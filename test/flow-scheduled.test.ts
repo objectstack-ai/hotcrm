@@ -5,6 +5,7 @@ import { CampaignCompletionFlow } from '../src/flows/campaign-completion.flow';
 import { CaseSlaMonitorFlow } from '../src/flows/case-sla-monitor.flow';
 import { ContractExpirationFlow } from '../src/flows/contract-expiration.flow';
 import { ContractRenewalFlow } from '../src/flows/contract-renewal.flow';
+import { DemoBootstrapFlow } from '../src/flows/demo-bootstrap.flow';
 import { ForecastSnapshotFlow } from '../src/flows/forecast-snapshot.flow';
 import { OpportunityStagnationFlow } from '../src/flows/opportunity-stagnation.flow';
 import { QuoteExpirationFlow } from '../src/flows/quote-expiration.flow';
@@ -750,5 +751,157 @@ describe('loop-nested conditions must be explicit CEL envelopes', () => {
       'bare string condition(s) inside a loop body — these never evaluate.\n' +
         "Wrap as { dialect: 'cel', source: '…' }:\n  " + bare.join('\n  '),
     ).toEqual([]);
+  });
+});
+
+/**
+ * demo_bootstrap — the post-seed ownership claim (#622).
+ *
+ * The failure this guards against is silent by construction. A seeded row can
+ * reach the database with the PLATFORM ownership column (`owner_id`) empty:
+ * seed writes run `{ isSystem: true }`, which by the seeder's documented
+ * contract disables auto-injection of `owner_id`, and these seeds cannot
+ * declare one (`cel`os.user.id`` does not resolve at seed time — that is why
+ * this flow exists). `owner_id` is the only column the sharing service reads,
+ * so under `sharingModel: 'private'` such a row is editable by NOBODY, the
+ * admin included: `PATCH` answers 403, and the attachment surface — which
+ * gates on `canEdit(parent)` — answers 403 ATTACHMENT_PARENT_ACCESS.
+ *
+ * Stamping only the app-level `owner` lookup hid it perfectly: the record LOOKS
+ * claimed everywhere a human would check, the "My …" views fill up, and the
+ * sweep's own filter (`owner != null`) then excludes the row forever, so the
+ * broken state is terminal. Shipped that way, `crm_contract` was read-only for
+ * every user on every demo org.
+ *
+ * These cases therefore assert the OUTCOME — every claimed object comes out of
+ * bootstrap with a real platform owner — over the object list read from the
+ * flow itself, so a newly claimed object is covered the day it is added.
+ */
+describe('demo_bootstrap — post-seed ownership claim', () => {
+  const USER = 'usr_first';
+
+  /** The platform ownership column; injected by ObjectQL, read by sharing. */
+  const PLATFORM_OWNER = 'owner_id';
+  /** The app's own lookup; drives "My …" views and owner-addressed notify. */
+  const APP_OWNER = 'owner';
+
+  /** Every object the flow claims, read off the flow's own `get_record` nodes. */
+  const claimedObjects = (): string[] => {
+    const nodes = (DemoBootstrapFlow.nodes ?? []) as Rec[];
+    const names = nodes
+      .filter((n) => n.type === 'get_record' && n.config?.objectName !== 'sys_user')
+      .map((n) => String(n.config.objectName));
+    return [...new Set(names)];
+  };
+
+  /**
+   * One row per ownerless SHAPE, for each claimed object:
+   *  - `both`      — a fresh seed row, ownerless on both columns.
+   *  - `app_only`  — the platform stamp fired, the app lookup is still empty.
+   *  - `plat_only` — THE #622 STATE: the app lookup reads as claimed while the
+   *                  platform column is empty. A sweep keyed on `owner` alone
+   *                  can never see this row again.
+   * Plus `owned`, already claimed by a real rep — must be left alone.
+   */
+  const seedStore = (): Record<string, Rec[]> => {
+    const store: Record<string, Rec[]> = { sys_user: [{ id: USER, email: 'admin@objectos.ai' }] };
+    for (const object of claimedObjects()) {
+      store[object] = [
+        { id: `${object}_both`, [APP_OWNER]: null, [PLATFORM_OWNER]: null },
+        { id: `${object}_app_only`, [APP_OWNER]: null, [PLATFORM_OWNER]: USER },
+        { id: `${object}_plat_only`, [APP_OWNER]: USER, [PLATFORM_OWNER]: null },
+        { id: `${object}_owned`, [APP_OWNER]: 'rep_9', [PLATFORM_OWNER]: 'rep_9' },
+      ];
+    }
+    return store;
+  };
+
+  const runBootstrap = async (store: Record<string, Rec[]> = seedStore()) => {
+    const h = makeFlowHarness({ demo_bootstrap: DemoBootstrapFlow }, store);
+    await h.run('demo_bootstrap', {}, { event: 'schedule' });
+    return h;
+  };
+
+  it('claims every object the seed data ships an owner-scoped record for', () => {
+    // Guards the cases below: they iterate this list, so an empty or truncated
+    // one would make every assertion vacuous.
+    const claimed = claimedObjects();
+    for (const object of [
+      'crm_lead', 'crm_account', 'crm_contact', 'crm_opportunity',
+      'crm_case', 'crm_task', 'crm_quote', 'crm_contract',
+    ]) {
+      expect(claimed, `demo_bootstrap never claims ${object}`).toContain(object);
+    }
+  });
+
+  it('leaves no claimed object ownerless at the PLATFORM level', async () => {
+    const h = await runBootstrap();
+
+    const ownerless: string[] = [];
+    for (const object of claimedObjects()) {
+      for (const row of h.store[object] ?? []) {
+        if (row[PLATFORM_OWNER] == null) ownerless.push(`${object}/${row.id as string}`);
+      }
+    }
+    expect(
+      ownerless,
+      'these rows came out of demo_bootstrap owned by nobody at the platform level.\n' +
+        `Under sharingModel:'private' that makes them read-only for EVERY user, admin\n` +
+        'included, and blocks attachments on them:\n  ' + ownerless.join('\n  '),
+    ).toEqual([]);
+  });
+
+  it('claims BOTH ownership columns on every row it touches', async () => {
+    const h = await runBootstrap();
+
+    for (const object of claimedObjects()) {
+      const byId = Object.fromEntries((h.store[object] ?? []).map((r) => [r.id, r]));
+      for (const shape of ['both', 'app_only', 'plat_only']) {
+        const row = byId[`${object}_${shape}`];
+        expect(row, `${object}_${shape} vanished`).toBeTruthy();
+        expect(row[PLATFORM_OWNER], `${object}_${shape}: platform ${PLATFORM_OWNER} not claimed`).toBe(USER);
+        expect(row[APP_OWNER], `${object}_${shape}: app ${APP_OWNER} not claimed`).toBe(USER);
+      }
+    }
+  });
+
+  it('repairs a row the app lookup already calls claimed (the #622 state)', async () => {
+    // The regression in one case: `owner` set, `owner_id` empty. A sweep keyed
+    // on `owner` alone reports success and never touches the row again, which
+    // is why this shipped invisibly.
+    const h = await runBootstrap();
+    const contract = (h.store.crm_contract ?? []).find((r) => r.id === 'crm_contract_plat_only');
+    expect(contract?.[PLATFORM_OWNER], 'half-claimed contract still ownerless to sharing').toBe(USER);
+  });
+
+  it('never reassigns a record that already has a real owner', async () => {
+    const h = await runBootstrap();
+    for (const object of claimedObjects()) {
+      const owned = (h.store[object] ?? []).find((r) => r.id === `${object}_owned`);
+      expect(owned?.[APP_OWNER], `${object}: stole an owned record`).toBe('rep_9');
+      expect(owned?.[PLATFORM_OWNER], `${object}: overwrote a real platform owner`).toBe('rep_9');
+    }
+  });
+
+  it('is a no-op on a fully claimed org', async () => {
+    const first = await runBootstrap();
+    const settled = JSON.parse(JSON.stringify(first.store)) as Record<string, Rec[]>;
+
+    const second = await runBootstrap(JSON.parse(JSON.stringify(settled)) as Record<string, Rec[]>);
+    expect(second.store).toEqual(settled);
+  });
+
+  it('does nothing at all before the first user exists', async () => {
+    const store = seedStore();
+    store.sys_user = [];
+    const h = await runBootstrap(store);
+
+    // Every row keeps exactly the ownership it started with — in particular the
+    // sweep must not stamp the literal `{firstUser.id}` placeholder.
+    for (const object of claimedObjects()) {
+      const both = (h.store[object] ?? []).find((r) => r.id === `${object}_both`);
+      expect(both?.[APP_OWNER], `${object}: claimed with no user present`).toBeNull();
+      expect(both?.[PLATFORM_OWNER], `${object}: claimed with no user present`).toBeNull();
+    }
   });
 });

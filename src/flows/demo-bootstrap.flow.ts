@@ -33,17 +33,69 @@ type Flow = Automation.Flow;
  * Scoped to a demo install by intent — it claims records for whoever the first
  * user is. A real deployment assigns ownership through import or territory
  * rules instead, and by then nothing is ownerless for this to pick up.
+ *
+ * ─── TWO ownership columns, not one (#622) ───────────────────────────────
+ *
+ * Every claimed object carries two:
+ *
+ *   - `owner`    — the app's own `lookup(sys_user)` field. Drives the "My …"
+ *                  views, the owner-addressed `notify` in every sweep, and the
+ *                  owner axis of the analytics datasets.
+ *   - `owner_id` — the PLATFORM ownership column ObjectQL injects into every
+ *                  user-owned object. This is the one — and the only one — the
+ *                  sharing service reads: under `sharingModel: 'private'` the
+ *                  OWD baseline admits the owner of `owner_id` and a share can
+ *                  only WIDEN from there.
+ *
+ * They are independent columns, so claiming one does not claim the other, and
+ * an app field that happens to be named `owner` is not the platform's owner.
+ * This flow used to stamp `owner` alone. A row that reached the platform
+ * ownerless therefore came out of the sweep looking claimed (`owner` = the dev
+ * admin) while still being owned by nobody as far as access control is
+ * concerned — `PATCH` answered 403 for EVERY user including the admin, and the
+ * attachment surface, which gates on `canEdit(parent)`, answered 403
+ * `ATTACHMENT_PARENT_ACCESS` on upload. Worse, the sweep's own filter then read
+ * `owner != null` and never looked at the row again: the state was terminal.
+ *
+ * Why rows reach the platform ownerless at all: seed writes run under
+ * `{ isSystem: true }`, which by the seeder's documented contract DISABLES the
+ * security plugin's auto-injection of `organization_id` / `owner_id` — "seeds
+ * either declare those fields explicitly per record". HotCRM's seeds cannot
+ * declare it: `cel\`os.user.id\`` does not resolve at seed time (boot logs
+ * "Unknown variable: os" for exactly these fields), which is why this flow
+ * exists in the first place. So ownership at the platform level is THIS flow's
+ * job, and nothing else's.
+ *
+ * Hence: every pass stamps BOTH columns, and each object is swept twice — once
+ * for rows missing `owner`, once for rows missing `owner_id`. Two single-field
+ * filters rather than one `$or`: `{ field: null }` is the only filter shape
+ * these sweeps have ever used against the real driver, and a half-claimed row
+ * (the state above) must still be reachable, which a single `owner`-keyed pass
+ * cannot do. On a healthy org both passes select nothing.
  */
 
-/** One find + loop + stamp-owner pass over an object. */
-const claim = (key: string, objectName: string, label: string) => ({
+/** The two ownership columns a claim pass stamps together. See the note above. */
+const OWNERSHIP_COLUMNS = ['owner', 'owner_id'] as const;
+type OwnershipColumn = (typeof OWNERSHIP_COLUMNS)[number];
+
+/** Both columns, pointed at the first user — the payload of every claim. */
+const CLAIM_FIELDS: Record<OwnershipColumn, string> = {
+  owner: '{firstUser.id}',
+  owner_id: '{firstUser.id}',
+};
+
+/**
+ * One find + loop + stamp-owner pass over an object, selecting the rows that
+ * are ownerless in `column` and stamping BOTH ownership columns on each.
+ */
+const claim = (key: string, objectName: string, label: string, column: OwnershipColumn) => ({
   find: {
     id: `find_${key}`,
     type: 'get_record' as const,
-    label: `Find ownerless ${label}`,
+    label: `Find ${label} with no ${column}`,
     config: {
       objectName,
-      filter: { owner: null },
+      filter: { [column]: null },
       limit: 500,
       outputVariable: `${key}List`,
     },
@@ -51,7 +103,7 @@ const claim = (key: string, objectName: string, label: string) => ({
   loop: {
     id: `loop_${key}`,
     type: 'loop' as const,
-    label: `Claim each ${label}`,
+    label: `Claim each ${label} with no ${column}`,
     config: {
       collection: `{${key}List}`,
       iteratorVariable: `current_${key}`,
@@ -60,11 +112,11 @@ const claim = (key: string, objectName: string, label: string) => ({
           {
             id: `stamp_${key}`,
             type: 'update_record' as const,
-            label: `Set owner on ${label}`,
+            label: `Set owner + owner_id on ${label}`,
             config: {
               objectName,
               filter: { id: `{current_${key}.id}` },
-              fields: { owner: '{firstUser.id}' },
+              fields: { ...CLAIM_FIELDS },
             },
           },
         ],
@@ -74,19 +126,35 @@ const claim = (key: string, objectName: string, label: string) => ({
   },
 });
 
-const TARGETS = [
-  claim('leads', 'crm_lead', 'Leads'),
-  claim('accounts', 'crm_account', 'Accounts'),
-  claim('contacts', 'crm_contact', 'Contacts'),
-  claim('opportunities', 'crm_opportunity', 'Opportunities'),
-  claim('cases', 'crm_case', 'Cases'),
-  claim('tasks', 'crm_task', 'Tasks'),
-  // Quotes and contracts are seeded ownerless too — without claiming them the
-  // contract_renewal / contract_expiration / quote_expiration notifies address
-  // a null owner and reach nobody (the exact failure this flow exists to fix).
-  claim('quotes', 'crm_quote', 'Quotes'),
-  claim('contracts', 'crm_contract', 'Contracts'),
+/**
+ * The objects whose seeded rows this flow claims.
+ *
+ * Quotes and contracts are in the list because they are seeded ownerless too —
+ * without claiming them the contract_renewal / contract_expiration /
+ * quote_expiration notifies address a null owner and reach nobody (the exact
+ * failure this flow exists to fix), and `crm_contract` additionally becomes
+ * uneditable for everyone (#622).
+ */
+const CLAIMED_OBJECTS: ReadonlyArray<[key: string, objectName: string, label: string]> = [
+  ['leads', 'crm_lead', 'Leads'],
+  ['accounts', 'crm_account', 'Accounts'],
+  ['contacts', 'crm_contact', 'Contacts'],
+  ['opportunities', 'crm_opportunity', 'Opportunities'],
+  ['cases', 'crm_case', 'Cases'],
+  ['tasks', 'crm_task', 'Tasks'],
+  ['quotes', 'crm_quote', 'Quotes'],
+  ['contracts', 'crm_contract', 'Contracts'],
 ];
+
+/**
+ * One pass per (object, ownership column). Ordered column-major so the whole
+ * `owner` sweep runs before the whole `owner_id` sweep — the `owner` pass
+ * stamps both columns, so by the time the `owner_id` sweep is reached it only
+ * has genuinely half-claimed rows left to repair.
+ */
+const TARGETS = OWNERSHIP_COLUMNS.flatMap((column) =>
+  CLAIMED_OBJECTS.map(([key, objectName, label]) => claim(`${key}_by_${column}`, objectName, label, column)),
+);
 
 /**
  * The whole flow is one straight line: check for a user, then find/loop each
@@ -103,7 +171,8 @@ const CHAIN = [
 export const DemoBootstrapFlow: Flow = {
   name: 'demo_bootstrap',
   label: 'Demo Bootstrap',
-  description: 'Claim ownerless seeded demo records for the first user so the "My …" views work.',
+  description:
+    'Claim ownerless seeded demo records for the first user — both the app `owner` lookup (the "My …" views) and the platform `owner_id` column (sharing / who may edit).',
   type: 'schedule',
   status: 'active',
   runAs: 'system',

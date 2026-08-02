@@ -2183,6 +2183,18 @@ connector instead. Retained for customers still on the legacy stack.`,
  * The `demo_bootstrap` scheduled flow (`src/flows/demo-bootstrap.flow.ts`)
  * does it at the only moment it can: once the first real user exists, its
  * periodic sweep claims every ownerless seeded record for that user.
+ *
+ * That sweep owns BOTH ownership columns, and it has to (#622). Seed writes
+ * run under `{ isSystem: true }`, which by the seeder's documented contract
+ * disables the security plugin's auto-injection of `organization_id` /
+ * `owner_id` — "seeds either declare those fields explicitly per record" — and
+ * per the paragraph above these seeds cannot declare it. So a seeded row can
+ * reach the database owned by nobody at the PLATFORM level (`owner_id` null)
+ * even though the app's own `owner` lookup later reads as claimed, and under
+ * `sharingModel: 'private'` such a row is editable by no one at all, admin
+ * included. Nothing here should grow an `owner` / `owner_id` seed value to
+ * paper over that: the sweep is the mechanism, and
+ * `test/flow-scheduled.test.ts` holds it to claiming both columns.
  */
 
 /** All CRM seed datasets */

@@ -52,9 +52,6 @@ const RUNTIME_TEST_FILES = [
 const PENDING_FLOWS = new Set([
   // Spans a 24h `wait` node; needs timer-resume support in the harness.
   'case_csat_followup',
-  // First-boot demo seeding. Exercised end to end every time the e2e suite
-  // boots a cold database (e2e/smoke.spec.ts asserts the seeded records).
-  'demo_bootstrap',
 ]);
 
 const testSource = (() => {
