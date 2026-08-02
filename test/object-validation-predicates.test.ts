@@ -131,6 +131,23 @@ import { REPO_ROOT } from './helpers/repo-root';
  * the engine should treat an unevaluable predicate on an `error`-severity rule
  * as a failure rather than a skip. A rule that cannot answer is not a rule that
  * passed — but that is a platform decision, not a HotCRM one.
+ *
+ * ### The same rule on the other two CEL surfaces (#633)
+ *
+ * The house rule above governs object `validations[]` and field predicates.
+ * The repo has two more CEL surfaces, and they were MEASURED separately rather
+ * than assumed to behave alike — do not carry a conclusion across:
+ *
+ *   - **Record-change flow conditions** — same strict-CEL abort, but the
+ *     engine records the run as FAILED and logs at ERROR instead of skipping
+ *     quietly. Guards required; enforced by
+ *     `test/flow-condition-totality.test.ts`, which also carries the measured
+ *     record shape and evaluation mechanism.
+ *   - **Sharing rule conditions** — NOT interpreted at all. They are compiled
+ *     to a pushdown filter by `compileCelToFilter`, which rejects the whole
+ *     function-call class, so a `has()` guard makes the rule untranslatable
+ *     and `plugin-sharing` silently stops seeding it. Guards are actively
+ *     harmful there; `test/sharing-seeding.test.ts` pins that.
  */
 
 type AnyRec = Record<string, any>;

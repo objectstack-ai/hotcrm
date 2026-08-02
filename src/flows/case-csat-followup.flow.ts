@@ -35,7 +35,18 @@ export const CaseCsatFollowupFlow: Flow = {
       config: {
         objectName: 'crm_case',
         triggerType: 'record-after-update',
-        condition: P`record.status == "closed" && (previous == null || previous.status != "closed")`,
+        // TOTALITY (#633): `has(...)` on every read, including the ones into
+        // `previous`. `previous` is the driver's PRIOR row, so it is sparse on
+        // driver-memory / driver-mongodb exactly like `record` is — measured,
+        // `previous == null || previous.status != "closed"` still aborts when
+        // `previous` is a row that simply has no `status` column. The
+        // `previous == null` term is kept because it is the author's declared
+        // intent for "no prior row: this is the close"; `!has(previous.status)`
+        // extends that same answer to a prior row the driver returned without
+        // the key. (`has()` on a null `previous` measures `false`, so the two
+        // terms agree rather than fight.)
+        condition: P`has(record.status) && record.status == "closed"
+          && (previous == null || !has(previous.status) || previous.status != "closed")`,
       },
     },
     {

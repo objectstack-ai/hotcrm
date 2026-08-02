@@ -66,7 +66,15 @@ const cronDisplay = (raw: string) => {
 const RULES: Rule[] = [
   {
     label: 'manager approval threshold',
-    extract: () => cap('opportunity-approval.flow.ts', /record\.amount > (\d+) && \(?record\.approval_status/),
+    // Anchored on the lowercase `record.` scope, which is what distinguishes
+    // the START condition's entry gate from the director tier's
+    // `oppRecord.amount > 500000` (the match is case-sensitive, so
+    // `oppRecord.amount` cannot satisfy `record\.amount`). It used to lean on
+    // the neighbouring `&& (record.approval_status` clause instead, which
+    // broke the moment #633 inserted the `has(...)` / `!= null` totality
+    // guards between the two — a drift detector should key on the value's own
+    // scope, not on whatever happens to sit next to it.
+    extract: () => cap('opportunity-approval.flow.ts', /record\.amount > (\d+)/),
     display: money,
     docs: ['crm_sales.md', 'crm_admin.md'],
   },

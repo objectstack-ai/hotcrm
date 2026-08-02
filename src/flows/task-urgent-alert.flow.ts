@@ -28,7 +28,14 @@ export const TaskUrgentAlertFlow: Flow = {
         // SQLite/libsql booleans persist as integer 1, so `is_completed != true`
         // is `1 != true` = always true and the guard never trips (cf. the same
         // hazard documented in case_escalation).
-        condition: P`record.priority == "urgent" && record.status != "completed"`,
+        // TOTALITY (#633): `has(...)` on every read. Both fields are `required`
+        // AND defaulted today, so this predicate measured total as authored —
+        // but that is a property of `crm_task`'s schema, not of the predicate.
+        // Drop either default and the flow goes silently inert on
+        // driver-memory / driver-mongodb, with nothing to catch it. An absent
+        // `status` is not `completed`, so it must not suppress the alert.
+        condition: P`has(record.priority) && record.priority == "urgent"
+          && (!has(record.status) || record.status != "completed")`,
       },
     },
     {
