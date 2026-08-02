@@ -9,6 +9,13 @@ import type { Dashboard } from '@objectstack/spec/ui';
  * Uses semantic colorVariant tokens (warning/danger/success) and chartConfig
  * palettes instead of raw hex values, mirroring the polished CRM dashboard
  * reference at https://github.com/objectstack-ai/objectui/tree/main/examples/crm.
+ *
+ * No KPI tile declares a `trend`. A period-over-period delta is a measurement,
+ * so it has to come from a real comparison query (widget `compareTo`) once the
+ * renderer supports it for dataset metrics — the percentages this file used to
+ * carry were typed by hand and recomputed by nothing, so they kept asserting
+ * the same "-6.2% vs last week" on any data, including an empty database.
+ * Same rule as the executive dashboard (#500, #587).
  */
 export const ServiceDashboard: Dashboard = {
   name: 'service_dashboard',
@@ -102,7 +109,6 @@ export const ServiceDashboard: Dashboard = {
       options: {
         icon: 'Inbox',
         format: '0,0',
-        trend: { value: 6.2, direction: 'down', label: 'vs last week' },
       },
     },
     {
@@ -117,7 +123,6 @@ export const ServiceDashboard: Dashboard = {
       options: {
         icon: 'AlertTriangle',
         format: '0,0',
-        trend: { value: 1.0, direction: 'up', label: 'vs last week' },
       },
     },
     {
@@ -133,7 +138,6 @@ export const ServiceDashboard: Dashboard = {
         icon: 'Clock',
         format: '0.0',
         suffix: 'h',
-        trend: { value: 9.8, direction: 'down', label: 'vs last week' },
       },
     },
     {
@@ -148,7 +152,6 @@ export const ServiceDashboard: Dashboard = {
       options: {
         icon: 'ShieldAlert',
         format: '0,0',
-        trend: { value: 2.4, direction: 'down', label: 'vs last week' },
       },
     },
 

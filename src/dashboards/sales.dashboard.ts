@@ -9,6 +9,13 @@ import { avgDealSizeMetricWidget, pipelineByStageFunnelWidget } from './shared-w
  * Pipeline analytics, win rate trends, and rep performance for the sales team.
  * Modeled after the polished CRM dashboard reference at
  * https://github.com/objectstack-ai/objectui/tree/main/examples/crm.
+ *
+ * No KPI tile declares a `trend`. A period-over-period delta is a measurement,
+ * so it has to come from a real comparison query (widget `compareTo`) once the
+ * renderer supports it for dataset metrics — the percentages this file used to
+ * carry were typed by hand and recomputed by nothing, so they kept asserting
+ * the same "+8.4% vs last quarter" on any data, including an empty database.
+ * Same rule as the executive dashboard (#500, #587).
  */
 export const SalesDashboard: Dashboard = {
   name: 'sales_dashboard',
@@ -71,7 +78,6 @@ export const SalesDashboard: Dashboard = {
       options: {
         icon: 'DollarSign',
         format: '0,0',
-        trend: { value: 8.4, direction: 'up', label: 'vs last quarter' },
       },
     },
     {
@@ -87,7 +93,6 @@ export const SalesDashboard: Dashboard = {
       options: {
         icon: 'Trophy',
         format: '0,0',
-        trend: { value: 14.7, direction: 'up', label: 'vs last quarter' },
       },
     },
     {
@@ -102,7 +107,6 @@ export const SalesDashboard: Dashboard = {
       options: {
         icon: 'Briefcase',
         format: '0,0',
-        trend: { value: 2.1, direction: 'down', label: 'vs last quarter' },
       },
     },
     avgDealSizeMetricWidget({ x: 9, y: 0, w: 3, h: 2 }, {
@@ -113,7 +117,6 @@ export const SalesDashboard: Dashboard = {
       options: {
         icon: 'bar-chart',
         format: '0,0',
-        trend: { value: 4.3, direction: 'up', label: 'vs last quarter' },
       },
     }),
 
