@@ -225,14 +225,18 @@ export const Account = ObjectSchema.create({
     { fields: ['type', 'is_active'] },
   ],
   
-  // API surface. Other object-level `enable.*` flags (trackHistory, files,
-  // feeds, activities, trash, mru, searchable) were removed in @objectstack 12
-  // — they were dead no-ops (ADR-0049 liveness). Field history now lives on
-  // individual `Field.trackHistory` (ADR-0052); global search uses
-  // `searchableFields`/per-field `searchable`.
+  // API surface + capabilities. `trash` / `mru` were removed in @objectstack 12
+  // as dead no-ops (ADR-0049 liveness); `files` and `feeds` were NOT — both are
+  // live and enforced in 17 (see the canonical note in `src/objects/index.ts`).
+  // Field history lives on individual `Field.trackHistory` (ADR-0052); global
+  // search uses `searchableFields`/per-field `searchable`.
   enable: {
     apiEnabled: true,       // Expose via REST/GraphQL
     apiMethods: ['get', 'list', 'create', 'update', 'delete'], // Whitelist allowed API operations
+    // #602 — contracts, org charts and RFPs live on the account record.
+    // Opt-in (spec default false); attach/download/delete authority is the
+    // parent record's own, so this adds a surface, not a grant.
+    files: true,
   },
   
   // Validation Rules

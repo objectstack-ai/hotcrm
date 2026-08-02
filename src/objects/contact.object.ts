@@ -181,10 +181,13 @@ export const Contact = ObjectSchema.create({
   },
   
   // Enable features
-  // Dead object-level enable.* flags removed in @objectstack 12 (ADR-0049);
-  // only the live API surface remains. History → Field.trackHistory (ADR-0052).
+  // Dead enable.* flags (trash/mru) removed in @objectstack 12 (ADR-0049);
+  // History → Field.trackHistory (ADR-0052).
   enable: {
     apiEnabled: true,
+    // #602 — signed NDAs, business cards, meeting notes attach to the person.
+    // See the canonical capability note in `src/objects/index.ts`.
+    files: true,
   },
   
   // Database indexes for performance
