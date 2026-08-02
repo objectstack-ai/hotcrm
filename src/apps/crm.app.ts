@@ -15,7 +15,13 @@ export const CrmApp = App.create({
   name: 'crm_enterprise',
   label: 'HotCRM',
   icon: 'briefcase',
-  defaultAgent: 'sales_copilot',
+  // ADR-0063 §1/§2 — `defaultAgent` is a surface binding, not a custom-agent
+  // slot: the only resolvable values are the two PLATFORM agents, `ask` (data
+  // surface) and `build` (authoring surface). HotCRM is a data surface, so it
+  // binds `ask`; the app's own AI capability ships as skills (`src/skills/`),
+  // which attach to the platform agents by `surface` affinity. The app-authored
+  // agents this key used to name were retired in #512.
+  defaultAgent: 'ask',
   branding: {
     primaryColor: '#4169E1',
     logo: '/assets/crm-logo.png',
