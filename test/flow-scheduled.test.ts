@@ -5,8 +5,10 @@ import { CampaignCompletionFlow } from '../src/flows/campaign-completion.flow';
 import { CaseSlaMonitorFlow } from '../src/flows/case-sla-monitor.flow';
 import { ContractExpirationFlow } from '../src/flows/contract-expiration.flow';
 import { ContractRenewalFlow } from '../src/flows/contract-renewal.flow';
+import { ForecastSnapshotFlow } from '../src/flows/forecast-snapshot.flow';
 import { OpportunityStagnationFlow } from '../src/flows/opportunity-stagnation.flow';
 import { QuoteExpirationFlow } from '../src/flows/quote-expiration.flow';
+import forecastDerive from '../src/objects/forecast.hook';
 import { TaskDueReminderFlow } from '../src/flows/task-due-reminder.flow';
 import * as allFlows from '../src/flows';
 import { makeFlowHarness, type Rec } from './helpers/flow-harness';
@@ -463,6 +465,200 @@ describe('contract_renewal — daily notice-window sweep', () => {
     ]);
     expect(h.store.crm_task).toHaveLength(0);
     expect(h.notifications).toHaveLength(0);
+  });
+});
+
+describe('forecast_snapshot — nightly per-owner pipeline snapshot', () => {
+  // Calendar-quarter maths in UTC, mirroring forecast.hook.ts and the seed
+  // module. The flow itself does none of this — that is the point: a flow
+  // template cannot express a quarter boundary, so the hook owns it and the
+  // flow reads the window back off the row it created.
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const isoUtc = (d: Date) => `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+  const nowUtc = new Date();
+  const qStart = new Date(Date.UTC(nowUtc.getUTCFullYear(), Math.floor(nowUtc.getUTCMonth() / 3) * 3, 1));
+  const qEnd = new Date(Date.UTC(qStart.getUTCFullYear(), qStart.getUTCMonth() + 3, 0));
+  const inPeriod = isoUtc(qStart);
+  const beforePeriod = isoUtc(new Date(qStart.getTime() - 86_400_000));
+  const quarterLabel = `Q${Math.floor(qStart.getUTCMonth() / 3) + 1} ${qStart.getUTCFullYear()}`;
+
+  const users = (): Rec[] => [
+    { id: 'rep1', name: 'Rep One' },
+    { id: 'rep2', name: 'Rep Two' },
+    { id: 'rep3', name: 'No Deals At All' },
+    { id: 'rep4', name: 'Only Lost Deals' },
+  ];
+
+  // Both rows that MUST be counted and rows that must be left out — a sweep
+  // whose window or bucket filter silently matches everything looks identical
+  // to a correct one otherwise.
+  const opps = (): Rec[] => [
+    // rep1 — one deal per bucket, plus two that must not count.
+    { id: 'o1', owner: 'rep1', stage: 'qualification',  forecast_category: 'pipeline',  amount: 100_000, close_date: inPeriod },
+    { id: 'o2', owner: 'rep1', stage: 'needs_analysis', forecast_category: 'best_case', amount: 50_000,  close_date: inPeriod },
+    { id: 'o3', owner: 'rep1', stage: 'negotiation',    forecast_category: 'commit',    amount: 30_000,  close_date: inPeriod },
+    { id: 'o4', owner: 'rep1', stage: 'closed_won',     forecast_category: 'closed',    amount: 70_000,  close_date: inPeriod },
+    // Closes in the PREVIOUS quarter — outside every bucket, but still makes
+    // rep1 an active owner.
+    { id: 'o5', owner: 'rep1', stage: 'proposal',       forecast_category: 'commit',    amount: 999_999, close_date: beforePeriod },
+    // Lost deals are neither open nor won.
+    { id: 'o6', owner: 'rep1', stage: 'closed_lost',    forecast_category: 'omitted',   amount: 12_345,  close_date: inPeriod },
+    // rep2 — the second amount arrives as a STRING, the shape a currency
+    // column takes coming back from some drivers. Without the `* 1` coercion
+    // in the accumulator the template CONCATENATES and pipeline reads
+    // "020000" + "25000" instead of 45000.
+    { id: 'o7', owner: 'rep2', stage: 'proposal',       forecast_category: 'commit',    amount: 20_000,  close_date: inPeriod },
+    { id: 'o8', owner: 'rep2', stage: 'qualification',  forecast_category: 'pipeline',  amount: '25000', close_date: inPeriod },
+    // rep4 owns nothing but a lost deal — not a forecast owner.
+    { id: 'o9', owner: 'rep4', stage: 'closed_lost',    forecast_category: 'omitted',   amount: 88_000,  close_date: inPeriod },
+  ];
+
+  const harness = (forecasts: Rec[] = []) =>
+    makeFlowHarness(
+      { forecast_snapshot: ForecastSnapshotFlow },
+      { sys_user: users(), crm_opportunity: opps(), crm_forecast: forecasts },
+      { hooks: [forecastDerive] },
+    );
+
+  const run = async (forecasts: Rec[] = []) => {
+    const h = harness(forecasts);
+    await h.run('forecast_snapshot', {}, { event: 'schedule' });
+    return h;
+  };
+
+  const byOwner = (h: ReturnType<typeof harness>) =>
+    Object.fromEntries(h.store.crm_forecast.map((f) => [f.owner, f]));
+
+  it('opens a current-period row for every active opportunity owner, and only for them', async () => {
+    const h = await run();
+
+    expect(h.store.crm_forecast).toHaveLength(2);
+    const owners = h.store.crm_forecast.map((f) => f.owner).sort();
+    expect(owners).toEqual(['rep1', 'rep2']);
+    // A user with no opportunities at all, and one whose only deal is lost,
+    // must not collect an empty snapshot row.
+    expect(owners, 'rep3 owns nothing').not.toContain('rep3');
+    expect(owners, 'rep4 owns only a lost deal').not.toContain('rep4');
+  });
+
+  it('lands on a calendar-true quarter, derived by the hook rather than the flow', async () => {
+    const h = await run();
+    const snap = byOwner(h).rep1;
+
+    expect(snap.period).toBe('quarter');
+    // The invariant #530 pinned for the seeds now also holds for every
+    // runtime snapshot: exact boundaries, and the label dialect the hook and
+    // the seeds both speak.
+    expect(snap.period_start).toBe(isoUtc(qStart));
+    expect(snap.period_end).toBe(isoUtc(qEnd));
+    expect(snap.period_label).toBe(quarterLabel);
+    expect(snap.snapshot_date).toBe(isoUtc(nowUtc));
+    expect(snap.source).toBe('scheduled');
+  });
+
+  it('sums the cumulative buckets from forecast_category', async () => {
+    const h = await run();
+    const snap = byOwner(h).rep1;
+
+    // pipeline = every open deal in the window: 100k + 50k + 30k.
+    expect(Number(snap.pipeline_amount)).toBe(180_000);
+    // best case = best_case ∪ commit: 50k + 30k. A strict partition would
+    // read 50k here, so this pins the ladder, not just "some sum happened".
+    expect(Number(snap.best_case_amount)).toBe(80_000);
+    expect(Number(snap.commit_amount)).toBe(30_000);
+    expect(Number(snap.closed_amount)).toBe(70_000);
+  });
+
+  it('excludes deals closing outside the period, and lost deals', async () => {
+    const h = await run();
+    const snap = byOwner(h).rep1;
+    // The 999,999 last-quarter deal and the 12,345 lost deal are the only way
+    // any total could exceed these.
+    for (const field of ['pipeline_amount', 'best_case_amount', 'commit_amount', 'closed_amount']) {
+      expect(Number(snap[field]), `${field} swallowed an out-of-scope deal`).toBeLessThan(200_000);
+    }
+  });
+
+  it('coerces a string amount instead of concatenating it', async () => {
+    const h = await run();
+    const snap = byOwner(h).rep2;
+    expect(Number(snap.pipeline_amount)).toBe(45_000);
+    expect(typeof snap.pipeline_amount, 'the accumulator produced a string').toBe('number');
+  });
+
+  it('is idempotent: a second sweep refreshes the row instead of duplicating it', async () => {
+    const h = harness();
+    await h.run('forecast_snapshot', {}, { event: 'schedule' });
+    await h.run('forecast_snapshot', {}, { event: 'schedule' });
+
+    expect(h.store.crm_forecast, 'the sweep inserted a second row for the same period').toHaveLength(2);
+    const snap = byOwner(h).rep1;
+    // Re-running must RECOMPUTE, not accumulate: a sweep that added to the
+    // stored totals would read 360,000 here.
+    expect(Number(snap.pipeline_amount)).toBe(180_000);
+  });
+
+  it('overwrites stale amounts when the pipeline moves', async () => {
+    // A pre-existing row from an earlier night, carrying numbers that no
+    // longer reflect the pipeline. The whole point of a nightly upsert is
+    // that amounts can go DOWN, which a create-once writer never achieves.
+    const h = await run([{
+      id: 'f_rep1', owner: 'rep1', period: 'quarter',
+      period_start: isoUtc(qStart), period_end: isoUtc(qEnd), period_label: quarterLabel,
+      snapshot_date: beforePeriod, source: 'scheduled',
+      pipeline_amount: 9_999_999, best_case_amount: 9_999_999,
+      commit_amount: 9_999_999, closed_amount: 9_999_999,
+    }]);
+
+    expect(h.store.crm_forecast).toHaveLength(2);
+    const snap = byOwner(h).rep1;
+    expect(snap.id, 'the existing row was replaced rather than refreshed').toBe('f_rep1');
+    expect(Number(snap.pipeline_amount)).toBe(180_000);
+    expect(Number(snap.closed_amount)).toBe(70_000);
+    expect(snap.snapshot_date).toBe(isoUtc(nowUtc));
+  });
+
+  it('never writes quota — the manually-maintained attainment denominator', async () => {
+    const h = await run([{
+      id: 'f_rep1', owner: 'rep1', period: 'quarter',
+      period_start: isoUtc(qStart), period_end: isoUtc(qEnd), period_label: quarterLabel,
+      snapshot_date: beforePeriod, source: 'scheduled', quota: 1_500_000,
+    }]);
+
+    const snap = byOwner(h).rep1;
+    expect(Number(snap.quota), 'the sweep clobbered a hand-maintained quota').toBe(1_500_000);
+    // And a freshly opened row leaves quota unset rather than zeroing it,
+    // so `attainment_pct` guards on quota > 0 instead of dividing by a lie.
+    expect(byOwner(h).rep2.quota).toBeUndefined();
+  });
+
+  it('does not touch a snapshot belonging to a different period', async () => {
+    const previousQuarterEnd = isoUtc(new Date(qStart.getTime() - 86_400_000));
+    const h = await run([{
+      id: 'f_old', owner: 'rep1', period: 'quarter',
+      period_start: isoUtc(new Date(Date.UTC(qStart.getUTCFullYear(), qStart.getUTCMonth() - 3, 1))),
+      period_end: previousQuarterEnd, period_label: 'previous',
+      snapshot_date: previousQuarterEnd, source: 'scheduled', closed_amount: 1_485_000,
+    }]);
+
+    const old = h.store.crm_forecast.find((f) => f.id === 'f_old')!;
+    expect(Number(old.closed_amount), 'a closed period was rewritten').toBe(1_485_000);
+    // rep1 still gets a NEW row for the current quarter.
+    expect(h.store.crm_forecast).toHaveLength(3);
+  });
+
+  it('is a clean no-op when nobody owns a live deal', async () => {
+    const h = makeFlowHarness(
+      { forecast_snapshot: ForecastSnapshotFlow },
+      {
+        sys_user: [{ id: 'rep9', name: 'Idle' }],
+        crm_opportunity: [{ id: 'ox', owner: 'rep9', stage: 'closed_lost', amount: 10, close_date: inPeriod }],
+        crm_forecast: [],
+      },
+      { hooks: [forecastDerive] },
+    );
+    await h.run('forecast_snapshot', {}, { event: 'schedule' });
+    expect(h.store.crm_forecast).toHaveLength(0);
   });
 });
 

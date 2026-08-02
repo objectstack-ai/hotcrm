@@ -66,7 +66,7 @@ A flow fires one of three ways, set by its start node:
 
 > **Auto-launch needs the `triggers` capability.** Record-change and scheduled flows only fire when the stack's `requires` list includes `triggers` — it installs the record-change + schedule trigger providers (schedule triggers also use the job service). Screen flows are always launched manually.
 
-**Built-in flows in HotCRM** (10):
+**Built-in flows in HotCRM** (11):
 
 | Flow | Trigger | What it does |
 | --- | --- | --- |
@@ -80,6 +80,7 @@ A flow fires one of three ways, set by its start node:
 | **Contract Renewal Reminder** | Schedule (daily 8 AM) | Open renewal tasks/opportunities for contracts nearing their `end_date` |
 | **Case SLA Monitor** | Schedule (hourly) | Flag and escalate open cases past their SLA due date |
 | **Stalled Deal Alert** | Schedule (daily 7:30 AM) | Nudge owners about open opportunities stuck in a stage too long |
+| **Forecast Snapshot** | Schedule (daily 3 AM) | Upsert a current-quarter forecast row per active opportunity owner — pipeline, best case, commit and closed-won totals |
 
 Notifications inside flows are delivered by the **`notify` node** (inbox + email via the messaging service) — not the legacy `script`/email step, which is a no-op in 7.4.
 
@@ -87,9 +88,11 @@ See [Customization › Extending Objects](/docs/customization/extending-objects)
 
 ## Scheduled automation
 
-Time-based automation is implemented as **scheduled flows** — flows whose start node carries a cron schedule. See the four `Schedule` rows above (campaign enrollment, contract renewal, SLA monitor, stalled-deal alert). They run via the job service, so the `triggers` capability is paired with `job` (both ship in the default slate).
+Time-based automation is implemented as **scheduled flows** — flows whose start node carries a cron schedule. See the five `Schedule` rows above (campaign enrollment, contract renewal, SLA monitor, stalled-deal alert, forecast snapshot). They run via the job service, so the `triggers` capability is paired with `job` (both ship in the default slate).
 
 Date-driven field logic that needs no orchestration — defaulting a quote's expiration date, freezing an expired/accepted quote, deriving a forecast period — lives in lightweight **object hooks** (`beforeInsert` / `beforeUpdate`) rather than a scheduled sweep.
+
+The division of labour on forecasts is worth calling out, because it is the pattern to copy: the **Forecast Snapshot** flow decides *who* gets a snapshot and *what the totals are*, while the forecast object's hook decides *which calendar period the snapshot belongs to*. A cron expression can say "every night"; it cannot say "the first day of this quarter", so that boundary is derived once, by the object, for every writer.
 
 ## Approvals
 
