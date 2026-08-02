@@ -1,6 +1,12 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import type { HookApi, HookQuery } from '../../src/objects/_hook-api';
+import type {
+  HookApi,
+  HookDeleteOptions,
+  HookQuery,
+  HookUpdateDoc,
+  HookUpdateOptions,
+} from '../../src/objects/_hook-api';
 
 /**
  * In-memory harness for running REAL hook handlers.
@@ -20,11 +26,19 @@ import type { HookApi, HookQuery } from '../../src/objects/_hook-api';
 
 export type Rec = Record<string, any>;
 
-/** A recorded write, for asserting that a hook did (or did not) touch the data. */
+/**
+ * A recorded write, for asserting that a hook did (or did not) touch the data.
+ *
+ * `args` is the ARGUMENT LIST as the engine would have received it, not a
+ * friendly re-packaging of it: `update` records `[doc, options]`. A test that
+ * only checks the resulting row cannot tell a correctly-shaped call from one
+ * the real engine would have thrown on, which is exactly how the `(id, doc)`
+ * spelling survived eight call sites (#616).
+ */
 export interface RecordedCall {
-  op: 'insert' | 'update' | 'updateMany' | 'delete';
+  op: 'insert' | 'update' | 'delete';
   object: string;
-  args: Rec;
+  args: unknown[];
 }
 
 /** Does `value` satisfy a single Mongo-style condition? */
@@ -122,26 +136,66 @@ export function makeHarness(store: Record<string, Rec[]> = {}): Harness {
         },
         async insert(doc: Rec) {
           const rec = { id: doc.id ?? `${name}_${++seq}`, ...doc };
-          calls.push({ op: 'insert', object: name, args: rec });
+          calls.push({ op: 'insert', object: name, args: [doc] });
           rows(name).push(rec);
           return rec;
         },
-        async update(id: string, doc: Rec) {
-          calls.push({ op: 'update', object: name, args: { id, doc } });
-          const row = rows(name).find((r) => r.id === id);
+        /**
+         * `update(doc, options)` — the engine's shape, enforced at runtime and
+         * not merely declared.
+         *
+         * TypeScript alone cannot hold this line: hooks reach `ctx.api` through
+         * a `ctx.api as HookApi` cast on an `unknown`, and every test builds its
+         * ctx with `as any`. So the checks below are the ones that actually
+         * fire. They mirror what the kernel does with a mis-shaped call — throw
+         * on an id where a document belongs (`update('opp_1', {...})` reaches
+         * `rejectUnknownEngineOptions` as `update('opp_1' , {amount})` and dies
+         * with "does not recognise option 'amount'") — so a hook that regresses
+         * fails here rather than silently no-op'ing in production.
+         */
+        async update(doc: HookUpdateDoc, options: HookUpdateOptions) {
+          if (typeof doc !== 'object' || doc === null || Array.isArray(doc)) {
+            throw new Error(
+              `hook-harness: update(${JSON.stringify(doc)}, …) was called with an id where the ` +
+                'repository facade takes a DOCUMENT. The kernel reads the target from `data.id` ' +
+                "and rejects the second positional document as an unknown option (#616). " +
+                'Use `update({ id, …fields }, { where: { id } })`.',
+            );
+          }
+          if (typeof doc.id !== 'string' || !doc.id) {
+            throw new Error(
+              'hook-harness: update() document carries no `id` — the kernel would have nothing ' +
+                'to resolve the row from. Use `update({ id, …fields }, { where: { id } })`.',
+            );
+          }
+          if (!options || typeof options.where !== 'object' || options.where === null) {
+            throw new Error(
+              'hook-harness: update() was called without `{ where: { id } }`. The row scope a ' +
+                'derived write runs under is not optional in this app (see `_hook-api.ts`).',
+            );
+          }
+          const scoped = (options.where as Rec).id;
+          if (scoped !== undefined && scoped !== doc.id) {
+            throw new Error(
+              `hook-harness: update() targets '${doc.id}' but scopes to '${String(scoped)}'. The ` +
+                'kernel prefers `data.id` and would silently write the wrong row.',
+            );
+          }
+          calls.push({ op: 'update', object: name, args: [doc, options] });
+          const row = rows(name).find((r) => r.id === doc.id);
           if (row) Object.assign(row, doc);
           return row;
         },
-        async updateMany(q: { where: Rec; doc: Rec }) {
-          calls.push({ op: 'updateMany', object: name, args: q });
-          const hits = rows(name).filter((r) => matches(r, q.where));
-          for (const r of hits) Object.assign(r, q.doc);
-          return { modified: hits.length };
-        },
-        async delete(id: string) {
-          calls.push({ op: 'delete', object: name, args: { id } });
+        async delete(options: HookDeleteOptions) {
+          if (!options || typeof options.where !== 'object' || options.where === null) {
+            throw new Error(
+              'hook-harness: delete() takes `{ where: … }` — the facade has no id-addressed ' +
+                'overload (#616).',
+            );
+          }
+          calls.push({ op: 'delete', object: name, args: [options] });
           const list = rows(name);
-          const i = list.findIndex((r) => r.id === id);
+          const i = list.findIndex((r) => matches(r, options.where as Rec));
           if (i >= 0) list.splice(i, 1);
           return { deleted: i >= 0 ? 1 : 0 };
         },
@@ -170,7 +224,7 @@ export function makeDeniedApi(message = "Access denied: not 'find'"): HookApi {
     object() {
       return {
         count: boom, find: boom, findOne: boom,
-        insert: boom, update: boom, updateMany: boom, delete: boom,
+        insert: boom, update: boom, delete: boom,
       } as never;
     },
   };

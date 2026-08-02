@@ -143,9 +143,10 @@ const caseSideEffects: Hook = {
     // its close time) and re-entered the record-change trigger surface.
     if (input.status === 'resolved' && previous.status !== 'resolved') {
       if (accountId) {
-        await api.object('crm_account').update(accountId, {
-          last_activity_date: new Date().toISOString().slice(0, 10),
-        });
+        await api.object('crm_account').update(
+          { id: accountId, last_activity_date: new Date().toISOString().slice(0, 10) },
+          { where: { id: accountId } },
+        );
       }
     }
   },
