@@ -2,6 +2,8 @@
 
 import { describe, it, expect } from 'vitest';
 import { CrmSeedData } from '../src/data/index';
+import { Forecast } from '../src/objects/forecast.object';
+import { ForecastSnapshotFlow } from '../src/flows/forecast-snapshot.flow';
 
 /**
  * Forecast seed calendar-alignment guards (#530).
@@ -25,7 +27,7 @@ import { CrmSeedData } from '../src/data/index';
 type SeedRec = Record<string, unknown>;
 
 const forecastSeed = CrmSeedData.find((s: any) => s.object === 'crm_forecast') as
-  | { records: SeedRec[] }
+  | { records: SeedRec[]; mode?: string; externalId?: string | string[] }
   | undefined;
 
 const records: SeedRec[] = forecastSeed?.records ?? [];
@@ -120,9 +122,94 @@ describe('forecast seed periods are calendar-true (#530)', () => {
     ).toBeDefined();
   });
 
-  it('period_label values are unique (they are the upsert identity)', () => {
+  it('period_label values are unique AMONG THE SEEDS — not a table invariant (#613)', () => {
+    // Restated deliberately. This once read "period_label values are unique
+    // (they are the upsert identity)", and both halves have since become
+    // false: `period_label` is no longer the upsert identity (that is
+    // `seed_key` now), and uniqueness is no longer true of the TABLE. The
+    // `forecast_snapshot` sweep (#590) writes one row per active opportunity
+    // owner per quarter and every one of them reads 'Q3 2026'.
+    //
+    // What survives is a much narrower property: these eight authored records
+    // must not collide with EACH OTHER, so the demo shows eight distinct
+    // periods rather than two rows fighting over one label. Asserting anything
+    // wider would advertise an invariant the database does not hold.
     const labels = records.map((r) => String(r.period_label));
     const dupes = labels.filter((l, i) => labels.indexOf(l) !== i);
-    expect(dupes, `duplicate period_label seeds would clobber each other: ${dupes.join(', ')}`).toEqual([]);
+    expect(dupes, `two seeded forecasts render the same period: ${dupes.join(', ')}`).toEqual([]);
+  });
+});
+
+/**
+ * Seed identity guards (#613).
+ *
+ * The seed upserts against the whole `crm_forecast` table — the loader builds
+ * its existing-record map from every row in the org, not just previously
+ * seeded ones. So the seed's `externalId` has to be a value that a genuine,
+ * owner-scoped runtime snapshot can never carry. `period_label` was not: it
+ * names a set of rows, and a re-seed overwrote whichever member came back
+ * first, demo numbers landing on a real rep's snapshot.
+ *
+ * These pin the replacement, because every part of it fails SILENTLY:
+ * a missing `seed_key` keys to "" and downgrades upsert to
+ * insert-on-every-replay; a writable `seed_key` lets a real row drift into the
+ * seed's line of fire; a reverted `externalId` restores the original bug.
+ */
+describe('the forecast seed keys on a seeder-only identity (#613)', () => {
+  const seedKeyField = (Forecast as any).fields?.seed_key;
+
+  it('the seed upserts on seed_key, not on a shared rendering like period_label', () => {
+    expect(forecastSeed?.externalId, 'forecast seed externalId').toBe('seed_key');
+    expect(forecastSeed?.mode, 'forecast seed mode').toBe('upsert');
+  });
+
+  it('every seeded forecast carries a seed_key', () => {
+    // An empty part collapses the loader's key to "", which never matches an
+    // existing row — so the record is INSERTED again on every replay boot and
+    // the demo table grows without bound. Silent: no error, just duplicates.
+    const missing = records
+      .filter((r) => typeof r.seed_key !== 'string' || (r.seed_key as string).trim() === '')
+      .map((r) => String(r.period_label));
+    expect(missing, `forecast seeds with no seed_key:\n  ${missing.join('\n  ')}`).toEqual([]);
+  });
+
+  it('seed_key values are unique among the seeds', () => {
+    const keys = records.map((r) => String(r.seed_key));
+    const dupes = keys.filter((k, i) => keys.indexOf(k) !== i);
+    expect(dupes, `two forecast seeds share one seed_key and would clobber each other: ${dupes.join(', ')}`).toEqual([]);
+  });
+
+  it('crm_forecast declares seed_key as a readonly, hidden text column', () => {
+    // `readonly` is what makes this structural rather than conventional: seed
+    // writes run `{ isSystem: true }` and bypass readonly stripping, while
+    // user and API writes do not. Drop it and a real forecast row becomes able
+    // to acquire a seed_key — which is the #613 bug again, one field over.
+    expect(seedKeyField, 'crm_forecast has no seed_key field').toBeDefined();
+    expect(seedKeyField?.type).toBe('text');
+    expect(seedKeyField?.readonly, 'seed_key must be readonly so only the seeder can write it').toBe(true);
+    expect(seedKeyField?.hidden, 'seed_key is a fixture column and must stay out of forms').toBe(true);
+  });
+
+  it('no runtime forecast writer populates seed_key', () => {
+    // The other half of the guarantee: even a system-context writer must leave
+    // the column empty, or its rows re-enter the seed's existing-record map.
+    const bad: string[] = [];
+    let writers = 0;
+    const walk = (node: any) => {
+      const fields = node?.config?.fields;
+      if (fields) {
+        writers++;
+        if (Object.prototype.hasOwnProperty.call(fields, 'seed_key')) {
+          bad.push(`${ForecastSnapshotFlow.name}.${node.id} writes seed_key`);
+        }
+      }
+      for (const child of node?.config?.body?.nodes ?? []) walk(child);
+    };
+    for (const node of (ForecastSnapshotFlow as any).nodes ?? []) walk(node);
+    // Guard the guard: the sweep creates a row and updates it, so a walker
+    // that found no field-writing node has stopped matching the flow's shape
+    // and would pass by asserting nothing.
+    expect(writers, 'walker found no record-writing node in the snapshot flow').toBeGreaterThanOrEqual(2);
+    expect(bad, bad.join('\n')).toEqual([]);
   });
 });
