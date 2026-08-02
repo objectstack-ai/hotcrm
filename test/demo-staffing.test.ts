@@ -55,6 +55,10 @@ const positionNames = new Set(positions.map((p) => String(p.name)));
 const staffedPositions = new Set(DemoOrgStaffing.flatMap((m) => m.positions));
 const holdersOf = (position: string) => DemoOrgStaffing.filter((m) => m.positions.includes(position));
 
+/** Someone whose visible rows are supposed to be bounded by a territory rule. */
+const territorial = (m: { positions: readonly string[] }) =>
+  m.positions.some((p) => p === 'na_sales_team' || p === 'eu_sales_team');
+
 /**
  * Identity/access tables only the platform may write. A seed dataset or flow
  * node naming any of these is the #640 hard constraint being violated: it would
@@ -139,22 +143,65 @@ describe('the staffing table encodes the #640 decision, not an org chart', () =>
 
   it('pairs each territory position with a functional one that carries a permission set', () => {
     // A territory position is a RECORD grouping: no permission set binds to
-    // `na_sales_team` / `eu_sales_team`, so on its own it widens which rows a
-    // user sees without saying what they may do. Measured: a user holding only
-    // `eu_sales_team` still reads the 2 EU accounts — via the platform's
-    // additive `member_default` baseline (ADR-0090 D5) — i.e. the demo would
-    // show a generic org member, not a sales rep.
+    // `na_sales_team` / `eu_sales_team`, so on its own it says nothing about
+    // what a user may DO. Measured: a user holding only `eu_sales_team` still
+    // reads the 2 EU accounts — the object door is opened by the platform's
+    // additive `member_default` baseline (ADR-0090 D5) and the rows come from
+    // the share — i.e. the demo would show a generic org member who happens to
+    // see two records, not a sales rep.
     const setNames = new Set(permissionSets.map((p) => String(p.name)));
     const bad: string[] = [];
     for (const m of DemoOrgStaffing) {
-      const territorial = m.positions.some((p) => p === 'na_sales_team' || p === 'eu_sales_team');
-      if (!territorial) continue;
+      if (!territorial(m)) continue;
       // A set whose NAME matches a position is bound to it at install time.
       if (!m.positions.some((p) => setNames.has(p))) {
         bad.push(`${m.email}: holds only territory position(s) [${m.positions.join(', ')}], so no permission set applies`);
       }
     }
     expect(bad, `demo reps that would log in as generic members:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('never gives a territory rep an org-wide view of crm_account', () => {
+    // THE mechanism question, pinned. What bounds a rep to their territory is
+    // NOT their profile — it is `crm_account`'s `private` OWD (rows are
+    // owner-visible only, and the reps own nothing) plus the `sys_record_share`
+    // rows their territory rule materialised. Read DEPTH is the "widest across
+    // granting sets" (ADR-0057 D1), and both sets in play compute `own`:
+    // `member_default` (the additive baseline every org member holds) and
+    // `SalesRepProfile.crm_account` (`viewAllRecords: false, readScope: 'own'`).
+    //
+    // So a single flipped bit on any set bound to a position a rep holds —
+    // `viewAllRecords: true` — widens the depth to all-rows, the rep reads all
+    // nine accounts, and the territory grant proves nothing while the org still
+    // looks correctly staffed. That is not hypothetical: it is exactly what
+    // `sales_manager` does (measured: she reads all 9, which is right for a
+    // manager). Without this assertion the whole demo would be true by
+    // coincidence, and a profile edit could switch it off in silence.
+    const setByName = new Map(permissionSets.map((p) => [String(p.name), p]));
+    const bad: string[] = [];
+    for (const m of DemoOrgStaffing) {
+      if (!territorial(m)) continue;
+      for (const position of m.positions) {
+        const grant = (setByName.get(position)?.objects ?? {})['crm_account'];
+        if (!grant) continue;
+        if (grant.viewAllRecords === true) {
+          bad.push(
+            `${m.email}: position "${position}" grants viewAllRecords on crm_account — they would ` +
+            `read every account, territory or not`,
+          );
+        }
+        if (grant.readScope != null && grant.readScope !== 'own') {
+          bad.push(
+            `${m.email}: position "${position}" reads crm_account at scope "${grant.readScope}", ` +
+            `which is wider than the 'own' depth the territory demo rests on`,
+          );
+        }
+      }
+    }
+    expect(
+      bad,
+      `territory reps whose row set is no longer bounded by sharing:\n  ${bad.join('\n  ')}`,
+    ).toEqual([]);
   });
 });
 

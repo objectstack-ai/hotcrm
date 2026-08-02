@@ -68,17 +68,49 @@
  * nodes that route to them declare `onEmptyApprovers: 'admin_rescue'`, so an
  * empty bench holds for admin takeover instead of stranding the record.
  *
- * ### Why a rep holds TWO positions
+ * ### Why a rep holds TWO positions — and what actually bounds the territory
  *
- * `na_sales_team` / `eu_sales_team` are territory groupings — no permission set
- * is bound to them, so on their own they widen WHICH RECORDS a user sees
- * without saying what a user may DO. Measured on a fresh install: a user
- * holding only `eu_sales_team` still reads the 2 EU accounts, because the
- * platform's additive baseline (ADR-0090 D5) gives every org member
- * `member_default` — i.e. the demo would show a generic member who happens to
- * see two accounts, not a sales rep. Pairing the territory with the functional
- * `sales_rep` position (which name-binds this app's `SalesRepProfile`) is what
- * makes the persona real: their own book, plus the territory.
+ * `na_sales_team` / `eu_sales_team` are territory groupings: no permission set
+ * is bound to either, so holding one says nothing about what a user may DO.
+ * Measured on a fresh install, a user holding ONLY `eu_sales_team` already
+ * reads the 2 EU accounts — `POST /api/v1/security/explain` for that user:
+ *
+ *     principal        positions [org_member, eu_sales_team, everyone]
+ *                      → permission set(s) [member_default]
+ *     object_crud      grants — read on 'crm_account' is granted by [member_default]
+ *     owd_baseline     narrows — Record baseline (OWD) is private: rows are
+ *                      owner-visible only; sharing can only WIDEN from here.
+ *     depth            Effective read depth: 'own' (ADR-0057 D1 — widest
+ *                      across granting sets)
+ *
+ * Read that layer stack carefully, because it says which layer is doing which
+ * job — and the answer is NOT "the profile narrows them to their territory":
+ *
+ *   - the OBJECT-LEVEL door on `crm_account` is opened by `member_default`, the
+ *     platform's additive baseline that every org member gets (ADR-0090 D5).
+ *     It is open with or without `sales_rep`.
+ *   - the ROW SET is decided one layer down and is the whole ballgame:
+ *     `crm_account` is `sharingModel: 'private'`, so the OWD baseline admits
+ *     only rows the caller OWNS, and `sys_record_share` can only widen it. The
+ *     reps own nothing (`demo_bootstrap` claimed every seeded record for the
+ *     dev admin), so their row set is exactly the grants their territory rule
+ *     materialised — 6 for NA, 2 for EU, and the SG account for nobody.
+ *
+ * So adding `sales_rep` widens no rows at all: its `crm_account` grant is
+ * `viewAllRecords: false, readScope: 'own'`, the same depth `member_default`
+ * already computes ("widest across granting sets" — an equal depth changes
+ * nothing). What it adds is what the persona may DO — create/edit, the
+ * `health_score` / `annual_revenue` field grants, export — i.e. it turns a
+ * generic org member who happens to see two records into a sales rep.
+ *
+ * The falsifiable part, and the reason `test/demo-staffing.test.ts` pins it: a
+ * set bound to a position a territory rep holds MUST NOT grant `viewAllRecords`
+ * on `crm_account`. That would widen the depth to all-rows and the rep would
+ * read all nine accounts, so the territory grant would stop proving anything
+ * while still looking staffed. This is not hypothetical — it is exactly what
+ * the sales manager does: `SalesManagerProfile` declares `viewAllRecords: true`
+ * and she reads all 9 (measured), which is correct for a manager and would be
+ * silent death for a territory demo.
  */
 
 /** One person in the demo org. Add a person = add a row. */

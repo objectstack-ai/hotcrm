@@ -308,9 +308,16 @@ async function main(): Promise<number> {
     for (const f of failures) console.log(`   · ${f}`);
     return 1;
   }
+  // The banner names the accounts but never their passwords. Nothing is hidden
+  // by that — the passwords are declared in `src/sharing/demo-staffing.ts`, one
+  // file away — but a run's stdout ends up in terminals, CI logs and pasted
+  // snippets, and "echo the credential you just used" is the one shape this
+  // reference app should not be teaching. (CodeQL says the same thing:
+  // js/clear-text-logging of sensitive information.)
   console.log(
     `\n🎉 demo org staffed. Sign in as any of: ` +
-    `${DemoOrgStaffing.map((m) => `${m.email} / ${m.password}`).join(' · ')}\n` +
+    `${DemoOrgStaffing.map((m) => m.email).join(' · ')}\n` +
+    `   Passwords are declared in src/sharing/demo-staffing.ts.\n` +
     `   Submit an opportunity over $100K to see manager_review route to ` +
     `${DemoOrgStaffing.find((m) => m.positions.includes('sales_manager'))?.email}.\n`,
   );

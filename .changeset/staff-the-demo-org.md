@@ -36,9 +36,22 @@ metadata: nothing in the published artifact can create a user, and
 metadata either — identity tables are `managedBy: 'better-auth'`, so a row
 inserted around that surface has no credential and nobody can sign in as it.)
 
-One platform behaviour worth carrying forward, measured here: `plugin-sharing`
-materialises rule grants from a record-write hook that returns early on
-`isSystem` writes, and every seeded row is written with `isSystem: true`. So
-staffing alone leaves `sys_record_share` empty until a rule is re-evaluated —
-which the script does, and which a server restart also does via the boot
-backfill. Fixes #640. Refs #621, #638, #622, #488.
+Two platform behaviours worth carrying forward, both measured here.
+
+`plugin-sharing` materialises rule grants from a record-write hook that returns
+early on `isSystem` writes, and every seeded row is written with
+`isSystem: true`. So staffing alone leaves `sys_record_share` empty until a rule
+is re-evaluated — which the script does, and which a server restart also does
+via the boot backfill.
+
+And what bounds a rep to their territory is not their profile. Object-level read
+on `crm_account` comes from `member_default`, the additive baseline every org
+member holds (ADR-0090 D5); the row set comes from `crm_account` being `private`
+(rows are owner-visible only, and the reps own nothing) plus the shares their
+territory rule materialised. Each rep also holds `sales_rep`, which widens no
+rows — `viewAllRecords: false, readScope: 'own'` is the same depth the baseline
+computes — but makes the persona a sales rep rather than a generic member. The
+corollary is now a test: a set bound to a position a territory rep holds must
+never grant `viewAllRecords` on `crm_account`, or the rep reads all nine
+accounts and the territory grant proves nothing while the org still looks
+staffed. Fixes #640. Refs #621, #638, #622, #488.
