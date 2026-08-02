@@ -26,6 +26,32 @@ export const LeadConversionFlow: Flow = {
   nodes: [
     { id: 'start', type: 'start', label: 'Start', config: { objectName: 'crm_lead' } },
     {
+      // BINDING, not guarding (#643). `createOpportunity` is the only variable
+      // any condition in this flow reads that no node upstream of the read
+      // assigns: `matchedAccount` / `matchedContact` are `get_record` outputs
+      // and `get_record` always writes its `outputVariable` (with `null` on a
+      // miss), but `createOpportunity` arrives only if the screen runner sends
+      // it back in the resume signal. A runner that posts just the fields the
+      // user touched leaves it UNBOUND, and edge `e16` then aborts with
+      // `No such key: createOpportunity` — reproduced end-to-end: the run is
+      // recorded `failed` and the lead is never marked converted.
+      //
+      // The remedy is NOT a `has()` guard. A guard would encode "a missing
+      // answer means No" inside the predicate; what is actually wrong is that
+      // the graph left the variable unbound. Declaring it in `flow.variables`
+      // does not help either — measured on 17.0.0-rc.1, `FlowVariableSchema` is
+      // strict `{ name, type, isInput, isOutput }` with NO `defaultValue`, and
+      // `AutomationEngine.execute` binds a declared input only when
+      // `context.params[name] !== undefined`. So the binding has to be an
+      // `assignment` node, and it has to sit ahead of the screen so the resume
+      // signal overwrites it whenever the runner does answer.
+      //
+      // `false` mirrors the screen field's own `defaultValue: false` — the
+      // commonest path is "convert this lead WITHOUT an opportunity".
+      id: 'init_defaults', type: 'assignment', label: 'Default Conversion Options',
+      config: { assignments: { createOpportunity: false } },
+    },
+    {
       id: 'screen_1', type: 'screen', label: 'Conversion Details',
       config: {
         // `visibleWhen` on a screen field is BARE CEL over the screen's own
@@ -185,7 +211,8 @@ export const LeadConversionFlow: Flow = {
   ],
 
   edges: [
-    { id: 'e1', source: 'start', target: 'screen_1', type: 'default' },
+    { id: 'e0', source: 'start', target: 'init_defaults', type: 'default' },
+    { id: 'e1', source: 'init_defaults', target: 'screen_1', type: 'default' },
     { id: 'e2', source: 'screen_1', target: 'get_lead', type: 'default' },
     { id: 'e3', source: 'get_lead', target: 'find_account', type: 'default' },
     { id: 'e4', source: 'find_account', target: 'decision_account', type: 'default' },

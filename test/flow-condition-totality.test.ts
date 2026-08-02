@@ -136,8 +136,15 @@ interface FlowCondition {
  *
  * Conditions over flow-local variables (`vars.x`, `oppRecord.x` — the output
  * of a `get_record` node) are deliberately NOT included. They are a different
- * shape with a different failure mode (an unset flow VARIABLE, not a sparse
- * driver row) and are tracked separately.
+ * shape with a different failure mode and are owned by
+ * `test/flow-variable-conditions.test.ts`, which measured them separately
+ * (#643) and found TWO classes with opposite remedies: a field read off a
+ * `get_record` output wants `has()` guards like these, while an unbindable
+ * VARIABLE wants binding in the flow graph and must NOT be guarded. Do not
+ * carry either conclusion across — that file's guards are additionally
+ * `vars.`-scoped, because measured, the bare `has(oppRecord.f)` spelling still
+ * aborts with `Unknown variable: oppRecord` on an unbound variable while
+ * `has(vars.oppRecord)` answers `false`.
  */
 const flowConditions: FlowCondition[] = flows
   .filter((f) => f.type === 'record_change')

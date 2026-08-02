@@ -108,7 +108,20 @@ export const OpportunityApprovalFlow: Flow = {
       id: 'check_high_value',
       type: 'decision',
       label: 'High Value (> $500K)?',
-      config: { condition: P`oppRecord.amount > 500000` },
+      // TOTALITY (#643): `oppRecord` is a `get_record` OUTPUT, so the read
+      // needs `has(vars.oppRecord)` (the variable), `has(vars.oppRecord.amount)`
+      // (the column — `findOne` answers a miss with `null`, and a sparse driver
+      // row omits an unwritten column outright) and `!= null` (an explicit null
+      // passes `has()` and the ordering comparison then aborts with
+      // `no such overload: dyn<null> > int`). Measured total as authored today
+      // — `amount` is `required` on `crm_opportunity` and this `get_record` is
+      // keyed on the row that just fired the trigger — but that is the
+      // neighbouring schema doing the work, exactly as in the start condition
+      // above. `vars.`-scoped rather than bare: `has(oppRecord.amount)` still
+      // aborts with `Unknown variable: oppRecord` on an unbound variable,
+      // `has(vars.oppRecord)` answers `false` (measured).
+      config: { condition: P`has(vars.oppRecord) && has(vars.oppRecord.amount)
+        && vars.oppRecord.amount != null && vars.oppRecord.amount > 500000` },
     },
 
     // ── Tier 2: Sales Director sign-off (deals > $500K only) ────────
@@ -188,9 +201,17 @@ export const OpportunityApprovalFlow: Flow = {
     { id: 'e3', source: 'manager_review', target: 'check_high_value', type: 'default', label: 'approve' },
     { id: 'e4', source: 'manager_review', target: 'mark_rejected', type: 'default', label: 'reject' },
 
-    // Tier gate (decision-node conditional branches)
-    { id: 'e5', source: 'check_high_value', target: 'director_signoff', type: 'conditional', condition: P`oppRecord.amount > 500000`, label: 'High value (> $500K)' },
-    { id: 'e6', source: 'check_high_value', target: 'mark_approved', type: 'conditional', condition: P`oppRecord.amount <= 500000`, label: 'Standard (≤ $500K)' },
+    // Tier gate (decision-node conditional branches). These EDGES are the live
+    // sites — the engine never evaluates a `decision` node's singular
+    // `config.condition` — and they must PARTITION, so the guards are written
+    // in opposite polarity. A deal whose amount cannot be read lands on
+    // `mark_approved`: the manager has already approved it, and an unreadable
+    // amount must not strand an approved deal in a locked, undecidable
+    // director step.
+    { id: 'e5', source: 'check_high_value', target: 'director_signoff', type: 'conditional', condition: P`has(vars.oppRecord) && has(vars.oppRecord.amount)
+      && vars.oppRecord.amount != null && vars.oppRecord.amount > 500000`, label: 'High value (> $500K)' },
+    { id: 'e6', source: 'check_high_value', target: 'mark_approved', type: 'conditional', condition: P`!has(vars.oppRecord) || !has(vars.oppRecord.amount)
+      || vars.oppRecord.amount == null || vars.oppRecord.amount <= 500000`, label: 'Standard (≤ $500K)' },
 
     // Director decision (approval-node branch labels)
     { id: 'e7', source: 'director_signoff', target: 'mark_approved', type: 'default', label: 'approve' },

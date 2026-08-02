@@ -64,8 +64,20 @@ export const CampaignEnrollmentFlow: Flow = {
       // Only enroll into campaigns that are actually running (or planned):
       // topping up a completed/aborted campaign would corrupt its final
       // snapshot metrics. (Status values: planning / in_progress / completed / aborted.)
+      //
+      // TOTALITY (#643): `has(vars.campaignRecord)` first, then
+      // `has(vars.campaignRecord.status)`. `campaignRecord` is a `get_record`
+      // OUTPUT, and `findOne` answers a miss with `null` — so a campaign that
+      // was deleted (or hidden by sharing) between the action click and this
+      // node leaves the variable bound to null, and the unguarded read aborted
+      // with `No such key: status` on edge `e4`. Reproduced end-to-end: the run
+      // was recorded `failed` and not one lead was enrolled. `status` itself is
+      // `required` on `crm_campaign` today so the column is never sparse — but
+      // that is the neighbouring schema doing the work, not this predicate, so
+      // it is guarded too.
       id: 'check_campaign_open', type: 'decision', label: 'Campaign Open?',
-      config: { condition: P`vars.campaignRecord.status == "planning" || vars.campaignRecord.status == "in_progress"` },
+      config: { condition: P`has(vars.campaignRecord) && has(vars.campaignRecord.status)
+        && (vars.campaignRecord.status == "planning" || vars.campaignRecord.status == "in_progress")` },
     },
     {
       id: 'query_leads', type: 'get_record', label: 'Find Eligible Leads',
@@ -128,7 +140,12 @@ export const CampaignEnrollmentFlow: Flow = {
     { id: 'e2', source: 'screen_1', target: 'get_campaign', type: 'default' },
     { id: 'e3', source: 'get_campaign', target: 'check_campaign_open', type: 'default' },
     // Closed campaign → no edge → flow ends without enrolling.
-    { id: 'e4', source: 'check_campaign_open', target: 'query_leads', type: 'conditional', condition: P`vars.campaignRecord.status == "planning" || vars.campaignRecord.status == "in_progress"`, label: 'Open' },
+    // Guarded identically to `check_campaign_open` — see the note there. The
+    // EDGE is the live site: a `decision` node's singular `config.condition` is
+    // never read by the engine (it evaluates `config.conditions[]`), so this
+    // copy is the one that decides, and the one that aborted.
+    { id: 'e4', source: 'check_campaign_open', target: 'query_leads', type: 'conditional', condition: P`has(vars.campaignRecord) && has(vars.campaignRecord.status)
+      && (vars.campaignRecord.status == "planning" || vars.campaignRecord.status == "in_progress")`, label: 'Open' },
     { id: 'e5', source: 'query_leads', target: 'loop_leads', type: 'default' },
     { id: 'e6', source: 'loop_leads', target: 'end', type: 'default' },
   ],
