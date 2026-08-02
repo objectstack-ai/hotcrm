@@ -75,7 +75,7 @@ export const OpportunityDataset = defineDataset({
     // all. The remaining asymmetry — a group with losses but NO wins reports a
     // null win rate rather than 0% — is a platform behaviour, not something a
     // widget can paper over; it is pinned by `test/win-loss-capture.test.ts`
-    // and filed upstream. The tables show `lost_count` next to `win_rate`
+    // and filed as #656. The tables show `lost_count` next to `win_rate`
     // precisely so that a blank rate reads as "0 wins out of 3", not as
     // "no data".
     { name: 'won_count', label: 'Won Deals', aggregate: 'count', filter: { stage: 'closed_won' } },

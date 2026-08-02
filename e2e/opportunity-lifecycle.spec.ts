@@ -89,9 +89,17 @@ test.describe('opportunity_lifecycle hook (through the real kernel)', () => {
     const id = rec.id as string;
     created.push(id);
 
-    const updated = await patchOpportunity(api, id, { stage: 'closed_won' });
+    // `win_reason` is `requiredWhen` stage is closed_won (#593) — the server
+    // rejects the close without it with a 400 VALIDATION_FAILED, which is what
+    // `opportunity-win-loss-capture.spec.ts` asserts on purpose. Here it is
+    // supplied so this file keeps testing the hook it is about.
+    const updated = await patchOpportunity(api, id, {
+      stage: 'closed_won',
+      win_reason: 'best_fit',
+    });
 
     expect(updated.stage).toBe('closed_won');
+    expect(updated.win_reason).toBe('best_fit');
     expect(updated.probability).toBe(100);
     expect(updated.expected_revenue).toBe(25_000);
     expect(updated.forecast_category).toBe('closed');
@@ -124,9 +132,13 @@ test.describe('opportunity_lifecycle hook (through the real kernel)', () => {
     const id = rec.id as string;
     created.push(id);
 
-    const updated = await patchOpportunity(api, id, { stage: 'closed_lost' });
+    const updated = await patchOpportunity(api, id, {
+      stage: 'closed_lost',
+      loss_reason: 'no_budget', // requiredWhen closed_lost (#593)
+    });
 
     expect(updated.stage).toBe('closed_lost');
+    expect(updated.loss_reason).toBe('no_budget');
     expect(updated.probability).toBe(0);
     expect(updated.expected_revenue).toBe(0);
     expect(updated.forecast_category).toBe('omitted');
@@ -159,7 +171,7 @@ test.describe('opportunity_lifecycle hook (through the real kernel)', () => {
     });
     const id = rec.id as string;
     created.push(id);
-    await patchOpportunity(api, id, { stage: 'closed_won' });
+    await patchOpportunity(api, id, { stage: 'closed_won', win_reason: 'better_price' });
 
     // Business field — the freeze guard must reject it.
     const rejected = await api.patch(`${BASE}/${id}`, { data: { amount: 999 } });

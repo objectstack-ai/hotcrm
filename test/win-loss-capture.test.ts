@@ -598,10 +598,15 @@ describe('win rate is measured, and both halves are load-bearing', () => {
     // `cold_call`, and a derived ratio over an absent input is null. The rate
     // reads blank where 0% would be right.
     //
-    // Pinned rather than papered over: a consumer-side `?? 0` would be exactly
-    // the lenient-consumer habit this repo keeps paying for, and the fix
-    // belongs in the executor. The shipped table puts `lost_count` beside
-    // `win_rate` so the blank reads as "0 of 2", not as "no data".
+    // Pinned rather than papered over (#656): a consumer-side `?? 0` would be
+    // exactly the lenient-consumer habit this repo keeps paying for, and the
+    // fix belongs in the executor's merge step, which is the only place that
+    // knows a `count` over no rows is 0 while an `avg` over no rows is not.
+    // The shipped table puts `lost_count` beside `win_rate` so the blank reads
+    // as "0 of 2", not as "no data".
+    //
+    // This assertion is deliberately written to FAIL when the platform fixes
+    // it — that is the notification, not a regression.
     const rows = await run(widget('win_rate_by_lead_source'), {});
     const coldCall = rows.find((r) => r.lead_source === 'cold_call')!;
     expect(coldCall.lost_count).toBe(2);
