@@ -1,0 +1,208 @@
+---
+title: 匯入你自己的資料
+description: 使用 HotCRM 內建的匯入對應，從試算表載入客戶、聯絡人與潛在客戶 —— 先試算，出錯可一次復原。
+---
+
+# 匯入你自己的資料
+
+用別人的示範資料評估 HotCRM 說明不了什麼。本指南把 **你自己的** 客戶、聯絡人與潛在
+客戶從試算表載入 —— 不需要逐欄設定對應，檔案有問題也能一次呼叫復原。
+
+HotCRM 內建三組 **匯入對應（import mapping）**。對應就是儲存好的「欄位 → 欄位」投影：
+在請求中指定名稱即可，HotCRM 已經知道標題列的 *Account Owner Email* 是客戶負責人，也
+知道 *SaaS* 對應 *Software / SaaS* 產業。
+
+| 對應名稱 | 匯入至 | 比對既有記錄的依據 |
+| --- | --- | --- |
+| `crm_account_import` | 客戶 | 客戶名稱（Account Name） |
+| `crm_contact_import` | 聯絡人 | 電子郵件（Email） |
+| `crm_lead_import` | 潛在客戶 | 電子郵件（Email） |
+
+由於每組對應都以業務主鍵比對，**重複匯入同一個檔案是更新而非重複建立** —— 在表格中
+改好一欄，再上傳一次即可。
+
+## 步驟 1 —— 從範本開始
+
+標題列完全對應的範本位於 `assets/import-templates/`：
+
+- `accounts.csv`
+- `contacts.csv`
+- `leads.csv`
+
+每個範本附 50 列範例資料。刪除範例列，把你自己的資料貼在相同標題列之下，**請勿更動
+標題列** —— 對應正是以標題文字比對。額外增加的欄位會被忽略，因此從舊系統多匯出幾欄
+並無妨礙。
+
+**匯入順序：客戶 → 聯絡人 → 潛在客戶。** 每位聯絡人都必須指向已存在的客戶
+（*Account Name* 欄），先匯入聯絡人會失敗。
+
+## 步驟 2 —— 先試算
+
+試算會驗證並轉換每一列，但 **不寫入任何資料**。正式匯入前請務必先執行一次。
+
+```bash
+curl -X POST "$HOTCRM/api/v1/data/crm_account/import" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{
+        "format": "csv",
+        "csv": "<檔案內容>",
+        "mappingName": "crm_account_import",
+        "dryRun": true,
+        "runAutomations": false
+      }'
+```
+
+回傳逐列報告：
+
+```json
+{
+  "total": 6, "ok": 1, "errors": 5, "created": 1,
+  "results": [
+    { "row": 2, "ok": false, "action": "failed", "field": "name",
+      "code": "required", "error": "Account Name is required" },
+    { "row": 3, "ok": false, "action": "failed", "field": "industry",
+      "code": "invalid_option", "error": "Industry: \"Underwater Basket Weaving\" is not a known option" },
+    { "row": 5, "ok": false, "action": "failed", "field": "owner",
+      "code": "reference_not_found", "error": "Account Owner: no record matches \"nobody@nowhere.example.com\"" }
+  ]
+}
+```
+
+`row` 就是檔案中的列號，據此修正表格後重跑即可。
+
+> **試算時請加上 `runAutomations: false`。** 自動化啟用時（預設值）試算會略過必填
+> 欄位預檢 —— 因為業務規則可能在真正寫入時補上空欄位，於是缺少 *Account Name* 的
+> 列會被報成正常，接著在匯入時失敗。加上 `runAutomations: false` 才能得到嚴格報告。
+> 正式匯入請保持預設（`true`），讓 HotCRM 的業務規則照常執行。
+
+## 步驟 3 —— 以作業方式匯入
+
+只要超過寥寥數列，就應該使用 **作業（job）** 端點：它在背景處理並回報進度，而且只有
+這條路徑可以復原。
+
+```bash
+curl -X POST "$HOTCRM/api/v1/data/crm_account/import/jobs" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{ "format": "csv", "csv": "<檔案內容>", "mappingName": "crm_account_import" }'
+```
+
+```json
+{ "jobId": "imp_msbr5xelz33iwx6k", "object": "crm_account", "status": "pending", "total": 50 }
+```
+
+輪詢進度：
+
+```bash
+curl "$HOTCRM/api/v1/data/import/jobs/$JOB_ID" -H "Authorization: Bearer $TOKEN"
+```
+
+```json
+{
+  "jobId": "imp_msbr5xelz33iwx6k", "status": "succeeded", "total": 50, "processed": 50,
+  "created": 50, "updated": 0, "skipped": 0, "errors": 0,
+  "percentComplete": 100, "undoable": true
+}
+```
+
+`GET /api/v1/data/import/jobs/$JOB_ID/results` 會回傳與試算相同的逐列報告；執行中的
+作業可用 `POST /api/v1/data/import/jobs/$JOB_ID/cancel` 取消。
+
+在 JavaScript SDK 中，對應的三個呼叫是 `data.createImportJob(object, request)`、
+`data.getImportJobProgress(jobId)` 與 `data.getImportJobResults(jobId)`。
+
+## 步驟 4 —— 復原一次錯誤的匯入
+
+若檔案有誤，可將整個作業回復：
+
+```bash
+curl -X POST "$HOTCRM/api/v1/data/import/jobs/$JOB_ID/undo" -H "Authorization: Bearer $TOKEN"
+```
+
+```json
+{ "success": true, "jobId": "imp_msbr5xelz33iwx6k", "object": "crm_account",
+  "deleted": 50, "restored": 0, "failed": 0 }
+```
+
+作業 **新建** 的記錄會被刪除，作業 **更新** 的記錄會還原為匯入前的值。SDK 呼叫為
+`data.undoImportJob(jobId)`。
+
+復原順序與匯入相反 —— 先潛在客戶、再聯絡人、最後客戶 —— 才不會讓聯絡人指向已被刪除
+的客戶。
+
+作業上的 `undoable: true` 代表可復原。以下情況為 `false`：試算（本來就沒寫入）、
+超過 **5,000 列** 的作業、仍在執行中的作業，以及已經復原過的作業。
+
+## 關於負責人
+
+三份範本都帶有負責人欄位 —— *Account Owner Email*、*Contact Owner Email*、
+*Lead Owner Email* —— 以 HotCRM 使用者的電子郵件位址比對。
+
+- **填入某位使用者的電子郵件** → 該使用者成為記錄的負責人。
+- **填入比對不到使用者的位址** → 該列 **失敗**，錯誤碼為 `reference_not_found`。系統
+  不會臆測。請先邀請該使用者，或清空這個儲存格。
+- **留空** → 記錄歸 **執行匯入的你** 所有。
+
+最後一點對潛在客戶同樣成立：留空時負責人就是匯入者，一般的輪流指派 **不會** 接手。
+若需要分派給團隊，請於匯入後重新指派。
+
+## 每組對應讀取哪些欄位
+
+只會讀取下列欄位，檔案中的其他內容一律忽略。
+
+### 客戶（`crm_account_import`）
+
+`Account Name` · `Account Type` · `Industry` · `Website` · `Phone` ·
+`Annual Revenue` · `Employees` · `Account Owner Email` · `Parent Account` ·
+`Description`
+
+*Parent Account* 指向另一個客戶，且可以是同一個檔案中較後面才建立的那一列。
+*Website* 必須是完整網址（`https://…`），否則該列會被拒絕。
+
+### 聯絡人（`crm_contact_import`）
+
+`Salutation` · `First Name` · `Last Name` · `Account Name` · `Title` ·
+`Department` · `Email` · `Phone` · `Mobile` · `Mailing Street` · `Mailing City` ·
+`Mailing State` · `Mailing Postal Code` · `Mailing Country` · `Birthdate` ·
+`Lead Source` · `Contact Owner Email` · `Description`
+
+*First Name*、*Last Name*、*Email* 與 *Account Name* 為必填。
+
+### 潛在客戶（`crm_lead_import`）
+
+`Salutation` · `First Name` · `Last Name` · `Company` · `Title` · `Industry` ·
+`Email` · `Phone` · `Mobile` · `Website` · `Lead Status` · `Lead Source` ·
+`Annual Revenue` · `Employees` · `Lead Owner Email` · `Description`
+
+*First Name*、*Last Name*、*Company* 與 *Email* 為必填。*Lead Status* 留空時，潛在
+客戶會落為 **New**。
+
+## 值如何比對
+
+- **選項清單**（*Industry*、*Lead Source*、*Account Type*、*Lead Status*、
+  *Department*、*Salutation*）接受 HotCRM 自己的標籤或代碼，且不區分大小寫 ——
+  *Technology* 與 *technology* 都可以。這些對應還會翻譯其他系統的用語：*SaaS*、*IT*、
+  *Financial Services* 分別轉為 *Software / SaaS*、*Technology*、*Finance*；
+  *Trade Show* 轉為 *Event / Trade Show*；*Working* 與 *Nurturing* 轉為 *Contacted*。
+  仍然無法辨識的值會讓該列失敗，而不會被悄悄丟棄。
+- **日期** 建議使用 `YYYY-MM-DD`。
+- **數字** 必須是純數字（`1500000`，不可寫成 `1.5M`）。
+- **空白儲存格** 不會覆寫欄位，欄位預設值照常生效。
+- **首尾空白** 會被自動去除。
+
+## 已知限制
+
+- **地址僅對聯絡人生效。** 聯絡人有獨立的郵寄地址欄位，因此其地址欄可以匯入；客戶與
+  潛在客戶將地址存為單一結構化欄位，無法由分散的試算表欄位組裝而成 —— 這兩份範本不
+  含地址欄，自行加上也不會生效。請於匯入後在介面或以 API 補登。
+- **每個作業上限 50,000 列。** 更大的檔案請拆分。
+- **復原上限 5,000 列。** 超過此規模的匯入仍會完成，但無法回復 —— 若想保留這道保險，
+  請分批匯入。
+- **Excel 亦可**：以 `format: "xlsx"` 並將活頁簿位元組以 `xlsxBase64` 傳入（取代
+  `csv`），對應的用法完全相同。
+
+## 延伸閱讀
+
+- [匯入與匯出](/zh-Hant/docs/guides/import-and-export) —— 匯出、遷移與資料保存請求。
+- [共用與安全](/zh-Hant/docs/administration/sharing-and-security) —— 資料進來之後由誰看見。
