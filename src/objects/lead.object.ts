@@ -79,6 +79,43 @@ export const Lead = ObjectSchema.create({
       group: 'company_info',
     }),
 
+    /**
+     * Case- and whitespace-folded copy of `company` — the value lead conversion
+     * compares against `crm_account.name_normalized` (#626).
+     *
+     * ### Why the LEAD needs one too
+     *
+     * A normalized column on `crm_account` alone does not fix anything: the
+     * conversion flow would then be comparing a raw company string against a
+     * folded account name, and `"ACME  Corp"` still would not match
+     * `acme corp`. Both sides of the comparison have to be canonical, and the
+     * flow cannot canonicalize either one — measured on 17.0.0-rc.1,
+     * `service-automation`'s `resolveToken` accepts exactly one function form
+     * (`NOW()` / `TODAY()`), so `{LOWER(x)}`, `{TRIM(x)}` and
+     * `{x.toLowerCase()}` all resolve to `undefined`. See the field comment on
+     * `crm_account.name_normalized` for the full measurement, and
+     * `test/account-name-normalized-match.test.ts`, which re-runs it.
+     *
+     * `company` itself is NOT folded in place: it is the display value, it is
+     * copied verbatim onto the account the conversion creates, and lower-casing
+     * it would ship `acme corp` as a customer-visible account name. That is the
+     * one way this differs from `email`, which has no meaningful case and so is
+     * canonicalized in place.
+     *
+     * Derived, never authored: `lead_duplicate_check` recomputes it on every
+     * write that carries `company`. Not indexed — nothing filters on it; it is
+     * read off the lead record the flow already fetched.
+     */
+    company_normalized: Field.text({
+      label: 'Company (Normalized)',
+      description:
+        'Match key for lead conversion: Company lower-cased, trimmed, with internal whitespace collapsed. Maintained by the lead_duplicate_check hook — never edit directly.',
+      readonly: true,
+      hidden: true,
+      maxLength: 255,
+      group: 'company_info',
+    }),
+
     title: Field.text({
       label: 'Job Title',
       group: 'company_info',

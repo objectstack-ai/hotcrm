@@ -172,6 +172,74 @@ orphans (the `__search` class above is excluded until #3955 lands):
 `--allow-destructive` drops columns irreversibly — never run it without the
 backup from step 2, and never against a database whose plan you have not read.
 
+### 3.3 Backfilling a hook-derived column
+
+Some HotCRM columns are **derived**: no one authors them, a lifecycle hook
+computes them from another field on every write. Two of them are match keys the
+lead-conversion flow reads (#626):
+
+| Column | Derived from | Writer |
+| --- | --- | --- |
+| `crm_account.name_normalized` | `crm_account.name` | `account_protection` |
+| `crm_lead.company_normalized` | `crm_lead.company` | `lead_duplicate_check` |
+
+A **fresh install needs nothing here.** Seed writes run lifecycle hooks
+(`skipTriggers` suppresses record-change automation, not hooks — measured in
+#617), so every seeded and every subsequently created row gets its key stamped
+on insert.
+
+An **in-place upgrade does**. A row written before the column existed holds
+`NULL`, and the two objects then fail in two different ways — both measured, and
+worth knowing apart when triaging:
+
+- **An account with no key is invisible to the match.** The conversion finds
+  nothing and creates a *second* account for a company that already has one —
+  silently. This is the failure that makes the backfill non-optional: it is
+  more duplicates than the behaviour the change replaced.
+- **A lead with no key stops the conversion.** The filter value resolves to
+  nothing, and `get_record` refuses to run rather than widen the query:
+  *"refusing to run — 1 filter condition(s) resolved to nothing and were dropped
+  from the query: `{leadRecord.company_normalized}` (at name_normalized)"*. The
+  run is recorded failed and the lead stays unconverted. Loud, and the message
+  names the missing key — re-save that lead and convert again.
+
+> [!NOTE]
+> **This section is a contingency, not a step in any current upgrade.** HotCRM's
+> deployment shape today is **fresh installs only**, which is the whole reason
+> the procedure below is documented rather than automated, and the reason
+> `name_normalized` carries no unique index (see `src/objects/account.object.ts`).
+> Both conclusions are conditional on that premise. If HotCRM ever acquires
+> long-lived installs that upgrade in place, re-read this section and the index
+> decision together — neither is a universal judgement.
+
+The backfill is a **re-save**: write a row's own `name` / `company` back to it
+and the hook derives the key. Nothing else about the row changes, and re-saving
+a row that already has a key is a no-op — so the pass is idempotent and safe to
+repeat or to run over every row rather than hunting for the empty ones.
+
+1. **Take a database backup.** This rewrites every account and lead row.
+2. **Read the rows.** Any path you already use is fine — a Console export, a
+   `GET` against the record API, or a direct read replica query. You need only
+   `id` plus the source field (`name` for accounts, `company` for leads).
+3. **Write each row back to itself**, one `PATCH` per record, against the
+   record endpoint `PATCH {basePath}/data/:object/:id` (`basePath` is
+   `/api/v1`):
+
+   ```bash
+   curl -s -X PATCH "$HOTCRM/api/v1/data/crm_account/$ID" \
+     -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+     -d '{"name": "Acme Corp"}'          # the row's OWN current name
+   ```
+
+   Do **not** send `name_normalized` itself: it is `readonly`, so an incoming
+   value is stripped, and the hook would overwrite it anyway. Repeat for
+   `crm_lead` with `{"company": "…"}`; converted leads can be skipped
+   (`is_converted = true`) — nothing converts them again.
+4. **Verify.** No row should be left with an empty key, and the end-to-end
+   check is the one that matters: convert a lead whose company differs from an
+   existing account only in case or spacing, and confirm it **reuses** that
+   account instead of creating a second one.
+
 ## 4. Seed-data staleness — the #1 HotCRM pitfall
 
 Stale seed data is the most common cause of "Studio shows a red

@@ -76,10 +76,47 @@ export const LeadConversionFlow: Flow = {
     },
     {
       // Account dedupe: before creating a new account, look for an existing one
-      // with the same company name. Exact-name match (case/whitespace sensitive)
-      // — the standard lightweight dedupe; fuzzy matching is out of scope here.
+      // with the same company name — NORMALIZED (#626). This used to compare
+      // `crm_account.name` against the raw `{leadRecord.company}`, so
+      // "Acme Corp" and "ACME  Corp" produced two accounts.
+      //
+      // Both sides of this comparison are stored, hook-maintained columns, and
+      // that is forced rather than chosen: a flow template cannot normalize
+      // ANYTHING. `service-automation`'s `resolveToken` recognises exactly one
+      // function form — `NOW()` / `TODAY()` — and every bare identifier in the
+      // expression fallback is substituted before evaluation, so no string
+      // method is reachable either: `{LOWER(x)}`, `{TRIM(x)}` and
+      // `{x.toLowerCase()}` all resolve to `undefined`, and an unwrapped
+      // `LOWER({x})` interpolates literally to "LOWER(Acme Corp)". A formula
+      // field is no help either — it has no physical column to filter on. So
+      // the producer canonicalizes (`account_protection`,
+      // `lead_duplicate_check`) and this node does a plain, indexed equality
+      // match. `test/account-name-normalized-match.test.ts` re-measures all of
+      // that rather than trusting this paragraph.
+      //
+      // Normalize-then-EXACT only: lower + trim + collapse internal
+      // whitespace. Fuzzy matching stays out of scope, as before.
+      //
+      // If the lead carries NO `company_normalized`, this node does not fall
+      // back and does not match everything — `get_record` REFUSES TO RUN:
+      //
+      //   get_record: refusing to run — 1 filter condition(s) resolved to
+      //   nothing and were dropped from the query: `{leadRecord.company_
+      //   normalized}` (at name_normalized). An absent condition does not
+      //   narrow a query, it widens it …
+      //
+      // (measured on 17.0.0-rc.1; pinned in the test file). That is the right
+      // failure: the only way to reach it is a lead row written before this
+      // change, which is what the backfill in docs/MAINTENANCE.md §3.3 exists
+      // for, and a conversion that stops with that message is far cheaper to
+      // diagnose than one that quietly creates a duplicate account.
+      //
+      // Deliberately NOT papered over with a second, case-sensitive lookup on
+      // the raw `name`: a missing key means the producer did not run, and a
+      // tolerant consumer path would hide that while restoring the exact bug
+      // this node exists to fix.
       id: 'find_account', type: 'get_record', label: 'Find Existing Account',
-      config: { objectName: 'crm_account', filter: { name: '{leadRecord.company}' }, outputVariable: 'matchedAccount' },
+      config: { objectName: 'crm_account', filter: { name_normalized: '{leadRecord.company_normalized}' }, outputVariable: 'matchedAccount' },
     },
     {
       id: 'decision_account', type: 'decision', label: 'Account Already Exists?',
@@ -89,6 +126,12 @@ export const LeadConversionFlow: Flow = {
       // NEW-account branch. outputVariable is `createdAccount`; the assignment
       // below normalizes both branches onto a single `accountId` id string so
       // downstream nodes don't need to know which path ran.
+      //
+      // `name` carries the lead's company VERBATIM — the display value. The
+      // match key `name_normalized` is deliberately absent: it is readonly and
+      // hook-owned, and `account_protection` derives it from the `name` written
+      // here, so an account created by this node is immediately findable by the
+      // next conversion.
       id: 'create_account', type: 'create_record', label: 'Create Account',
       config: {
         objectName: 'crm_account',

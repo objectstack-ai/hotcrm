@@ -67,6 +67,64 @@ export const Account = ObjectSchema.create({
       group: 'basic',
     }),
 
+    /**
+     * Case- and whitespace-folded copy of `name` — the key lead conversion
+     * matches accounts on (#626).
+     *
+     * ### Why a stored column, and not any of the cheaper shapes
+     *
+     * `lead_conversion` used to dedupe on the raw `name`, so `"Acme Corp"` and
+     * `"ACME  Corp"` produced two accounts. Three cheaper fixes were measured
+     * against 17.0.0-rc.1 and all three are dead ends — `test/account-name-
+     * normalized-match.test.ts` re-measures each one so this comment cannot
+     * quietly go stale:
+     *
+     * - **The flow cannot normalize.** `service-automation`'s `resolveToken`
+     *   understands exactly one function form, `/^(NOW|TODAY)\s*\(\s*\)…/`.
+     *   `{LOWER(x)}`, `{TRIM(x)}` and `{x.toLowerCase()}` all resolve to
+     *   `undefined` (every bare identifier is substituted before the expression
+     *   is evaluated, so no string method is reachable), and an unwrapped
+     *   `LOWER({x})` interpolates literally to `"LOWER(Acme Corp)"`.
+     * - **A formula field cannot be the match key.** `driver-sql`'s
+     *   `fieldHasColumn` returns false for `type: 'formula'`, so a computed
+     *   value has no physical column and nothing can filter on it.
+     * - **`$regex` is not an answer.** On `driver-sql` it does not even run as a
+     *   regex: it compiles to `LIKE '%value%'`, a SUBSTRING match, so
+     *   `"Acme Corp"` would also match `"Not Acme Corp Ltd"`. It cannot collapse
+     *   internal whitespace, the leading wildcard defeats the index, and on the
+     *   in-memory driver it does compile user-controlled text into a `RegExp`.
+     *
+     * So the canonical form is established by the PRODUCER at write time — the
+     * same doctrine `crm_lead.email` / `crm_contact.email` already follow — and
+     * the reader does a plain, indexed equality match. The other side of that
+     * comparison is `crm_lead.company_normalized`, which exists for the same
+     * reason: a flow can compare two stored columns, it cannot compute either.
+     *
+     * ### What it holds
+     *
+     * `name`, trimmed, lower-cased, with runs of internal whitespace collapsed
+     * to one space. Nothing else — normalize-then-EXACT. Fuzzy matching
+     * (punctuation folding, legal-suffix stripping, edit distance) is
+     * deliberately out of scope; it turns a lookup into a ranking problem and
+     * needs a human review affordance this app does not have.
+     *
+     * Derived, never authored: `account.hook.ts` recomputes it on every write
+     * that carries `name`, and leaves it alone on every write that does not.
+     * `readonly` keeps user/API writes off it (INSERT is exempt from the strip
+     * and UPDATE strips only CALLER-supplied keys, so the hook's own write
+     * always survives); `hidden` keeps a machine-owned column out of forms and
+     * pickers — the same pairing `crm_forecast.seed_key` uses.
+     */
+    name_normalized: Field.text({
+      label: 'Account Name (Normalized)',
+      description:
+        'Match key for lead conversion: Account Name lower-cased, trimmed, with internal whitespace collapsed. Maintained by the account_protection hook — never edit directly.',
+      readonly: true,
+      hidden: true,
+      maxLength: 255,
+      group: 'system',
+    }),
+
     // ADR-0079 record title (was titleFormat '{account_number} - {name}').
     display_title: Field.formula({
       label: 'Display Title',
@@ -292,6 +350,35 @@ export const Account = ObjectSchema.create({
     // The territory sharing rules filter on this column, so it is read on
     // every account query a territory recipient makes (#621).
     { fields: ['billing_country'] },
+    // Lead conversion filters on this column on every single conversion, and
+    // the whole point of the column is to replace an unindexed `$regex` scan
+    // (#626). Plain index — NOT `unique: true`, deliberately:
+    //
+    // 1. Uniqueness of account names is already declared, per tenant, on the
+    //    `name` field (#625). A unique `name_normalized` SUBSUMES it (equal
+    //    names normalize equally), so adding one would force a re-decision of
+    //    the constraint #625 landed one round earlier — for a guarantee this
+    //    issue does not need.
+    // 2. This column is a MATCH key, not a policy. The defect was "the flow
+    //    fails to reuse an existing account"; the fix is for the flow to find
+    //    it. Rejecting a near-duplicate name outright is a separate,
+    //    data-quality decision — and this repo has already chosen the soft
+    //    shape for exactly that question once (#598 removed the hard unique on
+    //    `crm_lead.email` because refusing a repeat enquiry is worse than
+    //    recording it).
+    // 3. Measured hazard: `create_index` FAILS on any deployment that already
+    //    holds `Acme Corp` and `ACME  Corp` separately, so a unique index could
+    //    not be an upgrade step without a merge pass first. That hazard is
+    //    bounded today ONLY because this repo's deployment shape is fresh
+    //    installs — see docs/MAINTENANCE.md §3.3. If that premise ever changes,
+    //    this conclusion changes with it; it is conditional, not universal.
+    //
+    // Consequence, recorded rather than hidden: two accounts CAN still hold the
+    // same normalized name if something outside the flow creates them, and
+    // `get_record` has no `sort` option, so the conversion would reuse an
+    // arbitrary one of them. Reusing one of N is still strictly better than
+    // creating the N+1th, which is what happens today.
+    { fields: ['name_normalized'] },
   ],
   
   // API surface + capabilities. `trash` / `mru` were removed in @objectstack 12
