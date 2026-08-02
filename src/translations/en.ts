@@ -767,7 +767,7 @@ export const en: TranslationData = {
         pipeline_by_forecast_category: { title: 'Pipeline by Forecast Category', description: 'Open pipeline grouped by sales forecast category' },
         lead_source_breakdown: { title: 'Lead Source', description: 'Where our pipeline is coming from' },
         open_pipeline_by_owner: { title: 'Open Pipeline by Owner', description: 'In-flight pipeline value, deal count and avg win probability per rep' },
-        quota_attainment_by_rep: { title: 'Quota Attainment by Rep', description: 'Quota, closed revenue and attainment per rep, from forecast snapshots' },
+        quota_attainment_by_rep: { title: 'Quota Attainment by Rep', description: 'Current-quarter quota, closed revenue and attainment per rep, from forecast snapshots' },
         pipeline_stage_by_source: { title: 'Pipeline by Stage × Lead Source', description: 'Cross-tab of open opportunity amount by stage and source' },
       },
     },

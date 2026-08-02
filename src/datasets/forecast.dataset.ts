@@ -10,6 +10,33 @@ import { defineDataset } from '@objectstack/spec/ui';
  * ended up annotating its revenue chart with a hardcoded quota of 100000
  * while the seeded quotas run 500k–1.5M. Widgets that talk about quota must
  * bind here instead of inventing numbers.
+ *
+ * ## The measures are NOT additive across periods (#614)
+ *
+ * One row per owner per period, and the table deliberately holds several
+ * periods at once (a current quarter, a current month, several settled ones).
+ * `quota_sum` and friends are plain `sum`s, so a query that does not pin the
+ * period adds a quarter's quota to a month's quota to last quarter's quota and
+ * calls the result "Quota" — the defect that shipped on
+ * `quota_attainment_by_rep` until #614.
+ *
+ * Every consumer must therefore make the period unambiguous, one of two ways:
+ *
+ *   • group by `period_label` (unique per period, so each row IS one period) —
+ *     the shape a quota-over-time trend wants; or
+ *   • filter to a single snapshot with `period` + `period_start`
+ *     (`{ period: 'quarter', period_start: '{current_quarter_start}' }`) —
+ *     the shape a "where do we stand right now" scoreboard wants.
+ *
+ * `test/forecast-period-scope.test.ts` fails the build for any widget or report
+ * that does neither, so the trap cannot be walked into twice.
+ *
+ * This constraint is deliberately NOT a dataset-level `filter` pinning the
+ * latest quarter. A dataset filter is invisible at the call site: it would make
+ * the very trend the `period` / `period_label` dimensions exist to serve return
+ * a single row, with nothing on the widget to explain why. The failure mode of
+ * a missing widget filter is a loud test; the failure mode of a hidden dataset
+ * filter is silently missing data.
  */
 export const ForecastDataset = defineDataset({
   name: 'forecast_metrics',

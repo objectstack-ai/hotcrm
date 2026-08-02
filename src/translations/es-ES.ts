@@ -725,7 +725,7 @@ export const esES: TranslationData = {
         pipeline_by_forecast_category: { title: 'Pipeline por categoría de pronóstico', description: 'Pipeline abierto agrupado por categoría de pronóstico de ventas' },
         lead_source_breakdown: { title: 'Origen del prospecto', description: 'De dónde proviene nuestro pipeline' },
         open_pipeline_by_owner: { title: 'Pipeline abierto por responsable', description: 'Valor del pipeline en curso, número de negocios y probabilidad media de cierre por comercial' },
-        quota_attainment_by_rep: { title: 'Cumplimiento de cuota por representante', description: 'Cuota, ingresos cerrados y cumplimiento por representante, según instantáneas de pronóstico' },
+        quota_attainment_by_rep: { title: 'Cumplimiento de cuota por representante', description: 'Cuota del trimestre actual, ingresos cerrados y cumplimiento por representante, según instantáneas de pronóstico' },
         pipeline_stage_by_source: { title: 'Pipeline por Etapa × Origen', description: 'Tabla cruzada del importe de oportunidades abiertas por etapa y origen' },
       },
     },
