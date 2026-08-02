@@ -725,7 +725,7 @@ export const jaJP: TranslationData = {
         pipeline_by_forecast_category: { title: '予測カテゴリ別パイプライン', description: '売上予測カテゴリ別のオープンパイプライン金額' },
         lead_source_breakdown: { title: 'リードソース', description: 'パイプラインの流入元' },
         open_pipeline_by_owner: { title: '担当者別オープンパイプライン', description: '営業担当者ごとの進行中パイプライン金額・商談数・平均勝率' },
-        quota_attainment_by_rep: { title: '担当者別ノルマ達成状況', description: '予測スナップショットに基づく担当者別のノルマ・成約収益・達成率' },
+        quota_attainment_by_rep: { title: '担当者別ノルマ達成状況', description: '予測スナップショットに基づく担当者別の今四半期ノルマ・成約収益・達成率' },
         pipeline_stage_by_source: { title: 'ステージ × リードソース', description: 'ステージとソース別の進行中商談金額のクロス集計' },
       },
     },

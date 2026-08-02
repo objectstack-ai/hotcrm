@@ -51,10 +51,12 @@ You can have all three for the same owner/period — they sit next to each other
 
 ## What you do with them
 
-- **Roll-up dashboards** — Sales dashboard groups by `period_label` and sums `commit_amount` across the team.
+- **Roll-up dashboards** — the Sales dashboard's *Quota Attainment by Rep* table shows each rep's **current-quarter** quota, closed revenue and attainment.
 - **Trend** — pick an owner and a period and chart `commit_amount` over the `created_at` of every snapshot. Sudden drops trigger the *“why did commit fall ¥800k this week?”* conversation.
 - **Attainment** — `closed_amount / quota` is computed in the report layer; no dedicated field.
 - **AI grounding** — the AI agent reads recent snapshots to ground its narrative in real movement, not imagined deals.
+
+> **Always scope a roll-up to one period.** A forecast number is only meaningful *inside* its period. Because the object stores one row per owner **per period** — this quarter, this month, and every settled period before them — a chart or table that adds up **Quota** or **Closed Won** without saying which period it means will stack a quarter's quota on top of a month's on top of last quarter's. Scope every roll-up either by grouping on the period label (**Q3 2026**, **Aug 2026**), or by filtering to a single period type *and* period start.
 
 ## Who can edit
 

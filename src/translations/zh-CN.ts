@@ -999,7 +999,7 @@ export const zhCN: TranslationData = {
         pipeline_by_forecast_category: { title: '预测类别管道分布', description: '按预测类别统计的进行中管道金额' },
         lead_source_breakdown: { title: '线索来源分布', description: '按来源统计的线索数量' },
         open_pipeline_by_owner: { title: '按负责人统计进行中管道', description: '各销售负责人的进行中管道金额、商机数与平均赢单概率' },
-        quota_attainment_by_rep: { title: '按销售代表统计配额达成', description: '来自预测快照的各销售代表配额、已成交收入与达成率' },
+        quota_attainment_by_rep: { title: '按销售代表统计配额达成', description: '来自预测快照的各销售代表本季度配额、已成交收入与达成率' },
         pipeline_stage_by_source: { title: '阶段 × 线索来源', description: '按阶段和来源交叉统计进行中商机金额' },
       },
     },

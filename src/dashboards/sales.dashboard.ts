@@ -223,13 +223,43 @@ export const SalesDashboard: Dashboard = {
     {
       id: 'quota_attainment_by_rep',
       title: 'Quota Attainment by Rep',
-      description: 'Quota, closed revenue and attainment per rep, from forecast snapshots',
+      description: 'Current-quarter quota, closed revenue and attainment per rep, from forecast snapshots',
       type: 'table',
       colorVariant: 'default',
       // crm_forecast has neither `close_date` nor `type`; opt out of the
       // dashboard filters bound to those fields (framework#2501 injects every
       // dashboard filter into each widget query). `owner` exists and applies.
       filterBindings: { dateRange: false, type: false },
+      // ONE period, or the numbers are nonsense (#614). `crm_forecast` holds a
+      // row per owner PER PERIOD, and `quota_sum` / `closed_sum` are plain
+      // `sum` measures — so an unpinned query adds this quarter's quota to this
+      // month's quota to every settled quarter's quota and labels the total
+      // "Quota". On the shipped seeds that turned a rep's real 1,500,000
+      // quarterly quota into 7,940,000, with attainment wrong by the same
+      // construction (89% instead of 55%).
+      //
+      // Both halves of the key are needed. `period: 'quarter'` alone still sums
+      // every quarter ever snapshotted; `period_start` alone still merges the
+      // quarter row with the month row that opens the same quarter (Q3 and July
+      // both start on the 1st). Together they name exactly one snapshot per
+      // owner — the same (owner, period, period_start) tuple the snapshot sweep
+      // upserts on and the object indexes.
+      //
+      // `{current_quarter_start}` is resolved by the ANALYTICS path, verified
+      // rather than assumed: `queryDataset` runs both the dataset filter and the
+      // widget's `runtimeFilter` through `resolveFilterTokens`, which
+      // understands `{(current|last|next)_(week|month|quarter|year)_(start|end)}`
+      // and throws `FILTER_TOKEN_UNKNOWN` on anything else. This is NOT true of
+      // the list-view path — see the comment on `this_quarter_forecasts` in
+      // `src/views/forecast.view.ts`, where the same macro would ship to the
+      // driver as a literal string. Do not generalise from one path to the other.
+      //
+      // Cost of pinning to the CURRENT quarter rather than the latest one: for
+      // the few hours between a quarter boundary and the 03:00 sweep that opens
+      // the new row, the table is empty. Empty is the honest state — the
+      // alternative renders last quarter's attainment under a header that says
+      // this one.
+      filter: { period: 'quarter', period_start: '{current_quarter_start}' },
       dataset: 'forecast_metrics', dimensions: ['owner'], values: ['quota_sum', 'closed_sum', 'attainment'],
       layout: { x: 0, y: 14, w: 12, h: 4 },
       options: {
