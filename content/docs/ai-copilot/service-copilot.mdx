@@ -1,11 +1,20 @@
 ---
-title: Service Copilot
-description: The AI service-agent assistant — triage cases, see full customer history, draft replies.
+title: Service Skills
+description: The service-side AI skills — triage cases, see full customer history, draft replies.
 ---
 
-# Service Copilot
+# Service Skills
 
-The Service Copilot is your AI partner for resolving customer issues fast. It lives in the right-side chat panel and as inline actions on case detail pages.
+HotCRM does not ship an assistant of its own. It ships **skills** — packaged AI
+abilities that attach to the **platform assistant** (`ask`) that every ObjectStack
+environment already provides. When a service agent opens the assistant panel on a
+case, the skills below are what it knows how to do.
+
+> **Where the personas went.** Earlier versions of this page described a "Service
+> Copilot" agent. HotCRM no longer defines its own agents: the same capability now
+> lives in skills registered through `src/skills/`, and the platform assistant selects
+> among them. Nothing was lost — the wiring moved from an app-owned agent to the
+> platform one.
 
 ## Who it's for
 
@@ -13,11 +22,17 @@ The Service Copilot is your AI partner for resolving customer issues fast. It li
 - **Support managers** — case routing and SLA compliance.
 - **Knowledge managers** — flagging gaps in the support knowledge base.
 
-## What it can do
+## How a skill gets picked
+
+Case Triage declares `crm_case` as its record context, so it activates the moment an
+agent asks a question while viewing a case. Customer 360°, Email Drafting, and Live
+Data carry no context restriction and are available everywhere.
+
+## The service skills
 
 ### 1. 🚦 Case Triage
 
-When a new case lands, the Copilot can triage it in one click. It analyses:
+Ask the assistant to triage a case and it analyses:
 
 - The **subject** and **description**.
 - The **customer's profile** (account tier, customer-since, contract).
@@ -29,15 +44,17 @@ It returns:
 
 - **Suggested priority** (Low / Medium / High / Critical) with a rationale tied to the [SLA matrix](/docs/service/sla-and-escalation).
 - **Suggested category** (Bug, Question, Feature Request, Billing).
-- **Suggested team / queue** based on the product or topic.
-- **Top 3 matching KB articles** with confidence scores.
+- **Top matching KB articles**.
 - A **draft first reply** that acknowledges the issue and links to the KB articles.
+- A pointer to the right next action — **Escalate Case** or **Close Case**.
 
-Agents can accept, edit, or reject each suggestion individually.
+Agents accept, edit, or reject each suggestion individually. The skill never changes
+the case on its own: it hands off to the same `escalate_case` / `close_case` actions
+an agent would click.
 
 ### 2. 🔭 Customer 360°
 
-On any case, ask *"Give me the customer's history"* and the Copilot surfaces:
+On any case, ask *"Give me the customer's history"* and you get:
 
 - **All prior cases** (open and closed) for the same contact and account.
 - **Contract status** — what they've bought, when it expires, what tier of support they're entitled to.
@@ -45,11 +62,13 @@ On any case, ask *"Give me the customer's history"* and the Copilot surfaces:
 - **Last touchpoints** — recent emails, calls, meetings.
 - **Account health signals** — escalations, churn risk flags, satisfaction scores.
 
-This is the difference between *"I see this is your first case"* and *"I see this is the 3rd time you've hit this issue this quarter — let me escalate."*
+This is the difference between *"I see this is your first case"* and *"I see this is
+the 3rd time you've hit this issue this quarter — let me escalate."*
 
 ### 3. ✍️ Email / Reply Drafting
 
-The Copilot drafts customer replies tuned for service tone:
+The same Email Drafting skill the sales side uses will draft customer replies tuned
+for service tone:
 
 - **Acknowledgment** — *"We've received your case and are investigating."*
 - **Asking for more info** — bug reproduction steps, screenshots, logs.
@@ -57,47 +76,37 @@ The Copilot drafts customer replies tuned for service tone:
 - **Resolution** — explaining what was done.
 - **Closure** — confirming everything's resolved.
 
-All drafts cite the Support Knowledge articles they pulled from, so agents can verify the source. The Copilot never sends — agents preview and edit first.
+All drafts cite the Support Knowledge articles they pulled from, so agents can verify
+the source. Nothing is sent automatically — agents preview and edit first.
 
-## Inline actions on case pages
+### 4. 🔄 Live Data
 
-| Button | What it does |
-| --- | --- |
-| **🚦 Triage** | Runs the triage skill and pre-fills priority, category, queue. |
-| **📚 Find articles** | Searches Support Knowledge for matching KB articles. |
-| **✍️ Draft reply** | Drafts a customer-facing reply based on case state. |
-| **🔭 Customer 360** | Opens the customer history side-panel. |
-| **🔁 Suggest similar** | Finds similar resolved cases. |
-
-## What the Copilot does for you in the background
-
-Even without you asking, the Service Copilot is busy:
-
-- **Auto-suggests articles** as the agent types into the case description.
-- **Flags repeat issues** — "this contact has filed 4 similar cases".
-- **Warns on SLA risk** — "this case will breach SLA in 47 minutes".
-- **Highlights sentiment** — angry-customer detection in the email thread.
+Every service skill composes on Live Data: the assistant re-reads the case object's
+schema before answering, so a field an admin added this morning is usable this
+afternoon. See [Live Schema (Wow #1)](/docs/ai-copilot/live-schema).
 
 ## Tips for agents
 
-- ✅ **Triage every new case** — it's a 5-second click and saves you sorting/routing time.
+- ✅ **Triage every new case** — it's one question and saves you sorting/routing time.
 - ✅ Use **Customer 360** before any phone call — knowing the contract tier shapes the conversation.
-- ✅ **Trust but verify** the KB suggestions — if the Copilot's confidence is below 70%, double-check.
+- ✅ **Trust but verify** the KB suggestions — check the cited article before you send.
 
 ## Tips for managers
 
-- ✅ Track **Copilot acceptance rate** — if your agents reject most triage suggestions, your KB needs work.
-- ✅ Use **Suggest similar** during deflection meetings — patterns of repeated cases reveal product issues.
+- ✅ Track how often triage suggestions are accepted — if your agents reject most of them, your KB needs work.
+- ✅ Look for patterns of repeated cases during deflection meetings — they reveal product issues.
 
 ## Tips for knowledge managers
 
-- ✅ When the Copilot can't find a matching article for a case, it logs the **gap** — review these weekly to identify new articles to write.
-- ✅ Articles that the Copilot cites frequently are your **highest-value content** — keep them updated.
+- ✅ When the assistant can't find a matching article for a case, that's a knowledge gap — review these to identify new articles to write.
+- ✅ Articles cited frequently are your **highest-value content** — keep them updated.
 
 ## Limits
 
-- The Copilot respects [sharing rules](/docs/administration/sharing-and-security) — it only sees what the agent can see.
-- It **won't close cases** or **mark them resolved** without explicit agent action.
-- For VIP/escalated customers, the Copilot **routes to humans first** rather than auto-suggesting deflection.
+- Skills respect [sharing rules](/docs/administration/sharing-and-security) — they only see what the agent can see.
+- They **won't close cases** or **mark them resolved** without explicit agent action.
+- Skills declare no bespoke tools: every state change goes through a real HotCRM action, so the same permission checks apply as when an agent clicks the button.
 
-See [Skills](/docs/ai-copilot/skills) for the full skill spec and [Knowledge Bases](/docs/ai-copilot/knowledge-bases) for the Support Knowledge index that powers replies.
+See [Skills](/docs/ai-copilot/skills) for the full skill spec and
+[Knowledge Bases](/docs/ai-copilot/knowledge-bases) for the Support Knowledge index
+that powers replies.

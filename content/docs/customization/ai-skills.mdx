@@ -1,11 +1,15 @@
 ---
 title: AI Skills
-description: Add Copilot skills and wire them into HotCRM agents.
+description: Add AI skills and register them with the HotCRM stack.
 ---
 
 # AI Skills
 
-AI skills live in `src/skills/` and are registered from `src/skills/index.ts`. Agents live in `src/agents/`.
+AI skills live in `src/skills/` and are registered from `src/skills/index.ts`.
+
+HotCRM defines **no agents of its own** — there is no `src/agents/` directory. Skills
+attach to the platform assistant (`ask`), which every ObjectStack environment already
+provides. Registering a skill in `allSkills` is the whole wiring step.
 
 ## Add a skill
 
@@ -24,26 +28,26 @@ account and contract records, summarize risk, and draft a concise
 });
 ```
 
-Export it:
+## Register it
+
+Export the skill and add it to `allSkills` — that array is what
+`objectstack.config.ts` passes to `defineStack({ skills })`:
 
 ```ts
 // src/skills/index.ts
 export { RenewalPitchSkill } from './renewal_pitch.skill.js';
+
+import { RenewalPitchSkill } from './renewal_pitch.skill.js';
+
+export const allSkills: Skill[] = [
+  // …existing skills
+  RenewalPitchSkill,
+];
 ```
 
-## Attach it to an agent
-
-```ts
-// src/agents/sales-copilot.agent.ts
-skills: [
-  'live_data',
-  'lead_qualification',
-  'email_drafting',
-  'revenue_forecasting',
-  'customer_360',
-  'renewal_pitch',
-],
-```
+To make the skill activate on a particular record instead of everywhere, declare a
+`triggerConditions` entry on it — for example
+`{ field: 'objectName', operator: 'eq', value: 'crm_contract' }`.
 
 ## Verify
 

@@ -1,15 +1,15 @@
 ---
 title: Skills
-description: The full library of AI Copilot skills — what each one does, where it appears, and what data it uses.
+description: The full library of HotCRM AI skills — what each one does, where it appears, and what data it uses.
 ---
 
 # Skills
 
-A **skill** is a bite-sized AI ability the Copilot can perform — like *"qualify this lead"* or *"draft a customer reply"*. Skills are the building blocks of both the [Sales Copilot](/docs/ai-copilot/sales-copilot) and the [Service Copilot](/docs/ai-copilot/service-copilot).
+A **skill** is a bite-sized AI ability the platform assistant can perform — like *"qualify this lead"* or *"draft a customer reply"*. Skills are all HotCRM contributes to the assistant; they are documented in two groups, [Sales Skills](/docs/ai-copilot/sales-copilot) and [Service Skills](/docs/ai-copilot/service-copilot).
 
 ## Why skills, not "one big AI"
 
-Breaking the Copilot into skills makes it:
+Packaging the capability as skills rather than one prompt makes it:
 
 - **Predictable** — each skill has a defined input, output, and behavior.
 - **Auditable** — admins can see what each skill reads from and writes to.
@@ -39,7 +39,7 @@ HotCRM ships with six core skills:
 | **Writes** | Nothing — read-only |
 | **Knowledge base** | None — purely metadata + records |
 
-This is the skill behind **[Wow #1 — Live Schema](/docs/ai-copilot/live-schema)**: add a field in the admin console, and the Copilot uses it on the very next turn. Every other Sales / Service skill composes on top of Live Data, so the same live-schema property applies transitively — Lead Qualification can score a lead on a custom field added 10 seconds ago.
+This is the skill behind **[Wow #1 — Live Schema](/docs/ai-copilot/live-schema)**: add a field in the admin console, and the assistant uses it on the very next turn. Every other Sales / Service skill composes on top of Live Data, so the same live-schema property applies transitively — Lead Qualification can score a lead on a custom field added 10 seconds ago.
 
 ### 🎯 Lead Qualification
 
@@ -95,10 +95,10 @@ This is the skill behind **[Wow #1 — Live Schema](/docs/ai-copilot/live-schema
 
 Skills can call other skills. For example:
 
-- The Service Copilot's *Case Triage* skill can invoke *Customer 360* to check if the customer is high-value before assigning priority.
-- The Sales Copilot's *Email Drafting* skill can invoke *Customer 360* to ground the email in real account context.
+- The *Case Triage* skill can invoke *Customer 360* to check if the customer is high-value before assigning priority.
+- The *Email Drafting* skill can invoke *Customer 360* to ground the email in real account context.
 
-This composition is automatic — you ask one question, the Copilot wires up whatever skills it needs.
+This composition is automatic — you ask one question, the assistant wires up whatever skills it needs.
 
 ## What every skill respects
 
