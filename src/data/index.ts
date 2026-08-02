@@ -2008,6 +2008,7 @@ const monthEndAgo = (n: number) => new Date(Date.UTC(forecastYear, forecastMonth
 
 /** A settled (past) period snapshot: pipeline is gone, only the closed number remains. */
 const closedPeriod = (
+  seed_key: string,
   period: 'month' | 'quarter',
   start: Date,
   end: Date,
@@ -2015,6 +2016,7 @@ const closedPeriod = (
   closed: number,
   notes: string,
 ) => ({
+  seed_key,
   period,
   period_label: period === 'quarter' ? forecastQuarterLabel(start) : forecastMonthLabel(start),
   period_start: forecastIsoDate(start),
@@ -2029,11 +2031,26 @@ const closedPeriod = (
   notes,
 });
 
+// Upsert identity is the synthetic `seed_key`, NOT `period_label` (#613).
+// `period_label` names a SET of rows once the forecast_snapshot sweep (#590)
+// writes one per active owner per quarter — all reading 'Q3 2026' — and the
+// loader matches against the whole table, so a re-seed could overwrite a real
+// rep's snapshot with the demo numbers. Why a synthetic key and not the true
+// (owner, period, period_start) identity or an insert-once mode: see the
+// `seed_key` declaration in `src/objects/forecast.object.ts`.
+//
+// The keys are POSITIONAL ('current quarter', 'two quarters back'), not
+// calendar values, because the records are positional — recomputed against
+// `new Date()` on every import. A positional key keeps the demo at exactly
+// these eight rows as the calendar rolls forward, re-pointing each at its new
+// period; a calendar-derived key would strand last quarter's demo row and add
+// one row per re-seed.
 const forecasts = defineSeed(Forecast, {
   mode: 'upsert',
-  externalId: 'period_label',
+  externalId: 'seed_key',
   records: [
     {
+      seed_key: 'demo_quarter_current',
       period: 'quarter',
       period_label: forecastQuarterLabel(thisQuarterStart),
       period_start: forecastIsoDate(thisQuarterStart),
@@ -2048,6 +2065,7 @@ const forecasts = defineSeed(Forecast, {
       notes: 'On track — commit + closed covers 64% of quota with the quarter still open.',
     },
     {
+      seed_key: 'demo_month_current',
       period: 'month',
       period_label: forecastMonthLabel(thisMonthStart),
       period_start: forecastIsoDate(thisMonthStart),
@@ -2062,6 +2080,7 @@ const forecasts = defineSeed(Forecast, {
       notes: 'Healthy coverage; two commit deals expected to close this week.',
     },
     {
+      seed_key: 'demo_quarter_minus_1',
       period: 'quarter',
       period_label: forecastQuarterLabel(lastQuarterStart),
       period_start: forecastIsoDate(lastQuarterStart),
@@ -2075,15 +2094,15 @@ const forecasts = defineSeed(Forecast, {
       source: 'scheduled',
       notes: 'Closed at 106% of quota.',
     },
-    closedPeriod('quarter', quarterStartAgo(2), quarterEndAgo(2), 1300000, 1196000,
+    closedPeriod('demo_quarter_minus_2', 'quarter', quarterStartAgo(2), quarterEndAgo(2), 1300000, 1196000,
       'Closed at 92% of quota — two enterprise deals slipped into the next quarter.'),
-    closedPeriod('quarter', quarterStartAgo(3), quarterEndAgo(3), 1200000, 1308000,
+    closedPeriod('demo_quarter_minus_3', 'quarter', quarterStartAgo(3), quarterEndAgo(3), 1200000, 1308000,
       'Closed at 109% of quota, carried by the enterprise renewal cohort.'),
-    closedPeriod('quarter', quarterStartAgo(4), quarterEndAgo(4), 1100000, 1045000,
+    closedPeriod('demo_quarter_minus_4', 'quarter', quarterStartAgo(4), quarterEndAgo(4), 1100000, 1045000,
       'Closed at 95% of quota in the first quarter on the new territory model.'),
-    closedPeriod('month', monthStartAgo(1), monthEndAgo(1), 480000, 505000,
+    closedPeriod('demo_month_minus_1', 'month', monthStartAgo(1), monthEndAgo(1), 480000, 505000,
       'Closed at 105% of quota; the expansion motion covered a soft new-business month.'),
-    closedPeriod('month', monthStartAgo(2), monthEndAgo(2), 460000, 414000,
+    closedPeriod('demo_month_minus_2', 'month', monthStartAgo(2), monthEndAgo(2), 460000, 414000,
       'Closed at 90% of quota — summer slowdown across the mid-market segment.'),
   ]
 });

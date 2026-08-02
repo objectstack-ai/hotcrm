@@ -198,6 +198,55 @@ export const Forecast = ObjectSchema.create({
       maxLength: 1000,
       group: 'meta',
     }),
+
+    // Fixture identity — the seed loader's `externalId`, and nothing else.
+    //
+    // `crm_forecast` is a PER-OWNER snapshot: its real identity is
+    // (owner, period, period_start), and every other column is a rendering of
+    // part of that. `period_label` in particular names a SET of rows once the
+    // `forecast_snapshot` sweep (#590) writes one row per active owner per
+    // quarter — they all read 'Q3 2026'. The demo seed used to upsert on that
+    // label, so a re-seed could match, and overwrite, a real rep's snapshot
+    // (#613).
+    //
+    // The three routes considered, and why this one:
+    //
+    //   • Composite `externalId: ['owner', 'period', 'period_start']` — the
+    //     true identity, and the platform does support composite keys (the
+    //     seed file already uses one for opportunity line items). It fails
+    //     HERE for a different reason: a seed cannot name a user (see the note
+    //     at the foot of `src/data/index.ts`), so `owner` is null on every
+    //     seeded row, and the loader's `externalIdKey` returns "" as soon as
+    //     any part is empty. An empty key never matches, so upsert degrades to
+    //     insert-on-every-replay and duplicates the table — strictly worse.
+    //     Dropping `owner` does not rescue it: a runtime row for the current
+    //     quarter carries exactly the same (period, period_start).
+    //
+    //   • `mode: 'insert'` — does NOT mean "insert once". The loader inserts
+    //     unconditionally on every replay boot (framework#3434). `'ignore'` is
+    //     the real insert-once mode, but it decides "already there?" from the
+    //     same `externalId`, so on the broken key it would SKIP the demo row
+    //     because a real rep's row already claimed 'Q3 2026' — a different
+    //     bug, same root cause. Fixing the identity is a prerequisite either
+    //     way, and once fixed `upsert` is both safe and strictly more useful.
+    //
+    //   • A synthetic, seeder-only key — this one.
+    //
+    // `readonly` is the load-bearing part, not decoration: seed writes run
+    // `{ isSystem: true }` and bypass readonly stripping, while readonly
+    // stripping does guard user/API writes — so a genuine forecast row can
+    // never acquire a `seed_key` and can never be matched by a re-seed. That
+    // is what makes the fix structural rather than a naming convention.
+    // `hidden` keeps a fixtures-only column out of forms and pickers, so no
+    // one is ever prompted to fill it in.
+    seed_key: Field.text({
+      label: 'Seed Key',
+      description: 'Demo-fixture identity. Written only by the seed loader; empty on every real snapshot.',
+      maxLength: 64,
+      readonly: true,
+      hidden: true,
+      group: 'meta',
+    }),
   },
 
   indexes: [
