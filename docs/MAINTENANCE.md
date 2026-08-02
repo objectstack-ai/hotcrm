@@ -190,6 +190,54 @@ After any platform upgrade, or whenever Studio shows validation banners:
 4. If a banner persists, fix the offending fixture in `src/data/`, not the
    designer or the platform.
 
+### 4.1 Staffing the demo org (`pnpm demo:staff`)
+
+A reseeded org has records but no PEOPLE. On a fresh install exactly one user
+exists (the dev admin), `demo_bootstrap` claims every seeded record for them,
+and `sys_user_position` is empty — so every position-based sharing rule this app
+ships grants nobody anything, and `opportunity_approval`'s `manager_review` node
+opens with an empty approver slate while `lockRecord` holds the record ([#640]).
+
+```bash
+pnpm dev          # terminal 1 — leave running
+pnpm demo:staff   # terminal 2 — once, after the server is up
+```
+
+That creates three non-admin demo users (`na.rep@` / `eu.rep@` /
+`sales.manager@objectos.ai`, all `demo1234`), assigns their positions, and
+re-evaluates every sharing rule so the already-seeded accounts materialise
+grants. It is idempotent, self-verifying (non-zero exit if the layers do not
+connect) and prints what each user can see:
+
+```
+north_america_territory  matched=  6  holders=1  granted=6
+europe_territory         matched=  2  holders=1  granted=2
+na.rep@objectos.ai sees 6 account(s) · countries: [CA, US]
+eu.rep@objectos.ai sees 2 account(s) · countries: [DE, UK]
+```
+
+Who exists and which positions they hold is a table —
+[`src/sharing/demo-staffing.ts`](../src/sharing/demo-staffing.ts). Adding a
+person is adding a row.
+
+Three things worth knowing before changing any of it:
+
+- **It is a script, not metadata, on purpose.** A real deployment must install
+  none of these accounts, so nothing in the published artifact may be able to
+  create a user. `test/demo-staffing.test.ts` fails if a seed dataset or a flow
+  node ever writes `sys_user` / `sys_member` / `sys_user_position`.
+- **Re-evaluating the rules is not optional.** `plugin-sharing` materialises
+  grants from a record-write hook that returns early on `isSystem` writes, and
+  every seeded row is written with `isSystem: true`. Staffing alone therefore
+  leaves `sys_record_share` empty until a rule is re-evaluated (a server restart
+  does it too, via the boot backfill).
+- **The reps must not own the accounts.** `crm_account` is `private`, so the OWD
+  baseline already admits a record's owner — a share to the owner demonstrates
+  nothing. Ownership stays with `demo_bootstrap`'s first user; the script exits
+  non-zero if a demo user turns out to own a seeded account.
+
+[#640]: https://github.com/objectstack-ai/hotcrm/issues/640
+
 ## 5. Releasing
 
 HotCRM ships as **one** app package (`hotcrm` / `app.objectstack.hotcrm`). Before
