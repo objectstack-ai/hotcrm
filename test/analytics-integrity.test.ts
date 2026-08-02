@@ -111,6 +111,62 @@ describe('dashboard widget bindings resolve', () => {
   });
 });
 
+describe('metric tiles carry no fabricated trend deltas', () => {
+  /**
+   * A period-over-period delta is a MEASUREMENT: it can only come from
+   * comparing this period's query result against the previous period's. A
+   * number sitting in static metadata was, by construction, typed by hand — no
+   * query produced it, nothing recomputes it, and it keeps asserting "+12.5% vs
+   * last month" forever, including on a freshly seeded database where it is
+   * provably false. The executive dashboard dropped its own on exactly this
+   * reasoning (#500); the CRM, Sales and Service tiles kept theirs until #587.
+   *
+   * The honest source of a delta is a real comparison query (widget
+   * `compareTo`) once the renderer supports it for dataset metrics. Until then
+   * a tile shows the number it actually measured and nothing else, so this
+   * guard rejects the literal — anywhere in a widget, under any nesting, since
+   * the console reads `options` as a free-form bag and a hand-written trend can
+   * reappear at any depth.
+   */
+
+  /** Every `[path, value]` pair whose key is `trend`, at any depth. */
+  function* trendDeclarations(node: unknown, path: string): Generator<[string, unknown]> {
+    if (!node || typeof node !== 'object') return;
+    if (Array.isArray(node)) {
+      for (const [i, item] of node.entries()) yield* trendDeclarations(item, `${path}[${i}]`);
+      return;
+    }
+    for (const [k, v] of Object.entries(node)) {
+      if (k === 'trend') yield [`${path}.${k}`, v];
+      yield* trendDeclarations(v, `${path}.${k}`);
+    }
+  }
+
+  /** `trend: 12.5` and `trend: { value: 12.5, … }` are both hand-typed deltas. */
+  const carriesLiteralNumber = (trend: unknown): boolean =>
+    typeof trend === 'number' ||
+    (!!trend && typeof trend === 'object' &&
+      Object.values(trend as AnyRec).some((v) => typeof v === 'number'));
+
+  it('no dashboard widget declares a literal trend value', () => {
+    const bad: string[] = [];
+    for (const d of dashboards) {
+      for (const w of d.widgets ?? []) {
+        for (const [path, trend] of trendDeclarations(w, `${d.name}/${w.id}`)) {
+          if (carriesLiteralNumber(trend)) {
+            bad.push(`${path} = ${JSON.stringify(trend)}`);
+          }
+        }
+      }
+    }
+    expect(
+      bad,
+      'hardcoded period-over-period deltas — a trend must be measured by a '
+        + `comparison query, not typed into metadata:\n  ${bad.join('\n  ')}`,
+    ).toEqual([]);
+  });
+});
+
 describe('time windows stay relative at runtime', () => {
   /**
    * A filter value like `2026-06-29` in the metadata means someone computed
