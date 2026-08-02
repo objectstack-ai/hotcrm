@@ -228,6 +228,15 @@ export const jaJP: TranslationData = {
         notes: { label: 'メモ' },
         do_not_call: { label: '電話拒否' },
         email_opt_out: { label: 'メール配信停止' },
+        disqualification_reason: {
+          label: '不適格理由',
+          help: 'ステータスが「不適格」の場合は必須',
+          options: {
+            not_a_fit: 'ニーズが合わない', no_budget: '予算なし', wrong_persona: '担当者が異なる',
+            unreachable: '連絡不能', duplicate: '重複リード', competitor: '競合他社に決定',
+            other: 'その他',
+          },
+        },
         duplicate_of_type: {
           label: '重複対象',
           options: { crm_lead: 'リード', crm_contact: '連絡先' },

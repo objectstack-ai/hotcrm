@@ -1288,6 +1288,200 @@ describe('action labels are translated in every locale', () => {
 });
 
 /**
+ * Select fields — the field's own label AND every option label — are translated
+ * in every locale.
+ *
+ * The sibling guard above does this for action labels (#494). It was never
+ * extended to select fields, and `crm_lead.disqualification_reason` (#631) is
+ * what that costs: a `required` field on eight lead forms with no entry in ANY
+ * of the four bundles, so the form rendered `not_a_fit` / `no_budget` /
+ * `wrong_persona` as raw stored VALUES in the middle of an otherwise fully
+ * translated screen.
+ *
+ * It stayed invisible for the same reason #494's did: a missing entry is not an
+ * error. The resolver falls back to the English `label` in code, and in `en`
+ * that fallback is indistinguishable from a correct translation — so the only
+ * locale a reviewer is likely to open is the one locale where the bug cannot be
+ * seen. That is a class a test catches and an eyeball does not.
+ *
+ * The two neighbouring guards in `picklist values never reach the UI unresolved`
+ * check that the entries which DO exist point at something real. This one checks
+ * the other direction: that they exist at all. Both are needed — a bundle can be
+ * perfectly well-formed and still be empty.
+ */
+describe('select fields are translated in every locale', () => {
+  /**
+   * Select fields knowingly still missing translations, keyed
+   * `object.field` → the locales that lack them.
+   *
+   * This map may only ever SHRINK. It is a ledger of pre-existing debt, not a
+   * place to park new work: a field added or extended from here on has no entry
+   * to hide behind, so it fails on the PR that introduces it. Two assertions
+   * below keep the ledger from rotting — an entry whose gap has since been
+   * filled fails as stale, and an entry naming a field or locale that does not
+   * exist fails as a ghost.
+   *
+   * Surveyed when #631 landed: 34 fields over 12 objects — 111 (locale, field)
+   * pairs, ~380 option labels. They are enumerated in #645 rather than fixed
+   * here, because translating that much in a one-field bug-fix PR would bury the
+   * field the PR is actually about.
+   */
+  /**
+   * Shorthand for a field NO locale translates. Written out literally rather
+   * than derived from `localePacks`, so that adding a fifth locale surfaces as
+   * new gaps to fill instead of silently extending every exemption to cover it.
+   */
+  const UNTRANSLATED_EVERYWHERE = ['en', 'zh-CN', 'ja-JP', 'es-ES'];
+  const PENDING_SELECT_LABELS: Record<string, string[]> = {
+    'crm_account.tier': ['ja-JP', 'es-ES'],
+    'crm_account.segment': ['ja-JP', 'es-ES'],
+    'crm_account.health_score': ['ja-JP', 'es-ES'],
+    'crm_campaign.type': ['en', 'ja-JP', 'es-ES'],
+    'crm_campaign.channel': ['en', 'ja-JP', 'es-ES'],
+    'crm_campaign.status': ['en', 'ja-JP', 'es-ES'],
+    'crm_case.status': ['en', 'ja-JP', 'es-ES'],
+    'crm_case.priority': ['en', 'ja-JP', 'es-ES'],
+    'crm_case.type': UNTRANSLATED_EVERYWHERE,
+    'crm_contact.salutation': UNTRANSLATED_EVERYWHERE,
+    'crm_contact.lead_source': ['en', 'ja-JP', 'es-ES'],
+    'crm_contract.status': ['en', 'ja-JP', 'es-ES'],
+    'crm_contract.billing_frequency': UNTRANSLATED_EVERYWHERE,
+    'crm_contract.payment_terms': UNTRANSLATED_EVERYWHERE,
+    'crm_contract.contract_type': UNTRANSLATED_EVERYWHERE,
+    // Partial: 5 of 7 categories and 4 of 8 tags are translated everywhere.
+    'crm_knowledge_article.category': UNTRANSLATED_EVERYWHERE,
+    'crm_knowledge_article.tags': UNTRANSLATED_EVERYWHERE,
+    'crm_lead.salutation': ['en', 'ja-JP', 'es-ES'],
+    'crm_lead.industry': ['en', 'ja-JP', 'es-ES'],
+    'crm_opportunity.competitors': UNTRANSLATED_EVERYWHERE,
+    'crm_opportunity.approval_status': ['ja-JP', 'es-ES'],
+    'crm_opportunity.win_reason': ['ja-JP', 'es-ES'],
+    'crm_opportunity.loss_reason': ['ja-JP', 'es-ES'],
+    'crm_product.category': ['en', 'ja-JP', 'es-ES'],
+    'crm_product.family': UNTRANSLATED_EVERYWHERE,
+    'crm_product.billing_type': UNTRANSLATED_EVERYWHERE,
+    'crm_product.unit_of_measure': UNTRANSLATED_EVERYWHERE,
+    'crm_quote.status': ['en', 'ja-JP', 'es-ES'],
+    'crm_quote.payment_terms': UNTRANSLATED_EVERYWHERE,
+    'crm_task.status': ['en', 'ja-JP', 'es-ES'],
+    'crm_task.priority': ['en', 'ja-JP', 'es-ES'],
+    'crm_task.type': UNTRANSLATED_EVERYWHERE,
+    'crm_task.related_to_type': UNTRANSLATED_EVERYWHERE,
+    'crm_task.recurrence_type': UNTRANSLATED_EVERYWHERE,
+  };
+
+  /** Every authored select field, with its option VALUES (what the DB stores). */
+  const selectFields = objects.flatMap((obj) =>
+    Object.entries<AnyRec>(obj.fields ?? {})
+      .filter(([, f]) => Array.isArray(f?.options) && f.options.length)
+      .map(([fieldName, f]) => ({
+        key: `${obj.name}.${fieldName}`,
+        objectName: obj.name as string,
+        fieldName,
+        values: (f.options as AnyRec[]).map((o) => String(o.value)),
+      })),
+  );
+
+  const isPending = (key: string, locale: string) =>
+    (PENDING_SELECT_LABELS[key] ?? []).includes(locale);
+
+  /** The translation entry for one select field in one locale pack. */
+  const entryFor = (pack: AnyRec, objectName: string, fieldName: string): AnyRec | undefined =>
+    pack?.objects?.[objectName]?.fields?.[fieldName];
+
+  it('sees a non-trivial set of select fields and locales', () => {
+    // Guards the guard: `stack.objects` returning [] (or the translations
+    // bundle failing to flatten) would make every assertion below pass by
+    // checking nothing — which is exactly how the navigation guard in this file
+    // spent its life green.
+    expect(selectFields.length, 'no select fields discovered').toBeGreaterThanOrEqual(40);
+    expect(localePacks.length, 'no locale packs found in stack.translations').toBeGreaterThan(0);
+  });
+
+  it('every select field has a translated label in every locale', () => {
+    const bad: string[] = [];
+    for (const { key, objectName, fieldName } of selectFields) {
+      for (const [locale, pack] of localePacks) {
+        if (isPending(key, locale)) continue;
+        if (!entryFor(pack, objectName, fieldName)?.label) {
+          bad.push(`${locale}: ${objectName}.fields.${fieldName}.label`);
+        }
+      }
+    }
+    expect(
+      bad,
+      `select fields with no translated label:\n  ${bad.join('\n  ')}\n` +
+        'Add the entry to src/translations/<locale>.ts — a missing one silently ' +
+        'falls back to the English label in code.',
+    ).toEqual([]);
+  });
+
+  it('every option value has a translated label in every locale', () => {
+    // The half of the defect users actually notice. A missing field label reads
+    // as an odd column heading; a missing OPTION label puts the raw stored value
+    // (`not_a_fit`, `waiting_customer`) into a picklist a rep has to choose from.
+    const bad: string[] = [];
+    for (const { key, objectName, fieldName, values } of selectFields) {
+      for (const [locale, pack] of localePacks) {
+        if (isPending(key, locale)) continue;
+        const options = entryFor(pack, objectName, fieldName)?.options ?? {};
+        const missing = values.filter((v) => !options[v]);
+        if (missing.length) {
+          bad.push(`${locale}: ${objectName}.${fieldName} — ${missing.join(', ')}`);
+        }
+      }
+    }
+    expect(
+      bad,
+      `option values with no translated label:\n  ${bad.join('\n  ')}\n` +
+        'These render as the raw stored value in the picklist.',
+    ).toEqual([]);
+  });
+
+  it('the pending map contains no stale entries', () => {
+    // A field that has since been translated must leave the ledger, or the
+    // ledger stops meaning anything and the field silently loses its guard.
+    const byKey = new Map(selectFields.map((f) => [f.key, f]));
+    const stale: string[] = [];
+    for (const [key, locales] of Object.entries(PENDING_SELECT_LABELS)) {
+      const field = byKey.get(key);
+      if (!field) continue; // ghost — reported by the test below
+      for (const locale of locales) {
+        const pack = packFor(locale);
+        if (!pack) continue; // ghost locale — reported by the test below
+        const entry = entryFor(pack, field.objectName, field.fieldName);
+        const complete =
+          !!entry?.label && field.values.every((v) => (entry.options ?? {})[v]);
+        if (complete) stale.push(`${locale}: ${key}`);
+      }
+    }
+    expect(
+      stale,
+      `these are now fully translated — remove them from PENDING_SELECT_LABELS:\n  ${stale.join('\n  ')}`,
+    ).toEqual([]);
+  });
+
+  it('the pending map only names real fields and real locales', () => {
+    const keys = new Set(selectFields.map((f) => f.key));
+    const locales = new Set(localePacks.map(([l]) => l));
+    const ghosts: string[] = [];
+    for (const [key, pending] of Object.entries(PENDING_SELECT_LABELS)) {
+      if (!keys.has(key)) {
+        ghosts.push(`${key} is not a select field on any object`);
+        continue;
+      }
+      for (const locale of pending) {
+        if (!locales.has(locale)) ghosts.push(`${key} names unknown locale "${locale}"`);
+      }
+    }
+    expect(
+      ghosts,
+      `PENDING_SELECT_LABELS has entries that check nothing:\n  ${ghosts.join('\n  ')}`,
+    ).toEqual([]);
+  });
+});
+
+/**
  * `form.data` is a data provider the form renderer never reads: a form binds to
  * its object and record through the route context, so the block only *looked*
  * like it was wiring the form to an object. The platform's own liveness rule

@@ -301,6 +301,17 @@ export const zhCN: TranslationData = {
         notes: { label: '备注' },
         do_not_call: { label: '禁止致电' },
         email_opt_out: { label: '拒收邮件' },
+        disqualification_reason: {
+          // 状态里的 unqualified 译作「未通过」,所以这里跟着叫「未通过原因」
+          // 而不是「取消资格原因」—— 两个字段在同一张表单上下相邻,用词必须成对。
+          label: '未通过原因',
+          help: '状态为「未通过」时必填',
+          options: {
+            not_a_fit: '需求不匹配', no_budget: '预算不足', wrong_persona: '联系人角色不符',
+            unreachable: '无法联系', duplicate: '重复线索', competitor: '选择了竞争对手',
+            other: '其他',
+          },
+        },
         duplicate_of_type: {
           label: '重复于',
           options: { crm_lead: '线索', crm_contact: '联系人' },
