@@ -17,6 +17,7 @@ export { QuoteGenerationFlow } from './quote-generation.flow';
 export { ContractRenewalFlow } from './contract-renewal.flow';
 export { CaseSlaMonitorFlow } from './case-sla-monitor.flow';
 export { OpportunityStagnationFlow } from './opportunity-stagnation.flow';
+export { ForecastSnapshotFlow } from './forecast-snapshot.flow';
 export { LeadAssignmentFlow } from './lead-assignment.flow';
 export { CaseCsatFollowupFlow } from './case-csat-followup.flow';
 // Migrated from object workflows[] (removed in 7.7): scheduled status-flips + notifications
@@ -39,6 +40,7 @@ import { QuoteGenerationFlow } from './quote-generation.flow';
 import { ContractRenewalFlow } from './contract-renewal.flow';
 import { CaseSlaMonitorFlow } from './case-sla-monitor.flow';
 import { OpportunityStagnationFlow } from './opportunity-stagnation.flow';
+import { ForecastSnapshotFlow } from './forecast-snapshot.flow';
 import { LeadAssignmentFlow } from './lead-assignment.flow';
 import { CaseCsatFollowupFlow } from './case-csat-followup.flow';
 import { CampaignCompletionFlow } from './campaign-completion.flow';
@@ -67,6 +69,7 @@ export const allFlows: Flow[] = [
   ContractRenewalFlow,
   CaseSlaMonitorFlow,
   OpportunityStagnationFlow,
+  ForecastSnapshotFlow,
   LeadAssignmentFlow,
   CaseCsatFollowupFlow,
   // Migrated from object workflows[] (removed in 7.7)

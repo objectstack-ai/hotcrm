@@ -12,14 +12,24 @@ import { F, P, cel } from '@objectstack/spec';
  * without re-aggregating opportunity history.
  *
  * Written by:
- *   • `forecast.hook.ts` scheduled job (default: nightly)
+ *   • `src/flows/forecast-snapshot.flow.ts` — the `forecast_snapshot`
+ *     scheduled flow, nightly at 03:00, one current-quarter row per active
+ *     opportunity owner (#590). It never touches `quota`.
  *   • `revenue_forecasting` AI skill on demand
+ *   • `forecast.hook.ts` derives the period family + `snapshot_date` on every
+ *     write; it creates nothing on its own.
  *
- * Forecast categories follow the standard Salesforce model:
- *   pipeline  → all open opps
- *   best_case → high-confidence opps (>= 60%)
- *   commit    → owner-committed opps (>= 80%)
- *   closed    → already-won amount
+ * Forecast categories follow the standard Salesforce ladder, and the buckets
+ * are CUMULATIVE — each is a subset of the one above it:
+ *   pipeline  → all open opps closing in the period
+ *   best_case → open opps whose forecast_category is best_case OR commit
+ *   commit    → open opps whose forecast_category is commit
+ *   closed    → already-won amount in the period
+ *
+ * The bucket boundary is the stored `forecast_category` column (derived from
+ * `stage` by the opportunity lifecycle hook), NOT a probability threshold —
+ * one definition, shared with the "Commit & Best Case" opportunity view and
+ * the `pipeline_by_forecast_category` dashboard widget.
  */
 export const Forecast = ObjectSchema.create({
   name: 'crm_forecast',
@@ -118,7 +128,7 @@ export const Forecast = ObjectSchema.create({
 
     pipeline_amount: Field.currency({
       label: 'Pipeline',
-      description: 'Sum of all open opportunities (any stage).',
+      description: 'Sum of all open opportunities closing in this period (any stage).',
       scale: 2,
       min: 0,
       group: 'amounts',
@@ -126,7 +136,11 @@ export const Forecast = ObjectSchema.create({
 
     best_case_amount: Field.currency({
       label: 'Best Case',
-      description: 'Open opportunities with probability >= 60%.',
+      // Was "probability >= 60%", which named a threshold no writer applied
+      // and which disagreed with the stage → forecast_category map that
+      // actually classifies deals (proposal is 60% but lands in `commit`).
+      // The stored category is the single boundary (#590).
+      description: 'Open opportunities in the best_case or commit forecast category.',
       scale: 2,
       min: 0,
       group: 'amounts',
@@ -134,7 +148,7 @@ export const Forecast = ObjectSchema.create({
 
     commit_amount: Field.currency({
       label: 'Commit',
-      description: 'Open opportunities with probability >= 80% (owner-committed).',
+      description: 'Open opportunities in the commit forecast category (owner-committed).',
       scale: 2,
       min: 0,
       group: 'amounts',

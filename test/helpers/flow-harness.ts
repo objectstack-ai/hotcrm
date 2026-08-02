@@ -2,6 +2,7 @@
 
 import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-automation';
 import type * as Automation from '@objectstack/spec/automation';
+import type { Hook } from '@objectstack/spec/data';
 
 type Flow = Automation.Flow;
 
@@ -111,6 +112,47 @@ export function makeDataEngine(seed: Record<string, Rec[]> = {}): DataEngine {
 }
 
 /**
+ * Wrap a data engine so registered `beforeInsert` / `beforeUpdate` hooks run
+ * against the mutating payload, exactly as the real runtime does before a
+ * write reaches the driver.
+ *
+ * `previous` for an update is the first matching row — the flows here update
+ * by `id`, and `update_record` cannot fan out anyway (no `options.multi`).
+ */
+function withHooks(engine: DataEngine, hooks: Hook[]): DataEngine {
+  const run = async (
+    object: string,
+    event: 'beforeInsert' | 'beforeUpdate',
+    input: Rec,
+    previous?: Rec,
+  ) => {
+    for (const hook of hooks) {
+      if (hook.object !== object) continue;
+      if (!(hook.events ?? []).includes(event as never)) continue;
+      await (hook.handler as (ctx: Rec) => unknown)({
+        event, object, input, previous, user: undefined, logger: silentLogger,
+      });
+    }
+  };
+
+  return {
+    ...engine,
+    store: engine.store,
+    async insert(object, data) {
+      const input = { ...data };
+      await run(object, 'beforeInsert', input);
+      return engine.insert(object, input);
+    },
+    async update(object, data, opts = {}) {
+      const input = { ...data };
+      const previous = await engine.findOne(object, opts);
+      await run(object, 'beforeUpdate', input, previous ?? undefined);
+      return engine.update(object, input, opts);
+    },
+  };
+}
+
+/**
  * A notification captured from a `notify` node.
  *
  * The builtin notify node calls `messaging.emit({ topic, audience, payload,
@@ -188,11 +230,31 @@ export interface FlowHarness {
  * recipient/severity/template contract (the class of bug where a notify targets
  * `{record.owner.manager}` and silently interpolates to "undefined").
  */
+export interface FlowHarnessOptions {
+  /**
+   * Object hooks to run around the data engine's writes.
+   *
+   * Off by default, because most flow tests want to assert exactly what the
+   * FLOW wrote. But a flow that relies on a `beforeInsert` hook to complete
+   * the record it creates — `forecast_snapshot` hands `crm_forecast` a bare
+   * `period` and lets `forecast_derive_period` compute the calendar window —
+   * is only half-tested without them: the flow would look fine while writing a
+   * row no consumer can find.
+   *
+   * `beforeInsert` / `beforeUpdate` only; the flows under test have no
+   * after-hook dependencies.
+   */
+  hooks?: Hook[];
+}
+
 export function makeFlowHarness(
   flows: Record<string, Flow>,
   seed: Record<string, Rec[]> = {},
+  options: FlowHarnessOptions = {},
 ): FlowHarness {
-  const raw = makeDataEngine(seed);
+  const base = makeDataEngine(seed);
+  const hooks = options.hooks ?? [];
+  const raw: DataEngine = hooks.length === 0 ? base : withHooks(base, hooks);
   const notifications: SentNotification[] = [];
   const queries: RecordedQuery[] = [];
 
