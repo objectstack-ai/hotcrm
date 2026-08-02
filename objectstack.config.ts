@@ -7,6 +7,7 @@ import * as actions from './src/actions/index.js';
 import * as dashboards from './src/dashboards/index.js';
 import * as datasets from './src/datasets/index.js';
 import * as reports from './src/reports/index.js';
+import * as mappings from './src/mappings/index.js';
 import { allFlows } from './src/flows/index.js';
 import { allSkills } from './src/skills/index.js';
 import * as profiles from './src/profiles/index.js';
@@ -85,6 +86,11 @@ export default defineStack({
   dashboards: Object.values(dashboards),
   datasets: Object.values(datasets),
   reports: Object.values(reports),
+  // Reusable import projections (#603). Referenced by name from the import
+  // endpoint — `mappingName: 'crm_account_import'` — so a customer's own
+  // spreadsheet loads without per-column mapping by hand. Templates:
+  // `assets/import-templates/`.
+  mappings: Object.values(mappings),
   flows: allFlows,
   skills: allSkills,
   permissions: Object.values(profiles),
