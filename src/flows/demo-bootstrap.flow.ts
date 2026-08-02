@@ -34,6 +34,34 @@ type Flow = Automation.Flow;
  * user is. A real deployment assigns ownership through import or territory
  * rules instead, and by then nothing is ownerless for this to pick up.
  *
+ * ─── This flow must NOT staff anybody (#640) ─────────────────────────────
+ *
+ * The demo org now also has PEOPLE — an NA rep, an EU rep and a sales manager
+ * holding the positions the sharing rules and `opportunity_approval` route to
+ * (`src/sharing/demo-staffing.ts`). That staffing deliberately does not happen
+ * here, and the obvious "just add a create_record on sys_user" is refused twice
+ * over:
+ *
+ *   - This flow ships in the ARTIFACT, so it runs in a customer's org too. The
+ *     one outcome #640 rules out unconditionally is synthetic users appearing
+ *     there, and the only way to make that impossible rather than unlikely is
+ *     for the artifact to contain no mechanism that can create one.
+ *     `test/demo-staffing.test.ts` fails on any flow node that writes an
+ *     identity table.
+ *   - It would not produce usable people anyway: identity tables are
+ *     `managedBy: 'better-auth'` (ADR-0092), and a row inserted around that
+ *     surface has no credential — an account nobody can sign in as.
+ *
+ * Staffing therefore lives in `pnpm demo:staff`, which drives a LOCAL dev
+ * server through the platform's own admin endpoints. It also depends on this
+ * flow's behaviour staying exactly as it is: the demo's whole point is that a
+ * rep reads accounts they do NOT own (a `private` OWD already admits the owner,
+ * so a share to the owner proves nothing). The reps are created after the dev
+ * admin and appended to `sys_user`, so `get_user`'s unordered "first user" is
+ * unchanged by staffing — and the staffing script re-checks that from the other
+ * side, failing if any demo user turns out to own a seeded account. Ownership
+ * itself is #548's subject; do not redefine it here.
+ *
  * ─── TWO ownership columns, not one (#622) ───────────────────────────────
  *
  * Every claimed object carries two:
