@@ -1,0 +1,72 @@
+# Label taxonomy — the single source of truth for this repository's labels.
+#
+# Governance (no ad-hoc labels):
+#   - Every label this repo uses is declared here with a color and description.
+#     Add or change a label by PR-ing this file; the `label-sync` workflow
+#     applies the manifest when it lands on main (or via manual dispatch).
+#   - `.github/labeler.yml` (the path-based PR labeler) may only reference
+#     labels declared here — actions/labeler does not create labels.
+#   - Sync is non-destructive (skip-delete): labels absent from this manifest
+#     are left untouched. Retire a label by removing it here AND deleting it in
+#     repo settings in the same change, so manifest and reality stay aligned.
+#
+# Taxonomy:
+#   type        bug / enhancement / documentation / dependencies
+#   area        metadata / backend / ci/cd / configuration
+#   priority    prio:p0 — blocking the current release goal
+#               prio:p1 — next in line once P0s clear
+#               prio:p2 — triaged backlog, no near-term schedule
+#   provenance  upstream:objectstack — blocked on / caused by the platform
+#   workflow    needs-user-decision / skip-changeset
+
+# --- type ---
+- name: bug
+  color: d73a4a
+  description: Something isn't working
+- name: enhancement
+  color: a2eeef
+  description: New feature or request
+- name: documentation
+  color: 0075ca
+  description: Improvements or additions to documentation
+- name: dependencies
+  color: 0366d6
+  description: Dependency bumps and lockfile changes
+
+# --- area (mirrors .github/labeler.yml path rules) ---
+- name: metadata
+  color: c5def5
+  description: Declarative metadata — schema, security posture, UI surfaces
+- name: backend
+  color: c2e0c6
+  description: Server-side behaviour — hooks, flows, actions
+- name: ci/cd
+  color: 6e5494
+  description: CI plumbing and the verification pipeline
+- name: configuration
+  color: bfd4f2
+  description: Build and app configuration files
+
+# --- priority ---
+- name: "prio:p0"
+  color: b60205
+  description: Blocking the current release goal — do first
+- name: "prio:p1"
+  color: d93f0b
+  description: Next in line once P0s clear
+- name: "prio:p2"
+  color: fef2c0
+  description: Triaged backlog — no near-term schedule
+
+# --- provenance ---
+- name: "upstream:objectstack"
+  color: 5319e7
+  description: Blocked on / caused by the ObjectStack platform — tracked upstream
+
+# --- workflow ---
+- name: needs-user-decision
+  color: fbca04
+  description: Needs the maintainer's call before work proceeds
+- name: skip-changeset
+  color: cccccc
+  description: PR ships nothing to users (pure CI/docs chore) — changeset gate waived
