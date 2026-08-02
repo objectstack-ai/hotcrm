@@ -319,20 +319,24 @@ export const Case = ObjectSchema.create({
   
   // Removed: list_views and form_views belong in UI configuration, not object definition
   
+  // Predicates below are TOTAL: every `record.x` read is `has()`-guarded, so the
+  // rule returns a verdict even when the merged record has no such key. See
+  // AGENTS.md "Validation predicates must be TOTAL" and
+  // test/object-validation-predicates.test.ts, which fails the build otherwise.
   validations: [
     {
       name: 'resolution_required_for_closed',
       type: 'script',
       severity: 'error',
       message: 'Resolution is required when closing a case',
-      condition: P`record.status == "closed" && isBlank(record.resolution)`,
+      condition: P`has(record.status) && record.status == "closed" && (!has(record.resolution) || isBlank(record.resolution))`,
     },
     {
       name: 'escalation_reason_required',
       type: 'script',
       severity: 'error',
       message: 'Escalation reason is required when escalating a case',
-      condition: P`record.is_escalated == true && isBlank(record.escalation_reason)`,
+      condition: P`has(record.is_escalated) && record.is_escalated == true && (!has(record.escalation_reason) || isBlank(record.escalation_reason))`,
     },
     {
       name: 'case_status_progression',

@@ -115,13 +115,17 @@ export const QuoteLineItem = ObjectSchema.create({
     }),
   },
 
+  // Predicates below are TOTAL: every `record.x` read is `has()`-guarded, so the
+  // rule returns a verdict even when the merged record has no such key. See
+  // AGENTS.md "Validation predicates must be TOTAL" and
+  // test/object-validation-predicates.test.ts, which fails the build otherwise.
   validations: [
     {
       name: 'unit_price_positive',
       type: 'script',
       severity: 'error',
       message: 'Sales price cannot be negative',
-      condition: P`record.unit_price != null && record.unit_price < 0`,
+      condition: P`has(record.unit_price) && record.unit_price != null && record.unit_price < 0`,
     },
   ],
 });

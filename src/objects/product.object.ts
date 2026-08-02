@@ -223,26 +223,34 @@ export const Product = ObjectSchema.create({
   },
   
   // Validation Rules
+  //
+  // Predicates below are TOTAL: every `record.x` read is `has()`-guarded, so the
+  // rule returns a verdict even when the merged record has no such key. See
+  // AGENTS.md "Validation predicates must be TOTAL" and
+  // test/object-validation-predicates.test.ts, which fails the build otherwise.
   validations: [
     {
       name: 'price_positive',
       type: 'script',
       severity: 'error',
       message: 'List Price must be positive',
-      // Null-guard: strict CEL cannot compare dyn<null> < int, and an
-      // unguarded predicate aborts evaluation (rule silently skipped) — the
-      // hazard written up on `account.object.ts`. `list_price` is `required`,
-      // but the rule also runs on partial updates that omit it.
-      condition: P`record.list_price != null && record.list_price < 0`,
+      // Two distinct guards, both required. `has(...)` answers "is the key
+      // there at all" — on update the merged record is `{...previous, ...data}`
+      // and a driver that stores only written columns hands back no key, which
+      // aborts the whole predicate (#630). `!= null` then answers "does it hold
+      // a value" — strict CEL cannot compare dyn<null> < int, the hazard
+      // written up on `account.object.ts`. `list_price` is `required`, but the
+      // rule also runs on partial updates that omit it.
+      condition: P`has(record.list_price) && record.list_price != null && record.list_price < 0`,
     },
     {
       name: 'cost_less_than_price',
       type: 'script',
       severity: 'warning',
       message: 'Cost should be less than List Price',
-      // Both operands need the guard: `cost` is optional and absent on every
+      // Both operands need both guards: `cost` is optional and absent on every
       // seeded product, so this warning has never once evaluated.
-      condition: P`record.cost != null && record.list_price != null && record.cost >= record.list_price`,
+      condition: P`has(record.cost) && record.cost != null && has(record.list_price) && record.list_price != null && record.cost >= record.list_price`,
     },
   ],
 });

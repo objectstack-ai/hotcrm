@@ -154,6 +154,9 @@ Use the most specific `Field` type available from `@objectstack/spec/data`:
 - **i18n**: Every new object must have entries in all 4 locale files (`src/translations/{en,zh-CN,es-ES,ja-JP}.ts`) — label, pluralLabel, all field labels + option labels, view labels, navigation labels. No new feature ships without all 4 locales.
 - **Docs**: Every new object/feature requires user-facing documentation under `content/docs/` (e.g. `getting-started/`, `guides/`, `marketing/`, `analytics/`, `administration/`) written for business users + admins (not developers).
 - **Documentation**: All documentation MUST be in English.
+- **Validation predicates must be TOTAL**: every `record.x` read in an authored
+  CEL predicate — `validations[].condition`, `requiredWhen`, `readonlyWhen`,
+  `visibleWhen` — carries a `has(record.x)` guard. See below.
 - **No Engine Code**: Do not try to modify the core runtime code. Focus on the *usage* of the runtime.
 - **Dependencies**: HotCRM depends on the published `@objectstack/*` packages (runtime, spec, drivers, services) declared in `package.json`. Keep `specVersion` in `objectstack.manifest.json` aligned with the installed `@objectstack/spec`.
 - **Tone**: Act as a Senior 10x Engineer. Be concise, professional, and technically accurate.
@@ -166,6 +169,41 @@ Use the most specific `Field` type available from `@objectstack/spec/data`:
 > warning on non-object items (pages/flows/datasets/etc.) is advisory only; its
 > "fail at install" wording is stale. Don't mass-rename UI/automation items to
 > chase that warning.
+
+### Validation predicates must be TOTAL (#630)
+
+A validation rule is evaluated against `{...previous, ...data}`, and the engine
+fills absent fields with `null` **only on insert**. On update, `previous` is
+whatever the driver returned — and a driver that stores only the columns a row
+was actually written with (`driver-memory`, `driver-mongodb`) hands back a
+record with the key **absent**, not null. Strict CEL then aborts the whole
+predicate with `No such key`, and the engine's answer to a predicate that
+cannot answer is to **skip the rule**:
+
+```
+WARN Validation rule 'x' predicate failed to evaluate (type: No such key: y) — skipped
+```
+
+No error, no failed save — just a rule that reads as enforced and requires
+nothing. So **every `record.x` read carries a `has(record.x)` guard**:
+
+| intent | write this |
+| --- | --- |
+| `x` holds no value | `(!has(record.x) \|\| isBlank(record.x))` |
+| `x` holds a value | `has(record.x) && record.x <op> …` |
+
+`!= null` is **not** a substitute — measured on an absent key, `record.f != null`
+aborts exactly like `record.f < 0` does. It guards a different hazard
+(`dyn<null> < int`); numeric comparisons need both guards. `has()` is the only
+total accessor: `coalesce(record.f, "")` aborts too, because its argument is
+evaluated before the call.
+
+`test/object-validation-predicates.test.ts` enforces this two ways — a grep for
+the guard, and a run of every predicate through the engine's own
+`evaluateValidationRules` against a record with no keys at all. That file also
+carries the full measurement table, the driver-by-driver findings, and why this
+route was chosen over making the in-memory test driver column-complete. Read it
+before adding a rule.
 
 ## ⬆️ Platform Upgrades (ObjectStack version bumps)
 

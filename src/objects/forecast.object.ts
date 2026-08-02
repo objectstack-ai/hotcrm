@@ -213,6 +213,10 @@ export const Forecast = ObjectSchema.create({
     apiMethods: ['get', 'list', 'create', 'update', 'delete'],
   },
 
+  // Predicates below are TOTAL: every `record.x` read is `has()`-guarded, so the
+  // rule returns a verdict even when the merged record has no such key. See
+  // AGENTS.md "Validation predicates must be TOTAL" and
+  // test/object-validation-predicates.test.ts, which fails the build otherwise.
   validations: [
     {
       name: 'period_end_after_start',
@@ -225,14 +229,14 @@ export const Forecast = ObjectSchema.create({
       // operator as the `end_after_start` twins on campaign/contract, which
       // this rule used to diverge from in both operator and wording
       // ("on or after") — #514 item 12.
-      condition: P`record.period_end != null && record.period_start != null && record.period_end <= record.period_start`,
+      condition: P`has(record.period_end) && record.period_end != null && has(record.period_start) && record.period_start != null && record.period_end <= record.period_start`,
     },
     {
       name: 'snapshot_amounts_non_negative',
       type: 'script',
       severity: 'error',
       message: 'Snapshot amounts cannot be negative.',
-      condition: P`(record.pipeline_amount != null && record.pipeline_amount < 0) || (record.best_case_amount != null && record.best_case_amount < 0) || (record.commit_amount != null && record.commit_amount < 0) || (record.closed_amount != null && record.closed_amount < 0)`,
+      condition: P`(has(record.pipeline_amount) && record.pipeline_amount != null && record.pipeline_amount < 0) || (has(record.best_case_amount) && record.best_case_amount != null && record.best_case_amount < 0) || (has(record.commit_amount) && record.commit_amount != null && record.commit_amount < 0) || (has(record.closed_amount) && record.closed_amount != null && record.closed_amount < 0)`,
     },
   ],
 });

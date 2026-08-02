@@ -102,19 +102,27 @@ export const OpportunityLineItem = ObjectSchema.create({
     }),
   },
 
+  // Predicates below are TOTAL: every `record.x` read is `has()`-guarded, so the
+  // rule returns a verdict even when the merged record has no such key. See
+  // AGENTS.md "Validation predicates must be TOTAL" and
+  // test/object-validation-predicates.test.ts, which fails the build otherwise.
   validations: [
     {
       name: 'unit_price_positive',
       type: 'script',
       severity: 'error',
       message: 'Sales price cannot be negative',
-      // The `!= null` guard is load-bearing, not defensive noise: strict CEL
+      // Both guards are load-bearing, not defensive noise. `has(...)` answers
+      // "is the key present at all": on update the predicate sees
+      // `{...previous, ...data}`, and a driver that stores only written columns
+      // returns no key, which aborts the whole predicate and silently skips the
+      // rule (#630). `!= null` answers "does it hold a value": strict CEL
       // ABORTS on `null < 0` instead of evaluating it false, so the unguarded
       // form left this rule inert on a blank price — it never fired at all,
-      // which is the opposite of what a validation is for. The hazard is
+      // which is the opposite of what a validation is for. The `null` hazard is
       // written up at `account.object.ts:244-245`; the same-named rule in
-      // `quote_line_item.object.ts` has carried the guard all along.
-      condition: P`record.unit_price != null && record.unit_price < 0`,
+      // `quote_line_item.object.ts` has carried that guard all along.
+      condition: P`has(record.unit_price) && record.unit_price != null && record.unit_price < 0`,
     },
   ],
 });
