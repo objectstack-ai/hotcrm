@@ -777,7 +777,8 @@ export const zhCN: TranslationData = {
           label: '赢单原因',
           options: {
             better_product: '产品更优', better_price: '价格更优', relationship: '客户关系',
-            better_support: '支持更好', best_fit: '最佳契合', other: '其他',
+            better_support: '支持更好', best_fit: '最佳契合',
+            quote_accepted: '报价被接受', other: '其他',
           },
         },
         loss_reason: {

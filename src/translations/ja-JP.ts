@@ -326,6 +326,26 @@ export const jaJP: TranslationData = {
         days_in_stage: { label: '現ステージ滞在日数' },
         stage_entry_date: { label: 'ステージ開始日' },
         is_private: { label: '非公開' },
+        // #593 — 商談クローズ時に必須。失注理由は営業ダッシュボードの
+        // 内訳ウィジェットにも出るため、保存値がそのまま画面に出てはいけない。
+        win_reason: {
+          label: '受注理由',
+          options: {
+            better_product: '製品が優れている', better_price: '価格が優れている',
+            relationship: '既存の関係', better_support: 'サポートが優れている',
+            best_fit: '最適な機能・適合性',
+            quote_accepted: '見積承認', other: 'その他',
+          },
+        },
+        loss_reason: {
+          label: '失注理由',
+          options: {
+            price: '価格が高すぎる', competitor: '競合他社に敗北',
+            no_budget: '予算なし', no_decision: '意思決定なし',
+            timing: 'タイミング不適', features: '機能不足', other: 'その他',
+          },
+        },
+        loss_details: { label: '受注・失注の詳細' },
       },
       _views: {
         open_opportunities: { label: '進行中の商談' },

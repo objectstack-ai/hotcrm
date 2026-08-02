@@ -23,6 +23,26 @@ Every opportunity moves through these stages. The system tracks where you are an
 
 You can move from any open stage directly to **Closed Lost** (deals can be lost at any point), but you can't skip forward — you have to walk through the funnel one stage at a time. The system blocks invalid jumps to keep your forecast honest.
 
+## Closing a deal — the reason is required
+
+Closing an opportunity takes one extra field, and the system will not save the record without it:
+
+| Closing as | You must pick |
+| --- | --- |
+| 🟢 **Closed Won** | **Win Reason** — Better Product, Better Price, Existing Relationship, Better Support, Best Fit / Features, or Other |
+| 🔴 **Closed Lost** | **Loss Reason** — Price Too High, Lost to Competitor, No Budget, No Decision, Bad Timing, Missing Features, or Other |
+
+**Win/Loss Details** is the free-text box next to it — use it for the sentence a teammate would actually need six months later ("marketing is locked into a 2-year HubSpot contract, revisit at renewal").
+
+Two things to know:
+
+- **This is checked on the server**, not just in the form. An import, an API call or a bulk update that closes a deal without the applicable reason is rejected the same way a rep's form is.
+- **Closed deals are locked.** Once a deal is closed, only the narrative fields (description, next steps) stay editable — so the reason cannot be filled in afterwards. Pick it when you close.
+
+If the deal closes because the customer accepted a quote, HotCRM closes it for you and records the win reason as **Quote Accepted** — see [Quotes](/docs/sales/quotes).
+
+Those two fields are what the Sales dashboard's **win rate** and **Why We Lose** widgets are built from; see [Dashboards](/docs/analytics/dashboards).
+
 ## What an opportunity record stores
 
 The detail screen has 7 sections:
@@ -32,7 +52,7 @@ The detail screen has 7 sections:
 | **Basic Information** | Name, account, primary contact, owner |
 | **Financials** | Amount, expected revenue *(auto)*, probability *(auto from stage)* |
 | **Sales Process** | Stage, close date, created date, stage entry date |
-| **Classification** | Type (New Business / Upgrade / Renewal / Expansion), lead source |
+| **Classification** | Type (New Business / Upgrade / Renewal / Expansion), lead source, win reason, loss reason, win/loss details |
 | **Competition & Campaigns** | Competitors, source campaign |
 | **Notes & Next Steps** | Description, next steps |
 | **Forecast & Metrics** | Line item totals, approval status |

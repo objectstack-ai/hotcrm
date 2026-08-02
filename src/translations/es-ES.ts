@@ -326,6 +326,27 @@ export const esES: TranslationData = {
         days_in_stage: { label: 'Días en Etapa Actual' },
         stage_entry_date: { label: 'Fecha de Entrada a la Etapa' },
         is_private: { label: 'Privado' },
+        // #593 — obligatorias al cerrar la oportunidad, y el desglose de
+        // motivos de pérdida las muestra en el panel de ventas, así que el
+        // valor almacenado nunca debe llegar crudo al selector.
+        win_reason: {
+          label: 'Motivo de Ganancia',
+          options: {
+            better_product: 'Mejor Producto', better_price: 'Mejor Precio',
+            relationship: 'Relación Existente', better_support: 'Mejor Soporte',
+            best_fit: 'Mejor Ajuste / Funcionalidades',
+            quote_accepted: 'Presupuesto Aceptado', other: 'Otro',
+          },
+        },
+        loss_reason: {
+          label: 'Motivo de Pérdida',
+          options: {
+            price: 'Precio Demasiado Alto', competitor: 'Perdida ante Competidor',
+            no_budget: 'Sin Presupuesto', no_decision: 'Sin Decisión',
+            timing: 'Momento Inadecuado', features: 'Funcionalidades Faltantes', other: 'Otro',
+          },
+        },
+        loss_details: { label: 'Detalles de Ganancia/Pérdida' },
       },
       _views: {
         open_opportunities: { label: 'Oportunidades Abiertas' },
