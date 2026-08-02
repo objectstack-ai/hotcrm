@@ -4,6 +4,7 @@
   "pages": [
     "index",
     "search-and-navigation",
+    "files-and-comments",
     "email-and-calendar",
     "mobile",
     "import-and-export",

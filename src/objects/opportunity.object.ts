@@ -309,12 +309,15 @@ export const Opportunity = ObjectSchema.create({
   ],
   
   // Enable advanced features
-  // Dead object-level enable.* flags removed in @objectstack 12 (ADR-0049);
-  // only the live API surface remains. Stage/amount/owner history is tracked
-  // per-field via Field.trackHistory (ADR-0052).
+  // Dead enable.* flags (trash/mru) removed in @objectstack 12 (ADR-0049).
+  // Stage/amount/owner history is tracked per-field via Field.trackHistory
+  // (ADR-0052).
   enable: {
     apiEnabled: true,
     apiMethods: ['get', 'list', 'create', 'update', 'delete'], // Whitelist allowed API operations
+    // #602 — proposals, redlines and signed orders belong on the deal.
+    // See the canonical capability note in `src/objects/index.ts`.
+    files: true,
   },
 
   // ADR-0052 §5b.2 — declarative milestone activity. When `stage` enters these

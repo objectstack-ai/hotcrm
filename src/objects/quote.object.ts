@@ -217,11 +217,14 @@ export const Quote = ObjectSchema.create({
   ],
   
   // Enable advanced features
-  // Dead object-level enable.* flags removed in @objectstack 12 (ADR-0049);
-  // only the live API surface remains. History → Field.trackHistory (ADR-0052).
+  // Dead enable.* flags (trash/mru) removed in @objectstack 12 (ADR-0049);
+  // History → Field.trackHistory (ADR-0052).
   enable: {
     apiEnabled: true,
     apiMethods: ['get', 'list', 'create', 'update', 'delete'],
+    // #602 — the generated quote PDF and the customer's countersigned copy.
+    // See the canonical capability note in `src/objects/index.ts`.
+    files: true,
   },
   
   // Validation Rules
