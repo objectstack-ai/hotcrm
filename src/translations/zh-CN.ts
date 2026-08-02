@@ -35,6 +35,10 @@ export const zhCN: TranslationData = {
         phone: { label: '电话' },
         website: { label: '网站' },
         billing_address: { label: '账单地址' },
+        billing_country: {
+          label: '账单国家',
+          help: '由账单地址推导——区域共享规则据此匹配的国家代码。',
+        },
         office_location: { label: '办公地点' },
         owner: { label: '客户负责人' },
         parent_account: { label: '母公司' },

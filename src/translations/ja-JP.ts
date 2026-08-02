@@ -34,6 +34,10 @@ export const jaJP: TranslationData = {
         phone: { label: '電話番号' },
         website: { label: 'Webサイト' },
         billing_address: { label: '請求先住所' },
+        billing_country: {
+          label: '請求先国',
+          help: '請求先住所から導出 — テリトリー共有ルールが照合する国コード。',
+        },
         office_location: { label: 'オフィス所在地' },
         owner: { label: '取引先責任者' },
         parent_account: { label: '親取引先' },

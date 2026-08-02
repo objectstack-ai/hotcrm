@@ -450,6 +450,77 @@ describe('account_protection', () => {
       })),
     ).resolves.toBeUndefined();
   });
+
+  // ─── billing_country projection (#621) ───────────────────────────────
+  //
+  // The territory sharing rules filter on `billing_country`, and this hook is
+  // its only writer. If the projection stops running, both rules still SEED
+  // (the column exists) but match nothing — the same silent territory outage
+  // #621 was filed for, one layer down. So the behaviour is pinned per shape.
+
+  it.each([
+    ['a country code',            { country: 'US' },                    'US'],
+    ['lower case',                { country: 'de' },                    'DE'],
+    ['surrounding whitespace',    { country: '  fr  ' },                'FR'],
+    ['a full address',            { street: '1 Main', city: 'Austin', country: 'US' }, 'US'],
+  ] as [string, Rec, string][])(
+    'projects %s onto billing_country on insert', async (_label, billing_address, expected) => {
+      const input: Rec = { name: 'Acme', billing_address };
+      await hook.handler(makeCtx({ event: 'beforeInsert', input, user: USER }));
+      expect(input.billing_country).toBe(expected);
+    },
+  );
+
+  it.each([
+    ['a null address',        null],
+    ['an address with no country', { city: 'Austin' }],
+    ['a blank country',       { country: '   ' }],
+    ['a non-string country',  { country: 42 }],
+    ['a non-object value',    'Austin, TX'],
+  ] as [string, unknown][])(
+    'projects %s onto null rather than throwing', async (_label, billing_address) => {
+      // A `before*` hook that throws rejects the whole write, so every shape an
+      // address column can hold must map to a value instead.
+      const input: Rec = { name: 'Acme', billing_address };
+      await expect(
+        hook.handler(makeCtx({ event: 'beforeInsert', input, user: USER })),
+      ).resolves.toBeUndefined();
+      expect(input.billing_country).toBeNull();
+    },
+  );
+
+  it('leaves billing_country alone when the write does not carry the address', async () => {
+    // The regression that would silently empty both territories: recomputing
+    // unconditionally would blank the column on every unrelated edit.
+    const input: Rec = { phone: '+1-512-555-0100' };
+    await hook.handler(makeCtx({
+      event: 'beforeUpdate',
+      input,
+      previous: { billing_address: { country: 'US' }, billing_country: 'US' },
+      user: USER,
+    }));
+    expect('billing_country' in input).toBe(false);
+  });
+
+  it('clears billing_country when the address itself is cleared', async () => {
+    const input: Rec = { billing_address: null };
+    await hook.handler(makeCtx({
+      event: 'beforeUpdate',
+      input,
+      previous: { billing_address: { country: 'US' }, billing_country: 'US' },
+      user: USER,
+    }));
+    expect(input.billing_country).toBeNull();
+  });
+
+  it('projects on a SYSTEM write too — seeds and imports must land in a territory', async () => {
+    // Unlike `last_activity_date`, this projection is not user-gated: a seeded
+    // or imported account with a billing country belongs to its territory
+    // however it was written.
+    const input: Rec = { name: 'Globex', billing_address: { country: 'DE' } };
+    await hook.handler(makeCtx({ event: 'beforeInsert', input, user: SYSTEM }));
+    expect(input.billing_country).toBe('DE');
+  });
 });
 
 // ──────────────────────────────────────────────────────────── contact ──

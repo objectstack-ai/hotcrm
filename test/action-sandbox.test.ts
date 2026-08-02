@@ -418,6 +418,47 @@ describe('every registered hook still lowers to a metadata-only body', () => {
 });
 
 /**
+ * The territory projection, executed in the VM rather than as a closure (#621).
+ *
+ * `crm_account.billing_country` is what the two territory sharing rules filter
+ * on, and `account_protection` is its only writer. `hooks-runtime-sales.test.ts`
+ * proves the logic by calling the handler directly — which cannot see the one
+ * failure mode that matters here: the projection is written INLINE (no
+ * module-scope helper) precisely so the handler still lowers to a metadata-only
+ * body, and a body is what the runtime actually evaluates. If a future edit
+ * factors it back out into a helper, the guard above turns red; if the inlined
+ * code uses something the sandbox does not provide, only this does.
+ */
+describe('account_protection projects billing_country inside the sandbox', () => {
+  const hook = hookNamed(allHooks.find((h) => h.name === 'account_protection'), 'account_protection');
+
+  it('normalises the address country onto billing_country', async () => {
+    const { input } = await runHookBody(hook, {
+      event: 'beforeInsert',
+      input: { name: 'Acme', billing_address: { street: '1 Main', country: ' de ' } },
+    });
+    expect(input.billing_country).toBe('DE');
+  });
+
+  it('yields null for an address carrying no country', async () => {
+    const { input } = await runHookBody(hook, {
+      event: 'beforeInsert',
+      input: { name: 'Acme', billing_address: { city: 'Austin' } },
+    });
+    expect(input.billing_country).toBeNull();
+  });
+
+  it('leaves billing_country untouched when the write omits the address', async () => {
+    const { input } = await runHookBody(hook, {
+      event: 'beforeUpdate',
+      input: { phone: '+1-512-555-0100' },
+      previous: { billing_country: 'US' },
+    });
+    expect('billing_country' in input).toBe(false);
+  });
+});
+
+/**
  * A price fill written the way the factory's doc comment forbids: the handler
  * reads `objectName`, which is a closure here and nothing at all once the body
  * is lowered. Kept next to the test that rejects it so the forbidden shape is

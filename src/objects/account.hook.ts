@@ -7,6 +7,8 @@ import type { HookApi } from './_hook-api';
  * Account protection hook.
  *
  * - Validates `website` format and `annual_revenue` non-negative.
+ * - Projects `billing_address.country` onto the flat `billing_country` column
+ *   the territory sharing rules filter on (#621).
  * - Refuses to delete a `customer` account that still has open opportunities.
  */
 const accountHook: Hook = {
@@ -27,6 +29,43 @@ const accountHook: Hook = {
       }
       if (typeof input.annual_revenue === 'number' && input.annual_revenue < 0) {
         throw new Error('Annual Revenue must be greater than or equal to 0');
+      }
+
+      // ─── Territory projection (#621) ───────────────────────────────────
+      //
+      // `billing_country` is the flat column the two territory sharing rules
+      // filter on, and this block is its only writer. It exists because a
+      // sharing rule's CEL condition is compiled into a pushdown-able query
+      // filter, and that compiler rejects any path reaching INSIDE a composite
+      // `address` value — `record.billing_address.country in [...]` is not
+      // translatable, so plugin-sharing dropped both rules on every boot and
+      // `na_sales_team` / `eu_sales_team` got nothing at all.
+      //
+      // Recompute ONLY when the write carries the address: a partial update
+      // that never mentions `billing_address` must leave `billing_country`
+      // alone, or every unrelated edit would blank the column and silently
+      // evict the account from its territory. A write that CLEARS the address
+      // (`billing_address: null`) does clear the projection — the key is
+      // present, the value is empty.
+      //
+      // Only `country` is read. `countryCode` is the ISO 3166-1 alpha-2 slot,
+      // where the United Kingdom is `GB`, while the Europe rule is authored
+      // against `UK`; preferring the ISO slot would silently drop UK accounts
+      // out of their own territory. Mirroring the one slot the rules have
+      // always named keeps this a change of STORAGE LOCATION, not of rule
+      // semantics.
+      //
+      // Written inline rather than as a module-scope helper on purpose: hook
+      // bodies must lower to metadata-only (no free identifiers), which
+      // `test/action-sandbox.test.ts` enforces for every registered hook.
+      if ('billing_address' in input) {
+        const address = input.billing_address;
+        const country =
+          address !== null && typeof address === 'object' && !Array.isArray(address)
+            ? (address as { country?: unknown }).country
+            : undefined;
+        const normalized = typeof country === 'string' ? country.trim().toUpperCase() : '';
+        input.billing_country = normalized === '' ? null : normalized;
       }
     }
 

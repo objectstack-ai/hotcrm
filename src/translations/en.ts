@@ -35,6 +35,10 @@ export const en: TranslationData = {
         phone: { label: 'Phone' },
         website: { label: 'Website' },
         billing_address: { label: 'Billing Address' },
+        billing_country: {
+          label: 'Billing Country',
+          help: 'Derived from Billing Address — the country code territory sharing rules match on.',
+        },
         office_location: { label: 'Office Location' },
         owner: { label: 'Account Owner' },
         parent_account: { label: 'Parent Account' },

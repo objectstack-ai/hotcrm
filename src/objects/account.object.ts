@@ -119,6 +119,54 @@ export const Account = ObjectSchema.create({
       group: 'contact_info',
     }),
 
+    /**
+     * Flat projection of `billing_address.country` — the column the territory
+     * sharing rules filter on (#621).
+     *
+     * ### Why this field exists
+     *
+     * `billing_address` is an `address` field: the platform stores the whole
+     * {street, city, state, postalCode, country, countryCode, formatted}
+     * value in ONE column. A sharing rule's CEL condition is compiled to a
+     * pushdown-able `FilterCondition` by `compileCelToFilter`, and that
+     * compiler rejects every path that reaches INSIDE such a value:
+     *
+     *     record.billing_address.country in ["US","CA","MX"]
+     *       → unsupported: cross-object/nested field path
+     *         "record.billing_address.country" is not pushdown-able
+     *
+     * `plugin-sharing` then refuses to seed the rule rather than degrade it to
+     * match-all, so both territory rules were dropped on every boot and
+     * `na_sales_team` / `eu_sales_team` received nothing at all. Measured: the
+     * blocker is the NESTED PATH, not the `in [...]` operator — `in [...]`,
+     * `==`, `!=`, `<`, `>`, `&&`, `||`, `!`, `startsWith()` and `== null` all
+     * compile fine against a FLAT field. Rewriting the condition as a
+     * disjunction of `==` (issue #621 option A) would therefore NOT have
+     * helped; only a flat column does. See `test/sharing-seeding.test.ts`,
+     * which measures that matrix instead of assuming it.
+     *
+     * ### What it holds
+     *
+     * `billing_address.country`, trimmed and upper-cased — nothing else.
+     * `countryCode` is deliberately NOT consulted: it carries ISO 3166-1
+     * alpha-2, where the United Kingdom is `GB`, while the Europe rule is
+     * authored against `UK`. Preferring the ISO slot would silently drop UK
+     * accounts out of the EU territory, so this projection mirrors exactly the
+     * one slot the rules have always named and changes no rule semantics.
+     *
+     * Derived, never authored: `account.hook.ts` recomputes it on every write
+     * that carries `billing_address`, and leaves it untouched on every write
+     * that does not.
+     */
+    billing_country: Field.text({
+      label: 'Billing Country',
+      description:
+        'Derived from Billing Address — the country code territory sharing rules match on. Enter the country as a 2-letter code (US, DE, …) in the address.',
+      readonly: true,
+      maxLength: 64,
+      group: 'contact_info',
+    }),
+
     // Office Location (new field type)
     office_location: Field.location({
       label: 'Office Location',
@@ -223,6 +271,9 @@ export const Account = ObjectSchema.create({
     { fields: ['name'], unique: true },
     { fields: ['owner'] },
     { fields: ['type', 'is_active'] },
+    // The territory sharing rules filter on this column, so it is read on
+    // every account query a territory recipient makes (#621).
+    { fields: ['billing_country'] },
   ],
   
   // API surface + capabilities. `trash` / `mru` were removed in @objectstack 12

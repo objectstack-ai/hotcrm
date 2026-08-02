@@ -229,7 +229,12 @@ export const AccountViews = defineView({
       {
         label: 'Locations',
         columns: 1,
-        fields: ['billing_address', 'office_location'],
+        // `billing_country` is readonly and derived, but it is on the form on
+        // purpose: it is the value the territory sharing rules actually match,
+        // so an admin asking "why does the NA team not see this account?" can
+        // read the answer off the record instead of guessing at the address
+        // blob (#621).
+        fields: ['billing_address', 'billing_country', 'office_location'],
       },
       {
         label: 'Description',
