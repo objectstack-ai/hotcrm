@@ -44,11 +44,25 @@ export const Account = ObjectSchema.create({
     }),
 
     // Basic Information
+    //
+    // `unique: true` is declared HERE, on the field, and deliberately NOT as a
+    // `{ fields: ['name'], unique: true }` entry in `indexes[]` below (#625).
+    // Since framework #3696 the field-level form is tenant-scoped — it
+    // materializes as `(organization_id, name)`, unique WITHIN an organization —
+    // while a declared index is taken verbatim, i.e. platform-wide. The table
+    // form is what this object used to carry, and it meant the SECOND
+    // organization to create an "Acme Corp" was rejected by the database.
+    // Account name is also the seed data's external-id / upsert key
+    // (`src/data/sales.seed.ts`), so that bit the very first multi-tenant
+    // install. The composite also indexes the column, so no separate
+    // `{ fields: ['name'] }` entry is needed for the `searchableFields` /
+    // seed-upsert read paths.
     name: Field.text({
       label: 'Account Name',
       required: true,
       storage: { notNull: true },
       searchable: true,
+      unique: true,
       maxLength: 255,
       group: 'basic',
     }),
@@ -264,11 +278,15 @@ export const Account = ObjectSchema.create({
   },
   
   // Database indexes for performance
+  //
+  // No `{ fields: ['name'], unique: true }` here (#625). Account-name
+  // uniqueness is declared on the `name` field itself, which since framework
+  // #3696 builds the tenant composite `(organization_id, name)`. Declaring the
+  // single-column index too makes the platform-wide constraint win and leaves
+  // the per-tenant one unreachable (framework#3991 `unique/double-declaration`)
+  // — the same trap `crm_contact`, `crm_lead` and `crm_product` document. Two
+  // organizations must be able to each have their own "Acme Corp".
   indexes: [
-    // Account name is the external id / upsert key (see src/data) and must be
-    // unique. In 7.6 uniqueness is expressed as a unique index — the standalone
-    // `type: 'unique'` validation rule was removed (ADR-0032 validation union).
-    { fields: ['name'], unique: true },
     { fields: ['owner'] },
     { fields: ['type', 'is_active'] },
     // The territory sharing rules filter on this column, so it is read on
@@ -294,7 +312,8 @@ export const Account = ObjectSchema.create({
   // This object declares none. Two entries used to live here:
   //
   // - `account_name_unique` (type: 'unique') was removed in 7.6 — uniqueness
-  //   now lives on the `name` index above (unique: true).
+  //   now lives on the `name` field above (`unique: true`), which the driver
+  //   materializes as the per-tenant `(organization_id, name)` index (#625).
   // - `revenue_positive` was removed in #514 (item 7) as a duplicate. It
   //   restated a check `account.hook.ts` already performs on beforeInsert /
   //   beforeUpdate, and the two disagreed in wording: the validation said
