@@ -1,0 +1,29 @@
+name: Label Sync
+
+# Applies .github/labels.yml — the label taxonomy manifest — to the repository,
+# creating missing labels and updating colors/descriptions of declared ones.
+# Non-destructive by design (skip-delete): labels not in the manifest are left
+# alone, so GitHub defaults and any not-yet-inventoried labels survive. Retire
+# a label by removing it from the manifest AND deleting it in repo settings.
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/labels.yml']
+  workflow_dispatch:
+
+jobs:
+  sync:
+    name: Sync labels from manifest
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: crazy-max/ghaction-github-labeler@v5
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          yaml-file: .github/labels.yml
+          skip-delete: true
+          dry-run: false
