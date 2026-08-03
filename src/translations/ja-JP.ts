@@ -719,11 +719,6 @@ export const jaJP: TranslationData = {
     'error.load_failed': 'データの読み込みに失敗しました',
   },
 
-  validationMessages: {
-    amount_required_for_closed: 'フェーズが「成立」の場合、金額は必須です',
-    close_date_required: '商談には完了予定日が必要です',
-    discount_limit: '割引は40%を超えることはできません',
-  },
 
   dashboards: {
     crm_overview_dashboard: {

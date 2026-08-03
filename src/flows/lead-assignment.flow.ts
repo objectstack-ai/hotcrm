@@ -40,18 +40,12 @@ export const LeadAssignmentFlow: Flow = {
       config: { objectName: 'crm_lead', triggerType: 'record-after-create' },
     },
     {
-      // TOTALITY (#633): `rating` is neither required nor defaulted, so a lead
-      // written without one is stored with NO `rating` column on
-      // driver-memory / driver-mongodb. Measured end-to-end: the unguarded
-      // `record.rating >= 4` on edge `e2` aborted with `No such key: rating`
-      // and an unrated lead got no SLA stamp and no alert at all. `has()`
-      // alone is not enough on an ORDERING comparison — an explicit
-      // `rating: null` passes `has()` and then aborts with
-      // `no such overload: dyn<null> >= int` — so both guards are required,
-      // in this order. Kept in sync with edge `e2` below, which is what
-      // actually branches (see the note there).
+      // Branching lives on edges `e2` / `e3` — see the totality note there.
+      // This node carries no `config.condition`: the engine never evaluates a
+      // `decision` node's singular one, so a copy here would restate the gate
+      // without being the gate (17.0.0-rc.2's `flow-inert-node-condition`,
+      // #4414).
       id: 'check_hot', type: 'decision', label: 'Hot Lead (rating ≥ 4)?',
-      config: { condition: P`has(record.rating) && record.rating != null && record.rating >= 4` },
     },
 
     // ── Hot path: 1-day SLA, high-severity alert ───────────────────
@@ -109,6 +103,14 @@ export const LeadAssignmentFlow: Flow = {
     // "declared ≠ enforced" shape this repo keeps deleting rules over. So the
     // hot branch demands a readable rating and the standard branch absorbs
     // everything else: an unrated lead is, correctly, not a hot lead.
+    //
+    // `rating` is neither required nor defaulted, so a lead written without one
+    // is stored with NO `rating` column on driver-memory / driver-mongodb.
+    // Measured end-to-end: the unguarded `record.rating >= 4` aborted with `No
+    // such key: rating` and an unrated lead got no SLA stamp and no alert at
+    // all. `has()` alone is not enough on an ORDERING comparison — an explicit
+    // `rating: null` passes `has()` and then aborts with `no such overload:
+    // dyn<null> >= int` — so both guards are required, in this order.
     { id: 'e2', source: 'check_hot', target: 'sla_hot', type: 'conditional', condition: P`has(record.rating) && record.rating != null && record.rating >= 4`, label: 'Hot' },
     { id: 'e3', source: 'check_hot', target: 'sla_std', type: 'conditional', condition: P`!has(record.rating) || record.rating == null || record.rating < 4`, label: 'Standard' },
     { id: 'e4', source: 'sla_hot', target: 'notify_hot', type: 'default' },

@@ -60,11 +60,18 @@ export const LeadConversionFlow: Flow = {
         // client re-evaluates the predicate against the values collected so far,
         // which is why it cannot be a server-interpolated template.
         fields: [
-          // `defaultValue: false` is load-bearing. An untouched checkbox holds
-          // `undefined`, which the runner counts as an unanswered required
-          // field — so "convert this lead WITHOUT an opportunity", the commonest
-          // path, blocked Submit on a box the user deliberately left clear.
-          { name: 'createOpportunity', label: 'Create Opportunity?', type: 'boolean', required: true, defaultValue: false },
+          // NOT `required` (#4477). A checkbox has no unanswered state — clear
+          // IS an answer, and "convert this lead WITHOUT an opportunity" is the
+          // commonest path. `required: true` said otherwise on both sides of the
+          // wire: the client counted the untouched box as an unanswered field
+          // and blocked Submit, and from 17.0.0-rc.2 the SERVER enforces the
+          // screen's declared contract too, refusing the resume outright with
+          // `INVALID_SCREEN_INPUT: Screen field "createOpportunity" is required`
+          // — so a runner that posts only what the user touched could no longer
+          // convert a lead at all. `defaultValue: false` (and the
+          // `init_defaults` assignment behind it) is what actually supplies the
+          // answer; the flag only ever contradicted it.
+          { name: 'createOpportunity', label: 'Create Opportunity?', type: 'boolean', defaultValue: false },
           { name: 'opportunityName', label: 'Opportunity Name', type: 'text', required: true, visibleWhen: 'createOpportunity == true' },
           { name: 'opportunityAmount', label: 'Opportunity Amount', type: 'currency', visibleWhen: 'createOpportunity == true' },
         ],
@@ -119,8 +126,9 @@ export const LeadConversionFlow: Flow = {
       config: { objectName: 'crm_account', filter: { name_normalized: '{leadRecord.company_normalized}' }, outputVariable: 'matchedAccount' },
     },
     {
+      // Branching is on edges `e5` / `e6`. No `config.condition` here: a
+      // `decision` node's singular one is never evaluated (#4414).
       id: 'decision_account', type: 'decision', label: 'Account Already Exists?',
-      config: { condition: P`vars.matchedAccount != null` },
     },
     {
       // NEW-account branch. outputVariable is `createdAccount`; the assignment
@@ -169,8 +177,8 @@ export const LeadConversionFlow: Flow = {
       },
     },
     {
+      // Branching is on edges `e11` / `e12` — see `decision_account`.
       id: 'decision_contact', type: 'decision', label: 'Contact Already Exists?',
-      config: { condition: P`vars.matchedContact != null` },
     },
     {
       // `accountId` is a bare id string from whichever account branch ran.
@@ -195,8 +203,8 @@ export const LeadConversionFlow: Flow = {
       config: { assignments: { contactId: '{matchedContact.id}' } },
     },
     {
+      // Branching is on edges `e16` / `e17` — see `decision_account`.
       id: 'decision_opportunity', type: 'decision', label: 'Create Opportunity?',
-      config: { condition: P`vars.createOpportunity == true` },
     },
     {
       id: 'create_opportunity', type: 'create_record', label: 'Create Opportunity',

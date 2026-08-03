@@ -1084,11 +1084,6 @@ export const zhCN: TranslationData = {
     'error.load_failed': '数据加载失败',
   },
 
-  validationMessages: {
-    amount_required_for_closed: '阶段为"成交"时，金额为必填项',
-    close_date_required: '商机必须填写预计成交日期',
-    discount_limit: '折扣不能超过40%',
-  },
 
   dashboards: {
     crm_overview_dashboard: {
