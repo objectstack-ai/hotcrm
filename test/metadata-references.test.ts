@@ -1599,3 +1599,126 @@ describe('app AI bindings resolve to a platform agent', () => {
     expect(((stack as any).skills ?? []).length, 'no skills registered').toBeGreaterThan(0);
   });
 });
+
+/**
+ * Simplified Chinese is complete on every translatable surface, not just on
+ * select options.
+ *
+ * `PENDING_SELECT_LABELS` above guards ONE surface (picklist option labels) and
+ * guards it well. It says nothing about the other four an authored bundle owns
+ * — field labels/help, page header copy, dashboard widget titles, and list-view
+ * empty states — and those were exactly where the remaining 98 zh-CN gaps sat:
+ * every page in the app rendered its header, nav label and breadcrumb in
+ * English, and the six win/loss widgets on the Sales dashboard did the same.
+ *
+ * Nothing in CI could have caught that. `pnpm lint` runs with `--skip-i18n`,
+ * and `objectstack lint` exits 0 on warnings regardless — so the i18n rules
+ * that DO find these gaps are switched off in the one place that would fail a
+ * PR. This suite is the only gate, which is why the assertions live here rather
+ * than in a lint config.
+ *
+ * Scoped to zh-CN on purpose. `en` / `ja-JP` / `es-ES` still carry the debt
+ * enumerated in #645 and #494; widening this guard is that work's finish line,
+ * not its entry fee.
+ */
+describe('zh-CN is complete on every authored surface', () => {
+  const zh = (): AnyRec => {
+    const pack = packFor('zh-CN');
+    expect(pack, 'no zh-CN locale pack found in stack.translations').toBeTruthy();
+    return pack as AnyRec;
+  };
+
+  it('every authored field label and help string has a zh-CN translation', () => {
+    const pack = zh();
+    const bad: string[] = [];
+    for (const obj of objects) {
+      const fields = pack.objects?.[obj.name]?.fields ?? {};
+      for (const [name, f] of Object.entries<AnyRec>(obj.fields ?? {})) {
+        // `help` mirrors the authored `description` — the field-level spelling
+        // differs between the two surfaces (spec: FieldTranslationSchema).
+        if (f?.label && !fields[name]?.label) bad.push(`${obj.name}.${name}.label`);
+        if (f?.description && !fields[name]?.help) bad.push(`${obj.name}.${name}.help`);
+      }
+    }
+    expect(bad, `fields with no zh-CN translation:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('every page has zh-CN nav copy and header copy', () => {
+    const pack = zh();
+    const bad: string[] = [];
+    for (const page of pages) {
+      const t = pack.pages?.[page.name];
+      if (page.label && !t?.label) bad.push(`${page.name}.label`);
+      if (page.description && !t?.description) bad.push(`${page.name}.description`);
+
+      // A page's header copy is addressed by the PAGE name: `page:header`
+      // instances carry no stable id, so `pages.<name>.title` / `.subtitle` are
+      // the only keys that reach them. `title` legitimately falls back to
+      // `label`, so it is only required when the two differ.
+      const header = (page.regions ?? [])
+        .flatMap((r: AnyRec) => r.components ?? [])
+        .find((c: AnyRec) => c?.type === 'page:header');
+      const title = header?.properties?.title;
+      const subtitle = header?.properties?.subtitle;
+      if (title && title !== page.label && !t?.title) bad.push(`${page.name}.title`);
+      if (subtitle && !t?.subtitle) bad.push(`${page.name}.subtitle`);
+    }
+    expect(bad, `pages with untranslated zh-CN copy:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('every dashboard widget has a zh-CN title and description', () => {
+    const pack = zh();
+    const dashboards: AnyRec[] = (stack as any).dashboards ?? [];
+    const bad: string[] = [];
+    for (const d of dashboards) {
+      const widgets = pack.dashboards?.[d.name]?.widgets ?? {};
+      for (const w of d.widgets ?? []) {
+        if (!w?.id) continue;
+        if (w.title && !widgets[w.id]?.title) bad.push(`${d.name}.${w.id}.title`);
+        if (w.description && !widgets[w.id]?.description) bad.push(`${d.name}.${w.id}.description`);
+      }
+    }
+    expect(bad, `widgets with no zh-CN copy:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('every view empty state has zh-CN copy', () => {
+    // The empty state is the ONE string a view shows when it has no rows — the
+    // exact moment a trial user is most likely to be reading it.
+    const pack = zh();
+    const bad: string[] = [];
+    for (const record of views) {
+      const containers: [string, AnyRec][] = [
+        ...(record.list ? [['list', record.list] as [string, AnyRec]] : []),
+        ...Object.entries<AnyRec>(record.listViews ?? {}),
+      ];
+      for (const [key, view] of containers) {
+        const empty = view?.emptyState;
+        if (!empty?.title && !empty?.message) continue;
+        const objectName = view?.data?.object ?? record.list?.data?.object ?? record.object;
+        const name = view?.name ?? key;
+        const t = pack.objects?.[objectName]?._views?.[name]?.emptyState;
+        if (empty.title && !t?.title) bad.push(`${objectName}.${name}.emptyState.title`);
+        if (empty.message && !t?.message) bad.push(`${objectName}.${name}.emptyState.message`);
+      }
+    }
+    expect(bad, `empty states with no zh-CN copy:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('every action parameter label has a zh-CN translation', () => {
+    // A param label is the field caption inside an action's modal — untranslated,
+    // it is a bare English word on an otherwise Chinese form.
+    const pack = zh();
+    const bad: string[] = [];
+    for (const action of stackActions) {
+      if (!action.objectName) continue;
+      const params = pack.objects?.[action.objectName]?._actions?.[action.name]?.params ?? {};
+      for (const p of action.params ?? []) {
+        const key = p?.name ?? p?.field;
+        if (key && p?.label && !params[key]?.label) {
+          bad.push(`${action.objectName}.${action.name}.params.${key}.label`);
+        }
+      }
+    }
+    expect(bad, `action params with no zh-CN label:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+});

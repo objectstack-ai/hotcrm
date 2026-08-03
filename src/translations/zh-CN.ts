@@ -41,7 +41,7 @@ export const zhCN: TranslationData = {
         },
         office_location: { label: '办公地点' },
         owner: { label: '客户负责人' },
-        parent_account: { label: '母公司' },
+        parent_account: { label: '母公司', help: '层级结构中的母公司' },
         description: { label: '描述' },
         is_active: { label: '是否活跃' },
         last_activity_date: { label: '最近活动日期' },
@@ -62,6 +62,8 @@ export const zhCN: TranslationData = {
         },
         renewal_owner: { label: '续约负责人 (CSM)' },
         next_renewal_date: { label: '下次续约日期' },
+        name_normalized: { label: '客户名称（规范化）', help: '线索转换的匹配键：客户名称转小写、去除首尾空格、内部连续空白合并为一个空格。由 account_protection 钩子维护——请勿直接编辑。' },
+        display_title: { label: '显示名称' },
       },
       _views: {
         all_accounts: { label: '全部客户', description: '客户主列表，包含营收与行业摘要' },
@@ -109,7 +111,7 @@ export const zhCN: TranslationData = {
         },
         owner: { label: '联系人负责人' },
         description: { label: '描述' },
-        is_primary: { label: '主要联系人' },
+        is_primary: { label: '主要联系人', help: '是否为该客户的主要联系人？' },
         reports_to: { label: '直属上级', help: '直属上级/主管' },
         mailing_street: { label: '邮寄地址' },
         mailing_city: { label: '邮寄城市' },
@@ -166,8 +168,8 @@ export const zhCN: TranslationData = {
       fields: {
         article_number: { label: '文章编号' },
         title: { label: '标题' },
-        summary: { label: '摘要' },
-        body: { label: '正文' },
+        summary: { label: '摘要', help: '一段话摘要，显示在搜索结果和 AI 引用中。' },
+        body: { label: '正文', help: '文章正文（Markdown）。' },
         category: {
           label: '分类',
           options: {
@@ -188,18 +190,19 @@ export const zhCN: TranslationData = {
           label: '状态',
           options: { draft: '草稿', in_review: '审核中', published: '已发布', archived: '已归档' },
         },
-        audience: { label: '受众', options: { public: '公开', internal: '仅内部' } },
+        audience: { label: '受众', options: { public: '公开', internal: '仅内部' }, help: '公开文章在客户门户可见；内部文章仅客服可见。' },
         language: {
           label: '语言',
           options: { en: '英语', zh_cn: '简体中文', es_es: '西班牙语', ja_jp: '日语' },
         },
         owner: { label: '负责人' },
-        related_to_case: { label: '来源案例' },
+        related_to_case: { label: '来源案例', help: '本文所依据的工单（可选）。' },
         published_at: { label: '发布时间' },
         last_reviewed_at: { label: '最近复核' },
         view_count: { label: '浏览数' },
         helpful_count: { label: '有用' },
         not_helpful_count: { label: '没用' },
+        display_title: { label: '显示名称' },
       },
       _views: {
         all_articles: { label: '全部文章' },
@@ -224,21 +227,23 @@ export const zhCN: TranslationData = {
         period: { label: '周期', options: { month: '月度', quarter: '季度' } },
         period_start: { label: '周期起始' },
         period_end: { label: '周期截止' },
-        period_label: { label: '周期标签' },
-        snapshot_date: { label: '快照日期' },
+        period_label: { label: '周期标签', help: '易读的周期标签，例如"2026 年第三季度"或"2026 年 8 月"。' },
+        snapshot_date: { label: '快照日期', help: '本次快照的采集日期。' },
         source: {
           label: '来源',
           options: { scheduled: '定时快照', ai: 'AI 技能', manual: '手工录入' },
         },
         quota: { label: '配额' },
-        pipeline_amount: { label: '管道金额' },
-        best_case_amount: { label: '最佳情况' },
-        commit_amount: { label: '承诺金额' },
-        closed_amount: { label: '已成交金额' },
-        expected_amount: { label: '预期金额' },
-        attainment_pct: { label: '达成率（%）' },
-        coverage_ratio: { label: '覆盖倍数' },
+        pipeline_amount: { label: '管道金额', help: '本周期内所有预计结单的进行中商机金额合计（不限阶段）。' },
+        best_case_amount: { label: '最佳情况', help: '预测类别为"最佳情况"或"承诺"的进行中商机。' },
+        commit_amount: { label: '承诺金额', help: '预测类别为"承诺"的进行中商机（负责人已承诺）。' },
+        closed_amount: { label: '已成交金额', help: '本周期内已赢单的金额。' },
+        expected_amount: { label: '预期金额', help: '已成交 + 承诺——负责人合理预期能拿下的金额。' },
+        attainment_pct: { label: '达成率（%）', help: '（已成交 / 配额）× 100。已对负数配额做保护。' },
+        coverage_ratio: { label: '覆盖倍数', help: '管道金额 ÷（配额 − 已成交）。用于判断管道储备是否充足。' },
         notes: { label: '备注' },
+        display_title: { label: '显示名称' },
+        seed_key: { label: '种子标识', help: '演示数据标识。仅由种子加载器写入；真实快照上始终为空。' },
       },
       _views: {
         all_forecasts: { label: '全部预测' },
@@ -301,7 +306,7 @@ export const zhCN: TranslationData = {
         description: { label: '描述' },
         mobile: { label: '手机' },
         website: { label: '网站' },
-        rating: { label: '线索评分' },
+        rating: { label: '线索评分', help: '线索质量评分（1-5 星）' },
         converted_account: { label: '转化客户' },
         converted_contact: { label: '转化联系人' },
         converted_opportunity: { label: '转化商机' },
@@ -309,7 +314,7 @@ export const zhCN: TranslationData = {
         address: { label: '地址' },
         annual_revenue: { label: '年营收' },
         number_of_employees: { label: '员工人数' },
-        notes: { label: '备注' },
+        notes: { label: '备注', help: '支持格式排版的富文本备注' },
         do_not_call: { label: '禁止致电' },
         email_opt_out: { label: '拒收邮件' },
         disqualification_reason: {
@@ -324,27 +329,39 @@ export const zhCN: TranslationData = {
           },
         },
         duplicate_of_type: {
+          help: '保留下来的那条记录所属的对象类型。',
           label: '重复于',
           options: { crm_lead: '线索', crm_contact: '联系人' },
         },
         duplicate_of_lead: { label: '重复的线索' },
         duplicate_of_contact: { label: '重复的联系人' },
         duplicate_status: {
+          help: '疑似 = 录入时自动标记；已确认 = 人工核实过匹配。',
           // 疑似 = 录入时自动标记;已确认 = 人工核对后的判定。两者是同一
           // 判断的两个阶段,所以共用一个字段而不是各占一套链接字段。
           label: '重复状态',
           options: { suspected: '疑似重复', confirmed: '已确认重复' },
         },
+        display_title: { label: '显示名称' },
+        company_normalized: { label: '公司名称（规范化）', help: '线索转换的匹配键：公司名称转小写、去除首尾空格、内部连续空白合并为一个空格。由 lead_duplicate_check 钩子维护——请勿直接编辑。' },
+        next_followup_date: { label: '下次跟进日期' },
+        last_contacted_date: { label: '最近联系时间' },
       },
       _views: {
-        all_leads: { label: '全部线索' },
+        all_leads: {
+          label: '全部线索',
+          emptyState: { title: '还没有线索', message: '创建第一条线索，从这里开始' },
+        },
         kanban_by_status: { label: '线索流水线' },
         calendar_by_created: { label: '线索日历' },
         gallery_view: { label: '线索卡片' },
         my_leads: { label: '我的线索' },
         high_priority: { label: '高优先级' },
         hot_leads: { label: '🔥 高热度线索' },
-        suspected_duplicates: { label: '疑似重复线索' },
+        suspected_duplicates: {
+          label: '疑似重复线索',
+          emptyState: { title: '没有疑似重复', message: '无需复核——每个重复录入的邮箱都已检查过。' },
+        },
       },
       _sections: {
         // Detail-page `record:details` section names (lead_detail.page.ts)
@@ -372,6 +389,9 @@ export const zhCN: TranslationData = {
         create_campaign: {
           label: '加入营销活动',
           successMessage: '已将线索加入营销活动！',
+          params: {
+            crm_campaign: { label: '营销活动' },
+          },
         },
         schedule_followup: {
           label: '安排跟进',
@@ -418,6 +438,7 @@ export const zhCN: TranslationData = {
         billing_address: { label: '账单地址' },
         shipping_address: { label: '收货地址' },
         internal_notes: { label: '内部备注' },
+        display_title: { label: '显示名称' },
       },
       _views: {
         all_quotes: { label: '全部报价单' },
@@ -538,13 +559,16 @@ export const zhCN: TranslationData = {
         is_sla_violated: { label: 'SLA 违反' },
         is_escalated: { label: '已升级' },
         escalation_reason: { label: '升级原因' },
-        parent_case: { label: '父级工单' },
+        parent_case: { label: '父级工单', help: '关联的父工单' },
         resolution: { label: '解决方案' },
-        customer_rating: { label: '客户满意度' },
+        customer_rating: { label: '客户满意度', help: '客户满意度评分（1-5 星）' },
         customer_feedback: { label: '客户反馈' },
-        customer_signature: { label: '客户签字' },
-        internal_notes: { label: '内部备注' },
+        customer_signature: { label: '客户签字', help: '确认工单已解决的电子签名' },
+        internal_notes: { label: '内部备注', help: '内部备注，客户不可见' },
         is_closed: { label: '是否关闭' },
+        display_title: { label: '显示名称' },
+        priority_rank: { label: '优先级排序' },
+        escalated_date: { label: '升级日期' },
       },
       _views: {
         all_cases: { label: '全部工单' },
@@ -654,6 +678,8 @@ export const zhCN: TranslationData = {
         progress_percent: { label: '进度（%）' },
         estimated_hours: { label: '预估工时' },
         actual_hours: { label: '实际工时' },
+        priority_rank: { label: '优先级排序' },
+        reminder_sent: { label: '提醒已发送' },
       },
       _views: {
         all_tasks: { label: '全部任务' },
@@ -700,7 +726,7 @@ export const zhCN: TranslationData = {
         budgeted_cost: { label: '预算成本' },
         actual_cost: { label: '实际成本' },
         actual_revenue: { label: '实际收入' },
-        target_size: { label: '目标人数' },
+        target_size: { label: '目标人数', help: '目标线索/联系人数量' },
         num_sent: { label: '发送数量' },
         num_responses: { label: '响应数量' },
         num_leads: { label: '线索数量' },
@@ -709,10 +735,11 @@ export const zhCN: TranslationData = {
         num_won_opportunities: { label: '已赢得商机' },
         response_rate: { label: '响应率（%）' },
         roi: { label: '投资回报率（%）' },
-        parent_campaign: { label: '父级活动' },
+        parent_campaign: { label: '父级活动', help: '层级结构中的上级活动' },
         owner: { label: '活动负责人' },
         landing_page_url: { label: '着陆页' },
         is_active: { label: '是否启用' },
+        display_title: { label: '显示名称' },
       },
       _views: {
         all_campaigns: { label: '全部营销活动' },
@@ -774,6 +801,8 @@ export const zhCN: TranslationData = {
         product_manager: { label: '产品经理' },
         image: { label: '产品图片' },
         datasheet: { label: '规格书' },
+        display_title: { label: '显示名称' },
+        tax_rate: { label: '默认税率 %' },
       },
       _views: {
         all_products: { label: '全部产品' },
@@ -839,9 +868,9 @@ export const zhCN: TranslationData = {
           label: '竞争对手',
           options: { competitor_a: '竞争对手 A', competitor_b: '竞争对手 B', competitor_c: '竞争对手 C' },
         },
-        crm_campaign: { label: '营销活动' },
+        crm_campaign: { label: '营销活动', help: '带来此商机的市场活动' },
         days_in_stage: { label: '当前阶段天数' },
-        stage_entry_date: { label: '进入当前阶段日期' },
+        stage_entry_date: { label: '进入当前阶段日期', help: '本商机进入当前阶段的日期。' },
         is_private: { label: '私密' },
         approval_status: {
           label: '审批状态',
@@ -849,6 +878,7 @@ export const zhCN: TranslationData = {
         },
         approved_date: { label: '批准时间' },
         win_reason: {
+          help: '赢单原因。将商机关闭为"赢单"时必填。',
           label: '赢单原因',
           options: {
             better_product: '产品更优', better_price: '价格更优', relationship: '客户关系',
@@ -857,13 +887,14 @@ export const zhCN: TranslationData = {
           },
         },
         loss_reason: {
+          help: '丢单原因。将商机关闭为"丢单"时必填。',
           label: '丢单原因',
           options: {
             price: '价格过高', competitor: '输给竞争对手', no_budget: '无预算',
             no_decision: '未决策', timing: '时机不合适', features: '功能缺失', other: '其他',
           },
         },
-        loss_details: { label: '赢/丢单详情' },
+        loss_details: { label: '赢/丢单详情', help: '赢单或丢单原因的补充说明。' },
       },
       _views: {
         open_opportunities: { label: '进行中商机' },
@@ -922,8 +953,8 @@ export const zhCN: TranslationData = {
       fields: {
         member_number: { label: '成员编号' },
         crm_campaign: { label: '营销活动' },
-        crm_lead: { label: '线索' },
-        crm_contact: { label: '联系人' },
+        crm_lead: { label: '线索', help: '成员加入时身份为线索的，记录在此' },
+        crm_contact: { label: '联系人', help: '成员为已有联系人的，记录在此' },
         status: {
           label: '状态',
           options: {
@@ -953,8 +984,8 @@ export const zhCN: TranslationData = {
         crm_product: { label: '产品' },
         description: { label: '描述' },
         quantity: { label: '数量' },
-        list_price: { label: '标价' },
-        unit_price: { label: '销售单价' },
+        list_price: { label: '标价', help: '自动取自产品的目录价' },
+        unit_price: { label: '销售单价', help: '协商后的单价（可与目录价不同）' },
         discount: { label: '折扣（%）' },
         total_price: { label: '总计' },
         line_number: { label: '行号' },
@@ -1105,6 +1136,12 @@ export const zhCN: TranslationData = {
         open_pipeline_by_owner: { title: '按负责人统计进行中管道', description: '各销售负责人的进行中管道金额、商机数与平均赢单概率' },
         quota_attainment_by_rep: { title: '按销售代表统计配额达成', description: '来自预测快照的各销售代表本季度配额、已成交收入与达成率' },
         pipeline_stage_by_source: { title: '阶段 × 线索来源', description: '按阶段和来源交叉统计进行中商机金额' },
+        win_rate_12m: { title: '赢率（近 12 个月）', description: '近 12 个月已结单商机中赢单所占的比例' },
+        won_deals_12m: { title: '赢单数（近 12 个月）', description: '赢率的分子' },
+        lost_deals_12m: { title: '丢单数（近 12 个月）', description: '赢率分母的另一半' },
+        win_rate_by_owner: { title: '按销售代表统计赢/丢单', description: '近 12 个月各销售代表的赢单数、丢单数与赢率' },
+        win_rate_by_lead_source: { title: '按线索来源统计赢/丢单', description: '近 12 个月哪些来源带来的商机真正成交' },
+        loss_reason_breakdown: { title: '丢单原因分析', description: '近 12 个月丢单按原因分布' },
       },
     },
     service_dashboard: {
@@ -1122,6 +1159,55 @@ export const zhCN: TranslationData = {
         sla_compliance_gauge: { title: 'SLA 达成率', description: '本期 SLA 内解决工单的占比' },
         open_cases_by_priority: { title: '按优先级统计未关闭工单', description: '未关闭工单及其 SLA 违约率，按优先级细分' },
       },
+    },
+  },
+
+  // `title` / `subtitle` translate the page's `page:header`; `title` falls back
+  // to `label` when omitted, so it is authored only where the two differ.
+  // Header strings carrying `{field}` tokens keep the token spelling verbatim —
+  // the console substitutes on the raw key, so a translated token resolves to
+  // nothing and the header renders blank.
+  pages: {
+    account_detail_page: {
+      label: '客户详情',
+      description: '插槽式客户记录页——自定义页头 + 常驻讨论区。',
+    },
+    account_workbench: {
+      label: '客户工作台',
+      description: '面向销售团队的精选客户列表：仅提供快捷筛选，不含视图管理。',
+    },
+    app_launcher_page: {
+      label: '应用中心',
+      description: '访问全部应用的统一入口',
+      subtitle: '选择一个应用开始使用',
+    },
+    case_detail_page: {
+      label: '工单详情',
+      description: '客服工单记录页：关键信息、SLA 进度、明细与活动时间线。',
+      title: '{case_number} · {subject}',
+      subtitle: '{crm_account}',
+    },
+    lead_detail_page: {
+      label: '线索详情',
+      description: '完整的线索详情页，包含关键信息、明细与相关记录。',
+      title: '{first_name} {last_name}',
+      subtitle: '{company}',
+    },
+    opportunity_detail_page: {
+      label: '商机详情',
+      description: '完整的商机详情页，包含阶段进度、关键信息、明细与相关列表。',
+      title: '{name}',
+      subtitle: '{crm_account}',
+    },
+    sales_home_page: {
+      label: '销售主页',
+      description: '销售团队主页，汇总关键指标与快捷操作',
+      title: '销售看板',
+      subtitle: '欢迎回来，{current_user.first_name}',
+    },
+    utility_bar_page: {
+      label: '工具栏',
+      description: '悬浮工具的快捷访问栏',
     },
   },
 };
