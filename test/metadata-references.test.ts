@@ -1327,11 +1327,15 @@ describe('select fields are translated in every locale', () => {
    * field the PR is actually about.
    */
   /**
-   * Shorthand for a field NO locale translates. Written out literally rather
-   * than derived from `localePacks`, so that adding a fifth locale surfaces as
-   * new gaps to fill instead of silently extending every exemption to cover it.
+   * Every row is written out literally rather than derived from `localePacks`,
+   * so that adding a fifth locale surfaces as new gaps to fill instead of
+   * silently extending every exemption to cover it.
+   *
+   * No row lists `zh-CN` any more: the 15 fields that were untranslated in all
+   * four locales were completed in Chinese first, ahead of a zh-CN customer
+   * trial. Simplified Chinese is therefore the one locale with full select
+   * coverage — a row regaining `zh-CN` is a regression, not a re-scope.
    */
-  const UNTRANSLATED_EVERYWHERE = ['en', 'zh-CN', 'ja-JP', 'es-ES'];
   const PENDING_SELECT_LABELS: Record<string, string[]> = {
     'crm_account.tier': ['ja-JP', 'es-ES'],
     'crm_account.segment': ['ja-JP', 'es-ES'],
@@ -1341,19 +1345,19 @@ describe('select fields are translated in every locale', () => {
     'crm_campaign.status': ['en', 'ja-JP', 'es-ES'],
     'crm_case.status': ['en', 'ja-JP', 'es-ES'],
     'crm_case.priority': ['en', 'ja-JP', 'es-ES'],
-    'crm_case.type': UNTRANSLATED_EVERYWHERE,
-    'crm_contact.salutation': UNTRANSLATED_EVERYWHERE,
+    'crm_case.type': ['en', 'ja-JP', 'es-ES'],
+    'crm_contact.salutation': ['en', 'ja-JP', 'es-ES'],
     'crm_contact.lead_source': ['en', 'ja-JP', 'es-ES'],
     'crm_contract.status': ['en', 'ja-JP', 'es-ES'],
-    'crm_contract.billing_frequency': UNTRANSLATED_EVERYWHERE,
-    'crm_contract.payment_terms': UNTRANSLATED_EVERYWHERE,
-    'crm_contract.contract_type': UNTRANSLATED_EVERYWHERE,
+    'crm_contract.billing_frequency': ['en', 'ja-JP', 'es-ES'],
+    'crm_contract.payment_terms': ['en', 'ja-JP', 'es-ES'],
+    'crm_contract.contract_type': ['en', 'ja-JP', 'es-ES'],
     // Partial: 5 of 7 categories and 4 of 8 tags are translated everywhere.
-    'crm_knowledge_article.category': UNTRANSLATED_EVERYWHERE,
-    'crm_knowledge_article.tags': UNTRANSLATED_EVERYWHERE,
+    'crm_knowledge_article.category': ['en', 'ja-JP', 'es-ES'],
+    'crm_knowledge_article.tags': ['en', 'ja-JP', 'es-ES'],
     'crm_lead.salutation': ['en', 'ja-JP', 'es-ES'],
     'crm_lead.industry': ['en', 'ja-JP', 'es-ES'],
-    'crm_opportunity.competitors': UNTRANSLATED_EVERYWHERE,
+    'crm_opportunity.competitors': ['en', 'ja-JP', 'es-ES'],
     // `crm_opportunity.win_reason` / `loss_reason` left the ledger in #593:
     // both became REQUIRED at close and both now drive a Sales-dashboard
     // widget, so an untranslated option is no longer a cosmetic gap — it is a
@@ -1362,16 +1366,16 @@ describe('select fields are translated in every locale', () => {
     // it is untouched by that change and belongs to #645's sweep.
     'crm_opportunity.approval_status': ['ja-JP', 'es-ES'],
     'crm_product.category': ['en', 'ja-JP', 'es-ES'],
-    'crm_product.family': UNTRANSLATED_EVERYWHERE,
-    'crm_product.billing_type': UNTRANSLATED_EVERYWHERE,
-    'crm_product.unit_of_measure': UNTRANSLATED_EVERYWHERE,
+    'crm_product.family': ['en', 'ja-JP', 'es-ES'],
+    'crm_product.billing_type': ['en', 'ja-JP', 'es-ES'],
+    'crm_product.unit_of_measure': ['en', 'ja-JP', 'es-ES'],
     'crm_quote.status': ['en', 'ja-JP', 'es-ES'],
-    'crm_quote.payment_terms': UNTRANSLATED_EVERYWHERE,
+    'crm_quote.payment_terms': ['en', 'ja-JP', 'es-ES'],
     'crm_task.status': ['en', 'ja-JP', 'es-ES'],
     'crm_task.priority': ['en', 'ja-JP', 'es-ES'],
-    'crm_task.type': UNTRANSLATED_EVERYWHERE,
-    'crm_task.related_to_type': UNTRANSLATED_EVERYWHERE,
-    'crm_task.recurrence_type': UNTRANSLATED_EVERYWHERE,
+    'crm_task.type': ['en', 'ja-JP', 'es-ES'],
+    'crm_task.related_to_type': ['en', 'ja-JP', 'es-ES'],
+    'crm_task.recurrence_type': ['en', 'ja-JP', 'es-ES'],
   };
 
   /** Every authored select field, with its option VALUES (what the DB stores). */
