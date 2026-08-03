@@ -105,23 +105,13 @@ export const OpportunityApprovalFlow: Flow = {
 
     // ── Tier gate: does this deal also need director sign-off? ──────
     {
+      // No `config.condition` here: the branch is on edges `e5` / `e6`, which
+      // is where the engine actually reads it. A copy on the node would be
+      // inert and indistinguishable from the live one (17.0.0-rc.2's
+      // `flow-inert-node-condition`, #4414).
       id: 'check_high_value',
       type: 'decision',
       label: 'High Value (> $500K)?',
-      // TOTALITY (#643): `oppRecord` is a `get_record` OUTPUT, so the read
-      // needs `has(vars.oppRecord)` (the variable), `has(vars.oppRecord.amount)`
-      // (the column — `findOne` answers a miss with `null`, and a sparse driver
-      // row omits an unwritten column outright) and `!= null` (an explicit null
-      // passes `has()` and the ordering comparison then aborts with
-      // `no such overload: dyn<null> > int`). Measured total as authored today
-      // — `amount` is `required` on `crm_opportunity` and this `get_record` is
-      // keyed on the row that just fired the trigger — but that is the
-      // neighbouring schema doing the work, exactly as in the start condition
-      // above. `vars.`-scoped rather than bare: `has(oppRecord.amount)` still
-      // aborts with `Unknown variable: oppRecord` on an unbound variable,
-      // `has(vars.oppRecord)` answers `false` (measured).
-      config: { condition: P`has(vars.oppRecord) && has(vars.oppRecord.amount)
-        && vars.oppRecord.amount != null && vars.oppRecord.amount > 500000` },
     },
 
     // ── Tier 2: Sales Director sign-off (deals > $500K only) ────────
@@ -208,6 +198,21 @@ export const OpportunityApprovalFlow: Flow = {
     // `mark_approved`: the manager has already approved it, and an unreadable
     // amount must not strand an approved deal in a locked, undecidable
     // director step.
+    //
+    // TOTALITY (#643): `oppRecord` is a `get_record` OUTPUT, so the read needs
+    // `has(vars.oppRecord)` (the variable), `has(vars.oppRecord.amount)` (the
+    // column — `findOne` answers a miss with `null`, and a sparse driver row
+    // omits an unwritten column outright) and `!= null` (an explicit null
+    // passes `has()` and the ordering comparison then aborts with `no such
+    // overload: dyn<null> > int`). Measured total as authored today — `amount`
+    // is `required` on `crm_opportunity` and the `get_record` is keyed on the
+    // row that just fired the trigger — but that is the neighbouring schema
+    // doing the work, exactly as in the start condition above. `vars.`-scoped
+    // rather than bare: `has(oppRecord.amount)` still aborts with `Unknown
+    // variable: oppRecord` on an unbound variable, `has(vars.oppRecord)`
+    // answers `false` (measured). From 17.0.0-rc.2 an unevaluable condition
+    // ABORTS the step rather than skipping it (#4775), so a guard that was
+    // belt-and-braces is now what keeps the run alive.
     { id: 'e5', source: 'check_high_value', target: 'director_signoff', type: 'conditional', condition: P`has(vars.oppRecord) && has(vars.oppRecord.amount)
       && vars.oppRecord.amount != null && vars.oppRecord.amount > 500000`, label: 'High value (> $500K)' },
     { id: 'e6', source: 'check_high_value', target: 'mark_approved', type: 'conditional', condition: P`!has(vars.oppRecord) || !has(vars.oppRecord.amount)

@@ -664,7 +664,7 @@ describe('forecast_snapshot — nightly per-owner pipeline snapshot', () => {
 });
 
 /**
- * Regression guard — a bare string condition inside a `loop` body is inert.
+ * Regression guard — a bare string condition inside a `loop` body WAS inert.
  *
  * `AutomationEngine.registerFlow` runs `applyConversionsToFlow`, which rewrites
  * a bare string `condition` into a `{ dialect: 'cel', source }` envelope. That
@@ -681,24 +681,35 @@ describe('forecast_snapshot — nightly per-owner pipeline snapshot', () => {
  * right records, and does nothing. `opportunity_stagnation`, `contract_renewal`
  * and `campaign_enrollment` all shipped in that state.
  *
- * The fix is to author nested conditions as explicit envelopes. These two tests
- * keep it fixed: the first pins the engine asymmetry that makes the envelope
- * necessary (so an upstream fix that makes bare strings work shows up as a
- * deliberate review rather than a silent behaviour change), and the second
- * fails if ANY flow ever reintroduces a bare string inside a loop body.
+ * The fix was to author nested conditions as explicit envelopes.
+ *
+ * ─── The platform closed the asymmetry in 17.0.0-rc.2 (#4336) ────────────
+ *
+ * `evaluateCondition` now decides its dialect from the SOURCE rather than from
+ * the caller, so a bare string is parsed as CEL wherever it appears — inside a
+ * loop body included — and the two forms agree. The first test below used to
+ * assert the gap and was written to fail when it closed; it now pins the fixed
+ * behaviour, which is the deliberate review that assertion existed to force.
+ *
+ * The explicit envelopes STAY. They are the authored form in every flow here,
+ * they say which dialect the predicate is in at the point a reader needs to
+ * know, and they are what makes these conditions correct on any runtime that
+ * still carries the old path. The second test keeps them in place, so a bare
+ * string reintroduced inside a loop body is still a failure here rather than a
+ * silent dependency on one specific engine version.
  */
 describe('loop-nested conditions must be explicit CEL envelopes', () => {
-  it('the engine still treats a bare string differently from an envelope', () => {
+  it('the engine evaluates a bare string and an envelope identically', () => {
     const h = makeFlowHarness({}, {});
     const evaluate = (condition: unknown) =>
       (h.engine as unknown as {
         evaluateCondition(c: unknown, v: Map<string, unknown>): boolean;
       }).evaluateCondition(condition, new Map([['existingStallTask', null]]));
 
-    // If this ever flips to `true`, the conversion pass (or the legacy path)
-    // changed upstream — revisit whether the explicit envelopes are still
-    // needed before relaxing them.
-    expect(evaluate('existingStallTask == null'), 'bare string, unresolved').toBe(false);
+    // Both forms open the gate as of 17.0.0-rc.2 (#4336). If the bare-string
+    // case ever flips back to `false`, the legacy string-compare path has
+    // returned and the envelopes below are load-bearing again.
+    expect(evaluate('existingStallTask == null'), 'bare string, CEL-parsed').toBe(true);
     expect(
       evaluate({ dialect: 'cel', source: 'existingStallTask == null' }),
       'explicit CEL envelope',

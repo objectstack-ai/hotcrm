@@ -177,15 +177,19 @@ fills absent fields with `null` **only on insert**. On update, `previous` is
 whatever the driver returned — and a driver that stores only the columns a row
 was actually written with (`driver-memory`, `driver-mongodb`) hands back a
 record with the key **absent**, not null. Strict CEL then aborts the whole
-predicate with `No such key`, and the engine's answer to a predicate that
-cannot answer is to **skip the rule**:
+predicate with `No such key` — and what the engine does next changed under us:
 
 ```
-WARN Validation rule 'x' predicate failed to evaluate (type: No such key: y) — skipped
+≤ 17.0.0-rc.1  WARN Validation rule 'x' predicate failed to evaluate (…) — skipped
+≥ 17.0.0-rc.2  WARN … — write rejected (#4649)
+               ValidationError: Validation rule 'x' could not be evaluated … — write rejected.
 ```
 
-No error, no failed save — just a rule that reads as enforced and requires
-nothing. So **every `record.x` read carries a `has(record.x)` guard**:
+Through rc.1 a rule that could not answer required nothing at all, silently.
+From rc.2 it **fails closed**: the same abort rejects the save. Neither is the
+rule the author wrote — one under-enforces, the other blocks an ordinary save on
+a record shape nobody considered — and one guard prevents both. So **every
+`record.x` read carries a `has(record.x)` guard**:
 
 | intent | write this |
 | --- | --- |

@@ -742,11 +742,6 @@ export const en: TranslationData = {
     'error.load_failed': 'Failed to load data',
   },
 
-  validationMessages: {
-    amount_required_for_closed: 'Amount is required when stage is Closed Won',
-    close_date_required: 'Close date is required for opportunities',
-    discount_limit: 'Discount cannot exceed 40%',
-  },
 
   dashboards: {
     crm_overview_dashboard: {

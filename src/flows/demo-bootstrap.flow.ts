@@ -191,6 +191,7 @@ const TARGETS = OWNERSHIP_COLUMNS.flatMap((column) =>
 const CHAIN = [
   'start',
   'get_user',
+  'bind_first_user',
   'has_user',
   ...TARGETS.flatMap((t) => [t.find.id, t.loop.id]),
   'end',
@@ -213,12 +214,39 @@ export const DemoBootstrapFlow: Flow = {
       config: { schedule: '*/10 * * * *' },
     },
     {
-      id: 'get_user', type: 'get_record', label: 'First User',
-      config: { objectName: 'sys_user', filter: {}, outputVariable: 'firstUser' },
+      // A LIST read, deliberately (#4419). 17.0.0-rc.2 refuses a `findOne` that
+      // names no record: `filter: {}` with no ordering made the platform pick an
+      // arbitrary row and hand it back as if it were "the" user, so the read is
+      // now rejected outright — `get_record(sys_user) failed: findOne('sys_user')
+      // selects no particular record`. That aborts the sweep on its second node
+      // and leaves every seeded row ownerless, which is the whole failure this
+      // flow exists to prevent.
+      //
+      // "Any row will genuinely do" is the honest description here — see the
+      // header: the reps are appended after the dev admin, and `demo:staff`
+      // asserts from the other side that no demo rep owns a seeded record. The
+      // prescription for that case is `find`, and the only way to reach `find`
+      // from this node is `limit > 1` (the executor routes `limit <= 1` to
+      // `findOne`, and offers no `orderBy` at all) — hence 2, not 1. The pick is
+      // the same first row as before; what changed is that it is now STATED as
+      // "some row out of this set" instead of smuggled through a call that
+      // claimed to name one.
+      id: 'get_user', type: 'get_record', label: 'First Users',
+      config: { objectName: 'sys_user', limit: 2, outputVariable: 'userList' },
     },
     {
+      // `{userList.0}` is absent on an empty org, so every downstream read of
+      // `vars.firstUser` is guarded with `has()` — an unguarded read aborts the
+      // predicate, and 17.0.0-rc.2 turns an unevaluable condition into a failed
+      // step rather than a skipped one.
+      id: 'bind_first_user', type: 'assignment', label: 'Bind First User',
+      config: { assignments: { firstUser: '{userList.0}' } },
+    },
+    {
+      // Branching is on the two out-edges below; a `decision` node's singular
+      // `config.condition` is never evaluated, so a copy here would be inert
+      // (17.0.0-rc.2's `flow-inert-node-condition`, #4414).
       id: 'has_user', type: 'decision', label: 'Any user yet?',
-      config: { condition: P`vars.firstUser != null` },
     },
     ...TARGETS.flatMap((t) => [t.find, t.loop]),
     { id: 'end', type: 'end', label: 'End' },
@@ -232,12 +260,14 @@ export const DemoBootstrapFlow: Flow = {
       target: CHAIN[i + 1],
       type: 'default' as const,
       // The only branch: leaving `has_user` towards the first claim step.
-      ...(source === 'has_user' ? { condition: P`vars.firstUser != null`, label: 'Yes' } : {}),
+      ...(source === 'has_user'
+        ? { condition: P`has(vars.firstUser) && vars.firstUser != null`, label: 'Yes' }
+        : {}),
     })),
     // Nothing to claim before anyone exists — skip the whole chain.
     {
       id: 'e_nouser', source: 'has_user', target: 'end', type: 'default',
-      condition: P`vars.firstUser == null`, label: 'No user yet',
+      condition: P`!has(vars.firstUser) || vars.firstUser == null`, label: 'No user yet',
     },
   ],
 };

@@ -592,27 +592,28 @@ describe('win rate is measured, and both halves are load-bearing', () => {
     expect(bySource.get('content')!.win_rate).toBe(1);
   });
 
-  it('a source that only ever lost reports no wins — a measured platform gap', async () => {
-    // 17.0.0-rc.1: a filtered measure contributes no row for a group its
-    // filter selects nothing in, so `won_count` is ABSENT (not 0) for
-    // `cold_call`, and a derived ratio over an absent input is null. The rate
-    // reads blank where 0% would be right.
+  it('a source that only ever lost reports 0% — not a blank', async () => {
+    // 17.0.0-rc.1: a filtered measure contributed no row for a group its filter
+    // selected nothing in, so `won_count` was ABSENT (not 0) for `cold_call`,
+    // and a derived ratio over an absent input was null — the rate read blank
+    // where 0% was right.
     //
-    // Pinned rather than papered over (#656): a consumer-side `?? 0` would be
-    // exactly the lenient-consumer habit this repo keeps paying for, and the
-    // fix belongs in the executor's merge step, which is the only place that
-    // knows a `count` over no rows is 0 while an `avg` over no rows is not.
-    // The shipped table puts `lost_count` beside `win_rate` so the blank reads
-    // as "0 of 2", not as "no data".
+    // That was pinned rather than papered over (#656): a consumer-side `?? 0`
+    // would be exactly the lenient-consumer habit this repo keeps paying for,
+    // and the fix belonged in the executor's merge step, which is the only
+    // place that knows a `count` over no rows is 0 while an `avg` over no rows
+    // is not. The assertion was written to fail when the platform fixed it.
     //
-    // This assertion is deliberately written to FAIL when the platform fixes
-    // it — that is the notification, not a regression.
+    // 17.0.0-rc.2 (#4708) is that fix, in exactly that place: a measure a query
+    // never reported now reads `0` for a count/sum on every merge seam. So the
+    // pin flips — the column that used to read blank now reads "0 of 2", and
+    // this test is what keeps it reading that way.
     const rows = await run(widget('win_rate_by_lead_source'), {});
     const coldCall = rows.find((r) => r.lead_source === 'cold_call')!;
     expect(coldCall.lost_count).toBe(2);
     expect(coldCall.decided_count).toBe(2);
-    expect(coldCall.won_count ?? null).toBeNull();
-    expect(coldCall.win_rate ?? null).toBeNull();
+    expect(coldCall.won_count).toBe(0);
+    expect(coldCall.win_rate).toBe(0);
   });
 
   it('the loss-reason breakdown counts only lost deals, grouped by reason', async () => {

@@ -30,8 +30,9 @@ import { REPO_ROOT } from './helpers/repo-root';
  *
  *   3. **Non-total predicate.** A field reference with no `has(...)` guard
  *      aborts the whole predicate on a record whose merged shape has no such
- *      key, and the engine's answer to a predicate that cannot answer is to
- *      SKIP the rule. See the house rule below — this is #630.
+ *      key. Through 17.0.0-rc.1 the engine's answer to a predicate that cannot
+ *      answer was to SKIP the rule; from 17.0.0-rc.2 it REJECTS the write. See
+ *      the house rule below — this is #630.
  *
  * None is visible in review without reading the CEL character by character,
  * which is exactly why they survived. See #514 (items 3 and 12) and #630.
@@ -44,19 +45,33 @@ import { REPO_ROOT } from './helpers/repo-root';
  * guard.** A predicate must return a verdict for every record shape it can be
  * handed — never abort. This file enforces it; you do not have to remember it.
  *
- * ### Why the rule exists (all figures measured on 17.0.0-rc.1)
+ * ### Why the rule exists (all figures measured on 17.0.0-rc.1 unless noted)
  *
  * `evaluateValidationRules` evaluates a rule against `{...previous, ...data}`
  * and fills absent fields with `null` **only on insert**. On update, `previous`
  * is whatever the driver returned, and strict CEL aborts with `No such key`
- * the moment a predicate reads a key that is not there. The engine's response
- * to an unevaluable predicate is to skip the rule:
+ * the moment a predicate reads a key that is not there. Through 17.0.0-rc.1 the
+ * engine's response to an unevaluable predicate was to skip the rule:
  *
  *     WARN Validation rule 'x' predicate failed to evaluate (…) — skipped
  *
- * A rule that reads as enforced then requires nothing at all — silently. It is
+ * A rule that reads as enforced then required nothing at all — silently. It is
  * the same "declared ≠ enforced" failure this repo keeps deleting rules over
  * (`cannot_edit_converted` #575 B1, `revenue_positive` #571).
+ *
+ * **17.0.0-rc.2 makes it fail CLOSED (#4649)** — the upstream question this
+ * file filed, answered. The same abort now rejects the write, naming the rule
+ * and the read that could not be evaluated (measured on 17.0.0-rc.2):
+ *
+ *     WARN  Validation rule 'x' predicate failed to evaluate (…) — write rejected (#4649)
+ *     THROW ValidationError: Validation rule 'x' could not be evaluated
+ *           (runtime: no such overload: dyn<null> < int) — write rejected. …
+ *
+ * That does not relax the house rule, it raises the stakes: what used to be a
+ * rule that quietly enforced nothing is now a rule that blocks an ordinary save
+ * on a record shape the author never considered. The guards below are what keep
+ * both outcomes off the table, and the sweeps still detect a non-total
+ * predicate through the same `failed to evaluate` warning.
  *
  * `!= null` does **not** substitute for `has(...)`: measured on an absent key,
  * `record.f != null` aborts exactly like `record.f != "v"` does. Only `has()`
@@ -83,8 +98,12 @@ import { REPO_ROOT } from './helpers/repo-root';
  *   | ------------------------------- | --------------------------- | -------------- |
  *   | `@objectstack/driver-sql`       | key present, `null`         | ENFORCED       |
  *   | `@objectstack/driver-sqlite-wasm` | key present, `null`       | ENFORCED       |
- *   | `@objectstack/driver-memory`    | **key absent**              | **SKIPPED**    |
- *   | `@objectstack/driver-mongodb`   | **key absent** (see below)  | **SKIPPED**    |
+ *   | `@objectstack/driver-memory`    | **key absent**              | **ABORTS**     |
+ *   | `@objectstack/driver-mongodb`   | **key absent** (see below)  | **ABORTS**     |
+ *
+ * "ABORTS" was a silent skip through 17.0.0-rc.1 and is a rejected write from
+ * 17.0.0-rc.2 — the same non-total predicate, two different ways of not being
+ * the rule the author wrote.
  *
  * The SQL family is column-complete because `SELECT *` returns a NULL for every
  * unset column, and the engine reads `previous` with no field projection
@@ -127,10 +146,11 @@ import { REPO_ROOT } from './helpers/repo-root';
  * keys at all and fails on any `failed to evaluate` warning. Forgetting the
  * guard is now loud, at PR time, which is the only way a house rule survives.
  *
- * Out of scope here, filed upstream as objectstack-ai/objectstack#4649: whether
- * the engine should treat an unevaluable predicate on an `error`-severity rule
- * as a failure rather than a skip. A rule that cannot answer is not a rule that
- * passed — but that is a platform decision, not a HotCRM one.
+ * Filed upstream as objectstack-ai/objectstack#4649 — whether the engine should
+ * treat an unevaluable predicate as a failure rather than a skip — and **landed
+ * in 17.0.0-rc.2**: a rule that cannot answer is not a rule that passed, so the
+ * write is rejected. See the fail-closed note above; the guards here are what
+ * keeps that door shut for HotCRM's own rules.
  *
  * ### The same rule on the other two CEL surfaces (#633)
  *
@@ -386,7 +406,8 @@ describe('every authored predicate guards every field it reads', () => {
       offenders,
       'These predicates read a field with no has(…) guard. On a record whose merged ' +
         'shape omits the key — every update on a driver that stores only written ' +
-        'columns — strict CEL aborts and the engine SKIPS the rule entirely. ' +
+        'columns — strict CEL aborts: the engine skipped the rule entirely through ' +
+        '17.0.0-rc.1 and rejects the write from 17.0.0-rc.2 (#4649). ' +
         'Use `(!has(record.f) || isBlank(record.f))` for "f is empty" and ' +
         '`has(record.f) && record.f <op> …` for "f holds a value".',
     ).toEqual([]);
@@ -401,13 +422,15 @@ describe('every authored predicate guards every field it reads', () => {
  * the engine's own `evaluateValidationRules` with `mode: 'update'` and a
  * `previous` that has no keys at all — the exact shape the in-memory and Mongo
  * drivers produce — and fails on any `failed to evaluate` warning, which is how
- * the engine reports that it skipped a rule.
+ * the engine reports a predicate it could not evaluate (skipped through
+ * 17.0.0-rc.1, write rejected from 17.0.0-rc.2 — same warning either way, which
+ * is why this sweep still reads it).
  *
- * A `ValidationError` here is a PASS: a rule that fires returned a verdict.
- * Only silence-by-abort is the defect.
+ * A `ValidationError` here is a PASS: a rule that fires returned a verdict. Only
+ * the abort is the defect, whichever way the engine of the day resolves it.
  */
 describe('predicates are TOTAL on the real engine', () => {
-  /** Run one object's rules and return the engine's "I skipped it" warnings. */
+  /** Run one object's rules and return the engine's "I could not evaluate" warnings. */
   function skippedWarnings(obj: AnyRec, data: AnyRec, previous: AnyRec | null): string[] {
     const warns: string[] = [];
     const logger = { warn: (...a: unknown[]) => void warns.push(a.map(String).join(' ')) };
@@ -475,7 +498,9 @@ describe('predicates are TOTAL on the real engine', () => {
  * without `completed_date`, then update its status to `completed`. Before the
  * guards landed, the merged record had no `completed_date` key, CEL aborted,
  * the engine logged `predicate failed to evaluate … — skipped`, and the save
- * SUCCEEDED with the rule silently doing nothing.
+ * SUCCEEDED with the rule silently doing nothing. (On 17.0.0-rc.2 the same
+ * unguarded predicate would block that save instead — a different wrong answer
+ * from the same missing guard.)
  */
 describe('the rule fires on a driver whose stored record omits the key', () => {
   const task = objects.find((o) => o.name === 'crm_task') as AnyRec;

@@ -48,7 +48,7 @@ export interface InlineReportGrouping {
 export type InlineQueryWidget = DashboardWidget & {
   object?: string;
   categoryField?: string;
-  categoryGranularity?: string;
+  categoryGranularity?: NonNullable<DatasetSelection['timeDimensions']>[number]['granularity'];
   valueField?: string;
   aggregate?: string;
   measures?: Array<{ aggregate?: string; valueField?: string }>;

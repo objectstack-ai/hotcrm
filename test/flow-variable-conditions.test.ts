@@ -35,12 +35,18 @@ import stack from '../objectstack.config';
  *     `{ label, expression }`;
  *   - every out-edge's `condition` (`AutomationEngine.traverseNext`).
  *
- * A `decision` node's SINGULAR `config.condition` — the shape every flow in
- * this repo authors — is **never read by the engine**. The branch is decided
- * entirely by the edge copies. That is why the reproductions below all abort on
- * an EDGE, and why this file sweeps node and edge conditions alike: the node
- * copy is inert today but it is the authored statement of intent, and it must
- * not drift from the edge that actually decides.
+ * A `decision` node's SINGULAR `config.condition` is **never read by the
+ * engine**. The branch is decided entirely by the edge copies, which is why the
+ * reproductions below all abort on an EDGE.
+ *
+ * This repo used to author the node copy too, as a statement of intent kept in
+ * sync with the edge. It no longer does: 17.0.0-rc.2's `flow-inert-node-condition`
+ * (#4414) flags exactly that copy, on the grounds that a second statement of a
+ * predicate which no reader can tell apart from the live one is worse than no
+ * statement at all — and a copy that drifts is a lie about what the flow does.
+ * Every `decision` node here now carries no condition, and the sweeps below run
+ * over the edges that decide. (The node arm stays in the collector: it costs
+ * nothing and catches a re-introduced copy.)
  *
  * **How variables reach CEL.** `evaluateCondition` flattens the run's variable
  * Map into one object and evaluates with `{ extra: { ...vars, vars }, record: vars }`

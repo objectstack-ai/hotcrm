@@ -41,7 +41,12 @@ async function enrol(seed: Rec = {}, screen: Rec = { leadStatus: 'new' }) {
   });
   const runId = await h.run('campaign_enrollment', { recordId: 'cmp1' });
   expect(runId, 'campaign_enrollment did not start').toBeTruthy();
-  await h.resume(runId!, { recordId: 'cmp1', ...screen });
+  // Screen fields ONLY. `recordId` is a start-time input the console seeds on
+  // the trigger, and from 17.0.0-rc.2 the engine holds a resume to the screen's
+  // declared field contract (#4477) — re-sending it here is refused with
+  // `INVALID_SCREEN_INPUT: Unknown screen field "recordId"`, which is the
+  // engine correctly rejecting a signal the console never sends.
+  await h.resume(runId!, screen);
   return h;
 }
 

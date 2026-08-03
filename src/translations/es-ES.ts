@@ -720,11 +720,6 @@ export const esES: TranslationData = {
     'error.load_failed': 'Error al cargar los datos',
   },
 
-  validationMessages: {
-    amount_required_for_closed: 'El monto es obligatorio cuando la etapa es Cerrada Ganada',
-    close_date_required: 'La fecha de cierre es obligatoria para las oportunidades',
-    discount_limit: 'El descuento no puede superar el 40%',
-  },
 
   dashboards: {
     crm_overview_dashboard: {
