@@ -87,7 +87,10 @@ export const zhCN: TranslationData = {
       pluralLabel: '联系人',
       description: '客户与商机的关键人物联系人',
       fields: {
-        salutation: { label: '称谓' },
+        salutation: {
+          label: '称谓',
+          options: { mr: '先生', ms: '女士', mrs: '夫人', dr: '博士', prof: '教授' },
+        },
         first_name: { label: '名' },
         last_name: { label: '姓' },
         full_name: { label: '全名' },
@@ -170,9 +173,17 @@ export const zhCN: TranslationData = {
           options: {
             getting_started: '入门指南', how_to: '操作指南',
             troubleshooting: '故障排查', billing: '账务与价格', api: 'API 与集成',
+            release_notes: '版本说明',
+            policy: '政策制度',
           },
         },
-        tags: { label: '标签', options: { auth: '身份认证', sso: '单点登录', mobile: '移动端', email: '邮件' } },
+        tags: {
+          label: '标签',
+          options: {
+            auth: '身份认证', sso: '单点登录', mobile: '移动端', email: '邮件',
+            reports: '报表', performance: '性能', data_import: '数据导入', webhooks: 'Webhook',
+          },
+        },
         status: {
           label: '状态',
           options: { draft: '草稿', in_review: '审核中', published: '已发布', archived: '已归档' },
@@ -396,7 +407,13 @@ export const zhCN: TranslationData = {
         discount_amount: { label: '折扣金额' },
         tax: { label: '税额' },
         shipping_handling: { label: '运费及手续费' },
-        payment_terms: { label: '付款条款' },
+        payment_terms: {
+          label: '付款条款',
+          options: {
+            net_15: '15 天账期', net_30: '30 天账期', net_60: '60 天账期',
+            net_90: '90 天账期', due_on_receipt: '货到付款',
+          },
+        },
         shipping_terms: { label: '运输条款' },
         billing_address: { label: '账单地址' },
         shipping_address: { label: '收货地址' },
@@ -438,11 +455,26 @@ export const zhCN: TranslationData = {
         crm_opportunity: { label: '关联商机' },
         owner: { label: '合同负责人' },
         contract_term_months: { label: '合同期限（月）' },
-        billing_frequency: { label: '计费周期' },
-        payment_terms: { label: '付款条款' },
+        billing_frequency: {
+          label: '计费周期',
+          options: { monthly: '按月', quarterly: '按季度', annually: '按年', one_time: '一次性' },
+        },
+        payment_terms: {
+          label: '付款条款',
+          options: {
+            net_15: '15 天账期', net_30: '30 天账期', net_60: '60 天账期',
+            net_90: '90 天账期', due_on_receipt: '货到付款',
+          },
+        },
         auto_renewal: { label: '自动续约' },
         renewal_notice_days: { label: '续约通知（天）' },
-        contract_type: { label: '合同类型' },
+        contract_type: {
+          label: '合同类型',
+          options: {
+            subscription: '订阅合同', service: '服务协议', license: '授权许可',
+            partnership: '合作协议', nda: '保密协议', msa: '主服务协议',
+          },
+        },
         signed_date: { label: '签署日期' },
         signed_by: { label: '签署人' },
         document_url: { label: '合同文档' },
@@ -487,7 +519,12 @@ export const zhCN: TranslationData = {
           label: '优先级',
           options: { low: '低', medium: '中', high: '高', critical: '紧急' },
         },
-        type: { label: '类型' },
+        type: {
+          label: '类型',
+          options: {
+            question: '咨询', problem: '故障', feature_request: '功能需求', bug: '缺陷',
+          },
+        },
         owner: { label: '负责人' },
         origin: {
           label: '工单来源',
@@ -583,18 +620,33 @@ export const zhCN: TranslationData = {
           options: { low: '低', normal: '普通', high: '高', urgent: '紧急' },
         },
         due_date: { label: '截止日期' },
-        type: { label: '任务类型' },
+        type: {
+          label: '任务类型',
+          options: {
+            call: '电话', email: '邮件', meeting: '会议',
+            follow_up: '跟进', demo: '演示', other: '其他',
+          },
+        },
         reminder_date: { label: '提醒时间' },
         completed_date: { label: '完成日期' },
         owner: { label: '负责人' },
-        related_to_type: { label: '关联对象类型' },
+        related_to_type: {
+          label: '关联对象类型',
+          options: {
+            crm_account: '客户', crm_contact: '联系人', crm_opportunity: '商机',
+            crm_lead: '线索', crm_case: '工单',
+          },
+        },
         related_to_account: { label: '关联客户' },
         related_to_contact: { label: '关联联系人' },
         related_to_opportunity: { label: '关联商机' },
         related_to_lead: { label: '关联线索' },
         related_to_case: { label: '关联工单' },
         is_recurring: { label: '重复任务' },
-        recurrence_type: { label: '重复类型' },
+        recurrence_type: {
+          label: '重复类型',
+          options: { daily: '每日', weekly: '每周', monthly: '每月', yearly: '每年' },
+        },
         recurrence_interval: { label: '重复间隔' },
         recurrence_end_date: { label: '重复结束日期' },
         is_completed: { label: '是否完成' },
@@ -691,9 +743,29 @@ export const zhCN: TranslationData = {
           },
         },
         cost: { label: '成本' },
+        billing_type: {
+          label: '计费类型',
+          options: {
+            one_time: '一次性', monthly: '按月', quarterly: '按季度',
+            annual: '按年', usage: '按用量',
+          },
+        },
+        unit_of_measure: {
+          label: '计量单位',
+          options: {
+            each: '个', license: '许可证', seat: '席位',
+            hour: '小时', day: '天', month: '月',
+          },
+        },
         is_active: { label: '是否启用' },
         description: { label: '描述' },
-        family: { label: '产品系列' },
+        family: {
+          label: '产品系列',
+          options: {
+            enterprise: '企业级方案', smb: '中小企业方案',
+            services: '专业服务', cloud: '云服务',
+          },
+        },
         list_price: { label: '标价' },
         sku: { label: 'SKU' },
         quantity_on_hand: { label: '库存数量' },
@@ -763,7 +835,10 @@ export const zhCN: TranslationData = {
             cold_call: '陌生拜访', email_campaign: '邮件营销', other: '其他',
           },
         },
-        competitors: { label: '竞争对手' },
+        competitors: {
+          label: '竞争对手',
+          options: { competitor_a: '竞争对手 A', competitor_b: '竞争对手 B', competitor_c: '竞争对手 C' },
+        },
         crm_campaign: { label: '营销活动' },
         days_in_stage: { label: '当前阶段天数' },
         stage_entry_date: { label: '进入当前阶段日期' },
