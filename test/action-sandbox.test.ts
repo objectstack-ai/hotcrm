@@ -244,7 +244,7 @@ describe('every script action body executes under QuickJS', () => {
           opts: {
             objectName,
             record,
-            input: { subject: 'Deep dive', start: '2026-09-01T09:00:00.000Z', duration: 60, location: 'Zoom' },
+            input: { subject: 'Deep dive', start_date: '2026-09-01', start_time: '09:00', duration: 60, location: 'Zoom' },
           },
         }],
       ]),

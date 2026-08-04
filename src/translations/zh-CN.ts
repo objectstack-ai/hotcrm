@@ -41,7 +41,8 @@ const activityActions = {
     successMessage: '会议已安排！',
     params: {
       subject: { label: '会议主题' },
-      start: { label: '开始时间' },
+      start_date: { label: '开始日期（UTC）' },
+      start_time: { label: '开始时间（UTC）' },
       location: { label: '地点' },
       duration: { label: '时长（分钟）' },
       attendee_contacts: { label: '联系人参会人' },

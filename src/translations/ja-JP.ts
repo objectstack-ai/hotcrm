@@ -42,7 +42,8 @@ const activityActions = {
     successMessage: '会議を設定しました！',
     params: {
       subject: { label: '会議の件名' },
-      start: { label: '開始日時' },
+      start_date: { label: '開始日 (UTC)' },
+      start_time: { label: '開始時刻 (UTC)' },
       location: { label: '場所' },
       duration: { label: '所要時間（分）' },
       attendee_contacts: { label: '取引先責任者の参加者' },

@@ -45,7 +45,8 @@ const activityActions = {
     successMessage: 'Meeting scheduled!',
     params: {
       subject: { label: 'Meeting Subject' },
-      start: { label: 'Starts At' },
+      start_date: { label: 'Start Date (UTC)' },
+      start_time: { label: 'Start Time (UTC)' },
       location: { label: 'Location' },
       duration: { label: 'Duration (minutes)' },
       attendee_contacts: { label: 'Contact Attendees' },

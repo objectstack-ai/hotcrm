@@ -29,6 +29,13 @@ import * as objects from '../objects';
  *     unified-timeline pointer (ADR-0052 `source_object`/`source_id`), the same
  *     way `send_email` points at its `sys_email`.
  *
+ * # Live platform workaround
+ *
+ * `schedule_meeting` collects its start as a `date` + `time` PAIR rather than
+ * as one `datetime` param, because a `datetime` action param cannot be
+ * submitted from the Console at all (objectstack-ai/objectstack#5061). Both the
+ * body and the param list carry the full reasoning and the revert instruction.
+ *
  * The recency bubble (`crm_account.last_activity_date`,
  * `crm_lead.last_contacted_date`, `crm_contact.last_contacted_date`) is
  * deliberately NOT written here. It hangs off `crm_event`'s own hook, so an
@@ -106,7 +113,7 @@ type ActivitySpec = {
   defaultSubject: string;
   subjectLabel: string;
   notesLabel: string;
-  /** Booked-in-the-future variants collect a start time and a location. */
+  /** Booked-in-the-future variants collect a start date + wall clock and a location. */
   collectsSchedule?: boolean;
   successMessage: string;
 };
@@ -165,11 +172,39 @@ function activityAction(spec: ActivitySpec, objectName: string): Action {
       const duration = input.duration ? Number(input.duration) : 0;
       const notes = input.notes ? String(input.notes) : '';
       const location = input.location ? String(input.location) : '';
-      // A booking states its own start; a log is "just now". An unparseable
-      // value falls back to now rather than writing NaN into a required column.
+
+      // A booking states its own start; a log is "just now".
+      //
+      // WORKAROUND for objectstack-ai/objectstack#5061 — the start is collected
+      // as a CALENDAR DAY + a WALL CLOCK (\`start_date\` / \`start_time\`) and
+      // joined here, instead of as one \`type: 'datetime'\` param. A datetime
+      // param is unusable from the Console: it renders as a zone-less
+      // \`<input type="datetime-local">\` and POSTs the raw value
+      // ("2026-08-10T15:00"), which the runtime's action-param validator rejects
+      // with 400 "expected an ISO-8601 instant with explicit zone" — no user
+      // input can pass. \`date\` and \`time\` are the two param types whose
+      // renderer output ("YYYY-MM-DD" / "HH:MM") the validator accepts verbatim,
+      // so the pair is submittable where the single datetime never was.
+      //
+      // TIMEZONE: the wall clock is interpreted as **UTC**, and both param
+      // labels say so. UTC is the only zone this body can apply deterministically
+      // — the sandbox context carries no user or org timezone (\`ctx.user\` is
+      // id/name/email), and reading the server's local zone would make the same
+      // input mean different instants on different hosts and in tests. Everything
+      // else this app writes is likewise a UTC instant (\`new Date().toISOString()\`).
+      //
+      // When #5061 lands (the Console serializing datetime-local in the
+      // browser's zone), this reverts to ONE \`type: 'datetime'\` param and the
+      // zone becomes the user's own — see \`collectsSchedule\` in this file.
       let startIso = nowIso;
-      if (input.start) {
-        const parsed = new Date(String(input.start));
+      const startDate = input.start_date ? String(input.start_date).trim() : '';
+      if (startDate) {
+        const startTime = input.start_time ? String(input.start_time).trim() : '00:00';
+        // 'HH:MM' and 'HH:MM:SS' are both shapes the validator lets through.
+        const clock = startTime.length === 5 ? startTime + ':00' : startTime;
+        const parsed = new Date(startDate + 'T' + clock + '.000Z');
+        // An unparseable value falls back to now rather than writing NaN into a
+        // required column.
         if (!isNaN(parsed.getTime())) startIso = parsed.toISOString();
       }
 
@@ -304,9 +339,35 @@ function activityAction(spec: ActivitySpec, objectName: string): Action {
         type: 'text',
         required: true,
       },
+      // WORKAROUND objectstack-ai/objectstack#5061 — one `type: 'datetime'`
+      // param ("Starts At") is what this WANTS to be, and it is unusable: the
+      // Console renders it as a zone-less `<input type="datetime-local">` and
+      // POSTs the raw value, which the action-param validator rejects with a
+      // 400 (`expected an ISO-8601 instant with explicit zone`). The renderer's
+      // output shape and the validator's accepted shape do not intersect, so
+      // NO user input can submit the action — reproduced from both the list-row
+      // menu and the record header (dogfood record on hotcrm#670).
+      //
+      // `date` and `time` are the two param types where they DO intersect: the
+      // Console renders native `<input type="date">` / `<input type="time">`
+      // pickers (`ui-components` DateField / TimeField, both emitting
+      // `e.target.value` verbatim) and the validator's `CalendarDateValueSchema`
+      // /`ClockTimeValueSchema` accept exactly `YYYY-MM-DD` and `HH:MM`. Two
+      // native pickers are also better UX than one free-text box, which is the
+      // other shape that would have submitted.
+      //
+      // The zone is stated in the LABELS, not in `helpText`: the Console's
+      // action-param form forwards only name/label/type/required/placeholder/
+      // options/multiple/accept/maxSize to the field widget, so a `helpText`
+      // here would never reach the user.
+      //
+      // REVERT WHEN #5061 LANDS: back to
+      //   { name: 'start', label: 'Starts At', type: 'datetime', required: true }
+      // and drop the join in the body above.
       ...(spec.collectsSchedule
         ? ([
-            { name: 'start', label: 'Starts At', type: 'datetime', required: true },
+            { name: 'start_date', label: 'Start Date (UTC)', type: 'date', required: true },
+            { name: 'start_time', label: 'Start Time (UTC)', type: 'time', required: true },
             { name: 'location', label: 'Location', type: 'text', required: false },
           ] as NonNullable<Action['params']>)
         : []),

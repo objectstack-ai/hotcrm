@@ -1,9 +1,12 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
+import { validateActionParams } from '@objectstack/spec/ui';
 import stack from '../objectstack.config';
 import { ACTIVITY_TARGETS } from '../src/actions/global.actions';
+import eventHooks from '../src/objects/event.hook';
 import { runActionBody, makeSandboxEngine, type ActionRunOpts } from './helpers/action-sandbox';
+import { makeHarness, makeCtx, hookNamed } from './helpers/hook-harness';
 
 /**
  * Behavioral guards for the activity actions in `src/actions/global.actions.ts`.
@@ -222,7 +225,7 @@ describe('every activity action writes a real crm_event', () => {
     expect(logged.type).toBe('call');
 
     const booked = (await run('crm_opportunity', 'schedule_meeting', {
-      input: { subject: 'Deep dive', start: '2026-09-01T09:00:00.000Z', location: 'Zoom' },
+      input: { subject: 'Deep dive', start_date: '2026-09-01', start_time: '09:00', location: 'Zoom' },
     })).engine.inserted('crm_event')[0]!;
     // The distinction the whole churn signal rests on: a booking must not reset
     // the customer's recency clock (`event.hook.ts` gates its bubble on `held`).
@@ -234,7 +237,7 @@ describe('every activity action writes a real crm_event', () => {
 
   it('falls back to now for an unparseable start rather than writing NaN', async () => {
     const { engine } = await run('crm_lead', 'schedule_meeting', {
-      input: { subject: 'Deep dive', start: 'next tuesday-ish' },
+      input: { subject: 'Deep dive', start_date: 'next tuesday-ish' },
     });
     const [event] = engine.inserted('crm_event') as AnyRec[];
     expect(event.start_datetime).toMatch(/^\d{4}-\d{2}-\d{2}T/);
@@ -275,7 +278,7 @@ describe('activity actions stamp a real record_label (#514 item 2)', () => {
     expect(nameField, `${objectName} declares no nameField`).toBeTruthy();
     for (const kind of KINDS) {
       const { engine } = await run(objectName, kind, {
-        input: { subject: 'Quarterly sync', start: '2026-09-01T09:00:00.000Z' },
+        input: { subject: 'Quarterly sync', start_date: '2026-09-01', start_time: '09:00' },
       });
       const [activity] = engine.inserted('sys_activity') as AnyRec[];
       expect(activity.record_label, `${objectName}:${kind}`).toBe(`label of ${objectName}`);
@@ -306,7 +309,7 @@ describe('activity actions stamp a real record_label (#514 item 2)', () => {
 
   it('marks a booking as scheduled, not completed', async () => {
     const { engine } = await run('crm_lead', 'schedule_meeting', {
-      input: { subject: 'Deep dive', start: '2026-09-01T09:00:00.000Z' },
+      input: { subject: 'Deep dive', start_date: '2026-09-01', start_time: '09:00' },
     });
     expect((engine.inserted('sys_activity')[0] as AnyRec).type).toBe('scheduled');
   });
@@ -353,9 +356,10 @@ describe('the activity actions stay twins (#514 item 15)', () => {
     for (const objectName of TARGETS) {
       const names = (kind: string) => paramsOf(objectName, kind).map((p) => p.name);
       expect(names('schedule_meeting').filter((n) => !names('log_call').includes(n)))
-        .toEqual(['start', 'location']);
+        .toEqual(['start_date', 'start_time', 'location']);
       expect(names('log_meeting')).toEqual(names('log_call'));
-      expect(param(objectName, 'schedule_meeting', 'start').required).toBe(true);
+      expect(param(objectName, 'schedule_meeting', 'start_date').required).toBe(true);
+      expect(param(objectName, 'schedule_meeting', 'start_time').required).toBe(true);
     }
   });
 
@@ -402,5 +406,153 @@ describe('the activity actions stay twins (#514 item 15)', () => {
       // …and no zero-length event is written either.
       expect((engine.inserted('crm_event')[0] as AnyRec).duration_minutes).toBeUndefined();
     }
+  });
+});
+
+// ────────────────────── the Console can actually submit it (objectstack#5061) ──
+
+describe('schedule_meeting is submittable from the Console (objectstack#5061)', () => {
+  /**
+   * The dogfood verification of PR #670 found `schedule_meeting` unusable from
+   * the UI, from BOTH entry points: `start` was declared `type: 'datetime'`,
+   * which the Console renders as a zone-less `<input type="datetime-local">`
+   * and POSTs raw — and the runtime's action-param validator answers 400,
+   * `expected an ISO-8601 instant with explicit zone`. The renderer's output
+   * shape and the validator's accepted shape did not intersect, so no user
+   * input could pass. Filed upstream as objectstack-ai/objectstack#5061; the
+   * app's workaround is a `date` + `time` PAIR, joined in the body.
+   *
+   * These run the EXACT bag the Console produces through the SAME
+   * `validateActionParams` the dispatcher rejects with, and then through the
+   * real QuickJS body — because a shape that passes one and not the other is
+   * precisely the defect being worked around.
+   */
+
+  /** The bag the Console POSTs, verbatim: zone-less strings from native pickers. */
+  const CONSOLE_BAG = {
+    subject: 'Q3 roadmap review',
+    start_date: '2026-08-10',
+    start_time: '15:00',
+    duration: 45,
+    location: 'Zoom',
+    attendee_contacts: ['con_1', 'con_2'],
+    attendee_users: ['usr_7'],
+    notes: 'Walk through the rollout plan',
+  };
+
+  /** What the dispatcher merges in on top of the submitted params. */
+  const dispatchExtras = (objectName: string) => ({
+    recordId: `${objectName}_1`,
+    objectName,
+  });
+
+  const declaredParams = (objectName: string) =>
+    (action(objectName, 'schedule_meeting').params ?? []).map((p: AnyRec) => ({
+      name: p.name,
+      type: p.type,
+      multiple: p.multiple,
+      required: p.required,
+      options: p.options,
+    }));
+
+  it.each(TARGETS)('%s accepts the console-produced bag with no validation issue', (objectName) => {
+    const issues = validateActionParams(
+      declaredParams(objectName) as never,
+      { ...CONSOLE_BAG, ...dispatchExtras(objectName) },
+    );
+    expect(
+      issues,
+      `the Console cannot submit ${objectName}:schedule_meeting:\n  ` +
+        issues.map((i) => `${i.param}: ${i.message}`).join('\n  '),
+    ).toEqual([]);
+  });
+
+  it('the shape this replaced is still rejected — the workaround is not decorative', () => {
+    // If this ever passes, objectstack#5061 has been fixed on the platform and
+    // the pair can collapse back to one `type: 'datetime'` param (see the
+    // REVERT note in src/actions/global.actions.ts).
+    const issues = validateActionParams(
+      [{ name: 'start', type: 'datetime', required: true }],
+      { start: '2026-08-10T15:00' },
+    );
+    expect(issues.map((i) => i.code)).toEqual(['invalid_shape']);
+    expect(issues[0]!.message).toMatch(/explicit zone/);
+  });
+
+  it('a bare wall clock would not pass as a datetime either way round', () => {
+    // Both halves are legal on their own declared type, and neither is a legal
+    // instant — which is why the join has to happen inside the body.
+    expect(validateActionParams(
+      [{ name: 'start_date', type: 'date', required: true },
+       { name: 'start_time', type: 'time', required: true }],
+      { start_date: '2026-08-10', start_time: '15:00' },
+    )).toEqual([]);
+    expect(validateActionParams(
+      [{ name: 'start', type: 'datetime', required: true }],
+      { start: '2026-08-10' },
+    )).not.toEqual([]);
+  });
+
+  it('the console bag writes a planned event at the joined UTC instant, with attendees', async () => {
+    const engine = makeSandboxEngine();
+    const { result } = await runActionBody(action('crm_opportunity', 'schedule_meeting'), {
+      objectName: 'crm_opportunity',
+      record: recordFor('crm_opportunity'),
+      input: CONSOLE_BAG,
+      engine,
+    });
+
+    const [event] = engine.inserted('crm_event') as AnyRec[];
+    expect(event.status).toBe('planned');
+    expect(event.type).toBe('meeting');
+    // 15:00 is read as UTC — the only zone this body can apply deterministically
+    // (the sandbox ctx carries no user/org timezone), and the one both param
+    // labels state.
+    expect(event.start_datetime).toBe('2026-08-10T15:00:00.000Z');
+    expect(event.duration_minutes).toBe(45);
+    expect(event.location).toBe('Zoom');
+    expect(event.related_to_opportunity).toBe('crm_opportunity_1');
+
+    // organiser + two contacts + one colleague, as rows (#592 acceptance)
+    const attendees = engine.inserted('crm_event_attendee');
+    expect(attendees).toHaveLength(4);
+    expect(attendees.every((a) => a.crm_event === result.eventId)).toBe(true);
+    expect(attendees.filter((a) => a.attendee_type === 'contact').map((a) => a.crm_contact).sort())
+      .toEqual(['con_1', 'con_2']);
+  });
+
+  it('accepts a seconds-bearing wall clock, which the validator also allows', async () => {
+    const { engine } = await run('crm_lead', 'schedule_meeting', {
+      input: { subject: 'Deep dive', start_date: '2026-08-10', start_time: '15:00:30' },
+    });
+    expect((engine.inserted('crm_event')[0] as AnyRec).start_datetime).toBe('2026-08-10T15:00:30.000Z');
+  });
+
+  it('booking through the console still does NOT bump recency', async () => {
+    // The event the console bag produces, handed to the REAL recency hook. A
+    // booking that refreshed the customer's clock is how `at_risk_accounts`
+    // learns to lie, and the fixed param shape must not have changed that.
+    const engine = makeSandboxEngine();
+    await runActionBody(action('crm_opportunity', 'schedule_meeting'), {
+      objectName: 'crm_opportunity',
+      record: recordFor('crm_opportunity'),
+      input: CONSOLE_BAG,
+      engine,
+    });
+    const [event] = engine.inserted('crm_event') as AnyRec[];
+
+    const bubble = hookNamed(eventHooks, 'event_activity_bubble');
+    const h = makeHarness({
+      crm_account: [{ id: 'acc1' }],
+      crm_opportunity: [{ id: 'crm_opportunity_1', crm_account: 'acc1' }],
+    });
+    await bubble.handler(makeCtx({
+      event: 'afterInsert',
+      input: { id: 'evt_1', ...event },
+      user: { id: 'usr_1' },
+      api: h.api,
+    }));
+    expect(h.calls, 'a booking bumped interaction recency').toHaveLength(0);
+    expect(h.rows('crm_account')[0]!.last_activity_date).toBeUndefined();
   });
 });

@@ -42,7 +42,8 @@ const activityActions = {
     successMessage: '¡Reunión programada!',
     params: {
       subject: { label: 'Asunto de la reunión' },
-      start: { label: 'Comienza a las' },
+      start_date: { label: 'Fecha de inicio (UTC)' },
+      start_time: { label: 'Hora de inicio (UTC)' },
       location: { label: 'Ubicación' },
       duration: { label: 'Duración (minutos)' },
       attendee_contacts: { label: 'Contactos participantes' },

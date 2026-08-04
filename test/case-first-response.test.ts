@@ -141,7 +141,7 @@ describe.each(TWINS)('%s stamps the first response', (name) => {
     await runActionBody(action('crm_case', 'schedule_meeting'), {
       objectName: 'crm_case',
       record: { id: 'case_1' },
-      input: { subject: 'Follow-up', start: '2026-09-01T09:00:00.000Z' },
+      input: { subject: 'Follow-up', start_date: '2026-09-01', start_time: '09:00' },
       engine,
     });
     expect(engine.rows('crm_case')[0]!.first_response_date).toBeNull();

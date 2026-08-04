@@ -57,3 +57,22 @@ customer minutes, activity by rep, weekly volume, activity mix, interactions on
 deals, and accounts quiet for 30 / 60 / 90 days. The dashboard is also the first
 consumer of the `task_metrics` dataset, which had shipped with no widget using
 it at all.
+
+**The activity actions are on the record header, not just the row menu.** The
+lead, opportunity and account detail pages are custom pages, and a custom page
+replaces the synthesized record header — so an object-scoped action it does not
+name is unreachable from the record itself. All three now list **Log a Call**,
+**Log a Meeting** and **Schedule a Meeting** in their header. (The case page's
+action set is a deliberate curation and is unchanged.)
+
+**Booking a meeting collects a date and a time, not a single "Starts At".**
+`schedule_meeting` asks for **Start Date (UTC)** and **Start Time (UTC)** and
+joins them into the stored instant. This is a workaround for a platform defect
+(objectstack-ai/objectstack#5061): an action param declared `datetime` is
+rendered by the Console as a zone-less `datetime-local` input and posted raw,
+which the runtime's param validator rejects — so *no* value a user could type
+was submittable, and the action failed with a 400 every time. `date` and `time`
+are the two param types whose native pickers emit exactly what the validator
+accepts. The wall clock is read as UTC, which is why both labels say so; when
+the platform fix lands this collapses back to one `datetime` param interpreted
+in the user's own timezone.
