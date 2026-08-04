@@ -4,10 +4,11 @@
   "private": true,
   "packageManager": "pnpm@10.33.0",
   "scripts": {
-    "build": "fumadocs-mdx && next build",
-    "dev": "next dev",
+    "sync:screenshots": "node ../../scripts/sync-docs-screenshots.mjs",
+    "build": "pnpm run sync:screenshots && fumadocs-mdx && next build",
+    "dev": "pnpm run sync:screenshots && next dev",
     "start": "next start",
-    "types:check": "fumadocs-mdx && next typegen && tsc --noEmit"
+    "types:check": "pnpm run sync:screenshots && fumadocs-mdx && next typegen && tsc --noEmit"
   },
   "dependencies": {
     "@orama/tokenizers": "3.1.18",

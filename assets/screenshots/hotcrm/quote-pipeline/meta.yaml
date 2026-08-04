@@ -1,0 +1,22 @@
+id: hotcrm-quote-pipeline
+kind: screenshot
+scope: hotcrm
+category: hotcrm
+status: published
+captured: '2026-08-01'
+capture:
+  application: HotCRM
+  theme: dark
+  viewport: 1440x1024
+locales:
+  en: en.png
+  zh-Hans: zh-Hans.png
+title:
+  en: Quote lifecycle pipeline
+  zh-Hans: 报价生命周期流水线
+alt:
+  en: A kanban view of quotes moving through draft, review, presentation, acceptance, and rejection.
+  zh-Hans: 展示报价从草稿、审核、提交到接受或拒绝的看板视图。
+purpose:
+  en: Show commercial process visibility from draft to decision.
+  zh-Hans: 展示从草稿到决策的商业流程可见性。

@@ -27,19 +27,19 @@ HotCRM is a complete, opinionated CRM built as the **first official application*
 
 ## 📸 Screenshots
 
-| Sales pipeline (kanban) | All opportunities (table) |
+| Qualified lead workspace | Sales pipeline |
 |---|---|
-| ![Sales pipeline](assets/screenshots/01-sales-pipeline.png) | ![All opportunities](assets/screenshots/03-opportunities-list.png) |
+| ![Qualified lead workspace](assets/screenshots/hotcrm/lead-detail/en.png) | ![Sales pipeline](assets/screenshots/hotcrm/sales-pipeline/en.png) |
 
-| Accounts (cards) | Service cases (kanban) |
+| Strategic account 360 | Quote lifecycle |
 |---|---|
-| ![Accounts](assets/screenshots/02-accounts-list.png) | ![Service cases](assets/screenshots/05-service-cases.png) |
+| ![Strategic account 360](assets/screenshots/hotcrm/customer-360/en.png) | ![Quote lifecycle](assets/screenshots/hotcrm/quote-pipeline/en.png) |
 
-| Executive dashboard |
-|---|
-| ![Executive dashboard](assets/screenshots/04-executive-dashboard.png) |
+| Campaign lifecycle and ROI | Sales performance dashboard |
+|---|---|
+| ![Campaign lifecycle and ROI](assets/screenshots/hotcrm/campaign-detail/en.png) | ![Sales performance dashboard](assets/screenshots/hotcrm/sales-dashboard/en.jpg) |
 
-> Screenshots show HotCRM running in English with seeded data. Bundled translations: en, zh-CN, es-ES, ja-JP.
+> The current, locale-specific screenshots live in `assets/screenshots/hotcrm/<screen>/<locale>.png`, with a colocated `meta.yaml` for purpose, alt text, capture context, and lifecycle. This README uses English; the documentation site also publishes `zh-Hans` variants. Bundled runtime translations: en, zh-CN, es-ES, ja-JP.
 
 ---
 

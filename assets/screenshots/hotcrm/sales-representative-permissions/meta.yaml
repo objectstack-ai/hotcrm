@@ -1,0 +1,25 @@
+id: hotcrm-sales-representative-permissions
+kind: screenshot
+scope: hotcrm
+category: governance
+status: published
+captured: '2026-08-01'
+capture:
+  application: HotCRM
+  surface: Studio permission matrix
+  theme: light
+  viewport: 1600x900
+  aspectRatio: '16:9'
+  dataset: curated-crm-schema
+locales:
+  en: en.png
+  zh-Hans: zh-Hans.png
+title:
+  en: Sales representative permission matrix
+  zh-Hans: 销售代表权限矩阵
+alt:
+  en: Object-level CRUD permissions and record-sharing defaults for a sales representative role.
+  zh-Hans: 销售代表角色的对象级 CRUD 权限与记录共享默认策略。
+purpose:
+  en: Show role-based access, object permissions, field overrides, and sharing governance.
+  zh-Hans: 展示基于角色的访问控制、对象权限、字段覆盖与共享治理。

@@ -1,0 +1,22 @@
+id: hotcrm-customer-360
+kind: screenshot
+scope: hotcrm
+category: hotcrm
+status: published
+captured: '2026-08-01'
+capture:
+  application: HotCRM
+  theme: dark
+  viewport: 1440x1024
+locales:
+  en: en.png
+  zh-Hans: zh-Hans.png
+title:
+  en: Strategic account 360
+  zh-Hans: 战略客户 360 视图
+alt:
+  en: An enterprise customer record with relationship context, current state, and risks.
+  zh-Hans: 包含关系背景、当前状态和风险信息的企业客户记录。
+purpose:
+  en: Tell the HotCRM story of maintaining customer context alongside operational data.
+  zh-Hans: 讲述 HotCRM 将客户背景与运营数据放在一起管理的故事。
