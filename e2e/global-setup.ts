@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { request, type FullConfig } from '@playwright/test';
+import { assertSeedPrecondition } from './seed-precondition';
 
 /**
  * One sign-in for the whole run.
@@ -95,6 +96,13 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
 
     if (!token) throw new Error('auth succeeded but returned no session token');
     process.env[TOKEN_ENV] = token;
+
+    // Authentication is not the same thing as access. This account is a plain
+    // org `member`, and under `sharingModel: 'private'` it reads a seeded row
+    // only while that row is owned by nobody — see `./seed-precondition.ts`.
+    // Checking it here turns one environmental state into one instruction,
+    // instead of eleven specs failing on "no seeded accounts returned" (#665).
+    await assertSeedPrecondition(ctx, token, EMAIL);
   } finally {
     await ctx.dispose();
   }

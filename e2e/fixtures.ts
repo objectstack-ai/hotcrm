@@ -2,6 +2,7 @@
 
 import { test as base, expect, type APIRequestContext } from '@playwright/test';
 import { TOKEN_ENV } from './global-setup';
+import { SEEDS_UNREADABLE_MID_RUN } from './seed-precondition';
 
 /**
  * Authenticated e2e fixtures.
@@ -82,6 +83,6 @@ export async function seededAccountId(api: APIRequestContext): Promise<string> {
   const res = await api.get('/api/v1/data/crm_account?limit=1');
   expect(res.ok(), `could not read seeded accounts: ${res.status()}`).toBeTruthy();
   const [first] = recordsOf(await res.json());
-  expect(first, 'no seeded crm_account — the demo seed did not load').toBeTruthy();
+  expect(first, `no seeded crm_account — ${SEEDS_UNREADABLE_MID_RUN}`).toBeTruthy();
   return first.id as string;
 }
