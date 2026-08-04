@@ -298,9 +298,13 @@ export const Lead = ObjectSchema.create({
       group: 'qualification',
     }),
 
+    // NOT `readonly` (#592) — see the long note on
+    // `crm_account.last_activity_date`. The activity bubble writes this from
+    // another object's hook, and a readonly field is stripped from any
+    // non-system write whose caller supplied the key (#2948), so every bubble
+    // into this column was silently discarded.
     last_contacted_date: Field.datetime({
       label: 'Last Contacted',
-      readonly: true,
       group: 'qualification',
     }),
 

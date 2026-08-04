@@ -118,6 +118,71 @@ export const OPPORTUNITY_STAGE_OPTIONS: SelectOption[] = [
   { label: 'Closed Lost', value: 'closed_lost', color: '#FF0000' },
 ];
 
+/**
+ * Event Type — crm_event.type, and the `kind` discriminator the per-object
+ * activity actions stamp on the `crm_event` row they insert (#592).
+ *
+ * Distinct from {@link TASK_TYPE_OPTIONS} on purpose: a Task is something a rep
+ * still owes someone, an Event is an interaction that occupies a slot on the
+ * calendar. `email` is therefore absent here (an email is not a meeting slot;
+ * it stays a `sys_email` + `sys_activity` pair) and `webinar` / `onsite_visit`
+ * are present, because those are the meeting shapes a rep books.
+ */
+export const EVENT_TYPE_OPTIONS: SelectOption[] = [
+  { label: 'Meeting',      value: 'meeting',       color: '#4169E1', default: true },
+  { label: 'Call',         value: 'call',          color: '#00AA00' },
+  { label: 'Demo',         value: 'demo',          color: '#9370DB' },
+  { label: 'Webinar',      value: 'webinar',       color: '#FFA500' },
+  { label: 'Onsite Visit', value: 'onsite_visit',  color: '#0EA5E9' },
+  { label: 'Other',        value: 'other',         color: '#808080' },
+];
+
+/**
+ * Event Status — crm_event.status.
+ *
+ * The `planned` → `held` transition is what separates "a meeting is booked"
+ * from "an interaction happened", and only the second one bumps
+ * `crm_account.last_activity_date` (see `event.hook.ts`). Without that split a
+ * meeting booked for next quarter would reset the churn clock today.
+ */
+export const EVENT_STATUS_OPTIONS: SelectOption[] = [
+  { label: 'Planned',   value: 'planned',   color: '#4169E1', default: true },
+  { label: 'Held',      value: 'held',      color: '#00AA00' },
+  { label: 'Cancelled', value: 'cancelled', color: '#999999' },
+  { label: 'No Show',   value: 'no_show',   color: '#FF4500' },
+];
+
+/**
+ * Attendee Response — crm_event_attendee.response.
+ *
+ * The reason attendees are RECORDS rather than a JSON string on the activity
+ * (#592 acceptance): a per-attendee response only exists if the attendee does.
+ */
+export const ATTENDEE_RESPONSE_OPTIONS: SelectOption[] = [
+  { label: 'No Response', value: 'no_response', color: '#808080', default: true },
+  { label: 'Accepted',    value: 'accepted',    color: '#00AA00' },
+  { label: 'Declined',    value: 'declined',    color: '#FF0000' },
+  { label: 'Tentative',   value: 'tentative',   color: '#FFA500' },
+];
+
+/**
+ * Polymorphic "Related To" type — crm_task.related_to_type and
+ * crm_event.related_to_type.
+ *
+ * Both activity objects carry the same five `related_to_*` lookups, and both
+ * hooks bubble recency through the same `related_to_type → lookup field` map.
+ * Declared once so the vocabulary of the discriminator cannot drift from the
+ * set of lookups that back it — a drift that reads as "the bubble silently
+ * stopped firing for one object type".
+ */
+export const RELATED_TO_TYPE_OPTIONS: SelectOption[] = [
+  { label: 'Account',     value: 'crm_account' },
+  { label: 'Contact',     value: 'crm_contact' },
+  { label: 'Opportunity', value: 'crm_opportunity' },
+  { label: 'Lead',        value: 'crm_lead' },
+  { label: 'Case',        value: 'crm_case' },
+];
+
 /** Project a canonical set down to bare `{ label, value }` pairs for flow
  * screens and action params, which don't understand color/default keys. */
 export const plainOptions = (options: SelectOption[]): { label: string; value: string }[] =>

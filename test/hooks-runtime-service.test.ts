@@ -890,68 +890,99 @@ describe('task_recurrence', () => {
 describe('task_activity_bubble', () => {
   const hook = hookNamed(taskHooks, 'task_activity_bubble');
 
+  /** A completing task, which is the only transition that bubbles (#592). */
+  const completing = (extra: Rec) => ({
+    event: 'afterUpdate',
+    input: { id: 't1', status: 'completed', ...extra },
+    previous: { id: 't1', status: 'in_progress' },
+    user: USER,
+  });
+
   it('bubbles last_activity_date to a related account', async () => {
     const h = makeHarness({ crm_account: [{ id: 'acc1' }] });
-    await hook.handler(makeCtx({
-      event: 'afterUpdate',
-      input: { id: 't1', related_to_type: 'crm_account', related_to_account: 'acc1' },
-      previous: { id: 't1' },
-      user: USER,
-      api: h.api,
-    }));
+    await hook.handler(makeCtx({ ...completing({ related_to_account: 'acc1' }), api: h.api }));
     expect(h.rows('crm_account')[0].last_activity_date).toBe(today());
   });
 
   it('uses last_contacted_date for a lead, which has no last_activity_date', async () => {
     const h = makeHarness({ crm_lead: [{ id: 'l1' }] });
-    await hook.handler(makeCtx({
-      event: 'afterUpdate',
-      input: { id: 't1', related_to_type: 'crm_lead', related_to_lead: 'l1' },
-      previous: { id: 't1' },
-      user: USER,
-      api: h.api,
-    }));
+    await hook.handler(makeCtx({ ...completing({ related_to_lead: 'l1' }), api: h.api }));
     const lead = h.rows('crm_lead')[0];
     expect(lead.last_activity_date, 'crm_lead has no last_activity_date column').toBeUndefined();
     expect(typeof lead.last_contacted_date).toBe('string');
   });
 
-  it.each(['crm_contact', 'crm_opportunity', 'crm_case'])(
-    'writes nothing for %s, which carries no activity timestamp', async (type) => {
-      const h = makeHarness({ [type]: [{ id: 'x1' }] });
-      const refField = {
-        crm_contact: 'related_to_contact',
-        crm_opportunity: 'related_to_opportunity',
-        crm_case: 'related_to_case',
-      }[type]!;
-      await hook.handler(makeCtx({
-        event: 'afterUpdate',
-        input: { id: 't1', related_to_type: type, [refField]: 'x1' },
-        previous: { id: 't1' },
-        user: USER,
-        api: h.api,
-      }));
-      expect(h.calls).toHaveLength(0);
-    },
-  );
+  it('does not bubble while the task is still open — a promise is not contact', async () => {
+    const h = makeHarness({ crm_account: [{ id: 'acc1' }] });
+    await hook.handler(makeCtx({
+      event: 'afterUpdate',
+      input: { id: 't1', status: 'in_progress', related_to_account: 'acc1' },
+      previous: { id: 't1', status: 'not_started' },
+      user: USER,
+      api: h.api,
+    }));
+    expect(h.calls.filter((c) => c.op === 'update')).toHaveLength(0);
+  });
+
+  it('does not bubble twice for a task that was already completed', async () => {
+    const h = makeHarness({ crm_account: [{ id: 'acc1' }] });
+    await hook.handler(makeCtx({
+      event: 'afterUpdate',
+      input: { id: 't1', status: 'completed', related_to_account: 'acc1', subject: 'edited' },
+      previous: { id: 't1', status: 'completed' },
+      user: USER,
+      api: h.api,
+    }));
+    expect(h.calls.filter((c) => c.op === 'update')).toHaveLength(0);
+  });
+
+  it('walks UP to the account from a contact, an opportunity and a case (#592)', async () => {
+    // The defect this closes: a rep completes their work on the OPPORTUNITY,
+    // never on the account row, so bubbling to the named record alone left
+    // `crm_account.last_activity_date` untouched through a whole sales cycle
+    // and `at_risk_accounts` listed the busiest customers in the book.
+    for (const [field, object] of [
+      ['related_to_contact', 'crm_contact'],
+      ['related_to_opportunity', 'crm_opportunity'],
+      ['related_to_case', 'crm_case'],
+    ] as const) {
+      const h = makeHarness({
+        crm_account: [{ id: 'acc1' }],
+        [object]: [{ id: 'x1', crm_account: 'acc1' }],
+      });
+      await hook.handler(makeCtx({ ...completing({ [field]: 'x1' }), api: h.api }));
+      expect(h.rows('crm_account')[0].last_activity_date, `${object} did not reach its account`)
+        .toBe(today());
+    }
+  });
+
+  it('stamps the contact itself as well as its account', async () => {
+    const h = makeHarness({
+      crm_account: [{ id: 'acc1' }],
+      crm_contact: [{ id: 'c1', crm_account: 'acc1' }],
+    });
+    await hook.handler(makeCtx({ ...completing({ related_to_contact: 'c1' }), api: h.api }));
+    expect(typeof h.rows('crm_contact')[0].last_contacted_date).toBe('string');
+    expect(h.rows('crm_account')[0].last_activity_date).toBe(today());
+  });
+
+  it('no longer needs related_to_type to be set', async () => {
+    // It is a display hint a rep can leave blank, and while the bubble keyed
+    // off it a task with a perfectly good related_to_account bubbled nowhere.
+    const h = makeHarness({ crm_account: [{ id: 'acc1' }] });
+    await hook.handler(makeCtx({ ...completing({ related_to_account: 'acc1' }), api: h.api }));
+    expect(h.rows('crm_account')[0].last_activity_date).toBe(today());
+  });
 
   it('is a no-op with no parent, and never propagates a write failure', async () => {
     const h = makeHarness({});
-    await hook.handler(makeCtx({
-      event: 'afterUpdate', input: { id: 't1' }, previous: { id: 't1' }, user: USER, api: h.api,
-    }));
+    await hook.handler(makeCtx({ ...completing({}), api: h.api }));
     expect(h.calls).toHaveLength(0);
 
     // A denied write must be swallowed — the bubble is best-effort and must
     // never break the parent task write.
     await expect(
-      hook.handler(makeCtx({
-        event: 'afterUpdate',
-        input: { id: 't1', related_to_type: 'crm_account', related_to_account: 'acc1' },
-        previous: { id: 't1' },
-        user: USER,
-        api: makeDeniedApi('denied'),
-      })),
+      hook.handler(makeCtx({ ...completing({ related_to_account: 'acc1' }), api: makeDeniedApi('denied') })),
     ).resolves.toBeUndefined();
   });
 });

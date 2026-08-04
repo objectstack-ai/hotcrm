@@ -31,16 +31,25 @@ import { makeSandboxEngine, runActionBody, type Rec } from './helpers/action-san
 type AnyRec = Record<string, any>;
 
 const stackActions: AnyRec[] = (stack as any).actions ?? [];
-const action = (name: string): AnyRec => {
-  const found = stackActions.find((a) => a.name === name);
-  if (!found) throw new Error(`no ${name} action registered`);
+
+/**
+ * An action addressed the way the runtime keys its registry —
+ * `<objectName>:<name>`.
+ *
+ * Since #592 five objects each register their own `log_call`, so a bare-name
+ * lookup returns whichever one the barrel happens to export first. That is not
+ * a detail to leave to export order in a file about which object gets stamped.
+ */
+const action = (objectName: string, name: string): AnyRec => {
+  const found = stackActions.find((a) => a.objectName === objectName && a.name === name);
+  if (!found) throw new Error(`no ${objectName}-scoped ${name} action registered`);
   return found;
 };
 
 const objects: AnyRec[] = (stack as any).objects ?? [];
 const crmCase = objects.find((o) => o.name === 'crm_case') as AnyRec | undefined;
 
-/** Both activity twins are built by the same constructor — both must stamp. */
+/** Both LOGGING twins are built by the same constructor — both must stamp. */
 const TWINS = ['log_call', 'log_meeting'] as const;
 
 const seeded = (first_response_date: string | null = null): Record<string, Rec[]> => ({
@@ -48,7 +57,7 @@ const seeded = (first_response_date: string | null = null): Record<string, Rec[]
 });
 
 const logOn = (name: string, engine: ReturnType<typeof makeSandboxEngine>, record: Rec = { id: 'case_1' }) =>
-  runActionBody(action(name), {
+  runActionBody(action('crm_case', name), {
     objectName: 'crm_case',
     record,
     input: { subject: 'Called the customer back', duration: 12 },
@@ -79,8 +88,8 @@ describe.each(TWINS)('%s stamps the first response', (name) => {
   it('declares the read capability the lookup needs', () => {
     // Without it the sandbox denies the `find` at call time and the whole
     // action fails — the capability list is load-bearing metadata, not prose.
-    expect(action(name).body?.capabilities).toContain('api.read');
-    expect(action(name).body?.capabilities).toContain('api.write');
+    expect(action('crm_case', name).body?.capabilities).toContain('api.read');
+    expect(action('crm_case', name).body?.capabilities).toContain('api.write');
   });
 
   it('writes the current time onto a case that has none', async () => {
@@ -111,17 +120,32 @@ describe.each(TWINS)('%s stamps the first response', (name) => {
   });
 
   it('leaves other objects alone', async () => {
-    // The twins are scoped to crm_case today, but the body's own comment keeps
-    // the global design alive as a restoration path — the object check is what
-    // stops this stamp from following it onto objects with no such field.
+    // #592 put the same body on five objects. The lead-scoped twin must not
+    // reach for a case field that only exists on `crm_case` — the object check
+    // inside the body is what stops the stamp travelling with the family.
     const engine = makeSandboxEngine({ crm_lead: [{ id: 'lead_1' }] });
-    await runActionBody(action(name), {
+    await runActionBody(action('crm_lead', name), {
       objectName: 'crm_lead',
       record: { id: 'lead_1' },
       input: { subject: 'Intro call' },
       engine,
     });
     expect(engine.callsFor('crm_case')).toHaveLength(0);
+  });
+
+  it('is not stamped by merely BOOKING a meeting', async () => {
+    // `schedule_meeting` writes a `planned` event. A meeting on next week's
+    // calendar is not a response the customer has received, so it must not
+    // start the SLA clock — the same `held` gate the recency bubble uses.
+    const engine = makeSandboxEngine(seeded());
+    await runActionBody(action('crm_case', 'schedule_meeting'), {
+      objectName: 'crm_case',
+      record: { id: 'case_1' },
+      input: { subject: 'Follow-up', start: '2026-09-01T09:00:00.000Z' },
+      engine,
+    });
+    expect(engine.rows('crm_case')[0]!.first_response_date).toBeNull();
+    expect(engine.callsFor('crm_case', 'update')).toHaveLength(0);
   });
 });
 

@@ -283,9 +283,28 @@ export const Account = ObjectSchema.create({
     }),
 
     // Date field
+    //
+    // NOT `readonly` (#592). This is the signal `at_risk_accounts` and
+    // `customer_churn_signals` are built on, and it is written by ONE path:
+    // another object's hook calling
+    // `api.object('crm_account').update({ last_activity_date }, …)`.
+    //
+    // That write was being thrown away on every invocation. `stripReadonlyFields`
+    // deletes a readonly key from any payload whose CALLER supplied it, for every
+    // context that is not `isSystem` (#2948) — and a hook's `ctx.api` is a
+    // `ScopedContext` over the *acting user's* execution context, not a system
+    // one. So the engine logged `Field 'last_activity_date' is read-only —
+    // ignoring incoming change` and moved on; the column stayed null for the
+    // life of the app, and the churn report has been counting every account as
+    // silent since the day it was written.
+    //
+    // Same reasoning, same fix as `crm_campaign_member.added_date` and
+    // `crm_case.is_sla_violated`: a field a hook or flow must write cannot be
+    // `readonly`. It stays out of every form section instead, which is the
+    // protection that actually holds. `test/activity-recency.test.ts` proves
+    // the write lands — and fails if the flag comes back.
     last_activity_date: Field.date({
       label: 'Last Activity Date',
-      readonly: true,
       group: 'system',
     }),
 

@@ -215,52 +215,96 @@ const taskBubble: Hook = {
   priority: 800,
   async: true,
   onError: 'log',
-  description: 'Bubble last_activity_date to the polymorphic parent record.',
+  description:
+    'A completed task stamps interaction recency on the related account (walking up from contact/opportunity/case), lead and contact.',
   handler: async (ctx: HookContext) => {
+    /*
+     * The activity bubble, second copy. `src/objects/event.hook.ts` carries the
+     * canonical one and the rationale; this is a deliberate verbatim duplicate,
+     * not drift — an L2 hook body ships body-only into the QuickJS sandbox, so a
+     * shared module helper resolves at authoring time and arrives `undefined` at
+     * runtime (same constraint as `_line-item-price-fill.ts` and the
+     * `priority_rank` table above). `test/activity-recency.test.ts` runs BOTH
+     * copies through the same cases so they cannot diverge silently.
+     *
+     * Two things changed here versus the version this replaces (#592):
+     *
+     *   1. It no longer keys off `related_to_type`. That discriminator is a
+     *      display hint a rep can leave blank — and when they did, a task with a
+     *      perfectly good `related_to_account` bubbled to nothing at all.
+     *   2. It WALKS UP to the account. A rep completes a task on the
+     *      opportunity, not on the account row, so bubbling only to the named
+     *      record left `crm_account.last_activity_date` untouched through an
+     *      entire deal — which is why `at_risk_accounts` listed active
+     *      customers.
+     */
     const { input } = ctx;
     const previous = ctx.previous;
     const api = ctx.api as HookApi | undefined;
     if (!api) return;
 
-    const today = new Date().toISOString().slice(0, 10);
-    const targetType =
-      (typeof input.related_to_type === 'string' && input.related_to_type) ||
-      (typeof previous?.related_to_type === 'string' && (previous.related_to_type as string)) ||
-      undefined;
-    if (!targetType) return;
+    // Recency means the interaction HAPPENED. An open task is a promise, not
+    // contact; only the completing transition bubbles.
+    const nowDone = input.status === 'completed' || input.is_completed === true;
+    const wasDone = previous?.status === 'completed' || previous?.is_completed === true;
+    if (!nowDone || wasDone) return;
 
-    const fieldByType: Record<string, string> = {
-      crm_account: 'related_to_account',
-      crm_contact: 'related_to_contact',
-      crm_opportunity: 'related_to_opportunity',
-      crm_lead: 'related_to_lead',
-      crm_case: 'related_to_case',
-    };
-    const refField = fieldByType[targetType];
-    if (!refField) return;
-    const targetId =
-      (typeof input[refField] === 'string' && (input[refField] as string)) ||
-      (typeof previous?.[refField] === 'string' && (previous[refField] as string)) ||
-      undefined;
-    if (!targetId) return;
+    const r: Record<string, any> = { ...(previous ?? {}), ...input };
 
-    // Only bubble to objects that carry an activity timestamp, and use each
-    // object's own field: `crm_lead` has no `last_activity_date` — its activity
-    // signal is `last_contacted_date` (a datetime, so pass full ISO).
-    const activityWriteByType: Record<string, Record<string, string>> = {
-      crm_account: { last_activity_date: today },
-      crm_lead: { last_contacted_date: new Date().toISOString() },
-    };
-    const activityWrite = activityWriteByType[targetType];
-    if (!activityWrite) return;
-    try {
-      await api.object(targetType).update(
-        { ...activityWrite, id: targetId },
-        { where: { id: targetId } },
-      );
-    } catch {
-      // Best-effort activity bubble; never break the parent write. No `console`
-      // in the L2 hook sandbox (would throw ReferenceError — cf. #471).
+    const nowIso = new Date().toISOString();
+    // `crm_account.last_activity_date` is a DATE column; the two contact
+    // timestamps are datetimes.
+    const today = nowIso.slice(0, 10);
+
+    const idOf = (key: string): string | undefined =>
+      typeof r[key] === 'string' && r[key].length > 0 ? (r[key] as string) : undefined;
+
+    const accountIds = new Set<string>();
+    const contactIds = new Set<string>();
+    const leadIds = new Set<string>();
+
+    const direct = idOf('related_to_account');
+    if (direct) accountIds.add(direct);
+    const contactId = idOf('related_to_contact');
+    if (contactId) contactIds.add(contactId);
+    const leadId = idOf('related_to_lead');
+    if (leadId) leadIds.add(leadId);
+
+    const parentLookups: Array<[string, string]> = [
+      ['related_to_contact', 'crm_contact'],
+      ['related_to_opportunity', 'crm_opportunity'],
+      ['related_to_case', 'crm_case'],
+    ];
+    for (const [field, object] of parentLookups) {
+      const id = idOf(field);
+      if (!id) continue;
+      try {
+        const raw: any = await api.object(object).find({
+          where: { id },
+          fields: ['crm_account'],
+          top: 1,
+        });
+        const rows = Array.isArray(raw) ? raw : (raw?.records ?? []);
+        const parent = rows.length ? rows[0].crm_account : undefined;
+        if (typeof parent === 'string' && parent.length > 0) accountIds.add(parent);
+      } catch {
+        // Best-effort: a rep who cannot read the parent simply does not bubble
+        // through it. No `console` in the L2 hook sandbox (cf. #471).
+      }
+    }
+
+    const writes: Array<{ object: string; id: string; doc: Record<string, any> }> = [
+      ...[...accountIds].map((id) => ({ object: 'crm_account', id, doc: { last_activity_date: today } })),
+      ...[...contactIds].map((id) => ({ object: 'crm_contact', id, doc: { last_contacted_date: nowIso } })),
+      ...[...leadIds].map((id) => ({ object: 'crm_lead', id, doc: { last_contacted_date: nowIso } })),
+    ];
+
+    for (const w of writes) {
+      try {
+        await api.object(w.object).update({ ...w.doc, id: w.id }, { where: { id: w.id } });
+      } catch {
+        // Best-effort activity bubble; never break the parent write.
+      }
     }
   },
 };

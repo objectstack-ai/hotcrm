@@ -39,6 +39,16 @@ export const SalesRepProfile = {
     crm_campaign:    { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
     crm_case:        { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const, allowExport: true },
     crm_task:        { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
+
+    // ─── Activity (#592) ──────────────────────────────────────────────
+    // `crm_event` is `private` like `crm_task` — a personal activity record —
+    // so an explicit record scope is required alongside allowRead (an omitted
+    // scope silently means "own only" and reads as an unmade decision).
+    // `crm_event_attendee` is `controlled_by_parent`: rows follow the event and
+    // writes require edit on it (ADR-0055), so authoring a readScope here would
+    // be inert metadata the engine never applies.
+    crm_event:       { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
+    crm_event_attendee: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: false, modifyAllRecords: false },
     // Reference catalog (public_read OWD): reps read knowledge articles, which
     // are authored by service.
     crm_knowledge_article: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },

@@ -85,9 +85,34 @@ export const SendEmailAction: Action = {
         source_id: email?.id ?? null,
         metadata: JSON.stringify({ kind: 'email', to, subject }),
       });
+      // #592 scope item 3: every activity writer bumps interaction recency.
+      // An email is an interaction but NOT a calendar slot, so it writes no
+      // \`crm_event\` — which means it cannot ride the event hook's bubble and
+      // has to stamp the two timestamps itself. Both columns are deliberately
+      // non-readonly (see crm_account.last_activity_date's note): a readonly
+      // field is stripped from any non-system write whose caller supplied the
+      // key (#2948), and an action body runs under the sending rep's context.
+      if (recipientId) {
+        const nowIso = new Date().toISOString();
+        try {
+          await ctx.api.object('crm_contact').update(
+            { id: recipientId, last_contacted_date: nowIso },
+            { where: { id: recipientId } },
+          );
+        } catch (e) { /* best-effort recency; never fail the send */ }
+        const accountId = record.crm_account ? String(record.crm_account) : null;
+        if (accountId) {
+          try {
+            await ctx.api.object('crm_account').update(
+              { id: accountId, last_activity_date: nowIso.slice(0, 10) },
+              { where: { id: accountId } },
+            );
+          } catch (e) { /* best-effort recency; never fail the send */ }
+        }
+      }
       return { emailId: email?.id, activityId: activity?.id };
     `,
-    capabilities: ['api.write'],
+    capabilities: ['api.read', 'api.write'],
     timeoutMs: 5000,
   },
   locations: ['record_header', 'list_item'],

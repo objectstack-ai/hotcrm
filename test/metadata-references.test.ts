@@ -450,8 +450,12 @@ describe('navigation reaches everything the app ships', () => {
       .map((o) => o.name)
       .filter((name: string) =>
         // Line items and junctions are edited inside their parent, never
-        // reached on their own.
-        !/_line_item$|_member$/.test(name) && !reachable.has(name));
+        // reached on their own. `_attendee` joined the list with `crm_event`
+        // (#592): an attendee row is reached through the meeting it belongs to,
+        // and it is `controlled_by_parent`, so a nav entry would offer a list
+        // whose every row derives its visibility from a record you got to some
+        // other way.
+        !/_line_item$|_member$|_attendee$/.test(name) && !reachable.has(name));
     expect(stranded, `objects with no navigation entry:\n  ${stranded.join('\n  ')}`).toEqual([]);
   });
 

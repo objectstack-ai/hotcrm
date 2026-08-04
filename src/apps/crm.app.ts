@@ -85,7 +85,31 @@ export const CrmApp = App.create({
         { id: 'nav_my_deals', type: 'object', objectName: 'crm_opportunity', viewName: 'my_open_deals', label: 'My Deals', icon: 'target' },
         { id: 'nav_my_leads', type: 'object', objectName: 'crm_lead', viewName: 'my_leads', label: 'My Leads', icon: 'user-plus' },
         { id: 'nav_my_cases', type: 'object', objectName: 'crm_case', viewName: 'my_open_cases', label: 'My Cases', icon: 'life-buoy' },
+        // #592 — the rep's own calendar. Same reasoning as `nav_my_tasks`: a
+        // ListView is the only surface where "mine" actually means mine
+        // (`{current_user_id}` interpolates on the list-view data path and
+        // nowhere else), so the personal calendar is a view, not a dashboard.
+        { id: 'nav_my_calendar', type: 'object', objectName: 'crm_event', viewName: 'my_events', label: 'My Calendar', icon: 'calendar-days' },
         { id: 'nav_all_tasks', type: 'object', objectName: 'crm_task', label: 'All Tasks', icon: 'list' },
+      ],
+    },
+
+    {
+      // #592 — activity was the app's largest blind spot: `crm_event` and its
+      // attendee rows had nowhere to be seen, and no dashboard anywhere counted
+      // an interaction. Kept as its own group rather than buried under Sales,
+      // because "what happened with this customer, and when?" is the question
+      // the whole batch was about.
+      id: 'group_activity',
+      type: 'group',
+      label: 'Activity',
+      icon: 'calendar-days',
+      expanded: true,
+      children: [
+        { id: 'nav_event',          type: 'object',    objectName: 'crm_event',   label: 'Events',          icon: 'calendar-days' },
+        { id: 'nav_event_calendar', type: 'object',    objectName: 'crm_event',   viewName: 'event_calendar', label: 'Calendar',    icon: 'calendar' },
+        { id: 'nav_event_history',  type: 'object',    objectName: 'crm_event',   viewName: 'held_events',    label: 'Interaction History', icon: 'history' },
+        { id: 'nav_activity_dashboard', type: 'dashboard', dashboardName: 'sales_activity_dashboard', label: 'Sales Activity', icon: 'activity' },
       ],
     },
 

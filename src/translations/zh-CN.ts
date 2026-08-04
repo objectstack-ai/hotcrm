@@ -7,6 +7,50 @@ import type { TranslationData } from '@objectstack/spec/system';
  *
  * Per-locale file: one file per language, following the `per_locale` convention.
  */
+/**
+ * 活动动作族（#592）：`log_call` / `log_meeting` / `schedule_meeting` 在
+ * 线索、联系人、客户、商机、工单上各注册一次（无 `objectName` 的脚本动作会落到
+ * 调度器从不探测的键上——见 #509）。五个对象的文案完全相同，因此在此声明一次并
+ * 展开到各对象的 `_actions`：每个语言手抄十五份正是译文走样的开端。
+ */
+const activityActions = {
+  log_call: {
+    label: '记录通话',
+    successMessage: '通话记录成功！',
+    params: {
+      subject: { label: '通话主题' },
+      duration: { label: '时长（分钟）' },
+      attendee_contacts: { label: '联系人参与者' },
+      attendee_users: { label: '内部参与者' },
+      notes: { label: '通话记录' },
+    },
+  },
+  log_meeting: {
+    label: '记录会议',
+    successMessage: '会议记录成功！',
+    params: {
+      subject: { label: '会议主题' },
+      duration: { label: '时长（分钟）' },
+      attendee_contacts: { label: '联系人参会人' },
+      attendee_users: { label: '内部参会人' },
+      notes: { label: '会议纪要' },
+    },
+  },
+  schedule_meeting: {
+    label: '安排会议',
+    successMessage: '会议已安排！',
+    params: {
+      subject: { label: '会议主题' },
+      start: { label: '开始时间' },
+      location: { label: '地点' },
+      duration: { label: '时长（分钟）' },
+      attendee_contacts: { label: '联系人参会人' },
+      attendee_users: { label: '内部参会人' },
+      notes: { label: '会议议程' },
+    },
+  },
+};
+
 export const zhCN: TranslationData = {
   objects: {
     crm_account: {
@@ -82,6 +126,7 @@ export const zhCN: TranslationData = {
         branding: { label: '品牌' },
         system: { label: '系统' },
       },
+      _actions: { ...activityActions },
     },
 
     crm_contact: {
@@ -130,6 +175,7 @@ export const zhCN: TranslationData = {
         },
         do_not_call: { label: '禁止致电' },
         email_opt_out: { label: '拒绝邮件' },
+        last_contacted_date: { label: '最近联系时间' },
         avatar: { label: '头像' },
       },
       _views: {
@@ -138,6 +184,7 @@ export const zhCN: TranslationData = {
         primary_contacts: { label: '主要联系人' },
       },
       _actions: {
+        ...activityActions,
         mark_primary: {
           label: '设为主要联系人',
           confirmText: '是否将此联系人设为该客户的主要联系人？',
@@ -381,6 +428,7 @@ export const zhCN: TranslationData = {
         conversion: { label: '转化' },
       },
       _actions: {
+        ...activityActions,
         convert_lead: {
           label: '转化线索',
           confirmText: '确认要转化此线索吗？',
@@ -580,25 +628,7 @@ export const zhCN: TranslationData = {
         sla_at_risk: { label: '⏰ SLA 风险预警' },
       },
       _actions: {
-        log_call: {
-          label: '记录通话',
-          successMessage: '通话记录成功！',
-          params: {
-            subject: { label: '通话主题' },
-            duration: { label: '时长（分钟）' },
-            notes: { label: '通话记录' },
-          },
-        },
-        log_meeting: {
-          label: '记录会议',
-          successMessage: '会议记录成功！',
-          params: {
-            subject: { label: '会议主题' },
-            duration: { label: '时长（分钟）' },
-            attendees: { label: '参会人' },
-            notes: { label: '会议纪要' },
-          },
-        },
+        ...activityActions,
         escalate_case: {
           label: '升级工单',
           confirmText: '此操作会将工单升级到升级处理团队，是否继续？',
@@ -921,6 +951,7 @@ export const zhCN: TranslationData = {
         notes: { label: '备注与下一步' },
       },
       _actions: {
+        ...activityActions,
         clone_opportunity: {
           label: '克隆商机',
           successMessage: '商机克隆成功！',
@@ -943,6 +974,86 @@ export const zhCN: TranslationData = {
             },
           },
         },
+      },
+    },
+
+    crm_event: {
+      label: '活动',
+      pluralLabel: '活动',
+      description: '与客户的会议、通话及其他已安排的互动',
+      fields: {
+        subject: { label: '主题' },
+        description: { label: '描述' },
+        type: {
+          label: '活动类型',
+          options: {
+            meeting: '会议', call: '电话', demo: '演示',
+            webinar: '线上研讨会', onsite_visit: '上门拜访', other: '其他',
+          },
+        },
+        status: {
+          label: '状态',
+          options: {
+            planned: '已计划', held: '已举行', cancelled: '已取消', no_show: '客户未到',
+          },
+        },
+        owner: { label: '负责人' },
+        start_datetime: { label: '开始时间' },
+        end_datetime: { label: '结束时间' },
+        all_day: { label: '全天活动' },
+        duration_minutes: { label: '时长（分钟）' },
+        location: { label: '地点', help: '会议室、地址或会议链接' },
+        related_to_type: {
+          label: '关联对象类型',
+          options: {
+            crm_account: '客户', crm_contact: '联系人', crm_opportunity: '商机',
+            crm_lead: '线索', crm_case: '工单',
+          },
+        },
+        related_to_account: { label: '关联客户' },
+        related_to_contact: { label: '关联联系人' },
+        related_to_opportunity: { label: '关联商机' },
+        related_to_lead: { label: '关联线索' },
+        related_to_case: { label: '关联工单' },
+        outcome_notes: { label: '会后纪要', help: '达成了什么共识，下一步做什么' },
+      },
+      _views: {
+        all_events: { label: '全部活动' },
+        event_calendar: { label: '活动日历' },
+        event_timeline: { label: '团队日程' },
+        my_events: { label: '我的日历' },
+        upcoming_events: { label: '📅 即将开始 · 按时间升序' },
+        held_events: { label: '✅ 互动历史' },
+      },
+    },
+
+    crm_event_attendee: {
+      label: '活动参与者',
+      pluralLabel: '活动参与者',
+      description: '受邀参加或实际出席活动的人员',
+      fields: {
+        attendee_number: { label: '参与者编号' },
+        crm_event: { label: '活动' },
+        attendee_type: {
+          label: '参与者类型',
+          options: { contact: '联系人', lead: '线索', user: '内部用户' },
+        },
+        crm_contact: { label: '联系人', help: '参与者是已有客户联系人时填写' },
+        crm_lead: { label: '线索', help: '参与者仍是未转化线索时填写' },
+        sys_user: { label: '内部用户', help: '参与者是同事时填写' },
+        external_name: { label: '外部参与者', help: '不在 CRM 中的参与者姓名' },
+        response: {
+          label: '回复',
+          options: {
+            no_response: '未回复', accepted: '已接受',
+            declined: '已拒绝', tentative: '待定',
+          },
+        },
+        is_organizer: { label: '组织者' },
+        invited_date: { label: '邀请时间' },
+      },
+      _views: {
+        all_event_attendees: { label: '活动参与者' },
       },
     },
 
@@ -1018,6 +1129,12 @@ export const zhCN: TranslationData = {
       description: '涵盖销售、服务和市场营销的客户关系管理系统',
       // Keyed by navigation-node `id` (a flat keyspace regardless of depth).
       navigation: {
+        group_activity: { label: '活动' },
+        nav_event: { label: '活动' },
+        nav_event_calendar: { label: '日历' },
+        nav_event_history: { label: '互动历史' },
+        nav_activity_dashboard: { label: '销售活动' },
+        nav_my_calendar: { label: '我的日历' },
         nav_home: { label: '首页' },
 
         group_sales: { label: '销售' },
@@ -1086,6 +1203,25 @@ export const zhCN: TranslationData = {
 
 
   dashboards: {
+    sales_activity_dashboard: {
+      label: '销售活动',
+      description: '谁在和客户沟通、频率如何，以及哪些客户已经沉默',
+      widgets: {
+        interactions_held: { title: '已记录互动', description: '真实发生过的通话与会议' },
+        meetings_booked: { title: '已预约会议', description: '已排入日历但尚未举行的会议' },
+        customer_minutes: { title: '客户接触分钟数', description: '面向客户的总时长' },
+        tasks_completed: { title: '已完成任务', description: '已闭环的跟进事项——活动的另一半' },
+        activity_by_rep: { title: '按销售代表统计的活动', description: '每位负责人记录的互动数' },
+        activity_by_week: { title: '每周活动量', description: '每周互动数' },
+        activity_mix: { title: '活动构成', description: '通话、会议与演示的占比' },
+        activity_by_record_type: { title: '活动落在哪里', description: '漏斗的哪个环节获得了关注' },
+        deal_activity: { title: '商机上的互动', description: '关联到商机的已记录互动' },
+        open_deals_for_activity: { title: '进行中的商机', description: '仍在推进的商机数' },
+        quiet_accounts_30: { title: '沉默 30 天以上', description: '一个月内没有任何互动记录的活跃客户' },
+        quiet_accounts_60: { title: '沉默 60 天以上', description: '两个月无联系——风险阈值' },
+        quiet_accounts_90: { title: '沉默 90 天以上', description: '整整一个季度没有联系' },
+      },
+    },
     crm_overview_dashboard: {
       label: 'CRM 总览',
       description: '收入指标、管道分析与商机洞察',

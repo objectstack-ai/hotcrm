@@ -254,8 +254,19 @@ const CASES: Record<string, WriteCase> = {
   'task_activity_bubble — the activity bubble on the parent record': {
     hook: 'task_activity_bubble',
     event: 'afterUpdate',
-    input: { id: 'task_1', related_to_type: 'crm_account', related_to_account: 'acc_1' },
+    // The COMPLETING transition is what bubbles now (#592): an open task is a
+    // promise, not an interaction, and the hook used to fire on any edit.
+    input: { id: 'task_1', status: 'completed', related_to_account: 'acc_1' },
     previous: { id: 'task_1', status: 'in_progress' },
+    seed: { crm_account: [{ id: 'acc_1' }] },
+    writes: [{ object: 'crm_account', id: 'acc_1', doc: { last_activity_date: today } }],
+  },
+
+  'event_activity_bubble — interaction recency from a held event': {
+    hook: 'event_activity_bubble',
+    event: 'afterUpdate',
+    input: { id: 'evt_1', status: 'held', related_to_account: 'acc_1' },
+    previous: { id: 'evt_1', status: 'planned' },
     seed: { crm_account: [{ id: 'acc_1' }] },
     writes: [{ object: 'crm_account', id: 'acc_1', doc: { last_activity_date: today } }],
   },

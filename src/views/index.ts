@@ -8,6 +8,8 @@ export { TaskViews } from './task.view';
 export { CaseViews } from './case.view';
 export { CampaignViews } from './campaign.view';
 export { ContractViews } from './contract.view';
+export { EventViews } from './event.view';
+export { EventAttendeeViews } from './event_attendee.view';
 export { ForecastViews } from './forecast.view';
 export { KnowledgeArticleViews } from './knowledge_article.view';
 export { ProductViews } from './product.view';
