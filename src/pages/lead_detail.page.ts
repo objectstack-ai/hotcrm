@@ -2,6 +2,11 @@
 
 import { Page } from '@objectstack/spec/ui';
 import { ConvertLeadAction, ScheduleFollowUpAction } from '../actions/lead.actions';
+import {
+  LeadLogCallAction,
+  LeadLogMeetingAction,
+  LeadScheduleMeetingAction,
+} from '../actions/global.actions';
 
 /**
  * Lead Detail Record Page
@@ -64,7 +69,20 @@ export const LeadDetailPage: Page = {
             // Convert is the outcome; scheduling the next touch is the daily
             // act. Both belong in the header — the follow-up used to be four
             // clicks deep in the Related tab.
-            actions: [ConvertLeadAction, ScheduleFollowUpAction],
+            //
+            // The three activity actions are listed EXPLICITLY (#592): a custom
+            // record page replaces the synthesized header, so an object-scoped
+            // action that is not named here is unreachable from the record —
+            // only the list-row ⋮ menu can fire it. Logging the call you just
+            // made is the single most frequent thing a rep does on a lead, and
+            // it was two navigations away.
+            actions: [
+              ConvertLeadAction,
+              ScheduleFollowUpAction,
+              LeadLogCallAction,
+              LeadLogMeetingAction,
+              LeadScheduleMeetingAction,
+            ],
           },
         },
         // Salesforce-style Highlights Panel: a horizontal strip of the

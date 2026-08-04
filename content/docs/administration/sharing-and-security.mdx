@@ -118,8 +118,9 @@ Sharing rules are authored **per object**. Widening `Account` widens accounts â€
 | Contracts | Their own only |
 | Cases | Their own only, plus open critical cases if they hold `service_manager` or `service_director` |
 | Tasks | Their own only |
+| Events | Their own only |
 
-So a territory rule hands over the account record and its contacts; the deal, quote, contract, case and task history underneath stays with its owners, and those related lists can look empty or partial on an account the user can otherwise read in full.
+So a territory rule hands over the account record and its contacts; the deal, quote, contract, case, task and meeting history underneath stays with its owners, and those related lists can look empty or partial on an account the user can otherwise read in full.
 
 Making a child object follow the account is a deliberate widening, not a config detail: author a sharing rule on the child object with criteria matching the account rules, or set the child's OWD to Controlled by Parent. Either one opens that object for **every** holder of it, not only for the territory recipients â€” which is why HotCRM ships neither by default.
 

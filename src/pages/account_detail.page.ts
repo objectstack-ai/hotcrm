@@ -1,6 +1,11 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { Page } from '@objectstack/spec/ui';
+import {
+  AccountLogCallAction,
+  AccountLogMeetingAction,
+  AccountScheduleMeetingAction,
+} from '../actions/global.actions';
 
 /**
  * Account Detail — slotted record page.
@@ -48,6 +53,11 @@ export const AccountDetailPage = {
         eyebrow: 'ACCOUNT',
         icon: 'building-2',
         breadcrumb: true,
+        // Overriding the `header` slot REPLACES the synthesized header, actions
+        // and all — so this slot has to re-state every action it wants to keep.
+        // Before #592 it named none, which is why an account record showed no
+        // activity buttons at all while the list row's ⋮ menu showed three.
+        actions: [AccountLogCallAction, AccountLogMeetingAction, AccountScheduleMeetingAction],
       },
     },
 

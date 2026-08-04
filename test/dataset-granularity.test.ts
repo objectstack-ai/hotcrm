@@ -57,6 +57,11 @@ const INTENDED_BUCKET: Record<string, Granularity> = {
   'account_metrics.created_at': 'month',
   'opportunity_metrics.close_date': 'month',
   'opportunity_metrics.close_quarter': 'quarter',
+  // #592. Every widget over this dimension asks "how much activity per
+  // week", and the week bucket is what puts the trend on an AXIS instead of
+  // in a datetime filter bound — which is the thing the app cannot trust yet
+  // (see the Activity dashboard's header note on #3912/#3777).
+  'event_metrics.start_datetime': 'week',
 };
 
 /** Matrix report → the bucket its date axis must carry on @objectstack 17+. */

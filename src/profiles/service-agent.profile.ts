@@ -24,6 +24,11 @@ export const ServiceAgentProfile = {
     // sees only their own tasks on it (#549).
     crm_case:        { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const, allowExport: true },
     crm_task:        { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
+    // #592 — `log_call` / `log_meeting` are scoped to `crm_case` too, and an
+    // agent who cannot INSERT a `crm_event` gets a button that 403s. Same
+    // own-scoped shape as their tasks.
+    crm_event:       { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
+    crm_event_attendee: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: false, modifyAllRecords: false },
     crm_product:     { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
     // The knowledge base is this team's own surface: agents draft and revise
     // articles (draft → in_review → published is enforced by the KB flow, not by

@@ -178,6 +178,22 @@ export const Contact = ObjectSchema.create({
       defaultValue: false,
       group: 'preferences',
     }),
+
+    // Interaction recency for the PERSON (#592). `crm_account` carries
+    // `last_activity_date` for the company and `crm_lead` carries
+    // `last_contacted_date` for a prospect; the contact — the record a rep
+    // actually calls and emails — had neither, so "when did anyone last speak
+    // to our champion?" was unanswerable.
+    //
+    // Written by the activity bubble in `event.hook.ts` / `task.hook.ts` and by
+    // `send_email`. Deliberately NOT `readonly`: a readonly field is stripped
+    // from every non-system write whose caller supplied the key (#2948), which
+    // is exactly how the account and lead columns above ended up permanently
+    // null. It is kept off the form sections instead.
+    last_contacted_date: Field.datetime({
+      label: 'Last Contacted',
+      group: 'additional',
+    }),
   },
   
   // Enable features

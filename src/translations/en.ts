@@ -8,6 +8,54 @@ import type { TranslationData } from '@objectstack/spec/system';
  * Per-locale file: one file per language, following the `per_locale` convention.
  * Each file exports a single `TranslationData` object for its locale.
  */
+/**
+ * The activity family (#592) — `log_call`, `log_meeting` and
+ * `schedule_meeting` are registered once PER OBJECT (lead, contact, account,
+ * opportunity, case), because a body action with no `objectName` lands under a
+ * dispatcher key nothing probes (#509). The labels are identical on every one
+ * of them, so they are declared once here and spread into each object's
+ * `_actions` — fifteen hand-copied blocks per locale is how a translation set
+ * drifts.
+ */
+const activityActions = {
+  log_call: {
+    label: 'Log a Call',
+    successMessage: 'Call logged successfully!',
+    params: {
+      subject: { label: 'Call Subject' },
+      duration: { label: 'Duration (minutes)' },
+      attendee_contacts: { label: 'Contact Attendees' },
+      attendee_users: { label: 'Internal Attendees' },
+      notes: { label: 'Call Notes' },
+    },
+  },
+  log_meeting: {
+    label: 'Log a Meeting',
+    successMessage: 'Meeting logged successfully!',
+    params: {
+      subject: { label: 'Meeting Subject' },
+      duration: { label: 'Duration (minutes)' },
+      attendee_contacts: { label: 'Contact Attendees' },
+      attendee_users: { label: 'Internal Attendees' },
+      notes: { label: 'Meeting Notes' },
+    },
+  },
+  schedule_meeting: {
+    label: 'Schedule a Meeting',
+    successMessage: 'Meeting scheduled!',
+    params: {
+      subject: { label: 'Meeting Subject' },
+      start_date: { label: 'Start Date (UTC)' },
+      start_time: { label: 'Start Time (UTC)' },
+      location: { label: 'Location' },
+      duration: { label: 'Duration (minutes)' },
+      attendee_contacts: { label: 'Contact Attendees' },
+      attendee_users: { label: 'Internal Attendees' },
+      notes: { label: 'Agenda' },
+    },
+  },
+};
+
 export const en: TranslationData = {
   objects: {
     crm_account: {
@@ -70,6 +118,7 @@ export const en: TranslationData = {
         enterprise_accounts: { label: 'Enterprise Accounts', description: 'Accounts with the highest annual revenue' },
         my_accounts: { label: 'My Accounts', description: 'Accounts owned by the current user' },
       },
+      _actions: { ...activityActions },
     },
 
     crm_contact: {
@@ -107,6 +156,7 @@ export const en: TranslationData = {
         lead_source: { label: 'Lead Source' },
         do_not_call: { label: 'Do Not Call' },
         email_opt_out: { label: 'Email Opt Out' },
+        last_contacted_date: { label: 'Last Contacted' },
       },
       _views: {
         all_contacts: { label: 'All Contacts' },
@@ -114,6 +164,7 @@ export const en: TranslationData = {
         primary_contacts: { label: 'Primary Contacts' },
       },
       _actions: {
+        ...activityActions,
         mark_primary: {
           label: 'Mark as Primary Contact',
           confirmText: 'Mark this contact as the primary contact for the account?',
@@ -280,6 +331,7 @@ export const en: TranslationData = {
         suspected_duplicates: { label: 'Suspected Duplicates' },
       },
       _actions: {
+        ...activityActions,
         convert_lead: {
           label: 'Convert Lead',
           confirmText: 'Are you sure you want to convert this lead?',
@@ -380,6 +432,7 @@ export const en: TranslationData = {
         my_open_deals: { label: 'My Open Deals' },
       },
       _actions: {
+        ...activityActions,
         clone_opportunity: {
           label: 'Clone Opportunity',
           successMessage: 'Opportunity cloned successfully!',
@@ -436,20 +489,7 @@ export const en: TranslationData = {
         escalated_cases: { label: 'Escalated Cases' },
       },
       _actions: {
-        log_call: {
-          label: 'Log a Call',
-          successMessage: 'Call logged successfully!',
-        },
-        log_meeting: {
-          label: 'Log a Meeting',
-          successMessage: 'Meeting logged successfully!',
-          params: {
-            subject: { label: 'Meeting Subject' },
-            duration: { label: 'Duration (minutes)' },
-            attendees: { label: 'Attendees' },
-            notes: { label: 'Meeting Notes' },
-          },
-        },
+        ...activityActions,
         escalate_case: {
           label: 'Escalate Case',
           confirmText: 'This will escalate the case to the escalation team. Continue?',
@@ -640,6 +680,86 @@ export const en: TranslationData = {
       },
     },
 
+    crm_event: {
+      label: 'Event',
+      pluralLabel: 'Events',
+      description: 'Meetings, calls and other scheduled interactions with customers',
+      fields: {
+        subject: { label: 'Subject' },
+        description: { label: 'Description' },
+        type: {
+          label: 'Event Type',
+          options: {
+            meeting: 'Meeting', call: 'Call', demo: 'Demo',
+            webinar: 'Webinar', onsite_visit: 'Onsite Visit', other: 'Other',
+          },
+        },
+        status: {
+          label: 'Status',
+          options: {
+            planned: 'Planned', held: 'Held', cancelled: 'Cancelled', no_show: 'No Show',
+          },
+        },
+        owner: { label: 'Assigned To' },
+        start_datetime: { label: 'Start' },
+        end_datetime: { label: 'End' },
+        all_day: { label: 'All Day Event' },
+        duration_minutes: { label: 'Duration (minutes)' },
+        location: { label: 'Location', help: 'Room, address, or meeting link' },
+        related_to_type: {
+          label: 'Related To Type',
+          options: {
+            crm_account: 'Account', crm_contact: 'Contact', crm_opportunity: 'Opportunity',
+            crm_lead: 'Lead', crm_case: 'Case',
+          },
+        },
+        related_to_account: { label: 'Related Account' },
+        related_to_contact: { label: 'Related Contact' },
+        related_to_opportunity: { label: 'Related Opportunity' },
+        related_to_lead: { label: 'Related Lead' },
+        related_to_case: { label: 'Related Case' },
+        outcome_notes: { label: 'Outcome Notes', help: 'What was agreed, and what happens next' },
+      },
+      _views: {
+        all_events: { label: 'All Events' },
+        event_calendar: { label: 'Event Calendar' },
+        event_timeline: { label: 'Team Schedule' },
+        my_events: { label: 'My Calendar' },
+        upcoming_events: { label: '📅 Upcoming · Soonest First' },
+        held_events: { label: '✅ Interaction History' },
+      },
+    },
+
+    crm_event_attendee: {
+      label: 'Event Attendee',
+      pluralLabel: 'Event Attendees',
+      description: 'A person invited to or present at an event',
+      fields: {
+        attendee_number: { label: 'Attendee Number' },
+        crm_event: { label: 'Event' },
+        attendee_type: {
+          label: 'Attendee Type',
+          options: { contact: 'Contact', lead: 'Lead', user: 'User' },
+        },
+        crm_contact: { label: 'Contact' },
+        crm_lead: { label: 'Lead' },
+        sys_user: { label: 'User' },
+        external_name: { label: 'External Attendee' },
+        response: {
+          label: 'Response',
+          options: {
+            no_response: 'No Response', accepted: 'Accepted',
+            declined: 'Declined', tentative: 'Tentative',
+          },
+        },
+        is_organizer: { label: 'Organizer' },
+        invited_date: { label: 'Invited' },
+      },
+      _views: {
+        all_event_attendees: { label: 'Event Attendees' },
+      },
+    },
+
     crm_campaign_member: {
       label: 'Campaign Member',
       pluralLabel: 'Campaign Members',
@@ -711,6 +831,7 @@ export const en: TranslationData = {
       label: 'HotCRM',
       description: 'Customer relationship management for sales, service, and marketing',
       navigation: {
+        group_activity: { label: 'Activity' },
         group_sales: { label: 'Sales' },
         group_service: { label: 'Service' },
         group_marketing: { label: 'Marketing' },
@@ -744,6 +865,25 @@ export const en: TranslationData = {
 
 
   dashboards: {
+    sales_activity_dashboard: {
+      label: 'Sales Activity',
+      description: 'Who is talking to customers, how often, and which accounts have gone quiet',
+      widgets: {
+        interactions_held: { title: 'Interactions Logged', description: 'Calls and meetings that actually happened' },
+        meetings_booked: { title: 'Meetings Booked', description: 'Meetings on the calendar that have not happened yet' },
+        customer_minutes: { title: 'Customer Minutes', description: 'Total time spent in front of customers' },
+        tasks_completed: { title: 'Tasks Completed', description: 'Follow-ups closed out — the other half of activity' },
+        activity_by_rep: { title: 'Activity by Rep', description: 'Logged interactions per owner' },
+        activity_by_week: { title: 'Activity Volume by Week', description: 'Interactions per week' },
+        activity_mix: { title: 'Activity Mix', description: 'Calls vs meetings vs demos' },
+        activity_by_record_type: { title: 'Where the Activity Lands', description: 'Which part of the funnel is getting attention' },
+        deal_activity: { title: 'Interactions on Deals', description: 'Logged interactions linked to an opportunity' },
+        open_deals_for_activity: { title: 'Open Deals', description: 'Opportunities still in play' },
+        quiet_accounts_30: { title: 'Quiet 30+ Days', description: 'Active accounts with no logged interaction in a month' },
+        quiet_accounts_60: { title: 'Quiet 60+ Days', description: 'Two months of silence — the at-risk threshold' },
+        quiet_accounts_90: { title: 'Quiet 90+ Days', description: 'A quarter with no contact' },
+      },
+    },
     crm_overview_dashboard: {
       label: 'CRM Overview',
       description: 'Revenue metrics, pipeline analytics, and deal insights',

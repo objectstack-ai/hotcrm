@@ -23,6 +23,11 @@ export const SalesManagerProfile = {
     crm_campaign:    { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
     crm_case:        { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, allowExport: true },
     crm_task:        { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true,  modifyAllRecords: true },
+    // A manager coaches on activity, so this is org-wide read AND write on a
+    // private object — the same shape their `crm_task` grant already has.
+    // `crm_event_attendee` derives from the event (ADR-0055): no scope to author.
+    crm_event:       { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true,  modifyAllRecords: true },
+    crm_event_attendee: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: false, modifyAllRecords: false },
     // The forecast IS the manager's job: they read every rep's snapshot and
     // adjust the committed number, so this is org-wide read AND write on a
     // private object (#488 — the object had no grant at all).

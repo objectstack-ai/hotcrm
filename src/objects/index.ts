@@ -61,6 +61,8 @@ export { CampaignMember } from './campaign_member.object';
 export { Case } from './case.object';
 export { Contact } from './contact.object';
 export { Contract } from './contract.object';
+export { Event } from './event.object';
+export { EventAttendee } from './event_attendee.object';
 export { Forecast } from './forecast.object';
 export { KnowledgeArticle } from './knowledge_article.object';
 export { Lead } from './lead.object';

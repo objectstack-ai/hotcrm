@@ -67,6 +67,14 @@ const ACCOUNT_CHILD_COVERAGE: Record<string, 'derived' | 'own_only' | 'partial'>
   crm_quote: 'own_only',
   crm_contract: 'own_only',
   crm_task: 'own_only',
+  // #592. `crm_event` is `private` with no sharing rule of its own, exactly
+  // like `crm_task` — the two are the same kind of record (a rep's personal
+  // activity) and there is no reason for one to reach further than the
+  // other. A rep who receives an account through a territory rule therefore
+  // sees the account's meetings only where they own them. Widening that is
+  // the same open business decision #549 asks about tasks, and it belongs in
+  // the PR that answers it for the whole family, not in this one.
+  crm_event: 'own_only',
 };
 
 /**

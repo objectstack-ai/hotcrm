@@ -2,6 +2,11 @@
 
 import { Page } from '@objectstack/spec/ui';
 import { CloneOpportunityAction, GenerateQuoteAction } from '../actions/opportunity.actions';
+import {
+  OpportunityLogCallAction,
+  OpportunityLogMeetingAction,
+  OpportunityScheduleMeetingAction,
+} from '../actions/global.actions';
 
 /**
  * Opportunity Detail Record Page
@@ -44,8 +49,17 @@ export const OpportunityDetailPage: Page = {
             breadcrumb: true,
             // generate_quote is the CPQ entry point (opportunity → quote); a
             // custom record page replaces the default header, so the action
-            // must be listed here explicitly or it is unreachable.
-            actions: [GenerateQuoteAction, CloneOpportunityAction],
+            // must be listed here explicitly or it is unreachable. The same
+            // sentence is why the three activity actions are named here (#592):
+            // without them a rep can log a call on the deal only from the list
+            // row's ⋮ menu, never from the deal itself.
+            actions: [
+              GenerateQuoteAction,
+              CloneOpportunityAction,
+              OpportunityLogCallAction,
+              OpportunityLogMeetingAction,
+              OpportunityScheduleMeetingAction,
+            ],
           },
         },
         {

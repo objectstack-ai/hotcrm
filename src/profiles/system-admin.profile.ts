@@ -28,6 +28,8 @@ export const SystemAdminProfile = {
     crm_campaign:    { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: true, modifyAllRecords: true },
     crm_case:        { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: true, modifyAllRecords: true, allowExport: true },
     crm_task:        { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: true, modifyAllRecords: true },
+    crm_event:       { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: true, modifyAllRecords: true },
+    crm_event_attendee: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: true, modifyAllRecords: true },
     // The objects below shipped with navigation, views, hooks and seed data
     // but no grant in ANY permission set (#488): "Knowledge" and "Forecasts"
     // were permission-denied nav items for every user, admins included.

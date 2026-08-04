@@ -7,6 +7,52 @@ import type { TranslationData } from '@objectstack/spec/system';
  *
  * Per-locale file: one file per language, following the `per_locale` convention.
  */
+/**
+ * 活動アクション群（#592）: `log_call` / `log_meeting` / `schedule_meeting` は
+ * リード・取引先責任者・取引先・商談・ケースの各オブジェクトごとに登録される
+ * （`objectName` を持たないスクリプトアクションはディスパッチャが参照しない
+ * キーに登録されるため — #509）。文言は 5 オブジェクトで同一なので、ここで
+ * 一度だけ定義して各 `_actions` に展開する。
+ */
+const activityActions = {
+  log_call: {
+    label: '電話を記録',
+    successMessage: '電話を記録しました！',
+    params: {
+      subject: { label: '電話の件名' },
+      duration: { label: '所要時間（分）' },
+      attendee_contacts: { label: '取引先責任者の参加者' },
+      attendee_users: { label: '社内参加者' },
+      notes: { label: '通話メモ' },
+    },
+  },
+  log_meeting: {
+    label: '会議を記録',
+    successMessage: '会議を記録しました！',
+    params: {
+      subject: { label: '会議の件名' },
+      duration: { label: '所要時間（分）' },
+      attendee_contacts: { label: '取引先責任者の参加者' },
+      attendee_users: { label: '社内参加者' },
+      notes: { label: '議事メモ' },
+    },
+  },
+  schedule_meeting: {
+    label: '会議を設定',
+    successMessage: '会議を設定しました！',
+    params: {
+      subject: { label: '会議の件名' },
+      start_date: { label: '開始日 (UTC)' },
+      start_time: { label: '開始時刻 (UTC)' },
+      location: { label: '場所' },
+      duration: { label: '所要時間（分）' },
+      attendee_contacts: { label: '取引先責任者の参加者' },
+      attendee_users: { label: '社内参加者' },
+      notes: { label: 'アジェンダ' },
+    },
+  },
+};
+
 export const jaJP: TranslationData = {
   objects: {
     crm_account: {
@@ -54,6 +100,7 @@ export const jaJP: TranslationData = {
         enterprise_accounts: { label: 'エンタープライズ取引先', description: '年商最上位の主要顧客' },
         my_accounts: { label: '私の取引先', description: '自分が所有する取引先' },
       },
+      _actions: { ...activityActions },
     },
 
     crm_contact: {
@@ -91,6 +138,7 @@ export const jaJP: TranslationData = {
         lead_source: { label: 'リードソース' },
         do_not_call: { label: '電話拒否' },
         email_opt_out: { label: 'メール配信停止' },
+        last_contacted_date: { label: '最終接触日時' },
       },
       _views: {
         all_contacts: { label: '全取引先責任者' },
@@ -98,6 +146,7 @@ export const jaJP: TranslationData = {
         primary_contacts: { label: '主担当者' },
       },
       _actions: {
+        ...activityActions,
         mark_primary: {
           label: '主担当者に設定',
           confirmText: 'この責任者を取引先の主担当者に設定しますか？',
@@ -258,6 +307,7 @@ export const jaJP: TranslationData = {
         suspected_duplicates: { label: '重複の疑いがあるリード' },
       },
       _actions: {
+        ...activityActions,
         convert_lead: {
           label: 'リード変換',
           confirmText: 'このリードを変換してもよろしいですか？',
@@ -357,6 +407,7 @@ export const jaJP: TranslationData = {
         my_open_deals: { label: '私のオープン商談' },
       },
       _actions: {
+        ...activityActions,
         clone_opportunity: {
           label: '商談を複製',
           successMessage: '商談を複製しました！',
@@ -413,20 +464,7 @@ export const jaJP: TranslationData = {
         escalated_cases: { label: 'エスカレートしたケース' },
       },
       _actions: {
-        log_call: {
-          label: '通話を記録',
-          successMessage: '通話を記録しました！',
-        },
-        log_meeting: {
-          label: '会議を記録',
-          successMessage: '会議を記録しました！',
-          params: {
-            subject: { label: '会議の件名' },
-            duration: { label: '所要時間（分）' },
-            attendees: { label: '参加者' },
-            notes: { label: '議事メモ' },
-          },
-        },
+        ...activityActions,
         escalate_case: {
           label: 'ケースをエスカレート',
           confirmText: 'このケースをエスカレーションチームへ引き継ぎます。続行しますか？',
@@ -617,6 +655,86 @@ export const jaJP: TranslationData = {
       },
     },
 
+    crm_event: {
+      label: 'イベント',
+      pluralLabel: 'イベント',
+      description: '顧客との会議・電話などの予定された対話',
+      fields: {
+        subject: { label: '件名' },
+        description: { label: '説明' },
+        type: {
+          label: 'イベント種別',
+          options: {
+            meeting: '会議', call: '電話', demo: 'デモ',
+            webinar: 'ウェビナー', onsite_visit: '訪問', other: 'その他',
+          },
+        },
+        status: {
+          label: 'ステータス',
+          options: {
+            planned: '予定', held: '実施済み', cancelled: 'キャンセル', no_show: '無断欠席',
+          },
+        },
+        owner: { label: '担当者' },
+        start_datetime: { label: '開始' },
+        end_datetime: { label: '終了' },
+        all_day: { label: '終日イベント' },
+        duration_minutes: { label: '所要時間（分）' },
+        location: { label: '場所', help: '会議室・住所・会議リンク' },
+        related_to_type: {
+          label: '関連レコード種別',
+          options: {
+            crm_account: '取引先', crm_contact: '取引先責任者', crm_opportunity: '商談',
+            crm_lead: 'リード', crm_case: 'ケース',
+          },
+        },
+        related_to_account: { label: '関連取引先' },
+        related_to_contact: { label: '関連取引先責任者' },
+        related_to_opportunity: { label: '関連商談' },
+        related_to_lead: { label: '関連リード' },
+        related_to_case: { label: '関連ケース' },
+        outcome_notes: { label: '結果メモ', help: '合意事項と次のアクション' },
+      },
+      _views: {
+        all_events: { label: 'すべてのイベント' },
+        event_calendar: { label: 'イベントカレンダー' },
+        event_timeline: { label: 'チームスケジュール' },
+        my_events: { label: 'マイカレンダー' },
+        upcoming_events: { label: '📅 開催予定 · 直近順' },
+        held_events: { label: '✅ 対話履歴' },
+      },
+    },
+
+    crm_event_attendee: {
+      label: 'イベント参加者',
+      pluralLabel: 'イベント参加者',
+      description: 'イベントに招待された、または出席した人',
+      fields: {
+        attendee_number: { label: '参加者番号' },
+        crm_event: { label: 'イベント' },
+        attendee_type: {
+          label: '参加者種別',
+          options: { contact: '取引先責任者', lead: 'リード', user: '社内ユーザー' },
+        },
+        crm_contact: { label: '取引先責任者' },
+        crm_lead: { label: 'リード' },
+        sys_user: { label: '社内ユーザー' },
+        external_name: { label: '社外参加者' },
+        response: {
+          label: '回答',
+          options: {
+            no_response: '未回答', accepted: '承諾',
+            declined: '辞退', tentative: '仮承諾',
+          },
+        },
+        is_organizer: { label: '主催者' },
+        invited_date: { label: '招待日時' },
+      },
+      _views: {
+        all_event_attendees: { label: 'イベント参加者' },
+      },
+    },
+
     crm_campaign_member: {
       label: 'キャンペーンメンバー',
       pluralLabel: 'キャンペーンメンバー',
@@ -688,6 +806,7 @@ export const jaJP: TranslationData = {
       label: 'HotCRM',
       description: '営業・サービス・マーケティング向け顧客関係管理システム',
       navigation: {
+        group_activity: { label: '活動' },
         group_sales: { label: '営業' },
         group_service: { label: 'サービス' },
         group_marketing: { label: 'マーケティング' },
@@ -721,6 +840,25 @@ export const jaJP: TranslationData = {
 
 
   dashboards: {
+    sales_activity_dashboard: {
+      label: '営業活動',
+      description: '誰がどれだけ顧客と話しているか、どの取引先が沈黙しているか',
+      widgets: {
+        interactions_held: { title: '記録済みの対話', description: '実際に行われた電話と会議' },
+        meetings_booked: { title: '設定済みの会議', description: 'カレンダー上にあり未実施の会議' },
+        customer_minutes: { title: '顧客接触時間（分）', description: '顧客と向き合った総時間' },
+        tasks_completed: { title: '完了タスク', description: 'クローズしたフォローアップ' },
+        activity_by_rep: { title: '担当者別の活動', description: '担当者ごとの記録済み対話数' },
+        activity_by_week: { title: '週次の活動量', description: '週あたりの対話数' },
+        activity_mix: { title: '活動の内訳', description: '電話・会議・デモの比率' },
+        activity_by_record_type: { title: '活動の対象', description: 'ファネルのどこに注力しているか' },
+        deal_activity: { title: '商談上の対話', description: '商談に紐づく記録済み対話' },
+        open_deals_for_activity: { title: 'オープン商談', description: '進行中の商談数' },
+        quiet_accounts_30: { title: '30 日以上沈黙', description: '1 か月間対話記録のないアクティブ取引先' },
+        quiet_accounts_60: { title: '60 日以上沈黙', description: '2 か月の沈黙 — リスク閾値' },
+        quiet_accounts_90: { title: '90 日以上沈黙', description: '四半期にわたり接触なし' },
+      },
+    },
     crm_overview_dashboard: {
       label: 'CRM 概要',
       description: '売上指標、パイプライン分析、商談インサイト',

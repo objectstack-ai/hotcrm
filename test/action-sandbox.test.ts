@@ -40,9 +40,25 @@ import {
 type AnyRec = Record<string, any>;
 
 const stackActions: AnyRec[] = (stack as any).actions ?? [];
-const action = (name: string): AnyRec => {
-  const found = stackActions.find((a) => a.name === name);
-  if (!found) throw new Error(`no ${name} action registered`);
+
+/**
+ * An action's registry key — `<objectName>:<name>`, which is how the runtime
+ * itself keys `registerAction` and how the dispatcher resolves a call.
+ *
+ * A bare name stopped identifying an action in #592: `log_call`, `log_meeting`
+ * and `schedule_meeting` are registered once per sales object, so five distinct
+ * bodies answer to "log_call". Keying on the name alone silently exercised
+ * whichever one happened to be first in the array.
+ */
+const keyOf = (a: AnyRec): string => `${a.objectName ?? 'global'}:${a.name}`;
+
+const action = (key: string): AnyRec => {
+  const found = stackActions.find((a) => keyOf(a) === key)
+    // A bare name still resolves, for the actions that are unique by name.
+    ?? (stackActions.filter((a) => a.name === key).length === 1
+      ? stackActions.find((a) => a.name === key)
+      : undefined);
+  if (!found) throw new Error(`no ${key} action registered (ambiguous or missing)`);
   return found;
 };
 
@@ -133,7 +149,10 @@ describe('the sandbox boundary is real', () => {
     // let it through with a shrug. This is the check that makes every
     // `capabilities: [...]` list in `src/actions/` load-bearing metadata
     // rather than documentation.
-    const stripped = { ...action('log_call'), body: { ...action('log_call').body, capabilities: [] } };
+    // Addressed by registry key: since #592 five objects each register their
+    // own `log_call`, so a bare name no longer names one body.
+    const logCall = action('crm_case:log_call');
+    const stripped = { ...logCall, body: { ...logCall.body, capabilities: [] } };
     await expect(
       runActionBody(stripped, { objectName: 'crm_case', record: { id: 'case_1' }, input: { subject: 'x' } }),
     ).rejects.toThrow(/capability 'api\.write' not granted/);
@@ -191,12 +210,6 @@ describe('every script action body executes under QuickJS', () => {
     create_campaign: {
       opts: { objectName: 'crm_lead', record: { id: 'lead_1' }, input: { crm_campaign: 'cmp_1' } },
     },
-    log_call: {
-      opts: { objectName: 'crm_case', record: { id: 'case_1', display_title: 'CASE-1' }, input: { subject: 'Intro call' } },
-    },
-    log_meeting: {
-      opts: { objectName: 'crm_case', record: { id: 'case_1', display_title: 'CASE-1' }, input: { subject: 'Kickoff' } },
-    },
     mark_primary: {
       opts: { objectName: 'crm_contact', record: { id: 'con_1' } },
       seed: { crm_contact: [{ id: 'con_1', is_primary: false }] },
@@ -212,20 +225,54 @@ describe('every script action body executes under QuickJS', () => {
       opts: { objectName: 'crm_opportunity', record: { id: 'opp_1' }, input: { stage: 'negotiation' } },
       seed: { crm_opportunity: [{ id: 'opp_1', stage: 'prospecting' }] },
     },
+    // The activity family (#592): the same three bodies, generated once per
+    // sales object. Each is invoked against ITS OWN object with that object's
+    // declared nameField in the record, because the body carries the resolved
+    // field name — a body dispatched against the wrong object would stamp a
+    // null label and nothing else would notice.
+    ...Object.fromEntries(
+      ([
+        ['crm_lead', { id: 'lead_1', full_name: 'Ada Lovelace' }],
+        ['crm_contact', { id: 'con_1', full_name: 'Ada Lovelace' }],
+        ['crm_account', { id: 'acc_1', display_title: 'ACC-1 - Acme' }],
+        ['crm_opportunity', { id: 'opp_1', name: 'Acme Expansion' }],
+        ['crm_case', { id: 'case_1', display_title: 'CASE-1' }],
+      ] as Array<[string, Rec]>).flatMap(([objectName, record]) => [
+        [`${objectName}:log_call`, { opts: { objectName, record, input: { subject: 'Intro call', duration: 15 } } }],
+        [`${objectName}:log_meeting`, { opts: { objectName, record, input: { subject: 'Kickoff' } } }],
+        [`${objectName}:schedule_meeting`, {
+          opts: {
+            objectName,
+            record,
+            input: { subject: 'Deep dive', start_date: '2026-09-01', start_time: '09:00', duration: 60, location: 'Zoom' },
+          },
+        }],
+      ]),
+    ),
   };
 
   /** Asserted separately below, because it does not currently reach the engine. */
-  const BROKEN = 'mass_update_stage';
+  const BROKEN = 'crm_opportunity:mass_update_stage';
 
   it('covers every action the runtime will sandbox', () => {
-    expect(Object.keys(INVOCATIONS).sort()).toEqual(SCRIPT_ACTIONS.map((a) => a.name).sort());
+    // Keyed the way the runtime keys its own registry, so fifteen distinct
+    // activity bodies are fifteen distinct cases rather than three.
+    const covered = new Set(Object.keys(INVOCATIONS));
+    const uncovered = SCRIPT_ACTIONS
+      .filter((a) => !covered.has(keyOf(a)) && !covered.has(a.name))
+      .map(keyOf);
+    expect(uncovered, `script bodies nothing executes:\n  ${uncovered.join('\n  ')}`).toEqual([]);
+    const stale = [...covered].filter(
+      (k) => !SCRIPT_ACTIONS.some((a) => keyOf(a) === k || a.name === k),
+    );
+    expect(stale, `INVOCATIONS names actions that no longer exist:\n  ${stale.join('\n  ')}`).toEqual([]);
   });
 
-  it.each(SCRIPT_ACTIONS.map((a) => a.name).filter((n) => n !== BROKEN))('%s', async (name) => {
-    const { opts, seed } = INVOCATIONS[name]!;
+  it.each(SCRIPT_ACTIONS.map(keyOf).filter((k) => k !== BROKEN))('%s', async (key) => {
+    const { opts, seed } = (INVOCATIONS[key] ?? INVOCATIONS[key.split(':')[1]!])!;
     const engine = makeSandboxEngine(seed ?? {});
-    const { result } = await runActionBody(action(name), { ...opts, engine });
-    expect(result, `${name} returned nothing`).toBeTruthy();
+    const { result } = await runActionBody(action(key), { ...opts, engine });
+    expect(result, `${key} returned nothing`).toBeTruthy();
   });
 
   /**
@@ -243,7 +290,7 @@ describe('every script action body executes under QuickJS', () => {
    * behaviour moved.
    */
   it(`${BROKEN} is rejected by the engine — it passes an id where the facade wants a document`, async () => {
-    const { opts, seed } = INVOCATIONS[BROKEN]!;
+    const { opts, seed } = INVOCATIONS[BROKEN.split(':')[1]!]!;
     const engine = makeSandboxEngine(seed ?? {});
     await expect(runActionBody(action(BROKEN), { ...opts, engine })).rejects.toThrow(
       /Update requires an ID or options\.multi=true/,

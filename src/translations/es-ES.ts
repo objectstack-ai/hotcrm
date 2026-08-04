@@ -7,6 +7,52 @@ import type { TranslationData } from '@objectstack/spec/system';
  *
  * Per-locale file: one file per language, following the `per_locale` convention.
  */
+/**
+ * Familia de acciones de actividad (#592): `log_call`, `log_meeting` y
+ * `schedule_meeting` se registran una vez POR OBJETO (prospecto, contacto,
+ * cuenta, oportunidad, caso), porque una acción de script sin `objectName`
+ * queda bajo una clave que el despachador nunca consulta (#509). Los textos son
+ * idénticos en los cinco, así que se declaran una vez aquí.
+ */
+const activityActions = {
+  log_call: {
+    label: 'Registrar llamada',
+    successMessage: '¡Llamada registrada exitosamente!',
+    params: {
+      subject: { label: 'Asunto de la llamada' },
+      duration: { label: 'Duración (minutos)' },
+      attendee_contacts: { label: 'Contactos participantes' },
+      attendee_users: { label: 'Participantes internos' },
+      notes: { label: 'Notas de la llamada' },
+    },
+  },
+  log_meeting: {
+    label: 'Registrar reunión',
+    successMessage: '¡Reunión registrada exitosamente!',
+    params: {
+      subject: { label: 'Asunto de la reunión' },
+      duration: { label: 'Duración (minutos)' },
+      attendee_contacts: { label: 'Contactos participantes' },
+      attendee_users: { label: 'Participantes internos' },
+      notes: { label: 'Notas de la reunión' },
+    },
+  },
+  schedule_meeting: {
+    label: 'Programar reunión',
+    successMessage: '¡Reunión programada!',
+    params: {
+      subject: { label: 'Asunto de la reunión' },
+      start_date: { label: 'Fecha de inicio (UTC)' },
+      start_time: { label: 'Hora de inicio (UTC)' },
+      location: { label: 'Ubicación' },
+      duration: { label: 'Duración (minutos)' },
+      attendee_contacts: { label: 'Contactos participantes' },
+      attendee_users: { label: 'Participantes internos' },
+      notes: { label: 'Agenda' },
+    },
+  },
+};
+
 export const esES: TranslationData = {
   objects: {
     crm_account: {
@@ -54,6 +100,7 @@ export const esES: TranslationData = {
         enterprise_accounts: { label: 'Cuentas Empresariales', description: 'Cuentas con mayores ingresos anuales' },
         my_accounts: { label: 'Mis Cuentas', description: 'Cuentas asignadas al usuario actual' },
       },
+      _actions: { ...activityActions },
     },
 
     crm_contact: {
@@ -91,6 +138,7 @@ export const esES: TranslationData = {
         lead_source: { label: 'Origen del Prospecto' },
         do_not_call: { label: 'No Llamar' },
         email_opt_out: { label: 'Excluir de Correos' },
+        last_contacted_date: { label: 'Último contacto' },
       },
       _views: {
         all_contacts: { label: 'Todos los Contactos' },
@@ -98,6 +146,7 @@ export const esES: TranslationData = {
         primary_contacts: { label: 'Contactos Principales' },
       },
       _actions: {
+        ...activityActions,
         mark_primary: {
           label: 'Marcar como Principal',
           confirmText: '¿Establecer este contacto como contacto principal de la cuenta?',
@@ -258,6 +307,7 @@ export const esES: TranslationData = {
         suspected_duplicates: { label: 'Duplicados Sospechosos' },
       },
       _actions: {
+        ...activityActions,
         convert_lead: {
           label: 'Convertir Prospecto',
           confirmText: '¿Está seguro de querer convertir este prospecto?',
@@ -358,6 +408,7 @@ export const esES: TranslationData = {
         my_open_deals: { label: 'Mis Negocios Abiertos' },
       },
       _actions: {
+        ...activityActions,
         clone_opportunity: {
           label: 'Clonar Oportunidad',
           successMessage: '¡Oportunidad clonada con éxito!',
@@ -414,20 +465,7 @@ export const esES: TranslationData = {
         escalated_cases: { label: 'Casos Escalados' },
       },
       _actions: {
-        log_call: {
-          label: 'Registrar Llamada',
-          successMessage: '¡Llamada registrada con éxito!',
-        },
-        log_meeting: {
-          label: 'Registrar Reunión',
-          successMessage: '¡Reunión registrada con éxito!',
-          params: {
-            subject: { label: 'Asunto de la Reunión' },
-            duration: { label: 'Duración (minutos)' },
-            attendees: { label: 'Asistentes' },
-            notes: { label: 'Notas de la Reunión' },
-          },
-        },
+        ...activityActions,
         escalate_case: {
           label: 'Escalar Caso',
           confirmText: 'Esto enviará el caso al equipo de escalación. ¿Continuar?',
@@ -618,6 +656,86 @@ export const esES: TranslationData = {
       },
     },
 
+    crm_event: {
+      label: 'Evento',
+      pluralLabel: 'Eventos',
+      description: 'Reuniones, llamadas y otras interacciones programadas con clientes',
+      fields: {
+        subject: { label: 'Asunto' },
+        description: { label: 'Descripción' },
+        type: {
+          label: 'Tipo de evento',
+          options: {
+            meeting: 'Reunión', call: 'Llamada', demo: 'Demostración',
+            webinar: 'Seminario web', onsite_visit: 'Visita presencial', other: 'Otro',
+          },
+        },
+        status: {
+          label: 'Estado',
+          options: {
+            planned: 'Planificado', held: 'Realizado', cancelled: 'Cancelado', no_show: 'No asistió',
+          },
+        },
+        owner: { label: 'Asignado a' },
+        start_datetime: { label: 'Inicio' },
+        end_datetime: { label: 'Fin' },
+        all_day: { label: 'Evento de todo el día' },
+        duration_minutes: { label: 'Duración (minutos)' },
+        location: { label: 'Ubicación', help: 'Sala, dirección o enlace de la reunión' },
+        related_to_type: {
+          label: 'Tipo de registro relacionado',
+          options: {
+            crm_account: 'Cuenta', crm_contact: 'Contacto', crm_opportunity: 'Oportunidad',
+            crm_lead: 'Prospecto', crm_case: 'Caso',
+          },
+        },
+        related_to_account: { label: 'Cuenta relacionada' },
+        related_to_contact: { label: 'Contacto relacionado' },
+        related_to_opportunity: { label: 'Oportunidad relacionada' },
+        related_to_lead: { label: 'Prospecto relacionado' },
+        related_to_case: { label: 'Caso relacionado' },
+        outcome_notes: { label: 'Notas de resultado', help: 'Qué se acordó y qué sigue' },
+      },
+      _views: {
+        all_events: { label: 'Todos los eventos' },
+        event_calendar: { label: 'Calendario de eventos' },
+        event_timeline: { label: 'Agenda del equipo' },
+        my_events: { label: 'Mi calendario' },
+        upcoming_events: { label: '📅 Próximos · Más cercanos primero' },
+        held_events: { label: '✅ Historial de interacciones' },
+      },
+    },
+
+    crm_event_attendee: {
+      label: 'Asistente al evento',
+      pluralLabel: 'Asistentes al evento',
+      description: 'Persona invitada o presente en un evento',
+      fields: {
+        attendee_number: { label: 'Número de asistente' },
+        crm_event: { label: 'Evento' },
+        attendee_type: {
+          label: 'Tipo de asistente',
+          options: { contact: 'Contacto', lead: 'Prospecto', user: 'Usuario' },
+        },
+        crm_contact: { label: 'Contacto' },
+        crm_lead: { label: 'Prospecto' },
+        sys_user: { label: 'Usuario' },
+        external_name: { label: 'Asistente externo' },
+        response: {
+          label: 'Respuesta',
+          options: {
+            no_response: 'Sin respuesta', accepted: 'Aceptado',
+            declined: 'Rechazado', tentative: 'Tentativo',
+          },
+        },
+        is_organizer: { label: 'Organizador' },
+        invited_date: { label: 'Invitado el' },
+      },
+      _views: {
+        all_event_attendees: { label: 'Asistentes al evento' },
+      },
+    },
+
     crm_campaign_member: {
       label: 'Miembro de Campaña',
       pluralLabel: 'Miembros de Campaña',
@@ -689,6 +807,7 @@ export const esES: TranslationData = {
       label: 'HotCRM',
       description: 'Gestión de relaciones con clientes para ventas, servicio y marketing',
       navigation: {
+        group_activity: { label: 'Actividad' },
         group_sales: { label: 'Ventas' },
         group_service: { label: 'Servicio' },
         group_marketing: { label: 'Marketing' },
@@ -722,6 +841,25 @@ export const esES: TranslationData = {
 
 
   dashboards: {
+    sales_activity_dashboard: {
+      label: 'Actividad de ventas',
+      description: 'Quién habla con los clientes, con qué frecuencia y qué cuentas se han quedado en silencio',
+      widgets: {
+        interactions_held: { title: 'Interacciones registradas', description: 'Llamadas y reuniones que realmente ocurrieron' },
+        meetings_booked: { title: 'Reuniones agendadas', description: 'Reuniones en el calendario que aún no ocurren' },
+        customer_minutes: { title: 'Minutos con clientes', description: 'Tiempo total frente a clientes' },
+        tasks_completed: { title: 'Tareas completadas', description: 'Seguimientos cerrados — la otra mitad de la actividad' },
+        activity_by_rep: { title: 'Actividad por representante', description: 'Interacciones registradas por responsable' },
+        activity_by_week: { title: 'Volumen de actividad por semana', description: 'Interacciones por semana' },
+        activity_mix: { title: 'Composición de la actividad', description: 'Llamadas vs reuniones vs demostraciones' },
+        activity_by_record_type: { title: 'Dónde cae la actividad', description: 'Qué parte del embudo recibe atención' },
+        deal_activity: { title: 'Interacciones en oportunidades', description: 'Interacciones vinculadas a una oportunidad' },
+        open_deals_for_activity: { title: 'Oportunidades abiertas', description: 'Oportunidades aún en juego' },
+        quiet_accounts_30: { title: 'Silencio 30+ días', description: 'Cuentas activas sin interacción en un mes' },
+        quiet_accounts_60: { title: 'Silencio 60+ días', description: 'Dos meses de silencio — el umbral de riesgo' },
+        quiet_accounts_90: { title: 'Silencio 90+ días', description: 'Un trimestre sin contacto' },
+      },
+    },
     crm_overview_dashboard: {
       label: 'Resumen CRM',
       description: 'Métricas de ingresos, analítica de pipeline e información de oportunidades',
