@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { test, expect, recordsOf } from './fixtures';
+import { SEEDS_UNREADABLE_MID_RUN } from './seed-precondition';
 
 /**
  * Server smoke tests — the routes are mounted and the CRM data is reachable.
@@ -52,7 +53,7 @@ test('REST API serves seeded hotcrm records to an authenticated caller', async (
   expect(res.ok(), `authenticated read failed: ${res.status()} ${await res.text()}`).toBeTruthy();
 
   const records = recordsOf(await res.json());
-  expect(records.length, 'no seeded accounts returned').toBeGreaterThan(0);
+  expect(records.length, `no seeded accounts returned — ${SEEDS_UNREADABLE_MID_RUN}`).toBeGreaterThan(0);
   // A real record, not just a 200 with an empty envelope.
   expect(typeof records[0].id).toBe('string');
   expect(typeof records[0].name).toBe('string');
