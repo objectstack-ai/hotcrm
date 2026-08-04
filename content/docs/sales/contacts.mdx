@@ -59,7 +59,7 @@ Reps can request a flag change but cannot remove these themselves — it's an ad
 
 ## Built-in rules
 
-- An **email address must be unique within the same account**. The same person can appear under multiple companies (a board member, for example) but not twice in one company.
+- An **email address must be unique within your organization**. The same address cannot be used by two contacts, even when those contacts sit under different accounts — the second save is rejected with *"Another contact … with email … already exists."* Another organization on the same platform is free to have its own contact at that address; the rule is scoped to your data, not the whole platform. Email is normalised to lower case before it is stored and compared, so `Ada@Example.com` and `ada@example.com` count as the same address. A person you deal with at two companies therefore needs a different address on each contact record.
 - **Welcome email** — when a contact is created, the system automatically sends them the *contact_welcome* email template.
 
 ## Sharing — who can see which contact
