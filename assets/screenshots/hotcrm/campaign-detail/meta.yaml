@@ -1,0 +1,23 @@
+id: hotcrm-campaign-detail
+kind: screenshot
+scope: hotcrm
+category: hotcrm
+status: published
+captured: '2026-08-01'
+capture:
+  application: HotCRM
+  theme: dark
+  viewport: 1440x1024
+  dataset: curated-campaign-schedule
+locales:
+  en: en.png
+  zh-Hans: zh-Hans.png
+title:
+  en: Campaign lifecycle and ROI
+  zh-Hans: 营销活动生命周期与投资回报率
+alt:
+  en: A campaign record with lifecycle stage, schedule, budget, revenue, and ROI.
+  zh-Hans: 包含生命周期阶段、日程、预算、收入和投资回报率的营销活动记录。
+purpose:
+  en: Tell the HotCRM story of connecting campaign execution to commercial outcomes.
+  zh-Hans: 讲述 HotCRM 将营销活动执行与商业结果相连的故事。

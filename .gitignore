@@ -5,6 +5,7 @@
 # node_modules/@objectstack`: checkout restores a dangling symlink and pnpm
 # cannot mkdir through it.
 node_modules
+apps/docs/public/screenshots/
 dist/
 .env
 *.log

@@ -1,0 +1,22 @@
+id: hotcrm-lead-detail
+kind: screenshot
+scope: hotcrm
+category: hotcrm
+status: published
+captured: '2026-08-01'
+capture:
+  application: HotCRM
+  theme: dark
+  viewport: 1440x1024
+locales:
+  en: en.png
+  zh-Hans: zh-Hans.png
+title:
+  en: Qualified lead workspace
+  zh-Hans: 已确认线索工作区
+alt:
+  en: A qualified lead record with lead score, source, conversion, and follow-up actions.
+  zh-Hans: 包含线索评分、来源、转化和跟进操作的已确认线索记录。
+purpose:
+  en: Show the transition from lead qualification to sales execution.
+  zh-Hans: 展示从线索确认到销售执行的衔接。

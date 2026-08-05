@@ -1,0 +1,26 @@
+id: hotcrm-large-deal-approval
+kind: screenshot
+scope: hotcrm
+category: automation
+status: published
+captured: '2026-08-01'
+capture:
+  application: HotCRM
+  surface: Studio flow designer
+  theme: light
+  viewport: 1600x900
+  aspectRatio: '16:9'
+  dataset: curated-opportunities
+  selectedNode: Sales Director Sign-off
+locales:
+  en: en.png
+  zh-Hans: zh-Hans.png
+title:
+  en: Large-deal approval flow
+  zh-Hans: 大额商机审批流程
+alt:
+  en: A visual approval flow with a selected director sign-off node and its configuration panel.
+  zh-Hans: 选中销售总监审批节点并展示其配置面板的可视化审批流程。
+purpose:
+  en: Show visual automation, branching, approvals, and node-level configuration.
+  zh-Hans: 展示可视化自动化、分支、审批及节点级配置。
