@@ -1,143 +1,159 @@
 ---
 title: Import & Export
-description: Bulk import from CSV/Excel, migrate from Salesforce or HubSpot, export data, and handle GDPR data requests.
+description: What actually ships for getting data in and out — the list-view import wizard and HotCRM's three ready-made mappings, CSV / XLSX export from four list views, the data API — and which migration wizards are still design intent.
 ---
 
 # Import & Export
 
-How to get data **into** HotCRM (bulk imports, migrations) and **out** (exports, GDPR, backups).
+How to get data **into** HotCRM and **out** of it. Everything below is stated against the app as it ships. Sections marked *(not shipped yet)* are kept as design intent — read them as a requirements document, not as instructions.
+
+> **There is no Setup → Data menu.** The Setup app's groups are *Overview*, *Apps*, *People & Organization*, *Access Control*, *Approvals*, *Configuration*, *Diagnostics*, *Integrations* and *Advanced*. There is no **Data** group and no **Privacy** group. Earlier versions of this page routed almost every step through `Setup → Data → …`, which sent readers looking for screens that do not exist. Import and export both live on the **object's own list view**; everything else is the data API.
 
 ## Importing from CSV / Excel
 
-The simplest route. Works for: leads, accounts, contacts, products, opportunities, cases, contracts.
+Two routes, both real, both landing in the same place:
 
-### Step-by-step
+- **In the app** — open the object's list view and choose **Import** in the toolbar. Best for a one-off file you want to eyeball before it writes.
+- **Over the API** — the import endpoint, with a dry run, a background job and an undo. Step by step in [Import your own data](/docs/guides/importing-your-data).
 
-1. Go to **Setup → Data → Import Wizard**.
-2. Pick the **object** to import into.
-3. Upload the **CSV** or **Excel** file (max 50 MB per upload; split larger files).
-4. **Map columns** to fields — the wizard auto-suggests matches by header name.
-5. Choose **conflict behaviour**:
-   - **Insert only** — skip rows that match an existing record.
-   - **Insert and update** — update existing records (matched by Email / External ID).
-   - **Update only** — fail if not found.
-6. Run a **dry-run** — the wizard reports how many would succeed / fail without writing.
-7. **Commit** — execute the import. You'll see a progress bar; large imports run in the background and you get an email when complete.
+They share the same server-side import path, so the same mappings, the same validation and the same per-row error codes apply either way.
+
+### The in-app import wizard
+
+1. **Open the object's list view** and choose **Import**. The target object comes from where you started — the wizard never asks you to pick one.
+2. **Upload** — drag and drop a CSV or Excel file, or paste from a spreadsheet. **Download template** hands you a CSV carrying that object's columns, with the required ones marked `*`.
+3. **Mapping** — columns are auto-matched to fields by header name, each match carrying a confidence reading; you correct or skip the rest by hand. If HotCRM ships a **saved mapping** for the object, pick that instead: the renames, the value transforms and the type coercion then run on the server and the column mapping goes read-only. Three ship today — `crm_account_import`, `crm_contact_import` and `crm_lead_import` — and they are the same three the API path names.
+4. **Import options** — *When a row matches an existing record* offers **Always create new**, **Update existing (skip if no match)** and **Update if matched, else create**, with **Match on** deciding which field or fields the matching runs against. A saved mapping brings its own default write mode and key, so on the three objects above you rarely touch this.
+5. **Validate data** — checks every row against the server without writing anything. Do it before every import.
+6. **Preview → Import** — a large file is handed to a background job and reports `Importing n of m rows`. **History** lists recent import jobs for the object and offers **Undo import**: records the job created are deleted, records it updated are restored to their previous values.
+
+> **No email arrives when the import finishes.** Progress shows on screen while the job runs, and the run is listed under **History** afterwards — that is the whole notification story. HotCRM sends no completion mail, and the platform's email service is outbound-only and delivers nothing at all until a deployment configures a transport.
+
+A job takes up to **50,000 rows**; split a bigger file. Undo has a tighter ceiling and a few other conditions — see [Import your own data](/docs/guides/importing-your-data).
 
 ### Field mapping tips
 
-- **Owners** — provide the user's email; the importer resolves to the user ID.
-- **Lookups** — provide the referenced record's *Name* or *External ID*; the importer resolves.
-- **Picklists** — values must match the picklist's defined values exactly (case-insensitive).
-- **Dates** — ISO format (`2025-03-15`) works everywhere; otherwise specify the format.
-- **Multi-select** — separate values with semicolons.
+- **Owners** — give the user's email address; it resolves against the user record. An address matching no user **fails that row** with `reference_not_found`; nothing is guessed. Leave the cell blank and the record is owned by whoever ran the import.
+- **Lookups** — give the referenced record's id, or the text its object is identified by (its display field, then `name` / `title` / `label` / `full_name` / `email` / `username`). A parent named later in the same file still resolves.
+- **Picklists** — matched against the field's option labels *and* values, case-insensitively, so *Technology* and *technology* both land. The shipped mappings additionally translate the vocabulary other systems export — *SaaS*, *Trade Show*, *Client*. Anything still unrecognised fails its row with `invalid_option` rather than being dropped quietly.
+- **Dates** — `YYYY-MM-DD` is safest.
+- **Numbers** — plain digits (`1500000`, not `1.5M`).
+- **Addresses** — contacts have real mailing-address columns; accounts and leads store an address as one structured field that cannot be assembled out of separate spreadsheet columns. The known limits are listed in [Import your own data](/docs/guides/importing-your-data).
 
-### External IDs (recommended)
+### Matching keys — not external IDs
 
-Add an `external_id` column (e.g., `legacy_account_id = ACME-001`) and mark it as the matching key. This lets you:
+Earlier versions of this page told you to add an `external_id` column and mark it as the matching key. **No HotCRM object carries an `external_id` field**, and a named mapping is a strict projection — every column it does not declare is dropped before the write — so that column would simply be ignored.
 
-- Re-run the import idempotently without creating duplicates.
-- Cross-reference between objects (e.g., import leads with their original account's external ID, and the importer links them).
+The idempotency it promised is real. It comes from a business key instead:
 
-## Migrating from Salesforce
-
-A purpose-built migration wizard ships in the box.
-
-1. **Setup → Data → Migrate from Salesforce**.
-2. Authorise via OAuth — the wizard reads from your Salesforce sandbox or production.
-3. The wizard auto-maps Salesforce objects to HotCRM equivalents:
-
-   | Salesforce | HotCRM |
-   | --- | --- |
-   | Account | account |
-   | Contact | contact |
-   | Lead | lead |
-   | Opportunity | opportunity |
-   | OpportunityLineItem | opportunity_line_item |
-   | Quote / QuoteLineItem | quote / quote_line_item |
-   | Contract | contract |
-   | Case | case |
-   | Campaign / CampaignMember | campaign / campaign_member |
-   | Product2 | product |
-   | Task / Event | task / event |
-   | User | user *(matched by email or invited)* |
-
-4. **Field mapping** — defaults are sensible; review and adjust custom fields.
-5. **Picklist mapping** — map Salesforce values to HotCRM values (especially stages, statuses, priorities).
-6. **Owner mapping** — map Salesforce users to HotCRM users by email.
-7. **Pick the slice** — all-time, or a date range (for staged cutover).
-8. **Dry-run**, review report, **commit**.
-
-The wizard preserves Salesforce IDs as `external_id` for traceability.
-
-## Migrating from HubSpot
-
-Similar wizard at **Setup → Data → Migrate from HubSpot**. Map Hub object types to HotCRM:
-
-| HubSpot | HotCRM |
+| Mapping | Matches existing records on |
 | --- | --- |
-| Company | account |
-| Contact | contact |
-| Deal | opportunity |
-| Ticket | case |
-| Line item | opportunity_line_item |
-| Product | product |
-| Quote | quote |
+| `crm_account_import` | Account Name |
+| `crm_contact_import` | Email |
+| `crm_lead_import` | Email |
 
-Deal pipelines map to opportunity stages — review the picklist mapping carefully.
+Re-run the same file and matching rows are updated rather than duplicated. In the wizard, **Match on** is the same idea chosen by hand. Cross-object references work the same way: a contact names its account by *Account Name*, not by a legacy id.
+
+Account names are matched **verbatim**, though — *Acme Corp* and *ACME Corp* are two different accounts.
+
+## Migrating from Salesforce (not shipped yet)
+
+The intended behaviour: a purpose-built migration wizard in the box. You authorise against your Salesforce sandbox or production over OAuth, the wizard auto-maps Salesforce objects onto their HotCRM equivalents, you review the field, picklist and owner mappings, choose the slice (all-time, or a date range for a staged cutover), dry-run, and commit — with the Salesforce record ids kept for traceability.
+
+| Salesforce | HotCRM equivalent (intended) |
+| --- | --- |
+| Account | `crm_account` |
+| Contact | `crm_contact` |
+| Lead | `crm_lead` |
+| Opportunity | `crm_opportunity` |
+| OpportunityLineItem | `crm_opportunity_line_item` |
+| Quote / QuoteLineItem | `crm_quote` / `crm_quote_line_item` |
+| Contract | `crm_contract` |
+| Case | `crm_case` |
+| Campaign / CampaignMember | `crm_campaign` / `crm_campaign_member` |
+| Product2 | `crm_product` |
+| Task / Event | `crm_task` / `crm_event` |
+| User | user *(matched by email, or invited)* |
+
+**None of this ships.** There is no migration wizard, no Salesforce connector and no action that reads from Salesforce anywhere in the app. Salesforce is mentioned a dozen or so times in the source, and every one of those is a comment citing it as a design reference — the forecast-category ladder, the first-response-time definition, the Lightning-style record page layouts, and the note in the import mappings about the vocabulary a Salesforce export writes.
+
+There is no outbound OAuth either. Setup's **OAuth Applications** screen registers clients that call *into* ObjectStack; nothing in the product authorises HotCRM *against* somebody else's org.
+
+It is not on the roadmap as such: the connector line there reads *"More connectors — Slack, Microsoft Teams, Google Workspace, HubSpot import"*.
+
+**What to do today.** Export from Salesforce to CSV and load it with the import above. The shipped mappings already speak part of that dialect — *SaaS* and *Financial Services* become *Software / SaaS* and *Finance*, *Trade Show* becomes *Event / Trade Show*, *Client* becomes a customer account — so the accounts, contacts and leads slice usually needs little more than the right header row. Objects with no shipped mapping go through the wizard's manual column mapping, or the data API.
+
+## Migrating from HubSpot (not shipped yet)
+
+The same story, with one difference: **HubSpot import is a named roadmap item**, so this one is scheduled rather than merely wished for.
+
+| HubSpot | HotCRM equivalent (intended) |
+| --- | --- |
+| Company | `crm_account` |
+| Contact | `crm_contact` |
+| Deal | `crm_opportunity` |
+| Ticket | `crm_case` |
+| Line item | `crm_opportunity_line_item` |
+| Product | `crm_product` |
+| Quote | `crm_quote` |
+
+Deal pipelines would map onto opportunity stages, which is the mapping worth reviewing by hand. Until it ships, the CSV route above is the migration path.
 
 ## Migration playbook
 
-1. **Map roles & users first** — without owners, everything is orphaned.
-2. **Dry-run in sandbox** — never run a first migration against production.
-3. **Migrate in this order** to keep references intact:
-   1. Users
-   2. Products
-   3. Accounts (+ External ID)
-   4. Contacts (+ link to accounts)
-   5. Leads
-   6. Opportunities (+ link to accounts + contacts)
-   7. Opportunity line items
-   8. Quotes / Quote line items
-   9. Contracts
-   10. Cases
-   11. Campaigns
-   12. Campaign members
-   13. Tasks / Events / Notes / Files
-4. **Reconcile counts** — totals from the source system vs. HotCRM. Investigate any gap >0.1%.
-5. **Spot-check 10 records** end-to-end manually.
-6. **Sign-off** with sales / service leadership before go-live.
+Still the right advice — it is now advice about the CSV route.
+
+1. **Invite the users first.** The importer never creates users, and an owner-email cell matching nobody fails its row. Load users into HotCRM (or clear the owner column and reassign afterwards) before anything else.
+2. **Load in dependency order** — accounts, then contacts, then leads. Every contact names an account that must already exist. Past those three, keep the same principle: a record that points at another one goes second.
+3. **Validate before you write**, every time. *Validate data* in the wizard, `dryRun` on the API. `row` in the report is the row number in your file, so you fix the sheet and re-run.
+4. **Reconcile counts** — totals in the source system against HotCRM, and investigate any gap.
+5. **Spot-check ten records end to end** by hand. Counts agreeing does not mean fields landed.
+6. **Know your undo window before you start.** Undo is per job and does not cover a large one, so import a big data set in chunks if you want the rollback.
 
 ## Exporting data
 
-### Ad-hoc export
+### From a list view
 
-From any list view or report → **Export** → CSV or Excel. Subject to user permissions and FLS.
+Four list views declare `exportOptions: ['csv', 'xlsx']` — **Accounts**, **Contacts**, **Leads** and **Opportunities**. Open one, use **Export** in the toolbar, pick CSV or Excel. What you get is the view you are looking at: its filter, its sort and its columns travel with the export.
 
-### Scheduled export
+### Who may export
 
-For data warehouse loads (Snowflake, BigQuery, Redshift):
+Export is its own permission, not a side effect of being able to read. `allowExport` is opt-in and an unset bit **denies**; neither `viewAllRecords` nor `modifyAllRecords` substitutes for it. HotCRM authors the grants per role:
 
-- **Setup → Data → Scheduled Exports** → pick object, fields, filters, schedule, destination.
-- Destinations: S3 / Azure Blob / GCS / SFTP.
-- Format: CSV, Parquet, or JSON Lines.
-- Incremental — only changed since the last run.
+| Role | Objects it may export |
+| --- | --- |
+| Sales Rep | Leads, Accounts, Contacts, Opportunities, Cases |
+| Sales Manager | Leads, Accounts, Contacts, Opportunities, Cases |
+| Service Agent | Leads, Accounts, Contacts, Cases |
+| Marketing User | Leads, Accounts, Contacts, Opportunities |
+| System Admin | Leads, Accounts, Contacts, Opportunities, Cases |
+| Guest Portal | nothing, deliberately |
 
-### Bulk API export
+The grant opens the door; it does not widen the rows. Export is read-derived, so record scope and sharing still apply on top — a rep exporting Opportunities gets their own book, not the org's.
 
-For programmatic export — use the [API reference](/docs/customization/api-reference). Query any object with ObjectQL; results paginate.
+Cases carry an export grant but no Cases list view declares `exportOptions`: that grant is aimed at report export, which rides on the platform's `reports` capability. This app's `requires` does not list it, so on a default boot the four list views above and the data API are the export surfaces you have.
 
-## GDPR / data deletion requests
+### Over the data API
 
-When a customer requests *"delete all my personal data"*:
+The list view's **Export** button calls the object's export route, and you can call it yourself: format `csv`, `xlsx` or `json`, with `fields`, `orderby`, `filter`, `search` and `limit`. Or query the object with ObjectQL and page through the results. See [API reference](/docs/customization/api-reference) for the route shape your runtime version serves, and for authentication.
 
-1. **Setup → Privacy → Data Subject Requests → New**.
-2. Identify the person — by email or contact ID.
-3. The wizard shows everything linked to them: contact record, leads, cases, emails logged, campaign memberships, files.
-4. Choose **Delete** or **Anonymise** (replace name/email with `[redacted]` while keeping records for analytics).
-5. Confirm — the system processes and produces an **audit certificate** you can hand the customer.
+### Scheduled export to a warehouse (not shipped yet)
 
-Anonymisation is usually preferred — it preserves the integrity of historical reports without keeping PII.
+The intended behaviour: pick object, fields, filter, schedule and destination; land the file on S3 / Azure Blob / GCS / SFTP as CSV, Parquet or JSON Lines; incremental after the first run.
+
+None of it exists — no scheduled-export screen, no warehouse destination, no Parquet writer, and no `Setup → Data` menu to hold one. Today, either export by hand from a list view, or put the export route on a schedule you own — a cron job, a Lambda, a GitHub Action. See [Integrations](/docs/guides/integrations).
+
+## Data deletion requests (not shipped yet)
+
+The intended behaviour: `Setup → Privacy → Data Subject Requests`, identify the person by email or contact id, see everything linked to them, choose **Delete** or **Anonymise** (name and email replaced with `[redacted]`, records kept for analytics), and hand the customer an audit certificate.
+
+None of it exists. There is no Privacy group in Setup, no data-subject-request object, no anonymisation action, and no audit certificate — the platform's audit capability is not among the ones this app enables.
+
+What you can do today is delete or edit the records directly:
+
+- **Delete the contact.** The event-attendee rows naming that person go with it; the meetings themselves stay, so the team's history does not develop holes.
+- **Delete the account** and its contacts cascade with it. Check what else hangs off it first — that cascade is worth planning rather than discovering.
+- **Anonymise by hand** by clearing the identifying fields on the record you keep. There is no one-click equivalent, and no certificate comes out the other end.
 
 ## Backups & disaster recovery
 
@@ -150,8 +166,9 @@ For a tested **disaster recovery** runbook, see [Reference › Security & Compli
 
 ## Tips
 
-- ✅ **Always dry-run** large imports.
-- ✅ **Always add an External ID** column — saves you from duplicates forever.
-- ✅ **Migrate in sandbox first**, then run a final delta migration on cutover weekend.
-- ✅ For exports, use **scheduled exports** rather than ad-hoc — repeatable, monitored, retried on failure.
-- ✅ Use **anonymisation** rather than deletion for GDPR — keeps reports honest.
+- ✅ **Validate before every import** — *Validate data* in the wizard, `dryRun` on the API. It costs seconds, and it is the only thing standing between a wrong column and 50,000 rows.
+- ✅ **Load in dependency order** — accounts, then contacts, then leads.
+- ✅ **Let the business key do the de-duplicating.** Do not invent an `external_id` column; re-running the same file already updates instead of duplicating.
+- ✅ **Check the undo window before a big import**, and chunk the file if you want the rollback.
+- ✅ **Grant `allowExport` deliberately** — it is opt-in because it is bulk egress, and the rows leave with the person.
+- ✅ **Read every *(not shipped yet)* section as a requirements document, not a configuration guide** — and watch the [roadmap](/docs/whats-new#roadmap).
