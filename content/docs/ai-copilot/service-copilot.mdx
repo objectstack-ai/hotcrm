@@ -35,7 +35,7 @@ Data carry no context restriction and are available everywhere.
 Ask the assistant to triage a case and it analyses:
 
 - The **subject** and **description**.
-- The **customer's profile** (account tier, customer-since, contract).
+- The **customer's profile** — the account's **Customer Tier** and the **Contract Value**, which the triage rubric weighs first. How long they have been a customer is not weighed, and could not be: `crm_account` has no *customer-since* field under any name, and the closest real date sits on the contract (**Signed Date**).
 - **Historical cases** from the same account and contact.
 - The **product** referenced in the case.
 - The **Support Knowledge** knowledge base for matching articles.
