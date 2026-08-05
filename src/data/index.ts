@@ -17,13 +17,20 @@
  *   - `_shared.ts`      seed doctrine + helpers used by more than one family
  *   - `catalog.seed.ts` products, and the catalogue price lookup
  *   - `sales.seed.ts`   accounts, contacts, leads, opportunities, opp lines
- *   - `service.seed.ts` tasks, cases, knowledge articles
+ *   - `service.seed.ts` tasks, cases, knowledge articles, events + attendees
  *   - `marketing.seed.ts` campaigns, campaign members
  *   - `revenue.seed.ts` contracts, quotes, quote lines, forecasts
  */
 import { products } from './catalog.seed';
 import { accounts, contacts, leads, opportunities, opportunityLineItems } from './sales.seed';
-import { tasks, cases, knowledgeArticles } from './service.seed';
+import {
+  tasks,
+  cases,
+  knowledgeArticles,
+  events,
+  eventAttendeesFromContacts,
+  eventAttendeesFromLeads,
+} from './service.seed';
 import { campaigns, campaignMembersFromLeads, campaignMembersFromContacts } from './marketing.seed';
 import { contracts, quotes, quoteLineItems, forecasts } from './revenue.seed';
 
@@ -64,6 +71,12 @@ export const CrmSeedData = [
   opportunityLineItems,
   tasks,
   cases,
+  // Events come after the five objects their `related_to_*` lookups resolve
+  // against (accounts, contacts, leads, opportunities, cases); the attendee
+  // junctions come after the events they hang off.
+  events,
+  eventAttendeesFromContacts,
+  eventAttendeesFromLeads,
   campaigns,
   campaignMembersFromLeads,
   campaignMembersFromContacts,

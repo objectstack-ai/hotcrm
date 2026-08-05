@@ -167,12 +167,13 @@ const claim = (key: string, objectName: string, label: string) => ({
  * independence comes from the seeds staying out of that window, not from this
  * claim; the claim only settles who owns the SETTLED periods.
  *
- * `crm_campaign` and `crm_knowledge_article` close the list (#716). Cross the
+ * `crm_campaign` and `crm_knowledge_article` came next (#716). Cross the
  * registered objects three ways — seeded × declares `owner_id` × claimed here —
- * and after these two the "seeded and owner-scoped but unclaimed" cell is
+ * and after those two the "seeded and owner-scoped but unclaimed" cell was
  * EMPTY. `test/flow-scheduled.test.ts` computes that cross-table rather than
  * reading a hand-written roster, so the next seeded owner-scoped object cannot
- * be forgotten the way these two were.
+ * be forgotten the way these two were — and `crm_event` at the foot of this
+ * list is that mechanism paying out for the first time (see below).
  *
  * What hid them is their OWD. The nine above are `private` (or
  * `controlled_by_parent`), where an ownerless row is INVISIBLE and the defect
@@ -217,6 +218,30 @@ const claim = (key: string, objectName: string, label: string) => ({
  * prejudge it — a real deployment assigns ownership through import or territory
  * rules before this sweep has anything to pick up (see the header). The demo's
  * job is only that no seeded row is left owned by nobody.
+ *
+ * `crm_event` joins the list the day the activity model gets demo rows (#671),
+ * and it is the computed cross-table above doing its job rather than an
+ * obstacle: `crm_event` declares `owner_id`, so the moment `src/data/` shipped
+ * events the "seeded AND owner-scoped AND unclaimed" cell stopped being empty
+ * and `test/flow-scheduled.test.ts` went red. Its OWD is `private` and
+ * `sales_rep` reads it `own`-only, which is #702's shape exactly: an ownerless
+ * interaction is invisible to every rep, absent from the owner axis of
+ * `event_metrics` (the Sales Activity dashboard's "Activity by Rep" bar) and
+ * editable by nobody, `system_admin` aside.
+ *
+ * `crm_event_attendee` is seeded alongside it and deliberately stays OUT. It
+ * declares no `owner_id` at all — `sharingModel: 'controlled_by_parent'`, its
+ * access derived from the event it hangs off — so there is no ownership to
+ * claim, and stamping one would write a column the object does not have. That
+ * is the cross-table's OTHER direction, which the same test asserts.
+ *
+ * No collision with the runtime writer, the question #702 taught us to ask
+ * before claiming anything: `log_call` / `log_meeting` / `schedule_meeting`
+ * insert their `crm_event` row with an explicit `owner_id` (an action body runs
+ * `isSystem`, so it stamps ownership itself — see `src/actions/global.actions.ts`),
+ * which means a rep's own interactions are never ownerless and this sweep never
+ * selects them. Unlike `crm_forecast` there is no shared window to keep clear:
+ * seeds and the actions write disjoint rows, not two producers of one row.
  */
 const CLAIMED_OBJECTS: ReadonlyArray<[key: string, objectName: string, label: string]> = [
   ['leads', 'crm_lead', 'Leads'],
@@ -230,6 +255,7 @@ const CLAIMED_OBJECTS: ReadonlyArray<[key: string, objectName: string, label: st
   ['forecasts', 'crm_forecast', 'Forecasts'],
   ['campaigns', 'crm_campaign', 'Campaigns'],
   ['knowledge', 'crm_knowledge_article', 'Knowledge Articles'],
+  ['events', 'crm_event', 'Events'],
 ];
 
 /** One pass per object. */

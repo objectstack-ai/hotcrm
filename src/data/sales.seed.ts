@@ -50,6 +50,63 @@ import { lineItemRecords } from './catalog.seed';
 //
 // Phone numbers moved with the addresses: a Munich account answering a Denver
 // number is the kind of incoherence an evaluator notices before the feature.
+//
+// ─── `last_activity_date`: the churn clock, and who is allowed to set it ───
+//
+// The three "Quiet 30 / 60 / 90+ Days" tiles on the Sales Activity dashboard,
+// `at_risk_accounts` and `customer_churn_signals` all window this one column,
+// so the demo needs a real DISTRIBUTION across the three bands — not the
+// cluster inside a fortnight it used to be, which left every churn surface
+// empty while the data looked populated (#671).
+//
+// Authoring it here is legitimate, and the boundary is worth stating because it
+// is NOT the `billing_country` case three paragraphs up (doctrine rule 3 in
+// `./_shared.ts`). `billing_country` is `readonly` and DERIVED — the hook
+// recomputes it from `billing_address` on every write that carries one, so a
+// seeded copy would be a second source of truth for a value nothing else owns.
+// `last_activity_date` is neither: #592 removed the `readonly` flag precisely
+// so hooks could write it, and no hook derives it from anything on the account.
+// It is a HISTORICAL fact — "when did anyone last speak to this customer" — and
+// authoring history into a field whose writers only ever stamp the current date
+// is doctrine rule 1, the same licence `stage_entry_date` and `created_date`
+// already use.
+//
+// What the writers DO impose is a constraint on the events seeded beside these
+// rows, and it decides the whole layout below. Lifecycle hooks run over seed
+// writes (#617), and two of them stamp TODAY on an account:
+//
+//   · `event_activity_bubble` — on any `held` event, walking up from its
+//     contact / opportunity / case (`src/objects/event.hook.ts`);
+//   · `task_activity_bubble`  — on any task seeded already completed.
+//
+// Neither reads the activity's own timestamp: a `held` meeting seeded 45 days
+// ago still stamps the day the demo was seeded. So an account may carry an
+// authored age ONLY if nothing in the seed book bubbles to it; otherwise the
+// authored value is overwritten at seed time and the demo shows something
+// nobody wrote (doctrine rule 2). Hence the three-way split:
+//
+//   today()   Acme, Wayne, Vertex, Stark — every account something in the seed
+//             book bubbles to. Acme / Wayne / Vertex carry `held` events;
+//             Stark carries the completed welcome-package task, which has
+//             bubbled since long before this issue (its authored `daysAgo(5)`
+//             was being silently overwritten). Authored as today because that
+//             is exactly what the bubble writes, so the value is right whether
+//             or not hooks fire.
+//   6–8 days  Lattice, Globex — recency from channels this seed book does not
+//             model (an email thread, a signature). They carry only `planned`
+//             and `cancelled` events, neither of which bubbles.
+//   41/72/104 Northwind, Initech, Apex — one per churn band. Nothing held
+//             reaches them; each carries a BOOKED re-engagement meeting
+//             instead, which is #592's whole point: a meeting on the calendar
+//             is not an interaction that happened, and only `held` moves the
+//             clock. Internal pipeline motion (a `stage_entry_date`) is not
+//             customer contact either, which is why a stagnating deal can sit
+//             on a silent account — that pairing is what the stagnation sweep
+//             and the churn tiles are each looking at from one side.
+//
+// `test/activity-seed-coverage.test.ts` recomputes the bubble's reachability
+// from the seeds themselves and fails if a held event ever reaches one of the
+// three quiet accounts, so the split above cannot rot into a comment.
 export const accounts = defineSeed(Account, {
   mode: 'upsert',
   externalId: 'name',
@@ -67,7 +124,8 @@ export const accounts = defineSeed(Account, {
       segment: 'growth',
       health_score: 'healthy',
       next_renewal_date: cel`daysFromNow(45)`,
-      last_activity_date: cel`daysAgo(3)`,
+      // Held: workshop, demo, calls and an onsite visit — see `service.seed.ts`.
+      last_activity_date: cel`today()`,
       description: `**Strategic Customer · Enterprise Tier**
 
 Acme Corporation is a Series-C robotics & industrial automation
@@ -107,6 +165,8 @@ three regional teams (NA, EMEA, APAC).
       website: 'https://globex.example.com',
       tier: 'enterprise',
       segment: 'net_new',
+      // Only a booked demo and a cancelled review — neither bubbles, so this
+      // 8-day age survives the seed load and stays inside every churn window.
       last_activity_date: cel`daysAgo(8)`,
     },
     {
@@ -122,7 +182,11 @@ three regional teams (NA, EMEA, APAC).
       segment: 'at_risk',
       health_score: 'at_risk',
       next_renewal_date: cel`daysFromNow(75)`,
-      last_activity_date: cel`daysAgo(21)`,
+      // QUIET 60+ — the `at_risk` segment and health score, with a clock that
+      // finally agrees with them: ten weeks of silence against a renewal 75
+      // days out. A no-show call 55 days ago was the last attempt; the
+      // re-engagement call on the calendar is `planned`, so it moves nothing.
+      last_activity_date: cel`daysAgo(72)`,
     },
     {
       name: 'Stark Medical',
@@ -137,7 +201,10 @@ three regional teams (NA, EMEA, APAC).
       website: 'https://starkmed.example.com',
       tier: 'mid_market',
       segment: 'stable',
-      last_activity_date: cel`daysAgo(5)`,
+      // The completed 'Send welcome package' task bubbles here on every seed
+      // load, so this has ALWAYS resolved to today — the previous `daysAgo(5)`
+      // was authored and then overwritten before anyone could read it.
+      last_activity_date: cel`today()`,
     },
     {
       name: 'Wayne Enterprises',
@@ -152,7 +219,8 @@ three regional teams (NA, EMEA, APAC).
       segment: 'growth',
       health_score: 'healthy',
       next_renewal_date: cel`daysFromNow(28)`,
-      last_activity_date: cel`daysAgo(1)`,
+      // Held: negotiation meeting, security-addendum call, governance webinar.
+      last_activity_date: cel`today()`,
     },
     {
       name: 'Northwind Energy',
@@ -166,7 +234,10 @@ three regional teams (NA, EMEA, APAC).
       website: 'https://northwind.example.com',
       tier: 'enterprise',
       segment: 'net_new',
-      last_activity_date: cel`daysAgo(2)`,
+      // QUIET 30+ — the field-service pilot was lost 80 days ago and the grid
+      // program has not been worked since. The discovery workshop is booked,
+      // not held.
+      last_activity_date: cel`daysAgo(41)`,
       description: 'A regional energy provider evaluating a unified operations and customer-data platform.',
     },
     {
@@ -182,7 +253,8 @@ three regional teams (NA, EMEA, APAC).
       segment: 'growth',
       health_score: 'healthy',
       next_renewal_date: cel`daysFromNow(62)`,
-      last_activity_date: cel`daysAgo(4)`,
+      // Held: rollout meeting, analytics demo, committee call, retrospective.
+      last_activity_date: cel`today()`,
       description: 'An analytics SaaS customer expanding usage from the data team to its revenue organization.',
     },
     {
@@ -201,6 +273,8 @@ three regional teams (NA, EMEA, APAC).
       segment: 'stable',
       health_score: 'healthy',
       next_renewal_date: cel`daysFromNow(36)`,
+      // Signed the analytics expansion six days ago; the renewal review is
+      // booked, not held, so nothing bubbles and this age stands.
       last_activity_date: cel`daysAgo(6)`,
       description: 'A higher-education technology company consolidating admissions, student-success and alumni workflows.',
     },
@@ -218,7 +292,10 @@ three regional teams (NA, EMEA, APAC).
       website: 'https://apexlogistics.example.com',
       tier: 'enterprise',
       segment: 'net_new',
-      last_activity_date: cel`daysAgo(9)`,
+      // QUIET 90+ — a lost compliance deal 110 days ago and a data-hub
+      // evaluation that has been silent for a quarter. Only a booked
+      // re-engagement call.
+      last_activity_date: cel`daysAgo(104)`,
       description: 'A fast-growing logistics provider assessing a modern data hub for its operations and commercial teams.',
     },
   ]
@@ -376,7 +453,13 @@ export const leads = defineSeed(Lead, {
       industry: 'education',
       rating: 4,
       next_followup_date: cel`daysFromNow(1)`,
-      last_contacted_date: cel`daysAgo(3)`,
+      // A seeded `held` event names this lead, and `event_activity_bubble`
+      // stamps `last_contacted_date` with the SEED MOMENT rather than the
+      // event's own timestamp — so an authored age here would be overwritten
+      // the instant it was written (doctrine rule 2 in `./_shared.ts`). Day
+      // granularity is the honest match: the seed writes today's UTC midnight,
+      // the bubble writes today's instant, and both render as "today".
+      last_contacted_date: cel`today()`,
     },
     {
       first_name: 'Lisa',
@@ -395,7 +478,8 @@ export const leads = defineSeed(Lead, {
       // prevent (#591).
       rating: 5,
       next_followup_date: cel`daysFromNow(0)`,
-      last_contacted_date: cel`daysAgo(1)`,
+      // Same as David Kim above: a `held` qualification call names this lead.
+      last_contacted_date: cel`today()`,
     },
     // ─── Generated demo leads — spread across 6 months for monthly-bucket reports
     // (`LeadInflowByMonthSourceReport`). Each `last_contacted_date` lives in a
