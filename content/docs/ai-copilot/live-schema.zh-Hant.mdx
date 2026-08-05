@@ -9,7 +9,9 @@ description: HotCRM 的 AI 在結構變更發生的那一刻就能看到——�
 
 HotCRM 與眾不同。**結構即系統提示詞。**
 
-每次銷售 Copilot 回答資料問題時，它都會針對 `@objectstack/runtime` 的元資料服務呼叫 `describe_object`——該服務會重新讀取即時註冊表。在 10:00:00 新增一個欄位，下一位使用者在 10:00:05 提問時就能看到它。
+每次助理回答資料問題時，它都會針對 `@objectstack/runtime` 的元資料服務呼叫 `describe_object`——該服務會重新讀取即時註冊表。在 10:00:00 新增一個欄位，下一位使用者在 10:00:05 提問時就能看到它。
+
+這個助理就是平台的 `ask` 智慧體。HotCRM 不自行撰寫任何智慧體——應用只交付**技能（skills）**，技能依 surface 親和性掛載到平台智慧體上（ADR-0063 §1/§2）。下面示範的行為，來自 HotCRM 的 `live_data` 技能搭載於 `ask` 之上。
 
 ## 30 秒示範
 
@@ -23,16 +25,16 @@ curl -X POST $HOTCRM/api/v1/ai/tools/add_field/invoke \
     "type": "number"
   }'
 
-# 2. Sales rep asks Copilot — five seconds later.
+# 2. Sales rep asks the assistant — five seconds later.
 curl -X POST $HOTCRM/api/v1/ai/chat \
   -d '{
-    "agent": "sales_copilot",
+    "agent": "ask",
     "messages": [{ "role": "user",
       "content": "Top 5 accounts by health_score — cite IDs." }]
   }'
 ```
 
-Copilot 的工具呼叫軌跡：
+智慧體的工具呼叫軌跡：
 
 1. `describe_object('crm_account')` → 看到 `health_score`（number）。
 2. `query_records('crm_account', orderBy: [{ field: 'health_score', order: 'desc' }], limit: 5)`。
@@ -46,8 +48,8 @@ Copilot 的工具呼叫軌跡：
 |------------------|--------------------------------------------------------------------------------|
 | 元資料服務 | 物件 + 欄位的單一事實來源。每次寫入時熱重載。       |
 | `describe_object`| 內建 AI 工具。每次呼叫都重新讀取元資料。從不快取。               |
-| 即時資料技能  | 捆綁 `describe_object` + `query_records`，並促使智慧體先行檢查。 |
-| 銷售 Copilot    | 始終在回答前檢查結構。自動呈現未知欄位。 |
+| `live_data` 技能  | 捆綁 `describe_object` + `query_records`，並促使智慧體先行檢查。 |
+| `ask` 智慧體    | 平台的資料智慧體。載入該技能，因此回答前一律檢查結構，並自動呈現未知欄位。 |
 
 執行完整示範：
 
