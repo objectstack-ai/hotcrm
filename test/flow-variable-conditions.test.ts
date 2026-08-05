@@ -48,6 +48,13 @@ import stack from '../objectstack.config';
  * over the edges that decide. (The node arm stays in the collector: it costs
  * nothing and catches a re-introduced copy.)
  *
+ * That paragraph described an intent, not the tree: when #650 measured it, 8
+ * `decision` nodes across 4 flows still carried the inert singular copy, and
+ * this file's own "finds conditions to check at all" case was asserting that at
+ * least one such copy EXISTED — pinning the defect while the prose above denied
+ * it. The copies are gone and the invariant is now enforced, on all three of
+ * its parts, by `test/flow-decision-authority.test.ts`.
+ *
  * **How variables reach CEL.** `evaluateCondition` flattens the run's variable
  * Map into one object and evaluates with `{ extra: { ...vars, vars }, record: vars }`
  * — so a variable `X` is readable BOTH bare (`X.f`) and scoped (`vars.X.f`).
@@ -239,8 +246,17 @@ describe('flow-variable conditions guard every FIELD they read', () => {
     // below pass over an empty list.
     expect(sites.length).toBeGreaterThanOrEqual(10);
     expect(sites.some((s) => s.kind === 'edge')).toBe(true);
-    expect(sites.some((s) => s.kind === 'node:condition')).toBe(true);
     expect(sites.some((s) => variableFieldReads(s.source).length > 0)).toBe(true);
+
+    // This used to additionally assert `some(kind === 'node:condition')` — an
+    // assertion that could only pass while `decision` nodes still carried the
+    // INERT singular copy the header above says this repo no longer authors.
+    // The "guard the guard" check was itself pinned to the defect, and #650
+    // (which deleted the last 8 copies) turned it red. The arm stays in the
+    // collector to catch a re-introduced copy, but it is now expected to be
+    // EMPTY, and that invariant is enforced properly — statically and against
+    // the real engine — by `test/flow-decision-authority.test.ts`.
+    expect(sites.filter((s) => s.kind === 'node:condition')).toEqual([]);
   });
 
   it('leads every field read with has(vars.<root>) and has(vars.<root>.<field>)', () => {

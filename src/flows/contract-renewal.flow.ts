@@ -58,30 +58,8 @@ export const ContractRenewalFlow: Flow = {
         body: {
           nodes: [
             {
+              // Gateway only — the predicate lives on the out-edge (#650).
               id: 'check_notice_window', type: 'decision', label: 'Within Notice Window?',
-              // `end_date` is a DATE field and arrives as `YYYY-MM-DD`, but CEL's
-              // `timestamp()` only accepts a full ISO 8601 datetime and throws
-              // otherwise ("timestamp() requires a string in ISO 8601 format").
-              // Appending the time part is what makes this evaluate instead of
-              // blowing up mid-sweep — a defect that only became REACHABLE once
-              // the condition was wrapped as a real CEL envelope, because the
-              // old bare string was never evaluated at all.
-              //
-              // TOTALITY (#643): `currentContract` is a LOOP ITEM over
-              // `contractList`, which `get_record` filled from `data.find` —
-              // every element is a raw driver row, sparse in exactly the way
-              // #633 measured. `end_date` is `required` on `crm_contract` so
-              // that column is always written, but `renewal_notice_days`
-              // (`defaultValue: 30`) and `auto_renewal` (`defaultValue: false`)
-              // are only DEFAULTED, and a row written before the default
-              // existed carries neither the column nor a value. Both operands
-              // additionally need `!= null`, because the abort here is not the
-              // usual overload error: `null + "T00:00:00Z"` and `int(null)`
-              // each blow up inside the function call, one contract into a
-              // 500-row sweep, taking the whole scheduled run with them.
-              config: { condition: P`has(vars.currentContract) && has(vars.currentContract.end_date) && has(vars.currentContract.renewal_notice_days)
-                && vars.currentContract.end_date != null && vars.currentContract.renewal_notice_days != null
-                && timestamp(vars.currentContract.end_date + "T00:00:00Z") <= daysFromNow(int(vars.currentContract.renewal_notice_days))` },
             },
             {
               // Idempotency gate: the sweep matches the same contract every
@@ -101,8 +79,8 @@ export const ContractRenewalFlow: Flow = {
               },
             },
             {
+              // Gateway only — the predicate lives on the out-edge (#650).
               id: 'check_not_reminded', type: 'decision', label: 'First Reminder?',
-              config: { condition: P`existingRenewalTask == null` },
             },
             {
               id: 'create_renewal_task', type: 'create_record', label: 'Create Renewal Task',
@@ -130,12 +108,8 @@ export const ContractRenewalFlow: Flow = {
               },
             },
             {
+              // Gateway only — the predicate lives on the out-edge (#650).
               id: 'check_auto_renewal', type: 'decision', label: 'Auto-Renewal On?',
-              // TOTALITY (#643): same loop item, same sparse driver row. Only
-              // an explicit `true` opens a renewal deal, so an absent column
-              // reads as "auto-renewal off" — the conservative branch.
-              config: { condition: P`has(vars.currentContract) && has(vars.currentContract.auto_renewal)
-                && vars.currentContract.auto_renewal == true` },
             },
             {
               // Second gate: never open a second renewal opportunity while one
@@ -153,8 +127,8 @@ export const ContractRenewalFlow: Flow = {
               },
             },
             {
+              // Gateway only — the predicate lives on the out-edge (#650).
               id: 'check_no_open_renewal', type: 'decision', label: 'No Open Renewal Deal?',
-              config: { condition: P`existingRenewalOpp == null` },
             },
             {
               id: 'create_renewal_opp', type: 'create_record', label: 'Open Renewal Opportunity',
@@ -176,9 +150,31 @@ export const ContractRenewalFlow: Flow = {
           edges: [
             // Only act when inside the per-contract notice window; gates with
             // no matching edge simply end the iteration, so the loop moves on.
-            // Guarded identically to `check_notice_window` — see the note there.
-            // The EDGE is the live site: the engine never reads a `decision`
-            // node's singular `config.condition`, only `config.conditions[]`.
+            //
+            // The EDGE is the ONLY site (#650): a `decision` node's singular
+            // `config.condition` is never read — the executor reads the plural
+            // `config.conditions[]` and nothing else — so a copy on the node
+            // would be inert metadata that drifts silently. `check_notice_window`
+            // is therefore a bare gateway and this predicate is authored once.
+            //
+            // `end_date` is a DATE field and arrives as `YYYY-MM-DD`, but CEL's
+            // `timestamp()` only accepts a full ISO 8601 datetime and throws
+            // otherwise ("timestamp() requires a string in ISO 8601 format").
+            // Appending the time part is what makes this evaluate instead of
+            // blowing up mid-sweep.
+            //
+            // TOTALITY (#643): `currentContract` is a LOOP ITEM over
+            // `contractList`, which `get_record` filled from `data.find` —
+            // every element is a raw driver row, sparse in exactly the way
+            // #633 measured. `end_date` is `required` on `crm_contract` so
+            // that column is always written, but `renewal_notice_days`
+            // (`defaultValue: 30`) and `auto_renewal` (`defaultValue: false`)
+            // are only DEFAULTED, and a row written before the default existed
+            // carries neither the column nor a value. Both operands
+            // additionally need `!= null`, because the abort here is not the
+            // usual overload error: `null + "T00:00:00Z"` and `int(null)` each
+            // blow up inside the function call, one contract into a 500-row
+            // sweep, taking the whole scheduled run with them.
             { id: 'b1', source: 'check_notice_window', target: 'find_existing_task', type: 'conditional', condition: P`has(vars.currentContract) && has(vars.currentContract.end_date) && has(vars.currentContract.renewal_notice_days)
               && vars.currentContract.end_date != null && vars.currentContract.renewal_notice_days != null
               && timestamp(vars.currentContract.end_date + "T00:00:00Z") <= daysFromNow(int(vars.currentContract.renewal_notice_days))`, label: 'In window' },
@@ -186,6 +182,9 @@ export const ContractRenewalFlow: Flow = {
             { id: 'b3', source: 'check_not_reminded', target: 'create_renewal_task', type: 'conditional', condition: P`existingRenewalTask == null`, label: 'First reminder' },
             { id: 'b4', source: 'create_renewal_task', target: 'notify_owner', type: 'default' },
             { id: 'b5', source: 'notify_owner', target: 'check_auto_renewal', type: 'default' },
+            // TOTALITY (#643): same loop item, same sparse driver row. Only an
+            // explicit `true` opens a renewal deal, so an absent column reads
+            // as "auto-renewal off" — the conservative branch.
             { id: 'b6', source: 'check_auto_renewal', target: 'find_existing_renewal_opp', type: 'conditional', condition: P`has(vars.currentContract) && has(vars.currentContract.auto_renewal)
               && vars.currentContract.auto_renewal == true`, label: 'Auto-renew' },
             { id: 'b7', source: 'find_existing_renewal_opp', target: 'check_no_open_renewal', type: 'default' },
