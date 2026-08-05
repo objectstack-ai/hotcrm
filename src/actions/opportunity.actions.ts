@@ -64,23 +64,32 @@ export const CloneOpportunityAction: Action = {
 /**
  * Mass Update Opportunity Stage.
  *
- * KNOWN-BROKEN in console 16.1.0 — kept DEFINED, no longer wired, tracked in
- * issue #508. No invocation path currently executes it: modal submits resolve
- * `target` as an object name (400), the selection-bar bulk button is a
- * client-side no-op (zero network requests), and the header toolbar path
- * rejects multi-row selections, so `input.selectedIds` never arrives.
- * Script-typed (modal is provably dead) with a recordId fallback so a
- * single-row invocation works the moment the toolbar delivers it.
+ * SINGLE-RECORD ONLY today, and that half now works. #508 split into two on
+ * the 17.0.0-rc.2 retest:
  *
- * The list view no longer lists it in `bulkActions` (#588): that button was
- * the one path that failed *silently* — success toast, nothing written — so it
- * read as data loss rather than as a tracked gap. This definition stays put so
- * the restore is a one-line edit in `src/views/opportunity.view.ts`; do it in
- * the PR that closes #508, and fix the `ctx.api...update(id, {...})` call
- * pinned in `test/action-sandbox.test.ts` at the same time.
+ *   - the SINGLE-row toolbar path reaches this body — the param dialog renders
+ *     and the console POSTs `{ recordId, params: { stage } }`. What it then hit
+ *     was this body's own bug: it called `update(id, { stage })`, but `ctx.api`
+ *     is the engine repo facade, whose update takes `(data, options)`. The id
+ *     landed in the `data` slot and every invocation 400'd with
+ *     `update('crm_opportunity') does not recognise option 'stage'`. Fixed
+ *     below, and executed end-to-end in `test/action-sandbox.test.ts`.
+ *   - the MULTI-row path is still dead upstream (objectstack-ai/objectstack
+ *     #5568): the console rejects a multi-row selection client-side (zero
+ *     network requests), a top-level `selectedIds` is not delivered to the
+ *     body, and `params.selectedIds` is refused by the action-param validator
+ *     as undeclared. So `input.selectedIds` cannot arrive by any route yet —
+ *     the branch below is kept because it is what the fix lands into.
  *
- * Until upstream ships bulk-selection delivery, stage moves happen via the
- * pipeline kanban drag-and-drop, inline grid editing, or the record form.
+ * The list view therefore still does NOT list it in `bulkActions` (#588): that
+ * button was the one path that failed *silently* — success toast, nothing
+ * written — so it read as data loss rather than as a tracked gap. Restoring it
+ * is a one-line edit in `src/views/opportunity.view.ts`; do it in the PR that
+ * closes #508, once objectstack#5568 ships multi-row delivery and the selection
+ * bar is verified to POST `selectedIds`.
+ *
+ * Until then, multi-record stage moves happen via the pipeline kanban
+ * drag-and-drop, inline grid editing, or the record form.
  */
 export const MassUpdateStageAction: Action = {
   name: 'mass_update_stage',
@@ -100,7 +109,14 @@ export const MassUpdateStageAction: Action = {
       if (!ids.length) throw new Error('mass_update_stage: no opportunity selected');
       let updated = 0;
       for (const id of ids) {
-        await ctx.api.object('crm_opportunity').update(id, { stage: newStage });
+        // \`update(data, options)\` — \`ctx.api\` is the engine repo facade, whose
+        // update takes a DOCUMENT, not an id. \`updateById(id, data)\` exists on
+        // ObjectRepository but NOT on the facade the runtime builds when it has
+        // no scoped context, so this spelling is the only one live on both.
+        await ctx.api.object('crm_opportunity').update(
+          { id: id, stage: newStage },
+          { where: { id: id } },
+        );
         updated++;
       }
       return { stage: newStage, updated };

@@ -16,6 +16,7 @@ import {
   runActionBody,
   runHookBody,
   type Rec,
+  type SandboxEngine,
 } from './helpers/action-sandbox';
 
 /**
@@ -252,9 +253,6 @@ describe('every script action body executes under QuickJS', () => {
     ),
   };
 
-  /** Asserted separately below, because it does not currently reach the engine. */
-  const BROKEN = 'crm_opportunity:mass_update_stage';
-
   it('covers every action the runtime will sandbox', () => {
     // Keyed the way the runtime keys its own registry, so fifteen distinct
     // activity bodies are fifteen distinct cases rather than three.
@@ -269,7 +267,7 @@ describe('every script action body executes under QuickJS', () => {
     expect(stale, `INVOCATIONS names actions that no longer exist:\n  ${stale.join('\n  ')}`).toEqual([]);
   });
 
-  it.each(SCRIPT_ACTIONS.map(keyOf).filter((k) => k !== BROKEN))('%s', async (key) => {
+  it.each(SCRIPT_ACTIONS.map(keyOf))('%s', async (key) => {
     const { opts, seed } = (INVOCATIONS[key] ?? INVOCATIONS[key.split(':')[1]!])!;
     const engine = makeSandboxEngine(seed ?? {});
     const { result } = await runActionBody(action(key), { ...opts, engine });
@@ -277,26 +275,124 @@ describe('every script action body executes under QuickJS', () => {
   });
 
   /**
-   * The defect this executor was built to be able to find, recorded rather than
-   * fixed: `mass_update_stage` calls `update(id, { stage })`, but `ctx.api` is
-   * the engine repo facade, whose update takes `(data, options)` — so the id
-   * lands in the `data` slot and the engine refuses the write (the same
-   * rejection pinned against the real kernel at the top of this file). Every
-   * invocation of this action fails, and nothing before this file could say so:
-   * the metadata is valid, the body parses, and the action has no live
-   * invocation path to fail on (#508, `src/actions/opportunity.actions.ts`).
+   * `mass_update_stage` — the defect this executor was built to be able to
+   * find, now fixed and pinned the other way round (#508, CRM half).
    *
-   * Fixing the body is a change to a shipped action and belongs to whoever
-   * revives it — at which point this assertion is the thing that tells them the
-   * behaviour moved.
+   * The body used to call `update(id, { stage })`, but `ctx.api` is the engine
+   * repo facade, whose update takes `(data, options)` — so the id landed in the
+   * `data` slot and the engine refused the write. Live, that was an HTTP 400 on
+   * every single-row dispatch: `update('crm_opportunity') does not recognise
+   * option 'stage'`. The rejection ITSELF is still pinned, action-independently,
+   * at the top of this file (`rejects update(id, doc)`), against both the real
+   * kernel and the stub — so nothing here has to re-prove that the wrong
+   * spelling is wrong. What these three assert is the shipped body: the call it
+   * makes, and the row that moves because of it.
+   *
+   * Reverting the body to `update(id, { … })` turns all three red, plus the
+   * `it.each` case above, which now covers this action like any other.
+   *
+   * The MULTI-record leg still has no live invocation path — the console cannot
+   * deliver a selection to an action at all (objectstack-ai/objectstack#5568),
+   * which is why #508 stays open and `bulkActions` stays un-wired. The loop is
+   * covered anyway, because the moment that delivery lands the only thing
+   * standing between it and a mass stage move is this body.
    */
-  it(`${BROKEN} is rejected by the engine — it passes an id where the facade wants a document`, async () => {
-    const { opts, seed } = INVOCATIONS[BROKEN.split(':')[1]!]!;
-    const engine = makeSandboxEngine(seed ?? {});
-    await expect(runActionBody(action(BROKEN), { ...opts, engine })).rejects.toThrow(
-      /Update requires an ID or options\.multi=true/,
-    );
-    expect(engine.rows('crm_opportunity')[0]!.stage, 'the stage move silently landed').toBe('prospecting');
+  describe('mass_update_stage writes the stage it was given (#508, CRM half)', () => {
+    const MASS_UPDATE = 'crm_opportunity:mass_update_stage';
+
+    /**
+     * A real ObjectQL, handed to the body runner in the `engine` slot.
+     *
+     * `runActionBody` passes `engine.engine` through as the runner factory's
+     * `ql`, and `buildSandboxApi` wraps whatever it gets in the very same
+     * `buildEngineRepoFacade` production builds: an ObjectQL instance exposes
+     * no `.object()`, and this harness supplies no `executionContext`, so both
+     * of the earlier branches are skipped. What the body meets here is
+     * therefore the production facade over the production kernel — only the
+     * `SandboxEngine` recorder side is missing, which this leg does not use.
+     */
+    const asBodyEngine = (kernel: unknown): SandboxEngine =>
+      ({ engine: kernel } as unknown as SandboxEngine);
+
+    const makeKernel = () =>
+      ObjectQL.create({
+        datasources: { default: new InMemoryDriver({ persistence: false }) },
+        objects: {
+          crm_opportunity: {
+            name: 'crm_opportunity',
+            fields: { id: { type: 'text' }, name: { type: 'text' }, stage: { type: 'text' } },
+          },
+        } as never,
+      });
+
+    let ql: Awaited<ReturnType<typeof makeKernel>>;
+
+    beforeAll(async () => {
+      ql = await makeKernel();
+    });
+    afterAll(async () => {
+      await ql?.close();
+    });
+
+    it('calls the facade with (data, options) — and the stub row moves', async () => {
+      const engine = makeSandboxEngine({ crm_opportunity: [{ id: 'opp_1', stage: 'qualification' }] });
+      const { result } = await runActionBody(action(MASS_UPDATE), {
+        objectName: 'crm_opportunity',
+        record: { id: 'opp_1' },
+        input: { stage: 'needs_analysis' },
+        engine,
+      });
+      const [call] = engine.callsFor('crm_opportunity', 'update');
+      // The document in the `data` slot, the predicate in `options` — the id is
+      // never a positional argument.
+      expect(call!.args[0]).toEqual({ id: 'opp_1', stage: 'needs_analysis' });
+      expect(call!.args[1]).toEqual({ where: { id: 'opp_1' } });
+      expect(engine.rows('crm_opportunity')[0]!.stage).toBe('needs_analysis');
+      expect(result).toEqual({ stage: 'needs_analysis', updated: 1 });
+    });
+
+    it('moves the STORED stage on a real kernel — the single-row path end to end', async () => {
+      // The exact live 400 from the rc.2 acceptance run: a `qualification` deal
+      // dispatched single-row to `needs_analysis`, which never applied.
+      const api = ql.createContext({ isSystem: true });
+      const row = await api.object('crm_opportunity').insert({
+        name: 'Acme Expansion',
+        stage: 'qualification',
+      });
+
+      const { result } = await runActionBody(action(MASS_UPDATE), {
+        objectName: 'crm_opportunity',
+        record: { id: row.id },
+        input: { stage: 'needs_analysis' },
+        engine: asBodyEngine(ql),
+      });
+
+      expect(result).toEqual({ stage: 'needs_analysis', updated: 1 });
+      // Read back from the driver, not from the body's return value: the return
+      // value was always honest about what the body INTENDED.
+      const stored = await api.object('crm_opportunity').findOne({ where: { id: row.id } });
+      expect(stored?.stage, 'the stage move never reached the store').toBe('needs_analysis');
+    });
+
+    it('walks every id of a selection, once the console can deliver one', async () => {
+      const api = ql.createContext({ isSystem: true });
+      const a = await api.object('crm_opportunity').insert({ name: 'Deal A', stage: 'prospecting' });
+      const b = await api.object('crm_opportunity').insert({ name: 'Deal B', stage: 'proposal' });
+
+      const { result } = await runActionBody(action(MASS_UPDATE), {
+        objectName: 'crm_opportunity',
+        // No `record`: a selection-scoped dispatch carries no single recordId,
+        // which is exactly why the body prefers `input.selectedIds`.
+        input: { stage: 'negotiation', selectedIds: [a.id, b.id] },
+        engine: asBodyEngine(ql),
+      });
+
+      expect(result).toEqual({ stage: 'negotiation', updated: 2 });
+      for (const id of [a.id, b.id]) {
+        const stored = await api.object('crm_opportunity').findOne({ where: { id } });
+        expect(stored?.stage).toBe('negotiation');
+      }
+    });
   });
 
   it('clone_opportunity copies the required fields onto a fresh prospecting deal', async () => {
