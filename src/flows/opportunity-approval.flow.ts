@@ -35,6 +35,24 @@ export const OpportunityApprovalFlow: Flow = {
   description: 'Tiered approval for opportunities: manager review > $100K, director sign-off > $500K.',
   type: 'record_change',
   status: 'active',
+  // Same user-less exposure as every record-change flow (ADR-0049, #1888,
+  // #3760) — and the one with teeth. Measured on 17.0.0-rc.2: a $150K renewal
+  // created by the `runAs: 'system'` contract_renewal sweep fired this flow
+  // with no trigger user, and the run died at `get_opportunity`. The deal sat
+  // at `approval_status: 'not_required'`, unlocked, with no approval request
+  // ever opened — the gate was bypassed by the writer simply not carrying a
+  // session. An approval control that only engages for logged-in writers is
+  // not a control.
+  //
+  // Elevating the USER-driven runs too is not merely acceptable here, it is
+  // required. This gate exists to CONSTRAIN the submitter, so the submitter's
+  // own scope is the wrong identity to evaluate it under; and
+  // `mark_approved` / `mark_rejected` stamp `approval_status` on a record the
+  // approval node holds locked (`lockRecord: true`), which only a platform
+  // write may land. The approval node itself already opens its request under
+  // the platform identity while re-attaching the deciding user for
+  // attribution, so this declaration aligns the flow with the node it drives.
+  runAs: 'system',
 
   variables: [
     { name: 'opportunityId', type: 'text', isInput: true, isOutput: false },

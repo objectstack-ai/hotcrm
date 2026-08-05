@@ -17,6 +17,21 @@ export const TaskUrgentAlertFlow: Flow = {
   description: 'On new urgent task: notify the owner.',
   type: 'record_change',
   status: 'active',
+  // A record-change flow fired by a SYSTEM write carries no trigger user
+  // either (ADR-0049, #1888, #3760), and most urgent tasks in this app are
+  // machine-written: `case_status_side_effects` opens the escalation follow-up
+  // task, and the scheduled sweeps create their own — none of those writes
+  // carries a session.
+  //
+  // Measured honestly on 17.0.0-rc.2: this flow has NO data node (start →
+  // notify → end), so the refusal does not reach it today and declaring
+  // `system` changes nothing observable. Declared for the same reason as
+  // `contact_welcome` — see the fuller note there: the recorded decision is
+  // that record-change automation runs as the platform, so a data node added
+  // later inherits an elevation that was reasoned about rather than one
+  // discovered as a production refusal. No data operation exists to scope, so
+  // elevating the user-driven runs costs nothing.
+  runAs: 'system',
   variables: [],
   nodes: [
     {

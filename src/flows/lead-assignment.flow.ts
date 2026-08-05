@@ -31,6 +31,19 @@ export const LeadAssignmentFlow: Flow = {
   description: 'On new lead: set a rating-based follow-up SLA and alert the lead owner.',
   type: 'record_change',
   status: 'active',
+  // A record-change flow fired by a SYSTEM write carries no trigger user
+  // either (ADR-0049, #1888, #3760). This is the population the flow is FOR:
+  // leads arrive from web-to-lead, a CSV import, a partner integration or a
+  // seed load, none of which carry a user session. Measured on 17.0.0-rc.2, a
+  // user-less run refuses `sla_hot` / `sla_std` outright, so the lead lands
+  // with no follow-up SLA and no alert at all — silently, since the refusal
+  // surfaces only in the server log.
+  //
+  // Elevating the USER-driven runs too is correct: the SLA stamp is the
+  // platform's routing decision about the row that just fired the trigger
+  // (keyed to `{record.id}`), not the submitting rep's own edit, and a rep who
+  // may create a lead is not thereby guaranteed edit rights on it.
+  runAs: 'system',
 
   variables: [],
 

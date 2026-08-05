@@ -53,9 +53,13 @@ const RUNTIME_TEST_FILES = [
  * shortcut — and a stale entry (a flow that has since gained coverage) fails
  * the suite too, so it cannot rot.
  */
-const PENDING_FLOWS = new Set([
-  // Spans a 24h `wait` node; needs timer-resume support in the harness.
-  'case_csat_followup',
+const PENDING_FLOWS = new Set<string>([
+  // Empty, and the "no stale entries" case below is what emptied it.
+  // `case_csat_followup` was pending because it spans a 24h `wait` node — but
+  // the part of it that needed proving turned out to be reachable without
+  // timer-resume support: #684's user-less run drives it through the real
+  // engine as far as the suspension, which is where its execution identity is
+  // decided. See test/flow-record-change.test.ts.
 ]);
 
 const testSource = (() => {

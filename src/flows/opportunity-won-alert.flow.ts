@@ -21,6 +21,18 @@ export const OpportunityWonAlertFlow: Flow = {
   description: 'On closed_won opportunities over $100K: notify owner + manager.',
   type: 'record_change',
   status: 'active',
+  // A record-change flow fired by a SYSTEM write carries no trigger user
+  // either (ADR-0049, #1888, #3760). Deals reach `closed_won` through
+  // machinery as well as through a rep's own save — `lead_conversion` and the
+  // `contract_renewal` sweep both write opportunities, and the latter is
+  // itself `runAs: 'system'`.
+  //
+  // Measured honestly on 17.0.0-rc.2: this flow has NO data node (start →
+  // notify → end), so the refusal does not reach it today and declaring
+  // `system` changes nothing observable. Declared for the same reason as
+  // `contact_welcome` — see the fuller note there. Nothing to scope, so
+  // elevating the user-driven runs costs nothing.
+  runAs: 'system',
   variables: [],
   nodes: [
     {

@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
+import { CaseCsatFollowupFlow } from '../src/flows/case-csat-followup.flow';
 import { CaseEscalationFlow, CaseEscalationOnCreateFlow } from '../src/flows/case-escalation.flow';
 import { ContactWelcomeFlow } from '../src/flows/contact-welcome.flow';
 import { LeadAssignmentFlow } from '../src/flows/lead-assignment.flow';
@@ -358,5 +359,181 @@ describe('insert-time twin flows', () => {
     };
     expect(startConditionHolds(OpportunityApprovalOnCreateFlow as unknown as Rec, pending))
       .toBe(startConditionHolds(OpportunityApprovalFlow as unknown as Rec, pending));
+  });
+});
+
+/**
+ * Execution identity under a USER-LESS trigger (#684).
+ *
+ * The metadata side of this invariant — every record-change flow declares
+ * `runAs: 'system'` — lives in `actions-flows-integrity.test.ts`, enumerated
+ * from the compiled stack so a new flow cannot slip past it. What that guard
+ * cannot show is WHY, so these run the real engine on the real flows with no
+ * trigger user and assert on what comes out.
+ *
+ * `makeFlowHarness().trigger()` always supplies `userId: 'user_1'`, which is
+ * exactly the healthy path the 17.0 acceptance sweep found working. The broken
+ * path is the other one, so these call `engine.execute` directly and omit
+ * `userId` — the shape of a write made by seed loading, an integration, or
+ * another `runAs:'system'` flow.
+ *
+ * Direction of the counter-proof, decided before running it: with `runAs`
+ * stripped back to the schema default the run must FAIL at its first data node
+ * with the engine's `[runAs]` refusal, and the record must be untouched. That
+ * is the pre-fix behaviour reproduced on demand — not a hypothetical — so the
+ * assertions below cannot pass vacuously by producing nothing.
+ */
+describe('record-change flows under a user-less trigger (#684)', () => {
+  type Run = { success: boolean; error?: string; summary?: { nodes?: Rec[] } };
+
+  /** Fire `flow` with NO trigger user, the way a system write does. */
+  async function fire(name: string, flow: Rec, record: Rec, previous: Rec, seed: Record<string, Rec[]> = {}) {
+    const h = makeFlowHarness({ [name]: flow as never }, seed);
+    const result = (await (h.engine as unknown as {
+      execute(n: string, c: Rec): Promise<Run>;
+    }).execute(name, { params: {}, event: 'record_change', record, previous })) as Run;
+    return { h, result };
+  }
+
+  const nodeStatus = (r: Run, id: string) =>
+    (r.summary?.nodes ?? []).find((n) => n.nodeId === id)?.status;
+
+  /** The flow as it was authored before #684: `runAs` back at its default. */
+  const withoutRunAs = (flow: Rec): Rec => {
+    const { runAs: _dropped, ...rest } = flow;
+    return rest;
+  };
+
+  const critical = (over: Rec = {}): Rec => ({
+    id: 'c1', case_number: 'CASE-1', priority: 'critical', status: 'new',
+    escalated_date: null, owner_id: 'agent1', ...over,
+  });
+
+  it('case_escalation escalates a case written with no session', async () => {
+    const { h, result } = await fire(
+      'case_escalation', CaseEscalationFlow as unknown as Rec,
+      critical(), {}, { crm_case: [critical()] },
+    );
+    expect(String(result.error ?? ''), 'the runAs refusal is back').not.toContain('[runAs]');
+    expect(result.success).toBe(true);
+    expect(h.store.crm_case[0].status).toBe('escalated');
+    expect(h.store.crm_case[0].is_escalated).toBe(true);
+    expect(h.notifications).toHaveLength(1);
+  });
+
+  it('…and REFUSES the same write once runAs is dropped (the shape #684 fixed)', async () => {
+    const { h, result } = await fire(
+      'case_escalation', withoutRunAs(CaseEscalationFlow as unknown as Rec),
+      critical(), {}, { crm_case: [critical()] },
+    );
+    expect(result.success).toBe(false);
+    expect(String(result.error)).toContain('[runAs] refusing a data operation');
+    // It dies at the FIRST data node, before anything is written — which is
+    // why a freshly seeded org had never once run this automation.
+    expect(nodeStatus(result, 'get_case')).toBe('failure');
+    expect(h.store.crm_case[0].status, 'the case was escalated despite the refusal').toBe('new');
+    expect(h.notifications).toHaveLength(0);
+  });
+
+  it('opportunity_approval reaches its approval node for a system-created deal', async () => {
+    // The governance hole the acceptance sweep demonstrated: a $150K renewal
+    // created by the runAs:'system' contract_renewal sweep fired this flow
+    // user-less and died at `get_opportunity`, leaving the deal unlocked at
+    // approval_status 'not_required' with no request ever opened.
+    const deal = {
+      id: 'o1', name: 'Acme Renewal', amount: 150_000, stage: 'negotiation',
+      approval_status: 'not_required', owner_id: 'rep1',
+    };
+    const { result } = await fire(
+      'opportunity_approval', OpportunityApprovalFlow as unknown as Rec,
+      deal, { ...deal, amount: 50_000 }, { crm_opportunity: [{ ...deal }] },
+    );
+    expect(String(result.error ?? ''), 'the deal is bypassing approval again').not.toContain('[runAs]');
+    expect(nodeStatus(result, 'get_opportunity')).toBe('success');
+    // The run then stops at `manager_review` for a harness-only reason: the
+    // approval node ships in @objectstack/plugin-approvals, which this
+    // in-memory harness does not install. That is NOT a runAs failure, and it
+    // is asserted here so a future reader does not read it as one.
+    expect(nodeStatus(result, 'manager_review')).toBe('failure');
+    expect(String(result.error)).toContain("No executor registered for node type 'approval'");
+  });
+
+  it('…and never gets that far once runAs is dropped', async () => {
+    const deal = {
+      id: 'o1', name: 'Acme Renewal', amount: 150_000, stage: 'negotiation',
+      approval_status: 'not_required', owner_id: 'rep1',
+    };
+    const { result } = await fire(
+      'opportunity_approval', withoutRunAs(OpportunityApprovalFlow as unknown as Rec),
+      deal, { ...deal, amount: 50_000 }, { crm_opportunity: [{ ...deal }] },
+    );
+    expect(String(result.error)).toContain('[runAs] refusing a data operation');
+    expect(nodeStatus(result, 'get_opportunity')).toBe('failure');
+    expect(nodeStatus(result, 'manager_review'), 'approval was never requested').toBeUndefined();
+  });
+
+  it('lead_assignment stamps the SLA on an integration-written lead', async () => {
+    const lead = {
+      id: 'l1', company: 'Acme', rating: 5, owner_id: 'rep1',
+      first_name: 'Ada', last_name: 'Lovelace',
+    };
+    const { h, result } = await fire(
+      'lead_assignment', LeadAssignmentFlow as unknown as Rec,
+      lead, {}, { crm_lead: [{ ...lead }] },
+    );
+    expect(String(result.error ?? '')).not.toContain('[runAs]');
+    expect(h.store.crm_lead[0].next_followup_date, 'hot lead got no SLA date').toBeTruthy();
+    expect(h.notifications).toHaveLength(1);
+  });
+
+  it('…and gets neither SLA nor alert once runAs is dropped', async () => {
+    const lead = {
+      id: 'l1', company: 'Acme', rating: 5, owner_id: 'rep1',
+      first_name: 'Ada', last_name: 'Lovelace',
+    };
+    const { h, result } = await fire(
+      'lead_assignment', withoutRunAs(LeadAssignmentFlow as unknown as Rec),
+      lead, {}, { crm_lead: [{ ...lead }] },
+    );
+    expect(String(result.error)).toContain('[runAs] refusing a data operation');
+    expect(h.store.crm_lead[0].next_followup_date).toBeUndefined();
+    expect(h.notifications).toHaveLength(0);
+  });
+
+  /**
+   * MEASURED, and deliberately recorded because the issue that prompted #684
+   * over-stated it: the four notify-only record-change flows
+   * (`contact_welcome`, `task_urgent_alert`, `opportunity_won_alert`,
+   * `case_csat_followup`) were NOT refused on 17.0.0-rc.2. The guard fires at
+   * `get_record` / `create_record` / `update_record` / `delete_record`, and
+   * `notify` dispatches through the messaging service without a run data
+   * context, so a user-less run of these completes and delivers.
+   *
+   * They carry `runAs: 'system'` anyway — the declaration records that
+   * record-change automation runs as the platform, so a data node added later
+   * inherits a reasoned elevation instead of a production refusal. This case
+   * pins the measurement so nobody "fixes" a break that was never there, and
+   * so the day it DOES start being refused, we hear about it here.
+   */
+  it('the notify-only siblings deliver either way (they were never the broken ones)', async () => {
+    const closed = { id: 'c2', case_number: 'CASE-2', status: 'closed', owner_id: 'agent1' };
+    for (const flow of [CaseCsatFollowupFlow, withoutRunAs(CaseCsatFollowupFlow as unknown as Rec)]) {
+      const { h, result } = await fire(
+        'case_csat_followup', flow as unknown as Rec, closed, { status: 'open' },
+      );
+      expect(String(result.error ?? '')).not.toContain('[runAs]');
+      // The run suspends at the P1D timer; the notify is on the other side.
+      expect(h.notifications).toHaveLength(0);
+    }
+
+    const contact = {
+      id: 'ct1', first_name: 'Ada', last_name: 'Lovelace',
+      owner_id: 'rep1', email_opt_out: false,
+    };
+    for (const flow of [ContactWelcomeFlow, withoutRunAs(ContactWelcomeFlow as unknown as Rec)]) {
+      const { h, result } = await fire('contact_welcome', flow as unknown as Rec, contact, {});
+      expect(String(result.error ?? '')).not.toContain('[runAs]');
+      expect(h.notifications, 'a notify-only flow was refused — the guard widened').toHaveLength(1);
+    }
   });
 });

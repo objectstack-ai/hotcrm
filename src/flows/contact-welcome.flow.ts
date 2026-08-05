@@ -25,6 +25,25 @@ export const ContactWelcomeFlow: Flow = {
   description: 'On new contact: prompt the owner to welcome them.',
   type: 'record_change',
   status: 'active',
+  // A record-change flow fired by a SYSTEM write carries no trigger user
+  // either (ADR-0049, #1888, #3760) — and this flow exists FOR that
+  // population: the start condition below already documents the seeded /
+  // integration-written contacts whose `owner_id` the security middleware
+  // never stamped because the write carried no session (#548).
+  //
+  // Measured honestly on 17.0.0-rc.2: this flow has NO data node today (start
+  // → notify → end), the runAs refusal covers get/create/update/delete only,
+  // and `notify` dispatches through the messaging service without a run data
+  // context — so a user-less run completes and delivers today, and this
+  // declaration changes nothing observable right now. It is declared anyway
+  // because the decision being recorded is "record-change automation runs as
+  // the platform", not "this flow currently happens to have no data node".
+  // The day a data node is added — or a start-node `config.expand`, which is
+  // the remedy the notify node's own error message recommends and which reads
+  // through the same guarded path — the elevation has already been reasoned
+  // about here rather than discovered as a refusal in production. Elevation is
+  // harmless for the user-driven runs: there is no data operation to scope.
+  runAs: 'system',
   variables: [],
   nodes: [
     {

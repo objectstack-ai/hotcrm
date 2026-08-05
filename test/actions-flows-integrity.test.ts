@@ -1,5 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { readdirSync, readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
 import stack from '../objectstack.config';
 
@@ -372,4 +373,96 @@ describe('case escalation trigger does not fight the close action', () => {
       expect(condition).toContain('record.status != "resolved"');
     },
   );
+});
+
+/**
+ * Execution identity of the RECORD-CHANGE flows (#684).
+ *
+ * `runAs` decides who a run's data operations execute as. Under the schema
+ * default `'user'` a run that resolved NO trigger user has no identity to
+ * scope to, so the engine REFUSES its data operations rather than letting them
+ * run unscoped — the fail-open ADR-0049 forbids (#1888, #3760).
+ *
+ * The trap this guard exists for is that "no trigger user" is NOT a
+ * schedule-only condition. A record-change flow is fired by a WRITE, and a
+ * write made without a session — seed loading, an integration, a webhook, or
+ * another `runAs:'system'` flow's own write — carries no user into the run it
+ * triggers. Ten scheduled flows had already been given `runAs:'system'`, each
+ * with an authored comment saying so; every record-change flow was left on the
+ * default, and on the 17.0 GA acceptance sweep that cost 12 failed runs on one
+ * boot plus a demonstrated approval bypass (a $150K renewal created by the
+ * contract_renewal sweep never opened its approval request).
+ *
+ * The platform's build-time lint (`flow-runas-unscoped`) rejects the
+ * statically-decidable shapes — schedule, time-relative, api — but explicitly
+ * NOT this one, because whether a record-change trigger carries a user is only
+ * knowable at run time. So the app owns the invariant, and this is it.
+ *
+ * Enumerated from the COMPILED STACK, not from a hand-maintained import list:
+ * a new record-change flow registered in `src/flows/index.ts` is covered the
+ * moment it is registered, which is the only way this guard cannot go stale.
+ */
+describe('record-change flows declare their execution identity (#684)', () => {
+  const recordChangeFlows = flows.filter((f) => f.type === 'record_change');
+
+  it('there are record-change flows to check (the filter still matches)', () => {
+    // Cheap canary: if `type` were ever renamed or the flows re-typed, every
+    // assertion below would pass vacuously over an empty list.
+    expect(recordChangeFlows.length).toBeGreaterThanOrEqual(9);
+  });
+
+  it.each(recordChangeFlows.map((f) => f.name))(
+    '%s declares runAs:"system"',
+    (name) => {
+      const f = flow(name)!;
+      expect(
+        f.runAs,
+        `flow '${name}' is record-change but leaves runAs at the default 'user'. ` +
+          'A write that carries no session (seed, integration, webhook, or another ' +
+          "runAs:'system' flow) fires it with no trigger user, and its data operations " +
+          'are then REFUSED at run time — silently, in the server log. Declare ' +
+          "runAs:'system' to make the elevation explicit, or, if this flow genuinely " +
+          "must act as the triggering user, exempt it here with the reasoning written down.",
+      ).toBe('system');
+    },
+  );
+
+  it('the insert-time twins inherit the parent’s identity rather than restating it', () => {
+    // Both twins are built by spreading their parent, so `runAs` rides along.
+    // Pinning it keeps a future refactor from turning the spread into an
+    // explicit field list that quietly drops it.
+    for (const [twin, parent] of [
+      ['case_escalation_on_create', 'case_escalation'],
+      ['opportunity_approval_on_create', 'opportunity_approval'],
+    ] as const) {
+      expect(flow(twin)!.runAs, `${twin} drifted from ${parent}`).toBe(flow(parent)!.runAs);
+    }
+  });
+
+  it('every record-change flow explains its elevation in the source', () => {
+    // The ten scheduled flows each carry an authored rationale beside their
+    // `runAs`. An undocumented `runAs:'system'` is indistinguishable from a
+    // copy-paste, and elevation is exactly the decision that must not be made
+    // by copy-paste: it applies to the USER-driven runs too, which today
+    // execute scoped to the triggering user.
+    const missing: string[] = [];
+    for (const file of readdirSync(new URL('../src/flows/', import.meta.url))) {
+      if (!file.endsWith('.flow.ts')) continue;
+      const lines = readFileSync(new URL(`../src/flows/${file}`, import.meta.url), 'utf8').split('\n');
+      if (!lines.some((l) => /^\s*type:\s*'record_change'\s*,?\s*$/.test(l))) continue;
+      // The DECLARATION line, not a mention of `runAs: 'system'` in prose —
+      // these rationales cite each other and every scheduled precedent, so a
+      // substring search lands inside a comment and reports the file as
+      // undocumented (it did, on four of the seven, first run).
+      const at = lines.findIndex((l) => /^\s*runAs:\s*'system'\s*,\s*$/.test(l));
+      if (at < 0) { missing.push(`${file}: no runAs: 'system' declaration`); continue; }
+      // Walk back over the contiguous comment block directly above it.
+      let comment = 0;
+      for (let i = at - 1; i >= 0 && /^\s*(\/\/|\*|\/\*)/.test(lines[i]); i--) comment++;
+      if (comment < 3) {
+        missing.push(`${file}: runAs: 'system' carries ${comment} line(s) of rationale above it, expected >= 3`);
+      }
+    }
+    expect(missing, missing.join('\n')).toEqual([]);
+  });
 });

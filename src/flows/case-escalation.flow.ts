@@ -11,6 +11,24 @@ export const CaseEscalationFlow: Flow = {
   description: 'Automatically escalate high-priority cases',
   type: 'record_change',
   status: 'active',
+  // A record-change flow fired by a SYSTEM write carries no trigger user
+  // either — the user-less exposure is NOT schedule-only (ADR-0049, #1888,
+  // #3760), and the platform's own build-time lint cannot see this shape
+  // because it is only knowable at run time. Measured on 17.0.0-rc.2: a
+  // user-less run refuses the very first data node — "[runAs] refusing a data
+  // operation (object 'crm_case', event 'record-after-update')" — so a case
+  // raised by the seed loader, an integration, or another runAs:'system'
+  // flow's write silently keeps its critical priority forever.
+  //
+  // Elevating the USER-driven runs too is correct here: escalation is a
+  // service-level policy, not the writer's own edit. Both data nodes are keyed
+  // to `{record.id}` — the row that just fired the trigger — so user scope
+  // buys no restriction that matters, while it does add a failure mode: an
+  // agent may legitimately raise a case without holding edit rights on the
+  // escalation lifecycle fields (`is_escalated` / `escalated_date` / `status`).
+  // This also puts the flow on the same footing as `case_sla_monitor`, which
+  // performs the same escalation on a schedule under `runAs: 'system'`.
+  runAs: 'system',
 
   variables: [
     { name: 'caseId', type: 'text', isInput: true, isOutput: false },

@@ -23,6 +23,22 @@ export const CaseCsatFollowupFlow: Flow = {
   description: 'When a case closes, wait a day then prompt the owner to collect a satisfaction rating.',
   type: 'record_change',
   status: 'active',
+  // A record-change flow fired by a SYSTEM write carries no trigger user
+  // either (ADR-0049, #1888, #3760), and here that is the NORMAL path, not an
+  // edge case: the close transition this flow waits on is written by the
+  // `close_case` screen flow, which is itself `runAs: 'system'`, so runs
+  // spawned from the Close Case button are user-less by construction.
+  //
+  // Measured honestly on 17.0.0-rc.2: this flow has NO data node (start →
+  // wait → notify → end), and a user-less run was driven end to end through
+  // the real engine — it suspends at the P1D timer and, on resume, the notify
+  // node delivers. The refusal covers get/create/update/delete only, so
+  // declaring `system` changes nothing observable today. Declared for the same
+  // reason as `contact_welcome` — see the fuller note there — and with extra
+  // force here: this flow resumes long after its trigger, so any data node
+  // added to the post-wait leg would run in whatever identity the suspended
+  // run carried, which for the common path is none.
+  runAs: 'system',
 
   variables: [],
 
