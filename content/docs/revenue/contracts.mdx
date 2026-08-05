@@ -74,12 +74,14 @@ When the contract enters its renewal window, the system creates a follow-up task
 ## What the system does automatically
 
 ### On contract activation
-The owner promotes the contract to *Activated*:
+Changing a contract's status **to** *Activated* runs two writes, and only these two:
 
-1. **Account status → Customer** if it was a Prospect.
-2. **Customer Since date** stamped on the account if blank.
-3. **Welcome email** sent to the primary contact (configurable).
-4. **Notification** to the account owner.
+1. **Signed Date** stamped on the contract — today's date, and only when the contract has none yet. Set Signed Date in the same edit that activates the contract and your date is kept.
+2. **Account type → Customer** — every account that is not already a *Customer* is promoted, so this catches a *Partner* or a *Former Customer* just as it catches a *Prospect*.
+
+Nothing is sent and nobody is told. Activation raises no notification for the contract owner or the account owner, and no message goes to the primary contact — there is no outbound customer email here, and no setting behind one. There is no *Customer Since* field on the account either: an account keeps no date of its own for when it became a customer, so cohort reporting has to read the contract's signed date or start date.
+
+Both writes run *after* the save, with failures logged rather than raised, so the contract stays activated even if promoting the account fails. They also hang off an **update** — a contract that arrives already *Activated* (a data import, seed data, an integration that writes the record in one shot) triggers neither, and its account stays a *Prospect*.
 
 ### Daily — expiration sweep
 Each night at midnight the system finds *Activated* contracts whose end date has passed:
@@ -131,5 +133,5 @@ If your org wants contracts to follow the account, an admin has to author that, 
 
 ## Tips for admins
 
-- The contract activation flow and expiration sweep can be customized. See [Administration › Automation](/docs/administration/automation).
+- Contract activation is an **object hook** (`src/objects/contract.hook.ts`), not a flow — that is where the signed-date stamp and the account promotion live, and it is not in the flow list. The expiration sweep and the renewal reminder *are* scheduled flows. See [Administration › Automation](/docs/administration/automation).
 - Contract types and billing frequency picklists are extensible.
