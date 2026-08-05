@@ -153,3 +153,82 @@ describe('bulk dispatch is declared the way the renderer reads it', () => {
       .not.toContain('_selectedIds');
   });
 });
+
+/**
+ * The OTHER contract, pinned on the app's only bare-string wiring (#813).
+ *
+ * `create_campaign` is wired as `bulkActions: ['create_campaign']` on the lead
+ * list — the per-record fan-out. The renderer promotes the action to a def
+ * carrying its own label / icon / params / `visible` and dispatches it ONCE PER
+ * selected row, each call carrying that row's `recordId` and no selection
+ * array. So the body's whole input is `ctx.recordId`, and multi-lead enrolment
+ * already works: it just arrives one lead at a time.
+ *
+ * Until #813 that body also carried `const selected = Array.isArray(
+ * input.selectedIds) ? input.selectedIds : [];` with a `ctx.recordId` fallback
+ * behind it. The limb never executed — nothing delivers a no-underscore
+ * `selectedIds` on EITHER contract — and its comment promised, in the present
+ * tense, that "when the runtime starts passing selectedIds the bulk path lights
+ * up". It would not have. The limb is gone; these pin why it must not come back
+ * AND the wiring the surviving body depends on.
+ *
+ * The two halves are one test on purpose: `ctx.recordId` is correct *because*
+ * the view uses the bare string. Move the lead list to an aggregate def and the
+ * body stops receiving a recordId at all — every dispatch would answer "no lead
+ * selected". Whichever half changes, this goes red rather than the button.
+ */
+describe('create_campaign is the per-record fan-out, body and wiring agreeing (#813)', () => {
+  const leadLists = () => {
+    const leadView = views.find((v) => (v.list?.data?.object ?? v.object) === 'crm_lead');
+    expect(leadView, 'no crm_lead view').toBeTruthy();
+    return listsOf(leadView!);
+  };
+
+  it('the lead list wires it as a bare string, not an aggregate def', () => {
+    const lists = leadLists();
+    const wiredBare = lists.some((l) => (l.bulkActions ?? []).includes('create_campaign'));
+    expect(
+      wiredBare,
+      'the lead list no longer names create_campaign in `bulkActions`. That bare string IS the '
+        + "per-record contract the body is written for — it reads `ctx.recordId` and nothing else. "
+        + 'Dropping it removes multi-lead enrolment from the selection bar; replacing it with an '
+        + 'aggregate def sends the whole selection in `_selectedIds` and NO recordId, so every '
+        + 'dispatch would throw "no lead selected" (#813).',
+    ).toBe(true);
+
+    const aggregateDefs = lists.flatMap((l) =>
+      ((l.bulkActionDefs ?? []) as AnyRec[]).filter((d) => d?.name === 'create_campaign'),
+    );
+    expect(
+      aggregateDefs,
+      'create_campaign is declared as a bulk DEF on the lead list while its body still reads '
+        + '`ctx.recordId`. Moving it to `execution: \'aggregate\'` is a product decision (one '
+        + 'audit entry and one dedupe read per run instead of per lead, plus all-or-nothing '
+        + 'failure semantics) and requires the body to read `input._selectedIds` in the same '
+        + 'change — see `mass_update_stage` for the finished shape.',
+    ).toEqual([]);
+  });
+
+  it('the body reads ctx.recordId and no undeliverable selection key', () => {
+    const createCampaign = actions.find((a) => a.name === 'create_campaign');
+    expect(createCampaign, 'create_campaign is not defined').toBeTruthy();
+    const source = String(createCampaign!.body?.source ?? '');
+
+    expect(
+      source.includes('ctx.recordId'),
+      'the create_campaign body no longer reads `ctx.recordId` — the per-record fan-out delivers '
+        + 'the lead under exactly that key and carries no selection array',
+    ).toBe(true);
+
+    // Boundary-matched so an `input._selectedIds` read (which would be correct
+    // only alongside an aggregate def, guarded above) does not trip this.
+    expect(
+      /(?<![\w$])input\.selectedIds\b/.test(source),
+      'the create_campaign body reads `input.selectedIds` (no underscore) again. It is not a '
+        + 'fallback and not a forward-compatible limb: on the fan-out contract nothing delivers '
+        + 'any selection array, and on the aggregate contract the key is `_selectedIds`. Top-level '
+        + 'it is never merged into the params bag; under `params.` the strict gate answers 400 '
+        + '`Unknown action param "selectedIds"` (#813).',
+    ).toBe(false);
+  });
+});
