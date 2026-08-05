@@ -78,28 +78,42 @@ export const OpportunityViews = defineView({
     // own `locations: ['list_item']`. Built-in `exportOptions` covers CSV
     // export.
     //
-    // There is deliberately NO `bulkActions` here.
+    // `mass_update_stage` is wired as an AGGREGATE bulk def, not as a bare
+    // `bulkActions: ['mass_update_stage']` string (#508). The two forms are
+    // different dispatch contracts, and only this one moves a whole selection:
     //
-    // `mass_update_stage` used to be listed, and the selection-bar button that
-    // produced is a pure client-side no-op in this console: selecting rows and
-    // clicking it fires ZERO network requests and then raises a generic
-    // "Action completed successfully" toast (#508, path 2). A rep therefore
-    // watches a stage move report success and never happen — which reads as
-    // silent data loss, not as a tracked platform gap. Not shipping the
-    // control is the honest state until the platform can deliver the
-    // selection.
+    //   - bare string  → per-record fan-out: the action is dispatched ONCE PER
+    //     selected row with `recordId` set. N requests, N stage moves.
+    //   - aggregate def → ONE dispatch for the whole selection, carrying every
+    //     id in the builtin `params._selectedIds` and no `recordId`. One
+    //     request, N stage moves, one audit entry.
     //
-    // The action DEFINITION stays in `src/actions/opportunity.actions.ts`
-    // (with its KNOWN-BROKEN note), so restoring the button is one line:
+    // Aggregate is the right shape here because the body already loops over the
+    // selection itself, and because the run is all-or-nothing: a partial result
+    // rejects instead of leaving the bar reporting per-row success it cannot
+    // honour (see the body in `src/actions/opportunity.actions.ts`).
     //
-    //     bulkActions: ['mass_update_stage'],
+    // `execution: 'aggregate'` is REQUIRED on an `operation: 'custom'` def and
+    // is not boilerplate: a custom def without it has no dispatcher, so the
+    // button ticks green once per row and does nothing at all. The spec refuses
+    // that shape at parse time (#4457) — which is also what makes this
+    // declaration safe to trust rather than merely present.
     //
-    // Re-add it in the same PR that closes #508 — i.e. once the selection bar
-    // is verified to POST /api/v1/actions/crm_opportunity/mass_update_stage
-    // with `selectedIds`, and the action body has been fixed to match the
-    // engine facade (pinned in `test/action-sandbox.test.ts`). Until then reps
-    // move stages via the pipeline kanban drag-and-drop, inline grid editing,
-    // or the record form.
+    // History: this list carried the bare-string form until #588 removed it as
+    // a silent no-op, and the removal was read as "the platform cannot deliver
+    // a selection" for two release candidates. It could: the channel is
+    // `params._selectedIds`, the underscore is load-bearing, and nothing was
+    // injecting it precisely BECAUSE this declaration was gone
+    // (objectstack-ai/objectstack#5568, closed works-as-declared).
+    //
+    // The def deliberately carries only the three keys that choose the dispatch
+    // contract. Label, icon, params (the New Stage picker) and `visible` are
+    // promoted from the action itself by the renderer, so the dialog and the
+    // toolbar button cannot drift apart — and the label stays i18n-resolved,
+    // which an inline `label:` here would not be.
+    bulkActionDefs: [
+      { name: 'mass_update_stage', operation: 'custom', execution: 'aggregate' },
+    ],
   },
 
   listViews: {
