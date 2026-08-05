@@ -42,8 +42,8 @@ The lead detail screen has 9 collapsible sections. Open only what you need:
 | **Identity** | Salutation, first/last name, full name |
 | **Company Information** | Company name, job title, industry, annual revenue, employees, website |
 | **Contact Information** | Email, phone, mobile |
-| **Qualification** | Status, rating (0-5 stars), score (0-100), budget, timeline |
-| **Assignment** | Owner, next follow-up date, lead source |
+| **Qualification** | Status, Lead Score (a 1-5 star rating), lead source, next follow-up date, last contacted, disqualification reason |
+| **Assignment** | Owner |
 | **Address** | Mailing address |
 | **Additional Info** | Description, tags |
 | **Communication Preferences** | Email opt-out, do-not-call |
@@ -55,19 +55,40 @@ The available **lead sources** include Web, Referral, Event, Trade Show, Webinar
 
 ## Lead scoring — what the score means
 
-Every lead automatically gets a **score from 0 to 100**, recalculated whenever the lead is created or updated. The score considers:
+A lead carries exactly **one** quality number: **Lead Score**, a **1-5 star rating**. It is the same field the list views show in the *Score* column — there is no separate 0-100 number, and no budget or timeline field behind it.
 
-- **Company size** — bigger company revenue and headcount → higher score.
-- **Industry fit** — Technology, Finance and Healthcare score highest by default.
-- **Job title seniority** — VPs and C-level titles add weight.
-- **Engagement signals** — recent web visits, webinar attendance, etc.
+### Where the stars come from
 
-You can also set a manual **star rating (0-5)** as a human override:
+When a lead is created **without** a rating, the system works one out from the lead's own fields and stores it. Everything it looks at is on the record in front of you — there is no web-visit or engagement tracking behind the number:
 
-- ⭐⭐⭐⭐ or higher → the system flags the lead as **hot** and sets the next follow-up to today.
-- ⭐⭐⭐⭐⭐ → the owner is emailed immediately.
+| What it looks at | Stars added |
+| --- | --- |
+| A business email address — anything that isn't gmail, yahoo, hotmail, outlook, qq or 163 | +1 |
+| Any phone number at all | +0.5 |
+| A senior job title — CEO, CTO, CFO, CIO, COO, Founder, VP, Vice President, Director, Head of | +1.5 |
+| Industry is Technology, Finance or Healthcare | +1 |
+| 200 employees or more | +0.5 |
+| Annual revenue of $10M or more | +0.5 |
 
-> An admin can adjust the scoring weights — see [Administration › Automation](/docs/administration/automation).
+The total is capped at 5, floored at 1 and rounded to a **whole star**: a lead is never scored 0, and half stars are never stored.
+
+Two limits worth knowing:
+
+- It runs **on creation only**. Filling in the job title or the headcount later does *not* re-score the lead — re-rate it yourself if the picture changed.
+- It never overwrites a rating that came in with the lead. Import a lead with a rating, or set one on the create form, and your value is what is kept.
+
+### What the stars trigger
+
+New-lead routing reads the rating once, as the lead lands:
+
+| Rating | Next Follow-up Date it stamps | Alert to the lead's owner |
+| --- | --- | --- |
+| **4 stars or better** | **Tomorrow** | *"Hot lead — assign within 24h"*, sent to both the **inbox and email**, flagged as a warning |
+| **Everything else**, including a lead with no rating at all | **Three days out** | *"New lead to assign"*, **inbox only** |
+
+Four stars is the whole of the hot threshold: a 5-star lead is routed exactly like a 4-star one, and nothing separate happens at five.
+
+> The weights above live in the lead's automation code, not in a setup screen — see the admin tips at the end of this page.
 
 ## Duplicate leads
 
@@ -130,7 +151,7 @@ The Leads list curates no tab row, so the switcher offers every saved view there
 ## Tips for sales reps
 
 - ✅ Keep the **Next Follow-up Date** honest — it is what **🔥 Hot Leads** sorts on, so a stale date buries a live lead at the bottom of the queue. A new lead gets one automatically (four stars or better is due tomorrow, everything else in three days), and **Schedule Follow-up** re-stamps it with the due date of the task you just filed.
-- ✅ Use the star rating if you have a strong gut feel — the score doesn't capture everything.
+- ✅ Set the stars yourself when you have a strong gut feel — a rating you supply on create is kept as-is, and the automatic one only fills in when you leave it blank.
 - ✅ Don't convert too early — a converted lead can't be reverted. Use *Qualified* status while you confirm.
 - ❌ Don't keep noise in *New* forever — disqualify after 3 failed contact attempts.
 
