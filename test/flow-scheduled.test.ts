@@ -1049,9 +1049,29 @@ describe('demo_bootstrap — post-seed ownership claim', () => {
       // row for everyone but `system_admin`.
       'crm_campaign',
       'crm_knowledge_article',
+      // #671: the activity model got demo rows, and `crm_event` declares
+      // `owner_id` under a `private` OWD — so an unclaimed seeded interaction
+      // is invisible to every rep (`sales_rep` reads it `own`-only), missing
+      // from the owner axis of `event_metrics`, and editable by nobody. This is
+      // the cross-table below going red the day the seeds landed, which is the
+      // mechanism working.
+      'crm_event',
     ]) {
       expect(claimed, `demo_bootstrap never claims ${object}`).toContain(object);
     }
+  });
+
+  /**
+   * The other half of #671, and the direction that is easy to get wrong by
+   * copying the line above: `crm_event_attendee` is seeded in the same commit
+   * as `crm_event` but declares NO `owner_id` — its access derives from the
+   * event it hangs off (`sharingModel: 'controlled_by_parent'`). Claiming it
+   * would stamp a column the object does not have, on rows where ownership
+   * means nothing. The computed cross-table below asserts this as a general
+   * rule; this case names the record so a future edit cannot quietly add it.
+   */
+  it('does not claim the attendee junction — it has no ownership to claim', () => {
+    expect(claimedObjects()).not.toContain('crm_event_attendee');
   });
 
   /**
