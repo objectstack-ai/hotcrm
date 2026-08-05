@@ -1533,6 +1533,25 @@ describe('app AI bindings resolve to a platform agent', () => {
  * Derived from `localePacks` rather than a hard-coded list: a fifth locale
  * added to the bundle is held to the same bar the day it appears, instead of
  * silently enjoying an exemption nobody wrote down.
+ *
+ * ### The surface list is derived from the METADATA, never from lint's categories
+ *
+ * The `_sections` assertion below was missing from the first version of this
+ * guard, and its absence is the lesson the rest of the file should be read
+ * against. The surfaces were chosen by reading off `objectstack lint`'s warning
+ * categories — missing-option / -field / -navigation / -page / -action / -view
+ * / -widget / -object. There is no `_sections` category, so sections were never
+ * considered, and the guard inherited the linter's blind spot while reporting
+ * that every locale was complete.
+ *
+ * What that cost: 83 of 85 section headings were untranslated in `ja-JP` and
+ * `es-ES`, so a Japanese user read "Basic Information" and "Ownership & Status"
+ * on every record page under an otherwise fully Japanese UI — while lint
+ * reported zero i18n warnings for that locale (#683).
+ *
+ * A tool's warning list is a record of what someone thought to check, not of
+ * what exists. Every assertion here therefore walks the metadata itself and
+ * asks what it declares; none of them asks a linter what it noticed.
  */
 describe('every locale is complete on every authored surface', () => {
   const packs = (): [string, AnyRec][] => {
@@ -1643,5 +1662,75 @@ describe('every locale is complete on every authored surface', () => {
       }
     }
     expect(bad, `action params with no translated label:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  /**
+   * Section headings — the surface `objectstack lint` cannot see (#683).
+   *
+   * A section is named in two independent places, and both must be collected or
+   * the requirement is understated:
+   *
+   *  1. Every distinct `group` on an object's fields. `fieldGroups` declares the
+   *     English heading for each, but a group used by a field and absent from
+   *     `fieldGroups` still renders a heading, so the FIELDS are the authority
+   *     for which sections exist.
+   *  2. Every `sections[].name` in the page and view tree — at ANY depth. Detail
+   *     pages nest them inside `page:tabs` → components → `properties.sections`,
+   *     and a shallow walk silently misses exactly those, which is how a first
+   *     pass at this derivation under-counted by nine.
+   */
+  const sectionsByObject = (): Map<string, Set<string>> => {
+    const need = new Map<string, Set<string>>();
+    const add = (objectName?: string, name?: string) => {
+      if (!objectName || !name) return;
+      if (!need.has(objectName)) need.set(objectName, new Set());
+      need.get(objectName)!.add(name);
+    };
+
+    for (const obj of objects) {
+      for (const f of Object.values<AnyRec>(obj.fields ?? {})) add(obj.name, f?.group);
+    }
+
+    const walk = (node: AnyRec | AnyRec[] | undefined, bound?: string): void => {
+      if (!node || typeof node !== 'object') return;
+      if (Array.isArray(node)) { for (const x of node) walk(x, bound); return; }
+      const here = node.object ?? node.properties?.object ?? node.data?.object ?? bound;
+      for (const arr of [node.sections, node.properties?.sections]) {
+        if (Array.isArray(arr)) for (const s of arr) add(here, s?.name);
+      }
+      // `fields` is skipped: it is a map of field definitions, not layout, and
+      // descending into it would attribute a field named `sections` as layout.
+      for (const [key, value] of Object.entries(node)) {
+        if (key !== 'fields' && value && typeof value === 'object') walk(value as AnyRec, here);
+      }
+    };
+    for (const page of pages) walk(page, page.object);
+    for (const view of views) walk(view, view.object ?? view.list?.data?.object);
+
+    return need;
+  };
+
+  it('sees a non-trivial set of sections to check', () => {
+    // Without this, a derivation that silently returned nothing would make the
+    // assertion below pass while checking nothing — the failure mode this whole
+    // describe block exists to rule out.
+    const need = sectionsByObject();
+    const total = [...need.values()].reduce((n, s) => n + s.size, 0);
+    expect(need.size, 'no objects declare sections — derivation is broken').toBeGreaterThan(10);
+    expect(total, 'suspiciously few sections found — derivation is broken').toBeGreaterThan(60);
+  });
+
+  it('every form and detail-page section heading is translated', () => {
+    const need = sectionsByObject();
+    const bad: string[] = [];
+    for (const [locale, pack] of packs()) {
+      for (const [objectName, names] of need) {
+        const translated = pack.objects?.[objectName]?._sections ?? {};
+        for (const name of names) {
+          if (!translated[name]?.label) bad.push(`${locale}: ${objectName}.${name}`);
+        }
+      }
+    }
+    expect(bad, `section headings with no translation:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 });

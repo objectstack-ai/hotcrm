@@ -427,6 +427,7 @@ export const zhCN: TranslationData = {
         additional: { label: '附加信息' },
         preferences: { label: '沟通偏好' },
         conversion: { label: '转化' },
+        duplicates: { label: '重复线索管理' },
       },
       _actions: {
         ...activityActions,
@@ -712,6 +713,14 @@ export const zhCN: TranslationData = {
         priority_rank: { label: '优先级排序' },
         reminder_sent: { label: '提醒已发送' },
       },
+      _sections: {
+        basic: { label: '任务信息' },
+        scheduling: { label: '日程安排' },
+        related: { label: '关联记录' },
+        recurrence: { label: '重复规则' },
+        system: { label: '系统' },
+        effort: { label: '进度与工时' },
+      },
       _views: {
         all_tasks: { label: '全部任务' },
         task_board: { label: '任务看板' },
@@ -771,6 +780,14 @@ export const zhCN: TranslationData = {
         landing_page_url: { label: '着陆页' },
         is_active: { label: '是否启用' },
         display_title: { label: '显示名称' },
+      },
+      _sections: {
+        basic: { label: '活动信息' },
+        schedule: { label: '日程安排' },
+        budget: { label: '预算与投资回报' },
+        metrics: { label: '效果数据' },
+        assignment: { label: '归属' },
+        assets: { label: '活动素材' },
       },
       _views: {
         all_campaigns: { label: '全部营销活动' },
@@ -1018,6 +1035,12 @@ export const zhCN: TranslationData = {
         related_to_case: { label: '关联工单' },
         outcome_notes: { label: '会后纪要', help: '达成了什么共识，下一步做什么' },
       },
+      _sections: {
+        basic: { label: '活动信息' },
+        schedule: { label: '日程安排' },
+        related: { label: '关联记录' },
+        outcome: { label: '结果' },
+      },
       _views: {
         all_events: { label: '全部活动' },
         event_calendar: { label: '活动日历' },
@@ -1052,6 +1075,10 @@ export const zhCN: TranslationData = {
         },
         is_organizer: { label: '组织者' },
         invited_date: { label: '邀请时间' },
+      },
+      _sections: {
+        basic: { label: '参与者' },
+        response: { label: '邀请' },
       },
       _views: {
         all_event_attendees: { label: '活动参与者' },

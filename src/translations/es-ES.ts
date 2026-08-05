@@ -136,6 +136,14 @@ export const esES: TranslationData = {
         renewals_due: { label: '🔄 Próximas Renovaciones' },
         at_risk_accounts: { label: '⚠️ Cuentas en Riesgo' },
       },
+      _sections: {
+        basic: { label: 'Información Básica' },
+        financials: { label: 'Datos Financieros' },
+        contact_info: { label: 'Información de Contacto' },
+        ownership: { label: 'Propiedad y Estado' },
+        branding: { label: 'Identidad de Marca' },
+        system: { label: 'Sistema' },
+      },
       _actions: { ...activityActions },
     },
 
@@ -195,6 +203,16 @@ export const esES: TranslationData = {
         all_contacts: { label: 'Todos los Contactos' },
         contact_directory: { label: 'Directorio de Contactos' },
         primary_contacts: { label: 'Contactos Principales' },
+      },
+      _sections: {
+        identity: { label: 'Identidad' },
+        account_info: { label: 'Cuenta y Cargo' },
+        contact_info: { label: 'Información de Contacto' },
+        // Los campos de esta sección se traducen «… de Correo»
+        // (`mailing_street`, `mailing_city`…): el encabezado los acompaña.
+        mailing_address: { label: 'Dirección de Correo' },
+        additional: { label: 'Información Adicional' },
+        preferences: { label: 'Preferencias de Comunicación' },
       },
       _actions: {
         ...activityActions,
@@ -266,6 +284,12 @@ export const esES: TranslationData = {
         my_drafts: { label: 'Mis borradores' },
         stale_articles: { label: 'Obsoletos (>180d)' },
       },
+      _sections: {
+        basic: { label: 'Información del Artículo' },
+        content: { label: 'Contenido' },
+        taxonomy: { label: 'Categorización' },
+        metrics: { label: 'Interacción' },
+      },
     },
 
     crm_forecast: {
@@ -302,6 +326,11 @@ export const esES: TranslationData = {
         all_forecasts: { label: 'Todas las previsiones' },
         this_quarter_forecasts: { label: 'Este trimestre' },
         my_forecast: { label: 'Mi previsión' },
+      },
+      _sections: {
+        basic: { label: 'Instantánea' },
+        amounts: { label: 'Importes' },
+        meta: { label: 'Origen' },
       },
     },
 
@@ -413,6 +442,26 @@ export const esES: TranslationData = {
             message: 'Nada que revisar: se han comprobado todos los correos recapturados.',
           },
         },
+      },
+      _sections: {
+        // Nombres de sección de `record:details` en la página de detalle
+        // (lead_detail.page.ts).
+        info: { label: 'Información del Prospecto' },
+        crm_contact: { label: 'Contacto' },
+        detail: { label: 'Detalle del Prospecto' },
+        address: { label: 'Dirección' },
+        description: { label: 'Descripción' },
+        // Claves de sección del objeto (lead.object.ts) que usan los
+        // formularios de registro.
+        identity: { label: 'Identidad' },
+        company_info: { label: 'Información de la Empresa' },
+        contact_info: { label: 'Información de Contacto' },
+        qualification: { label: 'Calificación' },
+        assignment: { label: 'Asignación' },
+        conversion: { label: 'Conversión' },
+        additional: { label: 'Información Adicional' },
+        preferences: { label: 'Preferencias de Comunicación' },
+        duplicates: { label: 'Gestión de Duplicados' },
       },
       _actions: {
         ...activityActions,
@@ -537,6 +586,25 @@ export const esES: TranslationData = {
         closing_this_quarter: { label: 'Cierres de Este Trimestre' },
         stale_opportunities: { label: '⚠️ Oportunidades Estancadas · Más Tiempo en Etapa Primero' },
       },
+      _sections: {
+        // Nombres de sección de `record:details` en la página de detalle
+        // (opportunity_detail.page.ts).
+        info: { label: 'Información de la Oportunidad' },
+        // La clave `crm_forecast` la comparten la sección de la página de
+        // detalle («Stage & Forecast») y el grupo de campos del objeto
+        // («Forecast & Metrics»). Ambas cubren etapa, probabilidad y
+        // categoría de pronóstico, así que se traduce una sola vez.
+        crm_forecast: { label: 'Etapa y Previsión' },
+        description: { label: 'Descripción' },
+        // Claves de sección del objeto (opportunity.object.ts) que usan los
+        // formularios de registro.
+        basic: { label: 'Información Básica' },
+        financials: { label: 'Datos Financieros' },
+        sales_process: { label: 'Proceso de Venta' },
+        classification: { label: 'Clasificación' },
+        competition: { label: 'Competencia y Campañas' },
+        notes: { label: 'Notas y Próximos Pasos' },
+      },
       _actions: {
         ...activityActions,
         clone_opportunity: {
@@ -629,6 +697,22 @@ export const esES: TranslationData = {
         my_open_cases: { label: 'Mis Casos Abiertos' },
         sla_at_risk: { label: '⏰ SLA en Riesgo' },
       },
+      _sections: {
+        // Nombres de sección de `record:details` en la página de detalle
+        // (case_detail.page.ts).
+        info: { label: 'Información del Caso' },
+        status: { label: 'Estado y SLA' },
+        description: { label: 'Descripción' },
+        // Claves de sección del objeto (case.object.ts) que usan los
+        // formularios de registro. `basic` repite el inglés de `info`
+        // («Case Information»), así que comparte traducción.
+        basic: { label: 'Información del Caso' },
+        origin: { label: 'Origen y Asignación' },
+        sla: { label: 'SLA y Prioridad' },
+        resolution: { label: 'Resolución' },
+        escalation: { label: 'Escalación' },
+        system: { label: 'Sistema' },
+      },
       _actions: {
         ...activityActions,
         escalate_case: {
@@ -700,6 +784,14 @@ export const esES: TranslationData = {
         contract_gantt: { label: 'Plazos del Contrato' },
         contract_timeline: { label: 'Línea de Tiempo' },
       },
+      _sections: {
+        basic: { label: 'Información del Contrato' },
+        parties: { label: 'Partes' },
+        terms: { label: 'Términos y Fechas' },
+        value: { label: 'Valor del Contrato' },
+        status: { label: 'Estado y Aprobación' },
+        renewal: { label: 'Renovación' },
+      },
     },
 
     crm_product: {
@@ -756,6 +848,11 @@ export const esES: TranslationData = {
         product_catalog: { label: 'Catálogo de Productos' },
         low_stock: { label: 'Stock Bajo' },
       },
+      _sections: {
+        basic: { label: 'Información del Producto' },
+        pricing: { label: 'Precios y Facturación' },
+        metadata: { label: 'Recursos' },
+      },
     },
 
     crm_quote: {
@@ -803,6 +900,13 @@ export const esES: TranslationData = {
         all_quotes: { label: 'Todas las Cotizaciones' },
         quote_pipeline: { label: 'Pipeline de Cotizaciones' },
         quote_calendar: { label: 'Calendario de Cotizaciones' },
+      },
+      _sections: {
+        basic: { label: 'Información de la Cotización' },
+        pricing: { label: 'Precios' },
+        terms: { label: 'Términos y Vigencia' },
+        address: { label: 'Direcciones' },
+        system: { label: 'Sistema' },
       },
     },
 
@@ -875,6 +979,14 @@ export const esES: TranslationData = {
         todays_tasks: { label: '📅 Mis Tareas Prioritarias' },
         overdue_tasks: { label: '⏰ Tareas Abiertas · Más Vencidas Primero' },
       },
+      _sections: {
+        basic: { label: 'Información de la Tarea' },
+        scheduling: { label: 'Programación' },
+        related: { label: 'Registros Relacionados' },
+        recurrence: { label: 'Recurrencia' },
+        effort: { label: 'Progreso y Esfuerzo' },
+        system: { label: 'Sistema' },
+      },
     },
 
     crm_campaign: {
@@ -934,6 +1046,16 @@ export const esES: TranslationData = {
         campaign_calendar: { label: 'Calendario de Campañas' },
         campaign_timeline: { label: 'Línea de Tiempo de Marketing' },
       },
+      _sections: {
+        basic: { label: 'Información de Campaña' },
+        schedule: { label: 'Programación' },
+        budget: { label: 'Presupuesto y ROI' },
+        metrics: { label: 'Rendimiento' },
+        // El inglés de este grupo es «Ownership», no «Assignment»: agrupa al
+        // propietario de la campaña, igual que `crm_account.ownership`.
+        assignment: { label: 'Propiedad' },
+        assets: { label: 'Recursos de Campaña' },
+      },
       _actions: {
         enroll_leads: {
           label: 'Inscribir Prospectos',
@@ -990,6 +1112,12 @@ export const esES: TranslationData = {
         upcoming_events: { label: '📅 Próximos · Más cercanos primero' },
         held_events: { label: '✅ Historial de interacciones' },
       },
+      _sections: {
+        basic: { label: 'Información del Evento' },
+        schedule: { label: 'Programación' },
+        related: { label: 'Registros Relacionados' },
+        outcome: { label: 'Resultado' },
+      },
     },
 
     crm_event_attendee: {
@@ -1019,6 +1147,12 @@ export const esES: TranslationData = {
       },
       _views: {
         all_event_attendees: { label: 'Asistentes al evento' },
+      },
+      _sections: {
+        // El inglés es «Attendee» / «Invitation», no el par
+        // «Basic Information» / «Response Tracking» de crm_campaign_member.
+        basic: { label: 'Asistente' },
+        response: { label: 'Invitación' },
       },
     },
 

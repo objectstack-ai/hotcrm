@@ -160,6 +160,14 @@ export const jaJP: TranslationData = {
         renewals_due: { label: '🔄 更新予定' },
         at_risk_accounts: { label: '⚠️ リスクのある取引先' },
       },
+      _sections: {
+        basic: { label: '基本情報' },
+        financials: { label: '財務情報' },
+        contact_info: { label: '連絡先情報' },
+        ownership: { label: '所有者・ステータス' },
+        branding: { label: 'ブランディング' },
+        system: { label: 'システム' },
+      },
       _actions: { ...activityActions },
     },
 
@@ -205,6 +213,14 @@ export const jaJP: TranslationData = {
         all_contacts: { label: '全取引先責任者' },
         contact_directory: { label: '責任者ディレクトリ' },
         primary_contacts: { label: '主担当者' },
+      },
+      _sections: {
+        identity: { label: '基本情報' },
+        account_info: { label: '取引先・役職' },
+        contact_info: { label: '連絡先情報' },
+        mailing_address: { label: '郵送先住所' },
+        additional: { label: 'その他の情報' },
+        preferences: { label: 'コミュニケーション設定' },
       },
       _actions: {
         ...activityActions,
@@ -276,6 +292,12 @@ export const jaJP: TranslationData = {
         my_drafts: { label: '自分の下書き' },
         stale_articles: { label: '古い (>180日)' },
       },
+      _sections: {
+        basic: { label: '記事情報' },
+        content: { label: 'コンテンツ' },
+        taxonomy: { label: '分類' },
+        metrics: { label: '利用状況' },
+      },
     },
 
     crm_forecast: {
@@ -333,6 +355,11 @@ export const jaJP: TranslationData = {
         all_forecasts: { label: 'すべてのフォーキャスト' },
         this_quarter_forecasts: { label: '今四半期' },
         my_forecast: { label: '自分のフォーキャスト' },
+      },
+      _sections: {
+        basic: { label: 'スナップショット' },
+        amounts: { label: '金額' },
+        meta: { label: 'ソース' },
       },
     },
 
@@ -424,6 +451,24 @@ export const jaJP: TranslationData = {
             message: '確認は不要です — 再登録されたメールアドレスはすべてチェック済みです。',
           },
         },
+      },
+      _sections: {
+        // 詳細ページの `record:details` セクション名（lead_detail.page.ts）
+        info: { label: 'リード情報' },
+        crm_contact: { label: '連絡先' },
+        detail: { label: 'リード詳細' },
+        address: { label: '住所' },
+        description: { label: '説明' },
+        // オブジェクト定義のセクションキー（lead.object.ts）— 入力フォームで使用
+        identity: { label: '基本情報' },
+        company_info: { label: '会社情報' },
+        contact_info: { label: '連絡先情報' },
+        qualification: { label: '適格判定' },
+        assignment: { label: '担当者' },
+        additional: { label: 'その他の情報' },
+        preferences: { label: 'コミュニケーション設定' },
+        conversion: { label: '変換' },
+        duplicates: { label: '重複管理' },
       },
       _actions: {
         ...activityActions,
@@ -529,6 +574,19 @@ export const jaJP: TranslationData = {
         stale_opportunities: { label: '⚠️ 停滞商談 · ステージ滞在が長い順' },
         closing_this_quarter: { label: '今四半期にクローズ予定' },
       },
+      _sections: {
+        // 詳細ページの `record:details` セクション名（opportunity_detail.page.ts）
+        info: { label: '商談情報' },
+        crm_forecast: { label: 'ステージ・売上予測' },
+        description: { label: '説明' },
+        // オブジェクト定義のセクションキー（opportunity.object.ts）— 入力フォームで使用
+        basic: { label: '基本情報' },
+        financials: { label: '財務情報' },
+        sales_process: { label: '営業プロセス' },
+        classification: { label: '分類' },
+        competition: { label: '競合・キャンペーン' },
+        notes: { label: 'メモ・次のステップ' },
+      },
       _actions: {
         ...activityActions,
         clone_opportunity: {
@@ -614,6 +672,19 @@ export const jaJP: TranslationData = {
         my_open_cases: { label: '私のオープンケース' },
         sla_at_risk: { label: '⏰ SLA リスクあり' },
       },
+      _sections: {
+        // 詳細ページの `record:details` セクション名（case_detail.page.ts）
+        info: { label: 'ケース情報' },
+        status: { label: 'ステータス・SLA' },
+        description: { label: '説明' },
+        // オブジェクト定義のセクションキー（case.object.ts）— 入力フォームで使用
+        basic: { label: 'ケース情報' },
+        origin: { label: '発生元・振り分け' },
+        sla: { label: 'SLA・優先度' },
+        resolution: { label: '解決' },
+        escalation: { label: 'エスカレーション' },
+        system: { label: 'システム' },
+      },
       _actions: {
         ...activityActions,
         escalate_case: {
@@ -678,6 +749,14 @@ export const jaJP: TranslationData = {
         contract_gantt: { label: '契約期間' },
         contract_timeline: { label: '契約タイムライン' },
       },
+      _sections: {
+        basic: { label: '契約情報' },
+        parties: { label: '契約当事者' },
+        terms: { label: '契約条件・期間' },
+        value: { label: '契約金額' },
+        status: { label: 'ステータス・承認' },
+        renewal: { label: '更新' },
+      },
     },
 
     crm_product: {
@@ -734,6 +813,11 @@ export const jaJP: TranslationData = {
         product_catalog: { label: '製品カタログ' },
         low_stock: { label: '低在庫' },
       },
+      _sections: {
+        basic: { label: '製品情報' },
+        pricing: { label: '価格・請求' },
+        metadata: { label: '関連資料' },
+      },
     },
 
     crm_quote: {
@@ -774,6 +858,13 @@ export const jaJP: TranslationData = {
         all_quotes: { label: '全見積' },
         quote_pipeline: { label: '見積パイプライン' },
         quote_calendar: { label: '見積カレンダー' },
+      },
+      _sections: {
+        basic: { label: '見積情報' },
+        pricing: { label: '価格' },
+        terms: { label: '条件・有効期限' },
+        address: { label: '住所' },
+        system: { label: 'システム' },
       },
     },
 
@@ -840,6 +931,14 @@ export const jaJP: TranslationData = {
         todays_tasks: { label: '📅 私の優先タスク' },
         overdue_tasks: { label: '⏰ オープンタスク · 期限超過が長い順' },
       },
+      _sections: {
+        basic: { label: 'タスク情報' },
+        scheduling: { label: 'スケジュール' },
+        related: { label: '関連レコード' },
+        recurrence: { label: '繰り返し' },
+        effort: { label: '進捗・工数' },
+        system: { label: 'システム' },
+      },
     },
 
     crm_campaign: {
@@ -900,6 +999,14 @@ export const jaJP: TranslationData = {
         campaign_calendar: { label: 'キャンペーンカレンダー' },
         campaign_timeline: { label: 'マーケティングタイムライン' },
       },
+      _sections: {
+        basic: { label: 'キャンペーン情報' },
+        schedule: { label: 'スケジュール' },
+        budget: { label: '予算・ROI' },
+        metrics: { label: '実績' },
+        assignment: { label: '担当者' },
+        assets: { label: 'キャンペーンアセット' },
+      },
       _actions: {
         enroll_leads: {
           label: 'リードを一括登録',
@@ -953,6 +1060,12 @@ export const jaJP: TranslationData = {
         upcoming_events: { label: '📅 開催予定 · 直近順' },
         held_events: { label: '✅ 対話履歴' },
       },
+      _sections: {
+        basic: { label: 'イベント情報' },
+        schedule: { label: 'スケジュール' },
+        related: { label: '関連レコード' },
+        outcome: { label: '実施結果' },
+      },
     },
 
     crm_event_attendee: {
@@ -982,6 +1095,10 @@ export const jaJP: TranslationData = {
       },
       _views: {
         all_event_attendees: { label: 'イベント参加者' },
+      },
+      _sections: {
+        basic: { label: '参加者' },
+        response: { label: '招待' },
       },
     },
 

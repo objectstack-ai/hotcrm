@@ -123,6 +123,14 @@ export const en: TranslationData = {
         enterprise_accounts: { label: 'Enterprise Accounts', description: 'Accounts with the highest annual revenue' },
         my_accounts: { label: 'My Accounts', description: 'Accounts owned by the current user' },
       },
+      _sections: {
+        basic: { label: 'Basic Information' },
+        financials: { label: 'Financials' },
+        contact_info: { label: 'Contact Information' },
+        ownership: { label: 'Ownership & Status' },
+        branding: { label: 'Branding' },
+        system: { label: 'System' },
+      },
       _actions: { ...activityActions },
     },
 
@@ -178,6 +186,14 @@ export const en: TranslationData = {
         all_contacts: { label: 'All Contacts' },
         contact_directory: { label: 'People Directory' },
         primary_contacts: { label: 'Primary Contacts' },
+      },
+      _sections: {
+        identity: { label: 'Identity' },
+        account_info: { label: 'Account & Role' },
+        contact_info: { label: 'Contact Information' },
+        mailing_address: { label: 'Mailing Address' },
+        additional: { label: 'Additional Info' },
+        preferences: { label: 'Communication Preferences' },
       },
       _actions: {
         ...activityActions,
@@ -249,6 +265,12 @@ export const en: TranslationData = {
         my_drafts: { label: 'My Drafts' },
         stale_articles: { label: 'Stale (>180d)' },
       },
+      _sections: {
+        basic: { label: 'Article Information' },
+        content: { label: 'Content' },
+        taxonomy: { label: 'Categorization' },
+        metrics: { label: 'Engagement' },
+      },
     },
 
     crm_forecast: {
@@ -300,6 +322,11 @@ export const en: TranslationData = {
         all_forecasts: { label: 'All Forecasts' },
         this_quarter_forecasts: { label: 'This Quarter' },
         my_forecast: { label: 'My Forecast' },
+      },
+      _sections: {
+        basic: { label: 'Snapshot' },
+        amounts: { label: 'Amounts' },
+        meta: { label: 'Source' },
       },
     },
 
@@ -406,6 +433,23 @@ export const en: TranslationData = {
             message: 'Nothing to review — every re-captured email has been checked.',
           },
         },
+      },
+      _sections: {
+        identity: { label: 'Identity' },
+        company_info: { label: 'Company Information' },
+        contact_info: { label: 'Contact Information' },
+        qualification: { label: 'Qualification' },
+        assignment: { label: 'Assignment' },
+        address: { label: 'Address' },
+        additional: { label: 'Additional Info' },
+        preferences: { label: 'Communication Preferences' },
+        conversion: { label: 'Conversion' },
+        duplicates: { label: 'Duplicate Management' },
+        // Detail-page sections (src/pages/lead_detail.page.ts)
+        info: { label: 'Lead Information' },
+        crm_contact: { label: 'Contact' },
+        detail: { label: 'Lead Detail' },
+        description: { label: 'Description' },
       },
       _actions: {
         ...activityActions,
@@ -525,6 +569,18 @@ export const en: TranslationData = {
         deal_gallery: { label: 'Deal Cards' },
         my_open_deals: { label: 'My Open Deals' },
       },
+      _sections: {
+        basic: { label: 'Basic Information' },
+        financials: { label: 'Financials' },
+        sales_process: { label: 'Sales Process' },
+        classification: { label: 'Classification' },
+        competition: { label: 'Competition & Campaigns' },
+        notes: { label: 'Notes & Next Steps' },
+        crm_forecast: { label: 'Forecast & Metrics' },
+        // Detail-page sections (src/pages/opportunity_detail.page.ts)
+        info: { label: 'Opportunity Information' },
+        description: { label: 'Description' },
+      },
       _actions: {
         ...activityActions,
         clone_opportunity: {
@@ -610,6 +666,18 @@ export const en: TranslationData = {
         case_timeline: { label: 'Case Timeline' },
         escalated_cases: { label: 'Escalated Cases' },
       },
+      _sections: {
+        basic: { label: 'Case Information' },
+        origin: { label: 'Origin & Routing' },
+        sla: { label: 'SLA & Priority' },
+        resolution: { label: 'Resolution' },
+        escalation: { label: 'Escalation' },
+        system: { label: 'System' },
+        // Detail-page sections (src/pages/case_detail.page.ts)
+        info: { label: 'Case Information' },
+        status: { label: 'Status & SLA' },
+        description: { label: 'Description' },
+      },
       _actions: {
         ...activityActions,
         escalate_case: {
@@ -681,6 +749,14 @@ export const en: TranslationData = {
         contract_gantt: { label: 'Contract Terms' },
         contract_timeline: { label: 'Contract Timeline' },
       },
+      _sections: {
+        basic: { label: 'Contract Information' },
+        parties: { label: 'Parties' },
+        terms: { label: 'Terms & Dates' },
+        value: { label: 'Contract Value' },
+        status: { label: 'Status & Approval' },
+        renewal: { label: 'Renewal' },
+      },
     },
 
     crm_product: {
@@ -736,6 +812,11 @@ export const en: TranslationData = {
         product_catalog: { label: 'Product Catalog' },
         low_stock: { label: 'Low Stock' },
       },
+      _sections: {
+        basic: { label: 'Product Information' },
+        pricing: { label: 'Pricing & Billing' },
+        metadata: { label: 'Resources' },
+      },
     },
 
     crm_quote: {
@@ -781,6 +862,13 @@ export const en: TranslationData = {
         all_quotes: { label: 'All Quotes' },
         quote_pipeline: { label: 'Quote Pipeline' },
         quote_calendar: { label: 'Quote Calendar' },
+      },
+      _sections: {
+        basic: { label: 'Quote Information' },
+        pricing: { label: 'Pricing' },
+        terms: { label: 'Terms & Validity' },
+        address: { label: 'Addresses' },
+        system: { label: 'System' },
       },
     },
 
@@ -847,6 +935,14 @@ export const en: TranslationData = {
         task_timeline: { label: 'Worklog Timeline' },
         my_open_tasks: { label: 'My Open Tasks' },
       },
+      _sections: {
+        basic: { label: 'Task Information' },
+        scheduling: { label: 'Scheduling' },
+        related: { label: 'Related Records' },
+        recurrence: { label: 'Recurrence' },
+        effort: { label: 'Progress & Effort' },
+        system: { label: 'System' },
+      },
     },
 
     crm_campaign: {
@@ -905,6 +1001,14 @@ export const en: TranslationData = {
         campaign_calendar: { label: 'Launch Calendar' },
         campaign_timeline: { label: 'Marketing Timeline' },
       },
+      _sections: {
+        basic: { label: 'Campaign Information' },
+        schedule: { label: 'Schedule' },
+        budget: { label: 'Budget & ROI' },
+        metrics: { label: 'Performance' },
+        assignment: { label: 'Ownership' },
+        assets: { label: 'Campaign Assets' },
+      },
       _actions: {
         enroll_leads: {
           label: 'Enroll Leads',
@@ -961,6 +1065,12 @@ export const en: TranslationData = {
         upcoming_events: { label: '📅 Upcoming · Soonest First' },
         held_events: { label: '✅ Interaction History' },
       },
+      _sections: {
+        basic: { label: 'Event Information' },
+        schedule: { label: 'Schedule' },
+        related: { label: 'Related Records' },
+        outcome: { label: 'Outcome' },
+      },
     },
 
     crm_event_attendee: {
@@ -993,6 +1103,10 @@ export const en: TranslationData = {
       },
       _views: {
         all_event_attendees: { label: 'Event Attendees' },
+      },
+      _sections: {
+        basic: { label: 'Attendee' },
+        response: { label: 'Invitation' },
       },
     },
 
