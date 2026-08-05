@@ -35,19 +35,20 @@ You can also **reopen** an unqualified lead back to *New* if circumstances chang
 
 ## What each lead record stores
 
-The lead detail screen has 9 collapsible sections. Open only what you need:
+A lead record declares its fields in **10 groups**. The lead's own record page curates its **Details** tab from a subset of them, so read this as the full inventory of what a lead carries rather than a screen-by-screen map:
 
-| Section | What's in it |
+| Group | What's in it |
 | --- | --- |
-| **Identity** | Salutation, first/last name, full name |
-| **Company Information** | Company name, job title, industry, annual revenue, employees, website |
-| **Contact Information** | Email, phone, mobile |
+| **Identity** | Salutation, first/last name, full name, display title |
+| **Company Information** | Company, job title, industry — plus a hidden normalised copy of the company name, which is what conversion and duplicate checks match on |
+| **Contact Information** | Email, phone, mobile, website |
 | **Qualification** | Status, Lead Score (a 1-5 star rating), lead source, next follow-up date, last contacted, disqualification reason |
 | **Assignment** | Owner |
-| **Address** | Mailing address |
-| **Additional Info** | Description, tags |
-| **Communication Preferences** | Email opt-out, do-not-call |
-| **Conversion** | Auto-filled after the lead is converted |
+| **Address** | A single structured address field |
+| **Additional Info** | Annual revenue, number of employees, description, notes |
+| **Communication Preferences** | Do-not-call, email opt-out |
+| **Conversion** | Converted flag, converted account, contact and opportunity, converted date — all auto-filled when the lead is converted |
+| **Duplicate Management** | Duplicate Of (which object the surviving record lives on), Duplicate Of Lead, Duplicate Of Contact, Duplicate Status — the fields behind *Duplicate leads* below |
 
 The available **industries** include Technology, Software/SaaS, Finance, Healthcare, Retail, Manufacturing, Education, Real Estate, Media, Logistics, Hospitality, Energy, Government, Non-profit, and Other.
 
