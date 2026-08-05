@@ -92,7 +92,7 @@ export const Contact = ObjectSchema.create({
         { label: 'Engineering', value: 'engineering' },
         { label: 'Support', value: 'support' },
         { label: 'Finance', value: 'finance' },
-        { label: 'HR', value: 'hr' },
+        { label: 'Human Resources', value: 'hr' },
         { label: 'Operations', value: 'operations' },
       ]
     }),

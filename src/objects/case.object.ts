@@ -260,7 +260,7 @@ export const Case = ObjectSchema.create({
     internal_notes: Field.markdown({
       label: 'Internal Notes',
       group: 'system',
-      description: 'Internal notes not visible to customer',
+      description: 'Internal notes; not visible to the customer.',
     }),
     
     // Flags

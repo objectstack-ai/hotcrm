@@ -290,8 +290,8 @@ export const esES: TranslationData = {
         commit_amount: { label: 'Compromiso', help: 'Oportunidades abiertas en la categoría de pronóstico Compromiso (comprometidas por el propietario).' },
         closed_amount: { label: 'Cerrado', help: 'Importe ya cerrado ganado en este periodo.' },
         expected_amount: { label: 'Esperado', help: 'Cerrado + Compromiso: lo que el propietario espera razonablemente cerrar.' },
-        attainment_pct: { label: 'Cumplimiento %', help: '(Cerrado / Cuota) * 100. Se protege frente a cuotas negativas.' },
-        coverage_ratio: { label: 'Cobertura', help: 'Pipeline ÷ (Cuota − Cerrado). Comprobación de si existe pipeline suficiente.' },
+        attainment_pct: { label: 'Cumplimiento %', help: 'Cerrado ÷ Cuota × 100. Muestra 0 % hasta que se fija una cuota positiva.' },
+        coverage_ratio: { label: 'Cobertura', help: 'Pipeline ÷ (Cuota − Cerrado): si queda pipeline suficiente para cubrir la diferencia. Muestra 0 cuando ya se ha alcanzado la cuota.' },
         notes: { label: 'Notas' },
         seed_key: {
           label: 'Clave de semilla',
@@ -370,7 +370,7 @@ export const esES: TranslationData = {
         address: { label: 'Dirección' },
         annual_revenue: { label: 'Ingresos Anuales' },
         number_of_employees: { label: 'Número de Empleados' },
-        notes: { label: 'Notas', help: 'Notas enriquecidas con formato' },
+        notes: { label: 'Notas', help: 'Notas de trabajo sobre este cliente potencial: admite formato.' },
         do_not_call: { label: 'No Llamar' },
         email_opt_out: { label: 'Excluir de Correos' },
         disqualification_reason: {
@@ -1060,7 +1060,7 @@ export const esES: TranslationData = {
         crm_product: { label: 'Producto' },
         description: { label: 'Descripción' },
         quantity: { label: 'Cantidad' },
-        list_price: { label: 'Precio de Lista', help: 'Se rellena automáticamente desde product.list_price' },
+        list_price: { label: 'Precio de Lista', help: 'Se rellena automáticamente desde el Precio de Lista del producto.' },
         unit_price: { label: 'Precio de Venta', help: 'Precio unitario negociado (puede diferir del precio de lista)' },
         discount: { label: 'Descuento (%)' },
         total_price: { label: 'Total' },

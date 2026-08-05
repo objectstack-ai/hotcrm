@@ -140,7 +140,7 @@ export const Forecast = ObjectSchema.create({
       // and which disagreed with the stage → forecast_category map that
       // actually classifies deals (proposal is 60% but lands in `commit`).
       // The stored category is the single boundary (#590).
-      description: 'Open opportunities in the best_case or commit forecast category.',
+      description: 'Open opportunities in the Best Case or Commit forecast category.',
       scale: 2,
       min: 0,
       group: 'amounts',
@@ -148,7 +148,7 @@ export const Forecast = ObjectSchema.create({
 
     commit_amount: Field.currency({
       label: 'Commit',
-      description: 'Open opportunities in the commit forecast category (owner-committed).',
+      description: 'Open opportunities in the Commit forecast category (owner-committed).',
       scale: 2,
       min: 0,
       group: 'amounts',
@@ -164,21 +164,21 @@ export const Forecast = ObjectSchema.create({
 
     expected_amount: Field.formula({
       label: 'Expected',
-      description: 'Closed + Commit — what the owner reasonably expects to ship.',
+      description: 'Closed Won + Commit — what the owner reasonably expects to land.',
       expression: F`coalesce(record.closed_amount, 0) + coalesce(record.commit_amount, 0)`,
       scale: 2,
     }),
 
     attainment_pct: Field.formula({
       label: 'Attainment %',
-      description: '(Closed / Quota) * 100. Negative quota guarded.',
+      description: 'Closed Won ÷ Quota × 100. Reads 0% until a positive quota is set.',
       expression: F`coalesce(record.quota, 0) > 0 ? (coalesce(record.closed_amount, 0) * 100.0) / record.quota : 0.0`,
       scale: 2,
     }),
 
     coverage_ratio: Field.formula({
       label: 'Coverage Ratio',
-      description: 'Pipeline ÷ (Quota − Closed). Health-check for whether enough pipeline exists.',
+      description: 'Pipeline ÷ (Quota − Closed Won) — whether enough pipeline remains to cover the gap. Reads 0 once the quota is already met.',
       expression: F`(coalesce(record.quota, 0) - coalesce(record.closed_amount, 0)) > 0 ? coalesce(record.pipeline_amount, 0) / (record.quota - coalesce(record.closed_amount, 0)) : 0.0`,
       scale: 2,
     }),
