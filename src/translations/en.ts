@@ -574,6 +574,16 @@ export const en: TranslationData = {
         deal_timeline: { label: 'Deal Timeline' },
         deal_gallery: { label: 'Deal Cards' },
         my_open_deals: { label: 'My Open Deals' },
+        // No `label` here on purpose: this view (like `stale_opportunities`)
+        // takes its English name from the metadata `label`, which is already
+        // English. Only the empty state needs a bundle entry — it has no
+        // metadata fallback path through the locale resolver.
+        closing_this_quarter: {
+          emptyState: {
+            title: 'No Deals Closing This Quarter',
+            message: 'This tab lists open commit and best-case deals with a close date inside the current quarter. Nothing matches right now — deals closing later are on the Open Deals tab.',
+          },
+        },
       },
       _sections: {
         basic: { label: 'Basic Information' },
