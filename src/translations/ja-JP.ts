@@ -353,7 +353,13 @@ export const jaJP: TranslationData = {
       },
       _views: {
         all_forecasts: { label: 'すべてのフォーキャスト' },
-        this_quarter_forecasts: { label: '今四半期' },
+        this_quarter_forecasts: {
+          label: '今四半期',
+          emptyState: {
+            title: '今四半期のスナップショットはまだありません',
+            message: '四半期スナップショットは夜間のフォーキャスト集計が書き込みます。今四半期分が一度実行されるまでこのビューは空です。確定済みの四半期は「すべて」タブにあります。',
+          },
+        },
         my_forecast: { label: '自分のフォーキャスト' },
       },
       _sections: {

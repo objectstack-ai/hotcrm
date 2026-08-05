@@ -607,20 +607,40 @@ describe('dashboard actions land on real routes', () => {
 
 describe('filter template tokens are resolvable', () => {
   /**
-   * Token support differs per data path, verified empirically against the
-   * running 16.1.0 console (2026-07-28):
+   * Token support differs per data path — and the difference MOVED under us at
+   * the 17.0 upgrade, so the shape of this rule changed with it (#730).
    *
-   * - LIST-VIEW data path (`/api/v1/data/...`): resolves ONLY the user tokens
-   *   (`{current_user_id}`). Date macros ship to the server as literal
-   *   strings — and because `'2026-…' < '{…'` is lexicographically TRUE, a
-   *   `< {180_days_ago}` filter matched freshly-reviewed articles (inverted
-   *   semantics, not just empty results). Use operator-only filters + sort.
+   * - LIST-VIEW data path (`/api/v1/data/...`): resolves user tokens AND date
+   *   macros. The date-macro half is new. Through 16.1.0 nothing on the server
+   *   substituted placeholders on the read path, so a macro shipped as a
+   *   literal string — and because `'2026-…' < '{…'` is lexicographically
+   *   TRUE, a `< {180_days_ago}` filter matched freshly-reviewed articles
+   *   (inverted semantics, not merely empty). That is why this rule used to
+   *   read "user tokens ONLY", and why views were written as operator-only
+   *   filters plus a sort.
+   *
+   *   `resolveFilterTokens()` was wired into the ObjectQL READ path in
+   *   17.0.0-rc.0 (objectql `feat(filters): evaluate {filter-token}
+   *   placeholders server-side`, #3582) — ahead of the middleware chain,
+   *   covering `find`/`findOne`/`count`/`aggregate`, which is the one gate
+   *   every server-side read passes through, saved-view filters included. The
+   *   lexicographic hazard above is gone in BOTH directions now: a known token
+   *   is substituted before the driver sees it, and an unknown one throws
+   *   `Unresolvable filter placeholder` naming the near-miss fix instead of
+   *   comparing as text.
+   *
+   *   Measured on the pinned 17.0.0-rc.2, not inferred from the changelog:
+   *   `test/forecast-current-quarter-view.test.ts` runs a shipped view filter
+   *   through a real engine and pins one quarter selected out of three, plus
+   *   the throw on the retired `{this_quarter_start}` spelling.
    *
    * - ANALYTICS path (dashboard widgets / dataset reports,
-   *   `/api/v1/analytics/...`): resolves the DATE_MACRO_TOKENS vocabulary
-   *   (the YTD revenue widget returns a non-zero sum, impossible with a
-   *   literal token), but NO user token — `{current_user}` and even
-   *   `{current_user_id}` match no owner (see crm.app.ts's My Work note).
+   *   `/api/v1/analytics/...`): resolves the DATE_MACRO_TOKENS vocabulary (the
+   *   YTD revenue widget returns a non-zero sum, impossible with a literal
+   *   token), but still NO user token — `{current_user}` and even
+   *   `{current_user_id}` match no owner (see crm.app.ts's My Work note). That
+   *   half is unchanged and tracked at #510, so the two rules below remain
+   *   asymmetric — just not in the direction they were written for.
    */
   const dashboards: AnyRec[] = (stack as any).dashboards ?? [];
   const reports: AnyRec[] = (stack as any).reports ?? [];
@@ -649,8 +669,8 @@ describe('filter template tokens are resolvable', () => {
     }
   };
 
-  it('list view and page filters only use user tokens', () => {
-    const allowed = (t: string) => USER_TOKENS.has(t);
+  it('list view and page filters only use user tokens or date macros', () => {
+    const allowed = (t: string) => USER_TOKENS.has(t) || isDateMacroToken(t);
     const bad: string[] = [];
     for (const v of views) {
       const lists = [v.list, ...Object.values(v.listViews ?? {})].filter(Boolean) as AnyRec[];
@@ -660,6 +680,31 @@ describe('filter template tokens are resolvable', () => {
       badTokensIn(`page "${p.name}"`, p.interfaceConfig?.filterBy, allowed, bad);
     }
     expect(bad, `unresolvable view/page filter tokens:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('the widened list-view rule still rejects what neither path resolves', () => {
+    // Widening a rule is how a rule dies. `{this_quarter_start}` is the exact
+    // spelling #515 removed from `this_quarter_forecasts`, and the engine now
+    // throws on it — so it must stay rejected HERE too, at author time, rather
+    // than being waved through by the new date-macro allowance. `{current_user}`
+    // covers the other near-miss (the resolvable spelling is `{current_user_id}`).
+    const allowed = (t: string) => USER_TOKENS.has(t) || isDateMacroToken(t);
+    const bad: string[] = [];
+    badTokensIn('probe', [
+      { value: '{this_quarter_start}' },
+      { value: '{current_user}' },
+      { value: '{not_a_token}' },
+    ], allowed, bad);
+    expect(bad).toHaveLength(3);
+
+    // …and still accepts both classes it is now supposed to accept.
+    const good: string[] = [];
+    badTokensIn('probe', [
+      { value: '{current_user_id}' },
+      { value: '{current_quarter_start}' },
+      { value: '{30_days_ago}' },
+    ], allowed, good);
+    expect(good).toEqual([]);
   });
 
   it('dashboard widget and report filters only use date macros', () => {

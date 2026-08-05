@@ -353,9 +353,11 @@ describe('quota_attainment_by_rep over the real seeds plus one sweep (#614)', ()
     expect(filtersSeen.length).toBeGreaterThan(0);
     // An unresolved token would reach the driver as the literal string
     // "{current_quarter_start}", compare as text and match nothing — an empty
-    // table indistinguishable from "no data yet". This is exactly what the
-    // LIST path does with the same macro (see src/views/forecast.view.ts), so
-    // the analytics path is asserted, never assumed.
+    // table indistinguishable from "no data yet". That WAS the list path's
+    // behaviour on 16.1.0, which is why this assertion was written for the
+    // analytics path alone; since 17.0.0-rc.0 the ObjectQL read path resolves
+    // the same macro too (#3582), and `test/forecast-current-quarter-view.test.ts`
+    // pins that half. Both paths are asserted, neither assumed.
     expect(leaves.filter((v) => /^\{.+\}$/.test(v))).toEqual([]);
     expect(leaves).toContain(currentQuarterStart);
   });
