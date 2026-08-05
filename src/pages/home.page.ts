@@ -1,13 +1,58 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { Page } from '@objectstack/spec/ui';
+import { Page, PageComponent, View } from '@objectstack/spec/ui';
+import { LeadViews } from '../views/lead.view';
+import { OpportunityViews } from '../views/opportunity.view';
+import { TaskViews } from '../views/task.view';
+
+/**
+ * Embed one of an object's OWN saved list views in a page region.
+ *
+ * The home tabs used to hold a bare `{ type: 'page:section', properties: {} }`
+ * each, which renders an empty `<section>` — three tab names promising content
+ * over three blank panels. Same lesson as the `record:highlights` card below:
+ * a component with no binding renders nothing, silently.
+ *
+ * `list-view` is the block that renders an object list inside a page (it is in
+ * the platform's public block contract, ADR-0080), and it takes its columns /
+ * filter / sort inline — there is no way for a page component to name a saved
+ * view, so those three keys are READ OFF the saved view here rather than
+ * retyped. That is the same iron rule `account_workbench.page.ts` states for
+ * interface pages: columns, base filter and sort are inherited, never restated.
+ * Retyping them would have created a second definition of "my leads" that
+ * drifts from `src/views/lead.view.ts` the first time either side is edited.
+ *
+ * `{current_user_id}` in a saved view's filter resolves on this path (the
+ * ObjectQL read path runs `resolveFilterTokens()` since 17.0.0-rc.0), so
+ * "mine" really does mean mine here — measured tab by tab in the browser, see
+ * the PR. The nav's My Work group reaches the SAME views by name
+ * (`src/apps/crm.app.ts`); these tabs are the landing-page shortcut to them.
+ */
+const embeddedListView = (id: string, objectName: string, views: View, viewKey: string): PageComponent => {
+  const view = views.listViews?.[viewKey];
+  // Loud, at build time: a renamed or deleted view must not degrade back into
+  // a blank tab — that is the defect this whole component replaces.
+  if (!view) throw new Error(`home.page.ts: no saved view "${viewKey}" on ${objectName}`);
+  return {
+    type: 'list-view',
+    id,
+    label: view.label,
+    properties: {
+      objectName,
+      viewType: 'grid',
+      columns: view.columns,
+      filter: view.filter,
+      sort: view.sort,
+    },
+  };
+};
 
 /**
  * Sales Home Page
- * 
+ *
  * Demonstrates a home page layout with dashboards and quick access widgets.
  * Similar to Salesforce Lightning Home Page.
- * 
+ *
  * Features:
  * - Dashboard-style layout
  * - Multiple component regions
@@ -156,32 +201,22 @@ export const SalesHomePage: Page = {
               {
                 label: 'My Leads',
                 icon: 'user-plus',
-                children: [
-                  {
-                    type: 'page:section',
-                    properties: {},
-                  },
-                ],
+                children: [embeddedListView('home_my_leads', 'crm_lead', LeadViews, 'my_leads')],
               },
               {
-                label: 'My Opportunities',
+                // Was "My Opportunities", which promises every deal I own; the
+                // view behind it is the open-pipeline one (the nav's My Work >
+                // My Deals opens the same `my_open_deals`). The tab name now
+                // says what the panel shows.
+                label: 'My Open Deals',
                 icon: 'dollar-sign',
-                children: [
-                  {
-                    type: 'page:section',
-                    properties: {},
-                  },
-                ],
+                children: [embeddedListView('home_my_deals', 'crm_opportunity', OpportunityViews, 'my_open_deals')],
               },
               {
-                label: 'My Tasks',
+                // Same correction: `my_open_tasks` excludes completed tasks.
+                label: 'My Open Tasks',
                 icon: 'list-checks',
-                children: [
-                  {
-                    type: 'page:section',
-                    properties: {},
-                  },
-                ],
+                children: [embeddedListView('home_my_tasks', 'crm_task', TaskViews, 'my_open_tasks')],
               },
             ],
           },
