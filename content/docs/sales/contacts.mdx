@@ -15,10 +15,10 @@ The contact detail screen has 6 collapsible sections:
 | --- | --- |
 | **Identity** | Salutation, first name, last name, full name |
 | **Account & Role** | Account, job title, department, primary contact flag |
-| **Contact Information** | Email, phone, mobile, fax |
+| **Contact Information** | Email, phone, mobile |
 | **Mailing Address** | Full structured address |
 | **Additional Info** | Description, birthday, lead source, reports-to |
-| **Communication Preferences** | Email opt-out, do-not-call, fax opt-out |
+| **Communication Preferences** | Email opt-out, do-not-call |
 
 ## The primary contact
 
@@ -47,15 +47,14 @@ The account detail page renders this as a clickable tree, so you can see at a gl
 
 ## Communication preferences (GDPR / CCPA)
 
-Three opt-out flags tell the system this person doesn't want to be contacted. Every flag is shown as a **red badge** at the top of the contact screen so it's impossible to miss:
+Two opt-out flags record that this person does not want to be contacted. Both are checkboxes in the **Communication Preferences** section of the contact record, and they differ in how much of the product actually acts on them:
 
-| Flag | What happens |
+| Flag | What it does today |
 | --- | --- |
-| **Email Opt-out** | The Sales Copilot refuses to draft outbound emails to this person; marketing campaigns exclude them. |
-| **Do Not Call** | The system blocks you from logging a *Call* task to this contact. |
-| **Fax Opt-out** | Fax-based campaigns skip this contact. |
+| **Email Opt Out** | **Enforced.** The **Send Email** action is hidden on a contact who has opted out — on the record header and on the list row — and creating such a contact raises no welcome prompt for its owner. |
+| **Do Not Call** | **A marker only.** Nothing in the product blocks a call, or the logging of a *Call* task, against a contact flagged this way. It is there for the rep who is about to pick up the phone. |
 
-Reps can request a flag change but cannot remove these themselves — it's an admin-only action.
+Both are ordinary editable checkboxes: anyone who can edit the contact can set or clear them. There is no field-level rule reserving them to admins, so treat them as a record of the person's wishes that your team is expected to honour — not as a lock.
 
 ## Built-in rules
 
