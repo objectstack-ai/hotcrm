@@ -1,13 +1,16 @@
 ---
 title: Activities
-description: Tasks, calls, emails and meetings scheduled on any record. The shared to-do list for every team.
+description: Tasks — what you still owe a customer, on any record. The shared to-do list for every team.
 ---
 
 # Activities
 
-An **activity** (stored as a *Task* record) is anything you need to do or track in relation to another record — a call to make, an email to send, a meeting to attend, a follow-up to schedule.
+An **activity** is anything you do or owe in relation to another record. HotCRM keeps activities in **two** objects, and this page is about the first:
 
-Activities can be attached to almost anything: an account, a contact, an opportunity, a lead, or a case.
+- A **task** (`crm_task`) — something you still **owe** somebody: a call to make, an email to send, a follow-up to schedule. It is anchored on a **due date**.
+- An **event** (`crm_event`) — a meeting or a call that takes a slot on somebody's calendar, whether it already happened or is booked for later. It is anchored on a **start and an end**, and everyone in the room is a real record. See [Meetings & Calls](/docs/sales/meetings-and-calls), which carries the full task-versus-event comparison.
+
+Either kind can be attached to almost anything: an account, a contact, an opportunity, a lead, or a case.
 
 ## What activities are for
 
@@ -39,12 +42,14 @@ When you create an Urgent task, the owner gets an email alert.
 
 ## The 6 activity types
 
-- **Call** — a phone call to make or log
+- **Call** — a phone call you still have to make
 - **Email** — an outbound or inbound email
-- **Meeting** — a scheduled conversation (call or in-person)
+- **Meeting** — a conversation you still have to set up
 - **Follow-up** — a generic check-in
 - **Demo** — a product demonstration
 - **Other** — anything else
+
+*Call* and *Meeting* here label a **to-do** — *"call Jane back on Tuesday"*. A task carries a due date, not a start and an end, and it has no attendee list. The call that actually happened, or the meeting you are booking for next week, is an event instead — written by the **Log a Call**, **Log a Meeting** and **Schedule a Meeting** buttons on the record. See [Meetings & Calls](/docs/sales/meetings-and-calls).
 
 ## What an activity record stores
 
@@ -98,13 +103,13 @@ Activities show up in **three** places:
 
 ## How the system uses activities
 
-- **Account last activity date** — automatically stamped whenever a task on the account is completed. Surfaces stale accounts.
-- **Opportunity last activity date** — same idea; surfaces stalled deals.
+- **Account last activity date** — the customer recency clock the quiet-account reporting is built on. A completed task is only **one of four** things that refresh it: an event turning **Held**, a task completed, **Send Email** on a contact, and a case set to **Resolved**. The stamp also **walks up** the chain — complete the task on the opportunity, the contact or the case, and the account behind it is stamped for you, which is what stops a busy customer from looking silent for a whole sales cycle. The full table, including the one non-interaction source (changing an account's owner or type stamps it too), is in [Meetings & Calls › What refreshes "last activity"](/docs/sales/meetings-and-calls#what-refreshes-last-activity).
+- **Stalled deals** — an opportunity has **no** last-activity field of its own; activity you log on a deal refreshes the **account** behind it. What surfaces a deal that has gone quiet is **Days in Stage**, derived from the stage entry date, plus the daily [Stalled Deal Alert](/docs/administration/automation), which nudges the owner and books a follow-up task.
 - **Sales Dashboard** — "Activities per rep this week" widget.
 
 ## Tips for sales reps
 
-- ✅ Always log a *Call* task after each customer call — it's how the team sees what's happening.
+- ✅ Log the call that happened with **Log a Call**, not as a *Call* task — that writes an [event](/docs/sales/meetings-and-calls) with attendees and a duration, and it is the event that lands in the customer's interaction history. Keep *Call* tasks for the calls you still have to make.
 - ✅ Set the *Reminder Date/Time* if you'll forget by the due date.
 - ✅ Link the task to the **opportunity**, not just the account — this is what surfaces it on the opportunity timeline.
 
