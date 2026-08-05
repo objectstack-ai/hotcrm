@@ -1098,8 +1098,12 @@ export const zhCN: TranslationData = {
     },
 
     crm_campaign_member: {
-      label: '活动成员',
-      pluralLabel: '活动成员',
+      // 「营销活动成员」, not 「活动成员」: this object's master is `crm_campaign`
+      // (营销活动), while 「活动」 is already this pack's label for `crm_event` and
+      // 「活动参与者」 its child `crm_event_attendee`. Dropping 「营销」 put a
+      // marketing object inside the calendar family's name space (#810).
+      label: '营销活动成员',
+      pluralLabel: '营销活动成员',
       description: '营销活动所触达的线索与联系人及其响应状态',
       fields: {
         member_number: { label: '成员编号' },
