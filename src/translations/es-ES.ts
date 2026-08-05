@@ -589,7 +589,13 @@ export const esES: TranslationData = {
         deal_timeline: { label: 'Línea de Tiempo' },
         deal_gallery: { label: 'Galería de Negocios' },
         my_open_deals: { label: 'Mis Negocios Abiertos' },
-        closing_this_quarter: { label: 'Cierres de Este Trimestre' },
+        closing_this_quarter: {
+          label: 'Cierres de Este Trimestre',
+          emptyState: {
+            title: 'No hay negocios que cierren este trimestre',
+            message: 'Esta pestaña muestra los negocios abiertos en categoría Compromiso o Mejor Caso cuya fecha de cierre cae dentro del trimestre actual. Ahora mismo no hay ninguno; los negocios que cierran más adelante están en la pestaña Negocios Abiertos.',
+          },
+        },
         stale_opportunities: { label: '⚠️ Oportunidades Estancadas · Más Tiempo en Etapa Primero' },
       },
       _sections: {

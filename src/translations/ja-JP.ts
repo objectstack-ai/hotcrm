@@ -578,7 +578,13 @@ export const jaJP: TranslationData = {
         deal_gallery: { label: '商談カード' },
         my_open_deals: { label: '私のオープン商談' },
         stale_opportunities: { label: '⚠️ 停滞商談 · ステージ滞在が長い順' },
-        closing_this_quarter: { label: '今四半期にクローズ予定' },
+        closing_this_quarter: {
+          label: '今四半期にクローズ予定',
+          emptyState: {
+            title: '今四半期にクローズ予定の商談はありません',
+            message: 'このタブには、完了予定日が今四半期内にあるコミット／ベストケースのオープン商談が表示されます。現在該当する商談はありません。それ以降にクローズする商談は「オープン商談」タブにあります。',
+          },
+        },
       },
       _sections: {
         // 詳細ページの `record:details` セクション名（opportunity_detail.page.ts）

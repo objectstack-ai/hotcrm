@@ -959,7 +959,13 @@ export const zhCN: TranslationData = {
         deal_gallery: { label: '商机卡片' },
         my_open_deals: { label: '我的进行中商机' },
         stale_opportunities: { label: '⚠️ 停滞商机 · 按阶段停留时间排序' },
-        closing_this_quarter: { label: '本季度待成交商机' },
+        closing_this_quarter: {
+          label: '本季度待成交商机',
+          emptyState: {
+            title: '本季度暂无待成交商机',
+            message: '本标签页列出成交日期落在当前季度内、且处于承诺（Commit）或最佳可能（Best Case）的进行中商机。当前没有符合条件的记录——成交日期更晚的商机请见“进行中商机”标签页。',
+          },
+        },
       },
       _sections: {
         // Detail-page `record:details` section names (opportunity_detail.page.ts)

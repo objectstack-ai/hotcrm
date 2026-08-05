@@ -239,11 +239,52 @@ export const OpportunityViews = defineView({
       label: 'Closing This Quarter',
       data: { provider: 'object', object: 'crm_opportunity' },
       columns: ['name', 'crm_account', 'amount', 'forecast_category', 'probability', 'close_date', 'owner_id'],
+      // The `close_date` window is what makes the label true (#743). Without
+      // it this view returned EVERY open commit/best-case deal whenever it
+      // closed — a deal slated for next March sat under a heading that said
+      // "Closing This Quarter", and summing the Amount column gave a number
+      // that was not this quarter's commit.
+      //
+      // Both bounds are date macros resolved server-side: `resolveFilterTokens()`
+      // was wired into the ObjectQL read path in 17.0.0-rc.0 (objectql #3582,
+      // covering find/findOne/count/aggregate ahead of the middleware chain),
+      // so a saved-view filter value reaches the driver already substituted.
+      // Measured on the pinned 17.0.0-rc.2, not inferred — see the runtime
+      // block in `test/forecast-current-quarter-view.test.ts`.
+      //
+      // The upper bound is INCLUSIVE against `{current_quarter_end}` rather
+      // than half-open against `{next_quarter_start}`, and that choice is
+      // deliberate: a `*_end` token resolves to the period's last calendar DAY
+      // (2026-09-30), which on a `datetime` column would stop at midnight and
+      // silently drop that day's rows — the spec says to use the half-open
+      // form there. `close_date` is `Field.date()`, stored as `YYYY-MM-DD`
+      // TEXT on both sides of the comparison, so the inclusive bound is exact.
+      // That is the same field-type property `metadata-references.test.ts`
+      // relies on for why the CRM/Sales/Executive dashboards may window
+      // `close_date` at all (#460). Both forms were measured to return the
+      // identical row set here; the inclusive one reads as what it means.
       filter: [
         { field: 'forecast_category', operator: 'in', value: ['commit', 'best_case'] },
         { field: 'stage', operator: 'not_in', value: ['closed_won', 'closed_lost'] },
+        { field: 'close_date', operator: 'greater_than_or_equal', value: '{current_quarter_start}' },
+        { field: 'close_date', operator: 'less_than_or_equal', value: '{current_quarter_end}' },
       ],
       sort: [{ field: 'close_date', order: 'asc' }],
+      // Scoping the list makes "empty" a state a real user meets, so it needs
+      // copy. Unlike the forecast view's (#745, where the sweep owns the
+      // window and a fresh install is ALWAYS empty until it runs), the seeds
+      // here do produce rows for most of a quarter — six seeded deals qualify
+      // on forecast_category + stage, at `daysFromNow` offsets 11/14/24/30/38/45.
+      // But every one of those offsets is relative to the INSTALL day, so once
+      // fewer than 11 days remain in the quarter all six land in the next one
+      // and a freshly seeded demo opens this tab on nothing. A real org meets
+      // the same state whenever a quarter's commit slips out. Empty is
+      // legitimate here; unexplained, it reads as broken.
+      emptyState: {
+        title: 'No Deals Closing This Quarter',
+        message: 'This tab lists open commit and best-case deals with a close date inside the current quarter. Nothing matches right now — deals closing later are on the Open Deals tab.',
+        icon: 'calendar-check',
+      },
     },
   },
 
