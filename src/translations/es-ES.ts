@@ -69,7 +69,11 @@ export const esES: TranslationData = {
         display_title: { label: 'Título Mostrado' },
         type: {
           label: 'Tipo',
-          options: { prospect: 'Prospecto', customer: 'Cliente', partner: 'Socio', former: 'Anterior' },
+          // `former` is 'Former Customer' in account.object.ts; the `en` bundle
+          // had truncated it to 'Former', and translating that truncation gave
+          // a bare 'Anterior' — an adjective with no noun, next to three option
+          // labels that are all nouns.
+          options: { prospect: 'Prospecto', customer: 'Cliente', partner: 'Socio', former: 'Cliente Anterior' },
         },
         industry: {
           label: 'Industria',
