@@ -324,7 +324,13 @@ export const esES: TranslationData = {
       },
       _views: {
         all_forecasts: { label: 'Todas las previsiones' },
-        this_quarter_forecasts: { label: 'Este trimestre' },
+        this_quarter_forecasts: {
+          label: 'Este trimestre',
+          emptyState: {
+            title: 'Aún no hay instantáneas de este trimestre',
+            message: 'Las instantáneas trimestrales las escribe el barrido nocturno de previsiones. Hasta que se ejecute una vez para el trimestre actual, esta vista está vacía; los trimestres cerrados están en la pestaña Todas.',
+          },
+        },
         my_forecast: { label: 'Mi previsión' },
       },
       _sections: {

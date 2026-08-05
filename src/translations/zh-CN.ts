@@ -295,7 +295,13 @@ export const zhCN: TranslationData = {
       },
       _views: {
         all_forecasts: { label: '全部预测' },
-        this_quarter_forecasts: { label: '本季度' },
+        this_quarter_forecasts: {
+          label: '本季度',
+          emptyState: {
+            title: '本季度尚无快照',
+            message: '季度快照由每晚的预测扫描任务写入。在它为当前季度首次跑完之前，本视图为空——已结束的季度请见“全部”标签页。',
+          },
+        },
         my_forecast: { label: '我的预测' },
       },
       _sections: {

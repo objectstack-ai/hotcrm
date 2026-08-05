@@ -320,7 +320,13 @@ export const en: TranslationData = {
       },
       _views: {
         all_forecasts: { label: 'All Forecasts' },
-        this_quarter_forecasts: { label: 'This Quarter' },
+        this_quarter_forecasts: {
+          label: 'This Quarter',
+          emptyState: {
+            title: 'This Quarter Has No Snapshots Yet',
+            message: 'Quarterly snapshots are written by the nightly forecast sweep. Until it has run once for the current quarter this view is empty — settled quarters are on the All tab.',
+          },
+        },
         my_forecast: { label: 'My Forecast' },
       },
       _sections: {

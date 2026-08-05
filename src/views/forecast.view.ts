@@ -39,7 +39,7 @@ export const ForecastViews = defineView({
     appearance: { allowedVisualizations: ['grid'] },
     tabs: [
       { name: 'all',          label: 'All',           view: 'all_forecasts',  isDefault: true, pinned: true },
-      { name: 'this_quarter', label: 'Quarterly',     icon: 'calendar',       view: 'this_quarter_forecasts' },
+      { name: 'this_quarter', label: 'This Quarter',  icon: 'calendar',       view: 'this_quarter_forecasts' },
       { name: 'mine',         label: 'My Forecast',   icon: 'user',           view: 'my_forecast' },
     ],
   },
@@ -48,26 +48,62 @@ export const ForecastViews = defineView({
     this_quarter_forecasts: {
       name: 'this_quarter_forecasts',
       type: 'grid',
-      // Operator-only filter: the list data path resolves no date macro (the
-      // old `{this_quarter_start}` — not even a valid token — reached the
-      // query as a literal string and matched nothing; the valid spelling
-      // `{current_quarter_start}` would ALSO ship unresolved). Newest quarter
-      // sorts first, so the current quarter is the top group.
-      label: 'Quarterly · Latest First',
+      // The label promises the CURRENT quarter, and the filter delivers it.
+      //
+      // The restriction was dropped in #515 on the measurement that "the list
+      // data path resolves no date macro". That measurement was taken on
+      // @objectstack 16.1.0 and has since expired: `resolveFilterTokens()` was
+      // wired into the ObjectQL READ path in 17.0.0-rc.0 (objectql
+      // `feat(filters): evaluate {filter-token} placeholders server-side`,
+      // #3582) — `find`/`findOne`/`count`/`aggregate`, ahead of the middleware
+      // chain, which is the one gate every server-side read passes through,
+      // saved-view filters included. Measured on the pinned 17.0.0-rc.2 rather
+      // than inferred; `test/forecast-current-quarter-view.test.ts` runs THIS
+      // filter through a real engine and pins the three-way outcome (one
+      // quarter selected, not zero and not all of them).
+      //
+      // Both halves of the key are load-bearing, same as the quota-attainment
+      // widget in `src/dashboards/sales.dashboard.ts`: `period: 'quarter'`
+      // alone returns every quarter ever snapshotted (the #730 defect), and
+      // `period_start` alone merges the quarter row with the MONTH row that
+      // opens the same quarter — Q3 and July both start on the 1st.
+      //
+      // The old `{this_quarter_start}` spelling is not merely unresolved now,
+      // it is rejected: the resolver throws `Unresolvable filter placeholder`
+      // and names `{current_quarter_start}` as the fix, so the silent-empty
+      // failure mode that removal was reacting to is no longer reachable.
+      label: 'This Quarter',
       data: { provider: 'object', object: 'crm_forecast' },
       columns: ['owner_id', 'quota', 'closed_amount', 'commit_amount', 'best_case_amount', 'pipeline_amount', 'attainment_pct', 'coverage_ratio'],
       filter: [
         { field: 'period', operator: 'equals', value: 'quarter' },
+        { field: 'period_start', operator: 'equals', value: '{current_quarter_start}' },
       ],
-      // The tiebreaker was `attainment_pct desc`, which is a FORMULA — the
+      // One sort key, because the filter pins `period_start` to a single value
+      // — the `period_start desc` key that ranked quarters against each other
+      // existed only to float the current quarter to the top of an unscoped
+      // list, and is provably inert now that the list holds one quarter.
+      //
+      // The tiebreaker is NOT `attainment_pct desc`, which is a FORMULA — the
       // engine computes it in JS after the query, so the data engine never saw
       // that sort key and the ordering within a quarter was arbitrary (same
       // class of defect as #489's `days_in_stage` filter). `closed_amount` is
       // the stored numerator behind attainment and ranks the same direction.
       sort: [
-        { field: 'period_start', order: 'desc' },
         { field: 'closed_amount', order: 'desc' },
       ],
+      // Empty is the honest state, and it needs to say so. The seeds ship no
+      // current-quarter row on purpose (#702 — the sweep owns that window, and
+      // two producers in one window is what left a phantom ownerless
+      // duplicate), so on a fresh install this view is empty until the 03:00
+      // `forecast_snapshot` sweep has run once. That is the same trade the
+      // quota-attainment widget already takes; without this copy the user
+      // cannot tell it apart from a broken view.
+      emptyState: {
+        title: 'This Quarter Has No Snapshots Yet',
+        message: 'Quarterly snapshots are written by the nightly forecast sweep. Until it has run once for the current quarter this view is empty — settled quarters are on the All tab.',
+        icon: 'calendar',
+      },
     },
     my_forecast: {
       name: 'my_forecast',
