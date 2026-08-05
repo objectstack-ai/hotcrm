@@ -175,12 +175,14 @@ export const EventAttendee = ObjectSchema.create({
     //    account erasure for any colleague who had ever attended a meeting.
     //  · The app's shipped stance is already "a deleted user's references
     //    degrade". HotCRM holds 15 lookups on `sys_user`; the other 14 (every
-    //    `owner_id`, `renewal_owner`, `product_manager`) are `set_null` and no
-    //    validation rule anywhere reads a user reference. `restrict` here would
-    //    make this junction the ONE app row able to veto a platform identity
-    //    erasure — an app object holding a `protection: { lock: 'full' }`,
-    //    better-auth-managed table hostage, surfacing as an opaque failure from
-    //    an auth route. That is the layering inversion, not the fix.
+    //    `owner_id`, plus `renewal_owner` and `product_manager`) are `set_null`
+    //    and NO validation rule reads any of them — the rule below is the only
+    //    one in the app that reads a user reference at all, which is precisely
+    //    why this is the only lookup where the default misbehaved. `restrict`
+    //    here would make this junction the ONE app row able to veto a platform
+    //    identity erasure — an app object holding a `protection: { lock:
+    //    'full' }`, better-auth-managed table hostage, surfacing as an opaque
+    //    failure from an auth route. That is the layering inversion, not the fix.
     //  · The cost of cascade is bounded and is the right half to lose: the
     //    meeting itself (`crm_event` — subject, times, outcome notes) survives
     //    untouched; only the per-person row goes, and it goes because the

@@ -62,11 +62,15 @@ import stack from '../objectstack.config';
  *  2. **"A deleted user's references degrade" is already this app's stance.**
  *     HotCRM holds 15 lookups on `sys_user`; the other 14 — every `owner_id`,
  *     plus `crm_account.renewal_owner` and `crm_product.product_manager` — are
- *     `set_null`, and no validation rule in the app reads a user reference.
- *     `restrict` would make this junction the ONE app row able to veto a
- *     platform identity erasure, on a `protection: { lock: 'full' }`,
- *     better-auth-managed table, surfacing as an opaque failure from an auth
- *     route. That is a layering inversion, not a fix.
+ *     `set_null`, and NO validation rule reads any of them. Swept over the
+ *     built stack (rule conditions are `{ dialect, source }`, so the source
+ *     string is what has to be searched): `attendee_resolves` is the only rule
+ *     in the app that reads a user reference at all, which is exactly why this
+ *     is the only lookup where the `set_null` default misbehaved. `restrict`
+ *     would make this junction the ONE app row able to veto a platform identity
+ *     erasure, on a `protection: { lock: 'full' }`, better-auth-managed table,
+ *     surfacing as an opaque failure from an auth route. That is a layering
+ *     inversion, not a fix.
  *  3. **The cost of cascade is the right half to lose.** The meeting itself
  *     survives untouched — only the per-person row goes, because the person's
  *     identity record was erased. Deactivation, not deletion, is the ordinary
@@ -82,6 +86,17 @@ import stack from '../objectstack.config';
  *
  * The `crm_event` side is deliberately NOT cascaded; see the last structural
  * test and the last end-to-end test for what it does instead, and why.
+ *
+ * ### The family is closed
+ *
+ * The construction — a severity `error` rule reading an OPTIONAL lookup that
+ * takes the `set_null` default — was swept across the built stack after this
+ * change. It now returns nothing: `crm_campaign_member` (#696) and
+ * `crm_event_attendee` (this) were the only two, and both cascade. The sweep
+ * was run non-vacuous first (the same query against `cascade` lists exactly
+ * those two objects), because the naive version silently matches nothing: a
+ * rule's `condition` is a `{ dialect, source }` object, so `String(condition)`
+ * is `"[object Object]"` and every `includes()` on it is false.
  */
 
 type AnyRec = Record<string, any>;
