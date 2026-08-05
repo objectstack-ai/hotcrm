@@ -43,6 +43,12 @@ export const OpportunityViews = defineView({
       colors: {
         prospecting: '#94a3b8',
         qualification: '#60a5fa',
+        // Teal sits between the cool qualification blue and the warm proposal
+        // amber, keeping the cool→warm funnel ramp readable. NOT the
+        // `#FFD700` this option carries in `_picklists.ts`: this map is a
+        // Tailwind palette, and gold is one hue step from proposal's
+        // `#f59e0b` — the two adjacent stages would tint rows the same.
+        needs_analysis: '#14b8a6',
         proposal: '#f59e0b',
         negotiation: '#a855f7',
         closed_won: '#16a34a',

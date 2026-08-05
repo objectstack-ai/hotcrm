@@ -76,9 +76,17 @@ export const OpportunityDetailPage: Page = {
           label: 'Opportunity Stage Path',
           properties: {
             statusField: 'stage',
+            // Every canonical value of `stage` must appear here, in funnel
+            // order — the path is the only place a rep reads "where is this
+            // deal". `needs_analysis` was missing, so a deal sitting in that
+            // stage lit up NO step at all and the strip read as if the deal
+            // had skipped from Qualification to Proposal. The two terminal
+            // stages stay last (won before lost), matching lead_detail's
+            // converted/unqualified tail.
             stages: [
               { value: 'prospecting', label: 'Prospecting' },
               { value: 'qualification', label: 'Qualification' },
+              { value: 'needs_analysis', label: 'Needs Analysis' },
               { value: 'proposal', label: 'Proposal' },
               { value: 'negotiation', label: 'Negotiation' },
               { value: 'closed_won', label: 'Closed Won' },
