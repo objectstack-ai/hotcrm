@@ -1,6 +1,11 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
+import {
+  DATA_ACTION_TO_API_OPERATION,
+  isApiOperationAllowed,
+  resolveEffectiveApiMethods,
+} from '@objectstack/spec/data';
 import stack from '../objectstack.config';
 
 /**
@@ -492,9 +497,17 @@ describe('#488 regressions stay fixed', () => {
  * 17.0 inverted this bit's default: unset used to inherit read, so the axis
  * only hid a button; now `resolveUserExportAllowed` (plugin-security) demands
  * an explicit `allowExport: true` and neither `viewAllRecords` nor
- * `modifyAllRecords` substitutes. Unset DENIES, at both bulk-egress doors —
- * the list views' built-in `exportOptions`, and `assertExportAllowed`, which
- * fails a report export closed with `EXPORT_NOT_PERMITTED`.
+ * `modifyAllRecords` substitutes. Unset DENIES.
+ *
+ * The gate sits on ONE route — `GET /api/v1/data/:object/export`, via
+ * `enforceExportPermission` → `security.canExport` (`@objectstack/rest`).
+ * Measured on a dev server in #798: 200 + rows for a principal holding the
+ * grant, 403 `EXPORT_NOT_PERMITTED` for one without it. A list view's
+ * `exportOptions` is not a separate door — the toolbar's Export button calls
+ * that same route, so the bit is object-wide and `curl`-reachable.
+ * `ReportService.assertExportAllowed` is a second gate, but it lives in the
+ * `reports` capability this app does not require (`/api/v1/reports` → 501),
+ * so no grant here lands on it.
  *
  * That makes an unauthored export bit a SILENT outage: `os validate`, `os
  * build` and every metadata test still pass while the Export button 403s for
@@ -505,7 +518,9 @@ describe('#488 regressions stay fixed', () => {
  * a profile grants `allowExport` on an object IFF it already holds `allowRead`
  * there AND the app ships an export surface for it. Both directions matter —
  * a surface nobody can use is the outage, and a grant behind no surface is
- * bulk egress nobody asked for.
+ * bulk egress nobody asked for. That union is an authoring discipline about
+ * the affordances this app ships; whether the grant can be exercised at all is
+ * the separate `enable` question, pinned by the last guard below.
  */
 describe('allowExport tracks the app’s real export surfaces', () => {
   const datasetByName = new Map<string, AnyRec>(
@@ -587,5 +602,47 @@ describe('allowExport tracks the app’s real export surfaces', () => {
     // binding on top of handing anonymous visitors bulk table egress.
     const guestExports = exportGrants.filter(([set]) => set === 'guest_portal').map(([, o]) => o);
     expect(guestExports, 'the guest set must never carry allowExport').toEqual([]);
+  });
+
+  /**
+   * Reachability, which the three guards above deliberately do not answer.
+   *
+   * They pin the AUTHORING discipline — grant export only where the app ships
+   * an affordance for it. This one pins that the grant can be exercised at
+   * all: the object's own `enable` block must leave `export` on the API, or
+   * `GET /api/v1/data/:object/export` answers 405 `OBJECT_API_METHOD_NOT_ALLOWED`
+   * before `security.canExport` is ever consulted, and the grant is inert no
+   * matter how well authored.
+   *
+   * Decided with the platform's own resolver rather than a hand-rolled reading
+   * of `apiMethods`, because the two disagree in a way that matters: an
+   * `apiMethods: ['get','list','create','update','delete']` whitelist reads as
+   * "no export", but `resolveEffectiveApiMethods` expands a restricted CRUD
+   * list to include `export`/`import`/`aggregate`/`search`/`upsert` — which is
+   * why `crm_account` and `crm_opportunity` export fine today despite the
+   * whitelist. A guard that judged the raw array would fail four objects for a
+   * hazard that does not exist, so it asks the same functions the REST layer
+   * calls (`@objectstack/rest` `apiAccessDenialFromEnable`).
+   *
+   * #798 is why this exists: the issue reasoned that `crm_case`'s grant landed
+   * on a surface that was not there, and nothing in this suite could answer.
+   * Measured on a dev server, the grant is live (200 with it, 403 without) —
+   * but the question was a fair one to ask and now has a guard behind it.
+   */
+  it('every object carrying allowExport actually exposes export on the API', () => {
+    const inert = exportGrants
+      .filter(([, objectName]) => {
+        const enable = objectByName.get(objectName)?.enable;
+        if (!enable) return false; // no `enable` block ⇒ unrestricted
+        if (enable.apiEnabled === false) return true;
+        const effective = resolveEffectiveApiMethods(enable);
+        const canonical = DATA_ACTION_TO_API_OPERATION.export ?? 'export';
+        return !isApiOperationAllowed(effective, canonical);
+      })
+      .map(([set, objectName]) => `${set}.${objectName}: allowExport granted, but the object's enable block blocks the export route`);
+    expect(
+      inert,
+      `export grants the API can never serve:\n  ${inert.join('\n  ')}`,
+    ).toEqual([]);
   });
 });

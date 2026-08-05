@@ -131,7 +131,7 @@ Export is its own permission, not a side effect of being able to read. `allowExp
 
 The grant opens the door; it does not widen the rows. Export is read-derived, so record scope and sharing still apply on top — a rep exporting Opportunities gets their own book, not the org's.
 
-Cases carry an export grant but no Cases list view declares `exportOptions`: that grant is aimed at report export, which rides on the platform's `reports` capability. This app's `requires` does not list it, so on a default boot the four list views above and the data API are the export surfaces you have.
+Cases carry an export grant but no Cases list view declares `exportOptions`, so there is no **Export** button on the Cases list. The grant is still live: export runs on one server-side route, the same one the Export button calls, so a role holding it exports Cases over the data API below. Reports are not an export surface here — a report page renders its chart and table, and offers no download.
 
 ### Over the data API
 

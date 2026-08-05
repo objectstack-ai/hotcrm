@@ -12,9 +12,25 @@
  * makes it a real gate and inverts the default — `resolveUserExportAllowed`
  * (plugin-security) returns true only for an explicit `allowExport: true`, and
  * neither `viewAllRecords` nor `modifyAllRecords` substitutes for it. An unset
- * bit now DENIES. Both bulk-egress doors ask before they read: the list views'
- * built-in `exportOptions`, and `ReportService.assertExportAllowed`, which
- * fails a report export closed with `EXPORT_NOT_PERMITTED`.
+ * bit now DENIES.
+ *
+ * WHERE it is enforced, measured on a running dev server (#798). One route
+ * carries bulk egress in this app: `GET /api/v1/data/:object/export`
+ * (`csv` / `xlsx` / `json`), gated by `enforceExportPermission` →
+ * `security.canExport` in `@objectstack/rest`. A principal holding the grant
+ * gets 200 and the rows; one without it gets 403 `EXPORT_NOT_PERMITTED`.
+ *
+ * A list view's `exportOptions` is NOT a second door — it declares which
+ * formats the toolbar's Export button offers, and that button calls the very
+ * same route. So the gate is object-wide and reachable with `curl`, which is
+ * exactly why it has to be enforced server-side rather than by hiding a button.
+ *
+ * `ReportService.assertExportAllowed` is a genuinely separate gate, but it
+ * belongs to the `reports` capability (saved reports + emailed digests over
+ * `sys_saved_report`), which this app does not require — `/api/v1/reports`
+ * answers 501 on a default boot, and the Console's report page ships no export
+ * affordance either way. It is not what any grant below lands on. Do not read
+ * the rule below as depending on it: #798 was filed on exactly that reading.
  *
  * So the grants below are authored, not inherited. The rule, pinned by
  * `test/authorization-coverage.test.ts`:
@@ -24,11 +40,25 @@
  *   a list view declaring `exportOptions`, or a report whose dataset is
  *   built on it.
  *
+ * That rule is an AUTHORING DISCIPLINE about which affordances this app ships,
+ * not a statement about reachability: the export route exists for every
+ * API-exposed object, so a grant on any of them would work. The discipline
+ * keeps the grant list to objects a user can actually reach an export from,
+ * so the permission table stays a description of the product rather than of
+ * the platform. Reachability is pinned separately, by the `enable` guard at
+ * the end of that same test file.
+ *
  * That union is exactly `crm_account`, `crm_case`, `crm_contact`, `crm_lead`,
  * `crm_opportunity` today. Adding `exportOptions` to a view (or a report over
  * a new dataset) means adding the matching grant here in the same change — the
  * guard fails otherwise, which is the point: a surface nobody can use is the
  * failure this axis exists to make loud instead of silent.
+ *
+ * `crm_case` is carried by the report leg alone — no Cases list view declares
+ * `exportOptions` — so its holders export Cases over the data API, not from a
+ * report page. Deleting the case reports would drop it out of the union and
+ * the guard would demand the grant go with them; the grant is live and useful,
+ * so give it a view affordance instead of dropping it.
  *
  * Export is READ-DERIVED (`export ⊆ list`), so the grant opens the door but
  * does not widen the rows: record scope, RLS and sharing still apply on top. A
