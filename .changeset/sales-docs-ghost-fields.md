@@ -14,8 +14,9 @@ looking for fields and behaviour they could never find:
   answered with new fields, since whether HotCRM should carry a fax number is a
   product decision and not something a docs page gets to settle. The two flags
   that do exist are now split by how far they are actually enforced:
-  `email_opt_out` hides the **Send Email** action and suppresses the welcome
-  email, while `do_not_call` is a marker that nothing in the product reads — the
+  `email_opt_out` hides the **Send Email** action and suppresses the
+  contact-created welcome prompt to the owner, while `do_not_call` is a marker
+  that nothing in the product reads — the
   page had claimed it blocks logging a *Call* task. The "admin-only, reps can
   only request a change" sentence is gone too: no profile declares field-level
   permissions on either flag, so every rep who can edit the contact can clear
