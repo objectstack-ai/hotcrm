@@ -192,8 +192,8 @@ const leadHook: Hook = {
     // `cannot_edit_converted` script validation over the four identity fields,
     // documented as the friendlier half of a two-layer design; #575 B1 removed
     // it because this throw always won the race, so the second layer was a
-    // second implementation that could only drift. The message below therefore
-    // has to carry the whole story — hence the attempted-field list.
+    // second implementation that could only drift. The messages below therefore
+    // have to carry the whole story — hence the attempted-field list.
     if (event === 'beforeUpdate' && ctx.user?.id) {
       const previous = ctx.previous;
       const wasConverted = previous?.is_converted === true || previous?.status === 'converted';
@@ -208,8 +208,44 @@ const leadHook: Hook = {
           (k) => !ALLOWED.has(k) && input[k] !== previous?.[k],
         );
         if (violating.length > 0) {
+          // Every lookup on `crm_lead` a referential clear can attack. The
+          // engine's `cascadeDeleteRelations` pass clears a `set_null` lookup
+          // by UPDATING the row that holds it, so deleting the account /
+          // contact / opportunity a converted lead points at (or the lead /
+          // contact it was flagged as a duplicate of) arrives here as an
+          // ordinary `beforeUpdate` — and nothing in the hook context says the
+          // write came from a cascade (measured on 17.0.0-rc.2: the ctx carries
+          // no cascade marker, and `session` is the caller's own). So a delete
+          // of an opportunity was reported as an *edit* of a *lead* (#693).
+          // Both messages below therefore describe the LOCK and the LINK rather
+          // than assuming which record the caller addressed.
+          const REFERENCE_FIELDS = new Set([
+            'converted_account', 'converted_contact', 'converted_opportunity',
+            'duplicate_of_lead', 'duplicate_of_contact',
+          ]);
+          const person = [previous?.first_name, previous?.last_name]
+            .filter((part) => typeof part === 'string' && part.trim() !== '')
+            .join(' ');
+          const name = person || (typeof previous?.company === 'string' ? previous.company : '');
+          const leadId =
+            (typeof previous?.id === 'string' && previous.id) ||
+            (typeof input.id === 'string' && input.id) ||
+            '';
+          const label = [name, leadId ? `(${leadId})` : ''].filter(Boolean).join(' ');
+
+          // A refusal made up ENTIRELY of links being cleared is the shape a
+          // delete of the linked record produces — describe it that way. A
+          // user nulling the same field by hand gets the same (true) sentence.
+          const detached = violating.filter(
+            (k) => REFERENCE_FIELDS.has(k) && input[k] === null && previous?.[k] != null,
+          );
+          if (detached.length === violating.length) {
+            throw new Error(
+              `${label ? `Converted lead ${label}` : 'A converted lead'} is locked, so its link(s) ${detached.join(', ')} cannot be cleared — which also blocks deleting the record(s) they point at. Delete the lead first, or have an admin clear the link with a system write.`,
+            );
+          }
           throw new Error(
-            `Cannot edit a converted lead (attempted: ${violating.join(', ')}). Make changes on the converted records instead.`,
+            `Cannot edit ${label ? `converted lead ${label}` : 'a converted lead'} (attempted: ${violating.join(', ')}). Make changes on the converted records instead.`,
           );
         }
       }

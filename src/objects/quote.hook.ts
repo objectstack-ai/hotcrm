@@ -59,8 +59,32 @@ const quoteValidation: Hook = {
           (k) => !allowed.has(k) && !SYSTEM_FIELDS.has(k) && input[k] !== previous[k],
         );
         if (changed.length > 0) {
+          // Same defect class as #693: the freeze also fires from a write the
+          // caller never made. Deleting an opportunity (or a contact) an
+          // ACCEPTED quote references makes the engine clear that lookup, and
+          // the clear arrives here as an ordinary `beforeUpdate` — measured:
+          // `DELETE /crm_opportunity/<id>` answered "Quote is accepted; only
+          // internal_notes may be edited. Attempted: crm_opportunity.", naming
+          // an object the caller never addressed. Nothing in the hook context
+          // marks a cascade, so the refusal names the frozen quote and the link.
+          const REFERENCE_FIELDS = new Set(['crm_account', 'crm_contact', 'crm_opportunity']);
+          const name = typeof previous.name === 'string' ? previous.name : '';
+          const quoteId =
+            (typeof previous.id === 'string' && previous.id) ||
+            (typeof input.id === 'string' && input.id) ||
+            '';
+          const label = [name, quoteId ? `(${quoteId})` : ''].filter(Boolean).join(' ');
+          const subject = label ? `Quote ${label}` : 'Quote';
+          const detached = changed.filter(
+            (k) => REFERENCE_FIELDS.has(k) && input[k] === null && previous[k] != null,
+          );
+          if (detached.length === changed.length) {
+            throw new Error(
+              `${subject} is ${previous.status as string} and frozen, so its link(s) ${detached.join(', ')} cannot be cleared — which also blocks deleting the record(s) they point at. Delete the quote first, or have an admin clear the link with a system write.`,
+            );
+          }
           throw new Error(
-            `Quote is ${previous.status as string}; only internal_notes may be edited. Attempted: ${changed.join(', ')}.`,
+            `${subject} is ${previous.status as string}; only internal_notes may be edited. Attempted: ${changed.join(', ')}.`,
           );
         }
       }

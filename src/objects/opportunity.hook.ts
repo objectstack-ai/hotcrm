@@ -84,8 +84,33 @@ const opportunityValidationHook: Hook = {
           (k) => !NARRATIVE_FIELDS.has(k) && !SYSTEM_FIELDS.has(k) && !APPROVAL_FIELDS.has(k) && input[k] !== previous[k],
         );
         if (violating.length > 0) {
+          // Same defect class as #693's two reported cases: this freeze also
+          // fires from a write the caller never made. Deleting a contact or a
+          // campaign a CLOSED opportunity references makes the engine clear
+          // that lookup, which arrives here as an ordinary `beforeUpdate` —
+          // measured: `DELETE /crm_contact/<id>` answered
+          // "Opportunity is closed (closed_won); … Attempted: primary_contact."
+          // The hook cannot tell a cascade from a hand edit (no marker in the
+          // context), so the refusal names the frozen record and the link
+          // instead of assuming the caller addressed the opportunity.
+          const REFERENCE_FIELDS = new Set(['crm_account', 'primary_contact', 'crm_campaign']);
+          const name = typeof previous.name === 'string' ? previous.name : '';
+          const oppId =
+            (typeof previous.id === 'string' && previous.id) ||
+            (typeof input.id === 'string' && input.id) ||
+            '';
+          const label = [name, oppId ? `(${oppId})` : ''].filter(Boolean).join(' ');
+          const subject = label ? `Opportunity ${label}` : 'Opportunity';
+          const detached = violating.filter(
+            (k) => REFERENCE_FIELDS.has(k) && input[k] === null && previous[k] != null,
+          );
+          if (detached.length === violating.length) {
+            throw new Error(
+              `${subject} is closed (${prevStage}) and frozen, so its link(s) ${detached.join(', ')} cannot be cleared — which also blocks deleting the record(s) they point at. Delete the opportunity first, or have an admin clear the link with a system write.`,
+            );
+          }
           throw new Error(
-            `Opportunity is closed (${prevStage}); only ${[...NARRATIVE_FIELDS].join(', ')} may be edited. Attempted: ${violating.join(', ')}.`,
+            `${subject} is closed (${prevStage}); only ${[...NARRATIVE_FIELDS].join(', ')} may be edited. Attempted: ${violating.join(', ')}.`,
           );
         }
       }
