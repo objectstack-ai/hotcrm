@@ -12,7 +12,7 @@ HotCRM is designed to **fit into your stack**, not replace it. Today it does tha
 ## What ships today
 
 - 🔌 **The platform data API** — every CRM object is reachable over the runtime's HTTP API, with ObjectQL-shaped filters and field selection. See [API reference](/docs/customization/api-reference).
-- 📤 **CSV / XLSX export** from a list view — the account, contact, lead and opportunity list views each declare `exportOptions: ['csv', 'xlsx']`.
+- 📤 **CSV / XLSX export** from a list view — the account, contact, lead, opportunity and case list views each declare `exportOptions: ['csv', 'xlsx']`.
 - 📥 **Spreadsheet import** with reusable column mappings and a dry-run first. See [Import your own data](/docs/guides/importing-your-data).
 - ✉️ **Outbound email** — **Send Email** on a contact, queued through the platform email service. Outbound only, and it leaves the building only if the deployment configures a transport. See [Email & Calendar](/docs/guides/email-and-calendar).
 - 🔔 **In-app notification** — the `notify` flow node delivers through the platform messaging service to the Console bell. Inside HotCRM, not into Slack or an inbox.

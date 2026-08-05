@@ -516,34 +516,39 @@ describe('#488 regressions stay fixed', () => {
  *
  * The rule these guards pin (canonical note: `src/profiles/index.ts`):
  * a profile grants `allowExport` on an object IFF it already holds `allowRead`
- * there AND the app ships an export surface for it. Both directions matter —
- * a surface nobody can use is the outage, and a grant behind no surface is
- * bulk egress nobody asked for. That union is an authoring discipline about
- * the affordances this app ships; whether the grant can be exercised at all is
- * the separate `enable` question, pinned by the last guard below.
+ * there AND a list view for that object declares `exportOptions`. Both
+ * directions matter — a surface nobody can use is the outage, and a grant
+ * behind no surface is bulk egress nobody asked for. That union is an
+ * authoring discipline about the affordances this app ships; whether the grant
+ * can be exercised at all is the separate `enable` question, pinned by the
+ * last guard below.
+ *
+ * #817 made the surface side one-to-one: `exportOptions` on a list view is now
+ * the ONLY thing that counts as a surface. It used to also count "a report
+ * over a dataset built on the object", which named a door that #798 measured
+ * shut — see the note on `exportSurfaces` below.
  */
 describe('allowExport tracks the app’s real export surfaces', () => {
-  const datasetByName = new Map<string, AnyRec>(
-    ((stack as any).datasets ?? []).map((d: AnyRec) => [d.name as string, d] as [string, AnyRec]),
-  );
   const views: AnyRec[] = (stack as any).views ?? [];
-  const reports: AnyRec[] = (stack as any).reports ?? [];
-
-  /** Every `dataset:` reference anywhere in a report, including `blocks[]`. */
-  const datasetRefsIn = (node: unknown, out: string[] = []): string[] => {
-    if (Array.isArray(node)) node.forEach((n) => datasetRefsIn(n, out));
-    else if (node && typeof node === 'object') {
-      for (const [k, v] of Object.entries(node as AnyRec)) {
-        if (k === 'dataset' && typeof v === 'string') out.push(v);
-        else datasetRefsIn(v, out);
-      }
-    }
-    return out;
-  };
 
   /**
-   * Objects with a bulk-egress door: a list view declaring `exportOptions`,
-   * or a report whose dataset is built on them.
+   * Objects with a bulk-egress door: a list view declaring `exportOptions`.
+   *
+   * A report is NOT one, and this used to say it was. #798 measured the
+   * Console's report page on a running server: it renders a chart and a data
+   * table and offers no download at all, and `ReportService`'s own export gate
+   * belongs to the `reports` capability this app does not require. So the
+   * report leg named surfaces that do not exist — and it named them in the
+   * direction that hurts, because the guard below turns a surface into a
+   * REQUIRED grant: a new report over, say, `crm_task` would have made this
+   * suite demand bulk egress on `crm_task`, which is precisely the
+   * over-granting the axis exists to prevent.
+   *
+   * Dropping the leg costs no coverage: `crm_case` was the only object it
+   * carried alone, and #817 gave the Cases list its own `exportOptions`, so
+   * the union is unchanged at `crm_account`, `crm_case`, `crm_contact`,
+   * `crm_lead`, `crm_opportunity` — now every one of them by an affordance a
+   * user can actually click.
    */
   const exportSurfaces = new Set<string>();
   for (const v of views) {
@@ -551,12 +556,6 @@ describe('allowExport tracks the app’s real export surfaces', () => {
     for (const list of [v.list, ...Object.values(v.listViews ?? {})].filter(Boolean) as AnyRec[]) {
       if (!(list.exportOptions ?? []).length) continue;
       const objectName = list.data?.object ?? defaultObject;
-      if (typeof objectName === 'string') exportSurfaces.add(objectName);
-    }
-  }
-  for (const r of reports) {
-    for (const ref of datasetRefsIn(r)) {
-      const objectName = datasetByName.get(ref)?.object;
       if (typeof objectName === 'string') exportSurfaces.add(objectName);
     }
   }
@@ -571,7 +570,7 @@ describe('allowExport tracks the app’s real export surfaces', () => {
   it('the app actually has export surfaces (the guard is wired to real metadata)', () => {
     expect(
       [...exportSurfaces].sort(),
-      'no exportOptions view and no report dataset resolved — this guard has gone blind',
+      'no list view declares exportOptions — this guard has gone blind',
     ).not.toEqual([]);
   });
 

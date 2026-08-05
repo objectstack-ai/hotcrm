@@ -12,7 +12,7 @@ HotCRM 的设计目标是**融入你的技术栈**，而非取代它。今天它
 ## 今天已落地的能力
 
 - 🔌 **平台数据 API**——每个 CRM 对象都可以通过运行时的 HTTP API 访问，支持 ObjectQL 形态的筛选与字段选择。参见 [API 参考](/zh-Hans/docs/customization/api-reference)。
-- 📤 **列表视图的 CSV / XLSX 导出**——客户、联系人、线索与商机的列表视图各自声明了 `exportOptions: ['csv', 'xlsx']`。
+- 📤 **列表视图的 CSV / XLSX 导出**——客户、联系人、线索、商机与工单的列表视图各自声明了 `exportOptions: ['csv', 'xlsx']`。
 - 📥 **电子表格导入**，带可复用的列映射，并可先试运行。参见[导入你自己的数据](/zh-Hans/docs/guides/importing-your-data)。
 - ✉️ **对外邮件**——联系人上的**发送邮件**，把邮件排入平台邮件服务。只有出站方向，而且只有在部署配置了传输方式时才真的发得出去。参见[邮件与日历](/zh-Hans/docs/guides/email-and-calendar)。
 - 🔔 **应用内通知**——`notify` 流程节点经平台消息服务送达 Console 铃铛。是在 HotCRM 内部，而不是送进 Slack 或某个收件箱。
