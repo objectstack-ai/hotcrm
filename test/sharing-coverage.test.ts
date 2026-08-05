@@ -51,7 +51,17 @@ const SHARING_DOC = 'content/docs/administration/sharing-and-security.mdx';
 /**
  * How far a rep's reach on an account carries into the records under it.
  *
- *   'derived'  — OWD is controlled_by_parent: the child follows the account.
+ *   'derived'  — OWD is controlled_by_parent. NOTE what that means as MEASURED
+ *                against the engine (`test/parent-derived-reach.test.ts`, #549):
+ *                the child is not filtered to accounts the caller can READ —
+ *                the ADR-0055 derivation resolves the master id set through the
+ *                master's RLS policies only (this app authors none on
+ *                `crm_account`) under a system context, so ownership and
+ *                `sys_record_share` grants are not folded in. In this app the
+ *                practical reach of a 'derived' child is therefore every record
+ *                of that object, for every holder of object-level read — which
+ *                is why #549's Option 2 (convert quote/contract) does NOT
+ *                deliver "follows the account" and is unresolved here.
  *   'own_only' — private, no sharing rule: the child stays with its owner.
  *   'partial'  — private, but a rule of its own widens SOME records (never by
  *                account criteria — the rules match on the child's own fields).
