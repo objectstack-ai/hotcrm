@@ -86,6 +86,17 @@ export const EventAttendee = ObjectSchema.create({
       format: 'EA-{00000}',
     }),
 
+    // Deliberately left on the spec default, and NOT cascaded with the party
+    // lookups below (#711). Because it is REQUIRED, the engine escalates the
+    // stored `set_null` to a refusal at delete time, with a message that names
+    // the real obstacle instead of an unrelated rule — measured on
+    // 17.0.0-rc.2: "Cannot delete crm_event (...): 3 dependent
+    // crm_event_attendee record(s) reference it via crm_event (crm_event is
+    // required, so it cannot be cleared)." That is the correct answer on this
+    // side, for the same reason `crm_campaign_member.crm_campaign` keeps it
+    // (#696): a meeting's attendee list is the meeting's historical record, not
+    // a per-person artefact. `test/event-attendee-cascade.test.ts` pins the
+    // resolved value so a copy-paste of the three cascades cannot reach here.
     crm_event: Field.lookup('crm_event', {
       group: 'basic',
       label: 'Event',
@@ -109,21 +120,77 @@ export const EventAttendee = ObjectSchema.create({
       ],
     }),
 
+    // `deleteBehavior: 'cascade'` on ALL THREE party lookups (#711, the same
+    // construction and the same defect as #696/`crm_campaign_member`). A lookup
+    // defaults to `set_null`, and that default made every person who had ever
+    // been logged as a meeting attendee permanently undeletable: deleting the
+    // party cleared this column, the row the engine had just edited instantly
+    // violated `attendee_resolves` below, and the whole delete rolled back with
+    // an error naming an object the caller never addressed. Measured on
+    // 17.0.0-rc.2, before the fix:
+    //
+    //   DELETE lead    -> "An attendee must point at a Contact, a Lead, a User,
+    //                      or name an external guest"  (lead survives)
+    //   DELETE contact -> same        DELETE user -> same
+    //
+    // `external_name` is the rule's fourth escape hatch, but it is blank on
+    // every row the product actually writes (`src/actions/global.actions.ts`
+    // logs attendees with a party reference and never an external name), so it
+    // rescues nothing in practice.
+    //
+    // Cascade rather than `restrict`: an attendee row is a JUNCTION whose whole
+    // meaning is "this person was in this room". Once the person is gone the
+    // row denotes nothing, and the query it exists to serve ("meetings this
+    // person attended") has lost its subject. `restrict` would produce an
+    // accurate message but keep the person undeletable until someone deleted
+    // their attendance by hand, and undeletable PEOPLE is the impact being
+    // fixed. Cascade also leaves no reachable state in which a stored attendee
+    // row breaks its own object's rule.
     crm_contact: Field.lookup('crm_contact', {
       group: 'basic',
       label: 'Contact',
+      deleteBehavior: 'cascade',
       description: 'Set when the attendee is an existing customer contact',
     }),
 
     crm_lead: Field.lookup('crm_lead', {
       group: 'basic',
       label: 'Lead',
+      deleteBehavior: 'cascade',
       description: 'Set when the attendee is still an unconverted lead',
     }),
 
+    // `sys_user` gets the SAME answer as the two CRM parties, and it was the one
+    // worth a second look rather than a copy-paste (#711 raises it explicitly).
+    // What decided it, measured rather than assumed:
+    //
+    //  · Deleting a user is a real, reachable operation. Generic CRUD delete on
+    //    the identity table is off (`sys_user` ships `apiMethods: ['get',
+    //    'list', 'update', 'bulk']`), but better-auth's own routes —
+    //    `/api/v1/auth/delete-user`, which the platform's `sys_user` object
+    //    surfaces as the "Delete My Account" record action, and
+    //    `/api/v1/auth/admin/remove-user` — resolve `user` to `sys_user` and
+    //    land on `dataEngine.delete(...)`, i.e. the SAME ObjectQL delete that
+    //    runs the referential pass. So `set_null` here is not dormant: it broke
+    //    account erasure for any colleague who had ever attended a meeting.
+    //  · The app's shipped stance is already "a deleted user's references
+    //    degrade". HotCRM holds 15 lookups on `sys_user`; the other 14 (every
+    //    `owner_id`, `renewal_owner`, `product_manager`) are `set_null` and no
+    //    validation rule anywhere reads a user reference. `restrict` here would
+    //    make this junction the ONE app row able to veto a platform identity
+    //    erasure — an app object holding a `protection: { lock: 'full' }`,
+    //    better-auth-managed table hostage, surfacing as an opaque failure from
+    //    an auth route. That is the layering inversion, not the fix.
+    //  · The cost of cascade is bounded and is the right half to lose: the
+    //    meeting itself (`crm_event` — subject, times, outcome notes) survives
+    //    untouched; only the per-person row goes, and it goes because the
+    //    person's identity record was erased. Deactivation, not deletion, is
+    //    the ordinary offboarding path (the platform ships ban/unban for that),
+    //    and it touches nothing here.
     sys_user: Field.lookup('sys_user', {
       group: 'basic',
       label: 'User',
+      deleteBehavior: 'cascade',
       description: 'Set when the attendee is a colleague',
     }),
 
