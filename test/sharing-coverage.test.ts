@@ -75,6 +75,25 @@ const tableAfter = (doc: string, heading: string, file: string = SHARING_DOC): s
 };
 
 /**
+ * Bullet items of the list under `heading`, up to the next heading.
+ *
+ * The sibling of {@link tableAfter} for the pages whose claims live in a bullet
+ * list rather than a table — `profiles.mdx`'s per-profile blocks (#807). Same
+ * contract: it asserts the heading is still there, so a section that was renamed
+ * fails loudly instead of silently yielding nothing for every rule to pass over.
+ */
+const bulletsAfter = (doc: string, heading: string, file: string): string[] => {
+  const start = doc.indexOf(heading);
+  expect(start, `"${heading}" is gone from ${file} — this guard has gone blind`).toBeGreaterThan(-1);
+  const bullets: string[] = [];
+  for (const line of doc.slice(start + heading.length).split('\n')) {
+    if (line.startsWith('#')) break; // the next heading ends the block
+    if (line.startsWith('- ')) bullets.push(line.slice(2).trim());
+  }
+  return bullets;
+};
+
+/**
  * How far a rep's reach on an account carries into the records under it.
  *
  *   'derived'  — OWD is controlled_by_parent. NOTE what that means as MEASURED
@@ -816,4 +835,217 @@ describe('every locale states the parent-derived reach this release computes', (
     }
     expect(bad, `pages out of step on what Controlled by Parent reaches:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
+});
+
+/**
+ * The profiles page states that same reach, in every locale (#807).
+ *
+ * Exactly the defect above, one page over. `profiles.mdx` describes the same
+ * derivation from the persona's side — what a Sales Representative reaches on
+ * Contact and on the two line-item objects — and PR #699 rewrote those two
+ * bullets in English only. The two Chinese pages went on promising the
+ * pre-#699 reading for six weeks ("**联系人** 跟随客户", "对自己的交易和报价拥有完整
+ * 权限"), which is not merely stale but the reverse of what ships: a rep reading
+ * one account reads both accounts' contacts, and a rep reading NO quote still
+ * reads every quote's lines (`test/parent-derived-reach.test.ts`).
+ *
+ * Nothing was red. The reach guard above stops at `sharing-and-security`, the
+ * OWD and related-list rules read tables this page does not have, and
+ * `docs-drift.test.ts` compares callout counts, which #699 did not change —
+ * `grep -rn "profiles.mdx" test/` was empty before this block.
+ *
+ * ## Why a second ledger rather than a fourth entry in PAGES
+ *
+ * {@link PAGES} describes pages built out of the OWD and related-list TABLES;
+ * every field on it (`owdHeading`, `owdCell`, `countSentence`,
+ * `relatedListHeading`) is meaningless here, because this page carries the claim
+ * in a bullet list under a persona heading. So this block reuses the parsing
+ * infrastructure — {@link DOC}, {@link bulletsAfter}, an authored-per-locale
+ * RegExp ledger, the same anti-vacuum discipline — and not the row shape.
+ *
+ * ## What is derived, and what is authored
+ *
+ * The CLAIM WORDING is authored per locale in {@link PROFILE_PAGES}: no locale's
+ * prose is derivable, and — same reason as the reach guard above — the app ships
+ * no zh-Hant pack and the zh-Hans page translates independently of the one it
+ * does ship. What is DERIVED is the precondition these three bullets rest on:
+ * the objects they describe must still be registered and still ship
+ * `controlled_by_parent`. That is what keeps the authored regexes answerable to
+ * the app: the day Contact stops being parent-derived, this block goes red on
+ * the derived rule and the wording has to be re-taken rather than re-matched.
+ *
+ * Like the guard above, what the claim rules pin is CO-MOVEMENT, not truth. The
+ * truth is measured in `test/parent-derived-reach.test.ts`. The English page is
+ * checked here too, deliberately: it is the baseline the Chinese pages were
+ * brought to, so if a future rewrite moves it and leaves them behind, the
+ * English rule is the one that fires first and names the page.
+ *
+ * The pointer is checked per locale rather than as a language-neutral token: on
+ * this page it is a cross-reference to *Controlled by Parent, in practice* on
+ * the sharing page (that is the form the English page uses — the upstream issue
+ * number lives on the page that pointer lands on), and both the localized route
+ * prefix and the translated section title differ per locale.
+ *
+ * ## Reverse verification (#807)
+ *
+ * Five directions, each predicted before it was run, each measured on this tree:
+ *
+ *   1. Put the pre-#699 promise back on the zh-Hans page ("**联系人** 跟随客户：
+ *      代表能看到自己可见的每个客户下的联系人") → predicted RED on that page's claim
+ *      rule ONLY: no table row moved, so nothing above can see it, and that is
+ *      the whole reason this block exists. Measured, 1 failed | 35 passed — and
+ *      that one test reported THREE findings, not one, because the pre-#699
+ *      bullet carried no cross-reference either: "no bullet matching
+ *      /组织内的每一个联系人 —— 而不只是代表能看到的那些客户下面的/", "does not point at
+ *      /zh-Hans/docs/administration/sharing-and-security", "does not point at
+ *      *“由父级控制”在实践中*". Losing the claim and losing the pointer to what
+ *      explains it are the same regression here, which is why they are one rule.
+ *   2. Put the narrowed line-item promise back on the zh-Hant page ("對自己的交易
+ *      和報價擁有完整權限") → predicted RED on that page's claim rule only, naming
+ *      the line-item regex and leaving the contact one green. Measured,
+ *      1 failed | 35 passed: "profiles.zh-Hant.mdx (zh-Hant): no bullet matching
+ *      /每一筆交易、每一張報價的明細，而不只是代表自己的/".
+ *   3. Break the ENGLISH bullet (drop "not only those on accounts the rep can
+ *      see") → predicted RED on the English page's claim rule, proving this
+ *      block watches the baseline too and does not merely compare the two
+ *      Chinese pages to each other. Measured, 1 failed | 35 passed:
+ *      "profiles.mdx (en): no bullet matching /every contact in the org — not
+ *      only those on accounts the rep can see/".
+ *   4. Rename the zh-Hans persona heading (`### 💼 Sales Representative` →
+ *      `### 💼 Sales Rep`) → predicted RED TWICE on that page and nowhere else:
+ *      the parse rule and the claim rule both read the block through
+ *      {@link bulletsAfter}, so a section that moved fails as a missing heading
+ *      rather than as an empty list every rule passes over. Measured,
+ *      2 failed | 34 passed, both "…"### 💼 Sales Representative" is gone from
+ *      content/docs/administration/profiles.zh-Hans.mdx — this guard has gone
+ *      blind".
+ *   5. Typo one name in {@link PARENT_DERIVED_IN_PROFILES}
+ *      (`crm_quote_line_item` → `crm_quote_lineitem`) → predicted RED on the
+ *      derived precondition, naming it as unregistered. This is the anti-vacuum:
+ *      it proves that rule reads the compiled stack instead of comparing an
+ *      authored list to itself. Measured, 1 failed | 35 passed:
+ *      "crm_quote_lineitem: not an object this app registers".
+ */
+const PROFILE_DOC = 'content/docs/administration/profiles.mdx';
+
+/**
+ * The objects the Sales Representative bullets claim a parent-derived reach for.
+ *
+ * Derived precondition, not decoration: every name here must be registered and
+ * must still ship `controlled_by_parent`. If one stops, the bullets below are
+ * describing a derivation the app no longer has, and re-matching the regex would
+ * be the wrong repair.
+ */
+const PARENT_DERIVED_IN_PROFILES = [
+  'crm_contact',
+  'crm_opportunity_line_item',
+  'crm_quote_line_item',
+] as const;
+
+interface ProfilePage {
+  locale: Locale;
+  file: string;
+  /** The heading the Sales Representative bullet list follows. */
+  repHeading: string;
+  /** The bullet stating how far Contact's parent derivation reaches. */
+  contactReach: RegExp;
+  /** The bullet stating how far the line-item derivation reaches. */
+  lineItemReach: RegExp;
+  /**
+   * The cross-reference into the sharing page's *Controlled by Parent, in
+   * practice* section: the localized route, then the translated section title.
+   */
+  pointers: readonly string[];
+}
+
+const PROFILE_PAGES: ProfilePage[] = [
+  {
+    locale: 'en',
+    file: PROFILE_DOC,
+    repHeading: '### 💼 Sales Representative',
+    contactReach: /every contact in the org — not only those on accounts the rep can see/,
+    lineItemReach: /reaches every deal's and every quote's lines, not only the rep's own/,
+    pointers: ['/docs/administration/sharing-and-security', '*Controlled by Parent, in practice*'],
+  },
+  {
+    locale: 'zh-Hans',
+    file: 'content/docs/administration/profiles.zh-Hans.mdx',
+    repHeading: '### 💼 Sales Representative',
+    contactReach: /组织内的每一个联系人 —— 而不只是代表能看到的那些客户下面的/,
+    lineItemReach: /每一笔交易、每一张报价的行项，而不只是代表自己的/,
+    pointers: [
+      '/zh-Hans/docs/administration/sharing-and-security',
+      '*“由父级控制”在实践中*',
+    ],
+  },
+  {
+    locale: 'zh-Hant',
+    file: 'content/docs/administration/profiles.zh-Hant.mdx',
+    repHeading: '### 💼 Sales Representative',
+    contactReach: /組織內的每一個聯絡人 —— 而不只是代表能看到的那些客戶底下的/,
+    lineItemReach: /每一筆交易、每一張報價的明細，而不只是代表自己的/,
+    pointers: [
+      '/zh-Hant/docs/administration/sharing-and-security',
+      '*「由父層控制」在實務中*',
+    ],
+  },
+];
+
+describe('every locale states the parent-derived reach on the profiles page', () => {
+  it('the objects those bullets describe are still parent-derived', () => {
+    const bad = PARENT_DERIVED_IN_PROFILES.map((name) => {
+      if (!objectByName.has(name)) return `${name}: not an object this app registers`;
+      const owd = owdOf(name);
+      return owd === 'controlled_by_parent' ? null : `${name}: ships '${owd}', not controlled_by_parent`;
+    }).filter((m): m is string => m !== null);
+    expect(
+      bad,
+      'the profiles page describes a parent-derived reach for objects that are no longer ' +
+        `parent-derived:\n  ${bad.join('\n  ')}\n` +
+        'Re-take the wording on all three pages against what the app now ships — do not ' +
+        'edit the regexes to match prose that describes a derivation nobody has.',
+    ).toEqual([]);
+  });
+
+  for (const page of PROFILE_PAGES) {
+    describe(page.file, () => {
+      const bulletsOf = () => bulletsAfter(DOC(page.file), page.repHeading, page.file);
+
+      it('the Sales Representative block still parses', () => {
+        // Anti-vacuum: an empty bullet list would let the rule below pass by
+        // searching nothing at all.
+        expect(
+          bulletsOf().length,
+          `no bullet parsed out of ${page.file} under "${page.repHeading}" — the persona block ` +
+            'moved, changed shape, or lost its heading, and the rule below has gone blind',
+        ).toBeGreaterThan(0);
+      });
+
+      it('states the reach Contact and the line items really have, and points at what explains it', () => {
+        const block = bulletsOf();
+        const bad: string[] = [];
+        for (const claim of [page.contactReach, page.lineItemReach]) {
+          if (!block.some((bullet) => claim.test(bullet))) {
+            bad.push(
+              `${page.file} (${page.locale}): no bullet matching ${claim} — either this page ` +
+                'still promises the pre-#699 reach ("contacts follow the account", "full ' +
+                'control of their own deals"), or the wording moved',
+            );
+          }
+        }
+        for (const pointer of page.pointers) {
+          if (!block.some((bullet) => bullet.includes(pointer))) {
+            bad.push(`${page.file} (${page.locale}): does not point at ${pointer}`);
+          }
+        }
+        expect(
+          bad,
+          `profiles pages out of step on what a rep's parent-derived reach is:\n  ${bad.join('\n  ')}\n` +
+            'The measured reach is pinned by test/parent-derived-reach.test.ts. If the platform ' +
+            'narrowed it (objectstack-ai/objectstack#5386), rewrite all three profiles pages, all ' +
+            'three sharing pages and both ledgers together; do not relax a regex to get green.',
+        ).toEqual([]);
+      });
+    });
+  }
 });
