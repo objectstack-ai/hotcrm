@@ -37,7 +37,6 @@ Permission sets are **explicit-allow only**: if an object is not listed in a set
 - Full control of **opportunity and quote line items**, so pricing on any rep's deal can be fixed
 - Read **cases**, **knowledge articles** and **campaign members**
 - **Forecasts**: reads every rep's snapshot and adjusts the committed number — the forecast is the manager's own deliverable
-- Curates the **competitor** battlecards
 - Cannot see a deal another user flagged **Private** (see [Sharing & security](/docs/administration/sharing-and-security))
 
 ### 💼 Sales Representative
@@ -45,7 +44,7 @@ Permission sets are **explicit-allow only**: if an object is not listed in a set
 - Create, read and edit their **own** leads, accounts, opportunities, quotes and tasks
 - **Contacts**: every contact in the org — not only those on accounts the rep can see. Contact is Controlled by Parent, and in this release that derivation resolves org-wide rather than per account (see [Sharing & security](/docs/administration/sharing-and-security), *Controlled by Parent, in practice*)
 - **Opportunity and quote line items** — full control, which is what the "Products" related list and quote building need. Controlled by Parent again, so this reaches every deal's and every quote's lines, not only the rep's own
-- Read the **product** catalog, **campaigns**, **campaign members**, **knowledge articles** and **competitor** battlecards, and file a new competitor they ran into
+- Read the **product** catalog, **campaigns**, **campaign members** and **knowledge articles**
 - Read their **own forecast snapshots** (they are written by the nightly forecast job, never by hand)
 - Read their own **contracts** and **cases**; deleting is a manager privilege (their own tasks excepted)
 
@@ -62,7 +61,7 @@ Permission sets are **explicit-allow only**: if an object is not listed in a set
 - Create, read and edit **leads**, **contacts** and **campaigns** org-wide
 - **Campaign members**: enrol and update membership — this is what the "Add to Campaign" action writes
 - Read **accounts** and **opportunities** org-wide, for campaign→pipeline ROI (a deal flagged **Private** stays hidden)
-- Read **knowledge articles** and **competitor** battlecards
+- Read **knowledge articles**
 - Cannot delete records
 
 ### 🌐 Guest (Public Forms)
