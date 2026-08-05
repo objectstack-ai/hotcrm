@@ -238,8 +238,9 @@ export const OpportunityViews = defineView({
       // grammar `DATE_MACRO_PARAM_RE`, `{N_(minutes|hours|days|weeks|months|
       // years)_(ago|from_now)}` — and on the pinned 17.0.0-rc.2 it reaches the
       // driver already substituted for an ISO date. It is the same seam
-      // `closing_this_quarter` uses a few views below, pinned against a real
-      // engine in `test/forecast-current-quarter-view.test.ts`.
+      // `closing_this_quarter` — the very next view in this file — relies on,
+      // pinned against a real engine in
+      // `test/forecast-current-quarter-view.test.ts`.
       //
       // Correcting that half of the comment does not decide anything about the
       // filter, and is deliberately not a licence to change it: expressing the
