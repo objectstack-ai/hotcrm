@@ -25,7 +25,7 @@ Measured, and restated:
   import**. It reads HotCRM's own saved mappings — the wizard lists the mappings
   whose `targetObject` is the object you are on, so `crm_account_import`,
   `crm_contact_import` and `crm_lead_import` are the same three the API path in
-  [Import your own data](/docs/guides/importing-your-data) names. The two pages
+  the `guides/importing-your-data` page names. The two pages
   now describe one feature from two ends and link to each other.
 - **No completion email.** Progress is on screen and the run lands in History;
   the platform email service is outbound-only and delivers nothing until a
