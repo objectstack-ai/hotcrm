@@ -922,51 +922,17 @@ describe('list-level action references resolve', () => {
   });
 
   /**
-   * No view may wire an action whose bulk invocation path is known dead (#588).
+   * Bulk dispatch (`bulkActionDefs` / `bulkActions`) is pinned in
+   * `test/bulk-action-dispatch.test.ts`.
    *
-   * `bulkActions` renders a selection-bar button. For `mass_update_stage` that
-   * button fires ZERO network requests and then toasts "Action completed
-   * successfully" (#508, path 2, verified live against the dev console) — the
-   * worst possible failure mode, because a rep sees a stage move confirmed and
-   * silently not applied. Neither `os validate` nor the dangling-reference
-   * guard above can see this: the action IS defined, so the reference resolves
-   * and the metadata is shape-valid. Only this list knows the button is dead.
-   *
-   * Retire an entry here in the SAME PR that proves its path works — for
-   * `mass_update_stage` that means #508: the selection bar POSTing
-   * /api/v1/actions/crm_opportunity/mass_update_stage with `selectedIds`, and
-   * the body fixed to match the engine facade (see `action-sandbox.test.ts`).
+   * A guard forbidding `mass_update_stage` on any list used to live here: the
+   * selection-bar button was found to be a client-side no-op (#588), so the
+   * wiring was treated as the defect. #508 disproved that premise — the console
+   * delivers a selection through `bulkActionDefs` + `execution: 'aggregate'`
+   * (objectstack-ai/objectstack#5568), and the button was inert because the
+   * DECLARATION had been removed. The guard is inverted rather than deleted,
+   * and moved: this file is one edit from the 100KB hygiene ceiling.
    */
-  const BULK_INVOCATION_DEAD: Record<string, string> = {
-    mass_update_stage: '#508 — selection-bar button is a client-side no-op in console 16.1.0',
-  };
-
-  it('no view wires an action whose bulk path is known dead', () => {
-    const wired: string[] = [];
-    for (const v of views) {
-      const lists = [v.list, ...Object.values(v.listViews ?? {})].filter(Boolean) as AnyRec[];
-      for (const list of lists) {
-        for (const name of list.bulkActions ?? []) {
-          const why = typeof name === 'string' ? BULK_INVOCATION_DEAD[name] : undefined;
-          if (why) wired.push(`view "${list.name ?? 'default'}": "${name}" — ${why}`);
-        }
-      }
-    }
-    expect(wired, `dead bulk buttons back on a list view:\n  ${wired.join('\n  ')}`).toEqual([]);
-  });
-
-  /**
-   * …and the counterpart: un-wiring must not become deletion.
-   *
-   * The definition is what makes the #508 restore a one-line edit, and what
-   * keeps the KNOWN-BROKEN note, the translations and the sandbox pin alive. A
-   * future cleanup pass that "removes the unused action" would throw all of
-   * that away and quietly close the paper trail.
-   */
-  it('keeps the definition of every un-wired action so the restore stays one line', () => {
-    const missing = Object.keys(BULK_INVOCATION_DEAD).filter((n) => !actionNames.has(n));
-    expect(missing, `un-wired but also deleted:\n  ${missing.join('\n  ')}`).toEqual([]);
-  });
 });
 
 describe('row colors and kanban groups key off real option values', () => {

@@ -291,11 +291,14 @@ describe('every script action body executes under QuickJS', () => {
    * Reverting the body to `update(id, { … })` turns all three red, plus the
    * `it.each` case above, which now covers this action like any other.
    *
-   * The MULTI-record leg still has no live invocation path — the console cannot
-   * deliver a selection to an action at all (objectstack-ai/objectstack#5568),
-   * which is why #508 stays open and `bulkActions` stays un-wired. The loop is
-   * covered anyway, because the moment that delivery lands the only thing
-   * standing between it and a mass stage move is this body.
+   * The MULTI-record leg is live as of #508: the opportunity list declares
+   * `bulkActionDefs: [{ name: 'mass_update_stage', operation: 'custom',
+   * execution: 'aggregate' }]`, and the renderer delivers the whole selection
+   * in the builtin `params._selectedIds` — which a script body reads as
+   * `input._selectedIds`, because `input` IS the params bag. The underscore is
+   * the entire reason this looked undeliverable for two release candidates
+   * (objectstack-ai/objectstack#5568, closed works-as-declared). The two legs
+   * below execute that shape against a real kernel.
    */
   describe('mass_update_stage writes the stage it was given (#508, CRM half)', () => {
     const MASS_UPDATE = 'crm_opportunity:mass_update_stage';
@@ -374,24 +377,57 @@ describe('every script action body executes under QuickJS', () => {
       expect(stored?.stage, 'the stage move never reached the store').toBe('needs_analysis');
     });
 
-    it('walks every id of a selection, once the console can deliver one', async () => {
+    it('moves every STORED row of an aggregate selection — the multi-row path end to end', async () => {
       const api = ql.createContext({ isSystem: true });
       const a = await api.object('crm_opportunity').insert({ name: 'Deal A', stage: 'prospecting' });
       const b = await api.object('crm_opportunity').insert({ name: 'Deal B', stage: 'proposal' });
 
       const { result } = await runActionBody(action(MASS_UPDATE), {
         objectName: 'crm_opportunity',
-        // No `record`: a selection-scoped dispatch carries no single recordId,
-        // which is exactly why the body prefers `input.selectedIds`.
-        input: { stage: 'negotiation', selectedIds: [a.id, b.id] },
+        // No `record`: an aggregate dispatch carries NO recordId — the whole
+        // selection arrives under the builtin `_selectedIds` instead. This is
+        // the shape the grid renderer POSTs, underscore included.
+        input: { stage: 'negotiation', _selectedIds: [a.id, b.id] },
         engine: asBodyEngine(ql),
       });
 
       expect(result).toEqual({ stage: 'negotiation', updated: 2 });
+      // Read back from the driver: `updated: 2` is the body's own count, and
+      // the point of this leg is that two rows really moved in the store.
       for (const id of [a.id, b.id]) {
         const stored = await api.object('crm_opportunity').findOne({ where: { id } });
         expect(stored?.stage).toBe('negotiation');
       }
+    });
+
+    it('rejects an aggregate run it cannot cover, instead of counting the miss', async () => {
+      // All-or-nothing (objectui#3139): the selection bar offers no per-row
+      // retry, so a handler that covers only part of the selection must reject
+      // rather than return a success the bar will toast.
+      //
+      // The trap this pins is specific and silent: an id matching no row does
+      // NOT make the engine throw — `update` RESOLVES WITH NULL. A body that
+      // counted iterations instead of returned rows would answer `updated: 2`
+      // for one write, which is exactly the "success toast, nothing written"
+      // failure #588 pulled this button off the list for.
+      const api = ql.createContext({ isSystem: true });
+      const live = await api.object('crm_opportunity').insert({ name: 'Deal C', stage: 'prospecting' });
+      const stale = 'opp_deleted_between_select_and_submit';
+
+      await expect(
+        runActionBody(action(MASS_UPDATE), {
+          objectName: 'crm_opportunity',
+          input: { stage: 'negotiation', _selectedIds: [live.id, stale] },
+          engine: asBodyEngine(ql),
+        }),
+      ).rejects.toThrow(/1 of 2 selected opportunities could not be updated/);
+
+      // And the honest half of "all-or-nothing without a transaction": the row
+      // that WAS written keeps its new stage. The body says so in its error and
+      // in its comment; re-running the action is the retry, which is safe
+      // because setting a stage is idempotent.
+      const stored = await api.object('crm_opportunity').findOne({ where: { id: live.id } });
+      expect(stored?.stage).toBe('negotiation');
     });
   });
 
