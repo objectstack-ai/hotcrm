@@ -309,91 +309,227 @@ describe('the admin docs describe the sharing the app actually ships', () => {
 });
 
 /**
- * The OWD table names every parent-derived object — on all three locale pages (#710).
+ * The OWD table IS the registered-object list — on all three locale pages
+ * (#710 for the parent-derived rows, #790 for the rest of the table).
  *
  * `crm_event_attendee` shipped `controlled_by_parent` with the activity model
  * (#592) and never reached the Org-Wide Defaults table, so the section right
  * under that table went on saying "the four parent-derived objects above" while
- * the app shipped five. Nothing caught it: the two doc rules above read the
- * sharing-rule table and the related-list table, and both stop at the English
- * page.
+ * the app shipped five. #710 pinned that class. Two neighbouring defects it
+ * deliberately left alone (#790) proved the class was drawn too narrowly:
+ * `crm_event` had no row either, and a `Competitor` row outlived the object —
+ * `crm_competitor` went with the demo-only module, taking four profile grants
+ * with it (`.changeset/dangling-competitor-grants.md`), while the row stayed
+ * behind telling admins to look in Setup for an object that is not there.
+ * Neither was parent-derived, so neither was visible to #710's guard.
+ *
+ * So the rule is now the whole table: **one row per registered object, no row
+ * for anything else.** The table earns that reading — with `Competitor` gone and
+ * `Event` added it holds exactly the 17 objects `objectstack.config.ts`
+ * registers, which is what an admin uses it for.
  *
  * ## What is derived, and what is authored
  *
- * The ROW SET is derived from the compiled stack — every object whose
- * `sharingModel` is `controlled_by_parent` must have a row, and no row may claim
- * Controlled by Parent for anything else. The ROW LABEL per locale is authored
- * below, because it cannot be derived: these pages translate object labels
- * themselves rather than reusing the app's locale packs (the zh-Hans table says
- * 商机行项 where `src/translations/zh-CN.ts` says 商机产品明细), and the app ships
- * no zh-Hant pack at all. So a sixth parent-derived object costs one ledger line
- * plus three doc rows — and the failure names the object AND the page, which is
- * the point.
+ * The ROW SET and each row's OWD VALUE are derived from the compiled stack: every
+ * registered object must have exactly one row, that row's OWD cell must state the
+ * `sharingModel` the object actually ships, and no row may name an object this
+ * app does not register. The ROW LABEL per locale is authored in {@link ROW_LABEL},
+ * because it cannot be derived: these pages translate object labels themselves
+ * rather than reusing the app's locale packs (the zh-Hans table says 商机行项 where
+ * `src/translations/zh-CN.ts` says 商机产品明细), and the app ships no zh-Hant pack
+ * at all. So a new object costs one ledger line plus three doc rows — and the
+ * failure names the object AND the page, which is the point.
  *
- * ## Scope: the parent-derived rows only, deliberately
- *
- * The table also lists `private` and `public_read` objects, and this guard says
- * nothing about them. It is not the full registered-object list today — `crm_event`
- * has no row, and a `Competitor` row outlived the object and the profile grants
- * that were removed with it (filed as #790) — so a whole-table rule would be red
- * on arrival over defects this change does not own; and locking every row would
- * turn an ordinary OWD change into a two-place edit for objects nobody derives.
- * Parent-derived is the class where a missing row ALSO falsifies the prose right
- * below the table, which is the defect that actually shipped. Widen this to the
- * full object set when #790 lands.
+ * `sys_*` objects are excluded, on `docs-object-coverage.test.ts`'s criterion:
+ * platform objects are documented by the platform, not here. Today the compiled
+ * stack contains none, so the filter changes nothing; it is there so a platform
+ * that starts injecting them does not turn this table into a platform manual.
  *
  * The parent named in the cell's parentheses — "(Event)", "（活动）" — is not
  * checked: which field the platform resolves as the master is an ADR-0055
  * derivation, and asserting our guess at it here would pin this repo's reading of
  * the platform rather than the app's own metadata.
  *
- * ## Reverse verification (#710)
+ * ## What replaced #710's reverse rule
  *
- * Three directions, each predicted before it was run, each measured on this tree:
+ * #710 had a narrower pair: parent-derived objects must have a row, and no row
+ * may *claim* Controlled by Parent for anything the stack does not derive. Both
+ * are now special cases and both are gone as separate rules — a row marked
+ * Controlled by Parent for a `private` object fails the OWD-value check, and a
+ * row for an object nobody registers fails the ghost-row check, whatever its OWD
+ * cell says. The count rule below is the one thing that did NOT generalise, and
+ * it stays exactly as #710 wrote it: it counts parent-derived objects because
+ * that is what the sentence under the table counts.
  *
- *   1. Delete the new Event Attendee row from the English page → predicted RED on
- *      the presence rule for that page only. Measured, 1 failed | 22 passed:
- *      "crm_event_attendee: content/docs/administration/sharing-and-security.mdx
- *      (en) has no "Event Attendee" row".
- *   2. Put "four" / 四 back in all three pages → predicted RED three times, once
- *      per locale, and GREEN on the row rules — the count is derived from the
- *      stack, never from the table's own row count, so a page cannot talk itself
- *      into agreement by losing a row. Measured, 3 failed | 20 passed, e.g.
- *      "…zh-Hant.mdx (zh-Hant) counts "四" parent-derived objects; the stack ships
- *      5 (crm_campaign_member, crm_contact, crm_event_attendee,
- *      crm_opportunity_line_item, crm_quote_line_item)".
- *   3. Add a row claiming Controlled by Parent for an object nobody registers →
- *      predicted RED on the reverse rule only. Measured, 1 failed | 22 passed:
- *      "…zh-Hant.mdx (zh-Hant): row "戰場情報" is documented Controlled by Parent,
- *      but no object with that label ships controlled_by_parent".
+ * ## The count is pinned to the stack, not to the table
  *
- * Direction 2 is the one worth reading twice: it is what makes this guard catch
- * #592's defect from either side. The row and the count are pinned to the same
- * derived set, so they cannot drift into agreeing with each other while both
- * disagree with the app.
+ * The number word under the table is derived from the same compiled stack as the
+ * rows, never from how many rows the table happens to have. That is what makes
+ * this guard catch #592's defect from either side: a page cannot lose a row and
+ * talk its own prose into agreeing with the loss.
+ *
+ * ## Reverse verification (#790, #791)
+ *
+ * Five directions, each predicted before it was run, each measured on this tree:
+ *
+ *   1. Delete the new `Event` row from the zh-Hant page → predicted RED on that
+ *      page's row rule only, naming `crm_event`; the count rule stays GREEN,
+ *      because Event is not parent-derived. Measured, 1 failed | 28 passed:
+ *      "crm_event: content/docs/administration/sharing-and-security.zh-Hant.mdx
+ *      (zh-Hant) has no "活動" row".
+ *   2. Put the `Competitor` row back on the English page → predicted RED on the
+ *      ghost-row rule for that page only. This is the direction #710's guard
+ *      could not see at all: the row is `Public Read-Only`, so nothing about it
+ *      was parent-derived. Measured, 1 failed | 28 passed:
+ *      "…sharing-and-security.mdx (en): row "Competitor" names no object this app
+ *      registers".
+ *   3. Delete a PARENT-DERIVED row (Event Attendee) from the zh-Hans page →
+ *      predicted RED on that page's row rule, and GREEN on its count rule, which
+ *      keeps reading 五 off the stack. Measured, 1 failed | 28 passed:
+ *      "crm_event_attendee: …sharing-and-security.zh-Hans.mdx (zh-Hans) has no
+ *      "活动参与者" row" — and no count failure anywhere, which is the point of
+ *      direction 3: rows and the number word cannot drift into agreeing with
+ *      each other while both disagree with the app.
+ *   4. Delete the new `活动` row from the zh-Hans RELATED-LIST table → predicted
+ *      RED on the Chinese related-list coverage rule for that page only.
+ *      Measured, 1 failed | 28 passed: "…zh-Hans.mdx (zh-Hans): the related-list
+ *      table has to cover every account child in the ledger … expected
+ *      [ 'crm_case', 'crm_contact', …(4) ] to deeply equal
+ *      [ 'crm_case', 'crm_contact', …(5) ]  -   "crm_event"".
+ *   5. Put the pre-#699 promise back on the zh-Hans page ("**读** —— 你能看到其父
+ *      记录你能看到的那些行") → predicted RED on the reach-claim rule below, and
+ *      only there: no row moved, so no row rule can see it. That is the whole
+ *      point — this is the defect #791 reports, and until now NOTHING was red on
+ *      it. Measured, 1 failed | 28 passed: "…zh-Hans.mdx (zh-Hans): no sentence
+ *      matching /本版本计算出来的结果是组织范围，而不是按父记录收窄/".
  */
-describe('the OWD table lists every parent-derived object, in every locale', () => {
-  type Locale = 'en' | 'zh-Hans' | 'zh-Hant';
 
-  /** Every object whose record access derives from a parent — off the compiled stack. */
-  const parentDerived = objects
-    .filter((o) => o.sharingModel === 'controlled_by_parent')
-    .map((o) => o.name as string)
-    .sort();
+type Locale = 'en' | 'zh-Hans' | 'zh-Hant';
 
-  /** The OWD table's row label for each parent-derived object, per locale (see header). */
-  const ROW_LABEL: Record<string, Record<Locale, string>> = {
-    crm_contact: { en: 'Contact', 'zh-Hans': '联系人', 'zh-Hant': '聯絡人' },
-    crm_opportunity_line_item: {
-      en: 'Opportunity Line Item',
-      'zh-Hans': '商机行项',
-      'zh-Hant': '商機明細',
+/** The OWD values this app's objects actually ship. */
+type SharingModel = 'private' | 'public_read' | 'controlled_by_parent';
+
+interface LocalePage {
+  locale: Locale;
+  file: string;
+  /** The heading the Org-Wide Defaults table follows. */
+  owdHeading: string;
+  /** How this page spells each OWD value in the table's second cell. */
+  owdCell: Record<SharingModel, RegExp>;
+  /**
+   * The sentence under the OWD table counting the parent-derived objects;
+   * group 1 is the number word.
+   */
+  countSentence: RegExp;
+  /**
+   * The sentence stating what Controlled by Parent *computes to* in this
+   * release. See the reach-claim guard below for why this is authored per
+   * locale rather than derived.
+   */
+  reachClaim: RegExp;
+  /** The heading the related-list table follows. */
+  relatedListHeading: string;
+  /** A related-list verdict reading "their own only" in this language. */
+  saysOwnOnly: RegExp;
+  /** A related-list verdict promising the child follows the account. */
+  saysFollowsAccount: RegExp;
+}
+
+const PAGES: LocalePage[] = [
+  {
+    locale: 'en',
+    file: SHARING_DOC,
+    owdHeading: '## Layer 1 — Org-Wide Defaults',
+    owdCell: {
+      private: /^Private$/i,
+      public_read: /^Public Read-Only$/i,
+      controlled_by_parent: /^Controlled by Parent\b/i,
     },
-    crm_quote_line_item: { en: 'Quote Line Item', 'zh-Hans': '报价行项', 'zh-Hant': '報價明細' },
-    crm_campaign_member: { en: 'Campaign Member', 'zh-Hans': '活动成员', 'zh-Hant': '活動成員' },
-    crm_event_attendee: { en: 'Event Attendee', 'zh-Hans': '活动参与者', 'zh-Hant': '活動參與者' },
-  };
+    countSentence: /For the ([A-Za-z]+) parent-derived objects above/,
+    reachClaim: /in this release the computed answer is org-wide, not parent-scoped/,
+    relatedListHeading: '### A rule widens one object, not the records underneath it',
+    saysOwnOnly: /own (deals |)only/i,
+    saysFollowsAccount: /follows the account/i,
+  },
+  {
+    locale: 'zh-Hans',
+    file: 'content/docs/administration/sharing-and-security.zh-Hans.mdx',
+    owdHeading: '## 第 1 层 —— 组织范围默认值',
+    owdCell: {
+      private: /^私有$/,
+      public_read: /^公共只读$/,
+      controlled_by_parent: /^由父级控制/,
+    },
+    countSentence: /对于上面([一二三四五六七八九十]+)个由父级派生的对象/,
+    reachClaim: /本版本计算出来的结果是组织范围，而不是按父记录收窄/,
+    relatedListHeading: '### 一条规则放开的是一个对象，而不是它下面的记录',
+    saysOwnOnly: /只有自己的/,
+    saysFollowsAccount: /跟随客户/,
+  },
+  {
+    locale: 'zh-Hant',
+    file: 'content/docs/administration/sharing-and-security.zh-Hant.mdx',
+    owdHeading: '## 第 1 層 —— 組織範圍預設值',
+    owdCell: {
+      private: /^私有$/,
+      public_read: /^公開唯讀$/,
+      controlled_by_parent: /^由父層控制/,
+    },
+    countSentence: /對於上面([一二三四五六七八九十]+)個由父層衍生的物件/,
+    reachClaim: /本版本計算出來的結果是組織範圍，而不是按父記錄收窄/,
+    relatedListHeading: '### 一條規則放開的是一個物件，而不是它底下的記錄',
+    saysOwnOnly: /只有自己的/,
+    saysFollowsAccount: /跟隨客戶/,
+  },
+];
 
+/**
+ * The OWD table's row label for each registered object, per locale.
+ *
+ * Authored, not derived — see the header. The Chinese pages reuse these same
+ * labels in the related-list table (Chinese has no plural form), which is why
+ * the related-list guard further down can read this ledger too; the English page
+ * pluralises there, and is checked against the stack's own `pluralLabel` by the
+ * rule in the docs describe above.
+ */
+const ROW_LABEL: Record<string, Record<Locale, string>> = {
+  crm_lead: { en: 'Lead', 'zh-Hans': '线索', 'zh-Hant': '線索' },
+  crm_account: { en: 'Account', 'zh-Hans': '客户', 'zh-Hant': '客戶' },
+  crm_contact: { en: 'Contact', 'zh-Hans': '联系人', 'zh-Hant': '聯絡人' },
+  crm_opportunity: { en: 'Opportunity', 'zh-Hans': '商机', 'zh-Hant': '商機' },
+  crm_opportunity_line_item: {
+    en: 'Opportunity Line Item',
+    'zh-Hans': '商机行项',
+    'zh-Hant': '商機明細',
+  },
+  crm_quote: { en: 'Quote', 'zh-Hans': '报价', 'zh-Hant': '報價' },
+  crm_quote_line_item: { en: 'Quote Line Item', 'zh-Hans': '报价行项', 'zh-Hant': '報價明細' },
+  crm_contract: { en: 'Contract', 'zh-Hans': '合同', 'zh-Hant': '合約' },
+  crm_case: { en: 'Case', 'zh-Hans': '工单', 'zh-Hant': '案件' },
+  crm_task: { en: 'Task', 'zh-Hans': '任务', 'zh-Hant': '任務' },
+  crm_event: { en: 'Event', 'zh-Hans': '活动', 'zh-Hant': '活動' },
+  crm_event_attendee: { en: 'Event Attendee', 'zh-Hans': '活动参与者', 'zh-Hant': '活動參與者' },
+  crm_forecast: { en: 'Forecast', 'zh-Hans': '预测', 'zh-Hant': '預測' },
+  crm_product: { en: 'Product', 'zh-Hans': '产品', 'zh-Hant': '產品' },
+  crm_campaign: { en: 'Campaign', 'zh-Hans': '市场活动', 'zh-Hant': '行銷活動' },
+  crm_campaign_member: { en: 'Campaign Member', 'zh-Hans': '活动成员', 'zh-Hant': '活動成員' },
+  crm_knowledge_article: {
+    en: 'Knowledge Article',
+    'zh-Hans': '知识文章',
+    'zh-Hant': '知識文章',
+  },
+};
+
+/** Every business object the compiled stack registers — the OWD table's row set. */
+const registeredObjects = objects
+  .map((o) => o.name as string)
+  .filter((name) => !name.startsWith('sys_'))
+  .sort();
+
+/** The subset the section under the table counts. */
+const parentDerived = registeredObjects.filter((name) => owdOf(name) === 'controlled_by_parent');
+
+describe('the OWD table lists every registered object, in every locale', () => {
   /**
    * How each page spells the count in the sentence under the table. An
    * unmapped count is a deliberate failure, the same convention
@@ -405,123 +541,128 @@ describe('the OWD table lists every parent-derived object, in every locale', () 
     'zh-Hant': { 3: '三', 4: '四', 5: '五', 6: '六', 7: '七', 8: '八' },
   };
 
-  const PAGES: {
-    locale: Locale;
-    file: string;
-    /** The heading the OWD table follows. */
-    heading: string;
-    /** An OWD cell reading "controlled by parent" in this language. */
-    derived: RegExp;
-    /** The sentence under the table that counts them; group 1 is the number word. */
-    countSentence: RegExp;
-  }[] = [
-    {
-      locale: 'en',
-      file: SHARING_DOC,
-      heading: '## Layer 1 — Org-Wide Defaults',
-      derived: /^Controlled by Parent\b/i,
-      countSentence: /For the ([A-Za-z]+) parent-derived objects above/,
-    },
-    {
-      locale: 'zh-Hans',
-      file: 'content/docs/administration/sharing-and-security.zh-Hans.mdx',
-      heading: '## 第 1 层 —— 组织范围默认值',
-      derived: /^由父级控制/,
-      countSentence: /对于上面([一二三四五六七八九十]+)个由父级派生的对象/,
-    },
-    {
-      locale: 'zh-Hant',
-      file: 'content/docs/administration/sharing-and-security.zh-Hant.mdx',
-      heading: '## 第 1 層 —— 組織範圍預設值',
-      derived: /^由父層控制/,
-      countSentence: /對於上面([一二三四五六七八九十]+)個由父層衍生的物件/,
-    },
-  ];
-
-  it('the row ledger answers exactly the objects the stack derives from a parent', () => {
-    // Anti-vacuum. Five ship today (#592 added the fifth); a ledger compared
-    // against an empty derived set would pass by checking nothing at all.
+  it('the row ledger answers exactly the objects this app registers', () => {
+    // Anti-vacuum, both halves. 17 objects ship today, 5 of them parent-derived;
+    // a ledger compared against an empty derived set would pass by checking
+    // nothing at all, and so would every rule below.
+    expect(
+      registeredObjects.length,
+      'fewer than 15 business objects in the compiled stack — either the app genuinely ' +
+        'shrank (then lower this number knowingly) or the derivation broke and every rule ' +
+        'below is comparing empty sets',
+    ).toBeGreaterThanOrEqual(15);
     expect(
       parentDerived.length,
-      'fewer than five controlled_by_parent objects in the compiled stack — either the app ' +
-        'genuinely retired some (then lower this number knowingly) or the derivation broke ' +
-        'and every rule below is comparing empty sets',
+      'fewer than five controlled_by_parent objects in the compiled stack — same reasoning: ' +
+        'lower this knowingly, or find out why the derivation stopped seeing them',
     ).toBeGreaterThanOrEqual(5);
 
-    const unledgered = parentDerived.filter((name) => !(name in ROW_LABEL));
+    const unledgered = registeredObjects.filter((name) => !(name in ROW_LABEL));
     expect(
       unledgered,
-      `parent-derived objects with no OWD row label:\n  ${unledgered.join('\n  ')}\n` +
+      `registered objects with no OWD row label:\n  ${unledgered.join('\n  ')}\n` +
         'Add the three locale labels here, and the row to each of the three pages.',
     ).toEqual([]);
 
-    const stale = Object.keys(ROW_LABEL).filter((name) => !parentDerived.includes(name));
+    const stale = Object.keys(ROW_LABEL).filter((name) => !registeredObjects.includes(name));
     expect(
       stale,
-      `ledger entries whose object is no longer controlled_by_parent:\n  ${stale.join('\n  ')}\n` +
-        'Its OWD row now states the wrong model — fix the pages, then drop the entry.',
+      `ledger entries whose object this app no longer registers:\n  ${stale.join('\n  ')}\n` +
+        'Its OWD row now describes an object nobody can find in Setup — the way the ' +
+        '`Competitor` row outlived `crm_competitor` (#790). Drop the row, then the entry.',
     ).toEqual([]);
+  });
+
+  it('no two objects share a row label within one locale', () => {
+    // "Exactly one row per object" is only meaningful while labels identify
+    // objects one-for-one. Two objects sharing a label would let one row answer
+    // for both, and a ghost row for the other would go unnoticed.
+    const bad: string[] = [];
+    for (const { locale } of PAGES) {
+      const seen = new Map<string, string>();
+      for (const name of registeredObjects) {
+        const label = ROW_LABEL[name]?.[locale];
+        if (!label) continue;
+        const owner = seen.get(label);
+        if (owner) bad.push(`${locale}: "${label}" labels both ${owner} and ${name}`);
+        else seen.set(label, name);
+      }
+    }
+    expect(bad, `ambiguous OWD row labels:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
   for (const page of PAGES) {
     describe(page.file, () => {
-      const rowsOf = () => tableAfter(DOC(page.file), page.heading, page.file);
+      const rowsOf = () => tableAfter(DOC(page.file), page.owdHeading, page.file);
 
       it('the OWD table still parses', () => {
         // Anti-vacuum #2: a table that stopped parsing would let every rule
         // below pass over an empty row list.
         expect(
           rowsOf().length,
-          `no OWD table row parsed out of ${page.file} after "${page.heading}" — the table ` +
+          `no OWD table row parsed out of ${page.file} after "${page.owdHeading}" — the table ` +
             'moved, changed shape, or lost its heading, and this whole block has gone blind',
         ).toBeGreaterThan(0);
       });
 
-      it('every parent-derived object has a row, marked Controlled by Parent', () => {
+      it('every registered object has exactly one row, stating the OWD it ships', () => {
         const rows = rowsOf();
         const bad: string[] = [];
-        for (const name of parentDerived) {
+        for (const name of registeredObjects) {
           const label = ROW_LABEL[name]?.[page.locale];
           if (!label) continue; // reported by the ledger test above
-          const row = rows.find((cells) => cells[0] === label);
-          if (!row) {
+          const matched = rows.filter((cells) => cells[0] === label);
+          if (matched.length === 0) {
             bad.push(`${name}: ${page.file} (${page.locale}) has no "${label}" row`);
             continue;
           }
-          if (!page.derived.test(row[1] ?? '')) {
+          if (matched.length > 1) {
             bad.push(
-              `${name}: ${page.file} (${page.locale}) row "${label}" gives OWD "${row[1]}", ` +
-                'but the object ships controlled_by_parent',
+              `${name}: ${page.file} (${page.locale}) has ${matched.length} "${label}" rows`,
+            );
+            continue;
+          }
+          const model = owdOf(name) as SharingModel;
+          const spelling = page.owdCell[model];
+          if (!spelling) {
+            throw new Error(
+              `${name} ships sharingModel '${model}', which this ledger cannot spell — add it ` +
+                `to owdCell on all three pages (and to the "Options for OWD" line under the table)`,
+            );
+          }
+          if (!spelling.test(matched[0][1] ?? '')) {
+            bad.push(
+              `${name}: ${page.file} (${page.locale}) row "${label}" gives OWD ` +
+                `"${matched[0][1]}", but the object ships ${model}`,
             );
           }
         }
         expect(
           bad,
-          `OWD rows missing for objects this app derives from a parent:\n  ${bad.join('\n  ')}\n` +
-            'A parent-derived object with no row also falsifies the count in the section under ' +
-            'the table — which is exactly how #592 left the page saying "four".',
+          `OWD rows that do not match the objects this app registers:\n  ${bad.join('\n  ')}\n` +
+            'This table is the admin’s object list. A missing row sends them looking for a ' +
+            'setting that is documented nowhere; a wrong OWD cell tells them the baseline is ' +
+            'something it is not.',
         ).toEqual([]);
       });
 
-      it('no row claims Controlled by Parent for something the stack does not derive', () => {
-        const rows = rowsOf();
+      it('no row names an object this app does not register', () => {
         const known = new Set(
-          parentDerived.map((name) => ROW_LABEL[name]?.[page.locale]).filter(Boolean),
+          registeredObjects.map((name) => ROW_LABEL[name]?.[page.locale]).filter(Boolean),
         );
-        const bad = rows
-          .filter((cells) => page.derived.test(cells[1] ?? ''))
+        const bad = rowsOf()
           .map((cells) => cells[0])
           .filter((label) => !known.has(label))
           .map(
             (label) =>
-              `${page.file} (${page.locale}): row "${label}" is documented Controlled by Parent, ` +
-              'but no object with that label ships controlled_by_parent',
+              `${page.file} (${page.locale}): row "${label}" names no object this app registers`,
           );
         expect(
           bad,
-          `OWD rows deriving from a parent nobody has:\n  ${bad.join('\n  ')}\n` +
-            'Either the object was renamed/retired (fix the row) or its OWD changed (fix the row ' +
-            'and the ledger above).',
+          `OWD rows for objects that are not in the stack:\n  ${bad.join('\n  ')}\n` +
+            'A reader takes this row to Setup and finds nothing — which is what the ' +
+            '`Competitor` row did for four releases after `crm_competitor` was removed (#790). ' +
+            'Either the object was renamed (fix the row and the ledger) or it is gone (drop the row).',
         ).toEqual([]);
       });
 
@@ -548,4 +689,131 @@ describe('the OWD table lists every parent-derived object, in every locale', () 
       });
     });
   }
+});
+
+/**
+ * The Chinese pages describe the same account children as the English one (#791).
+ *
+ * The related-list rule in the docs describe above reads the English page only,
+ * and that is how `| Events | Their own only |` — added there when the activity
+ * model landed (#592) — stayed missing from both Chinese tables: nothing was
+ * looking. Same shape as the OWD gap #710 closed, one table further down.
+ *
+ * Why this covers the two Chinese pages and not all three: the English rule
+ * resolves its rows against `pluralLabel` **derived from the stack**, which is
+ * strictly stronger than a ledger and needs no entry here. The Chinese pages
+ * cannot be checked that way — the app ships no zh-Hant locale pack, and the
+ * zh-Hans doc translates independently of the one it does ship — so they are
+ * checked against {@link ROW_LABEL}, which they reuse verbatim because Chinese
+ * has no plural form. Two rules, one per kind of page, rather than one rule
+ * weakened to the worse of the two.
+ *
+ * The verdict predicates are the English rule's, transposed per locale: a row
+ * may not promise the child follows the account unless the ledger says
+ * 'derived', may not say own-only about a parent-derived child, and must name a
+ * position for every extra record it promises. Deliberately NOT extended here:
+ * the built-in sharing-rules table (its object and access-level columns are
+ * translated too, and no drift is reported there today) — filed as a finding
+ * rather than guessed at.
+ */
+describe('the related-list table names the same account children on the Chinese pages', () => {
+  for (const page of PAGES.filter((p) => p.locale !== 'en')) {
+    describe(page.file, () => {
+      const rowsOf = () => tableAfter(DOC(page.file), page.relatedListHeading, page.file);
+
+      it('the related-list table still parses', () => {
+        expect(
+          rowsOf().length,
+          `no related-list row parsed out of ${page.file} after "${page.relatedListHeading}" — ` +
+            'the table moved or lost its heading, and the rule below has gone blind',
+        ).toBeGreaterThan(0);
+      });
+
+      it('covers every account child in the ledger, and promises what the metadata delivers', () => {
+        const byLabel = new Map<string, string>();
+        for (const name of Object.keys(ACCOUNT_CHILD_COVERAGE)) {
+          const label = ROW_LABEL[name]?.[page.locale];
+          if (label) byLabel.set(label, name);
+        }
+        const bad: string[] = [];
+        const documented: string[] = [];
+        for (const [listLabel, promise] of rowsOf()) {
+          const name = byLabel.get(listLabel);
+          if (!name) {
+            bad.push(`"${listLabel}" is not an account child this app ships`);
+            continue;
+          }
+          documented.push(name);
+          const coverage = ACCOUNT_CHILD_COVERAGE[name];
+          if (page.saysFollowsAccount.test(promise) && coverage !== 'derived') {
+            bad.push(`${name}: docs say it follows the account, ledger says '${coverage}'`);
+          }
+          if (page.saysOwnOnly.test(promise) && coverage === 'derived') {
+            bad.push(`${name}: docs say own-only, but the object is parent-derived`);
+          }
+          const positionsNamed = [...promise.matchAll(/`([a-z_]+)`/g)].map((m) => m[1]);
+          for (const position of positionsNamed) {
+            if (!rulesOn(name).some((r) => r.sharedWith?.value === position)) {
+              bad.push(`${name}: docs promise \`${position}\` extra records, no sharing rule grants them`);
+            }
+          }
+          if (coverage === 'partial' && positionsNamed.length === 0) {
+            bad.push(`${name}: a sharing rule widens it, the docs row names no position`);
+          }
+        }
+        expect(bad, `${page.file}: related-list table drift:\n  ${bad.join('\n  ')}`).toEqual([]);
+        expect(
+          documented.slice().sort(),
+          `${page.file} (${page.locale}): the related-list table has to cover every account ` +
+            'child in the ledger — the English page has carried an Events row since #592 and ' +
+            'these two never got one',
+        ).toEqual(Object.keys(ACCOUNT_CHILD_COVERAGE).sort());
+      });
+    });
+  }
+});
+
+/**
+ * All three pages state the reach Controlled by Parent actually computes (#791).
+ *
+ * PR #699 rewrote the English page after `test/parent-derived-reach.test.ts`
+ * measured what the platform really does — the derivation resolves accessible
+ * parents from the parent object's row-level policies alone, so a
+ * Controlled by Parent object reads org-wide rather than per parent. The two
+ * Chinese pages did not follow, and for six weeks told their readers the
+ * opposite of what the English page told theirs: "你能看到其父记录你能看到的那些行".
+ * The existing doc rules all stop at the English page (#725 is the same shape),
+ * and `docs-drift.test.ts` compares callout counts, which #699 did not change.
+ *
+ * What this pins is CO-MOVEMENT, not truth. The truth is pinned by
+ * `test/parent-derived-reach.test.ts`, which measures the reach against the
+ * engine and fails when the platform narrows it (objectstack-ai/objectstack#5386).
+ * This rule only makes the three pages move together when that day comes: the
+ * claim is authored per locale because no locale's wording is derivable, and the
+ * two pointers are language-neutral tokens, so one check covers all three.
+ */
+describe('every locale states the parent-derived reach this release computes', () => {
+  /** Language-neutral tokens the section must point at, on every page. */
+  const POINTERS = ['objectstack-ai/objectstack#5386', 'test/parent-derived-reach.test.ts'];
+
+  it('each page carries the measured reach claim, and points at what pins it', () => {
+    const bad: string[] = [];
+    for (const page of PAGES) {
+      const text = DOC(page.file);
+      if (!page.reachClaim.test(text)) {
+        bad.push(
+          `${page.file} (${page.locale}): no sentence matching ${page.reachClaim} — either this ` +
+            'page still promises parent-scoped reach, or the wording moved. If the platform ' +
+            'narrowed the derivation, rewrite all three pages and this ledger together; do not ' +
+            'delete the check to get green.',
+        );
+      }
+      for (const pointer of POINTERS) {
+        if (!text.includes(pointer)) {
+          bad.push(`${page.file} (${page.locale}): does not point at ${pointer}`);
+        }
+      }
+    }
+    expect(bad, `pages out of step on what Controlled by Parent reaches:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
 });
