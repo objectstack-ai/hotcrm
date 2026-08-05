@@ -198,30 +198,30 @@ describe('lead_auto_assign', () => {
         { position: 'sales_rep', user_id: 'repB' },
       ],
       crm_lead: [
-        { id: 'x1', owner: 'repA', is_converted: false },
-        { id: 'x2', owner: 'repA', is_converted: false }, // repA has 2 open
-        { id: 'x3', owner: 'repB', is_converted: false }, // repB has 1 open
+        { id: 'x1', owner_id: 'repA', is_converted: false },
+        { id: 'x2', owner_id: 'repA', is_converted: false }, // repA has 2 open
+        { id: 'x3', owner_id: 'repB', is_converted: false }, // repB has 1 open
       ],
     };
     const input: Rec = { company: 'NewCo' }; // no owner
     await assign.handler({ event: 'beforeInsert', input, api: makeApi(store) } as any);
-    expect(input.owner).toBe('repB'); // least-loaded
+    expect(input.owner_id).toBe('repB'); // least-loaded
   });
 
   it('is a no-op when there is no rep pool (never blocks intake)', async () => {
     const store: Record<string, Rec[]> = { sys_user_position: [], crm_lead: [] };
     const input: Rec = { company: 'NewCo' };
     await assign.handler({ event: 'beforeInsert', input, api: makeApi(store) } as any);
-    expect(input.owner).toBeUndefined();
+    expect(input.owner_id).toBeUndefined();
   });
 
   it('respects an explicit owner', async () => {
     const store: Record<string, Rec[]> = {
       sys_user_position: [{ position: 'sales_rep', user_id: 'repA' }],
     };
-    const input: Rec = { company: 'NewCo', owner: 'someone' };
+    const input: Rec = { company: 'NewCo', owner_id: 'someone' };
     await assign.handler({ event: 'beforeInsert', input, api: makeApi(store) } as any);
-    expect(input.owner).toBe('someone');
+    expect(input.owner_id).toBe('someone');
   });
 
   it('never throws when the rep-pool lookup is denied (anonymous Web-to-Lead)', async () => {
@@ -239,6 +239,6 @@ describe('lead_auto_assign', () => {
     await expect(
       assign.handler({ event: 'beforeInsert', input, api } as any),
     ).resolves.toBeUndefined();
-    expect(input.owner).toBeUndefined(); // ownerless, but the insert proceeds
+    expect(input.owner_id).toBeUndefined(); // ownerless, but the insert proceeds
   });
 });

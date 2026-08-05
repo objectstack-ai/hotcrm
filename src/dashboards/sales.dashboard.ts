@@ -44,7 +44,7 @@ export const SalesDashboard: Dashboard = {
 
   globalFilters: [
     {
-      field: 'owner',
+      field: 'owner_id',
       label: 'Sales Rep',
       type: 'lookup',
       scope: 'dashboard',
@@ -457,7 +457,7 @@ export const SalesDashboard: Dashboard = {
           // opportunity records for that stage + lead-source slice — the
           // same drill-through pattern used by the other dashboard widgets.
           target: 'drawer',
-          columns: ['name', 'crm_account', 'amount', 'forecast_category', 'close_date', 'owner'],
+          columns: ['name', 'crm_account', 'amount', 'forecast_category', 'close_date', 'owner_id'],
           maxRows: 100,
         },
       },

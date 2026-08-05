@@ -88,7 +88,7 @@ export const en: TranslationData = {
           help: 'Derived from Billing Address — the country code territory sharing rules match on.',
         },
         office_location: { label: 'Office Location' },
-        owner: { label: 'Account Owner' },
+        owner_id: { label: 'Account Owner' },
         parent_account: { label: 'Parent Account', help: 'Parent company in hierarchy' },
         description: { label: 'Description' },
         is_active: { label: 'Active' },
@@ -150,7 +150,7 @@ export const en: TranslationData = {
             hr: 'Human Resources', operations: 'Operations',
           },
         },
-        owner: { label: 'Contact Owner' },
+        owner_id: { label: 'Contact Owner' },
         description: { label: 'Description' },
         is_primary: { label: 'Primary Contact', help: 'Is this the main contact for the account?' },
         avatar: { label: 'Profile Picture' },
@@ -234,7 +234,7 @@ export const en: TranslationData = {
           label: 'Language',
           options: { en: 'English', zh_cn: 'Simplified Chinese', es_es: 'Spanish', ja_jp: 'Japanese' },
         },
-        owner: { label: 'Owner' },
+        owner_id: { label: 'Owner' },
         related_to_case: { label: 'Source Case', help: 'Case this article was authored from (optional).' },
         published_at: { label: 'Published At' },
         last_reviewed_at: { label: 'Last Reviewed' },
@@ -256,7 +256,7 @@ export const en: TranslationData = {
       pluralLabel: 'Forecasts',
       description: 'Periodic pipeline snapshot by owner used for revenue forecasting',
       fields: {
-        owner: { label: 'Owner' },
+        owner_id: { label: 'Owner' },
         period: { label: 'Period', options: { month: 'Month', quarter: 'Quarter' } },
         period_start: { label: 'Period Start' },
         period_end: { label: 'Period End' },
@@ -329,7 +329,7 @@ export const en: TranslationData = {
             cold_call: 'Cold Call', email_campaign: 'Email Campaign', other: 'Other',
           },
         },
-        owner: { label: 'Lead Owner' },
+        owner_id: { label: 'Lead Owner' },
         is_converted: { label: 'Converted' },
         description: { label: 'Description' },
         salutation: {
@@ -435,7 +435,7 @@ export const en: TranslationData = {
         name: { label: 'Opportunity Name' },
         crm_account: { label: 'Account' },
         primary_contact: { label: 'Primary Contact' },
-        owner: { label: 'Opportunity Owner' },
+        owner_id: { label: 'Opportunity Owner' },
         amount: { label: 'Amount' },
         expected_revenue: { label: 'Expected Revenue' },
         stage: {
@@ -577,7 +577,7 @@ export const en: TranslationData = {
           label: 'Case Origin',
           options: { email: 'Email', phone: 'Phone', web: 'Web', chat: 'Chat', social_media: 'Social Media' },
         },
-        owner: { label: 'Case Owner' },
+        owner_id: { label: 'Case Owner' },
         created_date: { label: 'Created Date' },
         closed_date: { label: 'Closed Date' },
         first_response_date: { label: 'First Response Date' },
@@ -633,7 +633,7 @@ export const en: TranslationData = {
         crm_account: { label: 'Account' },
         crm_contact: { label: 'Primary Contact' },
         crm_opportunity: { label: 'Related Opportunity' },
-        owner: { label: 'Contract Owner' },
+        owner_id: { label: 'Contract Owner' },
         status: {
           label: 'Status',
           options: {
@@ -747,7 +747,7 @@ export const en: TranslationData = {
         crm_account: { label: 'Account' },
         crm_contact: { label: 'Contact' },
         crm_opportunity: { label: 'Opportunity' },
-        owner: { label: 'Quote Owner' },
+        owner_id: { label: 'Quote Owner' },
         status: {
           label: 'Status',
           options: {
@@ -811,7 +811,7 @@ export const en: TranslationData = {
         due_date: { label: 'Due Date' },
         reminder_date: { label: 'Reminder Date/Time' },
         completed_date: { label: 'Completed Date' },
-        owner: { label: 'Assigned To' },
+        owner_id: { label: 'Assigned To' },
         related_to_type: {
           label: 'Related To Type',
           options: {
@@ -894,7 +894,7 @@ export const en: TranslationData = {
         response_rate: { label: 'Response Rate %' },
         roi: { label: 'ROI %' },
         parent_campaign: { label: 'Parent Campaign', help: 'Parent campaign in hierarchy' },
-        owner: { label: 'Campaign Owner' },
+        owner_id: { label: 'Campaign Owner' },
         landing_page_url: { label: 'Landing Page' },
         is_active: { label: 'Active' },
         display_title: { label: 'Display Title' },
@@ -933,7 +933,7 @@ export const en: TranslationData = {
             planned: 'Planned', held: 'Held', cancelled: 'Cancelled', no_show: 'No Show',
           },
         },
-        owner: { label: 'Assigned To' },
+        owner_id: { label: 'Assigned To' },
         start_datetime: { label: 'Start' },
         end_datetime: { label: 'End' },
         all_day: { label: 'All Day Event' },

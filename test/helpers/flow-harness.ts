@@ -228,7 +228,7 @@ export interface FlowHarness {
  * `notify` nodes are captured rather than delivered: the messaging service is
  * out of scope here, and asserting on the captured payload is what proves the
  * recipient/severity/template contract (the class of bug where a notify targets
- * `{record.owner.manager}` and silently interpolates to "undefined").
+ * `{record.owner_id.manager}` and silently interpolates to "undefined").
  */
 export interface FlowHarnessOptions {
   /**

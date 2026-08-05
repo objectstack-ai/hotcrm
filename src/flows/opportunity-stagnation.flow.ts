@@ -79,16 +79,16 @@ export const OpportunityStagnationFlow: Flow = {
               },
             },
             {
+              // Gateway only — the predicate lives on the out-edge (#650).
               id: 'check_not_nudged', type: 'decision', label: 'First Nudge?',
-              config: { condition: P`existingStallTask == null` },
             },
             {
-              // Owner only: `{currentOpp.owner.manager}` cannot traverse a
+              // Owner only: `{currentOpp.owner_id.manager}` cannot traverse a
               // lookup in flow templates — it interpolates to the literal
               // "undefined" (cf. opportunity_won_alert).
               id: 'notify_owner', type: 'notify', label: 'Nudge Owner',
               config: {
-                recipients: ['{currentOpp.owner}'],
+                recipients: ['{currentOpp.owner_id}'],
                 channels: ['inbox', 'email'],
                 topic: 'deal_stalled',
                 title: 'Stalled deal: {currentOpp.name}',
@@ -104,7 +104,7 @@ export const OpportunityStagnationFlow: Flow = {
                   subject: 'Advance stalled deal: {currentOpp.name}',
                   type: 'follow_up', priority: 'high', status: 'not_started',
                   due_date: '{TODAY() + 2}',
-                  owner: '{currentOpp.owner}',
+                  owner_id: '{currentOpp.owner_id}',
                   related_to_type: 'crm_opportunity',
                   related_to_opportunity: '{currentOpp.id}',
                 },
@@ -114,6 +114,9 @@ export const OpportunityStagnationFlow: Flow = {
           edges: [
             { id: 'b1', source: 'find_existing_task', target: 'check_not_nudged', type: 'default' },
             // "Already nudged" has no edge, so the loop moves to the next item.
+            // This edge is the ONLY site for the predicate (#650): a `decision`
+            // node's singular `config.condition` is never read, so a node copy
+            // would be inert metadata free to drift away from what runs.
             { id: 'b2', source: 'check_not_nudged', target: 'notify_owner', type: 'conditional', condition: P`existingStallTask == null`, label: 'First nudge' },
             { id: 'b3', source: 'notify_owner', target: 'create_followup_task', type: 'default' },
           ],

@@ -29,7 +29,9 @@ export const EventDataset = defineDataset({
   dimensions: [
     { name: 'type', label: 'Activity Type', field: 'type', type: 'string' },
     { name: 'status', label: 'Status', field: 'status', type: 'string' },
-    { name: 'owner', label: 'Owner', field: 'owner', type: 'string' },
+    // `owner` is the SEMANTIC name every widget/report selects by; the column
+    // behind it is the platform ownership anchor `owner_id` (#548).
+    { name: 'owner', label: 'Owner', field: 'owner_id', type: 'string' },
     { name: 'related_to_type', label: 'Related To', field: 'related_to_type', type: 'string' },
     {
       name: 'start_datetime',

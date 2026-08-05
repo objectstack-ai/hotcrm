@@ -7,13 +7,17 @@
 #  TIMELINE (target: under 30 seconds end-to-end)
 #  --------------------------------------------------------------------
 #  t=0   : Admin POSTs `add_field` to add `health_score` to crm_account.
-#  t≈5s  : Sales rep asks Copilot:
+#  t≈5s  : Sales rep asks the `ask` agent:
 #            "Show me the top 5 accounts by health score."
-#  t≈10s : Copilot calls `describe_object('crm_account')`. The response
+#  t≈10s : The agent calls `describe_object('crm_account')`. The response
 #          includes the new `health_score` field (re-read from metadata).
-#  t≈15s : Copilot calls `query_records('crm_account', orderBy=[{ field:
+#  t≈15s : The agent calls `query_records('crm_account', orderBy=[{ field:
 #          'health_score', order: 'desc' }], limit: 5)`.
-#  t≈20s : Copilot answers, citing record IDs, surfacing health_score.
+#  t≈20s : The agent answers, citing record IDs, surfacing health_score.
+#
+# The agent is the platform's `ask` (ADR-0063 §1/§2: the kernel ships `ask` and
+# `build`; apps author skills, not agents). HotCRM's `live_data` skill is what
+# makes the agent inspect the schema first — see src/skills/live-data.skill.ts.
 #
 # Requires hotcrm running on PORT (default 4001) with a bearer token in
 # HOTCRM_TOKEN, AND a runtime that provides the `ai` capability.
@@ -73,13 +77,13 @@ curl -fsS -X POST "${BASE}/api/v1/ai/tools/add_field/invoke" \
     "required": false
   }' | jq .
 
-# ── 2. Ask the Sales Copilot a question that needs the new field ──
-say "t≈5s  Asking Sales Copilot to rank accounts by health_score..."
+# ── 2. Ask the platform agent a question that needs the new field ──
+say "t≈5s  Asking the 'ask' agent to rank accounts by health_score..."
 curl -fsS -X POST "${BASE}/api/v1/ai/chat" \
   -H "${AUTH}" -H 'Content-Type: application/json' \
   -d '{
     "stream": false,
-    "agent": "sales_copilot",
+    "agent": "ask",
     "messages": [
       { "role": "user",
         "content": "Which 5 accounts have the highest health_score right now? Cite the IDs." }

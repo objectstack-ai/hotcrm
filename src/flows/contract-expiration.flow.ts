@@ -47,7 +47,7 @@ export const ContractExpirationFlow: Flow = {
             {
               id: 'notify_owner', type: 'notify', label: 'Notify Owner',
               config: {
-                recipients: ['{currentContract.owner}'],
+                recipients: ['{currentContract.owner_id}'],
                 channels: ['inbox', 'email'],
                 topic: 'contract_expired',
                 title: 'Contract expired: {currentContract.contract_number}',

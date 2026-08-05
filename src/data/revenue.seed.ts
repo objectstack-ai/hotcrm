@@ -229,9 +229,10 @@ export const quoteLineItems = defineSeed(QuoteLineItem, {
 });
 
 // ─── Forecasts ────────────────────────────────────────────────────────
-// `owner` is left unset: seed inserts bypass field-level defaults and run
-// before any human user exists, so ownership is backfilled to the active user
-// at runtime (same as every other CRM object).
+// `owner_id` is left unset: a seed cannot name a user and seed writes run
+// `isSystem`, so nothing stamps it — ownership is backfilled by
+// `demo_bootstrap` once a real user exists (same as every other CRM object).
+// See the note at the foot of `src/data/index.ts`.
 //
 // Periods are REAL calendar periods, labelled exactly the way
 // forecast.hook.ts derives them ('Q3 2026' / 'Aug 2026') — hooks don't run

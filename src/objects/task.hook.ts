@@ -178,7 +178,7 @@ const taskRecurrence: Hook = {
       description: r.description ?? null,
       priority: r.priority,
       type: r.type ?? null,
-      owner: r.owner ?? null,
+      owner_id: r.owner_id ?? null,
       status: 'not_started',
       is_completed: false,
       reminder_sent: false,

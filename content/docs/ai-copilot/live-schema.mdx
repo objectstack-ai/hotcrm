@@ -11,10 +11,15 @@ schema it was trained against last week, not the one you ship today.
 
 HotCRM is different. The **schema is the system prompt**.
 
-Every time the Sales Copilot answers a data question it calls
+Every time the assistant answers a data question it calls
 `describe_object` against `@objectstack/runtime`'s metadata service —
 which re-reads the live registry. Add a field at 10:00:00, and the
 next user question at 10:00:05 sees it.
+
+The assistant is the platform's `ask` agent. HotCRM authors no agents of
+its own — apps ship **skills**, which attach to a platform agent by
+surface affinity (ADR-0063 §1/§2). The behaviour below comes from
+HotCRM's `live_data` skill riding on `ask`.
 
 ## The 30-second demo
 
@@ -28,16 +33,16 @@ curl -X POST $HOTCRM/api/v1/ai/tools/add_field/invoke \
     "type": "number"
   }'
 
-# 2. Sales rep asks Copilot — five seconds later.
+# 2. Sales rep asks the assistant — five seconds later.
 curl -X POST $HOTCRM/api/v1/ai/chat \
   -d '{
-    "agent": "sales_copilot",
+    "agent": "ask",
     "messages": [{ "role": "user",
       "content": "Top 5 accounts by health_score — cite IDs." }]
   }'
 ```
 
-The Copilot's tool trace:
+The agent's tool trace:
 
 1. `describe_object('crm_account')` → sees `health_score` (number).
 2. `query_records('crm_account', orderBy: [{ field: 'health_score', order: 'desc' }], limit: 5)`.
@@ -52,8 +57,8 @@ to deploy.
 |------------------|--------------------------------------------------------------------------------|
 | Metadata service | Single source of truth for objects + fields. Hot-reloads on every write.       |
 | `describe_object`| Built-in AI tool. Re-reads metadata on every call. Never caches.               |
-| Live Data skill  | Bundles `describe_object` + `query_records` + nudges the agent to inspect first. |
-| Sales Copilot    | Always inspects schema before answering. Surfaces unknown fields automatically. |
+| `live_data` skill| Bundles `describe_object` + `query_records` + nudges the agent to inspect first. |
+| `ask` agent      | The platform data agent. Loads the skill, so it inspects schema before answering and surfaces unknown fields automatically. |
 
 Run the full demo with:
 

@@ -4,6 +4,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import stack from '../objectstack.config';
+import { ACTOR_NAME_RESOLUTION_SOURCE } from '../src/actions/global.actions';
 import { allHooks } from '../src/hooks';
 import { createLineItemPriceFill } from '../src/objects/_line-item-price-fill';
 import oppLineItemHooks from '../src/objects/opportunity_line_item.hook';
@@ -306,7 +307,7 @@ describe('every script action body executes under QuickJS', () => {
     expect(clone!.crm_account).toBe('acc_1');
     expect(clone!.amount).toBe(50000);
     expect(clone!.stage).toBe('prospecting');
-    expect(clone!.owner).toBe('usr_1');
+    expect(clone!.owner_id).toBe('usr_1');
     // A 90-day horizon computed INSIDE the VM — `Date` is one of the few host
     // globals a body may rely on, and this proves it is really there.
     expect(clone!.close_date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
@@ -352,6 +353,146 @@ describe('every script action body executes under QuickJS', () => {
     expect(activity!.source_id).toBe(email!.id);
     expect(activity!.record_label).toBe('Ada Lovelace');
     expect(result).toEqual({ emailId: email!.id, activityId: activity!.id });
+  });
+});
+
+// ─────────────── send_email's actor is a name, not a raw user id (#678) ──
+
+/**
+ * The twin of #673, on the same `sys_activity.actor_name` column.
+ *
+ * `send_email` stamped `actor_name: ctx.user?.name ?? null`, and on the
+ * dispatch path the Console uses that key is not a display name: the REST
+ * action dispatcher builds the body's user as `{ id: ec.userId, name: ec.userId,
+ * … }` (`@objectstack/runtime` 17.0.0-rc.2, `dist/index.js:5397`), so the key is
+ * PRESENT and carries the id — a plausible-looking string no `??` could catch.
+ * Every logged email on a contact's timeline therefore showed a 32-character id
+ * where the sender's name belongs.
+ *
+ * These run the REAL dispatcher user shape (`name === id`), which is why the
+ * existing `send_email` guard above stayed green through the whole bug: the
+ * harness default is `{ id: 'usr_1', name: 'Ada Lovelace' }`, a shape REST never
+ * produces.
+ */
+const REST_USER_ID = 'grDEyLoIgnunJ2M7Y2muLgcuQbDUT0s2';
+
+/** The user object the REST action dispatcher hands a body, verbatim. */
+const restUser = (id: string = REST_USER_ID): Rec => ({
+  id,
+  name: id,
+  email: 'admin@objectos.ai',
+  roles: [],
+  positions: [],
+  permissions: [],
+});
+
+const sendEmailOpts = {
+  objectName: 'crm_contact',
+  record: { id: 'con_1', email: 'ada@example.com', full_name: 'Ada Lovelace' },
+  input: { subject: 'Hello', body: 'Body text' },
+};
+
+describe('send_email writes a human-readable sys_activity.actor_name (#678)', () => {
+  it('resolves the display name from sys_user instead of stamping the id', async () => {
+    const engine = makeSandboxEngine({
+      sys_user: [{ id: REST_USER_ID, name: 'Dev Admin', email: 'admin@objectos.ai' }],
+    });
+    await runActionBody(action('send_email'), { ...sendEmailOpts, user: restUser(), engine });
+    const [activity] = engine.inserted('sys_activity') as Rec[];
+    expect(activity!.actor_id).toBe(REST_USER_ID);
+    expect(activity!.actor_name).toBe('Dev Admin');
+    // The regression itself, as its own assertion: whatever else changes, the
+    // contact timeline must never render the opaque id again.
+    expect(activity!.actor_name).not.toBe(REST_USER_ID);
+  });
+
+  it('reads sys_user once — and only because the dispatcher delivered no name', async () => {
+    const engine = makeSandboxEngine({
+      sys_user: [{ id: REST_USER_ID, name: 'Dev Admin', email: 'admin@objectos.ai' }],
+    });
+    await runActionBody(action('send_email'), { ...sendEmailOpts, user: restUser(), engine });
+    expect(engine.callsFor('sys_user', 'find')).toHaveLength(1);
+
+    // A dispatcher that DOES deliver a display name is believed as-is: the
+    // lookup is a workaround and has to retire itself the day the platform
+    // starts honouring `ctx.user.name` (objectstack-ai/objectstack#5372).
+    const delivered = makeSandboxEngine();
+    await runActionBody(action('send_email'), {
+      ...sendEmailOpts,
+      user: { id: 'usr_1', name: 'Ada Lovelace' },
+      engine: delivered,
+    });
+    expect(delivered.callsFor('sys_user', 'find')).toHaveLength(0);
+    expect((delivered.inserted('sys_activity')[0] as Rec).actor_name).toBe('Ada Lovelace');
+  });
+
+  it('falls back to the id rather than writing a blank actor', async () => {
+    // No `sys_user` row for the sender — a deleted user, or a read this context
+    // is not allowed to satisfy. An opaque id is bad; an activity whose actor is
+    // `null` is worse, because it is not attributable at all.
+    const engine = makeSandboxEngine();
+    await runActionBody(action('send_email'), { ...sendEmailOpts, user: restUser(), engine });
+    const [activity] = engine.inserted('sys_activity') as Rec[];
+    expect(activity!.actor_name).toBe(REST_USER_ID);
+    expect(activity!.actor_name).not.toBeNull();
+  });
+
+  it('never fails the send when the sys_user read throws', async () => {
+    const sandbox = makeSandboxEngine();
+    const passThrough = sandbox.engine.find;
+    sandbox.engine.find = async (object: string, options: Rec = {}) => {
+      if (object === 'sys_user') throw new Error('FORBIDDEN: no read access to sys_user');
+      return passThrough(object, options);
+    };
+    const { result } = await runActionBody(action('send_email'), {
+      ...sendEmailOpts,
+      user: restUser(),
+      engine: sandbox,
+    });
+    // The email the rep just sent outranks the label on its timeline row.
+    expect(result.emailId).toBeTruthy();
+    expect(result.activityId).toBeTruthy();
+    expect((sandbox.inserted('sys_activity')[0] as Rec).actor_name).toBe(REST_USER_ID);
+  });
+
+  /**
+   * The anti-drift guard the acceptance criterion asks for.
+   *
+   * The resolution is shared as body SOURCE TEXT
+   * (`ACTOR_NAME_RESOLUTION_SOURCE`), spliced into both bodies at authoring
+   * time, because a body runs body-only inside QuickJS and cannot call an
+   * imported helper. Sharing a string is only as good as the guarantee that
+   * both sites still splice it — re-inlining a "small local tweak" in one body
+   * is exactly how #673's fix failed to reach #678's call site in the first
+   * place.
+   */
+  it('every actor_name writer splices the SAME resolution block', () => {
+    const writers = stackActions.filter((a) =>
+      String(a.body?.source ?? '').includes('actor_name:'),
+    );
+    // `send_email` plus the fifteen generated activity bodies.
+    expect(writers.map(keyOf).sort()).toContain('crm_contact:send_email');
+    expect(writers.length).toBeGreaterThan(1);
+
+    const divergent = writers
+      .filter((a) => !String(a.body.source).includes(ACTOR_NAME_RESOLUTION_SOURCE))
+      .map(keyOf);
+    expect(
+      divergent,
+      'these bodies write sys_activity.actor_name without the shared resolution ' +
+        `block — a second copy is a second thing to forget (#673 / #678):\n  ${divergent.join('\n  ')}`,
+    ).toEqual([]);
+
+    // And nobody stamps the raw `ctx.user.name` beside it, which is the exact
+    // expression both defects were. Comment lines are excluded on purpose: the
+    // shared block QUOTES that expression in its own retirement note, and a
+    // guard that cannot tell code from prose would fire on the fix.
+    const raw = writers.filter((a) =>
+      String(a.body.source)
+        .split('\n')
+        .some((line) => !line.trim().startsWith('//') && /actor_name:\s*ctx\.user/.test(line)),
+    );
+    expect(raw.map(keyOf), 'actor_name is being stamped from ctx.user again').toEqual([]);
   });
 });
 

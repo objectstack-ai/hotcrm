@@ -20,7 +20,7 @@ import { makeFlowHarness, type Rec } from './helpers/flow-harness';
 
 const openCase = (over: Rec = {}): Rec => ({
   id: 'c1', case_number: 'CASE-1', status: 'new', priority: 'medium',
-  is_escalated: false, is_closed: false, owner: 'agent1', ...over,
+  is_escalated: false, is_closed: false, owner_id: 'agent1', ...over,
 });
 
 /**

@@ -74,8 +74,10 @@ export default defineStack({
   // the serve command hard-aborts boot when the package is absent, so keeping it
   // here would break `objectstack start`/`dev` for this open-edition app (the AI
   // block runs before every other capability resolves). The AI metadata is
-  // unaffected — the two agents + skills still validate, build into the artifact,
-  // and run wherever a runtime provides the `ai` tier (cloud's objectos-runtime).
+  // unaffected — the skills still validate, build into the artifact, and run
+  // wherever a runtime provides the `ai` tier (cloud's objectos-runtime). There
+  // are no app-authored agents: they were retired in #512 and the surface is
+  // skills-only (ADR-0063 §2); skills attach to a platform agent by `surface`.
   // A local open-edition boot simply omits the AI service and hides its console
   // surface. To run AI locally, declare `@objectstack/service-ai` (cloud) in
   // package.json — its mere presence best-effort auto-loads it.

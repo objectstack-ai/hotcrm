@@ -47,7 +47,7 @@ export const MarketingUserProfile = {
         'A deal flagged Private is visible only to its owner, even to holders of org-wide opportunity read.',
       object: 'crm_opportunity',
       operation: 'select' as const,
-      using: 'is_private == false || owner == current_user.id',
+      using: 'is_private == false || owner_id == current_user.id',
     },
     // The platform's `member_default` set carries a wildcard owner-only-writes
     // policy (`created_by == current_user.id` on update), and RLS policies are

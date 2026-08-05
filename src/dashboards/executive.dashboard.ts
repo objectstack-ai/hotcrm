@@ -47,7 +47,7 @@ export const ExecutiveDashboard: Dashboard = {
 
   globalFilters: [
     {
-      field: 'owner',
+      field: 'owner_id',
       label: 'Owner',
       type: 'lookup',
       scope: 'dashboard',
@@ -93,8 +93,8 @@ export const ExecutiveDashboard: Dashboard = {
       // out of both dashboard filters bound to those fields. ObjectStack 15
       // (framework#2501) injects every dashboard filter (dateRange + globalFilters)
       // into each widget's query, so a widget on an object lacking a filter field
-      // fails with `no such column`. crm_account DOES have `owner`, so the owner
-      // filter is left to apply.
+      // fails with `no such column`. crm_account DOES have `owner_id` (injected
+      // into every business object, #548), so the owner filter is left to apply.
       filterBindings: { dateRange: false, lead_source: false },
       dataset: 'account_metrics', values: ['account_count'],
       layout: { x: 3, y: 0, w: 3, h: 2 },

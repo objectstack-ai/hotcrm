@@ -1,4 +1,4 @@
-import { P, cel } from '@objectstack/spec';
+import { P } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
@@ -23,10 +23,11 @@ export const Task = ObjectSchema.create({
   fieldGroups: [
     { key: 'basic',      label: 'Task Information', icon: 'info' },
     { key: 'scheduling', label: 'Scheduling',       icon: 'calendar' },
-    // No 'assignment' group: `owner` was its only member, and the synthesized
-    // detail page hoists `owner` into the highlight strip — so the group
-    // rendered on forms and never on detail pages (`field-group-shadowed`).
-    // It lives in `basic` alongside subject/status/priority instead.
+    // No 'assignment' group: the assignee (`owner_id`) was its only member, and
+    // the synthesized detail page hoists it into the highlight strip — so the
+    // group rendered on forms and never on detail pages
+    // (`field-group-shadowed`). It lives in `basic` alongside
+    // subject/status/priority instead.
     { key: 'related',    label: 'Related Records',  icon: 'link' },
     { key: 'recurrence', label: 'Recurrence',       icon: 'refresh-ccw', defaultExpanded: false },
     { key: 'effort',     label: 'Progress & Effort', icon: 'activity',   defaultExpanded: false },
@@ -34,6 +35,15 @@ export const Task = ObjectSchema.create({
   ],
 
   fields: {
+    // Platform ownership anchor — canonical note in `account.object.ts` (#548).
+    owner_id: Field.lookup('sys_user', {
+      label: 'Assigned To',
+      group: 'basic',
+      system: true,
+      readonly: false,
+      trackHistory: true,
+    }),
+
     // Task Information
     subject: Field.text({
       group: 'basic',
@@ -125,14 +135,6 @@ export const Task = ObjectSchema.create({
       group: 'scheduling',
       label: 'Completed Date',
       readonly: true,
-    }),
-    
-    // Assignment
-    owner: Field.lookup('sys_user', {
-      group: 'basic',
-      defaultValue: cel`os.user.id`,
-      label: 'Assigned To',
-      trackHistory: true,
     }),
     
     // Related To (Polymorphic relationship - can link to multiple object types)
@@ -263,14 +265,14 @@ export const Task = ObjectSchema.create({
   indexes: [
     { fields: ['status'] },
     { fields: ['priority'] },
-    { fields: ['owner'] },
+    { fields: ['owner_id'] },
     { fields: ['due_date'] },
   ],
   
   // ADR-0079: render-only `titleFormat` retired in favor of `nameField`,
   // which names the real field holding the record title (here: `subject`).
   nameField: 'subject',
-  highlightFields: ['subject', 'status', 'priority', 'due_date', 'owner'],
+  highlightFields: ['subject', 'status', 'priority', 'due_date', 'owner_id'],
   
   // Removed: list_views and form_views belong in UI configuration, not object definition
   

@@ -67,7 +67,7 @@ export const OpportunityDetailPage: Page = {
           id: 'opp_highlights',
           label: 'Key Information',
           properties: {
-            fields: ['amount', 'close_date', 'probability', 'expected_revenue', 'owner', 'crm_account'],
+            fields: ['amount', 'close_date', 'probability', 'expected_revenue', 'owner_id', 'crm_account'],
           },
         },
         {
@@ -114,7 +114,7 @@ export const OpportunityDetailPage: Page = {
                         {
                           name: 'info',
                           label: 'Opportunity Information',
-                          fields: ['name', 'crm_account', 'owner', 'type', 'lead_source', 'crm_campaign'],
+                          fields: ['name', 'crm_account', 'owner_id', 'type', 'lead_source', 'crm_campaign'],
                         },
                         {
                           name: 'crm_forecast',
@@ -184,7 +184,7 @@ export const OpportunityDetailPage: Page = {
                               properties: {
                                 objectName: 'crm_task',
                                 relationshipField: 'related_to_opportunity',
-                                columns: ['subject', 'status', 'priority', 'due_date', 'owner'],
+                                columns: ['subject', 'status', 'priority', 'due_date', 'owner_id'],
                                 filter: [{ field: 'status', op: 'neq', value: 'completed' }],
                                 limit: 10,
                               },

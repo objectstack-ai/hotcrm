@@ -58,10 +58,10 @@ export const OpportunityWonAlertFlow: Flow = {
     {
       id: 'notify_management', type: 'notify', label: 'Notify Management',
       config: {
-        // Owner only: `{record.owner.manager}` cannot traverse a lookup on the
+        // Owner only: `{record.owner_id.manager}` cannot traverse a lookup on the
         // raw trigger snapshot — it interpolates to the literal "undefined"
         // and the message is delivered to a phantom user.
-        recipients: ['{record.owner}'],
+        recipients: ['{record.owner_id}'],
         channels: ['inbox', 'email'],
         severity: 'info',
         topic: 'large_deal_won',

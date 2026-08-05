@@ -69,7 +69,7 @@ export const TaskDueReminderFlow: Flow = {
             {
               id: 'notify_owner', type: 'notify', label: 'Notify Owner',
               config: {
-                recipients: ['{currentTask.owner}'],
+                recipients: ['{currentTask.owner_id}'],
                 channels: ['inbox', 'email'],
                 severity: 'warning',
                 topic: 'task_reminder',

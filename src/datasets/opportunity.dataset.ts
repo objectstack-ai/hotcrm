@@ -25,7 +25,8 @@ export const OpportunityDataset = defineDataset({
     { name: 'lead_source', label: 'Lead Source', field: 'lead_source', type: 'string' },
     { name: 'forecast_category', label: 'Forecast Category', field: 'forecast_category', type: 'string' },
     { name: 'type', label: 'Deal Type', field: 'type', type: 'string' },
-    { name: 'owner', label: 'Owner', field: 'owner', type: 'lookup' },
+    // Semantic name `owner`; column `owner_id`, the platform anchor (#548).
+    { name: 'owner', label: 'Owner', field: 'owner_id', type: 'lookup' },
     // Win/loss attribution (#593). Both columns are now mandatory at close
     // (`requiredWhen` on crm_opportunity), so grouping by either one over
     // settled deals has no "unattributed" bucket to explain away.

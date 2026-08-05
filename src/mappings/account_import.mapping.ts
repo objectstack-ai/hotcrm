@@ -75,13 +75,18 @@ export const AccountImportMapping = defineMapping({
     // `username`. `sys_user` has an `email` column, so an owner-email cell
     // resolves to that user's id — no separate resolution step is needed here.
     // An address that matches no user FAILS the row (`reference_not_found`);
-    // leaving the cell BLANK is the supported fallback — the field's
-    // `defaultValue: os.user.id` then makes the importing user the owner.
+    // leaving the cell BLANK is the supported fallback — the security
+    // middleware's insert-time stamp then makes the importing user the owner
+    // (the import write carries the importer's context, not `isSystem`).
     //
-    // Tracked on #548: this targets the app-authored `owner` lookup, which is
-    // what the objects carry today. When #548 replaces it with the platform's
-    // `owner_id`, retarget this entry (and the sibling contact/lead mappings).
-    { source: 'Account Owner Email', target: 'owner', transform: 'lookup' },
+    // The target is `owner_id`, the platform ownership anchor — #548 retired
+    // the app-authored `owner` lookup this used to name. A resolved cell is
+    // therefore an ownership TRANSFER: it plants the row under someone other
+    // than the importer, which the #3004 guard denies unless the importing user
+    // holds `allowTransfer` (system_admin / sales_manager do). That is the
+    // intended posture — a bulk file that silently reassigns the book is
+    // exactly what the grant exists to gate.
+    { source: 'Account Owner Email', target: 'owner_id', transform: 'lookup' },
 
     // Self-reference: a parent named later in the same file still resolves —
     // the runner flushes buffered creates and retries once (framework#3148).

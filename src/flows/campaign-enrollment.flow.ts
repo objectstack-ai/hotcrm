@@ -102,8 +102,8 @@ export const CampaignEnrollmentFlow: Flow = {
               },
             },
             {
+              // Gateway only — the predicate lives on the out-edge (#650).
               id: 'check_not_enrolled', type: 'decision', label: 'New Member?',
-              config: { condition: P`existingMember == null` },
             },
             {
               id: 'create_campaign_member', type: 'create_record', label: 'Add to Campaign',
@@ -115,7 +115,9 @@ export const CampaignEnrollmentFlow: Flow = {
           ],
           edges: [
             { id: 'b1', source: 'find_existing_member', target: 'check_not_enrolled', type: 'default' },
-            // Already enrolled → no edge → next lead.
+            // Already enrolled → no edge → next lead. This edge is the ONLY
+            // site for the predicate (#650): a `decision` node's singular
+            // `config.condition` is never read, so a node copy would be inert.
             { id: 'b2', source: 'check_not_enrolled', target: 'create_campaign_member', type: 'conditional', condition: P`existingMember == null`, label: 'Enroll' },
           ],
         },

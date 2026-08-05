@@ -75,7 +75,7 @@ export const ServiceDashboard: Dashboard = {
 
   globalFilters: [
     {
-      field: 'owner',
+      field: 'owner_id',
       label: 'Agent',
       type: 'lookup',
       scope: 'dashboard',

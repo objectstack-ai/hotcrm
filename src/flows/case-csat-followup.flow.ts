@@ -58,7 +58,7 @@ export const CaseCsatFollowupFlow: Flow = {
     {
       id: 'notify_csat', type: 'notify', label: 'Request Satisfaction Rating',
       config: {
-        recipients: ['{record.owner}'],
+        recipients: ['{record.owner_id}'],
         channels: ['inbox', 'email'],
         topic: 'case_csat',
         title: 'Collect CSAT: case {record.case_number}',

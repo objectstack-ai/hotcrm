@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
-import { F, P, cel } from '@objectstack/spec';
+import { F, P } from '@objectstack/spec';
 
 /**
  * Forecast Object
@@ -50,7 +50,7 @@ export const Forecast = ObjectSchema.create({
   // the formula field, which isn't a real column, so the lookup picker + global
   // search silently return zero. These are real, indexed columns.
   searchableFields: ['period_label'],
-  highlightFields: ['owner', 'period', 'period_start', 'commit_amount', 'closed_amount'],
+  highlightFields: ['owner_id', 'period', 'period_start', 'commit_amount', 'closed_amount'],
 
   fieldGroups: [
     { key: 'basic',   label: 'Snapshot',    icon: 'info' },
@@ -59,15 +59,15 @@ export const Forecast = ObjectSchema.create({
   ],
 
   fields: {
-    owner: Field.lookup('sys_user', {
-      defaultValue: cel`os.user.id`,
+    // Platform ownership anchor — canonical note in `account.object.ts` (#548).
+    owner_id: Field.lookup('sys_user', {
       label: 'Owner',
-      // Optional so seed inserts (which run before any human user exists and
-      // bypass field defaults) succeed; ownership is backfilled to the active
-      // user at runtime, matching every other CRM object's owner field.
       group: 'basic',
+      system: true,
+      readonly: false,
       trackHistory: true,
     }),
+
 
     period: Field.select({
       label: 'Period',
@@ -202,7 +202,7 @@ export const Forecast = ObjectSchema.create({
     // Fixture identity — the seed loader's `externalId`, and nothing else.
     //
     // `crm_forecast` is a PER-OWNER snapshot: its real identity is
-    // (owner, period, period_start), and every other column is a rendering of
+    // (owner_id, period, period_start), and every other column is a rendering of
     // part of that. `period_label` in particular names a SET of rows once the
     // `forecast_snapshot` sweep (#590) writes one row per active owner per
     // quarter — they all read 'Q3 2026'. The demo seed used to upsert on that
@@ -211,15 +211,15 @@ export const Forecast = ObjectSchema.create({
     //
     // The three routes considered, and why this one:
     //
-    //   • Composite `externalId: ['owner', 'period', 'period_start']` — the
+    //   • Composite `externalId: ['owner_id', 'period', 'period_start']` — the
     //     true identity, and the platform does support composite keys (the
     //     seed file already uses one for opportunity line items). It fails
     //     HERE for a different reason: a seed cannot name a user (see the note
-    //     at the foot of `src/data/index.ts`), so `owner` is null on every
+    //     at the foot of `src/data/index.ts`), so `owner_id` is null on every
     //     seeded row, and the loader's `externalIdKey` returns "" as soon as
     //     any part is empty. An empty key never matches, so upsert degrades to
     //     insert-on-every-replay and duplicates the table — strictly worse.
-    //     Dropping `owner` does not rescue it: a runtime row for the current
+    //     Dropping `owner_id` does not rescue it: a runtime row for the current
     //     quarter carries exactly the same (period, period_start).
     //
     //   • `mode: 'insert'` — does NOT mean "insert once". The loader inserts
@@ -250,7 +250,7 @@ export const Forecast = ObjectSchema.create({
   },
 
   indexes: [
-    { fields: ['owner', 'period_start', 'period'] },
+    { fields: ['owner_id', 'period_start', 'period'] },
     { fields: ['snapshot_date'] },
     { fields: ['period_start'] },
   ],

@@ -95,7 +95,7 @@ export const esES: TranslationData = {
           help: 'Derivado de la Dirección de Facturación — el código de país que usan las reglas de compartición por territorio.',
         },
         office_location: { label: 'Ubicación de Oficina' },
-        owner: { label: 'Propietario de Cuenta' },
+        owner_id: { label: 'Propietario de Cuenta' },
         parent_account: { label: 'Cuenta Matriz', help: 'Empresa matriz en la jerarquía' },
         description: { label: 'Descripción' },
         is_active: { label: 'Activo' },
@@ -165,7 +165,7 @@ export const esES: TranslationData = {
             hr: 'Recursos Humanos', operations: 'Operaciones',
           },
         },
-        owner: { label: 'Propietario de Contacto' },
+        owner_id: { label: 'Propietario de Contacto' },
         description: { label: 'Descripción' },
         is_primary: { label: 'Contacto Principal', help: '¿Es este el contacto principal de la cuenta?' },
         avatar: { label: 'Foto de Perfil' },
@@ -252,7 +252,7 @@ export const esES: TranslationData = {
           label: 'Idioma',
           options: { en: 'Inglés', zh_cn: 'Chino simplificado', es_es: 'Español', ja_jp: 'Japonés' },
         },
-        owner: { label: 'Propietario' },
+        owner_id: { label: 'Propietario' },
         related_to_case: { label: 'Caso de origen', help: 'Caso a partir del cual se redactó este artículo (opcional).' },
         published_at: { label: 'Publicado el' },
         last_reviewed_at: { label: 'Última revisión' },
@@ -273,7 +273,7 @@ export const esES: TranslationData = {
       pluralLabel: 'Previsiones',
       description: 'Instantánea periódica del pipeline por propietario para previsión de ingresos',
       fields: {
-        owner: { label: 'Propietario' },
+        owner_id: { label: 'Propietario' },
         period: { label: 'Periodo', options: { month: 'Mes', quarter: 'Trimestre' } },
         period_start: { label: 'Inicio del periodo' },
         period_end: { label: 'Fin del periodo' },
@@ -337,7 +337,7 @@ export const esES: TranslationData = {
             cold_call: 'Llamada en Frío', email_campaign: 'Campaña de Email', other: 'Otro',
           },
         },
-        owner: { label: 'Propietario' },
+        owner_id: { label: 'Propietario' },
         is_converted: { label: 'Convertido' },
         description: { label: 'Descripción' },
         // Mismo juego de valores que `crm_contact.salutation` — tradúzcanse igual.
@@ -443,7 +443,7 @@ export const esES: TranslationData = {
         name: { label: 'Nombre de Oportunidad' },
         crm_account: { label: 'Cuenta' },
         primary_contact: { label: 'Contacto Principal' },
-        owner: { label: 'Propietario de Oportunidad' },
+        owner_id: { label: 'Propietario de Oportunidad' },
         amount: { label: 'Monto' },
         expected_revenue: { label: 'Ingreso Esperado' },
         stage: {
@@ -602,7 +602,7 @@ export const esES: TranslationData = {
           label: 'Origen del Caso',
           options: { email: 'Email', phone: 'Teléfono', web: 'Web', chat: 'Chat', social_media: 'Redes Sociales' },
         },
-        owner: { label: 'Propietario del Caso' },
+        owner_id: { label: 'Propietario del Caso' },
         created_date: { label: 'Fecha de Creación' },
         closed_date: { label: 'Fecha de Cierre' },
         first_response_date: { label: 'Fecha de Primera Respuesta' },
@@ -653,7 +653,7 @@ export const esES: TranslationData = {
         crm_account: { label: 'Cuenta' },
         crm_contact: { label: 'Contacto Principal' },
         crm_opportunity: { label: 'Oportunidad Relacionada' },
-        owner: { label: 'Propietario del Contrato' },
+        owner_id: { label: 'Propietario del Contrato' },
         status: {
           label: 'Estado',
           options: {
@@ -769,7 +769,7 @@ export const esES: TranslationData = {
         crm_account: { label: 'Cuenta' },
         crm_contact: { label: 'Contacto' },
         crm_opportunity: { label: 'Oportunidad' },
-        owner: { label: 'Propietario de Cotización' },
+        owner_id: { label: 'Propietario de Cotización' },
         status: {
           label: 'Estado',
           options: {
@@ -836,7 +836,7 @@ export const esES: TranslationData = {
         reminder_date: { label: 'Fecha/Hora de Recordatorio' },
         reminder_sent: { label: 'Recordatorio Enviado' },
         completed_date: { label: 'Fecha de Finalización' },
-        owner: { label: 'Asignado A' },
+        owner_id: { label: 'Asignado A' },
         // Los valores son nombres de objeto: se reutilizan las etiquetas ya
         // traducidas de cada objeto en este mismo paquete (igual que
         // `crm_event.related_to_type`).
@@ -924,7 +924,7 @@ export const esES: TranslationData = {
         response_rate: { label: 'Tasa de Respuesta %' },
         roi: { label: 'ROI %' },
         parent_campaign: { label: 'Campaña Principal', help: 'Campaña principal en la jerarquía' },
-        owner: { label: 'Propietario de Campaña' },
+        owner_id: { label: 'Propietario de Campaña' },
         landing_page_url: { label: 'Página de Aterrizaje' },
         is_active: { label: 'Activo' },
       },
@@ -962,7 +962,7 @@ export const esES: TranslationData = {
             planned: 'Planificado', held: 'Realizado', cancelled: 'Cancelado', no_show: 'No asistió',
           },
         },
-        owner: { label: 'Asignado a' },
+        owner_id: { label: 'Asignado a' },
         start_datetime: { label: 'Inicio' },
         end_datetime: { label: 'Fin' },
         all_day: { label: 'Evento de todo el día' },

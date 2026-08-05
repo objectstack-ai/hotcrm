@@ -26,7 +26,7 @@ export const ContractViews = defineView({
       { field: 'start_date', width: 130, sortable: true },
       { field: 'end_date', width: 130, sortable: true },
       { field: 'auto_renewal', width: 110, align: 'center' },
-      { field: 'owner', width: 150 },
+      { field: 'owner_id', width: 150 },
     ],
     sort: [{ field: 'end_date', order: 'asc' }],
     pagination: { pageSize: 25 },
@@ -95,7 +95,7 @@ export const ContractViews = defineView({
       {
         label: 'Parties',
         columns: 2,
-        fields: ['contract_number', 'crm_account', 'crm_contact', 'crm_opportunity', 'owner', 'status'],
+        fields: ['contract_number', 'crm_account', 'crm_contact', 'crm_opportunity', 'owner_id', 'status'],
       },
       {
         label: 'Terms',

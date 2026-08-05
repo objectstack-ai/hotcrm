@@ -45,7 +45,8 @@ export const ForecastDataset = defineDataset({
   object: 'crm_forecast',
 
   dimensions: [
-    { name: 'owner', label: 'Owner', field: 'owner', type: 'lookup' },
+    // Semantic name `owner`; column `owner_id`, the platform anchor (#548).
+    { name: 'owner', label: 'Owner', field: 'owner_id', type: 'lookup' },
     { name: 'period', label: 'Period Type', field: 'period', type: 'string' },
     { name: 'period_label', label: 'Period', field: 'period_label', type: 'string' },
     { name: 'period_start', label: 'Period Start', field: 'period_start', type: 'date' },

@@ -27,7 +27,7 @@ export const CaseViews = defineView({
       { field: 'sla_due_date', width: 160, sortable: true },
       { field: 'is_sla_violated', width: 110, align: 'center' },
       { field: 'is_escalated', width: 110, align: 'center' },
-      { field: 'owner', width: 150 },
+      { field: 'owner_id', width: 150 },
     ],
     // Sort on the materialised ordinal, not the select itself: `priority desc`
     // compares raw strings and lands medium > low > high > critical, burying
@@ -69,7 +69,7 @@ export const CaseViews = defineView({
       columns: ['case_number', 'subject', 'priority', 'sla_due_date'],
       kanban: {
         groupByField: 'status',
-        columns: ['case_number', 'subject', 'crm_account', 'priority', 'owner'],
+        columns: ['case_number', 'subject', 'crm_account', 'priority', 'owner_id'],
       },
       filter: [{ field: 'is_closed', operator: 'equals', value: false }],
       navigation: { mode: 'drawer', width: '640px' },
@@ -100,7 +100,7 @@ export const CaseViews = defineView({
         startDateField: 'created_date',
         endDateField: 'closed_date',
         titleField: 'subject',
-        groupByField: 'owner',
+        groupByField: 'owner_id',
         colorField: 'status',
         scale: 'day',
       },
@@ -120,7 +120,7 @@ export const CaseViews = defineView({
       data: { provider: 'object', object: 'crm_case' },
       columns: ['case_number', 'subject', 'crm_account', 'priority', 'status', 'sla_due_date'],
       filter: [
-        { field: 'owner', operator: 'equals', value: '{current_user_id}' },
+        { field: 'owner_id', operator: 'equals', value: '{current_user_id}' },
         { field: 'is_closed', operator: 'equals', value: false },
       ],
       sort: [
@@ -134,7 +134,7 @@ export const CaseViews = defineView({
       type: 'grid',
       label: 'Escalated Cases',
       data: { provider: 'object', object: 'crm_case' },
-      columns: ['case_number', 'subject', 'crm_account', 'priority', 'sla_due_date', 'owner'],
+      columns: ['case_number', 'subject', 'crm_account', 'priority', 'sla_due_date', 'owner_id'],
       filter: [{ field: 'is_escalated', operator: 'equals', value: true }],
       sort: [{ field: 'priority_rank', order: 'desc' }],
     },
@@ -145,7 +145,7 @@ export const CaseViews = defineView({
       type: 'grid',
       label: '⏰ SLA at Risk',
       data: { provider: 'object', object: 'crm_case' },
-      columns: ['case_number', 'subject', 'crm_account', 'priority', 'sla_due_date', 'owner'],
+      columns: ['case_number', 'subject', 'crm_account', 'priority', 'sla_due_date', 'owner_id'],
       // Operator-only filter — sort by SLA due date ascending so the soonest
       // surface first. (The view runtime does not interpolate `{NOW() + 4h}`.)
       filter: [
@@ -170,7 +170,7 @@ export const CaseViews = defineView({
           { field: 'status', required: true },
           'priority',
           'origin',
-          'owner',
+          'owner_id',
           // Required on the object with no default — a form without it could
           // never save a new case.
           { field: 'description', required: true, colSpan: 2 },
@@ -205,7 +205,7 @@ export const CaseViews = defineView({
    * Web-to-Case equivalent). Hosted at `/forms/support` and embeddable in
    * a help center. Guests can ONLY submit — the `guest_portal` profile
    * denies read/edit/delete on `crm_case`. Internal fields (status, origin,
-   * priority defaults, owner, SLA) are stamped by `case.hook.ts` after a
+   * priority defaults, owner_id, SLA) are stamped by `case.hook.ts` after a
    * guest submission.
    */
   formViews: {

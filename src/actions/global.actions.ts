@@ -91,6 +91,73 @@ export const ACTIVITY_TARGETS: Record<string, string> = {
 const lit = (value: string): string => JSON.stringify(value);
 
 /**
+ * The acting user's display name, as action-body SOURCE TEXT.
+ *
+ * Shared verbatim by every body that writes `sys_activity.actor_name`: the
+ * activity family below (#673) and `send_email` in `contact.actions.ts` (#678,
+ * the byte-identical defect on the same column).
+ *
+ * # Why a string and not a function
+ *
+ * An action body is shipped BODY-ONLY and evaluated in a QuickJS sandbox with
+ * no module scope, so a shared helper called from a body is not a closure at
+ * runtime — it is a `ReferenceError` (`test/helpers/action-sandbox.ts` states
+ * the same constraint for the shared line-item price fill). A string spliced at
+ * AUTHORING time, while Node builds the metadata, has no such problem: what
+ * reaches the sandbox is one self-contained body with this text inlined,
+ * exactly as if it had been typed there. `test/action-sandbox.test.ts` executes
+ * both bodies under the real runner AND pins that both still contain this
+ * constant, so the two call sites cannot drift into disagreeing.
+ *
+ * # Contract for a splice site
+ *
+ * Splice into a body that has already declared `userId` (`ctx.user?.id ?? null`)
+ * and whose action declares `api.read`. Afterwards `actorName` holds a
+ * non-blank display name — the id only as a last resort, never `null`.
+ */
+export const ACTOR_NAME_RESOLUTION_SOURCE = `// The acting user's DISPLAY name, for the sys_activity row (#673 / #678).
+      //
+      // PLATFORM WORKAROUND. \`ctx.user.name\` is not a display name on the
+      // dispatch path the Console uses: the REST action dispatcher builds the
+      // body's user as \`{ id: ec.userId, name: ec.userId, … }\` — the key is
+      // present and carries the raw id, so \`ctx.user?.name\` reads as a
+      // plausible string and silently wrote ids like
+      // "grDEyLoIgnunJ2M7Y2muLgcuQbDUT0s2" into \`sys_activity.actor_name\`
+      // (@objectstack/runtime 17.0.0-rc.2, dist/index.js:5397-5399). The MCP
+      // dispatcher does try a display name first
+      // (\`ec.userName ?? ec.userDisplayName ?? ec.userId\`, dist/index.js:1776)
+      // but nothing in the installed platform ever populates either field, so
+      // it falls back to the id too.
+      //
+      // So the name is resolved HERE, from \`sys_user.name\` (the column the
+      // platform itself treats as the profile display name), with the id kept
+      // as the last resort — an opaque id is bad, a blank actor is worse.
+      // A name that differs from the id is taken as already-resolved, which is
+      // what makes this one query and not a query per activity write.
+      //
+      // DELETE THIS once the platform delivers a display name on ctx.user.name
+      // for REST-dispatched action bodies: every splice site collapses back to
+      // \`actor_name: ctx.user?.name\` (objectstack-ai/objectstack#5372).
+      const ctxName = ctx.user?.name ? String(ctx.user.name).trim() : '';
+      let actorName = ctxName && ctxName !== userId ? ctxName : '';
+      if (!actorName && userId) {
+        try {
+          const found = await ctx.api.object('sys_user').find({
+            where: { id: userId },
+            fields: ['name'],
+            top: 1,
+          });
+          const users = Array.isArray(found) ? found : (found?.records ?? []);
+          const resolved = users.length && users[0].name ? String(users[0].name).trim() : '';
+          if (resolved) actorName = resolved;
+        } catch (e) {
+          // A denied or unavailable sys_user read must not fail the log — the
+          // interaction the rep just recorded matters more than its label.
+        }
+      }
+      if (!actorName) actorName = userId;`;
+
+/**
  * The authored difference between one activity action and the next.
  *
  * Issue #514 item 15: `log_call` and `log_meeting` were near-verbatim copies —
@@ -168,6 +235,8 @@ function activityAction(spec: ActivitySpec, objectName: string): Action {
       const userId = ctx.user?.id ?? null;
       const nowIso = new Date().toISOString();
 
+      ${ACTOR_NAME_RESOLUTION_SOURCE}
+
       const subject = input.subject ? String(input.subject) : ${lit(spec.defaultSubject)};
       const duration = input.duration ? Number(input.duration) : 0;
       const notes = input.notes ? String(input.notes) : '';
@@ -214,7 +283,13 @@ function activityAction(spec: ActivitySpec, objectName: string): Action {
         type: EVENT_TYPE,
         status: EVENT_STATUS,
         start_datetime: startIso,
-        owner: userId,
+        // Load-bearing, not decoration: an action body executes with
+        // isSystem: true (runtime buildActionExecutionContext), which
+        // short-circuits the security middleware — so the insert-time
+        // auto-stamp of owner_id never fires here. Omitting it would land the
+        // interaction ownerless, i.e. invisible in "My …" and uneditable under
+        // a private OWD (#548, the #622 failure mode).
+        owner_id: userId,
         related_to_type: OBJECT_NAME,
       };
       if (duration > 0) eventDoc.duration_minutes = duration;
@@ -274,7 +349,7 @@ function activityAction(spec: ActivitySpec, objectName: string): Action {
         type: EVENT_STATUS === 'held' ? 'completed' : 'scheduled',
         summary: ${lit(spec.summaryPrefix)} + summary,
         actor_id: userId,
-        actor_name: ctx.user?.name ?? null,
+        actor_name: actorName,
         object_name: OBJECT_NAME,
         record_id: recordId,
         // #514 item 2: the object's DECLARED nameField, not a hardcoded name.

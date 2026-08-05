@@ -41,7 +41,7 @@ function startConditionHolds(flow: Rec, vars: Record<string, unknown>): boolean 
 
 describe('opportunity_won_alert — start condition', () => {
   const opp = (over: Rec = {}): Rec => ({
-    id: 'o1', name: 'Big Deal', stage: 'closed_won', amount: 250_000, owner: 'rep1', ...over,
+    id: 'o1', name: 'Big Deal', stage: 'closed_won', amount: 250_000, owner_id: 'rep1', ...over,
   });
 
   it('fires on the TRANSITION into closed_won above $100K', () => {
@@ -79,7 +79,7 @@ describe('opportunity_won_alert — start condition', () => {
     expect(h.notifications).toHaveLength(1);
     const [alert] = h.notifications;
     expect(alert.to).toContain('rep1');
-    // `{record.owner.manager}` interpolates to the literal "undefined" and the
+    // `{record.owner_id.manager}` interpolates to the literal "undefined" and the
     // message goes to a phantom user.
     expect(JSON.stringify(alert), 'a template dot-walked a lookup').not.toContain('undefined');
     expect(String(alert.title)).toContain('Big Deal');
@@ -89,7 +89,7 @@ describe('opportunity_won_alert — start condition', () => {
 describe('case_escalation — start condition', () => {
   const critical = (over: Rec = {}): Rec => ({
     id: 'c1', case_number: 'CASE-1', priority: 'critical', status: 'new',
-    escalated_date: null, owner: 'agent1', ...over,
+    escalated_date: null, owner_id: 'agent1', ...over,
   });
 
   it('fires for a fresh critical case', () => {
@@ -154,7 +154,7 @@ describe('case_escalation — start condition', () => {
 
 describe('contact_welcome — start condition', () => {
   const contact = (over: Rec = {}): Rec => ({
-    id: 'c1', first_name: 'Ada', last_name: 'Lovelace', owner: 'rep1',
+    id: 'c1', first_name: 'Ada', last_name: 'Lovelace', owner_id: 'rep1',
     email_opt_out: false, ...over,
   });
 
@@ -170,7 +170,7 @@ describe('contact_welcome — start condition', () => {
 
   it('skips ownerless contacts (nobody to prompt)', () => {
     expect(startConditionHolds(ContactWelcomeFlow, {
-      record: contact({ owner: null }),
+      record: contact({ owner_id: null }),
     })).toBe(false);
   });
 
@@ -189,7 +189,7 @@ describe('contact_welcome — start condition', () => {
 describe('task_urgent_alert — start condition', () => {
   const task = (over: Rec = {}): Rec => ({
     id: 't1', subject: 'Fix outage', priority: 'urgent', status: 'not_started',
-    owner: 'rep1', ...over,
+    owner_id: 'rep1', ...over,
   });
 
   it('fires for a new urgent, incomplete task', () => {
@@ -222,7 +222,7 @@ describe('task_urgent_alert — start condition', () => {
 
 describe('lead_assignment — hot-lead SLA routing', () => {
   const lead = (over: Rec = {}): Rec => ({
-    id: 'l1', company: 'Acme', rating: 5, owner: 'rep1', ...over,
+    id: 'l1', company: 'Acme', rating: 5, owner_id: 'rep1', ...over,
   });
 
   it('routes a hot lead (rating ≥ 4) down the accelerated SLA branch', async () => {
@@ -246,7 +246,7 @@ describe('lead_assignment — hot-lead SLA routing', () => {
           .not.toContain('undefined');
       }
       for (const t of h.store.crm_task) {
-        expect(String(t.owner), `rating ${rating} task has a phantom owner`).not.toBe('undefined');
+        expect(String(t.owner_id), `rating ${rating} task has a phantom owner`).not.toBe('undefined');
       }
     }
   });
@@ -338,7 +338,7 @@ describe('insert-time twin flows', () => {
   it('case_escalation_on_create escalates a case born critical', async () => {
     const born = {
       id: 'c9', case_number: 'CASE-9', priority: 'critical', status: 'new',
-      escalated_date: null, owner: 'agent1',
+      escalated_date: null, owner_id: 'agent1',
     };
     const h = makeFlowHarness({ case_escalation_on_create: CaseEscalationOnCreateFlow }, {
       crm_case: [{ ...born }],

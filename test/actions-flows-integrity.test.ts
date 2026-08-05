@@ -230,10 +230,11 @@ describe('lead conversion is discoverable', () => {
 describe('demo data is demo-ready', () => {
   /**
    * A seed can't name a user (lookups resolve against the target's externalId,
-   * which only works for objects in the app's own graph; `cel`os.user.id`` in a
-   * seed evaluates to nothing), and a hook on `sys_user` is rejected at build
-   * time. So ownership is claimed by a scheduled sweep — without which every
-   * "My …" view is empty and owner-addressed notify reaches nobody.
+   * which only works for objects in the app's own graph), and a hook on
+   * `sys_user` is rejected at build time. Seed writes are also `isSystem`, so
+   * the middleware's insert-time `owner_id` stamp never fires for them. So
+   * ownership is claimed by a scheduled sweep — without which every "My …"
+   * view is empty and owner-addressed notify reaches nobody (#548).
    */
   it('demo_bootstrap claims every owner-scoped object', () => {
     const f = flow('demo_bootstrap');
@@ -244,7 +245,7 @@ describe('demo data is demo-ready', () => {
     expect(f!.runAs).toBe('system');
 
     const claimed = (f!.nodes ?? [])
-      .filter((n: AnyRec) => n.type === 'get_record' && n.config?.filter?.owner === null)
+      .filter((n: AnyRec) => n.type === 'get_record' && n.config?.filter?.owner_id === null)
       .map((n: AnyRec) => n.config.objectName);
     // The objects behind My Leads / My Deals / My Cases and the task queue.
     for (const objectName of ['crm_lead', 'crm_account', 'crm_opportunity', 'crm_case', 'crm_task']) {
