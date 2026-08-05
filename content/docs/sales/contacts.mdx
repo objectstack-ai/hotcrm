@@ -70,11 +70,15 @@ This makes the security story simple: get the account-sharing right and contacts
 
 ## Standard list views
 
-- **My Contacts** — contacts you own.
-- **Primary Contacts** — `is_primary = true`.
-- **Decision Makers** — title contains "VP", "Chief", or "Director".
-- **By Title** — grouped.
-- **Recently Added** — newest first.
+Contacts opens on **All Contacts**, and the switcher carries three saved views — these, and nothing else:
+
+| View | What it shows |
+| --- | --- |
+| **All Contacts** *(the landing view)* | Every contact, **grouped by account with the groups collapsed**: you expand the account you are working on instead of scrolling one flat roster. Inside a group, people are ordered by last name A→Z, with avatar, account, title, department, email, phone and owner on the row. 50 rows a page, export to CSV or XLSX. |
+| **People Directory** | The same people as photo cards, each card fronted by the contact's avatar — the fastest way to put faces to an account team before a meeting. Name, title, department, email, phone and account are on the card. |
+| **Primary Contacts** | Only the contacts flagged as primary — one per account, as described above — ordered by account. This is the list worth reviewing before a quote run or a mail-merge, because it is exactly the set every default draws from. |
+
+There is no owner-filtered contact view, and none is needed for access: contacts are not shared on their own, they inherit the account's sharing (see above). To work "your" people, start from **My Accounts** on the [Accounts](./accounts) list and open the account, or expand your accounts' groups on **All Contacts**.
 
 ## How the AI Copilot uses contacts
 
