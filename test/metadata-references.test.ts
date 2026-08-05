@@ -1901,6 +1901,154 @@ describe('every locale is complete on every authored surface', () => {
     expect(bad, `empty states with no translated copy:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
+  /**
+   * ── View LABELS, the surface with no gate at all (#783, #767) ────────────
+   *
+   * The empty-state guard above covers the string a view shows when it has NO
+   * rows. Its label — the tab caption a user reads on every visit — had no
+   * guard of any kind, and two separate reviews found gaps by comparing the
+   * four bundles column by column with human eyes.
+   *
+   * Nothing mechanical could have found them:
+   *
+   *  - `pnpm lint` hard-codes `--skip-i18n`. Dropping the flag does not report
+   *    these either — the run emits one line, `platform built-ins: 2298 i18n
+   *    issue(s) hidden`, because app-authored `_views` completeness is not in
+   *    the set the linter checks at all. So this is NOT the #494 family (real
+   *    warnings suppressed by a flag); it is a surface nobody was checking.
+   *  - Every gap was in `en`, and in the source locale a missing key is
+   *    invisible: the resolver falls back to the metadata `label`, which is
+   *    already correct English. #679 wrote this down for select options, page
+   *    copy and empty states — "a missing key and a correct one render
+   *    identically" — and ruled it a defect anyway, because every other bundle
+   *    is authored by mirroring this one's shape: a view with no slot in `en`
+   *    is a view the next translator has nowhere to put.
+   *
+   * The requirement is therefore the same one the select-field guard states,
+   * applied to view labels: every canonical view, every locale, no exemptions.
+   * No ledger is introduced here — the nine rows this guard was born red on
+   * (`crm_task.todays_tasks` / `overdue_tasks` from #783, `crm_lead.hot_leads`
+   * / `crm_account.renewals_due` / `at_risk_accounts` from #767, and the four
+   * `crm_case` / `crm_opportunity` rows the derivation turned up beside them)
+   * were closed in the same PR. An empty ledger is an invitation to add a row.
+   */
+
+  /**
+   * Every canonical list view in the stack, as `{ object, name }`.
+   *
+   * Derived from the compiled stack rather than from a hand-kept list, which
+   * is the whole point: a view added tomorrow is held to the bar on the PR
+   * that adds it, without anyone remembering to extend a fixture. Same
+   * container walk as the empty-state guard above — a view record carries one
+   * default `list` plus a `listViews` map, and both are user-visible tabs.
+   */
+  const canonicalViews = (): Array<{ object: string; name: string; label?: string }> =>
+    views.flatMap((record) => {
+      const containers: [string, AnyRec][] = [
+        ...(record.list ? [['list', record.list] as [string, AnyRec]] : []),
+        ...Object.entries<AnyRec>(record.listViews ?? {}),
+      ];
+      return containers.map(([key, view]) => ({
+        object: view?.data?.object ?? record.list?.data?.object ?? record.object,
+        name: view?.name ?? key,
+        label: view?.label,
+      }));
+    });
+
+  it('sees a non-trivial set of canonical views and a _views table in every locale', () => {
+    // Guards the guard. The three assertions below iterate derived collections,
+    // and all would pass by checking nothing if `stack.views` came back empty, if
+    // the container walk stopped yielding, or if a bundle's `_views` tables
+    // failed to flatten — the exact way the navigation guard in this file spent
+    // its life green.
+    const derived = canonicalViews();
+    expect(derived.length, 'no canonical list views discovered').toBeGreaterThanOrEqual(50);
+    expect(
+      new Set(derived.map((v) => v.object)).size,
+      'canonical views collapsed onto too few objects — derivation is broken',
+    ).toBeGreaterThanOrEqual(10);
+    expect(
+      derived.filter((v) => typeof v.object === 'string' && typeof v.name === 'string').length,
+      'some canonical view resolved no object or no name',
+    ).toBe(derived.length);
+
+    for (const [locale, pack] of packs()) {
+      const tables = Object.values<AnyRec>(pack.objects ?? {}).filter((o) => o?._views);
+      expect(tables.length, `${locale}: no _views table parsed out of the bundle`).toBeGreaterThan(0);
+    }
+  });
+
+  it('every canonical view label is translated in every locale', () => {
+    const bad: string[] = [];
+    for (const [locale, pack] of packs()) {
+      for (const { object, name } of canonicalViews()) {
+        if (!pack.objects?.[object]?._views?.[name]?.label) {
+          bad.push(`${locale}: ${object}._views.${name}.label`);
+        }
+      }
+    }
+    expect(
+      bad,
+      `canonical views with no translated label:\n  ${bad.join('\n  ')}\n` +
+        'Add the entry to src/translations/<locale>.ts. In en the gap is ' +
+        'invisible — the resolver falls back to the metadata label — which is ' +
+        'why it needs a test rather than a reviewer.',
+    ).toEqual([]);
+  });
+
+  it('no locale carries a _views entry for a view the stack does not ship', () => {
+    // The other direction of the same parity. A renamed or deleted view leaves
+    // four orphan entries behind, and an orphan is worse than a gap: it reads
+    // as coverage while translating nothing, and the next person to add a view
+    // by that name inherits a stale label.
+    const shipped = new Set(canonicalViews().map(({ object, name }) => `${object}.${name}`));
+    const bad: string[] = [];
+    for (const [locale, pack] of packs()) {
+      for (const [object, entry] of Object.entries<AnyRec>(pack.objects ?? {})) {
+        for (const name of Object.keys(entry?._views ?? {})) {
+          if (!shipped.has(`${object}.${name}`)) bad.push(`${locale}: ${object}._views.${name}`);
+        }
+      }
+    }
+    expect(bad, `_views entries naming no shipped view:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('the en view label is the canonical label verbatim, so a rename cannot pass silently', () => {
+    // What the parity assertion above CANNOT catch, and #767's actual concern:
+    // the key exists in all four bundles and the metadata label is then edited.
+    // Before this pin, `en` tracked the rename for free (its entry is a copy of
+    // the same English string, and where it was missing the resolver fell back),
+    // while zh-CN / ja-JP / es-ES kept translating the OLD name — four bundles
+    // describing two different views, with nothing red.
+    //
+    // Holding `en` byte-identical to the metadata label is what converts that
+    // into a build failure: rename `⏰ Open Tasks · Most Overdue First` and this
+    // goes red, which puts the author in the translations file with all four
+    // locales in front of them. Be honest about the limit — it proves the
+    // ENGLISH pair agrees, and nothing here can verify that a human then
+    // re-translated the other three. It makes the rename loud; it does not make
+    // it correct.
+    //
+    // This is not a new rule so much as the one the bundle already followed:
+    // all 61 `en` view labels that existed when this landed were already
+    // byte-identical to their metadata label, because #679 extracted them
+    // programmatically from `objectstack.config` rather than transcribing them.
+    // If English ever genuinely wants to read differently from the metadata,
+    // the fix is contract-first — correct the `label` in `*.view.ts`, the one
+    // place every locale is derived from — not to let two English strings drift.
+    const en = packFor('en');
+    expect(en, 'no en pack in stack.translations').toBeTruthy();
+    const bad: string[] = [];
+    for (const { object, name, label } of canonicalViews()) {
+      if (typeof label !== 'string') continue;
+      const translated = en?.objects?.[object]?._views?.[name]?.label;
+      if (typeof translated === 'string' && translated !== label) {
+        bad.push(`${object}.${name}: metadata "${label}" vs en "${translated}"`);
+      }
+    }
+    expect(bad, `en view labels that drifted from the metadata label:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
   it('every action parameter label is translated', () => {
     // A param label is the field caption inside an action's modal — untranslated,
     // it is a bare English word on an otherwise localized form.
