@@ -80,15 +80,33 @@ export const CampaignMember = ObjectSchema.create({
       group: 'basic',
     }),
 
+    // `deleteBehavior: 'cascade'` on BOTH party lookups (#696). A lookup
+    // defaults to `set_null`, and that default made every enrolled person
+    // permanently undeletable: deleting the lead cleared this column, the
+    // cleared row instantly violated `lead_or_contact_required` below, and the
+    // whole delete rolled back with a 400 naming an object the caller never
+    // touched ("A campaign member must reference either a Lead or a Contact",
+    // `"object":"crm_lead"`). A GDPR "delete this person" request could not be
+    // served through the API or the UI.
+    //
+    // Cascade rather than `restrict`: this is a JUNCTION row whose entire
+    // meaning is "this person is enrolled in this campaign". Once the person is
+    // gone the row denotes nothing, so keeping it (restrict) would only trade
+    // one undeletable person for a manual un-enrol chore, and the impact this
+    // fixes is undeletable people, not a confusing message. Cascade also makes
+    // the object's own rule unfalsifiable by construction: there is no longer a
+    // reachable state in which a stored member row breaks it.
     crm_lead: Field.lookup('crm_lead', {
       label: 'Lead',
       group: 'basic',
+      deleteBehavior: 'cascade',
       description: 'Set when the member was a Lead at enrollment time',
     }),
 
     crm_contact: Field.lookup('crm_contact', {
       label: 'Contact',
       group: 'basic',
+      deleteBehavior: 'cascade',
       description: 'Set when the member is an existing Contact',
     }),
 
