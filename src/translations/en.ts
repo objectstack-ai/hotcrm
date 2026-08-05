@@ -122,6 +122,8 @@ export const en: TranslationData = {
         account_map: { label: 'Accounts by Location', description: 'Geospatial distribution of accounts' },
         enterprise_accounts: { label: 'Enterprise Accounts', description: 'Accounts with the highest annual revenue' },
         my_accounts: { label: 'My Accounts', description: 'Accounts owned by the current user' },
+        renewals_due: { label: '🔄 Upcoming Renewals' },
+        at_risk_accounts: { label: '⚠️ At-Risk Accounts' },
       },
       _sections: {
         basic: { label: 'Basic Information' },
@@ -432,6 +434,7 @@ export const en: TranslationData = {
         gallery_view: { label: 'Lead Cards' },
         my_leads: { label: 'My Leads' },
         high_priority: { label: 'High Priority' },
+        hot_leads: { label: '🔥 Hot Leads' },
         suspected_duplicates: {
           label: 'Suspected Duplicates',
           emptyState: {
@@ -574,11 +577,9 @@ export const en: TranslationData = {
         deal_timeline: { label: 'Deal Timeline' },
         deal_gallery: { label: 'Deal Cards' },
         my_open_deals: { label: 'My Open Deals' },
-        // No `label` here on purpose: this view (like `stale_opportunities`)
-        // takes its English name from the metadata `label`, which is already
-        // English. Only the empty state needs a bundle entry — it has no
-        // metadata fallback path through the locale resolver.
+        stale_opportunities: { label: '⚠️ Stale Opportunities · Longest in Stage First' },
         closing_this_quarter: {
+          label: 'Closing This Quarter',
           emptyState: {
             title: 'No Deals Closing This Quarter',
             message: 'This tab lists open commit and best-case deals with a close date inside the current quarter. Nothing matches right now — deals closing later are on the Open Deals tab.',
@@ -681,6 +682,8 @@ export const en: TranslationData = {
         sla_calendar: { label: 'SLA Calendar' },
         case_timeline: { label: 'Case Timeline' },
         escalated_cases: { label: 'Escalated Cases' },
+        my_open_cases: { label: 'My Open Cases' },
+        sla_at_risk: { label: '⏰ SLA at Risk' },
       },
       _sections: {
         basic: { label: 'Case Information' },
@@ -950,6 +953,8 @@ export const en: TranslationData = {
         task_gantt: { label: 'Execution Plan' },
         task_timeline: { label: 'Worklog Timeline' },
         my_open_tasks: { label: 'My Open Tasks' },
+        todays_tasks: { label: '📅 My Priority Tasks' },
+        overdue_tasks: { label: '⏰ Open Tasks · Most Overdue First' },
       },
       _sections: {
         basic: { label: 'Task Information' },
