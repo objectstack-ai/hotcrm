@@ -32,14 +32,26 @@ Activation is the key transition — it triggers the account to be promoted to *
 
 ## What a contract record stores
 
-| Section | Fields |
+A contract record declares its fields in **six groups**. The contract form shows a curated subset of them across its tabs, so read this as the full inventory of what a contract carries rather than a screen-by-screen map:
+
+| Group | What's in it |
 | --- | --- |
-| **Parties & Type** | Contract number *(auto)*, account, type, opportunity *(if originated from a deal)* |
-| **Status & Dates** | Status, start date, end date, signed date, activation date |
-| **Financials** | Contract value, billing frequency, payment terms |
-| **Renewal** | Auto-renewal flag, renewal notice (days), renewal terms |
-| **Ownership** | Contract owner, account exec |
-| **Documents** | Signed contract (file), order form (file) |
+| **Contract Information** | Contract Number *(auto-numbered `CTR-0001`)*, Contract Type, Contract Document, Description |
+| **Parties** | Contract Owner, Account, Primary Contact, Related Opportunity — the contact and opportunity pickers are scoped to the account you pick first |
+| **Terms & Dates** | Contract Term (Months), Start Date, End Date, Special Terms |
+| **Contract Value** | Contract Value, Billing Frequency, Payment Terms, Billing Address |
+| **Status & Approval** | Status, Signed Date, Signed By |
+| **Renewal** | Auto Renewal, Renewal Notice (Days) |
+
+Account, Primary Contact, Contract Term, Start Date, End Date, Contract Value and Status are all **required** — a contract cannot be saved without them.
+
+Three field names people go looking for and do not find:
+
+- **Activation Date.** There is none, and no other field records the moment of activation. Activation stamps **Signed Date** instead (see *On contract activation* below), so that is the date any "when did this go live" report has to read.
+- **Renewal Terms.** Renewal is exactly the two fields above. Free-text renewal instructions belong in **Special Terms**, which travels with the contract.
+- **Account Exec.** Ownership is the single **Contract Owner** lookup; a contract carries no second ownership field.
+
+**Contract Document** is a **link**, not an upload — it holds a URL pointing at wherever the document lives. The executed PDF itself goes on the record as an **attachment**; files are enabled on Contract, which is what makes that possible. There is no separate *Order Form* field.
 
 ## Billing frequency
 
@@ -63,13 +75,14 @@ When the customer pays:
 
 ## Renewals
 
-Three fields drive renewals:
+Two fields drive renewals:
 
-- **Auto-Renew** — does the contract roll over automatically?
-- **Renewal Notice Days** — how many days before end-date to alert the team (e.g., 60 days)
-- **Renewal Terms** — free-text instructions ("renew at 5% uplift unless customer opts out")
+- **Auto Renewal** — off unless you turn it on. With it on, the daily renewal sweep opens the renewal deal for you; with it off, the sweep still reminds you but creates no deal.
+- **Renewal Notice (Days)** — how many days before the end date the reminder fires. Defaults to 30, and each contract carries its own.
 
-When the contract enters its renewal window, the system creates a follow-up task and emails the contract owner.
+There is no *Renewal Terms* field. Instructions like "renew at 5% uplift unless the customer opts out" go in **Special Terms**, the free-text field on the contract itself.
+
+When a contract enters its renewal window, the system files a follow-up task and emails the contract owner — see *Daily — renewal reminder* below for everything it creates.
 
 ## What the system does automatically
 
@@ -84,14 +97,25 @@ Nothing is sent and nobody is told. Activation raises no notification for the co
 Both writes run *after* the save, with failures logged rather than raised, so the contract stays activated even if promoting the account fails. They also hang off an **update** — a contract that arrives already *Activated* (a data import, seed data, an integration that writes the record in one shot) triggers neither, and its account stays a *Prospect*.
 
 ### Daily — expiration sweep
-Each night at midnight the system finds *Activated* contracts whose end date has passed:
+Each night at midnight the system finds *Activated* contracts whose end date has passed, and does two things to each — only these two:
 
 1. **Status → Expired**.
-2. **Notification** to the contract owner.
-3. **Notification** to the account owner.
+2. **Notification to the contract owner** — inbox and email, linking to the contract.
+
+Nobody else is told. There is no second notification: the account owner, the primary contact and the rest of the account team hear nothing when a contract lapses, so if anyone beyond the contract owner needs to know, an admin has to add that. The sweep also reads *Activated* contracts only — one still sitting in *Draft* or *In Approval* past its end date is left alone — and it takes at most 500 contracts per run.
 
 ### Daily — renewal reminder
-At 8 AM the system finds contracts entering their renewal window (within `renewal_notice_days` of end date) and sends a reminder to the contract owner with a one-click action to "Create Renewal Opportunity".
+At 8 AM the system finds *Activated* contracts whose end date falls inside that contract's own *Renewal Notice (Days)* window, and for each one, in this order:
+
+1. **Files a renewal task** for the contract owner — *"Renewal due: contract CTR-0042"*, a high-priority follow-up due on the contract's end date, filed against the account.
+2. **Notifies the contract owner** — inbox and email. The notification links to the contract record, and that is all it does: there is no one-click action on it, and opening it creates nothing.
+3. **Opens a renewal opportunity** — but only when *Auto Renewal* is on. An *Existing Customer - Renewal* deal on the same account, at *Proposal* stage, amount copied from the contract value, close date set to the contract's end date, owner copied from the contract, next step *"Confirm renewal terms with customer"*. It is skipped when that account already has an open renewal deal.
+
+So the renewal deal is never something you click for. With *Auto Renewal* on it is already in the pipeline by the time you read the reminder; with it off, nobody opens one for you and the task is the whole of it.
+
+The task is also what keeps the sweep from repeating itself: the same contract matches every morning of its notice window, and an open *Renewal due* task for it means the day is already handled — no second task, no second notification, no second deal. Complete that task and the next morning's sweep files a fresh one, for as long as the contract is still inside its window.
+
+Two bounds worth knowing: the sweep looks 120 days ahead at most, so a notice window set longer than that only starts firing at 120 days out; and it takes at most 500 contracts per run.
 
 ### Manual termination
 The owner can change status to *Terminated*. This is a one-way action — terminated contracts can't be reactivated. Audit log records who and when.
@@ -123,8 +147,8 @@ If your org wants contracts to follow the account, an admin has to author that, 
 ## Tips for contract owners
 
 - ✅ **Attach the signed PDF** when activating — auditors will thank you.
-- ✅ **Set Renewal Notice Days = 90** for enterprise deals — gives you a full quarter to negotiate.
-- ✅ **Use Renewal Terms field** to capture the deal — "price-locked for 3 years; 5% uplift on renewal".
+- ✅ **Set Renewal Notice (Days) = 90** for enterprise deals — gives you a full quarter to negotiate, and the sweep looks far enough ahead to honour it.
+- ✅ **Record what you agreed in Special Terms** — "price-locked for 3 years; 5% uplift on renewal". There is no *Renewal Terms* field, and Special Terms is the note that will still be on the contract when the reminder lands.
 
 ## Tips for sales reps
 
