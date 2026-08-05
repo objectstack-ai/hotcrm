@@ -82,30 +82,31 @@ describe('bulk dispatch is declared the way the renderer reads it', () => {
     ).toEqual([]);
   });
 
-  it('every custom bulk def names a real action and declares the aggregate dispatcher', () => {
-    // The name-resolution half is coverage nothing else has: the guard in
-    // `metadata-references.test.ts` ("every rowAction / bulkAction names a
-    // defined action") reads `bulkActions` STRINGS only, and the spec schema
-    // cannot resolve a name against this app's actions. An aggregate def naming
-    // an action that does not exist gets no `actionDef` attached by the
-    // renderer, so the button dispatches nothing — the silent no-op again,
-    // through a third door.
+  it('every custom bulk def names a real action', () => {
+    // Coverage nothing else has. The guard in `metadata-references.test.ts`
+    // ("every rowAction / bulkAction names a defined action") reads
+    // `bulkActions` STRINGS only, and the spec schema cannot resolve a name
+    // against THIS app's actions — `SnakeCaseIdentifierSchema` checks the
+    // spelling, not the referent. An aggregate def naming an action that does
+    // not exist gets no `actionDef` attached by the renderer, so the button
+    // dispatches nothing: the silent no-op again, through a third door.
     //
-    // The `execution` half is an app-local echo of a rule `pnpm validate`
-    // enforces through the spec (#4457). Kept deliberately: it fails in the
-    // unit run an author is already watching, and names the intent rather than
-    // the schema path.
+    // What this test deliberately does NOT re-assert is `execution:
+    // 'aggregate'` on a custom def. That was in the first draft and it was a
+    // phantom: `defineView` parses through the spec at MODULE IMPORT time, so a
+    // custom def without `execution` throws a ZodError carrying the whole
+    // #4457 explanation before this file can collect a single test. The
+    // assertion could never fail, because metadata in that state cannot be
+    // imported at all — verified by making the edit and watching the suite fail
+    // to load rather than fail an expectation. The schema owns that verdict and
+    // states it better; re-stating it here would only look like coverage.
     const bad: string[] = [];
     for (const v of views) {
       for (const list of listsOf(v)) {
         for (const def of (list.bulkActionDefs ?? []) as AnyRec[]) {
           if (def?.operation !== 'custom') continue;
-          const where = `view "${list.name ?? 'default'}" bulk "${def.name}"`;
-          if (def.execution !== 'aggregate') {
-            bad.push(`${where}: operation 'custom' without execution 'aggregate' — no dispatcher`);
-          }
           if (!actionNames.has(def.name)) {
-            bad.push(`${where}: names no defined action`);
+            bad.push(`view "${list.name ?? 'default'}" bulk "${def.name}": names no defined action`);
           }
         }
       }
