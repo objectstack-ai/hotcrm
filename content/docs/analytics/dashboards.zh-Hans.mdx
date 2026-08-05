@@ -1,124 +1,156 @@
 ---
 title: 仪表盘
-description: 四个开箱即用的仪表盘——CRM 概览、销售管道、服务运营和高管记分卡。
+description: 五个开箱即用的仪表盘——CRM 概览、销售业绩、销售活动、客户服务和高管概览。
 ---
 
 # 仪表盘
 
-HotCRM 内置四个仪表盘。每个都为特定角色而构建，回答该角色每天提出的问题。
+HotCRM 内置五个仪表盘。每个都为特定角色而构建，回答该角色每天提出的问题。
 
-## 四个仪表盘
+本页列出的每一个磁贴，都是应用真正发布的磁贴。这些清单会在 CI 里与仪表盘元数据逐条比对（`test/docs-drift.test.ts`），所以产品中的磁贴一旦被改名、新增或删除，本页就会直接让构建失败，而不是悄悄开始说假话。
+
+## 五个仪表盘
 
 | 仪表盘 | 面向 | 回答 |
 | --- | --- | --- |
 | 🏠 **CRM Overview** | 所有人 | "今天整个业务发生了什么？" |
-| 📈 **Sales Dashboard** | 销售代表、经理 | "我的管道健康状况如何？" |
-| 🎧 **Service Dashboard** | 服务客服、经理 | "我们在工单和 SLA 上表现如何？" |
-| 👔 **Executive Scorecard** | 高管、财务 | "我们达成目标了吗？" |
+| 📈 **Sales Performance** | 销售代表、经理 | "我的管道健康状况如何？我们赢单了吗？" |
+| ☎️ **Sales Activity** | 销售经理、客户团队 | "谁在和客户打交道？哪些客户已经没了动静？" |
+| 🎧 **Customer Service** | 服务客服、经理 | "我们在工单和 SLA 上表现如何？" |
+| 👔 **Executive Overview** | 高管、财务 | "我们达成目标了吗？" |
 
-四者都遵守 [共享规则](/zh-Hans/docs/administration/sharing-and-security)——你看到的内容取决于你的角色。
+五者都遵守 [共享规则](/zh-Hans/docs/administration/sharing-and-security)——你看到的内容取决于你的角色。
+
+### 没有任何磁贴显示趋势箭头
+
+在任何一个仪表盘上，KPI 磁贴都不显示"对比上期"的涨跌幅。跨期对比是一次测量：它必须来自一次真实的对比查询。在渲染器能为数据集绑定的指标跑出这样一次查询之前，磁贴上的百分比只会是手工敲进去的数字，没有任何数据能改变它——数据库塞得满满的时候和一条记录都没有的时候，它读起来一模一样。所以磁贴只呈现真正查询出来的那个数，此外什么都不加。
 
 ## 🏠 CRM Overview
 
-跨职能的主页仪表盘，默认对所有用户可见。
+跨职能的主页仪表盘——收入、管道和交易构成集中在一页上。
 
 **磁贴**：
 
-- **Open Leads** — 数量，按状态。
-- **New Leads This Week** — 与上周对比的趋势。
-- **My Open Opportunities** — 数量和价值。
-- **Cases Awaiting Response** — 数量，并突出 SLA 风险。
-- **Top 5 Accounts by Pipeline** — 柱状图。
-- **Recent Activity** — 过去 24 小时的通话、会议、电子邮件（你的）。
+- **Total Revenue** — 所选周期内的成交赢单收入。
+- **Active Deals** — 管道中进行中的商机。
+- **Won Deals** — 所选周期内成交赢单的交易。
+- **Avg Deal Size** — 成交赢单交易的平均金额。
+- **Revenue Trends** — 近 12 个月的成交赢单收入（面积图）。
+- **Lead Source** — 按获客渠道统计的管道金额（环形图）。
+- **Pipeline by Stage** — 各销售阶段的进行中商机金额（漏斗图）。
+- **Top Products** — 按产品类别统计的标价收入合计（柱状图）。
+- **Pipeline by Owner** — 每位销售代表的进行中管道金额、交易数和平均交易规模（表格）。
+
+**控件**：一个基于商机预计成交日期的日期范围选择器（默认本季度），以及一个 Owner 筛选器。
 
 非常适合作为每天开始时的着陆页。
 
-## 📈 Sales Dashboard
+## 📈 Sales Performance
 
 销售团队的日常运营仪表盘。
 
 **磁贴**：
 
-- **Pipeline by Stage** — 显示各阶段 $ 的漏斗图。
-- **Forecast vs Quota** — 仪表盘图。
-- **Closed Won this Quarter** — 带目标线的累计总额。
-- **Win Rate (12M)** — 近 12 个月内**已结案**（赢单 + 丢单）商机中的赢单占比，旁边同时展示 **Deals Won** 与 **Deals Lost**，让分子分母始终可见。进行中的管道不计入分母。
-- **Win / Loss by Rep** 与 **Win / Loss by Lead Source** — 同一比值的拆分表：每行给出赢单数、丢单数、已结案数、赢率与赢单金额。
-- **Why We Lose** — 按丢单原因统计的丢单数。每条丢单商机都必须填写原因（[关单时强制](/docs/sales/opportunities)），因此图中不存在“未归因”切片——图为空表示该时间窗内没有丢单，而不是没人填字段。
-- **Average Deal Size** — 本季度对比上季度。
-- **Average Sales Cycle** — 从创建到成交的天数（赢单交易）。
-- **Top 10 Open Deals** — 可排序的表格。
-- **Slipping Deals** — 本周成交日期被推后的商机。
-- **Activity Heatmap** — 每位销售代表每天的通话 + 会议 + 电子邮件。
+- **Total Pipeline** — 进行中商机金额合计。
+- **Closed Won (QTD)** — 本季度已成交的收入。
+- **Open Opportunities** — 正在推进中的交易。
+- **Avg Deal Size** — 本季度成交赢单交易的平均金额。
+- **Win Rate (12M)** — 近 12 个月内*已结案*（赢单 + 丢单）商机中的赢单占比。进行中的管道不计入分母。
+- **Deals Won (12M)** — 这个百分比背后的分子。
+- **Deals Lost (12M)** — 分母的另一半，好让分子和分母始终陈列在赢率旁边。
+- **Pipeline by Stage** — 各销售阶段的进行中商机金额（漏斗图）。
+- **Monthly Revenue Trend** — 近 12 个月的成交赢单收入。
+- **Pipeline by Forecast Category** — 按预测类别分组的进行中管道。
+- **Lead Source** — 管道是从哪里来的（环形图）。
+- **Open Pipeline by Owner** — 每位销售代表进行中的金额、交易数和平均赢单概率（表格）。
+- **Quota Attainment by Rep** — 每位销售代表当季的配额、已成交收入与达成率，读取自预测快照。
+- **Win / Loss by Rep** — 每位销售代表的赢单数、丢单数、已结案数、赢率和赢单金额（表格）。
+- **Win / Loss by Lead Source** — 同一份拆分换成按获客渠道来看：哪些来源带来的商机真正能成交。
+- **Why We Lose** — 按丢单原因统计的丢单数。每条丢单商机都必须填写原因（[关单时强制](/zh-Hans/docs/sales/opportunities)），因此图中不存在"未归因"切片——图为空表示该时间窗内没有丢单，而不是没人填字段。
+- **Pipeline by Stage × Lead Source** — 进行中商机金额按阶段与来源的交叉统计（透视表）。
 
-角色感知：销售代表看到自己的，经理看到团队的，总监看到汇总。
+**控件**：一个基于成交日期的日期范围选择器（默认本季度），外加 Sales Rep 和 Deal Type 筛选器。Quota Attainment by Rep 固定在当前季度，两者都不作用于它——配额是为某个周期定义的，用任意范围去重新切分它，等于拿完整的目标对比不完整的收入。
 
-## 🎧 Service Dashboard
+角色感知：销售代表看到自己的记录，经理看到团队的，遵循共享规则。
+
+## ☎️ Sales Activity
+
+覆盖度与客户健康视图：谁在和客户打交道、打交道有多频繁，以及沉默出现在哪里。
+
+**磁贴**：
+
+- **Interactions Logged** — 真正发生过的通话和会议。
+- **Meetings Booked** — 已排进日历、但还没有发生的会议。
+- **Customer Minutes** — 面对客户的总时长。
+- **Tasks Completed** — 已经收尾的跟进事项，活动量的另一半。
+- **Activity by Rep** — 按负责人统计的已记录互动数（柱状图）。
+- **Activity Volume by Week** — 每周互动数：团队是在提速，还是在变安静？
+- **Activity Mix** — 通话、会议与演示各占多少（环形图）。
+- **Where the Activity Lands** — 漏斗的哪一段拿到了注意力。
+- **Interactions on Deals** — 关联到商机的已记录互动数。
+- **Open Deals** — 仍在推进中的商机，用来给上一个磁贴当参照。
+- **Quiet 30+ Days** — 一个月内没有任何已记录互动的活跃客户。
+- **Quiet 60+ Days** — 沉默两个月，风险阈值。
+- **Quiet 90+ Days** — 整整一个季度没有联系：要么介入，要么放弃。
+
+**控件**：一个 Rep 筛选器。这里**故意没有**日期范围选择器——互动日期是 datetime 列，而平台的 datetime 筛选器转换目前会在这类列上套用范围时把每个小部件都清零。时间改由坐标轴承载：Activity Volume by Week 按周分桶，三个沉默客户磁贴各自框住自己的 30 / 60 / 90 天阈值。
+
+## 🎧 Customer Service
 
 服务团队的日常运营视图。
 
 **磁贴**：
 
-- **Open Cases by Priority** — 柱状图。
-- **Cases Approaching SLA** — 按距违约时间排序的表格。
-- **Cases Breached** — 过去 7 天（含工单所有者）。
-- **First Response Time** — 平均值对比目标。
-- **Resolution Time** — 平均值对比目标。
-- **Customer Satisfaction (CSAT)** — 过去 30 天，趋势。
-- **Case Volume by Origin** — Email / Phone / Web / Chat / Portal。
-- **Top Case Categories** — 用于发现产品问题。
-- **Agent Workload** — 每位客服的未结工单数。
+- **Open Cases** — 尚未关闭的工单。
+- **Critical Cases** — 优先级为 critical 的未结工单。
+- **Avg Resolution Time** — 平均关单时长（小时）。
+- **SLA Violations** — 违反了 SLA 的工单。
+- **Cases by Status** — 工作量在流程各状态上的分布（环形图）。
+- **Cases by Priority** — 未结工单按紧急程度的构成（饼图）。
+- **Cases by Origin** — Email / Phone / Web / Chat / Portal（柱状图）。
+- **Daily Case Volume** — 近 30 天每天新建的工单数。
+- **SLA Compliance** — 在 SLA 内解决的工单占比，对比 95% 的目标线（仪表图）。
+- **Open Cases by Priority** — 每个优先级的未结工单数及其 SLA 违约率（表格）。
 
-*Cases Approaching SLA* 磁贴是此仪表盘上点击最多的小部件——它是客服确定优先级的方式。
+**控件**：Agent 和 Priority 筛选器，外加每分钟一次的刷新——服务台需要新鲜的数字。和 Sales Activity 一样，这里同样故意没有日期范围选择器，原因是同一个 datetime 筛选器问题；Daily Case Volume 自带 30 天的时间窗。
 
-## 👔 Executive Scorecard
+## 👔 Executive Overview
 
 业务的高管 / 财务视图。
 
 **磁贴**：
 
-- **Bookings This Quarter** — 成交赢单，对比计划和去年同期。
-- **Pipeline Coverage** — 管道 ÷ 剩余配额。
-- **Forecast Confidence** — 承诺 + 最佳情况对比目标。
-- **Net New ARR** — 适用于订阅业务。
-- **Renewals This Quarter** — 即将到来、已续约、已流失。
-- **CSAT and NPS** — 客户健康度。
-- **Customer Acquisition Cost** — 营销活动支出 ÷ 新客户数。
-- **Top 10 Accounts by ACV** — 年度合同价值排行榜。
-- **Pipeline Trend** — 4 周管道价值图表。
+- **Total Revenue (YTD)** — 今年的成交赢单收入。
+- **Active Accounts** — 至少还有一段有效关系的客户。
+- **Total Contacts** — 通讯录里的人。
+- **Open Leads** — 漏斗中尚未转化的线索。
+- **Revenue Trend** — 近 12 个月的成交赢单收入。
+- **Revenue by Industry** — 年初至今的成交赢单收入按客户行业拆分（环形图）。
+- **Pipeline by Stage** — 各销售阶段的进行中商机金额（漏斗图）。
+- **New Accounts** — 近 6 个月的客户新建节奏。
+- **Accounts by Industry** — 每个行业的年收入合计与客户数（表格）。
+
+**控件**：一个基于成交日期的日期范围选择器（默认本季度），外加 Owner 和 Lead Source 筛选器。四个 KPI 磁贴各自声明了自己的周期（年初至今、"活跃"、"未转化"），不会被这个选择器收窄。
 
 此仪表盘是每周领导层评审的基础。
 
-## 个性化和创建仪表盘
+## 你可以改什么
 
-每位用户都可以：
+- **日期范围** — CRM Overview、Sales Performance 和 Executive Overview 各带一个基于商机预计成交日期的选择器，默认本季度。Sales Activity 和 Customer Service 没有，原因见上面各自的章节。
+- **筛选器** — 每个仪表盘声明自己的一套：Owner 各处都有，另外 Sales Performance 有 Deal Type、Customer Service 有 Priority、Executive Overview 有 Lead Source。
+- **刷新** — Customer Service 每分钟刷新一次，Sales Performance 每三分钟，其余三个每五分钟。
 
-- 将任何仪表盘**固定**为着陆页。
-- 按日期范围、团队、地区、产品**筛选**仪表盘。
-- **下钻**到任何磁贴以查看底层记录。
-- 将任何磁贴**导出**为图片或 PDF。
-- **订阅**以通过电子邮件接收每周 PDF。
+有些磁贴刻意不接受所在仪表盘的筛选器。12 个月的收入趋势、Top Products 和 Quota Attainment by Rep 都保持自己标题上写明的那个时间窗，这样更窄的日期选择器就无法在标题不变的情况下悄悄改掉数字的定义。
 
-管理员可以：
+## 数字是从哪里来的
 
-- 从 **Analytics › Dashboards › New** 菜单创建新仪表盘。
-- 从标准库选择小部件，或从 [多维数据集](/zh-Hans/docs/analytics/cubes) 构建自定义小部件。
-- 设置受众——谁默认看到每个仪表盘。
-- 安排快照（例如自动生成的季度 QBR 演示文稿）。
+每个磁贴都绑定到一个数据集——正是这一层语义把"管道""已结案交易""SLA 违约"各定义一次，供用到它们的每个磁贴和报表共用。可用的度量和维度见 [数据集与多维数据集](/zh-Hans/docs/analytics/cubes)，聚合数字背后的记录级视图见 [报表](/zh-Hans/docs/analytics/reports)。
 
-## 给经理的提示
+出现在不止一个仪表盘上的定义是共享的，而不是重新敲一遍：Pipeline by Stage 和 Avg Deal Size 各自只有一份定义，分别被三个和两个仪表盘使用，所以"进行中管道"不会在不同页面上变成不同的意思。
 
-- ✅ 为你的团队**订阅仪表盘 PDF**——周一早上 8 点是很好的节奏。
-- ✅ 每周五使用 **Slipping Deals** 磁贴来规划下周的交易评审通话。
-- ✅ 不要从电子邮件管理——从仪表盘管理。电子邮件用于采取行动；仪表盘用于呈现事实。
+## 提示
 
-## 给高管的提示
-
-- ✅ 从多维数据集构建一个**董事会视图**仪表盘——成交、管道、流失、CSAT——一页搞定。
-- ✅ 设置**阈值告警**（例如管道覆盖率 &lt;2.5×），以便在问题出现前得到提醒。
-
-## 给管理员的提示
-
-- ✅ 构建仪表盘时，**从多维数据集开始**而非临时查询——它们更快也更一致。
-- ✅ 鼓励用户**克隆并个性化**，而非从头重建。
-- ✅ 每季度审计仪表盘使用情况——淘汰无人打开的仪表盘。
+- ✅ 管道评审之前，把 **Win / Loss by Rep** 和 **Why We Lose** 放在一起读——前者说谁在转化，后者说是什么在打败你。
+- ✅ 每周都处理一次 **Quiet 90+ Days** 磁贴。一个季度都没有任何已记录互动的客户，要么已经休眠，要么早就走了；而这个磁贴的价值上限，就是你的团队真正记录下来的互动量。
+- ✅ 在服务台，把 **SLA Violations**（违约的绝对条数）和 **SLA Compliance** 磁贴（对比目标的达标率）一起看——小基数上的一个小数字，和一个健康的达标率不是一回事。
+- ✅ 把 **Interactions on Deals** 对着 **Open Deals** 读：覆盖度问题的答案是这两者的比值，而不是其中任何一个单独的数字。

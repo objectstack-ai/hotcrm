@@ -340,16 +340,29 @@ describe('documented agent names resolve to a platform agent', () => {
  * page from silently omitting a whole dashboard, which is the case that actually
  * bit.
  *
- * Locale note: `dashboards.zh-Hans.mdx` / `.zh-Hant.mdx` carry the same tile
- * lists — the bold names are left in English there — so they can join `DOC_PAGES`
- * unchanged once their prose is retranslated against the current dashboards.
- * They are out of this rule's scope only because they still hold the old text.
+ * Locale note (#685): `dashboards.zh-Hans.mdx` / `.zh-Hant.mdx` were retranslated
+ * against the current English page and now sit in `DOC_PAGES` alongside it. The
+ * extraction is locale-agnostic on purpose — the section headings carry each
+ * dashboard's own English `label` and the bold tile names are left in English in
+ * every locale, so the same two regexes resolve all three files. That is what
+ * makes the section-coverage rule bite per locale: registering a sixth dashboard
+ * now fails until all three pages document it, which is the shape #592 needed.
+ *
+ * One asymmetry to know about: the `**Name** tile` prose rule below keys on the
+ * English word "tile", so it only ever fires on the English page — the zh pages
+ * say `**Quiet 90+ Days** 磁贴 / 磁貼`. Their tile LISTS are fully checked; a
+ * stray tile name in their running prose is not. Widen `TILE_REFERENCE` if that
+ * becomes a real defect, rather than assuming it is already covered.
  */
 describe('the dashboards docs page lists tiles that exist', () => {
   type AnyRec = Record<string, any>;
   const dashboards: AnyRec[] = (stack as any).dashboards ?? [];
 
-  const DOC_PAGES = ['content/docs/analytics/dashboards.mdx'];
+  const DOC_PAGES = [
+    'content/docs/analytics/dashboards.mdx',
+    'content/docs/analytics/dashboards.zh-Hans.mdx',
+    'content/docs/analytics/dashboards.zh-Hant.mdx',
+  ];
 
   /** `## 🏠 CRM Overview` → heading text + everything up to the next `## `. */
   const sectionsOf = (text: string): { heading: string; body: string }[] => {
