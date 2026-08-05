@@ -66,21 +66,38 @@ A flow fires one of three ways, set by its start node:
 
 > **Auto-launch needs the `triggers` capability.** Record-change and scheduled flows only fire when the stack's `requires` list includes `triggers` — it installs the record-change + schedule trigger providers (schedule triggers also use the job service). Screen flows are always launched manually.
 
-**Built-in flows in HotCRM** (11):
+**Built-in flows in HotCRM** (24). Each row carries the flow's own label — the name you see in **Setup → Process Monitor** and **Setup → Scheduled Jobs**, so a run you are chasing in the monitor can be looked up here verbatim:
 
 | Flow | Trigger | What it does |
 | --- | --- | --- |
-| **Lead Conversion** | Screen | Convert a qualified lead into an account + contact (+ optional opportunity), then notify |
-| **Quote Generation** | Screen | Build a quote from an opportunity and move it to *Proposal* |
-| **Lead Assignment & Routing** | Record change (insert) | Stamp a rating-based follow-up SLA and route the new lead to the sales-manager queue |
-| **Opportunity Approval** | Record change | Tiered sign-off via approval nodes — Sales Manager > $100K, Sales Director > $500K |
-| **Case Escalation** | Record change | When a case turns *Critical*, reassign to a senior agent, notify, create a follow-up task |
-| **Case CSAT Follow-up** | Record change + wait | When a case closes, wait 1 day, then prompt the owner to capture a satisfaction rating |
-| **Campaign Enrollment** | Schedule (Mon 9 AM) | Bulk-enroll matching leads into a campaign |
+| **Lead Conversion Process** | Screen | Convert a qualified lead into an account + contact (+ optional opportunity), then notify |
+| **Generate Quote from Opportunity** | Screen | Build a quote from an opportunity and move it to *Proposal* |
+| **Schedule Follow-up** | Screen | Create the next follow-up task on a lead, already linked to it and owned by the right user |
+| **Enroll Leads in Campaign** | Screen | Bulk-enroll eligible leads into this campaign, skipping the already-enrolled and the opted-out |
+| **Escalate Case** | Screen | Collect an escalation reason, then flag and re-prioritise the case |
+| **Close Case** | Screen | Collect the resolution, then close the case and stop the SLA clock |
+| **New Lead Routing & SLA** | Record change (insert) | Stamp a rating-based follow-up SLA and alert the new lead's owner |
+| **Contact Welcome** | Record change (insert) | Prompt the owner to welcome a newly created contact |
+| **Urgent Task Alert** | Record change (insert) | Notify the owner when a task is created at *Urgent* |
+| **Large Deal Approval** | Record change (update) | Tiered sign-off via approval nodes — Sales Manager > $100K, Sales Director > $500K |
+| **Large Deal Approval (on create)** | Record change (insert) | The same intake for opportunities *created* above the threshold |
+| **Large Deal Won Alert** | Record change (update) | When an opportunity over $100K turns *Closed Won*, notify the owner and their manager |
+| **Case Escalation Process** | Record change (update) | When a case turns *Critical*, reassign to a senior agent, notify, create a follow-up task |
+| **Case Escalation Process (on create)** | Record change (insert) | The same escalation for cases *created* at *Critical* |
+| **Case CSAT Follow-up** | Record change (update) + wait | When a case closes, wait 1 day, then prompt the owner to capture a satisfaction rating |
+| **Contract Auto-Expiration** | Schedule (daily midnight) | Expire activated contracts past their `end_date` and notify the owner |
+| **Quote Auto-Expiration** | Schedule (daily 1 AM) | Expire quotes past their `expiration_date` that are still open |
+| **Campaign Auto-Completion** | Schedule (daily 2 AM) | Mark in-progress campaigns whose `end_date` has passed as *Completed* |
+| **Forecast Snapshot** | Schedule (daily 3 AM) | Upsert a current-quarter forecast row per active opportunity owner — pipeline, best case, commit and closed-won totals |
+| **Stalled Deal Alert** | Schedule (daily 7:30 AM) | Nudge owners about open opportunities stuck in a stage too long |
 | **Contract Renewal Reminder** | Schedule (daily 8 AM) | Open renewal tasks/opportunities for contracts nearing their `end_date` |
 | **Case SLA Monitor** | Schedule (hourly) | Flag and escalate open cases past their SLA due date |
-| **Stalled Deal Alert** | Schedule (daily 7:30 AM) | Nudge owners about open opportunities stuck in a stage too long |
-| **Forecast Snapshot** | Schedule (daily 3 AM) | Upsert a current-quarter forecast row per active opportunity owner — pipeline, best case, commit and closed-won totals |
+| **Task Due Reminder** | Schedule (hourly) | Notify owners of tasks whose reminder time has arrived |
+| **Demo Bootstrap** | Schedule (every 10 min) | Claim ownerless seeded records for the first user by stamping `owner_id` |
+
+Two entries carry an **(on create)** twin. Record-change flows subscribe to one trigger type each — `record-after-create` *or* `record-after-update` — so automation that has to catch both a newly created record and a later edit is authored as a pair of flows with the same condition. They are separate rows here because they are separate runs in the process monitor.
+
+**Demo Bootstrap** is scaffolding, not business automation. Seed writes bypass the security middleware, so seeded rows arrive with no owner — which empties every *My …* view and sends owner-addressed notifications to nobody. This sweep stamps them onto the first user. On an org whose records already have owners it selects nothing and does nothing, every ten minutes.
 
 Notifications inside flows are delivered by the **`notify` node** (inbox + email via the messaging service) — not the legacy `script`/email step, which is a no-op in 7.4.
 
@@ -88,7 +105,7 @@ See [Customization › Extending Objects](/docs/customization/extending-objects)
 
 ## Scheduled automation
 
-Time-based automation is implemented as **scheduled flows** — flows whose start node carries a cron schedule. See the five `Schedule` rows above (campaign enrollment, contract renewal, SLA monitor, stalled-deal alert, forecast snapshot). They run via the job service, so the `triggers` capability is paired with `job` (both ship in the default slate).
+Time-based automation is implemented as **scheduled flows** — flows whose start node carries a cron schedule. The nine `Schedule` rows above are the complete set; there is no separate scheduled-job metadata to look for. They run via the job service, so the `triggers` capability is paired with `job` (both ship in the default slate).
 
 Date-driven field logic that needs no orchestration — defaulting a quote's expiration date, freezing an expired/accepted quote, deriving a forecast period — lives in lightweight **object hooks** (`beforeInsert` / `beforeUpdate`) rather than a scheduled sweep.
 
