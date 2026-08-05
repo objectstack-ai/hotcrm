@@ -113,12 +113,31 @@ On top of that:
 
 ## Standard list views
 
-- **My Opportunities** — opportunities you own.
-- **Pipeline This Quarter** — open deals closing this quarter.
-- **Closing This Month** — open deals closing this month.
-- **At Risk** — past their close date but still open.
-- **Top Deals by Amount** — biggest first.
-- **Pipeline Kanban** — the kanban board grouped by stage (also accessible via the sidebar shortcut "Sales Pipeline").
+Opportunities opens on **Open Deals**, and the switcher along the top of the list carries nine saved views — these, and nothing else:
+
+| View | What it shows |
+| --- | --- |
+| **Open Deals** *(the landing view)* | Every deal that is not Closed Won or Closed Lost, soonest close date first, with rows tinted by stage. **Amount** and **Expected Revenue** carry column totals. |
+| **My Open Deals** | The same open-deal filter, narrowed to the deals you own. |
+| **Sales Pipeline** | The kanban board — one column per stage, open deals only, drag a card to move the deal. Also reachable from **Pipeline** in the sidebar. |
+| **All Opportunities** | The unfiltered book *including* closed business, latest close date first. Where win/loss reviews and audits start. |
+| **Forecast Calendar** | Every deal placed on a month calendar by its close date, coloured by stage. |
+| **Deal Timeline** | One bar per deal, from the day it was created to its close date, grouped by owner on a month scale. |
+| **Deal Cards** | Gallery cards — account, amount, stage, probability, close date, owner — for pipeline and executive reviews. |
+| **⚠️ Stale Opportunities · Longest in Stage First** | Open deals ordered by how long they have sat in their current stage, longest first. Nothing is cut off by age — **Days in Current Stage** is a column, so you read the wait off the row. The daily [Stalled Deal Alert](/docs/administration/automation) is what acts on it, nudging the owner once a deal passes 14 days in one stage. |
+| **Closing This Quarter** | Open **Commit** and **Best Case** deals whose close date falls inside the current quarter — see below. |
+
+### Closing This Quarter
+
+This is the view a sales manager works at quarter-end, and it is scoped on three things at once:
+
+- **Forecast category** — only **Commit** and **Best Case** deals.
+- **Still open** — Closed Won and Closed Lost never appear.
+- **Close date inside the current quarter** — both ends of the quarter are computed each time the list runs, so it rolls into the new quarter by itself and never needs re-saving.
+
+That third filter is what makes the name true: summing the **Amount** column gives you *this quarter's* commit, not the total of every open deal that will one day close. A deal slated for next March is not here — it waits on **Open Deals** until its quarter comes round. Rows are ordered by close date, soonest first.
+
+**An empty list here is an answer, not a broken view.** When nothing matches, the view says so in place of the grid — *No Deals Closing This Quarter*, with a pointer back to **Open Deals** — because a quarter whose commit has slipped out entirely is exactly the state a manager needs to see. A freshly seeded demo org meets the same screen in the closing days of a quarter, when every sample deal lands in the next one.
 
 ## The opportunity detail layout
 
@@ -146,7 +165,7 @@ When you open an opportunity, ask:
 - ✅ **Add line items** for proper revenue forecasting; the rolled-up amount is more accurate.
 - ✅ **Fill in Next Steps** — it's the single most useful field for handoffs and standups.
 - ✅ **Pick competitors** — the AI uses this to surface win strategies.
-- ❌ Don't change the close date just because a deal is slipping. The **At Risk** view exists to surface honest slippage.
+- ❌ Don't push the close date out to keep a deal looking on track. An honest date is what makes **Closing This Quarter** add up — and a deal that has stopped moving surfaces on **Stale Opportunities** by its time in stage, whatever its close date says.
 
 ## Tips for admins
 
