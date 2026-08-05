@@ -59,10 +59,8 @@ export const ContactImportMapping = defineMapping({
 
     { source: 'Description', target: 'description' },
 
-    // Owner-email resolution + the blank-cell fallback: see the long note in
-    // `account_import.mapping.ts`.
-    // Tracked on #548: retarget to `owner_id` once that issue replaces the
-    // app-authored `owner` lookup with the platform owner model.
-    { source: 'Contact Owner Email', target: 'owner', transform: 'lookup' },
+    // Owner-email resolution, the blank-cell fallback, and why a filled cell
+    // needs `allowTransfer`: see the long note in `account_import.mapping.ts`.
+    { source: 'Contact Owner Email', target: 'owner_id', transform: 'lookup' },
   ],
 });

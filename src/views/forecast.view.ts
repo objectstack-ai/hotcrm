@@ -16,7 +16,7 @@ export const ForecastViews = defineView({
     label: 'All Forecasts',
     data: { provider: 'object', object: 'crm_forecast' },
     columns: [
-      { field: 'owner',            width: 160, pinned: 'left', link: true },
+      { field: 'owner_id',            width: 160, pinned: 'left', link: true },
       { field: 'period_label',     width: 130, sortable: true },
       { field: 'period_start',     width: 130, sortable: true },
       { field: 'snapshot_date',    width: 130, sortable: true },
@@ -32,7 +32,7 @@ export const ForecastViews = defineView({
     ],
     sort: [
       { field: 'period_start',  order: 'desc' },
-      { field: 'owner',         order: 'asc' },
+      { field: 'owner_id',         order: 'asc' },
     ],
     grouping: { fields: [{ field: 'period_label', order: 'desc' }] },
     pagination: { pageSize: 50 },
@@ -55,7 +55,7 @@ export const ForecastViews = defineView({
       // sorts first, so the current quarter is the top group.
       label: 'Quarterly · Latest First',
       data: { provider: 'object', object: 'crm_forecast' },
-      columns: ['owner', 'quota', 'closed_amount', 'commit_amount', 'best_case_amount', 'pipeline_amount', 'attainment_pct', 'coverage_ratio'],
+      columns: ['owner_id', 'quota', 'closed_amount', 'commit_amount', 'best_case_amount', 'pipeline_amount', 'attainment_pct', 'coverage_ratio'],
       filter: [
         { field: 'period', operator: 'equals', value: 'quarter' },
       ],
@@ -77,7 +77,7 @@ export const ForecastViews = defineView({
       columns: ['period_label', 'snapshot_date', 'quota', 'closed_amount', 'commit_amount', 'pipeline_amount', 'attainment_pct'],
       // `{current_user_id}` is the only user token the view runtime resolves
       // (`{current_user}` silently never matches).
-      filter: [{ field: 'owner', operator: 'equals', value: '{current_user_id}' }],
+      filter: [{ field: 'owner_id', operator: 'equals', value: '{current_user_id}' }],
       sort: [{ field: 'period_start', order: 'desc' }],
     },
   },
@@ -88,7 +88,7 @@ export const ForecastViews = defineView({
       {
         label: 'Snapshot',
         columns: 2,
-        fields: ['owner', 'period', 'period_start', 'period_end', 'period_label', 'snapshot_date', 'source'],
+        fields: ['owner_id', 'period', 'period_start', 'period_end', 'period_label', 'snapshot_date', 'source'],
       },
       {
         label: 'Amounts',

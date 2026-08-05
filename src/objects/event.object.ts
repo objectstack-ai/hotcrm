@@ -1,6 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { P, cel } from '@objectstack/spec';
+import { P } from '@objectstack/spec';
 import { ObjectSchema, Field } from '@objectstack/spec/data';
 import {
   EVENT_STATUS_OPTIONS,
@@ -62,6 +62,15 @@ export const Event = ObjectSchema.create({
   ],
 
   fields: {
+    // Platform ownership anchor — canonical note in `account.object.ts` (#548).
+    owner_id: Field.lookup('sys_user', {
+      label: 'Assigned To',
+      group: 'basic',
+      system: true,
+      readonly: false,
+      trackHistory: true,
+    }),
+
     // ─── Event Information ────────────────────────────────────────────
     subject: Field.text({
       group: 'basic',
@@ -98,18 +107,6 @@ export const Event = ObjectSchema.create({
     description: Field.markdown({
       group: 'basic',
       label: 'Description',
-    }),
-
-    // `owner` is an app-authored `sys_user` lookup, matching `crm_task.owner`
-    // exactly. The platform `owner_id` migration (#548, Option B) is decided
-    // but not implemented; authoring the same shape as every sibling object
-    // means that sweep converts this object with the rest instead of leaving
-    // one hand-rolled exception behind.
-    owner: Field.lookup('sys_user', {
-      group: 'basic',
-      label: 'Assigned To',
-      defaultValue: cel`os.user.id`,
-      trackHistory: true,
     }),
 
     // ─── Schedule ─────────────────────────────────────────────────────
@@ -215,7 +212,7 @@ export const Event = ObjectSchema.create({
 
   indexes: [
     { fields: ['start_datetime'] },
-    { fields: ['owner'] },
+    { fields: ['owner_id'] },
     { fields: ['status'] },
     { fields: ['related_to_account'] },
     { fields: ['related_to_opportunity'] },
@@ -223,7 +220,7 @@ export const Event = ObjectSchema.create({
 
   // ADR-0079: `nameField` names the real field holding the record title.
   nameField: 'subject',
-  highlightFields: ['subject', 'type', 'status', 'start_datetime', 'owner'],
+  highlightFields: ['subject', 'type', 'status', 'start_datetime', 'owner_id'],
   searchableFields: ['subject', 'location'],
 
   // Predicates below are TOTAL: every `record.x` read is `has()`-guarded, so the

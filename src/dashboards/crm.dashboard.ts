@@ -48,7 +48,7 @@ export const CrmOverviewDashboard: Dashboard = {
 
   globalFilters: [
     {
-      field: 'owner',
+      field: 'owner_id',
       label: 'Owner',
       type: 'lookup',
       scope: 'dashboard',
@@ -147,12 +147,14 @@ export const CrmOverviewDashboard: Dashboard = {
       description: 'Total list-price revenue by product category',
       type: 'bar',
       colorVariant: 'blue',
-      // crm_product has neither `close_date` nor `owner`; opt out of both
-      // dashboard filters bound to those fields. ObjectStack 15 (framework#2501)
-      // injects every dashboard filter (dateRange + globalFilters) into each
-      // widget's query, so a widget on an object lacking a filter field fails
-      // with `no such column`.
-      filterBindings: { dateRange: false, owner: false },
+      // crm_product has no `close_date`, so the date picker would fail it with
+      // `no such column`. ObjectStack 15 (framework#2501) injects every dashboard
+      // filter (dateRange + globalFilters) into each widget's query.
+      // The `owner_id` opt-out is SEMANTIC, not structural: since #548 every
+      // business object carries the injected `owner_id`, so the filter would now
+      // resolve — it just means nothing on a shared product catalog, where the
+      // column records whoever created the entry.
+      filterBindings: { dateRange: false, owner_id: false },
       dataset: 'product_metrics', dimensions: ['category'], values: ['list_price_sum'],
       layout: { x: 6, y: 6, w: 6, h: 4 },
       chartConfig: {

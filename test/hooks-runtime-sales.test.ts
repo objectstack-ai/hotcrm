@@ -111,7 +111,7 @@ describe('opportunity_lifecycle', () => {
       { description: 'post-mortem' },
       { next_step: 'nothing' },
       { approval_status: 'approved' },
-      { owner: 'user_2' },
+      { owner_id: 'user_2' },
       { updated_at: '2026-01-01' },
     ]) {
       await expect(
@@ -146,12 +146,12 @@ describe('opportunity_promote_account', () => {
 
   it('promotes the account to customer and schedules an activation task on close-won', async () => {
     const h = makeHarness({
-      crm_account: [{ id: 'acc1', type: 'prospect', owner: 'rep1' }],
+      crm_account: [{ id: 'acc1', type: 'prospect', owner_id: 'rep1' }],
       crm_task: [],
     });
     await hook.handler(makeCtx({
       event: 'afterUpdate',
-      input: { id: 'opp1', stage: 'closed_won', crm_account: 'acc1', owner: 'rep1' },
+      input: { id: 'opp1', stage: 'closed_won', crm_account: 'acc1', owner_id: 'rep1' },
       previous: { id: 'opp1', stage: 'negotiation', crm_account: 'acc1' },
       user: USER,
       api: h.api,
@@ -163,7 +163,7 @@ describe('opportunity_promote_account', () => {
     expect(task.priority).toBe('high');
     expect(task.status).toBe('not_started');
     expect(task.related_to_opportunity).toBe('opp1');
-    expect(task.owner).toBe('rep1');
+    expect(task.owner_id).toBe('rep1');
     expect(task.due_date).toBe(daysFromNow(3));
   });
 
@@ -226,7 +226,7 @@ describe('quote_workflow', () => {
 
   it('allows internal_notes and framework columns on a frozen quote', async () => {
     const previous: Rec = { status: 'accepted', total_price: 100 };
-    for (const input of [{ internal_notes: 'signed' }, { owner: 'user_2' }, { updated_at: 'x' }]) {
+    for (const input of [{ internal_notes: 'signed' }, { owner_id: 'user_2' }, { updated_at: 'x' }]) {
       await expect(
         hook.handler(makeCtx({ event: 'beforeUpdate', input, previous, user: USER })),
       ).resolves.toBeUndefined();
@@ -251,7 +251,7 @@ describe('quote_on_accepted', () => {
       event: 'afterUpdate',
       input: {
         id: 'q1', status: 'accepted', crm_account: 'acc1', crm_contact: 'con1',
-        crm_opportunity: 'opp1', total_price: 120_000, owner: 'rep1', ...extra,
+        crm_opportunity: 'opp1', total_price: 120_000, owner_id: 'rep1', ...extra,
       },
       previous: { id: 'q1', status: 'presented' },
       user: USER,
@@ -273,7 +273,7 @@ describe('quote_on_accepted', () => {
     expect(contract.crm_opportunity).toBe('opp1');
     expect(contract.contract_value).toBe(120_000);
     expect(contract.contract_term_months).toBe(12);
-    expect(contract.owner).toBe('rep1');
+    expect(contract.owner_id).toBe('rep1');
     expect(contract.start_date).toBe(today());
   });
 
@@ -389,9 +389,9 @@ describe('account_protection', () => {
   });
 
   it('stamps last_activity_date when a USER changes owner or type', async () => {
-    for (const input of [{ owner: 'rep2' }, { type: 'customer' }] as Rec[]) {
+    for (const input of [{ owner_id: 'rep2' }, { type: 'customer' }] as Rec[]) {
       await hook.handler(makeCtx({
-        event: 'beforeUpdate', input, previous: { owner: 'rep1', type: 'prospect' }, user: USER,
+        event: 'beforeUpdate', input, previous: { owner_id: 'rep1', type: 'prospect' }, user: USER,
       }));
       expect(input.last_activity_date).toBe(today());
     }
@@ -401,9 +401,9 @@ describe('account_protection', () => {
     // demo_bootstrap claims ownerless seeded accounts as a system write every
     // 10 minutes; stamping those flattened every seeded activity date to today
     // and emptied the churn report buckets.
-    const input: Rec = { owner: 'rep2' };
+    const input: Rec = { owner_id: 'rep2' };
     await hook.handler(makeCtx({
-      event: 'beforeUpdate', input, previous: { owner: null }, user: SYSTEM,
+      event: 'beforeUpdate', input, previous: { owner_id: null }, user: SYSTEM,
     }));
     expect(input.last_activity_date).toBeUndefined();
   });

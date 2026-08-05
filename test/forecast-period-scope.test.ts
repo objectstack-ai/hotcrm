@@ -188,7 +188,7 @@ const makeEngine = () =>
         name: 'crm_forecast',
         fields: {
           id: { type: 'text' },
-          owner: { type: 'text' },
+          owner_id: { type: 'text' },
           period: { type: 'text' },
           period_label: { type: 'text' },
           period_start: { type: 'date' },
@@ -214,12 +214,12 @@ describe('quota_attainment_by_rep over the real seeds (#614)', () => {
     ql = await makeEngine();
     const api = ql.createContext({ isSystem: true });
 
-    // The seed file ships ONE unowned set of snapshots (owner is backfilled to
+    // The seed file ships ONE unowned set of snapshots (`owner_id` is backfilled to
     // the active user at runtime). Replaying it per rep is what the live table
     // holds: the same period ladder, once per owner.
     for (const rep of REPS) {
       for (const rec of forecastSeed?.records ?? []) {
-        const row: AnyRec = { owner: rep };
+        const row: AnyRec = { owner_id: rep };
         for (const col of ANALYTICS_COLUMNS) row[col] = rec[col] ?? 0;
         await api.object('crm_forecast').insert(row);
       }
@@ -234,7 +234,7 @@ describe('quota_attainment_by_rep over the real seeds (#614)', () => {
       // `(document, options)` — the engine's real repo-facade shape (#616).
       await api.object('crm_forecast').update(
         { closed_amount: 900000, pipeline_amount: 2500000, commit_amount: 1200000 },
-        { where: { owner: rep, period: 'quarter', period_start: currentQuarterStart }, multi: true },
+        { where: { owner_id: rep, period: 'quarter', period_start: currentQuarterStart }, multi: true },
       );
     }
 

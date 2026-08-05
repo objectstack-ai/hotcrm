@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
-import { F, P, cel } from '@objectstack/spec';
+import { F, P } from '@objectstack/spec';
 import { SALUTATION_OPTIONS, INDUSTRY_OPTIONS, LEAD_SOURCE_OPTIONS } from './_picklists';
 
 export const Lead = ObjectSchema.create({
@@ -28,6 +28,15 @@ export const Lead = ObjectSchema.create({
   ],
 
   fields: {
+    // Platform ownership anchor — canonical note in `account.object.ts` (#548).
+    owner_id: Field.lookup('sys_user', {
+      label: 'Lead Owner',
+      group: 'assignment',
+      system: true,
+      readonly: false,
+      trackHistory: true,
+    }),
+
     // Personal Information
     salutation: Field.select({
       label: 'Salutation',
@@ -203,12 +212,6 @@ export const Lead = ObjectSchema.create({
     }),
 
     // Assignment
-    owner: Field.lookup('sys_user', {
-      defaultValue: cel`os.user.id`,
-      label: 'Lead Owner',
-      group: 'assignment',
-      trackHistory: true,
-    }),
 
     // Conversion tracking.
     // NOT `readonly`: since 16.x the platform drops writes to readonly fields
@@ -410,7 +413,7 @@ export const Lead = ObjectSchema.create({
   // (framework#3991), so two organizations could not work the same address
   // independently. Uniqueness is not the rule this object wants at all.
   indexes: [
-    { fields: ['owner'] },
+    { fields: ['owner_id'] },
     { fields: ['status'] },
     { fields: ['company'] },
     { fields: ['email'] },
@@ -430,7 +433,7 @@ export const Lead = ObjectSchema.create({
   // the formula field, which isn't a real column, so the lookup picker + global
   // search silently return zero. These are real, indexed columns.
   searchableFields: ['first_name', 'last_name', 'company', 'email'],
-  highlightFields: ['full_name', 'company', 'email', 'status', 'owner'],
+  highlightFields: ['full_name', 'company', 'email', 'status', 'owner_id'],
   
   // Removed: list_views and form_views belong in UI configuration, not object definition
   

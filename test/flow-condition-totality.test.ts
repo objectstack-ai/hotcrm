@@ -60,9 +60,11 @@ import stack from '../objectstack.config';
  *   | `@objectstack/driver-mongodb`     | **key absent**              |
  *
  * A field is absent whenever it is neither `required` nor defaulted and the
- * writer did not supply it — and also when its default is a CEL expression
- * that cannot evaluate, which is how `crm_contact.owner` (`os.user.id`) goes
- * missing on every write that carries no user.
+ * writer did not supply it. `crm_contact.owner_id` is the standing example:
+ * nothing in the SCHEMA fills it — the acting user is stamped onto it by the
+ * security middleware at insert time (#548), which a system write short-circuits
+ * and this harness does not install at all. Either way the row reaches the
+ * driver with no such column.
  *
  * **2. Interpreted or compiled?** Interpreted, every run.
  * `AutomationEngine.evaluateCondition` hands the source to `ExpressionEngine`
@@ -92,10 +94,13 @@ import stack from '../objectstack.config';
  *     `escalated_date` column; `record.escalated_date == null` aborted with
  *     `No such key: escalated_date`. The flow never ran on its own core
  *     population (a phone-in P1 is the common path, per its own file comment).
- *   - `contact_welcome` — `owner`'s `os.user.id` default cannot evaluate on a
- *     write with no user (seed data, integrations, any system context), so the
- *     row stores no `owner` column; `record.owner != null` aborted with
- *     `No such key: owner`.
+ *   - `contact_welcome` — nothing in the schema fills `owner_id`; the
+ *     middleware stamp that does is skipped on a write with no user (seed data,
+ *     integrations, any system context), so the row stores no `owner_id`
+ *     column and `record.owner_id != null` aborted with
+ *     `No such key: owner_id`. (Before #548 the same hole existed one step
+ *     earlier, on an app-authored `owner` whose `os.user.id` default could not
+ *     evaluate — same absent key, same abort.)
  *   - `lead_assignment` — `rating` is neither required nor defaulted;
  *     `record.rating >= 4` on edge `e2` aborted with `No such key: rating`, so
  *     an unrated lead got no SLA stamp and no alert.
@@ -516,8 +521,9 @@ describe('conditions answer on a driver whose stored record omits the key', () =
    *
    * Deliberately narrower than "runs that failed": these flows also fail
    * downstream in this harness for unrelated reasons (a `notify` node whose
-   * `{record.owner}` recipient is empty because the owner default needs a
-   * user, a `runAs: 'user'` refusal because a system write carries none).
+   * `{record.owner_id}` recipient is empty because nothing stamped an owner
+   * onto a user-less write, a `runAs: 'user'` refusal because a system write
+   * carries none).
    * Those are real, separate concerns and are not what this file asserts.
    */
   const conditionAborts = (b: Booted) =>
@@ -538,9 +544,14 @@ describe('conditions answer on a driver whose stored record omits the key', () =
       // platform upgrade makes this driver column-complete, this assertion
       // fails and everything below stops proving anything — intended signal.
       expect('escalated_date' in (stored ?? {})).toBe(false);
-      // …and the owner default (`os.user.id`) cannot evaluate without a user,
-      // so that column is missing too rather than defaulted.
-      expect('owner' in (stored ?? {})).toBe(false);
+      // …and `owner_id` has no schema-level filler at all — the acting user is
+      // stamped onto it by the security middleware (#548), which this harness
+      // does not install and which a system write short-circuits anyway. So the
+      // column is missing rather than null, which is precisely the shape
+      // `contact_welcome`'s `has(record.owner_id)` guard has to survive. The
+      // positive direction — a USER insert really does come back owned — is
+      // pinned in `test/ownership-model.test.ts`.
+      expect('owner_id' in (stored ?? {})).toBe(false);
     } finally {
       await b.close();
     }

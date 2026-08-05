@@ -26,7 +26,7 @@ export const QuoteViews = defineView({
       { field: 'discount', width: 110, align: 'right' },
       { field: 'tax', width: 110, align: 'right', summary: 'sum' },
       { field: 'total_price', width: 140, align: 'right', summary: 'sum' },
-      { field: 'owner', width: 150 },
+      { field: 'owner_id', width: 150 },
     ],
     sort: [{ field: 'quote_date', order: 'desc' }],
     pagination: { pageSize: 25 },
@@ -80,7 +80,7 @@ export const QuoteViews = defineView({
         columns: 2,
         // `name` is required on crm_quote with no default — omitting it made
         // quote creation through this form impossible.
-        fields: [{ field: 'name', required: true, colSpan: 2 }, 'quote_number', 'crm_account', 'crm_contact', 'crm_opportunity', 'owner', 'status', 'quote_date', 'expiration_date'],
+        fields: [{ field: 'name', required: true, colSpan: 2 }, 'quote_number', 'crm_account', 'crm_contact', 'crm_opportunity', 'owner_id', 'status', 'quote_date', 'expiration_date'],
       },
       {
         label: 'Totals',

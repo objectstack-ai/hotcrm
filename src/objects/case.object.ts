@@ -1,4 +1,4 @@
-import { F, P, cel } from '@objectstack/spec';
+import { F, P } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
@@ -23,6 +23,15 @@ export const Case = ObjectSchema.create({
   ],
 
   fields: {
+    // Platform ownership anchor — canonical note in `account.object.ts` (#548).
+    owner_id: Field.lookup('sys_user', {
+      label: 'Case Owner',
+      group: 'origin',
+      system: true,
+      readonly: false,
+      trackHistory: true,
+    }),
+
     // Case Information
     case_number: Field.autonumber({
       label: 'Case Number',
@@ -149,12 +158,6 @@ export const Case = ObjectSchema.create({
     }),
     
     // Assignment
-    owner: Field.lookup('sys_user', {
-      defaultValue: cel`os.user.id`,
-      label: 'Case Owner',
-      group: 'origin',
-      trackHistory: true,
-    }),
     
     // SLA and Metrics
     created_date: Field.datetime({
@@ -283,7 +286,7 @@ export const Case = ObjectSchema.create({
   indexes: [
     { fields: ['organization_id', 'case_number'], unique: true },
     { fields: ['crm_account'] },
-    { fields: ['owner'] },
+    { fields: ['owner_id'] },
     { fields: ['status'] },
     { fields: ['priority'] },
   ],

@@ -55,14 +55,14 @@ describe('case_sla_defaults', () => {
 
   it('stamps defaults and strips privileged fields on an anonymous guest submission', async () => {
     const input: Rec = {
-      subject: 'Help', owner: 'spoofed', is_escalated: true, is_closed: true,
+      subject: 'Help', owner_id: 'spoofed', is_escalated: true, is_closed: true,
       internal_notes: 'nope', resolution: 'nope',
     };
     await hook.handler(makeCtx({ event: 'beforeInsert', input, user: SYSTEM }));
     expect(input.origin).toBe('web');
     expect(input.status).toBe('new');
     expect(input.priority).toBe('medium');
-    for (const stripped of ['owner', 'is_escalated', 'is_closed', 'internal_notes', 'resolution']) {
+    for (const stripped of ['owner_id', 'is_escalated', 'is_closed', 'internal_notes', 'resolution']) {
       expect(input, `guest submission kept privileged field ${stripped}`).not.toHaveProperty(stripped);
     }
   });
@@ -91,7 +91,7 @@ describe('case_status_side_effects', () => {
 
   it('creates an urgent task for the account owner on escalation', async () => {
     const h = makeHarness({
-      crm_account: [{ id: 'acc1', owner: 'rep1' }],
+      crm_account: [{ id: 'acc1', owner_id: 'rep1' }],
       crm_task: [],
     });
     await hook.handler(makeCtx({
@@ -105,7 +105,7 @@ describe('case_status_side_effects', () => {
     const [task] = h.rows('crm_task');
     expect(task, 'no escalation task created').toBeTruthy();
     expect(task.priority).toBe('urgent');
-    expect(task.owner).toBe('rep1');
+    expect(task.owner_id).toBe('rep1');
     expect(task.related_to_case).toBe('case1');
     expect(task.due_date).toBe(daysFromNow(1));
   });
@@ -126,7 +126,7 @@ describe('case_status_side_effects', () => {
   });
 
   it('does not re-fire when the status did not change', async () => {
-    const h = makeHarness({ crm_account: [{ id: 'acc1', owner: 'rep1' }], crm_task: [] });
+    const h = makeHarness({ crm_account: [{ id: 'acc1', owner_id: 'rep1' }], crm_task: [] });
     await hook.handler(makeCtx({
       event: 'afterUpdate',
       input: { id: 'case1', status: 'escalated', crm_account: 'acc1' },
@@ -488,14 +488,14 @@ describe('lead_automation', () => {
     const input: Rec = {
       company: 'FromWebForm', is_converted: true, converted_account: 'acc1',
       converted_contact: 'c1', converted_opportunity: 'o1', converted_date: '2020-01-01',
-      owner: 'spoofed',
+      owner_id: 'spoofed',
     };
     await hook.handler(makeCtx({ event: 'beforeInsert', input, user: SYSTEM }));
     expect(input.lead_source).toBe('web');
     expect(input.status).toBe('new');
     for (const stripped of [
       'is_converted', 'converted_account', 'converted_contact',
-      'converted_opportunity', 'converted_date', 'owner',
+      'converted_opportunity', 'converted_date', 'owner_id',
     ]) {
       expect(input, `public form kept ${stripped}`).not.toHaveProperty(stripped);
     }
@@ -522,7 +522,7 @@ describe('lead_automation', () => {
     const h = makeHarness({ crm_task: [] });
     await hook.handler(makeCtx({
       event: 'afterUpdate',
-      input: { id: 'l1', status: 'qualified', owner: 'rep1' },
+      input: { id: 'l1', status: 'qualified', owner_id: 'rep1' },
       previous: { id: 'l1', status: 'working' },
       user: USER,
       api: h.api,
@@ -530,7 +530,7 @@ describe('lead_automation', () => {
     const [task] = h.rows('crm_task');
     expect(task, 'no follow-up task created').toBeTruthy();
     expect(task.priority).toBe('high');
-    expect(task.owner).toBe('rep1');
+    expect(task.owner_id).toBe('rep1');
     expect(task.related_to_lead).toBe('l1');
     expect(task.due_date).toBe(daysFromNow(2));
   });
@@ -709,7 +709,7 @@ describe('lead_auto_assign — permission resilience', () => {
     await expect(
       hook.handler(makeCtx({ event: 'beforeInsert', input, api: makeDeniedApi() })),
     ).resolves.toBeUndefined();
-    expect(input.owner).toBeUndefined();
+    expect(input.owner_id).toBeUndefined();
   });
 });
 
@@ -833,14 +833,14 @@ describe('task_recurrence', () => {
     const h = makeHarness({ crm_task: [] });
     await completeRecurring(h, {
       subject: 'Weekly sync', is_recurring: true, recurrence_type: 'weekly',
-      recurrence_interval: 1, due_date: daysFromNow(0), owner: 'rep1',
+      recurrence_interval: 1, due_date: daysFromNow(0), owner_id: 'rep1',
     });
     const [next] = h.rows('crm_task');
     expect(next.status).toBe('not_started');
     expect(next.is_completed).toBe(false);
     expect(next.reminder_sent).toBe(false);
     expect(next.subject).toBe('Weekly sync');
-    expect(next.owner).toBe('rep1');
+    expect(next.owner_id).toBe('rep1');
     expect(next.is_recurring).toBe(true);
   });
 

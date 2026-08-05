@@ -37,6 +37,15 @@ export const Quote = ObjectSchema.create({
   ],
 
   fields: {
+    // Platform ownership anchor — canonical note in `account.object.ts` (#548).
+    owner_id: Field.lookup('sys_user', {
+      label: 'Quote Owner',
+      group: 'basic',
+      system: true,
+      readonly: false,
+      trackHistory: true,
+    }),
+
     // AutoNumber field
     quote_number: Field.autonumber({
       label: 'Quote Number',
@@ -89,11 +98,6 @@ export const Quote = ObjectSchema.create({
       dependsOn: ['crm_account'],
     }),
 
-    owner: Field.lookup('sys_user', {
-      label: 'Quote Owner',
-      group: 'basic',
-      trackHistory: true,
-    }),
 
     // Status
     status: Field.select({
@@ -211,7 +215,7 @@ export const Quote = ObjectSchema.create({
   indexes: [
     { fields: ['crm_account'] },
     { fields: ['crm_opportunity'] },
-    { fields: ['owner'] },
+    { fields: ['owner_id'] },
     { fields: ['status'] },
     { fields: ['quote_date'] },
   ],

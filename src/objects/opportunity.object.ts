@@ -1,4 +1,4 @@
-import { F, P, cel } from '@objectstack/spec';
+import { F, P } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
@@ -26,7 +26,7 @@ export const Opportunity = ObjectSchema.create({
   // $search resolves on its own here; the list is kept explicit to pin the
   // intent (other objects whose nameField IS a formula rely on it).
   searchableFields: ['name'],
-  highlightFields: ['name', 'crm_account', 'amount', 'stage', 'owner'],
+  highlightFields: ['name', 'crm_account', 'amount', 'stage', 'owner_id'],
 
   fieldGroups: [
     { key: 'basic',       label: 'Basic Information',   icon: 'dollar-sign' },
@@ -39,6 +39,15 @@ export const Opportunity = ObjectSchema.create({
   ],
 
   fields: {
+    // Platform ownership anchor — canonical note in `account.object.ts` (#548).
+    owner_id: Field.lookup('sys_user', {
+      label: 'Opportunity Owner',
+      group: 'basic',
+      system: true,
+      readonly: false,
+      trackHistory: true,
+    }),
+
     // Basic Information
     name: Field.text({
       label: 'Opportunity Name',
@@ -68,13 +77,6 @@ export const Opportunity = ObjectSchema.create({
       group: 'basic',
     }),
 
-    owner: Field.lookup('sys_user', {
-
-      defaultValue: cel`os.user.id`,
-      label: 'Opportunity Owner',
-      group: 'basic',
-      trackHistory: true,
-    }),
 
     // Financial Information
     amount: Field.currency({
@@ -345,7 +347,7 @@ export const Opportunity = ObjectSchema.create({
   indexes: [
     { fields: ['name'] },
     { fields: ['crm_account'] },
-    { fields: ['owner'] },
+    { fields: ['owner_id'] },
     { fields: ['stage'] },
     { fields: ['close_date'] },
     // The stagnation sweep filters on this every morning.
@@ -354,7 +356,10 @@ export const Opportunity = ObjectSchema.create({
   
   // Enable advanced features
   // Dead enable.* flags (trash/mru) removed in @objectstack 12 (ADR-0049).
-  // Stage/amount/owner history is tracked per-field via Field.trackHistory
+  // Stage/amount history is tracked per-field via Field.trackHistory. Ownership
+  // is NOT: since #548 it lives on the platform's injected `owner_id`, which
+  // carries no `trackHistory` flag — a transfer is recorded in the compliance
+  // audit log (`sys_audit_log`, unconditional) rather than on the activity feed.
   // (ADR-0052).
   enable: {
     apiEnabled: true,

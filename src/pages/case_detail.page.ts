@@ -67,7 +67,7 @@ export const CaseDetailPage: Page = {
               'priority',
               'sla_due_date',
               'is_sla_violated',
-              'owner',
+              'owner_id',
               'crm_account',
             ],
           },
@@ -134,7 +134,7 @@ export const CaseDetailPage: Page = {
                           fields: [
                             'status',
                             'priority',
-                            'owner',
+                            'owner_id',
                             'is_escalated',
                             'escalation_reason',
                             'sla_due_date',
@@ -178,7 +178,7 @@ export const CaseDetailPage: Page = {
                                   'status',
                                   'priority',
                                   'due_date',
-                                  'owner',
+                                  'owner_id',
                                 ],
                                 filter: [
                                   { field: 'status', op: 'neq', value: 'completed' },

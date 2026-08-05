@@ -143,6 +143,44 @@ A user sees a record when **all** of the following hold: their profile grants **
 
 If none apply, the record is simply *gone* from lists, search and reports — not an error message.
 
+## Ownership and transfers
+
+Every record has exactly one **Owner**. It is the field on the form, the one the
+"My …" views filter on, and the one every rule above means by *"the record's
+owner"* — one column, one answer. Reassigning Owner really does hand the record
+over: the previous owner loses their owner-based access and the new one gains it,
+immediately and everywhere.
+
+Because it moves access, **changing Owner is a permission of its own**, separate
+from ordinary edit rights:
+
+| Who | May reassign |
+| --- | --- |
+| System Administrator | every object |
+| Sales Manager | the sales book — leads, accounts, contacts, opportunities, quotes, tasks, meetings, forecasts |
+| Service Agent | tasks only (so an escalation can hand work to the account owner) |
+| Sales Rep, Marketing User | nothing — records are assigned *to* them |
+
+Three everyday actions are **not** transfers and need no such permission:
+
+- **Creating a record.** New records are stamped to their creator automatically —
+  you never pick yourself.
+- **Saving a form** without touching Owner, even though the form submits the
+  field.
+- **Automation acting on your behalf** — the round-robin that routes an incoming
+  lead, the nightly sweeps that book renewal and follow-up tasks.
+
+A user without the permission who tries to reassign gets a clear refusal rather
+than a silent no-op. If you need to move a book of business, ask an
+administrator or your sales manager.
+
+> **Upgrading from an earlier release?** Owner used to be an ordinary field that
+> anyone with edit rights could change — and changing it moved the record in
+> every list and report while moving **no** access at all. The two are now the
+> same field. Records whose displayed Owner had drifted away from their real
+> access owner need a one-time pass to bring them back into line; see the
+> release notes for the backfill.
+
 ### Private opportunities
 
 `Private` on an opportunity is enforced on top of everything above: a deal a user flags **Private** stays visible to its owner (and to administrators) only, even for profiles that otherwise hold org-wide opportunity read, such as Sales Manager and Marketing User. Use it for board-level or acquisition-sensitive deals.

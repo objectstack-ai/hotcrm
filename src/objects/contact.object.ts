@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
-import { F, cel } from '@objectstack/spec';
+import { F } from '@objectstack/spec';
 import { SALUTATION_OPTIONS, LEAD_SOURCE_OPTIONS } from './_picklists';
 
 export const Contact = ObjectSchema.create({
@@ -24,6 +24,15 @@ export const Contact = ObjectSchema.create({
   ],
 
   fields: {
+    // Platform ownership anchor — canonical note in `account.object.ts` (#548).
+    owner_id: Field.lookup('sys_user', {
+      label: 'Contact Owner',
+      group: 'account_info',
+      system: true,
+      readonly: false,
+      trackHistory: true,
+    }),
+
     // Name fields
     salutation: Field.select({
       label: 'Salutation',
@@ -104,13 +113,6 @@ export const Contact = ObjectSchema.create({
       group: 'account_info',
     }),
 
-    owner: Field.lookup('sys_user', {
-
-      defaultValue: cel`os.user.id`,
-      label: 'Contact Owner',
-      group: 'account_info',
-      trackHistory: true,
-    }),
 
     // Contact Information
     email: Field.email({
@@ -218,7 +220,7 @@ export const Contact = ObjectSchema.create({
   // (framework#3991 `unique/double-declaration`).
   indexes: [
     { fields: ['crm_account'] },
-    { fields: ['owner'] },
+    { fields: ['owner_id'] },
     { fields: ['last_name', 'first_name'] },
   ],
   

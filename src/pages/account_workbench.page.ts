@@ -12,7 +12,8 @@ import { Page } from '@objectstack/spec/ui';
  *   • it REFERENCES the account default view (`sourceView`) — columns,
  *     base filter and sort are inherited, never restated (the iron rule);
  *   • end users get exactly three quick filters: industry (with record
- *     counts), customer type, and owner (a user lookup — renders as a
+ *     counts), customer type, and owner_id (the platform ownership lookup —
+ *     renders as a
  *     record-picker dropdown);
  *   • the visualization is locked to grid (single-entry whitelist);
  *   • advanced filtering / view management are not offered.
@@ -46,7 +47,7 @@ export const AccountWorkbenchPage: Page = {
         fields: [
           { field: 'industry', showCount: true },
           { field: 'type' },
-          { field: 'owner' },
+          { field: 'owner_id' },
         ],
       },
       // typed via spread-as-any until @objectstack/spec ships ADR-0047

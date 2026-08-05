@@ -201,6 +201,43 @@ describe('record-level scope is authored, not implied', () => {
     expect(bad, `unresolvable parent derivation:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
+  it('every allowTransfer grant is a real, enforced capability — not decoration', () => {
+    // `allowTransfer` is the one lifecycle bit the platform enforces TODAY,
+    // through the ordinary insert/update door rather than a future `transfer`
+    // operation (`@objectstack/spec` permission.zod.ts, the #3004 owner_id
+    // guard). Since #548 it is what stands between "reassign Owner" and
+    // "silently move a record in the lists while moving no access", so the
+    // grants are authored deliberately and pinned.
+    //
+    // The full per-persona ledger — who may transfer WHAT, and why the rep
+    // personas hold none — lives in `test/ownership-model.test.ts` beside the
+    // rest of the ownership model. Here it is checked as an authorization
+    // invariant: a transfer grant is an ownership WRITE, so it is meaningless
+    // (and misleading, because it reads as a capability) on an object the set
+    // cannot write at all.
+    const bad = grants
+      .filter((g) => g.perm.allowTransfer === true)
+      .filter((g) => g.perm.allowEdit !== true && g.perm.modifyAllRecords !== true)
+      .map((g) => `${g.set}.${g.objectName}: allowTransfer with no write grant`);
+    expect(bad, `transfer grants that can never fire:\n  ${bad.join('\n  ')}`).toEqual([]);
+
+    // Guard the guard: if the grants ever vanish this test must not pass by
+    // checking an empty list.
+    const holders = grants.filter((g) => g.perm.allowTransfer === true);
+    expect(holders.length, 'no set grants allowTransfer — ownership cannot be reassigned at all').toBeGreaterThan(0);
+  });
+
+  it('the lifecycle bits nobody enforces yet are not authored', () => {
+    // `allowRestore` / `allowPurge` are RBAC-gated but their operations do not
+    // exist yet, so authoring one grants nothing while reading as a capability
+    // the persona has. `allowTransfer` is deliberately NOT in this list — it is
+    // the documented exception (#3004), enforced now.
+    const bad = grants
+      .filter((g) => g.perm.allowRestore === true || g.perm.allowPurge === true)
+      .map((g) => `${g.set}.${g.objectName}`);
+    expect(bad, `declared-but-unenforced lifecycle grants:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
   it('controlled_by_parent grants do not author an inert readScope', () => {
     // The sharing service applies owner scope to `private` objects only, so a
     // readScope on a parent-derived object is never enforced — it documents a

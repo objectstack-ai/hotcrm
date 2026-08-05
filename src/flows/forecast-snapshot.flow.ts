@@ -81,7 +81,7 @@ const OPEN_STAGES = { $nin: ['closed_won', 'closed_lost'] };
 
 /** Window the current-period row: `period_start <= today <= period_end`. */
 const CURRENT_PERIOD_FILTER = {
-  owner: '{currentOwner.id}',
+  owner_id: '{currentOwner.id}',
   period: SNAPSHOT_PERIOD,
   period_start: { $lte: '{TODAY()}' },
   period_end: { $gte: '{TODAY()}' },
@@ -89,7 +89,7 @@ const CURRENT_PERIOD_FILTER = {
 
 /** Opportunities of the owner in flight during the snapshot window. */
 const inPeriod = (extra: Record<string, unknown>) => ({
-  owner: '{currentOwner.id}',
+  owner_id: '{currentOwner.id}',
   close_date: {
     $gte: '{currentForecast.period_start}',
     $lte: '{currentForecast.period_end}',
@@ -206,7 +206,7 @@ export const ForecastSnapshotFlow: Flow = {
               id: 'find_any_deal', type: 'get_record', label: 'Owns Any Live Deal?',
               config: {
                 objectName: 'crm_opportunity',
-                filter: { owner: '{currentOwner.id}', stage: { $nin: ['closed_lost'] } },
+                filter: { owner_id: '{currentOwner.id}', stage: { $nin: ['closed_lost'] } },
                 outputVariable: 'ownerAnyDeal',
               },
             },
@@ -240,7 +240,7 @@ export const ForecastSnapshotFlow: Flow = {
               config: {
                 objectName: 'crm_forecast',
                 fields: {
-                  owner: '{currentOwner.id}',
+                  owner_id: '{currentOwner.id}',
                   period: SNAPSHOT_PERIOD,
                   snapshot_date: '{TODAY()}',
                   source: 'scheduled',

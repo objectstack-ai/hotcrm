@@ -112,7 +112,7 @@ description: 与客户签署的协议——条款、价值、续约，以及自�
 
 ## 标准列表视图
 
-- **My Active Contracts**——`owner = me AND status = Activated`。
+- **My Active Contracts**——`owner_id = me AND status = Activated`。
 - **Expiring in 60 Days**——`end_date <= TODAY + 60 AND status = Activated`。
 - **Up for Renewal**——在续约通知窗口内。
 - **Expired This Month**——`status = Expired AND last_modified IN this month`。

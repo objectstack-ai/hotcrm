@@ -145,7 +145,7 @@ export const OpportunityApprovalFlow: Flow = {
       type: 'notify',
       label: 'Notify Owner — Approved',
       config: {
-        recipients: ['{oppRecord.owner}'],
+        recipients: ['{oppRecord.owner_id}'],
         channels: ['inbox', 'email'],
         topic: 'opportunity_approved',
         title: 'Deal approved: {oppRecord.name}',
@@ -170,7 +170,7 @@ export const OpportunityApprovalFlow: Flow = {
       type: 'notify',
       label: 'Notify Owner — Rejected',
       config: {
-        recipients: ['{oppRecord.owner}'],
+        recipients: ['{oppRecord.owner_id}'],
         channels: ['inbox', 'email'],
         severity: 'warning',
         topic: 'opportunity_rejected',

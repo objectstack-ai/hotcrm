@@ -23,7 +23,7 @@ export const ContactViews = defineView({
       { field: 'department', width: 140 },
       { field: 'email', width: 220 },
       { field: 'phone', width: 150 },
-      { field: 'owner', width: 150 },
+      { field: 'owner_id', width: 150 },
     ],
     sort: [{ field: 'last_name', order: 'asc' }],
     grouping: { fields: [{ field: 'crm_account', order: 'asc', collapsed: true }] },
@@ -83,7 +83,7 @@ export const ContactViews = defineView({
           'title',
           'department',
           'reports_to',
-          'owner',
+          'owner_id',
         ],
       },
       {

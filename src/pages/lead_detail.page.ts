@@ -93,7 +93,7 @@ export const LeadDetailPage: Page = {
           id: 'lead_highlights',
           label: 'Key Information',
           properties: {
-            fields: ['status', 'rating', 'lead_source', 'owner', 'email', 'phone'],
+            fields: ['status', 'rating', 'lead_source', 'owner_id', 'email', 'phone'],
           },
         },
         {
@@ -162,7 +162,7 @@ export const LeadDetailPage: Page = {
                           // Unqualified lead (see the validation on
                           // crm_lead) — the detail page has to show the
                           // recorded reason, not just the red status chip.
-                          fields: ['status', 'disqualification_reason', 'rating', 'lead_source', 'owner', 'annual_revenue', 'number_of_employees'],
+                          fields: ['status', 'disqualification_reason', 'rating', 'lead_source', 'owner_id', 'annual_revenue', 'number_of_employees'],
                         },
                         {
                           name: 'address',
@@ -208,7 +208,7 @@ export const LeadDetailPage: Page = {
                                 // this list read "0" no matter how many follow-ups
                                 // the rep had filed.
                                 relationshipField: 'related_to_lead',
-                                columns: ['subject', 'status', 'priority', 'due_date', 'owner'],
+                                columns: ['subject', 'status', 'priority', 'due_date', 'owner_id'],
                                 sort: [
                                   { field: 'due_date', order: 'asc' }
                                 ],
@@ -251,7 +251,10 @@ export const LeadDetailPage: Page = {
                 children: [
                   {
                     // `record:history` is the platform's own audit feed over the
-                    // fields marked `trackHistory` (status / rating / owner).
+                    // fields marked `trackHistory` (status / rating). Ownership
+                    // moved to the platform's `owner_id` in #548, which carries no
+                    // `trackHistory` flag — transfers land in the compliance audit
+                    // log, not on this feed.
                     // The hand-rolled version queried an object named
                     // `field_history`, which this app does not define, so the
                     // tab could only ever render empty.

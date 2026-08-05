@@ -24,7 +24,7 @@ export const TaskViews = defineView({
       { field: 'priority', width: 110, sortable: true },
       { field: 'due_date', width: 140, sortable: true },
       { field: 'progress_percent', width: 130, align: 'right' },
-      { field: 'owner', width: 150 },
+      { field: 'owner_id', width: 150 },
       { field: 'is_overdue', width: 100, align: 'center' },
     ],
     sort: [
@@ -63,7 +63,7 @@ export const TaskViews = defineView({
       type: 'kanban',
       label: 'Task Board',
       data: { provider: 'object', object: 'crm_task' },
-      columns: ['subject', 'priority', 'due_date', 'owner'],
+      columns: ['subject', 'priority', 'due_date', 'owner_id'],
       kanban: {
         groupByField: 'status',
         columns: ['subject', 'priority', 'due_date', 'progress_percent'],
@@ -78,7 +78,7 @@ export const TaskViews = defineView({
       type: 'calendar',
       label: 'Task Schedule',
       data: { provider: 'object', object: 'crm_task' },
-      columns: ['subject', 'priority', 'owner'],
+      columns: ['subject', 'priority', 'owner_id'],
       calendar: {
         startDateField: 'due_date',
         titleField: 'subject',
@@ -92,7 +92,7 @@ export const TaskViews = defineView({
       type: 'gantt',
       label: 'Execution Plan',
       data: { provider: 'object', object: 'crm_task' },
-      columns: ['subject', 'owner', 'progress_percent'],
+      columns: ['subject', 'owner_id', 'progress_percent'],
       gantt: {
         startDateField: 'reminder_date',
         endDateField: 'due_date',
@@ -112,7 +112,7 @@ export const TaskViews = defineView({
         startDateField: 'reminder_date',
         endDateField: 'due_date',
         titleField: 'subject',
-        groupByField: 'owner',
+        groupByField: 'owner_id',
         colorField: 'status',
         scale: 'week',
       },
@@ -125,7 +125,7 @@ export const TaskViews = defineView({
       data: { provider: 'object', object: 'crm_task' },
       columns: ['subject', 'priority', 'due_date', 'progress_percent'],
       filter: [
-        { field: 'owner', operator: 'equals', value: '{current_user_id}' },
+        { field: 'owner_id', operator: 'equals', value: '{current_user_id}' },
         { field: 'is_completed', operator: 'equals', value: false },
       ],
       sort: [{ field: 'due_date', order: 'asc' }],
@@ -137,7 +137,7 @@ export const TaskViews = defineView({
       type: 'grid',
       label: '📅 My Priority Tasks',
       data: { provider: 'object', object: 'crm_task' },
-      columns: ['subject', 'priority', 'status', 'due_date', 'related_to_type', 'owner'],
+      columns: ['subject', 'priority', 'status', 'due_date', 'related_to_type', 'owner_id'],
       // Operator-only filter (the view runtime does not interpolate
       // `{TODAY()}` / `{current_user_id}` templates). Sort puts urgent at top.
       filter: [
@@ -160,7 +160,7 @@ export const TaskViews = defineView({
       // hourly flow that stamps `is_overdue` (follow-up).
       label: '⏰ Open Tasks · Most Overdue First',
       data: { provider: 'object', object: 'crm_task' },
-      columns: ['subject', 'priority', 'status', 'due_date', 'owner'],
+      columns: ['subject', 'priority', 'status', 'due_date', 'owner_id'],
       filter: [
         { field: 'is_completed', operator: 'equals', value: false },
       ],
@@ -186,7 +186,7 @@ export const TaskViews = defineView({
           { field: 'status', required: true },
           'priority',
           'due_date',
-          'owner',
+          'owner_id',
           'reminder_date',
           { field: 'description', colSpan: 2 },
         ],

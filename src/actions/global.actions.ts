@@ -214,7 +214,13 @@ function activityAction(spec: ActivitySpec, objectName: string): Action {
         type: EVENT_TYPE,
         status: EVENT_STATUS,
         start_datetime: startIso,
-        owner: userId,
+        // Load-bearing, not decoration: an action body executes with
+        // isSystem: true (runtime buildActionExecutionContext), which
+        // short-circuits the security middleware — so the insert-time
+        // auto-stamp of owner_id never fires here. Omitting it would land the
+        // interaction ownerless, i.e. invisible in "My …" and uneditable under
+        // a private OWD (#548, the #622 failure mode).
+        owner_id: userId,
         related_to_type: OBJECT_NAME,
       };
       if (duration > 0) eventDoc.duration_minutes = duration;

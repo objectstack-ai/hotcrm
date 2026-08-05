@@ -41,7 +41,7 @@ export const TaskUrgentAlertFlow: Flow = {
     {
       id: 'notify_owner', type: 'notify', label: 'Notify Owner',
       config: {
-        recipients: ['{record.owner}'],
+        recipients: ['{record.owner_id}'],
         channels: ['inbox', 'email'],
         severity: 'warning',
         topic: 'urgent_task',

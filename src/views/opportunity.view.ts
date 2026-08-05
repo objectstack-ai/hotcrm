@@ -117,7 +117,7 @@ export const OpportunityViews = defineView({
         { field: 'probability', width: 110, align: 'right' },
         { field: 'expected_revenue', width: 160, align: 'right', summary: 'sum' },
         { field: 'close_date', width: 140, sortable: true },
-        { field: 'owner', width: 150 },
+        { field: 'owner_id', width: 150 },
       ],
       sort: [{ field: 'close_date', order: 'desc' }],
       showRecordCount: true,
@@ -129,7 +129,7 @@ export const OpportunityViews = defineView({
       type: 'kanban',
       label: 'Sales Pipeline',
       data: { provider: 'object', object: 'crm_opportunity' },
-      columns: ['name', 'crm_account', 'amount', 'close_date', 'owner'],
+      columns: ['name', 'crm_account', 'amount', 'close_date', 'owner_id'],
       kanban: {
         groupByField: 'stage',
         summarizeField: 'amount',
@@ -149,7 +149,7 @@ export const OpportunityViews = defineView({
       type: 'calendar',
       label: 'Forecast Calendar',
       data: { provider: 'object', object: 'crm_opportunity' },
-      columns: ['name', 'amount', 'stage', 'owner'],
+      columns: ['name', 'amount', 'stage', 'owner_id'],
       calendar: {
         startDateField: 'close_date',
         titleField: 'name',
@@ -172,7 +172,7 @@ export const OpportunityViews = defineView({
         startDateField: 'created_at',
         endDateField: 'close_date',
         titleField: 'name',
-        groupByField: 'owner',
+        groupByField: 'owner_id',
         colorField: 'stage',
         scale: 'month',
       },
@@ -188,7 +188,7 @@ export const OpportunityViews = defineView({
       gallery: {
         cardSize: 'medium',
         titleField: 'name',
-        visibleFields: ['crm_account', 'amount', 'stage', 'probability', 'close_date', 'owner'],
+        visibleFields: ['crm_account', 'amount', 'stage', 'probability', 'close_date', 'owner_id'],
       },
     },
 
@@ -203,7 +203,7 @@ export const OpportunityViews = defineView({
       // meant a rep's own queue opened on their lost deals, sorted to the top
       // by close_date — the least actionable rows in the system.
       filter: [
-        { field: 'owner', operator: 'equals', value: '{current_user_id}' },
+        { field: 'owner_id', operator: 'equals', value: '{current_user_id}' },
         { field: 'stage', operator: 'not_in', value: ['closed_won', 'closed_lost'] },
       ],
       sort: [{ field: 'close_date', order: 'asc' }],
@@ -225,7 +225,7 @@ export const OpportunityViews = defineView({
       // (STALE_THRESHOLD_DAYS = 14) in plain sight on every row.
       label: '⚠️ Stale Opportunities · Longest in Stage First',
       data: { provider: 'object', object: 'crm_opportunity' },
-      columns: ['name', 'crm_account', 'stage', 'amount', 'stage_entry_date', 'days_in_stage', 'close_date', 'owner'],
+      columns: ['name', 'crm_account', 'stage', 'amount', 'stage_entry_date', 'days_in_stage', 'close_date', 'owner_id'],
       filter: [
         { field: 'stage', operator: 'not_in', value: ['closed_won', 'closed_lost'] },
       ],
@@ -238,7 +238,7 @@ export const OpportunityViews = defineView({
       type: 'grid',
       label: 'Closing This Quarter',
       data: { provider: 'object', object: 'crm_opportunity' },
-      columns: ['name', 'crm_account', 'amount', 'forecast_category', 'probability', 'close_date', 'owner'],
+      columns: ['name', 'crm_account', 'amount', 'forecast_category', 'probability', 'close_date', 'owner_id'],
       filter: [
         { field: 'forecast_category', operator: 'in', value: ['commit', 'best_case'] },
         { field: 'stage', operator: 'not_in', value: ['closed_won', 'closed_lost'] },
@@ -261,7 +261,7 @@ export const OpportunityViews = defineView({
           { field: 'amount', required: true },
           'probability',
           'close_date',
-          'owner',
+          'owner_id',
         ],
       },
       {
