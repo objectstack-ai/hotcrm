@@ -468,22 +468,56 @@ describe('account_protection', () => {
     expect(input.last_activity_date).toBeUndefined();
   });
 
-  it('refuses to delete a customer account with open opportunities', async () => {
+  /**
+   * The refusal is asserted as the WHOLE sentence, per branch (#721).
+   *
+   * The count switches noun, verb and closing pronoun together, and the
+   * singular branch used to get only the noun — "1 open opportunity still
+   * reference it. Close or reassign them first." The pin that was here,
+   * `/1 open opportunity still reference/`, could not see that: it is
+   * unanchored, so it matches the correct "still references" just as happily
+   * as the broken "still reference". A message pin that passes on both
+   * spellings of the thing it is pinning is not pinning anything — hence the
+   * full strings below, one per branch, ending at the final period.
+   */
+  const refuseDelete = (openStages: string[]) => {
     const h = makeHarness({
       crm_opportunity: [
-        { id: 'o1', crm_account: 'acc1', stage: 'proposal' },
-        { id: 'o2', crm_account: 'acc1', stage: 'closed_won' },   // closed — ignored
-        { id: 'o3', crm_account: 'other', stage: 'proposal' },    // other account
+        ...openStages.map((stage, i) => ({ id: `o${i + 1}`, crm_account: 'acc1', stage })),
+        { id: 'closed', crm_account: 'acc1', stage: 'closed_won' },  // closed — ignored
+        { id: 'elsewhere', crm_account: 'other', stage: 'proposal' }, // other account
       ],
     });
-    await expect(
-      hook.handler(makeCtx({
-        event: 'beforeDelete',
-        previous: { id: 'acc1', type: 'customer' },
-        user: USER,
-        api: h.api,
-      })),
-    ).rejects.toThrow(/1 open opportunity still reference/);
+    return hook.handler(makeCtx({
+      event: 'beforeDelete',
+      previous: { id: 'acc1', type: 'customer' },
+      user: USER,
+      api: h.api,
+    }));
+  };
+
+  it('refuses to delete a customer account with ONE open opportunity (singular agreement)', async () => {
+    await expect(refuseDelete(['proposal'])).rejects.toThrow(
+      'Cannot delete customer account: 1 open opportunity still references it. Close or reassign it first.',
+    );
+  });
+
+  it('refuses to delete a customer account with SEVERAL open opportunities (plural agreement)', async () => {
+    await expect(refuseDelete(['proposal', 'negotiation'])).rejects.toThrow(
+      'Cannot delete customer account: 2 open opportunities still reference it. Close or reassign them first.',
+    );
+  });
+
+  it('never mixes the two branches — no plural verb on 1, no singular verb on 2', async () => {
+    // The defect was a stitched sentence, so guard the halves that were wrong
+    // rather than only the halves that were right.
+    const one = await refuseDelete(['proposal']).catch((e: Error) => e.message);
+    expect(one).not.toMatch(/opportunity still reference /);   // plural verb on a singular noun
+    expect(one).not.toMatch(/reassign them/);                  // plural pronoun on one record
+
+    const two = await refuseDelete(['proposal', 'negotiation']).catch((e: Error) => e.message);
+    expect(two).not.toMatch(/opportunities still references/); // singular verb on a plural noun
+    expect(two).not.toMatch(/reassign it first/);              // singular pronoun on two records
   });
 
   it('allows deleting a customer account whose opportunities are all closed', async () => {

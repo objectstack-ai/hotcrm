@@ -319,3 +319,71 @@ describe('sibling guards reached the same way', () => {
     expect(message).not.toContain('may be edited');
   });
 });
+
+// ───────────────────── the account guard's own sentence, measured (#721) ──
+
+/**
+ * `account_protection`'s open-opportunity refusal, taken from a real `DELETE`.
+ *
+ * Not a cascade case — nothing cascades INTO `crm_account`, so this guard only
+ * ever answers a caller who addressed the account, and "Cannot delete customer
+ * account" was already accurate (#721 says so explicitly). What was wrong was
+ * agreement: the count switched the noun (`opportunit{y,ies}`) and left the
+ * verb and the closing pronoun plural, so one open deal produced
+ *
+ *     Cannot delete customer account: 1 open opportunity still reference it.
+ *     Close or reassign them first.
+ *
+ * It lives in this file because this is where the app boots a real kernel: the
+ * unit pins in `hooks-runtime-sales.test.ts` call the handler directly, which
+ * proves the string the handler builds, not the string a user is shown. Both
+ * branches are measured here end-to-end, because only one of them was broken
+ * and the fix must not trade one wrong sentence for the other.
+ */
+describe('deleting a customer account with open opportunities', () => {
+  /** A customer account carrying `openDeals` open opportunities. */
+  const accountWithOpenDeals = async (openDeals: number) => {
+    const n = uniq();
+    const account = await insert('crm_account', {
+      name: `Busy Corp ${n}`, type: 'customer', industry: 'technology',
+    });
+    for (let i = 0; i < openDeals; i++) {
+      await insert('crm_opportunity', {
+        name: `Busy Deal ${n}-${i}`, crm_account: account.id,
+        stage: 'negotiation', amount: 1000, close_date: '2026-12-01',
+      });
+    }
+    return account;
+  };
+
+  it('agrees with a single blocker: "1 open opportunity still references it … reassign it"', async () => {
+    const account = await accountWithOpenDeals(1);
+    const message = await deleteAndCatch('crm_account', account.id);
+
+    expect(message, 'the delete must still be refused').toBeTruthy();
+    expect(message).toContain(
+      'Cannot delete customer account: 1 open opportunity still references it. Close or reassign it first.',
+    );
+    // The reported symptom, both halves of it.
+    expect(message).not.toContain('opportunity still reference it');
+    expect(message).not.toContain('reassign them');
+  });
+
+  it('agrees with several blockers: "2 open opportunities still reference it … reassign them"', async () => {
+    const account = await accountWithOpenDeals(2);
+    const message = await deleteAndCatch('crm_account', account.id);
+
+    expect(message, 'the delete must still be refused').toBeTruthy();
+    expect(message).toContain(
+      'Cannot delete customer account: 2 open opportunities still reference it. Close or reassign them first.',
+    );
+    expect(message).not.toContain('opportunities still references');
+    expect(message).not.toContain('reassign it first');
+  });
+
+  it('refuses, and leaves the account in place (semantics unchanged)', async () => {
+    const account = await accountWithOpenDeals(1);
+    await deleteAndCatch('crm_account', account.id);
+    expect(await rowsOf('crm_account', account.id)).toHaveLength(1);
+  });
+});

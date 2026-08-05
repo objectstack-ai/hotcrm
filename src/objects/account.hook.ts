@@ -133,8 +133,17 @@ const accountHook: Hook = {
         },
       });
       if (openOpps > 0) {
+        // Whole sentence per branch, not a stitched-together noun (#721). The
+        // count switched the NOUN only (`opportunit{y,ies}`) while the verb and
+        // the closing pronoun stayed plural, so the singular case read
+        // "1 open opportunity still reference it. Close or reassign them
+        // first." Agreement runs across three words here — noun, verb and
+        // pronoun — and the two readable sentences are cheaper to keep correct
+        // (and to grep for) than three interlocking conditionals.
         throw new Error(
-          `Cannot delete customer account: ${openOpps} open opportunit${openOpps === 1 ? 'y' : 'ies'} still reference it. Close or reassign them first.`,
+          openOpps === 1
+            ? 'Cannot delete customer account: 1 open opportunity still references it. Close or reassign it first.'
+            : `Cannot delete customer account: ${openOpps} open opportunities still reference it. Close or reassign them first.`,
         );
       }
     }
