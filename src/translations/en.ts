@@ -66,7 +66,7 @@ export const en: TranslationData = {
         name: { label: 'Account Name', help: 'Legal name of the company or organization' },
         type: {
           label: 'Type',
-          options: { prospect: 'Prospect', customer: 'Customer', partner: 'Partner', former: 'Former' },
+          options: { prospect: 'Prospect', customer: 'Customer', partner: 'Partner', former: 'Former Customer' },
         },
         industry: {
           label: 'Industry',
@@ -89,7 +89,7 @@ export const en: TranslationData = {
         },
         office_location: { label: 'Office Location' },
         owner_id: { label: 'Account Owner' },
-        parent_account: { label: 'Parent Account' },
+        parent_account: { label: 'Parent Account', help: 'Parent company in hierarchy' },
         description: { label: 'Description' },
         is_active: { label: 'Active' },
         last_activity_date: { label: 'Last Activity Date' },
@@ -110,6 +110,11 @@ export const en: TranslationData = {
         },
         renewal_owner: { label: 'Renewal Owner (CSM)' },
         next_renewal_date: { label: 'Next Renewal Date' },
+        name_normalized: {
+          label: 'Account Name (Normalized)',
+          help: 'Match key for lead conversion: Account Name lower-cased, trimmed, with internal whitespace collapsed. Maintained by the account_protection hook — never edit directly.',
+        },
+        display_title: { label: 'Display Title' },
       },
       _views: {
         all_accounts: { label: 'All Accounts', description: 'Primary account list with revenue & industry summaries' },
@@ -125,7 +130,10 @@ export const en: TranslationData = {
       label: 'Contact',
       pluralLabel: 'Contacts',
       fields: {
-        salutation: { label: 'Salutation' },
+        salutation: {
+          label: 'Salutation',
+          options: { mr: 'Mr.', ms: 'Ms.', mrs: 'Mrs.', dr: 'Dr.', prof: 'Prof.' },
+        },
         first_name: { label: 'First Name' },
         last_name: { label: 'Last Name' },
         full_name: { label: 'Full Name' },
@@ -144,16 +152,24 @@ export const en: TranslationData = {
         },
         owner_id: { label: 'Contact Owner' },
         description: { label: 'Description' },
-        is_primary: { label: 'Primary Contact' },
+        is_primary: { label: 'Primary Contact', help: 'Is this the main contact for the account?' },
         avatar: { label: 'Profile Picture' },
-        reports_to: { label: 'Reports To' },
+        reports_to: { label: 'Reports To', help: 'Direct manager/supervisor' },
         mailing_street: { label: 'Mailing Street' },
         mailing_city: { label: 'Mailing City' },
         mailing_state: { label: 'Mailing State/Province' },
         mailing_postal_code: { label: 'Mailing Postal Code' },
         mailing_country: { label: 'Mailing Country' },
         birthdate: { label: 'Birthdate' },
-        lead_source: { label: 'Lead Source' },
+        lead_source: {
+          label: 'Lead Source',
+          options: {
+            web: 'Web', referral: 'Referral', event: 'Event / Trade Show',
+            webinar: 'Webinar', partner: 'Partner', advertisement: 'Advertisement',
+            paid_search: 'Paid Search', social: 'Social Media', content: 'Content / Blog',
+            cold_call: 'Cold Call', email_campaign: 'Email Campaign', other: 'Other',
+          },
+        },
         do_not_call: { label: 'Do Not Call' },
         email_opt_out: { label: 'Email Opt Out' },
         last_contacted_date: { label: 'Last Contacted' },
@@ -172,6 +188,10 @@ export const en: TranslationData = {
         },
         send_email: {
           label: 'Send Email',
+          params: {
+            subject: { label: 'Subject' },
+            body: { label: 'Body' },
+          },
         },
       },
     },
@@ -183,18 +203,23 @@ export const en: TranslationData = {
       fields: {
         article_number: { label: 'Article #' },
         title: { label: 'Title' },
-        summary: { label: 'Summary' },
-        body: { label: 'Body' },
+        summary: { label: 'Summary', help: 'One-paragraph TL;DR shown in search results and AI citations.' },
+        body: { label: 'Body', help: 'Full article content (Markdown).' },
         category: {
           label: 'Category',
           options: {
             getting_started: 'Getting Started', how_to: 'How-To',
             troubleshooting: 'Troubleshooting', billing: 'Billing & Pricing', api: 'API & Integrations',
+            release_notes: 'Release Notes', policy: 'Policy',
           },
         },
         tags: {
           label: 'Tags',
-          options: { auth: 'Auth', sso: 'SSO', mobile: 'Mobile', email: 'Email' },
+          options: {
+            auth: 'Auth', sso: 'SSO', mobile: 'Mobile', email: 'Email',
+            reports: 'Reports', performance: 'Performance', data_import: 'Data Import',
+            webhooks: 'Webhooks',
+          },
         },
         status: {
           label: 'Status',
@@ -202,6 +227,7 @@ export const en: TranslationData = {
         },
         audience: {
           label: 'Audience',
+          help: 'Public articles are visible in the customer portal; internal articles are agent-only.',
           options: { public: 'Public', internal: 'Internal' },
         },
         language: {
@@ -209,12 +235,13 @@ export const en: TranslationData = {
           options: { en: 'English', zh_cn: 'Simplified Chinese', es_es: 'Spanish', ja_jp: 'Japanese' },
         },
         owner_id: { label: 'Owner' },
-        related_to_case: { label: 'Source Case' },
+        related_to_case: { label: 'Source Case', help: 'Case this article was authored from (optional).' },
         published_at: { label: 'Published At' },
         last_reviewed_at: { label: 'Last Reviewed' },
         view_count: { label: 'Views' },
         helpful_count: { label: 'Helpful' },
         not_helpful_count: { label: 'Not Helpful' },
+        display_title: { label: 'Display Title' },
       },
       _views: {
         all_articles: { label: 'All Articles' },
@@ -233,21 +260,41 @@ export const en: TranslationData = {
         period: { label: 'Period', options: { month: 'Month', quarter: 'Quarter' } },
         period_start: { label: 'Period Start' },
         period_end: { label: 'Period End' },
-        period_label: { label: 'Period' },
-        snapshot_date: { label: 'Snapshot Date' },
+        period_label: { label: 'Period', help: 'Human-friendly label, e.g. "Q3 2026" or "Aug 2026".' },
+        snapshot_date: { label: 'Snapshot Date', help: 'The day this snapshot was captured.' },
         source: {
           label: 'Source',
           options: { scheduled: 'Scheduled snapshot', ai: 'AI skill', manual: 'Manual entry' },
         },
         quota: { label: 'Quota' },
-        pipeline_amount: { label: 'Pipeline' },
-        best_case_amount: { label: 'Best Case' },
-        commit_amount: { label: 'Commit' },
-        closed_amount: { label: 'Closed' },
-        expected_amount: { label: 'Expected' },
-        attainment_pct: { label: 'Attainment %' },
-        coverage_ratio: { label: 'Coverage' },
+        pipeline_amount: {
+          label: 'Pipeline',
+          help: 'Sum of all open opportunities closing in this period (any stage).',
+        },
+        best_case_amount: {
+          label: 'Best Case',
+          help: 'Open opportunities in the best_case or commit forecast category.',
+        },
+        commit_amount: {
+          label: 'Commit',
+          help: 'Open opportunities in the commit forecast category (owner-committed).',
+        },
+        closed_amount: { label: 'Closed', help: 'Already-closed-won amount in this period.' },
+        expected_amount: {
+          label: 'Expected',
+          help: 'Closed + Commit — what the owner reasonably expects to ship.',
+        },
+        attainment_pct: { label: 'Attainment %', help: '(Closed / Quota) * 100. Negative quota guarded.' },
+        coverage_ratio: {
+          label: 'Coverage',
+          help: 'Pipeline ÷ (Quota − Closed). Health-check for whether enough pipeline exists.',
+        },
         notes: { label: 'Notes' },
+        display_title: { label: 'Display Title' },
+        seed_key: {
+          label: 'Seed Key',
+          help: 'Demo-fixture identity. Written only by the seed loader; empty on every real snapshot.',
+        },
       },
       _views: {
         all_forecasts: { label: 'All Forecasts' },
@@ -285,12 +332,24 @@ export const en: TranslationData = {
         owner_id: { label: 'Lead Owner' },
         is_converted: { label: 'Converted' },
         description: { label: 'Description' },
-        salutation: { label: 'Salutation' },
+        salutation: {
+          label: 'Salutation',
+          options: { mr: 'Mr.', ms: 'Ms.', mrs: 'Mrs.', dr: 'Dr.', prof: 'Prof.' },
+        },
         full_name: { label: 'Full Name' },
-        industry: { label: 'Industry' },
+        industry: {
+          label: 'Industry',
+          options: {
+            technology: 'Technology', software: 'Software / SaaS', finance: 'Finance',
+            healthcare: 'Healthcare', retail: 'Retail', manufacturing: 'Manufacturing',
+            education: 'Education', real_estate: 'Real Estate', media: 'Media & Entertainment',
+            logistics: 'Logistics', hospitality: 'Hospitality', energy: 'Energy & Utilities',
+            government: 'Government', nonprofit: 'Non-profit', other: 'Other',
+          },
+        },
         mobile: { label: 'Mobile' },
         website: { label: 'Website' },
-        rating: { label: 'Lead Score' },
+        rating: { label: 'Lead Score', help: 'Lead quality score (1-5 stars)' },
         converted_account: { label: 'Converted Account' },
         converted_contact: { label: 'Converted Contact' },
         converted_opportunity: { label: 'Converted Opportunity' },
@@ -298,7 +357,7 @@ export const en: TranslationData = {
         address: { label: 'Address' },
         annual_revenue: { label: 'Annual Revenue' },
         number_of_employees: { label: 'Number of Employees' },
-        notes: { label: 'Notes' },
+        notes: { label: 'Notes', help: 'Rich text notes with formatting' },
         do_not_call: { label: 'Do Not Call' },
         email_opt_out: { label: 'Email Opt Out' },
         disqualification_reason: {
@@ -312,23 +371,41 @@ export const en: TranslationData = {
         },
         duplicate_of_type: {
           label: 'Duplicate Of',
+          help: 'Which object holds the surviving record this lead repeats.',
           options: { crm_lead: 'Lead', crm_contact: 'Contact' },
         },
         duplicate_of_lead: { label: 'Duplicate Of Lead' },
         duplicate_of_contact: { label: 'Duplicate Of Contact' },
         duplicate_status: {
           label: 'Duplicate Status',
+          help: 'Suspected = flagged automatically at intake. Confirmed = a human verified the match.',
           options: { suspected: 'Suspected', confirmed: 'Confirmed' },
         },
+        display_title: { label: 'Display Title' },
+        company_normalized: {
+          label: 'Company (Normalized)',
+          help: 'Match key for lead conversion: Company lower-cased, trimmed, with internal whitespace collapsed. Maintained by the lead_duplicate_check hook — never edit directly.',
+        },
+        next_followup_date: { label: 'Next Follow-up Date' },
+        last_contacted_date: { label: 'Last Contacted' },
       },
       _views: {
-        all_leads: { label: 'All Leads' },
+        all_leads: {
+          label: 'All Leads',
+          emptyState: { title: 'No Leads Yet', message: 'Get started by creating your first lead' },
+        },
         kanban_by_status: { label: 'Lead Pipeline' },
         calendar_by_created: { label: 'Lead Calendar' },
         gallery_view: { label: 'Lead Cards' },
         my_leads: { label: 'My Leads' },
         high_priority: { label: 'High Priority' },
-        suspected_duplicates: { label: 'Suspected Duplicates' },
+        suspected_duplicates: {
+          label: 'Suspected Duplicates',
+          emptyState: {
+            title: 'No Suspected Duplicates',
+            message: 'Nothing to review — every re-captured email has been checked.',
+          },
+        },
       },
       _actions: {
         ...activityActions,
@@ -340,6 +417,9 @@ export const en: TranslationData = {
         create_campaign: {
           label: 'Add to Campaign',
           successMessage: 'Leads added to campaign!',
+          params: {
+            crm_campaign: { label: 'Campaign' },
+          },
         },
         schedule_followup: {
           label: 'Schedule Follow-up',
@@ -395,10 +475,19 @@ export const en: TranslationData = {
             cold_call: 'Cold Call', email_campaign: 'Email Campaign', other: 'Other',
           },
         },
-        competitors: { label: 'Competitors' },
-        crm_campaign: { label: 'Campaign' },
+        competitors: {
+          label: 'Competitors',
+          options: {
+            competitor_a: 'Competitor A', competitor_b: 'Competitor B',
+            competitor_c: 'Competitor C',
+          },
+        },
+        crm_campaign: { label: 'Campaign', help: 'Marketing campaign that generated this opportunity' },
         days_in_stage: { label: 'Days in Current Stage' },
-        stage_entry_date: { label: 'Stage Entry Date' },
+        stage_entry_date: {
+          label: 'Stage Entry Date',
+          help: 'Date this opportunity entered its current stage.',
+        },
         is_private: { label: 'Private' },
         approval_status: {
           label: 'Approval Status',
@@ -407,6 +496,7 @@ export const en: TranslationData = {
         approved_date: { label: 'Approved Date' },
         win_reason: {
           label: 'Win Reason',
+          help: 'Why this deal was won. Required to close an opportunity as Won.',
           options: {
             better_product: 'Better Product', better_price: 'Better Price', relationship: 'Existing Relationship',
             better_support: 'Better Support', best_fit: 'Best Fit / Features',
@@ -415,12 +505,16 @@ export const en: TranslationData = {
         },
         loss_reason: {
           label: 'Loss Reason',
+          help: 'Why this deal was lost. Required to close an opportunity as Lost.',
           options: {
             price: 'Price Too High', competitor: 'Lost to Competitor', no_budget: 'No Budget',
             no_decision: 'No Decision', timing: 'Bad Timing', features: 'Missing Features', other: 'Other',
           },
         },
-        loss_details: { label: 'Loss/Win Details' },
+        loss_details: {
+          label: 'Loss/Win Details',
+          help: 'Free-text context behind the win or loss reason.',
+        },
       },
       _views: {
         open_opportunities: { label: 'Open Deals' },
@@ -440,6 +534,9 @@ export const en: TranslationData = {
         mass_update_stage: {
           label: 'Update Stage',
           successMessage: 'Opportunities updated successfully!',
+          params: {
+            stage: { label: 'New Stage' },
+          },
         },
         generate_quote: {
           label: 'Generate Quote',
@@ -457,9 +554,25 @@ export const en: TranslationData = {
         description: { label: 'Description' },
         crm_account: { label: 'Account' },
         crm_contact: { label: 'Contact' },
-        status: { label: 'Status' },
-        priority: { label: 'Priority' },
-        type: { label: 'Case Type' },
+        status: {
+          label: 'Status',
+          options: {
+            new: 'New', in_progress: 'In Progress', waiting_customer: 'Waiting on Customer',
+            waiting_support: 'Waiting on Support', escalated: 'Escalated',
+            resolved: 'Resolved', closed: 'Closed',
+          },
+        },
+        priority: {
+          label: 'Priority',
+          options: { low: 'Low', medium: 'Medium', high: 'High', critical: 'Critical' },
+        },
+        type: {
+          label: 'Case Type',
+          options: {
+            question: 'Question', problem: 'Problem',
+            feature_request: 'Feature Request', bug: 'Bug',
+          },
+        },
         origin: {
           label: 'Case Origin',
           options: { email: 'Email', phone: 'Phone', web: 'Web', chat: 'Chat', social_media: 'Social Media' },
@@ -473,13 +586,22 @@ export const en: TranslationData = {
         is_sla_violated: { label: 'SLA Violated' },
         is_escalated: { label: 'Escalated' },
         escalation_reason: { label: 'Escalation Reason' },
-        parent_case: { label: 'Parent Case' },
+        parent_case: { label: 'Parent Case', help: 'Related parent case' },
         resolution: { label: 'Resolution' },
-        customer_rating: { label: 'Customer Satisfaction' },
+        customer_rating: {
+          label: 'Customer Satisfaction',
+          help: 'Customer satisfaction rating (1-5 stars)',
+        },
         customer_feedback: { label: 'Customer Feedback' },
-        customer_signature: { label: 'Customer Signature' },
-        internal_notes: { label: 'Internal Notes' },
+        customer_signature: {
+          label: 'Customer Signature',
+          help: 'Digital signature acknowledging case resolution',
+        },
+        internal_notes: { label: 'Internal Notes', help: 'Internal notes not visible to customer' },
         is_closed: { label: 'Is Closed' },
+        display_title: { label: 'Display Title' },
+        priority_rank: { label: 'Priority Rank' },
+        escalated_date: { label: 'Escalated Date' },
       },
       _views: {
         all_cases: { label: 'All Cases' },
@@ -512,16 +634,40 @@ export const en: TranslationData = {
         crm_contact: { label: 'Primary Contact' },
         crm_opportunity: { label: 'Related Opportunity' },
         owner_id: { label: 'Contract Owner' },
-        status: { label: 'Status' },
+        status: {
+          label: 'Status',
+          options: {
+            draft: 'Draft', in_approval: 'In Approval', activated: 'Activated',
+            expired: 'Expired', terminated: 'Terminated',
+          },
+        },
         contract_term_months: { label: 'Contract Term (Months)' },
         start_date: { label: 'Start Date' },
         end_date: { label: 'End Date' },
         contract_value: { label: 'Contract Value' },
-        billing_frequency: { label: 'Billing Frequency' },
-        payment_terms: { label: 'Payment Terms' },
+        billing_frequency: {
+          label: 'Billing Frequency',
+          options: {
+            monthly: 'Monthly', quarterly: 'Quarterly',
+            annually: 'Annually', one_time: 'One-time',
+          },
+        },
+        payment_terms: {
+          label: 'Payment Terms',
+          options: {
+            net_15: 'Net 15', net_30: 'Net 30', net_60: 'Net 60',
+            net_90: 'Net 90', due_on_receipt: 'Due on Receipt',
+          },
+        },
         auto_renewal: { label: 'Auto Renewal' },
         renewal_notice_days: { label: 'Renewal Notice (Days)' },
-        contract_type: { label: 'Contract Type' },
+        contract_type: {
+          label: 'Contract Type',
+          options: {
+            subscription: 'Subscription', service: 'Service Agreement', license: 'License',
+            partnership: 'Partnership', nda: 'NDA', msa: 'MSA',
+          },
+        },
         signed_date: { label: 'Signed Date' },
         signed_by: { label: 'Signed By' },
         document_url: { label: 'Contract Document' },
@@ -544,10 +690,36 @@ export const en: TranslationData = {
         product_code: { label: 'Product Code' },
         name: { label: 'Product Name' },
         description: { label: 'Description' },
-        category: { label: 'Category' },
-        family: { label: 'Product Family' },
+        category: {
+          label: 'Category',
+          options: {
+            software: 'Software', hardware: 'Hardware', service: 'Service',
+            subscription: 'Subscription', support: 'Support',
+          },
+        },
+        family: {
+          label: 'Product Family',
+          options: {
+            enterprise: 'Enterprise Solutions', smb: 'SMB Solutions',
+            services: 'Professional Services', cloud: 'Cloud Services',
+          },
+        },
         list_price: { label: 'List Price' },
         cost: { label: 'Cost' },
+        billing_type: {
+          label: 'Billing Type',
+          options: {
+            one_time: 'One-Time', monthly: 'Monthly', quarterly: 'Quarterly',
+            annual: 'Annual', usage: 'Usage',
+          },
+        },
+        unit_of_measure: {
+          label: 'Unit of Measure',
+          options: {
+            each: 'Each', license: 'License', seat: 'Seat',
+            hour: 'Hour', day: 'Day', month: 'Month',
+          },
+        },
         sku: { label: 'SKU' },
         quantity_on_hand: { label: 'Quantity on Hand' },
         reorder_point: { label: 'Reorder Point' },
@@ -556,6 +728,8 @@ export const en: TranslationData = {
         product_manager: { label: 'Product Manager' },
         image: { label: 'Product Image' },
         datasheet: { label: 'Datasheet' },
+        display_title: { label: 'Display Title' },
+        tax_rate: { label: 'Default Tax Rate %' },
       },
       _views: {
         all_products: { label: 'All Products' },
@@ -574,7 +748,13 @@ export const en: TranslationData = {
         crm_contact: { label: 'Contact' },
         crm_opportunity: { label: 'Opportunity' },
         owner_id: { label: 'Quote Owner' },
-        status: { label: 'Status' },
+        status: {
+          label: 'Status',
+          options: {
+            draft: 'Draft', in_review: 'In Review', presented: 'Presented',
+            accepted: 'Accepted', rejected: 'Rejected', expired: 'Expired',
+          },
+        },
         quote_date: { label: 'Quote Date' },
         expiration_date: { label: 'Expiration Date' },
         subtotal: { label: 'Subtotal' },
@@ -583,12 +763,19 @@ export const en: TranslationData = {
         tax: { label: 'Tax' },
         shipping_handling: { label: 'Shipping & Handling' },
         total_price: { label: 'Total Price' },
-        payment_terms: { label: 'Payment Terms' },
+        payment_terms: {
+          label: 'Payment Terms',
+          options: {
+            net_15: 'Net 15', net_30: 'Net 30', net_60: 'Net 60',
+            net_90: 'Net 90', due_on_receipt: 'Due on Receipt',
+          },
+        },
         shipping_terms: { label: 'Shipping Terms' },
         billing_address: { label: 'Billing Address' },
         shipping_address: { label: 'Shipping Address' },
         description: { label: 'Description' },
         internal_notes: { label: 'Internal Notes' },
+        display_title: { label: 'Display Title' },
       },
       _views: {
         all_quotes: { label: 'All Quotes' },
@@ -603,21 +790,45 @@ export const en: TranslationData = {
       fields: {
         subject: { label: 'Subject' },
         description: { label: 'Description' },
-        status: { label: 'Status' },
-        priority: { label: 'Priority' },
-        type: { label: 'Task Type' },
+        status: {
+          label: 'Status',
+          options: {
+            not_started: 'Not Started', in_progress: 'In Progress', waiting: 'Waiting',
+            completed: 'Completed', deferred: 'Deferred',
+          },
+        },
+        priority: {
+          label: 'Priority',
+          options: { low: 'Low', normal: 'Normal', high: 'High', urgent: 'Urgent' },
+        },
+        type: {
+          label: 'Task Type',
+          options: {
+            call: 'Call', email: 'Email', meeting: 'Meeting',
+            follow_up: 'Follow-up', demo: 'Demo', other: 'Other',
+          },
+        },
         due_date: { label: 'Due Date' },
         reminder_date: { label: 'Reminder Date/Time' },
         completed_date: { label: 'Completed Date' },
         owner_id: { label: 'Assigned To' },
-        related_to_type: { label: 'Related To Type' },
+        related_to_type: {
+          label: 'Related To Type',
+          options: {
+            crm_account: 'Account', crm_contact: 'Contact', crm_opportunity: 'Opportunity',
+            crm_lead: 'Lead', crm_case: 'Case',
+          },
+        },
         related_to_account: { label: 'Related Account' },
         related_to_contact: { label: 'Related Contact' },
         related_to_opportunity: { label: 'Related Opportunity' },
         related_to_lead: { label: 'Related Lead' },
         related_to_case: { label: 'Related Case' },
         is_recurring: { label: 'Recurring Task' },
-        recurrence_type: { label: 'Recurrence Type' },
+        recurrence_type: {
+          label: 'Recurrence Type',
+          options: { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly', yearly: 'Yearly' },
+        },
         recurrence_interval: { label: 'Recurrence Interval' },
         recurrence_end_date: { label: 'Recurrence End Date' },
         is_completed: { label: 'Is Completed' },
@@ -625,6 +836,8 @@ export const en: TranslationData = {
         progress_percent: { label: 'Progress (%)' },
         estimated_hours: { label: 'Estimated Hours' },
         actual_hours: { label: 'Actual Hours' },
+        priority_rank: { label: 'Priority Rank' },
+        reminder_sent: { label: 'Reminder Sent' },
       },
       _views: {
         all_tasks: { label: 'All Tasks' },
@@ -643,16 +856,35 @@ export const en: TranslationData = {
         campaign_code: { label: 'Campaign Code' },
         name: { label: 'Campaign Name' },
         description: { label: 'Description' },
-        type: { label: 'Campaign Type' },
-        channel: { label: 'Primary Channel' },
-        status: { label: 'Status' },
+        type: {
+          label: 'Campaign Type',
+          options: {
+            email: 'Email', webinar: 'Webinar', trade_show: 'Trade Show',
+            conference: 'Conference', direct_mail: 'Direct Mail', social_media: 'Social Media',
+            content: 'Content Marketing', partner: 'Partner Marketing',
+          },
+        },
+        channel: {
+          label: 'Primary Channel',
+          options: {
+            digital: 'Digital', social: 'Social', email: 'Email',
+            events: 'Events', partner: 'Partner',
+          },
+        },
+        status: {
+          label: 'Status',
+          options: {
+            planning: 'Planning', in_progress: 'In Progress',
+            completed: 'Completed', aborted: 'Aborted',
+          },
+        },
         start_date: { label: 'Start Date' },
         end_date: { label: 'End Date' },
         budgeted_cost: { label: 'Budgeted Cost' },
         actual_cost: { label: 'Actual Cost' },
         expected_revenue: { label: 'Expected Revenue' },
         actual_revenue: { label: 'Actual Revenue' },
-        target_size: { label: 'Target Size' },
+        target_size: { label: 'Target Size', help: 'Target number of leads/contacts' },
         num_sent: { label: 'Number Sent' },
         num_responses: { label: 'Number of Responses' },
         num_leads: { label: 'Number of Leads' },
@@ -661,10 +893,11 @@ export const en: TranslationData = {
         num_won_opportunities: { label: 'Won Opportunities' },
         response_rate: { label: 'Response Rate %' },
         roi: { label: 'ROI %' },
-        parent_campaign: { label: 'Parent Campaign' },
+        parent_campaign: { label: 'Parent Campaign', help: 'Parent campaign in hierarchy' },
         owner_id: { label: 'Campaign Owner' },
         landing_page_url: { label: 'Landing Page' },
         is_active: { label: 'Active' },
+        display_title: { label: 'Display Title' },
       },
       _views: {
         all_campaigns: { label: 'All Campaigns' },
@@ -741,10 +974,13 @@ export const en: TranslationData = {
           label: 'Attendee Type',
           options: { contact: 'Contact', lead: 'Lead', user: 'User' },
         },
-        crm_contact: { label: 'Contact' },
-        crm_lead: { label: 'Lead' },
-        sys_user: { label: 'User' },
-        external_name: { label: 'External Attendee' },
+        crm_contact: { label: 'Contact', help: 'Set when the attendee is an existing customer contact' },
+        crm_lead: { label: 'Lead', help: 'Set when the attendee is still an unconverted lead' },
+        sys_user: { label: 'User', help: 'Set when the attendee is a colleague' },
+        external_name: {
+          label: 'External Attendee',
+          help: 'Name of an attendee who is not a CRM record',
+        },
         response: {
           label: 'Response',
           options: {
@@ -767,8 +1003,8 @@ export const en: TranslationData = {
       fields: {
         member_number: { label: 'Member Number' },
         crm_campaign: { label: 'Campaign' },
-        crm_lead: { label: 'Lead' },
-        crm_contact: { label: 'Contact' },
+        crm_lead: { label: 'Lead', help: 'Set when the member was a Lead at enrollment time' },
+        crm_contact: { label: 'Contact', help: 'Set when the member is an existing Contact' },
         status: {
           label: 'Status',
           options: {
@@ -798,8 +1034,11 @@ export const en: TranslationData = {
         crm_product: { label: 'Product' },
         description: { label: 'Description' },
         quantity: { label: 'Quantity' },
-        list_price: { label: 'List Price' },
-        unit_price: { label: 'Sales Price' },
+        list_price: { label: 'List Price', help: 'Auto-populated from product.list_price' },
+        unit_price: {
+          label: 'Sales Price',
+          help: 'Negotiated unit price (may differ from list price)',
+        },
         discount: { label: 'Discount %' },
         total_price: { label: 'Total' },
         line_number: { label: 'Line #' },
@@ -929,6 +1168,12 @@ export const en: TranslationData = {
         open_pipeline_by_owner: { title: 'Open Pipeline by Owner', description: 'In-flight pipeline value, deal count and avg win probability per rep' },
         quota_attainment_by_rep: { title: 'Quota Attainment by Rep', description: 'Current-quarter quota, closed revenue and attainment per rep, from forecast snapshots' },
         pipeline_stage_by_source: { title: 'Pipeline by Stage × Lead Source', description: 'Cross-tab of open opportunity amount by stage and source' },
+        win_rate_12m: { title: 'Win Rate (12M)', description: 'Deals won as a share of all deals settled in the last 12 months' },
+        won_deals_12m: { title: 'Deals Won (12M)', description: 'The numerator of the win rate' },
+        lost_deals_12m: { title: 'Deals Lost (12M)', description: 'The other half of the win-rate denominator' },
+        win_rate_by_owner: { title: 'Win / Loss by Rep', description: 'Deals won, deals lost and win rate per rep — last 12 months' },
+        win_rate_by_lead_source: { title: 'Win / Loss by Lead Source', description: 'Which sources produce deals that actually close — last 12 months' },
+        loss_reason_breakdown: { title: 'Why We Lose', description: 'Lost deals by reason — last 12 months' },
       },
     },
     service_dashboard: {
@@ -946,6 +1191,51 @@ export const en: TranslationData = {
         sla_compliance_gauge: { title: 'SLA Compliance', description: 'Percent of cases resolved within SLA this period' },
         open_cases_by_priority: { title: 'Open Cases by Priority', description: 'Open cases and their SLA-violation rate, broken down by priority' },
       },
+    },
+  },
+
+  pages: {
+    account_detail_page: {
+      label: 'Account Detail',
+      description: 'Slotted account record page — custom header + persistent discussion feed.',
+    },
+    account_workbench: {
+      label: 'Account Workbench',
+      description: 'Curated account list for the sales team: quick filters only, no view management.',
+    },
+    app_launcher_page: {
+      label: 'App Launcher',
+      description: 'Central hub for accessing all applications',
+      subtitle: 'Select an app to get started',
+    },
+    case_detail_page: {
+      label: 'Case Detail',
+      description: 'Service-agent case record: highlights, SLA path, details and activity timeline.',
+      title: '{case_number} · {subject}',
+      subtitle: '{crm_account}',
+    },
+    lead_detail_page: {
+      label: 'Lead Detail',
+      description: 'Comprehensive lead detail page with highlights, details, and related information',
+      title: '{first_name} {last_name}',
+      subtitle: '{company}',
+    },
+    opportunity_detail_page: {
+      label: 'Opportunity Detail',
+      description:
+        'Comprehensive opportunity detail page with path, highlights, details, and related lists',
+      title: '{name}',
+      subtitle: '{crm_account}',
+    },
+    sales_home_page: {
+      label: 'Sales Home',
+      description: 'Sales team home page with key metrics and quick actions',
+      title: 'Sales Dashboard',
+      subtitle: 'Welcome back, {current_user.first_name}',
+    },
+    utility_bar_page: {
+      label: 'Utility Bar',
+      description: 'Quick access utility bar with floating tools',
     },
   },
 };
