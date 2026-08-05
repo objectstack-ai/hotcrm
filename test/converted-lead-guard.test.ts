@@ -83,7 +83,7 @@ describe('the hook is the guard that actually speaks', () => {
     'rejects an edit to %s — the fields the deleted validation covered',
     async (field) => {
       await expect(editConverted({ [field]: 'changed' })).rejects.toThrow(
-        /Cannot edit a converted lead/,
+        /Cannot edit converted lead/,
       );
     },
   );
@@ -92,6 +92,77 @@ describe('the hook is the guard that actually speaks', () => {
     // The deleted validation's whole claim was a friendlier message. Nothing
     // gets a turn after this throw, so the diagnostic has to live here.
     await expect(editConverted({ company: 'Globex' })).rejects.toThrow(/attempted: company/);
+  });
+
+  it('names the LEAD as well as the field (#693)', async () => {
+    // The lock fires on writes the caller never made (a cascade clearing a
+    // conversion link), so "a converted lead" was not enough to find the
+    // record that refused. The label falls back to the company when the lead
+    // carries no personal name, and to the bare id when it carries neither.
+    await expect(editConverted({ company: 'Globex' })).rejects.toThrow(
+      /Cannot edit converted lead Ada Lovelace \(lead_1\)/,
+    );
+    await expect(
+      guard.handler(
+        makeCtx({
+          event: 'beforeUpdate',
+          input: { id: 'lead_2', rating: 5 },
+          previous: { id: 'lead_2', is_converted: true, company: 'Initech', rating: 1 },
+          user: { id: 'usr_1' },
+          api: makeHarness().api,
+        }),
+      ),
+    ).rejects.toThrow(/Cannot edit converted lead Initech \(lead_2\)/);
+  });
+
+  /**
+   * #693's second symptom, at the unit level: the engine clears a `set_null`
+   * lookup by UPDATING the row that holds it, so `DELETE /crm_opportunity/<id>`
+   * reaches this guard as `{ converted_opportunity: null }` on the lead. The
+   * old message reported that as "Cannot edit a converted lead … Make changes
+   * on the converted records instead" — a delete of an opportunity described
+   * as an edit of a lead, advising the caller to go and edit the very record
+   * they had asked to delete.
+   *
+   * The guard cannot know it is inside a cascade (measured on 17.0.0-rc.2: the
+   * hook context carries no cascade marker), so the refusal is phrased from the
+   * LINK, which is true whether the null came from the engine or from a hand
+   * edit. The end-to-end proof that this is the message a real cascade produces
+   * lives in `test/cascade-guard-messages.test.ts`.
+   */
+  describe('a cleared conversion link is described as a link, not as an edit', () => {
+    it.each([
+      ['converted_opportunity', 'opp_1'],
+      ['converted_account', 'acc_1'],
+      ['converted_contact', 'con_1'],
+    ])('%s', async (field, previousValue) => {
+      const err = await editConverted({ [field]: null }, { [field]: previousValue }).then(
+        () => null,
+        (e: Error) => e,
+      );
+      expect(err, `clearing ${field} was allowed`).toBeInstanceOf(Error);
+      expect(err!.message).toContain(`its link(s) ${field} cannot be cleared`);
+      expect(err!.message).toContain('blocks deleting the record(s) they point at');
+      // The sentence that sent readers to the wrong record must be gone from
+      // this branch: the caller may never have edited anything.
+      expect(err!.message).not.toContain('Cannot edit');
+      expect(err!.message).not.toContain('Make changes on the converted records');
+    });
+
+    it('falls back to the edit wording when the write is not only a link clear', async () => {
+      // A hand edit that also touches a business field is an edit, and saying
+      // so stays correct — the link branch must not swallow it.
+      await expect(
+        editConverted({ converted_opportunity: null, company: 'Globex' }, { converted_opportunity: 'opp_1' }),
+      ).rejects.toThrow(/Cannot edit converted lead/);
+    });
+
+    it('is not reached when the link is merely re-stated', async () => {
+      // `input[k] === previous[k]` is not a change at all, so nothing refuses.
+      await expect(
+        editConverted({ converted_opportunity: 'opp_1' }, { converted_opportunity: 'opp_1' }),
+      ).resolves.toBeUndefined();
+    });
   });
 
   it('still rejects fields the deleted validation never covered', async () => {

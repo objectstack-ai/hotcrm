@@ -105,6 +105,37 @@ describe('opportunity_lifecycle', () => {
     ).rejects.toThrow(/closed \(closed_won\)/);
   });
 
+  /**
+   * #693's defect class, on this guard: deleting a contact or a campaign a
+   * CLOSED opportunity references makes the engine clear that lookup, which
+   * arrives here as an ordinary `beforeUpdate`. Measured end-to-end,
+   * `DELETE /crm_contact/<id>` used to answer "Opportunity is closed
+   * (closed_won); … Attempted: primary_contact." — an object the caller never
+   * addressed, described as an edit they never made.
+   */
+  it('describes a cleared link as a link, and names the opportunity', async () => {
+    const previous: Rec = { id: 'o1', name: 'Acme Renewal', stage: 'closed_won', primary_contact: 'c1' };
+    const err = await hook
+      .handler(makeCtx({
+        event: 'beforeUpdate', input: { primary_contact: null }, previous, user: USER,
+      }))
+      .then(() => null, (e: Error) => e);
+    expect(err).toBeInstanceOf(Error);
+    expect(err!.message).toContain('Opportunity Acme Renewal (o1)');
+    expect(err!.message).toContain('its link(s) primary_contact cannot be cleared');
+    expect(err!.message).toContain('blocks deleting the record(s) they point at');
+    expect(err!.message).not.toContain('may be edited');
+  });
+
+  it('still reports a mixed write as the edit it is', async () => {
+    const previous: Rec = { id: 'o1', name: 'Acme Renewal', stage: 'closed_won', primary_contact: 'c1', amount: 10 };
+    await expect(
+      hook.handler(makeCtx({
+        event: 'beforeUpdate', input: { primary_contact: null, amount: 1 }, previous, user: USER,
+      })),
+    ).rejects.toThrow(/Opportunity Acme Renewal \(o1\) is closed \(closed_won\); only .* may be edited/);
+  });
+
   it('allows narrative, approval and system fields on a closed opportunity', async () => {
     const previous: Rec = { stage: 'closed_lost', amount: 100 };
     for (const input of [
@@ -222,6 +253,35 @@ describe('quote_workflow', () => {
         event: 'beforeUpdate', input: { total_price: 1 }, previous, user: USER,
       })),
     ).rejects.toThrow(new RegExp(`Quote is ${status}`));
+  });
+
+  /**
+   * #693's defect class, on this guard: deleting the opportunity (or contact) a
+   * frozen quote references makes the engine clear that lookup. Measured
+   * end-to-end, `DELETE /crm_opportunity/<id>` used to answer "Quote is
+   * accepted; only internal_notes may be edited. Attempted: crm_opportunity."
+   */
+  it('describes a cleared link as a link, and names the quote', async () => {
+    const previous: Rec = { id: 'q1', name: 'Q-1001', status: 'accepted', crm_opportunity: 'o1' };
+    const err = await hook
+      .handler(makeCtx({
+        event: 'beforeUpdate', input: { crm_opportunity: null }, previous, user: USER,
+      }))
+      .then(() => null, (e: Error) => e);
+    expect(err).toBeInstanceOf(Error);
+    expect(err!.message).toContain('Quote Q-1001 (q1)');
+    expect(err!.message).toContain('its link(s) crm_opportunity cannot be cleared');
+    expect(err!.message).toContain('blocks deleting the record(s) they point at');
+    expect(err!.message).not.toContain('may be edited');
+  });
+
+  it('still reports a mixed write as the edit it is', async () => {
+    const previous: Rec = { id: 'q1', name: 'Q-1001', status: 'accepted', crm_opportunity: 'o1', total_price: 100 };
+    await expect(
+      hook.handler(makeCtx({
+        event: 'beforeUpdate', input: { crm_opportunity: null, total_price: 1 }, previous, user: USER,
+      })),
+    ).rejects.toThrow(/Quote Q-1001 \(q1\) is accepted; only internal_notes may be edited/);
   });
 
   it('allows internal_notes and framework columns on a frozen quote', async () => {
@@ -575,6 +635,43 @@ describe('contact_integrity', () => {
         event: 'beforeDelete', previous: { id: 'c1' }, user: USER, api: h.api,
       })),
     ).rejects.toThrow(/still referenced by 1 open opportunity\(ies\), 1 active quote\(s\), 1 active contract\(s\)/);
+  });
+
+  /**
+   * #693: this guard also runs as a CASCADE child of an account delete
+   * (`crm_contact.crm_account` is master-detail / cascade), and the hook cannot
+   * tell the two apart. "Cannot delete contact" therefore told an account
+   * deleter they had asked to delete a contact. The refusal now names the
+   * contact and both consequences, which is true in either context.
+   */
+  it('names the contact it refuses, and says the account delete is blocked too', async () => {
+    const h = makeHarness({
+      crm_opportunity: [{ id: 'o1', primary_contact: 'c1', stage: 'proposal' }],
+    });
+    const err = await hook
+      .handler(makeCtx({
+        event: 'beforeDelete',
+        previous: { id: 'c1', first_name: 'Ada', last_name: 'Lovelace' },
+        user: USER,
+        api: h.api,
+      }))
+      .then(() => null, (e: Error) => e);
+    expect(err).toBeInstanceOf(Error);
+    expect(err!.message).toContain('Contact Ada Lovelace (c1)');
+    expect(err!.message).toContain('neither can its account');
+    // The old wording claimed an operation the caller may not have performed.
+    expect(err!.message).not.toContain('Cannot delete contact');
+  });
+
+  it('falls back to the bare id when the contact carries no name', async () => {
+    const h = makeHarness({
+      crm_contract: [{ id: 'k1', crm_contact: 'c1', status: 'activated' }],
+    });
+    await expect(
+      hook.handler(makeCtx({
+        event: 'beforeDelete', previous: { id: 'c1' }, user: USER, api: h.api,
+      })),
+    ).rejects.toThrow(/^Contact c1 is still referenced by/);
   });
 
   it('allows deleting a contact whose references are all settled', async () => {

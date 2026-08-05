@@ -66,8 +66,24 @@ const contactHook: Hook = {
       ]);
       const total = openOpps + openQuotes + activeContracts;
       if (total > 0) {
+        // Phrase the refusal as the BLOCKING RELATIONSHIP, not as the caller's
+        // operation (#693). This hook fires on a direct
+        // `DELETE /crm_contact/<id>` AND as a cascade child of
+        // `DELETE /crm_account/<id>` (`crm_contact.crm_account` is a
+        // master-detail with `deleteBehavior: 'cascade'`), and the hook context
+        // carries nothing that distinguishes the two — measured on 17.0.0-rc.2,
+        // a cascaded `beforeDelete` ctx holds exactly
+        // {api,event,input,object,previous,provenance,ql,session,transaction,user}
+        // with no cascade marker. So "Cannot delete contact" told an account
+        // deleter that they had asked to delete a contact, and sent them
+        // looking for the wrong record. Naming the contact and both
+        // consequences is true in either context.
+        const name = [ctx.previous?.first_name, ctx.previous?.last_name]
+          .filter((part) => typeof part === 'string' && part.trim() !== '')
+          .join(' ');
+        const subject = name ? `Contact ${name} (${id})` : `Contact ${id}`;
         throw new Error(
-          `Cannot delete contact: still referenced by ${openOpps} open opportunity(ies), ${openQuotes} active quote(s), ${activeContracts} active contract(s). Reassign first.`,
+          `${subject} is still referenced by ${openOpps} open opportunity(ies), ${openQuotes} active quote(s), ${activeContracts} active contract(s), so it cannot be deleted — and neither can its account, because deleting an account deletes its contacts. Close or reassign those records first.`,
         );
       }
     }

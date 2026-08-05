@@ -503,9 +503,12 @@ describe('lead_automation', () => {
 
   it('locks identity fields on a converted lead but leaves notes editable', async () => {
     const previous: Rec = { id: 'l1', is_converted: true, company: 'Acme' };
+    // The refusal NAMES the lead (#693) — a converted-lead lock also fires on
+    // writes the caller never made, so "a converted lead" left the reader with
+    // no way to tell which record refused.
     await expect(
       hook.handler(makeCtx({ event: 'beforeUpdate', input: { company: 'Other' }, previous, user: USER })),
-    ).rejects.toThrow(/Cannot edit a converted lead/);
+    ).rejects.toThrow(/Cannot edit converted lead Acme \(l1\)/);
     await expect(
       hook.handler(makeCtx({ event: 'beforeUpdate', input: { description: 'note' }, previous, user: USER })),
     ).resolves.toBeUndefined();
