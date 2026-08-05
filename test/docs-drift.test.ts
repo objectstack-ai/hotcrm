@@ -590,3 +590,84 @@ describe('translated docs pages keep the English page callouts', () => {
     ).toEqual([]);
   });
 });
+
+/**
+ * The developer example must teach the DELIVERABLE selection key (#813).
+ *
+ * `docs/developers/code_examples.md` is the copy-paste surface for the next
+ * author of an action — human or AI — and its "Add An Action" example was a
+ * bulk enrolment body reading `input.selectedIds`. That key cannot arrive by
+ * any route: a top-level `selectedIds` is never merged into the params bag, and
+ * a `params.selectedIds` is refused by the strict params gate (ADR-0104) as
+ * undeclared. The only multi-select channel is the built-in `_selectedIds`,
+ * with a LEADING UNDERSCORE (`ACTION_PARAM_BUILTIN_KEYS` in `@objectstack/spec`
+ * `ui/action-params.zod.ts`), injected by an `execution: 'aggregate'` bulk def.
+ *
+ * This is not a style pin. #508 spent two release candidates concluding the
+ * platform had no multi-select channel, because every probe spelled the key the
+ * way this example spells it, and both refusals looked like proof. The example
+ * is where that conclusion gets re-manufactured, so it is where the guard goes.
+ *
+ * Pinned as text, deliberately: the example is prose to `os validate`, `pnpm
+ * lint` and every metadata assertion in this repo — nothing else in the gate
+ * chain reads a fenced code block at all.
+ */
+describe('the action example teaches a selection key the platform can deliver (#813)', () => {
+  const EXAMPLES = 'docs/developers/code_examples.md';
+  const text = () => readFileSync(join(REPO_ROOT, EXAMPLES), 'utf8');
+
+  it('reads the built-in `input._selectedIds`, never the undeliverable spelling', () => {
+    const src = text();
+    expect(
+      src.includes('input._selectedIds'),
+      `${EXAMPLES} no longer shows \`input._selectedIds\` — that built-in key is the only route a `
+        + 'multi-row selection has to an action body, so an example that omits it teaches the gap '
+        + 'that cost #508 two release candidates',
+    ).toBe(true);
+
+    // Boundary-matched so `input._selectedIds` itself does not trip it — the
+    // same guard `test/bulk-action-dispatch.test.ts` applies to the shipped
+    // opportunity body, applied here to the teaching copy of it.
+    const noUnderscore = [...src.matchAll(/(?<![\w$])input\.selectedIds\b/g)];
+    expect(
+      noUnderscore.length,
+      `${EXAMPLES} still teaches \`input.selectedIds\` (no underscore) in ${noUnderscore.length} `
+        + 'place(s). Nothing can deliver that key: top-level it is never merged into the params '
+        + 'bag, and under `params.` the strict gate answers 400 `Unknown action param '
+        + '"selectedIds"`. Both refusals read as "the platform has no bulk channel" — which is '
+        + 'exactly the wrong lesson (#813).',
+    ).toBe(0);
+  });
+
+  it('shows the view-side declaration that injects the key, and names the underscore trap', () => {
+    const src = text();
+    // Half a contract teaches a dead body. A handler reading `_selectedIds`
+    // with no aggregate def in the view is injected nothing and is just as
+    // inert as the misspelling — which is precisely how #508's button looked
+    // dead while the channel worked (#588 had removed the declaration).
+    for (const required of ['bulkActionDefs', "execution: 'aggregate'", 'bulkActions']) {
+      expect(
+        src.includes(required),
+        `${EXAMPLES} does not show \`${required}\`. The action body is only half the bulk `
+          + 'contract: the LIST VIEW chooses whether the action is dispatched once per row '
+          + '(bare-string `bulkActions`) or once for the whole selection (an aggregate '
+          + '`bulkActionDefs` entry, which is what injects `_selectedIds`).',
+      ).toBe(true);
+    }
+
+    // The trap itself, in a `> …` callout — the shape this repo's docs use for
+    // "someone already fell into this". Prose that merely uses the right key
+    // teaches the spelling; the callout is what stops the next reader
+    // re-deriving "there is no bulk channel" from two correct 400s.
+    const callout = src
+      .split('\n')
+      .filter((l) => /^>/.test(l))
+      .join('\n');
+    expect(
+      callout.includes('Unknown action param'),
+      `${EXAMPLES} has no callout naming the \`Unknown action param "selectedIds"\` refusal. That `
+        + '400 and the silent top-level drop are the two pieces of evidence #508 misread as '
+        + 'proof the capability did not exist; the example is where that misreading is prevented.',
+    ).toBe(true);
+  });
+});

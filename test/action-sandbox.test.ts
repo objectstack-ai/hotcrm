@@ -458,6 +458,40 @@ describe('every script action body executes under QuickJS', () => {
     expect(engine.rows('crm_contact')[0]!.is_primary).toBe(true);
   });
 
+  /**
+   * The behaviour pin for #813's lead half — deliberately a NON-regression
+   * nail, not a change detector.
+   *
+   * The dead `input.selectedIds` limb removed there was unreachable, so this
+   * body's observable behaviour is identical before and after: the old code
+   * evaluated an empty selection and fell through to the same `ctx.recordId`
+   * path. Restoring the limb therefore leaves this test GREEN, and that is the
+   * point being pinned: behaviour unchanged. What the limb's removal could have
+   * broken is the fan-out path itself, and nothing else asserted that a
+   * dispatch carrying only a recordId actually WRITES a membership row: the
+   * `it.each` smoke case above only checks the body returns something, and the
+   * dedupe case below asserts a row is NOT written. The change-detecting half
+   * lives in `test/bulk-action-dispatch.test.ts`, which goes red if the
+   * no-underscore read (or an aggregate wiring the body cannot serve) returns.
+   */
+  it('create_campaign enrols the dispatched lead from ctx.recordId alone', async () => {
+    // The per-record fan-out shape exactly: `bulkActions: ['create_campaign']`
+    // dispatches once per selected row with that row's recordId and NO
+    // selection array, so the params bag holds the campaign param only.
+    const engine = makeSandboxEngine();
+    const { result } = await runActionBody(action('create_campaign'), {
+      objectName: 'crm_lead',
+      record: { id: 'lead_7' },
+      input: { crm_campaign: 'cmp_1' },
+      engine,
+    });
+
+    expect(result).toMatchObject({ campaignId: 'cmp_1', count: 1, skipped: 0 });
+    const members = engine.rows('crm_campaign_member');
+    expect(members).toHaveLength(1);
+    expect(members[0]).toMatchObject({ crm_campaign: 'cmp_1', crm_lead: 'lead_7', status: 'sent' });
+  });
+
   it('create_campaign skips a lead already enrolled on the campaign', async () => {
     const engine = makeSandboxEngine({
       crm_campaign_member: [{ id: 'cm_1', crm_campaign: 'cmp_1', crm_lead: 'lead_1' }],
