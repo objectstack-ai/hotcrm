@@ -108,7 +108,7 @@ Contracts are **private**, and no sharing rule widens them. Contract visibility 
 - **Sales Manager** and **System Administrator** read every contract (*View All* on the object); edits stay with the owner except for admins.
 - **Everyone else** — including a rep who reached the account through a territory or team sharing rule — sees only the contracts they own, so an account's *Contracts* related list can look empty even when the account itself is fully readable.
 
-If your org wants contracts to follow the account, an admin has to author that: a sharing rule on Contract, or a Controlled-by-Parent OWD. Both widen contract visibility for every user of the object — see [Sharing & Security](/docs/administration/sharing-and-security).
+If your org wants contracts to follow the account, an admin has to author that, and neither available route actually delivers "follows the account" today: a sharing rule on Contract widens the records it matches for every holder of the object, and a Controlled-by-Parent OWD derives org-wide in this release — the parent link is not consulted per caller. Both are a broad widening, not an account-scoped one — see [Sharing & Security](/docs/administration/sharing-and-security), *Controlled by Parent, in practice*.
 
 ## Standard list views
 

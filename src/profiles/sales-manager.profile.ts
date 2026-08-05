@@ -28,7 +28,17 @@ export const SalesManagerProfile = {
     crm_task:        { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true,  modifyAllRecords: true, allowTransfer: true },
     // A manager coaches on activity, so this is org-wide read AND write on a
     // private object — the same shape their `crm_task` grant already has.
-    // `crm_event_attendee` derives from the event (ADR-0055): no scope to author.
+    // `crm_event_attendee` is `controlled_by_parent` (ADR-0055): no scope to
+    // author — one would be inert metadata. It does NOT narrow to the events
+    // this set can read either. MEASURED on 17.0.0-rc.2 and pinned by
+    // `test/parent-derived-reach.test.ts`, the derivation resolves the master id
+    // set through the master's row-level security policies only, under a system
+    // context, so ownership and `sys_record_share` grants never enter it; HotCRM
+    // authors no RLS policy on `crm_event`, so this grant is org-wide read and
+    // write on every attendee row. Here that matches the intent — the grants
+    // above are already org-wide on the activity stack — but read it as org-wide
+    // in fact, not as derived scope. Same note in `sales-rep.profile.ts`;
+    // upstream gap objectstack-ai/objectstack#5386 (#694).
     crm_event:       { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true,  modifyAllRecords: true, allowTransfer: true },
     crm_event_attendee: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: false, modifyAllRecords: false },
     // The forecast IS the manager's job: they read every rep's snapshot and
@@ -38,11 +48,27 @@ export const SalesManagerProfile = {
     // Knowledge is service-authored; sales reads it (public_read OWD).
     crm_knowledge_article: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
     // Enrollment is marketing's job; a manager only reads the membership rows
-    // behind campaign ROI. `crm_campaign_member` is controlled_by_parent, so
-    // rows follow the campaign — no readScope/viewAllRecords applies (ADR-0055).
+    // behind campaign ROI. `crm_campaign_member` is `controlled_by_parent`, so
+    // no readScope/viewAllRecords applies (ADR-0055) — but the rows do not
+    // "follow the campaign": the derivation resolves the master set through the
+    // master's RLS policies only (none narrow a select on `crm_campaign`), so
+    // this is org-wide read on every member row. The practical delta is small
+    // here — `crm_campaign` is `public_read` and this set reads every campaign
+    // anyway — so the intended derivation would return the same rows. See
+    // `campaign_member.object.ts` and objectstack-ai/objectstack#5386 (#694).
     crm_campaign_member:   { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     // Line items: full CRUD so a manager can fix pricing on any rep's deal or
-    // quote. Rows derive from the opportunity / quote (controlled_by_parent).
+    // quote. Both objects are `controlled_by_parent`, so there is no scope to
+    // author — but that derivation does not narrow these rows to the deals and
+    // quotes the manager can read. MEASURED (see the note in
+    // `sales-rep.profile.ts` and `test/parent-derived-reach.test.ts`): the master
+    // set comes from the master's RLS policies only, never from ownership or a
+    // share. This set authors one such policy — the private-deal filter on
+    // `crm_opportunity` below — and none on `crm_quote`, so quote lines are
+    // org-wide, and opportunity lines are bounded by that policy and nothing
+    // else (the guard test pins the quote chain; the opportunity side follows
+    // from the same measured mechanism). Upstream gap:
+    // objectstack-ai/objectstack#5386 (#694).
     crm_opportunity_line_item: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: false, modifyAllRecords: false },
     crm_quote_line_item:       { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: false, modifyAllRecords: false },
   },
