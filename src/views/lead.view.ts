@@ -1,7 +1,51 @@
-import { P } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { P } from '@objectstack/spec';
 import { defineView } from '@objectstack/spec/ui';
+
+/**
+ * ═══ HOUSE RULE: form predicates are `record.`-bound AND TOTAL ═════════════
+ *
+ * Every `visibleOn` / `visibleWhen` below is a CEL predicate the *renderer*
+ * evaluates, and it must satisfy two properties. `test/view-predicate-dialect.test.ts`
+ * enforces both against the compiled stack, so you do not have to remember them.
+ *
+ * 1. **`record.`-bound.** The evaluation context binds field values under the
+ *    `record` namespace (`buildScope` in `@objectstack/formula` binds exactly
+ *    `record` / `previous` / `input` / `user` / `current_user` / `ctx` / `os`).
+ *    A bare field name is an unbound identifier, so it never evaluates:
+ *
+ *        evaluate('status == "unqualified"',        { record: { status: 'new' } })
+ *          → ok:false  type  "Unknown variable: status"       ← for EVERY record
+ *        evaluate('record.status == "unqualified"', { record: { status: 'new' } })
+ *          → ok:true   false
+ *
+ * 2. **TOTAL** — the same `has(record.x)` rule AGENTS.md states for
+ *    `validations[].condition` / `requiredWhen` / `readonlyWhen` / `visibleWhen`
+ *    (#630). Prefixing alone is not enough: on a *brand-new* record the key is
+ *    absent, and strict CEL aborts on the read:
+ *
+ *        evaluate('record.duplicate_of_type == "crm_lead"',                { record: {} })
+ *          → ok:false  "No such key: duplicate_of_type"
+ *        evaluate('has(record.duplicate_of_type) && record.duplicate_of_type == "crm_lead"',
+ *                                                                          { record: {} })
+ *          → ok:true   false
+ *
+ * Why both matter here and not only in theory (#688): the console's predicate
+ * evaluation **fails OPEN** — an unevaluable `visibleWhen` defaults the field to
+ * *visible*, with no diagnostic — and a visible field carries its `required: true`
+ * into client-side submit validation. So a predicate that cannot answer does not
+ * degrade to "shown but optional"; it makes the form unsatisfiable. On `crm_lead`
+ * this rendered all five conditional disqualification fields at once and demanded
+ * a new lead be a duplicate of *both* a lead and a contact — mutually exclusive by
+ * design — so no lead could be created through the UI at all. The fail-open half
+ * is tracked upstream at objectstack-ai/objectstack#5149; these predicates are the
+ * half this repo owns, and they must be able to answer.
+ *
+ * Numeric comparisons carry `!= null` on top of `has(...)`, matching the object
+ * files: `has(record.rating) && record.rating != null && record.rating >= 4`.
+ * Strict CEL aborts on `dyn<null> < int`, which `has()` alone does not prevent.
+ */
 
 /**
  * The duplicate-link block (#598), spread into every form that offers
@@ -17,28 +61,31 @@ import { defineView } from '@objectstack/spec/ui';
  * this shape is meant to make impossible.
  *
  * The two lookups mirror the object's `requiredWhen` predicates: each appears
- * only when `duplicate_of_type` names its object.
+ * only when `duplicate_of_type` names its object — and now says so in the same
+ * words, character for character as the `requiredWhen` on those two fields in
+ * `lead.object.ts`, so the form shows a lookup exactly when the server will
+ * demand it. `test/view-predicate-dialect.test.ts` pins the two together.
  */
 const DUPLICATE_LINK_FIELDS = [
   {
     field: 'duplicate_of_type',
     required: true,
-    visibleOn: 'disqualification_reason == "duplicate"',
+    visibleOn: P`has(record.disqualification_reason) && record.disqualification_reason == "duplicate"`,
   },
   {
     field: 'duplicate_of_lead',
     required: true,
-    visibleOn: 'duplicate_of_type == "crm_lead"',
+    visibleOn: P`has(record.duplicate_of_type) && record.duplicate_of_type == "crm_lead"`,
   },
   {
     field: 'duplicate_of_contact',
     required: true,
-    visibleOn: 'duplicate_of_type == "crm_contact"',
+    visibleOn: P`has(record.duplicate_of_type) && record.duplicate_of_type == "crm_contact"`,
   },
   {
     field: 'duplicate_status',
     required: true,
-    visibleOn: 'disqualification_reason == "duplicate"',
+    visibleOn: P`has(record.disqualification_reason) && record.disqualification_reason == "duplicate"`,
     helpText: 'Confirmed means a human checked the two records and they are the same person.',
   },
 ];
@@ -207,7 +254,7 @@ export const LeadViews = defineView({
           {
             field: 'disqualification_reason',
             required: true,
-            visibleOn: 'status == "unqualified"',
+            visibleOn: P`has(record.status) && record.status == "unqualified"`,
           },
           ...DUPLICATE_LINK_FIELDS,
         ],
@@ -470,7 +517,7 @@ export const LeadViews = defineView({
             {
               field: 'disqualification_reason',
               required: true,
-              visibleOn: 'status == "unqualified"',
+              visibleOn: P`has(record.status) && record.status == "unqualified"`,
             },
             ...DUPLICATE_LINK_FIELDS,
           ],
@@ -513,7 +560,7 @@ export const LeadViews = defineView({
             {
               field: 'disqualification_reason',
               required: true,
-              visibleOn: 'status == "unqualified"',
+              visibleOn: P`has(record.status) && record.status == "unqualified"`,
             },
             ...DUPLICATE_LINK_FIELDS,
           ],
@@ -584,14 +631,16 @@ export const LeadViews = defineView({
             {
               field: 'disqualification_reason',
               required: true,
-              visibleOn: 'status == "unqualified"',
+              visibleOn: P`has(record.status) && record.status == "unqualified"`,
             },
             ...DUPLICATE_LINK_FIELDS,
             { field: 'rating', widget: 'star_rating' },
             'lead_source',
             {
               field: 'owner_id',
-              visibleOn: 'rating >= 4', // Conditional visibility
+              // Conditional visibility. `!= null` on top of `has(...)`: strict
+              // CEL aborts on `dyn<null> < int`, which `has()` alone allows.
+              visibleOn: P`has(record.rating) && record.rating != null && record.rating >= 4`,
             },
           ],
         },
@@ -633,7 +682,7 @@ export const LeadViews = defineView({
             {
               field: 'disqualification_reason',
               required: true,
-              visibleOn: 'status == "unqualified"',
+              visibleOn: P`has(record.status) && record.status == "unqualified"`,
             },
             ...DUPLICATE_LINK_FIELDS,
           ],
@@ -680,13 +729,16 @@ export const LeadViews = defineView({
             'lead_source',
             {
               field: 'owner_id',
-              visibleOn: 'status != "new"', // Only show owner after initial contact
+              // Only show owner after initial contact. A record with no status
+              // yet has not been contacted, so `!isBlank` keeps the blank case
+              // on the "hidden" side rather than letting `null != "new"` show it.
+              visibleOn: P`has(record.status) && !isBlank(record.status) && record.status != "new"`,
             },
             // See the default form: `unqualified` requires a reason.
             {
               field: 'disqualification_reason',
               required: true,
-              visibleOn: 'status == "unqualified"',
+              visibleOn: P`has(record.status) && record.status == "unqualified"`,
             },
             ...DUPLICATE_LINK_FIELDS,
           ],
@@ -720,7 +772,8 @@ export const LeadViews = defineView({
             {
               field: 'rating',
               widget: 'star_rating',
-              visibleOn: 'status == "qualified"', // Only show rating for qualified leads
+              // Only show rating for qualified leads
+              visibleOn: P`has(record.status) && record.status == "qualified"`,
             },
             // The reason picklist, not just free-text notes: it is what the
             // `disqualification_reason_required` validation checks, and this
@@ -728,13 +781,14 @@ export const LeadViews = defineView({
             {
               field: 'disqualification_reason',
               required: true,
-              visibleOn: 'status == "unqualified"',
+              visibleOn: P`has(record.status) && record.status == "unqualified"`,
             },
             ...DUPLICATE_LINK_FIELDS,
             {
               field: 'notes',
               placeholder: 'Add notes about this status change',
-              visibleOn: 'status == "unqualified"', // Free-text context alongside the reason
+              // Free-text context alongside the reason
+              visibleOn: P`has(record.status) && record.status == "unqualified"`,
             },
           ],
         },
@@ -823,7 +877,9 @@ export const LeadViews = defineView({
             {
               field: 'rating',
               widget: 'star_rating',
-              visibleOn: 'status != "new"', // Only show after first contact
+              // Only show after first contact — see the drawer form's note on
+              // why blank stays on the "hidden" side.
+              visibleOn: P`has(record.status) && !isBlank(record.status) && record.status != "new"`,
             },
             {
               field: 'industry',
@@ -831,29 +887,31 @@ export const LeadViews = defineView({
             },
             {
               field: 'annual_revenue',
-              visibleOn: 'rating >= 3', // Only for qualified leads
+              // Only for qualified leads
+              visibleOn: P`has(record.rating) && record.rating != null && record.rating >= 3`,
             },
             {
               field: 'number_of_employees',
-              visibleOn: P`record.rating >= 3`,
+              visibleOn: P`has(record.rating) && record.rating != null && record.rating >= 3`,
             },
             {
               field: 'owner_id',
               required: true,
-              visibleOn: P`record.status == "contacted" || record.status == "qualified"`,
+              visibleOn: P`has(record.status) && (record.status == "contacted" || record.status == "qualified")`,
             },
             // See the default form: `unqualified` requires a reason.
             {
               field: 'disqualification_reason',
               required: true,
-              visibleOn: 'status == "unqualified"',
+              visibleOn: P`has(record.status) && record.status == "unqualified"`,
             },
             ...DUPLICATE_LINK_FIELDS,
             {
               field: 'notes',
               colSpan: 2,
               required: true,
-              visibleOn: 'status == "unqualified"', // Require explanation for unqualified
+              // Require explanation for unqualified
+              visibleOn: P`has(record.status) && record.status == "unqualified"`,
             },
           ],
         },
