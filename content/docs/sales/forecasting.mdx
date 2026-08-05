@@ -45,7 +45,7 @@ So you'll never see a record labelled “2026-07-01 through ???” — only the 
 There are three sources, recorded in the `source` field:
 
 1. **Scheduled** — the **Forecast Snapshot** flow runs nightly at 3 AM and snapshots the current quarter for every rep who owns at least one live deal. This is the spine of the historical trend. Re-running it refreshes the same row, so numbers move down as well as up; it never writes **Quota**, which stays whatever a manager set.
-2. **AI** — the Copilot skill generates a forecast from current pipeline + recent stage moves + similar past deals. The conversation transcript is stored alongside the record.
+2. **AI** — a value nothing in HotCRM writes. The **Revenue Forecasting** Copilot skill is read-only: it composes `describe_object`, `aggregate_data`, `query_records` and `visualize_data` over live opportunity data and answers **in the conversation** — weighted pipeline, at-risk deals, and a chart when one carries the answer better than prose. It opens no forecast row, and there is nowhere to file the exchange either: **Notes** is the only narrative column, and a person types it. The value is reserved for a snapshot some agent or integration of your own writes; a Copilot conversation will never produce one.
 3. **Manual** — a manager enters a number directly. Used for adjustments and overrides.
 
 You can have all three for the same owner/period — they sit next to each other in the trend chart, so disagreements are visible.
