@@ -161,11 +161,11 @@ const SCANNED = ['src', 'test', 'e2e', 'scripts'];
  *     (201 `.mdx` + 137 `.md` + 40 `.json`, zero `.ts`). Widening would guard
  *     nothing while reading, to the next maintainer, as if prose were covered.
  *   - the 100KB cap would newly constrain documentation pages. Nothing is over
- *     it today (largest: 15KB, `content/docs/administration/
- *     sharing-and-security.zh-Hant.mdx`), but its remedy — "split the file" —
- *     is a review argument about modules that does not transfer to prose, and
- *     whether docs want a size ceiling belongs to #814, not to a silent
- *     side effect of this one.
+ *     it today — the largest is 15KB:
+ *     `content/docs/administration/sharing-and-security.zh-Hant.mdx` — but its
+ *     remedy, "split the file", is a review argument about modules that does
+ *     not transfer to prose, and whether docs want a size ceiling belongs to
+ *     #814, not to a silent side effect of this one.
  *
  * Both trees are text-only today (no file outside `.mdx` / `.md` / `.json`;
  * doc screenshots live in `assets/screenshots/` and are referenced by URL). A
