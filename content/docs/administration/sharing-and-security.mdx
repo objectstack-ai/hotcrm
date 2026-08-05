@@ -32,6 +32,7 @@ OWD is the *most restrictive* setting for each object. Everything else widens it
 | Contract | Private | Sensitive commercials |
 | Case | Private | An agent's queue is their own; escalations are shared |
 | Task | Private | Personal activity items |
+| Event Attendee | Controlled by Parent (Event) | An attendee belongs to the meeting they were in — but read *Controlled by Parent, in practice* below for what that derives to today |
 | Forecast | Private | A snapshot belongs to its owner; managers hold *View All* |
 | Product | Public Read-Only | Everyone sees the catalog |
 | Campaign | Public Read-Only | Marketing creates, sales sees |
@@ -43,7 +44,7 @@ OWD is the *most restrictive* setting for each object. Everything else widens it
 
 ### Controlled by Parent, in practice
 
-For the four parent-derived objects above, there is nothing to configure per user: access is *computed*.
+For the five parent-derived objects above, there is nothing to configure per user: access is *computed*.
 
 - **Read — in this release the computed answer is org-wide, not parent-scoped.** The intent of Controlled by Parent is "you see the rows whose parent you can see". That is not what ships today: the derivation resolves the set of accessible parents from the *parent object's row-level security policies* only. The one such policy HotCRM authors on any of these parents is the private-deal filter on Opportunity, carried by the Sales Manager and Marketing User profiles — so for every other parent, and for every caller without that policy, the parent set is every record. Measured against the shipped stack (platform 17.0.0-rc.2): a rep who can read exactly one account reads **both** accounts' contacts, and a rep who can read **no** quote at all still reads every quote's line items. In practice, a Controlled by Parent object here is readable by every user whose profile grants read on that object.
 - **Write** — adding, changing or removing a row requires **edit** access to the parent, and that parent is resolved through the same filter as reads. So the write gate is exactly as wide: a profile holding edit on a Controlled by Parent object can write any row of it, including rows under a parent it cannot read.
