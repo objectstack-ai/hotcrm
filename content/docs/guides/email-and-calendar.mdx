@@ -1,127 +1,106 @@
 ---
 title: Email & Calendar
-description: Connect Gmail or Outlook, log emails automatically, sync your calendar, and track opens & clicks.
+description: What HotCRM records today — Send Email from a contact, calls and meetings as real records — and which inbox / calendar connectors are still on the roadmap.
 ---
 
 # Email & Calendar
 
-HotCRM integrates with **Gmail** (Google Workspace) and **Outlook** (Microsoft 365) so that every customer email and meeting flows into the right record automatically — no copy-pasting.
+HotCRM turns customer conversations into **records you can query**: an email you send from a contact, a call you log on a deal, a meeting you book for next week. What it does not do yet is reach into your mailbox — the app ships **no Gmail or Outlook connector**, so nothing arrives in HotCRM merely because it landed in your inbox.
 
-## What you get
+> **Read this before following a setup step.** Every heading below marked *(not shipped yet)* describes the inbox / calendar integration **as designed** — it is on the [roadmap](/docs/whats-new#roadmap), not a switch you can turn on today. The unmarked sections describe what the app actually writes.
 
-- ✉️ **Two-way email sync** — emails to/from customers appear on the contact, account, and opportunity records.
-- 📅 **Two-way calendar sync** — your meetings appear in HotCRM and vice versa.
-- 👀 **Email tracking** — see when the recipient opened your email or clicked a link.
-- 🤖 **AI-drafted replies** sent straight from your inbox.
-- 📥 **Inbound case email** — `support@yourcompany.com` becomes a case automatically.
+## What ships today
 
-## Connecting your inbox
+- ✉️ **Send Email** from a contact record — queues the message through the platform email service and leaves an entry on the contact's timeline.
+- 📞 **Log a Call**, **Log a Meeting** and **Schedule a Meeting** on every lead, contact, account, opportunity and case — each writes a real **Event** record with attendee rows. See [Meetings & Calls](/docs/sales/meetings-and-calls).
+- ✍️ **AI email drafting** — the assistant writes the copy; you review it and press **Send Email** yourself.
+- 🕒 **Interaction recency** — sending an email, or holding a meeting, refreshes the customer's *Last Contacted* / *Last Activity* stamps.
 
-1. Click your avatar → **Settings → Email & Calendar**.
-2. Click **Connect Gmail** or **Connect Outlook**.
-3. Authorise the integration in the OAuth pop-up.
-4. Choose what to sync:
-   - **All email** (default) — every conversation with anyone in your CRM.
-   - **Tracked email only** — only emails you explicitly add a tracking pixel to.
-   - **Whitelist domains** — only emails to/from specific customer domains.
-5. Choose what to sync to calendar:
-   - **Customer meetings only** — events with at least one external attendee.
-   - **All events** — including internal meetings (more noise).
+## "Send Email" from a contact
 
-## How email logging works
+**Send Email** is registered on the **contact** record, and it is hidden on a contact with *Email Opt Out* ticked. Opportunities and cases carry the three activity actions below, not this one.
 
-When the connector sees an email between you and a known contact (matched by email address):
+1. The action asks for a **Subject** and a **Body**. The recipient is the contact's own email address; there is no template picker and no merge-field expansion.
+2. On submit an email row is written with status **Queued**, sent from your user's email address and linked back to the contact under *Related Object*.
+3. The contact's **Activity** timeline gains an entry — `Email: <subject>` — that points at that email row, so the drill-through opens the message rather than a summary string.
+4. The contact's **Last Contacted Date**, and the parent account's **Last Activity Date**, are stamped. An email is an interaction, even though it is not a calendar slot, so it refreshes the same recency clock a held meeting does — see [Meetings & Calls](/docs/sales/meetings-and-calls).
 
-- The email body is stored on the **activity timeline** of the contact, account, and any open opportunity / case.
-- Attachments are saved as files.
-- The email shows up to **anyone** with sharing access to those records (so reps can see what their predecessor sent).
+Delivery belongs to the platform's email service, which owns the states the row moves through: **Queued → Sent**, or **Failed** with the transport's error message and an attempt count. Whether the message leaves the building depends on the transport your deployment configures — with no provider configured the platform falls back to a log-only transport, which records the message and sends nothing.
 
-You can also **manually log** an email by forwarding it to a personalised address (e.g., `you@hotcrm-log.io`) — it'll match contacts and link automatically.
-
-## Email tracking
-
-When composing from within HotCRM:
-
-- ✅ **Track opens** — get notified when the recipient opens.
-- ✅ **Track clicks** — get notified when they click a tracked link.
-- ✅ **Schedule send** — pick a time.
-- ✅ **Reminder** — bump back into your inbox if they don't reply in N days.
-
-Tracking events are stored on the email activity, the contact, and the originating campaign (if any).
+> **Replies are not threaded back.** A reply the customer sends arrives in your mailbox and stops there: matching it onto the record needs the inbox connector, which is not shipped. Log the substance as a call or a meeting if the next person needs it.
 
 ## AI-drafted emails
 
-On any record, ask the assistant to draft an email — the Email Drafting skill is shared by the [sales](/docs/ai-copilot/sales-copilot) and [service](/docs/ai-copilot/service-copilot) skill sets:
+Ask the AI assistant to draft an email on any record — the **Email Drafting** skill is shared by the [sales](/docs/ai-copilot/sales-copilot) and [service](/docs/ai-copilot/service-copilot) skill sets:
 
-1. Pick a goal (*"discovery follow-up"*, *"renewal pitch"*, *"resolution"*).
-2. Review the draft — edit, replace, regenerate.
-3. Click **Send** — the email goes through your connected inbox, *not* a HotCRM relay, so it preserves your sender reputation.
-4. The conversation is logged automatically.
+1. It grounds itself in the live record first, then writes the subject and body, and offers two subject-line variants with a recommendation.
+2. It **stops there.** The skill carries no send tool, and it says so plainly rather than implying a send is queued.
+3. You take the copy into **Send Email** on the contact, review it, and send — through the platform email service described above, not through your own mailbox.
 
-## "Send Email" from a contact or case
-
-Anywhere you see the **Send Email** action (on a Contact, a Case, an Opportunity) the flow is:
-
-1. The action opens a modal with **To / Subject / Body** pre-filled from the record (and from any email template you select).
-2. On submit, the email is queued through the platform `sys_email` service. It does **not** go directly to your inbox — the queue worker handles retries, bounces and rate limiting.
-3. The new email row is linked back to the source record under **Related Object**, and a corresponding entry shows up on the **Activity** tab of that record with the current delivery status (queued / sent / bounced / failed).
-4. Once delivered, replies are matched back via the regular two-way sync above and threaded onto the same record.
-
-> Admins can see all queued / failed emails in **Settings → System Email Queue** and re-drive a failed batch from there.
+That review step is deliberate rather than a gap: outbound email is exactly the thing worth having a human read first.
 
 ## "Log a Call" from any record
 
-The **Log a Call** action records an outbound or inbound call without leaving the record. On submit, an entry of type **completed** is written to `sys_activity` (kind = *call*), with subject, duration and outcome. It appears on the record's **Activity** tab and is counted in the rep's activity metrics on the Sales / Service dashboards.
+The **Log a Call** action records an outbound or inbound call without leaving the record. It does not write a lone timeline string: one submit writes **three** things.
 
+1. **The event** — a real Event record with your subject, type *Call*, status **Held**, starting now, plus duration, notes, owner, and a link back to the record you fired the action from.
+2. **The attendees** — one row per person: you as the **organizer** with your response already *Accepted*, the contact or lead you fired the action from, and anyone you picked under *Contact Attendees* / *Internal Attendees*.
+3. **A timeline entry** on the record's **Activity** tab, pointing at that event, so the drill-through opens the real record.
 
+**Log a Meeting** and **Schedule a Meeting** are the same shape — held meeting, and booking for later. [Meetings & Calls](/docs/sales/meetings-and-calls) is the full account: what each form asks for, Planned vs Held, what attendee rows hold, and how a held call on a case stamps its First Response Date.
 
-Save reusable email templates in **Settings → Email Templates**:
+Held calls and meetings are counted on the **Sales Activity** dashboard — *Interactions Logged*, *Customer Minutes*, *Activity by Rep*, *Activity Mix* — which is where a rep's activity metrics live. The Sales and Customer Service dashboards carry pipeline and case metrics respectively, and no activity tiles; see [Dashboards](/docs/analytics/dashboards).
 
-- Merge fields (`{{Contact.FirstName}}`, `{{Opportunity.Amount}}`).
-- HTML + plain-text versions.
-- Per-team folders.
-- Approval-gated templates for legal-sensitive content.
+## Email templates (not shipped yet)
 
-Templates can be **personalised by the AI Copilot** — pick a template, add a goal, and the Copilot fills it in with the right context.
+The intended surface: reusable templates saved in **Settings → Email Templates**, with merge fields (`{{Contact.FirstName}}`, `{{Opportunity.Amount}}`), HTML plus plain-text versions, per-team folders, and approval-gated templates for legal-sensitive content — plus the AI assistant personalising a chosen template from record context.
 
-## Calendar sync
+HotCRM ships none of it today. The platform carries an email-template object of its own, used for authentication mail (invitations, password resets); **Send Email** above does not read it, and this app authors no templates.
 
-After connecting your calendar:
+## Connecting your inbox (not shipped yet)
 
-- HotCRM creates a **HotCRM Events** calendar in your Google/Outlook account.
-- Events created in HotCRM appear there.
-- Events created in your native calendar with **CRM contacts as attendees** sync into HotCRM as events on those contacts/accounts.
-- Conflicts (two events at the same time) are flagged.
+The intended flow: **Settings → Email & Calendar → Connect Gmail / Connect Outlook**, an OAuth grant, and a choice of what to sync — all email, tracked email only, or whitelisted customer domains; customer meetings only, or every event.
 
-## Inbound case email
+None of it exists in the app: there is no Gmail or Outlook connector, no such settings page, and no OAuth flow to authorise.
 
-Setup at **Setup → Email → Inbound Case Email**:
+## How email logging works (not shipped yet)
 
-1. Pick an address (e.g., `support@yourcompany.com`).
-2. Forward that address to the inbound address shown.
-3. Set the default queue, priority, and assignment rules.
+The intended behaviour: the connector sees an email between you and a known contact (matched by address), stores the body on the activity timeline of the contact, account and any open opportunity or case, saves attachments as files, and makes it visible to anyone with sharing access to those records — with a personalised forwarding address as the manual fallback.
 
-Now every email to support@ becomes a case:
+Today the only email on a timeline is one you sent from **Send Email** yourself.
 
-- The sender is matched (or auto-created) as a contact.
-- Subject → case subject; body → case description; attachments → case files.
-- Replies on the case thread go back via email to the customer, preserving the thread.
+## Email tracking (not shipped yet)
+
+The intended behaviour: open tracking, click tracking, schedule send, and a reply reminder that bumps the thread back at you after N days, with the tracking events stored on the email, the contact and the originating campaign.
+
+Nothing in the app tracks opens or clicks, schedules a send, or raises a reminder. The one adjacent thing that *is* real: a campaign member carries **First Opened** and **First Clicked** dates — but they have no automatic writer, so a person or an import fills them, not an email pixel. See [Campaign Members](/docs/marketing/campaign-members).
+
+## Calendar sync (not shipped yet)
+
+The intended behaviour: a **HotCRM Events** calendar created in your Google or Outlook account, events flowing both ways, native-calendar events with CRM contacts as attendees landing on those contacts and accounts, and double-booking flagged.
+
+Today a meeting exists in HotCRM only because someone logged or scheduled it here, and it stays here. Your own events are under **My Work → My Calendar**.
+
+## Inbound case email (not shipped yet)
+
+The intended behaviour: point `support@yourcompany.com` at an inbound address, set a default queue, priority and assignment rules, and every incoming email becomes a case — sender matched or created as a contact, subject and body mapped onto the case, replies threaded back to the customer over email.
+
+The app has no inbound email path. A case's **Origin** picklist does carry *Email*, but it is a value someone selects when logging the case by hand.
 
 ## Privacy & policies
 
-- Email body content is stored in the same DB as your CRM records and follows your sharing rules.
-- You can **exclude** specific addresses or domains (HR, personal).
-- BCC / hidden recipients are *not* logged.
-- For GDPR — you can purge a contact's email history via the contact's *Delete Personal Data* action.
+- Email you send from HotCRM is stored in the same database as your CRM records and follows the same sharing rules.
+- Recipients marked **Email Opt Out** cannot be mailed from the app: **Send Email** is hidden on their record.
+- Exclusion lists for specific addresses or domains, BCC handling, and a one-click purge of a contact's email history are **not shipped** — they belong with the inbox connector above. For a GDPR erasure today, delete the contact's records directly; deleting a person removes their attendee rows and keeps the meetings themselves.
 
 ## Tips for reps
 
-- ✅ Connect your inbox on day one — it eliminates 80% of CRM data entry.
-- ✅ Use **Schedule Send** for emails after hours — better response rates.
-- ✅ Watch the **open + click notifications** for hot signals (a prospect clicked 3 times in 5 minutes → pick up the phone).
+- ✅ Log the call **from the opportunity or the case** — the link is what surfaces it there, and the account's clock is stamped for you.
+- ✅ Put the real attendees on the call. "Which contacts have never joined one?" is only answerable if you did.
+- ✅ Draft with the assistant, then read it before you send — it writes the copy, you own the send.
 
 ## Tips for admins
 
-- ✅ Push everyone in sales / service to connect their inbox — the platform's value grows with email coverage.
-- ✅ Set a clear policy on what's logged (all vs domain-whitelisted) — clarify with HR/legal first.
-- ✅ Use templates aggressively — consistent voice + 10× faster than hand-writing.
+- ✅ Configure a real email transport before telling reps that **Send Email** delivers. With none configured, the platform logs the message and sends nothing.
+- ✅ Coach on the **Held** status: the activity numbers on the Sales Activity dashboard are only as honest as that field.
+- ✅ Do not build a process on inbox or calendar sync yet — set expectations from the *(not shipped yet)* sections above, and watch the [roadmap](/docs/whats-new#roadmap).
