@@ -53,7 +53,13 @@ const HOOK_SOURCE = readFileSync(join(REPO_ROOT, 'src', 'objects', 'lead.hook.ts
 const viewBundles: AnyRec[] = ((stack as AnyRec).views ?? []) as AnyRec[];
 const leadBundle = viewBundles.find((v) => v?.listViews?.hot_leads);
 const hotLeadsView: AnyRec | undefined = leadBundle?.listViews?.hot_leads;
-const highPriorityView: AnyRec | undefined = leadBundle?.listViews?.high_priority;
+
+// `high_priority` is deliberately NOT read here. Post-#766 it carries the same
+// filter as `hot_leads`, and pinning that sameness would be a guard over a
+// decision nobody has made: whether the two views should still coexist is open
+// (#775), and either merging them or re-differentiating `high_priority` on a
+// non-rating criterion is a legitimate outcome this file must not pre-empt.
+// The invariant with a producer behind it is the flow-vs-view one below.
 
 const clausesOn = (view: AnyRec | undefined, field: string): AnyRec[] =>
   ((view?.filter ?? []) as AnyRec[]).filter((c) => c?.field === field);
