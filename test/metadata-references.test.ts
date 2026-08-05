@@ -201,6 +201,93 @@ describe('page component references resolve', () => {
     }
     expect(bad, `dangling profile assignments:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
+
+  /**
+   * A tab whose name promises content must render content (#771).
+   *
+   * Sales Home's three tabs — My Leads / My Opportunities / My Tasks — each
+   * held one `{ type: 'page:section', properties: {} }`. That is a legal page
+   * schema and it validates, builds and renders: as `<section></section>`,
+   * literally nothing, measured in the browser. Three tab names over three
+   * blank panels, and no diagnostic anywhere, because there is no dangling
+   * reference to catch — the defect is the ABSENCE of one.
+   *
+   * The other tests in this block ask "does this reference resolve?". This one
+   * asks the prior question: is there a reference at all? A layout container
+   * (`page:section` / `page:card` / `page:accordion`) is a box; it shows what
+   * you put in it. Put nothing in it inside a tab and the tab is a lie.
+   *
+   * Scoped to TAB children on purpose. An empty card in a sidebar is a weaker
+   * claim (it carries a title, and nothing promised a list underneath), and
+   * this app still has some — filed separately rather than widened into here,
+   * because a rule that goes red on things this PR is not fixing gets
+   * suppressed, not fixed.
+   */
+  it('no page tab renders an empty container', () => {
+    /** Container types that render only what they are given. */
+    const CONTAINERS = new Set(['page:section', 'page:card', 'page:accordion']);
+    /** Keys a container carries its content under. */
+    const CONTENT_KEYS = ['body', 'children', 'items', 'components'];
+
+    const hasContent = (c: AnyRec): boolean => {
+      if (!CONTAINERS.has(c.type)) return true; // a real block renders itself
+      const props = c.properties ?? {};
+      return CONTENT_KEYS.some((k) => {
+        const v = (c as AnyRec)[k] ?? props[k];
+        return Array.isArray(v) ? v.length > 0 : !!v;
+      });
+    };
+
+    const bad: string[] = [];
+    let tabsSeen = 0;
+    for (const page of pages) {
+      for (const c of [...walk(page.regions), ...walk(page.slots)]) {
+        if (c.type !== 'page:tabs') continue;
+        for (const item of c.properties?.items ?? []) {
+          tabsSeen++;
+          const children: AnyRec[] = item.children ?? [];
+          if (children.length === 0) {
+            bad.push(`${page.name}/${c.id}: tab "${item.label}" has no children`);
+            continue;
+          }
+          if (!children.some(hasContent)) {
+            bad.push(
+              `${page.name}/${c.id}: tab "${item.label}" holds only empty containers ` +
+                `(${children.map((k) => k.type).join(', ')}) — it renders blank`,
+            );
+          }
+        }
+      }
+    }
+    // Without this the rule dies silently the day the walk stops finding tabs.
+    expect(tabsSeen, 'no page tabs were inspected — the walk found nothing').toBeGreaterThan(0);
+    expect(bad, `tabs that render blank:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  /**
+   * The rule above, exercised against the shape it exists to reject — so a
+   * later refactor of `hasContent` cannot quietly turn it into a pass-through.
+   */
+  it('the empty-tab rule still rejects the shape #771 found', () => {
+    const CONTAINERS = new Set(['page:section', 'page:card', 'page:accordion']);
+    const CONTENT_KEYS = ['body', 'children', 'items', 'components'];
+    const hasContent = (c: AnyRec): boolean => {
+      if (!CONTAINERS.has(c.type)) return true;
+      const props = c.properties ?? {};
+      return CONTENT_KEYS.some((k) => {
+        const v = (c as AnyRec)[k] ?? props[k];
+        return Array.isArray(v) ? v.length > 0 : !!v;
+      });
+    };
+
+    // What Sales Home shipped: rejected.
+    expect(hasContent({ type: 'page:section', properties: {} })).toBe(false);
+    expect(hasContent({ type: 'page:card', properties: { title: 'Recent Items' } })).toBe(false);
+    // What it ships now, and the shapes that must stay accepted.
+    expect(hasContent({ type: 'list-view', properties: { objectName: 'crm_lead' } })).toBe(true);
+    expect(hasContent({ type: 'page:card', properties: { body: [{ type: 'object-metric' }] } })).toBe(true);
+    expect(hasContent({ type: 'page:section', properties: { components: [{ type: 'text' }] } })).toBe(true);
+  });
 });
 
 describe('view field references resolve', () => {
@@ -679,6 +766,14 @@ describe('filter template tokens are resolvable', () => {
     }
     for (const p of pages) {
       badTokensIn(`page "${p.name}"`, p.interfaceConfig?.filterBy, allowed, bad);
+      // Page COMPONENTS carry filters too, and did not used to be walked. Sales
+      // Home now embeds `list-view` blocks whose filters come off the saved
+      // views (#771) — those are checked above as views, but a hand-written
+      // component filter would have reached the same data path unexamined.
+      for (const c of [...walk(p.regions), ...walk(p.slots)]) {
+        badTokensIn(`page "${p.name}"/${c.id ?? c.type}`, c.properties?.filter, allowed, bad);
+        badTokensIn(`page "${p.name}"/${c.id ?? c.type}`, c.dataSource?.filter, allowed, bad);
+      }
     }
     expect(bad, `unresolvable view/page filter tokens:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
