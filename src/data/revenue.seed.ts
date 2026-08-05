@@ -231,8 +231,43 @@ export const quoteLineItems = defineSeed(QuoteLineItem, {
 // ─── Forecasts ────────────────────────────────────────────────────────
 // `owner_id` is left unset: a seed cannot name a user and seed writes run
 // `isSystem`, so nothing stamps it — ownership is backfilled by
-// `demo_bootstrap` once a real user exists (same as every other CRM object).
-// See the note at the foot of `src/data/index.ts`.
+// `demo_bootstrap`, which claims `crm_forecast` alongside the other
+// owner-scoped objects (#702). See the note at the foot of `src/data/index.ts`.
+//
+// ─── ONE PRODUCER PER WINDOW (#702) ───────────────────────────────────
+//
+// `forecast_snapshot` (#590) upserts the row whose window contains today, and
+// its lookup is OWNER-SCOPED:
+//
+//     { owner_id: '{currentOwner.id}', period: 'quarter',
+//       period_start: { $lte: '{TODAY()}' }, period_end: { $gte: '{TODAY()}' } }
+//
+// A seeded row in that same window can never satisfy that filter at the moment
+// the sweep reads it — the seed writes no owner, and the claim is a separate,
+// later sweep — so the flow concludes the period is missing and opens a SECOND
+// row beside it. Both span the same quarter; one has an owner and one does not.
+// Every owner-grouped consumer then renders a phantom, ownerless duplicate for
+// the current quarter, on every re-seeded dev boot (`quota_attainment_by_rep`
+// most visibly, since it pins exactly that window).
+//
+// Claiming the row does not fix that, it only re-labels the phantom: whichever
+// of the two scheduled sweeps reaches the window first decides whether the
+// second one adopts the row or duplicates it, and a duplicate never heals.
+//
+// So the seeds stop at the window's edge. They ship SETTLED quarters only, plus
+// the current MONTH — a window no runtime writer touches, since the sweep's
+// period is fixed to `quarter`. The current quarter belongs to
+// `forecast_snapshot` alone. `test/forecast-seeds.test.ts` derives the
+// forbidden window from the flow's own lookup filter and fails on any seeded
+// row that lands inside it.
+//
+// The cost, stated rather than hidden: on a freshly seeded org the Sales
+// dashboard's *Quota Attainment by Rep* table is empty until the 03:00 sweep
+// opens the quarter's rows, and their `quota` stays blank until someone sets
+// one by hand (`quota` has no automated writer — see `forecast.object.ts`).
+// That is the same honest-empty state the widget already chooses at a quarter
+// boundary; the alternative was a row attributed to nobody, carrying a quota no
+// rep is on the hook for.
 //
 // Periods are REAL calendar periods, labelled exactly the way
 // forecast.hook.ts derives them ('Q3 2026' / 'Aug 2026') — hooks don't run
@@ -254,16 +289,17 @@ const forecastNow = new Date();
 const forecastYear = forecastNow.getUTCFullYear();
 const forecastMonth = forecastNow.getUTCMonth();
 const forecastQuarterMonth = Math.floor(forecastMonth / 3) * 3;
-const thisQuarterStart = new Date(Date.UTC(forecastYear, forecastQuarterMonth, 1));
-const thisQuarterEnd = new Date(Date.UTC(forecastYear, forecastQuarterMonth + 3, 0));
+// No `thisQuarterStart` / `thisQuarterEnd`: that window is `forecast_snapshot`'s
+// and nothing here may open a row in it (#702, note above).
 const thisMonthStart = new Date(Date.UTC(forecastYear, forecastMonth, 1));
 const thisMonthEnd = new Date(Date.UTC(forecastYear, forecastMonth + 1, 0));
 const lastQuarterStart = new Date(Date.UTC(forecastYear, forecastQuarterMonth - 3, 1));
 const lastQuarterEnd = new Date(Date.UTC(forecastYear, forecastQuarterMonth, 0));
 // Deeper history: quota-attainment and coverage trends need more than a single
 // prior period to plot (#591). These are all SETTLED periods — deliberately so:
-// the forecast snapshot sweep upserts on (owner, period) for the CURRENT
-// period, so historical rows can never collide with what it writes.
+// the forecast snapshot sweep upserts the CURRENT quarter, so historical rows
+// can never collide with what it writes. That rule is now the whole rule for
+// quarters (#702): every quarterly seed below is settled.
 const quarterStartAgo = (n: number) => new Date(Date.UTC(forecastYear, forecastQuarterMonth - 3 * n, 1));
 const quarterEndAgo = (n: number) => new Date(Date.UTC(forecastYear, forecastQuarterMonth - 3 * (n - 1), 0));
 const monthStartAgo = (n: number) => new Date(Date.UTC(forecastYear, forecastMonth - n, 1));
@@ -302,31 +338,21 @@ const closedPeriod = (
 // (owner, period, period_start) identity or an insert-once mode: see the
 // `seed_key` declaration in `src/objects/forecast.object.ts`.
 //
-// The keys are POSITIONAL ('current quarter', 'two quarters back'), not
-// calendar values, because the records are positional — recomputed against
-// `new Date()` on every import. A positional key keeps the demo at exactly
-// these eight rows as the calendar rolls forward, re-pointing each at its new
-// period; a calendar-derived key would strand last quarter's demo row and add
-// one row per re-seed.
+// The keys are POSITIONAL ('current month', 'two quarters back'), not calendar
+// values, because the records are positional — recomputed against `new Date()`
+// on every import. A positional key keeps the demo at exactly these seven rows
+// as the calendar rolls forward, re-pointing each at its new period; a
+// calendar-derived key would strand last quarter's demo row and add one row per
+// re-seed.
+//
+// There is no `demo_quarter_current`: the current quarter is the one window
+// `forecast_snapshot` writes, and two producers in one window is what #702 was.
+// The current MONTH stays — the sweep's period is `quarter`, so no runtime
+// writer opens a monthly row.
 export const forecasts = defineSeed(Forecast, {
   mode: 'upsert',
   externalId: 'seed_key',
   records: [
-    {
-      seed_key: 'demo_quarter_current',
-      period: 'quarter',
-      period_label: forecastQuarterLabel(thisQuarterStart),
-      period_start: forecastIsoDate(thisQuarterStart),
-      period_end: forecastIsoDate(thisQuarterEnd),
-      snapshot_date: cel`today()`,
-      quota: 1500000,
-      pipeline_amount: 2400000,
-      best_case_amount: 1800000,
-      commit_amount: 1100000,
-      closed_amount: 820000,
-      source: 'scheduled',
-      notes: 'On track — commit + closed covers 64% of quota with the quarter still open.',
-    },
     {
       seed_key: 'demo_month_current',
       period: 'month',

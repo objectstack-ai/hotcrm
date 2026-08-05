@@ -201,7 +201,23 @@ const makeEngine = () =>
     } as never,
   });
 
-describe('quota_attainment_by_rep over the real seeds (#614)', () => {
+/**
+ * The current-quarter quota, as it reaches a live table.
+ *
+ * Not from the seeds, and that is the point (#702): the seeds ship SETTLED
+ * quarters only, because `forecast_snapshot` owns the current-quarter window
+ * and two producers in one window is what left a phantom ownerless duplicate
+ * there. So the current-quarter row in the fixture below is the one the SWEEP
+ * opens — and the sweep never writes `quota` (see the flow header), which
+ * leaves it exactly where `crm_forecast` says it lives: maintained by hand
+ * until a quota model exists.
+ *
+ * A number, then, rather than a seeded value — and one that has to be here
+ * regardless, because the widget's whole subject is quota vs. closed.
+ */
+const CURRENT_QUARTER_QUOTA = 1_500_000;
+
+describe('quota_attainment_by_rep over the real seeds plus one sweep (#614)', () => {
   let ql: Awaited<ReturnType<typeof makeEngine>>;
   let analytics: AnalyticsService;
   /** Every filter the analytics service handed the engine, in order. */
@@ -225,17 +241,21 @@ describe('quota_attainment_by_rep over the real seeds (#614)', () => {
       }
     }
 
-    // "…plus one sweep run": `forecast_snapshot` upserts the CURRENT-period row
-    // and rewrites its amounts; it never writes `quota` (see the flow header).
-    // Modelled here as the write itself rather than by re-running the flow —
-    // `test/flow-scheduled.test.ts` owns the flow's behaviour; this file owns
-    // what the dashboard reads afterwards.
+    // "…plus one sweep run": `forecast_snapshot` OPENS the current-quarter row
+    // — the seeds no longer ship one (#702) — and writes the four amounts into
+    // it, never `quota`. Modelled here as the write itself rather than by
+    // re-running the flow: `test/flow-scheduled.test.ts` owns the flow's
+    // behaviour, this file owns what the dashboard reads afterwards. The quota
+    // arrives the only way it can, by hand.
     for (const rep of REPS) {
-      // `(document, options)` — the engine's real repo-facade shape (#616).
-      await api.object('crm_forecast').update(
-        { closed_amount: 900000, pipeline_amount: 2500000, commit_amount: 1200000 },
-        { where: { owner_id: rep, period: 'quarter', period_start: currentQuarterStart }, multi: true },
-      );
+      await api.object('crm_forecast').insert({
+        owner_id: rep,
+        period: 'quarter',
+        period_label: 'current quarter',
+        period_start: currentQuarterStart,
+        quota: CURRENT_QUARTER_QUOTA,
+        closed_amount: 900000, pipeline_amount: 2500000, commit_amount: 1200000,
+      });
     }
 
     filtersSeen = [];
@@ -274,44 +294,47 @@ describe('quota_attainment_by_rep over the real seeds (#614)', () => {
       { isSystem: true } as never,
     )).rows as AnyRec[];
 
-  /** The seeds' own current-quarter numbers — the answer the table must show. */
-  const currentQuarterSeed = () =>
-    (forecastSeed?.records ?? []).find(
-      (r) => r.period === 'quarter' && r.period_start === currentQuarterStart,
-    );
-
-  it('the seeds really do hold several periods for one owner', () => {
-    // The premise of the whole issue. If the seeds ever ship a single period,
-    // the assertions below would pass for the wrong reason.
+  it('the table really does hold several periods for one owner', () => {
+    // The premise of the whole issue. If the fixture ever collapsed to a single
+    // period, the assertions below would pass for the wrong reason.
     expect((forecastSeed?.records ?? []).length).toBeGreaterThan(1);
-    expect(currentQuarterSeed(), 'no current-quarter seed row').toBeDefined();
+  });
+
+  it('the seeds contribute no current-quarter row — the sweep owns that window (#702)', () => {
+    // The other premise, and the one that changed. A seeded row here could not
+    // be matched by the sweep's owner-scoped lookup, so the sweep would open a
+    // second row beside it and this table would show a phantom, ownerless
+    // duplicate for the current quarter after every re-seeded boot.
+    const trespassers = (forecastSeed?.records ?? [])
+      .filter((r) => r.period === 'quarter' && r.period_start === currentQuarterStart)
+      .map((r) => String(r.seed_key));
+    expect(trespassers, `seeded current-quarter rows: ${trespassers.join(', ')}`).toEqual([]);
   });
 
   it('unpinned, the measures add every snapshot together — the #614 defect', async () => {
     const rows = await runWidget();
     const alice = rows.find((r) => r.owner === 'rep_alice')!;
-    const seededQuotaTotal = (forecastSeed?.records ?? [])
-      .reduce((sum, r) => sum + Number(r.quota ?? 0), 0);
+    const quotaAcrossPeriods =
+      (forecastSeed?.records ?? []).reduce((sum, r) => sum + Number(r.quota ?? 0), 0)
+      + CURRENT_QUARTER_QUOTA;
 
     expect(rows).toHaveLength(REPS.length);
-    expect(alice.quota_sum).toBe(seededQuotaTotal);
+    expect(alice.quota_sum).toBe(quotaAcrossPeriods);
     // Concretely, and this is the number the dashboard used to print: every
     // period's quota stacked into one "Quota" cell.
-    expect(alice.quota_sum).toBeGreaterThan(Number(currentQuarterSeed()!.quota));
+    expect(alice.quota_sum).toBeGreaterThan(CURRENT_QUARTER_QUOTA);
   });
 
   it('the shipped widget filter yields the rep\'s quarterly quota, not the sum of snapshots', async () => {
-    const seedRow = currentQuarterSeed()!;
     const rows = await runWidget(quotaWidget.filter);
 
     expect(rows).toHaveLength(REPS.length);
     for (const rep of REPS) {
       const row = rows.find((r) => r.owner === rep)!;
-      expect(row.quota_sum, `${rep} quota`).toBe(Number(seedRow.quota));
-      // The sweep's write, not the seeded placeholder — the widget reads the
-      // refreshed current-quarter row.
+      expect(row.quota_sum, `${rep} quota`).toBe(CURRENT_QUARTER_QUOTA);
+      // The sweep's row, and only it — one snapshot per owner in this window.
       expect(row.closed_sum, `${rep} closed`).toBe(900000);
-      expect(row.attainment, `${rep} attainment`).toBeCloseTo(900000 / Number(seedRow.quota), 10);
+      expect(row.attainment, `${rep} attainment`).toBeCloseTo(900000 / CURRENT_QUARTER_QUOTA, 10);
     }
   });
 

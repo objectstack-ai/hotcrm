@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
+import { CrmSeedData } from '../src/data/index';
 import { CampaignCompletionFlow } from '../src/flows/campaign-completion.flow';
 import { CaseSlaMonitorFlow } from '../src/flows/case-sla-monitor.flow';
 import { ContractExpirationFlow } from '../src/flows/contract-expiration.flow';
@@ -664,6 +665,190 @@ describe('forecast_snapshot — nightly per-owner pipeline snapshot', () => {
 });
 
 /**
+ * Re-seed × snapshot: one row per (owner, period, window) — #702.
+ *
+ * The reported defect needs three ordinary behaviours and no bug in any of
+ * them: seeds land ownerless (seed writes are `isSystem`, so the platform's
+ * `owner_id` stamp never fires), a warm boot replays them, and the sweep's
+ * current-window lookup is owner-scoped. Put a seeded row in the window the
+ * sweep writes and the sweep cannot see it — so it opens a SECOND row beside
+ * it, and every owner-grouped consumer shows a phantom ownerless duplicate for
+ * the current quarter after every re-seeded boot.
+ *
+ * The fix is in the seed data — the current quarter is no longer seeded — and
+ * this file's job is to show that the invariant survives the two scheduled
+ * sweeps in EITHER ORDER. That matters because the obvious alternative fix
+ * (claim `crm_forecast` and let the sweep adopt the claimed row) holds only
+ * while `demo_bootstrap` reaches the window before `forecast_snapshot` does,
+ * and a duplicate opened by losing that race never heals. Both orders are run
+ * below over the REAL seed records; the last case restores a current-quarter
+ * seed row and reproduces the duplicate, so a green run here can never be green
+ * for want of a mechanism.
+ */
+describe('re-seed × snapshot leaves one row per (owner, period, window) (#702)', () => {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const isoUtc = (d: Date) => `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+  const nowUtc = new Date();
+  const qStart = new Date(Date.UTC(nowUtc.getUTCFullYear(), Math.floor(nowUtc.getUTCMonth() / 3) * 3, 1));
+  const qEnd = new Date(Date.UTC(qStart.getUTCFullYear(), qStart.getUTCMonth() + 3, 0));
+  const today = isoUtc(nowUtc);
+
+  /** The forecast rows the seed loader actually ships, read from the app. */
+  const seedRecords = ((CrmSeedData as unknown as Array<{ object: string; records: Rec[] }>)
+    .find((d) => d.object === 'crm_forecast')?.records ?? []);
+
+  const users = (): Rec[] => [
+    // `get_user` takes an unordered first row; the demo's first user is the
+    // dev admin, and `demo_bootstrap` claims every ownerless row for them.
+    { id: 'usr_admin', name: 'Dev Admin' },
+    { id: 'rep_two', name: 'Rep Two' },
+    { id: 'rep_idle', name: 'No Deals At All' },
+  ];
+
+  /** Two active deal owners and one user the sweep must skip. */
+  const opps = (): Rec[] => [
+    { id: 'o1', owner_id: 'usr_admin', stage: 'negotiation', forecast_category: 'commit', amount: 200_000, close_date: isoUtc(qStart) },
+    { id: 'o2', owner_id: 'rep_two', stage: 'proposal', forecast_category: 'commit', amount: 90_000, close_date: isoUtc(qStart) },
+  ];
+
+  /**
+   * One seed-loader pass, faithful to what the loader does rather than to what
+   * "re-seed" sounds like: `mode: 'upsert'` on `seed_key` resolves to
+   * `engine.update({ ...record, id })` for a row that already exists — a
+   * PARTIAL write over the columns the seed declares — and to an insert
+   * otherwise (`@objectstack/metadata-protocol`, `SeedLoaderService.writeRecord`).
+   *
+   * Partial is the load-bearing word: the seeds declare no `owner_id`, so a
+   * claimed owner SURVIVES a warm-boot replay. If it did not, the ownerless
+   * state would return on every boot and no claim could ever settle it.
+   *
+   * A fresh insert lands with `owner_id: null`, not with the key absent: the
+   * registry injects the column into every user-owned object, and the seed
+   * write only skips the security plugin's insert-time STAMP. The distinction
+   * decides whether `demo_bootstrap` can see the row at all — its filter is
+   * `{ owner_id: null }`, and an absent key is not null.
+   */
+  const loadSeeds = (store: Record<string, Rec[]>) => {
+    const rows = (store.crm_forecast ??= []);
+    for (const rec of seedRecords) {
+      const existing = rows.find((r) => r.seed_key === rec.seed_key);
+      if (existing) Object.assign(existing, rec);
+      else rows.push({ id: `seed_${String(rec.seed_key)}`, owner_id: null, ...rec });
+    }
+  };
+
+  const makeHarness = (forecasts: Rec[] = []) =>
+    makeFlowHarness(
+      { demo_bootstrap: DemoBootstrapFlow, forecast_snapshot: ForecastSnapshotFlow },
+      { sys_user: users(), crm_opportunity: opps(), crm_forecast: forecasts },
+      { hooks: [forecastDerive] },
+    );
+
+  /** A cold boot and a warm one, both running the sweeps in `order`. */
+  const boot = async (order: readonly string[]) => {
+    const h = makeHarness();
+    loadSeeds(h.store);
+    for (const flow of order) await h.run(flow, {}, { event: 'schedule' });
+    loadSeeds(h.store);
+    for (const flow of order) await h.run(flow, {}, { event: 'schedule' });
+    return h;
+  };
+
+  const inCurrentQuarter = (r: Rec) =>
+    r.period === 'quarter' && String(r.period_start) <= today && today <= String(r.period_end);
+
+  const ORDERINGS = [
+    ['claim first — the ten-minute sweep reaches the window first', ['demo_bootstrap', 'forecast_snapshot']],
+    ['sweep first — a boot minutes before 03:00', ['forecast_snapshot', 'demo_bootstrap']],
+  ] as const;
+
+  for (const [label, order] of ORDERINGS) {
+    describe(label, () => {
+      let h: Awaited<ReturnType<typeof boot>>;
+      beforeAll(async () => { h = await boot(order); });
+
+      it('leaves no forecast row owned by nobody', async () => {
+        const ownerless = h.store.crm_forecast
+          .filter((r) => r.owner_id == null)
+          .map((r) => `${String(r.seed_key ?? r.id)} (${String(r.period)} ${String(r.period_start)})`);
+        expect(
+          ownerless,
+          'these rows render with a blank Owner in every owner-grouped surface, and\n'
+            + "under sharingModel:'private' are readable by no rep at all:\n  "
+            + ownerless.join('\n  '),
+        ).toEqual([]);
+      });
+
+      it('leaves exactly one row per (owner, period, period_start)', async () => {
+        const keys = h.store.crm_forecast.map(
+          (r) => `${String(r.owner_id)}|${String(r.period)}|${String(r.period_start)}`,
+        );
+        const dupes = [...new Set(keys.filter((k, i) => keys.indexOf(k) !== i))];
+        expect(
+          dupes,
+          `two rows share one snapshot identity — a quota/closed double count:\n  ${dupes.join('\n  ')}`,
+        ).toEqual([]);
+      });
+
+      it('gives the current quarter one row per ACTIVE deal owner and no other', async () => {
+        const current = h.store.crm_forecast.filter(inCurrentQuarter);
+        expect(current.map((r) => String(r.owner_id)).sort()).toEqual(['rep_two', 'usr_admin']);
+        expect(
+          current.map((r) => r.seed_key).filter(Boolean),
+          'a seeded row opened in the window forecast_snapshot writes',
+        ).toEqual([]);
+      });
+
+      it('leaves the current-quarter numbers the sweep computed, not seeded ones', async () => {
+        // The other half of the warm-boot story: the replay must not stomp a
+        // runtime writer's row. It cannot, because the seeds no longer declare
+        // one in this window — this asserts the outcome rather than the reason.
+        const admin = h.store.crm_forecast.find((r) => inCurrentQuarter(r) && r.owner_id === 'usr_admin')!;
+        expect(admin, 'no current-quarter row for the admin').toBeTruthy();
+        expect(Number(admin.commit_amount)).toBe(200_000);
+        expect(Number(admin.pipeline_amount)).toBe(200_000);
+        expect(admin.period_start).toBe(isoUtc(qStart));
+        expect(admin.period_end).toBe(isoUtc(qEnd));
+      });
+
+      it('claims every settled seed row for the first user', async () => {
+        const seeded = h.store.crm_forecast.filter((r) => r.seed_key != null);
+        expect(seeded, 'the seed replay inserted duplicates').toHaveLength(seedRecords.length);
+        expect(seeded.map((r) => String(r.owner_id))).toEqual(seedRecords.map(() => 'usr_admin'));
+      });
+    });
+  }
+
+  it('reproduces the phantom when a current-quarter row IS seeded', async () => {
+    // Non-vacuity, and the reported mechanism end to end. Restore the row the
+    // seeds used to ship and run the sweep before the claim: the sweep's
+    // owner-scoped lookup cannot match an ownerless row, so it opens a second
+    // one; the claim then stamps the first, leaving TWO rows for ONE owner in
+    // ONE window. Predicted direction, and the one that makes the guards above
+    // meaningful — the duplicate is what they would report.
+    const phantom: Rec = {
+      id: 'seed_demo_quarter_current', seed_key: 'demo_quarter_current', owner_id: null,
+      period: 'quarter', period_start: isoUtc(qStart), period_end: isoUtc(qEnd),
+      snapshot_date: today, source: 'scheduled', quota: 1_500_000, closed_amount: 820_000,
+    };
+    const h = makeHarness([phantom]);
+    await h.run('forecast_snapshot', {}, { event: 'schedule' });
+    await h.run('demo_bootstrap', {}, { event: 'schedule' });
+
+    const adminRows = h.store.crm_forecast.filter((r) => inCurrentQuarter(r) && r.owner_id === 'usr_admin');
+    expect(adminRows, 'the sweep adopted the ownerless row instead of duplicating it').toHaveLength(2);
+    // And it is terminal: the sweep's findOne refreshes whichever row it
+    // reaches first and never sees, let alone merges, the other.
+    await h.run('forecast_snapshot', {}, { event: 'schedule' });
+    await h.run('demo_bootstrap', {}, { event: 'schedule' });
+    expect(
+      h.store.crm_forecast.filter((r) => inCurrentQuarter(r) && r.owner_id === 'usr_admin'),
+      'a later pass healed the duplicate — then the seed guard would be optional',
+    ).toHaveLength(2);
+  });
+});
+
+/**
  * Regression guard — a bare string condition inside a `loop` body WAS inert.
  *
  * `AutomationEngine.registerFlow` runs `applyConversionsToFlow`, which rewrites
@@ -844,6 +1029,11 @@ describe('demo_bootstrap — post-seed ownership claim', () => {
     for (const object of [
       'crm_lead', 'crm_account', 'crm_contact', 'crm_opportunity',
       'crm_case', 'crm_task', 'crm_quote', 'crm_contract',
+      // #702: `crm_forecast` is `private` and `sales_rep` reads it with
+      // `readScope: 'own'`, so an ownerless snapshot row is invisible to every
+      // rep and editable by nobody — the same defect as the eight above, on the
+      // one owner-scoped seeded object this list used to omit.
+      'crm_forecast',
     ]) {
       expect(claimed, `demo_bootstrap never claims ${object}`).toContain(object);
     }
