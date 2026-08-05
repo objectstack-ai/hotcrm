@@ -12,7 +12,7 @@ HotCRM 的設計目標是**融入你的技術堆疊**，而非取代它。今天
 ## 今天已落地的能力
 
 - 🔌 **平台資料 API**——每個 CRM 物件都可以透過執行階段的 HTTP API 存取，支援 ObjectQL 形態的篩選與欄位選擇。參見 [API 參考](/zh-Hant/docs/customization/api-reference)。
-- 📤 **清單檢視的 CSV / XLSX 匯出**——客戶、聯絡人、潛在客戶與商機的清單檢視各自宣告了 `exportOptions: ['csv', 'xlsx']`。
+- 📤 **清單檢視的 CSV / XLSX 匯出**——客戶、聯絡人、潛在客戶、商機與工單的清單檢視各自宣告了 `exportOptions: ['csv', 'xlsx']`。
 - 📥 **試算表匯入**，帶可重複使用的欄位對應，並可先試算。參見[匯入你自己的資料](/zh-Hant/docs/guides/importing-your-data)。
 - ✉️ **對外郵件**——聯絡人上的**傳送郵件**，把郵件排入平台郵件服務。只有出站方向，而且只有在部署設定了傳輸方式時才真的寄得出去。參見[郵件與行事曆](/zh-Hant/docs/guides/email-and-calendar)。
 - 🔔 **應用內通知**——`notify` 流程節點經平台訊息服務送達 Console 鈴鐺。是在 HotCRM 內部，而不是送進 Slack 或某個收件匣。

@@ -42,6 +42,14 @@ export const CaseViews = defineView({
     },
     selection: { type: 'multiple' },
     pagination: { pageSize: 50 },
+    // The UI door for the `allowExport` grant four profiles already hold on
+    // `crm_case`. Export runs on ONE server-side route
+    // (`GET /api/v1/data/crm_case/export`, gated by `security.canExport`), so
+    // this declares which formats the toolbar offers — not a second gate: a
+    // profile without the grant gets 403 whether it clicks the button or
+    // curls the route. Measured in #798/#816; before this the grant was live
+    // but reachable only by `curl`.
+    exportOptions: ['csv', 'xlsx'],
     appearance: {
       showDescription: true,
       allowedVisualizations: ['grid', 'kanban', 'calendar', 'timeline'],

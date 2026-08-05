@@ -37,8 +37,7 @@
  *
  *   a profile grants `allowExport` on an object IFF it already holds
  *   `allowRead` there AND the app ships an export surface for that object —
- *   a list view declaring `exportOptions`, or a report whose dataset is
- *   built on it.
+ *   that is, a list view declaring `exportOptions`.
  *
  * That rule is an AUTHORING DISCIPLINE about which affordances this app ships,
  * not a statement about reachability: the export route exists for every
@@ -49,16 +48,22 @@
  * the end of that same test file.
  *
  * That union is exactly `crm_account`, `crm_case`, `crm_contact`, `crm_lead`,
- * `crm_opportunity` today. Adding `exportOptions` to a view (or a report over
- * a new dataset) means adding the matching grant here in the same change — the
- * guard fails otherwise, which is the point: a surface nobody can use is the
- * failure this axis exists to make loud instead of silent.
+ * `crm_opportunity` today, each behind the `exportOptions` on its own list
+ * view. Adding `exportOptions` to a view means adding the matching grant here
+ * in the same change — the guard fails otherwise, which is the point: a
+ * surface nobody can use is the failure this axis exists to make loud instead
+ * of silent.
  *
- * `crm_case` is carried by the report leg alone — no Cases list view declares
- * `exportOptions` — so its holders export Cases over the data API, not from a
- * report page. Deleting the case reports would drop it out of the union and
- * the guard would demand the grant go with them; the grant is live and useful,
- * so give it a view affordance instead of dropping it.
+ * A REPORT IS NOT AN EXPORT SURFACE. The Console's report page renders a chart
+ * and a data table and offers no download (measured on a running server in
+ * #798), and `ReportService`'s own export gate belongs to the `reports`
+ * capability above. Until #817 the guard counted reports anyway, and
+ * `crm_case` hung off that leg alone: the grant was live but reachable only by
+ * `curl`, and deleting the case reports would have made the guard demand this
+ * useful grant be deleted with them. #817 gave the Cases list view its own
+ * `exportOptions` and retired the report leg, so a report over some future
+ * dataset no longer conjures a grant requirement out of a page with no
+ * download button.
  *
  * Export is READ-DERIVED (`export ⊆ list`), so the grant opens the door but
  * does not widen the rows: record scope, RLS and sharing still apply on top. A
