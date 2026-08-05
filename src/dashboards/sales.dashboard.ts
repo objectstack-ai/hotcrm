@@ -304,10 +304,25 @@ export const SalesDashboard: Dashboard = {
       // rather than assumed: `queryDataset` runs both the dataset filter and the
       // widget's `runtimeFilter` through `resolveFilterTokens`, which
       // understands `{(current|last|next)_(week|month|quarter|year)_(start|end)}`
-      // and throws `FILTER_TOKEN_UNKNOWN` on anything else. This is NOT true of
-      // the list-view path — see the comment on `this_quarter_forecasts` in
-      // `src/views/forecast.view.ts`, where the same macro would ship to the
-      // driver as a literal string. Do not generalise from one path to the other.
+      // and throws `FILTER_TOKEN_UNKNOWN` on anything else.
+      //
+      // The LIST path resolves the same macros, and has since 17.0.0-rc.0:
+      // `resolveFilterTokens()` was wired into the ObjectQL READ path (objectql
+      // `feat(filters): evaluate {filter-token} placeholders server-side`,
+      // #3582) ahead of the middleware chain, covering `find` / `findOne` /
+      // `count` / `aggregate` — the one gate every server-side read passes
+      // through, saved-view filters included. So this widget's filter and a
+      // saved view's filter now read the same way, and the sibling
+      // `this_quarter_forecasts` in `src/views/forecast.view.ts` pins this same
+      // quarter with this same macro. Measured, not inferred:
+      // `test/forecast-current-quarter-view.test.ts` runs both filter shapes —
+      // the `period_start` equality (#730) and the `close_date` range (#743) —
+      // through a real engine on the pinned 17.0.0-rc.2 and pins a three-way
+      // outcome (current quarter only: not zero rows, not every quarter).
+      //
+      // What stood here before described the two paths as asymmetric and told
+      // the next author not to generalise between them. That was true on
+      // @objectstack 16.1.0 and expired at rc.0 (#744).
       //
       // Cost of pinning to the CURRENT quarter rather than the latest one: for
       // the few hours between a quarter boundary and the 03:00 sweep that opens
