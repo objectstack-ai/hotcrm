@@ -8,6 +8,9 @@ import { ContractExpirationFlow } from '../src/flows/contract-expiration.flow';
 import { ContractRenewalFlow } from '../src/flows/contract-renewal.flow';
 import { DemoBootstrapFlow } from '../src/flows/demo-bootstrap.flow';
 import { ForecastSnapshotFlow } from '../src/flows/forecast-snapshot.flow';
+import * as CrmObjects from '../src/objects';
+import { MarketingUserProfile } from '../src/profiles/marketing-user.profile';
+import { ServiceAgentProfile } from '../src/profiles/service-agent.profile';
 import { OpportunityStagnationFlow } from '../src/flows/opportunity-stagnation.flow';
 import { QuoteExpirationFlow } from '../src/flows/quote-expiration.flow';
 import forecastDerive from '../src/objects/forecast.hook';
@@ -1034,9 +1037,83 @@ describe('demo_bootstrap — post-seed ownership claim', () => {
       // rep and editable by nobody — the same defect as the eight above, on the
       // one owner-scoped seeded object this list used to omit.
       'crm_forecast',
+      // #716: the last two, and the ones that hid longest. Both are seeded and
+      // both declare `owner_id`, but their OWD is `public_read` — so unlike the
+      // nine above their ownerless rows READ fine for everybody and nothing
+      // looked broken until somebody tried to WRITE one. `public_read` opens
+      // the read baseline only; the write filter still needs owner-match, so
+      // `marketing_user.crm_campaign.allowEdit` and
+      // `service_agent.crm_knowledge_article.allowEdit` (both at
+      // `modifyAllRecords: false`, i.e. write depth `own` → `owner_id ==
+      // caller`) were granted permissions that answered 403 on every seeded
+      // row for everyone but `system_admin`.
+      'crm_campaign',
+      'crm_knowledge_article',
     ]) {
       expect(claimed, `demo_bootstrap never claims ${object}`).toContain(object);
     }
+  });
+
+  /**
+   * The roster above is a list a human maintains, and #716 is what happens when
+   * one falls behind: `crm_campaign` and `crm_knowledge_article` sat seeded,
+   * owner-scoped and unclaimed for release after release because nothing ever
+   * COMPUTED the question — and their `public_read` OWD meant the omission
+   * showed up as a 403 on an edit nobody in a demo tries, rather than as an
+   * empty list somebody would have reported.
+   *
+   * So compute it, from the app's own metadata. An object that is SEEDED and
+   * declares `owner_id` reaches the database owned by nobody — seed writes run
+   * `{ isSystem: true }`, which skips the security middleware's insert-time
+   * stamp, and no seed can name a user — so this sweep is the ONLY thing that
+   * can give it an owner, and it belongs in the list. Objects with no
+   * `owner_id` (`crm_product`, and the `controlled_by_parent` children whose
+   * access derives from their master) have no ownership to claim and must stay
+   * out; `crm_product` in particular is the e2e ownership-blind probe, which
+   * `test/e2e-seed-precondition.test.ts` fails if this sweep ever touches it.
+   */
+  it('leaves no seeded owner-scoped object unclaimed — the cross-table, computed', () => {
+    const seeded = new Set(
+      (CrmSeedData as unknown as Array<{ object: string }>).map((d) => d.object),
+    );
+    const claimed = new Set(claimedObjects());
+    const objects = Object.values(CrmObjects as unknown as Record<string, Rec>).filter(
+      (o) => o != null && typeof o.name === 'string' && o.fields != null,
+    );
+    const ownerScoped = (o: Rec) =>
+      Object.prototype.hasOwnProperty.call(o.fields as Rec, PLATFORM_OWNER);
+
+    // Guard the guard: a broken walk would make every filter below empty and
+    // the whole case vacuous.
+    expect(objects.length, 'no objects read off the barrel — the walk broke').toBeGreaterThan(10);
+    expect(
+      objects.filter((o) => seeded.has(String(o.name)) && ownerScoped(o)).length,
+      'no seeded owner-scoped object found at all — the cross-table is empty',
+    ).toBeGreaterThan(5);
+
+    const unclaimed = objects
+      .filter((o) => seeded.has(String(o.name)) && ownerScoped(o) && !claimed.has(String(o.name)))
+      .map((o) => `${String(o.name)} (sharingModel: ${String(o.sharingModel)})`);
+    expect(
+      unclaimed,
+      'these objects ship seed records AND declare the ownership column, so their rows\n' +
+        'reach the database owned by nobody and nothing else can claim them. Under any\n' +
+        'OWD that leaves them uneditable by every user, `system_admin` aside — and under\n' +
+        '`public_read` it does so while the rows still read normally, so the only symptom\n' +
+        'is a 403 (#716). Add them to CLAIMED_OBJECTS:\n  ' + unclaimed.join('\n  '),
+    ).toEqual([]);
+
+    // The other direction: claiming an object with no ownership column would
+    // stamp a field it does not declare, on rows where ownership means nothing.
+    const byName = new Map(objects.map((o) => [String(o.name), o]));
+    const claimedWithoutOwner = [...claimed].filter((name) => {
+      const object = byName.get(name);
+      return object != null && !ownerScoped(object);
+    });
+    expect(
+      claimedWithoutOwner,
+      `these claimed objects declare no ${PLATFORM_OWNER}:\n  ` + claimedWithoutOwner.join('\n  '),
+    ).toEqual([]);
   });
 
   it('leaves no claimed object ownerless at the PLATFORM level', async () => {
@@ -1107,5 +1184,187 @@ describe('demo_bootstrap — post-seed ownership claim', () => {
       const unowned = (h.store[object] ?? []).find((r) => r.id === `${object}_unowned`);
       expect(unowned?.[PLATFORM_OWNER], `${object}: claimed with no user present`).toBeNull();
     }
+  });
+});
+
+/**
+ * #716 end to end: the two `public_read` families, over the records the seed
+ * loader actually ships.
+ *
+ * The block above runs on a synthetic two-row fixture per claimed object. That
+ * proves the sweep's MECHANICS and nothing about the real seed book — and #716
+ * was not a mechanics bug: the sweep worked perfectly, it simply never looked
+ * at these two objects. So this runs it over the actual `crm_campaign` and
+ * `crm_knowledge_article` seed records, read from `src/data/` rather than
+ * restated here, and asserts the outcome the issue is about.
+ *
+ * Why these two hid so long is worth keeping in the fixture: their OWD is
+ * `public_read`, so every one of these rows READS normally for every user even
+ * while owned by nobody. Nothing is empty, nothing errors, no list is short.
+ * The only symptom is a write — and a demo org is read almost exclusively.
+ */
+describe('demo_bootstrap claims the real campaign and knowledge seeds (#716)', () => {
+  const ADMIN = 'usr_admin';
+  const PLATFORM_OWNER = 'owner_id';
+
+  /** The two families, with the `externalId` their `defineSeed` upserts on. */
+  const FAMILIES = [
+    ['crm_campaign', 'name'],
+    ['crm_knowledge_article', 'title'],
+  ] as const;
+
+  const seedRecordsOf = (object: string): Rec[] =>
+    (CrmSeedData as unknown as Array<{ object: string; records: Rec[] }>).find(
+      (d) => d.object === object,
+    )?.records ?? [];
+
+  /**
+   * One seed-loader pass, faithful to what the loader does: `mode: 'upsert'` on
+   * the dataset's `externalId` resolves to a PARTIAL update over the columns
+   * the seed declares when the row already exists, and to an insert otherwise.
+   *
+   * Partial is load-bearing — the seeds declare no `owner_id`, so a claimed
+   * owner survives a warm-boot replay. And a fresh insert lands with
+   * `owner_id: null` rather than with the key absent: the registry injects the
+   * column into every user-owned object, and the seed write only skips the
+   * security plugin's insert-time STAMP. That distinction decides whether the
+   * sweep can see the row at all — its filter is `{ owner_id: null }`, and an
+   * absent key is not null.
+   */
+  const loadSeeds = (store: Record<string, Rec[]>) => {
+    for (const [object, externalId] of FAMILIES) {
+      const rows = (store[object] ??= []);
+      for (const rec of seedRecordsOf(object)) {
+        const key = String(rec[externalId]);
+        const existing = rows.find((r) => String(r[externalId]) === key);
+        if (existing) Object.assign(existing, rec);
+        else rows.push({ id: `seed_${object}_${key}`, [PLATFORM_OWNER]: null, ...rec });
+      }
+    }
+  };
+
+  const freshStore = (): Record<string, Rec[]> => {
+    const store: Record<string, Rec[]> = { sys_user: [{ id: ADMIN, email: 'admin@objectos.ai' }] };
+    loadSeeds(store);
+    return store;
+  };
+
+  const sweep = async (store: Record<string, Rec[]>) => {
+    const h = makeFlowHarness({ demo_bootstrap: DemoBootstrapFlow }, store);
+    await h.run('demo_bootstrap', {}, { event: 'schedule' });
+    return h;
+  };
+
+  const ownerless = (rows: Rec[]) => rows.filter((r) => r[PLATFORM_OWNER] == null);
+
+  it('the seed book actually ships rows for both, and ships them ownerless', () => {
+    // Guard the guard, twice over. An empty family makes every case below
+    // vacuous, and a family that arrived already owned would mean the fixture
+    // no longer presents the defect the sweep is supposed to fix.
+    const store = freshStore();
+    for (const [object] of FAMILIES) {
+      expect(seedRecordsOf(object).length, `${object} ships no seed records`).toBeGreaterThan(0);
+      expect(store[object].length, `${object} did not load`).toBe(seedRecordsOf(object).length);
+      expect(
+        ownerless(store[object]).length,
+        `${object}: seeds arrived owned — the fixture no longer shows the defect`,
+      ).toBe(store[object].length);
+    }
+  });
+
+  it('leaves no seeded campaign or article ownerless after one pass', async () => {
+    const h = await sweep(freshStore());
+
+    const stillOwnerless: string[] = [];
+    for (const [object, externalId] of FAMILIES) {
+      for (const row of ownerless(h.store[object] ?? [])) {
+        stillOwnerless.push(`${object}/${String(row[externalId])}`);
+      }
+    }
+    expect(
+      stillOwnerless,
+      'these seeded rows came out of demo_bootstrap owned by nobody. Their OWD is\n' +
+        '`public_read`, so they still READ fine — the failure is silent until an edit,\n' +
+        'which answers 403 for every user but system_admin (#716):\n  ' +
+        stillOwnerless.join('\n  '),
+    ).toEqual([]);
+
+    for (const [object] of FAMILIES) {
+      for (const row of h.store[object]) {
+        expect(row[PLATFORM_OWNER], `${object}/${String(row.id)}: wrong owner`).toBe(ADMIN);
+      }
+    }
+  });
+
+  /**
+   * The permission half of #716, as far as this repo can honestly take it.
+   *
+   * This is a MODEL of the platform's write gate, not the platform's own code —
+   * `@objectstack/plugin-security` is not a dependency of this app and standing
+   * one up would test the platform rather than us. The model is one line of
+   * documented behaviour: a grant with `modifyAllRecords: false` and no
+   * `writeScope` resolves to the `own` write depth, whose write filter is
+   * `owner_id == caller`, and `public_read` does NOT exempt writes from it
+   * ("public_read is read-open but write-owned; only a fully public object is
+   * write-open" — `@objectstack/plugin-sharing` 17.0.0-rc.2, `buildWriteFilter`).
+   *
+   * So what this pins is not "the 403 is gone" — only a running server shows
+   * that. It pins the single input the app controls and #716 got wrong: the row
+   * a granted editor is measured against has an owner at all. The grants are
+   * read from the real profile metadata, so the case fails loudly if the
+   * premise it reasons from (edit granted, `modifyAllRecords` off) ever moves.
+   */
+  it('turns a granted editor from zero editable rows into all of them', async () => {
+    const GRANTS = [
+      ['crm_campaign', (MarketingUserProfile.objects as Rec).crm_campaign, 'marketing_user'],
+      ['crm_knowledge_article', (ServiceAgentProfile.objects as Rec).crm_knowledge_article, 'service_agent'],
+    ] as const;
+
+    for (const [object, grant, profile] of GRANTS) {
+      expect(grant, `${profile} has no ${object} grant`).toBeTruthy();
+      expect(grant.allowEdit, `${profile}.${object}: edit grant gone`).toBe(true);
+      expect(grant.modifyAllRecords, `${profile}.${object}: now modifies all records`).toBe(false);
+      expect(grant.writeScope, `${profile}.${object}: gained a writeScope`).toBeUndefined();
+    }
+
+    // The `own`-depth write filter, applied to the rows a granted editor faces.
+    const editable = (rows: Rec[], userId: string) =>
+      rows.filter((r) => r[PLATFORM_OWNER] === userId);
+
+    const before = freshStore();
+    for (const [object] of GRANTS) {
+      expect(
+        editable(before[object], ADMIN).length,
+        `${object}: an editable row before the sweep — the fixture is wrong`,
+      ).toBe(0);
+    }
+
+    const h = await sweep(before);
+    for (const [object] of GRANTS) {
+      expect(
+        editable(h.store[object], ADMIN).length,
+        `${object}: rows a granted editor still cannot reach`,
+      ).toBe(seedRecordsOf(object).length);
+    }
+  });
+
+  it('survives a warm boot — the replayed seed does not blank the claim', async () => {
+    // The seeds re-run on every boot. They declare no `owner_id`, so the upsert
+    // is a partial write and the claim must persist; if it did not, the sweep
+    // would re-claim forever and any real reassignment would be undone by the
+    // next restart.
+    const h = await sweep(freshStore());
+    loadSeeds(h.store);
+
+    for (const [object] of FAMILIES) {
+      expect(ownerless(h.store[object]).length, `${object}: re-seed blanked the owner`).toBe(0);
+      expect(h.store[object].length, `${object}: re-seed duplicated rows`).toBe(
+        seedRecordsOf(object).length,
+      );
+    }
+
+    const settled = JSON.parse(JSON.stringify(h.store)) as Record<string, Rec[]>;
+    const again = await sweep(JSON.parse(JSON.stringify(settled)) as Record<string, Rec[]>);
+    expect(again.store).toEqual(settled);
   });
 });

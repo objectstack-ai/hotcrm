@@ -166,6 +166,57 @@ const claim = (key: string, objectName: string, label: string) => ({
  * the 03:00 sweep reached the window before this ten-minute sweep did. Order
  * independence comes from the seeds staying out of that window, not from this
  * claim; the claim only settles who owns the SETTLED periods.
+ *
+ * `crm_campaign` and `crm_knowledge_article` close the list (#716). Cross the
+ * registered objects three ways — seeded × declares `owner_id` × claimed here —
+ * and after these two the "seeded and owner-scoped but unclaimed" cell is
+ * EMPTY. `test/flow-scheduled.test.ts` computes that cross-table rather than
+ * reading a hand-written roster, so the next seeded owner-scoped object cannot
+ * be forgotten the way these two were.
+ *
+ * What hid them is their OWD. The nine above are `private` (or
+ * `controlled_by_parent`), where an ownerless row is INVISIBLE and the defect
+ * announces itself on the first list view. These two are `public_read`, so
+ * their seeded rows read fine for everybody and look perfectly healthy. But
+ * `public_read` opens the read baseline only — the platform's write filter
+ * applies to it exactly as it does to `private`: "public_read is read-open but
+ * write-owned; only a fully public object is write-open"
+ * (`@objectstack/plugin-sharing` 17.0.0-rc.2, `buildWriteFilter`). A write
+ * still needs owner-match, or a share at a write level.
+ *
+ * Which turns two GRANTED permissions into permanent 403s. `marketing_user`
+ * holds `crm_campaign` at `allowEdit: true, modifyAllRecords: false`, and
+ * `service_agent` holds `crm_knowledge_article` the same way. With
+ * `modifyAllRecords: false` and no `writeScope`, the effective write depth is
+ * `own`, whose filter is `owner_id == caller` — a predicate no null-owner row
+ * can ever satisfy. So the permission table says "can edit" while every seeded
+ * row answers 403 for everyone but `system_admin`. That is #622's failure shape
+ * on two more objects, and it is why this is worth fixing past the cosmetic
+ * complaint of a blank owner column (empty "My …" lists, an empty owner axis in
+ * the campaign analytics, owner-addressed `notify` reaching nobody).
+ *
+ * The `campaign_leadership_*` criteria shares (`src/sharing/campaign.sharing.ts`)
+ * are not a substitute: they widen edit to two marketing POSITIONS and only
+ * while a campaign is `planning`/`in_progress`, so they cover neither the
+ * finished seeded campaigns nor any knowledge article, and nobody holding the
+ * plain `marketing_user` grant is reached by them at all.
+ *
+ * Both objects are owner-scoped by history rather than shared catalogue:
+ * `scripts/backfill-owner-id.ts` lists both in its `OBJECTS`, i.e. both carried
+ * the app-level `owner` lookup #548 retired. `crm_product` — the other seeded
+ * `public_read` object — declares no `owner_id` at all and stays OUT: it is a
+ * shared catalogue, and it is also the e2e ownership-blind probe, whose premise
+ * is "`public_read` AND swept by nothing" (`e2e/seed-precondition.ts`, pinned by
+ * `test/e2e-seed-precondition.test.ts`). Claiming these two leaves that premise
+ * untouched; claiming `crm_product` would break it.
+ *
+ * Who owns a seeded knowledge article, recorded rather than decided (#716, PM
+ * ruling): the first user, by the same demo convention every other object here
+ * follows. Whether a real deployment's article owner means its AUTHOR or its
+ * MAINTAINER is a product question, and this claim deliberately does not
+ * prejudge it — a real deployment assigns ownership through import or territory
+ * rules before this sweep has anything to pick up (see the header). The demo's
+ * job is only that no seeded row is left owned by nobody.
  */
 const CLAIMED_OBJECTS: ReadonlyArray<[key: string, objectName: string, label: string]> = [
   ['leads', 'crm_lead', 'Leads'],
@@ -177,6 +228,8 @@ const CLAIMED_OBJECTS: ReadonlyArray<[key: string, objectName: string, label: st
   ['quotes', 'crm_quote', 'Quotes'],
   ['contracts', 'crm_contract', 'Contracts'],
   ['forecasts', 'crm_forecast', 'Forecasts'],
+  ['campaigns', 'crm_campaign', 'Campaigns'],
+  ['knowledge', 'crm_knowledge_article', 'Knowledge Articles'],
 ];
 
 /** One pass per object. */
