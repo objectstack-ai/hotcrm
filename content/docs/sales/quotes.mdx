@@ -105,11 +105,20 @@ If a quote's total exceeds the discount-approval threshold (e.g., total > $500K 
 
 ## Standard list views
 
-- **My Quotes** — quotes you own.
-- **Active Quotes** — Draft, In Review or Presented.
-- **Expiring This Week** — about to expire and still open.
-- **Won Quotes** — Accepted.
-- **By Account** — grouped.
+Quotes opens on **All Quotes**, and the switcher carries three saved views — these, and nothing else:
+
+| View | What it shows |
+| --- | --- |
+| **All Quotes** *(the landing view)* | Every quote, newest **Quote Date** first, with the quote number pinned to the left as the link into the record. **Subtotal**, **Tax** and **Total Price** carry column totals, so whatever is on screen adds itself up; account, opportunity, status, expiration date, discount and owner sit on the row. 25 rows a page. |
+| **Quote Pipeline** | The same quotes as a board, one column per status — Draft, In Review, Presented, Accepted, Rejected, Expired — each column totalling **Total Price**. This is where *"what is stuck in review?"* and *"how much have we presented?"* get answered, and the Accepted column is your won-quote list. |
+| **Quote Calendar** | Each quote drawn on a month calendar as a band running from its **Quote Date** to its **Expiration Date**, labelled with the quote number and coloured by status. What is about to lapse is the band ending nearest today. |
+
+None of the three is filtered — no owner cut, no date window, no "active only". Two things make that workable:
+
+- **Status is the filter you already have.** The board separates Draft / In Review / Presented from the closed statuses, and the nightly sweep moves anything past its expiration date into *Expired* on its own, so the open columns stay honest without anyone curating a list.
+- **Expiration Date is sortable** on All Quotes. Sorting on it ascending is the "expiring soon" answer, and it works on the whole register rather than a fixed week.
+
+A brand-new org has no quotes at all — they are generated from opportunities, never created from scratch — so the list is legitimately empty until the first **Generate Quote**. These views declare no empty-state message, so what you get in that case is an empty grid, not an explanation.
 
 ## Tips for sales reps
 
