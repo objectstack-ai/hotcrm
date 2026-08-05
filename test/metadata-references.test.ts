@@ -1956,8 +1956,8 @@ describe('every locale is complete on every authored surface', () => {
     });
 
   it('sees a non-trivial set of canonical views and a _views table in every locale', () => {
-    // Guards the guard. Both assertions below iterate derived collections, and
-    // both would pass by checking nothing if `stack.views` came back empty, if
+    // Guards the guard. The three assertions below iterate derived collections,
+    // and all would pass by checking nothing if `stack.views` came back empty, if
     // the container walk stopped yielding, or if a bundle's `_views` tables
     // failed to flatten — the exact way the navigation guard in this file spent
     // its life green.
