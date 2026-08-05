@@ -11,12 +11,14 @@ import stack from '../objectstack.config';
  *
  * A sharing rule widens **the object it names** — never the records hanging off
  * it. HotCRM authors its widening rules on `crm_account` (territory + team),
- * but the account's children each keep their own baseline: `crm_contact` is
- * `controlled_by_parent` and follows, while `crm_quote`, `crm_contract` and
- * `crm_task` are `private` with no rule of their own, and `crm_opportunity`
- * only widens through the >= $100k leadership rules. A rep who receives an
- * account through a territory rule therefore opens it to partially empty
- * related lists.
+ * but the account's children each keep their own baseline: `crm_quote`,
+ * `crm_contract` and `crm_task` are `private` with no rule of their own, and
+ * `crm_opportunity` only widens through the >= $100k leadership rules. A rep
+ * who receives an account through a territory rule therefore opens it to
+ * partially empty related lists. `crm_contact` is `controlled_by_parent`, which
+ * does NOT mean "follows the account": as MEASURED by
+ * `test/parent-derived-reach.test.ts`, a parent-derived child is readable
+ * org-wide — see the 'derived' note on ACCOUNT_CHILD_COVERAGE below.
  *
  * Whether those children *should* follow the account is an open business
  * decision (#549) — widening any of them changes what every holder of that
@@ -61,7 +63,9 @@ const SHARING_DOC = 'content/docs/administration/sharing-and-security.mdx';
  *                practical reach of a 'derived' child is therefore every record
  *                of that object, for every holder of object-level read — which
  *                is why #549's Option 2 (convert quote/contract) does NOT
- *                deliver "follows the account" and is unresolved here.
+ *                deliver "follows the account" and is unresolved here. The
+ *                narrow semantics is the intended one; the platform gap is
+ *                tracked upstream as objectstack-ai/objectstack#5386 (#694).
  *   'own_only' — private, no sharing rule: the child stays with its owner.
  *   'partial'  — private, but a rule of its own widens SOME records (never by
  *                account criteria — the rules match on the child's own fields).
