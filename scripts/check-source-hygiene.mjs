@@ -4,14 +4,15 @@
 /**
  * Source hygiene gate.
  *
- * These three checks used to live as inline `grep`/`find` one-liners in
- * `.github/workflows/code-quality.yml`. All three scanned `packages/` — a
- * directory this repository has never had — and all three carried
- * `continue-on-error: true`, so they reported success without ever reading a
- * single file of ours.
+ * The console.log / TODO / file-size checks used to live as inline
+ * `grep`/`find` one-liners in `.github/workflows/code-quality.yml`. All three
+ * scanned `packages/` — a directory this repository has never had — and all
+ * three carried `continue-on-error: true`, so they reported success without
+ * ever reading a single file of ours. The control-byte scan was added later,
+ * from #686.
  *
  * They now scan the real source tree and FAIL the build, which is only
- * defensible because the tree is already clean on all three counts. Running
+ * defensible because the tree is already clean on every count. Running
  * this locally is the same command CI runs:
  *
  *   node scripts/check-source-hygiene.mjs
@@ -69,6 +70,51 @@ function grep(files, pattern) {
   return hits;
 }
 
+/**
+ * Every control character except tab (0x09), LF (0x0a) and CR (0x0d).
+ *
+ * A NUL-only check would not be enough: 0x01 and friends make grep reach the
+ * same verdict, and a gate that scans for one byte gives false confidence about
+ * the whole class.
+ */
+const CONTROL_BYTE = /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/;
+
+/**
+ * Byte-level scan for control characters in first-party source (#686).
+ *
+ * One raw control byte makes grep/ripgrep classify the ENTIRE file as binary:
+ * `grep -rn` prints `binary file matches` instead of line hits, and the `-l` /
+ * `-c` forms most sweeps use report nothing at all. The file silently drops out
+ * of every text search — so the defect hides itself, and every later sweep over
+ * the repo reads clean while skipping that file. `test/seed-consistency.test.ts`
+ * carried a raw NUL as a key separator for months for exactly this reason; the
+ * separator was fine, its spelling was not.
+ *
+ * Scans every file under the scanned directories, not just `.ts` — the hazard
+ * is about the bytes on disk, not the language. Those directories hold text
+ * only; a binary fixture arriving there should fail loudly and be an explicit
+ * decision, not something a silent skip-list absorbs.
+ *
+ * Read as `latin1` so each byte maps 1:1 to a code point. utf8 decoding folds
+ * an invalid byte into U+FFFD, which sits outside the control range and would
+ * be missed by a scan that is supposed to be byte-level.
+ *
+ * @returns {{file: string, line: number, text: string}[]}
+ */
+function scanControlBytes(files) {
+  const hits = [];
+  for (const file of files) {
+    const lines = readFileSync(join(ROOT, file), 'latin1').split('\n');
+    lines.forEach((text, i) => {
+      const at = text.search(CONTROL_BYTE);
+      if (at === -1) return;
+      const hex = text.charCodeAt(at).toString(16).padStart(2, '0');
+      hits.push({ file, line: i + 1, text: `control byte 0x${hex} at column ${at + 1}` });
+    });
+  }
+  return hits;
+}
+
 const failures = [];
 
 function check(name, hits, remedy) {
@@ -119,6 +165,12 @@ check(
   'no TODO/FIXME markers',
   grep(allTs, /\b(TODO|FIXME)\b/),
   'file an issue and link it, or finish the work — a marker in main is invisible',
+);
+
+check(
+  'no raw control bytes in source files',
+  scanControlBytes(allFiles),
+  'write the character as an escape sequence (\\u0000 for NUL) — byte-identical at runtime, and it keeps the file findable by grep',
 );
 
 check(
