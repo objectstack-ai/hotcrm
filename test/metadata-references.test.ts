@@ -1315,72 +1315,21 @@ describe('action labels are translated in every locale', () => {
  */
 describe('select fields are translated in every locale', () => {
   /**
-   * Select fields knowingly still missing translations, keyed
-   * `object.field` → the locales that lack them.
+   * There is no exemption list any more, and re-introducing one is a regression.
    *
-   * This map may only ever SHRINK. It is a ledger of pre-existing debt, not a
-   * place to park new work: a field added or extended from here on has no entry
-   * to hide behind, so it fails on the PR that introduces it. Two assertions
-   * below keep the ledger from rotting — an entry whose gap has since been
-   * filled fails as stale, and an entry naming a field or locale that does not
-   * exist fails as a ghost.
+   * This guard shipped with a `PENDING_SELECT_LABELS` ledger: 34 fields over 12
+   * objects, 111 (locale, field) pairs, ~380 option labels of pre-existing debt
+   * that #631 could not fix without burying the one field its PR was about. The
+   * ledger was allowed to shrink and never grow, and #645 emptied it. It is gone
+   * rather than left behind as an empty object, along with the two assertions
+   * that existed only to keep it honest (stale rows, ghost rows) — an empty
+   * ledger is an invitation to add a row, and the assertions below say what the
+   * ledger was always converging on: every select field, every option value,
+   * every locale, no exceptions.
    *
-   * Surveyed when #631 landed: 34 fields over 12 objects — 111 (locale, field)
-   * pairs, ~380 option labels. They are enumerated in #645 rather than fixed
-   * here, because translating that much in a one-field bug-fix PR would bury the
-   * field the PR is actually about.
+   * A field added or extended from here on therefore fails on the PR that
+   * introduces it, which is the whole point.
    */
-  /**
-   * Every row is written out literally rather than derived from `localePacks`,
-   * so that adding a fifth locale surfaces as new gaps to fill instead of
-   * silently extending every exemption to cover it.
-   *
-   * No row lists `zh-CN` any more: the 15 fields that were untranslated in all
-   * four locales were completed in Chinese first, ahead of a zh-CN customer
-   * trial. Simplified Chinese is therefore the one locale with full select
-   * coverage — a row regaining `zh-CN` is a regression, not a re-scope.
-   */
-  const PENDING_SELECT_LABELS: Record<string, string[]> = {
-    'crm_account.tier': ['ja-JP', 'es-ES'],
-    'crm_account.segment': ['ja-JP', 'es-ES'],
-    'crm_account.health_score': ['ja-JP', 'es-ES'],
-    'crm_campaign.type': ['en', 'ja-JP', 'es-ES'],
-    'crm_campaign.channel': ['en', 'ja-JP', 'es-ES'],
-    'crm_campaign.status': ['en', 'ja-JP', 'es-ES'],
-    'crm_case.status': ['en', 'ja-JP', 'es-ES'],
-    'crm_case.priority': ['en', 'ja-JP', 'es-ES'],
-    'crm_case.type': ['en', 'ja-JP', 'es-ES'],
-    'crm_contact.salutation': ['en', 'ja-JP', 'es-ES'],
-    'crm_contact.lead_source': ['en', 'ja-JP', 'es-ES'],
-    'crm_contract.status': ['en', 'ja-JP', 'es-ES'],
-    'crm_contract.billing_frequency': ['en', 'ja-JP', 'es-ES'],
-    'crm_contract.payment_terms': ['en', 'ja-JP', 'es-ES'],
-    'crm_contract.contract_type': ['en', 'ja-JP', 'es-ES'],
-    // Partial: 5 of 7 categories and 4 of 8 tags are translated everywhere.
-    'crm_knowledge_article.category': ['en', 'ja-JP', 'es-ES'],
-    'crm_knowledge_article.tags': ['en', 'ja-JP', 'es-ES'],
-    'crm_lead.salutation': ['en', 'ja-JP', 'es-ES'],
-    'crm_lead.industry': ['en', 'ja-JP', 'es-ES'],
-    'crm_opportunity.competitors': ['en', 'ja-JP', 'es-ES'],
-    // `crm_opportunity.win_reason` / `loss_reason` left the ledger in #593:
-    // both became REQUIRED at close and both now drive a Sales-dashboard
-    // widget, so an untranslated option is no longer a cosmetic gap — it is a
-    // raw stored value (`no_budget`, `quote_accepted`) in a picklist a rep is
-    // forced to choose from, and in a chart legend. `approval_status` stays:
-    // it is untouched by that change and belongs to #645's sweep.
-    'crm_opportunity.approval_status': ['ja-JP', 'es-ES'],
-    'crm_product.category': ['en', 'ja-JP', 'es-ES'],
-    'crm_product.family': ['en', 'ja-JP', 'es-ES'],
-    'crm_product.billing_type': ['en', 'ja-JP', 'es-ES'],
-    'crm_product.unit_of_measure': ['en', 'ja-JP', 'es-ES'],
-    'crm_quote.status': ['en', 'ja-JP', 'es-ES'],
-    'crm_quote.payment_terms': ['en', 'ja-JP', 'es-ES'],
-    'crm_task.status': ['en', 'ja-JP', 'es-ES'],
-    'crm_task.priority': ['en', 'ja-JP', 'es-ES'],
-    'crm_task.type': ['en', 'ja-JP', 'es-ES'],
-    'crm_task.related_to_type': ['en', 'ja-JP', 'es-ES'],
-    'crm_task.recurrence_type': ['en', 'ja-JP', 'es-ES'],
-  };
 
   /** Every authored select field, with its option VALUES (what the DB stores). */
   const selectFields = objects.flatMap((obj) =>
@@ -1393,9 +1342,6 @@ describe('select fields are translated in every locale', () => {
         values: (f.options as AnyRec[]).map((o) => String(o.value)),
       })),
   );
-
-  const isPending = (key: string, locale: string) =>
-    (PENDING_SELECT_LABELS[key] ?? []).includes(locale);
 
   /** The translation entry for one select field in one locale pack. */
   const entryFor = (pack: AnyRec, objectName: string, fieldName: string): AnyRec | undefined =>
@@ -1414,7 +1360,6 @@ describe('select fields are translated in every locale', () => {
     const bad: string[] = [];
     for (const { key, objectName, fieldName } of selectFields) {
       for (const [locale, pack] of localePacks) {
-        if (isPending(key, locale)) continue;
         if (!entryFor(pack, objectName, fieldName)?.label) {
           bad.push(`${locale}: ${objectName}.fields.${fieldName}.label`);
         }
@@ -1435,7 +1380,6 @@ describe('select fields are translated in every locale', () => {
     const bad: string[] = [];
     for (const { key, objectName, fieldName, values } of selectFields) {
       for (const [locale, pack] of localePacks) {
-        if (isPending(key, locale)) continue;
         const options = entryFor(pack, objectName, fieldName)?.options ?? {};
         const missing = values.filter((v) => !options[v]);
         if (missing.length) {
@@ -1450,47 +1394,6 @@ describe('select fields are translated in every locale', () => {
     ).toEqual([]);
   });
 
-  it('the pending map contains no stale entries', () => {
-    // A field that has since been translated must leave the ledger, or the
-    // ledger stops meaning anything and the field silently loses its guard.
-    const byKey = new Map(selectFields.map((f) => [f.key, f]));
-    const stale: string[] = [];
-    for (const [key, locales] of Object.entries(PENDING_SELECT_LABELS)) {
-      const field = byKey.get(key);
-      if (!field) continue; // ghost — reported by the test below
-      for (const locale of locales) {
-        const pack = packFor(locale);
-        if (!pack) continue; // ghost locale — reported by the test below
-        const entry = entryFor(pack, field.objectName, field.fieldName);
-        const complete =
-          !!entry?.label && field.values.every((v) => (entry.options ?? {})[v]);
-        if (complete) stale.push(`${locale}: ${key}`);
-      }
-    }
-    expect(
-      stale,
-      `these are now fully translated — remove them from PENDING_SELECT_LABELS:\n  ${stale.join('\n  ')}`,
-    ).toEqual([]);
-  });
-
-  it('the pending map only names real fields and real locales', () => {
-    const keys = new Set(selectFields.map((f) => f.key));
-    const locales = new Set(localePacks.map(([l]) => l));
-    const ghosts: string[] = [];
-    for (const [key, pending] of Object.entries(PENDING_SELECT_LABELS)) {
-      if (!keys.has(key)) {
-        ghosts.push(`${key} is not a select field on any object`);
-        continue;
-      }
-      for (const locale of pending) {
-        if (!locales.has(locale)) ghosts.push(`${key} names unknown locale "${locale}"`);
-      }
-    }
-    expect(
-      ghosts,
-      `PENDING_SELECT_LABELS has entries that check nothing:\n  ${ghosts.join('\n  ')}`,
-    ).toEqual([]);
-  });
 });
 
 /**
@@ -1605,15 +1508,15 @@ describe('app AI bindings resolve to a platform agent', () => {
 });
 
 /**
- * Simplified Chinese is complete on every translatable surface, not just on
- * select options.
+ * EVERY locale is complete on every translatable surface, not just on select
+ * options.
  *
- * `PENDING_SELECT_LABELS` above guards ONE surface (picklist option labels) and
- * guards it well. It says nothing about the other four an authored bundle owns
- * — field labels/help, page header copy, dashboard widget titles, and list-view
- * empty states — and those were exactly where the remaining 98 zh-CN gaps sat:
- * every page in the app rendered its header, nav label and breadcrumb in
- * English, and the six win/loss widgets on the Sales dashboard did the same.
+ * The guard above covers ONE surface — picklist option labels. It says nothing
+ * about the other four an authored bundle owns (field labels/help, page header
+ * copy, dashboard widget titles, list-view empty states), and those are exactly
+ * where the gaps sat: every page in the app rendered its header, nav label and
+ * breadcrumb in English in three of four locales, and the Sales-dashboard
+ * win/loss widgets did the same.
  *
  * Nothing in CI could have caught that. `pnpm lint` runs with `--skip-i18n`,
  * and `objectstack lint` exits 0 on warnings regardless — so the i18n rules
@@ -1621,108 +1524,124 @@ describe('app AI bindings resolve to a platform agent', () => {
  * PR. This suite is the only gate, which is why the assertions live here rather
  * than in a lint config.
  *
- * Scoped to zh-CN on purpose. `en` / `ja-JP` / `es-ES` still carry the debt
- * enumerated in #645 and #494; widening this guard is that work's finish line,
- * not its entry fee.
+ * This started as a zh-CN-only guard, because zh-CN was completed first ahead
+ * of a customer trial while `en` / `ja-JP` / `es-ES` still carried the debt in
+ * #645 and #494. That debt is now paid, so the guard covers all four — which
+ * was always the stated finish line, and is the only version of it that stops
+ * the next locale from drifting.
+ *
+ * Derived from `localePacks` rather than a hard-coded list: a fifth locale
+ * added to the bundle is held to the same bar the day it appears, instead of
+ * silently enjoying an exemption nobody wrote down.
  */
-describe('zh-CN is complete on every authored surface', () => {
-  const zh = (): AnyRec => {
-    const pack = packFor('zh-CN');
-    expect(pack, 'no zh-CN locale pack found in stack.translations').toBeTruthy();
-    return pack as AnyRec;
+describe('every locale is complete on every authored surface', () => {
+  const packs = (): [string, AnyRec][] => {
+    // Guards the guard: an empty list would make every assertion below pass by
+    // checking nothing — how the navigation guard in this file spent its life.
+    expect(localePacks.length, 'no locale packs found in stack.translations').toBeGreaterThan(0);
+    return localePacks;
   };
 
-  it('every authored field label and help string has a zh-CN translation', () => {
-    const pack = zh();
+  it('every authored field label and help string is translated', () => {
     const bad: string[] = [];
-    for (const obj of objects) {
-      const fields = pack.objects?.[obj.name]?.fields ?? {};
-      for (const [name, f] of Object.entries<AnyRec>(obj.fields ?? {})) {
-        // `help` mirrors the authored `description` — the field-level spelling
-        // differs between the two surfaces (spec: FieldTranslationSchema).
-        if (f?.label && !fields[name]?.label) bad.push(`${obj.name}.${name}.label`);
-        if (f?.description && !fields[name]?.help) bad.push(`${obj.name}.${name}.help`);
-      }
-    }
-    expect(bad, `fields with no zh-CN translation:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-
-  it('every page has zh-CN nav copy and header copy', () => {
-    const pack = zh();
-    const bad: string[] = [];
-    for (const page of pages) {
-      const t = pack.pages?.[page.name];
-      if (page.label && !t?.label) bad.push(`${page.name}.label`);
-      if (page.description && !t?.description) bad.push(`${page.name}.description`);
-
-      // A page's header copy is addressed by the PAGE name: `page:header`
-      // instances carry no stable id, so `pages.<name>.title` / `.subtitle` are
-      // the only keys that reach them. `title` legitimately falls back to
-      // `label`, so it is only required when the two differ.
-      const header = (page.regions ?? [])
-        .flatMap((r: AnyRec) => r.components ?? [])
-        .find((c: AnyRec) => c?.type === 'page:header');
-      const title = header?.properties?.title;
-      const subtitle = header?.properties?.subtitle;
-      if (title && title !== page.label && !t?.title) bad.push(`${page.name}.title`);
-      if (subtitle && !t?.subtitle) bad.push(`${page.name}.subtitle`);
-    }
-    expect(bad, `pages with untranslated zh-CN copy:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-
-  it('every dashboard widget has a zh-CN title and description', () => {
-    const pack = zh();
-    const dashboards: AnyRec[] = (stack as any).dashboards ?? [];
-    const bad: string[] = [];
-    for (const d of dashboards) {
-      const widgets = pack.dashboards?.[d.name]?.widgets ?? {};
-      for (const w of d.widgets ?? []) {
-        if (!w?.id) continue;
-        if (w.title && !widgets[w.id]?.title) bad.push(`${d.name}.${w.id}.title`);
-        if (w.description && !widgets[w.id]?.description) bad.push(`${d.name}.${w.id}.description`);
-      }
-    }
-    expect(bad, `widgets with no zh-CN copy:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-
-  it('every view empty state has zh-CN copy', () => {
-    // The empty state is the ONE string a view shows when it has no rows — the
-    // exact moment a trial user is most likely to be reading it.
-    const pack = zh();
-    const bad: string[] = [];
-    for (const record of views) {
-      const containers: [string, AnyRec][] = [
-        ...(record.list ? [['list', record.list] as [string, AnyRec]] : []),
-        ...Object.entries<AnyRec>(record.listViews ?? {}),
-      ];
-      for (const [key, view] of containers) {
-        const empty = view?.emptyState;
-        if (!empty?.title && !empty?.message) continue;
-        const objectName = view?.data?.object ?? record.list?.data?.object ?? record.object;
-        const name = view?.name ?? key;
-        const t = pack.objects?.[objectName]?._views?.[name]?.emptyState;
-        if (empty.title && !t?.title) bad.push(`${objectName}.${name}.emptyState.title`);
-        if (empty.message && !t?.message) bad.push(`${objectName}.${name}.emptyState.message`);
-      }
-    }
-    expect(bad, `empty states with no zh-CN copy:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-
-  it('every action parameter label has a zh-CN translation', () => {
-    // A param label is the field caption inside an action's modal — untranslated,
-    // it is a bare English word on an otherwise Chinese form.
-    const pack = zh();
-    const bad: string[] = [];
-    for (const action of stackActions) {
-      if (!action.objectName) continue;
-      const params = pack.objects?.[action.objectName]?._actions?.[action.name]?.params ?? {};
-      for (const p of action.params ?? []) {
-        const key = p?.name ?? p?.field;
-        if (key && p?.label && !params[key]?.label) {
-          bad.push(`${action.objectName}.${action.name}.params.${key}.label`);
+    for (const [locale, pack] of packs()) {
+      for (const obj of objects) {
+        const fields = pack.objects?.[obj.name]?.fields ?? {};
+        for (const [name, f] of Object.entries<AnyRec>(obj.fields ?? {})) {
+          // `help` mirrors the authored `description` — the field-level spelling
+          // differs between the two surfaces (spec: FieldTranslationSchema).
+          if (f?.label && !fields[name]?.label) bad.push(`${locale}: ${obj.name}.${name}.label`);
+          if (f?.description && !fields[name]?.help) bad.push(`${locale}: ${obj.name}.${name}.help`);
         }
       }
     }
-    expect(bad, `action params with no zh-CN label:\n  ${bad.join('\n  ')}`).toEqual([]);
+    expect(bad, `fields with no translation:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('every page has translated nav copy and header copy', () => {
+    const bad: string[] = [];
+    for (const [locale, pack] of packs()) {
+      for (const page of pages) {
+        const t = pack.pages?.[page.name];
+        if (page.label && !t?.label) bad.push(`${locale}: ${page.name}.label`);
+        if (page.description && !t?.description) bad.push(`${locale}: ${page.name}.description`);
+
+        // A page's header copy is addressed by the PAGE name: `page:header`
+        // instances carry no stable id, so `pages.<name>.title` / `.subtitle` are
+        // the only keys that reach them. `title` legitimately falls back to
+        // `label`, so it is only required when the two differ.
+        const header = (page.regions ?? [])
+          .flatMap((r: AnyRec) => r.components ?? [])
+          .find((c: AnyRec) => c?.type === 'page:header');
+        const title = header?.properties?.title;
+        const subtitle = header?.properties?.subtitle;
+        if (title && title !== page.label && !t?.title) bad.push(`${locale}: ${page.name}.title`);
+        if (subtitle && !t?.subtitle) bad.push(`${locale}: ${page.name}.subtitle`);
+      }
+    }
+    expect(bad, `pages with untranslated copy:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('every dashboard widget has a translated title and description', () => {
+    const dashboards: AnyRec[] = (stack as any).dashboards ?? [];
+    const bad: string[] = [];
+    for (const [locale, pack] of packs()) {
+      for (const d of dashboards) {
+        const widgets = pack.dashboards?.[d.name]?.widgets ?? {};
+        for (const w of d.widgets ?? []) {
+          if (!w?.id) continue;
+          if (w.title && !widgets[w.id]?.title) bad.push(`${locale}: ${d.name}.${w.id}.title`);
+          if (w.description && !widgets[w.id]?.description) {
+            bad.push(`${locale}: ${d.name}.${w.id}.description`);
+          }
+        }
+      }
+    }
+    expect(bad, `widgets with no translated copy:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('every view empty state is translated', () => {
+    // The empty state is the ONE string a view shows when it has no rows — the
+    // exact moment a trial user is most likely to be reading it.
+    const bad: string[] = [];
+    for (const [locale, pack] of packs()) {
+      for (const record of views) {
+        const containers: [string, AnyRec][] = [
+          ...(record.list ? [['list', record.list] as [string, AnyRec]] : []),
+          ...Object.entries<AnyRec>(record.listViews ?? {}),
+        ];
+        for (const [key, view] of containers) {
+          const empty = view?.emptyState;
+          if (!empty?.title && !empty?.message) continue;
+          const objectName = view?.data?.object ?? record.list?.data?.object ?? record.object;
+          const name = view?.name ?? key;
+          const t = pack.objects?.[objectName]?._views?.[name]?.emptyState;
+          if (empty.title && !t?.title) bad.push(`${locale}: ${objectName}.${name}.emptyState.title`);
+          if (empty.message && !t?.message) {
+            bad.push(`${locale}: ${objectName}.${name}.emptyState.message`);
+          }
+        }
+      }
+    }
+    expect(bad, `empty states with no translated copy:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('every action parameter label is translated', () => {
+    // A param label is the field caption inside an action's modal — untranslated,
+    // it is a bare English word on an otherwise localized form.
+    const bad: string[] = [];
+    for (const [locale, pack] of packs()) {
+      for (const action of stackActions) {
+        if (!action.objectName) continue;
+        const params = pack.objects?.[action.objectName]?._actions?.[action.name]?.params ?? {};
+        for (const p of action.params ?? []) {
+          const key = p?.name ?? p?.field;
+          if (key && p?.label && !params[key]?.label) {
+            bad.push(`${locale}: ${action.objectName}.${action.name}.params.${key}.label`);
+          }
+        }
+      }
+    }
+    expect(bad, `action params with no translated label:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 });
