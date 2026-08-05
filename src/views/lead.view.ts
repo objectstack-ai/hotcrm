@@ -340,8 +340,35 @@ export const LeadViews = defineView({
     },
 
     /**
-     * Hot Leads — Ready for immediate follow-up
-     * (Set by the auto_flag_hot_lead workflow)
+     * Hot Leads — the working queue for the leads routing declared HOT.
+     *
+     * "Hot" is defined in exactly ONE place: the `lead_assignment` flow's
+     * `check_hot` decision (edge `e2`, `record.rating >= 4`). Crossing that
+     * line is what stamps the 1-day follow-up SLA and fires the "Hot lead —
+     * assign within 24h" alert at the owner, so this queue must hold precisely
+     * the leads that alert is about. (An earlier comment here credited a
+     * flagging workflow that has never existed in this repo — dead name
+     * removed, the routing flow is the producer.)
+     *
+     * The cut was `rating >= 4.5` (#766). `rating` is a WHOLE-star field —
+     * `lead.hook.ts` rounds its computed score ("round to WHOLE stars"), the
+     * `star_rating` widget offers nothing finer, and the one seeded 4.5 was
+     * deleted for the same reason (#591) — so `>= 4.5` meant `== 5` on every
+     * row that can actually exist. A 4-star lead was routed hot, alerted on,
+     * and then missing from the queue its owner was sent to.
+     *
+     * Sharing the population with "High Priority" is the deliberate cost of
+     * having one definition of hot, not an oversight: both views now show
+     * rating >= 4, still New or Contacted. What differs is what they are FOR.
+     * Hot Leads is the work order — sorted by next-follow-up (the SLA that
+     * routing just stamped), with phone, email and owner on the row so it can
+     * be dialled top to bottom. High Priority is the scan list — score-tinted
+     * rows and lead source, no SLA column, no time ordering. A 5-star-only
+     * queue, if it is ever a real need, gets its own view under its own name
+     * instead of squatting on "Hot".
+     *
+     * `test/hot-lead-threshold-parity.test.ts` derives this threshold and the
+     * flow's from the metadata and fails if they drift apart again.
      */
     hot_leads: {
       name: 'hot_leads',
@@ -349,13 +376,11 @@ export const LeadViews = defineView({
       label: '🔥 Hot Leads',
       data: { provider: 'object', object: 'crm_lead' },
       columns: ['full_name', 'company', 'phone', 'email', 'rating', 'next_followup_date', 'owner_id'],
-      // The HOTTEST actionable subset (rating >= 4.5) — a tighter cut than the
-      // "High Priority" view (rating >= 4) so the two are not duplicates. Hot
-      // Leads is what a rep works first; sort by next-follow-up so the most
-      // time-sensitive surface on top. (Operator-only filters; the view runtime
+      // Same rating cut as the `lead_assignment` hot branch, scoped to the
+      // statuses still worth working. (Operator-only filters; the view runtime
       // does not resolve date template strings.)
       filter: [
-        { field: 'rating', operator: 'greater_than_or_equal', value: 4.5 },
+        { field: 'rating', operator: 'greater_than_or_equal', value: 4 },
         { field: 'status', operator: 'in', value: ['new', 'contacted'] },
       ],
       sort: [{ field: 'next_followup_date', order: 'asc' }],
