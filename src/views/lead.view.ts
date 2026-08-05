@@ -108,7 +108,7 @@ export const LeadViews = defineView({
         width: 120,
       },
       {
-        field: 'owner',
+        field: 'owner_id',
         label: 'Owner',
         width: 150,
       },
@@ -196,7 +196,7 @@ export const LeadViews = defineView({
           'lead_source',
           'industry',
           {
-            field: 'owner',
+            field: 'owner_id',
             required: true,
           },
           // `disqualification_reason` is enforced by the
@@ -284,7 +284,7 @@ export const LeadViews = defineView({
       },
       columns: ['full_name', 'company', 'email', 'status', 'rating'],
       filter: [
-        { field: 'owner', operator: 'equals', value: '{current_user_id}' },
+        { field: 'owner_id', operator: 'equals', value: '{current_user_id}' },
       ],
       sort: [
         { field: 'rating', order: 'desc' },
@@ -301,7 +301,7 @@ export const LeadViews = defineView({
       type: 'grid',
       label: '🔥 Hot Leads',
       data: { provider: 'object', object: 'crm_lead' },
-      columns: ['full_name', 'company', 'phone', 'email', 'rating', 'next_followup_date', 'owner'],
+      columns: ['full_name', 'company', 'phone', 'email', 'rating', 'next_followup_date', 'owner_id'],
       // The HOTTEST actionable subset (rating >= 4.5) — a tighter cut than the
       // "High Priority" view (rating >= 4) so the two are not duplicates. Hot
       // Leads is what a rep works first; sort by next-follow-up so the most
@@ -356,7 +356,7 @@ export const LeadViews = defineView({
       columns: [
         'full_name', 'company', 'email',
         'duplicate_of_type', 'duplicate_of_lead', 'duplicate_of_contact',
-        'status', 'owner',
+        'status', 'owner_id',
       ],
       filter: [
         { field: 'duplicate_status', operator: 'equals', value: 'suspected' },
@@ -464,7 +464,7 @@ export const LeadViews = defineView({
             // Source at intake — attribution is unrecoverable if not captured
             // when the lead is keyed in.
             'lead_source',
-            'owner',
+            'owner_id',
             // See the default form: `unqualified` requires a reason, so the
             // reason must be reachable wherever the status can be set.
             {
@@ -590,7 +590,7 @@ export const LeadViews = defineView({
             { field: 'rating', widget: 'star_rating' },
             'lead_source',
             {
-              field: 'owner',
+              field: 'owner_id',
               visibleOn: 'rating >= 4', // Conditional visibility
             },
           ],
@@ -628,7 +628,7 @@ export const LeadViews = defineView({
             'company',
             'email',
             { field: 'status', required: true },
-            'owner',
+            'owner_id',
             // See the default form: `unqualified` requires a reason.
             {
               field: 'disqualification_reason',
@@ -679,7 +679,7 @@ export const LeadViews = defineView({
             { field: 'rating', widget: 'star_rating' },
             'lead_source',
             {
-              field: 'owner',
+              field: 'owner_id',
               visibleOn: 'status != "new"', // Only show owner after initial contact
             },
             // See the default form: `unqualified` requires a reason.
@@ -748,7 +748,7 @@ export const LeadViews = defineView({
      * via iframe on a marketing site. Guests can ONLY submit (insert) — the
      * `guest_portal` profile denies read/edit/delete on `crm_lead`.
      *
-     * Fields not on the form (status, lead_source, owner, rating) are stamped
+     * Fields not on the form (status, lead_source, owner_id, rating) are stamped
      * by the `lead_automation` hook in `lead.hook.ts` after a guest submission.
      */
     web_to_lead: {
@@ -838,7 +838,7 @@ export const LeadViews = defineView({
               visibleOn: P`record.rating >= 3`,
             },
             {
-              field: 'owner',
+              field: 'owner_id',
               required: true,
               visibleOn: P`record.status == "contacted" || record.status == "qualified"`,
             },

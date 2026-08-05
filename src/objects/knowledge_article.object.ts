@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
-import { F, P, cel } from '@objectstack/spec';
+import { F, P } from '@objectstack/spec';
 
 /**
  * Knowledge Article Object
@@ -40,6 +40,15 @@ export const KnowledgeArticle = ObjectSchema.create({
   ],
 
   fields: {
+    // Platform ownership anchor — canonical note in `account.object.ts` (#548).
+    owner_id: Field.lookup('sys_user', {
+      label: 'Article Owner',
+      group: 'basic',
+      system: true,
+      readonly: false,
+      trackHistory: true,
+    }),
+
     article_number: Field.autonumber({
       label: 'Article Number',
       format: 'KA-{0000}',
@@ -149,13 +158,6 @@ export const KnowledgeArticle = ObjectSchema.create({
       group: 'content',
     }),
 
-    owner: Field.lookup('sys_user', {
-
-      defaultValue: cel`os.user.id`,
-      label: 'Article Owner',
-      group: 'basic',
-      trackHistory: true,
-    }),
 
     published_at: Field.datetime({
       label: 'Published At',

@@ -114,7 +114,7 @@ const accountHook: Hook = {
     // every seeded activity date to "today", emptying the churn report buckets.
     if (event === 'beforeUpdate' && ctx.user?.id) {
       const prev = ctx.previous ?? {};
-      const ownerChanged = typeof input.owner !== 'undefined' && input.owner !== prev.owner;
+      const ownerChanged = typeof input.owner_id !== 'undefined' && input.owner_id !== prev.owner_id;
       const typeChanged = typeof input.type !== 'undefined' && input.type !== prev.type;
       if (ownerChanged || typeChanged) {
         input.last_activity_date = new Date().toISOString().slice(0, 10);

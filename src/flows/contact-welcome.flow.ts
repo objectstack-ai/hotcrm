@@ -34,23 +34,24 @@ export const ContactWelcomeFlow: Flow = {
         triggerType: 'record-after-create',
         // TOTALITY (#633): every `record.x` read carries a `has(record.x)`
         // guard — see the house-rule block in
-        // `test/flow-condition-totality.test.ts`. Measured end-to-end on
-        // driver-memory: `owner`'s `os.user.id` default cannot evaluate on a
-        // write that carries no user (seed data, an integration, any system
-        // context), ObjectQL logs `Failed to evaluate default expression` and
-        // stores the row with NO `owner` column — so `record.owner != null`
-        // aborted with `No such key: owner` and no seeded contact ever got a
-        // welcome prompt. `!= null` is not a substitute for `has()`: on an
-        // absent key it aborts exactly like `== "v"` does. An absent
-        // `email_opt_out` means the contact has not opted out.
-        condition: P`has(record.owner) && record.owner != null
+        // `test/flow-condition-totality.test.ts`. The absent-key case is real
+        // here, not hypothetical: `owner_id` is auto-stamped by the security
+        // middleware only on writes that CARRY a user, and a system write —
+        // seed data, an integration, a `runAs: 'system'` flow — short-circuits
+        // that middleware entirely (#548). Such a row reaches driver-memory
+        // with NO `owner_id` column at all, so `record.owner_id != null` alone
+        // aborts with `No such key` and no seeded contact ever gets a welcome
+        // prompt. `!= null` is not a substitute for `has()`: on an absent key
+        // it aborts exactly like `== "v"` does. An absent `email_opt_out`
+        // means the contact has not opted out.
+        condition: P`has(record.owner_id) && record.owner_id != null
           && (!has(record.email_opt_out) || record.email_opt_out != true)`,
       },
     },
     {
       id: 'send_welcome', type: 'notify', label: 'Prompt Owner to Welcome',
       config: {
-        recipients: ['{record.owner}'],
+        recipients: ['{record.owner_id}'],
         channels: ['inbox', 'email'],
         topic: 'contact_welcome',
         title: 'New contact: {record.first_name} {record.last_name}',

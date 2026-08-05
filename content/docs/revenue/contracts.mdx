@@ -112,7 +112,7 @@ If your org wants contracts to follow the account, an admin has to author that: 
 
 ## Standard list views
 
-- **My Active Contracts** — `owner = me AND status = Activated`.
+- **My Active Contracts** — `owner_id = me AND status = Activated`.
 - **Expiring in 60 Days** — `end_date <= TODAY + 60 AND status = Activated`.
 - **Up for Renewal** — within renewal-notice window.
 - **Expired This Month** — `status = Expired AND last_modified IN this month`.

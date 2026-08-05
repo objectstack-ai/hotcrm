@@ -1,4 +1,4 @@
-import { P, cel } from '@objectstack/spec';
+import { P } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
@@ -36,6 +36,15 @@ export const Contract = ObjectSchema.create({
   ],
 
   fields: {
+    // Platform ownership anchor — canonical note in `account.object.ts` (#548).
+    owner_id: Field.lookup('sys_user', {
+      label: 'Contract Owner',
+      group: 'parties',
+      system: true,
+      readonly: false,
+      trackHistory: true,
+    }),
+
     // AutoNumber field
     contract_number: Field.autonumber({
       label: 'Contract Number',
@@ -69,13 +78,6 @@ export const Contract = ObjectSchema.create({
       dependsOn: ['crm_account'],
     }),
     
-    owner: Field.lookup('sys_user', {
-
-      defaultValue: cel`os.user.id`,
-      label: 'Contract Owner',
-      group: 'parties',
-      trackHistory: true,
-    }),
 
     // Status
     status: Field.select({
@@ -213,7 +215,7 @@ export const Contract = ObjectSchema.create({
     { fields: ['status'] },
     { fields: ['start_date'] },
     { fields: ['end_date'] },
-    { fields: ['owner'] },
+    { fields: ['owner_id'] },
   ],
   
   // Enable advanced features

@@ -188,10 +188,10 @@ describe('import mappings — transforms the import path can execute', () => {
     for (const { name, object } of EXPECTED) {
       const m = mappingByName(name);
       const fields = objectByName.get(object)!.fields as Record<string, AnyRec>;
-      const ownerEntry = (m.fieldMapping as AnyRec[]).find((e) => first(e.target) === 'owner');
+      const ownerEntry = (m.fieldMapping as AnyRec[]).find((e) => first(e.target) === 'owner_id');
       expect(ownerEntry, `${name} maps no owner column`).toBeDefined();
       expect(first(ownerEntry!.source)).toMatch(/Owner Email$/);
-      expect(fields.owner.reference).toBe('sys_user');
+      expect(fields.owner_id.reference).toBe('sys_user');
     }
   });
 });

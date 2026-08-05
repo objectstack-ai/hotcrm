@@ -80,7 +80,7 @@ export const ScheduleFollowUpFlow: Flow = {
           priority: '{priority}',
           description: '{notes}',
           status: 'not_started',
-          owner: '{$User.Id}',
+          owner_id: '{$User.Id}',
           // Polymorphic parent: both halves are required for the lead's
           // Related tab to pick the task up.
           related_to_type: 'crm_lead',

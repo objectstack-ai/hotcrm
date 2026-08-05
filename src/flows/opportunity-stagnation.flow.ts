@@ -83,12 +83,12 @@ export const OpportunityStagnationFlow: Flow = {
               config: { condition: P`existingStallTask == null` },
             },
             {
-              // Owner only: `{currentOpp.owner.manager}` cannot traverse a
+              // Owner only: `{currentOpp.owner_id.manager}` cannot traverse a
               // lookup in flow templates — it interpolates to the literal
               // "undefined" (cf. opportunity_won_alert).
               id: 'notify_owner', type: 'notify', label: 'Nudge Owner',
               config: {
-                recipients: ['{currentOpp.owner}'],
+                recipients: ['{currentOpp.owner_id}'],
                 channels: ['inbox', 'email'],
                 topic: 'deal_stalled',
                 title: 'Stalled deal: {currentOpp.name}',
@@ -104,7 +104,7 @@ export const OpportunityStagnationFlow: Flow = {
                   subject: 'Advance stalled deal: {currentOpp.name}',
                   type: 'follow_up', priority: 'high', status: 'not_started',
                   due_date: '{TODAY() + 2}',
-                  owner: '{currentOpp.owner}',
+                  owner_id: '{currentOpp.owner_id}',
                   related_to_type: 'crm_opportunity',
                   related_to_opportunity: '{currentOpp.id}',
                 },

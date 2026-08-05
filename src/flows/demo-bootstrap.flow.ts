@@ -9,9 +9,8 @@ type Flow = Automation.Flow;
  *
  * A seed cannot name a user. Lookup values resolve against the target's
  * externalId and that only works for objects in the app's own graph, so
- * `owner: 'Dev Admin'` stores the literal string rather than an id, and
- * `cel\`os.user.id\`` inside a seed evaluates to nothing (both verified
- * against 16.1.0). A hook on `sys_user` is rejected at build time —
+ * `owner_id: 'Dev Admin'` would store the literal string rather than an id
+ * (verified against 16.1.0). A hook on `sys_user` is rejected at build time —
  * cross-reference validation refuses hooks on objects the app doesn't
  * declare. The user id only exists after first boot, so this has to be a
  * scheduled sweep.
@@ -59,71 +58,56 @@ type Flow = Automation.Flow;
  * so a share to the owner proves nothing). The reps are created after the dev
  * admin and appended to `sys_user`, so `get_user`'s unordered "first user" is
  * unchanged by staffing — and the staffing script re-checks that from the other
- * side, failing if any demo user turns out to own a seeded account. Ownership
- * itself is #548's subject; do not redefine it here.
+ * side, failing if any demo user turns out to own a seeded account — a check
+ * that now reads `owner_id`, the one column ownership lives in (#548).
  *
- * ─── TWO ownership columns, not one (#622) ───────────────────────────────
+ * ─── ONE ownership column (#548, and the #622 lesson it settles) ─────────
  *
- * Every claimed object carries two:
+ * `owner_id` is the ONLY owner this app has. It is the column ObjectQL injects
+ * into every user-owned object, and the only one the sharing service reads:
+ * under `sharingModel: 'private'` the OWD baseline admits the owner of
+ * `owner_id` and a share can only WIDEN from there. It also drives the "My …"
+ * views, the owner-addressed `notify` in every sweep, and the owner axis of the
+ * analytics datasets — because #548 pointed all of those at it.
  *
- *   - `owner`    — the app's own `lookup(sys_user)` field. Drives the "My …"
- *                  views, the owner-addressed `notify` in every sweep, and the
- *                  owner axis of the analytics datasets.
- *   - `owner_id` — the PLATFORM ownership column ObjectQL injects into every
- *                  user-owned object. This is the one — and the only one — the
- *                  sharing service reads: under `sharingModel: 'private'` the
- *                  OWD baseline admits the owner of `owner_id` and a share can
- *                  only WIDEN from there.
+ * Until #548 the app ALSO authored its own `owner` lookup, and this flow had to
+ * stamp both. That is what #622 was: a row claimed on `owner` alone came out of
+ * the sweep looking claimed everywhere a human would check, while still being
+ * owned by nobody as far as access control was concerned — `PATCH` answered 403
+ * for EVERY user including the admin, and the attachment surface, which gates on
+ * `canEdit(parent)`, answered 403 `ATTACHMENT_PARENT_ACCESS` on upload. Worse,
+ * the sweep's own filter then read `owner != null` and never looked at the row
+ * again: the state was terminal. With one column that whole failure mode is
+ * structurally gone, not merely guarded against — there is no second column left
+ * to disagree with the first.
  *
- * They are independent columns, so claiming one does not claim the other, and
- * an app field that happens to be named `owner` is not the platform's owner.
- * This flow used to stamp `owner` alone. A row that reached the platform
- * ownerless therefore came out of the sweep looking claimed (`owner` = the dev
- * admin) while still being owned by nobody as far as access control is
- * concerned — `PATCH` answered 403 for EVERY user including the admin, and the
- * attachment surface, which gates on `canEdit(parent)`, answered 403
- * `ATTACHMENT_PARENT_ACCESS` on upload. Worse, the sweep's own filter then read
- * `owner != null` and never looked at the row again: the state was terminal.
+ * Why rows reach the platform ownerless at all — unchanged by #548, and the
+ * reason this flow still exists: seed writes run under `{ isSystem: true }`,
+ * which short-circuits the security middleware entirely, so the insert-time
+ * auto-stamp of `owner_id` never fires ("seeds either declare those fields
+ * explicitly per record"). HotCRM's seeds cannot declare it — no seed can name a
+ * user. So ownership at the platform level is THIS flow's job, and nothing
+ * else's.
  *
- * Why rows reach the platform ownerless at all: seed writes run under
- * `{ isSystem: true }`, which by the seeder's documented contract DISABLES the
- * security plugin's auto-injection of `organization_id` / `owner_id` — "seeds
- * either declare those fields explicitly per record". HotCRM's seeds cannot
- * declare it: `cel\`os.user.id\`` does not resolve at seed time (boot logs
- * "Unknown variable: os" for exactly these fields), which is why this flow
- * exists in the first place. So ownership at the platform level is THIS flow's
- * job, and nothing else's.
- *
- * Hence: every pass stamps BOTH columns, and each object is swept twice — once
- * for rows missing `owner`, once for rows missing `owner_id`. Two single-field
- * filters rather than one `$or`: `{ field: null }` is the only filter shape
- * these sweeps have ever used against the real driver, and a half-claimed row
- * (the state above) must still be reachable, which a single `owner`-keyed pass
- * cannot do. On a healthy org both passes select nothing.
+ * One pass per object, selecting `{ owner_id: null }`. On a healthy org it
+ * selects nothing.
  */
 
-/** The two ownership columns a claim pass stamps together. See the note above. */
-const OWNERSHIP_COLUMNS = ['owner', 'owner_id'] as const;
-type OwnershipColumn = (typeof OWNERSHIP_COLUMNS)[number];
-
-/** Both columns, pointed at the first user — the payload of every claim. */
-const CLAIM_FIELDS: Record<OwnershipColumn, string> = {
-  owner: '{firstUser.id}',
-  owner_id: '{firstUser.id}',
-};
+/** The app's one ownership column — the platform anchor. See the note above. */
+const OWNERSHIP_COLUMN = 'owner_id';
 
 /**
  * One find + loop + stamp-owner pass over an object, selecting the rows that
- * are ownerless in `column` and stamping BOTH ownership columns on each.
+ * are ownerless and stamping the first user onto each.
  */
-const claim = (key: string, objectName: string, label: string, column: OwnershipColumn) => ({
+const claim = (key: string, objectName: string, label: string) => ({
   find: {
     id: `find_${key}`,
     type: 'get_record' as const,
-    label: `Find ${label} with no ${column}`,
+    label: `Find ownerless ${label}`,
     config: {
       objectName,
-      filter: { [column]: null },
+      filter: { [OWNERSHIP_COLUMN]: null },
       limit: 500,
       outputVariable: `${key}List`,
     },
@@ -131,7 +115,7 @@ const claim = (key: string, objectName: string, label: string, column: Ownership
   loop: {
     id: `loop_${key}`,
     type: 'loop' as const,
-    label: `Claim each ${label} with no ${column}`,
+    label: `Claim each ownerless ${label}`,
     config: {
       collection: `{${key}List}`,
       iteratorVariable: `current_${key}`,
@@ -140,11 +124,16 @@ const claim = (key: string, objectName: string, label: string, column: Ownership
           {
             id: `stamp_${key}`,
             type: 'update_record' as const,
-            label: `Set owner + owner_id on ${label}`,
+            label: `Set ${OWNERSHIP_COLUMN} on ${label}`,
             config: {
               objectName,
               filter: { id: `{current_${key}.id}` },
-              fields: { ...CLAIM_FIELDS },
+              // A foreign owner on an update is an ownership TRANSFER, denied
+              // without `allowTransfer` — but this flow is `runAs: 'system'`,
+              // which short-circuits the security middleware before that guard
+              // (#548). The claim is deliberately outside the user gate: there
+              // is no user to hold the grant when it runs.
+              fields: { [OWNERSHIP_COLUMN]: '{firstUser.id}' },
             },
           },
         ],
@@ -160,8 +149,8 @@ const claim = (key: string, objectName: string, label: string, column: Ownership
  * Quotes and contracts are in the list because they are seeded ownerless too —
  * without claiming them the contract_renewal / contract_expiration /
  * quote_expiration notifies address a null owner and reach nobody (the exact
- * failure this flow exists to fix), and `crm_contract` additionally becomes
- * uneditable for everyone (#622).
+ * failure this flow exists to fix), and they additionally stay uneditable for
+ * everyone under a `private` OWD (#622).
  */
 const CLAIMED_OBJECTS: ReadonlyArray<[key: string, objectName: string, label: string]> = [
   ['leads', 'crm_lead', 'Leads'],
@@ -174,15 +163,8 @@ const CLAIMED_OBJECTS: ReadonlyArray<[key: string, objectName: string, label: st
   ['contracts', 'crm_contract', 'Contracts'],
 ];
 
-/**
- * One pass per (object, ownership column). Ordered column-major so the whole
- * `owner` sweep runs before the whole `owner_id` sweep — the `owner` pass
- * stamps both columns, so by the time the `owner_id` sweep is reached it only
- * has genuinely half-claimed rows left to repair.
- */
-const TARGETS = OWNERSHIP_COLUMNS.flatMap((column) =>
-  CLAIMED_OBJECTS.map(([key, objectName, label]) => claim(`${key}_by_${column}`, objectName, label, column)),
-);
+/** One pass per object. */
+const TARGETS = CLAIMED_OBJECTS.map(([key, objectName, label]) => claim(key, objectName, label));
 
 /**
  * The whole flow is one straight line: check for a user, then find/loop each
@@ -201,7 +183,7 @@ export const DemoBootstrapFlow: Flow = {
   name: 'demo_bootstrap',
   label: 'Demo Bootstrap',
   description:
-    'Claim ownerless seeded demo records for the first user — both the app `owner` lookup (the "My …" views) and the platform `owner_id` column (sharing / who may edit).',
+    'Claim ownerless seeded demo records for the first user by stamping the platform `owner_id` column — the one that decides the "My …" views, owner-addressed notifications and who may edit.',
   type: 'schedule',
   status: 'active',
   runAs: 'system',

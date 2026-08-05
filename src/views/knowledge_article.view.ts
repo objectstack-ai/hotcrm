@@ -22,7 +22,7 @@ export const KnowledgeArticleViews = defineView({
       { field: 'status',         width: 130, sortable: true },
       { field: 'audience',       width: 110 },
       { field: 'language',       width: 110 },
-      { field: 'owner',          width: 150 },
+      { field: 'owner_id',          width: 150 },
       { field: 'published_at',   width: 160, sortable: true },
       { field: 'view_count',     width: 110, align: 'right', summary: 'sum' },
       { field: 'helpful_count',  width: 110, align: 'right', summary: 'sum' },
@@ -66,7 +66,7 @@ export const KnowledgeArticleViews = defineView({
       filter: [
         { field: 'status', operator: 'in',     value: ['draft', 'in_review'] },
         // `{current_user_id}` is the only user token the view runtime resolves.
-        { field: 'owner',  operator: 'equals', value: '{current_user_id}' },
+        { field: 'owner_id',  operator: 'equals', value: '{current_user_id}' },
       ],
       sort: [{ field: 'updated_at', order: 'desc' }],
     },
@@ -80,7 +80,7 @@ export const KnowledgeArticleViews = defineView({
       // ones reviewed minutes ago (verified against the running console).
       label: 'Review Queue · Oldest First',
       data: { provider: 'object', object: 'crm_knowledge_article' },
-      columns: ['article_number', 'title', 'category', 'owner', 'last_reviewed_at'],
+      columns: ['article_number', 'title', 'category', 'owner_id', 'last_reviewed_at'],
       filter: [
         { field: 'status', operator: 'equals', value: 'published' },
       ],
@@ -103,7 +103,7 @@ export const KnowledgeArticleViews = defineView({
           'status',
           'audience',
           'language',
-          'owner',
+          'owner_id',
         ],
       },
       {

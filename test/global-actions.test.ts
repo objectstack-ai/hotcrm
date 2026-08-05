@@ -214,7 +214,7 @@ describe('every activity action writes a real crm_event', () => {
     expect(event, `${objectName} wrote no crm_event`).toBeTruthy();
     expect(event.related_to_type).toBe(objectName);
     expect(event[ACTIVITY_TARGETS[objectName]!]).toBe(`${objectName}_1`);
-    expect(event.owner).toBe('usr_1');
+    expect(event.owner_id).toBe('usr_1');
     expect(event.duration_minutes).toBe(15);
     expect(event.start_datetime).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });

@@ -306,7 +306,7 @@ describe('every script action body executes under QuickJS', () => {
     expect(clone!.crm_account).toBe('acc_1');
     expect(clone!.amount).toBe(50000);
     expect(clone!.stage).toBe('prospecting');
-    expect(clone!.owner).toBe('usr_1');
+    expect(clone!.owner_id).toBe('usr_1');
     // A 90-day horizon computed INSIDE the VM — `Date` is one of the few host
     // globals a body may rely on, and this proves it is really there.
     expect(clone!.close_date).toMatch(/^\d{4}-\d{2}-\d{2}$/);

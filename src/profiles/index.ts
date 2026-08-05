@@ -39,6 +39,46 @@
  * `guest` anchors at all — granting it there would both hand anonymous
  * visitors bulk table egress and make the set unbindable.
  */
+/**
+ * ─── `allowTransfer` — the ownership-transfer axis (#548) ───────────────────
+ *
+ * This is the canonical note; the profiles point here.
+ *
+ * HotCRM has ONE owner column: the platform's `owner_id`, injected into every
+ * business object by the registry (`applySystemFields`) and auto-stamped to the
+ * inserting user. It is the column OWD, sharing rules, owner-scope widening and
+ * the `is_private` row filter all read — so whoever can write it decides who may
+ * see and edit the row.
+ *
+ * The app used to author its own `owner` lookup beside it. Reassigning that
+ * field moved the record in every list and report and moved NO access at all,
+ * and it did so for any user with plain edit rights — a transfer with none of
+ * the transfer semantics. #548 removed it.
+ *
+ * With one column, ownership writes go through the platform's gate: an
+ * insert planting a record under another user, or an update reassigning /
+ * disowning one, is DENIED unless the caller holds `allowTransfer` — enforced
+ * today through the ordinary insert/update door, not merely declared
+ * (`@objectstack/spec` `permission.zod.ts`, the #3004 owner_id guard).
+ * `modifyAllRecords` implies it. Two writes are deliberately NOT transfers and
+ * need no grant: an insert leaving `owner_id` empty (auto-stamped to the
+ * caller) and a form save echoing the unchanged owner back.
+ *
+ * The rule the grants below follow, pinned by
+ * `test/authorization-coverage.test.ts`:
+ *
+ *   `allowTransfer` is granted IFF the set already holds `allowEdit` on that
+ *   object, and only to `system_admin` (every business object) and
+ *   `sales_manager` (exactly the objects it holds `modifyAllRecords` on — the
+ *   sales book it owns the number for).
+ *
+ * On those objects `modifyAllRecords` already implies the bit, so authoring it
+ * grants nothing new. It is authored anyway, for the same reason `allowExport`
+ * is: the capability a persona is meant to have should be readable in the
+ * profile, and it must survive a future narrowing of `modifyAllRecords` rather
+ * than disappearing with it. Reps and service agents hold no transfer grant —
+ * for them ownership is assigned, never taken.
+ */
 export { GuestPortalProfile } from './guest-portal.profile';
 export { MarketingUserProfile } from './marketing-user.profile';
 export { SalesManagerProfile } from './sales-manager.profile';

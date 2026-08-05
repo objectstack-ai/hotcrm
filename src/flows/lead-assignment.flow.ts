@@ -62,7 +62,7 @@ export const LeadAssignmentFlow: Flow = {
         // 'sales_manager' was stored verbatim as sys_inbox_message.user_id,
         // matching no real user, so these alerts reached nobody. owner is set
         // on insert (defaultValue os.user.id) and is the accountable party.
-        recipients: ['{record.owner}'],
+        recipients: ['{record.owner_id}'],
         channels: ['inbox', 'email'],
         severity: 'warning',
         topic: 'lead_routing',
@@ -82,7 +82,7 @@ export const LeadAssignmentFlow: Flow = {
       config: {
         // Route to the lead's owner — see notify_hot for why a bare
         // 'sales_manager' position never reached anyone.
-        recipients: ['{record.owner}'],
+        recipients: ['{record.owner_id}'],
         channels: ['inbox'],
         topic: 'lead_routing',
         title: 'New lead to assign: {record.first_name} {record.last_name}',

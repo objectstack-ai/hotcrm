@@ -26,7 +26,7 @@ export const OpportunityLineItem = ObjectSchema.create({
   // this works without converting the relationship to master-detail.
   //
   // It was `private` before (#488), which was the wrong baseline twice over:
-  // this object has no owner field of its own, so "private" fell back to the
+  // this object has no owner of its own to speak of, so "private" fell back to the
   // platform's auto-stamped `owner_id` (whoever inserted the row) — the rep who
   // owns the deal could not see a line the quote-generation flow or their
   // manager added to it.

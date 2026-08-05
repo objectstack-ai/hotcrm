@@ -32,7 +32,7 @@ import { contracts, quotes, quoteLineItems, forecasts } from './revenue.seed';
  *
  * A seed can't name a user. Lookup values are resolved against the target's
  * externalId and that only works for objects in the app's own graph, so
- * `owner: 'Dev Admin'` stores the literal string rather than an id (verified:
+ * `owner_id: 'Dev Admin'` would store the literal string rather than an id (verified:
  * a `sys_user_position` row seeded that way is unmatchable by the real user
  * id), and `cel\`os.user.id\`` inside a seed evaluates to nothing. The id does
  * not exist until first boot.
@@ -41,17 +41,17 @@ import { contracts, quotes, quoteLineItems, forecasts } from './revenue.seed';
  * does it at the only moment it can: once the first real user exists, its
  * periodic sweep claims every ownerless seeded record for that user.
  *
- * That sweep owns BOTH ownership columns, and it has to (#622). Seed writes
- * run under `{ isSystem: true }`, which by the seeder's documented contract
- * disables the security plugin's auto-injection of `organization_id` /
- * `owner_id` — "seeds either declare those fields explicitly per record" — and
- * per the paragraph above these seeds cannot declare it. So a seeded row can
- * reach the database owned by nobody at the PLATFORM level (`owner_id` null)
- * even though the app's own `owner` lookup later reads as claimed, and under
+ * That sweep owns the app's ONE ownership column, `owner_id` (#548 retired the
+ * app-authored `owner` lookup that used to sit beside it — the #622 split).
+ * Seed writes run under `{ isSystem: true }`, which short-circuits the security
+ * middleware, so its insert-time auto-stamp of `owner_id` never fires — "seeds
+ * either declare those fields explicitly per record" — and per the paragraph
+ * above these seeds cannot declare it. So a seeded row reaches the database
+ * owned by nobody at the PLATFORM level (`owner_id` null), and under
  * `sharingModel: 'private'` such a row is editable by no one at all, admin
- * included. Nothing here should grow an `owner` / `owner_id` seed value to
- * paper over that: the sweep is the mechanism, and
- * `test/flow-scheduled.test.ts` holds it to claiming both columns.
+ * included. Nothing here should grow an `owner_id` seed value to paper over
+ * that: the sweep is the mechanism, and `test/flow-scheduled.test.ts` holds it
+ * to leaving no claimed object ownerless.
  */
 
 /** All CRM seed datasets */

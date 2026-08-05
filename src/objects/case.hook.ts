@@ -7,8 +7,10 @@ import type { HookApi } from './_hook-api';
  * Case SLA & escalation hook.
  *
  * - For `critical` cases without `sla_due_date`, sets a 4-hour SLA.
- * - On escalation: creates a follow-up task assigned to the account owner
+ * - On escalation: creates a follow-up task OWNED BY the account owner
  *   (the single owner of escalation tasks — flows must not create their own).
+ *   Owning it, not merely labelling it: `owner_id` is the one ownership column
+ *   since #548, so the person the task names is the person who can work it.
  * - On `resolved`: stamps `closed_date` (proxy for the resolution time — there is
  *   no resolved_date field) and bumps account `last_activity_date`.
  */
@@ -27,7 +29,7 @@ const caseValidation: Hook = {
       if (!input.origin)   input.origin   = 'web';
       if (!input.status)   input.status   = 'new';
       if (!input.priority) input.priority = 'medium';
-      delete (input as Record<string, unknown>).owner;
+      delete (input as Record<string, unknown>).owner_id;
       delete (input as Record<string, unknown>).is_escalated;
       delete (input as Record<string, unknown>).is_closed;
       delete (input as Record<string, unknown>).internal_notes;
@@ -117,10 +119,23 @@ const caseSideEffects: Hook = {
       (typeof previous.crm_account === 'string' && previous.crm_account) ||
       undefined;
 
-    // Escalation: open task for account owner
+    // Escalation: open task for the account owner.
+    //
+    // `owner_id` is the platform ownership anchor, and planting a record under
+    // ANOTHER user is a transfer: the #3004 guard denies it unless the caller
+    // holds `allowTransfer`. This insert runs on `ctx.api`, which carries the
+    // CALLER's context (not a system one), so the guard applies — hence the
+    // `crm_task.allowTransfer` grant on `service_agent` (see
+    // `src/profiles/service-agent.profile.ts`, and the canonical note in
+    // `src/profiles/index.ts`).
+    //
+    // Before #548 this hook wrote the app-authored `owner` lookup while the
+    // platform stamped `owner_id` to the ESCALATING AGENT — so the account
+    // owner saw the task in "My Tasks" and could not edit or complete it. One
+    // column means one answer, and the answer is the person who must act.
     if (input.status === 'escalated' && previous.status !== 'escalated' && accountId) {
       const account = await api.object('crm_account').findOne({ where: { id: accountId } });
-      const ownerId = (account as { owner?: string } | null)?.owner ?? ctx.user?.id;
+      const ownerId = (account as { owner_id?: string } | null)?.owner_id ?? ctx.user?.id;
       const due = new Date();
       due.setDate(due.getDate() + 1);
       await api.object('crm_task').insert({
@@ -129,7 +144,7 @@ const caseSideEffects: Hook = {
         priority: 'urgent',
         type: 'follow_up',
         due_date: due.toISOString().slice(0, 10),
-        owner: ownerId,
+        owner_id: ownerId,
         related_to_type: 'crm_case',
         related_to_case: caseId,
         related_to_account: accountId,

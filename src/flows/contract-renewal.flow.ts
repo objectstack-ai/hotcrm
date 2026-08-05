@@ -112,7 +112,7 @@ export const ContractRenewalFlow: Flow = {
                   subject: 'Renewal due: contract {currentContract.contract_number}',
                   type: 'follow_up', priority: 'high', status: 'not_started',
                   due_date: '{currentContract.end_date}',
-                  owner: '{currentContract.owner}',
+                  owner_id: '{currentContract.owner_id}',
                   related_to_type: 'crm_account',
                   related_to_account: '{currentContract.crm_account}',
                 },
@@ -121,7 +121,7 @@ export const ContractRenewalFlow: Flow = {
             {
               id: 'notify_owner', type: 'notify', label: 'Notify Owner',
               config: {
-                recipients: ['{currentContract.owner}'],
+                recipients: ['{currentContract.owner_id}'],
                 channels: ['inbox', 'email'],
                 topic: 'contract_renewal',
                 title: 'Contract renewal due: {currentContract.contract_number}',
@@ -167,7 +167,7 @@ export const ContractRenewalFlow: Flow = {
                   stage: 'proposal',
                   type: 'existing_renewal',
                   close_date: '{currentContract.end_date}',
-                  owner: '{currentContract.owner}',
+                  owner_id: '{currentContract.owner_id}',
                   next_step: 'Confirm renewal terms with customer',
                 },
               },

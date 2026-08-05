@@ -204,7 +204,7 @@ const CASES: Record<string, WriteCase> = {
   'opportunity_promote_account — the won deal promotes its account': {
     hook: 'opportunity_promote_account',
     event: 'afterUpdate',
-    input: { id: 'opp_1', stage: 'closed_won', crm_account: 'acc_1', owner: 'usr_1' },
+    input: { id: 'opp_1', stage: 'closed_won', crm_account: 'acc_1', owner_id: 'usr_1' },
     previous: { id: 'opp_1', stage: 'negotiation' },
     seed: { crm_account: [{ id: 'acc_1', type: 'prospect' }] },
     writes: [{ object: 'crm_account', id: 'acc_1', doc: { type: 'customer' } }],

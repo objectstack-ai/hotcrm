@@ -35,7 +35,7 @@ export const EventViews = defineView({
       { field: 'start_datetime', width: 180, sortable: true },
       { field: 'duration_minutes', width: 120, align: 'right' },
       { field: 'location', width: 180 },
-      { field: 'owner', width: 150 },
+      { field: 'owner_id', width: 150 },
     ],
     sort: [{ field: 'start_datetime', order: 'desc' }],
     rowColor: {
@@ -66,7 +66,7 @@ export const EventViews = defineView({
       type: 'calendar',
       label: 'Event Calendar',
       data: { provider: 'object', object: 'crm_event' },
-      columns: ['subject', 'type', 'owner'],
+      columns: ['subject', 'type', 'owner_id'],
       calendar: {
         startDateField: 'start_datetime',
         endDateField: 'end_datetime',
@@ -86,7 +86,7 @@ export const EventViews = defineView({
         startDateField: 'start_datetime',
         endDateField: 'end_datetime',
         titleField: 'subject',
-        groupByField: 'owner',
+        groupByField: 'owner_id',
         colorField: 'type',
         scale: 'day',
       },
@@ -100,7 +100,7 @@ export const EventViews = defineView({
       columns: ['subject', 'type', 'location'],
       // `{current_user_id}` is the one token the list-view data path really
       // interpolates (see crm.app.ts's "My Work" note).
-      filter: [{ field: 'owner', operator: 'equals', value: '{current_user_id}' }],
+      filter: [{ field: 'owner_id', operator: 'equals', value: '{current_user_id}' }],
       calendar: {
         startDateField: 'start_datetime',
         endDateField: 'end_datetime',
@@ -115,7 +115,7 @@ export const EventViews = defineView({
       type: 'grid',
       label: '📅 Upcoming · Soonest First',
       data: { provider: 'object', object: 'crm_event' },
-      columns: ['subject', 'type', 'start_datetime', 'location', 'related_to_type', 'owner'],
+      columns: ['subject', 'type', 'start_datetime', 'location', 'related_to_type', 'owner_id'],
       filter: [{ field: 'status', operator: 'equals', value: 'planned' }],
       sort: [{ field: 'start_datetime', order: 'asc' }],
     },
@@ -126,7 +126,7 @@ export const EventViews = defineView({
       type: 'grid',
       label: '✅ Interaction History',
       data: { provider: 'object', object: 'crm_event' },
-      columns: ['subject', 'type', 'start_datetime', 'duration_minutes', 'related_to_type', 'owner'],
+      columns: ['subject', 'type', 'start_datetime', 'duration_minutes', 'related_to_type', 'owner_id'],
       filter: [{ field: 'status', operator: 'equals', value: 'held' }],
       sort: [{ field: 'start_datetime', order: 'desc' }],
     },
@@ -142,7 +142,7 @@ export const EventViews = defineView({
           { field: 'subject', required: true, colSpan: 2 },
           { field: 'type', required: true },
           { field: 'status', required: true },
-          'owner',
+          'owner_id',
           'location',
           { field: 'description', colSpan: 2 },
         ],

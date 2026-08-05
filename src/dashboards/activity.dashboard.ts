@@ -52,7 +52,7 @@ export const ActivityDashboard: Dashboard = {
 
   globalFilters: [
     {
-      field: 'owner',
+      field: 'owner_id',
       label: 'Rep',
       type: 'lookup',
       scope: 'dashboard',

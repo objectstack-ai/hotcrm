@@ -42,27 +42,27 @@ describe('case_sla_monitor — hourly breach sweep', () => {
     // Breached and still open — MUST be flagged.
     {
       id: 'c_breached', case_number: 'CASE-1', status: 'working', priority: 'critical',
-      is_sla_violated: false, sla_due_date: iso(-2), owner: 'rep1',
+      is_sla_violated: false, sla_due_date: iso(-2), owner_id: 'rep1',
     },
     // Due in the future — must be left alone.
     {
       id: 'c_future', case_number: 'CASE-2', status: 'working', priority: 'high',
-      is_sla_violated: false, sla_due_date: iso(+2), owner: 'rep1',
+      is_sla_violated: false, sla_due_date: iso(+2), owner_id: 'rep1',
     },
     // Past due but already resolved: work is finished, so this is NOT a breach.
     {
       id: 'c_resolved', case_number: 'CASE-3', status: 'resolved', priority: 'high',
-      is_sla_violated: false, sla_due_date: iso(-5), owner: 'rep1',
+      is_sla_violated: false, sla_due_date: iso(-5), owner_id: 'rep1',
     },
     // Past due but closed — likewise excluded.
     {
       id: 'c_closed', case_number: 'CASE-4', status: 'closed', priority: 'low',
-      is_sla_violated: false, sla_due_date: iso(-9), owner: 'rep1',
+      is_sla_violated: false, sla_due_date: iso(-9), owner_id: 'rep1',
     },
     // Already flagged — must not be re-processed (or re-notified).
     {
       id: 'c_already', case_number: 'CASE-5', status: 'escalated', priority: 'critical',
-      is_sla_violated: true, sla_due_date: iso(-3), owner: 'rep1',
+      is_sla_violated: true, sla_due_date: iso(-3), owner_id: 'rep1',
     },
   ];
 
@@ -114,7 +114,7 @@ describe('case_sla_monitor — hourly breach sweep', () => {
     const [alert] = h.notifications;
     const recipients = JSON.stringify(alert.to);
     expect(recipients).toContain('rep1');
-    // `{currentCase.owner.manager}` dot-walks a lookup, which flow templates
+    // `{currentCase.owner_id.manager}` dot-walks a lookup, which flow templates
     // interpolate as the literal string "undefined" — a silently undeliverable
     // notification. Guard against that shape reappearing anywhere in the payload.
     expect(JSON.stringify(alert), 'a template dot-walked a lookup').not.toContain('undefined');
@@ -128,7 +128,7 @@ describe('case_sla_monitor — hourly breach sweep', () => {
       {
         crm_case: [{
           id: 'c1', case_number: 'CASE-9', status: 'working',
-          is_sla_violated: false, sla_due_date: iso(+5), owner: 'rep1',
+          is_sla_violated: false, sla_due_date: iso(+5), owner_id: 'rep1',
         }],
       },
     );
@@ -173,10 +173,10 @@ describe('contract_expiration — daily auto-expiry', () => {
   const run = async () => {
     const h = makeFlowHarness({ contract_expiration: ContractExpirationFlow }, {
       crm_contract: [
-        { id: 'k_past', contract_number: 'CTR-1', status: 'activated', end_date: day(-1), owner: 'rep1' },
-        { id: 'k_future', contract_number: 'CTR-2', status: 'activated', end_date: day(+30), owner: 'rep1' },
-        { id: 'k_draft', contract_number: 'CTR-3', status: 'draft', end_date: day(-30), owner: 'rep1' },
-        { id: 'k_expired', contract_number: 'CTR-4', status: 'expired', end_date: day(-60), owner: 'rep1' },
+        { id: 'k_past', contract_number: 'CTR-1', status: 'activated', end_date: day(-1), owner_id: 'rep1' },
+        { id: 'k_future', contract_number: 'CTR-2', status: 'activated', end_date: day(+30), owner_id: 'rep1' },
+        { id: 'k_draft', contract_number: 'CTR-3', status: 'draft', end_date: day(-30), owner_id: 'rep1' },
+        { id: 'k_expired', contract_number: 'CTR-4', status: 'expired', end_date: day(-60), owner_id: 'rep1' },
       ],
     });
     await h.run('contract_expiration', {}, { event: 'schedule' });
@@ -226,10 +226,10 @@ describe('task_due_reminder — hourly reminder sweep', () => {
   const run = async () => {
     const h = makeFlowHarness({ task_due_reminder: TaskDueReminderFlow }, {
       crm_task: [
-        { id: 't_due', subject: 'Call Acme', owner: 'rep1', is_completed: false, reminder_date: iso(-1) },
-        { id: 't_future', subject: 'Later', owner: 'rep1', is_completed: false, reminder_date: iso(+3) },
-        { id: 't_done', subject: 'Done', owner: 'rep1', is_completed: true, reminder_date: iso(-5) },
-        { id: 't_none', subject: 'No reminder', owner: 'rep1', is_completed: false, reminder_date: null },
+        { id: 't_due', subject: 'Call Acme', owner_id: 'rep1', is_completed: false, reminder_date: iso(-1) },
+        { id: 't_future', subject: 'Later', owner_id: 'rep1', is_completed: false, reminder_date: iso(+3) },
+        { id: 't_done', subject: 'Done', owner_id: 'rep1', is_completed: true, reminder_date: iso(-5) },
+        { id: 't_none', subject: 'No reminder', owner_id: 'rep1', is_completed: false, reminder_date: null },
       ],
     });
     await h.run('task_due_reminder', {}, { event: 'schedule' });
@@ -255,7 +255,7 @@ describe('task_due_reminder — hourly reminder sweep', () => {
 
   it('is idempotent across consecutive ticks', async () => {
     const h = makeFlowHarness({ task_due_reminder: TaskDueReminderFlow }, {
-      crm_task: [{ id: 't_due', subject: 'Call Acme', owner: 'rep1', is_completed: false, reminder_date: iso(-1) }],
+      crm_task: [{ id: 't_due', subject: 'Call Acme', owner_id: 'rep1', is_completed: false, reminder_date: iso(-1) }],
     });
     await h.run('task_due_reminder', {}, { event: 'schedule' });
     await h.run('task_due_reminder', {}, { event: 'schedule' });
@@ -277,15 +277,15 @@ describe('opportunity_stagnation — daily stalled-deal nudge', () => {
   // cannot be a filter key (#489). `stage_entry_date < TODAY() - 14` is the
   // same test, resolved by the flow template engine.
   const seedOpps = (): Rec[] => [
-    { id: 'o_stalled', name: 'Stalled Deal', stage: 'proposal', stage_entry_date: day(-30), owner: 'rep1' },
-    { id: 'o_fresh', name: 'Fresh Deal', stage: 'proposal', stage_entry_date: day(-3), owner: 'rep1' },
+    { id: 'o_stalled', name: 'Stalled Deal', stage: 'proposal', stage_entry_date: day(-30), owner_id: 'rep1' },
+    { id: 'o_fresh', name: 'Fresh Deal', stage: 'proposal', stage_entry_date: day(-3), owner_id: 'rep1' },
     // Exactly at the threshold: the filter is `$lt`, so a deal that entered its
     // stage exactly 14 days ago must NOT fire.
-    { id: 'o_boundary', name: 'Boundary Deal', stage: 'proposal', stage_entry_date: day(-14), owner: 'rep1' },
-    { id: 'o_won', name: 'Won Deal', stage: 'closed_won', stage_entry_date: day(-99), owner: 'rep1' },
-    { id: 'o_lost', name: 'Lost Deal', stage: 'closed_lost', stage_entry_date: day(-99), owner: 'rep1' },
+    { id: 'o_boundary', name: 'Boundary Deal', stage: 'proposal', stage_entry_date: day(-14), owner_id: 'rep1' },
+    { id: 'o_won', name: 'Won Deal', stage: 'closed_won', stage_entry_date: day(-99), owner_id: 'rep1' },
+    { id: 'o_lost', name: 'Lost Deal', stage: 'closed_lost', stage_entry_date: day(-99), owner_id: 'rep1' },
     // A row with a null clock does not satisfy `$lt` and is skipped.
-    { id: 'o_nullclock', name: 'No Clock', stage: 'proposal', stage_entry_date: null, owner: 'rep1' },
+    { id: 'o_nullclock', name: 'No Clock', stage: 'proposal', stage_entry_date: null, owner_id: 'rep1' },
   ];
 
   const run = async () => {
@@ -305,7 +305,7 @@ describe('opportunity_stagnation — daily stalled-deal nudge', () => {
     expect(task.subject).toBe('Advance stalled deal: Stalled Deal');
     expect(task.related_to_opportunity).toBe('o_stalled');
     expect(task.related_to_type).toBe('crm_opportunity');
-    expect(task.owner).toBe('rep1');
+    expect(task.owner_id).toBe('rep1');
     expect(task.priority).toBe('high');
     expect(task.status).toBe('not_started');
 
@@ -360,7 +360,7 @@ describe('opportunity_stagnation — daily stalled-deal nudge', () => {
 describe('contract_renewal — daily notice-window sweep', () => {
   const contract = (over: Rec): Rec => ({
     id: 'k1', contract_number: 'CTR-1', status: 'activated', crm_account: 'acc1',
-    owner: 'rep1', contract_value: 90_000, auto_renewal: false, renewal_notice_days: 30,
+    owner_id: 'rep1', contract_value: 90_000, auto_renewal: false, renewal_notice_days: 30,
     end_date: day(+20), ...over,
   });
 
@@ -405,7 +405,7 @@ describe('contract_renewal — daily notice-window sweep', () => {
     const [task] = h.store.crm_task;
     expect(task.subject).toBe('Renewal due: contract CTR-1');
     expect(task.related_to_account).toBe('acc1');
-    expect(task.owner).toBe('rep1');
+    expect(task.owner_id).toBe('rep1');
     expect(task.priority).toBe('high');
 
     expect(h.notifications).toHaveLength(1);
@@ -495,23 +495,23 @@ describe('forecast_snapshot — nightly per-owner pipeline snapshot', () => {
   // to a correct one otherwise.
   const opps = (): Rec[] => [
     // rep1 — one deal per bucket, plus two that must not count.
-    { id: 'o1', owner: 'rep1', stage: 'qualification',  forecast_category: 'pipeline',  amount: 100_000, close_date: inPeriod },
-    { id: 'o2', owner: 'rep1', stage: 'needs_analysis', forecast_category: 'best_case', amount: 50_000,  close_date: inPeriod },
-    { id: 'o3', owner: 'rep1', stage: 'negotiation',    forecast_category: 'commit',    amount: 30_000,  close_date: inPeriod },
-    { id: 'o4', owner: 'rep1', stage: 'closed_won',     forecast_category: 'closed',    amount: 70_000,  close_date: inPeriod },
+    { id: 'o1', owner_id: 'rep1', stage: 'qualification',  forecast_category: 'pipeline',  amount: 100_000, close_date: inPeriod },
+    { id: 'o2', owner_id: 'rep1', stage: 'needs_analysis', forecast_category: 'best_case', amount: 50_000,  close_date: inPeriod },
+    { id: 'o3', owner_id: 'rep1', stage: 'negotiation',    forecast_category: 'commit',    amount: 30_000,  close_date: inPeriod },
+    { id: 'o4', owner_id: 'rep1', stage: 'closed_won',     forecast_category: 'closed',    amount: 70_000,  close_date: inPeriod },
     // Closes in the PREVIOUS quarter — outside every bucket, but still makes
     // rep1 an active owner.
-    { id: 'o5', owner: 'rep1', stage: 'proposal',       forecast_category: 'commit',    amount: 999_999, close_date: beforePeriod },
+    { id: 'o5', owner_id: 'rep1', stage: 'proposal',       forecast_category: 'commit',    amount: 999_999, close_date: beforePeriod },
     // Lost deals are neither open nor won.
-    { id: 'o6', owner: 'rep1', stage: 'closed_lost',    forecast_category: 'omitted',   amount: 12_345,  close_date: inPeriod },
+    { id: 'o6', owner_id: 'rep1', stage: 'closed_lost',    forecast_category: 'omitted',   amount: 12_345,  close_date: inPeriod },
     // rep2 — the second amount arrives as a STRING, the shape a currency
     // column takes coming back from some drivers. Without the `* 1` coercion
     // in the accumulator the template CONCATENATES and pipeline reads
     // "020000" + "25000" instead of 45000.
-    { id: 'o7', owner: 'rep2', stage: 'proposal',       forecast_category: 'commit',    amount: 20_000,  close_date: inPeriod },
-    { id: 'o8', owner: 'rep2', stage: 'qualification',  forecast_category: 'pipeline',  amount: '25000', close_date: inPeriod },
+    { id: 'o7', owner_id: 'rep2', stage: 'proposal',       forecast_category: 'commit',    amount: 20_000,  close_date: inPeriod },
+    { id: 'o8', owner_id: 'rep2', stage: 'qualification',  forecast_category: 'pipeline',  amount: '25000', close_date: inPeriod },
     // rep4 owns nothing but a lost deal — not a forecast owner.
-    { id: 'o9', owner: 'rep4', stage: 'closed_lost',    forecast_category: 'omitted',   amount: 88_000,  close_date: inPeriod },
+    { id: 'o9', owner_id: 'rep4', stage: 'closed_lost',    forecast_category: 'omitted',   amount: 88_000,  close_date: inPeriod },
   ];
 
   const harness = (forecasts: Rec[] = []) =>
@@ -528,13 +528,13 @@ describe('forecast_snapshot — nightly per-owner pipeline snapshot', () => {
   };
 
   const byOwner = (h: ReturnType<typeof harness>) =>
-    Object.fromEntries(h.store.crm_forecast.map((f) => [f.owner, f]));
+    Object.fromEntries(h.store.crm_forecast.map((f) => [f.owner_id, f]));
 
   it('opens a current-period row for every active opportunity owner, and only for them', async () => {
     const h = await run();
 
     expect(h.store.crm_forecast).toHaveLength(2);
-    const owners = h.store.crm_forecast.map((f) => f.owner).sort();
+    const owners = h.store.crm_forecast.map((f) => f.owner_id).sort();
     expect(owners).toEqual(['rep1', 'rep2']);
     // A user with no opportunities at all, and one whose only deal is lost,
     // must not collect an empty snapshot row.
@@ -604,7 +604,7 @@ describe('forecast_snapshot — nightly per-owner pipeline snapshot', () => {
     // longer reflect the pipeline. The whole point of a nightly upsert is
     // that amounts can go DOWN, which a create-once writer never achieves.
     const h = await run([{
-      id: 'f_rep1', owner: 'rep1', period: 'quarter',
+      id: 'f_rep1', owner_id: 'rep1', period: 'quarter',
       period_start: isoUtc(qStart), period_end: isoUtc(qEnd), period_label: quarterLabel,
       snapshot_date: beforePeriod, source: 'scheduled',
       pipeline_amount: 9_999_999, best_case_amount: 9_999_999,
@@ -621,7 +621,7 @@ describe('forecast_snapshot — nightly per-owner pipeline snapshot', () => {
 
   it('never writes quota — the manually-maintained attainment denominator', async () => {
     const h = await run([{
-      id: 'f_rep1', owner: 'rep1', period: 'quarter',
+      id: 'f_rep1', owner_id: 'rep1', period: 'quarter',
       period_start: isoUtc(qStart), period_end: isoUtc(qEnd), period_label: quarterLabel,
       snapshot_date: beforePeriod, source: 'scheduled', quota: 1_500_000,
     }]);
@@ -636,7 +636,7 @@ describe('forecast_snapshot — nightly per-owner pipeline snapshot', () => {
   it('does not touch a snapshot belonging to a different period', async () => {
     const previousQuarterEnd = isoUtc(new Date(qStart.getTime() - 86_400_000));
     const h = await run([{
-      id: 'f_old', owner: 'rep1', period: 'quarter',
+      id: 'f_old', owner_id: 'rep1', period: 'quarter',
       period_start: isoUtc(new Date(Date.UTC(qStart.getUTCFullYear(), qStart.getUTCMonth() - 3, 1))),
       period_end: previousQuarterEnd, period_label: 'previous',
       snapshot_date: previousQuarterEnd, source: 'scheduled', closed_amount: 1_485_000,
@@ -653,7 +653,7 @@ describe('forecast_snapshot — nightly per-owner pipeline snapshot', () => {
       { forecast_snapshot: ForecastSnapshotFlow },
       {
         sys_user: [{ id: 'rep9', name: 'Idle' }],
-        crm_opportunity: [{ id: 'ox', owner: 'rep9', stage: 'closed_lost', amount: 10, close_date: inPeriod }],
+        crm_opportunity: [{ id: 'ox', owner_id: 'rep9', stage: 'closed_lost', amount: 10, close_date: inPeriod }],
         crm_forecast: [],
       },
       { hooks: [forecastDerive] },
@@ -766,35 +766,38 @@ describe('loop-nested conditions must be explicit CEL envelopes', () => {
 });
 
 /**
- * demo_bootstrap — the post-seed ownership claim (#622).
+ * demo_bootstrap — the post-seed ownership claim (#622, re-based on #548).
  *
- * The failure this guards against is silent by construction. A seeded row can
- * reach the database with the PLATFORM ownership column (`owner_id`) empty:
- * seed writes run `{ isSystem: true }`, which by the seeder's documented
- * contract disables auto-injection of `owner_id`, and these seeds cannot
- * declare one (`cel`os.user.id`` does not resolve at seed time — that is why
- * this flow exists). `owner_id` is the only column the sharing service reads,
- * so under `sharingModel: 'private'` such a row is editable by NOBODY, the
- * admin included: `PATCH` answers 403, and the attachment surface — which
- * gates on `canEdit(parent)` — answers 403 ATTACHMENT_PARENT_ACCESS.
+ * The failure this guards against is silent by construction. A seeded row
+ * reaches the database with the ownership column (`owner_id`) empty: seed
+ * writes run `{ isSystem: true }`, which short-circuits the security
+ * middleware, so its insert-time auto-stamp never fires — and these seeds
+ * cannot declare an owner either (a seed cannot name a user; that is why this
+ * flow exists). `owner_id` is the column the sharing service reads, so under
+ * `sharingModel: 'private'` such a row is editable by NOBODY, the admin
+ * included: `PATCH` answers 403, and the attachment surface — which gates on
+ * `canEdit(parent)` — answers 403 ATTACHMENT_PARENT_ACCESS.
  *
- * Stamping only the app-level `owner` lookup hid it perfectly: the record LOOKS
- * claimed everywhere a human would check, the "My …" views fill up, and the
- * sweep's own filter (`owner != null`) then excludes the row forever, so the
- * broken state is terminal. Shipped that way, `crm_contract` was read-only for
- * every user on every demo org.
+ * #622 was the two-column version of this: the app also authored its own
+ * `owner` lookup, the sweep stamped only that one, and the record LOOKED
+ * claimed everywhere a human would check while the platform still owned it to
+ * nobody — with the sweep's own filter (`owner != null`) then excluding the row
+ * forever, so the broken state was terminal. #548 removed the second column, so
+ * the half-claimed state is no longer reachable and there is nothing left for a
+ * `plat_only` fixture to describe.
  *
- * These cases therefore assert the OUTCOME — every claimed object comes out of
- * bootstrap with a real platform owner — over the object list read from the
- * flow itself, so a newly claimed object is covered the day it is added.
+ * What remains is one column and one question, and these cases assert the
+ * OUTCOME — every claimed object comes out of bootstrap with a real owner —
+ * over the object list read from the flow itself, so a newly claimed object is
+ * covered the day it is added. The single-column claim is NOT weaker than the
+ * two-column one it replaces: it is the same assertion with the column that
+ * could disagree with it deleted.
  */
 describe('demo_bootstrap — post-seed ownership claim', () => {
   const USER = 'usr_first';
 
-  /** The platform ownership column; injected by ObjectQL, read by sharing. */
+  /** The app's ONE ownership column — the platform anchor sharing reads. */
   const PLATFORM_OWNER = 'owner_id';
-  /** The app's own lookup; drives "My …" views and owner-addressed notify. */
-  const APP_OWNER = 'owner';
 
   /** Every object the flow claims, read off the flow's own `get_record` nodes. */
   const claimedObjects = (): string[] => {
@@ -806,22 +809,23 @@ describe('demo_bootstrap — post-seed ownership claim', () => {
   };
 
   /**
-   * One row per ownerless SHAPE, for each claimed object:
-   *  - `both`      — a fresh seed row, ownerless on both columns.
-   *  - `app_only`  — the platform stamp fired, the app lookup is still empty.
-   *  - `plat_only` — THE #622 STATE: the app lookup reads as claimed while the
-   *                  platform column is empty. A sweep keyed on `owner` alone
-   *                  can never see this row again.
-   * Plus `owned`, already claimed by a real rep — must be left alone.
+   * Two rows per claimed object:
+   *  - `unowned` — a fresh seed row, `owner_id` empty. The sweep must claim it.
+   *  - `owned`   — already claimed by a real rep. The sweep must leave it alone.
+   *
+   * The `app_only` / `plat_only` shapes this fixture used to carry described the
+   * two columns DISAGREEING, which #548 made unrepresentable — there is one
+   * column now, so "claimed here but not there" has no spelling. They are not
+   * re-spelled onto `owner_id` (that would duplicate `unowned` / `owned` under
+   * new names and assert nothing extra); they are deleted with the state they
+   * described.
    */
   const seedStore = (): Record<string, Rec[]> => {
     const store: Record<string, Rec[]> = { sys_user: [{ id: USER, email: 'admin@objectos.ai' }] };
     for (const object of claimedObjects()) {
       store[object] = [
-        { id: `${object}_both`, [APP_OWNER]: null, [PLATFORM_OWNER]: null },
-        { id: `${object}_app_only`, [APP_OWNER]: null, [PLATFORM_OWNER]: USER },
-        { id: `${object}_plat_only`, [APP_OWNER]: USER, [PLATFORM_OWNER]: null },
-        { id: `${object}_owned`, [APP_OWNER]: 'rep_9', [PLATFORM_OWNER]: 'rep_9' },
+        { id: `${object}_unowned`, [PLATFORM_OWNER]: null },
+        { id: `${object}_owned`, [PLATFORM_OWNER]: 'rep_9' },
       ];
     }
     return store;
@@ -862,35 +866,35 @@ describe('demo_bootstrap — post-seed ownership claim', () => {
     ).toEqual([]);
   });
 
-  it('claims BOTH ownership columns on every row it touches', async () => {
+  it('claims the ownership column on every row it touches', async () => {
     const h = await runBootstrap();
 
     for (const object of claimedObjects()) {
-      const byId = Object.fromEntries((h.store[object] ?? []).map((r) => [r.id, r]));
-      for (const shape of ['both', 'app_only', 'plat_only']) {
-        const row = byId[`${object}_${shape}`];
-        expect(row, `${object}_${shape} vanished`).toBeTruthy();
-        expect(row[PLATFORM_OWNER], `${object}_${shape}: platform ${PLATFORM_OWNER} not claimed`).toBe(USER);
-        expect(row[APP_OWNER], `${object}_${shape}: app ${APP_OWNER} not claimed`).toBe(USER);
-      }
+      const row = (h.store[object] ?? []).find((r) => r.id === `${object}_unowned`);
+      expect(row, `${object}_unowned vanished`).toBeTruthy();
+      expect(row![PLATFORM_OWNER], `${object}_unowned: ${PLATFORM_OWNER} not claimed`).toBe(USER);
     }
   });
 
-  it('repairs a row the app lookup already calls claimed (the #622 state)', async () => {
-    // The regression in one case: `owner` set, `owner_id` empty. A sweep keyed
-    // on `owner` alone reports success and never touches the row again, which
-    // is why this shipped invisibly.
+  it('stamps no OTHER ownership-shaped column — one owner, or the #622 split is back', async () => {
+    // The half-claimed state of #622 needed two columns to exist in. This is
+    // the assertion that keeps it that way: a future sweep that starts writing
+    // a second `owner`-ish key re-creates the state the fixture above no longer
+    // has a shape for, and it would do so silently.
     const h = await runBootstrap();
-    const contract = (h.store.crm_contract ?? []).find((r) => r.id === 'crm_contract_plat_only');
-    expect(contract?.[PLATFORM_OWNER], 'half-claimed contract still ownerless to sharing').toBe(USER);
+    for (const object of claimedObjects()) {
+      for (const row of h.store[object] ?? []) {
+        const ownerish = Object.keys(row).filter((k) => k === 'owner' || k.endsWith('_owner'));
+        expect(ownerish, `${object}/${row.id as string} grew a second ownership column`).toEqual([]);
+      }
+    }
   });
 
   it('never reassigns a record that already has a real owner', async () => {
     const h = await runBootstrap();
     for (const object of claimedObjects()) {
       const owned = (h.store[object] ?? []).find((r) => r.id === `${object}_owned`);
-      expect(owned?.[APP_OWNER], `${object}: stole an owned record`).toBe('rep_9');
-      expect(owned?.[PLATFORM_OWNER], `${object}: overwrote a real platform owner`).toBe('rep_9');
+      expect(owned?.[PLATFORM_OWNER], `${object}: overwrote a real owner`).toBe('rep_9');
     }
   });
 
@@ -910,9 +914,8 @@ describe('demo_bootstrap — post-seed ownership claim', () => {
     // Every row keeps exactly the ownership it started with — in particular the
     // sweep must not stamp the literal `{firstUser.id}` placeholder.
     for (const object of claimedObjects()) {
-      const both = (h.store[object] ?? []).find((r) => r.id === `${object}_both`);
-      expect(both?.[APP_OWNER], `${object}: claimed with no user present`).toBeNull();
-      expect(both?.[PLATFORM_OWNER], `${object}: claimed with no user present`).toBeNull();
+      const unowned = (h.store[object] ?? []).find((r) => r.id === `${object}_unowned`);
+      expect(unowned?.[PLATFORM_OWNER], `${object}: claimed with no user present`).toBeNull();
     }
   });
 });

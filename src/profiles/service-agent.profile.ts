@@ -23,7 +23,17 @@ export const ServiceAgentProfile = {
     // no sharing rule at all, so an agent reading an account org-wide still
     // sees only their own tasks on it (#549).
     crm_case:        { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const, allowExport: true },
-    crm_task:        { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
+    // `allowTransfer` on `crm_task` ONLY — canonical note in
+    // `src/profiles/index.ts`. Narrow and load-bearing: escalating a case fires
+    // `case_status_side_effects`, which opens the follow-up task OWNED BY the
+    // account owner (`case.hook.ts`). That insert runs on `ctx.api` with the
+    // agent's own context, so planting it under another user is a transfer and
+    // is denied without this bit — the case update would fail with it. This is
+    // "assign work to a colleague", not "reassign the ticket": the agent holds
+    // no transfer grant on `crm_case` or any customer record, so escalation
+    // still cannot move a case off its owner (#548; case reassignment remains
+    // the deferred half of that decision).
+    crm_task:        { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const, allowTransfer: true },
     // #592 — `log_call` / `log_meeting` are scoped to `crm_case` too, and an
     // agent who cannot INSERT a `crm_event` gets a button that 403s. Same
     // own-scoped shape as their tasks.

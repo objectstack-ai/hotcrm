@@ -26,11 +26,25 @@ import type { HookApi } from './_hook-api';
  * sales rep with the FEWEST open leads — a self-balancing round-robin that needs
  * no rotation counter.
  *
+ * It assigns `owner_id`, the platform ownership anchor (#548) — the column OWD,
+ * sharing and the "My Leads" view all read, so the assigned rep really owns the
+ * lead rather than merely being named on it.
+ *
+ * Writing a FOREIGN owner is normally an ownership transfer, denied without
+ * `allowTransfer` (#3004). It passes here because of WHERE this runs, not what
+ * it is granted: a `beforeInsert` hook mutates `opCtx.data` INSIDE the operation
+ * the security middleware already wrapped, so the guard read (and stamped) the
+ * payload before this line changed it. That ordering is pinned by
+ * `test/ownership-model.test.ts` against a real ObjectQL — an assumption here
+ * would be the difference between round-robin working and every web-to-lead
+ * submission 403-ing.
+ *
  * The rep pool is whoever holds the `sales_rep` position (`sys_user_position`).
  * When that pool is empty (e.g. a fresh org before positions are assigned) the
  * hook is a NO-OP and the lead keeps whatever owner it had — so it never blocks
- * lead creation. UI-created leads already carry owner = creator (field default),
- * so this only kicks in for genuinely ownerless intake.
+ * lead creation. UI-created leads already carry `owner_id` = creator (the
+ * middleware's insert-time stamp), so this only kicks in for genuinely
+ * ownerless intake.
  *
  * Runs beforeInsert so the downstream lead_assignment flow (afterInsert) sees
  * the assigned owner and routes its SLA alert to that rep. Territory-based
@@ -38,7 +52,7 @@ import type { HookApi } from './_hook-api';
  *
  * Priority 250 — hooks run in ASCENDING priority order, so this must run
  * AFTER `lead_automation` (200): its guest branch strips a client-spoofed
- * `owner` from anonymous Web-to-Lead submissions. At the old priority 150
+ * `owner_id` from anonymous Web-to-Lead submissions. At the old priority 150
  * this hook assigned an owner first and the guest strip then deleted it,
  * landing every web-to-lead ownerless — the exact case this hook exists for.
  */
@@ -50,8 +64,11 @@ const leadAutoAssignHook: Hook = {
   description: 'Assign ownerless new leads to the least-loaded sales rep.',
   handler: async (ctx: HookContext) => {
     const { input } = ctx;
-    // Respect an explicit / creator-assigned owner.
-    if (typeof input.owner === 'string' && input.owner) return;
+    // Respect an explicit / creator-assigned owner. On a write that carries a
+    // user the security middleware has ALREADY stamped `owner_id` to that user
+    // by the time this runs, so this is also what makes the hook a no-op for
+    // ordinary UI creation — only genuinely ownerless intake falls through.
+    if (typeof input.owner_id === 'string' && input.owner_id) return;
     const api = ctx.api as HookApi | undefined;
     if (!api) return;
 
@@ -81,14 +98,14 @@ const leadAutoAssignHook: Hook = {
       let bestCount = Infinity;
       for (const repId of repIds) {
         const openCount = await api.object('crm_lead').count({
-          where: { owner: repId, is_converted: false },
+          where: { owner_id: repId, is_converted: false },
         });
         if (openCount < bestCount) {
           bestCount = openCount;
           best = repId;
         }
       }
-      if (best) input.owner = best;
+      if (best) input.owner_id = best;
     } catch {
       // Swallow: auto-assignment must never block the insert. Common case is the
       // anonymous public-form context, which can't read sys_user_position — the
@@ -147,7 +164,7 @@ const leadHook: Hook = {
         delete (input as Record<string, unknown>).converted_contact;
         delete (input as Record<string, unknown>).converted_opportunity;
         delete (input as Record<string, unknown>).converted_date;
-        delete (input as Record<string, unknown>).owner;
+        delete (input as Record<string, unknown>).owner_id;
         // Same reasoning for the duplicate link (#598): a submitter who can
         // post `duplicate_status: 'confirmed'` can switch OFF the intake
         // dedupe for their own submission (`lead_duplicate_check` stands down
@@ -184,7 +201,7 @@ const leadHook: Hook = {
         const ALLOWED = new Set([
           'description', 'notes',
           // Framework-managed / system columns (cf. opportunity.hook.ts).
-          'id', 'owner', 'owner_id', 'created_at', 'updated_at',
+          'id', 'owner_id', 'created_at', 'updated_at',
           'created_by', 'updated_by', 'space_id', 'organization_id', 'org_id', 'version',
         ]);
         const violating = Object.keys(input).filter(
@@ -212,8 +229,8 @@ const leadHook: Hook = {
         (typeof previous?.id === 'string' && previous.id) ||
         undefined;
       const ownerId =
-        (typeof input.owner === 'string' && input.owner) ||
-        (typeof previous?.owner === 'string' && previous.owner) ||
+        (typeof input.owner_id === 'string' && input.owner_id) ||
+        (typeof previous?.owner_id === 'string' && previous.owner_id) ||
         ctx.user?.id;
 
       const dueDate = new Date();
@@ -226,7 +243,14 @@ const leadHook: Hook = {
           priority: 'high',
           type: 'follow_up',
           due_date: dueDate.toISOString().slice(0, 10),
-          owner: ownerId,
+          // Unlike `lead_auto_assign` above, this is a SEPARATE insert on
+          // `ctx.api` — a new operation carrying the caller's context, so the
+          // #3004 transfer guard does apply to it. When the qualifier is the
+          // lead's own rep (`owner_id` == caller) it is not a transfer at all;
+          // a manager qualifying a rep's lead holds `allowTransfer`. Any other
+          // caller is denied and the catch below drops the task rather than
+          // landing it on the wrong desk.
+          owner_id: ownerId,
           related_to_type: 'crm_lead',
           related_to_lead: leadId,
         });

@@ -42,7 +42,7 @@ const opportunityValidationHook: Hook = {
     // must never reject these system writes, only user edits to business fields.
     // (Declared in-handler: sandboxed bodies have no module scope.)
     const SYSTEM_FIELDS = new Set([
-      'id', 'owner', 'owner_id', 'created_at', 'updated_at',
+      'id', 'owner_id', 'created_at', 'updated_at',
       'created_by', 'updated_by', 'space_id', 'organization_id', 'org_id', 'version',
     ]);
     // Approval verdicts must be allowed to land even if the deal closes while
@@ -176,8 +176,8 @@ const opportunityWonHook: Hook = {
 
     const oppId = (typeof input.id === 'string' && input.id) || previous?.id;
     const ownerId =
-      (typeof input.owner === 'string' && input.owner) ||
-      (typeof previous?.owner === 'string' && previous.owner) ||
+      (typeof input.owner_id === 'string' && input.owner_id) ||
+      (typeof previous?.owner_id === 'string' && previous.owner_id) ||
       ctx.user?.id;
     const due = new Date();
     due.setDate(due.getDate() + 3);
@@ -187,7 +187,7 @@ const opportunityWonHook: Hook = {
       priority: 'high',
       type: 'follow_up',
       due_date: due.toISOString().slice(0, 10),
-      owner: ownerId,
+      owner_id: ownerId,
       related_to_type: 'crm_opportunity',
       related_to_opportunity: oppId,
       related_to_account: accountId,

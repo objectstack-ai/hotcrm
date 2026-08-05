@@ -104,7 +104,7 @@ export const CampaignViews = defineView({
           'channel',
           { field: 'status', required: true },
           'parent_campaign',
-          'owner',
+          'owner_id',
           'is_active',
           'landing_page_url',
         ],

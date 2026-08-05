@@ -72,7 +72,7 @@ export const CaseEscalationFlow: Flow = {
         // `escalation_reason` must be set whenever `is_escalated` flips true — the
         // object's `escalation_reason_required` validation rejects the write
         // otherwise (which silently aborted this flow until it was supplied).
-        // No owner reassignment: `{caseRecord.owner.manager}` cannot traverse a
+        // No owner reassignment: `{caseRecord.owner_id.manager}` cannot traverse a
         // lookup in flow templates — it interpolates to the literal "undefined",
         // orphaning the case under a phantom owner. The case stays with its
         // owner; the escalation flag + follow-up task carry the hand-off.
@@ -88,16 +88,16 @@ export const CaseEscalationFlow: Flow = {
       // ADR-0012: the dedicated `notify` node dispatches through the messaging
       // service (inbox + email + push). The legacy `script` + `actionType:'email'`
       // shape is a no-op stub in 7.4 and never delivered anything.
-      // Owner only: `{caseRecord.owner.manager}` cannot traverse a lookup in
+      // Owner only: `{caseRecord.owner_id.manager}` cannot traverse a lookup in
       // flow templates — it interpolates to the literal "undefined".
       id: 'notify_team', type: 'notify', label: 'Notify Support Team',
       config: {
         // Owner only. Flow templates cannot traverse a lookup (see the note on
-        // `assign_senior_agent` above): `{caseRecord.owner.manager}` and
+        // `assign_senior_agent` above): `{caseRecord.owner_id.manager}` and
         // `{caseRecord.crm_account.name}` both interpolate to the literal
         // string "undefined" — a phantom recipient and a garbled body.
         // "reassigned" was also false: this flow never changes the owner.
-        recipients: ['{caseRecord.owner}'],
+        recipients: ['{caseRecord.owner_id}'],
         channels: ['inbox', 'email'],
         severity: 'critical',
         topic: 'case_escalated',

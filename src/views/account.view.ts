@@ -59,7 +59,7 @@ export const AccountViews = defineView({
         operation: 'update',
         params: [
           {
-            name: 'owner',
+            name: 'owner_id',
             label: 'New Owner',
             type: 'lookup',
             // The platform registers `sys_user` — `user` matches no object and
@@ -106,7 +106,7 @@ export const AccountViews = defineView({
       gallery: {
         cardSize: 'medium',
         titleField: 'name',
-        visibleFields: ['industry', 'annual_revenue', 'number_of_employees', 'phone', 'website', 'owner'],
+        visibleFields: ['industry', 'annual_revenue', 'number_of_employees', 'phone', 'website', 'owner_id'],
       },
     },
 
@@ -125,7 +125,7 @@ export const AccountViews = defineView({
       type: 'grid',
       label: 'Enterprise Accounts',
       data: { provider: 'object', object: 'crm_account' },
-      columns: ['name', 'industry', 'annual_revenue', 'number_of_employees', 'owner'],
+      columns: ['name', 'industry', 'annual_revenue', 'number_of_employees', 'owner_id'],
       filter: [{ field: 'annual_revenue', operator: 'greater_than_or_equal', value: 10000000 }],
       sort: [{ field: 'annual_revenue', order: 'desc' }],
 
@@ -133,7 +133,8 @@ export const AccountViews = defineView({
       // dropdowns). Lives on THIS view, not the default one: the default
       // view's `tabs` act as the view switcher, and filter tabs/dropdowns
       // are mutually exclusive with a tab row on the same toolbar.
-      // `owner` is a user lookup — it renders as a record-picker dropdown.
+      // `owner_id` is the platform ownership lookup (#548) — it renders as a
+      // record-picker dropdown.
       // NOTE: requires @objectstack/spec > 9.2.0 (ADR-0047 UserFiltersSchema);
       // on older specs defineStack strips this block — harmless no-op.
       ...({
@@ -142,7 +143,7 @@ export const AccountViews = defineView({
           fields: [
             { field: 'industry', showCount: true },
             { field: 'type' },
-            { field: 'owner' },
+            { field: 'owner_id' },
           ],
         },
         // typed via spread-as-any until @objectstack/spec ships ADR-0047
@@ -156,7 +157,7 @@ export const AccountViews = defineView({
       label: 'My Accounts',
       data: { provider: 'object', object: 'crm_account' },
       columns: ['name', 'industry', 'annual_revenue', 'phone', 'last_activity_date'],
-      filter: [{ field: 'owner', operator: 'equals', value: '{current_user_id}' }],
+      filter: [{ field: 'owner_id', operator: 'equals', value: '{current_user_id}' }],
       sort: [{ field: 'last_activity_date', order: 'desc' }],
     },
 
@@ -207,7 +208,7 @@ export const AccountViews = defineView({
           'industry',
           'phone',
           'website',
-          'owner',
+          'owner_id',
           'parent_account',
           'is_active',
           'brand_color',

@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
-import { F, P, cel } from '@objectstack/spec';
+import { F, P } from '@objectstack/spec';
 
 /**
  * Campaign Object
@@ -42,6 +42,15 @@ export const Campaign = ObjectSchema.create({
   ],
 
   fields: {
+    // Platform ownership anchor — canonical note in `account.object.ts` (#548).
+    owner_id: Field.lookup('sys_user', {
+      label: 'Campaign Owner',
+      group: 'assignment',
+      system: true,
+      readonly: false,
+      trackHistory: true,
+    }),
+
     // AutoNumber field
     campaign_code: Field.autonumber({
       group: 'basic',
@@ -231,12 +240,6 @@ export const Campaign = ObjectSchema.create({
       description: 'Parent campaign in hierarchy',
     }),
     
-    owner: Field.lookup('sys_user', {
-      group: 'assignment',
-      defaultValue: cel`os.user.id`,
-      label: 'Campaign Owner',
-      trackHistory: true,
-    }),
     
     // Campaign Assets
     landing_page_url: Field.url({
@@ -257,7 +260,7 @@ export const Campaign = ObjectSchema.create({
     { fields: ['type'] },
     { fields: ['status'] },
     { fields: ['start_date'] },
-    { fields: ['owner'] },
+    { fields: ['owner_id'] },
   ],
   
   // Enable advanced features

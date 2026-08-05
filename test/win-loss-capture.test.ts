@@ -430,7 +430,7 @@ describe('win rate is measured, and both halves are load-bearing', () => {
   let ql: AnyRec;
   let analytics: AnalyticsService;
 
-  const OPP_COLUMNS = ['name', 'stage', 'amount', 'owner', 'lead_source', 'win_reason', 'loss_reason', 'close_date'];
+  const OPP_COLUMNS = ['name', 'stage', 'amount', 'owner_id', 'lead_source', 'win_reason', 'loss_reason', 'close_date'];
 
   beforeAll(async () => {
     ql = (await ObjectQL.create({
@@ -446,7 +446,7 @@ describe('win rate is measured, and both halves are load-bearing', () => {
             name: { type: 'text' },
             stage: { type: 'text' },
             amount: { type: 'number' },
-            owner: { type: 'text' },
+            owner_id: { type: 'text' },
             lead_source: { type: 'text' },
             win_reason: { type: 'text' },
             loss_reason: { type: 'text' },
@@ -511,20 +511,20 @@ describe('win rate is measured, and both halves are load-bearing', () => {
       for (const [i, src] of ['web', 'web', 'referral', 'content'].entries()) {
         await add({
           name: `${rep} win ${i}`, stage: 'closed_won', amount: 10000 * (i + 1),
-          owner: rep, lead_source: src, win_reason: 'best_fit', close_date: '2026-05-01',
+          owner_id: rep, lead_source: src, win_reason: 'best_fit', close_date: '2026-05-01',
         });
       }
       for (const [i, src] of ['web', 'cold_call'].entries()) {
         await add({
           name: `${rep} loss ${i}`, stage: 'closed_lost', amount: 5000,
-          owner: rep, lead_source: src, loss_reason: i === 0 ? 'price' : 'no_budget',
+          owner_id: rep, lead_source: src, loss_reason: i === 0 ? 'price' : 'no_budget',
           close_date: '2026-05-01',
         });
       }
       // Open pipeline: must not touch either half of the ratio.
       await add({
         name: `${rep} open`, stage: 'negotiation', amount: 999999,
-        owner: rep, lead_source: 'web', close_date: '2026-12-01',
+        owner_id: rep, lead_source: 'web', close_date: '2026-12-01',
       });
     }
   });
@@ -683,7 +683,7 @@ describe('win rate is measured, and both halves are load-bearing', () => {
     for (let i = 0; i < 5; i++) {
       await add({
         name: `noise ${i}`, stage: 'proposal', amount: 500000,
-        owner: 'rep_alice', lead_source: 'web', close_date: '2026-11-01',
+        owner_id: 'rep_alice', lead_source: 'web', close_date: '2026-11-01',
       });
     }
     expect(await overallWinRate()).toBeCloseTo(before as number, 10);
@@ -733,7 +733,7 @@ describe('the shipped seeds produce a real win rate and a real loss breakdown', 
             name: { type: 'text' },
             stage: { type: 'text' },
             amount: { type: 'number' },
-            owner: { type: 'text' },
+            owner_id: { type: 'text' },
             lead_source: { type: 'text' },
             win_reason: { type: 'text' },
             loss_reason: { type: 'text' },

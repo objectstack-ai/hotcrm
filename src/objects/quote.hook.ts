@@ -52,7 +52,7 @@ const quoteValidation: Hook = {
         // by the 9.x runtime — never treat those system writes as edits to a
         // frozen quote, only user changes to business fields.
         const SYSTEM_FIELDS = new Set([
-          'id', 'owner', 'owner_id', 'created_at', 'updated_at',
+          'id', 'owner_id', 'created_at', 'updated_at',
           'created_by', 'updated_by', 'space_id', 'organization_id', 'org_id', 'version',
         ]);
         const changed = Object.keys(input).filter(
@@ -114,9 +114,9 @@ const quoteAccepted: Hook = {
       crm_account: accountId,
       crm_contact: contactId,
       crm_opportunity: opportunityId,
-      owner:
-        (typeof input.owner === 'string' && input.owner) ||
-        (typeof previous?.owner === 'string' && previous.owner) ||
+      owner_id:
+        (typeof input.owner_id === 'string' && input.owner_id) ||
+        (typeof previous?.owner_id === 'string' && previous.owner_id) ||
         ctx.user?.id,
       status: 'draft',
       contract_term_months: months,

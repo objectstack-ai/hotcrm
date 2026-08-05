@@ -1,4 +1,4 @@
-import { F, cel } from '@objectstack/spec';
+import { F } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
@@ -22,7 +22,7 @@ export const Account = ObjectSchema.create({
   // the formula field, which isn't a real column, so the lookup picker + global
   // search silently return zero. These are real, indexed columns.
   searchableFields: ['name', 'account_number'],
-  highlightFields: ['account_number', 'name', 'type', 'owner'],
+  highlightFields: ['account_number', 'name', 'type', 'owner_id'],
 
   // Field groups organize the form layout. Array order == display order.
   // Each field below opts in via `group: '<key>'`.
@@ -36,6 +36,44 @@ export const Account = ObjectSchema.create({
   ],
 
   fields: {
+    // ─── Ownership (#548) ─────────────────────────────────────────────
+    //
+    // `owner_id` is the PLATFORM ownership anchor, not an app invention: the
+    // registry injects exactly this column into every user-owned object
+    // (`applySystemFields`), and it is the one OWD, sharing rules, owner-scope
+    // widening and the `is_private` row filter all read. This app used to
+    // author a SECOND `owner` lookup beside it — reassigning that moved the
+    // record in every list and report and moved no access at all (#548).
+    //
+    // Declared rather than left to injection, which the platform supports
+    // explicitly ("author-declared fields with the same name always win over
+    // injection, no overwrite"). Three things only a declaration buys, each
+    // one measured rather than assumed:
+    //   • `os validate` resolves it. An injected column is invisible to every
+    //     author-time rule, so `highlightFields: ['owner_id']` was reported as
+    //     "not a field on this object — silently skipped by every consumer",
+    //     and a CEL predicate reading `record.owner_id` failed outright.
+    //   • the per-object label and `group` survive (an injected field carries
+    //     the generic label "Owner" and no group at all);
+    //   • `trackHistory` survives, so a transfer still renders on the record
+    //     timeline instead of only in the compliance audit log.
+    // `system: true` keeps the injected marker the platform's own tooling
+    // reads — notably the clone path, which strips system columns so a copy is
+    // stamped to the cloner rather than inheriting the source's owner.
+    //
+    // No `defaultValue`: the security middleware stamps `owner_id` to the
+    // acting user on any insert that leaves it empty, and denies one that
+    // names another user without `allowTransfer` (#3004). That is a stronger
+    // guarantee than a field default, which evaluated to nothing on every
+    // user-less write (#620).
+    owner_id: Field.lookup('sys_user', {
+      label: 'Account Owner',
+      group: 'ownership',
+      system: true,
+      readonly: false,
+      trackHistory: true,
+    }),
+
     // AutoNumber field - Unique account identifier
     account_number: Field.autonumber({
       label: 'Account Number',
@@ -246,12 +284,6 @@ export const Account = ObjectSchema.create({
     }),
 
     // Relationship fields
-    owner: Field.lookup('sys_user', {
-      defaultValue: cel`os.user.id`,
-      label: 'Account Owner',
-      group: 'ownership',
-      trackHistory: true,
-    }),
 
     parent_account: Field.lookup('crm_account', {
       label: 'Parent Account',
@@ -364,7 +396,7 @@ export const Account = ObjectSchema.create({
   // — the same trap `crm_contact`, `crm_lead` and `crm_product` document. Two
   // organizations must be able to each have their own "Acme Corp".
   indexes: [
-    { fields: ['owner'] },
+    { fields: ['owner_id'] },
     { fields: ['type', 'is_active'] },
     // The territory sharing rules filter on this column, so it is read on
     // every account query a territory recipient makes (#621).
