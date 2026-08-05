@@ -20,10 +20,30 @@ export const OpportunityLineItem = ObjectSchema.create({
 
   // ADR-0090 D1/D7: OWD is an authored decision. A line item has no meaning
   // apart from its deal, so its record access DERIVES from the opportunity
-  // (ADR-0055): reads are filtered to line items whose `crm_opportunity` the
-  // caller can read, and any write requires edit access to that opportunity.
-  // ADR-0055's relation resolver accepts a REQUIRED LOOKUP as the parent, so
-  // this works without converting the relationship to master-detail.
+  // (ADR-0055) — but note what that derivation resolves to TODAY, which is not
+  // what "derives from the opportunity" suggests.
+  //
+  // MEASURED on 17.0.0-rc.2 and pinned by `test/parent-derived-reach.test.ts`
+  // on the twin `crm_quote_line_item` -> `crm_quote` chain: reads are NOT
+  // filtered to line items whose `crm_opportunity` the caller can read. The
+  // derivation resolves the master id set through the master's row-level
+  // security policies ONLY, under a SYSTEM context — ownership and
+  // `sys_record_share` grants are never folded in. The one RLS policy this app
+  // authors on `crm_opportunity` is the private-deal filter carried by the
+  // `sales_manager` and `marketing_user` sets, so for any caller without it —
+  // `sales_rep` included — the master set is EVERY opportunity, whatever they
+  // own or were shared. A line item here is effectively readable by every holder
+  // of object-level read on this object; where that private-deal policy does
+  // apply it is the POLICY narrowing the master set, never ownership or a share.
+  // The parent-write gate resolves the master through the same filter, so it
+  // does not narrow writes either (#549's measurement).
+  //
+  // The narrow "filtered to readable parents" semantics is the intended one; the
+  // platform gap is tracked upstream as objectstack-ai/objectstack#5386 (#694).
+  // The guard test named above pins the measured reach and goes red the moment
+  // the platform narrows the derivation — that failure is good news, not a
+  // regression. ADR-0055's relation resolver accepts a REQUIRED LOOKUP as the
+  // parent, so this works without converting the relationship to master-detail.
   //
   // It was `private` before (#488), which was the wrong baseline twice over:
   // this object has no owner of its own to speak of, so "private" fell back to the

@@ -18,11 +18,32 @@ export const CampaignMember = ObjectSchema.create({
   description: 'Membership and response tracking for marketing campaigns',
 
   // ADR-0090 D1/D7: OWD is an authored decision. Membership is an attribute of
-  // the campaign, so record access DERIVES from it (ADR-0055): reads are
-  // filtered to members whose `crm_campaign` the caller can read, and enrolling
-  // or updating a member requires edit access to that campaign. The relation
+  // the campaign, so record access DERIVES from it (ADR-0055). The relation
   // resolver accepts the REQUIRED `crm_campaign` LOOKUP as the parent, so no
   // master-detail conversion is needed.
+  //
+  // What that derivation delivers TODAY is not "members whose `crm_campaign`
+  // the caller can read". MEASURED on 17.0.0-rc.2 and pinned by
+  // `test/parent-derived-reach.test.ts`: the derivation resolves the master id
+  // set through the master's row-level security policies ONLY, under a SYSTEM
+  // context — ownership and `sys_record_share` grants are never folded in — and
+  // no RLS policy on `crm_campaign` narrows a SELECT here, so the master set is
+  // every campaign. A member row is readable by every holder of object-level
+  // read on this object, campaign grant or not.
+  //
+  // The practical delta is smaller here than on the app's other parent-derived
+  // objects: `crm_campaign` is `public_read`, so a caller who holds campaign
+  // read already reads every campaign, and the intended derivation would return
+  // the same rows for them. What it changes is that the member rows do not
+  // depend on the campaign grant AT ALL. The write side is where a policy does
+  // bite: the platform's `member_default` set carries an owner-only-writes RLS
+  // policy on updates, and because the derivation DOES fold master RLS in, that
+  // policy reaches through to member writes — see the
+  // `marketing_campaign_updates` note in `src/profiles/marketing-user.profile.ts`.
+  //
+  // The narrow "filtered to readable parents" semantics is the intended one; the
+  // platform gap is tracked upstream as objectstack-ai/objectstack#5386 (#694),
+  // and the guard test above goes red when it lands.
   //
   // It was `private` before (#488) — with no owner field on the junction row
   // that meant "whoever inserted it", which is nobody's idea of campaign

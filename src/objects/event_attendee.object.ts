@@ -31,14 +31,32 @@ import { ATTENDEE_RESPONSE_OPTIONS } from './_picklists';
  * This mirrors `crm_campaign_member`, the app's existing junction, down to the
  * autonumber `nameField` and the `controlled_by_parent` OWD.
  *
- * # Access derives from the event
+ * # Access derives from the event — and today that derivation is org-wide
  *
- * `sharingModel: 'controlled_by_parent'` (ADR-0055): reads are filtered to
- * attendees whose `crm_event` the caller can read, and adding or updating an
- * attendee requires edit access to that event. The relation resolver accepts
- * the REQUIRED `crm_event` lookup as the parent, so no master-detail
- * conversion is needed — same construction as `crm_campaign_member`. An
- * attendee row is therefore never more visible than the meeting it belongs to.
+ * `sharingModel: 'controlled_by_parent'` (ADR-0055). The relation resolver
+ * accepts the REQUIRED `crm_event` lookup as the parent, so no master-detail
+ * conversion is needed — same construction as `crm_campaign_member`.
+ *
+ * The INTENT of that model is "reads are filtered to attendees whose
+ * `crm_event` the caller can read, and adding or updating an attendee requires
+ * edit access to that event". That is not what the platform does today.
+ * MEASURED on 17.0.0-rc.2 and pinned by `test/parent-derived-reach.test.ts`:
+ * the derivation resolves the master id set through the master's row-level
+ * security policies ONLY, under a SYSTEM context — ownership scope and
+ * `sys_record_share` grants are never folded in. HotCRM authors no RLS policy
+ * on `crm_event`, so the master set is EVERY event, for every caller. An
+ * attendee row is therefore readable by every profile that grants read on this
+ * object, and the parent-write gate resolves the master through that same
+ * filter, so it does not narrow writes either.
+ *
+ * The gap is at its widest here: `crm_event` is `private` and reps hold it
+ * `own`-only, so the intended derivation would be a tight filter, while what
+ * ships hands every attendee row of every meeting to every holder of
+ * object-level read on this object. The narrow semantics is the intended one;
+ * the platform gap is tracked upstream as objectstack-ai/objectstack#5386
+ * (#694). The guard test named above goes red the moment the platform narrows
+ * the derivation — that failure is good news, not a regression, and the signal
+ * to rewrite this note.
  */
 export const EventAttendee = ObjectSchema.create({
   name: 'crm_event_attendee',
