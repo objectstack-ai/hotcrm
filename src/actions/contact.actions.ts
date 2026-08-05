@@ -2,6 +2,7 @@
 
 import type { Action } from '@objectstack/spec/ui';
 import { P } from '@objectstack/spec';
+import { ACTOR_NAME_RESOLUTION_SOURCE } from './global.actions';
 
 /**
  * Mark Contact as Primary.
@@ -56,6 +57,7 @@ export const SendEmailAction: Action = {
       const recipientId = ctx.recordId ?? record.id ?? null;
       const to = record.email ? String(record.email) : '';
       const from = ctx.user?.email ?? 'noreply@hotcrm.local';
+      const userId = ctx.user?.id ?? null;
       const subject = input.subject ? String(input.subject) : ('Email to ' + to);
       const body = input.body ? String(input.body) : '';
       const email = await ctx.api.object('sys_email').insert({
@@ -66,15 +68,18 @@ export const SendEmailAction: Action = {
         status: 'queued',
         related_object: 'crm_contact',
         related_id: recipientId,
-        sent_by: ctx.user?.id ?? null,
+        sent_by: userId,
       });
+
+      ${ACTOR_NAME_RESOLUTION_SOURCE}
+
       // Surface the email on the contact's unified activity timeline
       // (the audit writer only logs generic CRUD; this is the semantic event).
       const activity = await ctx.api.object('sys_activity').insert({
         type: 'completed',
         summary: 'Email: ' + subject,
-        actor_id: ctx.user?.id ?? null,
-        actor_name: ctx.user?.name ?? null,
+        actor_id: userId,
+        actor_name: actorName,
         object_name: 'crm_contact',
         record_id: recipientId,
         record_label: record.full_name ?? record.name ?? to,
