@@ -972,7 +972,7 @@ describe('every canonical opportunity stage reaches the UI that enumerates stage
           ]),
       );
 
-  it('the canonical stage list is the seven-value set the object validates against', () => {
+  it('the canonical stage list is the set the object validates against', () => {
     // Guards the guard twice over: an empty or renamed constant would make
     // every assertion below pass by comparing against nothing, and a `stage`
     // field that stopped being built from this constant would leave the two
