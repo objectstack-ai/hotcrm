@@ -31,9 +31,12 @@ established and #627 documented.
 The rewritten bullet states what the skill does (composes the four read tools
 over live opportunity data and answers in the conversation) and what the `ai`
 value on `source` actually is today: a value nothing in HotCRM writes, reserved
-for a snapshot an agent or integration of your own creates. The picklist option
-itself is left in place — it is metadata surface, and whether HotCRM should
-grow the capability that writes it is a product question, not a docs fix.
+for a snapshot an agent or integration of your own creates. The field table's
+**Source** row carried the same claim in three words — "`ai` (Copilot-generated)"
+— and now says the same thing as the bullet, so the page no longer contradicts
+itself one screen apart. The picklist option itself is left in place — it is
+metadata surface, and whether HotCRM should grow the capability that writes it
+is a product question, not a docs fix.
 
 Both Chinese translations carry the same correction. Documentation only — no
 metadata, skill, flow or object changed.

@@ -16,7 +16,7 @@ This page is about the **forecast object** that stores those snapshots. For the 
 | **Period** | Owner and period (`month` / `quarter`). The period start, the period end and the friendly label (e.g. **Q3 2026**) are all derived. |
 | **Numbers** | Quota, pipeline amount, best-case amount, commit amount, closed amount. |
 | **Derived** | **Expected**, **Attainment %** and **Coverage Ratio** — formula fields computed per row from the numbers above. Nobody types these in. |
-| **Source** | `scheduled` (nightly job), `ai` (Copilot-generated), `manual` (rep entry). |
+| **Source** | `scheduled` (nightly job), `ai` (reserved for an agent or integration of your own — nothing in HotCRM writes it), `manual` (rep entry). |
 | **Narrative** | Optional commentary — what changed, what's at risk, what to ask in the next 1:1. |
 
 Pipeline, best case and commit are **nested**, not independent — each is a subset of the one above it, so you read them as a ladder of confidence rather than as slices of a pie:
