@@ -21,9 +21,18 @@ export const MarketingUserProfile = {
     // "Add to Campaign" action (`src/actions/lead.actions.ts`) inserts
     // `crm_campaign_member` rows, and before #488 no permission set granted the
     // object — the action failed for the only persona meant to run it. Rows
-    // derive from the campaign (controlled_by_parent), so record scope follows
-    // the campaigns this profile can already read; deleting membership history
-    // stays a manager/admin privilege, matching every other object here.
+    // derive from the campaign (controlled_by_parent), so there is no record
+    // scope to author — but that derivation does not consult the campaign grant
+    // at all: MEASURED on 17.0.0-rc.2 and pinned by
+    // `test/parent-derived-reach.test.ts`, the master set comes from the
+    // master's row-level security policies only, under a system context, and
+    // nothing narrows a select on `crm_campaign`. For THIS profile the delta is
+    // small — `crm_campaign` is `public_read` and this set holds org-wide
+    // campaign read, so the intended derivation would hand back the same rows —
+    // but read this grant as org-wide on member rows in fact, not as scope that
+    // follows the campaigns above (objectstack-ai/objectstack#5386, #694).
+    // Deleting membership history stays a manager/admin privilege, matching
+    // every other object here.
     crm_campaign_member: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     // Read-only reference: knowledge articles for campaign copy
     // (public_read catalog).
@@ -55,8 +64,13 @@ export const MarketingUserProfile = {
     // campaigns only reaches campaigns the user personally created. That also
     // silently broke "Add to Campaign": enrolling a member is a write DERIVED
     // from the campaign (controlled_by_parent), so it requires campaign edit at
-    // the row level. This policy widens campaign updates to every holder of the
-    // set — exactly what the object grant above already declares. `id != null`
+    // the row level. This is the one direction in which the ADR-0055 derivation
+    // really does narrow: a master RLS policy is exactly what it folds in, while
+    // ownership and `sys_record_share` grants are not (which is why the READ
+    // side of these member rows is org-wide — see the `crm_campaign_member`
+    // grant above and objectstack-ai/objectstack#5386, #694). This policy widens
+    // campaign updates to every holder of the set — exactly what the object
+    // grant above already declares. `id != null`
     // is the pushdown-safe "all rows" predicate (verified: compiles to
     // `{id: {$null: false}}`).
     {

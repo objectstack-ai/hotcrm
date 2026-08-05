@@ -43,8 +43,8 @@ Permission sets are **explicit-allow only**: if an object is not listed in a set
 ### 💼 Sales Representative
 
 - Create, read and edit their **own** leads, accounts, opportunities, quotes and tasks
-- **Contacts** follow the account: a rep sees the contacts of every account they can see, including accounts reaching them through a territory or account-team share
-- **Opportunity and quote line items** — full control on their own deals and quotes, which is what the "Products" related list and quote building need
+- **Contacts**: every contact in the org — not only those on accounts the rep can see. Contact is Controlled by Parent, and in this release that derivation resolves org-wide rather than per account (see [Sharing & security](/docs/administration/sharing-and-security), *Controlled by Parent, in practice*)
+- **Opportunity and quote line items** — full control, which is what the "Products" related list and quote building need. Controlled by Parent again, so this reaches every deal's and every quote's lines, not only the rep's own
 - Read the **product** catalog, **campaigns**, **campaign members**, **knowledge articles** and **competitor** battlecards, and file a new competitor they ran into
 - Read their **own forecast snapshots** (they are written by the nightly forecast job, never by hand)
 - Read their own **contracts** and **cases**; deleting is a manager privilege (their own tasks excepted)
