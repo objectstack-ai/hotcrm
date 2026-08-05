@@ -1,8 +1,9 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { AgentSchema } from '@objectstack/spec/ai';
 import { REPO_ROOT } from './helpers/repo-root';
 
 /**
@@ -201,4 +202,110 @@ describe('maintainer docs do not point at directories that no longer exist', () 
       ).toEqual([]);
     });
   }
+});
+
+/**
+ * Agent-name drift — a copy-pasteable sample must not name an agent that the
+ * runtime refuses to load.
+ *
+ * `sales_copilot` was retired in #512 (app-authored agents removed; the surface
+ * is skills-only per ADR-0063 §2) and #586 cleared the two `src/` references,
+ * but the flagship "Wow #1 — live schema" demo kept POSTing it as the `agent`
+ * of `/api/v1/ai/chat` in four places: the runnable script and all three locale
+ * docs (#606). Nothing was checking, because an agent name in a fenced curl is
+ * just prose to every gate this repo runs — `os validate` and `pnpm lint` walk
+ * authored metadata, and there is no authored agent left for them to walk. The
+ * symptom only appears at demo time: `loadAgent()` refuses the non-platform
+ * name, and the script (`curl -fsS`) aborts at step 2.
+ *
+ * So the check has to live where the name lives — in the text. This walks every
+ * doc's code fences plus the demo scripts (a shell script is code end to end),
+ * pulls each `agent:` / `defaultAgent:` value, and requires it to be a PLATFORM
+ * agent. Architecture ruling (2026-08-04): AI capability is implemented by
+ * agents in objectstack-ai/cloud; app projects define skills only, so no
+ * self-named agent may reappear here — in metadata OR in a sample a reader is
+ * invited to paste into a terminal.
+ *
+ * The platform set is READ FROM THE SPEC (`AgentSchema.shape.surface`), the
+ * same derivation `metadata-references.test.ts` uses for `App.defaultAgent` —
+ * these two guards cover the same contract on its two surfaces (authored
+ * binding / documented sample) and should never disagree about the set.
+ */
+describe('documented agent names resolve to a platform agent', () => {
+  /** `['ask', 'build']` — straight off the spec's own surface enum. */
+  const PLATFORM_AGENTS: string[] = (() => {
+    const surface = (AgentSchema as unknown as { shape: Record<string, any> }).shape.surface;
+    const enumSchema = typeof surface.removeDefault === 'function' ? surface.removeDefault() : surface;
+    return enumSchema.options as string[];
+  })();
+
+  /** Files whose whole body is code — no fence to unwrap. */
+  const SCRIPT_DIRS = ['scripts'];
+  /** Prose files: only the fenced blocks are samples someone will run. */
+  const DOC_DIRS = ['content/docs', 'src/docs'];
+
+  /**
+   * Depth-first walk returning REPO_ROOT-relative paths. Hand-rolled rather
+   * than `readdirSync(..., { recursive: true })`: the repo's @types/node has no
+   * such overload, so the recursive form typechecks red under `pnpm typecheck`.
+   */
+  const walk = (dir: string, exts: string[]): string[] => {
+    const root = join(REPO_ROOT, dir);
+    if (!existsSync(root)) return [];
+    return readdirSync(root, { withFileTypes: true }).flatMap((entry) => {
+      const rel = join(dir, entry.name);
+      if (entry.isDirectory()) return walk(rel, exts);
+      return exts.some((e) => entry.name.endsWith(e)) ? [rel] : [];
+    });
+  };
+
+  /** ```lang\n ... ``` — the body only. */
+  const fences = (text: string): string[] =>
+    [...text.matchAll(/```[a-zA-Z0-9_-]*\n([\s\S]*?)```/g)].map((m) => m[1]);
+
+  /**
+   * `"agent": "x"`, `agent: 'x'`, `defaultAgent: "x"`. The leading `\b` is what
+   * keeps the `agent` alternative from matching inside `defaultAgent` (the
+   * preceding `t` is a word char, so there is no boundary there).
+   */
+  const AGENT_KEY = /\b(defaultAgent|agent)"?\s*:\s*["']([A-Za-z][A-Za-z0-9_]*)["']/g;
+
+  const cited = (source: string, blocks: string[]): { file: string; name: string }[] =>
+    blocks.flatMap((body) => [...body.matchAll(AGENT_KEY)].map((m) => ({ file: source, name: m[2] })));
+
+  const SAMPLES: { file: string; name: string }[] = [
+    ...walk(SCRIPT_DIRS[0], ['.sh', '.mjs', '.ts']).flatMap((f) =>
+      cited(f, [readFileSync(join(REPO_ROOT, f), 'utf8')]),
+    ),
+    ...DOC_DIRS.flatMap((d) => walk(d, ['.md', '.mdx'])).flatMap((f) =>
+      cited(f, fences(readFileSync(join(REPO_ROOT, f), 'utf8'))),
+    ),
+  ];
+
+  it('the spec still exposes a non-empty platform agent set', () => {
+    // Guard the guard, twice over. An introspection that silently returned []
+    // would fail every sample for the wrong reason; a scan that found nothing
+    // would pass by asserting nothing — which is exactly the state the repo was
+    // in before #606, and the reason the four sites went unnoticed for months.
+    expect(PLATFORM_AGENTS).toContain('ask');
+    expect(
+      SAMPLES.length,
+      'no `agent:` value found in any doc fence or script — this guard has gone vacuous. ' +
+        'If the demos legitimately dropped the key (`ask` is the implicit default, ADR-0063 §1), ' +
+        'delete this guard rather than leaving it green over nothing.',
+    ).toBeGreaterThan(0);
+  });
+
+  it('every documented agent name is a platform agent', () => {
+    const bad = SAMPLES.filter((s) => !PLATFORM_AGENTS.includes(s.name)).map(
+      (s) =>
+        `${s.file}: agent "${s.name}" is not a platform agent (${PLATFORM_AGENTS.join(' | ')}) — ` +
+        'loadAgent() refuses it, so this sample errors at chat time',
+    );
+    expect(
+      bad,
+      `documented agent names that will not resolve:\n  ${bad.join('\n  ')}\n` +
+        'Apps author skills, not agents (ADR-0063 §2). Name a platform agent, or omit the key.',
+    ).toEqual([]);
+  });
 });

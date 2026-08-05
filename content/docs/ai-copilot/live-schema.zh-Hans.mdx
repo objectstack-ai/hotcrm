@@ -9,7 +9,9 @@ description: HotCRM 的 AI 在模式变更发生的那一刻就能看到——�
 
 HotCRM 与众不同。**模式即系统提示词。**
 
-每次销售 Copilot 回答数据问题时，它都会针对 `@objectstack/runtime` 的元数据服务调用 `describe_object`——该服务会重新读取实时注册表。在 10:00:00 添加一个字段，下一位用户在 10:00:05 提问时就能看到它。
+每次助手回答数据问题时，它都会针对 `@objectstack/runtime` 的元数据服务调用 `describe_object`——该服务会重新读取实时注册表。在 10:00:00 添加一个字段，下一位用户在 10:00:05 提问时就能看到它。
+
+这个助手就是平台的 `ask` 智能体。HotCRM 不自行编写任何智能体——应用只交付**技能（skills）**，技能按 surface 亲和性挂载到平台智能体上（ADR-0063 §1/§2）。下面演示的行为，来自 HotCRM 的 `live_data` 技能搭载于 `ask` 之上。
 
 ## 30 秒演示
 
@@ -23,16 +25,16 @@ curl -X POST $HOTCRM/api/v1/ai/tools/add_field/invoke \
     "type": "number"
   }'
 
-# 2. Sales rep asks Copilot — five seconds later.
+# 2. Sales rep asks the assistant — five seconds later.
 curl -X POST $HOTCRM/api/v1/ai/chat \
   -d '{
-    "agent": "sales_copilot",
+    "agent": "ask",
     "messages": [{ "role": "user",
       "content": "Top 5 accounts by health_score — cite IDs." }]
   }'
 ```
 
-Copilot 的工具调用轨迹：
+智能体的工具调用轨迹：
 
 1. `describe_object('crm_account')` → 看到 `health_score`（number）。
 2. `query_records('crm_account', orderBy: [{ field: 'health_score', order: 'desc' }], limit: 5)`。
@@ -46,8 +48,8 @@ Copilot 的工具调用轨迹：
 |------------------|--------------------------------------------------------------------------------|
 | 元数据服务 | 对象 + 字段的单一事实来源。每次写入时热重载。       |
 | `describe_object`| 内置 AI 工具。每次调用都重新读取元数据。从不缓存。               |
-| 实时数据技能  | 捆绑 `describe_object` + `query_records`，并促使智能体先行检查。 |
-| 销售 Copilot    | 始终在回答前检查模式。自动呈现未知字段。 |
+| `live_data` 技能  | 捆绑 `describe_object` + `query_records`，并促使智能体先行检查。 |
+| `ask` 智能体    | 平台的数据智能体。加载该技能，因此回答前一律检查模式，并自动呈现未知字段。 |
 
 运行完整演示：
 
