@@ -275,7 +275,7 @@ export const Lead = ObjectSchema.create({
     // Custom notes with rich text formatting
     notes: Field.richtext({
       label: 'Notes',
-      description: 'Rich text notes with formatting',
+      description: 'Working notes on this lead — supports formatting.',
       group: 'additional',
     }),
 

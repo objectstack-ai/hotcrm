@@ -317,11 +317,11 @@ export const jaJP: TranslationData = {
         },
         attainment_pct: {
           label: '達成率 %',
-          help: '（クローズ ÷ クォータ）× 100。クォータが負の場合はガードされます。',
+          help: 'クローズ ÷ クォータ × 100。クォータが正の値になるまでは 0% と表示されます。',
         },
         coverage_ratio: {
           label: 'カバレッジ',
-          help: 'パイプライン ÷（クォータ − クローズ）。パイプラインが十分かを確認する指標。',
+          help: 'パイプライン ÷（クォータ − クローズ）— 残りの差分を埋めるパイプラインが十分かどうか。クォータ達成済みの場合は 0 と表示されます。',
         },
         notes: { label: 'メモ' },
         seed_key: {
@@ -379,7 +379,7 @@ export const jaJP: TranslationData = {
         address: { label: '住所' },
         annual_revenue: { label: '年間売上' },
         number_of_employees: { label: '従業員数' },
-        notes: { label: 'メモ', help: '書式設定に対応したリッチテキストのメモ' },
+        notes: { label: 'メモ', help: 'このリードに関する作業メモ — 書式設定に対応。' },
         do_not_call: { label: '電話拒否' },
         email_opt_out: { label: 'メール配信停止' },
         next_followup_date: { label: '次回フォローアップ日' },

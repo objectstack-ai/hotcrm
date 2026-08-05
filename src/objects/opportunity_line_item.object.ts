@@ -70,7 +70,7 @@ export const OpportunityLineItem = ObjectSchema.create({
     list_price: Field.currency({
       label: 'List Price',
       readonly: true,
-      description: 'Auto-populated from product.list_price',
+      description: "Auto-populated from the product's List Price.",
     }),
 
     unit_price: Field.currency({
