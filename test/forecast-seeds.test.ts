@@ -107,16 +107,20 @@ describe('forecast seed periods are calendar-true (#530)', () => {
     expect(bad, bad.join('\n')).toEqual([]);
   });
 
-  it('a quarterly snapshot exists for the current calendar quarter', () => {
-    // The row a "this quarter" equals-filter must be able to hit.
+  it('a monthly snapshot exists for the current calendar month', () => {
+    // The row a "this period" equals-filter must be able to hit. This was
+    // asserted on the current QUARTER until #702 moved that window out of the
+    // seeds entirely (see the #702 block below) — the property #530 is about is
+    // "a calendar-true current-period row exists to be matched", and the
+    // monthly row carries it now. The quarter's counterpart is written by
+    // `forecast_snapshot`, and `test/flow-scheduled.test.ts` pins that it lands
+    // on the same exact boundary.
     const now = new Date();
-    const currentQuarterStart = isoDate(
-      new Date(Date.UTC(now.getUTCFullYear(), Math.floor(now.getUTCMonth() / 3) * 3, 1)),
-    );
-    const hit = quarterRecs.find((r) => r.period_start === currentQuarterStart);
+    const currentMonthStart = isoDate(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)));
+    const hit = monthRecs.find((r) => r.period_start === currentMonthStart);
     expect(
       hit,
-      `no quarter snapshot with period_start ${currentQuarterStart}; got: ${quarterRecs
+      `no month snapshot with period_start ${currentMonthStart}; got: ${monthRecs
         .map((r) => r.period_start)
         .join(', ')}`,
     ).toBeDefined();
@@ -137,6 +141,112 @@ describe('forecast seed periods are calendar-true (#530)', () => {
     const labels = records.map((r) => String(r.period_label));
     const dupes = labels.filter((l, i) => labels.indexOf(l) !== i);
     expect(dupes, `two seeded forecasts render the same period: ${dupes.join(', ')}`).toEqual([]);
+  });
+});
+
+/**
+ * One producer per window (#702).
+ *
+ * `forecast_snapshot` upserts the row whose window contains today, keyed by
+ * OWNER. A seeded row in that same window cannot satisfy that lookup at the
+ * moment the sweep reads it — a seed writes no owner, and `demo_bootstrap`'s
+ * claim is a separate, later sweep — so the flow reports the period missing and
+ * opens a SECOND row beside it. Both span the quarter; one is ownerless. Every
+ * owner-grouped consumer then shows a phantom duplicate for the current
+ * quarter, on every re-seeded dev boot.
+ *
+ * Claiming `crm_forecast` (which `demo_bootstrap` now does, for the settled
+ * rows) does NOT make that safe: it only decides which of the two scheduled
+ * sweeps reaches the window first, and a duplicate opened by losing that race
+ * never heals. The invariant has to hold whatever the order, so it is enforced
+ * where order cannot reach it — in the seed data.
+ *
+ * The forbidden window is derived from the flow's own lookup filter rather than
+ * restated here: change `SNAPSHOT_PERIOD` and this guard follows.
+ */
+describe('the seeds stay out of the window forecast_snapshot owns (#702)', () => {
+  /** Any node in the flow, loop bodies included. */
+  const findNode = (id: string): Record<string, any> | undefined => {
+    const walk = (nodes: any[]): any => {
+      for (const node of nodes ?? []) {
+        if (node?.id === id) return node;
+        const hit = walk(node?.config?.body?.nodes ?? []);
+        if (hit) return hit;
+      }
+      return undefined;
+    };
+    return walk(((ForecastSnapshotFlow as any).nodes ?? []) as any[]);
+  };
+
+  const sweepLookup = (findNode('find_forecast')?.config?.filter ?? {}) as Record<string, any>;
+  const sweptPeriod = String(sweepLookup.period ?? '');
+  const today = isoDate(new Date());
+
+  /** Does `r` span today, in the period the sweep writes? */
+  const inSweptWindow = (r: SeedRec) =>
+    r.period === sweptPeriod
+    && String(r.period_start) <= today
+    && today <= String(r.period_end);
+
+  it('the sweep still claims the current window by an OWNER-SCOPED lookup', () => {
+    // The premise of everything below, and every part of it is load-bearing.
+    // Drop the owner key and the sweep would find the seeded row and adopt it,
+    // making this guard unnecessary; widen the window operators and it would
+    // match a different set of rows than the ones checked here. Either way the
+    // guard must be re-derived rather than left passing for a stale reason.
+    expect(findNode('find_forecast'), 'forecast_snapshot has no find_forecast node').toBeDefined();
+    expect(sweptPeriod, 'the sweep writes no fixed period any more').toMatch(/^(month|quarter)$/);
+    expect(String(sweepLookup.owner_id), 'the sweep lookup is no longer owner-scoped')
+      .toMatch(/\{currentOwner\.\w+\}/);
+    expect(sweepLookup.period_start).toEqual({ $lte: '{TODAY()}' });
+    expect(sweepLookup.period_end).toEqual({ $gte: '{TODAY()}' });
+  });
+
+  it('no seeded forecast row lands inside that window', () => {
+    const trespassers = records
+      .filter(inSweptWindow)
+      .map((r) => `${String(r.seed_key)} (${String(r.period_start)} → ${String(r.period_end)})`);
+    expect(
+      trespassers,
+      `these seeds open a ${sweptPeriod} row in the window forecast_snapshot writes.\n`
+        + 'The sweep cannot see them (its lookup is owner-scoped) so it opens a second,\n'
+        + 'owner-keyed row beside each — the #702 phantom. Seed settled periods only:\n  '
+        + trespassers.join('\n  '),
+    ).toEqual([]);
+  });
+
+  it('still seeds a CURRENT-period row for the period the sweep does not write', () => {
+    // The removal is scoped, not a blanket "no current periods". A monthly
+    // window has exactly one producer — the seed — so keeping it costs nothing
+    // and keeps the demo's current-period story alive. If this ever fails
+    // because the sweep took over months too, the seed has to give that window
+    // up as well rather than be quietly re-added.
+    const otherPeriod = sweptPeriod === 'quarter' ? 'month' : 'quarter';
+    const current = records.filter(
+      (r) =>
+        r.period === otherPeriod
+        && String(r.period_start) <= today
+        && today <= String(r.period_end),
+    );
+    expect(
+      current.map((r) => String(r.seed_key)),
+      `no seeded ${otherPeriod} row covers today — the demo has no current-period forecast at all`,
+    ).not.toEqual([]);
+  });
+
+  it(`every seeded row in the swept period is SETTLED — it ended before today`, () => {
+    // The same fact from the other side, and the one a reader checks by eye.
+    // Stated separately because the window guard above passes for a seeded
+    // FUTURE quarter, which the sweep will collide with the day it arrives
+    // rather than today — a bug that would sit dormant for up to three months.
+    const unsettled = records
+      .filter((r) => r.period === sweptPeriod && !(String(r.period_end) < today))
+      .map((r) => `${String(r.seed_key)} ends ${String(r.period_end)}`);
+    expect(
+      unsettled,
+      `these ${sweptPeriod} seeds are not settled — forecast_snapshot owns every\n`
+        + `${sweptPeriod} window from today onwards:\n  ${unsettled.join('\n  ')}`,
+    ).toEqual([]);
   });
 });
 

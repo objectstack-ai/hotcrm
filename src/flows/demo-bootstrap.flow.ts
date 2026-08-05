@@ -151,6 +151,21 @@ const claim = (key: string, objectName: string, label: string) => ({
  * quote_expiration notifies address a null owner and reach nobody (the exact
  * failure this flow exists to fix), and they additionally stay uneditable for
  * everyone under a `private` OWD (#622).
+ *
+ * `crm_forecast` is here for the same reason plus one sharper one (#702). A
+ * forecast row IS a per-owner object — `sharingModel: 'private'`, and
+ * `sales_rep` reads it with `readScope: 'own'` — so an ownerless snapshot is
+ * not merely blank on the owner axis of `forecast_metrics` and absent from "My
+ * Forecast": it is invisible to every rep and editable by nobody, admin
+ * included. It was the one owner-scoped seeded object this list omitted.
+ *
+ * Claiming it is only CORRECT because the seeds no longer ship a row in the
+ * window `forecast_snapshot` owns (`src/data/revenue.seed.ts`). While they did,
+ * stamping an owner here would have moved the phantom onto the first user
+ * rather than removing it — and left a permanent duplicate on any boot where
+ * the 03:00 sweep reached the window before this ten-minute sweep did. Order
+ * independence comes from the seeds staying out of that window, not from this
+ * claim; the claim only settles who owns the SETTLED periods.
  */
 const CLAIMED_OBJECTS: ReadonlyArray<[key: string, objectName: string, label: string]> = [
   ['leads', 'crm_lead', 'Leads'],
@@ -161,6 +176,7 @@ const CLAIMED_OBJECTS: ReadonlyArray<[key: string, objectName: string, label: st
   ['tasks', 'crm_task', 'Tasks'],
   ['quotes', 'crm_quote', 'Quotes'],
   ['contracts', 'crm_contract', 'Contracts'],
+  ['forecasts', 'crm_forecast', 'Forecasts'],
 ];
 
 /** One pass per object. */
