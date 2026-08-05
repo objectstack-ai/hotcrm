@@ -219,16 +219,44 @@ export const OpportunityViews = defineView({
     stale_opportunities: {
       name: 'stale_opportunities',
       type: 'grid',
-      // Honest label: the view cannot express the 14-day cut its automation
-      // twin uses, for two independent reasons. `days_in_stage` is a FORMULA
-      // (#489) — evaluated after the query, so the data engine can neither
-      // filter nor sort on it — and the list data path resolves no date
-      // macros, so `stage_entry_date < {14_days_ago}` would ship the literal
-      // token and invert the comparison (same trap as `stale_articles`).
-      // So: operator-only filter, ordered by the stored `stage_entry_date`
-      // ascending — longest-parked on top, which is the queue a manager works.
-      // The `days_in_stage` column puts the `opportunity_stagnation` threshold
-      // (STALE_THRESHOLD_DAYS = 14) in plain sight on every row.
+      // Honest label: this view does not apply the 14-day cut its automation
+      // twin (`opportunity_stagnation`, STALE_THRESHOLD_DAYS = 14) uses, and
+      // does not claim to. Two independent reasons were recorded for that; one
+      // still holds and one has expired, so they are separated here.
+      //
+      // STILL TRUE — `days_in_stage` is a FORMULA (#489), evaluated in JS after
+      // the query, so the data engine can neither filter nor sort on it. Any
+      // filter phrased in terms of `days_in_stage` remains impossible.
+      //
+      // EXPIRED (#744) — the second reason said the list data path resolves no
+      // date macros, so `stage_entry_date < {14_days_ago}` would ship the token
+      // as a literal and invert the comparison lexicographically ('2026-…' sorts
+      // below '{', so every row matched). That was measured on @objectstack
+      // 16.1.0 and stopped being true at 17.0.0-rc.0, when `resolveFilterTokens()`
+      // was wired into the ObjectQL read path (objectql #3582). `{14_days_ago}`
+      // is a first-class vocabulary member — it matches the parameterised
+      // grammar `DATE_MACRO_PARAM_RE`, `{N_(minutes|hours|days|weeks|months|
+      // years)_(ago|from_now)}` — and on the pinned 17.0.0-rc.2 it reaches the
+      // driver already substituted for an ISO date. It is the same seam
+      // `closing_this_quarter` uses a few views below, pinned against a real
+      // engine in `test/forecast-current-quarter-view.test.ts`.
+      //
+      // Correcting that half of the comment does not decide anything about the
+      // filter, and is deliberately not a licence to change it: expressing the
+      // cut as `stage_entry_date <= {14_days_ago}` would drop `days_in_stage`
+      // from the question entirely and change which rows this view returns —
+      // hiding today's 13-day-old deals from a manager's queue. That is a
+      // BEHAVIOUR change with its own issue (#770), where the open question is
+      // whether this queue should be a cut or a ranking at all — this label
+      // promises a ranking and honours it. `stale_articles` in
+      // `src/views/knowledge_article.view.ts` carried the same expired premise
+      // and was corrected in the same pass; its label does promise a window, so
+      // it has a defect this view does not (#769). Nothing below was touched.
+      //
+      // As shipped: operator-only filter, ordered by the stored
+      // `stage_entry_date` ascending — longest-parked on top, which is the
+      // queue a manager works. The `days_in_stage` column puts the
+      // `opportunity_stagnation` threshold in plain sight on every row.
       label: '⚠️ Stale Opportunities · Longest in Stage First',
       data: { provider: 'object', object: 'crm_opportunity' },
       columns: ['name', 'crm_account', 'stage', 'amount', 'stage_entry_date', 'days_in_stage', 'close_date', 'owner_id'],

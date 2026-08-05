@@ -73,11 +73,32 @@ export const KnowledgeArticleViews = defineView({
     stale_articles: {
       name: 'stale_articles',
       type: 'grid',
-      // Operator-only filter + oldest-review-first sort. The list data path
-      // does NOT resolve date macros: `last_reviewed_at < '{180_days_ago}'`
-      // compared the literal string, and since '2026-…' < '{…' is
-      // lexicographically true it matched EVERY published article — including
-      // ones reviewed minutes ago (verified against the running console).
+      // Operator-only filter + oldest-review-first sort, and the reason
+      // recorded here has expired (#744).
+      //
+      // It read: the list data path does NOT resolve date macros, so
+      // `last_reviewed_at < '{180_days_ago}'` compared the literal string, and
+      // since '2026-…' < '{…' is lexicographically true it matched EVERY
+      // published article — including ones reviewed minutes ago (verified
+      // against the running console). That was measured on @objectstack 16.1.0
+      // and stopped being true at 17.0.0-rc.0, when `resolveFilterTokens()` was
+      // wired into the ObjectQL read path (objectql #3582) ahead of the
+      // middleware chain — `find`/`findOne`/`count`/`aggregate`, saved-view
+      // filters included. `{180_days_ago}` matches the parameterised token
+      // grammar `DATE_MACRO_PARAM_RE`, so on the pinned 17.0.0-rc.2 it reaches
+      // the driver as a resolved instant and the lexicographic inversion above
+      // is unreachable on this path. `test/forecast-current-quarter-view.test.ts`
+      // pins that seam against a real engine for the view filters that use it.
+      //
+      // So the window is expressible now, and this view still does not express
+      // it — which matters more here than it does for `stale_opportunities`,
+      // because the four locale labels DO promise one ('Stale (>180d)' and its
+      // translations) while the metadata label promises only an ordering. That
+      // gap is #769: adding the bound is a behaviour change with two things to
+      // measure first (`last_reviewed_at` is `Field.datetime`, so a bare
+      // calendar-day comparand carries the #3777 upper-bound convention, and
+      // never-reviewed articles have no value at all), so it is filed rather
+      // than done here. Nothing below was touched.
       label: 'Review Queue · Oldest First',
       data: { provider: 'object', object: 'crm_knowledge_article' },
       columns: ['article_number', 'title', 'category', 'owner_id', 'last_reviewed_at'],

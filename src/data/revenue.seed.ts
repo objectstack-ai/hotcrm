@@ -273,9 +273,26 @@ export const quoteLineItems = defineSeed(QuoteLineItem, {
 // forecast.hook.ts derives them ('Q3 2026' / 'Aug 2026') — hooks don't run
 // over seeds, and the hook only fills a BLANK period_label, so seeded rows
 // must speak the same dialect as runtime snapshots or list views end up
-// mixing 'This Quarter' with 'Q3 2026' (#490). Calendar-true period_start
-// values also make the `this_quarter_forecasts` view's
-// `{this_quarter_start}` filter actually match the seeded row.
+// mixing 'This Quarter' with 'Q3 2026' (#490). Calendar-true `period_start`
+// values carry the same obligation on the QUERY side: `period_start` is one
+// half of the (owner, period, period_start) key the snapshot sweep upserts on,
+// the object indexes, and every period-scoped surface pins by equality — a
+// value that is not the period's real first day names a row no such filter can
+// ever select, and no rollup can line up against its neighbours.
+//
+// What these rows must NOT do is answer a CURRENT-quarter filter: per #702 that
+// window belongs to `forecast_snapshot` alone, so the seeds below ship settled
+// quarters plus the current month, and `this_quarter_forecasts` /
+// `quota_attainment_by_rep` correctly return none of them.
+//
+// (The sentence that stood here said the opposite — that these values make the
+// `this_quarter_forecasts` view's `{this_quarter_start}` filter "match the
+// seeded row". Corrected in #744, and it was wrong three ways:
+// `{this_quarter_start}` is not in the token vocabulary — the spelling is
+// `{current_quarter_start}`, and since 17.0.0-rc.0 the misspelling throws
+// `Unresolvable filter placeholder` instead of silently matching nothing; the
+// filter itself was removed from the view in #515 and only came back in #730;
+// and matching is the outcome #702 rules out.)
 //
 // Computed in plain TS (UTC, mirroring the hook's helpers): this module is
 // evaluated when the app bundle loads, the same moment the cel`...` seeds
