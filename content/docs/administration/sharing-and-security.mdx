@@ -24,7 +24,7 @@ OWD is the *most restrictive* setting for each object. Everything else widens it
 | --- | --- | --- |
 | Lead | Private | Reps work their own leads |
 | Account | Private | Account ownership matters |
-| Contact | Controlled by Parent (Account) | Visibility follows the account |
+| Contact | Controlled by Parent (Account) | A contact belongs to its account — but read *Controlled by Parent, in practice* below for what that derives to today |
 | Opportunity | Private | Sensitive deal data |
 | Opportunity Line Item | Controlled by Parent (Opportunity) | A product line is part of the deal |
 | Quote | Private | Pricing is owner's business |
@@ -45,8 +45,10 @@ OWD is the *most restrictive* setting for each object. Everything else widens it
 
 For the four parent-derived objects above, there is nothing to configure per user: access is *computed*.
 
-- **Read** — you see the rows whose parent you can see. A rep opening an account they reached through a territory rule also gets its contacts; the "Products" list on an opportunity shows the same lines the deal shows.
-- **Write** — adding, changing or removing a row requires **edit** access to the parent. You cannot add a line to someone else's quote, and marketing enrolling a campaign member needs edit on that campaign.
+- **Read — in this release the computed answer is org-wide, not parent-scoped.** The intent of Controlled by Parent is "you see the rows whose parent you can see". That is not what ships today: the derivation resolves the set of accessible parents from the *parent object's row-level security policies* only, and HotCRM authors none — so the parent set is every record, for every caller. Measured against the shipped stack (platform 17.0.0-rc.2): a rep who can read exactly one account reads **both** accounts' contacts, and a rep who can read **no** quote at all still reads every quote's line items. In practice, a Controlled by Parent object here is readable by every user whose profile grants read on that object.
+- **Write** — adding, changing or removing a row requires **edit** access to the parent, and that parent is resolved through the same filter as reads. So the write gate is exactly as wide: a profile holding edit on a Controlled by Parent object can write any row of it, including rows under a parent it cannot read.
+
+The narrowing to readable parents is tracked as a platform issue, objectstack-ai/objectstack#5386. The repo test `test/parent-derived-reach.test.ts` pins the reach measured above and fails the moment the platform narrows it — that failure is the signal this section needs rewriting, and HotCRM's OWD choices need re-taking (#549, #694).
 
 Because access is derived, ownership of the child row is irrelevant — a quote line the quote-generation flow created is as visible to the quote's owner as one they typed themselves.
 
@@ -112,7 +114,7 @@ Sharing rules are authored **per object**. Widening `Account` widens accounts �
 
 | Related list on a shared account | What the recipient sees |
 | --- | --- |
-| Contacts | All of them — Contact is Controlled by Parent, so it follows the account |
+| Contacts | All of them — and not only this account's: Contact is Controlled by Parent, which in this release derives org-wide (see above) |
 | Opportunities | Their own deals only, plus open deals ≥ $100,000 if they hold `sales_director` or `executive` |
 | Quotes | Their own only |
 | Contracts | Their own only |
@@ -120,13 +122,13 @@ Sharing rules are authored **per object**. Widening `Account` widens accounts �
 | Tasks | Their own only |
 | Events | Their own only |
 
-So a territory rule hands over the account record and its contacts; the deal, quote, contract, case, task and meeting history underneath stays with its owners, and those related lists can look empty or partial on an account the user can otherwise read in full.
+So a territory rule hands over the account record; the deal, quote, contract, case, task and meeting history underneath stays with its owners, and those related lists can look empty or partial on an account the user can otherwise read in full. The Contacts list is the exception in both directions — it is never empty, because Contact's parent derivation reaches every contact in the org, not just this account's.
 
-Making a child object follow the account is a deliberate widening, not a config detail: author a sharing rule on the child object with criteria matching the account rules, or set the child's OWD to Controlled by Parent. Either one opens that object for **every** holder of it, not only for the territory recipients — which is why HotCRM ships neither by default.
+Making a child object follow the account is a deliberate widening, not a config detail: author a sharing rule on the child object with criteria matching the account rules, or set the child's OWD to Controlled by Parent. Either one opens that object for **every** holder of it, not only for the territory recipients — which is why HotCRM ships neither by default. For Controlled by Parent that is literally what happens today, whatever the parent link suggests: see *Controlled by Parent, in practice* above, and objectstack-ai/objectstack#5386.
 
 ## Layer 4 — Manual shares
 
-A **manual share** grants one user or group **Read** or **Read/Write** on a single record, on top of everything above. Shares live per record, and the parent-derived children of a shared record follow it.
+A **manual share** grants one user or group **Read** or **Read/Write** on a single record, on top of everything above. Shares live per record. A manual share adds nothing to the parent-derived children of that record: the derivation never folds share grants in — and today it does not need to, because those children are already readable to everyone holding read on the child object (see *Controlled by Parent, in practice*).
 
 HotCRM ships **no account-team object** — there is no team roster on the account and no Team tab. The rule named *Account Team Sharing* in the table above is an ordinary criteria rule: it gives every `sales_manager` edit on active customer accounts, not a per-record pod. An org that sells in pods models the pod as a position with its own sharing rule, or as manual shares on the account.
 
@@ -137,7 +139,7 @@ A user sees a record when **all** of the following hold: their profile grants **
 1. They **own** the record.
 2. Their profile grants **View All** on the object.
 3. The **OWD** is Public Read-Only or wider.
-4. The record's **parent** is visible to them (Controlled by Parent).
+4. The object is **Controlled by Parent** — which today grants the record whether or not the parent is visible to them (see *Controlled by Parent, in practice*).
 5. A **sharing rule** matches the record and one of their positions.
 6. The record was **shared manually** with them.
 
@@ -213,6 +215,6 @@ There is no "AI bypass".
 If you think you should be able to see a record and can't:
 
 1. Check **who owns it**.
-2. If you reached it from an account, check **which object it is**: only contacts follow the account. Quotes, contracts, tasks, cases and deals stay with their owner even when the account itself is shared with you.
+2. If you reached it from an account, check **which object it is**: quotes, contracts, tasks, cases and deals stay with their owner even when the account itself is shared with you. Contacts are the one related list that is never withheld — Contact is Controlled by Parent, and in this release that derives org-wide rather than per account (see *Controlled by Parent, in practice*).
 3. Check whether the deal is flagged **Private**.
 4. Ask your admin whether a **sharing rule** should cover your position.

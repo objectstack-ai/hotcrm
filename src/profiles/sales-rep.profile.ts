@@ -13,12 +13,25 @@ export const SalesRepProfile = {
   // What widens that scope today is narrower than it sounds: the territory /
   // account-team rules are authored on `crm_account` ONLY, and a sharing rule
   // widens the object it names — not the records hanging off it. So a rep who
-  // receives an account through a territory rule reads the account and its
-  // contacts (`controlled_by_parent`), while the quotes, contracts and tasks on
-  // it stay own-only, and opportunities widen only through the >= $100k
-  // leadership rules. Whether those children should follow the account is an
-  // open business decision (#549), not a bug in these grants — do not widen
-  // them here to paper over it.
+  // receives an account through a territory rule reads that account, while the
+  // quotes, contracts and tasks on it stay own-only, and opportunities widen
+  // only through the >= $100k leadership rules. Whether those children should
+  // follow the account is an open business decision (#549), not a bug in these
+  // grants — do not widen them here to paper over it.
+  //
+  // The `controlled_by_parent` grants below are the opposite case: they are
+  // WIDER than they read. MEASURED on 17.0.0-rc.2 and pinned by
+  // `test/parent-derived-reach.test.ts`, a parent-derived child is not filtered
+  // to parents the caller can read — the ADR-0055 derivation resolves the master
+  // id set through the master's row-level security policies only, under a system
+  // context, so ownership and `sys_record_share` grants are never folded in.
+  // HotCRM authors no RLS policy on any master, so the master set is every
+  // record: a rep holding ONE account reads BOTH accounts' contacts, and a rep
+  // who can read no quote at all reads every quote's line items. Read every
+  // `controlled_by_parent` grant below as org-wide read on that object. The
+  // narrow semantics is the intended one and the platform gap is tracked
+  // upstream as objectstack-ai/objectstack#5386 (#694); the guard test goes red
+  // when it lands.
   objects: {
     // `allowExport` where an export surface exists — canonical note in
     // `src/profiles/index.ts`. Safe alongside `readScope: 'own'`: export is
@@ -26,11 +39,13 @@ export const SalesRepProfile = {
     crm_lead:        { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const, allowExport: true },
     crm_account:     { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const, allowExport: true },
     // NO readScope: `crm_contact` is `controlled_by_parent` (master-detail to
-    // crm_account), so its rows derive from the account the rep can read —
-    // territory- and team-shared accounts included. A `readScope` here was
-    // inert (the sharing service only applies owner scope to `private` objects)
-    // and read as a promise the engine never kept: it said "own contacts only"
-    // while access actually followed the account (#488).
+    // crm_account), so a `readScope` here is inert — the sharing service only
+    // applies owner scope to `private` objects — and it read as a promise the
+    // engine never kept: it said "own contacts only" while access derived from
+    // the parent (#488). What that derivation delivers today is wider than "the
+    // accounts the rep can read": measured, a rep holding one territory account
+    // reads EVERY account's contacts (see the note at the top of this file,
+    // #694).
     crm_contact:     { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, allowExport: true },
     crm_opportunity: { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const, allowExport: true },
     crm_quote:       { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
@@ -44,9 +59,10 @@ export const SalesRepProfile = {
     // `crm_event` is `private` like `crm_task` — a personal activity record —
     // so an explicit record scope is required alongside allowRead (an omitted
     // scope silently means "own only" and reads as an unmade decision).
-    // `crm_event_attendee` is `controlled_by_parent`: rows follow the event and
-    // writes require edit on it (ADR-0055), so authoring a readScope here would
-    // be inert metadata the engine never applies.
+    // `crm_event_attendee` is `controlled_by_parent`, so authoring a readScope
+    // here would be inert metadata the engine never applies. Its rows do not
+    // narrow to the events the rep can read either — the derivation is org-wide
+    // today (see the note at the top of this file, #694).
     crm_event:       { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
     crm_event_attendee: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: false, modifyAllRecords: false },
     // Reference catalog (public_read OWD): reps read knowledge articles, which
@@ -56,12 +72,13 @@ export const SalesRepProfile = {
     // `revenue_forecasting` skill, never by hand — read-only, and only the rep's
     // own snapshots (private OWD + explicit own scope, as above).
     crm_forecast:          { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
-    // Product lines on the rep's own deals and quotes. Both objects are
-    // `controlled_by_parent`, so rows follow the opportunity / quote and writes
-    // require edit on that parent (ADR-0055) — that is what scopes a rep to
-    // their own book here, which is why there is no readScope to author.
-    // Without these grants the opportunity "Products" related list and the
-    // whole CPQ path were denied for every non-admin user (#488).
+    // Product lines on deals and quotes. Both objects are
+    // `controlled_by_parent`, so there is no readScope to author — one would be
+    // inert metadata. That derivation does NOT scope a rep to their own book:
+    // measured, a rep reads every quote line and every opportunity line in the
+    // org, whatever they can read of the parent (see the note at the top of this
+    // file, #694). Without these grants the opportunity "Products" related list
+    // and the whole CPQ path were denied for every non-admin user (#488).
     crm_opportunity_line_item: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: false, modifyAllRecords: false },
     crm_quote_line_item:       { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: false, modifyAllRecords: false },
     // Which campaign sourced a lead — read-only context, derived from the
