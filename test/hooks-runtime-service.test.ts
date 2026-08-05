@@ -415,12 +415,38 @@ describe('forecast_derive_period', () => {
 
 // ──────────────────────────────────────────────────── knowledge article ──
 
+/**
+ * The article lifecycle is `draft → in_review → published → archived`, and
+ * every arrow that ENDS on `published` is covered below, because the criterion
+ * the hook applies is not "which status did we come from" but "does this record
+ * already carry a `published_at`" (#780).
+ *
+ * The distinction is what the old implementation got wrong. It asked
+ * `previous.status === 'published'`, which recognises only the
+ * published → published edit as a re-publish; `archived → published` — the
+ * ordinary re-shelving move — therefore fell into the FIRST-publish branch and
+ * moved the original date to today. `all_articles` sorts `published_at desc`,
+ * so a 2024 article re-shelved this year jumped to the top of the list as if
+ * newly written. One test covering only published → published is exactly how
+ * the assertion below ("must not move the original publish date") stayed green
+ * while the invariant it names was broken on the other arrow.
+ */
 describe('knowledge_article_publish_timestamps', () => {
   const hook = hookNamed(knowledgeHooks, 'knowledge_article_publish_timestamps');
+  const ORIGINAL_PUBLISH = '2024-03-01T00:00:00.000Z';
 
-  it('stamps both timestamps on the transition into published', async () => {
+  it('stamps both timestamps on the draft → published first publish', async () => {
     const input: Rec = { status: 'published' };
     await hook.handler(makeCtx({ event: 'beforeUpdate', input, previous: { status: 'draft' } }));
+    expect(input.published_at).toBeTruthy();
+    expect(input.last_reviewed_at).toBe(input.published_at);
+  });
+
+  it('stamps both timestamps on the in_review → published first publish', async () => {
+    // The reviewed route to the same first publish — no `published_at` exists
+    // yet on either, so both must stamp one.
+    const input: Rec = { status: 'published' };
+    await hook.handler(makeCtx({ event: 'beforeUpdate', input, previous: { status: 'in_review' } }));
     expect(input.published_at).toBeTruthy();
     expect(input.last_reviewed_at).toBe(input.published_at);
   });
@@ -428,9 +454,50 @@ describe('knowledge_article_publish_timestamps', () => {
   it('refreshes only last_reviewed_at when editing an already-published article', async () => {
     const input: Rec = { title: 'Revised' };
     await hook.handler(makeCtx({
-      event: 'beforeUpdate', input, previous: { status: 'published', published_at: '2020-01-01T00:00:00.000Z' },
+      event: 'beforeUpdate', input, previous: { status: 'published', published_at: ORIGINAL_PUBLISH },
     }));
     expect(input.published_at, 'republishing must not move the original publish date').toBeUndefined();
+    expect(input.last_reviewed_at).toBeTruthy();
+  });
+
+  it('keeps the original published_at when an ARCHIVED article is re-published', async () => {
+    // The arrow the old status test could not see (#780): `previous.status` is
+    // 'archived', so it read as a first publish and re-stamped a date the
+    // article had held since 2024.
+    const input: Rec = { status: 'published' };
+    await hook.handler(makeCtx({
+      event: 'beforeUpdate', input, previous: { status: 'archived', published_at: ORIGINAL_PUBLISH },
+    }));
+    expect(input.published_at, 'republishing must not move the original publish date').toBeUndefined();
+    expect(input.last_reviewed_at, 're-shelving an article is itself a review').toBeTruthy();
+  });
+
+  it('stamps published_at when an article archived before it ever shipped is published', async () => {
+    // Existence of the date, not the previous status, is the criterion: a draft
+    // archived without ever being published has no original date to keep, so
+    // this IS its first publish. (This arrow behaves the same under the old
+    // status test — it pins the criterion, it does not discriminate between
+    // the two implementations.)
+    const input: Rec = { status: 'published' };
+    await hook.handler(makeCtx({ event: 'beforeUpdate', input, previous: { status: 'archived' } }));
+    expect(input.published_at).toBeTruthy();
+    expect(input.last_reviewed_at).toBe(input.published_at);
+  });
+
+  it('honours a published_at carried by the write itself', async () => {
+    // The other slot the date can arrive in, and it is not hypothetical:
+    // measured end-to-end on a real engine, an insert carrying `published_at`
+    // stores exactly what it supplied (the read-only strip runs on the update
+    // path only, and hooks run ahead of it regardless). So an import or
+    // migration publishing records with their historical dates — the shape the
+    // `src/data/service.seed.ts` records use — reaches this handler with
+    // `published_at` on `input` and no `previous`. Stamping over it rewrites
+    // imported history exactly as the archived case rewrites a re-shelved
+    // article's.
+    const input: Rec = { status: 'published', published_at: ORIGINAL_PUBLISH };
+    await hook.handler(makeCtx({ event: 'beforeInsert', input }));
+    expect(input.published_at, 'an explicitly supplied publish date is history, not a default')
+      .toBe(ORIGINAL_PUBLISH);
     expect(input.last_reviewed_at).toBeTruthy();
   });
 
