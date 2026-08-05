@@ -98,10 +98,18 @@ export const KnowledgeArticleViews = defineView({
       //
       // 2. Expressible is not the same as expressible WITHOUT LOSS. A review
       //    queue's most overdue population is the never-reviewed one, and
-      //    `last_reviewed_at` is nullable: a published article can carry no
-      //    review timestamp at all. Measured on the same engine, `$lt` does
-      //    not match null or absent values, so a bare window silently deletes
-      //    exactly those rows. The honest condition is "earlier than
+      //    `last_reviewed_at` is nullable in exactly the case that matters.
+      //    On the SINGLE-record path `knowledge_article_publish_timestamps`
+      //    keeps it stamped — the engine's `sys_fetch_previous_update` builtin
+      //    hands the hook a `previous`, so publishing and every later edit
+      //    re-stamp. On the BULK path (`multi: true`) there is no
+      //    `input.id`, that builtin cannot fetch anything, the hook sees no
+      //    status at all and stamps nothing — so a bulk load or mass edit,
+      //    which is how an org imports an existing knowledge base, leaves
+      //    published articles with no review timestamp (measured; filed
+      //    separately). `$lt` matches neither null nor an absent key, so a
+      //    bare window deletes precisely those rows — the imported ones, the
+      //    least reviewed of all. The honest condition is "earlier than
       //    {180_days_ago} OR empty" — and a view `filter` cannot say that. It
       //    is a FLAT, strict array of `{field, operator, value}` rules
       //    (`ViewFilterRuleSchema`) combined with AND; there is no `or`, no
