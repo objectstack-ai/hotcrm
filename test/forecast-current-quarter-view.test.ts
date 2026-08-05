@@ -3,6 +3,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
+import { ViewFilterRuleSchema } from '@objectstack/spec/ui';
 import stack from '../objectstack.config';
 
 /**
@@ -62,6 +63,16 @@ import stack from '../objectstack.config';
  *   arbitrary day inside the quarter. A range has a failure mode an equality
  *   does not: lose one bound and the list widens back out while still looking
  *   scoped, so that block subtracts each bound separately (#743).
+ *
+ * ### A third claim shape, and the one case the rule resolves the OTHER way
+ *
+ * The file's name predates its scope: it is the house rule's home, and the
+ * rule is not about forecasts. #769 added the third claim family — a
+ * PARAMETERISED DAY WINDOW ("> 180d"), which the calendar-period vocabulary
+ * could not see — and, unlike #730 and #743, it was fixed by correcting the
+ * NAME rather than the filter. The last runtime block records why, on
+ * measurement rather than on preference: the honest condition needs a
+ * disjunction, and a view `filter` has no way to write one.
  */
 
 type AnyRec = Record<string, any>;
@@ -103,6 +114,52 @@ const CURRENT_PERIOD_CLAIMS: Array<{ period: string; token: string; phrases: Reg
     phrases: [/this year/i, /current year/i, /本年度/, /este año/i, /今年度/],
   },
 ];
+
+/**
+ * Phrases that claim a PARAMETERISED DAY WINDOW — "nothing here has been
+ * touched for N days" — and, derived from the N the label itself names, the
+ * `{N_days_ago}` token a filter must carry to honour the claim.
+ *
+ * A second family rather than more rows in the list above, because the claim
+ * is PARAMETERISED: the scope is not one of four fixed calendar words, it is
+ * whatever number the label prints, and the token that would honour it is
+ * computed from that number. `CURRENT_PERIOD_CLAIMS` cannot express that
+ * without one entry per N.
+ *
+ * It exists because the vocabulary above could not see #769. Four locale packs
+ * named `crm_knowledge_article.stale_articles` 'Stale (>180d)', '过期 (>180
+ * 天)', 'Obsoletos (>180d)' and '古い (>180日)' over a filter reading only
+ * `status = published`, so the tab returned EVERY published article — one
+ * reviewed minutes ago included, merely sorted last. The metadata label
+ * ('Review Queue · Oldest First') was honest throughout: exactly as in #730,
+ * the lie lived only in the translated half, and "this/current quarter" does
+ * not match "> 180 days".
+ *
+ * Each pattern captures the day count in group 1, and every one of them
+ * requires an explicit DAY unit (`d` / `days` / `días` / `天` / `日`), so
+ * "Top 10", "Q4" and an SLA heading reading "> 4h" claim no window.
+ */
+const DAY_WINDOW_PATTERNS: RegExp[] = [
+  /[>＞]\s*(\d+)\s*d\b/i,             // Stale (>180d) · Obsoletos (>180d)
+  /[>＞]\s*(\d+)\s*days?\b/i,         // Stale (>180 days)
+  /[>＞]\s*(\d+)\s*天/,               // 过期 (>180 天)
+  /[>＞]\s*(\d+)\s*日/,               // 古い (>180日)
+  /older than\s*(\d+)\s*days?\b/i,
+  /over\s*(\d+)\s*days?\b/i,
+  /más de\s*(\d+)\s*días?\b/i,
+  /(\d+)\s*天(?:以上|未|没)/,          // 180 天未复核
+  /(\d+)\s*日(?:以上|超)/,             // 180日以上
+];
+
+/** The day counts a single label claims, deduped. `[]` when it claims none. */
+const dayWindowClaims = (label: string): number[] => {
+  const found = new Set<number>();
+  for (const pattern of DAY_WINDOW_PATTERNS) {
+    const m = label.match(pattern);
+    if (m) found.add(Number(m[1]));
+  }
+  return [...found].sort((a, b) => a - b);
+};
 
 /**
  * KNOWN DEBT — surfaces in breach of the rule above, with the issue that owns
@@ -153,6 +210,54 @@ const filterTokens = (view: AnyRec): string[] =>
     .map((rule: AnyRec) => rule?.value)
     .filter((v: unknown): v is string => typeof v === 'string' && /^\{.+\}$/.test(v));
 
+/**
+ * Every breach ONE view is in, given every name it can be read under and the
+ * `{token}`s its filter carries.
+ *
+ * A pure function of (labels, tokens) rather than of a view, so the guard can
+ * be run against a HYPOTHETICAL label set — which is what proves it is not
+ * decoration. Both claim families are fixed by removing their only instances,
+ * so on the day each fix lands the derivation over the shipped stack returns
+ * `[]` and would pass for a shipped-empty reason. Feeding it the labels the fix
+ * DELETED is the positive control (see the #769 block below).
+ */
+const breachesOf = (id: string, labels: Array<[string, string]>, tokens: string[]): string[] => {
+  const out: string[] = [];
+  const named = (claiming: Array<[string, string]>) =>
+    claiming.map(([where, label]) => `${where}:"${label}"`).join(', ');
+
+  // Family 1 — a named CURRENT calendar period (#730, #743).
+  for (const claim of CURRENT_PERIOD_CLAIMS) {
+    const claiming = labels.filter(([, label]) => claim.phrases.some((p) => p.test(label)));
+    if (claiming.length === 0) continue;
+    if (tokens.includes(claim.token)) continue;
+    out.push(
+      `${id} is labelled ${named(claiming)} `
+      + `but its filter carries no ${claim.token} — it returns every ${claim.period}, `
+      + `not the current one (filter tokens: ${tokens.join(', ') || 'none'})`,
+    );
+  }
+
+  // Family 2 — a parameterised day window (#769).
+  const byDays = new Map<number, Array<[string, string]>>();
+  for (const [where, label] of labels) {
+    for (const days of dayWindowClaims(label)) {
+      byDays.set(days, [...(byDays.get(days) ?? []), [where, label]]);
+    }
+  }
+  for (const [days, claiming] of [...byDays.entries()].sort((a, b) => a[0] - b[0])) {
+    const token = `{${days}_days_ago}`;
+    if (tokens.includes(token)) continue;
+    out.push(
+      `${id} is labelled ${named(claiming)} `
+      + `but its filter carries no ${token} — it returns rows of every age, not the `
+      + `ones untouched for ${days} days (filter tokens: ${tokens.join(', ') || 'none'})`,
+    );
+  }
+
+  return out;
+};
+
 describe('no view label promises a time scope its filter does not express (#730)', () => {
   it('the locale bundles this guard reads are actually loaded', () => {
     // Without this, a bundle rename would silently reduce the guard to the
@@ -170,25 +275,9 @@ describe('no view label promises a time scope its filter does not express (#730)
     expect(claims.map((c) => `${c.object}.${c.name}`)).toContain('crm_forecast.this_quarter_forecasts');
   });
 
-  /** Every (view, claimed period) pair whose filter does not pin that period. */
-  const breaches = (): string[] => {
-    const out: string[] = [];
-    for (const { object, name, view } of listViews) {
-      const labels = namesOf(object, name, view);
-      const tokens = filterTokens(view);
-      for (const claim of CURRENT_PERIOD_CLAIMS) {
-        const claiming = labels.filter(([, label]) => claim.phrases.some((p) => p.test(label)));
-        if (claiming.length === 0) continue;
-        if (tokens.includes(claim.token)) continue;
-        out.push(
-          `${object}.${name} is labelled ${claiming.map(([l, v]) => `${l}:"${v}"`).join(', ')} `
-          + `but its filter carries no ${claim.token} — it returns every ${claim.period}, `
-          + `not the current one (filter tokens: ${tokens.join(', ') || 'none'})`,
-        );
-      }
-    }
-    return out;
-  };
+  /** Every (view, claim) pair, in either family, that the filter does not honour. */
+  const breaches = (): string[] => listViews.flatMap(({ object, name, view }) =>
+    breachesOf(`${object}.${name}`, namesOf(object, name, view), filterTokens(view)));
 
   it('every current-period label is backed by a filter that pins that period', () => {
     const bad = breaches().filter((line) => !Object.keys(KNOWN_DEBT).some((k) => line.startsWith(`${k} `)));
@@ -208,6 +297,72 @@ describe('no view label promises a time scope its filter does not express (#730)
       'these views no longer breach the rule — delete their KNOWN_DEBT entries so the '
         + `guard covers them again:\n  ${stale.join('\n  ')}`,
     ).toEqual([]);
+  });
+
+  // ── The day-window family, and the probe that keeps it from being decoration ──
+
+  /**
+   * The four locale labels #769 deleted, verbatim. They are the only instances
+   * the day-window family has ever had, and the fix removed them — so without
+   * this control the family would ship green over an empty set and nobody
+   * would find out it never matched anything.
+   */
+  const RETIRED_180D_LABELS: Array<[string, string]> = [
+    ['en', 'Stale (>180d)'],
+    ['zh-CN', '过期 (>180 天)'],
+    ['es-ES', 'Obsoletos (>180d)'],
+    ['ja-JP', '古い (>180日)'],
+  ];
+
+  it('the day-window vocabulary reads a window out of every label #769 deleted', () => {
+    for (const [locale, label] of RETIRED_180D_LABELS) {
+      expect(dayWindowClaims(label), `${locale}: ${label}`).toEqual([180]);
+    }
+  });
+
+  it('re-installing those labels over the shipped filter is reported as a breach', () => {
+    // The subtraction, run rather than asserted from memory — and run against
+    // the filter `stale_articles` ACTUALLY ships, not a mock of it. Restore the
+    // deleted names and the guard must name the missing token; that is the
+    // whole claim this family makes.
+    const stale = listViews.find((v) => v.name === 'stale_articles')!;
+    const lines = breachesOf(
+      'crm_knowledge_article.stale_articles',
+      [['metadata', stale.view.label], ...RETIRED_180D_LABELS],
+      filterTokens(stale.view),
+    );
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).toContain('{180_days_ago}');
+    expect(lines[0]).toContain('en:"Stale (>180d)"');
+    expect(lines[0]).toContain('ja-JP:"古い (>180日)"');
+    // The metadata label was the honest half in #769 and must not be blamed.
+    expect(lines[0]).not.toContain('metadata:');
+  });
+
+  it('no name this stack actually ships claims a day window', () => {
+    const claiming = listViews.flatMap(({ object, name, view }) =>
+      namesOf(object, name, view)
+        .filter(([, label]) => dayWindowClaims(label).length > 0)
+        .map(([where, label]) => `${object}.${name} ${where}:"${label}"`));
+    expect(
+      claiming,
+      'a name claims an N-day window. Either carry {N_days_ago} in the filter, or '
+        + `drop the window from the name:\n  ${claiming.join('\n  ')}`,
+    ).toEqual([]);
+  });
+
+  it('the vocabulary does not fire on names that merely contain a number', () => {
+    // False positives would be worse than the gap: they push authors to delete
+    // honest labels. A count, a quarter name and an hour-scoped SLA all name
+    // no day window.
+    for (const label of [
+      'Top 10 Articles', 'Q4 Pipeline', 'SLA > 4h', 'Tier 1 Accounts',
+      '2026 Renewals', '第 3 四半期', 'Review Queue · Oldest First',
+      '复核队列 · 最久未复核在前', 'Cola de revisión · Más antiguos primero',
+      'レビューキュー · 古い順',
+    ]) {
+      expect(dayWindowClaims(label), label).toEqual([]);
+    }
   });
 
   it('the quarter view pins BOTH halves of the period key', () => {
@@ -606,5 +761,216 @@ describe('closing_this_quarter returns this quarter only, on the real engine (#7
       if (!t?.message) missing.push(`${locale}: message`);
     }
     expect(missing, `untranslated empty-state copy:\n  ${missing.join('\n  ')}`).toEqual([]);
+  });
+});
+
+// ─── Runtime: why the third case is fixed at the NAME, not the filter (#769) ─
+
+/**
+ * `crm_knowledge_article.stale_articles` is the day-window family's origin, and
+ * the one surface under this rule where the honest fix was to correct the NAME.
+ * The two before it were not a precedent for that: `this_quarter_forecasts` and
+ * `closing_this_quarter` carried the time claim in their METADATA label — the
+ * authored contract itself promised a quarter — so the filter had to deliver
+ * one. Here the metadata label says 'Review Queue · Oldest First' and promises
+ * only an ordering, which the `last_reviewed_at asc` sort delivers exactly; the
+ * "> 180d" window existed nowhere but the four locale packs.
+ *
+ * That alone would not settle it — a promise four translators independently
+ * wrote is worth taking seriously as product intent. What settles it is that
+ * the honest window is NOT EXPRESSIBLE in a view filter, measured here rather
+ * than argued:
+ *
+ *   1. The macro resolves, and to the START of the calendar day 180 days ago,
+ *      so `less_than` excludes that whole day (#3777's day-boundary convention
+ *      on a `datetime` comparand) — the right sense for "> 180d".
+ *   2. `$lt` does not match null or absent values, so the window DELETES
+ *      never-reviewed articles — the rows a review queue most needs.
+ *   3. The honest condition is therefore a DISJUNCTION, "older than the window
+ *      OR never reviewed", and a view `filter` is a flat, strict array of
+ *      `{field, operator, value}` rules combined with AND. Written the only way
+ *      the grammar allows, it returns ZERO rows.
+ *   4. The engine itself answers the question correctly with `$or`. The limit
+ *      is the view-authoring grammar, not the data layer — which is why this is
+ *      recorded as a measurement with an issue behind it, not as a workaround.
+ *
+ * If a future spec gives view filters a disjunction, delete this block's fourth
+ * assertion, add the window, and give the tab an `emptyState` (the #746 rule:
+ * scoping makes "empty" newly reachable).
+ */
+describe('stale_articles: the 180-day window, measured on the real engine (#769)', () => {
+  let ql: Awaited<ReturnType<typeof ObjectQL.create>>;
+  let api: AnyRec;
+  const view = listViews.find((v) => v.name === 'stale_articles')!.view;
+
+  // Fixtures are pinned at module load; the boundary probes sit on the UTC day
+  // 180 days back, computed the same way the resolver does.
+  const DAY_MS = 86_400_000;
+  const nowMs = Date.now();
+  const daysAgo = (d: number) => new Date(nowMs - d * DAY_MS).toISOString();
+  const day180 = new Date(nowMs - 180 * DAY_MS);
+  const day180StartMs = Date.UTC(day180.getUTCFullYear(), day180.getUTCMonth(), day180.getUTCDate());
+  const day180Start = new Date(day180StartMs).toISOString();
+
+  /** name → what the row's `last_reviewed_at` holds. */
+  const fixtures: Array<{ title: string; status: string; last_reviewed_at?: string | null }> = [
+    { title: 'reviewed-today', status: 'published', last_reviewed_at: daysAgo(0) },
+    { title: 'reviewed-179d', status: 'published', last_reviewed_at: daysAgo(179) },
+    { title: 'boundary-day-opens', status: 'published', last_reviewed_at: day180Start },
+    { title: 'boundary-day-closes', status: 'published', last_reviewed_at: new Date(day180StartMs + DAY_MS - 60_000).toISOString() },
+    { title: 'reviewed-181d', status: 'published', last_reviewed_at: daysAgo(181) },
+    { title: 'reviewed-400d', status: 'published', last_reviewed_at: daysAgo(400) },
+    { title: 'never-reviewed-null', status: 'published', last_reviewed_at: null },
+    { title: 'never-reviewed-absent', status: 'published' },
+    // Ancient, but not published — keeps the status half of the filter honest.
+    { title: 'draft-ancient', status: 'draft', last_reviewed_at: daysAgo(900) },
+  ];
+
+  /** The window rule as it WOULD be authored, in canonical operator spelling. */
+  const WINDOW_RULE = { field: 'last_reviewed_at', operator: 'less_than', value: '{180_days_ago}' };
+
+  const titles = (rows: AnyRec[]) => rows.map((r) => r.title).sort();
+
+  beforeAll(async () => {
+    ql = await ObjectQL.create({
+      datasources: { default: new InMemoryDriver({ persistence: false }) },
+      objects: {
+        crm_knowledge_article: {
+          name: 'crm_knowledge_article',
+          fields: {
+            id: { type: 'text' },
+            title: { type: 'text' },
+            status: { type: 'text' },
+            // `datetime`, NOT `date` — the property assertion 1 rests on.
+            last_reviewed_at: { type: 'datetime' },
+          },
+        },
+      } as never,
+    });
+    api = ql.createContext({ isSystem: true, userId: 'usr_1', tenantId: 'org_1' } as never);
+    for (const f of fixtures) await api.object('crm_knowledge_article').insert(f);
+  });
+
+  afterAll(async () => {
+    await ql?.close();
+  });
+
+  it('the shipped filter is the status test alone, and the label promises only an order', () => {
+    expect((view.filter ?? []).map((r: AnyRec) => [r.field, r.operator, r.value])).toEqual([
+      ['status', 'equals', 'published'],
+    ]);
+    expect(view.sort).toEqual([{ field: 'last_reviewed_at', order: 'asc' }]);
+    expect(dayWindowClaims(view.label)).toEqual([]);
+  });
+
+  it('the fixture holds rows on both sides of the window AND rows with no value', async () => {
+    // Premise of everything below: on an all-stale or all-stamped table these
+    // assertions would pass without the window or the null case doing anything.
+    const all: AnyRec[] = await api.object('crm_knowledge_article').find({ where: {} });
+    expect(all.length).toBe(fixtures.length);
+    expect(all.filter((r) => r.last_reviewed_at == null).length).toBe(2);
+  });
+
+  it('{180_days_ago} resolves, and lands on the START of the day 180 days back', async () => {
+    // Not zero rows (the macro shipped unresolved) and not every row (the
+    // #769 defect): the same three-way pin the blocks above make, on a
+    // parameterised token. The second assertion is the day-boundary one — the
+    // macro is compared against the equivalent literal rather than described.
+    const macro: AnyRec[] = await api.object('crm_knowledge_article').find({
+      where: { last_reviewed_at: { $lt: '{180_days_ago}' } },
+    });
+    expect(macro.length).toBeGreaterThan(0);
+    expect(macro.length).toBeLessThan(fixtures.length);
+    expect(titles(macro)).toEqual(['draft-ancient', 'reviewed-181d', 'reviewed-400d']);
+
+    const literal: AnyRec[] = await api.object('crm_knowledge_article').find({
+      where: { last_reviewed_at: { $lt: day180Start } },
+    });
+    expect(titles(literal)).toEqual(titles(macro));
+  });
+
+  it('as an exclusive upper bound it excludes the whole 180-days-ago day', async () => {
+    // The three-state boundary: 179d is fresh, every hour of the 180th day is
+    // fresh, 181d is stale. `last_reviewed_at` is `Field.datetime`, so a row
+    // reviewed at 23:59 on the boundary day would fall INTO a window that used
+    // `less_than_or_equal` against a day-start comparand — a whole day of
+    // articles flipping side on the operator alone.
+    const stale = titles(await api.object('crm_knowledge_article').find({
+      where: { status: 'published', last_reviewed_at: { $lt: '{180_days_ago}' } },
+    }));
+    expect(stale).not.toContain('reviewed-179d');
+    expect(stale).not.toContain('boundary-day-opens');
+    expect(stale).not.toContain('boundary-day-closes');
+    expect(stale).toContain('reviewed-181d');
+  });
+
+  it('the window DELETES never-reviewed articles, which today’s filter returns', async () => {
+    // The measurement that decided #769. Both spellings of "no value" — an
+    // explicit null and an absent key — fall out of a `$lt`, and a review queue
+    // that hides never-reviewed articles hides its most overdue population.
+    const shipped: AnyRec[] = await api.object('crm_knowledge_article').find({
+      where: whereFromViewFilter(view.filter),
+    });
+    expect(titles(shipped)).toContain('never-reviewed-null');
+    expect(titles(shipped)).toContain('never-reviewed-absent');
+
+    const windowed: AnyRec[] = await api.object('crm_knowledge_article').find({
+      where: whereFromViewFilter([...(view.filter ?? []), WINDOW_RULE]),
+    });
+    expect(titles(windowed)).toEqual(['reviewed-181d', 'reviewed-400d']);
+    expect(titles(windowed)).not.toContain('never-reviewed-null');
+    expect(titles(windowed)).not.toContain('never-reviewed-absent');
+  });
+
+  it('the disjunction is not an authorable filter rule — `or` is not a key', async () => {
+    // A rule is `{field, operator, value}` and the object is STRICT, so there
+    // is no `or`, no nesting and no logic key to hang a second branch on. This
+    // asserts the KEY is not an authoring surface (unrecognized_keys), which is
+    // the fact in question — the operator vocabulary itself is fine.
+    const canonical = ViewFilterRuleSchema.safeParse(WINDOW_RULE);
+    expect(canonical.success, 'the window rule itself is authorable').toBe(true);
+
+    const disjunction = ViewFilterRuleSchema.safeParse({
+      ...WINDOW_RULE,
+      or: [{ field: 'last_reviewed_at', operator: 'is_empty' }],
+    });
+    expect(disjunction.success).toBe(false);
+    expect(disjunction.error!.issues.map((i) => i.code)).toContain('unrecognized_keys');
+  });
+
+  it('and spelled the only way the grammar allows, it returns nothing at all', async () => {
+    // Two rules on one field AND together. `last_reviewed_at` cannot be both
+    // older than the window and empty, so the tab would go blank — the failure
+    // that looks exactly like "nothing needs review".
+    const anded: AnyRec[] = await api.object('crm_knowledge_article').find({
+      where: { last_reviewed_at: { $lt: '{180_days_ago}', $null: true } },
+    });
+    expect(anded).toEqual([]);
+  });
+
+  it('the ENGINE answers the question correctly — the limit is the view grammar', async () => {
+    // Stated positively so the constraint above cannot be misread as "the data
+    // layer cannot do this". It can; a view just has no way to ask.
+    const rows: AnyRec[] = await api.object('crm_knowledge_article').find({
+      where: {
+        status: 'published',
+        $or: [
+          { last_reviewed_at: { $lt: '{180_days_ago}' } },
+          { last_reviewed_at: { $null: true } },
+        ],
+      },
+    });
+    expect(titles(rows)).toEqual([
+      'never-reviewed-absent', 'never-reviewed-null', 'reviewed-181d', 'reviewed-400d',
+    ]);
+  });
+
+  it('a token outside the macro grammar is rejected, not silently unresolved', async () => {
+    // The parameterised family is a GRAMMAR, not a fixed list: {180_days_ago}
+    // and {181_days_ago} both resolve. A misspelling throws and names the fix,
+    // so the 16.1.0 silent-empty mode is unreachable on this path too.
+    await expect(
+      api.object('crm_knowledge_article').find({ where: { last_reviewed_at: { $lt: '{180_days_agoo}' } } }),
+    ).rejects.toThrow(/Unresolvable filter placeholder/);
   });
 });

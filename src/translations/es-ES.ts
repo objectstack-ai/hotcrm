@@ -282,7 +282,7 @@ export const esES: TranslationData = {
         all_articles: { label: 'Todos los artículos' },
         published_articles: { label: 'Publicados' },
         my_drafts: { label: 'Mis borradores' },
-        stale_articles: { label: 'Obsoletos (>180d)' },
+        stale_articles: { label: 'Cola de revisión · Más antiguos primero' },
       },
       _sections: {
         basic: { label: 'Información del Artículo' },

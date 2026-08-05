@@ -5,9 +5,13 @@ import { defineView } from '@objectstack/spec/ui';
 /**
  * Knowledge Article Views
  *
- *   • grid     — agent-facing article queue (status / category / audience)
+ *   • grid      — agent-facing article queue (status / category / audience)
  *   • published — public articles only
- *   • stale     — published > 180 days without review
+ *   • stale     — every published article, least-recently-reviewed first
+ *
+ * The third one is a RANKING, not a cut: `stale_articles` is the metadata
+ * item's name, not a claim about which rows come back. See its own note below
+ * for why it stays a ranking (#769).
  */
 export const KnowledgeArticleViews = defineView({
   list: {
@@ -73,32 +77,57 @@ export const KnowledgeArticleViews = defineView({
     stale_articles: {
       name: 'stale_articles',
       type: 'grid',
-      // Operator-only filter + oldest-review-first sort, and the reason
-      // recorded here has expired (#744).
+      // Operator-only filter + least-recently-reviewed-first sort. This view
+      // is a RANKING and the label says so; it deliberately applies no
+      // 180-day cut. Both halves of that sentence were settled by measurement
+      // (#769), so the reasoning is recorded here rather than re-derived.
       //
-      // It read: the list data path does NOT resolve date macros, so
-      // `last_reviewed_at < '{180_days_ago}'` compared the literal string, and
-      // since '2026-…' < '{…' is lexicographically true it matched EVERY
-      // published article — including ones reviewed minutes ago (verified
-      // against the running console). That was measured on @objectstack 16.1.0
-      // and stopped being true at 17.0.0-rc.0, when `resolveFilterTokens()` was
-      // wired into the ObjectQL read path (objectql #3582) ahead of the
-      // middleware chain — `find`/`findOne`/`count`/`aggregate`, saved-view
-      // filters included. `{180_days_ago}` matches the parameterised token
-      // grammar `DATE_MACRO_PARAM_RE`, so on the pinned 17.0.0-rc.2 it reaches
-      // the driver as a resolved instant and the lexicographic inversion above
-      // is unreachable on this path. `test/forecast-current-quarter-view.test.ts`
-      // pins that seam against a real engine for the view filters that use it.
+      // 1. The old note's premise expired (#744, #773). It read: the list data
+      //    path does NOT resolve date macros, so `last_reviewed_at <
+      //    '{180_days_ago}'` compared the literal string, and since '2026-…' <
+      //    '{…' is lexicographically true it matched EVERY published article.
+      //    True on @objectstack 16.1.0; false from 17.0.0-rc.0, when
+      //    `resolveFilterTokens()` was wired into the ObjectQL read path
+      //    (objectql #3582) ahead of the middleware chain —
+      //    `find`/`findOne`/`count`/`aggregate`, saved-view filters included.
+      //    Measured on the pinned 17.0.0-rc.2: `{180_days_ago}` resolves to
+      //    the START of the calendar day 180 days ago (00:00:00.000Z), so as
+      //    an EXCLUSIVE upper bound under `less_than` it excludes that whole
+      //    day — the #3777 day-boundary convention, and the right sense for a
+      //    label reading "> 180d".
       //
-      // So the window is expressible now, and this view still does not express
-      // it — which matters more here than it does for `stale_opportunities`,
-      // because the four locale labels DO promise one ('Stale (>180d)' and its
-      // translations) while the metadata label promises only an ordering. That
-      // gap is #769: adding the bound is a behaviour change with two things to
-      // measure first (`last_reviewed_at` is `Field.datetime`, so a bare
-      // calendar-day comparand carries the #3777 upper-bound convention, and
-      // never-reviewed articles have no value at all), so it is filed rather
-      // than done here. Nothing below was touched.
+      // 2. Expressible is not the same as expressible WITHOUT LOSS. A review
+      //    queue's most overdue population is the never-reviewed one, and
+      //    `last_reviewed_at` is nullable: a published article can carry no
+      //    review timestamp at all. Measured on the same engine, `$lt` does
+      //    not match null or absent values, so a bare window silently deletes
+      //    exactly those rows. The honest condition is "earlier than
+      //    {180_days_ago} OR empty" — and a view `filter` cannot say that. It
+      //    is a FLAT, strict array of `{field, operator, value}` rules
+      //    (`ViewFilterRuleSchema`) combined with AND; there is no `or`, no
+      //    nesting, no logic key. Spelled as the two rules the grammar does
+      //    allow, the window and the emptiness test AND together and the view
+      //    returns ZERO rows. (The engine itself has `$or` and answers the
+      //    question correctly — this is a view-authoring limit, not an engine
+      //    limit.)
+      //
+      // So the label is what changed in #769, not the filter: the four locale
+      // packs had translated this view as 'Stale (>180d)' / '过期 (>180 天)' /
+      // 'Obsoletos (>180d)' / '古い (>180日)', promising a window the filter
+      // never expressed — the #730 defect class, living (as it did there) only
+      // in the translated half. They now render the metadata label faithfully,
+      // and every user-visible name for this view again promises exactly the
+      // ordering it delivers. No `emptyState` is authored because the change
+      // introduces no new empty state: "no published articles" is the same
+      // zero this tab has always had, unlike `closing_this_quarter` (#746),
+      // where scoping made "empty" newly reachable.
+      //
+      // `test/forecast-current-quarter-view.test.ts` owns the house rule and
+      // pins all of the above against a real engine, including the day-window
+      // claim vocabulary that would fail this view the day a label reclaims a
+      // window. Whether the queue SHOULD become a 180-day cut is a product
+      // question that needs the null population handled first — filed
+      // separately, not decided by a translator.
       label: 'Review Queue · Oldest First',
       data: { provider: 'object', object: 'crm_knowledge_article' },
       columns: ['article_number', 'title', 'category', 'owner_id', 'last_reviewed_at'],

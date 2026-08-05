@@ -290,7 +290,7 @@ export const jaJP: TranslationData = {
         all_articles: { label: 'すべての記事' },
         published_articles: { label: '公開済み' },
         my_drafts: { label: '自分の下書き' },
-        stale_articles: { label: '古い (>180日)' },
+        stale_articles: { label: 'レビューキュー · 古い順' },
       },
       _sections: {
         basic: { label: '記事情報' },

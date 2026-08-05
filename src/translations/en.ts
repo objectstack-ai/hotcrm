@@ -263,7 +263,7 @@ export const en: TranslationData = {
         all_articles: { label: 'All Articles' },
         published_articles: { label: 'Published' },
         my_drafts: { label: 'My Drafts' },
-        stale_articles: { label: 'Stale (>180d)' },
+        stale_articles: { label: 'Review Queue · Oldest First' },
       },
       _sections: {
         basic: { label: 'Article Information' },
