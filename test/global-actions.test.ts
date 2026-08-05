@@ -315,6 +315,109 @@ describe('activity actions stamp a real record_label (#514 item 2)', () => {
   });
 });
 
+// ──────────────────── actor_name is a name, not a raw user id (#673) ──
+
+/**
+ * The timeline used to render a 32-character id where the actor's name belongs.
+ *
+ * The cause is upstream and worth stating precisely, because the guards below
+ * only make sense against it: `@objectstack/runtime`'s REST action dispatcher —
+ * the path the Console uses — builds the body's user as
+ * `{ id: ec.userId, name: ec.userId, … }` (17.0.0-rc.2, `dist/index.js:5397`),
+ * so `ctx.user?.name` is PRESENT and is the id. Not absent, not null: a
+ * plausible-looking string that no `??` could catch. (The MCP dispatcher at
+ * `dist/index.js:1776` prefers `ec.userName ?? ec.userDisplayName`, but nothing
+ * in the platform populates either, so it lands on the id as well.)
+ *
+ * Which is exactly why the pre-existing "carries the acting user" guard above
+ * stayed green through the whole bug: the harness's default user is
+ * `{ id: 'usr_1', name: 'Ada Lovelace' }` — a shape the REST dispatcher never
+ * produces. So these run with the REAL dispatcher shape (`name === id`) and
+ * assert on the resolved value.
+ */
+const REST_USER_ID = 'grDEyLoIgnunJ2M7Y2muLgcuQbDUT0s2';
+
+/** The user object the REST action dispatcher hands a body, verbatim. */
+const restUser = (id: string = REST_USER_ID): AnyRec => ({
+  id,
+  name: id,
+  email: 'admin@objectos.ai',
+  roles: [],
+  positions: [],
+  permissions: [],
+});
+
+const withUserRow = (name = 'Dev Admin') =>
+  makeSandboxEngine({ sys_user: [{ id: REST_USER_ID, name, email: 'admin@objectos.ai' }] });
+
+/** Schedule params, so `schedule_meeting` runs on the same call as the loggers. */
+const ANY_KIND_INPUT = { subject: 'Quarterly sync', start_date: '2026-09-01', start_time: '09:00' };
+
+describe('sys_activity.actor_name is a human-readable name (#673)', () => {
+  it('resolves the display name for every activity action on every target', async () => {
+    for (const objectName of TARGETS) {
+      for (const kind of KINDS) {
+        const { engine } = await run(objectName, kind, {
+          user: restUser(),
+          engine: withUserRow(),
+          input: ANY_KIND_INPUT,
+        });
+        const [activity] = engine.inserted('sys_activity') as AnyRec[];
+        const where = `${objectName}:${kind}`;
+        expect(activity.actor_id, where).toBe(REST_USER_ID);
+        expect(activity.actor_name, where).toBe('Dev Admin');
+        // The regression itself, stated as its own assertion: whatever else
+        // changes, the timeline must never render the opaque id again.
+        expect(activity.actor_name, where).not.toBe(REST_USER_ID);
+      }
+    }
+  });
+
+  it('reads sys_user once — and only because the dispatcher delivered no name', async () => {
+    const { engine } = await run('crm_account', 'log_call', {
+      user: restUser(),
+      engine: withUserRow(),
+    });
+    expect(engine.callsFor('sys_user', 'find').length).toBe(1);
+
+    // A dispatcher that DOES deliver a display name is believed as-is: the
+    // lookup is a workaround, and it has to disappear on its own the day the
+    // platform starts honouring `ctx.user.name`.
+    const delivered = await run('crm_account', 'log_call', {
+      user: { id: 'usr_1', name: 'Ada Lovelace' },
+    });
+    expect(delivered.engine.callsFor('sys_user', 'find').length).toBe(0);
+    expect((delivered.engine.inserted('sys_activity')[0] as AnyRec).actor_name).toBe('Ada Lovelace');
+  });
+
+  it('falls back to the id rather than writing a blank actor', async () => {
+    // No `sys_user` row for the caller — a deleted user, or a read the caller's
+    // context is not allowed to satisfy. An opaque id is bad; an activity whose
+    // actor is `null` is worse, because it is not attributable at all.
+    const { engine } = await run('crm_case', 'log_meeting', { user: restUser(), input: ANY_KIND_INPUT });
+    const [activity] = engine.inserted('sys_activity') as AnyRec[];
+    expect(activity.actor_name).toBe(REST_USER_ID);
+    expect(activity.actor_name).not.toBeNull();
+  });
+
+  it('never fails the log when the sys_user read throws', async () => {
+    const sandbox = makeSandboxEngine();
+    const passThrough = sandbox.engine.find;
+    sandbox.engine.find = async (object: string, options: AnyRec = {}) => {
+      if (object === 'sys_user') throw new Error('FORBIDDEN: no read access to sys_user');
+      return passThrough(object, options);
+    };
+    const { engine, result } = await run('crm_contact', 'log_call', {
+      user: restUser(),
+      engine: sandbox,
+    });
+    // The interaction the rep just recorded outranks the label on it.
+    expect(result.eventId).toBeTruthy();
+    expect(result.activityId).toBeTruthy();
+    expect((engine.inserted('sys_activity')[0] as AnyRec).actor_name).toBe(REST_USER_ID);
+  });
+});
+
 // ─────────────────────────────────── the family stays a family (#514/15) ──
 
 describe('the activity actions stay twins (#514 item 15)', () => {

@@ -168,6 +168,48 @@ function activityAction(spec: ActivitySpec, objectName: string): Action {
       const userId = ctx.user?.id ?? null;
       const nowIso = new Date().toISOString();
 
+      // The acting user's DISPLAY name, for the timeline row below (#673).
+      //
+      // PLATFORM WORKAROUND. \`ctx.user.name\` is not a display name on the
+      // dispatch path the Console uses: the REST action dispatcher builds the
+      // body's user as \`{ id: ec.userId, name: ec.userId, … }\` — the key is
+      // present and carries the raw id, so \`ctx.user?.name\` reads as a
+      // plausible string and silently wrote ids like
+      // "grDEyLoIgnunJ2M7Y2muLgcuQbDUT0s2" into \`sys_activity.actor_name\`
+      // (@objectstack/runtime 17.0.0-rc.2, dist/index.js:5397-5399). The MCP
+      // dispatcher does try a display name first
+      // (\`ec.userName ?? ec.userDisplayName ?? ec.userId\`, dist/index.js:1776)
+      // but nothing in the installed platform ever populates either field, so
+      // it falls back to the id too.
+      //
+      // So the name is resolved HERE, from \`sys_user.name\` (the column the
+      // platform itself treats as the profile display name), with the id kept
+      // as the last resort — an opaque id is bad, a blank actor is worse.
+      // A name that differs from the id is taken as already-resolved, which is
+      // what makes this one query and not a query per activity write.
+      //
+      // DELETE THIS once the platform delivers a display name on ctx.user.name
+      // for REST-dispatched action bodies: the whole block collapses back to
+      // \`actor_name: ctx.user?.name\`.
+      const ctxName = ctx.user?.name ? String(ctx.user.name).trim() : '';
+      let actorName = ctxName && ctxName !== userId ? ctxName : '';
+      if (!actorName && userId) {
+        try {
+          const found = await ctx.api.object('sys_user').find({
+            where: { id: userId },
+            fields: ['name'],
+            top: 1,
+          });
+          const users = Array.isArray(found) ? found : (found?.records ?? []);
+          const resolved = users.length && users[0].name ? String(users[0].name).trim() : '';
+          if (resolved) actorName = resolved;
+        } catch (e) {
+          // A denied or unavailable sys_user read must not fail the log — the
+          // interaction the rep just recorded matters more than its label.
+        }
+      }
+      if (!actorName) actorName = userId;
+
       const subject = input.subject ? String(input.subject) : ${lit(spec.defaultSubject)};
       const duration = input.duration ? Number(input.duration) : 0;
       const notes = input.notes ? String(input.notes) : '';
@@ -274,7 +316,7 @@ function activityAction(spec: ActivitySpec, objectName: string): Action {
         type: EVENT_STATUS === 'held' ? 'completed' : 'scheduled',
         summary: ${lit(spec.summaryPrefix)} + summary,
         actor_id: userId,
-        actor_name: ctx.user?.name ?? null,
+        actor_name: actorName,
         object_name: OBJECT_NAME,
         record_id: recordId,
         // #514 item 2: the object's DECLARED nameField, not a hardcoded name.
