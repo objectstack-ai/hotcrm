@@ -530,7 +530,11 @@ const ROW_LABEL: Record<string, Record<Locale, string>> = {
   crm_event_attendee: { en: 'Event Attendee', 'zh-Hans': '活动参与者', 'zh-Hant': '活動參與者' },
   crm_forecast: { en: 'Forecast', 'zh-Hans': '预测', 'zh-Hant': '預測' },
   crm_product: { en: 'Product', 'zh-Hans': '产品', 'zh-Hant': '產品' },
-  crm_campaign: { en: 'Campaign', 'zh-Hans': '市场活动', 'zh-Hant': '行銷活動' },
+  // zh-Hans is 「营销活动」, the label the locale pack ships (`zh-CN.ts`
+  // `objects.crm_campaign.label`) and the word the other 14 zh-Hans doc pages
+  // already used. This row read 「市场活动」 until #830, which left the master
+  // spelled one way and the detail below spelled the other on the same page.
+  crm_campaign: { en: 'Campaign', 'zh-Hans': '营销活动', 'zh-Hant': '行銷活動' },
   // Both Chinese labels carry the marketing word on purpose (#810). Without it,
   // 「活动成员」/「活動成員」 sit two rows under 「活动」/「活動」 (`crm_event`) and
   // 「活动参与者」/「活動參與者」 (`crm_event_attendee`) and read as that family's
