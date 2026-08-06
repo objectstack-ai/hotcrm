@@ -124,7 +124,7 @@ Most automation actions send email. Templates live in **Setup → Email Template
 - **HTML + plain text** versions.
 - **Attachments** — quote PDFs, contract PDFs.
 
-Built-in templates cover lead-routing, opportunity wins, case acknowledgments, contract activations, renewal reminders.
+HotCRM itself ships no email templates: nothing under `src/` authors one, and the compiled app carries no email-template metadata at all. The lead-routing, opportunity-win, case and renewal notifications this app sends come from the **`notify` nodes** in the flows listed above — each one's subject and body text is written inline in its own flow, so that is where you change the wording. Contract activation sends nothing: it runs as an object hook (`src/objects/contract.hook.ts`) with no notification step, and the contract mail that does go out comes from the **Contract Auto-Expiration** and **Contract Renewal Reminder** flows. Author a template in **Setup → Email Templates** when you need a templated outbound email of your own.
 
 ## Where to monitor automation
 
