@@ -394,6 +394,45 @@ describe('every locale is complete on every authored surface', () => {
     expect(bad, `pages with untranslated copy:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
+  /**
+   * Reference-rail cards are headed by the OBJECT's label, not by any copy the
+   * page owns. The rail resolves
+   * `entry.title || i18n.objectLabel({ name, label: humanize(name) })`, and
+   * `objectLabel` looks up `objects.<name>.label` in the active locale bundle
+   * before falling back to the label passed in — which the rail sets to
+   * `humanize(objectName)`, i.e. `Crm Opportunity Line Item`.
+   *
+   * So the rail is one of the few surfaces where a MISSING object translation
+   * is worse than no translation system at all: the fallback is not the
+   * authored English label, it is a de-underscored object NAME. #972 removed
+   * the literal `title` from all three entries to let this lookup happen; this
+   * guard is what makes that safe, and it is scoped to the rail's objects
+   * deliberately — `objects.<name>.label` completeness at large is the
+   * surface-completeness test further down, which does not know that these
+   * three names have a second, harsher consumer.
+   */
+  it('every reference-rail object has a translated label in every locale', () => {
+    const railObjects = [
+      ...new Set(
+        pages
+          .flatMap((p: AnyRec) => (p.regions ?? []).flatMap((r: AnyRec) => r.components ?? []))
+          .filter((c: AnyRec) => c?.type === 'record:reference_rail')
+          .flatMap((c: AnyRec) => (c.properties?.entries ?? []) as AnyRec[])
+          .map((e: AnyRec) => e.objectName as string),
+      ),
+    ];
+    expect(railObjects.length, 'no rail entries found — this guard would be vacuous').toBeGreaterThan(0);
+
+    const bad: string[] = [];
+    for (const [locale, pack] of packs()) {
+      for (const name of railObjects) {
+        const label = pack.objects?.[name]?.label;
+        if (!label) bad.push(`${locale}: objects.${name}.label (rail card would read "${name}" humanized)`);
+      }
+    }
+    expect(bad, `reference-rail headings with no translation:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
   it('every dashboard widget has a translated title and description', () => {
     const dashboards: AnyRec[] = (stack as any).dashboards ?? [];
     const bad: string[] = [];

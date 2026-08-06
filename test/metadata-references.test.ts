@@ -101,6 +101,81 @@ describe('page component references resolve', () => {
     expect(bad, `dangling related-list columns:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
+  /**
+   * `record:reference_rail` entries are the one page reference the dangling-name
+   * guards above never reached. An entry is a bare object inside
+   * `properties.entries` — it carries no `type`, so `walk` does not yield it —
+   * and the platform declares no schema for it either: `record:reference_rail`
+   * has no row in the spec's `ComponentPropsMap`, and a page component's
+   * `properties` is `z.record(z.string(), z.unknown())`. Nothing between the
+   * authored file and the browser reads these names before the rail queries
+   * them, so a typo is a card that silently comes back empty and — because
+   * `hideEmpty` defaults on — folds itself away.
+   */
+  const railEntries = components
+    .filter((c) => c.type === 'record:reference_rail')
+    .flatMap((c) => ((c.properties?.entries ?? []) as AnyRec[]).map((e) => ({ id: c.id, entry: e })));
+
+  it('every record:reference_rail entry names a real object and a real relationship field', () => {
+    expect(railEntries.length, 'no rail entries found — this guard would be vacuous').toBeGreaterThan(0);
+    const bad: string[] = [];
+    for (const { id, entry } of railEntries) {
+      const objectName = entry.objectName;
+      if (!objectNames.has(objectName)) {
+        bad.push(`${id}: objectName "${objectName}" is not a defined object`);
+        continue;
+      }
+      const relField = entry.relationshipField;
+      if (relField && !fieldsOf(objectName).includes(relField)) {
+        bad.push(`${id}: "${objectName}" has no field "${relField}"`);
+      }
+    }
+    expect(bad, `dangling reference-rail references:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  /**
+   * A rail card's heading resolves as
+   * `entry.title || i18n.objectLabel({ name: objectName, … })`. A literal
+   * `title` does not supply a default — it wins outright, and the locale bundle
+   * is never consulted, so one English string overrides all four locale packs
+   * at once (#972). Nor can the literal itself be translated: the rail renders
+   * `entry.title` as a raw React child, unlike `record:alert`, which runs its
+   * `title` through the inline translation-map resolver.
+   *
+   * So: until the rail gains a translated-title channel, "declares a title" and
+   * "is untranslatable" are the same fact, and the only correct number of
+   * literals is zero. The other half of this guard — that dropping the literal
+   * lands on a *translation* rather than on a humanized object name — is
+   * `test/i18n-references.test.ts`, which requires `objects.<name>.label` in
+   * every locale for exactly these objects.
+   */
+  it('no record:reference_rail entry declares a literal title', () => {
+    const bad = railEntries
+      .filter(({ entry }) => entry.title !== undefined)
+      .map(({ id, entry }) => `${id}: "${entry.objectName}" declares title ${JSON.stringify(entry.title)}`);
+    expect(
+      bad,
+      `reference-rail titles override the localized object label:\n  ${bad.join('\n  ')}`,
+    ).toEqual([]);
+  });
+
+  /**
+   * The same rail entry has no filter channel either: the rail issues
+   * `find(objectName, { $filter: { [relationshipField]: parentId }, $top: limit,
+   * $count: true })` and reads nothing else off the entry. Because `properties`
+   * is an unvalidated `z.record`, a `filter` written here would parse, ship, and
+   * do nothing — the card would keep counting every related record while the
+   * source claimed otherwise. That is the trap this guard exists to spring: an
+   * author reaching for the *Related* tab's `status neq completed` and putting
+   * it on a rail entry gets a red test instead of a silent lie.
+   */
+  it('no record:reference_rail entry declares a filter the rail cannot apply', () => {
+    const bad = railEntries
+      .filter(({ entry }) => entry.filter !== undefined)
+      .map(({ id, entry }) => `${id}: "${entry.objectName}" declares a filter; the rail queries on the relationship alone`);
+    expect(bad, `inert reference-rail filters:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
   it('record:activity only lists object types this app defines', () => {
     const bad: string[] = [];
     for (const c of components) {
