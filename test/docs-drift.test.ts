@@ -344,15 +344,19 @@ describe('documented agent names resolve to a platform agent', () => {
  * against the current English page and now sit in `DOC_PAGES` alongside it. The
  * extraction is locale-agnostic on purpose — the section headings carry each
  * dashboard's own English `label` and the bold tile names are left in English in
- * every locale, so the same two regexes resolve all three files. That is what
+ * every locale, so the same two extractions resolve all three files. That is what
  * makes the section-coverage rule bite per locale: registering a sixth dashboard
  * now fails until all three pages document it, which is the shape #592 needed.
  *
- * One asymmetry to know about: the `**Name** tile` prose rule below keys on the
- * English word "tile", so it only ever fires on the English page — the zh pages
- * say `**Quiet 90+ Days** 磁贴 / 磁貼`. Their tile LISTS are fully checked; a
- * stray tile name in their running prose is not. Widen `TILE_REFERENCE` if that
- * becomes a real defect, rather than assuming it is already covered.
+ * The one asymmetry that survived #685 is gone as of #725: the `**Name** tile`
+ * prose rule keyed on the English word "tile", so it fired on the English page
+ * only, while the zh pages say `**Quiet 90+ Days** 磁贴 / 磁貼`. Their tile LISTS
+ * were checked; a stray tile name in their running prose was not. The noun now
+ * comes from `TILE_WORDS`, so the rule reads all three pages — 2 references
+ * before, 6 after, and the English hit set is unchanged (same two names, same
+ * page). No page had to move a word: every tile the zh prose names was already a
+ * real widget, which is why this was filed as a dormant coverage gap rather than
+ * a live defect.
  */
 describe('the dashboards docs page lists tiles that exist', () => {
   type AnyRec = Record<string, any>;
@@ -382,8 +386,38 @@ describe('the dashboards docs page lists tiles that exist', () => {
   const listedTiles = (body: string): string[] =>
     [...body.matchAll(/^- \*\*(.+?)\*\*/gm)].map((m) => m[1].trim());
 
-  /** `the **Quiet 90+ Days** tile` / `… tiles` — anywhere in the prose. */
-  const TILE_REFERENCE = /\*\*([^*\n]+)\*\*\s+tiles?\b/g;
+  /**
+   * The noun each locale's page uses for "tile". The tile NAMES stay English in
+   * every locale (see the Locale note above), so this one word is the whole
+   * locale surface of the prose rule — which is why it is a table rather than
+   * three regexes or three per-page rules.
+   *
+   * Entries are plain words: they are joined into an alternation verbatim, so
+   * anything carrying regex punctuation would not mean what it reads as.
+   */
+  const TILE_WORDS = ['tiles', 'tile', '磁贴', '磁貼'];
+
+  /**
+   * `the **Quiet 90+ Days** tile` / `**Quiet 90+ Days** 磁贴` — anywhere in the
+   * prose, in any locale the page ships (#725).
+   *
+   * Two details are load-bearing rather than style:
+   *
+   * - the separator is `\s*`, not `\s+`. Chinese typography does not put a space
+   *   before the noun, so `\s+` would leave `**Quiet 90+ Days**磁贴` unchecked —
+   *   the same hole this rule just closed, in the spelling the next translator
+   *   is most likely to reach for.
+   * - the tail guard is a lookahead, not `\b`. A JS word boundary is defined
+   *   against `[A-Za-z0-9_]` on BOTH sides, so there is no boundary between the
+   *   last character of 磁贴 and the full stop after it, and `磁贴\b` would never
+   *   match anything the zh pages actually write. The lookahead accepts exactly
+   *   the strings `tiles?\b` accepted, so the English half is untouched, and
+   *   lets the CJK half end on punctuation.
+   */
+  const TILE_REFERENCE = new RegExp(
+    String.raw`\*\*([^*\n]+)\*\*\s*(?:${TILE_WORDS.join('|')})(?![A-Za-z0-9_])`,
+    'g',
+  );
 
   const titlesOf = (d: AnyRec): Set<string> =>
     new Set((d.widgets ?? []).map((w: AnyRec) => w.title).filter(Boolean));
@@ -447,7 +481,29 @@ describe('the dashboards docs page lists tiles that exist', () => {
     });
   }
 
-  it('every "**Name** tile" reference names a real tile', () => {
+  it('the tile reference extraction reads every locale the page ships (#725)', () => {
+    // The standing form of #725's red/green check, and the reason it is not
+    // enough to lean on the vacuity guard below: that one counts the UNION over
+    // the three pages, so deleting a locale from TILE_WORDS keeps it green on
+    // the English hits alone — silently reopening the gap this closed. Probe
+    // each word directly, spaced and unspaced, with a CJK full stop as the tail
+    // (the character `\b` cannot follow — see TILE_REFERENCE).
+    const reads = (probe: string): string[] =>
+      [...probe.matchAll(TILE_REFERENCE)].map((m) => m[1].trim());
+    const unread = TILE_WORDS.flatMap((word) =>
+      [' ', ''].map((gap) => `每周都处理一次 **Open Deals**${gap}${word}。`),
+    ).filter((probe) => reads(probe)[0] !== 'Open Deals');
+    // Collected rather than asserted per probe, so a narrowed regex names every
+    // spelling it stopped reading in one run instead of only the first.
+    expect(
+      unread,
+      `TILE_REFERENCE no longer reads:\n  ${unread.join('\n  ')}\n` +
+        'A locale whose word for "tile" this regex cannot see is a page whose running prose ' +
+        'nobody checks — which is exactly the state the zh pages were in between #685 and #725.',
+    ).toEqual([]);
+  });
+
+  it('every "**Name** tile" / "**Name** 磁贴" reference names a real tile', () => {
     const refs = PAGES.flatMap(({ file, text }) =>
       [...text.matchAll(TILE_REFERENCE)].map((m) => ({ file, name: m[1].trim() })),
     );
@@ -455,7 +511,8 @@ describe('the dashboards docs page lists tiles that exist', () => {
     // lists, delete this check rather than leaving it green over nothing.
     expect(
       refs.length,
-      'no `**Name** tile` reference found in the dashboards docs — this check has gone vacuous.',
+      `no \`**Name** ${TILE_WORDS.join(' / ')}\` reference found in the dashboards docs — ` +
+        'this check has gone vacuous.',
     ).toBeGreaterThan(0);
     const bad = refs
       .filter((r) => !ALL_TITLES.has(r.name))
