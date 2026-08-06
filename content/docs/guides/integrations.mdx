@@ -5,7 +5,7 @@ description: What HotCRM actually exposes to the outside world today — the dat
 
 # Integrations
 
-HotCRM is designed to **fit into your stack**, not replace it. Today it does that through the platform's own edges: a data API, spreadsheet import and export, outbound email, and automation you write yourself. What it does not do yet is ship **packaged vendor connectors** — `src/` carries no connector metadata of any kind, and there is no **Setup → Integrations** menu to configure one under.
+HotCRM is designed to **fit into your stack**, not replace it. Today it does that through the platform's own edges: a data API, spreadsheet import and export, outbound email, and automation you write yourself. What it does not do yet is ship **packaged vendor connectors** — `src/` carries no connector metadata of any kind, and nothing this app installs puts a connector under **Setup → Integrations**.
 
 > **Read this before following a setup step.** Every heading below marked *(not shipped yet)* describes an integration **as designed** — it is on the [roadmap](/docs/whats-new#roadmap), not a switch you can turn on today. The unmarked sections describe what the app actually exposes. The roadmap's own line for this reads *"More connectors — Slack, Microsoft Teams, Google Workspace, HubSpot import"*.
 
@@ -20,7 +20,7 @@ HotCRM is designed to **fit into your stack**, not replace it. Today it does tha
 
 ## Built-in connectors (not shipped yet)
 
-The line-up below is **design intent** — kept here because it is the shape the product is aimed at. None of it is in the box: no connector metadata in `src/`, no connector plugin among the platform packages, and **no `Setup → Integrations` menu**. The setup paths this table used to print were the most misleading thing on the page, because someone following one went looking for a screen that does not exist.
+The line-up below is **design intent** — kept here because it is the shape the product is aimed at. None of it is in the box: no connector metadata in `src/`, and no connector plugin among the platform packages. The **Setup → Integrations** group itself does exist — it is one of the nine navigation groups the platform's Setup app declares, alongside *Overview*, *Apps*, *People & Organization*, *Access Control*, *Approvals*, *Configuration*, *Diagnostics* and *Advanced* — but **not one of the vendors below mounts anything under it**. The setup paths this table used to print were the most misleading thing on the page, because someone following one went looking for a screen that does not exist.
 
 | Tool | Intended behaviour | Closest thing that ships today |
 | --- | --- | --- |
@@ -79,7 +79,7 @@ Today the export that exists is manual: open a list view, export CSV or XLSX. An
 
 This one is not vapour. The platform **does** ship an outbound webhook service: `@objectstack/plugin-webhooks` keeps one subscription per `sys_webhook` row — authored either through that object's own admin UI or declared in code with `defineStack({ webhooks })` / `defineWebhook()` — matches record events against those rows, and hands each match to the shared messaging HTTP outbox for delivery.
 
-**HotCRM does not turn it on.** `objectstack.config.ts` declares `requires: ['automation', 'triggers', 'analytics', 'auth', 'ui', 'approvals', 'sharing']`. `webhooks` is not in that list, and it is not one of the capabilities the platform loads for every app regardless. The app authors no webhook either. So there is no webhook surface in HotCRM today, and no `Setup → Integrations → Webhooks` screen to find one under.
+**HotCRM does not turn it on.** `objectstack.config.ts` declares `requires: ['automation', 'triggers', 'analytics', 'auth', 'ui', 'approvals', 'sharing']`. `webhooks` is not in that list, and it is not one of the capabilities the platform loads for every app regardless. The app authors no webhook either. So there is no webhook surface in HotCRM today: with `@objectstack/plugin-webhooks` unloaded, the two Setup entries it contributes — **Webhooks** and **HTTP Deliveries** — do not appear under `Setup → Integrations`. That is *not enabled here*, not *not built*: turn the capability on as the note below describes and the plugin mounts them itself.
 
 > **This is a deployment decision, not a roadmap item.** Add `webhooks` to `requires`, declare your subscriptions, and delivery is the platform's job from there. The retry counts, payload-shape choices and delivery-log screen this page used to promise were never HotCRM's to define — read them from the platform's own webhook documentation for the version you run, not from here.
 
