@@ -18,7 +18,7 @@ type Flow = Automation.Flow;
 export const OpportunityWonAlertFlow: Flow = {
   name: 'opportunity_won_alert',
   label: 'Large Deal Won Alert',
-  description: 'On closed_won opportunities over $100K: notify owner + manager.',
+  description: 'On closed_won opportunities over $100K: notify the owner — the owner alone, not their manager.',
   type: 'record_change',
   status: 'active',
   // A record-change flow fired by a SYSTEM write carries no trigger user

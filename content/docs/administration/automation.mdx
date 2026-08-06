@@ -65,8 +65,8 @@ A flow fires one of three ways, set by its start node:
 | **Urgent Task Alert** | Record change (insert) | Notify the owner when a task is created at *Urgent* |
 | **Large Deal Approval** | Record change (update) | Tiered sign-off via approval nodes — Sales Manager > $100K, Sales Director > $500K |
 | **Large Deal Approval (on create)** | Record change (insert) | The same intake for opportunities *created* above the threshold |
-| **Large Deal Won Alert** | Record change (update) | When an opportunity over $100K turns *Closed Won*, notify the owner and their manager |
-| **Case Escalation Process** | Record change (update) | When a case turns *Critical*, reassign to a senior agent, notify, create a follow-up task |
+| **Large Deal Won Alert** | Record change (update) | When an opportunity over $100K turns *Closed Won*, notify the owner — the owner alone, not their manager |
+| **Case Escalation Process** | Record change (update) | When a case turns *Critical*, flag it escalated and notify its owner — the case is not reassigned to a senior agent, it stays with its owner; escalating also opens an urgent follow-up task for the account owner |
 | **Case Escalation Process (on create)** | Record change (insert) | The same escalation for cases *created* at *Critical* |
 | **Case CSAT Follow-up** | Record change (update) + wait | When a case closes, wait 1 day, then prompt the owner to capture a satisfaction rating |
 | **Contract Auto-Expiration** | Schedule (daily midnight) | Expire activated contracts past their `end_date` and notify the owner |
