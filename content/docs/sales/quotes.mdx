@@ -68,7 +68,16 @@ The sum of line items rolls up into the quote subtotal.
 ## What happens automatically
 
 - **Daily expiration sweep** — every night at 1 AM, the system marks any quote whose expiration has passed as **Expired** (unless it's already accepted or rejected). Keeps your active list clean.
-- **On acceptance** — when you mark a quote as *Accepted*, the system creates a contract automatically with the quote's terms, advances the opportunity to *Closed Won*, promotes the account from prospect to customer (if applicable), and schedules a renewal reminder task 60 days before contract end.
+- **On acceptance** — marking a quote *Accepted* is what drafts the contract. The system inserts a contract in **Draft** status, typed *Subscription*, on a 12-month term starting today, carrying the quote's account, primary contact, related opportunity, owner and total price. It then advances the linked opportunity to *Closed Won*, dated today, and — only when the rep recorded no win reason — stamps **Quote Accepted** as one. An opportunity already closed, won or lost, is left where it is.
+
+Two things readers often expect at this point happen **later, when someone activates that contract**, not when the quote is accepted:
+
+- **The account is promoted at activation, not at acceptance.** Moving an account from *Prospect* to *Customer* is a write that runs on contract activation, and what acceptance produces is a *Draft*. Until a Sales Manager or an admin activates that contract, the account is still a *Prospect*.
+- **The renewal reminder is not scheduled here, and it is not a 60-day one.** Renewal reminders come from the daily renewal sweep, which reads *Activated* contracts only and uses each contract's own **Renewal Notice (Days)** — **30** by default, and set per contract. A contract still sitting in *Draft* is invisible to that sweep, so it has no reminder at all.
+
+Both are described in full on the [Contracts](/docs/revenue/contracts) page.
+
+The links are copied across, not invented: the drafted contract requires a **Primary Contact** and takes it from the quote, and the close-won step acts on the quote's **related opportunity**. Put both on the quote before you mark it accepted — what the quote does not carry, acceptance cannot pass on.
 
 ## Generating a quote
 
