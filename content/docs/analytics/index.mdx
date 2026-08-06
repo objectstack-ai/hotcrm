@@ -1,6 +1,6 @@
 ---
 title: Analytics
-description: Dashboards, reports, and the data cubes that power them — how HotCRM turns daily activity into insight.
+description: Dashboards, reports, and the semantic layer under them — how HotCRM turns daily activity into insight.
 ---
 
 # Analytics
@@ -9,15 +9,17 @@ HotCRM Analytics turns your CRM activity into **decisions**. Three layers work t
 
 - **Dashboards** — visual at-a-glance views for execs, managers, and reps.
 - **Reports** — detailed list-and-summary reports anyone can filter and export.
-- **Cubes** — the data layer underneath, ready for self-service slice-and-dice.
+- **Cubes** — the semantic layer underneath. In this app that layer is a set of **datasets**: HotCRM declares no cube of its own, and the analytics service compiles each dataset into its cube internally (ADR-0021).
 
 ## What's included
 
 | Layer | What it does |
 | --- | --- |
-| [**Dashboards**](/docs/analytics/dashboards) | 4 ready-made dashboards (CRM, Sales, Service, Executive) |
-| [**Reports**](/docs/analytics/reports) | 10+ standard reports across leads, deals, cases, contracts |
-| [**Cubes**](/docs/analytics/cubes) | 4 cubes (sales, pipeline, service, marketing) for self-service analysis |
+| [**Dashboards**](/docs/analytics/dashboards) | **Five** ready-made dashboards — CRM Overview, Sales Performance, Sales Activity, Customer Service, Executive Overview |
+| [**Reports**](/docs/analytics/reports) | **Ten** standard reports — four on deals, three on cases, one each on leads, accounts and churn |
+| [**Cubes**](/docs/analytics/cubes) | **Nine** datasets in `src/datasets/`, the layer both of the above bind by name |
+
+Two counts on that table used to read differently, and the difference is worth knowing before you go looking. **There is no contract report** — and none can be built, because `src/datasets/` reads nine objects and `crm_contract` is not one of them, so nothing in analytics counts, sums or groups a contract. And **no cube is named** *Sales*, *Pipeline*, *Service* or *Marketing* — those four names exist nowhere in the app. [Cubes](/docs/analytics/cubes) says which datasets answer the first three and why the fourth has no data source at all.
 
 ## What you get out of the box
 
@@ -33,32 +35,34 @@ The moment you have data in HotCRM, you have analytics. No setup required.
 
 The same sharing rules that govern records also govern dashboards and reports:
 
-- A rep running *Pipeline by Stage* sees only their pipeline.
+- A rep running **Opportunities by Stage** sees only their own deals.
 - A manager sees the rollup for their team.
 - An exec sees company-wide.
 
 This means **one dashboard** works for the whole org — what each person sees depends on who they are.
 
+*Pipeline by Stage* is not a report you can run, though the name is real twice over: it is the open-pipeline funnel **tile** that CRM Overview, Sales Performance and Executive Overview share (`src/dashboards/shared-widgets.ts`), and it is the title of the bar chart on the **Opportunities by Stage** report. Search the report library for it and you find nothing — see [Reports](/docs/analytics/reports).
+
 ## Where to find things
 
-In the Enterprise CRM app, the **Analytics** group contains:
+In the Enterprise CRM app the group is called **Insights**, and it holds five entries:
 
-- **Dashboards** — the visual hub.
-- **Reports** — the report library.
-- **Cubes** — the data-modeling layer (admins).
+- **CRM Overview** — the cross-functional dashboard.
+- **Forecasts** — the forecast records themselves.
+- **Pipeline Coverage**, **Lead Inflow**, **SLA Performance** — three reports pinned to the sidebar by name.
+
+There is no *Analytics* group, and nothing in the sidebar is called *Dashboards*, *Reports* or *Cubes*. The other dashboards are pinned to the group that owns them — **Sales Performance** under Sales, **Sales Activity** under Activity, **Service Overview** under Service — and the rest of the report library is reached from the reports screen rather than from the nav. [Quick tour](/docs/getting-started/quick-tour) lists the whole sidebar, group by group.
 
 ## AI-powered insights
 
-The AI Copilot can read directly from cubes — ask questions like:
+**On this app's side, nothing connects the Copilot to a dataset.** The six skills under `src/skills/` name no dataset, no cube and no measure. The one that answers data questions, **Live Data Access**, is wired to the platform's object tools and is instructed to re-read the object's schema and aggregate over records — so a Copilot answer is computed from the objects, not read off a compiled cube.
 
-- *"What's driving the gap between commit and forecast?"*
-- *"Why did East close 3 fewer deals than West last quarter?"*
-- *"Show me which products correlate with longer sales cycles."*
+That also sets what it can be asked. *"What's driving the gap between commit and forecast?"* has data behind it: **Commit**, **Quota**, **Closed** and **Pipeline** are all real figures on the forecast record. *"Why did East close 3 fewer deals than West last quarter?"* and *"Show me which products correlate with longer sales cycles"* do not — no region is stored on a deal, no dataset reads line items, and the one duration the opportunity carries (**Days in Current Stage**) is a formula evaluated after the query, so nothing can aggregate it. [Cubes](/docs/analytics/cubes) lists the gaps one by one.
 
-See [Sales Skills](/docs/ai-copilot/sales-copilot) for more.
+Whether the platform's own agent additionally reads the compiled cubes is a question about the runtime rather than about this app, so this page makes no claim about it in either direction; check it against your deployment. See [Sales Skills](/docs/ai-copilot/sales-copilot) for what the sales-side skills do.
 
 ## Start here
 
-- [Dashboards](/docs/analytics/dashboards) — the four built-in dashboards.
-- [Reports](/docs/analytics/reports) — the standard report library.
-- [Cubes](/docs/analytics/cubes) — for analysts who want to build their own.
+- [Dashboards](/docs/analytics/dashboards) — the five built-in dashboards.
+- [Reports](/docs/analytics/reports) — the ten standard reports.
+- [Cubes](/docs/analytics/cubes) — the nine datasets underneath, and what each can and cannot answer.

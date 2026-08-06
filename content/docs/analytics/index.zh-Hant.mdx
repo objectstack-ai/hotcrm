@@ -1,6 +1,6 @@
 ---
 title: 分析
-description: 儀表板、報表，以及為它們提供支援的多維資料集——HotCRM 如何將日常活動轉化為洞察。
+description: 儀表板、報表，以及它們底下的語義層——HotCRM 如何將日常活動轉化為洞察。
 ---
 
 # 分析
@@ -9,15 +9,17 @@ HotCRM 分析將你的 CRM 活動轉化為**決策**。三個層次協同運作�
 
 - **儀表板** — 面向高階主管、經理和業務代表的視覺化一覽檢視。
 - **報表** — 任何人都可以篩選和匯出的詳細清單與彙總報表。
-- **多維資料集** — 底層資料層，可用於自助式切片分析。
+- **多維資料集** — 底下的語義層。在本應用裡，這一層是一組 **dataset**：HotCRM 自己不宣告任何 cube，由分析服務在內部把每個 dataset 編譯成它的 cube（ADR-0021）。
 
 ## 包含內容
 
 | 層次 | 作用 |
 | --- | --- |
-| [**儀表板**](/zh-Hant/docs/analytics/dashboards) | 4 個開箱即用的儀表板（CRM、銷售、服務、高階主管） |
-| [**報表**](/zh-Hant/docs/analytics/reports) | 涵蓋潛在客戶、交易、工單、合約的 10+ 個標準報表 |
-| [**多維資料集**](/zh-Hant/docs/analytics/cubes) | 4 個多維資料集（銷售、管道、服務、行銷），用於自助分析 |
+| [**儀表板**](/zh-Hant/docs/analytics/dashboards) | **五個**開箱即用的儀表板 —— CRM Overview、Sales Performance、Sales Activity、Customer Service、Executive Overview |
+| [**報表**](/zh-Hant/docs/analytics/reports) | **十份**標準報表 —— 交易 4 份、工單 3 份，潛在客戶、客戶、流失各 1 份 |
+| [**多維資料集**](/zh-Hant/docs/analytics/cubes) | `src/datasets/` 下的**九個** dataset，也就是上面兩層按名字繫結的那一層 |
+
+上表有兩個數字過去寫的是別的樣子，去找東西之前值得先知道。**這裡沒有合約報表** —— 也建不出來：`src/datasets/` 只讀九個物件，`crm_contract` 不在其中，所以分析裡沒有任何東西能對合約做計數、求和或分組。另外，**沒有任何 cube 叫這四個名字** —— *Sales*、*Pipeline*、*Service*、*Marketing* 在應用裡零命中。前三個由哪些 dataset 回答、第四個為什麼連資料來源都沒有，見 [多維資料集](/zh-Hant/docs/analytics/cubes)。
 
 ## 開箱即用的能力
 
@@ -33,32 +35,34 @@ HotCRM 分析將你的 CRM 活動轉化為**決策**。三個層次協同運作�
 
 管理記錄的共享規則同樣管理儀表板和報表：
 
-- 執行 *Pipeline by Stage* 的業務代表只能看到自己的管道。
+- 執行 **Opportunities by Stage** 的業務代表只能看到自己的交易。
 - 經理看到其團隊的彙總。
 - 高階主管看到全公司範圍。
 
 這意味著**一個儀表板**適用於整個組織——每個人看到的內容取決於他們的身分。
 
+*Pipeline by Stage* 不是一張可以執行的報表，但這個名字有兩個真身：它是 CRM Overview、Sales Performance 與 Executive Overview 共用的那塊未結管道漏斗**磁貼**（`src/dashboards/shared-widgets.ts`），也是 **Opportunities by Stage** 報表上那張長條圖的標題。在報表庫裡按這個名字搜尋，什麼也搜不到 —— 見 [報表](/zh-Hant/docs/analytics/reports)。
+
 ## 在哪裡可以找到
 
-在 Enterprise CRM 應用中，**分析**群組包含：
+在 Enterprise CRM 應用裡，這個群組叫 **Insights**，下面有五個條目：
 
-- **儀表板** — 視覺化中樞。
-- **報表** — 報表庫。
-- **多維資料集** — 資料建模層（管理員）。
+- **CRM Overview** —— 跨職能的那塊儀表板。
+- **Forecasts** —— 預測記錄本身。
+- **Pipeline Coverage**、**Lead Inflow**、**SLA Performance** —— 三張按名字釘在側邊欄上的報表。
+
+沒有 *Analytics* 群組，側邊欄上也沒有任何條目叫 *Dashboards*、*Reports* 或 *Cubes*。其餘儀表板各自釘在負責它的群組下 —— **Sales Performance** 在 Sales、**Sales Activity** 在 Activity、**Service Overview** 在 Service —— 報表庫裡剩下的報表則從報表介面進入，而不是從導覽進入。整條側邊欄逐組的列法，見 [快速導覽](/zh-Hant/docs/getting-started/quick-tour)。
 
 ## AI 驅動的洞察
 
-AI Copilot 可以直接從多維資料集讀取資料——可以提出如下問題：
+**在本應用這一側，沒有任何東西把 Copilot 連到某個 dataset 上。** `src/skills/` 下的六個技能，沒有一個點名任何 dataset、cube 或度量。其中負責回答資料問題的那個 —— **Live Data Access** —— 接的是平台的物件工具，而它的指令要求先重新讀一遍物件的 schema，再在記錄上做彙總。所以 Copilot 的回答是從物件上算出來的，而不是從編譯好的 cube 上讀出來的。
 
-- *"是什麼造成了承諾額與預測額之間的差距？"*
-- *"為什麼上一季東區比西區少成交了 3 筆交易？"*
-- *"告訴我哪些產品與更長的銷售週期相關。"*
+這也決定了能問它什麼。*"是什麼造成了承諾額與預測額之間的差距？"* 背後是有資料的：**Commit**、**Quota**、**Closed**、**Pipeline** 都是預測記錄上真實的數字。*"為什麼上一季東區比西區少成交了 3 筆交易？"* 與 *"告訴我哪些產品與更長的銷售週期相關。"* 則沒有 —— 交易上不存區域，沒有任何 dataset 讀行項目，而商機唯一帶著的那個時長（**Days in Current Stage**）是查詢之後才算的公式，什麼都彙總不了。這些缺口逐條列在 [多維資料集](/zh-Hant/docs/analytics/cubes)。
 
-更多內容請參閱 [銷售技能](/zh-Hant/docs/ai-copilot/sales-copilot)。
+平台自帶的 agent 是否另外也讀編譯後的 cube，是關於執行時而不是關於本應用的問題 —— 所以本頁對它不做任何方向上的斷言，請對著你自己的部署去核。銷售側的技能各自做什麼，見 [銷售技能](/zh-Hant/docs/ai-copilot/sales-copilot)。
 
 ## 從這裡開始
 
-- [儀表板](/zh-Hant/docs/analytics/dashboards) — 四個內建儀表板。
-- [報表](/zh-Hant/docs/analytics/reports) — 標準報表庫。
-- [多維資料集](/zh-Hant/docs/analytics/cubes) — 適合想要自行建構的分析師。
+- [儀表板](/zh-Hant/docs/analytics/dashboards) —— 五個內建儀表板。
+- [報表](/zh-Hant/docs/analytics/reports) —— 十份標準報表。
+- [多維資料集](/zh-Hant/docs/analytics/cubes) —— 底下的九個 dataset，以及每個能回答什麼、不能回答什麼。

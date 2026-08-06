@@ -1,6 +1,6 @@
 ---
 title: 分析
-description: 仪表盘、报表，以及为它们提供支持的多维数据集——HotCRM 如何将日常活动转化为洞察。
+description: 仪表盘、报表，以及它们底下的语义层——HotCRM 如何将日常活动转化为洞察。
 ---
 
 # 分析
@@ -9,15 +9,17 @@ HotCRM 分析将你的 CRM 活动转化为**决策**。三个层次协同工作�
 
 - **仪表盘** — 面向高管、经理和销售代表的可视化一览视图。
 - **报表** — 任何人都可以筛选和导出的详细列表与汇总报表。
-- **多维数据集** — 底层数据层，可用于自助式切片分析。
+- **多维数据集** — 底下的语义层。在本应用里，这一层是一组 **dataset**：HotCRM 自己不声明任何 cube，由分析服务在内部把每个 dataset 编译成它的 cube（ADR-0021）。
 
 ## 包含内容
 
 | 层次 | 作用 |
 | --- | --- |
-| [**仪表盘**](/zh-Hans/docs/analytics/dashboards) | 4 个开箱即用的仪表盘（CRM、销售、服务、高管） |
-| [**报表**](/zh-Hans/docs/analytics/reports) | 涵盖线索、交易、工单、合同的 10+ 个标准报表 |
-| [**多维数据集**](/zh-Hans/docs/analytics/cubes) | 4 个多维数据集（销售、管道、服务、市场营销），用于自助分析 |
+| [**仪表盘**](/zh-Hans/docs/analytics/dashboards) | **五个**开箱即用的仪表盘 —— CRM Overview、Sales Performance、Sales Activity、Customer Service、Executive Overview |
+| [**报表**](/zh-Hans/docs/analytics/reports) | **十份**标准报表 —— 交易 4 份、工单 3 份，线索、客户、流失各 1 份 |
+| [**多维数据集**](/zh-Hans/docs/analytics/cubes) | `src/datasets/` 下的**九个** dataset，也就是上面两层按名字绑定的那一层 |
+
+上表有两个数字过去写的是别的样子，去找东西之前值得先知道。**这里没有合同报表** —— 也建不出来：`src/datasets/` 只读九个对象，`crm_contract` 不在其中，所以分析里没有任何东西能对合同做计数、求和或分组。另外，**没有任何 cube 叫这四个名字** —— *Sales*、*Pipeline*、*Service*、*Marketing* 在应用里零命中。前三个由哪些 dataset 回答、第四个为什么连数据源都没有，见 [多维数据集](/zh-Hans/docs/analytics/cubes)。
 
 ## 开箱即用的能力
 
@@ -33,32 +35,34 @@ HotCRM 分析将你的 CRM 活动转化为**决策**。三个层次协同工作�
 
 管理记录的共享规则同样管理仪表盘和报表：
 
-- 运行 *Pipeline by Stage* 的销售代表只能看到自己的管道。
+- 运行 **Opportunities by Stage** 的销售代表只能看到自己的交易。
 - 经理看到其团队的汇总。
 - 高管看到全公司范围。
 
 这意味着**一个仪表盘**适用于整个组织——每个人看到的内容取决于他们的身份。
 
+*Pipeline by Stage* 不是一张可以运行的报表，但这个名字有两个真身：它是 CRM Overview、Sales Performance 与 Executive Overview 共用的那块未结管道漏斗**磁贴**（`src/dashboards/shared-widgets.ts`），也是 **Opportunities by Stage** 报表上那张柱状图的标题。在报表库里按这个名字搜索，什么也搜不到 —— 见 [报表](/zh-Hans/docs/analytics/reports)。
+
 ## 在哪里可以找到
 
-在 Enterprise CRM 应用中，**分析**组包含：
+在 Enterprise CRM 应用里，这个分组叫 **Insights**，下面有五个条目：
 
-- **仪表盘** — 可视化中枢。
-- **报表** — 报表库。
-- **多维数据集** — 数据建模层（管理员）。
+- **CRM Overview** —— 跨职能的那块仪表盘。
+- **Forecasts** —— 预测记录本身。
+- **Pipeline Coverage**、**Lead Inflow**、**SLA Performance** —— 三张按名字钉在侧边栏上的报表。
+
+没有 *Analytics* 分组，侧边栏上也没有任何条目叫 *Dashboards*、*Reports* 或 *Cubes*。其余仪表盘各自钉在负责它的分组下 —— **Sales Performance** 在 Sales、**Sales Activity** 在 Activity、**Service Overview** 在 Service —— 报表库里剩下的报表则从报表界面进入，而不是从导航进入。整条侧边栏逐组的列法，见 [快速导览](/zh-Hans/docs/getting-started/quick-tour)。
 
 ## AI 驱动的洞察
 
-AI Copilot 可以直接从多维数据集读取数据——可以提出如下问题：
+**在本应用这一侧，没有任何东西把 Copilot 连到某个 dataset 上。** `src/skills/` 下的六个技能，没有一个点名任何 dataset、cube 或度量。其中负责回答数据问题的那个 —— **Live Data Access** —— 接的是平台的对象工具，而它的指令要求先重新读一遍对象的 schema，再在记录上做聚合。所以 Copilot 的回答是从对象上算出来的，而不是从编译好的 cube 上读出来的。
 
-- *"是什么造成了承诺额与预测额之间的差距？"*
-- *"为什么上季度东区比西区少成交了 3 笔交易？"*
-- *"告诉我哪些产品与更长的销售周期相关。"*
+这也决定了能问它什么。*"是什么造成了承诺额与预测额之间的差距？"* 背后是有数据的：**Commit**、**Quota**、**Closed**、**Pipeline** 都是预测记录上真实的数字。*"为什么上季度东区比西区少成交了 3 笔交易？"* 与 *"告诉我哪些产品与更长的销售周期相关。"* 则没有 —— 交易上不存区域，没有任何 dataset 读行项目，而商机唯一带着的那个时长（**Days in Current Stage**）是查询之后才算的公式，什么都聚合不了。这些缺口逐条列在 [多维数据集](/zh-Hans/docs/analytics/cubes)。
 
-更多内容请参阅 [销售技能](/zh-Hans/docs/ai-copilot/sales-copilot)。
+平台自带的 agent 是否另外也读编译后的 cube，是关于运行时而不是关于本应用的问题 —— 所以本页对它不做任何方向上的断言，请对着你自己的部署去核。销售侧的技能各自做什么，见 [销售技能](/zh-Hans/docs/ai-copilot/sales-copilot)。
 
 ## 从这里开始
 
-- [仪表盘](/zh-Hans/docs/analytics/dashboards) — 四个内置仪表盘。
-- [报表](/zh-Hans/docs/analytics/reports) — 标准报表库。
-- [多维数据集](/zh-Hans/docs/analytics/cubes) — 适合想要自行构建的分析师。
+- [仪表盘](/zh-Hans/docs/analytics/dashboards) —— 五个内置仪表盘。
+- [报表](/zh-Hans/docs/analytics/reports) —— 十份标准报表。
+- [多维数据集](/zh-Hans/docs/analytics/cubes) —— 底下的九个 dataset，以及每个能回答什么、不能回答什么。
