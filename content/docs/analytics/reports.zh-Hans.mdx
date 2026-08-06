@@ -1,6 +1,6 @@
 ---
 title: 报表
-description: 标准报表库——管道、赢单/丢单、预测、工单量、SLA 绩效等。
+description: 标准报表库——HotCRM 就商机、线索、工单与客户发布的十份报表，以及缺席的那些各自还缺什么。
 ---
 
 # 报表
@@ -9,20 +9,34 @@ description: 标准报表库——管道、赢单/丢单、预测、工单量、
 
 ## 标准报表
 
-HotCRM 开箱即用地提供以下报表：
+HotCRM 开箱即用地发布 **十份** 报表 —— `src/reports/index.ts` 这个 barrel 就是整个报表库。下面每一节先列出它发布的那几份，再逐条点名本页曾经承诺过的名字，并说明语义层能不能回答它：
 
 ### 📈 销售报表
 
+`src/reports/opportunity.report.ts` 发布的商机报表共 **四份**：
+
 | 报表 | 显示内容 |
 | --- | --- |
-| **Pipeline by Stage** | 所有未结交易按阶段分组，带 $ 合计 |
-| **Forecast vs Actual** | 成交赢单对比预测，按周期 |
-| **Win/Loss Analysis** | 已结交易按赢单/丢单分组，带原因分解 |
-| **Sales Cycle Length** | 从创建到成交的天数，按所有者和产品 |
-| **Top Performing Reps** | 成交排行榜 |
-| **Stale Opportunities** | 14 天以上无活动的交易 |
-| **Big Deals Won** | ≥ $100K 的成交赢单商机 |
-| **Discount Approval Activity** | 所有审批请求，按状态和审批人 |
+| **Opportunities by Stage** | 按阶段的管道金额与平均赢单概率，只算今年内成交的、并排除已丢单的交易 —— 附一张按阶段的金额柱状图 |
+| **Won Opportunities by Owner** | 每位销售代表的赢单金额，图表标题是 *Revenue by Sales Rep* |
+| **Pipeline Coverage by Forecast × Quarter** | 未结管道的矩阵：行是预测类别，列是预计成交季度，每格给出金额与商机数 |
+| **Opportunity Funnel by Owner → Stage** | 两级漏斗 —— 每位代表的商机盘子再按阶段拆开，带金额、商机数与平均概率 |
+
+四份都绑定 `opportunity_metrics`（`src/datasets/opportunity.dataset.ts`），这也正是「管道」在这里和在仪表盘上是同一个数字的原因。
+
+本节曾经列出的八个名字哪儿都没有发布。其中两个是真名，但它们属于报表以外的东西：
+
+- **Pipeline by Stage** 是仪表盘**磁贴**标题和图表标题，不是报表。磁贴是 **CRM Overview**、**Sales Performance** 与 **Executive Overview** 三个仪表盘共用的未结管道漏斗（`src/dashboards/shared-widgets.ts`）；图表则是上面 **Opportunities by Stage** 那张柱状图，它的标题就写作 *Pipeline by Stage*。在报表库里按这个名字搜，一份都搜不到；你要的那份叫 **Opportunities by Stage**。
+- **Stale Opportunities** 是商机上的**列表视图** —— *⚠️ Stale Opportunities · Longest in Stage First*，也就是 **Stale** 标签页（`src/views/opportunity.view.ts`）—— 而且它并不施加本表所说的 14 天筛选。它列出**所有**未结交易，按 **Stage Entry Date** 升序排，停留最久的排在最上面；那 14 天属于负责催办的 `opportunity_stagnation` 流程，不属于这个视图。分析侧也重建不出来：**Days in Current Stage** 是查询之后才求值的公式，任何东西都无法按它分组、筛选或排序，也没有任何数据集把它暴露出来。
+- **Top Performing Reps** 是存在的，只是真名不同：**Won Opportunities by Owner** 就是赢单排行榜，**Opportunity Funnel by Owner → Stage** 则是同一份排名再把每人的各阶段摊开。`opportunity_metrics` 声明了 **Owner** 维度 —— 这一点和 `case_metrics` 不同，也正是服务侧没有客服排行的原因。
+
+剩下五个只是单纯不存在，其中三个自己建得出来、两个建不出来：
+
+- **Forecast vs Actual** —— 建得出来，但不是从管道数据集：配额在 `forecast_metrics`（`src/datasets/forecast.dataset.ts`）里，一位负责人一个周期一行，带 **Quota**、**Closed**、**Pipeline**、**Commit** 以及派生的 **Attainment**。基于它的任何报表都必须把周期钉死 —— 要么按 **Period** 分组，要么筛到单个 **Period Type** + **Period Start** —— 因为这些度量都是普通求和，而表里同时存着好几个周期。
+- **Win/Loss Analysis** —— 建得出来：**Win Reason** 与 **Loss Reason** 是维度，**Won Deals**、**Lost Deals**、**Settled Deals**、**Won Revenue**、**Lost Revenue** 与 **Win Rate** 都是 `opportunity_metrics` 上已声明的度量。
+- **Big Deals Won** —— 建得出来：赢单金额就是 **Won Revenue**，而按金额卡一个阈值是普通的报表筛选条件。
+- **Sales Cycle Length** —— 建不出来。没有任何地方存着销售周期时长：商机上有 **Stage Entry Date** 和 **Close Date**，但没有「已过天数」这样的列，而它唯一带的时长 **Days in Current Stage** 就是上面那个查询后公式。*按产品* 也没有落点 —— 没有任何数据集读 `crm_opportunity_line_item`。
+- **Discount Approval Activity** —— 建不出来。审批本身是真的（`src/flows/opportunity-approval.flow.ts`，以及商机上的 **Approval Status**），但没有任何维度把那个字段暴露出来；折扣则是行项目上的百分比（`crm_opportunity_line_item.discount`），而没有任何数据集读行项目。
 
 ### 🎯 线索报表
 
@@ -59,20 +73,31 @@ HotCRM 开箱即用地提供以下报表：
 
 **SLA Performance Report 里同样没有任何首次响应数字**，而且它那个 SLA 数字是 **SLA Violated** 标志的平均值，也就是违约 *率*，不是准时率。本应用根本不度量首次响应：**First Response Date** 只在工单上第一次记录 *已经发生过* 的通话或会议时被盖上，此后从不与任何目标比较；`case_metrics` 没有声明任何首次响应度量，所以没有报表、也没有仪表盘磁贴能报出一个来。参见 [SLA 与升级](/zh-Hans/docs/service/sla-and-escalation)。
 
-### 💰 收入报表
+### 💰 客户与收入报表
+
+`src/reports/account.report.ts` 与 `src/reports/churn.report.ts` 发布了 **两份** 报表，而这一节正是它们该待的地方 —— 它们从未在本页出现过：
 
 | 报表 | 显示内容 |
 | --- | --- |
-| **Contracts Expiring** | 在未来 30/60/90 天内结束的有效合同 |
-| **Active Contracts by Product** | 经常性收入汇总 |
-| **Renewal Pipeline** | 与续约合同关联的商机 |
+| **Accounts by Industry and Type** | 有效客户的矩阵 —— 行是行业，列是客户类型，每格给出客户数与 **Annual Revenue** 合计 |
+| **Customer Churn Signals** | 面向主动挽留的三块面板：**At-Risk Accounts**（有效但 60 天以上无活动，按行业）、**Silent High-Value Accounts**（战略级与企业级客户沉默 90 天以上，按类型）与 **Recently Lost Opportunities**（最近 30 天丢单，按负责人） |
+
+本节曾经列出的三份合同报表哪儿都没有发布，而且按它们写的口径一份都建不出来，原因是同一个：**没有合同数据集**。`src/datasets/` 覆盖九个对象 —— 客户、工单、联系人、活动、预测、线索、商机、产品、任务 —— `crm_contract` 不在其中，所以分析侧根本无法对合同计数、求和或分组。
+
+- **Contracts Expiring** —— 问题本身是真实的，回答它的是**视图**而不是报表：**Renewal Calendar**（合同的 *Renewals* 标签页）把每份合同按 **End Date** 摆在日历上，**Contract Terms** 则把同样的合同期画成甘特图（`src/views/contract.view.ts`）。两者都在列记录，都不做合计 —— 因为它们背后没有可供合计的数据集。
+- **Active Contracts by Product** —— 两头都够不着：既没有合同数据集，`product_metrics` 又只是产品目录的汇总（**Category**、产品数与目录价合计），它从不跨到合同，也不跨到行项目。
+- **Renewal Pipeline** —— 按它写的口径（*与续约合同关联的商机*）建不出来：这条关联是反着走的（`crm_contract.crm_opportunity`），而且没有任何维度把它暴露出来。不过续约管道本身建得出来：**Deal Type** 是 `opportunity_metrics` 上的维度，*Existing Customer - Renewal* 正是它的取值之一。
 
 ### 📣 市场营销报表
 
-| 报表 | 显示内容 |
-| --- | --- |
-| **Campaign ROI** | 支出对比来源/影响管道和收入 |
-| **Campaign Engagement** | 按营销活动的打开 / 点击 / 响应 / 转化 |
+**`src/reports/` 没有发布任何营销报表，而且自建也建不出来** —— 全页只有这一节缺的不是报表，而是数据源。`src/datasets/` 里没有营销活动数据集，所以没有任何报表、也没有任何仪表盘磁贴能对营销活动的数字做聚合。
+
+记录本身是带着这些数字的。`crm_campaign` 上有 **Budgeted Cost**、**Actual Cost**、**Expected Revenue**、**Actual Revenue**，有 **Num Sent / Responses / Leads / Converted Leads / Opportunities / Won Opportunities** 这一组计数器，还有两个公式字段 —— **Response Rate %** 与 **ROI %** —— 它们都摆在营销活动记录的 **Performance** 分区里（`src/views/campaign.view.ts`）。`crm_campaign_member` 则逐个成员盖上 **First Opened**、**First Clicked**、**Response Date** 与 **Responded**。
+
+- **Campaign ROI** —— 单个营销活动的数字在记录上是有的，就是上面那个 **ROI %** 公式。没有的是任何聚合或排名的办法：没有营销活动数据集，就没有度量、没有维度、也没有分组。从商机那一侧做归因同样缺一块 —— `crm_opportunity.crm_campaign` 是真实的 lookup，但 `opportunity_metrics` 没有声明营销活动维度，所以*来源*收入与*影响*收入在分析侧也归不了因。
+- **Campaign Engagement** —— 同样的原因，只是低一层：打开、点击与响应都盖在各个成员记录上，而没有任何东西把它们汇总起来。「按营销活动的转化」还多一个问题：`lead_metrics` 从不跨到营销活动。
+
+要补上这个缺口，得新增 `src/datasets/campaign.dataset.ts` —— 那是改源码加重新部署，不是报表构建器够得着的事。营销活动记录今天能看到什么，见 [营销活动](/zh-Hans/docs/marketing/campaigns)。
 
 ## 使用报表
 
@@ -92,7 +117,7 @@ HotCRM 开箱即用地提供以下报表：
 
 ## 权限
 
-- 用户只能看到他们有权访问的记录——运行 *Pipeline by Stage* 的销售代表看到自己的交易；经理看到团队的。
+- 用户只能看到他们有权访问的记录——运行 *Opportunities by Stage* 的销售代表看到自己的交易；经理看到团队的。
 - 管理员可以通过**字段级安全**锁定哪些字段出现在报表中。
 - 敏感报表可以限制给特定的 [配置文件](/zh-Hans/docs/administration/profiles)。
 
@@ -120,7 +145,7 @@ HotCRM 开箱即用地提供以下报表：
 
 一种常见模式：
 
-- *Pipeline by Stage* → 周一早上 8 点发给销售团队。
+- *Opportunities by Stage* → 周一早上 8 点发给销售团队。
 - *SLA Performance Report* → 每日下午 6 点发给服务经理。
 - *Cases Opened by Priority × Day* → 周五下午 4 点发给客户成功团队。
 
@@ -132,8 +157,8 @@ HotCRM 开箱即用地提供以下报表：
 
 ## 给经理的提示
 
-- ✅ 每周向你的团队安排 **Stale Opportunities**——它能强制跟进纪律。
-- ✅ 每月与销售教练一起使用 **Win/Loss Analysis**——它是最好的单一辅导工具。
+- ✅ 每周向你的团队安排 **Opportunity Funnel by Owner → Stage**——它能逐人强制跟进纪律。至于停滞的交易本身，请把人指到商机的 **Stale** 标签页：它是列表视图，定时推送不了，但停摆最久的交易就排在那儿。
+- ✅ 没有赢单/丢单报表可以安排，但这份分析只差一份自建报表——把 `opportunity_metrics` 按 **Loss Reason** 分组，并把 **Lost Deals** 与 **Win Rate** 并排看。每月与销售教练一起跑，它是最好的单一辅导工具。
 
 ## 给管理员的提示
 
