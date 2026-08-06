@@ -98,7 +98,7 @@ For deeper analysis, [export to a data warehouse](/docs/guides/import-and-export
 
 | Item | Limit |
 | --- | --- |
-| Workflow re-evaluations per save | **5** (then halts) |
+| Flow re-evaluations per save | No fixed budget — a flow's own writes re-enter the trigger order; the engine breaks self-trigger loops with a **re-entrancy guard** rather than a counter (a backstop, not a cap). See [Automation](/docs/administration/automation) |
 | Flow steps | **500** per flow |
 | Flow loop iterations | **2,000** |
 | Scheduled job concurrency | **20** simultaneous tenant-wide |

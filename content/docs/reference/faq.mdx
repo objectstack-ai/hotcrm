@@ -72,15 +72,15 @@ The dry-run report tells you which row failed and why. Always dry-run first.
 
 ## ⚙️ Automation
 
-### My workflow / flow didn't fire — why?
+### My flow didn't fire — why?
 
 Check in order:
 
-1. Is the rule **Active**?
-2. Does the record actually **match the condition** at the time of save?
-3. Did a **validation rule** block the save before the workflow could fire?
-4. Did a **prior workflow** change the record so the condition no longer matched?
-5. Workflows re-evaluate up to **5 times** — beyond that, the cascade stops.
+1. Is the flow **Active**?
+2. Does the record actually **match the start condition** at the time of save?
+3. Did a **validation rule** block the save before the flow could fire?
+4. Did an **earlier flow** change the record so the condition no longer matched?
+5. Was the flow **re-entered for the same record while its previous run was still in flight**? The engine's re-entrancy guard skips that run and logs a warning. There is no re-evaluation count to compare against — the guard is a backstop, not a stop condition. See [Administration › Automation](/docs/administration/automation).
 
 The **Process Monitor** (Setup → Process Monitor) shows the last 24 hours of automation runs with success/failure.
 
