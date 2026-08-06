@@ -23,6 +23,18 @@ column, with Critical marked as the one row `case_sla_defaults` turns into a
 deadline. The cube's SLA measure is named as what `case_metrics` really declares:
 an **SLA Violation Rate**, not a compliance percentage.
 
+**The Service reports table listed six reports where `src/reports/case.report.ts`
+publishes three.** *Cases by Status and Priority*, the SLA report and *Cases
+Opened by Priority × Day* are real; *Case Volume by Origin*, *Case Resolution
+Time*, *Top Accounts by Case Volume*, *Reopened Cases* and *CSAT by Agent* are
+not published anywhere, and most of them ask `case_metrics` for something it
+does not carry — there is no agent dimension, no account dimension, no reopen
+marker on the case and no measure over **Customer Satisfaction**, so three of
+those five cannot be built as custom reports either. The section now lists the
+three real reports with their real grouping, and says of each absent one why it
+is absent. Two subscription examples that named a report from that list now name
+a published one.
+
 **The Lead reports section listed three reports that do not exist**, and omitted
 the one that does. `src/reports/` publishes exactly one lead report — **Lead
 Engagement by Month × Source** (`src/reports/lead.report.ts`), a matrix of
