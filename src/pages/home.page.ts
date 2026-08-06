@@ -231,11 +231,18 @@ export const SalesHomePage: Page = {
         {
           type: 'page:card',
           id: 'ai_briefing',
-          label: 'Today with Copilot',
+          // The assistant is the PLATFORM's (`ask`), not an app-owned persona:
+          // HotCRM contributes skills, the agent lives in the cloud side
+          // (maintainer ruling on #612, 2026-08-04). The retired `sales_copilot`
+          // agent (#512, ADR-0063 §2) must not be named in live UI copy — and
+          // the entry point is the assistant panel the platform opens from the
+          // right edge of every page, which is the wording
+          // `content/docs/ai-copilot/index.mdx` landed in #611/PR #1001.
+          label: 'Today with the AI Assistant',
           properties: {
-            title: 'Ask the Sales Copilot',
+            title: 'Ask the AI Assistant',
             description:
-              'Open the floating Copilot (bottom-right) and ask "what should I focus on today?" — it sees your live pipeline, schema, and accounts.',
+              'Open the assistant panel from the right edge of the page and ask "what should I focus on today?" — it sees your live pipeline, schema, and accounts.',
             bordered: true,
           },
         },
