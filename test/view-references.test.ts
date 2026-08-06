@@ -1,0 +1,457 @@
+// Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
+
+import { describe, it, expect } from 'vitest';
+import { isDateMacroToken } from '@objectstack/spec/data';
+import stack from '../objectstack.config';
+import { OPPORTUNITY_STAGE_OPTIONS } from '../src/objects/_picklists';
+import {
+  type AnyRec,
+  objects,
+  pages,
+  views,
+  objectNames,
+  fieldsOf,
+  walk,
+} from './helpers/metadata-fixtures';
+
+/**
+ * Dangling-reference guards for the VIEW surface.
+ *
+ * Everything a list view or form view names — the fields it sections, sorts and
+ * filters on, the option values it tints rows and kanban columns by, the stage
+ * enumerations it draws, the tabs that reach it. `os validate` checks that a
+ * view has the SHAPE of a view; nothing checked that the names inside it
+ * resolve, and every guard here started as a defect found by clicking through
+ * the app, where the bad name rendered as an empty column or a silently
+ * untinted row rather than as an error.
+ *
+ * ---
+ *
+ * Split out of `test/metadata-references.test.ts` by family (#814).
+ *
+ * That file had grown to 99,872 bytes against the 100KB ceiling in
+ * `scripts/check-source-hygiene.mjs` — 97.5% of the quota — so the next PR to
+ * add a guard anywhere in it would have been failed by `pnpm hygiene` before
+ * it was reviewed. #815 had already been forced into an unplanned split for
+ * exactly that reason. The four files now split the guards by the metadata
+ * surface they resolve against; this one owns views and list views.
+ *
+ * The derivations every one of them shares (`objects`, `views`, `walk`, the
+ * locale packs, the platform-object allowlist) live in
+ * `test/helpers/metadata-fixtures.ts`. No assertion, helper or fixture changed
+ * in the split — see the reconciliation table on the PR.
+ */
+
+describe('view field references resolve', () => {
+  /** Views are keyed by object; `defineView` output carries the object on its data provider. */
+  const viewObjectOf = (v: AnyRec): string | undefined =>
+    v.list?.data?.object ?? v.form?.data?.object ?? v.object;
+
+  it('every form section field is a real field on the view object', () => {
+    const bad: string[] = [];
+    for (const v of views) {
+      const objectName = viewObjectOf(v);
+      if (!objectName || !objectNames.has(objectName)) continue;
+      const known = fieldsOf(objectName);
+      // The default `form` plus every named form under `formViews`. (The
+      // container key is `formViews` — iterating a non-existent `forms` key
+      // silently skipped every named form view.)
+      const forms = [v.form, ...Object.values(v.formViews ?? {})].filter(Boolean) as AnyRec[];
+      for (const form of forms) {
+        for (const section of form.sections ?? []) {
+          for (const f of section.fields ?? []) {
+            const name = typeof f === 'string' ? f : f?.field;
+            if (name && !known.includes(name)) {
+              bad.push(`${objectName} form "${form.name ?? 'default'}": no field "${name}"`);
+            }
+          }
+        }
+      }
+    }
+    expect(bad, `dangling form fields:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('every list sort targets a real field', () => {
+    const bad: string[] = [];
+    for (const v of views) {
+      const objectName = viewObjectOf(v);
+      if (!objectName || !objectNames.has(objectName)) continue;
+      const known = fieldsOf(objectName);
+      // The container key is `listViews` — iterating a non-existent `views`
+      // key silently skipped every named list view.
+      const lists = [v.list, ...Object.values(v.listViews ?? {})].filter(Boolean) as AnyRec[];
+      for (const list of lists) {
+        for (const s of list.sort ?? []) {
+          if (s.field && !known.includes(s.field)) {
+            bad.push(`${objectName} view "${list.name ?? 'default'}": sorts on missing "${s.field}"`);
+          }
+        }
+      }
+    }
+    expect(bad, `dangling sort fields:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+});
+
+describe('priority queues sort by urgency, not alphabetically', () => {
+  /**
+   * `priority desc` on the select itself compares the raw option strings, so
+   * cases came back medium > low > high > critical — the exact inversion of
+   * urgency. Queue views must sort on the materialised `priority_rank`.
+   */
+  const rankedObjects = ['crm_case', 'crm_task'];
+
+  it.each(rankedObjects)('%s defines a numeric priority_rank', (objectName) => {
+    const field = objects.find((o) => o.name === objectName)?.fields?.priority_rank;
+    expect(field, `${objectName}.priority_rank missing`).toBeTruthy();
+    expect(field.type).toBe('number');
+  });
+
+  it('no view sorts on the raw priority select', () => {
+    const bad: string[] = [];
+    for (const v of views) {
+      const lists = [v.list, ...Object.values(v.listViews ?? {})].filter(Boolean) as AnyRec[];
+      for (const list of lists) {
+        for (const s of list.sort ?? []) {
+          if (s.field === 'priority') {
+            bad.push(`view "${list.name ?? list.label ?? 'default'}" sorts on raw priority`);
+          }
+        }
+      }
+    }
+    expect(bad, `${bad.join('\n  ')}`).toEqual([]);
+  });
+});
+
+describe('filter template tokens are resolvable', () => {
+  /**
+   * Token support differs per data path — and the difference MOVED under us at
+   * the 17.0 upgrade, so the shape of this rule changed with it (#730).
+   *
+   * - LIST-VIEW data path (`/api/v1/data/...`): resolves user tokens AND date
+   *   macros. The date-macro half is new. Through 16.1.0 nothing on the server
+   *   substituted placeholders on the read path, so a macro shipped as a
+   *   literal string — and because `'2026-…' < '{…'` is lexicographically
+   *   TRUE, a `< {180_days_ago}` filter matched freshly-reviewed articles
+   *   (inverted semantics, not merely empty). That is why this rule used to
+   *   read "user tokens ONLY", and why views were written as operator-only
+   *   filters plus a sort.
+   *
+   *   `resolveFilterTokens()` was wired into the ObjectQL READ path in
+   *   17.0.0-rc.0 (objectql `feat(filters): evaluate {filter-token}
+   *   placeholders server-side`, #3582) — ahead of the middleware chain,
+   *   covering `find`/`findOne`/`count`/`aggregate`, which is the one gate
+   *   every server-side read passes through, saved-view filters included. The
+   *   lexicographic hazard above is gone in BOTH directions now: a known token
+   *   is substituted before the driver sees it, and an unknown one throws
+   *   `Unresolvable filter placeholder` naming the near-miss fix instead of
+   *   comparing as text.
+   *
+   *   Measured on the pinned 17.0.0-rc.2, not inferred from the changelog:
+   *   `test/forecast-current-quarter-view.test.ts` runs a shipped view filter
+   *   through a real engine and pins one quarter selected out of three, plus
+   *   the throw on the retired `{this_quarter_start}` spelling.
+   *
+   * - ANALYTICS path (dashboard widgets / dataset reports,
+   *   `/api/v1/analytics/...`): resolves the DATE_MACRO_TOKENS vocabulary (the
+   *   YTD revenue widget returns a non-zero sum, impossible with a literal
+   *   token), but still NO user token — `{current_user}` and even
+   *   `{current_user_id}` match no owner (see crm.app.ts's My Work note). That
+   *   half is unchanged and tracked at #510, so the two rules below remain
+   *   asymmetric — just not in the direction they were written for.
+   */
+  const dashboards: AnyRec[] = (stack as any).dashboards ?? [];
+  const reports: AnyRec[] = (stack as any).reports ?? [];
+
+  const USER_TOKENS = new Set(['current_user_id', 'current_org_id']);
+
+  /** Yield every string inside an arbitrarily nested filter value. */
+  function* filterStrings(node: unknown): Generator<string> {
+    if (typeof node === 'string') { yield node; return; }
+    if (Array.isArray(node)) { for (const item of node) yield* filterStrings(item); return; }
+    if (node && typeof node === 'object') {
+      for (const value of Object.values(node)) yield* filterStrings(value);
+    }
+  }
+
+  const badTokensIn = (
+    where: string,
+    filter: unknown,
+    allowed: (token: string) => boolean,
+    bad: string[],
+  ) => {
+    for (const s of filterStrings(filter)) {
+      for (const m of s.matchAll(/\{([^{}]+)\}/g)) {
+        if (!allowed(m[1])) bad.push(`${where}: unresolvable token "{${m[1]}}"`);
+      }
+    }
+  };
+
+  it('list view and page filters only use user tokens or date macros', () => {
+    const allowed = (t: string) => USER_TOKENS.has(t) || isDateMacroToken(t);
+    const bad: string[] = [];
+    for (const v of views) {
+      const lists = [v.list, ...Object.values(v.listViews ?? {})].filter(Boolean) as AnyRec[];
+      for (const list of lists) badTokensIn(`view "${list.name ?? 'default'}"`, list.filter, allowed, bad);
+    }
+    for (const p of pages) {
+      badTokensIn(`page "${p.name}"`, p.interfaceConfig?.filterBy, allowed, bad);
+      // Page COMPONENTS carry filters too, and did not used to be walked. Sales
+      // Home now embeds `list-view` blocks whose filters come off the saved
+      // views (#771) — those are checked above as views, but a hand-written
+      // component filter would have reached the same data path unexamined.
+      for (const c of [...walk(p.regions), ...walk(p.slots)]) {
+        badTokensIn(`page "${p.name}"/${c.id ?? c.type}`, c.properties?.filter, allowed, bad);
+        badTokensIn(`page "${p.name}"/${c.id ?? c.type}`, c.dataSource?.filter, allowed, bad);
+      }
+    }
+    expect(bad, `unresolvable view/page filter tokens:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('the widened list-view rule still rejects what neither path resolves', () => {
+    // Widening a rule is how a rule dies. `{this_quarter_start}` is the exact
+    // spelling #515 removed from `this_quarter_forecasts`, and the engine now
+    // throws on it — so it must stay rejected HERE too, at author time, rather
+    // than being waved through by the new date-macro allowance. `{current_user}`
+    // covers the other near-miss (the resolvable spelling is `{current_user_id}`).
+    const allowed = (t: string) => USER_TOKENS.has(t) || isDateMacroToken(t);
+    const bad: string[] = [];
+    badTokensIn('probe', [
+      { value: '{this_quarter_start}' },
+      { value: '{current_user}' },
+      { value: '{not_a_token}' },
+    ], allowed, bad);
+    expect(bad).toHaveLength(3);
+
+    // …and still accepts both classes it is now supposed to accept.
+    const good: string[] = [];
+    badTokensIn('probe', [
+      { value: '{current_user_id}' },
+      { value: '{current_quarter_start}' },
+      { value: '{30_days_ago}' },
+    ], allowed, good);
+    expect(good).toEqual([]);
+  });
+
+  it('dashboard widget and report filters only use date macros', () => {
+    const allowed = (t: string) => isDateMacroToken(t);
+    const bad: string[] = [];
+    for (const d of dashboards) {
+      for (const w of d.widgets ?? []) badTokensIn(`${d.name}/${w.id}`, w.filter, allowed, bad);
+    }
+    for (const r of reports) badTokensIn(`report "${r.name}"`, r.runtimeFilter, allowed, bad);
+    expect(bad, `unresolvable analytics filter tokens:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+});
+
+describe('row colors and kanban groups key off real option values', () => {
+  const viewObjectOf = (v: AnyRec): string | undefined =>
+    v.list?.data?.object ?? v.form?.data?.object ?? v.object;
+
+  it('rowColor keys on select fields are actual option values', () => {
+    // Task rows were colored by `critical`/`medium` — Case values. Task
+    // priority is low/normal/high/urgent, so urgent rows rendered uncolored.
+    const bad: string[] = [];
+    for (const v of views) {
+      const objectName = viewObjectOf(v);
+      const objDef = objects.find((o) => o.name === objectName);
+      if (!objDef) continue;
+      const lists = [v.list, ...Object.values(v.listViews ?? {})].filter(Boolean) as AnyRec[];
+      for (const list of lists) {
+        const rc = list.rowColor;
+        if (!rc?.field) continue;
+        const options = objDef.fields?.[rc.field]?.options;
+        if (!Array.isArray(options) || !options.length) continue; // not a select — booleans/numbers are fine
+        const values = new Set(options.map((o: AnyRec) => String(o.value)));
+        for (const key of Object.keys(rc.colors ?? {})) {
+          if (!values.has(key)) {
+            bad.push(`view "${list.name ?? 'default'}": rowColor key "${key}" is not an option of ${objectName}.${rc.field}`);
+          }
+        }
+      }
+    }
+    expect(bad, `dangling rowColor keys:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('kanban groupByField is a select field with options', () => {
+    const bad: string[] = [];
+    for (const v of views) {
+      const objectName = viewObjectOf(v);
+      const objDef = objects.find((o) => o.name === objectName);
+      if (!objDef) continue;
+      const lists = [v.list, ...Object.values(v.listViews ?? {})].filter(Boolean) as AnyRec[];
+      for (const list of lists) {
+        const groupBy = list.kanban?.groupByField;
+        if (!groupBy) continue;
+        const field = objDef.fields?.[groupBy];
+        if (!field) bad.push(`view "${list.name}": kanban groups by missing field "${groupBy}"`);
+        else if (!Array.isArray(field.options) || !field.options.length) {
+          bad.push(`view "${list.name}": kanban groupByField "${groupBy}" has no options`);
+        }
+      }
+    }
+    expect(bad, `broken kanban groupings:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+});
+
+/**
+ * Stage enumerations are COMPLETE, not merely valid.
+ *
+ * The two guards above answer "is every value written here a real option?" —
+ * a subset check. Nothing asked the converse, "is every real option written
+ * here?", and that is the half that broke (#759): `needs_analysis` is one of
+ * the seven canonical `OPPORTUNITY_STAGE_OPTIONS` and was absent from BOTH the
+ * detail page's stage path and the Open Deals `rowColor` map. Six of seven
+ * stages worked, so both surfaces looked fine on every deal that happened not
+ * to be in Needs Analysis — the deal that WAS lit up no step on the path and
+ * got no row tint, which reads to a user as corrupted data rather than as
+ * missing metadata.
+ *
+ * The expectation is derived from `OPPORTUNITY_STAGE_OPTIONS` itself — the
+ * single source `crm_opportunity.stage` and the `mass_update_stage` action are
+ * both built from — so an EIGHTH stage cannot ship half-covered. A hand-copied
+ * list here would need the same edit as the metadata it guards, and would
+ * therefore be forgotten in the same commit.
+ */
+describe('every canonical opportunity stage reaches the UI that enumerates stages', () => {
+  const canonical = OPPORTUNITY_STAGE_OPTIONS.map((o) => String(o.value));
+
+  /** Every `record:path` bound to `crm_opportunity.stage`, as [pageName, values]. */
+  const stagePaths = (): [string, string[]][] =>
+    pages
+      .filter((page) => page.object === 'crm_opportunity')
+      .flatMap((page) =>
+        [...walk(page.regions), ...walk(page.slots)]
+          .filter((c) => c.type === 'record:path' && c.properties?.statusField === 'stage')
+          .map((c): [string, string[]] => [
+            `${page.name} / ${c.id}`,
+            (c.properties?.stages ?? []).map((s: AnyRec) => String(s.value)),
+          ]),
+      );
+
+  /** Every list `rowColor` keyed on `crm_opportunity.stage`, as [viewName, colors]. */
+  const stageRowColors = (): [string, AnyRec][] =>
+    views
+      .filter((v) => (v.list?.data?.object ?? v.object) === 'crm_opportunity')
+      .flatMap((v) =>
+        ([v.list, ...Object.values(v.listViews ?? {})].filter(Boolean) as AnyRec[])
+          .filter((list) => list.rowColor?.field === 'stage')
+          .map((list): [string, AnyRec] => [
+            `view "${list.name ?? 'default'}"`,
+            list.rowColor?.colors ?? {},
+          ]),
+      );
+
+  it('the canonical stage list is the set the object validates against', () => {
+    // Guards the guard twice over: an empty or renamed constant would make
+    // every assertion below pass by comparing against nothing, and a `stage`
+    // field that stopped being built from this constant would leave the two
+    // sites below chasing a list the runtime no longer enforces.
+    expect(canonical.length, 'OPPORTUNITY_STAGE_OPTIONS is empty').toBeGreaterThan(0);
+    const objDef = objects.find((o) => o.name === 'crm_opportunity');
+    const fieldValues = (objDef?.fields?.stage?.options ?? []).map((o: AnyRec) => String(o.value));
+    expect([...fieldValues].sort(), 'crm_opportunity.stage no longer mirrors OPPORTUNITY_STAGE_OPTIONS')
+      .toEqual([...canonical].sort());
+  });
+
+  it('every stage has a step on the opportunity stage path', () => {
+    const sites = stagePaths();
+    // A renamed component type or statusField would silently empty this list
+    // and turn the assertion below into a no-op — exactly how the navigation
+    // guard in `test/action-references.test.ts` spent its life passing.
+    expect(sites.length, 'no record:path bound to crm_opportunity.stage was found').toBeGreaterThan(0);
+
+    const bad: string[] = [];
+    for (const [site, values] of sites) {
+      for (const stage of canonical) {
+        if (!values.includes(stage)) bad.push(`${site}: no path step for stage "${stage}"`);
+      }
+      for (const value of values) {
+        if (!canonical.includes(value)) bad.push(`${site}: path step "${value}" is not a canonical stage`);
+      }
+    }
+    expect(bad, `incomplete stage paths:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('every stage has a row colour in the opportunity list views that tint by stage', () => {
+    const sites = stageRowColors();
+    expect(sites.length, 'no rowColor keyed on crm_opportunity.stage was found').toBeGreaterThan(0);
+
+    const bad: string[] = [];
+    for (const [site, colors] of sites) {
+      const keys = Object.keys(colors);
+      for (const stage of canonical) {
+        if (!keys.includes(stage)) bad.push(`${site}: no rowColor entry for stage "${stage}"`);
+      }
+      for (const key of keys) {
+        if (!canonical.includes(key)) bad.push(`${site}: rowColor key "${key}" is not a canonical stage`);
+      }
+    }
+    expect(bad, `incomplete stage row colours:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('stage colours stay distinguishable from one another', () => {
+    // The point of the map is that a rep can tell two stages apart at a
+    // glance; two stages sharing a hex make the tint say nothing. (#759 was
+    // nearly fixed by copying `needs_analysis`'s `#FFD700` out of
+    // _picklists.ts, one hue step from proposal's `#f59e0b`.)
+    const bad: string[] = [];
+    for (const [site, colors] of stageRowColors()) {
+      const seen = new Map<string, string>();
+      for (const key of Object.keys(colors)) {
+        const hex = String(colors[key]).toLowerCase();
+        const owner = seen.get(hex);
+        if (owner) bad.push(`${site}: "${key}" and "${owner}" are both ${hex}`);
+        else seen.set(hex, key);
+      }
+    }
+    expect(bad, `stages sharing a row colour:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+});
+
+describe('every named list view is reachable', () => {
+  const apps: AnyRec[] = (stack as any).apps ?? [];
+  const navViewNames = new Set(
+    apps.flatMap((app) =>
+      (app.navigation ?? []).flatMap(function walk(n: AnyRec): string[] {
+        return [...(n.viewName ? [n.viewName] : []), ...(n.children ?? []).flatMap(walk)];
+      })),
+  );
+
+  it('every listViews entry is referenced by the switcher tabs or app navigation', () => {
+    // With no `tabs` declared, the data-mode switcher lists every saved view
+    // automatically (ADR-0047) — nothing to check. But once a view curates a
+    // `tabs` array, only the listed views render: seven working queues
+    // (renewals_due, at_risk_accounts, stale_opportunities,
+    // closing_this_quarter, sla_at_risk, todays_tasks, overdue_tasks) shipped
+    // outside their list's tabs — defined, tested, unreachable.
+    const bad: string[] = [];
+    for (const v of views) {
+      const tabs = v.list?.tabs;
+      if (!Array.isArray(tabs) || !tabs.length) continue;
+      const tabViews = new Set(tabs.map((t: AnyRec) => t.view).filter(Boolean));
+      for (const [key, def] of Object.entries(v.listViews ?? {}) as [string, AnyRec][]) {
+        const name = def.name ?? key;
+        if (!tabViews.has(name) && !navViewNames.has(name)) {
+          bad.push(`list view "${name}" (${def.data?.object}) is excluded from its list's tabs and has no navigation entry`);
+        }
+      }
+    }
+    expect(bad, `unreachable list views:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('every switcher tab points at a defined view', () => {
+    const bad: string[] = [];
+    for (const v of views) {
+      const defined = new Set([
+        v.list?.name,
+        ...Object.entries(v.listViews ?? {}).map(([key, def]) => (def as AnyRec)?.name ?? key),
+      ].filter(Boolean));
+      for (const t of v.list?.tabs ?? []) {
+        if (t.view && !defined.has(t.view)) {
+          bad.push(`tab "${t.name}" targets undefined view "${t.view}"`);
+        }
+      }
+    }
+    expect(bad, `dangling tabs:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+});
