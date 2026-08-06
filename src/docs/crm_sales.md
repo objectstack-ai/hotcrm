@@ -70,13 +70,13 @@ and **close date** current — the automation below keys off all three.
 
 ### Stalled-deal nudge (automatic)
 A daily **07:30** sweep finds any open opportunity that has sat in its current
-stage for **more than 14 days**. The owner and their manager are notified, and a
-**high-priority follow-up task** is created. Advance the stage or re-qualify the
-deal to clear it.
+stage for **more than 14 days**. The owner is notified — the owner alone, not
+their manager — and a **high-priority follow-up task** is created. Advance the
+stage or re-qualify the deal to clear it.
 
 ### Won-deal alert (automatic)
-When a deal over **$100,000** is marked **Closed Won**, the owner and manager are
-notified automatically.
+When a deal over **$100,000** is marked **Closed Won**, the owner is notified
+automatically — the owner alone, not their manager.
 
 ## 4. Large-deal approval — when a deal pauses for sign-off
 
