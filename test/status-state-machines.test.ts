@@ -1,7 +1,10 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import stack from '../objectstack.config';
+import { REPO_ROOT } from './helpers/repo-root';
 
 /**
  * Which status fields are governed by a transition table, and why (#575 B4).
@@ -147,6 +150,103 @@ describe('the new tables agree with the automation that drives them', () => {
     expect(expiring).toEqual(['activated']);
     expect(contract.expired).toEqual([]);
     expect(contract.terminated).toEqual([]);
+  });
+});
+
+/**
+ * The admin page's roster agrees with the ledger above (#896).
+ *
+ * `content/docs/administration/state-machines` opens with "HotCRM uses state
+ * machines on:" and a bullet per object. That roster was written when only
+ * `crm_lead` and `crm_opportunity` had a machine, and it did not move when
+ * #575 B4 added three more — so the page went on listing case, contract and
+ * quote as objects that *lack* a state machine while each of them carried a
+ * named one. Nothing was red: `os validate` and `pnpm lint` never open
+ * `content/docs`, and every guard in this file reads metadata only.
+ *
+ * This block closes that loop in the one direction that rots — the source grows
+ * a machine, the page does not. The expectation is DERIVED from {@link GOVERNED}
+ * / {@link UNGOVERNED}, so a sixth machine turns the page red instead of quietly
+ * joining the three that were missing.
+ *
+ * It reads the bullet list ONLY, not the prose around it: the paragraph below
+ * the list legitimately names campaigns (to say they deliberately have no
+ * machine), and a whole-section substring search would call that a listing.
+ * Bullets are the roster; prose is commentary.
+ */
+describe('the admin docs roster matches the ledger', () => {
+  /**
+   * How each object is named in the roster, per locale. Hand-written on purpose
+   * and NOT taken from `src/translations/` — the docs and the locale pack are
+   * separate surfaces with their own drift (#837 tracks `crm_case` alone being
+   * 服务案例 / 工单 / 案例 in three places), and pinning the page against the
+   * pack here would make this guard fail for a reason that has nothing to do
+   * with the roster being complete.
+   */
+  const DOC_LABEL: Record<string, { en: string; hans: string; hant: string }> = {
+    crm_lead: { en: 'Leads', hans: '潜在客户', hant: '潛在客戶' },
+    crm_opportunity: { en: 'Opportunities', hans: '商机', hant: '商機' },
+    crm_case: { en: 'Cases', hans: '案例', hant: '案例' },
+    crm_contract: { en: 'Contracts', hans: '合同', hant: '合約' },
+    crm_quote: { en: 'Quotes', hans: '报价', hant: '報價' },
+    crm_campaign: { en: 'Campaigns', hans: '营销活动', hant: '行銷活動' },
+    crm_task: { en: 'Tasks', hans: '任务', hant: '任務' },
+  };
+
+  const PAGES = [
+    { locale: 'en' as const, file: 'state-machines.mdx' },
+    { locale: 'hans' as const, file: 'state-machines.zh-Hans.mdx' },
+    { locale: 'hant' as const, file: 'state-machines.zh-Hant.mdx' },
+  ];
+
+  /** The bullet lines of the first `##` section, which is the roster. */
+  const rosterBullets = (file: string): string[] => {
+    const text = readFileSync(join(REPO_ROOT, 'content/docs/administration', file), 'utf8');
+    const sections = text.split(/^## /m);
+    // [0] is the frontmatter + `# Title` + lede; [1] is "Where state machines apply".
+    const section = sections[1];
+    if (!section) throw new Error(`${file}: no '## ' section found`);
+    return section.split('\n').filter((l) => l.startsWith('- '));
+  };
+
+  describe.each(PAGES)('$file', ({ locale, file }) => {
+    it('lists every governed object', () => {
+      const bullets = rosterBullets(file).join('\n');
+      const missing = GOVERNED.map((g) => g.object)
+        .filter((o) => !bullets.includes(DOC_LABEL[o]![locale]))
+        .map((o) => `${o} (${DOC_LABEL[o]![locale]})`);
+      expect(
+        missing,
+        `${file} declares a state machine for these objects but does not list them:\n  ${missing.join('\n  ')}`,
+      ).toEqual([]);
+    });
+
+    it('lists no object whose status is deliberately descriptive', () => {
+      const bullets = rosterBullets(file).join('\n');
+      const wrong = UNGOVERNED.filter((o) => bullets.includes(DOC_LABEL[o]![locale])).map(
+        (o) => `${o} (${DOC_LABEL[o]![locale]})`,
+      );
+      expect(
+        wrong,
+        `${file} lists these as having a state machine, but they deliberately do not — see #575 B4:\n  ${wrong.join('\n  ')}`,
+      ).toEqual([]);
+    });
+
+    it('has a roster to check — the precondition', () => {
+      // The UNGOVERNED assertion passes vacuously on an empty bullet list, so a
+      // section rename or a rewrite into prose would silently stop checking
+      // anything. This is the only signal for that; the GOVERNED assertion
+      // above cannot tell "no roster" from "roster missing an object".
+      expect(rosterBullets(file).length, `${file}: roster has no bullets`).toBeGreaterThan(0);
+    });
+  });
+
+  it('names every ledger object in every locale', () => {
+    // DOC_LABEL is hand-written; this keeps it in step with the ledger rather
+    // than letting a new object silently skip the roster check for want of a
+    // label entry.
+    const named = [...GOVERNED.map((g) => g.object), ...UNGOVERNED];
+    expect(named.filter((o) => !DOC_LABEL[o])).toEqual([]);
   });
 });
 
