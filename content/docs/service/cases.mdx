@@ -65,7 +65,7 @@ The detail screen is organised into 6 sections:
 
 ## What happens automatically
 
-- **First response time** — stamped the first time an agent comments or replies.
+- **First response date** (`first_response_date`) — stamped the first time a call or meeting that **already took place** is logged on the case. Its only writer is `logActivityAction` (`src/actions/global.actions.ts`), which stamps on the `held` activity kinds — **Log a Call** and **Log a Meeting** — and reads the stored value back before writing, so a second log never overwrites the first. Nothing else stamps it: a comment goes to the feed, an email goes to `sys_email`, a status change is deliberately not counted (an agent can move a case to *In Progress* and investigate for an hour while the customer hears nothing), and a meeting merely *scheduled* is not a response either. On a case worked entirely through comments and email the field stays empty.
 - **Closed flag** — set automatically when status changes to *Closed*.
 - **Closed date** — stamped to NOW when status changes to *Closed*.
 - **Resolution time (hours)** — calculated as the difference between *Created date* and *Closed date*.
@@ -139,7 +139,8 @@ Six names this section used to list are not views at all:
 
 When you open a case, you'll see:
 
-- **Header** — case number, subject, status badge, priority badge, SLA countdown.
+- **Header** — the case number and subject as the title (`{case_number} · {subject}`), the **account** as the subtitle, plus an icon, a breadcrumb and the action buttons. That is the whole header: there is **no status badge, no priority badge and no SLA countdown** on it. Nothing in this app computes time remaining or time over — not here, not anywhere else on the case — so there is no countdown to render. See [SLA & Escalation](/docs/service/sla-and-escalation) for what the two SLA fields do instead.
+- **Key Information** — the highlights strip directly under the header, and where **Status** and **Priority** actually live: ordinary fields rather than badges, side by side with **SLA Due Date**, **SLA Violated**, **Owner** and **Account**.
 - **Status path** — a Salesforce-style horizontal flow showing New → In Progress → Waiting on Customer → Escalated → Resolved → Closed, so an agent can see at a glance where the case stands and what the next stop is.
 - **Customer panel** — account, primary contact, contract tier, open cases this month.
 - **Three tabs:**
