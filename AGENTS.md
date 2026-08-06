@@ -76,7 +76,8 @@ hotcrm/
       `.changeset/hook-query-where-not-filter.md`. `HookQuery` in `src/objects/_hook-api.ts`
       deliberately omits the alias so the mistake is a compile error.
       A flow node's `config` is a **different surface**: `*.flow.ts` query/update nodes take
-      `filter:` (all 24 flows do). Do not "fix" one spelling into the other.
+      `filter:` (44 occurrences across 17 of the 21 flow files; `where:` appears in none of
+      them). Do not "fix" one spelling into the other.
 
 3.  **AI-Native**:
     - Every feature should consider AI augmentation (Co-Pilot, Agents).
