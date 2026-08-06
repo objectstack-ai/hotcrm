@@ -31,6 +31,8 @@ A typical stuck case: **New → In Progress → Waiting on Customer → In Progr
 | 🔴 **High** | 8 hours | Significant impact, customer is upset |
 | 🔴 **Critical** | 4 hours | Production down, immediate response needed |
 
+**Only the Critical row has a clock behind it.** The `case_sla_defaults` hook stamps `sla_due_date` on Critical cases and on no others, so the other three targets are the team's service commitment with nothing in the app measuring them — see [SLA & Escalation](/docs/service/sla-and-escalation) for the mechanics.
+
 When a case is set to **Critical**, the Case Escalation flow alerts the **case owner** by inbox message and email — its recipient list is the single entry `{caseRecord.owner_id}`, and there is no `support_manager@example.com` recipient anywhere in this app. A **High** case is never escalated automatically, whatever the account is: no escalation condition reads the account at all, and raising one is the manual **Escalate Case** button.
 
 ## Case types
@@ -56,7 +58,7 @@ The detail screen is organised into 6 sections:
 | --- | --- |
 | **Case Information** | Case number, subject, description, account, contact |
 | **Origin & Routing** | Origin, owner, parent case |
-| **SLA & Priority** | Status, priority, type, first response time, SLA due date, breach flag |
+| **SLA & Priority** | Status, priority, type, first response time, SLA due date, SLA Violated |
 | **Resolution** | Closed date, resolution, customer signature |
 | **Escalation** *(collapsed by default)* | Escalation flag, escalated date, escalation reason |
 | **System** *(collapsed by default)* | Audit trail, timestamps |
@@ -67,17 +69,17 @@ The detail screen is organised into 6 sections:
 - **Closed flag** — set automatically when status changes to *Closed*.
 - **Closed date** — stamped to NOW when status changes to *Closed*.
 - **Resolution time (hours)** — calculated as the difference between *Created date* and *Closed date*.
-- **SLA due date** — calculated when the case is created, based on priority.
-- **SLA breached flag** — flipped to true if the resolution time exceeds the SLA target.
+- **SLA due date** — stamped on **Critical** cases only. `case_sla_defaults` fills it with *now + 4 hours* when a case is created at — or edited to — Critical priority and the field is still empty. At High, Medium and Low it writes nothing, so the field stays blank unless somebody types a date in by hand.
+- **SLA Violated** (`is_sla_violated`) — there is no field called *SLA Breached?*. The hourly `case_sla_monitor` sweep sets it to true on cases that are **still open** (status is neither *Resolved* nor *Closed*) and whose **SLA Due Date** has already passed. It never compares resolution time against the target, so a case with no due date is never a candidate, and a case resolved late but before the next sweep is never flagged.
 - **Account's last activity date** — bumped to today when the case is updated.
 
 ## Built-in rules
 
 - **Closed cases must have a resolution** — you can't close a case with an empty Resolution field.
 - **Escalated cases must have an escalation reason** — explains why a senior agent was pulled in.
-- **Status progression is enforced** — you can't jump from *New* straight to *Resolved* without going through *In Progress*.
+- **Status progression is advice, not a gate** — the transition table says *New* leads to *In Progress*, *Waiting on Customer*, *Escalated* or *Closed*, so jumping straight to *Resolved* is outside it. That does not stop the save: the case is stored as *Resolved* and the engine writes one line to the server log, `WARN Validation rule 'case_status_progression' (warning): Invalid status transition`. Unlike the two rules above — both `error` severity, both of which do reject the save — this one only advises. See [State Machines](/docs/administration/state-machines) for what the table is good for.
 
-## Workflow automation
+## Flow and hook automation
 
 - **Notify on Critical** — when priority is set to Critical, the Case Escalation flow's `notify` node sends an inbox message and an email to the **case owner alone**: its recipient list is the single entry `{caseRecord.owner_id}`. There is no `support_manager@example.com` recipient anywhere in this app.
 - **Notify on Escalation** — when the status changes to *Escalated*, no email goes out at all: `escalation_team@example.com` exists nowhere in this app, and neither does an escalation-team recipient. What the escalated status fires is the `case_status_side_effects` hook, which opens an **Urgent follow-up task due tomorrow for the account owner** — and only for cases that have an account, since the task is keyed to it.
@@ -111,17 +113,27 @@ See [SLA & Escalation](/docs/service/sla-and-escalation) for the full mechanics.
 
 ## Field-level security
 
-- **SLA breach flag** and **Resolution time** are **read-only for agents** — these are auto-calculated and can't be hand-fudged.
+- **SLA Violated** (`is_sla_violated`) and **Resolution time** are **read-only for agents** — these are auto-calculated and can't be hand-fudged. The lock is field-level security: the Service Agent profile masks both as readable but not editable.
 
 ## Standard list views
 
-- **My Open Cases** — your cases not yet closed.
-- **Critical Cases** — priority = Critical, all owners.
-- **Cases Due Today** — SLA due date is today.
-- **Breached SLA** — SLA breach flag is true.
-- **Recently Closed** — closed in the last 7 days.
-- **By Account** — grouped by customer.
-- **Service Board** — kanban grouped by status.
+`crm_case` ships **seven** views (`src/views/case.view.ts`), and the case list surfaces them as tabs:
+
+| View | What it shows | Tab |
+| --- | --- | --- |
+| **All Cases** | Every case, sorted by priority then SLA due date, with a row tint keyed on **priority** | *All* |
+| **Service Workflow** | Kanban of open cases, grouped by status | *Workflow* |
+| **SLA Calendar** | Cases laid out on their **SLA Due Date** — in practice the Critical ones, plus whatever was dated by hand | *SLA* |
+| **Case Timeline** | Cases on a *created → closed* timeline, grouped by owner | *Timeline* |
+| **Escalated Cases** | `is_escalated` is true | *Escalated* |
+| **⏰ SLA at Risk** | Open **High and Critical** cases, soonest due date first | *SLA at Risk* |
+| **My Open Cases** | Your cases that are not closed | *My Cases* |
+
+Six names this section used to list are not views at all:
+
+- **Critical Cases** and **Breached SLA** are metric tiles, not lists. The [Service Dashboard](/docs/analytics/dashboards) carries *Critical Cases* (open and Critical) and **SLA Violations** (`is_sla_violated` is true); no list view in this app filters on a breach. For a list you can actually work through, use **Escalated Cases** — the SLA sweep escalates every case it flags, so each breach lands there.
+- **Service Board** is not this app's name for anything. The kanban is **Service Workflow**, on the *Workflow* tab.
+- **Cases Due Today**, **Recently Closed** and **By Account** do not exist in any form: no view filters on today's due date or on `closed_date`, and `crm_case` has no grouped view.
 
 ## The case detail layout
 
@@ -163,17 +175,17 @@ If the Copilot decides the priority is *Critical*, it will also recommend immedi
 
 ## Tips for service agents
 
-- ✅ **Triage incoming cases promptly** — *New* cases should not sit for more than the first-response SLA.
-- ✅ **Use "Waiting on Customer"** when you're blocked — it stops the SLA clock in some configurations.
+- ✅ **Triage incoming cases promptly** — but know that nothing in the app is watching. There is no first-response target to breach: **First Response Date** is recorded on the case and never compared against anything, `case_metrics` carries no first-response measure so no report or dashboard tile reports on it, and no flow alerts on it. Promptness here is the team's own commitment, not a clock the app runs.
+- ✅ **Use "Waiting on Customer"** when you're genuinely blocked — but it **does not stop the SLA clock**, in any configuration. `sla_due_date` is written once and never recomputed, and the hourly `case_sla_monitor` sweep collects open cases whose status is neither *Resolved* nor *Closed* — *Waiting on Customer* is not on that exclusion list. A Critical case parked on the customer runs its four hours down and is flagged **SLA Violated** and escalated on schedule.
 - ✅ **Always write a resolution** — it's mandatory, but also feeds the knowledge base for future cases.
 - ✅ **Link a task** when the case requires future follow-up (e.g., "verify fix worked in 7 days").
 - ❌ Don't close a case without confirming the fix worked.
 
 ## Tips for service managers
 
-- ✅ Watch the **Breached SLA** view daily — every red badge represents a customer trust event.
-- ✅ Use the **Service Board** kanban for daily standups.
-- ✅ Coach agents whose **Resolution Time** trends up — there's a column on the agent leaderboard.
+- ✅ There is no **Breached SLA** view to watch, and no red badge either — the only colour rule on a case list is *All Cases*' row tint, and it is keyed on **priority**, not on a breach. Work **Escalated Cases** daily instead, and read the **SLA Violations** tile on the Service Dashboard for the count.
+- ✅ Use the kanban for daily standups — it is named **Service Workflow** and reaches the case list as the *Workflow* tab.
+- ✅ Coach agents whose **Resolution Time** trends up — but you will be reading it off the cases themselves. There is no agent leaderboard: `case_metrics`, the dataset behind every service report and dashboard widget, declares Status, Priority, Origin, Type and Created as its only dimensions, so nothing in analytics can group cases by agent.
 
 ## Tips for admins
 

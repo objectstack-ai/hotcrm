@@ -31,6 +31,8 @@ description: 客户支持工单——主题、优先级、状态、解决方案�
 | 🔴 **High** | 8 小时 | 影响显著，客户不满 |
 | 🔴 **Critical** | 4 小时 | 生产中断，需要立即响应 |
 
+**四行里只有 Critical 那行背后真有一只时钟。** `case_sla_defaults` 钩子只给 Critical 工单标记 `sla_due_date`，别的一律不标，所以另外三个目标是团队的服务承诺，应用里没有任何东西去度量它们 —— 机制详见 [SLA 与升级](/zh-Hans/docs/service/sla-and-escalation)。
+
 当工单被设为 **Critical** 时，工单升级流程通过站内消息 + 邮件提醒**工单负责人**——它的收件人列表只有 `{caseRecord.owner_id}` 这一项，本应用中不存在 `support_manager@example.com` 这个收件人。**High** 工单永远不会被自动升级，无论账户是什么：没有任何升级条件会读取账户，要升级它靠的是手动的 **Escalate Case** 按钮。
 
 ## 工单类型
@@ -56,7 +58,7 @@ description: 客户支持工单——主题、优先级、状态、解决方案�
 | --- | --- |
 | **Case Information** | 工单编号、主题、描述、账户、联系人 |
 | **Origin & Routing** | 来源、所有者、父工单 |
-| **SLA & Priority** | 状态、优先级、类型、首次响应时间、SLA 截止日期、违约标记 |
+| **SLA & Priority** | 状态、优先级、类型、首次响应时间、SLA 截止日期、SLA Violated |
 | **Resolution** | 关闭日期、解决方案、客户签名 |
 | **Escalation** *(默认折叠)* | 升级标记、升级日期、升级原因 |
 | **System** *(默认折叠)* | 审计跟踪、时间戳 |
@@ -67,17 +69,17 @@ description: 客户支持工单——主题、优先级、状态、解决方案�
 - **关闭标记**——状态变为 *Closed* 时自动设置。
 - **关闭日期**——状态变为 *Closed* 时标记为 NOW。
 - **解决时间（小时）**——按 *Created date* 与 *Closed date* 之间的差值计算。
-- **SLA 截止日期**——工单创建时根据优先级计算。
-- **SLA 违约标记**——如果解决时间超过 SLA 目标，则翻转为 true。
+- **SLA 截止日期**——只给 **Critical** 工单标记。工单在建单时被设为 Critical、或后来被改为 Critical，且该字段仍为空时，`case_sla_defaults` 把它填成 *当前时间 + 4 小时*。High、Medium、Low 一个字节都不写，字段就停在空值，除非有人手工填一个日期进去。
+- **SLA Violated**（`is_sla_violated`）——不存在名为 *SLA Breached?* 的字段。每小时一次的 `case_sla_monitor` 扫描把它置真，选中的是**仍未结**（状态既不是 *Resolved* 也不是 *Closed*）且 **SLA 截止日期** 已经过去的工单。它从不拿解决时间去比对目标，所以没有截止日期的工单永远不是候选，晚解决但赶在下一次扫描前解决的工单也永远不会被标记。
 - **账户的最后活动日期**——工单更新时刷新为今天。
 
 ## 内置规则
 
 - **已关闭工单必须有解决方案**——解决方案字段为空时无法关闭工单。
 - **升级工单必须有升级原因**——解释为何引入了资深客服。
-- **状态推进受强制约束**——你不能从 *New* 直接跳到 *Resolved* 而不经过 *In Progress*。
+- **状态推进是建议，不是闸门**——转换表写的是 *New* 之后可以去 *In Progress*、*Waiting on Customer*、*Escalated* 或 *Closed*，所以直接跳到 *Resolved* 是走出了这张表。但这拦不下保存：工单照样以 *Resolved* 落库，引擎只在服务端日志里写一行 `WARN Validation rule 'case_status_progression' (warning): Invalid status transition`。与上面两条不同——那两条是 `error` 级、确实会拒绝保存——这一条只做提示。转换表到底有什么用，见[状态机](/zh-Hans/docs/administration/state-machines)。
 
-## 工作流自动化
+## 流程与对象钩子自动化
 
 - **紧急时通知**——当优先级被设为 Critical 时，工单升级流程的 `notify` 节点发出站内消息 + 邮件，只发给**工单负责人一人**：收件人列表只有 `{caseRecord.owner_id}` 这一项。本应用中不存在 `support_manager@example.com` 这个收件人。
 - **升级时通知**——当状态变更为 *Escalated* 时，不会发出任何邮件：`escalation_team@example.com` 在本应用中根本不存在，也不存在「升级团队」这样一个收件目标。状态转为已升级真正触发的是 `case_status_side_effects` 钩子，它开出的是一条**次日到期、优先级为紧急、归账户负责人的跟进任务**——且仅限有关联账户的工单，因为该任务是挂在那个账户上的。
@@ -111,17 +113,27 @@ description: 客户支持工单——主题、优先级、状态、解决方案�
 
 ## 字段级安全
 
-- **SLA 违约标记**和**解决时间**对客服是**只读的**——这些是自动计算的，无法手动篡改。
+- **SLA Violated**（`is_sla_violated`）和**解决时间**对客服是**只读的**——这些是自动计算的，无法手动篡改。锁是字段级安全给的：Service Agent 配置文件把这两个字段掩码为可读不可编辑。
 
 ## 标准列表视图
 
-- **My Open Cases**——你尚未关闭的工单。
-- **Critical Cases**——优先级 = Critical，所有所有者。
-- **Cases Due Today**——SLA 截止日期是今天。
-- **Breached SLA**——SLA 违约标记为 true。
-- **Recently Closed**——过去 7 天内关闭的。
-- **By Account**——按客户分组。
-- **Service Board**——按状态分组的看板。
+`crm_case` 一共发布 **7 个**视图（`src/views/case.view.ts`），工单列表把它们做成页签：
+
+| 视图 | 展示什么 | 页签 |
+| --- | --- | --- |
+| **All Cases** | 全部工单，先按优先级、再按 SLA 截止日期排序，行底色键在**优先级**上 | *All* |
+| **Service Workflow** | 未结工单的看板，按状态分列 | *Workflow* |
+| **SLA Calendar** | 按 **SLA 截止日期** 把工单铺在日历上——实际上就是那些 Critical 工单，外加手工填过日期的 | *SLA* |
+| **Case Timeline** | 工单按「创建 → 关闭」铺在时间轴上，按负责人分组 | *Timeline* |
+| **Escalated Cases** | `is_escalated` 为真 | *Escalated* |
+| **⏰ SLA at Risk** | 未结的 **High 与 Critical** 工单，截止日期最近的排在前面 | *SLA at Risk* |
+| **My Open Cases** | 你名下尚未关闭的工单 | *My Cases* |
+
+本节原先列的七个名字里，有六个根本不是视图：
+
+- **Critical Cases** 与 **Breached SLA** 是指标磁贴，不是列表。[服务仪表盘](/zh-Hans/docs/analytics/dashboards)上有 *Critical Cases*（未结且 Critical）和 **SLA Violations**（`is_sla_violated` 为真）两个磁贴；本应用里没有任何一个列表视图按违约过滤。真要有一份能逐条处理的清单，用 **Escalated Cases**——SLA 扫描会把它标记的每一条都升级，所以每次违约都会落到那里。
+- **Service Board** 不是本应用里任何东西的名字。看板叫 **Service Workflow**，在 *Workflow* 页签上。
+- **Cases Due Today**、**Recently Closed** 与 **By Account** 以任何形式都不存在：没有任何视图按「截止日期 = 今天」或 `closed_date` 过滤，`crm_case` 上也没有任何分组视图。
 
 ## 工单详情布局
 
@@ -163,17 +175,17 @@ Activity 标签页是工单上发生过什么的唯一可信来源。它将四�
 
 ## 给服务客服的提示
 
-- ✅ **及时分流来访工单**——*New* 工单的等待时间不应超过首次响应 SLA。
-- ✅ **当你被阻塞时使用 "Waiting on Customer"**——在某些配置中它会停止 SLA 计时。
+- ✅ **及时分流来访工单**——但要知道，应用里没有任何东西在盯着这件事。不存在可供违反的首次响应目标：**First Response Date** 只是记录在工单上，从不与任何东西比对，`case_metrics` 里没有首次响应这个度量，所以没有任何报表或仪表盘磁贴报它，也没有任何流程为它告警。这里的「及时」是团队自己的承诺，不是应用跑着的一只时钟。
+- ✅ **当你确实被阻塞时使用 "Waiting on Customer"**——但它**不会停止 SLA 计时**，任何配置下都不会。`sla_due_date` 只写一次，从不重算；每小时的 `case_sla_monitor` 扫描收的是状态既不是 *Resolved* 也不是 *Closed* 的未结工单，而 *Waiting on Customer* 不在这份排除名单上。一张挂在客户那边的 Critical 工单照样把四小时走完，照样被标记 **SLA Violated** 并按时升级。
 - ✅ **始终写下解决方案**——这是强制的，但也会为未来的工单提供知识库素材。
 - ✅ **关联一个任务**——当工单需要未来跟进时（例如"7 天后验证修复是否有效"）。
 - ❌ 不要在未确认修复有效之前关闭工单。
 
 ## 给服务经理的提示
 
-- ✅ 每天关注 **Breached SLA** 视图——每个红色徽章都代表一次客户信任事件。
-- ✅ 使用 **Service Board** 看板进行每日站会。
-- ✅ 辅导那些 **Resolution Time** 趋势上升的客服——客服排行榜上有相应的列。
+- ✅ 没有 **Breached SLA** 这个视图可看，也没有什么红色徽章——工单列表上唯一的颜色规则是 *All Cases* 的行底色，它键在**优先级**上，不是违约。每天改看 **Escalated Cases**，数量则看服务仪表盘上的 **SLA Violations** 磁贴。
+- ✅ 用看板开每日站会——它叫 **Service Workflow**，在工单列表的 *Workflow* 页签上。
+- ✅ 辅导那些 **Resolution Time** 趋势上升的客服——但这个趋势只能从工单本身读出来。不存在什么客服排行榜：`case_metrics` 这个数据集（服务侧每一张报表和每一个仪表盘部件都建在它上面）只声明了 Status、Priority、Origin、Type、Created 五个维度，所以分析层里没有任何东西能按客服分组。
 
 ## 给管理员的提示
 
