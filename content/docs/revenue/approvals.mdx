@@ -81,10 +81,22 @@ This history is permanent and surfaces in deal-review reports.
 
 ## Where to find pending approvals
 
-In the Enterprise CRM app, the **Approvals** group:
+In the Enterprise CRM app, the **Approvals** group holds exactly one item, and the group is **collapsed by default** — click it open before deciding something isn't there.
 
-- **Approval Requests** — everything pending, with views *Pending My Approval*, *Submitted by Me*, *Recently Approved*.
-- **Action History** — the full audit trail across all approvals.
+- **Inbox** — the approval requests waiting on you (`sys_approval_request`). **Inbox** is the label on the sidebar item; *Approval Requests* is not a navigation entry anywhere in this app. The name is not invented — it is what the approvals plugin calls the **object** (*Approval Request* / *Approval Requests*) — but this page had it standing where a sidebar item should be.
+
+That item pins no view of its own, so it opens the object's list with the four built-in views the approvals plugin ships:
+
+| View | What it shows |
+| --- | --- |
+| **My Pending** | Requests still pending where you are one of the approvers |
+| **I Submitted** | Everything you submitted, in any state |
+| **Completed** | Requests that ended — approved, rejected or recalled |
+| **All** | Every request, most recently updated first |
+
+Those four are the real filters. The three names this page used to list — *Pending My Approval*, *Submitted by Me* and *Recently Approved* — exist nowhere: neither `src/` nor the installed approvals plugin carries any of them, under any spelling. **My Pending**, **I Submitted** and **Completed** are the views they were describing.
+
+**Action History** is not in the group either, and no sidebar item anywhere in this app carries that name. The audit trail is real data — the approvals plugin stores every action as `sys_approval_action`, ships **Recent** / **By Actor** / **All** views for it, and each action points back at its request through a `request_id` lookup. What is missing is only the way in: no navigation entry in this app opens that object.
 
 ## Tips for sales reps
 
