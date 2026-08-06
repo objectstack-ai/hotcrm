@@ -67,14 +67,16 @@ hotcrm/
       cast once — `const api = ctx.api as HookApi | undefined`, from `src/objects/_hook-api.ts`
       — and then called as `api.object(...)`; action script bodies call `ctx.api.object(...)`
       directly.
-    - The predicate key is **`where`**, and only `where`. `filter` (canonical) and `filters`
-      (deprecated alias) are *HTTP query-param* spellings carrying a JSON **string**, not keys
-      of the in-process query object — passing either in process fails **silently**: `findOne`
-      spreads the query into the AST without aliasing and returns the object's **first row**,
-      `count` reads `query.where` only and counts the **whole object**. Neither throws. This
-      repo has already paid for it once — see `.changeset/hook-query-where-not-filter.md`.
-      `HookQuery` in `src/objects/_hook-api.ts` deliberately omits the alias so the mistake is
-      a compile error.
+    - On `ctx.api`, the predicate key is **`where`**, and only `where`. `filter` (canonical)
+      and `filters` (deprecated alias) are *HTTP query-param* spellings carrying a JSON
+      **string**, not keys of the in-process query object — passing either in process fails
+      **silently**: `findOne` spreads the query into the AST without aliasing and returns the
+      object's **first row**, `count` reads `query.where` only and counts the **whole object**.
+      Neither throws. This repo has already paid for that once — see
+      `.changeset/hook-query-where-not-filter.md`. `HookQuery` in `src/objects/_hook-api.ts`
+      deliberately omits the alias so the mistake is a compile error.
+      A flow node's `config` is a **different surface**: `*.flow.ts` query/update nodes take
+      `filter:` (all 24 flows do). Do not "fix" one spelling into the other.
 
 3.  **AI-Native**:
     - Every feature should consider AI augmentation (Co-Pilot, Agents).

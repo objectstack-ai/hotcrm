@@ -26,4 +26,9 @@ AST at the platform level, but it is not assignable to `HookQuery['where']`, and
 first-party call sites use it. All sixty use the object form, so the example now does:
 `where: { amount: { $gt: 50000 } }`.
 
+The `where`-only rule is stated *scoped to `ctx.api`* on purpose: a flow node's `config`
+is a separate, schema-unvalidated bag (`config: z.record(z.string(), z.unknown())`), and
+all 24 `*.flow.ts` query/update nodes spell their predicate `filter:`. An unscoped rule
+would have invited the next agent to "fix" those into `where:`.
+
 Documentation only — no runtime, metadata, or dependency change.
