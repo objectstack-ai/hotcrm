@@ -107,10 +107,16 @@ export const AddLeadsToCampaignAction: Action = {
   type: 'script',
   locations: ['list_toolbar'],
   params: [
+    // Field-backed param: `field` + `objectOverride` make the console resolve
+    // the widget from crm_campaign_member.crm_campaign (a lookup → crm_campaign),
+    // rendering a RECORD PICKER. A bare `{ type: 'lookup' }` with no field can't
+    // resolve a target object and silently falls back to a paste-the-ID textbox.
+    // The value key is the field name (`crm_campaign`) because the param omits
+    // an explicit `name` — that is the key the body reads below.
     {
-      name: 'campaign',
+      field: 'crm_campaign',
+      objectOverride: 'crm_campaign_member',
       label: 'Campaign',
-      type: 'lookup',
       required: true,
     },
     // NOTE: `_selectedIds` is NOT declared here. See "Bulk actions" below.
@@ -128,7 +134,7 @@ export const AddLeadsToCampaignAction: Action = {
       const ids = selected.length ? selected : (ctx.recordId ? [ctx.recordId] : []);
       if (!ids.length) throw new Error('No lead selected');
 
-      const campaignId = input.campaign;
+      const campaignId = input.crm_campaign;
       if (!campaignId) throw new Error('Campaign is required');
 
       for (const leadId of ids) {

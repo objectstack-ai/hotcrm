@@ -24,8 +24,11 @@ import { makeSandboxEngine, runActionBody, type Rec } from './helpers/action-san
  * These run the SHIPPED body under the real QuickJS sandbox rather than the
  * handler-as-JS shortcut, because two of the things that can break this stamp
  * only exist there: the `api.read` capability the new lookup needs, and the
- * engine facade's `update(data, options)` signature (`mass_update_stage` is the
- * action in this repo that got that wrong and silently never wrote).
+ * engine facade's `update(data, options)` signature. `mass_update_stage` was
+ * the action in this repo that got that signature wrong (fixed in #777); the
+ * hook-side writes in #616 failed *silently* because those hooks are
+ * `onError: 'log'`, while the action path always failed loudly — a 400 from
+ * the dispatch and a red toast in the console.
  */
 
 type AnyRec = Record<string, any>;
