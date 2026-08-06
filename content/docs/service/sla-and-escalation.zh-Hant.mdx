@@ -24,7 +24,7 @@ SLA（服務級別協議）系統為 Critical 工單打上一個**截止時間**
 
 Critical 的 4 小時是系統唯一會盯的目標，而且它寫在鉤子裡，不在任何設定頁面上——參見下方的*給管理員的提示*部分。
 
-> **營業時間**——系統可以配置為只計算營業時間（例如週一至週五 9-5），而非日曆時間。參見 [管理 › 設定](/zh-Hant/docs/administration/setup)。
+> **這 4 小時是日曆小時，不是營業時間。** 本應用沒有任何營業時間設定——沒有工作日日曆，沒有假日清單，中繼資料裡也不存在任何可供截止時間去對照的東西。鉤子只是往當前時鐘上加 4 小時（`src/objects/case.hook.ts` 裡的 `due.setHours(due.getHours() + 4)`），所以一個週五下午 4 點建的 Critical 工單，截止時間就是同一個週五晚上 8 點；晚上 11 點建的，截止時間是凌晨 3 點。夜間、週末與假日一律照算進這個目標裡。
 
 ## SLA 如何被追蹤
 
@@ -44,12 +44,15 @@ Critical 的 4 小時是系統唯一會盯的目標，而且它寫在鉤子裡�
 
 ## SLA 表現報表
 
-**SLA 表現**報表顯示在 SLA 目標內解決的工單百分比，並按以下維度細分：
+**SLA 表現**報表只按**一個**維度細分：**優先順序**。它的 `rows` 就是 `['priority']`，沒有別的（`src/reports/case.report.ts`）。而且它報的也不是"在目標內解決的百分比"，而是 **SLA 違約率**——**SLA 已違約**標記的平均值——與工單數、平均解決時長並列，並且只統計**已關閉的工單**（`runtimeFilter: { is_closed: true }`）。所以本頁過去許諾的四個問題，它只回答其中一個：*哪個優先順序桶在漏單？*
 
-- 客服（誰達成了他們的 SLA？）
-- 優先順序（哪個優先順序桶在漏單？）
-- 帳戶等級（客戶是否被比潛在客戶更差地對待？）
-- 月份（表現是趨升還是趨降？）
+另外三個不只是"報表裡沒放"，而是在它底下的語意層裡根本搆不著。`case_metrics` 資料集（`src/datasets/case.dataset.ts`）總共只宣告了五個維度——**狀態**、**優先順序**、**來源**、**類型**、**建立時間**——因此：
+
+- **客服**——不存在負責人或客服維度。`owner_id` 是工單上的欄位，但資料集沒有把它暴露成維度，所以沒有任何報表、也沒有任何儀表板部件能按它分組。
+- **帳戶等級**——`crm_account.tier` 確實存在於帳戶物件上，但 `case_metrics` 只讀 `crm_case`，從不跨到帳戶上去取它，所以分析側任何地方都選不到帳戶等級。
+- **月份**——**建立時間**這個維度按**天**分桶（`dateGranularity: 'day'`），不是按月；而且 SLA 表現報表壓根沒把它放進 `rows`。真正用到它的是**按優先順序 × 天的建單量**報表，那是一張優先順序對天的矩陣。
+
+想要這三個裡的任何一個，都得先改 `case_metrics`；報表本身沒有任何設定能把它們變出來。
 
 這份報表是支援團隊最常用的 KPI。
 
@@ -119,26 +122,30 @@ Critical 的 4 小時是系統唯一會盯的目標，而且它寫在鉤子裡�
 
 | 角色 | 查看什麼 | 何時 |
 | --- | --- | --- |
-| **客服** | My Open Cases（按 SLA 截止日期排序） | 當班期間每小時 |
-| **服務經理** | Breached SLA + Critical Cases | 每天一早 |
+| **客服** | My Open Cases——一個按優先順序排的佇列，不是按截止時間排的佇列 | 當班期間每小時 |
+| **服務經理** | Escalated Cases 與 SLA at Risk 兩個檢視，外加服務儀表板上的 **SLA Violations** 磁貼 | 每天一早 |
 | **服務總監** | SLA 表現報表 | 每週 |
 | **高管** | 服務儀表板 | 每週 |
+
+這張表過去寫的兩個名字根本不是檢視。**Breached SLA** 與 **Critical Cases** 都不存在於列表檢視裡：`crm_case` 隨產品提供的檢視一共七個——*All Cases*、*Service Workflow*、*SLA Calendar*、*Case Timeline*、*My Open Cases*、*Escalated Cases* 與 *⏰ SLA at Risk*（`src/views/case.view.ts`）——其中沒有任何一個以 **SLA 已違約**為過濾條件。真正按違約過濾的只有[服務儀表板](/zh-Hant/docs/analytics/dashboards)上的兩個指標磁貼：**SLA Violations**（`is_sla_violated: true`）與 **Critical Cases**（未結 + Critical）。如果你要的是一份能逐條處理的列表，**Escalated Cases** 是最接近的那個：`case_sla_monitor` 會把它標記為違約的每一個工單都升級掉，所以每一次違約都會落進這個檢視——只是會和那些僅因優先順序而升級的工單混在一起。
+
+**My Open Cases 是按優先順序排序的，不是按 SLA 截止日期。** 它的排序鍵是 `priority_rank` 降序在先、`sla_due_date` 升序僅作次級鍵（`src/views/case.view.ts`）——所以一個一小時後就到期的 Low 工單，仍然排在每一個 Critical 工單下面。又因為只有 Critical 工單才會被打上截止日期，次級鍵在 Critical 以下的各檔裡根本無值可排：同一檔內的先後順序，取決於儲存返回的順序。如果你是按截止時間在幹活，請在它旁邊同時開著 **SLA at Risk** 或 **SLA Calendar**。
 
 ## 給服務客服的提示
 
 - ✅ 自己盯著 **SLA 截止日期**——沒有倒數計時，也沒有琥珀色區域會來提醒你，所以當班時把 **SLA at Risk** 或 **SLA Calendar** 檢視開著，趕在日期過去之前求助。
-- ✅ 當你確實被阻塞時使用 **Waiting on Customer**——取決於你的配置，這可以暫停 SLA 計時。
+- ✅ 當你確實被阻塞時使用 **Waiting on Customer**——但要知道它**不會暫停 SLA 計時**，無論你怎麼配置。本應用裡沒有任何東西會暫停、順延或重算一個截止時間：`sla_due_date` 只在工單第一次成為 Critical 時寫入一次，此後任何狀態流轉都不會再碰它；每小時一輪的 `case_sla_monitor` 掃描撈的是狀態既不是 *Resolved* 也不是 *Closed* 的未結工單，而 *Waiting on Customer* 不在這份排除清單裡（`src/flows/case-sla-monitor.flow.ts`）。所以一個掛在等客戶回覆上的 Critical 工單，4 小時照走，到點照樣被標 **SLA 已違約**並升級。該切狀態還是要切——它讓團隊知道這單卡在哪兒——但別因此不盯錶了。
 - ✅ 不要人為降低優先順序來延長你的 SLA——經理可以看到優先順序變更歷史。
 
 ## 給服務經理的提示
 
-- ✅ 每天早上執行 **Breached SLA** 列表檢視。
-- ✅ 使用 **Service Board** 看板進行每日站會。
+- ✅ 沒有 **Breached SLA** 這個列表檢視可以執行。改去處理 **Escalated Cases** 檢視——SLA 掃描標記的每一個工單都會被升級進這個檢視——數量則看服務儀表板上的 **SLA Violations** 磁貼。
+- ✅ 每日站會用那塊看板，但它叫 **Service Workflow**（`case_workflow`），在工單列表上以 **Workflow** 頁籤出現。本應用裡不存在叫 *Service Board* 的東西。
 - ✅ 輔導那些違約率趨升的客服——在它形成模式之前於 1:1 中提出。
 
 ## 給管理員的提示
 
 - 每個優先順序的 SLA 目標透過工單物件的自動化（一個 SLA 計算鉤子）設定。要調整，請編輯 `src/objects/case.hook.ts`（綁定到 `crm_case`）或更改底層配置——參見 [管理 › 自動化](/zh-Hant/docs/administration/automation)。
-- 營業時間與日曆時間的行為由你租戶的營業時間設定控制。參見 [管理 › 設定](/zh-Hant/docs/administration/setup)。
+- **不存在"營業時間 vs. 日曆時間"這個開關**，它背後也不存在什麼租戶級的營業時間設定——本應用根本沒有工作日日曆，也沒有假日清單。Critical 的 4 小時目標是在 `src/objects/case.hook.ts` 裡往當前時鐘上加出來的，所以夜間、週末與假日一律照算；要讓截止時間跳過非工作時段，就得先把一套日曆教給這個鉤子。
 - 升級觸發條件——只有 Critical 優先順序這一項，不存在 High+Customer 這個條件——寫在 [工單升級流程定義](/zh-Hant/docs/administration/automation)裡，即 `src/flows/case-escalation.flow.ts`。承載它的是兩個流程：`case_escalation`（更新時）與 `case_escalation_on_create`（新建時）。要改就**兩個一起改**，否則以新條件新建的工單仍會漏掉。
 - 這兩處的收件人列表都不是 Setup 介面上的設定項。*緊急時通知* 就是工單升級流程的 `notify` 節點，其列表只有 `{caseRecord.owner_id}` 一項——要改就改 `src/flows/case-escalation.flow.ts`。*升級時通知* 根本沒有收件人列表，因為它不發出任何訊息：狀態轉為已升級觸發的是 `src/objects/case.hook.ts` 裡的 `case_status_side_effects` 鉤子，它觸達的是帳戶負責人，靠的是那條跟進任務。

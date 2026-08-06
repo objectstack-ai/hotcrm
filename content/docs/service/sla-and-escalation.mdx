@@ -24,7 +24,7 @@ In a list view, the thing that actually reports a breach is the **SLA Violated**
 
 Critical's four hours is the one target the system keeps, and it lives in the hook rather than on a Setup screen — see the *Tips for admins* section below.
 
-> **Business hours** — the system can be configured to count only business hours (e.g., 9-5 Mon-Fri) rather than calendar hours. See [Administration › Setup](/docs/administration/setup).
+> **Those four hours are calendar hours, not business hours.** This app has no business-hours setting — no working-day calendar, no holiday list, nothing anywhere in its metadata that a deadline could be counted against. The hook adds four hours to the wall clock (`due.setHours(due.getHours() + 4)` in `src/objects/case.hook.ts`), so a Critical case opened at 4pm on a Friday is due at 8pm that same Friday, and one opened at 11pm is due at 3am. Nights, weekends and holidays all count against the target.
 
 ## How the SLA is tracked
 
@@ -44,12 +44,15 @@ Two views help with that, neither of them a timer:
 
 ## SLA performance reporting
 
-The **SLA Performance** report shows the percentage of cases resolved within their SLA target, broken down by:
+The **SLA Performance** report breaks its numbers down by **one** dimension: **priority**. Its `rows` are `['priority']` and nothing else (`src/reports/case.report.ts`). What it reports is not a compliance percentage either, but the **SLA Violation Rate** — the average of the **SLA Violated** flag — shown next to the case count and the average resolution time, and computed over **closed cases only** (`runtimeFilter: { is_closed: true }`). Of the four questions this page used to promise, it answers one: *which priority bucket is leaking?*
 
-- Agent (who's hitting their SLA?)
-- Priority (which priority bucket is leaking?)
-- Account tier (are customers being treated worse than prospects?)
-- Month (is performance trending up or down?)
+The other three are not merely missing from the report — they are unreachable in the semantic layer underneath it. The `case_metrics` dataset (`src/datasets/case.dataset.ts`) declares exactly five dimensions — **Status**, **Priority**, **Origin**, **Type** and **Created** — so:
+
+- **Agent** — there is no owner or agent dimension. `owner_id` is a field on the case, but the dataset does not expose it, so no report and no dashboard widget can group by it.
+- **Account tier** — `crm_account.tier` exists on the account object, but `case_metrics` reads `crm_case` alone and never crosses over to the account, so tier is not selectable anywhere in analytics.
+- **Month** — **Created** buckets by **day** (`dateGranularity: 'day'`), not by month, and the SLA Performance report does not put it in `rows` at all. The report that does use it is **Cases Opened by Priority × Day**, a matrix of priority against day.
+
+Any of the three would mean changing `case_metrics` first; no setting on the report itself can bring them back.
 
 This report is the support team's most-used KPI.
 
@@ -119,26 +122,30 @@ If priority resolves to **Critical**, the Copilot immediately recommends escalat
 
 | Role | What to check | When |
 | --- | --- | --- |
-| **Agent** | My Open Cases (sorted by SLA Due Date) | Hourly during your shift |
-| **Service Manager** | Breached SLA + Critical Cases | First thing every morning |
+| **Agent** | My Open Cases — a priority queue, not a deadline queue | Hourly during your shift |
+| **Service Manager** | Escalated Cases and SLA at Risk, plus the Service Dashboard's **SLA Violations** tile | First thing every morning |
 | **Service Director** | SLA Performance report | Weekly |
 | **Executive** | Service Dashboard | Weekly |
+
+Two names this table used to carry are not views at all. **Breached SLA** and **Critical Cases** do not exist as list views: `crm_case` ships seven — *All Cases*, *Service Workflow*, *SLA Calendar*, *Case Timeline*, *My Open Cases*, *Escalated Cases* and *⏰ SLA at Risk* (`src/views/case.view.ts`) — and not one of them filters on **SLA Violated**. The only two surfaces that do filter on a breach are metric tiles on the [Service Dashboard](/docs/analytics/dashboards): **SLA Violations** (`is_sla_violated: true`) and **Critical Cases** (open and Critical). For a list you can actually work through, **Escalated Cases** is the closest thing: `case_sla_monitor` escalates every case it flags as breached, so each breach lands in it — mixed in with the cases escalated on priority alone.
+
+**My Open Cases is sorted by priority, not by SLA Due Date.** Its keys are `priority_rank` descending first, and `sla_due_date` ascending only as a tie-breaker (`src/views/case.view.ts`) — so a Low case due within the hour still sits below every Critical one. And because only Critical cases are stamped with a due date at all, the tie-breaker has no values to order the bands below Critical by: inside those bands the order is whatever the store returns. Keep **SLA at Risk** or **SLA Calendar** open next to it if you are working to deadlines.
 
 ## Tips for service agents
 
 - ✅ Watch **SLA Due Date** yourself — there is no countdown and no amber zone to warn you, so keep **SLA at Risk** or **SLA Calendar** open during your shift and ask for help before the date passes.
-- ✅ Use **Waiting on Customer** when you're genuinely blocked — depending on your config, this can pause the SLA clock.
+- ✅ Use **Waiting on Customer** when you're genuinely blocked — but know that it **does not pause the SLA clock**, whatever your configuration. Nothing in this app pauses, extends or recomputes a deadline: `sla_due_date` is written once, the first time the case is Critical, and no later status change touches it; the hourly `case_sla_monitor` sweep collects open cases whose status is neither *Resolved* nor *Closed*, and *Waiting on Customer* is not on that exclusion list (`src/flows/case-sla-monitor.flow.ts`). So a Critical case parked on the customer runs its four hours down and is flagged **SLA Violated** and escalated on schedule. Set the status — it tells the team where the case stands — but keep watching the clock.
 - ✅ Don't artificially down-prioritise to extend your SLA — managers see priority change history.
 
 ## Tips for service managers
 
-- ✅ Run the **Breached SLA** list view every morning.
-- ✅ Use the **Service Board** kanban for daily standups.
+- ✅ There is no **Breached SLA** list view to run. Work the **Escalated Cases** view instead — every case the SLA sweep flags gets escalated into it — and read the **SLA Violations** tile on the Service Dashboard for the count.
+- ✅ Use the kanban board for daily standups — it is named **Service Workflow** (`case_workflow`) and reaches the case list as the **Workflow** tab. Nothing in this app is called *Service Board*.
 - ✅ Coach agents whose breach rate trends up — surface it 1:1 before it becomes a pattern.
 
 ## Tips for admins
 
 - The SLA target per priority is set via the case object's automation (a SLA-calculation hook). To adjust, edit `src/objects/case.hook.ts` (binds to `crm_case`) or change the underlying configuration — see [Administration › Automation](/docs/administration/automation).
-- Business-hours vs. calendar-hours behaviour is controlled by your tenant's business-hours setup. See [Administration › Setup](/docs/administration/setup).
+- **There is no business-hours vs. calendar-hours switch**, and no tenant business-hours setup behind it — this app ships no working-day calendar and no holiday list at all. The four-hour Critical target is added to the wall clock in `src/objects/case.hook.ts`, so nights, weekends and holidays count like any other hours; making a deadline skip non-working time means teaching that hook a calendar.
 - The escalation trigger — Critical priority, and nothing else; there is no High+Customer condition — lives in the [Case Escalation flow definition](/docs/administration/automation#flows-multi-step), i.e. `src/flows/case-escalation.flow.ts`. Two flows carry it: `case_escalation` (on update) and `case_escalation_on_create` (on insert). Change the condition in **both**, or a case created at the new priority still slips through.
 - Neither recipient list is configurable on a Setup screen. *Notify on Critical* is the Case Escalation flow's `notify` node, and its list is the single entry `{caseRecord.owner_id}` — edit it in `src/flows/case-escalation.flow.ts`. *Notify on Escalation* has no recipient list at all, because it sends no message: what the escalated status fires is the `case_status_side_effects` hook in `src/objects/case.hook.ts`, and the person it reaches is the account owner, through the follow-up task.
