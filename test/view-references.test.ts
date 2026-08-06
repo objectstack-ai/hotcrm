@@ -455,3 +455,111 @@ describe('every named list view is reachable', () => {
     expect(bad, `dangling tabs:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 });
+
+/**
+ * ── What curates a related list, when it is NOT a view (#944) ────────────────
+ *
+ * Four objects in this app are reached only through a parent's detail page —
+ * the two junctions and the two line items. It is a standing temptation to
+ * believe that panel renders the child's list view, and the header of
+ * `src/views/event_attendee.view.ts` said so in as many words until #944.
+ *
+ * It does not. MEASURED against the shipped Console (17.0.0-rc.3): a
+ * detail-page related list takes its columns from the CHILD's lookup field
+ * (`relatedListColumns`, which this app authors nowhere), then falls back to
+ * the child object's `highlightFields` minus the lookup the panel is scoped
+ * by — capped at six, with columns empty on every fetched row dropped. Only
+ * with neither of those does it reach a heuristic over the whole field map.
+ * The child's `list` view is never consulted, which is why
+ * `crm_campaign_member` ships no view at all and its panel on a campaign is
+ * still curated (Lead / Contact / Status / Response Date), while
+ * `crm_event_attendee` ships one whose columns that panel ignores.
+ *
+ * So the thing worth guarding here is not the views — it is `highlightFields`
+ * on the objects that have no other way to be read. Delete it and the panel
+ * drops to the heuristic, which leads with the autonumber these objects carry
+ * as their `nameField`: `CM-00001`, `EA-00001`, one useless column where the
+ * person's name should be. That is exactly the degradation #944 was filed
+ * about, and deleting this metadata is the only way to reach it.
+ *
+ * Derived, not listed: an object qualifies when it holds a REQUIRED lookup to
+ * another `crm_` object and has no navigation entry of its own. A fifth such
+ * object added tomorrow is held to the same bar without anyone extending a
+ * fixture.
+ */
+describe('objects reached only through a parent curate that related list', () => {
+  const apps: AnyRec[] = (stack as any).apps ?? [];
+  const navObjects = new Set(
+    apps.flatMap((app) =>
+      (app.navigation ?? []).flatMap(function walk(n: AnyRec): string[] {
+        return [...(n.objectName ? [n.objectName] : []), ...(n.children ?? []).flatMap(walk)];
+      })),
+  );
+
+  /** The required `crm_` lookups on an object — each one is a panel it appears in. */
+  const parentLookupsOf = (obj: AnyRec): string[] =>
+    Object.entries<AnyRec>(obj.fields ?? {})
+      .filter(([, def]) =>
+        (def?.type === 'lookup' || def?.type === 'master_detail') &&
+        def?.required === true &&
+        String(def?.reference_to ?? def?.reference ?? '').startsWith('crm_'))
+      .map(([name]) => name);
+
+  const parentOnly = objects.filter(
+    (o) => String(o.name).startsWith('crm_') && !navObjects.has(o.name) && parentLookupsOf(o).length > 0,
+  );
+
+  it('the derivation finds the objects it is meant to cover', () => {
+    // Guard the guard. Every assertion below iterates `parentOnly`, and all of
+    // them would pass by checking nothing if the navigation walk stopped
+    // yielding object names or the lookup filter stopped matching — the way
+    // the navigation guard in `test/action-references.test.ts` spent its life
+    // green. The two junctions are named because they are what #944 is about;
+    // the count is a floor, not a roster.
+    expect(navObjects.size, 'no navigation object entries parsed out of the app').toBeGreaterThan(5);
+    const names = parentOnly.map((o) => o.name);
+    expect(names).toContain('crm_campaign_member');
+    expect(names).toContain('crm_event_attendee');
+    expect(names.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it.each(parentOnly.map((o) => o.name))('%s authors highlightFields', (name) => {
+    const obj = objects.find((o) => o.name === name) as AnyRec;
+    const highlight: string[] = Array.isArray(obj.highlightFields) ? obj.highlightFields : [];
+    expect(
+      highlight.length,
+      `${name} authors no highlightFields — nothing curates its related list, and the ` +
+        'fallback heuristic leads with whatever the field map offers first',
+    ).toBeGreaterThan(0);
+
+    const known = new Set(Object.keys(obj.fields ?? {}));
+    const dangling = highlight.filter((f) => !known.has(f));
+    expect(dangling, `${name}.highlightFields names fields that do not exist: ${dangling.join(', ')}`).toEqual([]);
+  });
+
+  it.each(parentOnly.map((o) => o.name))('%s still has columns once the parent lookup is dropped', (name) => {
+    const obj = objects.find((o) => o.name === name) as AnyRec;
+    const highlight: string[] = Array.isArray(obj.highlightFields) ? obj.highlightFields : [];
+    const nameField = typeof obj.nameField === 'string' ? obj.nameField : undefined;
+    const isAutonumber = !!nameField && obj.fields?.[nameField]?.type === 'autonumber';
+
+    const bad: string[] = [];
+    for (const parent of parentLookupsOf(obj)) {
+      // What the panel on `parent`'s detail page is left with: the related list
+      // drops the field it scoped the query by, since every row shows the same
+      // value for it.
+      const surviving = highlight.filter((f) => f !== parent);
+      if (surviving.length === 0) {
+        bad.push(
+          highlight.length === 0
+            ? `${name} in the ${parent} panel: no highlightFields at all — the panel falls to the heuristic`
+            : `${name} in the ${parent} panel: every highlightField is the panel's own scope — no columns left`,
+        );
+      }
+      if (isAutonumber && surviving.includes(nameField as string)) {
+        bad.push(`${name} in the ${parent} panel: leads with the autonumber "${nameField}"`);
+      }
+    }
+    expect(bad, `related lists with nothing to show:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+});
