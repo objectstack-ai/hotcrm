@@ -31,7 +31,9 @@ description: 銷售管道的日常運作方式——推進交易、自動機率�
 
 這個數字是加權預測的核心。每當金額或機率變化時（包括來自階段變化的自動更新），它都會自動重新計算。
 
-**銷售儀表板**會在開放銷售管道上對*預期營收*求和，從而給你本季度的加權預測。
+加權預測是**清單檢視上的合計，不是儀表板上的數字**。商機的**進行中商機**與**全部商機**兩個檢視各帶一欄*預期營收*並對該欄求和（`src/views/opportunity.view.ts`），這個在開放管道上的合計就是加權預測。
+
+儀表板給不出同一個數。**Sales Performance** 儀表板（`sales_dashboard`）讀的是 `opportunity_metrics` dataset，而該 dataset **沒有任何度量讀 `expected_revenue`** —— 它暴露的金額類度量（*Total Amount*、*Avg Deal Size*、*Won Revenue*、*Lost Revenue*）一律讀原始的 `amount` 欄位。所以它的 *Total Pipeline* 磁貼是**未加權**的在飛管道；兩個數字之間差的正是上面這層機率加權。
 
 ## 銷售管道看板視圖
 
@@ -65,15 +67,15 @@ description: 銷售管道的日常運作方式——推進交易、自動機率�
 
 ## 值得收藏的銷售管道報告
 
-你會在側邊欄的**報告**部分找到這些：
+這五張裡只有第一張在側邊欄上。側邊欄沒有*報告*分組：報表所在的分組叫 **Insights**（`src/apps/crm.app.ts`），它釘了三張報表 —— **Pipeline Coverage**、**Lead Inflow**、**SLA Performance** —— 外加 **CRM Overview** 儀表板與 **Forecasts**。下面其餘四張要從報表介面進。這裡用的是報表庫列出的 label，它未必等於導航項上那個更短的名字。
 
 | 報告 | 它顯示什麼 |
 | --- | --- |
-| **銷售管道覆蓋率（季度）** | 我們對即將到來的季度是否覆蓋了 3 倍配額？季度 × 階段矩陣。 |
-| **按負責人 → 階段的漏斗** | 每位銷售代表的漏斗健康——發現漏水的階段。 |
-| **按階段的商機** | 按階段的銷售管道柱狀圖。 |
-| **按負責人的贏單** | 用於季末表彰的排行榜。 |
-| **客戶流失訊號** | 現有客戶的開放案例 + 低 NPS = 流失風險。 |
+| **Pipeline Coverage by Forecast × Quarter** | 我們對即將到來的季度是否覆蓋了 3 倍配額？未結管道的矩陣：列是預測類別，欄是預計成交季度。它在側邊欄上的導航項寫作 **Pipeline Coverage**。 |
+| **Opportunity Funnel by Owner → Stage** | 每位銷售代表的漏斗健康——發現漏水的階段。 |
+| **Opportunities by Stage** | 按階段的銷售管道柱狀圖。 |
+| **Won Opportunities by Owner** | 用於季末表彰的排行榜。 |
+| **Customer Churn Signals** | 現有客戶的開放案例 + 低 NPS = 流失風險。 |
 
 詳情參見 [Analytics › Reports](/zh-Hant/docs/analytics/reports)。
 
@@ -82,19 +84,21 @@ description: 銷售管道的日常運作方式——推進交易、自動機率�
 | 節奏 | 該做什麼 |
 | --- | --- |
 | **每日** | 打開銷售管道看板。找出停滯的卡片（階段內 > 14 天）。推進或關閉。 |
-| **每週** | 執行*銷售管道覆蓋率*。向 Sales Copilot 提問：*"what's at risk?"* |
-| **每月** | 執行*按負責人 → 階段的漏斗*。對漏斗漏水的銷售代表進行一對一輔導。 |
-| **季末** | 執行*按負責人的贏單*以計算提成。歸檔*失敗*的交易並附上*丟單原因*。 |
+| **每週** | 執行 *Pipeline Coverage*。向 Sales Copilot 提問：*"what's at risk?"* |
+| **每月** | 執行 *Opportunity Funnel by Owner → Stage*。對漏斗漏水的銷售代表進行一對一輔導。 |
+| **季末** | 執行 *Won Opportunities by Owner* 以計算提成。歸檔*失敗*的交易並附上*丟單原因*。 |
 
 ## 預測彙總
 
 銷售經理 / 總監的預測視圖由以下部分構建：
 
 - **Opportunity Metrics** dataset（`opportunity_metrics`）—— 度量 **Total Amount**（金額之和），維度 **Stage**
-- **Sales Performance** 儀表板（`sales_dashboard`）—— 小工具包括按階段的銷售管道、贏單率、頂級交易
+- **Sales Performance** 儀表板（`sales_dashboard`）—— 小工具包括按階段的銷售管道、贏單率、按負責人的在飛管道
 - **Pipeline Coverage** 報告（`pipeline_coverage_by_quarter`，報表自身的 label 寫作 **Pipeline Coverage by Forecast × Quarter**）—— 未結管道的矩陣：列是預測類別，欄是預計成交季度
 
 它們共同回答：*"我們是否有足夠的銷售管道來完成本季度，以及風險在哪裡？"*
+
+這塊儀表板給不了的是*頂級交易*那種逐筆排行，改個名字也解決不了：儀表板的 table 綁定的是分析 dataset，只能做聚合，列不出原始記錄（ADR-0021）。原先占著這個位置的 **Top Open Opportunities** 表正是因此被換成了按負責人聚合的 **Open Pipeline by Owner** —— `src/dashboards/sales.dashboard.ts` 裡 Row 5 的註釋記下了這次替換。要逐筆的交易排行，請改用商機清單檢視。
 
 ## 給銷售代表的提示
 
@@ -104,8 +108,8 @@ description: 銷售管道的日常運作方式——推進交易、自動機率�
 
 ## 給銷售經理的提示
 
-- ✅ 每月執行*按負責人 → 階段的漏斗*，以發現漏斗漏水的銷售代表。
-- ✅ 在 QBR 中使用*按季度的銷售管道覆蓋率*來設定下一季度的目標。
+- ✅ 每月執行 *Opportunity Funnel by Owner → Stage*，以發現漏斗漏水的銷售代表。
+- ✅ 在 QBR 中使用 *Pipeline Coverage* 來設定下一季度的目標。
 - ✅ 輔導銷售代表填寫*競爭對手*——它能顯著提升 Copilot 的品質。
 
 ## 給管理員的提示
