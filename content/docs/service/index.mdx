@@ -45,7 +45,7 @@ New ──► In Progress ──► Waiting on Customer ──► Resolved ─�
 The [service skills](/docs/ai-copilot/service-copilot) are built into every case. Ask the assistant:
 
 - *"Triage this case"* — assigns a priority based on subject, description and customer tier.
-- *"Suggest a resolution"* — searches the support knowledge base and drafts a customer reply.
+- *"Suggest a resolution"* — two skills, not one. **Customer 360°** reads the published knowledge articles (`crm_knowledge_article` is an ordinary object it queries), and **Email Drafting** writes the customer reply. Case Triage does neither: it has no query tool, and no drafting step.
 - *"Summarise this customer"* — Customer 360 view including past cases and open opportunities.
 
 ## Standard dashboards & reports

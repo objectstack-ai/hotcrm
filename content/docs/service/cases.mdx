@@ -153,7 +153,7 @@ You don't have to configure any of this — every CRM object ships with `trackHi
 The [service skills](/docs/ai-copilot/service-copilot) auto-activate on any case. Ask:
 
 - *"Triage this case"* — Case Triage skill recommends a priority based on subject and description.
-- *"Suggest a resolution"* — searches the [Support Knowledge Base](/docs/service/knowledge-base) and drafts a customer reply.
+- *"Suggest a resolution"* — no one skill does this end to end. **Case Triage** declares two tools, `describe_object` and `get_record`, and no query tool at all, so it searches nothing. Ask **Customer 360°** for the published [knowledge articles](/docs/service/knowledge-base) matched on the case's category or tags, then **Email Drafting** for the customer reply — the draft is grounded in the contact and account records, not in those articles, so paste in whatever it should quote.
 - *"Customer 360"* — pulls the full account context (open opportunities, past cases, contract tier).
 
 If the Copilot decides the priority is *Critical*, it will also recommend immediate escalation and draft an internal notification message.
