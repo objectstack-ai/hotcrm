@@ -31,7 +31,9 @@ You can override the probability manually on an individual deal if you have a sp
 
 This number is the heart of the weighted forecast. It's recalculated automatically every time the amount or probability changes (including the auto-updates from stage changes).
 
-The **Sales Dashboard** sums *Expected Revenue* across the open pipeline to give you the weighted forecast for the quarter.
+The weighted forecast is a **list-view total, not a dashboard number**. The **Open Deals** and **All Opportunities** views on Opportunities each carry an *Expected Revenue* column with a column sum (`src/views/opportunity.view.ts`), and that sum over the open pipeline is the weighted forecast.
+
+No dashboard can give you the same figure. The **Sales Performance** dashboard (`sales_dashboard`) reads the `opportunity_metrics` dataset, and that dataset declares **no measure over `expected_revenue`** — every amount measure it exposes (*Total Amount*, *Avg Deal Size*, *Won Revenue*, *Lost Revenue*) reads the raw `amount` field. So its *Total Pipeline* tile is the **unweighted** open pipeline; the two numbers differ by the probability weighting, which is the whole point of the calculation above.
 
 ## The pipeline kanban view
 
@@ -65,14 +67,14 @@ The Sales Copilot surfaces at-risk deals when you ask *"what's slipping?"* or *"
 
 ## Pipeline reports worth bookmarking
 
-You'll find these in the **Reports** section of the sidebar:
+Only the first of these is on the sidebar. There is no *Reports* group: the reports group is called **Insights** (`src/apps/crm.app.ts`), and it pins three reports — **Pipeline Coverage**, **Lead Inflow** and **SLA Performance** — alongside the **CRM Overview** dashboard and **Forecasts**. The other four below are opened from the reports screen. Names here are the labels the report library lists, which is not always the shorter name on the nav entry.
 
 | Report | What it shows |
 | --- | --- |
-| **Pipeline Coverage (Quarter)** | Are we covering 3x the quota for the upcoming quarter? Matrix of quarter × stage. |
-| **Funnel by Owner → Stage** | Per-rep funnel health — spot leaky stages. |
+| **Pipeline Coverage by Forecast × Quarter** | Are we covering 3x the quota for the upcoming quarter? A matrix of open pipeline: forecast category down the rows, close quarter across the columns. The sidebar entry for it reads **Pipeline Coverage**. |
+| **Opportunity Funnel by Owner → Stage** | Per-rep funnel health — spot leaky stages. |
 | **Opportunities by Stage** | Bar chart of pipeline by stage. |
-| **Won by Owner** | Leaderboard for quarter-end recognition. |
+| **Won Opportunities by Owner** | Leaderboard for quarter-end recognition. |
 | **Customer Churn Signals** | Open cases + low NPS on existing customers = churn risk. |
 
 See [Analytics › Reports](/docs/analytics/reports) for details.
@@ -83,18 +85,20 @@ See [Analytics › Reports](/docs/analytics/reports) for details.
 | --- | --- |
 | **Daily** | Open Pipeline Kanban. Find stalled cards (in-stage > 14 days). Push or close. |
 | **Weekly** | Run *Pipeline Coverage*. Ask the Sales Copilot: *"what's at risk?"* |
-| **Monthly** | Run *Funnel by Owner → Stage*. Coach reps with leaky stages 1:1. |
-| **Quarter-end** | Run *Won by Owner* for commissions. Archive lost deals with a *loss reason*. |
+| **Monthly** | Run *Opportunity Funnel by Owner → Stage*. Coach reps with leaky stages 1:1. |
+| **Quarter-end** | Run *Won Opportunities by Owner* for commissions. Archive lost deals with a *loss reason*. |
 
 ## Forecasting roll-up
 
 The Sales Manager / Director view of the forecast is built from:
 
 - The **Opportunity Metrics** dataset (`opportunity_metrics`) — measure **Total Amount** (sum of amount), dimension **Stage**
-- The **Sales Performance** dashboard (`sales_dashboard`) — widgets for pipeline by stage, win rate, top deals
+- The **Sales Performance** dashboard (`sales_dashboard`) — widgets for pipeline by stage, win rate, and open pipeline by owner
 - The **Pipeline Coverage** report (`pipeline_coverage_by_quarter`, whose own label reads **Pipeline Coverage by Forecast × Quarter**) — a matrix of open pipeline: forecast category down the rows, close quarter across the columns
 
 Together they answer: *"do we have enough pipeline to make the quarter, and where are the risks?"*
+
+What that dashboard will not give you is a *top deals* ranking, and no renaming would fix it: a dashboard table binds to an analytics dataset and can only aggregate — it cannot list raw records (ADR-0021). The **Top Open Opportunities** table that once held that slot was replaced by **Open Pipeline by Owner**, a per-rep ranking, for exactly that reason; the Row 5 comment in `src/dashboards/sales.dashboard.ts` records the swap. For a deal-by-deal ranking, open an opportunity list view.
 
 ## Tips for sales reps
 
@@ -104,8 +108,8 @@ Together they answer: *"do we have enough pipeline to make the quarter, and wher
 
 ## Tips for sales managers
 
-- ✅ Run *Funnel by Owner → Stage* monthly to catch reps with leaky funnels.
-- ✅ Use *Pipeline Coverage by Quarter* in QBRs to set the next quarter's targets.
+- ✅ Run *Opportunity Funnel by Owner → Stage* monthly to catch reps with leaky funnels.
+- ✅ Use *Pipeline Coverage* in QBRs to set the next quarter's targets.
 - ✅ Coach reps to fill in *Competitors* — it dramatically improves Copilot quality.
 
 ## Tips for admins
