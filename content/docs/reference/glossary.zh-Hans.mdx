@@ -67,7 +67,7 @@ description: CRM 与平台术语 —— 按字母排序，让你在会议中不�
 
 **FLS** *(Field-Level Security，字段级安全)* —— 按简档划分的逐字段读/写权限。
 
-**Flow（流程）** —— 多步骤自动化。比工作流规则更强大。
+**Flow（流程）** —— 多步骤自动化，也是 ObjectStack 唯一的规则类自动化类型：本应用里每一条「这条记录一保存就做某事」的规则都是记录变更类流程。参见下方 *Workflow rule* 词条。
 
 **Forecast（预测）** —— 某一期间的预测签约额，分桶为 Closed / Commit / Best Case / Pipeline。
 
@@ -195,7 +195,7 @@ description: CRM 与平台术语 —— 按字母排序，让你在会议中不�
 
 **Webhook** —— 在 CRM 事件发生时触发的 HTTP 回调。
 
-**Workflow rule（工作流规则）** —— 一种简单的保存后自动化：条件 → 字段更新 / 邮件 / 任务。
+**Workflow rule（工作流规则）** —— 并非 ObjectStack 的概念。平台已退休独立的工作流规则类型（ADR-0019 / ADR-0020）：不存在 `workflow` 元数据类型，stack 上没有 `workflows` 集合，**设置 → 自动化** 下也没有 *工作流规则* 入口，只有 *流程*。一条简单的保存后规则（条件 → 字段更新 / 邮件 / 任务）应写成 **记录变更类流程**；参见 [Administration › Automation](/zh-Hans/docs/administration/automation)。
 
 **Win rate（赢单率）** —— 赢单 ÷（赢单 + 丢单）。不含"未决策即关闭"。
 

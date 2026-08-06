@@ -169,6 +169,6 @@ description: 活跃的销售交易——销售管道的核心，包含 7 个阶�
 
 ## 给管理员的提示
 
-- 阶段列表和默认概率位于商机对象的自动化中。参见 [Customization › Extending Objects](/zh-Hans/docs/customization/extending-objects) 来更改它们——你需要同步更新工作流规则和状态机。
+- 阶段列表、默认概率和合法的状态转换分散在源码的三处，而不是某个 Setup 界面：共享选择列表 `OPPORTUNITY_STAGE_OPTIONS`（`src/objects/_picklists.ts`），由 `stage` 字段渲染；`opportunity_lifecycle` 钩子里的 `STAGE_PROBABILITY` 映射（`src/objects/opportunity.hook.ts`），每次保存都据此重新同步*成交概率*；以及商机对象上名为 `opportunity_stage_progression` 的状态机校验规则（`src/objects/opportunity.object.ts`）。三处需同步修改。参见 [Customization › Extending Objects](/zh-Hans/docs/customization/extending-objects)。
 - $500K 折扣审批阈值可以在 [审批流程配置](/zh-Hans/docs/revenue/approvals) 中更改。
-- $100K 大单通知阈值位于商机工作流规则中。
+- $100K 大单通知阈值同样不是 Setup 界面上的字段：它是 `opportunity_won_alert` 流程的 CEL 起始条件——`src/flows/opportunity-won-alert.flow.ts` 里的 `record.amount > 100000`。收件人则由该流程 `notify` 节点的 `recipients` 决定，列表里只有 `{record.owner_id}` 一项，即商机负责人本人。

@@ -79,8 +79,8 @@ description: 客户支持工单——主题、优先级、状态、解决方案�
 
 ## 工作流自动化
 
-- **紧急时通知**——当优先级被设为 Critical 时，向 `support_manager@example.com` 发送邮件。
-- **升级时通知**——当工单被升级时，向升级团队发送邮件。
+- **紧急时通知**——当优先级被设为 Critical 时，工单升级流程的 `notify` 节点发出站内消息 + 邮件，只发给**工单负责人一人**：收件人列表只有 `{caseRecord.owner_id}` 这一项。本应用中不存在 `support_manager@example.com` 这个收件人。
+- **升级时通知**——当状态变更为 *Escalated* 时，不会发出任何邮件：`escalation_team@example.com` 在本应用中根本不存在，也不存在「升级团队」这样一个收件目标。状态转为已升级真正触发的是 `case_status_side_effects` 钩子，它开出的是一条**次日到期、优先级为紧急、归账户负责人的跟进任务**——且仅限有关联账户的工单，因为该任务是挂在那个账户上的。
 - **计算解决时间**——关闭时自动进行。
 - **自动设置关闭日期和标记**——状态变更时。
 
@@ -175,5 +175,5 @@ Activity 标签页是工单上发生过什么的唯一可信来源。它将四�
 ## 给管理员的提示
 
 - 每个优先级的 SLA 目标存储在工单对象的自动化中。要更改它们，请编辑工单自动化——参见 [管理 › 自动化](/zh-Hans/docs/administration/automation)。
-- 升级团队邮件收件人（`escalation_team@example.com`）和支持经理邮件（`support_manager@example.com`）在工单工作流规则中配置。
+- `escalation_team@example.com` 和 `support_manager@example.com` 都没有在任何地方配置过——这两个地址在本应用中根本不存在。真实存在的收件人列表只有一处：工单升级流程 `notify` 节点的 `recipients: ['{caseRecord.owner_id}']`，即工单负责人一人；它在 `src/flows/case-escalation.flow.ts` 里改，不是 Setup 界面上的配置项。
 - 邮件转工单接入（从来访邮件自动创建工单）需要邮件插件——参见 [定制 › 扩展对象](/zh-Hans/docs/customization/extending-objects)。
