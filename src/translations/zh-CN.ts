@@ -107,7 +107,7 @@ export const zhCN: TranslationData = {
         },
         renewal_owner: { label: '续约负责人 (CSM)' },
         next_renewal_date: { label: '下次续约日期' },
-        name_normalized: { label: '客户名称（规范化）', help: '线索转换的匹配键：客户名称转小写、去除首尾空格、内部连续空白合并为一个空格。由 account_protection 钩子维护——请勿直接编辑。' },
+        name_normalized: { label: '客户名称（规范化）', help: '线索转化的匹配键：客户名称转小写、去除首尾空格、内部连续空白合并为一个空格。由 account_protection 钩子维护——请勿直接编辑。' },
         display_title: { label: '显示名称' },
       },
       _views: {
@@ -397,7 +397,7 @@ export const zhCN: TranslationData = {
           options: { suspected: '疑似重复', confirmed: '已确认重复' },
         },
         display_title: { label: '显示名称' },
-        company_normalized: { label: '公司名称（规范化）', help: '线索转换的匹配键：公司名称转小写、去除首尾空格、内部连续空白合并为一个空格。由 lead_duplicate_check 钩子维护——请勿直接编辑。' },
+        company_normalized: { label: '公司名称（规范化）', help: '线索转化的匹配键：公司名称转小写、去除首尾空格、内部连续空白合并为一个空格。由 lead_duplicate_check 钩子维护——请勿直接编辑。' },
         next_followup_date: { label: '下次跟进日期' },
         last_contacted_date: { label: '最近联系时间' },
       },
@@ -922,7 +922,7 @@ export const zhCN: TranslationData = {
           label: '竞争对手',
           options: { competitor_a: '竞争对手 A', competitor_b: '竞争对手 B', competitor_c: '竞争对手 C' },
         },
-        crm_campaign: { label: '营销活动', help: '带来此商机的市场活动' },
+        crm_campaign: { label: '营销活动', help: '带来此商机的营销活动' },
         days_in_stage: { label: '当前阶段天数' },
         stage_entry_date: { label: '进入当前阶段日期', help: '本商机进入当前阶段的日期。' },
         is_private: { label: '私密' },
@@ -932,7 +932,7 @@ export const zhCN: TranslationData = {
         },
         approved_date: { label: '批准时间' },
         win_reason: {
-          help: '赢单原因。将商机关闭为"赢单"时必填。',
+          help: '赢单原因。将商机关闭为"成交"时必填。',
           label: '赢单原因',
           options: {
             better_product: '产品更优', better_price: '价格更优', relationship: '客户关系',
@@ -941,7 +941,7 @@ export const zhCN: TranslationData = {
           },
         },
         loss_reason: {
-          help: '丢单原因。将商机关闭为"丢单"时必填。',
+          help: '丢单原因。将商机关闭为"失败"时必填。',
           label: '丢单原因',
           options: {
             price: '价格过高', competitor: '输给竞争对手', no_budget: '无预算',
