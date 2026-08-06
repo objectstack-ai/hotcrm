@@ -17,15 +17,11 @@ Navigate to **Setup → Company Information**:
 - [ ] Fiscal year start month (used by all forecast reports)
 - [ ] Default language
 
-### 2. Business hours
+### 2. Business hours — nothing to configure
 
-**Setup → Business Hours**:
+**There is no Setup → Business Hours screen.** This app ships no working-day calendar, no working-hours window and no holiday list — nothing to fill in here, and nothing a deadline could be counted against. The section is kept only so the admin who came looking for that screen stops looking.
 
-- [ ] Working days (e.g., Mon–Fri)
-- [ ] Working hours (e.g., 9 AM – 6 PM)
-- [ ] Holidays for the year
-
-Business hours drive [SLA calculations](/docs/service/sla-and-escalation) — e.g., "resolve within 8 business hours" uses these.
+What follows from that is on the SLA side: deadlines run on **calendar hours**. The one deadline this app computes is the Critical case target — `src/objects/case.hook.ts` adds four hours to the wall clock (`due.setHours(due.getHours() + 4)`) — so a Critical case opened at 4pm on a Friday is due at 8pm that same Friday, and nights, weekends and holidays all count against it. No other priority is stamped with a due date at all: the 8-hour High target and the rest are service promises your team keeps, not clocks the app runs. See [SLA & Escalation](/docs/service/sla-and-escalation).
 
 ### 3. Email setup
 
