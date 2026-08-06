@@ -12,7 +12,6 @@ import {
   localePacks,
   packFor,
   fieldsOf,
-  walk,
 } from './helpers/metadata-fixtures';
 
 /**
@@ -262,7 +261,7 @@ describe('select fields are translated in every locale', () => {
 
   it('every select field has a translated label in every locale', () => {
     const bad: string[] = [];
-    for (const { key, objectName, fieldName } of selectFields) {
+    for (const { objectName, fieldName } of selectFields) {
       for (const [locale, pack] of localePacks) {
         if (!entryFor(pack, objectName, fieldName)?.label) {
           bad.push(`${locale}: ${objectName}.fields.${fieldName}.label`);
@@ -282,7 +281,7 @@ describe('select fields are translated in every locale', () => {
     // as an odd column heading; a missing OPTION label puts the raw stored value
     // (`not_a_fit`, `waiting_customer`) into a picklist a rep has to choose from.
     const bad: string[] = [];
-    for (const { key, objectName, fieldName, values } of selectFields) {
+    for (const { objectName, fieldName, values } of selectFields) {
       for (const [locale, pack] of localePacks) {
         const options = entryFor(pack, objectName, fieldName)?.options ?? {};
         const missing = values.filter((v) => !options[v]);

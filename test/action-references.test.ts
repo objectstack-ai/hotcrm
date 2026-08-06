@@ -10,7 +10,6 @@ import {
   objectNames,
   packFor,
   PLATFORM_OBJECTS,
-  walk,
 } from './helpers/metadata-fixtures';
 
 /**

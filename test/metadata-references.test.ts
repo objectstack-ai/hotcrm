@@ -8,7 +8,6 @@ import {
   objects,
   pages,
   views,
-  profiles,
   objectNames,
   profileNames,
   PLATFORM_OBJECTS,

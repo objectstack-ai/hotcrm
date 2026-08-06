@@ -32,7 +32,10 @@ keeps a map at the top naming which family went where.
 
 Nothing about what is checked changed. The split moved text: no assertion,
 helper, fixture or test name was edited, and the same 70 tests run before and
-after (24 + 16 + 11 + 19). The only bytes that differ inside a moved block are
-five comments whose wording the split itself falsified — sentences saying "the
-navigation guard in this file", which now name `test/action-references.test.ts`.
-Largest resulting file is 33,447 bytes, 67% below the ceiling.
+after (24 + 16 + 11 + 19). Two categories of byte differ inside a moved block,
+and nothing else: five comments whose wording the split itself falsified
+(sentences saying "the navigation guard in this file", which now name
+`test/action-references.test.ts`), and two `for` statements that destructured a
+`key` binding they never read — dead before the split, and reported by CodeQL
+once the code landed at a new path. Largest resulting file is 33,433 bytes, 67%
+below the ceiling.
