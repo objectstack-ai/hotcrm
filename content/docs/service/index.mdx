@@ -27,17 +27,17 @@ New ──► In Progress ──► Waiting on Customer ──► Resolved ─�
 2. **Priority is assigned** — Low, Medium, High or Critical. *Critical* alerts the support manager immediately.
 3. **SLA target is calculated** — every case gets a deadline based on priority.
 4. **Agent works the case**, moving status as they go.
-5. **If it's stuck** (or critical, or a customer's), the [escalation process](/docs/service/sla-and-escalation#case-escalation) reassigns it to a senior agent.
+5. **If it's Critical** (or its SLA due date passes), the [escalation process](/docs/service/sla-and-escalation#case-escalation) flags the case as *Escalated* and alerts its owner. It does **not** reassign it — there is no hand-off to senior staff or to a manager — and no escalation condition reads the account, so a *Customer*'s case gets no branch of its own.
 6. **Resolution is recorded**, the resolution time is auto-stamped, and the case is closed.
 
 ## What the system does for you
 
 - **Auto-prioritise** with the Case Triage skill (the Service Copilot reads the case and recommends a priority).
-- **Auto-escalate** critical cases or high-priority customer cases to a senior agent.
-- **Notify on critical** — emails the support manager whenever a case is set to Critical.
-- **Notify on escalation** — emails the escalation team whenever a case is escalated.
+- **Auto-escalate** Critical cases — the flow flags them *Escalated* and alerts the owner; it never touches `owner_id`, so nothing is handed to a senior agent. A High case is never escalated automatically, whatever the account is: raising one is the manual **Escalate Case** button.
+- **Notify on critical** — inbox message + email to the **case owner** whenever a case is set to Critical. That is the Case Escalation flow's notify node, whose recipient list is `{caseRecord.owner_id}` alone; there is no `support_manager@example.com` recipient anywhere in this app.
+- **Notify on escalation** — no email goes to an escalation team: `escalation_team@example.com` exists nowhere in this app. What the *Escalated* status fires is the `case_status_side_effects` hook, which opens an **Urgent follow-up task due tomorrow for the account owner**.
 - **Stamp resolution time** automatically when a case is closed.
-- **Flag SLA breaches** with a red banner once the SLA target passes.
+- **Flag SLA breaches** once the SLA target passes — the case is marked **SLA Violated**, escalated, and its owner alerted by inbox + email. No red banner: this app has no banner mechanism.
 - **Block bad closes** — you can't mark a case Closed without a resolution written.
 
 ## Service AI skills
