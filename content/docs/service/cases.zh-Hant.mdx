@@ -131,7 +131,7 @@ description: 客戶支援工單——主題、優先順序、狀態、解決方�
 
 本節原先列的七個名字裡，有六個根本不是檢視：
 
-- **Critical Cases** 與 **Breached SLA** 是指標磁磚，不是列表。[服務儀表板](/zh-Hant/docs/analytics/dashboards)上有 *Critical Cases*（未結且 Critical）和 **SLA Violations**（`is_sla_violated` 為真）兩個磁磚；本應用裡沒有任何一個列表檢視按違約過濾。真要有一份能逐條處理的清單，用 **Escalated Cases**——SLA 掃描會把它標記的每一條都升級，所以每次違約都會落到那裡。
+- **Critical Cases** 與 **Breached SLA** 是指標磁磚，不是列表。[服務概覽](/zh-Hant/docs/analytics/dashboards)（Service Overview；該儀表板自身的標題是 **Customer Service**）上有 *Critical Cases*（未結且 Critical）和 **SLA Violations**（`is_sla_violated` 為真）兩個磁磚；本應用裡沒有任何一個列表檢視按違約過濾。真要有一份能逐條處理的清單，用 **Escalated Cases**——SLA 掃描會把它標記的每一條都升級，所以每次違約都會落到那裡。
 - **Service Board** 不是本應用裡任何東西的名字。看板叫 **Service Workflow**，在 *Workflow* 頁籤上。
 - **Cases Due Today**、**Recently Closed** 與 **By Account** 以任何形式都不存在：沒有任何檢視按「截止日期 = 今天」或 `closed_date` 過濾，`crm_case` 上也沒有任何分組檢視。
 
@@ -183,7 +183,7 @@ Activity 標籤頁是工單上發生過什麼的唯一可信來源。它將四�
 
 ## 給服務經理的提示
 
-- ✅ 沒有 **Breached SLA** 這個檢視可看，也沒有什麼紅色徽章——工單列表上唯一的顏色規則是 *All Cases* 的列底色，它鍵在**優先順序**上，不是違約。每天改看 **Escalated Cases**，數量則看服務儀表板上的 **SLA Violations** 磁磚。
+- ✅ 沒有 **Breached SLA** 這個檢視可看，也沒有什麼紅色徽章——工單列表上唯一的顏色規則是 *All Cases* 的列底色，它鍵在**優先順序**上，不是違約。每天改看 **Escalated Cases**，數量則看服務概覽上的 **SLA Violations** 磁磚。
 - ✅ 用看板開每日站會——它叫 **Service Workflow**，在工單列表的 *Workflow* 頁籤上。
 - ✅ 輔導那些 **Resolution Time** 趨勢上升的客服——但這個趨勢只能從工單本身讀出來。不存在什麼客服排行榜：`case_metrics` 這個資料集（服務側每一張報表和每一個儀表板部件都建在它上面）只宣告了 Status、Priority、Origin、Type、Created 五個維度，所以分析層裡沒有任何東西能按客服分組。
 

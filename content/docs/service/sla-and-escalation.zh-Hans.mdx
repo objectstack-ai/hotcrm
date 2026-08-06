@@ -123,11 +123,11 @@ Critical 的 4 小时是系统唯一会盯的目标，而且它写在钩子里�
 | 角色 | 查看什么 | 何时 |
 | --- | --- | --- |
 | **客服** | My Open Cases——一个按优先级排的队列，不是按截止时间排的队列 | 当班期间每小时 |
-| **服务经理** | Escalated Cases 与 SLA at Risk 两个视图，外加服务仪表盘上的 **SLA Violations** 磁贴 | 每天一早 |
+| **服务经理** | Escalated Cases 与 SLA at Risk 两个视图，外加服务概览（Service Overview）上的 **SLA Violations** 磁贴——该仪表盘自身的标题是 **Customer Service** | 每天一早 |
 | **服务总监** | SLA 表现报表 | 每周 |
-| **高管** | 服务仪表盘 | 每周 |
+| **高管** | 服务概览 | 每周 |
 
-这张表过去写的两个名字根本不是视图。**Breached SLA** 与 **Critical Cases** 都不存在于列表视图里：`crm_case` 随产品提供的视图一共七个——*All Cases*、*Service Workflow*、*SLA Calendar*、*Case Timeline*、*My Open Cases*、*Escalated Cases* 与 *⏰ SLA at Risk*（`src/views/case.view.ts`）——其中没有任何一个以 **SLA 已违约**为过滤条件。真正按违约过滤的只有[服务仪表盘](/zh-Hans/docs/analytics/dashboards)上的两个指标磁贴：**SLA Violations**（`is_sla_violated: true`）与 **Critical Cases**（未结 + Critical）。如果你要的是一份能逐条处理的列表，**Escalated Cases** 是最接近的那个：`case_sla_monitor` 会把它标记为违约的每一个工单都升级掉，所以每一次违约都会落进这个视图——只是会和那些仅因优先级而升级的工单混在一起。
+这张表过去写的两个名字根本不是视图。**Breached SLA** 与 **Critical Cases** 都不存在于列表视图里：`crm_case` 随产品提供的视图一共七个——*All Cases*、*Service Workflow*、*SLA Calendar*、*Case Timeline*、*My Open Cases*、*Escalated Cases* 与 *⏰ SLA at Risk*（`src/views/case.view.ts`）——其中没有任何一个以 **SLA 已违约**为过滤条件。真正按违约过滤的只有[服务概览](/zh-Hans/docs/analytics/dashboards)上的两个指标磁贴：**SLA Violations**（`is_sla_violated: true`）与 **Critical Cases**（未结 + Critical）。如果你要的是一份能逐条处理的列表，**Escalated Cases** 是最接近的那个：`case_sla_monitor` 会把它标记为违约的每一个工单都升级掉，所以每一次违约都会落进这个视图——只是会和那些仅因优先级而升级的工单混在一起。
 
 **My Open Cases 是按优先级排序的，不是按 SLA 截止日期。** 它的排序键是 `priority_rank` 降序在先、`sla_due_date` 升序仅作次级键（`src/views/case.view.ts`）——所以一个一小时后就到期的 Low 工单，仍然排在每一个 Critical 工单下面。又因为只有 Critical 工单才会被打上截止日期，次级键在 Critical 以下的各档里根本无值可排：同一档内的先后顺序，取决于存储返回的顺序。如果你是按截止时间在干活，请在它旁边同时开着 **SLA at Risk** 或 **SLA Calendar**。
 
@@ -139,7 +139,7 @@ Critical 的 4 小时是系统唯一会盯的目标，而且它写在钩子里�
 
 ## 给服务经理的提示
 
-- ✅ 没有 **Breached SLA** 这个列表视图可以运行。改去处理 **Escalated Cases** 视图——SLA 扫描标记的每一个工单都会被升级进这个视图——数量则看服务仪表盘上的 **SLA Violations** 磁贴。
+- ✅ 没有 **Breached SLA** 这个列表视图可以运行。改去处理 **Escalated Cases** 视图——SLA 扫描标记的每一个工单都会被升级进这个视图——数量则看服务概览上的 **SLA Violations** 磁贴。
 - ✅ 每日站会用那块看板，但它叫 **Service Workflow**（`case_workflow`），在工单列表上以 **Workflow** 页签出现。本应用里不存在叫 *Service Board* 的东西。
 - ✅ 辅导那些违约率趋升的客服——在它形成模式之前于 1:1 中提出。
 

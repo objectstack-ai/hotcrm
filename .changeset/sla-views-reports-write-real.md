@@ -35,9 +35,10 @@ percentage.
 (`src/views/case.view.ts`): *All Cases*, *Service Workflow*, *SLA Calendar*,
 *Case Timeline*, *My Open Cases*, *Escalated Cases*, *⏰ SLA at Risk* — and none
 of them filters on `is_sla_violated`. The two surfaces that do are metric tiles
-on the Service Dashboard. The cadence table and the manager tip now point at
-**Escalated Cases** (every case the sweep flags gets escalated into it) plus the
-**SLA Violations** tile, and say plainly that the two old names name nothing.
+on the Service Overview dashboard. The cadence table and the manager tip now
+point at **Escalated Cases** (every case the sweep flags gets escalated into it)
+plus the **SLA Violations** tile, and say plainly that the two old names name
+nothing.
 
 **The kanban board is called Service Workflow.** `case_workflow` carries
 `label: 'Service Workflow'` and appears on the case list as the **Workflow**
