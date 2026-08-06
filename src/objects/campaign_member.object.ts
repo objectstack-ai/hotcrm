@@ -59,8 +59,27 @@ export const CampaignMember = ObjectSchema.create({
   // auto-derivation whitelist).
   nameField: 'member_number',
 
+  // Load-bearing on TWO surfaces, and the second one is why this list is not
+  // the side that gave way to fix `field-group-shadowed` below (#715). Besides the
+  // detail highlight strip, it is what curates the members panel on a
+  // campaign's detail page: a related list takes its columns from the child's
+  // `highlightFields` minus the lookup it is scoped by, and this object ships
+  // no view at all, so dropping `crm_lead`/`crm_contact` here would leave that
+  // panel showing Status / Response Date and no person — measured and pinned in
+  // `test/view-references.test.ts` (#944).
   highlightFields: ['crm_campaign', 'crm_lead', 'crm_contact', 'status', 'response_date'],
 
+  // Both groups render on detail pages as well as on forms, and keeping them
+  // that way is a constraint on the two lists above, not a free choice (#715).
+  // A detail page hoists the record title plus the first four highlightFields
+  // out of the body, so a group whose every field is hoisted keeps its heading
+  // on forms and silently disappears from detail pages (`field-group-shadowed`).
+  // `basic` was exactly that: member_number is the title, and campaign/lead/
+  // contact are the first three of the strip. `added_date` — the enrollment
+  // stamp, which describes the MEMBERSHIP rather than the person's response —
+  // sits here rather than under `response` so the group has something of its
+  // own to show. Same resolution as `crm_task`'s shadowed `assignment` group
+  // (#582): move the field to the group it reads under, leave the strip alone.
   fieldGroups: [
     { key: 'basic',    label: 'Basic Information', icon: 'info' },
     { key: 'response', label: 'Response Tracking', icon: 'activity' },
@@ -110,6 +129,18 @@ export const CampaignMember = ObjectSchema.create({
       description: 'Set when the member is an existing Contact',
     }),
 
+    // NOT `readonly`: the campaign_enrollment flow writes this stamp, and
+    // 16.x drops writes to readonly fields (#2948) — every member landed with
+    // a null Added Date while the flag was on.
+    //
+    // Grouped under `basic`, not `response` (#715): it records when the
+    // membership was created, which is a fact about the enrollment, not a step
+    // in the response lifecycle the other stamps track.
+    added_date: Field.datetime({
+      label: 'Added Date',
+      group: 'basic',
+    }),
+
     status: Field.select({
       label: 'Status',
       required: true,
@@ -125,14 +156,6 @@ export const CampaignMember = ObjectSchema.create({
         { label: 'Bounced',   value: 'bounced',   color: '#FF4500' },
         { label: 'Unsubscribed', value: 'unsubscribed', color: '#FF0000' },
       ],
-    }),
-
-    // NOT `readonly`: the campaign_enrollment flow writes this stamp, and
-    // 16.x drops writes to readonly fields (#2948) — every member landed with
-    // a null Added Date while the flag was on.
-    added_date: Field.datetime({
-      label: 'Added Date',
-      group: 'response',
     }),
 
     first_opened_date: Field.datetime({

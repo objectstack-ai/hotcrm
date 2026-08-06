@@ -95,6 +95,70 @@ describe('fieldGroups are internally consistent', () => {
     expect(bad, `fields pointing at undeclared groups:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
+  /**
+   * The third way a group can be declared and still never reach a reader, and
+   * the only one of the three that is invisible on forms (#715).
+   *
+   * A synthesized detail page hoists the record title and the leading
+   * `highlightFields` into the header strip and drops them from the body, so a
+   * group whose every field is hoisted keeps its heading on forms and renders
+   * nowhere on detail pages. `crm_task` reached that state with a one-field
+   * `assignment` group (#582); `crm_campaign_member` reached it with all four
+   * fields of `basic` (member_number as the title, campaign/lead/contact in the
+   * strip).
+   *
+   * `objectstack lint` reports this as `field-group-shadowed`, but lint exits 0
+   * on warnings, so nothing in `pnpm verify` fails when it comes back — the same
+   * reason the two checks above are duplicated here. The hoisting model mirrors
+   * the platform rule: title + the first FOUR non-title highlight entries.
+   */
+  it('no declared group is entirely hoisted into the detail highlight strip', () => {
+    const TITLE_FALLBACKS = ['name', 'full_name', 'title', 'subject', 'display_name'];
+    const bad: string[] = [];
+    let checked = 0;
+
+    for (const obj of objects) {
+      const fields = (obj.fields ?? {}) as Record<string, AnyRec>;
+      const declared = ((obj.fieldGroups ?? []) as AnyRec[]).map((g) => g.key).filter(Boolean);
+      const highlights: string[] = (
+        Array.isArray(obj.highlightFields)
+          ? obj.highlightFields
+          : Array.isArray(obj.compactLayout)
+            ? obj.compactLayout
+            : []
+      ).filter((h: unknown): h is string => typeof h === 'string' && h.length > 0);
+      if (declared.length === 0 || highlights.length === 0) continue;
+
+      const titleField =
+        [obj.nameField, obj.primaryField, obj.displayNameField].find(
+          (v) => typeof v === 'string' && v.length > 0 && v in fields,
+        ) ?? TITLE_FALLBACKS.find((c) => c in fields);
+
+      const hiddenFromBody = new Set(highlights.filter((h) => h !== titleField).slice(0, 4));
+      if (titleField) hiddenFromBody.add(titleField as string);
+
+      for (const key of declared) {
+        const members = Object.entries(fields)
+          .filter(([, f]) => f?.group === key && f?.hidden !== true)
+          .map(([fieldName]) => fieldName);
+        if (members.length === 0) continue;
+        checked++;
+        if (members.every((m) => hiddenFromBody.has(m))) {
+          bad.push(
+            `${obj.name}: group "${key}" (${members.join(', ')}) is entirely title-or-strip — ` +
+              'it renders on forms and never on detail pages',
+          );
+        }
+      }
+    }
+
+    // Guard the guard: an object walk that stopped resolving groups or
+    // highlightFields would report nothing and pass.
+    expect(checked, 'no grouped fields on any object with highlightFields — the walker is broken')
+      .toBeGreaterThan(20);
+    expect(bad, `groups shadowed by the highlight strip:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
   it('no declared group is left with no fields in it', () => {
     // An empty group renders as an empty section header — visible, and always
     // the residue of a rename or a deleted field.
