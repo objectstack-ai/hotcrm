@@ -79,8 +79,8 @@ description: 客戶支援工單——主題、優先順序、狀態、解決方�
 
 ## 工作流自動化
 
-- **緊急時通知**——當優先順序被設為 Critical 時，向 `support_manager@example.com` 發送郵件。
-- **升級時通知**——當工單被升級時，向升級團隊發送郵件。
+- **緊急時通知**——當優先順序被設為 Critical 時，工單升級流程的 `notify` 節點發出站內訊息 + 郵件，只發給**工單負責人一人**：收件人列表只有 `{caseRecord.owner_id}` 這一項。本應用中不存在 `support_manager@example.com` 這個收件人。
+- **升級時通知**——當狀態變更為 *Escalated* 時，不會發出任何郵件：`escalation_team@example.com` 在本應用中根本不存在，也不存在「升級團隊」這樣一個收件目標。狀態轉為已升級真正觸發的是 `case_status_side_effects` 鉤子，它開出的是一條**次日到期、優先順序為緊急、歸帳戶負責人的跟進任務**——且僅限有關聯帳戶的工單，因為該任務是掛在那個帳戶上的。
 - **計算解決時間**——關閉時自動進行。
 - **自動設定關閉日期和標記**——狀態變更時。
 
@@ -175,5 +175,5 @@ Activity 標籤頁是工單上發生過什麼的唯一可信來源。它將四�
 ## 給管理員的提示
 
 - 每個優先順序的 SLA 目標儲存在工單物件的自動化中。要更改它們，請編輯工單自動化——參見 [管理 › 自動化](/zh-Hant/docs/administration/automation)。
-- 升級團隊郵件收件人（`escalation_team@example.com`）和支援經理郵件（`support_manager@example.com`）在工單工作流規則中配置。
+- `escalation_team@example.com` 和 `support_manager@example.com` 都沒有在任何地方設定過——這兩個地址在本應用中根本不存在。真實存在的收件人列表只有一處：工單升級流程 `notify` 節點的 `recipients: ['{caseRecord.owner_id}']`，即工單負責人一人；它在 `src/flows/case-escalation.flow.ts` 裡改，不是 Setup 介面上的設定項。
 - 郵件轉工單接入（從來訪郵件自動建立工單）需要郵件外掛——參見 [定制 › 擴展物件](/zh-Hant/docs/customization/extending-objects)。

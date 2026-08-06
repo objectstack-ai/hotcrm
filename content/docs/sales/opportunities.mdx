@@ -169,6 +169,6 @@ When you open an opportunity, ask:
 
 ## Tips for admins
 
-- The stage list and default probabilities live in the opportunity object's automation. See [Customization › Extending Objects](/docs/customization/extending-objects) to change them — you'll need to update the workflow rule and the state machine in lockstep.
+- The stage list, the default probabilities and the legal transitions live in three places in the source, not on a Setup screen: the shared `OPPORTUNITY_STAGE_OPTIONS` picklist (`src/objects/_picklists.ts`), which the `stage` field renders; the `STAGE_PROBABILITY` map inside the `opportunity_lifecycle` hook (`src/objects/opportunity.hook.ts`), which re-syncs *Probability* on every save; and the `opportunity_stage_progression` state-machine validation rule on the opportunity object (`src/objects/opportunity.object.ts`). Change the three in lockstep. See [Customization › Extending Objects](/docs/customization/extending-objects).
 - The $500K discount approval threshold can be changed in the [approval process configuration](/docs/revenue/approvals).
-- The $100K large-deal notification threshold lives in the opportunity workflow rules.
+- The $100K large-deal notification threshold is not a Setup field either: it is the CEL start condition of the `opportunity_won_alert` flow — `record.amount > 100000` in `src/flows/opportunity-won-alert.flow.ts`. Who gets the alert is that flow's `notify` node, whose `recipients` list is the single entry `{record.owner_id}` — the deal owner alone.

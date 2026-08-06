@@ -132,4 +132,4 @@ SLA 目标可按优先级配置——参见下方的*给管理员的提示*部�
 - 每个优先级的 SLA 目标通过工单对象的自动化（一个 SLA 计算钩子）设置。要调整，请编辑 `src/objects/case.hook.ts`（绑定到 `crm_case`）或更改底层配置——参见 [管理 › 自动化](/zh-Hans/docs/administration/automation)。
 - 营业时间与日历时间的行为由你租户的营业时间设置控制。参见 [管理 › 设置](/zh-Hans/docs/administration/setup)。
 - 升级触发条件（Critical，或 High+Customer）存在于 [工单升级流程定义](/zh-Hans/docs/administration/automation)中。在那里调整条件即可更改升级何时触发。
-- *紧急时通知*和*升级时通知*的收件人列表可在工单工作流规则中配置。
+- 这两处的收件人列表都不是 Setup 界面上的配置项。*紧急时通知* 就是工单升级流程的 `notify` 节点，其列表只有 `{caseRecord.owner_id}` 一项——要改就改 `src/flows/case-escalation.flow.ts`。*升级时通知* 根本没有收件人列表，因为它不发出任何消息：状态转为已升级触发的是 `src/objects/case.hook.ts` 里的 `case_status_side_effects` 钩子，它触达的是账户负责人，靠的是那条跟进任务。

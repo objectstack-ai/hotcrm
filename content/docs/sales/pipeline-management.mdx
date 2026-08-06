@@ -110,5 +110,5 @@ Together they answer: *"do we have enough pipeline to make the quarter, and wher
 
 ## Tips for admins
 
-- Add or remove stages? You need to update three places: the picklist on the opportunity object, the workflow rule that sets probabilities, and the state machine that controls transitions. See [Customization › Extending Objects](/docs/customization/extending-objects).
-- The $100K *large deal* notification threshold lives in the opportunity workflow rules.
+- Add or remove stages? You need to update three places in the source, none of them a Setup screen: the `OPPORTUNITY_STAGE_OPTIONS` picklist the `stage` field renders (`src/objects/_picklists.ts`), the `STAGE_PROBABILITY` map that sets probabilities inside the `opportunity_lifecycle` hook (`src/objects/opportunity.hook.ts`), and the `opportunity_stage_progression` state-machine validation rule that controls transitions (`src/objects/opportunity.object.ts`). See [Customization › Extending Objects](/docs/customization/extending-objects).
+- The $100K *large deal* notification threshold is not a Setup field either: it is the CEL start condition of the `opportunity_won_alert` flow — `record.amount > 100000` in `src/flows/opportunity-won-alert.flow.ts`. Who gets the alert is that flow's `notify` node, whose `recipients` list is the single entry `{record.owner_id}` — the deal owner alone.

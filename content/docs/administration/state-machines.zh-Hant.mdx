@@ -14,7 +14,7 @@ HotCRM 在以下物件上使用狀態機：
 - **潛在客戶** —— *New → Working → Qualified → Converted / Disqualified*
 - **商機** —— 經過 7 個階段 *Prospecting → Qualification → Proposal → Negotiation → Closed Won / Closed Lost / Closed Without Decision*
 
-其他物件（案例、合約、活動、報價）有狀態欄位，但使用 **更簡單的工作流規則** 而非完整的狀態機，因為它們的轉換沒那麼嚴格。
+其他物件（案例、合約、活動、報價）有狀態欄位，但使用 **更簡單的狀態處理** 而非完整的狀態機，因為它們的轉換沒那麼嚴格。
 
 ## 潛在客戶狀態機
 
@@ -94,7 +94,7 @@ Prospecting → Qualification → Proposal → Negotiation
 - **移除轉換**（例如禁止在商機階段中向後移動）。
 - **新增進入條件**（例如 *沒有決策者聯絡人角色就不能進入 Proposal*）。
 - **新增退出條件**（例如 *沒有更新關閉日期就不能離開 Negotiation*）。
-- 在每次轉換時 **觸發自動化**（工作流規則、流程、通知）。
+- 在每次轉換時 **觸發自動化**（物件鉤子、流程、通知）。
 
 在 **設定 → 物件 → 狀態 → 狀態機** 中設定。
 

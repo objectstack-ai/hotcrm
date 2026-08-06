@@ -14,7 +14,7 @@ HotCRM 在以下对象上使用状态机：
 - **潜在客户** —— *New → Working → Qualified → Converted / Disqualified*
 - **商机** —— 经过 7 个阶段 *Prospecting → Qualification → Proposal → Negotiation → Closed Won / Closed Lost / Closed Without Decision*
 
-其他对象（案例、合同、活动、报价）有状态字段，但使用 **更简单的工作流规则** 而非完整的状态机，因为它们的转换没那么严格。
+其他对象（案例、合同、活动、报价）有状态字段，但使用 **更简单的状态处理** 而非完整的状态机，因为它们的转换没那么严格。
 
 ## 潜在客户状态机
 
@@ -94,7 +94,7 @@ Prospecting → Qualification → Proposal → Negotiation
 - **移除转换**（例如禁止在商机阶段中向后移动）。
 - **添加进入条件**（例如 *没有决策者联系人角色就不能进入 Proposal*）。
 - **添加退出条件**（例如 *没有更新关闭日期就不能离开 Negotiation*）。
-- 在每次转换时 **触发自动化**（工作流规则、流程、通知）。
+- 在每次转换时 **触发自动化**（对象钩子、流程、通知）。
 
 在 **设置 → 对象 → 状态 → 状态机** 中配置。
 

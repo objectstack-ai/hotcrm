@@ -67,7 +67,7 @@ description: CRM and platform terms — alphabetised so you can stop bluffing in
 
 **FLS** *(Field-Level Security)* — Per-field read/edit permissions per profile.
 
-**Flow** — A multi-step automation. More powerful than a workflow rule.
+**Flow** — A multi-step automation, and the only rule-style automation type ObjectStack has: every *"when this record saves, do that"* rule in this app is a record-change flow. See *Workflow rule* below.
 
 **Forecast** — Predicted bookings for a period, bucketed Closed / Commit / Best Case / Pipeline.
 
@@ -195,7 +195,7 @@ description: CRM and platform terms — alphabetised so you can stop bluffing in
 
 **Webhook** — An HTTP callback fired when CRM events happen.
 
-**Workflow rule** — A simple after-save automation: condition → field update / email / task.
+**Workflow rule** — Not an ObjectStack concept. The platform retired the standalone workflow-rule type (ADR-0019 / ADR-0020): there is no `workflow` metadata type, no `workflows` collection on a stack, and no *Workflow Rules* entry under **Setup → Automation** — only *Flows*. A simple after-save rule (condition → field update / email / task) is authored as a **record-change flow**; see [Administration › Automation](/docs/administration/automation).
 
 **Win rate** — Closed-won ÷ (closed-won + closed-lost). Excludes "closed without decision".
 

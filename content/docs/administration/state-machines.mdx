@@ -14,7 +14,7 @@ HotCRM uses state machines on:
 - **Leads** — *New → Working → Qualified → Converted / Disqualified*
 - **Opportunities** — through the 7 stages *Prospecting → Qualification → Proposal → Negotiation → Closed Won / Closed Lost / Closed Without Decision*
 
-Other objects (case, contract, campaign, quote) have status fields but use **simpler workflow rules** rather than full state machines, because their transitions are less strict.
+Other objects (case, contract, campaign, quote) have status fields but use **simpler status handling** rather than full state machines, because their transitions are less strict.
 
 ## The Lead state machine
 
@@ -94,7 +94,7 @@ Admins can:
 - **Remove transitions** (e.g., disallow going backwards through opportunity stages).
 - **Add entry conditions** (e.g., *Cannot enter Proposal without a Decision Maker contact role*).
 - **Add exit conditions** (e.g., *Cannot leave Negotiation without an updated Close Date*).
-- **Trigger automation** on each transition (workflow rule, flow, notification).
+- **Trigger automation** on each transition (object hook, flow, notification).
 
 Configure at **Setup → Object → Status → State Machine**.
 

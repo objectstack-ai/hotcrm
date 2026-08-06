@@ -79,8 +79,8 @@ The detail screen is organised into 6 sections:
 
 ## Workflow automation
 
-- **Notify on Critical** — when priority is set to Critical, an email goes to `support_manager@example.com`.
-- **Notify on Escalation** — when a case is escalated, an email goes to the escalation team.
+- **Notify on Critical** — when priority is set to Critical, the Case Escalation flow's `notify` node sends an inbox message and an email to the **case owner alone**: its recipient list is the single entry `{caseRecord.owner_id}`. There is no `support_manager@example.com` recipient anywhere in this app.
+- **Notify on Escalation** — when the status changes to *Escalated*, no email goes out at all: `escalation_team@example.com` exists nowhere in this app, and neither does an escalation-team recipient. What the escalated status fires is the `case_status_side_effects` hook, which opens an **Urgent follow-up task due tomorrow for the account owner** — and only for cases that have an account, since the task is keyed to it.
 - **Calculate resolution time** — automatic on close.
 - **Auto-set closed date and flag** — on status change.
 
@@ -175,5 +175,5 @@ If the Copilot decides the priority is *Critical*, it will also recommend immedi
 ## Tips for admins
 
 - The SLA targets per priority are stored in the case object's automation. To change them, edit the case automation — see [Administration › Automation](/docs/administration/automation).
-- The escalation team email recipient (`escalation_team@example.com`) and support manager email (`support_manager@example.com`) are configured in case workflow rules.
+- Neither `escalation_team@example.com` nor `support_manager@example.com` is configured anywhere — both addresses exist nowhere in this app. The one recipient list that does exist is the `notify` node of the Case Escalation flow, `recipients: ['{caseRecord.owner_id}']` — the case owner alone — and it is edited in `src/flows/case-escalation.flow.ts`, not on a Setup screen.
 - Email-to-case ingestion (auto-create case from an inbound email) requires the email plugin — see [Customization › Extending Objects](/docs/customization/extending-objects).
