@@ -13,7 +13,7 @@ SLA（服务级别协议）系统根据每个工单的优先级为其赋予一�
 
 | 优先级 | 默认 SLA 目标 | "违约"是什么样子 |
 | --- | --- | --- |
-| **Critical** | 4 小时 | 工单详情上的红色横幅、向支持经理发出警报 |
+| **Critical** | 4 小时 | SLA 监控流程把它标记为 **SLA 已违约**并升级，然后通过站内消息 + 邮件提醒**工单负责人**。工单详情页上没有红色横幅——本应用没有任何横幅机制——也不会向支持经理发出警报：该 notify 节点的收件人列表只有 `{currentCase.owner_id}` 一项 |
 | **High** | 8 小时 | 列表视图中的红色徽章 |
 | **Medium** | 2 个工作日 | 琥珀色徽章 |
 | **Low** | 7 个工作日 | 灰色徽章 |
@@ -54,10 +54,14 @@ SLA 目标可按优先级配置——参见下方的*给管理员的提示*部�
 
 ### 何时触发升级
 
-升级流程在工单满足以下任一条件的那一刻运行：
+升级流程只在一个条件下运行：**工单处于 Critical 优先级**。承载这个条件的是两个流程——`case_escalation` 在工单被*编辑*为 Critical 时触发，`case_escalation_on_create` 在工单被*创建*为 Critical 时触发——两者读的都是 `record.priority == "critical"`，外加那些防止已升级、已解决或已关闭的工单被二次升级的守卫项。
 
-- 工单被设为 **Critical** 优先级，或
-- 工单为 **High** 优先级**且**关联账户为 **Customer**（非潜在客户）
+本页过去列出的另外两个条件并不存在：
+
+- **不存在 High 优先级这一分支。** High 工单永远不会被自动升级。要升级它，是一个手动步骤——工单记录上的 **Escalate Case** 按钮。
+- **没有任何升级条件会读取账户。** *Customer*、潜在客户、以及任何账户等级，都不出现在这些条件里——本应用中没有任何流程读取账户类型。Customer 的 High 工单与潜在客户的 High 工单待遇完全相同：两者都不会自行升级。
+
+基于时间的那条路径同样兜不住它们。`case_sla_monitor` 会升级任何 **SLA 截止日期**已过的未结工单，但没有任何东西会给 High 工单打上这个日期：SLA 钩子只为 `critical` 填 `sla_due_date`，其余优先级一律留空，除非有人手工填写。所以一个没人过问的 High 工单，两条路径都进不去——请为这批工单安排人工巡检，而不是等待自动化去捞。
 
 ### 升级会做什么
 
@@ -102,7 +106,7 @@ SLA 目标可按优先级配置——参见下方的*给管理员的提示*部�
 
 - 一个客户等级的账户即使主题含糊，仍会因客户关系而获得 **High**。
 - 一个描述中含 *"production is down"* 的潜在客户会获得 **Critical**，尽管它不是付费客户。
-- Copilot 使用[支持知识库](/zh-Hans/docs/service/knowledge-base)与过往的相似工单进行模式匹配。
+- **工单分流不会**与过往的相似工单做模式匹配。它只声明了 `describe_object` 与 `get_record`，因此只能读眼前这一个工单，既检索不了[知识文章](/zh-Hans/docs/service/knowledge-base)，也拉不出该账户的其它工单。按工单的分类或标签匹配已发布文章，是 **Customer 360°** 的活，需要单独去问它。
 
 如果优先级解析为 **Critical**，Copilot 会立即推荐升级并起草内部通知消息。
 
@@ -131,5 +135,5 @@ SLA 目标可按优先级配置——参见下方的*给管理员的提示*部�
 
 - 每个优先级的 SLA 目标通过工单对象的自动化（一个 SLA 计算钩子）设置。要调整，请编辑 `src/objects/case.hook.ts`（绑定到 `crm_case`）或更改底层配置——参见 [管理 › 自动化](/zh-Hans/docs/administration/automation)。
 - 营业时间与日历时间的行为由你租户的营业时间设置控制。参见 [管理 › 设置](/zh-Hans/docs/administration/setup)。
-- 升级触发条件（Critical，或 High+Customer）存在于 [工单升级流程定义](/zh-Hans/docs/administration/automation)中。在那里调整条件即可更改升级何时触发。
+- 升级触发条件——只有 Critical 优先级这一项，不存在 High+Customer 这个条件——写在 [工单升级流程定义](/zh-Hans/docs/administration/automation)里，即 `src/flows/case-escalation.flow.ts`。承载它的是两个流程：`case_escalation`（更新时）与 `case_escalation_on_create`（新建时）。要改就**两个一起改**，否则以新条件新建的工单仍会漏掉。
 - 这两处的收件人列表都不是 Setup 界面上的配置项。*紧急时通知* 就是工单升级流程的 `notify` 节点，其列表只有 `{caseRecord.owner_id}` 一项——要改就改 `src/flows/case-escalation.flow.ts`。*升级时通知* 根本没有收件人列表，因为它不发出任何消息：状态转为已升级触发的是 `src/objects/case.hook.ts` 里的 `case_status_side_effects` 钩子，它触达的是账户负责人，靠的是那条跟进任务。
