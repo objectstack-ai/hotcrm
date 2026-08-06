@@ -12,9 +12,9 @@ sales skills below are what it knows how to do.
 
 > **Where the personas went.** Earlier versions of this page described a "Sales
 > Copilot" agent. HotCRM no longer defines its own agents: the same capability now
-> lives in five skills registered through `src/skills/`, and the platform assistant
-> selects among them. Nothing was lost — the wiring moved from an app-owned agent to
-> the platform one.
+> lives in skills registered through `src/skills/`, and the platform assistant selects
+> among them. Nothing was lost — the wiring moved from an app-owned agent to the
+> platform one.
 
 ## Who it's for
 
@@ -102,11 +102,21 @@ You always **preview and edit** before sending. The skill never sends on its own
 
 Ask *"What's my forecast for this quarter?"* and you get:
 
-- **Closed** — committed revenue (closed-won this period).
-- **Commit** — opportunities >80% probability in the period.
-- **Best case** — opportunities 40-80% probability.
-- **Pipeline** — everything else.
-- **Risk callouts** — deals slipping, stale opportunities, missing close dates.
+- **Pipeline by stage** — count and summed amount grouped by stage, scoped to the period you name (default: the current quarter).
+- **Weighted value** — amount × probability, computed by the skill from what it read.
+- **At-risk deals** — named one by one with the signal behind each: a close date already past, no activity in 30+ days, or a stage held longer than its typical duration.
+- **A forecast given as a range** — commit-only (high-probability stages) to full weighted pipeline, with the assumption behind the number stated in one line, rather than false precision.
+- **A chart** — via `visualize_data`, when one carries the answer better than prose.
+
+**Where the four buckets actually live.** This page used to present **Closed / Commit /
+Best Case / Pipeline** as the forecasting skill's output. Those names are real, but they
+belong elsewhere: they are options of `crm_opportunity`'s **Forecast Category** field
+(alongside **Omitted**), and the amounts carrying those names are what the scheduled
+forecast snapshot writes onto **Forecast** records. The skill neither reads
+`forecast_category` nor groups by it. The probability thresholds this page attached to
+two of them — Commit at >80%, Best case at 40-80% — had no source anywhere in HotCRM:
+the snapshot buckets by forecast category, not by probability band, and the skill uses
+probability only to compute weighted value.
 
 Forecasts respect your position and sharing rules — a rep sees their own number, a
 manager sees their team's, a director sees the rollup.
@@ -149,7 +159,7 @@ informed.
 
 - ✅ Use *Customer 360* before every customer-facing meeting your team has.
 - ✅ Run *Revenue forecast* mid-week to spot slipping deals before the EOQ scramble.
-- ✅ Ask *"Which reps need coaching?"* — the forecasting skill flags reps with stale pipelines or unusually long stage times.
+- ✅ Ask *"Which deals are slipping this quarter?"* — the forecasting skill names each at-risk deal and the signal behind it. It does not group by rep: stage and the period you name are its only groupings, so *"which reps need coaching?"* is not a question it answers.
 
 ## Limits
 
