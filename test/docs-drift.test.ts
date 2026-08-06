@@ -891,12 +891,14 @@ describe('the action example teaches a selection key the platform can deliver (#
  *
  * #512 removed the two app-authored agents and ADR-0063 §2 made the surface
  * skills-only; #589 / PR #611 rewrote `content/docs/ai-copilot/*` accordingly.
- * What #611 could not reach was the rest of the tree: 39 product pages went on
- * calling the assistant "the Sales Copilot" / "the Service Copilot" in running
- * prose, in all three locales — 79 occurrences at the time this guard was
- * written. None of them asserted a `sales_copilot` agent (the check above
- * already covers fenced samples), so every gate this repo runs was green: `os
- * validate` and `pnpm lint` walk authored metadata and never open a paragraph.
+ * What #611 could not reach was the rest of the tree. At the time this guard was
+ * written the docs carried 79 occurrences of the two names across 39 pages; 14
+ * of those, on the 12 pages in HISTORICAL below, are retirement history and
+ * belong there. The other 65, on 29 product pages in all three locales, were
+ * live prose still calling the assistant "the Sales Copilot" / "the Service
+ * Copilot". None asserted a `sales_copilot` agent (the check above already
+ * covers fenced samples), so every gate this repo runs was green: `os validate`
+ * and `pnpm lint` walk authored metadata and never open a paragraph.
  *
  * Maintainer ruling (2026-08-04, on #612): the personas are retired as PRODUCT
  * VOCABULARY too. The prose says "AI assistant" (zh: 「AI 助手」), because the
