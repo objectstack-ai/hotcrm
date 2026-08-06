@@ -81,10 +81,22 @@ approval 节点使用**首次响应**（`first_response`）行为——在每个
 
 ## 在哪里找到待处理的审批
 
-在 Enterprise CRM 应用中，**审批**分组：
+Enterprise CRM 应用里的 **Approvals**（审批）分组只有一项，而且这个分组**默认折叠**——先把分组点开，再判断某样东西在不在这里。
 
-- **审批请求**——所有待处理项，带视图 *Pending My Approval*、*Submitted by Me*、*Recently Approved*。
-- **操作历史**——跨所有审批的完整审计跟踪。
+- **Inbox**——等着你处理的审批请求（`sys_approval_request`）。侧边栏上的 label 就是 **Inbox**，简体中文界面下这一项显示为**待我审批**；应用里没有任何导航条目叫 *Approval Requests*（审批请求）。这个名字不是凭空捏造：它是审批插件给**对象**起的名字（*Approval Request* / *Approval Requests*，简体界面为「审批请求」）——只是本页把它摆在了侧边栏条目的位置上。
+
+该条目没有绑定自己的视图，所以点开后落在对象的列表页上，带着审批插件内置的四个视图：
+
+| 视图 | 内容 |
+| --- | --- |
+| **My Pending**（我的待办） | 仍在待批、且你是审批人之一的请求 |
+| **I Submitted**（我提交的） | 你提交过的全部请求，不分状态 |
+| **Completed**（已完成） | 已结束的请求——已批准、已拒绝或已撤回 |
+| **All**（全部） | 全部请求，按最近更新排序 |
+
+这四个才是真实的过滤视图。本页过去列出的三个名字——*Pending My Approval*、*Submitted by Me*、*Recently Approved*——**哪里都不存在**：`src/` 与已安装的审批插件双面零命中，换任何拼写都一样。它们想描述的其实就是 **My Pending**、**I Submitted** 和 **Completed**。
+
+**Action History**（操作历史）同样不在这个分组里，本应用侧边栏上也没有任何条目叫这个名字。审批的操作留痕本身是真实数据——审批插件把每一次操作存为 `sys_approval_action`，还为它内置了 **Recent**（最近）/ **By Actor**（按执行人）/ **All**（全部）三个视图，每条操作都通过 `request_id` 指回它所属的请求。缺的只是入口：本应用里没有任何导航条目能打开这个对象。
 
 ## 给销售代表的提示
 

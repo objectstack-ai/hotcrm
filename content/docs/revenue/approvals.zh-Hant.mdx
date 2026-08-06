@@ -81,10 +81,22 @@ approval 節點使用**首次回應**（`first_response`）行為——在每個
 
 ## 在哪裡找到待處理的審批
 
-在 Enterprise CRM 應用中，**審批**分組：
+Enterprise CRM 應用裡的 **Approvals**（審批）群組只有一項，而且這個群組**預設摺疊**——先把群組點開，再判斷某樣東西在不在這裡。
 
-- **審批請求**——所有待處理項，帶視圖 *Pending My Approval*、*Submitted by Me*、*Recently Approved*。
-- **操作歷史**——跨所有審批的完整稽核軌跡。
+- **Inbox**——等著你處理的審批請求（`sys_approval_request`）。側邊欄上的 label 就是 **Inbox**（本應用提供 en / zh-CN / ja-JP / es-ES 四種介面語言，簡體中文介面下這一項顯示為「待我审批」）；應用裡沒有任何導覽條目叫 *Approval Requests*（審批請求）。這個名字不是憑空捏造：它是審批外掛給**物件**取的名字（*Approval Request* / *Approval Requests*）——只是本頁把它擺在了側邊欄條目的位置上。
+
+該條目沒有綁定自己的檢視，所以點開後落在物件的列表頁上，帶著審批外掛內建的四個檢視：
+
+| 檢視 | 內容 |
+| --- | --- |
+| **My Pending**（簡體介面「我的待办」） | 仍在待批、且你是審批人之一的請求 |
+| **I Submitted**（簡體介面「我提交的」） | 你提交過的全部請求，不分狀態 |
+| **Completed**（簡體介面「已完成」） | 已結束的請求——已批准、已拒絕或已撤回 |
+| **All**（簡體介面「全部」） | 全部請求，按最近更新排序 |
+
+這四個才是真實的過濾檢視。本頁過去列出的三個名字——*Pending My Approval*、*Submitted by Me*、*Recently Approved*——**哪裡都不存在**：`src/` 與已安裝的審批外掛雙面零命中，換任何拼寫都一樣。它們想描述的其實就是 **My Pending**、**I Submitted** 和 **Completed**。
+
+**Action History**（操作歷史）同樣不在這個群組裡，本應用側邊欄上也沒有任何條目叫這個名字。審批的操作留痕本身是真實資料——審批外掛把每一次操作存為 `sys_approval_action`，還為它內建了 **Recent**（最近）/ **By Actor**（按執行人）/ **All**（全部）三個檢視，每條操作都透過 `request_id` 指回它所屬的請求。缺的只是入口：本應用裡沒有任何導覽條目能打開這個物件。
 
 ## 給銷售代表的提示
 
