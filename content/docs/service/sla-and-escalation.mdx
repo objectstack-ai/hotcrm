@@ -5,20 +5,24 @@ description: How priorities drive deadlines, when cases escalate automatically, 
 
 # SLA & Escalation
 
-The SLA (Service-Level Agreement) system gives every case a **deadline** based on its priority, surfaces **breaches** in real time, and **escalates** stuck cases automatically — escalation flags the case and alerts its owner; it does not move the case to senior staff.
+The SLA (Service-Level Agreement) system stamps a **deadline** on Critical cases, flags **breaches** on an hourly sweep, and **escalates** stuck cases automatically — escalation flags the case and alerts its owner; it does not move the case to senior staff.
 
 ## How SLA targets are calculated
 
-Every case gets an **SLA due date** the moment it's created. The target is based on priority:
+**Only Critical cases get an SLA due date automatically.** The `case_sla_defaults` hook (`src/objects/case.hook.ts`) fills `sla_due_date` with *now + 4 hours* when a case is created at — or edited to — Critical priority and the field is still empty. At **High**, **Medium** and **Low** it writes nothing, so the field stays blank unless a person types a date into it by hand.
 
-| Priority | Default SLA target | What "breach" looks like |
+That makes the four rows below two different kinds of thing: Critical's four hours is a deadline the system keeps, and the other three are the team's service commitment, with no clock behind them.
+
+| Priority | Target | What "breach" looks like |
 | --- | --- | --- |
-| **Critical** | 4 hours | The SLA monitor flags **SLA Violated**, escalates the case, and alerts the **case owner** by inbox + email. No red banner on the case detail page — this app has no banner mechanism — and no alert to a support manager: the notify node's recipient list is `{currentCase.owner_id}` alone |
-| **High** | 8 hours | Red badge in list views |
-| **Medium** | 2 business days | Amber badge |
-| **Low** | 7 business days | Grey badge |
+| **Critical** | 4 hours, stamped as `sla_due_date` | The SLA monitor flags **SLA Violated**, escalates the case, and alerts the **case owner** by inbox + email. No red banner on the case detail page — this app has no banner mechanism — and no alert to a support manager: the notify node's recipient list is `{currentCase.owner_id}` alone |
+| **High** | 8 hours — a service commitment; nothing stamps `sla_due_date` | Nothing fires. `case_sla_monitor` only picks up cases whose `sla_due_date` has passed, so a case with no due date is never a candidate and **SLA Violated** stays `false`. There is no red badge either: the only colour rule on a case list is the **row tint** in *All Cases*, which is keyed on **priority** (`#f97316`, orange) and paints every High case from the moment it is created, breach or no breach |
+| **Medium** | 2 business days — a service commitment; nothing stamps `sla_due_date` | Nothing fires, for the same reason. The amber-looking rows are that same priority row tint (`#eab308`, yellow), not a breach badge |
+| **Low** | 7 business days — a service commitment; nothing stamps `sla_due_date` | Nothing fires, for the same reason. The grey rows are the priority row tint (`#94a3b8`) |
 
-The SLA target is configurable per priority — see the *Tips for admins* section below.
+In a list view, the thing that actually reports a breach is the **SLA Violated** column, not the row colour.
+
+Critical's four hours is the one target the system keeps, and it lives in the hook rather than on a Setup screen — see the *Tips for admins* section below.
 
 > **Business hours** — the system can be configured to count only business hours (e.g., 9-5 Mon-Fri) rather than calendar hours. See [Administration › Setup](/docs/administration/setup).
 
@@ -26,16 +30,17 @@ The SLA target is configurable per priority — see the *Tips for admins* sectio
 
 Two fields on every case:
 
-- **SLA Due Date** — when the case must be resolved by.
-- **SLA Breached?** — `true` when the resolution time exceeds the target.
+- **SLA Due Date** (`sla_due_date`) — when the case must be resolved by. Blank on every case the Critical hook did not stamp, unless somebody filled it in by hand.
+- **SLA Violated** (`is_sla_violated`) — there is no field called *SLA Breached?*; the checkbox agents see is labelled **SLA Violated**. It does not measure resolution time against the target. The hourly `case_sla_monitor` sweep sets it to `true` on cases that are still open — status is neither *Resolved* nor *Closed* — and whose **SLA Due Date** is already in the past. Two consequences worth knowing: a case with no due date is never a candidate, and a case resolved late but before the next sweep is never flagged.
 
-The breach flag is **read-only for agents** — they can't fudge it. It's auto-calculated by the system.
+The breach flag is **read-only for agents** — they can't fudge it, and the value itself is written by `case_sla_monitor`, which runs as the system rather than as a user. The lock is field-level security rather than a read-only field: the Service Agent profile masks `crm_case.is_sla_violated` as readable but not editable, which is why an agent sees the checkbox on the case — on the form's **SLA** tab and in the detail page's **Status & SLA** section — but cannot change it. The shipped masks are listed under [Profiles › Field-level security](/docs/administration/profiles#field-level-security).
 
-The case detail page shows a live SLA countdown in the header:
+**There is no live SLA countdown.** Nothing in this app computes time remaining or time over — no threshold colouring, no warning zone, and no ⏱ / ⚠️ / 🚨 treatment anywhere on the case. The page header carries the case number, subject and account and nothing else; **SLA Due Date** and **SLA Violated** are rendered as two ordinary fields in the **Key Information** strip below it, next to Status, Priority, Owner and Account. Working out how much time is left is the agent's own arithmetic.
 
-- ⏱ *2h 14m remaining* — fine
-- ⚠️ *24m remaining* — warning zone
-- 🚨 *BREACHED – 1h 32m over* — escalation territory
+Two views help with that, neither of them a timer:
+
+- **SLA Calendar** lays cases out on their **SLA Due Date**, so in practice it shows the Critical ones and whatever else was dated by hand.
+- **SLA at Risk** lists open **High and Critical** cases sorted by due date, soonest first. It selects on priority, not on how close the deadline is, so a High case with no due date sits in it from the day it opens.
 
 ## SLA performance reporting
 
@@ -121,7 +126,7 @@ If priority resolves to **Critical**, the Copilot immediately recommends escalat
 
 ## Tips for service agents
 
-- ✅ Watch your SLA countdown — when you see the amber zone, ask for help.
+- ✅ Watch **SLA Due Date** yourself — there is no countdown and no amber zone to warn you, so keep **SLA at Risk** or **SLA Calendar** open during your shift and ask for help before the date passes.
 - ✅ Use **Waiting on Customer** when you're genuinely blocked — depending on your config, this can pause the SLA clock.
 - ✅ Don't artificially down-prioritise to extend your SLA — managers see priority change history.
 
