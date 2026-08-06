@@ -1,6 +1,6 @@
 ---
 title: Reports
-description: The standard report library — pipeline, win/loss, forecast, case volume, SLA performance and more.
+description: The standard report library — the ten reports HotCRM publishes across deals, leads, cases and accounts, and what the missing ones would need.
 ---
 
 # Reports
@@ -9,20 +9,34 @@ Reports are filterable, exportable lists with grouping and summary totals. Where
 
 ## Standard reports
 
-HotCRM ships with these reports out of the box:
+HotCRM ships **ten** reports out of the box — the barrel in `src/reports/index.ts` is the whole library. Each section below lists the ones it publishes, then names what this page used to promise and says whether the semantic layer could answer it:
 
 ### 📈 Sales reports
 
+`src/reports/opportunity.report.ts` publishes **four** opportunity reports:
+
 | Report | What it shows |
 | --- | --- |
-| **Pipeline by Stage** | All open deals grouped by stage with $ totals |
-| **Forecast vs Actual** | Closed Won vs forecast, by period |
-| **Win/Loss Analysis** | Closed deals grouped by win/loss with reason breakdown |
-| **Sales Cycle Length** | Days from creation to close, by owner and product |
-| **Top Performing Reps** | Bookings leaderboard |
-| **Stale Opportunities** | Deals with no activity in 14+ days |
-| **Big Deals Won** | Closed-won opportunities ≥ $100K |
-| **Discount Approval Activity** | All approval requests by status and approver |
+| **Opportunities by Stage** | Pipeline amount and average probability by stage, over deals closing this year and excluding closed-lost — with a bar chart of amount by stage |
+| **Won Opportunities by Owner** | Closed-won amount per rep, charted as *Revenue by Sales Rep* |
+| **Pipeline Coverage by Forecast × Quarter** | A matrix of open pipeline: forecast category down the rows, close quarter across the columns, with amount and deal count in each cell |
+| **Opportunity Funnel by Owner → Stage** | A two-level funnel — each rep's book of business broken down stage by stage, with amount, deal count and average probability |
+
+All four bind `opportunity_metrics` (`src/datasets/opportunity.dataset.ts`), which is what makes *pipeline* mean the same number here as on the dashboards.
+
+The eight names this section used to list are published nowhere. Two of them are real names that belong to something other than a report:
+
+- **Pipeline by Stage** is a dashboard **tile** and a chart title, not a report. The tile is the open-pipeline funnel that **CRM Overview**, **Sales Performance** and **Executive Overview** all share (`src/dashboards/shared-widgets.ts`); the chart is the bar chart on **Opportunities by Stage** above, whose title reads *Pipeline by Stage*. Searching the report library for the name finds nothing; the report you want is **Opportunities by Stage**.
+- **Stale Opportunities** is a **list view** on the opportunity — *⚠️ Stale Opportunities · Longest in Stage First*, the **Stale** tab (`src/views/opportunity.view.ts`) — and it does not apply the 14-day cut this table claimed. It lists **every** open deal, ordered by **Stage Entry Date** ascending, so the longest-parked sit on top; the 14 days belongs to the `opportunity_stagnation` flow that nudges owners, not to the view. Analytics cannot rebuild it either: **Days in Current Stage** is a formula evaluated after the query, so nothing can group, filter or sort on it, and no dataset exposes it.
+- **Top Performing Reps** exists, under its real name: **Won Opportunities by Owner** is the bookings leaderboard, and **Opportunity Funnel by Owner → Stage** is the same ranking with each rep's stages underneath it. `opportunity_metrics` declares an **Owner** dimension — unlike `case_metrics`, which is why the service side has no agent ranking.
+
+Of the five that are simply absent, three are a custom report away and two are not:
+
+- **Forecast vs Actual** — buildable, but not from the pipeline dataset: quota lives in `forecast_metrics` (`src/datasets/forecast.dataset.ts`), one row per owner per period, with **Quota**, **Closed**, **Pipeline**, **Commit** and a derived **Attainment**. Any report over it has to pin the period — group by **Period**, or filter to a single **Period Type** + **Period Start** — because the measures are plain sums and the table holds several periods at once.
+- **Win/Loss Analysis** — buildable: **Win Reason** and **Loss Reason** are dimensions, and **Won Deals**, **Lost Deals**, **Settled Deals**, **Won Revenue**, **Lost Revenue** and **Win Rate** are declared measures on `opportunity_metrics`.
+- **Big Deals Won** — buildable: closed-won amount is **Won Revenue**, and a threshold on the deal amount is an ordinary report filter.
+- **Sales Cycle Length** — not buildable. Nothing stores a cycle duration: the opportunity carries **Stage Entry Date** and **Close Date** but no elapsed-days column, and the one duration it does carry, **Days in Current Stage**, is the post-query formula above. *By product* has no landing place either — no dataset reads `crm_opportunity_line_item`.
+- **Discount Approval Activity** — not buildable. The approvals themselves are real (`src/flows/opportunity-approval.flow.ts`, and **Approval Status** on the opportunity), but no dimension exposes that field, and the discount is a percent on the line item (`crm_opportunity_line_item.discount`) that no dataset reads.
 
 ### 🎯 Lead reports
 
@@ -59,20 +73,31 @@ The five other reports this section used to list are published nowhere, and most
 
 **SLA Performance Report carries no first-response figure either**, and its SLA number is a violation *rate* — the average of the **SLA Violated** flag — rather than an on-time percentage. Nothing in this app measures first response at all: **First Response Date** is stamped on a case the first time a call or meeting that already took place is logged on it, and it is then never compared against a target; `case_metrics` declares no first-response measure, so no report and no dashboard tile can report one. See [SLA & Escalation](/docs/service/sla-and-escalation).
 
-### 💰 Revenue reports
+### 💰 Customer and revenue reports
+
+`src/reports/account.report.ts` and `src/reports/churn.report.ts` publish **two** reports, and this is the section they belong in — neither has ever appeared on this page:
 
 | Report | What it shows |
 | --- | --- |
-| **Contracts Expiring** | Active contracts ending in next 30/60/90 days |
-| **Active Contracts by Product** | Recurring revenue rollup |
-| **Renewal Pipeline** | Opportunities tied to renewing contracts |
+| **Accounts by Industry and Type** | A matrix of active accounts — industry down the rows, account type across the columns — with the account count and the **Annual Revenue** sum in each cell |
+| **Customer Churn Signals** | Three stacked panels for proactive retention: **At-Risk Accounts** (active, no activity in 60+ days, by industry), **Silent High-Value Accounts** (strategic and enterprise tiers quiet for 90+ days, by type) and **Recently Lost Opportunities** (closed-lost in the last 30 days, by owner) |
+
+The three contract reports this section used to list are published nowhere, and none of them can be built as written, for one shared reason: **there is no contract dataset**. `src/datasets/` covers nine objects — account, case, contact, event, forecast, lead, opportunity, product and task — and `crm_contract` is not among them, so nothing in analytics counts, sums or groups contracts.
+
+- **Contracts Expiring** — the question is real and it is answered by a **view**, not a report: **Renewal Calendar** (the *Renewals* tab on Contracts) plots every contract on its **End Date**, and **Contract Terms** shows the same terms as a Gantt (`src/views/contract.view.ts`). Both list records; neither totals them, because there is no dataset behind them to total.
+- **Active Contracts by Product** — unreachable twice over: no contract dataset, and `product_metrics` is a catalog rollup — **Category**, the product count and the list-price sum — that never crosses to contracts or to line items.
+- **Renewal Pipeline** — as written, *opportunities tied to renewing contracts*, it cannot be built: the link runs the other way (`crm_contract.crm_opportunity`) and no dimension exposes it. The renewal pipeline itself is buildable, though: **Deal Type** is a dimension on `opportunity_metrics`, and *Existing Customer - Renewal* is one of its values.
 
 ### 📣 Marketing reports
 
-| Report | What it shows |
-| --- | --- |
-| **Campaign ROI** | Spend vs sourced/influenced pipeline and revenue |
-| **Campaign Engagement** | Open / click / response / conversion by campaign |
+**`src/reports/` publishes no marketing report, and no custom one can be built** — this is the one section of the page where the gap is not a missing report but a missing data source. `src/datasets/` has no campaign dataset, so no report and no dashboard tile can aggregate campaign numbers at all.
+
+The records do carry the numbers. `crm_campaign` has **Budgeted Cost**, **Actual Cost**, **Expected Revenue**, **Actual Revenue**, the **Num Sent / Responses / Leads / Converted Leads / Opportunities / Won Opportunities** counters and two formula fields — **Response Rate %** and **ROI %** — all of which the campaign record shows in its **Performance** section (`src/views/campaign.view.ts`). `crm_campaign_member` stamps **First Opened**, **First Clicked**, **Response Date** and **Responded** per member.
+
+- **Campaign ROI** — the per-campaign figure exists on the record, as the **ROI %** formula above. What does not exist is any way to aggregate or rank it: no campaign dataset means no measure, no dimension and no grouping. Attribution from the deal side is missing too — `crm_opportunity.crm_campaign` is a real lookup, but `opportunity_metrics` declares no campaign dimension, so *sourced* and *influenced* revenue cannot be attributed in analytics either.
+- **Campaign Engagement** — same reason, one layer down: the opens, clicks and responses are stamped on each member record, and nothing rolls them up. *Conversion by campaign* has the extra problem that `lead_metrics` never crosses to campaigns.
+
+Closing the gap means adding `src/datasets/campaign.dataset.ts` — a source change and a redeploy, not something a report builder can reach. See [Campaigns](/docs/marketing/campaigns) for what the campaign record does show today.
 
 ## Working with reports
 
@@ -92,7 +117,7 @@ Every report has the same basic controls:
 
 ## Permissions
 
-- A user only sees records they have access to — a rep running *Pipeline by Stage* sees their own deals; a manager sees the team's.
+- A user only sees records they have access to — a rep running *Opportunities by Stage* sees their own deals; a manager sees the team's.
 - Admins can lock down which fields appear in reports via **Field-Level Security**.
 - Sensitive reports can be restricted to specific [profiles](/docs/administration/profiles).
 
@@ -120,7 +145,7 @@ The most common way to consume reports is by **email subscription**:
 
 A common pattern:
 
-- *Pipeline by Stage* → Mondays 8 AM to the sales team.
+- *Opportunities by Stage* → Mondays 8 AM to the sales team.
 - *SLA Performance Report* → daily 6 PM to the service manager.
 - *Cases Opened by Priority × Day* → Fridays 4 PM to the customer success team.
 
@@ -132,8 +157,8 @@ A common pattern:
 
 ## Tips for managers
 
-- ✅ Schedule **Stale Opportunities** weekly to your team — it forces follow-up discipline.
-- ✅ Use **Win/Loss Analysis** monthly with sales coaches — it's the single best coaching tool.
+- ✅ Schedule **Opportunity Funnel by Owner → Stage** weekly to your team — it forces follow-up discipline, rep by rep. For the stalled deals themselves, send people to the **Stale** tab on Opportunities: it is a list view, so it cannot be scheduled, but it is where the parked deals are ranked.
+- ✅ There is no win/loss report to schedule, but the analysis is a custom report away — group `opportunity_metrics` by **Loss Reason** and read **Lost Deals** next to **Win Rate**. Run it monthly with sales coaches; it is the single best coaching tool.
 
 ## Tips for admins
 

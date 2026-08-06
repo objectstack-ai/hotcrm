@@ -1,178 +1,140 @@
 ---
 title: Cubes
-description: The data layer that powers HotCRM analytics — four built-in cubes for self-service slice and dice.
+description: The semantic layer under HotCRM analytics — nine datasets, what each one can answer, and what it cannot.
 ---
 
 # Cubes
 
-A **cube** is a pre-modeled, multi-dimensional dataset designed for fast analytics. Cubes are the layer underneath [dashboards](/docs/analytics/dashboards) and [reports](/docs/analytics/reports) — they're what makes analytics fast, consistent, and self-service.
+A **cube** is a pre-modeled, multi-dimensional dataset: a set of named **measures** (the numbers) over named **dimensions** (the ways you cut them). Cubes are the layer underneath [dashboards](/docs/analytics/dashboards) and [reports](/docs/analytics/reports) — they are what makes a number mean the same thing in two places.
 
-## Why cubes (instead of querying raw tables)
+**In HotCRM that layer is a set of datasets.** This app declares no cube of its own: every semantic definition it ships is a `defineDataset(...)` under `src/datasets/`, registered through `objectstack.config.ts`, and the analytics service compiles each dataset into its cube internally (ADR-0021). A second, hand-written cube layer did exist here once and was removed — it duplicated every measure and drifted from the datasets that reports and tiles actually bind to. So wherever this page says *dataset*, that is the object a report or a dashboard tile binds **by name**, and the thing the platform turns into a cube.
 
-Cubes solve three problems:
+## Why a semantic layer (instead of querying raw tables)
 
-1. **Consistency** — *"bookings"* means the same thing in every dashboard.
-2. **Speed** — pre-aggregated, sub-second response on millions of records.
-3. **Self-service** — business users can slice and dice without writing queries.
+1. **Consistency** — *"pipeline"* means the same thing in every dashboard, because every widget selects the same named measure.
+2. **Speed** — pre-aggregated, rather than one ad-hoc scan per question.
+3. **Reuse** — a measure is declared once and picked by name. `win_rate` carries its own two halves with it, so no widget has to improvise a denominator.
 
-## The four built-in cubes
+## The nine datasets
 
-| Cube | Built for | Slices by |
-| --- | --- | --- |
-| 💰 **Sales Cube** | Revenue analysis | Account, owner, region, product, period |
-| 📊 **Pipeline Cube** | Pipeline analysis | Stage, owner, age, source, probability |
-| 🎧 **Service Cube** | Case and SLA analysis | Priority, status, agent, origin, account |
-| 📣 **Marketing Cube** | Campaign performance | Campaign, source, channel, period |
+`src/datasets/index.ts` is the whole semantic layer:
 
-## 💰 Sales Cube
+| Dataset | Reads | Dimensions | Measures |
+| --- | --- | --- | --- |
+| **Opportunity Metrics** (`opportunity_metrics`) | `crm_opportunity`, joined to `crm_account` | Stage, Lead Source, Forecast Category, Deal Type, Owner, Win Reason, Loss Reason, Close Date (month), Close Quarter, Account Industry | Opportunities, Total Amount, Avg Deal Size, Avg Probability, Won Deals, Lost Deals, Settled Deals, Won Revenue, Lost Revenue, Win Rate |
+| **Case Metrics** (`case_metrics`) | `crm_case` | Status, Priority, Origin, Type, Created (day) | Cases, Avg Resolution (h), SLA Violation Rate |
+| **Lead Metrics** (`lead_metrics`) | `crm_lead` | Status, Source, Created, Last Contacted (month) | Leads |
+| **Account Metrics** (`account_metrics`) | `crm_account` | Industry, Type, Created (month) | Accounts, Annual Revenue |
+| **Forecast Metrics** (`forecast_metrics`) | `crm_forecast` | Owner, Period Type, Period, Period Start | Quota, Closed, Pipeline, Commit, Attainment |
+| **Activity Metrics** (`event_metrics`) | `crm_event` | Activity Type, Status, Owner, Related To, Activity Week | Activities, Minutes, Avg Duration |
+| **Task Metrics** (`task_metrics`) | `crm_task` | Status, Priority, Urgency, Type, Due Date, Overdue, Completed | Tasks, Avg Progress |
+| **Product Metrics** (`product_metrics`) | `crm_product` | Category | Products, Total List Price |
+| **Contact Metrics** (`contact_metrics`) | `crm_contact` | *none* | Contacts |
 
-The cube that powers all "how much did we book?" questions.
+Two things to read off that table before anything else. **Contact Metrics declares no dimension at all** — it counts contacts and nothing more. And **no dataset reads `crm_campaign`, `crm_contract`, `crm_quote` or either line-item object**, which is where most of the gaps below come from.
 
-**Measures**:
-- Bookings (closed-won $)
-- Deal count
-- Average deal size
-- Win rate
-- Sales cycle (days)
-- Average discount %
+This page used to describe four cubes — *Sales*, *Pipeline*, *Service* and *Marketing*. None of those four names exists in the app. Three of them map onto datasets that do exist, under different names and with different contents; the fourth has no data source at all. Each section below says which.
 
-**Dimensions**:
-- Account (and account tier, industry, size)
-- Owner (and team, region)
-- Product (and category, family)
-- Period (day, week, month, quarter, year)
-- Won/Lost reason
-- Lead source
+## 💰 Sales and 📊 pipeline — one dataset, not two
 
-**Sample questions**:
-- *"Bookings by region by quarter."*
-- *"Win rate by lead source over the last year."*
-- *"Average deal size by product family."*
+Both cubes this page described are answered by the same place: **Opportunity Metrics**, the dataset every pipeline widget and all four opportunity reports bind.
 
-## 📊 Pipeline Cube
+**Reachable today**, with the name the app uses:
 
-For "what's in the funnel?" questions. A snapshot view + a time-series view.
+- *Bookings* → **Won Revenue** (closed-won amount), with **Won Deals** beside it.
+- *Deal count* → **Opportunities**; *pipeline value* → **Total Amount**; *average deal size* → **Avg Deal Size**.
+- *Win rate* → **Win Rate**, declared as a ratio with **Won Deals**, **Lost Deals** and **Settled Deals** published next to it so the arithmetic behind the percentage can be checked.
+- *Stage*, *owner*, *source*, *won/lost reason* → **Stage**, **Owner**, **Lead Source**, **Win Reason**, **Loss Reason**.
+- *Probability bucket (commit / best case / pipeline)* → **Forecast Category**. The page's own name for it was the only thing missing.
+- *Account industry* → **Account Industry**, reached through the `crm_account` join this dataset includes.
+- *Period* → **Close Date**, bucketed by **month**, and **Close Quarter**, bucketed by **quarter**.
 
-**Measures**:
-- Pipeline value ($)
-- Pipeline count
-- Weighted pipeline (value × probability)
-- Days in stage
-- Days in pipeline
+**Not reachable, and why:**
 
-**Dimensions**:
-- Stage
-- Owner (and team)
-- Source
-- Product
-- Probability bucket (commit / best case / pipeline)
-- Snapshot date (for trend analysis)
+- **Sales cycle days** and **Days in pipeline** — nothing stores a duration. The opportunity carries **Stage Entry Date** and **Close Date** but no elapsed-days column, and the one duration it does carry, **Days in Current Stage**, is a formula evaluated *after* the query (`src/objects/opportunity.object.ts`), so it cannot be aggregated, filtered or sorted, and no dataset exposes it.
+- **Days in stage** — same field, same reason.
+- **Weighted pipeline (value × probability)** — the number exists per record: **Expected Revenue** is the amount times the stage probability, recomputed by `src/objects/opportunity.hook.ts` on every save, and the opportunity list views total that column. `opportunity_metrics` declares no measure over it, so no tile and no report can.
+- **Average discount %** — the discount is a percent on the line item (`crm_opportunity_line_item.discount`), and no dataset reads line items.
+- **Product, category, family** — same reason. **Product Metrics** covers the catalogue (**Category**, product count, list-price sum) and never joins to deals, so *"average deal size by product family"* has no path even though **Family** is a real field on the product.
+- **Account, account tier, account size** — `crm_account.tier` and **Number of Employees** are real fields, but the only account cut reachable from deals is **Account Industry**; **Account Metrics** adds **Type** and **Created** and stops there.
+- **Team, region** — no dataset declares either, and neither is a field on the deal to expose. Team and territory exist in this app as **positions** (*NA Sales Team*, *EU Sales Team* in `src/sharing/positions.ts`) and as **Billing Country** on the account, a flat projection the territory sharing rules match on — both are access-control machinery, and no dataset reads either. *"Bookings by region by quarter"* cannot be asked; the nearest answerable cut is by **Owner**.
+- **Period at day, week or year grain** — the two buckets declared are month and quarter. Another grain means another dimension.
+- **Snapshot date** — nothing snapshots the pipeline. *"Pipeline by stage today vs 30 days ago"* has no history to compare against. The nearest real thing is **Forecast Metrics**, which holds one row per owner per period — a settled snapshot of quota, closed, pipeline and commit — and answers the coverage question instead: *"coverage ratio (pipeline ÷ quota) by rep"*, provided the period is pinned (group by **Period**, or filter to a single **Period Type** + **Period Start**).
 
-**Sample questions**:
-- *"Pipeline by stage today vs 30 days ago."*
-- *"Average days-in-stage for the Proposal stage."*
-- *"Coverage ratio (pipeline ÷ quota) by team."*
+## 🎧 Service — `case_metrics`
 
-## 🎧 Service Cube
+The dataset behind every case-related dashboard tile and all three case reports. Five dimensions — **Status**, **Priority**, **Origin**, **Type**, **Created** (bucketed by day) — and three measures:
 
-The cube behind every case-related dashboard and SLA report.
-
-**Measures**:
-- Open case count
-- New case count
-- Resolved case count
-- Resolution time (hours)
+- **Cases** — the case count.
+- **Avg Resolution (h)** — average resolution time.
 - **SLA Violation Rate** — the average of the **SLA Violated** flag (`avg_sla_violated` in `case_metrics`), which is a breach rate and not a compliance percentage
-- CSAT score
 
 **There is no first-response measure here**, and no "SLA met %". `case_metrics` (`src/datasets/case.dataset.ts`) declares neither, so nothing in analytics can aggregate, compare or chart a first response. The **First Response Date** stamp on the case is real — see [Cases](/docs/service/cases) for when it is written — but it stops there: nothing measures it, and nothing alerts on it.
 
-**Dimensions**:
-- Status, priority, category, origin
-- Agent (and team)
-- Account (and tier)
-- Product
-- Period
+The rest of what this section used to list is not reachable either:
 
-**Sample questions**:
+- **Open / New / Resolved case count** — there is one count measure, not three. **Status** is a dimension, so a count *split by* status gives the same breakdown; what does not exist is a pre-filtered measure you can drop on a tile by itself.
+- **Agent (and team)** — `case_metrics` declares **no owner dimension**, so nothing in analytics can group, rank or filter cases by agent. `owner_id` is a field on the case; no dimension exposes it. This is why the service pages carry no agent leaderboard and *"reopened cases by agent"* is doubly impossible — nothing records a reopen either.
+- **Account (and tier)** — the dataset reads `crm_case` alone and never crosses to `crm_account`.
+- **Product** — cases carry no product link that analytics can read, so *"cases by category by product"* has no path.
+- **Category** — the nearest real dimension is **Type** (*Question / Problem / Feature Request / Bug*).
+- **Period** — **Created** buckets by **day** only.
+- **CSAT score** — **Customer Satisfaction** (`customer_rating`) is a real 1–5 field on the case, and no measure aggregates it.
+
+**Sample questions this dataset answers**:
 - *"SLA Violation Rate by priority."*
-- *"Cases by category by product — which products generate the most support load?"*
-- *"Reopened cases by agent — quality signal."*
+- *"Case volume by origin — where is the load coming in?"*
+- *"Average resolution time by type."*
 
-## 📣 Marketing Cube
+## 📣 Marketing — no dataset, no cube
 
-Powers campaign and lead-source ROI analysis.
+**There is no marketing dataset, so there is nothing to slice.** `src/datasets/` reads nine objects and `crm_campaign` is not one of them, which makes this the one section on the page where the gap is not a missing measure but a missing data source: all seven measures and all five dimensions it used to list are unreachable, and none of them can be added from a report or a cube screen.
 
-**Measures**:
-- Members enrolled
-- Members responded
-- Conversion count (member → opportunity)
-- Sourced revenue (closed-won where campaign was first touch)
-- Influenced revenue (closed-won where campaign was any touch)
-- Campaign spend
-- Cost per lead, cost per opportunity, ROI %
+The records do carry the numbers. `crm_campaign` has **Budgeted Cost**, **Actual Cost**, **Expected Revenue**, **Actual Revenue**, the **Num Sent / Responses / Leads / Converted Leads / Opportunities / Won Opportunities** counters, and two formula fields — **Response Rate %** and **ROI %** — shown in the **Performance** section of the campaign record. `crm_campaign_member` stamps **First Opened**, **First Clicked**, **Response Date** and **Responded** per member. Every one of those is a per-record figure that nothing aggregates.
 
-**Dimensions**:
-- Campaign (and type)
-- Channel (email, webinar, event, etc.)
-- Period
-- Lead source
-- Persona (job role)
+Name by name:
 
-**Sample questions**:
-- *"ROI by campaign type."*
-- *"Cost per opportunity by channel."*
-- *"Conversion rate by persona."*
+- **Members enrolled / responded**, **conversion count** — per-campaign counters on the record; no measure, so no total and no ranking across campaigns.
+- **Sourced and influenced revenue** — unreachable from the deal side too: `crm_opportunity.crm_campaign` is a real lookup, but `opportunity_metrics` declares no campaign dimension, so revenue cannot be attributed to a campaign anywhere in analytics.
+- **Campaign spend**, **cost per lead**, **cost per opportunity**, **ROI %** — the ROI percentage exists on each record as a formula; nothing sums the spend or compares campaigns.
+- **Campaign (and type)**, **channel**, **period** — real fields on `crm_campaign`, and dimensions nowhere.
+- **Lead source** — a dimension on **Lead Metrics** and on **Opportunity Metrics**, so *"which sources produce deals"* is answerable; the *campaign* behind the source is not.
+- **Persona (job role)** — no path at all: **Title** is free text on the contact and the lead, and **Contact Metrics** declares no dimensions.
 
-## How users interact with cubes
+So the three questions this section offered — *"ROI by campaign type"*, *"cost per opportunity by channel"*, *"conversion rate by persona"* — cannot be answered here today. Closing the gap means adding `src/datasets/campaign.dataset.ts`: a source change and a redeploy, not a setting. See [Campaigns](/docs/marketing/campaigns) for what the campaign record shows today.
 
-The cube UI lets anyone:
+## How users interact with datasets
 
-1. **Pick** a cube.
-2. **Drag** dimensions to rows and columns.
-3. **Pick** measures to display.
-4. **Filter** to narrow the view.
-5. **Pivot** instantly to see the data differently.
-6. **Chart** the result as bar, line, area, heatmap, or table.
-7. **Save** the view as a report.
-8. **Pin** the view to a dashboard.
+What the app guarantees is the binding: a report or a dashboard tile names a dataset and selects its measures and dimensions by name, and `test/analytics-integrity.test.ts` fails the build if any of those names does not resolve. That is what keeps two tiles showing the same number.
 
-No SQL, no formulas — just drag and drop.
+The drag-and-drop pivot experience this section used to describe — pick a cube, drag dimensions to rows and columns, filter, pivot, chart, save the view as a report, pin it to a dashboard — is a **platform** surface rather than something HotCRM declares. Nothing in this app's metadata configures such a screen, and nothing here tests one, so this page makes no claim about it in either direction. If your workflow depends on self-service pivoting, verify it against your deployment rather than against this page.
 
 ## How cubes stay fresh
 
-- **Incremental refresh** every few minutes for hot data (today's activity).
-- **Full refresh** nightly.
-- **Snapshots** for time-series analysis (e.g., daily pipeline snapshots that power trend charts).
+Refresh belongs to the analytics service, not to this app. HotCRM declares no refresh schedule, no incremental-versus-full-refresh policy and no snapshot job anywhere in `src/` — the only scheduled work it declares is its own flows (`src/flows/`). The figures this section used to quote — incremental refresh every few minutes, a nightly full refresh, daily snapshots, a refresh status screen in the admin console — are not configured here and are not measured here; treat them as questions for your deployment.
 
-Refresh status is visible in the admin console.
+One half of it *is* in the app's hands, and it is the half that fails today: a trend chart needs a snapshot dimension to compare against, and no dataset declares one. Time-series questions are answerable only along a date dimension a dataset already carries — **Close Date** by month, **Close Quarter**, **Created** by day, **Activity Week**, **Last Contacted** by month.
 
 ## AI Copilot and cubes
 
-The AI Copilot reads directly from cubes — when you ask *"What's our win rate by region?"*, it's the Sales Cube responding. This means:
+**On this app's side, nothing connects the Copilot to a dataset.** The six skills under `src/skills/` name no dataset, no cube and no measure. The one that answers data questions, **Live Data Access**, is wired to the platform's object tools — `describe_object`, `list_objects`, `query_records`, `get_record`, `aggregate_data` — and its instructions tell the agent to re-read the object's schema first and aggregate over records. So a Copilot answer about win rate is computed from the objects, not read off the compiled cube, and this app declares nothing that would make the two consistent by construction.
 
-- **AI answers are consistent** with dashboards and reports (same source of truth).
-- **AI can explain** the answer by referencing the cube measure and dimension.
-- **Admins can audit** AI queries through the cube access log.
+Whether the platform's own agent additionally reads the compiled cubes, and whether cube access is audited for admins, are questions about the runtime rather than about this app — so this page makes no claim about them in either direction. If you are relying on Copilot answers matching a dashboard to the decimal, check it against your deployment.
 
 ## Custom cubes
 
-Admins and developers can build new cubes for domain-specific analysis:
+In HotCRM a new cube starts as a new **dataset in source**: a `defineDataset(...)` in `src/datasets/<object>.dataset.ts`, exported from `src/datasets/index.ts`, registered by `objectstack.config.ts`, then deployed. That is the route all nine above took, and the reason the marketing gap is a code change rather than a configuration one.
 
-- A **Subscriptions Cube** for SaaS revenue (ARR, NRR, churn).
-- A **Renewal Cube** for renewal pipeline visibility.
-- A **Partner Cube** if you sell through channels.
-
-See [Customization › Extending Objects](/docs/customization/extending-objects) for how to define new cubes, dimensions, and measures.
+The three examples this section used to offer — a *Subscriptions Cube*, a *Renewal Cube*, a *Partner Cube* — exist in no form; there is no subscription or partner object to build them on. Whether the console additionally offers an admin-facing cube builder is, again, a platform question this page does not answer.
 
 ## Tips for analysts
 
-- ✅ Start every new analysis from a cube — don't build dashboards on raw queries.
-- ✅ Use **snapshot dimensions** for trend questions ("How did this metric change?").
-- ✅ Save **shared views** that the team can subscribe to.
+- ✅ Start from a dataset and its declared measures — the number a tile shows is the measure it names, so quoting the measure name makes an answer checkable.
+- ✅ Pin the period when you touch **Forecast Metrics**: its measures are plain sums over a table that holds several periods at once, so an unscoped query adds a quarter's quota to a month's.
+- ✅ Read **Win Rate** together with **Won Deals** and **Lost Deals** — a blank rate means "no settled deals", not "no wins".
 
 ## Tips for admins
 
-- ✅ When a measure is computed inconsistently across reports, **promote it to a cube measure** — single source of truth.
-- ✅ Monitor cube refresh times — if they slow down, prune unused dimensions.
-- ✅ Document each cube's measures and dimensions for end users — discoverability is the #1 adoption blocker.
+- ✅ When a measure is computed inconsistently across reports, **promote it into the dataset** — one declaration, selected by name everywhere.
+- ✅ Adding a dimension is how you close an "unreachable" gap above; adding a dataset is how you close a missing-source one. Both are source changes, so they go through review like any other metadata.
+- ✅ Document what each dataset can and cannot answer — the gaps in this page are exactly the questions users kept asking.
