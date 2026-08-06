@@ -27,7 +27,7 @@ HotCRM ships with six core skills:
 | **✍️ Email Drafting** | Sales + Service | Drafts a context-aware email or reply |
 | **📈 Revenue Forecasting** | Sales | Rolls up pipeline into commit / best-case / pipeline buckets |
 | **🔭 Customer 360°** | Sales + Service | One-page summary of an account or contact |
-| **🚦 Case Triage** | Service | Suggests priority, category, queue, and matching KB articles |
+| **🚦 Case Triage** | Service | Suggests a priority with the reason that drove it |
 
 ### 🔄 Live Data
 
@@ -49,7 +49,7 @@ This is the skill behind **[Wow #1 — Live Schema](/docs/ai-copilot/live-schema
 | **Reads** | Lead fields, campaign engagement, matched account history |
 | **Output** | Rating (Hot/Warm/Cold), BANT score, recommended status, rationale |
 | **Writes** | Updates `rating` and `status` if user accepts |
-| **Knowledge base** | Sales Knowledge |
+| **Knowledge base** | None. No knowledge step — and no *Sales Knowledge* library exists to have one (see [Knowledge Bases](/docs/ai-copilot/knowledge-bases)) |
 
 ### ✍️ Email Drafting
 
@@ -59,7 +59,7 @@ This is the skill behind **[Wow #1 — Live Schema](/docs/ai-copilot/live-schema
 | **Reads** | Record fields, related activities, contact history |
 | **Output** | Draft email with subject + body |
 | **Writes** | Nothing automatically — user reviews and sends |
-| **Knowledge base** | Sales Knowledge (sales context), Support Knowledge (service context), Product Information (technical content) |
+| **Knowledge base** | None. The drafting instructions never reach for an article, and the three libraries once named here do not exist |
 
 ### 📈 Revenue Forecasting
 
@@ -69,7 +69,7 @@ This is the skill behind **[Wow #1 — Live Schema](/docs/ai-copilot/live-schema
 | **Reads** | Opportunities visible to the user, opportunity history |
 | **Output** | Forecast bucketed by Closed / Commit / Best Case / Pipeline + risk callouts |
 | **Writes** | Nothing — read-only |
-| **Knowledge base** | Sales Knowledge (for forecast methodology) |
+| **Knowledge base** | None. The methodology is in the skill's own instructions, not in a library |
 
 ### 🔭 Customer 360°
 
@@ -79,7 +79,7 @@ This is the skill behind **[Wow #1 — Live Schema](/docs/ai-copilot/live-schema
 | **Reads** | Account, contacts, opportunities, contracts, cases, recent activities, campaign memberships |
 | **Output** | Structured snapshot with sections for sales, service, contracts, and engagement |
 | **Writes** | Nothing — read-only |
-| **Knowledge base** | None — purely data-driven |
+| **Knowledge base** | Published **Knowledge Articles**, matched on the category or tags of the cases it just read — the only skill that reads them |
 
 ### 🚦 Case Triage
 
@@ -89,7 +89,7 @@ This is the skill behind **[Wow #1 — Live Schema](/docs/ai-copilot/live-schema
 | **Reads** | Case subject/description, contact and account context, prior cases, product |
 | **Output** | Suggested priority, category, team, top 3 KB articles, draft acknowledgment |
 | **Writes** | Updates `priority`, `category`, `queue` if user accepts |
-| **Knowledge base** | Support Knowledge, Product Information |
+| **Knowledge base** | None. It declares no query tool, so it cannot search articles at all |
 
 ## How skills work together
 

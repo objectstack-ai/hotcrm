@@ -9,40 +9,43 @@ The knowledge base is the **library of support content** the AI Service Copilot 
 
 ## What's in the knowledge base
 
-The Support Knowledge index covers four content types:
+The knowledge base is one object — **Knowledge Article** — and every article is an ordinary record you create from **Service → Knowledge**. There is no separate index and no file store behind it: what you see in the list view is what the Copilot can read.
 
-| Content type | Examples |
+Each article is filed under one **Category**, and the seven categories are the whole vocabulary:
+
+| Category | What belongs there |
 | --- | --- |
-| **FAQs** | "How do I reset my password?", "What are your support hours?" |
-| **Troubleshooting guides** | Step-by-step problem-solving for common issues |
-| **SLA policies** | The promises you make to customers — response and resolution times |
-| **Resolution templates** | Reusable answer drafts for recurring case types |
+| **Getting Started** | First-run setup, orientation, "how do I begin" answers |
+| **How-To** | Step-by-step task instructions |
+| **Troubleshooting** | Symptom → cause → fix, error codes, known workarounds |
+| **Billing & Pricing** | Invoices, plan changes, refunds, price questions |
+| **API & Integrations** | Endpoints, webhooks, connector setup |
+| **Release Notes** | What changed, and when |
+| **Policy** | Support hours, SLA promises, data handling, anything you commit to in writing |
 
-These are stored as Markdown files under `/knowledge/support/` and re-indexed automatically when changed.
+Alongside the category, each article carries **Tags** (Auth, SSO, Mobile, Email, Reports, Performance, Data Import, Webhooks), a **Status** (Draft → In Review → Published → Archived), an **Audience** (Public or Internal), and a **Language**. Articles get an **Article Number** — `KA-0001` — automatically, and that number is what the Copilot cites.
+
+## Finding articles
+
+The **Knowledge** list ships with four tabs:
+
+- **All** — everything, grouped by category, newest publication first.
+- **Published** — published articles only, most-viewed first.
+- **My Drafts** — your own drafts and in-review articles.
+- **Review Queue** — published articles ranked least-recently-reviewed first, so the top of the list is what is most likely stale.
+
+The object's declared search targets are the **Title**, **Summary** and **Article Number**, so those are the fields global search and the lookup picker read — the words a colleague would search for belong there rather than buried in the body.
 
 ## How the Service Copilot uses it
 
-When an agent asks the Service Copilot to *"suggest a resolution"* or *"help me reply to this customer"*, the Copilot:
+One skill reads articles: **Customer 360°**. Ask it for a customer's history and, alongside the account, contacts, open deals and cases, it queries **published** articles matched on the **category or tags** of the cases it just read, and cites each one by number (`KA-0007`).
 
-1. Takes the case subject and description as the question.
-2. Searches the knowledge base for the **5 most relevant snippets** above a quality threshold.
-3. Drafts a customer-facing response grounded in those snippets.
-4. **Cites the source** for each claim, so the agent can verify before sending.
+Two things it is worth being precise about, because both used to be described the other way round:
 
-This means the AI never makes things up — it can only repeat what's in your knowledge base.
+- **Case Triage does not search for articles.** It declares two tools, `describe_object` and `get_record`, and no query tool at all. It returns a priority with its reason and a pointer at Escalate or Close — no article list.
+- **Email Drafting does not quote articles.** A draft is grounded in the records the skill reads — the contact, plus the related account or opportunity — and nothing in its instructions reaches for an article. When a reply should quote one, take the article Customer 360° matched and paste it in.
 
-## How the Sales Copilot uses other knowledge
-
-HotCRM ships with **four** AI knowledge bases, each tuned for different teams:
-
-| Knowledge Base | Used by | Content |
-| --- | --- | --- |
-| **Sales Knowledge** | Sales Copilot | Sales playbook, qualification methodology, objection handling |
-| **Product Information** | Sales Copilot | Product catalog, specifications, pricing, positioning |
-| **Support Knowledge** | Service Copilot | FAQs, troubleshooting, SLA policies |
-| **Competitive Intelligence** | Sales Copilot | Competitor profiles, battlecards, win/loss analysis |
-
-See [AI Copilot › Knowledge Bases](/docs/ai-copilot/knowledge-bases) for the technical details.
+Matching is by category and tags, not by meaning. An article filed under the wrong category will not surface however well its body answers the question — which makes categorisation, not prose, the highest-leverage thing a knowledge manager does.
 
 ## Curating the knowledge base
 
@@ -50,29 +53,29 @@ The knowledge base is **only as good as what you put in it**. A typical content-
 
 ### 1. Capture what's working
 
-When an agent resolves a tricky case with a great answer, copy that answer into the knowledge base. The next agent (or the AI) will reuse it.
+When an agent resolves a tricky case with a great answer, copy that answer into a new article. The **Originating Case** field links it back to the case it came from, so the next reader can see the real conversation behind it.
 
 ### 2. Triage incoming questions
 
-Every week, look at the most common case subjects. The top 10 questions deserve dedicated FAQ entries — if 30 customers asked the same thing, the 31st should be answered automatically.
+Every week, look at the most common case subjects. The top 10 questions deserve dedicated articles — if 30 customers asked the same thing, the 31st should be answered from an article.
 
 ### 3. Retire stale content
 
-If a product changes, the corresponding KB articles need updating. Set a quarterly review on each article's owner.
+If a product changes, the corresponding articles need updating. **Review Queue** ranks published articles by how long it has been since anyone touched them; work it from the top. Publishing stamps the publication date once and refreshes the review date on every later edit, so the ranking reflects real attention.
 
-### 4. Watch the AI's citations
+### 4. Watch what gets cited and read
 
-When the Service Copilot drafts a response, it cites which KB articles it used. If the same article is cited every day, it's pulling its weight. If an article is never cited, consider rewriting or removing it.
+**View Count**, **Helpful Votes** and **Not Helpful Votes** are on every article. An article read often and voted down is doing damage; one that is never read may be filed under a category nobody browses.
 
 ## Tips for service managers
 
 - ✅ Make KB updates part of the weekly team meeting — "what 3 new articles do we need this week?"
 - ✅ Reward agents who contribute KB content; it scales their expertise.
-- ✅ Audit the AI's recent answers — pick 10 at random per week and check the cited articles were used correctly.
+- ✅ Audit the articles **Customer 360°** cites — pick 10 at random per week and check they actually fit the cases they were matched to.
 
 ## Tips for admins
 
-- Place new Markdown files under `/knowledge/support/` and they'll be indexed on the next embedding refresh (configurable interval).
-- The AI uses *retrieval augmentation* — it never trains on your KB, just searches it at query time. New content takes effect immediately after the index updates.
-- For details on chunking, embeddings, retrieval thresholds and caching, see [AI Copilot › Knowledge Bases](/docs/ai-copilot/knowledge-bases).
-- You can add new knowledge bases (e.g., a separate compliance KB) and wire them to specific skills. See [Customization › Adding AI Skills](/docs/customization/ai-skills).
+- **Publish it or it does not exist.** The Copilot queries published articles only; a draft is invisible to it.
+- **Set the audience deliberately.** Public articles are the ones written for customers; internal ones are agent-only. Note that the customer portal does not serve articles today — the guest profile cannot read the object at all, by design — so *Public* is a statement of intent, not a publication channel.
+- **Categories are metadata.** Adding an eighth category is a change to the object, not a setting — see [Customization › Extending Objects](/docs/customization/extending-objects).
+- HotCRM ships no separate sales, product or competitive knowledge base to wire up; there is this one object and its categories. [AI Copilot › Knowledge Bases](/docs/ai-copilot/knowledge-bases) has the detail on what the Copilot can and cannot do with it.
