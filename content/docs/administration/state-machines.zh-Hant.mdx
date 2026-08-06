@@ -5,14 +5,14 @@ description: HotCRM 如何在潛在客戶和商機上宣告有效的狀態轉換
 
 # 狀態機
 
-某些物件有嚴格的 **生命週期** —— 潛在客戶從 *New* 推進到 *Working* 再到 *Qualified*，絕不會倒退回 *New*。狀態機把這條路線 **宣告** 出來，但並不強制執行：本應用的五條狀態機全是 **警告** 級，使用者把記錄挪出這條路線，**儲存照樣通過** —— 詳見下文《宣告出來的路線是建議，不是閘門》。
+某些物件有嚴格的 **生命週期** —— 潛在客戶從 *New* 推進到 *Contacted*、*Qualified*，最後到 *Converted*。狀態機把這條路線 **宣告** 出來，但並不強制執行：本應用的五條狀態機全是 **警告** 級，使用者把記錄挪出這條路線，**儲存照樣通過** —— 詳見下文《宣告出來的路線是建議，不是閘門》。
 
 ## 狀態機在哪裡適用
 
 HotCRM 在 **五個** 物件上使用狀態機：
 
-- **潛在客戶** —— *New → Working → Qualified → Converted / Disqualified*
-- **商機** —— 經過 7 個階段 *Prospecting → Qualification → Proposal → Negotiation → Closed Won / Closed Lost / Closed Without Decision*
+- **潛在客戶** —— *New → Contacted → Qualified → Converted*；*Unqualified* 從任何開放狀態都能進入，而它唯一的出路是重新開啟回 *New*
+- **商機** —— 經過 7 個階段 *Prospecting → Qualification → Needs Analysis → Proposal → Negotiation → Closed Won / Closed Lost*
 - **案例** —— *New → In Progress → Resolved → Closed*；*Waiting on Customer* 與 *Waiting on Support* 用來把未結案的案例掛起，*Escalated* 從任何未解決的狀態都能進入，*Resolved* 與 *Closed* 都可以重新開啟回 *In Progress*
 - **合約** —— *Draft → In Approval → Activated → Expired*；*In Approval* 可以把文件退回 *Draft*，三種在途狀態都能直接走到 *Terminated*，*Expired* 與 *Terminated* 都是終點
 - **報價** —— *Draft → In Review → Presented → Accepted*；*In Review* 可以退回 *Draft*，*Rejected* 會回到 *Draft* 重來，*Expired* 可從 *Draft*、*In Review*、*Presented* 進入，*Accepted* 與 *Expired* 都是終點
@@ -25,63 +25,75 @@ HotCRM 在 **五個** 物件上使用狀態機：
 
 ## 潛在客戶狀態機
 
+主路線，以及從它岔出去的兩條邊：
+
 ```
-        ┌──────────────┐
-        │     New      │
-        └──────┬───────┘
-               │ Begin working
-               ▼
-        ┌──────────────┐
-        │   Working    │
-        └──┬────────┬──┘
-   Disqual │        │ Qualify
-           ▼        ▼
-   ┌────────────┐  ┌────────────┐
-   │Disqualified│  │ Qualified  │
-   └────────────┘  └─────┬──────┘
-                         │ Convert
-                         ▼
-                  ┌────────────┐
-                  │ Converted  │
-                  └────────────┘
+   New  ──Contact──▶  Contacted  ──Qualify──▶  Qualified  ──Convert──▶  Converted
+    ▲                     │                        │                   (terminal)
+    │                     │  Disqualify            │  Disqualify
+    │                     └───────────┬────────────┘
+    │                                 ▼
+    │                          ┌─────────────┐
+    └────────── Re-open ───────│ Unqualified │
+                               └─────────────┘
 ```
 
-**允許的轉換**：
+**允許的轉換** —— 下面就是整張表，照抄自 `src/objects/lead.object.ts` 裡的 `lead_status_progression` 規則；它比上面那張圖多帶幾條捷徑：
 
-| 從 | 到 | 觸發 |
+| 從 | 可以移動到 | 說明 |
 | --- | --- | --- |
-| New | Working | 手動（「Begin Working」）或首次活動時自動更新 |
-| Working | Qualified | 手動（「Mark Qualified」） |
-| Working | Disqualified | 手動（「Disqualify」），需填寫原因 |
-| Qualified | Converted | 轉化精靈（建立客戶/聯絡人/商機） |
-| Disqualified | （終態） | — |
-| Converted | （終態） | — |
+| New | Contacted、Qualified、Unqualified、Converted | 潛在客戶可以不經過 *Contacted* 就被確認資格或被轉化 |
+| Contacted | Qualified、Unqualified、Converted | |
+| Qualified | Converted、Unqualified | |
+| Unqualified | New | 重新開啟。這是 *Unqualified* 唯一的出邊 —— 它不是終態 |
+| Converted | — | 終態 |
 
-**不允許**：從 *New* 直接跳到 *Converted*；將 *Converted* 退回到 *Working*。
+其中兩條邊背後是有機制的。移動到 *Unqualified* 必須填寫 **取消資格原因**：該欄位的 `requiredWhen` 在 `status == "unqualified"` 時生效，而這一條 **確實** 會拒絕儲存。移動到 *Converted* 走的是 **Convert Lead** 按鈕，它執行 `lead_conversion` 流程 —— 流程建立客戶、聯絡人和商機，最後蓋上 `status: 'converted'`。
+
+**這是有意允許的**：從 *New* 直接到 *Converted*。Convert Lead 按鈕在任何既未轉化也未被取消資格的線索上都可見 —— 也就是 *New*、*Contacted*、*Qualified* 三種狀態都會顯示它 —— 而流程自己會蓋狀態，所以這條捷徑必須寫進表裡，否則每一次從未跟進過的線索轉化都會記下一條名不副實的「非法轉換」警告。`lead.object.ts` 裡表上方的註解說的正是這件事。
+
+**表裡沒有的**：*Converted* 的任何出邊，它是終態；從 *Qualified* 退回 *Contacted* 或 *New*；以及把 *Unqualified* 一步重新確認資格 —— 從那裡回來的路是重新開啟到 *New*。
 
 ## 商機狀態機
 
 ```
-Prospecting → Qualification → Proposal → Negotiation
-                                              │
-                            ┌─────────────────┼────────────────────────┐
-                            ▼                 ▼                        ▼
-                        Closed Won      Closed Lost        Closed Without Decision
+Prospecting → Qualification → Needs Analysis → Proposal → Negotiation
+                                                  │            │
+                                                  └─────┬──────┘
+                                                        ▼
+                                                   Closed Won
+
+any of the five open stages ─────────────────────▶ Closed Lost
 ```
 
-**規則**：
+已關閉階段只有 **兩個**，不是三個：*Closed Won* 與 *Closed Lost*。不存在 *Closed Without Decision* —— 一筆無聲無息拖沒了的交易就是 *Closed Lost*。
 
-- 你可以自由地 **向前** 經過 *Prospecting → Qualification → Proposal → Negotiation*。
-- 你可以 **向後** 移動（例如從 *Negotiation* 退回 *Proposal*）—— 有時交易會滑落。
-- 從任何開放階段，你都可以移動到三個 **已關閉** 階段之一。
-- 一旦 *Closed*，商機的金額/階段編輯就被 **鎖定**（除非重新開啟 —— 僅限管理員）。
+**允許的轉換**，照抄自 `src/objects/opportunity.object.ts` 裡的 `opportunity_stage_progression` 規則：
+
+| 從 | 可以移動到 | 說明 |
+| --- | --- | --- |
+| Prospecting | Qualification、Proposal、Closed Lost | |
+| Qualification | Needs Analysis、Proposal、Closed Lost | |
+| Needs Analysis | Proposal、Closed Lost | 預設贏率 40%，預測類別為 *Best Case* |
+| Proposal | Negotiation、Closed Won、Closed Lost | |
+| Negotiation | Closed Won、Closed Lost | |
+| Closed Won | — | 終態 |
+| Closed Lost | — | 終態 |
+
+其中兩條邊是為 CPQ 路徑存在的，不是給業務一個階段一個階段點出來的：*→ Proposal* 從每一個 Proposal 之前的階段都合法，因為 `quote_generation` 流程一旦產生報價就把交易快進到 *Proposal*，而產生報價在任何開放階段都可能發生；*Proposal → Closed Won* 合法，則是因為 `quote_on_accepted` 鉤子會從一份被接受的報價上直接贏下關聯交易，中間不再經過一次談判。
+
+**表裡沒有的**：**向後** 移動。沒有任何一個開放階段宣告了通往更早階段的邊，所以從 *Negotiation* 退回 *Proposal* —— 交易滑落 —— 是走出了這條路線，和其他任何一次出格一樣只記一條警告（照樣儲存，見上文）。兩個已關閉階段也都沒有出邊，所以既不存在「重新開啟」這條轉換，也不存在管理員繞回開放階段的通道。
+
+已關閉的商機另有一道 **凍結**，而且管的遠不止階段欄位：`opportunity_lifecycle` 鉤子會拒絕使用者對 *Closed Won* / *Closed Lost* 記錄的任何編輯，只放行 `description`、`next_step` 和 `notes` 三個欄位；而且這次拒絕是拋出錯誤、並點名你試圖改的那些欄位 —— 不是警告。審批結論和平台託管的欄位被排除在外，好讓一次在途審批仍能落地；而沒有登入使用者的寫入（種子資料或回填）根本不受這道凍結管轄。
 
 系統還強制執行：
 
-- 移動到 *Proposal* 之前 **必須填寫關閉日期**。
-- 移動到 *Negotiation* 之前 **必須填寫金額**。
-- 進入 *Closed Lost* 或 *Closed Won* 時 **必須填寫贏單/丟單原因**。
-- 如果金額 > $500K 且尚未授予折扣審批，進入 *Closed Won* **可能需要審批**。
+- **必須填寫關閉日期** —— 而且不是從 *Proposal* 開始才要求，是一直要求：`close_date` 帶著 `required: true` 和 `notNull` 儲存，沒有它商機根本建不出來。
+- **必須填寫金額** —— 同樣是無條件的。這兩個欄位都不等哪個階段。
+- 進入 *Closed Lost* 或 *Closed Won* 時 **必須填寫贏單/丟單原因** —— 這是 `win_reason` 與 `loss_reason` 上按階段生效的 `requiredWhen` 述詞。
+- **審批的入口是 $100K。** `opportunity_approval` 流程會在任何一次更新之後觸發，只要這筆開放商機金額超過 **$100,000** 且還沒有在案的審批，就把它送到 **銷售經理** 那裡。**$500K** 是第二檔而不是入口：超過這個數，還要 **銷售總監** 在經理之後加簽。所以一筆 $200K 的單子是會進審批的。
+
+與上面那些轉換表不同，這四條確實會拒絕儲存：`required` 與 `requiredWhen` 是硬的，而在審批步驟擱置期間，流程會把記錄鎖住。
 
 ## 狀態機給你的是什麼
 
@@ -115,13 +127,11 @@ Prospecting → Qualification → Proposal → Negotiation
 
 ## 狀態機與 AI Copilot
 
-Copilot 理解狀態機。在建議操作時：
+**本應用沒有把這兩者接起來。** `src/skills/` 下的六個技能、`src/actions/` 下的每一個操作，都沒有提到轉換表、狀態機或「合法的下一批狀態」這類查詢，也沒有任何一個技能的提示詞裡寫著哪個狀態之後可以接哪個狀態。本頁原先描述過 Copilot 會壓住 *「確認這個潛在客戶的資格」*、*「轉化這個潛在客戶」* 這類建議，直到記錄的狀態允許這次移動為止；HotCRM 並沒有宣告任何能產生這種行為的東西。
 
-- *「確認這個潛在客戶的資格」* → 僅當狀態為 *Working* 時建議。
-- *「轉化這個潛在客戶」* → 僅當狀態為 *Qualified* 時建議。
-- *「將這個商機標記為 Closed Won」* → 僅當贏單條件滿足時建議（金額、關閉日期、贏單原因、必要時的審批）。
+平台自己的 agent 在裝載物件中繼資料時會不會把 `state_machine` 驗證一併讀進去、並據此收窄建議，這是執行階段的問題，不是本應用的問題 —— 所以本頁對它不作任何方向的斷言。如果你正指望 Copilot 待在某條生命週期裡，請在你自己的部署上驗證，而不是照著本頁相信。
 
-這可以防止 Copilot 建議非法的轉換。
+轉換表能給 agent 的，和它給報表作者的是同一樣東西：那條路線，宣告在物件上的一個地方，供技能或流程有意識地照著寫。
 
 ## 給管理員的提示
 
