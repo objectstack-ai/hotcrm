@@ -231,23 +231,54 @@ export const OpportunityDetailPage: Page = {
           type: 'record:reference_rail',
           id: 'opp_reference_rail',
           properties: {
+            /**
+             * No entry declares a `title` — deliberately (#972).
+             *
+             * The rail resolves a card's heading as
+             * `entry.title || i18n.objectLabel({ name: objectName, … })`, so a
+             * literal `title` does not merely provide a default: it WINS, and
+             * the locale bundle is never consulted. The three literals that
+             * used to sit here (`Quotes` / `Products` / `Open Tasks`) therefore
+             * printed English into every one of the four locales this app
+             * ships, on top of `objects.<name>.label` already being translated
+             * in all of them. Dropping them hands the heading back to the
+             * translation bundle — the single source of truth for what an
+             * object is called — so a locale added later is covered for free.
+             *
+             * A translated literal is not available as an alternative: unlike
+             * `record:alert`, whose `title` is run through the inline
+             * translation-map resolver, the rail renders `entry.title` as a
+             * raw React child. An `{ en, 'zh-CN' }` map here would not be
+             * resolved — it would be handed to React as an object.
+             *
+             * The third card losing the word "Open" is a correction, not a
+             * casualty. A rail entry has no filter at all — the rail queries
+             * `{ $filter: { [relationshipField]: parentId }, $top: limit }` and
+             * reads nothing else — so that card always counted and listed this
+             * deal's tasks whatever their status. The heading claimed a filter
+             * the component cannot apply. The genuinely filtered view is the
+             * `opp_tasks` related list on the *Related* tab above, which does
+             * carry `status neq completed`.
+             *
+             * Pinned by `test/metadata-references.test.ts` (entries resolve,
+             * no literal titles) and `test/i18n-references.test.ts` (every
+             * rail object has a `label` in every locale, so the fallback
+             * lands on a translation rather than on a humanized object name).
+             */
             entries: [
               {
                 objectName: 'crm_quote',
                 relationshipField: 'crm_opportunity',
-                title: 'Quotes',
                 limit: 3,
               },
               {
                 objectName: 'crm_opportunity_line_item',
                 relationshipField: 'crm_opportunity',
-                title: 'Products',
                 limit: 3,
               },
               {
                 objectName: 'crm_task',
                 relationshipField: 'related_to_opportunity',
-                title: 'Open Tasks',
                 limit: 3,
               },
             ],
