@@ -117,11 +117,20 @@ All metadata files MUST be validated against their corresponding `@objectstack/s
 
 1. **Objects**: Use `ObjectSchema.parse()` from `@objectstack/spec/data`
 2. **Pages/Views/Dashboards/Forms**: Use schemas from `@objectstack/spec/ui`
-3. **Workflows**: Use `WorkflowRuleSchema.parse()` from `@objectstack/spec/automation`
+3. **Flows**: Use `FlowSchema.parse()` from `@objectstack/spec/automation` (`defineFlow()` is that call)
 4. **State Machines**: Use `StateMachineSchema.parse()` from `@objectstack/spec/automation`
 5. **Plugins**: Use `PluginSchema.parse()` from `@objectstack/spec/kernel` (remove `: any` annotations)
 6. **Permissions**: Use `PermissionSetSchema.parse()` from `@objectstack/spec/security`
 7. **AI Agents**: Use `AgentSchema.parse()` from `@objectstack/spec/ai`
+
+> **There is no `workflow` metadata type** (ADR-0019/0020): `WorkflowRuleSchema` is not
+> exported by any installed `@objectstack/*` package, and `ObjectSchema` rejects
+> `workflows:` / `workflow:` by name. Field updates belong in `*.hook.ts`; status flips and
+> notifications in a `record_change` / `schedule` flow (item 3); approvals in an `approval`
+> node inside a flow. A record **lifecycle** constraint is not item 4 either — it is a
+> `validations[]` entry with `type: 'state_machine'` on the object, validated by
+> `ObjectSchema.parse()` (item 1); item 4's `StateMachineSchema` is a different shape
+> (`initial` / `states` / `on`) and does not validate that entry.
 
 ## 🏷️ Field Type Guidance
 
