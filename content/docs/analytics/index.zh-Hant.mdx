@@ -57,7 +57,7 @@ HotCRM 分析將你的 CRM 活動轉化為**決策**。三個層次協同運作�
 
 **在本應用這一側，沒有任何東西把 Copilot 連到某個 dataset 上。** `src/skills/` 下的六個技能，沒有一個點名任何 dataset、cube 或度量。其中負責回答資料問題的那個 —— **Live Data Access** —— 接的是平台的物件工具，而它的指令要求先重新讀一遍物件的 schema，再在記錄上做彙總。所以 Copilot 的回答是從物件上算出來的，而不是從編譯好的 cube 上讀出來的。
 
-這也決定了能問它什麼。*"是什麼造成了承諾額與預測額之間的差距？"* 背後是有資料的：**Commit**、**Quota**、**Closed**、**Pipeline** 都是預測記錄上真實的數字。*"為什麼上一季東區比西區少成交了 3 筆交易？"* 與 *"告訴我哪些產品與更長的銷售週期相關。"* 則沒有 —— 交易上不存區域，沒有任何 dataset 讀行項目，而商機唯一帶著的那個時長（**Days in Current Stage**）是查詢之後才算的公式，什麼都彙總不了。這些缺口逐條列在 [多維資料集](/zh-Hant/docs/analytics/cubes)。
+這也決定了能問它什麼。*"是什麼造成了承諾額與預測額之間的差距？"* 背後是有資料的：預測記錄上真實帶著 **Commit**、**Quota**、**Closed Won**、**Pipeline** 四個數字，在 **Forecast Metrics** dataset 上發布為 **Commit**、**Quota**、**Closed**、**Pipeline** 四個度量。*"為什麼上一季東區比西區少成交了 3 筆交易？"* 與 *"告訴我哪些產品與更長的銷售週期相關。"* 則沒有 —— 交易上不存區域，沒有任何 dataset 讀行項目，而商機唯一帶著的那個時長（**Days in Current Stage**）是查詢之後才算的公式，什麼都彙總不了。這些缺口逐條列在 [多維資料集](/zh-Hant/docs/analytics/cubes)。
 
 平台自帶的 agent 是否另外也讀編譯後的 cube，是關於執行時而不是關於本應用的問題 —— 所以本頁對它不做任何方向上的斷言，請對著你自己的部署去核。銷售側的技能各自做什麼，見 [銷售技能](/zh-Hant/docs/ai-copilot/sales-copilot)。
 
