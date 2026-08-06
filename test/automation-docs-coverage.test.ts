@@ -195,7 +195,11 @@ const EVENT_WORD: Record<Locale, { 'record-after-create': string; 'record-after-
  * page uses the flow's own `label`, checked against the stack.
  */
 const ROW_LABEL: Record<string, Record<'zh-Hans' | 'zh-Hant', string>> = {
-  lead_conversion: { 'zh-Hans': '线索转换流程', 'zh-Hant': '線索轉換流程' },
+  // 转化, not 转换: the lead convert verb face follows the locale pack, where
+  // `convert_lead.label` is 转化线索 and `is_converted` is 已转化 (#801/#825/#829).
+  // The flow itself carries no locale-pack entry, so this ledger is where the
+  // page's spelling is pinned — it moves with the three pages, not after them.
+  lead_conversion: { 'zh-Hans': '线索转化流程', 'zh-Hant': '線索轉化流程' },
   quote_generation: { 'zh-Hans': '由商机生成报价', 'zh-Hant': '由商機產生報價' },
   schedule_followup: { 'zh-Hans': '安排跟进', 'zh-Hant': '安排跟進' },
   // 营销活动, not 活动: 「活动」 is the locale pack's label for `crm_event`, and this

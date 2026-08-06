@@ -46,7 +46,7 @@ HotCRM 在以下物件上使用狀態機：
 | New | Working | 手動（「Begin Working」）或首次活動時自動更新 |
 | Working | Qualified | 手動（「Mark Qualified」） |
 | Working | Disqualified | 手動（「Disqualify」），需填寫原因 |
-| Qualified | Converted | 轉換精靈（建立客戶/聯絡人/商機） |
+| Qualified | Converted | 轉化精靈（建立客戶/聯絡人/商機） |
 | Disqualified | （終態） | — |
 | Converted | （終態） | — |
 
@@ -109,7 +109,7 @@ Prospecting → Qualification → Proposal → Negotiation
 Copilot 理解狀態機。在建議操作時：
 
 - *「確認這個潛在客戶的資格」* → 僅當狀態為 *Working* 時建議。
-- *「轉換這個潛在客戶」* → 僅當狀態為 *Qualified* 時建議。
+- *「轉化這個潛在客戶」* → 僅當狀態為 *Qualified* 時建議。
 - *「將這個商機標記為 Closed Won」* → 僅當贏單條件滿足時建議（金額、關閉日期、贏單原因、必要時的審批）。
 
 這可以防止 Copilot 建議非法的轉換。
@@ -119,7 +119,7 @@ Copilot 理解狀態機。在建議操作時：
 - ✅ **不要過度約束** —— 太多轉換規則會成為團隊的摩擦稅。
 - ✅ 新增狀態時，**先決定進入和退出條件** —— 其餘的自然就有了。
 - ✅ 使用狀態機轉換來 **觸發自動化**，而非在每次儲存時執行自動化 —— 效能要好得多。
-- ✅ 每次變更後 **測試精靈流程**（轉換潛在客戶、關閉商機）。
+- ✅ 每次變更後 **測試精靈流程**（轉化潛在客戶、關閉商機）。
 
 ## 給使用者的提示
 

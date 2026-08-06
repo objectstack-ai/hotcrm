@@ -46,7 +46,7 @@ HotCRM 在以下对象上使用状态机：
 | New | Working | 手动（“Begin Working”）或首次活动时自动更新 |
 | Working | Qualified | 手动（“Mark Qualified”） |
 | Working | Disqualified | 手动（“Disqualify”），需填写原因 |
-| Qualified | Converted | 转换向导（创建客户/联系人/商机） |
+| Qualified | Converted | 转化向导（创建客户/联系人/商机） |
 | Disqualified | （终态） | — |
 | Converted | （终态） | — |
 
@@ -109,7 +109,7 @@ Prospecting → Qualification → Proposal → Negotiation
 Copilot 理解状态机。在建议操作时：
 
 - *“确认这个潜在客户的资格”* → 仅当状态为 *Working* 时建议。
-- *“转换这个潜在客户”* → 仅当状态为 *Qualified* 时建议。
+- *“转化这个潜在客户”* → 仅当状态为 *Qualified* 时建议。
 - *“将这个商机标记为 Closed Won”* → 仅当赢单条件满足时建议（金额、关闭日期、赢单原因、必要时的审批）。
 
 这可以防止 Copilot 建议非法的转换。
@@ -119,7 +119,7 @@ Copilot 理解状态机。在建议操作时：
 - ✅ **不要过度约束** —— 太多转换规则会成为团队的摩擦税。
 - ✅ 添加新状态时，**先决定进入和退出条件** —— 其余的自然就有了。
 - ✅ 使用状态机转换来 **触发自动化**，而非在每次保存时运行自动化 —— 性能要好得多。
-- ✅ 每次变更后 **测试向导流程**（转换潜在客户、关闭商机）。
+- ✅ 每次变更后 **测试向导流程**（转化潜在客户、关闭商机）。
 
 ## 给用户的提示
 
