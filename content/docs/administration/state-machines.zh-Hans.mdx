@@ -9,12 +9,19 @@ description: HotCRM 如何在潜在客户和商机上强制执行有效的状态
 
 ## 状态机在哪里适用
 
-HotCRM 在以下对象上使用状态机：
+HotCRM 在 **五个** 对象上使用状态机：
 
 - **潜在客户** —— *New → Working → Qualified → Converted / Disqualified*
 - **商机** —— 经过 7 个阶段 *Prospecting → Qualification → Proposal → Negotiation → Closed Won / Closed Lost / Closed Without Decision*
+- **案例** —— *New → In Progress → Resolved → Closed*；*Waiting on Customer* 与 *Waiting on Support* 用来把未结案的案例挂起，*Escalated* 从任何未解决的状态都能进入，*Resolved* 与 *Closed* 都可以重新打开回 *In Progress*
+- **合同** —— *Draft → In Approval → Activated → Expired*；*In Approval* 可以把文件退回 *Draft*，三种在途状态都能直接走到 *Terminated*，*Expired* 与 *Terminated* 都是终点
+- **报价** —— *Draft → In Review → Presented → Accepted*；*In Review* 可以退回 *Draft*，*Rejected* 会回到 *Draft* 重来，*Expired* 可从 *Draft*、*In Review*、*Presented* 进入，*Accepted* 与 *Expired* 都是终点
 
-其他对象（案例、合同、活动、报价）有状态字段，但使用 **更简单的状态处理** 而非完整的状态机，因为它们的转换没那么严格。
+五者的声明方式完全相同 —— 都是对象上一条具名的 `state_machine` 验证规则，作用于该对象的生命周期字段（`status`，商机上是 `stage`）。案例、合同、报价用的不是比潜在客户和商机更轻的机制，就是同一套机制。顶层 `stateMachines` 键在平台 7.7 被移除后，所有状态机都迁到了各自的对象上。
+
+**声明出来的路线是建议，不是闸门。** 五条规则都是 **警告** 级：走出转换表的状态变更只会写进服务端日志——比如 *“Invalid contract status transition”*——而 **保存照样通过**。记录在 **新建** 时也根本不受检查：规则拿新值与前一个值比对，因此只在更新时运行，直接导入到后期状态的记录不会被碰。转换表给你的是一条声明出来、机器可读的路线，供自动化、报表和 Copilot 依赖——而不是给字段上锁。
+
+**营销活动没有状态机，这是有意的。** 营销活动的状态是描述性的（*Planning / In Progress / Completed / Aborted*），不是受控的生命周期；营销活动成员、活动、知识文章和任务的状态字段同理。给它们中任何一个加转换表，只会在正常编辑时报警告，教用户忽略警告。
 
 ## 潜在客户状态机
 

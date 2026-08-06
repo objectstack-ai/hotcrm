@@ -9,12 +9,19 @@ Some objects have a strict **lifecycle** — a lead progresses from *New* to *Wo
 
 ## Where state machines apply
 
-HotCRM uses state machines on:
+HotCRM uses state machines on **five** objects:
 
 - **Leads** — *New → Working → Qualified → Converted / Disqualified*
 - **Opportunities** — through the 7 stages *Prospecting → Qualification → Proposal → Negotiation → Closed Won / Closed Lost / Closed Without Decision*
+- **Cases** — *New → In Progress → Resolved → Closed*, with *Waiting on Customer* and *Waiting on Support* to park an open case, *Escalated* reachable from any unresolved status, and both *Resolved* and *Closed* able to reopen to *In Progress*
+- **Contracts** — *Draft → In Approval → Activated → Expired*, with *In Approval* able to send the paperwork back to *Draft*, *Terminated* reachable from all three live statuses, and *Expired* and *Terminated* both final
+- **Quotes** — *Draft → In Review → Presented → Accepted*, with *In Review* able to return to *Draft*, *Rejected* starting over at *Draft*, *Expired* reachable from *Draft*, *In Review* and *Presented*, and *Accepted* and *Expired* both final
 
-Other objects (case, contract, campaign, quote) have status fields but use **simpler status handling** rather than full state machines, because their transitions are less strict.
+All five are declared the same way — a named `state_machine` validation rule on the object, over that object's lifecycle field (`status`, or `stage` on opportunities). Cases, contracts and quotes are not a lighter mechanism than leads and opportunities; they are the same one. The top-level `stateMachines` key was removed in platform 7.7 and every machine moved onto its object.
+
+**A declared route is advice, not a gate.** All five rules carry **warning** severity, so a move outside the transition table is written to the server log — *"Invalid contract status transition"*, and so on — and **the save still goes through**. Nor is a record checked when it is *created*: the rules compare a new value against the previous one, so they only run on update, and a record imported straight into a late state passes untouched. What the table buys you is a declared, machine-readable route that automation, reports and the Copilot can rely on — not a lock on the field.
+
+**Campaigns have no state machine, and that is deliberate.** A campaign's status is descriptive (*Planning / In Progress / Completed / Aborted*) rather than a controlled lifecycle, and the same is true of the status fields on campaign members, events, knowledge articles and tasks. A transition table on any of them would warn on ordinary edits and teach users to ignore the warning.
 
 ## The Lead state machine
 
