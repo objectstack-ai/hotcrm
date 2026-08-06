@@ -30,18 +30,29 @@ Click the **app launcher** (top-left grid icon) to switch between apps:
 - **Enterprise CRM** — the main app with all CRM functionality.
 - **Admin** — for system administrators.
 
-Inside Enterprise CRM, the left nav groups things by:
+Inside Enterprise CRM, the left nav opens with one pinned item — **Home**, which is the **Executive Overview** dashboard — and everything else sits in seven groups:
 
 | Group | Contents |
 | --- | --- |
-| **Sales** | Leads, Accounts, Contacts, Opportunities, Quotes, Contracts |
-| **Service** | Cases, Knowledge Base |
-| **Marketing** | Campaigns, Campaign Members |
-| **Products** | Products |
-| **Activities** | Tasks, Events |
-| **Analytics** | Dashboards, Reports |
-| **AI** | Copilot, Knowledge Bases |
-| **Approvals** | Approval Requests, Action History |
+| **Sales** | Leads, Accounts, Account Workbench, Contacts, Opportunities, Pipeline, Quotes, Contracts, Sales Performance |
+| **My Work** | My Tasks, My Deals, My Leads, My Cases, My Calendar, All Tasks |
+| **Activity** | Events, Calendar, Interaction History, Sales Activity |
+| **Marketing** | Campaigns, Products |
+| **Service** | Cases, Knowledge, Service Overview |
+| **Insights** | CRM Overview, Forecasts, Pipeline Coverage, Lead Inflow, SLA Performance |
+| **Approvals** | Inbox |
+
+**Marketing**, **Insights** and **Approvals** are collapsed when the app loads — only **Sales**, **My Work**, **Activity** and **Service** open themselves. Click a group open before deciding something isn't there.
+
+Four group names this page used to list are not in the app at all, and several item names sit somewhere other than where it put them:
+
+- *Products* is not a group. The catalog is the **Products** item under **Marketing** — see [Marketing](/docs/marketing/index).
+- *Activities* is not a group; the real one is **Activity**, and tasks are not in it. `crm_task` reaches the sidebar as **My Tasks** and **All Tasks**, both under **My Work**.
+- *Analytics* is not a group; the real one is **Insights**. Nothing in it is called *Dashboards* or *Reports* — the dashboard and the three reports it pins are listed above under their own names.
+- *AI* is not a group, and no sidebar item is called *Copilot* or *Knowledge Bases*. The Copilot is the right-side chat panel on every page (section 6 below), and the knowledge articles are **Knowledge** under **Service**.
+- *Knowledge Base* is not a label this app carries. The **Service** entry is **Knowledge**, and the service dashboard beside it is **Service Overview** — see [Service](/docs/service/index).
+- *Campaign Members* is not a sidebar item. Campaign membership is reached from the campaign detail page or from global search — see [Campaign Members](/docs/marketing/campaign-members).
+- *Approval Requests* and *Action History* are not items either: **Inbox** is the only entry under **Approvals**. The approval audit trail is real data — the approvals plugin stores it as `sys_approval_action` — but no navigation entry in this app opens it.
 
 ## 3. Your first lead
 

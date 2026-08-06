@@ -30,18 +30,31 @@ description: HotCRM 的 5 分钟演练 —— 主页、你的第一条线索、�
 - **Enterprise CRM** —— 包含所有 CRM 功能的主应用。
 - **Admin** —— 面向系统管理员。
 
-在 Enterprise CRM 内，左侧导航按以下方式分组：
+在 Enterprise CRM 内，左侧导航最上面是一个固定条目——**Home**，它打开的是 **Executive Overview** 仪表盘；其余内容分在 7 个分组里：
 
 | 分组 | 内容 |
 | --- | --- |
-| **Sales** | Leads、Accounts、Contacts、Opportunities、Quotes、Contracts |
-| **Service** | Cases、Knowledge Base |
-| **Marketing** | Campaigns、Campaign Members |
-| **Products** | Products |
-| **Activities** | Tasks、Events |
-| **Analytics** | Dashboards、Reports |
-| **AI** | Copilot、Knowledge Bases |
-| **Approvals** | Approval Requests、Action History |
+| **Sales** | Leads、Accounts、Account Workbench、Contacts、Opportunities、Pipeline、Quotes、Contracts、Sales Performance |
+| **My Work** | My Tasks、My Deals、My Leads、My Cases、My Calendar、All Tasks |
+| **Activity** | Events、Calendar、Interaction History、Sales Activity |
+| **Marketing** | Campaigns、Products |
+| **Service** | Cases、Knowledge、Service Overview |
+| **Insights** | CRM Overview、Forecasts、Pipeline Coverage、Lead Inflow、SLA Performance |
+| **Approvals** | Inbox |
+
+上表用的是源码里的英文 label，也就是英文界面上看到的名字。简体中文界面下，它们显示为语言包里的译名——例如 **Inbox** 显示为「待我审批」、**Knowledge** 显示为「知识库」、**My Work** 显示为「我的工作」。
+
+**Marketing**、**Insights**、**Approvals** 这三个分组在应用加载时是折叠的——只有 **Sales**、**My Work**、**Activity**、**Service** 会自动展开。先把分组点开，再判断某样东西在不在这里。
+
+本页过去列出的 4 个分组名，应用里根本不存在；另有几个条目名，真身并不在它说的位置：
+
+- *Products*（产品）不是分组。产品目录是 **Marketing** 分组下的 **Products** 条目——参见 [Marketing](/zh-Hans/docs/marketing/index)。
+- *Activities* 不是分组，真实的分组叫 **Activity**，而且任务不在里面。`crm_task` 在侧边栏上是 **My Tasks** 与 **All Tasks** 两项，都挂在 **My Work** 分组下。
+- *Analytics* 不是分组，真实的分组叫 **Insights**。它里面没有任何条目叫 *Dashboards* 或 *Reports*——它固定的那个仪表盘和三张报表，上表已按各自的名字列出。
+- *AI* 不是分组，也没有叫 *Copilot* 或 *Knowledge Bases* 的侧边栏条目。Copilot 是每个页面右侧的聊天面板（见下文第 6 节），知识文章则是 **Service** 分组下的 **Knowledge**。
+- *Knowledge Base* 不是本应用使用的 label。**Service** 分组下的条目叫 **Knowledge**，与它并列的服务仪表盘叫 **Service Overview**——参见 [Service](/zh-Hans/docs/service/index)。
+- *Campaign Members* 不是侧边栏条目。营销活动成员要从营销活动详情页或全局搜索进入——参见 [Campaign Members](/zh-Hans/docs/marketing/campaign-members)。
+- *Approval Requests* 与 *Action History* 也都不是条目：**Approvals** 分组下只有 **Inbox** 一项。审批的操作留痕本身是真实数据，由审批插件以 `sys_approval_action` 存储，但本应用里没有任何导航条目能打开它。
 
 ## 3. 你的第一条线索
 
