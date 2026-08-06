@@ -84,7 +84,13 @@ export const CaseEscalationFlow: Flow = {
       config: { objectName: 'crm_case', filter: { id: '{record.id}' }, outputVariable: 'caseRecord' },
     },
     {
-      id: 'assign_senior_agent', type: 'update_record', label: 'Assign to Senior Agent',
+      // The `label` names what this node actually does: it flags the case as
+      // escalated (see `fields` below) and reassigns nothing. The `id` keeps
+      // its original `assign_senior_agent` spelling on purpose — `edges[]`
+      // reference nodes by id, and `CaseEscalationOnCreateFlow` rewrites the
+      // node list by id, so renaming one is a behaviour change, not a wording
+      // fix.
+      id: 'assign_senior_agent', type: 'update_record', label: 'Flag as Escalated',
       config: {
         objectName: 'crm_case', filter: { id: '{record.id}' },
         // `escalation_reason` must be set whenever `is_escalated` flips true — the
@@ -108,7 +114,11 @@ export const CaseEscalationFlow: Flow = {
       // shape is a no-op stub in 7.4 and never delivered anything.
       // Owner only: `{caseRecord.owner_id.manager}` cannot traverse a lookup in
       // flow templates — it interpolates to the literal "undefined".
-      id: 'notify_team', type: 'notify', label: 'Notify Support Team',
+      // The `label` names the single recipient this node has (`recipients`
+      // below); the `id` keeps its `notify_team` spelling because `edges[]`
+      // reference it. Cf. the same node in `case-sla-monitor.flow.ts`, whose
+      // label already says `Alert Owner`.
+      id: 'notify_team', type: 'notify', label: 'Notify Case Owner',
       config: {
         // Owner only. Flow templates cannot traverse a lookup (see the note on
         // `assign_senior_agent` above): `{caseRecord.owner_id.manager}` and

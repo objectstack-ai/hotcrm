@@ -9,7 +9,8 @@ type Flow = Automation.Flow;
  *
  * Migrated from the removed `notify_on_large_deal_won` object workflow (7.7
  * dropped `workflows[]`). When a deal > $100K is marked closed_won, notify the
- * owner and their manager.
+ * owner — the owner alone, not their manager (see the notify node for why the
+ * manager cannot be reached).
  *
  * NB: `record.amount > 100000` is authored as bare CEL against the (string-
  * serialized) currency field — this relies on the 7.7 numeric-hydration fix
@@ -68,7 +69,11 @@ export const OpportunityWonAlertFlow: Flow = {
       },
     },
     {
-      id: 'notify_management', type: 'notify', label: 'Notify Management',
+      // The `label` names what this node actually does: it notifies the owner
+      // and nobody else. The `id` keeps its original `notify_management`
+      // spelling on purpose — `edges[]` reference nodes by id, so renaming one
+      // is a behaviour change, not a wording fix.
+      id: 'notify_management', type: 'notify', label: 'Notify Owner',
       config: {
         // Owner only: `{record.owner_id.manager}` cannot traverse a lookup on the
         // raw trigger snapshot — it interpolates to the literal "undefined"
