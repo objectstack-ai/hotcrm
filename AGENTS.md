@@ -59,9 +59,27 @@ hotcrm/
     - **All HotCRM business object names MUST use the `crm_` prefix and the prefix MUST be written explicitly in source** (e.g., `crm_account`, `crm_opportunity`, `crm_knowledge_article`). **No automatic prefix injection by the runtime.** Open architectural decision: AI-authored metadata is fragile around "context-aware" naming, so we trade verbosity for grep-ability. Cross-references via `reference_to` / `lookup` / `masterDetail` MUST use the prefixed name. Cube `sql:` fields, view `data.object`, hook `object:`, action `objectName:`, navigation `objectName:`, dashboard `object:`, translation `objects.{key}`, REST URLs, and DB table names ALL use the same prefixed name. The name in source = the name at runtime = the name in DB = the name in URL = the name in docs. No translation layer.
 
 2.  **ObjectQL (No-SQL)**:
-    - Data access MUST use **ObjectQL**.
+    - Data access MUST use **ObjectQL**, reached through the `ctx.api` surface. There is
+      **no `broker`** in this repo — the identifier has zero occurrences in `src/`.
     - **NEVER** write raw SQL.
-    - Format: `broker.find('opportunity', { filters: [['amount', '>', 50000]] })`.
+    - Format: `ctx.api.object('crm_opportunity').find({ where: { amount: { $gt: 50000 } } })`.
+      Object names carry the `crm_` prefix, same as rule 1. In a `*.hook.ts` the surface is
+      cast once — `const api = ctx.api as HookApi | undefined`, from `src/objects/_hook-api.ts`
+      — and then called as `api.object(...)`; action script bodies call `ctx.api.object(...)`
+      directly.
+    - On `ctx.api`, the predicate key is **`where`**, and only `where`. `filter` (canonical)
+      and `filters` (deprecated alias) are *HTTP query-param* spellings carrying a JSON
+      **string**, not keys of the in-process query object — passing either in process fails
+      **silently**: `findOne` spreads the query into the AST without aliasing and returns the
+      object's **first row**, `count` reads `query.where` only and counts the **whole object**.
+      Neither throws. This repo has already paid for that once — see
+      `.changeset/hook-query-where-not-filter.md`. `HookQuery` in `src/objects/_hook-api.ts`
+      deliberately omits the alias so the mistake is a compile error.
+      Other surfaces are **not** governed by this rule and have their own spelling: a
+      `*.flow.ts` node `config` takes `filter:` (44 occurrences across 17 of the 21 flow
+      files; `where:` in none), and a page component config takes `filter:` in the
+      AST-array form (`src/pages/lead_detail.page.ts:217`). Do not "fix" one surface's
+      spelling into another's.
 
 3.  **AI-Native**:
     - Every feature should consider AI augmentation (Co-Pilot, Agents).
