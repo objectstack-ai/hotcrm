@@ -24,7 +24,7 @@ SLA（服务级别协议）系统为 Critical 工单打上一个**截止时间**
 
 Critical 的 4 小时是系统唯一会盯的目标，而且它写在钩子里，不在任何设置页面上——参见下方的*给管理员的提示*部分。
 
-> **营业时间**——系统可以配置为只计算营业时间（例如周一至周五 9-5），而非日历时间。参见 [管理 › 设置](/zh-Hans/docs/administration/setup)。
+> **这 4 小时是日历小时，不是营业时间。** 本应用没有任何营业时间设置——没有工作日日历，没有节假日清单，元数据里也不存在任何可供截止时间去对照的东西。钩子只是往当前时钟上加 4 小时（`src/objects/case.hook.ts` 里的 `due.setHours(due.getHours() + 4)`），所以一个周五下午 4 点建的 Critical 工单，截止时间就是同一个周五晚上 8 点；晚上 11 点建的，截止时间是凌晨 3 点。夜间、周末与节假日一律照算进这个目标里。
 
 ## SLA 如何被跟踪
 
@@ -44,12 +44,15 @@ Critical 的 4 小时是系统唯一会盯的目标，而且它写在钩子里�
 
 ## SLA 表现报表
 
-**SLA 表现**报表显示在 SLA 目标内解决的工单百分比，并按以下维度细分：
+**SLA 表现**报表只按**一个**维度细分：**优先级**。它的 `rows` 就是 `['priority']`，没有别的（`src/reports/case.report.ts`）。而且它报的也不是"在目标内解决的百分比"，而是 **SLA 违约率**——**SLA 已违约**标记的平均值——与工单数、平均解决时长并列，并且只统计**已关闭的工单**（`runtimeFilter: { is_closed: true }`）。所以本页过去许诺的四个问题，它只回答其中一个：*哪个优先级桶在漏单？*
 
-- 客服（谁达成了他们的 SLA？）
-- 优先级（哪个优先级桶在漏单？）
-- 账户等级（客户是否被比潜在客户更差地对待？）
-- 月份（表现是趋升还是趋降？）
+另外三个不只是"报表里没放"，而是在它底下的语义层里根本够不着。`case_metrics` 数据集（`src/datasets/case.dataset.ts`）总共只声明了五个维度——**状态**、**优先级**、**来源**、**类型**、**创建时间**——因此：
+
+- **客服**——不存在负责人或客服维度。`owner_id` 是工单上的字段，但数据集没有把它暴露成维度，所以没有任何报表、也没有任何仪表盘部件能按它分组。
+- **账户等级**——`crm_account.tier` 确实存在于账户对象上，但 `case_metrics` 只读 `crm_case`，从不跨到账户上去取它，所以分析侧任何地方都选不到账户等级。
+- **月份**——**创建时间**这个维度按**天**分桶（`dateGranularity: 'day'`），不是按月；而且 SLA 表现报表压根没把它放进 `rows`。真正用到它的是**按优先级 × 天的建单量**报表，那是一张优先级对天的矩阵。
+
+想要这三个里的任何一个，都得先改 `case_metrics`；报表本身没有任何设置能把它们变出来。
 
 这份报表是支持团队最常用的 KPI。
 
@@ -119,26 +122,30 @@ Critical 的 4 小时是系统唯一会盯的目标，而且它写在钩子里�
 
 | 角色 | 查看什么 | 何时 |
 | --- | --- | --- |
-| **客服** | My Open Cases（按 SLA 截止日期排序） | 当班期间每小时 |
-| **服务经理** | Breached SLA + Critical Cases | 每天一早 |
+| **客服** | My Open Cases——一个按优先级排的队列，不是按截止时间排的队列 | 当班期间每小时 |
+| **服务经理** | Escalated Cases 与 SLA at Risk 两个视图，外加服务仪表盘上的 **SLA Violations** 磁贴 | 每天一早 |
 | **服务总监** | SLA 表现报表 | 每周 |
 | **高管** | 服务仪表盘 | 每周 |
+
+这张表过去写的两个名字根本不是视图。**Breached SLA** 与 **Critical Cases** 都不存在于列表视图里：`crm_case` 随产品提供的视图一共七个——*All Cases*、*Service Workflow*、*SLA Calendar*、*Case Timeline*、*My Open Cases*、*Escalated Cases* 与 *⏰ SLA at Risk*（`src/views/case.view.ts`）——其中没有任何一个以 **SLA 已违约**为过滤条件。真正按违约过滤的只有[服务仪表盘](/zh-Hans/docs/analytics/dashboards)上的两个指标磁贴：**SLA Violations**（`is_sla_violated: true`）与 **Critical Cases**（未结 + Critical）。如果你要的是一份能逐条处理的列表，**Escalated Cases** 是最接近的那个：`case_sla_monitor` 会把它标记为违约的每一个工单都升级掉，所以每一次违约都会落进这个视图——只是会和那些仅因优先级而升级的工单混在一起。
+
+**My Open Cases 是按优先级排序的，不是按 SLA 截止日期。** 它的排序键是 `priority_rank` 降序在先、`sla_due_date` 升序仅作次级键（`src/views/case.view.ts`）——所以一个一小时后就到期的 Low 工单，仍然排在每一个 Critical 工单下面。又因为只有 Critical 工单才会被打上截止日期，次级键在 Critical 以下的各档里根本无值可排：同一档内的先后顺序，取决于存储返回的顺序。如果你是按截止时间在干活，请在它旁边同时开着 **SLA at Risk** 或 **SLA Calendar**。
 
 ## 给服务客服的提示
 
 - ✅ 自己盯着 **SLA 截止日期**——没有倒计时，也没有琥珀色区域会来提醒你，所以当班时把 **SLA at Risk** 或 **SLA Calendar** 视图开着，赶在日期过去之前求助。
-- ✅ 当你确实被阻塞时使用 **Waiting on Customer**——取决于你的配置，这可以暂停 SLA 计时。
+- ✅ 当你确实被阻塞时使用 **Waiting on Customer**——但要知道它**不会暂停 SLA 计时**，无论你怎么配置。本应用里没有任何东西会暂停、顺延或重算一个截止时间：`sla_due_date` 只在工单第一次成为 Critical 时写入一次，此后任何状态流转都不会再碰它；每小时一轮的 `case_sla_monitor` 扫描捞的是状态既不是 *Resolved* 也不是 *Closed* 的未结工单，而 *Waiting on Customer* 不在这份排除清单里（`src/flows/case-sla-monitor.flow.ts`）。所以一个挂在等客户回复上的 Critical 工单，4 小时照走，到点照样被标 **SLA 已违约**并升级。该切状态还是要切——它让团队知道这单卡在哪儿——但别因此不盯表了。
 - ✅ 不要人为降低优先级来延长你的 SLA——经理可以看到优先级变更历史。
 
 ## 给服务经理的提示
 
-- ✅ 每天早上运行 **Breached SLA** 列表视图。
-- ✅ 使用 **Service Board** 看板进行每日站会。
+- ✅ 没有 **Breached SLA** 这个列表视图可以运行。改去处理 **Escalated Cases** 视图——SLA 扫描标记的每一个工单都会被升级进这个视图——数量则看服务仪表盘上的 **SLA Violations** 磁贴。
+- ✅ 每日站会用那块看板，但它叫 **Service Workflow**（`case_workflow`），在工单列表上以 **Workflow** 页签出现。本应用里不存在叫 *Service Board* 的东西。
 - ✅ 辅导那些违约率趋升的客服——在它形成模式之前于 1:1 中提出。
 
 ## 给管理员的提示
 
 - 每个优先级的 SLA 目标通过工单对象的自动化（一个 SLA 计算钩子）设置。要调整，请编辑 `src/objects/case.hook.ts`（绑定到 `crm_case`）或更改底层配置——参见 [管理 › 自动化](/zh-Hans/docs/administration/automation)。
-- 营业时间与日历时间的行为由你租户的营业时间设置控制。参见 [管理 › 设置](/zh-Hans/docs/administration/setup)。
+- **不存在"营业时间 vs. 日历时间"这个开关**，它背后也不存在什么租户级的营业时间设置——本应用根本没有工作日日历，也没有节假日清单。Critical 的 4 小时目标是在 `src/objects/case.hook.ts` 里往当前时钟上加出来的，所以夜间、周末与节假日一律照算；要让截止时间跳过非工作时段，就得先把一套日历教给这个钩子。
 - 升级触发条件——只有 Critical 优先级这一项，不存在 High+Customer 这个条件——写在 [工单升级流程定义](/zh-Hans/docs/administration/automation)里，即 `src/flows/case-escalation.flow.ts`。承载它的是两个流程：`case_escalation`（更新时）与 `case_escalation_on_create`（新建时）。要改就**两个一起改**，否则以新条件新建的工单仍会漏掉。
 - 这两处的收件人列表都不是 Setup 界面上的配置项。*紧急时通知* 就是工单升级流程的 `notify` 节点，其列表只有 `{caseRecord.owner_id}` 一项——要改就改 `src/flows/case-escalation.flow.ts`。*升级时通知* 根本没有收件人列表，因为它不发出任何消息：状态转为已升级触发的是 `src/objects/case.hook.ts` 里的 `case_status_side_effects` 钩子，它触达的是账户负责人，靠的是那条跟进任务。
