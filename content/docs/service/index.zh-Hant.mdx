@@ -13,7 +13,7 @@ description: 接收客戶問題，按優先順序路由，達成 SLA 目標，�
 | --- | --- |
 | [**工單**](/zh-Hant/docs/service/cases) | 工單記錄——主題、優先順序、狀態、解決方案。 |
 | [**SLA 與升級**](/zh-Hant/docs/service/sla-and-escalation) | 自動截止時間、升級流程，以及系統如何呈現違約。 |
-| [**知識庫**](/zh-Hant/docs/service/knowledge-base) | AI 服務 Copilot 讀取的支援知識。 |
+| [**知識庫**](/zh-Hant/docs/service/knowledge-base) | AI 助手讀取的支援知識。 |
 
 ## 一個典型工單的生命週期
 
@@ -23,7 +23,7 @@ New ──► In Progress ──► Waiting on Customer ──► Resolved ─�
                    ╲ Escalated ────────────╱
 ```
 
-1. **建立工單**（透過電子郵件、網頁表單、電話記錄，或由 **Service Copilot** 對來訪訊息進行分流）。
+1. **建立工單**（透過電子郵件、網頁表單、電話記錄，或由 **AI 助手**對來訪訊息進行分流）。
 2. **分配優先順序**——Low、Medium、High 或 Critical。*Critical* 會立即提醒**工單負責人**，而不是支援經理：這條提醒的收件人列表只有 `{caseRecord.owner_id}` 一項。
 3. **計算 SLA 目標**——每個工單都會根據優先順序獲得一個截止時間。
 4. **客服處理工單**，隨進度推進狀態。
@@ -32,7 +32,7 @@ New ──► In Progress ──► Waiting on Customer ──► Resolved ─�
 
 ## 系統為你做的事
 
-- **自動確定優先順序**——透過工單分流技能（Service Copilot 閱讀工單並推薦優先順序）。
+- **自動確定優先順序**——透過工單分流技能（AI 助手閱讀工單並推薦優先順序）。
 - **自動升級**——只針對 Critical 工單：流程把它們標記為 *Escalated* 並提醒負責人，從不改寫 `owner_id`，因此沒有任何工單被交到資深客服手裡。High 工單永遠不會被自動升級，無論帳戶是什麼：要升級它，靠的是手動的 **Escalate Case** 按鈕。
 - **緊急時通知**——每當工單被設為 Critical 時，站內訊息 + 郵件只發給**工單負責人**。這就是工單升級流程的 notify 節點，其收件人列表只有 `{caseRecord.owner_id}` 一項；本應用中不存在 `support_manager@example.com` 這個收件人。
 - **升級時通知**——不會給任何升級團隊發郵件：`escalation_team@example.com` 在本應用中根本不存在。狀態轉為 *Escalated* 真正觸發的，是 `case_status_side_effects` 鉤子開出的那條**次日到期、優先順序為緊急、歸帳戶負責人的跟進任務**。
@@ -40,7 +40,7 @@ New ──► In Progress ──► Waiting on Customer ──► Resolved ─�
 - **標記 SLA 違約**——一旦 SLA 目標時間過去，工單會被標記為 **SLA 已違約**並升級，其負責人收到站內訊息 + 郵件提醒。沒有紅色橫幅：本應用沒有任何橫幅機制。
 - **阻止錯誤關閉**——未填寫解決方案就不能將工單標記為已關閉。
 
-## Service Copilot
+## 服務 AI 技能
 
 [服務技能](/zh-Hant/docs/ai-copilot/service-copilot) 內建於每個工單中。你可以問助手：
 

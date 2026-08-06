@@ -13,7 +13,7 @@ The Service module helps your support team **receive customer issues, prioritise
 | --- | --- |
 | [**Cases**](/docs/service/cases) | The ticket record — subject, priority, status, resolution. |
 | [**SLA & Escalation**](/docs/service/sla-and-escalation) | Automatic deadlines, the escalation process, and how the system surfaces breaches. |
-| [**Knowledge Base**](/docs/service/knowledge-base) | The support knowledge the AI Service Copilot reads from. |
+| [**Knowledge Base**](/docs/service/knowledge-base) | The support knowledge the AI assistant reads from. |
 
 ## A typical case life
 
@@ -23,7 +23,7 @@ New ──► In Progress ──► Waiting on Customer ──► Resolved ─�
                    ╲ Escalated ────────────╱
 ```
 
-1. **Case is created** (via email, web form, phone log or the **Service Copilot** triaging an inbound message).
+1. **Case is created** (via email, web form, phone log or the **AI assistant** triaging an inbound message).
 2. **Priority is assigned** — Low, Medium, High or Critical. *Critical* alerts the **case owner** immediately, not a support manager: the alert's recipient list is `{caseRecord.owner_id}` alone.
 3. **SLA target is calculated** — every case gets a deadline based on priority.
 4. **Agent works the case**, moving status as they go.
@@ -32,7 +32,7 @@ New ──► In Progress ──► Waiting on Customer ──► Resolved ─�
 
 ## What the system does for you
 
-- **Auto-prioritise** with the Case Triage skill (the Service Copilot reads the case and recommends a priority).
+- **Auto-prioritise** with the Case Triage skill (the AI assistant reads the case and recommends a priority).
 - **Auto-escalate** Critical cases — the flow flags them *Escalated* and alerts the owner; it never touches `owner_id`, so nothing is handed to a senior agent. A High case is never escalated automatically, whatever the account is: raising one is the manual **Escalate Case** button.
 - **Notify on critical** — inbox message + email to the **case owner** whenever a case is set to Critical. That is the Case Escalation flow's notify node, whose recipient list is `{caseRecord.owner_id}` alone; there is no `support_manager@example.com` recipient anywhere in this app.
 - **Notify on escalation** — no email goes to an escalation team: `escalation_team@example.com` exists nowhere in this app. What the *Escalated* status fires is the `case_status_side_effects` hook, which opens an **Urgent follow-up task due tomorrow for the account owner**.

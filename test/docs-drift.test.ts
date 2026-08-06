@@ -884,3 +884,313 @@ describe('the action example teaches a selection key the platform can deliver (#
     ).toBe(true);
   });
 });
+
+/**
+ * Persona drift — the product pages must not re-personify the retired copilots
+ * (#612).
+ *
+ * #512 removed the two app-authored agents and ADR-0063 §2 made the surface
+ * skills-only; #589 / PR #611 rewrote `content/docs/ai-copilot/*` accordingly.
+ * What #611 could not reach was the rest of the tree: 39 product pages went on
+ * calling the assistant "the Sales Copilot" / "the Service Copilot" in running
+ * prose, in all three locales — 79 occurrences at the time this guard was
+ * written. None of them asserted a `sales_copilot` agent (the check above
+ * already covers fenced samples), so every gate this repo runs was green: `os
+ * validate` and `pnpm lint` walk authored metadata and never open a paragraph.
+ *
+ * Maintainer ruling (2026-08-04, on #612): the personas are retired as PRODUCT
+ * VOCABULARY too. The prose says "AI assistant" (zh: 「AI 助手」), because the
+ * architecture it must describe is "AI capability is implemented by agents in
+ * objectstack-ai/cloud; HotCRM contributes domain skills" — a page that names an
+ * app-owned persona is describing an entity this app does not contain.
+ *
+ * Two things about the scan are load-bearing rather than style:
+ *
+ * - **Soft wraps are normalised first.** `content/docs/index.mdx` wrote "the
+ *   Sales\n> Copilot" across a blockquote line break, and `whats-new.mdx` wrote
+ *   "ask the Sales\nCopilot" across a plain one. A line-oriented grep — the
+ *   obvious way to write this, and the way the issue's own inventory was taken —
+ *   reads neither. Both were live prose, and the second had already been fixed
+ *   in both zh translations ("向助手询问"), so the English page was the only one
+ *   still personifying: exactly the drift this rule exists to stop, and exactly
+ *   the drift a naive scan would have certified as absent.
+ * - **CJK wraps are tightened after that.** `ai-copilot/index.zh-Hant.mdx`
+ *   breaks 「服務 Copilot」 between 服 and 務, which no amount of space-joining
+ *   repairs — join the lines with a space and the phrase reads 服 務 Copilot.
+ *   Whitespace between two CJK characters is a typesetting artifact, never a
+ *   word boundary, so it is removed before matching.
+ *
+ * ## Reverse verification (#612)
+ *
+ * Predicted direction: **red before the rewrite, green after** — an ordinary
+ * forbidden-string rule over pages that plainly contained the string. Measured
+ * on the pre-rewrite tree: 29 non-exempt pages reported, 65 occurrences. After:
+ * 0 reported, with 14 occurrences surviving inside HISTORICAL. The rule is not
+ * vacuous either — see the three guards below, of which the probe test is the
+ * one that matters, since a regex that had stopped matching would otherwise
+ * report a clean tree and read exactly like success.
+ */
+describe('product docs do not name a retired copilot persona (#612)', () => {
+  /**
+   * Pages allowed to write a persona name, each with the reason it may.
+   *
+   * A map rather than a list: an exemption with no stated reason is how a
+   * targeted whitelist turns into a blanket one. Both reasons here are the same
+   * kind — the page is talking ABOUT the retirement, in the past tense, which is
+   * the one context where naming the thing is the point.
+   */
+  const HISTORICAL: Record<string, string> = {
+    'content/docs/ai-copilot/index.mdx': "#611's \"No app-owned agents\" retirement callout",
+    'content/docs/ai-copilot/index.zh-Hans.mdx': "#611's retirement callout (zh-Hans)",
+    'content/docs/ai-copilot/index.zh-Hant.mdx': "#611's retirement callout (zh-Hant)",
+    'content/docs/ai-copilot/sales-copilot.mdx': "#611's \"Where the personas went\" callout",
+    'content/docs/ai-copilot/sales-copilot.zh-Hans.mdx': "#611's persona callout (zh-Hans)",
+    'content/docs/ai-copilot/sales-copilot.zh-Hant.mdx': "#611's persona callout (zh-Hant)",
+    'content/docs/ai-copilot/service-copilot.mdx': "#611's \"Where the personas went\" callout",
+    'content/docs/ai-copilot/service-copilot.zh-Hans.mdx': "#611's persona callout (zh-Hans)",
+    'content/docs/ai-copilot/service-copilot.zh-Hant.mdx': "#611's persona callout (zh-Hant)",
+    'content/docs/whats-new.mdx': 'the v1.0 release record — what that release actually shipped',
+    'content/docs/whats-new.zh-Hans.mdx': 'the v1.0 release record (zh-Hans)',
+    'content/docs/whats-new.zh-Hant.mdx': 'the v1.0 release record (zh-Hant)',
+  };
+
+  /** Soft wraps and blockquote continuation markers collapse to one space. */
+  const unwrap = (text: string): string => text.replace(/[ \t]*\n[ \t]*>?[ \t]*/g, ' ');
+
+  /**
+   * Whitespace BETWEEN two CJK characters is typesetting, not a word boundary
+   * (see the header) — `服 務` is one word that a line break split.
+   */
+  const CJK = '\\u4e00-\\u9fff';
+  const tighten = (text: string): string =>
+    text.replace(new RegExp(`([${CJK}])[ \\t]+(?=[${CJK}])`, 'g'), '$1');
+
+  const normalise = (text: string): string => tighten(unwrap(text));
+
+  /**
+   * The persona spellings, one regex each so the failure names the spelling it
+   * found. The separator is an OPTIONAL single space: after `normalise()` a
+   * wrapped phrase is space-joined, and Chinese typography writes 「服务Copilot」
+   * with no space at all.
+   */
+  const PERSONAS: { label: string; re: RegExp }[] = [
+    { label: 'Sales Copilot', re: /Sales ?Copilot/ },
+    { label: 'Service Copilot', re: /Service ?Copilot/ },
+    { label: '销售 Copilot', re: /销售 ?Copilot/ },
+    { label: '服务 Copilot', re: /服务 ?Copilot/ },
+    { label: '銷售 Copilot', re: /銷售 ?Copilot/ },
+    { label: '服務 Copilot', re: /服務 ?Copilot/ },
+  ];
+
+  /** Depth-first walk of `content/docs`, REPO_ROOT-relative. */
+  const walkDocs = (dir: string): string[] => {
+    const root = join(REPO_ROOT, dir);
+    if (!existsSync(root)) return [];
+    return readdirSync(root, { withFileTypes: true }).flatMap((entry) => {
+      const rel = join(dir, entry.name);
+      return entry.isDirectory() ? walkDocs(rel) : rel.endsWith('.mdx') ? [rel] : [];
+    });
+  };
+
+  const PAGES = walkDocs('content/docs').map((file) => ({
+    file,
+    normalised: normalise(readFileSync(join(REPO_ROOT, file), 'utf8')),
+  }));
+
+  /** The persona spellings `file` still writes, after normalisation. */
+  const personasIn = (normalised: string): string[] =>
+    PERSONAS.filter((p) => p.re.test(normalised)).map((p) => p.label);
+
+  it('the scan reads a real docs tree', () => {
+    // Vacuity guard #1: a walk that returned nothing would report a clean tree.
+    expect(
+      PAGES.length,
+      'no .mdx pages found under content/docs — this guard has gone vacuous',
+    ).toBeGreaterThan(50);
+  });
+
+  it('the detector reads every persona spelling, wrapped and unwrapped', () => {
+    // Vacuity guard #2, and the one that actually protects this rule. Every
+    // check below reports "nothing found" when the tree is clean AND when the
+    // regexes have stopped matching; only a positive probe tells those apart.
+    // The three wrap shapes are the ones that really occur in this tree: a
+    // blockquote continuation (`index.mdx`), a plain soft wrap
+    // (`whats-new.mdx`), and a CJK word split mid-token
+    // (`ai-copilot/index.zh-Hant.mdx`).
+    const probes: { text: string; expected: string }[] = [
+      { text: 'ask the Sales Copilot about it', expected: 'Sales Copilot' },
+      { text: 'the AI Service Copilot reads from', expected: 'Service Copilot' },
+      { text: '让销售 Copilot 替你判定', expected: '销售 Copilot' },
+      { text: '由服务Copilot 分流', expected: '服务 Copilot' },
+      // blockquote continuation — `content/docs/index.mdx` wrote exactly this
+      { text: '> Ten seconds later, the Sales\n> Copilot uses it', expected: 'Sales Copilot' },
+      // plain soft wrap — `content/docs/whats-new.mdx` wrote exactly this
+      { text: 'ten seconds later, ask the Sales\nCopilot a question', expected: 'Sales Copilot' },
+      // CJK word split — `ai-copilot/index.zh-Hant.mdx` wraps 服務 this way
+      { text: '> 兩個自己的智能體——「銷售 Copilot」和「服\n> 務 Copilot」', expected: '服務 Copilot' },
+    ];
+    const unread = probes
+      .filter((p) => !personasIn(normalise(p.text)).includes(p.expected))
+      .map((p) => `${JSON.stringify(p.text)} → expected ${p.expected}, read ${JSON.stringify(personasIn(normalise(p.text)))}`);
+    // Collected rather than asserted per probe, so a narrowed detector names
+    // every spelling it stopped reading in one run instead of only the first.
+    expect(
+      unread,
+      `the persona detector no longer reads:\n  ${unread.join('\n  ')}\n` +
+        'A spelling this scan cannot see is a page nobody is checking — and the rule below ' +
+        'would go green over it, which is indistinguishable from the tree being clean.',
+    ).toEqual([]);
+  });
+
+  it('every exempt page still writes a persona, so no exemption is dead', () => {
+    // Vacuity guard #3, pointed the other way: an exemption that no longer
+    // covers anything is a standing licence for the next author to re-introduce
+    // the persona on that page, granted by nobody, reviewed by nobody.
+    const dead = Object.keys(HISTORICAL).filter((file) => {
+      const page = PAGES.find((p) => p.file === file);
+      return !page || personasIn(page.normalised).length === 0;
+    });
+    expect(
+      dead,
+      `HISTORICAL exempts pages that no longer name a persona (or no longer exist):\n  ${dead.join('\n  ')}\n` +
+        'Delete the entry. An exemption is granted to a specific piece of retirement history, ' +
+        'not to a filename in perpetuity.',
+    ).toEqual([]);
+  });
+
+  it('no other page names "Sales Copilot" or "Service Copilot"', () => {
+    const offenders = PAGES.filter((p) => !(p.file in HISTORICAL))
+      .map((p) => ({ file: p.file, found: personasIn(p.normalised) }))
+      .filter((p) => p.found.length > 0)
+      .map((p) => `${p.file}: ${p.found.join(', ')}`);
+    expect(
+      offenders,
+      `pages naming a retired copilot persona:\n  ${offenders.join('\n  ')}\n` +
+        'Say "AI assistant" (zh: 「AI 助手」) instead, and keep the sentence\'s functional ' +
+        'meaning — only the name changes. HotCRM ships SKILLS; the assistant they attach to is ' +
+        'the platform\'s (`ask`), implemented by an agent in objectstack-ai/cloud. Naming an ' +
+        'app-owned persona describes an entity this app does not contain (#512, ADR-0063 §2). ' +
+        'A page genuinely writing retirement HISTORY belongs in HISTORICAL, with its reason.',
+    ).toEqual([]);
+  });
+});
+
+/**
+ * Version drift — the docs must print the version the app declares (#612).
+ *
+ * The same three digits are hand-copied into at least four maintainer docs, and
+ * `docs/RELEASE_STRATEGY.md` had been sitting on `1.0.5` since v1 while the
+ * manifest said `2.2.2` — a whole major behind, on the page whose entire job is
+ * to tell a releaser what the current version IS. #589 caught the same defect in
+ * `docs/ARCHITECTURE.md` and #611 fixed that one copy; nothing generalised, so
+ * the next copy went on lying.
+ *
+ * `manifest.version` in `objectstack.config.ts` is the single source of truth
+ * here — it is what `pnpm build` stamps into the artifact — and it is READ FROM
+ * THE CONFIG rather than regexed out of it, the same derivation the flow rules
+ * at the top of this file use for thresholds.
+ *
+ * Two rules, because the docs make two different claims:
+ *
+ *  - **contains**: each listed doc prints the version somewhere. Catches a doc
+ *    that quietly drops the number.
+ *  - **table rows**: a `| Current version | \`x.y.z\` |` row states the version
+ *    as a FACT, so it must state THE version. This is the rule that was red on
+ *    `RELEASE_STRATEGY.md` before this change (`1.0.5` vs `2.2.2`) and is the
+ *    precise shape of the defect #612 filed.
+ *
+ * Reverse verification: predicted and measured **red before, green after** —
+ * pre-fix the row rule reported `docs/RELEASE_STRATEGY.md:14 states 1.0.5, the
+ * manifest declares 2.2.2`, and nothing else in the set was drifted.
+ */
+describe('the docs print the version the manifest declares (#612)', () => {
+  const VERSION: string = ((stack as any).manifest ?? {}).version;
+
+  /** Docs that state the CURRENT version as a fact a reader may act on. */
+  const VERSION_DOCS = [
+    'docs/RELEASE_STRATEGY.md',
+    'docs/STATUS.md',
+    'docs/ARCHITECTURE.md',
+    'README.md',
+  ];
+
+  /**
+   * `| Current version | \`2.2.2\` |` — first cell is the LABEL, second carries
+   * a backticked semver.
+   *
+   * Keyed on the first cell, not on "a row mentioning version":
+   * `ARCHITECTURE.md` has a row whose text contains "conversion", and
+   * `RELEASE_STRATEGY.md` has a `| Change type | Version impact |` header with
+   * no version in it at all. Both are matched by the obvious regex and neither
+   * states a version.
+   */
+  const VERSION_ROW = /^\|\s*(?:current\s+)?version\s*\|\s*`([^`]+)`\s*\|/gim;
+
+  const rowsIn = (file: string): { file: string; stated: string }[] => {
+    const text = readFileSync(join(REPO_ROOT, file), 'utf8');
+    return [...text.matchAll(VERSION_ROW)].map((m) => ({ file, stated: m[1].trim() }));
+  };
+
+  const ALL_ROWS = VERSION_DOCS.flatMap(rowsIn);
+
+  it('the manifest declares a version this rule can compare against', () => {
+    // Vacuity guard #1: a config whose shape moved would leave VERSION
+    // undefined, and `includes(undefined)` throws rather than passing — but the
+    // row rule below would go green over zero rows. Pin the source directly.
+    expect(
+      VERSION,
+      'objectstack.config.ts declares no manifest.version — this whole guard is vacuous',
+    ).toMatch(/^\d+\.\d+\.\d+/);
+  });
+
+  it('package.json agrees with the manifest', () => {
+    // The two halves RELEASE_STRATEGY.md's own "Version Sources" section tells a
+    // releaser to keep aligned. Cheap to check, and a mismatch here would make
+    // every doc below correct against one source and wrong against the other.
+    const pkg = JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8')) as { version: string };
+    expect(
+      pkg.version,
+      `package.json is ${pkg.version} but objectstack.config.ts declares ${VERSION}. ` +
+        'These ship as one artifact; align them (docs/RELEASE_STRATEGY.md §Version Sources).',
+    ).toBe(VERSION);
+  });
+
+  it('every doc that states a version in a table states the declared one', () => {
+    // Vacuity guard #2: the extraction finding nothing looks exactly like every
+    // row agreeing. Both docs that carry such a row are in the list, so the
+    // floor is 2.
+    expect(
+      ALL_ROWS.length,
+      'no `| Current version | `x.y.z` |` row parsed in any of ' +
+        `${VERSION_DOCS.join(', ')} — either the tables were reformatted (teach VERSION_ROW ` +
+        'the new shape) or the rows are gone (drop this rule rather than leaving it green ' +
+        'over nothing).',
+    ).toBeGreaterThanOrEqual(2);
+    const drifted = ALL_ROWS.filter((r) => r.stated !== VERSION).map(
+      (r) => `${r.file} states ${r.stated}, the manifest declares ${VERSION}`,
+    );
+    expect(
+      drifted,
+      `version rows that do not match objectstack.config.ts:\n  ${drifted.join('\n  ')}\n` +
+        'Update the doc — the manifest is the source of truth, and a release page printing a ' +
+        'stale version is the one page a releaser trusts.',
+    ).toEqual([]);
+  });
+
+  it('every doc that names the current version prints the declared one', () => {
+    // Bounded so `2.2.2` cannot be satisfied by `12.2.2` or `2.2.22`.
+    const boundedVersion = new RegExp(
+      `(?<![\\d.])${VERSION.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\d.])`,
+    );
+    const silent = VERSION_DOCS.filter(
+      (file) => !boundedVersion.test(readFileSync(join(REPO_ROOT, file), 'utf8')),
+    );
+    expect(
+      silent,
+      `docs that no longer print the declared version (${VERSION}):\n  ${silent.join('\n  ')}\n` +
+        'Each of these tells a reader which version they are looking at. If one legitimately ' +
+        'stopped making that claim, drop it from VERSION_DOCS rather than leaving the check ' +
+        'green over a page that says nothing.',
+    ).toEqual([]);
+  });
+});
