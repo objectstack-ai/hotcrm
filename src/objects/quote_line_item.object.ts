@@ -53,12 +53,22 @@ export const QuoteLineItem = ObjectSchema.create({
   highlightFields: ['crm_product', 'quantity', 'unit_price', 'total_price'],
 
   fields: {
+    // The parent link — same decision, same reasoning, as
+    // `opportunity_line_item.crm_opportunity` (#727); read the long note there.
+    // In short: declaring nothing resolves to the spec default `set_null`, which
+    // the engine escalates to `restrict` on a REQUIRED lookup, so every quote
+    // that had been itemised refused to delete with a 409 quoting this field.
+    // A quote line is subordinate to its quote (`quote_line_item.hook.ts` rolls
+    // the quote's subtotal/total UP from these rows), so it goes with it.
     crm_quote: Field.lookup('crm_quote', {
       label: 'Quote',
       required: true,
       storage: { notNull: true },
+      deleteBehavior: 'cascade',
     }),
 
+    // Left on the restricting default on purpose — see the twin object: a
+    // product's catalog entry must not take priced quote history with it.
     crm_product: Field.lookup('crm_product', {
       label: 'Product',
       required: true,
