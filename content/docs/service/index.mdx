@@ -24,7 +24,7 @@ New ──► In Progress ──► Waiting on Customer ──► Resolved ─�
 ```
 
 1. **Case is created** (via email, web form, phone log or the **Service Copilot** triaging an inbound message).
-2. **Priority is assigned** — Low, Medium, High or Critical. *Critical* alerts the support manager immediately.
+2. **Priority is assigned** — Low, Medium, High or Critical. *Critical* alerts the **case owner** immediately, not a support manager: the alert's recipient list is `{caseRecord.owner_id}` alone.
 3. **SLA target is calculated** — every case gets a deadline based on priority.
 4. **Agent works the case**, moving status as they go.
 5. **If it's Critical** (or its SLA due date passes), the [escalation process](/docs/service/sla-and-escalation#case-escalation) flags the case as *Escalated* and alerts its owner. It does **not** reassign it — there is no hand-off to senior staff or to a manager — and no escalation condition reads the account, so a *Customer*'s case gets no branch of its own.

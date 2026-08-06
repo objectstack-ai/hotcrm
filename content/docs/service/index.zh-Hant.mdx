@@ -24,7 +24,7 @@ New ──► In Progress ──► Waiting on Customer ──► Resolved ─�
 ```
 
 1. **建立工單**（透過電子郵件、網頁表單、電話記錄，或由 **Service Copilot** 對來訪訊息進行分流）。
-2. **分配優先順序**——低、中、高或緊急。*緊急*會立即提醒支援經理。
+2. **分配優先順序**——Low、Medium、High 或 Critical。*Critical* 會立即提醒**工單負責人**，而不是支援經理：這條提醒的收件人列表只有 `{caseRecord.owner_id}` 一項。
 3. **計算 SLA 目標**——每個工單都會根據優先順序獲得一個截止時間。
 4. **客服處理工單**，隨進度推進狀態。
 5. **如果是 Critical**（或 SLA 截止日期已過），[升級流程](/zh-Hant/docs/service/sla-and-escalation)會把工單標記為 *Escalated* 並提醒它的負責人。它**不會**重新指派工單——不存在向資深員工或經理的交接——也沒有任何升級條件會讀取帳戶，所以 *Customer* 的工單沒有屬於自己的分支。
