@@ -47,17 +47,20 @@ Renewal task ──► Renewal opportunity
 
 ## Where to find things
 
-In the Enterprise CRM app, the **Products** group contains:
+There is no **Products** group in the Enterprise CRM app. The catalog's only sidebar entry is **Products**, and it sits under the **Marketing** group — see [Marketing](/docs/marketing/index). Apart from that item and global search, a product record is reached only from a quote or an opportunity line item.
 
-- **Products** — the catalog
+**Contracts** is under the **Sales** group, alongside Leads, Accounts, Contacts, Opportunities, Pipeline and Quotes, because contracts belong to the sales process. That entry is the app's only sidebar route to a contract.
 
-And the **Sales** group contains **Contracts** (because they belong to the sales process).
+The **Approvals** group holds exactly one item:
 
-Approvals live in the **Approvals** group:
+- **Inbox** — the approval requests waiting on you (`sys_approval_request`). **Inbox** is the label you see in the sidebar; nothing in the app is called *Approval Requests*.
 
-- **Approval Requests** — what's pending
-- **Action History** — who approved what, when
-- **Processes** — admin view of the approval rules
+Two names this page used to list are not in that group:
+
+- **Action History** — no sidebar item carries that name. The audit trail is real data — the approvals plugin stores it as `sys_approval_action` — but no navigation entry in this app opens it.
+- **Processes** — deliberately removed, not an oversight: no `sys_approval_process` object exists in any installed plugin, so the item's *requires object* guard hid it on every install, forever. It stays out until such an object ships.
+
+**Marketing** and **Approvals** are both **collapsed by default** — unlike Sales, My Work, Activity and Service, they do not open when the app loads. Click a group open before deciding something isn't there.
 
 ## Start here
 
