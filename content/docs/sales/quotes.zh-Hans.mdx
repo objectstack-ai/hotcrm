@@ -138,6 +138,6 @@ Total Price    = Subtotal − Discount + Tax + Shipping & Handling
 
 ## 给管理员的提示
 
-- 每日过期扫描在凌晨 1 点运行。要更改时间，请调整报价对象工作流上的计划。
+- 每日过期扫描在凌晨 1 点运行。这个时间写在源码里，不在 Setup 界面上：它是 `quote_expiration` 流程（`src/flows/quote-expiration.flow.ts`）start 节点上的 `schedule: '0 1 * * *'`。要改就得改代码并重新部署——报价对象上没有可调的设置项。
 - 报价 PDF 模板（封面和行项目布局）存储在你的邮件模板设置中。
-- 要在系统级 $500K 阈值之下要求经理审批（例如对每个折扣 >20% 的报价），请添加一个工作流，将报价翻转为*审核中*并通知经理。参见 [Administration › Automation](/zh-Hans/docs/administration/automation)。
+- 要在系统级 $500K 阈值之下要求经理审批（例如对每个折扣 >20% 的报价），需要在报价对象上新写一条**记录变更类流程**，由它把报价翻转为*审核中*并通知经理。这是 `src/flows/` 下的源码改动，不是在 Setup 界面上拼装出来的。内置流程是怎么组织的，参见 [Administration › Automation](/zh-Hans/docs/administration/automation)。

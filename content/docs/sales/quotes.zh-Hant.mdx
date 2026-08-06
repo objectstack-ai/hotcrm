@@ -138,6 +138,6 @@ Total Price    = Subtotal − Discount + Tax + Shipping & Handling
 
 ## 給管理員的提示
 
-- 每日到期掃描在凌晨 1 點執行。要更改時間，請調整報價物件工作流上的排程。
+- 每日到期掃描在凌晨 1 點執行。這個時間寫在原始碼裡，不在 Setup 介面上：它是 `quote_expiration` 流程（`src/flows/quote-expiration.flow.ts`）start 節點上的 `schedule: '0 1 * * *'`。要改就得改程式碼並重新部署——報價物件上沒有可調的設定項。
 - 報價 PDF 範本（封面和行項目版面）儲存在你的郵件範本設定中。
-- 要在系統級 $500K 閾值之下要求經理審批（例如對每個折扣 >20% 的報價），請新增一個工作流，將報價翻轉為*審核中*並通知經理。參見 [Administration › Automation](/zh-Hant/docs/administration/automation)。
+- 要在系統級 $500K 閾值之下要求經理審批（例如對每個折扣 >20% 的報價），需要在報價物件上新寫一條**記錄變更類流程**，由它把報價翻轉為*審核中*並通知經理。這是 `src/flows/` 下的原始碼改動，不是在 Setup 介面上拼裝出來的。內建流程是怎麼組織的，參見 [Administration › Automation](/zh-Hant/docs/administration/automation)。
