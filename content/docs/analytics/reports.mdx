@@ -26,22 +26,31 @@ HotCRM ships with these reports out of the box:
 
 ### 🎯 Lead reports
 
+`src/reports/lead.report.ts` publishes **one** lead report:
+
 | Report | What it shows |
 | --- | --- |
-| **Lead Conversion Funnel** | New → Working → Qualified → Converted |
-| **Lead Source ROI** | Volume, conversion rate, and revenue by source |
-| **Aged Leads** | Leads in *New* or *Working* status > 30 days |
+| **Lead Engagement by Month × Source** | A matrix of contacted-lead volume — lead source down the rows, the month of **Last Contacted** across the columns. Leads nobody has contacted are excluded; they have no engagement month |
+
+The three reports this section used to list are published nowhere, and two of them named a lead status that does not exist:
+
+- **Lead Conversion Funnel** and **Aged Leads** do not exist in any form. Both leaned on a *Working* status, and `crm_lead.status` has no such value — the route is *New → Contacted → Qualified → Unqualified → Converted* (`src/objects/lead.object.ts`), with *Unqualified* reachable from any open status. *Working* is a row in the import alias table (`src/mappings/lead_import.mapping.ts`), which maps that legacy spelling onto **Contacted** as records come in; the product never displays the word. [State machines](/docs/administration/state-machines) documents the declared route.
+- **Lead Source ROI** does not exist either, and the semantic layer could not answer it as written: `lead_metrics` (`src/datasets/lead.dataset.ts`) declares a single measure — the lead count — over four dimensions (status, source, created date, last-contacted month). Volume by source comes straight off that, a conversion rate is arithmetic you do on top of a count grouped by status, and revenue is not in this dataset at all — it never crosses over to opportunities.
+
+The lead count is the one lead number anything else reads: the **Open Leads** tile on the [Executive Overview](/docs/analytics/dashboards) dashboard counts unconverted leads off that same dataset. For the rest, build the report you need — see *Custom reports* below.
 
 ### 🎧 Service reports
 
 | Report | What it shows |
 | --- | --- |
 | **Case Volume by Origin** | New cases by Email / Phone / Web / Chat / Portal |
-| **SLA Performance** | % first-response on time, % resolved on time, by priority |
+| **SLA Performance Report** | Case count, **SLA Violation Rate** and average resolution time, by priority — over closed cases only |
 | **Case Resolution Time** | Average time-to-resolve, by category and agent |
 | **Top Accounts by Case Volume** | Accounts with the most cases |
 | **Reopened Cases** | Cases reopened in the period (quality signal) |
 | **CSAT by Agent** | Average customer satisfaction by agent |
+
+**SLA Performance Report carries no first-response figure**, and its SLA number is a violation *rate* — the average of the **SLA Violated** flag — rather than an on-time percentage. Nothing in this app measures first response at all: **First Response Date** is stamped on a case the first time a call or meeting that already took place is logged on it, and it is then never compared against a target; `case_metrics` declares no first-response measure, so no report and no dashboard tile can report one. See [SLA & Escalation](/docs/service/sla-and-escalation).
 
 ### 💰 Revenue reports
 

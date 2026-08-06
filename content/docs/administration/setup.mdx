@@ -93,20 +93,24 @@ Confirm the 7-stage default pipeline matches your sales process. Stages and prob
 | Closed Won | 100% |
 | Closed Lost | 0% |
 
-If your process differs, adjust in **Setup → Opportunity → Stages**.
+If your process differs, that is a source edit rather than a screen: **there is no Setup → Opportunity → Stages page**. The seven stages are the `stage` field's own options (`OPPORTUNITY_STAGE_OPTIONS` in `src/objects/_picklists.ts`), and the probabilities are the `STAGE_PROBABILITY` map in `src/objects/opportunity.hook.ts` — which re-derives **Probability** and **Expected Revenue** from the stage on every save, so a probability typed onto a deal by hand does not survive the next one. Changing either is a code change plus a redeploy.
 
 ### 11. Case SLAs
 
 Confirm the default [SLA matrix](/docs/service/sla-and-escalation):
 
-| Priority | First response | Resolution |
-| --- | --- | --- |
-| Critical | 1 hour | 4 hours |
-| High | 2 hours | 8 hours |
-| Medium | 4 hours | 2 business days |
-| Low | 1 business day | 7 business days |
+| Priority | Resolution |
+| --- | --- |
+| Critical | 4 hours |
+| High | 8 hours |
+| Medium | 2 business days |
+| Low | 7 business days |
 
-Adjust if your support promise differs.
+**Only the Critical row is a deadline the app keeps.** The `case_sla_defaults` hook (`src/objects/case.hook.ts`) stamps `sla_due_date` at *now + 4 calendar hours* on a Critical case and writes nothing at the other three priorities — and the hourly `case_sla_monitor` sweep only picks up cases whose due date has passed, so below Critical there is no date to pass. Those three rows are your team's service commitment, not a clock the app runs.
+
+**There is no first-response target to confirm.** This checklist used to carry a whole *First response* column — 1 hour at Critical through 1 business day at Low — and none of those four numbers exists anywhere in the app; the SLA page this section links to does not mention a first response at all. What does exist is the stamp: **First Response Date** is written the first time a call or meeting that already took place is logged on the case (`logActivityAction`, `src/actions/global.actions.ts`). It is never compared against anything — `case_metrics` declares no first-response measure, so no report or dashboard tile reports on it, and no flow alerts on it. Promise your customers a first response time by all means; the app records when it happened and nothing else.
+
+Adjust if your support promise differs — the Critical four hours lives in `src/objects/case.hook.ts`, not on a Setup screen.
 
 ### 12. Approval process
 

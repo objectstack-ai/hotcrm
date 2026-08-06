@@ -26,22 +26,31 @@ HotCRM 開箱即用地提供以下報表：
 
 ### 🎯 潛在客戶報表
 
+`src/reports/lead.report.ts` 發布的潛在客戶報表只有 **一份**：
+
 | 報表 | 顯示內容 |
 | --- | --- |
-| **Lead Conversion Funnel** | New → Working → Qualified → Converted |
-| **Lead Source ROI** | 按來源的數量、轉化率和收入 |
-| **Aged Leads** | 處於 *New* 或 *Working* 狀態超過 30 天的潛在客戶 |
+| **Lead Engagement by Month × Source** | 已聯絡潛在客戶數量的矩陣 —— 橫列是潛在客戶來源，直欄是 **Last Contacted** 所在的月份。從未聯絡過的潛在客戶被排除在外：它們沒有互動月份 |
+
+本節曾經列出的三份報表，一份都沒有發布，其中兩份還用了一個並不存在的潛在客戶狀態：
+
+- **Lead Conversion Funnel** 與 **Aged Leads** 以任何形式都不存在。兩者都依賴一個 *Working* 狀態，而 `crm_lead.status` 根本沒有這個取值 —— 真實路線是 *New → Contacted → Qualified → Unqualified → Converted*（`src/objects/lead.object.ts`），其中 *Unqualified* 從任何開放狀態都能進入。*Working* 是匯入別名表（`src/mappings/lead_import.mapping.ts`）裡的一行，它在記錄匯入時把這個歷史寫法對應到 **Contacted**；產品從不顯示這個詞。宣告出來的路線見 [狀態機](/zh-Hant/docs/administration/state-machines)。
+- **Lead Source ROI** 同樣不存在，而且按它寫的口徑，語義層也答不出來：`lead_metrics`（`src/datasets/lead.dataset.ts`）只宣告了一個度量 —— 潛在客戶計數 —— 外加四個維度（狀態、來源、建立日期、最後聯絡月份）。「按來源的數量」可以直接從它得到；轉化率要你自己在按狀態分組的計數上做除法；而收入根本不在這個資料集裡 —— 它從不跨到商機那一側。
+
+潛在客戶計數也是別處唯一會讀的潛在客戶數字：[Executive Overview](/zh-Hant/docs/analytics/dashboards) 儀表板上的 **Open Leads** 磁貼正是用同一個資料集數未轉化的潛在客戶。其餘的請自建 —— 見下文《自訂報表》。
 
 ### 🎧 服務報表
 
 | 報表 | 顯示內容 |
 | --- | --- |
 | **Case Volume by Origin** | 新工單按 Email / Phone / Web / Chat / Portal |
-| **SLA Performance** | 首次回應準時 %、按時解決 %，按優先順序 |
+| **SLA Performance Report** | 工單數、**SLA 違約率** 與平均解決時長，按優先順序 —— 只統計已關閉的工單 |
 | **Case Resolution Time** | 平均解決時間，按類別和客服 |
 | **Top Accounts by Case Volume** | 工單最多的客戶 |
 | **Reopened Cases** | 週期內重開的工單（品質訊號） |
 | **CSAT by Agent** | 按客服的平均客戶滿意度 |
+
+**SLA Performance Report 裡沒有任何首次回應數字**，而且它那個 SLA 數字是 **SLA Violated** 標誌的平均值，也就是違約 *率*，不是準時率。本應用根本不度量首次回應：**First Response Date** 只在工單上第一次記錄 *已經發生過* 的通話或會議時被蓋上，此後從不與任何目標比較；`case_metrics` 沒有宣告任何首次回應度量，所以沒有報表、也沒有儀表板磁貼能報出一個來。參見 [SLA 與升級](/zh-Hant/docs/service/sla-and-escalation)。
 
 ### 💰 收入報表
 
