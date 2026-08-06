@@ -59,12 +59,16 @@ New ──► In Progress ──► Waiting on Customer ──► Resolved ─�
 
 ## 在哪裡找到這些內容
 
-在 Enterprise CRM 應用中，**服務**分組包含：
+在 Enterprise CRM 應用中，**服務**分組包含三項：
 
-- **工單**
-- **任務**
-- **服務看板**——看板式工單工作流
-- **服務儀表板**
+- **工單**（Cases）——工單清單。
+- **知識**（Knowledge）——Copilot 讀取的知識文章（`crm_knowledge_article`）。
+- **服務概覽**（Service Overview）——服務儀表板。側邊欄上的 label 就是這個；沒有任何側邊欄條目叫 *Service Dashboard*。
+
+有兩個名字，人們會到**服務**分組下面找，但它們不在這裡：
+
+- **任務**——`crm_task` 在側邊欄上是 **My Tasks**（我的任務）與 **All Tasks**（全部任務）兩項，都掛在**我的工作**分組下，不在**服務**分組裡。
+- **服務看板**——本應用裡不存在叫這個名字的東西。看板是視圖 `case_workflow`，label 為 **Service Workflow**，而且它根本不是側邊欄條目：要從工單清單視圖切換器裡的 **Workflow** 頁籤進入。
 
 ## 從這裡開始
 

@@ -59,12 +59,16 @@ See [Analytics › Dashboards](/docs/analytics/dashboards) and [Reports](/docs/a
 
 ## Where to find things
 
-In the Enterprise CRM app, the **Service** group contains:
+In the Enterprise CRM app, the **Service** group contains three items:
 
-- **Cases**
-- **Tasks**
-- **Service Board** — kanban-style case workflow
-- **Service Dashboard**
+- **Cases** — the case list.
+- **Knowledge** — the knowledge articles the Copilot reads from (`crm_knowledge_article`).
+- **Service Overview** — the service dashboard. That is its sidebar label; no sidebar item is called *Service Dashboard*.
+
+Two names people look for under **Service** are not there:
+
+- **Tasks** — `crm_task` reaches the sidebar as **My Tasks** and **All Tasks**, both under the **My Work** group, not under Service.
+- **Service Board** — nothing in this app carries that name. The kanban is the view `case_workflow`, labelled **Service Workflow**, and it is not a sidebar item at all: you reach it from the **Workflow** tab in the case list's view switcher.
 
 ## Start here
 
