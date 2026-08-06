@@ -70,7 +70,10 @@ Use cases:
 
 - *Quarterly check-in with key accounts* — monthly recurrence × 3.
 - *Daily standup notes* — daily recurrence.
-- *Renewal reminder 60 days before contract end* — set automatically by the contract flow.
+
+Both of those you set up by hand, and that is the only way a series starts here: **nothing in HotCRM marks a task as recurring for you** — no flow, no action, no seed record ticks *Recurring Task*. Once you tick it, the system carries the series forward on completion; until you do, this app has no recurring tasks at all.
+
+The **renewal reminder is not one of them**. The daily renewal sweep files an ordinary high-priority follow-up — no recurrence fields on it — against *Activated* contracts whose end date has come within that contract's own **Renewal Notice (Days)**, **30** by default and set per contract, not a fixed 60. It returns each morning because the sweep runs again and skips any contract that still has an open one, not because of a recurrence rule: complete it and, while the contract is still inside its window, tomorrow's sweep files a fresh task. The [Contracts](/docs/revenue/contracts) page describes that sweep in full.
 
 ## What happens automatically
 
