@@ -50,10 +50,10 @@ The [service skills](/docs/ai-copilot/service-copilot) are built into every case
 
 ## Standard dashboards & reports
 
-- **Service Overview** (the dashboard's own title is **Customer Service**) — open cases by priority, SLA performance, top agents, oldest open cases.
-- **Cases Opened by Day × Priority** — daily inflow.
-- **Cases by Status × Priority** — current snapshot.
-- **SLA Performance** — % of cases resolved within SLA target.
+- **Service Overview** (the dashboard's own title is **Customer Service**) — the KPIs **Open Cases**, **Critical Cases**, **Avg Resolution Time** and **SLA Violations**; the charts **Cases by Status**, **Cases by Priority** and **Cases by Origin**; **Daily Case Volume**; an **SLA Compliance** gauge; and an **Open Cases by Priority** table. What it does not carry is a *top agents* tile or an *oldest open cases* tile, and neither is merely a widget nobody has built yet: `case_metrics`, the dataset behind every service widget, declares no owner dimension, so nothing in analytics can rank agents — the [Cases](/docs/service/cases) page says the same — and a dashboard table aggregates its dataset instead of listing records, so the oldest individual cases cannot be shown there either.
+- **Cases Opened by Priority × Day** — daily inflow, as a matrix of priority in the rows against day in the columns, in that order.
+- **Cases by Status and Priority** — current snapshot: case count and average resolution time, by status and priority.
+- **SLA Performance Report** — case count, **SLA Violation Rate** and average resolution time, by priority, over closed cases only. It does not report a compliance percentage: the share of cases resolved inside the target is not a measure `case_metrics` defines. See [SLA & Escalation](/docs/service/sla-and-escalation).
 
 See [Analytics › Dashboards](/docs/analytics/dashboards) and [Reports](/docs/analytics/reports).
 
