@@ -37,7 +37,7 @@ No dashboard can give you the same figure. The **Sales Performance** dashboard (
 
 ## The pipeline kanban view
 
-The **Pipeline Kanban** (sidebar shortcut **Sales Pipeline**) shows the pipeline as 7 columns — one per stage. Each card shows:
+The kanban board is the **Sales Pipeline** view on Opportunities (`pipeline_kanban`), and the sidebar entry that opens it reads **Pipeline**. It shows the pipeline as 7 columns — one per stage. Each card shows:
 
 - Opportunity name
 - Account
@@ -47,10 +47,9 @@ The **Pipeline Kanban** (sidebar shortcut **Sales Pipeline**) shows the pipeline
 
 To advance a deal, just **drag the card** to the next column. The system enforces the stage rules, so you can't drag from *Prospecting* directly to *Closed Won*.
 
-At the top of each column you'll see two numbers:
+At the top of each column you'll see **one** number: the sum of *Amount* across that column's deals — the unweighted total for that stage. One is all a kanban column can carry, by design: a board declares a single `summarizeField` (`src/views/opportunity.view.ts`), and this board binds it to `amount`.
 
-- The **unweighted total** (sum of amount)
-- The **weighted total** (sum of expected revenue)
+The board has no weighted total. As *How expected revenue is calculated* says above, the weighted forecast is a list-view total: the *Expected Revenue* column sum on **Open Deals** and **All Opportunities**.
 
 ## Pipeline health signals
 
