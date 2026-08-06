@@ -79,7 +79,7 @@ Business hours drive [SLA calculations](/docs/service/sla-and-escalation) — e.
 
 - [ ] Import [products](/docs/revenue/products) — at minimum: code, name, list price, billing type
 - [ ] Set up product manager (the contact for each product line)
-- [ ] Upload datasheets (feeds the AI Copilot's Product Information knowledge base)
+- [ ] Upload datasheets — a PDF file field on the product record, there for people to open; no knowledge base ingests it
 
 ## ✅ Day 4 — Process
 
@@ -120,14 +120,17 @@ Adjust if your support promise differs.
 
 ## ✅ Day 5 — Knowledge & AI
 
-### 13. Knowledge bases
+### 13. Knowledge articles
 
-- [ ] Seed **Support Knowledge** with your top 20 FAQ articles
-- [ ] Seed **Sales Knowledge** with your sales playbook
-- [ ] Seed **Competitive Intel** with battle cards for your top 5 competitors
-- [ ] Product datasheets — already in product records (synced automatically)
+HotCRM ships **one** knowledge object, not a set of knowledge bases. Everything below is an ordinary record you create under **Service → Knowledge**, filed under one of the seven categories the object defines.
 
-See [Knowledge Bases](/docs/ai-copilot/knowledge-bases).
+- [ ] Write your top 20 FAQs as articles under **Troubleshooting**, **How-To** or **Getting Started**
+- [ ] Put support hours, SLA promises and data-handling commitments under **Policy**
+- [ ] Set each article's **Audience** — *Internal* for runbooks, *Public* for anything you would send a customer
+- [ ] **Publish** them — the Copilot queries published articles only, so a draft may as well not exist
+- [ ] Check the categories and tags before you call it done: matching is by category and tags, not by meaning, so a misfiled article is an invisible one
+
+There is nothing to seed called *Sales Knowledge*, *Product Information* or *Competitive Intel* — HotCRM ships no such libraries, and no competitor object for battle cards to hang off. See [Knowledge Bases](/docs/ai-copilot/knowledge-bases) for what the Copilot can and cannot do with an article.
 
 ### 14. AI Copilot
 

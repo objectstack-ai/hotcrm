@@ -45,7 +45,7 @@ It returns:
 **What triage does not do.** Three abilities this page used to list are outside the
 skill, and it is worth saying where each one actually lives:
 
-- **Historical cases, and matching Support Knowledge articles.** Triage declares exactly two tools — `describe_object` and `get_record`. `get_record` fetches one record by ID and the skill has no query tool at all, so it cannot pull the account's or contact's *other* cases and cannot search for articles. **Customer 360°** below is the skill that carries `query_records`: it reads `crm_case` and `crm_knowledge_article`, so ask it for the history and the article matches.
+- **Historical cases, and matching knowledge articles.** Triage declares exactly two tools — `describe_object` and `get_record`. `get_record` fetches one record by ID and the skill has no query tool at all, so it cannot pull the account's or contact's *other* cases and cannot search for articles. **Customer 360°** below is the skill that carries `query_records`: it reads `crm_case` and `crm_knowledge_article`, so ask it for the history and the article matches.
 - **A suggested category.** Triage assigns a priority and stops there. **Case Type** stays a field a person sets on the case, and its real options are Question, Problem, Feature Request and Bug — there is no Billing type.
 - **A draft first reply.** The skill hands the customer-facing reply to **Email Drafting** (section 3 below) by name rather than writing it itself. Ask for the draft as a second question and that skill takes it.
 
@@ -127,4 +127,4 @@ afternoon. See [Live Schema (Wow #1)](/docs/ai-copilot/live-schema).
 - Skills declare no bespoke tools: every state change goes through a real HotCRM action, so the same permission checks apply as when an agent clicks the button.
 
 See [Skills](/docs/ai-copilot/skills) for the full skill spec and
-[Knowledge Bases](/docs/ai-copilot/knowledge-bases) for the Support Knowledge index.
+[Knowledge Bases](/docs/ai-copilot/knowledge-bases) for what the assistant can and cannot do with a knowledge article.

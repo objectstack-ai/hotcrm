@@ -76,8 +76,16 @@ context-aware draft using:
 - The contact's name, role, and account.
 - The opportunity stage and amount (if relevant).
 - Past conversation history (recent emails and notes).
-- The relevant product datasheet from the Product Information knowledge base.
-- The sales playbook from the Sales Knowledge knowledge base.
+
+**Not the knowledge base, on two separate counts.** The *Product Information* and
+*Sales Knowledge* knowledge bases this list used to name do not exist — HotCRM ships
+no such libraries, only the one [Knowledge Article object](/docs/ai-copilot/knowledge-bases).
+And even where knowledge does exist, this skill does not read it: the drafting
+instructions are five steps about grounding the copy in the contact record and
+writing it, and not one of them reaches for an article. The skill carries
+`query_records` and could read `crm_knowledge_article` — it is simply never told to,
+so no draft quotes a datasheet or a playbook. When a draft should quote an article,
+ask **Customer 360°** for the matching one and paste it in.
 
 Common email shapes it handles well:
 
