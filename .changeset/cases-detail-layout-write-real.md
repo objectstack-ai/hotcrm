@@ -18,7 +18,7 @@ region, no side panel and no AI component anywhere on it.
   Tier** on the account, which this page does not show), and nothing in this app counts a customer's
   cases by month.
 - **Related** — one list, not four. The tab is an accordion with a single item, **Open Tasks**: the
-  `crm_task` records pointing at the case through **Related To Case**, filtered to those not yet
+  `crm_task` records pointing at the case through **Related Case** (`related_to_case`), filtered to those not yet
   *Completed*, ten at a time. Attachments are enabled on the object but no component on this page
   lists them; `crm_case` has no opportunity relationship in either direction; and the case's three
   milestones — *escalated*, *resolved*, *closed* — are `activityMilestones` that land as entries in
