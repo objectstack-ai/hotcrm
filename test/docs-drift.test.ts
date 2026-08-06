@@ -292,14 +292,26 @@ describe('maintainer docs do not point at directories that no longer exist', () 
  * on a page is a pointer is an editorial fact about that page, so pages opt in
  * here one at a time.
  *
- * `customization/index.{mdx,zh-Hans,zh-Hant}` draws the same tree and still
- * carries the retired `agents/` entry plus a `*.agent.ts` row (#988); its three
- * locales join both lists below with that fix.
+ * `customization/index.{mdx,zh-Hans,zh-Hant}` drew the same tree with the same
+ * retired `agents/` entry and `*.agent.ts` row; #988 redrew all three and they
+ * joined here, as the note left above by #984 anticipated.
+ *
+ * Membership costs a page something, and the customization page had to pay it:
+ * the inline check below refuses to pass vacuously, and that page named no
+ * `src/<dir>/` inline at all — its one candidate, the golden rule "export from
+ * the relevant `src/**\/index.ts`", is a glob and matches nothing. What made it
+ * eligible is the barrel sentence #988 added under the tree, which names
+ * `src/skills/index.ts` outright. A page that only DRAWS a tree belongs in
+ * TREE_DIAGRAM_DOCS; being here additionally asserts it points into `src/` in
+ * prose.
  */
 const PRODUCT_TREE_DOCS = [
   'content/docs/getting-started/for-developers.mdx',
   'content/docs/getting-started/for-developers.zh-Hans.mdx',
   'content/docs/getting-started/for-developers.zh-Hant.mdx',
+  'content/docs/customization/index.mdx',
+  'content/docs/customization/index.zh-Hans.mdx',
+  'content/docs/customization/index.zh-Hant.mdx',
 ];
 
 /** Every doc that DRAWS a `src/` tree — the form axis, maintainer and product alike. */

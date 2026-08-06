@@ -12,7 +12,7 @@ description: 用 ObjectStack 中繼資料、動作、流程、AI skills 和 UI �
 | 領域 | 內容 |
 | --- | --- |
 | [擴展物件](/zh-Hant/docs/customization/extending-objects) | 欄位、物件、hooks、流程、校驗、共享 |
-| [AI skills](/zh-Hant/docs/customization/ai-skills) | Copilot skills 和 agent 接線 |
+| [AI skills](/zh-Hant/docs/customization/ai-skills) | 面向平台助手的 skills，以及註冊它們的 barrel |
 | [UI 擴展](/zh-Hant/docs/customization/ui-extensions) | 頁面、視圖、儀表板、動作 |
 | [測試與 CI](/zh-Hant/docs/customization/testing-and-ci) | 中繼資料校驗和自動化檢查 |
 
@@ -22,21 +22,27 @@ HotCRM 是一個單體 ObjectStack 應用。請在 `src/` 下新增或修改中�
 
 ```text
 src/
-├── objects/        # 資料模型和物件 hooks
+├── objects/        # *.object.ts 模型和 *.hook.ts 生命週期邏輯
+├── hooks/          # 把物件 hooks 彙總交給 stack 的 barrel
 ├── actions/        # UI 動作和可執行動作體
 ├── flows/          # 自動化
-├── agents/         # AI agents
 ├── skills/         # AI skills
 ├── apps/
 ├── views/
 ├── pages/
 ├── dashboards/
 ├── reports/
+├── datasets/       # 儀表板和報表查詢的維度與度量
+├── mappings/       # 資料匯入的欄位對應
 ├── profiles/
 ├── sharing/
 ├── translations/
-└── data/
+├── data/           # 種子資料
+├── docs/           # 陳述流程所實作業務規則的應用文件
+└── interfaces/     # 共享型別（目前是空 barrel）
 ```
+
+HotCRM 只定義 skills，不定義 agent：應用自帶的兩個 copilot 及其所在目錄已被移除，AI 能力來自每個 ObjectStack 環境都提供的平台助手。把 skill 從 `src/skills/index.ts` 匯出就是全部的接線工作。參見 [AI Skills](/zh-Hant/docs/customization/ai-skills)。
 
 ## 檔案後綴協議
 
@@ -47,7 +53,6 @@ src/
 | `*.actions.ts` | UI 動作和可執行動作 |
 | `*.flow.ts` | 自動化 |
 | `*.skill.ts` | AI Copilot skill |
-| `*.agent.ts` | AI agent |
 | `*.page.ts` | UI 頁面 |
 | `*.view.ts` | 清單或看板視圖 |
 | `*.dashboard.ts` | 儀表板 |

@@ -12,7 +12,7 @@ This section is for developers and technical implementers extending HotCRM with 
 | Area | What it covers |
 | --- | --- |
 | [Extending objects](/docs/customization/extending-objects) | Fields, objects, hooks, flows, validation, sharing |
-| [AI skills](/docs/customization/ai-skills) | Copilot skills and agent wiring |
+| [AI skills](/docs/customization/ai-skills) | Skills for the platform assistant, and the barrel that registers them |
 | [UI extensions](/docs/customization/ui-extensions) | Pages, views, dashboards, actions |
 | [Testing and CI](/docs/customization/testing-and-ci) | Metadata validation and automated checks |
 
@@ -22,21 +22,27 @@ HotCRM is a single ObjectStack app. Add or modify metadata under `src/`, then ex
 
 ```text
 src/
-├── objects/        # data model and object hooks
+├── objects/        # *.object.ts schemas and *.hook.ts lifecycle logic
+├── hooks/          # barrel that hands the object hooks to the stack
 ├── actions/        # UI actions and executable action bodies
 ├── flows/          # automation
-├── agents/         # AI agents
 ├── skills/         # AI skills
 ├── apps/
 ├── views/
 ├── pages/
 ├── dashboards/
 ├── reports/
+├── datasets/       # dimensions and measures the dashboards and reports query
+├── mappings/       # import column-to-field projections
 ├── profiles/
 ├── sharing/
 ├── translations/
-└── data/
+├── data/           # seed data
+├── docs/           # package docs stating the business rules the flows implement
+└── interfaces/     # shared types (an empty barrel today)
 ```
+
+HotCRM authors skills, not agents: the two app-owned copilots and the directory that held them were retired, and AI capability now comes from the platform assistant every ObjectStack environment provides. Exporting a skill from `src/skills/index.ts` is the whole wiring step. See [AI Skills](/docs/customization/ai-skills).
 
 ## File suffix protocol
 
@@ -47,7 +53,6 @@ src/
 | `*.actions.ts` | UI actions and executable actions |
 | `*.flow.ts` | Automation |
 | `*.skill.ts` | AI Copilot skill |
-| `*.agent.ts` | AI agent |
 | `*.page.ts` | UI page |
 | `*.view.ts` | List or kanban view |
 | `*.dashboard.ts` | Dashboard |
