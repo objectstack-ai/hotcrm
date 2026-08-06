@@ -130,12 +130,12 @@ Sharing. Reports respect record visibility — you see only what you can see. A 
 Check:
 
 - The tile's **filter** — too restrictive?
-- The underlying **cube refresh** — overdue?
+- The underlying **analytics refresh** — the compiled cube is refreshed by the analytics service, on no schedule HotCRM declares, so a stale tile is a question for your deployment.
 - Your **profile permissions** for the source object.
 
 ### I changed a field on a record — when will the dashboard update?
 
-Most tiles use cubes with incremental refresh every few minutes. Force a refresh from the dashboard's **⟳ Refresh** button.
+Each dashboard re-queries on the interval it declares: every **60 s** on Customer Service, every **180 s** on Sales Performance, every **300 s** on CRM Overview, Sales Activity and Executive Overview (`src/dashboards/`). How soon the analytics service re-compiles the cube underneath is a deployment question — this app configures no refresh schedule of its own. HotCRM's dashboard metadata declares no manual refresh control either, so any refresh button your console shows comes from the platform rather than from this app.
 
 ### Why can't I add a custom field to a report?
 

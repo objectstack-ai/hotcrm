@@ -72,7 +72,7 @@ Rate-limit responses use HTTP **429** with `Retry-After` header. Always implemen
 
 Bulk-skill invocations (e.g., qualify 500 leads) count as 500 skill calls — be mindful of quotas.
 
-## Reporting & cubes
+## Reporting & analytics
 
 | Item | Limit |
 | --- | --- |
@@ -80,7 +80,8 @@ Bulk-skill invocations (e.g., qualify 500 leads) count as 500 skill calls — be
 | Report rows exported | **1,000,000** |
 | Dashboards per user | Unlimited |
 | Widgets per dashboard | **50** |
-| Cube refresh frequency | Every **5 min** (incremental) / nightly (full) |
+| Dashboard refresh interval | **60 s** on Customer Service, **180 s** on Sales Performance, **300 s** on the other three — declared per dashboard in `src/dashboards/` |
+| Cube refresh frequency | Owned by the analytics service. HotCRM declares no refresh schedule and no incremental-versus-full policy anywhere in `src/`, so there is no app-side figure to quote — check your deployment |
 | Concurrent report runs (per user) | **5** |
 
 For deeper analysis, [export to a data warehouse](/docs/guides/import-and-export#scheduled-export).

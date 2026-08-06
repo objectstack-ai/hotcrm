@@ -84,7 +84,7 @@ HOTCRM_TOKEN=... ./scripts/wow1-live-schema.sh
 
 ### 分析
 
-- **四个内置多维数据集**：销售、管道、服务、营销 —— 用于自助分析。
+- **九个内置 dataset**：Opportunity、Case、Lead、Account、Forecast、Activity、Task、Product、Contact Metrics —— 每块仪表盘磁贴和每张报表都按名字绑定的那层语义层。HotCRM 自己不声明任何 cube：由分析服务在内部把每个 dataset 编译成 cube（ADR-0021），所以并没有 *Sales* / *Pipeline* / *Service* / *Marketing* 这几个 cube 可打开。
 - 仪表盘和报告的**订阅邮件** —— 在收件箱里收到每周摘要。
 
 ### 文档
