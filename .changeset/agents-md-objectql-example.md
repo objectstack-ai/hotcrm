@@ -1,0 +1,29 @@
+---
+'hotcrm': patch
+---
+
+Make `AGENTS.md`'s only ObjectQL example match the repo's real read path.
+
+The example under §"Tech Stack & Protocol" item 2 read
+`broker.find('opportunity', { filters: [['amount', '>', 50000]] })`, and every part of
+it was wrong for this codebase:
+
+- **`broker`** has zero occurrences in `src/`. The data surface an agent actually gets
+  is `ctx.api`: 43 call sites in `*.hook.ts` (cast once as `HookApi`, then
+  `api.object('crm_x')`) and 17 in action script bodies (`ctx.api.object('crm_x')`).
+- **`filters`** is not a key of the in-process query object at all. It is the
+  *deprecated plural alias* of the `filter` HTTP query-param, whose value is a JSON
+  string. Used in process it fails silently, which is the failure mode this repo has
+  already paid for once — `.changeset/hook-query-where-not-filter.md` records seventeen
+  hook calls whose predicate vanished: `findOne` returned the object's first row and
+  `count` counted the whole object, with no error and no `null`. `HookQuery` in
+  `src/objects/_hook-api.ts` now omits the alias precisely so the compiler rejects it.
+- **`'opportunity'`** violated the `crm_` prefix rule stated four lines above it in the
+  same file. The object is `crm_opportunity`.
+
+The predicate *value* changed shape too: `[['amount', '>', 50000]]` is a legal filter
+AST at the platform level, but it is not assignable to `HookQuery['where']`, and zero
+first-party call sites use it. All sixty use the object form, so the example now does:
+`where: { amount: { $gt: 50000 } }`.
+
+Documentation only — no runtime, metadata, or dependency change.
