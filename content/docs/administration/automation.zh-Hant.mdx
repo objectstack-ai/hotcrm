@@ -119,7 +119,7 @@ HotCRM 內建的 **商機審批** 流程串聯兩個 approval 節點實作分級
 
 大多數自動化操作會傳送電子郵件。範本位於 **設定 → 電子郵件範本**，並支援：
 
-- **合併欄位** —— `{{Opportunity.Name}}`、`{{Account.Owner.Email}}`。
+- **合併欄位** —— `{{path.to.value}}` 佔位符，依每次傳送傳入的 `data` 酬載渲染。路徑的每一段都寫 HotCRM 自己的拼寫 —— 物件是 `crm_opportunity`、`crm_contact`，欄位是 `name`、`owner_id`、`email` —— 而不是 Salesforce 式的 `Opportunity.Name`。路徑從哪一層寫起，取決於傳送方傳入的酬載形狀；本應用沒有任何 `sendTemplate()` 呼叫方可供照抄，因此請把範本要讀取的名稱宣告在它的 `variables` 清單裡，並與傳送方約定好酬載形狀。
 - **條件區塊** —— 僅在條件為真時顯示。
 - **HTML + 純文字** 版本。
 - **附件** —— 報價 PDF、合約 PDF。

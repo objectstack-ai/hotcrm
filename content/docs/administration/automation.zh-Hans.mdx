@@ -119,7 +119,7 @@ HotCRM 内置的 **商机审批** 流程串联两个 approval 节点实现分级
 
 大多数自动化操作会发送电子邮件。模板位于 **设置 → 电子邮件模板**，并支持：
 
-- **合并字段** —— `{{Opportunity.Name}}`、`{{Account.Owner.Email}}`。
+- **合并字段** —— `{{path.to.value}}` 占位符，按每次发送传入的 `data` 载荷渲染。路径的每一段都写 HotCRM 自己的拼写 —— 对象是 `crm_opportunity`、`crm_contact`，字段是 `name`、`owner_id`、`email` —— 而不是 Salesforce 式的 `Opportunity.Name`。路径从哪一层写起，取决于发送方传入的载荷形状；本应用没有任何 `sendTemplate()` 调用方可供照抄，所以请把模板要读的名字声明在它的 `variables` 列表里，并与发送方约定好载荷形状。
 - **条件块** —— 仅在条件为真时显示。
 - **HTML + 纯文本** 版本。
 - **附件** —— 报价 PDF、合同 PDF。
