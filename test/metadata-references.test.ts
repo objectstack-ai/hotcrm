@@ -746,3 +746,83 @@ describe('app AI bindings resolve to a platform agent', () => {
     expect(((stack as any).skills ?? []).length, 'no skills registered').toBeGreaterThan(0);
   });
 });
+
+/**
+ * The home page's AI card does not name a retired persona (#1002).
+ *
+ * The two guards above check agent BINDINGS — `defaultAgent`, `stack.agents` —
+ * because those are keys a schema can be pointed at. This one checks a
+ * paragraph, and that is the whole point: the card below said
+ * "Ask the Sales Copilot" for months while every gate stayed green. `os
+ * validate` and `pnpm lint` walk authored metadata and treat a card's `title` /
+ * `description` as free text; PR #1001's persona rule is deliberately scoped to
+ * `content/docs/**` (the range the maintainer drew for #612), so it never
+ * opened a `.page.ts`. A retired persona in `src/` had no guard at all — and
+ * this one was live UI copy, visible to a user today, not documentation.
+ *
+ * Two drifts were fixed here, both from the maintainer's 2026-08-04 ruling on
+ * #612 (Option A) and the architecture note that followed it:
+ *
+ * - **The persona.** `sales_copilot` was retired in #512 and ADR-0063 §2 made
+ *   the surface skills-only. AI capability is implemented by agents in
+ *   `objectstack-ai/cloud`; HotCRM contributes domain skills. So the copy names
+ *   the platform's assistant, never an app-owned one.
+ * - **The entry point.** The card sent users to "the floating Copilot
+ *   (bottom-right)"; `content/docs/ai-copilot/index.mdx` documents "the chat
+ *   panel the platform opens from the right edge of every page" (#611 / PR
+ *   #1001). Two descriptions of one entry point is drift whichever is right, so
+ *   the card now uses the documented one.
+ *
+ * SCOPE — read before extending. This pins the ONE card this PR rewrote. It is
+ * not the general rule, and it cannot catch the same persona reappearing in a
+ * different card, view, or skill description: that is a scan-surface question
+ * over every user-visible string in `src/` (`title` / `label` / `description` /
+ * `help`), which touches the public wording surface and needs its own ruling.
+ * Filed as #1003 for that reason — do not quietly grow this into it.
+ *
+ * Reverse verification: predicted red-before / green-after, the ordinary
+ * direction for a forbidden-string pin over copy that plainly contained the
+ * string. Measured by restoring the old three lines: 2 of 3 assertions fail
+ * ("Ask the Sales Copilot" on `title`, "Today with Copilot" on `label`, and the
+ * floating/bottom-right entry point), then green once rewritten.
+ */
+describe('live UI copy does not name a retired copilot persona (#1002)', () => {
+  const homePage = pages.find((p) => p.name === 'sales_home_page');
+
+  /** The card carries the app's only AI-facing home-page copy. */
+  const card = [...walk(homePage?.regions), ...walk(homePage?.slots)].find(
+    (c: AnyRec) => c.id === 'ai_briefing',
+  );
+
+  it('the card this rule reads is still on the home page', () => {
+    // Guard the guard: renamed away, every assertion below would pass by
+    // reading `undefined` — the empty-pass failure mode a copy rule dies of.
+    expect(homePage, 'sales_home_page is no longer registered in the stack').toBeDefined();
+    expect(card, 'no component with id "ai_briefing" on sales_home_page').toBeDefined();
+    expect(typeof card?.properties?.title).toBe('string');
+    expect(typeof card?.properties?.description).toBe('string');
+  });
+
+  it('no retired persona name in the card copy', () => {
+    const copy = [card?.label, card?.properties?.title, card?.properties?.description]
+      .filter((s): s is string => typeof s === 'string')
+      .join('\n');
+    // The bare word is included on purpose: "Copilot" alone reads as an
+    // app-owned assistant in UI copy, even though the DOCS keep *AI Copilot* as
+    // a section name (#611's line, which applies to a docs nav, not to a card).
+    const found = ['Sales Copilot', 'Service Copilot', 'Copilot'].filter((name) =>
+      copy.includes(name),
+    );
+    expect(found, `retired persona named in home-page card copy: ${found.join(', ')}`).toEqual([]);
+  });
+
+  it('the card points at the documented assistant entry point', () => {
+    const description: string = card?.properties?.description ?? '';
+    // The stale spelling, not a paraphrase of the new one: pinning the exact
+    // sentence would fail on any harmless rewording, while "floating" /
+    // "bottom-right" is precisely the claim that contradicts the docs.
+    expect(description.toLowerCase()).not.toContain('floating');
+    expect(description.toLowerCase()).not.toContain('bottom-right');
+    expect(description).toContain('right edge');
+  });
+});
