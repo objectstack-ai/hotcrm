@@ -119,7 +119,7 @@ Understanding this order helps debug *"why didn't my flow fire?"* questions.
 
 Most automation actions send email. Templates live in **Setup → Email Templates** and support:
 
-- **Merge fields** — `{{Opportunity.Name}}`, `{{Account.Owner.Email}}`.
+- **Merge fields** — `{{path.to.value}}` placeholders, rendered against the `data` payload passed on that send. Spell every segment the way HotCRM spells it — objects are `crm_opportunity` and `crm_contact`, fields are `name`, `owner_id`, `email` — never Salesforce-style `Opportunity.Name`. What the path is rooted at depends on the payload shape the sender passes, and this app ships no `sendTemplate()` caller to copy one from, so declare the names your template reads in its `variables` list and agree the shape with whoever sends the mail.
 - **Conditional blocks** — show only if a condition is true.
 - **HTML + plain text** versions.
 - **Attachments** — quote PDFs, contract PDFs.
