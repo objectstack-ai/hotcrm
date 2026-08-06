@@ -93,20 +93,24 @@ description: 让 HotCRM 为你的团队做好生产准备的第一周任务。
 | Closed Won | 100% |
 | Closed Lost | 0% |
 
-如果你的流程不同，请在 **设置 → 商机 → 阶段** 中调整。
+如果你的流程不同，那是一次源码修改，不是在某个屏上调整：**并不存在「设置 → 商机 → 阶段」这个页面**。七个阶段是 `stage` 字段自己的选项（`src/objects/_picklists.ts` 里的 `OPPORTUNITY_STAGE_OPTIONS`），概率则是 `src/objects/opportunity.hook.ts` 里的 `STAGE_PROBABILITY` 映射 —— 它在每次保存时都按阶段重新推导 **Probability** 与 **Expected Revenue**，所以手工填在商机上的概率撑不过下一次保存。改动其中任何一项都是代码改动加一次重新部署。
 
 ### 11. 案例 SLA
 
 确认默认的 [SLA 矩阵](/zh-Hans/docs/service/sla-and-escalation)：
 
-| 优先级 | 首次响应 | 解决 |
-| --- | --- | --- |
-| Critical | 1 小时 | 4 小时 |
-| High | 2 小时 | 8 小时 |
-| Medium | 4 小时 | 2 个工作日 |
-| Low | 1 个工作日 | 7 个工作日 |
+| 优先级 | 解决 |
+| --- | --- |
+| Critical | 4 小时 |
+| High | 8 小时 |
+| Medium | 2 个工作日 |
+| Low | 7 个工作日 |
 
-如果你的支持承诺不同，请进行调整。
+**只有 Critical 这一行是应用真正在守的期限。** `case_sla_defaults` 钩子（`src/objects/case.hook.ts`）在 Critical 工单上把 `sla_due_date` 盖成 *当前时间 + 4 个自然小时*，其余三个优先级什么都不写 —— 而每小时跑一次的 `case_sla_monitor` 只捞到期日已过的工单，所以 Critical 以下根本没有一个日期可以过期。那三行是你们团队的服务承诺，不是应用替你跑的钟。
+
+**这里没有「首次响应目标」可确认。** 本清单曾经带着整整一列 *首次响应*（Critical 1 小时一直到 Low 1 个工作日），这四个数字在应用里哪儿都不存在；本节链过去的那一页 SLA 文档也根本没提过首次响应。真正存在的是那个时间戳：**First Response Date** 在工单上第一次记录 *已经发生过* 的通话或会议时被写入（`logActivityAction`，`src/actions/global.actions.ts`）。它从不与任何目标比较 —— `case_metrics` 没有声明任何首次响应度量，因此没有报表、没有仪表盘磁贴会报它，也没有任何流程会为它告警。你当然可以对客户承诺一个首次响应时长；应用只是记下它何时发生，别的什么都不做。
+
+如果你的支持承诺不同，请自行调整 —— Critical 的这 4 小时写在 `src/objects/case.hook.ts` 里，不在任何设置屏上。
 
 ### 12. 审批流程
 

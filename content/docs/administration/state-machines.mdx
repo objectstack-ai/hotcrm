@@ -137,7 +137,7 @@ What the tables do give an agent is what they give a report author: the route, d
 
 - ✅ **Don't over-constrain** — too many transition rules become a friction tax on the team.
 - ✅ When adding a new status, **decide the entry and exit conditions first** — the rest follows.
-- ✅ Use state-machine transitions to **trigger automation** rather than running automation on every save — much more performant.
+- ✅ **Don't hang automation off a transition** — there is nothing to hang it on. The table is a validation rule, evaluated on the save that makes the move; it writes a log line and emits no event for automation to subscribe to. Automation that should run on one move is a `record_change` flow that fires on the save and narrows *itself* in its start condition, comparing `record.stage` against `previous.stage` — `opportunity_won_alert` (`src/flows/opportunity-won-alert.flow.ts`) does exactly that, so the congratulations blast goes out on the move into *Closed Won* and not on every later edit of a won deal.
 - ✅ **Test the wizard flows** (convert lead, close opportunity) after every change.
 
 ## Tips for users

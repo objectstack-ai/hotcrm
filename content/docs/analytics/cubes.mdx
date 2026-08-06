@@ -81,10 +81,11 @@ The cube behind every case-related dashboard and SLA report.
 - Open case count
 - New case count
 - Resolved case count
-- First-response time (minutes)
 - Resolution time (hours)
-- SLA met % (first response and resolution)
+- **SLA Violation Rate** — the average of the **SLA Violated** flag (`avg_sla_violated` in `case_metrics`), which is a breach rate and not a compliance percentage
 - CSAT score
+
+**There is no first-response measure here**, and no "SLA met %". `case_metrics` (`src/datasets/case.dataset.ts`) declares neither, so nothing in analytics can aggregate, compare or chart a first response. The **First Response Date** stamp on the case is real — see [Cases](/docs/service/cases) for when it is written — but it stops there: nothing measures it, and nothing alerts on it.
 
 **Dimensions**:
 - Status, priority, category, origin
@@ -94,7 +95,7 @@ The cube behind every case-related dashboard and SLA report.
 - Period
 
 **Sample questions**:
-- *"SLA met % by priority by month."*
+- *"SLA Violation Rate by priority."*
 - *"Cases by category by product — which products generate the most support load?"*
 - *"Reopened cases by agent — quality signal."*
 
