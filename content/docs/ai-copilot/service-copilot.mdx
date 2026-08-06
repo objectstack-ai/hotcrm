@@ -34,9 +34,8 @@ Data carry no context restriction and are available everywhere.
 
 Ask the assistant to triage a case and it analyses:
 
-- The **subject** and **description**.
+- The **subject** and **description** — and, within triage's reach, the only place a product shows up at all. The case itself carries no product: `crm_case` has no product field under any name and no lookup to `crm_product`, which hangs off **Opportunity Line Items** and **Quote Line Items** instead. Whatever the customer wrote about a product, triage reads as text here.
 - The **customer's profile** — the account's **Customer Tier** and the **Contract Value**, which the triage rubric weighs first. How long they have been a customer is not weighed, and could not be: `crm_account` has no *customer-since* field under any name, and the closest real date sits on the contract (**Signed Date**).
-- The **product** referenced in the case.
 
 It returns:
 
@@ -92,8 +91,12 @@ for service tone:
 - **Resolution** — explaining what was done.
 - **Closure** — confirming everything's resolved.
 
-All drafts cite the Support Knowledge articles they pulled from, so agents can verify
-the source. Nothing is sent automatically — agents preview and edit first.
+A draft is grounded in the records the skill reads — the contact, plus the related
+account or opportunity when the request names one — and not in knowledge articles.
+Nothing in the drafting instructions reaches for an article, so no draft cites one;
+when a reply should quote one, take the article **Customer 360°** matched above and
+paste it in. Nothing is sent automatically either: the skill shows the draft and
+points at **Send Email** on the contact record, where a person reviews and sends.
 
 ### 4. 🔄 Live Data
 
@@ -104,17 +107,17 @@ afternoon. See [Live Schema (Wow #1)](/docs/ai-copilot/live-schema).
 ## Tips for agents
 
 - ✅ **Triage every new case** — it's one question and saves you sorting/routing time.
-- ✅ Use **Customer 360** before any phone call — knowing the contract tier shapes the conversation.
-- ✅ **Trust but verify** the KB suggestions — check the cited article before you send.
+- ✅ Use **Customer 360°** before any phone call — it hands you the open cases, the live deals and the matching articles. The contract is not among the objects it reads (see *What Customer 360° does not pull* above), so when the call turns on **Contract Type** or **Contract Value**, open the account's contract record for those.
+- ✅ **Trust but verify** the articles **Customer 360°** cites (`KA-0007`) — it matches them on the category or tags of the cases it just read, which is a starting point rather than a verdict. Open the article and confirm it fits before you quote it in a reply.
 
 ## Tips for managers
 
-- ✅ Track how often triage suggestions are accepted — if your agents reject most of them, your KB needs work.
+- ✅ Track how often the **priority** triage suggests is the one that sticks — that priority and the escalate/close pointer are everything it returns. A high override rate points at the rubric and at the case data it reads; it says nothing about your knowledge base, which triage never touches. The knowledge-gap signal is the knowledge managers' tip below.
 - ✅ Look for patterns of repeated cases during deflection meetings — they reveal product issues.
 
 ## Tips for knowledge managers
 
-- ✅ When the assistant can't find a matching article for a case, that's a knowledge gap — review these to identify new articles to write.
+- ✅ When **Customer 360°** matches no published article to a case's category or tags, that's a knowledge gap — review these to identify new articles to write. Triage never searches for articles, so the signal comes from asking Customer 360° for the customer's history, not from triaging the case.
 - ✅ Articles cited frequently are your **highest-value content** — keep them updated.
 
 ## Limits
@@ -124,5 +127,4 @@ afternoon. See [Live Schema (Wow #1)](/docs/ai-copilot/live-schema).
 - Skills declare no bespoke tools: every state change goes through a real HotCRM action, so the same permission checks apply as when an agent clicks the button.
 
 See [Skills](/docs/ai-copilot/skills) for the full skill spec and
-[Knowledge Bases](/docs/ai-copilot/knowledge-bases) for the Support Knowledge index
-that powers replies.
+[Knowledge Bases](/docs/ai-copilot/knowledge-bases) for the Support Knowledge index.
