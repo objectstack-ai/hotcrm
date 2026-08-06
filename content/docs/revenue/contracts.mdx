@@ -121,7 +121,13 @@ The task is also what keeps the sweep from repeating itself: the same contract m
 Two bounds worth knowing: the sweep looks 120 days ahead at most, so a notice window set longer than that only starts firing at 120 days out; and it takes at most 500 contracts per run.
 
 ### Manual termination
-The owner can change status to *Terminated*. This is a one-way action — terminated contracts can't be reactivated. Audit log records who and when.
+Terminating a contract is a status change to *Terminated*, and two things commonly assumed about that change do not hold.
+
+**Being the owner is not what qualifies you to make it.** Edit on Contract is an object-level right that ownership does not extend: **Sales Manager** and **System Administrator** hold it, **Sales Rep** does not. That gap lands on the most common case, because the contract an accepted quote drafts carries the quote's owner across with it — so the rep whose deal it was ends up owning a contract they can read and cannot touch. Terminating it is someone else's action to take.
+
+**And nothing holds the door shut afterwards.** *Terminated* is declared a dead end, but on the same **warning**-severity status machine as the rest of the progression: an edit that moves a terminated contract back to *Activated* is written to the server log and **saved anyway** — see *The status progression is advice, not a gate* below. Termination is one-way by convention, which is what the status means and how everything downstream reads it, not by enforcement. If it has to be enforced, an admin has to author that.
+
+**Status** is one of the two fields Contract keeps history on, so the audit log does record who moved it and when — a revival included.
 
 ## Built-in rules
 
@@ -142,8 +148,8 @@ And one rule people expect that is not there: **nothing stops an activated contr
 
 Contracts are **private**, and no sharing rule widens them. Contract visibility does **not** follow the account:
 
-- **The contract owner** reads and edits their own contracts.
-- **Sales Manager** and **System Administrator** read every contract (*View All* on the object); edits stay with the owner except for admins.
+- **The contract owner** reads their own contracts — and reading is the whole of what ownership buys here. Whether you may edit one at all is settled a layer earlier, by the object-level rights on your profile: **Sales Rep** holds Contract read-only, so a rep reads the contract standing in their own name and cannot change it. Record-level sharing widens *which records* you reach, never *which operations* you hold, so no sharing rule and no record share turns that read into an edit.
+- **Sales Manager** and **System Administrator** read every contract (*View All* on the object), and they are the only profiles holding edit on it at all.
 - **Everyone else** — including a rep who reached the account through a territory or team sharing rule — sees only the contracts they own, so an account's *Contracts* related list can look empty even when the account itself is fully readable.
 
 If your org wants contracts to follow the account, an admin has to author that, and neither available route actually delivers "follows the account" today: a sharing rule on Contract widens the records it matches for every holder of the object, and a Controlled-by-Parent OWD derives org-wide in this release — the parent link is not consulted per caller. Both are a broad widening, not an account-scoped one — see [Sharing & Security](/docs/administration/sharing-and-security), *Controlled by Parent, in practice*.
