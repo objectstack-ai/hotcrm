@@ -48,7 +48,7 @@ The main route, with the two side edges that leave it:
 | Unqualified | New | Re-open. This is the only edge out of *Unqualified* — it is not a terminal status |
 | Converted | — | Terminal |
 
-Two of those edges have machinery behind them. Moving to *Unqualified* needs a **Disqualification Reason**: the field's `requiredWhen` fires on `status == "unqualified"` and that one **does** reject the save. Moving to *Converted* is the **Convert Lead** button, which runs the `lead_conversion` flow — it creates the account, contact and opportunity and stamps `status: 'converted'` at the end.
+Two of those edges have machinery behind them. Moving to *Unqualified* needs a **Disqualification Reason**: a separate validation rule, `disqualification_reason_required`, fires when the status is `unqualified` and the reason is blank — and unlike the transition table it is `error` severity, so that one **does** reject the save. Moving to *Converted* is the **Convert Lead** button, which runs the `lead_conversion` flow — it creates the account, contact and opportunity and stamps `status: 'converted'` at the end.
 
 **Allowed on purpose**: *New* directly to *Converted*. Convert Lead is visible on any lead that is neither converted nor unqualified — so *New*, *Contacted* and *Qualified* all show it — and the flow stamps the status itself, so that shortcut has to be in the table or every conversion from an unworked lead would log a spurious "invalid transition" warning. The comment above the table in `lead.object.ts` says exactly this.
 
@@ -93,7 +93,7 @@ The system also enforces:
 - **Won/Lost reason is required** when entering *Closed Lost* or *Closed Won* — `requiredWhen` predicates on `win_reason` and `loss_reason`, keyed on the stage.
 - **Approval starts at $100K.** The `opportunity_approval` flow fires on any update that leaves an open opportunity above **$100,000** with no approval on file, and routes it to a **Sales Manager**. **$500K** is the second tier, not the entry: above that a **Sales Director** signs off after the manager. So a $200K deal does go through approval.
 
-Unlike the transition tables, these four do reject the save: `required` and `requiredWhen` are hard, and while an approval step is pending the flow holds the record locked.
+The heading is fair for the first three, unlike the transition tables above them: `required` and `requiredWhen` are hard, and a save that violates one is refused. The fourth is not a save-time check at all — `opportunity_approval` is a `record_change` flow that runs *after* the update and then holds the record locked while a step is pending.
 
 ## What a state machine buys you
 

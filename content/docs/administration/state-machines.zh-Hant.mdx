@@ -48,7 +48,7 @@ HotCRM 在 **五個** 物件上使用狀態機：
 | Unqualified | New | 重新開啟。這是 *Unqualified* 唯一的出邊 —— 它不是終態 |
 | Converted | — | 終態 |
 
-其中兩條邊背後是有機制的。移動到 *Unqualified* 必須填寫 **取消資格原因**：該欄位的 `requiredWhen` 在 `status == "unqualified"` 時生效，而這一條 **確實** 會拒絕儲存。移動到 *Converted* 走的是 **Convert Lead** 按鈕，它執行 `lead_conversion` 流程 —— 流程建立客戶、聯絡人和商機，最後蓋上 `status: 'converted'`。
+其中兩條邊背後是有機制的。移動到 *Unqualified* 必須填寫 **取消資格原因**：這是另一條名為 `disqualification_reason_required` 的驗證規則，在狀態為 `unqualified` 而原因為空時觸發 —— 而且與轉換表不同，它是 `error` 級，所以這一條 **確實** 會拒絕儲存。移動到 *Converted* 走的是 **Convert Lead** 按鈕，它執行 `lead_conversion` 流程 —— 流程建立客戶、聯絡人和商機，最後蓋上 `status: 'converted'`。
 
 **這是有意允許的**：從 *New* 直接到 *Converted*。Convert Lead 按鈕在任何既未轉化也未被取消資格的線索上都可見 —— 也就是 *New*、*Contacted*、*Qualified* 三種狀態都會顯示它 —— 而流程自己會蓋狀態，所以這條捷徑必須寫進表裡，否則每一次從未跟進過的線索轉化都會記下一條名不副實的「非法轉換」警告。`lead.object.ts` 裡表上方的註解說的正是這件事。
 
@@ -93,7 +93,7 @@ any of the five open stages ─────────────────�
 - 進入 *Closed Lost* 或 *Closed Won* 時 **必須填寫贏單/丟單原因** —— 這是 `win_reason` 與 `loss_reason` 上按階段生效的 `requiredWhen` 述詞。
 - **審批的入口是 $100K。** `opportunity_approval` 流程會在任何一次更新之後觸發，只要這筆開放商機金額超過 **$100,000** 且還沒有在案的審批，就把它送到 **銷售經理** 那裡。**$500K** 是第二檔而不是入口：超過這個數，還要 **銷售總監** 在經理之後加簽。所以一筆 $200K 的單子是會進審批的。
 
-與上面那些轉換表不同，這四條確實會拒絕儲存：`required` 與 `requiredWhen` 是硬的，而在審批步驟擱置期間，流程會把記錄鎖住。
+對前三條來說，「強制執行」這個說法是站得住的 —— 與它們上面那些轉換表不同：`required` 與 `requiredWhen` 是硬的，違反它們的儲存會被拒絕。第四條則根本不是儲存時的檢查 —— `opportunity_approval` 是一條 `record_change` 流程，在更新**之後**才跑，然後在審批步驟擱置期間把記錄鎖住。
 
 ## 狀態機給你的是什麼
 
