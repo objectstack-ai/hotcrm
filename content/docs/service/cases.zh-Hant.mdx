@@ -31,6 +31,8 @@ description: 客戶支援工單——主題、優先順序、狀態、解決方�
 | 🔴 **High** | 8 小時 | 影響顯著，客戶不滿 |
 | 🔴 **Critical** | 4 小時 | 生產中斷，需要立即回應 |
 
+**四行裡只有 Critical 那行背後真有一隻時鐘。** `case_sla_defaults` 鉤子只給 Critical 工單標記 `sla_due_date`，別的一律不標，所以另外三個目標是團隊的服務承諾，應用裡沒有任何東西去度量它們 —— 機制詳見 [SLA 與升級](/zh-Hant/docs/service/sla-and-escalation)。
+
 當工單被設為 **Critical** 時，工單升級流程透過站內訊息 + 郵件提醒**工單負責人**——它的收件人列表只有 `{caseRecord.owner_id}` 這一項，本應用中不存在 `support_manager@example.com` 這個收件人。**High** 工單永遠不會被自動升級，無論帳戶是什麼：沒有任何升級條件會讀取帳戶，要升級它靠的是手動的 **Escalate Case** 按鈕。
 
 ## 工單類型
@@ -56,7 +58,7 @@ description: 客戶支援工單——主題、優先順序、狀態、解決方�
 | --- | --- |
 | **Case Information** | 工單編號、主題、描述、帳戶、聯絡人 |
 | **Origin & Routing** | 來源、所有者、父工單 |
-| **SLA & Priority** | 狀態、優先順序、類型、首次回應時間、SLA 截止日期、違約標記 |
+| **SLA & Priority** | 狀態、優先順序、類型、首次回應時間、SLA 截止日期、SLA Violated |
 | **Resolution** | 關閉日期、解決方案、客戶簽名 |
 | **Escalation** *(預設折疊)* | 升級標記、升級日期、升級原因 |
 | **System** *(預設折疊)* | 審計追蹤、時間戳 |
@@ -67,17 +69,17 @@ description: 客戶支援工單——主題、優先順序、狀態、解決方�
 - **關閉標記**——狀態變為 *Closed* 時自動設定。
 - **關閉日期**——狀態變為 *Closed* 時標記為 NOW。
 - **解決時間（小時）**——按 *Created date* 與 *Closed date* 之間的差值計算。
-- **SLA 截止日期**——工單建立時根據優先順序計算。
-- **SLA 違約標記**——如果解決時間超過 SLA 目標，則翻轉為 true。
+- **SLA 截止日期**——只給 **Critical** 工單標記。工單在建單時被設為 Critical、或後來被改為 Critical，且該欄位仍為空時，`case_sla_defaults` 把它填成 *目前時間 + 4 小時*。High、Medium、Low 一個位元組都不寫，欄位就停在空值，除非有人手工填一個日期進去。
+- **SLA Violated**（`is_sla_violated`）——不存在名為 *SLA Breached?* 的欄位。每小時一次的 `case_sla_monitor` 掃描把它置真，選中的是**仍未結**（狀態既不是 *Resolved* 也不是 *Closed*）且 **SLA 截止日期** 已經過去的工單。它從不拿解決時間去比對目標，所以沒有截止日期的工單永遠不是候選，晚解決但趕在下一次掃描前解決的工單也永遠不會被標記。
 - **帳戶的最後活動日期**——工單更新時刷新為今天。
 
 ## 內建規則
 
 - **已關閉工單必須有解決方案**——解決方案欄位為空時無法關閉工單。
 - **升級工單必須有升級原因**——解釋為何引入了資深客服。
-- **狀態推進受強制約束**——你不能從 *New* 直接跳到 *Resolved* 而不經過 *In Progress*。
+- **狀態推進是建議，不是閘門**——轉換表寫的是 *New* 之後可以去 *In Progress*、*Waiting on Customer*、*Escalated* 或 *Closed*，所以直接跳到 *Resolved* 是走出了這張表。但這攔不下儲存：工單照樣以 *Resolved* 落庫，引擎只在伺服器日誌裡寫一行 `WARN Validation rule 'case_status_progression' (warning): Invalid status transition`。與上面兩條不同——那兩條是 `error` 級、確實會拒絕儲存——這一條只做提示。轉換表到底有什麼用，見[狀態機](/zh-Hant/docs/administration/state-machines)。
 
-## 工作流自動化
+## 流程與物件鉤子自動化
 
 - **緊急時通知**——當優先順序被設為 Critical 時，工單升級流程的 `notify` 節點發出站內訊息 + 郵件，只發給**工單負責人一人**：收件人列表只有 `{caseRecord.owner_id}` 這一項。本應用中不存在 `support_manager@example.com` 這個收件人。
 - **升級時通知**——當狀態變更為 *Escalated* 時，不會發出任何郵件：`escalation_team@example.com` 在本應用中根本不存在，也不存在「升級團隊」這樣一個收件目標。狀態轉為已升級真正觸發的是 `case_status_side_effects` 鉤子，它開出的是一條**次日到期、優先順序為緊急、歸帳戶負責人的跟進任務**——且僅限有關聯帳戶的工單，因為該任務是掛在那個帳戶上的。
@@ -111,17 +113,27 @@ description: 客戶支援工單——主題、優先順序、狀態、解決方�
 
 ## 欄位級安全
 
-- **SLA 違約標記**和**解決時間**對客服是**唯讀的**——這些是自動計算的，無法手動篡改。
+- **SLA Violated**（`is_sla_violated`）和**解決時間**對客服是**唯讀的**——這些是自動計算的，無法手動篡改。鎖是欄位級安全給的：Service Agent 設定檔把這兩個欄位遮罩為可讀不可編輯。
 
 ## 標準列表檢視
 
-- **My Open Cases**——你尚未關閉的工單。
-- **Critical Cases**——優先順序 = Critical，所有所有者。
-- **Cases Due Today**——SLA 截止日期是今天。
-- **Breached SLA**——SLA 違約標記為 true。
-- **Recently Closed**——過去 7 天內關閉的。
-- **By Account**——按客戶分組。
-- **Service Board**——按狀態分組的看板。
+`crm_case` 一共發布 **7 個**檢視（`src/views/case.view.ts`），工單列表把它們做成頁籤：
+
+| 檢視 | 展示什麼 | 頁籤 |
+| --- | --- | --- |
+| **All Cases** | 全部工單，先按優先順序、再按 SLA 截止日期排序，列底色鍵在**優先順序**上 | *All* |
+| **Service Workflow** | 未結工單的看板，按狀態分欄 | *Workflow* |
+| **SLA Calendar** | 按 **SLA 截止日期** 把工單鋪在行事曆上——實際上就是那些 Critical 工單，外加手工填過日期的 | *SLA* |
+| **Case Timeline** | 工單按「建立 → 關閉」鋪在時間軸上，按負責人分組 | *Timeline* |
+| **Escalated Cases** | `is_escalated` 為真 | *Escalated* |
+| **⏰ SLA at Risk** | 未結的 **High 與 Critical** 工單，截止日期最近的排在前面 | *SLA at Risk* |
+| **My Open Cases** | 你名下尚未關閉的工單 | *My Cases* |
+
+本節原先列的七個名字裡，有六個根本不是檢視：
+
+- **Critical Cases** 與 **Breached SLA** 是指標磁磚，不是列表。[服務儀表板](/zh-Hant/docs/analytics/dashboards)上有 *Critical Cases*（未結且 Critical）和 **SLA Violations**（`is_sla_violated` 為真）兩個磁磚；本應用裡沒有任何一個列表檢視按違約過濾。真要有一份能逐條處理的清單，用 **Escalated Cases**——SLA 掃描會把它標記的每一條都升級，所以每次違約都會落到那裡。
+- **Service Board** 不是本應用裡任何東西的名字。看板叫 **Service Workflow**，在 *Workflow* 頁籤上。
+- **Cases Due Today**、**Recently Closed** 與 **By Account** 以任何形式都不存在：沒有任何檢視按「截止日期 = 今天」或 `closed_date` 過濾，`crm_case` 上也沒有任何分組檢視。
 
 ## 工單詳情佈局
 
@@ -163,17 +175,17 @@ Activity 標籤頁是工單上發生過什麼的唯一可信來源。它將四�
 
 ## 給服務客服的提示
 
-- ✅ **及時分流來訪工單**——*New* 工單的等待時間不應超過首次回應 SLA。
-- ✅ **當你被阻塞時使用 "Waiting on Customer"**——在某些配置中它會停止 SLA 計時。
+- ✅ **及時分流來訪工單**——但要知道，應用裡沒有任何東西在盯著這件事。不存在可供違反的首次回應目標：**First Response Date** 只是記錄在工單上，從不與任何東西比對，`case_metrics` 裡沒有首次回應這個度量，所以沒有任何報表或儀表板磁磚報它，也沒有任何流程為它告警。這裡的「及時」是團隊自己的承諾，不是應用跑著的一隻時鐘。
+- ✅ **當你確實被阻塞時使用 "Waiting on Customer"**——但它**不會停止 SLA 計時**，任何設定下都不會。`sla_due_date` 只寫一次，從不重算；每小時的 `case_sla_monitor` 掃描收的是狀態既不是 *Resolved* 也不是 *Closed* 的未結工單，而 *Waiting on Customer* 不在這份排除名單上。一張掛在客戶那邊的 Critical 工單照樣把四小時走完，照樣被標記 **SLA Violated** 並按時升級。
 - ✅ **始終寫下解決方案**——這是強制的，但也會為未來的工單提供知識庫素材。
 - ✅ **關聯一個任務**——當工單需要未來跟進時（例如"7 天後驗證修復是否有效"）。
 - ❌ 不要在未確認修復有效之前關閉工單。
 
 ## 給服務經理的提示
 
-- ✅ 每天關注 **Breached SLA** 檢視——每個紅色徽章都代表一次客戶信任事件。
-- ✅ 使用 **Service Board** 看板進行每日站會。
-- ✅ 輔導那些 **Resolution Time** 趨勢上升的客服——客服排行榜上有相應的欄。
+- ✅ 沒有 **Breached SLA** 這個檢視可看，也沒有什麼紅色徽章——工單列表上唯一的顏色規則是 *All Cases* 的列底色，它鍵在**優先順序**上，不是違約。每天改看 **Escalated Cases**，數量則看服務儀表板上的 **SLA Violations** 磁磚。
+- ✅ 用看板開每日站會——它叫 **Service Workflow**，在工單列表的 *Workflow* 頁籤上。
+- ✅ 輔導那些 **Resolution Time** 趨勢上升的客服——但這個趨勢只能從工單本身讀出來。不存在什麼客服排行榜：`case_metrics` 這個資料集（服務側每一張報表和每一個儀表板部件都建在它上面）只宣告了 Status、Priority、Origin、Type、Created 五個維度，所以分析層裡沒有任何東西能按客服分組。
 
 ## 給管理員的提示
 

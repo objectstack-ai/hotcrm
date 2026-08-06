@@ -127,7 +127,7 @@ Earlier versions of this page offered a connector plugin shape with a first-clas
 
 ## Auth & secrets (not shipped yet)
 
-The intended behaviour: every integration credential held in the platform's secrets store (HashiCorp Vault / AWS Secrets Manager / GCP Secret Manager, configurable) and referenced rather than pasted into workflow or hook code, OAuth refresh tokens rotated automatically every 90 days, and an audit log entry for each secret access.
+The intended behaviour: every integration credential held in the platform's secrets store (HashiCorp Vault / AWS Secrets Manager / GCP Secret Manager, configurable) and referenced rather than pasted into flow or hook code, OAuth refresh tokens rotated automatically every 90 days, and an audit log entry for each secret access.
 
 HotCRM holds no integration credentials — there is no connector to hold one for, and no OAuth grant to rotate — and the platform's capability list has no secrets-store capability to configure. What is real sits one level down: a field of type `secret` is encrypted through the deployment's registered crypto provider (a local one in development, a KMS or Vault provider in production) and persisted to `sys_secret`, and the write **fails closed** rather than storing cleartext when no provider is registered. This app authors no `secret` field today.
 

@@ -1,11 +1,11 @@
 ---
 title: State Machines
-description: How HotCRM enforces valid status transitions on leads and opportunities — and how to extend the rules.
+description: How HotCRM declares valid status transitions on leads and opportunities — what the tables do and do not do, and how to extend the rules.
 ---
 
 # State Machines
 
-Some objects have a strict **lifecycle** — a lead progresses from *New* to *Working* to *Qualified*, never jumping backwards into *New*. A state machine enforces these transitions so users can't put records into nonsensical states.
+Some objects have a strict **lifecycle** — a lead progresses from *New* to *Working* to *Qualified*, never jumping backwards into *New*. A state machine **declares** that route; it does not enforce it. All five machines in this app carry **warning** severity, so a user can move a record outside the route and **the save still goes through** — see *A declared route is advice, not a gate* below.
 
 ## Where state machines apply
 
@@ -83,15 +83,17 @@ The system also enforces:
 - **Won/Lost reason is required** when entering *Closed Lost* or *Closed Won*.
 - **Approval may be required** to enter *Closed Won* if amount > $500K and discount approval hasn't been granted.
 
-## Why state machines matter
+## What a state machine buys you
 
-Without them, you get:
+Not prevention. Everything this section used to list as impossible still happens exactly as it did before the table was declared: a rep can mark a lead *Converted* by accident, an opportunity can go from *Prospecting* straight to *Closed Won*, and records can skip stages. Each of those writes one warning to the server log and is then saved. So a funnel report does **not** "reflect reality" by virtue of a table existing — it reports whatever stages the records actually passed through.
 
-- Reps marking leads *Converted* by accident.
-- Opportunities jumping from *Prospecting* to *Closed Won* (no real qualification done).
-- Inaccurate funnel reports because records skipped stages.
+What the table does buy you is the route itself, **written down in one machine-readable place**:
 
-With them, your funnel report **reflects reality** — every win went through every stage.
+- **One place the lifecycle lives.** A reviewer, a report author or an agent writing metadata for this app reads the intended route off the object, instead of inferring it from every flow and hook that writes the field.
+- **Illegal moves are reported rather than silent.** The move is saved, but the engine names it in the log — *"Invalid opportunity stage transition"*, with the rule's own name — so a bad import or a misbehaving integration can be found afterwards. A move inside the table logs nothing, which is what makes the warnings worth reading.
+- **Something for automation and reporting to point at.** A flow condition, a report or a skill can be written against the declared route instead of a list of statuses copied out by hand.
+
+If you need a status change to be genuinely impossible, the state machine is the wrong tool: an `error`-severity validation rule is the one that blocks a save. Keeping these five advisory is deliberate — the reasoning is written into the rules themselves (`src/objects/quote.object.ts`): a support-driven correction must not require a data fix.
 
 ## Customising state machines
 
@@ -103,13 +105,13 @@ Admins can:
 - **Add exit conditions** (e.g., *Cannot leave Negotiation without an updated Close Date*).
 - **Trigger automation** on each transition (object hook, flow, notification).
 
-Configure at **Setup → Object → Status → State Machine**.
+All of that is a source edit, not a Setup screen: **there is no Setup → Object → Status → State Machine page**. Each table is a `validations[]` entry of type `state_machine` on its object (`src/objects/*.object.ts`), and that entry carries a transition map and nothing else — so the first two changes above are edits to the map, entry and exit conditions are separate `validations[]` rules or `requiredWhen` predicates on the fields concerned, and per-transition automation is a `record_change` flow or an object hook. Each of them is a code change plus a redeploy.
 
 ## What users see
 
-- The status field on the record only shows **valid next states** in the dropdown.
-- Attempting a disallowed transition shows an error: *"Cannot move from Converted back to Working."*
-- Required fields for the new state are enforced — the user sees them inline before save.
+- **The status dropdown is not filtered.** It offers every option the field declares, whatever the record's current status is. The platform *can* compute the legal next states — `legalNextStates` in `@objectstack/objectql`, reachable over `GET /objects/{name}/state/{field}?from=…` — but nothing in this app calls it, and no list, form or detail page narrows a picklist by it.
+- **A disallowed transition raises no error and no dialog.** The save goes through and the record keeps its new value; the only trace is a single server-side log line — `WARN Validation rule 'lead_status_progression' (warning): Invalid lead status transition` — which nobody working in the UI ever sees.
+- Required fields for the new state are enforced — the user sees them inline before save. That is a different mechanism: a `requiredWhen` predicate on the field (for example `win_reason` when the stage becomes *Closed Won*), which does reject the save.
 
 ## State machines and the AI Copilot
 
@@ -130,11 +132,11 @@ This prevents the Copilot from suggesting illegal transitions.
 
 ## Tips for users
 
-- If a status dropdown is missing the option you expect, the state machine is blocking it. Check the current status, what comes next, and what fields are required.
-- If you genuinely need to bypass the rule (e.g., importing legacy data), ask an admin — they have a *"bypass state machine"* permission they can grant temporarily.
+- A status dropdown never hides an option on the state machine's account — it does not filter the picklist at all. If an option you expect is missing, look at the field's own options or at your profile's field-level security, not at the transition table.
+- There is no *"bypass state machine"* permission to ask for, and nothing to bypass. Importing legacy data straight into a late status needs no grant: on **create** the table is not consulted at all, and on update a move outside it is logged and saved. What you should still do is tell an admin, so the warnings that land in the log are recognised as the import rather than chased as a bug.
 
 ## Related
 
 - [Sales › Leads](/docs/sales/leads) — the user-facing lead lifecycle.
 - [Sales › Opportunities](/docs/sales/opportunities) — the user-facing opportunity lifecycle.
-- [Automation](/docs/administration/automation) — for transition-triggered workflows.
+- [Automation](/docs/administration/automation) — for the flows and object hooks a transition can trigger.
