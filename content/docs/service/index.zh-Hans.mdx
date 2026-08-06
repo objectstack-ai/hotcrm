@@ -50,10 +50,10 @@ New ──► In Progress ──► Waiting on Customer ──► Resolved ─�
 
 ## 标准仪表盘与报表
 
-- **服务概览**（Service Overview；仪表盘自身的标题是 **Customer Service**）——按优先级划分的未结工单、SLA 表现、顶尖客服、最久未结工单。
-- **每日 × 优先级开单数**——每日流入量。
-- **按状态 × 优先级划分的工单**——当前快照。
-- **SLA 表现**——在 SLA 目标内解决的工单百分比。
+- **服务概览**（Service Overview；仪表盘自身的标题是 **Customer Service**）——KPI 有 **Open Cases**、**Critical Cases**、**Avg Resolution Time**、**SLA Violations**；分布图有 **Cases by Status**、**Cases by Priority**、**Cases by Origin**；再加 **Daily Case Volume**、一个 **SLA Compliance** 仪表图，以及一张 **Open Cases by Priority** 表格。它没有 *顶尖客服* 部件，也没有 *最久未结工单* 部件，而且这两个都不是"只是还没做"那么简单：`case_metrics`——服务侧每个部件都建在它上面的那个数据集——没有负责人维度，所以分析层里没有任何东西能给客服排名（[工单](/zh-Hans/docs/service/cases)页写的是同一件事）；而仪表盘表格聚合的是数据集，不列出单条记录，所以最久未结的那几张单也放不进去。
+- **Cases Opened by Priority × Day**（按优先级 × 天的建单量）——每日流入量：一张优先级作行、天作列的矩阵，顺序就是这个。
+- **Cases by Status and Priority**（按状态与优先级划分的工单）——当前快照：按状态与优先级给出工单数与平均解决时长。
+- **SLA Performance Report**（SLA 表现报表）——按优先级给出工单数、**SLA Violation Rate**（SLA 违约率）与平均解决时长，并且只统计已关闭的工单。它报的不是达成率百分比："在目标内解决的工单占比"不是 `case_metrics` 定义的任何一个度量。参见 [SLA 与升级](/zh-Hans/docs/service/sla-and-escalation)。
 
 参见 [分析 › 仪表盘](/zh-Hans/docs/analytics/dashboards) 与 [报表](/zh-Hans/docs/analytics/reports)。
 
