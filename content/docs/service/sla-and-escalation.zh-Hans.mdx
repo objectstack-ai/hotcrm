@@ -125,5 +125,5 @@ SLA 目标可按优先级配置——参见下方的*给管理员的提示*部�
 
 - 每个优先级的 SLA 目标通过工单对象的自动化（一个 SLA 计算钩子）设置。要调整，请编辑 `src/objects/case.hook.ts`（绑定到 `crm_case`）或更改底层配置——参见 [管理 › 自动化](/zh-Hans/docs/administration/automation)。
 - 营业时间与日历时间的行为由你租户的营业时间设置控制。参见 [管理 › 设置](/zh-Hans/docs/administration/setup)。
-- 升级触发条件（Critical，或 High+Customer）存在于 [工单升级流程定义](/zh-Hans/docs/administration/automation#case-escalation)中。在那里调整条件即可更改升级何时触发。
+- 升级触发条件（Critical，或 High+Customer）存在于 [工单升级流程定义](/zh-Hans/docs/administration/automation)中。在那里调整条件即可更改升级何时触发。
 - *紧急时通知*和*升级时通知*的收件人列表可在工单工作流规则中配置。
