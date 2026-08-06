@@ -37,15 +37,18 @@ No dashboard can give you the same figure. The **Sales Performance** dashboard (
 
 ## The pipeline kanban view
 
-The kanban board is the **Sales Pipeline** view on Opportunities (`pipeline_kanban`), and the sidebar entry that opens it reads **Pipeline**. It shows the pipeline as 7 columns — one per stage. Each card shows:
+The kanban board is the **Sales Pipeline** view on Opportunities (`pipeline_kanban`), and the sidebar entry that opens it reads **Pipeline**. It shows the pipeline **one column per stage, open deals only**: the board carries its own filter — `stage not_in [closed_won, closed_lost]` in `src/views/opportunity.view.ts` — so only the five active stages, *Prospecting*, *Qualification*, *Needs Analysis*, *Proposal* and *Negotiation*, can ever hold a card. Closed business is not hidden, it is elsewhere: **All Opportunities** and the **Sales Performance** dashboard both include it. Whether the two closed stages are drawn as permanently empty columns or left off the board altogether is the console's rendering choice and not something this app declares — either way there is no closed deal on this board to find.
+
+Each card carries the four fields the board binds (`kanban.columns`):
 
 - Opportunity name
 - Account
 - Amount
 - Close date
-- Owner avatar
 
-To advance a deal, just **drag the card** to the next column. The system enforces the stage rules, so you can't drag from *Prospecting* directly to *Closed Won*.
+**Owner is not on the card.** `owner_id` sits in the view's top-level `columns` list, which is what the grid renderings read, but the card binding names those four fields and stops there. To see the owner next to a deal, use **All Opportunities**, which carries an *Owner* column, or the **Deal Cards** gallery, whose cards do show it.
+
+To advance a deal, just **drag the card** to the next column. The stage rules are **advice, not a gate**. `opportunity_stage_progression` (`src/objects/opportunity.object.ts`) declares which moves are legal — *Prospecting* straight to *Closed Won* is not one of them — but the rule carries **warning** severity, so a move outside the table writes one line to the server log, *"Invalid opportunity stage transition"*, and **the save still goes through**. Nothing in the board stops you. What the log buys you is that a bad import or a misbehaving integration can be found afterwards; see [Administration › State Machines](/docs/administration/state-machines) for what the table is and is not good for.
 
 At the top of each column you'll see **one** number: the sum of *Amount* across that column's deals — the unweighted total for that stage. One is all a kanban column can carry, by design: a board declares a single `summarizeField` (`src/views/opportunity.view.ts`), and this board binds it to `amount`.
 
@@ -82,7 +85,7 @@ See [Analytics › Reports](/docs/analytics/reports) for details.
 
 | Cadence | What to do |
 | --- | --- |
-| **Daily** | Open Pipeline Kanban. Find stalled cards (in-stage > 14 days). Push or close. |
+| **Daily** | Open the **Pipeline** board. Find stalled cards (in-stage > 14 days). Push or close. |
 | **Weekly** | Run *Pipeline Coverage*. Ask the Sales Copilot: *"what's at risk?"* |
 | **Monthly** | Run *Opportunity Funnel by Owner → Stage*. Coach reps with leaky stages 1:1. |
 | **Quarter-end** | Run *Won Opportunities by Owner* for commissions. Archive lost deals with a *loss reason*. |
