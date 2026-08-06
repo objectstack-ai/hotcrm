@@ -25,7 +25,7 @@ HotCRM ships with six core skills:
 | **🔄 Live Data** | Sales + Service | Reads the live schema and the live records — every turn |
 | **🎯 Lead Qualification** | Sales | Scores a lead on BANT, recommends next action |
 | **✍️ Email Drafting** | Sales + Service | Drafts a context-aware email or reply |
-| **📈 Revenue Forecasting** | Sales | Rolls up pipeline into commit / best-case / pipeline buckets |
+| **📈 Revenue Forecasting** | Sales | Summarises pipeline by stage and forecasts a range, naming the deals at risk |
 | **🔭 Customer 360°** | Sales + Service | One-page summary of an account or contact |
 | **🚦 Case Triage** | Service | Suggests a priority with the reason that drove it |
 
@@ -45,29 +45,29 @@ This is the skill behind **[Wow #1 — Live Schema](/docs/ai-copilot/live-schema
 
 | | |
 | --- | --- |
-| **Input** | A lead record |
-| **Reads** | Lead fields, campaign engagement, matched account history |
-| **Output** | Rating (Hot/Warm/Cold), BANT score, recommended status, rationale |
-| **Writes** | Updates `rating` and `status` if user accepts |
+| **Input** | A lead record — the skill activates on any `crm_lead` |
+| **Reads** | The lead itself (`describe_object` for `crm_lead`, then `get_record`) and its related activity history (`query_records`). Not campaign engagement, and not matched-account history: neither is in the skill's instructions |
+| **Output** | A 0–100 BANT score, one line of justification per dimension naming the field or activity it read, and the single recommended next step — with the lead ID cited. It does not return a Hot/Warm/Cold rating or a recommended status |
+| **Writes** | Nothing itself — the two outcomes are real Actions it calls. At 70+ with your agreement, **Convert Lead** (`action_convert_lead`), whose flow creates the account, contact and optional opportunity and stamps the lead `is_converted` / `status: converted`; otherwise **Schedule Follow-up** (`action_schedule_followup`), whose flow files a `crm_task` and stamps the lead's next follow-up date. `rating` is never written by either — it is the 1–5 star **Lead Score** a person sets |
 | **Knowledge base** | None. No knowledge step — and no *Sales Knowledge* library exists to have one (see [Knowledge Bases](/docs/ai-copilot/knowledge-bases)) |
 
 ### ✍️ Email Drafting
 
 | | |
 | --- | --- |
-| **Input** | A record (lead, contact, opportunity, case) + a goal sentence |
-| **Reads** | Record fields, related activities, contact history |
-| **Output** | Draft email with subject + body |
-| **Writes** | Nothing automatically — user reviews and sends |
+| **Input** | A goal sentence plus the record it is about — the instructions ground the copy in the contact, and in the related account or opportunity when the request names one |
+| **Reads** | The contact record (`get_record`), plus that related account or opportunity; `query_records` for the recent history |
+| **Output** | A draft subject and body — subject under 60 characters, one clear ask, no more than 150 words — plus a second subject-line variant with a recommendation on which of the two to use |
+| **Writes** | Nothing, and it has no way to: **Send Email** on the contact carries no AI exposure, so no send tool is materialised for the skill. It shows the draft and points at that button, where a person reviews and sends |
 | **Knowledge base** | None. The drafting instructions never reach for an article, and the three libraries once named here do not exist |
 
 ### 📈 Revenue Forecasting
 
 | | |
 | --- | --- |
-| **Input** | A user (or team) + a period (this quarter, next quarter, custom) |
-| **Reads** | Opportunities visible to the user, opportunity history |
-| **Output** | Forecast bucketed by Closed / Commit / Best Case / Pipeline + risk callouts |
+| **Input** | A question about pipeline health, forecast, risk or slippage + the period it covers (default: the current quarter) |
+| **Reads** | `crm_opportunity` — its current shape via `describe_object`, count and summed amount grouped by stage via `aggregate_data`, and the at-risk deals via `query_records` (close date already past, no activity in 30+ days, stage unchanged too long). No field-history read is in the instructions; stage age comes off the record's own **Days in Stage** |
+| **Output** | Pipeline by stage with weighted value (amount × probability computed from what it read), the at-risk deals named with the signal behind each, and a forecast given as a range — commit-only (high-probability stages) to full weighted pipeline — plus a chart via `visualize_data` when one carries the answer better. The **Closed / Commit / Best Case / Pipeline** buckets are not this skill's output: they are `crm_opportunity`'s **Forecast Category** field and the amounts the scheduled forecast snapshot writes onto **Forecast** records |
 | **Writes** | Nothing — read-only |
 | **Knowledge base** | None. The methodology is in the skill's own instructions, not in a library |
 
@@ -76,8 +76,8 @@ This is the skill behind **[Wow #1 — Live Schema](/docs/ai-copilot/live-schema
 | | |
 | --- | --- |
 | **Input** | An account or contact |
-| **Reads** | Account, contacts, opportunities, contracts, cases, recent activities, campaign memberships |
-| **Output** | Structured snapshot with sections for sales, service, contracts, and engagement |
+| **Reads** | `crm_account`, then filtered to it: `crm_contact`, open `crm_case` (`is_closed` false), open `crm_opportunity`, and published `crm_knowledge_article` — with totals from `aggregate_data` rather than added up row by row. Contracts, recent activities and campaign memberships are **not** read: the skill carries `query_records` and could reach `crm_contract`, `crm_campaign`, `crm_event` and `crm_task`, but its instructions never tell it to (same finding as the [Service Skills](/docs/ai-copilot/service-copilot) page) |
+| **Output** | Three sections — **Account Snapshot** · **Active Work** · **Risks & Notes** — with record IDs cited inline for deep linking. Every risk names its record and the signal that raised it; a section with no records is reported as empty. There is no contracts or engagement section |
 | **Writes** | Nothing — read-only |
 | **Knowledge base** | Published **Knowledge Articles**, matched on the category or tags of the cases it just read — the only skill that reads them |
 
@@ -85,27 +85,26 @@ This is the skill behind **[Wow #1 — Live Schema](/docs/ai-copilot/live-schema
 
 | | |
 | --- | --- |
-| **Input** | A new case |
-| **Reads** | Case subject/description, contact and account context, prior cases, product |
-| **Output** | Suggested priority, category, team, top 3 KB articles, draft acknowledgment |
-| **Writes** | Updates `priority`, `category`, `queue` if user accepts |
+| **Input** | A case — the skill activates on `crm_case` |
+| **Reads** | The case itself: `describe_object` for `crm_case`, then `get_record` for the case at hand, plus the customer context its rubric weighs first (**Customer Tier**, contract value). It declares no query tool, so prior cases are out of reach — and there is no product to read: `crm_case` has no product field under any name and no lookup to `crm_product` |
+| **Output** | A priority (Low / Medium / High / Critical) with the ONE reason that drove it, citing the case ID and the field values used, then a pointer to **Escalate Case** with a ready-to-paste `reason` or **Close Case** with a `resolution` summary. No category, no team and no article list; the customer-facing reply is handed to **Email Drafting** |
+| **Writes** | Nothing. Its tools are `describe_object` and `get_record` only, and the two Actions that would change the case — `escalate_case` / `close_case` — carry no AI exposure, so no write tool is materialised for it to call. The `category` and `queue` this row used to name are not fields on `crm_case` under any name (its own classification field is **Case Type**: Question / Problem / Feature Request / Bug, set by a person). Triage supplies the judgement; the agent clicks the button |
 | **Knowledge base** | None. It declares no query tool, so it cannot search articles at all |
 
 ## How skills work together
 
-Skills can call other skills. For example:
+Skills do not call each other. The assistant selects the skill that fits the question you asked, and one question runs one skill — nothing chains a second skill behind it.
 
-- The *Case Triage* skill can invoke *Customer 360* to check if the customer is high-value before assigning priority.
-- The *Email Drafting* skill can invoke *Customer 360* to ground the email in real account context.
+The only handoff written into a skill's own instructions is Case Triage's: for the customer-facing reply it names *Email Drafting* by name instead of writing the copy itself. That handoff is a pointer for you, so ask for the draft as your next question and that skill takes it. *Case Triage* does not invoke *Customer 360* to weigh how valuable the customer is, and *Email Drafting* does not invoke it for account context — neither call exists. When you want the account history behind a triage or a draft, ask *Customer 360°* for it yourself; it is the skill that carries `query_records`.
 
-This composition is automatic — you ask one question, the assistant wires up whatever skills it needs.
+What every skill does share is the data floor: each one reads through the same live metadata and record tools, so Live Data's live-schema property applies to all of them.
 
 ## What every skill respects
 
 - **Sharing rules** — a skill running for user X can only read records visible to X.
 - **Field-level security** — restricted fields are hidden from skill input.
 - **Audit log** — every skill invocation, with input and output, is logged for review.
-- **Confirmation** — any skill that *writes* requires explicit user confirmation before commit.
+- **Confirmation** — Lead Qualification is the only skill with a write path at all, and it writes through real Actions rather than fields: **Convert Lead** is irreversible, so it asks for confirmation and an agent-invoked conversion waits for human approval instead of running unattended; **Schedule Follow-up** is additive and reversible, so it carries no approval gate. The other five skills declare no write tool.
 
 ## Adding your own skills
 
