@@ -9,15 +9,33 @@ description: HotCRM 的 5 分鐘演練 —— 主頁、你的第一條線索、�
 
 ## 1. 主頁儀表板
 
-你看到的第一個東西是 **CRM Overview** 儀表板。它告訴你：
+左側導覽最上面只有一個固定條目 **Home**，你落地的就是它。**Home** 打開的是 **Executive Overview** 儀表板——9 個磁貼，講收入、客戶與管道：
 
-- 你有多少**開啟的線索**。
-- 你的管道中有多少**商機**。
-- 任何**等待你回應**的案例。
-- 按管道價值排名的頂級客戶。
-- 近期活動（最近的通話、會議、郵件）。
+| 磁貼 | 它顯示什麼 |
+| --- | --- |
+| **Total Revenue (YTD)** | 本年度已成交收入 |
+| **Active Accounts** | 至少存在一項活躍關係的客戶 |
+| **Total Contacts** | 通訊錄中的聯絡人 |
+| **Open Leads** | 漏斗中尚未轉換的線索 |
+| **Revenue Trend** | 過去 12 個月的已成交收入 |
+| **Revenue by Industry** | 本年度已成交收入按客戶產業拆分 |
+| **Pipeline by Stage** | 各銷售階段的進行中商機金額，畫成漏斗——是金額，不是商機筆數 |
+| **New Accounts** | 過去 6 個月的客戶建立節奏 |
+| **Accounts by Industry** | 各產業的年營收總額與客戶數 |
 
-把它當作你每日開始工作的著陸頁。如果你是經理，你還會看到團隊級彙總。
+上表用的是原始碼裡的英文 label，也就是英文介面上看到的名字。本應用提供 en / zh-CN / ja-JP / es-ES 四種介面語言，沒有繁體語言包——簡體中文介面下這些名字會顯示為語言包裡的譯名，例如 **Open Leads** 顯示為「未转化线索」、**Pipeline by Stage** 顯示為「阶段管道分布」，儀表板 **Executive Overview** 自己顯示為「高管总览」。
+
+磁貼上方是三個面板級控制項：一個按成交日期的日期範圍選擇器（預設本季）、一個 **Owner** 篩選器和一個 **Lead Source** 篩選器。開頭 4 個 KPI 磁貼各自框定了自己的週期（本年度累計、"活躍"、"未轉換"），不受日期選擇器收窄，所以這幾個數始終是完整的，而收入類圖表跟著選擇器走。
+
+把它當作你每日開始工作的著陸頁。
+
+本節過去承諾的 4 樣東西，這塊儀表板上沒有任何磁貼對應；另有一個名字，它屬於另一塊儀表板：
+
+- **CRM Overview** 是一塊真實存在的儀表板，但它不是 **Home** 打開的那塊。它掛在 **Insights** 群組下，而 **Insights** 在應用載入時是摺疊的——所以它離你兩次點擊，不是"第一眼看到"的東西。**Active Deals**（進行中商機的筆數）、**Won Deals** 與 **Pipeline by Owner** 是它的磁貼，不是這塊的。
+- *等待你回應的案例*：兩塊儀表板上都沒有。**Executive Overview** 與 **CRM Overview** 都沒有任何磁貼在數案例。**Open Cases**、**Critical Cases**、**SLA Violations** 在 **Service** 群組下的 **Service Overview** 上——參見 [Service](/zh-Hant/docs/service/index)。
+- *按管道價值排名的頂級客戶*：本應用裡根本沒有這樣一個磁貼。**Accounts by Industry** 是按產業歸組，不是給客戶排名；全應用最接近的排名是 **CRM Overview** 上的 **Pipeline by Owner**，那是按業務代表排，不是按客戶排。
+- *近期活動（最近的通話、會議、郵件）*：也不在這裡。**Interactions Logged**、**Meetings Booked** 與 **Customer Minutes** 在 **Activity** 群組下的 **Sales Activity** 上。
+- *給經理看的團隊級彙總*：這塊儀表板不做這件事。每個磁貼對所有人跑的都是同一個查詢，變的是你被允許讀到哪些記錄，而那由你的權限集決定。本應用的職位是扁平的——沒有可供可見性向上彙總的匯報線——而 **Sales Manager** 權限集直接授予 `viewAllRecords`，所以經理讀到的是全組織的合計，而不是某個團隊的切片。
 
 ➜ 了解更多：[儀表板](/zh-Hant/docs/analytics/dashboards)
 

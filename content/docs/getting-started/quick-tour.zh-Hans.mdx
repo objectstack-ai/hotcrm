@@ -9,15 +9,33 @@ description: HotCRM 的 5 分钟演练 —— 主页、你的第一条线索、�
 
 ## 1. 主页仪表盘
 
-你看到的第一个东西是 **CRM Overview** 仪表盘。它告诉你：
+左侧导航最上面只有一个固定条目 **Home**，你落地的就是它。**Home** 打开的是 **Executive Overview** 仪表盘——9 个磁贴，讲收入、客户与管道：
 
-- 你有多少**打开的线索**。
-- 你的管道中有多少**商机**。
-- 任何**等待你响应**的案例。
-- 按管道价值排名的顶级客户。
-- 近期活动（最近的通话、会议、邮件）。
+| 磁贴 | 它显示什么 |
+| --- | --- |
+| **Total Revenue (YTD)** | 本年度已成交收入 |
+| **Active Accounts** | 至少存在一项活跃关系的客户 |
+| **Total Contacts** | 通讯录中的联系人 |
+| **Open Leads** | 漏斗中尚未转化的线索 |
+| **Revenue Trend** | 过去 12 个月的已成交收入 |
+| **Revenue by Industry** | 本年度已成交收入按客户行业拆分 |
+| **Pipeline by Stage** | 各销售阶段的进行中商机金额，画成漏斗——是金额，不是商机条数 |
+| **New Accounts** | 过去 6 个月的客户创建节奏 |
+| **Accounts by Industry** | 各行业的年营收总额与客户数 |
 
-把它当作你每日开始工作的着陆页。如果你是经理，你还会看到团队级汇总。
+上表用的是源码里的英文 label，也就是英文界面上看到的名字。简体中文界面下，它们显示为语言包里的译名——例如 **Open Leads** 显示为「未转化线索」、**Pipeline by Stage** 显示为「阶段管道分布」，仪表盘 **Executive Overview** 自己显示为「高管总览」。
+
+磁贴上方是三个面板级控件：一个按成交日期的日期范围选择器（默认本季度）、一个 **Owner** 筛选器和一个 **Lead Source** 筛选器。开头 4 个 KPI 磁贴各自框定了自己的周期（本年度累计、"活跃"、"未转化"），不受日期选择器收窄，所以这几个数始终是完整的，而收入类图表跟着选择器走。
+
+把它当作你每日开始工作的着陆页。
+
+本节过去承诺的 4 样东西，这块盘上没有任何磁贴对应；另有一个名字，它属于另一块盘：
+
+- **CRM Overview** 是一块真实存在的仪表盘，但它不是 **Home** 打开的那块。它挂在 **Insights** 分组下，而 **Insights** 在应用加载时是折叠的——所以它离你两次点击，不是"第一眼看到"的东西。**Active Deals**（进行中商机的条数）、**Won Deals** 与 **Pipeline by Owner** 是它的磁贴，不是这块盘的。
+- *等待你响应的案例*：两块盘上都没有。**Executive Overview** 与 **CRM Overview** 都没有任何磁贴在数案例。**Open Cases**、**Critical Cases**、**SLA Violations** 在 **Service** 分组下的 **Service Overview** 上——参见 [Service](/zh-Hans/docs/service/index)。
+- *按管道价值排名的顶级客户*：本应用里根本没有这样一个磁贴。**Accounts by Industry** 是按行业归组，不是给客户排名；全应用最接近的排名是 **CRM Overview** 上的 **Pipeline by Owner**，那是按销售代表排，不是按客户排。
+- *近期活动（最近的通话、会议、邮件）*：也不在这里。**Interactions Logged**、**Meetings Booked** 与 **Customer Minutes** 在 **Activity** 分组下的 **Sales Activity** 上。
+- *给经理看的团队级汇总*：这块盘不做这件事。每个磁贴对所有人跑的都是同一个查询，变的是你被允许读到哪些记录，而那由你的权限集决定。本应用的岗位是扁平的——没有可供可见性向上汇总的汇报线——而 **Sales Manager** 权限集直接授予 `viewAllRecords`，所以经理读到的是全组织的合计，而不是某个团队的切片。
 
 ➜ 了解更多：[仪表盘](/zh-Hans/docs/analytics/dashboards)
 

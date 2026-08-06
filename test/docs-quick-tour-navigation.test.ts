@@ -6,6 +6,11 @@ import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
 import { CrmApp } from '../src/apps/crm.app';
 import { ExecutiveDashboard } from '../src/dashboards/executive.dashboard';
+import { CrmOverviewDashboard } from '../src/dashboards/crm.dashboard';
+import { ServiceDashboard } from '../src/dashboards/service.dashboard';
+import { ActivityDashboard } from '../src/dashboards/activity.dashboard';
+import { SalesManagerProfile } from '../src/profiles/sales-manager.profile';
+import { CrmPositions } from '../src/sharing/positions';
 
 /**
  * The quick-tour page's left-nav table, pinned to `src/apps/crm.app.ts` (#960).
@@ -266,6 +271,15 @@ describe('the source facts the quick-tour table now rests on (#960)', () => {
     expect(taskOwners).toEqual(['My Work']);
   });
 
+  it('routes CRM Overview through Insights, which is collapsed on load', () => {
+    const insights = GROUPS.find((g) => g.label === 'Insights');
+    expect(insights?.expanded).not.toBe(true);
+    const item = ((insights?.children ?? []) as AnyRec[]).find(
+      (c) => c.dashboardName === CrmOverviewDashboard.name,
+    );
+    expect(item?.label).toBe(CrmOverviewDashboard.label);
+  });
+
   it('keeps the labels the page spells verbatim', () => {
     const byId = new Map(
       ((): AnyRec[] => {
@@ -278,5 +292,278 @@ describe('the source facts the quick-tour table now rests on (#960)', () => {
     expect(byId.get('nav_service_dashboard')?.label).toBe('Service Overview');
     expect(byId.get('nav_approval_requests')?.label).toBe('Inbox');
     expect(byId.get('nav_product')?.label).toBe('Products');
+  });
+});
+
+/* ───────────────────────────────────────────────────────────────────────────
+ * Section 1 — the landing dashboard (#971)
+ * ───────────────────────────────────────────────────────────────────────── */
+
+/**
+ * The quick tour's opening section, pinned to the dashboard **Home** really
+ * opens (#971).
+ *
+ * The section described a dashboard that does not exist. Its name came from
+ * `crm_overview_dashboard` — a real dashboard, but the one under **Insights**,
+ * a group that is collapsed on load, so a new user neither lands on it nor can
+ * click it without opening the group first. Its five bullets came from three
+ * different dashboards: exactly one, **Open Leads**, is a tile on the dashboard
+ * `nav_home` actually binds.
+ *
+ * The rewrite is measured against `ExecutiveDashboard.widgets` at runtime, not
+ * against the file's text, and that distinction is the whole reason the issue
+ * mis-counted. #971 read the source and listed EIGHT tiles, concluding that no
+ * pipeline tile existed on this dashboard — but the funnel arrives from the
+ * shared factory (`pipelineByStageFunnelWidget`, #539), so it carries no inline
+ * `title:` literal to grep. The dashboard ships NINE tiles, and **Pipeline by
+ * Stage** is one of them; the four locale bundles register it too. So the
+ * page's "opportunities in your pipeline" bullet was the one claim that was
+ * half-right, and the rewrite says what the tile really measures — open
+ * opportunity VALUE per stage, not a count of deals. A count tile does exist,
+ * **Active Deals**, and it is on **CRM Overview**.
+ *
+ * Rules, in both directions, using the typography section 2 already
+ * establishes (#960 / PR #968):
+ *
+ *  - exists ⇒ listed: every widget title on `executive_dashboard` must appear
+ *    in the section, so a new tile cannot land while the tour goes stale.
+ *  - listed ⇒ exists: every bolded Latin run must resolve to a real widget
+ *    title, dashboard label, navigation label, dashboard filter label, or the
+ *    permission set the section names. (CJK bold runs are the locale prose's
+ *    own emphasis — product names stay English in every locale.)
+ *  - a name the reader arrives with is re-pointed, never deleted: the four
+ *    retired claims must each still be named, in *italics*, and none may ever
+ *    be bolded as if it were real.
+ *  - the source side of the negative claims is pinned too. Bind a case or an
+ *    activity dataset to either landing-candidate dashboard, add a per-account
+ *    ranking, give positions a parent, or take `viewAllRecords` off the sales
+ *    manager, and this file goes red — because the prose would then be wrong in
+ *    the other direction.
+ */
+
+const tileTitles = (d: AnyRec): string[] =>
+  ((d.widgets ?? []) as AnyRec[]).map((w) => w.title as string).filter(Boolean);
+
+const EXEC_TILES = tileTitles(ExecutiveDashboard as AnyRec);
+
+/** Dashboard-level filter labels the section names as controls. */
+const EXEC_FILTER_LABELS = (((ExecutiveDashboard as AnyRec).globalFilters ?? []) as AnyRec[])
+  .map((f) => f.label as string)
+  .filter(Boolean);
+
+const ALLOWED_BOLD_SECTION1 = new Set<string>([
+  ...ALL_NAV_LABELS,
+  ...EXEC_TILES,
+  ...tileTitles(CrmOverviewDashboard as AnyRec),
+  ...tileTitles(ServiceDashboard as AnyRec),
+  ...tileTitles(ActivityDashboard as AnyRec),
+  ...EXEC_FILTER_LABELS,
+  ExecutiveDashboard.label as string,
+  CrmOverviewDashboard.label as string,
+  SalesManagerProfile.label,
+]);
+
+const SECTION1 = [
+  {
+    file: 'content/docs/getting-started/quick-tour.mdx',
+    lang: 'en',
+    heading: '## 1. The home dashboard',
+    /** The tile count, stated in prose, must match the dashboard. */
+    count: /nine tiles/,
+    /** Each retired claim, in the exact spelling the section now italicises. */
+    retired: [
+      'Cases awaiting your response',
+      'Top accounts by pipeline value',
+      'Recent activity (last calls, meetings, emails)',
+      'Team-level rollups for managers',
+    ],
+    /** Sentences the rewrite removed. None may come back in any locale. */
+    gone: [
+      'The first thing you see is the **CRM Overview** dashboard',
+      'you also see team-level rollups',
+    ],
+  },
+  {
+    file: 'content/docs/getting-started/quick-tour.zh-Hans.mdx',
+    lang: 'zh-Hans',
+    heading: '## 1. 主页仪表盘',
+    count: /9 个磁贴/,
+    retired: [
+      '等待你响应的案例',
+      '按管道价值排名的顶级客户',
+      '近期活动（最近的通话、会议、邮件）',
+      '给经理看的团队级汇总',
+    ],
+    gone: ['你看到的第一个东西是 **CRM Overview** 仪表盘', '如果你是经理，你还会看到团队级汇总'],
+  },
+  {
+    file: 'content/docs/getting-started/quick-tour.zh-Hant.mdx',
+    lang: 'zh-Hant',
+    heading: '## 1. 主頁儀表板',
+    count: /9 個磁貼/,
+    retired: [
+      '等待你回應的案例',
+      '按管道價值排名的頂級客戶',
+      '近期活動（最近的通話、會議、郵件）',
+      '給經理看的團隊級彙總',
+    ],
+    gone: ['你看到的第一個東西是 **CRM Overview** 儀表板', '如果你是經理，你還會看到團隊級彙總'],
+  },
+] as const;
+
+const sectionOf = (file: string, heading: string): string => {
+  const lines = readFileSync(join(REPO_ROOT, file), 'utf8').split('\n');
+  const from = lines.findIndex((l) => l.trim() === heading);
+  expect(from, `${file}: section heading '${heading}' not found`).toBeGreaterThanOrEqual(0);
+  const rest = lines.slice(from);
+  const end = rest.findIndex((l, i) => i > 0 && l.startsWith('## '));
+  return (end === -1 ? rest : rest.slice(0, end)).join('\n');
+};
+
+describe("getting-started/quick-tour describes the dashboard Home really opens (#971)", () => {
+  describe.each(SECTION1)('$file', ({ file, heading, count, retired, gone }) => {
+    const section = () => sectionOf(file, heading);
+
+    it('names the pinned entry, the dashboard it opens, and every one of its tiles', () => {
+      const text = section();
+      expect(text, `${file}: the pinned nav entry is not named`).toContain('**Home**');
+      expect(text, `${file}: the dashboard Home opens is not named`).toContain(
+        `**${ExecutiveDashboard.label}**`,
+      );
+      const missing = EXEC_TILES.filter((t) => !text.includes(`**${t}**`));
+      expect(
+        missing,
+        `${file}: tile(s) on ${ExecutiveDashboard.name} that the section does not name. A new ` +
+          'tile cannot land while the first section a user reads goes stale.',
+      ).toEqual([]);
+      expect(text, `${file}: the tile count in prose does not match the dashboard`).toMatch(count);
+    });
+
+    it('bolds only names the app actually carries', () => {
+      const unknown = boldNames(section()).filter((n) => !ALLOWED_BOLD_SECTION1.has(n));
+      expect(
+        unknown,
+        `${file}: bolded name(s) that are not a widget title, dashboard label, navigation ` +
+          'label, dashboard filter label, or the permission set named here. Bold is reserved ' +
+          'for real names — a name the app does not carry goes in *italics*.',
+      ).toEqual([]);
+    });
+
+    it('re-points CRM Overview to where it really lives instead of deleting the name', () => {
+      const text = section();
+      expect(text, `${file}: the name readers arrive with was dropped`).toContain(
+        `**${CrmOverviewDashboard.label}**`,
+      );
+      expect(
+        text,
+        `${file}: CRM Overview is named but the group it actually sits under is not`,
+      ).toContain('**Insights**');
+    });
+
+    it('still names every retired claim, in italics, and never in bold', () => {
+      const text = section();
+      const italics = italicNames(text);
+      const bold = boldNames(text);
+
+      const unnamed = retired.filter((n) => !italics.includes(n));
+      expect(
+        unnamed,
+        `${file}: a claim the section used to make was deleted instead of answered. Readers ` +
+          'arrive with these — say where the thing really is, do not drop it silently.',
+      ).toEqual([]);
+
+      expect(
+        retired.filter((n) => bold.includes(n)),
+        `${file}: a claim the app does not support, written in bold as if it were real`,
+      ).toEqual([]);
+
+      gone.forEach((s) =>
+        expect(text, `${file}: a removed sentence came back: ${s}`).not.toContain(s),
+      );
+    });
+  });
+});
+
+describe('the source facts the quick-tour landing section now rests on (#971)', () => {
+  it('Home binds the executive dashboard, and that dashboard ships nine tiles', () => {
+    expect(PINNED[0].dashboardName).toBe(ExecutiveDashboard.name);
+    expect(EXEC_TILES).toEqual([
+      'Total Revenue (YTD)',
+      'Active Accounts',
+      'Total Contacts',
+      'Open Leads',
+      'Revenue Trend',
+      'Revenue by Industry',
+      'Pipeline by Stage',
+      'New Accounts',
+      'Accounts by Industry',
+    ]);
+  });
+
+  it('counts the funnel that arrives from the shared factory, which no title grep finds', () => {
+    // #971 read `executive.dashboard.ts` and found eight `title:` literals, so it
+    // reported that the dashboard carries no pipeline tile. `pipeline_by_stage`
+    // comes from `pipelineByStageFunnelWidget` (#539) and has no inline literal —
+    // it is the ninth tile, and it is the reason the "opportunities in your
+    // pipeline" bullet was half-right rather than simply wrong.
+    const inlineTitles = (readFileSync(
+      join(REPO_ROOT, 'src/dashboards/executive.dashboard.ts'),
+      'utf8',
+    ).match(/title: '/g) ?? []).length;
+    expect(inlineTitles).toBe(EXEC_TILES.length - 1);
+    expect(EXEC_TILES).toContain('Pipeline by Stage');
+  });
+
+  it('binds no case or activity dataset on either dashboard a reader might land on', () => {
+    const datasets = (d: AnyRec): string[] => [
+      ...new Set(((d.widgets ?? []) as AnyRec[]).map((w) => w.dataset as string).filter(Boolean)),
+    ];
+    expect(datasets(ExecutiveDashboard as AnyRec).sort()).toEqual([
+      'account_metrics',
+      'contact_metrics',
+      'lead_metrics',
+      'opportunity_metrics',
+    ]);
+    expect(datasets(CrmOverviewDashboard as AnyRec).sort()).toEqual([
+      'opportunity_metrics',
+      'product_metrics',
+    ]);
+    // The tiles the section re-points to, on the dashboards that do carry them.
+    expect(datasets(ServiceDashboard as AnyRec)).toContain('case_metrics');
+    expect(datasets(ActivityDashboard as AnyRec)).toContain('event_metrics');
+  });
+
+  it('ranks nothing by individual account on either dashboard', () => {
+    const dims = (d: AnyRec): string[] => [
+      ...new Set(
+        ((d.widgets ?? []) as AnyRec[]).flatMap((w) => (w.dimensions ?? []) as string[]),
+      ),
+    ].sort();
+    // Pinned as exact sets: adding any dimension here must force a re-read of the
+    // "top accounts by pipeline value is not a tile" claim, in all three locales.
+    expect(dims(ExecutiveDashboard as AnyRec)).toEqual([
+      'account_industry',
+      'close_date',
+      'created_at',
+      'industry',
+      'stage',
+    ]);
+    expect(dims(CrmOverviewDashboard as AnyRec)).toEqual([
+      'category',
+      'close_date',
+      'lead_source',
+      'owner',
+      'stage',
+    ]);
+  });
+
+  it('keeps positions flat and the sales manager org-wide, as the section says', () => {
+    expect(CrmPositions.filter((p) => 'parent' in p || 'parentRole' in p)).toEqual([]);
+    (['crm_lead', 'crm_account', 'crm_opportunity'] as const).forEach((o) =>
+      expect(
+        (SalesManagerProfile.objects as AnyRec)[o]?.viewAllRecords,
+        `sales_manager must read every ${o} for "org-wide totals, not a team slice" to hold`,
+      ).toBe(true),
+    );
   });
 });

@@ -9,15 +9,31 @@ A guided tour through the screens you'll use every day.
 
 ## 1. The home dashboard
 
-The first thing you see is the **CRM Overview** dashboard. It tells you:
+The left nav opens with one pinned entry, **Home**, and that is where you land. **Home** opens the **Executive Overview** dashboard — nine tiles of revenue, customer and pipeline numbers:
 
-- How many **open leads** you have.
-- How many **opportunities** are in your pipeline.
-- Any **cases** awaiting your response.
-- Top accounts by pipeline value.
-- Recent activity (last calls, meetings, emails).
+| Tile | What it shows |
+| --- | --- |
+| **Total Revenue (YTD)** | Closed-won revenue this year |
+| **Active Accounts** | Customers with at least one active relationship |
+| **Total Contacts** | People in the address book |
+| **Open Leads** | Unconverted leads in the funnel |
+| **Revenue Trend** | Closed-won revenue over the last 12 months |
+| **Revenue by Industry** | YTD closed-won revenue split by customer industry |
+| **Pipeline by Stage** | Open opportunity value at each sales stage, drawn as a funnel — value, not a count of deals |
+| **New Accounts** | Account creation cadence over the last 6 months |
+| **Accounts by Industry** | Total annual revenue and account count per industry |
 
-Use it as your daily start-of-day landing page. If you're a manager, you also see team-level rollups.
+Above them sit a date-range picker over the close date (this quarter by default), an **Owner** filter and a **Lead Source** filter. The four KPI tiles state their own period — YTD, "active", "unconverted" — and are not narrowed by the picker, so those counts stay whole while the revenue charts follow it.
+
+Use it as your daily start-of-day landing page.
+
+Four things this page used to promise are on no tile here, and one name it used belongs to a different dashboard:
+
+- **CRM Overview** is a real dashboard, but it is not the one **Home** opens. It sits under **Insights** — one of the groups collapsed when the app loads — so it is two clicks away rather than the first thing you see. **Active Deals** (a count of open opportunities), **Won Deals** and **Pipeline by Owner** are its tiles, not this dashboard's.
+- *Cases awaiting your response* are on neither dashboard: no tile on **Executive Overview** or on **CRM Overview** counts a case. **Open Cases**, **Critical Cases** and **SLA Violations** are on **Service Overview**, under **Service** — see [Service](/docs/service/index).
+- *Top accounts by pipeline value* is not a tile in this app at all. **Accounts by Industry** groups by industry rather than ranking customers, and the nearest ranking anywhere — **Pipeline by Owner** on **CRM Overview** — ranks sales reps rather than customers.
+- *Recent activity (last calls, meetings, emails)* is not here either. **Interactions Logged**, **Meetings Booked** and **Customer Minutes** are on **Sales Activity**, under **Activity**.
+- *Team-level rollups for managers* are not something this dashboard does. Every tile runs the same query for everyone; what differs is which records you are allowed to read, and that comes from your permission set. Positions in this app are flat — there is no reporting line for visibility to roll up — and the **Sales Manager** set grants `viewAllRecords` outright, so a manager reads org-wide totals rather than a team slice.
 
 ➜ Learn more: [Dashboards](/docs/analytics/dashboards)
 
