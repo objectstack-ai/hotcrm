@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { SysApprovalAction, SysApprovalRequest } from '@objectstack/plugin-approvals';
 import { REPO_ROOT } from './helpers/repo-root';
@@ -70,14 +70,21 @@ const ACTION_VIEWS = viewLabels(SysApprovalAction as unknown as AnyRec);
 /** The three names the section says exist nowhere. */
 const PHANTOM_VIEWS = ['Pending My Approval', 'Submitted by Me', 'Recently Approved'] as const;
 
-/** Every authored source file, for the "zero hits in `src/`" half of the claim. */
+/**
+ * Every authored source file, for the "zero hits in `src/`" half of the claim.
+ *
+ * The directory entries carry their own type (`withFileTypes`), so the walk
+ * never stats a path and then re-opens it — that check-then-use pair is the
+ * file-system race CodeQL flags, and a `readFileSync` that throws on a file
+ * that vanished mid-walk is the behaviour this guard wants anyway.
+ */
 const SRC_TEXT: string = (() => {
   const out: string[] = [];
   const walk = (dir: string) => {
-    for (const entry of readdirSync(dir)) {
-      const full = join(dir, entry);
-      if (statSync(full).isDirectory()) walk(full);
-      else if (/\.(ts|tsx|json)$/.test(entry)) out.push(readFileSync(full, 'utf8'));
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (/\.(ts|tsx|json)$/.test(entry.name)) out.push(readFileSync(full, 'utf8'));
     }
   };
   walk(join(REPO_ROOT, 'src'));
