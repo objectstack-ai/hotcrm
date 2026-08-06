@@ -36,17 +36,19 @@ Ask the assistant to triage a case and it analyses:
 
 - The **subject** and **description**.
 - The **customer's profile** — the account's **Customer Tier** and the **Contract Value**, which the triage rubric weighs first. How long they have been a customer is not weighed, and could not be: `crm_account` has no *customer-since* field under any name, and the closest real date sits on the contract (**Signed Date**).
-- **Historical cases** from the same account and contact.
 - The **product** referenced in the case.
-- The **Support Knowledge** knowledge base for matching articles.
 
 It returns:
 
-- **Suggested priority** (Low / Medium / High / Critical) with a rationale tied to the [SLA matrix](/docs/service/sla-and-escalation).
-- **Suggested category** (Bug, Question, Feature Request, Billing).
-- **Top matching KB articles**.
-- A **draft first reply** that acknowledges the issue and links to the KB articles.
-- A pointer to the right next action — **Escalate Case** or **Close Case**.
+- **Suggested priority** (Low / Medium / High / Critical) with the one reason that drove it, citing the case ID and the field values it read. After tier and contract value, the rubric weighs whether the customer is blocked with no workaround, how long the case has been open against the [SLA matrix](/docs/service/sla-and-escalation), and the sentiment of the latest customer message.
+- A pointer to the right next action — **Escalate Case** with a ready-to-paste `reason`, or **Close Case** with a `resolution` summary.
+
+**What triage does not do.** Three abilities this page used to list are outside the
+skill, and it is worth saying where each one actually lives:
+
+- **Historical cases, and matching Support Knowledge articles.** Triage declares exactly two tools — `describe_object` and `get_record`. `get_record` fetches one record by ID and the skill has no query tool at all, so it cannot pull the account's or contact's *other* cases and cannot search for articles. **Customer 360°** below is the skill that carries `query_records`: it reads `crm_case` and `crm_knowledge_article`, so ask it for the history and the article matches.
+- **A suggested category.** Triage assigns a priority and stops there. **Case Type** stays a field a person sets on the case, and its real options are Question, Problem, Feature Request and Bug — there is no Billing type.
+- **A draft first reply.** The skill hands the customer-facing reply to **Email Drafting** (section 3 below) by name rather than writing it itself. Ask for the draft as a second question and that skill takes it.
 
 Agents accept, edit, or reject each suggestion individually. The skill never changes
 the case on its own: it hands off to the same `escalate_case` / `close_case` actions
@@ -56,11 +58,25 @@ an agent would click.
 
 On any case, ask *"Give me the customer's history"* and you get:
 
-- **All prior cases** (open and closed) for the same contact and account.
-- **Contract status** — what they've bought, when it expires, what tier of support they're entitled to.
-- **Active opportunities** — so the agent knows if they're talking to a customer mid-purchase.
-- **Last touchpoints** — recent emails, calls, meetings.
-- **Account health signals** — escalations, churn risk flags, satisfaction scores.
+- **The people** — the account's contacts, primary contact first.
+- **Open cases** — the account's cases where `is_closed` is false, newest first. Closed cases are not listed row by row; the case count by status comes from `aggregate_data`, which is what makes *"the 3rd time this quarter"* countable.
+- **Active opportunities** — open deals with stage, amount and close date, so the agent knows whether they are talking to a customer mid-purchase.
+- **Matching knowledge** — published `crm_knowledge_article` records, matched on the category or tags of the cases it just read.
+
+The answer comes back in three sections — **Account Snapshot** · **Active Work** ·
+**Risks & Notes** — with record IDs cited inline (`CASE-01234`, `KA-0007`) so the UI
+can deep link. A risk has to name its record and the signal behind it: an escalated
+case, a close date already past, a deal with no activity in 30+ days.
+
+**What Customer 360° does not pull.** **Contract status** (what they bought, when it
+expires, the support tier they are entitled to) and **last touchpoints** (recent
+emails, calls, meetings) are not in the skill's instructions, and neither is a churn
+or satisfaction roll-up. This is a narrower miss than the triage one above: the skill
+*does* carry `query_records` and could reach `crm_contract`, `crm_event` and
+`crm_task` — it is simply not told to read them, and widening what a skill reads is a
+product decision rather than a documentation one. Until then, read those from the
+account's own related lists; the one health signal the skill does report is the
+escalation, cited from the case record.
 
 This is the difference between *"I see this is your first case"* and *"I see this is
 the 3rd time you've hit this issue this quarter — let me escalate."*
