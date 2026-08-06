@@ -5,7 +5,7 @@ description: How priorities drive deadlines, when cases escalate automatically, 
 
 # SLA & Escalation
 
-The SLA (Service-Level Agreement) system gives every case a **deadline** based on its priority, surfaces **breaches** in real time, and **escalates** stuck cases to senior staff automatically.
+The SLA (Service-Level Agreement) system gives every case a **deadline** based on its priority, surfaces **breaches** in real time, and **escalates** stuck cases automatically — escalation flags the case and alerts its owner; it does not move the case to senior staff.
 
 ## How SLA targets are calculated
 
@@ -50,7 +50,7 @@ This report is the support team's most-used KPI.
 
 ## Case escalation
 
-The Case Escalation process automatically reassigns stuck or critical cases to senior staff.
+The Case Escalation process automatically flags stuck or critical cases as escalated and alerts the people who have to act on them. It does **not** reassign them: there is no hand-off to senior staff or to a manager, and the case stays with the agent who owns it.
 
 ### When escalation triggers
 
@@ -63,13 +63,19 @@ The escalation flow runs the moment a case meets either of these conditions:
 
 When triggered, the flow performs these steps in order:
 
-1. **Reassigns** the case to the current agent's **manager**.
-2. **Sets the `Escalated` flag** to true and stamps the escalated date.
-3. **Changes the status** to *Escalated*.
-4. **Creates a follow-up task** on the original agent due tomorrow (so they stay in the loop and learn).
-5. **Sends an email** to the original agent, their manager, and the broader `support-team@example.com` list, with case number, priority, and account name.
+1. **Sets the `Escalated` flag** to true and stamps the escalated date.
+2. **Changes the status** to *Escalated*.
+3. **Notifies the case owner** — inbox and email, carrying the case number and the priority.
 
-The result: the customer's issue is now in the hands of a senior agent within minutes, and the support team sees the escalation alert immediately.
+The status change to *Escalated* then fires the `case_status_side_effects` hook, which opens a **follow-up task** due tomorrow at **Urgent** priority — for cases that have an account, since the task is keyed to that account.
+
+Three things this list deliberately does not claim, because the escalation does not do them:
+
+- **The case is not reassigned.** The escalation write sets `is_escalated`, `escalation_reason`, `escalated_date` and `status`, and never touches `owner_id`. There is no hand-off to a manager or to senior staff — the case stays with the agent who has it, which is what the escalation notice tells its recipient in so many words: `It remains assigned to you.`
+- **The notification goes to the owner alone.** Its recipient list is the single entry `{caseRecord.owner_id}` — not the manager, and not a broader `support-team@example.com` list, an address that exists nowhere in this app. The message carries no account name either: a flow template cannot dot-walk a lookup, so `{caseRecord.crm_account.name}` would interpolate to the literal `undefined`, and the node leaves it out on purpose.
+- **The follow-up task is not the original agent's.** It is owned by the **account owner**, not by the agent who was handling the case and not by a senior agent. The flow carries no task node at all — the hook is the single owner of escalation follow-up tasks, so there is exactly one task per escalation.
+
+The result: within minutes the case carries the *Escalated* status, its owner has been alerted, and the account owner has an urgent task waiting. Handing the case to a senior agent, if it needs handing over, is still a manual step someone has to take.
 
 ### Required: escalation reason
 
@@ -79,8 +85,8 @@ You can't escalate a case without filling in an **Escalation Reason** — a shor
 
 | Automation | When it fires | What it does |
 | --- | --- | --- |
-| **Notify on Critical** | Priority set to Critical | Emails `support_manager@example.com` |
-| **Notify on Escalation** | `Escalated` flag flips to true | Emails `escalation_team@example.com` |
+| **Notify on Critical** | Priority set to Critical | Inbox + email to the **case owner** — this is the Case Escalation flow's notify node, whose recipient list is `{caseRecord.owner_id}` alone. There is no `support_manager@example.com` recipient anywhere in this app |
+| **Notify on Escalation** | Status changes to *Escalated* | No email goes to an escalation team — `escalation_team@example.com` exists nowhere in this app. What the escalated status fires is the urgent follow-up task for the account owner described under *What the escalation does* |
 | **Calculate resolution time** | Case is closed | Computes hours from created → closed |
 | **Set closed flag** | Status changes | `is_closed = (status == "closed")` |
 | **Set closed date** | Status changes to *Closed* | Stamps closed date to NOW |
