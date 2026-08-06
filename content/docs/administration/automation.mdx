@@ -1,20 +1,19 @@
 ---
 title: Automation
-description: Workflow rules, flows, validation rules and scheduled jobs — the business logic that runs without you.
+description: Validation rules, flows, scheduled jobs and approvals — the business logic that runs without you.
 ---
 
 # Automation
 
-Automation is what makes HotCRM *do work for you* — sending notifications, updating fields, creating tasks, escalating cases, all without anyone clicking a button. Five kinds of automation are available, each suited to a different job.
+Automation is what makes HotCRM *do work for you* — sending notifications, updating fields, creating tasks, escalating cases, all without anyone clicking a button. Four kinds of automation are available, each suited to a different job.
 
-> **How HotCRM implements them:** validation + field logic run as **object hooks** (`beforeInsert` / `beforeUpdate`); everything multi-step, scheduled, or approval-based runs as **flows**; and approvals are **`approval` nodes inside a flow** (ADR-0019), not a standalone process type. The platform also supports standalone workflow rules and approval-process metadata — listed below for completeness.
+> **How HotCRM implements them:** validation + field logic run as **object hooks** (`beforeInsert` / `beforeUpdate`); everything multi-step, scheduled, or approval-based runs as **flows**; and approvals are **`approval` nodes inside a flow** (ADR-0019), not a standalone process type. Standalone workflow-rule and approval-process metadata do not exist on the platform either — ADR-0019 and ADR-0020 removed both types.
 
-## The five kinds
+## The four kinds
 
 | Kind | When it fires | Best for |
 | --- | --- | --- |
 | **Validation rules** | Before save | Blocking bad data |
-| **Workflow rules** | After save | Field updates, simple email alerts |
 | **Flows** | On screen, on record change, or on a schedule | Multi-step logic, branching, loops, waits, approvals |
 | **Scheduled jobs** | On a schedule | Daily sweeps, weekly reports |
 | **Approval processes** | Inside a flow (approval node) | Multi-step sign-off with record locking |
@@ -37,24 +36,9 @@ To add one:
 3. Write the error message shown to the user.
 4. Activate.
 
-## Workflow rules
-
-Fire when a record matches a condition after save. Each rule can perform one or more **actions**.
-
-**Action types**:
-
-- **Field update** — change a field on the same record or a parent record.
-- **Email alert** — send a templated email to specific recipients.
-- **Create task** — for the record owner or another user.
-- **Outbound message** — fire a webhook.
-
-**Built-in examples**:
-
-- *Lead created with rating = Hot* → email to sales manager + create a *"qualify within 24 hours"* task.
-- *Opportunity won, amount ≥ $100K* → email celebration to the team, post in #wins channel.
-- *Case priority changed to Critical* → notify on-call engineer.
-
 ## Flows (multi-step)
+
+> **Looking for "workflow rules"?** There is nothing to look for — not in this app, and not on the platform. ObjectStack retired the standalone workflow-rule type (ADR-0019 / ADR-0020): there is no `workflow` metadata type, no `workflows` collection on a stack, and no *Workflow Rules* entry under **Setup → Automation** — only *Flows*. A *"when this record saves, do that"* rule is a **record-change flow**, and every one this app ships is a row in the table below.
 
 When a single field update isn't enough — branching, loops, waits, multi-object writes, approvals — use a **flow**. A flow is a visual graph of nodes: get data → decide → create/update records → notify → wait → call a sub-flow.
 
@@ -124,12 +108,12 @@ When a record is saved, the order is fixed:
 1. **System** runs auto-calculations (formula fields, auto-numbering).
 2. **Validation rules** run — if any fail, the save is blocked.
 3. **The record is saved** to the database.
-4. **Workflow rules** fire.
-5. **Flow triggers** fire.
-6. **Field updates** from workflows / flows may cascade — re-evaluating workflows up to 5 times before stopping.
-7. **Email alerts** are queued.
+4. **Flow triggers** fire — `record-after-create` or `record-after-update`, whichever the save was.
+5. **`notify` nodes** inside those flows queue their inbox messages and email.
 
-Understanding this order helps debug *"why didn't my workflow fire?"* questions.
+A flow's own writes are ordinary saves, so they re-enter this list and can trigger further flows. There is no fixed re-evaluation budget to rely on: the engine breaks self-trigger loops with a **re-entrancy guard** — a flow re-entered for the *same record* while its previous run is still in flight is skipped, and the skip is logged as a warning. Write each record-change flow's start condition so it stops re-firing on its own writes; the guard is a backstop, not a stop condition.
+
+Understanding this order helps debug *"why didn't my flow fire?"* questions.
 
 ## Email templates
 
@@ -145,15 +129,14 @@ Built-in templates cover lead-routing, opportunity wins, case acknowledgments, c
 ## Where to monitor automation
 
 - **Setup → Process Monitor** — last 24 hours of automation runs with success/failure.
-- **Setup → Workflow Queue** — pending email alerts and field updates.
 - **Setup → Scheduled Jobs → History** — past runs of each scheduled job.
 - **Object → audit log** — what changed on the record, who/what made the change.
 
 ## Tips for admins
 
 - ✅ **Validation rules** are the cheapest way to enforce data quality — use them liberally.
-- ✅ **One workflow per condition** is easier to maintain than mega-workflows with 10 branches.
-- ✅ For anything more complex than 2 actions, **use a flow** — much easier to debug.
+- ✅ **One flow per condition** is easier to maintain than a mega-flow with 10 branches.
+- ✅ Anything beyond a single field write — branching, multi-object writes, waits, approvals — belongs in a **flow** rather than an object hook: a flow run is visible in the process monitor, hook code is not.
 - ✅ **Test in sandbox** before activating in production — bad automation can cascade fast.
 - ✅ **Document what each rule does** in its description field — your future self will thank you.
 
@@ -161,6 +144,6 @@ Built-in templates cover lead-routing, opportunity wins, case acknowledgments, c
 
 If a record isn't behaving as expected:
 
-1. Check the **audit log** — was the field updated by a workflow?
-2. Check the **task list** — did a workflow auto-create a task you missed?
+1. Check the **audit log** — was the field updated by a flow or an object hook?
+2. Check the **task list** — did a flow auto-create a task you missed?
 3. Ask an admin to inspect the **process monitor** for that record.
