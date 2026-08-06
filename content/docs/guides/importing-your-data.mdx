@@ -9,6 +9,13 @@ Evaluating HotCRM with somebody else's demo data tells you very little. This gui
 loads **your** accounts, contacts and leads from a spreadsheet — no column-by-column
 mapping, and with a one-call undo if the file turns out to be wrong.
 
+Two routes lead in, over one and the same server-side import path: the **import
+wizard** on the object's list view, and the **import API**. Take the wizard for a
+one-off file you want to eyeball before it writes — no token, no curl. Take the API
+for a scripted or repeatable load: it is the route that exposes the strict dry-run
+report, the per-row error codes and the undo call. The wizard gets one short
+section below; **Steps 1–4 are the API route**.
+
 HotCRM ships three **import mappings**. A mapping is a saved column→field
 projection: you name it in the request, and HotCRM already knows that a column
 headed *Account Owner Email* is the account owner and that *SaaS* means the
@@ -22,6 +29,26 @@ headed *Account Owner Email* is the account owner and that *SaaS* means the
 
 Because each mapping matches on a business key, **re-running the same file updates
 rather than duplicates** — fix a column in your spreadsheet, upload again, done.
+
+## From the list view — the import wizard
+
+Open the **Accounts**, **Contacts** or **Leads** list view and choose **Import** in
+the toolbar. The wizard runs three steps — **Upload**, **Mapping**, **Preview**.
+
+The three mappings above are not an API-only feature. The wizard lists the mappings
+whose target object is the one you started from, so those three turn up under
+**Saved mapping** on exactly those three list views. Pick one and the renames, the
+value transforms and the type coercion run on the server just as they do over the
+API — and the column mapping goes read-only, because there is nothing left to match
+by hand.
+
+The rest of the wizard is the steps below behind buttons: **Validate data** is the
+dry run of Step 2, a large file is handed to the same background job as Step 3, and
+**History** → **Undo import** is Step 4, undo window included.
+
+Click-by-click steps — the generated template, the write modes, **Match on** — are
+in [Import & Export](/docs/guides/import-and-export), where the in-app route is
+documented in full.
 
 ## Step 1 — Start from the template
 
