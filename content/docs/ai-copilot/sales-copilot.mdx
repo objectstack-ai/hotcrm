@@ -108,11 +108,25 @@ manager sees their team's, a director sees the rollup.
 On any account or contact, ask *"Give me a 360° view"* and you get:
 
 - **Relationship snapshot** — the account's **Customer Tier** and its owner, read straight off the account record. There is no *customer-since* date to snapshot: `crm_account` carries no field of any name for when an account became a customer, so "how long have they been with us?" has to be answered from the contract's **Signed Date** or **Start Date**.
-- **Active deals** — open opportunities with stage and amount.
-- **Recent activity** — last call, meeting, email.
-- **Open cases** — any service tickets, with priority and age.
-- **Contracts** — active and upcoming renewals.
-- **Marketing engagement** — recent campaigns the customer engaged with.
+- **The people** — the account's contacts, primary contact first.
+- **Active deals** — open opportunities with stage, amount and close date, plus the open pipeline total read from `aggregate_data` rather than added up row by row.
+- **Open cases** — service cases where `is_closed` is false, newest first, with the case count by status.
+- **Matching knowledge** — published `crm_knowledge_article` records, matched on the category or tags of those cases.
+
+The answer comes back in three sections — **Account Snapshot** · **Active Work** ·
+**Risks & Notes** — with record IDs cited inline (`CASE-01234`, `KA-0007`) so the UI
+can deep link. A risk has to name its record and the signal behind it: an escalated
+case, a close date already past, a deal with no activity in 30+ days. A section with
+no records is reported as empty rather than filled.
+
+**What Customer 360° does not pull.** Three lines this page used to carry — **recent
+activity** (last call, meeting, email), **contracts** (active and upcoming renewals)
+and **marketing engagement** (recent campaigns the customer engaged with) — are not in
+the skill's instructions, so they will not appear in the answer. This is not a tool
+ceiling: the skill carries `query_records` and could reach `crm_contract`,
+`crm_campaign`, `crm_event` and `crm_task`. It is simply not told to read them, and
+widening what a skill reads is a product decision rather than a documentation one.
+Until then, read those from the account's own related lists.
 
 Perfect for prep before a meeting — "give me Customer 360 on Acme" and you walk in
 informed.
