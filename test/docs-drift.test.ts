@@ -1196,3 +1196,264 @@ describe('the docs print the version the manifest declares (#612)', () => {
     ).toEqual([]);
   });
 });
+
+/*
+ * ─── One protocol version, declared in three files (#728) ────────────────────
+ *
+ * `objectstack.config.ts` drives the build artifact, `objectstack.manifest.json`
+ * is the marketplace template manifest, and `package.json` pins the
+ * `@objectstack/*` line the metadata is authored against. All three state the
+ * same protocol version, and `objectstack.config.ts`'s own comment has said so
+ * since it was written: "Bump together with `specVersion` on every platform
+ * upgrade (docs/MAINTENANCE.md §3)".
+ *
+ * A comment is not a gate. Two consecutive platform upgrades moved the template
+ * manifest and the dependency line and left `objectstack.config.ts` behind — the
+ * gap was rc.1 vs rc.2 when #728 was filed and had widened to rc.1 vs rc.3 by
+ * the time it was fixed. Neither `pnpm build` nor `publish:marketplace:dry-run`
+ * compares the two, so the stale value rode all the way into the published
+ * artifact (`dist/objectstack.json` → `manifest.engines.protocol`).
+ *
+ * Only the MAJOR participates in the runtime handshake, so this never blocked a
+ * boot — which is precisely why nothing caught it for two releases. It is still
+ * a metadata fact distributed to customers, and this turns the file's own
+ * maintenance rule from a convention into a gate.
+ *
+ * Reverse verification: predicted and measured **red before, green after**. On
+ * the pre-fix tree the first rule reported `objectstack.config.ts declares
+ * ^17.0.0-rc.1, objectstack.manifest.json declares ^17.0.0-rc.3`; the other two
+ * rules were already green, so the failure named the one file that was wrong.
+ */
+describe('one protocol version, declared in three files (#728)', () => {
+  const TEMPLATE = 'objectstack.manifest.json';
+
+  const configProtocol: string | undefined = (((stack as any).manifest ?? {}).engines ?? {}).protocol;
+  const template = JSON.parse(readFileSync(join(REPO_ROOT, TEMPLATE), 'utf8')) as {
+    specVersion?: string;
+    engines?: { protocol?: string };
+  };
+  const pkg = JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8')) as {
+    dependencies?: Record<string, string>;
+  };
+  const installedSpec: string | undefined = (pkg.dependencies ?? {})['@objectstack/spec'];
+
+  /** `^17.0.0-rc.3` and `17.0.0-rc.3` state the same version. */
+  const bare = (range: string | undefined): string => (range ?? '').replace(/^[\^~>=<\s]+/, '');
+
+  const SEMVERISH = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
+
+  it('all three sources state a version this rule can compare', () => {
+    // Vacuity guard: any of these going absent would make every comparison below
+    // compare '' with '' and pass over nothing at all.
+    const sources: [string, string | undefined][] = [
+      ['objectstack.config.ts manifest.engines.protocol', configProtocol],
+      [`${TEMPLATE} specVersion`, template.specVersion],
+      [`${TEMPLATE} engines.protocol`, template.engines?.protocol],
+      ['package.json dependencies["@objectstack/spec"]', installedSpec],
+    ];
+    const unreadable = sources
+      .filter(([, value]) => !SEMVERISH.test(bare(value)))
+      .map(([label, value]) => `${label} = ${value ?? '(absent)'}`);
+    expect(
+      unreadable,
+      `protocol/spec declarations this guard cannot read:\n  ${unreadable.join('\n  ')}\n` +
+        'Teach the guard the new shape rather than leaving it green over nothing.',
+    ).toEqual([]);
+  });
+
+  it('objectstack.config.ts declares the protocol the template manifest declares', () => {
+    expect(
+      bare(configProtocol),
+      `objectstack.config.ts declares ${configProtocol}, ${TEMPLATE} declares ` +
+        `${template.engines?.protocol}. These ship as one app: objectstack.config.ts drives ` +
+        `dist/objectstack.json's manifest.engines.protocol, and ${TEMPLATE} is what the ` +
+        'marketplace reads. Bump both together (docs/MAINTENANCE.md §3).',
+    ).toBe(bare(template.engines?.protocol));
+  });
+
+  it('the template manifest states one version in both of its fields', () => {
+    expect(
+      bare(template.specVersion),
+      `${TEMPLATE} states specVersion ${template.specVersion} and engines.protocol ` +
+        `${template.engines?.protocol} — one file, two spellings of a single fact.`,
+    ).toBe(bare(template.engines?.protocol));
+  });
+
+  it('the declared protocol is the @objectstack/spec version package.json installs', () => {
+    // AGENTS.md §Constraint Checklist → Dependencies: "Keep `specVersion` in
+    // `objectstack.manifest.json` aligned with the installed `@objectstack/spec`."
+    // This is the half that catches an upgrade moving the dependency line and
+    // forgetting the metadata — the shape of #728 on both the rc.2 and rc.3 bumps.
+    expect(
+      bare(template.specVersion),
+      `${TEMPLATE} declares ${template.specVersion} but package.json installs ` +
+        `@objectstack/spec ${installedSpec}. The app claims to be authored against a spec ` +
+        'version it does not depend on (AGENTS.md §Constraint Checklist → Dependencies).',
+    ).toBe(bare(installedSpec));
+  });
+});
+
+/*
+ * ─── Product docs count the metadata the stack registers (#729) ──────────────
+ *
+ * The README banner, the "What you get" section, the fork guide and the docs
+ * overview all state how many objects / flows / dashboards / datasets HotCRM
+ * ships. Every one of those numbers was written by hand and then left behind:
+ * #592 added `crm_event` and `crm_event_attendee` plus a fifth dashboard, and
+ * the docs still advertised 15 objects / 23 flows / 4 dashboards two releases
+ * later. The README banner is the first thing a reader sees, and the fork guide
+ * is what a customer follows — being told the wrong inventory there is a product
+ * defect, not a typo.
+ *
+ * The expected values are read from `objectstack.config.ts` at test time and are
+ * deliberately NOT written down here. A hard-coded expectation is just the same
+ * hand-maintained number moved into the test file: it would go stale on the very
+ * next object and take the guard with it.
+ *
+ * `actions` is deliberately absent. The docs say 13, the registered stack says
+ * 26, and the two are counting different things — an action bound to five
+ * objects registers five times (#729's closing note). Which one a reader should
+ * be told is a product call, so this guard does not pick a side; it also does
+ * not pretend to cover the number. See the out-of-scope note on #729.
+ *
+ * Reverse verification: predicted and measured **red before, green after**. On
+ * the pre-fix tree the rule listed nine drifted claims across seven files
+ * (README ×5, fork-hotcrm ×3 locales, index ×3 locales, introduction ×3
+ * locales); after the fix the only surviving `15` is the exempt v1.0 record.
+ */
+describe('product docs state the metadata counts the stack registers (#729)', () => {
+  const registered = stack as unknown as Record<string, unknown[]>;
+
+  /** Read from the registered stack — never hard-coded. */
+  const REGISTERED: Record<string, number> = {
+    objects: (registered.objects ?? []).length,
+    flows: (registered.flows ?? []).length,
+    dashboards: (registered.dashboards ?? []).length,
+    datasets: (registered.datasets ?? []).length,
+  };
+
+  /**
+   * Every way the docs spell a count, one pattern per spelling so a failure
+   * names the sentence it read. Three locale faces ship for each page, and the
+   * translated ones spell the noun in Chinese — a rule that only reads English
+   * guards one third of the surface (#725 taught this file the same lesson about
+   * dashboard tiles).
+   */
+  const CLAIMS: { kind: keyof typeof REGISTERED; re: RegExp }[] = [
+    { kind: 'objects', re: /(\d+) business objects/g },
+    { kind: 'objects', re: /(\d+) objects across/g },
+    { kind: 'objects', re: /(\d+) objects,/g },
+    { kind: 'objects', re: /data model \((\d+) objects\)/g },
+    { kind: 'objects', re: /(\d+) 个业务对象/g },
+    { kind: 'objects', re: /(\d+) 個業務物件/g },
+    { kind: 'objects', re: /(\d+) 个对象/g },
+    { kind: 'objects', re: /(\d+) 個物件/g },
+    { kind: 'flows', re: /(\d+) flows/g },
+    { kind: 'flows', re: /visual flows \((\d+)\)/g },
+    { kind: 'dashboards', re: /(\d+) dashboards/g },
+    { kind: 'dashboards', re: /(\d+) 个仪表盘/g },
+    { kind: 'dashboards', re: /(\d+) 個儀表板/g },
+    { kind: 'datasets', re: /(\d+) datasets/g },
+    { kind: 'datasets', re: /semantic layer \((\d+)\)/g },
+  ];
+
+  /**
+   * Pages allowed to state a count that is not today's, each with the reason.
+   * A map rather than a list, for the reason the persona rule above gives: an
+   * exemption with no stated reason is how a targeted whitelist becomes a
+   * blanket one. All three entries are the same page in its three locales, and
+   * the reason is the same one that exempts it from the persona rule — it is a
+   * dated release record describing what v1.0 shipped, not a claim about today.
+   */
+  const HISTORICAL: Record<string, string> = {
+    'content/docs/whats-new.mdx': 'the v1.0 release record — the inventory that release shipped',
+    'content/docs/whats-new.zh-Hans.mdx': 'the v1.0 release record (zh-Hans)',
+    'content/docs/whats-new.zh-Hant.mdx': 'the v1.0 release record (zh-Hant)',
+  };
+
+  /** Depth-first walk of a docs tree, REPO_ROOT-relative. */
+  const walkMdx = (dir: string): string[] => {
+    const root = join(REPO_ROOT, dir);
+    if (!existsSync(root)) return [];
+    return readdirSync(root, { withFileTypes: true }).flatMap((entry) => {
+      const rel = join(dir, entry.name);
+      return entry.isDirectory() ? walkMdx(rel) : rel.endsWith('.mdx') ? [rel] : [];
+    });
+  };
+
+  const COUNT_DOCS = ['README.md', ...walkMdx('content/docs')];
+
+  type Claim = { file: string; line: number; kind: string; text: string; stated: number };
+
+  const claimsIn = (file: string): Claim[] => {
+    const text = readFileSync(join(REPO_ROOT, file), 'utf8');
+    return CLAIMS.flatMap(({ kind, re }) =>
+      [...text.matchAll(re)].map((m) => ({
+        file,
+        line: text.slice(0, m.index ?? 0).split('\n').length,
+        kind,
+        text: m[0],
+        stated: Number(m[1]),
+      })),
+    );
+  };
+
+  const ALL_CLAIMS = COUNT_DOCS.flatMap(claimsIn);
+
+  it('the stack registers a count for every kind this rule guards', () => {
+    // Vacuity guard #1: a config whose shape moved would leave every REGISTERED
+    // entry at 0, and the rule would then demand the docs say "0" — loud, but
+    // for the wrong reason. Fail here, where the message is true.
+    const empty = Object.entries(REGISTERED)
+      .filter(([, count]) => count === 0)
+      .map(([kind]) => kind);
+    expect(
+      empty,
+      `objectstack.config.ts registers nothing for: ${empty.join(', ')}. Either the stack ` +
+        'shape moved (point REGISTERED at the new field) or the metadata is gone (drop the ' +
+        'kind rather than leaving the rule green over an empty set).',
+    ).toEqual([]);
+  });
+
+  it('the scan finds a claim of every kind it guards', () => {
+    // Vacuity guard #2: a reworded sentence stops matching, and a rule that
+    // matches nothing agrees with everything. Per-kind, so rewording one noun
+    // cannot hide behind the other three still matching.
+    const unclaimed = Object.keys(REGISTERED).filter(
+      (kind) => !ALL_CLAIMS.some((c) => c.kind === kind),
+    );
+    expect(
+      unclaimed,
+      `no doc states a count for: ${unclaimed.join(', ')} — the docs were reworded and this ` +
+        'rule now guards nothing for those kinds. Teach CLAIMS the new spelling, or drop the ' +
+        'kind deliberately.',
+    ).toEqual([]);
+  });
+
+  it('every exempt page still states a count, so no exemption is dead', () => {
+    // Same discipline as the persona rule: an exemption that outlives the text it
+    // excused silently widens the next time that page is edited.
+    const dead = Object.keys(HISTORICAL).filter(
+      (file) => !ALL_CLAIMS.some((c) => c.file === file),
+    );
+    expect(
+      dead,
+      `HISTORICAL exempts pages that no longer state any count:\n  ${dead.join('\n  ')}\n` +
+        'Drop the exemption — it now only serves to hide the next drift on that page.',
+    ).toEqual([]);
+  });
+
+  it('every count a doc states is the count the stack registers', () => {
+    const drifted = ALL_CLAIMS.filter(
+      (c) => !(c.file in HISTORICAL) && c.stated !== REGISTERED[c.kind],
+    ).map(
+      (c) => `${c.file}:${c.line} says "${c.text}", the stack registers ${REGISTERED[c.kind]} ${c.kind}`,
+    );
+    expect(
+      drifted,
+      `doc counts that no longer match objectstack.config.ts:\n  ${drifted.join('\n  ')}\n` +
+        'Update the doc — the registered stack is the source of truth, and the README banner ' +
+        'plus the fork guide are the two pages a prospective customer reads first.',
+    ).toEqual([]);
+  });
+});
