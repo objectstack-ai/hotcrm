@@ -175,10 +175,10 @@ describe('package docs do not drift from the flows they document', () => {
  * against the real tree. `docs/archive/` is deliberately excluded — it is a
  * historical record and is allowed to describe a repo that no longer exists.
  *
- * A doc states the tree in TWO forms, and the guard above reads only the first
- * (#984 — `getting-started/for-developers.mdx` kept drawing `agents/` right
- * through the deletion, under a guard whose own comment names `src/agents/` as
- * the defect it exists to catch):
+ * A doc states the tree in TWO forms, and that check — the first one below —
+ * reads only one of them (#984: `getting-started/for-developers.mdx` kept
+ * drawing `agents/` right through the deletion, under a guard whose own comment
+ * names `src/agents/` as the defect it exists to catch):
  *
  *   inline — `src/skills/index.ts` written into a sentence. `inlineSrcDirs()`.
  *   drawn  — an ASCII tree, whose entries under the `src/` node carry no
