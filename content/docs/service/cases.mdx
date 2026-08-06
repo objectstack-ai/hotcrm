@@ -31,7 +31,7 @@ A typical stuck case: **New → In Progress → Waiting on Customer → In Progr
 | 🔴 **High** | 8 hours | Significant impact, customer is upset |
 | 🔴 **Critical** | 4 hours | Production down, immediate response needed |
 
-When a case is set to **Critical**, the support manager is notified by email. When set to **High** for a customer account, the case is auto-escalated.
+When a case is set to **Critical**, the Case Escalation flow alerts the **case owner** by inbox message and email — its recipient list is the single entry `{caseRecord.owner_id}`, and there is no `support_manager@example.com` recipient anywhere in this app. A **High** case is never escalated automatically, whatever the account is: no escalation condition reads the account at all, and raising one is the manual **Escalate Case** button.
 
 ## Case types
 
@@ -86,18 +86,21 @@ The detail screen is organised into 6 sections:
 
 ## Case escalation
 
-The [Case Escalation flow](/docs/service/sla-and-escalation#case-escalation) runs automatically when:
-
-- Priority is **Critical**, OR
-- Priority is **High** AND the account is a **Customer** (not a prospect)
+The [Case Escalation flow](/docs/service/sla-and-escalation#case-escalation) runs on exactly one condition: **the case is at Critical priority**. There is no High-priority branch, and no escalation condition reads the account — a *Customer*'s High case and a prospect's High case are treated identically: neither escalates on its own, and raising one is the manual **Escalate Case** button.
 
 It performs:
 
-1. **Reassign** the case to the agent's manager.
-2. **Flag** as escalated, stamp the escalated date.
-3. **Set status** to *Escalated*.
-4. **Create a follow-up task** on the original agent due tomorrow.
-5. **Notify** the agent, the manager, and the support team via email.
+1. **Flag** as escalated, stamp the escalated date.
+2. **Set status** to *Escalated*.
+3. **Notify the case owner** — inbox and email, carrying the case number and the priority.
+
+The status change to *Escalated* then fires the `case_status_side_effects` hook, which opens an **Urgent follow-up task due tomorrow for the account owner** — and only for cases that have an account, since the task is keyed to it.
+
+Three things this list deliberately does not claim, because the escalation does not do them:
+
+- **The case is not reassigned.** The escalation write sets `is_escalated`, `escalation_reason`, `escalated_date` and `status`, and never touches `owner_id`. There is no hand-off to the agent's manager or to senior staff — which is what the escalation notice tells its recipient in so many words: `It remains assigned to you.`
+- **The notification goes to the case owner alone.** Its recipient list is the single entry `{caseRecord.owner_id}` — not the manager, and not a broader `support-team@example.com` list, an address that exists nowhere in this app.
+- **The follow-up task is not the original agent's.** It belongs to the **account owner**, not to the agent who was handling the case and not to a senior agent. The flow carries no task node at all — the hook is the single owner of escalation follow-up tasks, so there is exactly one task per escalation.
 
 See [SLA & Escalation](/docs/service/sla-and-escalation) for the full mechanics.
 

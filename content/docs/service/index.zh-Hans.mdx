@@ -24,7 +24,7 @@ New ──► In Progress ──► Waiting on Customer ──► Resolved ─�
 ```
 
 1. **创建工单**（通过电子邮件、网页表单、电话记录，或由 **Service Copilot** 对来访消息进行分流）。
-2. **分配优先级**——低、中、高或紧急。*紧急*会立即提醒支持经理。
+2. **分配优先级**——Low、Medium、High 或 Critical。*Critical* 会立即提醒**工单负责人**，而不是支持经理：这条提醒的收件人列表只有 `{caseRecord.owner_id}` 一项。
 3. **计算 SLA 目标**——每个工单都会根据优先级获得一个截止时间。
 4. **客服处理工单**，随进度推进状态。
 5. **如果是 Critical**（或 SLA 截止日期已过），[升级流程](/zh-Hans/docs/service/sla-and-escalation)会把工单标记为 *Escalated* 并提醒它的负责人。它**不会**重新分配工单——不存在向资深员工或经理的交接——也没有任何升级条件会读取账户，所以 *Customer* 的工单没有属于自己的分支。
