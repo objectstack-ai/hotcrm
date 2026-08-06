@@ -30,13 +30,15 @@ A deal's Forecast Category is set automatically from its **Stage**, so the same 
 
 ## How periods are derived
 
-You choose a `period`; the system computes the rest. Supply a `period_start` to snapshot a specific quarter or month, or leave it out and the snapshot lands on the calendar period containing its snapshot date. For a quarterly forecast taken on 2026-08-02:
+You choose a `period`; the system computes the rest. Supply a `period_start` — that period's own first day — to snapshot a specific quarter or month, or leave it out and the snapshot lands on the calendar period containing its snapshot date. For a quarterly forecast taken on 2026-08-02:
 
 - `period_start` → 2026-07-01
 - `period_end` → 2026-09-30
 - `period_label` → **Q3 2026**
 
-Because the boundary is always computed, never typed, every snapshot for the same quarter lines up exactly — which is what makes “this quarter” filters and quarter-over-quarter trends work at all.
+Because that derivation lives in one place instead of in every writer, snapshots that leave `period_start` blank all land on the same boundary and line up exactly — which is what makes “this quarter” filters and quarter-over-quarter trends work at all. Every automated writer takes that route: the nightly sweep sends `period` and nothing else.
+
+**What you do supply is kept exactly as you sent it.** The derivation fills in the blanks; it never rewrites a value that arrived with the record. Send `period_start` 2026-07-15 for a quarterly snapshot and the row is stored with that date — labelled **Q3 2026**, but starting mid-quarter rather than on the quarter's first day. Nothing snaps it back, and the surfaces that scope by period will then not find it: the forecast list's *This Quarter* tab and the Sales dashboard's *Quota Attainment by Rep* table both match `period_start` against the quarter's real first day. So when you write a snapshot by hand or through the API, send the period's first day — or send no `period_start` at all and let the derivation place it.
 
 So you'll never see a record labelled “2026-07-01 through ???” — only the human label. The list view and dashboards group by `period_label` directly.
 
