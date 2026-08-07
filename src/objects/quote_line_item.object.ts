@@ -51,6 +51,20 @@ export const QuoteLineItem = ObjectSchema.create({
   // (ADR-0052), set on quantity/unit_price/discount below. Master-detail
   // children still inherit the master's sharing automatically.
 
+  // ADR-0079 record title — same decision, same reasoning, as the twin object
+  // `crm_opportunity_line_item` (#1031); the long note lives there. In short:
+  // `description` is the line's own text column and is already what
+  // `objectTitleCompleteness()` derives for this object, the product name is
+  // behind a lookup a formula cannot dot-walk (ADR-0072), and a stored column
+  // cannot fail to `null` the way a faulting formula does (#690).
+  //
+  // Fixed here in the same batch even though no reference rail lists quote
+  // lines today: the twins are authored as one shape, and the titleless state
+  // is just as visible in a lookup picker, a record drawer or global search as
+  // it is in a rail card. objectstack-ai/objectstack#6108 records both objects
+  // as genuinely missing a name surface.
+  nameField: 'description',
+
   highlightFields: ['crm_product', 'quantity', 'unit_price', 'total_price'],
 
   fields: {

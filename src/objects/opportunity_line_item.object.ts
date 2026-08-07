@@ -56,6 +56,41 @@ export const OpportunityLineItem = ObjectSchema.create({
   // (ADR-0052), set on quantity/unit_price/discount below. Master-detail
   // children still inherit the master's sharing automatically.
 
+  // ADR-0079 record title. A line item is only ever seen as a ROW in someone
+  // else's panel — it has no navigation entry and no page of its own — so the
+  // title is the whole of what a user reads about it, and until #1031 there was
+  // none: every consumer fell through to the raw cuid.
+  //
+  // `description` is the line's own text column, and it is what the platform
+  // already grades as this object's title: `objectTitleCompleteness()` (the
+  // function behind `os lint`'s `title-unresolvable` rule) returns
+  // `{ status: 'derived', field: 'description' }` here. Declaring it changes no
+  // verdict — it makes the derivation EXPLICIT, which is the point of ADR-0079:
+  // a consumer that does not run the derivation gets the same answer as one
+  // that does.
+  //
+  // Why not the product name, the other candidate on #1031: `crm_product` is a
+  // lookup holding an id, and a formula cannot dot-walk one (ADR-0072). Formula
+  // fields are evaluated against `{ now, timezone, user, org, record }` where
+  // `record` is the raw driver row (`objectql` `applyFormulaPlan`), so
+  // `record.crm_product.name` has no object to walk into. This is the same call
+  // `crm_forecast` made when it dropped the leading `{owner}` from its title and
+  // composed the local fields only.
+  //
+  // Why a stored column rather than a `display_title` formula: a formula that
+  // faults evaluates to `null` and leaves the record titleless with no error
+  // anywhere — that is #690, where `crm_forecast.display_title` called a `text()`
+  // that has never been in `CEL_STDLIB_FUNCTIONS` and was null for months. A
+  // plain column cannot fail that way. It also keeps `$search` on a real column:
+  // `autoDefaultFields` promotes a text `displayField` to the lead search field,
+  // while a formula is not search-eligible and needs a companion
+  // `searchableFields` (pinned by `test/actions-flows-integrity.test.ts`).
+  //
+  // Known residual, NOT introduced here: `description` is optional, so a line
+  // saved without one still has no title. See #1031 — the platform-side fallback
+  // for a titleless record is out of scope for that issue.
+  nameField: 'description',
+
   highlightFields: ['crm_product', 'quantity', 'unit_price', 'total_price'],
 
   fields: {
