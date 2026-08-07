@@ -349,6 +349,15 @@ export const OpportunityViews = defineView({
           'primary_contact',
           { field: 'stage', required: true },
           { field: 'amount', required: true },
+          // Read-only on the object since #1035 — `opportunity_lifecycle`
+          // re-derives it from `stage` on every write, so an input here could
+          // only ever collect a number the save throws away (a rep set 40 %
+          // and the record landed at 10 %). It stays ON the form, next to the
+          // stage that decides it, because that is where a rep asks what this
+          // deal is worth to the forecast; the field's `description` names the
+          // stage → percentage table. Same disposition as `expected_revenue`
+          // on the Forecast tab and `crm_account.billing_country`: derived,
+          // visible, never an input.
           'probability',
           'close_date',
           'owner_id',
