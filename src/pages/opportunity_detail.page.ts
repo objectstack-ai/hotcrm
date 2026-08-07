@@ -271,9 +271,52 @@ export const OpportunityDetailPage: Page = {
                 relationshipField: 'crm_opportunity',
                 limit: 3,
               },
+              /**
+               * `displayField` is declared HERE, and only here, because the
+               * rail resolves a preview row's label WITHOUT consulting the
+               * object at all (#1031, #733).
+               *
+               * MEASURED against the console build this app installs
+               * (`@objectstack/console@17.0.0-rc.4`,
+               * `dist/assets/plugins-views-*.js`): the row label is
+               *
+               *   entry.displayField, else
+               *   row.name || row.title || row.subject || row.label ||
+               *   row.email || row.username || row.code || row.slug ||
+               *   row.provider_id || row.user_agent || row.ip_address ||
+               *   row.id || '—'
+               *
+               * — a hard-coded chain with no step that reads the object's
+               * declared `nameField`. `crm_opportunity_line_item` holds none of
+               * those eleven keys, so this card rendered bare cuids
+               * (`1I4gIPKsDXQIqQv3`, …) while the Quotes card (row.name) and the
+               * Open Tasks card (row.subject) resolved fine. Declaring
+               * `nameField` on the object — which this PR also does, for the
+               * consumers that DO read it — cannot fix this card on its own.
+               *
+               * `displayField` is the rail entry's own first-class key for
+               * exactly this ("canonical field on the related object to render
+               * in each preview row"), so declaring it is using the contract,
+               * not routing around it. The RENDERER is that contract's only
+               * authority here: `record:reference_rail` has no entry in
+               * `ComponentPropsMap` (@objectstack/spec/ui), so `pnpm validate`
+               * neither blesses nor rejects this key — which is why
+               * `test/line-item-record-title.test.ts` transcribes the measured
+               * chain and asserts against it instead of trusting the schema.
+               * It names `description` — the same field
+               * the object now declares as its `nameField`, kept deliberately in
+               * step so the rail and every other surface say one thing. Do NOT
+               * point it at `crm_product`: a lookup hands back an id and this
+               * card would be back where it started.
+               *
+               * The rail's chain learning to read `nameField` is upstream work
+               * and deliberately out of scope on #1031; when it lands, this key
+               * becomes redundant rather than wrong.
+               */
               {
                 objectName: 'crm_opportunity_line_item',
                 relationshipField: 'crm_opportunity',
+                displayField: 'description',
                 limit: 3,
               },
               {
