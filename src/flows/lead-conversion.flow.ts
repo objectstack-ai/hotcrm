@@ -12,6 +12,58 @@ export const LeadConversionFlow: Flow = {
   type: 'screen',
   status: 'active',
 
+  // Lead conversion is a TRUSTED, INDIVISIBLE business transaction, so it runs
+  // with the system writer — the same shape `close_case` uses in
+  // `case-actions.flow.ts` (a screen flow off a record header action whose
+  // writes are not the caller's to make). Under the default `runAs: 'user'`
+  // every data node executed as the rep who pressed the button, and that made
+  // the flow's OUTCOME a function of the converter's permission set rather than
+  // of the lead:
+  //
+  //  1. #1033 — DEAD FLOW FOR THE CORE PERSONA. `create_account` maps
+  //     `annual_revenue`, which the `sales_rep` set marks
+  //     `{ readable: true, editable: false }`. Every rep conversion died at that
+  //     node with `create_record(crm_account) failed: [Security] Field write
+  //     denied: not permitted to edit [annual_revenue] on 'crm_account'`, lead
+  //     unconverted and nothing created. FLS masks a REP EDITING an account's
+  //     revenue by hand; it was never meant to decide whether a lead can be
+  //     converted, and an empty `annual_revenue` on the lead failed identically
+  //     because the refusal is on the KEY, not the value.
+  //  2. DEDUPE THAT ONLY SAW HALF THE ORG. `find_account` /`find_contact` guard
+  //     constraints that are ORG-WIDE (`crm_account.name` is `unique: true`, and
+  //     `crm_contact.email` carries a global unique index), but under the
+  //     caller's scope they only ever saw the caller's own book — `crm_account`
+  //     is private + `readScope: 'own'` for a rep, `crm_contact` derives from
+  //     the accounts they can reach. A rep converting a lead whose company or
+  //     contact email already belongs to ANOTHER rep matched nothing, fell to
+  //     the create branch, and hit the unique index — after the account row was
+  //     already written. That is the very orphaning `find_contact`'s own note
+  //     says it fixed; the fix was only ever complete for admins.
+  //
+  // Both are the same defect: a dedupe/copy decision that must be a property of
+  // the LEAD was being taken through the converter's keyhole. Elevating fixes
+  // both and makes the products identical whoever converts, which is the point.
+  //
+  // What this deliberately does NOT do — and must not be "simplified" into:
+  //
+  //  - It does NOT widen FLS. `sales_rep` still cannot edit
+  //    `crm_account.annual_revenue`; a direct rep write is still refused. The
+  //    grant belongs to this flow, not to the rep.
+  //  - It does NOT skip restricted fields for restricted callers. A
+  //    caller-dependent field map would make one lead convert into two different
+  //    accounts depending on who clicked, which is the bug, not the fix.
+  //
+  // Cost, stated plainly: the run no longer re-checks the caller's access to
+  // `recordId`, so authorization rests on the surfaces that gate the trigger —
+  // the `convert_lead` action's own `visible` predicate and the record page that
+  // hosts it. This is the same posture `close_case` already carries, and it is
+  // why `get_lead` below re-asserts, IN the graph, the one guard a system write
+  // stands down (`lead.hook.ts`'s converted-lead lock keys on `ctx.user?.id`,
+  // this repo's system-write signal). See
+  // `test/flow-conversion-authority.test.ts`, which measures every sentence of
+  // this comment against the real kernel.
+  runAs: 'system',
+
   variables: [
     // Named `recordId` to match the console's flow-action invocation contract:
     // POST /automation/:name/trigger sends { recordId, objectName } and the
@@ -73,13 +125,66 @@ export const LeadConversionFlow: Flow = {
           // answer; the flag only ever contradicted it.
           { name: 'createOpportunity', label: 'Create Opportunity?', type: 'boolean', defaultValue: false },
           { name: 'opportunityName', label: 'Opportunity Name', type: 'text', required: true, visibleWhen: 'createOpportunity == true' },
-          { name: 'opportunityAmount', label: 'Opportunity Amount', type: 'currency', visibleWhen: 'createOpportunity == true' },
+          // `required` here, unlike on `createOpportunity` above, is CORRECT
+          // and load-bearing (#1030). `crm_opportunity.amount` is
+          // `required: true` + `storage: { notNull: true }`, so an opportunity
+          // with no amount is refused by the engine — but the refusal landed
+          // deep inside `create_opportunity`, after the account and contact had
+          // already been written, and #524 (platform: a flow's internal failure
+          // has no UI echo) swallowed it: the dialog closed, nothing was
+          // converted, and the user was told nothing. Declaring it here moves
+          // the same refusal forward to the moment a human is still looking at
+          // the screen.
+          //
+          // Pairing `required` with `visibleWhen` is what keeps this out of
+          // #4477's trap. The server evaluates a screen field's `visibleWhen`
+          // against the SUBMITTED values before enforcing its `required`
+          // (`refuseInvalidScreenInput`), so on the commonest path — convert
+          // WITHOUT an opportunity — the field is hidden, its `required` never
+          // fires, and a runner that posts only what the user touched still
+          // resumes. An UNCONDITIONAL `required` would have re-broken
+          // conversion for exactly the callers #4477 fixed it for.
+          { name: 'opportunityAmount', label: 'Opportunity Amount', type: 'currency', required: true, visibleWhen: 'createOpportunity == true' },
         ],
       },
     },
     {
-      id: 'get_lead', type: 'get_record', label: 'Get Lead Record',
-      config: { objectName: 'crm_lead', filter: { id: '{recordId}' }, outputVariable: 'leadRecord' },
+      // Selects the lead ONLY while it is still convertible. The
+      // `is_converted` half is this flow's own re-conversion guard, and it is
+      // here because `runAs: 'system'` above takes the other one away:
+      // `lead.hook.ts`'s converted-lead lock is written `if (event ===
+      // 'beforeUpdate' && ctx.user?.id)`, and a system write carries no user,
+      // so the lock stands down by design (its own message advertises the
+      // system write as the admin escape hatch — do NOT close it there, other
+      // flows and the demo bootstrap rely on it).
+      //
+      // MEASURED, not assumed: with the flow elevated and this condition
+      // absent, running the conversion twice over one lead returns
+      // `success: true` the second time and writes a SECOND opportunity, then
+      // re-stamps `converted_*`. With it present the second run reaches
+      // `find_account` with `leadRecord` null and the engine refuses:
+      //
+      //   get_record: refusing to run — 1 filter condition(s) resolved to
+      //   nothing and were dropped from the query: `{leadRecord.company_
+      //   normalized}` (at name_normalized) …
+      //
+      // — run `failed`, `acted: 0`, nothing written. Fail-closed, which is the
+      // outcome that matters; the message names the dropped condition rather
+      // than the cause, so note that a null `leadRecord` now has exactly two
+      // readings: no such lead, or one that is already converted.
+      // `test/flow-conversion-authority.test.ts` pins both.
+      //
+      // `$ne: true` and not `false`: it is TOTAL. `is_converted` carries
+      // `defaultValue: false` so ordinary rows hold `false`, but a driver that
+      // stores only the columns a row was written with hands back the key
+      // ABSENT, and `is_converted: false` would then refuse to convert a
+      // perfectly open lead.
+      id: 'get_lead', type: 'get_record', label: 'Get Convertible Lead',
+      config: {
+        objectName: 'crm_lead',
+        filter: { id: '{recordId}', is_converted: { $ne: true } },
+        outputVariable: 'leadRecord',
+      },
     },
     {
       // Account dedupe: before creating a new account, look for an existing one

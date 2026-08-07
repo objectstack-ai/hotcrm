@@ -112,17 +112,19 @@ Work them from the **Suspected Duplicates** view on the Leads tab. Open the pair
 When a lead is qualified, click **Convert**. A small form pops up asking:
 
 - Should we also create an Opportunity?
-- If yes — what's the opportunity name and amount?
+- If yes — what's the opportunity name and amount? Both are required, and the form asks for them before it lets you submit. An opportunity cannot be saved without an amount, so being asked here rather than afterwards is what stops a conversion from being lost.
 
 The system then, in a single step:
 
-1. Creates an **Account** from the lead's company information — or reuses the one you already have. The match ignores capitalisation and extra spaces, so a lead for `ACME  Corp` lands on your existing `Acme Corp` instead of creating a second account. It is not a fuzzy match: `Acme Corp` and `Acme Corporation` are still two different companies.
+1. Creates an **Account** from the lead's company information — or reuses the one you already have. The match ignores capitalisation and extra spaces, so a lead for `ACME  Corp` lands on your existing `Acme Corp` instead of creating a second account. It is not a fuzzy match: `Acme Corp` and `Acme Corporation` are still two different companies. The search covers the whole organisation, not just your own records, so a lead for a company a colleague already owns joins their account instead of creating a rival copy.
 2. Creates a **Contact** from the lead's person information, attached to that account, marked as primary.
 3. *(Optional)* Creates an **Opportunity** in the *Prospecting* stage with a 90-day close date.
 4. Marks the lead as **Converted** and locks it.
 5. Sends you a confirmation email summarising what was created.
 
-After conversion, the lead becomes read-only — all future activity happens on the new account, contact and opportunity.
+After conversion, the lead becomes read-only — all future activity happens on the new account, contact and opportunity. Converting the same lead a second time is refused rather than creating a duplicate opportunity.
+
+Conversion is a trusted step, so it can fill in fields on the new account that you would not be able to type yourself — Annual Revenue, for example, is carried over from the lead even though it is read-only on the account form. That is a permission granted to the conversion, not to your account: editing an account's Annual Revenue by hand is still restricted. It also means the records you get are the same whoever runs the conversion.
 
 ## How the AI Copilot helps
 
