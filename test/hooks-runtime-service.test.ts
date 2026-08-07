@@ -411,6 +411,36 @@ describe('forecast_derive_period', () => {
     expect(input.period_end).toBeUndefined();
     expect(input.period_label).toBeUndefined();
   });
+
+  /**
+   * The two halves of the boundary contract `content/docs/sales/forecasting.mdx`
+   * now states, pinned against the handler rather than against the wish (#748).
+   *
+   * The page used to claim the boundary is "always computed, never typed", one
+   * sentence after teaching that a caller may supply `period_start`. Only the
+   * first case below is a computed boundary; the second is kept verbatim, which
+   * is what the prose says today. If the derivation ever starts snapping a
+   * supplied `period_start` to the calendar boundary — the contract change
+   * option #748 deliberately did NOT take — the second assertion goes red and
+   * that paragraph has to be rewritten with it.
+   */
+  it('snaps to the calendar boundary only when the caller sends no period_start (#748)', async () => {
+    const derived: Rec = { period: 'quarter', snapshot_date: '2026-08-02' };
+    await hook.handler(makeCtx({ event: 'beforeInsert', input: derived }));
+    expect(derived.period_start).toBe('2026-07-01');
+    expect(derived.period_end).toBe('2026-09-30');
+    expect(derived.period_label).toBe('Q3 2026');
+  });
+
+  it('keeps a hand-supplied period_start verbatim, mid-period and all (#748)', async () => {
+    const typed: Rec = { period: 'quarter', period_start: '2026-07-15' };
+    await hook.handler(makeCtx({ event: 'beforeInsert', input: typed }));
+    // NOT snapped to 2026-07-01: the row starts mid-quarter, so the surfaces
+    // that pin `period_start` to the quarter's first day (the `This Quarter`
+    // list view, the quota-attainment widget) never match it.
+    expect(typed.period_start).toBe('2026-07-15');
+    expect(typed.period_label).toBe('Q3 2026');
+  });
 });
 
 // ──────────────────────────────────────────────────── knowledge article ──
