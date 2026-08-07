@@ -164,7 +164,7 @@ Because it's the reference for every ObjectStack convention you'll encounter:
 - ✅ ObjectQL only — no raw SQL anywhere
 - ✅ AI-Native — every entity has an `*.action.ts` that's also an AI tool
 - ✅ Four-language i18n out of the box
-- ✅ Production-shaped sharing rules, profiles, and role hierarchy
+- ✅ Production-shaped sharing rules, profiles, and positions
 
 If you want to ship an HR app, a project tracker, a help-desk — start by reading HotCRM's structure, then change names.
 

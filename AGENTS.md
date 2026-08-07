@@ -38,7 +38,7 @@ hotcrm/
 │   ├── actions/            # UI actions + AI-callable tools (*.actions.ts)
 │   ├── dashboards/ reports/ datasets/          # Analytics metadata
 │   ├── skills/             # AI skill metadata (*.skill.ts) — skills-only surface
-│   ├── profiles/ sharing/  # Permission sets, role hierarchy, sharing rules
+│   ├── profiles/ sharing/  # Permission sets, positions, sharing rules
 │   ├── translations/       # Locale bundles (en / zh-CN / es-ES / ja-JP)
 │   └── data/               # Seed data (defineDataset)
 ├── content/docs/           # Product documentation site content

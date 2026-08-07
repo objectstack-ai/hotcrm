@@ -104,11 +104,11 @@ The approval status is shown as a banner at the top of the opportunity detail sc
 
 ## Sharing — who can see which deal
 
-By default opportunities are **private** — only the owner and people above them in the role hierarchy can see them.
+By default opportunities are **private** — only the owner. Positions are flat and **nothing rolls up**, so no one sees a deal by sitting above its owner in an org chart; every other reader is named by one of the rules below.
 
 On top of that:
 
-- **Open opportunities of $100K or more** are shared *read-only* with the Sales Director and everyone below them in the hierarchy. This way leadership sees the big deals without having to follow up.
+- **Open opportunities of $100K or more** are shared *read-only* with the `sales_director` position — and, because nothing rolls up, a second rule shares the same deals with `executive`. This way leadership sees the big deals without having to follow up.
 - **High-value deals in approval** are visible to the approvers regardless of ownership.
 
 ## Standard list views
