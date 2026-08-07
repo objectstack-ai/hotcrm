@@ -29,7 +29,8 @@ import { makeHarness, makeCtx, hookNamed } from './helpers/hook-harness';
  *   1. the family is complete and reachable on every object a rep sells to
  *      (the #509 workaround scoped everything to `crm_case`);
  *   2. attendees are ROWS — the acceptance criterion of #592;
- *   3. a booking does not masquerade as an interaction;
+ *   3. a booking does not masquerade as an interaction — and since #1046 does
+ *      not enter the "what happened" timeline at all;
  *   4. the `record_label` and twin-parity guarantees from #514 still hold.
  */
 
@@ -47,7 +48,14 @@ const action = (objectName: string, name: string): AnyRec => {
 };
 
 const KINDS = ['log_call', 'log_meeting', 'schedule_meeting'] as const;
-/** Kinds that record something that HAPPENED, as opposed to a booking. */
+/**
+ * Kinds that record something that HAPPENED, as opposed to a booking.
+ *
+ * Since #1046 this is also exactly the set that writes a `sys_activity`
+ * timeline pointer, which is why several guards below run over it rather than
+ * over {@link KINDS}: the timeline is a record of what happened, and a booking
+ * has not happened yet.
+ */
 const LOGGING_KINDS = ['log_call', 'log_meeting'] as const;
 const TARGETS = Object.keys(ACTIVITY_TARGETS);
 
@@ -273,10 +281,13 @@ describe('activity actions stamp a real record_label (#514 item 2)', () => {
     expect(notName.length).toBeGreaterThan(withNameField.length / 2);
   });
 
+  // LOGGING_KINDS, not KINDS: since #1046 a booking writes no `sys_activity`
+  // row for a label to land on. That deliberate absence is guarded on its own,
+  // below — this one stays about the label the pointer carries.
   it.each(TARGETS)('%s resolves its own declared nameField', async (objectName) => {
     const nameField = objectByName.get(objectName)?.nameField;
     expect(nameField, `${objectName} declares no nameField`).toBeTruthy();
-    for (const kind of KINDS) {
+    for (const kind of LOGGING_KINDS) {
       const { engine } = await run(objectName, kind, {
         input: { subject: 'Quarterly sync', start_date: '2026-09-01', start_time: '09:00' },
       });
@@ -307,11 +318,149 @@ describe('activity actions stamp a real record_label (#514 item 2)', () => {
     expect(activity.type).toBe('completed');
   });
 
-  it('marks a booking as scheduled, not completed', async () => {
-    const { engine } = await run('crm_lead', 'schedule_meeting', {
-      input: { subject: 'Deep dive', start_date: '2026-09-01', start_time: '09:00' },
+});
+
+// ─────────── a booking is not an entry in the "what happened" feed (#1046) ──
+
+/**
+ * The declared options of `sys_activity.type`, verbatim.
+ *
+ * Copied from the platform's own declaration — `@objectstack/plugin-audit`,
+ * `src/objects/sys-activity.object.ts` at 17.0.0-rc.4 — because that package
+ * exports the `AuditPlugin` class and registers the object inside `init()`,
+ * so there is no object literal to import. Same trade, and the same reason, as
+ * the hand-listed `PLATFORM_OBJECTS` in `test/helpers/metadata-fixtures.ts`.
+ *
+ * A value outside this set is not "an unusual timeline entry". The Console's
+ * `record:activity` renderer maps a row's `type` through a table keyed on
+ * exactly these values (`created`/`updated`/`deleted`/`assigned`/`shared` →
+ * `field_change`, `system` → `system`, `completed` → `task`, the rest →
+ * undefined) and `continue`s past every row it cannot map — so an out-of-range
+ * value is NO entry at all, plus a bucket outside the dictionary in any
+ * group-by over the column.
+ */
+const SYS_ACTIVITY_TYPE_OPTIONS = new Set([
+  'created',
+  'updated',
+  'deleted',
+  'commented',
+  'mentioned',
+  'shared',
+  'assigned',
+  'completed',
+  'login',
+  'logout',
+  'system',
+]);
+
+describe('a booking writes no timeline pointer (#1046)', () => {
+  /**
+   * The asymmetry here is DELIBERATE, and it is the one asymmetry the family
+   * is allowed: `log_call` / `log_meeting` record something that HAPPENED and
+   * therefore land on the record's "what happened" timeline; `schedule_meeting`
+   * books something that has not happened and does not.
+   *
+   * It is the same line `crm_event.status` already draws — only `held` moves
+   * the customer's recency clock, because "a meeting booked for next quarter is
+   * not an interaction that happened" (`src/objects/event.object.ts`) — and
+   * before #1046 step 3 of the shared body contradicted it: a booking wrote a
+   * `sys_activity` row with `type: 'scheduled'`, a value the field does not
+   * declare and the renderer cannot map. The row was therefore stored
+   * out-of-range AND rendered nowhere, so the "consistency" it bought was
+   * consistency with nothing a user could see.
+   *
+   * A booking stays visible where a booking belongs: the calendar views over
+   * `crm_event`, and the Events related list on the record it was booked from
+   * (#1034). Nothing else reads it — `sys_activity` has exactly two writers in
+   * this app (`global.actions.ts`, `contact.actions.ts`) and no reader at all:
+   * every calendar view, the `event_metrics` dataset and the activity dashboard
+   * all read `crm_event` itself.
+   */
+  const BOOKING_INPUT = { subject: 'Deep dive', start_date: '2026-09-01', start_time: '09:00' };
+
+  it.each(TARGETS)('%s: schedule_meeting writes no sys_activity row', async (objectName) => {
+    const { engine, result } = await run(objectName, 'schedule_meeting', { input: BOOKING_INPUT });
+    expect(
+      engine.inserted('sys_activity'),
+      `${objectName}:schedule_meeting put a booking on the "what happened" timeline`,
+    ).toEqual([]);
+    // The key stays in the return shape, answering "none" rather than going
+    // absent and leaving the caller to guess.
+    expect(result.activityId).toBeNull();
+  });
+
+  it('the booking itself is still written, with its attendees', async () => {
+    // The absence above is a timeline decision, not a lost booking: what makes
+    // it safe is that the queryable record is untouched.
+    const { engine, result } = await run('crm_opportunity', 'schedule_meeting', {
+      input: { ...BOOKING_INPUT, location: 'Zoom', attendee_contacts: ['con_1'] },
     });
-    expect((engine.inserted('sys_activity')[0] as AnyRec).type).toBe('scheduled');
+    const [event] = engine.inserted('crm_event') as AnyRec[];
+    expect(event.status).toBe('planned');
+    expect(event.start_datetime).toBe('2026-09-01T09:00:00.000Z');
+    expect(event.related_to_opportunity).toBe('crm_opportunity_1');
+    // `rows`, not `inserted`: the generated id lives on the stored row, while
+    // `inserted` records the document the body handed the engine.
+    expect(result.eventId).toBe((engine.rows('crm_event')[0] as AnyRec).id);
+    expect(engine.inserted('crm_event_attendee').length).toBeGreaterThan(0);
+  });
+
+  it.each(LOGGING_KINDS)('%s does write one — the absence is a booking rule, not a lost writer', async (kind) => {
+    const { engine, result } = await run('crm_lead', kind);
+    const rows = engine.inserted('sys_activity') as AnyRec[];
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.type).toBe('completed');
+    expect(rows[0]!.source_object).toBe('crm_event');
+    expect(result.activityId).toBe((engine.rows('sys_activity')[0] as AnyRec).id);
+  });
+
+  it.each(TARGETS)('%s: every sys_activity row the family writes carries a declared type', async (objectName) => {
+    const written: string[] = [];
+    for (const kind of KINDS) {
+      const { engine } = await run(objectName, kind, { input: BOOKING_INPUT });
+      for (const row of engine.inserted('sys_activity') as AnyRec[]) written.push(row.type);
+    }
+    const undeclared = written.filter((t) => !SYS_ACTIVITY_TYPE_OPTIONS.has(t));
+    expect(
+      undeclared,
+      `${objectName} wrote sys_activity.type values the field does not declare — ` +
+        'the renderer drops these rows and any group-by gains a bucket outside the ' +
+        `dictionary:\n  ${undeclared.join('\n  ')}`,
+    ).toEqual([]);
+  });
+
+  it('no action body anywhere declares an out-of-range sys_activity.type', () => {
+    // A SOURCE scan, unlike everything else in this file, and deliberately so:
+    // it reaches bodies this file never invokes (`send_email` is the other
+    // writer today), so a future writer that reintroduces an undeclared literal
+    // fails here rather than only wherever someone remembered to execute it.
+    // A non-literal type — the `EVENT_STATUS === 'held' ? … : …` ternary this
+    // issue removed — fails too: a value assembled at runtime is a value this
+    // guard cannot vouch for.
+    const MARKER = "object('sys_activity').insert({";
+    const offenders: string[] = [];
+    for (const a of stackActions) {
+      const source: string = a.body?.source ?? '';
+      for (let at = source.indexOf(MARKER); at !== -1; at = source.indexOf(MARKER, at + MARKER.length)) {
+        const where = `${a.objectName ?? '*'}:${a.name}`;
+        const declared = /\btype:\s*'([^']*)'/.exec(source.slice(at, at + 400));
+        if (!declared) {
+          offenders.push(`${where} — the sys_activity insert has no literal \`type\``);
+        } else if (!SYS_ACTIVITY_TYPE_OPTIONS.has(declared[1]!)) {
+          offenders.push(`${where} — writes \`type: '${declared[1]}'\``);
+        }
+      }
+    }
+    expect(
+      offenders,
+      `sys_activity.type declares only ${[...SYS_ACTIVITY_TYPE_OPTIONS].join('/')}:\n  ` +
+        offenders.join('\n  '),
+    ).toEqual([]);
+  });
+
+  it('the app still writes this column at all — otherwise the guards above are vacuous', () => {
+    const writers = stackActions.filter((a) => (a.body?.source ?? '').includes("object('sys_activity')"));
+    expect(writers.length, 'nothing writes sys_activity any more').toBeGreaterThan(0);
   });
 });
 
@@ -354,9 +503,11 @@ const withUserRow = (name = 'Dev Admin') =>
 const ANY_KIND_INPUT = { subject: 'Quarterly sync', start_date: '2026-09-01', start_time: '09:00' };
 
 describe('sys_activity.actor_name is a human-readable name (#673)', () => {
-  it('resolves the display name for every activity action on every target', async () => {
+  // LOGGING_KINDS: a booking writes no `sys_activity` row to carry an actor
+  // name since #1046 — the pointer it used to write was unrenderable anyway.
+  it('resolves the display name for every logging action on every target', async () => {
     for (const objectName of TARGETS) {
-      for (const kind of KINDS) {
+      for (const kind of LOGGING_KINDS) {
         const { engine } = await run(objectName, kind, {
           user: restUser(),
           engine: withUserRow(),

@@ -29,6 +29,13 @@ import * as objects from '../objects';
  *     unified-timeline pointer (ADR-0052 `source_object`/`source_id`), the same
  *     way `send_email` points at its `sys_email`.
  *
+ * # The pointer row is written by the LOGGING kinds only (#1046)
+ *
+ * `log_call` and `log_meeting` record something that happened, so they write
+ * the timeline pointer. `schedule_meeting` books something that has not, so it
+ * writes none — the same `held` / `planned` line `crm_event.status` already
+ * draws for the recency clock. Step 3 of the body carries the measurement.
+ *
  * # Live platform workaround
  *
  * `schedule_meeting` collects its start as a `date` + `time` PAIR rather than
@@ -166,16 +173,12 @@ export const ACTOR_NAME_RESOLUTION_SOURCE = `// The acting user's DISPLAY name, 
  * Everything they share lives in {@link activityAction}; this type is the
  * complete list of what a variant is still allowed to differ on.
  */
-type ActivitySpec = {
+type ActivitySpecCore = {
   name: string;
   label: string;
   icon: string;
   /** `crm_event.type` for the row this action writes. */
   eventType: string;
-  /** `crm_event.status`: `held` for something that happened, `planned` for a booking. */
-  eventStatus: 'held' | 'planned';
-  /** Stamped in front of the activity summary; `''` for calls. */
-  summaryPrefix: string;
   /** Subject used when the user submits the form with the field blank. */
   defaultSubject: string;
   subjectLabel: string;
@@ -184,6 +187,30 @@ type ActivitySpec = {
   collectsSchedule?: boolean;
   successMessage: string;
 };
+
+/**
+ * `held` and `planned` differ in more than a column value, so the type says so.
+ *
+ * A `held` kind records something that HAPPENED and therefore writes the
+ * `sys_activity` timeline pointer — which is the only thing `summaryPrefix`
+ * exists for. A `planned` kind books something that has NOT happened and writes
+ * no pointer at all (#1046), so it carries no prefix: the union makes "a
+ * booking with a timeline summary prefix" unrepresentable rather than merely
+ * unused, and a fourth kind cannot inherit a dormant one by copy-paste.
+ */
+type ActivitySpec = ActivitySpecCore &
+  (
+    | {
+        /** `crm_event.status` — this one HAPPENED. */
+        eventStatus: 'held';
+        /** Stamped in front of the timeline-pointer summary; `''` for calls. */
+        summaryPrefix: string;
+      }
+    | {
+        /** `crm_event.status` — this one is a booking, and writes no pointer. */
+        eventStatus: 'planned';
+      }
+  );
 
 /**
  * Build one activity action, bound to one object.
@@ -206,6 +233,12 @@ function activityAction(spec: ActivitySpec, objectName: string): Action {
   // miss on. `?? 'name'` only fires for an object that declares no nameField
   // at all, which no business object in this app does.
   const nameField = NAME_FIELD_BY_OBJECT[objectName] ?? 'name';
+  // Total over the union above, not a tolerant read of an authored value: a
+  // `planned` spec HAS no prefix, and the branch it would be spliced into never
+  // runs for one. The empty string keeps a single body source across the family
+  // (the pointer block cannot drift between kinds) without leaving a live-looking
+  // "Meeting scheduled: " in a body that can never emit it.
+  const summaryPrefix = spec.eventStatus === 'held' ? spec.summaryPrefix : '';
 
   return {
     name: spec.name,
@@ -340,29 +373,60 @@ function activityAction(spec: ActivitySpec, objectName: string): Action {
         if (row?.id) attendeeIds.push(row.id);
       }
 
-      // 3. the unified-timeline pointer.
+      // 3. the unified-timeline pointer — written only for something that
+      //    HAPPENED (#1046).
+      //
+      // \`sys_activity\` is the "what happened" feed, and a booking has not
+      // happened yet. That line is already drawn by \`crm_event.status\`: only
+      // \`held\` moves the customer's recency clock, because "a meeting booked
+      // for next quarter is not an interaction that happened"
+      // (\`src/objects/event.object.ts\`). This step now honours the same line
+      // instead of contradicting it.
+      //
+      // What the planned branch used to write was \`type: 'scheduled'\`, which
+      // is not an option of \`sys_activity.type\` at all — the platform declares
+      // exactly created / updated / deleted / commented / mentioned / shared /
+      // assigned / completed / login / logout / system
+      // (\`@objectstack/plugin-audit\`, \`src/objects/sys-activity.object.ts\`).
+      // The Console's \`record:activity\` renderer maps a row's type through a
+      // table keyed on those same options and DROPS every row it cannot map, so
+      // the booking's pointer row was stored out-of-range AND rendered nowhere:
+      // it was never a timeline entry, only an out-of-dictionary bucket in any
+      // group-by over \`sys_activity.type\`.
+      //
+      // A booking is visible where a booking belongs: the calendar views over
+      // \`crm_event\` and the Events related list on the record it was booked
+      // from (#1034). Nothing reads this row for a booking — the timeline
+      // renderer was its only consumer.
+      //
       // \`metadata\` no longer carries the attendee list: it is a display hint
       // beside a real record now, not the record itself. ADR-0052
       // source_object/source_id is the queryable drill to the crm_event row.
-      const summary = duration ? subject + ' (' + duration + ' min)' : subject;
-      const activity = await ctx.api.object('sys_activity').insert({
-        type: EVENT_STATUS === 'held' ? 'completed' : 'scheduled',
-        summary: ${lit(spec.summaryPrefix)} + summary,
-        actor_id: userId,
-        actor_name: actorName,
-        object_name: OBJECT_NAME,
-        record_id: recordId,
-        // #514 item 2: the object's DECLARED nameField, not a hardcoded name.
-        record_label: record[NAME_FIELD] ?? null,
-        source_object: 'crm_event',
-        source_id: eventId,
-        metadata: JSON.stringify({
-          kind: EVENT_TYPE,
-          duration_minutes: duration,
-          notes: notes,
-          attendee_count: attendeeIds.length,
-        }),
-      });
+      let activity = null;
+      if (EVENT_STATUS === 'held') {
+        const summary = duration ? subject + ' (' + duration + ' min)' : subject;
+        activity = await ctx.api.object('sys_activity').insert({
+          // A literal, not a ternary on EVENT_STATUS: inside this branch the
+          // status IS \`held\`, and the only value the field accepts for a
+          // finished interaction is \`completed\`.
+          type: 'completed',
+          summary: ${lit(summaryPrefix)} + summary,
+          actor_id: userId,
+          actor_name: actorName,
+          object_name: OBJECT_NAME,
+          record_id: recordId,
+          // #514 item 2: the object's DECLARED nameField, not a hardcoded name.
+          record_label: record[NAME_FIELD] ?? null,
+          source_object: 'crm_event',
+          source_id: eventId,
+          metadata: JSON.stringify({
+            kind: EVENT_TYPE,
+            duration_minutes: duration,
+            notes: notes,
+            attendee_count: attendeeIds.length,
+          }),
+        });
+      }
 
       // 4. SLA first-response stamp (#575 B2, cases only).
       // \`first_response_date\` was the one member of the case SLA family with
@@ -401,6 +465,9 @@ function activityAction(spec: ActivitySpec, objectName: string): Action {
         }
       }
 
+      // \`activityId\` is null for a booking, and the key stays present so the
+      // three kinds keep one return shape: "this action wrote no timeline
+      // pointer" is an answer, an absent key is a caller-side guess (#1046).
       return { eventId: eventId, activityId: activity?.id ?? null, attendeeIds: attendeeIds };
     `,
       capabilities: ['api.read', 'api.write'],
@@ -516,9 +583,12 @@ const SCHEDULE_MEETING_SPEC: ActivitySpec = {
   icon: 'calendar-plus',
   eventType: 'meeting',
   // `planned`, and that is the whole difference that matters: a booking must
-  // NOT reset the customer's recency clock (see event.hook.ts).
+  // NOT reset the customer's recency clock (see event.hook.ts), and it does not
+  // enter the "what happened" timeline either — no `summaryPrefix` here because
+  // this kind writes no `sys_activity` pointer for one to sit in front of
+  // (#1046). It is visible on the calendar and on the record's Events related
+  // list, which is where a booking belongs.
   eventStatus: 'planned',
-  summaryPrefix: 'Meeting scheduled: ',
   defaultSubject: 'Untitled Meeting',
   subjectLabel: 'Meeting Subject',
   notesLabel: 'Agenda',
