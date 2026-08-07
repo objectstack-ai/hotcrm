@@ -64,7 +64,9 @@ import { objects, pages, views, profiles, type AnyRec } from './helpers/metadata
  *     `stage_entry_date`, also `readonly`, is admitted and kept), despite the
  *     spec's `readonly` description claiming both paths. On the create path it
  *     is therefore the hook, not the engine, that makes the stored value the
- *     stage's. Filed separately; nothing here depends on it changing.
+ *     stage's. Filed as objectstack#6187; nothing here depends on it changing,
+ *     and the create assertion below is written against the stored value for
+ *     exactly that reason.
  *
  * Reverse verification, direction predicted before it was run: deleting
  * `readonly: true` from the field leaves the STORED values identical on every

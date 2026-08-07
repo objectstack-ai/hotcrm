@@ -129,11 +129,11 @@ export const Opportunity = ObjectSchema.create({
     // through `onFieldsDropped`. On INSERT that strip does NOT fire on this
     // version — a caller-supplied readonly value is admitted (measured with
     // `stage_entry_date`, which the hook leaves alone when the caller supplies
-    // one) — so on the create path it is the hook's unconditional sync, not
-    // the engine, that makes the stored value the stage's. Either way no write
-    // path stores a caller's number; the two just get there differently, and
-    // this comment says which rather than assuming the symmetry the spec's
-    // `readonly` description promises.
+    // one; reported as objectstack#6187) — so on the create path it is the
+    // hook's unconditional sync, not the engine, that makes the stored value
+    // the stage's. Either way no write path stores a caller's number; the two
+    // just get there differently, and this comment says which rather than
+    // assuming the symmetry the spec's `readonly` description promises.
     //
     // Hook-written keys are never "caller-supplied", so the sync still lands.
     // Same disposition as `expected_revenue` above and
