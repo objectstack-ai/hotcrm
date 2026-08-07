@@ -40,7 +40,11 @@ What follows from that is on the SLA side: deadlines run on **calendar hours**. 
 - [ ] Import or invite all users
 - [ ] Assign each user a [profile](/docs/administration/profiles)
 - [ ] Assign each user their positions — a user may hold more than one
-- [ ] Set a manager for each user (drives approval routing)
+- [ ] Make sure `sales_manager` and `sales_director` each have at least one holder — those two positions are what opportunity approvals route to
+
+**Approvals route to a position, never to a reporting line.** The Opportunity Approval flow resolves each tier's approvers from a position — `sales_manager` for the >$100K tier, `sales_director` for >$500K — and snapshots that list when the request opens. Leave a position unheld and the request opens with an **empty approver slate**: the approval node has already locked the opportunity, and only an administrator can clear it (the flow's `onEmptyApprovers: 'admin_rescue'`). So the position roster below is what makes approvals work, and staffing it is a Day 2 task, not a Day 4 one.
+
+**The user record's *Manager* field drives nothing in HotCRM.** It is a platform field on the user, and this app never reads it: no sharing rule, flow or approval node consults a manager or a reporting line, and positions are flat, so nothing rolls up either. Fill it in as org data if that is useful to you — it changes no one's access and routes no approval.
 
 ### 5. Positions
 
@@ -115,7 +119,7 @@ Adjust if your support promise differs — the Critical four hours lives in `src
 ### 12. Approval process
 
 - [ ] Confirm the discount approval threshold ($500K default) — see [Approvals](/docs/revenue/approvals)
-- [ ] Confirm approvers (manager + director by role)
+- [ ] Confirm both approver positions have holders — `sales_manager` (> $100K) and `sales_director` (> $500K)
 - [ ] Test by submitting a sample opportunity
 
 ## ✅ Day 5 — Knowledge & AI
