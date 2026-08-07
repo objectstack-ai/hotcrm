@@ -221,6 +221,62 @@ export const LeadDetailPage: Page = {
                             },
                           ],
                         },
+                        {
+                          // #1034. A rep logs a call from this very page (the
+                          // three activity actions sit in the header, #592) and
+                          // the interaction was then invisible on the record it
+                          // came from — the crm_event row was written with
+                          // `related_to_lead` pointing straight back here, but
+                          // nothing on the page read it, so the only way to find
+                          // the call was My Calendar.
+                          //
+                          // This is the same shape the ACCOUNT detail page shows.
+                          // That page is `kind: 'slotted'` (regions: []), so its
+                          // Related tab is SYNTHESIZED — the default layout emits
+                          // one related list per incoming lookup, `crm_event`'s
+                          // `related_to_account` included. A `kind: 'full'` page
+                          // like this one authors every component itself and gets
+                          // no synthesis at all, which is exactly why lead fell
+                          // behind account while account needed no metadata.
+                          // So the panel is written out here in the page's own
+                          // idiom (the Tasks list above, opportunity's Quotes /
+                          // Products) rather than by converting the page to
+                          // slotted, which would discard the authored header,
+                          // highlights, path and Details grid.
+                          //
+                          // Scope: `related_to_lead`, the one crm_event lookup
+                          // that points at crm_lead. The object carries five
+                          // `related_to_*` lookups and picking any other one
+                          // would list somebody else's interactions here.
+                          label: 'Events',
+                          icon: 'calendar-days',
+                          collapsed: false,
+                          children: [
+                            {
+                              type: 'record:related_list',
+                              id: 'related_events',
+                              label: 'Events',
+                              properties: {
+                                objectName: 'crm_event',
+                                relationshipField: 'related_to_lead',
+                                // crm_event.highlightFields, which is also what
+                                // the synthesized account panel derives its
+                                // columns from.
+                                columns: ['subject', 'type', 'status', 'start_datetime', 'owner_id'],
+                                // Newest interaction first. NOT filtered by
+                                // `status`: a booked meeting and the call that
+                                // already happened are both "what is going on
+                                // with this lead", and the Planned/Held split is
+                                // already a column.
+                                sort: [
+                                  { field: 'start_datetime', order: 'desc' }
+                                ],
+                                limit: 10,
+                                showViewAll: true,
+                              },
+                            },
+                          ],
+                        },
                       ],
                     },
                   },
@@ -235,12 +291,40 @@ export const LeadDetailPage: Page = {
                     id: 'lead_activity',
                     label: 'Activity Timeline',
                     properties: {
-                      // Only `crm_task` exists in this app — `event` / `email` /
-                      // `call` / `note` were aspirational object names that the
-                      // timeline silently skipped.
-                      types: ['crm_task'],
+                      // #1034. This tab used to show ONLY the audit feed
+                      // (Created/Updated) — a call logged a second earlier was
+                      // missing. Measured against the renderer, both keys that
+                      // used to sit here were at fault, in different ways:
+                      //
+                      // · `showCompleted: false` was the cause. The timeline
+                      //   reads `sys_activity` rows for this record and maps
+                      //   `type` onto a feed type: created/updated/deleted/
+                      //   assigned/shared → `field_change`, system → `system`,
+                      //   completed → `task`. `log_call` / `log_meeting` write
+                      //   `sys_activity.type: 'completed'` (global.actions.ts),
+                      //   so a held interaction arrives as `task` — and the
+                      //   renderer drops every `task` item unless showCompleted
+                      //   is exactly `true`. Only the `field_change` rows
+                      //   survived, which is precisely the audit-only feed that
+                      //   was reported. A record's past activity is the point of
+                      //   this tab, so it is `true` here.
+                      //
+                      // · `types` is gone, not corrected. It takes `FeedItemType`
+                      //   (comment | field_change | task | event | email | call |
+                      //   note | file | record_create | record_delete | approval |
+                      //   sharing | system) — FEED item types, never object
+                      //   names. `['crm_task']` matched none of them, so the
+                      //   renderer's sanitizer discarded the whole array and the
+                      //   key was inert: it neither filtered nor broke anything,
+                      //   and its comment ("only crm_task exists in this app")
+                      //   described a mechanism the component does not have.
+                      //   Leaving `types` unset is the honest spelling and what
+                      //   case_detail / opportunity_detail already do — the
+                      //   timeline shows every kind of item it can render, and a
+                      //   feed type the platform adds later is not silently
+                      //   excluded by a list frozen today.
                       limit: 20,
-                      showCompleted: false,
+                      showCompleted: true,
                     },
                   },
                 ],

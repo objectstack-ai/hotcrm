@@ -2,6 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { AgentSchema } from '@objectstack/spec/ai';
+import { FeedItemType } from '@objectstack/spec/data';
 import stack from '../objectstack.config';
 import {
   type AnyRec,
@@ -176,15 +177,53 @@ describe('page component references resolve', () => {
     expect(bad, `inert reference-rail filters:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
-  it('record:activity only lists object types this app defines', () => {
+  /**
+   * `record:activity.types` takes `FeedItemType` — the platform's FEED item
+   * enum — and never an object name.
+   *
+   * This guard used to read "only lists object types this app defines", and it
+   * was green on `lead_activity`'s `types: ['crm_task']` for the whole time that
+   * key sat there doing nothing (#1034). The renderer sanitizes the array
+   * against `FeedItemType.options` and drops what does not match; an array where
+   * NOTHING matches sanitizes to `undefined`, i.e. no filter at all. So the old
+   * guard licensed a value that was simultaneously wrong and invisible: it could
+   * never fail, and the only way to notice was to read the component.
+   *
+   * Checking the producer's enum instead is strictly stronger — it rejects
+   * `crm_task` and would equally reject a typo like `calls` — and it is the
+   * spelling every consumer of this key has to satisfy anyway.
+   */
+  const isFeedItemType = (t: unknown): boolean =>
+    typeof t === 'string' && (FeedItemType.options as readonly string[]).includes(t);
+
+  it('record:activity types are FeedItemType members, not object names', () => {
     const bad: string[] = [];
     for (const c of components) {
       if (c.type !== 'record:activity') continue;
       for (const t of c.properties?.types ?? []) {
-        if (!objectNames.has(t)) bad.push(`${c.id}: activity type "${t}" is not a defined object`);
+        if (!isFeedItemType(t)) {
+          bad.push(
+            `${c.id}: activity type "${t}" is not a FeedItemType ` +
+              `(${FeedItemType.options.join(' | ')})`,
+          );
+        }
       }
     }
-    expect(bad, `dangling activity types:\n  ${bad.join('\n  ')}`).toEqual([]);
+    expect(bad, `activity types the timeline cannot render:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  /**
+   * The app currently authors NO `types` at all (every `record:activity` lets the
+   * timeline show what it can render), so the loop above walks zero values. A
+   * guard that passes because it inspected nothing is not a guard, so the
+   * predicate is exercised directly — the same way `hasContent` is below.
+   */
+  it('the FeedItemType check rejects an object name and accepts a feed type', () => {
+    expect(isFeedItemType('crm_task')).toBe(false);
+    expect(isFeedItemType('crm_event')).toBe(false);
+    expect(isFeedItemType('call')).toBe(true);
+    expect(isFeedItemType('event')).toBe(true);
+    expect(isFeedItemType('field_change')).toBe(true);
   });
 
   it('record:details / record:highlights / record:path only name real fields on the page object', () => {
@@ -327,6 +366,95 @@ describe('page component references resolve', () => {
     expect(hasContent({ type: 'list-view', properties: { objectName: 'crm_lead' } })).toBe(true);
     expect(hasContent({ type: 'page:card', properties: { body: [{ type: 'object-metric' }] } })).toBe(true);
     expect(hasContent({ type: 'page:section', properties: { components: [{ type: 'text' }] } })).toBe(true);
+  });
+});
+
+/**
+ * A logged interaction is visible on the record it was logged from (#1034).
+ *
+ * The lead detail page carries **Log a Call** in its own header (#592), the
+ * action writes a real `crm_event` with `related_to_lead` pointing straight back
+ * at the lead — and for as long as the page read neither, the rep's own call
+ * vanished from the record the moment it was filed. The only place it could be
+ * found was My Calendar.
+ *
+ * Nothing structural caught that: every reference the page DID declare resolved
+ * fine. The defect is an absence, the same class as the empty-tab guard above,
+ * so it is pinned as an absence: the panel that reads the events has to be
+ * there, and it has to be scoped by the right lookup.
+ *
+ * ## Why lead and not "every activity target"
+ *
+ * `crm_account`'s detail page is `kind: 'slotted'` — it authors two slots and
+ * lets the default-page synthesizer emit the Related tab, related lists
+ * included — so it never needed metadata for this and cannot regress by losing
+ * it. A `kind: 'full'` page authors every component itself. `opportunity` and
+ * `case` are `full` and carry no event panel either; that is filed separately
+ * rather than fixed here, so this guard deliberately names the ONE page the
+ * issue is about instead of sweeping the family and going red on known,
+ * triaged gaps.
+ */
+describe('a logged interaction is visible on the lead it was logged from (#1034)', () => {
+  const leadPage = pages.find((p) => p.name === 'lead_detail_page');
+  const leadComponents = [...walk(leadPage?.regions), ...walk(leadPage?.slots)];
+
+  /**
+   * Derived, not spelled: the `crm_event` lookups whose target is `crm_lead`.
+   * `crm_event` carries five `related_to_*` lookups and scoping the panel by any
+   * of the other four would list some other record's interactions under this
+   * lead — the failure mode `related_tasks` already paid for once when it was
+   * bound to a `lead_id` column that does not exist.
+   */
+  const eventFields: Record<string, AnyRec> =
+    (objects.find((o) => o.name === 'crm_event')?.fields ?? {}) as Record<string, AnyRec>;
+  const lookupsToLead = Object.entries(eventFields)
+    .filter(([, f]) => f?.type === 'lookup' || f?.type === 'master_detail')
+    .filter(([, f]) => (f.reference ?? f.reference_to ?? f.referenceTo) === 'crm_lead')
+    .map(([name]) => name);
+
+  const eventLists = leadComponents.filter(
+    (c) => c.type === 'record:related_list' && c.properties?.objectName === 'crm_event',
+  );
+
+  it('crm_event reaches crm_lead through exactly one lookup', () => {
+    // If this ever becomes two, the panel below has a choice to make and the
+    // choice has to be authored, not inherited from whichever came first.
+    expect(lookupsToLead).toEqual(['related_to_lead']);
+  });
+
+  it('the lead detail page declares a crm_event related list', () => {
+    expect(
+      eventLists.map((c) => c.id),
+      'the lead has no events panel — a call logged from this page is invisible on it',
+    ).not.toEqual([]);
+  });
+
+  it('every crm_event panel on the lead is scoped by a lookup that points at crm_lead', () => {
+    const bad = eventLists
+      .filter((c) => !lookupsToLead.includes(c.properties?.relationshipField))
+      .map((c) => `${c.id}: relationshipField "${c.properties?.relationshipField}" does not reach crm_lead`);
+    expect(bad, `mis-scoped event panels:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  /**
+   * The timeline half.
+   *
+   * `record:activity` reads `sys_activity` rows for the record and maps each
+   * row's `type` onto a feed item type. `log_call` / `log_meeting` write
+   * `sys_activity.type: 'completed'` for an interaction that HAPPENED
+   * (`src/actions/global.actions.ts`), and the renderer maps `completed` →
+   * `task` — then drops every `task` item unless `showCompleted` is exactly
+   * `true`. With `showCompleted: false` the only rows that survived were the
+   * created/updated audit entries, which is precisely the audit-only feed #1034
+   * reported. A record's past activity is what this tab is for.
+   */
+  it('the lead activity timeline does not hide what already happened', () => {
+    const timelines = leadComponents.filter((c) => c.type === 'record:activity');
+    expect(timelines.map((c) => c.id), 'the lead has no activity timeline').not.toEqual([]);
+    const bad = timelines
+      .filter((c) => c.properties?.showCompleted !== true)
+      .map((c) => `${c.id}: showCompleted is ${JSON.stringify(c.properties?.showCompleted)} — a held call renders as a 'task' feed item and is dropped`);
+    expect(bad, `activity timelines that hide logged interactions:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 });
 
