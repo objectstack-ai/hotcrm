@@ -41,8 +41,11 @@ export default defineStack({
     // load with a structured OS_PROTOCOL_INCOMPATIBLE diagnostic (naming the
     // `objectstack migrate meta` replay) instead of failing deep in a schema
     // parse. Bump together with `specVersion` on every platform upgrade
-    // (docs/MAINTENANCE.md §3).
-    engines: { protocol: '^17.0.0-rc.1' },
+    // (docs/MAINTENANCE.md §3) — `test/docs-drift.test.ts` now enforces that
+    // pairing against `objectstack.manifest.json` instead of trusting this
+    // comment, because two platform upgrades in a row (rc.2, then rc.3) moved
+    // the manifest and left this line behind (#728).
+    engines: { protocol: '^17.0.0-rc.3' },
   },
 
   // ─── Platform capabilities this app needs ─────────────────────────
