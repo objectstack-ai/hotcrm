@@ -138,8 +138,8 @@ See [SLA & Escalation](/docs/service/sla-and-escalation) for the full mechanics.
 
 ## Sharing — who can see which case
 
-- By default, cases are **private** — only the owner and managers above in the role hierarchy.
-- **Critical open cases** are auto-shared (read/edit) with all service managers and their subordinates. Critical issues get team-wide visibility.
+- By default, cases are **private** — only the owner. Positions are flat and **nothing rolls up**, so no manager sees a case by sitting above its owner.
+- **Critical open cases** are auto-shared by two rules, one per rung: *Escalated Cases Sharing* grants read/edit to `service_manager`, and *Escalated Cases — Service Director* grants read to `service_director`. Both rungs are named explicitly because neither inherits from the other.
 
 ## Field-level security
 

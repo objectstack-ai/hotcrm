@@ -42,7 +42,7 @@ hotcrm/
 │   ├── reports/        # Report metadata
 │   ├── views/, pages/  # App UI metadata
 │   ├── profiles/       # Permission sets
-│   ├── sharing/        # Sharing rules and role hierarchy
+│   ├── sharing/        # Sharing rules and positions
 │   ├── translations/   # Locale bundles
 │   └── data/           # Seed data
 ├── content/docs/       # Product documentation site content

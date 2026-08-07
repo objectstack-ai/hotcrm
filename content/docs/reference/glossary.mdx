@@ -77,7 +77,7 @@ description: CRM and platform terms — alphabetised so you can stop bluffing in
 
 ## H
 
-**Hierarchy** *(role hierarchy)* — The org chart that drives visibility — managers see their team's records.
+**Hierarchy** — Two different things share the word, and only one of them is in this app. **Account hierarchy** is real: parent and child accounts, see [Accounts](/docs/sales/accounts). A *reporting* hierarchy that drives record visibility is not — positions are flat, nothing rolls up between them, and each rung that needs a record is named by its own sharing rule. See [Sharing & Security](/docs/administration/sharing-and-security).
 
 ## I
 
@@ -125,6 +125,8 @@ description: CRM and platform terms — alphabetised so you can stop bluffing in
 
 **Permission set** — A bundle of extra permissions granted on top of a user's profile.
 
+**Position** — A flat group used to hand out record access (`sales_manager`, `eu_sales_team`, …). Positions do not nest and nothing rolls up between them: a record reaches a position only through a sharing rule that names it, so a position no rule names grants nothing. A user may hold several.
+
 **Profile** — The base permissions assigned to every user.
 
 **PWA** *(Progressive Web App)* — Install HotCRM as an "app" on your phone home screen.
@@ -143,7 +145,7 @@ description: CRM and platform terms — alphabetised so you can stop bluffing in
 
 **Renewal** — Extending a contract before / at its end date.
 
-**Role** — A position in the role hierarchy (drives sharing).
+**Role** — The v1 name for a **position**, kept here because older screens and imports still use it. The thing itself is a position; see *Position*.
 
 ## S
 
@@ -151,7 +153,7 @@ description: CRM and platform terms — alphabetised so you can stop bluffing in
 
 **SDR / BDR** *(Sales Development Rep / Business Development Rep)* — A rep specialised in prospecting leads.
 
-**Sharing rule** — An exception that grants visibility beyond OWD + hierarchy.
+**Sharing rule** — An exception that widens record access beyond the OWD baseline, to the positions it names.
 
 **Skill (AI)** — A bite-sized AI capability (qualify lead, draft email, triage case).
 
@@ -183,7 +185,7 @@ description: CRM and platform terms — alphabetised so you can stop bluffing in
 
 ## U
 
-**User** — A person who can log in. Each has a profile + role.
+**User** — A person who can log in. Each has a profile, and any number of positions.
 
 ## V
 
