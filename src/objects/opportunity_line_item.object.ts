@@ -60,12 +60,41 @@ export const OpportunityLineItem = ObjectSchema.create({
   highlightFields: ['crm_product', 'quantity', 'unit_price', 'total_price'],
 
   fields: {
+    // The parent link, and the ONE field on this object that decides whether the
+    // deal it belongs to can be deleted at all (#727).
+    //
+    // Declaring nothing here does not mean "no opinion": `Field.lookup` resolves
+    // `deleteBehavior` to the spec default `set_null`, and the engine's
+    // `cascadeDeleteRelations` escalates a `set_null` default on a REQUIRED
+    // lookup to `restrict` — a NOT NULL column cannot be cleared. So the silent
+    // default made every itemised opportunity undeletable, with a message that
+    // told the API caller to `set deleteBehavior:'cascade'` on this very field:
+    //
+    //     DELETE /api/v1/data/crm_opportunity/<id>
+    //     → 409 DELETE_RESTRICTED "…1 dependent crm_opportunity_line_item
+    //       record(s) reference it via crm_opportunity…"
+    //
+    // `cascade` is the semantics this object already claims twice over: the
+    // header comment says a line has no meaning apart from its deal, and
+    // `opportunity_line_item.hook.ts` derives `crm_opportunity.amount` FROM the
+    // line set. A record whose parent is gone denotes nothing and would keep a
+    // dead deal's revenue in the line-level reports.
+    //
+    // This is deliberately NOT the campaign/event answer (#696, #711 kept
+    // `crm_campaign_member.crm_campaign` and `crm_event_attendee.crm_event` on
+    // the restricting default): a member list is a campaign's historical record
+    // and survives on its own terms. A price line does not.
     crm_opportunity: Field.lookup('crm_opportunity', {
       label: 'Opportunity',
       required: true,
       storage: { notNull: true },
+      deleteBehavior: 'cascade',
     }),
 
+    // Deliberately left on the default, which the same escalation turns into
+    // `restrict`: deleting a catalog product must NOT shred the priced history
+    // of deals that sold it. `product.hook.ts`'s own `beforeDelete` says the
+    // same thing in words ("Set is_active=false to retire instead").
     crm_product: Field.lookup('crm_product', {
       label: 'Product',
       required: true,
