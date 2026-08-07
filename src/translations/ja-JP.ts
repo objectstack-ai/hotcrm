@@ -543,7 +543,10 @@ export const jaJP: TranslationData = {
         is_private: { label: '非公開' },
         approval_status: {
           label: '承認ステータス',
-          options: { not_required: '承認不要', pending: '承認待ち', approved: '承認済み', rejected: '却下' },
+          options: {
+            not_required: '承認不要', pending: '承認待ち', approved: '承認済み',
+            rejected: '却下', recalled: '取り消し済み',
+          },
         },
         approved_date: { label: '承認日' },
         // #593 — 商談クローズ時に必須。失注理由は営業ダッシュボードの

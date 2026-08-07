@@ -26,8 +26,34 @@ type Flow = Automation.Flow;
  *   - amount > $100K          → Sales Manager review
  *   - amount > $500K          → additionally Sales Director sign-off
  * On full approval the deal is stamped `approval_status = approved` (+ date);
- * any rejection stamps `approval_status = rejected`. The record is locked while
- * a step is pending and `approval_status` mirrors the live request status.
+ * a rejection stamps `approval_status = rejected`; a submitter RECALL stamps
+ * `approval_status = recalled`. The record is locked while a step is pending
+ * and `approval_status` mirrors the live request status.
+ *
+ * The `reject` branch carries TWO outcomes (#1037)
+ * ------------------------------------------------
+ * `ApprovalService.recall()` — the submitter withdrawing their own request —
+ * finalises the request as `recalled` and then resumes this run down
+ * `APPROVAL_BRANCH_LABELS.reject`, the same label a real rejection uses. The
+ * two are told apart ONLY by the resume envelope's `decision`:
+ *
+ *   | what happened            | request status | resume label | `decision` |
+ *   | ------------------------ | -------------- | ------------ | ---------- |
+ *   | approver rejected        | `rejected`     | `reject`     | `reject`   |
+ *   | revision budget exceeded | `rejected`     | `reject`     | `reject`   |
+ *   | submitter recalled       | `recalled`     | `reject`     | `recall`   |
+ *
+ * Before this was read, both landed on `mark_rejected`: a withdrawn deal was
+ * stamped `rejected` (contradicting its own `recalled` request) AND its owner
+ * was told the deal had been turned down. Anything reporting off this field
+ * counted every withdrawal as a loss.
+ *
+ * `decision` reaches the edges as `vars.<approvalNodeId>.decision`: the engine
+ * binds a resume signal's `output` under the SUSPENDED NODE's id
+ * (`applyResumeSignal` → `variables.set('<nodeId>.<key>')`) and nests dotted
+ * keys before evaluating CEL. Both approval branch labels therefore fan out
+ * from the same node — narrowing by `label` happens first, edge `condition`s
+ * are evaluated within the narrowed set, and `isDefault` takes the rest.
  */
 export const OpportunityApprovalFlow: Flow = {
   name: 'opportunity_approval',
@@ -172,6 +198,30 @@ export const OpportunityApprovalFlow: Flow = {
       },
     },
 
+    // ── Recall: stamp status, and say nothing ───────────────────────
+    //
+    // The platform's mirror has ALREADY written `recalled` here by the time
+    // this node runs (`recall()` mirrors before it resumes). This write is not
+    // redundant: `mirrorStatusField` wraps its update in a try/catch that
+    // downgrades any failure to a `warn`, so the app's own state machine must
+    // not depend on it having landed. Same value, so the second write is a
+    // no-op whenever the mirror worked.
+    //
+    // No `notify`: the recall is an action the SUBMITTER just took, so telling
+    // them about it is noise, and the rejection message ("was not approved")
+    // is actively wrong. The action is on the request's audit trail either way
+    // (`sys_approval_action`, `action: 'recall'`).
+    {
+      id: 'mark_recalled',
+      type: 'update_record',
+      label: 'Mark Recalled',
+      config: {
+        objectName: 'crm_opportunity',
+        filter: { id: '{record.id}' },
+        fields: { approval_status: 'recalled' },
+      },
+    },
+
     // ── Rejection: stamp status + notify owner ──────────────────────
     {
       id: 'mark_rejected',
@@ -207,7 +257,30 @@ export const OpportunityApprovalFlow: Flow = {
 
     // Manager decision (approval-node branch labels)
     { id: 'e3', source: 'manager_review', target: 'check_high_value', type: 'default', label: 'approve' },
-    { id: 'e4', source: 'manager_review', target: 'mark_rejected', type: 'default', label: 'reject' },
+
+    // The `reject` label carries both a rejection and a recall — see the file
+    // header. `label` narrows the edge set FIRST, then these two partition it:
+    // the conditional claims the recall, `isDefault` takes everything else.
+    // `isDefault` (not a second, opposite-polarity condition) because the
+    // fallback must also cover a resume that carried no `decision` at all —
+    // an inverted guard would then match nothing and the run would end with
+    // the deal stuck at `pending`.
+    //
+    // TOTALITY (#643): `vars.`-scoped and `has()`-guarded on BOTH levels. The
+    // variable is bound by the approval node itself on every path out of it —
+    // the resume envelope always carries `decision` (`decide` → approve/reject,
+    // `recall` → recall, the maxRevisions auto-rejection → reject), and the
+    // `onEmptyApprovers: 'auto_approve'` shortcut returns it as node output —
+    // so this is a guard against a shape that should not occur, not a policy
+    // hidden in a predicate. Measured: the bare `has(manager_review.decision)`
+    // spelling still aborts with `Unknown variable` on an unbound variable,
+    // while `has(vars.manager_review)` answers `false`.
+    {
+      id: 'e4r', source: 'manager_review', target: 'mark_recalled', type: 'conditional', label: 'reject',
+      condition: P`has(vars.manager_review) && has(vars.manager_review.decision)
+        && vars.manager_review.decision == "recall"`,
+    },
+    { id: 'e4', source: 'manager_review', target: 'mark_rejected', type: 'default', label: 'reject', isDefault: true },
 
     // Tier gate (decision-node conditional branches). These EDGES are the live
     // sites — the engine never evaluates a `decision` node's singular
@@ -236,15 +309,24 @@ export const OpportunityApprovalFlow: Flow = {
     { id: 'e6', source: 'check_high_value', target: 'mark_approved', type: 'conditional', condition: P`!has(vars.oppRecord) || !has(vars.oppRecord.amount)
       || vars.oppRecord.amount == null || vars.oppRecord.amount <= 500000`, label: 'Standard (≤ $500K)' },
 
-    // Director decision (approval-node branch labels)
+    // Director decision (approval-node branch labels). Same split as the
+    // manager tier, keyed on the DIRECTOR node's own variable: at this point
+    // `vars.manager_review.decision` is `"approve"` (that is how the run got
+    // here), so reading the wrong node's variable would never see the recall.
     { id: 'e7', source: 'director_signoff', target: 'mark_approved', type: 'default', label: 'approve' },
-    { id: 'e8', source: 'director_signoff', target: 'mark_rejected', type: 'default', label: 'reject' },
+    {
+      id: 'e8r', source: 'director_signoff', target: 'mark_recalled', type: 'conditional', label: 'reject',
+      condition: P`has(vars.director_signoff) && has(vars.director_signoff.decision)
+        && vars.director_signoff.decision == "recall"`,
+    },
+    { id: 'e8', source: 'director_signoff', target: 'mark_rejected', type: 'default', label: 'reject', isDefault: true },
 
     // Terminal branches
     { id: 'e9', source: 'mark_approved', target: 'notify_approved', type: 'default' },
     { id: 'e10', source: 'notify_approved', target: 'end', type: 'default' },
     { id: 'e11', source: 'mark_rejected', target: 'notify_rejected', type: 'default' },
     { id: 'e12', source: 'notify_rejected', target: 'end', type: 'default' },
+    { id: 'e13', source: 'mark_recalled', target: 'end', type: 'default' },
   ],
 };
 

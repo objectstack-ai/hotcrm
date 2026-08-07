@@ -550,7 +550,7 @@ export const esES: TranslationData = {
           label: 'Estado de Aprobación',
           options: {
             not_required: 'No Requerida', pending: 'Pendiente',
-            approved: 'Aprobada', rejected: 'Rechazada',
+            approved: 'Aprobada', rejected: 'Rechazada', recalled: 'Retirada',
           },
         },
         approved_date: { label: 'Fecha de Aprobación' },

@@ -332,10 +332,29 @@ describe('flow-variable conditions guard every FIELD they read', () => {
  * them — which is the whole defect this check exists to catch. Also not
  * included: `flow.variables` declarations, which bind nothing at runtime (see
  * the header).
+ *
+ * An `approval` node IS included, and it is the one node here that binds a
+ * NAMESPACE rather than a name (#1037). Every path out of it writes
+ * `<nodeId>.decision`, so `vars.<nodeId>` is guaranteed at every reader:
+ *
+ *   - decided (`decide`) → `resumeRecordedOutcome` resumes with
+ *     `output: { …outputs, decision: 'approve' | 'reject', requestId }`;
+ *   - recalled (`recall`) → resumes with `output: { decision: 'recall', … }`;
+ *   - auto-rejected past `maxRevisions` → `output: { decision: 'reject', … }`;
+ *   - empty slate under `onEmptyApprovers: 'auto_approve'` → the node executor
+ *     returns `output: { decision: 'approve', autoApproved: true }` WITHOUT
+ *     suspending.
+ *
+ * Both routes land in the variable map under the node's id: the resume path
+ * through `applyResumeSignal(variables, signal, run.nodeId)`, the non-suspend
+ * path through `executeNode`'s `variables.set(\`${node.id}.${key}\`, …)`.
+ * Unlike a screen's client-supplied fields, nothing outside the platform can
+ * withhold it — which is exactly the distinction this list encodes.
  */
 function binds(node: AnyRec): string[] {
   const cfg = node.config ?? {};
   const out: string[] = [];
+  if (node.type === 'approval' && typeof node.id === 'string' && node.id) out.push(node.id);
   if (typeof cfg.outputVariable === 'string' && cfg.outputVariable) out.push(cfg.outputVariable);
   if (typeof cfg.iteratorVariable === 'string' && cfg.iteratorVariable) out.push(cfg.iteratorVariable);
   if (typeof cfg.idVariable === 'string' && cfg.idVariable) out.push(cfg.idVariable);

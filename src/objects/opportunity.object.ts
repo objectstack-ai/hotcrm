@@ -248,6 +248,35 @@ export const Opportunity = ObjectSchema.create({
     // `defaultValue` at field level: option-level `default: true` only
     // preselects in UI forms — API/flow inserts land null without it, and a
     // null approval_status never matches the flow's entry condition.
+    //
+    // ⚠️ THIS OPTION SET IS A CONSUMER OF THE APPROVALS MIRROR (#1037).
+    // The approval nodes in `opportunity_approval` declare
+    // `approvalStatusField: 'approval_status'`, and the platform's
+    // `ApprovalService.mirrorStatusField` writes the request's OWN status
+    // string here verbatim — it does not map, and it swallows a failed write
+    // into a `warn` nobody reads. So every status this flow's request can
+    // reach must be declared here, or the mirror silently no-ops and the
+    // record contradicts the request it mirrors.
+    //
+    // Measured on 17.0.0-rc.4 (`test/flow-approval-recall.test.ts` pins it):
+    // a write of an undeclared value is refused by the engine with
+    // `Approval Status must be one of: …`. That refusal is what turned a
+    // recall into a "rejected" deal — the `recalled` mirror was dropped and
+    // the flow's own reject branch then stamped `rejected` over `pending`.
+    //
+    // Reachable request statuses for THIS flow, and their writer:
+    //   pending   — openNodeRequest, on entry to either approval node
+    //   approved  — decide(approve) on the last required tier
+    //   rejected  — decide(reject), and the maxRevisions auto-rejection
+    //   recalled  — recall() by the submitter, AND releaseDeadRunRequests()
+    //               abandoning a request whose flow run died (that one never
+    //               resumes the flow, so this mirror is the ONLY writer — with
+    //               no `recalled` option the record stayed `pending` forever)
+    // `returned` (ADR-0044 send-back) is NOT reachable and is deliberately not
+    // declared: `sendBack` validates that the approval node declares a
+    // `revise` out-edge BEFORE any mutation, and neither node here does. A
+    // declared-but-unreachable option is the "declared ≠ enforced" surface
+    // this repo keeps retiring; it comes back with the revise window, if ever.
     approval_status: Field.select({
       label: 'Approval Status',
       group: 'sales_process',
@@ -257,6 +286,7 @@ export const Opportunity = ObjectSchema.create({
         { label: 'Pending', value: 'pending', color: '#FFA500' },
         { label: 'Approved', value: 'approved', color: '#00AA00' },
         { label: 'Rejected', value: 'rejected', color: '#FF0000' },
+        { label: 'Recalled', value: 'recalled', color: '#888888' },
       ],
     }),
 
