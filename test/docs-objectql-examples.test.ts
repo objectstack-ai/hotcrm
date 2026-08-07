@@ -66,11 +66,15 @@ import { REPO_ROOT } from './helpers/repo-root';
  * Predicted direction, decided before running: **red before the rewrite, green
  * after** — an ordinary forbidden-shape rule over pages that plainly contained
  * the shape. Measured by restoring `content/docs` from `origin/main` and
- * re-running: 6 offending code units on 3 pages — the glossary entry in all
- * three locales reporting BOTH labels (`broker` and the alias key), plus the
- * three quarantined `testing-and-ci` pages. After the rewrite: the glossary
- * entries are gone from the report and only the quarantined pages remain, which
- * is why they are quarantined rather than silently exempt.
+ * re-running: **3 offending pages** — `reference/glossary` in all three locales,
+ * each reporting BOTH labels (`broker` AND the alias key) from the same eleven
+ * words — plus all three failing the entry pin below. After the rewrite: 0
+ * offenders, pin green.
+ *
+ * A second run on that same pre-fix tree with `QUARANTINE` emptied reports **6**
+ * pages: the three above and the three `testing-and-ci` locales, both labels
+ * each. That difference is what the quarantine is holding, measured rather than
+ * asserted — and it is the reason #1032 exists.
  *
  * ## The quarantine, and why it is not an exemption
  *
