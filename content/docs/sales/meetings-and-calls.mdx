@@ -52,6 +52,8 @@ Logging a call on an opportunity writes three things, not one:
 2. **The attendees** — one row per person (see below). You are added as the **organizer**, with your response already set to *Accepted*; a contact or lead you fired the action from is added as an attendee too.
 3. **A timeline entry** — the record's activity timeline gains an entry that points at the event, so the drill-through from the timeline opens the real record rather than a summary string.
 
+**Scheduling** a meeting produces the first two, not the third. The activity timeline is a record of what *happened*, and a meeting on next week's calendar has not happened yet. A booking is therefore found on the **calendar** and in the record's **Events** related list — both of which read the event itself, so nothing about it is hidden.
+
 On a **case**, the first *held* call or meeting also stamps the case's **First Response Date** — the moment the customer first heard back. A meeting merely *booked* does not count as a response, and neither does a status change.
 
 ## Planned vs Held — the distinction that keeps reports honest
