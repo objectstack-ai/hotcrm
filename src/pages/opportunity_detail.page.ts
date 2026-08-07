@@ -297,7 +297,13 @@ export const OpportunityDetailPage: Page = {
                * `displayField` is the rail entry's own first-class key for
                * exactly this ("canonical field on the related object to render
                * in each preview row"), so declaring it is using the contract,
-               * not routing around it. It names `description` — the same field
+               * not routing around it. The RENDERER is that contract's only
+               * authority here: `record:reference_rail` has no entry in
+               * `ComponentPropsMap` (@objectstack/spec/ui), so `pnpm validate`
+               * neither blesses nor rejects this key — which is why
+               * `test/line-item-record-title.test.ts` transcribes the measured
+               * chain and asserts against it instead of trusting the schema.
+               * It names `description` — the same field
                * the object now declares as its `nameField`, kept deliberately in
                * step so the rail and every other surface say one thing. Do NOT
                * point it at `crm_product`: a lookup hands back an id and this
