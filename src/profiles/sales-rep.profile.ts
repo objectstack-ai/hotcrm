@@ -19,19 +19,21 @@ export const SalesRepProfile = {
   // follow the account is an open business decision (#549), not a bug in these
   // grants — do not widen them here to paper over it.
   //
-  // The `controlled_by_parent` grants below are the opposite case: they are
-  // WIDER than they read. MEASURED on 17.0.0-rc.2 and pinned by
-  // `test/parent-derived-reach.test.ts`, a parent-derived child is not filtered
-  // to parents the caller can read — the ADR-0055 derivation resolves the master
-  // id set through the master's row-level security policies only, under a system
-  // context, so ownership and `sys_record_share` grants are never folded in.
-  // HotCRM authors no RLS policy on any master, so the master set is every
-  // record: a rep holding ONE account reads BOTH accounts' contacts, and a rep
-  // who can read no quote at all reads every quote's line items. Read every
-  // `controlled_by_parent` grant below as org-wide read on that object. The
-  // narrow semantics is the intended one and the platform gap is tracked
-  // upstream as objectstack-ai/objectstack#5386 (#694); the guard test goes red
-  // when it lands.
+  // The `controlled_by_parent` grants below read as narrow, and as of
+  // 17.0.0-rc.4 they ARE. MEASURED and pinned by
+  // `test/parent-derived-reach.test.ts`: the ADR-0055 derivation resolves master
+  // accessibility through the same paths a direct read of the master takes —
+  // owner scope AND `sys_record_share` grants, not the master's row-level
+  // security policies alone. A rep holding ONE account through a territory rule
+  // reads that account's contacts and no others, and reads line items only under
+  // the quotes they can reach. Writes derive the same way: a child of a master
+  // the rep cannot edit is refused. So each grant below is bounded by the
+  // parent's sharing, which is what it looks like.
+  //
+  // Until 17.0.0-rc.3 the same grants were org-wide reads and this note said so
+  // (#694): the derivation consulted master RLS policies only, and HotCRM
+  // authors none, so the master set was every record.
+  // objectstack-ai/objectstack#5386 fixed that upstream and it shipped in rc.4.
   objects: {
     // `allowExport` where an export surface exists — canonical note in
     // `src/profiles/index.ts`. Safe alongside `readScope: 'own'`: export is
@@ -42,10 +44,10 @@ export const SalesRepProfile = {
     // crm_account), so a `readScope` here is inert — the sharing service only
     // applies owner scope to `private` objects — and it read as a promise the
     // engine never kept: it said "own contacts only" while access derived from
-    // the parent (#488). What that derivation delivers today is wider than "the
-    // accounts the rep can read": measured, a rep holding one territory account
-    // reads EVERY account's contacts (see the note at the top of this file,
-    // #694).
+    // the parent (#488). That derivation now delivers exactly "the accounts the
+    // rep can read": measured on 17.0.0-rc.4, a rep holding one territory
+    // account reads THAT account's contacts and no others (see the note at the
+    // top of this file, #694).
     crm_contact:     { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, allowExport: true },
     crm_opportunity: { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const, allowExport: true },
     crm_quote:       { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
@@ -60,9 +62,10 @@ export const SalesRepProfile = {
     // so an explicit record scope is required alongside allowRead (an omitted
     // scope silently means "own only" and reads as an unmade decision).
     // `crm_event_attendee` is `controlled_by_parent`, so authoring a readScope
-    // here would be inert metadata the engine never applies. Its rows do not
-    // narrow to the events the rep can read either — the derivation is org-wide
-    // today (see the note at the top of this file, #694).
+    // here would be inert metadata the engine never applies. Its rows narrow to
+    // the events the rep can read — which, `crm_event` being private and
+    // own-scoped, is their own calendar (see the note at the top of this file,
+    // #694).
     crm_event:       { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
     crm_event_attendee: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: false, modifyAllRecords: false },
     // Reference catalog (public_read OWD): reps read knowledge articles, which
@@ -74,11 +77,12 @@ export const SalesRepProfile = {
     crm_forecast:          { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
     // Product lines on deals and quotes. Both objects are
     // `controlled_by_parent`, so there is no readScope to author — one would be
-    // inert metadata. That derivation does NOT scope a rep to their own book:
-    // measured, a rep reads every quote line and every opportunity line in the
-    // org, whatever they can read of the parent (see the note at the top of this
-    // file, #694). Without these grants the opportunity "Products" related list
-    // and the whole CPQ path were denied for every non-admin user (#488).
+    // inert metadata. That derivation scopes a rep to the lines under the deals
+    // and quotes they can reach: measured on 17.0.0-rc.4, a rep reads the lines
+    // of the one quote they own and none of the others (see the note at the top
+    // of this file, #694). Without these grants the opportunity "Products"
+    // related list and the whole CPQ path were denied for every non-admin user
+    // (#488).
     crm_opportunity_line_item: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: false, modifyAllRecords: false },
     crm_quote_line_item:       { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: false, modifyAllRecords: false },
     // Which campaign sourced a lead — read-only context, derived from the

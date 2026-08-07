@@ -20,30 +20,29 @@ export const OpportunityLineItem = ObjectSchema.create({
 
   // ADR-0090 D1/D7: OWD is an authored decision. A line item has no meaning
   // apart from its deal, so its record access DERIVES from the opportunity
-  // (ADR-0055) — but note what that derivation resolves to TODAY, which is not
-  // what "derives from the opportunity" suggests.
+  // (ADR-0055), and as of 17.0.0-rc.4 that derivation means what it says.
   //
-  // MEASURED on 17.0.0-rc.2 and pinned by `test/parent-derived-reach.test.ts`
-  // on the twin `crm_quote_line_item` -> `crm_quote` chain: reads are NOT
-  // filtered to line items whose `crm_opportunity` the caller can read. The
-  // derivation resolves the master id set through the master's row-level
-  // security policies ONLY, under a SYSTEM context — ownership and
-  // `sys_record_share` grants are never folded in. The one RLS policy this app
-  // authors on `crm_opportunity` is the private-deal filter carried by the
-  // `sales_manager` and `marketing_user` sets, so for any caller without it —
-  // `sales_rep` included — the master set is EVERY opportunity, whatever they
-  // own or were shared. A line item here is effectively readable by every holder
-  // of object-level read on this object; where that private-deal policy does
-  // apply it is the POLICY narrowing the master set, never ownership or a share.
-  // The parent-write gate resolves the master through the same filter, so it
-  // does not narrow writes either (#549's measurement).
+  // MEASURED on 17.0.0-rc.4 and pinned by `test/parent-derived-reach.test.ts`
+  // on the twin `crm_quote_line_item` -> `crm_quote` chain: reads ARE filtered
+  // to line items whose `crm_opportunity` the caller can read, and master
+  // accessibility now resolves through the same paths a direct read of the
+  // opportunity takes — ownership and `sys_record_share` grants included, not
+  // the master's row-level security policies alone. So a rep reads the lines of
+  // the deals in their own book plus anything shared to them, and the
+  // private-deal RLS filter carried by the `sales_manager` and `marketing_user`
+  // sets narrows on top of that rather than being the only thing that narrows.
+  // The parent-write gate derives the same way: a line whose opportunity the
+  // caller cannot edit is refused.
   //
-  // The narrow "filtered to readable parents" semantics is the intended one; the
-  // platform gap is tracked upstream as objectstack-ai/objectstack#5386 (#694).
-  // The guard test named above pins the measured reach and goes red the moment
-  // the platform narrows the derivation — that failure is good news, not a
-  // regression. ADR-0055's relation resolver accepts a REQUIRED LOOKUP as the
-  // parent, so this works without converting the relationship to master-detail.
+  // Until 17.0.0-rc.3 this was the opposite, and this note said so (#694): with
+  // the master set resolved from RLS policies alone, any caller without the
+  // private-deal policy — `sales_rep` included — reached EVERY opportunity's
+  // lines, whatever they owned or were shared.
+  // objectstack-ai/objectstack#5386 fixed that upstream and it shipped in rc.4;
+  // the guard test named above was written to go red the day the engine
+  // narrowed, and now pins the narrow semantics. ADR-0055's relation resolver
+  // accepts a REQUIRED LOOKUP as the parent, so this works without converting
+  // the relationship to master-detail.
   //
   // It was `private` before (#488), which was the wrong baseline twice over:
   // this object has no owner of its own to speak of, so "private" fell back to the

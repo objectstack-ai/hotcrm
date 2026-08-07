@@ -31,7 +31,7 @@ import { ATTENDEE_RESPONSE_OPTIONS } from './_picklists';
  * This mirrors `crm_campaign_member`, the app's existing junction, down to the
  * autonumber `nameField` and the `controlled_by_parent` OWD.
  *
- * # Access derives from the event — and today that derivation is org-wide
+ * # Access derives from the event
  *
  * `sharingModel: 'controlled_by_parent'` (ADR-0055). The relation resolver
  * accepts the REQUIRED `crm_event` lookup as the parent, so no master-detail
@@ -39,24 +39,23 @@ import { ATTENDEE_RESPONSE_OPTIONS } from './_picklists';
  *
  * The INTENT of that model is "reads are filtered to attendees whose
  * `crm_event` the caller can read, and adding or updating an attendee requires
- * edit access to that event". That is not what the platform does today.
- * MEASURED on 17.0.0-rc.2 and pinned by `test/parent-derived-reach.test.ts`:
- * the derivation resolves the master id set through the master's row-level
- * security policies ONLY, under a SYSTEM context — ownership scope and
- * `sys_record_share` grants are never folded in. HotCRM authors no RLS policy
- * on `crm_event`, so the master set is EVERY event, for every caller. An
- * attendee row is therefore readable by every profile that grants read on this
- * object, and the parent-write gate resolves the master through that same
- * filter, so it does not narrow writes either.
+ * edit access to that event", and as of 17.0.0-rc.4 that is what the platform
+ * does. MEASURED on 17.0.0-rc.4 and pinned by
+ * `test/parent-derived-reach.test.ts`: master accessibility resolves through
+ * the same paths a direct read of the event takes — ownership scope and
+ * `sys_record_share` grants folded in, not the master's row-level security
+ * policies alone. `crm_event` is `private` and reps hold it `own`-only, so a
+ * rep's attendee rows are the attendees of their own calendar. The parent-write
+ * gate derives the same way and refuses a child of an event the caller cannot
+ * edit.
  *
- * The gap is at its widest here: `crm_event` is `private` and reps hold it
- * `own`-only, so the intended derivation would be a tight filter, while what
- * ships hands every attendee row of every meeting to every holder of
- * object-level read on this object. The narrow semantics is the intended one;
- * the platform gap is tracked upstream as objectstack-ai/objectstack#5386
- * (#694). The guard test named above goes red the moment the platform narrows
- * the derivation — that failure is good news, not a regression, and the signal
- * to rewrite this note.
+ * The gap was at its widest here until 17.0.0-rc.3, and this note said so
+ * (#694): the derivation consulted master RLS policies ONLY, under a SYSTEM
+ * context, and HotCRM authors none on `crm_event`, so every attendee row of
+ * every meeting reached every holder of object-level read on this object.
+ * objectstack-ai/objectstack#5386 fixed that upstream and it shipped in rc.4;
+ * the guard test named above was written to go red the day the platform
+ * narrowed, and it did.
  */
 export const EventAttendee = ObjectSchema.create({
   name: 'crm_event_attendee',

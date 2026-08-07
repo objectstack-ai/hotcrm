@@ -103,10 +103,19 @@ export const Forecast = ObjectSchema.create({
     // ADR-0079 record title. Original titleFormat was
     // '{owner} — {period_label} ({period_start})'; the leading `{owner}` lookup
     // is DROPPED (a formula cannot dot-walk a lookup, ADR-0072). Composes the
-    // local fields only; `period_start` (a date) is text()-coerced for concat.
+    // local fields only; `period_start` (a date) is string()-coerced for concat.
+    //
+    // The coercion is `string()`, NOT `text()`. `text` has never been a
+    // registered CEL function — it is absent from `CEL_STDLIB_FUNCTIONS` on
+    // 17.0.0-rc.3 as well as rc.4 — so this formula faulted at runtime and left
+    // the record's `nameField` null. What changed in rc.4 is that the
+    // author-time `expression-invalid` rule now REPORTS it ("found no matching
+    // overload for 'text(dyn)'") instead of letting a broken formula through to
+    // null silently. `string` is the catalog's coercion, alongside
+    // `int`/`bool`/`double`/`timestamp`.
     display_title: Field.formula({
       label: 'Display Title',
-      expression: F`record.period_label + " (" + text(record.period_start) + ")"`,
+      expression: F`record.period_label + " (" + string(record.period_start) + ")"`,
       group: 'basic',
     }),
 

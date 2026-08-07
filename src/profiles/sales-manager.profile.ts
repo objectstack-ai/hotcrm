@@ -29,16 +29,16 @@ export const SalesManagerProfile = {
     // A manager coaches on activity, so this is org-wide read AND write on a
     // private object — the same shape their `crm_task` grant already has.
     // `crm_event_attendee` is `controlled_by_parent` (ADR-0055): no scope to
-    // author — one would be inert metadata. It does NOT narrow to the events
-    // this set can read either. MEASURED on 17.0.0-rc.2 and pinned by
-    // `test/parent-derived-reach.test.ts`, the derivation resolves the master id
-    // set through the master's row-level security policies only, under a system
-    // context, so ownership and `sys_record_share` grants never enter it; HotCRM
-    // authors no RLS policy on `crm_event`, so this grant is org-wide read and
-    // write on every attendee row. Here that matches the intent — the grants
-    // above are already org-wide on the activity stack — but read it as org-wide
-    // in fact, not as derived scope. Same note in `sales-rep.profile.ts`;
-    // upstream gap objectstack-ai/objectstack#5386 (#694).
+    // author — one would be inert metadata. It narrows to the events this set
+    // can read, which is every event: `viewAllRecords` on `crm_event` above puts
+    // the whole activity stack in reach, so the derived attendee rows follow.
+    // MEASURED on 17.0.0-rc.4 and pinned by `test/parent-derived-reach.test.ts`,
+    // master accessibility resolves through the same paths a direct read of the
+    // event takes — ownership and `sys_record_share` grants folded in, not the
+    // master's row-level security policies alone. Until 17.0.0-rc.3 this grant
+    // was org-wide in FACT rather than by derivation, whatever the event grants
+    // said (#694); objectstack-ai/objectstack#5386 fixed that upstream and it
+    // shipped in rc.4. Same note in `sales-rep.profile.ts`.
     crm_event:       { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true,  modifyAllRecords: true, allowTransfer: true },
     crm_event_attendee: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: false, modifyAllRecords: false },
     // The forecast IS the manager's job: they read every rep's snapshot and
