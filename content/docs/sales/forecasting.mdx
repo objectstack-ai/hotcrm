@@ -74,7 +74,7 @@ Forecasts inherit the standard CRM permission model:
 
 - **Sales reps** see and edit their own forecasts.
 - **Sales managers** see and edit **every** forecast: the Sales Manager profile holds *View All* / *Modify All* on Forecast, so the reach is org-wide rather than a team slice. Positions are flat — there is no reporting line that could narrow it to "their" reps.
-- **Sales operations** see all forecasts and can override any number.
+- **System administrators** reach every forecast as well: the System Administrator profile holds the same *View All* / *Modify All*, plus delete. Those two profiles are the whole list — HotCRM ships [six profiles](/docs/administration/profiles) and none of them is a *Sales Operations* one, so whoever calibrates other people's numbers has to hold **Sales Manager** or **System Administrator**.
 - All edits are tracked in the platform audit log — every commit change is attributed and time-stamped.
 
 ## Common questions

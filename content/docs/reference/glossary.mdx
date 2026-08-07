@@ -111,7 +111,7 @@ description: CRM and platform terms — alphabetised so you can stop bluffing in
 
 ## O
 
-**ObjectQL** — HotCRM's query language. `broker.find('crm_opportunity', { filters: [...] })`.
+**ObjectQL** — HotCRM's query language, reached through `ctx.api`: `ctx.api.object('crm_opportunity').find({ where: { amount: { $gt: 50000 } } })`. The predicate key is `where`, and only `where` — `filter` / `filters` are the HTTP query-param spellings, and passing either in process fails silently instead of erroring.
 
 **ObjectStack** — The runtime that HotCRM is built on.
 

@@ -111,7 +111,7 @@ description: CRM 與平台術語 —— 按字母排序，讓你在會議中不�
 
 ## O
 
-**ObjectQL** —— HotCRM 的查詢語言。`broker.find('crm_opportunity', { filters: [...] })`。
+**ObjectQL** —— HotCRM 的查詢語言，透過 `ctx.api` 存取：`ctx.api.object('crm_opportunity').find({ where: { amount: { $gt: 50000 } } })`。述詞鍵是 `where`，而且只有 `where` —— `filter` / `filters` 是 HTTP 查詢參數的拼法，在行程內傳入其中任何一個都不會報錯，而是靜默失敗。
 
 **ObjectStack** —— HotCRM 所基於的執行時。
 
