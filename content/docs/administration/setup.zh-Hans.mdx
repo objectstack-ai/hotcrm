@@ -93,7 +93,7 @@ description: 让 HotCRM 为你的团队做好生产准备的第一周任务。
 | Closed Won | 100% |
 | Closed Lost | 0% |
 
-如果你的流程不同，那是一次源码修改，不是在某个屏上调整：**并不存在「设置 → 商机 → 阶段」这个页面**。七个阶段是 `stage` 字段自己的选项（`src/objects/_picklists.ts` 里的 `OPPORTUNITY_STAGE_OPTIONS`），概率则是 `src/objects/opportunity.hook.ts` 里的 `STAGE_PROBABILITY` 映射 —— 它在每次保存时都按阶段重新推导 **Probability** 与 **Expected Revenue**，所以手工填在商机上的概率撑不过下一次保存。改动其中任何一项都是代码改动加一次重新部署。
+如果你的流程不同，那是一次源码修改，不是在某个屏上调整：**并不存在「设置 → 商机 → 阶段」这个页面**。七个阶段是 `stage` 字段自己的选项（`src/objects/_picklists.ts` 里的 `OPPORTUNITY_STAGE_OPTIONS`），概率则是 `src/objects/opportunity.hook.ts` 里的 `STAGE_PROBABILITY` 映射 —— 它在每次保存时都按阶段重新推导 **Probability** 与 **Expected Revenue**。正因为这层推导无条件生效，商机上的 **Probability** 是只读字段——根本不存在一个待它丢弃的手填值。改动其中任何一项都是代码改动加一次重新部署。
 
 ### 11. 案例 SLA
 

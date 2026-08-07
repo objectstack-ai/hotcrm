@@ -72,7 +72,7 @@ Splitting deals by type is essential for accurate revenue forecasting — new bu
 
 You don't have to remember any of this — the system does it for you:
 
-- **Probability** is set from the stage whenever you move the deal (you *can* override it manually if you have a special situation, but it'll reset next time the stage changes).
+- **Probability** is set from the stage on every save — it is a read-only field, so there is nothing to override by hand.
 - **Expected revenue** = amount × probability ÷ 100, recalculated whenever amount or probability changes.
 - **Stage entry date** is stamped the moment a deal is created and re-stamped every time you move it to a new stage. **Days in current stage** counts from it, so it is always up to date — that is what surfaces stagnant deals.
 - When you mark a deal **Closed Won and the amount is over $100K**, sales management gets an email.

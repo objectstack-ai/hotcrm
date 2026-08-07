@@ -93,7 +93,13 @@ export const SalesRepProfile = {
     'crm_account.annual_revenue':     { readable: true, editable: false },
     'crm_account.description':        { readable: true, editable: true },
     'crm_opportunity.amount':         { readable: true, editable: true },
-    'crm_opportunity.probability':    { readable: true, editable: true },
+    // Probability is derived from the stage by `opportunity_lifecycle` and is
+    // `readonly` on the object (#1035). This grant used to say `editable: true`
+    // — a permission to write a column no writer can reach, and the one
+    // remaining declaration a surface could read as "offer this rep an input".
+    // Read-only here too, so both axes say the same thing (same shape as
+    // `crm_account.health_score` below: rep reads it, the process sets it).
+    'crm_opportunity.probability':    { readable: true, editable: false },
     // Health score drives the renewal book and the at-risk views: reps see it,
     // the renewal/CS process sets it. Readable (the `at_risk_accounts` view
     // filters and sorts on it, and a masked field cannot be filtered) but never

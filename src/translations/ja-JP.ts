@@ -512,7 +512,10 @@ export const jaJP: TranslationData = {
           label: 'ステージ',
           options: { ...opportunityStageOptions },
         },
-        probability: { label: '確度 (%)' },
+        probability: {
+          label: '確度 (%)',
+          help: 'ステージから自動設定されます（見込み調査 10% … 成立 100%）。変更するにはステージを進めてください。',
+        },
         close_date: { label: '完了予定日' },
         type: {
           label: 'タイプ',

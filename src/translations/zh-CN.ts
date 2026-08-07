@@ -889,7 +889,10 @@ export const zhCN: TranslationData = {
             negotiation: '谈判', closed_won: '成交', closed_lost: '失败',
           },
         },
-        probability: { label: '成交概率 (%)' },
+        probability: {
+          label: '成交概率 (%)',
+          help: '根据阶段自动设定（寻找客户 10% … 成交 100%）——推进阶段即可改变它。',
+        },
         close_date: { label: '预计成交日期' },
         type: {
           label: '类型',

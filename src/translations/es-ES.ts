@@ -509,7 +509,10 @@ export const esES: TranslationData = {
             negotiation: 'Negociación', closed_won: 'Cerrada Ganada', closed_lost: 'Cerrada Perdida',
           },
         },
-        probability: { label: 'Probabilidad (%)' },
+        probability: {
+          label: 'Probabilidad (%)',
+          help: 'Se establece automáticamente según la Etapa (Prospección 10% … Cerrada Ganada 100%): cambia la etapa para cambiarla.',
+        },
         close_date: { label: 'Fecha de Cierre' },
         type: {
           label: 'Tipo',

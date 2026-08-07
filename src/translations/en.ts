@@ -499,7 +499,10 @@ export const en: TranslationData = {
             negotiation: 'Negotiation', closed_won: 'Closed Won', closed_lost: 'Closed Lost',
           },
         },
-        probability: { label: 'Probability (%)' },
+        probability: {
+          label: 'Probability (%)',
+          help: 'Set automatically from the Stage (Prospecting 10% … Closed Won 100%) — move the stage to change it.',
+        },
         close_date: { label: 'Close Date' },
         type: {
           label: 'Type',

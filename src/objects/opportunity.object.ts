@@ -110,11 +110,48 @@ export const Opportunity = ObjectSchema.create({
       options: [...OPPORTUNITY_STAGE_OPTIONS],
     }),
 
+    // Derived from `stage`, never authored (#1035).
+    //
+    // `opportunity_lifecycle` assigns `STAGE_PROBABILITY[stage]` on EVERY
+    // write it sees — insert, a stage change, an update that touches neither
+    // (the stage is then read off `previous`), and system writes too. Measured
+    // on 17.0.0-rc.4: there is no write path on which a caller-supplied value
+    // survives. So an editable widget over this column can only ever collect a
+    // number the save discards: a rep set 40 % on the create form, the record
+    // landed at `probability: 10` (prospecting) with
+    // `expected_revenue = amount × 10 %`, and nothing said so.
+    //
+    // `readonly` is what closes that. It is the field-level contract the
+    // renderer reads to draw a value instead of an input, and on the UPDATE
+    // path the engine enforces it server-side as well: measured on rc.4, a
+    // non-system `update` carrying `probability` has the key dropped before
+    // the write and reports `{ fields: ['probability'], reason: 'readonly' }`
+    // through `onFieldsDropped`. On INSERT that strip does NOT fire on this
+    // version — a caller-supplied readonly value is admitted (measured with
+    // `stage_entry_date`, which the hook leaves alone when the caller supplies
+    // one) — so on the create path it is the hook's unconditional sync, not
+    // the engine, that makes the stored value the stage's. Either way no write
+    // path stores a caller's number; the two just get there differently, and
+    // this comment says which rather than assuming the symmetry the spec's
+    // `readonly` description promises.
+    //
+    // Hook-written keys are never "caller-supplied", so the sync still lands.
+    // Same disposition as `expected_revenue` above and
+    // `crm_account.billing_country`: derived value, shown on the form,
+    // read-only, explained in its `description`.
+    //
+    // No `defaultValue` for the same reason it has no widget. A literal `10`
+    // here is a second copy of `STAGE_PROBABILITY.prospecting` that a stage
+    // re-tuning would leave behind, and on the create form it rendered a
+    // "10 %" that was wrong the moment the rep picked any other stage. The
+    // column is blank until the hook fills it, like `expected_revenue`.
     probability: Field.percent({
       label: 'Probability (%)',
+      description:
+        'Set automatically from the Stage (Prospecting 10% … Closed Won 100%) — move the stage to change it.',
       min: 0,
       max: 100,
-      defaultValue: 10,
+      readonly: true,
       group: 'sales_process',
     }),
 
