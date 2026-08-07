@@ -63,6 +63,12 @@ The process uses **first-response** behavior — the first approver to respond a
 - `approval_status` is stamped **rejected** and the owner is notified to revise and resubmit.
 - The rejection is captured in the approval request's history.
 
+### ↩️ Recalled (withdrawn by the submitter)
+- The submitter can withdraw their own pending request from the approval request — nobody has decided anything, so this is not a rejection.
+- `approval_status` is stamped **recalled** (shown as *Recalled*) and the record is unlocked. **No** "deal rejected" notification is sent: the person who would receive it is the person who just withdrew it.
+- The withdrawal is captured in the approval request's history alongside decisions.
+- A recalled deal is **not** resubmitted automatically. Approval re-launches on save only from *Not Required*, so a recall — like a rejection — parks the deal until an admin resets the status.
+
 ## Record locking
 
 Each approval node sets `lockRecord: true`, so while a step is pending the opportunity is **locked by the approval engine** — edits are blocked until the step resolves. The lock is released automatically on the final approve/reject.

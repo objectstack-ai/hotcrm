@@ -40,6 +40,11 @@ const RUNTIME_TEST_FILES = [
   'flow-record-change.test.ts',
   'flow-case-actions.test.ts',
   'flow-campaign-enrollment.test.ts',
+  // #1037 — `opportunity_approval`'s recall path, driven through a real
+  // kernel with the approvals plugin composed. The harness the other flow
+  // files use has no approvals service, so the `approval` node type is not
+  // even registered there and everything past the first tier is invisible.
+  'flow-approval-recall.test.ts',
   // #592 — the activity model's own runtime file: both `crm_event` hooks, the
   // parity check that keeps the duplicated bubble body from drifting, and the
   // readonly-strip regression proof against a real engine.

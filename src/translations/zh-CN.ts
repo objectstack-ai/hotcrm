@@ -928,7 +928,10 @@ export const zhCN: TranslationData = {
         is_private: { label: '私密' },
         approval_status: {
           label: '审批状态',
-          options: { not_required: '无需审批', pending: '审批中', approved: '已批准', rejected: '已驳回' },
+          options: {
+            not_required: '无需审批', pending: '审批中', approved: '已批准',
+            rejected: '已驳回', recalled: '已撤回',
+          },
         },
         approved_date: { label: '批准时间' },
         win_reason: {

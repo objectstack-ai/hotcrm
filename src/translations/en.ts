@@ -544,7 +544,10 @@ export const en: TranslationData = {
         is_private: { label: 'Private' },
         approval_status: {
           label: 'Approval Status',
-          options: { not_required: 'Not Required', pending: 'Pending', approved: 'Approved', rejected: 'Rejected' },
+          options: {
+            not_required: 'Not Required', pending: 'Pending', approved: 'Approved',
+            rejected: 'Rejected', recalled: 'Recalled',
+          },
         },
         approved_date: { label: 'Approved Date' },
         win_reason: {
