@@ -1,0 +1,13 @@
+---
+'hotcrm': patch
+---
+
+Three pages that told readers something about "today" had all stopped being true, and each one had a guard that was looking somewhere else.
+
+**Getting started no longer sells a role hierarchy that was removed.** `getting-started/introduction` advertised "a 10-role hierarchy" in all three locales. Both halves were wrong: the app registers **12** positions, and ADR-0090 D3 removed the hierarchy itself — positions are flat capability-distribution groups, and nothing rolls up from one to another, which is why each rung that needs a record is named by its own sharing rule. The bullet now says that, and the docs home's security row says it too instead of listing "role hierarchy" as a feature. Position counts are now read from the registered stack by the same guard that pins objects, flows, dashboards and datasets.
+
+**`docs/STATUS.md` is a current-state page again.** It called itself the source of truth for the repo while every figure on it was stale — 16 objects against 17, 318 fields against 344, 4 dashboards against 5, 23 flows against 24, 13 views against 14, and a platform line two release candidates behind the installed `17.0.0-rc.3`. The validator transcript and the runtime-requirements table are now both pinned: the transcript against the registered stack (every label, including ones nobody was checking), the table against `package.json`'s `engines`, `@objectstack/*` line and dev-server port. The misleading "Snapshot date" is gone — the page is present tense and enforced — and the test row now states a verdict rather than a size, because "N files, M tests" moves on nearly every PR and nothing can check it from inside the suite it describes.
+
+**"What's New" no longer announces a release that never happened.** Its latest-release section claimed `v5.0` on "ObjectStack 5.0", offering `@objectstack/console@5.0` and `@objectstack/account@5.0`; the app is **2.2.2** and the platform is **17.0.0-rc.3**, twelve majors away, and `v5.0` was never either. That section now states the two versions that are actually shipped and points at the pages that own each area, rather than keeping a second, hand-copied release table — the release-by-release history stays in `CHANGELOG.md`, compiled from changesets. The v1.0 record is untouched. A new rule holds any section marked "Latest release", in every locale, to the version the manifest declares and the platform version `package.json` installs.
+
+The exemption that hid the last of these is also fixed: it excused the whole "What's New" page as a historical record, which was right for the v1.0 section and wrong for the one next to it. Exemptions are now scoped to the section they were granted for.

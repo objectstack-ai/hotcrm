@@ -1078,6 +1078,55 @@ describe('product docs do not name a retired copilot persona (#612)', () => {
 });
 
 /**
+ * `package.json`, parsed once — three rules below read it (the version pair,
+ * the whats-new latest-release section, and the STATUS.md runtime table).
+ */
+const PACKAGE_JSON = JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8')) as {
+  version?: string;
+  scripts?: Record<string, string>;
+  engines?: Record<string, string>;
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+};
+
+/** `^17.0.0-rc.3` and `17.0.0-rc.3` state the same version. */
+const bareRange = (range: string | undefined): string => (range ?? '').replace(/^[\^~>=<\s]+/, '');
+
+/**
+ * The `@objectstack/*` versions this app installs, deduplicated.
+ *
+ * A SET rather than one package's value, because the docs speak of "ObjectStack
+ * packages" in the plural and that sentence only means anything while the line
+ * is uniform — the platform packages are version-locked (AGENTS.md §Platform
+ * Upgrades: "bump all `@objectstack/*` packages together"). Both rules that use
+ * this assert the set has exactly one member before comparing to it, so a
+ * half-finished upgrade fails where the message is true rather than making one
+ * doc right against one package and wrong against the rest.
+ */
+const PLATFORM_VERSIONS: string[] = [
+  ...new Set(
+    Object.entries({ ...PACKAGE_JSON.dependencies, ...PACKAGE_JSON.devDependencies })
+      .filter(([name]) => name.startsWith('@objectstack/'))
+      .map(([, range]) => bareRange(range)),
+  ),
+];
+
+/** A version that `12.2.2` / `2.2.22` cannot satisfy — see the #612 rule below. */
+const statesVersion = (text: string, version: string): boolean =>
+  new RegExp(`(?<![\\d.])${version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\d.])`).test(text);
+
+/** `## Heading` → its text plus everything up to the next `## `. */
+const h2Sections = (text: string): { heading: string; body: string }[] => {
+  const out: { heading: string; body: string[] }[] = [];
+  for (const line of text.split('\n')) {
+    const m = /^## +(.*)$/.exec(line);
+    if (m) out.push({ heading: m[1].trim(), body: [] });
+    else if (out.length) out[out.length - 1].body.push(line);
+  }
+  return out.map((s) => ({ heading: s.heading, body: s.body.join('\n') }));
+};
+
+/**
  * Version drift — the docs must print the version the app declares (#612).
  *
  * The same three digits are hand-copied into at least four maintainer docs, and
@@ -1149,10 +1198,9 @@ describe('the docs print the version the manifest declares (#612)', () => {
     // The two halves RELEASE_STRATEGY.md's own "Version Sources" section tells a
     // releaser to keep aligned. Cheap to check, and a mismatch here would make
     // every doc below correct against one source and wrong against the other.
-    const pkg = JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8')) as { version: string };
     expect(
-      pkg.version,
-      `package.json is ${pkg.version} but objectstack.config.ts declares ${VERSION}. ` +
+      PACKAGE_JSON.version,
+      `package.json is ${PACKAGE_JSON.version} but objectstack.config.ts declares ${VERSION}. ` +
         'These ship as one artifact; align them (docs/RELEASE_STRATEGY.md §Version Sources).',
     ).toBe(VERSION);
   });
@@ -1193,6 +1241,119 @@ describe('the docs print the version the manifest declares (#612)', () => {
         'Each of these tells a reader which version they are looking at. If one legitimately ' +
         'stopped making that claim, drop it from VERSION_DOCS rather than leaving the check ' +
         'green over a page that says nothing.',
+    ).toEqual([]);
+  });
+
+  /*
+   * ─── A section marked "Latest release" states the version we ship (#1015) ───
+   *
+   * The rules above cover the MAINTAINER docs. `content/docs/whats-new.mdx` is
+   * the product-side version page — `content/docs/index.mdx` sends a reader to
+   * it for "what changed in the latest version" — and it wrote
+   * `## v5.0 — Latest release`, on "ObjectStack 5.0", offering
+   * `@objectstack/console@5.0` and `@objectstack/account@5.0` "on npm". Not one
+   * of those numbers was ever real for this app: the manifest declares 2.2.2
+   * and package.json installs 17.0.0-rc.3, twelve majors away. `v5.0` was
+   * neither an app version nor a platform version, so it dated from nothing at
+   * all.
+   *
+   * It survived because each rule that could have read it had a reason not to.
+   * VERSION_DOCS lists maintainer pages and this is a product page. The count
+   * rule (#729) had the whole page exempted as a release record — correctly for
+   * the v1.0 section it was granted for, and the exemption is now section-scoped
+   * so it stops covering this one. The persona rule exempts the page too. Three
+   * guards read this file and all three were told to look away from the one
+   * section on it that is a claim about TODAY.
+   *
+   * "Latest release" is present tense, so it is held to the two facts that are
+   * mechanically knowable about the current tree — the app version the manifest
+   * declares, and the platform version package.json installs. Everything else
+   * in the section is editorial and this rule does not touch it.
+   *
+   * The marker table is what makes this read all three locales rather than the
+   * English page alone (#725's lesson, applied at the point where a heading is
+   * translated). No separate probe test is needed for it: a marker that stopped
+   * matching takes its page's section count to zero, which the first rule below
+   * reports by name.
+   *
+   * Reverse verification: predicted and measured **red before, green after** —
+   * on the pre-fix tree the heading rule reported all three pages stating
+   * neither 2.2.2 nor 17.0.0-rc.3 in their latest-release section. Captured
+   * output is in the PR.
+   */
+  const WHATS_NEW_PAGES = [
+    'content/docs/whats-new.mdx',
+    'content/docs/whats-new.zh-Hans.mdx',
+    'content/docs/whats-new.zh-Hant.mdx',
+  ];
+
+  /** How each locale marks the section as being about the current release. */
+  const LATEST_MARKERS = ['Latest release', '最新发布', '最新發行'];
+
+  const latestSectionsOf = (file: string): { heading: string; body: string }[] =>
+    h2Sections(readFileSync(join(REPO_ROOT, file), 'utf8')).filter((s) =>
+      LATEST_MARKERS.some((marker) => s.heading.includes(marker)),
+    );
+
+  it('every locale of whats-new marks exactly one section as the latest release', () => {
+    // Vacuity guard, both directions. Zero sections reads exactly like every
+    // section agreeing — the state a renamed or retranslated heading would put
+    // this rule in, silently. Two means the page claims two current releases.
+    const wrong = WHATS_NEW_PAGES.map((file) => ({ file, found: latestSectionsOf(file) }))
+      .filter((p) => p.found.length !== 1)
+      .map(
+        (p) =>
+          `${p.file}: ${p.found.length} section(s) marked latest ` +
+          `(looking for ${LATEST_MARKERS.join(' | ')}; found headings: ` +
+          `${p.found.map((s) => s.heading).join(' | ') || 'none'})`,
+      );
+    expect(
+      wrong,
+      `whats-new pages that do not mark exactly one latest-release section:\n  ${wrong.join('\n  ')}\n` +
+        'Every locale ships this page and every locale makes the claim, so every locale is ' +
+        'checked. If a locale renamed the heading, teach LATEST_MARKERS its word — a page this ' +
+        'rule cannot find is a page nobody is checking.',
+    ).toEqual([]);
+  });
+
+  it('the latest-release heading states the version the manifest declares', () => {
+    const drifted = WHATS_NEW_PAGES.flatMap((file) =>
+      latestSectionsOf(file)
+        .filter((s) => !statesVersion(s.heading, VERSION))
+        .map((s) => `${file}: "## ${s.heading}" does not state ${VERSION}`),
+    );
+    expect(
+      drifted,
+      `latest-release headings that do not state the declared version:\n  ${drifted.join('\n  ')}\n` +
+        'A heading is what a reader sees in the table of contents, and "Latest release" is a ' +
+        'claim about today. Name the version objectstack.config.ts declares — the number in ' +
+        'this heading is the one thing on the page that cannot be a matter of taste.',
+    ).toEqual([]);
+  });
+
+  it('the latest-release section states the platform version package.json installs', () => {
+    // Guard the derivation before comparing against it: an empty or split
+    // `@objectstack/*` line would make this rule demand a version nobody
+    // installs, or pass over nothing.
+    expect(
+      PLATFORM_VERSIONS,
+      `package.json installs ${PLATFORM_VERSIONS.length} distinct @objectstack/* versions ` +
+        `(${PLATFORM_VERSIONS.join(', ') || 'none'}). They are version-locked and bumped ` +
+        'together (AGENTS.md §Platform Upgrades); until they agree, no page can state "the" ' +
+        'platform version.',
+    ).toHaveLength(1);
+    const platform = PLATFORM_VERSIONS[0];
+    const drifted = WHATS_NEW_PAGES.flatMap((file) =>
+      latestSectionsOf(file)
+        .filter((s) => !statesVersion(`${s.heading}\n${s.body}`, platform))
+        .map((s) => `${file}: "## ${s.heading}" never states the installed platform ${platform}`),
+    );
+    expect(
+      drifted,
+      `latest-release sections that do not state the installed platform version:\n  ${drifted.join('\n  ')}\n` +
+        'This is the half that was twelve majors out ("Upgraded to ObjectStack 5.0" against an ' +
+        'installed 17.x). The platform version a release runs on is a fact about package.json, ' +
+        'not a number to be carried forward by hand.',
     ).toEqual([]);
   });
 });
@@ -1330,6 +1491,13 @@ describe('product docs state the metadata counts the stack registers (#729)', ()
     flows: (registered.flows ?? []).length,
     dashboards: (registered.dashboards ?? []).length,
     datasets: (registered.datasets ?? []).length,
+    // #1014: `getting-started/introduction` sold "a 10-role hierarchy" on the
+    // page a new reader opens first. Both halves were wrong — `CrmPositions`
+    // holds 12, and ADR-0090 D3 removed the hierarchy itself (positions are
+    // flat capability-distribution groups; the parent links went with the
+    // business-unit tree this app does not model). The wording is prose and
+    // this rule cannot judge it, but the number is a count like any other.
+    positions: (registered.positions ?? []).length,
   };
 
   /**
@@ -1355,20 +1523,52 @@ describe('product docs state the metadata counts the stack registers (#729)', ()
     { kind: 'dashboards', re: /(\d+) 個儀表板/g },
     { kind: 'datasets', re: /(\d+) datasets/g },
     { kind: 'datasets', re: /semantic layer \((\d+)\)/g },
+    // Positions, in the three spellings the pages settled on (#1014). The zh
+    // nouns are the ones `administration/sharing-and-security` already uses —
+    // 「岗位」 in zh-Hans, 「職位」 in zh-Hant — so the vocabulary is one word
+    // per locale across the docs, not one per page.
+    { kind: 'positions', re: /(\d+) positions/g },
+    { kind: 'positions', re: /(\d+) 个岗位/g },
+    { kind: 'positions', re: /(\d+) 個職位/g },
   ];
 
   /**
-   * Pages allowed to state a count that is not today's, each with the reason.
+   * SECTIONS allowed to state a count that is not today's, each with the reason.
    * A map rather than a list, for the reason the persona rule above gives: an
    * exemption with no stated reason is how a targeted whitelist becomes a
    * blanket one. All three entries are the same page in its three locales, and
    * the reason is the same one that exempts it from the persona rule — it is a
    * dated release record describing what v1.0 shipped, not a claim about today.
+   *
+   * ## Why the key is a SECTION and not a file (#1015)
+   *
+   * It was a file. `content/docs/whats-new.mdx` carries the v1.0 record AND a
+   * "Latest release" section, which is a claim about TODAY — and a page-wide
+   * exemption granted for the first covered the second. Under it that section
+   * advertised `v5.0` / "Upgraded to ObjectStack 5.0" for however long it took
+   * someone to read the page: neither number was ever an app version (the
+   * manifest says 2.2.2) or the installed platform (17.0.0-rc.3), and the one
+   * rule that would have noticed had been told not to look. The exemption was
+   * right about the v1.0 section and wrong about the page.
+   *
+   * A claim is now exempt only when the `## ` section it sits under matches the
+   * pattern here. The v1.0 heading opens with `v1.0` in all three locales, so
+   * one pattern covers them; anything else on the page is checked like any
+   * other product page.
    */
-  const HISTORICAL: Record<string, string> = {
-    'content/docs/whats-new.mdx': 'the v1.0 release record — the inventory that release shipped',
-    'content/docs/whats-new.zh-Hans.mdx': 'the v1.0 release record (zh-Hans)',
-    'content/docs/whats-new.zh-Hant.mdx': 'the v1.0 release record (zh-Hant)',
+  const HISTORICAL: Record<string, { section: RegExp; reason: string }> = {
+    'content/docs/whats-new.mdx': {
+      section: /^v1\.0\b/,
+      reason: 'the v1.0 release record — the inventory that release shipped',
+    },
+    'content/docs/whats-new.zh-Hans.mdx': {
+      section: /^v1\.0\b/,
+      reason: 'the v1.0 release record (zh-Hans)',
+    },
+    'content/docs/whats-new.zh-Hant.mdx': {
+      section: /^v1\.0\b/,
+      reason: 'the v1.0 release record (zh-Hant)',
+    },
   };
 
   /** Depth-first walk of a docs tree, REPO_ROOT-relative. */
@@ -1381,24 +1581,63 @@ describe('product docs state the metadata counts the stack registers (#729)', ()
     });
   };
 
+  /**
+   * The product surface #729 scoped this rule to: the README banner and the
+   * docs site. `docs/` is a different audience and a different claim shape —
+   * `docs/STATUS.md` states its counts as a transcript of what `pnpm validate`
+   * prints (`Data: 17 Objects  344 Fields`), which none of the prose spellings
+   * in CLAIMS matches. Adding the file here would widen the scan by one path
+   * and check nothing on it; the transcript is pinned by its own rule below
+   * (#1011), against the same registered stack.
+   */
   const COUNT_DOCS = ['README.md', ...walkMdx('content/docs')];
 
-  type Claim = { file: string; line: number; kind: string; text: string; stated: number };
+  type Claim = {
+    file: string;
+    line: number;
+    /** The `## ` heading this claim sits under — '' before the first one. */
+    section: string;
+    kind: string;
+    text: string;
+    stated: number;
+  };
+
+  /**
+   * The `## ` heading governing each 1-based line number.
+   *
+   * `### ` and deeper are deliberately not headings here: the v1.0 record files
+   * its inventory under `### What's in v1.0`, and a reader attributes that to
+   * the `## v1.0 …` section it is drawn inside.
+   */
+  const sectionByLine = (text: string): string[] => {
+    const out: string[] = ['']; // index 0 is unused — line numbers are 1-based
+    let current = '';
+    for (const line of text.split('\n')) {
+      const heading = /^## +(.*)$/.exec(line);
+      if (heading) current = heading[1].trim();
+      out.push(current);
+    }
+    return out;
+  };
 
   const claimsIn = (file: string): Claim[] => {
     const text = readFileSync(join(REPO_ROOT, file), 'utf8');
+    const sections = sectionByLine(text);
     return CLAIMS.flatMap(({ kind, re }) =>
-      [...text.matchAll(re)].map((m) => ({
-        file,
-        line: text.slice(0, m.index ?? 0).split('\n').length,
-        kind,
-        text: m[0],
-        stated: Number(m[1]),
-      })),
+      [...text.matchAll(re)].map((m) => {
+        const line = text.slice(0, m.index ?? 0).split('\n').length;
+        return { file, line, section: sections[line] ?? '', kind, text: m[0], stated: Number(m[1]) };
+      }),
     );
   };
 
   const ALL_CLAIMS = COUNT_DOCS.flatMap(claimsIn);
+
+  /** A claim excused by HISTORICAL — file AND section must both match. */
+  const isHistorical = (c: Claim): boolean => {
+    const entry = HISTORICAL[c.file];
+    return entry !== undefined && entry.section.test(c.section);
+  };
 
   it('the stack registers a count for every kind this rule guards', () => {
     // Vacuity guard #1: a config whose shape moved would leave every REGISTERED
@@ -1430,22 +1669,26 @@ describe('product docs state the metadata counts the stack registers (#729)', ()
     ).toEqual([]);
   });
 
-  it('every exempt page still states a count, so no exemption is dead', () => {
+  it('every exempt section still states a count, so no exemption is dead', () => {
     // Same discipline as the persona rule: an exemption that outlives the text it
-    // excused silently widens the next time that page is edited.
-    const dead = Object.keys(HISTORICAL).filter(
-      (file) => !ALL_CLAIMS.some((c) => c.file === file),
-    );
+    // excused silently widens the next time that page is edited. Section-scoped
+    // since #1015, so this also fails if the v1.0 record is renamed or its
+    // inventory moves out from under the heading the exemption names — either
+    // way the licence would otherwise go on standing over a heading nobody
+    // writes any more.
+    const dead = Object.entries(HISTORICAL)
+      .filter(([file]) => !ALL_CLAIMS.some((c) => c.file === file && isHistorical(c)))
+      .map(([file, entry]) => `${file} (section matching ${entry.section})`);
     expect(
       dead,
-      `HISTORICAL exempts pages that no longer state any count:\n  ${dead.join('\n  ')}\n` +
+      `HISTORICAL exempts sections that no longer state any count:\n  ${dead.join('\n  ')}\n` +
         'Drop the exemption — it now only serves to hide the next drift on that page.',
     ).toEqual([]);
   });
 
   it('every count a doc states is the count the stack registers', () => {
     const drifted = ALL_CLAIMS.filter(
-      (c) => !(c.file in HISTORICAL) && c.stated !== REGISTERED[c.kind],
+      (c) => !isHistorical(c) && c.stated !== REGISTERED[c.kind],
     ).map(
       (c) => `${c.file}:${c.line} says "${c.text}", the stack registers ${REGISTERED[c.kind]} ${c.kind}`,
     );
@@ -1454,6 +1697,260 @@ describe('product docs state the metadata counts the stack registers (#729)', ()
       `doc counts that no longer match objectstack.config.ts:\n  ${drifted.join('\n  ')}\n` +
         'Update the doc — the registered stack is the source of truth, and the README banner ' +
         'plus the fork guide are the two pages a prospective customer reads first.',
+    ).toEqual([]);
+  });
+});
+
+/*
+ * ─── docs/STATUS.md states the current repo, not a stale snapshot (#1011) ────
+ *
+ * `docs/STATUS.md` opens with "Source of truth: `pnpm validate`, `pnpm
+ * typecheck`, and `pnpm test`" and is the first page a maintainer — human or
+ * agent — opens to learn where the repo stands. Every figure on it had stopped
+ * being true: `16 Objects  318 Fields` against 17/344, `4 Dashboards` against
+ * 5, `23 Flows` against 24, `13 Views` against 14, and `ObjectStack packages
+ * 17.0.0-rc.1` two release candidates behind the installed rc.3. A page that
+ * claims to be the source of truth and is wrong in every row is worse than no
+ * page, because it is the one a reader stops checking things against.
+ *
+ * Nothing caught it. The #612 version rules list this file but compare only the
+ * APP version, which was right. The #729 count rule deliberately scans the
+ * product surface (README + `content/docs`), and — the reason it stopped there
+ * — its claims are prose spellings ("17 business objects") that match nothing
+ * in a machine transcript. So this file needed a rule keyed to the shape its
+ * claims actually have.
+ *
+ * Two present-tense tables, two derivations:
+ *
+ *  - the fenced `pnpm validate` summary, every figure read off the registered
+ *    stack, exactly like #729 reads its own;
+ *  - `## Current Runtime Requirements`, every row read off `package.json`.
+ *
+ * ## What this rule deliberately does NOT decide (#1012)
+ *
+ * The transcript states `26 Actions`, and whether a READER should be told 26
+ * (registrations), 13 (action families — an action bound to five objects
+ * registers five times) or 6 (`*.actions.ts` files) is an open product question
+ * on #1012. This rule does not answer it. It asserts that a block presented as
+ * the output of `pnpm validate` matches what the loader registers, which is
+ * what that command prints by construction — a fidelity check on a transcript,
+ * not a vote on the calibre. However #1012 lands, this assertion is unchanged;
+ * what may change is the prose around the block.
+ *
+ * ## Reverse verification (#1011)
+ *
+ * Predicted and measured **red before, green after**, in both halves: on the
+ * pre-fix tree the transcript rule reported five drifted figures (Objects,
+ * Fields, Views, Dashboards, Actions, Flows) and the runtime table reported
+ * `ObjectStack packages: page says 17.0.0-rc.1, package.json installs
+ * 17.0.0-rc.3`. Captured output is in the PR.
+ */
+describe('docs/STATUS.md states the current repository (#1011)', () => {
+  const STATUS = 'docs/STATUS.md';
+  const text = readFileSync(join(REPO_ROOT, STATUS), 'utf8');
+  const registered = stack as unknown as Record<string, unknown[]>;
+  const len = (kind: string): number => (registered[kind] ?? []).length;
+
+  /**
+   * Field totals come from the objects themselves — `fields` is a record keyed
+   * by field name, so this is the same sum the validator prints.
+   */
+  const FIELD_TOTAL = ((registered.objects ?? []) as Record<string, unknown>[]).reduce(
+    (total, o) => total + Object.keys((o.fields ?? {}) as Record<string, unknown>).length,
+    0,
+  );
+
+  /** Every label the transcript prints → the figure the stack registers. */
+  const EXPECTED: Record<string, number> = {
+    Objects: len('objects'),
+    Fields: FIELD_TOTAL,
+    Apps: len('apps'),
+    Views: len('views'),
+    Pages: len('pages'),
+    Dashboards: len('dashboards'),
+    Reports: len('reports'),
+    Actions: len('actions'),
+    Flows: len('flows'),
+    Positions: len('positions'),
+    Permissions: len('permissions'),
+  };
+
+  /**
+   * The fenced block transcribing the validator summary — identified by its
+   * `HotCRM v<version>` first line rather than by position, so inserting a
+   * section above it does not silently point this rule at another fence.
+   */
+  const TRANSCRIPT: string = (() => {
+    const fenced = [...text.matchAll(/```[a-zA-Z0-9_-]*\n([\s\S]*?)```/g)].map((m) => m[1]);
+    return fenced.find((body) => /^HotCRM v\d+\.\d+\.\d+/m.test(body)) ?? '';
+  })();
+
+  /**
+   * `Data: 17 Objects  344 Fields` → `{ Objects: 17, Fields: 344 }`.
+   *
+   * The separator is horizontal whitespace, never `\s`: the block's first line
+   * is `HotCRM v2.2.2` and the next opens `Data:`, so a `\s+` reads the version's
+   * last digit and the following line's label as one pair and reports a figure
+   * called "Data" that no line states.
+   */
+  const STATED: Record<string, number> = Object.fromEntries(
+    [...TRANSCRIPT.matchAll(/(\d+)[ \t]+([A-Z][A-Za-z]*)/g)].map((m) => [m[2], Number(m[1])]),
+  );
+
+  it('the validator transcript is present and parses', () => {
+    // Vacuity guard #1. A reformatted or deleted block would leave STATED empty,
+    // and every comparison below would then agree with nothing at all — which is
+    // indistinguishable from a page that is correct.
+    expect(
+      TRANSCRIPT,
+      `${STATUS} carries no fenced block starting \`HotCRM v<version>\`. Either the transcript ` +
+        'was removed (drop this rule rather than leaving it green over nothing) or it was ' +
+        'reformatted — teach the extraction the new shape.',
+    ).not.toBe('');
+    expect(
+      Object.keys(STATED).length,
+      `${STATUS}'s transcript parsed ${Object.keys(STATED).length} labelled figures ` +
+        `(${JSON.stringify(STATED)}). The summary prints ${Object.keys(EXPECTED).length}.`,
+    ).toBeGreaterThanOrEqual(Object.keys(EXPECTED).length);
+  });
+
+  it('the transcript states every figure the summary prints', () => {
+    // Vacuity guard #2, pointed at silent subtraction: a row dropped from the
+    // block would take its figure out of STATED, and a rule that only compares
+    // what it finds would call that agreement.
+    const missing = Object.keys(EXPECTED).filter((label) => !(label in STATED));
+    expect(
+      missing,
+      `${STATUS}'s transcript no longer states: ${missing.join(', ')}. It is presented as the ` +
+        'output of `pnpm validate`; a summary missing a line is not that output. Re-run the ' +
+        'command and paste what it prints.',
+    ).toEqual([]);
+  });
+
+  it('every figure the transcript states is one this rule knows', () => {
+    // The other direction: the validator growing a figure this rule has never
+    // heard of would land in the block unchecked, which is how the last set of
+    // numbers aged. Fail loudly and teach EXPECTED where it comes from.
+    const unknown = Object.keys(STATED).filter((label) => !(label in EXPECTED));
+    expect(
+      unknown,
+      `${STATUS}'s transcript states figures this rule cannot derive: ${unknown.join(', ')}. ` +
+        'Add them to EXPECTED with their source on the registered stack, or drop them from the ' +
+        'block — an unchecked number on this page is exactly what #1011 was.',
+    ).toEqual([]);
+  });
+
+  it('every figure the transcript states is the one the stack registers', () => {
+    const drifted = Object.entries(EXPECTED)
+      .filter(([label, count]) => label in STATED && STATED[label] !== count)
+      .map(([label, count]) => `${label}: page says ${STATED[label]}, the stack registers ${count}`);
+    expect(
+      drifted,
+      `${STATUS} transcribes figures that are not the current ones:\n  ${drifted.join('\n  ')}\n` +
+        'Re-run `pnpm validate` and paste its summary. This page calls itself the source of ' +
+        'truth for the repo state — a stale figure here is read as fact by the next maintainer.',
+    ).toEqual([]);
+  });
+
+  it('the transcript names the version the manifest declares', () => {
+    const declared: string = ((stack as any).manifest ?? {}).version;
+    const stated = /^HotCRM v(\d+\.\d+\.\d+[^\s]*)/m.exec(TRANSCRIPT)?.[1];
+    expect(
+      stated,
+      `${STATUS}'s transcript opens with "HotCRM v${stated}" but objectstack.config.ts declares ` +
+        `${declared}.`,
+    ).toBe(declared);
+  });
+
+  /**
+   * `## Current Runtime Requirements` — a present-tense fact table, so it is
+   * held to the file those facts live in. The section is sliced out by heading
+   * rather than the whole page scanned: `## Local Checks` above it has
+   * backticked second cells too, and would be read as requirement rows.
+   */
+  const REQUIREMENTS_HEADING = 'Current Runtime Requirements';
+
+  const requirementRows: Record<string, string> = (() => {
+    const section = h2Sections(text).find((s) => s.heading.includes(REQUIREMENTS_HEADING));
+    if (!section) return {};
+    return Object.fromEntries(
+      [...section.body.matchAll(/^\|\s*([^|]+?)\s*\|\s*`([^`]+)`\s*\|/gm)].map((m) => [
+        m[1].trim(),
+        m[2].trim(),
+      ]),
+    );
+  })();
+
+  /** Each row's label → where the value actually lives. */
+  const REQUIREMENT_SOURCES: { label: string; source: string; value: () => string }[] = [
+    {
+      label: 'Node.js',
+      source: 'package.json engines.node',
+      value: () => (PACKAGE_JSON.engines ?? {}).node ?? '',
+    },
+    {
+      label: 'pnpm',
+      source: 'package.json engines.pnpm',
+      value: () => (PACKAGE_JSON.engines ?? {}).pnpm ?? '',
+    },
+    {
+      label: 'ObjectStack packages',
+      source: 'the @objectstack/* dependency line in package.json',
+      // Asserted to be a single version by the test below before it is read.
+      value: () => PLATFORM_VERSIONS[0] ?? '',
+    },
+    {
+      label: 'Local dev port',
+      // `objectstack dev -p 4001` — the port a reader is told to open is the
+      // port the script actually binds, not one remembered from a past release.
+      source: "package.json scripts.dev (`-p <port>`)",
+      value: () => /-p\s+(\d+)/.exec((PACKAGE_JSON.scripts ?? {}).dev ?? '')?.[1] ?? '',
+    },
+  ];
+
+  it('the runtime-requirements table parses, with a row for every requirement', () => {
+    // Vacuity guard #3: an unparsed table would leave this rule comparing an
+    // empty map, agreeing with any page at all.
+    const missing = REQUIREMENT_SOURCES.map((r) => r.label).filter((l) => !(l in requirementRows));
+    expect(
+      missing,
+      `${STATUS} §${REQUIREMENTS_HEADING} states no row for: ${missing.join(', ')} ` +
+        `(parsed: ${Object.keys(requirementRows).join(', ') || 'nothing'}). Either the table ` +
+        'was reformatted — teach the extraction its shape — or a requirement stopped being ' +
+        'stated, which is a decision to make deliberately rather than by deletion.',
+    ).toEqual([]);
+  });
+
+  it('every value this rule derives is readable from package.json', () => {
+    // Guard the derivations before comparing against them, for the reason the
+    // whats-new rule guards PLATFORM_VERSIONS: a source that went absent would
+    // make every row "wrong" for a reason that has nothing to do with the page.
+    expect(
+      PLATFORM_VERSIONS,
+      `package.json installs ${PLATFORM_VERSIONS.length} distinct @objectstack/* versions ` +
+        `(${PLATFORM_VERSIONS.join(', ') || 'none'}) — they are version-locked and bumped ` +
+        'together (AGENTS.md §Platform Upgrades).',
+    ).toHaveLength(1);
+    const unreadable = REQUIREMENT_SOURCES.filter((r) => r.value() === '').map(
+      (r) => `${r.label}: nothing read from ${r.source}`,
+    );
+    expect(
+      unreadable,
+      `requirement values this rule can no longer derive:\n  ${unreadable.join('\n  ')}\n` +
+        'Point the derivation at the new shape rather than leaving the row unchecked.',
+    ).toEqual([]);
+  });
+
+  it('every runtime requirement matches package.json', () => {
+    const drifted = REQUIREMENT_SOURCES.filter(
+      (r) => r.label in requirementRows && requirementRows[r.label] !== r.value(),
+    ).map((r) => `${r.label}: page says \`${requirementRows[r.label]}\`, ${r.source} says \`${r.value()}\``);
+    expect(
+      drifted,
+      `${STATUS} §${REQUIREMENTS_HEADING} disagrees with package.json:\n  ${drifted.join('\n  ')}\n` +
+        'This table is written in the present tense and read as fact — the platform row alone ' +
+        'sat two release candidates behind for two upgrades (#1011). package.json is the source; ' +
+        'the page follows it.',
     ).toEqual([]);
   });
 });
