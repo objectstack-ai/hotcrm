@@ -99,6 +99,20 @@ fields this app declares (`crm_product.image`, `crm_product.datasheet`,
 install — no seed data populates a media field — but an in-place upgrade needs
 both before strict validation is safe to enable.
 
+`17.0.0-rc.5` adds a third, `os migrate summary-nulls`, which recomputes
+roll-up `count` / `sum` columns left `NULL` by rows inserted before the
+create-time fix. **It does not apply to HotCRM**, and the reason is worth
+writing down rather than re-deriving on the next upgrade: the migration walks
+*platform* roll-up columns, which only exist on `master_detail` relationships,
+and this app declares none — every line-item and member object reaches its
+parent through a `lookup`. The four aggregates HotCRM does show
+(`crm_opportunity.amount`, `crm_quote` totals, the campaign metrics, the case
+activity stamp) are ordinary number fields written by the hooks in
+`src/objects/*.hook.ts`, so no platform code has ever seeded or recomputed
+them. Re-check this if a future change converts a line-item lookup to
+`master_detail` — the lint rule `relationship/line-item-should-be-master-detail`
+suggests exactly that on four fields today.
+
 If a scan reports rows it cannot convert, the escape hatches downgrade the new
 enforcement to warnings while you fix the data. They are temporary, not a
 destination:
