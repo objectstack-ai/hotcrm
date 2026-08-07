@@ -33,10 +33,37 @@ export const Case = ObjectSchema.create({
     }),
 
     // Case Information
+    //
+    // `unique: true` is declared HERE, on the field, and deliberately NOT as a
+    // `{ fields: ['organization_id', 'case_number'], unique: true }` entry in
+    // `indexes[]` below (#1023) — same spelling `crm_account.name`,
+    // `crm_contact.email` and `crm_product.sku` already use, for the same
+    // reason. Since framework #3696 the field-level form is per-organization:
+    // it materializes as the composite `(organization key part, case_number)`,
+    // unique WITHIN an organization. Since platform 17.0.0-rc.4 (ADR-0120 D3,
+    // #5030) that key part is NULL-safe — `COALESCE(organization_id,
+    // '__global__')` — so rows with no organization form ONE bucket instead of
+    // each escaping the constraint under SQL's NULL-distinct semantics.
+    //
+    // The hand-written table composite this replaced could not get that: a
+    // declared index is taken verbatim, so it materialized as plain
+    // `UNIQUE (organization_id, case_number)` and enforced NOTHING on any row
+    // whose `organization_id` was NULL — i.e. every row of a single-organization
+    // or untenanted install. It also read as "unique per organization" while
+    // materializing as an unscoped composite, which is the bare-`unique: true`
+    // spelling ADR-0120 warns on in 17.x and protocol 18 rejects (#5082).
+    //
+    // Scope spelling: bare `true` at FIELD level already means "per
+    // organization" and carries no deprecation (`'organization'` is its
+    // explicit synonym with byte-identical materialization — measured). It is
+    // written as `true` to match the four sibling objects above; switching the
+    // repo to the explicit word is a uniform decision for all of them, not
+    // something `crm_case` forks on alone.
     case_number: Field.autonumber({
       label: 'Case Number',
       group: 'basic',
       format: 'CASE-{00000}',
+      unique: true,
     }),
     
     subject: Field.text({
@@ -281,10 +308,16 @@ export const Case = ObjectSchema.create({
   // autonumber sequence is PER TENANT — every organization counts from 1. A
   // platform-wide unique index on it therefore rejects the second
   // organization's `CASE-00001` on insert: the exact collision framework #3696
-  // exists to prevent. Spelled out as the tenant composite so the constraint
-  // matches the sequence that feeds it.
+  // exists to prevent. The constraint has to match the sequence that feeds it.
+  //
+  // No `{ fields: ['organization_id', 'case_number'], unique: true }` here
+  // (#1023). Case-number uniqueness is declared on the `case_number` field
+  // itself — see the note there for why the hand-written table composite could
+  // not express it. Do NOT add it back alongside the field-level declaration
+  // either: declaring both makes the verbatim index win and leaves the
+  // per-organization one unreachable (framework#3991
+  // `unique/double-declaration`), which would silently undo the fix.
   indexes: [
-    { fields: ['organization_id', 'case_number'], unique: true },
     { fields: ['crm_account'] },
     { fields: ['owner_id'] },
     { fields: ['status'] },
