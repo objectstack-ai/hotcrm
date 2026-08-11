@@ -2,6 +2,7 @@
 
 import { P } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
+import { HIGH_VALUE_DEAL_AMOUNT, LARGE_DEAL_AMOUNT } from '../objects/_thresholds';
 type Flow = Automation.Flow;
 
 /**
@@ -85,7 +86,7 @@ export const OpportunityApprovalFlow: Flow = {
         // predicate. An absent `approval_status` reads the same as the null
         // this condition already tolerates; an absent `stage` is not a settled
         // stage, so it must not block approval.
-        condition: P`has(record.amount) && record.amount != null && record.amount > 100000
+        condition: P`has(record.amount) && record.amount != null && record.amount > ${LARGE_DEAL_AMOUNT}
           && (!has(record.approval_status) || record.approval_status == "not_required" || record.approval_status == null)
           && (!has(record.stage) || (record.stage != "closed_won" && record.stage != "closed_lost"))`,
       },
@@ -232,9 +233,9 @@ export const OpportunityApprovalFlow: Flow = {
     // ABORTS the step rather than skipping it (#4775), so a guard that was
     // belt-and-braces is now what keeps the run alive.
     { id: 'e5', source: 'check_high_value', target: 'director_signoff', type: 'conditional', condition: P`has(vars.oppRecord) && has(vars.oppRecord.amount)
-      && vars.oppRecord.amount != null && vars.oppRecord.amount > 500000`, label: 'High value (> $500K)' },
+      && vars.oppRecord.amount != null && vars.oppRecord.amount > ${HIGH_VALUE_DEAL_AMOUNT}`, label: 'High value (> $500K)' },
     { id: 'e6', source: 'check_high_value', target: 'mark_approved', type: 'conditional', condition: P`!has(vars.oppRecord) || !has(vars.oppRecord.amount)
-      || vars.oppRecord.amount == null || vars.oppRecord.amount <= 500000`, label: 'Standard (≤ $500K)' },
+      || vars.oppRecord.amount == null || vars.oppRecord.amount <= ${HIGH_VALUE_DEAL_AMOUNT}`, label: 'Standard (≤ $500K)' },
 
     // Director decision (approval-node branch labels)
     { id: 'e7', source: 'director_signoff', target: 'mark_approved', type: 'default', label: 'approve' },
