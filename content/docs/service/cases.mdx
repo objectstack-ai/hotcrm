@@ -24,14 +24,14 @@ A typical stuck case: **New → In Progress → Waiting on Customer → In Progr
 
 ## The 4 priority levels
 
-| Priority | Typical SLA target | When to use |
+| Priority | SLA target (SMB → Strategic) | When to use |
 | --- | --- | --- |
-| 🔵 **Low** | 7 business days | Cosmetic issue, low-impact question *(default)* |
-| 🟠 **Medium** | 2 business days | Standard issue, work continues |
-| 🔴 **High** | 8 hours | Significant impact, customer is upset |
-| 🔴 **Critical** | 4 hours | Production down, immediate response needed |
+| 🔵 **Low** | 7 days → 4 days | Cosmetic issue, low-impact question *(default)* |
+| 🟠 **Medium** | 2 days → 24 hours | Standard issue, work continues |
+| 🔴 **High** | 8 hours → 6 hours | Significant impact, customer is upset |
+| 🔴 **Critical** | 4 hours, every tier | Production down, immediate response needed |
 
-**Only the Critical row has a clock behind it.** The `case_sla_defaults` hook stamps `sla_due_date` on Critical cases and on no others, so the other three targets are the team's service commitment with nothing in the app measuring them — see [SLA & Escalation](/docs/service/sla-and-escalation) for the mechanics.
+**Every row has a clock behind it now.** The `case_sla_defaults` hook stamps `sla_due_date` on every case from a **priority × account-tier matrix**, so the target tightens for a Strategic or Enterprise customer and the hourly breach sweep applies at all four priorities — see [SLA & Escalation](/docs/service/sla-and-escalation) for the full table and the mechanics. Those are **calendar** hours: this app has no business-hours calendar, so nights, weekends and holidays count against the target.
 
 When a case is set to **Critical**, the Case Escalation flow alerts the **case owner** by inbox message and email — its recipient list is the single entry `{caseRecord.owner_id}`, and there is no `support_manager@example.com` recipient anywhere in this app. A **High** case is never escalated automatically, whatever the account is: no escalation condition reads the account at all, and raising one is the manual **Escalate Case** button.
 
@@ -95,11 +95,11 @@ The two are not one screen wearing different chrome. **Parent Case** is on the f
 
 ## What happens automatically
 
-- **First response date** (`first_response_date`) — stamped the first time a call or meeting that **already took place** is logged on the case. Its only writer is `logActivityAction` (`src/actions/global.actions.ts`), which stamps on the `held` activity kinds — **Log a Call** and **Log a Meeting** — and reads the stored value back before writing, so a second log never overwrites the first. Nothing else stamps it: a comment goes to the feed, an email goes to `sys_email`, a status change is deliberately not counted (an agent can move a case to *In Progress* and investigate for an hour while the customer hears nothing), and a meeting merely *scheduled* is not a response either. On a case worked entirely through comments and email the field stays empty.
+- **First response date** (`first_response_date`) — stamped the first time an interaction that **already took place** is recorded against the case. Its single writer is the `event_activity_bubble` hook (`src/objects/event.hook.ts`), which fires on any `crm_event` reaching **Held** status with the case as its related record — so **Log a Call** and **Log a Meeting** stamp it, and so does an interaction entered any other way, including straight onto the case's activity list. It reads the stored value back before writing, so a second interaction never overwrites the first. Two things are deliberately *not* a first response: a **status change** (an agent can move a case to *In Progress* and investigate for an hour while the customer hears nothing) and a meeting merely *scheduled*, which is `planned` rather than held. On a case worked entirely through comments the field stays empty.
 - **Closed flag** — set automatically when status changes to *Closed*.
 - **Closed date** — stamped to NOW when status changes to *Closed*.
 - **Resolution time (hours)** — calculated as the difference between *Created date* and *Closed date*.
-- **SLA due date** — stamped on **Critical** cases only. `case_sla_defaults` fills it with *now + 4 hours* when a case is created at — or edited to — Critical priority and the field is still empty. At High, Medium and Low it writes nothing, so the field stays blank unless somebody types a date in by hand.
+- **SLA due date** — stamped on **every** case with a recognised priority. `case_sla_defaults` looks up the case's priority against its account's **Customer Tier** and fills the field with *now + the matching number of calendar hours*, when a case is created and whenever the field is still empty. It is written once and never recomputed, and a date somebody typed in by hand is never overwritten.
 - **SLA Violated** (`is_sla_violated`) — there is no field called *SLA Breached?*. The hourly `case_sla_monitor` sweep sets it to true on cases that are **still open** (status is neither *Resolved* nor *Closed*) and whose **SLA Due Date** has already passed. It never compares resolution time against the target, so a case with no due date is never a candidate, and a case resolved late but before the next sweep is never flagged.
 - **Account's last activity date** — bumped to today when the case is updated.
 
@@ -153,7 +153,7 @@ See [SLA & Escalation](/docs/service/sla-and-escalation) for the full mechanics.
 | --- | --- | --- |
 | **All Cases** | Every case, sorted by priority then SLA due date, with a row tint keyed on **priority** | *All* |
 | **Service Workflow** | Kanban of open cases, grouped by status | *Workflow* |
-| **SLA Calendar** | Cases laid out on their **SLA Due Date** — in practice the Critical ones, plus whatever was dated by hand | *SLA* |
+| **SLA Calendar** | Cases laid out on their **SLA Due Date** — every case carries one now, so the calendar shows the whole open backlog | *SLA* |
 | **Case Timeline** | Cases on a *created → closed* timeline, grouped by owner | *Timeline* |
 | **Escalated Cases** | `is_escalated` is true | *Escalated* |
 | **⏰ SLA at Risk** | Open **High and Critical** cases, soonest due date first | *SLA at Risk* |
@@ -207,7 +207,7 @@ If the Copilot decides the priority is *Critical*, it will also recommend immedi
 ## Tips for service agents
 
 - ✅ **Triage incoming cases promptly** — but know that nothing in the app is watching. There is no first-response target to breach: **First Response Date** is recorded on the case and never compared against anything, `case_metrics` carries no first-response measure so no report or dashboard tile reports on it, and no flow alerts on it. Promptness here is the team's own commitment, not a clock the app runs.
-- ✅ **Use "Waiting on Customer"** when you're genuinely blocked — but it **does not stop the SLA clock**, in any configuration. `sla_due_date` is written once and never recomputed, and the hourly `case_sla_monitor` sweep collects open cases whose status is neither *Resolved* nor *Closed* — *Waiting on Customer* is not on that exclusion list. A Critical case parked on the customer runs its four hours down and is flagged **SLA Violated** and escalated on schedule.
+- ✅ **Use "Waiting on Customer"** when you're genuinely blocked — but it **does not stop the SLA clock**, in any configuration. `sla_due_date` is written once and never recomputed, and the hourly `case_sla_monitor` sweep collects open cases whose status is neither *Resolved* nor *Closed* — *Waiting on Customer* is not on that exclusion list. A case parked on the customer runs its clock down and is flagged **SLA Violated** and escalated on schedule, at every priority.
 - ✅ **Always write a resolution** — it's mandatory, but also feeds the knowledge base for future cases.
 - ✅ **Link a task** when the case requires future follow-up (e.g., "verify fix worked in 7 days").
 - ❌ Don't close a case without confirming the fix worked.
@@ -220,6 +220,6 @@ If the Copilot decides the priority is *Critical*, it will also recommend immedi
 
 ## Tips for admins
 
-- The SLA targets per priority are stored in the case object's automation. To change them, edit the case automation — see [Administration › Automation](/docs/administration/automation).
+- The SLA targets per priority and account tier are stored in the case object's automation. To change them, edit `src/objects/_case-sla.ts` and the matching table inside `case_sla_defaults` in `src/objects/case.hook.ts` — both, because a sandboxed hook body cannot import a constant — see [SLA & Escalation](/docs/service/sla-and-escalation) and [Administration › Automation](/docs/administration/automation).
 - Neither `escalation_team@example.com` nor `support_manager@example.com` is configured anywhere — both addresses exist nowhere in this app. The one recipient list that does exist is the `notify` node of the Case Escalation flow, `recipients: ['{caseRecord.owner_id}']` — the case owner alone — and it is edited in `src/flows/case-escalation.flow.ts`, not on a Setup screen.
 - Email-to-case ingestion (auto-create case from an inbound email) requires the email plugin — see [Customization › Extending Objects](/docs/customization/extending-objects).

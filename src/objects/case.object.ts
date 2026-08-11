@@ -199,11 +199,14 @@ export const Case = ObjectSchema.create({
       readonly: true,
     }),
     
-    // NOT `readonly`: stamped by the `log_call` / `log_meeting` activity
-    // actions (`src/actions/global.actions.ts`), and 16.x drops writes to
-    // readonly fields on user-context writes (#2948) — an action body runs as
-    // the acting user, so `readonly` here silently disabled the stamp. Same
-    // reason `is_sla_violated` and `escalated_date` below are not readonly.
+    // NOT `readonly`: stamped by `event_activity_bubble`
+    // (`src/objects/event.hook.ts`) on the first HELD `crm_event` related to
+    // the case — whoever wrote that event, `log_call` / `log_meeting` included
+    // (#595 moved the stamp out of the two action bodies so every path is
+    // covered, not just those two buttons). 16.x drops writes to readonly
+    // fields on user-context writes (#2948) and that hook runs under the
+    // acting user's context, so `readonly` here silently disabled the stamp.
+    // Same reason `is_sla_violated` and `escalated_date` below are not readonly.
     //
     // Definition: the moment the customer first heard back from us, matching
     // Salesforce `FirstResponseDateTime` / Zendesk first reply time — NOT an
@@ -221,6 +224,12 @@ export const Case = ObjectSchema.create({
       scale: 2,
     }),
     
+    // Stamped once, on the first write that gives the case a priority, from the
+    // priority × account-tier matrix in `src/objects/_case-sla.ts`
+    // (`case_sla_defaults`). The clock runs on CALENDAR hours — this app has no
+    // business-hours calendar, so nights, weekends and holidays count. Not
+    // `readonly`: a service manager may legitimately renegotiate a deadline,
+    // and the hook never overwrites a value that is already there.
     sla_due_date: Field.datetime({
       label: 'SLA Due Date',
       group: 'sla',

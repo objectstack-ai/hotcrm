@@ -364,42 +364,18 @@ function activityAction(spec: ActivitySpec, objectName: string): Action {
         }),
       });
 
-      // 4. SLA first-response stamp (#575 B2, cases only).
-      // \`first_response_date\` was the one member of the case SLA family with
-      // no writer at all, so the metric was permanently null. A logged call or
-      // meeting is the only record of outbound contact a case carries, which
-      // makes the FIRST one the moment the customer first heard back — the
-      // industry definition (Salesforce \`FirstResponseDateTime\`, Zendesk first
-      // reply time). A status change is deliberately NOT used: an agent can
-      // move a case to "in progress" and investigate for an hour while the
-      // customer hears nothing. A meeting merely BOOKED is not a response
-      // either, which is why this is gated on EVENT_STATUS.
-      //
-      // CONVENTION: any future customer-facing path on a case MUST stamp this
-      // too, or the metric silently under-reports.
-      //
-      // The stored value is READ rather than taken from \`ctx.record\`: the
-      // list_item / record_related dispatch paths hand the body a PROJECTED
-      // record, and a field missing from that projection reads as blank — which
-      // would re-stamp on every log and turn "first response" into "last".
-      if (OBJECT_NAME === 'crm_case' && recordId && EVENT_STATUS === 'held') {
-        const raw = await ctx.api.object('crm_case').find({
-          where: { id: recordId },
-          fields: ['first_response_date'],
-          top: 1,
-        });
-        const found = Array.isArray(raw) ? raw : (raw?.records ?? []);
-        const stored = found.length ? found[0].first_response_date : record.first_response_date;
-        if (!stored) {
-          // \`update(data, options)\` — \`ctx.api\` is the engine repo facade,
-          // whose update takes a DOCUMENT, not an id (test/action-sandbox.test.ts
-          // pins the contract against a real kernel).
-          await ctx.api.object('crm_case').update(
-            { id: recordId, first_response_date: nowIso },
-            { where: { id: recordId } },
-          );
-        }
-      }
+      // 4. SLA first-response stamp — NOT here. #575 B2 originally stamped
+      // \`crm_case.first_response_date\` from this body, which meant the metric
+      // was only ever written when the interaction was recorded through the two
+      // buttons this factory builds; an event created any other way left it
+      // null, under a comment asking every future author to remember. #595
+      // moved the stamp to \`event_activity_bubble\` in
+      // \`src/objects/event.hook.ts\`, which already fires on exactly the
+      // condition that matters ("a held event, on its transition into held")
+      // and already resolves \`related_to_case\`. Step 1 above writes that
+      // event, so this action still stamps the case — through one writer
+      // instead of a convention. Do not reintroduce a copy here: two writers
+      // racing on a "first" timestamp is how it becomes a "last" one.
 
       return { eventId: eventId, activityId: activity?.id ?? null, attendeeIds: attendeeIds };
     `,

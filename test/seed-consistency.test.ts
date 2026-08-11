@@ -2,6 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { CrmSeedData } from '../src/data/index';
+import { CASE_SLA_DEFAULT_TIER, caseSlaHours } from '../src/objects/_case-sla';
 
 /**
  * Seed ↔ hook consistency guards (#591).
@@ -418,5 +419,93 @@ describe('seed values respect the remaining field contracts', () => {
   it('the catalog is wide enough to configure a realistic deal', () => {
     expect(products.length, 'four products cannot demonstrate a product mix').toBeGreaterThanOrEqual(10);
     expect(new Set(products.map((p) => String(p.category))).size).toBeGreaterThanOrEqual(3);
+  });
+});
+
+describe('seeded case SLA due dates match the policy matrix (#595)', () => {
+  /**
+   * `sla_due_date` is a hook-owned field, and hooks do not run over seeds — so
+   * the seeded value has to already BE what `case_sla_defaults` would have
+   * computed at the case's creation moment: `created_date` plus the
+   * priority × account-tier cell, in calendar hours.
+   *
+   * The seed generator derives these by construction (`celCaseSlaDue` in
+   * `src/data/service.seed.ts`). This block is what stops a future hand-typed
+   * date — the shape every one of these values used to have — from quietly
+   * reintroducing a deadline nobody's policy produces.
+   */
+  const cases = recordsOf('crm_case');
+  const tierOf = new Map(
+    accounts.map((a) => [String(a.name), typeof a.tier === 'string' ? a.tier : CASE_SLA_DEFAULT_TIER]),
+  );
+  /** The CEL source of a seeded expression value, or null for a plain value. */
+  const celSource = (v: unknown): string | null =>
+    v !== null && typeof v === 'object' && (v as Rec).dialect === 'cel' ? String((v as Rec).source) : null;
+
+  it('seeds enough cases across enough priorities to be worth checking', () => {
+    // Guards the guard: an empty or single-priority set would pass vacuously.
+    expect(cases.length).toBeGreaterThanOrEqual(30);
+    expect(new Set(cases.map((c) => String(c.priority))).size).toBe(4);
+  });
+
+  it('gives every seeded case a due date, at every priority', () => {
+    // The defect #595 fixed, restated as a property of the demo data: three of
+    // four priorities used to be able to carry a blank one.
+    const blank = cases
+      .filter((c) => c.sla_due_date == null)
+      .map((c) => `${String(c.subject)} (${String(c.priority)})`);
+    expect(blank, blank.join('\n')).toEqual([]);
+  });
+
+  it('derives every due date from created_date + the matrix cell', () => {
+    const problems: string[] = [];
+    for (const c of cases) {
+      const created = celSource(c.created_date);
+      const due = celSource(c.sla_due_date);
+      const label = `${String(c.subject)} (${String(c.priority)} / ${String(c.crm_account)})`;
+      if (!created || !due) {
+        problems.push(`${label}: created_date and sla_due_date must both be CEL expressions`);
+        continue;
+      }
+      const age = /^daysAgo\((\d+)\)$/.exec(created);
+      if (!age) {
+        problems.push(`${label}: created_date is not a daysAgo() expression — ${created}`);
+        continue;
+      }
+      const hours = caseSlaHours(String(c.priority), tierOf.get(String(c.crm_account)));
+      if (hours === undefined) {
+        problems.push(`${label}: no SLA matrix row for priority "${String(c.priority)}"`);
+        continue;
+      }
+      const expected = `daysAgo(${age[1]}) + duration('${hours}h')`;
+      if (due !== expected) problems.push(`${label}: expected \`${expected}\`, seeded \`${due}\``);
+    }
+    expect(problems, problems.join('\n')).toEqual([]);
+  });
+
+  it('never marks a case as breached while its own due date is still ahead of it', () => {
+    // `is_sla_violated` is `case_sla_monitor`'s field to write, and the sweep's
+    // definition of a breach is "open, and past due". A seed that pre-sets the
+    // flag has to satisfy that definition on arrival, or the demo ships a
+    // breach the sweep would never have produced. `daysAgo(n)` is a UTC
+    // midnight, so a case is UNAMBIGUOUSLY past due when the matrix offset is
+    // no longer than its age.
+    const problems: string[] = [];
+    for (const c of cases.filter((r) => r.is_sla_violated === true)) {
+      const age = /^daysAgo\((\d+)\)$/.exec(celSource(c.created_date) ?? '');
+      const hours = caseSlaHours(String(c.priority), tierOf.get(String(c.crm_account)));
+      const label = `${String(c.subject)} (${String(c.priority)})`;
+      if (!age || hours === undefined) {
+        problems.push(`${label}: cannot check a breach without a daysAgo() creation and a matrix row`);
+        continue;
+      }
+      if (Number(age[1]) * 24 < hours) {
+        problems.push(`${label}: flagged as breached but only ${age[1]}d old against a ${hours}h clock`);
+      }
+      if (c.status === 'resolved' || c.status === 'closed') {
+        problems.push(`${label}: a settled case has met its SLA — the sweep excludes it`);
+      }
+    }
+    expect(problems, problems.join('\n')).toEqual([]);
   });
 });

@@ -47,10 +47,19 @@ describe('case_sla_defaults', () => {
     expect(due).toBeLessThan(before + 4.1 * 3_600_000);
   });
 
-  it('does not give a non-critical case an SLA', async () => {
+  it('gives a non-critical case an SLA too, off the priority × tier matrix', async () => {
+    // This assertion used to read `expect(input.sla_due_date).toBeUndefined()`
+    // — High, Medium and Low cases got no clock at all, which is what kept
+    // `case_sla_monitor` from ever firing for three of the four priorities
+    // (#595). The cells themselves are pinned in `test/case-sla-matrix.test.ts`;
+    // here the point is only that the field is no longer blank. With no `api`
+    // the tier is unresolvable, so this lands on the default `smb` column.
     const input: Rec = { priority: 'high' };
+    const before = Date.now();
     await hook.handler(makeCtx({ event: 'beforeInsert', input, user: USER }));
-    expect(input.sla_due_date).toBeUndefined();
+    const due = new Date(input.sla_due_date as string).getTime();
+    expect(due).toBeGreaterThan(before + 7.9 * 3_600_000);
+    expect(due).toBeLessThan(before + 8.1 * 3_600_000);
   });
 
   it('stamps defaults and strips privileged fields on an anonymous guest submission', async () => {

@@ -1,7 +1,11 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { CrmSeedData } from '../src/data/index';
+import caseHooks from '../src/objects/case.hook';
+import {
+  makeHarness as makeHookHarness, makeCtx as makeHookCtx, hookNamed,
+} from './helpers/hook-harness';
 import { CampaignCompletionFlow } from '../src/flows/campaign-completion.flow';
 import { CaseSlaMonitorFlow } from '../src/flows/case-sla-monitor.flow';
 import { ContractExpirationFlow } from '../src/flows/contract-expiration.flow';
@@ -133,6 +137,99 @@ describe('case_sla_monitor — hourly breach sweep', () => {
         crm_case: [{
           id: 'c1', case_number: 'CASE-9', status: 'working',
           is_sla_violated: false, sla_due_date: iso(+5), owner_id: 'rep1',
+        }],
+      },
+    );
+    await h.run('case_sla_monitor', {}, { event: 'schedule' });
+    expect(h.store.crm_case[0].is_sla_violated).toBe(false);
+    expect(h.notifications).toHaveLength(0);
+  });
+});
+
+describe('case_sla_monitor — non-critical breaches (#595)', () => {
+  /**
+   * The acceptance criterion of #595, asserted rather than reasoned about.
+   *
+   * The sweep's filter has always been priority-blind — it selects on
+   * `sla_due_date < now` and nothing else — so "it can't fire for High cases"
+   * was never a property of this flow. It was a property of the HOOK: nothing
+   * stamped `sla_due_date` below `critical`, and a blank date is never in the
+   * past. Proving the fix therefore means running BOTH halves for real: the
+   * shipped `case_sla_defaults` handler stamps the deadline, and the shipped
+   * `case_sla_monitor` flow sweeps it.
+   *
+   * The clock is moved back to the moment of creation so the matrix's own
+   * offset is what puts the case past due — no hand-written date anywhere in
+   * this test, which is what keeps it honest if a cell ever changes.
+   */
+  const NON_CRITICAL: Array<{ priority: string; tier: string; hours: number }> = [
+    { priority: 'high', tier: 'strategic', hours: 6 },
+    { priority: 'high', tier: 'enterprise', hours: 8 },
+    { priority: 'medium', tier: 'mid_market', hours: 48 },
+    { priority: 'low', tier: 'smb', hours: 168 },
+  ];
+
+  const slaHook = hookNamed(caseHooks as Record<string, any>[], 'case_sla_defaults');
+
+  /** Stamp a case as if it had been created `hours + 1` hours ago. */
+  const stampInThePast = async (priority: string, tier: string, hours: number): Promise<string> => {
+    const harness = makeHookHarness({ crm_account: [{ id: 'acct_1', tier }] });
+    const input: Rec = { priority, crm_account: 'acct_1', status: 'working' };
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date(Date.now() - (hours + 1) * 3_600_000));
+      await slaHook.handler(
+        makeHookCtx({ event: 'beforeInsert', input, user: { id: 'rep1' }, api: harness.api }),
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+    return input.sla_due_date as string;
+  };
+
+  it.each(NON_CRITICAL)(
+    'flags and escalates a breached $priority case on a $tier account',
+    async ({ priority, tier, hours }) => {
+      const due = await stampInThePast(priority, tier, hours);
+      expect(due, `${priority} got no SLA clock at all`).toBeTruthy();
+      expect(new Date(due).getTime(), 'the matrix offset should put this case past due')
+        .toBeLessThan(Date.now());
+
+      const h = makeFlowHarness(
+        { case_sla_monitor: CaseSlaMonitorFlow },
+        {
+          crm_case: [{
+            id: 'c_1', case_number: 'CASE-595', status: 'working', priority,
+            is_sla_violated: false, sla_due_date: due, owner_id: 'rep1',
+          }],
+        },
+      );
+      await h.run('case_sla_monitor', {}, { event: 'schedule' });
+
+      const swept = h.store.crm_case[0];
+      expect(swept.is_sla_violated, `a breached ${priority} case was not flagged`).toBe(true);
+      expect(swept.is_escalated).toBe(true);
+      expect(swept.status).toBe('escalated');
+      expect(swept.escalation_reason, 'missing reason ⇒ the write is rejected').toBeTruthy();
+      expect(h.notifications, 'the owner must be alerted').toHaveLength(1);
+    },
+  );
+
+  it('still leaves a non-critical case alone while it is inside its window', async () => {
+    // The other half of the guard: a High case that has NOT breached must not
+    // be swept just because it finally has a due date.
+    const harness = makeHookHarness({ crm_account: [{ id: 'acct_1', tier: 'enterprise' }] });
+    const input: Rec = { priority: 'high', crm_account: 'acct_1', status: 'working' };
+    await slaHook.handler(
+      makeHookCtx({ event: 'beforeInsert', input, user: { id: 'rep1' }, api: harness.api }),
+    );
+
+    const h = makeFlowHarness(
+      { case_sla_monitor: CaseSlaMonitorFlow },
+      {
+        crm_case: [{
+          id: 'c_1', case_number: 'CASE-596', status: 'working', priority: 'high',
+          is_sla_violated: false, sla_due_date: input.sla_due_date as string, owner_id: 'rep1',
         }],
       },
     );

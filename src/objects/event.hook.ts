@@ -13,7 +13,8 @@ import type { HookApi } from './_hook-api';
  *   recency: a `held` event stamps `crm_account.last_activity_date`,
  *   `crm_lead.last_contacted_date` and `crm_contact.last_contacted_date`,
  *   walking UP from an opportunity / case / contact to the account it hangs
- *   off.
+ *   off. Since #595 it is also the SINGLE writer of
+ *   `crm_case.first_response_date` (see the block at the end of the handler).
  *
  * # Why the walk-up matters
  *
@@ -80,7 +81,7 @@ const eventActivityBubble: Hook = {
   async: true,
   onError: 'log',
   description:
-    'A held event stamps interaction recency on the related account (walking up from contact/opportunity/case), lead and contact.',
+    'A held event stamps interaction recency on the related account (walking up from contact/opportunity/case), lead and contact, and the first-response time on a related case.',
   handler: async (ctx: HookContext) => {
     const { input } = ctx;
     const previous = ctx.previous;
@@ -160,6 +161,51 @@ const eventActivityBubble: Hook = {
         await api.object(w.object).update({ ...w.doc, id: w.id }, { where: { id: w.id } });
       } catch {
         // Best-effort activity bubble; never break the parent write.
+      }
+    }
+
+    // ── First response on a case (#595) ──────────────────────────────────
+    //
+    // The SINGLE writer of `crm_case.first_response_date`. It used to live in
+    // the `log_call` / `log_meeting` action body (#575 B2), which stamped it
+    // only when the interaction was recorded through one of those two buttons —
+    // an event created any other way (the Activity tab, an import, an
+    // integration, a future action) left the most standard SLA metric a service
+    // desk reports permanently null, under a comment asking every future author
+    // to remember to stamp it too. The rule those two actions were really
+    // expressing is the one this hook already computes for recency: an
+    // interaction that HAPPENED. So it belongs here, once, where every writer
+    // of a held event passes through it — the same argument that made this hook
+    // the single writer of recency, and `case_status_side_effects` the single
+    // owner of escalation follow-up tasks.
+    //
+    // A status change is deliberately NOT a first response, and #595 does not
+    // change that: an agent can move a case to "in progress" and investigate
+    // for an hour while the customer hears nothing, so a status-derived number
+    // would report a response that never happened. Neither is a meeting merely
+    // BOOKED — that is the `held` gate above, which this block sits under.
+    const responseCaseId = idOf('related_to_case');
+    if (responseCaseId) {
+      try {
+        // Read the STORED value rather than trusting the event's own payload:
+        // "first response" is a property of the case, so the second held event
+        // on a case must find the first one's stamp and leave it alone. A
+        // re-stamp would silently turn the metric into "last response".
+        const raw: any = await api.object('crm_case').find({
+          where: { id: responseCaseId },
+          fields: ['first_response_date'],
+          top: 1,
+        });
+        const rows = Array.isArray(raw) ? raw : (raw?.records ?? []);
+        const stored = rows.length ? rows[0].first_response_date : undefined;
+        if (!stored) {
+          await api.object('crm_case').update(
+            { id: responseCaseId, first_response_date: nowIso },
+            { where: { id: responseCaseId } },
+          );
+        }
+      } catch {
+        // Best-effort, like the bubble above: never break the event write.
       }
     }
   },

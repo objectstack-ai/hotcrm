@@ -21,7 +21,49 @@ import { Case } from '../objects/case.object';
 import { KnowledgeArticle } from '../objects/knowledge_article.object';
 import { Event } from '../objects/event.object';
 import { EventAttendee } from '../objects/event_attendee.object';
-import { celDaysAgo, celDaysFromNow } from './_shared';
+import { CASE_SLA_DEFAULT_TIER, caseSlaHours } from '../objects/_case-sla';
+import { celDaysAgo } from './_shared';
+import { accounts } from './sales.seed';
+
+// ─── Seeded SLA due dates ─────────────────────────────────────────────
+//
+// Hooks do not run over seeds, so a hook-owned field has to arrive already
+// holding what the hook would have computed (`test/seed-consistency.test.ts`
+// is the enforcement). `sla_due_date` used to be hand-typed per case — eight
+// numbers picked to look plausible — and it is now DERIVED from the same
+// priority × account-tier matrix `case_sla_defaults` applies, so a cell change
+// moves the demo data with it instead of leaving it lying.
+//
+// The account tier is read off the account seed itself rather than copied into
+// a table here: `crm_account.tier` is the input the matrix takes, and there is
+// no reason for this file to hold a second opinion about which tier Acme is.
+const TIER_BY_ACCOUNT = new Map<string, string>(
+  (accounts.records as ReadonlyArray<Record<string, unknown>>).map((a) => [
+    String(a.name),
+    typeof a.tier === 'string' ? a.tier : CASE_SLA_DEFAULT_TIER,
+  ]),
+);
+
+/**
+ * `created_date + matrix(priority, tier)`, as a CEL expression.
+ *
+ * `daysAgo(n)` is a UTC midnight, so the hour offset has to be added on top of
+ * it — hence `+ duration('Nh')` rather than a second day-granular helper. The
+ * matrix is stated in CALENDAR hours (see `src/objects/_case-sla.ts`), which is
+ * exactly what this arithmetic does: no working-day skipping, because the app
+ * has no working-day calendar to skip by.
+ *
+ * A due date that lands in the past is expected and correct on an old open case
+ * — that is what a breach IS, and `case_sla_monitor` is the thing that notices
+ * it on its next hourly sweep. `is_sla_violated` is deliberately NOT derived
+ * from this: the flag is the sweep's to write, and the seed only pre-sets it
+ * where the demo wants a breach visible before the first sweep runs.
+ */
+const celCaseSlaDue = (createdDaysAgo: number, priority: string, accountName?: string) => {
+  const hours = caseSlaHours(priority, accountName ? TIER_BY_ACCOUNT.get(accountName) : undefined);
+  if (hours === undefined) throw new Error(`seed: no SLA matrix row for priority "${priority}"`);
+  return cel`daysAgo(${createdDaysAgo}) + duration('${hours}h')`;
+};
 
 // ─── Tasks ────────────────────────────────────────────────────────────
 // Polymorphic parents need BOTH halves: `related_to_type` names the parent
@@ -130,7 +172,7 @@ export const cases = defineSeed(Case, {
       is_sla_violated: false,
       is_escalated: false,
       created_date: cel`daysAgo(2)`,
-      sla_due_date: cel`daysFromNow(1)`,
+      sla_due_date: celCaseSlaDue(2, 'high', 'Acme Corporation'),
     },
     {
       subject: 'Data export timing out for large datasets',
@@ -147,7 +189,7 @@ export const cases = defineSeed(Case, {
       is_escalated: true,
       escalation_reason: 'Customer threatening churn',
       created_date: cel`daysAgo(5)`,
-      sla_due_date: cel`daysAgo(2)`,
+      sla_due_date: celCaseSlaDue(5, 'critical', 'Globex Industries'),
     },
     {
       subject: 'How to configure SSO with Okta?',
@@ -169,7 +211,7 @@ export const cases = defineSeed(Case, {
       resolution_time_hours: 24.0,
       created_date: cel`daysAgo(3)`,
       closed_date: cel`daysAgo(2)`,
-      sla_due_date: cel`daysFromNow(2)`,
+      sla_due_date: celCaseSlaDue(3, 'medium', 'Initech Solutions'),
     },
     {
       subject: 'API rate limit exceeded on production',
@@ -191,7 +233,7 @@ export const cases = defineSeed(Case, {
       resolution_time_hours: 24.0,
       created_date: cel`daysAgo(7)`,
       closed_date: cel`daysAgo(6)`,
-      sla_due_date: cel`daysAgo(6)`,
+      sla_due_date: celCaseSlaDue(7, 'high', 'Wayne Enterprises'),
     },
     {
       subject: 'PDF reports not rendering charts correctly',
@@ -207,7 +249,7 @@ export const cases = defineSeed(Case, {
       is_sla_violated: false,
       is_escalated: false,
       created_date: cel`daysAgo(1)`,
-      sla_due_date: cel`daysFromNow(2)`,
+      sla_due_date: celCaseSlaDue(1, 'medium', 'Stark Medical'),
     },
     {
       subject: 'Billing discrepancy on last invoice',
@@ -227,7 +269,7 @@ export const cases = defineSeed(Case, {
       is_sla_violated: false,
       is_escalated: false,
       created_date: cel`daysAgo(4)`,
-      sla_due_date: cel`daysFromNow(3)`,
+      sla_due_date: celCaseSlaDue(4, 'low', 'Acme Corporation'),
     },
     {
       subject: 'Mobile app crashes on iOS 17',
@@ -244,7 +286,7 @@ export const cases = defineSeed(Case, {
       is_escalated: true,
       escalation_reason: 'Affects 30% of mobile users',
       created_date: cel`daysAgo(3)`,
-      sla_due_date: cel`daysAgo(1)`,
+      sla_due_date: celCaseSlaDue(3, 'critical', 'Globex Industries'),
     },
     {
       subject: 'Request: bulk import via CSV',
@@ -265,7 +307,7 @@ export const cases = defineSeed(Case, {
       resolution_time_hours: 48.0,
       created_date: cel`daysAgo(10)`,
       closed_date: cel`daysAgo(8)`,
-      sla_due_date: cel`daysAgo(8)`,
+      sla_due_date: celCaseSlaDue(10, 'low', 'Wayne Enterprises'),
     },
     // ─── Generated demo cases — 30 cases over the last 30 days, mixed across
     // priorities. Powers `CasesOpenedByDayPriorityReport` (daily bucketing
@@ -291,6 +333,14 @@ export const cases = defineSeed(Case, {
         // SLA breaches only make sense on OPEN cases with a due date already in
         // the past (the case_sla_monitor flow's definition). The old generator
         // flagged rows as violated while giving every row a FUTURE due date.
+        //
+        // Since #595 the due date is DERIVED (`celCaseSlaDue` below), so the
+        // "already in the past" half now holds by construction for these rows:
+        // a critical case is due 4h after creation and every generated case is
+        // at least a day old. The converse is deliberately not enforced — other
+        // open rows are past due too, and `case_sla_monitor` is the thing that
+        // notices them. Pre-setting the flag here only decides what the demo
+        // shows before the first hourly sweep lands.
         const slaViolated = !settled && priority === 'critical' && i % 3 === 0;
         out.push({
           subject: `Demo case ${String(i + 1).padStart(2, '0')} — ${priority} ${types[i % types.length]}`,
@@ -316,9 +366,7 @@ export const cases = defineSeed(Case, {
           // Resolved cases also carry closed_date: case.hook stamps it as the
           // resolved-date proxy while keeping is_closed=false.
           ...(settled ? { closed_date: celDaysAgo(ageDays - resolutionDays) } : {}),
-          sla_due_date: slaViolated
-            ? celDaysAgo(1)
-            : celDaysFromNow(priority === 'critical' ? 1 : priority === 'high' ? 2 : 4),
+          sla_due_date: celCaseSlaDue(ageDays, priority, accountsList[i % accountsList.length]),
         });
       }
       return out;

@@ -21,7 +21,7 @@ Navigate to **Setup → Company Information**:
 
 **There is no Setup → Business Hours screen.** This app ships no working-day calendar, no working-hours window and no holiday list — nothing to fill in here, and nothing a deadline could be counted against. The section is kept only so the admin who came looking for that screen stops looking.
 
-What follows from that is on the SLA side: deadlines run on **calendar hours**. The one deadline this app computes is the Critical case target — `src/objects/case.hook.ts` adds four hours to the wall clock (`due.setHours(due.getHours() + 4)`) — so a Critical case opened at 4pm on a Friday is due at 8pm that same Friday, and nights, weekends and holidays all count against it. No other priority is stamped with a due date at all: the 8-hour High target and the rest are service promises your team keeps, not clocks the app runs. See [SLA & Escalation](/docs/service/sla-and-escalation).
+What follows from that is on the SLA side: deadlines run on **calendar hours**. Every case now gets a computed deadline — `src/objects/case.hook.ts` looks the case's priority up against its account's **Customer Tier** and adds that many elapsed hours to the wall clock — so a Critical case opened at 4pm on a Friday is due at 8pm that same Friday, and a Low case opened before a public holiday runs its week down through it. Nights, weekends and holidays all count against every target, at every priority. See [SLA & Escalation](/docs/service/sla-and-escalation).
 
 ### 3. Email setup
 
@@ -99,18 +99,18 @@ If your process differs, that is a source edit rather than a screen: **there is 
 
 Confirm the default [SLA matrix](/docs/service/sla-and-escalation):
 
-| Priority | Resolution |
-| --- | --- |
-| Critical | 4 hours |
-| High | 8 hours |
-| Medium | 2 business days |
-| Low | 7 business days |
+| Priority | Strategic | Enterprise | Mid-Market | SMB |
+| --- | --- | --- | --- | --- |
+| Critical | 4h | 4h | 4h | 4h |
+| High | 6h | 8h | 8h | 8h |
+| Medium | 24h | 36h | 48h | 48h |
+| Low | 96h | 120h | 168h | 168h |
 
-**Only the Critical row is a deadline the app keeps.** The `case_sla_defaults` hook (`src/objects/case.hook.ts`) stamps `sla_due_date` at *now + 4 calendar hours* on a Critical case and writes nothing at the other three priorities — and the hourly `case_sla_monitor` sweep only picks up cases whose due date has passed, so below Critical there is no date to pass. Those three rows are your team's service commitment, not a clock the app runs.
+**Every cell is a deadline the app keeps.** The `case_sla_defaults` hook (`src/objects/case.hook.ts`) stamps `sla_due_date` at *now + the matching number of calendar hours* on every case, and the hourly `case_sla_monitor` sweep picks up any of them whose due date has passed. The column is chosen by the account's **Customer Tier** — so part of confirming this matrix is confirming that your accounts are actually classified. An account with a blank tier, or one the case's creator cannot read, is treated as **SMB**.
 
-**There is no first-response target to confirm.** This checklist used to carry a whole *First response* column — 1 hour at Critical through 1 business day at Low — and none of those four numbers exists anywhere in the app; the SLA page this section links to does not mention a first response at all. What does exist is the stamp: **First Response Date** is written the first time a call or meeting that already took place is logged on the case (`logActivityAction`, `src/actions/global.actions.ts`). It is never compared against anything — `case_metrics` declares no first-response measure, so no report or dashboard tile reports on it, and no flow alerts on it. Promise your customers a first response time by all means; the app records when it happened and nothing else.
+**There is no first-response target to confirm.** This checklist used to carry a whole *First response* column — 1 hour at Critical through 1 business day at Low — and none of those four numbers exists anywhere in the app; the SLA page this section links to does not carry a first-response target either. What does exist is the stamp: **First Response Date** is written the first time an interaction that already took place is recorded against the case (the `event_activity_bubble` hook, `src/objects/event.hook.ts`). It is never compared against anything — `case_metrics` declares no first-response measure, so no report or dashboard tile reports on it, and no flow alerts on it. Promise your customers a first response time by all means; the app records when it happened and nothing else.
 
-Adjust if your support promise differs — the Critical four hours lives in `src/objects/case.hook.ts`, not on a Setup screen.
+Adjust if your support promise differs — the sixteen numbers live in `src/objects/_case-sla.ts` and a matching table inside `src/objects/case.hook.ts`, not on a Setup screen, and both copies have to change together.
 
 ### 12. Approval process
 
