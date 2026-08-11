@@ -33,7 +33,10 @@ export const Opportunity = ObjectSchema.create({
     { key: 'financials',  label: 'Financials',          icon: 'trending-up' },
     { key: 'sales_process', label: 'Sales Process',     icon: 'target' },
     { key: 'classification', label: 'Classification',   icon: 'tag' },
-    { key: 'competition', label: 'Competition & Campaigns', icon: 'flag', defaultExpanded: false },
+    // Was `competition` / "Competition & Campaigns" until #1061 retired the
+    // `competitors` placeholder picklist. Campaign attribution is all that ever
+    // lived here besides it, so the group is named for what it holds.
+    { key: 'campaign', label: 'Campaigns', icon: 'flag', defaultExpanded: false },
     { key: 'notes',       label: 'Notes & Next Steps',  icon: 'file-text' },
     { key: 'crm_forecast',    label: 'Forecast & Metrics',  icon: 'bar-chart', defaultExpanded: false },
   ],
@@ -168,23 +171,21 @@ export const Opportunity = ObjectSchema.create({
       options: [...LEAD_SOURCE_OPTIONS],
     }),
 
-    // Competitor Analysis
-    competitors: Field.select({
-      label: 'Competitors',
-      multiple: true,
-      group: 'competition',
-      options: [
-        { label: 'Competitor A', value: 'competitor_a' },
-        { label: 'Competitor B', value: 'competitor_b' },
-        { label: 'Competitor C', value: 'competitor_c' },
-      ]
-    }),
+    // `competitors` was retired in #1061: a `multiple` select whose only three
+    // options were the placeholders `Competitor A/B/C`. Measured before the
+    // removal, it had no reader anywhere in the app — no list column, filter,
+    // detail-page section, dashboard, report, dataset, flow, hook or AI skill —
+    // and no seed row ever set it, so it was a write-only field carrying
+    // fabricated values. Recording *which* competitor a deal is against is a
+    // real need, but it needs a display surface and a real source of names, not
+    // a picklist of invented ones; the closed-lost side of that story is already
+    // served by `loss_reason: 'competitor'` + the free-text `loss_details`.
 
     // Campaign tracking
     crm_campaign: Field.lookup('crm_campaign', {
       label: 'Campaign',
       description: 'Marketing campaign that generated this opportunity',
-      group: 'competition',
+      group: 'campaign',
     }),
 
     // Sales cycle metrics

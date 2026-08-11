@@ -538,10 +538,6 @@ export const jaJP: TranslationData = {
         description: { label: '説明' },
         next_step: { label: '次のステップ' },
         lead_source: { label: 'リードソース', options: { ...leadSourceOptions } },
-        competitors: {
-          label: '競合他社',
-          options: { competitor_a: '競合 A', competitor_b: '競合 B', competitor_c: '競合 C' },
-        },
         crm_campaign: { label: 'キャンペーン', help: 'この商談を生み出したマーケティングキャンペーン' },
         days_in_stage: { label: '現ステージ滞在日数' },
         stage_entry_date: { label: 'ステージ開始日', help: 'この商談が現在のステージに入った日。' },
@@ -601,7 +597,7 @@ export const jaJP: TranslationData = {
         financials: { label: '財務情報' },
         sales_process: { label: '営業プロセス' },
         classification: { label: '分類' },
-        competition: { label: '競合・キャンペーン' },
+        campaign: { label: 'キャンペーン' },
         notes: { label: 'メモ・次のステップ' },
       },
       _actions: {

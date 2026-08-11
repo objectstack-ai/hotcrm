@@ -533,13 +533,6 @@ export const en: TranslationData = {
             cold_call: 'Cold Call', email_campaign: 'Email Campaign', other: 'Other',
           },
         },
-        competitors: {
-          label: 'Competitors',
-          options: {
-            competitor_a: 'Competitor A', competitor_b: 'Competitor B',
-            competitor_c: 'Competitor C',
-          },
-        },
         crm_campaign: { label: 'Campaign', help: 'Marketing campaign that generated this opportunity' },
         days_in_stage: { label: 'Days in Current Stage' },
         stage_entry_date: {
@@ -596,7 +589,7 @@ export const en: TranslationData = {
         financials: { label: 'Financials' },
         sales_process: { label: 'Sales Process' },
         classification: { label: 'Classification' },
-        competition: { label: 'Competition & Campaigns' },
+        campaign: { label: 'Campaigns' },
         notes: { label: 'Notes & Next Steps' },
         crm_forecast: { label: 'Forecast & Metrics' },
         // Detail-page sections (src/pages/opportunity_detail.page.ts)

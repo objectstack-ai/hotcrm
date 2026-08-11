@@ -371,7 +371,9 @@ export const OpportunityViews = defineView({
       {
         label: 'Sales Strategy',
         columns: 1,
-        fields: ['next_step', 'competitors'],
+        // `competitors` sat here until #1061 retired it — this form section was
+        // the field's ONLY surface anywhere in the app (nothing read it back).
+        fields: ['next_step'],
       },
       {
         // Win/loss capture at close time. The fields existed on the object for
