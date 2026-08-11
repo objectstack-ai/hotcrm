@@ -1,7 +1,7 @@
-import { F, P } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
+import { F, P } from '@objectstack/spec';
 
 export const Case = ObjectSchema.create({
   name: 'crm_case',
