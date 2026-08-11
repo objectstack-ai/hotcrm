@@ -64,6 +64,7 @@ The sum of line items rolls up into the quote subtotal.
 
 - **Expiration date must be after the quote date** — no expired-on-creation quotes.
 - **Discount cannot exceed 100%** — basic sanity check.
+- **A quote cannot be Presented or Accepted without a contact.** A *Draft* or *In Review* quote needs no recipient — you often price a deal before knowing who signs it. But the write that moves it to *Presented* (or straight to *Accepted*) is refused unless **Contact** is filled in, and the message points at that field. Quotes that are never sent are unaffected: *Rejected* straight out of review, and the nightly sweep's *Expired*, both still go through without a contact.
 
 ## What happens automatically
 
@@ -77,7 +78,9 @@ Two things readers often expect at this point happen **later, when someone activ
 
 Both are described in full on the [Contracts](/docs/revenue/contracts) page.
 
-The links are copied across, not invented: the drafted contract requires a **Primary Contact** and takes it from the quote, and the close-won step acts on the quote's **related opportunity**. Put both on the quote before you mark it accepted — what the quote does not carry, acceptance cannot pass on.
+The links are copied across, not invented: the drafted contract requires a **Primary Contact** and takes it from the quote, and the close-won step acts on the quote's **related opportunity**. What the quote does not carry, acceptance cannot pass on.
+
+The contact half of that is now enforced rather than advised — you cannot present a quote without one, so by the time it can be accepted the recipient is already on it. The **related opportunity** is still genuinely optional: a quote with no opportunity is accepted normally and drafts its contract, there is simply no deal for the system to close-won. If you want the acceptance to win the deal, put the opportunity on the quote first.
 
 ## Generating a quote
 

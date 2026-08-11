@@ -81,14 +81,53 @@ export const Quote = ObjectSchema.create({
     crm_contact: Field.lookup('crm_contact', {
       label: 'Contact',
       group: 'basic',
-      // Optional: quote_generation maps the opportunity's primary_contact,
-      // which is itself optional — requiring it here meant contact-less
-      // opportunities could never draft a quote. Recipient is nailed down by
-      // the time a quote is presented, not when it is drafted.
+      // Optional AT DRAFT TIME, required from `presented` on (#1017).
+      //
+      // quote_generation maps the opportunity's `primary_contact`, which is
+      // itself optional — a flat `required: true` here meant contact-less
+      // opportunities could never draft a quote at all. So the recipient is
+      // nailed down by the time a quote is PRESENTED, not when it is drafted.
+      // That sentence sat in this comment for the field's whole life with
+      // nothing enforcing it: no rule stopped a contact-less quote reaching
+      // `presented` or `accepted`, and the bill came due one object over.
+      // `crm_contract.crm_contact` is `required` + `notNull`, so accepting such
+      // a quote made `quote_on_accepted` fail to draft the contract — since
+      // #714/#1013 that failure is honest and no longer swallows the close-won
+      // leg, but the hook is `async` + `onError: 'log'`, so the accepting write
+      // still answers 200 and the only evidence is a server log nobody reads.
+      // `requiredWhen` moves the same refusal to the synchronous, someone-is-
+      // watching moment: the rep is told on the write that turns the quote
+      // outward, against the field, with the quote still editable.
+      //
+      // WHY EXACTLY `presented` + `accepted`, and not the other two terminal
+      // states. Both of those are reachable WITHOUT the quote ever being sent
+      // (see the `quote_status_progression` transitions below):
+      //   • `expired` — the `quote_expiration` flow sweeps on `expiration_date`
+      //     alone and expires never-sent drafts as readily as presented ones.
+      //     Requiring a recipient there would make a nightly system write fail
+      //     on exactly the quotes that have no recipient BECAUSE nobody sent
+      //     them, and the sweep's `runAs: 'system'` would not exempt it — the
+      //     gate applies on write, not on actor.
+      //   • `rejected` — legal straight from `in_review`, i.e. a quote killed
+      //     internally before anyone saw it. Demanding a contact to file that
+      //     verdict asks for a recipient the quote never had.
+      // Neither state passes anything on to a contract, so neither needs one.
+      //
+      // ⚠️ `has(record.status)` is load-bearing, not decoration — the same trap
+      // documented at `lead.object.ts`'s duplicate lookups: a bare
+      // `record.status == "presented"` aborts with `No such key` on any merged
+      // record that simply omits the column, and the engine's answer to a
+      // predicate that fails to evaluate is to SKIP it ("requiredWhen for
+      // 'crm_contact' failed to evaluate — skipped"). The rule would then read
+      // as enforced and require nothing at all.
+      //
       // @objectstack 12: string[] `referenceFilters` is dead (not read by the
       // picker); `dependsOn` is the live cascading form — scopes contacts to the
       // quote's `crm_account` (ADR-0049).
       dependsOn: ['crm_account'],
+      requiredWhen: P`has(record.status) && (record.status == "presented" || record.status == "accepted")`,
+      description:
+        'Required once the quote is Presented or Accepted — the drafted contract takes its Primary Contact from here.',
     }),
 
     crm_opportunity: Field.lookup('crm_opportunity', {

@@ -841,7 +841,10 @@ export const jaJP: TranslationData = {
         name: { label: '見積名' },
         display_title: { label: '表示名' },
         crm_account: { label: '取引先' },
-        crm_contact: { label: '取引先責任者' },
+        crm_contact: {
+          label: '取引先責任者',
+          help: '見積が「提示済み」または「承認済み」になった時点で必須です。作成される契約の主担当者はここから引き継がれます。',
+        },
         crm_opportunity: { label: '商談' },
         owner_id: { label: '見積担当者' },
         status: {
