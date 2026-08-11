@@ -30,9 +30,19 @@ export const ServiceAgentProfile = {
     // agent's own context, so planting it under another user is a transfer and
     // is denied without this bit — the case update would fail with it. This is
     // "assign work to a colleague", not "reassign the ticket": the agent holds
-    // no transfer grant on `crm_case` or any customer record, so escalation
-    // still cannot move a case off its owner (#548; case reassignment remains
-    // the deferred half of that decision).
+    // no transfer grant on `crm_case` or any customer record.
+    //
+    // ⚠️ Escalation DOES now move a case to the `service_manager` pool (#1070),
+    // and it does so with no `crm_case` grant here — deliberately. That
+    // hand-off runs on the `beforeUpdate` seam, which the #3004 guard cannot
+    // see (measured, three readings, in `_case-assignment.ts`'s header and
+    // pinned in `test/case-assignment.test.ts`), so the case moves as part of
+    // the escalation write the automation is already performing rather than as
+    // an agent-initiated transfer. Doing it the other way — a `ctx.api` write
+    // from `afterUpdate` — WOULD need `crm_case.allowTransfer` here, which
+    // would let an agent reassign any case they can edit. That is a
+    // permission-model decision and is not being taken as a side effect of a
+    // hook: this line stays `crm_task` only.
     crm_task:        { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const, allowTransfer: true },
     // #592 — `log_call` / `log_meeting` are scoped to `crm_case` too, and an
     // agent who cannot INSERT a `crm_event` gets a button that 403s. Same

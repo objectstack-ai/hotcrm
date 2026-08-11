@@ -27,13 +27,13 @@ New ──► In Progress ──► Waiting on Customer ──► Resolved ─�
 2. **分配優先順序**——Low、Medium、High 或 Critical。*Critical* 會立即提醒**工單負責人**，而不是支援經理：這條提醒的收件人列表只有 `{caseRecord.owner_id}` 一項。
 3. **計算 SLA 目標**——每個工單都會根據優先順序獲得一個截止時間。
 4. **客服處理工單**，隨進度推進狀態。
-5. **如果是 Critical**（或 SLA 截止日期已過），[升級流程](/zh-Hant/docs/service/sla-and-escalation)會把工單標記為 *Escalated* 並提醒它的負責人。它**不會**重新指派工單——不存在向資深員工或經理的交接——也沒有任何升級條件會讀取帳戶，所以 *Customer* 的工單沒有屬於自己的分支。
+5. **如果是 Critical**（或 SLA 截止日期已過），[升級流程](/zh-Hant/docs/service/sla-and-escalation)會把工單標記為 *Escalated*、移交給負載最輕的 **Service Manager**，並提醒它原來那位客服。移交的對象是一個扁平的職位池，而不是向上的匯報線；若無人持有該職位，工單就保留原負責人。沒有任何升級條件會讀取帳戶，所以 *Customer* 的工單沒有屬於自己的分支。
 6. **記錄解決方案**，自動標記解決時間，並關閉工單。
 
 ## 系統為你做的事
 
 - **自動確定優先順序**——透過工單分流技能（AI 助手閱讀工單並推薦優先順序）。
-- **自動升級**——只針對 Critical 工單：流程把它們標記為 *Escalated* 並提醒負責人，從不改寫 `owner_id`，因此沒有任何工單被交到資深客服手裡。High 工單永遠不會被自動升級，無論帳戶是什麼：要升級它，靠的是手動的 **Escalate Case** 按鈕。
+- **自動升級**——只針對 Critical 工單：流程把它們標記為 *Escalated*、提醒原來那位客服，並把工單交給未結工單最少的那位服務經理（若無人持有該職位，則原地不動）。High 工單永遠不會被自動升級，無論帳戶是什麼：要升級它，靠的是手動的 **Escalate Case** 按鈕。
 - **緊急時通知**——每當工單被設為 Critical 時，站內訊息 + 郵件只發給**工單負責人**。這就是工單升級流程的 notify 節點，其收件人列表只有 `{caseRecord.owner_id}` 一項；本應用中不存在 `support_manager@example.com` 這個收件人。
 - **升級時通知**——不會給任何升級團隊發郵件：`escalation_team@example.com` 在本應用中根本不存在。狀態轉為 *Escalated* 真正觸發的，是 `case_status_side_effects` 鉤子開出的那條**次日到期、優先順序為緊急、歸帳戶負責人的跟進任務**。
 - **標記解決時間**——工單關閉時自動標記。

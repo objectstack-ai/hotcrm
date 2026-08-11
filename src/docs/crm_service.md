@@ -54,15 +54,17 @@ the due date, because a breach is recorded permanently on the case.
 The moment a case is set to **Critical** priority, it escalates without waiting
 for the SLA clock:
 
-- status moves to **Escalated** with an escalation reason stamped (the case
-  stays with its owner),
+- status moves to **Escalated** with an escalation reason stamped, and the case
+  is handed to the **Service Manager** carrying the fewest open cases — with
+  nobody holding that position it stays with its current owner,
 - an **urgent follow-up task** is created for the account owner (due the next
   day), and
 - the case owner is notified.
 
 > Two safety nets, two triggers: **priority = Critical** escalates *immediately*;
-> a **missed SLA Due Date** escalates *on breach*. Both flag and alert; neither
-> reassigns the case.
+> a **missed SLA Due Date** escalates *on breach*. Both flag, hand the case to
+> the Service Manager pool, and alert the agent it came from — and both leave it
+> where it is when that pool is unstaffed.
 
 ## After a case closes — satisfaction follow-up (automatic)
 

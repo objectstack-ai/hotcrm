@@ -96,10 +96,18 @@ export const CaseEscalationFlow: Flow = {
         // `escalation_reason` must be set whenever `is_escalated` flips true — the
         // object's `escalation_reason_required` validation rejects the write
         // otherwise (which silently aborted this flow until it was supplied).
-        // No owner reassignment: `{caseRecord.owner_id.manager}` cannot traverse a
-        // lookup in flow templates — it interpolates to the literal "undefined",
-        // orphaning the case under a phantom owner. The case stays with its
-        // owner; the escalation flag + follow-up task carry the hand-off.
+        //
+        // This node still writes NO owner, and still cannot: reassigning from a
+        // flow would mean `{caseRecord.owner_id.manager}`, and a flow template
+        // cannot traverse a lookup — it interpolates to the literal "undefined"
+        // and would orphan the case under a phantom owner. What changed in
+        // #1070 is that the hand-off no longer has to happen here: this very
+        // update fires the `case_escalation_reassign` beforeUpdate hook
+        // (`src/objects/_case-assignment.ts`), which puts the case with the
+        // least-loaded holder of the flat `service_manager` position — a pool,
+        // which the app can resolve, rather than a manager chain, which it
+        // cannot. With that pool unstaffed the case keeps its owner and this
+        // write is unchanged.
         fields: { is_escalated: true, escalation_reason: 'Auto-escalated: critical priority', escalated_date: '{NOW()}', status: 'escalated' },
       },
     },
@@ -120,17 +128,25 @@ export const CaseEscalationFlow: Flow = {
       // label already says `Alert Owner`.
       id: 'notify_team', type: 'notify', label: 'Notify Case Owner',
       config: {
-        // Owner only. Flow templates cannot traverse a lookup (see the note on
-        // `assign_senior_agent` above): `{caseRecord.owner_id.manager}` and
-        // `{caseRecord.crm_account.name}` both interpolate to the literal
-        // string "undefined" — a phantom recipient and a garbled body.
-        // "reassigned" was also false: this flow never changes the owner.
+        // Owner only, and the owner it reaches is the one the case had BEFORE
+        // the escalation: `caseRecord` was read by `get_case` upstream of the
+        // write, so `{caseRecord.owner_id}` is the agent being handed off from
+        // — exactly the person this message is for. Flow templates cannot
+        // traverse a lookup (see the note on `assign_senior_agent` above):
+        // `{caseRecord.owner_id.manager}` and `{caseRecord.crm_account.name}`
+        // both interpolate to the literal string "undefined" — a phantom
+        // recipient and a garbled body.
         recipients: ['{caseRecord.owner_id}'],
         channels: ['inbox', 'email'],
         severity: 'critical',
         topic: 'case_escalated',
         title: 'Case escalated: {caseRecord.case_number}',
-        message: 'Case {caseRecord.case_number} ({caseRecord.priority}) has been auto-escalated on critical priority. It remains assigned to you.',
+        // ⚠️ The body must stay true on BOTH outcomes. `It remains assigned to
+        // you.` was the old text and became false the moment #1070 landed; the
+        // opposite claim ("it has been reassigned") is false whenever the
+        // `service_manager` pool is unstaffed, which is the first-install norm.
+        // So it states the rule and points at the record for the answer.
+        message: 'Case {caseRecord.case_number} ({caseRecord.priority}) has been auto-escalated on critical priority. Ownership passes to the service manager with the lightest load; while nobody holds that position the case stays with you. Open the case to see who owns it now.',
         actionUrl: '/crm_case/{record.id}',
       },
     },

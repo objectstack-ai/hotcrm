@@ -68,7 +68,7 @@ A flow fires one of three ways, set by its start node:
 | **Large Deal Won Alert** | Record change (update) | When an opportunity over $100K turns *Closed Won*, notify the owner — the owner alone, not their manager |
 | **Billing Hand-off: Closed Won** | Record change (update) | On the transition into *Closed Won*, enqueue one durable POST of the deal + account + line items to the billing endpoint |
 | **Billing Hand-off: Contract Activated** | Record change (update) | On the transition into *Activated*, enqueue one durable POST of the contract + account + the originating deal's line items |
-| **Case Escalation Process** | Record change (update) | When a case turns *Critical*, flag it escalated and notify its owner — the case is not reassigned to a senior agent, it stays with its owner; escalating also opens an urgent follow-up task for the account owner |
+| **Case Escalation Process** | Record change (update) | When a case turns *Critical*, flag it escalated, hand it to the least-loaded holder of the `service_manager` position (it stays with its owner while that pool is unstaffed) and notify the agent it came from; escalating also opens an urgent follow-up task for the account owner |
 | **Case Escalation Process (on create)** | Record change (insert) | The same escalation for cases *created* at *Critical* |
 | **Case CSAT Follow-up** | Record change (update) + wait | When a case closes, wait 1 day, then prompt the owner to capture a satisfaction rating |
 | **Contract Auto-Expiration** | Schedule (daily midnight) | Expire activated contracts past their `end_date` and notify the owner |
