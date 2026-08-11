@@ -167,6 +167,31 @@ export const CaseViews = defineView({
      * Closed cases are excluded: an ownerless case that has already been closed
      * is history, not backlog, and leaving it here would make the count stop
      * meaning "work waiting for a human".
+     *
+     * ⚠️ WHO ACTUALLY SEES ROWS HERE is decided by record-level access, not by
+     * this view, and the answer today is narrower than the tab suggests. A
+     * view tab carries no role scoping — `ViewTabSchema` has `pinned`,
+     * `isDefault` and a boolean `visible`, and nothing per-profile — so this is
+     * pinned for everyone who can open Cases, while the ROWS resolve per
+     * profile:
+     *
+     *   - `system_admin` — `viewAllRecords`, so the full backlog. This is the
+     *     persona the empty-pool state is FOR: an empty `service_agent` pool is
+     *     fixed by staffing `sys_user_position`, which only an admin can do.
+     *   - `sales_manager` — `viewAllRecords`, read-only.
+     *   - a service manager / director — the critical, open slice only, via the
+     *     existing `case_escalation_sharing` / `case_director_sharing` criteria
+     *     rules (`src/sharing/case.sharing.ts`).
+     *   - `service_agent` — `readScope: 'own'` on `crm_case`, and an unowned
+     *     row is owned by nobody, so **an agent's triage tab is empty**.
+     *
+     * The last line is a real gap for the "agent pulls from the queue" story
+     * and is deliberately NOT closed here: granting service roles sight of
+     * unowned cases is a sharing-model change (a new criteria rule, or a
+     * `readScope` widening), which is outside this card's file surface and is
+     * exactly the kind of quiet permission widening the #596 ruling rules out.
+     * Filed as #1096 for a decision, with the reach table above and the three
+     * options priced.
      */
     unassigned_triage: {
       name: 'unassigned_triage',

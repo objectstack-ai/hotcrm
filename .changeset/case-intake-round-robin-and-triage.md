@@ -36,6 +36,15 @@ behaviour (intake must never be blocked) and was previously invisible. The view
 filters `owner_id is_null` and excludes closed cases, so its row count is the
 intake backlog. Label and empty state are authored in all four locales.
 
+⚠️ Who sees rows in that view is decided by record-level access, not by the
+view: `system_admin` and `sales_manager` see the whole backlog, service
+manager/director see the critical open slice through the existing criteria
+rules, and a `service_agent` — `readScope: 'own'` on `crm_case` — sees none,
+because an unowned row is owned by nobody. The empty-pool state is an admin
+problem (only an admin can staff `sys_user_position`), so the admin is the
+right first audience; making an agent able to pull from triage is a
+sharing-model change and is filed as #1096 rather than ridden in here.
+
 No permission-model change. Stamping another user's `owner_id` is a transfer,
 denied by the platform's #3004 guard without `allowTransfer`, and whether that
 gate applies is a property of the SEAM rather than of the object — so it was
