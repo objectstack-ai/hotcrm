@@ -1471,11 +1471,27 @@ describe('one protocol version, declared in three files (#728)', () => {
  * hand-maintained number moved into the test file: it would go stale on the very
  * next object and take the guard with it.
  *
- * `actions` is deliberately absent. The docs say 13, the registered stack says
- * 26, and the two are counting different things — an action bound to five
- * objects registers five times (#729's closing note). Which one a reader should
- * be told is a product call, so this guard does not pick a side; it also does
- * not pretend to cover the number. See the out-of-scope note on #729.
+ * `actions` was deliberately absent while the calibre was undecided: the docs
+ * said 13, the registered stack said 26, and the two count different things — an
+ * action bound to five objects registers five times (#729's closing note).
+ * #1012 settled it — the count a reader is told is the REGISTRATION count, for
+ * the two reasons that decided it: every other figure in the same README
+ * sentence is already a registration count, and it is the only calibre this rule
+ * can re-derive instead of asserting a hand-maintained number back at itself
+ * (a "family" is not a countable entity anywhere in `src/`). So `actions` now
+ * reads off the stack like every other kind here.
+ *
+ * Its CLAIMS pattern is bold-scoped (`**26 actions**`) where the others are not,
+ * and that is not decoration: `actions` is the one noun on this list that is
+ * also an ordinary English word in these pages. `content/docs/whats-new.mdx`
+ * quotes a Copilot prompt — "What are the next 3 actions I should take?" — in
+ * all three locales, and a bare `(\d+) actions` reads that sentence as an
+ * inventory claim and demands it say 26. The inventory sentence bolds every
+ * figure it states, so the bold is what separates a claim about the app from a
+ * sentence that merely contains a number. (Those quotes sit under the v1.0
+ * heading HISTORICAL exempts, so today they would be excused anyway — that is an
+ * accident of where the example lives, not a reason to write a pattern that
+ * matches the wrong sentence.)
  *
  * Reverse verification: predicted and measured **red before, green after**. On
  * the pre-fix tree the rule listed nine drifted claims across seven files
@@ -1491,6 +1507,10 @@ describe('product docs state the metadata counts the stack registers (#729)', ()
     flows: (registered.flows ?? []).length,
     dashboards: (registered.dashboards ?? []).length,
     datasets: (registered.datasets ?? []).length,
+    // #1012: the registration count, the calibre that issue settled on. Read
+    // here exactly like the others — the number this rule enforces moves when
+    // an action is bound to one more object, which is the whole point.
+    actions: (registered.actions ?? []).length,
     // #1014: `getting-started/introduction` sold "a 10-role hierarchy" on the
     // page a new reader opens first. Both halves were wrong — `CrmPositions`
     // holds 12, and ADR-0090 D3 removed the hierarchy itself (positions are
@@ -1523,6 +1543,15 @@ describe('product docs state the metadata counts the stack registers (#729)', ()
     { kind: 'dashboards', re: /(\d+) 個儀表板/g },
     { kind: 'datasets', re: /(\d+) datasets/g },
     { kind: 'datasets', re: /semantic layer \((\d+)\)/g },
+    // Bold-scoped on purpose — see the note above this describe (#1012).
+    { kind: 'actions', re: /\*\*(\d+) actions\*\*/g },
+    // The README's repository-layout block states the same figure a second time,
+    // in the shape the other three kinds are already matched in here
+    // (`data model (17 objects)`, `visual flows (24)`, `semantic layer (9)`).
+    // It said 13 while the banner said 13 and stayed wrong on every calibre —
+    // the directory it annotates holds 6 files. One claim per spelling, so a
+    // failure names the sentence it read.
+    { kind: 'actions', re: /server actions \+ AI tools \((\d+)\)/g },
     // Positions, in the three spellings the pages settled on (#1014). The zh
     // nouns are the ones `administration/sharing-and-security` already uses —
     // 「岗位」 in zh-Hans, 「職位」 in zh-Hant — so the vocabulary is one word
