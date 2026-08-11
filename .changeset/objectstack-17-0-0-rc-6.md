@@ -9,7 +9,7 @@ and carry the app's metadata and pinned upstream expectations across with it.
 (`specVersion` + `engines.protocol`) move with the pin, per the #728 rule that
 config, manifest and build must not diverge.
 
-Five upstream behavior changes reached this app and are handled here rather
+Six upstream behavior changes reached this app and are handled here rather
 than left to fail:
 
 - **`filter-empty-node` is a new author-time error.** An empty filter node
@@ -38,6 +38,17 @@ than left to fail:
   → 待我审批. The docs that quote it follow, and the #973 guard that retired
   待我审批 as "a sidebar label, not a view" is released: the string now occurs
   exactly once in the shipped bundle, as that view's label.
+
+- **The `ReportInput` type export is retired**, and the bare name `Report` now
+  carries the authoring shape it used to name (ADR-0122: `X` is the input type,
+  `XParsed` the post-parse one). The five `src/reports/*.report.ts` annotations
+  follow; the underlying type — `z.input<typeof ReportSchema>` — is unchanged.
+  Worth knowing on any other app making this jump: on rc.5 the name `Report`
+  meant the OPPOSITE (`z.infer`), so an annotation that already said `Report`
+  changed meaning silently, and only the removed `ReportInput` announced
+  itself. `Action`, `Dashboard` and `Page` swapped the same way. Nothing but
+  `tsc --noEmit` catches this class of change — `objectstack build` does not
+  typecheck app sources.
 
 Docs that state the installed platform version (`docs/STATUS.md`,
 `content/docs/whats-new.mdx` and its zh-Hans / zh-Hant twins) move to rc.6.

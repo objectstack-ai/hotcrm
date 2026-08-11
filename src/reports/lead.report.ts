@@ -1,6 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import type { ReportInput } from '@objectstack/spec/ui';
+import type { Report } from '@objectstack/spec/ui';
 
 /**
  * Lead engagement trend — matrix over `last_contacted_date` (a user-managed
@@ -11,7 +11,7 @@ import type { ReportInput } from '@objectstack/spec/ui';
  * `lead_metrics.last_contacted_date` declares the month bucket, so each column
  * represents one calendar month instead of a raw timestamp.
  */
-export const LeadInflowByMonthSourceReport: ReportInput = {
+export const LeadInflowByMonthSourceReport: Report = {
   name: 'lead_inflow_by_month_source',
   label: 'Lead Engagement by Month × Source',
   description: 'Contacted-lead volume per month, broken down by acquisition channel',

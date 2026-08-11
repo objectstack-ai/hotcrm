@@ -1,8 +1,8 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import type { ReportInput } from '@objectstack/spec/ui';
+import type { Report } from '@objectstack/spec/ui';
 
-export const OpportunitiesByStageReport: ReportInput = {
+export const OpportunitiesByStageReport: Report = {
   name: 'opportunities_by_stage',
   label: 'Opportunities by Stage',
   description: 'Summary of opportunities grouped by stage',
@@ -15,7 +15,7 @@ export const OpportunitiesByStageReport: ReportInput = {
   chart: { type: 'bar', title: 'Pipeline by Stage', showLegend: true, xAxis: 'stage', yAxis: 'total_amount' }
 };
 
-export const WonOpportunitiesByOwnerReport: ReportInput = {
+export const WonOpportunitiesByOwnerReport: Report = {
   name: 'won_opportunities_by_owner',
   label: 'Won Opportunities by Owner',
   description: 'Closed won opportunities grouped by owner',
@@ -32,7 +32,7 @@ export const WonOpportunitiesByOwnerReport: ReportInput = {
  * quarterly dimension over the same field; the trend widgets keep their
  * monthly `close_date` dimension.
  */
-export const PipelineCoverageByQuarterReport: ReportInput = {
+export const PipelineCoverageByQuarterReport: Report = {
   name: 'pipeline_coverage_by_quarter',
   label: 'Pipeline Coverage by Forecast × Quarter',
   description: 'Open pipeline amount by forecast category, bucketed by close quarter',
@@ -46,7 +46,7 @@ export const PipelineCoverageByQuarterReport: ReportInput = {
  * own book of business. Exercises multi-level `rows` grouping (owner → stage)
  * over the dataset's measures.
  */
-export const OpportunityFunnelByOwnerStageReport: ReportInput = {
+export const OpportunityFunnelByOwnerStageReport: Report = {
   name: 'opportunity_funnel_owner_stage',
   label: 'Opportunity Funnel by Owner → Stage',
   description: 'Per-rep stage-by-stage pipeline funnel',
