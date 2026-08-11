@@ -47,6 +47,12 @@ const RUNTIME_TEST_FILES = [
   // parity check that keeps the duplicated bubble body from drifting, and the
   // readonly-strip regression proof against a real engine.
   'activity-recency.test.ts',
+  // #596 — case intake assignment. Same precedent as the line above: a feature
+  // whose runtime evidence is one story (the transfer-gate measurement, the
+  // assigned and pool-empty paths, the strip-then-assign ordering, and the
+  // triage view that makes the no-op visible) gets its own runtime file rather
+  // than being scattered across the by-domain ones.
+  'case-assignment.test.ts',
 ];
 
 /**

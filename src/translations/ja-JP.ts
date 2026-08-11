@@ -687,6 +687,13 @@ export const jaJP: TranslationData = {
         case_workflow: { label: 'サービスフロー' },
         sla_calendar: { label: 'SLA カレンダー' },
         case_timeline: { label: 'ケースタイムライン' },
+        unassigned_triage: {
+          label: '未割り当て — トリアージ',
+          emptyState: {
+            title: 'トリアージ待ちはありません',
+            message: 'すべてのケースに所有者がいます。所有者のないケースはここに表示されます — 通常は、サービスエージェントの職位を誰も保持していない間に届いた Web-to-Case の送信です。',
+          },
+        },
         escalated_cases: { label: 'エスカレートしたケース' },
         my_open_cases: { label: '私のオープンケース' },
         sla_at_risk: { label: '⏰ SLA リスクあり' },

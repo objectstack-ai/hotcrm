@@ -2,6 +2,7 @@
 
 import type { Hook, HookContext } from '@objectstack/spec/data';
 import type { HookApi } from './_hook-api';
+import { createCaseRoundRobinAssign } from './_case-assignment';
 
 /**
  * Case SLA & escalation hook.
@@ -16,6 +17,12 @@ import type { HookApi } from './_hook-api';
  *   since #548, so the person the task names is the person who can work it.
  * - On `resolved`: stamps `closed_date` (proxy for the resolution time — there is
  *   no resolved_date field) and bumps account `last_activity_date`.
+ *
+ * Ownership assignment for ownerless intake is NOT here: it lives in
+ * `_case-assignment.ts`, which is the single home for "who should own this
+ * case" and is explicitly an app-level stopgap for the platform's missing queue
+ * engine (#596). Its hook is composed into this module's default export below,
+ * so the registry still sees one `crm_case` hook set.
  */
 
 const caseValidation: Hook = {
@@ -237,4 +244,14 @@ const caseSideEffects: Hook = {
   },
 };
 
-export default [caseValidation, caseSideEffects];
+/**
+ * Ownerless-intake round-robin (#596), composed from `_case-assignment.ts`.
+ *
+ * It is listed AFTER `case_sla_defaults` here for readability only — ordering
+ * at runtime is decided by `priority` (250 vs 200), not by array position, and
+ * that ordering is load-bearing: `case_sla_defaults` strips a guest-supplied
+ * `owner_id` and this hook must run after the strip, never before it.
+ */
+const caseAutoAssign: Hook = createCaseRoundRobinAssign();
+
+export default [caseValidation, caseAutoAssign, caseSideEffects];

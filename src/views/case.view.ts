@@ -59,6 +59,10 @@ export const CaseViews = defineView({
       { name: 'workflow', label: 'Workflow', icon: 'columns-3', view: 'case_workflow' },
       { name: 'sla', label: 'SLA', icon: 'calendar', view: 'sla_calendar' },
       { name: 'timeline', label: 'Timeline', icon: 'git-commit-horizontal', view: 'case_timeline' },
+      // Pinned, and second only to All: the triage queue is the first thing a
+      // service role must be able to reach, because a case sitting in it is a
+      // case nobody owns. See `unassigned_triage` below.
+      { name: 'triage', label: 'Unassigned — triage', icon: 'inbox', view: 'unassigned_triage', pinned: true },
       { name: 'escalated', label: 'Escalated', icon: 'triangle-alert', view: 'escalated_cases' },
       { name: 'at_risk', label: 'SLA at Risk', icon: 'clock-alert', view: 'sla_at_risk' },
       { name: 'mine', label: 'My Cases', icon: 'user', view: 'my_open_cases' },
@@ -135,6 +139,90 @@ export const CaseViews = defineView({
         { field: 'priority_rank', order: 'desc' },
         { field: 'sla_due_date', order: 'asc' },
       ],
+    },
+
+    /**
+     * Unassigned — triage (#596). The second half of the queue substitute.
+     *
+     * `case_auto_assign` (`src/objects/_case-assignment.ts`) is a NO-OP whenever
+     * the `service_agent` pool is empty, and an empty pool is the FIRST-INSTALL
+     * NORM rather than an edge case: `sys_user_position` membership is runtime
+     * data, so on a fresh org — and any time every agent has been unassigned
+     * from the position — an inbound web-to-case lands ownerless. Best-effort
+     * assignment also stands down on a permission denial (the anonymous
+     * public-form context cannot read `sys_user_position` at all).
+     *
+     * Those cases used to be invisible: no view filtered on the absence of an
+     * owner, so an unowned case appeared in `All Cases` with a blank Owner
+     * column and nothing distinguished it from the rest. This view is the
+     * standing answer — silence replaced by a pinned tab whose row count IS the
+     * intake backlog.
+     *
+     * `is_null` on `owner_id`, not `equals: null`: the ownerless shape is an
+     * ABSENT column on driver-memory (see the totality note in
+     * `case-escalation.flow.ts`, where `record.escalated_date == null` aborted
+     * with `No such key`) as well as a NULL one on SQL, and only the operator
+     * form answers the same way for both.
+     *
+     * Closed cases are excluded: an ownerless case that has already been closed
+     * is history, not backlog, and leaving it here would make the count stop
+     * meaning "work waiting for a human".
+     *
+     * ⚠️ WHO ACTUALLY SEES ROWS HERE is decided by record-level access, not by
+     * this view, and the answer today is narrower than the tab suggests. A
+     * view tab carries no role scoping — `ViewTabSchema` has `pinned`,
+     * `isDefault` and a boolean `visible`, and nothing per-profile — so this is
+     * pinned for everyone who can open Cases, while the ROWS resolve per
+     * profile:
+     *
+     *   - `system_admin` — `viewAllRecords`, so the full backlog. This is the
+     *     persona the empty-pool state is FOR: an empty `service_agent` pool is
+     *     fixed by staffing `sys_user_position`, which only an admin can do.
+     *   - `sales_manager` — `viewAllRecords`, read-only.
+     *   - a service manager / director — the critical, open slice only, via the
+     *     existing `case_escalation_sharing` / `case_director_sharing` criteria
+     *     rules (`src/sharing/case.sharing.ts`).
+     *   - `service_agent` — `readScope: 'own'` on `crm_case`, and an unowned
+     *     row is owned by nobody, so **an agent's triage tab is empty**.
+     *
+     * The last line is a real gap for the "agent pulls from the queue" story
+     * and is deliberately NOT closed here: granting service roles sight of
+     * unowned cases is a sharing-model change (a new criteria rule, or a
+     * `readScope` widening), which is outside this card's file surface and is
+     * exactly the kind of quiet permission widening the #596 ruling rules out.
+     * Filed as #1096 for a decision, with the reach table above and the three
+     * options priced.
+     */
+    unassigned_triage: {
+      name: 'unassigned_triage',
+      type: 'grid',
+      label: 'Unassigned — triage',
+      data: { provider: 'object', object: 'crm_case' },
+      columns: ['case_number', 'subject', 'crm_account', 'crm_contact', 'priority', 'status', 'origin', 'sla_due_date'],
+      filter: [
+        { field: 'owner_id', operator: 'is_null' },
+        { field: 'is_closed', operator: 'equals', value: false },
+      ],
+      // Same ordering as the main queue: urgency first (on the materialised
+      // ordinal, never the raw select), then soonest deadline.
+      sort: [
+        { field: 'priority_rank', order: 'desc' },
+        { field: 'sla_due_date', order: 'asc' },
+      ],
+      rowColor: {
+        field: 'priority',
+        colors: { critical: '#dc2626', high: '#f97316', medium: '#eab308', low: '#94a3b8' },
+      },
+      // The empty state carries the operational instruction, because "no rows"
+      // here is ambiguous on its own: it means either "the round-robin placed
+      // everything" (good) or "no case has arrived yet" (also fine) — and the
+      // reader most likely to be looking is someone who just found the tab
+      // full and needs to know why.
+      emptyState: {
+        title: 'Nothing waiting for triage',
+        message: 'Every case has an owner. Cases appear here when they arrive with no owner — typically a web-to-case submission that arrived while nobody held the Service Agent position.',
+        icon: 'inbox',
+      },
     },
 
     escalated_cases: {

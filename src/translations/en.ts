@@ -685,6 +685,13 @@ export const en: TranslationData = {
         case_workflow: { label: 'Service Workflow' },
         sla_calendar: { label: 'SLA Calendar' },
         case_timeline: { label: 'Case Timeline' },
+        unassigned_triage: {
+          label: 'Unassigned — triage',
+          emptyState: {
+            title: 'Nothing waiting for triage',
+            message: 'Every case has an owner. Cases appear here when they arrive with no owner — typically a web-to-case submission that arrived while nobody held the Service Agent position.',
+          },
+        },
         escalated_cases: { label: 'Escalated Cases' },
         my_open_cases: { label: 'My Open Cases' },
         sla_at_risk: { label: '⏰ SLA at Risk' },
