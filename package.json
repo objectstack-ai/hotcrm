@@ -16,7 +16,7 @@
     "build": "objectstack build",
     "typecheck": "tsc --noEmit",
     "validate": "objectstack validate",
-    "lint": "objectstack lint --skip-i18n",
+    "lint": "objectstack lint",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",

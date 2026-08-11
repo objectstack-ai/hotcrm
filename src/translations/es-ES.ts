@@ -1429,34 +1429,69 @@ export const esES: TranslationData = {
       label: 'Lanzador de Aplicaciones',
       description: 'Punto de acceso central a todas las aplicaciones',
       subtitle: 'Seleccione una aplicación para empezar',
+      components: {
+        app_search: { label: 'Buscar Aplicaciones' },
+        app_grid: { label: 'Cuadrícula de Aplicaciones' },
+      },
     },
     case_detail_page: {
       label: 'Detalle de Caso',
       description: 'Página de caso para el agente de servicio: datos destacados, progreso del SLA, detalles y cronología de actividad.',
       title: '{case_number} · {subject}',
       subtitle: '{crm_account}',
+      components: {
+        case_highlights: { label: 'Información Clave' },
+        case_status_path: { label: 'Progreso del Estado del Caso' },
+      },
     },
     lead_detail_page: {
       label: 'Detalle de Prospecto',
       description: 'Página completa de detalle del prospecto, con datos destacados, detalles e información relacionada',
       title: '{first_name} {last_name}',
       subtitle: '{company}',
+      components: {
+        lead_highlights: { label: 'Información Clave' },
+        lead_path: { label: 'Progreso del Estado del Prospecto' },
+        main_tabs: { label: 'Pestañas de Información del Prospecto' },
+      },
     },
     opportunity_detail_page: {
       label: 'Detalle de Oportunidad',
       description: 'Página completa de detalle de la oportunidad, con recorrido de etapas, datos destacados, detalles y listas relacionadas',
       title: '{name}',
       subtitle: '{crm_account}',
+      components: {
+        opp_highlights: { label: 'Información Clave' },
+        opp_stage_path: { label: 'Progreso de Etapa de la Oportunidad' },
+      },
     },
     sales_home_page: {
       label: 'Inicio de Ventas',
       description: 'Página de inicio del equipo comercial con métricas clave y acciones rápidas',
       title: 'Panel de Ventas',
       subtitle: 'Bienvenido de nuevo, {current_user.first_name}',
+      components: {
+        quick_create: { title: 'Creación Rápida', label: 'Creación Rápida' },
+        my_recent_items: { title: 'Elementos Recientes', label: 'Elementos Recientes' },
+        key_metrics: { title: 'Indicadores Clave de Rendimiento', label: 'Métricas Clave' },
+        home_tabs: { label: 'Pestañas de Inicio' },
+        ai_briefing: {
+          title: 'Pregúntale al Asistente de IA',
+          description:
+            'Abra el panel del asistente desde el borde derecho de la página y pregunte "¿en qué debería concentrarme hoy?" — ve su flujo de ventas, esquema y cuentas en tiempo real.',
+          label: 'Hoy con el Asistente de IA',
+        },
+        upcoming_events: { title: 'Agenda de Hoy', label: 'Calendario' },
+      },
     },
     utility_bar_page: {
       label: 'Barra de Utilidades',
       description: 'Barra de acceso rápido con herramientas flotantes',
+      components: {
+        notifications_panel: { label: 'Notificaciones' },
+        quick_notes: { title: 'Notas Rápidas', label: 'Notas Rápidas' },
+        quick_search: { label: 'Búsqueda Rápida' },
+      },
     },
   },
 };
