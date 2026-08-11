@@ -279,8 +279,11 @@ describe('deleting an itemised parent', () => {
 
     await expect(
       api.object('crm_product').delete({ where: { id: product.id } }),
+      // rc.6 rewording: display labels, not API names (see the sibling
+      // assertion in test/event-attendee-cascade.test.ts). Still asserts the
+      // message names the dependent object and the blocking field.
     ).rejects.toThrow(
-      /dependent crm_opportunity_line_item record\(s\) reference it via crm_product/i,
+      /still referenced by \d+ Opportunity Line Item record\(s\) through .Product./i,
     );
     expect(await api.object('crm_product').find({ where: { id: product.id } })).toHaveLength(1);
     expect(await oppLines()).toHaveLength(1);

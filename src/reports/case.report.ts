@@ -1,8 +1,8 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import type { ReportInput } from '@objectstack/spec/ui';
+import type { Report } from '@objectstack/spec/ui';
 
-export const CasesByStatusPriorityReport: ReportInput = {
+export const CasesByStatusPriorityReport: Report = {
   name: 'cases_by_status_priority',
   label: 'Cases by Status and Priority',
   description: 'Summary of cases by status and priority',
@@ -14,7 +14,7 @@ export const CasesByStatusPriorityReport: ReportInput = {
   chart: { type: 'bar', title: 'Cases by Status', showLegend: true, xAxis: 'status', yAxis: 'case_count' }
 };
 
-export const SlaPerformanceReport: ReportInput = {
+export const SlaPerformanceReport: Report = {
   name: 'sla_performance',
   label: 'SLA Performance Report',
   description: 'Analysis of SLA compliance',
@@ -36,7 +36,7 @@ export const SlaPerformanceReport: ReportInput = {
  * `case_metrics.created_date` declares the day bucket, so records created at
  * different times on the same day aggregate into one column.
  */
-export const CasesOpenedByDayPriorityReport: ReportInput = {
+export const CasesOpenedByDayPriorityReport: Report = {
   name: 'cases_opened_by_day_priority',
   label: 'Cases Opened by Priority × Day',
   description: 'Daily case inflow split by priority',

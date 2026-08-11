@@ -1,6 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import type { ReportInput } from '@objectstack/spec/ui';
+import type { Report } from '@objectstack/spec/ui';
 
 /**
  * Customer Churn Signals — a "joined" report that gives a Customer Success
@@ -24,7 +24,7 @@ import type { ReportInput } from '@objectstack/spec/ui';
  * Joined Reports demonstrate the spec's M3 capability: multi-block analytic
  * surfaces with shared chrome but independent data binding.
  */
-export const CustomerChurnSignalsReport: ReportInput = {
+export const CustomerChurnSignalsReport: Report = {
   name: 'customer_churn_signals',
   label: 'Customer Churn Signals',
   description:
