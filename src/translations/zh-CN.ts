@@ -476,7 +476,10 @@ export const zhCN: TranslationData = {
         discount: { label: '折扣 (%)' },
         expiration_date: { label: '到期日期' },
         description: { label: '描述' },
-        crm_contact: { label: '联系人' },
+        crm_contact: {
+          label: '联系人',
+          help: '报价进入「已呈现」或「已接受」后必填 —— 起草的合同从这里取主要联系人。',
+        },
         owner_id: { label: '报价负责人' },
         quote_date: { label: '报价日期' },
         subtotal: { label: '小计' },

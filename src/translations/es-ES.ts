@@ -876,7 +876,10 @@ export const esES: TranslationData = {
         display_title: { label: 'Título Mostrado' },
         name: { label: 'Nombre de Cotización' },
         crm_account: { label: 'Cuenta' },
-        crm_contact: { label: 'Contacto' },
+        crm_contact: {
+          label: 'Contacto',
+          help: 'Obligatorio en cuanto el presupuesto pasa a Presentado o Aceptado: el contrato generado toma de aquí su Contacto principal.',
+        },
         crm_opportunity: { label: 'Oportunidad' },
         owner_id: { label: 'Propietario de Cotización' },
         status: {

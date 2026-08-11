@@ -845,7 +845,10 @@ export const en: TranslationData = {
         quote_number: { label: 'Quote Number' },
         name: { label: 'Quote Name' },
         crm_account: { label: 'Account' },
-        crm_contact: { label: 'Contact' },
+        crm_contact: {
+          label: 'Contact',
+          help: 'Required once the quote is Presented or Accepted — the drafted contract takes its Primary Contact from here.',
+        },
         crm_opportunity: { label: 'Opportunity' },
         owner_id: { label: 'Quote Owner' },
         status: {

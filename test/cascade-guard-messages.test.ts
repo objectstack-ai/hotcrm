@@ -306,8 +306,17 @@ describe('sibling guards reached the same way', () => {
       name: 'Quoted Deal', crm_account: account.id,
       stage: 'negotiation', amount: 1000, close_date: '2026-12-01',
     });
+    // The recipient is not decoration here: since #1017 `crm_quote.crm_contact`
+    // is `requiredWhen` the status is `presented`/`accepted`, so a contact-less
+    // quote cannot reach `accepted` at all and this fixture would never get as
+    // far as the freeze it is measuring.
+    const contact = await insert('crm_contact', {
+      first_name: 'Quinn', last_name: 'Reyes', crm_account: account.id,
+      email: `quinn.${n}@cascade-guards.test`,
+    });
     const quote = await insert('crm_quote', {
       name: `Q-${n}`, crm_account: account.id, crm_opportunity: opportunity.id,
+      crm_contact: contact.id,
       status: 'draft', quote_date: '2026-01-01', expiration_date: '2026-02-01',
     });
     await ql.update('crm_quote', { id: quote.id, status: 'accepted' }, { context: SYS });
