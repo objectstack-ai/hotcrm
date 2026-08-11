@@ -21,7 +21,45 @@ export const SalesManagerProfile = {
     crm_contact:     { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true,  modifyAllRecords: true, allowTransfer: true, allowExport: true },
     crm_opportunity: { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true,  modifyAllRecords: true, allowTransfer: true, allowExport: true },
     crm_quote:       { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true,  modifyAllRecords: true, allowTransfer: true },
-    crm_contract:    { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
+    // `writeScope: 'org'` — the app's FIRST authored write depth, and the only
+    // value in the enum that does anything here (#880).
+    //
+    // The object gate said "can edit" and every quote-drafted contract answered
+    // 403 anyway. `quote_on_accepted` copies the quote's `owner_id` onto the
+    // contract it drafts, so that contract hangs under a REP; `crm_contract` is
+    // `private` with an owner field, so `plugin-sharing`'s write gate needs the
+    // owner inside the caller's write DEPTH — and depth with no `writeScope`
+    // and `modifyAllRecords: false` is `own` (`getEffectiveScope`). A manager
+    // could edit only the contracts they had created themselves, which is why
+    // this never showed up in a smoke test: it only bites on the real path,
+    // where the rep closes the deal and the manager is asked to fix the terms.
+    //
+    // WHY `org` AND NOT `own_and_reports` / `unit_and_below` — measured on
+    // 17.0.0-rc.6, not assumed. Those two (and `unit`) are HIERARCHY scopes:
+    // `SharingService.resolveOwnerScopeIds` resolves them through the
+    // `hierarchy-scope-resolver` service, which ships ONLY in
+    // `@objectstack/security-enterprise`. This app is open-edition, so the
+    // resolver is absent and every hierarchy scope fails CLOSED to owner-only —
+    // measurably identical to authoring nothing. `objectstack validate` refuses
+    // them outright ("uses writeScope='own_and_reports', a HIERARCHY scope.
+    // Declare `requires: ['hierarchy-security']` … the open edition cannot
+    // enforce it and would fail closed to owner-only"), and declaring that
+    // capability only downgrades the refusal to a warning — MEASURED: the
+    // manager still gets 403 on the rep's contract. A grant that validates and
+    // conveys nothing is the exact defect this card is about, one layer up.
+    //
+    // There is also no narrower set to aim at. HotCRM's positions are FLAT by
+    // design (ADR-0090 D3, `src/sharing/positions.ts`) and the app models no
+    // manager chain and no business units, so "this manager's team" is not
+    // expressible data here — `org` IS the manager's team in this app.
+    //
+    // `org` is deliberately NOT `modifyAllRecords: true`: depth widens which
+    // OWNERS the caller reaches and nothing else, while the Modify All Data bit
+    // is a super-user bypass that also skips row-level security, edits
+    // ownerless rows, widens DELETE past `checkDelete`, and opens
+    // `canManageShares`. This set holds `allowDelete: false` on contracts and
+    // must keep holding it. Pinned end-to-end by `test/contract-write-depth.test.ts`.
+    crm_contract:    { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, writeScope: 'org' as const },
     crm_product:     { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
     crm_campaign:    { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
     crm_case:        { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, allowExport: true },
