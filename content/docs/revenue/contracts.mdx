@@ -123,7 +123,7 @@ Two bounds worth knowing: the sweep looks 120 days ahead at most, so a notice wi
 ### Manual termination
 Terminating a contract is a status change to *Terminated*, and two things commonly assumed about that change do not hold.
 
-**Being the owner is not what qualifies you to make it.** Edit on Contract is an object-level right that ownership does not extend: **Sales Manager** and **System Administrator** hold it, **Sales Rep** does not. That gap lands on the most common case, because the contract an accepted quote drafts carries the quote's owner across with it — so the rep whose deal it was ends up owning a contract they can read and cannot touch. Terminating it is someone else's action to take.
+**Being the owner is not what qualifies you to make it.** Edit on Contract is an object-level right that ownership does not extend: **Sales Manager** and **System Administrator** hold it, **Sales Rep** does not. That gap lands on the most common case, because the contract an accepted quote drafts carries the quote's owner across with it — so the rep whose deal it was ends up owning a contract they can read and cannot touch. Terminating it is someone else's action to take, and **who that someone is depends on your edition** — see *Who can edit which contract* under Sharing below. On the open edition it is a System Administrator.
 
 **And nothing holds the door shut afterwards.** *Terminated* is declared a dead end, but on the same **warning**-severity status machine as the rest of the progression: an edit that moves a terminated contract back to *Activated* is written to the server log and **saved anyway** — see *The status progression is advice, not a gate* below. Termination is one-way by convention, which is what the status means and how everything downstream reads it, not by enforcement. If it has to be enforced, an admin has to author that.
 
@@ -149,7 +149,19 @@ And one rule people expect that is not there: **nothing stops an activated contr
 Contracts are **private**, and no sharing rule widens them. Contract visibility does **not** follow the account:
 
 - **The contract owner** reads their own contracts — and reading is the whole of what ownership buys here. Whether you may edit one at all is settled a layer earlier, by the object-level rights on your profile: **Sales Rep** holds Contract read-only, so a rep reads the contract standing in their own name and cannot change it. Record-level sharing widens *which records* you reach, never *which operations* you hold, so no sharing rule and no record share turns that read into an edit.
-- **Sales Manager** and **System Administrator** read every contract (*View All* on the object), and they are the only profiles holding edit on it at all.
+- **Sales Manager** and **System Administrator** read every contract (*View All* on the object), and they are the only profiles holding edit on it at all. Holding edit is not the same as reaching a given record, though — see immediately below.
+
+### Who can edit which contract
+
+Reading every contract and being able to *change* one are two different grants, because Contract is private and owned. The object-level edit right gets you through the first door; the second asks whether the record's owner is inside your **write depth**. The three profiles sit differently:
+
+| Profile | Can edit… | Why |
+| --- | --- | --- |
+| **System Administrator** | any contract | *Modify All* — the super-user bypass, which skips ownership entirely |
+| **Sales Manager** | their own contracts always; **their reports' contracts on the Enterprise edition** | the profile declares a write depth of *own and reports*, which needs the hierarchy resolver that ships with ObjectStack Enterprise |
+| **Sales Rep** | none | no object-level edit right at all — the first door is shut |
+
+That middle row is the one to read carefully, because it is the common case: the contract an accepted quote drafts belongs to the **rep**, not the manager. HotCRM declares the depth that says "a manager reaches the people who report to them", and the **Enterprise** edition supplies the machinery that resolves it. What it resolves against is the **reporting relationship your deployment maintains** — not HotCRM's positions, which are flat by design and roll nothing up. On the **open** edition there is no resolver, so that depth safely narrows to owner-only and a manager cannot change a contract standing in a rep's name — on that edition, those changes are a **System Administrator** job. Nothing is misconfigured when you see that; it is the edition boundary.
 - **Everyone else** — including a rep who reached the account through a territory or team sharing rule — sees only the contracts they own, so an account's *Contracts* related list can look empty even when the account itself is fully readable.
 
 If your org wants contracts to follow the account, an admin has to author that, and neither available route actually delivers "follows the account" today: a sharing rule on Contract widens the records it matches for every holder of the object, and a Controlled-by-Parent OWD derives org-wide in this release — the parent link is not consulted per caller. Both are a broad widening, not an account-scoped one — see [Sharing & Security](/docs/administration/sharing-and-security), *Controlled by Parent, in practice*.
@@ -177,7 +189,7 @@ None of the four filters anything, so **every contract you can see appears in al
 
 - ✅ **You never fill a contract in — accepting the quote drafts it.** Contract is read-only for a Sales Rep: you cannot create one and you cannot edit one. What you do own is the quote, and marking it **Accepted** is what drafts the contract — a *Draft* contract carrying the quote's account, primary contact, related opportunity, owner and total, on a 12-month term starting today, typed *Subscription*.
 - ✅ **The opportunity link is copied off the quote, not pre-filled on a form you are typing into** — so there is nothing on it for you to keep or lose. Nor does the manual route pre-fill it: when a manager or an admin creates a contract by hand, the opportunity is picked by hand, and the only help the picker gives is that it lists the deals of the account already chosen on the contract. Nothing reads that link for reporting today — HotCRM ships no contract report or dashboard at all.
-- ✅ **You read your own contracts and ask for the rest.** The contract your accepted quote drafted lands in your name, so you can read it; contracts owned by anyone else you cannot see. Changing a term, a date, the value or the status is a **Sales Manager** or **System Administrator** job, and so is an amendment — that is a new contract, which only they can create.
+- ✅ **You read your own contracts and ask for the rest.** The contract your accepted quote drafted lands in your name, so you can read it; contracts owned by anyone else you cannot see. Changing a term, a date, the value or the status is somebody else's job, and so is an amendment — that is a new contract, which only they can create. **Who to ask depends on your edition**: on **Enterprise**, your Sales Manager can change the contract standing in your name without it being handed over first; on the **open** edition, a manager only reaches their own contracts, so it is a **System Administrator** who makes the change. If you are not sure which you are on, ask for the manager first — see *Who can edit which contract* above.
 
 ## Tips for admins
 

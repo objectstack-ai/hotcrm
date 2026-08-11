@@ -21,7 +21,62 @@ export const SalesManagerProfile = {
     crm_contact:     { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true,  modifyAllRecords: true, allowTransfer: true, allowExport: true },
     crm_opportunity: { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true,  modifyAllRecords: true, allowTransfer: true, allowExport: true },
     crm_quote:       { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true,  modifyAllRecords: true, allowTransfer: true },
-    crm_contract:    { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
+    // `writeScope: 'own_and_reports'` — the app's FIRST authored write depth
+    // (#880). Paired with `requires: ['hierarchy-security']` in
+    // `objectstack.config.ts`; the two are one declaration and must move together.
+    //
+    // THE DEFECT. The object gate said "can edit" and every quote-drafted
+    // contract answered 403 anyway. `quote_on_accepted` copies the quote's
+    // `owner_id` onto the contract it drafts, so that contract hangs under a
+    // REP; `crm_contract` is `private` with an owner field, so
+    // `plugin-sharing`'s write gate needs the owner inside the caller's write
+    // DEPTH — and depth with no `writeScope` and `modifyAllRecords: false` is
+    // `own` (`getEffectiveScope`). A manager could edit only the contracts they
+    // had created themselves, which is why this never showed up in a smoke
+    // test: it bites only on the real path, where the rep closes the deal and
+    // the manager is asked to fix the terms.
+    //
+    // WHAT THIS DECLARES, AND WHERE IT TAKES EFFECT. Maintainer ruling,
+    // 2026-08-11, verbatim: 「本项目是元数据app，在企业版运行就具备企业版相关的
+    // 能力，不重复开发。」 This app states the depth it MEANS and lets the edition
+    // supply the capability. `own_and_reports` is a HIERARCHY scope resolved by
+    // the `hierarchy-scope-resolver` service, which ships only in
+    // `@objectstack/security-enterprise`:
+    //
+    //   - on the ENTERPRISE edition the resolver is present and a Sales Manager
+    //     reaches their reports' contracts — the workflow this card is about;
+    //   - on the OPEN edition there is no resolver, so
+    //     `SharingService.resolveOwnerScopeIds` fails CLOSED to owner-only and a
+    //     Sales Manager still gets 403 on a rep's contract.
+    //
+    // That 403 is an EDITION BOUNDARY, not the #880 defect returning. Do not
+    // "fix" it by substituting a broader open-edition value: an earlier revision
+    // of this PR used `writeScope: 'org'` for exactly that reason and the ruling
+    // rejected it as 重复开发 — approximating an enterprise capability in app
+    // metadata instead of declaring the real one. `test/contract-write-depth.test.ts`
+    // pins BOTH halves, so the open-edition refusal is asserted rather than
+    // merely tolerated, and an edition change becomes visible instead of silent.
+    //
+    // WHY `own_and_reports` AND NOT `unit_and_below`. The ruling's 「经理能改团队
+    // 的合同」 means the manager's REPORTS, and the two scopes resolve through
+    // different data (ADR-0057 / ADR-0090 Addendum): `unit` / `unit_and_below`
+    // resolve through BUSINESS UNITS — the anchored
+    // `sys_user_position.business_unit_id`, falling back to
+    // `sys_business_unit_member` — while `own_and_reports` resolves through the
+    // MANAGER CHAIN (`ITeamGraphService.managerOf`). HotCRM's metadata mentions
+    // business units nowhere at all, so `unit_and_below` would tie this grant to
+    // an org topology the app never describes; the manager/rep split it DOES
+    // model (`src/sharing/positions.ts`) is a reporting relationship, which is
+    // what `own_and_reports` names. Neither scope's data is authored by this app
+    // — both are supplied by the deployment — so this is a choice of MEANING,
+    // and the reporting line is the meaning the ruling states.
+    //
+    // Deliberately NOT `modifyAllRecords: true`: depth widens which OWNERS the
+    // caller reaches and nothing else, while the Modify All Data bit is a
+    // super-user bypass that also skips row-level security, edits ownerless
+    // rows, widens DELETE past `checkDelete`, and opens `canManageShares`. This
+    // set holds `allowDelete: false` on contracts and must keep holding it.
+    crm_contract:    { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, writeScope: 'own_and_reports' as const },
     crm_product:     { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
     crm_campaign:    { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
     crm_case:        { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, allowExport: true },
