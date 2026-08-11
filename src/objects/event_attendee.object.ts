@@ -1,8 +1,80 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { P } from '@objectstack/spec';
+import { expression } from '@objectstack/spec';
 import { ObjectSchema, Field } from '@objectstack/spec/data';
 import { ATTENDEE_RESPONSE_OPTIONS } from './_picklists';
+
+/**
+ * The ways an attendee row can name a person — ONE declaration, not two lists
+ * that happen to line up (#740).
+ *
+ * `attendee_type` is the discriminator and each of the four columns below is a
+ * resolution; before #740 the two were authored separately and had drifted
+ * apart. `external_name` was one of the four resolutions `attendee_resolves`
+ * accepted, and `attendee_type` had no value for it — so an external guest
+ * could only be STORED MISLABELLED. Measured on 17.0.0-rc.6, before the fix,
+ * against the real engine (`test/attendee-type-resolution.test.ts` now pins the
+ * other direction):
+ *
+ *     insert { attendee_type: "contact", external_name: "the prospect's lawyer" }
+ *       -> ACCEPTED   (row claims to be a Contact and points at no contact)
+ *     insert { external_name: "no type given" }        // type omitted
+ *       -> ACCEPTED as attendee_type: "contact"        (the field default)
+ *     insert { attendee_type: "external", external_name: "Jane Roe" }
+ *       -> ValidationError: Attendee Type must be one of: contact, lead, user
+ *
+ * The Console's attendee form reaches all three; `src/actions/global.actions.ts`
+ * never writes `external_name`, which is why the defect was live but dormant.
+ *
+ * Deriving BOTH the picklist and the two rules from this table is the point: a
+ * fifth resolution cannot be added without its type, and a type cannot be added
+ * without saying which column it names — the failure #740 records is not
+ * expressible in this shape. Everything downstream (options, `attendee_resolves`,
+ * `attendee_type_exclusive`) is generated below; nothing repeats the pairing.
+ *
+ * Adding a row here is a user-visible picklist change: it needs a label in all
+ * four locale packs (`test/i18n-references.test.ts` fails otherwise) and a
+ * changeset.
+ */
+export const ATTENDEE_RESOLUTIONS = [
+  { value: 'contact',  column: 'crm_contact',   label: 'Contact',  color: '#4169E1' },
+  { value: 'lead',     column: 'crm_lead',      label: 'Lead',     color: '#FFA500' },
+  { value: 'user',     column: 'sys_user',      label: 'User',     color: '#00AA00' },
+  { value: 'external', column: 'external_name', label: 'External', color: '#8A8A8A' },
+] as const;
+
+/** A new attendee row is a Contact until the author says otherwise. */
+export const DEFAULT_ATTENDEE_TYPE = 'contact';
+
+// The predicate fragments below are the TOTAL shapes from the house rule in
+// `test/object-validation-predicates.test.ts`: every `record.x` read carries its
+// own `has(record.x)` in the same expression, so the rule returns a verdict on a
+// merged record with absent keys instead of aborting (and, from 17.0.0-rc.2,
+// rejecting the write it could not judge).
+const blank = (f: string) => `(!has(record.${f}) || isBlank(record.${f}))`;
+const filled = (f: string) => `(has(record.${f}) && !isBlank(record.${f}))`;
+const typeIs = (v: string) => `(has(record.attendee_type) && record.attendee_type == "${v}")`;
+const typeIsNot = (v: string) => `(has(record.attendee_type) && record.attendee_type != "${v}")`;
+
+/**
+ * Violation predicates — validations fire when the condition is TRUE.
+ *
+ * They are the two halves of "declared = enforced", split so each condition
+ * carries its own wording: a row missing the party its type names is a
+ * different mistake from a row naming a party its type does not.
+ *
+ * A record whose `attendee_type` is absent satisfies neither (every fragment is
+ * `has()`-guarded on it), which is deliberate: "no type at all" is the REQUIRED
+ * field's job — `Attendee Type is required` names the real obstacle, and a
+ * second rule saying so would only shadow it.
+ */
+const RESOLVES_CONDITION = ATTENDEE_RESOLUTIONS
+  .map((r) => `(${typeIs(r.value)} && ${blank(r.column)})`)
+  .join(' || ');
+
+const EXCLUSIVE_CONDITION = ATTENDEE_RESOLUTIONS
+  .map((r) => `(${filled(r.column)} && ${typeIsNot(r.value)})`)
+  .join(' || ');
 
 /**
  * Event Attendee — who was in the room (#592).
@@ -103,20 +175,23 @@ export const EventAttendee = ObjectSchema.create({
       storage: { notNull: true },
     }),
 
-    // The discriminator says which of the three person lookups below is the
-    // live one. It is authored rather than derived so a query can filter
-    // "internal attendees only" without three OR'd null checks.
+    // The discriminator says which of the four columns below is the live one.
+    // It is authored rather than derived so a query can filter "internal
+    // attendees only" without four OR'd null checks — and that filter is
+    // exactly what a mislabelled row used to break (#740), which is why the
+    // options are generated from the resolution table rather than retyped.
     attendee_type: Field.select({
       group: 'basic',
       label: 'Attendee Type',
       required: true,
       storage: { notNull: true },
-      defaultValue: 'contact',
-      options: [
-        { label: 'Contact', value: 'contact', color: '#4169E1', default: true },
-        { label: 'Lead',    value: 'lead',    color: '#FFA500' },
-        { label: 'User',    value: 'user',    color: '#00AA00' },
-      ],
+      defaultValue: DEFAULT_ATTENDEE_TYPE,
+      options: ATTENDEE_RESOLUTIONS.map((r) => ({
+        label: r.label,
+        value: r.value,
+        color: r.color,
+        ...(r.value === DEFAULT_ATTENDEE_TYPE ? { default: true } : {}),
+      })),
     }),
 
     // `deleteBehavior: 'cascade'` on ALL THREE party lookups (#711, the same
@@ -132,10 +207,16 @@ export const EventAttendee = ObjectSchema.create({
     //                      or name an external guest"  (lead survives)
     //   DELETE contact -> same        DELETE user -> same
     //
-    // `external_name` is the rule's fourth escape hatch, but it is blank on
-    // every row the product actually writes (`src/actions/global.actions.ts`
-    // logs attendees with a party reference and never an external name), so it
-    // rescues nothing in practice.
+    // (The message above is the pre-#740 wording, kept verbatim because it is
+    // what was measured on 17.0.0-rc.2. `attendee_resolves` says something
+    // narrower now — see the rules at the bottom of this file.)
+    //
+    // `external_name` is the fourth resolution, but it is blank on every row the
+    // product actually writes (`src/actions/global.actions.ts` logs attendees
+    // with a party reference and never an external name), so it rescues nothing
+    // in practice. #740 gave it its own `attendee_type` value rather than a
+    // second job; it still rescues nothing here, and now it cannot be reached
+    // by a row that calls itself a Contact either.
     //
     // Cascade rather than `restrict`: an attendee row is a JUNCTION whose whole
     // meaning is "this person was in this room". Once the person is gone the
@@ -196,14 +277,16 @@ export const EventAttendee = ObjectSchema.create({
     }),
 
     // Free text is the LAST resort, not the default: it exists only for the
-    // genuinely unmodelled guest (a prospect's lawyer who is in no CRM object),
-    // and the `attendee_resolves` rule below makes it insufficient on its own
-    // for the three modelled types. It is not a place to paste a list.
+    // genuinely unmodelled guest (a prospect's lawyer who is in no CRM object).
+    // Since #740 it is the resolution of ONE attendee type — `external` — and
+    // the rules below enforce that both ways: an `external` row must fill it,
+    // and no other type may. It is not a place to paste a list, and it is not a
+    // note field to hang off a Contact row.
     external_name: Field.text({
       group: 'basic',
       label: 'External Attendee',
       maxLength: 255,
-      description: 'Name of an attendee who is not a CRM record',
+      description: 'Name of an attendee who is in no CRM object — set when Attendee Type is External',
     }),
 
     response: Field.select({
@@ -241,14 +324,41 @@ export const EventAttendee = ObjectSchema.create({
   // rule returns a verdict even when the merged record has no such key. See
   // AGENTS.md "Validation predicates must be TOTAL" and
   // test/object-validation-predicates.test.ts, which fails the build otherwise.
+  //
+  // Both rules are GENERATED from `ATTENDEE_RESOLUTIONS` at the top of this
+  // file (`expression(..., 'cel')` is the same envelope the ``P`…` `` tag
+  // produces; the tag JSON-quotes an interpolated string, so it cannot splice a
+  // source fragment). The pairing is declared once and read twice — see the
+  // note up there for why that is the fix and not a style choice.
   validations: [
+    // The type's own column must be filled. Until #740 this rule accepted ANY
+    // of the four resolutions regardless of the type, which is what let a row
+    // say `contact` while pointing at no contact.
     {
       name: 'attendee_resolves',
       type: 'script',
       severity: 'error',
       message:
-        'An attendee must point at a Contact, a Lead, a User, or name an external guest',
-      condition: P`(!has(record.crm_contact) || isBlank(record.crm_contact)) && (!has(record.crm_lead) || isBlank(record.crm_lead)) && (!has(record.sys_user) || isBlank(record.sys_user)) && (!has(record.external_name) || isBlank(record.external_name))`,
+        'An attendee must fill the party its Attendee Type names — a Contact row needs a Contact, an External row needs an External Attendee name',
+      condition: expression(RESOLVES_CONDITION, 'cel'),
+    },
+    // …and no other column may be filled. The separate rule is deliberate: one
+    // condition, one wording. Folding both into `attendee_resolves` would make
+    // its message a lie for half the rows it rejects, and "you filled the wrong
+    // column" is not the same instruction as "you filled nothing".
+    //
+    // This also retires a documented cost of #711: a row naming two parties was
+    // removed when EITHER was deleted, "accepted because no such row is
+    // reachable today". It is now unwritable, so the question cannot arise —
+    // `test/event-attendee-cascade.test.ts` pins the refusal where it used to
+    // pin the double-cascade.
+    {
+      name: 'attendee_type_exclusive',
+      type: 'script',
+      severity: 'error',
+      message:
+        'An attendee names exactly one party — clear every party column its Attendee Type does not name',
+      condition: expression(EXCLUSIVE_CONDITION, 'cel'),
     },
   ],
 });

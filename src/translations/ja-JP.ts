@@ -1097,12 +1097,12 @@ export const jaJP: TranslationData = {
         crm_event: { label: 'イベント' },
         attendee_type: {
           label: '参加者種別',
-          options: { contact: '取引先責任者', lead: 'リード', user: '社内ユーザー' },
+          options: { contact: '取引先責任者', lead: 'リード', user: '社内ユーザー', external: '社外ゲスト' },
         },
         crm_contact: { label: '取引先責任者', help: '参加者が既存の取引先責任者である場合に設定します' },
         crm_lead: { label: 'リード', help: '参加者がまだ変換されていないリードである場合に設定します' },
         sys_user: { label: '社内ユーザー', help: '参加者が社内の同僚である場合に設定します' },
-        external_name: { label: '社外参加者', help: 'CRM に登録されていない参加者の氏名' },
+        external_name: { label: '社外参加者', help: 'CRM のどのオブジェクトにも存在しない参加者の氏名 — 参加者種別が「社外ゲスト」のときに設定します' },
         response: {
           label: '回答',
           options: {
