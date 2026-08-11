@@ -275,7 +275,32 @@ export const Case = ObjectSchema.create({
       label: 'Resolution',
       group: 'resolution',
     }),
-    
+
+    /**
+     * The knowledge article that RESOLVED this case (#601).
+     *
+     * The second half of a two-way link, and deliberately not a replacement for
+     * the first. `crm_knowledge_article.related_to_case` points the other way —
+     * "the case this article was WRITTEN FROM" — and the two answer different
+     * questions: provenance (where did this article come from) versus
+     * deflection (what did this article save us). Merging them would make both
+     * unanswerable, so both stay.
+     *
+     * This is the column the deflection measures on `case_metrics` read
+     * (`kb_resolved_count` / `kb_deflection_rate`), which is why blank is
+     * normalised to NULL by `case_resolution_article_normalize` in
+     * `case.hook.ts`: the close-case screen sends `''` for a field the agent
+     * left empty, an empty string is NOT null, and `count(resolved_by_article)`
+     * counts it — a silently inflated numerator on a ratio widget, the exact
+     * shape of #614.
+     */
+    resolved_by_article: Field.lookup('crm_knowledge_article', {
+      label: 'Resolved by Article',
+      group: 'resolution',
+      description: 'Knowledge article that resolved this case — the deflection signal.',
+    }),
+
+
     // Customer satisfaction
     customer_rating: Field.rating(5, {
       label: 'Customer Satisfaction',

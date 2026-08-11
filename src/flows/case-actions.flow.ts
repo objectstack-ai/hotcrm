@@ -89,19 +89,55 @@ export const CloseCaseFlow: Flow = {
   variables: [
     { name: 'recordId', type: 'text', isInput: true, isOutput: false },
     { name: 'resolution', type: 'text', isInput: true, isOutput: false },
+    { name: 'resolved_by_article', type: 'text', isInput: true, isOutput: false },
   ],
 
   nodes: [
     { id: 'start', type: 'start', label: 'Start', config: { objectName: 'crm_case' } },
     {
+      // The "attach the article that resolved it" affordance (#601). Optional
+      // on purpose: most cases are not resolved out of the knowledge base, and
+      // a required field here would be answered with a junk value rather than
+      // left honest — which is worse than an absent link for a measure whose
+      // whole job is to say how OFTEN the KB resolves a case.
+      //
+      // ⚠️ MEASURED LIMITATION, stated so nobody re-discovers it: a flow screen
+      // field cannot name a target object. `ScreenFieldConfigSchema`
+      // (`@objectstack/spec/automation`) has `name` / `label` / `type` /
+      // `options` / `defaultValue` / `placeholder` / `visibleWhen` and NO
+      // object or reference key, so `type: 'lookup'` has nothing to resolve a
+      // record picker from — the same degradation `add_contact_to_campaign`
+      // documents for a bare `{ type: 'lookup' }` action param, which it avoids
+      // by being FIELD-BACKED, an escape a screen field does not have.
+      //
+      // So the real picker for this link is the `Resolved by Article` lookup in
+      // the case's Resolution group, on the record form, and this screen field
+      // is the CLOSE-PATH capture beside it. Both write the same column; the
+      // action is `refreshAfter: true`, so the record form is what the agent
+      // lands on immediately after closing.
       id: 'screen_1', type: 'screen', label: 'Close Case',
       config: {
         fields: [
           { name: 'resolution', label: 'Resolution', type: 'textarea', required: true },
+          {
+            name: 'resolved_by_article',
+            label: 'Resolved by Article (optional)',
+            type: 'lookup',
+            required: false,
+            placeholder: 'Knowledge article id, if the KB resolved this case',
+          },
         ],
       },
     },
     {
+      // `resolved_by_article` is written unconditionally, and a blank one is
+      // normalised to NULL by `case_resolution_article_normalize`
+      // (`src/objects/case.hook.ts`) rather than branched around here: MEASURED
+      // on the real engine, a screen field left empty resumes as `''` and lands
+      // as an empty string, which `count(resolved_by_article)` counts. A
+      // `decision` node could not have branched it either — this repo has
+      // measured `decision.config.condition` to be inert metadata
+      // (`test/win-loss-capture.test.ts`'s table of five such surfaces).
       id: 'close', type: 'update_record', label: 'Close Case',
       config: {
         objectName: 'crm_case',
@@ -110,6 +146,7 @@ export const CloseCaseFlow: Flow = {
           is_closed: true,
           resolution: '{resolution}',
           status: 'closed',
+          resolved_by_article: '{resolved_by_article}',
         },
       },
     },

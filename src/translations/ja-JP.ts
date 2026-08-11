@@ -294,9 +294,8 @@ export const jaJP: TranslationData = {
         related_to_case: { label: '元のケース', help: 'この記事の元になったケース（任意）。' },
         published_at: { label: '公開日時' },
         last_reviewed_at: { label: '最終レビュー' },
-        view_count: { label: '閲覧数' },
-        helpful_count: { label: '役に立った' },
-        not_helpful_count: { label: '役に立たなかった' },
+        helpful_count: { label: '役に立った', help: 'crm_article_feedback から再集計されます。手入力はできません。' },
+        not_helpful_count: { label: '役に立たなかった', help: 'crm_article_feedback から再集計されます。手入力はできません。' },
       },
       _views: {
         all_articles: { label: 'すべての記事' },
@@ -309,6 +308,17 @@ export const jaJP: TranslationData = {
         content: { label: 'コンテンツ' },
         taxonomy: { label: '分類' },
         metrics: { label: '利用状況' },
+        engagement: { label: '利用状況' },
+      },
+      _actions: {
+        mark_article_helpful: {
+          label: '役に立った',
+          successMessage: '「役に立った」として記録しました。ありがとうございます。',
+        },
+        mark_article_not_helpful: {
+          label: '役に立たなかった',
+          successMessage: '「役に立たなかった」として記録しました。ありがとうございます。',
+        },
       },
     },
 
@@ -683,6 +693,7 @@ export const jaJP: TranslationData = {
         escalation_reason: { label: 'エスカレーション理由' },
         parent_case: { label: '親ケース', help: '関連する親ケース' },
         resolution: { label: '解決内容' },
+        resolved_by_article: { label: '解決したナレッジ記事', help: 'このケースを解決したナレッジ記事 — 逸らし率の指標。' },
         customer_rating: { label: '顧客満足度', help: '顧客満足度の評価（1〜5 段階）' },
         customer_feedback: { label: '顧客フィードバック' },
         customer_signature: { label: '顧客署名', help: 'ケースの解決を確認する電子署名' },
@@ -1138,6 +1149,25 @@ export const jaJP: TranslationData = {
       },
     },
 
+    crm_article_feedback: {
+      label: '記事フィードバック',
+      pluralLabel: '記事フィードバック',
+      description: 'ナレッジ記事に対する読者の「役に立った / 役に立たなかった」評価',
+      fields: {
+        feedback_number: { label: 'フィードバック番号' },
+        owner_id: { label: '読者' },
+        crm_knowledge_article: { label: '記事', help: 'このフィードバックの対象となるナレッジ記事。' },
+        verdict: {
+          label: '評価',
+          options: { helpful: '役に立った', not_helpful: '役に立たなかった' },
+        },
+        comment: { label: 'コメント', help: '評価の理由（任意） — 記事の作成者が読みます。' },
+      },
+      _sections: {
+        basic: { label: 'フィードバック' },
+      },
+    },
+
     crm_campaign_member: {
       label: 'キャンペーンメンバー',
       pluralLabel: 'キャンペーンメンバー',
@@ -1373,6 +1403,10 @@ export const jaJP: TranslationData = {
         cases_by_origin: { title: '発生源別ケース', description: 'ケースの流入チャネル' },
         daily_case_volume: { title: '日次ケース件数', description: '過去30日間の新規ケース' },
         sla_compliance_gauge: { title: 'SLA 達成率', description: '当期 SLA 内に解決したケースの割合' },
+        kb_deflection_rate: { title: 'ナレッジ解決率', description: 'クローズしたケースのうちナレッジ記事で解決した割合' },
+        kb_resolved_cases: { title: 'ナレッジで解決', description: '解決した記事が紐づくクローズ済みケース' },
+        closed_cases_total: { title: 'クローズ済みケース', description: 'ナレッジ解決率の分母' },
+        top_resolving_articles: { title: '解決件数の多い記事', description: '解決したクローズ済みケース数で並べたナレッジ記事' },
         open_cases_by_priority: { title: '優先度別オープンケース', description: 'オープンケースとそのSLA違反率を優先度別に集計' },
       },
     },

@@ -259,9 +259,8 @@ export const zhCN: TranslationData = {
         related_to_case: { label: '来源案例', help: '本文所依据的工单（可选）。' },
         published_at: { label: '发布时间' },
         last_reviewed_at: { label: '最近复核' },
-        view_count: { label: '浏览数' },
-        helpful_count: { label: '有用' },
-        not_helpful_count: { label: '没用' },
+        helpful_count: { label: '有用', help: '由 crm_article_feedback 重新统计得出，不可手工填写。' },
+        not_helpful_count: { label: '没用', help: '由 crm_article_feedback 重新统计得出，不可手工填写。' },
         display_title: { label: '显示名称' },
       },
       _views: {
@@ -275,6 +274,17 @@ export const zhCN: TranslationData = {
         content: { label: '内容' },
         taxonomy: { label: '分类' },
         metrics: { label: '互动数据' },
+        engagement: { label: '互动数据' },
+      },
+      _actions: {
+        mark_article_helpful: {
+          label: '有用',
+          successMessage: '已记录为「有用」，谢谢反馈。',
+        },
+        mark_article_not_helpful: {
+          label: '没用',
+          successMessage: '已记录为「没用」，谢谢反馈。',
+        },
       },
     },
 
@@ -638,6 +648,7 @@ export const zhCN: TranslationData = {
         escalation_reason: { label: '升级原因' },
         parent_case: { label: '父级工单', help: '关联的父工单' },
         resolution: { label: '解决方案' },
+        resolved_by_article: { label: '解决该工单的知识文章', help: '解决此工单的知识库文章 —— 转移率的统计口径。' },
         customer_rating: { label: '客户满意度', help: '客户满意度评分（1-5 星）' },
         customer_feedback: { label: '客户反馈' },
         customer_signature: { label: '客户签字', help: '确认工单已解决的电子签名' },
@@ -1121,6 +1132,25 @@ export const zhCN: TranslationData = {
       },
     },
 
+    crm_article_feedback: {
+      label: '文章反馈',
+      pluralLabel: '文章反馈',
+      description: '读者对某篇知识文章的「有用 / 没用」评价',
+      fields: {
+        feedback_number: { label: '反馈编号' },
+        owner_id: { label: '读者' },
+        crm_knowledge_article: { label: '文章', help: '本条反馈针对的知识文章。' },
+        verdict: {
+          label: '评价',
+          options: { helpful: '有用', not_helpful: '没用' },
+        },
+        comment: { label: '备注', help: '可选说明，作者可见。' },
+      },
+      _sections: {
+        basic: { label: '反馈' },
+      },
+    },
+
     crm_campaign_member: {
       // 「营销活动成员」, not 「活动成员」: this object's master is `crm_campaign`
       // (营销活动), while 「活动」 is already this pack's label for `crm_event` and
@@ -1359,6 +1389,10 @@ export const zhCN: TranslationData = {
         cases_by_origin: { title: '按来源分布', description: '工单的来源渠道' },
         daily_case_volume: { title: '每日工单量', description: '过去 30 天的新建工单' },
         sla_compliance_gauge: { title: 'SLA 达成率', description: '本期 SLA 内解决工单的占比' },
+        kb_deflection_rate: { title: '知识库转移率', description: '已关闭工单中由知识文章解决的占比' },
+        kb_resolved_cases: { title: '知识库解决数', description: '已关联解决文章的已关闭工单' },
+        closed_cases_total: { title: '已关闭工单', description: '转移率的分母' },
+        top_resolving_articles: { title: '解决工单最多的文章', description: '按解决的已关闭工单数排名的知识文章' },
         open_cases_by_priority: { title: '按优先级统计未关闭工单', description: '未关闭工单及其 SLA 违约率，按优先级细分' },
       },
     },

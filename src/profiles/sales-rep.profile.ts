@@ -70,6 +70,8 @@ export const SalesRepProfile = {
     crm_event_attendee: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: false, modifyAllRecords: false },
     // Reference catalog (public_read OWD): reps read knowledge articles, which
     // are authored by service.
+    // Reads the KB and may rate it; cannot author articles (#601).
+    crm_article_feedback: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
     crm_knowledge_article: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
     // Forecast snapshots are written by the nightly `forecast.hook` job and the
     // `revenue_forecasting` skill, never by hand — read-only, and only the rep's

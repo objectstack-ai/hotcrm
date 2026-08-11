@@ -58,6 +58,15 @@ const RUNTIME_TEST_FILES = [
   // triage view that makes the no-op visible) gets its own runtime file rather
   // than being scattered across the by-domain ones.
   'case-assignment.test.ts',
+  // #601 — the knowledge loop. Same precedent as the two lines above: each of
+  // these files carries one feature's runtime evidence together with the
+  // metadata half it only makes sense beside. `knowledge-feedback` runs the
+  // vote actions under the real sandbox and the recount hook against a real
+  // store; `knowledge-deflection` runs the close-case flow through the real
+  // automation engine, the normalisation hook, and the shipped deflection
+  // measures through the real analytics executor on both drivers.
+  'knowledge-feedback.test.ts',
+  'knowledge-deflection.test.ts',
 ];
 
 /**

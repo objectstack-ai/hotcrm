@@ -50,7 +50,7 @@ New ──► In Progress ──► Waiting on Customer ──► Resolved ─�
 
 ## 標準儀表板與報表
 
-- **服務概覽**（Service Overview；儀表板自身的標題是 **Customer Service**）——KPI 有 **Open Cases**、**Critical Cases**、**Avg Resolution Time**、**SLA Violations**；分布圖有 **Cases by Status**、**Cases by Priority**、**Cases by Origin**；再加 **Daily Case Volume**、一個 **SLA Compliance** 量表圖，以及一張 **Open Cases by Priority** 表格。它沒有 *頂尖客服* 部件，也沒有 *最久未結工單* 部件，而且這兩個都不是"只是還沒做"那麼簡單：`case_metrics`——服務側每個部件都建在它上面的那個資料集——沒有負責人維度，所以分析層裡沒有任何東西能給客服排名（[工單](/zh-Hant/docs/service/cases)頁寫的是同一件事）；而儀表板表格聚合的是資料集，不列出單筆記錄，所以最久未結的那幾張單也放不進去。
+- **服務概覽**（Service Overview；儀表板自身的標題是 **Customer Service**）——KPI 有 **Open Cases**、**Critical Cases**、**Avg Resolution Time**、**SLA Violations**；分布圖有 **Cases by Status**、**Cases by Priority**、**Cases by Origin**；再加 **Daily Case Volume**、一個 **SLA Compliance** 量表圖，一張 **Open Cases by Priority** 表格；以及知識轉移那一列——**KB Deflection Rate**（知識庫轉移率）配上它的分子分母 **Resolved by KB** 與 **Closed Cases**，兩個數字就印在百分比旁邊，讓人能核對而不是只能相信，再加一張 **Top Resolving Articles** 表格，按解決的已關閉工單數給文章排名。它沒有 *頂尖客服* 部件，也沒有 *最久未結工單* 部件，而且這兩個都不是"只是還沒做"那麼簡單：`case_metrics`——服務側每個部件都建在它上面的那個資料集——沒有負責人維度，所以分析層裡沒有任何東西能給客服排名（[工單](/zh-Hant/docs/service/cases)頁寫的是同一件事）；而儀表板表格聚合的是資料集，不列出單筆記錄，所以最久未結的那幾張單也放不進去。
 - **Cases Opened by Priority × Day**（按優先順序 × 天的建單量）——每日流入量：一張優先順序作列、天作欄的矩陣，順序就是這個。
 - **Cases by Status and Priority**（按狀態與優先順序劃分的工單）——當前快照：按狀態與優先順序給出工單數與平均解決時長。
 - **SLA Performance Report**（SLA 表現報表）——按優先順序給出工單數、**SLA Violation Rate**（SLA 違約率）與平均解決時長，並且只統計已關閉的工單。它報的不是達成率百分比："在目標內解決的工單占比"不是 `case_metrics` 定義的任何一個度量。參見 [SLA 與升級](/zh-Hant/docs/service/sla-and-escalation)。

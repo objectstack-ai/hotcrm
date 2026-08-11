@@ -265,7 +265,69 @@ export const ServiceDashboard: Dashboard = {
       },
     },
 
-    // ─── Row 4: Open Cases by Priority ────────────────────────────────
+    // ─── Row 4: Knowledge deflection (#601) ───────────────────────────
+    //
+    // The deflection metric the card asks the service dashboard to show, and
+    // the reason it is THREE tiles rather than one: a ratio widget on its own
+    // is unreadable — 100% could be "40 of 40" or "1 of 1", and a blank rate
+    // could be "no closed cases" or "no KB resolutions" (measured: a filtered
+    // measure contributes NO row for a group it selects nothing in, so the
+    // rate comes back absent, not 0). Numerator and denominator therefore ship
+    // beside the percentage, the same rule the sales dashboard's win rate
+    // follows after #614.
+    {
+      id: 'kb_deflection_rate',
+      title: 'KB Deflection Rate',
+      description: 'Share of closed cases resolved with a knowledge article',
+      type: 'metric',
+      colorVariant: 'success',
+      dataset: 'case_metrics', values: ['kb_deflection_rate'],
+      layout: { x: 0, y: 10, w: 4, h: 2 },
+      options: { icon: 'BookOpenCheck', format: '0%' },
+    },
+    {
+      id: 'kb_resolved_cases',
+      title: 'Resolved by KB',
+      description: 'Closed cases pointing at the article that resolved them',
+      type: 'metric',
+      colorVariant: 'blue',
+      dataset: 'case_metrics', values: ['kb_resolved_count'],
+      layout: { x: 4, y: 10, w: 4, h: 2 },
+      options: { icon: 'BookOpen', format: '0,0' },
+    },
+    {
+      id: 'closed_cases_total',
+      title: 'Closed Cases',
+      description: 'The denominator behind the deflection rate',
+      type: 'metric',
+      colorVariant: 'default',
+      dataset: 'case_metrics', values: ['closed_count'],
+      layout: { x: 8, y: 10, w: 4, h: 2 },
+      options: { icon: 'CheckCheck', format: '0,0' },
+    },
+    {
+      id: 'top_resolving_articles',
+      title: 'Top Resolving Articles',
+      description: 'Knowledge articles ranked by the closed cases they resolved',
+      type: 'table',
+      filter: { is_closed: true },
+      colorVariant: 'default',
+      dataset: 'case_metrics', dimensions: ['resolved_article'], values: ['kb_resolved_count'],
+      layout: { x: 0, y: 12, w: 12, h: 4 },
+      options: {
+        columns: [
+          { header: 'Article', accessorKey: 'resolved_article' },
+          { header: 'Cases Resolved', accessorKey: 'kb_resolved_count' },
+        ],
+        sortBy: 'kb_resolved_count',
+        sortOrder: 'desc',
+        limit: 10,
+        striped: true,
+        density: 'comfortable',
+      },
+    },
+
+    // ─── Row 5: Open Cases by Priority ────────────────────────────────
     // A dashboard `table` binds to an analytics cube and aggregates; it cannot
     // list individual cases (ADR-0021). This is deliberately TEAM-WIDE, not
     // "my cases": the analytics query path resolves no user token at all —
@@ -283,7 +345,7 @@ export const ServiceDashboard: Dashboard = {
       filter: { is_closed: false },
       colorVariant: 'default',
       dataset: 'case_metrics', dimensions: ['priority'], values: ['case_count', 'avg_sla_violated'],
-      layout: { x: 0, y: 10, w: 12, h: 4 },
+      layout: { x: 0, y: 16, w: 12, h: 4 },
       options: {
         columns: [
           { header: 'Priority',            accessorKey: 'priority' },

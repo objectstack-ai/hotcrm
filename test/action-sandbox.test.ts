@@ -238,6 +238,20 @@ describe('every script action body executes under QuickJS', () => {
       opts: { objectName: 'crm_opportunity', record: { id: 'opp_1' }, input: { stage: 'negotiation' } },
       seed: { crm_opportunity: [{ id: 'opp_1', stage: 'prospecting' }] },
     },
+    // The knowledge-article counters' writers (#601). Both bodies INSERT a
+    // `crm_article_feedback` row rather than touching the article — the article
+    // is `public_read` (write-owned) and a sandboxed body carries no caller
+    // identity, so an update would be refused. Invoked with a real `user`
+    // because the voter's id is what keys the one-vote-per-reader index; the
+    // seeded article is what the body reads first.
+    mark_article_helpful: {
+      opts: { objectName: 'crm_knowledge_article', record: { id: 'ka_1' }, user: { id: 'usr_1' } },
+      seed: { crm_knowledge_article: [{ id: 'ka_1', status: 'published', audience: 'public' }] },
+    },
+    mark_article_not_helpful: {
+      opts: { objectName: 'crm_knowledge_article', record: { id: 'ka_1' }, user: { id: 'usr_1' } },
+      seed: { crm_knowledge_article: [{ id: 'ka_1', status: 'published', audience: 'public' }] },
+    },
     // The activity family (#592): the same three bodies, generated once per
     // sales object. Each is invoked against ITS OWN object with that object's
     // declared nameField in the record, because the body carries the resolved

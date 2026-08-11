@@ -26,5 +26,6 @@ export {
   AccountLogCallAction, AccountLogMeetingAction, AccountScheduleMeetingAction,
   OpportunityLogCallAction, OpportunityLogMeetingAction, OpportunityScheduleMeetingAction,
 } from './global.actions';
+export { MarkArticleHelpfulAction, MarkArticleNotHelpfulAction } from './knowledge_article.actions';
 export { ConvertLeadAction, CreateCampaignAction, ScheduleFollowUpAction } from './lead.actions';
 export { CloneOpportunityAction, MassUpdateStageAction, GenerateQuoteAction } from './opportunity.actions';

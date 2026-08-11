@@ -286,9 +286,8 @@ export const esES: TranslationData = {
         related_to_case: { label: 'Caso de origen', help: 'Caso a partir del cual se redactó este artículo (opcional).' },
         published_at: { label: 'Publicado el' },
         last_reviewed_at: { label: 'Última revisión' },
-        view_count: { label: 'Vistas' },
-        helpful_count: { label: 'Útil' },
-        not_helpful_count: { label: 'No útil' },
+        helpful_count: { label: 'Útil', help: 'Recontado desde crm_article_feedback — nunca se escribe a mano.' },
+        not_helpful_count: { label: 'No útil', help: 'Recontado desde crm_article_feedback — nunca se escribe a mano.' },
       },
       _views: {
         all_articles: { label: 'Todos los artículos' },
@@ -301,6 +300,17 @@ export const esES: TranslationData = {
         content: { label: 'Contenido' },
         taxonomy: { label: 'Categorización' },
         metrics: { label: 'Interacción' },
+        engagement: { label: 'Interacción' },
+      },
+      _actions: {
+        mark_article_helpful: {
+          label: 'Útil',
+          successMessage: 'Gracias — registrado como útil.',
+        },
+        mark_article_not_helpful: {
+          label: 'No útil',
+          successMessage: 'Gracias — registrado como no útil.',
+        },
       },
     },
 
@@ -708,6 +718,7 @@ export const esES: TranslationData = {
         escalation_reason: { label: 'Motivo de Escalación' },
         parent_case: { label: 'Caso Principal', help: 'Caso principal relacionado' },
         resolution: { label: 'Resolución' },
+        resolved_by_article: { label: 'Resuelto por Artículo', help: 'Artículo de la base de conocimiento que resolvió este caso — la señal de desvío.' },
         customer_rating: { label: 'Satisfacción del Cliente', help: 'Valoración de satisfacción del cliente (1-5 estrellas)' },
         customer_feedback: { label: 'Comentarios del Cliente' },
         customer_signature: { label: 'Firma del Cliente', help: 'Firma digital que confirma la resolución del caso' },
@@ -1192,6 +1203,25 @@ export const esES: TranslationData = {
       },
     },
 
+    crm_article_feedback: {
+      label: 'Opinión sobre el Artículo',
+      pluralLabel: 'Opiniones sobre Artículos',
+      description: 'El veredicto útil / no útil de un lector sobre un artículo de la base de conocimiento',
+      fields: {
+        feedback_number: { label: 'N.º de Opinión' },
+        owner_id: { label: 'Lector' },
+        crm_knowledge_article: { label: 'Artículo', help: 'Artículo de la base de conocimiento al que se refiere esta opinión.' },
+        verdict: {
+          label: 'Veredicto',
+          options: { helpful: 'Útil', not_helpful: 'No útil' },
+        },
+        comment: { label: 'Comentario', help: 'Nota opcional que explica el veredicto — la lee el autor del artículo.' },
+      },
+      _sections: {
+        basic: { label: 'Opinión' },
+      },
+    },
+
     crm_campaign_member: {
       label: 'Miembro de Campaña',
       pluralLabel: 'Miembros de Campaña',
@@ -1427,6 +1457,10 @@ export const esES: TranslationData = {
         cases_by_origin: { title: 'Casos por origen', description: 'De dónde provienen nuestros casos' },
         daily_case_volume: { title: 'Volumen diario de casos', description: 'Casos nuevos creados en los últimos 30 días' },
         sla_compliance_gauge: { title: 'Cumplimiento de SLA', description: 'Porcentaje de casos resueltos dentro del SLA en este período' },
+        kb_deflection_rate: { title: 'Tasa de Desvío por KB', description: 'Proporción de casos cerrados resueltos con un artículo de la base de conocimiento' },
+        kb_resolved_cases: { title: 'Resueltos por KB', description: 'Casos cerrados que señalan el artículo que los resolvió' },
+        closed_cases_total: { title: 'Casos Cerrados', description: 'El denominador de la tasa de desvío' },
+        top_resolving_articles: { title: 'Artículos que Más Resuelven', description: 'Artículos de la base de conocimiento ordenados por los casos cerrados que resolvieron' },
         open_cases_by_priority: { title: 'Casos abiertos por prioridad', description: 'Casos abiertos y su tasa de incumplimiento de SLA, desglosados por prioridad' },
       },
     },

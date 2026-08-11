@@ -5,7 +5,7 @@
 # HotCRM
 
 > **The reference app for AI-written enterprise software.** A complete CRM —
-> 17 objects, 26 flows, 5 dashboards, 6 AI skills, 4 languages — is roughly
+> 18 objects, 26 flows, 5 dashboards, 6 AI skills, 4 languages — is roughly
 > **170k tokens** of typed [ObjectStack](https://github.com/objectstack-ai/objectstack)
 > metadata (~18,000 lines): the entire enterprise CRM fits in a single agent
 > context window, so an AI can hold it whole, reason about it, and refactor it.
@@ -45,7 +45,7 @@ HotCRM is a complete, opinionated CRM built as the **first official application*
 
 ## ✨ What you get
 
-**17 business objects** spanning the full Lead-to-Cash cycle:
+**18 business objects** spanning the full Lead-to-Cash cycle:
 
 | Sales | Service | Marketing | Revenue |
 |---|---|---|---|
@@ -59,7 +59,7 @@ HotCRM is a complete, opinionated CRM built as the **first official application*
 | `crm_event` | | | |
 | `crm_event_attendee` | | | |
 
-Plus **6 AI skills** (a skills-only surface — HotCRM defines no agents of its own; the skills attach to the platform `ask` assistant), **5 dashboards**, **26 flows**, **28 actions**, **9 datasets**, **4 language bundles** (en, zh-CN, es-ES, ja-JP), **6 permission profiles**, **12 positions**, and **9 sharing rules**.
+Plus **6 AI skills** (a skills-only surface — HotCRM defines no agents of its own; the skills attach to the platform `ask` assistant), **5 dashboards**, **26 flows**, **30 actions**, **9 datasets**, **4 language bundles** (en, zh-CN, es-ES, ja-JP), **6 permission profiles**, **12 positions**, and **9 sharing rules**.
 
 > **Business reader?** The ObjectStack docs tour every one of these capabilities in plain business language — [What Can It Do?](https://objectstack.ai/docs/capabilities) — with HotCRM as the running example on every page.
 
@@ -126,8 +126,8 @@ See [docs: Publishing your first marketplace app](content/docs/marketplace/publi
 hotcrm/
 ├── objectstack.config.ts         # manifest + defineStack() — single source of truth
 ├── src/
-│   ├── objects/                  # *.object.ts — data model (17 objects)
-│   ├── actions/                  # *.actions.ts — server actions + AI tools (28)
+│   ├── objects/                  # *.object.ts — data model (18 objects)
+│   ├── actions/                  # *.actions.ts — server actions + AI tools (30)
 │   ├── flows/                    # *.flow.ts — visual flows (26): screen, record-change & scheduled
 │   ├── hooks/                    # hook registry barrel
 │   ├── skills/                   # *.skill.ts — AI skills (6) — skills-only surface, no agents

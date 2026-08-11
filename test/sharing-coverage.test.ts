@@ -551,6 +551,12 @@ const ROW_LABEL: Record<string, Record<Locale, string>> = {
     'zh-Hans': '知识文章',
     'zh-Hant': '知識文章',
   },
+  // #601 — the vote row behind the article's helpful / not-helpful counters.
+  crm_article_feedback: {
+    en: 'Article Feedback',
+    'zh-Hans': '文章反馈',
+    'zh-Hant': '文章回饋',
+  },
 };
 
 /** Every business object the compiled stack registers — the OWD table's row set. */
