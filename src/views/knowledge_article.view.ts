@@ -28,7 +28,6 @@ export const KnowledgeArticleViews = defineView({
       { field: 'language',       width: 110 },
       { field: 'owner_id',          width: 150 },
       { field: 'published_at',   width: 160, sortable: true },
-      { field: 'view_count',     width: 110, align: 'right', summary: 'sum' },
       { field: 'helpful_count',  width: 110, align: 'right', summary: 'sum' },
     ],
     sort: [{ field: 'published_at', order: 'desc' }],
@@ -57,9 +56,9 @@ export const KnowledgeArticleViews = defineView({
       type: 'grid',
       label: 'Published',
       data: { provider: 'object', object: 'crm_knowledge_article' },
-      columns: ['article_number', 'title', 'category', 'audience', 'view_count', 'helpful_count', 'published_at'],
+      columns: ['article_number', 'title', 'category', 'audience', 'helpful_count', 'not_helpful_count', 'published_at'],
       filter: [{ field: 'status', operator: 'equals', value: 'published' }],
-      sort: [{ field: 'view_count', order: 'desc' }],
+      sort: [{ field: 'helpful_count', order: 'desc' }],
     },
     my_drafts: {
       name: 'my_drafts',
@@ -170,9 +169,17 @@ export const KnowledgeArticleViews = defineView({
         fields: ['body'],
       },
       {
+        // `name` alongside `label` (#1100): a form section declaring only a
+        // label renders its ENGLISH label under every locale, and neither the
+        // existing i18n tests nor the `i18n/missing-*` gate can see it — the
+        // heading has no key for a translator to miss. This section is named
+        // because this change edits it (`view_count` was removed from it, #601);
+        // the app-wide sweep of the other headings is #1100's job, held behind
+        // this card precisely so the two do not collide in the locale packs.
+        name: 'engagement',
         label: 'Engagement',
         columns: 3,
-        fields: ['view_count', 'helpful_count', 'not_helpful_count', 'published_at', 'last_reviewed_at', 'related_to_case'],
+        fields: ['helpful_count', 'not_helpful_count', 'published_at', 'last_reviewed_at', 'related_to_case'],
       },
     ],
   },

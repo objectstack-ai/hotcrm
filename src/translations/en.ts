@@ -268,9 +268,8 @@ export const en: TranslationData = {
         related_to_case: { label: 'Source Case', help: 'Case this article was authored from (optional).' },
         published_at: { label: 'Published At' },
         last_reviewed_at: { label: 'Last Reviewed' },
-        view_count: { label: 'Views' },
-        helpful_count: { label: 'Helpful' },
-        not_helpful_count: { label: 'Not Helpful' },
+        helpful_count: { label: 'Helpful', help: 'Recounted from crm_article_feedback — never typed in.' },
+        not_helpful_count: { label: 'Not Helpful', help: 'Recounted from crm_article_feedback — never typed in.' },
         display_title: { label: 'Display Title' },
       },
       _views: {
@@ -284,6 +283,17 @@ export const en: TranslationData = {
         content: { label: 'Content' },
         taxonomy: { label: 'Categorization' },
         metrics: { label: 'Engagement' },
+        engagement: { label: 'Engagement' },
+      },
+      _actions: {
+        mark_article_helpful: {
+          label: 'Helpful',
+          successMessage: 'Thanks — recorded as helpful.',
+        },
+        mark_article_not_helpful: {
+          label: 'Not Helpful',
+          successMessage: 'Thanks — recorded as not helpful.',
+        },
       },
     },
 
@@ -672,6 +682,7 @@ export const en: TranslationData = {
         escalation_reason: { label: 'Escalation Reason' },
         parent_case: { label: 'Parent Case', help: 'Related parent case' },
         resolution: { label: 'Resolution' },
+        resolved_by_article: { label: 'Resolved by Article', help: 'Knowledge article that resolved this case — the deflection signal.' },
         customer_rating: {
           label: 'Customer Satisfaction',
           help: 'Customer satisfaction rating (1-5 stars)',
@@ -1152,6 +1163,25 @@ export const en: TranslationData = {
       },
     },
 
+    crm_article_feedback: {
+      label: 'Article Feedback',
+      pluralLabel: 'Article Feedback',
+      description: 'One reader’s helpful / not-helpful verdict on a knowledge article',
+      fields: {
+        feedback_number: { label: 'Feedback #' },
+        owner_id: { label: 'Reader' },
+        crm_knowledge_article: { label: 'Article', help: 'Knowledge article this feedback is about.' },
+        verdict: {
+          label: 'Verdict',
+          options: { helpful: 'Helpful', not_helpful: 'Not Helpful' },
+        },
+        comment: { label: 'Comment', help: 'Optional note explaining the verdict — read by the article’s author.' },
+      },
+      _sections: {
+        basic: { label: 'Feedback' },
+      },
+    },
+
     crm_campaign_member: {
       label: 'Campaign Member',
       pluralLabel: 'Campaign Members',
@@ -1348,6 +1378,10 @@ export const en: TranslationData = {
         cases_by_origin: { title: 'Cases by Origin', description: 'Where our cases are coming from' },
         daily_case_volume: { title: 'Daily Case Volume', description: 'New cases created over the last 30 days' },
         sla_compliance_gauge: { title: 'SLA Compliance', description: 'Percent of cases resolved within SLA this period' },
+        kb_deflection_rate: { title: 'KB Deflection Rate', description: 'Share of closed cases resolved with a knowledge article' },
+        kb_resolved_cases: { title: 'Resolved by KB', description: 'Closed cases pointing at the article that resolved them' },
+        closed_cases_total: { title: 'Closed Cases', description: 'The denominator behind the deflection rate' },
+        top_resolving_articles: { title: 'Top Resolving Articles', description: 'Knowledge articles ranked by the closed cases they resolved' },
         open_cases_by_priority: { title: 'Open Cases by Priority', description: 'Open cases and their SLA-violation rate, broken down by priority' },
       },
     },

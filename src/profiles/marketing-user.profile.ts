@@ -36,6 +36,8 @@ export const MarketingUserProfile = {
     crm_campaign_member: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     // Read-only reference: knowledge articles for campaign copy
     // (public_read catalog).
+    // Reads the KB and may rate it; cannot author articles (#601).
+    crm_article_feedback: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
     crm_knowledge_article: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
   },
   fields: {

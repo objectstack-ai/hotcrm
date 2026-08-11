@@ -277,4 +277,70 @@ const caseAutoAssign: Hook = createCaseRoundRobinAssign();
  */
 const caseEscalationReassign: Hook = createCaseEscalationReassign();
 
-export default [caseValidation, caseAutoAssign, caseEscalationReassign, caseSideEffects];
+/**
+ * Normalise a BLANK `resolved_by_article` to NULL (#601).
+ *
+ * Additive and deliberately independent of everything above: it touches no
+ * ownership column and issues no operation of its own, so it shares nothing
+ * with the two assignment hooks composed from `_case-assignment.ts`.
+ *
+ * ### Why it has to exist
+ *
+ * `resolved_by_article` is the column the deflection ratio on `case_metrics`
+ * counts (`kb_resolved_count` = `count(resolved_by_article)` over closed
+ * cases). MEASURED against the real automation engine, an optional screen
+ * field the agent leaves empty does not arrive as "absent" — the resume
+ * carries `''`, and `update_record` writes that empty string into the column:
+ *
+ *   supplied `'ka1'` → `resolved_by_article: "ka1"`
+ *   left blank       → `resolved_by_article: ""`      ← counted by count(col)
+ *   key omitted      → column not written at all       ← correct
+ *
+ * SQL `count(column)` counts every NON-NULL value, and `''` is not NULL. So
+ * without this hook every case closed WITHOUT an article would still land in
+ * the numerator, and the deflection rate would read 100% on a dashboard that
+ * raises no error while doing it — the #614 failure mode exactly, where a
+ * wrong ratio is indistinguishable from a right one.
+ *
+ * Fixing it here rather than in the measure is deliberate: an empty string in
+ * a lookup column is wrong for the record form, the list views, the reports
+ * and any future reader too, so it is the STORED value that is corrected, not
+ * each consumer's arithmetic. The alternative — teaching one measure to
+ * discount `''` — is a lenient consumer papering over bad data, and the next
+ * reader would not know to copy it. `test/knowledge-deflection.test.ts` pins
+ * both halves: the empty string is normalised, and the ratio is right.
+ *
+ * The blank test is spelled out inline rather than lifted into a shared
+ * helper: hook handlers lower to a metadata-only body and a free identifier
+ * would push this one into the legacy runtime bundle instead
+ * (`test/action-sandbox.test.ts` fails the build on it).
+ */
+const caseResolutionArticleNormalize: Hook = {
+  name: 'case_resolution_article_normalize',
+  object: 'crm_case',
+  events: ['beforeInsert', 'beforeUpdate'],
+  priority: 150,
+  description: 'Normalise a blank resolved_by_article to null so the deflection measure counts only real links.',
+  handler: async (ctx: HookContext) => {
+    const { input } = ctx;
+    // Only a write that CARRIES the key is normalised. An update that never
+    // mentions the column must not clear a link somebody else set.
+    if (!('resolved_by_article' in input)) return;
+    const value = input.resolved_by_article;
+    if (value === '' || value === undefined) {
+      input.resolved_by_article = null;
+      return;
+    }
+    if (typeof value === 'string' && value.trim() === '') {
+      input.resolved_by_article = null;
+    }
+  },
+};
+
+export default [
+  caseValidation,
+  caseAutoAssign,
+  caseEscalationReassign,
+  caseResolutionArticleNormalize,
+  caseSideEffects,
+];

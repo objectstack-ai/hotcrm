@@ -18,8 +18,8 @@ loader registers:
 
 ```text
 HotCRM v2.2.2
-Data: 17 Objects  342 Fields
-UI: 1 Apps  14 Views  8 Pages  5 Dashboards  10 Reports  28 Actions
+Data: 18 Objects  347 Fields
+UI: 1 Apps  14 Views  8 Pages  5 Dashboards  10 Reports  30 Actions
 Logic: 26 Flows
 Security: 12 Positions  6 Permissions
 ```
@@ -30,7 +30,7 @@ Validation command:
 pnpm validate
 ```
 
-> **`28 Actions` is the REGISTRATION count, not a count of distinct action
+> **`30 Actions` is the REGISTRATION count, not a count of distinct action
 > definitions.** One action bound to five objects registers five times, so the
 > source tree's 6 `*.actions.ts` files and this figure answer different
 > questions. The registration count is the calibre this repo states to readers

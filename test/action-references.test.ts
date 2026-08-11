@@ -94,8 +94,12 @@ describe('navigation reaches everything the app ships', () => {
         // (#592): an attendee row is reached through the meeting it belongs to,
         // and it is `controlled_by_parent`, so a nav entry would offer a list
         // whose every row derives its visibility from a record you got to some
-        // other way.
-        !/_line_item$|_member$|_attendee$/.test(name) && !reachable.has(name));
+        // other way. `_feedback` joined it with `crm_article_feedback` (#601)
+        // on exactly that reasoning: a vote is reached through the article it
+        // is about, it is `controlled_by_parent` too, and "Article Feedback" as
+        // a top-level destination would be a list of verdicts detached from the
+        // things they are verdicts on.
+        !/_line_item$|_member$|_attendee$|_feedback$/.test(name) && !reachable.has(name));
     expect(stranded, `objects with no navigation entry:\n  ${stranded.join('\n  ')}`).toEqual([]);
   });
 

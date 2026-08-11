@@ -222,6 +222,26 @@ const CASES: Record<string, WriteCase> = {
     writes: [{ object: 'crm_campaign', id: 'cmp_1', doc: { num_sent: 1, num_responses: 0 } }],
   },
 
+  // #601 — the writer that finally moves the knowledge article's engagement
+  // counters. It RECOUNTS from `crm_article_feedback` rather than incrementing,
+  // so the seeded article deliberately carries a WRONG stored count: a write
+  // that reaches the engine correctly overwrites it with the true tally.
+  'article_feedback_metrics_refresh — the article vote recount': {
+    hook: 'article_feedback_metrics_refresh',
+    event: 'afterInsert',
+    input: { id: 'af_1', crm_knowledge_article: 'ka_1', verdict: 'helpful', owner_id: 'usr_1' },
+    seed: {
+      crm_knowledge_article: [{ id: 'ka_1', helpful_count: 99, not_helpful_count: 99 }],
+      crm_article_feedback: [
+        { id: 'af_1', crm_knowledge_article: 'ka_1', verdict: 'helpful', owner_id: 'usr_1' },
+        { id: 'af_2', crm_knowledge_article: 'ka_1', verdict: 'not_helpful', owner_id: 'usr_2' },
+      ],
+    },
+    writes: [
+      { object: 'crm_knowledge_article', id: 'ka_1', doc: { helpful_count: 1, not_helpful_count: 1 } },
+    ],
+  },
+
   'campaign_member_optout_sync — the unsubscribe round-trip': {
     hook: 'campaign_member_optout_sync',
     event: 'afterUpdate',

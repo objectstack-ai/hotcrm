@@ -101,6 +101,8 @@ export const SalesManagerProfile = {
     // private object (#488 — the object had no grant at all).
     crm_forecast:    { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: true, allowTransfer: true },
     // Knowledge is service-authored; sales reads it (public_read OWD).
+    // Reads the KB and may rate it; cannot author articles (#601).
+    crm_article_feedback: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
     crm_knowledge_article: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
     // Enrollment is marketing's job; a manager only reads the membership rows
     // behind campaign ROI. `crm_campaign_member` is `controlled_by_parent`, so

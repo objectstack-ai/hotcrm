@@ -39,12 +39,13 @@ OWD is the *most restrictive* setting for each object. Everything else widens it
 | Campaign | Public Read-Only | Marketing creates, sales sees |
 | Campaign Member | Controlled by Parent (Campaign) | Membership is an attribute of the campaign, and follows its sharing — see *Controlled by Parent, in practice* below |
 | Knowledge Article | Public Read-Only | The knowledge base is for everyone internally; agents author it |
+| Article Feedback | Controlled by Parent (Knowledge Article) | A reader's helpful / not-helpful verdict is an attribute of the article, and follows its sharing — see *Controlled by Parent, in practice* below |
 
 **Options for OWD**: Private / Public Read-Only / Public Read/Write / Controlled by Parent.
 
 ### Controlled by Parent, in practice
 
-For the five parent-derived objects above, there is nothing to configure per user: access is *computed*.
+For the six parent-derived objects above, there is nothing to configure per user: access is *computed*.
 
 - **Read** — you see the rows whose parent you can see, and "can see" means every route that would let you open the parent directly: you own it, a sharing rule granted it, or someone shared it with you by hand. Measured against the shipped stack (platform 17.0.0-rc.4): a rep who can read exactly one account reads **that** account's contacts and no others, and a rep who can read **no** quote reads no quote line items at all. The account reaching that rep only through a territory rule is the point — a parent held by a share counts as a parent you can see.
 - **Write** — adding, changing or removing a row requires **edit** access to the parent, resolved the same way as reads. A row under a parent you cannot edit is refused, naming the parent that stopped it.

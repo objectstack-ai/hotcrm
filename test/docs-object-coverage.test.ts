@@ -137,6 +137,12 @@ const DOCS_LEDGER: Record<string, LedgerEntry> = {
   crm_product: { page: 'revenue/products' },
   crm_case: { page: 'service/cases' },
   crm_knowledge_article: { page: 'service/knowledge-base', term: 'article' },
+  // #601 — the vote row behind the article's Helpful / Not Helpful counters.
+  // Documented on the article's own page rather than a page of its own, the
+  // same call `crm_event_attendee` makes: a verdict is only ever read beside
+  // the article it is about, and a standalone page would document a row nobody
+  // navigates to.
+  crm_article_feedback: { page: 'service/knowledge-base', term: 'Article Feedback' },
 };
 
 /** Sections written for developers — see check 4 in the header note. */

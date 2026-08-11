@@ -36,6 +36,7 @@ export const SystemAdminProfile = {
     // but no grant in ANY permission set (#488): "Knowledge" and "Forecasts"
     // were permission-denied nav items for every user, admins included.
     crm_forecast:              { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: true, modifyAllRecords: true, allowTransfer: true },
+    crm_article_feedback:      { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: true, modifyAllRecords: true, allowTransfer: true },
     crm_knowledge_article:     { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: true, modifyAllRecords: true, allowTransfer: true },
     // Detail rows. Their RECORD-level access derives from the master
     // (ADR-0055 `controlled_by_parent`), but object-level CRUD is a separate

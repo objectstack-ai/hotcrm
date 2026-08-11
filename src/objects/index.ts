@@ -56,6 +56,7 @@
  * to colleagues rather than scoped to the record's audience.
  */
 export { Account } from './account.object';
+export { ArticleFeedback } from './article_feedback.object';
 export { Campaign } from './campaign.object';
 export { CampaignMember } from './campaign_member.object';
 export { Case } from './case.object';

@@ -56,6 +56,11 @@ export const ServiceAgentProfile = {
     // is destructive-by-policy, so deletion stays with admins. Before #488 the
     // object had no grant at all — the "Knowledge" nav item was denied for
     // everyone, including the agents it was built for.
+    // Agents rate the articles they use to close cases (#601). Create + edit
+    // their OWN row (`modifyAllRecords: false` keeps them off everyone else's
+    // vote); no delete — a withdrawn opinion is a changed verdict, not an
+    // erased one.
+    crm_article_feedback: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
     crm_knowledge_article: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
   },
   fields: {

@@ -229,6 +229,11 @@ export const cases = defineSeed(Case, {
       // `resolution` is REQUIRED when status is 'closed' (object validation
       // `resolution_required_for_closed`) — without it the seed row is rejected.
       resolution: 'Raised the production rate-limit tier and added client-side backoff; usage now within limits.',
+      // The deflection link (#601): this case was answered out of the knowledge
+      // base, so it names the article that resolved it. Referenced by the
+      // article seed's `externalId` (`title`), the same way every other seeded
+      // lookup names its target.
+      resolved_by_article: 'API Rate Limits',
       // closed−created delta, as case.hook computes it.
       resolution_time_hours: 24.0,
       created_date: cel`daysAgo(7)`,
@@ -375,6 +380,26 @@ export const cases = defineSeed(Case, {
 });
 
 // ─── Knowledge Articles ───────────────────────────────────────────────
+//
+// No `helpful_count` / `not_helpful_count` here, deliberately (#601). Those two
+// are now DERIVED: `article_feedback_metrics_refresh` recounts them from
+// `crm_article_feedback` on every vote. This file used to type in 38, 96, 5, 9
+// — numbers with no rows behind them — and the first real vote on an article
+// would have recounted 96 down to 1, in front of whoever pressed the button.
+//
+// The seed doctrine at the top of this file is what decides it: a hook-owned
+// field must arrive holding what the hook WOULD have computed. With no seeded
+// feedback rows the honest value is the field's own default, 0. Rows are not
+// seeded either, because a seed cannot name a user (see the note on
+// `crm_event_attendee` below) and the voter's identity is exactly what the
+// one-vote-per-reader index keys on — a table of ownerless verdicts would be
+// the same fiction one level down.
+//
+// The deflection half of #601 does not have this problem and IS seeded: a case
+// naming the article that resolved it needs no user, so the closed
+// `API rate limit exceeded on production` case above carries a real
+// `resolved_by_article` and the Service dashboard's KB tiles have something
+// true to show on a fresh `pnpm demo:reset`.
 export const knowledgeArticles = defineSeed(KnowledgeArticle, {
   mode: 'upsert',
   externalId: 'title',
@@ -399,9 +424,6 @@ Open the **Sales Pipeline** kanban to drag deals between stages, and use the
 **Executive Overview** dashboard to track revenue at a glance.`,
       published_at: cel`daysAgo(40)`,
       last_reviewed_at: cel`daysAgo(20)`,
-      view_count: 412,
-      helpful_count: 38,
-      not_helpful_count: 2,
     },
     {
       title: 'Resetting Your Password',
@@ -420,9 +442,6 @@ Open the **Sales Pipeline** kanban to drag deals between stages, and use the
 If the email does not arrive, check spam or contact your administrator.`,
       published_at: cel`daysAgo(25)`,
       last_reviewed_at: cel`daysAgo(10)`,
-      view_count: 1280,
-      helpful_count: 96,
-      not_helpful_count: 7,
     },
     {
       title: 'API Rate Limits',
@@ -449,9 +468,6 @@ This covers the deprecated SAML 1.1 flow. New tenants should use the OIDC
 connector instead. Retained for customers still on the legacy stack.`,
       published_at: cel`daysAgo(240)`,
       last_reviewed_at: cel`daysAgo(220)`,
-      view_count: 64,
-      helpful_count: 5,
-      not_helpful_count: 9,
     },
   ]
 });
