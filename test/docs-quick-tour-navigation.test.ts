@@ -45,6 +45,32 @@ import { CrmPositions } from '../src/sharing/positions';
  *  - exists ⇒ listed: the table's rows are compared against `CrmApp.navigation`
  *    group-for-group, child-for-child, in source order. Add a nav item without
  *    touching the tour and this file goes red at PR time, in all three locales.
+ *
+ * ## The app's own name is part of the assertion set (#998)
+ *
+ * The rules above pinned every name INSIDE the app and left the app's name
+ * itself unguarded, and that is exactly where the next drift landed: 22 doc
+ * pages called this app *Enterprise CRM*, a spelling `src/` has never carried
+ * anywhere — `CrmApp.label`, all four locale bundles, the build artifact and the
+ * marketplace manifest all say **HotCRM**. It looks like a hand-rearranged
+ * reading of the identifier `crm_enterprise`. The name even survived a full
+ * round of navigation rewrites (#927 / #938 / #943 / #963 / #976) because it was
+ * never the thing under review.
+ *
+ * This file could not see it twice over: the guarded block STARTED at the line
+ * naming the app, so the app-launcher list one paragraph above it was outside
+ * every rule, and the occurrence inside the block was not bold, so the
+ * "bold must be a real name" rule passed over it.
+ *
+ * Both holes are closed by deriving the app's name from `CrmApp.label` rather
+ * than writing it down here:
+ *
+ *  - the block's `start` marker is built from the label, so renaming the app in
+ *    `src/` fails as "block start not found" until the pages are re-taken;
+ *  - each page's app-launcher bullet ({@link PAGES}`.launcher`) must name the
+ *    app by exactly `CrmApp.label`;
+ *  - the label joins {@link ALLOWED_BOLD}, so the page may bold it like any
+ *    other real name.
  */
 
 type AnyRec = Record<string, any>;
@@ -67,7 +93,14 @@ const ALL_NAV_LABELS: string[] = [
 const COLLAPSED: string[] = GROUPS.filter((g) => g.expanded !== true).map((g) => g.label as string);
 const EXPANDED: string[] = GROUPS.filter((g) => g.expanded === true).map((g) => g.label as string);
 
-const ALLOWED_BOLD = new Set<string>([...ALL_NAV_LABELS, ExecutiveDashboard.label as string]);
+/** The name the app ships under — `src/apps/crm.app.ts`, never written down here (#998). */
+const APP_LABEL = (CrmApp as AnyRec).label as string;
+
+const ALLOWED_BOLD = new Set<string>([
+  ...ALL_NAV_LABELS,
+  ExecutiveDashboard.label as string,
+  APP_LABEL,
+]);
 
 /**
  * Names the old table carried that resolve to no navigation label anywhere.
@@ -99,23 +132,27 @@ const PAGES = [
     file: 'content/docs/getting-started/quick-tour.mdx',
     lang: 'en',
     /** First line of the guarded block; the block runs to the next `## `. */
-    start: 'Inside Enterprise CRM,',
+    start: `Inside ${APP_LABEL},`,
     sep: ', ',
     collapse: /collapsed when the app loads/,
+    /** The app-launcher bullet; capture group 1 is the name it gives this app. */
+    launcher: /^- \*\*(.+?)\*\* — the main app with all CRM functionality\./m,
   },
   {
     file: 'content/docs/getting-started/quick-tour.zh-Hans.mdx',
     lang: 'zh-Hans',
-    start: '在 Enterprise CRM 内，',
+    start: `在 ${APP_LABEL} 内，`,
     sep: '、',
     collapse: /在应用加载时是折叠的/,
+    launcher: /^- \*\*(.+?)\*\* —— 包含所有 CRM 功能的主应用。/m,
   },
   {
     file: 'content/docs/getting-started/quick-tour.zh-Hant.mdx',
     lang: 'zh-Hant',
-    start: '在 Enterprise CRM 內，',
+    start: `在 ${APP_LABEL} 內，`,
     sep: '、',
     collapse: /在應用載入時是摺疊的/,
+    launcher: /^- \*\*(.+?)\*\* —— 包含所有 CRM 功能的主應用。/m,
   },
 ] as const;
 
@@ -157,8 +194,25 @@ const italicNames = (block: string): string[] =>
   [...block.replace(/\*\*[^*\n]+\*\*/g, '').matchAll(/\*([^*\n]+)\*/g)].map((m) => m[1].trim());
 
 describe('getting-started/quick-tour names the navigation the app really ships (#960)', () => {
-  describe.each(PAGES)('$file', ({ file, start, sep, collapse }) => {
+  describe.each(PAGES)('$file', ({ file, start, sep, collapse, launcher }) => {
     const block = () => blockOf(file, start);
+
+    it('the app-launcher list calls this app by the label the app ships (#998)', () => {
+      const text = readFileSync(join(REPO_ROOT, file), 'utf8');
+      const found = launcher.exec(text);
+      expect(
+        found,
+        `${file}: the app-launcher bullet for this app is gone (pattern ${launcher}) — this ` +
+          'rule has gone blind. Re-take the pattern against the page rather than deleting it.',
+      ).not.toBeNull();
+      expect(
+        found?.[1],
+        `${file}: the app-launcher list — the very screen a new user opens — calls this app ` +
+          `something other than the name it ships. \`CrmApp.label\` is '${APP_LABEL}', and the ` +
+          'launcher shows that string; a page that spells it differently is naming an app ' +
+          'nobody can find.',
+      ).toBe(APP_LABEL);
+    });
 
     it('lists every group, in source order, with exactly its children', () => {
       const rows = tableRows(block());

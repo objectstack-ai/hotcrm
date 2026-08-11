@@ -51,15 +51,16 @@ Permission sets are **explicit-allow only**: if an object is not listed in a set
 ### 🎧 Service Agent
 
 - Create, read and edit **cases** and **tasks** in their own queue; critical cases reach the wider service team through the escalation sharing rule
-- Read **accounts**, **contacts** (editable) and **leads** org-wide — a ticket is meaningless without the customer behind it
+- Read **accounts**, **contacts** and **leads** org-wide — a ticket is meaningless without the customer behind it. Reading is the whole of it: an agent who opens a customer's contact to correct a phone number can save it only if that contact is one they both own and created, which a contact that came in with the account never is (see [Why "org-wide" describes reading, not writing](#why-org-wide-describes-reading-not-writing))
 - **Knowledge articles**: read every article and author or revise them (the draft → in review → published lifecycle is enforced by the KB flow, not by permissions). Archiving is an admin action
 - Read the **product** catalog
 - No access to opportunities, quotes or forecasts
 
 ### 📣 Marketing User
 
-- Create, read and edit **leads**, **contacts** and **campaigns** org-wide
-- **Campaign members**: enrol and update membership — this is what the "Add to Campaign" action writes
+- **Leads**: create them, read every lead in the org, and edit the ones they own and created — org-wide read does not carry org-wide editing (see [below](#why-org-wide-describes-reading-not-writing))
+- **Contacts**: read every contact in the org. Creating one is refused in practice — a contact is master-detail under its account, so inserting one requires edit access to that account, and this profile holds no account editing anywhere. Editing is the same owner-and-creator gate as leads
+- **Campaigns** and **campaign members**: create, and edit *any* of them — these two objects carry a row-level rule written for this profile, which is what lets a marketer work a campaign a colleague planned and update members the enrollment flow created. This is what the "Add to Campaign" action writes
 - Read **accounts** and **opportunities** org-wide, for campaign→pipeline ROI (a deal flagged **Private** stays hidden)
 - Read **knowledge articles**
 - Cannot delete records
@@ -68,6 +69,12 @@ Permission sets are **explicit-allow only**: if an object is not listed in a set
 
 - **Insert only** on **leads** and **cases**, through the public Web-to-Lead / Web-to-Case forms
 - **No read access to anything.** Every other object — including public-audience knowledge articles — is denied
+
+### Why "org-wide" describes reading, not writing
+
+A profile's object grant says what a user **may** do. Whether a save actually lands is decided a second time, per record, by the platform — and today that second gate is narrow: a user updates a record only when they are both its **owner** and its **creator**. Org-wide read (**View All**) does not widen it; it is a read scope and never grants a write. This is why the bullets above say, per object, whether editing reaches *any* record or only your own.
+
+The exception is authored deliberately, one object at a time: a **row-level rule** on the object can open updates to every holder of a profile. This app ships two, both on the Marketing User set — **campaigns** and **campaign members** — because enrolling and tracking members is teamwork on rows the enrollment flow created, not the marketer. Anywhere no such rule exists, "edit" means the records you own and created, whatever the read scope says.
 
 ## Field-level security
 
