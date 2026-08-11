@@ -7,8 +7,25 @@ import { P } from '@objectstack/spec';
  * Campaign Member Object
  *
  * Links a Lead OR Contact to a Campaign and tracks the response
- * lifecycle (Sent → Opened → Clicked → Responded → Converted).
+ * lifecycle `sent → responded / converted / unsubscribed`.
  * Used by the campaign-enrollment flow and by ROI dashboards.
+ *
+ * ⚠️ The lifecycle stops where the platform's writers stop (#597). It used to
+ * read `Sent → Opened → Clicked → Responded → Converted` with `bounced` beside
+ * it, plus `first_opened_date` / `first_clicked_date` stamps — six values and
+ * two columns that NOTHING in this app or on the platform could ever write.
+ * `@objectstack/plugin-email` is "transport-pluggable OUTBOUND delivery with
+ * sys_email persistence": its `sys_email.status` vocabulary is
+ * `queued | sent | failed`, there is no open/click webhook, no bounce
+ * ingestion, and no tracking pixel anywhere in the installed platform
+ * (measured on 17.0.0-rc.6). So an author reading this object was promised
+ * engagement tracking the product cannot deliver, and every one of those
+ * values would have stayed at its default forever.
+ *
+ * Removed rather than wired, per ADR-0049's enforce-or-remove spirit: they
+ * come back the day a real tracking integration exists to write them, and not
+ * before. What survives is the part with a real writer — see the writer table
+ * beside each field below.
  */
 export const CampaignMember = ObjectSchema.create({
   name: 'crm_campaign_member',
@@ -141,6 +158,20 @@ export const CampaignMember = ObjectSchema.create({
       group: 'basic',
     }),
 
+    // Writers, one per surviving value (#597):
+    //   sent         — campaign_enrollment flow, `create_campaign` (leads) and
+    //                  `add_contact_to_campaign` (contacts) stamp it on insert.
+    //   responded    — the `mark_responded` action (src/actions/campaign.actions.ts).
+    //   converted    — the member's lead converting; `campaign_lead_conversion_refresh`
+    //                  (campaign.hook.ts) promotes the row when
+    //                  `crm_lead.is_converted` flips.
+    //   unsubscribed — set by a rep (or an opt-out request) on the member row;
+    //                  `campaign_member_optout_sync` round-trips it to the
+    //                  lead/contact's `email_opt_out`, which is what makes the
+    //                  enrollment flow's opt-out filter honour it next run.
+    //
+    // `opened` / `clicked` / `bounced` were removed here — see the object
+    // docblock. Nothing on the platform can produce them.
     status: Field.select({
       label: 'Status',
       required: true,
@@ -149,30 +180,25 @@ export const CampaignMember = ObjectSchema.create({
       trackHistory: true,
       options: [
         { label: 'Sent',      value: 'sent',      default: true, color: '#A0A0A0' },
-        { label: 'Opened',    value: 'opened',    color: '#4169E1' },
-        { label: 'Clicked',   value: 'clicked',   color: '#00AA00' },
         { label: 'Responded', value: 'responded', color: '#00AA00' },
         { label: 'Converted', value: 'converted', color: '#7C3AED' },
-        { label: 'Bounced',   value: 'bounced',   color: '#FF4500' },
         { label: 'Unsubscribed', value: 'unsubscribed', color: '#FF0000' },
       ],
     }),
 
-    first_opened_date: Field.datetime({
-      label: 'First Opened',
-      group: 'response',
-    }),
-
-    first_clicked_date: Field.datetime({
-      label: 'First Clicked',
-      group: 'response',
-    }),
-
+    // Written by the `mark_responded` action, and by
+    // `campaign_member_lifecycle` when it back-fills a member whose response
+    // was recorded by flipping `status` directly.
     response_date: Field.datetime({
       label: 'Response Date',
       group: 'response',
     }),
 
+    // Kept in lockstep with `status == "responded"` by
+    // `campaign_member_lifecycle` (beforeInsert/beforeUpdate) — a boolean that
+    // disagrees with the status it summarises is the shape the response
+    // surfaces cannot render, and it is what `test/seed-consistency.test.ts`
+    // already pins on the seed side.
     has_responded: Field.boolean({
       label: 'Has Responded',
       defaultValue: false,

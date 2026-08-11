@@ -198,7 +198,10 @@ describe('deleting an enrolled person', () => {
     await api.object('crm_campaign_member').insert({
       crm_campaign: campaign.id,
       crm_contact: contact.id,
-      status: 'opened',
+      // `sent`, not `opened`: the untrackable engagement states were removed in
+      // #597 — no email-tracking engine exists to produce them — and the object
+      // now refuses the value outright.
+      status: 'sent',
     });
 
     await expect(
@@ -222,7 +225,7 @@ describe('deleting an enrolled person', () => {
     // naming a different record of the same type. A cascade that keyed off the
     // object rather than the id would take both.
     const keepContact = await api.object('crm_campaign_member').insert({
-      crm_campaign: campaign.id, crm_contact: contact.id, status: 'clicked',
+      crm_campaign: campaign.id, crm_contact: contact.id, status: 'responded',
     });
     const keepLead = await api.object('crm_campaign_member').insert({
       crm_campaign: campaign.id, crm_lead: bystanderLead.id, status: 'sent',

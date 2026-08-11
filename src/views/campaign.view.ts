@@ -95,7 +95,15 @@ export const CampaignViews = defineView({
     type: 'tabbed',
     sections: [
       {
-        label: 'Overview',
+        // Every form section here carries a `name` matching the object's
+        // fieldGroup key, so the heading resolves through
+        // `objects.crm_campaign._sections.<name>.label` in all four packs. A
+        // nameless section has no key a bundle can carry and renders its
+        // English label in every locale — the platform warns about exactly this
+        // during `objectstack validate`, and this form was carrying four of
+        // those warnings before the #597 restructure gave it a reason to move.
+        name: 'basic',
+        label: 'Campaign Information',
         columns: 2,
         fields: [
           { field: 'name', required: true, colSpan: 2 },
@@ -110,14 +118,46 @@ export const CampaignViews = defineView({
         ],
       },
       {
-        label: 'Schedule & Budget',
+        name: 'schedule',
+        label: 'Schedule',
         columns: 2,
-        fields: ['start_date', 'end_date', 'budgeted_cost', 'actual_cost', 'expected_revenue', 'actual_revenue', 'target_size'],
+        fields: ['start_date', 'end_date'],
       },
       {
+        /**
+         * Budget & ROI — a SECTION OF ITS OWN, deliberately (#597).
+         *
+         * `budgeted_cost` and `actual_cost` are the only two campaign numbers
+         * that are manual-entry by design: nothing on the platform knows what a
+         * trade-show booth cost. They used to sit seventh and eighth in a
+         * seven-field "Schedule & Budget" row, below the dates and beside two
+         * revenue figures one of which the metric hooks own — so the two fields
+         * a marketer must type were the least visible things on the form, and
+         * `actual_cost` in particular went untyped.
+         *
+         * That is not a cosmetic complaint: `roi` divides by `actual_cost`, and
+         * its formula answers a flat `0.0` for any campaign where that field is
+         * blank. An empty cost field renders as 0% ROI on every campaign — the
+         * one number the whole Performance section exists to produce, reading
+         * as a real measurement rather than as missing input.
+         *
+         * So the costs get their own heading, and `roi` is displayed HERE with
+         * them rather than at the bottom of Performance, where its dependency
+         * on two fields three sections away was invisible. The heading matches
+         * the object's `budget` fieldGroup, so the form and the detail page
+         * agree on what this group is called.
+         */
+        name: 'budget',
+        label: 'Budget & ROI',
+        columns: 2,
+        fields: ['budgeted_cost', 'actual_cost', 'expected_revenue', 'actual_revenue', 'roi'],
+      },
+      {
+        name: 'metrics',
         label: 'Performance',
         columns: 2,
         fields: [
+          'target_size',
           'num_sent',
           'num_responses',
           'num_leads',
@@ -125,7 +165,6 @@ export const CampaignViews = defineView({
           'num_opportunities',
           'num_won_opportunities',
           'response_rate',
-          'roi',
         ],
       },
     ],

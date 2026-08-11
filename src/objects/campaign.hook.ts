@@ -4,11 +4,39 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
 import type { HookApi } from './_hook-api';
 
 /**
- * Campaign lifecycle hook.
+ * Campaign lifecycle hooks.
  *
- * - Validates start/end date ordering and prevents `in_progress` without dates.
- * - On `completed`: snapshots the lead/opportunity counts attributed to the campaign
- *   into the campaign's metric fields.
+ * - `campaign_validation` — start/end date ordering, and no `in_progress`
+ *   without both dates.
+ * - `campaign_metrics_refresh` — recompute the metric block when the campaign's
+ *   own status moves.
+ * - `campaign_attribution_refresh` — recompute it when an opportunity's campaign
+ *   attribution changes.
+ * - `campaign_lead_conversion_refresh` — promote the member rows of a
+ *   converting lead, then recompute.
+ *
+ * The membership side of the same recompute lives in `campaign_member.hook.ts`.
+ * Together these are what replaced the single completion-time snapshot (#597):
+ * every input a campaign metric derives from now has a trigger that refreshes
+ * the metric when it changes, so a LIVE campaign reports live numbers instead
+ * of zeros until the day it ends.
+ *
+ * ⚠️ WHY THE RECOMPUTE IS WRITTEN OUT FOUR TIMES.
+ *
+ * L2 hook bodies are lowered to metadata and evaluated BODY-ONLY in the QuickJS
+ * sandbox: a handler cannot reach module scope at runtime, so a shared
+ * `refreshCampaignMetrics()` import would be a free identifier — the CLI build
+ * silently declines to lower the handler, keeps it in a bundled runtime file,
+ * and the hook stops being deployable as pure metadata (the build says so in
+ * one line nobody reads). The first draft of this change did exactly that, and
+ * `test/action-sandbox.test.ts` caught it.
+ *
+ * So the arithmetic is inlined per handler, the same way `account_protection`
+ * inlines the territory table rather than importing `_territory.ts`. The
+ * duplication is NOT trusted: `test/campaign-member-lifecycle.test.ts` lowers
+ * all four bodies and asserts the recompute block is character-identical across
+ * them, so a fix landing on one copy and skipping three fails a test instead of
+ * shipping four definitions of `num_sent`.
  */
 
 const campaignValidation: Hook = {
@@ -41,79 +69,258 @@ const campaignValidation: Hook = {
   },
 };
 
-const campaignCompleted: Hook = {
-  name: 'campaign_snapshot_metrics',
+/**
+ * Recompute this campaign's metrics when its own status moves.
+ *
+ * ⚠️ RECURSION. This hook writes to the object it listens on, so its trigger
+ * has to be a condition its own write cannot satisfy. It is: the write carries
+ * the metric block and nothing else, and this fires only on a `status`
+ * TRANSITION — `input.status` present AND different from `previous.status`. A
+ * metric-only write has no `status` key at all, so the re-entry ends at the
+ * first guard. `CAMPAIGN_METRIC_WRITE_KEYS` at the bottom of this file states
+ * the other half of that contract as data the runtime test checks the recorded
+ * write against, so a future writer that adds a non-metric key to the refresh
+ * write fails a test instead of looping in production.
+ *
+ * The old `campaign_snapshot_metrics` fired on `→ completed` and nothing else,
+ * which meant a campaign reported zeros for its entire useful life and became
+ * accurate on the day everybody stopped looking at it. Completion is now simply
+ * one of the transitions this catches.
+ */
+const campaignMetricsRefresh: Hook = {
+  name: 'campaign_metrics_refresh',
   object: 'crm_campaign',
   events: ['afterUpdate'],
   priority: 800,
   async: true,
   onError: 'log',
-  description: 'On completion, snapshot attributed lead/opportunity counts and ROI metrics.',
+  description: 'Recompute the campaign metric block whenever the campaign status moves.',
   handler: async (ctx: HookContext) => {
     const { input } = ctx;
     const previous = ctx.previous;
-    if (input.status !== 'completed' || previous?.status === 'completed') return;
+    // The recursion guard, stated positively: only a status TRANSITION runs.
+    if (typeof input.status !== 'string') return;
+    if (previous && input.status === previous.status) return;
     const api = ctx.api as HookApi | undefined;
     if (!api) return;
-    const id =
+    const campaignId =
       (typeof input.id === 'string' && input.id) ||
-      (typeof previous?.id === 'string' ? (previous.id as string) : undefined);
-    if (!id) return;
-
-    // Lead attribution goes through the `crm_campaign_member` junction —
-    // `crm_lead` has NO `campaign` field, so the old direct-count queries
-    // (`crm_lead.count({ campaign: id })`) matched nothing and every lead
-    // metric snapshot was silently zero.
-    const [memberRows, opportunities, wonOpps, wonOppRecords] = await Promise.all([
-      api.object('crm_campaign_member').find({
-        where: { crm_campaign: id },
-        fields: ['crm_lead', 'status'],
-        top: 5000,
-      }),
-      api.object('crm_opportunity').count({ where: { crm_campaign: id } }),
-      api.object('crm_opportunity').count({ where: { crm_campaign: id, stage: 'closed_won' } }),
-      api.object('crm_opportunity').find({
-        where: { crm_campaign: id, stage: 'closed_won' },
-        fields: ['amount'],
-        top: 5000,
-      }),
-    ]);
-
-    const members = memberRows.length;
-    const responded = memberRows.filter((r) => r.status === 'responded').length;
-    const leadIds = Array.from(
-      new Set(
-        memberRows
-          .map((r) => (typeof r.crm_lead === 'string' ? r.crm_lead : ''))
-          .filter(Boolean),
-      ),
-    );
-    const convertedLeads =
-      leadIds.length > 0
+      (typeof previous?.id === 'string' ? (previous.id as string) : '');
+    if (!campaignId) return;
+    for (const id of [campaignId]) {
+      // ── recompute ── identical in all four refresh hooks; see the header.
+      const memberRows = await api.object('crm_campaign_member').find({
+        where: { crm_campaign: id }, fields: ['crm_lead', 'status'], top: 5000,
+      });
+      const leadIds = Array.from(new Set(
+        memberRows.map((r) => (typeof r.crm_lead === 'string' ? r.crm_lead : '')).filter(Boolean),
+      ));
+      const convertedLeads = leadIds.length > 0
         ? await api.object('crm_lead').count({ where: { id: { $in: leadIds }, is_converted: true } })
         : 0;
-
-    const actualRevenue = wonOppRecords.reduce((sum, row) => {
-      const amt = typeof row.amount === 'number' ? row.amount : Number(row.amount) || 0;
-      return sum + amt;
-    }, 0);
-
-    await api.object('crm_campaign').update(
-      {
+      const numOpportunities = await api.object('crm_opportunity').count({ where: { crm_campaign: id } });
+      const numWon = await api.object('crm_opportunity').count({ where: { crm_campaign: id, stage: 'closed_won' } });
+      const wonRows = await api.object('crm_opportunity').find({
+        where: { crm_campaign: id, stage: 'closed_won' }, fields: ['amount'], top: 5000,
+      });
+      const actualRevenue = wonRows.reduce(
+        (sum, row) => sum + (typeof row.amount === 'number' ? row.amount : Number(row.amount) || 0), 0,
+      );
+      await api.object('crm_campaign').update({
         id,
+        num_sent: memberRows.length,
+        num_responses: memberRows.filter((r) => r.status === 'responded' || r.status === 'converted').length,
         num_leads: leadIds.length,
         num_converted_leads: convertedLeads,
-        num_opportunities: opportunities,
-        num_won_opportunities: wonOpps,
-        // "Total members enrolled" — the single definition of num_sent. The old
-        // `sent || members` under-counted as members progressed past `sent`.
-        num_sent: members,
-        num_responses: responded,
+        num_opportunities: numOpportunities,
+        num_won_opportunities: numWon,
         actual_revenue: actualRevenue,
-      },
-      { where: { id } },
-    );
+      }, { where: { id } });
+      // ── /recompute ──
+    }
   },
 };
 
-export default [campaignValidation, campaignCompleted];
+/**
+ * Recompute when an opportunity's campaign attribution changes.
+ *
+ * `num_opportunities`, `num_won_opportunities` and `actual_revenue` derive from
+ * opportunities, not from members — so the membership trigger alone would leave
+ * exactly the three metrics `roi` is built on stale. Insert / update / delete,
+ * and both sides of a re-attribution (old and new campaign), the same way the
+ * line-item rollup handles re-parenting.
+ *
+ * Declared here rather than in `opportunity.hook.ts` on purpose: it is campaign
+ * arithmetic that happens to be triggered by an opportunity write, and the
+ * hooks barrel flattens each `*.hook.ts` default export regardless of which
+ * object each entry names.
+ */
+const campaignAttributionRefresh: Hook = {
+  name: 'campaign_attribution_refresh',
+  object: 'crm_opportunity',
+  events: ['afterInsert', 'afterUpdate', 'afterDelete'],
+  priority: 810,
+  async: true,
+  onError: 'log',
+  description: 'Recompute campaign metrics when an opportunity’s campaign attribution changes.',
+  handler: async (ctx: HookContext) => {
+    const api = ctx.api as HookApi | undefined;
+    if (!api) return;
+    const { input } = ctx;
+    const previous = ctx.previous;
+    const campaignIds = Array.from(new Set([
+      typeof input?.crm_campaign === 'string' ? input.crm_campaign : '',
+      typeof previous?.crm_campaign === 'string' ? (previous.crm_campaign as string) : '',
+    ].filter(Boolean)));
+    for (const id of campaignIds) {
+      // ── recompute ── identical in all four refresh hooks; see the header.
+      const memberRows = await api.object('crm_campaign_member').find({
+        where: { crm_campaign: id }, fields: ['crm_lead', 'status'], top: 5000,
+      });
+      const leadIds = Array.from(new Set(
+        memberRows.map((r) => (typeof r.crm_lead === 'string' ? r.crm_lead : '')).filter(Boolean),
+      ));
+      const convertedLeads = leadIds.length > 0
+        ? await api.object('crm_lead').count({ where: { id: { $in: leadIds }, is_converted: true } })
+        : 0;
+      const numOpportunities = await api.object('crm_opportunity').count({ where: { crm_campaign: id } });
+      const numWon = await api.object('crm_opportunity').count({ where: { crm_campaign: id, stage: 'closed_won' } });
+      const wonRows = await api.object('crm_opportunity').find({
+        where: { crm_campaign: id, stage: 'closed_won' }, fields: ['amount'], top: 5000,
+      });
+      const actualRevenue = wonRows.reduce(
+        (sum, row) => sum + (typeof row.amount === 'number' ? row.amount : Number(row.amount) || 0), 0,
+      );
+      await api.object('crm_campaign').update({
+        id,
+        num_sent: memberRows.length,
+        num_responses: memberRows.filter((r) => r.status === 'responded' || r.status === 'converted').length,
+        num_leads: leadIds.length,
+        num_converted_leads: convertedLeads,
+        num_opportunities: numOpportunities,
+        num_won_opportunities: numWon,
+        actual_revenue: actualRevenue,
+      }, { where: { id } });
+      // ── /recompute ──
+    }
+  },
+};
+
+/**
+ * Promote the member rows of a converting lead, then recompute.
+ *
+ * This hook is `converted`'s ONLY writer, and without it that status option
+ * would be exactly the kind of inert vocabulary #597 removed the tracker states
+ * for — a value the picklist offers, the ROI surfaces segment by, and nothing
+ * produces. Conversion is the one campaign outcome the app can observe by
+ * itself: `crm_lead.is_converted` flips (the `lead_conversion` flow, or the
+ * convert action), and every campaign that lead was enrolled in has just
+ * recorded a conversion.
+ *
+ * Only members still `sent` or `responded` are promoted. An `unsubscribed`
+ * member is NOT: that person asked to be left alone, and overwriting their
+ * opt-out state with a marketing outcome is precisely the kind of quiet rewrite
+ * `campaign_member_optout_sync` exists to prevent.
+ *
+ * `num_converted_leads` also counts `crm_lead.is_converted` across the
+ * membership, so this same event is the metric's trigger — a lead can sit in
+ * several campaigns and every one of them is refreshed.
+ */
+const campaignLeadConversionRefresh: Hook = {
+  name: 'campaign_lead_conversion_refresh',
+  object: 'crm_lead',
+  events: ['afterUpdate'],
+  priority: 810,
+  async: true,
+  onError: 'log',
+  description: 'Promote campaign members of a converting lead and recompute campaign metrics.',
+  handler: async (ctx: HookContext) => {
+    const api = ctx.api as HookApi | undefined;
+    if (!api) return;
+    const { input } = ctx;
+    const previous = ctx.previous;
+    if (input?.is_converted !== true) return;
+    if (previous?.is_converted === true) return;
+    const leadId =
+      (typeof input?.id === 'string' && input.id) ||
+      (typeof previous?.id === 'string' ? (previous.id as string) : '');
+    if (!leadId) return;
+    const memberships = await api.object('crm_campaign_member').find({
+      where: { crm_lead: leadId }, fields: ['crm_campaign', 'status'], top: 500,
+    });
+    for (const m of memberships) {
+      const memberId = typeof m.id === 'string' ? m.id : '';
+      if (!memberId) continue;
+      if (m.status !== 'sent' && m.status !== 'responded') continue;
+      await api.object('crm_campaign_member').update(
+        { id: memberId, status: 'converted' },
+        { where: { id: memberId } },
+      );
+    }
+    const campaignIds = Array.from(new Set(
+      memberships.map((m) => (typeof m.crm_campaign === 'string' ? m.crm_campaign : '')).filter(Boolean),
+    ));
+    for (const id of campaignIds) {
+      // ── recompute ── identical in all four refresh hooks; see the header.
+      const memberRows = await api.object('crm_campaign_member').find({
+        where: { crm_campaign: id }, fields: ['crm_lead', 'status'], top: 5000,
+      });
+      const leadIds = Array.from(new Set(
+        memberRows.map((r) => (typeof r.crm_lead === 'string' ? r.crm_lead : '')).filter(Boolean),
+      ));
+      const convertedLeads = leadIds.length > 0
+        ? await api.object('crm_lead').count({ where: { id: { $in: leadIds }, is_converted: true } })
+        : 0;
+      const numOpportunities = await api.object('crm_opportunity').count({ where: { crm_campaign: id } });
+      const numWon = await api.object('crm_opportunity').count({ where: { crm_campaign: id, stage: 'closed_won' } });
+      const wonRows = await api.object('crm_opportunity').find({
+        where: { crm_campaign: id, stage: 'closed_won' }, fields: ['amount'], top: 5000,
+      });
+      const actualRevenue = wonRows.reduce(
+        (sum, row) => sum + (typeof row.amount === 'number' ? row.amount : Number(row.amount) || 0), 0,
+      );
+      await api.object('crm_campaign').update({
+        id,
+        num_sent: memberRows.length,
+        num_responses: memberRows.filter((r) => r.status === 'responded' || r.status === 'converted').length,
+        num_leads: leadIds.length,
+        num_converted_leads: convertedLeads,
+        num_opportunities: numOpportunities,
+        num_won_opportunities: numWon,
+        actual_revenue: actualRevenue,
+      }, { where: { id } });
+      // ── /recompute ──
+    }
+  },
+};
+
+/**
+ * The metric block these hooks own. Nothing else may write these columns.
+ *
+ * Module scope, deliberately OUTSIDE every handler: this is read by the tests,
+ * never by a sandboxed body — a body that referenced it would stop lowering
+ * (see the header).
+ */
+export const CAMPAIGN_METRIC_FIELDS: readonly string[] = [
+  'num_sent',
+  'num_responses',
+  'num_leads',
+  'num_converted_leads',
+  'num_opportunities',
+  'num_won_opportunities',
+  'actual_revenue',
+];
+
+/**
+ * The recursion contract of `campaign_metrics_refresh`, asserted rather than
+ * described: the refresh write may carry the metric block and `id`, nothing
+ * else. A comment cannot fail; this is checked against the recorded write.
+ */
+export const CAMPAIGN_METRIC_WRITE_KEYS: readonly string[] = ['id', ...CAMPAIGN_METRIC_FIELDS];
+
+export default [
+  campaignValidation,
+  campaignMetricsRefresh,
+  campaignAttributionRefresh,
+  campaignLeadConversionRefresh,
+];

@@ -30,8 +30,10 @@ export const Campaign = ObjectSchema.create({
   // Every other business object with a detail page groups its fields; campaign
   // was one of the two that did not, so its detail page fell back to one flat
   // 30-field grid with the ROI formulas sitting next to the campaign name. The
-  // keys mirror the sections the campaign form already uses (Overview /
-  // Schedule & Budget / Performance) so the two surfaces agree.
+  // labels mirror the sections the campaign form uses (Campaign Information /
+  // Schedule / Budget & ROI / Performance) so the two surfaces agree — the
+  // form's old three-section shape buried the two manual-entry cost fields in a
+  // combined "Schedule & Budget" row and was split to match this one (#597).
   fieldGroups: [
     { key: 'basic',      label: 'Campaign Information', icon: 'megaphone' },
     { key: 'schedule',   label: 'Schedule',             icon: 'calendar' },

@@ -203,6 +203,13 @@ export const zhCN: TranslationData = {
             body: { label: '正文' },
           },
         },
+        add_contact_to_campaign: {
+          label: '加入营销活动',
+          successMessage: '联系人已加入营销活动！',
+          params: {
+            crm_campaign: { label: '营销活动' },
+          },
+        },
       },
       _sections: {
         identity: { label: '身份信息' },
@@ -824,8 +831,8 @@ export const zhCN: TranslationData = {
       },
       _actions: {
         enroll_leads: {
-          label: '批量加入线索',
-          successMessage: '符合条件的线索已加入营销活动。',
+          label: '批量加入成员',
+          successMessage: '符合条件的成员已加入营销活动。',
         },
       },
     },
@@ -1130,20 +1137,23 @@ export const zhCN: TranslationData = {
         status: {
           label: '状态',
           options: {
-            sent: '已发送', opened: '已打开', clicked: '已点击',
-            responded: '已响应', converted: '已转化', bounced: '已退回',
-            unsubscribed: '已退订',
+            sent: '已发送', responded: '已响应',
+            converted: '已转化', unsubscribed: '已退订',
           },
         },
         added_date: { label: '加入时间' },
-        first_opened_date: { label: '首次打开' },
-        first_clicked_date: { label: '首次点击' },
         response_date: { label: '响应时间' },
         has_responded: { label: '已响应' },
       },
       _sections: {
         basic: { label: '基本信息' },
         response: { label: '响应跟踪' },
+      },
+      _actions: {
+        mark_responded: {
+          label: '标记为已响应',
+          successMessage: '已记录该营销活动成员的响应。',
+        },
       },
     },
 

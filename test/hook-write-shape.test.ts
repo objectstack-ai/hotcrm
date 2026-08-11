@@ -173,8 +173,18 @@ const CASES: Record<string, WriteCase> = {
     ],
   },
 
-  'campaign_snapshot_metrics — the completion snapshot': {
-    hook: 'campaign_snapshot_metrics',
+  // The four #597 metric-refresh hooks. `campaign_snapshot_metrics` used to sit
+  // here alone, firing on the `→ completed` transition; it was replaced by a
+  // refresh that runs on every input change, and each of the four triggers
+  // reaches the SAME inlined write, so each needs its own call-shape case.
+  //
+  // Only the fields the stub engine can compute exactly are asserted — its
+  // `where` matcher is equality-only, so the `$in` lead count comes back 0. The
+  // metric arithmetic is covered in `hooks-runtime*.test.ts` and
+  // `campaign-member-lifecycle.test.ts`; what is on trial in this file is the
+  // call shape.
+  'campaign_metrics_refresh — the status-transition refresh': {
+    hook: 'campaign_metrics_refresh',
     event: 'afterUpdate',
     input: { id: 'cmp_1', status: 'completed' },
     previous: { id: 'cmp_1', status: 'in_progress' },
@@ -192,12 +202,83 @@ const CASES: Record<string, WriteCase> = {
       {
         object: 'crm_campaign',
         id: 'cmp_1',
-        // Only the fields the stub engine can compute exactly are asserted here
-        // — its `where` matcher is equality-only, so the `$in` lead count comes
-        // back 0. The metric arithmetic is covered in `hooks-runtime*.test.ts`;
-        // what is on trial in this file is the call shape.
         doc: { num_opportunities: 1, num_won_opportunities: 1, num_sent: 1, actual_revenue: 1000 },
       },
+    ],
+  },
+
+  'campaign_member_metrics_refresh — the live membership refresh': {
+    hook: 'campaign_member_metrics_refresh',
+    event: 'afterInsert',
+    input: { id: 'cm_1', crm_campaign: 'cmp_1', crm_lead: 'lead_1', status: 'sent' },
+    seed: {
+      crm_campaign: [{ id: 'cmp_1', status: 'in_progress' }],
+      crm_campaign_member: [
+        { id: 'cm_1', crm_campaign: 'cmp_1', crm_lead: 'lead_1', status: 'sent' },
+      ],
+      crm_opportunity: [],
+      crm_lead: [{ id: 'lead_1', is_converted: false }],
+    },
+    writes: [{ object: 'crm_campaign', id: 'cmp_1', doc: { num_sent: 1, num_responses: 0 } }],
+  },
+
+  'campaign_member_optout_sync — the unsubscribe round-trip': {
+    hook: 'campaign_member_optout_sync',
+    event: 'afterUpdate',
+    input: { id: 'cm_1', crm_campaign: 'cmp_1', crm_lead: 'lead_1', status: 'unsubscribed' },
+    previous: { id: 'cm_1', crm_campaign: 'cmp_1', crm_lead: 'lead_1', status: 'sent' },
+    seed: { crm_lead: [{ id: 'lead_1', email_opt_out: false }] },
+    writes: [{ object: 'crm_lead', id: 'lead_1', doc: { email_opt_out: true } }],
+  },
+
+  // The contact branch of the same hook is a SECOND update() call site — the
+  // two are not an if/else, so a row carrying both lookups opts out both people
+  // rather than half of them, and each branch needs its own case here.
+  'campaign_member_optout_sync — the contact branch': {
+    hook: 'campaign_member_optout_sync',
+    event: 'afterUpdate',
+    input: { id: 'cm_2', crm_campaign: 'cmp_1', crm_contact: 'con_1', status: 'unsubscribed' },
+    previous: { id: 'cm_2', crm_campaign: 'cmp_1', crm_contact: 'con_1', status: 'sent' },
+    seed: { crm_contact: [{ id: 'con_1', email_opt_out: false }] },
+    writes: [{ object: 'crm_contact', id: 'con_1', doc: { email_opt_out: true } }],
+  },
+
+  'campaign_attribution_refresh — the opportunity side': {
+    hook: 'campaign_attribution_refresh',
+    event: 'afterUpdate',
+    input: { id: 'opp_1', crm_campaign: 'cmp_1', stage: 'closed_won' },
+    previous: { id: 'opp_1', crm_campaign: 'cmp_1', stage: 'negotiation' },
+    seed: {
+      crm_campaign: [{ id: 'cmp_1', status: 'in_progress' }],
+      crm_campaign_member: [],
+      crm_opportunity: [{ id: 'opp_1', crm_campaign: 'cmp_1', stage: 'closed_won', amount: 250 }],
+      crm_lead: [],
+    },
+    writes: [
+      {
+        object: 'crm_campaign',
+        id: 'cmp_1',
+        doc: { num_opportunities: 1, num_won_opportunities: 1, actual_revenue: 250 },
+      },
+    ],
+  },
+
+  'campaign_lead_conversion_refresh — promotes the member, then refreshes': {
+    hook: 'campaign_lead_conversion_refresh',
+    event: 'afterUpdate',
+    input: { id: 'lead_1', is_converted: true },
+    previous: { id: 'lead_1', is_converted: false },
+    seed: {
+      crm_campaign: [{ id: 'cmp_1', status: 'in_progress' }],
+      crm_campaign_member: [
+        { id: 'cm_1', crm_campaign: 'cmp_1', crm_lead: 'lead_1', status: 'responded' },
+      ],
+      crm_opportunity: [],
+      crm_lead: [{ id: 'lead_1', is_converted: true }],
+    },
+    writes: [
+      { object: 'crm_campaign_member', id: 'cm_1', doc: { status: 'converted' } },
+      { object: 'crm_campaign', id: 'cmp_1', doc: { num_sent: 1, num_responses: 1 } },
     ],
   },
 

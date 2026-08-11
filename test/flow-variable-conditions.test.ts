@@ -719,7 +719,12 @@ describe('the two defects, reproduced end-to-end', () => {
 
       const started = await b.engine.execute('campaign_enrollment', asUser({ recordId: camp.id }));
       expect(started.status).toBe('paused');
-      const done = await b.engine.resume(started.runId, { variables: { leadStatus: 'new' } });
+      const done = await b.engine.resume(started.runId, {
+        // All three screen fields — the enrollment screen gained `memberSource`
+        // and `contactDepartment` in #597 and the engine holds a resume to the
+        // screen's declared field contract (#4477).
+        variables: { memberSource: 'leads', leadStatus: 'new', contactDepartment: 'executive' },
+      });
       // Before the guard: `condition failed to evaluate as CEL: No such key: status`.
       expect(done.error ?? null).toBeNull();
       expect(done.success).not.toBe(false);
@@ -741,7 +746,12 @@ describe('the two defects, reproduced end-to-end', () => {
         status: 'new', email: 'jo@acme.com', email_opt_out: false, is_converted: false,
       });
       const started = await b.engine.execute('campaign_enrollment', asUser({ recordId: camp.id }));
-      const done = await b.engine.resume(started.runId, { variables: { leadStatus: 'new' } });
+      const done = await b.engine.resume(started.runId, {
+        // All three screen fields — the enrollment screen gained `memberSource`
+        // and `contactDepartment` in #597 and the engine holds a resume to the
+        // screen's declared field contract (#4477).
+        variables: { memberSource: 'leads', leadStatus: 'new', contactDepartment: 'executive' },
+      });
       expect(done.error ?? null).toBeNull();
       const members = await api.object('crm_campaign_member').find({ where: { crm_campaign: camp.id } });
       expect(members.length, 'the guard suppressed a legitimate enrolment').toBe(1);

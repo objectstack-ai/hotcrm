@@ -18,8 +18,8 @@ loader registers:
 
 ```text
 HotCRM v2.2.2
-Data: 17 Objects  344 Fields
-UI: 1 Apps  14 Views  8 Pages  5 Dashboards  10 Reports  26 Actions
+Data: 17 Objects  342 Fields
+UI: 1 Apps  14 Views  8 Pages  5 Dashboards  10 Reports  28 Actions
 Logic: 26 Flows
 Security: 12 Positions  6 Permissions
 ```
@@ -30,7 +30,7 @@ Validation command:
 pnpm validate
 ```
 
-> **`26 Actions` is the REGISTRATION count, not a count of distinct action
+> **`28 Actions` is the REGISTRATION count, not a count of distinct action
 > definitions.** One action bound to five objects registers five times, so the
 > source tree's 6 `*.actions.ts` files and this figure answer different
 > questions. The registration count is the calibre this repo states to readers
@@ -39,6 +39,12 @@ pnpm validate
 > only one a guard can re-derive from the stack instead of trusting a
 > hand-maintained figure. The README states the same 26, pinned by
 > `test/docs-drift.test.ts`.
+>
+> The two figures moved together in #597: `crm_campaign_member` gave up the
+> `first_opened_date` / `first_clicked_date` stamps no email-tracking engine
+> exists to write (344 → 342 fields), and gained the two writers that make the
+> surviving lifecycle honest — `mark_responded` on the member and
+> `add_contact_to_campaign` on the contact (26 → 28 actions).
 
 ## Local Checks
 

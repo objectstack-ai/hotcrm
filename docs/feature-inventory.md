@@ -174,12 +174,13 @@
 | --- | --- | --- | --- |
 | MKT-001 | 活动对象 | 市场活动(`crm_campaign`):CPG-{0000} 编号,类型/渠道,预算四件套与 `response_rate`/`roi` 公式,父活动层级,全组织可读 | `src/objects/campaign.object.ts` |
 | MKT-002 | 活动校验 | 结束日须晚于开始日、进入 in_progress 须起止日齐备、实际成本超预算告警 | `src/objects/campaign.hook.ts` + validations |
-| MKT-003 | 活动成员联结对象 | `crm_campaign_member`:挂 Lead 或 Contact(二选一强制),7 状态响应生命周期(sent→…→converted/bounced/unsubscribed),受父活动控共享;人物删除级联(GDPR) | `src/objects/campaign_member.object.ts` |
-| MKT-004 | 批量入组线索 | 屏幕流:按状态筛选未转化、有邮箱、未退订的线索(上限 1000),去重后批量插入成员并盖 `added_date` | `src/flows/campaign-enrollment.flow.ts` + `src/actions/campaign.actions.ts`(`enroll_leads`) |
-| MKT-005 | 活动指标快照 | 活动完成时一次性经成员表归因统计:入组数/响应数/线索数/转化数/商机数/赢单数/实际营收 | `src/objects/campaign.hook.ts`(`campaign_snapshot_metrics`) |
-| MKT-006 | 活动自动完结 | 每日 02:00 把过了 `end_date` 的 in_progress 活动置 completed(随后触发指标快照) | `src/flows/campaign-completion.flow.ts` |
+| MKT-003 | 活动成员联结对象 | `crm_campaign_member`:挂 Lead 或 Contact(二选一强制),4 状态响应生命周期(sent → responded / converted / unsubscribed —— 每个值都有真实写入方),受父活动控共享;人物删除级联(GDPR) | `src/objects/campaign_member.object.ts` + `campaign_member.hook.ts` |
+| MKT-004 | 批量入组成员 | 屏幕流:线索按状态、联系人按部门筛选(均要求有邮箱、未退订;线索另须未转化,上限 1000),去重后批量插入成员并盖 `added_date`;单条加入走 `create_campaign`(线索)/`add_contact_to_campaign`(联系人) | `src/flows/campaign-enrollment.flow.ts` + `src/actions/campaign.actions.ts`(`enroll_leads`) |
+| MKT-005 | 活动指标实时重算 | 成员变更、商机归因变更、线索转化、活动状态流转四类事件各自触发一次全量重算(入组数/响应数/线索数/转化数/商机数/赢单数/实际营收);不再是「完成时快照」,进行中的活动即时出数 | `src/objects/_campaign-metrics.ts` + `campaign.hook.ts` + `campaign_member.hook.ts` |
+| MKT-006 | 活动自动完结 | 每日 02:00 把过了 `end_date` 的 in_progress 活动置 completed(状态流转随即触发一次指标重算) | `src/flows/campaign-completion.flow.ts` |
 | MKT-007 | 活动时间可视化 | 全仓唯一同时具备 gantt/calendar/timeline 三种时间视图的对象 | `src/views/campaign.view.ts` |
 | MKT-008 | 营销协作权限 | planning/in_progress 活动共享给营销经理/总监(可编辑);marketing_user 经 RLS 放宽可编辑他人活动与系统创建的成员行 | `src/sharing/campaign.sharing.ts` + `src/profiles/marketing-user.profile.ts` |
+| MKT-009 | 退订闭环 | 成员置 `unsubscribed` 时经 hook 回写该 lead/contact 的 `email_opt_out`,使入组流与发信动作既有的退订尊重形成闭环;`mark_responded` 动作写 `responded`/`response_date`/`has_responded` | `src/objects/campaign_member.hook.ts` + `src/actions/campaign.actions.ts`(`mark_responded`) |
 
 ## FCT — 预测与销售业绩
 

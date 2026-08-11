@@ -216,6 +216,13 @@ export const en: TranslationData = {
             body: { label: 'Body' },
           },
         },
+        add_contact_to_campaign: {
+          label: 'Add to Campaign',
+          successMessage: 'Contacts added to campaign!',
+          params: {
+            crm_campaign: { label: 'Campaign' },
+          },
+        },
       },
     },
 
@@ -1046,8 +1053,8 @@ export const en: TranslationData = {
       },
       _actions: {
         enroll_leads: {
-          label: 'Enroll Leads',
-          successMessage: 'Eligible leads enrolled in campaign.',
+          label: 'Enroll Members',
+          successMessage: 'Eligible members enrolled in campaign.',
         },
       },
     },
@@ -1157,20 +1164,23 @@ export const en: TranslationData = {
         status: {
           label: 'Status',
           options: {
-            sent: 'Sent', opened: 'Opened', clicked: 'Clicked',
-            responded: 'Responded', converted: 'Converted', bounced: 'Bounced',
-            unsubscribed: 'Unsubscribed',
+            sent: 'Sent', responded: 'Responded',
+            converted: 'Converted', unsubscribed: 'Unsubscribed',
           },
         },
         added_date: { label: 'Added Date' },
-        first_opened_date: { label: 'First Opened' },
-        first_clicked_date: { label: 'First Clicked' },
         response_date: { label: 'Response Date' },
         has_responded: { label: 'Has Responded' },
       },
       _sections: {
         basic: { label: 'Basic Information' },
         response: { label: 'Response Tracking' },
+      },
+      _actions: {
+        mark_responded: {
+          label: 'Mark Responded',
+          successMessage: 'Response recorded on this campaign member.',
+        },
       },
     },
 

@@ -13,6 +13,7 @@ import type { Hook } from '@objectstack/spec/data';
 
 import accountHook from '../objects/account.hook';
 import campaignHook from '../objects/campaign.hook';
+import campaignMemberHook from '../objects/campaign_member.hook';
 import caseHook from '../objects/case.hook';
 import contactHook from '../objects/contact.hook';
 import contractHook from '../objects/contract.hook';
@@ -30,6 +31,7 @@ import taskHook from '../objects/task.hook';
 const entries: Array<Hook | Hook[]> = [
   accountHook,
   campaignHook,
+  campaignMemberHook,
   caseHook,
   contactHook,
   contractHook,

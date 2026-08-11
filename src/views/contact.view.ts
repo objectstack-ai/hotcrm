@@ -28,6 +28,12 @@ export const ContactViews = defineView({
     sort: [{ field: 'last_name', order: 'asc' }],
     grouping: { fields: [{ field: 'crm_account', order: 'asc', collapsed: true }] },
     selection: { type: 'multiple' },
+    // The selection-bar entry point for campaigning at existing customers
+    // (#597), mirroring `bulkActions: ['create_campaign']` on the lead grid.
+    // The bare-string form fans the action out once per selected row; do not
+    // add strings for `mark_primary` / `send_email`, which declare
+    // `locations: ['list_item']` and are auto-injected into the row menu.
+    bulkActions: ['add_contact_to_campaign'],
     pagination: { pageSize: 50, pageSizeOptions: [25, 50, 100] },
     exportOptions: ['csv', 'xlsx'],
     appearance: {

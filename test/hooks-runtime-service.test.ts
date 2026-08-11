@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import campaignHooks from '../src/objects/campaign.hook';
+import campaignHooks, { CAMPAIGN_METRIC_WRITE_KEYS } from '../src/objects/campaign.hook';
 import caseHooks from '../src/objects/case.hook';
 import contractHooks from '../src/objects/contract.hook';
 import forecastHooks from '../src/objects/forecast.hook';
@@ -298,40 +298,46 @@ describe('campaign_validation', () => {
   });
 });
 
-describe('campaign_snapshot_metrics', () => {
-  const hook = hookNamed(campaignHooks, 'campaign_snapshot_metrics');
+describe('campaign_metrics_refresh', () => {
+  const hook = hookNamed(campaignHooks, 'campaign_metrics_refresh');
 
-  const complete = (h: ReturnType<typeof makeHarness>) =>
+  const transition = (
+    h: ReturnType<typeof makeHarness>,
+    status = 'completed',
+    from = 'in_progress',
+  ) =>
     hook.handler(makeCtx({
       event: 'afterUpdate',
-      input: { id: 'cmp1', status: 'completed' },
-      previous: { id: 'cmp1', status: 'in_progress' },
+      input: { id: 'cmp1', status },
+      previous: { id: 'cmp1', status: from },
       user: USER,
       api: h.api,
     }));
 
+  const populated = () => makeHarness({
+    crm_campaign: [{ id: 'cmp1', status: 'in_progress' }],
+    crm_campaign_member: [
+      { id: 'm1', crm_campaign: 'cmp1', crm_lead: 'l1', status: 'responded' },
+      { id: 'm2', crm_campaign: 'cmp1', crm_lead: 'l2', status: 'sent' },
+      { id: 'm3', crm_campaign: 'cmp1', crm_lead: 'l2', status: 'responded' }, // dup lead
+      { id: 'm4', crm_campaign: 'other', crm_lead: 'l9', status: 'responded' },
+    ],
+    crm_lead: [
+      { id: 'l1', is_converted: true },
+      { id: 'l2', is_converted: false },
+    ],
+    crm_opportunity: [
+      { id: 'o1', crm_campaign: 'cmp1', stage: 'closed_won', amount: 100 },
+      { id: 'o2', crm_campaign: 'cmp1', stage: 'proposal', amount: 50 },
+      { id: 'o3', crm_campaign: 'cmp1', stage: 'closed_won', amount: 400 },
+    ],
+  });
+
   it('counts leads through the campaign_member junction, not a lead.campaign field', async () => {
     // `crm_lead` has NO `campaign` field. The old direct-count queries matched
-    // nothing, so every lead metric snapshot was silently zero.
-    const h = makeHarness({
-      crm_campaign: [{ id: 'cmp1', status: 'completed' }],
-      crm_campaign_member: [
-        { id: 'm1', crm_campaign: 'cmp1', crm_lead: 'l1', status: 'responded' },
-        { id: 'm2', crm_campaign: 'cmp1', crm_lead: 'l2', status: 'sent' },
-        { id: 'm3', crm_campaign: 'cmp1', crm_lead: 'l2', status: 'responded' }, // dup lead
-        { id: 'm4', crm_campaign: 'other', crm_lead: 'l9', status: 'responded' },
-      ],
-      crm_lead: [
-        { id: 'l1', is_converted: true },
-        { id: 'l2', is_converted: false },
-      ],
-      crm_opportunity: [
-        { id: 'o1', crm_campaign: 'cmp1', stage: 'closed_won', amount: 100 },
-        { id: 'o2', crm_campaign: 'cmp1', stage: 'proposal', amount: 50 },
-        { id: 'o3', crm_campaign: 'cmp1', stage: 'closed_won', amount: 400 },
-      ],
-    });
-    await complete(h);
+    // nothing, so every lead metric was silently zero.
+    const h = populated();
+    await transition(h);
 
     const campaign = h.rows('crm_campaign')[0];
     expect(campaign.num_leads, 'distinct leads via the junction').toBe(2);
@@ -345,25 +351,212 @@ describe('campaign_snapshot_metrics', () => {
     expect(campaign.num_responses).toBe(2);
   });
 
-  it('snapshots zeroes rather than skipping when a campaign has no members', async () => {
+  it('writes zeroes rather than skipping when a campaign has no members', async () => {
     const h = makeHarness({
-      crm_campaign: [{ id: 'cmp1', status: 'completed' }],
+      crm_campaign: [{ id: 'cmp1', status: 'in_progress' }],
       crm_campaign_member: [],
       crm_lead: [],
       crm_opportunity: [],
     });
-    await complete(h);
+    await transition(h);
     const campaign = h.rows('crm_campaign')[0];
     expect(campaign.num_leads).toBe(0);
     expect(campaign.actual_revenue).toBe(0);
   });
 
-  it('is a no-op unless the campaign just became completed', async () => {
+  /**
+   * #597: the trigger is a status TRANSITION, not the `→ completed` one.
+   *
+   * The hook this replaced fired only on the move into `completed`, which meant
+   * a campaign reported zeros for its entire useful life. Pinning the
+   * in_progress transition is what separates "recompute" from "snapshot on
+   * completion" — the old handler was green on the completed case too.
+   */
+  it('recomputes on a transition that is not completion at all', async () => {
+    const h = populated();
+    h.rows('crm_campaign')[0].status = 'planning';
+    await transition(h, 'in_progress', 'planning');
+    expect(h.rows('crm_campaign')[0].num_sent, 'a live campaign reports live numbers').toBe(3);
+  });
+
+  it('is a no-op when the status did not move', async () => {
     const h = makeHarness({ crm_campaign: [{ id: 'cmp1' }] });
     await hook.handler(makeCtx({
       event: 'afterUpdate',
       input: { id: 'cmp1', status: 'completed' },
       previous: { id: 'cmp1', status: 'completed' },
+      user: USER,
+      api: h.api,
+    }));
+    expect(h.calls).toHaveLength(0);
+  });
+
+  /**
+   * THE RECURSION GUARD, both halves.
+   *
+   * This hook writes `crm_campaign` and listens on `crm_campaign`, so a refresh
+   * write that carried `status` would re-enter itself forever. Half one: the
+   * handler ignores a write with no status key. Half two: the write it emits
+   * carries only the metric block, which is what makes half one sufficient.
+   */
+  it('ignores a metric-only write, and emits one', async () => {
+    const h = populated();
+    await hook.handler(makeCtx({
+      event: 'afterUpdate',
+      input: { id: 'cmp1', num_sent: 3 },
+      previous: { id: 'cmp1', status: 'in_progress' },
+      user: USER,
+      api: h.api,
+    }));
+    expect(h.calls, 'a metric-only write must not re-enter the refresh').toHaveLength(0);
+
+    await transition(h);
+    const writes = h.callsFor('crm_campaign', 'update');
+    expect(writes).toHaveLength(1);
+    const doc = writes[0].args[0] as Rec;
+    expect(
+      Object.keys(doc).filter((k) => !CAMPAIGN_METRIC_WRITE_KEYS.includes(k)),
+      'the refresh write must carry nothing that could re-trigger it',
+    ).toEqual([]);
+  });
+});
+
+describe('campaign_attribution_refresh', () => {
+  const hook = hookNamed(campaignHooks, 'campaign_attribution_refresh');
+
+  /**
+   * `num_opportunities` / `num_won_opportunities` / `actual_revenue` derive from
+   * opportunities, so the membership trigger alone would leave exactly the
+   * three metrics `roi` is built on stale.
+   */
+  it('recomputes the campaign when an opportunity is won', async () => {
+    const h = makeHarness({
+      crm_campaign: [{ id: 'cmp1', status: 'in_progress', actual_revenue: 0 }],
+      crm_campaign_member: [{ id: 'm1', crm_campaign: 'cmp1', crm_lead: 'l1', status: 'responded' }],
+      crm_lead: [{ id: 'l1', is_converted: false }],
+      crm_opportunity: [{ id: 'o1', crm_campaign: 'cmp1', stage: 'closed_won', amount: 900 }],
+    });
+    await hook.handler(makeCtx({
+      event: 'afterUpdate',
+      input: { id: 'o1', crm_campaign: 'cmp1', stage: 'closed_won' },
+      previous: { id: 'o1', crm_campaign: 'cmp1', stage: 'negotiation' },
+      user: USER,
+      api: h.api,
+    }));
+    expect(h.rows('crm_campaign')[0].actual_revenue).toBe(900);
+    expect(h.rows('crm_campaign')[0].num_won_opportunities).toBe(1);
+  });
+
+  it('recomputes BOTH campaigns when an opportunity is re-attributed', async () => {
+    const h = makeHarness({
+      crm_campaign: [
+        { id: 'cmp1', status: 'in_progress' },
+        { id: 'cmp2', status: 'in_progress' },
+      ],
+      crm_campaign_member: [],
+      crm_lead: [],
+      crm_opportunity: [{ id: 'o1', crm_campaign: 'cmp2', stage: 'closed_won', amount: 700 }],
+    });
+    await hook.handler(makeCtx({
+      event: 'afterUpdate',
+      input: { id: 'o1', crm_campaign: 'cmp2' },
+      previous: { id: 'o1', crm_campaign: 'cmp1' },
+      user: USER,
+      api: h.api,
+    }));
+    const byId = Object.fromEntries(h.rows('crm_campaign').map((c) => [c.id, c]));
+    expect(byId.cmp2.actual_revenue, 'the new campaign gains it').toBe(700);
+    expect(byId.cmp1.actual_revenue, 'the old campaign gives it up').toBe(0);
+  });
+});
+
+describe('campaign_lead_conversion_refresh', () => {
+  const hook = hookNamed(campaignHooks, 'campaign_lead_conversion_refresh');
+
+  const convert = (h: ReturnType<typeof makeHarness>) =>
+    hook.handler(makeCtx({
+      event: 'afterUpdate',
+      input: { id: 'l1', is_converted: true },
+      previous: { id: 'l1', is_converted: false },
+      user: USER,
+      api: h.api,
+    }));
+
+  const store = () => ({
+    crm_campaign: [
+      { id: 'cmp1', status: 'in_progress' },
+      { id: 'cmp2', status: 'in_progress' },
+    ],
+    crm_campaign_member: [
+      { id: 'm1', crm_campaign: 'cmp1', crm_lead: 'l1', status: 'responded' },
+      { id: 'm2', crm_campaign: 'cmp2', crm_lead: 'l1', status: 'sent' },
+      { id: 'm3', crm_campaign: 'cmp1', crm_lead: 'l2', status: 'sent' },
+    ],
+    crm_lead: [
+      { id: 'l1', is_converted: true },
+      { id: 'l2', is_converted: false },
+    ],
+    crm_opportunity: [],
+  });
+
+  /**
+   * `converted` is a status option the picklist offers and the ROI surfaces
+   * segment by. This hook is its ONLY writer — without it the value would be
+   * exactly the inert vocabulary #597 removed `opened`/`clicked`/`bounced` for.
+   */
+  it('promotes every membership of the converting lead to `converted`', async () => {
+    const h = makeHarness(store());
+    await convert(h);
+    const byId = Object.fromEntries(h.rows('crm_campaign_member').map((m) => [m.id, m]));
+    expect(byId.m1.status, 'a responded member converts').toBe('converted');
+    expect(byId.m2.status, 'a sent member converts too').toBe('converted');
+    expect(byId.m3.status, "another lead's membership is untouched").toBe('sent');
+  });
+
+  it('never drags an unsubscribed member back into the funnel', async () => {
+    // That person asked to be left alone; `campaign_member_optout_sync` has
+    // already opted them out of email, and overwriting the status here would
+    // leave the two records disagreeing about the same human being.
+    const seed = store();
+    seed.crm_campaign_member[1].status = 'unsubscribed';
+    const h = makeHarness(seed);
+    await convert(h);
+    const byId = Object.fromEntries(h.rows('crm_campaign_member').map((m) => [m.id, m]));
+    expect(byId.m2.status).toBe('unsubscribed');
+  });
+
+  it('refreshes every campaign the lead belongs to', async () => {
+    const h = makeHarness(store());
+    await convert(h);
+    const byId = Object.fromEntries(h.rows('crm_campaign').map((c) => [c.id, c]));
+    expect(byId.cmp1.num_converted_leads).toBe(1);
+    expect(byId.cmp2.num_converted_leads).toBe(1);
+  });
+
+  /**
+   * The promotion moves m1 from `responded` to `converted`, and a response
+   * count matching only the exact `responded` string would DEDUCT the response
+   * it grew out of — response_rate falling as the campaign succeeded.
+   * `computeCampaignMetrics` counts both states for this reason, so cmp1's one
+   * response survives its own success. Under the narrow predicate this reads 0.
+   */
+  it('conversion does not deduct the response it grew out of', async () => {
+    const h = makeHarness(store());
+    const before = h.rows('crm_campaign_member').filter(
+      (m) => m.crm_campaign === 'cmp1' && m.status === 'responded',
+    ).length;
+    expect(before, 'cmp1 starts with exactly one responded member').toBe(1);
+    await convert(h);
+    expect(h.rows('crm_campaign_member').find((m) => m.id === 'm1')!.status).toBe('converted');
+    expect(h.rows('crm_campaign').find((c) => c.id === 'cmp1')!.num_responses).toBe(1);
+  });
+
+  it('does nothing when is_converted did not just flip', async () => {
+    const h = makeHarness(store());
+    await hook.handler(makeCtx({
+      event: 'afterUpdate',
+      input: { id: 'l1', is_converted: true },
+      previous: { id: 'l1', is_converted: true },
       user: USER,
       api: h.api,
     }));

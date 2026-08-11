@@ -25,18 +25,19 @@ import { leads, opportunities } from './sales.seed';
  * campaign reported `num_sent` 0, `response_rate` 0% and no attributed leads
  * at all, whatever the campaign records claimed.
  *
- * Status vocabulary is deliberately restricted to the lifecycle values a
- * writer actually produces: `sent` (what the campaign_enrollment flow stamps),
- * `responded` and `unsubscribed`. The `opened` / `clicked` / `bounced` states
- * and the `first_opened_date` / `first_clicked_date` stamps have no writer
- * anywhere in the app and are being trimmed under #597 — seeding them would
- * manufacture data that nothing can maintain and that the trim would then
- * invalidate.
+ * Status vocabulary is restricted to the lifecycle values a writer actually
+ * produces: `sent` (what the campaign_enrollment flow and the two
+ * Add-to-Campaign actions stamp), `responded` (the `mark_responded` action)
+ * and `unsubscribed`. The `opened` / `clicked` / `bounced` states and the
+ * `first_opened_date` / `first_clicked_date` stamps were REMOVED from the
+ * object under #597 — no email-tracking engine exists on the platform, so
+ * nothing could ever have written them.
  *
- * `converted` is likewise unused here: the hook counts converted leads from
- * `crm_lead.is_converted`, and no seeded lead is converted (conversion is the
- * lead_conversion flow's job at runtime), so a `converted` member would be a
- * member state no lead record backs up.
+ * `converted` is a live status with a real writer
+ * (`campaign_lead_conversion_refresh` promotes a member when its lead's
+ * `is_converted` flips) but is deliberately not SEEDED: no seeded lead is
+ * converted — conversion is the lead_conversion flow's job at runtime — so a
+ * `converted` member would be a member state no lead record backs up.
  */
 type CampaignMemberSpec = {
   /** Lead email (the lead dataset's externalId) — mutually exclusive with `contact`. */
@@ -122,16 +123,23 @@ const CAMPAIGN_MEMBERS: Record<string, readonly CampaignMemberSpec[]> = {
 };
 
 /**
- * The metric block `campaign_snapshot_metrics` writes when a campaign moves to
- * `completed`, computed here from the very same inputs the hook reads: the
- * membership table above and the opportunities attributed via `crm_campaign`.
+ * The metric block the campaign metric hooks maintain, computed here from the
+ * very same inputs they read: the membership table above and the opportunities
+ * attributed via `crm_campaign`.
  *
- * Seeding these by hand is what made them wrong before. The snapshot fires on
- * the transition INTO `completed` and nowhere else, so a hand-typed
- * `actual_revenue` survives untouched right up until someone completes the
- * campaign — at which point the hook replaces it with the truth and the number
- * "mysteriously" changes. Deriving it here makes that snapshot a no-op instead:
- * same inputs, same arithmetic, same answer.
+ * Seeding these by hand is what made them wrong before — a hand-typed
+ * `actual_revenue` survived untouched until something recomputed, at which
+ * point the hook replaced it with the truth and the number "mysteriously"
+ * changed. Deriving it here makes the first recompute a no-op instead: same
+ * inputs, same arithmetic, same answer.
+ *
+ * That first recompute now arrives much sooner than it used to. Before #597 the
+ * only writer fired on the `→ completed` transition, so these seeded values
+ * were the ONLY numbers a live campaign ever showed; today any membership,
+ * attribution or conversion change refreshes them (see
+ * `src/objects/_campaign-metrics.ts`). The derivation below is therefore a
+ * mirror of that module and has to stay one — `test/seed-consistency.test.ts`
+ * checks the seeds against it.
  */
 const campaignMetrics = (campaignName: string) => {
   const members = CAMPAIGN_MEMBERS[campaignName] ?? [];
@@ -144,7 +152,10 @@ const campaignMetrics = (campaignName: string) => {
   return {
     // "Total members enrolled" — campaign.hook.ts's single definition of num_sent.
     num_sent: members.length,
-    // Only the exact `responded` status counts, as in the hook.
+    // `responded` or `converted`, as in `computeCampaignMetrics`. The seed set
+    // holds no `converted` member (see the note on CAMPAIGN_MEMBERS), so the
+    // two predicates coincide on this data — spelled the narrow way because
+    // widening it here would suggest a seeded state that does not exist.
     num_responses: members.filter((m) => m.status === 'responded').length,
     num_leads: leadKeys.size,
     num_converted_leads: convertedLeads,

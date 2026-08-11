@@ -59,7 +59,7 @@ HotCRM is a complete, opinionated CRM built as the **first official application*
 | `crm_event` | | | |
 | `crm_event_attendee` | | | |
 
-Plus **6 AI skills** (a skills-only surface — HotCRM defines no agents of its own; the skills attach to the platform `ask` assistant), **5 dashboards**, **26 flows**, **26 actions**, **9 datasets**, **4 language bundles** (en, zh-CN, es-ES, ja-JP), **6 permission profiles**, **12 positions**, and **9 sharing rules**.
+Plus **6 AI skills** (a skills-only surface — HotCRM defines no agents of its own; the skills attach to the platform `ask` assistant), **5 dashboards**, **26 flows**, **28 actions**, **9 datasets**, **4 language bundles** (en, zh-CN, es-ES, ja-JP), **6 permission profiles**, **12 positions**, and **9 sharing rules**.
 
 > **Business reader?** The ObjectStack docs tour every one of these capabilities in plain business language — [What Can It Do?](https://objectstack.ai/docs/capabilities) — with HotCRM as the running example on every page.
 
@@ -127,7 +127,7 @@ hotcrm/
 ├── objectstack.config.ts         # manifest + defineStack() — single source of truth
 ├── src/
 │   ├── objects/                  # *.object.ts — data model (17 objects)
-│   ├── actions/                  # *.actions.ts — server actions + AI tools (26)
+│   ├── actions/                  # *.actions.ts — server actions + AI tools (28)
 │   ├── flows/                    # *.flow.ts — visual flows (26): screen, record-change & scheduled
 │   ├── hooks/                    # hook registry barrel
 │   ├── skills/                   # *.skill.ts — AI skills (6) — skills-only surface, no agents

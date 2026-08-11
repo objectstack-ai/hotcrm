@@ -233,6 +233,13 @@ export const esES: TranslationData = {
             body: { label: 'Cuerpo' },
           },
         },
+        add_contact_to_campaign: {
+          label: 'Añadir a Campaña',
+          successMessage: '¡Contactos añadidos a la campaña!',
+          params: {
+            crm_campaign: { label: 'Campaña' },
+          },
+        },
       },
     },
 
@@ -1087,8 +1094,8 @@ export const esES: TranslationData = {
       },
       _actions: {
         enroll_leads: {
-          label: 'Inscribir Prospectos',
-          successMessage: 'Prospectos elegibles inscritos en la campaña.',
+          label: 'Inscribir Miembros',
+          successMessage: 'Miembros elegibles inscritos en la campaña.',
         },
       },
     },
@@ -1197,20 +1204,23 @@ export const esES: TranslationData = {
         status: {
           label: 'Estado',
           options: {
-            sent: 'Enviado', opened: 'Abierto', clicked: 'Clicado',
-            responded: 'Respondido', converted: 'Convertido', bounced: 'Rebotado',
-            unsubscribed: 'Dado de Baja',
+            sent: 'Enviado', responded: 'Respondido',
+            converted: 'Convertido', unsubscribed: 'Dado de Baja',
           },
         },
         added_date: { label: 'Fecha de Alta' },
-        first_opened_date: { label: 'Primera Apertura' },
-        first_clicked_date: { label: 'Primer Clic' },
         response_date: { label: 'Fecha de Respuesta' },
         has_responded: { label: 'Ha Respondido' },
       },
       _sections: {
         basic: { label: 'Información Básica' },
         response: { label: 'Seguimiento de Respuesta' },
+      },
+      _actions: {
+        mark_responded: {
+          label: 'Marcar como Respondido',
+          successMessage: 'Respuesta registrada en este miembro de campaña.',
+        },
       },
     },
 

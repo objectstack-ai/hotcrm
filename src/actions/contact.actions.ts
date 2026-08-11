@@ -37,6 +37,93 @@ export const MarkPrimaryContactAction: Action = {
 };
 
 /**
+ * Add selected contacts to a Campaign.
+ *
+ * The contact-side mirror of `create_campaign` on `crm_lead` (#597). Before
+ * this, `crm_campaign_member.crm_contact` was a lookup no writer populated:
+ * campaigns could only ever reach LEADS, so the one audience a CRM knows most
+ * about — its existing customers — was unreachable by marketing. Every design
+ * decision below is copied deliberately from the lead action rather than
+ * re-derived, so the two paths cannot drift:
+ *
+ *   - PER-RECORD dispatch. `src/views/contact.view.ts` wires this as the
+ *     BARE-STRING form (`bulkActions: ['add_contact_to_campaign']`), which the
+ *     renderer fans out once per selected row with that row's `recordId` and NO
+ *     selection array. The body reads `ctx.recordId` and nothing else. There is
+ *     no `input.selectedIds` read: only the aggregate contract injects the
+ *     underscore-prefixed builtin, and the strict params gate (ADR-0104)
+ *     refuses an undeclared `selectedIds` param outright (#813).
+ *   - `type: 'script'` + `params`, never `type: 'modal'` — a modal action has
+ *     no server dispatch, so its body never runs.
+ *   - The campaign param is FIELD-BACKED (`field` + `objectOverride`) so the
+ *     console resolves a record picker from
+ *     `crm_campaign_member.crm_campaign`. A bare `{ type: 'lookup' }` cannot
+ *     resolve a target object and degrades to a paste-the-ID textbox.
+ *
+ * One deliberate difference: the dedupe read scopes on `crm_contact`, so a
+ * person enrolled as a LEAD and again as a CONTACT is not treated as a
+ * duplicate. Those are two different records of two different relationships,
+ * and `crm_campaign_member` keys them separately (see the two seed datasets in
+ * `src/data/marketing.seed.ts`).
+ */
+export const AddContactToCampaignAction: Action = {
+  name: 'add_contact_to_campaign',
+  label: 'Add to Campaign',
+  objectName: 'crm_contact',
+  icon: 'send',
+  type: 'script',
+  body: {
+    language: 'js',
+    source: `
+      // Value key = the param's field name ('crm_campaign') since the param
+      // omits an explicit 'name'. Insert uses the REAL lookup field names on
+      // crm_campaign_member (crm_campaign / crm_contact).
+      const campaignId = input.crm_campaign ?? null;
+      if (!campaignId) throw new Error('add_contact_to_campaign requires a campaign id');
+      const ids = ctx.recordId ? [ctx.recordId] : [];
+      if (!ids.length) throw new Error('add_contact_to_campaign: no contact selected');
+      const raw = await ctx.api.object('crm_campaign_member').find({
+        where: { crm_campaign: campaignId },
+        fields: ['crm_contact'],
+        top: 5000,
+      });
+      const existingRows = Array.isArray(raw) ? raw : (raw?.records ?? []);
+      const existing = new Set(existingRows.map((r) => r.crm_contact));
+      const inserted = [];
+      let skipped = 0;
+      for (const contactId of ids) {
+        if (existing.has(contactId)) { skipped++; continue; }
+        const row = await ctx.api.object('crm_campaign_member').insert({
+          crm_campaign: campaignId,
+          crm_contact: contactId,
+          status: 'sent',
+        });
+        inserted.push(row?.id ?? null);
+      }
+      return { campaignId, count: inserted.length, skipped, ids: inserted };
+    `,
+    capabilities: ['api.read', 'api.write'],
+    timeoutMs: 10000,
+  },
+  locations: ['list_toolbar', 'list_item'],
+  params: [
+    {
+      field: 'crm_campaign',
+      objectOverride: 'crm_campaign_member',
+      label: 'Campaign',
+      required: true,
+    },
+  ],
+  // An opted-out contact must not be added to a campaign by hand either — the
+  // enrollment flow already filters them out, and a manual add-to-campaign is
+  // the obvious way around a filter nobody remembers is there. Same predicate
+  // the `send_email` action uses.
+  visible: P`record.email_opt_out == false`,
+  successMessage: 'Contacts added to campaign!',
+  refreshAfter: true,
+};
+
+/**
  * Send Email to Contact.
  *
  * Modal-typed action: collects subject + body, then logs an `activity`
