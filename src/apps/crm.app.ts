@@ -22,10 +22,21 @@ export const CrmApp = App.create({
   // which attach to the platform agents by `surface` affinity. The app-authored
   // agents this key used to name were retired in #512.
   defaultAgent: 'ask',
+  // `logo`/`favicon` point at the repo's existing `assets/icon.svg` (#731):
+  // the previously-referenced `crm-logo.png` / `crm-favicon.ico` were never
+  // added to `assets/`, and — separately — the runtime never serves a plain
+  // `/assets/*` path at all; static assets under `assets/` are only mounted
+  // at `/runtime/assets/:filename` (packages/cli's `createRuntimeAssetsPlugin`
+  // in @objectstack/cli). Verified live: GET /runtime/assets/icon.svg → 200,
+  // `content-type: image/svg+xml`. Both console consumers accept an SVG
+  // string here — `logo` renders via a plain `<img src>` (objectui's
+  // `AppSidebar.tsx`) and `favicon` is set via `link.href` (objectui's
+  // `AppShell.tsx`'s `useAppShellBranding`) — so repointing to the existing
+  // icon is correct without adding new binary assets.
   branding: {
     primaryColor: '#4169E1',
-    logo: '/assets/crm-logo.png',
-    favicon: '/assets/crm-favicon.ico',
+    logo: '/runtime/assets/icon.svg',
+    favicon: '/runtime/assets/icon.svg',
   },
 
   navigation: [

@@ -31,13 +31,14 @@ pnpm validate
 ```
 
 > **`26 Actions` is the REGISTRATION count, not a count of distinct action
-> definitions.** One action bound to five objects registers five times, so this
-> figure and the `13 actions` the README states are answering different
-> questions (the source tree holds 6 `*.actions.ts` files, a third figure again).
-> Which calibre a reader should be told is an open product question —
-> [#1012](https://github.com/objectstack-ai/hotcrm/issues/1012) — and this block
-> does not settle it: it transcribes what the command prints, which is the
-> registered stack, exactly like every other number in it.
+> definitions.** One action bound to five objects registers five times, so the
+> source tree's 6 `*.actions.ts` files and this figure answer different
+> questions. The registration count is the calibre this repo states to readers
+> ([#1012](https://github.com/objectstack-ai/hotcrm/issues/1012)): it is the one
+> every other number in the README's inventory sentence already uses, and the
+> only one a guard can re-derive from the stack instead of trusting a
+> hand-maintained figure. The README states the same 26, pinned by
+> `test/docs-drift.test.ts`.
 
 ## Local Checks
 

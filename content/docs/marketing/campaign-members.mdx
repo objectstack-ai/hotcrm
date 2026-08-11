@@ -12,8 +12,8 @@ A **campaign member** is the link between a [campaign](/docs/marketing/campaigns
 Three ways:
 
 1. **Bulk enrollment via the campaign flow** — when a campaign moves to *In Progress*, the [Campaign Enrollment flow](/docs/marketing/campaigns#campaign-enrollment-flow) runs and adds everyone matching the audience criteria.
-2. **Manual enrollment** — open a campaign and click **Add Members**, then pick from lead and contact list views.
-3. **From a lead or contact** — open the record and click **Add to Campaign**.
+2. **From a lead** — open a lead (or tick several in a lead list view) and run **Add to Campaign**, then choose the campaign. Leads already on that campaign are skipped, so re-running it never double-counts a touch. This is the only picker-driven path that ships: there is no *Add Members* button on the campaign that picks people from lead and contact list views.
+3. **One at a time on the campaign** — open a campaign, find the **Campaign Members** panel on the *Related* tab, and use its **New** button to fill in a single membership by hand.
 
 A person can be in many campaigns over time, but only once per campaign (one membership per person per campaign).
 
@@ -82,14 +82,14 @@ Conversion rate = members where status == Converted ÷ Sent
 
 This means the campaign-level metrics are always live. As soon as a person opens an email, the campaign's *Open Rate* ticks up.
 
-## Standard list views
+## Where members appear
 
-On the campaign detail page's *Members* tab:
+On the campaign detail page, under the **Related** tab, in a panel titled **Campaign Members**. The panel lists every member of that campaign with four columns — **Lead**, **Contact**, **Status** and **Response Date** — and carries the **New** button described above.
 
-- **All Members** — everyone enrolled.
-- **Responded** — status ≥ Responded.
-- **Bounced / Unsubscribed** — to clean up the audience.
-- **Converted to Opportunity** — the wins.
+Two things readers arrive expecting, and where they really are:
+
+- There is no *Members* tab. Campaign membership is one panel among the campaign's other related records on the shared *Related* tab.
+- There are no saved member list views — not *All Members*, *Responded*, *Bounced / Unsubscribed* or *Converted to Opportunity*. Campaign Member ships no list views at all, and a related-list panel would not read them if it did: its columns come from the object's highlight fields, not from a view. Nothing ships that narrows the panel to one status, and no report ships over Campaign Member either, so a subset — every bounce, every conversion — is a number on the campaign rather than a list: see [How the metrics roll up](#how-the-metrics-roll-up), where every rate is computed live from member status.
 
 ## Tips for marketers
 

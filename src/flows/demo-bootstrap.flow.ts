@@ -206,10 +206,11 @@ const claim = (key: string, objectName: string, label: string) => ({
  * `scripts/backfill-owner-id.ts` lists both in its `OBJECTS`, i.e. both carried
  * the app-level `owner` lookup #548 retired. `crm_product` — the other seeded
  * `public_read` object — declares no `owner_id` at all and stays OUT: it is a
- * shared catalogue, and it is also the e2e ownership-blind probe, whose premise
- * is "`public_read` AND swept by nothing" (`e2e/seed-precondition.ts`, pinned by
- * `test/e2e-seed-precondition.test.ts`). Claiming these two leaves that premise
- * untouched; claiming `crm_product` would break it.
+ * shared catalogue, so there is no ownership to claim and stamping one would
+ * write a column the object does not have. Until #669 it was also the e2e
+ * suite's ownership-blind probe, which gave it a second reason to stay out;
+ * that suite no longer reads seeded rows at all, so the first reason is the
+ * only one left — and it is the one that was always doing the work.
  *
  * Who owns a seeded knowledge article, recorded rather than decided (#716, PM
  * ruling): the first user, by the same demo convention every other object here

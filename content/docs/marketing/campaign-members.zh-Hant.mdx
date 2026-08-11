@@ -12,8 +12,8 @@ description: 加入每個行銷活動的潛在客戶和聯絡人，以及如何�
 三種方式：
 
 1. **透過行銷活動流程批次加入** — 當行銷活動進入 *In Progress* 時，[Campaign Enrollment flow](/zh-Hant/docs/marketing/campaigns) 執行並新增所有符合受眾條件的人。
-2. **手動加入** — 開啟一個行銷活動並點擊 **Add Members**，然後從潛在客戶和聯絡人清單檢視中選擇。
-3. **從潛在客戶或聯絡人** — 開啟記錄並點擊 **Add to Campaign**。
+2. **從潛在客戶加入** — 開啟一筆潛在客戶（或在潛在客戶清單檢視裡勾選多筆），執行 **Add to Campaign**，再選擇行銷活動。已經在該活動裡的潛在客戶會被略過，所以重複執行不會把一次觸達算成兩次。這是產品裡唯一帶選人器的路徑：行銷活動上並沒有一個 *Add Members* 按鈕讓你從潛在客戶和聯絡人清單檢視中挑人。
+3. **在行銷活動上逐筆新增** — 開啟行銷活動，在 *Related*（相關）索引標籤裡找到 **Campaign Members** 面板，用面板上的 **New**（新增）按鈕手動填寫一筆成員記錄。
 
 一個人隨著時間推移可以加入多個行銷活動，但每個行銷活動只能加入一次（每人每個行銷活動一個成員身分）。
 
@@ -82,14 +82,14 @@ Conversion rate = members where status == Converted ÷ Sent
 
 這意味著行銷活動級別的指標始終是即時的。只要有人開啟了郵件，行銷活動的 *Open Rate* 就會上升。
 
-## 標準清單檢視
+## 成員在哪裡檢視
 
-在行銷活動詳情頁的 *Members* 索引標籤上：
+在行銷活動詳情頁的 **Related**（相關）索引標籤下，一個標題為 **Campaign Members** 的面板裡。該面板列出這個活動的每一位成員，四欄——**Lead**（潛在客戶）、**Contact**（聯絡人）、**Status**（狀態）和 **Response Date**（回應日期）——並帶著上面提到的 **New**（新增）按鈕。
 
-- **All Members** — 所有加入的人。
-- **Responded** — 狀態 ≥ Responded。
-- **Bounced / Unsubscribed** — 用於清理受眾。
-- **Converted to Opportunity** — 贏單。
+讀者常帶著兩個預期過來，它們真正的落點是：
+
+- **沒有 *Members* 索引標籤。** 成員面板只是活動在共用的 *Related* 索引標籤上的關聯記錄面板之一。
+- **沒有任何成員清單檢視** —— *All Members*、*Responded*、*Bounced / Unsubscribed*、*Converted to Opportunity* 都不存在。Campaign Member 物件一個清單檢視都沒有；即便有，關聯清單面板也不讀子物件的清單檢視：它的欄位來自物件的 highlight 欄位。產品裡沒有任何東西能把這個面板按狀態篩選，也沒有面向 Campaign Member 的報表，所以「所有退信」「所有轉換」這類子集是活動上的一個**數字**而不是一份名單——見上文《指標如何彙總》一節，那裡的每個比率都由成員狀態即時算出。
 
 ## 給行銷人員的提示
 

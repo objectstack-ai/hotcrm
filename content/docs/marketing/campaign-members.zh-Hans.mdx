@@ -12,8 +12,8 @@ description: 加入每个营销活动的线索和联系人，以及如何跟踪�
 三种方式：
 
 1. **通过营销活动流程批量加入** — 当营销活动进入 *In Progress* 时，[Campaign Enrollment flow](/zh-Hans/docs/marketing/campaigns) 运行并添加所有匹配受众条件的人。
-2. **手动加入** — 打开一个营销活动并点击 **Add Members**，然后从线索和联系人列表视图中选择。
-3. **从线索或联系人** — 打开记录并点击 **Add to Campaign**。
+2. **从线索加入** — 打开一条线索（或在线索列表视图里勾选多条），运行 **Add to Campaign**，再选择营销活动。已经在该活动里的线索会被跳过，所以重复运行不会把一次触达算成两次。这是产品里唯一带选人器的路径：营销活动上并没有一个 *Add Members* 按钮供你从线索和联系人列表视图中挑人。
+3. **在营销活动上逐条新建** — 打开营销活动，在 *Related*（相关）选项卡里找到 **Campaign Members** 面板，用面板上的 **New**（新建）按钮手工填写一条成员记录。
 
 一个人随着时间推移可以加入多个营销活动，但每个营销活动只能加入一次（每人每个营销活动一个成员身份）。
 
@@ -82,14 +82,14 @@ Conversion rate = members where status == Converted ÷ Sent
 
 这意味着营销活动级别的指标始终是实时的。只要有人打开了邮件，营销活动的 *Open Rate* 就会上升。
 
-## 标准列表视图
+## 成员在哪里查看
 
-在营销活动详情页的 *Members* 选项卡上：
+在营销活动详情页的 **Related**（相关）选项卡下，一个标题为 **Campaign Members** 的面板里。该面板列出这个活动的每一位成员，四列——**Lead**（线索）、**Contact**（联系人）、**Status**（状态）和 **Response Date**（响应日期）——并带着上面提到的 **New**（新建）按钮。
 
-- **All Members** — 所有加入的人。
-- **Responded** — 状态 ≥ Responded。
-- **Bounced / Unsubscribed** — 用于清理受众。
-- **Converted to Opportunity** — 赢单。
+读者常带着两个预期过来，它们真正的落点是：
+
+- **没有 *Members* 选项卡。** 成员面板只是活动在共用的 *Related* 选项卡上的关联记录面板之一。
+- **没有任何成员列表视图** —— *All Members*、*Responded*、*Bounced / Unsubscribed*、*Converted to Opportunity* 都不存在。Campaign Member 对象一个列表视图都没有；即便有，关联列表面板也不读子对象的列表视图：它的列来自对象的 highlight 字段。产品里没有任何东西能把这个面板按状态筛选，也没有面向 Campaign Member 的报表，所以「所有退信」「所有转化」这类子集是活动上的一个**数字**而不是一份名单——见上文《指标如何汇总》一节，那里的每个比率都由成员状态实时算出。
 
 ## 给营销人员的提示
 
