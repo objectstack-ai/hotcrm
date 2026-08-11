@@ -351,6 +351,89 @@ describe('the write is REFUSED on a real SQLite database too', () => {
   });
 });
 
+// ──────────────────────────────── what the gate reaches, and what it doesn't ──
+
+describe('a row that was ALREADY presented when the rule landed', () => {
+  /**
+   * The stock-data question on #1017, measured instead of assumed.
+   *
+   * A `requiredWhen` applies on WRITE, so the shape that matters is a row that
+   * entered the gated state BEFORE the rule existed. That is built here the way
+   * an upgrading deployment gets one: insert through an engine whose schema has
+   * no `requiredWhen`, then re-open the SAME store with the shipped schema.
+   *
+   * Measured verdict: the engine evaluates the requirement on the write that
+   * makes the predicate BECOME true, not on every later write while it holds.
+   * So a pre-existing `presented`-without-contact quote is NOT bricked — it
+   * reads, and ordinary edits still land. The cost of that is the last case
+   * here: such a row can still be walked on to `accepted`, where it meets the
+   * pre-#1017 behaviour (`quote_on_accepted` cannot draft the contract, and
+   * says so in the log). This repo ships no such row — `the stock data clears
+   * the new gate` below enumerates the seeds — so the residue is empty here;
+   * it is pinned so that the boundary is a recorded measurement rather than
+   * something a future reader has to rediscover.
+   */
+  const ungated = () => {
+    const clone = JSON.parse(JSON.stringify(quote)) as AnyRec;
+    delete clone.fields.crm_contact.requiredWhen;
+    return clone;
+  };
+
+  /** A store holding one contact-less `presented` quote, then re-opened gated. */
+  const legacyRow = async () => {
+    const driver = new InMemoryDriver({ persistence: false });
+    const before: AnyRec = (await ObjectQL.create({
+      datasources: { default: driver },
+      objects: { crm_quote: ungated() } as never,
+    })) as never;
+    const row = await before
+      .createContext({ isSystem: true })
+      .object('crm_quote')
+      .insert({ ...DRAFT, name: 'Legacy Presented', status: 'presented' });
+
+    const after: AnyRec = (await ObjectQL.create({
+      datasources: { default: driver },
+      objects: { crm_quote: quote } as never,
+    })) as never;
+    return { ql: after, api: after.createContext({ isSystem: true }), row };
+  };
+
+  it('is still readable and still editable — the gate breaks no stock row', async () => {
+    const { ql, api, row } = await legacyRow();
+    const stored = await api.object('crm_quote').findOne({ where: { id: row.id } });
+    expect(stored?.status).toBe('presented');
+    expect(stored?.crm_contact ?? null).toBeNull();
+
+    await api.object('crm_quote').update({ internal_notes: 'chased' }, { where: { id: row.id } });
+    await api.object('crm_quote').update({ total_price: 4321 }, { where: { id: row.id } });
+    const after = await api.object('crm_quote').findOne({ where: { id: row.id } });
+    expect(after?.internal_notes).toBe('chased');
+    expect(after?.total_price).toBe(4321);
+    await ql.close();
+  });
+
+  it('is repaired by the ordinary edit — filling the contact in', async () => {
+    const { ql, api, row } = await legacyRow();
+    await api.object('crm_quote').update({ crm_contact: 'con_stub' }, { where: { id: row.id } });
+    const after = await api.object('crm_quote').findOne({ where: { id: row.id } });
+    expect(after?.crm_contact).toBe('con_stub');
+    expect(after?.status).toBe('presented');
+    await ql.close();
+  });
+
+  it('can still be walked on to accepted — the boundary of a write-time gate', async () => {
+    // NOT an endorsement: this is the residue the gate does not reach, recorded
+    // so it is known. It exists only for rows that were already gated when the
+    // rule arrived; a quote created under this schema cannot get here, because
+    // the draft → presented write is refused (see the enforcement suites above).
+    const { ql, api, row } = await legacyRow();
+    await api.object('crm_quote').update({ status: 'accepted' }, { where: { id: row.id } });
+    const after = await api.object('crm_quote').findOne({ where: { id: row.id } });
+    expect(after?.status).toBe('accepted');
+    await ql.close();
+  });
+});
+
 // ───────────────────────────────────────────────── the data already shipped ──
 
 describe('the stock data clears the new gate', () => {
