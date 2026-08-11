@@ -926,10 +926,6 @@ export const zhCN: TranslationData = {
             cold_call: '陌生拜访', email_campaign: '邮件营销', other: '其他',
           },
         },
-        competitors: {
-          label: '竞争对手',
-          options: { competitor_a: '竞争对手 A', competitor_b: '竞争对手 B', competitor_c: '竞争对手 C' },
-        },
         crm_campaign: { label: '营销活动', help: '带来此商机的营销活动' },
         days_in_stage: { label: '当前阶段天数' },
         stage_entry_date: { label: '进入当前阶段日期', help: '本商机进入当前阶段的日期。' },
@@ -985,7 +981,7 @@ export const zhCN: TranslationData = {
         financials: { label: '财务信息' },
         sales_process: { label: '销售流程' },
         classification: { label: '分类' },
-        competition: { label: '竞争与营销' },
+        campaign: { label: '营销活动' },
         notes: { label: '备注与下一步' },
       },
       _actions: {

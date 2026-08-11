@@ -543,10 +543,6 @@ export const esES: TranslationData = {
             cold_call: 'Llamada en Frío', email_campaign: 'Campaña de Email', other: 'Otro',
           },
         },
-        competitors: {
-          label: 'Competidores',
-          options: { competitor_a: 'Competidor A', competitor_b: 'Competidor B', competitor_c: 'Competidor C' },
-        },
         crm_campaign: { label: 'Campaña', help: 'Campaña de marketing que generó esta oportunidad' },
         days_in_stage: { label: 'Días en Etapa Actual' },
         stage_entry_date: { label: 'Fecha de Entrada a la Etapa', help: 'Fecha en la que esta oportunidad entró en su etapa actual.' },
@@ -619,7 +615,7 @@ export const esES: TranslationData = {
         financials: { label: 'Datos Financieros' },
         sales_process: { label: 'Proceso de Venta' },
         classification: { label: 'Clasificación' },
-        competition: { label: 'Competencia y Campañas' },
+        campaign: { label: 'Campañas' },
         notes: { label: 'Notas y Próximos Pasos' },
       },
       _actions: {
