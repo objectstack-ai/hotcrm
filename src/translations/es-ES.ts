@@ -148,6 +148,11 @@ export const esES: TranslationData = {
         ownership: { label: 'Propiedad y Estado' },
         branding: { label: 'Identidad de Marca' },
         system: { label: 'Sistema' },
+        // Nombres de sección del formulario en account.view.ts (#1100)
+        profile: { label: 'Perfil' },
+        customer_success: { label: 'Éxito del Cliente' },
+        locations: { label: 'Ubicaciones' },
+        description: { label: 'Descripción' },
       },
       _actions: { ...activityActions },
     },
@@ -218,6 +223,9 @@ export const esES: TranslationData = {
         mailing_address: { label: 'Dirección de Correo' },
         additional: { label: 'Información Adicional' },
         preferences: { label: 'Preferencias de Comunicación' },
+        // Nombres de sección del formulario en contact.view.ts (#1100)
+        contact_details: { label: 'Información de Contacto' },
+        comm_preferences: { label: 'Preferencias' },
       },
       _actions: {
         ...activityActions,
@@ -301,6 +309,8 @@ export const esES: TranslationData = {
         taxonomy: { label: 'Categorización' },
         metrics: { label: 'Interacción' },
         engagement: { label: 'Interacción' },
+        // Nombre de sección del formulario en knowledge_article.view.ts (#1100)
+        article: { label: 'Artículo' },
       },
       _actions: {
         mark_article_helpful: {
@@ -365,6 +375,9 @@ export const esES: TranslationData = {
         basic: { label: 'Instantánea' },
         amounts: { label: 'Importes' },
         meta: { label: 'Origen' },
+        // Nombres de sección del formulario en forecast.view.ts (#1100)
+        snapshot: { label: 'Instantánea' },
+        notes: { label: 'Notas' },
       },
     },
 
@@ -496,6 +509,30 @@ export const esES: TranslationData = {
         additional: { label: 'Información Adicional' },
         preferences: { label: 'Preferencias de Comunicación' },
         duplicates: { label: 'Gestión de Duplicados' },
+        // Nombres de sección del formulario en lead.view.ts (#1100) — el
+        // formulario por defecto y sus seis formViews con nombre.
+        contact_information: { label: 'Información de Contacto' },
+        lead_classification: { label: 'Clasificación del Lead' },
+        company_information: { label: 'Información de la Empresa' },
+        additional_information: { label: 'Información Adicional' },
+        privacy: { label: 'Privacidad' },
+        lead_details: { label: 'Detalles del Lead' },
+        general: { label: 'General' },
+        details: { label: 'Detalles' },
+        step_1_contact_details: { label: 'Paso 1: Datos de Contacto' },
+        step_2_company_information: { label: 'Paso 2: Información de la Empresa' },
+        step_3_qualification: { label: 'Paso 3: Calificación' },
+        step_4_review_and_convert: { label: 'Paso 4: Revisar y Convertir' },
+        primary_information: { label: 'Información Principal' },
+        extended_details: { label: 'Detalles Ampliados' },
+        quick_edit: { label: 'Edición Rápida' },
+        update_lead_status: { label: 'Actualizar Estado del Lead' },
+        tell_us_about_yourself: { label: 'Cuéntanos sobre ti' },
+        about_your_company: { label: 'Sobre tu empresa' },
+        how_can_we_help: { label: '¿Cómo podemos ayudarte?' },
+        lead_information: { label: 'Información del Lead' },
+        address_information: { label: 'Información de Dirección' },
+        privacy_preferences: { label: 'Preferencias de Privacidad' },
       },
       _actions: {
         ...activityActions,
@@ -640,6 +677,11 @@ export const esES: TranslationData = {
         classification: { label: 'Clasificación' },
         campaign: { label: 'Campañas' },
         notes: { label: 'Notas y Próximos Pasos' },
+        // Nombres de sección del formulario en opportunity.view.ts (#1100)
+        overview: { label: 'Resumen' },
+        forecast: { label: 'Previsión' },
+        sales_strategy: { label: 'Estrategia de Ventas' },
+        win_loss: { label: 'Ganada / Perdida' },
       },
       _actions: {
         ...activityActions,
@@ -747,6 +789,12 @@ export const esES: TranslationData = {
         info: { label: 'Información del Caso' },
         status: { label: 'Estado y SLA' },
         description: { label: 'Descripción' },
+        // Nombres de sección del formulario en case.view.ts (#1100).
+        // `sla_overview`, no `sla` — `sla` ya es la clave del fieldGroup
+        // «SLA & Priority».
+        case: { label: 'Caso' },
+        sla_overview: { label: 'SLA' },
+        how_can_we_help: { label: '¿Cómo podemos ayudarte?' },
         // Claves de sección del objeto (case.object.ts) que usan los
         // formularios de registro. `basic` repite el inglés de `info`
         // («Case Information»), así que comparte traducción.
@@ -835,6 +883,10 @@ export const esES: TranslationData = {
         value: { label: 'Valor del Contrato' },
         status: { label: 'Estado y Aprobación' },
         renewal: { label: 'Renovación' },
+        // Nombres de sección del formulario en contract.view.ts (#1100)
+        contract_terms: { label: 'Términos' },
+        signing_and_documents: { label: 'Firma y Documentos' },
+        notes: { label: 'Notas' },
       },
     },
 
@@ -896,6 +948,10 @@ export const esES: TranslationData = {
         basic: { label: 'Información del Producto' },
         pricing: { label: 'Precios y Facturación' },
         metadata: { label: 'Recursos' },
+        // Nombres de sección del formulario en product.view.ts (#1100)
+        product_info: { label: 'Información del Producto' },
+        pricing_and_inventory: { label: 'Precios e Inventario' },
+        media: { label: 'Multimedia' },
       },
     },
 
@@ -954,6 +1010,11 @@ export const esES: TranslationData = {
         terms: { label: 'Términos y Vigencia' },
         address: { label: 'Direcciones' },
         system: { label: 'Sistema' },
+        // Nombres de sección del formulario en quote.view.ts (#1100)
+        quote: { label: 'Cotización' },
+        totals: { label: 'Totales' },
+        quote_terms: { label: 'Términos' },
+        addresses_and_notes: { label: 'Direcciones y Notas' },
       },
     },
 
@@ -1033,6 +1094,10 @@ export const esES: TranslationData = {
         recurrence: { label: 'Recurrencia' },
         effort: { label: 'Progreso y Esfuerzo' },
         system: { label: 'Sistema' },
+        // Nombres de sección del formulario en task.view.ts (#1100)
+        task: { label: 'Tarea' },
+        related_records: { label: 'Registros Relacionados' },
+        recurrence_and_effort: { label: 'Recurrencia y Esfuerzo' },
       },
     },
 
@@ -1164,6 +1229,9 @@ export const esES: TranslationData = {
         schedule: { label: 'Programación' },
         related: { label: 'Registros Relacionados' },
         outcome: { label: 'Resultado' },
+        // Nombres de sección del formulario en event.view.ts (#1100)
+        event: { label: 'Evento' },
+        related_records: { label: 'Registros Relacionados' },
       },
     },
 
@@ -1200,6 +1268,9 @@ export const esES: TranslationData = {
         // «Basic Information» / «Response Tracking» de crm_campaign_member.
         basic: { label: 'Asistente' },
         response: { label: 'Invitación' },
+        // Nombres de sección del formulario en event_attendee.view.ts (#1100)
+        attendee: { label: 'Asistente' },
+        invitation: { label: 'Invitación' },
       },
     },
 

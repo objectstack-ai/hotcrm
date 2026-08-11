@@ -136,6 +136,7 @@ export const EventViews = defineView({
     type: 'simple',
     sections: [
       {
+        name: 'event',
         label: 'Event',
         columns: 2,
         fields: [
@@ -148,6 +149,7 @@ export const EventViews = defineView({
         ],
       },
       {
+        name: 'schedule',
         label: 'Schedule',
         columns: 2,
         fields: [
@@ -158,6 +160,7 @@ export const EventViews = defineView({
         ],
       },
       {
+        name: 'related_records',
         label: 'Related Records',
         collapsible: true,
         columns: 2,
@@ -170,6 +173,7 @@ export const EventViews = defineView({
         ],
       },
       {
+        name: 'outcome',
         label: 'Outcome',
         collapsible: true,
         collapsed: true,

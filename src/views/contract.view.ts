@@ -93,11 +93,17 @@ export const ContractViews = defineView({
     type: 'tabbed',
     sections: [
       {
+        name: 'parties',
         label: 'Parties',
         columns: 2,
         fields: ['contract_number', 'crm_account', 'crm_contact', 'crm_opportunity', 'owner_id', 'status'],
       },
       {
+        // Named `contract_terms`, not `terms` — `terms` is already a distinct
+        // fieldGroup key on `crm_contract` ("Terms & Dates"), and reusing it
+        // here would make this section's translated heading follow that
+        // group's wording instead of its own "Terms".
+        name: 'contract_terms',
         label: 'Terms',
         columns: 2,
         fields: [
@@ -112,11 +118,13 @@ export const ContractViews = defineView({
         ],
       },
       {
+        name: 'signing_and_documents',
         label: 'Signing & Documents',
         columns: 2,
         fields: ['signed_date', 'signed_by', 'document_url'],
       },
       {
+        name: 'notes',
         label: 'Notes',
         columns: 1,
         fields: ['special_terms', 'billing_address'],

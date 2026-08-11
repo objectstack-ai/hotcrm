@@ -78,6 +78,7 @@ export const EventAttendeeViews = defineView({
     type: 'simple',
     sections: [
       {
+        name: 'attendee',
         label: 'Attendee',
         columns: 2,
         fields: [
@@ -90,6 +91,7 @@ export const EventAttendeeViews = defineView({
         ],
       },
       {
+        name: 'invitation',
         label: 'Invitation',
         columns: 2,
         fields: ['response', 'is_organizer', 'invited_date'],

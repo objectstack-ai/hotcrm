@@ -341,6 +341,7 @@ export const OpportunityViews = defineView({
     type: 'tabbed',
     sections: [
       {
+        name: 'overview',
         label: 'Overview',
         columns: 2,
         fields: [
@@ -355,6 +356,7 @@ export const OpportunityViews = defineView({
         ],
       },
       {
+        name: 'forecast',
         label: 'Forecast',
         columns: 2,
         fields: [
@@ -369,6 +371,7 @@ export const OpportunityViews = defineView({
         ],
       },
       {
+        name: 'sales_strategy',
         label: 'Sales Strategy',
         columns: 1,
         // `competitors` sat here until #1061 retired it — this form section was
@@ -379,6 +382,7 @@ export const OpportunityViews = defineView({
         // Win/loss capture at close time. The fields existed on the object for
         // reporting but no form offered them, so every closed deal lost its
         // why-we-won / why-we-lost data.
+        name: 'win_loss',
         label: 'Win / Loss',
         collapsible: true,
         collapsed: true,

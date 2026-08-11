@@ -256,6 +256,7 @@ export const CaseViews = defineView({
     type: 'tabbed',
     sections: [
       {
+        name: 'case',
         label: 'Case',
         columns: 2,
         fields: [
@@ -273,6 +274,11 @@ export const CaseViews = defineView({
         ],
       },
       {
+        // Named `sla_overview`, not `sla` — `sla` is already a distinct
+        // fieldGroup key on `crm_case` ("SLA & Priority"), and reusing it here
+        // would make this section's translated heading follow that group's
+        // wording instead of its own "SLA".
+        name: 'sla_overview',
         label: 'SLA',
         columns: 2,
         fields: [
@@ -287,6 +293,7 @@ export const CaseViews = defineView({
         ],
       },
       {
+        name: 'resolution',
         label: 'Resolution',
         columns: 1,
         fields: ['resolution', 'internal_notes', 'customer_rating', 'customer_feedback', 'customer_signature', 'closed_date', 'is_closed'],
@@ -310,6 +317,7 @@ export const CaseViews = defineView({
       data: { provider: 'object', object: 'crm_case' },
       sections: [
         {
+          name: 'how_can_we_help',
           label: 'How can we help?',
           columns: 1,
           fields: [

@@ -79,6 +79,7 @@ export const ContactViews = defineView({
     type: 'tabbed',
     sections: [
       {
+        name: 'identity',
         label: 'Identity',
         columns: 2,
         fields: [
@@ -93,11 +94,23 @@ export const ContactViews = defineView({
         ],
       },
       {
+        // Named `contact_details`, not `contact_info` — `contact_info` is
+        // already a distinct fieldGroup key on `crm_contact` ("Contact
+        // Information"), and reusing it here would make this section's
+        // translated heading follow that group's wording instead of its own
+        // "Contact Info".
+        name: 'contact_details',
         label: 'Contact Info',
         columns: 2,
         fields: ['email', 'phone', 'mobile', 'birthdate', 'avatar'],
       },
       {
+        // Named `comm_preferences`, not `preferences` — `preferences` is
+        // already a distinct fieldGroup key on `crm_contact` ("Communication
+        // Preferences"), and reusing it here would make this section's
+        // translated heading follow that group's wording instead of its own
+        // "Preferences".
+        name: 'comm_preferences',
         label: 'Preferences',
         columns: 2,
         fields: ['lead_source', 'is_primary', 'do_not_call', 'email_opt_out'],

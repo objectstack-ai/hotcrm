@@ -199,6 +199,7 @@ export const LeadViews = defineView({
     
     sections: [
       {
+        name: 'contact_information',
         label: 'Contact Information',
         collapsible: true,
         collapsed: false,
@@ -227,6 +228,7 @@ export const LeadViews = defineView({
         ],
       },
       {
+        name: 'lead_classification',
         label: 'Lead Classification',
         collapsible: true,
         collapsed: false,
@@ -260,6 +262,7 @@ export const LeadViews = defineView({
         ],
       },
       {
+        name: 'company_information',
         label: 'Company Information',
         collapsible: true,
         collapsed: true, // Collapsed by default
@@ -270,6 +273,7 @@ export const LeadViews = defineView({
         ],
       },
       {
+        name: 'address',
         label: 'Address',
         collapsible: true,
         collapsed: true,
@@ -286,6 +290,7 @@ export const LeadViews = defineView({
         ],
       },
       {
+        name: 'additional_information',
         label: 'Additional Information',
         collapsible: true,
         collapsed: true,
@@ -296,6 +301,7 @@ export const LeadViews = defineView({
         ],
       },
       {
+        name: 'privacy',
         label: 'Privacy',
         collapsible: true,
         collapsed: true,
@@ -524,6 +530,7 @@ export const LeadViews = defineView({
         {
           // Neutral label — this form backs BOTH the create and edit dialogs,
           // so "Quick Lead Creation" read wrong when editing.
+          name: 'lead_details',
           label: 'Lead Details',
           columns: 2,
           fields: [
@@ -558,6 +565,7 @@ export const LeadViews = defineView({
       type: 'tabbed',
       sections: [
         {
+          name: 'general',
           label: 'General',
           columns: 2,
           fields: [
@@ -572,6 +580,7 @@ export const LeadViews = defineView({
           ],
         },
         {
+          name: 'qualification',
           label: 'Qualification',
           columns: 2,
           fields: [
@@ -591,6 +600,7 @@ export const LeadViews = defineView({
           ],
         },
         {
+          name: 'address',
           label: 'Address',
           columns: 2,
           // Single composite `Field.address` — see the note on the default
@@ -600,6 +610,7 @@ export const LeadViews = defineView({
           ],
         },
         {
+          name: 'details',
           label: 'Details',
           columns: 1,
           fields: [
@@ -624,6 +635,7 @@ export const LeadViews = defineView({
       },
       sections: [
         {
+          name: 'step_1_contact_details',
           label: 'Step 1: Contact Details',
           columns: 2,
           fields: [
@@ -635,6 +647,7 @@ export const LeadViews = defineView({
           ],
         },
         {
+          name: 'step_2_company_information',
           label: 'Step 2: Company Information',
           columns: 2,
           fields: [
@@ -647,6 +660,7 @@ export const LeadViews = defineView({
           ],
         },
         {
+          name: 'step_3_qualification',
           label: 'Step 3: Qualification',
           columns: 2,
           fields: [
@@ -670,6 +684,7 @@ export const LeadViews = defineView({
           ],
         },
         {
+          name: 'step_4_review_and_convert',
           label: 'Step 4: Review & Convert',
           columns: 1,
           fields: [
@@ -694,6 +709,7 @@ export const LeadViews = defineView({
       },
       sections: [
         {
+          name: 'primary_information',
           label: 'Primary Information',
           columns: 1,
           fields: [
@@ -713,6 +729,7 @@ export const LeadViews = defineView({
           ],
         },
         {
+          name: 'extended_details',
           label: 'Extended Details',
           columns: 2,
           fields: [
@@ -741,6 +758,7 @@ export const LeadViews = defineView({
       },
       sections: [
         {
+          name: 'quick_edit',
           label: 'Quick Edit',
           columns: 1, // Drawers typically use single column
           fields: [
@@ -783,6 +801,7 @@ export const LeadViews = defineView({
       },
       sections: [
         {
+          name: 'update_lead_status',
           label: 'Update Lead Status',
           columns: 1,
           fields: [
@@ -838,6 +857,7 @@ export const LeadViews = defineView({
       },
       sections: [
         {
+          name: 'tell_us_about_yourself',
           label: 'Tell us about yourself',
           columns: 2,
           fields: [
@@ -849,6 +869,7 @@ export const LeadViews = defineView({
           ],
         },
         {
+          name: 'about_your_company',
           label: 'About your company',
           columns: 2,
           fields: [
@@ -860,6 +881,7 @@ export const LeadViews = defineView({
           ],
         },
         {
+          name: 'how_can_we_help',
           label: 'How can we help?',
           columns: 1,
           fields: [
@@ -890,6 +912,7 @@ export const LeadViews = defineView({
       },
       sections: [
         {
+          name: 'lead_information',
           label: 'Lead Information',
           columns: 2,
           fields: [
@@ -941,6 +964,7 @@ export const LeadViews = defineView({
           ],
         },
         {
+          name: 'address_information',
           label: 'Address Information',
           collapsible: true,
           collapsed: true,
@@ -952,6 +976,7 @@ export const LeadViews = defineView({
           ],
         },
         {
+          name: 'privacy_preferences',
           label: 'Privacy Preferences',
           collapsible: true,
           collapsed: true,
