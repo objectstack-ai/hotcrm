@@ -713,4 +713,49 @@ describe('every locale is complete on every authored surface', () => {
     }
     expect(bad, `section headings with no translation:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
+
+  /**
+   * The blind spot itself (#1100), asserted directly.
+   *
+   * `sectionsByObject`'s `add()` above requires a `name` before it records
+   * anything, so a `sections[]` entry that declares only a `label` is not an
+   * "untranslated section" to either test above it — it is a section neither
+   * of them can see at all. 67 of exactly that shape sat on `main` reporting
+   * zero i18n failures, because nothing walked the tree asking the question
+   * this test asks: does every section that HAS a heading also have a KEY a
+   * translation bundle could address it by?
+   *
+   * This walks the page/view tree itself (independently of `sectionsByObject`,
+   * which cannot see the failure mode being guarded against here) and fails on
+   * any `sections[]` entry carrying a `label` with no `name` alongside it —
+   * structural, not translation-completeness, so it needs no locale loop.
+   */
+  it('every section with a label carries a name — otherwise it is invisible to the i18n gate (#1100)', () => {
+    const bad: string[] = [];
+    const walk = (node: AnyRec | AnyRec[] | undefined, path: string): void => {
+      if (!node || typeof node !== 'object') return;
+      if (Array.isArray(node)) {
+        node.forEach((x, i) => walk(x, `${path}[${i}]`));
+        return;
+      }
+      for (const key of ['sections', 'properties'] as const) {
+        const arr = key === 'sections' ? node.sections : node.properties?.sections;
+        if (Array.isArray(arr)) {
+          arr.forEach((s: AnyRec, i: number) => {
+            if (s && typeof s === 'object' && s.label && !s.name) {
+              bad.push(`${path}.sections[${i}] label=${JSON.stringify(s.label)}`);
+            }
+          });
+        }
+      }
+      // `fields` is skipped for the same reason `sectionsByObject` skips it:
+      // it is a map of field definitions, not layout.
+      for (const [key, value] of Object.entries(node)) {
+        if (key !== 'fields' && value && typeof value === 'object') walk(value as AnyRec, `${path}.${key}`);
+      }
+    };
+    for (const page of pages) walk(page, `page:${page.name}`);
+    for (const view of views) walk(view, `view:${view.list?.data?.object ?? view.object ?? '?'}`);
+    expect(bad, `sections with a label but no name — invisible to every i18n gate:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
 });

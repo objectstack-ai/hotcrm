@@ -76,6 +76,7 @@ export const QuoteViews = defineView({
     type: 'tabbed',
     sections: [
       {
+        name: 'quote',
         label: 'Quote',
         columns: 2,
         // `name` is required on crm_quote with no default — omitting it made
@@ -83,16 +84,23 @@ export const QuoteViews = defineView({
         fields: [{ field: 'name', required: true, colSpan: 2 }, 'quote_number', 'crm_account', 'crm_contact', 'crm_opportunity', 'owner_id', 'status', 'quote_date', 'expiration_date'],
       },
       {
+        name: 'totals',
         label: 'Totals',
         columns: 2,
         fields: ['subtotal', 'discount', 'discount_amount', 'tax', 'shipping_handling', 'total_price'],
       },
       {
+        // Named `quote_terms`, not `terms` — `terms` is already a distinct
+        // fieldGroup key on `crm_quote` ("Terms & Validity"), and reusing it
+        // here would make this section's translated heading follow that
+        // group's wording instead of its own "Terms".
+        name: 'quote_terms',
         label: 'Terms',
         columns: 2,
         fields: ['payment_terms', 'shipping_terms'],
       },
       {
+        name: 'addresses_and_notes',
         label: 'Addresses & Notes',
         columns: 1,
         fields: ['billing_address', 'shipping_address', 'internal_notes'],

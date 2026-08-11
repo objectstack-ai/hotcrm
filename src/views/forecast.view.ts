@@ -122,16 +122,19 @@ export const ForecastViews = defineView({
     type: 'simple',
     sections: [
       {
+        name: 'snapshot',
         label: 'Snapshot',
         columns: 2,
         fields: ['owner_id', 'period', 'period_start', 'period_end', 'period_label', 'snapshot_date', 'source'],
       },
       {
+        name: 'amounts',
         label: 'Amounts',
         columns: 2,
         fields: ['quota', 'closed_amount', 'commit_amount', 'best_case_amount', 'pipeline_amount', 'expected_amount', 'attainment_pct', 'coverage_ratio'],
       },
       {
+        name: 'notes',
         label: 'Notes',
         columns: 1,
         fields: ['notes'],

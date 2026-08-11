@@ -74,6 +74,7 @@ export const ProductViews = defineView({
     type: 'simple',
     sections: [
       {
+        name: 'product_info',
         label: 'Product Info',
         columns: 2,
         fields: [
@@ -88,11 +89,13 @@ export const ProductViews = defineView({
         ],
       },
       {
+        name: 'pricing_and_inventory',
         label: 'Pricing & Inventory',
         columns: 2,
         fields: ['list_price', 'cost', 'quantity_on_hand', 'reorder_point'],
       },
       {
+        name: 'media',
         label: 'Media',
         columns: 1,
         fields: ['image', 'datasheet', 'description'],

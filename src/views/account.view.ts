@@ -196,6 +196,7 @@ export const AccountViews = defineView({
     type: 'tabbed',
     sections: [
       {
+        name: 'profile',
         label: 'Profile',
         columns: 2,
         fields: [
@@ -215,6 +216,7 @@ export const AccountViews = defineView({
         ],
       },
       {
+        name: 'financials',
         label: 'Financials',
         columns: 2,
         fields: ['annual_revenue', 'number_of_employees'],
@@ -223,11 +225,13 @@ export const AccountViews = defineView({
         // The customer-success fields the renewals_due / at_risk_accounts
         // views list and filter on. They existed on the object but no form
         // offered them, so the CS working queues stayed permanently empty.
+        name: 'customer_success',
         label: 'Customer Success',
         columns: 2,
         fields: ['tier', 'segment', 'health_score', 'renewal_owner', 'next_renewal_date'],
       },
       {
+        name: 'locations',
         label: 'Locations',
         columns: 1,
         // `billing_country` and `territory` are readonly and derived, but both
@@ -242,6 +246,7 @@ export const AccountViews = defineView({
         fields: ['billing_address', 'billing_country', 'territory', 'office_location'],
       },
       {
+        name: 'description',
         label: 'Description',
         columns: 1,
         fields: ['description'],

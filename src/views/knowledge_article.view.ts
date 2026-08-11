@@ -149,6 +149,7 @@ export const KnowledgeArticleViews = defineView({
     type: 'simple',
     sections: [
       {
+        name: 'article',
         label: 'Article',
         columns: 2,
         fields: [
@@ -164,6 +165,7 @@ export const KnowledgeArticleViews = defineView({
         ],
       },
       {
+        name: 'content',
         label: 'Content',
         columns: 1,
         fields: ['body'],

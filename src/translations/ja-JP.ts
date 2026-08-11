@@ -172,6 +172,11 @@ export const jaJP: TranslationData = {
         ownership: { label: '所有者・ステータス' },
         branding: { label: 'ブランディング' },
         system: { label: 'システム' },
+        // account.view.ts のフォームセクション名 (#1100)
+        profile: { label: 'プロフィール' },
+        customer_success: { label: 'カスタマーサクセス' },
+        locations: { label: '所在地' },
+        description: { label: '説明' },
       },
       _actions: { ...activityActions },
     },
@@ -226,6 +231,9 @@ export const jaJP: TranslationData = {
         mailing_address: { label: '郵送先住所' },
         additional: { label: 'その他の情報' },
         preferences: { label: 'コミュニケーション設定' },
+        // contact.view.ts のフォームセクション名 (#1100)
+        contact_details: { label: '連絡先情報' },
+        comm_preferences: { label: '設定' },
       },
       _actions: {
         ...activityActions,
@@ -309,6 +317,8 @@ export const jaJP: TranslationData = {
         taxonomy: { label: '分類' },
         metrics: { label: '利用状況' },
         engagement: { label: '利用状況' },
+        // knowledge_article.view.ts のフォームセクション名 (#1100)
+        article: { label: '記事' },
       },
       _actions: {
         mark_article_helpful: {
@@ -394,6 +404,9 @@ export const jaJP: TranslationData = {
         basic: { label: 'スナップショット' },
         amounts: { label: '金額' },
         meta: { label: 'ソース' },
+        // forecast.view.ts のフォームセクション名 (#1100)
+        snapshot: { label: 'スナップショット' },
+        notes: { label: 'メモ' },
       },
     },
 
@@ -503,6 +516,30 @@ export const jaJP: TranslationData = {
         preferences: { label: 'コミュニケーション設定' },
         conversion: { label: '変換' },
         duplicates: { label: '重複管理' },
+        // lead.view.ts のフォームセクション名 (#1100) — デフォルトフォームと
+        // 名前付き formView 6 種。
+        contact_information: { label: '連絡先情報' },
+        lead_classification: { label: 'リード分類' },
+        company_information: { label: '会社情報' },
+        additional_information: { label: '追加情報' },
+        privacy: { label: 'プライバシー' },
+        lead_details: { label: 'リード詳細' },
+        general: { label: '一般' },
+        details: { label: '詳細' },
+        step_1_contact_details: { label: 'ステップ1：連絡先情報' },
+        step_2_company_information: { label: 'ステップ2：会社情報' },
+        step_3_qualification: { label: 'ステップ3：資格評価' },
+        step_4_review_and_convert: { label: 'ステップ4：確認と変換' },
+        primary_information: { label: '主要情報' },
+        extended_details: { label: '詳細情報' },
+        quick_edit: { label: 'クイック編集' },
+        update_lead_status: { label: 'リードステータスを更新' },
+        tell_us_about_yourself: { label: 'あなたについて教えてください' },
+        about_your_company: { label: '貴社について' },
+        how_can_we_help: { label: 'どのようなご用件でしょうか？' },
+        lead_information: { label: 'リード情報' },
+        address_information: { label: '住所情報' },
+        privacy_preferences: { label: 'プライバシー設定' },
       },
       _actions: {
         ...activityActions,
@@ -622,6 +659,11 @@ export const jaJP: TranslationData = {
         classification: { label: '分類' },
         campaign: { label: 'キャンペーン' },
         notes: { label: 'メモ・次のステップ' },
+        // opportunity.view.ts のフォームセクション名 (#1100)
+        overview: { label: '概要' },
+        forecast: { label: '予測' },
+        sales_strategy: { label: '営業戦略' },
+        win_loss: { label: '受注／失注' },
       },
       _actions: {
         ...activityActions,
@@ -721,6 +763,12 @@ export const jaJP: TranslationData = {
         info: { label: 'ケース情報' },
         status: { label: 'ステータス・SLA' },
         description: { label: '説明' },
+        // case.view.ts のフォームセクション名 (#1100)。sla ではなく
+        // sla_overview — sla は「SLA・優先度」フィールドグループのキーとして
+        // 既に使われている。
+        case: { label: 'ケース' },
+        sla_overview: { label: 'SLA' },
+        how_can_we_help: { label: 'どのようなご用件でしょうか？' },
         // オブジェクト定義のセクションキー（case.object.ts）— 入力フォームで使用
         basic: { label: 'ケース情報' },
         origin: { label: '発生元・振り分け' },
@@ -800,6 +848,10 @@ export const jaJP: TranslationData = {
         value: { label: '契約金額' },
         status: { label: 'ステータス・承認' },
         renewal: { label: '更新' },
+        // contract.view.ts のフォームセクション名 (#1100)
+        contract_terms: { label: '契約条件' },
+        signing_and_documents: { label: '署名と書類' },
+        notes: { label: '備考' },
       },
     },
 
@@ -861,6 +913,10 @@ export const jaJP: TranslationData = {
         basic: { label: '製品情報' },
         pricing: { label: '価格・請求' },
         metadata: { label: '関連資料' },
+        // product.view.ts のフォームセクション名 (#1100)
+        product_info: { label: '製品情報' },
+        pricing_and_inventory: { label: '価格と在庫' },
+        media: { label: 'メディア' },
       },
     },
 
@@ -912,6 +968,11 @@ export const jaJP: TranslationData = {
         terms: { label: '条件・有効期限' },
         address: { label: '住所' },
         system: { label: 'システム' },
+        // quote.view.ts のフォームセクション名 (#1100)
+        quote: { label: '見積書' },
+        totals: { label: '合計' },
+        quote_terms: { label: '契約条件' },
+        addresses_and_notes: { label: '住所と備考' },
       },
     },
 
@@ -985,6 +1046,10 @@ export const jaJP: TranslationData = {
         recurrence: { label: '繰り返し' },
         effort: { label: '進捗・工数' },
         system: { label: 'システム' },
+        // task.view.ts のフォームセクション名 (#1100)
+        task: { label: 'タスク' },
+        related_records: { label: '関連レコード' },
+        recurrence_and_effort: { label: '繰り返しと工数' },
       },
     },
 
@@ -1112,6 +1177,9 @@ export const jaJP: TranslationData = {
         schedule: { label: 'スケジュール' },
         related: { label: '関連レコード' },
         outcome: { label: '実施結果' },
+        // event.view.ts のフォームセクション名 (#1100)
+        event: { label: 'イベント' },
+        related_records: { label: '関連レコード' },
       },
     },
 
@@ -1146,6 +1214,9 @@ export const jaJP: TranslationData = {
       _sections: {
         basic: { label: '参加者' },
         response: { label: '招待' },
+        // event_attendee.view.ts のフォームセクション名 (#1100)
+        attendee: { label: '参加者' },
+        invitation: { label: '招待' },
       },
     },
 

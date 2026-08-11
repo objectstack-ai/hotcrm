@@ -137,6 +137,11 @@ export const en: TranslationData = {
         ownership: { label: 'Ownership & Status' },
         branding: { label: 'Branding' },
         system: { label: 'System' },
+        // Form section names on account.view.ts (#1100)
+        profile: { label: 'Profile' },
+        customer_success: { label: 'Customer Success' },
+        locations: { label: 'Locations' },
+        description: { label: 'Description' },
       },
       _actions: { ...activityActions },
     },
@@ -201,6 +206,11 @@ export const en: TranslationData = {
         mailing_address: { label: 'Mailing Address' },
         additional: { label: 'Additional Info' },
         preferences: { label: 'Communication Preferences' },
+        // Form section names on contact.view.ts (#1100). `contact_details` /
+        // `comm_preferences`, not `contact_info` / `preferences` — those are
+        // already fieldGroup keys with their own (longer) wording above.
+        contact_details: { label: 'Contact Info' },
+        comm_preferences: { label: 'Preferences' },
       },
       _actions: {
         ...activityActions,
@@ -284,6 +294,8 @@ export const en: TranslationData = {
         taxonomy: { label: 'Categorization' },
         metrics: { label: 'Engagement' },
         engagement: { label: 'Engagement' },
+        // Form section name on knowledge_article.view.ts (#1100)
+        article: { label: 'Article' },
       },
       _actions: {
         mark_article_helpful: {
@@ -363,6 +375,11 @@ export const en: TranslationData = {
         basic: { label: 'Snapshot' },
         amounts: { label: 'Amounts' },
         meta: { label: 'Source' },
+        // Form section names on forecast.view.ts (#1100). `basic`'s label
+        // matches "Snapshot" but its key does not, so this form section
+        // needs its own entry; `notes` has no fieldGroup counterpart at all.
+        snapshot: { label: 'Snapshot' },
+        notes: { label: 'Notes' },
       },
     },
 
@@ -487,6 +504,31 @@ export const en: TranslationData = {
         crm_contact: { label: 'Contact' },
         detail: { label: 'Lead Detail' },
         description: { label: 'Description' },
+        // Form section names on lead.view.ts (#1100) — the default form and
+        // its six named formViews. `address` / `qualification` above are
+        // reused (identical fieldGroup wording); every other name here is new.
+        contact_information: { label: 'Contact Information' },
+        lead_classification: { label: 'Lead Classification' },
+        company_information: { label: 'Company Information' },
+        additional_information: { label: 'Additional Information' },
+        privacy: { label: 'Privacy' },
+        lead_details: { label: 'Lead Details' },
+        general: { label: 'General' },
+        details: { label: 'Details' },
+        step_1_contact_details: { label: 'Step 1: Contact Details' },
+        step_2_company_information: { label: 'Step 2: Company Information' },
+        step_3_qualification: { label: 'Step 3: Qualification' },
+        step_4_review_and_convert: { label: 'Step 4: Review & Convert' },
+        primary_information: { label: 'Primary Information' },
+        extended_details: { label: 'Extended Details' },
+        quick_edit: { label: 'Quick Edit' },
+        update_lead_status: { label: 'Update Lead Status' },
+        tell_us_about_yourself: { label: 'Tell us about yourself' },
+        about_your_company: { label: 'About your company' },
+        how_can_we_help: { label: 'How can we help?' },
+        lead_information: { label: 'Lead Information' },
+        address_information: { label: 'Address Information' },
+        privacy_preferences: { label: 'Privacy Preferences' },
       },
       _actions: {
         ...activityActions,
@@ -618,6 +660,11 @@ export const en: TranslationData = {
         // Detail-page sections (src/pages/opportunity_detail.page.ts)
         info: { label: 'Opportunity Information' },
         description: { label: 'Description' },
+        // Form section names on opportunity.view.ts (#1100)
+        overview: { label: 'Overview' },
+        forecast: { label: 'Forecast' },
+        sales_strategy: { label: 'Sales Strategy' },
+        win_loss: { label: 'Win / Loss' },
       },
       _actions: {
         ...activityActions,
@@ -725,6 +772,11 @@ export const en: TranslationData = {
         info: { label: 'Case Information' },
         status: { label: 'Status & SLA' },
         description: { label: 'Description' },
+        // Form section names on case.view.ts (#1100). `sla_overview`, not
+        // `sla` — `sla` is already the fieldGroup key for "SLA & Priority".
+        case: { label: 'Case' },
+        sla_overview: { label: 'SLA' },
+        how_can_we_help: { label: 'How can we help?' },
       },
       _actions: {
         ...activityActions,
@@ -804,6 +856,11 @@ export const en: TranslationData = {
         value: { label: 'Contract Value' },
         status: { label: 'Status & Approval' },
         renewal: { label: 'Renewal' },
+        // Form section names on contract.view.ts (#1100). `contract_terms`,
+        // not `terms` — `terms` is already the fieldGroup key for "Terms & Dates".
+        contract_terms: { label: 'Terms' },
+        signing_and_documents: { label: 'Signing & Documents' },
+        notes: { label: 'Notes' },
       },
     },
 
@@ -864,6 +921,10 @@ export const en: TranslationData = {
         basic: { label: 'Product Information' },
         pricing: { label: 'Pricing & Billing' },
         metadata: { label: 'Resources' },
+        // Form section names on product.view.ts (#1100)
+        product_info: { label: 'Product Info' },
+        pricing_and_inventory: { label: 'Pricing & Inventory' },
+        media: { label: 'Media' },
       },
     },
 
@@ -920,6 +981,12 @@ export const en: TranslationData = {
         terms: { label: 'Terms & Validity' },
         address: { label: 'Addresses' },
         system: { label: 'System' },
+        // Form section names on quote.view.ts (#1100). `quote_terms`, not
+        // `terms` — `terms` is already the fieldGroup key for "Terms & Validity".
+        quote: { label: 'Quote' },
+        totals: { label: 'Totals' },
+        quote_terms: { label: 'Terms' },
+        addresses_and_notes: { label: 'Addresses & Notes' },
       },
     },
 
@@ -995,6 +1062,10 @@ export const en: TranslationData = {
         recurrence: { label: 'Recurrence' },
         effort: { label: 'Progress & Effort' },
         system: { label: 'System' },
+        // Form section names on task.view.ts (#1100)
+        task: { label: 'Task' },
+        related_records: { label: 'Related Records' },
+        recurrence_and_effort: { label: 'Recurrence & Effort' },
       },
     },
 
@@ -1123,6 +1194,10 @@ export const en: TranslationData = {
         schedule: { label: 'Schedule' },
         related: { label: 'Related Records' },
         outcome: { label: 'Outcome' },
+        // Form section names on event.view.ts (#1100). `related_records`,
+        // not `related` — `related` is already the fieldGroup key above.
+        event: { label: 'Event' },
+        related_records: { label: 'Related Records' },
       },
     },
 
@@ -1160,6 +1235,11 @@ export const en: TranslationData = {
       _sections: {
         basic: { label: 'Attendee' },
         response: { label: 'Invitation' },
+        // Form section names on event_attendee.view.ts (#1100) — same English
+        // text as the fieldGroups above, but a distinct key: `attendee` /
+        // `invitation` are not `basic` / `response`.
+        attendee: { label: 'Attendee' },
+        invitation: { label: 'Invitation' },
       },
     },
 

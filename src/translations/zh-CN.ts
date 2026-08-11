@@ -131,6 +131,11 @@ export const zhCN: TranslationData = {
         ownership: { label: '归属与状态' },
         branding: { label: '品牌' },
         system: { label: '系统' },
+        // account.view.ts 表单区块名称 (#1100)
+        profile: { label: '资料' },
+        customer_success: { label: '客户成功' },
+        locations: { label: '地址信息' },
+        description: { label: '描述' },
       },
       _actions: { ...activityActions },
     },
@@ -218,6 +223,9 @@ export const zhCN: TranslationData = {
         mailing_address: { label: '邮寄地址' },
         additional: { label: '附加信息' },
         preferences: { label: '沟通偏好' },
+        // contact.view.ts 表单区块名称 (#1100)
+        contact_details: { label: '联系信息' },
+        comm_preferences: { label: '偏好设置' },
       },
     },
 
@@ -275,6 +283,8 @@ export const zhCN: TranslationData = {
         taxonomy: { label: '分类' },
         metrics: { label: '互动数据' },
         engagement: { label: '互动数据' },
+        // knowledge_article.view.ts 表单区块名称 (#1100)
+        article: { label: '文章' },
       },
       _actions: {
         mark_article_helpful: {
@@ -336,6 +346,9 @@ export const zhCN: TranslationData = {
         basic: { label: '快照' },
         amounts: { label: '金额' },
         meta: { label: '来源' },
+        // forecast.view.ts 表单区块名称 (#1100)
+        snapshot: { label: '快照' },
+        notes: { label: '备注' },
       },
     },
 
@@ -462,6 +475,29 @@ export const zhCN: TranslationData = {
         preferences: { label: '沟通偏好' },
         conversion: { label: '转化' },
         duplicates: { label: '重复线索管理' },
+        // lead.view.ts 表单区块名称 (#1100) —— 默认表单及六个具名 formView。
+        contact_information: { label: '联系信息' },
+        lead_classification: { label: '线索分类' },
+        company_information: { label: '公司信息' },
+        additional_information: { label: '附加信息' },
+        privacy: { label: '隐私' },
+        lead_details: { label: '线索详情' },
+        general: { label: '常规信息' },
+        details: { label: '详情' },
+        step_1_contact_details: { label: '第一步：联系方式' },
+        step_2_company_information: { label: '第二步：公司信息' },
+        step_3_qualification: { label: '第三步：资质审核' },
+        step_4_review_and_convert: { label: '第四步：审核并转化' },
+        primary_information: { label: '主要信息' },
+        extended_details: { label: '扩展信息' },
+        quick_edit: { label: '快速编辑' },
+        update_lead_status: { label: '更新线索状态' },
+        tell_us_about_yourself: { label: '请介绍一下您自己' },
+        about_your_company: { label: '您的公司信息' },
+        how_can_we_help: { label: '我们能帮您什么？' },
+        lead_information: { label: '线索信息' },
+        address_information: { label: '地址信息' },
+        privacy_preferences: { label: '隐私偏好' },
       },
       _actions: {
         ...activityActions,
@@ -538,6 +574,11 @@ export const zhCN: TranslationData = {
         terms: { label: '条款与有效期' },
         address: { label: '地址' },
         system: { label: '系统' },
+        // quote.view.ts 表单区块名称 (#1100)
+        quote: { label: '报价单' },
+        totals: { label: '合计' },
+        quote_terms: { label: '条款' },
+        addresses_and_notes: { label: '地址与备注' },
       },
     },
 
@@ -602,6 +643,10 @@ export const zhCN: TranslationData = {
         value: { label: '合同金额' },
         status: { label: '状态与审批' },
         renewal: { label: '续约' },
+        // contract.view.ts 表单区块名称 (#1100)
+        contract_terms: { label: '条款' },
+        signing_and_documents: { label: '签署与文件' },
+        notes: { label: '备注' },
       },
     },
 
@@ -692,6 +737,11 @@ export const zhCN: TranslationData = {
         info: { label: '工单信息' },
         status: { label: '状态与 SLA' },
         description: { label: '描述' },
+        // case.view.ts 表单区块名称 (#1100)。使用 sla_overview 而非 sla ——
+        // sla 已是「SLA 与优先级」字段分组的键。
+        case: { label: '工单' },
+        sla_overview: { label: 'SLA' },
+        how_can_we_help: { label: '我们能帮您什么？' },
         // Object-level section keys (case.object.ts) used by record forms
         basic: { label: '工单信息' },
         origin: { label: '来源与路由' },
@@ -765,6 +815,10 @@ export const zhCN: TranslationData = {
         recurrence: { label: '重复规则' },
         system: { label: '系统' },
         effort: { label: '进度与工时' },
+        // task.view.ts 表单区块名称 (#1100)
+        task: { label: '任务' },
+        related_records: { label: '关联记录' },
+        recurrence_and_effort: { label: '重复与工时' },
       },
       _views: {
         all_tasks: { label: '全部任务' },
@@ -906,6 +960,10 @@ export const zhCN: TranslationData = {
         basic: { label: '产品信息' },
         pricing: { label: '价格与计费' },
         metadata: { label: '资源' },
+        // product.view.ts 表单区块名称 (#1100)
+        product_info: { label: '产品信息' },
+        pricing_and_inventory: { label: '定价与库存' },
+        media: { label: '媒体' },
       },
     },
 
@@ -1014,6 +1072,11 @@ export const zhCN: TranslationData = {
         classification: { label: '分类' },
         campaign: { label: '营销活动' },
         notes: { label: '备注与下一步' },
+        // opportunity.view.ts 表单区块名称 (#1100)
+        overview: { label: '概览' },
+        forecast: { label: '预测' },
+        sales_strategy: { label: '销售策略' },
+        win_loss: { label: '赢单/输单' },
       },
       _actions: {
         ...activityActions,
@@ -1087,6 +1150,9 @@ export const zhCN: TranslationData = {
         schedule: { label: '日程安排' },
         related: { label: '关联记录' },
         outcome: { label: '结果' },
+        // event.view.ts 表单区块名称 (#1100)
+        event: { label: '活动' },
+        related_records: { label: '关联记录' },
       },
       _views: {
         all_events: { label: '全部活动' },
@@ -1126,6 +1192,9 @@ export const zhCN: TranslationData = {
       _sections: {
         basic: { label: '参与者' },
         response: { label: '邀请' },
+        // event_attendee.view.ts 表单区块名称 (#1100)
+        attendee: { label: '参与者' },
+        invitation: { label: '邀请' },
       },
       _views: {
         all_event_attendees: { label: '活动参与者' },

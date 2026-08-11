@@ -245,6 +245,7 @@ export const TaskViews = defineView({
     type: 'simple',
     sections: [
       {
+        name: 'task',
         label: 'Task',
         columns: 2,
         // `type` (call / email / meeting / demo) is what makes an activity
@@ -265,6 +266,7 @@ export const TaskViews = defineView({
         ],
       },
       {
+        name: 'related_records',
         label: 'Related Records',
         collapsible: true,
         columns: 2,
@@ -277,6 +279,7 @@ export const TaskViews = defineView({
         ],
       },
       {
+        name: 'recurrence_and_effort',
         label: 'Recurrence & Effort',
         collapsible: true,
         collapsed: true,
