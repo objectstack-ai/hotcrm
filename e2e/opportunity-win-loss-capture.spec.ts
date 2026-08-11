@@ -1,6 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { test, expect, recordOf, recordsOf, seededAccountId } from './fixtures';
+import { test, expect, recordOf, uniqueName } from './fixtures';
 import type { APIRequestContext } from '@playwright/test';
 
 /**
@@ -19,19 +19,42 @@ import type { APIRequestContext } from '@playwright/test';
  * evidence, but the kind that disappears the moment someone fixes the
  * fixtures. A rule whose only proof is another test's collateral damage is a
  * rule that can be silently removed.
+ *
+ * ─── Where the "the demo boots with the rule on" case went (#669) ───────────
+ *
+ * This file used to end by listing 200 opportunities and sweeping the settled
+ * ones for a missing reason. That case could only ever run while the SEEDED
+ * deals were readable by this account, which is true only while nobody owns
+ * them — the dependency #669 removes. It is not replaced by a weaker version of
+ * itself; its claim is carried, in full, by two assertions that do not need a
+ * particular owner:
+ *
+ *   - that every settled SEED supplies its reason is
+ *     `test/win-loss-capture.test.ts` → "every settled seed carries its reason",
+ *     which reads `objectstack.config`'s own seed buckets, so it sees every
+ *     record rather than the first 200 rows some user can see;
+ *   - that the seed's WRITE SHAPE — an insert landing directly in a settled
+ *     stage — is subject to the rule at all is the pair of insert-path cases
+ *     below: the rejection when the reason is absent, and (new here) the
+ *     acceptance, with the reason stored, when it is supplied.
+ *
+ * What is genuinely no longer asserted anywhere on this path: that the rows the
+ * seed loader actually WROTE match the seed source it read. That is a platform
+ * property rather than a hotcrm rule, and it is not one this suite can state
+ * without reading somebody else's records.
  */
 
 const BASE = '/api/v1/data/crm_opportunity';
 
-/** An open deal to close, and its id registered for cleanup. */
+/** An open deal, ready to be closed. */
 async function openDeal(
   api: APIRequestContext,
   name: string,
-  accountId: string,
+  accountId: unknown,
 ): Promise<Record<string, unknown>> {
   const res = await api.post(BASE, {
     data: {
-      name,
+      name: uniqueName(name),
       stage: 'negotiation',
       amount: 30_000,
       close_date: '2099-12-31',
@@ -42,27 +65,15 @@ async function openDeal(
   return recordOf(await res.json());
 }
 
+// No cleanup hook: this account holds no delete grant (see `./fixtures.ts`), so
+// the loop that used to sit here deleted nothing. Unique names carry reruns.
 test.describe('closing an opportunity requires a reason (real HTTP path)', () => {
-  let accountId: string | undefined;
-  const created: string[] = [];
-
-  test.beforeEach(async ({ api }) => {
-    accountId ??= await seededAccountId(api);
-  });
-
-  test.afterEach(async ({ api }) => {
-    while (created.length) {
-      const id = created.pop()!;
-      await api.delete(`${BASE}/${id}`).catch(() => undefined);
-    }
-  });
-
   test('PATCH to closed_lost with no loss_reason is rejected, and the deal does not move', async ({
     api,
+    account,
   }) => {
-    const rec = await openDeal(api, 'E2E Lost Without Reason', accountId!);
+    const rec = await openDeal(api, 'E2E Lost Without Reason', account.id);
     const id = rec.id as string;
-    created.push(id);
 
     const res = await api.patch(`${BASE}/${id}`, { data: { stage: 'closed_lost' } });
 
@@ -84,10 +95,10 @@ test.describe('closing an opportunity requires a reason (real HTTP path)', () =>
 
   test('PATCH to closed_won with no win_reason is rejected, and the deal does not move', async ({
     api,
+    account,
   }) => {
-    const rec = await openDeal(api, 'E2E Won Without Reason', accountId!);
+    const rec = await openDeal(api, 'E2E Won Without Reason', account.id);
     const id = rec.id as string;
-    created.push(id);
 
     const res = await api.patch(`${BASE}/${id}`, { data: { stage: 'closed_won' } });
 
@@ -99,17 +110,17 @@ test.describe('closing an opportunity requires a reason (real HTTP path)', () =>
     expect(after.stage).toBe('negotiation');
   });
 
-  test('POST that lands directly in a closed stage is rejected too', async ({ api }) => {
-    // The path an import or an API integration takes. Insert is a different
-    // branch of the rule — the engine fills absent fields with null there
-    // rather than leaving them out — so it is asserted separately.
+  test('POST that lands directly in a closed stage is rejected too', async ({ api, account }) => {
+    // The path an import, a seed file or an API integration takes. Insert is a
+    // different branch of the rule — the engine fills absent fields with null
+    // there rather than leaving them out — so it is asserted separately.
     const res = await api.post(BASE, {
       data: {
-        name: 'E2E Born Lost',
+        name: uniqueName('E2E Born Lost'),
         stage: 'closed_lost',
         amount: 30_000,
         close_date: '2020-01-01',
-        crm_account: accountId,
+        crm_account: account.id,
       },
     });
     expect(res.ok(), 'the server accepted an insert straight into closed_lost').toBeFalsy();
@@ -117,12 +128,44 @@ test.describe('closing an opportunity requires a reason (real HTTP path)', () =>
     expect(JSON.stringify(await res.json())).toContain('loss_reason');
   });
 
-  test('the same close SUCCEEDS once the reason is supplied', async ({ api }) => {
+  test('a deal born settled WITH its reason is accepted, and stores it', async ({ api, account }) => {
+    // The other half of the insert branch, and the half the seeds themselves
+    // take: `src/data/revenue.seed.ts` ships closed_won and closed_lost deals
+    // that land settled at insert time and carry their reason. Without this the
+    // case above would still pass if the API had simply stopped accepting
+    // settled inserts altogether — a rule that rejects everything is not the
+    // rule #593 asked for, and it would take the demo's whole win/loss
+    // breakdown down with it.
+    const name = uniqueName('E2E Born Won');
+    const res = await api.post(BASE, {
+      data: {
+        name,
+        stage: 'closed_won',
+        win_reason: 'best_fit',
+        amount: 30_000,
+        close_date: '2020-01-01',
+        crm_account: account.id,
+      },
+    });
+    expect(res.ok(), `a settled insert WITH its reason was refused: ${res.status()} ${await res.text()}`).toBeTruthy();
+
+    const rec = recordOf(await res.json());
+    expect(rec.stage).toBe('closed_won');
+    expect(rec.win_reason).toBe('best_fit');
+
+    // Re-read: the reason has to be STORED, not merely echoed by the write.
+    const reread = recordOf(await (await api.get(`${BASE}/${rec.id}`)).json());
+    expect(reread.name).toBe(name);
+    expect(reread.stage).toBe('closed_won');
+    expect(reread.win_reason).toBe('best_fit');
+    expect(reread.loss_reason ?? null).toBeNull();
+  });
+
+  test('the same close SUCCEEDS once the reason is supplied', async ({ api, account }) => {
     // Without this, every assertion above would still pass if the API had
     // simply stopped accepting stage changes at all.
-    const rec = await openDeal(api, 'E2E Lost With Reason', accountId!);
+    const rec = await openDeal(api, 'E2E Lost With Reason', account.id);
     const id = rec.id as string;
-    created.push(id);
 
     const res = await api.patch(`${BASE}/${id}`, {
       data: { stage: 'closed_lost', loss_reason: 'competitor' },
@@ -132,29 +175,5 @@ test.describe('closing an opportunity requires a reason (real HTTP path)', () =>
     const updated = recordOf(await res.json());
     expect(updated.stage).toBe('closed_lost');
     expect(updated.loss_reason).toBe('competitor');
-  });
-
-  test('every seeded settled deal carries its reason — the demo boots with the rule on', async ({
-    api,
-  }) => {
-    // The rule applies to seed writes too, so a settled seed with no reason
-    // does not degrade the demo, it stops the boot. This reads the database the
-    // server actually loaded rather than the seed source, which is the only
-    // way to see the result of that boot.
-    const res = await api.get(`${BASE}?limit=200`);
-    expect(res.ok(), `could not list opportunities: ${res.status()}`).toBeTruthy();
-    const rows = recordsOf(await res.json());
-
-    const won = rows.filter((r) => r.stage === 'closed_won');
-    const lost = rows.filter((r) => r.stage === 'closed_lost');
-    // Guards the guard: an empty database would make the sweep below vacuous.
-    expect(won.length, 'no closed_won opportunities loaded').toBeGreaterThan(0);
-    expect(lost.length, 'no closed_lost opportunities loaded').toBeGreaterThan(0);
-
-    const missing = [
-      ...won.filter((r) => !r.win_reason).map((r) => `${r.name}: no win_reason`),
-      ...lost.filter((r) => !r.loss_reason).map((r) => `${r.name}: no loss_reason`),
-    ];
-    expect(missing, `settled deals with no reason:\n  ${missing.join('\n  ')}`).toEqual([]);
   });
 });
