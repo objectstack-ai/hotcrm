@@ -212,6 +212,17 @@ describe('every script action body executes under QuickJS', () => {
     create_campaign: {
       opts: { objectName: 'crm_lead', record: { id: 'lead_1' }, input: { crm_campaign: 'cmp_1' } },
     },
+    // The contact-side mirror of `create_campaign` (#597) — the writer that
+    // finally populates `crm_campaign_member.crm_contact`.
+    add_contact_to_campaign: {
+      opts: { objectName: 'crm_contact', record: { id: 'con_1' }, input: { crm_campaign: 'cmp_1' } },
+    },
+    // The `responded` status's writer (#597). Seeded with the member it stamps,
+    // so the body's update resolves a real row.
+    mark_responded: {
+      opts: { objectName: 'crm_campaign_member', record: { id: 'cm_1' } },
+      seed: { crm_campaign_member: [{ id: 'cm_1', crm_campaign: 'cmp_1', crm_lead: 'lead_1', status: 'sent' }] },
+    },
     mark_primary: {
       opts: { objectName: 'crm_contact', record: { id: 'con_1' } },
       seed: { crm_contact: [{ id: 'con_1', is_primary: false }] },
@@ -490,6 +501,68 @@ describe('every script action body executes under QuickJS', () => {
     const members = engine.rows('crm_campaign_member');
     expect(members).toHaveLength(1);
     expect(members[0]).toMatchObject({ crm_campaign: 'cmp_1', crm_lead: 'lead_7', status: 'sent' });
+  });
+
+  /**
+   * The contact side of the same fan-out (#597).
+   *
+   * `crm_campaign_member.crm_contact` was a lookup no writer populated, so a
+   * campaign could only ever reach leads. This body is the manual half of the
+   * fix (the enrollment flow is the bulk half), and it is asserted in the
+   * sandbox rather than against the handler because a `script` action's body is
+   * what the runtime actually evaluates.
+   */
+  it('add_contact_to_campaign enrols the dispatched contact, keeping crm_lead null', async () => {
+    const engine = makeSandboxEngine();
+    const { result } = await runActionBody(action('add_contact_to_campaign'), {
+      objectName: 'crm_contact',
+      record: { id: 'con_7' },
+      input: { crm_campaign: 'cmp_1' },
+      engine,
+    });
+
+    expect(result).toMatchObject({ campaignId: 'cmp_1', count: 1, skipped: 0 });
+    const members = engine.rows('crm_campaign_member');
+    expect(members).toHaveLength(1);
+    expect(members[0]).toMatchObject({ crm_campaign: 'cmp_1', crm_contact: 'con_7', status: 'sent' });
+    expect(members[0].crm_lead, 'a contact member must not also claim a lead').toBeUndefined();
+  });
+
+  it('add_contact_to_campaign skips a contact already on the campaign', async () => {
+    const engine = makeSandboxEngine({
+      crm_campaign_member: [{ id: 'cm_x', crm_campaign: 'cmp_1', crm_contact: 'con_7', status: 'sent' }],
+    });
+    const { result } = await runActionBody(action('add_contact_to_campaign'), {
+      objectName: 'crm_contact',
+      record: { id: 'con_7' },
+      input: { crm_campaign: 'cmp_1' },
+      engine,
+    });
+    expect(result).toMatchObject({ count: 0, skipped: 1 });
+    expect(engine.rows('crm_campaign_member')).toHaveLength(1);
+  });
+
+  /**
+   * `mark_responded` is the only writer of the `responded` status, and it
+   * stamps all three response fields together rather than leaving two of them
+   * for `campaign_member_lifecycle` to back-fill — a member that reads
+   * "Responded / Has Responded: false" for the length of a hook dispatch is a
+   * shape the detail page can render.
+   */
+  it('mark_responded stamps status, has_responded and response_date together', async () => {
+    const engine = makeSandboxEngine({
+      crm_campaign_member: [{ id: 'cm_9', crm_campaign: 'cmp_1', crm_lead: 'lead_1', status: 'sent' }],
+    });
+    const { result } = await runActionBody(action('mark_responded'), {
+      objectName: 'crm_campaign_member',
+      record: { id: 'cm_9', status: 'sent' },
+      engine,
+    });
+    expect(result).toMatchObject({ id: 'cm_9', status: 'responded' });
+    const [member] = engine.rows('crm_campaign_member');
+    expect(member.status).toBe('responded');
+    expect(member.has_responded).toBe(true);
+    expect(typeof member.response_date).toBe('string');
   });
 
   it('create_campaign skips a lead already enrolled on the campaign', async () => {

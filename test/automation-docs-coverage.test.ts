@@ -205,7 +205,10 @@ const ROW_LABEL: Record<string, Record<'zh-Hans' | 'zh-Hant', string>> = {
   // 营销活动, not 活动: 「活动」 is the locale pack's label for `crm_event`, and this
   // page's own table sits one section from the campaign rows. Naming the master
   // fully is the same call #810 made for `crm_campaign_member`.
-  campaign_enrollment: { 'zh-Hans': '将线索登记进营销活动', 'zh-Hant': '將線索登記進行銷活動' },
+  // 成员, not 线索: the flow enrols leads AND contacts since #597, and the
+  // English label moved to "Enroll Members in Campaign" with it. 「成员」 follows
+  // the locale packs, where `crm_campaign_member` is 营销活动成员.
+  campaign_enrollment: { 'zh-Hans': '将成员登记进营销活动', 'zh-Hant': '將成員登記進行銷活動' },
   escalate_case: { 'zh-Hans': '升级案例', 'zh-Hant': '升級案例' },
   close_case: { 'zh-Hans': '关闭案例', 'zh-Hant': '關閉案例' },
   lead_assignment: { 'zh-Hans': '新线索路由与 SLA', 'zh-Hant': '新線索路由與 SLA' },

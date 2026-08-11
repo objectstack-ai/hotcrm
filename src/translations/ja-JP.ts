@@ -241,6 +241,13 @@ export const jaJP: TranslationData = {
             body: { label: '本文' },
           },
         },
+        add_contact_to_campaign: {
+          label: 'キャンペーンに追加',
+          successMessage: '取引先責任者をキャンペーンに追加しました！',
+          params: {
+            crm_campaign: { label: 'キャンペーン' },
+          },
+        },
       },
     },
 
@@ -1038,8 +1045,8 @@ export const jaJP: TranslationData = {
       },
       _actions: {
         enroll_leads: {
-          label: 'リードを一括登録',
-          successMessage: '対象リードをキャンペーンに登録しました。',
+          label: 'メンバーを一括登録',
+          successMessage: '対象メンバーをキャンペーンに登録しました。',
         },
       },
     },
@@ -1143,20 +1150,23 @@ export const jaJP: TranslationData = {
         status: {
           label: 'ステータス',
           options: {
-            sent: '送信済', opened: '開封済', clicked: 'クリック済',
-            responded: '応答済', converted: '変換済', bounced: 'バウンス',
-            unsubscribed: '配信停止',
+            sent: '送信済', responded: '応答済',
+            converted: '変換済', unsubscribed: '配信停止',
           },
         },
         added_date: { label: '追加日時' },
-        first_opened_date: { label: '初回開封' },
-        first_clicked_date: { label: '初回クリック' },
         response_date: { label: '応答日時' },
         has_responded: { label: '応答済' },
       },
       _sections: {
         basic: { label: '基本情報' },
         response: { label: '反応トラッキング' },
+      },
+      _actions: {
+        mark_responded: {
+          label: '応答済にする',
+          successMessage: 'このキャンペーンメンバーの応答を記録しました。',
+        },
       },
     },
 

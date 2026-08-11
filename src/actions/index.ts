@@ -11,9 +11,9 @@
  * action and the screen flow under `src/flows/lead-conversion.flow.ts`
  * carries the implementation.
  */
-export { EnrollLeadsAction } from './campaign.actions';
+export { EnrollLeadsAction, MarkRespondedAction } from './campaign.actions';
 export { EscalateCaseAction, CloseCaseAction } from './case.actions';
-export { MarkPrimaryContactAction, SendEmailAction } from './contact.actions';
+export { AddContactToCampaignAction, MarkPrimaryContactAction, SendEmailAction } from './contact.actions';
 // Activity logging, one registration per (kind × object) — #592. Every export
 // forwarded from here must be ONE Action: the stack is built from
 // `Object.values(actions)`, so an exported array would arrive as a nested list
