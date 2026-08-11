@@ -158,16 +158,20 @@ beforeAll(async () => {
   });
 
   // ── population: two accounts the rep owns NEITHER of ──────────────────
-  // `billing_country` is the flat column the territory rules filter on
-  // (`account.hook.ts` projects it; the hook does not run for this direct
-  // insert, so the fixture states it alongside the address).
+  // `territory` is the declared column the territory rules filter on (#639),
+  // and `account_protection` derives it — plus `billing_country` — from the
+  // address on every insert. `account_protection` DOES run here (this is the
+  // real engine with the real stack, not a stub), so both derived values are
+  // deliberately left unstated: authoring them would let this fixture keep
+  // granting the rep an account after the derivation itself broke, which is
+  // precisely the class of silent pass #639 was about.
   id.acct_US = await insert('crm_account', {
     name: 'US Customer', type: 'customer', is_active: true, owner_id: id.owner,
-    billing_address: { country: 'US' }, billing_country: 'US',
+    billing_address: { country: 'US' },
   });
   id.acct_JP = await insert('crm_account', {
     name: 'JP Customer', type: 'customer', is_active: true, owner_id: id.owner,
-    billing_address: { country: 'JP' }, billing_country: 'JP',
+    billing_address: { country: 'JP' },
   });
 
   const quoteOn = (account: string, name: string) => ({

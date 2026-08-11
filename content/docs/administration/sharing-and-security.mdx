@@ -87,8 +87,8 @@ Criteria-based rules are the enforced flavour: matching records materialise real
 | Rule | Object | Grants | To |
 | --- | --- | --- | --- |
 | Account Team Sharing | Account | Edit | `sales_manager` — active customer accounts |
-| North America Territory | Account | Edit | `na_sales_team` — accounts billing to US/CA/MX |
-| Europe Territory | Account | Edit | `eu_sales_team` — accounts billing to UK/DE/FR/IT/ES |
+| North America Territory | Account | Edit | `na_sales_team` — accounts whose Territory is `na` |
+| Europe Territory | Account | Edit | `eu_sales_team` — accounts whose Territory is `emea` |
 | Opportunity Sales Team Sharing | Opportunity | Read | `sales_director` — open deals ≥ $100,000 |
 | Large Open Deals — Executive | Opportunity | Read | `executive` — the same deals, one rung up |
 | Escalated Cases Sharing | Case | Edit | `service_manager` — open critical cases |

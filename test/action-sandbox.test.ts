@@ -772,43 +772,68 @@ describe('every registered hook still lowers to a metadata-only body', () => {
 });
 
 /**
- * The territory projection, executed in the VM rather than as a closure (#621).
+ * The territory derivation, executed in the VM rather than as a closure
+ * (#621 the projection, #639 the classification).
  *
- * `crm_account.billing_country` is what the two territory sharing rules filter
- * on, and `account_protection` is its only writer. `hooks-runtime-sales.test.ts`
- * proves the logic by calling the handler directly — which cannot see the one
- * failure mode that matters here: the projection is written INLINE (no
- * module-scope helper) precisely so the handler still lowers to a metadata-only
- * body, and a body is what the runtime actually evaluates. If a future edit
- * factors it back out into a helper, the guard above turns red; if the inlined
- * code uses something the sandbox does not provide, only this does.
+ * `crm_account.territory` is what the two territory sharing rules filter on,
+ * `billing_country` is the value it is classified from, and
+ * `account_protection` is the only writer of both.
+ * `hooks-runtime-sales.test.ts` proves the logic by calling the handler
+ * directly — which cannot see the one failure mode that matters here: the
+ * derivation is written INLINE (no module-scope helper) precisely so the
+ * handler still lowers to a metadata-only body, and a body is what the runtime
+ * actually evaluates. If a future edit factors it back out into a helper, the
+ * guard above turns red; if the inlined code uses something the sandbox does
+ * not provide, only this does.
+ *
+ * That inline-ness is exactly why the country mapping has to be duplicated
+ * between `src/objects/_territory.ts` and this handler — a sandboxed body has
+ * no module scope to import it from. The duplication is not trusted:
+ * `test/territory-single-source.test.ts` parses the table back out of the
+ * lowered body and asserts it equals the module's, and drives every declared
+ * spelling through this same VM.
  */
-describe('account_protection projects billing_country inside the sandbox', () => {
+describe('account_protection derives billing_country and territory inside the sandbox', () => {
   const hook = hookNamed(allHooks.find((h) => h.name === 'account_protection'), 'account_protection');
 
-  it('normalises the address country onto billing_country', async () => {
+  it('normalises the address country onto billing_country and classifies it', async () => {
     const { input } = await runHookBody(hook, {
       event: 'beforeInsert',
       input: { name: 'Acme', billing_address: { street: '1 Main', country: ' de ' } },
     });
     expect(input.billing_country).toBe('DE');
+    expect(input.territory).toBe('emea');
   });
 
-  it('yields null for an address carrying no country', async () => {
+  it('classifies a full country name the old free-text match would have dropped', async () => {
+    // The #639 defect in one case: `United States` used to belong to no
+    // territory at all, silently. Run here rather than only as a closure
+    // because a regex is one of the shapes QuickJS could plausibly differ on.
+    const { input } = await runHookBody(hook, {
+      event: 'beforeInsert',
+      input: { name: 'Acme', billing_address: { country: 'United  States' } },
+    });
+    expect(input.billing_country).toBe('UNITED STATES');
+    expect(input.territory).toBe('na');
+  });
+
+  it('yields null for an address carrying no country, and a stated `other`', async () => {
     const { input } = await runHookBody(hook, {
       event: 'beforeInsert',
       input: { name: 'Acme', billing_address: { city: 'Austin' } },
     });
     expect(input.billing_country).toBeNull();
+    expect(input.territory).toBe('other');
   });
 
-  it('leaves billing_country untouched when the write omits the address', async () => {
+  it('leaves both derived columns untouched when the write omits the address', async () => {
     const { input } = await runHookBody(hook, {
       event: 'beforeUpdate',
       input: { phone: '+1-512-555-0100' },
-      previous: { billing_country: 'US' },
+      previous: { billing_country: 'US', territory: 'na' },
     });
     expect('billing_country' in input).toBe(false);
+    expect('territory' in input).toBe(false);
   });
 });
 

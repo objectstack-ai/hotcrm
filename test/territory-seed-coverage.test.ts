@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { compileCelToFilter } from '@objectstack/formula';
 import stack from '../objectstack.config';
 import accountHook from '../src/objects/account.hook';
+import { TERRITORY_OPTIONS, territoryFor } from '../src/objects/_territory';
 import { CrmSeedData } from '../src/data/index';
 import * as sharedSeed from '../src/data/_shared';
 import * as catalogSeed from '../src/data/catalog.seed';
@@ -29,10 +30,14 @@ import * as revenueSeed from '../src/data/revenue.seed';
  * platform's own pieces at every step rather than a re-implementation:
  *
  *   seed record  →  `account_protection` (the real hook body)
- *                →  `billing_country`
+ *                →  `billing_country` + `territory`
  *                →  `compileCelToFilter(rule.condition)` (the seeder's own
  *                   compiler, the same call `plugin-sharing` makes)
  *                →  which accounts each territory actually covers.
+ *
+ * #639 replaced the last link's INPUT — the rules now compare the derived
+ * `territory` select rather than the free-text country — and the chain is
+ * otherwise unchanged, which is the point: the same walk still measures it.
  *
  * ### Hooks DO run over seed writes — measured, not assumed
  *
@@ -146,25 +151,52 @@ describe('the demo dataset can actually exercise the territory rules (#638)', ()
       .map((r) => `${nameOf(r)}: ${JSON.stringify((r.billing_address as AnyRec | undefined)?.country)}`);
     expect(
       bad,
-      'These accounts carry no usable billing country, so they belong to no territory and the ' +
-        'rules that filter on it match nothing. `billing_country` holds the address country ' +
-        'verbatim (trimmed + upper-cased, never translated), so it must BE the code the rules ' +
-        'name — "United States" or "Deutschland" silently matches nothing:\n  ' +
+      'Seed addresses keep to ISO 3166-1 alpha-2 codes. Since #639 this is a DATA-QUALITY ' +
+        'convention rather than a matching requirement — the spelling table in ' +
+        'src/objects/_territory.ts is there for what users type, and a name like "Germany" now ' +
+        'classifies correctly — but a seed is authored, not typed, so it states the canonical ' +
+        'code:\n  ' +
         bad.join('\n  '),
     ).toEqual([]);
   });
 
-  it('never authors billing_country in a seed — the hook owns that column', () => {
-    // It is `readonly` and derived. A hand-copied value would be a second
-    // source of truth for something `account_protection` recomputes on every
-    // write that carries the address, i.e. drift with a delayed fuse.
-    const authored = accountRecords.filter((r) => 'billing_country' in r).map(nameOf);
-    expect(authored, `seed records authoring the derived billing_country: ${authored.join(', ')}`).toEqual([]);
-  });
+  it.each(['billing_country', 'territory'])(
+    'never authors %s in a seed — the hook owns that column',
+    (column) => {
+      // Both are `readonly` and derived. A hand-copied value would be a second
+      // source of truth for something `account_protection` recomputes on every
+      // write that carries the address, i.e. drift with a delayed fuse — and for
+      // `territory` it would additionally hide a broken derivation behind a
+      // correct-looking seed.
+      const authored = accountRecords.filter((r) => column in r).map(nameOf);
+      expect(authored, `seed records authoring the derived ${column}: ${authored.join(', ')}`).toEqual([]);
+    },
+  );
 
   it('projects a country onto every seeded account when the hook runs', async () => {
     const missing = projectedAccounts.filter((r) => typeof r.billing_country !== 'string' || !r.billing_country);
     expect(missing.map(nameOf), 'account_protection produced no billing_country for these seeds').toEqual([]);
+  });
+
+  it('states a declared territory on every seeded account', () => {
+    // #639: the classification is never blank, and never a value the picklist
+    // does not offer. A seeded row landing outside the declared domain would
+    // render as a raw string on the account form and match no rule.
+    const declared = TERRITORY_OPTIONS.map((o) => String(o.value));
+    const bad = projectedAccounts
+      .filter((r) => !declared.includes(String(r.territory)))
+      .map((r) => `${nameOf(r)}: ${JSON.stringify(r.territory)}`);
+    expect(bad, `seeded accounts outside the declared territory domain:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('classifies each seeded account the way the mapping module does', () => {
+    // The hook body carries its own inline copy of the mapping (a sandboxed
+    // body has no module scope — see test/territory-single-source.test.ts).
+    // This is that pin applied to REAL seed rows rather than to the table.
+    const divergent = projectedAccounts
+      .filter((r) => r.territory !== territoryFor((r.billing_address as AnyRec | undefined)?.country))
+      .map((r) => `${nameOf(r)}: hook says ${r.territory}`);
+    expect(divergent, `the hook and src/objects/_territory.ts disagree:\n  ${divergent.join('\n  ')}`).toEqual([]);
   });
 
   it('partitions the seeded accounts across NA, EU and neither', () => {
@@ -176,6 +208,11 @@ describe('the demo dataset can actually exercise the territory rules (#638)', ()
 
     const summary = `NA=${na.length} [${na.join(', ')}] · EU=${eu.length} [${eu.join(', ')}] · ` +
       `neither=${outside.length} [${outside.join(', ')}]`;
+
+    // Since #639 "neither" is a STATED value rather than the absence of one, so
+    // it can be asserted directly instead of only by subtraction.
+    const stated = projectedAccounts.filter((r) => r.territory === 'other').map(nameOf);
+    expect(stated.sort(), `the accounts in no territory must say so: ${summary}`).toEqual(outside.sort());
 
     // Each bucket non-empty is the actual deliverable of #638: a rule with no
     // matching record is indistinguishable from a rule that was never seeded,
@@ -195,9 +232,9 @@ describe('the demo dataset can actually exercise the territory rules (#638)', ()
     expect(both, `accounts covered by BOTH territories: ${both.join(', ')}`).toEqual([]);
   });
 
-  it('covers more than one country per territory where the rule claims several', () => {
-    // `$in ["US","CA","MX"]` degenerating to "US accounts only" would still
-    // pass every assertion above while leaving most of the rule untested.
+  it('covers more than one country per territory where the mapping claims several', () => {
+    // A territory reachable from only ONE country in practice would still pass
+    // every assertion above while leaving most of the mapping untested.
     const countries = new Set(
       projectedAccounts
         .filter((r) => covered('north_america_territory').includes(nameOf(r)))

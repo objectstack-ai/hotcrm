@@ -221,17 +221,22 @@ async function evaluateRules(api: Api) {
  */
 async function verify(base: URL, outcomes: StaffOutcome[], adminAccounts: Json[]): Promise<string[]> {
   const failures: string[] = [];
-  const countryOf = (name: string) =>
-    String(adminAccounts.find((a) => a.name === name)?.billing_country ?? '??');
+  // Report the TERRITORY, which is what the rules actually match since #639,
+  // with the country it was classified from beside it — a diagnostic that named
+  // only the country would stay plausible while the classification was broken.
+  const territoryOf = (name: string) => {
+    const account = adminAccounts.find((a) => a.name === name);
+    return `${String(account?.territory ?? '??')}/${String(account?.billing_country ?? '??')}`;
+  };
 
   for (const { member, userId } of outcomes) {
     const asUser = new Api(base);
     await asUser.signIn(member.email, member.password);
-    const rows = await asUser.query('crm_account', [], ['id', 'name', 'billing_country', 'owner_id']);
+    const rows = await asUser.query('crm_account', [], ['id', 'name', 'territory', 'billing_country', 'owner_id']);
     const names = rows.map((r) => String(r.name)).sort();
-    const countries = [...new Set(names.map(countryOf))].sort();
+    const territories = [...new Set(names.map(territoryOf))].sort();
     console.log(`   ${member.email} sees ${rows.length} account(s): ${names.join(', ') || '—'}`);
-    console.log(`     countries: [${countries.join(', ')}]`);
+    console.log(`     territory/country: [${territories.join(', ')}]`);
 
     const owned = rows.filter((r) => String(r.owner_id ?? '') === userId).map((r) => String(r.name));
     if (owned.length > 0) {
@@ -248,14 +253,20 @@ async function verify(base: URL, outcomes: StaffOutcome[], adminAccounts: Json[]
           `matched nothing, or no grant was materialised for it.`,
         );
       }
-      const wanted = member.positions.includes('na_sales_team')
-        ? ['US', 'CA', 'MX']
-        : ['UK', 'DE', 'FR', 'IT', 'ES'];
-      const strays = countries.filter((c) => !wanted.includes(c));
+      // Checked against the TERRITORY the rules match, read straight off the
+      // rows. This used to hold its own copy of the country lists — an eighth
+      // place the mapping was written down, in a script nobody re-reads when a
+      // country is added (#639). There is no list here now: the recipient's
+      // position names one territory value, and every row they can read must
+      // carry it.
+      const wanted = member.positions.includes('na_sales_team') ? 'na' : 'emea';
+      const strays = rows
+        .filter((r) => String(r.territory ?? '') !== wanted)
+        .map((r) => `${String(r.name)}: ${String(r.territory ?? 'none')}`);
       if (strays.length > 0) {
         failures.push(
-          `${member.email} reads accounts outside their territory (${strays.join(', ')}) — a ` +
-          `match-all regression looks exactly like this.`,
+          `${member.email} reads accounts outside their ${wanted} territory (${strays.join(', ')}) ` +
+          `— a match-all regression looks exactly like this.`,
         );
       }
     }
@@ -299,7 +310,7 @@ async function main(): Promise<number> {
   }
 
   const shares = await api.query('sys_record_share', [['source', '=', 'rule']], ['id']);
-  const accounts = await api.query('crm_account', [], ['name', 'billing_country']);
+  const accounts = await api.query('crm_account', [], ['name', 'territory', 'billing_country']);
   console.log(`\n── Verifying (sys_record_share: ${shares.length} rule-materialised grants) ──`);
   const failures = await verify(base, outcomes, accounts);
 

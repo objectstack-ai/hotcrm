@@ -3,6 +3,7 @@
 import { describe, it, expect } from 'vitest';
 import { compileCelToFilter } from '@objectstack/formula';
 import stack from '../objectstack.config';
+import { COUNTRY_TERRITORY, TERRITORY_OPTIONS, territoryFor } from '../src/objects/_territory';
 
 /**
  * Every declared sharing rule must actually be SEEDED (#621).
@@ -41,6 +42,7 @@ import stack from '../objectstack.config';
  *   | predicate (against `crm_account`)                          | compiles |
  *   | ---------------------------------------------------------- | -------- |
  *   | `record.type == "customer" && record.is_active == true`     | yes      |
+ *   | `record.territory == "na"`                                    | yes      |
  *   | `record.billing_country in ["US","CA","MX"]`                 | yes      |
  *   | `record.type != "customer"`                                  | yes      |
  *   | `record.annual_revenue > 1000` / `>=`                        | yes      |
@@ -197,7 +199,21 @@ describe('every declared sharing rule is actually seeded', () => {
   });
 });
 
-describe('the territory rules read the flat projection, not the address blob', () => {
+describe('the territory rules match a declared value, not a country string', () => {
+  /**
+   * Two defects, one describe block, because the second was only reachable
+   * once the first was fixed.
+   *
+   * #621: the condition reached into the `address` composite
+   * (`record.billing_address.country`), so it did not compile and the rule was
+   * never seeded. The fix was a FLAT column.
+   *
+   * #639: the flat column was FREE TEXT, so the rules still compared a typed
+   * string — `United States` matched neither territory, silently. The fix is to
+   * compare `record.territory`, a declared select. Both halves are pinned here:
+   * the condition must still compile to a single flat field (or #621 returns),
+   * and that field must be `territory` carrying a declared value (or #639 does).
+   */
   const territoryRules = sharingRules.filter((r) =>
     ['north_america_territory', 'europe_territory'].includes(r.name as string),
   );
@@ -207,11 +223,11 @@ describe('the territory rules read the flat projection, not the address blob', (
   });
 
   it.each(territoryRules.map((r) => [r.name as string, r] as const))(
-    '%s filters on billing_country',
+    '%s filters on territory',
     (_name, rule) => {
       const outcome = seedOutcome(rule);
       expect(outcome.seeded, `not seeded: ${JSON.stringify(outcome)}`).toBe(true);
-      expect((outcome as { fields: string[] }).fields).toEqual(['billing_country']);
+      expect((outcome as { fields: string[] }).fields).toEqual(['territory']);
     },
   );
 
@@ -223,23 +239,67 @@ describe('the territory rules read the flat projection, not the address blob', (
     },
   );
 
+  it.each(territoryRules.map((r) => [r.name as string, r] as const))(
+    '%s compares no country string at all',
+    (_name, rule) => {
+      // The #639 assertion proper. A rule naming a country — in ANY spelling
+      // the mapping accepts, or the column the countries used to live in — has
+      // gone back to matching free text, whatever else it also does.
+      const source = celSource(rule.condition);
+      expect(source, 'the rule reads the free-text country column again').not.toContain('billing_country');
+      const named = Object.keys(COUNTRY_TERRITORY).filter((country) =>
+        new RegExp(`"${country}"`, 'i').test(source),
+      );
+      expect(
+        named,
+        `${_name} names ${named.join(', ')} — territory membership is decided in ` +
+          `src/objects/_territory.ts, not in a CEL string`,
+      ).toEqual([]);
+    },
+  );
+
   it('keeps the territories it always covered', () => {
-    // The fix moved WHERE the country is read from; it must not quietly move
-    // WHICH accounts each team gets. `UK` (not the ISO `GB`) is carried over
-    // deliberately — see the note in src/sharing/account.sharing.ts.
+    // #639 changed WHAT the rules match, and must not quietly change WHICH
+    // accounts each team gets. The two conditions are asserted verbatim: they
+    // are interpolated from `TERRITORY`, so this is also the pin that a
+    // territory value renamed in the picklist reaches the rules (`P` quotes an
+    // interpolated string, hence the double quotes below).
     const na = territoryRules.find((r) => r.name === 'north_america_territory');
     const eu = territoryRules.find((r) => r.name === 'europe_territory');
-    expect(celSource(na!.condition)).toBe('record.billing_country in ["US", "CA", "MX"]');
-    expect(celSource(eu!.condition)).toBe('record.billing_country in ["UK", "DE", "FR", "IT", "ES"]');
+    expect(celSource(na!.condition)).toBe('record.territory == "na"');
+    expect(celSource(eu!.condition)).toBe('record.territory == "emea"');
+    // And the countries those two values cover are still the pre-#639 set,
+    // with `UK` kept as a spelling of the (now canonical) `GB` so no stock
+    // account was evicted by the rename.
+    expect(new Set(Object.keys(COUNTRY_TERRITORY).filter((c) => COUNTRY_TERRITORY[c] === 'na'))).toContain('US');
+    for (const country of ['US', 'CA', 'MX']) expect(territoryFor(country)).toBe('na');
+    for (const country of ['UK', 'GB', 'DE', 'FR', 'IT', 'ES']) expect(territoryFor(country)).toBe('emea');
   });
 
-  it('crm_account carries billing_country as a readonly, derived column', () => {
+  it('crm_account carries territory as a readonly select over the declared domain', () => {
+    const account = objectByName.get('crm_account');
+    const field = (account?.fields ?? {}).territory;
+    expect(field, 'crm_account.territory is gone — the territory rules now filter on nothing').toBeDefined();
+    expect(field.type).toBe('select');
+    // A select is what makes the domain knowable — the whole point of #639.
+    // Free text has no enumerable set, which is why `United States` could land
+    // an account in no territory with nothing to check it against.
+    expect((field.options ?? []).map((o: AnyRec) => o.value)).toEqual(
+      TERRITORY_OPTIONS.map((o) => o.value),
+    );
+    // Readonly is what makes it derived rather than a second place to state a
+    // territory: `account.hook.ts` is the only writer.
+    expect(field.readonly).toBe(true);
+  });
+
+  it('crm_account still carries billing_country as a readonly, derived column', () => {
+    // It is no longer matched against, but it is still the INPUT the territory
+    // was classified from and the only place the typed spelling survives — the
+    // one thing that can explain an account sitting in `other`.
     const account = objectByName.get('crm_account');
     const field = (account?.fields ?? {}).billing_country;
-    expect(field, 'crm_account.billing_country is gone — the territory rules now filter on nothing').toBeDefined();
+    expect(field, 'crm_account.billing_country is gone — nothing shows what the territory was derived from').toBeDefined();
     expect(field.type).toBe('text');
-    // Readonly is what makes it a projection rather than a second place to
-    // type a country: `account.hook.ts` is the only writer.
     expect(field.readonly).toBe(true);
   });
 });
