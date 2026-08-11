@@ -35,6 +35,11 @@ const forecastDerive: Hook = {
     const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const endOfMonth = (start: Date) =>
       new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 0));
+    // "start + one period", a ROLLING window — calendar-true only because a
+    // hand-filled `period_start` off a calendar boundary is now REFUSED by
+    // `period_start_first_of_period` / `quarter_starts_on_quarter_boundary` in
+    // `forecast.object.ts` (#1008). Before that rule, `2026-08-15` + `quarter`
+    // derived `2026-10-31` under the label `Q3 2026`.
     const endOfQuarter = (start: Date) =>
       new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 3, 0));
     // First day of the calendar period CONTAINING `d` — the inverse of the
