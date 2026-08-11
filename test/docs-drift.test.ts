@@ -30,6 +30,8 @@ import stack from '../objectstack.config';
 // the repo root — from a subdirectory, or an editor runner with a different
 // working directory, this drift guard died with ENOENT instead of checking
 // anything.
+type AnyRec = Record<string, any>;
+
 const FLOWS = (f: string) => readFileSync(join(REPO_ROOT, 'src/flows', f), 'utf8');
 const DOC = (f: string) => readFileSync(join(REPO_ROOT, 'src/docs', f), 'utf8');
 
@@ -58,6 +60,45 @@ const cap = (file: string, re: RegExp): string => {
   return m[1];
 };
 
+/**
+ * The same capture, taken from the COMPILED flow instead of the file text.
+ *
+ * The approval and won-alert amounts stopped being source literals in #599 —
+ * they are interpolated from `src/objects/_thresholds.ts`, so the file now
+ * reads `record.amount > ${LARGE_DEAL_AMOUNT}` and a regex over the text finds
+ * no digits to capture. Reading the compiled condition is not a workaround for
+ * that, it is strictly better: `P` interpolates at build time, so this sees the
+ * number the deployed flow actually cuts at, whatever spelling produced it —
+ * a literal, a constant, or an arithmetic expression a text regex would have
+ * silently mis-parsed.
+ *
+ * Every condition on the flow is searched (start-node configs and edges alike),
+ * which is why the patterns below stay anchored on their own scope: `record.`
+ * for the entry gate, `oppRecord.` for the director tier.
+ */
+const FLOWS_COMPILED: AnyRec[] = ((stack as AnyRec).flows ?? []) as AnyRec[];
+
+/** `P` compiles to `{ dialect: 'cel', source }`; older conditions may be raw strings. */
+const celSource = (condition: unknown): string =>
+  typeof condition === 'string' ? condition : String((condition as AnyRec)?.source ?? '');
+
+const conditionsOf = (flowName: string): string => {
+  const flow = FLOWS_COMPILED.find((f) => f?.name === flowName);
+  if (!flow) {
+    throw new Error(`drift test out of date: no flow named "${flowName}" in the compiled stack`);
+  }
+  return [
+    ...(((flow.nodes ?? []) as AnyRec[]).map((n) => celSource(n?.config?.condition))),
+    ...(((flow.edges ?? []) as AnyRec[]).map((e) => celSource(e?.condition))),
+  ].join('\n');
+};
+
+const capCel = (flowName: string, re: RegExp): string => {
+  const m = conditionsOf(flowName).match(re);
+  if (!m) throw new Error(`drift test out of date: pattern ${re} not found in the conditions of "${flowName}"`);
+  return m[1];
+};
+
 const money = (raw: string) => [`$${Number(raw).toLocaleString('en-US')}`, Number(raw).toLocaleString('en-US')];
 const cronDisplay = (raw: string) => {
   const label = CRON_LABEL[raw];
@@ -76,19 +117,19 @@ const RULES: Rule[] = [
     // broke the moment #633 inserted the `has(...)` / `!= null` totality
     // guards between the two — a drift detector should key on the value's own
     // scope, not on whatever happens to sit next to it.
-    extract: () => cap('opportunity-approval.flow.ts', /record\.amount > (\d+)/),
+    extract: () => capCel('opportunity_approval', /record\.amount > (\d+)/),
     display: money,
     docs: ['crm_sales.md', 'crm_admin.md'],
   },
   {
     label: 'director approval threshold',
-    extract: () => cap('opportunity-approval.flow.ts', /oppRecord\.amount > (\d+)/),
+    extract: () => capCel('opportunity_approval', /oppRecord\.amount > (\d+)/),
     display: money,
     docs: ['crm_sales.md', 'crm_admin.md'],
   },
   {
     label: 'won-deal alert threshold',
-    extract: () => cap('opportunity-won-alert.flow.ts', /record\.amount > (\d+)/),
+    extract: () => capCel('opportunity_won_alert', /record\.amount > (\d+)/),
     display: money,
     docs: ['crm_sales.md', 'crm_admin.md'],
   },

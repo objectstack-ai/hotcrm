@@ -63,7 +63,7 @@ The sum of line items rolls up into the quote subtotal.
 ## Built-in rules
 
 - **Expiration date must be after the quote date** — no expired-on-creation quotes.
-- **Discount cannot exceed 100%** — basic sanity check.
+- **Discount cannot exceed 60%.** This is a hard ceiling, not a warning: a quote whose **Discount %** is above 60 is refused on save, with *"Discount cannot exceed 60%"*. There is no approval that unblocks it — see [Discount ceiling](#discount-ceiling) below for what to do instead. (A discount above 100% was never possible; the field itself only accepts 0–100.)
 - **A quote cannot be Presented or Accepted without a contact.** A *Draft* or *In Review* quote needs no recipient — you often price a deal before knowing who signs it. But the write that moves it to *Presented* (or straight to *Accepted*) is refused unless **Contact** is filled in, and the message points at that field. Quotes that are never sent are unaffected: *Rejected* straight out of review, and the nightly sweep's *Expired*, both still go through without a contact.
 
 ## What happens automatically
@@ -111,9 +111,15 @@ Two buttons on the detail screen close the loop:
 - **Mark Accepted** → status = Accepted; triggers the contract chain described above.
 - **Mark Rejected** → status = Rejected; the opportunity stays open (you can re-quote at a lower price).
 
-## High-value discount approval
+## Discount ceiling
 
-If a quote's total exceeds the discount-approval threshold (e.g., total > $500K or discount > 30%), the linked opportunity enters the [Discount Approval](/docs/revenue/approvals) process. The quote shows a banner at the top — you can't mark it *Presented* until approval clears.
+**A quote's discount may never exceed 60%.** The rule is an invariant, not a checkpoint: it is evaluated on *every* save of the quote, so there is no state in which a deeper discount is allowed to sit. A save that would put **Discount %** above 60 comes back refused with *"Discount cannot exceed 60%"* and nothing is written.
+
+What to do when a deal genuinely needs to go deeper: restructure the number rather than the percentage — a lower **Unit Price** on the line items, or a shorter term, reaches the same total price without a discount the system refuses. Record why in **Internal Notes** either way.
+
+⚠️ **There is no approval that unblocks the ceiling.** Approval in HotCRM routes on the *opportunity's* **Amount** — a manager above $100K, a director above $500K (see [Revenue › Approvals](/docs/revenue/approvals)) — and nothing routes on a discount. That is a deliberate gap, not an oversight: discount-triggered approval routing is a planned addition, and until it ships the ceiling is absolute. A quote that needs a deeper discount than the ceiling allows is a conversation to have off-system, not a request to submit.
+
+The line sits at 60% because a rule that blocks with no way around it has to refuse only what is genuinely wrong. Aggressive commercial pricing — the 20–30% range HotCRM's own demo data uses — is untouched; the ceiling exists for the 90%-off quote that no one reviewed.
 
 ## Standard list views
 
@@ -144,4 +150,6 @@ A brand-new org has no quotes at all — they are generated from opportunities, 
 - The daily expiration sweep runs at 1 AM. That time lives in source, not in Setup: it is the `schedule: '0 1 * * *'` on the start node of the `quote_expiration` flow (`src/flows/quote-expiration.flow.ts`). Changing it is a code change plus a redeploy — there is no setting to adjust on the quote object.
 - The quote PDF template (cover and line item layout) is stored in your email-template settings.
 - The Contact requirement is checked **when a quote moves into Presented or Accepted**, not on every save. A quote that was already sitting in *Presented* without a contact before this rule shipped keeps working normally — you can read and edit it, and filling the Contact in is an ordinary edit. It is the only case that can still reach *Accepted* without a recipient, and there it behaves as it always did: the contract cannot be drafted, and the reason lands in the server log. HotCRM's own demo data contains no such quote.
-- To require manager approval below the system-wide $500K threshold (for example, on every quote with >20% discount), you would author a new **record-change flow** on the quote object that flips it to *In Review* and notifies the manager. That is a source change under `src/flows/`, not something assembled in Setup. See [Administration › Automation](/docs/administration/automation) for how the built-in flows are put together.
+- The Discount ceiling is checked on **every save**, not only on a status change — the opposite boundary to the Contact requirement above, and deliberately so. "The discount may never exceed 60%" is an invariant; "a quote must have a recipient by the time it is presented" is a condition on a transition. The consequence worth knowing: a quote stored above the ceiling before this rule shipped would be frozen to every edit except lowering its discount, which is always allowed. HotCRM's own demo data contains no such quote — the deepest discount it seeds is 20%.
+- The ceiling value lives in source, not in Setup: it is `QUOTE_DISCOUNT_CEILING` in `src/objects/_thresholds.ts`, interpolated into both the rule's condition and its message on the quote object. Changing it is a code change plus a redeploy.
+- To route quotes for approval on their discount (for example, every quote over 20% off to the manager), you would author a new **record-change flow** on the quote object that flips it to *In Review* and notifies them. Nothing built in does this today — the shipped approval flow keys on the *opportunity's* Amount and never reads a discount. That is a source change under `src/flows/`, not something assembled in Setup. See [Administration › Automation](/docs/administration/automation) for how the built-in flows are put together.

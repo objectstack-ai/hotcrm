@@ -1,6 +1,8 @@
 import { P } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { LARGE_DEAL_AMOUNT } from '../objects/_thresholds';
+
 /**
  * Share high-value open opportunities with the sales director.
  * ADR-0090 D3: `role_and_subordinates` is gone (positions are flat); the
@@ -11,7 +13,7 @@ export const OpportunitySalesSharingRule = {
   label: 'Opportunity Sales Team Sharing',
   object: 'crm_opportunity',
   type: 'criteria' as const,
-  condition: P`!(record.stage in ["closed_won", "closed_lost"]) && record.amount >= 100000`,
+  condition: P`!(record.stage in ["closed_won", "closed_lost"]) && record.amount >= ${LARGE_DEAL_AMOUNT}`,
   accessLevel: 'read' as const,
   sharedWith: { type: 'position' as const, value: 'sales_director' },
 };
@@ -29,7 +31,7 @@ export const OpportunityExecutiveSharingRule = {
   label: 'Large Open Deals — Executive',
   object: 'crm_opportunity',
   type: 'criteria' as const,
-  condition: P`!(record.stage in ["closed_won", "closed_lost"]) && record.amount >= 100000`,
+  condition: P`!(record.stage in ["closed_won", "closed_lost"]) && record.amount >= ${LARGE_DEAL_AMOUNT}`,
   accessLevel: 'read' as const,
   sharedWith: { type: 'position' as const, value: 'executive' },
 };

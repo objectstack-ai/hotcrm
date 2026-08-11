@@ -3,6 +3,7 @@ import { F, P, cel } from '@objectstack/spec';
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
 import { PAYMENT_TERMS_OPTIONS } from './_picklists';
+import { QUOTE_DISCOUNT_CEILING } from './_thresholds';
 
 /**
  * Quote Object
@@ -285,11 +286,49 @@ export const Quote = ObjectSchema.create({
       condition: P`has(record.expiration_date) && record.expiration_date != null && has(record.quote_date) && record.quote_date != null && record.expiration_date <= record.quote_date`,
     },
     {
-      name: 'valid_discount',
+      // #599. The only discount constraint this object ever had was the field's
+      // own `max: 100` — the arithmetic domain of a percentage — so a rep could
+      // put 90% off a $99K deal on a quote and nothing anywhere objected: the
+      // approval flow keys on the opportunity's AMOUNT, and $99K is under the
+      // large-deal line. This is the policy ceiling that constraint never was.
+      //
+      // ### It replaces a rule that could never fire
+      //
+      // The predicate here used to read `record.discount > 100` under the
+      // message "Discount cannot exceed 100%". Measured: field-level bounds are
+      // evaluated BEFORE object validations, so `discount: 150` was already
+      // refused by `max: 100` with `code: 'max_value'` and the message
+      // "Discount % must be ≤ 100" — the rule's own message was unreachable on
+      // every input that could reach it. Tightening the number in place removes
+      // a dead rule rather than adding a second one; the count is unchanged.
+      //
+      // ### Why a script validation and not a lower `max` on the field
+      //
+      // This is an INVARIANT — "a quote's discount may never exceed the
+      // ceiling" — not a transition condition, and #1069 is open on exactly
+      // that distinction for `requiredWhen`. Both instruments were measured
+      // against a row stored above the ceiling before the rule existed
+      // (`test/quote-discount-ceiling.test.ts` runs the measurement):
+      //
+      //   Field.percent({ max: 60 })   legacy row, unrelated edit → ADMITTED
+      //   this rule                    legacy row, unrelated edit → REFUSED
+      //
+      // A field bound checks the value being WRITTEN; a script validation is
+      // evaluated against the MERGED record on every write. So `max` carries
+      // the same silent legacy hole #1069 describes, in a second instrument,
+      // and the rule does not. The cost of the invariant, stated rather than
+      // hidden: an over-ceiling row is frozen to everything except the repair —
+      // bringing the discount back under the ceiling is admitted, and is an
+      // ordinary edit. HotCRM ships no such row (deepest seeded discount: 20%).
+      //
+      // `max: 100` stays on the field as the domain of a percentage. The policy
+      // number lives in `_thresholds.ts`, interpolated into both the predicate
+      // and the message so the two cannot disagree.
+      name: 'discount_within_ceiling',
       type: 'script',
       severity: 'error',
-      message: 'Discount cannot exceed 100%',
-      condition: P`has(record.discount) && record.discount != null && record.discount > 100`,
+      message: `Discount cannot exceed ${QUOTE_DISCOUNT_CEILING}%`,
+      condition: P`has(record.discount) && record.discount != null && record.discount > ${QUOTE_DISCOUNT_CEILING}`,
     },
     {
       // #575 B4. `crm_quote` had a full lifecycle vocabulary and no transition

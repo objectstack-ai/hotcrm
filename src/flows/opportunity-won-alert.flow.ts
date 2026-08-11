@@ -2,6 +2,7 @@
 
 import { P } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
+import { LARGE_DEAL_AMOUNT } from '../objects/_thresholds';
 type Flow = Automation.Flow;
 
 /**
@@ -65,7 +66,7 @@ export const OpportunityWonAlertFlow: Flow = {
         // exactly what nobody wants.
         condition: P`has(record.stage) && record.stage == "closed_won"
           && has(previous.stage) && previous.stage != "closed_won"
-          && has(record.amount) && record.amount != null && record.amount > 100000`,
+          && has(record.amount) && record.amount != null && record.amount > ${LARGE_DEAL_AMOUNT}`,
       },
     },
     {
