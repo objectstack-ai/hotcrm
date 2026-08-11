@@ -34,24 +34,24 @@
   },
   "packageManager": "pnpm@10.33.0",
   "dependencies": {
-    "@objectstack/account": "17.0.0-rc.5",
-    "@objectstack/cli": "17.0.0-rc.5",
-    "@objectstack/driver-memory": "17.0.0-rc.5",
-    "@objectstack/driver-sql": "17.0.0-rc.5",
-    "@objectstack/driver-sqlite-wasm": "17.0.0-rc.5",
-    "@objectstack/metadata": "17.0.0-rc.5",
-    "@objectstack/objectql": "17.0.0-rc.5",
-    "@objectstack/runtime": "17.0.0-rc.5",
-    "@objectstack/service-analytics": "17.0.0-rc.5",
-    "@objectstack/service-automation": "17.0.0-rc.5",
-    "@objectstack/spec": "17.0.0-rc.5"
+    "@objectstack/account": "17.0.0-rc.6",
+    "@objectstack/cli": "17.0.0-rc.6",
+    "@objectstack/driver-memory": "17.0.0-rc.6",
+    "@objectstack/driver-sql": "17.0.0-rc.6",
+    "@objectstack/driver-sqlite-wasm": "17.0.0-rc.6",
+    "@objectstack/metadata": "17.0.0-rc.6",
+    "@objectstack/objectql": "17.0.0-rc.6",
+    "@objectstack/runtime": "17.0.0-rc.6",
+    "@objectstack/service-analytics": "17.0.0-rc.6",
+    "@objectstack/service-automation": "17.0.0-rc.6",
+    "@objectstack/spec": "17.0.0-rc.6"
   },
   "optionalDependencies": {
     "better-sqlite3": "^12.11.1"
   },
   "devDependencies": {
     "@changesets/cli": "^2.31.1",
-    "@objectstack/formula": "17.0.0-rc.5",
+    "@objectstack/formula": "17.0.0-rc.6",
     "@playwright/test": "^1.61.1",
     "@vitest/coverage-v8": "^4.1.10",
     "tsx": "^4.23.1",

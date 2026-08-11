@@ -435,7 +435,11 @@ describe('deleting a person who attended a meeting', () => {
 
     await expect(
       api.object('crm_event').delete({ where: { id: event.id } }),
-    ).rejects.toThrow(/dependent crm_event_attendee record\(s\) reference it via crm_event/i);
+      // ObjectStack 17.0.0-rc.6 reworded the DELETE_RESTRICTED message to speak
+      // in display labels ("… 1 Event Attendee record(s) through “Event” …")
+      // instead of API names. The assertion still pins what the test is about:
+      // the message must name the dependent object and the field that blocks.
+    ).rejects.toThrow(/still referenced by \d+ Event Attendee record\(s\) through .Event./i);
     // Not the party rule, which is what the caller used to be told.
     await expect(
       api.object('crm_event').delete({ where: { id: event.id } }),

@@ -25,10 +25,17 @@ import { type AnyRec, packFor, views } from './helpers/metadata-fixtures';
  *    **I Submitted** / **Completed** / **All** on `sys_approval_request`.
  *
  * The zh pages were wrong in two further ways, each its own kind of wrong:
- * zh-Hans said 「待我审批」, which is real but is the **navigation** label of
- * `nav_approval_requests`, not a view; zh-Hant said 「待我審核」, which is
+ * zh-Hans said 「待我审批」, which at the time was real but was the **navigation**
+ * label of `nav_approval_requests`, not a view; zh-Hant said 「待我審核」, which is
  * neither — this app ships en / zh-CN / ja-JP / es-ES and no Hant pack, so no
  * surface can display it.
+ *
+ * ObjectStack 17.0.0-rc.6 then relabelled the `my_pending` view itself, from
+ * 我的待办 to 待我审批 — so the string #973 retired here as "a sidebar entry, not
+ * a view" is now precisely this bullet's correct answer, and the pages quote it
+ * again. The gloss check below is what keeps that honest: it resolves every
+ * 「…」 against the shipped bundle rather than against a spelling written down
+ * once.
  *
  * Both were fixed by naming the real views, not by adding a denial: unlike
  * `revenue/approvals`, this bullet is an *example*, not a navigation roster, so
@@ -73,10 +80,10 @@ const APP_ZH_VIEW_LABELS = new Set<string>(
  * The approvals plugin's shipped bundle, with `\uXXXX` escapes decoded.
  *
  * The package exports its schemas (`SysApprovalRequest`) but not its locale
- * packs, so the zh-CN view labels the zh pages quote — 「我的待办」 for
+ * packs, so the zh-CN view labels the zh pages quote — 「待我审批」 for
  * `my_pending` — are only reachable as text in the built bundle, where the
  * bundler emits every non-ASCII character as an escape (the same reason a
- * plain `grep 我的待办 dist/index.js` returns nothing and reads as "the plugin
+ * plain `grep 待我审批 dist/index.js` returns nothing and reads as "the plugin
  * ships no zh-CN"). Decoding once here keeps the gloss check honest instead of
  * unpinned.
  */
@@ -103,9 +110,14 @@ const PAGES = [
     file: 'content/docs/guides/search-and-navigation.zh-Hans.mdx',
     lang: 'zh-Hans',
     heading: '### 内置 vs 个人 vs 共享',
-    // 待我审批 is a real string — the zh-CN label of `nav_approval_requests` —
-    // but it names a sidebar entry, not a view, so it may not come back HERE.
-    retired: ['所有未结商机', '待我审批'],
+    // 待我审批 used to be retired HERE: it was the zh-CN label of the
+    // `nav_approval_requests` SIDEBAR entry, and the bullet is about views.
+    // ObjectStack 17.0.0-rc.6 relabelled the `my_pending` VIEW from 我的待办 to
+    // 待我审批 and the string now occurs exactly once in the approvals bundle —
+    // as that view's label — so the collision the pin guarded against is gone
+    // and the spelling is the correct one for this bullet. 所有未结商机 stays:
+    // it still names nothing.
+    retired: ['所有未结商机'],
   },
   {
     file: 'content/docs/guides/search-and-navigation.zh-Hant.mdx',
@@ -189,8 +201,8 @@ describe('the source facts the built-in-views example rests on (#973)', () => {
     expect(oppPack?._views?.all_opportunities?.label).toBe('全部商机');
   });
 
-  it('the approvals plugin labels my_pending 我的待办 in zh-CN', () => {
-    expect(shipsZhLabel('我的待办')).toBe(true);
+  it('the approvals plugin labels my_pending 待我审批 in zh-CN', () => {
+    expect(shipsZhLabel('待我审批')).toBe(true);
   });
 });
 
@@ -233,7 +245,7 @@ describe('guides/search-and-navigation names only views that exist (#973)', () =
         back,
         `${file}: '${back.join("', '")}' is back in the built-in bullet. ` +
           'These name no view: *All Open Opportunities* and *Pending My Approval* exist ' +
-          'nowhere, 待我审批 is the sidebar label of `nav_approval_requests`, and 待我審核 ' +
+          'nowhere, 所有未结商机 / 所有未結商機 name no view, and 待我審核 ' +
           'is in no locale pack at all.',
       ).toEqual([]);
     });

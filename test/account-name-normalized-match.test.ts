@@ -163,12 +163,21 @@ describe('premise: a formula field cannot be the match key', () => {
 // ═══════════════════════════════ premise 3: `$regex` is not an answer ══
 
 /**
- * The measurement is sharper than "unindexed": on `driver-sql`, `$regex` is not
- * evaluated as a regular expression at all. It compiles to `LIKE '%value%'`, a
- * LIKE-escaped SUBSTRING match — so it matches strings the caller did not mean,
- * and a real pattern matches nothing.
+ * The measurement is sharper than "unindexed". It used to be that on
+ * `driver-sql`, `$regex` was not evaluated as a regular expression at all — it
+ * compiled to `LIKE '%value%'`, a LIKE-escaped SUBSTRING match, so it matched
+ * strings the caller did not mean and a real pattern matched nothing.
+ *
+ * ObjectStack 17.0.0-rc.6 finished the argument: `$regex` was never declared by
+ * the Filter Protocol and is now RETIRED (upstream #4706) — the driver rejects
+ * it outright rather than compiling it to something that means a different
+ * thing on each backend. The declared replacement, `$icontains`, is exactly the
+ * case-insensitive substring match the old compilation already was, so the
+ * premise this block exists to establish is unchanged and now stronger: no
+ * filter operator expresses normalize-then-exact, which is why the match key
+ * below is a stored, normalized column.
  */
-describe('premise: `$regex` cannot express normalize-then-exact on SQL', () => {
+describe('premise: no filter operator expresses normalize-then-exact on SQL', () => {
   let driver: SqliteWasmDriver;
 
   beforeAll(async () => {
@@ -194,15 +203,26 @@ describe('premise: `$regex` cannot express normalize-then-exact on SQL', () => {
     return rows.map((r) => String(r.name)).sort();
   };
 
-  it('matches a SUPERSTRING — it is a substring LIKE, not an exact match', async () => {
-    expect(await names({ name: { $regex: 'Acme Corp' } })).toEqual([
+  it('`$regex` is retired — the driver refuses it instead of guessing', async () => {
+    await expect(names({ name: { $regex: 'Acme Corp' } })).rejects.toThrow(
+      /\$regex.*RETIRED|RETIRED.*\$regex/is,
+    );
+  });
+
+  it('`$icontains`, the declared replacement, matches a SUPERSTRING — not an exact match', async () => {
+    expect(await names({ name: { $icontains: 'Acme Corp' } })).toEqual([
       'Acme Corp',
       'Not Acme Corp Ltd',
     ]);
   });
 
-  it('cannot collapse internal whitespace — a real pattern matches nothing', async () => {
-    expect(await names({ name: { $regex: '^acme\\s+corp$' } })).toEqual([]);
+  it('and it cannot collapse internal whitespace — the comparand is literal', async () => {
+    // 'ACME  Corp' (two spaces) is the row a normalize-then-exact match must
+    // find for the input 'Acme Corp'. A substring predicate cannot: the
+    // comparand is matched literally, so the single space never lines up.
+    expect(await names({ name: { $icontains: 'Acme Corp' } })).not.toContain('ACME  Corp');
+    // Nor is a real pattern an escape hatch any more — it is just a literal.
+    expect(await names({ name: { $icontains: '^acme\\s+corp$' } })).toEqual([]);
   });
 });
 

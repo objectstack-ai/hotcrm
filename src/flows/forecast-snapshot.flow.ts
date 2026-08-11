@@ -189,8 +189,14 @@ export const ForecastSnapshotFlow: Flow = {
       // Every user is a candidate; the `has_deals` gate below decides who is
       // actually an opportunity owner. Filtering `sys_user` here instead would
       // hard-code an activity flag this app does not own.
+      // No `filter` key: an EMPTY filter node (`{}`) reduces to TRUE and
+      // matches every row, so it is indistinguishable from an absent key —
+      // ObjectStack 17.0.0-rc.6 promotes the pair to an author-time error
+      // (`filter-empty-node`) precisely because only the absent key SAYS
+      // "every user is a candidate" to the next reader. The `has_deals` gate
+      // below is what actually narrows the set.
       id: 'query_owners', type: 'get_record', label: 'Find Users',
-      config: { objectName: 'sys_user', filter: {}, limit: 500, outputVariable: 'ownerList' },
+      config: { objectName: 'sys_user', limit: 500, outputVariable: 'ownerList' },
     },
     {
       id: 'loop_owners', type: 'loop', label: 'For Each Owner',

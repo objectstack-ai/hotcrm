@@ -229,7 +229,16 @@ afterAll(async () => {
 
 describe('the harness enforces (negative controls)', () => {
   it('the rep resolves to sales_rep only — no platform-admin bypass', () => {
-    expect(repCtx.permissions, 'the rep must not carry admin_full_access').toEqual(['sales_rep']);
+    // ObjectStack 17.0.0-rc.6 enumerates the platform baseline set
+    // `member_default` in `ctx.permissions` alongside the app-declared profile;
+    // it is the set every member has always carried (see
+    // src/sharing/demo-staffing.ts), so this is enumeration, not a new grant —
+    // every reach assertion below is unchanged. The negative control is about
+    // the ADMIN bypass, so it pins that directly instead of the exact list.
+    expect(repCtx.permissions, 'the rep must carry its app profile').toContain('sales_rep');
+    expect(repCtx.permissions, 'the rep must not carry admin_full_access').not.toContain(
+      'admin_full_access',
+    );
     expect(repCtx.hasPlatformAdminGrant).toBe(false);
     expect(repCtx.positions).toContain('na_sales_team');
   });
