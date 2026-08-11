@@ -230,12 +230,16 @@ export const AccountViews = defineView({
       {
         label: 'Locations',
         columns: 1,
-        // `billing_country` is readonly and derived, but it is on the form on
-        // purpose: it is the value the territory sharing rules actually match,
-        // so an admin asking "why does the NA team not see this account?" can
-        // read the answer off the record instead of guessing at the address
-        // blob (#621).
-        fields: ['billing_address', 'billing_country', 'office_location'],
+        // `billing_country` and `territory` are readonly and derived, but both
+        // are on the form on purpose: an admin asking "why does the NA team not
+        // see this account?" reads the answer off the record instead of
+        // guessing at the address blob (#621). `territory` is what the rules
+        // actually match (#639) and `billing_country` is the input it was
+        // classified from, so the two together show the whole derivation —
+        // including the case the picklist alone cannot explain, an account
+        // sitting in `Other` because its country was typed in a spelling the
+        // mapping does not know.
+        fields: ['billing_address', 'billing_country', 'territory', 'office_location'],
       },
       {
         label: 'Description',

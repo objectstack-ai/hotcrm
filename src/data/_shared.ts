@@ -33,9 +33,9 @@ import { cel } from '@objectstack/spec';
  *
  * Lifecycle HOOKS — derived fields, defaults, validation — still run. The boot
  * log shows them firing (`opportunity_amount_rollup`, `quote_total_rollup`),
- * and `crm_account.billing_country` is only ever populated because
- * `account_protection` projects it from `billing_address` on the seed insert
- * (#638). `test/territory-seed-coverage.test.ts` pins that dependency.
+ * and `crm_account.billing_country` / `crm_account.territory` are only ever
+ * populated because `account_protection` derives them from `billing_address`
+ * on the seed insert (#638, #639). `test/territory-seed-coverage.test.ts` pins that dependency.
  *
  * ### What that means for authoring
  *
@@ -52,8 +52,9 @@ import { cel } from '@objectstack/spec';
  *    mismatch is rewritten immediately, at seed time, instead of on the first
  *    user edit — either way the demo does not show what was authored.
  * 3. A field the hook DERIVES and the schema marks `readonly` is not authored
- *    here at all (`crm_account.billing_country`): duplicating it would create a
- *    second source of truth for a value the hook already owns.
+ *    here at all (`crm_account.billing_country`, `crm_account.territory`):
+ *    duplicating it would create a second source of truth for a value the hook
+ *    already owns.
  *
  * Autonumber fields (`case_number`, `contract_number`, `quote_number`) are
  * NEVER seeded: the runtime owns those sequences (the SQL driver bootstraps

@@ -8,7 +8,8 @@ import type { HookApi } from './_hook-api';
  *
  * - Validates `website` format and `annual_revenue` non-negative.
  * - Projects `billing_address.country` onto the flat `billing_country` column
- *   the territory sharing rules filter on (#621).
+ *   (#621) and classifies it into the `territory` select the territory sharing
+ *   rules filter on (#639).
  * - Folds `name` into the `name_normalized` column lead conversion matches
  *   accounts on (#626).
  * - Refuses to delete a `customer` account that still has open opportunities.
@@ -33,41 +34,92 @@ const accountHook: Hook = {
         throw new Error('Annual Revenue must be greater than or equal to 0');
       }
 
-      // ─── Territory projection (#621) ───────────────────────────────────
+      // ─── Territory (#621 storage location, #639 classification) ────────
       //
-      // `billing_country` is the flat column the two territory sharing rules
-      // filter on, and this block is its only writer. It exists because a
-      // sharing rule's CEL condition is compiled into a pushdown-able query
-      // filter, and that compiler rejects any path reaching INSIDE a composite
-      // `address` value — `record.billing_address.country in [...]` is not
-      // translatable, so plugin-sharing dropped both rules on every boot and
-      // `na_sales_team` / `eu_sales_team` got nothing at all.
+      // Two derived columns, one input. `billing_country` is the flat
+      // projection of `billing_address.country`; `territory` is the CLASSIFIED
+      // value the two territory sharing rules now filter on. This block is the
+      // only writer of both.
       //
-      // Recompute ONLY when the write carries the address: a partial update
-      // that never mentions `billing_address` must leave `billing_country`
-      // alone, or every unrelated edit would blank the column and silently
-      // evict the account from its territory. A write that CLEARS the address
-      // (`billing_address: null`) does clear the projection — the key is
-      // present, the value is empty.
+      // `billing_country` became a flat column because a sharing rule's CEL
+      // condition is compiled into a pushdown-able query filter, and that
+      // compiler rejects any path reaching INSIDE a composite `address` value
+      // — `record.billing_address.country in [...]` is not translatable, so
+      // plugin-sharing dropped both rules on every boot and `na_sales_team` /
+      // `eu_sales_team` got nothing at all (#621).
       //
-      // Only `country` is read. `countryCode` is the ISO 3166-1 alpha-2 slot,
-      // where the United Kingdom is `GB`, while the Europe rule is authored
-      // against `UK`; preferring the ISO slot would silently drop UK accounts
-      // out of their own territory. Mirroring the one slot the rules have
-      // always named keeps this a change of STORAGE LOCATION, not of rule
-      // semantics.
+      // That fixed WHERE the country is read from and left WHAT the rules
+      // match on unfixed: a free-text country. `United States` matched no
+      // territory, silently, and the same country lists were restated in two
+      // CEL strings and six documentation files. #639 replaced the matching
+      // with `territory`, a declared select — see `./_territory.ts` for the
+      // whole argument and for the authored tables this table is derived from.
       //
-      // Written inline rather than as a module-scope helper on purpose: hook
-      // bodies must lower to metadata-only (no free identifiers), which
-      // `test/action-sandbox.test.ts` enforces for every registered hook.
-      if ('billing_address' in input) {
+      // ── Two different recompute rules, on purpose ──
+      //
+      // `billing_country` MIRRORS the address, so it is rewritten only when
+      // the write carries one: a partial update that never mentions
+      // `billing_address` must leave it alone, or every unrelated edit would
+      // blank the column. A write that CLEARS the address
+      // (`billing_address: null`) does clear it — the key is present, the
+      // value is empty.
+      //
+      // `territory` is a CLASSIFICATION, and #639 decided it is always a
+      // stated fact rather than a blank ("belongs to no territory" and "nobody
+      // filled it in" must not look alike). So it is also stated on an insert
+      // that carries no address at all, where it is `other`. On an update that
+      // does not mention the address it is left alone, exactly like the
+      // projection — an unrelated edit must not re-derive it.
+      //
+      // Only `country` is read. `countryCode` is the ISO 3166-1 alpha-2 slot
+      // and would be the better input, but it is optional and mostly empty in
+      // this app's data; reading it in preference would move which slot decides
+      // an account's territory, which #639 did not ask for. `UK` vs `GB` is
+      // handled in the mapping instead (both are `emea`), which is why nothing
+      // had to migrate.
+      //
+      // ── Why the map is INLINE rather than imported ──
+      //
+      // A hook handler is lowered to a metadata-only `body.source` and
+      // evaluated inside QuickJS with no module scope, so an import is a
+      // `ReferenceError` at runtime, not a closure; `extractHookBody` rejects
+      // such a handler and `test/action-sandbox.test.ts` runs that same
+      // lowering pass over every registered hook. The table therefore cannot be
+      // read from `./_territory.ts` here. It is not trusted to stay in step
+      // either: `test/territory-single-source.test.ts` parses this literal out
+      // of the LOWERED body and asserts deep equality with the module's derived
+      // map, so a country added to either side alone fails.
+      if ('billing_address' in input || event === 'beforeInsert') {
         const address = input.billing_address;
         const country =
           address !== null && typeof address === 'object' && !Array.isArray(address)
             ? (address as { country?: unknown }).country
             : undefined;
-        const normalized = typeof country === 'string' ? country.trim().toUpperCase() : '';
-        input.billing_country = normalized === '' ? null : normalized;
+        // The one normalisation rule, mirrored from `normalizeCountry`: trim,
+        // collapse internal whitespace, upper-case. Every key below is written
+        // in that form, so the lookup is a plain property read rather than a
+        // pile of tolerant comparisons.
+        const normalized =
+          typeof country === 'string' ? country.trim().replace(/\s+/g, ' ').toUpperCase() : '';
+
+        if ('billing_address' in input) {
+          input.billing_country = normalized === '' ? null : normalized;
+        }
+
+        // A COPY of the map derived in `./_territory.ts`, kept here because a
+        // sandboxed body cannot import it (see above). Edit `_territory.ts`
+        // and mirror the result here — `test/territory-single-source.test.ts`
+        // reads this literal back out of the lowered body and fails if the two
+        // disagree, so the mirroring is enforced rather than remembered.
+        const TERRITORY_BY_COUNTRY: Record<string, string> = {
+          "US": "na", "CA": "na", "MX": "na",
+          "GB": "emea", "DE": "emea", "FR": "emea", "IT": "emea", "ES": "emea",
+          "UNITED STATES": "na", "UNITED STATES OF AMERICA": "na", "USA": "na",
+          "CANADA": "na", "MEXICO": "na",
+          "UK": "emea", "UNITED KINGDOM": "emea", "GREAT BRITAIN": "emea",
+          "GERMANY": "emea", "FRANCE": "emea", "ITALY": "emea", "SPAIN": "emea"
+        };
+        input.territory = TERRITORY_BY_COUNTRY[normalized] || 'other';
       }
 
       // ─── Account-name match key (#626) ─────────────────────────────────

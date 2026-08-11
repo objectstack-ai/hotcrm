@@ -64,7 +64,7 @@
 | --- | --- | --- | --- |
 | ACC-001 | 客户对象 | 公司主档(`crm_account`):类型/行业/财务、客户成功字段(tier/segment/health_score/续约)、logo/品牌色/地理位置,启用附件 | `src/objects/account.object.ts` |
 | ACC-002 | 客户名唯一与匹配键 | `name` 租户内唯一;hook 维护 `name_normalized`(小写+折叠空白)作为线索转化的账户去重键 | `src/objects/account.object.ts` + `src/objects/account.hook.ts` |
-| ACC-003 | 区域国家投影 | 从 `billing_address.country` 投影扁平列 `billing_country`(大写 trim),供区域共享规则下推过滤 | `src/objects/account.hook.ts` |
+| ACC-003 | 区域派生 | 从 `billing_address.country` 投影扁平列 `billing_country`(大写 trim),并按唯一映射表分类为 `territory` 选择列表(`na`/`emea`/`other`),供区域共享规则下推过滤 | `src/objects/_territory.ts` + `src/objects/account.hook.ts` |
 | ACC-004 | 客户保护 | 网址须以 http(s) 开头、营收非负;有开放商机的 customer 禁止删除 | `src/objects/account.hook.ts` |
 | ACC-005 | 客户活动时钟 | `last_activity_date` 由多路写入:owner/type 变更、held 事件与完成任务冒泡、工单解决;是流失分析的信号源 | `src/objects/account.hook.ts` 等 |
 | ACC-006 | 客户列表视图族 | 默认列表 + 卡片/地图/大客户/我的/续约/风险 7 个 tab;批量改 tier、转移 owner、批量删除 | `src/views/account.view.ts` |
@@ -233,7 +233,7 @@
 | PRM-003 | 字段级安全 | 如 `annual_revenue`/`health_score` 对销售只读、`crm_case.internal_notes` 对销售完全遮蔽、坐席可读写 | `src/profiles/*.profile.ts`(fieldPermissions) |
 | PRM-004 | 导出权限闸门 | `allowExport` 是真实闸门(未设即拒):仅在有读权限且视图提供导出界面的五个对象上授予,服务端 `canExport` 把关 | `src/profiles/index.ts` |
 | PRM-005 | 所有权转移轴 | `allowTransfer` 控制把记录种到/改到他人名下:管理员全量、经理随 modifyAll、坐席仅在任务上窄授权(工单升级派单所需) | `src/profiles/index.ts` |
-| PRM-006 | 九条条件共享规则 | 客户团队(customer→经理可编辑)、NA/EU 区域(按 `billing_country`)、活动领导层、工单升级、大单(≥$100K→总监/高管只读) | `src/sharing/` |
+| PRM-006 | 九条条件共享规则 | 客户团队(customer→经理可编辑)、NA/EU 区域(按 `territory`)、活动领导层、工单升级、大单(≥$100K→总监/高管只读) | `src/sharing/` |
 | PRM-007 | 扁平岗位结构 | 12 个岗位(销售/服务/营销三线 + NA/EU 区域组),无层级、可见性不向上滚动,每个层级各带自己的授权 | `src/sharing/positions.ts` |
 | PRM-008 | 行级安全(RLS) | 私密商机仅 owner 可见(经理与营销两份 select 规则);营销对活动/成员的 update 放宽 | `src/profiles/sales-manager.profile.ts`、`src/profiles/marketing-user.profile.ts` |
 | PRM-009 | OWD 共享模型分布 | 销售/服务核心对象 private;产品/活动/知识库 public_read;联系人与四个明细/联结对象 controlled_by_parent | `src/objects/*.object.ts`(sharingModel) |

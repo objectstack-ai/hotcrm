@@ -92,7 +92,12 @@ export const esES: TranslationData = {
         billing_address: { label: 'Dirección de Facturación' },
         billing_country: {
           label: 'País de Facturación',
-          help: 'Derivado de la Dirección de Facturación — el código de país que usan las reglas de compartición por territorio.',
+          help: 'Derivado de la Dirección de Facturación — el país tal como se introdujo, sin espacios y en mayúsculas.',
+        },
+        territory: {
+          label: 'Territorio',
+          help: 'Derivado de la Dirección de Facturación — el territorio de ventas que usan las reglas de compartición. Las cuentas fuera de los territorios con equipo asignado son Otro.',
+          options: { na: 'Norteamérica', emea: 'EMEA', other: 'Otro' },
         },
         office_location: { label: 'Ubicación de Oficina' },
         owner_id: { label: 'Propietario de Cuenta' },

@@ -539,23 +539,42 @@ describe('account_protection', () => {
     ).resolves.toBeUndefined();
   });
 
-  // ─── billing_country projection (#621) ───────────────────────────────
+  // ─── billing_country / territory derivation (#621, #639) ─────────────
   //
-  // The territory sharing rules filter on `billing_country`, and this hook is
-  // its only writer. If the projection stops running, both rules still SEED
-  // (the column exists) but match nothing — the same silent territory outage
-  // #621 was filed for, one layer down. So the behaviour is pinned per shape.
+  // The territory sharing rules filter on `territory`, and this hook is the
+  // only writer of it AND of the `billing_country` it is classified from. If
+  // the derivation stops running, both rules still SEED (the column exists)
+  // but match nothing — the same silent territory outage #621 was filed for,
+  // one layer down. So the behaviour is pinned per shape.
+  //
+  // The mapping itself is not re-stated here: it is authored in
+  // `src/objects/_territory.ts` and pinned against this hook's LOWERED body by
+  // `test/territory-single-source.test.ts`. What these cases own is the
+  // handler's own contract — which writes derive, which leave the columns
+  // alone, and that nothing throws.
 
   it.each([
-    ['a country code',            { country: 'US' },                    'US'],
-    ['lower case',                { country: 'de' },                    'DE'],
-    ['surrounding whitespace',    { country: '  fr  ' },                'FR'],
-    ['a full address',            { street: '1 Main', city: 'Austin', country: 'US' }, 'US'],
-  ] as [string, Rec, string][])(
-    'projects %s onto billing_country on insert', async (_label, billing_address, expected) => {
+    ['a country code',            { country: 'US' },                    'US',             'na'],
+    ['lower case',                { country: 'de' },                    'DE',             'emea'],
+    ['surrounding whitespace',    { country: '  fr  ' },                'FR',             'emea'],
+    ['a full address',            { street: '1 Main', city: 'Austin', country: 'US' }, 'US', 'na'],
+    // #639 acceptance criterion 1: the three spellings the issue names, plus
+    // the legacy `UK` that the ISO rename must not have evicted.
+    ['a full country name',       { country: 'Germany' },               'GERMANY',        'emea'],
+    ['a trailing-space code',     { country: 'de ' },                   'DE',             'emea'],
+    ['the legacy UK spelling',    { country: 'UK' },                    'UK',             'emea'],
+    ['the ISO GB spelling',       { country: 'GB' },                    'GB',             'emea'],
+    ['an uncovered country',      { country: 'SG' },                    'SG',             'other'],
+  ] as [string, Rec, string, string][])(
+    'derives %s onto billing_country + territory on insert',
+    async (_label, billing_address, expectedCountry, expectedTerritory) => {
       const input: Rec = { name: 'Acme', billing_address };
       await hook.handler(makeCtx({ event: 'beforeInsert', input, user: USER }));
-      expect(input.billing_country).toBe(expected);
+      // `billing_country` is what was TYPED (normalised); `territory` is the
+      // classification. Keeping both visible is what lets an admin see why an
+      // account landed in `other` — the pair, not either one alone.
+      expect(input.billing_country).toBe(expectedCountry);
+      expect(input.territory).toBe(expectedTerritory);
     },
   );
 
@@ -574,8 +593,22 @@ describe('account_protection', () => {
         hook.handler(makeCtx({ event: 'beforeInsert', input, user: USER })),
       ).resolves.toBeUndefined();
       expect(input.billing_country).toBeNull();
+      // …and the classification is STATED rather than left blank (#639): an
+      // account belonging to no territory must not look like one nobody has
+      // filled in yet.
+      expect(input.territory).toBe('other');
     },
   );
+
+  it('states territory on an insert that carries no address at all', async () => {
+    // The shape the `billing_address in input` guard alone would skip. There is
+    // no previous value to preserve on an insert, so leaving it unset would
+    // ship exactly the blank #639 ruled out.
+    const input: Rec = { name: 'Acme' };
+    await hook.handler(makeCtx({ event: 'beforeInsert', input, user: USER }));
+    expect(input.territory).toBe('other');
+    expect('billing_country' in input).toBe(false);
+  });
 
   it('leaves billing_country alone when the write does not carry the address', async () => {
     // The regression that would silently empty both territories: recomputing
@@ -588,26 +621,42 @@ describe('account_protection', () => {
       user: USER,
     }));
     expect('billing_country' in input).toBe(false);
+    // Same rule for the classification: an unrelated edit must not re-derive
+    // it, or a partial update would silently reclassify the account.
+    expect('territory' in input).toBe(false);
   });
 
-  it('clears billing_country when the address itself is cleared', async () => {
+  it('clears billing_country and states `other` when the address is cleared', async () => {
     const input: Rec = { billing_address: null };
     await hook.handler(makeCtx({
       event: 'beforeUpdate',
       input,
-      previous: { billing_address: { country: 'US' }, billing_country: 'US' },
+      previous: { billing_address: { country: 'US' }, billing_country: 'US', territory: 'na' },
       user: USER,
     }));
     expect(input.billing_country).toBeNull();
+    expect(input.territory).toBe('other');
   });
 
-  it('projects on a SYSTEM write too — seeds and imports must land in a territory', async () => {
-    // Unlike `last_activity_date`, this projection is not user-gated: a seeded
+  it('reclassifies when an update moves the account to another country', async () => {
+    const input: Rec = { billing_address: { country: 'Germany' } };
+    await hook.handler(makeCtx({
+      event: 'beforeUpdate',
+      input,
+      previous: { billing_address: { country: 'US' }, billing_country: 'US', territory: 'na' },
+      user: USER,
+    }));
+    expect(input.territory).toBe('emea');
+  });
+
+  it('derives on a SYSTEM write too — seeds and imports must land in a territory', async () => {
+    // Unlike `last_activity_date`, this derivation is not user-gated: a seeded
     // or imported account with a billing country belongs to its territory
     // however it was written.
     const input: Rec = { name: 'Globex', billing_address: { country: 'DE' } };
     await hook.handler(makeCtx({ event: 'beforeInsert', input, user: SYSTEM }));
     expect(input.billing_country).toBe('DE');
+    expect(input.territory).toBe('emea');
   });
 });
 

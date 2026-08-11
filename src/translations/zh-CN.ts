@@ -82,7 +82,12 @@ export const zhCN: TranslationData = {
         billing_address: { label: '账单地址' },
         billing_country: {
           label: '账单国家',
-          help: '由账单地址推导——区域共享规则据此匹配的国家代码。',
+          help: '由账单地址推导——按录入原样去除首尾空格并转为大写。',
+        },
+        territory: {
+          label: '销售区域',
+          help: '由账单地址推导——区域共享规则据此匹配。不属于已配置区域的客户为“其他”。',
+          options: { na: '北美', emea: '欧洲、中东与非洲', other: '其他' },
         },
         office_location: { label: '办公地点' },
         owner_id: { label: '客户负责人' },

@@ -29,19 +29,27 @@ import { lineItemRecords } from './catalog.seed';
 // The nine accounts partition deliberately across all THREE outcomes the rules
 // can produce, so a demo shows the split instead of asserting it:
 //
-//   north_america_territory  ["US","CA","MX"]            → 6  (5 × US, 1 × CA)
-//   europe_territory         ["UK","DE","FR","IT","ES"]  → 2  (DE, UK)
-//   neither territory                                     → 1  (SG)
+//   north_america_territory  territory == "na"     → 6  (5 × US, 1 × CA)
+//   europe_territory         territory == "emea"   → 2  (DE, UK)
+//   neither territory        territory == "other"  → 1  (SG)
 //
-// `country` carries the 2-LETTER CODE the rules match on. The projection trims
-// and upper-cases; it does not translate, so 'United States' would silently
-// land an account outside every territory. `UK` rather than the ISO `GB` for
-// the same reason — that is the code the europe rule is authored against (see
-// the `billing_country` note in `src/objects/account.object.ts`).
+// The rules match `territory`, a declared select the hook classifies the
+// address country into (#639) — no rule compares a country string any more.
+// `country` still carries the 2-LETTER CODE here: seed addresses keep to ISO
+// 3166-1 alpha-2 as a data-quality convention, and the spelling table in
+// `src/objects/_territory.ts` exists for what USERS type, not for what this
+// file authors.
 //
-// `billing_country` itself is deliberately NOT authored here. Hooks DO run
-// over seed writes (#617, corrected in `./_shared.ts`), so the projection is
-// computed at seed time; the field is `readonly` and hook-owned, and a
+// `UK` on the London account is the one deliberate exception, and it is now
+// load-bearing rather than merely historical: `UK` is an ACCEPTED SPELLING of
+// `GB` in that table, so this row is the stock-data proof that the alias path
+// works end to end. Correcting it to `GB` would delete that coverage — and the
+// eviction #639 was worried about cannot happen, because both spellings are
+// `emea`.
+//
+// `billing_country` and `territory` are both deliberately NOT authored here.
+// Hooks DO run over seed writes (#617, corrected in `./_shared.ts`), so both
+// are computed at seed time; the field is `readonly` and hook-owned, and a
 // hand-copied value would be a second source of truth for something
 // `account_protection` already maintains — the exact drift the doctrine block
 // exists to prevent. `test/territory-seed-coverage.test.ts` pins the dependency
@@ -263,9 +271,11 @@ three regional teams (NA, EMEA, APAC).
       industry: 'education',
       annual_revenue: 6800000,
       number_of_employees: 320,
-      // europe_territory, half 2: UK — the code the rule names, not ISO `GB`.
-      // No `state`: an address without a subdivision is a normal shape, and the
-      // projection only ever reads `country`.
+      // europe_territory, half 2 — and the alias fixture. `UK` is not ISO
+      // 3166-1 alpha-2 (`GB` is); it is an ACCEPTED SPELLING in
+      // `src/objects/_territory.ts`, so this row proves on stock data that a
+      // legacy spelling still lands in `emea` (#639). No `state`: an address
+      // without a subdivision is a normal shape, and only `country` is read.
       phone: '+44-20-7946-0800',
       billing_address: { street: '20 Fenchurch Street', city: 'London', postalCode: 'EC3M 3BY', country: 'UK' },
       website: 'https://lattice.example.com',
@@ -284,9 +294,12 @@ three regional teams (NA, EMEA, APAC).
       industry: 'logistics',
       annual_revenue: 22000000,
       number_of_employees: 1400,
-      // Outside BOTH territories on purpose: without a record that matches
+      // `territory == "other"` on purpose: without a record that matches
       // neither rule, "the rules partition the accounts" is unfalsifiable —
-      // a match-all regression would look identical to a working one.
+      // a match-all regression would look identical to a working one. `SG` is
+      // a real country the staffed territories do not cover, which is exactly
+      // what `other` is for (#639) — it is a stated classification here, not a
+      // blank.
       phone: '+65-6555-0900',
       billing_address: { street: '10 Marina Boulevard, #30-01', city: 'Singapore', postalCode: '018983', country: 'SG' },
       website: 'https://apexlogistics.example.com',

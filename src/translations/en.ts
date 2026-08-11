@@ -85,7 +85,12 @@ export const en: TranslationData = {
         billing_address: { label: 'Billing Address' },
         billing_country: {
           label: 'Billing Country',
-          help: 'Derived from Billing Address — the country code territory sharing rules match on.',
+          help: 'Derived from Billing Address — the country exactly as entered, trimmed and upper-cased.',
+        },
+        territory: {
+          label: 'Territory',
+          help: 'Derived from Billing Address — the sales territory the sharing rules match on. Accounts outside the staffed territories are Other.',
+          options: { na: 'North America', emea: 'EMEA', other: 'Other' },
         },
         office_location: { label: 'Office Location' },
         owner_id: { label: 'Account Owner' },

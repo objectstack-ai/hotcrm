@@ -87,8 +87,8 @@ na_sales_team       eu_sales_team          （区域分组）
 | 规则 | 对象 | 授予 | 给谁 |
 | --- | --- | --- | --- |
 | Account Team Sharing | 客户 | 编辑 | `sales_manager` —— 活跃的客户型客户 |
-| North America Territory | 客户 | 编辑 | `na_sales_team` —— 账单国家为 US/CA/MX 的客户 |
-| Europe Territory | 客户 | 编辑 | `eu_sales_team` —— 账单国家为 UK/DE/FR/IT/ES 的客户 |
+| North America Territory | 客户 | 编辑 | `na_sales_team` —— 销售区域为 `na` 的客户 |
+| Europe Territory | 客户 | 编辑 | `eu_sales_team` —— 销售区域为 `emea` 的客户 |
 | Opportunity Sales Team Sharing | 商机 | 读取 | `sales_director` —— 金额 ≥ $100,000 的进行中交易 |
 | Large Open Deals — Executive | 商机 | 读取 | `executive` —— 同一批交易，上一层级 |
 | Escalated Cases Sharing | 工单 | 编辑 | `service_manager` —— 未关闭的紧急工单 |

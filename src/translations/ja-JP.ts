@@ -122,7 +122,12 @@ export const jaJP: TranslationData = {
         billing_address: { label: '請求先住所' },
         billing_country: {
           label: '請求先国',
-          help: '請求先住所から導出 — テリトリー共有ルールが照合する国コード。',
+          help: '請求先住所から導出 — 入力された国名をそのまま、前後の空白を除去し大文字化した値。',
+        },
+        territory: {
+          label: 'テリトリー',
+          help: '請求先住所から導出 — テリトリー共有ルールが照合する営業テリトリー。担当チームのないテリトリーの取引先は「その他」。',
+          options: { na: '北米', emea: 'EMEA', other: 'その他' },
         },
         office_location: { label: 'オフィス所在地' },
         owner_id: { label: '取引先所有者' },

@@ -3,6 +3,7 @@ import { F } from '@objectstack/spec';
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
 import { INDUSTRY_OPTIONS } from './_picklists';
+import { TERRITORY_OPTIONS } from './_territory';
 
 export const Account = ObjectSchema.create({
   name: 'crm_account',
@@ -230,8 +231,12 @@ export const Account = ObjectSchema.create({
     }),
 
     /**
-     * Flat projection of `billing_address.country` — the column the territory
-     * sharing rules filter on (#621).
+     * Flat projection of `billing_address.country` (#621).
+     *
+     * NOTE — the territory sharing rules no longer filter on this column;
+     * they filter on `territory` below (#639). What survives is the reason the
+     * flat column exists at all, which is still worth stating because the same
+     * trap catches every rule authored against an `address`:
      *
      * ### Why this field exists
      *
@@ -257,12 +262,14 @@ export const Account = ObjectSchema.create({
      *
      * ### What it holds
      *
-     * `billing_address.country`, trimmed and upper-cased — nothing else.
-     * `countryCode` is deliberately NOT consulted: it carries ISO 3166-1
-     * alpha-2, where the United Kingdom is `GB`, while the Europe rule is
-     * authored against `UK`. Preferring the ISO slot would silently drop UK
-     * accounts out of the EU territory, so this projection mirrors exactly the
-     * one slot the rules have always named and changes no rule semantics.
+     * `billing_address.country`, trimmed, internal whitespace collapsed, and
+     * upper-cased — nothing else. It is what was TYPED, so it is still free
+     * text and still capable of holding `Deutschland`. That is no longer a
+     * silent failure, because nothing matches against it: `territory` below
+     * classifies it, and an unrecognised spelling lands in a stated `other`.
+     *
+     * `countryCode` is deliberately not consulted; see the note in
+     * `account.hook.ts` for why the ISO slot is not the input.
      *
      * Derived, never authored: `account.hook.ts` recomputes it on every write
      * that carries `billing_address`, and leaves it untouched on every write
@@ -271,9 +278,46 @@ export const Account = ObjectSchema.create({
     billing_country: Field.text({
       label: 'Billing Country',
       description:
-        'Derived from Billing Address — the country code territory sharing rules match on. Enter the country as a 2-letter code (US, DE, …) in the address.',
+        'Derived from Billing Address — the country exactly as it was entered, trimmed and upper-cased. Territory is classified from it.',
       readonly: true,
       maxLength: 64,
+      group: 'contact_info',
+    }),
+
+    /**
+     * Territory — the declared value the territory sharing rules filter on
+     * (#639).
+     *
+     * ### Why a select and not the country
+     *
+     * The rules used to match `billing_country` against a list of country
+     * codes inside a CEL string. `billing_country` is free text, so an account
+     * whose address read `United States` belonged to NO territory, silently —
+     * the metadata said territory sharing worked and for that account it did
+     * nothing, with no error anywhere. A `select` makes the domain knowable:
+     * three values, declared, every one of them reachable, and an account
+     * outside the staffed territories says `other` rather than nothing.
+     *
+     * It also collapses four copies of the country list (two CEL strings and
+     * six localised documentation tables) into one authored table in
+     * `./_territory.ts`. Adding a country is a line there; the sharing rules,
+     * this picklist and the docs all follow, and
+     * `test/territory-single-source.test.ts` fails if any of them does not.
+     *
+     * ### Readonly, and always stated
+     *
+     * Derived by `account_protection` from `billing_address.country`, never
+     * authored — correcting an account's territory means correcting its
+     * address, which is what keeps ONE fact behind the classification. Every
+     * insert states it (an account with no address at all is `other`), and an
+     * update that does not carry the address leaves it alone.
+     */
+    territory: Field.select({
+      label: 'Territory',
+      description:
+        'Derived from Billing Address — the sales territory this account belongs to. Accounts outside the staffed territories are Other.',
+      readonly: true,
+      options: [...TERRITORY_OPTIONS],
       group: 'contact_info',
     }),
 
@@ -399,8 +443,11 @@ export const Account = ObjectSchema.create({
     { fields: ['owner_id'] },
     { fields: ['type', 'is_active'] },
     // The territory sharing rules filter on this column, so it is read on
-    // every account query a territory recipient makes (#621).
-    { fields: ['billing_country'] },
+    // every account query a territory recipient makes (#621, retargeted from
+    // `billing_country` to `territory` by #639). `billing_country` carries no
+    // index of its own any more: nothing filters on it — it is displayed, and
+    // classified into this column by the hook.
+    { fields: ['territory'] },
     // Lead conversion filters on this column on every single conversion, and
     // the whole point of the column is to replace an unindexed `$regex` scan
     // (#626). Plain index — NOT `unique: true`, deliberately:
