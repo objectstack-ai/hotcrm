@@ -9,7 +9,9 @@ import type { HookApi } from './_hook-api';
  * - Re-derives `expected_revenue` from `amount * stageProbability` when either changes.
  * - Stamps `stage_entry_date` on insert and on every stage change — the stored
  *   clock behind the `days_in_stage` formula and the stagnation sweep (#489).
- * - Freezes most fields after stage is closed (won/lost) — only narrative fields editable.
+ * - Freezes most fields after stage is closed (won/lost) — only narrative fields
+ *   editable. The freeze yields to the engine's reference cleanup, so a closed
+ *   deal never makes the records it points at undeletable (#720).
  * - On `closed_won`: stamps `close_date=today`, promotes the parent account to `customer`,
  *   and asynchronously schedules an "Activate customer" task.
  */
@@ -84,16 +86,41 @@ const opportunityValidationHook: Hook = {
           (k) => !NARRATIVE_FIELDS.has(k) && !SYSTEM_FIELDS.has(k) && !APPROVAL_FIELDS.has(k) && input[k] !== previous[k],
         );
         if (violating.length > 0) {
-          // Same defect class as #693's two reported cases: this freeze also
-          // fires from a write the caller never made. Deleting a contact or a
-          // campaign a CLOSED opportunity references makes the engine clear
-          // that lookup, which arrives here as an ordinary `beforeUpdate` —
-          // measured: `DELETE /crm_contact/<id>` answered
-          // "Opportunity is closed (closed_won); … Attempted: primary_contact."
-          // The hook cannot tell a cascade from a hand edit (no marker in the
-          // context), so the refusal names the frozen record and the link
-          // instead of assuming the caller addressed the opportunity.
+          // Every lookup on `crm_opportunity` a referential clear can attack.
           const REFERENCE_FIELDS = new Set(['crm_account', 'primary_contact', 'crm_campaign']);
+          // ───────────────────────────────────── the reference-cleanup yield ──
+          // #720. The engine implements `deleteBehavior: 'set_null'` by UPDATING
+          // the row that HOLDS the lookup, so deleting a contact or a campaign a
+          // CLOSED opportunity references arrives here as an ordinary user
+          // `beforeUpdate` — and this freeze refused it, which made the frozen
+          // opportunity able to keep a person undeletable forever (and, through
+          // the master-detail cascade, that person's account too — a GDPR
+          // erasure that cannot be carried out).
+          //
+          // Measured on 17.0.0-rc.6, not assumed: the payload is exactly
+          // `{ id, <link>: null, updated_at, updated_by }`; `ctx.user` is the
+          // CALLER; `ctx.session` is the caller's own `{ userId, isSystem }`.
+          // The engine DOES stamp a `__referentialFieldClear: true` marker, but
+          // on its internal operation context — `ObjectQL.buildSession` copies a
+          // fixed allow-list of keys into `ctx.session`, and `__`-prefixed
+          // operation-private keys are deliberately not among them (see the
+          // `__` convention note in `@objectstack/core`). So no marker reaches a
+          // hook, and the WRITE SHAPE is the only evidence there is.
+          //
+          // ⛔ Keep this narrow (maintainer's ruling on #720, Option A): a write
+          // yields ONLY when every one of its non-system changes is a DECLARED
+          // link going from a value to `null`. One business field alongside it,
+          // or a link repointed to a NEW value, and the refusal below still
+          // fires. The three freeze guards share this block verbatim — sharing
+          // it as an imported helper is not possible (hook bodies run body-only
+          // in the sandbox and cannot reach module scope), so
+          // `test/freeze-guard-reference-cleanup.test.ts` pins the three copies
+          // as identical text and pins both directions of the narrowness.
+          const isReferenceCleanup = violating.every(
+            (k) => REFERENCE_FIELDS.has(k) && input[k] === null && previous?.[k] != null,
+          );
+          if (isReferenceCleanup) return;
+
           const name = typeof previous.name === 'string' ? previous.name : '';
           const oppId =
             (typeof previous.id === 'string' && previous.id) ||
@@ -101,14 +128,6 @@ const opportunityValidationHook: Hook = {
             '';
           const label = [name, oppId ? `(${oppId})` : ''].filter(Boolean).join(' ');
           const subject = label ? `Opportunity ${label}` : 'Opportunity';
-          const detached = violating.filter(
-            (k) => REFERENCE_FIELDS.has(k) && input[k] === null && previous[k] != null,
-          );
-          if (detached.length === violating.length) {
-            throw new Error(
-              `${subject} is closed (${prevStage}) and frozen, so its link(s) ${detached.join(', ')} cannot be cleared — which also blocks deleting the record(s) they point at. Delete the opportunity first, or have an admin clear the link with a system write.`,
-            );
-          }
           throw new Error(
             `${subject} is closed (${prevStage}); only ${[...NARRATIVE_FIELDS].join(', ')} may be edited. Attempted: ${violating.join(', ')}.`,
           );

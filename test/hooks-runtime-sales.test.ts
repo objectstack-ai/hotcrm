@@ -106,25 +106,22 @@ describe('opportunity_lifecycle', () => {
   });
 
   /**
-   * #693's defect class, on this guard: deleting a contact or a campaign a
-   * CLOSED opportunity references makes the engine clear that lookup, which
-   * arrives here as an ordinary `beforeUpdate`. Measured end-to-end,
-   * `DELETE /crm_contact/<id>` used to answer "Opportunity is closed
-   * (closed_won); … Attempted: primary_contact." — an object the caller never
-   * addressed, described as an edit they never made.
+   * #693's defect class, on this guard, as #720 settled it: deleting a contact
+   * or a campaign a CLOSED opportunity references makes the engine clear that
+   * lookup, which arrives here as an ordinary `beforeUpdate`. It used to be
+   * refused — "Opportunity is closed (closed_won); … Attempted: primary_contact"
+   * — which made the frozen deal able to keep that person undeletable. The
+   * freeze now yields to that write shape and only to it; the full narrowness,
+   * and the end-to-end deletes, live in
+   * `test/freeze-guard-reference-cleanup.test.ts`.
    */
-  it('describes a cleared link as a link, and names the opportunity', async () => {
+  it('lets the engine clear a link on a closed opportunity', async () => {
     const previous: Rec = { id: 'o1', name: 'Acme Renewal', stage: 'closed_won', primary_contact: 'c1' };
-    const err = await hook
-      .handler(makeCtx({
+    await expect(
+      hook.handler(makeCtx({
         event: 'beforeUpdate', input: { primary_contact: null }, previous, user: USER,
-      }))
-      .then(() => null, (e: Error) => e);
-    expect(err).toBeInstanceOf(Error);
-    expect(err!.message).toContain('Opportunity Acme Renewal (o1)');
-    expect(err!.message).toContain('its link(s) primary_contact cannot be cleared');
-    expect(err!.message).toContain('blocks deleting the record(s) they point at');
-    expect(err!.message).not.toContain('may be edited');
+      })),
+    ).resolves.toBeUndefined();
   });
 
   it('still reports a mixed write as the edit it is', async () => {
@@ -256,23 +253,20 @@ describe('quote_workflow', () => {
   });
 
   /**
-   * #693's defect class, on this guard: deleting the opportunity (or contact) a
-   * frozen quote references makes the engine clear that lookup. Measured
-   * end-to-end, `DELETE /crm_opportunity/<id>` used to answer "Quote is
-   * accepted; only internal_notes may be edited. Attempted: crm_opportunity."
+   * #693's defect class on this guard, as #720 settled it: deleting the
+   * opportunity (or contact) a frozen quote references makes the engine clear
+   * that lookup, and the freeze used to answer "Quote is accepted; only
+   * internal_notes may be edited. Attempted: crm_opportunity." — a settled
+   * quote keeping a deal undeletable. It now yields to that write shape and
+   * only to it; see `test/freeze-guard-reference-cleanup.test.ts`.
    */
-  it('describes a cleared link as a link, and names the quote', async () => {
+  it('lets the engine clear a link on a frozen quote', async () => {
     const previous: Rec = { id: 'q1', name: 'Q-1001', status: 'accepted', crm_opportunity: 'o1' };
-    const err = await hook
-      .handler(makeCtx({
+    await expect(
+      hook.handler(makeCtx({
         event: 'beforeUpdate', input: { crm_opportunity: null }, previous, user: USER,
-      }))
-      .then(() => null, (e: Error) => e);
-    expect(err).toBeInstanceOf(Error);
-    expect(err!.message).toContain('Quote Q-1001 (q1)');
-    expect(err!.message).toContain('its link(s) crm_opportunity cannot be cleared');
-    expect(err!.message).toContain('blocks deleting the record(s) they point at');
-    expect(err!.message).not.toContain('may be edited');
+      })),
+    ).resolves.toBeUndefined();
   });
 
   it('still reports a mixed write as the edit it is', async () => {

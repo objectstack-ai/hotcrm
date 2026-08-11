@@ -7,7 +7,8 @@ import type { HookApi } from './_hook-api';
  * Quote workflow hook.
  *
  * - Defaults `expiration_date` to `quote_date + 30 days` when missing.
- * - Freezes quotes once `accepted` or `expired`.
+ * - Freezes quotes once `accepted` or `expired` — against USER edits only: a
+ *   write that is purely the engine clearing a link is let through (#720).
  * - On `accepted`, drafts a contract and pushes the linked opportunity to `closed_won`.
  */
 
@@ -55,19 +56,47 @@ const quoteValidation: Hook = {
           'id', 'owner_id', 'created_at', 'updated_at',
           'created_by', 'updated_by', 'space_id', 'organization_id', 'org_id', 'version',
         ]);
-        const changed = Object.keys(input).filter(
+        // `violating` rather than `changed` (#720): the three freeze guards now
+        // share one reference-cleanup predicate verbatim, and a shared block can
+        // only be shared if it reads the same variable in all three.
+        const violating = Object.keys(input).filter(
           (k) => !allowed.has(k) && !SYSTEM_FIELDS.has(k) && input[k] !== previous[k],
         );
-        if (changed.length > 0) {
-          // Same defect class as #693: the freeze also fires from a write the
-          // caller never made. Deleting an opportunity (or a contact) an
-          // ACCEPTED quote references makes the engine clear that lookup, and
-          // the clear arrives here as an ordinary `beforeUpdate` — measured:
-          // `DELETE /crm_opportunity/<id>` answered "Quote is accepted; only
-          // internal_notes may be edited. Attempted: crm_opportunity.", naming
-          // an object the caller never addressed. Nothing in the hook context
-          // marks a cascade, so the refusal names the frozen quote and the link.
+        if (violating.length > 0) {
+          // Every lookup on `crm_quote` a referential clear can attack.
           const REFERENCE_FIELDS = new Set(['crm_account', 'crm_contact', 'crm_opportunity']);
+          // ───────────────────────────────────── the reference-cleanup yield ──
+          // #720. The engine implements `deleteBehavior: 'set_null'` by UPDATING
+          // the row that HOLDS the lookup, so deleting the opportunity (or the
+          // contact) an ACCEPTED quote references arrives here as an ordinary
+          // user `beforeUpdate` — and this freeze refused it, which made a
+          // settled quote able to keep a deal, a person and (through the
+          // master-detail cascade) that person's account undeletable forever.
+          //
+          // Measured on 17.0.0-rc.6, not assumed: the payload is exactly
+          // `{ id, <link>: null, updated_at, updated_by }`; `ctx.user` is the
+          // CALLER; `ctx.session` is the caller's own `{ userId, isSystem }`.
+          // The engine DOES stamp a `__referentialFieldClear: true` marker, but
+          // on its internal operation context — `ObjectQL.buildSession` copies a
+          // fixed allow-list of keys into `ctx.session`, and `__`-prefixed
+          // operation-private keys are deliberately not among them (see the
+          // `__` convention note in `@objectstack/core`). So no marker reaches a
+          // hook, and the WRITE SHAPE is the only evidence there is.
+          //
+          // ⛔ Keep this narrow (maintainer's ruling on #720, Option A): a write
+          // yields ONLY when every one of its non-system changes is a DECLARED
+          // link going from a value to `null`. One business field alongside it,
+          // or a link repointed to a NEW value, and the refusal below still
+          // fires. The three freeze guards share this block verbatim — sharing
+          // it as an imported helper is not possible (hook bodies run body-only
+          // in the sandbox and cannot reach module scope), so
+          // `test/freeze-guard-reference-cleanup.test.ts` pins the three copies
+          // as identical text and pins both directions of the narrowness.
+          const isReferenceCleanup = violating.every(
+            (k) => REFERENCE_FIELDS.has(k) && input[k] === null && previous?.[k] != null,
+          );
+          if (isReferenceCleanup) return;
+
           const name = typeof previous.name === 'string' ? previous.name : '';
           const quoteId =
             (typeof previous.id === 'string' && previous.id) ||
@@ -75,16 +104,8 @@ const quoteValidation: Hook = {
             '';
           const label = [name, quoteId ? `(${quoteId})` : ''].filter(Boolean).join(' ');
           const subject = label ? `Quote ${label}` : 'Quote';
-          const detached = changed.filter(
-            (k) => REFERENCE_FIELDS.has(k) && input[k] === null && previous[k] != null,
-          );
-          if (detached.length === changed.length) {
-            throw new Error(
-              `${subject} is ${previous.status as string} and frozen, so its link(s) ${detached.join(', ')} cannot be cleared — which also blocks deleting the record(s) they point at. Delete the quote first, or have an admin clear the link with a system write.`,
-            );
-          }
           throw new Error(
-            `${subject} is ${previous.status as string}; only internal_notes may be edited. Attempted: ${changed.join(', ')}.`,
+            `${subject} is ${previous.status as string}; only internal_notes may be edited. Attempted: ${violating.join(', ')}.`,
           );
         }
       }

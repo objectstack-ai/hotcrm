@@ -35,7 +35,7 @@ import stack from '../objectstack.config';
  * - `contact_integrity`'s `beforeDelete` runs on a direct contact delete AND as
  *   a cascade child of an account delete (`crm_contact.crm_account` is a
  *   master-detail with `deleteBehavior: 'cascade'`).
- * - The `beforeUpdate` locks (`lead_automation`, `opportunity_stage_automation`,
+ * - The `beforeUpdate` locks (`lead_automation`, `opportunity_lifecycle`,
  *   `quote_workflow`) run on a hand edit AND on the engine's referential clear:
  *   `cascadeDeleteRelations` implements `set_null` by UPDATING the row that
  *   holds the lookup, so deleting the referenced record arrives at the guard as
@@ -45,8 +45,14 @@ import stack from '../objectstack.config';
  * the cascade case carries no marker at all: the same keys, and a `session`
  * that is the caller's own. So the fix is not to detect the cascade — it is to
  * phrase every refusal from the BLOCKING RELATIONSHIP, which is true in both
- * contexts. The messages name the refusing record, the link or the references
- * that block, and what to do.
+ * contexts. The messages name the refusing record, the references that block,
+ * and what to do.
+ *
+ * ⚠️ Superseded in part by #720. The three `beforeUpdate` locks no longer refuse
+ * the referential clear at all — they yield to it on the write SHAPE, so those
+ * deletes now succeed and their refusal messages have been deleted rather than
+ * re-worded. That half moved to `test/freeze-guard-reference-cleanup.test.ts`.
+ * The `beforeDelete` half below is untouched and still refuses.
  *
  * ### Why this file boots a real kernel
  *
@@ -214,120 +220,25 @@ describe('deleting an account whose contact is still referenced', () => {
 
 // ────────────────────────────────────── symptom 2: the opportunity delete ──
 
-describe('deleting an opportunity a converted lead points at', () => {
-  const build = async () => {
-    const n = uniq();
-    const account = await insert('crm_account', {
-      name: `Globex ${n}`, type: 'customer', industry: 'technology',
-    });
-    const contact = await insert('crm_contact', {
-      first_name: 'Bo', last_name: 'Chen', crm_account: account.id,
-      email: `bo.${n}@cascade-guards.test`,
-    });
-    const opportunity = await insert('crm_opportunity', {
-      name: 'Globex New Business', crm_account: account.id, primary_contact: contact.id,
-      stage: 'negotiation', amount: 5000, close_date: '2026-12-01',
-    });
-    const lead = await insert('crm_lead', {
-      first_name: 'Bo', last_name: 'Chen', company: 'Globex', status: 'new',
-      lead_source: 'web', email: `bo.${n}@cascade-guards.test`,
-    });
-    // The conversion itself is a SYSTEM write (the flow's), which the lock lets
-    // through by design — it is user edits that are refused.
-    await ql.update('crm_lead', {
-      id: lead.id, is_converted: true, status: 'converted',
-      converted_account: account.id, converted_contact: contact.id,
-      converted_opportunity: opportunity.id, converted_date: '2026-02-01',
-    }, { context: SYS });
-    return { lead, opportunity };
-  };
-
-  it('names the lead and the link, not an edit of the lead', async () => {
-    const { lead, opportunity } = await build();
-    const message = await deleteAndCatch('crm_opportunity', opportunity.id);
-
-    expect(message, 'the opportunity delete must still be refused').toBeTruthy();
-    expect(message).toContain(`Converted lead Bo Chen (${lead.id})`);
-    expect(message).toContain('its link(s) converted_opportunity cannot be cleared');
-    expect(message).toContain('blocks deleting the record(s) they point at');
-    // The reported symptom: a DELETE of an OPPORTUNITY reported as an EDIT of a
-    // LEAD, advising the caller to go and change the record they just tried to
-    // delete.
-    expect(message).not.toContain('Cannot edit');
-    expect(message).not.toContain('Make changes on the converted records');
-  });
-
-  it('refuses, and leaves both records in place (semantics unchanged)', async () => {
-    const { lead, opportunity } = await build();
-    await deleteAndCatch('crm_opportunity', opportunity.id);
-    expect(await rowsOf('crm_opportunity', opportunity.id)).toHaveLength(1);
-    expect(await rowsOf('crm_lead', lead.id)).toHaveLength(1);
-    // And the message's own advice works: delete the lead, then the
-    // opportunity — the order the acceptance sweep had to discover by hand.
-    expect(await deleteAndCatch('crm_lead', lead.id)).toBeNull();
-    expect(await deleteAndCatch('crm_opportunity', opportunity.id)).toBeNull();
-  });
-});
-
-// ───────────────────────────── the same defect class on the sibling guards ──
-
 /**
- * Neither of these is in #693's report, and both are reachable with the same
- * two REST calls the sweep made. They are the same construction — a lock whose
- * message assumed the caller had addressed the locked record — so they are
- * fixed here rather than left to be re-found.
+ * #693's second symptom — a `DELETE /crm_opportunity/<id>` answered by the
+ * converted-lead lock — no longer produces a refusal at all, and neither do the
+ * two sibling freeze guards on the same construction.
+ *
+ * #720 ruled (maintainer, 2026-08-11) that a frozen record must not make the
+ * records it points at undeletable: all three guards now YIELD to the engine's
+ * reference-cleanup write shape, so the cascade completes and there is no
+ * sentence left to phrase. The message this file used to pin here —
+ * "…its link(s) X cannot be cleared — which also blocks deleting the record(s)
+ * they point at" — is gone from the three hooks, and with it the whole reason a
+ * caller ever saw it.
+ *
+ * Those cases now live, as successful deletes plus the narrowness that keeps
+ * ordinary edits refused, in `test/freeze-guard-reference-cleanup.test.ts`.
+ * What stays HERE is #693's other half, which #720 did not touch: refusals that
+ * are still correct (`contact_integrity`, `account_protection`) and must still
+ * name the record that is refusing.
  */
-describe('sibling guards reached the same way', () => {
-  it('a closed opportunity blocking a contact delete names the opportunity and the link', async () => {
-    const { contact } = await accountWithContact('Frozen Corp');
-    const elsewhere = await insert('crm_account', {
-      name: `Elsewhere ${uniq()}`, type: 'customer', industry: 'technology',
-    });
-    // CLOSED, so `contact_integrity` does not count it (it counts OPEN work)
-    // and the delete reaches the opportunity's own freeze.
-    const opportunity = await insert('crm_opportunity', {
-      name: 'Closed Deal', crm_account: elsewhere.id, primary_contact: contact.id,
-      stage: 'closed_won', win_reason: 'better_price', amount: 1000, close_date: '2026-01-01',
-    });
-
-    const message = await deleteAndCatch('crm_contact', contact.id);
-    expect(message).toContain(`Opportunity Closed Deal (${opportunity.id})`);
-    expect(message).toContain('its link(s) primary_contact cannot be cleared');
-    expect(message).toContain('blocks deleting the record(s) they point at');
-    expect(message).not.toContain('may be edited');
-  });
-
-  it('an accepted quote blocking an opportunity delete names the quote and the link', async () => {
-    const n = uniq();
-    const account = await insert('crm_account', {
-      name: `Quoted Corp ${n}`, type: 'customer', industry: 'technology',
-    });
-    const opportunity = await insert('crm_opportunity', {
-      name: 'Quoted Deal', crm_account: account.id,
-      stage: 'negotiation', amount: 1000, close_date: '2026-12-01',
-    });
-    // The recipient is not decoration here: since #1017 `crm_quote.crm_contact`
-    // is `requiredWhen` the status is `presented`/`accepted`, so a contact-less
-    // quote cannot reach `accepted` at all and this fixture would never get as
-    // far as the freeze it is measuring.
-    const contact = await insert('crm_contact', {
-      first_name: 'Quinn', last_name: 'Reyes', crm_account: account.id,
-      email: `quinn.${n}@cascade-guards.test`,
-    });
-    const quote = await insert('crm_quote', {
-      name: `Q-${n}`, crm_account: account.id, crm_opportunity: opportunity.id,
-      crm_contact: contact.id,
-      status: 'draft', quote_date: '2026-01-01', expiration_date: '2026-02-01',
-    });
-    await ql.update('crm_quote', { id: quote.id, status: 'accepted' }, { context: SYS });
-
-    const message = await deleteAndCatch('crm_opportunity', opportunity.id);
-    expect(message).toContain(`Quote Q-${n} (${quote.id})`);
-    expect(message).toContain('its link(s) crm_opportunity cannot be cleared');
-    expect(message).toContain('blocks deleting the record(s) they point at');
-    expect(message).not.toContain('may be edited');
-  });
-});
 
 // ───────────────────── the account guard's own sentence, measured (#721) ──
 
