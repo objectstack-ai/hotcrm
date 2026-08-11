@@ -5,6 +5,7 @@
     "index",
     "products",
     "contracts",
-    "approvals"
+    "approvals",
+    "billing-handoff"
   ]
 }

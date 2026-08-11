@@ -28,6 +28,11 @@ export { ContactWelcomeFlow } from './contact-welcome.flow';
 export { OpportunityWonAlertFlow } from './opportunity-won-alert.flow';
 export { TaskUrgentAlertFlow } from './task-urgent-alert.flow';
 export { TaskDueReminderFlow } from './task-due-reminder.flow';
+// Outbound integration: the billing hand-off (#600) — where CRM scope ends.
+export {
+  BillingHandoffClosedWonFlow,
+  BillingHandoffContractActivatedFlow,
+} from './billing-handoff.flow';
 
 import { CampaignEnrollmentFlow } from './campaign-enrollment.flow';
 import { CaseEscalationFlow, CaseEscalationOnCreateFlow } from './case-escalation.flow';
@@ -50,6 +55,10 @@ import { ContactWelcomeFlow } from './contact-welcome.flow';
 import { OpportunityWonAlertFlow } from './opportunity-won-alert.flow';
 import { TaskUrgentAlertFlow } from './task-urgent-alert.flow';
 import { TaskDueReminderFlow } from './task-due-reminder.flow';
+import {
+  BillingHandoffClosedWonFlow,
+  BillingHandoffContractActivatedFlow,
+} from './billing-handoff.flow';
 
 /** All flow definitions as a typed array for defineStack() */
 export const allFlows: Flow[] = [
@@ -80,4 +89,7 @@ export const allFlows: Flow[] = [
   OpportunityWonAlertFlow,
   TaskUrgentAlertFlow,
   TaskDueReminderFlow,
+  // Outbound integration (#600)
+  BillingHandoffClosedWonFlow,
+  BillingHandoffContractActivatedFlow,
 ];
