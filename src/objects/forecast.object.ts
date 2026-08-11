@@ -289,6 +289,59 @@ export const Forecast = ObjectSchema.create({
       // ("on or after") — #514 item 12.
       condition: P`has(record.period_end) && record.period_end != null && has(record.period_start) && record.period_start != null && record.period_end <= record.period_start`,
     },
+    // A hand-filled `period_start` must be the first day of the calendar period
+    // it labels (#1008, maintainer ruling of 2026-08-11: 「接受你的全部建议」 —
+    // option 3, refuse rather than accept or snap).
+    //
+    // The hook derives `period_end` as "start + one period" — a ROLLING window.
+    // That is calendar-true for a start on a boundary and drifts for anything
+    // else: `period: 'quarter'` + `period_start: 2026-08-15` derived
+    // `period_end: 2026-10-31` under `period_label: 'Q3 2026'`, a window
+    // labelled Q3 that reaches a month into Q4. `period: 'month'` +
+    // `2026-08-17` derived a half-month window. The row was internally
+    // inconsistent in a way no consumer could detect: every "this quarter"
+    // equals-filter reads `period_start`, and the nightly sweep selects the
+    // current row by `period_start <= today <= period_end`.
+    //
+    // These two rules are the ONE enforcement point — deliberately not a throw
+    // in `forecast.hook.ts` as well. Two enforcement points that can disagree
+    // is what #514 item 7 deleted on `annual_revenue`, and a declared rule is
+    // the shape the platform can act on: it refuses the write with a
+    // `ValidationError` / `VALIDATION_FAILED` envelope (HTTP 400) on the record
+    // form the manager uses, on the API, and on a seed's system write alike,
+    // where a hook throw is a bare `Error`. The derivation is left alone: with
+    // the start pinned to a boundary, "start + one period" IS the calendar
+    // period, so there is nothing left for option 1 to fix.
+    //
+    // WHY A REGEX AND NOT DATE ARITHMETIC: the CEL stdlib this app compiles
+    // against (`CEL_STDLIB_FUNCTIONS`) has no month/day accessor — the date
+    // functions are `today`/`daysBetween`/`addDays`/`addMonths`/`date` — so
+    // "the 1st of its month" is not expressible as arithmetic. Measured: both
+    // drivers this app can run on hand `period_start` back as a `YYYY-MM-DD`
+    // string (`driver-memory` and `driver-sqlite-wasm`), and an ISO *datetime*
+    // string still matches these prefix-anchored patterns. A caller that writes
+    // a JS `Date` object instead of a string is the one shape `string()` has no
+    // overload for; the engine then rejects that write naming the rule
+    // (17.0.0-rc.2 fails closed, #4649) rather than admitting it — no writer in
+    // this app does that (`forecast.hook.ts` and `revenue.seed.ts` both emit
+    // ISO strings), and failing closed is the right side to err on here.
+    {
+      name: 'period_start_first_of_period',
+      type: 'script',
+      severity: 'error',
+      message: 'Period Start must be the first day of the period — e.g. 2026-08-01 for Aug 2026.',
+      condition: P`has(record.period_start) && record.period_start != null && !matches(string(record.period_start), "^[0-9]{4}-[0-9]{2}-01")`,
+    },
+    {
+      name: 'quarter_starts_on_quarter_boundary',
+      type: 'script',
+      severity: 'error',
+      // The month rule above already rejects any non-1st day, so this one only
+      // ever adds the quarter-month half: 2026-08-01 is a valid month start and
+      // not a valid quarter start.
+      message: 'A quarterly forecast must start on a quarter boundary — January 1, April 1, July 1 or October 1.',
+      condition: P`has(record.period) && record.period == "quarter" && has(record.period_start) && record.period_start != null && !matches(string(record.period_start), "^[0-9]{4}-(01|04|07|10)-01")`,
+    },
     {
       name: 'snapshot_amounts_non_negative',
       type: 'script',
