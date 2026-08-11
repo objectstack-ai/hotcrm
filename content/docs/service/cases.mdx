@@ -124,14 +124,16 @@ It performs:
 
 1. **Flag** as escalated, stamp the escalated date.
 2. **Set status** to *Escalated*.
-3. **Notify the case owner** — inbox and email, carrying the case number and the priority.
+3. **Hand the case over** — ownership moves to the service manager carrying the fewest open cases.
+4. **Notify the case owner** — inbox and email, carrying the case number and the priority.
+
+The hand-off goes to a **pool**, not up a chain. Positions in this app are flat, so "the owner's manager" is not something it can resolve; the case goes to whoever holds the **Service Manager** position and has the fewest open (neither *Resolved* nor *Closed*) cases, which spreads consecutive escalations across the team on its own. Three cases where it deliberately does nothing: **nobody holds the position** — the state a fresh install is in — so the case keeps its owner and the escalation completes exactly as before; the case is **already owned by a pool member**, so it stays with the manager working it; or the same edit **names an owner itself**, which wins over the pool.
 
 The status change to *Escalated* then fires the `case_status_side_effects` hook, which opens an **Urgent follow-up task due tomorrow for the account owner** — and only for cases that have an account, since the task is keyed to it.
 
-Three things this list deliberately does not claim, because the escalation does not do them:
+Two things this list deliberately does not claim, because the escalation does not do them:
 
-- **The case is not reassigned.** The escalation write sets `is_escalated`, `escalation_reason`, `escalated_date` and `status`, and never touches `owner_id`. There is no hand-off to the agent's manager or to senior staff — which is what the escalation notice tells its recipient in so many words: `It remains assigned to you.`
-- **The notification goes to the case owner alone.** Its recipient list is the single entry `{caseRecord.owner_id}` — not the manager, and not a broader `support-team@example.com` list, an address that exists nowhere in this app.
+- **The notification goes to the previous case owner alone.** Its recipient list is the single entry `{caseRecord.owner_id}`, read before the hand-off — so it reaches the agent the case is being taken from, which is the point. Not the manager, and not a broader `support-team@example.com` list, an address that exists nowhere in this app.
 - **The follow-up task is not the original agent's.** It belongs to the **account owner**, not to the agent who was handling the case and not to a senior agent. The flow carries no task node at all — the hook is the single owner of escalation follow-up tasks, so there is exactly one task per escalation.
 
 See [SLA & Escalation](/docs/service/sla-and-escalation) for the full mechanics.

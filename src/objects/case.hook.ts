@@ -2,7 +2,7 @@
 
 import type { Hook, HookContext } from '@objectstack/spec/data';
 import type { HookApi } from './_hook-api';
-import { createCaseRoundRobinAssign } from './_case-assignment';
+import { createCaseRoundRobinAssign, createCaseEscalationReassign } from './_case-assignment';
 
 /**
  * Case SLA & escalation hook.
@@ -18,11 +18,17 @@ import { createCaseRoundRobinAssign } from './_case-assignment';
  * - On `resolved`: stamps `closed_date` (proxy for the resolution time — there is
  *   no resolved_date field) and bumps account `last_activity_date`.
  *
- * Ownership assignment for ownerless intake is NOT here: it lives in
- * `_case-assignment.ts`, which is the single home for "who should own this
- * case" and is explicitly an app-level stopgap for the platform's missing queue
- * engine (#596). Its hook is composed into this module's default export below,
- * so the registry still sees one `crm_case` hook set.
+ * Ownership assignment is NOT here: both answers to "who should own this case"
+ * live in `_case-assignment.ts` — the ownerless-intake round-robin (#596) and
+ * the escalation hand-off to the `service_manager` pool (#1070). One module, so
+ * the app never grows two independently-authored ownership paths on `crm_case`;
+ * its hooks are composed into this module's default export below, so the
+ * registry still sees one `crm_case` hook set. In particular the escalation
+ * hand-off is deliberately NOT a branch of `case_status_side_effects` below:
+ * that hook writes through `ctx.api`, a seam the #3004 transfer guard can see
+ * (which would demand `crm_case.allowTransfer`) and a second write that
+ * re-enters the record-change trigger surface. Both measurements are in
+ * `_case-assignment.ts`'s header.
  */
 
 const caseValidation: Hook = {
@@ -210,6 +216,13 @@ const caseSideEffects: Hook = {
     // platform stamped `owner_id` to the ESCALATING AGENT — so the account
     // owner saw the task in "My Tasks" and could not edit or complete it. One
     // column means one answer, and the answer is the person who must act.
+    //
+    // The CASE itself has already changed hands by the time this runs, on the
+    // `beforeUpdate` seam of this very update (`case_escalation_reassign`,
+    // #1070) — so this hook still writes no `crm_case.owner_id` and still needs
+    // no `crm_case.allowTransfer`. The task and the case are two different
+    // hand-offs: the task goes to the ACCOUNT owner (commercial follow-up), the
+    // case to a service manager (the work itself).
     if (input.status === 'escalated' && previous.status !== 'escalated' && accountId) {
       const account = await api.object('crm_account').findOne({ where: { id: accountId } });
       const ownerId = (account as { owner_id?: string } | null)?.owner_id ?? ctx.user?.id;
@@ -254,4 +267,14 @@ const caseSideEffects: Hook = {
  */
 const caseAutoAssign: Hook = createCaseRoundRobinAssign();
 
-export default [caseValidation, caseAutoAssign, caseSideEffects];
+/**
+ * Escalation hand-off to the `service_manager` pool (#1070), composed from
+ * `_case-assignment.ts`.
+ *
+ * Runs on `beforeUpdate` and mutates the escalation write itself — it issues no
+ * operation of its own, which is what keeps it off the record-change trigger
+ * surface that has looped this file's neighbourhood twice before.
+ */
+const caseEscalationReassign: Hook = createCaseEscalationReassign();
+
+export default [caseValidation, caseAutoAssign, caseEscalationReassign, caseSideEffects];

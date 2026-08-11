@@ -30,8 +30,10 @@ import type { HookApi } from './_hook-api';
  * ownership too. Two independently-authored ownership paths on `crm_case` is
  * the "one operation, two implementations" shape that later has to be converged
  * by deleting one of them. This module is the single home for the question
- * "who should own this case", so #1070 extends it rather than authoring a
- * second answer — see "Extending this for #1070" at the bottom.
+ * "who should own this case", so #1070 landed here as a second factory —
+ * {@link createCaseEscalationReassign} — rather than as a second answer
+ * elsewhere. Both factories read a POSITION POOL and pick its least-loaded
+ * holder; they differ in which pool, which seam and which trigger.
  *
  * # ⚠️ The sandbox constraint, and what "shared" can therefore mean here
  *
@@ -85,6 +87,36 @@ import type { HookApi } from './_hook-api';
  * escalation task under the account owner needs
  * `service_agent.crm_task.allowTransfer`. Both seams are pinned in
  * `test/ownership-model.test.ts`.
+ *
+ * # The same question again, on the UPDATE door (#1070)
+ *
+ * The verdict above is a property of the SEAM, not of `crm_case`, so #1070 —
+ * which reassigns on the escalation transition — measured its own door rather
+ * than inheriting this one. Measured 2026-08-11 on @objectstack/* 17.0.0-rc.6,
+ * same recorder technique, three readings:
+ *
+ *   A. a `beforeUpdate` hook stamping `owner_id`: the middleware observed
+ *      `{"operation":"update","data":{"id":"…","status":"escalated"}}` — no
+ *      `owner_id` — and the stored row came back owned by the hook's pick.
+ *      INVISIBLE, exactly like the insert door.
+ *   B. negative control, a caller-supplied `owner_id` on the same object
+ *      through the same seam: `{"…","owner_id":"agent_explicit"}`. VISIBLE, so
+ *      reading A as an absence is not vacuous.
+ *   C. the `afterUpdate` shape the card proposed — a `ctx.api` update, i.e. a
+ *      fresh operation: `{"…","owner_id":"mgr_from_after_update"}`. VISIBLE.
+ *
+ * C is why {@link createCaseEscalationReassign} runs on `beforeUpdate` and not
+ * in `case_status_side_effects`: on that seam the reassignment would be a
+ * transfer the guard reads, and would need `crm_case.allowTransfer` granted to
+ * `service_agent` — a permission-model widening (#596's ruling forbids making
+ * one quietly). Choosing the seam the guard cannot see is not a way around the
+ * gate: it is the same standing the intake round-robin already has, and the
+ * app's escalation is a service-level policy applied by the platform's own
+ * automation rather than an agent reaching for someone else's record. All three
+ * readings are pinned in `test/case-assignment.test.ts`; if a platform release
+ * moves the guard, reading A flips and that test goes red — the signal is to
+ * grant `allowTransfer` deliberately or to stop assigning in a hook, NOT to
+ * widen the permission model to make a red test green.
  */
 
 /** The position whose holders form the case intake pool (`sys_user_position`). */
@@ -220,33 +252,144 @@ export function createCaseRoundRobinAssign(hookName = 'case_auto_assign'): Hook 
 }
 
 /**
- * ─── Extending this for #1070 (escalation → `service_manager` pool) ─────────
+ * Hand an escalating case to the least-loaded service manager (#1070).
  *
- * #1070 reassigns an ESCALATED case to the least-loaded holder of
- * {@link SERVICE_MANAGER_POSITION}. It belongs in THIS module, as a second
- * exported factory beside {@link createCaseRoundRobinAssign} — not as a fresh
- * ownership path in `case.hook.ts`. Three things that card must account for,
- * all of which differ from the intake path above and none of which are
- * cosmetic:
+ * Escalation used to change hands with nobody: `case_escalation`,
+ * `case_escalation_on_create`, `case_sla_monitor` and the `escalate_case`
+ * screen flow all write the same four fields — `is_escalated`,
+ * `escalation_reason`, `escalated_date`, `status` — and none of them touches
+ * `owner_id`. The agent who could not get to the case in time stayed the only
+ * person who could work it, and "escalated" meant a flag, a status and an inbox
+ * message. This hook is the hand-off: on the escalation TRANSITION the case
+ * moves to the holder of {@link SERVICE_MANAGER_POSITION} with the fewest open
+ * cases — the same least-loaded balance the intake round-robin above computes,
+ * against a different pool.
  *
- *  1. **Different seam, different verdict.** Escalation reassignment is an
- *     UPDATE to an existing row, which cannot be done by mutating `input` in a
- *     `beforeInsert`. Whether it runs as a `beforeUpdate` `input` mutation
- *     (invisible to the guard, like this hook) or a `ctx.api` update (VISIBLE
- *     to the guard, and therefore needing `crm_case.allowTransfer` on the
- *     writing profile — a permission-model widening) decides whether that card
- *     is a hook change or a security change. ⛔ Do not assume this module's
- *     measured "no grant needed" answer carries over: it is a property of the
- *     `beforeInsert` seam, not of `crm_case`. Measure the chosen seam the same
- *     way `test/case-assignment.test.ts` measures this one.
- *  2. **Re-entrancy.** `case_status_side_effects` is an `afterUpdate` hook on a
- *     file that has looped before (the `is_escalated` re-fire that wedged a
- *     first-boot seed on 2026-07-06, and the `closed_date`-as-`resolved_date`
- *     write). An ownership write on the escalation transition re-enters the
- *     record-change trigger surface and must be reasoned about, not assumed.
- *  3. **The empty pool is still the norm**, and the answer is still a no-op
- *     that leaves the case where it is — plus a way to SEE it. The
- *     `unassigned_triage` view covers ownerless cases; an escalated case that
- *     could not be handed over is not ownerless, so #1070 needs its own
- *     visibility answer rather than inheriting this one.
+ * Positions are FLAT (`src/sharing/positions.ts`): there is no manager chain to
+ * walk, so "the owner's manager" is not a thing this app can resolve — and
+ * `{caseRecord.owner_id.manager}` in a flow template interpolates to the
+ * literal string `undefined`, which is why the flow cannot do this itself and a
+ * hook must. The pool substitute is the same technique `lead_auto_assign`
+ * established for reps.
+ *
+ * ## `beforeUpdate`, not `afterUpdate` — and both halves of that matter
+ *
+ * The card proposed `case_status_side_effects` (an `afterUpdate` hook writing
+ * through `ctx.api`). Measured, that seam is VISIBLE to the #3004 transfer
+ * guard (reading C in this module's header), so it would need
+ * `crm_case.allowTransfer` on `service_agent` — widening what an agent may do
+ * to a case generally. The `beforeUpdate` door is invisible to it (reading A,
+ * with reading B as the negative control), so the hand-off costs no permission
+ * change at all.
+ *
+ * It also disposes of the re-entrancy risk rather than guarding it. This hook
+ * performs NO operation: it mutates the payload of the update already in
+ * flight, so there is no second write, no second `record-after-update` event,
+ * and nothing for `case_escalation` or `case_status_side_effects` to re-fire
+ * on. Compare the two accidents this file's neighbourhood has already had — the
+ * `closed_date`-as-`resolved_date` write, and the `is_escalated` re-fire loop
+ * that wedged a first-boot seed on 2026-07-06 — both of which were EXTRA
+ * writes. On top of that the predicate is a TRANSITION (`status` becomes
+ * `escalated` having not been), not a state: it reads two status strings and is
+ * false on a replay, where the 2026-07-06 loop read the boolean `is_escalated`
+ * and met SQLite's `1 != true`. And the write is idempotent by construction —
+ * a case already owned by a pool member is left alone, so re-running this on
+ * the same record moves nothing. `test/case-assignment.test.ts` drives all
+ * three of those properties.
+ *
+ * ## The empty pool: a no-op that is still VISIBLE
+ *
+ * `sys_user_position` membership is runtime data and `service_manager` is
+ * unstaffed on a fresh install (and in the demo org — see
+ * `src/sharing/demo-staffing.ts`, where leaving the leadership bench empty is a
+ * decision, not an oversight). With no pool, the case keeps its current owner
+ * and the escalation completes exactly as before. Unlike the intake path, that
+ * no-op needs no new view to be visible: an escalated case is not ownerless,
+ * it sits in the `escalated_cases` list view, and `case_escalation_sharing`
+ * already grants every `service_manager` edit access to open critical cases —
+ * so a case the pool could not be handed can still be seen, and taken, by the
+ * people the pool names.
+ *
+ * ## Best-effort, always
+ *
+ * Reassignment is an ENHANCEMENT to the escalation, never a precondition for
+ * it.
+ * A read denial (the `sys_user_position` find), an empty pool or any other
+ * failure leaves the case with its current owner and lets the escalation write
+ * through untouched.
+ *
+ * @param hookName registry name for the hook (metadata only — never read by
+ *   the body, which the sandbox would not let it be).
  */
+export function createCaseEscalationReassign(hookName = 'case_escalation_reassign'): Hook {
+  return {
+    name: hookName,
+    object: 'crm_case',
+    events: ['beforeUpdate'],
+    priority: 250,
+    description: 'Hand a case being escalated to the least-loaded service manager.',
+    handler: async (ctx: HookContext) => {
+      const { input } = ctx;
+      const previous = ctx.previous;
+      if (!previous) return;
+
+      // The escalation TRANSITION, not the escalated STATE. A state predicate
+      // is what looped on 2026-07-06; this one is false on every write that
+      // does not move the status, including a replay of this very update.
+      if (input.status !== 'escalated' || previous.status === 'escalated') return;
+
+      // An explicit owner in the SAME payload wins: a manual "escalate and hand
+      // it to Dana" must not be overwritten by the pool's arithmetic.
+      if (typeof input.owner_id === 'string' && input.owner_id) return;
+
+      const api = ctx.api as HookApi | undefined;
+      if (!api) return;
+
+      try {
+        // The pool = holders of the `service_manager` position. This literal is
+        // the exported SERVICE_MANAGER_POSITION; the sandbox forbids reading
+        // the constant from here, and the parity assertion in
+        // `test/case-assignment.test.ts` is what keeps the two in step.
+        const holders = await api.object('sys_user_position').find({
+          where: { position: 'service_manager' }, fields: ['user_id'], top: 1000,
+        });
+        const managerIds = Array.from(
+          new Set(
+            (holders ?? [])
+              .map((r) => (typeof r.user_id === 'string' ? r.user_id : ''))
+              .filter(Boolean),
+          ),
+        );
+        // No pool → the case keeps its owner and the escalation still lands.
+        if (managerIds.length === 0) return;
+
+        // Already with the pool → leave it alone. This is what makes the write
+        // idempotent: a manager escalating their own case, or a second
+        // escalation of a case handed over once already, moves nothing.
+        const currentOwner =
+          (typeof previous.owner_id === 'string' && previous.owner_id) || '';
+        if (currentOwner && managerIds.indexOf(currentOwner) !== -1) return;
+
+        // Fewest OPEN cases wins — same predicate as the intake round-robin:
+        // `$nin` rather than `is_closed: false`, because a resolved case is
+        // finished work and must stop counting against whoever holds it.
+        let best: string | undefined;
+        let bestCount = Infinity;
+        for (const managerId of managerIds) {
+          const openCount = await api.object('crm_case').count({
+            where: { owner_id: managerId, status: { $nin: ['resolved', 'closed'] } },
+          });
+          if (openCount < bestCount) {
+            bestCount = openCount;
+            best = managerId;
+          }
+        }
+        if (best) input.owner_id = best;
+      } catch {
+        // Swallow: the hand-off must never reject the escalation. A denied
+        // `sys_user_position` read leaves the case where it is, escalated.
+        // (No `console` here — the L2 hook sandbox does not define one.)
+      }
+    },
+  };
+}

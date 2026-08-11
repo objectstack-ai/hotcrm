@@ -314,8 +314,17 @@ describe('allowTransfer is granted deliberately', () => {
     // ACCOUNT owner through `ctx.api` — the seam the gate sees (above), so
     // without this bit the case update itself fails. It is "assign work to a
     // colleague", NOT "reassign the ticket": the agent holds no transfer grant
-    // on `crm_case` or any customer record, so escalation still cannot move a
-    // case off its owner (#548 deferred case reassignment).
+    // on `crm_case` or any customer record.
+    //
+    // #1070 hands an escalated case to the `service_manager` pool and this list
+    // still reads `['crm_task']` — that is the point, not an oversight. The
+    // hand-off runs on the `beforeUpdate` seam, which the gate cannot see (seam
+    // 1 above, measured for `crm_case` update in `test/case-assignment.test.ts`
+    // with its own negative control). Had it been written as a `ctx.api` write
+    // from `afterUpdate` — seam 2 — the gate WOULD see it and this expectation
+    // would have had to grow `crm_case`, handing every agent the ability to
+    // reassign any case they can edit. If this line ever needs that entry, it
+    // is a permission-model decision for the maintainer, not a test fix.
     expect(transfersIn('service_agent')).toEqual(['crm_task']);
   });
 

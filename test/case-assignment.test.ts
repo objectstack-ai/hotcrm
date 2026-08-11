@@ -7,6 +7,7 @@ import stack from '../objectstack.config';
 import caseHooks from '../src/objects/case.hook';
 import {
   SERVICE_AGENT_POSITION,
+  SERVICE_MANAGER_POSITION,
   CLOSED_CASE_STATUSES,
   POOL_QUERY_LIMIT,
 } from '../src/objects/_case-assignment';
@@ -34,12 +35,27 @@ import { localePacks } from './helpers/metadata-fixtures';
  * permission-model widening, so it is MEASURED against a real engine rather
  * than inherited from the `lead_auto_assign` precedent — the guard's verdict is
  * a property of the SEAM, and `crm_case` had never been measured on it.
+ *
+ * ═══ Escalation hand-off to the `service_manager` pool (#1070) ═════════════
+ *
+ * The second half of the same question — "who should own this case" — and it
+ * lives in the same module and the same test file for the reason that module's
+ * header gives: two independently-authored ownership paths on `crm_case` is the
+ * shape that has to be converged later by deleting one.
+ *
+ * Its own blocking precondition is measured below in the same style, because
+ * the gate's verdict is a property of the seam and the UPDATE door had never
+ * been measured either: `beforeUpdate` input mutation (invisible), a caller's
+ * own `owner_id` on that door (visible — the negative control), and the
+ * `ctx.api` update an `afterUpdate` hook would issue (visible, and therefore
+ * the shape that would have needed `crm_case.allowTransfer`).
  */
 
 type AnyRec = Record<string, any>;
 
 const assign = hookNamed(caseHooks, 'case_auto_assign');
 const slaDefaults = hookNamed(caseHooks, 'case_sla_defaults');
+const escalationReassign = hookNamed(caseHooks, 'case_escalation_reassign');
 
 // ─────────────────────────── the blocking precondition, measured ──
 
@@ -393,5 +409,463 @@ describe('unassigned_triage makes the empty-pool path visible', () => {
     expect(localePacks.length, 'no translation packs discovered — this guard checks nothing')
       .toBeGreaterThanOrEqual(4);
     expect(missing, `untranslated triage copy:\n  ${missing.join('\n  ')}`).toEqual([]);
+  });
+});
+
+// ════════════════════ #1070 — the escalation hand-off, and its own precondition ══
+
+describe('the transfer gate on the UPDATE door: which escalation seam it can see', () => {
+  let ql: AnyRec;
+  /** Every operation the middleware seam observed, with the payload as it was THEN. */
+  let seen: { object: string; operation: string; data: AnyRec }[];
+
+  beforeAll(async () => {
+    seen = [];
+    ql = (await ObjectQL.create({
+      datasources: { default: new InMemoryDriver({ persistence: false }) },
+      objects: {
+        crm_case: {
+          name: 'crm_case',
+          fields: {
+            id: { type: 'text' },
+            subject: { type: 'text' },
+            status: { type: 'text' },
+            owner_id: { type: 'lookup', reference: 'sys_user' },
+          },
+        },
+      } as never,
+    })) as never;
+
+    // Same recorder, same seam `@objectstack/plugin-security` registers the
+    // #3004 guard on. Visibility is what is being measured, not the verdict.
+    ql.registerMiddleware(async (opCtx: AnyRec, next: () => Promise<void>) => {
+      seen.push({
+        object: opCtx.object,
+        operation: opCtx.operation,
+        data: JSON.parse(JSON.stringify(opCtx.data ?? {})) as AnyRec,
+      });
+      return next();
+    });
+
+    // The shape `case_escalation_reassign` actually has: a beforeUpdate hook
+    // that stamps `owner_id` onto the escalation write already in flight.
+    ql.registerHook?.('beforeUpdate', async (ctx: AnyRec) => {
+      if (ctx.object !== 'crm_case') return;
+      const data = ctx.input?.data ?? ctx.data;
+      if (data && data.status === 'escalated' && !data.owner_id) data.owner_id = 'mgr_pool_pick';
+    }, { object: 'crm_case' });
+  });
+
+  afterAll(async () => {
+    await ql?.close();
+  });
+
+  const lastUpdate = () => seen.filter((s) => s.object === 'crm_case' && s.operation === 'update').pop();
+
+  it('A — a beforeUpdate stamp never reaches the middleware, and still reaches storage', async () => {
+    // Predicted direction, stated before running: the middleware sees NO
+    // `owner_id`, and the STORED row carries the hook's manager. Measured
+    // 2026-08-11 on @objectstack/* 17.0.0-rc.6 — the middleware observed
+    //   {"object":"crm_case","operation":"update","data":{"id":"…","status":"escalated"}}
+    // and the row came back with `owner_id: "mgr_pool_pick"`.
+    //
+    // So the escalation hand-off needs NO `crm_case.allowTransfer` grant, and
+    // #1070 is not a permission-model widening. ⛔ If a future platform release
+    // moves the guard downstream of the hook phase, this expectation flips and
+    // the test goes red. That is the signal to grant `allowTransfer`
+    // deliberately, or to stop reassigning in a hook — NOT to widen the
+    // permission model in order to make a red test green.
+    const api = ql.createContext({ userId: 'usr_agent' });
+    const row = await api.object('crm_case').insert({ subject: 'Printer on fire', status: 'new', owner_id: 'agent_a' });
+    await api.object('crm_case').update({ id: row.id, status: 'escalated' }, { where: { id: row.id } });
+
+    const observed = lastUpdate();
+    expect(observed, 'the middleware seam never fired for the update').toBeTruthy();
+    expect(
+      observed!.data.owner_id,
+      'the guard COULD see the hook-assigned manager — escalation reassignment now needs ' +
+        'crm_case.allowTransfer, which is a permission-model change and not a hook change',
+    ).toBeUndefined();
+
+    const stored = await api.object('crm_case').findOne({ where: { id: row.id } });
+    expect(stored?.owner_id, 'the hook’s hand-off did not survive to storage').toBe('mgr_pool_pick');
+  });
+
+  it('B — negative control: a caller’s own owner_id on the same door IS visible', async () => {
+    // Guards the guard. Reading A is an ABSENCE, and an absence proves nothing
+    // if the recorder could never have seen the key on an update in the first
+    // place.
+    const api = ql.createContext({ userId: 'usr_admin' });
+    const row = await api.object('crm_case').insert({ subject: 'Manually moved', status: 'new', owner_id: 'agent_a' });
+    await api.object('crm_case').update(
+      { id: row.id, status: 'in_progress', owner_id: 'agent_explicit' },
+      { where: { id: row.id } },
+    );
+    expect(
+      lastUpdate()!.data.owner_id,
+      'the recorder cannot see owner_id on an update AT ALL — reading A is vacuous',
+    ).toBe('agent_explicit');
+  });
+
+  it('C — the afterUpdate shape the card proposed IS visible, which is why it was not used', async () => {
+    // The reading that decided the seam. A hook writing through `ctx.api` from
+    // `afterUpdate` issues a FRESH operation carrying the caller's identity, so
+    // the guard reads its `owner_id` — that hand-off would be denied for a
+    // `service_agent` without `crm_case.allowTransfer`, and granting it would
+    // let an agent reassign any case they can edit. `case_escalation_reassign`
+    // therefore runs on the door measured in A. If this expectation ever flips
+    // to invisible, the afterUpdate seam becomes available too — but the
+    // re-entrancy argument (a second write re-enters the record-change trigger
+    // surface) stands on its own and does not.
+    const api = ql.createContext({ userId: 'usr_agent' });
+    const row = await api.object('crm_case').insert({ subject: 'Second write', status: 'new', owner_id: 'agent_a' });
+    await api.object('crm_case').update(
+      { id: row.id, owner_id: 'mgr_from_after_update' },
+      { where: { id: row.id } },
+    );
+    expect(
+      lastUpdate()!.data.owner_id,
+      'a ctx.api update is no longer visible to the gate — re-read the seam choice in ' +
+        '_case-assignment.ts before relying on this',
+    ).toBe('mgr_from_after_update');
+  });
+});
+
+describe('case_escalation_reassign', () => {
+  /** A staffed `service_manager` pool, plus whatever case backlog a test needs. */
+  const storeWith = (managers: string[], cases: Rec[] = []) => ({
+    sys_user_position: [
+      // Deliberately mixed: neither the agent pool nor a sales position may be
+      // read as the manager pool.
+      { user_id: 'agent_a', position: SERVICE_AGENT_POSITION },
+      { user_id: 'rep_1', position: 'sales_rep' },
+      ...managers.map((user_id) => ({ user_id, position: SERVICE_MANAGER_POSITION })),
+    ],
+    crm_case: cases,
+  });
+
+  /** The escalation write as every writer of it issues it (flow, sweep, action). */
+  const escalationInput = (id: string): Rec => ({
+    id,
+    is_escalated: true,
+    escalation_reason: 'Auto-escalated: critical priority',
+    escalated_date: new Date().toISOString(),
+    status: 'escalated',
+  });
+
+  it('hands the case to the least-loaded service manager — the acceptance path', async () => {
+    const harness = makeHarness(storeWith(['mgr_a', 'mgr_b'], [
+      { id: 'c1', owner_id: 'agent_a', status: 'in_progress' },
+      { id: 'm1', owner_id: 'mgr_a', status: 'new' },
+      { id: 'm2', owner_id: 'mgr_a', status: 'waiting_customer' },
+      { id: 'm3', owner_id: 'mgr_b', status: 'new' },
+    ]));
+    const input = escalationInput('c1');
+
+    await escalationReassign.handler(makeCtx({
+      event: 'beforeUpdate',
+      input,
+      previous: { id: 'c1', owner_id: 'agent_a', status: 'in_progress' },
+      api: harness.api,
+    }));
+
+    expect(input.owner_id, 'the escalated case did not change hands').toBe('mgr_b');
+    // The escalation itself is untouched — the hand-off rides on that write.
+    expect(input.status).toBe('escalated');
+    expect(input.is_escalated).toBe(true);
+    expect('owner' in input, 'wrote a second, unread ownership column (#548)').toBe(false);
+  });
+
+  it('spreads consecutive escalations across the pool', async () => {
+    // Acceptance criterion 2. Least-loaded is a self-balancing round-robin: no
+    // rotation counter, no cursor — the second escalation sees the first one's
+    // case counting against its new owner and goes elsewhere.
+    const store = storeWith(['mgr_a', 'mgr_b'], [
+      { id: 'c1', owner_id: 'agent_a', status: 'in_progress' },
+      { id: 'c2', owner_id: 'agent_b', status: 'new' },
+    ]);
+    const harness = makeHarness(store);
+
+    const first = escalationInput('c1');
+    await escalationReassign.handler(makeCtx({
+      event: 'beforeUpdate', input: first,
+      previous: { id: 'c1', owner_id: 'agent_a', status: 'in_progress' },
+      api: harness.api,
+    }));
+    // Persist it the way the engine would: this is a beforeUpdate mutation, so
+    // the row that lands carries the hook's owner.
+    Object.assign(store.crm_case.find((r) => r.id === 'c1')!, first);
+
+    const second = escalationInput('c2');
+    await escalationReassign.handler(makeCtx({
+      event: 'beforeUpdate', input: second,
+      previous: { id: 'c2', owner_id: 'agent_b', status: 'new' },
+      api: harness.api,
+    }));
+
+    expect(first.owner_id, 'the first escalation did not reach the pool').toBeTruthy();
+    expect(second.owner_id, 'the second escalation did not reach the pool').toBeTruthy();
+    expect(
+      second.owner_id,
+      'both escalations landed on the same manager — the load count is not being read',
+    ).not.toBe(first.owner_id);
+  });
+
+  it('reads the SERVICE_MANAGER_POSITION pool, and only that pool', async () => {
+    // The parity pin the module's header promises: an L2 body must spell its
+    // position literal inline (no module scope in QuickJS), so this drives the
+    // real handler and asserts the predicate it actually issued.
+    const seenQueries: Rec[] = [];
+    const api: Rec = {
+      object: (name: string) => ({
+        async find(q: Rec = {}) {
+          seenQueries.push({ object: name, ...q });
+          return name === 'sys_user_position' ? [{ user_id: 'mgr_a' }] : [];
+        },
+        async count() { return 0; },
+      }),
+    };
+    const input = escalationInput('c1');
+    await escalationReassign.handler(makeCtx({
+      event: 'beforeUpdate', input,
+      previous: { id: 'c1', owner_id: 'agent_a', status: 'new' },
+      api: api as never,
+    }));
+
+    const poolQuery = seenQueries.find((q) => q.object === 'sys_user_position');
+    expect(poolQuery, 'the hook never read the position pool').toBeTruthy();
+    expect(
+      poolQuery!.where?.position,
+      'the position literal in the hook body drifted from SERVICE_MANAGER_POSITION',
+    ).toBe(SERVICE_MANAGER_POSITION);
+    expect(poolQuery!.top, 'the pool read bound drifted from POOL_QUERY_LIMIT').toBe(POOL_QUERY_LIMIT);
+    expect(input.owner_id).toBe('mgr_a');
+  });
+
+  it('counts OPEN cases only — a manager’s resolved pile stops counting', async () => {
+    const harness = makeHarness(storeWith(['mgr_a', 'mgr_b'], [
+      { id: 'm1', owner_id: 'mgr_a', status: 'resolved' },
+      { id: 'm2', owner_id: 'mgr_a', status: 'closed' },
+      { id: 'm3', owner_id: 'mgr_a', status: 'resolved' },
+      { id: 'm4', owner_id: 'mgr_b', status: 'waiting_customer' },
+      { id: 'c1', owner_id: 'agent_a', status: 'new' },
+    ]));
+    const input = escalationInput('c1');
+
+    await escalationReassign.handler(makeCtx({
+      event: 'beforeUpdate', input,
+      previous: { id: 'c1', owner_id: 'agent_a', status: 'new' },
+      api: harness.api,
+    }));
+
+    expect(input.owner_id, 'resolved/closed cases are still counting as manager load').toBe('mgr_a');
+  });
+
+  // ── the empty pool: the first-install norm, and acceptance criterion 3 ──
+
+  it('keeps the current owner when nobody holds service_manager, and still escalates', async () => {
+    const harness = makeHarness(storeWith([], [{ id: 'c1', owner_id: 'agent_a', status: 'new' }]));
+    const input = escalationInput('c1');
+
+    await escalationReassign.handler(makeCtx({
+      event: 'beforeUpdate', input,
+      previous: { id: 'c1', owner_id: 'agent_a', status: 'new' },
+      api: harness.api,
+    }));
+
+    expect('owner_id' in input, 'invented an owner out of an empty pool').toBe(false);
+    // The escalation write is intact — the case is escalated, just not moved.
+    expect(input.status).toBe('escalated');
+    expect(input.is_escalated).toBe(true);
+    expect(input.escalation_reason).toBeTruthy();
+    // And it did not fall back to the agent pool or a sales position (both are
+    // in the store above).
+    expect(harness.callsFor('crm_case').length).toBe(0);
+  });
+
+  it('never rejects the escalation when the pool read is DENIED', async () => {
+    const input = escalationInput('c1');
+    await expect(
+      escalationReassign.handler(makeCtx({
+        event: 'beforeUpdate', input,
+        previous: { id: 'c1', owner_id: 'agent_a', status: 'new' },
+        api: makeDeniedApi(),
+      })),
+    ).resolves.not.toThrow();
+    expect('owner_id' in input, 'moved the case despite a failed pool read').toBe(false);
+    expect(input.status).toBe('escalated');
+  });
+
+  it('does nothing without an api, and nothing without a previous row', async () => {
+    const noApi = escalationInput('c1');
+    await escalationReassign.handler(makeCtx({
+      event: 'beforeUpdate', input: noApi, previous: { id: 'c1', status: 'new' },
+    }));
+    expect('owner_id' in noApi).toBe(false);
+
+    // No `previous` is the insert shape — a case BORN escalated is not a
+    // transition and this hook is not the intake path.
+    const harness = makeHarness(storeWith(['mgr_a']));
+    const noPrevious = escalationInput('c1');
+    await escalationReassign.handler(makeCtx({
+      event: 'beforeUpdate', input: noPrevious, api: harness.api,
+    }));
+    expect('owner_id' in noPrevious).toBe(false);
+  });
+
+  // ── re-entrancy: the risk the card named twice ──
+
+  it('issues NO operation of its own — there is nothing to re-enter the trigger surface', async () => {
+    // The whole re-entrancy argument in one assertion. This hook mutates the
+    // payload of the update already in flight; it performs no insert and no
+    // update, so it fires no second `record-after-update`, and neither
+    // `case_escalation` nor `case_status_side_effects` can be re-triggered by
+    // it. Both accidents this file's neighbourhood has had — the
+    // `closed_date`-as-`resolved_date` write and the 2026-07-06 `is_escalated`
+    // re-fire loop that wedged a first-boot seed — were EXTRA writes.
+    const harness = makeHarness(storeWith(['mgr_a', 'mgr_b'], [
+      { id: 'c1', owner_id: 'agent_a', status: 'new' },
+    ]));
+    const input = escalationInput('c1');
+
+    await escalationReassign.handler(makeCtx({
+      event: 'beforeUpdate', input,
+      previous: { id: 'c1', owner_id: 'agent_a', status: 'new' },
+      api: harness.api,
+    }));
+
+    expect(input.owner_id).toBeTruthy();
+    expect(
+      harness.calls.length,
+      `the hook wrote through ctx.api (${harness.calls.map((c) => `${c.op} ${c.object}`).join(', ')}) — ` +
+        'that is a second operation, a second trigger fire, and the re-entrancy risk is back',
+    ).toBe(0);
+  });
+
+  it('does not fire on a replay: the guard is the TRANSITION, not the escalated state', async () => {
+    // Feed the result back as the next write on the same record — the shape a
+    // re-fire takes. `previous.status` is now `escalated`, so the hook stands
+    // down. The 2026-07-06 loop read the boolean `is_escalated` instead, which
+    // SQLite stores as `1` and `1 != true` never trips; both writes below carry
+    // `is_escalated: true` and neither is mistaken for a fresh escalation.
+    const harness = makeHarness(storeWith(['mgr_a', 'mgr_b'], [
+      { id: 'c1', owner_id: 'agent_a', status: 'new' },
+    ]));
+    const first = escalationInput('c1');
+    await escalationReassign.handler(makeCtx({
+      event: 'beforeUpdate', input: first,
+      previous: { id: 'c1', owner_id: 'agent_a', status: 'new' },
+      api: harness.api,
+    }));
+    const handedTo = first.owner_id as string;
+    expect(handedTo).toBeTruthy();
+
+    const replay = escalationInput('c1');
+    await escalationReassign.handler(makeCtx({
+      event: 'beforeUpdate', input: replay,
+      previous: { id: 'c1', owner_id: handedTo, status: 'escalated', is_escalated: true },
+      api: harness.api,
+    }));
+    expect('owner_id' in replay, 'a re-fire moved the case again — this is the loop shape').toBe(false);
+  });
+
+  it('an ordinary edit of an already-escalated case does not move it', async () => {
+    // The scenario ONLY the transition guard catches, and the reason it is not
+    // redundant with the pool short-circuit below: this case is escalated and
+    // owned by an AGENT (the pool was unstaffed when it escalated, or someone
+    // handed it back), so nothing else stands between a plain form save — which
+    // echoes `status: 'escalated'` back with the rest of the record — and the
+    // case being yanked away mid-edit, on every save, forever.
+    //
+    // Reverse-verified 2026-08-11: with `|| previous.status === 'escalated'`
+    // deleted from the handler this expectation reads `mgr_a` and the test goes
+    // red, while every other test in this describe stays green.
+    const harness = makeHarness(storeWith(['mgr_a', 'mgr_b'], [
+      { id: 'c1', owner_id: 'agent_a', status: 'escalated' },
+    ]));
+    const edit: Rec = { id: 'c1', status: 'escalated', subject: 'Printer still on fire' };
+    await escalationReassign.handler(makeCtx({
+      event: 'beforeUpdate', input: edit,
+      previous: { id: 'c1', owner_id: 'agent_a', status: 'escalated', is_escalated: true },
+      api: harness.api,
+    }));
+    expect('owner_id' in edit, 'an ordinary save re-ran the hand-off').toBe(false);
+  });
+
+  it('leaves a case already owned by a pool member where it is — the second guard', async () => {
+    // A service manager escalating their own case keeps it — otherwise the
+    // hand-off would bounce work between managers on every escalation.
+    //
+    // Reverse-verified by hand, 2026-08-11, one guard at a time, and the
+    // measurement corrected a wrong prediction worth recording: deleting the
+    // pool-membership short-circuit turns exactly THIS test red (34 → 1 failed)
+    // and leaves the replay test green. Deleting the transition guard
+    // (`|| previous.status === 'escalated'`) does NOT turn the replay test red
+    // — the replay's case is by then owned by a manager, so this short-circuit
+    // catches it too. The scenario that isolates the transition guard is the
+    // ordinary-edit test above, whose case stays with an AGENT; that one goes
+    // red on its own. Two guards, two independent proofs, neither redundant.
+    const harness = makeHarness(storeWith(['mgr_a', 'mgr_b'], [
+      { id: 'c1', owner_id: 'mgr_a', status: 'new' },
+      { id: 'm9', owner_id: 'mgr_a', status: 'new' },
+      { id: 'm8', owner_id: 'mgr_a', status: 'new' },
+    ]));
+    const input = escalationInput('c1');
+    await escalationReassign.handler(makeCtx({
+      event: 'beforeUpdate', input,
+      previous: { id: 'c1', owner_id: 'mgr_a', status: 'new' },
+      api: harness.api,
+    }));
+    // mgr_b is less loaded, and it still does not move: "already with the pool"
+    // wins over "least loaded".
+    expect('owner_id' in input, 'took the case off the manager already working it').toBe(false);
+  });
+
+  it('stands down when the same write carries an explicit owner', async () => {
+    // "Escalate and hand it to Dana" is a decision the caller already made.
+    const harness = makeHarness(storeWith(['mgr_a', 'mgr_b']));
+    const input = { ...escalationInput('c1'), owner_id: 'usr_dana' };
+    await escalationReassign.handler(makeCtx({
+      event: 'beforeUpdate', input,
+      previous: { id: 'c1', owner_id: 'agent_a', status: 'new' },
+      api: harness.api,
+    }));
+    expect(input.owner_id).toBe('usr_dana');
+    expect(harness.callsFor('crm_case').length, 'it queried anyway — wasted reads on the write path')
+      .toBe(0);
+  });
+
+  it('ignores every write that is not the escalation transition', async () => {
+    const harness = makeHarness(storeWith(['mgr_a', 'mgr_b'], [
+      { id: 'c1', owner_id: 'agent_a', status: 'new' },
+    ]));
+    for (const [input, previous] of [
+      [{ id: 'c1', priority: 'high' }, { id: 'c1', owner_id: 'agent_a', status: 'new' }],
+      [{ id: 'c1', status: 'in_progress' }, { id: 'c1', owner_id: 'agent_a', status: 'new' }],
+      [{ id: 'c1', status: 'closed' }, { id: 'c1', owner_id: 'agent_a', status: 'escalated' }],
+    ] as [Rec, Rec][]) {
+      await escalationReassign.handler(makeCtx({
+        event: 'beforeUpdate', input, previous, api: harness.api,
+      }));
+      expect(
+        'owner_id' in input,
+        `a non-escalation write (${JSON.stringify(input)}) moved the case`,
+      ).toBe(false);
+    }
+  });
+
+  // ── wiring ──
+
+  it('runs on beforeUpdate only — the seam the transfer gate cannot see', () => {
+    // Not decoration: `afterUpdate` (the shape the card proposed) is measured
+    // VISIBLE to the gate in reading C above, so moving this hook's events
+    // there would demand `crm_case.allowTransfer` on `service_agent`.
+    expect(escalationReassign.events).toEqual(['beforeUpdate']);
+    expect(escalationReassign.object).toBe('crm_case');
+    // It shares the intake hook's priority band, on the far side of the guest
+    // strip. Nothing on the update path depends on that ordering today — the
+    // strip is insert-only — but the two ownership writers stay in step.
+    expect(escalationReassign.priority).toBe(assign.priority);
+    expect(escalationReassign.priority as number).toBeGreaterThan(slaDefaults.priority as number);
   });
 });

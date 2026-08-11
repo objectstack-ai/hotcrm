@@ -5,7 +5,7 @@ description: How priorities drive deadlines, when cases escalate automatically, 
 
 # SLA & Escalation
 
-The SLA (Service-Level Agreement) system stamps a **deadline** on every case, flags **breaches** on an hourly sweep, and **escalates** stuck cases automatically — escalation flags the case and alerts its owner; it does not move the case to senior staff.
+The SLA (Service-Level Agreement) system stamps a **deadline** on every case, flags **breaches** on an hourly sweep, and **escalates** stuck cases automatically — escalation flags the case, hands it to the **Service Manager** pool, and alerts the agent it came from.
 
 ## How SLA targets are calculated
 
@@ -66,7 +66,7 @@ This report is the support team's most-used KPI.
 
 ## Case escalation
 
-The Case Escalation process automatically flags stuck or critical cases as escalated and alerts the people who have to act on them. It does **not** reassign them: there is no hand-off to senior staff or to a manager, and the case stays with the agent who owns it.
+The Case Escalation process automatically flags stuck or critical cases as escalated, hands them to the **Service Manager** pool, and alerts the people who have to act on them. The hand-off is to a pool rather than up a chain — positions are flat, so there is no "the owner's manager" to route to — and with nobody holding that position the case keeps the agent who owns it.
 
 ### When escalation triggers
 
@@ -85,17 +85,21 @@ When triggered, the flow performs these steps in order:
 
 1. **Sets the `Escalated` flag** to true and stamps the escalated date.
 2. **Changes the status** to *Escalated*.
-3. **Notifies the case owner** — inbox and email, carrying the case number and the priority.
+3. **Hands the case over** — ownership moves to the holder of the **Service Manager** position with the fewest open cases.
+4. **Notifies the case owner it came from** — inbox and email, carrying the case number and the priority.
 
 The status change to *Escalated* then fires the `case_status_side_effects` hook, which opens a **follow-up task** due tomorrow at **Urgent** priority — for cases that have an account, since the task is keyed to that account.
 
-Three things this list deliberately does not claim, because the escalation does not do them:
+The hand-off is **least-loaded**, not round-robin by rotation: whoever holds the position with the fewest open (neither *Resolved* nor *Closed*) cases takes it, so consecutive escalations spread across the team without any counter to keep. It steps aside in three situations, each of them deliberate: **nobody holds the position** — the state a fresh install is in, and the demo org too — so the case keeps its owner and the escalation completes as it always did; the case is **already owned by a pool member**, so it is left with the manager working it; or the same write **names an owner itself**, which wins.
 
-- **The case is not reassigned.** The escalation write sets `is_escalated`, `escalation_reason`, `escalated_date` and `status`, and never touches `owner_id`. There is no hand-off to a manager or to senior staff — the case stays with the agent who has it, which is what the escalation notice tells its recipient in so many words: `It remains assigned to you.`
-- **The notification goes to the owner alone.** Its recipient list is the single entry `{caseRecord.owner_id}` — not the manager, and not a broader `support-team@example.com` list, an address that exists nowhere in this app. The message carries no account name either: a flow template cannot dot-walk a lookup, so `{caseRecord.crm_account.name}` would interpolate to the literal `undefined`, and the node leaves it out on purpose.
+The mechanics, for the record: the reassignment is not a second write. It rides on the escalation update itself (a `beforeUpdate` hook, `case_escalation_reassign` in `src/objects/_case-assignment.ts`) — which is why it fires no extra automation and cannot loop, and why the flow's own `update_record` node still writes no owner. A flow could not do this: `{caseRecord.owner_id.manager}` dot-walks a lookup and interpolates to the literal `undefined`.
+
+Two things this list deliberately does not claim, because the escalation does not do them:
+
+- **The notification goes to the previous owner alone.** It is read before the hand-off, so it reaches the agent the case is being taken from. Its recipient list is the single entry `{caseRecord.owner_id}` — not the manager, and not a broader `support-team@example.com` list, an address that exists nowhere in this app. The message carries no account name either: a flow template cannot dot-walk a lookup, so `{caseRecord.crm_account.name}` would interpolate to the literal `undefined`, and the node leaves it out on purpose.
 - **The follow-up task is not the original agent's.** It is owned by the **account owner**, not by the agent who was handling the case and not by a senior agent. The flow carries no task node at all — the hook is the single owner of escalation follow-up tasks, so there is exactly one task per escalation.
 
-The result: within minutes the case carries the *Escalated* status, its owner has been alerted, and the account owner has an urgent task waiting. Handing the case to a senior agent, if it needs handing over, is still a manual step someone has to take.
+The result: within minutes the case carries the *Escalated* status, a service manager owns it, the agent it came from has been alerted, and the account owner has an urgent task waiting. With the Service Manager bench empty the first of those does not happen and nothing else changes — the case is escalated, visible in **Escalated Cases**, and still with its agent.
 
 ### Required: escalation reason
 

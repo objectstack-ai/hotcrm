@@ -48,8 +48,11 @@ Manager's access; each rung that needs a record is named by its own sharing
 rule, which is why the leadership rules below come in pairs.
 
 These same names back the approval and escalation automation: large deals route
-to **Sales Manager** / **Sales Director**; critical cases reassign to the owner's
-**manager**.
+to **Sales Manager** / **Sales Director**; an escalated case is handed to the
+**Service Manager** holding the fewest open cases. Note what the flatness means
+there: the hand-off targets the *position*, not "the owner's manager" — there is
+no reporting line to walk — and with nobody holding it the case keeps its
+owner.
 
 ## Record visibility (sharing rules)
 
