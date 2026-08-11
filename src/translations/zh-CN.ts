@@ -278,8 +278,14 @@ export const zhCN: TranslationData = {
       fields: {
         owner_id: { label: '负责人' },
         period: { label: '周期', options: { month: '月度', quarter: '季度' } },
-        period_start: { label: '周期起始' },
-        period_end: { label: '周期截止' },
+        period_start: {
+          label: '周期起始',
+          help: '必须是所在周期的第一天——例如 2026 年 8 月对应 2026-08-01。季度预测还必须落在季度边界上：1 月 1 日、4 月 1 日、7 月 1 日或 10 月 1 日。',
+        },
+        period_end: {
+          label: '周期截止',
+          help: '通常根据"周期"和"周期起始"自动推算。如手动填写，必须晚于周期起始。',
+        },
         period_label: { label: '周期标签', help: '易读的周期标签，例如"2026 年第三季度"或"2026 年 8 月"。' },
         snapshot_date: { label: '快照日期', help: '本次快照的采集日期。' },
         source: {

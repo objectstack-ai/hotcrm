@@ -80,15 +80,28 @@ export const Forecast = ObjectSchema.create({
       ],
     }),
 
+    // Wording mirrors the two refusal messages this field is bound by
+    // (`period_start_first_of_period` / `quarter_starts_on_quarter_boundary`,
+    // both below) so the form and the rejection agree on the same rule
+    // instead of describing two different ones (#1085).
     period_start: Field.date({
       label: 'Period Start',
+      description:
+        'Must be the first day of the period — e.g. 2026-08-01 for Aug 2026. A quarterly forecast must additionally start on a quarter boundary: January 1, April 1, July 1 or October 1.',
       required: true,
       storage: { notNull: true },
       group: 'basic',
     }),
 
+    // Not read-only: `forecast.hook.ts` fills it only when the write leaves it
+    // unset, so a caller may still hand-type it. The only rule bound to THIS
+    // field is `period_end_after_start` below — it does not share
+    // `period_start`'s calendar-boundary rules, so the description says only
+    // what is actually enforced on it (#1085).
     period_end: Field.date({
       label: 'Period End',
+      description:
+        'Normally derived automatically from Period and Period Start. If set by hand, it must be after Period Start.',
       required: true,
       storage: { notNull: true },
       group: 'basic',

@@ -304,8 +304,14 @@ export const esES: TranslationData = {
       fields: {
         owner_id: { label: 'Propietario' },
         period: { label: 'Periodo', options: { month: 'Mes', quarter: 'Trimestre' } },
-        period_start: { label: 'Inicio del periodo' },
-        period_end: { label: 'Fin del periodo' },
+        period_start: {
+          label: 'Inicio del periodo',
+          help: 'Debe ser el primer día del periodo — p. ej. 2026-08-01 para agosto de 2026. Además, una previsión trimestral debe comenzar en un límite de trimestre: 1 de enero, 1 de abril, 1 de julio o 1 de octubre.',
+        },
+        period_end: {
+          label: 'Fin del periodo',
+          help: 'Normalmente se calcula automáticamente a partir de Periodo e Inicio del periodo. Si se introduce a mano, debe ser posterior al Inicio del periodo.',
+        },
         period_label: { label: 'Periodo', help: 'Etiqueta legible, p. ej. «T3 2026» o «Ago 2026».' },
         display_title: { label: 'Título Mostrado' },
         snapshot_date: { label: 'Fecha de instantánea', help: 'El día en que se capturó esta instantánea.' },
