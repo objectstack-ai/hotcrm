@@ -1377,34 +1377,69 @@ export const jaJP: TranslationData = {
       label: 'アプリランチャー',
       description: 'すべてのアプリケーションにアクセスするための統合ハブ',
       subtitle: '開始するアプリを選択してください',
+      components: {
+        app_search: { label: 'アプリを検索' },
+        app_grid: { label: 'アプリグリッド' },
+      },
     },
     case_detail_page: {
       label: 'ケース詳細',
       description: 'サービス担当者向けのケースレコードページ：ハイライト、SLA パス、詳細、活動タイムライン。',
       title: '{case_number} · {subject}',
       subtitle: '{crm_account}',
+      components: {
+        case_highlights: { label: '重要情報' },
+        case_status_path: { label: 'ケースステータスの進捗' },
+      },
     },
     lead_detail_page: {
       label: 'リード詳細',
       description: 'ハイライト・詳細・関連情報を備えたリードの総合詳細ページ。',
       title: '{first_name} {last_name}',
       subtitle: '{company}',
+      components: {
+        lead_highlights: { label: '重要情報' },
+        lead_path: { label: 'リードステータスの進捗' },
+        main_tabs: { label: 'リード情報タブ' },
+      },
     },
     opportunity_detail_page: {
       label: '商談詳細',
       description: 'ステージパス・ハイライト・詳細・関連リストを備えた商談の総合詳細ページ。',
       title: '{name}',
       subtitle: '{crm_account}',
+      components: {
+        opp_highlights: { label: '重要情報' },
+        opp_stage_path: { label: '商談ステージの進捗' },
+      },
     },
     sales_home_page: {
       label: '営業ホーム',
       description: '主要指標とクイックアクションをまとめた営業チームのホームページ',
       title: '営業ダッシュボード',
       subtitle: 'おかえりなさい、{current_user.first_name} さん',
+      components: {
+        quick_create: { title: 'クイック作成', label: 'クイック作成' },
+        my_recent_items: { title: '最近使用したアイテム', label: '最近使用したアイテム' },
+        key_metrics: { title: '主要業績評価指標', label: '主要指標' },
+        home_tabs: { label: 'ホームタブ' },
+        ai_briefing: {
+          title: 'AI アシスタントに質問',
+          description:
+            'ページ右端からアシスタントパネルを開き、「今日は何に集中すべきか？」と尋ねてください — リアルタイムのパイプライン、スキーマ、取引先情報を把握しています。',
+          label: '今日の AI アシスタント',
+        },
+        upcoming_events: { title: '今日の予定', label: 'カレンダー' },
+      },
     },
     utility_bar_page: {
       label: 'ユーティリティバー',
       description: 'フローティングツールへのクイックアクセスバー',
+      components: {
+        notifications_panel: { label: '通知' },
+        quick_notes: { title: 'クイックメモ', label: 'クイックメモ' },
+        quick_search: { label: 'クイック検索' },
+      },
     },
   },
 };
