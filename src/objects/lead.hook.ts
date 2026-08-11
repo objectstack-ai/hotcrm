@@ -7,7 +7,8 @@ import type { HookApi } from './_hook-api';
  * Lead automation hook.
  *
  * - Auto-scores incoming leads into `rating` (1-5) using industry/title/email/phone weights.
- * - Refuses edits to a converted lead.
+ * - Refuses edits to a converted lead — but not the engine's reference cleanup,
+ *   so a converted lead never makes its conversion products undeletable (#720).
  * - When status flips to `qualified`, schedules a follow-up `crm_task` for the current user.
  * - Normalizes `email` and flags a re-captured address as a suspected duplicate.
  */
@@ -192,8 +193,8 @@ const leadHook: Hook = {
     // `cannot_edit_converted` script validation over the four identity fields,
     // documented as the friendlier half of a two-layer design; #575 B1 removed
     // it because this throw always won the race, so the second layer was a
-    // second implementation that could only drift. The messages below therefore
-    // have to carry the whole story — hence the attempted-field list.
+    // second implementation that could only drift. The message below therefore
+    // has to carry the whole story — hence the attempted-field list.
     if (event === 'beforeUpdate' && ctx.user?.id) {
       const previous = ctx.previous;
       const wasConverted = previous?.is_converted === true || previous?.status === 'converted';
@@ -208,21 +209,44 @@ const leadHook: Hook = {
           (k) => !ALLOWED.has(k) && input[k] !== previous?.[k],
         );
         if (violating.length > 0) {
-          // Every lookup on `crm_lead` a referential clear can attack. The
-          // engine's `cascadeDeleteRelations` pass clears a `set_null` lookup
-          // by UPDATING the row that holds it, so deleting the account /
-          // contact / opportunity a converted lead points at (or the lead /
-          // contact it was flagged as a duplicate of) arrives here as an
-          // ordinary `beforeUpdate` — and nothing in the hook context says the
-          // write came from a cascade (measured on 17.0.0-rc.2: the ctx carries
-          // no cascade marker, and `session` is the caller's own). So a delete
-          // of an opportunity was reported as an *edit* of a *lead* (#693).
-          // Both messages below therefore describe the LOCK and the LINK rather
-          // than assuming which record the caller addressed.
+          // Every lookup on `crm_lead` a referential clear can attack.
           const REFERENCE_FIELDS = new Set([
             'converted_account', 'converted_contact', 'converted_opportunity',
             'duplicate_of_lead', 'duplicate_of_contact',
           ]);
+          // ───────────────────────────────────── the reference-cleanup yield ──
+          // #720. The engine implements `deleteBehavior: 'set_null'` by UPDATING
+          // the row that HOLDS the lookup, so deleting the account / contact /
+          // opportunity a converted lead points at (or the lead / contact it was
+          // flagged as a duplicate of) arrives here as an ordinary user
+          // `beforeUpdate` — and this lock refused it, which made a converted
+          // lead able to keep all three of its conversion products undeletable
+          // forever (a GDPR erasure that cannot be carried out).
+          //
+          // Measured on 17.0.0-rc.6, not assumed: the payload is exactly
+          // `{ id, <link>: null, updated_at, updated_by }`; `ctx.user` is the
+          // CALLER; `ctx.session` is the caller's own `{ userId, isSystem }`.
+          // The engine DOES stamp a `__referentialFieldClear: true` marker, but
+          // on its internal operation context — `ObjectQL.buildSession` copies a
+          // fixed allow-list of keys into `ctx.session`, and `__`-prefixed
+          // operation-private keys are deliberately not among them (see the
+          // `__` convention note in `@objectstack/core`). So no marker reaches a
+          // hook, and the WRITE SHAPE is the only evidence there is.
+          //
+          // ⛔ Keep this narrow (maintainer's ruling on #720, Option A): a write
+          // yields ONLY when every one of its non-system changes is a DECLARED
+          // link going from a value to `null`. One business field alongside it,
+          // or a link repointed to a NEW value, and the refusal below still
+          // fires. The three freeze guards share this block verbatim — sharing
+          // it as an imported helper is not possible (hook bodies run body-only
+          // in the sandbox and cannot reach module scope), so
+          // `test/freeze-guard-reference-cleanup.test.ts` pins the three copies
+          // as identical text and pins both directions of the narrowness.
+          const isReferenceCleanup = violating.every(
+            (k) => REFERENCE_FIELDS.has(k) && input[k] === null && previous?.[k] != null,
+          );
+          if (isReferenceCleanup) return;
+
           const person = [previous?.first_name, previous?.last_name]
             .filter((part) => typeof part === 'string' && part.trim() !== '')
             .join(' ');
@@ -233,17 +257,6 @@ const leadHook: Hook = {
             '';
           const label = [name, leadId ? `(${leadId})` : ''].filter(Boolean).join(' ');
 
-          // A refusal made up ENTIRELY of links being cleared is the shape a
-          // delete of the linked record produces — describe it that way. A
-          // user nulling the same field by hand gets the same (true) sentence.
-          const detached = violating.filter(
-            (k) => REFERENCE_FIELDS.has(k) && input[k] === null && previous?.[k] != null,
-          );
-          if (detached.length === violating.length) {
-            throw new Error(
-              `${label ? `Converted lead ${label}` : 'A converted lead'} is locked, so its link(s) ${detached.join(', ')} cannot be cleared — which also blocks deleting the record(s) they point at. Delete the lead first, or have an admin clear the link with a system write.`,
-            );
-          }
           throw new Error(
             `Cannot edit ${label ? `converted lead ${label}` : 'a converted lead'} (attempted: ${violating.join(', ')}). Make changes on the converted records instead.`,
           );

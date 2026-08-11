@@ -116,40 +116,36 @@ describe('the hook is the guard that actually speaks', () => {
   });
 
   /**
-   * #693's second symptom, at the unit level: the engine clears a `set_null`
-   * lookup by UPDATING the row that holds it, so `DELETE /crm_opportunity/<id>`
-   * reaches this guard as `{ converted_opportunity: null }` on the lead. The
-   * old message reported that as "Cannot edit a converted lead … Make changes
-   * on the converted records instead" — a delete of an opportunity described
-   * as an edit of a lead, advising the caller to go and edit the very record
-   * they had asked to delete.
+   * #693's second symptom at the unit level, and #720's ruling on it: the
+   * engine clears a `set_null` lookup by UPDATING the row that holds it, so
+   * `DELETE /crm_opportunity/<id>` reaches this guard as
+   * `{ converted_opportunity: null }` on the lead. The lock used to refuse
+   * that, which meant a converted lead made all three of its conversion
+   * products permanently undeletable — an erasure request with no way to
+   * carry it out.
    *
-   * The guard cannot know it is inside a cascade (measured on 17.0.0-rc.2: the
-   * hook context carries no cascade marker), so the refusal is phrased from the
-   * LINK, which is true whether the null came from the engine or from a hand
-   * edit. The end-to-end proof that this is the message a real cascade produces
-   * lives in `test/cascade-guard-messages.test.ts`.
+   * No marker distinguishes the cleanup (measured on rc.2 when #693 landed, and
+   * again on rc.6 for #720 — the engine's own `__referentialFieldClear` is
+   * stripped before a hook sees it), so the lock yields on the write SHAPE
+   * instead: a write whose every non-system change is a declared link going
+   * value→null. The end-to-end proof that a real cascade produces exactly that
+   * shape, and the narrowness in both directions, live in
+   * `test/freeze-guard-reference-cleanup.test.ts`.
    */
-  describe('a cleared conversion link is described as a link, not as an edit', () => {
+  describe('a cleared conversion link is the engine tidying up, not an edit', () => {
     it.each([
       ['converted_opportunity', 'opp_1'],
       ['converted_account', 'acc_1'],
       ['converted_contact', 'con_1'],
+      ['duplicate_of_lead', 'lead_9'],
+      ['duplicate_of_contact', 'con_9'],
     ])('%s', async (field, previousValue) => {
-      const err = await editConverted({ [field]: null }, { [field]: previousValue }).then(
-        () => null,
-        (e: Error) => e,
-      );
-      expect(err, `clearing ${field} was allowed`).toBeInstanceOf(Error);
-      expect(err!.message).toContain(`its link(s) ${field} cannot be cleared`);
-      expect(err!.message).toContain('blocks deleting the record(s) they point at');
-      // The sentence that sent readers to the wrong record must be gone from
-      // this branch: the caller may never have edited anything.
-      expect(err!.message).not.toContain('Cannot edit');
-      expect(err!.message).not.toContain('Make changes on the converted records');
+      await expect(
+        editConverted({ [field]: null }, { [field]: previousValue }),
+      ).resolves.toBeUndefined();
     });
 
-    it('falls back to the edit wording when the write is not only a link clear', async () => {
+    it('refuses the edit when the write is not only a link clear', async () => {
       // A hand edit that also touches a business field is an edit, and saying
       // so stays correct — the link branch must not swallow it.
       await expect(
