@@ -312,8 +312,14 @@ export const jaJP: TranslationData = {
       fields: {
         owner_id: { label: '担当者' },
         period: { label: '期間', options: { month: '月次', quarter: '四半期' } },
-        period_start: { label: '期間開始' },
-        period_end: { label: '期間終了' },
+        period_start: {
+          label: '期間開始',
+          help: '期間の初日である必要があります — 例: 2026 年 8 月なら 2026-08-01。四半期のフォーキャストはさらに四半期の境界（1 月 1 日・4 月 1 日・7 月 1 日・10 月 1 日）で開始する必要があります。',
+        },
+        period_end: {
+          label: '期間終了',
+          help: '通常は「期間」と「期間開始」から自動的に算出されます。手動で入力する場合は、期間開始より後の日付にする必要があります。',
+        },
         period_label: {
           label: '期間',
           help: '「2026 年第 3 四半期」「2026 年 8 月」のような読みやすい期間ラベル。',

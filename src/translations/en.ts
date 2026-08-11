@@ -287,8 +287,14 @@ export const en: TranslationData = {
       fields: {
         owner_id: { label: 'Owner' },
         period: { label: 'Period', options: { month: 'Month', quarter: 'Quarter' } },
-        period_start: { label: 'Period Start' },
-        period_end: { label: 'Period End' },
+        period_start: {
+          label: 'Period Start',
+          help: 'Must be the first day of the period — e.g. 2026-08-01 for Aug 2026. A quarterly forecast must additionally start on a quarter boundary: January 1, April 1, July 1 or October 1.',
+        },
+        period_end: {
+          label: 'Period End',
+          help: 'Normally derived automatically from Period and Period Start. If set by hand, it must be after Period Start.',
+        },
         period_label: { label: 'Period', help: 'Human-friendly label, e.g. "Q3 2026" or "Aug 2026".' },
         snapshot_date: { label: 'Snapshot Date', help: 'The day this snapshot was captured.' },
         source: {
