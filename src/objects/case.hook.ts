@@ -6,7 +6,10 @@ import type { HookApi } from './_hook-api';
 /**
  * Case SLA & escalation hook.
  *
- * - For `critical` cases without `sla_due_date`, sets a 4-hour SLA.
+ * - Stamps `sla_due_date` on a case that has none, from the priority × account
+ *   tier matrix in `_case-sla.ts` (CALENDAR hours — see that file; this app has
+ *   no business-hours calendar and the deadline does not skip nights, weekends
+ *   or holidays).
  * - On escalation: creates a follow-up task OWNED BY the account owner
  *   (the single owner of escalation tasks — flows must not create their own).
  *   Owning it, not merely labelling it: `owner_id` is the one ownership column
@@ -20,9 +23,10 @@ const caseValidation: Hook = {
   object: 'crm_case',
   events: ['beforeInsert', 'beforeUpdate'],
   priority: 200,
-  description: 'Apply SLA defaults for critical cases.',
+  description: 'Apply the priority × account-tier SLA matrix and the case lifecycle defaults.',
   handler: async (ctx: HookContext) => {
     const { input } = ctx;
+    const api = ctx.api as HookApi | undefined;
 
     const isGuestSubmission = !ctx.previous && !ctx.user?.id;
     if (isGuestSubmission) {
@@ -57,10 +61,76 @@ const caseValidation: Hook = {
       input.priority_rank = rank[priority] ?? 0;
     }
 
-    if (priority === 'critical' && !input.sla_due_date && !ctx.previous?.sla_due_date) {
-      const due = new Date();
-      due.setHours(due.getHours() + 4);
-      input.sla_due_date = due.toISOString();
+    // ── SLA policy matrix: priority × account tier, in CALENDAR HOURS (#595) ──
+    //
+    // ⚠️ CALENDAR hours, not business hours. Every number below is added to the
+    // wall clock: this app ships no business-hours calendar, no working-day
+    // definition and no holiday list, so a P1 raised at 5pm on a Friday is due
+    // at 9pm that same Friday. Stated here rather than hidden because it is the
+    // one way these numbers get misread. The canonical write-up — including why
+    // the `critical` row is flat at 4 (so the new behaviour is a strict SUPERSET
+    // of the old critical-only rule rather than a loosening) — lives in
+    // `_case-sla.ts`.
+    //
+    // The table is declared INLINE and duplicated in `_case-sla.ts` on purpose,
+    // for the same reason as the `rank` map above: L2 hook bodies run body-only
+    // in the QuickJS sandbox, so a shared module constant resolves at authoring
+    // time and arrives as `undefined` (see `_line-item-price-fill.ts`). The
+    // seed module imports the real constant; this body cannot.
+    // `test/case-sla-matrix.test.ts` pins all sixteen cells by driving THIS
+    // handler, so the two copies cannot drift apart quietly.
+    if (priority && !input.sla_due_date && !ctx.previous?.sla_due_date) {
+      const slaHours: Record<string, Record<string, number>> = {
+        critical: { strategic: 4, enterprise: 4, mid_market: 4, smb: 4 },
+        high: { strategic: 6, enterprise: 8, mid_market: 8, smb: 8 },
+        medium: { strategic: 24, enterprise: 36, mid_market: 48, smb: 48 },
+        low: { strategic: 96, enterprise: 120, mid_market: 168, smb: 168 },
+      };
+      // `smb` is both the loosest column and the `tier` field's own default, so
+      // an unclassified account and an UNREADABLE one land on the same cell.
+      // Erring loose is the safe direction: a tighter deadline invented out of
+      // a permission error would manufacture breaches.
+      const DEFAULT_TIER = 'smb';
+      const row = slaHours[priority];
+      // An unrecognised priority gets no clock at all rather than a guessed
+      // one — the same refusal-to-invent as the `0` unranked sentinel above.
+      if (row) {
+        let tier = DEFAULT_TIER;
+        // Only pay for the account read when the row actually varies by tier.
+        // The `critical` row does not, which is what makes a critical case
+        // behave EXACTLY as it did before this hook learned about accounts —
+        // same 4 hours, same absence of any dependency on `ctx.api`.
+        const variesByTier =
+          row.strategic !== row.enterprise ||
+          row.enterprise !== row.mid_market ||
+          row.mid_market !== row.smb;
+        const accountId =
+          (typeof input.crm_account === 'string' && input.crm_account) ||
+          (typeof ctx.previous?.crm_account === 'string' && (ctx.previous.crm_account as string)) ||
+          undefined;
+        if (variesByTier && accountId && api) {
+          try {
+            const found = await api.object('crm_account').find({
+              where: { id: accountId }, fields: ['tier'], top: 1,
+            });
+            const rows = Array.isArray(found) ? found : [];
+            const stored = rows.length ? rows[0].tier : undefined;
+            if (typeof stored === 'string' && stored) tier = stored;
+          } catch {
+            // Best-effort tier resolution: the anonymous web-to-case grant can
+            // create a case and read nothing else, and a denial there must not
+            // reject the submission. Falling through leaves `tier` on the
+            // default column. (No `console` in the L2 hook sandbox — cf. #471.)
+          }
+        }
+        const hours = row[tier] ?? row[DEFAULT_TIER];
+        // Milliseconds, not `setHours(getHours() + n)`: the latter does LOCAL
+        // calendar arithmetic, so on a host in a DST-observing zone "+4 hours"
+        // silently becomes 3 or 5 real hours across a transition — and a 168h
+        // Low-priority clock crosses one twice a year by construction. These
+        // are elapsed hours, so add elapsed milliseconds.
+        input.sla_due_date = new Date(Date.now() + hours * 3_600_000).toISOString();
+      }
     }
 
     // Closed flag/date + resolution time (migrated from removed `set_closed_flag`

@@ -23,9 +23,19 @@ Every case carries a **priority** that drives its urgency:
 
 `Low → Medium → High → Critical`
 
-Each case also carries an **SLA Due Date** — the deadline to resolve it, set
-when the case is logged per your support policy. The automation below watches
-that clock and the priority for you.
+Each case also carries an **SLA Due Date** — the deadline to resolve it. It is
+set automatically when the case is logged, from a **priority × account-tier
+matrix**: the case's priority is looked up against the **Customer Tier** of its
+account, and the resulting number of hours is added to the time of creation.
+Critical is four hours on every tier; the other three priorities tighten as the
+tier rises (an account with no tier set is treated as SMB).
+
+> Those are **calendar** hours, not business hours. This app has no
+> working-day calendar and no holiday list, so nights, weekends and holidays
+> count against every target — a Critical case raised at 5pm on a Friday is due
+> at 9pm that same Friday.
+
+The automation below watches that clock and the priority for you.
 
 ## The clock is watched for you — SLA breach handling (automatic)
 

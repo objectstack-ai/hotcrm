@@ -270,6 +270,20 @@ const CASES: Record<string, WriteCase> = {
     seed: { crm_account: [{ id: 'acc_1' }] },
     writes: [{ object: 'crm_account', id: 'acc_1', doc: { last_activity_date: today } }],
   },
+
+  // The second derived write in the same handler (#595): the first held event
+  // on a case stamps `first_response_date`. The case carries no `crm_account`,
+  // so the recency walk-up finds no parent and this is the only write — which
+  // is what lets the per-object assertions above stay "exactly one update".
+  'event_activity_bubble — first response on the related case': {
+    hook: 'event_activity_bubble',
+    event: 'afterInsert',
+    input: { id: 'evt_2', status: 'held', related_to_case: 'case_1' },
+    seed: { crm_case: [{ id: 'case_1', first_response_date: null }] },
+    writes: [
+      { object: 'crm_case', id: 'case_1', doc: { first_response_date: expect.any(String) } },
+    ],
+  },
 };
 
 describe('every hook-side derived write reaches the engine in the engine’s own shape', () => {

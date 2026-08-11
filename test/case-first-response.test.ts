@@ -2,75 +2,78 @@
 
 import { describe, it, expect } from 'vitest';
 import stack from '../objectstack.config';
-import { makeSandboxEngine, runActionBody, type Rec } from './helpers/action-sandbox';
+import eventHooks from '../src/objects/event.hook';
+import { makeHarness, makeDeniedApi, makeCtx, hookNamed, type Rec } from './helpers/hook-harness';
 
 /**
- * `crm_case.first_response_date` finally has a writer (#575 B2).
+ * `crm_case.first_response_date` — one writer, every path (#575 B2, #595).
  *
- * It was the only member of the case SLA family without one. `sla_due_date` and
- * `resolution_time_hours` are stamped by `case.hook`, `is_sla_violated` by the
- * `case_sla_monitor` flow — and first response, the most standard SLA metric a
- * service desk reports, was permanently null while the field, its four
- * translations and its place on the case detail page all advertised otherwise.
+ * It was the only member of the case SLA family without a writer at all
+ * (#575 B2), and the fix then was to stamp it from the `log_call` /
+ * `log_meeting` action body. That covered the two buttons and nothing else: an
+ * interaction recorded any other way — the Activity tab, an import, an
+ * integration, a future action — left the most standard metric a service desk
+ * reports permanently null. The body carried a comment asking every future
+ * author to remember to stamp it too, which is the shape of a rule that gets
+ * forgotten rather than enforced.
  *
- * The writer is the shared `logActivityAction` body in
- * `src/actions/global.actions.ts`: the first `sys_activity` on a case is the
- * first record that the customer heard back from anyone. An earlier proposal —
- * stamp when the status first leaves `new` — was rejected and is worth stating
- * as a non-goal: an agent can move a case to "in progress" and investigate for
- * an hour while the customer hears nothing, so a status-derived number would
- * report a response that never happened.
+ * #595 moved the stamp to `event_activity_bubble` (`src/objects/event.hook.ts`).
+ * That hook already fires on exactly the right condition — a `crm_event` on its
+ * transition into `held` — and already resolves `related_to_case` for the
+ * recency walk-up. Both actions still stamp the case, because step 1 of their
+ * body writes the event this hook watches; they just no longer each carry their
+ * own copy of the rule. Two writers racing on a "first" timestamp is how it
+ * quietly becomes a "last" one.
  *
- * These run the SHIPPED body under the real QuickJS sandbox rather than the
- * handler-as-JS shortcut, because two of the things that can break this stamp
- * only exist there: the `api.read` capability the new lookup needs, and the
- * engine facade's `update(data, options)` signature. `mass_update_stage` was
- * the action in this repo that got that signature wrong (fixed in #777); the
- * hook-side writes in #616 failed *silently* because those hooks are
- * `onError: 'log'`, while the action path always failed loudly — a 400 from
- * the dispatch and a red toast in the console.
+ * Non-goals, restated because both were proposed and rejected:
+ *
+ *   - **A status change is not a first response.** An agent can move a case to
+ *     "in progress" and investigate for an hour while the customer hears
+ *     nothing, so a status-derived number reports a response that never
+ *     happened. #595's scope note lists "first agent status transition" as a
+ *     candidate touchpoint; it is deliberately still not one.
+ *   - **A meeting merely BOOKED is not a response either.** `schedule_meeting`
+ *     writes a `planned` event, and the `held` gate is what keeps next
+ *     quarter's placeholder from starting the clock.
  */
 
 type AnyRec = Record<string, any>;
 
-const stackActions: AnyRec[] = (stack as any).actions ?? [];
-
-/**
- * An action addressed the way the runtime keys its registry —
- * `<objectName>:<name>`.
- *
- * Since #592 five objects each register their own `log_call`, so a bare-name
- * lookup returns whichever one the barrel happens to export first. That is not
- * a detail to leave to export order in a file about which object gets stamped.
- */
-const action = (objectName: string, name: string): AnyRec => {
-  const found = stackActions.find((a) => a.objectName === objectName && a.name === name);
-  if (!found) throw new Error(`no ${objectName}-scoped ${name} action registered`);
-  return found;
-};
-
 const objects: AnyRec[] = (stack as any).objects ?? [];
 const crmCase = objects.find((o) => o.name === 'crm_case') as AnyRec | undefined;
+const stackActions: AnyRec[] = (stack as any).actions ?? [];
 
-/** Both LOGGING twins are built by the same constructor — both must stamp. */
-const TWINS = ['log_call', 'log_meeting'] as const;
+const hook = hookNamed(eventHooks as AnyRec[], 'event_activity_bubble') as AnyRec;
 
+/** A store holding one case (optionally already stamped) and its account. */
 const seeded = (first_response_date: string | null = null): Record<string, Rec[]> => ({
-  crm_case: [{ id: 'case_1', subject: 'Login issues', status: 'new', first_response_date }],
+  crm_case: [{ id: 'case_1', subject: 'Login issues', status: 'new', crm_account: 'acct_1', first_response_date }],
+  crm_account: [{ id: 'acct_1', name: 'Acme Corporation' }],
 });
 
-const logOn = (name: string, engine: ReturnType<typeof makeSandboxEngine>, record: Rec = { id: 'case_1' }) =>
-  runActionBody(action('crm_case', name), {
-    objectName: 'crm_case',
-    record,
-    input: { subject: 'Called the customer back', duration: 12 },
-    engine,
-  });
+/** Fire the hook for an event landing on `case_1`. */
+const heldEventOnCase = async (
+  harness: ReturnType<typeof makeHarness>,
+  overrides: Rec = {},
+  previous?: Rec,
+) =>
+  hook.handler(
+    makeCtx({
+      event: previous ? 'afterUpdate' : 'afterInsert',
+      input: {
+        id: 'event_1', subject: 'Called the customer back', type: 'call',
+        status: 'held', related_to_case: 'case_1', ...overrides,
+      },
+      previous,
+      user: { id: 'user_1' },
+      api: harness.api,
+    }),
+  );
 
 describe('the field is writable at all', () => {
   it('crm_case.first_response_date is not readonly', () => {
     // 16.x drops writes to readonly fields on user-context writes (#2948), and
-    // an action body runs as the acting user — so `readonly: true` here would
+    // this hook runs under the acting user — so `readonly: true` here would
     // make every assertion below pass in this harness and write nothing in
     // production. Same reason `is_sla_violated` and `escalated_date` dropped it.
     const field = crmCase?.fields?.first_response_date;
@@ -87,100 +90,152 @@ describe('the field is writable at all', () => {
   });
 });
 
-describe.each(TWINS)('%s stamps the first response', (name) => {
-  it('declares the read capability the lookup needs', () => {
-    // Without it the sandbox denies the `find` at call time and the whole
-    // action fails — the capability list is load-bearing metadata, not prose.
-    expect(action('crm_case', name).body?.capabilities).toContain('api.read');
-    expect(action('crm_case', name).body?.capabilities).toContain('api.write');
-  });
-
+describe('a held event on a case stamps the first response', () => {
   it('writes the current time onto a case that has none', async () => {
     const before = Date.now();
-    const engine = makeSandboxEngine(seeded());
-    const { result } = await logOn(name, engine);
+    const harness = makeHarness(seeded());
+    await heldEventOnCase(harness);
 
-    expect(result.activityId, 'the activity itself must still be written').toBeTruthy();
-    const stamped = engine.rows('crm_case')[0]!.first_response_date as string;
+    const stamped = harness.rows('crm_case')[0]!.first_response_date as string;
     expect(stamped).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     expect(new Date(stamped).getTime()).toBeGreaterThanOrEqual(before);
     expect(new Date(stamped).getTime()).toBeLessThanOrEqual(Date.now());
   });
 
   it('uses the (data, options) update shape the engine facade requires', async () => {
-    const engine = makeSandboxEngine(seeded());
-    await logOn(name, engine);
-    const [call] = engine.callsFor('crm_case', 'update');
+    // `update(id, doc)` compiles and no-ops against the real kernel (#616); the
+    // harness throws on it, which is the only reason this assertion can exist.
+    const harness = makeHarness(seeded());
+    await heldEventOnCase(harness);
+    const call = harness
+      .callsFor('crm_case', 'update')
+      .find((c) => (c.args[0] as Rec).first_response_date);
     expect(call!.args[0]).toMatchObject({ id: 'case_1' });
     expect(call!.args[1]).toEqual({ where: { id: 'case_1' } });
   });
 
   it('never moves a stamp that is already there', async () => {
-    const engine = makeSandboxEngine(seeded('2026-01-01T09:00:00.000Z'));
-    await logOn(name, engine);
-    expect(engine.rows('crm_case')[0]!.first_response_date).toBe('2026-01-01T09:00:00.000Z');
-    expect(engine.callsFor('crm_case', 'update'), 'a second write would make it "last response"').toHaveLength(0);
+    const harness = makeHarness(seeded('2026-01-01T09:00:00.000Z'));
+    await heldEventOnCase(harness);
+    expect(harness.rows('crm_case')[0]!.first_response_date).toBe('2026-01-01T09:00:00.000Z');
+    expect(
+      harness.callsFor('crm_case', 'update'),
+      'a second write would make it "last response"',
+    ).toHaveLength(0);
   });
 
-  it('leaves other objects alone', async () => {
-    // #592 put the same body on five objects. The lead-scoped twin must not
-    // reach for a case field that only exists on `crm_case` — the object check
-    // inside the body is what stops the stamp travelling with the family.
-    const engine = makeSandboxEngine({ crm_lead: [{ id: 'lead_1' }] });
-    await runActionBody(action('crm_lead', name), {
-      objectName: 'crm_lead',
-      record: { id: 'lead_1' },
-      input: { subject: 'Intro call' },
-      engine,
-    });
-    expect(engine.callsFor('crm_case')).toHaveLength(0);
+  it('is written once across a call and then a meeting on the same case', async () => {
+    // "First response" is a property of the case, not of either action, so the
+    // second interaction must find the first one's stamp.
+    const harness = makeHarness(seeded());
+    await heldEventOnCase(harness, { id: 'event_1', type: 'call' });
+    const first = harness.rows('crm_case')[0]!.first_response_date;
+    await heldEventOnCase(harness, { id: 'event_2', type: 'meeting' });
+    expect(harness.rows('crm_case')[0]!.first_response_date).toBe(first);
+    expect(harness.callsFor('crm_case', 'update')).toHaveLength(1);
   });
 
-  it('is not stamped by merely BOOKING a meeting', async () => {
-    // `schedule_meeting` writes a `planned` event. A meeting on next week's
-    // calendar is not a response the customer has received, so it must not
-    // start the SLA clock — the same `held` gate the recency bubble uses.
-    const engine = makeSandboxEngine(seeded());
-    await runActionBody(action('crm_case', 'schedule_meeting'), {
-      objectName: 'crm_case',
-      record: { id: 'case_1' },
-      input: { subject: 'Follow-up', start_date: '2026-09-01', start_time: '09:00' },
-      engine,
-    });
-    expect(engine.rows('crm_case')[0]!.first_response_date).toBeNull();
-    expect(engine.callsFor('crm_case', 'update')).toHaveLength(0);
+  it('reads the stored row rather than trusting the event payload', async () => {
+    // The event carries no first-response field of its own; a body that
+    // inferred "unstamped" from its own input would re-stamp on every log and
+    // turn "first response" into "last".
+    const harness = makeHarness(seeded('2026-01-01T09:00:00.000Z'));
+    await heldEventOnCase(harness, { first_response_date: undefined });
+    expect(harness.rows('crm_case')[0]!.first_response_date).toBe('2026-01-01T09:00:00.000Z');
   });
 });
 
-describe('the stamp survives the ways a case reaches the body', () => {
-  it('is written once across BOTH twins on the same case', async () => {
-    // One case, a call and then a meeting: "first response" is a property of
-    // the case, not of either action, so the second must find the first.
-    const engine = makeSandboxEngine(seeded());
-    await logOn('log_call', engine);
-    const first = engine.rows('crm_case')[0]!.first_response_date;
-    await logOn('log_meeting', engine);
-    expect(engine.rows('crm_case')[0]!.first_response_date).toBe(first);
-    expect(engine.callsFor('crm_case', 'update')).toHaveLength(1);
+describe('what does NOT count as a first response', () => {
+  it('a meeting merely BOOKED does not start the clock', async () => {
+    // `schedule_meeting` writes `planned`. A meeting on next week's calendar is
+    // not a response the customer has received — the same `held` gate the
+    // recency bubble uses.
+    const harness = makeHarness(seeded());
+    await heldEventOnCase(harness, { status: 'planned' });
+    expect(harness.rows('crm_case')[0]!.first_response_date).toBeNull();
+    expect(harness.callsFor('crm_case', 'update')).toHaveLength(0);
   });
 
-  it('reads the stored row, not the record the dispatcher handed it', async () => {
-    // `list_item` / `record_related` dispatch can hand the body a PROJECTED
-    // record. If the body trusted `ctx.record.first_response_date`, a
-    // projection that omits the field would read as blank and re-stamp on
-    // every single log — which is precisely the metric being wrong.
-    const engine = makeSandboxEngine(seeded('2026-01-01T09:00:00.000Z'));
-    await logOn('log_call', engine, { id: 'case_1', display_title: 'CASE-0001' });
-    expect(engine.rows('crm_case')[0]!.first_response_date).toBe('2026-01-01T09:00:00.000Z');
-    expect(engine.callsFor('crm_case', 'update')).toHaveLength(0);
+  it('a cancelled or no-show interaction does not either', async () => {
+    const harness = makeHarness(seeded());
+    for (const status of ['cancelled', 'no_show']) {
+      await heldEventOnCase(harness, { status });
+    }
+    expect(harness.rows('crm_case')[0]!.first_response_date).toBeNull();
   });
 
-  it('still logs the activity when the case row cannot be read', async () => {
-    // A read that comes back empty must not cost the user their activity entry
-    // — the timeline write is the action's actual job.
-    const engine = makeSandboxEngine();
-    const { result } = await logOn('log_call', engine);
-    expect(result.activityId).toBeTruthy();
-    expect(engine.rows('sys_activity')).toHaveLength(1);
+  it('an event already held before this write does not re-stamp', async () => {
+    // The hook fires once, on the transition INTO held — an unrelated edit to
+    // an already-held event must not look like a fresh response.
+    const harness = makeHarness(seeded());
+    await heldEventOnCase(harness, { subject: 'Corrected the notes' }, { status: 'held' });
+    expect(harness.rows('crm_case')[0]!.first_response_date).toBeNull();
+  });
+
+  it('an event on some other object leaves cases alone', async () => {
+    // The same activity model spans five parents (#592). A call logged on a
+    // lead must not reach for a field that only exists on `crm_case`.
+    const harness = makeHarness({ ...seeded(), crm_lead: [{ id: 'lead_1' }] });
+    await hook.handler(
+      makeCtx({
+        event: 'afterInsert',
+        input: { id: 'event_9', status: 'held', type: 'call', related_to_lead: 'lead_1' },
+        user: { id: 'user_1' },
+        api: harness.api,
+      }),
+    );
+    expect(harness.callsFor('crm_case')).toEqual([]);
+    expect(harness.rows('crm_case')[0]!.first_response_date).toBeNull();
+  });
+});
+
+describe('the stamp is best-effort, like the rest of the bubble', () => {
+  it('a denied case read does not break the event write', async () => {
+    // An agent who cannot see the case still gets to record their call; the
+    // metric simply does not move. The hook is `onError: 'log'`, but a throw
+    // here would still abort the recency writes that share the handler.
+    await expect(
+      hook.handler(
+        makeCtx({
+          event: 'afterInsert',
+          input: { id: 'event_1', status: 'held', type: 'call', related_to_case: 'case_1' },
+          user: { id: 'user_1' },
+          api: makeDeniedApi(),
+        }),
+      ),
+    ).resolves.toBeUndefined();
+  });
+
+  it('runs at all only when the hook has an api', async () => {
+    await expect(
+      hook.handler(
+        makeCtx({
+          event: 'afterInsert',
+          input: { id: 'event_1', status: 'held', related_to_case: 'case_1' },
+          user: { id: 'user_1' },
+        }),
+      ),
+    ).resolves.toBeUndefined();
+  });
+});
+
+describe('the action bodies no longer carry their own copy', () => {
+  const activityAction = (objectName: string, name: string): AnyRec => {
+    const found = stackActions.find((a) => a.objectName === objectName && a.name === name);
+    if (!found) throw new Error(`no ${objectName}-scoped ${name} action registered`);
+    return found;
+  };
+
+  it.each(['log_call', 'log_meeting'])('%s writes the event and stops there', (name) => {
+    // The regression this guards is a re-added stamp in the action body: two
+    // writers, both guarding on "is it blank", both reading before the other
+    // writes. Whichever lands second is the one the metric keeps.
+    const source = String(activityAction('crm_case', name).body?.source ?? '');
+    expect(source, `${name} still stamps first_response_date itself`).not.toMatch(
+      /first_response_date:\s/,
+    );
+    // …and it must still write the `crm_event` the hook watches, or the stamp
+    // has no path at all.
+    expect(source).toMatch(/object\('crm_event'\)\.insert/);
   });
 });

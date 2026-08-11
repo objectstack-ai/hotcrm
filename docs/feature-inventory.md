@@ -139,7 +139,7 @@
 | --- | --- | --- | --- |
 | SVC-001 | 工单对象 | 支持工单(`crm_case`):CASE-{00000} 租户内唯一编号,四档优先级、七状态、来源渠道、父工单,客户签名/五星评分/反馈,启用附件 | `src/objects/case.object.ts` |
 | SVC-002 | 工单状态机 | 每个开放状态都可达 escalated 与 closed;resolved/closed 可重开;关闭必填 resolution | `src/objects/case.object.ts`(validations) |
-| SVC-003 | SLA 时限计算 | critical 工单首次落库时自动写 `sla_due_date = 当前时间 + 4 小时` | `src/objects/case.hook.ts`(`case_sla_defaults`) |
+| SVC-003 | SLA 时限计算 | 每张工单首次落库时按「优先级 × 账户 tier」矩阵写 `sla_due_date`(日历小时;critical 各 tier 均 4 小时) | `src/objects/case.hook.ts`(`case_sla_defaults`)、`src/objects/_case-sla.ts` |
 | SVC-004 | 优先级排序落地 | `priority_rank`(critical=4…low=1,未知=0)供队列按紧急度排序,与任务侧哨兵一致 | `src/objects/case.hook.ts` |
 | SVC-005 | Web-to-Case 公开表单 | 匿名表单 `/forms/support`;hook 判定访客提交,补默认值并剥离 owner/升级/关闭/内部备注字段 | `src/views/case.view.ts`(`web_to_case`)+ `src/objects/case.hook.ts` |
 | SVC-006 | 关闭指标 | 关闭时打 `closed_date` 并计算 `resolution_time_hours`;`is_closed` 由状态派生 | `src/objects/case.hook.ts` |
@@ -148,7 +148,7 @@
 | SVC-009 | 升级派发跟进任务 | 升级时的唯一任务产出点:给客户负责人创建次日到期的 urgent 跟进任务;解决时更新客户活动时钟 | `src/objects/case.hook.ts`(`case_status_side_effects`) |
 | SVC-010 | 手动升级/关闭工单 | 两个屏幕流动作:升级必填原因并置 critical;关闭必填解决方案(系统身份写只读生命周期字段) | `src/flows/case-actions.flow.ts` + `src/actions/case.actions.ts` |
 | SVC-011 | CSAT 关单回访 | 工单关闭 1 天后通知 owner 联系客户记录满意度评分 | `src/flows/case-csat-followup.flow.ts` |
-| SVC-012 | 首次响应打戳 | 工单上记录已发生的通话/会议时,自动补 `first_response_date`(SLA 首次响应指标) | `src/actions/global.actions.ts` |
+| SVC-012 | 首次响应打戳 | 工单上出现任何一条 held 互动事件时,自动补 `first_response_date`(SLA 首次响应指标) | `src/objects/event.hook.ts`(`event_activity_bubble`) |
 | SVC-013 | 工单视图族 | 默认按优先级序排 + 状态看板(抽屉)/SLA 日历/timeline/已升级/SLA 风险/我的未结共 7 个 tab | `src/views/case.view.ts` |
 | SVC-014 | 工单详情页 | SLA highlights 条、6 阶段 path、升级/关闭/记录通话动作,统一活动时间线(评论/提及/线程/表情全开) | `src/pages/case_detail.page.ts` |
 | SVC-015 | 工单升级共享 | critical 未结工单自动共享给 service_manager(可编辑)与 service_director(只读) | `src/sharing/case.sharing.ts` |
