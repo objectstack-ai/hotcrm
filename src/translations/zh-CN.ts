@@ -1363,34 +1363,69 @@ export const zhCN: TranslationData = {
       label: '应用中心',
       description: '访问全部应用的统一入口',
       subtitle: '选择一个应用开始使用',
+      components: {
+        app_search: { label: '搜索应用' },
+        app_grid: { label: '应用网格' },
+      },
     },
     case_detail_page: {
       label: '工单详情',
       description: '客服工单记录页：关键信息、SLA 进度、明细与活动时间线。',
       title: '{case_number} · {subject}',
       subtitle: '{crm_account}',
+      components: {
+        case_highlights: { label: '关键信息' },
+        case_status_path: { label: '工单状态进度' },
+      },
     },
     lead_detail_page: {
       label: '线索详情',
       description: '完整的线索详情页，包含关键信息、明细与相关记录。',
       title: '{first_name} {last_name}',
       subtitle: '{company}',
+      components: {
+        lead_highlights: { label: '关键信息' },
+        lead_path: { label: '线索状态进度' },
+        main_tabs: { label: '线索信息标签页' },
+      },
     },
     opportunity_detail_page: {
       label: '商机详情',
       description: '完整的商机详情页，包含阶段进度、关键信息、明细与相关列表。',
       title: '{name}',
       subtitle: '{crm_account}',
+      components: {
+        opp_highlights: { label: '关键信息' },
+        opp_stage_path: { label: '商机阶段进度' },
+      },
     },
     sales_home_page: {
       label: '销售主页',
       description: '销售团队主页，汇总关键指标与快捷操作',
       title: '销售看板',
       subtitle: '欢迎回来，{current_user.first_name}',
+      components: {
+        quick_create: { title: '快速创建', label: '快速创建' },
+        my_recent_items: { title: '最近使用', label: '最近使用' },
+        key_metrics: { title: '关键绩效指标', label: '关键指标' },
+        home_tabs: { label: '主页标签页' },
+        ai_briefing: {
+          title: '询问 AI 助手',
+          description:
+            '从页面右侧打开助手面板，询问"我今天应该关注什么？"——它可以实时查看您的销售管道、架构与客户信息。',
+          label: 'AI 助手今日速览',
+        },
+        upcoming_events: { title: '今日日程', label: '日历' },
+      },
     },
     utility_bar_page: {
       label: '工具栏',
       description: '悬浮工具的快捷访问栏',
+      components: {
+        notifications_panel: { label: '通知' },
+        quick_notes: { title: '快速笔记', label: '快速笔记' },
+        quick_search: { label: '快速搜索' },
+      },
     },
   },
 };
