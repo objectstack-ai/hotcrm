@@ -1,6 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { test, expect, recordOf, seededAccountId } from './fixtures';
+import { test, expect, recordOf, uniqueName } from './fixtures';
 import type { APIRequestContext } from '@playwright/test';
 
 /**
@@ -20,6 +20,13 @@ import type { APIRequestContext } from '@playwright/test';
  * 401/403, read the record out of `json.data` when the API answers
  * `{ object, id, record }`, and omitted the REQUIRED `crm_account` — three
  * independent reasons it could never have gone green on real behaviour.
+ *
+ * The parent account comes from the `account` fixture, which creates one owned
+ * by this caller. It used to be the first SEEDED account, which made every test
+ * here depend on the demo book still being owned by nobody (#665, #669) — a
+ * condition `demo_bootstrap` removes within a minute of a `pnpm dev` boot. The
+ * hook under test does not care whose account the deal hangs off, so nothing
+ * about what these assertions prove changed.
  */
 
 const BASE = '/api/v1/data/crm_opportunity';
@@ -43,32 +50,21 @@ async function patchOpportunity(
   return recordOf(await res.json());
 }
 
+// The records these tests write are never deleted afterwards, and there is no
+// `afterEach` pretending otherwise: this account holds no delete grant —
+// measured, `DELETE /api/v1/data/crm_opportunity/:id` answers 403
+// `PERMISSION_DENIED … for positions [org_member, everyone]` — so the loop that
+// used to sit here had never removed a single record. Names are made unique per
+// run instead, which is what actually keeps reruns on one database honest.
 test.describe('opportunity_lifecycle hook (through the real kernel)', () => {
-  let accountId: string | undefined;
-  const created: string[] = [];
-
-  test.beforeEach(async ({ api }) => {
-    accountId ??= await seededAccountId(api);
-  });
-
-  test.afterEach(async ({ api }) => {
-    // Best-effort cleanup; a closed opportunity may refuse edits but deletes
-    // are not blocked by the freeze guard.
-    while (created.length) {
-      const id = created.pop()!;
-      await api.delete(`${BASE}/${id}`).catch(() => undefined);
-    }
-  });
-
-  test('derives probability and expected_revenue from stage on create', async ({ api }) => {
+  test('derives probability and expected_revenue from stage on create', async ({ api, account }) => {
     const rec = await createOpportunity(api, {
-      name: 'E2E Pipeline Deal',
+      name: uniqueName('E2E Pipeline Deal'),
       stage: 'proposal', // canonical probability 60
       amount: 10_000,
       close_date: '2099-12-31',
-      crm_account: accountId,
+      crm_account: account.id,
     });
-    created.push(rec.id as string);
 
     // Hook syncs probability to the stage's canonical value …
     expect(rec.probability).toBe(60);
@@ -78,16 +74,15 @@ test.describe('opportunity_lifecycle hook (through the real kernel)', () => {
     expect(rec.forecast_category).toBe('commit');
   });
 
-  test('closed_won stamps close_date and recomputes to 100% probability', async ({ api }) => {
+  test('closed_won stamps close_date and recomputes to 100% probability', async ({ api, account }) => {
     const rec = await createOpportunity(api, {
-      name: 'E2E Won Deal',
+      name: uniqueName('E2E Won Deal'),
       stage: 'negotiation',
       amount: 25_000,
       close_date: '2099-12-31',
-      crm_account: accountId,
+      crm_account: account.id,
     });
     const id = rec.id as string;
-    created.push(id);
 
     // `win_reason` is `requiredWhen` stage is closed_won (#593) — the server
     // rejects the close without it with a 400 VALIDATION_FAILED, which is what
@@ -121,16 +116,15 @@ test.describe('opportunity_lifecycle hook (through the real kernel)', () => {
     expect(fresh.days_in_stage, 'the formula should read 0 the day the stage changed').toBe(0);
   });
 
-  test('closed_lost drops probability to 0 and omits the deal from forecast', async ({ api }) => {
+  test('closed_lost drops probability to 0 and omits the deal from forecast', async ({ api, account }) => {
     const rec = await createOpportunity(api, {
-      name: 'E2E Lost Deal',
+      name: uniqueName('E2E Lost Deal'),
       stage: 'negotiation',
       amount: 40_000,
       close_date: '2099-12-31',
-      crm_account: accountId,
+      crm_account: account.id,
     });
     const id = rec.id as string;
-    created.push(id);
 
     const updated = await patchOpportunity(api, id, {
       stage: 'closed_lost',
@@ -144,16 +138,15 @@ test.describe('opportunity_lifecycle hook (through the real kernel)', () => {
     expect(updated.forecast_category).toBe('omitted');
   });
 
-  test('changing amount re-derives expected_revenue at the current stage', async ({ api }) => {
+  test('changing amount re-derives expected_revenue at the current stage', async ({ api, account }) => {
     const rec = await createOpportunity(api, {
-      name: 'E2E Amount Change',
+      name: uniqueName('E2E Amount Change'),
       stage: 'proposal', // 60%
       amount: 10_000,
       close_date: '2099-12-31',
-      crm_account: accountId,
+      crm_account: account.id,
     });
     const id = rec.id as string;
-    created.push(id);
     expect(rec.expected_revenue).toBe(6_000);
 
     const updated = await patchOpportunity(api, id, { amount: 50_000 });
@@ -161,16 +154,15 @@ test.describe('opportunity_lifecycle hook (through the real kernel)', () => {
     expect(updated.expected_revenue).toBe(30_000); // 50k × 60%
   });
 
-  test('a closed opportunity rejects business-field edits but accepts narrative ones', async ({ api }) => {
+  test('a closed opportunity rejects business-field edits but accepts narrative ones', async ({ api, account }) => {
     const rec = await createOpportunity(api, {
-      name: 'E2E Frozen Deal',
+      name: uniqueName('E2E Frozen Deal'),
       stage: 'negotiation',
       amount: 15_000,
       close_date: '2099-12-31',
-      crm_account: accountId,
+      crm_account: account.id,
     });
     const id = rec.id as string;
-    created.push(id);
     await patchOpportunity(api, id, { stage: 'closed_won', win_reason: 'better_price' });
 
     // Business field — the freeze guard must reject it.

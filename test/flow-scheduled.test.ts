@@ -1089,8 +1089,7 @@ describe('demo_bootstrap — post-seed ownership claim', () => {
    * can give it an owner, and it belongs in the list. Objects with no
    * `owner_id` (`crm_product`, and the `controlled_by_parent` children whose
    * access derives from their master) have no ownership to claim and must stay
-   * out; `crm_product` in particular is the e2e ownership-blind probe, which
-   * `test/e2e-seed-precondition.test.ts` fails if this sweep ever touches it.
+   * out — stamping one would write a column the object does not have.
    */
   it('leaves no seeded owner-scoped object unclaimed — the cross-table, computed', () => {
     const seeded = new Set(
