@@ -645,6 +645,13 @@ export const zhCN: TranslationData = {
         case_workflow: { label: '服务流转' },
         sla_calendar: { label: 'SLA 日历' },
         case_timeline: { label: '工单时间线' },
+        unassigned_triage: {
+          label: '未分派 — 待分诊',
+          emptyState: {
+            title: '没有待分诊的工单',
+            message: '所有工单都有负责人。当工单到达时没有负责人，就会出现在这里 —— 通常是在无人担任「客服专员」职位期间提交的网页转工单。',
+          },
+        },
         escalated_cases: { label: '已升级工单' },
         my_open_cases: { label: '我的待处理工单' },
         sla_at_risk: { label: '⏰ SLA 风险预警' },

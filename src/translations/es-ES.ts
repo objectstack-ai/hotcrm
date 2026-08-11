@@ -712,6 +712,13 @@ export const esES: TranslationData = {
         case_workflow: { label: 'Flujo de Servicio' },
         sla_calendar: { label: 'Calendario SLA' },
         case_timeline: { label: 'Línea de Tiempo de Casos' },
+        unassigned_triage: {
+          label: 'Sin asignar — triaje',
+          emptyState: {
+            title: 'Nada pendiente de triaje',
+            message: 'Todos los casos tienen propietario. Los casos aparecen aquí cuando llegan sin propietario — normalmente un envío web-a-caso recibido mientras nadie ocupaba el puesto de Agente de Servicio.',
+          },
+        },
         escalated_cases: { label: 'Casos Escalados' },
         my_open_cases: { label: 'Mis Casos Abiertos' },
         sla_at_risk: { label: '⏰ SLA en Riesgo' },
