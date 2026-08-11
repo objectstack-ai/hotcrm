@@ -182,6 +182,32 @@ interface MessagingEmit {
   [key: string]: unknown;
 }
 
+/**
+ * One durable outbound-HTTP delivery an `http` node enqueued (#600).
+ *
+ * The builtin `http` node takes the durable path ONLY when the messaging
+ * service answers `isHttpDeliveryReady()` truthily; otherwise it logs a warning
+ * and silently degrades to a real inline `fetch`. A harness whose messaging stub
+ * carries `emit` alone therefore lets a `durable: true` node "pass" while firing
+ * a live network request off the test runner — which is both a flake and the
+ * exact blind spot a hand-off test exists to close. Capturing these is what
+ * makes "the deal was enqueued for delivery, once" an assertable fact.
+ *
+ * Mirrors the `enqueueHttp` input `@objectstack/service-messaging` accepts.
+ */
+export interface EnqueuedHttpDelivery {
+  source?: string;
+  refId?: string;
+  dedupKey?: string;
+  label?: string;
+  url: string;
+  method?: string;
+  headers?: Record<string, string>;
+  signingSecret?: string;
+  timeoutMs?: number;
+  payload?: unknown;
+}
+
 export const silentLogger: any = {
   info() {}, warn() {}, error() {}, debug() {}, trace() {},
   child() { return silentLogger; },
@@ -198,6 +224,11 @@ export interface FlowHarness {
   engine: AutomationEngine;
   data: DataEngine;
   store: Record<string, Rec[]>;
+  /**
+   * Every durable delivery an `http` node enqueued during the run — the outbox
+   * rows the platform's dispatcher would drain with retry / dead-letter.
+   */
+  deliveries: EnqueuedHttpDelivery[];
   /** Everything a `notify` node emitted during the run. */
   notifications: SentNotification[];
   /**
@@ -257,6 +288,7 @@ export function makeFlowHarness(
   const raw: DataEngine = hooks.length === 0 ? base : withHooks(base, hooks);
   const notifications: SentNotification[] = [];
   const queries: RecordedQuery[] = [];
+  const deliveries: EnqueuedHttpDelivery[] = [];
 
   const record = <T>(op: RecordedQuery['op'], object: string, opts: Rec, result: T): T => {
     queries.push({ op, object, where: opts.where ?? opts.filter ?? {} });
@@ -288,6 +320,18 @@ export function makeFlowHarness(
         failed: 0,
       };
     },
+    /**
+     * Stand in for a wired `sys_http_delivery` outbox. Answering `true` is what
+     * keeps a `durable: true` node ON the durable path — see
+     * {@link EnqueuedHttpDelivery} for what a `false` here would silently do.
+     */
+    isHttpDeliveryReady() {
+      return true;
+    },
+    async enqueueHttp(input: EnqueuedHttpDelivery) {
+      deliveries.push(input);
+      return `delivery_${deliveries.length}`;
+    },
   };
 
   const ctx: any = {
@@ -309,6 +353,7 @@ export function makeFlowHarness(
     store: data.store,
     notifications,
     queries,
+    deliveries,
     async run(flowName, params = {}, opts = {}) {
       const started: any = await engine.execute(flowName, {
         params, userId: 'user_1', event: 'manual', ...opts,

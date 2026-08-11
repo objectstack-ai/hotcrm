@@ -232,6 +232,13 @@ const ROW_LABEL: Record<string, Record<'zh-Hans' | 'zh-Hant', string>> = {
   case_sla_monitor: { 'zh-Hans': '案例 SLA 监控', 'zh-Hant': '案例 SLA 監控' },
   task_due_reminder: { 'zh-Hans': '任务到期提醒', 'zh-Hant': '任務到期提醒' },
   demo_bootstrap: { 'zh-Hans': '演示数据引导', 'zh-Hant': '展示資料啟動' },
+  // 计费/計費, not 账单/帳單: the pages call the outbound target 「计费端点」 and the
+  // boundary page is 「计费交接」, so the flow labels follow that one word (#600).
+  billing_handoff_closed_won: { 'zh-Hans': '计费交接：赢单', 'zh-Hant': '計費交接：贏單' },
+  billing_handoff_contract_activated: {
+    'zh-Hans': '计费交接：合同激活',
+    'zh-Hant': '計費交接：合約啟用',
+  },
 };
 
 /** How each page spells the two counts. An unmapped count throws — see the header. */
