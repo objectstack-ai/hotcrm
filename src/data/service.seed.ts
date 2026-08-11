@@ -863,6 +863,28 @@ export const events = defineSeed(Event, {
  * against the target's externalId, which only works inside the app's own
  * object graph. `global.actions.ts` adds the organiser row at runtime, where
  * the id exists. Nothing is invented here to stand in for it.
+ *
+ * # The external guest, revisited (#740)
+ *
+ * #671 seeded no external-only attendee for a reason that has now EXPIRED, and
+ * the note is updated rather than deleted because the reason was a defect, not
+ * a taste: `attendee_type` had no `external` value, so the only way to store a
+ * guest who is in no CRM object was to file the row under `contact` and leave
+ * `crm_contact` empty — a seed that lies about its own discriminator. #740 added
+ * the fourth option and made `attendee_resolves` / `attendee_type_exclusive`
+ * enforce the pairing, so `{ attendee_type: 'external', external_name: "…" }` is
+ * now an honest, accepted row and seeding one is legitimate.
+ *
+ * It is still not seeded, on the narrower ground that survives: every row below
+ * is drawn from a seeded contact or lead so the demo's related lists and churn
+ * tiles hang together, and an invented outside counsel would buy a third
+ * dataset (its own `externalId: ['crm_event', 'external_name']`, since the
+ * loader's composite key is empty when a component is null) for one decorative
+ * row that no view, cube or dashboard reads. The capability is proven where the
+ * question actually is — on the real engine, in
+ * `test/attendee-type-resolution.test.ts` — not in the fixture book. Add one
+ * here the day a demo scenario genuinely has a guest in the room; nothing in
+ * the metadata stands in the way any more.
  */
 const attendeeRecords = (kind: 'contact' | 'lead') =>
   EVENT_SPECS.flatMap((spec) =>

@@ -1080,12 +1080,12 @@ export const zhCN: TranslationData = {
         crm_event: { label: '活动' },
         attendee_type: {
           label: '参与者类型',
-          options: { contact: '联系人', lead: '线索', user: '内部用户' },
+          options: { contact: '联系人', lead: '线索', user: '内部用户', external: '外部来宾' },
         },
         crm_contact: { label: '联系人', help: '参与者是已有客户联系人时填写' },
         crm_lead: { label: '线索', help: '参与者仍是未转化线索时填写' },
         sys_user: { label: '内部用户', help: '参与者是同事时填写' },
-        external_name: { label: '外部参与者', help: '不在 CRM 中的参与者姓名' },
+        external_name: { label: '外部参与者', help: '不在任何 CRM 对象中的参与者姓名——参与者类型为「外部来宾」时填写' },
         response: {
           label: '回复',
           options: {

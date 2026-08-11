@@ -1149,12 +1149,12 @@ export const esES: TranslationData = {
         crm_event: { label: 'Evento' },
         attendee_type: {
           label: 'Tipo de asistente',
-          options: { contact: 'Contacto', lead: 'Prospecto', user: 'Usuario' },
+          options: { contact: 'Contacto', lead: 'Prospecto', user: 'Usuario', external: 'Externo' },
         },
         crm_contact: { label: 'Contacto', help: 'Se rellena cuando el asistente es un contacto de cliente ya existente' },
         crm_lead: { label: 'Prospecto', help: 'Se rellena cuando el asistente sigue siendo un prospecto sin convertir' },
         sys_user: { label: 'Usuario', help: 'Se rellena cuando el asistente es un compañero de la empresa' },
-        external_name: { label: 'Asistente externo', help: 'Nombre de un asistente que no es un registro del CRM' },
+        external_name: { label: 'Asistente externo', help: 'Nombre de un asistente que no está en ningún objeto del CRM: se rellena cuando el tipo de asistente es Externo' },
         response: {
           label: 'Respuesta',
           options: {

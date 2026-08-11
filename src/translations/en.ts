@@ -1111,14 +1111,14 @@ export const en: TranslationData = {
         crm_event: { label: 'Event' },
         attendee_type: {
           label: 'Attendee Type',
-          options: { contact: 'Contact', lead: 'Lead', user: 'User' },
+          options: { contact: 'Contact', lead: 'Lead', user: 'User', external: 'External' },
         },
         crm_contact: { label: 'Contact', help: 'Set when the attendee is an existing customer contact' },
         crm_lead: { label: 'Lead', help: 'Set when the attendee is still an unconverted lead' },
         sys_user: { label: 'User', help: 'Set when the attendee is a colleague' },
         external_name: {
           label: 'External Attendee',
-          help: 'Name of an attendee who is not a CRM record',
+          help: 'Name of an attendee who is in no CRM object — set when Attendee Type is External',
         },
         response: {
           label: 'Response',

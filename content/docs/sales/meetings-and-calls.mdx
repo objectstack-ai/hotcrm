@@ -106,15 +106,15 @@ Each attendee row holds:
 
 | Field | Notes |
 | --- | --- |
-| **Attendee Type** | *Contact*, *Lead* or *User* — says which kind of person the row names |
+| **Attendee Type** | *Contact*, *Lead*, *User* or *External* — says which kind of person the row names |
 | **Contact / Lead / User** | The person, as a real link to their record |
-| **External Attendee** | Free text, and the last resort: for a guest who is in no CRM object at all (the prospect's lawyer). Not a place to paste a list. |
+| **External Attendee** | Free text, and the last resort: for a guest who is in no CRM object at all (the prospect's lawyer). Set the type to *External* and name them here. Not a place to paste a list. |
 | **Response** | *No Response* *(default)*, *Accepted*, *Declined*, *Tentative* |
 | **Organizer** | Whoever called the meeting |
 | **Invited** | When the invitation was recorded |
 | **Attendee Number** | Auto-numbered `EA-00001` |
 
-A row must name a contact, a lead, a user, or an external guest — an attendee pointing at nobody is rejected.
+A row must fill exactly the party its **Attendee Type** names, and nothing else: a *Contact* row needs a contact, an *External* row needs a name in **External Attendee**. An attendee pointing at nobody is rejected, and so is one whose type disagrees with the column that is filled — a row cannot claim to be a contact while naming an outside guest.
 
 ### Deleting people and meetings
 

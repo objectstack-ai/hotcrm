@@ -31,12 +31,19 @@ import stack from '../objectstack.config';
  *     DELETE contact ERROR: (same)      contact survives? true
  *     DELETE user    ERROR: (same)      user survives?    true
  *
- * `external_name` gives the rule a fourth escape hatch, but it rescues nothing
- * in practice: `src/actions/global.actions.ts` logs attendees with a party
- * reference and never with an external name, so every row the product actually
- * writes has it blank. Anyone logged as a meeting attendee was therefore
- * undeletable, with an error naming an object the caller never addressed — the
- * same GDPR "delete this person" impact as #696.
+ * `external_name` is the fourth resolution, but it rescues nothing in practice:
+ * `src/actions/global.actions.ts` logs attendees with a party reference and
+ * never with an external name, so every row the product actually writes has it
+ * blank. Anyone logged as a meeting attendee was therefore undeletable, with an
+ * error naming an object the caller never addressed — the same GDPR "delete
+ * this person" impact as #696.
+ *
+ * #740 rewrote both the rule and its message: `attendee_resolves` now requires
+ * the column `attendee_type` NAMES (and its sibling `attendee_type_exclusive`
+ * refuses any other), so the quoted 17.0.0-rc.2 measurements above are history,
+ * not the current wording. Nothing about the cascade decision changes — the
+ * rule is still severity `error` and still reads all four columns, so a
+ * `set_null` party lookup would break a stored row exactly as before.
  *
  * ### The fix, and why cascade on the USER lookup too
  *
@@ -64,8 +71,9 @@ import stack from '../objectstack.config';
  *     plus `crm_account.renewal_owner` and `crm_product.product_manager` — are
  *     `set_null`, and NO validation rule reads any of them. Swept over the
  *     built stack (rule conditions are `{ dialect, source }`, so the source
- *     string is what has to be searched): `attendee_resolves` is the only rule
- *     in the app that reads a user reference at all, which is exactly why this
+ *     string is what has to be searched): this object's rules are the only ones
+ *     in the app that read a user reference at all — `attendee_resolves`, and
+ *     since #740 `attendee_type_exclusive` beside it — which is exactly why this
  *     is the only lookup where the `set_null` default misbehaved. `restrict`
  *     would make this junction the ONE app row able to veto a platform identity
  *     erasure, on a `protection: { lock: 'full' }`, better-auth-managed table,
@@ -106,8 +114,16 @@ const byName = (n: string) => objects.find((o) => o.name === n) as AnyRec;
 
 const EVENT_ATTENDEE = byName('crm_event_attendee');
 
-/** The rule's exact text, so a reworded message cannot quietly pass. */
-const RULE_MESSAGE = /must point at a Contact, a Lead, a User, or name an external guest/i;
+/**
+ * The rule's exact text, so a reworded message cannot quietly pass.
+ *
+ * #740 rewrote it. The old wording — "must point at a Contact, a Lead, a User,
+ * or name an external guest", quoted verbatim in the measurements above because
+ * that is what 17.0.0-rc.2 printed — described a rule that accepted any of the
+ * four resolutions regardless of `attendee_type`. The rule now requires the
+ * column the type NAMES, so the message names it too.
+ */
+const RULE_MESSAGE = /must fill the party its Attendee Type names/i;
 
 // ───────────────────────────────────────────────── the declaration ──
 
@@ -326,8 +342,11 @@ describe('deleting a person who attended a meeting', () => {
     const keepLead = await api.object('crm_event_attendee').insert({
       crm_event: event.id, attendee_type: 'lead', crm_lead: bystanderLead.id, response: 'tentative',
     });
+    // `attendee_type: 'external'` since #740 — this row used to be filed under
+    // `contact` with no contact on it, which is the mislabelling that issue
+    // fixed, and it is now refused outright.
     const keepGuest = await api.object('crm_event_attendee').insert({
-      crm_event: event.id, attendee_type: 'contact', external_name: "the prospect's lawyer",
+      crm_event: event.id, attendee_type: 'external', external_name: "the prospect's lawyer",
       response: 'no_response',
     });
 
@@ -340,12 +359,13 @@ describe('deleting a person who attended a meeting', () => {
   });
 
   /**
-   * The rule's fourth branch, the one that makes this object differ from
+   * The fourth resolution, the one that makes this object differ from
    * `crm_campaign_member` at all: a guest who is in no CRM object is named in
-   * free text. Two things are pinned — that such a row is ACCEPTED (the escape
-   * hatch is live, not decorative), and that it is untouched by any party
-   * delete (it references nothing to cascade from). It is also why the bug was
-   * never total: a hand-authored external-guest row was always deletable-around.
+   * free text, under `attendee_type: 'external'` since #740. Two things are
+   * pinned — that such a row is ACCEPTED (the escape hatch is live, not
+   * decorative), and that it is untouched by any party delete (it references
+   * nothing to cascade from). It is also why the bug was never total: a
+   * hand-authored external-guest row was always deletable-around.
    * `src/actions/global.actions.ts` never writes one, so no row the product
    * produces was rescued by it.
    */
@@ -357,7 +377,7 @@ describe('deleting a person who attended a meeting', () => {
 
     const guest = await api.object('crm_event_attendee').insert({
       crm_event: event.id,
-      attendee_type: 'contact',
+      attendee_type: 'external',
       external_name: 'Jane Roe (outside counsel)',
       response: 'accepted',
     });
@@ -389,31 +409,45 @@ describe('deleting a person who attended a meeting', () => {
   });
 
   /**
-   * The one semantic cost of cascading on all three lookups, measured and
-   * written down rather than left for the next reader to trip over: a row
-   * naming two parties is removed when EITHER is deleted, even though the other
-   * still exists.
+   * The one semantic cost of cascading on all three lookups — RETIRED by #740,
+   * and pinned here in the shape that retired it.
    *
-   * It is accepted because no such row is reachable today — the activity
-   * actions in `src/actions/global.actions.ts` push one party per attendee
-   * entry (`attendee_type` is the discriminator that says which lookup is the
-   * live one, and it holds exactly one value). If a future change starts
-   * writing two, this test is the place that says what has to be decided again.
+   * This test used to assert the cost: a row naming two parties was removed
+   * when EITHER was deleted, even though the other still existed. It was
+   * accepted on the ground that "no such row is reachable today", since the
+   * activity actions push one party per attendee entry — a reachability
+   * argument, which is the weakest kind, and exactly the kind #740 came back
+   * for on the `external_name` side.
+   *
+   * `attendee_type_exclusive` makes the row UNWRITABLE instead, so the
+   * double-cascade question can no longer arise: there is nothing to cascade
+   * twice. The assertion is the refusal plus the empty table — a rule that
+   * rejected the write but left a row behind would be worse than the cost it
+   * replaced.
    */
-  it('removes a two-party row on either delete (documented consequence)', async () => {
+  it('refuses a two-party row outright, so the double-cascade question cannot arise', async () => {
     const event = await newEvent();
     const contact = await newContact();
     const user = await newUser();
+
+    await expect(
+      api.object('crm_event_attendee').insert({
+        crm_event: event.id,
+        attendee_type: 'contact',
+        crm_contact: contact.id,
+        sys_user: user.id,
+        response: 'accepted',
+      }),
+    ).rejects.toThrow(/names exactly one party/i);
+
+    expect(await attendees()).toHaveLength(0);
+
+    // And the single-party row it was a corruption of still writes, still
+    // cascades: the tightening removed a shape, not the behaviour around it.
     await api.object('crm_event_attendee').insert({
-      crm_event: event.id,
-      attendee_type: 'contact',
-      crm_contact: contact.id,
-      sys_user: user.id,
-      response: 'accepted',
+      crm_event: event.id, attendee_type: 'user', sys_user: user.id, response: 'accepted',
     });
-
     await api.object('sys_user').delete({ where: { id: user.id } });
-
     expect(await attendees()).toHaveLength(0);
     expect(await api.object('crm_contact').find({ where: { id: contact.id } })).toHaveLength(1);
   });
