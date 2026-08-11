@@ -271,7 +271,7 @@ describe('the acceptance surface, on a real engine', () => {
         type: type.value, column: other.column,
       })),
     ),
-  )('refuses attendee_type "$type" filled as $column', async ({ type, column }) => {
+  )('refuses attendee_type $type filled as $column', async ({ type, column }) => {
     const error = await refusal({ attendee_type: type, [column]: party[column] });
     // Either half may speak first — the row both misses its own column and
     // fills one it may not — and both messages are true of it. What must never
