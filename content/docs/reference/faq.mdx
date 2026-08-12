@@ -41,7 +41,7 @@ The Copilot respects your sharing — if you can't see it, neither can it. Verif
 
 ### I created a lead but it's assigned to someone else — why?
 
-A **lead assignment rule** matched. Check the rule at **Setup → Lead Settings → Assignment Rules**. The default behaviour is to assign to the rep matching the lead's region/territory.
+Auto-assignment ran. **There is no Setup → Lead Settings screen and there are no assignment rules to check** — a lead that arrives without an owner is handed on insert to whichever holder of the `sales_rep` position has the fewest open leads (`src/objects/lead.hook.ts`). It load-balances; it does not match region or territory. So the owner you see is the least-loaded rep, not the nearest one.
 
 ### My opportunity won't move to Closed Won.
 
@@ -57,7 +57,7 @@ Likely a rejected approval. Check the **Approval History** section on the opport
 
 ### Where do deleted records go?
 
-To the **Recycle Bin** for 30 days. Restore from **Setup → Recycle Bin**. After 30 days they're purged permanently (logged in audit).
+Nowhere — **a delete is permanent and immediate.** There is no recycle bin to restore from and no Setup entry for one: the platform ships no soft-delete runtime at all. `@objectstack/spec` retired the flag that used to promise one, and says why in as many words — *"every delete has always been a hard delete, and a default-true flag promising a recycle bin was a false affordance"*. Treat every delete as irreversible. The audit log at **Setup → Audit Logs** records who deleted what and when; it does not bring the record back.
 
 ### My import says "0 rows imported" — why?
 

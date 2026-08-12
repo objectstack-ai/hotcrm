@@ -11,7 +11,7 @@ A practical, week-one checklist for the new HotCRM admin. Work through it in ord
 
 ### 1. Company profile
 
-Navigate to **Setup → Company Information**:
+Navigate to **Setup → Company**:
 
 - [ ] Company name, address, time zone, default currency
 - [ ] Fiscal year start month (used by all forecast reports)
@@ -51,7 +51,7 @@ What follows from that is on the SLA side: deadlines run on **calendar hours**. 
 
 ### 6. Profiles & permissions
 
-**Setup → Profiles**:
+**Setup → Permission Sets** — what this checklist calls a *profile* is a permission set, and Setup ships no screen called *Profiles*:
 
 - [ ] Review the six built-in profiles (see [Profiles](/docs/administration/profiles))
 - [ ] Clone and customise if needed (e.g., a *Junior Sales Rep* profile with limited delete rights)
@@ -63,13 +63,12 @@ What follows from that is on the SLA side: deadlines run on **calendar hours**. 
 - [ ] Decide org-wide default for accounts and contacts (private vs public read vs public read/write) — see [Sharing & security](/docs/administration/sharing-and-security)
 - [ ] Configure account teams if you sell as pods rather than solo reps
 
-### 8. Lead routing
+### 8. Lead routing — nothing to configure
 
-**Setup → Lead Settings**:
+**There is no Setup → Lead Settings screen**, and there are no routing rules to write. An ownerless lead — web-to-lead, CSV import, API capture — is assigned on insert by `src/objects/lead.hook.ts`: it goes to whichever holder of the `sales_rep` position has the **fewest open leads**. That is a self-balancing round-robin, not a rule matching region, industry or source; there is no territory routing, no queue, and no auto-response email to the submitter. If nobody holds `sales_rep` the hook does nothing and the lead stays ownerless until someone claims it.
 
-- [ ] Default lead owner / queue (when no rule matches)
-- [ ] Routing rules (by region, industry, source)
-- [ ] Auto-response email to new leads from the web form
+- [ ] Assign the `sales_rep` position to every rep who should receive intake — that pool *is* the routing table
+- [ ] Read what happens next in the `lead_assignment` flow (a rating-based follow-up date, and an alert to the new owner) at **Studio → Automation → Flows**
 
 ### 9. Product catalog
 

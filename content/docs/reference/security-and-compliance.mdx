@@ -30,7 +30,7 @@ Supported protocols:
 - **OpenID Connect (OIDC)** — Auth0, AWS Cognito.
 - **OAuth 2.0** — for delegated app access.
 
-Configure at **Setup → Security → SSO**. When SSO is on, you can disable password login entirely.
+Configure at **Setup → SSO Providers** (under *Access Control* — Setup has no *Security* group). When SSO is on, you can disable password login entirely.
 
 ### SCIM provisioning
 
@@ -40,7 +40,7 @@ Sync users from your identity provider automatically:
 - IdP group changes → HotCRM permission set changes.
 - IdP user deactivation → HotCRM user deactivated, records reassigned.
 
-Configure at **Setup → Security → SCIM**.
+**Setup ships no SCIM screen.** The capability is real — the platform stores SCIM providers as records and the auth plugin carries the adapter — but it has no navigation entry of its own, so there is nothing to click. SSO is the part you configure in the UI, at **Setup → SSO Providers**.
 
 ## Authorisation
 
@@ -64,7 +64,7 @@ The full layered model is in [Sharing & Security](/docs/administration/sharing-a
 - **Concurrent sessions** — max simultaneous sessions per user.
 - **Device trust** — flag new devices and require email confirmation.
 
-Configure at **Setup → Security → Session Policy**.
+**There is no Session Policy screen.** Login and authentication settings are at **Setup → Authentication**; live sessions are listed — and can be revoked — at **Setup → Sessions**. The per-profile IP allowlist, login-hours, concurrent-session cap and device-trust controls listed above are not settings this app ships anywhere.
 
 ## Audit logs
 
@@ -87,7 +87,7 @@ Retention:
 - **7 years** in the archived audit log (S3 / object storage).
 - Configurable to longer for regulated industries.
 
-Read the audit log at **Setup → Security → Audit Log**. Export to CSV or stream to your SIEM (Splunk, Datadog, Elastic).
+Read the audit log at **Setup → Audit Logs** (under *Diagnostics*). Export to CSV or stream to your SIEM (Splunk, Datadog, Elastic).
 
 ## Encryption
 
@@ -127,21 +127,13 @@ Cross-region transfers can be disabled per tenant for compliance with EU data re
 
 ### Right of access
 
-A subject can request all their data:
-
-1. **Setup → Privacy → Data Subject Requests → New → Export**.
-2. Provide the contact's email.
-3. The system generates a JSON / PDF bundle of every record referencing them.
-4. Deliver to the subject; the request is logged in the privacy audit log.
+**There is no Setup → Privacy screen, and no Data Subject Request record type.** A subject access request is served by hand: find every record that references the person — contact, lead, cases, activities, campaign members — and export those list views yourself. Nothing assembles a JSON / PDF bundle for you, and nothing files the request as a privacy event.
 
 ### Right of erasure
 
-1. **Setup → Privacy → Data Subject Requests → New → Delete or Anonymise**.
-2. Preview what will be affected.
-3. Choose **Delete** (purge) or **Anonymise** (mask PII, keep records for analytics).
-4. Confirm — system produces an audit certificate.
+By hand as well, and with a sharper edge: erasure means **hard-deleting** the records you pick (there is no recycle bin to fish them back out of — see the [FAQ](/docs/reference/faq)), or anonymising them by editing the PII fields yourself. Nothing previews what a request would affect, and no audit certificate is produced; what you get is the ordinary audit-log entry for each record you touched.
 
-Anonymisation typically preferred — it preserves the integrity of historical reports.
+Anonymisation is still usually the better choice — it preserves the integrity of historical reports.
 
 ### Consent management
 
@@ -153,7 +145,7 @@ For marketing:
 
 ### Data Processing Agreements
 
-A DPA template ships in **Setup → Privacy → DPA**.
+**No DPA template ships with the app** — there is no *Privacy* screen to keep one on. Get the agreement from your legal team.
 
 ## SOC 2 / ISO 27001
 
