@@ -81,7 +81,7 @@ import { REPO_ROOT } from './helpers/repo-root';
  * page in order to say it does not exist (「**Setup → Automation** 下也没有
  * 工作流规则入口」), and every zh-Hant nav string, which cannot resolve because
  * the platform ships no Traditional-Chinese pack at all. Fixing those is a
- * separate, larger editorial pass; filed as its own finding, listed in
+ * separate, larger editorial pass; filed as #1113, listed in
  * {@link KNOWN_UNRESOLVED}, one line each.
  *
  * The ledger is keyed by NAME, not by name-and-file, and that is deliberate:
@@ -218,8 +218,8 @@ const NOT_BANNED = new Set(['流程运行记录']);
 
 /**
  * First-segment navigation names cited in `content/docs/**` that resolve to
- * nothing, and that #853 does not own. Tracked as a separate finding; see the
- * "quarantine ledger" section of this file's header.
+ * nothing, and that #853 does not own. Tracked as #1113; see the "quarantine
+ * ledger" section of this file's header.
  *
  * ADDING ONE IS A ONE-LINE CHANGE — but do not reach for it to silence a name
  * you just wrote. A new page citing a page name that does not exist is the
