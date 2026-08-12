@@ -63,9 +63,9 @@ A flow fires one of three ways, set by its start node:
 | **New Lead Routing & SLA** | Record change (insert) | Stamp a rating-based follow-up SLA and alert the new lead's owner |
 | **Contact Welcome** | Record change (insert) | Prompt the owner to welcome a newly created contact |
 | **Urgent Task Alert** | Record change (insert) | Notify the owner when a task is created at *Urgent* |
-| **Large Deal Approval** | Record change (update) | Tiered sign-off via approval nodes — Sales Manager > $100K, Sales Director > $500K |
-| **Large Deal Approval (on create)** | Record change (insert) | The same intake for opportunities *created* above the threshold |
-| **Large Deal Won Alert** | Record change (update) | When an opportunity over $100K turns *Closed Won*, notify the owner — the owner alone, not their manager |
+| **Large Deal Approval** | Record change (update) | Tiered sign-off via approval nodes — Sales Manager ≥ $100K, Sales Director > $500K |
+| **Large Deal Approval (on create)** | Record change (insert) | The same intake for opportunities *created* at or above the threshold |
+| **Large Deal Won Alert** | Record change (update) | When an opportunity of $100K or more turns *Closed Won*, notify the owner — the owner alone, not their manager |
 | **Billing Hand-off: Closed Won** | Record change (update) | On the transition into *Closed Won*, enqueue one durable POST of the deal + account + line items to the billing endpoint |
 | **Billing Hand-off: Contract Activated** | Record change (update) | On the transition into *Activated*, enqueue one durable POST of the contract + account + the originating deal's line items |
 | **Case Escalation Process** | Record change (update) | When a case turns *Critical*, flag it escalated, hand it to the least-loaded holder of the `service_manager` position (it stays with its owner while that pool is unstaffed) and notify the agent it came from; escalating also opens an urgent follow-up task for the account owner |

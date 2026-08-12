@@ -329,7 +329,7 @@ async function main(): Promise<number> {
     `\n🎉 demo org staffed. Sign in as any of: ` +
     `${DemoOrgStaffing.map((m) => m.email).join(' · ')}\n` +
     `   Passwords are declared in src/sharing/demo-staffing.ts.\n` +
-    `   Submit an opportunity over $100K to see manager_review route to ` +
+    `   Submit an opportunity of $100K or more to see manager_review route to ` +
     `${DemoOrgStaffing.find((m) => m.positions.includes('sales_manager'))?.email}.\n`,
   );
   return 0;
