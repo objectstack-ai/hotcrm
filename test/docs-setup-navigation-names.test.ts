@@ -280,8 +280,21 @@ const KNOWN_UNRESOLVED = new Set<string>([
 /** Ledger key for one citation. */
 const ledgerKey = (app: 'setup' | 'studio', name: string): string => `${app}:${name}`;
 
-/** First-party text trees. `.mdx` docs plus the TypeScript that describes them. */
-const SCANNED_DIRS = ['content/docs', 'src', 'test', 'docs', '.changeset'];
+/**
+ * First-party text trees: the reader-facing docs, plus the TypeScript that
+ * describes the same surfaces to the next maintainer — `src/flows/*.flow.ts`
+ * header comments and test prose both told readers to look in the process
+ * monitor, and both are wrong for the same reason a page is.
+ *
+ * `.changeset/**` is deliberately NOT scanned. A changeset's job is to record
+ * what changed, so the one that retires a name has to be able to say the name —
+ * as this card's own does. That exemption is narrow and it is not free: #839's
+ * pending changeset was giving *advice* in the retired name's voice ("the name
+ * shown in Setup's process monitor"), which would have shipped the false claim
+ * to `CHANGELOG.md` at release. It is corrected in this PR by hand, because no
+ * rule can separate "advice in a changeset" from "history in a changeset".
+ */
+const SCANNED_DIRS = ['content/docs', 'src', 'test', 'docs'];
 
 /** This file names the retired spellings on purpose, so it cannot scan itself. */
 const SELF = 'test/docs-setup-navigation-names.test.ts';
