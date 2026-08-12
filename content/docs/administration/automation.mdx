@@ -50,7 +50,7 @@ A flow fires one of three ways, set by its start node:
 
 > **Auto-launch needs the `triggers` capability.** Record-change and scheduled flows only fire when the stack's `requires` list includes `triggers` — it installs the record-change + schedule trigger providers (schedule triggers also use the job service). Screen flows are always launched manually.
 
-**Built-in flows in HotCRM** (26). Each row carries the flow's own label — the name you see in **Setup → Process Monitor** and **Setup → Scheduled Jobs**, so a run you are chasing in the monitor can be looked up here verbatim:
+**Built-in flows in HotCRM** (26). Each row carries the flow's own label — the name listed in **Studio → Automation → Flows**, and the name you pick from in **Studio → Developer → Flow Runs**, so a run you are chasing can be looked up here verbatim:
 
 | Flow | Trigger | What it does |
 | --- | --- | --- |
@@ -81,7 +81,7 @@ A flow fires one of three ways, set by its start node:
 | **Task Due Reminder** | Schedule (hourly) | Notify owners of tasks whose reminder time has arrived |
 | **Demo Bootstrap** | Schedule (every 10 min) | Claim ownerless seeded records for the first user by stamping `owner_id` |
 
-Two entries carry an **(on create)** twin. Record-change flows subscribe to one trigger type each — `record-after-create` *or* `record-after-update` — so automation that has to catch both a newly created record and a later edit is authored as a pair of flows with the same condition. They are separate rows here because they are separate runs in the process monitor.
+Two entries carry an **(on create)** twin. Record-change flows subscribe to one trigger type each — `record-after-create` *or* `record-after-update` — so automation that has to catch both a newly created record and a later edit is authored as a pair of flows with the same condition. They are separate rows here because they are separate runs in **Flow Runs**.
 
 **Demo Bootstrap** is scaffolding, not business automation. Seed writes bypass the security middleware, so seeded rows arrive with no owner — which empties every *My …* view and sends owner-addressed notifications to nobody. This sweep stamps them onto the first user. On an org whose records already have owners it selects nothing and does nothing, every ten minutes.
 
@@ -130,15 +130,15 @@ HotCRM itself ships no email templates: nothing under `src/` authors one, and th
 
 ## Where to monitor automation
 
-- **Setup → Process Monitor** — last 24 hours of automation runs with success/failure.
-- **Setup → Scheduled Jobs → History** — past runs of each scheduled job.
+- **Studio → Developer → Flow Runs** — pick a flow from the list, then read its recent runs and each run's status (*success* / *failed* / *running* / *skipped*). Scheduled flows appear here too: they are flows, so there is no separate scheduled-job history to go looking for.
+- **Studio → Automation → Flows** — the flow roster itself, when you need to check what a flow is wired to do before reading its runs.
 - **Object → audit log** — what changed on the record, who/what made the change.
 
 ## Tips for admins
 
 - ✅ **Validation rules** are the cheapest way to enforce data quality — use them liberally.
 - ✅ **One flow per condition** is easier to maintain than a mega-flow with 10 branches.
-- ✅ Anything beyond a single field write — branching, multi-object writes, waits, approvals — belongs in a **flow** rather than an object hook: a flow run is visible in the process monitor, hook code is not.
+- ✅ Anything beyond a single field write — branching, multi-object writes, waits, approvals — belongs in a **flow** rather than an object hook: a flow run is visible in **Flow Runs**, hook code is not.
 - ✅ **Test in sandbox** before activating in production — bad automation can cascade fast.
 - ✅ **Document what each rule does** in its description field — your future self will thank you.
 
@@ -148,4 +148,4 @@ If a record isn't behaving as expected:
 
 1. Check the **audit log** — was the field updated by a flow or an object hook?
 2. Check the **task list** — did a flow auto-create a task you missed?
-3. Ask an admin to inspect the **process monitor** for that record.
+3. Ask an admin to open **Studio → Developer → Flow Runs** and read the recent runs of the flow you expected to fire.

@@ -62,8 +62,9 @@ import stack from '../objectstack.config';
  *   - the ENGLISH row label is NOT in the ledger: the English page uses each
  *     flow's own `label` verbatim, so it is checked against the stack, which is
  *     strictly stronger than a ledger entry. That is also a product decision, not
- *     just a test convenience — the label is what the process monitor shows, so a
- *     table keyed on it can be searched from a run the admin is staring at.
+ *     just a test convenience — the label is what **Studio → Developer → Flow
+ *     Runs** lists, so a table keyed on it can be searched from a run the admin
+ *     is staring at.
  *   - the cron DISPLAY text ({@link CRON_LABEL}) and the number WORDS
  *     ({@link COUNT_WORD}). An unregistered cron or count throws rather than
  *     passing silently — the convention `docs-drift.test.ts` set for its own
@@ -457,7 +458,7 @@ describe('the automation page lists every flow the app ships, in every locale (#
         expect(
           bad,
           `rows for flows that are not in the stack:\n  ${bad.join('\n  ')}\n` +
-            'A reader takes this row to the process monitor and finds nothing. Either the ' +
+            'A reader takes this row to Studio > Developer > Flow Runs and finds nothing. Either the ' +
             'flow was renamed (fix the row, and the ledger) or it is gone (drop the row).',
         ).toEqual([]);
       });
