@@ -1,7 +1,7 @@
-import { F, P, cel } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
+import { F, P, cel } from '@objectstack/spec';
 import { PAYMENT_TERMS_OPTIONS } from './_picklists';
 import { QUOTE_DISCOUNT_CEILING } from './_thresholds';
 

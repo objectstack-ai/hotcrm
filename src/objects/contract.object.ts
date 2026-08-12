@@ -1,7 +1,7 @@
-import { P } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
+import { P } from '@objectstack/spec';
 import { PAYMENT_TERMS_OPTIONS } from './_picklists';
 
 /**

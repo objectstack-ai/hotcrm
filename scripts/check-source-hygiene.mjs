@@ -12,8 +12,9 @@
  * from #686.
  *
  * They now scan the real source tree and FAIL the build, which is only
- * defensible because the tree is already clean on every count. Running
- * this locally is the same command CI runs:
+ * defensible because the tree is already clean on every count. The
+ * copyright-header check came last, from #1094. Running this locally is the
+ * same command CI runs:
  *
  *   node scripts/check-source-hygiene.mjs
  *
@@ -24,7 +25,8 @@
  *
  * The checks do not all read the same tree, and that is deliberate — see
  * `SCANNED` and `TEXT_SCANNED` below. Three checks judge code; the byte-level
- * one judges first-party text wherever it lives (#818).
+ * one judges first-party text wherever it lives (#818); the header check judges
+ * `.ts` only, for the measured reason given at `scanHeaderPosition`.
  */
 
 import { readdirSync, readFileSync, statSync } from 'node:fs';
@@ -115,6 +117,128 @@ function scanControlBytes(files) {
       if (at === -1) return;
       const hex = text.charCodeAt(at).toString(16).padStart(2, '0');
       hits.push({ file, line: i + 1, text: `control byte 0x${hex} at column ${at + 1}` });
+    });
+  }
+  return hits;
+}
+
+/**
+ * The license header, anchored to the start of its line.
+ *
+ * The year is `\d{4}` rather than `2025` because two files already say 2026 and
+ * the year a file was written is not this check's business — its *position* is.
+ * Only the `Copyright (c) <year> ObjectStack.` stem is matched, not the licence
+ * sentence that follows it: policing the wording would be a different check,
+ * one this repo has not measured and does not need today.
+ */
+const COPYRIGHT_HEADER = /^\/\/ Copyright \(c\) \d{4} ObjectStack\./;
+
+/**
+ * The same header pushed off column 1 by whitespace or a byte-order mark.
+ *
+ * Consulted only when no properly anchored header exists, and deliberately
+ * narrow — leading whitespace and nothing else — so that a file merely
+ * *mentioning* the header inside a string (this gate's own tests do) is never
+ * mistaken for a file that has one. It exists so the message can name the real
+ * case instead of reporting a header that is plainly there as missing.
+ *
+ * `\s` covers the byte-order mark without spelling it: U+FEFF is whitespace in
+ * ECMAScript. Written as an escape wherever it must be named at all — a raw BOM
+ * in a source file renders as nothing and is unfindable by grep in either
+ * spelling, which is the same argument the control-byte scan above makes.
+ */
+const INDENTED_COPYRIGHT_HEADER = /^\s+\/\/ Copyright \(c\) \d{4} ObjectStack\./;
+
+/**
+ * The copyright header must be the first line of every `.ts` file (#1094).
+ *
+ * The drift did not accrete a typo at a time — it arrived in one batch. All
+ * eleven affected files took their displaced import from a single commit,
+ * `01da4a8e` (836 files, 2026-08-06), which prepended an `import` line above the
+ * header mechanically. Nothing caught it: typecheck, lint and this gate were all
+ * green, so it sat in `main` for five days.
+ *
+ * It then cost two issues and two PRs to clean up by hand. #1091 noticed three
+ * of the eleven and fixed those; the sweep it prompted found the other eight
+ * within the hour, which became #1094 — a second card, a second review, a second
+ * PR, for one commit's worth of drift. Hand-fixing instance twelve buys nothing,
+ * because the next bulk edit will land the same way. A gate turns that whole
+ * sequence into a red build on the commit that introduces it.
+ *
+ * So this check is the deliverable, and #1094's eight fixes are what made it
+ * green.
+ *
+ * **What "correct" means here**, and why:
+ *
+ *   - **The header is line 1.** A licence header that is not the first thing in
+ *     the file is not doing its job for any reader or tool that looks at the top
+ *     of a file.
+ *   - **A shebang may precede it, and nothing else may.** `#!` is the one
+ *     construct whose position is load-bearing — the kernel requires it at byte
+ *     0. `/* eslint-disable *\/`, `'use strict'` and JSDoc banners all behave
+ *     identically one line lower, so none of them earns a place above the
+ *     header. (No `.ts` file in this repo has a shebang today; the two `.mjs`
+ *     gates in `scripts/` do, and they carry the header on line 2, which is the
+ *     shape this allows.)
+ *   - **A missing header is an error, not out of scope.** Measured before
+ *     writing this: all 282 `.ts` files under the scanned trees carry the
+ *     header, 274 of them on line 1. So requiring presence costs zero collateral
+ *     fixes — and without it the check would police the symptom while leaving
+ *     the invariant open, since deleting the header would be a way to satisfy a
+ *     position-only rule.
+ *
+ * **Why `.ts` only** (`allTs`, the same predicate the marker check uses, so
+ * `.d.ts` is excluded exactly as #1094's own reproduce loop excluded it): the
+ * header is universal in `.ts` and is *not* in the rest of the scanned trees —
+ * 3 of the 5 `.mjs` files under `scripts/`, the `.sh` script and the four
+ * `src/docs/*.md` pages have none. Widening the surface would therefore either
+ * demand a header in files this card cannot touch, or force the weaker
+ * position-only rule on everyone to accommodate them. Filed separately instead.
+ *
+ * There is no skip-list and no path list — a new `.ts` file with its header in
+ * the wrong place goes red, which is the entire point. Generated output is
+ * already outside the walk (`dist`, `.source`, `.objectstack` are in
+ * `SKIP_DIRS`), and no generated `.ts` lives in the scanned trees, so no
+ * exemption is invented for a case that does not exist.
+ *
+ * @returns {{file: string, line: number, text: string}[]}
+ */
+function scanHeaderPosition(files) {
+  const hits = [];
+  for (const file of files) {
+    const lines = readFileSync(join(ROOT, file), 'utf8').split('\n');
+    const preamble = lines[0]?.startsWith('#!') ? 1 : 0;
+    const want = preamble + 1; // the 1-based line the header must occupy
+    const at = lines.findIndex((line) => COPYRIGHT_HEADER.test(line));
+
+    if (at === want - 1) continue;
+
+    if (at !== -1) {
+      const displaced = lines[preamble].trim();
+      hits.push({
+        file,
+        line: at + 1,
+        text: `header on line ${at + 1}, must be line ${want} — move it back above \`${displaced}\``,
+      });
+      continue;
+    }
+
+    const indented = lines.findIndex((line) => INDENTED_COPYRIGHT_HEADER.test(line));
+    if (indented !== -1) {
+      hits.push({
+        file,
+        line: indented + 1,
+        text: 'header does not start at column 1 — strip the leading whitespace or byte-order mark',
+      });
+      continue;
+    }
+
+    hits.push({
+      file,
+      line: want,
+      text:
+        `no copyright header — add \`// Copyright (c) ${new Date().getFullYear()} ` +
+        `ObjectStack. Licensed under the Apache-2.0 license.\` as line ${want}`,
     });
   }
   return hits;
@@ -228,6 +352,12 @@ check(
       text: `${(statSync(join(ROOT, f)).size / 1024).toFixed(0)}KB`,
     })),
   'split the file — oversized modules defeat review',
+);
+
+check(
+  'copyright header at the top of every .ts file',
+  scanHeaderPosition(allTs),
+  'the header is line 1 (line 2 when a shebang comes first) — move it back up, do not delete it or add a second one; #1091 and #1094 were this same drift twice',
 );
 
 console.log('');

@@ -1,6 +1,6 @@
-import { P } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { P } from '@objectstack/spec';
 import { LARGE_DEAL_AMOUNT } from '../objects/_thresholds';
 
 /**
