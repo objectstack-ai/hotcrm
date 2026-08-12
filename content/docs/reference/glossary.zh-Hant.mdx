@@ -31,7 +31,7 @@ description: CRM 與平台術語 —— 按字母排序，讓你在會議中不�
 
 **Bookings（簽約額）** —— 某一期間內的贏單合約價值。包括新增 + 擴展 + 續約。
 
-**Business hours（營業時間）** —— 在提供這項設定的 CRM 裡，指截止時間所對照的工作日與工作時段。**HotCRM 沒有這個概念**：沒有工作日日曆，沒有假日清單，沒有「設定 → 營業時間」這個畫面，中繼資料裡也不存在任何可供截止時間去對照的東西。它算得出來的那些截止時間 —— 工單 SLA 矩陣裡的每一個格子，從 Critical 的 4 小時到 SMB Low 的 7 天 —— 都是加在掛鐘上的，夜間、週末與假日一律照算。參見 [SLA 與升級](/zh-Hant/docs/service/sla-and-escalation)。
+**Business hours（營業時間）** —— 在提供這項設定的 CRM 裡，指截止時間所對照的工作日與工作時段。**HotCRM 沒有這個概念**：沒有工作日日曆，沒有假日清單，沒有「Setup → Business Hours」這個畫面，中繼資料裡也不存在任何可供截止時間去對照的東西。它算得出來的那些截止時間 —— 工單 SLA 矩陣裡的每一個格子，從 Critical 的 4 小時到 SMB Low 的 7 天 —— 都是加在掛鐘上的，夜間、週末與假日一律照算。參見 [SLA 與升級](/zh-Hant/docs/service/sla-and-escalation)。
 
 ## C
 
@@ -197,7 +197,7 @@ description: CRM 與平台術語 —— 按字母排序，讓你在會議中不�
 
 **Webhook** —— 在 CRM 事件發生時觸發的 HTTP 回呼。
 
-**Workflow rule（工作流規則）** —— 並非 ObjectStack 的概念。平台已退休獨立的工作流規則類型（ADR-0019 / ADR-0020）：不存在 `workflow` 中繼資料類型，stack 上沒有 `workflows` 集合，**設定 → 自動化** 下也沒有 *工作流規則* 入口，只有 *流程*。一條簡單的儲存後規則（條件 → 欄位更新 / 郵件 / 任務）應寫成 **記錄變更類流程**；參見 [Administration › Automation](/zh-Hant/docs/administration/automation)。
+**Workflow rule（工作流規則）** —— 並非 ObjectStack 的概念。平台已退休獨立的工作流規則類型（ADR-0019 / ADR-0020）：不存在 `workflow` 中繼資料類型，stack 上沒有 `workflows` 集合，**Studio → Automation** 下也沒有 *Workflow Rules* 入口，只有 *Flows*（平台未附繁體中文語言包，主控台介面顯示英文）。一條簡單的儲存後規則（條件 → 欄位更新 / 郵件 / 任務）應寫成 **記錄變更類流程**；參見 [Administration › Automation](/zh-Hant/docs/administration/automation)。
 
 **Win rate（贏單率）** —— 贏單 ÷（贏單 + 丟單）。不含「未決策即關閉」。
 
