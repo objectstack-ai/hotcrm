@@ -22,8 +22,8 @@ billed it as a scheduled sweep, and the prose below counted it among them.
 What changed for readers:
 
 - All 24 flows are listed, grouped by trigger surface, each row carrying the
-  flow's own label — the name shown in Setup's process monitor and scheduled-job
-  history, so a run can be looked up here verbatim.
+  flow's own label — the name listed in Studio's Flows and Flow Runs pages, so a
+  run can be looked up here verbatim.
 - Each row states the real trigger, including the `insert` / `update` half of a
   record-change flow, and the real cron for the nine scheduled ones.
 - The counted sentences follow: `(24)` in the header, and "the nine `Schedule`

@@ -124,7 +124,7 @@ const accountBlock = {
  * `crm_account` is `required` + `storage.notNull` on both `crm_opportunity` and
  * `crm_contract`, so the token always resolves on a real row. Left UNGUARDED on
  * purpose: if it ever did resolve to nothing, `get_record` refuses the step and
- * the run fails loudly in the process monitor. For a required field that is the
+ * the run fails loudly in Studio's Flow Runs page. For a required field that is the
  * right failure — a silent skip would drop a hand-off with no trace.
  */
 const loadAccountNode = (): Automation.FlowNode => ({
