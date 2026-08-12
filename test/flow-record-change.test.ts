@@ -312,11 +312,14 @@ describe('opportunity_approval — start condition', () => {
       ['afterInsert twin', OpportunityApprovalOnCreateFlow],
     ] as const;
 
-    it.each(GATES)('%s routes a deal at EXACTLY $100,000 for approval', (_label, flow) => {
+    // No `$` in these titles: vitest reads `$name` in an `it.each` template as
+    // an object-property interpolation, so `$100,000` renders as
+    // "undefined,000" and the failure names an amount nobody wrote.
+    it.each(GATES)('%s routes a deal at EXACTLY 100,000 for approval', (_label, flow) => {
       expect(startConditionHolds(flow as unknown as Rec, openDeal(100_000))).toBe(true);
     });
 
-    it.each(GATES)('%s leaves $99,999 alone', (_label, flow) => {
+    it.each(GATES)('%s leaves 99,999 alone', (_label, flow) => {
       expect(startConditionHolds(flow as unknown as Rec, openDeal(99_999))).toBe(false);
     });
   });
