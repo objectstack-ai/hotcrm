@@ -62,7 +62,24 @@ export const LARGE_DEAL_AMOUNT = 100_000;
 export const HIGH_VALUE_DEAL_AMOUNT = 500_000;
 
 /**
- * The hard ceiling on a quote's discount percentage, in percent.
+ * The hard ceiling on a discount percentage, in percent — on a quote, and on
+ * each of its line items.
+ *
+ * ### One number, two rules, because a quote's total has two multipliers
+ *
+ * `crm_quote.discount_within_ceiling` (#599) and
+ * `crm_quote_line_item.discount_within_ceiling` (#1086) both interpolate this
+ * constant. The second is not a copy for symmetry's sake: the quote-level
+ * percentage and the per-line percentage are INDEPENDENT inputs to the same
+ * total (`quote_total_rollup` discounts each line, sums, then applies the
+ * quote's percentage to the sum), so a quote at `discount: 0` with every line
+ * at 90% cleared the quote-level rule outright and still priced 90% below
+ * list. Ceiling one multiplier and the other is the way around it.
+ *
+ * What this constant does NOT settle is what the ceiling means once the two
+ * multipliers COMPOUND — 60% per line and 60% on the quote is ~84% effective.
+ * That is a business-policy question, open as #1109, and neither rule pretends
+ * to answer it.
  *
  * ### Why 60, and why only one number
  *
@@ -95,12 +112,13 @@ export const HIGH_VALUE_DEAL_AMOUNT = 500_000;
  *
  * ### Why this is a validation rule and not `Field.percent({ max })`
  *
- * Measured, both ways, on a legacy row already above the ceiling (see
- * `test/quote-discount-ceiling.test.ts`): a field-level `max` validates the
+ * Measured, both ways, on a legacy row already above the ceiling — on the quote
+ * (#599) and again on the line item (#1086), both in
+ * `test/quote-discount-ceiling.test.ts`: a field-level `max` validates the
  * WRITTEN VALUE only, so a row stored above the ceiling before the rule existed
  * keeps accepting edits forever — the same silent legacy hole #1069 reports for
  * `requiredWhen`. A `type: 'script'` validation is evaluated against the MERGED
- * record on every write, so it is a true invariant. The field keeps `max: 100`
- * as the arithmetic domain of a percentage; the policy line lives in the rule.
+ * record on every write, so it is a true invariant. Both fields keep `max: 100`
+ * as the arithmetic domain of a percentage; the policy line lives in the rules.
  */
 export const QUOTE_DISCOUNT_CEILING = 60;

@@ -2,6 +2,7 @@
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
 import { F, P } from '@objectstack/spec';
+import { QUOTE_DISCOUNT_CEILING } from './_thresholds';
 
 /**
  * Quote Line Item
@@ -153,6 +154,57 @@ export const QuoteLineItem = ObjectSchema.create({
       severity: 'error',
       message: 'Sales price cannot be negative',
       condition: P`has(record.unit_price) && record.unit_price != null && record.unit_price < 0`,
+    },
+    {
+      // #1086. The other half of #599's ceiling, and the reason that card's own
+      // acceptance criterion — "a quote with a 90% line discount cannot reach
+      // `presented`" — was not met by the quote-level rule alone.
+      //
+      // ### The walk-around this closes
+      //
+      // A quote's total has TWO independent discount multipliers, and
+      // `quote_total_rollup` composes them:
+      //
+      //   subtotal        = Σ line (quantity × unit_price × (1 − LINE discount/100))
+      //   discount_amount = subtotal × QUOTE discount%
+      //
+      // #599 put a ceiling on the second one only. So a quote at
+      // `discount: 0` — which clears `discount_within_ceiling` on `crm_quote`
+      // outright — with every line at `discount: 90` prices 90% below list, and
+      // nothing objected: this object's only discount constraint was the
+      // field's own `max: 100`, the arithmetic domain of a percentage. An
+      // invariant with a documented walk-around is worse than no invariant,
+      // because a reader (human or AI) cites the rule as the guarantee.
+      //
+      // ### Same constant, same instrument, deliberately
+      //
+      // The number is `QUOTE_DISCOUNT_CEILING` — imported, never retyped, so the
+      // two ceilings are one policy and cannot drift into two. The instrument is
+      // a `type: 'script'` validation for the reason #599 measured on the quote
+      // (and this card re-measured on this object, in
+      // `test/quote-discount-ceiling.test.ts`): a field-level `max` validates
+      // only the value being WRITTEN, so a line stored above the ceiling before
+      // the rule existed keeps accepting edits forever, while a script
+      // validation is evaluated against the MERGED record on every write and is
+      // therefore a true invariant. `max: 100` stays on the field as the domain
+      // of a percentage; the policy line lives here.
+      //
+      // ### What this rule does NOT decide
+      //
+      // 60% per line AND 60% on the quote still compounds to ~84% EFFECTIVE.
+      // Whether the ceiling should be read against the effective discount is a
+      // business-policy question with no answer in this codebase, and it is
+      // open as #1109 — deliberately not guessed here. A per-line ceiling is
+      // correct under either answer: it is the whole policy if the answer is
+      // per-line, and a component of it if the answer is effective.
+      name: 'discount_within_ceiling',
+      type: 'script',
+      severity: 'error',
+      // Names the LINE, because the quote carries a same-named rule with its
+      // own message: on a refused save the rep must be able to tell which of
+      // the two numbers the platform is objecting to.
+      message: `Line discount cannot exceed ${QUOTE_DISCOUNT_CEILING}%`,
+      condition: P`has(record.discount) && record.discount != null && record.discount > ${QUOTE_DISCOUNT_CEILING}`,
     },
   ],
 });
