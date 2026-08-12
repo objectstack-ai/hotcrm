@@ -322,7 +322,7 @@ export const en: TranslationData = {
         },
         period_end: {
           label: 'Period End',
-          help: 'Normally derived automatically from Period and Period Start. If set by hand, it must be after Period Start.',
+          help: 'Normally derived automatically from Period and Period Start. If set by hand, it must be the last day of that period — e.g. 2026-09-30 for a quarter starting 2026-07-01, or 2026-08-31 for Aug 2026.',
         },
         period_label: { label: 'Period', help: 'Human-friendly label, e.g. "Q3 2026" or "Aug 2026".' },
         snapshot_date: { label: 'Snapshot Date', help: 'The day this snapshot was captured.' },
