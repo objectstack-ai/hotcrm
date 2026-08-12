@@ -79,6 +79,13 @@ export const LEAD_SOURCE_OPTIONS: SelectOption[] = [
  * Payment Terms — Quote + Contract. Superset (incl. `due_on_receipt`,
  * formerly Quote-only): an accepted quote's terms carry over to the contract,
  * so the contract vocabulary must cover every quote value.
+ *
+ * The carry-over is `quote_on_accepted` in `src/objects/quote.hook.ts`, named
+ * here because this rationale spent its first months unenforced (#873): the
+ * hook drafted the contract without `payment_terms`, so every accepted quote
+ * produced a contract on the `net_30` option default below regardless of what
+ * was negotiated — a shared vocabulary justified by a copy that did not exist.
+ * A comment that names its enforcer can be checked; this one could not be.
  */
 export const PAYMENT_TERMS_OPTIONS: SelectOption[] = [
   { label: 'Net 15', value: 'net_15' },
