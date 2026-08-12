@@ -29,16 +29,16 @@ The simplest kind. They block a save if a condition is true.
 - *"A campaign member must have either a Lead or a Contact, not both"* (on campaign members).
 - *"Discount % must be between 0 and 100"* (on quote line items).
 
-To add one:
+To add one — it is a source edit, not a Setup screen. **There is no Setup → Object entry**: the object roster the Console does show is **Studio → Data Model → Objects**, and a rule is a `validations[]` entry on the object itself (`src/objects/*.object.ts`), next to its fields.
 
-1. **Setup → Object → Validation Rules → New**.
+1. Add a `validations[]` entry to the object (`src/objects/*.object.ts`).
 2. Write the condition (the *fail* condition).
 3. Write the error message shown to the user.
-4. Activate.
+4. Deploy — a rule runs unless it carries `active: false`.
 
 ## Flows (multi-step)
 
-> **Looking for "workflow rules"?** There is nothing to look for — not in this app, and not on the platform. ObjectStack retired the standalone workflow-rule type (ADR-0019 / ADR-0020): there is no `workflow` metadata type, no `workflows` collection on a stack, and no *Workflow Rules* entry under **Setup → Automation** — only *Flows*. A *"when this record saves, do that"* rule is a **record-change flow**, and every one this app ships is a row in the table below.
+> **Looking for "workflow rules"?** There is nothing to look for — not in this app, and not on the platform. ObjectStack retired the standalone workflow-rule type (ADR-0019 / ADR-0020): there is no `workflow` metadata type, no `workflows` collection on a stack, and no *Workflow Rules* entry under **Studio → Automation** — only *Flows*. A *"when this record saves, do that"* rule is a **record-change flow**, and every one this app ships is a row in the table below.
 
 When a single field update isn't enough — branching, loops, waits, multi-object writes, approvals — use a **flow**. A flow is a visual graph of nodes: get data → decide → create/update records → notify → wait → call a sub-flow.
 
@@ -119,14 +119,14 @@ Understanding this order helps debug *"why didn't my flow fire?"* questions.
 
 ## Email templates
 
-Most automation actions send email. Templates live in **Setup → Email Templates** and support:
+Most automation actions send email. Templates live in **Studio → Integration → Email Templates** and support:
 
 - **Merge fields** — `{{path.to.value}}` placeholders, rendered against the `data` payload passed on that send. Spell every segment the way HotCRM spells it — objects are `crm_opportunity` and `crm_contact`, fields are `name`, `owner_id`, `email` — never Salesforce-style `Opportunity.Name`. What the path is rooted at depends on the payload shape the sender passes, and this app ships no `sendTemplate()` caller to copy one from, so declare the names your template reads in its `variables` list and agree the shape with whoever sends the mail.
 - **Conditional blocks** — show only if a condition is true.
 - **HTML + plain text** versions.
 - **Attachments** — quote PDFs, contract PDFs.
 
-HotCRM itself ships no email templates: nothing under `src/` authors one, and the compiled app carries no email-template metadata at all. The lead-routing, opportunity-win, case and renewal notifications this app sends come from the **`notify` nodes** in the flows listed above — each one's subject and body text is written inline in its own flow, so that is where you change the wording. Contract activation sends nothing: it runs as an object hook (`src/objects/contract.hook.ts`) with no notification step, and the contract mail that does go out comes from the **Contract Auto-Expiration** and **Contract Renewal Reminder** flows. Author a template in **Setup → Email Templates** when you need a templated outbound email of your own.
+HotCRM itself ships no email templates: nothing under `src/` authors one, and the compiled app carries no email-template metadata at all. The lead-routing, opportunity-win, case and renewal notifications this app sends come from the **`notify` nodes** in the flows listed above — each one's subject and body text is written inline in its own flow, so that is where you change the wording. Contract activation sends nothing: it runs as an object hook (`src/objects/contract.hook.ts`) with no notification step, and the contract mail that does go out comes from the **Contract Auto-Expiration** and **Contract Renewal Reminder** flows. Author a template in **Studio → Integration → Email Templates** when you need a templated outbound email of your own.
 
 ## Where to monitor automation
 

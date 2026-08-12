@@ -66,32 +66,44 @@ import { REPO_ROOT } from './helpers/repo-root';
  *
  * `**Setup → Users → [user] → Deactivate**` is one sidebar entry followed by
  * two in-page controls. Measured against `content/docs/**`: checking the first
- * segment leaves 20 distinct unresolved names, checking every segment leaves
- * 32 — the extra 12 are `New`, `Deactivate`, `[user]`, `回滾`, `連接 Gmail /
- * 連接 Outlook` and friends, which are buttons, not navigation. The first
- * segment is the claim a reader acts on ("click this in the sidebar"), so it
- * is the claim that is pinned. (Both numbers were 39 / 74 when #853 first
- * measured them; #1113's first pass closed the gap, not the rule.)
+ * segment leaves 13 distinct unresolved names, checking every segment leaves
+ * 21 — the extra 8 are `Deactivate`, `[user]`, `回滾`, `新增`, `部署歷史`,
+ * `連接 Gmail / 連接 Outlook` and friends, which are buttons, not navigation.
+ * The first segment is the claim a reader acts on ("click this in the
+ * sidebar"), so it is the claim that is pinned. (Both numbers were 39 / 74
+ * when #853 first measured them, and 20 / 32 after #1113's first pass;
+ * #1113 closed the gap, not the rule.)
  *
  * ## Why there is a quarantine ledger, and what it is not
  *
- * The path rule cannot be applied to this repo cleanly today: 20 distinct
+ * The path rule cannot be applied to this repo cleanly today: 13 distinct
  * first-segment names in `content/docs/**` do not resolve, across pages this
- * card does not own — names that are real in **Studio** but cited under
- * **Setup** (*Automation*, *Email Templates*, *Objects*), some of them
- * deliberate DENIALS that name a page in order to say it does not exist
- * (「**Setup → Automation** 下也没有工作流规则入口」), and every zh-Hant nav
- * string, which cannot resolve because the platform ships no
- * Traditional-Chinese pack at all. Fixing those is a separate editorial pass;
- * filed as #1113, listed in {@link KNOWN_UNRESOLVED}, one line each.
+ * card does not own. Every one of the 13 is now a zh-Hant navigation string,
+ * which cannot resolve because the platform ships no Traditional-Chinese pack
+ * at all — a locale-policy question before it is an edit. Fixing those is a
+ * separate editorial pass; filed as #1113, listed in {@link
+ * KNOWN_UNRESOLVED}, one line each.
  *
- * It started at 39. #1113's first pass took out the nineteen *invented*
- * screens — Salesforce-flavoured names (*Profiles* → **Permission Sets**,
- * *Sharing Settings* → **Sharing Rules**) and names for capabilities this
- * platform does not have at all (*Recycle Bin*, *Sandbox Management*,
- * *Change Packages*, *Privacy*, *Usage*, *Lead Settings*), which are now
- * either the real path or a plain statement that the screen does not exist.
- * The two remaining sub-classes land after it, in that order.
+ * It started at 39, and #1113 has taken two passes at it.
+ *
+ *  - **39 → 20**, the *invented* screens: Salesforce-flavoured names
+ *    (*Profiles* → **Permission Sets**, *Sharing Settings* → **Sharing
+ *    Rules**) and names for capabilities this platform does not have at all
+ *    (*Recycle Bin*, *Sandbox Management*, *Change Packages*, *Privacy*,
+ *    *Usage*, *Lead Settings*), now either the real path or a plain statement
+ *    that the screen does not exist.
+ *  - **20 → 13**, right name / wrong app: *Automation*, *Email Templates* and
+ *    *Objects* are real navigation labels — in **Studio** — and the docs filed
+ *    them under **Setup**. Not a mechanical rename, because one of the seven
+ *    was a deliberate DENIAL that names a page in order to say it does not
+ *    exist (`guides/email-and-calendar.zh-Hans.mdx`'s 「邮件模板（尚未落地）」
+ *    section): pointing a denial at the live Studio path would have made the
+ *    page contradict its own "HotCRM ships none of it today", so that one was
+ *    reworded to drop the path form instead. The other six really were the
+ *    wrong app, denials included — 「no *Workflow Rules* entry under **Studio →
+ *    Automation** — only *Flows*」 is both true and the more useful sentence.
+ *
+ * One sub-class is left, and it lands next.
  *
  * The ledger is keyed by NAME, not by name-and-file, and that is deliberate:
  * these names are already-filed drift, so a second page repeating one of them
@@ -235,23 +247,17 @@ const NOT_BANNED = new Set(['流程运行记录']);
  * defect this file exists to catch.
  *
  * Entries are `app:name`, because the app half carries real information here.
- * *Automation*, *Email Templates* and 对象 are all real navigation labels — in
- * **Studio**. The docs put them under **Setup**, where they do not exist, and a
- * name-only ledger would call that resolved.
+ * #1113's second pass is what proves it: *Automation*, *Email Templates* and
+ * 对象 were all real navigation labels the whole time — in **Studio** — and the
+ * docs cited them under **Setup**, where they do not exist. A name-only ledger
+ * would have called those seven entries resolved and never asked which app.
  */
 const KNOWN_UNRESOLVED = new Set<string>([
-  // Real navigation labels — in STUDIO, cited under Setup (en).
-  'setup:Automation',
-  'setup:Email Templates',
-  'setup:Object',
-  // Same, zh-Hans.
-  'setup:对象',
-  'setup:电子邮件模板',
-  'setup:自动化',
-  'setup:邮件模板',
-  // Same, zh-Hant. Every one of these ALSO fails for a structural reason: the
-  // platform ships en / zh-CN / ja-JP / es-ES and no Traditional-Chinese pack,
-  // so no surface displays a Hant navigation label at all.
+  // zh-Hant navigation strings. Every one of these fails for a STRUCTURAL
+  // reason rather than a naming one: the platform ships en / zh-CN / ja-JP /
+  // es-ES and no Traditional-Chinese pack, so no surface displays a Hant
+  // navigation label at all — several of these are faithful Hant translations
+  // of a label that really exists, which is precisely why none of them resolve.
   'setup:使用者',
   'setup:公司資訊',
   'setup:共用設定',
