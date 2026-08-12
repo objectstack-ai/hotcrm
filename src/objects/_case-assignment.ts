@@ -117,6 +117,41 @@ import type { HookApi } from './_hook-api';
  * moves the guard, reading A flips and that test goes red — the signal is to
  * grant `allowTransfer` deliberately or to stop assigning in a hook, NOT to
  * widen the permission model to make a red test green.
+ *
+ * # The ORDER of the gate and the hook phase (#1096) — reading D
+ *
+ * Readings A–C answer "can the gate SEE a hook's stamp". #1096's claim seam
+ * turns on the sharper question underneath: WHEN does the gate run relative to
+ * the hook phase — because if a hook ran first it could sanitise a payload the
+ * gate would otherwise refuse, and an agent could then spell a claim as
+ * `{ owner_id: <self> }` after all.
+ *
+ * It cannot. Measured 2026-08-12 on `@objectstack/*` 17.0.0-rc.6, against the
+ * FULL shipped stack (ObjectQL + `plugin-security` + `plugin-sharing` over this
+ * app's own `objectstack.config.ts`) as a real `service_agent` holding the
+ * `case_unassigned_triage_sharing` share, three readings:
+ *
+ *   D1. `update(unowned_open, { owner_id: <self> })` → denied,
+ *       `PermissionDeniedError`, "'owner_id' on 'crm_case' is system-managed".
+ *       So does `{ owner_id: <other> }`, and so does the same write against a
+ *       case owned by somebody else. `{ internal_notes: … }` on the very same
+ *       row is ALLOWED, which is the control that says the denial is about the
+ *       ownership column and not about reach.
+ *   D2. THE DECISIVE ONE. With a `beforeUpdate` hook installed that DELETES
+ *       `input.owner_id`, the same claim write is still denied — and the hook
+ *       never fired at all (its recorder logged nothing). The gate rejects
+ *       inside the middleware, upstream of the hook phase, so no hook can
+ *       rescue, launder or adjudicate a payload that carries `owner_id`.
+ *   D3. A `beforeUpdate` hook stamping `owner_id` onto a payload that did NOT
+ *       carry the key — `{ status: 'in_progress' }` — is ALLOWED, and the
+ *       stored row comes back owned by the hook's pick. Reading A, re-measured
+ *       through the real security plugin rather than a bare ObjectQL.
+ *
+ * ⇒ "An agent may set `owner_id` to themselves" is not implementable as an
+ * adjudicated write, because the agent's payload may not contain the key at
+ * all. It IS implementable one level up, as a GESTURE the hook interprets:
+ * {@link createCaseSelfClaim}. That is a strictly stronger safety property —
+ * see its own header.
  */
 
 /** The position whose holders form the case intake pool (`sys_user_position`). */
@@ -142,6 +177,36 @@ export const CLOSED_CASE_STATUSES = ['resolved', 'closed'] as const;
 
 /** Cap on the pool read — the same bound `lead_auto_assign` uses. */
 export const POOL_QUERY_LIMIT = 1000;
+
+/**
+ * The statuses that mean "a human has picked this case up and it is not
+ * finished" — the gesture {@link createCaseSelfClaim} reads as a claim (#1096).
+ *
+ * One concept, not three arbitrary picks: each of these says a person is
+ * engaged with the case and the work is still live. The four statuses NOT here
+ * are excluded for a stated reason apiece:
+ *
+ *   - `new` — the state a triage row is already IN. Not a move, so not a claim.
+ *   - `escalated` — {@link createCaseEscalationReassign} owns that transition
+ *     and routes the case to the `service_manager` pool. Two hooks answering
+ *     "who owns this case" for one status change is the "one operation, two
+ *     implementations" shape this whole module exists to prevent.
+ *   - `resolved` / `closed` — finishing a case is not picking it up. An agent
+ *     may still resolve an unowned case straight out of triage (the share
+ *     grants edit); doing so records them in `updated_by` and leaves the
+ *     ownership column honest about the fact that nobody ever took the work.
+ *
+ * ⚠️ Declared here for the doc, the tests and future readers — the handler body
+ * spells the same three strings INLINE, because the L2 sandbox gives it no
+ * module scope (see this file's header).
+ * `test/unassigned-case-triage-reach.test.ts` drives every one of them through
+ * the real engine, so the two copies cannot drift apart quietly.
+ */
+export const CLAIMABLE_TARGET_STATUSES = [
+  'in_progress',
+  'waiting_customer',
+  'waiting_support',
+] as const;
 
 /**
  * Round-robin assignment for ownerless new cases.
@@ -390,6 +455,165 @@ export function createCaseEscalationReassign(hookName = 'case_escalation_reassig
         // `sys_user_position` read leaves the case where it is, escalated.
         // (No `console` here — the L2 hook sandbox does not define one.)
       }
+    },
+  };
+}
+
+/**
+ * Let an agent CLAIM an unowned case out of triage (#1096, acceptance #1's
+ * write half).
+ *
+ * `case_unassigned_triage_sharing` (#1134) gave `service_agent` sight of, and
+ * `edit` on, every unowned open case — so the pinned `Unassigned — triage` tab
+ * finally has rows for the persona it was built for. It could not give them the
+ * other half of the sentence: *"and can take ownership"*. This hook is that
+ * half.
+ *
+ * ## The contract, and why it is STRUCTURAL rather than adjudicated
+ *
+ * The ruled contract is: **an agent may set `owner_id` to THEMSELVES, only
+ * while it is currently null, only on a case that is not closed.**
+ *
+ * The obvious implementation — let the agent write `{ owner_id: <self> }` and
+ * have a hook approve or refuse it — is not available, and that is measured,
+ * not assumed: reading D2 in this file's header shows the #3004 gate rejecting
+ * such a payload INSIDE the middleware, upstream of the hook phase, with the
+ * hook never firing at all. A hook cannot approve a write it never sees.
+ *
+ * So the claim is not a value the agent supplies; it is a GESTURE the hook
+ * reads. The agent moves an unowned open case into a status that means they
+ * have picked it up ({@link CLAIMABLE_TARGET_STATUSES}) and this hook stamps
+ * the ownership column — with `ctx.user.id`, the only user id it has.
+ *
+ * That inverts the usual safety burden, and it is the reason this shape is
+ * preferable to `crm_case.allowTransfer` even setting the blast radius aside:
+ *
+ *   - **"claim it for somebody else" has no spelling.** The hook writes the
+ *     caller's own id and reads no target from the payload; a payload that
+ *     names a third party is refused one layer up by the gate, before this code
+ *     runs, and a payload that carries `owner_id` at all makes this hook stand
+ *     down. There is no lenient branch to find, because there is no input to be
+ *     lenient about.
+ *   - **"claim a case that already has an owner" has no spelling either.** The
+ *     hook is inert unless the STORED row is ownerless.
+ *   - A transfer grant, by contrast, is a general capability being installed to
+ *     obtain a specific one: it would let an agent reassign any case they can
+ *     edit, to anyone, and it cannot express "to yourself only".
+ *
+ * `src/profiles/service-agent.profile.ts` is therefore UNCHANGED by this card —
+ * no new grant of any kind — which is the same standing the intake round-robin
+ * and the escalation hand-off already have.
+ *
+ * ## The four boundaries
+ *
+ * | write, as a `service_agent`                       | outcome |
+ * | --- | --- |
+ * | `{ status: 'in_progress' }` on an unowned OPEN case | claimed — owner becomes the caller |
+ * | the same on a case owned by SOMEBODY ELSE           | refused: no reach, and the ownership guard below |
+ * | `{ owner_id: <anyone> }`, unowned or not            | refused by the transfer gate, upstream |
+ * | the same on an unowned CLOSED case                  | refused: not shared, and the closed guard below |
+ *
+ * Each guard is doubled on purpose. The sharing rule already hides a closed
+ * unowned case and a case owned by someone else, so an agent's write is refused
+ * before reaching here — but the hook must not depend on that, because the hook
+ * also runs for callers the sharing rule does not constrain (an admin, a
+ * manager holding the escalation share). `is_closed == false` in the predicate
+ * and `previous.status !== 'closed'` here are the SAME rule stated at two
+ * layers, and the reach test drives both layers separately so neither can pass
+ * on the other's behalf.
+ *
+ * ## Re-entrancy — reasoned, not assumed
+ *
+ * This file's neighbourhood has been bitten twice (the `closed_date` write, and
+ * the `is_escalated` re-fire loop that wedged a first-boot seed on 2026-07-06),
+ * and both accidents were EXTRA WRITES. Four properties keep this hook off that
+ * surface, in descending order of how much work they do:
+ *
+ *   1. **It performs no operation.** It mutates the payload of the update
+ *      already in flight — no second write, no second `record-after-update`
+ *      event, nothing for `case_escalation`, `case_sla_monitor` or
+ *      `case_status_side_effects` to re-fire on. Same disposal as
+ *      {@link createCaseEscalationReassign}, and it is a disposal rather than a
+ *      guard: there is no loop to break.
+ *   2. **The predicate is a TRANSITION, not a state** (`input.status` present
+ *      AND different from `previous.status`), so it is false on a replay of the
+ *      very update it fired on. The 2026-07-06 loop read a boolean STATE and
+ *      met SQLite's `1 != true`; this one compares two status strings, a
+ *      column with no boolean round-trip to get wrong. The closed guard reads
+ *      `previous.status` first for the same reason, and accepts `is_closed`
+ *      as either `true` or `1` rather than trusting the driver's spelling.
+ *   3. **It is idempotent by construction.** After a successful claim the
+ *      stored row HAS an owner, so guard 3 stops every subsequent run — the
+ *      claim cannot be re-applied, and cannot move a case a second time.
+ *   4. **It cannot collide with the escalation hand-off.** The two hooks are
+ *      disjoint by target status (`escalated` is deliberately not claimable),
+ *      and doubly so by order: at priority 260 this runs AFTER
+ *      `case_escalation_reassign` (250), and stands down entirely the moment
+ *      `owner_id` is already in the payload — so whichever of them speaks
+ *      first, the other is silent.
+ *
+ * ## Who this runs for
+ *
+ * A claim is something a PERSON does, so a write with no user (a seed, a
+ * system-context migration, the anonymous web-to-case path) never claims —
+ * ownerless intake stays ownerless and stays in the tab, which is the whole
+ * point of #596's no-op. A write carrying a real user id claims for that user,
+ * whoever they are: an admin or a service manager who moves an unowned case
+ * into progress has picked it up in exactly the sense an agent has, and both
+ * can hand it on afterwards because both hold the transfer grant an agent does
+ * not.
+ *
+ * @param hookName registry name for the hook (metadata only — never read by
+ *   the body, which the sandbox would not let it be).
+ */
+export function createCaseSelfClaim(hookName = 'case_self_claim'): Hook {
+  return {
+    name: hookName,
+    object: 'crm_case',
+    events: ['beforeUpdate'],
+    priority: 260,
+    description: 'Let a user claim an unowned open case by picking it up; the owner written is always the caller.',
+    handler: async (ctx: HookContext) => {
+      const { input } = ctx;
+      const previous = ctx.previous;
+      if (!previous) return;
+
+      // 1. A claim is something a PERSON does. A system or seed write leaves
+      //    the case ownerless for the triage tab to keep showing.
+      const claimant = ctx.user?.id;
+      if (typeof claimant !== 'string' || !claimant) return;
+      if (ctx.session?.isSystem) return;
+
+      // 2. An explicit `owner_id` in the payload WINS and is never touched.
+      //    For an agent this branch is unreachable — the transfer gate refuses
+      //    that payload upstream (reading D2) — so in practice it means: a
+      //    caller who legitimately holds `allowTransfer` and named an owner
+      //    gets the owner they named, not this hook's opinion.
+      if ('owner_id' in input) return;
+
+      // 3. Only an UNOWNED case can be claimed. Covers both storage shapes of
+      //    "no owner": the key ABSENT (memory/mongo) and the column NULL (SQL).
+      if (typeof previous.owner_id === 'string' && previous.owner_id) return;
+
+      // 4. …and only one that is not CLOSED — the same line the sharing rule
+      //    draws with `is_closed == false`. `status` is read first because it
+      //    is a string on every driver; `is_closed` is accepted as `true` or
+      //    `1` because SQLite hands booleans back as integers.
+      if (previous.status === 'closed') return;
+      if (previous.is_closed === true || previous.is_closed === 1) return;
+
+      // 5. The gesture: the status MOVES to one that means a human has picked
+      //    the case up. These three literals are CLAIMABLE_TARGET_STATUSES;
+      //    the sandbox forbids reading the constant from here, and the parity
+      //    assertion in `test/unassigned-case-triage-reach.test.ts` is what
+      //    keeps the two in step. `escalated` is absent on purpose — that
+      //    transition belongs to `case_escalation_reassign`.
+      const next = input.status;
+      if (typeof next !== 'string' || next === previous.status) return;
+      if (next !== 'in_progress' && next !== 'waiting_customer' && next !== 'waiting_support') return;
+
+      // The only user id this hook has, and the only one it can write.
+      input.owner_id = claimant;
     },
   };
 }
