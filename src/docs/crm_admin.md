@@ -110,12 +110,12 @@ revisits:
 
 | Behavior | Current setting | Defined in |
 |---|---|---|
-| Large-deal approval (manager) | amount **> $100,000** | `opportunity-approval.flow.ts` |
+| Large-deal approval (manager) | amount **$100,000 or more** | `opportunity-approval.flow.ts` |
 | Large-deal approval (+ director) | amount **> $500,000** | `opportunity-approval.flow.ts` |
 | Hot-lead follow-up SLA | **1 day** (Lead Score ≥ 4★) | `lead-assignment.flow.ts` |
 | Standard-lead follow-up SLA | **3 days** | `lead-assignment.flow.ts` |
 | Stalled-deal nudge | **> 14 days** in stage, swept daily **07:30** | `opportunity-stagnation.flow.ts` |
-| Won-deal alert | **Closed Won** over **$100,000** | `opportunity-won-alert.flow.ts` |
+| Won-deal alert | **Closed Won** at **$100,000** or more | `opportunity-won-alert.flow.ts` |
 | Quote default validity | **30 days** | `quote-generation.flow.ts` |
 | Quote auto-expiration sweep | daily **01:00** | `quote-expiration.flow.ts` |
 | Case SLA breach sweep | **hourly** | `case-sla-monitor.flow.ts` |

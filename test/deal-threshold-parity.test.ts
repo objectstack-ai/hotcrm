@@ -28,15 +28,19 @@ import { HIGH_VALUE_DEAL_AMOUNT, LARGE_DEAL_AMOUNT } from '../src/objects/_thres
  * The companion guard is `test/docs-drift.test.ts`, which pins the published
  * prose in `src/docs/*.md` to the same compiled conditions.
  *
- * ### ⚠️ Scope, stated honestly: the VALUE is converged, the OPERATORS are not
+ * ### The VALUE and the OPERATOR are both converged (#599, then #1087)
  *
- * Two sites cut at `> LARGE_DEAL_AMOUNT` (approval entry, won alert) and two at
- * `>= LARGE_DEAL_AMOUNT` (both sharing rules). #599's ruling scoped this card to
- * the constant, and closing that boundary is a product decision — does a deal at
- * exactly $100,000.00 need manager approval? — not a refactor. So the
- * disagreement is not papered over here: it is asserted, with the population it
- * affects named, so that it is a recorded fact rather than a silent one. When
- * the product question is answered, the `BOUNDARY` block below is what changes.
+ * #599 converged the value and deliberately left the operators alone: approval
+ * entry and the won alert cut at `> LARGE_DEAL_AMOUNT`, both sharing rules at
+ * `>=`, so a deal at exactly $100,000.00 was shared with the sales director and
+ * the executive and was neither routed for approval nor announced when it was
+ * won — visible to leadership, invisible to governance.
+ *
+ * #1087 answered the product question that left open (**does a deal at exactly
+ * the threshold count as large? — yes**) and converged every site on `>=`. The
+ * `BOUNDARY` block below is what states that: one line, and above it — at it,
+ * inclusive — everything applies. It is the assertion that fails if a future
+ * author flips one site back, which is the same drift by another name.
  */
 
 type AnyRec = Record<string, any>;
@@ -57,7 +61,7 @@ const flowNamed = (name: string): AnyRec | undefined => flows.find((f) => f?.nam
  *
  * Both source sweeps below are about what the app EXECUTES. Prose is not only
  * allowed to quote the old literals, it should: the totality notes in both
- * flows explain why `record.amount > 100000` aborts on a null, and
+ * flows explain why `record.amount >= 100000` aborts on a null, and
  * `_thresholds.ts` records the whole four-way history. A sweep that could not
  * tell code from commentary would force those explanations to be deleted,
  * which trades a real drift guard for a worse-documented repo.
@@ -234,45 +238,99 @@ describe('one definition of the director tier', () => {
   });
 });
 
-// ── the boundary that is NOT converged, recorded rather than hidden ─────────
+// ── the boundary, converged and pinned ──────────────────────────────────────
 
-describe('BOUNDARY: the operators still disagree, and this is what it costs', () => {
+describe('BOUNDARY: every large-deal site cuts inclusively at the line (#1087)', () => {
   /**
-   * Converging the value leaves the operators where they were. This block is
-   * the honest statement of the residue: at EXACTLY `LARGE_DEAL_AMOUNT` a deal
-   * is visible to leadership and invisible to governance.
+   * The ruling on #1087: a deal at exactly `LARGE_DEAL_AMOUNT` **is** a large
+   * deal, so all five sites cut at `>=`. Before it, governance (approval entry,
+   * its insert twin, the won alert) cut at `>` while visibility (both sharing
+   * rules) cut at `>=`, and the $100,000.00 deal — plausibly the single
+   * commonest amount in a CRM, because a round threshold attracts deals priced
+   * at exactly that number — was shared with the sales director and the
+   * executive, not routed for approval, and not announced when it was won.
    *
-   * It is asserted, not merely commented, for two reasons. It makes the
-   * disagreement fail loudly if someone changes one operator and not the
-   * others — the same drift by another name — and it is the test that goes red
-   * when the product question is answered, which is exactly when someone should
-   * be reading this file.
+   * The operator is asserted per site rather than inferred from one of them: a
+   * single site flipped back is the same drift #599 closed on the value, and it
+   * is exactly as invisible. The truth table underneath then states what the
+   * operators MEAN, in the three rows that separate the two readings — the
+   * middle row is the whole card.
    */
   const opFor = (label: string): string => {
     const site = LARGE_DEAL_SITES.find((s) => s.label === label)!;
     return amountCuts(site.source() ?? '').find((c) => c.scope === site.scope)!.op;
   };
 
-  it('governance cuts strictly above the line; visibility cuts at it', () => {
-    expect(opFor('approval entry gate (afterUpdate)')).toBe('>');
-    expect(opFor('approval entry gate (afterInsert twin)')).toBe('>');
-    expect(opFor('won-deal alert')).toBe('>');
-    expect(opFor('sharing: sales director')).toBe('>=');
-    expect(opFor('sharing: executive')).toBe('>=');
-  });
+  it.each(LARGE_DEAL_SITES.map((s) => [s.label] as const))(
+    '%s cuts at `>=`, not `>`',
+    (label) => {
+      expect(
+        opFor(label),
+        `${label} cuts at "${opFor(label)}" — every large-deal site must cut at ">=" (#1087). ` +
+          'One site on ">" puts a deal at exactly the threshold on the wrong side of that ' +
+          'site alone, which is how "visible to leadership, invisible to governance" happened.',
+      ).toBe('>=');
+    },
+  );
 
-  it('names the population that falls in the gap', () => {
-    // A deal at exactly $100,000.00 — plausibly the single commonest amount in
-    // a CRM — is shared with the director and the executive, is NOT routed for
-    // approval, and is NOT announced when it is won. Recorded as a truth table
-    // so the gap is a row someone can read, not a sentence someone can skip.
-    const shared = (amount: number) => amount >= LARGE_DEAL_AMOUNT;
-    const governed = (amount: number) => amount > LARGE_DEAL_AMOUNT;
+  it('a deal AT the line is both shared and governed; below it, neither', () => {
+    // Derived from the SHIPPED operators, not restated: `shared` / `governed`
+    // are built out of what the metadata cuts at, so the table cannot stay
+    // green while a flow flips back — which is what makes it a truth table
+    // about this app rather than about JavaScript's `>=`.
+    const cutAt = (label: string) => {
+      const op = opFor(label);
+      return (amount: number) => (op === '>=' ? amount >= LARGE_DEAL_AMOUNT : amount > LARGE_DEAL_AMOUNT);
+    };
+    const shared = (amount: number) =>
+      cutAt('sharing: sales director')(amount) && cutAt('sharing: executive')(amount);
+    const governed = (amount: number) =>
+      cutAt('approval entry gate (afterUpdate)')(amount) &&
+      cutAt('approval entry gate (afterInsert twin)')(amount) &&
+      cutAt('won-deal alert')(amount);
     const at = LARGE_DEAL_AMOUNT;
 
-    expect({ shared: shared(at), governed: governed(at) }).toEqual({ shared: true, governed: false });
-    expect({ shared: shared(at + 1), governed: governed(at + 1) }).toEqual({ shared: true, governed: true });
-    expect({ shared: shared(at - 1), governed: governed(at - 1) }).toEqual({ shared: false, governed: false });
+    // The row the card exists for: $100,000 is large for BOTH, or the fix did
+    // not land. Accepted and intended consequence — a deal at exactly the
+    // threshold now requires manager approval and fires the won-deal alert.
+    expect({ amount: at, shared: shared(at), governed: governed(at) }).toEqual({
+      amount: at, shared: true, governed: true,
+    });
+    expect({ amount: at + 1, shared: shared(at + 1), governed: governed(at + 1) }).toEqual({
+      amount: at + 1, shared: true, governed: true,
+    });
+    expect({ amount: at - 1, shared: shared(at - 1), governed: governed(at - 1) }).toEqual({
+      amount: at - 1, shared: false, governed: false,
+    });
+  });
+
+  it('visibility and governance answer the same at every amount around the line', () => {
+    // The property behind the table, stated once so it survives the next
+    // threshold change: "large deal" is ONE predicate. Sweeping a window rather
+    // than the three rows above catches an operator pair that agrees at the
+    // boundary and disagrees elsewhere (e.g. a `>` paired with a value one
+    // lower), which the three-row table alone would pass.
+    const disagreements: string[] = [];
+    for (const amount of [
+      LARGE_DEAL_AMOUNT - 2, LARGE_DEAL_AMOUNT - 1, LARGE_DEAL_AMOUNT,
+      LARGE_DEAL_AMOUNT + 1, LARGE_DEAL_AMOUNT + 2,
+    ]) {
+      const verdicts = LARGE_DEAL_SITES.map((site) => {
+        const cut = amountCuts(site.source() ?? '').find((c) => c.scope === site.scope)!;
+        const large = cut.op === '>=' ? amount >= cut.value : amount > cut.value;
+        return { label: site.label, large };
+      });
+      if (new Set(verdicts.map((v) => v.large)).size > 1) {
+        disagreements.push(
+          `${amount}: ${verdicts.map((v) => `${v.label}=${v.large ? 'large' : 'not large'}`).join(', ')}`,
+        );
+      }
+    }
+    expect(
+      disagreements,
+      'these amounts are a large deal to some sites and not to others:\n  ' +
+        disagreements.join('\n  '),
+    ).toEqual([]);
   });
 });
 
