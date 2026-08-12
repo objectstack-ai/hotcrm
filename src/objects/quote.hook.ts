@@ -9,7 +9,9 @@ import type { HookApi } from './_hook-api';
  * - Defaults `expiration_date` to `quote_date + 30 days` when missing.
  * - Freezes quotes once `accepted` or `expired` — against USER edits only: a
  *   write that is purely the engine clearing a link is let through (#720).
- * - On `accepted`, drafts a contract and pushes the linked opportunity to `closed_won`.
+ * - On `accepted`, drafts a contract — carrying the quote's negotiated
+ *   `payment_terms` onto it (#873) — and pushes the linked opportunity to
+ *   `closed_won`.
  */
 
 // NB: helpers used by handlers are declared INSIDE each handler — L2 hook
@@ -178,6 +180,32 @@ const quoteAccepted: Hook = {
           ? (previous.total_price as number)
           : 0;
 
+    /**
+     * The payment terms the customer actually negotiated (#873).
+     *
+     * `_picklists.ts` justifies Quote and Contract sharing one `payment_terms`
+     * vocabulary with "an accepted quote's terms carry over to the contract",
+     * and `contract.object.ts` repeats it — but nothing carried them: the
+     * drafted contract took `crm_contract.payment_terms`'s own option default
+     * `net_30` on every accepted quote, including one negotiated at
+     * `due_on_receipt`. The value is not cosmetic downstream either — the
+     * contract's `payment_terms` is one of the fields
+     * `src/flows/billing-handoff.flow.ts` POSTs to billing when the contract
+     * activates, so a defaulted term becomes an invoicing term.
+     *
+     * Read like `totalPrice` above: the patch's value when the accepting write
+     * carried one, else the value already on the quote. A quote that never
+     * chose a term yields `undefined`, which drops the key (see `pickId`) and
+     * lets the contract's own default apply — exactly today's behaviour for
+     * that case, so this copy is strictly additive.
+     */
+    const paymentTerms =
+      typeof input.payment_terms === 'string' && input.payment_terms
+        ? input.payment_terms
+        : typeof previous?.payment_terms === 'string' && previous.payment_terms
+          ? (previous.payment_terms as string)
+          : undefined;
+
     const today = new Date().toISOString().slice(0, 10);
     const months = 12;
 
@@ -198,6 +226,10 @@ const quoteAccepted: Hook = {
     if (contactId) contract.crm_contact = contactId;
     if (opportunityId) contract.crm_opportunity = opportunityId;
     if (ownerId) contract.owner_id = ownerId;
+    // Same idiom for the same reason: written only when the quote HAS a term,
+    // so "the quote chose nothing" stays an absent key rather than becoming a
+    // value the contract's default would otherwise have supplied.
+    if (paymentTerms) contract.payment_terms = paymentTerms;
 
     // The two legs are INDEPENDENT, and this is the other half of #714: they
     // used to be one straight-line sequence, so anything that made the contract
