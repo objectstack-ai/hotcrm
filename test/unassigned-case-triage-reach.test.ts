@@ -13,6 +13,8 @@ import {
 import { SharingServicePlugin } from '@objectstack/plugin-sharing';
 import { SysUser, SysMember, SysOrganization } from '@objectstack/platform-objects/identity';
 import stack from '../objectstack.config';
+import caseHooks from '../src/objects/case.hook';
+import { CLAIMABLE_TARGET_STATUSES } from '../src/objects/_case-assignment';
 
 /**
  * Who really sees the `Unassigned — triage` tab's rows (#1096) — measured
@@ -75,6 +77,24 @@ import stack from '../objectstack.config';
  * far worse: the grant stopped being self-limiting and agents are reading other
  * people's customer cases. Every visibility case carries a positive control (a
  * row that MUST come back), so none of them can pass by returning nothing.
+ *
+ * ### The write half (#1096, second pass)
+ *
+ * #1134 shipped the sight and left the card open on *"and can take ownership"*.
+ * The final block per driver — `the write half — taking ownership` — is that
+ * half, driven the same way: real writes, real contexts, both row shapes.
+ *
+ * The seam is `case_self_claim` (`src/objects/_case-assignment.ts`), and the
+ * one thing to understand before reading those cases is WHY it is a gesture
+ * rather than an adjudicated value. Measured, the #3004 transfer gate refuses a
+ * payload carrying `owner_id` inside the middleware, UPSTREAM of the hook phase
+ * — a hook that would sanitise the key never fires. So "an agent may set
+ * `owner_id` to themselves" is unimplementable as written, and is implemented
+ * one level up instead: the agent moves an unowned open case into a worked
+ * status, and the hook stamps the only user id it has, the caller's own.
+ *
+ * That is why `writing owner_id BY HAND is still denied` is still here and
+ * still green. It is no longer the card's open half; it is the safety half.
  */
 
 type AnyRec = Record<string, any>;
@@ -94,12 +114,26 @@ interface Fixture {
   id: Record<string, string>;
   /** The `service_agent` execution context under test. */
   agentCtx: AnyRec;
+  /** The platform-admin context — the actor that can reach what the rule hides. */
+  adminCtx: AnyRec;
   /** What `agent` can see of `object`, as sorted fixture labels. */
   sees: (object: string) => Promise<string[]>;
   /** Attempt an agent-context update; returns a stable outcome label. */
   writes: (object: string, rowId: string, patch: AnyRec) => Promise<string>;
+  /** The same, under any context — the admin, or the system. */
+  writesAs: (context: AnyRec, object: string, rowId: string, patch: AnyRec) => Promise<string>;
   /** The stored row as the driver hands it back, under a system context. */
   raw: (object: string, rowId: string) => Promise<AnyRec>;
+  /**
+   * The stored `owner_id` as a PRIMITIVE, read fresh from the driver.
+   *
+   * ⚠️ Deliberately not "the row before" and "the row after". The in-memory
+   * driver can hand back the very object it stores, so a "before" ROW captured
+   * into a variable is the same reference the write then mutates — comparing it
+   * afterwards compares a row against itself and passes on unfixed code. A
+   * string (or null) copied out at read time cannot do that.
+   */
+  ownerOf: (rowId: string) => Promise<string | null>;
 }
 
 /**
@@ -149,7 +183,13 @@ async function boot(driver: string, config: AnyRec): Promise<Fixture> {
   // The FIRST human user is auto-promoted to platform admin at boot, and a
   // platform admin bypasses every filter this file measures. Burn that
   // promotion on a throwaway so the agent under test is an ordinary user.
-  await insert('sys_user', { name: 'Platform Admin', email: 'admin@triage-reach.test' });
+  //
+  // #1096 then gives that throwaway a second job: it is the actor that can
+  // REACH a case the sharing rule hides, which is the only way to ask
+  // `case_self_claim`'s own guards a question the record-level denial has not
+  // already answered. See `the closed guard is the SEAM's, not just the
+  // sharing rule's` below.
+  id.admin = await insert('sys_user', { name: 'Platform Admin', email: 'admin@triage-reach.test' });
   id.agent = await insert('sys_user', { name: 'Triage Agent', email: 'agent@triage-reach.test' });
   id.other = await insert('sys_user', { name: 'Other Agent', email: 'other@triage-reach.test' });
 
@@ -182,6 +222,28 @@ async function boot(driver: string, config: AnyRec): Promise<Fixture> {
     { id: id.unowned_closed, status: 'closed', resolution: 'Duplicate of an earlier report.' },
     { context: SYS },
   );
+
+  // ── the claim population (#1096's write half) ─────────────────────────
+  // One row per boundary, because every claim case CONSUMES its row: a
+  // successful claim gives the case an owner, and a second test reusing it
+  // would be measuring an owned case. They are inserted HERE, inside the
+  // empty-pool window, for the same reason as the three above — a row created
+  // after the pool is staffed is round-robined onto an agent by
+  // `case_auto_assign` and is not ownerless at all. That is also what gives
+  // them the driver's genuine ownerless SHAPE (key absent on memory, column
+  // NULL on SQL), which is the input `case_self_claim`'s guard 3 has to answer.
+  id.claim_pickup = await insert('crm_case', caseDoc('Claimable — picked up'));
+  id.claim_waiting = await insert('crm_case', caseDoc('Claimable — answered'));
+  // Seeded already `waiting_customer` (an import/migration shape): the status
+  // machine does not allow `new → waiting_support`, so the only realistic way
+  // to reach that gesture is from a case that is already mid-conversation.
+  id.claim_support = await insert('crm_case', caseDoc('Claimable — waiting on support', { status: 'waiting_customer' }));
+  id.claim_escalate = await insert('crm_case', caseDoc('Escalated, not claimed'));
+  // Likewise seeded `in_progress`: `new → resolved` is not a declared
+  // transition, and resolving is the gesture being excluded, not tested.
+  id.claim_resolve = await insert('crm_case', caseDoc('Resolved, not claimed', { status: 'in_progress' }));
+  id.claim_system = await insert('crm_case', caseDoc('Touched by automation, not claimed'));
+  id.claim_admin = await insert('crm_case', caseDoc('Picked up by an admin'));
 
   // ── the pool, staffed only now ────────────────────────────────────────
   // `sys_user_position.position` holds the position NAME (that is what
@@ -225,30 +287,40 @@ async function boot(driver: string, config: AnyRec): Promise<Fixture> {
   }
 
   const agentCtx = await buildContextForUser(ql, id.agent);
+  const adminCtx = await buildContextForUser(ql, id.admin);
   const byId = new Map(Object.entries(id).map(([label, value]) => [value, label]));
+
+  const rawRow = async (object: string, rowId: string): Promise<AnyRec> => {
+    const rows = await ql.find(object, { where: { id: rowId } }, { context: SYS });
+    return (Array.isArray(rows) ? rows : [])[0] ?? {};
+  };
+  const writesAs = async (context: AnyRec, object: string, rowId: string, patch: AnyRec): Promise<string> => {
+    try {
+      await ql.update(object, { id: rowId, ...patch }, { context });
+      return 'allowed';
+    } catch (error: unknown) {
+      return `denied: ${(error as AnyRec)?.name}`;
+    }
+  };
 
   return {
     kernel,
     ql,
     id,
     agentCtx,
+    adminCtx,
     sees: async (object: string) => {
       const rows = await ql.find(object, { where: {} }, { context: agentCtx });
       return (Array.isArray(rows) ? rows : [])
         .map((r: AnyRec) => byId.get(String(r.id)) ?? String(r.id))
         .sort();
     },
-    writes: async (object: string, rowId: string, patch: AnyRec) => {
-      try {
-        await ql.update(object, { id: rowId, ...patch }, { context: agentCtx });
-        return 'allowed';
-      } catch (error: unknown) {
-        return `denied: ${(error as AnyRec)?.name}`;
-      }
-    },
-    raw: async (object: string, rowId: string) => {
-      const rows = await ql.find(object, { where: { id: rowId } }, { context: SYS });
-      return (Array.isArray(rows) ? rows : [])[0] ?? {};
+    writes: (object: string, rowId: string, patch: AnyRec) => writesAs(agentCtx, object, rowId, patch),
+    writesAs,
+    raw: rawRow,
+    ownerOf: async (rowId: string) => {
+      const stored = (await rawRow('crm_case', rowId)).owner_id;
+      return typeof stored === 'string' && stored ? stored : null;
     },
   };
 }
@@ -336,7 +408,21 @@ for (const { label, driver } of DRIVERS) {
         got,
         'the triage rule seeded no share row, or seeded the wrong records — a declared rule ' +
           'that plugin-sharing could not compile is dropped silently (see test/sharing-seeding.test.ts)',
-      ).toEqual(['unowned_critical:edit', 'unowned_open:edit']);
+      ).toEqual([
+        // The seven `claim_*` rows are #1096's write-half fixtures, one per
+        // boundary. They are ordinary unowned open cases and the rule reaches
+        // them for exactly that reason — which is itself worth seeing here,
+        // because a claim is only interesting on a case the agent can reach.
+        'claim_admin:edit',
+        'claim_escalate:edit',
+        'claim_pickup:edit',
+        'claim_resolve:edit',
+        'claim_support:edit',
+        'claim_system:edit',
+        'claim_waiting:edit',
+        'unowned_critical:edit',
+        'unowned_open:edit',
+      ]);
     });
 
     it('an agent sees every unowned OPEN case — acceptance #1', async () => {
@@ -346,7 +432,18 @@ for (const { label, driver } of DRIVERS) {
       expect(
         await F().sees('crm_case'),
         'the Unassigned — triage tab is empty for the persona it is pinned for again',
-      ).toEqual(['own_case', 'unowned_critical', 'unowned_open']);
+      ).toEqual([
+        'claim_admin',
+        'claim_escalate',
+        'claim_pickup',
+        'claim_resolve',
+        'claim_support',
+        'claim_system',
+        'claim_waiting',
+        'own_case',
+        'unowned_critical',
+        'unowned_open',
+      ]);
     });
 
     it('an agent sees NO case owned by someone else — acceptance #2', async () => {
@@ -380,38 +477,56 @@ for (const { label, driver } of DRIVERS) {
       ).toBe('allowed');
     });
 
-    it('⚠️ taking ownership is DENIED by the transfer gate — acceptance #1’s write half is OPEN', async () => {
-      // MEASURED, and it is the finding this card turns on. The dispatch
-      // presumed the sharing rule alone would deliver "sees them and can take
-      // ownership". The read half it does deliver. The write half it cannot:
-      // `owner_id` is system-managed, and the platform's #3004 transfer gate
-      // refuses ANY ownership change on update without `allowTransfer` or
-      // `modifyAllRecords` — it does not exempt assigning to YOURSELF, and it
-      // does not exempt a record that currently has NO owner:
+    it('writing owner_id BY HAND is still denied — to self, to a third party, on any case', async () => {
+      // ═══ #1096, second pass: this pin used to be the card's open half ═════
       //
-      //   [Security] Access denied: 'owner_id' on 'crm_case' is system-managed
-      //   — changing record ownership on update requires the transfer grant
-      //   (allowTransfer or modifyAllRecords)
+      // It shipped in #1134 reading "⚠️ taking ownership is DENIED by the
+      // transfer gate — acceptance #1's write half is OPEN", and it carried
+      // this instruction:
       //
-      // `service_agent` holds `allowTransfer` on `crm_task` ONLY, deliberately
-      // (`src/profiles/service-agent.profile.ts`): granting it on `crm_case`
-      // would let an agent reassign any case they can edit, which is a
-      // permission-model widening the #1096 ruling did not take. So this is
-      // pinned as the measured status quo rather than "fixed" here.
+      //   🔴 WHEN THIS GOES RED, that is the queue-pull story being completed
+      //   — by a claim seam or by a transfer grant. Do not relax it: take it
+      //   back to #1096, which is where the seam gets decided.
       //
-      // 🔴 WHEN THIS GOES RED, that is the queue-pull story being completed —
-      // by a claim seam or by a transfer grant. Do not relax it: take it back
-      // to #1096, which is where the seam gets decided.
-      const { id, writes } = F();
+      // The seam landed (`case_self_claim`) and this pin did NOT go red, which
+      // is the whole shape of the answer rather than an oversight. MEASURED
+      // 2026-08-12 on the full stack (reading D2 in `_case-assignment.ts`): the
+      // #3004 gate rejects a payload carrying `owner_id` INSIDE the middleware,
+      // upstream of the hook phase — a `beforeUpdate` hook that deletes the key
+      // does not fire at all, and the write is still denied. No hook can
+      // approve a write it never sees.
+      //
+      // So the claim is not a VALUE an agent supplies and something adjudicates.
+      // It is a GESTURE the hook reads, and the hook's only possible output is
+      // the caller's own id. This test is now the safety half of that: the hand
+      // route stays shut in every direction, including the one a looser design
+      // would have opened — naming a THIRD PARTY on a case nobody owns.
+      //
+      // 🔴 If any of these goes green, an ownership grant has appeared on
+      // `service_agent` (or the gate moved). That is a permission-model change
+      // and belongs on its own card — do not absorb it here.
+      const { id, writes, ownerOf } = F();
       expect(
         await writes('crm_case', id.unowned_open, { owner_id: id.agent }),
-        'claiming an unowned case became possible — #1096’s open half has been answered ' +
-          'somewhere; update the card and this pin together',
+        'the hand-written ownership route opened up — an agent can now name an owner directly',
+      ).toBe('denied: PermissionDeniedError');
+      expect(
+        await writes('crm_case', id.unowned_open, { owner_id: id.other }),
+        'an agent assigned an unowned case to SOMEBODY ELSE — the claim seam is supposed to make ' +
+          'that unspellable, and the gate is supposed to refuse it',
       ).toBe('denied: PermissionDeniedError');
       expect(
         await writes('crm_case', id.other_case, { owner_id: id.agent }),
         'an agent grabbed a case owned by somebody else — the transfer gate is not holding',
       ).toBe('denied: PermissionDeniedError');
+      // Nor can the value ride along with the gesture that IS allowed.
+      expect(
+        await writes('crm_case', id.unowned_open, { status: 'in_progress', owner_id: id.agent }),
+        'owner_id smuggled alongside a claim gesture was accepted',
+      ).toBe('denied: PermissionDeniedError');
+      // A denied claim leaves nothing behind: the case is still unowned, so no
+      // half of the refused write landed.
+      expect(await ownerOf(id.unowned_open), 'a denied ownership write partially applied').toBeNull();
     });
 
     it('the grant is SELF-LIMITING — it evaporates the moment the case has an owner', async () => {
@@ -448,5 +563,211 @@ for (const { label, driver } of DRIVERS) {
       expect((otherShares as AnyRec[]).length).toBe(0);
       expect(await sees('crm_case')).toContain('unowned_critical'); // now theirs, by own-scope
     });
+
+    // ══════════ #1096, write half — claiming a case out of triage ══════════
+    //
+    // Everything above is about SIGHT. These are about TAKING, and they run
+    // last because every one of them consumes its fixture: a claimed case has
+    // an owner, and re-using it would be measuring a different question.
+    //
+    // ⚠️ How the "before" state is read matters here. `ownerOf()` copies a
+    // STRING (or null) out of a fresh read, never a row object: the in-memory
+    // driver can hand back the object it stores, so a row captured into a
+    // variable and re-inspected after the write is the same reference the write
+    // mutated — a comparison against itself, green on unfixed code (#1132).
+    describe('the write half — taking ownership', () => {
+      it('an agent CLAIMS an unowned open case by picking it up — acceptance #1', async () => {
+        const { id, writes, ownerOf, raw, sees } = F();
+
+        // The input shape this driver actually presents to the seam's guard 3.
+        // Asserted per driver, so a claim on the sparse (key-absent) shape and
+        // a claim on the column-complete (NULL) shape are two measurements and
+        // never one repeated — the same reason the whole matrix runs twice.
+        const stored = await raw('crm_case', id.claim_pickup);
+        expect(
+          'owner_id' in stored,
+          driver === 'memory'
+            ? 'the memory fixture materialised owner_id — the absent-key shape is no longer covered'
+            : 'the SQL fixture did not materialise owner_id — the NULL-column shape is no longer covered',
+        ).toBe(driver !== 'memory');
+        expect(await ownerOf(id.claim_pickup), 'the fixture was not ownerless to begin with').toBeNull();
+
+        expect(
+          await writes('crm_case', id.claim_pickup, { status: 'in_progress' }),
+          'an agent could not pick up a case from their own triage tab',
+        ).toBe('allowed');
+
+        expect(
+          await ownerOf(id.claim_pickup),
+          'the case was not claimed — #1096 acceptance #1 is back to half-delivered: the tab has ' +
+            'rows and nobody can take one',
+        ).toBe(id.agent);
+        expect((await raw('crm_case', id.claim_pickup)).status, 'the gesture itself did not land').toBe('in_progress');
+        // …and it is still theirs to work, now by ordinary own-scope rather
+        // than by the triage grant.
+        expect(await sees('crm_case')).toContain('claim_pickup');
+      });
+
+      it('the claim gesture is exactly CLAIMABLE_TARGET_STATUSES — every member, driven', async () => {
+        // The parity pin. The handler spells these three strings INLINE (the L2
+        // sandbox gives it no module scope), so the exported constant and the
+        // body can only be kept in step behaviourally: every member is driven
+        // through a real write here, and the two exclusions below are driven too.
+        const { id, writes, ownerOf } = F();
+        expect([...CLAIMABLE_TARGET_STATUSES].sort()).toEqual(['in_progress', 'waiting_customer', 'waiting_support']);
+
+        expect(await writes('crm_case', id.claim_waiting, { status: 'waiting_customer' })).toBe('allowed');
+        expect(
+          await ownerOf(id.claim_waiting),
+          'answering the customer on an unowned case did not claim it, so it stays in the triage ' +
+            'tab while an agent is already handling it',
+        ).toBe(id.agent);
+
+        expect(await writes('crm_case', id.claim_support, { status: 'waiting_support' })).toBe('allowed');
+        expect(await ownerOf(id.claim_support)).toBe(id.agent);
+      });
+
+      it('ESCALATING is not claiming — that transition belongs to the hand-off', async () => {
+        // `case_escalation_reassign` (#1070) owns `→ escalated` and routes the
+        // case to the `service_manager` pool. Two hooks answering "who owns
+        // this case" for one status change is the shape `_case-assignment.ts`
+        // exists to prevent, so `escalated` is deliberately not claimable. The
+        // manager pool is unstaffed in this fixture — the first-install norm —
+        // so the hand-off is a no-op and the case stays ownerless, which is
+        // exactly what makes this a clean reading of OUR hook standing down.
+        const { id, writes, ownerOf, raw } = F();
+        expect(await writes('crm_case', id.claim_escalate, { status: 'escalated' })).toBe('allowed');
+        expect((await raw('crm_case', id.claim_escalate)).status).toBe('escalated');
+        expect(
+          await ownerOf(id.claim_escalate),
+          'escalating an unowned case claimed it for the escalating agent — the escalation ' +
+            'hand-off and the claim seam are both writing owner_id on the same transition',
+        ).toBeNull();
+      });
+
+      it('RESOLVING is not claiming — finishing a case is not picking it up', async () => {
+        const { id, writes, ownerOf } = F();
+        expect(await writes('crm_case', id.claim_resolve, { status: 'resolved' })).toBe('allowed');
+        expect(
+          await ownerOf(id.claim_resolve),
+          'resolving an unowned case claimed it — the ownership column should stay honest about ' +
+            'the fact that nobody ever took the work',
+        ).toBeNull();
+      });
+
+      it('an unowned CLOSED case cannot be claimed — the record-level half', async () => {
+        // Layer one: the sharing rule's `is_closed == false` never grants the
+        // agent the row, so the write is refused before any hook runs. This is
+        // a record-level FORBIDDEN, not the transfer gate's PermissionDenied —
+        // a different refusal from the one pinned above, which is why it is
+        // matched loosely and asserted on the stored row as well.
+        const { id, writes, ownerOf } = F();
+        expect(
+          await writes('crm_case', id.unowned_closed, { status: 'in_progress' }),
+          'a closed unowned case became writable by an agent — the triage grant is leaking ' +
+            'past its own predicate',
+        ).toMatch(/^denied/);
+        expect(await ownerOf(id.unowned_closed)).toBeNull();
+      });
+
+      it('the closed guard is the SEAM’s too, not only the sharing rule’s', async () => {
+        // Layer two, and the reason it needs its own case: the denial above
+        // proves the agent cannot REACH the row, which would look identical if
+        // `case_self_claim` had no closed guard at all. So the same question is
+        // asked by an actor that CAN reach it, with a control that differs in
+        // one property only — whether the case is closed.
+        const { id, adminCtx, writesAs, ownerOf } = F();
+        expect(adminCtx.hasPlatformAdminGrant, 'the admin cannot reach the row either — this case proves nothing').toBe(true);
+
+        expect(await writesAs(adminCtx, 'crm_case', id.unowned_closed, { status: 'in_progress' })).toBe('allowed');
+        expect(
+          await ownerOf(id.unowned_closed),
+          'the seam claimed a CLOSED case for whoever touched it — history is not backlog, and ' +
+            'the guard that says so has gone',
+        ).toBeNull();
+
+        // The control: same actor, same payload, an OPEN case. It claims — so
+        // the refusal above is about closedness and not about the caller.
+        expect(await writesAs(adminCtx, 'crm_case', id.claim_admin, { status: 'in_progress' })).toBe('allowed');
+        expect(
+          await ownerOf(id.claim_admin),
+          'the control did not claim either, so the closed case proves nothing about the guard',
+        ).toBe(id.admin);
+      });
+
+      it('a write with no user never claims — automation leaves the backlog alone', async () => {
+        // #596's no-op is load-bearing: an ownerless case must STAY ownerless
+        // and stay in the tab when nothing human has picked it up. A seam that
+        // claimed on any write would hand the whole backlog to whichever
+        // scheduled sweep touched it first.
+        const { id, ql, ownerOf } = F();
+        await ql.update('crm_case', { id: id.claim_system, status: 'in_progress' }, { context: SYS });
+        expect(
+          await ownerOf(id.claim_system),
+          'a system write claimed the case — automation is now taking ownership of the triage backlog',
+        ).toBeNull();
+      });
+
+      it('claiming is idempotent, and it makes the triage grant evaporate', async () => {
+        // Two properties on the case claimed in the first test above.
+        //
+        // (1) Idempotence: the seam cannot move a case a second time, because
+        //     its own success gives the row an owner and guard 3 then stops it.
+        //     That is what keeps it off the re-entrancy surface this file's
+        //     neighbourhood has been bitten on twice.
+        // (2) The claim closes the loop with the read half: the grant that let
+        //     the agent see the case destroys itself the moment they take it.
+        const { id, ql, kernel, writes, ownerOf } = F();
+        expect(await ownerOf(id.claim_pickup), 'the earlier claim did not stick').toBe(id.agent);
+
+        expect(await writes('crm_case', id.claim_pickup, { status: 'waiting_customer' })).toBe('allowed');
+        expect(
+          await ownerOf(id.claim_pickup),
+          'a second worked-status move re-ran the claim — on a case with an owner, the seam must be inert',
+        ).toBe(id.agent);
+
+        await kernel.getService('sharingRules').evaluateRule(RULE, SYS);
+        const shares = await ql.find(
+          'sys_record_share',
+          { where: { object_name: 'crm_case', record_id: id.claim_pickup } },
+          { context: SYS },
+        );
+        expect(
+          (shares as AnyRec[]).length,
+          'the triage share outlived the claim — a claimed case stays reachable by every other ' +
+            'agent through the rule',
+        ).toBe(0);
+      });
+    });
   });
 }
+
+/**
+ * The seam's registered shape (#1096).
+ *
+ * Metadata rather than behaviour, and here rather than in a shape-only suite
+ * because both halves of the priority argument are measured in this file: 260
+ * puts `case_self_claim` AFTER `case_escalation_reassign` (250), and the
+ * escalation case above is what proves the two do not both write.
+ */
+describe('case_self_claim is registered on the seam it was measured on', () => {
+  const claim = (caseHooks as AnyRec[]).find((h) => h.name === 'case_self_claim');
+
+  it('exists, on beforeUpdate, after the escalation hand-off', () => {
+    expect(claim, 'the claim hook is not registered on crm_case at all').toBeTruthy();
+    expect(claim!.object).toBe('crm_case');
+    expect(
+      claim!.events,
+      'the claim seam moved off beforeUpdate — every other phase is VISIBLE to the #3004 transfer ' +
+        'gate (readings C and D in _case-assignment.ts), so the claim would start needing ' +
+        'crm_case.allowTransfer on service_agent',
+    ).toEqual(['beforeUpdate']);
+
+    const escalation = (caseHooks as AnyRec[]).find((h) => h.name === 'case_escalation_reassign');
+    expect(
+      claim!.priority,
+      'the claim hook must run after the escalation hand-off, so an escalation that has already ' +
+        'chosen an owner is never second-guessed',
+    ).toBeGreaterThan(escalation!.priority as number);
+  });
+});

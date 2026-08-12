@@ -2,7 +2,11 @@
 
 import type { Hook, HookContext } from '@objectstack/spec/data';
 import type { HookApi } from './_hook-api';
-import { createCaseRoundRobinAssign, createCaseEscalationReassign } from './_case-assignment';
+import {
+  createCaseRoundRobinAssign,
+  createCaseEscalationReassign,
+  createCaseSelfClaim,
+} from './_case-assignment';
 
 /**
  * Case SLA & escalation hook.
@@ -18,9 +22,10 @@ import { createCaseRoundRobinAssign, createCaseEscalationReassign } from './_cas
  * - On `resolved`: stamps `closed_date` (proxy for the resolution time — there is
  *   no resolved_date field) and bumps account `last_activity_date`.
  *
- * Ownership assignment is NOT here: both answers to "who should own this case"
- * live in `_case-assignment.ts` — the ownerless-intake round-robin (#596) and
- * the escalation hand-off to the `service_manager` pool (#1070). One module, so
+ * Ownership assignment is NOT here: all three answers to "who should own this
+ * case" live in `_case-assignment.ts` — the ownerless-intake round-robin
+ * (#596), the escalation hand-off to the `service_manager` pool (#1070), and
+ * the triage self-claim (#1096). One module, so
  * the app never grows two independently-authored ownership paths on `crm_case`;
  * its hooks are composed into this module's default export below, so the
  * registry still sees one `crm_case` hook set. In particular the escalation
@@ -278,6 +283,19 @@ const caseAutoAssign: Hook = createCaseRoundRobinAssign();
 const caseEscalationReassign: Hook = createCaseEscalationReassign();
 
 /**
+ * Triage self-claim (#1096), composed from `_case-assignment.ts`.
+ *
+ * The write half of the queue-pull story #1134 opened the read half of: an
+ * agent who moves an unowned open case into a worked status becomes its owner.
+ * Priority 260 puts it AFTER the escalation hand-off (250), and it stands down
+ * whenever `owner_id` is already in the payload — so the two ownership writers
+ * on this seam cannot both speak. Like the hand-off it issues no operation of
+ * its own; unlike either sibling it reads no pool, because the only user id it
+ * can write is the caller's own.
+ */
+const caseSelfClaim: Hook = createCaseSelfClaim();
+
+/**
  * Normalise a BLANK `resolved_by_article` to NULL (#601).
  *
  * Additive and deliberately independent of everything above: it touches no
@@ -341,6 +359,7 @@ export default [
   caseValidation,
   caseAutoAssign,
   caseEscalationReassign,
+  caseSelfClaim,
   caseResolutionArticleNormalize,
   caseSideEffects,
 ];

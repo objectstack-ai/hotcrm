@@ -67,6 +67,14 @@ const RUNTIME_TEST_FILES = [
   // measures through the real analytics executor on both drivers.
   'knowledge-feedback.test.ts',
   'knowledge-deflection.test.ts',
+  // #1096 — the triage claim seam. Same precedent as the lines above, and a
+  // stronger case for it than most: `case_self_claim` cannot be exercised by a
+  // hook harness at all, because the behaviour under test is what the PLATFORM
+  // does either side of the hook (the transfer gate refusing a hand-written
+  // `owner_id` upstream of the hook phase, and accepting the hook's own stamp).
+  // Only a boot of the real stack can ask that, so the hook's runtime evidence
+  // lives beside the sharing rule it completes.
+  'unassigned-case-triage-reach.test.ts',
 ];
 
 /**
