@@ -1,6 +1,6 @@
-import { P } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { P } from '@objectstack/spec';
 import { TERRITORY } from '../objects/_territory';
 
 /** Share accounts with sales managers/directors based on customer status */

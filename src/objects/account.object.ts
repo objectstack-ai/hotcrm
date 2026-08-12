@@ -1,7 +1,7 @@
-import { F } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
+import { F } from '@objectstack/spec';
 import { INDUSTRY_OPTIONS } from './_picklists';
 import { TERRITORY_OPTIONS } from './_territory';
 
