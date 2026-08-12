@@ -222,6 +222,69 @@ describe('what a shared account carries into its related lists', () => {
   });
 });
 
+/**
+ * `crm_case`'s three grants, named — including the triage widening (#1096).
+ *
+ * The ledger above answers `crm_case: 'partial'`, and 'partial' says only "some
+ * rule widens some records". That was true before #1096 and is true after it,
+ * so the ledger alone cannot notice a grant arriving or leaving — and the one
+ * that arrived is the app's only grant over records with **no owner at all**.
+ *
+ * So the roster is pinned by name. `service_agent` is the entry that matters:
+ * unlike the manager and director rungs, an agent's reach here is not "the same
+ * cases, one rung up" — it is a set of rows that had no reader whatsoever, and
+ * it is the one grant whose criteria matches on the ABSENCE of a value.
+ *
+ * Declared shape only. What it delivers on a running engine — on both the
+ * sparse (absent-key) and column-complete (NULL) row shapes — is measured in
+ * `test/unassigned-case-triage-reach.test.ts`.
+ */
+describe('who can read a case they do not own', () => {
+  const caseRules = () => rulesOn('crm_case');
+
+  it('exactly three rules widen crm_case, and each names its position', () => {
+    const roster = caseRules()
+      .map((r) => `${r.name}→${r.sharedWith?.value}:${r.accessLevel ?? 'read'}`)
+      .sort();
+    expect(
+      roster,
+      'the crm_case sharing roster changed. Adding a rule widens who reads customer case ' +
+        'history; removing one takes a persona back to own-only — both are decisions, and ' +
+        'both belong in a PR that also updates the admin docs and this list.',
+    ).toEqual([
+      'case_director_sharing→service_director:read',
+      'case_escalation_sharing→service_manager:edit',
+      'case_unassigned_triage_sharing→service_agent:edit',
+    ]);
+  });
+
+  it('the triage rule is the ONLY one that matches on the absence of an owner', () => {
+    // A second rule keying off `owner_id == null` would be a second, unreviewed
+    // answer to "who sees unowned work" — the shape that later has to be
+    // converged by deleting one of them. Across the WHOLE stack, not just
+    // crm_case: nothing else in this app shares records by ownerlessness.
+    const ownerless = sharingRules
+      .filter((r) => /record\.owner_id\s*==\s*null/.test(r.condition?.source ?? ''))
+      .map((r) => r.name as string);
+    expect(ownerless, 'more than one rule now grants sight of unowned records').toEqual([
+      'case_unassigned_triage_sharing',
+    ]);
+  });
+
+  it('no rule hands an agent a case that HAS an owner — acceptance #2, at the metadata layer', () => {
+    // The runtime proof is in the reach test; this is the authoring-time
+    // counterpart, and it is the cheaper of the two to keep honest. Any
+    // `service_agent`-targeted rule on crm_case must carry the ownerless
+    // condition — a second one that did not would grant owned rows, which is
+    // exactly what #1096 rejected option C for.
+    const bad = caseRules()
+      .filter((r) => r.sharedWith?.type === 'position' && r.sharedWith?.value === 'service_agent')
+      .filter((r) => !/record\.owner_id\s*==\s*null/.test(r.condition?.source ?? ''))
+      .map((r) => `${r.name}: grants agents cases without requiring the case to be unowned`);
+    expect(bad, `agent-targeted case rules that reach owned records:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+});
+
 describe('the admin docs describe the sharing the app actually ships', () => {
   const doc = DOC(SHARING_DOC);
 
