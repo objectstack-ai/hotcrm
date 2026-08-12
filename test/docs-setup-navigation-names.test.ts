@@ -66,25 +66,20 @@ import { REPO_ROOT } from './helpers/repo-root';
  *
  * `**Setup → Users → [user] → Deactivate**` is one sidebar entry followed by
  * two in-page controls. Measured against `content/docs/**`: checking the first
- * segment leaves 13 distinct unresolved names, checking every segment leaves
- * 21 — the extra 8 are `Deactivate`, `[user]`, `回滾`, `新增`, `部署歷史`,
- * `連接 Gmail / 連接 Outlook` and friends, which are buttons, not navigation.
- * The first segment is the claim a reader acts on ("click this in the
- * sidebar"), so it is the claim that is pinned. (Both numbers were 39 / 74
- * when #853 first measured them, and 20 / 32 after #1113's first pass;
- * #1113 closed the gap, not the rule.)
+ * segment leaves 0 distinct unresolved names, checking every segment leaves
+ * 2 — and both of those, `Deactivate` and `[user]`, come from the citation
+ * above: in-page controls, not navigation. The first segment is the claim a
+ * reader acts on ("click this in the sidebar"), so it is the claim that is
+ * pinned. (Both numbers were 39 / 74 when #853 first measured them, then
+ * 20 / 32 and 13 / 21 after #1113's first two passes; #1113 closed the gap,
+ * not the rule. That the all-segment residue is now only those two buttons is
+ * the evidence the split was drawn in the right place.)
  *
  * ## Why there is a quarantine ledger, and what it is not
  *
- * The path rule cannot be applied to this repo cleanly today: 13 distinct
- * first-segment names in `content/docs/**` do not resolve, across pages this
- * card does not own. Every one of the 13 is now a zh-Hant navigation string,
- * which cannot resolve because the platform ships no Traditional-Chinese pack
- * at all — a locale-policy question before it is an edit. Fixing those is a
- * separate editorial pass; filed as #1113, listed in {@link
- * KNOWN_UNRESOLVED}, one line each.
- *
- * It started at 39, and #1113 has taken two passes at it.
+ * The ledger is **empty**, and that is the finished state, not a missing
+ * feature. It held 39 names when #853 first measured the repo, and #1113
+ * emptied it in three passes:
  *
  *  - **39 → 20**, the *invented* screens: Salesforce-flavoured names
  *    (*Profiles* → **Permission Sets**, *Sharing Settings* → **Sharing
@@ -102,8 +97,25 @@ import { REPO_ROOT } from './helpers/repo-root';
  *    reworded to drop the path form instead. The other six really were the
  *    wrong app, denials included — 「no *Workflow Rules* entry under **Studio →
  *    Automation** — only *Flows*」 is both true and the more useful sentence.
+ *  - **13 → 0**, the zh-Hant strings, all of them structural: the platform
+ *    ships `en` / `zh-CN` / `ja-JP` / `es-ES` and **no Traditional-Chinese
+ *    pack**, so a zh-Hant reader sees the English UI and every one of the 13
+ *    described a surface that existed in no configuration. Ruled on the card:
+ *    zh-Hant pages spell platform navigation in **English**, the convention
+ *    `getting-started/quick-tour.zh-Hant.mdx` already followed and the same
+ *    fact `docs-search-navigation-views.test.ts` recorded for 待我審核 (#973).
+ *    Each was ALSO an instance of one of the two sub-classes above wearing a
+ *    Hant costume, so each was re-judged before being rendered: *變更包* and
+ *    *潛在客戶設定* were invented screens and became denials, *自動化* /
+ *    *物件* / *電子郵件範本* were Studio's, and the two on
+ *    `guides/email-and-calendar.zh-Hant.mdx` were surface-denials that
+ *    resisted renaming for the same reason their zh-Hans twin did.
  *
- * One sub-class is left, and it lands next.
+ * ⛔ **Do not delete {@link KNOWN_UNRESOLVED} because it is empty.** An empty
+ * ledger that is still checked in both directions is the strongest state this
+ * guard can be in: it says every name in `content/docs/**` resolves live
+ * today, and it is the thing that catches the next one. Deleting the mechanism
+ * would trade a measured zero for an unmeasured one.
  *
  * The ledger is keyed by NAME, not by name-and-file, and that is deliberate:
  * these names are already-filed drift, so a second page repeating one of them
@@ -239,12 +251,14 @@ const NOT_BANNED = new Set(['流程运行记录']);
 
 /**
  * First-segment navigation names cited in `content/docs/**` that resolve to
- * nothing, and that #853 does not own. Tracked as #1113; see the "quarantine
- * ledger" section of this file's header.
+ * nothing. **Empty since #1113's third pass** — see the "quarantine ledger"
+ * section of this file's header for the 39 → 20 → 13 → 0 history, and for why
+ * the empty set stays.
  *
  * ADDING ONE IS A ONE-LINE CHANGE — but do not reach for it to silence a name
  * you just wrote. A new page citing a page name that does not exist is the
- * defect this file exists to catch.
+ * defect this file exists to catch, and there is no longer any backlog for a
+ * new entry to hide in.
  *
  * Entries are `app:name`, because the app half carries real information here.
  * #1113's second pass is what proves it: *Automation*, *Email Templates* and
@@ -253,24 +267,12 @@ const NOT_BANNED = new Set(['流程运行记录']);
  * would have called those seven entries resolved and never asked which app.
  */
 const KNOWN_UNRESOLVED = new Set<string>([
-  // zh-Hant navigation strings. Every one of these fails for a STRUCTURAL
-  // reason rather than a naming one: the platform ships en / zh-CN / ja-JP /
-  // es-ES and no Traditional-Chinese pack, so no surface displays a Hant
-  // navigation label at all — several of these are faithful Hant translations
-  // of a label that really exists, which is precisely why none of them resolve.
-  'setup:使用者',
-  'setup:公司資訊',
-  'setup:共用設定',
-  'setup:整合',
-  'setup:權限設定檔',
-  'setup:潛在客戶設定',
-  'setup:物件',
-  'setup:自動化',
-  'setup:變更包',
-  'setup:郵件範本',
-  'setup:郵件與行事曆',
-  'setup:電子郵件',
-  'setup:電子郵件範本',
+  // EMPTY, and deliberately kept. #1113 cleared the last 13 (all zh-Hant) in
+  // its third pass, so every bold navigation citation in content/docs now
+  // resolves live against what the platform ships. Keep the set — the two
+  // staleness checks below run against it in both directions, so an empty
+  // ledger is an ASSERTED zero rather than an absent one, and the next wrong
+  // name has something to fail against instead of a deleted mechanism.
 ]);
 
 /** Ledger key for one citation. */
