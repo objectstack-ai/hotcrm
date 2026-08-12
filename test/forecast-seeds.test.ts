@@ -198,6 +198,12 @@ describe('the seeds stay out of the window forecast_snapshot owns (#702)', () =>
     expect(sweptPeriod, 'the sweep writes no fixed period any more').toMatch(/^(month|quarter)$/);
     expect(String(sweepLookup.owner_id), 'the sweep lookup is no longer owner-scoped')
       .toMatch(/\{currentOwner\.\w+\}/);
+    // ⚠️ These two are SPELLING guards, and only that. They pin the window
+    // against a widening edit; they say nothing about whether `{TODAY()}` still
+    // MEANS anything, because they never execute the filter — which is how the
+    // rc.5 → rc.6 change in the token's treatment passed under them unnoticed
+    // (#1107). The execution guard lives in `test/flow-filter-today-token.test.ts`
+    // and must stay green beside these.
     expect(sweepLookup.period_start).toEqual({ $lte: '{TODAY()}' });
     expect(sweepLookup.period_end).toEqual({ $gte: '{TODAY()}' });
   });
