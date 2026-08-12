@@ -9,18 +9,24 @@ type Flow = Automation.Flow;
  * Large-deal-won alert — record-change flow on opportunity update.
  *
  * Migrated from the removed `notify_on_large_deal_won` object workflow (7.7
- * dropped `workflows[]`). When a deal > $100K is marked closed_won, notify the
- * owner — the owner alone, not their manager (see the notify node for why the
- * manager cannot be reached).
+ * dropped `workflows[]`). When a deal of $100K or more is marked closed_won,
+ * notify the owner — the owner alone, not their manager (see the notify node
+ * for why the manager cannot be reached).
  *
- * NB: `record.amount > 100000` is authored as bare CEL against the (string-
+ * The cut is INCLUSIVE (`>=`, #1087): `LARGE_DEAL_AMOUNT` means one thing across
+ * this alert, the approval entry gate and both sharing rules, so a deal at
+ * exactly $100,000 is announced on win for the same reason it is shared with
+ * leadership. Before #1087 this site cut at `>` and the sharing rules at `>=`,
+ * which made that deal visible to leadership and invisible to governance.
+ *
+ * NB: `record.amount >= 100000` is authored as bare CEL against the (string-
  * serialized) currency field — this relies on the 7.7 numeric-hydration fix
  * (framework #1534); pre-7.7 it would have needed `double(record.amount)`.
  */
 export const OpportunityWonAlertFlow: Flow = {
   name: 'opportunity_won_alert',
   label: 'Large Deal Won Alert',
-  description: 'On closed_won opportunities over $100K: notify the owner — the owner alone, not their manager.',
+  description: 'On closed_won opportunities of $100K or more: notify the owner — the owner alone, not their manager.',
   type: 'record_change',
   status: 'active',
   // A record-change flow fired by a SYSTEM write carries no trigger user
@@ -49,8 +55,8 @@ export const OpportunityWonAlertFlow: Flow = {
         // condition scope (cf. the engine's record-change context).
         // TOTALITY (#633): `has(...)` on every read, plus `!= null` on the
         // ordering comparison (`has()` passes an explicit null and
-        // `record.amount > 100000` then aborts with
-        // `no such overload: dyn<null> > int`).
+        // `record.amount >= 100000` then aborts with
+        // `no such overload: dyn<null> >= int`).
         //
         // `previous.stage` is guarded FAIL-CLOSED — `has(previous.stage) &&`,
         // not `!has(previous.stage) ||` — which is the opposite of how
@@ -66,7 +72,7 @@ export const OpportunityWonAlertFlow: Flow = {
         // exactly what nobody wants.
         condition: P`has(record.stage) && record.stage == "closed_won"
           && has(previous.stage) && previous.stage != "closed_won"
-          && has(record.amount) && record.amount != null && record.amount > ${LARGE_DEAL_AMOUNT}`,
+          && has(record.amount) && record.amount != null && record.amount >= ${LARGE_DEAL_AMOUNT}`,
       },
     },
     {

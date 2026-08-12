@@ -65,7 +65,7 @@ const cap = (file: string, re: RegExp): string => {
  *
  * The approval and won-alert amounts stopped being source literals in #599 —
  * they are interpolated from `src/objects/_thresholds.ts`, so the file now
- * reads `record.amount > ${LARGE_DEAL_AMOUNT}` and a regex over the text finds
+ * reads `record.amount >= ${LARGE_DEAL_AMOUNT}` and a regex over the text finds
  * no digits to capture. Reading the compiled condition is not a workaround for
  * that, it is strictly better: `P` interpolates at build time, so this sees the
  * number the deployed flow actually cuts at, whatever spelling produced it —
@@ -117,7 +117,14 @@ const RULES: Rule[] = [
     // broke the moment #633 inserted the `has(...)` / `!= null` totality
     // guards between the two — a drift detector should key on the value's own
     // scope, not on whatever happens to sit next to it.
-    extract: () => capCel('opportunity_approval', /record\.amount > (\d+)/),
+    //
+    // The OPERATOR is spelled out (`>=` since #1087) rather than made optional.
+    // A `>=?` would keep matching through an operator flip and quietly publish
+    // the same number under a changed meaning; as written, flipping the gate
+    // fails here as "pattern not found in the conditions of …", which is the
+    // right kind of loud — the published table in `crm_sales.md` / `crm_admin.md`
+    // states the operator as well as the value, and both have to move together.
+    extract: () => capCel('opportunity_approval', /record\.amount >= (\d+)/),
     display: money,
     docs: ['crm_sales.md', 'crm_admin.md'],
   },
@@ -129,7 +136,8 @@ const RULES: Rule[] = [
   },
   {
     label: 'won-deal alert threshold',
-    extract: () => capCel('opportunity_won_alert', /record\.amount > (\d+)/),
+    // `>=` since #1087, for the reason spelled out on the manager rule above.
+    extract: () => capCel('opportunity_won_alert', /record\.amount >= (\d+)/),
     display: money,
     docs: ['crm_sales.md', 'crm_admin.md'],
   },

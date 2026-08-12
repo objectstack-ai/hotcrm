@@ -45,7 +45,7 @@ describe('opportunity_won_alert — start condition', () => {
     id: 'o1', name: 'Big Deal', stage: 'closed_won', amount: 250_000, owner_id: 'rep1', ...over,
   });
 
-  it('fires on the TRANSITION into closed_won above $100K', () => {
+  it('fires on the TRANSITION into closed_won at or above $100K', () => {
     expect(startConditionHolds(OpportunityWonAlertFlow, {
       record: opp(), previous: { stage: 'negotiation' },
     })).toBe(true);
@@ -59,8 +59,19 @@ describe('opportunity_won_alert — start condition', () => {
     })).toBe(false);
   });
 
-  it('ignores deals at or below the $100K threshold', () => {
-    for (const amount of [100_000, 50_000]) {
+  it('fires at EXACTLY the $100K threshold (#1087)', () => {
+    // The boundary case this flow used to miss. It cut at `>` while both
+    // sharing rules cut at `>=`, so a deal at exactly $100,000 was shared with
+    // leadership as a large deal and then closed without the large-deal alert.
+    // Asserted against the engine, not against the condition string, because
+    // the string is what the parity test reads — this is the behaviour.
+    expect(startConditionHolds(OpportunityWonAlertFlow, {
+      record: opp({ amount: 100_000 }), previous: { stage: 'negotiation' },
+    }), 'a deal at exactly $100,000 must alert on win').toBe(true);
+  });
+
+  it('ignores deals below the $100K threshold', () => {
+    for (const amount of [99_999, 50_000]) {
       expect(startConditionHolds(OpportunityWonAlertFlow, {
         record: opp({ amount }), previous: { stage: 'negotiation' },
       }), `amount ${amount} should not alert`).toBe(false);
@@ -283,6 +294,31 @@ describe('opportunity_approval — start condition', () => {
       previous: { id: 'o1', amount: 750_000, approval_status: 'pending', stage: 'negotiation' },
     };
     expect(startConditionHolds(OpportunityApprovalFlow, pending)).toBe(false);
+  });
+
+  describe('the large-deal line is inclusive (#1087)', () => {
+    // The governance half of the card's truth table, measured through the
+    // engine. The parity test reads the operator out of the shipped condition
+    // string; this asserts what that operator DOES, on both the update gate and
+    // its insert twin — a deal born at exactly $100,000 has to enter approval
+    // for the same reason one edited up to it does.
+    const openDeal = (amount: number): Record<string, unknown> => ({
+      record: { id: 'o1', amount, approval_status: 'not_required', stage: 'negotiation' },
+      previous: { id: 'o1', amount, approval_status: 'not_required', stage: 'negotiation' },
+    });
+
+    const GATES = [
+      ['afterUpdate gate', OpportunityApprovalFlow],
+      ['afterInsert twin', OpportunityApprovalOnCreateFlow],
+    ] as const;
+
+    it.each(GATES)('%s routes a deal at EXACTLY $100,000 for approval', (_label, flow) => {
+      expect(startConditionHolds(flow as unknown as Rec, openDeal(100_000))).toBe(true);
+    });
+
+    it.each(GATES)('%s leaves $99,999 alone', (_label, flow) => {
+      expect(startConditionHolds(flow as unknown as Rec, openDeal(99_999))).toBe(false);
+    });
   });
 });
 

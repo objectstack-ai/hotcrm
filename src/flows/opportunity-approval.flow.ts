@@ -24,8 +24,17 @@ type Flow = Automation.Flow;
  * instead of the no-op `script` + `actionType:'email'` shape.
  *
  * Tiered policy (single source of truth — no double-firing):
- *   - amount > $100K          → Sales Manager review
+ *   - amount >= $100K         → Sales Manager review
  *   - amount > $500K          → additionally Sales Director sign-off
+ *
+ * The entry gate is INCLUSIVE at the line (`>=`, #1087) and the director tier is
+ * exclusive (`>`): those are not the same kind of number. `LARGE_DEAL_AMOUNT` is
+ * the one line this app draws around "large deal", and every consumer of it —
+ * this gate, its insert twin, the won-deal alert and both sharing rules — now
+ * cuts the same way, so a deal at exactly $100,000 is large everywhere or
+ * nowhere. `HIGH_VALUE_DEAL_AMOUNT` below is a matched PAIR (`> 500000` /
+ * `<= 500000`) whose two halves must partition, which is a different property
+ * and is left alone.
  * On full approval the deal is stamped `approval_status = approved` (+ date);
  * any rejection stamps `approval_status = rejected`. The record is locked while
  * a step is pending and `approval_status` mirrors the live request status.
@@ -33,7 +42,7 @@ type Flow = Automation.Flow;
 export const OpportunityApprovalFlow: Flow = {
   name: 'opportunity_approval',
   label: 'Large Deal Approval',
-  description: 'Tiered approval for opportunities: manager review > $100K, director sign-off > $500K.',
+  description: 'Tiered approval for opportunities: manager review at $100K or more, director sign-off > $500K.',
   type: 'record_change',
   status: 'active',
   // Same user-less exposure as every record-change flow (ADR-0049, #1888,
@@ -79,14 +88,14 @@ export const OpportunityApprovalFlow: Flow = {
         // could never resolve (lockRecord held the closed record hostage).
         // TOTALITY (#633): `has(...)` on every read, plus `!= null` on the
         // ordering comparison — `has()` passes an explicit null and
-        // `record.amount > 100000` then aborts with
-        // `no such overload: dyn<null> > int`. Measured total as authored
+        // `record.amount >= 100000` then aborts with
+        // `no such overload: dyn<null> >= int`. Measured total as authored
         // today (amount/stage are required, approval_status is defaulted), but
         // that is `crm_opportunity`'s schema doing the work, not the
         // predicate. An absent `approval_status` reads the same as the null
         // this condition already tolerates; an absent `stage` is not a settled
         // stage, so it must not block approval.
-        condition: P`has(record.amount) && record.amount != null && record.amount > ${LARGE_DEAL_AMOUNT}
+        condition: P`has(record.amount) && record.amount != null && record.amount >= ${LARGE_DEAL_AMOUNT}
           && (!has(record.approval_status) || record.approval_status == "not_required" || record.approval_status == null)
           && (!has(record.stage) || (record.stage != "closed_won" && record.stage != "closed_lost"))`,
       },
@@ -98,7 +107,7 @@ export const OpportunityApprovalFlow: Flow = {
       config: { objectName: 'crm_opportunity', filter: { id: '{record.id}' }, outputVariable: 'oppRecord' },
     },
 
-    // ── Tier 1: Sales Manager review (all deals > $100K) ────────────
+    // ── Tier 1: Sales Manager review (all deals at $100K or more) ───
     {
       id: 'manager_review',
       type: 'approval',
