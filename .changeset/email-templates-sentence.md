@@ -24,8 +24,8 @@ whatsoever (#805/#823), and the contract mail that does go out belongs to the
 
 The correction is scoped to what this repo can prove — that HotCRM ships no
 templates of its own. It makes no claim about the platform's template surface:
-**Setup → Email Templates** stays the place to author one when a templated
-outbound email is what you need, and the rest of the section (merge fields,
+**Studio → Integration → Email Templates** stays the place to author one when a
+templated outbound email is what you need, and the rest of the section (merge fields,
 conditional blocks, HTML + plain text, attachments) describes that platform
 capability unchanged.
 

@@ -13,7 +13,8 @@ source = the name at runtime = the name in DB = the name in URL = the name in
 docs. No translation layer* — and the rest of the same page already keeps it
 (`end_date`, `expiration_date`, `owner_id`). Only this bullet was borrowing
 another product's vocabulary, which an admin authoring a template under
-**Setup → Email Templates** would have copied into paths that resolve to nothing.
+**Studio → Integration → Email Templates** would have copied into paths that
+resolve to nothing.
 
 The placeholder *syntax* was never the problem and is unchanged.
 `EmailTemplateDefinitionSchema` in `@objectstack/spec` 17.0.0-rc.3 documents
