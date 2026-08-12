@@ -5,6 +5,10 @@
  */
 export { AccountTeamSharingRule, TerritorySharingRules } from './account.sharing';
 export { CampaignLeadershipSharingRules } from './campaign.sharing';
-export { CaseDirectorSharingRule, CaseEscalationSharingRule } from './case.sharing';
+export {
+  CaseDirectorSharingRule,
+  CaseEscalationSharingRule,
+  CaseUnassignedTriageSharingRule,
+} from './case.sharing';
 export { OpportunityExecutiveSharingRule, OpportunitySalesSharingRule } from './opportunity.sharing';
 export { CrmPositions } from './positions';

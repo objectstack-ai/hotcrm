@@ -20,7 +20,7 @@ import { CrmSeedData } from './src/data/index.js';
 import {
   AccountTeamSharingRule, TerritorySharingRules,
   OpportunitySalesSharingRule, OpportunityExecutiveSharingRule,
-  CaseEscalationSharingRule, CaseDirectorSharingRule,
+  CaseEscalationSharingRule, CaseDirectorSharingRule, CaseUnassignedTriageSharingRule,
   CampaignLeadershipSharingRules,
   CrmPositions,
 } from './src/sharing/index.js';
@@ -155,6 +155,7 @@ export default defineStack({
     OpportunityExecutiveSharingRule,
     CaseEscalationSharingRule,
     CaseDirectorSharingRule,
+    CaseUnassignedTriageSharingRule,
     ...TerritorySharingRules,
     ...CampaignLeadershipSharingRules,
   ],
