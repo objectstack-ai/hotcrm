@@ -30,7 +30,7 @@ description: SSO、SCIM、稽核日誌、加密、GDPR、SOC2 —— HotCRM 提�
 - **OpenID Connect (OIDC)** —— Auth0、AWS Cognito。
 - **OAuth 2.0** —— 用於委派應用存取。
 
-在 **Setup → Security → SSO** 處設定。啟用 SSO 後，你可以完全停用密碼登入。
+在 **Setup → SSO Providers** 處設定（位於 *Access Control* 群組下 —— 設定裡沒有 *Security* 這個群組）。啟用 SSO 後，你可以完全停用密碼登入。
 
 ### SCIM 佈建
 
@@ -40,7 +40,7 @@ description: SSO、SCIM、稽核日誌、加密、GDPR、SOC2 —— HotCRM 提�
 - IdP 群組變更 → HotCRM 權限集變更。
 - IdP 使用者停用 → HotCRM 使用者停用，記錄重新指派。
 
-在 **Setup → Security → SCIM** 處設定。
+**設定裡沒有 SCIM 頁面。** 這個能力本身是真的 —— 平台把 SCIM 提供方存為記錄，認證外掛也帶了轉接器 —— 但它沒有自己的導覽入口，所以沒有可點的地方。在介面裡能設定的是 SSO，位置是 **Setup → SSO Providers**。
 
 ## 授權
 
@@ -64,7 +64,7 @@ description: SSO、SCIM、稽核日誌、加密、GDPR、SOC2 —— HotCRM 提�
 - **並行工作階段** —— 每使用者的最大同時工作階段數。
 - **裝置信任** —— 標記新裝置並要求郵件確認。
 
-在 **Setup → Security → Session Policy** 處設定。
+**不存在 Session Policy 這個畫面。** 登入與認證設定在 **Setup → Authentication**；正在進行的工作階段（以及撤銷某個工作階段）在 **Setup → Sessions**。上面列出的按設定檔的 IP 允許清單、登入時間、並行工作階段上限與裝置信任，本應用在任何地方都沒有對應的設定項。
 
 ## 稽核日誌
 
@@ -87,7 +87,7 @@ description: SSO、SCIM、稽核日誌、加密、GDPR、SOC2 —— HotCRM 提�
 - 歸檔稽核日誌（S3 / 物件儲存）中 **7 年**。
 - 對於受監管產業可設定為更長。
 
-在 **Setup → Security → Audit Log** 處讀取稽核日誌。匯出為 CSV 或串流傳輸到你的 SIEM（Splunk、Datadog、Elastic）。
+在 **Setup → Audit Logs** 處讀取稽核日誌（位於 *Diagnostics* 群組下）。匯出為 CSV 或串流傳輸到你的 SIEM（Splunk、Datadog、Elastic）。
 
 ## 加密
 
@@ -127,21 +127,13 @@ description: SSO、SCIM、稽核日誌、加密、GDPR、SOC2 —— HotCRM 提�
 
 ### 存取權
 
-資料主體可以請求其所有資料：
-
-1. **Setup → Privacy → Data Subject Requests → New → Export**。
-2. 提供聯絡人的信箱。
-3. 系統生成包含每筆引用他們的記錄的 JSON / PDF 包。
-4. 交付給資料主體；請求記錄在隱私稽核日誌中。
+**不存在「Setup → Privacy」這個畫面，也沒有資料主體請求這種記錄類型。** 存取權請求今天要靠人工完成：把引用到這個人的每一筆記錄找出來 —— 聯絡人、線索、工單、活動、行銷活動成員 —— 再自己從清單檢視匯出。沒有任何東西會替你拼出 JSON / PDF 包，也沒有任何東西會把這次請求登記為一個隱私事件。
 
 ### 被遺忘權
 
-1. **Setup → Privacy → Data Subject Requests → New → Delete or Anonymise**。
-2. 預覽將受影響的內容。
-3. 選擇 **Delete**（清除）或 **Anonymise**（遮罩 PII，保留記錄用於分析）。
-4. 確認 —— 系統生成稽核憑證。
+同樣靠人工，而且更不留情：刪除就是把你挑中的記錄**硬刪除**（沒有資源回收筒可以再撈回來 —— 參見 [FAQ](/zh-Hant/docs/reference/faq)），或者由你自己編輯 PII 欄位來做匿名化。沒有「將受影響內容」的預覽，也不會生成什麼稽核憑證；你能拿到的，是你動過的每筆記錄各自的那條普通稽核日誌。
 
-通常首選匿名化 —— 它保留歷史報表的完整性。
+通常仍然首選匿名化 —— 它保留歷史報表的完整性。
 
 ### 同意管理
 
@@ -153,7 +145,7 @@ description: SSO、SCIM、稽核日誌、加密、GDPR、SOC2 —— HotCRM 提�
 
 ### 資料處理協議
 
-DPA 範本在 **Setup → Privacy → DPA** 處提供。
+**應用不附帶 DPA 範本** —— 也沒有 *Privacy* 頁面來存放它。請向你的法務團隊索取這份協議。
 
 ## SOC 2 / ISO 27001
 

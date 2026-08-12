@@ -187,15 +187,9 @@ Records older than your operational window (e.g., closed cases >2 years) can be 
 
 ## Monitoring your usage
 
-Each tenant has a **Usage dashboard** at **Setup → Usage**:
+**There is no Setup → Usage screen and no usage dashboard.** Nothing in the app reports API calls per user, AI skill invocations, storage growth or anomaly alerts — those numbers are not collected anywhere a reader can look at them.
 
-- API calls per minute / day / month, by user.
-- AI skill invocations, by skill.
-- Storage growth.
-- Top users by record creation / API consumption.
-- Anomaly alerts.
-
-Enterprise tenants get a quarterly **usage review** with the account team.
+What Setup does ship is **Setup → System Overview**: total users, organizations, active sessions, installed packages, and audit-event counts (logins, permission changes, configuration changes). That is platform health and security activity, not quota consumption. For the quotas themselves the matrix above is the reference — you will hit a limit before you can watch yourself approach it.
 
 ## When you outgrow these limits
 

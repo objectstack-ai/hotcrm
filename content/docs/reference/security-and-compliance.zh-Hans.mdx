@@ -30,7 +30,7 @@ description: SSO、SCIM、审计日志、加密、GDPR、SOC2 —— HotCRM 提�
 - **OpenID Connect (OIDC)** —— Auth0、AWS Cognito。
 - **OAuth 2.0** —— 用于委托应用访问。
 
-在 **Setup → Security → SSO** 处配置。启用 SSO 后，你可以完全禁用密码登录。
+在 **Setup → SSO Providers** 处配置（位于 *Access Control* 分组下 —— 设置里没有 *Security* 这个分组）。启用 SSO 后，你可以完全禁用密码登录。
 
 ### SCIM 配置
 
@@ -40,7 +40,7 @@ description: SSO、SCIM、审计日志、加密、GDPR、SOC2 —— HotCRM 提�
 - IdP 组更改 → HotCRM 权限集更改。
 - IdP 用户停用 → HotCRM 用户停用，记录重新分配。
 
-在 **Setup → Security → SCIM** 处配置。
+**设置里没有 SCIM 页面。** 这个能力本身是真的 —— 平台把 SCIM 提供方存为记录，认证插件也带了适配器 —— 但它没有自己的导航入口，所以没有可点的地方。在界面里能配置的是 SSO，位置是 **Setup → SSO Providers**。
 
 ## 授权
 
@@ -64,7 +64,7 @@ description: SSO、SCIM、审计日志、加密、GDPR、SOC2 —— HotCRM 提�
 - **并发会话** —— 每用户的最大同时会话数。
 - **设备信任** —— 标记新设备并要求邮件确认。
 
-在 **Setup → Security → Session Policy** 处配置。
+**不存在 Session Policy 这个屏幕。** 登录与认证设置在 **Setup → Authentication**；正在进行的会话（以及吊销某个会话）在 **Setup → Sessions**。上面列出的按简档的 IP 允许列表、登录时间、并发会话上限与设备信任，本应用在任何地方都没有对应的设置项。
 
 ## 审计日志
 
@@ -87,7 +87,7 @@ description: SSO、SCIM、审计日志、加密、GDPR、SOC2 —— HotCRM 提�
 - 归档审计日志（S3 / 对象存储）中 **7 年**。
 - 对于受监管行业可配置为更长。
 
-在 **Setup → Security → Audit Log** 处读取审计日志。导出为 CSV 或流式传输到你的 SIEM（Splunk、Datadog、Elastic）。
+在 **Setup → Audit Logs** 处读取审计日志（位于 *Diagnostics* 分组下）。导出为 CSV 或流式传输到你的 SIEM（Splunk、Datadog、Elastic）。
 
 ## 加密
 
@@ -127,21 +127,13 @@ description: SSO、SCIM、审计日志、加密、GDPR、SOC2 —— HotCRM 提�
 
 ### 访问权
 
-数据主体可以请求其所有数据：
-
-1. **Setup → Privacy → Data Subject Requests → New → Export**。
-2. 提供联系人的邮箱。
-3. 系统生成包含每条引用他们的记录的 JSON / PDF 包。
-4. 交付给数据主体；请求记录在隐私审计日志中。
+**不存在“Setup → Privacy”这个屏幕，也没有数据主体请求这种记录类型。** 访问权请求今天要靠人工完成：把引用到这个人的每一条记录找出来 —— 联系人、线索、工单、活动、营销活动成员 —— 再自己从列表视图导出。没有任何东西会替你拼出 JSON / PDF 包，也没有任何东西会把这次请求登记为一个隐私事件。
 
 ### 被遗忘权
 
-1. **Setup → Privacy → Data Subject Requests → New → Delete or Anonymise**。
-2. 预览将受影响的内容。
-3. 选择 **Delete**（清除）或 **Anonymise**（掩码 PII，保留记录用于分析）。
-4. 确认 —— 系统生成审计证书。
+同样靠人工，而且更不留情：删除就是把你挑中的记录**硬删除**（没有回收站可以再捞回来 —— 参见 [FAQ](/zh-Hans/docs/reference/faq)），或者由你自己编辑 PII 字段来做匿名化。没有“将受影响内容”的预览，也不会生成什么审计证书；你能拿到的，是你动过的每条记录各自的那条普通审计日志。
 
-通常首选匿名化 —— 它保留历史报表的完整性。
+通常仍然首选匿名化 —— 它保留历史报表的完整性。
 
 ### 同意管理
 
@@ -153,7 +145,7 @@ description: SSO、SCIM、审计日志、加密、GDPR、SOC2 —— HotCRM 提�
 
 ### 数据处理协议
 
-DPA 模板在 **Setup → Privacy → DPA** 处提供。
+**应用不附带 DPA 模板** —— 也没有 *Privacy* 页面来存放它。请向你的法务团队索取这份协议。
 
 ## SOC 2 / ISO 27001
 

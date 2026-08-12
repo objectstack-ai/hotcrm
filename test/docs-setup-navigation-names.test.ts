@@ -64,25 +64,34 @@ import { REPO_ROOT } from './helpers/repo-root';
  *
  * ## Why the path rule checks the FIRST segment only
  *
- * `**Setup → Change Packages → Deployment History → [deployment] → Rollback**`
- * is one sidebar entry followed by four in-page controls. Measured against
- * `content/docs/**`: checking the first segment leaves 39 distinct unresolved
- * names, checking every segment leaves 74 — the extra 35 are `New`, `Export`,
- * `Rollback`, `[user]`, `Connect` and friends, which are buttons, not
- * navigation. The first segment is the claim a reader acts on ("click this in
- * the sidebar"), so it is the claim that is pinned.
+ * `**Setup → Users → [user] → Deactivate**` is one sidebar entry followed by
+ * two in-page controls. Measured against `content/docs/**`: checking the first
+ * segment leaves 20 distinct unresolved names, checking every segment leaves
+ * 32 — the extra 12 are `New`, `Deactivate`, `[user]`, `回滾`, `連接 Gmail /
+ * 連接 Outlook` and friends, which are buttons, not navigation. The first
+ * segment is the claim a reader acts on ("click this in the sidebar"), so it
+ * is the claim that is pinned. (Both numbers were 39 / 74 when #853 first
+ * measured them; #1113's first pass closed the gap, not the rule.)
  *
  * ## Why there is a quarantine ledger, and what it is not
  *
- * The path rule cannot be applied to this repo cleanly today: 39 distinct
- * first-segment names in `content/docs/**` do not resolve, across ~20 pages
- * this card does not own — invented Salesforce-flavoured screens (*Profiles*,
- * *Sharing Settings*, *Sandbox Management*), deliberate DENIALS that name a
- * page in order to say it does not exist (「**Setup → Automation** 下也没有
- * 工作流规则入口」), and every zh-Hant nav string, which cannot resolve because
- * the platform ships no Traditional-Chinese pack at all. Fixing those is a
- * separate, larger editorial pass; filed as #1113, listed in
- * {@link KNOWN_UNRESOLVED}, one line each.
+ * The path rule cannot be applied to this repo cleanly today: 20 distinct
+ * first-segment names in `content/docs/**` do not resolve, across pages this
+ * card does not own — names that are real in **Studio** but cited under
+ * **Setup** (*Automation*, *Email Templates*, *Objects*), some of them
+ * deliberate DENIALS that name a page in order to say it does not exist
+ * (「**Setup → Automation** 下也没有工作流规则入口」), and every zh-Hant nav
+ * string, which cannot resolve because the platform ships no
+ * Traditional-Chinese pack at all. Fixing those is a separate editorial pass;
+ * filed as #1113, listed in {@link KNOWN_UNRESOLVED}, one line each.
+ *
+ * It started at 39. #1113's first pass took out the nineteen *invented*
+ * screens — Salesforce-flavoured names (*Profiles* → **Permission Sets**,
+ * *Sharing Settings* → **Sharing Rules**) and names for capabilities this
+ * platform does not have at all (*Recycle Bin*, *Sandbox Management*,
+ * *Change Packages*, *Privacy*, *Usage*, *Lead Settings*), which are now
+ * either the real path or a plain statement that the screen does not exist.
+ * The two remaining sub-classes land after it, in that order.
  *
  * The ledger is keyed by NAME, not by name-and-file, and that is deliberate:
  * these names are already-filed drift, so a second page repeating one of them
@@ -231,33 +240,14 @@ const NOT_BANNED = new Set(['流程运行记录']);
  * name-only ledger would call that resolved.
  */
 const KNOWN_UNRESOLVED = new Set<string>([
-  // Invented / Salesforce-flavoured Setup screens (en).
+  // Real navigation labels — in STUDIO, cited under Setup (en).
   'setup:Automation',
-  'setup:Change Packages',
-  'setup:Company Information',
   'setup:Email Templates',
-  'setup:Lead Settings',
   'setup:Object',
-  'setup:Privacy',
-  'setup:Profiles',
-  'setup:Recycle Bin',
-  'setup:Sandbox',
-  'setup:Sandbox Management',
-  'setup:Security',
-  'setup:Sharing Settings',
-  'setup:Usage',
   // Same, zh-Hans.
-  'setup:共享设置',
-  'setup:变更包',
   'setup:对象',
-  'setup:权限档案',
-  'setup:沙箱',
-  'setup:沙箱管理',
-  'setup:潜在客户设置',
-  'setup:电子邮件',
   'setup:电子邮件模板',
   'setup:自动化',
-  'setup:邮件与日历',
   'setup:邮件模板',
   // Same, zh-Hant. Every one of these ALSO fails for a structural reason: the
   // platform ships en / zh-CN / ja-JP / es-ES and no Traditional-Chinese pack,

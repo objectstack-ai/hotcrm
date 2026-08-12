@@ -7,6 +7,8 @@ description: Make configuration changes safely — sandbox tenants, change packa
 
 Never make config changes directly in production. This page covers the safe workflow: build in a sandbox, test, package, promote to production, rollback if needed.
 
+**None of the screens named below exist.** Setup ships no *Sandbox Management*, no *Change Packages* and no *Git Sync* entry — its navigation is Overview, Apps, People & Organization, Access Control, Approvals, Configuration, Diagnostics, Integrations and Advanced, and nothing under them provisions a tenant or assembles a change set. What follows is the intended shape of release management, kept because the discipline it teaches is the right one. What HotCRM does today: its metadata is TypeScript under `src/`, reviewed in git and shipped with the app; installed packages are listed at **Setup → Packages**.
+
 ## What's a sandbox?
 
 A **sandbox** is a full-fidelity copy of your production HotCRM tenant — same schema, optionally same data — running in isolation. You can break it without consequence.
@@ -21,12 +23,9 @@ Enterprise plans typically include **3 sandboxes**; add more as needed.
 
 ## Creating & refreshing a sandbox
 
-1. **Setup → Sandbox Management → New Sandbox**.
-2. Pick the **type** (config / partial / full).
-3. Name it (e.g., `dev`, `uat`, `training`).
-4. Click **Create** — typically ready in 10–60 min depending on size.
+The intended flow: a *Sandbox Management* screen where you pick a **type** (config / partial / full), name it (`dev`, `uat`, `training`) and click **Create**, with a **Refresh** on each row that pulls the latest production data down again — wiping whatever was in the sandbox.
 
-To refresh an existing sandbox with the latest production data, click **Refresh** on the sandbox row. ⚠️ **Refresh wipes all changes in the sandbox** — package and export first if you need them.
+There is no such screen. Provisioning an environment is a control-plane concern of ObjectStack Cloud, not a page inside this tenant's Setup; the only cloud entry Setup ships is **Setup → Cloud Connection**.
 
 ### Anonymisation on refresh
 
@@ -65,14 +64,9 @@ A **change package** captures a set of metadata changes (objects, fields, valida
 
 ### Creating a package
 
-1. **Setup → Change Packages → New**.
-2. Name + description.
-3. Add components:
-   - **Manual** — pick objects, fields, rules from a list.
-   - **By tag** — anything tagged `release-2026-Q1`.
-   - **Auto** — every change since the last package timestamp.
-4. **Validate** — the system checks the package for consistency (e.g., field references that don't resolve).
-5. **Save**.
+The intended flow: a *Change Packages → New* screen taking a name and description, components added by hand / by tag / automatically since the last package, then **Validate** for consistency and **Save**.
+
+There is no such screen. A package here is the platform's own unit — listed at **Setup → Packages** and **Studio → Packages** — and HotCRM's own metadata is packaged from source at build time, never assembled in the UI.
 
 ### Deploying a package
 
@@ -100,22 +94,14 @@ A **change package** captures a set of metadata changes (objects, fields, valida
 
 ## Version control (git-backed)
 
-For technical teams, sandbox metadata can be **synced to a git repo**:
-
-1. **Setup → Sandbox → Git Sync → Connect**.
-2. Authorise a GitHub / GitLab / Bitbucket account.
-3. Pick the repo and branch.
-4. **Pull** — fetch metadata from git into sandbox.
-5. **Push** — commit sandbox changes back to git.
-
-This unlocks:
+There is no *Git Sync* entry to connect — and for HotCRM there is nothing for one to do. The metadata **is** the git repo: every object, field, validation, flow, view and sharing rule is TypeScript under `src/`. So the things a sync page would unlock are already how the app is built:
 
 - **Code review** via PRs.
 - **Diffs** between branches.
 - **History** of every change.
 - **CI** running `pnpm typecheck` etc. before merge.
 
-For HotCRM customers extending with their own packages, this is the recommended workflow.
+Point your team at the repository, not at Setup.
 
 ## Rollback
 
@@ -123,11 +109,9 @@ Two flavours:
 
 ### Quick rollback (within 24 h)
 
-Every deployment creates a **restore point**. Within 24 h of deploy:
+The intended flow: every deployment leaves a **restore point**, and a *Deployment History* list lets you roll one back within 24 h — reverting the metadata while leaving records created since the deploy in place.
 
-1. **Setup → Change Packages → Deployment History → [deployment] → Rollback**.
-2. Confirm — system reverts the metadata changes.
-3. Records created since the deploy stay; metadata reverts.
+No deployment history is recorded and there is no rollback button. Rolling back means deploying the previous version of the app again, from the same source that produced the current one.
 
 ### Re-deploy previous package
 
