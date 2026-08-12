@@ -93,15 +93,18 @@ export const Forecast = ObjectSchema.create({
       group: 'basic',
     }),
 
-    // Not read-only: `forecast.hook.ts` fills it only when the write leaves it
-    // unset, so a caller may still hand-type it. The only rule bound to THIS
-    // field is `period_end_after_start` below — it does not share
-    // `period_start`'s calendar-boundary rules, so the description says only
-    // what is actually enforced on it (#1085).
+    // Still not read-only: `forecast.hook.ts` fills it only when the write
+    // leaves it unset, and `src/data/revenue.seed.ts` hand-fills it on every
+    // seeded row — so hand-entry is a capability this app uses, not a
+    // leftover. What changed in #1093 is that a hand-filled value is now
+    // pinned to the same calendar period `period_start` is
+    // (`period_end_matches_calendar_period` below), so the description states
+    // that rule rather than the weaker `period_end_after_start` it subsumes
+    // — same #1085 convention: the form says what is actually enforced.
     period_end: Field.date({
       label: 'Period End',
       description:
-        'Normally derived automatically from Period and Period Start. If set by hand, it must be after Period Start.',
+        'Normally derived automatically from Period and Period Start. If set by hand, it must be the last day of that period — e.g. 2026-09-30 for a quarter starting 2026-07-01, or 2026-08-31 for Aug 2026.',
       required: true,
       storage: { notNull: true },
       group: 'basic',
@@ -354,6 +357,75 @@ export const Forecast = ObjectSchema.create({
       // not a valid quarter start.
       message: 'A quarterly forecast must start on a quarter boundary — January 1, April 1, July 1 or October 1.',
       condition: P`has(record.period) && record.period == "quarter" && has(record.period_start) && record.period_start != null && !matches(string(record.period_start), "^[0-9]{4}-(01|04|07|10)-01")`,
+    },
+    // …and the OTHER end of the same window (#1093). The two rules above pin
+    // the START; `period_end` stayed reachable, because the hook derives it
+    // only when the write leaves it unset and the field sits editable on the
+    // record form's Snapshot section. Measured end-to-end through a real
+    // ObjectQL and the real `forecast_derive_period` handler (the #1106
+    // sweep): `period: 'quarter'` + `period_start: 2026-07-01` (a boundary the
+    // rules above admit) + a hand-typed `period_end: 2027-05-15` was ADMITTED
+    // under `period_label: 'Q3 2026'` — a ten-month window labelled as one
+    // quarter, the very shape #1008 was ruled to make unwritable, reached
+    // through the other field. Control, same probe: with `period_end` left
+    // unset the hook derives 2026-09-30, so the drift is specifically what the
+    // hand-typed value buys.
+    //
+    // WHY A RULE AND NOT A READ-ONLY FIELD: the card's option 1 was to derive
+    // `period_end` always and lock the form. Refused on a measurement, not a
+    // preference — `src/data/revenue.seed.ts:339,378,393` hand-fill
+    // `period_end` on every seeded row, so locking the field breaks the demo
+    // seed. Hand-entry stays; it is now bounded.
+    //
+    // WHY `type: 'script'` AND NOT A FIELD CONSTRAINT: a field bound judges
+    // only the value being written, so a row already stored wrong keeps
+    // accepting edits forever; a script validation is evaluated against the
+    // MERGED record on every write and is therefore a true invariant. Measured
+    // on this platform in #599 / PR #1088, and re-measured for this field in
+    // `test/forecast-period-end-boundary.test.ts` — a legacy row is refused on
+    // its next unrelated edit, and the repair is always admitted.
+    //
+    // WHY DATE ARITHMETIC HERE WHEN THE TWO RULES ABOVE USE A REGEX: not a
+    // divergence in taste. Those rules have to inspect ONE date's components
+    // ("is this the 1st of its month?"), and the CEL stdlib has no month/day
+    // accessor, so that is not expressible as arithmetic. This rule compares
+    // TWO dates, which `addMonths`/`addDays`/`daysBetween` — all registered in
+    // `CEL_STDLIB_FUNCTIONS` — express directly.
+    //
+    // The predicate says "one period long", and that is the same claim as "ends
+    // on the calendar boundary" ONLY because the two rules above pin the start
+    // to one. That coupling is deliberate: the three are one set enforcing one
+    // invariant (a row's window is exactly the calendar period it is labelled
+    // with), not three independent gates. An off-boundary start reaches this
+    // rule with a rolling window that satisfies it, and is refused by name
+    // upstairs — the schema's own rejection, not this rule reaching for it.
+    //
+    // `daysBetween(a, b) != 0` rather than `a == b`: both drivers this app runs
+    // on hand dates back as `YYYY-MM-DD` strings while `addDays` returns a
+    // timestamp, and a string never `==` a timestamp — the rule would be
+    // permanently green. `daysBetween` puts both sides through the same
+    // `toDate`, so the string, an ISO datetime spelling and a JS `Date` all
+    // compare alike (all three measured).
+    //
+    // The `!= null` guards are load-bearing for a THIRD hazard, beyond the two
+    // AGENTS.md names: `daysBetween(null, …)` reaches `BigInt(NaN)` and THROWS,
+    // which the engine reports as `predicate failed to evaluate` — a rule that
+    // cannot answer, i.e. a rejected ordinary save from 17.0.0-rc.2 (#4649).
+    // Measured: dropping them turns `{quarter, 2026-07-01, period_end: null}`
+    // into that abort. Note this predicate has no ordering operator, so
+    // `object-validation-predicates.test.ts`'s unguarded-comparison sweep does
+    // not cover it — the pin lives in this card's own test file instead.
+    {
+      name: 'period_end_matches_calendar_period',
+      type: 'script',
+      severity: 'error',
+      message:
+        'Period End must be the last day of the period — e.g. 2026-09-30 for a quarter starting 2026-07-01, or 2026-08-31 for Aug 2026.',
+      // Spelled out per period value instead of a ternary on the month count:
+      // an undeclared `period` is refused BY NAME by the picklist ("Period must
+      // be one of: month, quarter", measured), so this rule judges only the two
+      // values it understands and leaves the rest to the schema.
+      condition: P`has(record.period) && record.period != null && has(record.period_start) && record.period_start != null && has(record.period_end) && record.period_end != null && ((record.period == "month" && daysBetween(record.period_end, addDays(addMonths(record.period_start, 1), -1)) != 0) || (record.period == "quarter" && daysBetween(record.period_end, addDays(addMonths(record.period_start, 3), -1)) != 0))`,
     },
     {
       name: 'snapshot_amounts_non_negative',
