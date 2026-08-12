@@ -98,7 +98,7 @@
 | OPP-011 | 批量更新阶段 | 全仓唯一聚合式批量动作:整个选择集一次 dispatch(`_selectedIds`),全有或全无,失败 id 汇总报错 | `src/actions/opportunity.actions.ts`(`mass_update_stage`) |
 | OPP-012 | 克隆商机 | 复制客户/联系人/金额/来源等为新 prospecting 商机,关闭日重置为 +90 天 | `src/actions/opportunity.actions.ts`(`clone_opportunity`) |
 | OPP-013 | 停滞商机日扫描 | 每日 07:30 扫描阶段停留 >14 天的开放商机:通知 owner 并幂等创建 +2 天跟进任务 | `src/flows/opportunity-stagnation.flow.ts` |
-| OPP-014 | 大单赢单告警 | 金额 >$100K 的商机赢单时通知 owner(防重发) | `src/flows/opportunity-won-alert.flow.ts` |
+| OPP-014 | 大单赢单告警 | 金额 ≥$100K 的商机赢单时通知 owner(防重发) | `src/flows/opportunity-won-alert.flow.ts` |
 | OPP-015 | 私密商机 | `is_private` 标记的交易经 RLS 仅对 owner 可见,即使读方持全组织读权限 | `src/profiles/sales-manager.profile.ts`、`src/profiles/marketing-user.profile.ts`(RLS) |
 | OPP-016 | 商机详情页 | header 挂生成报价/克隆/三个活动动作,7 阶段 path,Related 含报价/产品明细/任务三个相关列表 + 侧栏 reference rail | `src/pages/opportunity_detail.page.ts` |
 | OPP-017 | 商机分析 | `opportunity_metrics` 数据集(win_rate 派生比率、跨对象行业维度)+ 阶段/按人赢单/管道覆盖矩阵/漏斗 4 个报表 | `src/datasets/opportunity.dataset.ts` + `src/reports/opportunity.report.ts` |
@@ -219,7 +219,7 @@
 
 | 编号 | 功能 | 说明 | 实现锚点 |
 | --- | --- | --- | --- |
-| APR-001 | 大额商机两级审批 | >$100K 触发销售经理审批,>$500K 追加销售总监签字(create/update 孪生流,ADR-0019 approval 节点) | `src/flows/opportunity-approval.flow.ts` |
+| APR-001 | 大额商机两级审批 | ≥$100K 触发销售经理审批,>$500K 追加销售总监签字(create/update 孪生流,ADR-0019 approval 节点) | `src/flows/opportunity-approval.flow.ts` |
 | APR-002 | 审批行为语义 | first_response(先响应者决定)、审批期间锁记录、`approval_status` 字段实时镜像审批状态 | `src/flows/opportunity-approval.flow.ts` |
 | APR-003 | 审批结果处置 | 通过写 `approved_date` 并通知 owner;拒绝置 rejected 并通知修改后重提(warning 级) | `src/flows/opportunity-approval.flow.ts` |
 | APR-004 | 空审批人兜底 | 审批岗位无人在职时 `onEmptyApprovers: 'admin_rescue'` 挂起等管理员接管,不搁死记录 | `src/flows/opportunity-approval.flow.ts` |

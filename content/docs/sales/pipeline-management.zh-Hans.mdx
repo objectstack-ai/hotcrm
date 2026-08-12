@@ -117,4 +117,4 @@ description: 销售管道的日常运作方式——推进交易、自动概率�
 ## 给管理员的提示
 
 - 添加或移除阶段？你需要更新源码里的三处，没有一处是 Setup 界面：`stage` 字段所渲染的 `OPPORTUNITY_STAGE_OPTIONS` 选择列表（`src/objects/_picklists.ts`）、`opportunity_lifecycle` 钩子里设定概率的 `STAGE_PROBABILITY` 映射（`src/objects/opportunity.hook.ts`），以及控制状态转换的 `opportunity_stage_progression` 状态机校验规则（`src/objects/opportunity.object.ts`）。参见 [Customization › Extending Objects](/zh-Hans/docs/customization/extending-objects)。
-- $100K *大单*通知阈值同样不是 Setup 界面上的字段：它是 `opportunity_won_alert` 流程的 CEL 起始条件——`src/flows/opportunity-won-alert.flow.ts` 里的 `record.amount > 100000`。收件人则由该流程 `notify` 节点的 `recipients` 决定，列表里只有 `{record.owner_id}` 一项，即商机负责人本人。
+- $100K *大单*通知阈值同样不是 Setup 界面上的字段：它是 `opportunity_won_alert` 流程的 CEL 起始条件——`src/flows/opportunity-won-alert.flow.ts` 里的 `record.amount >= 100000`。收件人则由该流程 `notify` 节点的 `recipients` 决定，列表里只有 `{record.owner_id}` 一项，即商机负责人本人。

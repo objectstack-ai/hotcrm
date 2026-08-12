@@ -11,31 +11,31 @@ HotCRM ships with one built-in approval: the **Opportunity Approval** flow. It e
 
 ## What triggers an approval
 
-The flow runs automatically when an **opportunity is saved** and its **amount crosses a threshold** — no manual "submit" step:
+The flow runs automatically when an **opportunity is saved** and its **amount reaches a threshold** — no manual "submit" step:
 
-- **Amount > $100K** → **Sales Manager** review.
+- **Amount $100K or more** → **Sales Manager** review.
 - **Amount > $500K** → **Sales Manager** review **and** **Sales Director** sign-off.
 
-Below $100K, no approval is needed — the rep can progress the deal directly. The entry guard (`approval_status = not_required`) means the flow's own status writes don't re-trigger it.
+Under $100K, no approval is needed — the rep can progress the deal directly. The manager line is **inclusive**: a deal at exactly $100,000 *does* route for approval. The entry guard (`approval_status = not_required`) means the flow's own status writes don't re-trigger it.
 
 ## The tiered process
 
 | Tier | Approver | Applies when | Why |
 | --- | --- | --- | --- |
-| **1. Sales Manager** | The `sales_manager` role | Amount > $100K | First line of defense — sanity-check the deal |
+| **1. Sales Manager** | The `sales_manager` role | Amount $100K or more | First line of defense — sanity-check the deal |
 | **2. Sales Director** | The `sales_director` role | Amount > $500K | Final sign-off — protect company margin on the largest deals |
 
 A `> $500K` deal goes Manager → (decision gate) → Director. A `$100K–$500K` deal needs only the Manager. Rejection at **either** tier ends the run as rejected and notifies the owner.
 
 ## What submitters see
 
-When a rep saves an opportunity whose amount crosses the threshold, the flow submits it automatically:
+When a rep saves an opportunity whose amount reaches the threshold, the flow submits it automatically:
 
 1. The opportunity is **locked** — the approval node holds the record until the step resolves.
 2. `approval_status` flips to **pending** (shown as *In Approval*).
 3. The first approver gets an in-app notification and email.
 
-There's no separate "Submit for Approval" click — crossing the amount threshold on save is the trigger.
+There's no separate "Submit for Approval" click — reaching the amount threshold on save is the trigger.
 
 ## What approvers see
 
@@ -100,8 +100,8 @@ Those four are the real filters. The three names this page used to list — *Pen
 
 ## Tips for sales reps
 
-- ✅ **Mind the thresholds** — an amount over $100K (and especially over $500K) will auto-launch approval the moment you save. Plan for the review window before promising a close date.
-- ✅ **Get the deal right before saving over the threshold** — the record locks while a tier is pending; you can't tweak it mid-review.
+- ✅ **Mind the thresholds** — an amount of $100K or more (and especially over $500K) will auto-launch approval the moment you save. A deal priced at exactly $100,000 is on the approval side of the line. Plan for the review window before promising a close date.
+- ✅ **Get the deal right before saving at or above the threshold** — the record locks while a tier is pending; you can't tweak it mid-review.
 - ✅ **Watch for the rejection notification** — a reject ends the run; revise and save again to re-submit.
 
 ## Tips for managers

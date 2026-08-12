@@ -117,4 +117,4 @@ description: 銷售管道的日常運作方式——推進交易、自動機率�
 ## 給管理員的提示
 
 - 新增或移除階段？你需要更新原始碼裡的三處，沒有一處是 Setup 介面：`stage` 欄位所算繪的 `OPPORTUNITY_STAGE_OPTIONS` 選擇列表（`src/objects/_picklists.ts`）、`opportunity_lifecycle` 鉤子裡設定機率的 `STAGE_PROBABILITY` 對映（`src/objects/opportunity.hook.ts`），以及控制狀態轉換的 `opportunity_stage_progression` 狀態機驗證規則（`src/objects/opportunity.object.ts`）。參見 [Customization › Extending Objects](/zh-Hant/docs/customization/extending-objects)。
-- $100K *大單*通知閾值同樣不是 Setup 介面上的欄位：它是 `opportunity_won_alert` 流程的 CEL 起始條件——`src/flows/opportunity-won-alert.flow.ts` 裡的 `record.amount > 100000`。收件人則由該流程 `notify` 節點的 `recipients` 決定，列表裡只有 `{record.owner_id}` 一項，即商機負責人本人。
+- $100K *大單*通知閾值同樣不是 Setup 介面上的欄位：它是 `opportunity_won_alert` 流程的 CEL 起始條件——`src/flows/opportunity-won-alert.flow.ts` 裡的 `record.amount >= 100000`。收件人則由該流程 `notify` 節點的 `recipients` 決定，列表裡只有 `{record.owner_id}` 一項，即商機負責人本人。

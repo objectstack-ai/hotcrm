@@ -91,7 +91,7 @@ The system also enforces:
 - **Close Date is required** — and not from *Proposal* onwards, but always: `close_date` carries `required: true` with `notNull` storage, so an opportunity cannot be created without one.
 - **Amount is required** — unconditional in the same way. Neither field waits for a stage.
 - **Won/Lost reason is required** when entering *Closed Lost* or *Closed Won* — `requiredWhen` predicates on `win_reason` and `loss_reason`, keyed on the stage.
-- **Approval starts at $100K.** The `opportunity_approval` flow fires on any update that leaves an open opportunity above **$100,000** with no approval on file, and routes it to a **Sales Manager**. **$500K** is the second tier, not the entry: above that a **Sales Director** signs off after the manager. So a $200K deal does go through approval.
+- **Approval starts at $100K.** The `opportunity_approval` flow fires on any update that leaves an open opportunity at **$100,000 or more** with no approval on file, and routes it to a **Sales Manager**. **$500K** is the second tier, not the entry: above that a **Sales Director** signs off after the manager. So a $200K deal does go through approval.
 
 The heading is fair for the first three, unlike the transition tables above them: `required` and `requiredWhen` are hard, and a save that violates one is refused. The fourth is not a save-time check at all — `opportunity_approval` is a `record_change` flow that runs *after* the update and then holds the record locked while a step is pending.
 
