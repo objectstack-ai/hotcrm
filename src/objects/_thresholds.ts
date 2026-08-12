@@ -7,14 +7,15 @@
  * ### What this replaces
  *
  * "What counts as a large deal" was answered by four independent numeric
- * literals sitting in three files, with nothing joining them:
+ * literals sitting in three files, with nothing joining them. What each site
+ * wrote then, and what it interpolates today:
  *
- * | site | literal |
- * | --- | --- |
- * | `flows/opportunity-approval.flow.ts` start condition (both the update and the insert twin share it) | `record.amount > 100000` |
- * | `flows/opportunity-won-alert.flow.ts` start condition | `record.amount > 100000` |
- * | `sharing/opportunity.sharing.ts` — sales-director rule | `record.amount >= 100000` |
- * | `sharing/opportunity.sharing.ts` — executive rule | `record.amount >= 100000` |
+ * | site | was | ships now |
+ * | --- | --- | --- |
+ * | `flows/opportunity-approval.flow.ts` start condition (both the update and the insert twin share it) | `record.amount > 100000` | `record.amount >= LARGE_DEAL_AMOUNT` |
+ * | `flows/opportunity-won-alert.flow.ts` start condition | `record.amount > 100000` | `record.amount >= LARGE_DEAL_AMOUNT` |
+ * | `sharing/opportunity.sharing.ts` — sales-director rule | `record.amount >= 100000` | `record.amount >= LARGE_DEAL_AMOUNT` |
+ * | `sharing/opportunity.sharing.ts` — executive rule | `record.amount >= 100000` | `record.amount >= LARGE_DEAL_AMOUNT` |
  *
  * plus a second tier stated twice, in complementary polarity, for the director
  * step: `vars.oppRecord.amount > 500000` / `<= 500000`.
@@ -28,20 +29,40 @@
  * `test/deal-threshold-parity.test.ts` reads the shipped metadata back and
  * fails if any of them stops agreeing.
  *
- * ### ⚠️ The operators are deliberately NOT unified here — the value is
+ * ### The operator was converged after the value, and it took a ruling (#1087)
  *
- * The approval and won-alert sites cut at `> LARGE_DEAL_AMOUNT`; the two
- * sharing rules cut at `>= LARGE_DEAL_AMOUNT`. Converging the *value* leaves
- * that boundary disagreement exactly where it was, and it is real: an
- * opportunity at **exactly $100,000.00** — the single likeliest amount in a
- * CRM — is shared with the sales director and the executive, and is neither
- * routed for approval nor announced when it is won.
+ * #599 converged the *number* and deliberately left the comparisons alone: the
+ * approval and won-alert sites still cut at `> LARGE_DEAL_AMOUNT` while the two
+ * sharing rules cut at `>=`. That residue was real, not a rounding edge. An
+ * opportunity at **exactly $100,000.00** was shared with the sales director and
+ * the executive as a large open deal, and was neither routed for approval nor
+ * announced when it was won — visible to leadership, invisible to governance.
+ * A threshold set at a round number *attracts* deals priced at exactly that
+ * number ("a hundred K" is how deals get quoted), so the boundary case was
+ * plausibly the modal large deal rather than a measure-zero one.
  *
- * That is a product decision (does a $100K deal need manager approval?), not a
- * refactor, and #599's ruling scoped this card to the constant. So the drift is
- * not silently "fixed" by picking an operator here: it is pinned as a recorded
- * fact in the parity test and filed for triage. What this module guarantees is
- * that both operators now cut at the SAME NUMBER, and cannot drift apart again.
+ * Which way to converge was a product decision — it changes who signs what — so
+ * it was escalated rather than guessed, and #1087 ruled: **a deal at the line is
+ * a large deal.** Every site now cuts at `>=`. The decisive argument was not the
+ * boundary population but the mental model: governance narrower than visibility
+ * is the counter-intuitive direction, and the next author extending this system
+ * will assume the reverse (*if leadership can see it, someone signs it*). One
+ * line, and at or above it everything applies.
+ *
+ * So this module now guarantees two things about "large deal", not one: every
+ * consumer cuts at the same NUMBER, and every consumer cuts the same WAY.
+ * `test/deal-threshold-parity.test.ts` reads both back out of the shipped
+ * metadata — the compiled CEL of every flow condition and sharing rule — and
+ * fails if any site stops agreeing on either.
+ *
+ * If a reason ever appears for leadership to see a deal that needs no approval,
+ * that reason belongs **here**, next to the constant, and the split becomes a
+ * design instead of the drift it was. It is not written here because nothing in
+ * this repo makes that argument.
+ *
+ * `HIGH_VALUE_DEAL_AMOUNT` below is deliberately NOT part of this: its `> ` and
+ * `<= ` halves are one branch stated in complementary polarity, which must
+ * PARTITION rather than agree. Two operators there are the design.
  */
 
 /**
