@@ -615,16 +615,30 @@ describe('forecast_derive_period', () => {
   });
 
   /**
-   * The two halves of the boundary contract `content/docs/sales/forecasting.mdx`
-   * now states, pinned against the handler rather than against the wish (#748).
+   * The two halves of the DERIVATION contract, pinned against the handler
+   * rather than against the wish (#748) — and, since #1111, deliberately not
+   * against the docs page either.
    *
    * The page used to claim the boundary is "always computed, never typed", one
    * sentence after teaching that a caller may supply `period_start`. Only the
-   * first case below is a computed boundary; the second is kept verbatim, which
-   * is what the prose says today. If the derivation ever starts snapping a
-   * supplied `period_start` to the calendar boundary — the contract change
-   * option #748 deliberately did NOT take — the second assertion goes red and
-   * that paragraph has to be rewritten with it.
+   * first case below is a computed boundary; the second is kept verbatim. That
+   * is a statement about THIS HANDLER, and it is still exactly true: the hook
+   * fills blanks and never rewrites a supplied value. If the derivation ever
+   * starts snapping a supplied `period_start` to the calendar boundary — the
+   * contract change option #748 deliberately did NOT take — the second
+   * assertion goes red.
+   *
+   * What is no longer true is the *storage* claim the docs used to draw from
+   * it. A mid-quarter `period_start` reaches the driver only in this unit
+   * harness, which runs the handler alone; through a real ObjectQL the write
+   * is refused by `period_start_first_of_period` /
+   * `quarter_starts_on_quarter_boundary` (#1008 / PR #1081), with
+   * `period_end_matches_calendar_period` (#1093 / PR #1110) closing the other
+   * end. Those refusals are pinned in `forecast-period-boundary.test.ts` and
+   * `forecast-period-end-boundary.test.ts`; `content/docs/sales/forecasting*.mdx`
+   * was rewritten for the full rule set in #1111. Read the second case below as
+   * "the hook does not silently correct you" — the schema refuses you instead —
+   * and not as "such a row can be stored".
    */
   it('snaps to the calendar boundary only when the caller sends no period_start (#748)', async () => {
     const derived: Rec = { period: 'quarter', snapshot_date: '2026-08-02' };
@@ -637,9 +651,10 @@ describe('forecast_derive_period', () => {
   it('keeps a hand-supplied period_start verbatim, mid-period and all (#748)', async () => {
     const typed: Rec = { period: 'quarter', period_start: '2026-07-15' };
     await hook.handler(makeCtx({ event: 'beforeInsert', input: typed }));
-    // NOT snapped to 2026-07-01: the row starts mid-quarter, so the surfaces
-    // that pin `period_start` to the quarter's first day (the `This Quarter`
-    // list view, the quota-attainment widget) never match it.
+    // NOT snapped to 2026-07-01. The handler leaves the caller's value alone;
+    // the schema is what refuses it (see the note above) — so a mid-quarter
+    // start never reaches the surfaces that pin `period_start` to the quarter's
+    // first day (the `This Quarter` list view, the quota-attainment widget).
     expect(typed.period_start).toBe('2026-07-15');
     expect(typed.period_label).toBe('Q3 2026');
   });
