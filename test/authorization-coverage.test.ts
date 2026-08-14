@@ -628,7 +628,22 @@ describe('allowExport tracks the app’s real export surfaces', () => {
   for (const v of views) {
     const defaultObject = v.list?.data?.object;
     for (const list of [v.list, ...Object.values(v.listViews ?? {})].filter(Boolean) as AnyRec[]) {
-      if (!(list.exportOptions ?? []).length) continue;
+      // `.formats`, not the value itself. `exportOptions` is the OBJECT form
+      // `{ formats: [...] }` at @objectstack/spec 17.0.0 (#8010, maintainer
+      // ruling 2026-08-12); the bare array this app authored through
+      // 17.0.0-rc.6 is the legacy `z.input` spelling and LIFTS to the object
+      // at parse, so `z.output` — which is what `stack.views` hands us here —
+      // is the object on both spellings.
+      //
+      // Reading the old way is not a stale assertion, it is a BLIND one, and
+      // silently: `({ formats: [...] }).length` is `undefined`, `??` never
+      // fires because the object is not nullish, and every surface in the app
+      // fell out of this set at once. Both guards below invert on an empty
+      // set — "no surface" makes every `allowExport` grant look gratuitous —
+      // so the 17.0.0 bump turned a bulk-egress guard into 23 false accusals
+      // rather than into silence. Only the `not.toEqual([])` canary above
+      // separates the two, which is exactly why it is written.
+      if (!(list.exportOptions?.formats ?? []).length) continue;
       const objectName = list.data?.object ?? defaultObject;
       if (typeof objectName === 'string') exportSurfaces.add(objectName);
     }

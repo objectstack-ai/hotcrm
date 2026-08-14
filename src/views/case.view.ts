@@ -49,7 +49,7 @@ export const CaseViews = defineView({
     // profile without the grant gets 403 whether it clicks the button or
     // curls the route. Measured in #798/#816; before this the grant was live
     // but reachable only by `curl`.
-    exportOptions: ['csv', 'xlsx'],
+    exportOptions: { formats: ['csv', 'xlsx'] },
     appearance: {
       showDescription: true,
       allowedVisualizations: ['grid', 'kanban', 'calendar', 'timeline'],

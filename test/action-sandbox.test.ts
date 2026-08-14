@@ -430,11 +430,21 @@ describe('every script action body executes under QuickJS', () => {
       // retry, so a handler that covers only part of the selection must reject
       // rather than return a success the bar will toast.
       //
-      // The trap this pins is specific and silent: an id matching no row does
-      // NOT make the engine throw — `update` RESOLVES WITH NULL. A body that
-      // counted iterations instead of returned rows would answer `updated: 2`
-      // for one write, which is exactly the "success toast, nothing written"
-      // failure #588 pulled this button off the list for.
+      // The trap this pins is specific and silent: a body that counted
+      // iterations instead of returned rows would answer `updated: 2` for one
+      // write, which is exactly the "success toast, nothing written" failure
+      // #588 pulled this button off the list for.
+      //
+      // How the engine reports the stale id changed under us, and the body
+      // handles both — measured on this harness with a live-id control:
+      //
+      //   ≤ 17.0.0-rc.6   update() RESOLVES WITH NULL
+      //   ≥ 17.0.0        update() REJECTS — RECORD_NOT_FOUND / 404
+      //
+      // Either way the aggregate message below is what the rep must see, so
+      // the body catches per row rather than letting the first miss abort the
+      // run. `covers_live_rows_after_a_stale_id` next door pins the half that
+      // an uncaught rejection would silently cost.
       const api = ql.createContext({ isSystem: true });
       const live = await api.object('crm_opportunity').insert({ name: 'Deal C', stage: 'prospecting' });
       const stale = 'opp_deleted_between_select_and_submit';
@@ -453,6 +463,30 @@ describe('every script action body executes under QuickJS', () => {
       // because setting a stage is idempotent.
       const stored = await api.object('crm_opportunity').findOne({ where: { id: live.id } });
       expect(stored?.stage).toBe('negotiation');
+    });
+
+    it('covers_live_rows_after_a_stale_id — a miss does not abandon the rest of the selection', async () => {
+      // The stale id goes FIRST, which is the ordering the previous leg cannot
+      // see: with `update` rejecting on a miss (17.0.0), a body that let the
+      // rejection escape the loop would never attempt `live` at all, and the
+      // rep's retry would abort at the same row every time — the selection
+      // could never be covered from the UI. Before 17.0.0 the same body passed
+      // this by accident, because a miss resolved null instead of throwing.
+      const api = ql.createContext({ isSystem: true });
+      const stale = 'opp_deleted_before_the_live_row';
+      const live = await api.object('crm_opportunity').insert({ name: 'Deal D', stage: 'prospecting' });
+
+      await expect(
+        runActionBody(action(MASS_UPDATE), {
+          objectName: 'crm_opportunity',
+          input: { stage: 'negotiation', _selectedIds: [stale, live.id] },
+          engine: asBodyEngine(ql),
+        }),
+      ).rejects.toThrow(/1 of 2 selected opportunities could not be updated/);
+
+      // The point of the leg: the row BEHIND the stale id was still written.
+      const stored = await api.object('crm_opportunity').findOne({ where: { id: live.id } });
+      expect(stored?.stage, 'the live row behind a stale id was never attempted').toBe('negotiation');
     });
   });
 

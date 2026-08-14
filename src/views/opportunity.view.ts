@@ -58,7 +58,7 @@ export const OpportunityViews = defineView({
     pagination: { pageSize: 25, pageSizeOptions: [25, 50, 100] },
     selection: { type: 'multiple' },
     showRecordCount: true,
-    exportOptions: ['csv', 'xlsx'],
+    exportOptions: { formats: ['csv', 'xlsx'] },
     appearance: {
       showDescription: true,
       allowedVisualizations: ['grid', 'kanban', 'calendar', 'timeline', 'gallery'],

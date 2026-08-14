@@ -118,21 +118,46 @@ export const MassUpdateStageAction: Action = {
       const ids = selected.length ? selected : (ctx.recordId ? [ctx.recordId] : []);
       if (!ids.length) throw new Error('mass_update_stage: no opportunity selected');
       const missed = [];
+      let firstCause = '';
       let updated = 0;
       for (const id of ids) {
         // \`update(data, options)\` — \`ctx.api\` is the engine repo facade, whose
         // update takes a DOCUMENT, not an id. \`updateById(id, data)\` exists on
         // ObjectRepository but NOT on the facade the runtime builds when it has
         // no scoped context, so this spelling is the only one live on both.
-        const row = await ctx.api.object('crm_opportunity').update(
-          { id: id, stage: newStage },
-          { where: { id: id } },
-        );
-        // An id that matched no row resolves to null — the engine does NOT
-        // throw for it. Counting the attempt instead of the returned row is how
-        // a stale or invisible id turns into a success toast for a write that
-        // never happened, which is the exact silent-success failure #588 pulled
-        // this button for. Count only what came back.
+        //
+        // An id that matches no row is a MISS, not an abort, and the engine has
+        // answered it both ways: through @objectstack/* 17.0.0-rc.6 \`update\`
+        // RESOLVED WITH NULL, and from 17.0.0 it REJECTS (RECORD_NOT_FOUND /
+        // 404). Both are handled here, and neither may end the loop — an
+        // uncaught rejection on the first stale id would leave every id after
+        // it unattempted, so re-running the action over the same selection
+        // would fail at the same row forever and the live rows behind it could
+        // never be covered. That is strictly worse than the silent-success
+        // failure #588 pulled this button for, because it is unrecoverable
+        // from the UI. Collect the miss, keep going, reject once at the end.
+        //
+        // The catch is deliberately cause-AGNOSTIC. A host rejection crosses
+        // the QuickJS boundary as \`{ name, message }\` only — \`code\`, \`status\`
+        // and \`details\` are dropped by the bridge (runtime \`vm.newError\`) — so
+        // a body physically cannot test for RECORD_NOT_FOUND, and sniffing the
+        // message text would pin engine wording that is not contract. Every
+        // per-row failure is therefore reported as what the aggregate error
+        // already claims — this id was not updated — with the first cause
+        // carried along so the reason is not lost.
+        let row = null;
+        try {
+          row = await ctx.api.object('crm_opportunity').update(
+            { id: id, stage: newStage },
+            { where: { id: id } },
+          );
+        } catch (err) {
+          row = null;
+          if (!firstCause) firstCause = (err && err.message) ? String(err.message) : String(err);
+        }
+        // Count only what came back: counting the ATTEMPT is how a stale or
+        // invisible id turns into a success toast for a write that never
+        // happened (#588).
         if (row) { updated++; } else { missed.push(id); }
       }
       // Aggregate dispatch is all-or-nothing (objectui#3139): a handler that
@@ -146,6 +171,7 @@ export const MassUpdateStageAction: Action = {
           'mass_update_stage: ' + missed.length + ' of ' + ids.length
           + ' selected opportunities could not be updated (' + missed.join(', ')
           + '). Re-run the action on the selection to retry.'
+          + (firstCause ? ' First cause: ' + firstCause : '')
         );
       }
       return { stage: newStage, updated };

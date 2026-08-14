@@ -25,6 +25,18 @@
  * same route. So the gate is object-wide and reachable with `curl`, which is
  * exactly why it has to be enforced server-side rather than by hiding a button.
  *
+ * SHAPE (@objectstack/spec 17.0.0, #8010, maintainer ruling 2026-08-12): the
+ * declaration is the OBJECT form `exportOptions: { formats: ['csv', 'xlsx'] }`.
+ * The bare array this app used through 17.0.0-rc.6 is the legacy spelling; it
+ * still parses and LIFTS to `{ formats: [...] }`, so `z.input` accepts both
+ * while `z.output` — everything that reads loaded metadata, this app's own
+ * guards included — only ever sees the object. That asymmetry is why the bump
+ * to 17.0.0 blinded the guard below rather than failing it: the views still
+ * declared their surfaces, and a reader testing the legacy array's `.length`
+ * silently measured `undefined` on every one of them. Read `.formats`.
+ * `'pdf'` left the format enum in the same change (#1301 NOT_PLANNED); this
+ * app never declared it.
+ *
  * `ReportService.assertExportAllowed` is a genuinely separate gate, but it
  * belongs to the `reports` capability (saved reports + emailed digests over
  * `sys_saved_report`), which this app does not require — `/api/v1/reports`

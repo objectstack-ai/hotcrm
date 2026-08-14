@@ -180,7 +180,7 @@ export const LeadViews = defineView({
     // Features
     pagination: { pageSize: 25, pageSizeOptions: [10, 25, 50, 100] },
     rowHeight: 'medium',
-    exportOptions: ['csv', 'xlsx'],
+    exportOptions: { formats: ['csv', 'xlsx'] },
     
     // Empty State
     emptyState: {
