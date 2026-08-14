@@ -35,7 +35,7 @@ export const ContactViews = defineView({
     // `locations: ['list_item']` and are auto-injected into the row menu.
     bulkActions: ['add_contact_to_campaign'],
     pagination: { pageSize: 50, pageSizeOptions: [25, 50, 100] },
-    exportOptions: ['csv', 'xlsx'],
+    exportOptions: { formats: ['csv', 'xlsx'] },
     appearance: {
       showDescription: true,
       allowedVisualizations: ['grid', 'gallery'],

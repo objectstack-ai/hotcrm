@@ -45,7 +45,7 @@ export default defineStack({
     // pairing against `objectstack.manifest.json` instead of trusting this
     // comment, because two platform upgrades in a row (rc.2, then rc.3) moved
     // the manifest and left this line behind (#728).
-    engines: { protocol: '^17.0.0-rc.6' },
+    engines: { protocol: '^17.0.0' },
   },
 
   // ─── Platform capabilities this app needs ─────────────────────────

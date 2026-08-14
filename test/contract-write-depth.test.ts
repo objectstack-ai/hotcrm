@@ -105,6 +105,13 @@ const attempt = async (object: string, doc: AnyRec, ctx: AnyRec) => {
       message: String(e?.message ?? ''),
       code: e?.code,
       status: e?.status ?? e?.statusCode,
+      // @objectstack/spec 17.0.0 split the refusal in two: `message` is now a
+      // localized END-USER sentence rendered from `BUILTIN_OPERATION_MESSAGES`
+      // (`errors.permission_denied`, four locales), while the operator-facing
+      // sentence naming the operation, object and positions moved to
+      // `developerMessage` and the machine-readable facts to `details`.
+      details: e?.details,
+      developerMessage: e?.developerMessage,
     };
   }
 };
@@ -386,7 +393,21 @@ describe('what the grant deliberately does NOT convey, on any edition', () => {
     // `statusCode` rather than a `status`.
     const r = await attempt('crm_contract', { id: id.repContract, contract_value: 9999 }, repCtx);
     expect(r.ok).toBe(false);
+    // The ENVELOPE is the contract (ADR-0112): code + status, then the
+    // structured facts. This used to read the refusal out of `message`, which
+    // stopped naming the object at @objectstack/spec 17.0.0 — `message` is now
+    // the localized end-user sentence and says nothing about `crm_contract`.
+    // Asserting `details` instead is strictly stronger than the old substring:
+    // it pins WHICH verb was refused on WHICH object as data, so a refusal
+    // arriving for the wrong object can no longer pass by wording alone.
     expect(r.code).toBe('PERMISSION_DENIED');
-    expect(r.message).toContain("operation 'update' on object 'crm_contract' is not permitted");
+    expect(r.status).toBe(403);
+    expect(r.details).toMatchObject({ operation: 'update', object: 'crm_contract' });
+    // The operator-facing sentence survives, one field over — kept in the
+    // assertion so a future release that drops `developerMessage` is loud here
+    // rather than quietly leaving the logs with nothing to grep.
+    expect(String(r.developerMessage)).toContain(
+      "operation 'update' on object 'crm_contract' is not permitted",
+    );
   });
 });
