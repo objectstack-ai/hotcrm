@@ -332,17 +332,21 @@ describe('deleting a record a CONVERTED lead points at', () => {
    * `duplicate_of_contact` on any new lead whose email matches an existing
    * contact — and `duplicate_of_contact` carries
    * `requiredWhen has(record.duplicate_of_type) && … == "crm_contact"`. So the
-   * engine's cleanup nulls the lookup while the discriminator stays behind, and
-   * the record's own rule refuses the write. That is the #696 / #711
+   * engine's cleanup nulled the lookup while the discriminator stayed behind,
+   * and the record's own rule refused the write. That is the #696 / #711
    * construction (a `set_null` clear that violates the holder's own rule), NOT
-   * the freeze-guard construction this card fixes, and it is fully independent
-   * of it: an OPEN, unconverted lead blocks the same delete the same way, on a
+   * the freeze-guard construction this card fixes, and it was fully independent
+   * of it: an OPEN, unconverted lead blocked the same delete the same way, on a
    * path where no freeze guard runs at all.
    *
    * What this test pins forever is that none of the three freeze guards is the
-   * one answering any more. The `Duplicate Of Contact is required` line is
-   * today's truth and is expected to flip to a clean delete when that finding
-   * lands — treat a failure of that assertion as news, and update it here.
+   * one answering. The `Duplicate Of Contact is required` line WAS today's
+   * truth and was expected to flip to a clean delete when that finding landed;
+   * it landed as #1072, so the assertion is flipped — `lead_duplicate_check`
+   * now retires `duplicate_of_type` + `duplicate_status` with the link. The
+   * fix's own coverage lives in `test/lead-duplicate-link-cleanup.test.ts`;
+   * what remains asserted HERE is only the part this file is responsible for —
+   * that no freeze guard speaks for that path.
    */
   it('leaves the duplicate-pairing blocker to its own fix, and stops answering for it', async () => {
     const n = uniq();
@@ -368,8 +372,13 @@ describe('deleting a record a CONVERTED lead points at', () => {
     expect(message ?? '').not.toContain('is locked');
     expect(message ?? '').not.toContain('and frozen');
     expect(message ?? '').not.toContain('Cannot edit converted lead');
-    // Today: the field-pairing rule still refuses, on its own account.
-    expect(message).toContain('Duplicate Of Contact is required');
+    // Since #1072 the pairing no longer refuses either: the delete completes,
+    // and the lead stops claiming to duplicate anything.
+    expect(message).toBeNull();
+    expect(await rowsOf('crm_contact', contact.id)).toHaveLength(0);
+    const cleared = await rowOf('crm_lead', lead.id);
+    expect(cleared.duplicate_of_type ?? null).toBeNull();
+    expect(cleared.duplicate_of_contact ?? null).toBeNull();
   });
 });
 

@@ -366,6 +366,16 @@ export const Lead = ObjectSchema.create({
     // response to a predicate that fails to evaluate is to SKIP it
     // ("requiredWhen for 'duplicate_of_lead' failed to evaluate — skipped").
     // The rule would then read as enforced and require nothing at all.
+    //
+    // Both lookups take the spec default `deleteBehavior: 'set_null'`, and that
+    // is deliberate: a lead is a first-class record that happens to carry a
+    // flag, so `cascade` would destroy the lead because the record it was
+    // compared against was deleted. What keeps the pairing honest under a
+    // `set_null` clear is the retirement block in `lead_duplicate_check`
+    // (`lead.hook.ts`, job 1c): when a write leaves the named lookup blank it
+    // drops `duplicate_of_type` and `duplicate_status` in the same write, so the
+    // pair is never left half-stated and this rule never has to be loosened to
+    // tolerate one (#1072). Read that note before changing either predicate.
     duplicate_of_lead: Field.lookup('crm_lead', {
       label: 'Duplicate Of Lead',
       group: 'duplicates',
