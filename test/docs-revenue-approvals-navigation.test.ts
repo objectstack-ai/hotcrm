@@ -43,28 +43,36 @@ import { type AnyRec, packFor } from './helpers/metadata-fixtures';
  * metadata and never open `content/docs`, so — as with `docs-drift.test.ts`
  * and the service-index guard (#948) — the check lives where the claim lives.
  *
- * ⚠ KNOWN STALE PROSE, tracked separately — do not read the green pins below
- * as "the section is accurate". #1123 re-pointed the Inbox entry away from
- * `sys_approval_request` (see the source-fact block), which leaves two claims
- * on the doc pages wrong while every assertion here still passes, because the
- * doc-side pins check that names are *present*, not that the destination is
- * right:
+ * ## The destination, pinned to the entry (#1162)
  *
- *   1. `revenue/approvals.{mdx,zh-Hans,zh-Hant}` — "That item pins no view of
- *      its own, so it opens the object's list with the four built-in views the
- *      approvals plugin ships", plus the four-row table under it. The item no
- *      longer opens that object at all; the approval centre's own tabs are
- *      My Pending / Submitted by me / All, with a separate status filter.
- *   2. `revenue/index.{mdx,zh-Hans,zh-Hant}` and the same bullet in
- *      `revenue/approvals.*` — "**Inbox** — the approval requests waiting on
- *      you (`sys_approval_request`)". The parenthetical names the object the
- *      entry used to open.
+ * #1123 re-pointed the Inbox entry away from `sys_approval_request` to the
+ * platform's approval centre, and every assertion in this file stayed green
+ * while two doc claims went wrong — because the doc-side pins all asked
+ * whether a NAME is *present* (or a retired phrase absent), never whether the
+ * destination the page describes is the destination the entry carries. A page
+ * can satisfy all of them and still send the reader to a screen the sidebar
+ * stopped opening.
  *
- * The four built-in view labels themselves are still real and still shipped by
- * the plugin, so `lists every built-in view …` is not lying — it is the framing
- * around them that went stale. Rewriting six MDX files across three languages
- * was out of #1123's declared file surface; the doc-side fixtures in this file
- * (`PAGES`) must be re-cut in the same change that fixes the prose.
+ * `destinationClaims` closes that: each page fixture carries the sentence that
+ * belongs to each shape the entry could take, and the test picks the required
+ * one from `INBOX_DESTINATION` — read off `crm.app.ts` itself — then forbids
+ * the others. Re-point the entry without rewriting the pages and this goes red
+ * naming both sides. It is still a prose pin, the same class as `retired`
+ * below: it cannot tell that a rewrite is *good*, only that the page and the
+ * entry are talking about the same destination.
+ *
+ * The centre's own labels are pinned the other way, against the installed
+ * console bundle (`consoleBundleText`), the way the sibling guard in
+ * `docs-search-navigation-views.test.ts` resolves its 「…」 glosses against the
+ * shipped plugin. Nothing else in this repo would notice a console release
+ * renaming a tab out from under the pages.
+ *
+ * The four built-in view labels remain real and still shipped by the plugin —
+ * they are simply not what the Inbox entry opens any more, so the section keeps
+ * naming them under a heading of their own, and the pages carry an explicit
+ * collision table: *My Pending* and *All* appear on both sides verbatim, and
+ * the centre's **Submitted by me** tab differs from the phantom *Submitted by
+ * Me* only in capitalisation.
  */
 
 const NAV_NODES: AnyRec[] = (() => {
@@ -90,8 +98,55 @@ const viewLabels = (schema: AnyRec): string[] =>
 const REQUEST_VIEWS = viewLabels(SysApprovalRequest as unknown as AnyRec);
 const ACTION_VIEWS = viewLabels(SysApprovalAction as unknown as AnyRec);
 
+/**
+ * Which destination the Inbox entry actually carries, reduced to the
+ * discriminant the doc pins key on. Anything unrecognised stays distinct, so a
+ * third shape fails loudly rather than silently matching one of the two the
+ * pages know how to describe.
+ */
+const INBOX_DESTINATION: string = (() => {
+  const inbox = APPROVALS_CHILDREN[0];
+  if (!inbox) return 'missing';
+  if (inbox.type === 'component' && inbox.componentRef === 'approvals:inbox') return 'approval-centre';
+  if (inbox.type === 'object' && inbox.objectName === SysApprovalRequest.name) return 'request-object-list';
+  return `unpinned:${String(inbox.type)}`;
+})();
+
+/**
+ * Every shipped console bundle, joined once and memoised.
+ *
+ * The centre's tabs and status labels are rendered by the console, not by
+ * anything this repo authors, so a page naming them is quoting a third party.
+ * Read lazily: the bundles are tens of megabytes and only the label pins need
+ * them.
+ */
+let consoleTextCache: string | undefined;
+const consoleBundleText = (): string => {
+  if (consoleTextCache === undefined) {
+    const assets = join(REPO_ROOT, 'node_modules/@objectstack/console/dist/assets');
+    consoleTextCache = readdirSync(assets)
+      .filter((f) => f.endsWith('.js'))
+      .map((f) => readFileSync(join(assets, f), 'utf8'))
+      .join('\n');
+  }
+  return consoleTextCache;
+};
+
 /** The three names the section says exist nowhere. */
 const PHANTOM_VIEWS = ['Pending My Approval', 'Submitted by Me', 'Recently Approved'] as const;
+
+/**
+ * A label that ships nowhere, used to prove the bundle scan can miss. Without
+ * it, a scan over tens of megabytes that matched everything would read exactly
+ * like a passing pin — the vacuous-guard failure mode the `sees a non-trivial
+ * navigation tree` test covers for the other fixtures. Taken from
+ * `PHANTOM_VIEWS` so it stays a name this file already asserts is fictional.
+ *
+ * Note *which* phantom: not `Submitted by Me`, which the console does ship
+ * bar one capital letter (`Submitted by me`, the centre's second tab) and so
+ * would make this control pass for the wrong reason.
+ */
+const ABSENT_FROM_CONSOLE: string = PHANTOM_VIEWS[2];
 
 /**
  * Every authored source file, for the "zero hits in `src/`" half of the claim.
@@ -127,6 +182,19 @@ const PAGES = [
     ],
     /** Where the section says the *Approval Requests* name really lives. */
     attribution: /calls the \*\*object\*\*/,
+    /**
+     * The sentence that belongs to each destination the entry could carry. The
+     * one keyed by `INBOX_DESTINATION` is required; every other one is
+     * forbidden, so the page cannot describe a destination the entry left.
+     */
+    destinationClaims: {
+      'approval-centre': "opens the platform's **approval centre**",
+      'request-object-list': "so it opens the object's list",
+    },
+    /** Centre labels the page quotes, checked against the console bundle. */
+    quotedFromConsole: ['My Pending', 'Submitted by me', 'Returned for revision'],
+    /** The reader must be told the two lists are two screens. */
+    collision: /same words, different screen/,
     /** Verbatim fragments of the wrong section. None may return. */
     retired: [
       '**Approval Requests** — everything pending',
@@ -144,6 +212,26 @@ const PAGES = [
       /本应用侧边栏上也没有任何条目叫这个名字/,
     ],
     attribution: /审批插件给\*\*对象\*\*起的名字/,
+    destinationClaims: {
+      'approval-centre': '进入平台的**审批中心**',
+      'request-object-list': '所以点开后落在对象的列表页上',
+    },
+    // The zh pages gloss the centre's labels with the strings the zh-CN console
+    // actually renders, so those are pinned too — 全部 is left out on purpose,
+    // a bare "all" matches any bundle and would pin nothing.
+    quotedFromConsole: [
+      'My Pending',
+      'Submitted by me',
+      '待我审批',
+      '我发起的',
+      '全部状态',
+      '待审批',
+      '已通过',
+      '已拒绝',
+      '已撤回',
+      '已退回修改',
+    ],
+    collision: /同名，但不是同一块界面/,
     retired: [
       '**审批请求**——所有待处理项',
       '带视图 *Pending My Approval*',
@@ -160,11 +248,65 @@ const PAGES = [
       /本應用側邊欄上也沒有任何條目叫這個名字/,
     ],
     attribution: /審批外掛給\*\*物件\*\*取的名字/,
+    destinationClaims: {
+      'approval-centre': '進入平台的**審批中心**',
+      'request-object-list': '所以點開後落在物件的列表頁上',
+    },
+    // Neither the app nor the console ships a Hant pack, so this page quotes the
+    // simplified strings verbatim inside 「」 — the same convention the rest of
+    // the file uses, and the reason these are the simplified spellings.
+    quotedFromConsole: [
+      'My Pending',
+      'Submitted by me',
+      '待我审批',
+      '我发起的',
+      '全部状态',
+      '待审批',
+      '已通过',
+      '已拒绝',
+      '已撤回',
+      '已退回修改',
+    ],
+    collision: /同名，但不是同一塊介面/,
     retired: [
       '**審批請求**——所有待處理項',
       '帶視圖 *Pending My Approval*',
       '**操作歷史**——跨所有審批的完整稽核軌跡',
     ],
+  },
+] as const;
+
+/**
+ * `revenue/index` carries the same Inbox bullet one directory over, and nothing
+ * pinned it at all — which is why #1123's re-point left it stale in three more
+ * files than the section above. Only the destination is pinned here: the roster
+ * of names on that page is `revenue/approvals`'s job, and duplicating it would
+ * make two files fight over one claim.
+ */
+const INDEX_PAGES = [
+  {
+    file: 'content/docs/revenue/index.mdx',
+    heading: '## Where to find things',
+    destinationClaims: {
+      'approval-centre': "opens the platform's **approval centre**",
+      'request-object-list': 'the approval requests waiting on you (`sys_approval_request`)',
+    },
+  },
+  {
+    file: 'content/docs/revenue/index.zh-Hans.mdx',
+    heading: '## 在哪里找到这些内容',
+    destinationClaims: {
+      'approval-centre': '进入平台的**审批中心**',
+      'request-object-list': '等着你处理的审批请求（`sys_approval_request`）',
+    },
+  },
+  {
+    file: 'content/docs/revenue/index.zh-Hant.mdx',
+    heading: '## 在哪裡找到這些內容',
+    destinationClaims: {
+      'approval-centre': '進入平台的**審批中心**',
+      'request-object-list': '等著你處理的審批請求（`sys_approval_request`）',
+    },
   },
 ] as const;
 
@@ -245,10 +387,25 @@ describe('the source facts the approvals navigation section rests on (#963)', ()
     ).toBe(true);
   });
 
-  it('that item pins no view, so the object\'s own list views are what a reader meets', () => {
-    // The section explains the four tabs *because* the nav item names none of
-    // them. Pin a `viewName` here and the prose has to change with it.
+  it('that item still pins no view of its own — a leftover viewName would be dead metadata', () => {
+    // Renamed in #1162: the old name said the object's list views "are what a
+    // reader meets", which stopped being true the moment #1123 re-pointed the
+    // entry. The assertion did not: a `viewName` surviving from the object-list
+    // era would name a view of an object this entry no longer opens — inert
+    // metadata that reads, to anyone grepping, as though it still routes. The
+    // pages' "That item pins no view of its own" sentence rests on this.
     expect(APPROVALS_CHILDREN[0]!.viewName).toBeUndefined();
+  });
+
+  /**
+   * The discriminant the doc pins key on, asserted once here so a failure says
+   * "the entry moved" rather than repeating three times as "the pages are
+   * wrong". If this goes red, the pages are not wrong yet — they are simply
+   * describing a destination `crm.app.ts` no longer carries, and both sides
+   * have to be re-cut together.
+   */
+  it('the entry carries a destination the doc pages know how to describe', () => {
+    expect(INBOX_DESTINATION).toBe('approval-centre');
   });
 
   it('the Approvals group is collapsed by default', () => {
@@ -295,49 +452,143 @@ describe('the source facts the approvals navigation section rests on (#963)', ()
   });
 });
 
-describe('revenue/approvals names the navigation that exists (#963)', () => {
-  describe.each(PAGES)('$file', ({ file, heading, denials, attribution, retired }) => {
-    const section = () => sectionOf(file, heading);
+describe('revenue/approvals names the navigation that exists (#963, #1162)', () => {
+  describe.each(PAGES)(
+    '$file',
+    ({ file, heading, denials, attribution, destinationClaims, quotedFromConsole, collision, retired }) => {
+      const section = () => sectionOf(file, heading);
 
-    it('names the real sidebar item', () => {
-      expect(section()).toContain('Inbox');
-    });
+      it('names the real sidebar item', () => {
+        expect(section()).toContain('Inbox');
+      });
 
-    it('lists every built-in view of the approval request, by its source label', () => {
-      const text = section();
-      const missing = REQUEST_VIEWS.filter((l) => !text.includes(l));
+      /**
+       * The pin that would have caught #1123's doc fallout. Every other doc-side
+       * assertion in this file asks whether a name is present; this one asks
+       * whether the destination the page describes is the destination the entry
+       * carries, by reading the required sentence off `crm.app.ts`.
+       */
+      it('describes the destination the entry actually carries, and no other', () => {
+        const text = section();
+        const claims = destinationClaims as Readonly<Record<string, string>>;
+        const required = claims[INBOX_DESTINATION];
+        expect(
+          required,
+          `${file}: the Inbox entry is now '${INBOX_DESTINATION}', which no fixture describes — ` +
+            'add the sentence this page should carry for that shape',
+        ).toBeDefined();
+        expect(
+          text,
+          `${file}: the entry opens '${INBOX_DESTINATION}' but the section never says so`,
+        ).toContain(required);
+        for (const [kind, phrase] of Object.entries(claims)) {
+          if (kind === INBOX_DESTINATION) continue;
+          expect(
+            text,
+            `${file}: still describes the '${kind}' destination, which the entry left`,
+          ).not.toContain(phrase);
+        }
+      });
+
+      /**
+       * The centre's labels come from the installed console, not from anything
+       * this repo authors, so they are pinned against the shipped bundle rather
+       * than against a spelling written down once — the same discipline the
+       * sibling guard in `docs-search-navigation-views.test.ts` applies to its
+       * 「…」 glosses.
+       */
+      it('quotes the approval centre using labels the installed console really ships', () => {
+        const bundles = consoleBundleText();
+        expect(bundles.length, 'console bundle scan read nothing').toBeGreaterThan(1_000_000);
+        expect(
+          bundles,
+          'the bundle scan matched a label that ships nowhere — it cannot fail, so it pins nothing',
+        ).not.toContain(ABSENT_FROM_CONSOLE);
+        const text = section();
+        for (const label of quotedFromConsole) {
+          expect(text, `${file}: the section stopped quoting '${label}'`).toContain(label);
+          expect(
+            bundles,
+            `${file} quotes '${label}', but no console bundle ships it any more — the centre was ` +
+              'relabelled and the page now names a tab the reader cannot see',
+          ).toContain(label);
+        }
+      });
+
+      it('warns that the object views and the centre tabs are two screens, not one', () => {
+        // *My Pending* and *All* are on both sides verbatim, so a page that lists
+        // both sets without saying they are different screens leaves the reader
+        // with a table that is half right — worse than one plainly wrong.
+        expect(section(), `${file}: no collision warning between the two lists`).toMatch(collision);
+      });
+
+      it('still lists every built-in view of the approval request, by its source label', () => {
+        const text = section();
+        const missing = REQUEST_VIEWS.filter((l) => !text.includes(l));
+        expect(
+          missing,
+          `${file}: the section omits list view(s) the approvals plugin still ships — they are no ` +
+            'longer what Inbox opens, but they are real and a reader who meets them needs them named',
+        ).toEqual([]);
+      });
+
+      it('lists the audit-trail views too, so "real data, no entry point" is concrete', () => {
+        const text = section();
+        expect(ACTION_VIEWS.filter((l) => !text.includes(l))).toEqual([]);
+        expect(text).toContain(SysApprovalAction.name);
+      });
+
+      it('keeps all five wrong names on the page instead of deleting them silently', () => {
+        const text = section();
+        for (const name of [...PHANTOM_VIEWS, 'Approval Requests', 'Action History']) {
+          expect(text, `${file}: ${name} was dropped — a reader who remembers it learns nothing`).toContain(name);
+        }
+      });
+
+      it('states the denial for each of them, not merely the correction', () => {
+        const text = section();
+        for (const re of denials) expect(text, `${file}: missing denial ${re}`).toMatch(re);
+      });
+
+      it('says where the Approval Requests name really lives', () => {
+        expect(section()).toMatch(attribution);
+      });
+
+      it('does not resurrect the claims #963 removed', () => {
+        const text = section();
+        expect(retired.filter((phrase) => text.includes(phrase))).toEqual([]);
+      });
+    },
+  );
+});
+
+describe('revenue/index sends the reader to the same destination (#1162)', () => {
+  describe.each(INDEX_PAGES)('$file', ({ file, heading, destinationClaims }) => {
+    it('describes the destination the entry actually carries, and no other', () => {
+      const text = sectionOf(file, heading);
+      const claims = destinationClaims as Readonly<Record<string, string>>;
+      const required = claims[INBOX_DESTINATION];
       expect(
-        missing,
-        `${file}: the section omits list view(s) the approvals plugin ships — a reader ` +
-          'filtering the Inbox would not find them',
-      ).toEqual([]);
-    });
-
-    it('lists the audit-trail views too, so "real data, no entry point" is concrete', () => {
-      const text = section();
-      expect(ACTION_VIEWS.filter((l) => !text.includes(l))).toEqual([]);
-      expect(text).toContain(SysApprovalAction.name);
-    });
-
-    it('keeps all five wrong names on the page instead of deleting them silently', () => {
-      const text = section();
-      for (const name of [...PHANTOM_VIEWS, 'Approval Requests', 'Action History']) {
-        expect(text, `${file}: ${name} was dropped — a reader who remembers it learns nothing`).toContain(name);
+        required,
+        `${file}: the Inbox entry is now '${INBOX_DESTINATION}', which no fixture describes`,
+      ).toBeDefined();
+      expect(
+        text,
+        `${file}: the entry opens '${INBOX_DESTINATION}' but the bullet never says so`,
+      ).toContain(required);
+      for (const [kind, phrase] of Object.entries(claims)) {
+        if (kind === INBOX_DESTINATION) continue;
+        expect(
+          text,
+          `${file}: still describes the '${kind}' destination, which the entry left`,
+        ).not.toContain(phrase);
       }
     });
 
-    it('states the denial for each of them, not merely the correction', () => {
-      const text = section();
-      for (const re of denials) expect(text, `${file}: missing denial ${re}`).toMatch(re);
-    });
-
-    it('says where the Approval Requests name really lives', () => {
-      expect(section()).toMatch(attribution);
-    });
-
-    it('does not resurrect the claims #963 removed', () => {
-      const text = section();
-      expect(retired.filter((phrase) => text.includes(phrase))).toEqual([]);
+    it('names the sidebar item and keeps the Approval Requests denial', () => {
+      const text = sectionOf(file, heading);
+      expect(text).toContain('Inbox');
+      expect(text).toContain('Approval Requests');
     });
   });
 });
