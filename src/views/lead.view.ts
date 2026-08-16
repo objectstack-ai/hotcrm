@@ -2,6 +2,7 @@
 
 import { P } from '@objectstack/spec';
 import { defineView } from '@objectstack/spec/ui';
+import { DUPLICATE_OF_TYPE_AUTHORABLE_OPTIONS } from '../objects/_picklists';
 
 /**
  * ═══ HOUSE RULE: form predicates are `record.`-bound AND TOTAL ═════════════
@@ -70,6 +71,22 @@ const DUPLICATE_LINK_FIELDS = [
   {
     field: 'duplicate_of_type',
     required: true,
+    // The picker offers the AUTHORABLE half of the vocabulary only (#1164).
+    // `crm_lead.duplicate_of_type` also accepts `erased`, a tombstone
+    // `lead_duplicate_check` stamps when the engine's reference cleanup nulls
+    // the pointer — "confirmed duplicate of a record that has since been
+    // erased". Nobody authors that: it is an observation about a deletion that
+    // already happened, and offering it would let a reviewer close a lead as a
+    // duplicate of nothing while satisfying every rule that exists to stop
+    // exactly that. Narrowing here rather than deleting the value is the point
+    // — the record can still SAY it, and the field keeps its label in all four
+    // locales, so a tombstoned lead reads as "Erased Record" on the detail page
+    // instead of as a raw enum nobody can explain.
+    //
+    // Spread from `_picklists.ts` rather than retyped: the authorable set is
+    // the source both lists derive from, so a future object type added there
+    // reaches this picker automatically and the tombstone never can.
+    options: [...DUPLICATE_OF_TYPE_AUTHORABLE_OPTIONS],
     visibleOn: P`has(record.disqualification_reason) && record.disqualification_reason == "duplicate"`,
   },
   {

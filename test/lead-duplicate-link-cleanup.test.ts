@@ -74,6 +74,24 @@ import stack from '../objectstack.config';
  * The consequence is pinned explicitly below (`a hand-clear of the lookup
  * retires the claim too`) so that it reads as the measured trade it is.
  *
+ * ### The second rule on the same path (#1164)
+ *
+ * Retiring the claim whole cleared the field pairing and immediately tripped
+ * `duplicate_disqualification_requires_survivor` instead, so a lead a REVIEWER
+ * had closed as a confirmed duplicate still held its survivor hostage. #1164
+ * splits the retirement in two, on the one question the record already answers:
+ *
+ *     duplicate_status == 'confirmed'  ⇒  TOMBSTONE — `duplicate_of_type`
+ *                                          becomes `erased`, the status stands
+ *     anything else                    ⇒  retired whole, exactly as above
+ *
+ * A machine's guess is still retired whole; only a human's verdict is kept. The
+ * tombstone is a third `duplicate_of_type` value rather than a loosened rule,
+ * and that is deliberate: it changes NO predicate. The pairing fires only on
+ * `crm_lead` / `crm_contact`, so it never sees `erased`; #598's rule wants a
+ * non-blank type and `confirmed`, and gets both. The last describe block below
+ * used to pin the refusal and now pins the erasure, on both delete paths.
+ *
  * ### On the refusal envelope
  *
  * Measured end to end on 17.0.0 GA: both refusals in this file arrive as
@@ -279,18 +297,63 @@ describe('a lead stops claiming a duplicate once the record it named is gone', (
     expect(row.status).toBe('converted');
   });
 
-  it('retires a human-CONFIRMED claim too, and keeps the verdict off the record', async () => {
-    // `confirmed` is a human's verdict, not the machine's guess — but it is a
-    // verdict ABOUT a record that no longer exists, so it goes with the link.
-    // Nothing is lost: `duplicate_status` declares `trackHistory: true`.
+  it('TOMBSTONES a human-CONFIRMED claim instead of retiring it (#1164)', async () => {
+    // Flipped from "retires it too" by #1164, and the flip is the whole fix.
+    //
+    // A `confirmed` status is a person's verdict: they opened both records and
+    // agreed. That verdict is about what the reviewer FOUND, not about the
+    // pointer, so erasing someone else's contact must not delete it — and until
+    // #1164 it did, because "the pointer was erased" and "this claim never
+    // named anyone" were the same state on the record. `erased` makes them
+    // different states, and then nothing has to be relaxed to tell them apart.
     const { contact, lead } = await buildContactCase();
     await ql.update('crm_lead', { id: lead.id, duplicate_status: 'confirmed' }, { context: SYS });
 
     expect(await deleteAndCatch('crm_contact', contact.id)).toBeNull();
 
     const row = await rowOf('crm_lead', lead.id);
-    expect(row.duplicate_status ?? null).toBeNull();
-    expect(row.duplicate_of_type ?? null).toBeNull();
+    expect(row.duplicate_of_type).toBe('erased');
+    expect(row.duplicate_status).toBe('confirmed');
+    // The pointer really is gone — the tombstone replaces the claim's target,
+    // it does not preserve a dangling reference to a deleted row.
+    expect(row.duplicate_of_contact ?? null).toBeNull();
+    expect(await rowsOf('crm_contact', contact.id)).toHaveLength(0);
+  });
+
+  it('leaves a tombstoned lead alone on every later write', async () => {
+    // `erased` maps to no lookup, so the retirement block cannot fire on it a
+    // second time. Without that, a tombstoned lead would be one unrelated edit
+    // away from silently losing the verdict the tombstone exists to keep.
+    const { contact, lead } = await buildContactCase();
+    await ql.update('crm_lead', { id: lead.id, duplicate_status: 'confirmed' }, { context: SYS });
+    expect(await deleteAndCatch('crm_contact', contact.id)).toBeNull();
+
+    expect(await updateAndCatch('crm_lead', { id: lead.id, status: 'contacted' })).toBeNull();
+
+    const row = await rowOf('crm_lead', lead.id);
+    expect(row.status).toBe('contacted');
+    expect(row.duplicate_of_type).toBe('erased');
+    expect(row.duplicate_status).toBe('confirmed');
+  });
+
+  it('tombstones the lead↔lead case too, not just the contact one', async () => {
+    const n = uniq();
+    const survivor = await insert('crm_lead', {
+      first_name: 'Val', last_name: 'Verdict', company: 'Verdict Inc', status: 'new',
+      lead_source: 'web', email: `val.${n}@dupe-cleanup.test`,
+    });
+    const dupe = await insert('crm_lead', {
+      first_name: 'Val', last_name: 'Verdict', company: 'Verdict Inc', status: 'new',
+      lead_source: 'web', email: `val.${n}@dupe-cleanup.test`,
+    });
+    await ql.update('crm_lead', { id: dupe.id, duplicate_status: 'confirmed' }, { context: SYS });
+
+    expect(await deleteAndCatch('crm_lead', survivor.id)).toBeNull();
+
+    const row = await rowOf('crm_lead', dupe.id);
+    expect(row.duplicate_of_type).toBe('erased');
+    expect(row.duplicate_status).toBe('confirmed');
+    expect(row.duplicate_of_lead ?? null).toBeNull();
   });
 
   it('a hand-clear of the lookup retires the claim too — the measured trade', async () => {
@@ -301,6 +364,31 @@ describe('a lead stops claiming a duplicate once the record it named is gone', (
     const { lead } = await buildContactCase();
 
     expect(await updateAndCatch('crm_lead', { id: lead.id, duplicate_of_contact: null })).toBeNull();
+
+    const row = await rowOf('crm_lead', lead.id);
+    expect(row.duplicate_of_type ?? null).toBeNull();
+    expect(row.duplicate_status ?? null).toBeNull();
+  });
+
+  it('retires a CONFIRMED claim whole when the write speaks about the verdict', async () => {
+    // The tombstone's reachability boundary, stated as behaviour (#1164).
+    //
+    // The engine's `set_null` cleanup is silent about `duplicate_status` — it
+    // arrives as `{ id, <link>: null, updated_at, updated_by }` and nothing
+    // else. A caller that DOES name the status in the same payload is managing
+    // the claim by hand, and a hand-blanked pointer is not an erasure: that
+    // claim is retired whole, exactly as it was before #1164. This is what
+    // stops a payload from manufacturing a tombstone by supplying its own
+    // `confirmed`, which would be an author writing "duplicate of a record that
+    // was erased" about a record nobody erased.
+    const { lead } = await buildContactCase();
+    await ql.update('crm_lead', { id: lead.id, duplicate_status: 'confirmed' }, { context: SYS });
+
+    expect(
+      await updateAndCatch('crm_lead', {
+        id: lead.id, duplicate_of_contact: null, duplicate_status: 'confirmed',
+      }),
+    ).toBeNull();
 
     const row = await rowOf('crm_lead', lead.id);
     expect(row.duplicate_of_type ?? null).toBeNull();
@@ -407,38 +495,120 @@ describe('the type↔lookup pairing still bites', () => {
 // ──────────────────────────────────────────── the boundary of this fix ──
 
 /**
- * A lead already DISQUALIFIED as a duplicate is still undeletable-adjacent, and
- * deliberately left that way here.
+ * A lead already DISQUALIFIED as a duplicate — the second rule on the same
+ * erasure path, cleared by #1164.
  *
- * `duplicate_disqualification_requires_survivor` is a second, independent rule:
- * closing a lead with `disqualification_reason: 'duplicate'` requires a named
- * survivor AND `duplicate_status: 'confirmed'` (#598). Retiring the claim
- * satisfies the field pairing and immediately trips that rule instead, so the
- * delete still rolls back — with a different sentence, and for a different
- * reason. It is blocked today either way; this change moves which rule answers,
- * not whether the delete succeeds.
+ * These assertions used to pin the refusal. `duplicate_disqualification_requires_survivor`
+ * is a second, independent rule: closing a lead with
+ * `disqualification_reason: 'duplicate'` requires a named survivor AND
+ * `duplicate_status: 'confirmed'` (#598). Retiring the claim satisfied the field
+ * pairing and immediately tripped that rule instead, so the delete still rolled
+ * back — with a different sentence, for a different reason. #1072 moved which
+ * rule answered; it did not make the delete succeed.
  *
- * Fixing it is a product call this card did not make: "closed as a duplicate of
- * a person who has since been erased" has no obviously right resting state, and
- * every candidate either rewrites a recorded business verdict or loosens a rule
- * that is correct at authoring time — which is exactly what #1072 rejected.
- * Filed separately; the assertion below is today's truth and is expected to
- * flip when that lands.
+ * What cleared it is NOT a relaxation, and that distinction is the point. Three
+ * shapes were built and measured before this one (PR #1172): loosening the
+ * pairing, loosening the #598 rule, and rewriting the verdict. All three fail
+ * for one root reason — a validation is evaluated against `{...previous, ...data}`
+ * and cannot see a transition, so on the record "the pointer was erased" and
+ * "this claim never named anyone" are the SAME state, and every rule taught to
+ * tolerate the first also admits the second.
+ *
+ * `duplicate_of_type: 'erased'` makes them different states instead, and then
+ * every rule stands unedited: the `requiredWhen` pairing fires only on
+ * `crm_lead` / `crm_contact` so it never sees the tombstone, and #598's rule
+ * asks for a non-blank type plus `confirmed` — both of which a tombstoned lead
+ * still has. The verdict survives the erasure, which is what a reviewer's
+ * finding deserves, and the erasure completes, which is what the law requires.
  */
 describe('a lead already disqualified as a duplicate', () => {
-  it('is still refused, by the disqualification rule rather than the pairing', async () => {
-    const { contact, lead } = await buildContactCase();
+  /** A contact-case lead closed by a reviewer as a confirmed duplicate. */
+  const buildDisqualifiedCase = async (): Promise<AnyRec> => {
+    const built = await buildContactCase();
     await ql.update('crm_lead', {
-      id: lead.id, duplicate_status: 'confirmed', status: 'unqualified',
+      id: built.lead.id, duplicate_status: 'confirmed', status: 'unqualified',
       disqualification_reason: 'duplicate',
     }, { context: SYS });
+    return built;
+  };
+
+  it('deletes the contact it named — neither rule refuses any more', async () => {
+    const { contact, lead } = await buildDisqualifiedCase();
 
     const message = await deleteAndCatch('crm_contact', contact.id);
 
-    // The pairing is no longer the one answering — that is this card's change.
+    // Both refusals named explicitly: a fix that traded one for the other is
+    // exactly what #1072 produced here, and it read as progress.
     expect(message ?? '').not.toContain('Duplicate Of Contact is required');
-    // Today: the disqualification rule refuses, on its own account.
-    expect(message).toContain(
+    expect(message ?? '').not.toContain(
+      'Disqualifying a lead as Duplicate requires naming the surviving record',
+    );
+    expect(message).toBeNull();
+    expect(await rowsOf('crm_contact', contact.id)).toHaveLength(0);
+
+    // The disqualification survives the erasure whole — that is the half every
+    // rejected option paid for the delete with.
+    const row = await rowOf('crm_lead', lead.id);
+    expect(row.status).toBe('unqualified');
+    expect(row.disqualification_reason).toBe('duplicate');
+    expect(row.duplicate_status).toBe('confirmed');
+    // …and it now says what it could not say before: the survivor is gone.
+    expect(row.duplicate_of_type).toBe('erased');
+    expect(row.duplicate_of_contact ?? null).toBeNull();
+  });
+
+  it('then deletes the account above that contact', async () => {
+    const { account, contact } = await buildDisqualifiedCase();
+
+    expect(await deleteAndCatch('crm_contact', contact.id)).toBeNull();
+    expect(await deleteAndCatch('crm_account', account.id)).toBeNull();
+    expect(await rowsOf('crm_account', account.id)).toHaveLength(0);
+  });
+
+  it('deletes the account directly, cascading through the contact', async () => {
+    // The second delete path, and the one a GDPR erasure actually takes: one
+    // `DELETE crm_account/{A}`. `crm_contact.crm_account` is a master-detail
+    // with `deleteBehavior: 'cascade'`, so the account above a named contact
+    // was refused for the same reason the contact was.
+    const { account, contact, lead } = await buildDisqualifiedCase();
+
+    expect(await deleteAndCatch('crm_account', account.id)).toBeNull();
+    expect(await rowsOf('crm_account', account.id)).toHaveLength(0);
+    expect(await rowsOf('crm_contact', contact.id)).toHaveLength(0);
+
+    const row = await rowOf('crm_lead', lead.id);
+    expect(row.duplicate_of_type).toBe('erased');
+    expect(row.duplicate_status).toBe('confirmed');
+    expect(row.disqualification_reason).toBe('duplicate');
+  });
+
+  it('still refuses a disqualification that never named anyone', async () => {
+    // The other direction, and the reason the tombstone is a VALUE rather than
+    // a relaxation. #598's rule has to keep refusing the state it was written
+    // for; a fix that cleared the erasure path by admitting "closed as a
+    // duplicate of nobody" would look identical from the delete's side.
+    const lead = await insert('crm_lead', {
+      first_name: 'Nia', last_name: 'Named', company: 'Named Inc', status: 'new',
+      lead_source: 'web', email: `nia.${uniq()}@dupe-cleanup.test`,
+    });
+
+    expectValidationRefusal(
+      await updateAndCatch('crm_lead', {
+        id: lead.id, status: 'unqualified', disqualification_reason: 'duplicate',
+      }),
+      'Disqualifying a lead as Duplicate requires naming the surviving record',
+    );
+  });
+
+  it('still refuses one closed on the machine guess alone', async () => {
+    // `suspected` is the machine's guess. #598 exists to make a human look, and
+    // the tombstone must not become a way around that either.
+    const { lead } = await buildContactCase();
+
+    expectValidationRefusal(
+      await updateAndCatch('crm_lead', {
+        id: lead.id, status: 'unqualified', disqualification_reason: 'duplicate',
+      }),
       'Disqualifying a lead as Duplicate requires naming the surviving record',
     );
   });

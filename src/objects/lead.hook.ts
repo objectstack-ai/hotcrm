@@ -474,23 +474,65 @@ const leadDuplicateCheckHook: Hook = {
       const declared = previous?.duplicate_of_type;
       const link = typeof declared === 'string' ? LINK_OF_TYPE[declared] : undefined;
       if (!restated && link && link in input && isBlank(input[link])) {
-        input.duplicate_of_type = null;
-        // `duplicate_status` goes with it, and that half was measured rather
-        // than assumed. Its readers in this app are: the `suspected_duplicates`
-        // review queue (`src/views/lead.view.ts`), whose entire workflow is
-        // "open the two records and compare them"; the
-        // `duplicate_disqualification_requires_survivor` validation, which
-        // demands a NAMED survivor; the disqualification form block, shown only
-        // when the lead is being closed as a duplicate; and this hook's own
-        // insert-time stand-down, which reads the incoming payload and never the
-        // stored row. With no link left, not one of them can act on `suspected`
-        // — and leaving it would park a permanently unworkable row in that
-        // queue: it names nobody to compare against, and the `confirmed` route
-        // that drains the queue is closed by the validation the cleared type
-        // just tripped. The verdict itself is not lost — `duplicate_status`
-        // declares `trackHistory: true`, so who decided what, and when, stays on
-        // the record's field history.
-        input.duplicate_status = null;
+        // Two outcomes, and which one applies turns on ONE question: did a
+        // human ever look at these two records and agree? That is exactly what
+        // `duplicate_status` records, and it is a column this hook already
+        // reads and writes — so the question is answered from the record's own
+        // vocabulary, with no second rule restated here (#1164).
+        //
+        //   `confirmed` — a person compared the two records and said yes. The
+        //     record it named is now gone, but the VERDICT is not about the
+        //     pointer, it is about what the reviewer found. Erasing someone
+        //     else's contact must not silently delete it, so the claim is
+        //     TOMBSTONED: the discriminator moves to `erased` and the status
+        //     stands. The lead goes on saying "confirmed duplicate of a record
+        //     that has since been erased" — a fact the record could not state
+        //     before, and the reason `erased` had to exist at all.
+        //
+        //   anything else — the machine's `suspected` guess, or no opinion at
+        //     all. Retired WHOLE, exactly as #1072 / #1166 decided; nothing is
+        //     tombstoned, because there is no human verdict to preserve.
+        //
+        // ⚠️ `'erased'` is spelled INLINE here on purpose. L2 hook bodies run
+        // body-only in the QuickJS sandbox, so `DUPLICATE_OF_TYPE_ERASED` from
+        // `_picklists.ts` would resolve at authoring time and arrive as
+        // `undefined` — the same constraint the SLA matrix in `case.hook.ts`
+        // documents. The canonical constant is the one in `_picklists.ts`;
+        // `test/lead-duplicate-management.test.ts` pins this literal to it and
+        // pins this block as its only writer, so the two cannot drift.
+        //
+        // The verdict is read from `previous`, and the write must be SILENT
+        // about it — `'duplicate_status' in input` disqualifies the tombstone.
+        // That is what keeps the tombstone on the erasure path and off every
+        // other one. The engine's `set_null` cleanup arrives as exactly
+        // `{ id, <link>: null, updated_at, updated_by }`, so it never mentions
+        // the status; a caller that DOES mention it is managing the claim by
+        // hand, and a hand-blanked pointer is not an erasure — that claim is
+        // retired whole and left for the rules to judge. It also means no
+        // payload can manufacture a tombstone by supplying its own `confirmed`.
+        if (!('duplicate_status' in input) && previous?.duplicate_status === 'confirmed') {
+          input.duplicate_of_type = 'erased';
+          // `duplicate_status` deliberately UNTOUCHED — it stays `confirmed`,
+          // which is what keeps the surviving state readable as a verdict.
+        } else {
+          input.duplicate_of_type = null;
+          // `duplicate_status` goes with it, and that half was measured rather
+          // than assumed. Its readers in this app are: the
+          // `suspected_duplicates` review queue (`src/views/lead.view.ts`),
+          // whose entire workflow is "open the two records and compare them";
+          // the `duplicate_disqualification_requires_survivor` validation,
+          // which demands a NAMED survivor; the duplicate form block, shown
+          // only when the lead is being closed as a duplicate; and this hook's
+          // own insert-time stand-down, which reads the incoming payload and
+          // never the stored row. With no link left, not one of them can act on
+          // `suspected` — and leaving it would park a permanently unworkable
+          // row in that queue: it names nobody to compare against, and the
+          // `confirmed` route that drains the queue is closed by the validation
+          // the cleared type just tripped. The verdict itself is not lost —
+          // `duplicate_status` declares `trackHistory: true`, so who decided
+          // what, and when, stays on the record's field history.
+          input.duplicate_status = null;
+        }
       }
     }
 

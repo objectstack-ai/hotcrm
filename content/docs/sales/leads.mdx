@@ -107,6 +107,15 @@ Work them from the **Suspected Duplicates** view on the Leads tab. Open the pair
 
 > Anonymous Web-to-Lead submissions are always accepted. If the public form cannot check for existing records (it deliberately has no read access to your CRM data), the lead lands unflagged — review it from the normal lead queue.
 
+### When the surviving record is later deleted
+
+Deleting a Contact, or the Account above it, is never blocked by a lead that pointed at it — including a lead you already closed as a confirmed duplicate. What happens to the lead depends on how far the review had got:
+
+- **Still Suspected** — nothing was decided, so the flag is dropped entirely. The lead stops claiming to duplicate anything and goes back to the normal queue.
+- **Confirmed by a reviewer** — the verdict stands. Duplicate Status stays **Confirmed** and **Duplicate Of** changes to **Erased Record**, so the lead reads as *"a confirmed duplicate of a record that has since been erased"*. The disqualification and its reason are untouched.
+
+**Erased Record** is not something you can choose. It is only ever written when the record a lead named is actually deleted, which is why seeing it on a lead is reliable evidence that the deletion happened rather than that someone typed it. This is what lets an erasure request be carried out in full without quietly deleting a reviewer's finding along with it.
+
 ## Converting a qualified lead
 
 When a lead is qualified, click **Convert**. A small form pops up asking:

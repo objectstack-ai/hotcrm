@@ -426,7 +426,10 @@ export const zhCN: TranslationData = {
         duplicate_of_type: {
           help: '保留下来的那条记录所属的对象类型。',
           label: '重复于',
-          options: { crm_lead: '线索', crm_contact: '联系人' },
+          // `erased` 是墓碑值，不是可选项：表单不提供它（见
+          // `src/views/lead.view.ts`），但幸存记录被删除后线索会带着它，
+          // 所以凡是读取记录的地方都需要标签，否则会显示原始值 `erased`。
+          options: { crm_lead: '线索', crm_contact: '联系人', erased: '记录已删除' },
         },
         duplicate_of_lead: { label: '重复的线索' },
         duplicate_of_contact: { label: '重复的联系人' },

@@ -461,7 +461,11 @@ export const esES: TranslationData = {
         duplicate_of_type: {
           label: 'Duplicado De',
           help: 'Qué objeto contiene el registro superviviente que este prospecto repite.',
-          options: { crm_lead: 'Prospecto', crm_contact: 'Contacto' },
+          // `erased` es una lápida, no una opción: el formulario no la ofrece
+          // (ver `src/views/lead.view.ts`), pero un prospecto cuyo superviviente
+          // fue eliminado la lleva, así que necesita etiqueta allí donde el
+          // registro se LEE; sin traducir se mostraría el valor crudo `erased`.
+          options: { crm_lead: 'Prospecto', crm_contact: 'Contacto', erased: 'Registro Eliminado' },
         },
         duplicate_of_lead: { label: 'Prospecto Duplicado' },
         duplicate_of_contact: { label: 'Contacto Duplicado' },
