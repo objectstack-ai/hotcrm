@@ -320,7 +320,7 @@ const leadHook: Hook = {
  * answered a returning visitor with a save error. That constraint is gone; a
  * re-captured address is now recorded as a fact instead of refused.
  *
- * Three jobs, all `before`-phase so the values land in the same write:
+ * Four jobs, all `before`-phase so the values land in the same write:
  *
  * 1. **Normalize `email`** (trim + lowercase), exactly as `contact_integrity`
  *    does on `crm_contact`. This is what makes the dedupe lookup below a plain
@@ -344,6 +344,11 @@ const leadHook: Hook = {
  *    conversion flow would reuse anyway. Within a kind, the OLDEST record wins,
  *    so a cluster of five re-submissions all point at the same origin instead
  *    of forming a chain.
+ *
+ * 3. **Retire the whole claim when the record it named is gone** (#1072) — on
+ *    update only, and the exact mirror of job 2: the hook that stamps a
+ *    duplicate link is the one that takes it back down. See the long note at
+ *    the block itself.
  *
  * The write is `duplicate_status: 'suspected'` — a machine's guess, explicitly
  * distinguished from the `confirmed` verdict a human records when disqualifying
@@ -404,6 +409,89 @@ const leadDuplicateCheckHook: Hook = {
           ? rawCompany.trim().toLowerCase().replace(/\s+/g, ' ')
           : '';
       input.company_normalized = normalizedCompany === '' ? null : normalizedCompany;
+    }
+
+    // 1c. Retire a duplicate claim once the record it named is gone (#1072).
+    //
+    //     `duplicate_of_type` is a DISCRIMINATOR, and `lead.object.ts` pairs it
+    //     with the lookup it names through `requiredWhen` — so "the type is set"
+    //     and "that lookup is populated" are ONE fact stated in two columns.
+    //     Neither lookup declares a `deleteBehavior`, so both take the spec
+    //     default `set_null`, and the engine implements `set_null` by UPDATING
+    //     the row that HOLDS the lookup. Deleting the contact (or lead) a lead
+    //     was flagged against therefore arrives here as
+    //     `{ id, duplicate_of_<x>: null, updated_at, updated_by }`, nulls one
+    //     half of the pair, and the row instantly breaks its own rule — so the
+    //     whole delete rolls back with `Duplicate Of Contact is required`, an
+    //     error naming a field on an object the caller never addressed.
+    //
+    //     That was not a wording problem. The flag is stamped automatically at
+    //     intake on any OPEN lead that merely re-uses a contact's email, so an
+    //     ordinary duplicate made that CONTACT undeletable — and because
+    //     `crm_contact.crm_account` is a master-detail with
+    //     `deleteBehavior: 'cascade'`, the ACCOUNT above it too. A GDPR "delete
+    //     this person" request with no way to carry it out. (#696 / #711 are the
+    //     same construction on other objects; #720 is a different one — a hook
+    //     refusing the write — and its fix does not reach this.)
+    //
+    //     The rule restored here is one line: **the discriminator may not
+    //     outlive the lookup it names.** When a write leaves that lookup blank,
+    //     the claim is retired WHOLE — type and status go with the link — and
+    //     the lead simply stops saying it duplicates something.
+    //
+    //     ⚠️ This is deliberately NOT a second spelling of #720's "is this write
+    //     the engine's reference cleanup?" predicate in `lead_automation` above.
+    //     It cannot be: measured on 17.0.0 GA, the engine's cleanup write and a
+    //     user's hand-clear of the same lookup are indistinguishable — identical
+    //     `input` (`{ id, <link>: null, updated_at, updated_by }`), identical
+    //     `ctx.user`, identical `ctx.session`. Asking a question the context
+    //     cannot answer is what forces shape-sniffing; asking "is the pair still
+    //     whole?" needs no provenance at all, and answers both callers the same
+    //     correct way — a lead whose link you removed no longer duplicates
+    //     anything, however the removal was spelled.
+    //
+    //     It does NOT loosen the pairing, which is the thing to check when
+    //     reading this: a write that STATES a type without naming a record is
+    //     still refused by `requiredWhen`, on insert and on update. That is what
+    //     the `restated` guard below protects — a payload carrying its own
+    //     non-blank `duplicate_of_type` is an author's claim, so it is left for
+    //     the rule to judge instead of being quietly deleted.
+    //
+    //     ⚠️ Priority 300 is load-bearing here, not just for job 2:
+    //     `lead_automation` (200) must see the CALLER's payload before these two
+    //     nulls are added to it. Its #720 yield passes a write only when every
+    //     non-system change is a declared LOOKUP going value→null, and
+    //     `duplicate_of_type` / `duplicate_status` are neither — so at a lower
+    //     priority this block would make the converted-lead lock refuse the very
+    //     cleanup #720 fixed it to allow.
+    if (event === 'beforeUpdate') {
+      const previous = ctx.previous;
+      const LINK_OF_TYPE: Record<string, string> = {
+        crm_lead: 'duplicate_of_lead',
+        crm_contact: 'duplicate_of_contact',
+      };
+      const restated = 'duplicate_of_type' in input && !isBlank(input.duplicate_of_type);
+      const declared = previous?.duplicate_of_type;
+      const link = typeof declared === 'string' ? LINK_OF_TYPE[declared] : undefined;
+      if (!restated && link && link in input && isBlank(input[link])) {
+        input.duplicate_of_type = null;
+        // `duplicate_status` goes with it, and that half was measured rather
+        // than assumed. Its readers in this app are: the `suspected_duplicates`
+        // review queue (`src/views/lead.view.ts`), whose entire workflow is
+        // "open the two records and compare them"; the
+        // `duplicate_disqualification_requires_survivor` validation, which
+        // demands a NAMED survivor; the disqualification form block, shown only
+        // when the lead is being closed as a duplicate; and this hook's own
+        // insert-time stand-down, which reads the incoming payload and never the
+        // stored row. With no link left, not one of them can act on `suspected`
+        // — and leaving it would park a permanently unworkable row in that
+        // queue: it names nobody to compare against, and the `confirmed` route
+        // that drains the queue is closed by the validation the cleared type
+        // just tripped. The verdict itself is not lost — `duplicate_status`
+        // declares `trackHistory: true`, so who decided what, and when, stays on
+        // the record's field history.
+        input.duplicate_status = null;
+      }
     }
 
     if (event !== 'beforeInsert' || !email) return;
