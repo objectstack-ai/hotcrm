@@ -452,7 +452,12 @@ export const en: TranslationData = {
         duplicate_of_type: {
           label: 'Duplicate Of',
           help: 'Which object holds the surviving record this lead repeats.',
-          options: { crm_lead: 'Lead', crm_contact: 'Contact' },
+          // `erased` is a tombstone, not a choice: the form does not offer it
+          // (see `src/views/lead.view.ts`), but a lead whose survivor was
+          // deleted carries it, so it needs a label wherever the record is
+          // READ — detail page, list column, export. Untranslated it would
+          // render as the raw `erased`.
+          options: { crm_lead: 'Lead', crm_contact: 'Contact', erased: 'Erased Record' },
         },
         duplicate_of_lead: { label: 'Duplicate Of Lead' },
         duplicate_of_contact: { label: 'Duplicate Of Contact' },

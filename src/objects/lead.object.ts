@@ -2,7 +2,12 @@
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
 import { F, P } from '@objectstack/spec';
-import { SALUTATION_OPTIONS, INDUSTRY_OPTIONS, LEAD_SOURCE_OPTIONS } from './_picklists';
+import {
+  SALUTATION_OPTIONS,
+  INDUSTRY_OPTIONS,
+  LEAD_SOURCE_OPTIONS,
+  DUPLICATE_OF_TYPE_OPTIONS,
+} from './_picklists';
 
 export const Lead = ObjectSchema.create({
   name: 'crm_lead',
@@ -340,14 +345,26 @@ export const Lead = ObjectSchema.create({
     // same TYPE-DISCRIMINATOR shape `crm_task.related_to_*` already uses on this
     // repo: one select naming the object, one lookup per object, and the pairing
     // enforced declaratively. This is deliberately not a new pattern.
+    //
+    // The vocabulary is TWO sets, declared in `_picklists.ts` and split there:
+    // the two object names an author may pick, plus `erased` — a tombstone the
+    // form does not offer and only `lead_duplicate_check` ever writes (#1164).
+    //
+    // The tombstone is what lets an erasure COMPLETE against a lead a human
+    // confirmed as a duplicate, and it does so without relaxing one rule. That
+    // is its whole justification, so read it as a constraint rather than as a
+    // spare value: `requiredWhen` below pairs only `crm_lead` / `crm_contact`,
+    // so a tombstoned type never fires either pairing and never demands a
+    // pointer to a record that is gone; and
+    // `duplicate_disqualification_requires_survivor` asks for a NON-BLANK type
+    // plus `duplicate_status == "confirmed"`, both of which a tombstoned lead
+    // still satisfies — so the verdict a reviewer recorded survives the erasure
+    // instead of being deleted as a side effect of someone else's GDPR request.
     duplicate_of_type: Field.select({
       label: 'Duplicate Of',
       group: 'duplicates',
       description: 'Which object holds the surviving record this lead repeats.',
-      options: [
-        { label: 'Lead',    value: 'crm_lead' },
-        { label: 'Contact', value: 'crm_contact' },
-      ],
+      options: [...DUPLICATE_OF_TYPE_OPTIONS],
     }),
 
     // The type↔lookup pairing is `requiredWhen`, not a script validation:

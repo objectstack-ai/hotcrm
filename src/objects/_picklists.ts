@@ -190,6 +190,62 @@ export const RELATED_TO_TYPE_OPTIONS: SelectOption[] = [
   { label: 'Case',        value: 'crm_case' },
 ];
 
+/**
+ * Duplicate Of — crm_lead.duplicate_of_type, the discriminator half of the
+ * `duplicate_of_lead` / `duplicate_of_contact` pair (#598).
+ *
+ * Two vocabularies, deliberately, and the split is the enforcement:
+ *
+ *   - {@link DUPLICATE_OF_TYPE_AUTHORABLE_OPTIONS} is what a human may pick. Each
+ *     value names an object, and `lead.object.ts` pairs it with that object's
+ *     lookup through `requiredWhen`, so choosing one demands a record.
+ *   - {@link DUPLICATE_OF_TYPE_OPTIONS} is what the COLUMN may hold. It is the
+ *     authorable set plus {@link DUPLICATE_OF_TYPE_ERASED}, a tombstone no
+ *     author writes.
+ *
+ * The form spreads the authorable set (`src/views/lead.view.ts`) and the object
+ * spreads the full one, so the tombstone is unpickable BY CONSTRUCTION rather
+ * than by a hand-maintained exclusion list: a fourth authorable object type
+ * added below reaches the form automatically, and the tombstone never does.
+ */
+export const DUPLICATE_OF_TYPE_AUTHORABLE_OPTIONS: SelectOption[] = [
+  { label: 'Lead',    value: 'crm_lead' },
+  { label: 'Contact', value: 'crm_contact' },
+];
+
+/**
+ * The tombstone (#1164): "this lead was confirmed a duplicate of a record that
+ * has since been erased."
+ *
+ * It exists because on the record — which is all a validation can see, being
+ * evaluated against `{...previous, ...data}` — "the pointer was erased" and
+ * "this claim never named anyone" were the SAME state. Every way of teaching a
+ * rule to tolerate the first also admitted the second, which is why the erasure
+ * path could not be cleared by relaxing anything (measured in full on #1164).
+ * Giving the two states different values makes them different facts, and then
+ * no rule has to be loosened at all: the `requiredWhen` pairing fires only on
+ * `crm_lead` / `crm_contact` so it never sees this value, and
+ * `duplicate_disqualification_requires_survivor` asks for a NON-BLANK type,
+ * which this is.
+ *
+ * Deliberately not an object name: it is the answer to "which object holds the
+ * survivor" when the answer is "none, any more".
+ *
+ * ⚠️ `lead_duplicate_check` (`lead.hook.ts`, job 1c) is the ONLY writer, and it
+ * spells the value as an inline literal — L2 hook bodies run body-only in the
+ * QuickJS sandbox, so a module constant resolves at authoring time and arrives
+ * as `undefined` (same constraint as the SLA matrix in `case.hook.ts`). The two
+ * spellings are pinned together, and the writer pinned to that one site, by
+ * `test/lead-duplicate-management.test.ts`.
+ */
+export const DUPLICATE_OF_TYPE_ERASED = 'erased';
+
+/** The full column vocabulary: what an author may pick, plus the tombstone. */
+export const DUPLICATE_OF_TYPE_OPTIONS: SelectOption[] = [
+  ...DUPLICATE_OF_TYPE_AUTHORABLE_OPTIONS,
+  { label: 'Erased Record', value: DUPLICATE_OF_TYPE_ERASED },
+];
+
 /** Project a canonical set down to bare `{ label, value }` pairs for flow
  * screens and action params, which don't understand color/default keys. */
 export const plainOptions = (options: SelectOption[]): { label: string; value: string }[] =>

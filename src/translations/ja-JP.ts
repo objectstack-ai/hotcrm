@@ -470,7 +470,10 @@ export const jaJP: TranslationData = {
         duplicate_of_type: {
           label: '重複対象',
           help: '重複元として残るレコードが属するオブジェクトの種別。',
-          options: { crm_lead: 'リード', crm_contact: '取引先責任者' },
+          // `erased` は墓碑値であり選択肢ではない。フォームには表示しない
+          // （`src/views/lead.view.ts` を参照）が、残存レコードが削除された
+          // リードはこの値を保持するため、レコードを読む場所ではラベルが要る。
+          options: { crm_lead: 'リード', crm_contact: '取引先責任者', erased: '削除済みレコード' },
         },
         duplicate_of_lead: { label: '重複するリード' },
         duplicate_of_contact: { label: '重複する取引先責任者' },

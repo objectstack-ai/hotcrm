@@ -1,13 +1,18 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import stack from '../objectstack.config';
 import { CrmTranslations } from '../src/translations';
 import leadHooks from '../src/objects/lead.hook';
+import {
+  DUPLICATE_OF_TYPE_AUTHORABLE_OPTIONS,
+  DUPLICATE_OF_TYPE_ERASED,
+  DUPLICATE_OF_TYPE_OPTIONS,
+} from '../src/objects/_picklists';
 import { REPO_ROOT } from './helpers/repo-root';
 
 /**
@@ -260,10 +265,33 @@ describe('the duplicate link is declarative metadata', () => {
     const task = objects.find((o) => o.name === 'crm_task') as AnyRec;
     expect(task?.fields?.related_to_type?.type).toBe(lead.fields.duplicate_of_type.type);
 
+    // The column vocabulary is the two AUTHORABLE object types plus the #1164
+    // tombstone. Asserted as the split rather than as a flat list of three: the
+    // list would go green again for any junk value someone appended, and the
+    // property that matters is that every authorable value names an object
+    // whose lookup exists, while `erased` names none — which is exactly what
+    // keeps the `requiredWhen` pairing from ever firing on a tombstone.
     const options = (lead.fields.duplicate_of_type.options ?? []) as AnyRec[];
-    expect(options.map((o) => o.value).sort()).toEqual(['crm_contact', 'crm_lead']);
+    expect(options.map((o) => o.value)).toEqual([
+      ...DUPLICATE_OF_TYPE_AUTHORABLE_OPTIONS.map((o) => o.value),
+      DUPLICATE_OF_TYPE_ERASED,
+    ]);
+    expect(DUPLICATE_OF_TYPE_AUTHORABLE_OPTIONS.map((o) => o.value).sort()).toEqual([
+      'crm_contact', 'crm_lead',
+    ]);
     expect(lead.fields.duplicate_of_lead.reference_to ?? lead.fields.duplicate_of_lead.reference).toBe('crm_lead');
     expect(lead.fields.duplicate_of_contact.reference_to ?? lead.fields.duplicate_of_contact.reference).toBe('crm_contact');
+
+    // Every authorable type is backed by a lookup that targets it; the
+    // tombstone is backed by none.
+    const LOOKUP_OF_TYPE: Record<string, string> = {
+      crm_lead: 'duplicate_of_lead',
+      crm_contact: 'duplicate_of_contact',
+    };
+    for (const { value } of DUPLICATE_OF_TYPE_AUTHORABLE_OPTIONS) {
+      expect(lead.fields[LOOKUP_OF_TYPE[value]], `${value} names no lookup`).toBeTruthy();
+    }
+    expect(LOOKUP_OF_TYPE[DUPLICATE_OF_TYPE_ERASED]).toBeUndefined();
   });
 
   it('separates the machine guess from the human verdict on ONE field', () => {
@@ -394,6 +422,117 @@ describe('the forms can satisfy the rule they are shipped under', () => {
   });
 });
 
+// ───────────────────────────── the tombstone is written, never authored ──
+
+/**
+ * `duplicate_of_type: 'erased'` clears the erasure path (#1164) precisely
+ * because it is a FACT the platform observed — the engine's reference cleanup
+ * nulled the pointer — and not a choice a reviewer makes. Both halves of that
+ * sentence need pinning, because the value's entire safety argument rests on
+ * them:
+ *
+ *   - **Not authorable.** The form must not offer it. If it did, a reviewer
+ *     could close a lead as "duplicate of a record that was erased" about a
+ *     record nobody erased — satisfying `duplicate_disqualification_requires_survivor`
+ *     and the `requiredWhen` pairing at once, which is the exact hole #598 was
+ *     written to close. Narrowing the picker is what the decision on this card
+ *     called "a visible, labelled hole rather than an invisible one": the value
+ *     is still labelled in all four locales (see below), it just cannot be
+ *     picked.
+ *
+ *   - **One writer.** A second place that stamps it — a flow, an action,
+ *     another hook — would be a second, silent route to the same state, and the
+ *     record could no longer be read as "the platform saw this deletion happen".
+ *
+ * The second pin is a SOURCE scan on purpose. A behavioural test can only cover
+ * the paths it thinks to drive; this one fails on a writer nobody thought of.
+ */
+describe('the erased tombstone is unauthorable, and has exactly one writer', () => {
+  /** Every `duplicate_of_type` entry on every crm_lead form surface. */
+  const formEntries = (): AnyRec[] => {
+    const found: AnyRec[] = [];
+    const walk = (node: unknown): void => {
+      if (Array.isArray(node)) return void node.forEach(walk);
+      if (!node || typeof node !== 'object') return;
+      const rec = node as AnyRec;
+      if (rec.field === 'duplicate_of_type') found.push(rec);
+      Object.values(rec).forEach(walk);
+    };
+    walk(leadView);
+    return found;
+  };
+
+  it('finds the duplicate picker on the lead forms at all', () => {
+    // Guards the two assertions below against going vacuously green if the
+    // block is renamed or the walk stops matching the compiled shape.
+    expect(formEntries().length).toBeGreaterThan(0);
+  });
+
+  it('offers only the authorable object types on every form that shows it', () => {
+    for (const entry of formEntries()) {
+      const values = ((entry.options ?? []) as AnyRec[]).map((o) => o.value);
+      expect(
+        values,
+        'a lead form offers duplicate_of_type without narrowing its options — ' +
+          'the erased tombstone is pickable there',
+      ).toEqual(DUPLICATE_OF_TYPE_AUTHORABLE_OPTIONS.map((o) => o.value));
+      expect(values).not.toContain(DUPLICATE_OF_TYPE_ERASED);
+    }
+  });
+
+  it('is spelled in exactly two places in src/ — its declaration and its stamp', () => {
+    // Comment lines are stripped first, the same way the "no second imperative
+    // implementation" pin above does it: prose may name the value freely, code
+    // may not.
+    const files: string[] = [];
+    const walkDir = (dir: string): void => {
+      for (const entry of readdirSync(join(REPO_ROOT, dir), { withFileTypes: true })) {
+        const rel = `${dir}/${entry.name}`;
+        if (entry.isDirectory()) walkDir(rel);
+        else if (entry.name.endsWith('.ts')) files.push(rel);
+      }
+    };
+    walkDir('src');
+    expect(files.length, 'no source files scanned').toBeGreaterThan(50);
+
+    const hits: string[] = [];
+    for (const rel of files) {
+      const code = readFileSync(join(REPO_ROOT, rel), 'utf8')
+        .split('\n')
+        .filter((line) => !/^\s*(\/\/|\*|\/\*)/.test(line));
+      for (const line of code) {
+        if (line.includes(`'${DUPLICATE_OF_TYPE_ERASED}'`) || line.includes(`"${DUPLICATE_OF_TYPE_ERASED}"`)) {
+          hits.push(`${rel}: ${line.trim()}`);
+        }
+      }
+    }
+
+    // Exactly two LINES, not merely two files: a second stamp added inside
+    // `lead.hook.ts` would keep the file set right while adding the second
+    // silent route this pin exists to refuse.
+    expect(hits, `expected 2 occurrences, got:\n${hits.join('\n')}`).toHaveLength(2);
+    expect(hits.map((h) => h.split(':')[0]).sort()).toEqual([
+      'src/objects/_picklists.ts',
+      'src/objects/lead.hook.ts',
+    ]);
+    // The hook's one occurrence STAMPS the value; it is not a comparison that
+    // happens to mention it.
+    const stamp = hits.find((h) => h.startsWith('src/objects/lead.hook.ts'))!;
+    expect(stamp).toContain(`duplicate_of_type = '${DUPLICATE_OF_TYPE_ERASED}'`);
+  });
+
+  it('keeps the hook literal and the canonical constant in step', () => {
+    // They cannot be the same expression: L2 hook bodies run body-only in the
+    // QuickJS sandbox, so a module constant referenced in the handler resolves
+    // at authoring time and arrives as `undefined` (see the SLA matrix note in
+    // `case.hook.ts`). Two spellings is the platform's constraint, not a
+    // shortcut — so they are pinned together instead.
+    const hookSource = readFileSync(join(REPO_ROOT, 'src/objects/lead.hook.ts'), 'utf8');
+    expect(hookSource).toContain(`input.duplicate_of_type = '${DUPLICATE_OF_TYPE_ERASED}';`);
+    expect(DUPLICATE_OF_TYPE_OPTIONS.map((o) => o.value)).toContain(DUPLICATE_OF_TYPE_ERASED);
+  });
+});
+
 describe('every locale names the new fields', () => {
   const LOCALES = ['en', 'zh-CN', 'ja-JP', 'es-ES'] as const;
   const NEW_FIELDS = [
@@ -413,9 +552,16 @@ describe('every locale names the new fields', () => {
     // An untranslated option renders as the raw value (`crm_lead`, `suspected`)
     // in the middle of an otherwise translated form.
     const fields = ((CrmTranslations as AnyRec)[locale]?.objects?.crm_lead?.fields ?? {}) as AnyRec;
-    expect(Object.keys(fields.duplicate_of_type?.options ?? {}).sort()).toEqual([
-      'crm_contact', 'crm_lead',
-    ]);
+    // Derived from the object's own vocabulary, not retyped: every value the
+    // COLUMN can hold needs a label, including the #1164 tombstone. `erased` is
+    // never offered on the form, but a lead whose survivor was deleted carries
+    // it and gets read — detail page, list column, export — so leaving it
+    // untranslated would print the raw `erased` in an otherwise localized form.
+    // Unauthorable is not the same as invisible, and this is the assertion that
+    // keeps the hole labelled.
+    expect(Object.keys(fields.duplicate_of_type?.options ?? {}).sort()).toEqual(
+      DUPLICATE_OF_TYPE_OPTIONS.map((o) => o.value).sort(),
+    );
     expect(Object.keys(fields.duplicate_status?.options ?? {}).sort()).toEqual([
       'confirmed', 'suspected',
     ]);
