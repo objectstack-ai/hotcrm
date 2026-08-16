@@ -303,6 +303,28 @@ export const ForecastSnapshotFlow: Flow = {
                 objectName: 'crm_forecast',
                 fields: {
                   owner_id: '{currentOwner.id}',
+                  // ORG PARTITION (#700). A schedule trigger carries no
+                  // organization, so without this the snapshot row is born
+                  // `organization_id` NULL — outside every org partition, where
+                  // an `(organization_id, …)` unique index does not constrain
+                  // and org-scoped reads never see it. Upstream ruling
+                  // objectstack#6155 Q2=A assigns the answer to the flow author.
+                  //
+                  // The source is `ownerAnyDeal`, NOT `currentOwner`. The loop
+                  // item here is a `sys_user` row, and `sys_user` declares NO
+                  // `organization_id` — identity is global, org-partitioned it
+                  // is not (it carries `primary_business_unit_id` instead).
+                  // `{currentOwner.organization_id}` would interpolate to
+                  // `undefined` and land as NULL: the publish guard, which only
+                  // checks that the key is declared, would go green over a row
+                  // still born outside every partition. Measured, not assumed.
+                  //
+                  // `ownerAnyDeal` is the `crm_opportunity` from `find_any_deal`
+                  // — it carries the column, and edge `b2` (`ownerAnyDeal !=
+                  // null`) is the only route to this node, so it is never null
+                  // here. Semantically right too: an owner's forecast belongs to
+                  // the org their pipeline is in.
+                  organization_id: '{ownerAnyDeal.organization_id}',
                   period: SNAPSHOT_PERIOD,
                   snapshot_date: '{TODAY()}',
                   source: 'scheduled',
