@@ -42,6 +42,29 @@ import { type AnyRec, packFor } from './helpers/metadata-fixtures';
  * Nothing else checks this: `os validate` and `pnpm lint` walk authored
  * metadata and never open `content/docs`, so — as with `docs-drift.test.ts`
  * and the service-index guard (#948) — the check lives where the claim lives.
+ *
+ * ⚠ KNOWN STALE PROSE, tracked separately — do not read the green pins below
+ * as "the section is accurate". #1123 re-pointed the Inbox entry away from
+ * `sys_approval_request` (see the source-fact block), which leaves two claims
+ * on the doc pages wrong while every assertion here still passes, because the
+ * doc-side pins check that names are *present*, not that the destination is
+ * right:
+ *
+ *   1. `revenue/approvals.{mdx,zh-Hans,zh-Hant}` — "That item pins no view of
+ *      its own, so it opens the object's list with the four built-in views the
+ *      approvals plugin ships", plus the four-row table under it. The item no
+ *      longer opens that object at all; the approval centre's own tabs are
+ *      My Pending / Submitted by me / All, with a separate status filter.
+ *   2. `revenue/index.{mdx,zh-Hans,zh-Hant}` and the same bullet in
+ *      `revenue/approvals.*` — "**Inbox** — the approval requests waiting on
+ *      you (`sys_approval_request`)". The parenthetical names the object the
+ *      entry used to open.
+ *
+ * The four built-in view labels themselves are still real and still shipped by
+ * the plugin, so `lists every built-in view …` is not lying — it is the framing
+ * around them that went stale. Rewriting six MDX files across three languages
+ * was out of #1123's declared file surface; the doc-side fixtures in this file
+ * (`PAGES`) must be re-cut in the same change that fixes the prose.
  */
 
 const NAV_NODES: AnyRec[] = (() => {
@@ -169,7 +192,57 @@ describe('the source facts the approvals navigation section rests on (#963)', ()
 
   it('the Approvals group holds exactly one item, labelled Inbox', () => {
     expect(APPROVALS_CHILDREN.map((c) => c.label)).toEqual(['Inbox']);
-    expect(APPROVALS_CHILDREN[0]!.objectName).toBe(SysApprovalRequest.name);
+  });
+
+  /**
+   * #1123 re-pointed that item. It was `type: 'object'` on
+   * `sys_approval_request` — the plugin's raw request table, which is read-only
+   * (no row actions, no approve/reject), so a label promising "待我审批" landed
+   * an approver somewhere they could not approve. It is now the platform's
+   * approval centre, reached by its ComponentRegistry ref.
+   *
+   * Deliberately NOT `type: 'url'`: the spec documents `url` as the external
+   * link type, and a URL would have to hard-code both a console-internal route
+   * and this app's own name. A `componentRef` resolves against the current app
+   * base instead, so the entry cannot drift when either changes.
+   */
+  it('that item opens the approval centre by component ref, not the read-only object table', () => {
+    const inbox = APPROVALS_CHILDREN[0]!;
+    expect(inbox.type).toBe('component');
+    expect(inbox.componentRef).toBe('approvals:inbox');
+    expect(inbox.url, 'a raw console URL would rot on the next console release').toBeUndefined();
+    expect(
+      inbox.objectName,
+      'pointing back at the object table would restore the dead end #1123 closed',
+    ).toBeUndefined();
+  });
+
+  it('keeps the requiresObject guard, so the entry hides where approvals are not installed', () => {
+    expect(APPROVALS_CHILDREN[0]!.requiresObject).toBe(SysApprovalRequest.name);
+  });
+
+  /**
+   * The half no metadata check can see. `componentRef` is resolved at runtime
+   * by the console's own ComponentRegistry: an unregistered ref renders a
+   * "Component not registered" panel, and nothing in `os validate`, `pnpm lint`
+   * or any other test in this repo opens the console bundle to notice. This
+   * card exists *because* a console route went stale between releases — the
+   * issue's own recommended URL (`/_console/system/approvals`) no longer
+   * resolves the way it was written — so the ref is pinned against the
+   * installed console rather than trusted. On an upgrade that renames or drops
+   * the surface, this goes red instead of the sidebar going quietly dead.
+   */
+  it('the installed console actually registers that component ref', () => {
+    const assets = join(REPO_ROOT, 'node_modules/@objectstack/console/dist/assets');
+    const ref = APPROVALS_CHILDREN[0]!.componentRef as string;
+    const bundles = readdirSync(assets).filter((f) => f.endsWith('.js'));
+    expect(bundles.length, 'no console bundles found — this pin would pass vacuously').toBeGreaterThan(5);
+    const registered = bundles.some((f) => readFileSync(join(assets, f), 'utf8').includes(ref));
+    expect(
+      registered,
+      `${ref} is not registered by @objectstack/console — the Inbox entry would render ` +
+        '"Component not registered" instead of the approval centre',
+    ).toBe(true);
   });
 
   it('that item pins no view, so the object\'s own list views are what a reader meets', () => {
