@@ -173,7 +173,37 @@ export const CrmApp = App.create({
       label: 'Approvals',
       icon: 'check-circle',
       children: [
-        { id: 'nav_approval_requests', type: 'object', objectName: 'sys_approval_request', label: 'Inbox',     icon: 'inbox',   requiresObject: 'sys_approval_request' },
+        // "Inbox" (zh-CN 待我审批) must land somewhere an approver can actually
+        // approve. It used to be `type: 'object'` on `sys_approval_request` —
+        // the approvals plugin's raw request table, which is read-only: no row
+        // actions, no approve/reject, only Share on the record detail. The label
+        // promised an action the destination could not perform (#1123).
+        //
+        // `component` — not `url`. The platform's approval centre is a
+        // first-party console surface registered in the ComponentRegistry as
+        // `approvals:inbox` (registered by @objectstack/console itself, source
+        // `@object-ui/console`, rendering ApprovalsInboxPage) — exactly what the
+        // spec documents `component` for: "a first-party UI shipped with the
+        // platform — typically admin/setup surfaces that have no row in any data
+        // store". `url` is documented as the *external link* type, and taking it
+        // would mean hard-coding a console-internal route plus this app's own
+        // name (`/apps/crm_enterprise/system/approvals`) into metadata. A
+        // `componentRef` instead resolves against the *current* app base, so the
+        // entry keeps the user inside HotCRM's shell without naming the app, and
+        // a ref that ever stops resolving renders a loud "Component not
+        // registered" panel rather than silently bouncing to the console home.
+        //
+        // The read-only object list is not kept as a second "history" entry: the
+        // approval centre already subsumes it — My Pending / Submitted by me /
+        // All tabs plus a status filter (Pending / Approved / Rejected /
+        // Recalled / Returned for revision) — so a second entry would add a
+        // strictly weaker view of the same rows.
+        //
+        // `requiresObject` is retained: it is a base nav-item field on every
+        // item type, so the entry still hides itself on installs where
+        // @objectstack/plugin-approvals is absent and no approval exists to act
+        // on.
+        { id: 'nav_approval_requests', type: 'component', componentRef: 'approvals:inbox', label: 'Inbox',     icon: 'inbox',   requiresObject: 'sys_approval_request' },
         // No "Processes" item: @objectstack/plugin-approvals registers
         // sys_approval / sys_approval_request / sys_approval_action …, but no
         // `sys_approval_process` object exists in any installed plugin, so the
