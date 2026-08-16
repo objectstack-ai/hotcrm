@@ -350,6 +350,12 @@ const leadHook: Hook = {
  *    duplicate link is the one that takes it back down. See the long note at
  *    the block itself.
  *
+ * 4. **Keep a human's duplicate DISQUALIFICATION standing through that
+ *    erasure** (#1164) — job 3 stands down on a lead closed as a duplicate,
+ *    because retiring its claim would trip the rule that requires one; in
+ *    exchange this hook is what refuses a disqualification that never named a
+ *    record at all, since only a hook can tell that from an erased one.
+ *
  * The write is `duplicate_status: 'suspected'` — a machine's guess, explicitly
  * distinguished from the `confirmed` verdict a human records when disqualifying
  * as a duplicate. The hook stands down on any record that already carries a
@@ -464,16 +470,46 @@ const leadDuplicateCheckHook: Hook = {
     //     `duplicate_of_type` / `duplicate_status` are neither — so at a lower
     //     priority this block would make the converted-lead lock refuse the very
     //     cleanup #720 fixed it to allow.
+    //
+    //     ── The disqualified carve-out (#1164) ─────────────────────────────
+    //
+    //     One case cannot take the retirement: a lead a human has already
+    //     DISQUALIFIED as a duplicate. `duplicate_disqualification_requires_
+    //     survivor` (#598) demands that lead carry `duplicate_of_type` plus a
+    //     `confirmed` status, so dropping the type to satisfy the pairing trips
+    //     THAT rule instead and the delete still rolls back — two rules on one
+    //     erasure path, satisfying either by breaking the other. So on that lead
+    //     the claim STANDS, and `lead.object.ts` stands the pairing down for it
+    //     instead: the lead keeps saying "confirmed duplicate of a contact"
+    //     while the pointer to the erased contact is gone, which is what an
+    //     erasure is supposed to leave behind. The verdict is not rewritten, no
+    //     new vocabulary is invented, and the row stays editable afterwards.
+    //
+    //     The carve-out LAPSES with the verdict, which is why `orphaned` below
+    //     asks what the lookup holds AFTER the write rather than whether this
+    //     write blanked it: a later write that stops calling the lead a
+    //     duplicate hands the pair back to `requiredWhen`, so the type left
+    //     standing over an erased pointer must go with it. Otherwise re-opening
+    //     such a lead would be refused for a pointer nobody can restore.
+    const LINK_OF_TYPE: Record<string, string> = {
+      crm_lead: 'duplicate_of_lead',
+      crm_contact: 'duplicate_of_contact',
+    };
+    const previous = ctx.previous;
+    /**
+     * What a field will HOLD after this write — `{...previous, ...input}`, the
+     * same merged record the engine hands its validation predicates.
+     */
+    const after = (field: string): unknown => (field in input ? input[field] : previous?.[field]);
+    /** The verdict #1164 governs: a lead closed as a duplicate of something. */
+    const disqualifiedAsDuplicate = after('disqualification_reason') === 'duplicate';
+
     if (event === 'beforeUpdate') {
-      const previous = ctx.previous;
-      const LINK_OF_TYPE: Record<string, string> = {
-        crm_lead: 'duplicate_of_lead',
-        crm_contact: 'duplicate_of_contact',
-      };
       const restated = 'duplicate_of_type' in input && !isBlank(input.duplicate_of_type);
       const declared = previous?.duplicate_of_type;
       const link = typeof declared === 'string' ? LINK_OF_TYPE[declared] : undefined;
-      if (!restated && link && link in input && isBlank(input[link])) {
+      const orphaned = !!link && isBlank(after(link));
+      if (!restated && orphaned && !disqualifiedAsDuplicate) {
         input.duplicate_of_type = null;
         // `duplicate_status` goes with it, and that half was measured rather
         // than assumed. Its readers in this app are: the `suspected_duplicates`
@@ -492,6 +528,51 @@ const leadDuplicateCheckHook: Hook = {
         // the record's field history.
         input.duplicate_status = null;
       }
+    }
+
+    // 1d. A duplicate DISQUALIFICATION still has to name a record (#598/#1164).
+    //
+    //     The carve-out above buys the erasure path by standing the
+    //     `requiredWhen` pairing down whenever the lead is closed as a
+    //     duplicate. On the record, "the pointer was erased" and "this claim
+    //     never named anyone" are the SAME state — so with the pairing down,
+    //     nothing declarative refuses the second one, and #598's whole point
+    //     ("a rep could close a lead as a duplicate and the record never said
+    //     WHAT it duplicated") would be authorable again in one write.
+    //
+    //     A validation cannot make that distinction: it is evaluated against
+    //     `{...previous, ...data}` and both records read identically. A hook
+    //     can, because it also sees `previous` on its own — `previous[link]`
+    //     non-blank means a pointer WAS there and this write removes it (the
+    //     erasure, and its byte-identical twin the hand-clear, which is the
+    //     measured trade #1072 already pinned). Both blank means the claim is
+    //     being asserted with nobody named, and that is refused.
+    //
+    //     Refused BY THE EXISTING RULE, not by a second sentence here: clearing
+    //     the discriminator makes `duplicate_disqualification_requires_survivor`
+    //     fire on its own account, with its own wording and its own
+    //     `VALIDATION_FAILED` envelope. One statement of the rule, one message,
+    //     and the mutation cannot leak into a stored row — the very predicate
+    //     that makes this branch fire also guarantees the write is rejected.
+    //
+    //     `asserted` keeps this to writes that CLAIM something. The residue left
+    //     by an erasure (type standing, pointer gone) would otherwise trip this
+    //     on every later unrelated edit and make the lead permanently
+    //     unsaveable — the opposite of the fix.
+    const claimedType = after('duplicate_of_type');
+    const claimedLink = typeof claimedType === 'string' ? LINK_OF_TYPE[claimedType] : undefined;
+    const asserted =
+      event === 'beforeInsert' ||
+      ('duplicate_of_type' in input && !isBlank(input.duplicate_of_type)) ||
+      ('disqualification_reason' in input && previous?.disqualification_reason !== 'duplicate');
+    if (
+      disqualifiedAsDuplicate &&
+      asserted &&
+      claimedLink &&
+      isBlank(after(claimedLink)) &&
+      isBlank(previous?.[claimedLink])
+    ) {
+      input.duplicate_of_type = null;
     }
 
     if (event !== 'beforeInsert' || !email) return;

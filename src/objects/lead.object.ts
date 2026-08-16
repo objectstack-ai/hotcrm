@@ -376,16 +376,37 @@ export const Lead = ObjectSchema.create({
     // drops `duplicate_of_type` and `duplicate_status` in the same write, so the
     // pair is never left half-stated and this rule never has to be loosened to
     // tolerate one (#1072). Read that note before changing either predicate.
+    //
+    // ── The disqualified carve-out (#1164) ───────────────────────────────
+    //
+    // That retirement cannot run on a lead a human has already DISQUALIFIED as
+    // a duplicate: dropping `duplicate_of_type` there trips
+    // `duplicate_disqualification_requires_survivor` below, which demands that
+    // type. Two rules, and satisfying one broke the other — the survivor stayed
+    // undeletable, only the sentence changed. So on that lead the claim STANDS
+    // and this pairing yields instead. "Confirmed duplicate of a contact" with
+    // the pointer to the erased contact gone is exactly what an erasure is
+    // supposed to leave behind, and it is the only residue that keeps the
+    // verdict, the erasure AND the lead's own later editability.
+    //
+    // ⚠️ This does NOT make "a duplicate disqualification may name nobody"
+    // authorable, which is the whole point of #598. The pointer requirement for
+    // that case did not disappear — it MOVED, to `lead_duplicate_check` job 1d,
+    // the one place that can tell "this pointer was erased" from "this claim
+    // never named anyone". A validation cannot: it is evaluated against
+    // `{...previous, ...data}`, where those two records are identical. Read
+    // that block before touching this predicate — on its own, this line is a
+    // hole.
     duplicate_of_lead: Field.lookup('crm_lead', {
       label: 'Duplicate Of Lead',
       group: 'duplicates',
-      requiredWhen: P`has(record.duplicate_of_type) && record.duplicate_of_type == "crm_lead"`,
+      requiredWhen: P`has(record.duplicate_of_type) && record.duplicate_of_type == "crm_lead" && !(has(record.disqualification_reason) && record.disqualification_reason == "duplicate")`,
     }),
 
     duplicate_of_contact: Field.lookup('crm_contact', {
       label: 'Duplicate Of Contact',
       group: 'duplicates',
-      requiredWhen: P`has(record.duplicate_of_type) && record.duplicate_of_type == "crm_contact"`,
+      requiredWhen: P`has(record.duplicate_of_type) && record.duplicate_of_type == "crm_contact" && !(has(record.disqualification_reason) && record.disqualification_reason == "duplicate")`,
     }),
 
     // Machine suspicion and human verdict are ONE field with two values, not two
@@ -489,6 +510,16 @@ export const Lead = ObjectSchema.create({
       //
       // Neither clause duplicates the `requiredWhen` predicates: those pair the
       // type with its lookup, this one requires the type in the first place.
+      //
+      // ⚠️ #1164 changed the division of labour for THIS case only. On a lead
+      // carrying `disqualification_reason: 'duplicate'` the `requiredWhen`
+      // pairing now stands down (see the carve-out note on the lookups above),
+      // so that an erased survivor leaves the verdict standing instead of
+      // deadlocking this rule against the pairing. This rule is unchanged and
+      // still demands the type + a human's `confirmed`; the POINTER for the
+      // disqualified case is demanded by `lead_duplicate_check` job 1d, which
+      // clears the type on a claim that never named a record — so an author who
+      // tries it gets refused by the sentence below, exactly as before.
       //
       // ⚠️ Every field reference is wrapped in `has(...)`, and that is what
       // makes this rule an enforced rule rather than a decorative one.

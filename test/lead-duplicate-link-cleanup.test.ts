@@ -57,6 +57,18 @@ import stack from '../objectstack.config';
  * write which STATES a type without naming a record is still refused, on insert
  * and on update alike.
  *
+ * ### The second rule on the same path (#1164)
+ *
+ * Retiring the claim clears the pairing but trips
+ * `duplicate_disqualification_requires_survivor` on a lead a human had already
+ * closed as a duplicate — a second rule, on the same erasure path, refusing the
+ * same delete with a different sentence. That case is now cleared too, and by
+ * the opposite move: the claim STANDS on such a lead and the pairing stands
+ * down for it. What still refuses "closed as a duplicate of nobody" is
+ * `lead_duplicate_check` job 1d, because with the pairing down only a hook can
+ * separate an erased pointer from one that never existed. The last two describe
+ * blocks are the two halves of that trade.
+ *
  * ### What the hook deliberately does not ask
  *
  * It never asks whether the null came from the engine. Measured on 17.0.0 GA by
@@ -404,42 +416,250 @@ describe('the type↔lookup pairing still bites', () => {
   });
 });
 
-// ──────────────────────────────────────────── the boundary of this fix ──
+// ─────────────────────────────── the second rule on the same path (#1164) ──
 
 /**
- * A lead already DISQUALIFIED as a duplicate is still undeletable-adjacent, and
- * deliberately left that way here.
+ * A lead already DISQUALIFIED as a duplicate — the case this file previously
+ * pinned as still refused, now cleared.
  *
  * `duplicate_disqualification_requires_survivor` is a second, independent rule:
- * closing a lead with `disqualification_reason: 'duplicate'` requires a named
- * survivor AND `duplicate_status: 'confirmed'` (#598). Retiring the claim
- * satisfies the field pairing and immediately trips that rule instead, so the
- * delete still rolls back — with a different sentence, and for a different
- * reason. It is blocked today either way; this change moves which rule answers,
- * not whether the delete succeeds.
+ * closing a lead with `disqualification_reason: 'duplicate'` requires
+ * `duplicate_of_type` AND `duplicate_status: 'confirmed'` (#598). Note what it
+ * does NOT reference — the lookup. So the two rules deadlocked: the pointer was
+ * erased, the pairing demanded it back, #1072's cleanup dropped the type to
+ * satisfy the pairing, and dropping the type tripped this rule. Satisfying
+ * either broke the other, and the delete rolled back with a different sentence.
  *
- * Fixing it is a product call this card did not make: "closed as a duplicate of
- * a person who has since been erased" has no obviously right resting state, and
- * every candidate either rewrites a recorded business verdict or loosens a rule
- * that is correct at authoring time — which is exactly what #1072 rejected.
- * Filed separately; the assertion below is today's truth and is expected to
- * flip when that lands.
+ * The fix breaks the deadlock at the pairing, not at the verdict: on a lead
+ * closed as a duplicate the claim STANDS (`duplicate_of_type` +
+ * `duplicate_status`), and `requiredWhen` stands down for it. The residue reads
+ * "confirmed duplicate of a contact" with the pointer gone — which is what an
+ * erasure leaves behind. Nothing is rewritten, no field or option value is
+ * invented, and `duplicate_disqualification_requires_survivor` is untouched.
+ *
+ * The price is stated in the next describe block, and it is the whole reason
+ * this fix is not a loosening: with the pairing down, only a HOOK can still
+ * tell "the pointer was erased" from "this claim never named anyone" — the two
+ * are the same record — so `lead_duplicate_check` job 1d does, and #598's
+ * invariant is enforced there instead. Both directions are pinned.
  */
 describe('a lead already disqualified as a duplicate', () => {
-  it('is still refused, by the disqualification rule rather than the pairing', async () => {
+  /** A disqualified-as-duplicate lead over a real contact — the erasure case. */
+  const buildDisqualifiedCase = async (): Promise<AnyRec> => {
+    const built = await buildContactCase();
+    await ql.update('crm_lead', {
+      id: built.lead.id, duplicate_status: 'confirmed', status: 'unqualified',
+      disqualification_reason: 'duplicate',
+    }, { context: SYS });
+    return built;
+  };
+
+  it('deletes the contact it was disqualified against, and keeps the verdict', async () => {
+    const { contact, lead } = await buildDisqualifiedCase();
+
+    expect(await deleteAndCatch('crm_contact', contact.id)).toBeNull();
+    expect(await rowsOf('crm_contact', contact.id)).toHaveLength(0);
+
+    const row = await rowOf('crm_lead', lead.id);
+    // The pointer is gone — that is the erasure.
+    expect(row.duplicate_of_contact ?? null).toBeNull();
+    // The verdict is NOT: the lead still says it was closed as a confirmed
+    // duplicate of a contact. Rewriting that would be option 2 of the card.
+    expect(row.status).toBe('unqualified');
+    expect(row.disqualification_reason).toBe('duplicate');
+    expect(row.duplicate_of_type).toBe('crm_contact');
+    expect(row.duplicate_status).toBe('confirmed');
+  });
+
+  it('then deletes the account above that contact', async () => {
+    const { account, contact } = await buildDisqualifiedCase();
+
+    expect(await deleteAndCatch('crm_contact', contact.id)).toBeNull();
+    expect(await deleteAndCatch('crm_account', account.id)).toBeNull();
+    expect(await rowsOf('crm_account', account.id)).toHaveLength(0);
+  });
+
+  it('deletes the account directly, cascading through the contact', async () => {
+    // The second half of the reported repro, and the path an erasure request
+    // actually takes: one DELETE on the account, cascading (master-detail) to
+    // the contact and through to the lead's claim.
+    const { account, contact, lead } = await buildDisqualifiedCase();
+
+    expect(await deleteAndCatch('crm_account', account.id)).toBeNull();
+    expect(await rowsOf('crm_account', account.id)).toHaveLength(0);
+    expect(await rowsOf('crm_contact', contact.id)).toHaveLength(0);
+
+    const row = await rowOf('crm_lead', lead.id);
+    expect(row.duplicate_of_contact ?? null).toBeNull();
+    expect(row.duplicate_of_type).toBe('crm_contact');
+    expect(row.duplicate_status).toBe('confirmed');
+  });
+
+  it('deletes the survivor in the lead↔lead case too', async () => {
+    const n = uniq();
+    const survivor = await insert('crm_lead', {
+      first_name: 'Sid', last_name: 'Same', company: 'Same Inc', status: 'new',
+      lead_source: 'web', email: `sid.${n}@dupe-cleanup.test`,
+    });
+    const dupe = await insert('crm_lead', {
+      first_name: 'Sid', last_name: 'Same', company: 'Same Inc', status: 'new',
+      lead_source: 'web', email: `sid.${n}@dupe-cleanup.test`,
+    });
+    expect((await rowOf('crm_lead', dupe.id)).duplicate_of_lead).toBe(survivor.id);
+    await ql.update('crm_lead', {
+      id: dupe.id, duplicate_status: 'confirmed', status: 'unqualified',
+      disqualification_reason: 'duplicate',
+    }, { context: SYS });
+
+    expect(await deleteAndCatch('crm_lead', survivor.id)).toBeNull();
+    expect(await rowsOf('crm_lead', survivor.id)).toHaveLength(0);
+
+    const row = await rowOf('crm_lead', dupe.id);
+    expect(row.duplicate_of_lead ?? null).toBeNull();
+    expect(row.duplicate_of_type).toBe('crm_lead');
+    expect(row.duplicate_status).toBe('confirmed');
+  });
+
+  it('leaves the lead editable afterwards — the residue is not a dead end', async () => {
+    // The failure mode a narrower fix produces: a row that satisfies nothing it
+    // is checked against, so every later save is refused for a pointer nobody
+    // can restore. An ordinary edit must simply work.
+    const { contact, lead } = await buildDisqualifiedCase();
+    expect(await deleteAndCatch('crm_contact', contact.id)).toBeNull();
+
+    expect(await updateAndCatch('crm_lead', { id: lead.id, description: 'erased' })).toBeNull();
+    expect((await rowOf('crm_lead', lead.id)).description).toBe('erased');
+  });
+
+  it('lets the claim be re-pointed at a surviving record', async () => {
+    const { contact, lead } = await buildDisqualifiedCase();
+    expect(await deleteAndCatch('crm_contact', contact.id)).toBeNull();
+    const replacement = await buildContactCase();
+
+    expect(await updateAndCatch('crm_lead', {
+      id: lead.id, duplicate_of_type: 'crm_contact', duplicate_of_contact: replacement.contact.id,
+    })).toBeNull();
+    expect((await rowOf('crm_lead', lead.id)).duplicate_of_contact).toBe(replacement.contact.id);
+  });
+
+  it('retires the stale type when the lead stops being a duplicate', async () => {
+    // The carve-out lapses with the verdict. Re-opening the lead hands the pair
+    // back to `requiredWhen`, so the type standing over an erased pointer has to
+    // go with the verdict — otherwise this write would be refused for a pointer
+    // that cannot be restored, which is the original bug in a new place.
+    const { contact, lead } = await buildDisqualifiedCase();
+    expect(await deleteAndCatch('crm_contact', contact.id)).toBeNull();
+
+    expect(await updateAndCatch('crm_lead', {
+      id: lead.id, status: 'new', disqualification_reason: 'other',
+    })).toBeNull();
+
+    const row = await rowOf('crm_lead', lead.id);
+    expect(row.status).toBe('new');
+    expect(row.duplicate_of_type ?? null).toBeNull();
+    expect(row.duplicate_status ?? null).toBeNull();
+  });
+});
+
+// ──────────────────── a duplicate disqualification still names somebody (#598) ──
+
+/**
+ * The other direction, and the reason the change above is not the loosening
+ * #1072 refused. With the pairing standing down for a disqualified lead, the
+ * ONLY thing left between this repo and "a lead may be closed as a duplicate of
+ * nobody" is `lead_duplicate_check` job 1d. Every route to that state is pinned
+ * shut here.
+ *
+ * The refusal arrives as `duplicate_disqualification_requires_survivor` — the
+ * #598 rule itself, with its own wording and envelope — because the hook clears
+ * the unbacked discriminator rather than inventing a second sentence.
+ */
+describe('a duplicate disqualification still has to name a record', () => {
+  it('refuses an INSERT that closes a lead as a duplicate of nobody', async () => {
+    const err = await ql
+      .insert('crm_lead', {
+        first_name: 'Ida', last_name: 'None', company: 'None Inc',
+        status: 'unqualified', disqualification_reason: 'duplicate',
+        email: `ida.${uniq()}@dupe-cleanup.test`,
+        duplicate_of_type: 'crm_contact', duplicate_status: 'confirmed',
+      }, { context: userCtx })
+      .then(() => null, (e: Error) => e);
+
+    expectValidationRefusal(err, 'Disqualifying a lead as Duplicate requires naming the surviving record');
+  });
+
+  it('refuses an UPDATE that closes a lead as a duplicate of nobody', async () => {
+    const lead = await insert('crm_lead', {
+      first_name: 'Uma', last_name: 'None', company: 'None Inc', status: 'new',
+      email: `uma.${uniq()}@dupe-cleanup.test`,
+    });
+
+    expectValidationRefusal(
+      await updateAndCatch('crm_lead', {
+        id: lead.id, status: 'unqualified', disqualification_reason: 'duplicate',
+        duplicate_of_type: 'crm_lead', duplicate_status: 'confirmed',
+      }),
+      'Disqualifying a lead as Duplicate requires naming the surviving record',
+    );
+    expect((await rowOf('crm_lead', lead.id)).status).toBe('new');
+  });
+
+  it('refuses re-pointing an erased claim at a kind without naming the record', async () => {
+    // The residue is not a licence to restate the claim emptily: a write that
+    // says "actually, a lead" and names none is an assertion, not an erasure.
     const { contact, lead } = await buildContactCase();
     await ql.update('crm_lead', {
       id: lead.id, duplicate_status: 'confirmed', status: 'unqualified',
       disqualification_reason: 'duplicate',
     }, { context: SYS });
+    expect(await deleteAndCatch('crm_contact', contact.id)).toBeNull();
 
-    const message = await deleteAndCatch('crm_contact', contact.id);
-
-    // The pairing is no longer the one answering — that is this card's change.
-    expect(message ?? '').not.toContain('Duplicate Of Contact is required');
-    // Today: the disqualification rule refuses, on its own account.
-    expect(message).toContain(
+    expectValidationRefusal(
+      await updateAndCatch('crm_lead', { id: lead.id, duplicate_of_type: 'crm_lead' }),
       'Disqualifying a lead as Duplicate requires naming the surviving record',
+    );
+    // Refused for real: the erased-but-recorded verdict is untouched.
+    const row = await rowOf('crm_lead', lead.id);
+    expect(row.duplicate_of_type).toBe('crm_contact');
+    expect(row.duplicate_status).toBe('confirmed');
+  });
+
+  it('still refuses a duplicate disqualification that names no kind at all', async () => {
+    // #598's original complaint, unchanged and untouched by this card: the rule
+    // itself was not relaxed.
+    const lead = await insert('crm_lead', {
+      first_name: 'Ora', last_name: 'None', company: 'None Inc', status: 'new',
+      email: `ora.${uniq()}@dupe-cleanup.test`,
+    });
+
+    expectValidationRefusal(
+      await updateAndCatch('crm_lead', {
+        id: lead.id, status: 'unqualified', disqualification_reason: 'duplicate',
+      }),
+      'Disqualifying a lead as Duplicate requires naming the surviving record',
+    );
+  });
+
+  it('keeps the pairing itself intact for every lead that is NOT disqualified', async () => {
+    // The carve-out is keyed on `disqualification_reason == "duplicate"` and on
+    // nothing else. An open lead — the state the intake dedupe produces, and the
+    // bulk of the rows — is refused by `requiredWhen` exactly as before.
+    const lead = await insert('crm_lead', {
+      first_name: 'Pia', last_name: 'Open', company: 'Open Inc', status: 'new',
+      email: `pia.${uniq()}@dupe-cleanup.test`,
+    });
+
+    expectValidationRefusal(
+      await updateAndCatch('crm_lead', { id: lead.id, duplicate_of_type: 'crm_contact' }),
+      'Duplicate Of Contact is required',
+    );
+    // …and a lead disqualified for some OTHER reason is not carved out either.
+    expectValidationRefusal(
+      await updateAndCatch('crm_lead', {
+        id: lead.id, status: 'unqualified', disqualification_reason: 'not_a_fit',
+        duplicate_of_type: 'crm_contact',
+      }),
+      'Duplicate Of Contact is required',
     );
   });
 });
