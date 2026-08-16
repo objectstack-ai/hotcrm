@@ -83,18 +83,41 @@ This history is permanent and surfaces in deal-review reports.
 
 In the HotCRM app, the **Approvals** group holds exactly one item, and the group is **collapsed by default** — click it open before deciding something isn't there.
 
-- **Inbox** — the approval requests waiting on you (`sys_approval_request`). **Inbox** is the label on the sidebar item; *Approval Requests* is not a navigation entry anywhere in this app. The name is not invented — it is what the approvals plugin calls the **object** (*Approval Request* / *Approval Requests*) — but this page had it standing where a sidebar item should be.
+- **Inbox** — opens the platform's **approval centre**, the screen where the approvals waiting on you are actually approved or rejected. **Inbox** is the label on the sidebar item; *Approval Requests* is not a navigation entry anywhere in this app. The name is not invented — it is what the approvals plugin calls the **object** (*Approval Request* / *Approval Requests*) — but this page had it standing where a sidebar item should be.
 
-That item pins no view of its own, so it opens the object's list with the four built-in views the approvals plugin ships:
+That item pins no view of its own. It used to land on the `sys_approval_request` object's list, which is read-only — you could read a request there but not act on it — so it now opens the approval centre instead, the surface that carries the **Approve** / **Reject** buttons. The object name is still on the entry, as the guard that hides the whole item on an install without the approvals plugin, but it is no longer where the item lands.
 
-| View | What it shows |
+The approval centre has three tabs of its own:
+
+| Tab | What it shows |
+| --- | --- |
+| **My Pending** | Requests waiting on your decision, with a count badge |
+| **Submitted by me** | Requests you raised, in any state |
+| **All** | Every request you are allowed to see |
+
+Inside whichever tab you are on, a separate **Status** filter narrows further: *All statuses*, **Pending**, **Approved**, **Rejected**, **Recalled** or **Returned for revision**.
+
+### The object's own list views are a different screen
+
+The approvals plugin also ships four built-in list views on the `sys_approval_request` **object**. They are real and still shipped — they are simply not what clicking **Inbox** opens, and no sidebar item in this app opens them:
+
+| Built-in view on the object | What it shows |
 | --- | --- |
 | **My Pending** | Requests still pending where you are one of the approvers |
 | **I Submitted** | Everything you submitted, in any state |
 | **Completed** | Requests that ended — approved, rejected or recalled |
 | **All** | Every request, most recently updated first |
 
-Those four are the real filters. The three names this page used to list — *Pending My Approval*, *Submitted by Me* and *Recently Approved* — exist nowhere: neither `src/` nor the installed approvals plugin carries any of them, under any spelling. **My Pending**, **I Submitted** and **Completed** are the views they were describing.
+Read those as a second screen, not as the tabs above. Two names sit on both sides unchanged, and one pair differs by a single word:
+
+| Built-in view on the object | Approval centre tab |
+| --- | --- |
+| **My Pending** | **My Pending** — same words, different screen |
+| **I Submitted** | **Submitted by me** |
+| **Completed** | *no tab* — use the **Status** filter instead |
+| **All** | **All** — same words, different screen |
+
+The three names this page used to list — *Pending My Approval*, *Submitted by Me* and *Recently Approved* — exist nowhere: neither `src/` nor the installed approvals plugin carries any of them, under any spelling. **My Pending**, **I Submitted** and **Completed** are the views they were describing. One caveat arrived with the re-point: the approval centre's **Submitted by me** tab differs from the phantom *Submitted by Me* only in capitalisation. That tab is a real screen in the centre — it is not, and never was, a view of the object.
 
 **Action History** is not in the group either, and no sidebar item anywhere in this app carries that name. The audit trail is real data — the approvals plugin stores every action as `sys_approval_action`, ships **Recent** / **By Actor** / **All** views for it, and each action points back at its request through a `request_id` lookup. What is missing is only the way in: no navigation entry in this app opens that object.
 
