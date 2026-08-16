@@ -87,14 +87,35 @@ import stack from '../objectstack.config';
  * variable scope. A failed node throws and the run stops, so a node that could
  * not bind its output never reaches a downstream reader.
  *
- * **What does NOT bind a variable — the trap.** Declaring it in
- * `flow.variables` does nothing at runtime. `FlowVariableSchema` is strict
- * `{ name, type, isInput, isOutput }` with **no `defaultValue`**, and
- * `AutomationEngine.execute` binds a declared input only when
- * `context.params[name] !== undefined`. A `screen` node's collected values
- * arrive only in the RESUME SIGNAL, from the client. So a declared,
- * screen-collected input is unbound on any run whose runner did not send it
- * back — which is exactly how `lead_conversion` aborted.
+ * **What does NOT bind a variable — the trap, and the half of it that CLOSED.**
+ * A bare declaration in `flow.variables` still binds nothing at runtime: the
+ * engine binds a declared input only when `context.params[name] !== undefined`,
+ * and a `screen` node's collected values arrive only in the RESUME SIGNAL, from
+ * the client. So a declared, screen-collected input with no default is unbound
+ * on any run whose runner did not send it back — which is exactly how
+ * `lead_conversion` aborted.
+ *
+ * What changed: on 17.0.0 GA a declaration MAY carry `defaultValue`, and that
+ * key — and only that key — turns declared into bound. `FlowVariableSchema` is
+ * now strict `{ name, type, isInput, isOutput, defaultValue? }`, and
+ * `seedDeclaredVariables` runs before the start node with this precedence:
+ *
+ *     context.params[name]  (isInput, and `!== undefined`)   ← wins
+ *     defaultValue          (when the declaration carries one)
+ *     — otherwise the name stays UNBOUND, exactly as before —
+ *
+ * The distinction is load-bearing for the CLASS 2 analysis below, which now
+ * counts a declared default as a binding: `defaultValue: false` binds,
+ * `defaultValue` absent does not, and nothing else about a declaration matters.
+ * That is a claim about the ENGINE, so it is not assumed — the
+ * "declared defaults are seeded by the real engine" block re-measures all three
+ * rows by running flows, and a platform that stopped seeding would turn this
+ * file red instead of letting the structural sweep certify a binding that no
+ * longer happens.
+ *
+ * Precedence matters as much as bindedness. The `assignment` node this replaced
+ * (`init_defaults`, #643) was unconditional, so it CLOBBERED a caller-supplied
+ * value; the declared default defers to one. Both directions are pinned.
  *
  * ### The defects this measured (both reproduced end-to-end below)
  *
@@ -329,9 +350,10 @@ describe('flow-variable conditions guard every FIELD they read', () => {
  *
  * Deliberately NOT included: a `screen` node's collected fields. They arrive
  * only in the resume signal, from the client, so the graph cannot guarantee
- * them — which is the whole defect this check exists to catch. Also not
- * included: `flow.variables` declarations, which bind nothing at runtime (see
- * the header).
+ * them — which is the whole defect this check exists to catch. Declarations in
+ * `flow.variables` are not here either, but for a different reason: a declared
+ * default is bound by the ENGINE before the start node runs, not by any node,
+ * so it belongs to the start node's entry set — see {@link declaredDefaults}.
  */
 function binds(node: AnyRec): string[] {
   const cfg = node.config ?? {};
@@ -352,16 +374,43 @@ function binds(node: AnyRec): string[] {
 }
 
 /**
+ * The variables the ENGINE binds before the first node runs, from the flow's
+ * own declarations — i.e. those carrying a `defaultValue`.
+ *
+ * `defaultValue !== undefined` is the whole test, and the narrowness is the
+ * point. A declaration without one binds nothing (the header's trap, still
+ * live), and `isInput` is irrelevant in both directions: a non-input
+ * declaration cannot be filled from `context.params`, so its default is the
+ * only thing that can ever bind it, and the engine honours it there too.
+ *
+ * Broadening this to "declared means bound" would silently re-open #643 — the
+ * sweep would certify `createOpportunity` as bound on a flow that has neither a
+ * default nor a seeding node, which is precisely the state that aborted a lead
+ * conversion. The engine-side block below measures the narrow rule rather than
+ * trusting this comment.
+ */
+function declaredDefaults(flow: AnyRec): string[] {
+  return ((flow.variables ?? []) as AnyRec[])
+    .filter((v) => v && typeof v.name === 'string' && v.name && v.defaultValue !== undefined)
+    .map((v) => v.name as string);
+}
+
+/**
  * For every node, the variables guaranteed bound when the engine ENTERS it.
  *
  * Standard intersection dataflow over the flow DAG: a variable is guaranteed at
  * `v` only if every path into `v` binds it first. A `loop` body region runs in
  * the enclosing variable scope, entered from its container, so it is seeded
  * with the container's exit set (plus the iterator).
+ *
+ * The START node's entry set is not empty: it holds the declared defaults,
+ * which the engine seeds ahead of it (and ahead of the start CONDITION, so a
+ * start condition may read one — measured, not assumed).
  */
 function boundOnEntry(flow: AnyRec): Map<string, Set<string>> {
   const { nodes, edges } = graphOf(flow);
-  const universe = new Set(nodes.flatMap(binds));
+  const seeded = declaredDefaults(flow);
+  const universe = new Set([...nodes.flatMap(binds), ...seeded]);
   const byId = new Map(nodes.map((n) => [n.id as string, n]));
   const incoming = new Map<string, AnyRec[]>();
   for (const e of edges) {
@@ -383,7 +432,7 @@ function boundOnEntry(flow: AnyRec): Map<string, Set<string>> {
   }
 
   for (const n of nodes) {
-    entry.set(n.id, n.type === 'start' ? new Set() : new Set(universe));
+    entry.set(n.id, n.type === 'start' ? new Set(seeded) : new Set(universe));
   }
   for (let pass = 0; pass < nodes.length + 2; pass++) {
     let changed = false;
@@ -443,11 +492,15 @@ describe('every variable a flow condition reads is BOUND on every path to it', (
         'does not happen.\n\n' +
         'Do NOT fix this with `has(...)`. A guard would bury a policy ("a missing ' +
         'answer means No") inside a predicate and leave the graph defect in place. Bind ' +
-        'the variable instead — an `assignment` node upstream of every reader, or a ' +
-        '`get_record` whose `outputVariable` is that name. Declaring it in ' +
-        '`flow.variables` does NOT bind it: FlowVariableSchema has no `defaultValue` and ' +
-        'the engine binds a declared input only when the caller passed it in ' +
-        '`context.params`.',
+        'the variable instead. Preferred: give its `flow.variables` declaration a ' +
+        '`defaultValue` — the engine seeds that before the run starts, it costs no node ' +
+        'or edge, and it DEFERS to a caller-supplied `context.params` value. Otherwise ' +
+        'bind it in the graph: a `get_record` whose `outputVariable` is that name, or an ' +
+        '`assignment` node upstream of every reader (note an assignment is ' +
+        'unconditional, so it clobbers a supplied param — that is why the declared ' +
+        'default is preferred). A declaration with NO `defaultValue` still binds ' +
+        'nothing: the engine binds a bare declared input only when the caller passed it ' +
+        'in `context.params`.',
     ).toEqual([]);
   });
 
@@ -473,11 +526,35 @@ describe('every variable a flow condition reads is BOUND on every path to it', (
       source: 'vars.answer == true',
     };
     // Declared in `flow.variables` AND collected by a screen — and still not
-    // guaranteed, which is precisely the trap.
+    // guaranteed, which is precisely the trap. This arm is what stops the
+    // `defaultValue` support below from degenerating into "declared means
+    // bound": the declaration here carries NO default, so it binds nothing.
     expect(guaranteedAt(synthetic, site).has('answer')).toBe(false);
 
-    // …and an `assignment` ahead of the screen fixes it, which is the remedy
-    // `lead_conversion` now uses.
+    // …and a declared `defaultValue` fixes it — the remedy `lead_conversion`
+    // now uses (#1155). No node, no edge: the engine seeds it ahead of the
+    // start node.
+    const declared: AnyRec = {
+      ...synthetic,
+      variables: [{ name: 'answer', type: 'boolean', isInput: true, isOutput: false, defaultValue: false }],
+    };
+    expect(guaranteedAt(declared, site).has('answer')).toBe(true);
+
+    // A default of `false` must count: the key's PRESENCE is the test, not its
+    // truthiness. `false` is the single commonest default in this repo, so an
+    // implementation that leaned on `!!v.defaultValue` would be wrong exactly
+    // where it matters most and right everywhere it does not.
+    expect(declaredDefaults(declared)).toEqual(['answer']);
+    expect(declaredDefaults(synthetic)).toEqual([]);
+    // …and a non-input declaration counts too — params cannot reach it, so its
+    // default is the only thing that ever binds it.
+    expect(declaredDefaults({
+      variables: [{ name: 'q', type: 'text', isInput: false, isOutput: true, defaultValue: 'seeded' }],
+    })).toEqual(['q']);
+
+    // …and the pre-#1155 remedy, an `assignment` ahead of the screen, still
+    // works. Retiring the node from `lead_conversion` did not retire the
+    // graph-binding route: `campaign_enrollment` still uses it.
     const fixed: AnyRec = {
       ...synthetic,
       nodes: [
@@ -495,18 +572,53 @@ describe('every variable a flow condition reads is BOUND on every path to it', (
   });
 
   it('binds `createOpportunity` before lead_conversion reads it', () => {
-    // The concrete defect, named: an `assignment` node ahead of the screen, not
-    // a `has()` guard on the edges.
+    // The concrete defect, named. The binding is a declared `defaultValue`
+    // since #1155 — NOT a `has()` guard on the edges, and no longer the
+    // `init_defaults` assignment node (#643) that stood in for it while
+    // `FlowVariableSchema` had no such key.
     const flow = flows.find((f) => f.name === 'lead_conversion')!;
+    const declared = (flow.variables as AnyRec[]).find((v) => v.name === 'createOpportunity');
+    expect(declared, 'lead_conversion no longer declares createOpportunity').toBeDefined();
+    expect(
+      declared!.defaultValue,
+      'lead_conversion no longer seeds createOpportunity — the edge e16/e17 read is unbound again (#643)',
+    ).toBe(false);
+    expect(guaranteedAt(flow, sites.find((s) => s.id === 'lead_conversion.edge:e16')!).has('createOpportunity')).toBe(true);
+
+    // The workaround is gone, and stays gone: a re-introduced seeding node
+    // would be a second statement of the same default with nothing keeping the
+    // two in step, which is the duplication #1155 removed.
     const init = (flow.nodes as AnyRec[]).find((n) => n.type === 'assignment' && 'createOpportunity' in (n.config?.assignments ?? {}));
-    expect(init, 'lead_conversion no longer seeds createOpportunity').toBeDefined();
-    expect(init!.config.assignments.createOpportunity).toBe(false);
+    expect(init, 'the init_defaults workaround is back — the declared default already binds it (#1155)').toBeUndefined();
+
     for (const s of sites.filter((x) => x.flow === 'lead_conversion')) {
       expect(
         /has\(vars\.(createOpportunity|matchedAccount|matchedContact)\)/.test(s.source),
         `${s.id} guards a flow VARIABLE with has(...) — bind it in the graph instead`,
       ).toBe(false);
     }
+  });
+
+  it('the conversion default has exactly ONE authority (#1155)', () => {
+    // The motivation behind #1155, pinned so it cannot silently come back: the
+    // default used to be written twice — on the screen field and on the
+    // assignment node — with nothing keeping them in step. The screen field now
+    // DERIVES its prefill from the variable, so the literal lives in one place.
+    const flow = flows.find((f) => f.name === 'lead_conversion')!;
+    const screen = (flow.nodes as AnyRec[]).find((n) => n.id === 'screen_1')!;
+    const field = (screen.config.fields as AnyRec[]).find((f) => f.name === 'createOpportunity')!;
+    expect(
+      field.defaultValue,
+      'the screen field restates the default instead of deriving it — that is the ' +
+        'duplication #1155 removed, moved one level over',
+    ).toBe('{createOpportunity}');
+
+    // …and the literal really is written once. Restating `false` on the field
+    // would put a second copy in this file with nothing reconciling them.
+    const literals = (flow.variables as AnyRec[])
+      .filter((v) => v.name === 'createOpportunity' && v.defaultValue !== undefined).length +
+      (field.defaultValue === false ? 1 : 0);
+    expect(literals, 'the conversion default is stated more than once').toBe(1);
   });
 });
 
@@ -627,6 +739,116 @@ describe('flow-variable conditions are TOTAL on the real engine', () => {
     expect(abortOf('vars.missing == 1 && vars.b == "no"', { b: 'x' })).toBeNull();
     expect(abortOf('vars.missing == 1 && vars.b == "x"', { b: 'x' })).toMatch(/No such key: missing/);
   });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// The CLASS 2 analysis's engine assumption, measured by RUNNING FLOWS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * `declaredDefaults` above tells the structural sweep that a variable declared
+ * with `defaultValue` is bound on every path. That is not a fact about the
+ * graph — it is a claim about the ENGINE, and an unmeasured one would be the
+ * worst kind of green: the sweep would certify `lead_conversion` as safe while
+ * the runtime left `createOpportunity` unbound, which is #643 exactly.
+ *
+ * So the rule is re-measured here, by running flows on the installed engine.
+ * Each property is paired with the ablation that must fail, because a probe
+ * that cannot go red proves nothing. If a platform upgrade drops the seeding,
+ * these go red — and the `init_defaults` assignment node retired in #1155 is
+ * the documented way back.
+ */
+describe('declared defaults are seeded by the real engine, not just by this file', () => {
+  const silent: any = { info() {}, warn() {}, error() {}, debug() {}, trace() {} };
+  silent.child = () => silent;
+
+  /** A one-variable flow whose START CONDITION reads the declared variable. */
+  const probeFlow = (variables: AnyRec[], condition?: string): AnyRec => ({
+    name: 'probe', label: 'Probe', type: 'record_change', status: 'active',
+    variables,
+    nodes: [
+      { id: 'start', type: 'start', label: 'Start', config: { objectName: 'crm_lead', ...(condition ? { condition } : {}) } },
+      { id: 'end', type: 'end', label: 'End' },
+    ],
+    edges: [{ id: 'e0', source: 'start', target: 'end', type: 'default' }],
+  });
+
+  async function runProbe(flow: AnyRec, params: AnyRec = {}) {
+    const engine = new AutomationEngine(silent);
+    installBuiltinNodes(engine, { logger: silent, getService: () => undefined } as never);
+    (engine as unknown as AnyRec).registerFlow('probe', flow);
+    return (engine as unknown as AnyRec).execute('probe', { userId: 'u1', user: { id: 'u1' }, params });
+  }
+
+  const OUT = (defaultValue?: unknown, isInput = true): AnyRec[] => [{
+    name: 'createOpportunity', type: 'boolean', isInput, isOutput: true,
+    ...(defaultValue !== undefined ? { defaultValue } : {}),
+  }];
+
+  it('a declared defaultValue BINDS when nothing supplies it — and absent, nothing does', async () => {
+    const cond = 'vars.createOpportunity == false';
+
+    const bound = await runProbe(probeFlow(OUT(false), cond));
+    expect(bound.error ?? null, 'the declared default did not bind').toBeNull();
+    expect(bound.success).toBe(true);
+    expect(bound.output?.createOpportunity).toBe(false);
+
+    // ABLATION — the same flow with the key removed. Without this the assertion
+    // above could be passing for some other reason entirely.
+    const unbound = await runProbe(probeFlow(OUT(undefined), cond));
+    expect(unbound.success, 'a bare declaration bound the variable — the CLASS 2 trap is gone').toBe(false);
+    expect(unbound.error).toMatch(/No such key: createOpportunity/);
+  }, 60_000);
+
+  it('the seeding happens BEFORE the start condition is evaluated', async () => {
+    // #651 "what to establish" item 2, never measured until #1155. If seeding
+    // ran after the start condition, this would abort rather than answer.
+    const reads = await runProbe(probeFlow(OUT(false), 'vars.createOpportunity == false'));
+    expect(reads.error ?? null).toBeNull();
+    expect(reads.output?.skipped ?? false, 'the start condition read a value the default did not supply').toBe(false);
+
+    // The complement: the same start condition against the OTHER value must
+    // reach the opposite VERDICT (skip), not an abort. A condition that aborted
+    // would also "not run", so only this pair distinguishes seeded-and-false
+    // from never-seeded.
+    const skips = await runProbe(probeFlow(OUT(false), 'vars.createOpportunity == true'));
+    expect(skips.error ?? null).toBeNull();
+    expect(skips.output?.skipped).toBe(true);
+    expect(skips.output?.reason).toBe('condition_not_met');
+
+    // …and supplying the param flips that same condition, proving it reads the
+    // live seeded map rather than a constant folded at registration.
+    const supplied = await runProbe(probeFlow(OUT(false), 'vars.createOpportunity == true'), { createOpportunity: true });
+    expect(supplied.output?.skipped ?? false).toBe(false);
+  }, 60_000);
+
+  it('a caller-supplied param WINS over the declared default — the clobber the node had', async () => {
+    // The property `init_defaults` did NOT have: an unconditional assignment
+    // overwrote a supplied value. Falsy supplied values are the whole point —
+    // the boundary is `!== undefined`, not truthiness.
+    for (const [supplied, expected] of [
+      [undefined, false],   // absent → the default
+      [true, true],
+      [false, false],
+      [null, null],
+    ] as const) {
+      const res = await runProbe(
+        probeFlow(OUT(false)),
+        supplied === undefined ? {} : { createOpportunity: supplied },
+      );
+      expect(res.error ?? null).toBeNull();
+      expect(res.output?.createOpportunity ?? null, `params.createOpportunity=${JSON.stringify(supplied)}`).toBe(expected);
+    }
+  }, 60_000);
+
+  it('a NON-input declaration is seeded too — params cannot reach it, so the default is all there is', async () => {
+    const res = await runProbe(probeFlow(
+      [{ name: 'createOpportunity', type: 'boolean', isInput: false, isOutput: true, defaultValue: false }],
+      'vars.createOpportunity == false',
+    ));
+    expect(res.error ?? null).toBeNull();
+    expect(res.output?.createOpportunity).toBe(false);
+  }, 60_000);
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -776,8 +998,23 @@ describe('the two defects, reproduced end-to-end', () => {
       });
       const started = await b.engine.execute('lead_conversion', asUser({ recordId: lead.id }));
       expect(started.status).toBe('paused');
+
+      // The declared default reaches the CLIENT too, through the screen
+      // descriptor — and as a boolean, not the string "{createOpportunity}".
+      // This is the single-authority claim on the wire (#1155): the widget
+      // prefill is derived from the variable, so it cannot drift from the value
+      // the engine bound, and the byte the client sees is what a literal
+      // `defaultValue: false` used to send.
+      const screen = started.screen ?? started.output?.screen ?? null;
+      const box = ((screen?.fields ?? []) as AnyRec[]).find((f) => f.name === 'createOpportunity');
+      expect(box, 'the conversion screen no longer offers the checkbox').toBeDefined();
+      expect(box!.defaultValue).toBe(false);
+      expect(typeof box!.defaultValue, 'the derived prefill stringified — the client would read it as truthy').toBe('boolean');
+
       // The runner posts only what the user touched — the checkbox was left
-      // alone, so `createOpportunity` is absent from the signal.
+      // alone, so `createOpportunity` is absent from the signal. Since #1155 it
+      // is the DECLARED DEFAULT, not an `init_defaults` assignment node, that
+      // has to survive the pause and bind edges e16/e17 here.
       const done = await b.engine.resume(started.runId, { variables: {} });
       // Before the binding: `condition failed to evaluate as CEL: No such key: createOpportunity`.
       expect(done.error ?? null).toBeNull();
@@ -808,6 +1045,9 @@ describe('the two defects, reproduced end-to-end', () => {
       expect(done.error ?? null).toBeNull();
       const opp = await api.object('crm_opportunity').findOne({ where: { name: 'Acme Deal' } });
       expect(opp, 'the seeded default overrode the user answer').toBeTruthy();
+      // The resume signal wins over the declared default, same as it won over
+      // the assignment node it replaced (#1155) — a default that could not be
+      // answered would make the checkbox decorative.
     } finally {
       await b.close();
     }

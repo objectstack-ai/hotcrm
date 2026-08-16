@@ -18,39 +18,39 @@ export const LeadConversionFlow: Flow = {
     // dispatcher exposes them as params.recordId / params.crmLeadId. A custom
     // name like `leadId` never gets seeded (16.x runtime).
     { name: 'recordId', type: 'text', isInput: true, isOutput: false },
-    { name: 'createOpportunity', type: 'boolean', isInput: true, isOutput: false },
+    // THE authority for the conversion default (#1155). `defaultValue` is what
+    // makes declared mean BOUND: the engine seeds every declared variable that
+    // carries one before the run starts, so `createOpportunity` is bound on
+    // every path — including the one where the screen runner posts back only
+    // the fields the user touched, which is the #643 defect. The `init_defaults`
+    // assignment node that used to do this is gone; the screen field below
+    // derives its prefill from this line rather than restating `false`.
+    //
+    // Measured on 17.0.0 GA, by running flows (not by reading the engine):
+    //   · declared + nothing supplied  → bound to `false`; ablating this key
+    //     from the declaration re-fails the read with `No such key:
+    //     createOpportunity`, so the default is what binds it;
+    //   · seeded BEFORE the start condition is evaluated, so a start condition
+    //     could read it too;
+    //   · a caller-supplied `context.params.createOpportunity` WINS — the
+    //     boundary is `!== undefined`, so an explicit `false`/`null` is a
+    //     supplied answer, and only absence falls through to this default.
+    // The assignment node had none of that last property: it was unconditional,
+    // so it clobbered a supplied value. All three are pinned in
+    // `test/flow-variable-conditions.test.ts`.
+    { name: 'createOpportunity', type: 'boolean', isInput: true, isOutput: false, defaultValue: false },
     { name: 'opportunityName', type: 'text', isInput: true, isOutput: false },
     { name: 'opportunityAmount', type: 'text', isInput: true, isOutput: false },
   ],
 
   nodes: [
     { id: 'start', type: 'start', label: 'Start', config: { objectName: 'crm_lead' } },
-    {
-      // BINDING, not guarding (#643). `createOpportunity` is the only variable
-      // any condition in this flow reads that no node upstream of the read
-      // assigns: `matchedAccount` / `matchedContact` are `get_record` outputs
-      // and `get_record` always writes its `outputVariable` (with `null` on a
-      // miss), but `createOpportunity` arrives only if the screen runner sends
-      // it back in the resume signal. A runner that posts just the fields the
-      // user touched leaves it UNBOUND, and edge `e16` then aborts with
-      // `No such key: createOpportunity` — reproduced end-to-end: the run is
-      // recorded `failed` and the lead is never marked converted.
-      //
-      // The remedy is NOT a `has()` guard. A guard would encode "a missing
-      // answer means No" inside the predicate; what is actually wrong is that
-      // the graph left the variable unbound. Declaring it in `flow.variables`
-      // does not help either — measured on 17.0.0-rc.1, `FlowVariableSchema` is
-      // strict `{ name, type, isInput, isOutput }` with NO `defaultValue`, and
-      // `AutomationEngine.execute` binds a declared input only when
-      // `context.params[name] !== undefined`. So the binding has to be an
-      // `assignment` node, and it has to sit ahead of the screen so the resume
-      // signal overwrites it whenever the runner does answer.
-      //
-      // `false` mirrors the screen field's own `defaultValue: false` — the
-      // commonest path is "convert this lead WITHOUT an opportunity".
-      id: 'init_defaults', type: 'assignment', label: 'Default Conversion Options',
-      config: { assignments: { createOpportunity: false } },
-    },
+    // The `init_defaults` assignment node that used to sit here is RETIRED
+    // (#1155). It existed only because `FlowVariableSchema` had no
+    // `defaultValue` (#643 / #651); it does now, and the declaration on
+    // `createOpportunity` above binds the variable earlier and without the
+    // node's one real defect — being unconditional, it clobbered a
+    // caller-supplied `context.params` value it should have deferred to.
     {
       id: 'screen_1', type: 'screen', label: 'Conversion Details',
       config: {
@@ -68,10 +68,24 @@ export const LeadConversionFlow: Flow = {
           // screen's declared contract too, refusing the resume outright with
           // `INVALID_SCREEN_INPUT: Screen field "createOpportunity" is required`
           // — so a runner that posts only what the user touched could no longer
-          // convert a lead at all. `defaultValue: false` (and the
-          // `init_defaults` assignment behind it) is what actually supplies the
-          // answer; the flag only ever contradicted it.
-          { name: 'createOpportunity', label: 'Create Opportunity?', type: 'boolean', defaultValue: false },
+          // convert a lead at all. The variable's declared `defaultValue` is
+          // what actually supplies the answer; the flag only ever contradicted
+          // it.
+          //
+          // DERIVED, not restated (#1155). `{createOpportunity}` reads the flow
+          // variable, so the literal `false` is written exactly once in this
+          // file — on the declaration — and the widget prefill cannot drift
+          // from the value the engine binds. That is the duplication #1155 was
+          // filed about; writing `defaultValue: false` here again would have
+          // moved it one level over rather than removed it.
+          //
+          // A screen field's `defaultValue` is server-interpolated before the
+          // descriptor goes on the wire, and a whole-string sole token returns
+          // the RAW value rather than a stringification — measured on GA, the
+          // client receives boolean `false`, byte-identical to what the literal
+          // sent. (`visibleWhen` below is the opposite case: forwarded raw,
+          // never interpolated. Same node, two different dialects.)
+          { name: 'createOpportunity', label: 'Create Opportunity?', type: 'boolean', defaultValue: '{createOpportunity}' },
           { name: 'opportunityName', label: 'Opportunity Name', type: 'text', required: true, visibleWhen: 'createOpportunity == true' },
           { name: 'opportunityAmount', label: 'Opportunity Amount', type: 'currency', visibleWhen: 'createOpportunity == true' },
         ],
@@ -262,8 +276,11 @@ export const LeadConversionFlow: Flow = {
   ],
 
   edges: [
-    { id: 'e0', source: 'start', target: 'init_defaults', type: 'default' },
-    { id: 'e1', source: 'init_defaults', target: 'screen_1', type: 'default' },
+    // `e0` used to run start → init_defaults, with `e1` carrying on to the
+    // screen. With the seeding node retired (#1155) the start edge goes
+    // straight to the screen and `e1` is gone; the gap in the numbering is
+    // deliberate, so every surviving edge keeps the id it has always had.
+    { id: 'e0', source: 'start', target: 'screen_1', type: 'default' },
     { id: 'e2', source: 'screen_1', target: 'get_lead', type: 'default' },
     { id: 'e3', source: 'get_lead', target: 'find_account', type: 'default' },
     { id: 'e4', source: 'find_account', target: 'decision_account', type: 'default' },
