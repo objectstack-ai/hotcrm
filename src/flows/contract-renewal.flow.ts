@@ -91,6 +91,20 @@ export const ContractRenewalFlow: Flow = {
                   type: 'follow_up', priority: 'high', status: 'not_started',
                   due_date: '{currentContract.end_date}',
                   owner_id: '{currentContract.owner_id}',
+                  // ORG PARTITION (#700). A schedule trigger carries no
+                  // organization, so the engine has nothing to fill this from
+                  // and the row would be born `organization_id` NULL — outside
+                  // every org partition, where an `(organization_id, …)` unique
+                  // index does not constrain and org-scoped reads never see it.
+                  // Upstream ruling objectstack#6155 Q2=A puts the answer here,
+                  // with the flow author: a renewal task belongs to the org of
+                  // the contract that spawned it. Fill-only precedence means an
+                  // author-set value wins over the engine (objectstack#6153).
+                  // The source MUST be a row that actually carries the column —
+                  // an absent key interpolates to `undefined` and lands as NULL,
+                  // which satisfies the publish guard while reproducing the bug.
+                  // `crm_contract` carries it; `sys_user` does not.
+                  organization_id: '{currentContract.organization_id}',
                   related_to_type: 'crm_account',
                   related_to_account: '{currentContract.crm_account}',
                 },
@@ -142,6 +156,9 @@ export const ContractRenewalFlow: Flow = {
                   type: 'existing_renewal',
                   close_date: '{currentContract.end_date}',
                   owner_id: '{currentContract.owner_id}',
+                  // ORG PARTITION (#700) — see `create_renewal_task` above.
+                  // The renewal deal belongs to the same org as the contract.
+                  organization_id: '{currentContract.organization_id}',
                   next_step: 'Confirm renewal terms with customer',
                 },
               },

@@ -105,6 +105,15 @@ export const OpportunityStagnationFlow: Flow = {
                   type: 'follow_up', priority: 'high', status: 'not_started',
                   due_date: '{TODAY() + 2}',
                   owner_id: '{currentOpp.owner_id}',
+                  // ORG PARTITION (#700). A schedule trigger carries no
+                  // organization, so without this the nudge task is born
+                  // `organization_id` NULL — outside every org partition.
+                  // Upstream ruling objectstack#6155 Q2=A assigns the answer to
+                  // the flow author; the task belongs to the org of the deal it
+                  // nudges. `crm_opportunity` carries the column, so the token
+                  // resolves — a source lacking it would interpolate to
+                  // `undefined` and land as NULL while looking declared.
+                  organization_id: '{currentOpp.organization_id}',
                   related_to_type: 'crm_opportunity',
                   related_to_opportunity: '{currentOpp.id}',
                 },
