@@ -328,23 +328,24 @@ describe('dashboard date ranges window a field the query layer can actually comp
    * comparison cannot match, the whole dashboard renders zeros. That is #460:
    * the Service dashboard windowed `crm_case.created_date` — a
    * `Field.datetime()` — and opened with every KPI at 0 and every chart empty,
-   * with 38 cases in the system.
+   * with 38 cases in the system. `driver-sql` 16.1.0 coerced a datetime bound
+   * to an epoch-millisecond INTEGER against ISO TEXT storage, and SQLite orders
+   * every INTEGER before every TEXT: `>= <int>` matched every row, `<= <int>`
+   * matched none.
    *
-   * The mechanism is a storage disagreement, not a bad preset. On SQLite,
-   * `driver-sql` 16.1.0 coerces datetime filter values to epoch-millisecond
-   * INTEGERs (`coerceFilterValue`), documenting the assumption that datetime
-   * columns hold INTEGER ms. In this app they hold ISO TEXT — including the
-   * platform's own `created_at`/`updated_at`. SQLite orders every INTEGER
-   * before every TEXT, so `datetime_col >= <int>` is true for all rows and
-   * `datetime_col <= <int>` is true for none. Measured against the running
-   * 16.1.0 console: `$gte` alone → all 38 cases, `$lte` alone → 0, both → 0,
-   * in every date format tried.
+   * This block used to carry a second rule — **no dashboard may window a
+   * `datetime` field at all** — and #1157 removed it rather than relaxing its
+   * wording, because a field-type ban is the wrong instrument for that claim:
+   * it is equally green whether the window works or not, so it could never
+   * report the fix landing (objectstack#3912 and objectstack#3777 are both
+   * released as of 17.0.0 GA) and could never catch a re-regression either.
    *
-   * `Field.date()` is unaffected (TEXT `YYYY-MM-DD` on both sides), which is
-   * why the CRM/Sales/Executive dashboards — all windowing `close_date` — show
-   * data. So the rule is about the FIELD TYPE, not the preset: a dashboard may
-   * only window a `date` field. Note this deliberately fails if someone
-   * restores the Service dashboard's `dateRange` before the driver is fixed.
+   * Its replacement EXECUTES the window against a real SQLite database and
+   * compares every widget to a ground truth computed in the same run:
+   * `test/dashboard-date-range-window.test.ts`. Restoring a datetime window is
+   * therefore still gated — on evidence now, not on a ban. What stays here is
+   * the half that is genuinely a metadata question: a range field the objects
+   * behind the dashboard do not define.
    */
   const dashboards: AnyRec[] = (stack as any).dashboards ?? [];
   const datasets: AnyRec[] = (stack as any).datasets ?? [];
@@ -361,24 +362,6 @@ describe('dashboard date ranges window a field the query layer can actually comp
 
   const fieldType = (objectName: string, field: string): string | undefined =>
     objects.find((o) => o.name === objectName)?.fields?.[field]?.type;
-
-  it('no dashboard windows a datetime field', () => {
-    const bad: string[] = [];
-    for (const d of dashboards) {
-      const field = d.dateRange?.field;
-      if (!field) continue;
-      for (const obj of objectsBehind(d)) {
-        const type = fieldType(obj, field);
-        if (type === 'datetime') {
-          bad.push(
-            `${d.name}: dateRange windows ${obj}.${field}, a datetime field — ` +
-            `the $lte bound matches no rows, so every widget renders empty`,
-          );
-        }
-      }
-    }
-    expect(bad, `dashboards that will render empty:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
 
   it('every dashboard dateRange field exists on the objects its widgets aggregate', () => {
     // A range field that no underlying object defines is silently dropped or

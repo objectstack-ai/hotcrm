@@ -2,6 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { isDateMacroToken } from '@objectstack/spec/data';
+import { DATE_RANGE_PRESETS } from '@objectstack/spec/ui';
 import stack from '../objectstack.config';
 
 /**
@@ -204,6 +205,29 @@ describe('time windows stay relative at runtime', () => {
       }
     }
     expect(bad, `absolute dates frozen into metadata:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('no filter comparand is a bare date-range PRESET name (objectstack#8690)', () => {
+    // A preset name is the picker's vocabulary, not the query layer's. The
+    // console lowers `last_30_days` into `{ from: '{30_days_ago}', to:
+    // '{today}' }` before any filter is sent; a preset name written straight
+    // into metadata never gets that lowering. It is not a `{macro}` either, so
+    // the resolver does not reject it — it reaches the driver as a literal
+    // string, compares false against every row, and the query answers HTTP 200
+    // with ZERO rows and no diagnostic. The symptom is an all-zero dashboard,
+    // indistinguishable at a glance from the #460 defect that cost this
+    // dashboard its date picker for a release. Filed upstream as
+    // objectstack#8690; guarded here because the repair is one grep away.
+    const presets = new Set<string>(DATE_RANGE_PRESETS as readonly string[]);
+    const bad: string[] = [];
+    for (const [where, filter] of filterSources) {
+      for (const [path, value] of filterLeaves(filter ?? {}, '')) {
+        if (presets.has(value)) {
+          bad.push(`${where}${path} = "${value}" — write the macro bounds, e.g. { $gte: '{30_days_ago}' }`);
+        }
+      }
+    }
+    expect(bad, `preset names used as filter comparands:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
   it('every {placeholder} in a temporal filter position is a recognised date macro', () => {
