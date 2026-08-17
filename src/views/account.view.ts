@@ -22,7 +22,6 @@ export const AccountViews = defineView({
       { field: 'annual_revenue', width: 160, align: 'right', summary: 'sum' },
       { field: 'number_of_employees', width: 130, align: 'right', summary: 'avg' },
       { field: 'health_score', width: 140 },
-      { field: 'next_renewal_date', width: 160, sortable: true },
     ],
     sort: [{ field: 'annual_revenue', order: 'desc' }],
     rowColor: { field: 'is_active', colors: { true: '#16a34a', false: '#94a3b8' } },
@@ -90,7 +89,10 @@ export const AccountViews = defineView({
       { name: 'map', label: 'Map', icon: 'map', view: 'account_map' },
       { name: 'enterprise', label: 'Enterprise', icon: 'crown', view: 'enterprise_accounts' },
       { name: 'mine', label: 'My Accounts', icon: 'user', view: 'my_accounts' },
-      { name: 'renewals', label: 'Renewals', icon: 'refresh-cw', view: 'renewals_due' },
+      // No account-level "Renewals" tab (#1181). It listed `renewals_due`,
+      // which filtered and sorted on `crm_account.next_renewal_date` — a field
+      // nothing maintained. The renewals queue lives on `crm_contract`
+      // (`renewal_calendar`), over the `end_date` the daily sweep reads.
       { name: 'at_risk', label: 'At Risk', icon: 'triangle-alert', view: 'at_risk_accounts' },
     ],
   },
@@ -161,21 +163,11 @@ export const AccountViews = defineView({
       sort: [{ field: 'last_activity_date', order: 'desc' }],
     },
 
-    /** Customer-success: upcoming renewals, sorted by date ascending */
-    renewals_due: {
-      name: 'renewals_due',
-      type: 'grid',
-      label: '🔄 Upcoming Renewals',
-      data: { provider: 'object', object: 'crm_account' },
-      columns: ['name', 'tier', 'health_score', 'next_renewal_date', 'renewal_owner', 'annual_revenue'],
-      // Operator-only filter (no `{TODAY() + 90d}` template — sort exposes
-      // the soonest renewals at the top of the list).
-      filter: [
-        { field: 'type', operator: 'equals', value: 'customer' },
-        { field: 'next_renewal_date', operator: 'is_not_null' },
-      ],
-      sort: [{ field: 'next_renewal_date', order: 'asc' }],
-    },
+    // The `renewals_due` view is gone with the fields it was built on (#1181):
+    // both its `is_not_null` filter and its sort key were
+    // `crm_account.next_renewal_date`, so the view could not outlive the field.
+    // Nothing is lost — `crm_contract` ships the renewals queue that the daily
+    // sweep actually acts on (`renewal_calendar`, over `end_date`).
 
     /** At-risk customers — CSM action queue */
     at_risk_accounts: {
@@ -183,7 +175,7 @@ export const AccountViews = defineView({
       type: 'grid',
       label: '⚠️ At-Risk Accounts',
       data: { provider: 'object', object: 'crm_account' },
-      columns: ['name', 'tier', 'health_score', 'segment', 'renewal_owner', 'last_activity_date'],
+      columns: ['name', 'tier', 'health_score', 'segment', 'last_activity_date'],
       filter: [
         { field: 'type', operator: 'equals', value: 'customer' },
         { field: 'health_score', operator: 'in', value: ['at_risk', 'churning'] },
@@ -222,13 +214,15 @@ export const AccountViews = defineView({
         fields: ['annual_revenue', 'number_of_employees'],
       },
       {
-        // The customer-success fields the renewals_due / at_risk_accounts
-        // views list and filter on. They existed on the object but no form
-        // offered them, so the CS working queues stayed permanently empty.
+        // The customer-success fields the at_risk_accounts view lists and
+        // filters on. They existed on the object but no form offered them, so
+        // the CS working queue stayed permanently empty. (`renewal_owner` and
+        // `next_renewal_date` were removed from this section with the fields
+        // themselves — #1181.)
         name: 'customer_success',
         label: 'Customer Success',
         columns: 2,
-        fields: ['tier', 'segment', 'health_score', 'renewal_owner', 'next_renewal_date'],
+        fields: ['tier', 'segment', 'health_score'],
       },
       {
         name: 'locations',

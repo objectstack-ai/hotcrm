@@ -419,15 +419,17 @@ export const Account = ObjectSchema.create({
       ],
     }),
 
-    renewal_owner: Field.lookup('sys_user', {
-      label: 'Renewal Owner (CSM)',
-      group: 'ownership',
-    }),
-
-    next_renewal_date: Field.date({
-      label: 'Next Renewal Date',
-      group: 'ownership',
-    }),
+    // No account-level renewal model here (#1181). `renewal_owner` and
+    // `next_renewal_date` used to sit in this group, declared and inert:
+    // nothing wrote the date, and no automation ever read the owner, so an
+    // admin naming a CSM here was told a renewal would reach them and it never
+    // did. Renewal is a CONTRACT-level process and has exactly one home —
+    // `crm_contract.end_date` + `renewal_notice_days`, swept daily by
+    // `src/flows/contract-renewal.flow.ts`, which books the task and notifies
+    // the CONTRACT owner. The user-facing renewal queue is the contract
+    // object's own `renewal_calendar` view. If an account-level renewal owner
+    // is ever wanted, it is a change to that flow plus a real writer for the
+    // date — not a second pair of fields beside the first.
   },
   
   // Database indexes for performance

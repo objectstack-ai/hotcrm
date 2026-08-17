@@ -110,8 +110,6 @@ export const zhCN: TranslationData = {
           help: '客户成功经理维护的健康度指标',
           options: { healthy: '健康', watching: '关注', at_risk: '风险', churning: '流失中' },
         },
-        renewal_owner: { label: '续约负责人 (CSM)' },
-        next_renewal_date: { label: '下次续约日期' },
         name_normalized: { label: '客户名称（规范化）', help: '线索转化的匹配键：客户名称转小写、去除首尾空格、内部连续空白合并为一个空格。由 account_protection 钩子维护——请勿直接编辑。' },
         display_title: { label: '显示名称' },
       },
@@ -121,7 +119,6 @@ export const zhCN: TranslationData = {
         account_map: { label: '客户地图', description: '客户的地理分布' },
         enterprise_accounts: { label: '企业客户', description: '年营收最高的大客户' },
         my_accounts: { label: '我的客户', description: '由当前用户负责的客户' },
-        renewals_due: { label: '🔄 即将续约' },
         at_risk_accounts: { label: '⚠️ 风险客户' },
       },
       _sections: {

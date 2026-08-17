@@ -153,8 +153,6 @@ export const jaJP: TranslationData = {
           help: 'カスタマーサクセス担当（CSM）が管理する健全性の指標',
           options: { healthy: '良好', watching: '要観察', at_risk: 'リスクあり', churning: '解約進行中' },
         },
-        renewal_owner: { label: '更新担当者 (CSM)' },
-        next_renewal_date: { label: '次回更新日' },
       },
       _views: {
         all_accounts: { label: '全取引先', description: '売上と業種を含む取引先の一覧' },
@@ -162,7 +160,6 @@ export const jaJP: TranslationData = {
         account_map: { label: '取引先マップ', description: '取引先の地理的分布' },
         enterprise_accounts: { label: 'エンタープライズ取引先', description: '年商最上位の主要顧客' },
         my_accounts: { label: '私の取引先', description: '自分が所有する取引先' },
-        renewals_due: { label: '🔄 更新予定' },
         at_risk_accounts: { label: '⚠️ リスクのある取引先' },
       },
       _sections: {

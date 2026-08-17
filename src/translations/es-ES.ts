@@ -129,8 +129,6 @@ export const esES: TranslationData = {
             at_risk: 'En Riesgo', churning: 'En Fuga',
           },
         },
-        renewal_owner: { label: 'Responsable de Renovación (CSM)' },
-        next_renewal_date: { label: 'Próxima Fecha de Renovación' },
       },
       _views: {
         all_accounts: { label: 'Todas las Cuentas', description: 'Lista maestra de cuentas con ingresos e industria' },
@@ -138,7 +136,6 @@ export const esES: TranslationData = {
         account_map: { label: 'Mapa de Cuentas', description: 'Distribución geográfica de cuentas' },
         enterprise_accounts: { label: 'Cuentas Empresariales', description: 'Cuentas con mayores ingresos anuales' },
         my_accounts: { label: 'Mis Cuentas', description: 'Cuentas asignadas al usuario actual' },
-        renewals_due: { label: '🔄 Próximas Renovaciones' },
         at_risk_accounts: { label: '⚠️ Cuentas en Riesgo' },
       },
       _sections: {

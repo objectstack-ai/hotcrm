@@ -121,7 +121,7 @@ Admins can change these rules — see [Administration › Sharing](/docs/adminis
 
 ## Standard list views
 
-Accounts opens on **All Accounts**, and the switcher along the top of the list carries seven saved views — these, and nothing else:
+Accounts opens on **All Accounts**, and the switcher along the top of the list carries six saved views — these, and nothing else:
 
 | View | What it shows |
 | --- | --- |
@@ -130,16 +130,18 @@ Accounts opens on **All Accounts**, and the switcher along the top of the list c
 | **Accounts by Location** | Accounts plotted on a map. The pin comes from **Office Location**, not from the billing address, so an account that has a billing address but no office location is missing from this view — and only from this view. |
 | **Enterprise Accounts** | Accounts with **Annual Revenue of $10M or more**, biggest first, with quick-filter dropdowns for **Industry** (with a count per value), **Type** and **Owner** above the grid. This is a revenue cut, not the **Customer Tier** field: an account you tiered *Enterprise* at $5M of revenue is not here. |
 | **My Accounts** | The accounts you own, most recently active first (**Last Activity Date**, descending). |
-| **🔄 Upcoming Renewals** | Customers that have a **Next Renewal Date**, soonest first. It is not windowed to a number of days — every customer with a renewal date on file is listed, and the sort is what puts the next few weeks on top. The columns are the renewal ones: tier, health score, renewal date, renewal owner (the CSM) and annual revenue. |
-| **⚠️ At-Risk Accounts** | Customers whose **Health Score** is *At Risk* or *Churning* — the customer-success working queue, with segment, renewal owner and last activity date alongside. |
+| **⚠️ At-Risk Accounts** | Customers whose **Health Score** is *At Risk* or *Churning* — the customer-success working queue, with segment and last activity date alongside. |
 
-### Why the two customer-success queues can be empty
+<Callout type="info">
+  **Looking for upcoming renewals? They are on the contract.** Open **Contracts** and pick the **Renewals** tab for the renewal calendar, or sort **All Contracts** by **End Date** — those are the dates the daily renewal reminder actually acts on. The account list used to carry its own *Upcoming Renewals* view, built on an account-level **Next Renewal Date** and **Renewal Owner** that nothing in the product ever wrote or read: the date showed whatever had last been typed in by hand rather than what was really expiring, and naming a renewal owner there sent that person nothing. Both fields were removed rather than left looking wired. See [Revenue](/docs/revenue/index) for how the renewal reminder picks its recipient.
+</Callout>
 
-**Upcoming Renewals** and **At-Risk Accounts** both read the fields on the **Customer Success** section of the account form (Tier, Segment, Health Score, Renewal Owner, Next Renewal Date), and both are scoped to **Type = Customer** before anything else:
+### Why the customer-success queue can be empty
 
-- A prospect or a partner never appears in either, however the renewal fields are filled in. Promote the account to *Customer* first — activating a contract does that for you.
+**At-Risk Accounts** reads the fields on the **Customer Success** section of the account form (Tier, Segment, Health Score), and is scoped to **Type = Customer** before anything else:
+
+- A prospect or a partner never appears, however those fields are filled in. Promote the account to *Customer* first — activating a contract does that for you.
 - **Health Score** is maintained by hand by whoever owns the relationship and has no default value. On an org where nobody sets it, *At-Risk Accounts* is empty — that is missing data, not a broken filter.
-- Likewise a customer with no **Next Renewal Date** is invisible to *Upcoming Renewals*. Both fields sit together on the same form section, so filling one is the moment to fill the other.
 
 ## Tips for sales reps
 

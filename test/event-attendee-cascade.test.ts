@@ -68,7 +68,7 @@ import stack from '../objectstack.config';
  *     in a logged meeting.
  *  2. **"A deleted user's references degrade" is already this app's stance.**
  *     HotCRM holds 15 lookups on `sys_user`; the other 14 — every `owner_id`,
- *     plus `crm_account.renewal_owner` and `crm_product.product_manager` — are
+ *     plus `crm_product.product_manager` — are
  *     `set_null`, and NO validation rule reads any of them. Swept over the
  *     built stack (rule conditions are `{ dialect, source }`, so the source
  *     string is what has to be searched): this object's rules are the only ones
