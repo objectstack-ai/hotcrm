@@ -164,16 +164,18 @@ describe('the shape of the refusal (repo issue #1075)', () => {
    * not an endorsement.
    */
   it('carries a precise message, and (until #1075) no code or status', async () => {
-    const err = await runTask({
+    const caught = await runTask({
       type: 'call',
       status: 'not_started',
       related_to_lead: FLAGGED_LEAD,
     }).then(
       () => null,
-      (e: AnyRec) => e,
+      (e: AnyRec) => e as AnyRec,
     );
 
-    expect(err, 'the write was expected to be refused').toBeTruthy();
+    expect(caught, 'the write was expected to be refused').toBeTruthy();
+    const err = caught as AnyRec;
+
     expect(String(err.message)).toMatch(/flagged Do Not Call/);
     // Names the remedy, not just the refusal — a rep who cannot act on the
     // message will clear the flag, which is the outcome the field exists to
