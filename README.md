@@ -5,12 +5,20 @@
 # HotCRM
 
 > **The reference app for AI-written enterprise software.** A complete CRM —
-> 18 objects, 26 flows, 5 dashboards, 6 AI skills, 4 languages — is roughly
-> **170k tokens** of typed [ObjectStack](https://github.com/objectstack-ai/objectstack)
-> metadata (~18,000 lines): the entire enterprise CRM fits in a single agent
-> context window, so an AI can hold it whole, reason about it, and refactor it.
+> 18 objects, 26 flows, 5 dashboards, 6 AI skills, 4 languages — carries its
+> whole business semantics (objects, flows, actions, hooks) in **~81k tokens**
+> of typed [ObjectStack](https://github.com/objectstack-ai/objectstack) metadata,
+> and its whole interaction layer (views, pages, dashboards, app shell) in
+> another **~39k**. An agent holds every business rule of a real enterprise CRM
+> in a fraction of one context window — and the entire authored app still fits
+> comfortably — so it can reason about the system whole and refactor it safely.
 > **Install it online in one click, or fork it and build & ask with Claude
 > Code** — it's the reference implementation every marketplace app forks from.
+>
+> <sub>Measured, not estimated: `node scripts/check-source-token-ratchet.mjs`
+> prints both figures and CI fails when either grows past its committed ceiling.
+> Comments and blank lines are stripped; translations and seed data are outside
+> the count — a fifth locale is not business logic.</sub>
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Manifest](https://img.shields.io/badge/manifest-app.objectstack.hotcrm-blueviolet)](objectstack.config.ts)
