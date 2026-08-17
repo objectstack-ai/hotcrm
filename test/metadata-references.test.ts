@@ -546,9 +546,10 @@ describe('forms can actually author the data the views depend on', () => {
   });
 
   it('fields the list views filter on are editable in some form', () => {
-    // account views filter on type/health_score/next_renewal_date, but the
-    // account form never offered them — the views could never match anything
-    // a user created through the UI.
+    // account views filter on type/health_score, but the account form never
+    // offered them — the views could never match anything a user created
+    // through the UI. (The `next_renewal_date` filter this guard was also born
+    // on went away with the field itself, #1181.)
     const bad: string[] = [];
     for (const v of views) {
       const objectName = viewObjectOf(v);

@@ -113,8 +113,6 @@ export const en: TranslationData = {
           help: 'CSM-maintained health indicator',
           options: { healthy: 'Healthy', watching: 'Watching', at_risk: 'At Risk', churning: 'Churning' },
         },
-        renewal_owner: { label: 'Renewal Owner (CSM)' },
-        next_renewal_date: { label: 'Next Renewal Date' },
         name_normalized: {
           label: 'Account Name (Normalized)',
           help: 'Match key for lead conversion: Account Name lower-cased, trimmed, with internal whitespace collapsed. Maintained by the account_protection hook — never edit directly.',
@@ -127,7 +125,6 @@ export const en: TranslationData = {
         account_map: { label: 'Accounts by Location', description: 'Geospatial distribution of accounts' },
         enterprise_accounts: { label: 'Enterprise Accounts', description: 'Accounts with the highest annual revenue' },
         my_accounts: { label: 'My Accounts', description: 'Accounts owned by the current user' },
-        renewals_due: { label: '🔄 Upcoming Renewals' },
         at_risk_accounts: { label: '⚠️ At-Risk Accounts' },
       },
       _sections: {
