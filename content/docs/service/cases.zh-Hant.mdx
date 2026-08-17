@@ -149,7 +149,7 @@ description: 客戶支援工單——主題、優先順序、狀態、解決方�
 
 ## 標準列表檢視
 
-`crm_case` 一共發布 **7 個**檢視（`src/views/case.view.ts`），工單列表把它們做成頁籤：
+`crm_case` 一共發布 **8 個**檢視（`src/views/case.view.ts`），工單列表把它們做成頁籤：
 
 | 檢視 | 展示什麼 | 頁籤 |
 | --- | --- | --- |
@@ -158,6 +158,7 @@ description: 客戶支援工單——主題、優先順序、狀態、解決方�
 | **SLA Calendar** | 按 **SLA 截止日期** 把工單鋪在行事曆上——現在每張工單都帶截止日期，所以它顯示的是整個未結積壓 | *SLA* |
 | **Case Timeline** | 工單按「建立 → 關閉」鋪在時間軸上，按負責人分組 | *Timeline* |
 | **Escalated Cases** | `is_escalated` 為真 | *Escalated* |
+| **Unassigned — triage** | 完全沒有負責人的未結工單，先按緊急程度、再按最近的截止日期——沒有人擔任服務座席時，Web 提交的工單就落在這裡 | *Triage* |
 | **⏰ SLA at Risk** | 未結的 **High 與 Critical** 工單，截止日期最近的排在前面 | *SLA at Risk* |
 | **My Open Cases** | 你名下尚未關閉的工單 | *My Cases* |
 

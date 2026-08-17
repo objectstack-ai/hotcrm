@@ -44,9 +44,11 @@ Categories and families let you slice reports by product mix — *"how much SMB-
 | --- | --- |
 | **List Price** | Standard published price — what shows up on a quote by default |
 | **Cost** | Your cost — used for margin calculation |
-| **Default Tax Rate %** | The rate carried on the product record |
+| **Default Tax Rate %** | Stored on the product. Nothing applies it — see below |
 
 The system warns you if Cost is greater than List Price (which would be a losing sale).
+
+**Tax is a quote-level figure, and the product rate is not applied anywhere.** The price fill that copies a product's List Price onto a quote or opportunity line item does not copy the rate, and a quote's total is *subtotal − discount + Tax + Shipping*, where **Tax** is an amount you type on the quote itself. A quote line item has its own **Tax Rate %**, defaulted to 0 and set per line. So setting *Default Tax Rate %* on a product changes no total anywhere today.
 
 ## No inventory, no billing schedule
 
@@ -73,9 +75,14 @@ The product catalog is **public read-only** for the whole organisation. Sales re
 
 ## Standard list views
 
-- **Active Products** — `is_active = true`.
-- **By Category** — grouped.
-- **By Family** — grouped.
+Products saves **two** views (`src/views/product.view.ts`), and the two tabs above the list switch between them:
+
+| View | What it shows | Tab |
+| --- | --- | --- |
+| **All Products** | The grid: product code (pinned left, and the link into the record), name, category, family, SKU, list price with a column average, cost and Active. Sorted by name and **grouped by category**, 50 rows a page. | *All* |
+| **Product Catalog** | The same products drawn as cards, with the **Product Image** as the cover and product code, category, family, list price and SKU on the face. | *Catalog* |
+
+Neither view filters anything, so **every product appears in both**, inactive ones included, and switching tabs only redraws them. There is no saved *Active Products*, *By Category* or *By Family* view: grouping by category is a setting on the grid above, not a second saved view, and nothing groups by family at all. To work with active products only, sort or filter the **Active** column yourself.
 
 ## Tips for product managers
 
@@ -85,7 +92,7 @@ The product catalog is **public read-only** for the whole organisation. Sales re
 
 ## Tips for sales reps
 
-- ✅ Use products from the catalog rather than typing line items by hand — pricing and tax are auto-filled.
+- ✅ Use products from the catalog rather than typing line items by hand — the List Price is filled in for you, and on a new line the Sales Price starts there too. Tax is not filled in: enter it on the quote.
 - ✅ Check the datasheet before proposing — it usually has the exact spec sheet you need for the proposal.
 
 ## Tips for admins

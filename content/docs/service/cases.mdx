@@ -149,7 +149,7 @@ See [SLA & Escalation](/docs/service/sla-and-escalation) for the full mechanics.
 
 ## Standard list views
 
-`crm_case` ships **seven** views (`src/views/case.view.ts`), and the case list surfaces them as tabs:
+`crm_case` ships **eight** views (`src/views/case.view.ts`), and the case list surfaces them as tabs:
 
 | View | What it shows | Tab |
 | --- | --- | --- |
@@ -158,6 +158,7 @@ See [SLA & Escalation](/docs/service/sla-and-escalation) for the full mechanics.
 | **SLA Calendar** | Cases laid out on their **SLA Due Date** — every case carries one now, so the calendar shows the whole open backlog | *SLA* |
 | **Case Timeline** | Cases on a *created → closed* timeline, grouped by owner | *Timeline* |
 | **Escalated Cases** | `is_escalated` is true | *Escalated* |
+| **Unassigned — triage** | Open cases with no owner at all, urgent first then soonest due — where a web-to-case submission lands when nobody holds the Service Agent position | *Triage* |
 | **⏰ SLA at Risk** | Open **High and Critical** cases, soonest due date first | *SLA at Risk* |
 | **My Open Cases** | Your cases that are not closed | *My Cases* |
 
