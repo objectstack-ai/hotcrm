@@ -239,20 +239,10 @@ export const Task = ObjectSchema.create({
       defaultValue: 0,
     }),
     
-    // Time tracking
-    estimated_hours: Field.number({
-      group: 'effort',
-      label: 'Estimated Hours',
-      scale: 2,
-      min: 0,
-    }),
-    
-    actual_hours: Field.number({
-      group: 'effort',
-      label: 'Actual Hours',
-      scale: 2,
-      min: 0,
-    }),
+    // No time tracking. `estimated_hours` / `actual_hours` were declared and
+    // inert: no rollup summed them onto a case or an opportunity, no variance
+    // report compared them, and nothing warned when actual overran estimate.
+    // Effort on a task is `progress_percent`, which the task views do read.
   },
   
   // Dead object-level enable.* flags removed in @objectstack 12 (ADR-0049);

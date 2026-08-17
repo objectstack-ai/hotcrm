@@ -29,7 +29,7 @@ export const Product = ObjectSchema.create({
 
   fieldGroups: [
     { key: 'basic',    label: 'Product Information', icon: 'info' },
-    { key: 'pricing',  label: 'Pricing & Billing',   icon: 'dollar-sign' },
+    { key: 'pricing',  label: 'Pricing',             icon: 'dollar-sign' },
     { key: 'metadata', label: 'Resources',           icon: 'link', defaultExpanded: false },
   ],
 
@@ -104,25 +104,18 @@ export const Product = ObjectSchema.create({
       min: 0,
     }),
     
-    // SKU and Inventory
+    // SKU
+    //
+    // `quantity_on_hand` / `reorder_point` were removed with the rest of the
+    // inventory surface: nothing in this app decremented stock, and the "Low
+    // Stock" view they fed compared against a hardcoded 10 rather than the
+    // reorder point beside it. HotCRM sells from a catalog; warehouse state
+    // belongs to the system of record that owns it.
     sku: Field.text({
       label: 'SKU',
       group: 'basic',
       maxLength: 50,
       unique: true,
-    }),
-    
-    quantity_on_hand: Field.number({
-      label: 'Quantity on Hand',
-      group: 'basic',
-      min: 0,
-      defaultValue: 0,
-    }),
-    
-    reorder_point: Field.number({
-      label: 'Reorder Point',
-      group: 'basic',
-      min: 0,
     }),
     
     // Status
@@ -131,12 +124,6 @@ export const Product = ObjectSchema.create({
       group: 'basic',
       defaultValue: true,
       trackHistory: true,
-    }),
-
-    is_taxable: Field.boolean({
-      label: 'Taxable',
-      group: 'pricing',
-      defaultValue: true,
     }),
     
     // Relationships
@@ -174,30 +161,12 @@ export const Product = ObjectSchema.create({
       defaultValue: 0,
     }),
 
-    billing_type: Field.select({
-      label: 'Billing Type',
-      group: 'pricing',
-      options: [
-        { label: 'One-Time',  value: 'one_time', default: true },
-        { label: 'Monthly',   value: 'monthly' },
-        { label: 'Quarterly', value: 'quarterly' },
-        { label: 'Annual',    value: 'annual' },
-        { label: 'Usage',     value: 'usage' },
-      ],
-    }),
-
-    unit_of_measure: Field.select({
-      label: 'Unit of Measure',
-      group: 'pricing',
-      options: [
-        { label: 'Each',       value: 'each', default: true },
-        { label: 'License',    value: 'license' },
-        { label: 'Seat',       value: 'seat' },
-        { label: 'Hour',       value: 'hour' },
-        { label: 'Day',        value: 'day' },
-        { label: 'Month',      value: 'month' },
-      ],
-    }),
+    // `billing_type` and `unit_of_measure` were removed with the tax flag: both
+    // were seeded on all 13 catalog products and read by nothing — no quote
+    // total, no revenue-recognition report and no line-item behaviour ever
+    // consulted either. A picklist that only ever renders itself is a
+    // maintenance obligation (four locales, an import column, every future
+    // migration) charged against a capability that does not exist.
   },
   
   // Database indexes

@@ -208,10 +208,13 @@ export const AccountViews = defineView({
         ],
       },
       {
+        // `child_account_revenue` is a roll-up the engine maintains, so it is
+        // read-only on the form by construction — it is here because a hierarchy
+        // nobody can see the effect of is the decoration this field replaced.
         name: 'financials',
         label: 'Financials',
         columns: 2,
-        fields: ['annual_revenue', 'number_of_employees'],
+        fields: ['annual_revenue', 'number_of_employees', 'child_account_revenue'],
       },
       {
         // The customer-success fields the at_risk_accounts view lists and

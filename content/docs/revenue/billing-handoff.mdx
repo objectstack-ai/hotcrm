@@ -22,7 +22,7 @@ That is a deliberate boundary, not a gap. Billing, tax, collections and revenue 
 
 Two consequences worth stating plainly, because people look for them:
 
-- **`Quantity on Hand` on a product is display-only.** Closing a deal does not decrement it. Stock movement belongs to the fulfilment system.
+- **HotCRM holds no stock figure at all.** A product carries no quantity on hand, and closing a deal decrements nothing. Inventory is the fulfilment system’s record, and this app deliberately keeps no second copy of it.
 - **Payment status is never mirrored back.** Nothing in HotCRM tells you whether an invoice was paid. A future inbound integration could, but it does not exist today, and no field pretends otherwise.
 
 ## The two events

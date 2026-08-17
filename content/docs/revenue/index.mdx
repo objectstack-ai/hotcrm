@@ -11,7 +11,7 @@ The Revenue module covers everything that happens **after sales says "we won"**:
 
 | Area | What it does |
 | --- | --- |
-| [**Products**](/docs/revenue/products) | The catalog of what you sell — names, codes, list prices, billing types. |
+| [**Products**](/docs/revenue/products) | The catalog of what you sell — names, codes, list prices, SKUs. |
 | [**Contracts**](/docs/revenue/contracts) | Signed agreements with customers — terms, value, renewals. |
 | [**Approvals**](/docs/revenue/approvals) | Multi-step approval for high-value discounts. |
 | [**Billing Hand-off**](/docs/revenue/billing-handoff) | Where CRM scope ends — the two outbound events that hand a won deal and an activated contract to billing. |
@@ -31,7 +31,7 @@ Contract (Activated)
 Renewal task ──► Renewal opportunity
 ```
 
-1. **Set up the catalog** — Products with codes, list prices, billing types.
+1. **Set up the catalog** — Products with codes, list prices and SKUs.
 2. **Build quotes** with line items from the catalog (see [Quotes](/docs/sales/quotes)).
 3. **On acceptance** the system creates a contract with the quote's terms.
 4. **Contract is activated** — the account is promoted to *Customer*.

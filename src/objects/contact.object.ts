@@ -106,13 +106,10 @@ export const Contact = ObjectSchema.create({
       ]
     }),
 
-    // Relationship fields
-    reports_to: Field.lookup('crm_contact', {
-      label: 'Reports To',
-      description: 'Direct manager/supervisor',
-      group: 'account_info',
-    }),
-
+    // No `reports_to`. The org chart was declared and never built: no page
+    // rendered the tree the contact docs promised, no skill read the chain when
+    // summarising an account, and no flow escalated along it. Sharing derives
+    // from the master `crm_account`, never from this lookup.
 
     // Contact Information
     email: Field.email({
@@ -143,10 +140,11 @@ export const Contact = ObjectSchema.create({
     mailing_country: Field.text({ label: 'Mailing Country', group: 'mailing_address' }),
 
     // Additional Information
-    birthdate: Field.date({
-      label: 'Birthdate',
-      group: 'additional',
-    }),
+    //
+    // No `birthdate`. Nothing greeted, segmented or reported on it, and an
+    // importable date of birth with no consumer is personal data held for no
+    // stated purpose — the one field on this object where "declared but inert"
+    // also carries a data-protection cost.
 
     lead_source: Field.select({
       label: 'Lead Source',

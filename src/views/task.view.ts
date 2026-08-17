@@ -289,8 +289,6 @@ export const TaskViews = defineView({
           'recurrence_type',
           'recurrence_interval',
           'recurrence_end_date',
-          'estimated_hours',
-          'actual_hours',
           'progress_percent',
         ],
       },

@@ -235,13 +235,12 @@ export const Campaign = ObjectSchema.create({
       scale: 2,
     }),
     
-    // Relationships
-    parent_campaign: Field.lookup('crm_campaign', {
-      group: 'basic',
-      label: 'Parent Campaign',
-      description: 'Parent campaign in hierarchy',
-    }),
-    
+    // No `parent_campaign`. Campaign hierarchy was declared and never used: no
+    // page, doc or report mentioned it, and the honest consumer for it — a
+    // rolled-up ROI — cannot be one declaration. `roi` here is a formula over
+    // this campaign's OWN `actual_cost` / `actual_revenue`, so a hierarchy ROI
+    // would put a second, differently-scoped ROI on the same record and leave
+    // every reader to guess which one they were looking at.
     
     // Campaign Assets
     landing_page_url: Field.url({

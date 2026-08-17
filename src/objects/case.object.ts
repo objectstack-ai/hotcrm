@@ -263,12 +263,11 @@ export const Case = ObjectSchema.create({
       group: 'escalation',
     }),
     
-    // Related case
-    parent_case: Field.lookup('crm_case', {
-      label: 'Parent Case',
-      group: 'basic',
-      description: 'Related parent case',
-    }),
+    // No `parent_case`. A case hierarchy was declared here and never
+    // traversed: nothing rolled child cases up, nothing closed or notified them
+    // with the parent, and no service flow read the link. Related cases that
+    // matter in this app are linked through the knowledge article that resolved
+    // them (`resolved_by_article`), which the deflection measures do read.
     
     // Resolution
     resolution: Field.markdown({
@@ -311,13 +310,6 @@ export const Case = ObjectSchema.create({
     customer_feedback: Field.textarea({
       label: 'Customer Feedback',
       group: 'resolution',
-    }),
-    
-    // Customer signature (for case resolution acknowledgment)
-    customer_signature: Field.signature({
-      label: 'Customer Signature',
-      group: 'resolution',
-      description: 'Digital signature acknowledging case resolution',
     }),
     
     // Internal notes
