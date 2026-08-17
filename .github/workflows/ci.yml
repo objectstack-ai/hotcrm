@@ -40,6 +40,15 @@ jobs:
       - name: Source hygiene (console.log / TODO / file size)
         run: node scripts/check-source-hygiene.mjs
 
+      # The app's headline claim ("the whole CRM fits in one context window") is
+      # a number, and an ungated number drifts — it already had. This prints the
+      # layered measurement on every run and fails when the authored surface
+      # grows past its committed, shrink-only ceiling (#1183). It lives here as
+      # well as in Code Quality because this workflow has no `paths:` filter, so
+      # it fires for every PR that can touch the tree it measures.
+      - name: Source token ratchet (authored surface, only-down)
+        run: node scripts/check-source-token-ratchet.mjs
+
       - name: Validate metadata (protocol/schema)
         run: pnpm run validate
 
