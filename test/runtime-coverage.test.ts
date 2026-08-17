@@ -75,6 +75,14 @@ const RUNTIME_TEST_FILES = [
   // Only a boot of the real stack can ask that, so the hook's runtime evidence
   // lives beside the sharing rule it completes.
   'unassigned-case-triage-reach.test.ts',
+  // #1180 — the `do_not_call` guards on `crm_task` and `crm_event`. Same
+  // precedent as the feature files above: one field's enforcement is one story,
+  // and it is only legible with both halves side by side — the refusals AND the
+  // deliberate non-refusals (`log_call`, a completed Call task, a held Call
+  // event) that draw the line between preventing a call and hiding one. Both
+  // hooks run their SHIPPED lowered bodies through the real QuickJS runner
+  // there, not their handlers.
+  'do-not-call-enforcement.test.ts',
 ];
 
 /**
