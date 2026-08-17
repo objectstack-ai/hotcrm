@@ -45,6 +45,13 @@ jobs:
       - name: Source hygiene (console.log / TODO / file size)
         run: node scripts/check-source-hygiene.mjs
 
+      # Shrink-only ceiling on the authored surface, in estimated tokens
+      # (#1183) — the gate behind the README's context-window claim. The same
+      # step runs in `CI`, which has no `paths:` filter; this copy keeps the
+      # measurement visible in the review-facing Quality Checks output.
+      - name: Source token ratchet (authored surface, only-down)
+        run: node scripts/check-source-token-ratchet.mjs
+
       - name: Check TypeScript compilation
         run: pnpm run typecheck
 
