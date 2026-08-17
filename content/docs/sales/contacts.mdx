@@ -14,10 +14,10 @@ The contact detail screen has 6 collapsible sections:
 | Section | Fields |
 | --- | --- |
 | **Identity** | Salutation, first name, last name, full name, profile picture |
-| **Account & Role** | Contact owner, account, job title, department, reports-to |
+| **Account & Role** | Contact owner, account, job title, department |
 | **Contact Information** | Email, phone, mobile |
 | **Mailing Address** | Mailing street, city, state/province, postal code and country — five separate fields |
-| **Additional Info** | Birthday, lead source, description, last contacted |
+| **Additional Info** | Lead source, description, last contacted |
 | **Communication Preferences** | Primary contact flag, do-not-call, email opt-out |
 
 ## The primary contact
@@ -32,18 +32,11 @@ The primary contact is auto-suggested as the default on:
 
 This saves a lot of clicks.
 
-## Org chart at the account
+## No org chart — and what to use instead
 
-Use **Reports To** to model the org structure inside an account:
+There is **no reporting line on a contact**. A `Reports To` field was declared for one, and the tree it promised was never built: no page rendered it, no report grouped by it, and the Copilot never read it when summarising an account. Rather than keep a field whose documented behaviour did not exist, HotCRM records seniority where something acts on it — **job title** and **department**, which reports do group by and the Copilot does read.
 
-```
-CEO
-├── VP Sales
-│   └── Sales Director
-└── VP Engineering
-```
-
-The account detail page renders this as a clickable tree, so you can see at a glance who reports to whom. The AI Copilot uses it when summarising the account — it can tell you which people are decision-makers vs. influencers.
+Nor is a date of birth stored. `Birthdate` was importable and read by nothing; personal data with no purpose is a liability rather than a feature, so it is gone too.
 
 ## Communication preferences (GDPR / CCPA)
 
@@ -93,7 +86,7 @@ So *"Draft a follow-up to Jane"* gives you a personalised, on-brand email in sec
 ## Tips for sales reps
 
 - ✅ Always set a job title and department — it's used by reports and by the Copilot.
-- ✅ Use the Reports To field — it makes account meetings much easier to prep for.
+- ✅ Fill in job title and department for every contact you meet — they are what the Copilot and the reports actually read.
 - ✅ Mark exactly one primary contact per account.
 
 ## Tips for admins

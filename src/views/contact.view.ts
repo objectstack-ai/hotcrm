@@ -89,7 +89,6 @@ export const ContactViews = defineView({
           { field: 'crm_account', required: true },
           'title',
           'department',
-          'reports_to',
           'owner_id',
         ],
       },
@@ -102,7 +101,7 @@ export const ContactViews = defineView({
         name: 'contact_details',
         label: 'Contact Info',
         columns: 2,
-        fields: ['email', 'phone', 'mobile', 'birthdate', 'avatar'],
+        fields: ['email', 'phone', 'mobile', 'avatar'],
       },
       {
         // Named `comm_preferences`, not `preferences` — `preferences` is

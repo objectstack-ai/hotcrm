@@ -32,7 +32,7 @@ The account detail screen is organised into 6 sections:
 | Section | Fields |
 | --- | --- |
 | **Basic Information** | Account number, name, type, industry, description |
-| **Financials** | Annual revenue, number of employees |
+| **Financials** | Annual revenue, number of employees, child account revenue |
 | **Contact Information** | Phone, website, billing address, office location (with map) |
 | **Ownership & Status** | Owner, parent account, active flag |
 | **Branding** | Brand color (used as the avatar accent) |
@@ -53,9 +53,10 @@ Acme Corp Global
 
 The hierarchy gives you:
 
-- **Roll-up reports** — annual revenue of the global parent sums all children.
-- **Cascading sharing** — when an admin grants access to the parent, all children inherit it.
+- **Rolled-up revenue** — **Child Account Revenue**, on the *Financials* section, is the sum of the **Annual Revenue** of this account's **direct** children. The platform maintains it: it moves when a child's revenue is edited, when a child is re-parented onto another account, and when a child is deleted. It is one level deep, so a grandparent shows the total of its own children rather than of the whole tree.
 - **Easier navigation** — from a child you can jump to the global parent.
+
+Two things the hierarchy deliberately does **not** do. It does **not** cascade sharing: accounts are private, and granting someone the parent gives them nothing on the children — use the sharing rules on [Administration › Sharing](/docs/administration/sharing-and-security) for that. And it does **not** roll anything else up: opportunities, cases and contacts belong to the account they name, and no report sums them up the tree.
 
 ## Built-in rules
 

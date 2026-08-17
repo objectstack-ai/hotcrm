@@ -33,8 +33,6 @@ export const products = defineSeed(Product, {
       sku: 'OS-PLAT-ENT',
       list_price: 50000,
       cost: 12000,
-      billing_type: 'annual',
-      unit_of_measure: 'license',
       is_active: true,
     },
     {
@@ -45,8 +43,6 @@ export const products = defineSeed(Product, {
       sku: 'OS-PLAT-SMB',
       list_price: 18000,
       cost: 4500,
-      billing_type: 'annual',
-      unit_of_measure: 'license',
       is_active: true,
     },
     {
@@ -57,8 +53,6 @@ export const products = defineSeed(Product, {
       sku: 'OS-CLOUD-HOST',
       list_price: 12000,
       cost: 4200,
-      billing_type: 'annual',
-      unit_of_measure: 'each',
       is_active: true,
     },
     {
@@ -69,8 +63,6 @@ export const products = defineSeed(Product, {
       sku: 'OS-CLOUD-SBX',
       list_price: 7500,
       cost: 2600,
-      billing_type: 'annual',
-      unit_of_measure: 'each',
       is_active: true,
     },
     {
@@ -81,8 +73,6 @@ export const products = defineSeed(Product, {
       sku: 'OS-AI-SEAT',
       list_price: 1000,
       cost: 260,
-      billing_type: 'annual',
-      unit_of_measure: 'seat',
       is_active: true,
     },
     {
@@ -93,8 +83,6 @@ export const products = defineSeed(Product, {
       sku: 'OS-ADDON-ANL',
       list_price: 22000,
       cost: 6500,
-      billing_type: 'annual',
-      unit_of_measure: 'license',
       is_active: true,
     },
     {
@@ -105,8 +93,6 @@ export const products = defineSeed(Product, {
       sku: 'OS-ADDON-INT',
       list_price: 16000,
       cost: 5200,
-      billing_type: 'annual',
-      unit_of_measure: 'license',
       is_active: true,
     },
     {
@@ -117,8 +103,6 @@ export const products = defineSeed(Product, {
       sku: 'OS-ADDON-FSM',
       list_price: 14000,
       cost: 4200,
-      billing_type: 'annual',
-      unit_of_measure: 'license',
       is_active: true,
     },
     {
@@ -129,8 +113,6 @@ export const products = defineSeed(Product, {
       sku: 'OS-SUP-PREM',
       list_price: 25000,
       cost: 9000,
-      billing_type: 'annual',
-      unit_of_measure: 'each',
       is_active: true,
     },
     {
@@ -141,8 +123,6 @@ export const products = defineSeed(Product, {
       sku: 'OS-SUP-STD',
       list_price: 9000,
       cost: 3600,
-      billing_type: 'annual',
-      unit_of_measure: 'each',
       is_active: true,
     },
     {
@@ -153,8 +133,6 @@ export const products = defineSeed(Product, {
       sku: 'OS-SVC-IMPL',
       list_price: 75000,
       cost: 41000,
-      billing_type: 'one_time',
-      unit_of_measure: 'each',
       is_active: true,
     },
     {
@@ -165,8 +143,6 @@ export const products = defineSeed(Product, {
       sku: 'OS-SVC-MIGR',
       list_price: 35000,
       cost: 19000,
-      billing_type: 'one_time',
-      unit_of_measure: 'each',
       is_active: true,
     },
     {
@@ -177,8 +153,6 @@ export const products = defineSeed(Product, {
       sku: 'OS-SVC-TRN',
       list_price: 6000,
       cost: 2400,
-      billing_type: 'one_time',
-      unit_of_measure: 'day',
       is_active: true,
     },
   ]

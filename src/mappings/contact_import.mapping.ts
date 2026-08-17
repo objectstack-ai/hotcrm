@@ -48,8 +48,6 @@ export const ContactImportMapping = defineMapping({
     { source: 'Mailing Postal Code', target: 'mailing_postal_code' },
     { source: 'Mailing Country', target: 'mailing_country' },
 
-    { source: 'Birthdate', target: 'birthdate' },
-
     {
       source: 'Lead Source',
       target: 'lead_source',

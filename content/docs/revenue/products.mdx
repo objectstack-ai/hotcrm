@@ -1,6 +1,6 @@
 ---
 title: Products
-description: The catalog of what you sell — codes, list prices, billing types and SKUs.
+description: The catalog of what you sell — codes, list prices, SKUs and tax rates.
 ---
 
 # Products
@@ -14,7 +14,7 @@ The detail screen has 3 sections:
 | Section | Fields |
 | --- | --- |
 | **Product Information** | Product code *(auto)*, name, description, category, family |
-| **Pricing & Billing** | List price, cost, SKU, billing type, unit of measure, tax rate, taxable flag |
+| **Pricing** | List price, cost, SKU, tax rate |
 | **Resources** | Product image, datasheet, product manager |
 
 ## Categories and families
@@ -38,48 +38,19 @@ Categorise products two ways:
 
 Categories and families let you slice reports by product mix — *"how much SMB-tier subscription revenue did we book this quarter?"*
 
-## Billing types
-
-| Billing type | Use for |
-| --- | --- |
-| **One-Time** *(default)* | Perpetual licenses, one-off purchases |
-| **Monthly** | Monthly subscriptions |
-| **Quarterly** | Quarterly subscriptions |
-| **Annual** | Annual subscriptions |
-| **Usage** | Consumption-based (per API call, per GB, etc.) |
-
-The billing type drives how the quote calculates totals (one-time fee vs. recurring) and feeds into revenue recognition reporting.
-
-## Units of measure
-
-Specify how the product is sold:
-
-- **Each** *(default)* — one unit per quantity
-- **License** — per software license
-- **Seat** — per named user
-- **Hour** — for services
-- **Day** — for services
-- **Month** — for time-bounded subscriptions
-
 ## Pricing fields
 
 | Field | Purpose |
 | --- | --- |
 | **List Price** | Standard published price — what shows up on a quote by default |
 | **Cost** | Your cost — used for margin calculation |
-| **Default Tax Rate %** | Auto-applied to quote line items |
-| **Taxable** | If unchecked, no tax is added (zero-rated products) |
+| **Default Tax Rate %** | The rate carried on the product record |
 
 The system warns you if Cost is greater than List Price (which would be a losing sale).
 
-## Inventory tracking
+## No inventory, no billing schedule
 
-For physical products:
-
-- **Quantity on Hand** — current inventory.
-- **Reorder Point** — when to reorder.
-
-These fields are optional — leave them empty for non-inventory items (software, services).
+A product record is a catalog entry and nothing more. HotCRM holds **no stock figure** — no quantity on hand, no reorder point, and nothing decrements on a closed deal — and **no billing schedule or unit of measure**: how a subscription is billed lives in the contract and the quote, not on the catalog row. Those fields used to be declared here and were read by nothing, which made the catalog look like an inventory and billing system it never was. Stock belongs to your fulfilment system; see [Billing Handoff](/docs/revenue/billing-handoff).
 
 ## The product image and datasheet
 
@@ -105,8 +76,6 @@ The product catalog is **public read-only** for the whole organisation. Sales re
 - **Active Products** — `is_active = true`.
 - **By Category** — grouped.
 - **By Family** — grouped.
-- **Subscriptions** — `category = subscription OR billing_type IN [monthly, quarterly, annual]`.
-- **Low Stock** — `quantity_on_hand < reorder_point` (for inventory products).
 
 ## Tips for product managers
 
@@ -121,5 +90,5 @@ The product catalog is **public read-only** for the whole organisation. Sales re
 
 ## Tips for admins
 
-- The category, family, billing type and unit-of-measure picklists can be extended. See [Customization › Extending Objects](/docs/customization/extending-objects).
+- The category and family picklists can be extended. See [Customization › Extending Objects](/docs/customization/extending-objects).
 - A product can be linked to multiple opportunities and quotes — deactivation doesn't break historical records.

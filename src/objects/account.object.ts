@@ -206,6 +206,42 @@ export const Account = ObjectSchema.create({
       trackHistory: true,
     }),
 
+    /**
+     * Rolled-up annual revenue of this account's direct children.
+     *
+     * MEASURED against the installed engine (17.0.0) before being declared, on
+     * all four legs of the lifecycle — a roll-up that is only right at insert
+     * is a stale number, which is the same defect one layer over:
+     *
+     *   insert two children (1,000 + 2,500)      -> 3,500
+     *   raise one child to 4,000                 -> 6,500
+     *   re-parent the other child away           -> 4,000
+     *   delete the remaining child               -> 0
+     *
+     * Self-referencing roll-ups are the case worth measuring rather than
+     * assuming, because parent and child are the same object and the engine's
+     * summary index is keyed by child object. `test/decorative-field-sweep.test.ts`
+     * re-runs that measurement so a platform regression cannot quietly turn
+     * this back into the decoration it replaced.
+     *
+     * DIRECT children only, one level — the engine aggregates over the rows
+     * whose `parent_account` is this account, not over a transitive closure. A
+     * grandparent therefore shows the sum of its own children, and the docs say
+     * so; anything else would need a different (and much more expensive)
+     * primitive than the one the platform ships.
+     */
+    child_account_revenue: Field.summary({
+      label: 'Child Account Revenue',
+      group: 'financials',
+      scale: 2,
+      summaryOperations: {
+        object: 'crm_account',
+        field: 'annual_revenue',
+        function: 'sum',
+        relationshipField: 'parent_account',
+      },
+    }),
+
     number_of_employees: Field.number({
       label: 'Employees',
       min: 0,
@@ -329,6 +365,17 @@ export const Account = ObjectSchema.create({
 
     // Relationship fields
 
+    /**
+     * The account hierarchy — kept because it now has a reader.
+     *
+     * This lookup was declared and traversed by nothing, while
+     * `content/docs/sales/accounts` sold the hierarchy with a diagram and
+     * promised "roll-up reports — annual revenue of the global parent sums all
+     * children". `child_account_revenue` below is that promise, and it is the
+     * whole of the enforcement: the platform computes roll-up summaries
+     * itself, so the honest consumer here is one declaration rather than the
+     * hand-written recompute hooks the line-item totals need.
+     */
     parent_account: Field.lookup('crm_account', {
       label: 'Parent Account',
       description: 'Parent company in hierarchy',
