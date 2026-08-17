@@ -94,12 +94,16 @@ description: 规划、启动并衡量市场营销举措——电子邮件、网�
 
 ## 标准列表视图
 
-- **Active Campaigns** — 状态 = *In Progress*。
-- **Upcoming Campaigns** — 开始日期在未来，状态 = *Planning*。
-- **Completed This Quarter** — 状态 = *Completed* 且结束日期在本季度。
-- **Over Budget** — 实际成本 > 预算成本。
-- **By Type** — 已分组。
-- **Best ROI** — 按 ROI 降序排列。
+营销活动一共保存了**四个**视图（`src/views/campaign.view.ts`），列表上方的标签行改的是同一批营销活动**怎么画**，而不是里面有哪些营销活动：
+
+| 视图 | 它展示什么 | 标签 |
+| --- | --- | --- |
+| **All Campaigns** | 表格：名称（固定在左侧，也是进入记录的链接）、渠道、状态、开始与结束日期、预算成本和预期营收——后两列带列合计。按**开始日期**升序排列，每页 25 行。 | *All* |
+| **Campaign Schedule** | 每个营销活动一根甘特条，从开始日期到结束日期，以名称为标题，让相互重叠的档期对齐排布。 | *Schedule* |
+| **Launch Calendar** | 同一批营销活动排在月历上，落在各自的**开始日期**，按渠道着色。 | *Launches* |
+| **Marketing Timeline** | 同样的起止跨度画在月度刻度上，按渠道分组、按状态着色。 | *Timeline* |
+
+四个视图都没有任何过滤条件，所以**你能看到的每个营销活动在四个标签里都在**，切换标签只是换一种画法。不存在名为 *Active Campaigns*、*Upcoming Campaigns*、*Completed This Quarter*、*Over Budget*、*By Type* 或 *Best ROI* 的已保存视图：要把列表收窄到某个状态，请自己对表格的列排序和过滤。**ROI** 并不在这些列里——它在营销活动记录的*成本*区块上，以及市场仪表盘里。
 
 ## 共享——营销活动默认公开
 

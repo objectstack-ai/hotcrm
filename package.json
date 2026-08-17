@@ -23,6 +23,7 @@
     "test:e2e": "playwright test",
     "hygiene": "node scripts/check-source-hygiene.mjs",
     "hygiene:tokens": "node scripts/check-source-token-ratchet.mjs",
+    "scan:fields": "tsx scripts/scan-field-consumers.ts",
     "reconcile:analytics": "tsx scripts/analytics-reconcile/run.ts",
     "verify": "pnpm validate && pnpm typecheck && pnpm lint && pnpm lint:i18n-gate && pnpm hygiene && pnpm hygiene:tokens && pnpm build && pnpm test",
     "changeset": "changeset",

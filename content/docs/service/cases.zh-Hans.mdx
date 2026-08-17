@@ -149,7 +149,7 @@ description: 客户支持工单——主题、优先级、状态、解决方案�
 
 ## 标准列表视图
 
-`crm_case` 一共发布 **7 个**视图（`src/views/case.view.ts`），工单列表把它们做成页签：
+`crm_case` 一共发布 **8 个**视图（`src/views/case.view.ts`），工单列表把它们做成页签：
 
 | 视图 | 展示什么 | 页签 |
 | --- | --- | --- |
@@ -158,6 +158,7 @@ description: 客户支持工单——主题、优先级、状态、解决方案�
 | **SLA Calendar** | 按 **SLA 截止日期** 把工单铺在日历上——现在每张工单都带截止日期，所以它显示的是整个未结积压 | *SLA* |
 | **Case Timeline** | 工单按「创建 → 关闭」铺在时间轴上，按负责人分组 | *Timeline* |
 | **Escalated Cases** | `is_escalated` 为真 | *Escalated* |
+| **Unassigned — triage** | 完全没有负责人的未结工单，先按紧急程度、再按最近的截止日期——没有人担任服务坐席时，Web 提交的工单就落在这里 | *Triage* |
 | **⏰ SLA at Risk** | 未结的 **High 与 Critical** 工单，截止日期最近的排在前面 | *SLA at Risk* |
 | **My Open Cases** | 你名下尚未关闭的工单 | *My Cases* |
 
