@@ -131,7 +131,6 @@ export const accounts = defineSeed(Account, {
       tier: 'enterprise',
       segment: 'growth',
       health_score: 'healthy',
-      next_renewal_date: cel`daysFromNow(45)`,
       // Held: workshop, demo, calls and an onsite visit — see `service.seed.ts`.
       last_activity_date: cel`today()`,
       description: `**Strategic Customer · Enterprise Tier**
@@ -189,11 +188,10 @@ three regional teams (NA, EMEA, APAC).
       tier: 'mid_market',
       segment: 'at_risk',
       health_score: 'at_risk',
-      next_renewal_date: cel`daysFromNow(75)`,
       // QUIET 60+ — the `at_risk` segment and health score, with a clock that
-      // finally agrees with them: ten weeks of silence against a renewal 75
-      // days out. A no-show call 55 days ago was the last attempt; the
-      // re-engagement call on the calendar is `planned`, so it moves nothing.
+      // finally agrees with them: ten weeks of silence. A no-show call 55 days
+      // ago was the last attempt; the re-engagement call on the calendar is
+      // `planned`, so it moves nothing.
       last_activity_date: cel`daysAgo(72)`,
     },
     {
@@ -226,7 +224,6 @@ three regional teams (NA, EMEA, APAC).
       tier: 'strategic',
       segment: 'growth',
       health_score: 'healthy',
-      next_renewal_date: cel`daysFromNow(28)`,
       // Held: negotiation meeting, security-addendum call, governance webinar.
       last_activity_date: cel`today()`,
     },
@@ -260,7 +257,6 @@ three regional teams (NA, EMEA, APAC).
       tier: 'enterprise',
       segment: 'growth',
       health_score: 'healthy',
-      next_renewal_date: cel`daysFromNow(62)`,
       // Held: rollout meeting, analytics demo, committee call, retrospective.
       last_activity_date: cel`today()`,
       description: 'An analytics SaaS customer expanding usage from the data team to its revenue organization.',
@@ -282,7 +278,6 @@ three regional teams (NA, EMEA, APAC).
       tier: 'mid_market',
       segment: 'stable',
       health_score: 'healthy',
-      next_renewal_date: cel`daysFromNow(36)`,
       // Signed the analytics expansion six days ago; the renewal review is
       // booked, not held, so nothing bubbles and this age stands.
       last_activity_date: cel`daysAgo(6)`,

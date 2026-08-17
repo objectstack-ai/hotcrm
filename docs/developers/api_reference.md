@@ -12,7 +12,7 @@ Source: `src/objects/account.object.ts`
 
 Key fields:
 
-`account_number`, `name`, `type`, `industry`, `annual_revenue`, `number_of_employees`, `phone`, `website`, `billing_address`, `office_location`, `owner`, `parent_account`, `is_active`, `tier`, `segment`, `health_score`, `renewal_owner`, `next_renewal_date`
+`account_number`, `name`, `type`, `industry`, `annual_revenue`, `number_of_employees`, `phone`, `website`, `billing_address`, `office_location`, `owner`, `parent_account`, `is_active`, `tier`, `segment`, `health_score`
 
 ### `crm_contact` - Contact
 
