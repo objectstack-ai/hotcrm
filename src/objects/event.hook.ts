@@ -211,4 +211,80 @@ const eventActivityBubble: Hook = {
   },
 };
 
-export default [eventScheduleDerive, eventActivityBubble];
+/**
+ * `do_not_call` — the calendar half of the same promise.
+ *
+ * `crm_task` carries the follow-up a rep OWES; `crm_event` carries the slot a
+ * rep BOOKS. A `planned` event of type `call` is a booked outbound phone call,
+ * so it is refused against a person flagged `do_not_call` for exactly the
+ * reasons stated on `task_do_not_call_guard` in `src/objects/task.hook.ts`
+ * (read that block first — it carries the full rationale for enforcing on the
+ * write rather than on a button, and for scoping to the phone).
+ *
+ * The status split is what makes this guard honest, and it is the whole reason
+ * `log_call` needs no gate of its own:
+ *
+ *   - `status: 'held'`   — the call HAPPENED. Allowed, always. This is what
+ *     `log_call` writes, and refusing it would hide evidence of a call rather
+ *     than prevent one.
+ *   - `status: 'planned'` — the call is BOOKED. Refused.
+ *
+ * `schedule_meeting` is deliberately NOT caught here: it hardcodes
+ * `type: 'meeting'`, and a person who does not want phone calls may still be
+ * met in person or over video. Gating it would widen `do_not_call` into
+ * `do_not_contact`.
+ */
+const eventDoNotCallGuard: Hook = {
+  name: 'event_do_not_call_guard',
+  object: 'crm_event',
+  events: ['beforeInsert', 'beforeUpdate'],
+  priority: 150,
+  description: 'Refuse to book a planned Call event against a lead/contact flagged Do Not Call.',
+  handler: async (ctx: HookContext) => {
+    const { input } = ctx;
+    const previous = ctx.previous;
+    const api = ctx.api as HookApi | undefined;
+    if (!api) return;
+
+    const effective = (key: string): unknown =>
+      input[key] !== undefined && input[key] !== null ? input[key] : previous?.[key];
+
+    if (effective('type') !== 'call') return;
+    // Only a booking. `held` (what `log_call` writes) and every other status
+    // describe a call that is no longer preventable.
+    if (effective('status') !== 'planned') return;
+
+    const leadId = effective('related_to_lead');
+    const contactId = effective('related_to_contact');
+
+    const targets: Array<{ object: string; id: string; label: string }> = [];
+    if (typeof leadId === 'string' && leadId) {
+      targets.push({ object: 'crm_lead', id: leadId, label: 'lead' });
+    }
+    if (typeof contactId === 'string' && contactId) {
+      targets.push({ object: 'crm_contact', id: contactId, label: 'contact' });
+    }
+
+    for (const t of targets) {
+      // `find(... top: 1)`, normalised for both driver shapes — same reasoning
+      // as `event_activity_bubble` below.
+      const raw: any = await api.object(t.object).find({
+        where: { id: t.id },
+        fields: ['id', 'do_not_call'],
+        top: 1,
+      });
+      const rows = Array.isArray(raw) ? raw : (raw?.records ?? []);
+      const person = rows[0];
+      // `=== true`: absent / null / false are all "not flagged".
+      if (person?.do_not_call === true) {
+        throw new Error(
+          `This ${t.label} is flagged Do Not Call, so a call cannot be scheduled against them. ` +
+            'Log the call as held if it already happened, book a meeting instead, ' +
+            'or clear Do Not Call on the record first.',
+        );
+      }
+    }
+  },
+};
+
+export default [eventScheduleDerive, eventDoNotCallGuard, eventActivityBubble];

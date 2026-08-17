@@ -52,7 +52,7 @@ Two opt-out flags record that this person does not want to be contacted. Both ar
 | Flag | What it does today |
 | --- | --- |
 | **Email Opt Out** | **Enforced.** The **Send Email** action is hidden on a contact who has opted out — on the record header and on the list row — and creating such a contact raises no welcome prompt for its owner. |
-| **Do Not Call** | **A marker only.** Nothing in the product blocks a call, or the logging of a *Call* task, against a contact flagged this way. It is there for the rep who is about to pick up the phone. |
+| **Do Not Call** | **Enforced for scheduling, not for logging.** HotCRM refuses to *schedule* a phone touch against a flagged contact: an open **Call** task and a **planned** *Call* calendar event are both rejected on save, wherever the write comes from — the Schedule Follow-up screen, a hand-created task, an import, or the API. Recording a call that already happened stays available on purpose: **Log a Call**, and a *Call* task saved as **Completed**, are never blocked, because refusing them would hide the evidence rather than prevent the call. The flag is about the phone only — email is governed by **Email Opt Out**, and meetings and demos are not restricted. |
 
 Both are ordinary editable checkboxes: anyone who can edit the contact can set or clear them. There is no field-level rule reserving them to admins, so treat them as a record of the person's wishes that your team is expected to honour — not as a lock.
 

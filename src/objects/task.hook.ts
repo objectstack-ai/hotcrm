@@ -10,6 +10,8 @@ import type { HookApi } from './_hook-api';
  * - Warns when `reminder_date` is after `due_date`.
  * - Bubbles activity to the polymorphic parent (account `last_activity_date`,
  *   lead `last_contacted_date`).
+ * - Refuses to SCHEDULE a phone touch against a person flagged `do_not_call`
+ *   (see {@link taskDoNotCallGuard}).
  */
 
 const taskValidation: Hook = {
@@ -309,4 +311,107 @@ const taskBubble: Hook = {
   },
 };
 
-export default [taskValidation, taskRecurrence, taskBubble];
+/**
+ * `do_not_call` — refuse to SCHEDULE a phone touch, never to record one.
+ *
+ * # Why this is a hook and not an action predicate
+ *
+ * The obvious mirror of the `email_opt_out` treatment is
+ * `visible: P\`record.do_not_call == false\`` on a button, the way
+ * `send_email` and `add_contact_to_campaign` are gated in
+ * `src/actions/contact.actions.ts`. That is a RENDERING hint, and it is the
+ * whole of what those two do: it hides a button in the Console and leaves the
+ * action reachable over REST, from an AI tool call, from a flow, and from an
+ * import. For email that is only half a promise too — but the email half is
+ * backed by real enforcement elsewhere (`campaign-enrollment.flow.ts` filters
+ * on the flag, `campaign_member.hook.ts` writes it). `do_not_call` had no such
+ * backing, so a predicate alone would have moved the field from "declared and
+ * unenforced" to "declared and unenforced unless you use the mouse".
+ *
+ * Enforcing on the WRITE instead covers every entry point at once — the
+ * `schedule_followup` screen flow, a hand-created task, an import, an AI agent
+ * calling the data API — which is the same "one writer, not one per entry
+ * point" reasoning `src/actions/global.actions.ts` gives for keeping the
+ * recency bubble on `crm_event`'s hook rather than in each button's body.
+ *
+ * # Why `type: 'call'` and not "any forward-looking outreach"
+ *
+ * `do_not_call` is a promise about the PHONE. It is not `do_not_contact`:
+ * this person may still be emailed (that is `email_opt_out`'s separate flag),
+ * met, or demoed to. Refusing a `meeting` task here would silently widen a
+ * declared field into a promise the app never made — the mirror image of the
+ * defect this guard closes.
+ *
+ * # Why a completed task is allowed through
+ *
+ * A `completed` Call task is a RECORD of a call that already happened, not a
+ * plan to place one. Refusing it would delete the evidence rather than prevent
+ * the call — and would make the flag actively harmful, because the honest rep
+ * who logs the call they should not have made is the one who gets blocked. The
+ * same reasoning keeps the `log_call` action reachable and ungated.
+ */
+const taskDoNotCallGuard: Hook = {
+  name: 'task_do_not_call_guard',
+  object: 'crm_task',
+  events: ['beforeInsert', 'beforeUpdate'],
+  priority: 150,
+  description: 'Refuse to schedule an open Call task against a lead/contact flagged Do Not Call.',
+  handler: async (ctx: HookContext) => {
+    const { input } = ctx;
+    const previous = ctx.previous;
+    const api = ctx.api as HookApi | undefined;
+    if (!api) return;
+
+    // The value the row will HAVE after this write, not the value the write
+    // happens to mention: flipping `type` to `call` on an existing task and
+    // re-parenting an existing Call task are both ways in, and each only
+    // supplies one of the two keys.
+    const effective = (key: string): unknown =>
+      input[key] !== undefined && input[key] !== null ? input[key] : previous?.[key];
+
+    if (effective('type') !== 'call') return;
+    if (effective('status') === 'completed') return;
+
+    const leadId = effective('related_to_lead');
+    const contactId = effective('related_to_contact');
+
+    // Both branches run rather than an if/else: `related_to_required` on the
+    // object guarantees at least one parent, and a row that somehow carries
+    // both must be checked against both people, not against whichever the
+    // author listed first.
+    const targets: Array<{ object: string; id: string; label: string }> = [];
+    if (typeof leadId === 'string' && leadId) {
+      targets.push({ object: 'crm_lead', id: leadId, label: 'lead' });
+    }
+    if (typeof contactId === 'string' && contactId) {
+      targets.push({ object: 'crm_contact', id: contactId, label: 'contact' });
+    }
+
+    for (const t of targets) {
+      // `find(... top: 1)` rather than `findOne`, matching
+      // `event_activity_bubble` in `src/objects/event.hook.ts` and the shape
+      // the rest of the app's hooks read with. The result is normalised for
+      // both driver shapes (bare array / `{ records }`).
+      const raw: any = await api.object(t.object).find({
+        where: { id: t.id },
+        fields: ['id', 'do_not_call'],
+        top: 1,
+      });
+      const rows = Array.isArray(raw) ? raw : (raw?.records ?? []);
+      const person = rows[0];
+      // `=== true` on purpose: an absent key, `null`, and `false` are all "not
+      // flagged". A driver that stores only written columns hands back the key
+      // ABSENT (see AGENTS.md on predicate totality), and treating that as
+      // truthy would block every ordinary call task in the app.
+      if (person?.do_not_call === true) {
+        throw new Error(
+          `This ${t.label} is flagged Do Not Call, so a Call task cannot be scheduled against them. ` +
+            'Log a completed call if one already happened, choose a non-phone activity type, ' +
+            'or clear Do Not Call on the record first.',
+        );
+      }
+    }
+  },
+};
+
+export default [taskValidation, taskDoNotCallGuard, taskRecurrence, taskBubble];
