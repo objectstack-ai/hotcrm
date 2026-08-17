@@ -210,18 +210,48 @@ describe('source token ratchet — measurement basis', () => {
 
 describe('source token ratchet — the ratchet itself', () => {
   it('fails when a scope exceeds its ceiling, naming the scope and the only way up', () => {
-    const ceiling = 81_000; // business semantics, as committed in the gate
+    const ceiling = 85_000; // business semantics, as committed in the gate
     write('src/objects/crm_bloat.object.ts', `export const a = "${'x'.repeat((ceiling + 1000) * 4)}";\n`);
 
     const { status, output } = run(root);
     expect(status).toBe(1);
-    expect(output).toContain('business semantics is ~82,005');
-    expect(output).toContain('the ratchet ceiling is ~81,000');
+    expect(output).toContain('business semantics is ~86,005');
+    expect(output).toContain('the ratchet ceiling is ~85,000');
     expect(output).toContain('quotes a maintainer ruling');
+    // The buffer is spent before the gate ever goes red, and the message says
+    // so — otherwise a red run reads as "the ratchet is too tight" when it
+    // actually means the surface grew past a deliberate 5% allowance.
+    expect(output).toContain('already carries the ruled 5% working buffer');
     // The remedy must not send anyone comment-hunting: comments are stripped
     // before the count, so #1184's work cannot move this number.
     expect(output).toContain('deleting comments will not help');
     expect(output).toContain('✗ source token ratchet failed');
+  });
+
+  it('nags to re-anchor only when headroom is over twice the ruled buffer', () => {
+    // Under 「给 5% 缓冲」 a healthy scope carries thousands of tokens of
+    // headroom by design. An advisory that fired on that would instruct every
+    // author to undo the ruling, so it triggers on relative drift instead — and
+    // when it does, it names the ceiling `anchor()` would commit today.
+    write('src/objects/crm_thing.object.ts', 'export const a = 1;\n');
+    write('src/views/thing.view.ts', 'export const c = 2;\n');
+
+    const tiny = run(root);
+    expect(tiny.status).toBe(0);
+    expect(tiny.output).toContain('over twice the 5% buffer');
+    expect(tiny.output).toContain('re-anchor this ceiling to ~1,000');
+
+    // A scope sitting inside the buffer says nothing at all: ~40,010 tokens
+    // against the committed 42,000 interaction ceiling is 5.0% of headroom, so
+    // that line gets a clean ✓ and no advisory under it.
+    write('src/views/bulk.view.ts', `export const v = "${'y'.repeat(40_000 * 4)}";\n`);
+    const inBuffer = run(root);
+    expect(inBuffer.status).toBe(0);
+
+    const lines = inBuffer.output.split('\n');
+    const at = lines.findIndex((l) => l.includes('✓ interaction layer'));
+    expect(lines[at]).toContain('headroom ~1,990');
+    expect(lines[at + 1] ?? '').not.toContain('over twice the 5% buffer');
   });
 
   it('is red — not silently green — when a measured scope reads as empty', () => {

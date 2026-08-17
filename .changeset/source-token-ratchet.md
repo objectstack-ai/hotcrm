@@ -21,11 +21,15 @@ layer (`views` + `pages` + `dashboards` + `apps`) — plus the residual and the
 authored total, which carries its own ceiling so nothing under `src/` can grow
 unwatched in a directory that is in neither layer.
 
-Anchored from a real run on the landing branch (2026-08-17, base `2342811a`):
-business semantics ~80,411 tokens, interaction layer ~39,259, authored total
-~133,533. Ceilings are those readings rounded up to the next 1,000 — an anchor,
-not a growth budget. Lowering a ceiling is free and encouraged; raising one
-requires a maintainer ruling quoted in the raising PR.
+Anchored from a real run on the landing branch after merging `main` at
+`d038b957` (2026-08-17 03:20 UTC): business semantics ~80,356 tokens,
+interaction layer ~39,084, authored total ~133,302. Each ceiling is that reading
+plus a **5% working buffer**, rounded up to the next 1,000 — 85,000 / 42,000 /
+140,000 — by maintainer ruling of 2026-08-17: 「给 5% 缓冲」. The first anchor sat
+flush against the reading, under 1%, and was rejected: routine work should not
+be interrupted, only real growth should. A red run therefore means the surface
+grew more than 5% past the last agreed claim. Lowering a ceiling is free and
+encouraged; raising one requires a maintainer ruling quoted in the raising PR.
 
 The measure is comment-stripped, so comment-slimming work does not move these
 numbers — by design. Comments are for the humans and agents reading the repo,

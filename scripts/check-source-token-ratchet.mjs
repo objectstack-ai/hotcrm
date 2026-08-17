@@ -91,7 +91,7 @@
  * take. If one is ever wanted, it changes the ceilings once and the ratchet
  * continues from there.
  *
- * ## The ratchet discipline (shrink-only)
+ * ## The ratchet discipline (shrink-only, over a 5% working buffer)
  *
  *   - A ceiling may be LOWERED by any PR that shrinks its scope. Lowering is
  *     always legitimate and is the point.
@@ -100,8 +100,12 @@
  *     elsewhere, or by getting an explicit decision that the claim has moved —
  *     which is exactly the conversation the drift-prone number never triggered
  *     on its own.
- *   - Headroom is the budget for ordinary work between compressions, and is
- *     deliberately small (see `CEILINGS`).
+ *   - Headroom is a **deliberate 5% working buffer**, by maintainer ruling of
+ *     2026-08-17: 「给 5% 缓冲」. The first anchor was set flush against the
+ *     reading, under 1%, and that was rejected: routine work must not be
+ *     interrupted, only real growth should be. So a red run here is not "someone
+ *     added a field" — it is "this surface has grown more than 5% past the last
+ *     agreed claim", which is worth a conversation.
  *
  * A scope that reads as empty is RED, never a pass: a gate that cannot find its
  * input must fail rather than silently measure nothing.
@@ -137,27 +141,45 @@ const LAYERS = [
   },
 ];
 
+/** The ruled working buffer over a measured reading: 「给 5% 缓冲」. */
+const BUFFER = 0.05;
+
+/**
+ * The ceiling to commit for a given reading: `measured × 1.05`, rounded up to
+ * the next 1,000 tokens. Exported so the anchoring arithmetic lives in one
+ * place — the header, the advisory below and any re-anchoring PR all read it
+ * from here rather than repeating a multiplication by hand.
+ */
+export const anchor = (tokens) => Math.ceil((tokens * (1 + BUFFER)) / 1000) * 1000;
+
 /**
  * Shrink-only ceilings, in estimated tokens.
  *
- * Anchored from a real run of this script, not from a hand measurement:
+ * Anchored from a real run of this script, not from a hand measurement, taken
+ * after merging `main` at `d038b957` (#1189, which removed the account renewal
+ * fields, their view and their seed values):
  *
- *   node scripts/check-source-token-ratchet.mjs   # 2026-08-17, base 2342811a
- *   business semantics ~80,411 · interaction layer ~39,259 · authored total ~133,533
+ *   node scripts/check-source-token-ratchet.mjs   # 2026-08-17 03:20 UTC
+ *   business semantics ~80,356 · interaction layer ~39,084 · authored total ~133,302
  *
- * Each ceiling is that reading rounded UP to the next 1,000 tokens — the same
- * granularity at which the published headline number itself moves, so the gate
- * fires at roughly the moment the claim in the README would have to be
- * rewritten. Headroom is therefore under 1% by construction: this is an anchor,
- * not a growth budget.
+ * Each ceiling is `anchor(reading)` — the reading plus the ruled 5% working
+ * buffer, rounded up to the next 1,000:
+ *
+ *   business semantics   80,356 × 1.05 =  84,374 -> ceil 1k ->  85,000  (headroom 4,644, 5.8%)
+ *   interaction layer    39,084 × 1.05 =  41,038 -> ceil 1k ->  42,000  (headroom 2,916, 7.5%)
+ *   authored total      133,302 × 1.05 = 139,967 -> ceil 1k -> 140,000  (headroom 6,698, 5.0%)
+ *
+ * The rounding step is what carries two of the three a little past 5%; it is
+ * kept because a ceiling a reader can hold in their head is worth more than the
+ * last few hundred tokens of precision on a number estimated as `chars / 4`.
  *
  * Lower them whenever the tree shrinks — that is free and encouraged. Raising
  * one requires a maintainer ruling quoted in the raising PR's body.
  */
 export const CEILINGS = new Map([
-  ['business semantics', 81000],
-  ['interaction layer', 40000],
-  ['authored total', 134000],
+  ['business semantics', 85000],
+  ['interaction layer', 42000],
+  ['authored total', 140000],
 ]);
 
 /** Recursively collect files under `dir` (repo-relative paths). */
@@ -319,10 +341,11 @@ export function verdict(label, tokens, ceiling) {
       ok: false,
       msg:
         `${label} is ~${fmt(tokens)} tokens; the ratchet ceiling is ~${fmt(ceiling)} ` +
-        `(over by ~${fmt(tokens - ceiling)}). This surface is the app's headline claim — ` +
-        'shrink it back (compress metadata, drop duplication, move prose to content/docs), ' +
-        'or raise the ceiling in a PR that quotes a maintainer ruling approving the new number. ' +
-        'Comments are already stripped, so deleting comments will not help.',
+        `(over by ~${fmt(tokens - ceiling)}). That ceiling already carries the ruled 5% working ` +
+        'buffer, so this is growth past the buffer, not routine drift. This surface is the ' +
+        "app's headline claim — shrink it back (compress metadata, drop duplication, move prose " +
+        'to content/docs), or raise the ceiling in a PR that quotes a maintainer ruling approving ' +
+        'the new number. Comments are already stripped, so deleting comments will not help.',
     };
   }
   return {
@@ -443,10 +466,19 @@ function main() {
       continue;
     }
     console.log(`  ✓ ${v.msg}`);
-    if (row.ceiling - row.tokens > 2000) {
+    // Nag only when the ceiling has drifted well past the ruled buffer — i.e.
+    // the tree has shrunk enough that `anchor()` would now commit a lower
+    // number. A flat "headroom is over Nk" threshold cannot be used any more:
+    // under 「给 5% 缓冲」 a healthy scope carries thousands of tokens of
+    // headroom by design, so a flat threshold would fire on every clean run and
+    // tell the author to undo the ruling. The trigger is therefore relative and
+    // one whole buffer clear of it (10% vs the ruled 5%), so ordinary shrinkage
+    // inside the buffer stays quiet.
+    const suggested = anchor(row.tokens);
+    if (row.ceiling - row.tokens > row.tokens * 2 * BUFFER) {
       console.log(
-        `      ℹ️  headroom is over 2k tokens — lower this ceiling in your PR; ` +
-          'shrink-only ratchets tighten opportunistically.',
+        `      ℹ️  headroom is ${fmt(row.ceiling - row.tokens)} tokens, over twice the 5% buffer — ` +
+          `re-anchor this ceiling to ~${fmt(suggested)} in your PR; shrink-only ratchets tighten opportunistically.`,
       );
     }
   }
