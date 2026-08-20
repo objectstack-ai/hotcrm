@@ -4,13 +4,14 @@ import { describe, it, expect } from 'vitest';
 import { ErrorCode } from '@objectstack/spec/api';
 import { allHooks } from '../src/hooks';
 import { REFUSAL_CODES, REFUSE_HELPER } from '../src/objects/_refusal';
-import { hookNamed } from './helpers/hook-harness';
+import { hookNamed, makeCtx, makeHarness } from './helpers/hook-harness';
 import { extractSandboxBody, makeSandboxEngine, runHookBody } from './helpers/action-sandbox';
 import accountHooks from '../src/objects/account.hook';
 import contactHooks from '../src/objects/contact.hook';
 import opportunityHooks from '../src/objects/opportunity.hook';
 import productHooks from '../src/objects/product.hook';
 import taskHooks from '../src/objects/task.hook';
+import eventHooks from '../src/objects/event.hook';
 
 /**
  * The refusal envelope, pinned where it actually ships (#1075 + #1167).
@@ -229,5 +230,121 @@ describe('every refusal class survives the QuickJS boundary (#1167)', () => {
       }),
     });
     expectEnvelope(err, 'prohibited', 'task_do_not_call_guard', /flagged Do Not Call/);
+  });
+});
+
+// ─────────────────────────────────────── the in-process path, same envelope ──
+
+/**
+ * The SAME five classes through the handler closure rather than the sandbox.
+ *
+ * Not redundant with the block above, for two reasons that pull in opposite
+ * directions. The shipped path is what users get, so it is where the envelope
+ * has to be true — but it runs inside QuickJS, where the source is a string and
+ * v8 coverage cannot see it, so a guard tested only there reads as dead code.
+ * The in-process path is the one #1075's original observation was taken on, and
+ * it is the path every other runtime test in this repo drives.
+ *
+ * The two differ in ways worth pinning side by side: in-process the error is a
+ * plain `Error` with the message unrewritten, so `innerMessage` does not exist
+ * and `message` IS the original sentence. `code` and `status` must be identical
+ * across both, and asserting that here is what would catch an envelope that
+ * survives one path and not the other.
+ */
+const expectInProcess = (
+  err: unknown,
+  cls: keyof typeof REFUSAL_CODES,
+  wording: RegExp,
+): void => {
+  expect(err, `expected a refusal matching ${wording}`).toBeInstanceOf(Error);
+  const e = err as AnyRec;
+  expect(e.name, 'in-process the error is NOT re-thrown as SandboxError').toBe('Error');
+  expect(e.message).toMatch(wording);
+  expect(e.innerMessage, 'only the sandbox adds innerMessage').toBeUndefined();
+  expect([e.code, e.status]).toEqual([REFUSAL_CODES[cls].code, REFUSAL_CODES[cls].status]);
+};
+
+const inProcess = async (hook: AnyRec, opts: AnyRec): Promise<unknown> =>
+  hook.handler(makeCtx(opts as never)).then(
+    () => null,
+    (e: unknown) => e,
+  );
+
+describe('the same envelope on the in-process path (#1075)', () => {
+  it('invalid_value — account_protection', async () => {
+    expectInProcess(
+      await inProcess(accountGuard, {
+        event: 'beforeInsert',
+        input: { name: 'Acme', website: 'ftp://nope.example.com' },
+      }),
+      'invalid_value',
+      /must start with http/,
+    );
+  });
+
+  it('duplicate — contact_integrity', async () => {
+    expectInProcess(
+      await inProcess(contactGuard, {
+        event: 'beforeInsert',
+        input: { email: 'dup@acme.example.com', organization_id: 'org_1' },
+        user: { id: 'usr_1', organizationId: 'org_1' },
+        api: makeHarness({
+          crm_contact: [{ id: 'con_existing', organization_id: 'org_1', email: 'dup@acme.example.com' }],
+        }).api,
+      }),
+      'duplicate',
+      /already exists/,
+    );
+  });
+
+  it('locked — opportunity_lifecycle', async () => {
+    expectInProcess(
+      await inProcess(oppGuard, {
+        event: 'beforeUpdate',
+        input: { id: 'opp_1', amount: 999 },
+        previous: { id: 'opp_1', name: 'Big Deal', stage: 'closed_won', amount: 100 },
+        user: { id: 'usr_1' },
+      }),
+      'locked',
+      /is closed \(closed_won\)/,
+    );
+  });
+
+  it('delete_restricted — product_catalog', async () => {
+    expectInProcess(
+      await inProcess(productGuard, {
+        event: 'beforeDelete',
+        previous: { id: 'prod_1', name: 'Widget' },
+        api: makeHarness({
+          crm_opportunity_line_item: [{ id: 'oli_1', crm_product: 'prod_1' }],
+        }).api,
+      }),
+      'delete_restricted',
+      /Cannot delete product/,
+    );
+  });
+
+  it('prohibited — task_do_not_call_guard', async () => {
+    expectInProcess(
+      await inProcess(taskGuard, {
+        event: 'beforeInsert',
+        input: { type: 'call', status: 'not_started', related_to_lead: 'lead_dnc' },
+        api: makeHarness({ crm_lead: [{ id: 'lead_dnc', do_not_call: true }] }).api,
+      }),
+      'prohibited',
+      /flagged Do Not Call/,
+    );
+  });
+
+  it('prohibited — event_do_not_call_guard, the twin guard on the other object', async () => {
+    expectInProcess(
+      await inProcess(hookNamed(eventHooks, 'event_do_not_call_guard'), {
+        event: 'beforeInsert',
+        input: { type: 'call', status: 'planned', related_to_lead: 'lead_dnc' },
+        api: makeHarness({ crm_lead: [{ id: 'lead_dnc', do_not_call: true }] }).api,
+      }),
+      'prohibited',
+      /flagged Do Not Call/,
+    );
   });
 });
