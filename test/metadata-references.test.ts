@@ -243,6 +243,35 @@ describe('page component references resolve', () => {
   });
 
   /**
+   * Container types that render only what they are given.
+   *
+   * Hoisted out of the two rules below so the pin test at the end exercises
+   * the SAME predicate the live rules run. It used to be declared once per
+   * `it`, which meant the pin was pinning a copy: a refactor that turned the
+   * real `hasContent` into a pass-through would have left the pin green.
+   */
+  const CONTAINERS = new Set(['page:section', 'page:card', 'page:accordion']);
+
+  /**
+   * Keys a container carries its content under.
+   *
+   * `body` is @objectstack/spec 17.0.0's RETIRED spelling of `children` on
+   * `page:card` (#5775, ADR-0087 D2) and this repo no longer authors it — it
+   * stays in the list because the renderer still reads both, so a card that
+   * authors `body` renders content and this rule must not call it empty.
+   */
+  const CONTENT_KEYS = ['body', 'children', 'items', 'components'];
+
+  const hasContent = (c: AnyRec): boolean => {
+    if (!CONTAINERS.has(c.type)) return true; // a real block renders itself
+    const props = c.properties ?? {};
+    return CONTENT_KEYS.some((k) => {
+      const v = (c as AnyRec)[k] ?? props[k];
+      return Array.isArray(v) ? v.length > 0 : !!v;
+    });
+  };
+
+  /**
    * A tab whose name promises content must render content (#771).
    *
    * Sales Home's three tabs — My Leads / My Opportunities / My Tasks — each
@@ -257,27 +286,11 @@ describe('page component references resolve', () => {
    * (`page:section` / `page:card` / `page:accordion`) is a box; it shows what
    * you put in it. Put nothing in it inside a tab and the tab is a lie.
    *
-   * Scoped to TAB children on purpose. An empty card in a sidebar is a weaker
-   * claim (it carries a title, and nothing promised a list underneath), and
-   * this app still has some — filed separately rather than widened into here,
-   * because a rule that goes red on things this PR is not fixing gets
-   * suppressed, not fixed.
+   * #771 scoped this to TAB children, deliberately, and #734 is the card that
+   * widens it: the sidebar rule below now covers every region, so the two
+   * together answer for the whole page.
    */
   it('no page tab renders an empty container', () => {
-    /** Container types that render only what they are given. */
-    const CONTAINERS = new Set(['page:section', 'page:card', 'page:accordion']);
-    /** Keys a container carries its content under. */
-    const CONTENT_KEYS = ['body', 'children', 'items', 'components'];
-
-    const hasContent = (c: AnyRec): boolean => {
-      if (!CONTAINERS.has(c.type)) return true; // a real block renders itself
-      const props = c.properties ?? {};
-      return CONTENT_KEYS.some((k) => {
-        const v = (c as AnyRec)[k] ?? props[k];
-        return Array.isArray(v) ? v.length > 0 : !!v;
-      });
-    };
-
     const bad: string[] = [];
     let tabsSeen = 0;
     for (const page of pages) {
@@ -305,26 +318,97 @@ describe('page component references resolve', () => {
   });
 
   /**
+   * The same rule, everywhere else on the page (#734).
+   *
+   * The tab rule above covers panels behind a tab strip. Sales Home shipped
+   * the identical defect in its SIDEBARS, where nothing is hidden behind a
+   * click: `my_recent_items` and `upcoming_events` were `page:card`s with a
+   * title and no body, so the landing page of every `sales_rep` /
+   * `sales_manager` carried bordered boxes reading "Recent Items" and
+   * "Today's Schedule" with nothing under them. A third, `ai_briefing`, looked
+   * bound but was not — its paragraph was authored as `properties.description`,
+   * a key `page:card` does not declare, so the props schema stripped it and
+   * the card rendered as a title too.
+   *
+   * That last one is why this rule reads DECLARED content keys rather than
+   * "does the props bag have something in it": `PageComponent.properties` is
+   * an open bag, so an undeclared key is a success receipt for configuration
+   * that renders nothing. A container is full when it holds components.
+   *
+   * # The exemption list is the honest half
+   *
+   * #771 declined to widen its rule to sidebars because a rule that goes red
+   * on things the PR is not fixing gets suppressed rather than fixed. The way
+   * out is not a narrower rule, it is a rule that covers everything with the
+   * known-open cases named, dated and owned — so the debt is visible instead
+   * of invisible. Each entry needs an issue, and the assertion below fails
+   * when an entry is no longer reachable, so a fixed defect cannot leave its
+   * exemption behind to cover the next one.
+   */
+  it('no page region renders an empty container', () => {
+    /**
+     * `page.name/component.id` of containers that are known-empty and NOT this
+     * card's to fix. Shrink-only: adding a line needs an issue and a reason.
+     *
+     *   utility_bar_page/quick_notes — an empty `page:card` on a page #734
+     *   deliberately does not touch (that page is the reproduction of an
+     *   upstream renderer gap for `global:*` component types, and editing it
+     *   would destroy the evidence). Filed separately; see the PR for #734.
+     *
+     *   sales_home_page/ai_briefing — carries its copy under
+     *   `properties.description`, which `page:card` does not declare, so it
+     *   renders as a title too. The fix is to move that copy into an
+     *   `element:text` child — but the copy is pinned where it is by the
+     *   #1002 persona guard below, which reads `properties.description` and
+     *   encodes a maintainer ruling, so moving it is its own card rather than
+     *   a rider on this one. Filed separately; see the PR for #734.
+     */
+    const KNOWN_EMPTY = new Set(['utility_bar_page/quick_notes', 'sales_home_page/ai_briefing']);
+
+    const bad: string[] = [];
+    const emptyFound = new Set<string>();
+    let containersSeen = 0;
+    for (const page of pages) {
+      for (const c of [...walk(page.regions), ...walk(page.slots)] as AnyRec[]) {
+        if (!CONTAINERS.has(c.type)) continue;
+        containersSeen++;
+        if (hasContent(c)) continue;
+        const where = `${page.name}/${c.id}`;
+        emptyFound.add(where);
+        if (KNOWN_EMPTY.has(where)) continue;
+        bad.push(`${where}: ${c.type} "${c.properties?.title ?? c.label ?? ''}" has no body — it renders as a title over nothing`);
+      }
+    }
+
+    // Same reason as `tabsSeen` above: the rule must not pass by finding nothing.
+    expect(containersSeen, 'no page containers were inspected — the walk found nothing').toBeGreaterThan(0);
+    expect(bad, `containers that render blank:\n  ${bad.join('\n  ')}`).toEqual([]);
+
+    // An exemption outlives its defect only if nobody checks. Keyed on still
+    // being EMPTY, not on still existing: a `quick_notes` that gets a body
+    // must drop its line here, or the next empty card inherits the cover.
+    const stale = [...KNOWN_EMPTY].filter((k) => !emptyFound.has(k));
+    expect(stale, `exemptions whose container is no longer empty — delete these lines:\n  ${stale.join('\n  ')}`).toEqual([]);
+  });
+
+  /**
    * The rule above, exercised against the shape it exists to reject — so a
    * later refactor of `hasContent` cannot quietly turn it into a pass-through.
    */
   it('the empty-tab rule still rejects the shape #771 found', () => {
-    const CONTAINERS = new Set(['page:section', 'page:card', 'page:accordion']);
-    const CONTENT_KEYS = ['body', 'children', 'items', 'components'];
-    const hasContent = (c: AnyRec): boolean => {
-      if (!CONTAINERS.has(c.type)) return true;
-      const props = c.properties ?? {};
-      return CONTENT_KEYS.some((k) => {
-        const v = (c as AnyRec)[k] ?? props[k];
-        return Array.isArray(v) ? v.length > 0 : !!v;
-      });
-    };
-
     // What Sales Home shipped: rejected.
     expect(hasContent({ type: 'page:section', properties: {} })).toBe(false);
     expect(hasContent({ type: 'page:card', properties: { title: 'Recent Items' } })).toBe(false);
+    // The #734 shape: a card whose only copy is under a key `page:card` does
+    // not declare. The props schema strips `description`, so this renders as a
+    // title over nothing and must not read as full.
+    expect(
+      hasContent({ type: 'page:card', properties: { title: 'Ask the AI Assistant', description: 'Open the panel…' } }),
+    ).toBe(false);
     // What it ships now, and the shapes that must stay accepted.
     expect(hasContent({ type: 'list-view', properties: { objectName: 'crm_lead' } })).toBe(true);
+    expect(hasContent({ type: 'page:card', properties: { children: [{ type: 'object-metric' }] } })).toBe(true);
+    // The retired `body` spelling still renders, so it still counts as content.
     expect(hasContent({ type: 'page:card', properties: { body: [{ type: 'object-metric' }] } })).toBe(true);
     expect(hasContent({ type: 'page:section', properties: { components: [{ type: 'text' }] } })).toBe(true);
   });
