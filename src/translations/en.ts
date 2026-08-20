@@ -1479,7 +1479,7 @@ export const en: TranslationData = {
       label: 'Sales Home',
       description: 'Sales team home page with key metrics and quick actions',
       title: 'Sales Dashboard',
-      subtitle: 'Welcome back, {current_user.first_name}',
+      subtitle: 'Welcome back',
     },
     utility_bar_page: {
       label: 'Utility Bar',

@@ -1570,10 +1570,9 @@ export const esES: TranslationData = {
       label: 'Inicio de Ventas',
       description: 'Página de inicio del equipo comercial con métricas clave y acciones rápidas',
       title: 'Panel de Ventas',
-      subtitle: 'Bienvenido de nuevo, {current_user.first_name}',
+      subtitle: 'Bienvenido de nuevo',
       components: {
         quick_create: { title: 'Creación Rápida', label: 'Creación Rápida' },
-        my_recent_items: { title: 'Elementos Recientes', label: 'Elementos Recientes' },
         key_metrics: { title: 'Indicadores Clave de Rendimiento', label: 'Métricas Clave' },
         home_tabs: { label: 'Pestañas de Inicio' },
         ai_briefing: {
@@ -1582,7 +1581,7 @@ export const esES: TranslationData = {
             'Abra el panel del asistente desde el borde derecho de la página y pregunte "¿en qué debería concentrarme hoy?" — ve su flujo de ventas, esquema y cuentas en tiempo real.',
           label: 'Hoy con el Asistente de IA',
         },
-        upcoming_events: { title: 'Agenda de Hoy', label: 'Calendario' },
+        upcoming_events: { title: 'Próximos Eventos', label: 'Próximos Eventos' },
       },
     },
     utility_bar_page: {

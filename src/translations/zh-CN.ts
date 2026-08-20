@@ -1501,10 +1501,9 @@ export const zhCN: TranslationData = {
       label: '销售主页',
       description: '销售团队主页，汇总关键指标与快捷操作',
       title: '销售看板',
-      subtitle: '欢迎回来，{current_user.first_name}',
+      subtitle: '欢迎回来',
       components: {
         quick_create: { title: '快速创建', label: '快速创建' },
-        my_recent_items: { title: '最近使用', label: '最近使用' },
         key_metrics: { title: '关键绩效指标', label: '关键指标' },
         home_tabs: { label: '主页标签页' },
         ai_briefing: {
@@ -1513,7 +1512,7 @@ export const zhCN: TranslationData = {
             '从页面右侧打开助手面板，询问"我今天应该关注什么？"——它可以实时查看您的销售管道、架构与客户信息。',
           label: 'AI 助手今日速览',
         },
-        upcoming_events: { title: '今日日程', label: '日历' },
+        upcoming_events: { title: '即将开始的活动', label: '即将开始的活动' },
       },
     },
     utility_bar_page: {

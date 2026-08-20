@@ -1517,10 +1517,9 @@ export const jaJP: TranslationData = {
       label: '営業ホーム',
       description: '主要指標とクイックアクションをまとめた営業チームのホームページ',
       title: '営業ダッシュボード',
-      subtitle: 'おかえりなさい、{current_user.first_name} さん',
+      subtitle: 'おかえりなさい',
       components: {
         quick_create: { title: 'クイック作成', label: 'クイック作成' },
-        my_recent_items: { title: '最近使用したアイテム', label: '最近使用したアイテム' },
         key_metrics: { title: '主要業績評価指標', label: '主要指標' },
         home_tabs: { label: 'ホームタブ' },
         ai_briefing: {
@@ -1529,7 +1528,7 @@ export const jaJP: TranslationData = {
             'ページ右端からアシスタントパネルを開き、「今日は何に集中すべきか？」と尋ねてください — リアルタイムのパイプライン、スキーマ、取引先情報を把握しています。',
           label: '今日の AI アシスタント',
         },
-        upcoming_events: { title: '今日の予定', label: 'カレンダー' },
+        upcoming_events: { title: '今後の予定', label: '今後の予定' },
       },
     },
     utility_bar_page: {
