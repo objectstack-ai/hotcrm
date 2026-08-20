@@ -251,7 +251,15 @@ export interface CtxOptions {
    * "system / seed / backfill write" signal and deliberately relax their
    * guards, so tests must be explicit about which they are simulating.
    */
-  user?: { id: string } | undefined;
+  user?: { id: string; organizationId?: string } | undefined;
+  /**
+   * The session, for hooks that must scope a lookup by the caller's active
+   * organization. A SYSTEM write (the seed loader, a backfill) has neither a
+   * `user` nor a session organization, and hooks that reach across tenants
+   * only misbehave in exactly that case — so a test that cannot express it
+   * cannot catch the bug (`contact_integrity`, the org-blind dedupe).
+   */
+  session?: { userId?: string; organizationId?: string; isSystem?: boolean } | undefined;
   api?: HookApi;
 }
 
@@ -262,6 +270,7 @@ export function makeCtx(opts: CtxOptions): Rec {
     input: opts.input ?? {},
     previous: opts.previous,
     user: opts.user,
+    session: opts.session,
     api: opts.api,
   };
 }
