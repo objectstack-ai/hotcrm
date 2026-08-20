@@ -54,6 +54,15 @@ const contactHook: Hook = {
   description:
     'Dedupe contacts by email and protect referenced contacts from deletion.',
   handler: async (ctx: HookContext) => {
+    // The refusal envelope (#1075). Mirrored from `./_refusal.ts` because a
+    // lowered body has no module scope and `extractHookBody` THROWS on an
+    // import; `test/refusal-envelope.test.ts` pins every copy against it.
+    function refuse(message: string, code: string, status: number): Error {
+      const err = new Error(message) as Error & { code: string; status: number };
+      err.code = code;
+      err.status = status;
+      return err;
+    }
     const { event, input } = ctx;
     const api = ctx.api as HookApi | undefined;
 
@@ -82,8 +91,10 @@ const contactHook: Hook = {
           const dupId = (dup as { id?: string } | null)?.id;
           const selfId = ctx.previous?.id ?? input.id;
           if (dup && dupId !== selfId) {
-            throw new Error(
+            throw refuse(
               `Another contact (${dupId}) with email ${email} already exists.`,
+              'DUPLICATE_VALUE',
+              409,
             );
           }
         }
@@ -122,8 +133,10 @@ const contactHook: Hook = {
           .filter((part) => typeof part === 'string' && part.trim() !== '')
           .join(' ');
         const subject = name ? `Contact ${name} (${id})` : `Contact ${id}`;
-        throw new Error(
+        throw refuse(
           `${subject} is still referenced by ${openOpps} open opportunity(ies), ${openQuotes} active quote(s), ${activeContracts} active contract(s), so it cannot be deleted — and neither can its account, because deleting an account deletes its contacts. Close or reassign those records first.`,
+          'DELETE_RESTRICTED',
+          409,
         );
       }
     }

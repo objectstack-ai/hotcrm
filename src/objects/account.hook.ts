@@ -22,16 +22,25 @@ const accountHook: Hook = {
   description:
     'Validate account fields and protect customer accounts with open opportunities from deletion.',
   handler: async (ctx: HookContext) => {
+    // The refusal envelope (#1075). Mirrored from `./_refusal.ts` because a
+    // lowered body has no module scope and `extractHookBody` THROWS on an
+    // import; `test/refusal-envelope.test.ts` pins every copy against it.
+    function refuse(message: string, code: string, status: number): Error {
+      const err = new Error(message) as Error & { code: string; status: number };
+      err.code = code;
+      err.status = status;
+      return err;
+    }
     const { event, input } = ctx;
 
     if (event === 'beforeInsert' || event === 'beforeUpdate') {
       if (typeof input.website === 'string' && input.website.length > 0) {
         if (!/^https?:\/\//i.test(input.website)) {
-          throw new Error('Website must start with http:// or https://');
+          throw refuse('Website must start with http:// or https://', 'VALIDATION_FAILED', 400);
         }
       }
       if (typeof input.annual_revenue === 'number' && input.annual_revenue < 0) {
-        throw new Error('Annual Revenue must be greater than or equal to 0');
+        throw refuse('Annual Revenue must be greater than or equal to 0', 'VALIDATION_FAILED', 400);
       }
 
       // ─── Territory (#621 storage location, #639 classification) ────────
@@ -192,10 +201,12 @@ const accountHook: Hook = {
         // first." Agreement runs across three words here — noun, verb and
         // pronoun — and the two readable sentences are cheaper to keep correct
         // (and to grep for) than three interlocking conditionals.
-        throw new Error(
+        throw refuse(
           openOpps === 1
             ? 'Cannot delete customer account: 1 open opportunity still references it. Close or reassign it first.'
             : `Cannot delete customer account: ${openOpps} open opportunities still reference it. Close or reassign them first.`,
+          'DELETE_RESTRICTED',
+          409,
         );
       }
     }

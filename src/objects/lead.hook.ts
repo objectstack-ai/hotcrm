@@ -124,6 +124,15 @@ const leadHook: Hook = {
   description:
     'Score new leads, lock converted leads, and create follow-up task on qualification.',
   handler: async (ctx: HookContext) => {
+    // The refusal envelope (#1075). Mirrored from `./_refusal.ts` because a
+    // lowered body has no module scope and `extractHookBody` THROWS on an
+    // import; `test/refusal-envelope.test.ts` pins every copy against it.
+    function refuse(message: string, code: string, status: number): Error {
+      const err = new Error(message) as Error & { code: string; status: number };
+      err.code = code;
+      err.status = status;
+      return err;
+    }
     const { event, input } = ctx;
 
     const HIGH_VALUE_INDUSTRIES = new Set(['technology', 'finance', 'healthcare']);
@@ -257,8 +266,10 @@ const leadHook: Hook = {
             '';
           const label = [name, leadId ? `(${leadId})` : ''].filter(Boolean).join(' ');
 
-          throw new Error(
+          throw refuse(
             `Cannot edit ${label ? `converted lead ${label}` : 'a converted lead'} (attempted: ${violating.join(', ')}). Make changes on the converted records instead.`,
+            'RECORD_LOCKED',
+            409,
           );
         }
       }

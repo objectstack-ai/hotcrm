@@ -3,6 +3,7 @@
 import { describe, it, expect } from 'vitest';
 import stack from '../objectstack.config';
 import taskHooks from '../src/objects/task.hook';
+import { REFUSAL_CODES } from '../src/objects/_refusal';
 import eventHooks from '../src/objects/event.hook';
 import { ScheduleFollowUpFlow } from '../src/flows/schedule-followup.flow';
 import { makeSandboxEngine, runHookBody, type Rec } from './helpers/action-sandbox';
@@ -147,23 +148,22 @@ describe('scheduling a phone touch against a Do Not Call person is refused', () 
 
 describe('the shape of the refusal (repo issue #1075)', () => {
   /**
-   * #1180 asks for `code` and `status` assertions on the rejection. They are
-   * asserted at the level that is REAL, which is currently neither.
+   * #1180 asked for `code` and `status` assertions on the rejection, and this
+   * test used to answer that both were `undefined` — measured, not assumed, and
+   * flagged as a tripwire that should go red the day #1075 landed. It did, and
+   * this is the strengthened form the comment promised.
    *
-   * Every business rejection in this app is a bare `throw new Error(msg)` — 17
-   * of them across `src/objects/*.hook.ts`, and these two guards match that
-   * idiom deliberately rather than inventing a private error class for one
-   * field. Repo issue #1075 (open) records the consequence: such rejections
-   * reach REST with `code` and `status` undefined. Fixing that is #1075's job,
-   * not this card's.
+   * The class chosen for Do Not Call is `prohibited` (`FORBIDDEN` / 403), not
+   * one of the 409 conflict classes, and the distinction is the actionable part
+   * for an integration: a 409 says "resolve the conflicting state and retry",
+   * while a DNC flag is a compliance prohibition that must NOT be auto-retried.
+   * The remedy sentence stays in the message, where a human reads it; the
+   * status is what a machine branches on.
    *
-   * So this test MEASURES both properties instead of assuming them, and pins
-   * the message — which, until #1075 lands, is the entire contract a caller
-   * gets. When #1075 does land, this test is the one that should go red and be
-   * strengthened; the `toBeUndefined()` assertions are a deliberate tripwire,
-   * not an endorsement.
+   * The wording pins below are unchanged and stay in ADDITION to the envelope —
+   * the phrasing is a real contract (#693 / #719), not a substitute for one.
    */
-  it('carries a precise message, and (until #1075) no code or status', async () => {
+  it('carries a precise message AND the #1075 refusal envelope', async () => {
     const caught = await runTask({
       type: 'call',
       status: 'not_started',
@@ -182,9 +182,13 @@ describe('the shape of the refusal (repo issue #1075)', () => {
     // prevent.
     expect(String(err.message)).toMatch(/Log a completed call|non-phone activity type/);
 
-    // Measured, not assumed. See the block comment: this is #1075's wall.
-    expect(err.code, '#1075 has landed — tighten this assertion').toBeUndefined();
-    expect(err.status, '#1075 has landed — tighten this assertion').toBeUndefined();
+    // The envelope #1075 installed, read as a pair — a code without a status
+    // maps to 500 / INTERNAL_ERROR, so asserting them together is what keeps a
+    // half-applied envelope from passing.
+    expect([err.code, err.status]).toEqual([
+      REFUSAL_CODES.prohibited.code,
+      REFUSAL_CODES.prohibited.status,
+    ]);
   });
 });
 

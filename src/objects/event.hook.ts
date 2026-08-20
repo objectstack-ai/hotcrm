@@ -241,6 +241,15 @@ const eventDoNotCallGuard: Hook = {
   priority: 150,
   description: 'Refuse to book a planned Call event against a lead/contact flagged Do Not Call.',
   handler: async (ctx: HookContext) => {
+    // The refusal envelope (#1075). Mirrored from `./_refusal.ts` because a
+    // lowered body has no module scope and `extractHookBody` THROWS on an
+    // import; `test/refusal-envelope.test.ts` pins every copy against it.
+    function refuse(message: string, code: string, status: number): Error {
+      const err = new Error(message) as Error & { code: string; status: number };
+      err.code = code;
+      err.status = status;
+      return err;
+    }
     const { input } = ctx;
     const previous = ctx.previous;
     const api = ctx.api as HookApi | undefined;
@@ -277,10 +286,12 @@ const eventDoNotCallGuard: Hook = {
       const person = rows[0];
       // `=== true`: absent / null / false are all "not flagged".
       if (person?.do_not_call === true) {
-        throw new Error(
+        throw refuse(
           `This ${t.label} is flagged Do Not Call, so a call cannot be scheduled against them. ` +
             'Log the call as held if it already happened, book a meeting instead, ' +
             'or clear Do Not Call on the record first.',
+          'FORBIDDEN',
+          403,
         );
       }
     }

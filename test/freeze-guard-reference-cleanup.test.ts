@@ -7,6 +7,7 @@ import { ObjectQLPlugin } from '@objectstack/objectql';
 import { MetadataPlugin } from '@objectstack/metadata';
 import stack from '../objectstack.config';
 import leadHooks from '../src/objects/lead.hook';
+import { REFUSAL_CODES } from '../src/objects/_refusal';
 import oppHooks from '../src/objects/opportunity.hook';
 import quoteHooks from '../src/objects/quote.hook';
 import { hookNamed, makeCtx, makeHarness, type Rec } from './helpers/hook-harness';
@@ -69,14 +70,16 @@ import { extractSandboxBody } from './helpers/action-sandbox';
  *
  * ### On the refusal envelope
  *
- * Measured end-to-end on rc.6: every refusal these guards raise arrives at the
- * caller as a bare `Error` — `code` and `status` are both `undefined`, and so
- * they are for the platform's own `account_protection` / `contact_integrity`
- * refusals. This app's hooks have no ADR-0112 envelope to assert, so the
- * envelope is pinned as the (absent) thing it measurably is, alongside the
- * message wording, which IS the contract here (PR #719 wrote it). A failure of
- * the envelope assertion means the platform started wrapping hook errors —
- * news to act on, not a regression to paper over.
+ * This block used to record the opposite of what it records now, and the change
+ * is the point. Measured on rc.6, every refusal these guards raised reached the
+ * caller as a bare `Error` with `code` and `status` both `undefined`; the
+ * envelope was pinned as the absent thing it measurably was, and the pin was
+ * declared a tripwire rather than an endorsement. #1075 landed the envelope, so
+ * the tripwire fired and this is its strengthened form: the same wording pins
+ * (PR #719 wrote that contract and it is unchanged) PLUS the `code`/`status`
+ * these guards now carry. All three freeze guards refuse with the same class —
+ * the record's own state froze the field the write touched — so all three
+ * assert `RECORD_LOCKED` / 409 from `REFUSAL_CODES.locked`.
  */
 
 type AnyRec = Record<string, any>;
@@ -453,10 +456,11 @@ const expectRefusal = (err: unknown, wording: RegExp): void => {
   expect(err, `expected a refusal matching ${wording}`).toBeInstanceOf(Error);
   const e = err as AnyRec;
   expect(e.message).toMatch(wording);
-  // Measured on 17.0.0-rc.6: hook refusals reach the caller as bare `Error`s,
-  // with no ADR-0112 envelope on them — this asserts what IS, so that the day
-  // the platform starts wrapping them, this file says so.
-  expect([e.code, e.status]).toEqual([undefined, undefined]);
+  // The envelope, asserted as a PAIR on purpose. A `code` without a `status` is
+  // not half a fix: `resolveThrownHttpError` reads `status` first, and a code
+  // alone falls through to 500 / INTERNAL_ERROR — a deliberate refusal filed as
+  // a server fault. Reading them together is what makes that failure visible.
+  expect([e.code, e.status]).toEqual([REFUSAL_CODES.locked.code, REFUSAL_CODES.locked.status]);
 };
 
 const runGuard = (hook: AnyRec, input: Rec, previous: Rec): Promise<unknown> =>
