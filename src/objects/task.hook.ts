@@ -21,6 +21,15 @@ const taskValidation: Hook = {
   priority: 200,
   description: 'Stamp completed/overdue flags + dates on completion and validate reminder timing.',
   handler: async (ctx: HookContext) => {
+    // The refusal envelope (#1075). Mirrored from `./_refusal.ts` because a
+    // lowered body has no module scope and `extractHookBody` THROWS on an
+    // import; `test/refusal-envelope.test.ts` pins every copy against it.
+    function refuse(message: string, code: string, status: number): Error {
+      const err = new Error(message) as Error & { code: string; status: number };
+      err.code = code;
+      err.status = status;
+      return err;
+    }
     const { input } = ctx;
     const previous = ctx.previous;
 
@@ -78,8 +87,10 @@ const taskValidation: Hook = {
       (typeof previous?.due_date === 'string' && (previous.due_date as string)) ||
       undefined;
     if (reminder && due && reminder.slice(0, 10) > due.slice(0, 10)) {
-      throw new Error(
+      throw refuse(
         `Reminder (${reminder}) is after the due date (${due}); reminders should fire before the deadline.`,
+        'VALIDATION_FAILED',
+        400,
       );
     }
   },
@@ -357,6 +368,15 @@ const taskDoNotCallGuard: Hook = {
   priority: 150,
   description: 'Refuse to schedule an open Call task against a lead/contact flagged Do Not Call.',
   handler: async (ctx: HookContext) => {
+    // The refusal envelope (#1075). Mirrored from `./_refusal.ts` because a
+    // lowered body has no module scope and `extractHookBody` THROWS on an
+    // import; `test/refusal-envelope.test.ts` pins every copy against it.
+    function refuse(message: string, code: string, status: number): Error {
+      const err = new Error(message) as Error & { code: string; status: number };
+      err.code = code;
+      err.status = status;
+      return err;
+    }
     const { input } = ctx;
     const previous = ctx.previous;
     const api = ctx.api as HookApi | undefined;
@@ -404,10 +424,12 @@ const taskDoNotCallGuard: Hook = {
       // ABSENT (see AGENTS.md on predicate totality), and treating that as
       // truthy would block every ordinary call task in the app.
       if (person?.do_not_call === true) {
-        throw new Error(
+        throw refuse(
           `This ${t.label} is flagged Do Not Call, so a Call task cannot be scheduled against them. ` +
             'Log a completed call if one already happened, choose a non-phone activity type, ' +
             'or clear Do Not Call on the record first.',
+          'FORBIDDEN',
+          403,
         );
       }
     }

@@ -24,6 +24,15 @@ const contractValidation: Hook = {
   priority: 200,
   description: 'Enforce contract term math and prevent shrinking end_date once activated.',
   handler: async (ctx: HookContext) => {
+    // The refusal envelope (#1075). Mirrored from `./_refusal.ts` because a
+    // lowered body has no module scope and `extractHookBody` THROWS on an
+    // import; `test/refusal-envelope.test.ts` pins every copy against it.
+    function refuse(message: string, code: string, status: number): Error {
+      const err = new Error(message) as Error & { code: string; status: number };
+      err.code = code;
+      err.status = status;
+      return err;
+    }
     const { event, input } = ctx;
     const previous = ctx.previous;
 
@@ -54,8 +63,10 @@ const contractValidation: Hook = {
     if (startDate && endDate && term) {
       const calc = monthsBetween(startDate, endDate);
       if (Math.abs(calc - term) > 1) {
-        throw new Error(
+        throw refuse(
           `Contract term (${term} months) does not match date range (${calc} months from ${startDate} to ${endDate}).`,
+          'VALIDATION_FAILED',
+          400,
         );
       }
     }
@@ -66,8 +77,10 @@ const contractValidation: Hook = {
         typeof previous.end_date === 'string' &&
         input.end_date < previous.end_date
       ) {
-        throw new Error(
+        throw refuse(
           `Cannot shrink end_date (${previous.end_date as string} → ${input.end_date}) after activation. Use a termination/amendment workflow instead.`,
+          'RECORD_LOCKED',
+          409,
         );
       }
     }

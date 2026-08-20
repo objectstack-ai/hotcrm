@@ -25,6 +25,15 @@ const quoteValidation: Hook = {
   priority: 200,
   description: 'Default expiration date and freeze accepted/expired quotes.',
   handler: async (ctx: HookContext) => {
+    // The refusal envelope (#1075). Mirrored from `./_refusal.ts` because a
+    // lowered body has no module scope and `extractHookBody` THROWS on an
+    // import; `test/refusal-envelope.test.ts` pins every copy against it.
+    function refuse(message: string, code: string, status: number): Error {
+      const err = new Error(message) as Error & { code: string; status: number };
+      err.code = code;
+      err.status = status;
+      return err;
+    }
     const { event, input } = ctx;
     const previous = ctx.previous;
 
@@ -106,8 +115,10 @@ const quoteValidation: Hook = {
             '';
           const label = [name, quoteId ? `(${quoteId})` : ''].filter(Boolean).join(' ');
           const subject = label ? `Quote ${label}` : 'Quote';
-          throw new Error(
+          throw refuse(
             `${subject} is ${previous.status as string}; only internal_notes may be edited. Attempted: ${violating.join(', ')}.`,
+            'RECORD_LOCKED',
+            409,
           );
         }
       }
@@ -288,6 +299,15 @@ const quoteAccepted: Hook = {
     }
 
     if (failures.length > 0) {
+      // DELIBERATELY BARE — the one throw in this file the #1075 sweep left
+      // alone. Every other throw here is a business refusal: the user asked for
+      // something the rules forbid, and an envelope tells their client which
+      // rule. This one is the opposite. It fires from an `afterUpdate` cascade
+      // when close-won bookkeeping FAILED for reasons the user did not cause
+      // and cannot act on, so it is a server fault and belongs in the 5xx band.
+      // A bare Error is already mapped to `500 / INTERNAL_ERROR` by
+      // `resolveThrownHttpError`, which is the correct answer — dressing it in
+      // a 4xx refusal code would file a broken cascade as user error.
       throw new Error(`quote_on_accepted: ${failures.join('; ')}`);
     }
   },

@@ -24,6 +24,15 @@ const opportunityValidationHook: Hook = {
   description:
     'Recompute expected_revenue, freeze closed opportunities except narrative fields.',
   handler: async (ctx: HookContext) => {
+    // The refusal envelope (#1075). Mirrored from `./_refusal.ts` because a
+    // lowered body has no module scope and `extractHookBody` THROWS on an
+    // import; `test/refusal-envelope.test.ts` pins every copy against it.
+    function refuse(message: string, code: string, status: number): Error {
+      const err = new Error(message) as Error & { code: string; status: number };
+      err.code = code;
+      err.status = status;
+      return err;
+    }
     // NOTE: L2 hook bodies run *body-only* in a sandbox (QuickJS) — module-level
     // constants are NOT in scope at runtime. These MUST be declared inside the
     // handler or the body throws `ReferenceError` on every write. (See ADR on
@@ -128,8 +137,10 @@ const opportunityValidationHook: Hook = {
             '';
           const label = [name, oppId ? `(${oppId})` : ''].filter(Boolean).join(' ');
           const subject = label ? `Opportunity ${label}` : 'Opportunity';
-          throw new Error(
+          throw refuse(
             `${subject} is closed (${prevStage}); only ${[...NARRATIVE_FIELDS].join(', ')} may be edited. Attempted: ${violating.join(', ')}.`,
+            'RECORD_LOCKED',
+            409,
           );
         }
       }

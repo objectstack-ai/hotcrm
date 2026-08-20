@@ -46,6 +46,15 @@ const campaignValidation: Hook = {
   priority: 200,
   description: 'Validate campaign date range and required fields per status.',
   handler: async (ctx: HookContext) => {
+    // The refusal envelope (#1075). Mirrored from `./_refusal.ts` because a
+    // lowered body has no module scope and `extractHookBody` THROWS on an
+    // import; `test/refusal-envelope.test.ts` pins every copy against it.
+    function refuse(message: string, code: string, status: number): Error {
+      const err = new Error(message) as Error & { code: string; status: number };
+      err.code = code;
+      err.status = status;
+      return err;
+    }
     const { input } = ctx;
     const previous = ctx.previous;
     const start =
@@ -57,14 +66,14 @@ const campaignValidation: Hook = {
       (typeof previous?.end_date === 'string' && (previous.end_date as string)) ||
       undefined;
     if (start && end && start > end) {
-      throw new Error(`Campaign start_date (${start}) must not be after end_date (${end}).`);
+      throw refuse(`Campaign start_date (${start}) must not be after end_date (${end}).`, 'VALIDATION_FAILED', 400);
     }
     const status =
       (typeof input.status === 'string' && input.status) ||
       (typeof previous?.status === 'string' && (previous.status as string)) ||
       undefined;
     if (status === 'in_progress' && (!start || !end)) {
-      throw new Error('Campaign cannot move to in_progress without both start_date and end_date.');
+      throw refuse('Campaign cannot move to in_progress without both start_date and end_date.', 'VALIDATION_FAILED', 400);
     }
   },
 };
