@@ -353,7 +353,7 @@ describe('page component references resolve', () => {
      *   utility_bar_page/quick_notes — an empty `page:card` on a page #734
      *   deliberately does not touch (that page is the reproduction of an
      *   upstream renderer gap for `global:*` component types, and editing it
-     *   would destroy the evidence). Filed separately; see the PR for #734.
+     *   would destroy the evidence). Filed as #1215.
      *
      *   sales_home_page/ai_briefing — carries its copy under
      *   `properties.description`, which `page:card` does not declare, so it
@@ -361,7 +361,7 @@ describe('page component references resolve', () => {
      *   `element:text` child — but the copy is pinned where it is by the
      *   #1002 persona guard below, which reads `properties.description` and
      *   encodes a maintainer ruling, so moving it is its own card rather than
-     *   a rider on this one. Filed separately; see the PR for #734.
+     *   a rider on this one. Filed as #1216.
      */
     const KNOWN_EMPTY = new Set(['utility_bar_page/quick_notes', 'sales_home_page/ai_briefing']);
 

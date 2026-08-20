@@ -154,9 +154,8 @@ export const SalesHomePage: Page = {
         // page does not have. Binding it to one object's list view instead
         // would have made the title lie, which is the defect #771 exists to
         // prevent, so the card is removed rather than filled with something
-        // that is not recency. See the tracking issue in the PR that removed
-        // it; when the platform ships a recent-records source, this is where
-        // the card goes back.
+        // that is not recency. Recorded as #1217; when the platform ships a
+        // recent-records source, this is where the card goes back.
       ],
     },
     
@@ -285,8 +284,8 @@ export const SalesHomePage: Page = {
             // `properties.description` and asserts it is a string, and that
             // guard encodes a maintainer ruling. Relocating the copy to an
             // `element:text` child means rewriting a ruling-backed guard, which
-            // is a different card than "fill the two empty containers". Filed;
-            // exempted by name in the empty-container rule until then.
+            // is a different card than "fill the two empty containers". Filed
+            // as #1216; exempted by name in the rule below until then.
             description:
               'Open the assistant panel from the right edge of the page and ask "what should I focus on today?" — it sees your live pipeline, schema, and accounts.',
             bordered: true,
