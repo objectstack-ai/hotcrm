@@ -250,7 +250,6 @@ beforeAll(async () => {
     const set = sets.find((s) => s.name === setName);
     await insert('sys_user_permission_set', {
       user_id: userId,
-      permission_set: set?.id,
       permission_set_id: set?.id,
     });
   };

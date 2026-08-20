@@ -153,7 +153,6 @@ beforeAll(async () => {
   const salesRepSet = (sets as AnyRec[]).find((s) => s.name === 'sales_rep');
   await insert('sys_user_permission_set', {
     user_id: id.rep,
-    permission_set: salesRepSet?.id,
     permission_set_id: salesRepSet?.id,
   });
 
