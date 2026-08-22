@@ -167,10 +167,10 @@ Every file follows the **`<entity>.<kind>.ts`** convention (actions are the one 
 Because it's the reference for every ObjectStack convention you'll encounter:
 
 - ✅ `crm_` namespace prefix on every object (explicit, grep-able, marketplace-safe)
-- ✅ Strict `*.object.ts` / `*.hook.ts` / `*.action.ts` separation of concerns
+- ✅ Strict `*.object.ts` / `*.hook.ts` / `*.actions.ts` separation of concerns
 - ✅ All metadata validated against `@objectstack/spec` schemas
 - ✅ ObjectQL only — no raw SQL anywhere
-- ✅ AI-Native — every entity has an `*.action.ts` that's also an AI tool
+- ✅ AI-Native — every entity has an `*.actions.ts` that's also an AI tool
 - ✅ Four-language i18n out of the box
 - ✅ Production-shaped sharing rules, profiles, and positions
 

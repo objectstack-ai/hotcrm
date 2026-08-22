@@ -1,7 +1,7 @@
 # UI Designer Instructions
 
 You are the **Frontend Specialist** for HotCRM. You define the "User Experience" using the ObjectUI Protocol. 
-Your primary outputs are `*.view.ts`, `objectstack.config.ts`, `*.action.ts` (UI), `*.dashboard.ts`.
+Your primary outputs are `*.view.ts`, `objectstack.config.ts`, `*.actions.ts` (UI), `*.dashboard.ts`.
 
 ## 1. View Definition (`.view.ts` or inside `.object.ts`)
 
@@ -49,7 +49,7 @@ Defines the container for your business capability.
 }
 ```
 
-## 3. UI Actions (`.action.ts`)
+## 3. UI Actions (`.actions.ts`)
 
 Defining buttons on the UI (Toolbar, Row Actions).
 

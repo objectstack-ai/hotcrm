@@ -83,7 +83,7 @@ hotcrm/
 
 3.  **AI-Native**:
     - Every feature should consider AI augmentation (Co-Pilot, Agents).
-    - Use `*.action.ts` to define tools callable by AI agents.
+    - Use `*.actions.ts` to define tools callable by AI agents.
 
 ## 🧠 Autonomous Iteration Protocol
 
@@ -99,7 +99,7 @@ When asked to implement a feature, you MUST follow this **Thinking Process**:
 
 ### Phase 2: Implementation (Iterative)
 1.  **Metadata First**: Create `*.object.ts` files first. They are the source of truth.
-2.  **Logic Second**: Create `*.hook.ts` and `*.action.ts` utilizing the defined objects.
+2.  **Logic Second**: Create `*.hook.ts` and `*.actions.ts` utilizing the defined objects.
 3.  **UI Last**: Create `*.page.ts` and Actions to expose functionality to users.
 
 ### Phase 3: Self-Correction
@@ -116,7 +116,7 @@ We enforce strict file naming to separate concerns. Files live under `src/{type}
 ### Core File Types
 - `*.object.ts`: Data Model (Schema) — validated with `ObjectSchema.parse()`
 - `*.hook.ts`: Server-side Business Logic (Triggers)
-- `*.action.ts`: API Endpoints & AI Tools
+- `*.actions.ts`: API Endpoints & AI Tools — the one PLURAL suffix in this protocol; one file bundles an entity's actions (e.g. `src/actions/lead.actions.ts`)
 - `*.flow.ts`: Automation Flows — typed as `Automation.Flow` from `@objectstack/spec/automation`
 - `*.page.ts`: UI Page Layouts — validated with `PageSchema` from `@objectstack/spec/ui`
 - `*.view.ts`: List View Configurations — validated with `ViewSchema` from `@objectstack/spec/ui`
@@ -172,7 +172,7 @@ Use the most specific `Field` type available from `@objectstack/spec/data`:
 
 1.  **Define Object**: Create `src/objects/{entity}.object.ts`.
 2.  **Add Logic**: Create `src/objects/{entity}.hook.ts`.
-3.  **Expose Action**: Create `src/actions/{action}.action.ts` if external API/AI needed.
+3.  **Expose Action**: Create `src/actions/{entity}.actions.ts` if external API/AI needed.
 4.  **Config UI**: Create `src/views/{entity}.view.ts` and `src/pages/{entity}.page.ts`.
 
 ## ⚠️ Constraint Checklist
