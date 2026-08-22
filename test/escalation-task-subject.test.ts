@@ -92,19 +92,21 @@ describe('escalation task subject — out of the lowered hook body', () => {
     expect(task.related_to_type).toBe('crm_case');
   });
 
-  it('gives nine seeded escalations nine distinguishable rows', async () => {
-    // The reported symptom, restated as an assertion: nine urgent tasks all
-    // due tomorrow are only workable if their subjects differ.
-    const subjects: string[] = [];
+  it('gives nine seeded escalations nine rows the agent can tell apart', async () => {
+    // The reported symptom, restated as an assertion — and deliberately NOT as
+    // "the nine subjects are distinct". Nine raw ids are nine distinct strings
+    // too, so distinctness alone passes on the very code this file exists to
+    // reject. What was missing is a discriminator the reader can MATCH against
+    // the case pages, list views and breadcrumbs: the case number.
     for (let n = 31; n <= 39; n += 1) {
       const task = await escalate(previousCase({
         id: `id_${n}`,
         case_number: `CASE-000${n}`,
         subject: `Customer ${n} cannot sign in`,
       }));
-      subjects.push(task.subject as string);
+      expect(task.subject).toBe(`Escalated: CASE-000${n} · Customer ${n} cannot sign in`);
+      expect(task.subject).not.toContain(`id_${n}`);
     }
-    expect(new Set(subjects).size).toBe(9);
   });
 
   it('prefers a subject the same write is changing', async () => {
@@ -167,6 +169,9 @@ describe('the 255 cap, against a real ObjectQL', () => {
 
   it('accepts the capped subject the hook composes', async () => {
     const task = await escalate(previousCase({ subject: 'S'.repeat(255) }));
+    // Pin the worst case, not just any case: a subject that came back SHORT
+    // would make this insert succeed without ever exercising the cap.
+    expect((task.subject as string).length).toBe(255);
     const row = await api.object('crm_task').insert({
       subject: task.subject, status: 'not_started', organization_id: 'org_1',
     });
