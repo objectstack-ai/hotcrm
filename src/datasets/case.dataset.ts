@@ -68,5 +68,44 @@ export const CaseDataset = defineDataset({
       derived: { op: 'ratio', of: ['kb_resolved_count', 'closed_count'] },
       format: '0%',
     },
+
+    // ─── SLA compliance (#1213) ─────────────────────────────────────────
+    //
+    // The service dashboard's gauge asks "are we meeting SLA?", so the number
+    // it plots has to BE compliance. It used to plot `avg_sla_violated` — the
+    // complement — and ask the renderer to flip it with `options.invert`. That
+    // key is not declared by `DashboardWidgetOptionsSchema`; it rides the
+    // schema's `.passthrough()`, so no validator, lint rule or gate could ever
+    // tell the author it does nothing — and none did. The gauge read 0.0% on
+    // an org with 100% compliance.
+    //
+    // Spelled as a ratio of two counts rather than `1 - avg_sla_violated`
+    // because `DerivedMeasureOp` operands are MEASURE NAMES only (`of:
+    // string[]` — "no raw fields, no raw SQL"), so there is no literal `1` to
+    // subtract from. `difference` cannot express it either. This is the card's
+    // own second option and the spec's sanctioned shape — the one
+    // `kb_deflection_rate` above already uses.
+    //
+    // `is_sla_violated: false`, not `$ne: true`: the field declares
+    // `defaultValue: false`, and MEASURED on both drivers this app runs, a
+    // closed case inserted without the column stores `false` rather than NULL.
+    // So `sla_met_count + violated = closed_count` holds with no NULL hole.
+    // Both spellings measured identical (2 of 3, both drivers); the plain one
+    // is the one that reads as what it means.
+    //
+    // The denominator is `closed_count`, already declared above — the same
+    // measure the `closed_cases_total` tile shows, so a reader can check the
+    // percentage against a number on the same page. An empty numerator group
+    // does NOT blank the rate: the executor fills a `count` column's empty
+    // group with 0 BEFORE evaluating derived measures, so a fully-breached org
+    // reads 0%, not blank. A zero DENOMINATOR (no closed cases at all) does
+    // return null — "no data", which is the honest reading.
+    { name: 'sla_met_count', label: 'Cases Within SLA', aggregate: 'count', filter: { is_closed: true, is_sla_violated: false } },
+    {
+      name: 'sla_compliance_rate',
+      label: 'SLA Compliance Rate',
+      derived: { op: 'ratio', of: ['sla_met_count', 'closed_count'] },
+      format: '0%',
+    },
   ],
 });

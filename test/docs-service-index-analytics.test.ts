@@ -224,11 +224,32 @@ describe('the source facts those four bullets now rest on (#948)', () => {
     expect(unbound).toEqual([]);
   });
 
+  /**
+   * NARROWED in #1213. The last line of this pin used to read "no measure whose
+   * name matches /compl|within_sla|sla_met/ exists anywhere on `case_metrics`"
+   * — a proxy for the prose that held only while the app had no compliance
+   * measure at all. The service dashboard's gauge now plots one, so the proxy
+   * would have forbidden the very metadata the page's own **SLA Compliance**
+   * tile is built on.
+   *
+   * What the prose claims is about the REPORT: it carries the violation rate,
+   * not a compliance percentage. That is pinned here from both directions, and
+   * the positive half — where the compliance percentage DOES live — is the test
+   * below, so the sentence cannot go stale in either direction.
+   */
   it('the SLA report carries a violation rate over closed cases, not a compliance percentage', () => {
     expect(SlaPerformanceReport.values).toContain('avg_sla_violated');
     expect(SlaPerformanceReport.runtimeFilter).toMatchObject({ is_closed: true });
-    const measures = CaseDataset.measures.map((m) => m.name);
-    expect(measures.filter((m) => /compl|within_sla|sla_met/i.test(m))).toEqual([]);
+    const reported = (SlaPerformanceReport.values ?? []) as string[];
+    expect(reported.filter((v) => /compl|within_sla|sla_met/i.test(v))).toEqual([]);
+  });
+
+  it('the compliance percentage the page points at is the dashboard gauge (#1213)', () => {
+    const gauge = (ServiceDashboard.widgets ?? [])
+      .find((w) => (w as AnyRec).id === 'sla_compliance_gauge') as AnyRec;
+    expect(gauge, 'the page now points readers at a gauge that is gone').toBeTruthy();
+    expect(gauge.values).toEqual(['sla_compliance_rate']);
+    expect(CaseDataset.measures.map((m) => m.name)).toContain('sla_compliance_rate');
   });
 
   it('the daily-inflow report puts priority in the rows and the day in the columns', () => {
