@@ -1,137 +1,139 @@
 ---
 title: Integrations
-description: Connect HotCRM to Slack, Teams, DocuSign, Stripe, telephony, and other tools — and how to build your own integration.
+description: What HotCRM actually exposes to the outside world today — the data API, list-view exports, outbound email — and which packaged connectors are still design intent on the roadmap.
 ---
 
 # Integrations
 
-HotCRM is designed to **fit into your stack**, not replace it. This page lists the supported integrations and how to plug HotCRM into the rest of your business systems.
+HotCRM is designed to **fit into your stack**, not replace it. Today it does that through the platform's own edges: a data API, spreadsheet import and export, outbound email, and automation you write yourself. What it does not do yet is ship **packaged vendor connectors** — `src/` carries no connector metadata of any kind, and nothing this app installs puts a connector under **Setup → Integrations**.
 
-## Built-in connectors
+> **Read this before following a setup step.** Every heading below marked *(not shipped yet)* describes an integration **as designed** — it is on the [roadmap](/docs/whats-new#roadmap), not a switch you can turn on today. The unmarked sections describe what the app actually exposes. The roadmap's own line for this reads *"More connectors — Slack, Microsoft Teams, Google Workspace, HubSpot import"*.
 
-| Tool | What it does | Setup at |
+## What ships today
+
+- 🔌 **The platform data API** — every CRM object is reachable over the runtime's HTTP API, with ObjectQL-shaped filters and field selection. See [API reference](/docs/customization/api-reference).
+- 📤 **CSV / XLSX export** from a list view — the account, contact, lead, opportunity and case list views each declare `exportOptions: ['csv', 'xlsx']`.
+- 📥 **Spreadsheet import** with reusable column mappings and a dry-run first. See [Import your own data](/docs/guides/importing-your-data).
+- ✉️ **Outbound email** — **Send Email** on a contact, queued through the platform email service. Outbound only, and it leaves the building only if the deployment configures a transport. See [Email & Calendar](/docs/guides/email-and-calendar).
+- 🔔 **In-app notification** — the `notify` flow node delivers through the platform messaging service to the Console bell. Inside HotCRM, not into Slack or an inbox.
+- 🧩 **Your own code** — hooks, flows and action bodies run in-process against the same objects and the same permission checks. See [Customization › Extending Objects](/docs/customization/extending-objects).
+
+## Built-in connectors (not shipped yet)
+
+The line-up below is **design intent** — kept here because it is the shape the product is aimed at. None of it is in the box: no connector metadata in `src/`, and no connector plugin among the platform packages. The **Setup → Integrations** group itself does exist — it is one of the nine navigation groups the platform's Setup app declares, alongside *Overview*, *Apps*, *People & Organization*, *Access Control*, *Approvals*, *Configuration*, *Diagnostics* and *Advanced* — but **not one of the vendors below mounts anything under it**. The setup paths this table used to print were the most misleading thing on the page, because someone following one went looking for a screen that does not exist.
+
+| Tool | Intended behaviour | Closest thing that ships today |
 | --- | --- | --- |
-| 💬 **Slack** | Notifications, slash-commands, deal-room channels | Setup → Integrations → Slack |
-| 💬 **Microsoft Teams** | Same as Slack | Setup → Integrations → Teams |
-| ✍️ **DocuSign** | Send quotes/contracts for e-signature; status flows back | Setup → Integrations → DocuSign |
-| 💳 **Stripe** | Customers, subscriptions, invoices sync to accounts/contracts | Setup → Integrations → Stripe |
-| 📞 **Twilio Voice** | Click-to-call, call recording, AI transcript | Setup → Integrations → Twilio |
-| 📞 **Aircall / RingCentral / Five9** | Same as Twilio | Setup → Integrations → Telephony |
-| 💬 **Intercom / Zendesk Chat** | Live-chat conversations land as cases | Setup → Integrations → Chat |
-| 📧 **Gmail / Outlook** | Email & calendar sync (see [Email & Calendar](/docs/guides/email-and-calendar)) | Settings → Email & Calendar |
-| 📊 **Snowflake / BigQuery / Redshift** | Data warehouse export | Setup → Data → Scheduled Exports |
-| 🔗 **Zapier / Make / n8n** | No-code automation to 5,000+ apps | Setup → Integrations → Webhooks |
+| 💬 **Slack** | Notifications, slash-commands, deal-room channels | In-app notification only — the `notify` flow node reaches the Console bell, not Slack |
+| 💬 **Microsoft Teams** | Same as Slack | Same |
+| ✍️ **DocuSign** | Send quotes / contracts for e-signature; status flows back | Nothing — a quote's or contract's status is a field someone sets by hand |
+| 💳 **Stripe** | Customers, subscriptions, invoices sync to accounts / contracts | Nothing — contracts are authored in HotCRM |
+| 📞 **Twilio Voice** | Click-to-call, call recording, AI transcript | **Log a Call** records the call as a real Event *after* it happens; nothing dials, records or transcribes |
+| 📞 **Aircall / RingCentral / Five9** | Same as Twilio | Same |
+| 💬 **Intercom / Zendesk Chat** | Live-chat conversations land as cases | A case's **Origin** picklist carries *Chat*, but a person selects it when logging the case |
+| 📧 **Gmail / Outlook** | Two-way email and calendar sync | **Send Email** on a contact — outbound only, no inbox connector. See [Email & Calendar](/docs/guides/email-and-calendar) |
+| 📊 **Snowflake / BigQuery / Redshift** | Nightly incremental warehouse export with dbt models | CSV / XLSX export from a list view, run by hand |
+| 🔗 **Zapier / Make / n8n** | No-code automation to 5,000+ apps | Nothing in this app — the platform's webhook outbox exists, but HotCRM does not enable it (see below) |
 
-## What each connector does
+## What each connector would do (not shipped yet)
+
+Kept as the design brief for each family. Read it as a specification, not as instructions.
 
 ### 💬 Slack
 
-- **Notifications**: deal wins, case escalations, approvals, @mentions → DM or channel.
-- **Slash commands**: `/hotcrm lookup acme` to fetch an account; `/hotcrm log call` to log activity from Slack.
-- **Deal rooms**: auto-create a Slack channel per opportunity over a threshold, with the account team and product specialists invited.
-- **Approval actions**: approve/reject discount requests directly from Slack.
+The intended behaviour: deal wins, case escalations, approvals and @mentions pushed to a DM or a channel; slash-commands (`/hotcrm lookup acme`, `/hotcrm log call`); a channel auto-created per opportunity over a threshold, with the account team and product specialists invited; and approve / reject on a discount request straight from Slack.
+
+Those events do fire today — as flows — but they end at the Console bell, and an approval is decided on the record.
 
 ### ✍️ DocuSign
 
-1. From a quote or contract → click **Send for Signature**.
-2. Choose recipients, signing order, fields.
-3. DocuSign emails the customer; status (sent → viewed → signed) flows back into HotCRM.
-4. Once signed, the executed PDF is attached and the record's status auto-updates.
+The intended behaviour: **Send for Signature** from a quote or contract, recipients and signing order and fields chosen in HotCRM, status (sent → viewed → signed) flowing back, and the executed PDF landing on the record with its status updated for you.
+
+Today a quote or contract carries status fields and file attachments, and a person moves them.
 
 ### 💳 Stripe
 
-- **Customers** in Stripe sync to HotCRM **accounts** by email or external ID.
-- **Subscriptions** sync to **contracts** — status, MRR, billing frequency.
-- **Invoices** appear on the account's activity timeline.
-- **Failed payments** create a high-priority case for the account owner / CSM.
-- **Cancellations** alert the CSM and create a churn opportunity.
+The intended behaviour: Stripe customers matched onto accounts by email or external ID; subscriptions mirrored onto contracts with status, MRR and billing frequency; invoices on the account timeline; a failed payment raising a high-priority case for the owner or CSM; a cancellation alerting the CSM and opening a churn opportunity.
+
+Today none of that arrives on its own. Contracts, and the tasks that chase them, are written in HotCRM — see [Contracts](/docs/revenue/contracts).
 
 ### 📞 Telephony (Twilio / Aircall / RingCentral / Five9)
 
-- Click any phone number to dial — call is logged automatically.
-- Inbound calls pop a screen-pop showing the contact, account, recent cases, recent emails.
-- Optional **call recording** — saved as audio file on the activity.
-- AI **transcription** + **call summary** delivered after each call.
+The intended behaviour: click a phone number to dial and have the call logged for you; an inbound call popping a screen with the contact, account, recent cases and recent emails; optional call recording saved as an audio file on the activity; and an AI transcript plus summary after each call.
 
-### 💬 Live chat (Intercom, Zendesk Chat, etc.)
+What is real is the other half of that loop: **Log a Call** on any record writes the call as an Event with attendee rows and a timeline entry — after the call, by hand. See [Meetings & Calls](/docs/sales/meetings-and-calls).
 
-- Chat conversations land as cases automatically.
-- Visitor identified by email → linked to existing contact + account.
-- Anonymous chats become leads.
+### 💬 Live chat (Intercom, Zendesk Chat, …)
+
+The intended behaviour: chat conversations landing as cases automatically, the visitor identified by email and linked to an existing contact and account, and anonymous chats becoming leads.
+
+Today a case is created by a person or by the API. Its **Origin** picklist offers *Chat*, which is a value someone selects, not evidence a chat arrived.
 
 ### 📊 Data warehouse
 
-- Nightly incremental export of every CRM object.
-- Pre-built dbt models for Snowflake / BigQuery / Redshift.
-- Powers BI tools (Tableau, Looker, Power BI, Metabase, Hex).
+The intended behaviour: a nightly incremental export of every CRM object, pre-built dbt models for Snowflake / BigQuery / Redshift, and BI tools reading from there.
 
-## Webhooks (outbound)
+Today the export that exists is manual: open a list view, export CSV or XLSX. Anything scheduled is something your deployment builds on the HTTP data API.
 
-Trigger external systems when CRM records change.
+## Webhooks (outbound) — not enabled in this app
 
-1. **Setup → Integrations → Webhooks → New**.
-2. Pick the **object** and **event** (`created`, `updated`, `deleted`, custom).
-3. Add **conditions** (e.g., *only when opportunity stage = Closed Won*).
-4. Set the **target URL** and authentication (Bearer / Basic / HMAC signature).
-5. Choose the **payload schema** — full record, diff only, or custom.
-6. Test → activate.
+This one is not vapour. The platform **does** ship an outbound webhook service: `@objectstack/plugin-webhooks` keeps one subscription per `sys_webhook` row — authored either through that object's own admin UI or declared in code with `defineStack({ webhooks })` / `defineWebhook()` — matches record events against those rows, and hands each match to the shared messaging HTTP outbox for delivery.
 
-Webhooks retry up to 5 times with exponential back-off. Failures are visible in the **delivery log**.
+**HotCRM does not turn it on.** `objectstack.config.ts` declares `requires: ['automation', 'triggers', 'analytics', 'auth', 'ui', 'approvals', 'sharing']`. `webhooks` is not in that list, and it is not one of the capabilities the platform loads for every app regardless. The app authors no webhook either. So there is no webhook surface in HotCRM today: with `@objectstack/plugin-webhooks` unloaded, the two Setup entries it contributes — **Webhooks** and **HTTP Deliveries** — do not appear under `Setup → Integrations`. That is *not enabled here*, not *not built*: turn the capability on as the note below describes and the plugin mounts them itself.
 
-## Inbound webhooks / HTTP API
+> **This is a deployment decision, not a roadmap item.** Add `webhooks` to `requires`, declare your subscriptions, and delivery is the platform's job from there. The retry counts, payload-shape choices and delivery-log screen this page used to promise were never HotCRM's to define — read them from the platform's own webhook documentation for the version you run, not from here.
 
-External systems can create / update HotCRM records via REST / GraphQL. See the [API reference](/docs/customization/api-reference) for endpoints and authentication.
+## HTTP API
+
+External systems can create and update HotCRM records over the runtime's HTTP data API. See [API reference](/docs/customization/api-reference) for the object inventory, the ObjectQL filter shape and authentication. Object names are the ones this app registers — `crm_lead`, `crm_account`, `crm_opportunity` — and the route shape follows your runtime version rather than anything this app pins, so read it from your own environment instead of a path hard-coded into a guide.
+
+There is **no GraphQL endpoint**. GraphQL is not in the product plan, and the platform removed the `/graphql` route from its service table rather than advertise a path nobody serves.
 
 Common patterns:
 
-- A **website form** → POST to `/api/v1/leads` → new lead with source = *Web*.
-- A **product** sending usage data → PATCH a custom usage field on the account.
-- A **finance system** → POST contract activation, which triggers the standard contract workflow.
+- A **website form** creates a `crm_lead` with source = *Web* — enough to fire the lead-assignment flow, which runs on lead creation.
+- A **product** patches a custom usage field on `crm_account`.
+- A **finance system** writes a `crm_contract` as activated. The contract flows are daily sweeps (renewal reminders, expiry), not record-change triggers, so an activation is picked up on the next run rather than the instant it lands.
 
-## Event bus (Kafka / EventBridge / Pub/Sub)
+## Event bus (not shipped yet)
 
-For high-volume integrations, HotCRM publishes events to a configurable event bus.
+The intended behaviour: HotCRM publishing every record lifecycle event, plus domain events (`opportunity_won`, `contract_activated`, `case_escalated`, `approval_granted`), onto a configurable Kafka / EventBridge / Pub-Sub bus, schema-validated with versioned schemas.
 
-- **All record lifecycle events** (`created`, `updated`, `deleted`).
-- **Domain events** (opportunity_won, contract_activated, case_escalated, approval_granted).
-- **Schema-validated** with versioned schemas in the [@objectstack/spec](/docs/customization/index) repo.
-
-Configure at **Setup → Integrations → Event Bus**.
+There is no such capability. The platform's capability list carries no event-bus token, so there is nothing to configure and no `Setup → Integrations → Event Bus` screen. Record events themselves are real — they drive record-change flows in-process — and the webhook outbox above is the out-of-process path, once a deployment enables it.
 
 ## Building a custom integration
 
-If the connector you need isn't built-in, you have three options ordered from easy to powerful:
+Two routes are real today. One is not.
 
-### 1. Zapier / Make / n8n (no-code)
+### 1. Server-to-server scripting (real)
 
-Set up webhooks at **Setup → Integrations → Webhooks** and an inbound endpoint, then use Zapier to bridge to any app.
+Call the HTTP data API from a script — a cron job, a Lambda, a GitHub Action. See [API reference](/docs/customization/api-reference).
 
-Best for: simple field-sync between systems, small teams.
+Best for: scheduled syncs, internal tools, anything whose reliability you want to own.
 
-### 2. Server-to-server scripting
+### 2. In-process extension code (real)
 
-Use the REST API to call HotCRM from a script (cron job, AWS Lambda, GitHub Action). See [API reference](/docs/customization/api-reference).
+Hooks, flows and action bodies run inside HotCRM, against the same objects and the same permission checks. See [Customization › Extending Objects](/docs/customization/extending-objects).
 
-Best for: scheduled syncs, internal tools, anything more reliable than a no-code tool.
+Best for: logic that must run on every write, whoever made it.
 
-### 3. Native plugin
+### 3. No-code bridges — Zapier / Make / n8n (needs webhooks enabled first)
 
-Build a `*.connector.ts` plugin that lives inside HotCRM with first-class lifecycle (auth, sync, monitoring). See [Customization › Extending Objects](/docs/customization/extending-objects).
+A no-code bridge needs an outbound trigger, so it depends on the webhook service above being enabled in your deployment. Turn it on and the Zapier side is ordinary work; leave it off and there is nothing for Zapier to subscribe to.
 
-Best for: integrations you'll ship to other HotCRM customers; integrations where bi-directional sync and observability matter.
+### A native `*.connector.ts` plugin (not shipped)
 
-## Auth & secrets
+Earlier versions of this page offered a connector plugin shape with a first-class lifecycle — auth, sync, monitoring — for integrations you would ship to other HotCRM customers. No such authoring surface exists. The spec does carry a `connector_action` flow node, but nothing registers a connector for it to call: this app's own approval flow records that its pre-ADR-0019 `connectorId: 'approval'` node stopped being registered and had to be rewritten as a native approval node.
 
-All integration credentials are stored in the platform's secrets store (HashiCorp Vault / AWS Secrets Manager / GCP Secret Manager — configurable).
+## Auth & secrets (not shipped yet)
 
-- **Never** paste a token into a workflow / hook code — always reference from secrets.
-- **Rotate** OAuth refresh tokens automatically every 90 days.
-- **Audit log** records every secret access.
+The intended behaviour: every integration credential held in the platform's secrets store (HashiCorp Vault / AWS Secrets Manager / GCP Secret Manager, configurable) and referenced rather than pasted into flow or hook code, OAuth refresh tokens rotated automatically every 90 days, and an audit log entry for each secret access.
+
+HotCRM holds no integration credentials — there is no connector to hold one for, and no OAuth grant to rotate — and the platform's capability list has no secrets-store capability to configure. What is real sits one level down: a field of type `secret` is encrypted through the deployment's registered crypto provider (a local one in development, a KMS or Vault provider in production) and persisted to `sys_secret`, and the write **fails closed** rather than storing cleartext when no provider is registered. This app authors no `secret` field today.
 
 ## Tips for admins
 
-- ✅ **Connect Slack** first — biggest day-1 adoption boost.
-- ✅ **Connect telephony** for call-heavy teams — eliminates the "did Alex log the call?" gap.
-- ✅ **DocuSign** for closing — the gap between "signed in DocuSign" and "marked Won in CRM" is where deals die.
-- ✅ For each integration, **monitor the delivery log** weekly — webhook failures pile up silently.
-- ✅ Use **event bus** rather than webhooks once you have >3 downstream consumers — scales better.
+- ✅ Plan integrations around the **HTTP data API** — it is the surface that exists, and it reaches every object.
+- ✅ Want outbound events? Enable the platform's **webhook** capability in your deployment, rather than waiting for a vendor connector.
+- ✅ Configure a real email transport before telling reps that **Send Email** delivers. With none configured the platform logs the message and sends nothing.
+- ✅ Read every *(not shipped yet)* section above as a requirements document, not a configuration guide — and watch the [roadmap](/docs/whats-new#roadmap).

@@ -5,47 +5,58 @@ description: The AI assistant embedded throughout HotCRM — what it can do, whe
 
 # AI Copilot
 
-HotCRM is **AI-native** — the assistant is built in, not bolted on. Two specialised copilots ship out of the box:
+HotCRM is **AI-native** — the assistant is built in, not bolted on. But the assistant
+itself is not something HotCRM ships: it is the **platform assistant** (`ask`) that
+every ObjectStack environment already provides. What HotCRM contributes is **six
+skills** that teach that assistant your CRM.
 
-- The **Sales Copilot** helps reps qualify leads, draft emails, forecast revenue, and get a 360° view of accounts.
-- The **Service Copilot** helps agents triage cases, see the full customer history, and draft customer responses.
+> **No app-owned agents.** HotCRM used to define two agents of its own — a "Sales
+> Copilot" and a "Service Copilot". They were retired, and their capability moved into
+> skills that attach to the platform assistant. Everything on this page still works;
+> only the wiring changed.
 
-Both run on top of your CRM data — they read from the same objects you see in the UI, and they know your products, knowledge bases, and process rules.
+The six skills read from the same objects you see in the UI, and they know your
+products, knowledge articles, and process rules.
 
 ## Where you'll find it
 
-- 🪄 **Copilot panel** — a chat panel that opens from the right edge of every page.
-- ⚡ **Inline actions** — buttons like *"Qualify this lead"*, *"Draft reply"*, *"Summarize case"* on record detail pages.
-- 📋 **Suggestions** — automatic insights in dashboards (*"3 deals are at risk this week"*).
+- 🪄 **Assistant panel** — the chat panel the platform opens from the right edge of every page.
+- 🎯 **Context activation** — skills declare the record they belong to, so opening a lead and asking *"is this worth a call?"* runs Lead Qualification without you naming it.
+- 📈 **Dashboard questions** — the forecasting skill also activates on dashboards, so you can ask *"what's at risk this week?"* where the numbers already are.
 
 ## How it works (in plain terms)
 
-The Copilot has three ingredients:
+The assistant has three ingredients:
 
 1. **Skills** — bite-sized abilities like *Draft an email*, *Qualify this lead*, *Triage this case*. See [Skills](/docs/ai-copilot/skills).
-2. **Knowledge bases** — searchable libraries of product info, sales playbooks, support articles, and competitive intel. See [Knowledge Bases](/docs/ai-copilot/knowledge-bases).
-3. **Your live CRM data** — the Copilot reads from the same accounts, contacts, opportunities, and cases you do, respecting the same sharing rules.
+2. **Knowledge articles** — one library of support articles, filed by category, that the assistant queries like any other object. There is no separate product, sales or competitive library. See [Knowledge Bases](/docs/ai-copilot/knowledge-bases).
+3. **Your live CRM data** — the assistant reads from the same accounts, contacts, opportunities, and cases you do, respecting the same sharing rules.
 
-When you ask a question, the Copilot picks the right skill, pulls relevant knowledge, and combines it with your CRM data to produce a grounded answer — with citations back to the source records and articles.
+When you ask a question, the assistant picks the right skill, pulls relevant
+knowledge, and combines it with your CRM data to produce a grounded answer — with
+citations back to the source records and articles.
 
 ## What it won't do
 
 - ❌ See records you can't see — it respects sharing and field-level security.
 - ❌ Take actions without your confirmation — drafted emails and updates are previewed first.
 - ❌ Fabricate data — every claim is traceable to a record or knowledge source.
+- ❌ Reach for tools of its own — skills declare no bespoke tools, so every write goes through a real HotCRM action with the same permission checks as the button.
 
-## Two flavours
+## Two groupings of skills
 
-| Copilot | Audience | Built-in skills |
+The six skills are documented in two role-shaped groups. This is a documentation
+convenience, not a runtime boundary — one assistant runs all six, and it will use a
+"sales" skill on a service question whenever that is the right answer.
+
+| Group | Audience | Skills |
 | --- | --- | --- |
-| [**Sales Copilot**](/docs/ai-copilot/sales-copilot) | Sales reps, sales managers | Lead qualification, email drafting, revenue forecasting, 360° customer view |
-| [**Service Copilot**](/docs/ai-copilot/service-copilot) | Service agents, support managers | Case triage, 360° customer view, email drafting |
-
-Both copilots can call each other's skills when relevant — for example, the Service Copilot can use the Sales Copilot's *Customer 360°* skill to show what the customer has bought.
+| [**Sales Skills**](/docs/ai-copilot/sales-copilot) | Sales reps, sales managers | Live Data, Lead Qualification, Email Drafting, Revenue Forecasting, Customer 360° |
+| [**Service Skills**](/docs/ai-copilot/service-copilot) | Service agents, support managers | Live Data, Case Triage, Customer 360°, Email Drafting |
 
 ## Start here
 
-- [Sales Copilot](/docs/ai-copilot/sales-copilot) — what reps and managers can do.
-- [Service Copilot](/docs/ai-copilot/service-copilot) — what agents can do.
+- [Sales Skills](/docs/ai-copilot/sales-copilot) — what reps and managers can do.
+- [Service Skills](/docs/ai-copilot/service-copilot) — what agents can do.
 - [Skills](/docs/ai-copilot/skills) — the full skill library.
-- [Knowledge Bases](/docs/ai-copilot/knowledge-bases) — the RAG indexes the Copilot reads from.
+- [Knowledge Bases](/docs/ai-copilot/knowledge-bases) — the RAG indexes the assistant reads from.

@@ -1,7 +1,7 @@
-import { F, P, cel } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
+import { F, P } from '@objectstack/spec';
 
 export const Case = ObjectSchema.create({
   name: 'crm_case',
@@ -23,11 +23,47 @@ export const Case = ObjectSchema.create({
   ],
 
   fields: {
+    // Platform ownership anchor — canonical note in `account.object.ts` (#548).
+    owner_id: Field.lookup('sys_user', {
+      label: 'Case Owner',
+      group: 'origin',
+      system: true,
+      readonly: false,
+      trackHistory: true,
+    }),
+
     // Case Information
+    //
+    // `unique: true` is declared HERE, on the field, and deliberately NOT as a
+    // `{ fields: ['organization_id', 'case_number'], unique: true }` entry in
+    // `indexes[]` below (#1023) — same spelling `crm_account.name`,
+    // `crm_contact.email` and `crm_product.sku` already use, for the same
+    // reason. Since framework #3696 the field-level form is per-organization:
+    // it materializes as the composite `(organization key part, case_number)`,
+    // unique WITHIN an organization. Since platform 17.0.0-rc.4 (ADR-0120 D3,
+    // #5030) that key part is NULL-safe — `COALESCE(organization_id,
+    // '__global__')` — so rows with no organization form ONE bucket instead of
+    // each escaping the constraint under SQL's NULL-distinct semantics.
+    //
+    // The hand-written table composite this replaced could not get that: a
+    // declared index is taken verbatim, so it materialized as plain
+    // `UNIQUE (organization_id, case_number)` and enforced NOTHING on any row
+    // whose `organization_id` was NULL — i.e. every row of a single-organization
+    // or untenanted install. It also read as "unique per organization" while
+    // materializing as an unscoped composite, which is the bare-`unique: true`
+    // spelling ADR-0120 warns on in 17.x and protocol 18 rejects (#5082).
+    //
+    // Scope spelling: bare `true` at FIELD level already means "per
+    // organization" and carries no deprecation (`'organization'` is its
+    // explicit synonym with byte-identical materialization — measured). It is
+    // written as `true` to match the four sibling objects above; switching the
+    // repo to the explicit word is a uniform decision for all of them, not
+    // something `crm_case` forks on alone.
     case_number: Field.autonumber({
       label: 'Case Number',
       group: 'basic',
       format: 'CASE-{00000}',
+      unique: true,
     }),
     
     subject: Field.text({
@@ -149,12 +185,6 @@ export const Case = ObjectSchema.create({
     }),
     
     // Assignment
-    owner: Field.lookup('sys_user', {
-      defaultValue: cel`os.user.id`,
-      label: 'Case Owner',
-      group: 'origin',
-      trackHistory: true,
-    }),
     
     // SLA and Metrics
     created_date: Field.datetime({
@@ -169,11 +199,14 @@ export const Case = ObjectSchema.create({
       readonly: true,
     }),
     
-    // NOT `readonly`: stamped by the `log_call` / `log_meeting` activity
-    // actions (`src/actions/global.actions.ts`), and 16.x drops writes to
-    // readonly fields on user-context writes (#2948) — an action body runs as
-    // the acting user, so `readonly` here silently disabled the stamp. Same
-    // reason `is_sla_violated` and `escalated_date` below are not readonly.
+    // NOT `readonly`: stamped by `event_activity_bubble`
+    // (`src/objects/event.hook.ts`) on the first HELD `crm_event` related to
+    // the case — whoever wrote that event, `log_call` / `log_meeting` included
+    // (#595 moved the stamp out of the two action bodies so every path is
+    // covered, not just those two buttons). 16.x drops writes to readonly
+    // fields on user-context writes (#2948) and that hook runs under the
+    // acting user's context, so `readonly` here silently disabled the stamp.
+    // Same reason `is_sla_violated` and `escalated_date` below are not readonly.
     //
     // Definition: the moment the customer first heard back from us, matching
     // Salesforce `FirstResponseDateTime` / Zendesk first reply time — NOT an
@@ -191,6 +224,12 @@ export const Case = ObjectSchema.create({
       scale: 2,
     }),
     
+    // Stamped once, on the first write that gives the case a priority, from the
+    // priority × account-tier matrix in `src/objects/_case-sla.ts`
+    // (`case_sla_defaults`). The clock runs on CALENDAR hours — this app has no
+    // business-hours calendar, so nights, weekends and holidays count. Not
+    // `readonly`: a service manager may legitimately renegotiate a deadline,
+    // and the hook never overwrites a value that is already there.
     sla_due_date: Field.datetime({
       label: 'SLA Due Date',
       group: 'sla',
@@ -224,19 +263,43 @@ export const Case = ObjectSchema.create({
       group: 'escalation',
     }),
     
-    // Related case
-    parent_case: Field.lookup('crm_case', {
-      label: 'Parent Case',
-      group: 'basic',
-      description: 'Related parent case',
-    }),
+    // No `parent_case`. A case hierarchy was declared here and never
+    // traversed: nothing rolled child cases up, nothing closed or notified them
+    // with the parent, and no service flow read the link. Related cases that
+    // matter in this app are linked through the knowledge article that resolved
+    // them (`resolved_by_article`), which the deflection measures do read.
     
     // Resolution
     resolution: Field.markdown({
       label: 'Resolution',
       group: 'resolution',
     }),
-    
+
+    /**
+     * The knowledge article that RESOLVED this case (#601).
+     *
+     * The second half of a two-way link, and deliberately not a replacement for
+     * the first. `crm_knowledge_article.related_to_case` points the other way —
+     * "the case this article was WRITTEN FROM" — and the two answer different
+     * questions: provenance (where did this article come from) versus
+     * deflection (what did this article save us). Merging them would make both
+     * unanswerable, so both stay.
+     *
+     * This is the column the deflection measures on `case_metrics` read
+     * (`kb_resolved_count` / `kb_deflection_rate`), which is why blank is
+     * normalised to NULL by `case_resolution_article_normalize` in
+     * `case.hook.ts`: the close-case screen sends `''` for a field the agent
+     * left empty, an empty string is NOT null, and `count(resolved_by_article)`
+     * counts it — a silently inflated numerator on a ratio widget, the exact
+     * shape of #614.
+     */
+    resolved_by_article: Field.lookup('crm_knowledge_article', {
+      label: 'Resolved by Article',
+      group: 'resolution',
+      description: 'Knowledge article that resolved this case — the deflection signal.',
+    }),
+
+
     // Customer satisfaction
     customer_rating: Field.rating(5, {
       label: 'Customer Satisfaction',
@@ -249,18 +312,11 @@ export const Case = ObjectSchema.create({
       group: 'resolution',
     }),
     
-    // Customer signature (for case resolution acknowledgment)
-    customer_signature: Field.signature({
-      label: 'Customer Signature',
-      group: 'resolution',
-      description: 'Digital signature acknowledging case resolution',
-    }),
-    
     // Internal notes
     internal_notes: Field.markdown({
       label: 'Internal Notes',
       group: 'system',
-      description: 'Internal notes not visible to customer',
+      description: 'Internal notes; not visible to the customer.',
     }),
     
     // Flags
@@ -278,20 +334,29 @@ export const Case = ObjectSchema.create({
   // autonumber sequence is PER TENANT — every organization counts from 1. A
   // platform-wide unique index on it therefore rejects the second
   // organization's `CASE-00001` on insert: the exact collision framework #3696
-  // exists to prevent. Spelled out as the tenant composite so the constraint
-  // matches the sequence that feeds it.
+  // exists to prevent. The constraint has to match the sequence that feeds it.
+  //
+  // No `{ fields: ['organization_id', 'case_number'], unique: true }` here
+  // (#1023). Case-number uniqueness is declared on the `case_number` field
+  // itself — see the note there for why the hand-written table composite could
+  // not express it. Do NOT add it back alongside the field-level declaration
+  // either: declaring both makes the verbatim index win and leaves the
+  // per-organization one unreachable (framework#3991
+  // `unique/double-declaration`), which would silently undo the fix.
   indexes: [
-    { fields: ['organization_id', 'case_number'], unique: true },
     { fields: ['crm_account'] },
-    { fields: ['owner'] },
+    { fields: ['owner_id'] },
     { fields: ['status'] },
     { fields: ['priority'] },
   ],
   
-  // Dead object-level enable.* flags removed in @objectstack 12 (ADR-0049);
-  // only the live API surface remains. History → Field.trackHistory (ADR-0052).
+  // Dead enable.* flags (trash/mru) removed in @objectstack 12 (ADR-0049);
+  // History → Field.trackHistory (ADR-0052).
   enable: {
     apiEnabled: true,
+    // #602 — screenshots and logs are how a support case gets diagnosed.
+    // See the canonical capability note in `src/objects/index.ts`.
+    files: true,
   },
 
   // ADR-0052 §5b.2 — declarative milestone activity for the service narrative.
@@ -316,20 +381,24 @@ export const Case = ObjectSchema.create({
   
   // Removed: list_views and form_views belong in UI configuration, not object definition
   
+  // Predicates below are TOTAL: every `record.x` read is `has()`-guarded, so the
+  // rule returns a verdict even when the merged record has no such key. See
+  // AGENTS.md "Validation predicates must be TOTAL" and
+  // test/object-validation-predicates.test.ts, which fails the build otherwise.
   validations: [
     {
       name: 'resolution_required_for_closed',
       type: 'script',
       severity: 'error',
       message: 'Resolution is required when closing a case',
-      condition: P`record.status == "closed" && isBlank(record.resolution)`,
+      condition: P`has(record.status) && record.status == "closed" && (!has(record.resolution) || isBlank(record.resolution))`,
     },
     {
       name: 'escalation_reason_required',
       type: 'script',
       severity: 'error',
       message: 'Escalation reason is required when escalating a case',
-      condition: P`record.is_escalated == true && isBlank(record.escalation_reason)`,
+      condition: P`has(record.is_escalated) && record.is_escalated == true && (!has(record.escalation_reason) || isBlank(record.escalation_reason))`,
     },
     {
       name: 'case_status_progression',

@@ -1,36 +1,66 @@
 ---
 title: Security & Compliance
-description: SSO, SCIM, audit logs, encryption, GDPR, SOC2 — what HotCRM does and how to configure it.
+description: SSO, MFA, audit logs, the secret-field channel, GDPR — what HotCRM and the installed platform really do, and which controls belong to your deployment.
 ---
 
 # Security & Compliance
 
-This page covers the security and compliance controls available in HotCRM. Many are configured at the platform layer; some are policy choices you make as an admin.
+This page covers the security and compliance controls a HotCRM admin can actually reach. Most of them live in the platform layer and are configured at **Setup → Authentication**; a few are properties of the deployment you run on rather than of this app.
+
+> **Every claim below was measured, and several did not survive.** The page was checked
+> claim by claim against this app's own metadata (`src/`, `objectstack.config.ts`) and the
+> installed `@objectstack/*` packages — **17.1.0**, all 51 of them. Headings and rows
+> marked *(not shipped)* describe a capability that is absent: no object, no schema key,
+> no setting. Rows marked *(unsourced)* keep a figure nothing in the app or the platform
+> enforces. Rows marked *(your deployment)* are true or false of the instance you run on
+> and of whoever operates it — this page cannot see either, so it says what HotCRM and the
+> installed tree do and stops there. **Where this page denies something, the denial is
+> scoped to "nothing here does it"** — it never asserts what a hosted service or a company
+> does or does not do, because a confident denial about something you cannot see is the
+> same error as the confident claim it replaces, with the sign flipped. Nothing was
+> deleted: a deleted claim and a false one look identical to the next reader.
 
 ## Authentication
 
 ### Username + password
 
-- Strong password policy enforced (min length, complexity, history, expiration).
-- Bcrypt-hashed; never stored in plain text.
-- Account lockout after N failed attempts (configurable; default 5).
+The knobs below are real, and they all live in one place: **Setup → Authentication**, in the *Password policy* and *Anti-abuse* groups. What was wrong on this page was the posture — it described them as active defaults. **Every protective one is off until an admin turns it on, and HotCRM turns none of them on**: `objectstack.config.ts` carries no `auth` block, so this app runs on the platform defaults.
+
+| Control | Setting | Default |
+| --- | --- | --- |
+| Minimum password length | `password_min_length` | **8** |
+| Maximum password length | `password_max_length` | **128** |
+| Complexity (upper / lower / digit / symbol) | `password_require_complexity` | **off** |
+| — how many classes when it is on | `password_min_classes` | 3 (of 4) |
+| No reuse of the last N passwords | `password_history_count` | **0 — no history kept** |
+| Password expiry | `password_expiry_days` | **0 — never expires** |
+| Reject known-breached passwords | `password_reject_breached` | **off** |
+| Account lockout threshold | `lockout_threshold` | **0 — lockout disabled** |
+| Lockout duration | `lockout_duration_minutes` | 15 |
+| Auth rate limit (per IP) | `rate_limit_max` / `rate_limit_window_seconds` | 10 per 60 s |
+
+Two corrections a reader could otherwise act on and get a wrong answer from:
+
+- **"Account lockout after N failed attempts (configurable; default 5)."** The default is **`0`, which disables lockout entirely**. Five was never the default. Lockout is enforced per identity (so it survives IP rotation, unlike the rate limit beside it), and it is worth turning on — but a security review that assumed it was already on would have been reading the opposite of the truth.
+- **"Bcrypt-hashed."** *(not shipped — different algorithm.)* Passwords are hashed with **scrypt**, not bcrypt (`@objectstack/plugin-auth` uses better-auth's native hasher, and swaps in a pure-JS `@noble/hashes/scrypt` with byte-identical parameters under WebContainer). The substance of the claim holds — passwords are never stored in plain text — but the algorithm name was wrong, and it is the sort of detail that gets pasted into a security questionnaire.
 
 ### Multi-factor authentication (MFA)
 
-- TOTP (Google Authenticator, Authy, 1Password) — recommended for all users.
-- WebAuthn / hardware keys (YubiKey, Touch ID).
-- Backup recovery codes.
-- **Admins should mandate MFA** for all users — Setup → Security → MFA Policy.
+- **TOTP** (Google Authenticator, Authy, 1Password) — real: enrolment is tracked on `sys_user.two_factor_enabled`, with codes and lockout state on `sys_two_factor`.
+- **Backup recovery codes** — real, stored as `sys_two_factor.backup_codes`.
+- **WebAuthn / hardware keys (YubiKey, Touch ID)** — *(not shipped as an admin setting.)* The passkey capability exists in `@objectstack/plugin-auth`, but it is `passkeys: false` by default and the **only** switch is a constructor option on a hand-instantiated `AuthPlugin`. There is no env var and no Setup field for it, and HotCRM instantiates no plugin of its own, so nothing an admin can click turns it on.
+- **Two-factor is off by default.** The whole TOTP plugin is gated: `twoFactor` resolves from `OS_AUTH_TWO_FACTOR`, then a plugin option, then `false`. Setting **Require multi-factor authentication** (`mfa_required`, default off) at **Setup → Authentication** switches it on and starts a grace window (`mfa_grace_period_days`, default 7) after which a user without TOTP is gated out with `MFA_REQUIRED`.
+- ⚠️ The old advice pointed at *Setup → Security → MFA Policy*. **There is no *Security* group in Setup and no *MFA Policy* screen.** Setup's groups are Overview, Apps, People & Organization, Access Control, Approvals, Configuration, Diagnostics, Integrations and Advanced; the MFA settings are in the *Multi-factor* group of **Setup → Authentication**.
 
 ### Single Sign-On (SSO)
 
-Supported protocols:
+Supported protocols, all real in the installed tree:
 
 - **SAML 2.0** — Okta, Azure AD, Google Workspace, OneLogin, Ping.
 - **OpenID Connect (OIDC)** — Auth0, AWS Cognito.
 - **OAuth 2.0** — for delegated app access.
 
-Configure at **Setup → Security → SSO**. When SSO is on, you can disable password login entirely.
+Configure at **Setup → SSO Providers**, under *Access Control*. One thing the old text left out: **that entry only appears once SSO is wired.** `@objectstack/plugin-auth` contributes it conditionally — on `OS_SSO_ENABLED` (or the cloud per-environment equivalent) — deliberately, so an unwired deployment does not get an empty list and a *Register* button whose endpoint 404s. If you do not see the entry, SSO is off in your deployment, not missing from the product. When SSO is on you can disable password login entirely.
 
 ### SCIM provisioning
 
@@ -40,7 +70,7 @@ Sync users from your identity provider automatically:
 - IdP group changes → HotCRM permission set changes.
 - IdP user deactivation → HotCRM user deactivated, records reassigned.
 
-Configure at **Setup → Security → SCIM**.
+**Setup ships no SCIM screen.** The capability is real — the platform stores SCIM providers as records and the auth plugin carries the adapter, gated on `OS_SCIM_ENABLED` and off by default — but it has no navigation entry of its own, so there is nothing to click. SSO is the part you configure in the UI, at **Setup → SSO Providers**.
 
 ## Authorisation
 
@@ -51,149 +81,178 @@ The full layered model is in [Sharing & Security](/docs/administration/sharing-a
 | **Profile** | What actions a user can do (create/edit/delete) |
 | **Permission set** | Extra actions on top of profile |
 | **Org-wide default** | Baseline record visibility per object |
-| **Role hierarchy** | Managers see their team's records |
+| **Positions** | Flat access groups a sharing rule can name — nothing rolls up between them |
 | **Sharing rules** | Exceptions to OWD |
-| **Account teams** | Per-record sharing |
-| **Field-level security** | Per-field read/edit |
+| **Record shares** | Per-record sharing — `sys_record_share`, at **Setup → Record Shares** |
+| **Field-level security** | Per-field read/edit — see [Encryption](#field-level-controls) below |
+
+That sixth row used to read *Account teams*. **There is no account-team object and no per-record team feature** — the Salesforce name was describing the platform's per-record grant table, `sys_record_share`. HotCRM does ship a sharing rule *named* `account_team_sharing` (`src/sharing/account.sharing.ts`), and that is a rule granting a position access to a set of accounts, not a team you add people to on one record.
 
 ## Network & login controls
 
-- **IP allowlists** — restrict login to specific IPs/ranges (per profile).
-- **Login hours** — restrict login to working hours (per profile).
-- **Session timeout** — idle timeout (default 30 min) and absolute timeout (default 12 hr).
-- **Concurrent sessions** — max simultaneous sessions per user.
-- **Device trust** — flag new devices and require email confirmation.
+**Two of these five are real and this page said they were not.** The 2026-08 correction pass that added the denial below scoped it to "not settings *this app* ships", which is true and reads as "you cannot configure this" — and an admin can:
 
-Configure at **Setup → Security → Session Policy**.
+| Control | State | Where |
+| --- | --- | --- |
+| **IP allowlist** | ✅ real, **deployment-wide** | `allowed_ip_ranges` at **Setup → Authentication** (*Network*). CIDR ranges or exact IPs, one per line or comma-separated. Empty = no restriction. Sign-in from outside the ranges is rejected. Needs a trusted proxy setting `X-Forwarded-For` |
+| **Concurrent sessions** | ✅ real, **deployment-wide** | `max_concurrent_sessions_per_user` at **Setup → Authentication** (*Sessions*). Default **0 = unlimited**, max 100; past the cap the oldest sessions are signed out |
+| **Session timeout** | ✅ real, but **off by default** | `session_idle_timeout_minutes` and `session_absolute_max_hours`, both default **0 = off**. The session lifetime itself is `session_expiry_days`, default 7. The old page presented 30 min idle / 12 hr absolute as active defaults; they are neither active nor the defaults |
+| **Login hours** | *(not shipped)* | Zero hits for any login-hours, login-window or allowed-hours surface across the 1,186 non-map distribution files of the 51 installed packages |
+| **Device trust** | *(not shipped)* | Same, zero hits: no trusted-device, device-fingerprint or new-device-confirmation surface anywhere |
+
+⚠️ **The per-profile framing was wrong for all of them.** The old bullets said "(per profile)". The two that exist are **deployment-wide settings in the `auth` namespace** — one IP allowlist and one session cap for the whole instance, not a value you vary between Sales Rep and System Admin. If your policy needs per-profile network rules, nothing here does that.
+
+**There is no Session Policy screen.** Login, password, MFA, session and network settings are all on the one page at **Setup → Authentication**; live sessions are listed — and can be revoked — at **Setup → Sessions**.
 
 ## Audit logs
 
-Every meaningful action is logged immutably:
+`sys_audit_log` is real and it is genuinely immutable: the object is `managedBy: 'append-only'` and every field on it is `readonly: true`. It ships with `@objectstack/plugin-audit`, and **this app gets it** — declaring `auth` in `requires` makes the CLI register the auth, security and audit plugins as a set. Read it at **Setup → Audit Logs**, under *Diagnostics*, which ships five list views: *Recent*, *Auth*, *Record Views*, *Config* and *All*.
 
-| Category | What's logged |
-| --- | --- |
-| **Authentication** | Login success / failure, MFA, IP, device |
-| **Authorisation changes** | Profile / permission set / role changes |
-| **Record changes** | Create / update / delete with before+after values |
-| **Configuration** | Field, validation, workflow, sharing rule edits |
-| **Data export** | Who exported what, when, how many rows |
-| **AI invocations** | Which user invoked which skill on which record |
-| **Integration activity** | Webhook deliveries, OAuth grants |
-| **Mass actions** | Mass edit, mass delete, mass assign |
+The category table was the unmeasured part. Re-judged against the writers that actually exist:
 
-Retention:
+| Category | State | What is really recorded |
+| --- | --- | --- |
+| **Authentication** | ✅ partly | `login` and `logout` rows, each carrying `user_id`, session id, organization, **`ip_address`** and **`user_agent`**. ⚠️ **Failed sign-ins are not recorded** — the writer builds its row from a session, and a failed attempt has none. A failure increments `failed_login_count` on the account for lockout accounting and writes no audit row. No MFA attribute is recorded either |
+| **Authorisation changes** | ✅ as ordinary record rows | Not a category of its own. A grant or binding is an ordinary record write, so it lands as a `create` / `update` row on the permission object — filter by `object_name`. The platform **retired** a dedicated `permission_change` action in 2026-08 for exactly this reason: it duplicated rows the generic writer already made |
+| **Record changes** | ✅ verified | `create` / `update` / `delete` with `old_value` + `new_value`. The diff skips computed types (`formula`, `summary`, `rollup`, `autonumber`) |
+| **Configuration** | ✅ verified | `config_change` rows, surfaced by the *Config* list view |
+| **Data export** | *(not shipped)* | **No export has ever written an audit row.** The platform removed `export` from this object's action enum in 2026-08 on the ruling that a permanently-empty filter on a compliance surface is a visible product defect — 「审计面宁窄勿谎」. A filter naming it was reading an empty result set on every deployment |
+| **AI invocations** | *(not shipped)* | No AI action in the enum and no writer. The eight declared actions are `create`, `read`, `update`, `delete`, `login`, `logout`, `config_change`, `import` |
+| **Integration activity** | *(not shipped here)* | No webhook or OAuth-grant action in the enum. HotCRM does not declare the `webhooks` capability, so nothing in this app writes deliveries. The adjacent real surfaces are **Setup → Webhooks** and **Setup → HTTP Deliveries**, which are their own logs — not the audit log |
+| **Mass actions** | *(not shipped as a category)* | A mass edit or mass delete is recorded as ordinary `update` / `delete` rows, one per record, with nothing marking them as one operation. The one bulk-shaped action that does exist is `import`, written by the admin user-import path |
 
-- **90 days** in the live audit log UI.
-- **7 years** in the archived audit log (S3 / object storage).
-- Configurable to longer for regulated industries.
+### Record views — new, and off until you ask for it
 
-Read the audit log at **Setup → Security → Audit Log**. Export to CSV or stream to your SIEM (Splunk, Datadog, Elastic).
+The question a security review opens with — *who viewed this customer record?* — has an answer as of **17.1.0**: `sys_audit_log` gained a `read` action, its writer, and the *Record Views* list view.
+
+Read carefully before relying on it, because the scope is deliberately narrow:
+
+- **Record-detail views only.** A read qualifies when it materialised one record and its predicate pinned the primary key — the shape `GET /data/:object/:id` produces. **List and search reads are not audited.**
+- **Per-object opt-in, and there is no global switch.** Nothing is recorded until a deployment names objects: `new AuditPlugin({ readAudit: { objects: ['crm_contact', 'crm_account'] } })` in the stack's `plugins` array. An empty opt-in registers no hook at all, so the default costs a read nothing.
+- **HotCRM opts nothing in today.** `objectstack.config.ts` declares no `plugins` array, so the audit plugin is registered with no options and **no view rows are written**. Turning it on is a deployment change, not a Setup toggle.
+- The row records who, what and when — **never field values**. The hook runs ahead of field masking on purpose: copying values in would mint a plaintext copy of exactly what field-level security withholds, inside the table compliance staff are granted broad access to.
+- A system-elevated read (`api.sudo()`, formula recomputes, roll-ups) writes no row, and neither does a read with no principal to name.
+
+### Retention
+
+- **90 days** hot, then archive-then-delete: the object declares `lifecycle: { retention: { maxAge: '90d' }, archive: { after: '90d', to: 'archive', keep: '7y' } }`.
+- **7 years** in the archive — real, and `to: 'archive'` names a **datasource**, not a storage vendor. The old page said "S3 / object storage"; where that datasource points is a property of your deployment.
+- ⚠️ **A deployment with no `archive` datasource registered simply retains everything** — the lifecycle service never hot-deletes a row with `archive` declared until the archive copy has succeeded. That is the safe failure, but it is not "90 days".
+- *"Configurable to longer for regulated industries."* *(not shipped as a setting.)* The lifecycle block is declared by the platform on a platform-owned object; there is no Setup field, no `auth`-style settings key and nothing in this app that changes it.
+
+**Export to CSV** is a real, permission-gated operation — `GET /data/:object/export`, checked against the security service's `canExport`. **Streaming to your SIEM is not** *(not shipped)*: the `splunk` / `datadog` / `elasticsearch` names in the tree belong to `LogDestinationType`, the platform's application-**log** destination vocabulary in `@objectstack/spec/system` — and nothing outside `@objectstack/spec` reads it. It is not an audit-log forwarder, and no audit-log forwarder exists.
 
 ## Encryption
 
 ### At rest
 
-- Database: **AES-256** column-level encryption for sensitive fields (SSN, payment, health data).
-- File storage: **AES-256** server-side encryption.
-- Backups: encrypted with separate keys.
+**AES-256 is real, and it is not what this page described.** *(corrected.)*
+
+The claim was **AES-256 column-level encryption for sensitive fields (SSN, payment, health data)**, marked per field. That field key does not exist, and the platform rejects it by name with an unusually direct message:
+
+```
+Unrecognized key(s) on this field: `encrypted`.
+  • the `encryptionConfig` family was pruned in 2026-06: it implied at-rest
+    protection that never happened. The real channel is `type: 'secret'`.
+```
+
+What does exist is a narrower, stronger channel:
+
+- A field declared **`type: 'secret'`** is encrypted on write by the registered crypto provider, persisted as a `sys_secret` row, and replaced on the business row by an opaque ref. **Cleartext never reaches the business table**, and reads are masked.
+- The provider is **AES-256-GCM** — `LocalCryptoProvider` in `@objectstack/service-settings`, keyed off `OS_SECRET_KEY`. `os serve` injects it for dev and self-host; production is meant to swap a KMS- or Vault-backed provider *(your deployment)*.
+- It is **fail-closed**: with no provider registered, writing to an object that declares a secret field **throws** rather than persist cleartext. An empty string is refused outright rather than encrypted into a ref that decrypts to nothing.
+- ⚠️ **`type: 'password'` is not this.** A generic password-typed field is stored **plaintext at rest** and only masked on read (ADR-0100). It is a masked field, not an encrypted one — do not reach for it to protect a credential.
+- **HotCRM declares no `secret`-typed field.** Nothing in this app currently uses the channel; the CRM objects hold no credentials.
+
+**Backups encrypted with separate keys** *(your deployment)*. The platform's schema can *describe* it — `@objectstack/spec/system` carries a `backup` block (`strategy`, `frequencyHours`, `retentionDays`) and an `encryption` block (`perTenantKeys`, `algorithm`, `keyManagement: aws_kms | azure_key_vault | gcp_kms | hashicorp_vault | custom`) on its database-level tenant-isolation strategy. Nothing outside `@objectstack/spec` reads any of it, and HotCRM declares none of it. Whether your backups exist, and whether they are keyed per tenant, is a property of the instance you run on. Ask whoever operates it.
 
 ### In transit
 
-- **TLS 1.3** for all HTTP traffic.
-- **mTLS** between internal services.
-- Webhooks signed with HMAC-SHA256 for integrity.
+*(your deployment.)* **TLS 1.3**, **mTLS between internal services** and transport configuration generally are properties of how your instance is deployed and fronted, not of this app's metadata. Nothing in the installed tree pins a TLS version — zero hits for any TLS-1.3 minimum-version setting — and `@objectstack/spec/system` carries an mTLS *config schema* with no consumer in the installed packages. What this app can say is that it configures none of it.
 
-### Field-level encryption
+**Webhooks signed with HMAC-SHA256** — real as a platform capability (`@objectstack/plugin-webhooks`), but **HotCRM does not declare the `webhooks` capability**, so this app sends none and signs none.
 
-Mark sensitive fields as **encrypted** in the field definition. Encrypted fields are:
+### Field-level controls
 
-- Stored encrypted in the database.
-- Visible only to users with the *View Encrypted Data* permission.
-- Excluded from SQL-level queries (only the platform can decrypt).
-- Logged with their decrypted value masked in the audit log.
+The old *Field-level encryption* section told admins to "mark sensitive fields as **encrypted** in the field definition". That key is rejected (above), and the *View Encrypted Data* permission it named returns **zero hits** anywhere in the installed tree. Three real channels replace it, and they do different jobs:
+
+| Want | Declare | What the engine does |
+| --- | --- | --- |
+| The value protected at rest | `type: 'secret'` | Encrypted into `sys_secret`, opaque ref on the row, masked on read, fail-closed |
+| The value shown partially | `maskingRule` | **New in 17.1.0.** A preset — `phone`, `id_card`, `bank_account`, `email`, `name` — or `{ keepHead, keepTail }`. Enforced by plugin-security's `FieldMasker` on read |
+| The value withheld from some callers | `requiredPermissions: [...]` | `FieldMasker` strips the field from results for a caller without the permission — and a query that filters, sorts or groups by it is **rejected** (403), so the value cannot be probed through a predicate |
+| The value never returned at all | `internal: true` | The key is omitted from every row the engine hands back, on the default projection and on an explicit `?select=` |
+
+⚠️ `maskingRule` is a **read-time display rule, not encryption** — the stored value is untouched. Its earlier incarnation was pruned in 2026-06 for implying at-rest protection it never delivered; the key that came back in 17.1.0 is the authoring surface for a masking runtime that now exists. HotCRM declares no masking rule on any field today.
 
 ## Data residency
 
-Choose where customer data is stored:
+*(your deployment.)* Where your data is stored — US, EU, APAC, your own VPC — and whether cross-region transfer is blocked are properties of the instance you run on and of whoever operates it. **Nothing in this app, and nothing in the installed platform tree, enforces or even records a region.** Two measurements behind that:
 
-- **US** (default for North America customers)
-- **EU** (Frankfurt / Dublin)
-- **APAC** (Tokyo / Sydney)
-- **Self-hosted** — your VPC, your control.
+- A `dataResidency` shape (`region`, `excludeRegions`) does exist inside `@objectstack/spec/kernel`'s bundle, alongside a `compliance` block naming `sox | hipaa | gdpr | pci_dss | iso_27001 | fedramp`. It is **not exported and has no type declaration** — an author cannot write it and nothing reads it. It describes an intention, not a control.
+- Zero hits for any cross-region transfer block, region lock or residency enforcement across the installed packages.
 
-Cross-region transfers can be disabled per tenant for compliance with EU data residency rules.
+If residency is a requirement, it is answered by your deployment topology, not by a setting in Setup.
 
 ## GDPR
 
 ### Right of access
 
-A subject can request all their data:
-
-1. **Setup → Privacy → Data Subject Requests → New → Export**.
-2. Provide the contact's email.
-3. The system generates a JSON / PDF bundle of every record referencing them.
-4. Deliver to the subject; the request is logged in the privacy audit log.
+**There is no Setup → Privacy screen, and no Data Subject Request record type.** A subject access request is served by hand: find every record that references the person — contact, lead, cases, activities, campaign members — and export those list views yourself. Nothing assembles a JSON / PDF bundle for you, and nothing files the request as a privacy event.
 
 ### Right of erasure
 
-1. **Setup → Privacy → Data Subject Requests → New → Delete or Anonymise**.
-2. Preview what will be affected.
-3. Choose **Delete** (purge) or **Anonymise** (mask PII, keep records for analytics).
-4. Confirm — system produces an audit certificate.
+By hand as well, and with a sharper edge: erasure means **hard-deleting** the records you pick (there is no recycle bin to fish them back out of — see the [FAQ](/docs/reference/faq)), or anonymising them by editing the PII fields yourself. Nothing previews what a request would affect, and no audit certificate is produced; what you get is the ordinary audit-log entry for each record you touched.
 
-Anonymisation typically preferred — it preserves the integrity of historical reports.
+Anonymisation is still usually the better choice — it preserves the integrity of historical reports.
 
 ### Consent management
 
 For marketing:
 
-- **Consent fields** on contact/lead — capture lawful basis and consent date.
-- **Unsubscribe** — auto-handled by email campaigns; updates the contact.
-- **Suppression list** — anyone unsubscribed is excluded from all future campaigns globally.
+- **Consent fields** on contact/lead — *(partly shipped.)* `crm_contact` and `crm_lead` each carry `do_not_call` and `email_opt_out` booleans. **Neither object has a lawful-basis field or a consent-date field**, so the record tells you *that* someone opted out and never *why* or *when*. If your DPO needs lawful basis recorded, it is a field you would have to add.
+- **Unsubscribe** — ✅ verified, in a specific shape. The `campaign_member_optout_sync` hook writes a member's move to `status: 'unsubscribed'` back to the person's `email_opt_out`. It is deliberately one-directional. ⚠️ Nothing flips the member for you from an inbound mail click — there is no inbox connector; see [Email & Calendar](/docs/guides/email-and-calendar).
+- **Suppression list** — ✅ verified. Both enrollment gates in `src/flows/campaign-enrollment.flow.ts` filter on `email_opt_out: false`, so an opted-out person is excluded from future campaign enrollment. The flag lives on the person, which is what makes the exclusion global rather than per campaign.
 
 ### Data Processing Agreements
 
-A DPA template ships in **Setup → Privacy → DPA**.
+**No DPA template ships with the app** — there is no *Privacy* screen to keep one on. Get the agreement from your legal team.
 
 ## SOC 2 / ISO 27001
 
-For SaaS deployments, HotCRM operates under SOC 2 Type II and ISO 27001 controls. Reports available under NDA from your account team.
+*(your deployment.)* Whether the organisation operating your instance holds a SOC 2 Type II report or an ISO 27001 certificate — and the operational controls behind one: least-privilege engineering access, just-in-time production access, quarterly access reviews, annual penetration testing, twice-yearly DR tests, a bug bounty — are properties of that organisation and of how it runs the service. **This app's metadata cannot establish any of them, and nothing in the installed tree operates or evidences a control programme.**
 
-Key controls:
+The one place those names appear in the tree is worth knowing so it is not mistaken for evidence: `@objectstack/spec/kernel` declares a `PluginSecurityManifestSchema`, where a **package** may declare its own `certifications[]` (the doc example is literally "SOC 2, ISO 27001"), a `securityContact` and a `vulnerabilityDisclosure` block with a `bugBounty` flag. That is a package publishing claims about itself. **HotCRM declares none of it**, and it says nothing about any deployment.
 
-- Least-privilege access for engineering team.
-- Production access via just-in-time approvals.
-- Quarterly access reviews.
-- Annual penetration testing.
-- Disaster recovery tested twice a year.
-- Bug bounty programme.
+If you need the reports, ask whoever operates your instance.
 
 ## HIPAA / PHI
 
-Available as an add-on for healthcare customers — additional BAA, encryption controls, and audit-log retention required. Contact your account team to enable.
+*(your deployment.)* A Business Associate Agreement, and whether PHI may be processed at all, are commercial and legal arrangements with whoever operates your instance — not a capability this app ships or withholds. `BAA` returns zero hits in the installed tree.
+
+What HotCRM can tell you is what it gives you to work with: the `type: 'secret'` channel and `maskingRule` above, `requiredPermissions` field gates, the audit log's 90-day/7-year lifecycle, and the record-view auditing you can opt into per object. None of those is a compliance programme; they are the controls a programme would be built on.
 
 ## Disaster recovery
 
-- **RPO** (Recovery Point Objective): 1 hour.
-- **RTO** (Recovery Time Objective): 4 hours.
-- Daily snapshots retained 30 days.
-- Weekly snapshots retained 1 year.
-- Cross-region replication for production tenants on the Enterprise plan.
+*(your deployment.)* RPO, RTO, snapshot cadence and cross-region replication are properties of the infrastructure your instance runs on. **This app schedules no backup, measures no recovery objective, and the installed tree contains nothing that does either** — the `backup` schema block noted under [At rest](#at-rest) describes a shape with no consumer. The figures this page used to state (1 hr / 4 hr, 30-day daily and 1-year weekly snapshots) were *(unsourced)* and are not repeated as if measured.
 
-Self-hosted customers — see [Setup checklist](/docs/administration/setup) for recommended backup cadence.
+Self-hosted — see the [Setup checklist](/docs/administration/setup) for recommended backup cadence, and treat the cadence as yours to implement.
 
 ## Security incident response
 
-- **Status page** — `status.your-hotcrm-url` — incidents reported in real time.
-- **Notification** — security incidents affecting customer data are reported within **72 hours** per GDPR.
-- **Security email** — `security@yourcompany.com` for reporting vulnerabilities.
-- **Bug bounty** — see the program page.
+*(your deployment.)* A status page, a security contact address and a disclosure programme belong to whoever operates your instance; **nothing in this app or the installed tree provides, hosts or monitors any of them** — zero hits for a status-page surface, zero for penetration testing. The 72-hour GDPR breach-notification window is a legal obligation of the controller and processor, not a feature, and it applies to your organisation regardless of what any software does.
+
+Establish, and write down where your users can find them: who to contact, where incidents are posted, and how a researcher reports a vulnerability.
 
 ## Tips for admins
 
-- ✅ **Mandate MFA** for all users — biggest security ROI.
-- ✅ **Turn on SSO + SCIM** as soon as you have >10 users.
+- ✅ **Turn the password policy on.** Complexity, history and expiry all default to off. `password_reject_breached` is one toggle and is the highest-value of the three.
+- ✅ **Set `lockout_threshold`.** It is `0` today, which means no account lockout at all. This is the single most consequential default on the page.
+- ✅ **Mandate MFA** — `mfa_required` at **Setup → Authentication**, with a grace window. Biggest security ROI, and it is off until you set it.
+- ✅ **Set an idle and absolute session timeout**, and a concurrent-session cap if your policy has one. All three default to unlimited.
+- ✅ **Turn on SSO** as soon as you have >10 users. SCIM has no screen, so plan for it as a deployment change rather than an admin task.
 - ✅ **Restrict System Admin** to 2-3 people max.
-- ✅ **Review audit log** monthly — look for unusual export volumes or failed-login spikes.
-- ✅ **Stream audit log to SIEM** for centralised monitoring.
+- ✅ **Review the audit log** monthly at **Setup → Audit Logs** — look for failed-login *lockouts* and unusual `config_change` volume. ⚠️ Do not plan a review around export events: none are recorded.
+- ✅ **Consider opting into record-view auditing** for `crm_contact` and `crm_account` if you are in a regulated industry. It is a `plugins` change in `objectstack.config.ts`, not a setting.
 - ✅ **Run a tabletop exercise** annually — what happens if an admin account is compromised?
+- ⛔ Do not plan around per-profile IP allowlists, login hours, device trust, column-level field encryption, a *View Encrypted Data* permission, or audit-log streaming to a SIEM. Every one of them is marked *(not shipped)* above.

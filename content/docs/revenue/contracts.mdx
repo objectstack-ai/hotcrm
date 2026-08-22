@@ -32,98 +32,166 @@ Activation is the key transition — it triggers the account to be promoted to *
 
 ## What a contract record stores
 
-| Section | Fields |
+A contract record declares its fields in **six groups**. The contract form shows a curated subset of them across its tabs, so read this as the full inventory of what a contract carries rather than a screen-by-screen map:
+
+| Group | What's in it |
 | --- | --- |
-| **Parties & Type** | Contract number *(auto)*, account, type, opportunity *(if originated from a deal)* |
-| **Status & Dates** | Status, start date, end date, signed date, activation date |
-| **Financials** | Contract value, billing frequency, payment terms |
-| **Renewal** | Auto-renewal flag, renewal notice (days), renewal terms |
-| **Ownership** | Contract owner, account exec |
-| **Documents** | Signed contract (file), order form (file) |
+| **Contract Information** | Contract Number *(auto-numbered `CTR-0001`)*, Contract Type, Contract Document, Description |
+| **Parties** | Contract Owner, Account, Primary Contact, Related Opportunity — the contact and opportunity pickers are scoped to the account you pick first |
+| **Terms & Dates** | Contract Term (Months), Start Date, End Date, Special Terms |
+| **Contract Value** | Contract Value, Billing Frequency, Payment Terms, Billing Address |
+| **Status & Approval** | Status, Signed Date, Signed By |
+| **Renewal** | Auto Renewal, Renewal Notice (Days) |
+
+Account, Primary Contact, Contract Term, Start Date, End Date, Contract Value and Status are all **required** — a contract cannot be saved without them.
+
+Three field names people go looking for and do not find:
+
+- **Activation Date.** There is none, and no other field records the moment of activation. Activation stamps **Signed Date** instead (see *On contract activation* below), so that is the date any "when did this go live" report has to read.
+- **Renewal Terms.** Renewal is exactly the two fields above. Free-text renewal instructions belong in **Special Terms**, which travels with the contract.
+- **Account Exec.** Ownership is the single **Contract Owner** lookup; a contract carries no second ownership field.
+
+**Contract Document** is a **link**, not an upload — it holds a URL pointing at wherever the document lives. The executed PDF itself goes on the record as an **attachment**; files are enabled on Contract, which is what makes that possible. There is no separate *Order Form* field.
 
 ## Billing frequency
 
-How often the customer is invoiced:
+How often the customer is invoiced — four values, and a new contract starts on **Monthly** unless you change it:
 
-- **One-Time**
-- **Monthly**
+- **Monthly** *(default)*
 - **Quarterly**
-- **Annual**
-- **Custom**
+- **Annually**
+- **One-time**
+
+There is no *Custom* billing frequency. A cadence that is none of these four has to be written out in **Special Terms**; the picklist will not hold it.
 
 ## Payment terms
 
-When the customer pays:
+When the customer pays — five values, the same five a quote offers, so the two records speak one vocabulary:
 
 - **Net 15** — within 15 days of invoice
 - **Net 30** *(default)* — within 30 days
-- **Net 45 / Net 60 / Net 90**
+- **Net 60**
+- **Net 90**
 - **Due on Receipt** — immediately
-- **Prepaid** — paid upfront
+
+There is no *Net 45* and no *Prepaid*. Payment upfront is an arrangement you record in **Special Terms**, not a term you can pick here.
 
 ## Renewals
 
-Three fields drive renewals:
+Two fields drive renewals:
 
-- **Auto-Renew** — does the contract roll over automatically?
-- **Renewal Notice Days** — how many days before end-date to alert the team (e.g., 60 days)
-- **Renewal Terms** — free-text instructions ("renew at 5% uplift unless customer opts out")
+- **Auto Renewal** — off unless you turn it on. With it on, the daily renewal sweep opens the renewal deal for you; with it off, the sweep still reminds you but creates no deal.
+- **Renewal Notice (Days)** — how many days before the end date the reminder fires. Defaults to 30, and each contract carries its own.
 
-When the contract enters its renewal window, the system creates a follow-up task and emails the contract owner.
+There is no *Renewal Terms* field. Instructions like "renew at 5% uplift unless the customer opts out" go in **Special Terms**, the free-text field on the contract itself.
+
+When a contract enters its renewal window, the system files a follow-up task and emails the contract owner — see *Daily — renewal reminder* below for everything it creates.
 
 ## What the system does automatically
 
 ### On contract activation
-The owner promotes the contract to *Activated*:
+Changing a contract's status **to** *Activated* runs two writes, and only these two:
 
-1. **Account status → Customer** if it was a Prospect.
-2. **Customer Since date** stamped on the account if blank.
-3. **Welcome email** sent to the primary contact (configurable).
-4. **Notification** to the account owner.
+1. **Signed Date** stamped on the contract — today's date, and only when the contract has none yet. Set Signed Date in the same edit that activates the contract and your date is kept.
+2. **Account type → Customer** — every account that is not already a *Customer* is promoted, so this catches a *Partner* or a *Former Customer* just as it catches a *Prospect*.
+
+Nothing is sent and nobody is told. Activation raises no notification for the contract owner or the account owner, and no message goes to the primary contact — there is no outbound customer email here, and no setting behind one. There is no *Customer Since* field on the account either: an account keeps no date of its own for when it became a customer, so cohort reporting has to read the contract's signed date or start date.
+
+Both writes run *after* the save, with failures logged rather than raised, so the contract stays activated even if promoting the account fails. They also hang off an **update** — a contract that arrives already *Activated* (a data import, seed data, an integration that writes the record in one shot) triggers neither, and its account stays a *Prospect*.
 
 ### Daily — expiration sweep
-Each night at midnight the system finds *Activated* contracts whose end date has passed:
+Each night at midnight the system finds *Activated* contracts whose end date has passed, and does two things to each — only these two:
 
 1. **Status → Expired**.
-2. **Notification** to the contract owner.
-3. **Notification** to the account owner.
+2. **Notification to the contract owner** — inbox and email, linking to the contract.
+
+Nobody else is told. There is no second notification: the account owner, the primary contact and the rest of the account team hear nothing when a contract lapses, so if anyone beyond the contract owner needs to know, an admin has to add that. The sweep also reads *Activated* contracts only — one still sitting in *Draft* or *In Approval* past its end date is left alone — and it takes at most 500 contracts per run.
 
 ### Daily — renewal reminder
-At 8 AM the system finds contracts entering their renewal window (within `renewal_notice_days` of end date) and sends a reminder to the contract owner with a one-click action to "Create Renewal Opportunity".
+At 8 AM the system finds *Activated* contracts whose end date falls inside that contract's own *Renewal Notice (Days)* window, and for each one, in this order:
+
+1. **Files a renewal task** for the contract owner — *"Renewal due: contract CTR-0042"*, a high-priority follow-up due on the contract's end date, filed against the account.
+2. **Notifies the contract owner** — inbox and email. The notification links to the contract record, and that is all it does: there is no one-click action on it, and opening it creates nothing.
+3. **Opens a renewal opportunity** — but only when *Auto Renewal* is on. An *Existing Customer - Renewal* deal on the same account, at *Proposal* stage, amount copied from the contract value, close date set to the contract's end date, owner copied from the contract, next step *"Confirm renewal terms with customer"*. It is skipped when that account already has an open renewal deal.
+
+So the renewal deal is never something you click for. With *Auto Renewal* on it is already in the pipeline by the time you read the reminder; with it off, nobody opens one for you and the task is the whole of it.
+
+The task is also what keeps the sweep from repeating itself: the same contract matches every morning of its notice window, and an open *Renewal due* task for it means the day is already handled — no second task, no second notification, no second deal. Complete that task and the next morning's sweep files a fresh one, for as long as the contract is still inside its window.
+
+Two bounds worth knowing: the sweep looks 120 days ahead at most, so a notice window set longer than that only starts firing at 120 days out; and it takes at most 500 contracts per run.
 
 ### Manual termination
-The owner can change status to *Terminated*. This is a one-way action — terminated contracts can't be reactivated. Audit log records who and when.
+Terminating a contract is a status change to *Terminated*, and two things commonly assumed about that change do not hold.
+
+**Being the owner is not what qualifies you to make it.** Edit on Contract is an object-level right that ownership does not extend: **Sales Manager** and **System Administrator** hold it, **Sales Rep** does not. That gap lands on the most common case, because the contract an accepted quote drafts carries the quote's owner across with it — so the rep whose deal it was ends up owning a contract they can read and cannot touch. Terminating it is someone else's action to take, and **who that someone is depends on your edition** — see *Who can edit which contract* under Sharing below. On the open edition it is a System Administrator.
+
+**And nothing holds the door shut afterwards.** *Terminated* is declared a dead end, but on the same **warning**-severity status machine as the rest of the progression: an edit that moves a terminated contract back to *Activated* is written to the server log and **saved anyway** — see *The status progression is advice, not a gate* below. Termination is one-way by convention, which is what the status means and how everything downstream reads it, not by enforcement. If it has to be enforced, an admin has to author that.
+
+**Status** is one of the two fields Contract keeps history on, so the audit log does record who moved it and when — a revival included.
 
 ## Built-in rules
 
-- **End date must be after start date** — basic sanity check.
-- **Contract value must be zero or positive** — NDAs can be $0.
-- **Activated contracts cannot be deleted** — change status to Terminated instead.
+Three rules reject a save outright:
+
+- **End date must be after start date** — the one validation rule on the object that refuses a contract.
+- **The term must match the dates** — the contract hook counts the months between **Start Date** and **End Date** and rejects anything more than **one month** away from **Contract Term (Months)**: *"Contract term (12 months) does not match date range (6 months from … to …)."* Term and dates move together, or the save bounces.
+- **An activated contract's end date cannot be pulled in** — once the contract is *Activated*, an edit that moves **End Date** earlier is refused (*"Cannot shrink end_date … after activation"*). Pushing it out is fine; shortening a live agreement is a termination or an amendment, not an edit.
+
+Two more things are often read as rules and are not:
+
+- **Contract Value cannot be negative** — that is the field's own minimum of 0 rather than a validation rule, so NDAs at $0 are fine. **Contract Term (Months)** is bounded the same way, at a minimum of 1.
+- **The status progression is advice, not a gate.** The declared route is *Draft* → *In Approval* → *Activated* → *Expired* or *Terminated*, with *In Approval* able to go back to *Draft*, *Terminated* reachable from all three live statuses, and *Expired* and *Terminated* both dead ends. But it is declared at **warning** severity: an illegal jump — *Draft* straight to *Activated*, or reviving an *Expired* contract — is written to the server log and **the save still goes through**. Nothing in the form stops it and nobody is notified. A contract *created* directly as *Activated* is not checked at all, which is the same import path that skips the activation writes described above.
+
+And one rule people expect that is not there: **nothing stops an activated contract from being deleted.** Contract has no delete hook and no status check anywhere — who may delete a contract is decided by their profile alone, and the profile never looks at the status. A **System Administrator** can delete any contract, activated ones included; **Sales Manager** and **Sales Rep** can delete none, not even a draft. If signed agreements must be undeletable in your org, an admin has to author that — the app does not do it for you.
 
 ## Sharing
 
-Contracts follow the account's sharing — if you can see the account, you can see its contracts. The contract owner, the account owner, and the account team have edit access. Read access flows up the role hierarchy.
+Contracts are **private**, and no sharing rule widens them. Contract visibility does **not** follow the account:
+
+- **The contract owner** reads their own contracts — and reading is the whole of what ownership buys here. Whether you may edit one at all is settled a layer earlier, by the object-level rights on your profile: **Sales Rep** holds Contract read-only, so a rep reads the contract standing in their own name and cannot change it. Record-level sharing widens *which records* you reach, never *which operations* you hold, so no sharing rule and no record share turns that read into an edit.
+- **Sales Manager** and **System Administrator** read every contract (*View All* on the object), and they are the only profiles holding edit on it at all. Holding edit is not the same as reaching a given record, though — see immediately below.
+
+### Who can edit which contract
+
+Reading every contract and being able to *change* one are two different grants, because Contract is private and owned. The object-level edit right gets you through the first door; the second asks whether the record's owner is inside your **write depth**. The three profiles sit differently:
+
+| Profile | Can edit… | Why |
+| --- | --- | --- |
+| **System Administrator** | any contract | *Modify All* — the super-user bypass, which skips ownership entirely |
+| **Sales Manager** | their own contracts always; **their reports' contracts on the Enterprise edition** | the profile declares a write depth of *own and reports*, which needs the hierarchy resolver that ships with ObjectStack Enterprise |
+| **Sales Rep** | none | no object-level edit right at all — the first door is shut |
+
+That middle row is the one to read carefully, because it is the common case: the contract an accepted quote drafts belongs to the **rep**, not the manager. HotCRM declares the depth that says "a manager reaches the people who report to them", and the **Enterprise** edition supplies the machinery that resolves it. What it resolves against is the **reporting relationship your deployment maintains** — not HotCRM's positions, which are flat by design and roll nothing up. On the **open** edition there is no resolver, so that depth safely narrows to owner-only and a manager cannot change a contract standing in a rep's name — on that edition, those changes are a **System Administrator** job. Nothing is misconfigured when you see that; it is the edition boundary.
+- **Everyone else** — including a rep who reached the account through a territory or team sharing rule — sees only the contracts they own, so an account's *Contracts* related list can look empty even when the account itself is fully readable.
+
+If your org wants contracts to follow the account, an admin has to author that, and neither available route actually delivers "follows the account" today: a sharing rule on Contract widens the records it matches for every holder of the object, and a Controlled-by-Parent OWD derives org-wide in this release — the parent link is not consulted per caller. Both are a broad widening, not an account-scoped one — see [Sharing & Security](/docs/administration/sharing-and-security), *Controlled by Parent, in practice*.
 
 ## Standard list views
 
-- **My Active Contracts** — `owner = me AND status = Activated`.
-- **Expiring in 60 Days** — `end_date <= TODAY + 60 AND status = Activated`.
-- **Up for Renewal** — within renewal-notice window.
-- **Expired This Month** — `status = Expired AND last_modified IN this month`.
-- **Pending Activation** — `status IN [Draft, In Approval]`.
+Contracts saves **one** list — **All Contracts**, every contract you may see, with no filter on it — and the tab row along the top of that list changes how the same records are *drawn*, not which records are in them. Four tabs, and nothing else:
+
+| Tab | How it draws the same contracts |
+| --- | --- |
+| **All Contracts** *(the landing tab)* | The grid: contract number (pinned left, and the link into the record), account, related opportunity, status, contract value with a column total, term in months, start and end date, auto-renewal and owner. Ordered by **End Date**, soonest first, so whatever expires next is on top. 25 rows a page. |
+| **Renewal Calendar** | The same contracts on a month calendar, each placed on its **End Date**, titled by contract number and coloured by status. |
+| **Contract Terms** | One gantt bar per contract, from start date to end date, so overlapping terms line up against one another. |
+| **Contract Timeline** | The same start-to-end spans on a quarter scale, grouped by account and coloured by status. |
+
+None of the four filters anything, so **every contract you can see appears in all four** and switching tabs only redraws them. There is no saved *My Active Contracts*, *Expiring in 60 Days*, *Up for Renewal*, *Expired This Month* or *Pending Activation* — to narrow the list to your own contracts or to one status, sort and filter the grid columns yourself. What watches renewal dates for you is the daily renewal reminder described above, not a list view.
 
 ## Tips for contract owners
 
 - ✅ **Attach the signed PDF** when activating — auditors will thank you.
-- ✅ **Set Renewal Notice Days = 90** for enterprise deals — gives you a full quarter to negotiate.
-- ✅ **Use Renewal Terms field** to capture the deal — "price-locked for 3 years; 5% uplift on renewal".
+- ✅ **Set Renewal Notice (Days) = 90** for enterprise deals — gives you a full quarter to negotiate, and the sweep looks far enough ahead to honour it.
+- ✅ **Record what you agreed in Special Terms** — "price-locked for 3 years; 5% uplift on renewal". There is no *Renewal Terms* field, and Special Terms is the note that will still be on the contract when the reminder lands.
 
 ## Tips for sales reps
 
-- ✅ When a quote is accepted and you create the contract, the **opportunity link** is pre-filled — keep it; it powers post-sale reporting.
-- ✅ Don't sneak edits into Activated contracts — create an amendment instead (a new contract linked to the same account).
+- ✅ **You never fill a contract in — accepting the quote drafts it.** Contract is read-only for a Sales Rep: you cannot create one and you cannot edit one. What you do own is the quote, and marking it **Accepted** is what drafts the contract — a *Draft* contract carrying the quote's account, primary contact, related opportunity, owner and total, on a 12-month term starting today, typed *Subscription*.
+- ✅ **The opportunity link is copied off the quote, not pre-filled on a form you are typing into** — so there is nothing on it for you to keep or lose. Nor does the manual route pre-fill it: when a manager or an admin creates a contract by hand, the opportunity is picked by hand, and the only help the picker gives is that it lists the deals of the account already chosen on the contract. Nothing reads that link for reporting today — HotCRM ships no contract report or dashboard at all.
+- ✅ **You read your own contracts and ask for the rest.** The contract your accepted quote drafted lands in your name, so you can read it; contracts owned by anyone else you cannot see. Changing a term, a date, the value or the status is somebody else's job, and so is an amendment — that is a new contract, which only they can create. **Who to ask depends on your edition**: on **Enterprise**, your Sales Manager can change the contract standing in your name without it being handed over first; on the **open** edition, a manager only reaches their own contracts, so it is a **System Administrator** who makes the change. If you are not sure which you are on, ask for the manager first — see *Who can edit which contract* above.
 
 ## Tips for admins
 
-- The contract activation flow and expiration sweep can be customized. See [Administration › Automation](/docs/administration/automation).
+- Contract activation is an **object hook** (`src/objects/contract.hook.ts`), not a flow — that is where the signed-date stamp and the account promotion live, and it is not in the flow list. The expiration sweep and the renewal reminder *are* scheduled flows. See [Administration › Automation](/docs/administration/automation).
 - Contract types and billing frequency picklists are extensible.

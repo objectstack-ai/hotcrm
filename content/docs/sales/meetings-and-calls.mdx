@@ -1,0 +1,169 @@
+---
+title: Meetings & Calls
+description: Log a call, log a meeting, or book one for later — and the interaction history that keeps "when did we last talk to this customer?" honest.
+---
+
+# Meetings & Calls
+
+A **meeting or call is stored as an Event record** (`crm_event`) — one row per interaction that takes a slot on somebody's calendar, whether it already happened (a call you just logged) or is booked for next Tuesday.
+
+Events are the queryable answer to *"what happened with this customer, and when?"*. They are deliberately **not** the same thing as a [task](/docs/sales/activities):
+
+| | **Task** | **Event** |
+| --- | --- | --- |
+| What it is | Something you still **owe** someone | Something that **occurs** |
+| Anchored on | A due date | A start and an end |
+| Has attendees | No | Yes — as records |
+| Lives on | Your to-do list | Your calendar |
+
+An email is a third shape: it is not a calendar slot, so **Send Email** writes no event (see [Email & Calendar](/docs/guides/email-and-calendar)) — but it does refresh the customer's contact recency, just like a held meeting.
+
+## The three buttons
+
+Every **lead, contact, account, opportunity and case** carries the same three actions:
+
+| Action | Writes an event with | Use it when |
+| --- | --- | --- |
+| 📞 **Log a Call** | Type *Call*, status **Held**, starting *now* | The call just happened |
+| 📅 **Log a Meeting** | Type *Meeting*, status **Held**, starting *now* | The meeting just happened |
+| ➕ **Schedule a Meeting** | Type *Meeting*, status **Planned**, starting when you say | You are booking something for later |
+
+You will find them in the record header, in the ⋮ menu of a list-view row, and on related lists. (On a case, the record header carries **Log a Call** alongside *Escalate* and *Close*; the other two are still registered on cases and reachable from the list-view row menu.)
+
+### What each form asks for
+
+Both **Log a Call** and **Log a Meeting** ask for:
+
+- **Subject** *(required)*
+- **Duration (minutes)** — optional on all three actions
+- **Contact Attendees** — pick any number of contacts
+- **Internal Attendees** — pick any number of colleagues
+- **Notes** — what was discussed
+
+**Schedule a Meeting** adds **Start Date (UTC)**, **Start Time (UTC)** and **Location**, and renames the notes box to **Agenda**.
+
+> ⚠️ **The start date and time of a scheduled meeting are read as UTC**, which is why both field labels say so. Convert before you type: a 15:00 meeting in UTC+8 is entered as `07:00`. Everything HotCRM stores is a UTC instant; the picker simply does not know your timezone yet.
+
+### What one click produces
+
+Logging a call on an opportunity writes three things, not one:
+
+1. **The event** — subject, type, status, start time, duration, location, notes, owned by you, and linked back to the record you fired the action from.
+2. **The attendees** — one row per person (see below). You are added as the **organizer**, with your response already set to *Accepted*; a contact or lead you fired the action from is added as an attendee too.
+3. **A timeline entry** — the record's activity timeline gains an entry that points at the event, so the drill-through from the timeline opens the real record rather than a summary string.
+
+On a **case**, the first *held* call or meeting also stamps the case's **First Response Date** — the moment the customer first heard back. A meeting merely *booked* does not count as a response, and neither does a status change.
+
+## Planned vs Held — the distinction that keeps reports honest
+
+Every event carries a status:
+
+| Status | What it means |
+| --- | --- |
+| 🔵 **Planned** | Booked, has not happened yet *(default for a new event)* |
+| 🟢 **Held** | It happened |
+| ⚪ **Cancelled** | Called off |
+| 🟠 **No Show** | Nobody turned up |
+
+**Only a *Held* event refreshes the customer's contact clock.** A meeting booked for next quarter is not an interaction that happened, and letting a booking reset the clock is exactly how an "at risk" report learns to lie about a customer nobody has spoken to.
+
+So there is one habit worth building:
+
+> After the meeting, open the event and set **Status → Held**.
+
+The clock moves on the transition *into* Held — once, not on every later save. Cancelled and No Show meetings keep their row (the attempt is evidence) but their **duration is zeroed**, so "customer minutes this week" stays truthful.
+
+## What refreshes "last activity"
+
+Two fields carry customer recency, and reports such as the quiet-account tiles on the [Sales Activity dashboard](/docs/analytics/dashboards) are built on them:
+
+- **Account → Last Activity Date**
+- **Contact / Lead → Last Contacted Date**
+
+Exactly these actions refresh them:
+
+| What you do | Account | Contact | Lead |
+| --- | --- | --- | --- |
+| An event becomes **Held** | ✅ | ✅ | ✅ |
+| A **task** is completed | ✅ | ✅ | ✅ |
+| **Send Email** from a contact | ✅ (the contact's account) | ✅ | — |
+| A **case** is set to *Resolved* | ✅ (the case's account) | — | — |
+
+The account stamp **walks up the chain**. A rep logs a call on the opportunity, the contact or the case — almost never on the account row itself — so the event follows the link up to the account behind it and stamps that. Without the walk-up, a busy customer looks silent for an entire sales cycle.
+
+Two things this table does *not* include, on purpose:
+
+- A **Planned** event, and an event that was already Held before you saved it again.
+- A meeting linked to nothing. The event warns you when no related record is set, and an interaction attached to no customer cannot refresh any customer's clock.
+
+Admins should also know that changing an account's **owner** or **type** stamps its Last Activity Date as a side effect of the edit. It is not an interaction; if you are auditing silence, read the events, not just the date.
+
+## Attendees are records, not a text box
+
+Everyone in the room is a real row (`crm_event_attendee`) hanging off the meeting — which is what makes *"which contacts declined twice this quarter?"* and *"what has this rep actually attended?"* answerable at all.
+
+Each attendee row holds:
+
+| Field | Notes |
+| --- | --- |
+| **Attendee Type** | *Contact*, *Lead*, *User* or *External* — says which kind of person the row names |
+| **Contact / Lead / User** | The person, as a real link to their record |
+| **External Attendee** | Free text, and the last resort: for a guest who is in no CRM object at all (the prospect's lawyer). Set the type to *External* and name them here. Not a place to paste a list. |
+| **Response** | *No Response* *(default)*, *Accepted*, *Declined*, *Tentative* |
+| **Organizer** | Whoever called the meeting |
+| **Invited** | When the invitation was recorded |
+| **Attendee Number** | Auto-numbered `EA-00001` |
+
+A row must fill exactly the party its **Attendee Type** names, and nothing else: a *Contact* row needs a contact, an *External* row needs a name in **External Attendee**. An attendee pointing at nobody is rejected, and so is one whose type disagrees with the column that is filled — a row cannot claim to be a contact while naming an outside guest.
+
+### Deleting people and meetings
+
+- **Delete a person** (contact, lead or colleague) → their attendee rows go with them, and **the meeting itself survives** with its subject, times and outcome notes intact. This is what keeps a person deletable: before it worked this way, anyone who had ever attended a meeting could not be erased at all.
+- **Delete a meeting that still has attendees** → refused, naming the attendee rows that hold it. Remove the attendee rows first, then the meeting deletes. A meeting's attendee list is part of the meeting's historical record, so it is never silently discarded.
+
+## What the system fills in for you
+
+- **Duration ↔ end time.** Give a start and an end, and the duration is measured from them (even if you typed a different number — a stored duration that disagrees with its own timestamps is what turns a report into nonsense). Give a start and a duration, and the end time is calculated, which is what puts a logged call on the calendar.
+- **All-day events** keep no minute count, so "all day" stays distinguishable from "we forgot to fill it in".
+- **Cancelled / No Show** → duration zeroed.
+- **End before start** is rejected outright.
+- **No related record** raises a warning — link the meeting to the deal or the case, or it will be invisible where it matters.
+
+## Where to find events
+
+In the **Activity** group of the sidebar:
+
+| Entry | What it shows |
+| --- | --- |
+| **Events** | Every event you can see, newest first |
+| **Calendar** | The same rows on a calendar, coloured by type |
+| **Interaction History** | Held events only — what actually happened |
+
+Under **My Work → My Calendar** you get your own events, and the Events list itself carries tabs for **All**, **Calendar**, **Team Schedule** (one lane per rep), **My Calendar**, **Upcoming** (planned, soonest first) and **Interaction History**.
+
+The six event types — **Meeting** *(default)*, **Call**, **Demo**, **Webinar**, **Onsite Visit**, **Other** — colour the calendar and drive the activity-mix reporting on the [Sales Activity dashboard](/docs/analytics/dashboards).
+
+There is no "past events" filter on a date, and that is deliberate: status is authored and does not decay, whereas a date-based flag is stale the moment the clock passes it.
+
+## Who sees what
+
+- Events are **private**: a rep sees their own, a sales manager sees the whole team's, an admin sees everything. Service agents can log and read their own events on cases.
+- **Attendee rows behave differently today.** Access to them is meant to derive from the meeting, but on the current platform the derivation does not narrow by ownership, so any user whose profile grants read on Event Attendees can read attendee rows for meetings they cannot open. Keep that in mind before granting the object to a wider audience; the narrowing is a platform fix in flight, not an app setting.
+
+## How the AI assistant helps
+
+Because a meeting is now an ordinary record, the assistant's **Live Data** skill reads it like any other object — *"how many meetings did we hold with Acme last quarter?"*, *"which of my accounts have had no interaction in 60 days?"* — against the live schema, so a field you add today is usable in the same conversation. No skill writes events; the three buttons above are the writers.
+
+## Tips for reps
+
+- ✅ Log the call **from the opportunity or the case**, not from the account — the link is what surfaces it on that record, and the account clock is stamped for you anyway.
+- ✅ Go back and flip the meeting to **Held**. A calendar full of Planned meetings tells your manager nothing and moves no customer's clock.
+- ✅ Put the real attendees in. "Who at the customer has never joined a call?" is only answerable if you did.
+- ✅ Use **Outcome Notes** on the event for what was agreed — the notes box on the log form records what was discussed; the outcome is what the next person needs.
+
+## Tips for admins
+
+- ✅ Coach on **Held**, not on volume: the quiet-account tiles are only as honest as the status field.
+- ✅ Watch **No Show** — a rising no-show rate on one account is a churn signal well before the renewal.
+- ✅ Events are a private object. If a manager reports an empty calendar, check their permission set's record scope before suspecting the data.
+- ✅ Remember the UTC start-time entry when writing internal how-tos for teams outside UTC.

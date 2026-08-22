@@ -8,9 +8,32 @@ export const SalesRepProfile = {
   // `readScope: 'own'` so the intent is authored, not inferred — this both
   // silences the `security-private-no-readscope` liveness warning and pins the
   // behavior: without it, a private-OWD object with allowRead but no scope is
-  // an under-specified grant the engine reads as "own only" anyway. Reps who
-  // need cross-team visibility get it through the account team / territory
-  // sharing rules, not by widening the base set.
+  // an under-specified grant the engine reads as "own only" anyway.
+  //
+  // What widens that scope today is narrower than it sounds: the territory /
+  // account-team rules are authored on `crm_account` ONLY, and a sharing rule
+  // widens the object it names — not the records hanging off it. So a rep who
+  // receives an account through a territory rule reads that account, while the
+  // quotes, contracts and tasks on it stay own-only, and opportunities widen
+  // only through the >= $100k leadership rules. Whether those children should
+  // follow the account is an open business decision (#549), not a bug in these
+  // grants — do not widen them here to paper over it.
+  //
+  // The `controlled_by_parent` grants below read as narrow, and as of
+  // 17.0.0-rc.4 they ARE. MEASURED and pinned by
+  // `test/parent-derived-reach.test.ts`: the ADR-0055 derivation resolves master
+  // accessibility through the same paths a direct read of the master takes —
+  // owner scope AND `sys_record_share` grants, not the master's row-level
+  // security policies alone. A rep holding ONE account through a territory rule
+  // reads that account's contacts and no others, and reads line items only under
+  // the quotes they can reach. Writes derive the same way: a child of a master
+  // the rep cannot edit is refused. So each grant below is bounded by the
+  // parent's sharing, which is what it looks like.
+  //
+  // Until 17.0.0-rc.3 the same grants were org-wide reads and this note said so
+  // (#694): the derivation consulted master RLS policies only, and HotCRM
+  // authors none, so the master set was every record.
+  // objectstack-ai/objectstack#5386 fixed that upstream and it shipped in rc.4.
   objects: {
     // `allowExport` where an export surface exists — canonical note in
     // `src/profiles/index.ts`. Safe alongside `readScope: 'own'`: export is
@@ -18,11 +41,13 @@ export const SalesRepProfile = {
     crm_lead:        { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const, allowExport: true },
     crm_account:     { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const, allowExport: true },
     // NO readScope: `crm_contact` is `controlled_by_parent` (master-detail to
-    // crm_account), so its rows derive from the account the rep can read —
-    // territory- and team-shared accounts included. A `readScope` here was
-    // inert (the sharing service only applies owner scope to `private` objects)
-    // and read as a promise the engine never kept: it said "own contacts only"
-    // while access actually followed the account (#488).
+    // crm_account), so a `readScope` here is inert — the sharing service only
+    // applies owner scope to `private` objects — and it read as a promise the
+    // engine never kept: it said "own contacts only" while access derived from
+    // the parent (#488). That derivation now delivers exactly "the accounts the
+    // rep can read": measured on 17.0.0-rc.4, a rep holding one territory
+    // account reads THAT account's contacts and no others (see the note at the
+    // top of this file, #694).
     crm_contact:     { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, allowExport: true },
     crm_opportunity: { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const, allowExport: true },
     crm_quote:       { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
@@ -31,19 +56,35 @@ export const SalesRepProfile = {
     crm_campaign:    { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
     crm_case:        { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const, allowExport: true },
     crm_task:        { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
+
+    // ─── Activity (#592) ──────────────────────────────────────────────
+    // `crm_event` is `private` like `crm_task` — a personal activity record —
+    // so an explicit record scope is required alongside allowRead (an omitted
+    // scope silently means "own only" and reads as an unmade decision).
+    // `crm_event_attendee` is `controlled_by_parent`, so authoring a readScope
+    // here would be inert metadata the engine never applies. Its rows narrow to
+    // the events the rep can read — which, `crm_event` being private and
+    // own-scoped, is their own calendar (see the note at the top of this file,
+    // #694).
+    crm_event:       { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
+    crm_event_attendee: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: false, modifyAllRecords: false },
     // Reference catalog (public_read OWD): reps read knowledge articles, which
     // are authored by service.
+    // Reads the KB and may rate it; cannot author articles (#601).
+    crm_article_feedback: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
     crm_knowledge_article: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
     // Forecast snapshots are written by the nightly `forecast.hook` job and the
     // `revenue_forecasting` skill, never by hand — read-only, and only the rep's
     // own snapshots (private OWD + explicit own scope, as above).
     crm_forecast:          { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
-    // Product lines on the rep's own deals and quotes. Both objects are
-    // `controlled_by_parent`, so rows follow the opportunity / quote and writes
-    // require edit on that parent (ADR-0055) — that is what scopes a rep to
-    // their own book here, which is why there is no readScope to author.
-    // Without these grants the opportunity "Products" related list and the
-    // whole CPQ path were denied for every non-admin user (#488).
+    // Product lines on deals and quotes. Both objects are
+    // `controlled_by_parent`, so there is no readScope to author — one would be
+    // inert metadata. That derivation scopes a rep to the lines under the deals
+    // and quotes they can reach: measured on 17.0.0-rc.4, a rep reads the lines
+    // of the one quote they own and none of the others (see the note at the top
+    // of this file, #694). Without these grants the opportunity "Products"
+    // related list and the whole CPQ path were denied for every non-admin user
+    // (#488).
     crm_opportunity_line_item: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: false, modifyAllRecords: false },
     crm_quote_line_item:       { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: false, modifyAllRecords: false },
     // Which campaign sourced a lead — read-only context, derived from the

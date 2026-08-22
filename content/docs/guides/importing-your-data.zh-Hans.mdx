@@ -1,0 +1,228 @@
+---
+title: 导入你自己的数据
+description: 使用 HotCRM 内置的导入映射，从电子表格加载客户、联系人和潜在客户 —— 先试运行，出错可一键撤销。
+---
+
+# 导入你自己的数据
+
+用别人的演示数据评估 HotCRM 说明不了什么。本指南把 **你自己的** 客户、联系人和潜在
+客户从电子表格加载进来 —— 不需要逐列配置映射，文件有问题也能一次调用撤销。
+
+有两条路可以进来，而它们共用服务端同一条导入通路：对象列表视图上的 **导入向导**，以及
+**导入 API**。一次性的文件、想先亲眼过一遍再写入，走向导 —— 不用令牌，也不用 curl；
+脚本化或需要反复执行的加载，走 API —— 严格的试运行报告、逐行错误码与撤销调用只在这条
+路上。向导在下面用一节简单带过，**第 1–4 步讲的是 API 那条路**。
+
+HotCRM 内置三个 **导入映射（import mapping）**。映射就是保存好的「列 → 字段」投影：
+在请求里指定名字即可，HotCRM 已经知道表头 *Account Owner Email* 是客户负责人，也知道
+*SaaS* 对应 *Software / SaaS* 行业。
+
+| 映射名 | 导入对象 | 匹配已有记录的依据 |
+| --- | --- | --- |
+| `crm_account_import` | 客户 | 客户名称（Account Name） |
+| `crm_contact_import` | 联系人 | 邮箱（Email） |
+| `crm_lead_import` | 潜在客户 | 邮箱（Email） |
+
+由于每个映射都按业务主键匹配，**重复导入同一个文件是更新而不是重复创建** —— 在表格里
+改好一列，再传一次即可。
+
+## 从列表视图进 —— 导入向导
+
+打开 **客户**、**联系人** 或 **潜在客户** 列表视图，点工具栏的 **导入**。向导走三步 ——
+**上传**、**字段映射**、**预览**。
+
+上面那三个映射并不是只有 API 才能用。向导会列出目标对象等于你进来时那个对象的映射，
+所以它们正好出现在这三个列表视图的 **已保存的映射** 里。选中之后，重命名、值转换与类型
+强制转换都在服务端执行，和走 API 时完全一样 —— 列映射随之变为只读，因为已经没有需要
+手工匹配的东西了。
+
+向导其余的部分就是下面这些步骤换成按钮：**校验数据** 就是第 2 步的试运行，大文件会交给
+第 3 步同一个后台作业，**历史** → **撤销导入** 就是第 4 步，撤销窗口的限制也一并适用。
+
+逐步操作 —— 自动生成的模板、写入模式、**匹配依据** —— 见
+[导入与导出](/zh-Hans/docs/guides/import-and-export)，界面这条路在那里写全了。
+
+## 第 1 步 —— 从模板开始
+
+表头完全对应的模板位于 `assets/import-templates/`：
+
+- `accounts.csv`
+- `contacts.csv`
+- `leads.csv`
+
+每个模板带 50 行示例数据。删掉示例行，把你自己的数据粘到相同表头下，**不要改动表头**
+—— 映射就是靠表头文字匹配的。多出来的列会被忽略，所以从旧系统多导出几列没有关系。
+
+**导入顺序：客户 → 联系人 → 潜在客户。** 每个联系人都必须指向一个已存在的客户
+（*Account Name* 列），先导联系人会失败。
+
+## 第 2 步 —— 先试运行
+
+试运行会校验并转换每一行，但 **不写入任何数据**。正式导入前请务必先做一次。
+
+```bash
+curl -X POST "$HOTCRM/api/v1/data/crm_account/import" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{
+        "format": "csv",
+        "csv": "<文件内容>",
+        "mappingName": "crm_account_import",
+        "dryRun": true,
+        "runAutomations": false
+      }'
+```
+
+返回逐行报告：
+
+```json
+{
+  "total": 6, "ok": 1, "errors": 5, "created": 1,
+  "results": [
+    { "row": 2, "ok": false, "action": "failed", "field": "name",
+      "code": "required", "error": "Account Name is required" },
+    { "row": 3, "ok": false, "action": "failed", "field": "industry",
+      "code": "invalid_option", "error": "Industry: \"Underwater Basket Weaving\" is not a known option" },
+    { "row": 5, "ok": false, "action": "failed", "field": "owner",
+      "code": "reference_not_found", "error": "Account Owner: no record matches \"nobody@nowhere.example.com\"" }
+  ]
+}
+```
+
+`row` 就是文件里的行号，据此修表格再重跑即可。
+
+> **试运行请带上 `runAutomations: false`。** 自动化开启时（默认值）试运行会跳过必填
+> 字段预检 —— 因为业务规则可能在真正写入时补上空字段，于是缺少 *Account Name* 的行
+> 会被报成正常，随后在导入时失败。加上 `runAutomations: false` 才能得到严格报告。
+> 正式导入则保持默认（`true`），让 HotCRM 的业务规则照常执行。
+
+## 第 3 步 —— 以作业方式导入
+
+行数稍多就应使用 **作业（job）** 接口：它在后台处理并上报进度，而且只有这条路径可以撤销。
+
+```bash
+curl -X POST "$HOTCRM/api/v1/data/crm_account/import/jobs" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{ "format": "csv", "csv": "<文件内容>", "mappingName": "crm_account_import" }'
+```
+
+```json
+{ "jobId": "imp_msbr5xelz33iwx6k", "object": "crm_account", "status": "pending", "total": 50 }
+```
+
+轮询进度：
+
+```bash
+curl "$HOTCRM/api/v1/data/import/jobs/$JOB_ID" -H "Authorization: Bearer $TOKEN"
+```
+
+```json
+{
+  "jobId": "imp_msbr5xelz33iwx6k", "status": "succeeded", "total": 50, "processed": 50,
+  "created": 50, "updated": 0, "skipped": 0, "errors": 0,
+  "percentComplete": 100, "undoable": true
+}
+```
+
+`GET /api/v1/data/import/jobs/$JOB_ID/results` 返回与试运行相同的逐行报告；正在运行的
+作业可用 `POST /api/v1/data/import/jobs/$JOB_ID/cancel` 取消。
+
+在 JavaScript SDK 中对应的三个调用是 `data.createImportJob(object, request)`、
+`data.getImportJobProgress(jobId)` 和 `data.getImportJobResults(jobId)`。
+
+## 第 4 步 —— 撤销一次错误导入
+
+文件有问题时，可以整个作业回滚：
+
+```bash
+curl -X POST "$HOTCRM/api/v1/data/import/jobs/$JOB_ID/undo" -H "Authorization: Bearer $TOKEN"
+```
+
+```json
+{ "success": true, "jobId": "imp_msbr5xelz33iwx6k", "object": "crm_account",
+  "deleted": 50, "restored": 0, "failed": 0 }
+```
+
+作业 **新建** 的记录会被删除，作业 **更新** 的记录会恢复为导入前的值。SDK 调用为
+`data.undoImportJob(jobId)`。
+
+撤销顺序与导入相反 —— 先潜在客户，再联系人，最后客户 —— 避免联系人指向已被删除的客户。
+
+作业上的 `undoable: true` 表示可撤销。以下情况为 `false`：试运行（本就没写入）、超过
+**5,000 行** 的作业、仍在运行的作业、以及已经撤销过的作业。
+
+## 关于负责人
+
+三个模板都带负责人列 —— *Account Owner Email*、*Contact Owner Email*、
+*Lead Owner Email* —— 按 HotCRM 用户的邮箱地址匹配。
+
+- **填了某个用户的邮箱** → 该用户成为记录负责人。
+- **填了匹配不到用户的邮箱** → 该行 **失败**，错误码 `reference_not_found`。系统不会
+  去猜。请先邀请该用户，或清空这个单元格。
+- **留空** → 记录归 **执行导入的你** 所有。
+
+最后一条对潜在客户同样成立：留空时负责人是导入者，常规的轮询分配 **不会** 接管。若需要
+分配给团队，请在导入后重新指派。
+
+## 每个映射读取哪些列
+
+只读取下列列，文件中其他内容一律忽略。
+
+### 客户（`crm_account_import`）
+
+`Account Name` · `Account Type` · `Industry` · `Website` · `Phone` ·
+`Annual Revenue` · `Employees` · `Account Owner Email` · `Parent Account` ·
+`Description`
+
+*Parent Account* 指向另一个客户，并且可以是同一个文件里更靠后创建的那一行。
+*Website* 必须是完整 URL（`https://…`），否则该行被拒绝。
+
+### 联系人（`crm_contact_import`）
+
+`Salutation` · `First Name` · `Last Name` · `Account Name` · `Title` ·
+`Department` · `Email` · `Phone` · `Mobile` · `Mailing Street` · `Mailing City` ·
+`Mailing State` · `Mailing Postal Code` · `Mailing Country` ·
+`Lead Source` · `Contact Owner Email` · `Description`
+
+*First Name*、*Last Name*、*Email* 和 *Account Name* 为必填。
+
+### 潜在客户（`crm_lead_import`）
+
+`Salutation` · `First Name` · `Last Name` · `Company` · `Title` · `Industry` ·
+`Email` · `Phone` · `Mobile` · `Website` · `Lead Status` · `Lead Source` ·
+`Annual Revenue` · `Employees` · `Lead Owner Email` · `Description`
+
+*First Name*、*Last Name*、*Company* 和 *Email* 为必填。*Lead Status* 留空则落为
+**New**。
+
+## 取值如何匹配
+
+- **选项列表**（*Industry*、*Lead Source*、*Account Type*、*Lead Status*、
+  *Department*、*Salutation*）接受 HotCRM 自己的标签或代码，且不区分大小写 ——
+  *Technology* 和 *technology* 都可以。映射还会翻译其他系统的说法：*SaaS*、*IT*、
+  *Financial Services* 分别转成 *Software / SaaS*、*Technology*、*Finance*；
+  *Trade Show* 转成 *Event / Trade Show*；*Working*、*Nurturing* 转成 *Contacted*。
+  仍然无法识别的值会让该行失败，而不是被悄悄丢掉。
+- **日期** 建议用 `YYYY-MM-DD`。
+- **数字** 必须是纯数字（`1500000`，不能写 `1.5M`）。
+- **空单元格** 不会覆盖字段，字段默认值照常生效。
+- **首尾空格** 会被自动去除。
+
+## 已知限制
+
+- **地址只对联系人生效。** 联系人有独立的邮寄地址字段，因此地址列可以落库；客户和潜在
+  客户把地址存为一个结构化字段，无法由分散的表格列拼装出来，而拼成一整串地址会被逐行
+  拒绝（*"Billing Address has an invalid address value"*）。所以这两份模板不带地址列，
+  自行往表里加一列也不会有任何效果 —— 映射只读它声明过的表头。请在导入后在记录页或
+  通过 API 补录。
+- **单个作业上限 50,000 行。** 更大的文件请拆分。
+- **撤销上限 5,000 行。** 超过这个规模的导入仍会完成，但无法回滚 —— 想保留这份保险，
+  就分批导入。
+- **Excel 同样支持**：用 `format: "xlsx"` 并把工作簿字节以 `xlsxBase64` 传入（替代
+  `csv`），映射用法完全相同。
+
+## 延伸阅读
+
+- [导入与导出](/zh-Hans/docs/guides/import-and-export) —— 导出、迁移与数据留存请求。
+- [共享与安全](/zh-Hans/docs/administration/sharing-and-security) —— 数据进来之后谁能看到。

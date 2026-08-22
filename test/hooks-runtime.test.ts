@@ -5,6 +5,7 @@ import oppLineItemHooks from '../src/objects/opportunity_line_item.hook';
 import quoteLineItemHooks from '../src/objects/quote_line_item.hook';
 import leadHooks from '../src/objects/lead.hook';
 import opportunityHooks from '../src/objects/opportunity.hook';
+import { makeHarness } from './helpers/hook-harness';
 
 /**
  * Runtime hook tests — the REAL handler code, executed against a controllable
@@ -20,40 +21,23 @@ import opportunityHooks from '../src/objects/opportunity.hook';
 
 type Rec = Record<string, any>;
 
-/** A tiny ctx.api backed by in-memory arrays, matching the HookApi surface. */
+/**
+ * A `ctx.api` over in-memory arrays.
+ *
+ * This used to be a SECOND, hand-rolled stand-in living in this file — one that
+ * accepted `filter` as a synonym for `where` and `update(id, doc)` as a synonym
+ * for the engine's `update(doc, options)`. Both spellings are rejected by the
+ * kernel, so every assertion below was being made against an API that does not
+ * exist: `opportunity_amount_rollup` was green here while throwing on every
+ * invocation in production (#616).
+ *
+ * There is now exactly one stand-in — `test/helpers/hook-harness.ts` — and it
+ * refuses what the kernel refuses. A fake that is more permissive than the real
+ * thing cannot prove anything about the real thing.
+ */
 function makeApi(store: Record<string, Rec[]>) {
-  const calls: Array<{ op: string; object: string; args: any }> = [];
-  const match = (row: Rec, where: Rec = {}) =>
-    Object.entries(where).every(([k, v]) => row[k] === v);
-  const api = {
-    calls,
-    object(name: string) {
-      const rows = store[name] ?? (store[name] = []);
-      return {
-        async find(q: { filter?: Rec; where?: Rec } = {}) {
-          return rows.filter((r) => match(r, q.filter ?? q.where ?? {}));
-        },
-        async findOne(q: { filter?: Rec; where?: Rec } = {}) {
-          return rows.find((r) => match(r, q.filter ?? q.where ?? {})) ?? null;
-        },
-        async count(q: { filter?: Rec; where?: Rec } = {}) {
-          return rows.filter((r) => match(r, q.filter ?? q.where ?? {})).length;
-        },
-        async update(id: string, doc: Rec) {
-          calls.push({ op: 'update', object: name, args: { id, doc } });
-          const row = rows.find((r) => r.id === id);
-          if (row) Object.assign(row, doc);
-          return row;
-        },
-        async insert(doc: Rec) {
-          calls.push({ op: 'insert', object: name, args: doc });
-          rows.push(doc);
-          return doc;
-        },
-      };
-    },
-  };
-  return api;
+  const h = makeHarness(store);
+  return { ...h.api, calls: h.calls };
 }
 
 const hookByName = (hooks: any, name: string) => {
@@ -214,30 +198,30 @@ describe('lead_auto_assign', () => {
         { position: 'sales_rep', user_id: 'repB' },
       ],
       crm_lead: [
-        { id: 'x1', owner: 'repA', is_converted: false },
-        { id: 'x2', owner: 'repA', is_converted: false }, // repA has 2 open
-        { id: 'x3', owner: 'repB', is_converted: false }, // repB has 1 open
+        { id: 'x1', owner_id: 'repA', is_converted: false },
+        { id: 'x2', owner_id: 'repA', is_converted: false }, // repA has 2 open
+        { id: 'x3', owner_id: 'repB', is_converted: false }, // repB has 1 open
       ],
     };
     const input: Rec = { company: 'NewCo' }; // no owner
     await assign.handler({ event: 'beforeInsert', input, api: makeApi(store) } as any);
-    expect(input.owner).toBe('repB'); // least-loaded
+    expect(input.owner_id).toBe('repB'); // least-loaded
   });
 
   it('is a no-op when there is no rep pool (never blocks intake)', async () => {
     const store: Record<string, Rec[]> = { sys_user_position: [], crm_lead: [] };
     const input: Rec = { company: 'NewCo' };
     await assign.handler({ event: 'beforeInsert', input, api: makeApi(store) } as any);
-    expect(input.owner).toBeUndefined();
+    expect(input.owner_id).toBeUndefined();
   });
 
   it('respects an explicit owner', async () => {
     const store: Record<string, Rec[]> = {
       sys_user_position: [{ position: 'sales_rep', user_id: 'repA' }],
     };
-    const input: Rec = { company: 'NewCo', owner: 'someone' };
+    const input: Rec = { company: 'NewCo', owner_id: 'someone' };
     await assign.handler({ event: 'beforeInsert', input, api: makeApi(store) } as any);
-    expect(input.owner).toBe('someone');
+    expect(input.owner_id).toBe('someone');
   });
 
   it('never throws when the rep-pool lookup is denied (anonymous Web-to-Lead)', async () => {
@@ -255,6 +239,6 @@ describe('lead_auto_assign', () => {
     await expect(
       assign.handler({ event: 'beforeInsert', input, api } as any),
     ).resolves.toBeUndefined();
-    expect(input.owner).toBeUndefined(); // ownerless, but the insert proceeds
+    expect(input.owner_id).toBeUndefined(); // ownerless, but the insert proceeds
   });
 });

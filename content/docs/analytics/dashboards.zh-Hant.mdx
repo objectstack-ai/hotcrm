@@ -1,122 +1,156 @@
 ---
 title: 儀表板
-description: 四個開箱即用的儀表板——CRM 概覽、銷售管道、服務營運和高階主管記分卡。
+description: 五個開箱即用的儀表板——CRM 概覽、銷售績效、銷售活動、客戶服務和高階主管概覽。
 ---
 
 # 儀表板
 
-HotCRM 內建四個儀表板。每個都為特定角色而建構，回答該角色每天提出的問題。
+HotCRM 內建五個儀表板。每個都為特定角色而建構，回答該角色每天提出的問題。
 
-## 四個儀表板
+本頁列出的每一個磁貼，都是應用真正發布的磁貼。這些清單會在 CI 裡與儀表板中繼資料逐條比對（`test/docs-drift.test.ts`），所以產品中的磁貼一旦被改名、新增或刪除，本頁就會直接讓建構失敗，而不是悄悄開始說假話。
+
+## 五個儀表板
 
 | 儀表板 | 面向 | 回答 |
 | --- | --- | --- |
 | 🏠 **CRM Overview** | 所有人 | "今天整個業務發生了什麼？" |
-| 📈 **Sales Dashboard** | 業務代表、經理 | "我的管道健康狀況如何？" |
-| 🎧 **Service Dashboard** | 服務客服、經理 | "我們在工單和 SLA 上表現如何？" |
-| 👔 **Executive Scorecard** | 高階主管、財務 | "我們達成目標了嗎？" |
+| 📈 **Sales Performance** | 銷售代表、經理 | "我的管道健康狀況如何？我們贏單了嗎？" |
+| ☎️ **Sales Activity** | 銷售經理、客戶團隊 | "誰在和客戶往來？哪些客戶已經沒了動靜？" |
+| 🎧 **Customer Service** | 服務客服、經理 | "我們在工單和 SLA 上表現如何？" |
+| 👔 **Executive Overview** | 高階主管、財務 | "我們達成目標了嗎？" |
 
-四者都遵守 [共享規則](/zh-Hant/docs/administration/sharing-and-security)——你看到的內容取決於你的角色。
+五者都遵守 [共享規則](/zh-Hant/docs/administration/sharing-and-security)——你看到的內容取決於你的角色。
+
+### 沒有任何磁貼顯示趨勢箭頭
+
+在任何一個儀表板上，KPI 磁貼都不顯示"對比上期"的漲跌幅。跨期對比是一次測量：它必須來自一次真實的對比查詢。在渲染器能為綁定資料集的指標跑出這樣一次查詢之前，磁貼上的百分比只會是手動敲進去的數字，沒有任何資料能改變它——資料庫塞得滿滿的時候和一筆記錄都沒有的時候，它讀起來一模一樣。所以磁貼只呈現真正查詢出來的那個數，此外什麼都不加。
 
 ## 🏠 CRM Overview
 
-跨職能的首頁儀表板，預設對所有使用者可見。
+跨職能的首頁儀表板——收入、管道和交易組成集中在一頁上。
 
-**磚貼**：
+**磁貼**：
 
-- **Open Leads** — 數量，按狀態。
-- **New Leads This Week** — 與上週對比的趨勢。
-- **My Open Opportunities** — 數量和價值。
-- **Cases Awaiting Response** — 數量，並突出 SLA 風險。
-- **Top 5 Accounts by Pipeline** — 長條圖。
-- **Recent Activity** — 過去 24 小時的通話、會議、電子郵件（你的）。
+- **Total Revenue** — 所選週期內的成交贏單收入。
+- **Active Deals** — 管道中進行中的商機。
+- **Won Deals** — 所選週期內成交贏單的交易。
+- **Avg Deal Size** — 成交贏單交易的平均金額。
+- **Revenue Trends** — 近 12 個月的成交贏單收入（面積圖）。
+- **Lead Source** — 按獲客通路統計的管道金額（環圈圖）。
+- **Pipeline by Stage** — 各銷售階段的進行中商機金額（漏斗圖）。
+- **Top Products** — 按產品類別統計的標價收入合計（長條圖）。
+- **Pipeline by Owner** — 每位銷售代表的進行中管道金額、交易數和平均交易規模（表格）。
+
+**控制項**：一個以商機預計成交日期為準的日期範圍選擇器（預設本季），以及一個 Owner 篩選器。
 
 非常適合作為每天開始時的著陸頁。
 
-## 📈 Sales Dashboard
+## 📈 Sales Performance
 
-業務團隊的日常營運儀表板。
+銷售團隊的日常營運儀表板。
 
-**磚貼**：
+**磁貼**：
 
-- **Pipeline by Stage** — 顯示各階段 $ 的漏斗圖。
-- **Forecast vs Quota** — 量表圖。
-- **Closed Won this Quarter** — 帶目標線的累計總額。
-- **Win Rate (last 90 days)** — 帶趨勢的百分比。
-- **Average Deal Size** — 本季對比上一季。
-- **Average Sales Cycle** — 從建立到成交的天數（贏單交易）。
-- **Top 10 Open Deals** — 可排序的表格。
-- **Slipping Deals** — 本週成交日期被推後的商機。
-- **Activity Heatmap** — 每位業務代表每天的通話 + 會議 + 電子郵件。
+- **Total Pipeline** — 進行中商機金額合計。
+- **Closed Won (QTD)** — 本季已成交的收入。
+- **Open Opportunities** — 正在推進中的交易。
+- **Avg Deal Size** — 本季成交贏單交易的平均金額。
+- **Win Rate (12M)** — 近 12 個月內*已結案*（贏單 + 丟單）商機中的贏單占比。進行中的管道不計入分母。
+- **Deals Won (12M)** — 這個百分比背後的分子。
+- **Deals Lost (12M)** — 分母的另一半，好讓分子和分母始終陳列在贏率旁邊。
+- **Pipeline by Stage** — 各銷售階段的進行中商機金額（漏斗圖）。
+- **Monthly Revenue Trend** — 近 12 個月的成交贏單收入。
+- **Pipeline by Forecast Category** — 按預測類別分組的進行中管道。
+- **Lead Source** — 管道是從哪裡來的（環圈圖）。
+- **Open Pipeline by Owner** — 每位銷售代表進行中的金額、交易數和平均贏單機率（表格）。
+- **Quota Attainment by Rep** — 每位銷售代表當季的配額、已成交收入與達成率，讀取自預測快照。
+- **Win / Loss by Rep** — 每位銷售代表的贏單數、丟單數、已結案數、贏率和贏單金額（表格）。
+- **Win / Loss by Lead Source** — 同一份拆分換成按獲客通路來看：哪些來源帶來的商機真正能成交。
+- **Why We Lose** — 按丟單原因統計的丟單數。每筆丟單商機都必須填寫原因（[結案時強制](/zh-Hant/docs/sales/opportunities)），因此圖中不存在"未歸因"切片——圖為空表示該時間窗內沒有丟單，而不是沒人填欄位。
+- **Pipeline by Stage × Lead Source** — 進行中商機金額按階段與來源的交叉統計（樞紐分析表）。
 
-角色感知：業務代表看到自己的，經理看到團隊的，總監看到彙總。
+**控制項**：一個以成交日期為準的日期範圍選擇器（預設本季），外加 Sales Rep 和 Deal Type 篩選器。Quota Attainment by Rep 固定在當季，兩者都不作用於它——配額是為某個週期定義的，用任意範圍去重新切分它，等於拿完整的目標對比不完整的收入。
 
-## 🎧 Service Dashboard
+角色感知：銷售代表看到自己的記錄，經理看到團隊的，遵循共享規則。
+
+## ☎️ Sales Activity
+
+覆蓋度與客戶健康檢視：誰在和客戶往來、往來有多頻繁，以及沉默出現在哪裡。
+
+**磁貼**：
+
+- **Interactions Logged** — 真正發生過的通話和會議。
+- **Meetings Booked** — 已排進行事曆、但還沒有發生的會議。
+- **Customer Minutes** — 面對客戶的總時長。
+- **Tasks Completed** — 已經收尾的跟進事項，活動量的另一半。
+- **Activity by Rep** — 按負責人統計的已記錄互動數（長條圖）。
+- **Activity Volume by Week** — 每週互動數：團隊是在提速，還是在變安靜？
+- **Activity Mix** — 通話、會議與示範各占多少（環圈圖）。
+- **Where the Activity Lands** — 漏斗的哪一段拿到了注意力。
+- **Interactions on Deals** — 關聯到商機的已記錄互動數。
+- **Open Deals** — 仍在推進中的商機，用來給上一個磁貼當參照。
+- **Quiet 30+ Days** — 一個月內沒有任何已記錄互動的活躍客戶。
+- **Quiet 60+ Days** — 沉默兩個月，風險閾值。
+- **Quiet 90+ Days** — 整整一季沒有聯絡：要麼介入，要麼放棄。
+
+**控制項**：一個 Rep 篩選器。這裡**刻意沒有**日期範圍選擇器——互動日期是 datetime 欄，而平台的 datetime 篩選器轉換目前會在這類欄位上套用範圍時把每個小工具都歸零。時間改由座標軸承載：Activity Volume by Week 按週分桶，三個沉默客戶磁貼各自框住自己的 30 / 60 / 90 天閾值。
+
+## 🎧 Customer Service
 
 服務團隊的日常營運檢視。
 
-**磚貼**：
+**磁貼**：
 
-- **Open Cases by Priority** — 長條圖。
-- **Cases Approaching SLA** — 按距違約時間排序的表格。
-- **Cases Breached** — 過去 7 天（含工單擁有者）。
-- **First Response Time** — 平均值對比目標。
-- **Resolution Time** — 平均值對比目標。
-- **Customer Satisfaction (CSAT)** — 過去 30 天，趨勢。
-- **Case Volume by Origin** — Email / Phone / Web / Chat / Portal。
-- **Top Case Categories** — 用於發現產品問題。
-- **Agent Workload** — 每位客服的未結工單數。
+- **Open Cases** — 尚未結案的工單。
+- **Critical Cases** — 優先順序為 critical 的未結工單。
+- **Avg Resolution Time** — 平均結案時長（小時）。
+- **SLA Violations** — 違反了 SLA 的工單。
+- **Cases by Status** — 工作量在流程各狀態上的分布（環圈圖）。
+- **Cases by Priority** — 未結工單按緊急程度的組成（圓餅圖）。
+- **Cases by Origin** — Email / Phone / Web / Chat / Portal（長條圖）。
+- **Daily Case Volume** — 近 30 天每天新建的工單數。
+- **SLA Compliance** — 在 SLA 內解決的工單占比，對比 95% 的目標線（量表圖）。
+- **Open Cases by Priority** — 每個優先順序的未結工單數及其 SLA 違約率（表格）。
 
-*Cases Approaching SLA* 磚貼是此儀表板上點擊最多的小工具——它是客服確定優先順序的方式。
+**控制項**：Agent 和 Priority 篩選器，外加每分鐘一次的重新整理——服務台需要新鮮的數字。和 Sales Activity 一樣，這裡同樣刻意沒有日期範圍選擇器，原因是同一個 datetime 篩選器問題；Daily Case Volume 自帶 30 天的時間窗。
 
-## 👔 Executive Scorecard
+## 👔 Executive Overview
 
 業務的高階主管 / 財務檢視。
 
-**磚貼**：
+**磁貼**：
 
-- **Bookings This Quarter** — 成交贏單，對比計畫和去年同期。
-- **Pipeline Coverage** — 管道 ÷ 剩餘配額。
-- **Forecast Confidence** — 承諾 + 最佳情況對比目標。
-- **Net New ARR** — 適用於訂閱業務。
-- **Renewals This Quarter** — 即將到來、已續約、已流失。
-- **CSAT and NPS** — 客戶健康度。
-- **Customer Acquisition Cost** — 行銷活動支出 ÷ 新客戶數。
-- **Top 10 Accounts by ACV** — 年度合約價值排行榜。
-- **Pipeline Trend** — 4 週管道價值圖表。
+- **Total Revenue (YTD)** — 今年的成交贏單收入。
+- **Active Accounts** — 至少還有一段有效關係的客戶。
+- **Total Contacts** — 通訊錄裡的人。
+- **Open Leads** — 漏斗中尚未轉化的潛在客戶。
+- **Revenue Trend** — 近 12 個月的成交贏單收入。
+- **Revenue by Industry** — 年初至今的成交贏單收入按客戶產業拆分（環圈圖）。
+- **Pipeline by Stage** — 各銷售階段的進行中商機金額（漏斗圖）。
+- **New Accounts** — 近 6 個月的客戶新建節奏。
+- **Accounts by Industry** — 每個產業的年收入合計與客戶數（表格）。
+
+**控制項**：一個以成交日期為準的日期範圍選擇器（預設本季），外加 Owner 和 Lead Source 篩選器。四個 KPI 磁貼各自宣告了自己的週期（年初至今、"活躍"、"未轉化"），不會被這個選擇器收窄。
 
 此儀表板是每週領導層評審的基礎。
 
-## 個人化和建立儀表板
+## 你可以改什麼
 
-每位使用者都可以：
+- **日期範圍** — CRM Overview、Sales Performance 和 Executive Overview 各帶一個以商機預計成交日期為準的選擇器，預設本季。Sales Activity 和 Customer Service 沒有，原因見上面各自的章節。
+- **篩選器** — 每個儀表板宣告自己的一套：Owner 各處都有，另外 Sales Performance 有 Deal Type、Customer Service 有 Priority、Executive Overview 有 Lead Source。
+- **重新整理** — Customer Service 每分鐘重新整理一次，Sales Performance 每三分鐘，其餘三個每五分鐘。
 
-- 將任何儀表板**釘選**為著陸頁。
-- 按日期範圍、團隊、地區、產品**篩選**儀表板。
-- **下鑽**到任何磚貼以檢視底層記錄。
-- 將任何磚貼**匯出**為圖片或 PDF。
-- **訂閱**以透過電子郵件接收每週 PDF。
+有些磁貼刻意不接受所在儀表板的篩選器。12 個月的收入趨勢、Top Products 和 Quota Attainment by Rep 都保持自己標題上寫明的那個時間窗，這樣更窄的日期選擇器就無法在標題不變的情況下悄悄改掉數字的定義。
 
-管理員可以：
+## 數字是從哪裡來的
 
-- 從 **Analytics › Dashboards › New** 選單建立新儀表板。
-- 從標準庫選擇小工具，或從 [多維資料集](/zh-Hant/docs/analytics/cubes) 建構自訂小工具。
-- 設定受眾——誰預設看到每個儀表板。
-- 安排快照（例如自動產生的季度 QBR 簡報）。
+每個磁貼都綁定到一個資料集——正是這一層語意把"管道""已結案交易""SLA 違約"各定義一次，供用到它們的每個磁貼和報表共用。可用的度量和維度見 [資料集與多維資料集](/zh-Hant/docs/analytics/cubes)，彙總數字背後的記錄層級檢視見 [報表](/zh-Hant/docs/analytics/reports)。
 
-## 給經理的提示
+出現在不只一個儀表板上的定義是共享的，而不是重新敲一遍：Pipeline by Stage 和 Avg Deal Size 各自只有一份定義，分別被三個和兩個儀表板使用，所以"進行中管道"不會在不同頁面上變成不同的意思。
 
-- ✅ 為你的團隊**訂閱儀表板 PDF**——週一早上 8 點是很好的節奏。
-- ✅ 每週五使用 **Slipping Deals** 磚貼來規劃下週的交易評審通話。
-- ✅ 不要從電子郵件管理——從儀表板管理。電子郵件用於採取行動；儀表板用於呈現事實。
+## 提示
 
-## 給高階主管的提示
-
-- ✅ 從多維資料集建構一個**董事會檢視**儀表板——成交、管道、流失、CSAT——一頁搞定。
-- ✅ 設定**閾值告警**（例如管道覆蓋率 &lt;2.5×），以便在問題出現前得到提醒。
-
-## 給管理員的提示
-
-- ✅ 建構儀表板時，**從多維資料集開始**而非臨時查詢——它們更快也更一致。
-- ✅ 鼓勵使用者**複製並個人化**，而非從頭重建。
-- ✅ 每季稽核儀表板使用情況——淘汰無人開啟的儀表板。
+- ✅ 管道評審之前，把 **Win / Loss by Rep** 和 **Why We Lose** 放在一起讀——前者說誰在轉化，後者說是什麼在打敗你。
+- ✅ 每週都處理一次 **Quiet 90+ Days** 磁貼。一季都沒有任何已記錄互動的客戶，要麼已經休眠，要麼早就走了；而這個磁貼的價值上限，就是你的團隊真正記錄下來的互動量。
+- ✅ 在服務台，把 **SLA Violations**（違約的絕對筆數）和 **SLA Compliance** 磁貼（對比目標的達標率）一起看——小基數上的一個小數字，和一個健康的達標率不是一回事。
+- ✅ 把 **Interactions on Deals** 對著 **Open Deals** 讀：覆蓋度問題的答案是這兩者的比值，而不是其中任何一個單獨的數字。

@@ -1,13 +1,16 @@
 ---
 title: Activities
-description: Tasks, calls, emails and meetings scheduled on any record. The shared to-do list for every team.
+description: Tasks — what you still owe a customer, on any record. The shared to-do list for every team.
 ---
 
 # Activities
 
-An **activity** (stored as a *Task* record) is anything you need to do or track in relation to another record — a call to make, an email to send, a meeting to attend, a follow-up to schedule.
+An **activity** is anything you do or owe in relation to another record. HotCRM keeps activities in **two** objects, and this page is about the first:
 
-Activities can be attached to almost anything: an account, a contact, an opportunity, a lead, or a case.
+- A **task** (`crm_task`) — something you still **owe** somebody: a call to make, an email to send, a follow-up to schedule. It is anchored on a **due date**.
+- An **event** (`crm_event`) — a meeting or a call that takes a slot on somebody's calendar, whether it already happened or is booked for later. It is anchored on a **start and an end**, and everyone in the room is a real record. See [Meetings & Calls](/docs/sales/meetings-and-calls), which carries the full task-versus-event comparison.
+
+Either kind can be attached to almost anything: an account, a contact, an opportunity, a lead, or a case.
 
 ## What activities are for
 
@@ -39,12 +42,14 @@ When you create an Urgent task, the owner gets an email alert.
 
 ## The 6 activity types
 
-- **Call** — a phone call to make or log
+- **Call** — a phone call you still have to make
 - **Email** — an outbound or inbound email
-- **Meeting** — a scheduled conversation (call or in-person)
+- **Meeting** — a conversation you still have to set up
 - **Follow-up** — a generic check-in
 - **Demo** — a product demonstration
 - **Other** — anything else
+
+*Call* and *Meeting* here label a **to-do** — *"call Jane back on Tuesday"*. A task carries a due date, not a start and an end, and it has no attendee list. The call that actually happened, or the meeting you are booking for next week, is an event instead — written by the **Log a Call**, **Log a Meeting** and **Schedule a Meeting** buttons on the record. See [Meetings & Calls](/docs/sales/meetings-and-calls).
 
 ## What an activity record stores
 
@@ -55,7 +60,7 @@ When you create an Urgent task, the owner gets an email alert.
 | **Assignment** | Owner |
 | **Related To** | Account, contact, opportunity, lead or case |
 | **Recurrence** | Is it recurring? Daily / weekly / monthly / yearly with an interval and end date |
-| **Tracking** | Estimated hours, actual hours, progress % |
+| **Tracking** | Progress % |
 
 ## Recurring tasks
 
@@ -65,7 +70,10 @@ Use cases:
 
 - *Quarterly check-in with key accounts* — monthly recurrence × 3.
 - *Daily standup notes* — daily recurrence.
-- *Renewal reminder 60 days before contract end* — set automatically by the contract flow.
+
+Both of those you set up by hand, and that is the only way a series starts here: **nothing in HotCRM marks a task as recurring for you** — no flow, no action, no seed record ticks *Recurring Task*. Once you tick it, the system carries the series forward on completion; until you do, this app has no recurring tasks at all.
+
+The **renewal reminder is not one of them**. The daily renewal sweep files an ordinary high-priority follow-up — no recurrence fields on it — against *Activated* contracts whose end date has come within that contract's own **Renewal Notice (Days)**, **30** by default and set per contract, not a fixed 60. It returns each morning because the sweep runs again and skips any contract that still has an open one, not because of a recurrence rule: complete it and, while the contract is still inside its window, tomorrow's sweep files a fresh task. The [Contracts](/docs/revenue/contracts) page describes that sweep in full.
 
 ## What happens automatically
 
@@ -83,28 +91,34 @@ Use cases:
 
 Activities show up in **three** places:
 
-1. **The task list** — global "My Tasks" tab.
-2. **The Activity tab on the related record** — open an account, see all related tasks.
-3. **The home page activity widget** — *Today's Tasks* and *Overdue Tasks*.
+1. **The task list** — **My Work › All Tasks** opens the whole list with the eight view tabs described below; **My Work › My Tasks** drops you straight onto *My Open Tasks*.
+2. **The Activity tab on the related record** — open an account, a lead, an opportunity or a case and its Activity tab gathers the tasks and events hanging off it.
+3. **The Sales Home page** — its **My Open Tasks** tab embeds that same *My Open Tasks* view, so what you owe is on the page you land on. Sales Home carries no activity *metric*: the four tiles at the top are all pipeline (Revenue (Won), Deals Won, Pipeline Value, Open Leads). Activity volume is reported on the Sales Activity dashboard — see below.
 
 ## Standard list views
 
-- **My Open Tasks** — your incomplete tasks.
-- **Overdue** — past due date, not completed.
-- **Today** — due today.
-- **This Week** — due in the next 7 days.
-- **Completed This Week** — for activity reporting.
-- **By Priority** — sorted by priority descending.
+Tasks are the richest object in the app for ways to look at the same records: eight saved views, one per tab across the top of the list, in this order. Three of the tabs are named for the job rather than for the view they open, so both names are given.
+
+| Tab | The view it opens | What it shows |
+| --- | --- | --- |
+| **All** *(the landing tab)* | **All Tasks** | Every task. Unfinished ones first, then soonest due; the row carries a completion tick, status, priority, due date, progress, owner and an overdue flag, and is tinted by priority — red for urgent, orange for high, green for normal, grey for low. 50 rows a page, tick several to act on them together. **My Work › All Tasks** opens the same list. |
+| **Board** | **Task Board** | The kanban board, one column per status, cards showing subject, priority, due date and progress. Completed tasks are left out — this is the work still moving. Opening a card slides the task in from the side rather than taking you off the board. |
+| **Schedule** | **Task Schedule** | Tasks placed on a calendar by **due date** and coloured by priority. It filters nothing, so finished tasks stay on the calendar where they happened. |
+| **Plan** | **Execution Plan** | The gantt view: each task is a bar from its **reminder date** to its **due date**, filled to its progress percentage. |
+| **Worklog** | **Worklog Timeline** | The same reminder-to-due span laid out week by week and grouped by **owner**, coloured by status — who is carrying what, and when. |
+| **My Tasks** | **My Open Tasks** | The tasks **you** own that are not finished, soonest due first. The same view sits behind **My Work › My Tasks** and behind the **My Open Tasks** tab on Sales Home. |
+| **Priority** | **📅 My Priority Tasks** | Open tasks — *Not Started* or *In Progress* — at **High** or **Urgent** priority, soonest due first with urgent above high on the same day. Read the name carefully: the filter mentions **no date at all**, so this is the priority queue, not a "due today" list. It carries no owner clause either, so it shows every high/urgent open task you have access to, not only your own. |
+| **Backlog** | **⏰ Open Tasks · Most Overdue First** | Every unfinished task, oldest due date at the top. The name is the honest one: this is **not** filtered down to tasks that are strictly past due — it is the open backlog sorted so that whatever has been waiting longest surfaces first. The **Overdue** tick on the *All* tab is not a second opinion either: it is stamped when the task is **saved**, so it tells you what was true at the last edit, not what is true today. |
 
 ## How the system uses activities
 
-- **Account last activity date** — automatically stamped whenever a task on the account is completed. Surfaces stale accounts.
-- **Opportunity last activity date** — same idea; surfaces stalled deals.
-- **Sales Dashboard** — "Activities per rep this week" widget.
+- **Account last activity date** — the customer recency clock the quiet-account reporting is built on. A completed task is only **one of four** things that refresh it: an event turning **Held**, a task completed, **Send Email** on a contact, and a case set to **Resolved**. The stamp also **walks up** the chain — complete the task on the opportunity, the contact or the case, and the account behind it is stamped for you, which is what stops a busy customer from looking silent for a whole sales cycle. The full table, including the one non-interaction source (changing an account's owner or type stamps it too), is in [Meetings & Calls › What refreshes "last activity"](/docs/sales/meetings-and-calls#what-refreshes-last-activity).
+- **Stalled deals** — an opportunity has **no** last-activity field of its own; activity you log on a deal refreshes the **account** behind it. What surfaces a deal that has gone quiet is **Days in Stage**, derived from the stage entry date, plus the daily [Stalled Deal Alert](/docs/administration/automation), which nudges the owner and books a follow-up task.
+- **Sales Activity dashboard** — activity volume is reported here, not on Sales Performance, which carries pipeline metrics only. **Activity by Rep** counts logged interactions per owner — events that reached **Held**, the calls and meetings that actually happened, *not* tasks; completed tasks are counted separately, by the **Tasks Completed** tile. Neither is windowed to a week: this dashboard deliberately ships no date-range picker, so the week-by-week read is the neighbouring **Activity Volume by Week** chart. See [Dashboards](/docs/analytics/dashboards).
 
 ## Tips for sales reps
 
-- ✅ Always log a *Call* task after each customer call — it's how the team sees what's happening.
+- ✅ Log the call that happened with **Log a Call**, not as a *Call* task — that writes an [event](/docs/sales/meetings-and-calls) with attendees and a duration, and it is the event that lands in the customer's interaction history. Keep *Call* tasks for the calls you still have to make.
 - ✅ Set the *Reminder Date/Time* if you'll forget by the due date.
 - ✅ Link the task to the **opportunity**, not just the account — this is what surfaces it on the opportunity timeline.
 

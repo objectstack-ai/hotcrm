@@ -12,10 +12,13 @@
 import type { Hook } from '@objectstack/spec/data';
 
 import accountHook from '../objects/account.hook';
+import articleFeedbackHook from '../objects/article_feedback.hook';
 import campaignHook from '../objects/campaign.hook';
+import campaignMemberHook from '../objects/campaign_member.hook';
 import caseHook from '../objects/case.hook';
 import contactHook from '../objects/contact.hook';
 import contractHook from '../objects/contract.hook';
+import eventHook from '../objects/event.hook';
 import forecastHook from '../objects/forecast.hook';
 import knowledgeArticleHook from '../objects/knowledge_article.hook';
 import leadHook from '../objects/lead.hook';
@@ -28,10 +31,13 @@ import taskHook from '../objects/task.hook';
 
 const entries: Array<Hook | Hook[]> = [
   accountHook,
+  articleFeedbackHook,
   campaignHook,
+  campaignMemberHook,
   caseHook,
   contactHook,
   contractHook,
+  eventHook,
   forecastHook,
   knowledgeArticleHook,
   leadHook,

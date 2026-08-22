@@ -21,12 +21,23 @@ export const MarketingUserProfile = {
     // "Add to Campaign" action (`src/actions/lead.actions.ts`) inserts
     // `crm_campaign_member` rows, and before #488 no permission set granted the
     // object — the action failed for the only persona meant to run it. Rows
-    // derive from the campaign (controlled_by_parent), so record scope follows
-    // the campaigns this profile can already read; deleting membership history
-    // stays a manager/admin privilege, matching every other object here.
+    // derive from the campaign (controlled_by_parent), so there is no record
+    // scope to author — and as of 17.0.0-rc.4 that derivation does follow the
+    // campaign grant: MEASURED and pinned by
+    // `test/parent-derived-reach.test.ts`, master accessibility resolves through
+    // the same paths a direct read of the campaign takes, ownership and
+    // `sys_record_share` grants included. For THIS profile the delta is small —
+    // `crm_campaign` is `public_read` and this set holds org-wide campaign read,
+    // so the rows are the same either way — but the grant is now scope that
+    // follows the campaigns above, not org-wide read in fact as it was through
+    // 17.0.0-rc.3 (objectstack-ai/objectstack#5386, #694).
+    // Deleting membership history stays a manager/admin privilege, matching
+    // every other object here.
     crm_campaign_member: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     // Read-only reference: knowledge articles for campaign copy
     // (public_read catalog).
+    // Reads the KB and may rate it; cannot author articles (#601).
+    crm_article_feedback: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
     crm_knowledge_article: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
   },
   fields: {
@@ -47,7 +58,7 @@ export const MarketingUserProfile = {
         'A deal flagged Private is visible only to its owner, even to holders of org-wide opportunity read.',
       object: 'crm_opportunity',
       operation: 'select' as const,
-      using: 'is_private == false || owner == current_user.id',
+      using: 'is_private == false || owner_id == current_user.id',
     },
     // The platform's `member_default` set carries a wildcard owner-only-writes
     // policy (`created_by == current_user.id` on update), and RLS policies are
@@ -55,8 +66,13 @@ export const MarketingUserProfile = {
     // campaigns only reaches campaigns the user personally created. That also
     // silently broke "Add to Campaign": enrolling a member is a write DERIVED
     // from the campaign (controlled_by_parent), so it requires campaign edit at
-    // the row level. This policy widens campaign updates to every holder of the
-    // set — exactly what the object grant above already declares. `id != null`
+    // the row level. This is the one direction in which the ADR-0055 derivation
+    // really does narrow: a master RLS policy is exactly what it folds in, while
+    // ownership and `sys_record_share` grants are not (which is why the READ
+    // side of these member rows is org-wide — see the `crm_campaign_member`
+    // grant above and objectstack-ai/objectstack#5386, #694). This policy widens
+    // campaign updates to every holder of the set — exactly what the object
+    // grant above already declares. `id != null`
     // is the pushdown-safe "all rows" predicate (verified: compiles to
     // `{id: {$null: false}}`).
     {

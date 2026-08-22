@@ -2,6 +2,7 @@
 
 import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-automation';
 import type * as Automation from '@objectstack/spec/automation';
+import type { Hook } from '@objectstack/spec/data';
 
 type Flow = Automation.Flow;
 
@@ -111,6 +112,47 @@ export function makeDataEngine(seed: Record<string, Rec[]> = {}): DataEngine {
 }
 
 /**
+ * Wrap a data engine so registered `beforeInsert` / `beforeUpdate` hooks run
+ * against the mutating payload, exactly as the real runtime does before a
+ * write reaches the driver.
+ *
+ * `previous` for an update is the first matching row — the flows here update
+ * by `id`, and `update_record` cannot fan out anyway (no `options.multi`).
+ */
+function withHooks(engine: DataEngine, hooks: Hook[]): DataEngine {
+  const run = async (
+    object: string,
+    event: 'beforeInsert' | 'beforeUpdate',
+    input: Rec,
+    previous?: Rec,
+  ) => {
+    for (const hook of hooks) {
+      if (hook.object !== object) continue;
+      if (!(hook.events ?? []).includes(event as never)) continue;
+      await (hook.handler as (ctx: Rec) => unknown)({
+        event, object, input, previous, user: undefined, logger: silentLogger,
+      });
+    }
+  };
+
+  return {
+    ...engine,
+    store: engine.store,
+    async insert(object, data) {
+      const input = { ...data };
+      await run(object, 'beforeInsert', input);
+      return engine.insert(object, input);
+    },
+    async update(object, data, opts = {}) {
+      const input = { ...data };
+      const previous = await engine.findOne(object, opts);
+      await run(object, 'beforeUpdate', input, previous ?? undefined);
+      return engine.update(object, input, opts);
+    },
+  };
+}
+
+/**
  * A notification captured from a `notify` node.
  *
  * The builtin notify node calls `messaging.emit({ topic, audience, payload,
@@ -140,6 +182,32 @@ interface MessagingEmit {
   [key: string]: unknown;
 }
 
+/**
+ * One durable outbound-HTTP delivery an `http` node enqueued (#600).
+ *
+ * The builtin `http` node takes the durable path ONLY when the messaging
+ * service answers `isHttpDeliveryReady()` truthily; otherwise it logs a warning
+ * and silently degrades to a real inline `fetch`. A harness whose messaging stub
+ * carries `emit` alone therefore lets a `durable: true` node "pass" while firing
+ * a live network request off the test runner — which is both a flake and the
+ * exact blind spot a hand-off test exists to close. Capturing these is what
+ * makes "the deal was enqueued for delivery, once" an assertable fact.
+ *
+ * Mirrors the `enqueueHttp` input `@objectstack/service-messaging` accepts.
+ */
+export interface EnqueuedHttpDelivery {
+  source?: string;
+  refId?: string;
+  dedupKey?: string;
+  label?: string;
+  url: string;
+  method?: string;
+  headers?: Record<string, string>;
+  signingSecret?: string;
+  timeoutMs?: number;
+  payload?: unknown;
+}
+
 export const silentLogger: any = {
   info() {}, warn() {}, error() {}, debug() {}, trace() {},
   child() { return silentLogger; },
@@ -156,6 +224,11 @@ export interface FlowHarness {
   engine: AutomationEngine;
   data: DataEngine;
   store: Record<string, Rec[]>;
+  /**
+   * Every durable delivery an `http` node enqueued during the run — the outbox
+   * rows the platform's dispatcher would drain with retry / dead-letter.
+   */
+  deliveries: EnqueuedHttpDelivery[];
   /** Everything a `notify` node emitted during the run. */
   notifications: SentNotification[];
   /**
@@ -186,15 +259,36 @@ export interface FlowHarness {
  * `notify` nodes are captured rather than delivered: the messaging service is
  * out of scope here, and asserting on the captured payload is what proves the
  * recipient/severity/template contract (the class of bug where a notify targets
- * `{record.owner.manager}` and silently interpolates to "undefined").
+ * `{record.owner_id.manager}` and silently interpolates to "undefined").
  */
+export interface FlowHarnessOptions {
+  /**
+   * Object hooks to run around the data engine's writes.
+   *
+   * Off by default, because most flow tests want to assert exactly what the
+   * FLOW wrote. But a flow that relies on a `beforeInsert` hook to complete
+   * the record it creates — `forecast_snapshot` hands `crm_forecast` a bare
+   * `period` and lets `forecast_derive_period` compute the calendar window —
+   * is only half-tested without them: the flow would look fine while writing a
+   * row no consumer can find.
+   *
+   * `beforeInsert` / `beforeUpdate` only; the flows under test have no
+   * after-hook dependencies.
+   */
+  hooks?: Hook[];
+}
+
 export function makeFlowHarness(
   flows: Record<string, Flow>,
   seed: Record<string, Rec[]> = {},
+  options: FlowHarnessOptions = {},
 ): FlowHarness {
-  const raw = makeDataEngine(seed);
+  const base = makeDataEngine(seed);
+  const hooks = options.hooks ?? [];
+  const raw: DataEngine = hooks.length === 0 ? base : withHooks(base, hooks);
   const notifications: SentNotification[] = [];
   const queries: RecordedQuery[] = [];
+  const deliveries: EnqueuedHttpDelivery[] = [];
 
   const record = <T>(op: RecordedQuery['op'], object: string, opts: Rec, result: T): T => {
     queries.push({ op, object, where: opts.where ?? opts.filter ?? {} });
@@ -226,6 +320,18 @@ export function makeFlowHarness(
         failed: 0,
       };
     },
+    /**
+     * Stand in for a wired `sys_http_delivery` outbox. Answering `true` is what
+     * keeps a `durable: true` node ON the durable path — see
+     * {@link EnqueuedHttpDelivery} for what a `false` here would silently do.
+     */
+    isHttpDeliveryReady() {
+      return true;
+    },
+    async enqueueHttp(input: EnqueuedHttpDelivery) {
+      deliveries.push(input);
+      return `delivery_${deliveries.length}`;
+    },
   };
 
   const ctx: any = {
@@ -247,6 +353,7 @@ export function makeFlowHarness(
     store: data.store,
     notifications,
     queries,
+    deliveries,
     async run(flowName, params = {}, opts = {}) {
       const started: any = await engine.execute(flowName, {
         params, userId: 'user_1', event: 'manual', ...opts,

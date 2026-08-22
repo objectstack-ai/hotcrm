@@ -35,19 +35,20 @@ You can also **reopen** an unqualified lead back to *New* if circumstances chang
 
 ## What each lead record stores
 
-The lead detail screen has 9 collapsible sections. Open only what you need:
+A lead record declares its fields in **10 groups**. The lead's own record page curates its **Details** tab from a subset of them, so read this as the full inventory of what a lead carries rather than a screen-by-screen map:
 
-| Section | What's in it |
+| Group | What's in it |
 | --- | --- |
-| **Identity** | Salutation, first/last name, full name |
-| **Company Information** | Company name, job title, industry, annual revenue, employees, website |
-| **Contact Information** | Email, phone, mobile |
-| **Qualification** | Status, rating (0-5 stars), score (0-100), budget, timeline |
-| **Assignment** | Owner, next follow-up date, lead source |
-| **Address** | Mailing address |
-| **Additional Info** | Description, tags |
-| **Communication Preferences** | Email opt-out, do-not-call |
-| **Conversion** | Auto-filled after the lead is converted |
+| **Identity** | Salutation, first/last name, full name, display title |
+| **Company Information** | Company, job title, industry — plus a hidden normalised copy of the company name, which is what conversion and duplicate checks match on |
+| **Contact Information** | Email, phone, mobile, website |
+| **Qualification** | Status, Lead Score (a 1-5 star rating), lead source, next follow-up date, last contacted, disqualification reason |
+| **Assignment** | Owner |
+| **Address** | A single structured address field |
+| **Additional Info** | Annual revenue, number of employees, description, notes |
+| **Communication Preferences** | Do-not-call, email opt-out |
+| **Conversion** | Converted flag, converted account, contact and opportunity, converted date — all auto-filled when the lead is converted |
+| **Duplicate Management** | Duplicate Of (which object the surviving record lives on), Duplicate Of Lead, Duplicate Of Contact, Duplicate Status — the fields behind *Duplicate leads* below |
 
 The available **industries** include Technology, Software/SaaS, Finance, Healthcare, Retail, Manufacturing, Education, Real Estate, Media, Logistics, Hospitality, Energy, Government, Non-profit, and Other.
 
@@ -55,19 +56,65 @@ The available **lead sources** include Web, Referral, Event, Trade Show, Webinar
 
 ## Lead scoring — what the score means
 
-Every lead automatically gets a **score from 0 to 100**, recalculated whenever the lead is created or updated. The score considers:
+A lead carries exactly **one** quality number: **Lead Score**, a **1-5 star rating**. It is the same field the list views show in the *Score* column — there is no separate 0-100 number, and no budget or timeline field behind it.
 
-- **Company size** — bigger company revenue and headcount → higher score.
-- **Industry fit** — Technology, Finance and Healthcare score highest by default.
-- **Job title seniority** — VPs and C-level titles add weight.
-- **Engagement signals** — recent web visits, webinar attendance, etc.
+### Where the stars come from
 
-You can also set a manual **star rating (0-5)** as a human override:
+When a lead is created **without** a rating, the system works one out from the lead's own fields and stores it. Everything it looks at is on the record in front of you — there is no web-visit or engagement tracking behind the number:
 
-- ⭐⭐⭐⭐ or higher → the system flags the lead as **hot** and sets the next follow-up to today.
-- ⭐⭐⭐⭐⭐ → the owner is emailed immediately.
+| What it looks at | Stars added |
+| --- | --- |
+| A business email address — anything that isn't gmail, yahoo, hotmail, outlook, qq or 163 | +1 |
+| Any phone number at all | +0.5 |
+| A senior job title — CEO, CTO, CFO, CIO, COO, Founder, VP, Vice President, Director, Head of | +1.5 |
+| Industry is Technology, Finance or Healthcare | +1 |
+| 200 employees or more | +0.5 |
+| Annual revenue of $10M or more | +0.5 |
 
-> An admin can adjust the scoring weights — see [Administration › Automation](/docs/administration/automation).
+The total is capped at 5, floored at 1 and rounded to a **whole star**: a lead is never scored 0, and half stars are never stored.
+
+Two limits worth knowing:
+
+- It runs **on creation only**. Filling in the job title or the headcount later does *not* re-score the lead — re-rate it yourself if the picture changed.
+- It never overwrites a rating that came in with the lead. Import a lead with a rating, or set one on the create form, and your value is what is kept.
+
+### What the stars trigger
+
+New-lead routing reads the rating once, as the lead lands:
+
+| Rating | Next Follow-up Date it stamps | Alert to the lead's owner |
+| --- | --- | --- |
+| **4 stars or better** | **Tomorrow** | *"Hot lead — assign within 24h"*, sent to both the **inbox and email**, flagged as a warning |
+| **Everything else**, including a lead with no rating at all | **Three days out** | *"New lead to assign"*, **inbox only** |
+
+Four stars is the whole of the hot threshold: a 5-star lead is routed exactly like a 4-star one, and nothing separate happens at five.
+
+> The weights above live in the lead's automation code, not in a setup screen — see the admin tips at the end of this page.
+
+## Duplicate leads
+
+The same person enquiring twice is normal, not an error. A returning prospect who fills in the web form again — or a trade-show list that overlaps one you already imported — creates a **second lead**, and HotCRM records the relationship instead of refusing the record.
+
+When a lead arrives with an email address already in the system, it is saved with:
+
+- **Duplicate Status = Suspected** — a machine's guess, nothing has been decided.
+- **Duplicate Of** — the record it appears to repeat: an existing **Contact** if the person already became one, otherwise the **oldest open Lead** with that address. Every re-submission points at the same original, so a cluster is one list, not a chain.
+
+Work them from the **Suspected Duplicates** view on the Leads tab. Open the pair, compare them, and then either:
+
+- **It's a new enquiry from a known person** — clear Duplicate Status and work the lead normally. A returning prospect with a fresh budget is a real opportunity.
+- **It's the same enquiry twice** — set the lead to *Unqualified* with the reason **Duplicate**. The form then requires you to name the surviving record and set Duplicate Status to **Confirmed**; the lead cannot be closed as a duplicate without saying what survives it, so the disqualification report always links to something you can open.
+
+> Anonymous Web-to-Lead submissions are always accepted. If the public form cannot check for existing records (it deliberately has no read access to your CRM data), the lead lands unflagged — review it from the normal lead queue.
+
+### When the surviving record is later deleted
+
+Deleting a Contact, or the Account above it, is never blocked by a lead that pointed at it — including a lead you already closed as a confirmed duplicate. What happens to the lead depends on how far the review had got:
+
+- **Still Suspected** — nothing was decided, so the flag is dropped entirely. The lead stops claiming to duplicate anything and goes back to the normal queue.
+- **Confirmed by a reviewer** — the verdict stands. Duplicate Status stays **Confirmed** and **Duplicate Of** changes to **Erased Record**, so the lead reads as *"a confirmed duplicate of a record that has since been erased"*. The disqualification and its reason are untouched.
+
+**Erased Record** is not something you can choose. It is only ever written when the record a lead named is actually deleted, which is why seeing it on a lead is reliable evidence that the deletion happened rather than that someone typed it. This is what lets an erasure request be carried out in full without quietly deleting a reviewer's finding along with it.
 
 ## Converting a qualified lead
 
@@ -78,7 +125,7 @@ When a lead is qualified, click **Convert**. A small form pops up asking:
 
 The system then, in a single step:
 
-1. Creates an **Account** from the lead's company information.
+1. Creates an **Account** from the lead's company information — or reuses the one you already have. The match ignores capitalisation and extra spaces, so a lead for `ACME  Corp` lands on your existing `Acme Corp` instead of creating a second account. It is not a fuzzy match: `Acme Corp` and `Acme Corporation` are still two different companies.
 2. Creates a **Contact** from the lead's person information, attached to that account, marked as primary.
 3. *(Optional)* Creates an **Opportunity** in the *Prospecting* stage with a 90-day close date.
 4. Marks the lead as **Converted** and locks it.
@@ -88,7 +135,7 @@ After conversion, the lead becomes read-only — all future activity happens on 
 
 ## How the AI Copilot helps
 
-When you open a lead, the Sales Copilot is available in the side panel. Try asking:
+When you open a lead, the AI assistant is available in the side panel. Try asking:
 
 - *"Qualify this lead"* — runs BANT, gives you a score and a one-line justification per dimension.
 - *"Is this a hot lead?"* — quick yes/no plus reasoning.
@@ -98,18 +145,23 @@ The Copilot will recommend the next action (e.g., schedule a call, send a follow
 
 ## Standard list views
 
-Open the Leads tab to see these saved views:
+The Leads list curates no tab row, so the switcher offers every saved view there is — eight of them, in this order:
 
-- **My Open Leads** — leads you own that aren't converted or unqualified.
-- **Hot Leads** — rating ≥ 4 stars.
-- **Today's Follow-ups** — leads with next follow-up date = today.
-- **Recently Created** — newest first.
-- **By Source** — grouped by where the lead came from.
+| View | What it shows |
+| --- | --- |
+| **All Leads** *(the landing view)* | Every lead, newest first, with the name as the link into the record plus company, email, status, score, source and owner. 25 rows a page, export to CSV or XLSX, and **Add to Campaign** on the selection toolbar. On an empty org it says so — *No Leads Yet · Get started by creating your first lead*. |
+| **My Leads** | The leads you own, highest star rating first and newest within a rating. Also reachable from **My Work › My Leads** in the sidebar. |
+| **🔥 Hot Leads** | Leads still **New** or **Contacted** rated **4 stars or better** — exactly the leads new-lead routing calls hot, gives a next-day follow-up date and alerts their owner about ("assign within 24h"). Ordered by **Next Follow-up Date**, soonest first, with phone, email and owner on the row so it can be worked top to bottom. |
+| **High Priority** | The same population — **4 stars and up**, still New or Contacted — laid out to scan rather than to work through: no follow-up date, but the lead source on the row and rows tinted by rating (green at 5, orange at 4). |
+| **Suspected Duplicates** | The review queue described above: leads whose **Duplicate Status** is *Suspected*, oldest suspicion first, with the duplicate-link fields on the row. Working it drains it — a lead set to *Confirmed* or cleared drops out. When there is nothing to review it says *No Suspected Duplicates · Nothing to review — every re-captured email has been checked.* |
+| **Lead Pipeline** | The kanban board, one column per status, each column summing **Annual Revenue**. Opening a card slides the lead in from the side rather than taking you off the board. |
+| **Lead Calendar** | Leads placed on a month calendar by the day they arrived, titled by company and coloured by status — the shape of your inflow. |
+| **Lead Cards** | Gallery cards, one per lead, titled by company with name, email, phone, status and rating on the face. |
 
 ## Tips for sales reps
 
-- ✅ Add the next follow-up date as soon as you contact a lead — it powers the "Today's Follow-ups" view.
-- ✅ Use the star rating if you have a strong gut feel — the score doesn't capture everything.
+- ✅ Keep the **Next Follow-up Date** honest — it is what **🔥 Hot Leads** sorts on, so a stale date buries a live lead at the bottom of the queue. A new lead gets one automatically (four stars or better is due tomorrow, everything else in three days), and **Schedule Follow-up** re-stamps it with the due date of the task you just filed.
+- ✅ Set the stars yourself when you have a strong gut feel — a rating you supply on create is kept as-is, and the automatic one only fills in when you leave it blank.
 - ✅ Don't convert too early — a converted lead can't be reverted. Use *Qualified* status while you confirm.
 - ❌ Don't keep noise in *New* forever — disqualify after 3 failed contact attempts.
 

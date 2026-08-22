@@ -23,13 +23,19 @@ export const ContactViews = defineView({
       { field: 'department', width: 140 },
       { field: 'email', width: 220 },
       { field: 'phone', width: 150 },
-      { field: 'owner', width: 150 },
+      { field: 'owner_id', width: 150 },
     ],
     sort: [{ field: 'last_name', order: 'asc' }],
     grouping: { fields: [{ field: 'crm_account', order: 'asc', collapsed: true }] },
     selection: { type: 'multiple' },
+    // The selection-bar entry point for campaigning at existing customers
+    // (#597), mirroring `bulkActions: ['create_campaign']` on the lead grid.
+    // The bare-string form fans the action out once per selected row; do not
+    // add strings for `mark_primary` / `send_email`, which declare
+    // `locations: ['list_item']` and are auto-injected into the row menu.
+    bulkActions: ['add_contact_to_campaign'],
     pagination: { pageSize: 50, pageSizeOptions: [25, 50, 100] },
-    exportOptions: ['csv', 'xlsx'],
+    exportOptions: { formats: ['csv', 'xlsx'] },
     appearance: {
       showDescription: true,
       allowedVisualizations: ['grid', 'gallery'],
@@ -73,6 +79,7 @@ export const ContactViews = defineView({
     type: 'tabbed',
     sections: [
       {
+        name: 'identity',
         label: 'Identity',
         columns: 2,
         fields: [
@@ -82,16 +89,27 @@ export const ContactViews = defineView({
           { field: 'crm_account', required: true },
           'title',
           'department',
-          'reports_to',
-          'owner',
+          'owner_id',
         ],
       },
       {
+        // Named `contact_details`, not `contact_info` — `contact_info` is
+        // already a distinct fieldGroup key on `crm_contact` ("Contact
+        // Information"), and reusing it here would make this section's
+        // translated heading follow that group's wording instead of its own
+        // "Contact Info".
+        name: 'contact_details',
         label: 'Contact Info',
         columns: 2,
-        fields: ['email', 'phone', 'mobile', 'birthdate', 'avatar'],
+        fields: ['email', 'phone', 'mobile', 'avatar'],
       },
       {
+        // Named `comm_preferences`, not `preferences` — `preferences` is
+        // already a distinct fieldGroup key on `crm_contact` ("Communication
+        // Preferences"), and reusing it here would make this section's
+        // translated heading follow that group's wording instead of its own
+        // "Preferences".
+        name: 'comm_preferences',
         label: 'Preferences',
         columns: 2,
         fields: ['lead_source', 'is_primary', 'do_not_call', 'email_opt_out'],

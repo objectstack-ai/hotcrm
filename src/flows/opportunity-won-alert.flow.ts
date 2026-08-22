@@ -2,25 +2,45 @@
 
 import { P } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
+import { LARGE_DEAL_AMOUNT } from '../objects/_thresholds';
 type Flow = Automation.Flow;
 
 /**
  * Large-deal-won alert — record-change flow on opportunity update.
  *
  * Migrated from the removed `notify_on_large_deal_won` object workflow (7.7
- * dropped `workflows[]`). When a deal > $100K is marked closed_won, notify the
- * owner and their manager.
+ * dropped `workflows[]`). When a deal of $100K or more is marked closed_won,
+ * notify the owner — the owner alone, not their manager (see the notify node
+ * for why the manager cannot be reached).
  *
- * NB: `record.amount > 100000` is authored as bare CEL against the (string-
+ * The cut is INCLUSIVE (`>=`, #1087): `LARGE_DEAL_AMOUNT` means one thing across
+ * this alert, the approval entry gate and both sharing rules, so a deal at
+ * exactly $100,000 is announced on win for the same reason it is shared with
+ * leadership. Before #1087 this site cut at `>` and the sharing rules at `>=`,
+ * which made that deal visible to leadership and invisible to governance.
+ *
+ * NB: `record.amount >= 100000` is authored as bare CEL against the (string-
  * serialized) currency field — this relies on the 7.7 numeric-hydration fix
  * (framework #1534); pre-7.7 it would have needed `double(record.amount)`.
  */
 export const OpportunityWonAlertFlow: Flow = {
   name: 'opportunity_won_alert',
   label: 'Large Deal Won Alert',
-  description: 'On closed_won opportunities over $100K: notify owner + manager.',
+  description: 'On closed_won opportunities of $100K or more: notify the owner — the owner alone, not their manager.',
   type: 'record_change',
   status: 'active',
+  // A record-change flow fired by a SYSTEM write carries no trigger user
+  // either (ADR-0049, #1888, #3760). Deals reach `closed_won` through
+  // machinery as well as through a rep's own save — `lead_conversion` and the
+  // `contract_renewal` sweep both write opportunities, and the latter is
+  // itself `runAs: 'system'`.
+  //
+  // Measured honestly on 17.0.0-rc.2: this flow has NO data node (start →
+  // notify → end), so the refusal does not reach it today and declaring
+  // `system` changes nothing observable. Declared for the same reason as
+  // `contact_welcome` — see the fuller note there. Nothing to scope, so
+  // elevating the user-driven runs costs nothing.
+  runAs: 'system',
   variables: [],
   nodes: [
     {
@@ -33,16 +53,39 @@ export const OpportunityWonAlertFlow: Flow = {
         // claims, approval-status stamps, description tweaks) re-sent the
         // congratulations blast. The trigger forwards `previous` into the
         // condition scope (cf. the engine's record-change context).
-        condition: P`record.stage == "closed_won" && previous.stage != "closed_won" && record.amount > 100000`,
+        // TOTALITY (#633): `has(...)` on every read, plus `!= null` on the
+        // ordering comparison (`has()` passes an explicit null and
+        // `record.amount >= 100000` then aborts with
+        // `no such overload: dyn<null> >= int`).
+        //
+        // `previous.stage` is guarded FAIL-CLOSED — `has(previous.stage) &&`,
+        // not `!has(previous.stage) ||` — which is the opposite of how
+        // `record.stage` is guarded, deliberately. This term exists solely to
+        // suppress a re-fire, and the failure it was written for (a
+        // congratulations blast to management re-sent on every later edit of a
+        // won deal) is worse than a missed one. When the engine cannot see
+        // what the prior stage was it cannot see a TRANSITION either, so it
+        // must not claim one. In practice `previous` is a full prior row on
+        // every record-after-update; the shape this covers is a bulk
+        // `updateMany`, where ObjectQL never reads a prior row and `previous`
+        // arrives null — and firing one blast per row of a bulk update is
+        // exactly what nobody wants.
+        condition: P`has(record.stage) && record.stage == "closed_won"
+          && has(previous.stage) && previous.stage != "closed_won"
+          && has(record.amount) && record.amount != null && record.amount >= ${LARGE_DEAL_AMOUNT}`,
       },
     },
     {
-      id: 'notify_management', type: 'notify', label: 'Notify Management',
+      // The `label` names what this node actually does: it notifies the owner
+      // and nobody else. The `id` keeps its original `notify_management`
+      // spelling on purpose — `edges[]` reference nodes by id, so renaming one
+      // is a behaviour change, not a wording fix.
+      id: 'notify_management', type: 'notify', label: 'Notify Owner',
       config: {
-        // Owner only: `{record.owner.manager}` cannot traverse a lookup on the
+        // Owner only: `{record.owner_id.manager}` cannot traverse a lookup on the
         // raw trigger snapshot — it interpolates to the literal "undefined"
         // and the message is delivered to a phantom user.
-        recipients: ['{record.owner}'],
+        recipients: ['{record.owner_id}'],
         channels: ['inbox', 'email'],
         severity: 'info',
         topic: 'large_deal_won',

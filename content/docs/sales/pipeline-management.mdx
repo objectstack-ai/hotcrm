@@ -31,24 +31,28 @@ You can override the probability manually on an individual deal if you have a sp
 
 This number is the heart of the weighted forecast. It's recalculated automatically every time the amount or probability changes (including the auto-updates from stage changes).
 
-The **Sales Dashboard** sums *Expected Revenue* across the open pipeline to give you the weighted forecast for the quarter.
+The weighted forecast is a **list-view total, not a dashboard number**. The **Open Deals** and **All Opportunities** views on Opportunities each carry an *Expected Revenue* column with a column sum (`src/views/opportunity.view.ts`), and that sum over the open pipeline is the weighted forecast.
+
+No dashboard can give you the same figure. The **Sales Performance** dashboard (`sales_dashboard`) reads the `opportunity_metrics` dataset, and that dataset declares **no measure over `expected_revenue`** — every amount measure it exposes (*Total Amount*, *Avg Deal Size*, *Won Revenue*, *Lost Revenue*) reads the raw `amount` field. So its *Total Pipeline* tile is the **unweighted** open pipeline; the two numbers differ by the probability weighting, which is the whole point of the calculation above.
 
 ## The pipeline kanban view
 
-The **Pipeline Kanban** (sidebar shortcut **Sales Pipeline**) shows the pipeline as 7 columns — one per stage. Each card shows:
+The kanban board is the **Sales Pipeline** view on Opportunities (`pipeline_kanban`), and the sidebar entry that opens it reads **Pipeline**. It shows the pipeline **one column per stage, open deals only**: the board carries its own filter — `stage not_in [closed_won, closed_lost]` in `src/views/opportunity.view.ts` — so only the five active stages, *Prospecting*, *Qualification*, *Needs Analysis*, *Proposal* and *Negotiation*, can ever hold a card. Closed business is not hidden, it is elsewhere: **All Opportunities** and the **Sales Performance** dashboard both include it. Whether the two closed stages are drawn as permanently empty columns or left off the board altogether is the console's rendering choice and not something this app declares — either way there is no closed deal on this board to find.
+
+Each card carries the four fields the board binds (`kanban.columns`):
 
 - Opportunity name
 - Account
 - Amount
 - Close date
-- Owner avatar
 
-To advance a deal, just **drag the card** to the next column. The system enforces the stage rules, so you can't drag from *Prospecting* directly to *Closed Won*.
+**Owner is not on the card.** `owner_id` sits in the view's top-level `columns` list, which is what the grid renderings read, but the card binding names those four fields and stops there. To see the owner next to a deal, use **All Opportunities**, which carries an *Owner* column, or the **Deal Cards** gallery, whose cards do show it.
 
-At the top of each column you'll see two numbers:
+To advance a deal, just **drag the card** to the next column. The stage rules are **advice, not a gate**. `opportunity_stage_progression` (`src/objects/opportunity.object.ts`) declares which moves are legal — *Prospecting* straight to *Closed Won* is not one of them — but the rule carries **warning** severity, so a move outside the table writes one line to the server log, *"Invalid opportunity stage transition"*, and **the save still goes through**. Nothing in the board stops you. What the log buys you is that a bad import or a misbehaving integration can be found afterwards; see [Administration › State Machines](/docs/administration/state-machines) for what the table is and is not good for.
 
-- The **unweighted total** (sum of amount)
-- The **weighted total** (sum of expected revenue)
+At the top of each column you'll see **one** number: the sum of *Amount* across that column's deals — the unweighted total for that stage. One is all a kanban column can carry, by design: a board declares a single `summarizeField` (`src/views/opportunity.view.ts`), and this board binds it to `amount`.
+
+The board has no weighted total. As *How expected revenue is calculated* says above, the weighted forecast is a list-view total: the *Expected Revenue* column sum on **Open Deals** and **All Opportunities**.
 
 ## Pipeline health signals
 
@@ -59,20 +63,20 @@ A few derived fields surface deal risk so you can act on them in your weekly rev
 | **Days in current stage** > 30 | Deal is stagnant — push or close it. |
 | **Close date in the past** AND stage still open | Forecast is wrong; reset the date or accept the loss. |
 | **Amount > $500K** with no submitted approval | Discount approval is required before this can close. |
-| **Competitors set** with no win plan | The Sales Copilot can suggest a strategy. |
+| **Closed lost** with no loss reason | The deal's story is gone — nothing can learn from it. |
 
-The Sales Copilot surfaces at-risk deals when you ask *"what's slipping?"* or *"how does my pipeline look?"*
+The AI assistant surfaces at-risk deals when you ask *"what's slipping?"* or *"how does my pipeline look?"*
 
 ## Pipeline reports worth bookmarking
 
-You'll find these in the **Reports** section of the sidebar:
+Only the first of these is on the sidebar. There is no *Reports* group: the reports group is called **Insights** (`src/apps/crm.app.ts`), and it pins three reports — **Pipeline Coverage**, **Lead Inflow** and **SLA Performance** — alongside the **CRM Overview** dashboard and **Forecasts**. The other four below are opened from the reports screen. Names here are the labels the report library lists, which is not always the shorter name on the nav entry.
 
 | Report | What it shows |
 | --- | --- |
-| **Pipeline Coverage (Quarter)** | Are we covering 3x the quota for the upcoming quarter? Matrix of quarter × stage. |
-| **Funnel by Owner → Stage** | Per-rep funnel health — spot leaky stages. |
+| **Pipeline Coverage by Forecast × Quarter** | Are we covering 3x the quota for the upcoming quarter? A matrix of open pipeline: forecast category down the rows, close quarter across the columns. The sidebar entry for it reads **Pipeline Coverage**. |
+| **Opportunity Funnel by Owner → Stage** | Per-rep funnel health — spot leaky stages. |
 | **Opportunities by Stage** | Bar chart of pipeline by stage. |
-| **Won by Owner** | Leaderboard for quarter-end recognition. |
+| **Won Opportunities by Owner** | Leaderboard for quarter-end recognition. |
 | **Customer Churn Signals** | Open cases + low NPS on existing customers = churn risk. |
 
 See [Analytics › Reports](/docs/analytics/reports) for details.
@@ -81,20 +85,22 @@ See [Analytics › Reports](/docs/analytics/reports) for details.
 
 | Cadence | What to do |
 | --- | --- |
-| **Daily** | Open Pipeline Kanban. Find stalled cards (in-stage > 14 days). Push or close. |
-| **Weekly** | Run *Pipeline Coverage*. Ask the Sales Copilot: *"what's at risk?"* |
-| **Monthly** | Run *Funnel by Owner → Stage*. Coach reps with leaky stages 1:1. |
-| **Quarter-end** | Run *Won by Owner* for commissions. Archive lost deals with a *loss reason*. |
+| **Daily** | Open the **Pipeline** board. Find stalled cards (in-stage > 14 days). Push or close. |
+| **Weekly** | Run *Pipeline Coverage*. Ask the AI assistant: *"what's at risk?"* |
+| **Monthly** | Run *Opportunity Funnel by Owner → Stage*. Coach reps with leaky stages 1:1. |
+| **Quarter-end** | Run *Won Opportunities by Owner* for commissions. Archive lost deals with a *loss reason*. |
 
 ## Forecasting roll-up
 
 The Sales Manager / Director view of the forecast is built from:
 
-- The **Opportunity** analytic cube (measure: sum of amount, dimension: stage)
-- The **Sales Dashboard** widgets (pipeline by stage, win rate, top deals)
-- The **Pipeline Coverage** report (quarter × stage matrix)
+- The **Opportunity Metrics** dataset (`opportunity_metrics`) — measure **Total Amount** (sum of amount), dimension **Stage**
+- The **Sales Performance** dashboard (`sales_dashboard`) — widgets for pipeline by stage, win rate, and open pipeline by owner
+- The **Pipeline Coverage** report (`pipeline_coverage_by_quarter`, whose own label reads **Pipeline Coverage by Forecast × Quarter**) — a matrix of open pipeline: forecast category down the rows, close quarter across the columns
 
 Together they answer: *"do we have enough pipeline to make the quarter, and where are the risks?"*
+
+What that dashboard will not give you is a *top deals* ranking, and no renaming would fix it: a dashboard table binds to an analytics dataset and can only aggregate — it cannot list raw records (ADR-0021). The **Top Open Opportunities** table that once held that slot was replaced by **Open Pipeline by Owner**, a per-rep ranking, for exactly that reason; the Row 5 comment in `src/dashboards/sales.dashboard.ts` records the swap. For a deal-by-deal ranking, open an opportunity list view.
 
 ## Tips for sales reps
 
@@ -104,11 +110,11 @@ Together they answer: *"do we have enough pipeline to make the quarter, and wher
 
 ## Tips for sales managers
 
-- ✅ Run *Funnel by Owner → Stage* monthly to catch reps with leaky funnels.
-- ✅ Use *Pipeline Coverage by Quarter* in QBRs to set the next quarter's targets.
-- ✅ Coach reps to fill in *Competitors* — it dramatically improves Copilot quality.
+- ✅ Run *Opportunity Funnel by Owner → Stage* monthly to catch reps with leaky funnels.
+- ✅ Use *Pipeline Coverage* in QBRs to set the next quarter's targets.
+- ✅ Coach reps to fill in *Loss Reason* and *Loss Details* on every closed-lost deal — it is the only competitive data the app keeps.
 
 ## Tips for admins
 
-- Add or remove stages? You need to update three places: the picklist on the opportunity object, the workflow rule that sets probabilities, and the state machine that controls transitions. See [Customization › Extending Objects](/docs/customization/extending-objects).
-- The $100K *large deal* notification threshold lives in the opportunity workflow rules.
+- Add or remove stages? You need to update three places in the source, none of them a Setup screen: the `OPPORTUNITY_STAGE_OPTIONS` picklist the `stage` field renders (`src/objects/_picklists.ts`), the `STAGE_PROBABILITY` map that sets probabilities inside the `opportunity_lifecycle` hook (`src/objects/opportunity.hook.ts`), and the `opportunity_stage_progression` state-machine validation rule that controls transitions (`src/objects/opportunity.object.ts`). See [Customization › Extending Objects](/docs/customization/extending-objects).
+- The $100K *large deal* notification threshold is not a Setup field either: it is the CEL start condition of the `opportunity_won_alert` flow — `record.amount >= 100000` in `src/flows/opportunity-won-alert.flow.ts`. Who gets the alert is that flow's `notify` node, whose `recipients` list is the single entry `{record.owner_id}` — the deal owner alone.

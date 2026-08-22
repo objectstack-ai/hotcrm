@@ -9,37 +9,70 @@ description: HotCRM 的 5 分钟演练 —— 主页、你的第一条线索、�
 
 ## 1. 主页仪表盘
 
-你看到的第一个东西是 **CRM Overview** 仪表盘。它告诉你：
+左侧导航最上面只有一个固定条目 **Home**，你落地的就是它。**Home** 打开的是 **Executive Overview** 仪表盘——9 个磁贴，讲收入、客户与管道：
 
-- 你有多少**打开的线索**。
-- 你的管道中有多少**商机**。
-- 任何**等待你响应**的案例。
-- 按管道价值排名的顶级客户。
-- 近期活动（最近的通话、会议、邮件）。
+| 磁贴 | 它显示什么 |
+| --- | --- |
+| **Total Revenue (YTD)** | 本年度已成交收入 |
+| **Active Accounts** | 至少存在一项活跃关系的客户 |
+| **Total Contacts** | 通讯录中的联系人 |
+| **Open Leads** | 漏斗中尚未转化的线索 |
+| **Revenue Trend** | 过去 12 个月的已成交收入 |
+| **Revenue by Industry** | 本年度已成交收入按客户行业拆分 |
+| **Pipeline by Stage** | 各销售阶段的进行中商机金额，画成漏斗——是金额，不是商机条数 |
+| **New Accounts** | 过去 6 个月的客户创建节奏 |
+| **Accounts by Industry** | 各行业的年营收总额与客户数 |
 
-把它当作你每日开始工作的着陆页。如果你是经理，你还会看到团队级汇总。
+上表用的是源码里的英文 label，也就是英文界面上看到的名字。简体中文界面下，它们显示为语言包里的译名——例如 **Open Leads** 显示为「未转化线索」、**Pipeline by Stage** 显示为「阶段管道分布」，仪表盘 **Executive Overview** 自己显示为「高管总览」。
+
+磁贴上方是三个面板级控件：一个按成交日期的日期范围选择器（默认本季度）、一个 **Owner** 筛选器和一个 **Lead Source** 筛选器。开头 4 个 KPI 磁贴各自框定了自己的周期（本年度累计、"活跃"、"未转化"），不受日期选择器收窄，所以这几个数始终是完整的，而收入类图表跟着选择器走。
+
+把它当作你每日开始工作的着陆页。
+
+本节过去承诺的 4 样东西，这块盘上没有任何磁贴对应；另有一个名字，它属于另一块盘：
+
+- **CRM Overview** 是一块真实存在的仪表盘，但它不是 **Home** 打开的那块。它挂在 **Insights** 分组下，而 **Insights** 在应用加载时是折叠的——所以它离你两次点击，不是"第一眼看到"的东西。**Active Deals**（进行中商机的条数）、**Won Deals** 与 **Pipeline by Owner** 是它的磁贴，不是这块盘的。
+- *等待你响应的案例*：两块盘上都没有。**Executive Overview** 与 **CRM Overview** 都没有任何磁贴在数案例。**Open Cases**、**Critical Cases**、**SLA Violations** 在 **Service** 分组下的 **Service Overview** 上——参见 [Service](/zh-Hans/docs/service/index)。
+- *按管道价值排名的顶级客户*：本应用里根本没有这样一个磁贴。**Accounts by Industry** 是按行业归组，不是给客户排名；全应用最接近的排名是 **CRM Overview** 上的 **Pipeline by Owner**，那是按销售代表排，不是按客户排。
+- *近期活动（最近的通话、会议、邮件）*：也不在这里。**Interactions Logged**、**Meetings Booked** 与 **Customer Minutes** 在 **Activity** 分组下的 **Sales Activity** 上。
+- *给经理看的团队级汇总*：这块盘不做这件事。每个磁贴对所有人跑的都是同一个查询，变的是你被允许读到哪些记录，而那由你的权限集决定。本应用的岗位是扁平的——没有可供可见性向上汇总的汇报线——而 **Sales Manager** 权限集直接授予 `viewAllRecords`，所以经理读到的是全组织的合计，而不是某个团队的切片。
 
 ➜ 了解更多：[仪表盘](/zh-Hans/docs/analytics/dashboards)
+
+![销售业绩仪表盘](/screenshots/hotcrm/sales-dashboard/zh-Hans.jpg)
 
 ## 2. 应用启动器
 
 点击**应用启动器**（左上角网格图标）以在应用之间切换：
 
-- **Enterprise CRM** —— 包含所有 CRM 功能的主应用。
+- **HotCRM** —— 包含所有 CRM 功能的主应用。
 - **Admin** —— 面向系统管理员。
 
-在 Enterprise CRM 内，左侧导航按以下方式分组：
+在 HotCRM 内，左侧导航最上面是一个固定条目——**Home**，它打开的是 **Executive Overview** 仪表盘；其余内容分在 7 个分组里：
 
 | 分组 | 内容 |
 | --- | --- |
-| **Sales** | Leads、Accounts、Contacts、Opportunities、Quotes、Contracts |
-| **Service** | Cases、Knowledge Base |
-| **Marketing** | Campaigns、Campaign Members |
-| **Products** | Products |
-| **Activities** | Tasks、Events |
-| **Analytics** | Dashboards、Reports |
-| **AI** | Copilot、Knowledge Bases |
-| **Approvals** | Approval Requests、Action History |
+| **Sales** | Leads、Accounts、Account Workbench、Contacts、Opportunities、Pipeline、Quotes、Contracts、Sales Performance |
+| **My Work** | My Tasks、My Deals、My Leads、My Cases、My Calendar、All Tasks |
+| **Activity** | Events、Calendar、Interaction History、Sales Activity |
+| **Marketing** | Campaigns、Products |
+| **Service** | Cases、Knowledge、Service Overview |
+| **Insights** | CRM Overview、Forecasts、Pipeline Coverage、Lead Inflow、SLA Performance |
+| **Approvals** | Inbox |
+
+上表用的是源码里的英文 label，也就是英文界面上看到的名字。简体中文界面下，它们显示为语言包里的译名——例如 **Inbox** 显示为「待我审批」、**Knowledge** 显示为「知识库」、**My Work** 显示为「我的工作」。
+
+**Marketing**、**Insights**、**Approvals** 这三个分组在应用加载时是折叠的——只有 **Sales**、**My Work**、**Activity**、**Service** 会自动展开。先把分组点开，再判断某样东西在不在这里。
+
+本页过去列出的 4 个分组名，应用里根本不存在；另有几个条目名，真身并不在它说的位置：
+
+- *Products*（产品）不是分组。产品目录是 **Marketing** 分组下的 **Products** 条目——参见 [Marketing](/zh-Hans/docs/marketing/index)。
+- *Activities* 不是分组，真实的分组叫 **Activity**，而且任务不在里面。`crm_task` 在侧边栏上是 **My Tasks** 与 **All Tasks** 两项，都挂在 **My Work** 分组下。
+- *Analytics* 不是分组，真实的分组叫 **Insights**。它里面没有任何条目叫 *Dashboards* 或 *Reports*——它固定的那个仪表盘和三张报表，上表已按各自的名字列出。
+- *AI* 不是分组，也没有叫 *Copilot* 或 *Knowledge Bases* 的侧边栏条目。Copilot 是每个页面右侧的聊天面板（见下文第 6 节），知识文章则是 **Service** 分组下的 **Knowledge**。
+- *Knowledge Base* 不是本应用使用的 label。**Service** 分组下的条目叫 **Knowledge**，与它并列的服务仪表盘叫 **Service Overview**——参见 [Service](/zh-Hans/docs/service/index)。
+- *Campaign Members* 不是侧边栏条目。营销活动成员要从营销活动详情页或全局搜索进入——参见 [Campaign Members](/zh-Hans/docs/marketing/campaign-members)。
+- *Approval Requests* 与 *Action History* 也都不是条目：**Approvals** 分组下只有 **Inbox** 一项。审批的操作留痕本身是真实数据，由审批插件以 `sys_approval_action` 存储，但本应用里没有任何导航条目能打开它。
 
 ## 3. 你的第一条线索
 
@@ -48,10 +81,12 @@ description: HotCRM 的 5 分钟演练 —— 主页、你的第一条线索、�
 1. 点击 **Sales → Leads → New**。
 2. 填写 **Name**、**Company**、**Email**。
 3. 保存。线索会自动分配给你。
-4. 在线索详情页上点击 **🎯 Qualify** —— [Sales Copilot](/zh-Hans/docs/ai-copilot/sales-copilot) 会将其评分为 Hot / Warm / Cold 并建议下一步操作。
+4. 在线索详情页上请助手 *"判定此线索资格"* —— [线索资格判定技能](/zh-Hans/docs/ai-copilot/sales-copilot) 会按 BANT 给出 0–100 的评分并建议下一步操作。
 5. 准备就绪后，点击 **Convert** 一步将线索转化为 Account + Contact + Opportunity。
 
 ➜ 了解更多：[线索](/zh-Hans/docs/sales/leads)
+
+![已确认线索工作区](/screenshots/hotcrm/lead-detail/zh-Hans.png)
 
 ## 4. 你的第一个商机
 
@@ -66,13 +101,15 @@ description: HotCRM 的 5 分钟演练 —— 主页、你的第一条线索、�
 
 ➜ 了解更多：[商机](/zh-Hans/docs/sales/opportunities)
 
+![销售管道看板](/screenshots/hotcrm/sales-pipeline/zh-Hans.png)
+
 ## 5. 一个服务案例
 
 **案例**是一个客户问题。
 
 1. 案例通过邮件、Web 表单、电话、聊天或门户到达。
 2. 新案例进入队列 —— 坐席接手。
-3. 在新案例上点击 **🚦 Triage** —— [Service Copilot](/zh-Hans/docs/ai-copilot/service-copilot) 会建议优先级、类别以及最匹配的前 3 篇知识库文章。
+3. 在新工单上请助手 *"分流此工单"* —— [工单分流技能](/zh-Hans/docs/ai-copilot/service-copilot) 会建议优先级、分类以及匹配的知识库文章。
 4. SLA 计时器开始 —— 在案例页面查看响应时间 / 解决时间倒计时。
 5. 回复客户；解决后关闭案例。
 

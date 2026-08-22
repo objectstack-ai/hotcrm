@@ -9,6 +9,13 @@ import type { Dashboard } from '@objectstack/spec/ui';
  * Uses semantic colorVariant tokens (warning/danger/success) and chartConfig
  * palettes instead of raw hex values, mirroring the polished CRM dashboard
  * reference at https://github.com/objectstack-ai/objectui/tree/main/examples/crm.
+ *
+ * No KPI tile declares a `trend`. A period-over-period delta is a measurement,
+ * so it has to come from a real comparison query (widget `compareTo`) once the
+ * renderer supports it for dataset metrics — the percentages this file used to
+ * carry were typed by hand and recomputed by nothing, so they kept asserting
+ * the same "-6.2% vs last week" on any data, including an empty database.
+ * Same rule as the executive dashboard (#500, #587).
  */
 export const ServiceDashboard: Dashboard = {
   name: 'service_dashboard',
@@ -27,48 +34,23 @@ export const ServiceDashboard: Dashboard = {
     // routes — all three were dead. Re-add real, wired-up actions here when available.
   },
 
-  // NO `dateRange` — deliberately, and this is the fix for #460.
-  //
-  // This dashboard carried `{ field: 'created_date', defaultRange:
-  // 'last_30_days' }` and opened on all zeros with 38 cases in the system. The
-  // cause is NOT the preset. `crm_case.created_date` is a `Field.datetime()`,
-  // and on the SQLite path `driver-sql` 16.1.0 coerces datetime filter values
-  // to epoch-millisecond INTEGERs (`coerceFilterValue`), on the documented
-  // assumption that datetime columns are stored as INTEGER ms. They are not —
-  // every datetime in the demo database is ISO TEXT, including the platform's
-  // own `created_at` / `updated_at` audit columns. SQLite orders every INTEGER
-  // before every TEXT, so on a datetime column:
-  //     created_date >= <int>   is TRUE for every row   (window has no floor)
-  //     created_date <= <int>   is FALSE for every row  (window matches nothing)
-  // The runtime ANDs the dashboard range into every widget query, so the `$lte`
-  // half zeroed the whole dashboard. Measured against the running 16.1.0
-  // console: `$gte` alone → all 38 cases, `$lte` alone → 0, both bounds → 0, in
-  // every date format tried (`2026-07-30`, full ISO, end-of-day). WIDENING THE
-  // PRESET CANNOT FIX THIS — `last_90_days` renders exactly the same zeros.
-  //
-  // The other three dashboards are unaffected because they window `close_date`,
-  // a `Field.date()`, which stays TEXT `YYYY-MM-DD` on both sides of the
-  // comparison. That is why Service was the outlier — not the preset choice.
-  //
-  // Upstream: objectstack-ai/objectstack#3912 is this exact defect (closed
-  // 2026-07-29, fix in the 17.0 train — HotCRM is pinned to 16.1.0, so it is
-  // still live here). Note that the platform upgrade alone does NOT make it
-  // safe to restore the range on a datetime field: #3777 (open, p1) is the
-  // separate bug that a bare `YYYY-MM-DD` `$lte` upper bound on a datetime
-  // column still drops every record created after 00:00 that day — silently,
-  // and by an amount that grows as the day goes on. BOTH must land first.
-  //
-  // Dropping the range is what makes the dashboard render (verified in the
-  // console: 30 open / 7 critical / 45.0h / 3 SLA breaches, every chart
-  // populated). The cost is honest and visible: this dashboard has no date
-  // picker. Restore the line below only once both upstream issues are fixed;
-  // the guard in `metadata-references.test.ts` fails while it is still unsafe.
-  //
-  //   dateRange: { field: 'created_date', defaultRange: 'last_90_days', allowCustomRange: true },
+  // Historical note (#460 → #1157): this dashboard shipped without a date
+  // picker from PR #546 until the 17.0.0 GA upgrade, because windowing a
+  // `Field.datetime()` could not be compared — `driver-sql` 16.1.0 coerced
+  // datetime bounds to epoch-ms INTEGER while every datetime in the database is
+  // ISO TEXT, so `$gte` matched everything and `$lte` matched nothing and the
+  // whole dashboard read zeros. Both named preconditions are fixed and
+  // released: objectstack#3912 (the coercion) and objectstack#3777 (a bare-date
+  // `$lte` dropping same-day rows). The window below is not restored on the
+  // strength of those closures alone — `test/dashboard-date-range-window.test.ts`
+  // executes it against a real SQLite database and compares every widget to a
+  // ground truth computed in the same run, so a re-regression fails CI here
+  // rather than being discovered as an all-zero dashboard again.
+  dateRange: { field: 'created_date', defaultRange: 'last_90_days', allowCustomRange: true },
 
   globalFilters: [
     {
-      field: 'owner',
+      field: 'owner_id',
       label: 'Agent',
       type: 'lookup',
       scope: 'dashboard',
@@ -102,7 +84,6 @@ export const ServiceDashboard: Dashboard = {
       options: {
         icon: 'Inbox',
         format: '0,0',
-        trend: { value: 6.2, direction: 'down', label: 'vs last week' },
       },
     },
     {
@@ -117,7 +98,6 @@ export const ServiceDashboard: Dashboard = {
       options: {
         icon: 'AlertTriangle',
         format: '0,0',
-        trend: { value: 1.0, direction: 'up', label: 'vs last week' },
       },
     },
     {
@@ -133,7 +113,6 @@ export const ServiceDashboard: Dashboard = {
         icon: 'Clock',
         format: '0.0',
         suffix: 'h',
-        trend: { value: 9.8, direction: 'down', label: 'vs last week' },
       },
     },
     {
@@ -148,7 +127,6 @@ export const ServiceDashboard: Dashboard = {
       options: {
         icon: 'ShieldAlert',
         format: '0,0',
-        trend: { value: 2.4, direction: 'down', label: 'vs last week' },
       },
     },
 
@@ -211,13 +189,20 @@ export const ServiceDashboard: Dashboard = {
       description: 'New cases created over the last 30 days',
       type: 'area',
       filter: { created_date: { $gte: '{30_days_ago}' } },
-      // Kept opted out so this stays self-scoped if the dashboard `dateRange`
-      // is ever restored (see the note above).
-      // Caveat, same root cause as #460: on 16.1.0 a `$gte` against a datetime
-      // column is TRUE for every row, so this floor is currently INERT and the
-      // chart plots every case rather than the last 30 days. Indistinguishable
-      // today (the seed spans exactly 30 days) and it starts working once the
-      // driver is fixed — but the title's "last 30 days" is not yet enforced.
+      // Opted out ON PURPOSE, re-decided in #1157 rather than inherited.
+      //
+      // The floor above is no longer inert: on 17.0.0 `{30_days_ago}` resolves
+      // to a start-of-day bound the driver compares correctly (measured, with a
+      // ground truth, in `test/dashboard-date-range-window.test.ts`), so this
+      // chart really does plot the last 30 days and its title is true again.
+      // That is exactly why it must not follow the picker: the dashboard range
+      // is ANDed into every bound widget, so a reader who selects "last 7 days"
+      // would get a 7-day chart still labelled "last 30 days". Self-described
+      // windows opt out — the same rule the Executive dashboard's YTD tile
+      // follows, pinned by `test/action-references.test.ts`. Binding it instead
+      // would mean dropping this filter and retitling the widget in all four
+      // locale bundles; the fixed 30-day volume trend beside a 90-day case load
+      // is the intended reading.
       filterBindings: { dateRange: false },
       colorVariant: 'blue',
       dataset: 'case_metrics', dimensions: ['created_date'], values: ['case_count'],
@@ -240,7 +225,16 @@ export const ServiceDashboard: Dashboard = {
       type: 'gauge',
       filter: { is_closed: true },
       colorVariant: 'success',
-      dataset: 'case_metrics', values: ['avg_sla_violated'],
+      // Plots COMPLIANCE, the quantity the title, the description, the
+      // success colouring and the 0.95 target line all name (#1213). It used
+      // to plot `avg_sla_violated` — the complement — with `options.invert`
+      // asking the renderer to flip it. `invert` is not a declared key on
+      // `DashboardWidgetOptionsSchema`; it rode the `.passthrough()`, nothing
+      // could report it inert, and the gauge read 0.0% on an org with 100%
+      // compliance. The key is gone rather than left pretending: a measure
+      // that means what the widget says is the fix, and the measure's own
+      // label prints under the number, so the two cannot drift apart again.
+      dataset: 'case_metrics', values: ['sla_compliance_rate'],
       layout: { x: 8, y: 6, w: 4, h: 4 },
       chartConfig: {
         type: 'gauge',
@@ -251,9 +245,11 @@ export const ServiceDashboard: Dashboard = {
           { type: 'line', axis: 'y', value: 0.95, label: 'Target', style: 'dashed', color: '#10B981' },
         ],
       },
+      // The ladder and the target line were written for COMPLIANCE and are
+      // unchanged: 95%+ is green, 85–95% amber, below that red. They were
+      // always right — it was the plotted value that disagreed with them.
       options: {
         format: '0%',
-        invert: true, // value is sla_violated rate; gauge shows compliance = 1 - rate
         thresholds: [
           { value: 0.95, color: 'success' },
           { value: 0.85, color: 'warning' },
@@ -262,7 +258,69 @@ export const ServiceDashboard: Dashboard = {
       },
     },
 
-    // ─── Row 4: Open Cases by Priority ────────────────────────────────
+    // ─── Row 4: Knowledge deflection (#601) ───────────────────────────
+    //
+    // The deflection metric the card asks the service dashboard to show, and
+    // the reason it is THREE tiles rather than one: a ratio widget on its own
+    // is unreadable — 100% could be "40 of 40" or "1 of 1", and a blank rate
+    // could be "no closed cases" or "no KB resolutions" (measured: a filtered
+    // measure contributes NO row for a group it selects nothing in, so the
+    // rate comes back absent, not 0). Numerator and denominator therefore ship
+    // beside the percentage, the same rule the sales dashboard's win rate
+    // follows after #614.
+    {
+      id: 'kb_deflection_rate',
+      title: 'KB Deflection Rate',
+      description: 'Share of closed cases resolved with a knowledge article',
+      type: 'metric',
+      colorVariant: 'success',
+      dataset: 'case_metrics', values: ['kb_deflection_rate'],
+      layout: { x: 0, y: 10, w: 4, h: 2 },
+      options: { icon: 'BookOpenCheck', format: '0%' },
+    },
+    {
+      id: 'kb_resolved_cases',
+      title: 'Resolved by KB',
+      description: 'Closed cases pointing at the article that resolved them',
+      type: 'metric',
+      colorVariant: 'blue',
+      dataset: 'case_metrics', values: ['kb_resolved_count'],
+      layout: { x: 4, y: 10, w: 4, h: 2 },
+      options: { icon: 'BookOpen', format: '0,0' },
+    },
+    {
+      id: 'closed_cases_total',
+      title: 'Closed Cases',
+      description: 'The denominator behind the deflection rate',
+      type: 'metric',
+      colorVariant: 'default',
+      dataset: 'case_metrics', values: ['closed_count'],
+      layout: { x: 8, y: 10, w: 4, h: 2 },
+      options: { icon: 'CheckCheck', format: '0,0' },
+    },
+    {
+      id: 'top_resolving_articles',
+      title: 'Top Resolving Articles',
+      description: 'Knowledge articles ranked by the closed cases they resolved',
+      type: 'table',
+      filter: { is_closed: true },
+      colorVariant: 'default',
+      dataset: 'case_metrics', dimensions: ['resolved_article'], values: ['kb_resolved_count'],
+      layout: { x: 0, y: 12, w: 12, h: 4 },
+      options: {
+        columns: [
+          { header: 'Article', accessorKey: 'resolved_article' },
+          { header: 'Cases Resolved', accessorKey: 'kb_resolved_count' },
+        ],
+        sortBy: 'kb_resolved_count',
+        sortOrder: 'desc',
+        limit: 10,
+        striped: true,
+        density: 'comfortable',
+      },
+    },
+
+    // ─── Row 5: Open Cases by Priority ────────────────────────────────
     // A dashboard `table` binds to an analytics cube and aggregates; it cannot
     // list individual cases (ADR-0021). This is deliberately TEAM-WIDE, not
     // "my cases": the analytics query path resolves no user token at all —
@@ -280,7 +338,7 @@ export const ServiceDashboard: Dashboard = {
       filter: { is_closed: false },
       colorVariant: 'default',
       dataset: 'case_metrics', dimensions: ['priority'], values: ['case_count', 'avg_sla_violated'],
-      layout: { x: 0, y: 10, w: 12, h: 4 },
+      layout: { x: 0, y: 16, w: 12, h: 4 },
       options: {
         columns: [
           { header: 'Priority',            accessorKey: 'priority' },

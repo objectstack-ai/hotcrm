@@ -13,7 +13,7 @@ description: 接收客戶問題，按優先順序路由，達成 SLA 目標，�
 | --- | --- |
 | [**工單**](/zh-Hant/docs/service/cases) | 工單記錄——主題、優先順序、狀態、解決方案。 |
 | [**SLA 與升級**](/zh-Hant/docs/service/sla-and-escalation) | 自動截止時間、升級流程，以及系統如何呈現違約。 |
-| [**知識庫**](/zh-Hant/docs/service/knowledge-base) | AI 服務 Copilot 讀取的支援知識。 |
+| [**知識庫**](/zh-Hant/docs/service/knowledge-base) | AI 助手讀取的支援知識。 |
 
 ## 一個典型工單的生命週期
 
@@ -23,48 +23,52 @@ New ──► In Progress ──► Waiting on Customer ──► Resolved ─�
                    ╲ Escalated ────────────╱
 ```
 
-1. **建立工單**（透過電子郵件、網頁表單、電話記錄，或由 **Service Copilot** 對來訪訊息進行分流）。
-2. **分配優先順序**——低、中、高或緊急。*緊急*會立即提醒支援經理。
+1. **建立工單**（透過電子郵件、網頁表單、電話記錄，或由 **AI 助手**對來訪訊息進行分流）。
+2. **分配優先順序**——Low、Medium、High 或 Critical。*Critical* 會立即提醒**工單負責人**，而不是支援經理：這條提醒的收件人列表只有 `{caseRecord.owner_id}` 一項。
 3. **計算 SLA 目標**——每個工單都會根據優先順序獲得一個截止時間。
 4. **客服處理工單**，隨進度推進狀態。
-5. **如果卡住了**（或緊急，或來自客戶），[升級流程](/zh-Hant/docs/service/sla-and-escalation#case-escalation)會將其重新分配給資深客服。
+5. **如果是 Critical**（或 SLA 截止日期已過），[升級流程](/zh-Hant/docs/service/sla-and-escalation)會把工單標記為 *Escalated*、移交給負載最輕的 **Service Manager**，並提醒它原來那位客服。移交的對象是一個扁平的職位池，而不是向上的匯報線；若無人持有該職位，工單就保留原負責人。沒有任何升級條件會讀取帳戶，所以 *Customer* 的工單沒有屬於自己的分支。
 6. **記錄解決方案**，自動標記解決時間，並關閉工單。
 
 ## 系統為你做的事
 
-- **自動確定優先順序**——透過工單分流技能（Service Copilot 閱讀工單並推薦優先順序）。
-- **自動升級**——將緊急工單或高優先順序客戶工單升級給資深客服。
-- **緊急時通知**——每當工單被設為緊急時，向支援經理發送郵件。
-- **升級時通知**——每當工單被升級時，向升級團隊發送郵件。
+- **自動確定優先順序**——透過工單分流技能（AI 助手閱讀工單並推薦優先順序）。
+- **自動升級**——只針對 Critical 工單：流程把它們標記為 *Escalated*、提醒原來那位客服，並把工單交給未結工單最少的那位服務經理（若無人持有該職位，則原地不動）。High 工單永遠不會被自動升級，無論帳戶是什麼：要升級它，靠的是手動的 **Escalate Case** 按鈕。
+- **緊急時通知**——每當工單被設為 Critical 時，站內訊息 + 郵件只發給**工單負責人**。這就是工單升級流程的 notify 節點，其收件人列表只有 `{caseRecord.owner_id}` 一項；本應用中不存在 `support_manager@example.com` 這個收件人。
+- **升級時通知**——不會給任何升級團隊發郵件：`escalation_team@example.com` 在本應用中根本不存在。狀態轉為 *Escalated* 真正觸發的，是 `case_status_side_effects` 鉤子開出的那條**次日到期、優先順序為緊急、歸帳戶負責人的跟進任務**。
 - **標記解決時間**——工單關閉時自動標記。
-- **標記 SLA 違約**——一旦 SLA 目標時間過去，顯示紅色橫幅。
+- **標記 SLA 違約**——一旦 SLA 目標時間過去，工單會被標記為 **SLA 已違約**並升級，其負責人收到站內訊息 + 郵件提醒。沒有紅色橫幅：本應用沒有任何橫幅機制。
 - **阻止錯誤關閉**——未填寫解決方案就不能將工單標記為已關閉。
 
-## Service Copilot
+## 服務 AI 技能
 
-[Service Copilot](/zh-Hant/docs/ai-copilot/service-copilot) 內建於每個工單中。你可以問它：
+[服務技能](/zh-Hant/docs/ai-copilot/service-copilot) 內建於每個工單中。你可以問助手：
 
 - *"分流這個工單"*——根據主題、描述和客戶等級分配優先順序。
-- *"建議一個解決方案"*——搜尋支援知識庫並起草客戶回覆。
+- *"建議一個解決方案"*——這是兩個技能的事，不是一個。**Customer 360°** 讀取已發布的知識文章（`crm_knowledge_article` 就是它查詢的一個普通物件），**郵件撰寫**寫客戶回覆。工單分流兩件都不做：它沒有檢索類工具，也沒有起草這一步。
 - *"總結這個客戶"*——包括過往工單和未結商機的 Customer 360 檢視。
 
 ## 標準儀表板與報表
 
-- **服務儀表板**——按優先順序劃分的未結工單、SLA 表現、頂尖客服、最久未結工單。
-- **每日 × 優先順序開單數**——每日流入量。
-- **按狀態 × 優先順序劃分的工單**——當前快照。
-- **SLA 表現**——在 SLA 目標內解決的工單百分比。
+- **服務概覽**（Service Overview；儀表板自身的標題是 **Customer Service**）——KPI 有 **Open Cases**、**Critical Cases**、**Avg Resolution Time**、**SLA Violations**；分布圖有 **Cases by Status**、**Cases by Priority**、**Cases by Origin**；再加 **Daily Case Volume**、一個 **SLA Compliance** 量表圖，一張 **Open Cases by Priority** 表格；以及知識轉移那一列——**KB Deflection Rate**（知識庫轉移率）配上它的分子分母 **Resolved by KB** 與 **Closed Cases**，兩個數字就印在百分比旁邊，讓人能核對而不是只能相信，再加一張 **Top Resolving Articles** 表格，按解決的已關閉工單數給文章排名。它沒有 *頂尖客服* 部件，也沒有 *最久未結工單* 部件，而且這兩個都不是"只是還沒做"那麼簡單：`case_metrics`——服務側每個部件都建在它上面的那個資料集——沒有負責人維度，所以分析層裡沒有任何東西能給客服排名（[工單](/zh-Hant/docs/service/cases)頁寫的是同一件事）；而儀表板表格聚合的是資料集，不列出單筆記錄，所以最久未結的那幾張單也放不進去。
+- **Cases Opened by Priority × Day**（按優先順序 × 天的建單量）——每日流入量：一張優先順序作列、天作欄的矩陣，順序就是這個。
+- **Cases by Status and Priority**（按狀態與優先順序劃分的工單）——當前快照：按狀態與優先順序給出工單數與平均解決時長。
+- **SLA Performance Report**（SLA 表現報表）——按優先順序給出工單數、**SLA Violation Rate**（SLA 違約率）與平均解決時長，並且只統計已關閉的工單。它報的不是達成率百分比：達成率在服務儀表板的 **SLA Compliance** 量表圖上，繪製的是同一個資料集裡的 `sla_compliance_rate`。參見 [SLA 與升級](/zh-Hant/docs/service/sla-and-escalation)。
 
 參見 [分析 › 儀表板](/zh-Hant/docs/analytics/dashboards) 與 [報表](/zh-Hant/docs/analytics/reports)。
 
 ## 在哪裡找到這些內容
 
-在 Enterprise CRM 應用中，**服務**分組包含：
+在 HotCRM 應用中，**服務**分組包含三項：
 
-- **工單**
-- **任務**
-- **服務看板**——看板式工單工作流
-- **服務儀表板**
+- **工單**（Cases）——工單清單。
+- **知識**（Knowledge）——Copilot 讀取的知識文章（`crm_knowledge_article`）。
+- **服務概覽**（Service Overview）——服務的那個儀表板。側邊欄上的 label 就是這個；沒有任何側邊欄條目叫 *Service Dashboard*。
+
+有兩個名字，人們會到**服務**分組下面找，但它們不在這裡：
+
+- **任務**——`crm_task` 在側邊欄上是 **My Tasks**（我的任務）與 **All Tasks**（全部任務）兩項，都掛在**我的工作**分組下，不在**服務**分組裡。
+- **服務看板**——本應用裡不存在叫這個名字的東西。看板是視圖 `case_workflow`，label 為 **Service Workflow**，而且它根本不是側邊欄條目：要從工單清單視圖切換器裡的 **Workflow** 頁籤進入。
 
 ## 從這裡開始
 

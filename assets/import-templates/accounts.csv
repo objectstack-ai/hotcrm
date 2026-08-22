@@ -1,0 +1,51 @@
+Account Name,Account Type,Industry,Website,Phone,Annual Revenue,Employees,Account Owner Email,Parent Account,Description
+Northwind Traders,Prospect,retail,https://www.northwindtraders.example.com,+1-555-0100,100000,15,,,Imported from the accounts template. Northwind Traders is a prospect account.
+Contoso Manufacturing,Customer,manufacturing,https://www.contosomanufacturing.example.com,+1-555-0101,3800000,68,,,Imported from the accounts template. Contoso Manufacturing is a customer account.
+Fabrikam Logistics,Partner,logistics,https://www.fabrikamlogistics.example.com,+1-555-0102,7500000,121,,,Imported from the accounts template. Fabrikam Logistics is a partner account.
+Adventure Works,Client,hospitality,https://www.adventureworks.example.com,+1-555-0103,2200000,174,,,Imported from the accounts template. Adventure Works is a client account.
+Litware Software,Reseller,SaaS,https://www.litwaresoftware.example.com,+1-555-0104,5900000,227,,,Imported from the accounts template. Litware Software is a reseller account.
+Proseware Health,Prospect,healthcare,https://www.prosewarehealth.example.com,+1-555-0105,600000,280,,,Imported from the accounts template. Proseware Health is a prospect account.
+Tailspin Toys,Customer,retail,https://www.tailspintoys.example.com,+1-555-0106,4300000,333,,,Imported from the accounts template. Tailspin Toys is a customer account.
+Wide World Importers,Partner,logistics,https://www.wideworldimporters.example.com,+1-555-0107,8000000,386,,,Imported from the accounts template. Wide World Importers is a partner account.
+Woodgrove Bank,Client,Banking,https://www.woodgrovebank.example.com,+1-555-0108,2700000,439,,,Imported from the accounts template. Woodgrove Bank is a client account.
+Alpine Ski House,Reseller,hospitality,https://www.alpineskihouse.example.com,+1-555-0109,6400000,492,,,Imported from the accounts template. Alpine Ski House is a reseller account.
+Blue Yonder Airlines,Prospect,Transportation,https://www.blueyonderairlines.example.com,+1-555-0110,1100000,545,,,Imported from the accounts template. Blue Yonder Airlines is a prospect account.
+Coho Vineyard,Customer,Consumer Goods,https://www.cohovineyard.example.com,+1-555-0111,4800000,598,,,Imported from the accounts template. Coho Vineyard is a customer account.
+Lucerne Publishing,Partner,media,https://www.lucernepublishing.example.com,+1-555-0112,8500000,651,,,Imported from the accounts template. Lucerne Publishing is a partner account.
+Trey Research,Client,healthcare,https://www.treyresearch.example.com,+1-555-0113,3200000,704,,,Imported from the accounts template. Trey Research is a client account.
+VanArsdel Design,Reseller,other,https://www.vanarsdeldesign.example.com,+1-555-0114,6900000,757,,,Imported from the accounts template. VanArsdel Design is a reseller account.
+Relecloud Systems,Prospect,IT,https://www.relecloudsystems.example.com,+1-555-0115,1600000,810,,,Imported from the accounts template. Relecloud Systems is a prospect account.
+Bellows College,Customer,education,https://www.bellowscollege.example.com,+1-555-0116,5300000,863,,,Imported from the accounts template. Bellows College is a customer account.
+Munson Pickles,Partner,manufacturing,https://www.munsonpickles.example.com,+1-555-0117,9000000,916,,,Imported from the accounts template. Munson Pickles is a partner account.
+First Up Consultants,Client,other,https://www.firstupconsultants.example.com,+1-555-0118,3700000,969,,,Imported from the accounts template. First Up Consultants is a client account.
+Fourth Coffee,Reseller,hospitality,https://www.fourthcoffee.example.com,+1-555-0119,7400000,1022,,,Imported from the accounts template. Fourth Coffee is a reseller account.
+Graphic Design Institute,Prospect,education,https://www.graphicdesigninstitute.example.com,+1-555-0120,2100000,1075,,,Imported from the accounts template. Graphic Design Institute is a prospect account.
+Humongous Insurance,Customer,Insurance,https://www.humongousinsurance.example.com,+1-555-0121,5800000,1128,,,Imported from the accounts template. Humongous Insurance is a customer account.
+Margie Travel,Partner,hospitality,https://www.margietravel.example.com,+1-555-0122,500000,1181,,,Imported from the accounts template. Margie Travel is a partner account.
+Nod Publishers,Client,media,https://www.nodpublishers.example.com,+1-555-0123,4200000,1234,,,Imported from the accounts template. Nod Publishers is a client account.
+Southridge Video,Reseller,media,https://www.southridgevideo.example.com,+1-555-0124,7900000,1287,,,Imported from the accounts template. Southridge Video is a reseller account.
+The Phone Company,Prospect,Tech,https://www.thephonecompany.example.com,+1-555-0125,2600000,1340,,,Imported from the accounts template. The Phone Company is a prospect account.
+City Power & Light,Customer,Utilities,https://www.citypowerlight.example.com,+1-555-0126,6300000,1393,,,Imported from the accounts template. City Power & Light is a customer account.
+Consolidated Messenger,Partner,logistics,https://www.consolidatedmessenger.example.com,+1-555-0127,1000000,1446,,,Imported from the accounts template. Consolidated Messenger is a partner account.
+Fincher Architects,Client,real_estate,https://www.fincherarchitects.example.com,+1-555-0128,4700000,1499,,,Imported from the accounts template. Fincher Architects is a client account.
+Lamna Healthcare,Reseller,healthcare,https://www.lamnahealthcare.example.com,+1-555-0129,8400000,1552,,,Imported from the accounts template. Lamna Healthcare is a reseller account.
+Liberty Delightful Sinful Bakery,Prospect,retail,https://www.libertydelightfulsinfulb.example.com,+1-555-0130,3100000,1605,,,Imported from the accounts template. Liberty Delightful Sinful Bakery is a prospect account.
+Best For You Organics,Customer,retail,https://www.bestforyouorganics.example.com,+1-555-0131,6800000,1658,,,Imported from the accounts template. Best For You Organics is a customer account.
+Wingtip Toys,Partner,retail,https://www.wingtiptoys.example.com,+1-555-0132,1500000,1711,,,Imported from the accounts template. Wingtip Toys is a partner account.
+Contoso Energy,Client,energy,https://www.contosoenergy.example.com,+1-555-0133,5200000,1764,,,Imported from the accounts template. Contoso Energy is a client account.
+Datum Analytics,Reseller,software,https://www.datumanalytics.example.com,+1-555-0134,8900000,1817,,,Imported from the accounts template. Datum Analytics is a reseller account.
+Fabrikam Residences,Prospect,real_estate,https://www.fabrikamresidences.example.com,+1-555-0135,3600000,1870,,,Imported from the accounts template. Fabrikam Residences is a prospect account.
+Nordwind Capital,Customer,finance,https://www.nordwindcapital.example.com,+1-555-0136,7300000,1923,,,Imported from the accounts template. Nordwind Capital is a customer account.
+Tailwind Traders,Partner,E-commerce,https://www.tailwindtraders.example.com,+1-555-0137,2000000,1976,,,Imported from the accounts template. Tailwind Traders is a partner account.
+Bellows Robotics,Client,manufacturing,https://www.bellowsrobotics.example.com,+1-555-0138,5700000,2029,,,Imported from the accounts template. Bellows Robotics is a client account.
+Cronus Pharma,Reseller,Pharmaceuticals,https://www.cronuspharma.example.com,+1-555-0139,400000,2082,,,Imported from the accounts template. Cronus Pharma is a reseller account.
+Halo Public Works,Prospect,Public Sector,https://www.halopublicworks.example.com,+1-555-0140,4100000,2135,,,Imported from the accounts template. Halo Public Works is a prospect account.
+Helping Hands Foundation,Customer,Non-Profit,https://www.helpinghandsfoundation.example.com,+1-555-0141,7800000,2188,,,Imported from the accounts template. Helping Hands Foundation is a customer account.
+Iride Motors,Partner,manufacturing,https://www.iridemotors.example.com,+1-555-0142,2500000,2241,,,Imported from the accounts template. Iride Motors is a partner account.
+Kiana Freight,Client,logistics,https://www.kianafreight.example.com,+1-555-0143,6200000,2294,,,Imported from the accounts template. Kiana Freight is a client account.
+Lakeview Medical,Reseller,healthcare,https://www.lakeviewmedical.example.com,+1-555-0144,900000,2347,,,Imported from the accounts template. Lakeview Medical is a reseller account.
+Meridian Legal,Prospect,other,https://www.meridianlegal.example.com,+1-555-0145,4600000,2400,,,Imported from the accounts template. Meridian Legal is a prospect account.
+Orion Semiconductor,Customer,technology,https://www.orionsemiconductor.example.com,+1-555-0146,8300000,2453,,,Imported from the accounts template. Orion Semiconductor is a customer account.
+Pinewood Estates,Partner,real_estate,https://www.pinewoodestates.example.com,+1-555-0147,3000000,2506,,,Imported from the accounts template. Pinewood Estates is a partner account.
+Quill Stationery,Client,retail,https://www.quillstationery.example.com,+1-555-0148,6700000,2559,,,Imported from the accounts template. Quill Stationery is a client account.
+Redwood Renewables,Reseller,energy,https://www.redwoodrenewables.example.com,+1-555-0149,1400000,2612,,,Imported from the accounts template. Redwood Renewables is a reseller account.

@@ -12,7 +12,7 @@ Marketing 模块让你能够**规划营销活动、加入合适的线索和联�
 | 领域 | 作用 |
 | --- | --- |
 | [**营销活动**](/zh-Hans/docs/marketing/campaigns) | 市场营销举措——电子邮件、网络研讨会、展会、社交、内容。 |
-| [**活动成员**](/zh-Hans/docs/marketing/campaign-members) | 加入每个营销活动的线索和联系人及其互动状态。 |
+| [**营销活动成员**](/zh-Hans/docs/marketing/campaign-members) | 加入每个营销活动的线索和联系人及其互动状态。 |
 
 ## 典型的营销活动生命周期
 
@@ -24,7 +24,7 @@ Planning ──► In Progress ──► Completed
 ```
 
 1. **Planning** — 定义营销活动、预算、预期收入、目标受众。
-2. **In Progress** — 启动营销活动；系统将目标受众批量加入为活动成员。
+2. **In Progress** — 启动营销活动；系统将目标受众批量加入为营销活动成员。
 3. **跟踪互动** — 成员经历 *Sent → Opened → Clicked → Responded → Converted*。
 4. **Completed** — 营销活动结束；指标被快照（发送、响应、转化、ROI）。
 5. **归因收入** — 关联到该营销活动的商机汇总成为该营销活动的实际收入。
@@ -69,13 +69,16 @@ Planning ──► In Progress ──► Completed
 
 ## 在哪里可以找到
 
-在 Enterprise CRM 应用中，**Marketing** 组包含：
+在 HotCRM 应用中，**Marketing** 组包含两项：
 
-- **营销活动**
+- **营销活动**（Campaigns）——营销活动列表（`crm_campaign`）。
+- **产品**（Products）——产品目录（`crm_product`）。这是产品目录在整个应用侧边栏里唯一的入口，尽管产品的文档挂在 [Revenue › Products](/zh-Hans/docs/revenue/products) 下。除了这一项和全局搜索之外，只能从报价或商机的明细行反查到产品记录。
+
+**Marketing** 组**默认是折叠的**——与 Sales、My Work、Activity、Service 不同，它不会在应用加载时自动展开。先把它点开，再判断某样东西在不在这里。
 
 加入营销活动的线索可从营销活动详情页或通过全局搜索访问。
 
 ## 从这里开始
 
 - [营销活动](/zh-Hans/docs/marketing/campaigns) — 营销活动记录。
-- [活动成员](/zh-Hans/docs/marketing/campaign-members) — 加入的人员。
+- [营销活动成员](/zh-Hans/docs/marketing/campaign-members) — 加入的人员。

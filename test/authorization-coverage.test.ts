@@ -1,6 +1,11 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
+import {
+  DATA_ACTION_TO_API_OPERATION,
+  isApiOperationAllowed,
+  resolveEffectiveApiMethods,
+} from '@objectstack/spec/data';
 import stack from '../objectstack.config';
 
 /**
@@ -201,6 +206,43 @@ describe('record-level scope is authored, not implied', () => {
     expect(bad, `unresolvable parent derivation:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
+  it('every allowTransfer grant is a real, enforced capability — not decoration', () => {
+    // `allowTransfer` is the one lifecycle bit the platform enforces TODAY,
+    // through the ordinary insert/update door rather than a future `transfer`
+    // operation (`@objectstack/spec` permission.zod.ts, the #3004 owner_id
+    // guard). Since #548 it is what stands between "reassign Owner" and
+    // "silently move a record in the lists while moving no access", so the
+    // grants are authored deliberately and pinned.
+    //
+    // The full per-persona ledger — who may transfer WHAT, and why the rep
+    // personas hold none — lives in `test/ownership-model.test.ts` beside the
+    // rest of the ownership model. Here it is checked as an authorization
+    // invariant: a transfer grant is an ownership WRITE, so it is meaningless
+    // (and misleading, because it reads as a capability) on an object the set
+    // cannot write at all.
+    const bad = grants
+      .filter((g) => g.perm.allowTransfer === true)
+      .filter((g) => g.perm.allowEdit !== true && g.perm.modifyAllRecords !== true)
+      .map((g) => `${g.set}.${g.objectName}: allowTransfer with no write grant`);
+    expect(bad, `transfer grants that can never fire:\n  ${bad.join('\n  ')}`).toEqual([]);
+
+    // Guard the guard: if the grants ever vanish this test must not pass by
+    // checking an empty list.
+    const holders = grants.filter((g) => g.perm.allowTransfer === true);
+    expect(holders.length, 'no set grants allowTransfer — ownership cannot be reassigned at all').toBeGreaterThan(0);
+  });
+
+  it('the lifecycle bits nobody enforces yet are not authored', () => {
+    // `allowRestore` / `allowPurge` are RBAC-gated but their operations do not
+    // exist yet, so authoring one grants nothing while reading as a capability
+    // the persona has. `allowTransfer` is deliberately NOT in this list — it is
+    // the documented exception (#3004), enforced now.
+    const bad = grants
+      .filter((g) => g.perm.allowRestore === true || g.perm.allowPurge === true)
+      .map((g) => `${g.set}.${g.objectName}`);
+    expect(bad, `declared-but-unenforced lifecycle grants:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
   it('controlled_by_parent grants do not author an inert readScope', () => {
     // The sharing service applies owner scope to `private` objects only, so a
     // readScope on a parent-derived object is never enforced — it documents a
@@ -389,6 +431,80 @@ describe('sharing rules and positions line up', () => {
     expect(bad, `inert sharing rules:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
+  /**
+   * The triage grant is AUTHORED, not implied (#1096).
+   *
+   * `service_agent` holds `crm_case` with `readScope: 'own'`, and an unowned row
+   * matches nobody's own-scope — so the `Unassigned — triage` view #596 pinned
+   * in every Cases list returned zero rows for the persona it was built for.
+   * `case_unassigned_triage_sharing` is the ruled fix, and this block is the
+   * reason the widening cannot be lost silently: a permission grant nobody
+   * asserts is a grant nobody notices losing.
+   *
+   * What is pinned here is the DECLARED shape — the object, the criteria, the
+   * access level and the recipient. What it delivers on a running engine, on
+   * both the sparse (absent-key) and column-complete (NULL) row shapes, is
+   * measured in `test/unassigned-case-triage-reach.test.ts`; that it survives
+   * `plugin-sharing`'s CEL→filter compiler at all is pinned in
+   * `test/sharing-seeding.test.ts`.
+   */
+  describe('#1096: unowned open cases reach the agents who triage them', () => {
+    const rule = () => sharingRules.find((r) => r.name === 'case_unassigned_triage_sharing');
+
+    it('the rule exists, on crm_case, granting edit to the service_agent position', () => {
+      const r = rule();
+      expect(
+        r,
+        'case_unassigned_triage_sharing is gone — the Unassigned — triage tab is empty again ' +
+          'for the only persona it is pinned for (#1096)',
+      ).toBeDefined();
+      expect(r!.object).toBe('crm_case');
+      expect(r!.type).toBe('criteria');
+      // `edit`, not `read`: triage is a pull queue, and an agent who cannot
+      // write the row cannot work it.
+      expect(r!.accessLevel).toBe('edit');
+      expect(r!.sharedWith).toEqual({ type: 'position', value: 'service_agent' });
+    });
+
+    it('its criteria is exactly "unowned AND open" — both halves, and nothing wider', () => {
+      // Asserted verbatim, because every token is load-bearing and each fails
+      // differently: drop `owner_id == null` and the rule shares the whole case
+      // table with every agent (option C by accident); drop
+      // `is_closed == false` and closed history joins the backlog, so the tab's
+      // row count stops meaning "work waiting for a human"; and `!= null` in
+      // place of `== null` inverts the grant into precisely the leak
+      // acceptance #2 forbids.
+      expect(String(rule()!.condition?.source ?? '')).toBe(
+        'record.owner_id == null && record.is_closed == false',
+      );
+    });
+
+    it('carries NO has() guard — one would make it untranslatable and silently unseeded', () => {
+      // ⚠️ The inverse of the house rule, and deliberate. AGENTS.md's totality
+      // rule (#630) governs the INTERPRETED CEL surfaces; a sharing condition is
+      // compiled to a pushdown filter instead, and `compileCelToFilter` rejects
+      // the whole function-call class — so a guard here would make the rule
+      // undeployable rather than safe (#621's defect, reintroduced). Totality is
+      // answered by the operator: `== null` lowers to `{ $null: true }`, which
+      // reads an absent key and a NULL column alike.
+      expect(String(rule()!.condition?.source ?? '')).not.toMatch(/\bhas\s*\(/);
+    });
+
+    it('the widening is a SHARING rule — the profile stays own-scoped', () => {
+      // The other half of "authored, not implied": option C (`viewAllRecords`
+      // on the profile) was rejected on sight and stays rejected, so if it ever
+      // arrives this fails rather than passing quietly alongside the rule.
+      const perm = (setByName.get('service_agent')?.objects ?? {}).crm_case ?? {};
+      expect(perm.readScope, 'service_agent.crm_case stopped being own-scoped').toBe('own');
+      expect(
+        perm.viewAllRecords,
+        'service_agent gained viewAllRecords on crm_case — that is #1096 option C, which hands ' +
+          "every agent every customer's entire case history to solve a null-owner problem",
+      ).toBe(false);
+      expect(perm.modifyAllRecords).toBe(false);
+    });
+  });
+
   it('every position is referenced by a sharing rule or a permission set', () => {
     const referenced = new Set<string>();
     for (const rule of sharingRules) {
@@ -455,9 +571,17 @@ describe('#488 regressions stay fixed', () => {
  * 17.0 inverted this bit's default: unset used to inherit read, so the axis
  * only hid a button; now `resolveUserExportAllowed` (plugin-security) demands
  * an explicit `allowExport: true` and neither `viewAllRecords` nor
- * `modifyAllRecords` substitutes. Unset DENIES, at both bulk-egress doors —
- * the list views' built-in `exportOptions`, and `assertExportAllowed`, which
- * fails a report export closed with `EXPORT_NOT_PERMITTED`.
+ * `modifyAllRecords` substitutes. Unset DENIES.
+ *
+ * The gate sits on ONE route — `GET /api/v1/data/:object/export`, via
+ * `enforceExportPermission` → `security.canExport` (`@objectstack/rest`).
+ * Measured on a dev server in #798: 200 + rows for a principal holding the
+ * grant, 403 `EXPORT_NOT_PERMITTED` for one without it. A list view's
+ * `exportOptions` is not a separate door — the toolbar's Export button calls
+ * that same route, so the bit is object-wide and `curl`-reachable.
+ * `ReportService.assertExportAllowed` is a second gate, but it lives in the
+ * `reports` capability this app does not require (`/api/v1/reports` → 501),
+ * so no grant here lands on it.
  *
  * That makes an unauthored export bit a SILENT outage: `os validate`, `os
  * build` and every metadata test still pass while the Export button 403s for
@@ -466,45 +590,61 @@ describe('#488 regressions stay fixed', () => {
  *
  * The rule these guards pin (canonical note: `src/profiles/index.ts`):
  * a profile grants `allowExport` on an object IFF it already holds `allowRead`
- * there AND the app ships an export surface for it. Both directions matter —
- * a surface nobody can use is the outage, and a grant behind no surface is
- * bulk egress nobody asked for.
+ * there AND a list view for that object declares `exportOptions`. Both
+ * directions matter — a surface nobody can use is the outage, and a grant
+ * behind no surface is bulk egress nobody asked for. That union is an
+ * authoring discipline about the affordances this app ships; whether the grant
+ * can be exercised at all is the separate `enable` question, pinned by the
+ * last guard below.
+ *
+ * #817 made the surface side one-to-one: `exportOptions` on a list view is now
+ * the ONLY thing that counts as a surface. It used to also count "a report
+ * over a dataset built on the object", which named a door that #798 measured
+ * shut — see the note on `exportSurfaces` below.
  */
 describe('allowExport tracks the app’s real export surfaces', () => {
-  const datasetByName = new Map<string, AnyRec>(
-    ((stack as any).datasets ?? []).map((d: AnyRec) => [d.name as string, d] as [string, AnyRec]),
-  );
   const views: AnyRec[] = (stack as any).views ?? [];
-  const reports: AnyRec[] = (stack as any).reports ?? [];
-
-  /** Every `dataset:` reference anywhere in a report, including `blocks[]`. */
-  const datasetRefsIn = (node: unknown, out: string[] = []): string[] => {
-    if (Array.isArray(node)) node.forEach((n) => datasetRefsIn(n, out));
-    else if (node && typeof node === 'object') {
-      for (const [k, v] of Object.entries(node as AnyRec)) {
-        if (k === 'dataset' && typeof v === 'string') out.push(v);
-        else datasetRefsIn(v, out);
-      }
-    }
-    return out;
-  };
 
   /**
-   * Objects with a bulk-egress door: a list view declaring `exportOptions`,
-   * or a report whose dataset is built on them.
+   * Objects with a bulk-egress door: a list view declaring `exportOptions`.
+   *
+   * A report is NOT one, and this used to say it was. #798 measured the
+   * Console's report page on a running server: it renders a chart and a data
+   * table and offers no download at all, and `ReportService`'s own export gate
+   * belongs to the `reports` capability this app does not require. So the
+   * report leg named surfaces that do not exist — and it named them in the
+   * direction that hurts, because the guard below turns a surface into a
+   * REQUIRED grant: a new report over, say, `crm_task` would have made this
+   * suite demand bulk egress on `crm_task`, which is precisely the
+   * over-granting the axis exists to prevent.
+   *
+   * Dropping the leg costs no coverage: `crm_case` was the only object it
+   * carried alone, and #817 gave the Cases list its own `exportOptions`, so
+   * the union is unchanged at `crm_account`, `crm_case`, `crm_contact`,
+   * `crm_lead`, `crm_opportunity` — now every one of them by an affordance a
+   * user can actually click.
    */
   const exportSurfaces = new Set<string>();
   for (const v of views) {
     const defaultObject = v.list?.data?.object;
     for (const list of [v.list, ...Object.values(v.listViews ?? {})].filter(Boolean) as AnyRec[]) {
-      if (!(list.exportOptions ?? []).length) continue;
+      // `.formats`, not the value itself. `exportOptions` is the OBJECT form
+      // `{ formats: [...] }` at @objectstack/spec 17.0.0 (#8010, maintainer
+      // ruling 2026-08-12); the bare array this app authored through
+      // 17.0.0-rc.6 is the legacy `z.input` spelling and LIFTS to the object
+      // at parse, so `z.output` — which is what `stack.views` hands us here —
+      // is the object on both spellings.
+      //
+      // Reading the old way is not a stale assertion, it is a BLIND one, and
+      // silently: `({ formats: [...] }).length` is `undefined`, `??` never
+      // fires because the object is not nullish, and every surface in the app
+      // fell out of this set at once. Both guards below invert on an empty
+      // set — "no surface" makes every `allowExport` grant look gratuitous —
+      // so the 17.0.0 bump turned a bulk-egress guard into 23 false accusals
+      // rather than into silence. Only the `not.toEqual([])` canary above
+      // separates the two, which is exactly why it is written.
+      if (!(list.exportOptions?.formats ?? []).length) continue;
       const objectName = list.data?.object ?? defaultObject;
-      if (typeof objectName === 'string') exportSurfaces.add(objectName);
-    }
-  }
-  for (const r of reports) {
-    for (const ref of datasetRefsIn(r)) {
-      const objectName = datasetByName.get(ref)?.object;
       if (typeof objectName === 'string') exportSurfaces.add(objectName);
     }
   }
@@ -519,7 +659,7 @@ describe('allowExport tracks the app’s real export surfaces', () => {
   it('the app actually has export surfaces (the guard is wired to real metadata)', () => {
     expect(
       [...exportSurfaces].sort(),
-      'no exportOptions view and no report dataset resolved — this guard has gone blind',
+      'no list view declares exportOptions — this guard has gone blind',
     ).not.toEqual([]);
   });
 
@@ -550,5 +690,47 @@ describe('allowExport tracks the app’s real export surfaces', () => {
     // binding on top of handing anonymous visitors bulk table egress.
     const guestExports = exportGrants.filter(([set]) => set === 'guest_portal').map(([, o]) => o);
     expect(guestExports, 'the guest set must never carry allowExport').toEqual([]);
+  });
+
+  /**
+   * Reachability, which the three guards above deliberately do not answer.
+   *
+   * They pin the AUTHORING discipline — grant export only where the app ships
+   * an affordance for it. This one pins that the grant can be exercised at
+   * all: the object's own `enable` block must leave `export` on the API, or
+   * `GET /api/v1/data/:object/export` answers 405 `OBJECT_API_METHOD_NOT_ALLOWED`
+   * before `security.canExport` is ever consulted, and the grant is inert no
+   * matter how well authored.
+   *
+   * Decided with the platform's own resolver rather than a hand-rolled reading
+   * of `apiMethods`, because the two disagree in a way that matters: an
+   * `apiMethods: ['get','list','create','update','delete']` whitelist reads as
+   * "no export", but `resolveEffectiveApiMethods` expands a restricted CRUD
+   * list to include `export`/`import`/`aggregate`/`search`/`upsert` — which is
+   * why `crm_account` and `crm_opportunity` export fine today despite the
+   * whitelist. A guard that judged the raw array would fail four objects for a
+   * hazard that does not exist, so it asks the same functions the REST layer
+   * calls (`@objectstack/rest` `apiAccessDenialFromEnable`).
+   *
+   * #798 is why this exists: the issue reasoned that `crm_case`'s grant landed
+   * on a surface that was not there, and nothing in this suite could answer.
+   * Measured on a dev server, the grant is live (200 with it, 403 without) —
+   * but the question was a fair one to ask and now has a guard behind it.
+   */
+  it('every object carrying allowExport actually exposes export on the API', () => {
+    const inert = exportGrants
+      .filter(([, objectName]) => {
+        const enable = objectByName.get(objectName)?.enable;
+        if (!enable) return false; // no `enable` block ⇒ unrestricted
+        if (enable.apiEnabled === false) return true;
+        const effective = resolveEffectiveApiMethods(enable);
+        const canonical = DATA_ACTION_TO_API_OPERATION.export ?? 'export';
+        return !isApiOperationAllowed(effective, canonical);
+      })
+      .map(([set, objectName]) => `${set}.${objectName}: allowExport granted, but the object's enable block blocks the export route`);
+    expect(
+      inert,
+      `export grants the API can never serve:\n  ${inert.join('\n  ')}`,
+    ).toEqual([]);
   });
 });

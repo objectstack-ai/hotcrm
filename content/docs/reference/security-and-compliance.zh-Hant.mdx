@@ -1,46 +1,74 @@
 ---
 title: 安全與合規
-description: SSO、SCIM、稽核日誌、加密、GDPR、SOC2 —— HotCRM 提供什麼以及如何設定。
+description: SSO、MFA、稽核日誌、secret 欄位通道、GDPR —— HotCRM 與已安裝平台真正做了什麼，以及哪些控制屬於你的部署。
 ---
 
 # 安全與合規
 
-本頁介紹 HotCRM 中可用的安全與合規控制。許多控制在平台層設定；有些則是你作為管理員所做的策略選擇。
+本頁介紹 HotCRM 管理員真正能觸及的安全與合規控制。其中大多數位於平台層，在 **Setup → Authentication** 設定；少數幾項是你所運行的部署的屬性，而不是本應用的屬性。
+
+> **下面每一條斷言都經過實測，其中好幾條沒能活下來。** 本頁逐條對照本應用自己的中繼資料
+> （`src/`、`objectstack.config.ts`）與已安裝的 `@objectstack/*` 包 —— **17.1.0**，全部
+> 51 個 —— 做了核驗。標註 *(not shipped)* 的標題與表格行描述的是一項缺失的能力：沒有物件、
+> 沒有 schema 鍵、沒有設定項。標註 *(unsourced)* 的行保留了一個數字，但應用與平台都沒有任何
+> 東西在強制它。標註 *(your deployment)* 的行，其真假取決於你運行其上的實例以及運營它的
+> 那一方 —— 本頁看不見這兩者，所以它只說 HotCRM 與已安裝依賴樹做了什麼，到此為止。
+> **本頁做出否定時，否定的範圍被限定為「這裡沒有任何東西做這件事」** —— 它絕不斷言某個託管
+> 服務或某家公司做了或沒做什麼，因為對一個你看不見的東西下一個自信的否定，與它所替換的那個
+> 自信的斷言是同一個錯誤，只是符號相反。什麼都沒有被刪除：對下一位讀者而言，被刪掉的斷言和
+> 虛假的斷言看起來一模一樣。
 
 ## 身分驗證
 
 ### 使用者名稱 + 密碼
 
-- 強制執行強密碼策略（最小長度、複雜度、歷史、過期）。
-- 使用 Bcrypt 雜湊；絕不以明文儲存。
-- N 次失敗嘗試後帳戶鎖定（可設定；預設 5 次）。
+下面這些旋鈕都是真的，而且都在同一個地方：**Setup → Authentication**，位於 *Password policy* 與 *Anti-abuse* 群組下。本頁原先錯的是姿態 —— 它把它們描述成生效中的預設值。**每一項保護性設定在管理員打開之前都是關閉的，而 HotCRM 一項都沒有打開**：`objectstack.config.ts` 裡沒有 `auth` 設定區塊，所以本應用跑在平台預設值上。
+
+| 控制 | 設定項 | 預設值 |
+| --- | --- | --- |
+| 密碼最小長度 | `password_min_length` | **8** |
+| 密碼最大長度 | `password_max_length` | **128** |
+| 複雜度（大寫 / 小寫 / 數字 / 符號） | `password_require_complexity` | **關閉** |
+| —— 打開時要求幾類字元 | `password_min_classes` | 3（共 4 類） |
+| 禁止重複使用最近 N 個密碼 | `password_history_count` | **0 —— 不保留歷史** |
+| 密碼過期 | `password_expiry_days` | **0 —— 永不過期** |
+| 拒絕已洩漏密碼 | `password_reject_breached` | **關閉** |
+| 帳戶鎖定閾值 | `lockout_threshold` | **0 —— 鎖定被停用** |
+| 鎖定時長 | `lockout_duration_minutes` | 15 |
+| 認證速率限制（按 IP） | `rate_limit_max` / `rate_limit_window_seconds` | 60 秒內 10 次 |
+
+有兩處更正，讀者若照原文行事會得到相反的答案：
+
+- **「N 次失敗嘗試後帳戶鎖定（可設定；預設 5 次）。」** 預設值是 **`0`，也就是完全停用鎖定**。5 從來就不是預設值。鎖定按身分強制（因此它能扛住 IP 輪換，這一點與旁邊的速率限制不同），也確實值得打開 —— 但一次假定它已經開著的安全評審，讀到的恰好是事實的反面。
+- **「使用 Bcrypt 雜湊。」** *(not shipped —— 演算法不是這個。)* 密碼用 **scrypt** 雜湊，不是 bcrypt（`@objectstack/plugin-auth` 使用 better-auth 的原生雜湊器，並在 WebContainer 下換成參數逐字節一致的純 JS `@noble/hashes/scrypt`）。這條斷言的實質成立 —— 密碼絕不以明文儲存 —— 但演算法名字是錯的，而這正是會被貼進安全問卷裡的那種細節。
 
 ### 多因素身分驗證（MFA）
 
-- TOTP（Google Authenticator、Authy、1Password）—— 推薦所有使用者使用。
-- WebAuthn / 硬體金鑰（YubiKey、Touch ID）。
-- 備用恢復碼。
-- **管理員應強制要求所有使用者使用 MFA** —— Setup → Security → MFA Policy。
+- **TOTP**（Google Authenticator、Authy、1Password）—— 真實：註冊狀態記在 `sys_user.two_factor_enabled` 上，驗證碼與鎖定狀態記在 `sys_two_factor` 上。
+- **備用恢復碼** —— 真實，存為 `sys_two_factor.backup_codes`。
+- **WebAuthn / 硬體金鑰（YubiKey、Touch ID）** —— *(not shipped，作為管理員設定而言。)* passkey 能力存在於 `@objectstack/plugin-auth` 中，但它預設 `passkeys: false`，而且**唯一**的開關是手工實例化 `AuthPlugin` 時的建構參數。沒有環境變數，Setup 裡也沒有對應欄位，而 HotCRM 不實例化自己的外掛，所以管理員點不到任何能打開它的東西。
+- **雙因素預設關閉。** 整個 TOTP 外掛是被門控的：`twoFactor` 依次取自 `OS_AUTH_TWO_FACTOR`、外掛選項，最後落到 `false`。在 **Setup → Authentication** 打開 **Require multi-factor authentication**（`mfa_required`，預設關閉）會啟用它，並開啟一個寬限期（`mfa_grace_period_days`，預設 7 天），寬限期過後未註冊 TOTP 的使用者會被 `MFA_REQUIRED` 擋在門外。
+- ⚠️ 舊建議指向 *Setup → Security → MFA Policy*。**Setup 裡沒有 *Security* 群組，也沒有 *MFA Policy* 這個畫面。** Setup 的群組是 Overview、Apps、People & Organization、Access Control、Approvals、Configuration、Diagnostics、Integrations 與 Advanced；MFA 設定在 **Setup → Authentication** 的 *Multi-factor* 群組裡。
 
 ### 單一登入（SSO）
 
-支援的協定：
+支援的協定，在已安裝依賴樹中都是真的：
 
 - **SAML 2.0** —— Okta、Azure AD、Google Workspace、OneLogin、Ping。
 - **OpenID Connect (OIDC)** —— Auth0、AWS Cognito。
 - **OAuth 2.0** —— 用於委派應用存取。
 
-在 **Setup → Security → SSO** 處設定。啟用 SSO 後，你可以完全停用密碼登入。
+在 **Setup → SSO Providers** 處設定，位於 *Access Control* 群組下。舊文本漏掉的一點是：**這個入口只有在 SSO 已接通後才會出現。** `@objectstack/plugin-auth` 是有條件地貢獻它的 —— 取決於 `OS_SSO_ENABLED`（或雲端的按環境等價開關）—— 而且這是刻意的，好讓未接通的部署不會拿到一個空列表加一個端點 404 的 *Register* 按鈕。如果你看不到這個入口，說明 SSO 在你的部署裡是關的，而不是產品裡沒有。SSO 打開後，你可以完全停用密碼登入。
 
 ### SCIM 佈建
 
 自動從你的身分提供商同步使用者：
 
 - 新 IdP 使用者 → 具有正確設定檔 + 角色的新 HotCRM 使用者。
-- IdP 群組變更 → HotCRM 權限集變更。
+- IdP 組更改 → HotCRM 權限集更改。
 - IdP 使用者停用 → HotCRM 使用者停用，記錄重新指派。
 
-在 **Setup → Security → SCIM** 處設定。
+**設定裡沒有 SCIM 頁面。** 這個能力本身是真的 —— 平台把 SCIM 提供方存為記錄，認證外掛也帶了轉接器，由 `OS_SCIM_ENABLED` 門控且預設關閉 —— 但它沒有自己的導覽入口，所以沒有可點的地方。在介面裡能設定的是 SSO，位置是 **Setup → SSO Providers**。
 
 ## 授權
 
@@ -51,149 +79,178 @@ description: SSO、SCIM、稽核日誌、加密、GDPR、SOC2 —— HotCRM 提�
 | **設定檔** | 使用者可以執行哪些操作（建立/編輯/刪除） |
 | **權限集** | 在設定檔之上的額外操作 |
 | **組織範圍預設值** | 每個物件的基線記錄可見性 |
-| **角色層級** | 經理可以看到其團隊的記錄 |
+| **崗位** | 共享規則可以點名的扁平存取群體——崗位之間什麼都不會上卷 |
 | **共享規則** | OWD 的例外 |
-| **客戶團隊** | 按記錄共享 |
-| **欄位級安全** | 逐欄位讀/寫 |
+| **記錄共享** | 按記錄共享 —— `sys_record_share`，位於 **Setup → Record Shares** |
+| **欄位級安全** | 逐欄位讀/寫 —— 見下方[加密](#field-level-controls)一節 |
+
+第六行原先寫的是 *客戶團隊*。**不存在客戶團隊物件，也不存在按記錄的團隊功能** —— 這個 Salesforce 味的名字描述的其實是平台的按記錄授權表 `sys_record_share`。HotCRM 確實帶了一條**名叫** `account_team_sharing` 的共享規則（`src/sharing/account.sharing.ts`），但那是一條把一組客戶授權給某個崗位的規則，不是你能在某條記錄上往裡加人的團隊。
 
 ## 網路與登入控制
 
-- **IP 允許清單** —— 限制登入到特定 IP/範圍（按設定檔）。
-- **登入時間** —— 限制登入到工作時間（按設定檔）。
-- **工作階段逾時** —— 閒置逾時（預設 30 分鐘）和絕對逾時（預設 12 小時）。
-- **並行工作階段** —— 每使用者的最大同時工作階段數。
-- **裝置信任** —— 標記新裝置並要求郵件確認。
+**這五項裡有兩項是真的，而本頁說它們不是。** 加上那條否定的 2026-08 更正把範圍限定為「不是**本應用**提供的設定」，這句話本身為真，讀起來卻是「你沒法設定這個」—— 而管理員是可以的：
 
-在 **Setup → Security → Session Policy** 處設定。
+| 控制 | 狀態 | 位置 |
+| --- | --- | --- |
+| **IP 允許清單** | ✅ 真實，**部署級** | **Setup → Authentication**（*Network*）下的 `allowed_ip_ranges`。CIDR 段或精確 IP，每行一個或逗號分隔。留空 = 不限制。來自這些範圍之外的登入會被拒絕。需要一個可信代理設定 `X-Forwarded-For` |
+| **並行工作階段** | ✅ 真實，**部署級** | **Setup → Authentication**（*Sessions*）下的 `max_concurrent_sessions_per_user`。預設 **0 = 不限**，上限 100；超過上限時最舊的工作階段會被登出 |
+| **工作階段逾時** | ✅ 真實，但**預設關閉** | `session_idle_timeout_minutes` 與 `session_absolute_max_hours`，兩者預設都是 **0 = 關閉**。工作階段本身的生命週期是 `session_expiry_days`，預設 7 天。舊頁面把 30 分鐘閒置 / 12 小時絕對逾時說成生效中的預設值；它們既沒生效，也不是預設值 |
+| **登入時間** | *(not shipped)* | 在 51 個已安裝包的 1,186 個非 map 分發檔案中，任何 login-hours、login-window 或 allowed-hours 表面都是零命中 |
+| **裝置信任** | *(not shipped)* | 同樣零命中：任何可信裝置、裝置指紋或新裝置確認表面都不存在 |
+
+⚠️ **「按設定檔」這個說法對它們全都是錯的。** 舊條目寫著「（按設定檔）」。存在的那兩項是 `auth` 命名空間下的**部署級設定** —— 整個實例一份 IP 允許清單、一個工作階段上限，不是你能在 Sales Rep 與 System Admin 之間取不同值的東西。如果你的策略需要按設定檔的網路規則，這裡沒有任何東西做這件事。
+
+**不存在 Session Policy 這個畫面。** 登入、密碼、MFA、工作階段與網路設定全都在 **Setup → Authentication** 這一個頁面上；正在進行的工作階段（以及撤銷某個工作階段）在 **Setup → Sessions**。
 
 ## 稽核日誌
 
-每個有意義的操作都會被不可變地記錄：
+`sys_audit_log` 是真的，而且確實不可變：該物件是 `managedBy: 'append-only'`，其上每個欄位都是 `readonly: true`。它隨 `@objectstack/plugin-audit` 一起發布，而**本應用拿得到它** —— 在 `requires` 中宣告 `auth` 會讓 CLI 把 auth、security、audit 三個外掛作為一組註冊。在 **Setup → Audit Logs**（位於 *Diagnostics* 群組下）讀取，它帶了五個列表檢視：*Recent*、*Auth*、*Record Views*、*Config* 與 *All*。
 
-| 類別 | 記錄內容 |
-| --- | --- |
-| **身分驗證** | 登入成功 / 失敗、MFA、IP、裝置 |
-| **授權變更** | 設定檔 / 權限集 / 角色變更 |
-| **記錄變更** | 建立 / 更新 / 刪除及前後值 |
-| **設定** | 欄位、驗證、工作流、共享規則編輯 |
-| **資料匯出** | 誰在何時匯出了什麼、多少列 |
-| **AI 呼叫** | 哪個使用者在哪筆記錄上呼叫了哪個技能 |
-| **整合活動** | Webhook 投遞、OAuth 授權 |
-| **批量操作** | 批量編輯、批量刪除、批量指派 |
+分類表是沒測過的那部分。對照真正存在的寫入方重新判定：
 
-保留期：
+| 分類 | 狀態 | 真正被記錄的內容 |
+| --- | --- | --- |
+| **身分驗證** | ✅ 部分成立 | `login` 與 `logout` 記錄，各自帶有 `user_id`、工作階段 id、組織、**`ip_address`** 與 **`user_agent`**。⚠️ **失敗的登入不會被記錄** —— 寫入方是從一個工作階段建構記錄的，而失敗的嘗試沒有工作階段。一次失敗會讓帳戶上的 `failed_login_count` 遞增以供鎖定核算，但不寫稽核記錄。也不記錄任何 MFA 屬性 |
+| **授權變更** | ✅ 以普通記錄行的形式 | 它不是一個獨立分類。一次授予或綁定就是一次普通的記錄寫入，因此它會落成權限物件上的一條 `create` / `update` 記錄 —— 按 `object_name` 過濾即可。平台在 2026-08 **退役**了專門的 `permission_change` 動作，正是因為它重複了通用寫入方已經寫下的行 |
+| **記錄變更** | ✅ 已核實 | `create` / `update` / `delete`，帶 `old_value` + `new_value`。差異比對會跳過計算型欄位（`formula`、`summary`、`rollup`、`autonumber`） |
+| **設定** | ✅ 已核實 | `config_change` 記錄，由 *Config* 列表檢視呈現 |
+| **資料匯出** | *(not shipped)* | **從來沒有任何一次匯出寫過稽核記錄。** 平台在 2026-08 把 `export` 從本物件的動作列舉中移除，理由是：合規面上一個永遠為空的過濾器是一個可見的產品缺陷 —— 「稽核面寧窄勿謊」。一個按它過濾的消費者，在每一個部署上讀到的都是空結果集 |
+| **AI 呼叫** | *(not shipped)* | 列舉裡沒有 AI 動作，也沒有寫入方。已宣告的八個動作是 `create`、`read`、`update`、`delete`、`login`、`logout`、`config_change`、`import` |
+| **整合活動** | *(not shipped here)* | 列舉裡沒有 webhook 或 OAuth 授予動作。HotCRM 沒有宣告 `webhooks` 能力，所以本應用裡沒有任何東西寫投遞記錄。鄰近的真實表面是 **Setup → Webhooks** 與 **Setup → HTTP Deliveries**，它們是各自的日誌 —— 不是稽核日誌 |
+| **批量操作** | *(not shipped，作為分類而言)* | 一次批量編輯或批量刪除會被記成普通的 `update` / `delete` 行，每條記錄一行，沒有任何東西標記它們屬於同一次操作。唯一存在的批量形態動作是 `import`，由管理員使用者匯入路徑寫入 |
 
-- 即時稽核日誌 UI 中 **90 天**。
-- 歸檔稽核日誌（S3 / 物件儲存）中 **7 年**。
-- 對於受監管產業可設定為更長。
+### 記錄查看 —— 新能力，且在你開口之前是關的
 
-在 **Setup → Security → Audit Log** 處讀取稽核日誌。匯出為 CSV 或串流傳輸到你的 SIEM（Splunk、Datadog、Elastic）。
+安全評審開場必問的那個問題 ——「誰看過這條客戶記錄？」—— 從 **17.1.0** 起有了答案：`sys_audit_log` 新增了 `read` 動作、它的寫入方，以及 *Record Views* 列表檢視。
+
+依賴它之前先讀清楚，因為範圍是刻意收窄的：
+
+- **僅記錄詳情查看。** 一次讀取要算數，必須是它物化了單條記錄且其謂詞釘住了主鍵 —— 也就是 `GET /data/:object/:id` 產生的那種形狀。**列表與搜尋讀取不被稽核。**
+- **按物件逐個選入，而且沒有全域開關。** 在部署點名物件之前什麼都不會被記錄：在 stack 的 `plugins` 陣列裡寫 `new AuditPlugin({ readAudit: { objects: ['crm_contact', 'crm_account'] } })`。空的選入根本不會註冊鉤子，所以預設姿態對一次讀取不產生任何成本。
+- **HotCRM 今天什麼都沒選入。** `objectstack.config.ts` 沒有宣告 `plugins` 陣列，因此稽核外掛是以無選項方式註冊的，**不會寫任何查看記錄**。打開它是一次部署改動，不是一個 Setup 開關。
+- 記錄只寫下誰、什麼、何時 —— **絕不寫欄位值**。這個鉤子刻意跑在欄位遮罩之前：把值抄進去，就等於在合規人員被廣泛授權存取的那張表裡，鑄出一份欄位級安全本來要扣住的明文副本。
+- 系統提權讀取（`api.sudo()`、公式重算、上卷）不寫記錄，沒有主體可點名的讀取同樣不寫。
+
+### 保留期
+
+- **90 天**熱存，隨後歸檔再刪除：物件宣告了 `lifecycle: { retention: { maxAge: '90d' }, archive: { after: '90d', to: 'archive', keep: '7y' } }`。
+- **7 年**歸檔 —— 真實，而 `to: 'archive'` 點名的是一個**資料來源**，不是某個儲存廠商。舊頁面寫的是「S3 / 物件儲存」；那個資料來源指向哪裡，是你的部署的屬性。
+- ⚠️ **沒有註冊 `archive` 資料來源的部署會把一切都保留下來** —— 生命週期服務在歸檔副本成功之前，絕不熱刪除一條宣告了 `archive` 的記錄。這是安全的失敗方式，但它不是「90 天」。
+- *「受監管行業可設定為更長。」* *(not shipped，作為設定而言。)* 這個 lifecycle 塊由平台宣告在一個平台自有物件上；沒有 Setup 欄位，沒有 `auth` 那樣的設定鍵，本應用裡也沒有任何東西能改它。
+
+**匯出為 CSV** 是真實且受權限門控的操作 —— `GET /data/:object/export`，由安全服務的 `canExport` 檢查。**流式傳輸到你的 SIEM 則不是** *(not shipped)*：依賴樹裡那些 `splunk` / `datadog` / `elasticsearch` 名字屬於 `LogDestinationType`，即 `@objectstack/spec/system` 中平台的應用**日誌**目的地詞表 —— 而 `@objectstack/spec` 之外沒有任何東西讀它。它不是稽核日誌轉發器，而稽核日誌轉發器並不存在。
 
 ## 加密
 
 ### 靜態加密
 
-- 資料庫：對敏感欄位（SSN、支付、健康資料）進行 **AES-256** 列級加密。
-- 檔案儲存：**AES-256** 伺服器端加密。
-- 備份：使用單獨的金鑰加密。
+**AES-256 是真的，而且不是本頁所描述的那個東西。** *(已更正。)*
+
+原斷言是**為敏感欄位（SSN、支付、健康資料）提供 AES-256 列級加密**，在欄位上逐個標記。那個欄位鍵並不存在，而且平台會按名字拒絕它，措辭異常直白：
+
+```
+Unrecognized key(s) on this field: `encrypted`.
+  • the `encryptionConfig` family was pruned in 2026-06: it implied at-rest
+    protection that never happened. The real channel is `type: 'secret'`.
+```
+
+真正存在的是一條更窄、也更硬的通道：
+
+- 宣告為 **`type: 'secret'`** 的欄位在寫入時由已註冊的加密提供方加密，持久化為一條 `sys_secret` 記錄，業務行上只留一個不透明引用。**明文從不進入業務表**，讀取時被遮罩。
+- 提供方是 **AES-256-GCM** —— `@objectstack/service-settings` 中的 `LocalCryptoProvider`，金鑰取自 `OS_SECRET_KEY`。`os serve` 會為開發與自託管注入它；生產環境應當換成 KMS 或 Vault 支撐的提供方 *(your deployment)*。
+- 它是**失敗即關閉**的：沒有註冊提供方時，對一個宣告了 secret 欄位的物件寫入會**拋錯**，而不是把明文落盤。空字串會被直接拒絕，而不是加密成一個解密出來什麼都沒有的引用。
+- ⚠️ **`type: 'password'` 不是這個東西。** 一個通用的 password 類型欄位是**明文靜態儲存**的，只在讀取時被遮罩（ADR-0100）。它是一個被遮罩的欄位，不是一個被加密的欄位 —— 不要拿它來保護憑據。
+- **HotCRM 沒有宣告任何 `secret` 類型欄位。** 本應用目前沒有用到這條通道；CRM 物件裡不持有憑據。
+
+**備份使用獨立金鑰加密** *(your deployment)*。平台的 schema 能*描述*它 —— `@objectstack/spec/system` 在其資料庫級租戶隔離策略上帶有一個 `backup` 塊（`strategy`、`frequencyHours`、`retentionDays`）與一個 `encryption` 塊（`perTenantKeys`、`algorithm`、`keyManagement: aws_kms | azure_key_vault | gcp_kms | hashicorp_vault | custom`）。`@objectstack/spec` 之外沒有任何東西讀它們中的任何一個，HotCRM 也一個都沒有宣告。你的備份是否存在、是否按租戶分金鑰，是你所運行實例的屬性。去問運營它的那一方。
 
 ### 傳輸加密
 
-- 所有 HTTP 流量使用 **TLS 1.3**。
-- 內部服務之間使用 **mTLS**。
-- Webhook 使用 HMAC-SHA256 簽署以保證完整性。
+*(your deployment。)* **TLS 1.3**、**內部服務之間的 mTLS**，以及一般意義上的傳輸設定，都是你的實例如何部署與如何被前置的屬性，不是本應用中繼資料的屬性。已安裝依賴樹裡沒有任何東西釘住 TLS 版本 —— 任何 TLS 1.3 最低版本設定都是零命中 —— 而 `@objectstack/spec/system` 帶的那個 mTLS *設定 schema* 在已安裝包中沒有消費者。本應用能說的是：它對這些一概不設定。
 
-### 欄位級加密
+**Webhook 以 HMAC-SHA256 簽名** —— 作為平台能力是真的（`@objectstack/plugin-webhooks`），但 **HotCRM 沒有宣告 `webhooks` 能力**，所以本應用既不發送也不簽名。
 
-在欄位定義中將敏感欄位標記為**加密**。加密欄位：
+### 欄位級控制
 
-- 在資料庫中加密儲存。
-- 僅對擁有 *View Encrypted Data* 權限的使用者可見。
-- 從 SQL 級查詢中排除（僅平台可以解密）。
-- 在稽核日誌中以遮罩後的解密值記錄。
+舊的*欄位級加密*一節告訴管理員「在欄位定義中把敏感欄位標記為 **encrypted**」。那個鍵會被拒絕（見上），而它點名的 *View Encrypted Data* 權限在已安裝依賴樹中是**零命中**。取而代之的是三條真實通道，它們各司其職：
+
+| 想要 | 宣告 | 引擎會做什麼 |
+| --- | --- | --- |
+| 值在靜態時受保護 | `type: 'secret'` | 加密進 `sys_secret`，行上只留不透明引用，讀取時遮罩，失敗即關閉 |
+| 值部分展示 | `maskingRule` | **17.1.0 新增。** 一個預設 —— `phone`、`id_card`、`bank_account`、`email`、`name` —— 或 `{ keepHead, keepTail }`。由 plugin-security 的 `FieldMasker` 在讀取時強制 |
+| 值對部分呼叫方隱藏 | `requiredPermissions: [...]` | 對沒有該權限的呼叫方，`FieldMasker` 會把該欄位從結果中剝離 —— 而且按它過濾、排序或群組的查詢會被**拒絕**（403），所以該值無法透過謂詞探測出來 |
+| 值根本不返回 | `internal: true` | 該鍵會從引擎交回的每一行中省略，預設投影與顯式 `?select=` 都一樣 |
+
+⚠️ `maskingRule` 是一條**讀取時的展示規則，不是加密** —— 儲存的值原封不動。它的前身在 2026-06 被剪除，因為它暗示了一種它從未兌現的靜態保護；17.1.0 回來的這個鍵，是一個如今真實存在的遮罩執行階段的編寫面。HotCRM 目前沒有在任何欄位上宣告遮罩規則。
 
 ## 資料駐留
 
-選擇客戶資料的儲存位置：
+*(your deployment。)* 你的資料存在哪裡 —— 美國、歐盟、亞太、你自己的 VPC —— 以及跨區傳輸是否被阻斷，是你所運行實例及其運營方的屬性。**本應用裡沒有任何東西、已安裝平台依賴樹裡也沒有任何東西強制甚至記錄一個區域。** 支撐這一點的兩項測量：
 
-- **美國**（北美客戶預設）
-- **歐盟**（法蘭克福 / 都柏林）
-- **亞太**（東京 / 雪梨）
-- **自託管** —— 你的 VPC，你的掌控。
+- `@objectstack/spec/kernel` 的產物裡確實存在一個 `dataResidency` 形狀（`region`、`excludeRegions`），旁邊還有一個點名 `sox | hipaa | gdpr | pci_dss | iso_27001 | fedramp` 的 `compliance` 塊。它**沒有被匯出，也沒有類型宣告** —— 編寫者寫不出它，也沒有任何東西讀它。它描述的是一個意圖，不是一個控制。
+- 已安裝包中，任何跨區傳輸阻斷、區域鎖定或駐留強制都是零命中。
 
-為符合歐盟資料駐留規則，可按租戶停用跨區域傳輸。
+如果駐留是一項硬要求，回答它的是你的部署拓撲，而不是 Setup 裡的某個設定。
 
 ## GDPR
 
 ### 存取權
 
-資料主體可以請求其所有資料：
+**不存在 Setup → Privacy 畫面，也不存在資料主體請求記錄類型。** 一次主體存取請求要靠人工處理：找出引用了此人的每一條記錄 —— 聯絡人、潛在客戶、案例、活動、活動成員 —— 然後自己匯出那些列表檢視。沒有任何東西替你打包成 JSON / PDF，也沒有任何東西把該請求登記為一個隱私事件。
 
-1. **Setup → Privacy → Data Subject Requests → New → Export**。
-2. 提供聯絡人的信箱。
-3. 系統生成包含每筆引用他們的記錄的 JSON / PDF 包。
-4. 交付給資料主體；請求記錄在隱私稽核日誌中。
+### 刪除權
 
-### 被遺忘權
+同樣靠人工，而且更不留情：刪除就是把你挑中的記錄**硬刪除**（沒有資源回收筒可以再撈回來 —— 參見 [FAQ](/zh-Hant/docs/reference/faq)），或者由你自己編輯 PII 欄位來做匿名化。沒有「將受影響內容」的預覽，也不會生成什麼稽核證書；你能拿到的，是你動過的每條記錄各自的那條普通稽核日誌。
 
-1. **Setup → Privacy → Data Subject Requests → New → Delete or Anonymise**。
-2. 預覽將受影響的內容。
-3. 選擇 **Delete**（清除）或 **Anonymise**（遮罩 PII，保留記錄用於分析）。
-4. 確認 —— 系統生成稽核憑證。
-
-通常首選匿名化 —— 它保留歷史報表的完整性。
+匿名化通常仍是更好的選擇 —— 它保住了歷史報表的完整性。
 
 ### 同意管理
 
 對於市場行銷：
 
-- 聯絡人/線索上的**同意欄位** —— 擷取合法依據和同意日期。
-- **退訂** —— 由郵件行銷活動自動處理；更新聯絡人。
-- **抑制清單** —— 任何退訂的人都會被全域排除在所有未來行銷活動之外。
+- **同意欄位**位於聯絡人/潛在客戶上 —— *(部分成立。)* `crm_contact` 與 `crm_lead` 各自帶有 `do_not_call` 與 `email_opt_out` 兩個布林欄位。**兩個物件都沒有合法性基礎欄位，也沒有同意日期欄位**，所以記錄只告訴你某人*退訂了*，從不告訴你*為什麼*或*在什麼時候*。如果你的 DPO 需要記錄合法性基礎，那是一個你得自己加的欄位。
+- **退訂** —— ✅ 已核實，形態具體。`campaign_member_optout_sync` 鉤子會把一個成員轉為 `status: 'unsubscribed'` 這件事回寫到此人的 `email_opt_out` 上。它刻意是單向的。⚠️ 沒有任何東西會因為一次入站郵件點擊替你翻轉成員狀態 —— 這裡沒有收件匣連接器；參見[郵件與日曆](/zh-Hant/docs/guides/email-and-calendar)。
+- **抑制清單** —— ✅ 已核實。`src/flows/campaign-enrollment.flow.ts` 的兩個加入關口都按 `email_opt_out: false` 過濾，所以已退訂的人會被排除在後續行銷活動加入之外。這個標記位掛在人身上，這正是這條排除是全域而非按行銷活動的原因。
 
 ### 資料處理協議
 
-DPA 範本在 **Setup → Privacy → DPA** 處提供。
+**應用不附帶任何 DPA 範本** —— 沒有 *Privacy* 畫面可以放它。請從你的法務團隊索取這份協議。
 
 ## SOC 2 / ISO 27001
 
-對於 SaaS 部署，HotCRM 在 SOC 2 Type II 和 ISO 27001 控制下營運。報告可透過你的客戶團隊在 NDA 下取得。
+*(your deployment。)* 運營你實例的那個組織是否持有 SOC 2 Type II 報告或 ISO 27001 證書 —— 以及支撐它的運營控制：工程團隊最小權限存取、即時審批的生產存取、季度存取評審、年度滲透測試、每年兩次的災備演練、漏洞賞金 —— 都是那個組織的屬性，以及它如何運營該服務的屬性。**本應用的中繼資料無法確立其中任何一條，已安裝依賴樹裡也沒有任何東西在運行或佐證一個控制體系。**
 
-關鍵控制：
+依賴樹裡唯一出現這些名字的地方值得知道，免得被當成證據：`@objectstack/spec/kernel` 宣告了一個 `PluginSecurityManifestSchema`，**包**可以在其中宣告自己的 `certifications[]`（文件範例寫的正是 「SOC 2, ISO 27001」）、一個 `securityContact`，以及一個帶 `bugBounty` 標記的 `vulnerabilityDisclosure` 塊。那是一個包在發布關於它自己的宣告。**HotCRM 一項都沒有宣告**，而且它對任何部署都不說明任何事情。
 
-- 工程團隊的最小權限存取。
-- 透過即時審批進行生產存取。
-- 季度存取評審。
-- 年度滲透測試。
-- 每年測試兩次的災難恢復。
-- 漏洞賞金計畫。
+如果你需要那些報告，去問運營你實例的那一方。
 
 ## HIPAA / PHI
 
-作為面向醫療保健客戶的附加元件提供 —— 需要額外的 BAA、加密控制和稽核日誌保留。請聯絡你的客戶團隊啟用。
+*(your deployment。)* 一份業務夥伴協議（BAA），以及是否允許處理 PHI，是與運營你實例的那一方之間的商業與法律安排 —— 不是本應用提供或不提供的某項能力。`BAA` 在已安裝依賴樹中零命中。
+
+HotCRM 能告訴你的是它給了你什麼可用之物：上文的 `type: 'secret'` 通道與 `maskingRule`、`requiredPermissions` 欄位門控、稽核日誌的 90 天/7 年生命週期，以及你可以按物件選入的記錄查看稽核。這些都不是一個合規體系；它們是一個合規體系會建立其上的那些控制。
 
 ## 災難恢復
 
-- **RPO**（恢復點目標）：1 小時。
-- **RTO**（恢復時間目標）：4 小時。
-- 每日快照保留 30 天。
-- 每週快照保留 1 年。
-- 企業版方案生產租戶的跨區域複製。
+*(your deployment。)* RPO、RTO、快照頻率與跨區複製，是你的實例所運行的基礎設施的屬性。**本應用不排程任何備份、不度量任何恢復目標，已安裝依賴樹裡也沒有任何東西做這兩件事** —— [靜態加密](#at-rest)一節提到的那個 `backup` schema 塊描述的是一個沒有消費者的形狀。本頁原先陳述的那些數字（1 小時 / 4 小時，30 天日快照與 1 年週快照）屬於 *(unsourced)*，不會被當作實測結果再重複一次。
 
-自託管客戶 —— 請參見[設定清單](/zh-Hant/docs/administration/setup)了解推薦的備份頻率。
+自託管 —— 請參見[設定清單](/zh-Hant/docs/administration/setup)了解推薦的備份頻率，並把這個頻率當成需要你自己去落實的事。
 
-## 安全事件回應
+## 安全事件響應
 
-- **狀態頁面** —— `status.your-hotcrm-url` —— 即時報告事故。
-- **通知** —— 影響客戶資料的安全事件按 GDPR 在 **72 小時**內報告。
-- **安全信箱** —— `security@yourcompany.com` 用於報告漏洞。
-- **漏洞賞金** —— 請參見計畫頁面。
+*(your deployment。)* 狀態頁、安全聯絡信箱與漏洞披露計畫都屬於運營你實例的那一方；**本應用與已安裝依賴樹都不提供、不託管、也不監控其中任何一項** —— 狀態頁表面零命中，滲透測試零命中。GDPR 的 72 小時洩漏通知視窗是控制者與處理者的法律義務，不是一項功能，而且無論軟體做什麼，它都適用於你的組織。
 
-## 給管理員的提示
+把它們建立起來，並寫在你的使用者找得到的地方：聯絡誰、事件公布在哪裡、以及研究者該如何上報漏洞。
 
-- ✅ **強制要求所有使用者使用 MFA** —— 最大的安全 ROI。
-- ✅ 當使用者超過 10 人時盡快**開啟 SSO + SCIM**。
-- ✅ **將系統管理員限制**在最多 2-3 人。
-- ✅ **每月評審稽核日誌** —— 留意異常的匯出量或登入失敗激增。
-- ✅ **將稽核日誌串流傳輸到 SIEM** 以進行集中監控。
-- ✅ 每年**進行一次桌面演練** —— 如果管理員帳戶被入侵會發生什麼？
+## 管理員提示
+
+- ✅ **把密碼策略打開。** 複雜度、歷史與過期全都預設關閉。`password_reject_breached` 只需一個開關，是三者中價值最高的。
+- ✅ **設定 `lockout_threshold`。** 它今天是 `0`，也就是根本沒有帳戶鎖定。這是本頁上最有後果的一個預設值。
+- ✅ **強制 MFA** —— 在 **Setup → Authentication** 打開 `mfa_required`，配一個寬限期。安全投入產出比最高，而且在你設定之前它是關的。
+- ✅ **設定閒置與絕對工作階段逾時**，如果你的策略有要求，再加上並行工作階段上限。這三項預設都是不限。
+- ✅ **一旦使用者超過 10 人就打開 SSO。** SCIM 沒有介面，所以要把它當成一次部署改動來規劃，而不是一項管理員任務。
+- ✅ **把系統管理員限制在 2-3 人以內。**
+- ✅ **每月評審稽核日誌** —— 在 **Setup → Audit Logs** —— 留意登入失敗導致的*鎖定*以及異常的 `config_change` 量。⚠️ 不要圍繞匯出事件來安排評審：它們一條都沒被記錄。
+- ✅ **如果你身處受監管行業，考慮為 `crm_contact` 與 `crm_account` 選入記錄查看稽核。** 那是 `objectstack.config.ts` 裡的一次 `plugins` 改動，不是一個設定項。
+- ✅ **每年做一次桌面推演** —— 如果一個管理員帳戶被攻陷會發生什麼？
+- ⛔ 不要圍繞按設定檔的 IP 允許清單、登入時間、裝置信任、列級欄位加密、*View Encrypted Data* 權限，或稽核日誌流式傳輸到 SIEM 來做規劃。上面每一項都標著 *(not shipped)*。

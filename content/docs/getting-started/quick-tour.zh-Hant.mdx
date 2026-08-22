@@ -9,15 +9,33 @@ description: HotCRM 的 5 分鐘演練 —— 主頁、你的第一條線索、�
 
 ## 1. 主頁儀表板
 
-你看到的第一個東西是 **CRM Overview** 儀表板。它告訴你：
+左側導覽最上面只有一個固定條目 **Home**，你落地的就是它。**Home** 打開的是 **Executive Overview** 儀表板——9 個磁貼，講收入、客戶與管道：
 
-- 你有多少**開啟的線索**。
-- 你的管道中有多少**商機**。
-- 任何**等待你回應**的案例。
-- 按管道價值排名的頂級客戶。
-- 近期活動（最近的通話、會議、郵件）。
+| 磁貼 | 它顯示什麼 |
+| --- | --- |
+| **Total Revenue (YTD)** | 本年度已成交收入 |
+| **Active Accounts** | 至少存在一項活躍關係的客戶 |
+| **Total Contacts** | 通訊錄中的聯絡人 |
+| **Open Leads** | 漏斗中尚未轉換的線索 |
+| **Revenue Trend** | 過去 12 個月的已成交收入 |
+| **Revenue by Industry** | 本年度已成交收入按客戶產業拆分 |
+| **Pipeline by Stage** | 各銷售階段的進行中商機金額，畫成漏斗——是金額，不是商機筆數 |
+| **New Accounts** | 過去 6 個月的客戶建立節奏 |
+| **Accounts by Industry** | 各產業的年營收總額與客戶數 |
 
-把它當作你每日開始工作的著陸頁。如果你是經理，你還會看到團隊級彙總。
+上表用的是原始碼裡的英文 label，也就是英文介面上看到的名字。本應用提供 en / zh-CN / ja-JP / es-ES 四種介面語言，沒有繁體語言包——簡體中文介面下這些名字會顯示為語言包裡的譯名，例如 **Open Leads** 顯示為「未转化线索」、**Pipeline by Stage** 顯示為「阶段管道分布」，儀表板 **Executive Overview** 自己顯示為「高管总览」。
+
+磁貼上方是三個面板級控制項：一個按成交日期的日期範圍選擇器（預設本季）、一個 **Owner** 篩選器和一個 **Lead Source** 篩選器。開頭 4 個 KPI 磁貼各自框定了自己的週期（本年度累計、"活躍"、"未轉換"），不受日期選擇器收窄，所以這幾個數始終是完整的，而收入類圖表跟著選擇器走。
+
+把它當作你每日開始工作的著陸頁。
+
+本節過去承諾的 4 樣東西，這塊儀表板上沒有任何磁貼對應；另有一個名字，它屬於另一塊儀表板：
+
+- **CRM Overview** 是一塊真實存在的儀表板，但它不是 **Home** 打開的那塊。它掛在 **Insights** 群組下，而 **Insights** 在應用載入時是摺疊的——所以它離你兩次點擊，不是"第一眼看到"的東西。**Active Deals**（進行中商機的筆數）、**Won Deals** 與 **Pipeline by Owner** 是它的磁貼，不是這塊的。
+- *等待你回應的案例*：兩塊儀表板上都沒有。**Executive Overview** 與 **CRM Overview** 都沒有任何磁貼在數案例。**Open Cases**、**Critical Cases**、**SLA Violations** 在 **Service** 群組下的 **Service Overview** 上——參見 [Service](/zh-Hant/docs/service/index)。
+- *按管道價值排名的頂級客戶*：本應用裡根本沒有這樣一個磁貼。**Accounts by Industry** 是按產業歸組，不是給客戶排名；全應用最接近的排名是 **CRM Overview** 上的 **Pipeline by Owner**，那是按業務代表排，不是按客戶排。
+- *近期活動（最近的通話、會議、郵件）*：也不在這裡。**Interactions Logged**、**Meetings Booked** 與 **Customer Minutes** 在 **Activity** 群組下的 **Sales Activity** 上。
+- *給經理看的團隊級彙總*：這塊儀表板不做這件事。每個磁貼對所有人跑的都是同一個查詢，變的是你被允許讀到哪些記錄，而那由你的權限集決定。本應用的職位是扁平的——沒有可供可見性向上彙總的匯報線——而 **Sales Manager** 權限集直接授予 `viewAllRecords`，所以經理讀到的是全組織的合計，而不是某個團隊的切片。
 
 ➜ 了解更多：[儀表板](/zh-Hant/docs/analytics/dashboards)
 
@@ -25,21 +43,34 @@ description: HotCRM 的 5 分鐘演練 —— 主頁、你的第一條線索、�
 
 點擊**應用啟動器**（左上角網格圖示）以在應用之間切換：
 
-- **Enterprise CRM** —— 包含所有 CRM 功能的主應用。
+- **HotCRM** —— 包含所有 CRM 功能的主應用。
 - **Admin** —— 面向系統管理員。
 
-在 Enterprise CRM 內，左側導覽按以下方式分組：
+在 HotCRM 內，左側導覽最上面是一個固定條目——**Home**，它打開的是 **Executive Overview** 儀表板；其餘內容分在 7 個群組裡：
 
 | 分組 | 內容 |
 | --- | --- |
-| **Sales** | Leads、Accounts、Contacts、Opportunities、Quotes、Contracts |
-| **Service** | Cases、Knowledge Base |
-| **Marketing** | Campaigns、Campaign Members |
-| **Products** | Products |
-| **Activities** | Tasks、Events |
-| **Analytics** | Dashboards、Reports |
-| **AI** | Copilot、Knowledge Bases |
-| **Approvals** | Approval Requests、Action History |
+| **Sales** | Leads、Accounts、Account Workbench、Contacts、Opportunities、Pipeline、Quotes、Contracts、Sales Performance |
+| **My Work** | My Tasks、My Deals、My Leads、My Cases、My Calendar、All Tasks |
+| **Activity** | Events、Calendar、Interaction History、Sales Activity |
+| **Marketing** | Campaigns、Products |
+| **Service** | Cases、Knowledge、Service Overview |
+| **Insights** | CRM Overview、Forecasts、Pipeline Coverage、Lead Inflow、SLA Performance |
+| **Approvals** | Inbox |
+
+上表用的是原始碼裡的英文 label，也就是英文介面上看到的名字。本應用提供 en / zh-CN / ja-JP / es-ES 四種介面語言，沒有繁體語言包——簡體中文介面下這些名字會顯示為語言包裡的譯名，例如 **Inbox** 顯示為「待我审批」、**Knowledge** 顯示為「知识库」、**My Work** 顯示為「我的工作」。
+
+**Marketing**、**Insights**、**Approvals** 這三個群組在應用載入時是摺疊的——只有 **Sales**、**My Work**、**Activity**、**Service** 會自動展開。先把群組點開，再判斷某樣東西在不在這裡。
+
+本頁過去列出的 4 個群組名，應用裡根本不存在；另有幾個條目名，真身並不在它說的位置：
+
+- *Products*（產品）不是群組。產品目錄是 **Marketing** 群組下的 **Products** 條目——參見 [Marketing](/zh-Hant/docs/marketing/index)。
+- *Activities* 不是群組，真實的群組叫 **Activity**，而且任務不在裡面。`crm_task` 在側邊欄上是 **My Tasks** 與 **All Tasks** 兩項，都掛在 **My Work** 群組下。
+- *Analytics* 不是群組，真實的群組叫 **Insights**。它裡面沒有任何條目叫 *Dashboards* 或 *Reports*——它釘住的那個儀表板和三張報表，上表已按各自的名字列出。
+- *AI* 不是群組，也沒有叫 *Copilot* 或 *Knowledge Bases* 的側邊欄條目。Copilot 是每個頁面右側的聊天面板（見下文第 6 節），知識文章則是 **Service** 群組下的 **Knowledge**。
+- *Knowledge Base* 不是本應用使用的 label。**Service** 群組下的條目叫 **Knowledge**，與它並列的服務儀表板叫 **Service Overview**——參見 [Service](/zh-Hant/docs/service/index)。
+- *Campaign Members* 不是側邊欄條目。行銷活動成員要從行銷活動詳情頁或全域搜尋進入——參見 [Campaign Members](/zh-Hant/docs/marketing/campaign-members)。
+- *Approval Requests* 與 *Action History* 也都不是條目：**Approvals** 群組下只有 **Inbox** 一項。審批的操作留痕本身是真實資料，由審批外掛以 `sys_approval_action` 儲存，但本應用裡沒有任何導覽條目能打開它。
 
 ## 3. 你的第一條線索
 
@@ -48,8 +79,8 @@ description: HotCRM 的 5 分鐘演練 —— 主頁、你的第一條線索、�
 1. 點擊 **Sales → Leads → New**。
 2. 填寫 **Name**、**Company**、**Email**。
 3. 儲存。線索會自動指派給你。
-4. 在線索詳情頁上點擊 **🎯 Qualify** —— [Sales Copilot](/zh-Hant/docs/ai-copilot/sales-copilot) 會將其評分為 Hot / Warm / Cold 並建議下一步操作。
-5. 準備就緒後，點擊 **Convert** 一步將線索轉換為 Account + Contact + Opportunity。
+4. 在潛在客戶詳情頁上請助手 *「判定此潛在客戶資格」* —— [潛在客戶資格判定技能](/zh-Hant/docs/ai-copilot/sales-copilot) 會按 BANT 給出 0–100 的評分並建議下一步操作。
+5. 準備就緒後，點擊 **Convert** 一步將線索轉化為 Account + Contact + Opportunity。
 
 ➜ 了解更多：[線索](/zh-Hant/docs/sales/leads)
 
@@ -57,7 +88,7 @@ description: HotCRM 的 5 分鐘演練 —— 主頁、你的第一條線索、�
 
 **商機**是你正在處理的真實交易。
 
-1. 由線索轉換自動建立，或 **Sales → Opportunities → New**。
+1. 由線索轉化自動建立，或 **Sales → Opportunities → New**。
 2. 設定 **Account**、**Amount**、**Close Date**、**Stage**。
 3. 隨著交易推進，將其在各階段間移動：*Prospecting → Qualification → Proposal → Negotiation → Closed Won*。
 4. 系統會強制執行[狀態機](/zh-Hant/docs/administration/state-machines) —— 你不能隨意跳過階段。
@@ -72,7 +103,7 @@ description: HotCRM 的 5 分鐘演練 —— 主頁、你的第一條線索、�
 
 1. 案例透過郵件、Web 表單、電話、聊天或入口網站到達。
 2. 新案例進入佇列 —— 專員接手。
-3. 在新案例上點擊 **🚦 Triage** —— [Service Copilot](/zh-Hant/docs/ai-copilot/service-copilot) 會建議優先順序、類別以及最匹配的前 3 篇知識庫文章。
+3. 在新工單上請助手 *「分流此工單」* —— [工單分流技能](/zh-Hant/docs/ai-copilot/service-copilot) 會建議優先順序、分類以及匹配的知識庫文章。
 4. SLA 計時器開始 —— 在案例頁面查看回應時間 / 解決時間倒數計時。
 5. 回覆客戶；解決後關閉案例。
 

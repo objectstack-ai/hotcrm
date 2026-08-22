@@ -32,7 +32,7 @@ The account detail screen is organised into 6 sections:
 | Section | Fields |
 | --- | --- |
 | **Basic Information** | Account number, name, type, industry, description |
-| **Financials** | Annual revenue, number of employees |
+| **Financials** | Annual revenue, number of employees, child account revenue |
 | **Contact Information** | Phone, website, billing address, office location (with map) |
 | **Ownership & Status** | Owner, parent account, active flag |
 | **Branding** | Brand color (used as the avatar accent) |
@@ -53,20 +53,21 @@ Acme Corp Global
 
 The hierarchy gives you:
 
-- **Roll-up reports** — annual revenue of the global parent sums all children.
-- **Cascading sharing** — when an admin grants access to the parent, all children inherit it.
+- **Rolled-up revenue** — **Child Account Revenue**, on the *Financials* section, is the sum of the **Annual Revenue** of this account's **direct** children. The platform maintains it: it moves when a child's revenue is edited, when a child is re-parented onto another account, and when a child is deleted. It is one level deep, so a grandparent shows the total of its own children rather than of the whole tree.
 - **Easier navigation** — from a child you can jump to the global parent.
+
+Two things the hierarchy deliberately does **not** do. It does **not** cascade sharing: accounts are private, and granting someone the parent gives them nothing on the children — use the sharing rules on [Administration › Sharing](/docs/administration/sharing-and-security) for that. And it does **not** roll anything else up: opportunities, cases and contacts belong to the account they name, and no report sums them up the tree.
 
 ## Built-in rules
 
-- The account **name must be unique** across the system (case-insensitive). You'll get an error if you try to create a duplicate.
+- The account **name must be unique within your organization**. You'll get an error if you try to create a second account with a name you already use. Another organization on the same platform is free to have its own "Acme Corp" — the rule is scoped to your data, not the whole platform. The uniqueness check compares names exactly as typed, so `Acme Corp` and `ACME  Corp` can both exist as separate accounts. Lead conversion is more forgiving: it ignores capitalisation and extra spaces when looking for an account to reuse (see [Leads](./leads)), so converting a lead for `ACME  Corp` attaches it to your existing `Acme Corp` rather than creating a near-duplicate.
 - **Annual revenue must be zero or positive** — no negative numbers allowed.
 - You **cannot delete** an account that has open opportunities or active contracts. Set it to *Inactive* instead (`is_active = false`).
 
 ## Automatic updates
 
 - **Last Activity Date** is auto-stamped whenever the account changes owner or type, so you can always tell when there was last meaningful movement.
-- The **Customer Since** date is captured on the first contract activation.
+- The **Type** flips to *Customer* on the first contract activation — but **no date comes with it**. There is no *Customer Since* field, and no field of any name records when the account became a customer, so a cohort question ("which accounts did we win last quarter?") has to be answered from the contract's **Signed Date** or **Start Date**.
 - The **Total Opportunity Amount** and **Won Opportunity Amount** roll up automatically from related opportunities.
 - The **Open Case Count** is always live, so you can see at a glance if a customer is having a rough time.
 
@@ -84,14 +85,33 @@ When you open an account, you'll see tabs for:
 
 ## Sharing — who can see which account
 
-By default accounts are **private** — only the owner and people above them in the role hierarchy can see them.
+By default accounts are **private** — only the owner. Positions are flat and **nothing rolls up**, so no one sees an account by sitting above its owner in an org chart; every other reader is named by one of the rules below.
 
 On top of that:
 
 - **Active customer accounts** are shared automatically with all Sales Managers (read/edit).
-- **Territory rules** share accounts by billing country:
-  - North America (US, CA, MX) → North America sales team
-  - Europe (UK, DE, FR, IT, ES) → Europe sales team
+- **Territory rules** share accounts by **Territory**:
+  - `na` → North America sales team
+  - `emea` → Europe sales team
+  - `other` → no territory team
+
+**Territory** is a read-only picklist on the account, derived from the country
+you enter in **Billing Address**. You never set it directly — correct the
+address and the territory follows.
+
+| Territory | Countries | Also accepted |
+| --- | --- | --- |
+| North America (`na`) | `US`, `CA`, `MX` | `United States`, `United States of America`, `USA`, `Canada`, `Mexico` |
+| EMEA (`emea`) | `GB`, `DE`, `FR`, `IT`, `ES` | `UK`, `United Kingdom`, `Great Britain`, `Germany`, `France`, `Italy`, `Spain` |
+| Other (`other`) | every other country, and accounts with no billing country | — |
+
+Case and surrounding spaces do not matter — `de`, `DE` and ` de ` are the same
+country. Anything this table does not list is **Other**: a stated value rather
+than a blank, so an account no territory covers shows up as such instead of
+quietly missing from every list. Territory and **Billing Country** (the country
+exactly as it was typed) both sit in the *Locations* section of the account,
+which makes them the first thing to check when a territory team says an account
+is missing from their list.
 
 Admins can change these rules — see [Administration › Sharing](/docs/administration/sharing-and-security).
 
@@ -102,12 +122,27 @@ Admins can change these rules — see [Administration › Sharing](/docs/adminis
 
 ## Standard list views
 
-- **My Accounts** — accounts you own.
-- **All Customers** — active customers.
-- **Top Accounts by Revenue** — biggest first.
-- **Inactive Accounts** — `is_active = false`, for clean-up.
-- **By Industry** — grouped.
-- **Recently Updated** — what changed last.
+Accounts opens on **All Accounts**, and the switcher along the top of the list carries six saved views — these, and nothing else:
+
+| View | What it shows |
+| --- | --- |
+| **All Accounts** *(the landing view)* | Every account whatever its type, highest **Annual Revenue** first. Annual Revenue carries a column total and **Employees** a column average, so the header line is the whole book at a glance. Rows are tinted by the **Active** flag — the grey rows are the inactive ones (`is_active = false`), which is where retired accounts stay visible instead of needing a list of their own. 50 rows a page, export to CSV or XLSX, and with rows selected: **Update Tier**, **Transfer Owner**, **Delete**. |
+| **Account Cards** | The same accounts as branded cards — industry, annual revenue, employees, phone, website and owner under the account name. |
+| **Accounts by Location** | Accounts plotted on a map. The pin comes from **Office Location**, not from the billing address, so an account that has a billing address but no office location is missing from this view — and only from this view. |
+| **Enterprise Accounts** | Accounts with **Annual Revenue of $10M or more**, biggest first, with quick-filter dropdowns for **Industry** (with a count per value), **Type** and **Owner** above the grid. This is a revenue cut, not the **Customer Tier** field: an account you tiered *Enterprise* at $5M of revenue is not here. |
+| **My Accounts** | The accounts you own, most recently active first (**Last Activity Date**, descending). |
+| **⚠️ At-Risk Accounts** | Customers whose **Health Score** is *At Risk* or *Churning* — the customer-success working queue, with segment and last activity date alongside. |
+
+<Callout type="info">
+  **Looking for upcoming renewals? They are on the contract.** Open **Contracts** and pick the **Renewals** tab for the renewal calendar, or sort **All Contracts** by **End Date** — those are the dates the daily renewal reminder actually acts on. The account list used to carry its own *Upcoming Renewals* view, built on an account-level **Next Renewal Date** and **Renewal Owner** that nothing in the product ever wrote or read: the date showed whatever had last been typed in by hand rather than what was really expiring, and naming a renewal owner there sent that person nothing. Both fields were removed rather than left looking wired. See [Revenue](/docs/revenue/index) for how the renewal reminder picks its recipient.
+</Callout>
+
+### Why the customer-success queue can be empty
+
+**At-Risk Accounts** reads the fields on the **Customer Success** section of the account form (Tier, Segment, Health Score), and is scoped to **Type = Customer** before anything else:
+
+- A prospect or a partner never appears, however those fields are filled in. Promote the account to *Customer* first — activating a contract does that for you.
+- **Health Score** is maintained by hand by whoever owns the relationship and has no default value. On an org where nobody sets it, *At-Risk Accounts* is empty — that is missing data, not a broken filter.
 
 ## Tips for sales reps
 

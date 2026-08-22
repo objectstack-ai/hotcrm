@@ -83,7 +83,7 @@ describe('the hook is the guard that actually speaks', () => {
     'rejects an edit to %s — the fields the deleted validation covered',
     async (field) => {
       await expect(editConverted({ [field]: 'changed' })).rejects.toThrow(
-        /Cannot edit a converted lead/,
+        /Cannot edit converted lead/,
       );
     },
   );
@@ -92,6 +92,73 @@ describe('the hook is the guard that actually speaks', () => {
     // The deleted validation's whole claim was a friendlier message. Nothing
     // gets a turn after this throw, so the diagnostic has to live here.
     await expect(editConverted({ company: 'Globex' })).rejects.toThrow(/attempted: company/);
+  });
+
+  it('names the LEAD as well as the field (#693)', async () => {
+    // The lock fires on writes the caller never made (a cascade clearing a
+    // conversion link), so "a converted lead" was not enough to find the
+    // record that refused. The label falls back to the company when the lead
+    // carries no personal name, and to the bare id when it carries neither.
+    await expect(editConverted({ company: 'Globex' })).rejects.toThrow(
+      /Cannot edit converted lead Ada Lovelace \(lead_1\)/,
+    );
+    await expect(
+      guard.handler(
+        makeCtx({
+          event: 'beforeUpdate',
+          input: { id: 'lead_2', rating: 5 },
+          previous: { id: 'lead_2', is_converted: true, company: 'Initech', rating: 1 },
+          user: { id: 'usr_1' },
+          api: makeHarness().api,
+        }),
+      ),
+    ).rejects.toThrow(/Cannot edit converted lead Initech \(lead_2\)/);
+  });
+
+  /**
+   * #693's second symptom at the unit level, and #720's ruling on it: the
+   * engine clears a `set_null` lookup by UPDATING the row that holds it, so
+   * `DELETE /crm_opportunity/<id>` reaches this guard as
+   * `{ converted_opportunity: null }` on the lead. The lock used to refuse
+   * that, which meant a converted lead made all three of its conversion
+   * products permanently undeletable — an erasure request with no way to
+   * carry it out.
+   *
+   * No marker distinguishes the cleanup (measured on rc.2 when #693 landed, and
+   * again on rc.6 for #720 — the engine's own `__referentialFieldClear` is
+   * stripped before a hook sees it), so the lock yields on the write SHAPE
+   * instead: a write whose every non-system change is a declared link going
+   * value→null. The end-to-end proof that a real cascade produces exactly that
+   * shape, and the narrowness in both directions, live in
+   * `test/freeze-guard-reference-cleanup.test.ts`.
+   */
+  describe('a cleared conversion link is the engine tidying up, not an edit', () => {
+    it.each([
+      ['converted_opportunity', 'opp_1'],
+      ['converted_account', 'acc_1'],
+      ['converted_contact', 'con_1'],
+      ['duplicate_of_lead', 'lead_9'],
+      ['duplicate_of_contact', 'con_9'],
+    ])('%s', async (field, previousValue) => {
+      await expect(
+        editConverted({ [field]: null }, { [field]: previousValue }),
+      ).resolves.toBeUndefined();
+    });
+
+    it('refuses the edit when the write is not only a link clear', async () => {
+      // A hand edit that also touches a business field is an edit, and saying
+      // so stays correct — the link branch must not swallow it.
+      await expect(
+        editConverted({ converted_opportunity: null, company: 'Globex' }, { converted_opportunity: 'opp_1' }),
+      ).rejects.toThrow(/Cannot edit converted lead/);
+    });
+
+    it('is not reached when the link is merely re-stated', async () => {
+      // `input[k] === previous[k]` is not a change at all, so nothing refuses.
+      await expect(
+        editConverted({ converted_opportunity: 'opp_1' }, { converted_opportunity: 'opp_1' }),
+      ).resolves.toBeUndefined();
+    });
   });
 
   it('still rejects fields the deleted validation never covered', async () => {

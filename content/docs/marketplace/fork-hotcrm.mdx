@@ -15,10 +15,10 @@ A working ObjectStack app needs ~15 conventions wired correctly:
 - AI tool exposure via `*.action.ts`
 - Strict `@objectstack/spec` schema validation
 - i18n bundles for all locales you ship
-- Profile + role hierarchy + sharing rules
+- Profile + positions + sharing rules
 - Approval processes
 - Hooks correctly lowered for the build pipeline
-- Dashboards backed by analytics cubes
+- Dashboards backed by analytics datasets
 - Documentation that's actually accurate
 
 Writing all of that from scratch is a week. Forking HotCRM and renaming it is an hour.
@@ -74,7 +74,7 @@ Then update `src/translations/index.ts` to reference the new filename.
 
 ### 4. Cut what you don't need
 
-HotCRM ships 15 objects across Sales / Service / Marketing / Revenue. Most apps need fewer:
+HotCRM ships 18 objects across Sales / Service / Marketing / Revenue. Most apps need fewer:
 
 ```bash
 # Example: keep only Sales-related objects

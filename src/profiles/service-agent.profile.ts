@@ -17,10 +17,38 @@ export const ServiceAgentProfile = {
     crm_account:     { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, allowExport: true },
     crm_contact:     { allowCreate: false, allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, allowExport: true },
     crm_opportunity: { allowCreate: false, allowRead: false, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
-    // Cases + tasks: an agent's own queue by default (readScope: 'own');
-    // cross-agent visibility comes from the case-escalation sharing rule.
+    // Cases + tasks: an agent's own queue by default (readScope: 'own').
+    // Cross-agent visibility exists for CASES only — the escalation rules widen
+    // open critical cases to service_manager / service_director. `crm_task` has
+    // no sharing rule at all, so an agent reading an account org-wide still
+    // sees only their own tasks on it (#549).
     crm_case:        { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const, allowExport: true },
-    crm_task:        { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
+    // `allowTransfer` on `crm_task` ONLY — canonical note in
+    // `src/profiles/index.ts`. Narrow and load-bearing: escalating a case fires
+    // `case_status_side_effects`, which opens the follow-up task OWNED BY the
+    // account owner (`case.hook.ts`). That insert runs on `ctx.api` with the
+    // agent's own context, so planting it under another user is a transfer and
+    // is denied without this bit — the case update would fail with it. This is
+    // "assign work to a colleague", not "reassign the ticket": the agent holds
+    // no transfer grant on `crm_case` or any customer record.
+    //
+    // ⚠️ Escalation DOES now move a case to the `service_manager` pool (#1070),
+    // and it does so with no `crm_case` grant here — deliberately. That
+    // hand-off runs on the `beforeUpdate` seam, which the #3004 guard cannot
+    // see (measured, three readings, in `_case-assignment.ts`'s header and
+    // pinned in `test/case-assignment.test.ts`), so the case moves as part of
+    // the escalation write the automation is already performing rather than as
+    // an agent-initiated transfer. Doing it the other way — a `ctx.api` write
+    // from `afterUpdate` — WOULD need `crm_case.allowTransfer` here, which
+    // would let an agent reassign any case they can edit. That is a
+    // permission-model decision and is not being taken as a side effect of a
+    // hook: this line stays `crm_task` only.
+    crm_task:        { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const, allowTransfer: true },
+    // #592 — `log_call` / `log_meeting` are scoped to `crm_case` too, and an
+    // agent who cannot INSERT a `crm_event` gets a button that 403s. Same
+    // own-scoped shape as their tasks.
+    crm_event:       { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
+    crm_event_attendee: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: false, modifyAllRecords: false },
     crm_product:     { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
     // The knowledge base is this team's own surface: agents draft and revise
     // articles (draft → in_review → published is enforced by the KB flow, not by
@@ -28,6 +56,11 @@ export const ServiceAgentProfile = {
     // is destructive-by-policy, so deletion stays with admins. Before #488 the
     // object had no grant at all — the "Knowledge" nav item was denied for
     // everyone, including the agents it was built for.
+    // Agents rate the articles they use to close cases (#601). Create + edit
+    // their OWN row (`modifyAllRecords: false` keeps them off everyone else's
+    // vote); no delete — a withdrawn opinion is a changed verdict, not an
+    // erased one.
+    crm_article_feedback: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
     crm_knowledge_article: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
   },
   fields: {

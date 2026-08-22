@@ -63,12 +63,25 @@ The sum of line items rolls up into the quote subtotal.
 ## Built-in rules
 
 - **Expiration date must be after the quote date** — no expired-on-creation quotes.
-- **Discount cannot exceed 100%** — basic sanity check.
+- **Discount cannot exceed 60%.** This is a hard ceiling, not a warning: a quote whose **Discount %** is above 60 is refused on save, with *"Discount cannot exceed 60%"*. There is no approval that unblocks it — see [Discount ceiling](#discount-ceiling) below for what to do instead. (A discount above 100% was never possible; the field itself only accepts 0–100.)
+- **No single line may exceed 60% either.** The same ceiling, the same 60, applied to each line item's own **Discount %**: a line above it is refused on save with *"Line discount cannot exceed 60%"*. Both numbers are needed, because a quote's total runs them one after the other — each line is discounted first, then the quote's percentage comes off the sum — so a quote sitting innocently at 0% with every line at 90% off used to price 90% below list and clear the quote rule outright.
+- **A quote cannot be Presented or Accepted without a contact.** A *Draft* or *In Review* quote needs no recipient — you often price a deal before knowing who signs it. But the write that moves it to *Presented* (or straight to *Accepted*) is refused unless **Contact** is filled in, and the message points at that field. Quotes that are never sent are unaffected: *Rejected* straight out of review, and the nightly sweep's *Expired*, both still go through without a contact.
 
 ## What happens automatically
 
 - **Daily expiration sweep** — every night at 1 AM, the system marks any quote whose expiration has passed as **Expired** (unless it's already accepted or rejected). Keeps your active list clean.
-- **On acceptance** — when you mark a quote as *Accepted*, the system creates a contract automatically with the quote's terms, advances the opportunity to *Closed Won*, promotes the account from prospect to customer (if applicable), and schedules a renewal reminder task 60 days before contract end.
+- **On acceptance** — marking a quote *Accepted* is what drafts the contract. The system inserts a contract in **Draft** status, typed *Subscription*, on a 12-month term starting today, carrying the quote's account, primary contact, related opportunity, owner and total price. It then advances the linked opportunity to *Closed Won*, dated today, and — only when the rep recorded no win reason — stamps **Quote Accepted** as one. An opportunity already closed, won or lost, is left where it is.
+
+Two things readers often expect at this point happen **later, when someone activates that contract**, not when the quote is accepted:
+
+- **The account is promoted at activation, not at acceptance.** Moving an account from *Prospect* to *Customer* is a write that runs on contract activation, and what acceptance produces is a *Draft*. Until a Sales Manager or an admin activates that contract, the account is still a *Prospect*.
+- **The renewal reminder is not scheduled here, and it is not a 60-day one.** Renewal reminders come from the daily renewal sweep, which reads *Activated* contracts only and uses each contract's own **Renewal Notice (Days)** — **30** by default, and set per contract. A contract still sitting in *Draft* is invisible to that sweep, so it has no reminder at all.
+
+Both are described in full on the [Contracts](/docs/revenue/contracts) page.
+
+The links are copied across, not invented: the drafted contract requires a **Primary Contact** and takes it from the quote, and the close-won step acts on the quote's **related opportunity**. What the quote does not carry, acceptance cannot pass on.
+
+The contact half of that is now enforced rather than advised — you cannot present a quote without one, so by the time it can be accepted the recipient is already on it. The **related opportunity** is still genuinely optional: a quote with no opportunity is accepted normally and drafts its contract, there is simply no deal for the system to close-won. If you want the acceptance to win the deal, put the opportunity on the quote first.
 
 ## Generating a quote
 
@@ -90,7 +103,7 @@ The rep then reviews the draft, attaches a PDF (or uses the built-in templating)
 
 ## Sending a quote to the customer
 
-From the quote detail page, click **Send to Customer**. This sets the status to *Presented* and emails the PDF using a quote-cover-email template. The Sales Copilot can draft the cover email for you — *"Draft a cover note for this quote"*.
+From the quote detail page, click **Send to Customer**. This sets the status to *Presented* and emails the PDF using a quote-cover-email template. The AI assistant can draft the cover email for you — *"Draft a cover note for this quote"*.
 
 ## Mark as Accepted / Rejected
 
@@ -99,17 +112,36 @@ Two buttons on the detail screen close the loop:
 - **Mark Accepted** → status = Accepted; triggers the contract chain described above.
 - **Mark Rejected** → status = Rejected; the opportunity stays open (you can re-quote at a lower price).
 
-## High-value discount approval
+## Discount ceiling
 
-If a quote's total exceeds the discount-approval threshold (e.g., total > $500K or discount > 30%), the linked opportunity enters the [Discount Approval](/docs/revenue/approvals) process. The quote shows a banner at the top — you can't mark it *Presented* until approval clears.
+**A quote's discount may never exceed 60% — and neither may any one line's.** The rule is an invariant, not a checkpoint: it is evaluated on *every* save, so there is no state in which a deeper discount is allowed to sit. A save that would put the quote's **Discount %** above 60 comes back refused with *"Discount cannot exceed 60%"*, a save that would put a line's **Discount %** above 60 comes back refused with *"Line discount cannot exceed 60%"*, and in both cases nothing is written. The two messages differ so that a refused save tells you which of the two numbers to bring down.
+
+Both are needed because a quote's total applies them in sequence — each line is discounted, the lines are summed, and the quote's percentage comes off that sum. Ceiling one and the other is the way around it: a quote at 0% with every line at 90% off is 90% below list, and the quote-level rule has nothing to object to. That is the case this pair of rules closes.
+
+⚠️ **60% + 60% is not 60%.** A quote at the ceiling whose lines are also at the ceiling is roughly 84% below list, because the two percentages compound. Each rule caps one multiplier; neither caps the combination. What the ceiling should mean for the *effective* discount is an open product question, so if the combined number matters for your business, watch **Total Price** rather than relying on the two percentages to add up to a bound.
+
+What to do when a deal genuinely needs to go deeper: restructure the number rather than the percentage — a lower **Unit Price** on the line items, or a shorter term, reaches the same total price without a discount the system refuses. Record why in **Internal Notes** either way.
+
+⚠️ **There is no approval that unblocks the ceiling.** Approval in HotCRM routes on the *opportunity's* **Amount** — a manager at $100K or more, a director above $500K (see [Revenue › Approvals](/docs/revenue/approvals)) — and nothing routes on a discount. That is a deliberate gap, not an oversight: discount-triggered approval routing is a planned addition, and until it ships the ceiling is absolute. A quote that needs a deeper discount than the ceiling allows is a conversation to have off-system, not a request to submit.
+
+The line sits at 60% because a rule that blocks with no way around it has to refuse only what is genuinely wrong. Aggressive commercial pricing — the 20–30% range HotCRM's own demo data uses — is untouched; the ceiling exists for the 90%-off quote that no one reviewed.
 
 ## Standard list views
 
-- **My Quotes** — quotes you own.
-- **Active Quotes** — Draft, In Review or Presented.
-- **Expiring This Week** — about to expire and still open.
-- **Won Quotes** — Accepted.
-- **By Account** — grouped.
+Quotes opens on **All Quotes**, and the switcher carries three saved views — these, and nothing else:
+
+| View | What it shows |
+| --- | --- |
+| **All Quotes** *(the landing view)* | Every quote, newest **Quote Date** first, with the quote number pinned to the left as the link into the record. **Subtotal**, **Tax** and **Total Price** carry column totals, so whatever is on screen adds itself up; account, opportunity, status, expiration date, discount and owner sit on the row. 25 rows a page. |
+| **Quote Pipeline** | The same quotes as a board, one column per status — Draft, In Review, Presented, Accepted, Rejected, Expired — each column totalling **Total Price**. This is where *"what is stuck in review?"* and *"how much have we presented?"* get answered, and the Accepted column is your won-quote list. |
+| **Quote Calendar** | Each quote drawn on a month calendar as a band running from its **Quote Date** to its **Expiration Date**, labelled with the quote number and coloured by status. What is about to lapse is the band ending nearest today. |
+
+None of the three is filtered — no owner cut, no date window, no "active only". Two things make that workable:
+
+- **Status is the filter you already have.** The board separates Draft / In Review / Presented from the closed statuses, and the nightly sweep moves anything past its expiration date into *Expired* on its own, so the open columns stay honest without anyone curating a list.
+- **Expiration Date is sortable** on All Quotes. Sorting on it ascending is the "expiring soon" answer, and it works on the whole register rather than a fixed week.
+
+A brand-new org has no quotes at all — they are generated from opportunities, never created from scratch — so the list is legitimately empty until the first **Generate Quote**. These views declare no empty-state message, so what you get in that case is an empty grid, not an explanation.
 
 ## Tips for sales reps
 
@@ -120,6 +152,10 @@ If a quote's total exceeds the discount-approval threshold (e.g., total > $500K 
 
 ## Tips for admins
 
-- The daily expiration sweep runs at 1 AM. To change the time, adjust the schedule on the quote object's workflow.
+- The daily expiration sweep runs at 1 AM. That time lives in source, not in Setup: it is the `schedule: '0 1 * * *'` on the start node of the `quote_expiration` flow (`src/flows/quote-expiration.flow.ts`). Changing it is a code change plus a redeploy — there is no setting to adjust on the quote object.
 - The quote PDF template (cover and line item layout) is stored in your email-template settings.
-- To require manager approval below the system-wide $500K threshold (for example, on every quote with >20% discount), add a workflow that flips the quote to *In Review* and notifies the manager. See [Administration › Automation](/docs/administration/automation).
+- The Contact requirement is checked **when a quote moves into Presented or Accepted**, not on every save. A quote that was already sitting in *Presented* without a contact before this rule shipped keeps working normally — you can read and edit it, and filling the Contact in is an ordinary edit. It is the only case that can still reach *Accepted* without a recipient, and there it behaves as it always did: the contract cannot be drafted, and the reason lands in the server log. HotCRM's own demo data contains no such quote.
+- The Discount ceiling is checked on **every save**, not only on a status change — the opposite boundary to the Contact requirement above, and deliberately so. "The discount may never exceed 60%" is an invariant; "a quote must have a recipient by the time it is presented" is a condition on a transition. The consequence worth knowing: a quote stored above the ceiling before this rule shipped would be frozen to every edit except lowering its discount, which is always allowed. HotCRM's own demo data contains no such quote — the deepest discount it seeds is 20%.
+- The line-item ceiling behaves the same way and reaches the same legacy case: a line stored above 60 before the rule shipped is refused on its next edit until its discount comes down. One boundary is worth knowing: a validation is evaluated against the record being saved, so an over-ceiling *line* freezes that line, not its parent quote — the quote can still change status. Nothing HotCRM ships is in that state (the deepest line discount it seeds is 20%), and after this rule a line above the ceiling cannot be written at all.
+- The ceiling value lives in source, not in Setup: it is `QUOTE_DISCOUNT_CEILING` in `src/objects/_thresholds.ts`, interpolated into the condition and the message of *both* rules — the one on the quote object and the one on the quote line item. There is only ever one number to change, and changing it is a code change plus a redeploy.
+- To route quotes for approval on their discount (for example, every quote over 20% off to the manager), you would author a new **record-change flow** on the quote object that flips it to *In Review* and notifies them. Nothing built in does this today — the shipped approval flow keys on the *opportunity's* Amount and never reads a discount. That is a source change under `src/flows/`, not something assembled in Setup. See [Administration › Automation](/docs/administration/automation) for how the built-in flows are put together.

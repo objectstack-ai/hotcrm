@@ -12,7 +12,7 @@ Source: `src/objects/account.object.ts`
 
 Key fields:
 
-`account_number`, `name`, `type`, `industry`, `annual_revenue`, `number_of_employees`, `phone`, `website`, `billing_address`, `office_location`, `owner`, `parent_account`, `is_active`, `tier`, `segment`, `health_score`, `renewal_owner`, `next_renewal_date`
+`account_number`, `name`, `type`, `industry`, `annual_revenue`, `child_account_revenue`, `number_of_employees`, `phone`, `website`, `billing_address`, `office_location`, `owner`, `parent_account`, `is_active`, `tier`, `segment`, `health_score`
 
 ### `crm_contact` - Contact
 
@@ -20,7 +20,7 @@ Source: `src/objects/contact.object.ts`
 
 Key fields:
 
-`salutation`, `first_name`, `last_name`, `full_name`, `avatar`, `crm_account`, `title`, `department`, `reports_to`, `owner`, `email`, `phone`, `mobile`, `mailing_street`, `mailing_city`, `mailing_state`, `mailing_postal_code`, `mailing_country`, `birthdate`, `lead_source`, `is_primary`, `do_not_call`, `email_opt_out`
+`salutation`, `first_name`, `last_name`, `full_name`, `avatar`, `crm_account`, `title`, `department`, `owner`, `email`, `phone`, `mobile`, `mailing_street`, `mailing_city`, `mailing_state`, `mailing_postal_code`, `mailing_country`, `lead_source`, `is_primary`, `do_not_call`, `email_opt_out`
 
 ### `crm_lead` - Lead
 
@@ -62,7 +62,7 @@ Source: `src/objects/case.object.ts`
 
 Key fields:
 
-`case_number`, `subject`, `description`, `crm_account`, `crm_contact`, `status`, `priority`, `type`, `origin`, `owner`, `created_date`, `closed_date`, `first_response_date`, `resolution_time_hours`, `sla_due_date`, `is_sla_violated`, `is_escalated`, `escalated_date`, `escalation_reason`, `parent_case`, `resolution`, `customer_rating`, `customer_feedback`, `customer_signature`, `internal_notes`, `is_closed`
+`case_number`, `subject`, `description`, `crm_account`, `crm_contact`, `status`, `priority`, `type`, `origin`, `owner`, `created_date`, `closed_date`, `first_response_date`, `resolution_time_hours`, `sla_due_date`, `is_sla_violated`, `is_escalated`, `escalated_date`, `escalation_reason`, `resolution`, `customer_rating`, `customer_feedback`, `internal_notes`, `is_closed`
 
 ### `crm_knowledge_article` - Knowledge Article
 
@@ -78,7 +78,7 @@ Source: `src/objects/task.object.ts`
 
 Key fields:
 
-`subject`, `description`, `status`, `priority`, `type`, `due_date`, `reminder_date`, `completed_date`, `owner`, `related_to_type`, `related_to_account`, `related_to_contact`, `related_to_opportunity`, `related_to_lead`, `related_to_case`, `is_recurring`, `recurrence_type`, `recurrence_interval`, `recurrence_end_date`, `is_completed`, `is_overdue`, `progress_percent`, `estimated_hours`, `actual_hours`
+`subject`, `description`, `status`, `priority`, `type`, `due_date`, `reminder_date`, `completed_date`, `owner`, `related_to_type`, `related_to_account`, `related_to_contact`, `related_to_opportunity`, `related_to_lead`, `related_to_case`, `is_recurring`, `recurrence_type`, `recurrence_interval`, `recurrence_end_date`, `is_completed`, `is_overdue`, `progress_percent`
 
 ## Marketing
 
@@ -88,7 +88,7 @@ Source: `src/objects/campaign.object.ts`
 
 Key fields:
 
-`campaign_code`, `name`, `description`, `type`, `channel`, `status`, `start_date`, `end_date`, `budgeted_cost`, `actual_cost`, `expected_revenue`, `actual_revenue`, `target_size`, `num_sent`, `num_responses`, `num_leads`, `num_converted_leads`, `num_opportunities`, `num_won_opportunities`, `response_rate`, `roi`, `parent_campaign`, `owner`, `landing_page_url`, `is_active`
+`campaign_code`, `name`, `description`, `type`, `channel`, `status`, `start_date`, `end_date`, `budgeted_cost`, `actual_cost`, `expected_revenue`, `actual_revenue`, `target_size`, `num_sent`, `num_responses`, `num_leads`, `num_converted_leads`, `num_opportunities`, `num_won_opportunities`, `response_rate`, `roi`, `owner`, `landing_page_url`, `is_active`
 
 ### `crm_campaign_member` - Campaign Member
 
@@ -106,7 +106,7 @@ Source: `src/objects/product.object.ts`
 
 Key fields:
 
-`product_code`, `name`, `description`, `category`, `family`, `list_price`, `cost`, `sku`, `quantity_on_hand`, `reorder_point`, `is_active`, `is_taxable`, `product_manager`, `image`, `datasheet`, `tax_rate`, `billing_type`, `unit_of_measure`
+`product_code`, `name`, `description`, `category`, `family`, `list_price`, `cost`, `sku`, `is_active`, `product_manager`, `image`, `datasheet`, `tax_rate`
 
 ### `crm_quote` - Quote
 

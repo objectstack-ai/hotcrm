@@ -38,7 +38,7 @@ hotcrm/
 │   ├── actions/            # UI actions + AI-callable tools (*.actions.ts)
 │   ├── dashboards/ reports/ datasets/          # Analytics metadata
 │   ├── skills/             # AI skill metadata (*.skill.ts) — skills-only surface
-│   ├── profiles/ sharing/  # Permission sets, role hierarchy, sharing rules
+│   ├── profiles/ sharing/  # Permission sets, positions, sharing rules
 │   ├── translations/       # Locale bundles (en / zh-CN / es-ES / ja-JP)
 │   └── data/               # Seed data (defineDataset)
 ├── content/docs/           # Product documentation site content
@@ -59,9 +59,27 @@ hotcrm/
     - **All HotCRM business object names MUST use the `crm_` prefix and the prefix MUST be written explicitly in source** (e.g., `crm_account`, `crm_opportunity`, `crm_knowledge_article`). **No automatic prefix injection by the runtime.** Open architectural decision: AI-authored metadata is fragile around "context-aware" naming, so we trade verbosity for grep-ability. Cross-references via `reference_to` / `lookup` / `masterDetail` MUST use the prefixed name. Cube `sql:` fields, view `data.object`, hook `object:`, action `objectName:`, navigation `objectName:`, dashboard `object:`, translation `objects.{key}`, REST URLs, and DB table names ALL use the same prefixed name. The name in source = the name at runtime = the name in DB = the name in URL = the name in docs. No translation layer.
 
 2.  **ObjectQL (No-SQL)**:
-    - Data access MUST use **ObjectQL**.
+    - Data access MUST use **ObjectQL**, reached through the `ctx.api` surface. There is
+      **no `broker`** in this repo — the identifier has zero occurrences in `src/`.
     - **NEVER** write raw SQL.
-    - Format: `broker.find('opportunity', { filters: [['amount', '>', 50000]] })`.
+    - Format: `ctx.api.object('crm_opportunity').find({ where: { amount: { $gt: 50000 } } })`.
+      Object names carry the `crm_` prefix, same as rule 1. In a `*.hook.ts` the surface is
+      cast once — `const api = ctx.api as HookApi | undefined`, from `src/objects/_hook-api.ts`
+      — and then called as `api.object(...)`; action script bodies call `ctx.api.object(...)`
+      directly.
+    - On `ctx.api`, the predicate key is **`where`**, and only `where`. `filter` (canonical)
+      and `filters` (deprecated alias) are *HTTP query-param* spellings carrying a JSON
+      **string**, not keys of the in-process query object — passing either in process fails
+      **silently**: `findOne` spreads the query into the AST without aliasing and returns the
+      object's **first row**, `count` reads `query.where` only and counts the **whole object**.
+      Neither throws. This repo has already paid for that once — see
+      `.changeset/hook-query-where-not-filter.md`. `HookQuery` in `src/objects/_hook-api.ts`
+      deliberately omits the alias so the mistake is a compile error.
+      Other surfaces are **not** governed by this rule and have their own spelling: a
+      `*.flow.ts` node `config` takes `filter:` (44 occurrences across 17 of the 21 flow
+      files; `where:` in none), and a page component config takes `filter:` in the
+      AST-array form (`src/pages/lead_detail.page.ts:217`). Do not "fix" one surface's
+      spelling into another's.
 
 3.  **AI-Native**:
     - Every feature should consider AI augmentation (Co-Pilot, Agents).
@@ -117,11 +135,20 @@ All metadata files MUST be validated against their corresponding `@objectstack/s
 
 1. **Objects**: Use `ObjectSchema.parse()` from `@objectstack/spec/data`
 2. **Pages/Views/Dashboards/Forms**: Use schemas from `@objectstack/spec/ui`
-3. **Workflows**: Use `WorkflowRuleSchema.parse()` from `@objectstack/spec/automation`
+3. **Flows**: Use `FlowSchema.parse()` from `@objectstack/spec/automation` (`defineFlow()` is that call)
 4. **State Machines**: Use `StateMachineSchema.parse()` from `@objectstack/spec/automation`
 5. **Plugins**: Use `PluginSchema.parse()` from `@objectstack/spec/kernel` (remove `: any` annotations)
 6. **Permissions**: Use `PermissionSetSchema.parse()` from `@objectstack/spec/security`
 7. **AI Agents**: Use `AgentSchema.parse()` from `@objectstack/spec/ai`
+
+> **There is no `workflow` metadata type** (ADR-0019/0020): `WorkflowRuleSchema` is not
+> exported by any installed `@objectstack/*` package, and `ObjectSchema` rejects
+> `workflows:` / `workflow:` by name. Field updates belong in `*.hook.ts`; status flips and
+> notifications in a `record_change` / `schedule` flow (item 3); approvals in an `approval`
+> node inside a flow. A record **lifecycle** constraint is not item 4 either — it is a
+> `validations[]` entry with `type: 'state_machine'` on the object, validated by
+> `ObjectSchema.parse()` (item 1); item 4's `StateMachineSchema` is a different shape
+> (`initial` / `states` / `on`) and does not validate that entry.
 
 ## 🏷️ Field Type Guidance
 
@@ -154,6 +181,9 @@ Use the most specific `Field` type available from `@objectstack/spec/data`:
 - **i18n**: Every new object must have entries in all 4 locale files (`src/translations/{en,zh-CN,es-ES,ja-JP}.ts`) — label, pluralLabel, all field labels + option labels, view labels, navigation labels. No new feature ships without all 4 locales.
 - **Docs**: Every new object/feature requires user-facing documentation under `content/docs/` (e.g. `getting-started/`, `guides/`, `marketing/`, `analytics/`, `administration/`) written for business users + admins (not developers).
 - **Documentation**: All documentation MUST be in English.
+- **Validation predicates must be TOTAL**: every `record.x` read in an authored
+  CEL predicate — `validations[].condition`, `requiredWhen`, `readonlyWhen`,
+  `visibleWhen` — carries a `has(record.x)` guard. See below.
 - **No Engine Code**: Do not try to modify the core runtime code. Focus on the *usage* of the runtime.
 - **Dependencies**: HotCRM depends on the published `@objectstack/*` packages (runtime, spec, drivers, services) declared in `package.json`. Keep `specVersion` in `objectstack.manifest.json` aligned with the installed `@objectstack/spec`.
 - **Tone**: Act as a Senior 10x Engineer. Be concise, professional, and technically accurate.
@@ -166,6 +196,45 @@ Use the most specific `Field` type available from `@objectstack/spec/data`:
 > warning on non-object items (pages/flows/datasets/etc.) is advisory only; its
 > "fail at install" wording is stale. Don't mass-rename UI/automation items to
 > chase that warning.
+
+### Validation predicates must be TOTAL (#630)
+
+A validation rule is evaluated against `{...previous, ...data}`, and the engine
+fills absent fields with `null` **only on insert**. On update, `previous` is
+whatever the driver returned — and a driver that stores only the columns a row
+was actually written with (`driver-memory`, `driver-mongodb`) hands back a
+record with the key **absent**, not null. Strict CEL then aborts the whole
+predicate with `No such key` — and what the engine does next changed under us:
+
+```
+≤ 17.0.0-rc.1  WARN Validation rule 'x' predicate failed to evaluate (…) — skipped
+≥ 17.0.0-rc.2  WARN … — write rejected (#4649)
+               ValidationError: Validation rule 'x' could not be evaluated … — write rejected.
+```
+
+Through rc.1 a rule that could not answer required nothing at all, silently.
+From rc.2 it **fails closed**: the same abort rejects the save. Neither is the
+rule the author wrote — one under-enforces, the other blocks an ordinary save on
+a record shape nobody considered — and one guard prevents both. So **every
+`record.x` read carries a `has(record.x)` guard**:
+
+| intent | write this |
+| --- | --- |
+| `x` holds no value | `(!has(record.x) \|\| isBlank(record.x))` |
+| `x` holds a value | `has(record.x) && record.x <op> …` |
+
+`!= null` is **not** a substitute — measured on an absent key, `record.f != null`
+aborts exactly like `record.f < 0` does. It guards a different hazard
+(`dyn<null> < int`); numeric comparisons need both guards. `has()` is the only
+total accessor: `coalesce(record.f, "")` aborts too, because its argument is
+evaluated before the call.
+
+`test/object-validation-predicates.test.ts` enforces this two ways — a grep for
+the guard, and a run of every predicate through the engine's own
+`evaluateValidationRules` against a record with no keys at all. That file also
+carries the full measurement table, the driver-by-driver findings, and why this
+route was chosen over making the in-memory test driver column-complete. Read it
+before adding a rule.
 
 ## ⬆️ Platform Upgrades (ObjectStack version bumps)
 

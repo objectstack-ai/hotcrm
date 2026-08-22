@@ -6,10 +6,37 @@ import type { HookApi } from './_hook-api';
 /**
  * Contact integrity hook.
  *
- * - On insert/update, dedupes by `email` GLOBALLY — matching the schema's
- *   global unique index on `email`. (The old per-account lookup let a
- *   cross-account duplicate sail past the friendly check and explode on the
- *   DB index instead, mid-conversion.)
+ * - On insert/update, dedupes by `email` WITHIN THE ORGANIZATION — matching
+ *   the constraint the schema actually declares. `crm_contact.email` carries
+ *   field-level `unique: true`, which materializes as the tenant composite
+ *   `(organization_id, email)` (framework#3696), so the address is unique
+ *   across every account of one organization and two organizations may each
+ *   know the same person. The lookup is deliberately NOT account-scoped (the
+ *   old per-account lookup let a cross-account duplicate sail past the
+ *   friendly check and explode on the DB index instead, mid-conversion) — but
+ *   it must not reach ACROSS organizations either.
+ *
+ *   ## What an unscoped lookup cost, as measured
+ *
+ *   `ctx.api` reads are not organization-scoped for every caller: the seed
+ *   loader replays a dataset per organization as a SYSTEM write, and an
+ *   unscoped `findOne({ where: { email } })` from inside that replay meets the
+ *   FIRST organization's contacts. On the deployment shape where many
+ *   organizations share one database, the second organization's replay was
+ *   refused row by row — `Another contact (…) with email
+ *   john.smith@acme.example.com already exists.` — landing 0 of 9 contacts
+ *   and, because `crm_contract` requires one, 0 of 4 contracts, plus
+ *   half-populated quotes, quote line items, campaign members and event
+ *   attendees. Nothing leaked; the tenant wall held. The data never arrived.
+ *
+ *   The organization is therefore resolved before the lookup, in the blessed
+ *   order: the acting user's active organization first (`user.organizationId`
+ *   === `session.organizationId` === the `organization_id` column === RLS's
+ *   `current_user.organizationId`), then the row's own stamp, which is what a
+ *   system write carries when no session does. Resolved: scope the lookup.
+ *   Unresolvable on a system write: skip the friendly guard and let the
+ *   `(organization_id, email)` index enforce. Unresolvable for a USER write:
+ *   an untenanted (community) install, where the old global lookup is right.
  * - On delete, refuses if the contact is referenced by an active opportunity,
  *   open quote or active contract.
  *
@@ -27,6 +54,15 @@ const contactHook: Hook = {
   description:
     'Dedupe contacts by email and protect referenced contacts from deletion.',
   handler: async (ctx: HookContext) => {
+    // The refusal envelope (#1075). Mirrored from `./_refusal.ts` because a
+    // lowered body has no module scope and `extractHookBody` THROWS on an
+    // import; `test/refusal-envelope.test.ts` pins every copy against it.
+    function refuse(message: string, code: string, status: number): Error {
+      const err = new Error(message) as Error & { code: string; status: number };
+      err.code = code;
+      err.status = status;
+      return err;
+    }
     const { event, input } = ctx;
     const api = ctx.api as HookApi | undefined;
 
@@ -34,18 +70,33 @@ const contactHook: Hook = {
       const email = typeof input.email === 'string' ? input.email.toLowerCase() : '';
       if (email) {
         input.email = email;
-        // GLOBAL lookup (no account scope): the unique index on `email` is
-        // global, so this guard must be at least as strict to fire first with
-        // a readable error.
-        const dup = await api.object('crm_contact').findOne({
-          where: { email },
-        });
-        const dupId = (dup as { id?: string } | null)?.id;
-        const selfId = ctx.previous?.id ?? input.id;
-        if (dup && dupId !== selfId) {
-          throw new Error(
-            `Another contact (${dupId}) with email ${email} already exists.`,
-          );
+        // Scope the guard to the organization the write belongs to, so it is
+        // exactly as strict as the `(organization_id, email)` index it fires
+        // ahead of — no stricter. An unresolvable organization on a SYSTEM
+        // write (no `ctx.user`) means the caller is the seed loader or a
+        // backfill: skip the friendly guard rather than run it unscoped, and
+        // let the database constraint be the enforcement. Running it unscoped
+        // there is what starved every organization after the first of its
+        // contacts.
+        const organizationId = [
+          ctx.user?.organizationId,
+          ctx.session?.organizationId,
+          input.organization_id,
+          ctx.previous?.organization_id,
+        ].find((candidate): candidate is string => typeof candidate === 'string' && candidate !== '');
+        if (organizationId || ctx.user?.id) {
+          const dup = await api.object('crm_contact').findOne({
+            where: organizationId ? { organization_id: organizationId, email } : { email },
+          });
+          const dupId = (dup as { id?: string } | null)?.id;
+          const selfId = ctx.previous?.id ?? input.id;
+          if (dup && dupId !== selfId) {
+            throw refuse(
+              `Another contact (${dupId}) with email ${email} already exists.`,
+              'DUPLICATE_VALUE',
+              409,
+            );
+          }
         }
       }
     }
@@ -66,8 +117,26 @@ const contactHook: Hook = {
       ]);
       const total = openOpps + openQuotes + activeContracts;
       if (total > 0) {
-        throw new Error(
-          `Cannot delete contact: still referenced by ${openOpps} open opportunity(ies), ${openQuotes} active quote(s), ${activeContracts} active contract(s). Reassign first.`,
+        // Phrase the refusal as the BLOCKING RELATIONSHIP, not as the caller's
+        // operation (#693). This hook fires on a direct
+        // `DELETE /crm_contact/<id>` AND as a cascade child of
+        // `DELETE /crm_account/<id>` (`crm_contact.crm_account` is a
+        // master-detail with `deleteBehavior: 'cascade'`), and the hook context
+        // carries nothing that distinguishes the two — measured on 17.0.0-rc.2,
+        // a cascaded `beforeDelete` ctx holds exactly
+        // {api,event,input,object,previous,provenance,ql,session,transaction,user}
+        // with no cascade marker. So "Cannot delete contact" told an account
+        // deleter that they had asked to delete a contact, and sent them
+        // looking for the wrong record. Naming the contact and both
+        // consequences is true in either context.
+        const name = [ctx.previous?.first_name, ctx.previous?.last_name]
+          .filter((part) => typeof part === 'string' && part.trim() !== '')
+          .join(' ');
+        const subject = name ? `Contact ${name} (${id})` : `Contact ${id}`;
+        throw refuse(
+          `${subject} is still referenced by ${openOpps} open opportunity(ies), ${openQuotes} active quote(s), ${activeContracts} active contract(s), so it cannot be deleted — and neither can its account, because deleting an account deletes its contacts. Close or reassign those records first.`,
+          'DELETE_RESTRICTED',
+          409,
         );
       }
     }

@@ -80,18 +80,52 @@ export const ScheduleFollowUpAction: Action = {
  * Add selected leads to a Campaign.
  *
  * Script-typed action: collects a campaign id (param dialog) then writes one
- * `crm_campaign_member` record per selected lead via the metadata body,
- * skipping leads already on the campaign. Selected ids are surfaced through
- * `input.selectedIds` (populated by the list toolbar) and the chosen
- * campaign through `input.crm_campaign`.
+ * `crm_campaign_member` record for the dispatched lead, skipping leads already
+ * on the campaign. The chosen campaign arrives as `input.crm_campaign`; the
+ * lead arrives as `ctx.recordId`.
+ *
+ * PER-RECORD dispatch, deliberately. `src/views/lead.view.ts` wires this as the
+ * BARE-STRING form — `bulkActions: ['create_campaign']` — and that string is a
+ * dispatch contract, not a spelling of the other one:
+ *
+ *   - bare string    → the renderer promotes the action to a def carrying its
+ *     own label / icon / params / `visible` and dispatches it ONCE PER selected
+ *     row, each call carrying that row's `recordId` and NO selection array. A
+ *     10-lead selection is 10 dispatches through this body, one lead each.
+ *   - `bulkActionDefs` + `execution: 'aggregate'` → ONE dispatch for the whole
+ *     selection, every id in the builtin `params._selectedIds` and no
+ *     `recordId` (see `mass_update_stage` in `opportunity.actions.ts`, #508).
+ *
+ * So multi-select enrollment already works here — it just arrives one lead at a
+ * time. This body reads `ctx.recordId` and nothing else, which is exactly what
+ * the fan-out delivers.
+ *
+ * There is NO `input.selectedIds` read (no underscore), and re-adding one would
+ * be dead code, not a fallback: nothing can deliver that key on either contract
+ * (#813). A top-level `selectedIds` is never merged into the params bag, and a
+ * `params.selectedIds` is refused by the strict params gate (ADR-0104) with
+ * `Unknown action param "selectedIds" — not declared on this action`. The only
+ * selection channel is the underscore-prefixed builtin, and only the aggregate
+ * contract injects it (`@objectstack/spec` `ui/action-params.zod.ts`,
+ * `ACTION_PARAM_BUILTIN_KEYS`; verified end to end in
+ * objectstack-ai/objectstack#5568).
+ *
+ * Switching this action to the aggregate contract would be a PRODUCT change —
+ * one audit entry and one dedupe read per run instead of per lead, and
+ * all-or-nothing failure semantics — so it needs `lead.view.ts` changed with it
+ * and is deliberately not done here (#813).
  */
 export const CreateCampaignAction: Action = {
   name: 'create_campaign',
   label: 'Add to Campaign',
   objectName: 'crm_lead',
   icon: 'send',
-  // script, not modal — modal submits never execute the body in 16.1.0 (the
-  // console resolves `target` as an object name; see ScheduleFollowUpAction).
+  // script, not modal — a `type: 'modal'` action has NO server dispatch at all:
+  // the renderer just opens its `target`, and the runtime refuses it over REST
+  // (`headlessActionTypeError`, 400 "a client-side action with no server
+  // dispatch"), so its `body` never runs. To collect input and then run
+  // server-side, the shape is `type: 'script'` + `params` — the runner collects
+  // the same dialog. See ScheduleFollowUpAction.
   type: 'script',
   body: {
     language: 'js',
@@ -99,17 +133,16 @@ export const CreateCampaignAction: Action = {
       // Value key = the param's field name ('crm_campaign') since the param
       // omits an explicit 'name'. Insert uses the REAL lookup field names on
       // crm_campaign_member (crm_campaign / crm_lead) — not the generic
-      // campaign_id / lead_id from the doc example, which don't exist here and
-      // left crm_campaign null → 'Campaign required' validation failure.
+      // campaign_id / lead_id an earlier revision of the doc example taught,
+      // which don't exist here and left crm_campaign null → 'Campaign required'
+      // validation failure.
       const campaignId = input.crm_campaign ?? null;
       if (!campaignId) throw new Error('create_campaign requires a campaign id');
-      // Selection first, single record as the fallback: console 16.1.0 does
-      // not deliver multi-row selections to actions (the toolbar path rejects
-      // them), so the working invocation today is one lead at a time via the
-      // row menu / a single-row selection. When the runtime starts passing
-      // selectedIds, the bulk path lights up with no further change here.
-      const selected = Array.isArray(input.selectedIds) ? input.selectedIds : [];
-      const ids = selected.length ? selected : (ctx.recordId ? [ctx.recordId] : []);
+      // One lead per dispatch — the bare-string \`bulkActions\` wiring fans this
+      // body out once per selected row (see the note above). \`ids\` stays a
+      // list so the dedupe + skip loop below reads the same on both contracts,
+      // should this action ever move to an aggregate def.
+      const ids = ctx.recordId ? [ctx.recordId] : [];
       if (!ids.length) throw new Error('create_campaign: no lead selected');
       // Skip leads already on this campaign — the modal copy promises
       // duplicates are skipped, and re-running the action on the same
@@ -137,9 +170,13 @@ export const CreateCampaignAction: Action = {
     capabilities: ['api.read', 'api.write'],
     timeoutMs: 10000,
   },
-  // list_item gives every row a working record-scoped entry point; the
-  // toolbar button works for a single-row selection (multi-row selections are
-  // rejected client-side in 16.1.0).
+  // list_item gives every row a working record-scoped entry point. The
+  // list_toolbar button is single-record by construction: with no `_selectedIds`
+  // in the bag the dispatcher resolves a recordId from the grid selection, and a
+  // multi-row selection there is ambiguous, so it is refused client-side with
+  // "This action runs on a single record — select exactly one row."
+  // Multi-lead enrollment is the SELECTION-BAR button instead, which the view's
+  // `bulkActions: ['create_campaign']` produces and which fans out per row.
   locations: ['list_toolbar', 'list_item'],
   params: [
     // Field-backed param: `field` + `objectOverride` make the console resolve

@@ -100,24 +100,41 @@ export const AddLeadsToCampaignAction: Action = {
   label: 'Add to Campaign',
   objectName: 'crm_lead',
   icon: 'send',
-  type: 'modal',
-  target: 'add_leads_to_campaign',
+  // `script` — the body runs on the server. A `type: 'modal'` action has no
+  // server dispatch at all (the renderer just opens its `target`), so a `body`
+  // on one never executes: the runtime refuses it over REST with
+  // `400 … a client-side action with no server dispatch`.
+  type: 'script',
   locations: ['list_toolbar'],
   params: [
+    // Field-backed param: `field` + `objectOverride` make the console resolve
+    // the widget from crm_campaign_member.crm_campaign (a lookup → crm_campaign),
+    // rendering a RECORD PICKER. A bare `{ type: 'lookup' }` with no field can't
+    // resolve a target object and silently falls back to a paste-the-ID textbox.
+    // The value key is the field name (`crm_campaign`) because the param omits
+    // an explicit `name` — that is the key the body reads below.
     {
-      name: 'campaign',
+      field: 'crm_campaign',
+      objectOverride: 'crm_campaign_member',
       label: 'Campaign',
-      type: 'lookup',
       required: true,
     },
+    // NOTE: `_selectedIds` is NOT declared here. See "Bulk actions" below.
   ],
   body: {
     language: 'js',
     capabilities: ['api.write'],
     timeoutMs: 10000,
     source: `
-      const ids = Array.isArray(input.selectedIds) ? input.selectedIds : [];
-      const campaignId = input.campaign;
+      // \`input\` IS the action's params bag. An aggregate bulk dispatch puts
+      // the whole selection under the built-in \`_selectedIds\` (leading
+      // underscore) and sends no recordId; a single-record dispatch sends a
+      // recordId and no selection.
+      const selected = Array.isArray(input._selectedIds) ? input._selectedIds : [];
+      const ids = selected.length ? selected : (ctx.recordId ? [ctx.recordId] : []);
+      if (!ids.length) throw new Error('No lead selected');
+
+      const campaignId = input.crm_campaign;
       if (!campaignId) throw new Error('Campaign is required');
 
       for (const leadId of ids) {
@@ -137,6 +154,67 @@ export const AddLeadsToCampaignAction: Action = {
 ```
 
 Export actions from `src/actions/index.ts` so `objectstack.config.ts` can register them.
+
+### Bulk actions: how a multi-row selection reaches the body
+
+An action does not decide on its own whether it runs once per selected row or
+once for the whole selection. **The list view does**, and the two declarations
+are different dispatch contracts — not two spellings of one thing. Declare the
+one whose shape your body is written for.
+
+| View declaration | Dispatches | Each call carries | Body reads |
+|:---|:---|:---|:---|
+| `bulkActions: ['add_leads_to_campaign']` (bare string) | once **per selected row** — N rows, N requests | that row's `recordId`, **no** selection array | `ctx.recordId` |
+| `bulkActionDefs: [{ name: 'add_leads_to_campaign', operation: 'custom', execution: 'aggregate' }]` | **once** for the whole selection | every selected id in `params._selectedIds`, **no** `recordId` | `input._selectedIds` |
+
+The body above handles both, which is why it reads `_selectedIds` first and
+falls back to `ctx.recordId`. Wire it up in the view:
+
+```typescript
+// src/views/example.view.ts — inside the `list` block
+bulkActionDefs: [
+  { name: 'add_leads_to_campaign', operation: 'custom', execution: 'aggregate' },
+],
+```
+
+`execution: 'aggregate'` is required on an `operation: 'custom'` def and is not
+boilerplate. A custom def without it has no dispatcher: the button ticks green
+once per row and does nothing. The spec rejects that shape at parse time rather
+than letting it ship.
+
+Two more rules the shipped code depends on:
+
+- **Do not declare `_selectedIds` in `params[]`.** It is a *built-in* key
+  (`ACTION_PARAM_BUILTIN_KEYS` in `@objectstack/spec`, alongside `recordId` and
+  `objectName`), injected by the grid renderer and admitted by the params gate
+  without a declaration. Declaring it is not a supported authoring move.
+- **An aggregate run is all-or-nothing.** The selection bar has no per-row
+  retry, so a body that cannot cover the whole selection must throw rather than
+  return a partial count the bar will toast as success.
+
+> ⚠️ **The underscore is load-bearing. `selectedIds` without it is not a
+> synonym — nothing can ever deliver it.**
+>
+> - as a **top-level** request key → never merged into the params bag, so the
+>   body reads `undefined` and your own "nothing selected" guard fires;
+> - under **`params.`** → refused by the strict params gate (ADR-0104) with
+>   `400 Unknown action param "selectedIds" — not declared on this action`.
+>
+> Both refusals are correct, and together they look exactly like "the platform
+> has no multi-select channel". It does; the key is `_selectedIds`. This cost
+> two release candidates in this repo (#508): three rounds of review probed the
+> no-underscore spelling, read the two 400s as proof of a missing capability,
+> and shipped the bulk button removed. See objectstack-ai/objectstack#5568.
+
+The live reference implementation is `mass_update_stage` —
+`src/actions/opportunity.actions.ts` (the body) plus the `bulkActionDefs` entry
+in `src/views/opportunity.view.ts` (the declaration), pinned end to end in
+`test/bulk-action-dispatch.test.ts` and `test/action-sandbox.test.ts`. Read
+those two files together: a body reading `_selectedIds` with no aggregate def in
+the view is just as dead as the misspelling, because nothing injects the key.
+
+`create_campaign` in `src/actions/lead.actions.ts` is the other contract — bare
+string, per-record fan-out — and reads `ctx.recordId` only.
 
 ## Add A Flow
 

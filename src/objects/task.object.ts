@@ -1,7 +1,7 @@
-import { P, cel } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
+import { P } from '@objectstack/spec';
 import { TASK_TYPE_OPTIONS } from './_picklists';
 
 export const Task = ObjectSchema.create({
@@ -23,10 +23,11 @@ export const Task = ObjectSchema.create({
   fieldGroups: [
     { key: 'basic',      label: 'Task Information', icon: 'info' },
     { key: 'scheduling', label: 'Scheduling',       icon: 'calendar' },
-    // No 'assignment' group: `owner` was its only member, and the synthesized
-    // detail page hoists `owner` into the highlight strip — so the group
-    // rendered on forms and never on detail pages (`field-group-shadowed`).
-    // It lives in `basic` alongside subject/status/priority instead.
+    // No 'assignment' group: the assignee (`owner_id`) was its only member, and
+    // the synthesized detail page hoists it into the highlight strip — so the
+    // group rendered on forms and never on detail pages
+    // (`field-group-shadowed`). It lives in `basic` alongside
+    // subject/status/priority instead.
     { key: 'related',    label: 'Related Records',  icon: 'link' },
     { key: 'recurrence', label: 'Recurrence',       icon: 'refresh-ccw', defaultExpanded: false },
     { key: 'effort',     label: 'Progress & Effort', icon: 'activity',   defaultExpanded: false },
@@ -34,6 +35,15 @@ export const Task = ObjectSchema.create({
   ],
 
   fields: {
+    // Platform ownership anchor — canonical note in `account.object.ts` (#548).
+    owner_id: Field.lookup('sys_user', {
+      label: 'Assigned To',
+      group: 'basic',
+      system: true,
+      readonly: false,
+      trackHistory: true,
+    }),
+
     // Task Information
     subject: Field.text({
       group: 'basic',
@@ -125,14 +135,6 @@ export const Task = ObjectSchema.create({
       group: 'scheduling',
       label: 'Completed Date',
       readonly: true,
-    }),
-    
-    // Assignment
-    owner: Field.lookup('sys_user', {
-      group: 'basic',
-      defaultValue: cel`os.user.id`,
-      label: 'Assigned To',
-      trackHistory: true,
     }),
     
     // Related To (Polymorphic relationship - can link to multiple object types)
@@ -237,20 +239,10 @@ export const Task = ObjectSchema.create({
       defaultValue: 0,
     }),
     
-    // Time tracking
-    estimated_hours: Field.number({
-      group: 'effort',
-      label: 'Estimated Hours',
-      scale: 2,
-      min: 0,
-    }),
-    
-    actual_hours: Field.number({
-      group: 'effort',
-      label: 'Actual Hours',
-      scale: 2,
-      min: 0,
-    }),
+    // No time tracking. `estimated_hours` / `actual_hours` were declared and
+    // inert: no rollup summed them onto a case or an opportunity, no variance
+    // report compared them, and nothing warned when actual overran estimate.
+    // Effort on a task is `progress_percent`, which the task views do read.
   },
   
   // Dead object-level enable.* flags removed in @objectstack 12 (ADR-0049);
@@ -263,38 +255,42 @@ export const Task = ObjectSchema.create({
   indexes: [
     { fields: ['status'] },
     { fields: ['priority'] },
-    { fields: ['owner'] },
+    { fields: ['owner_id'] },
     { fields: ['due_date'] },
   ],
   
   // ADR-0079: render-only `titleFormat` retired in favor of `nameField`,
   // which names the real field holding the record title (here: `subject`).
   nameField: 'subject',
-  highlightFields: ['subject', 'status', 'priority', 'due_date', 'owner'],
+  highlightFields: ['subject', 'status', 'priority', 'due_date', 'owner_id'],
   
   // Removed: list_views and form_views belong in UI configuration, not object definition
   
+  // Predicates below are TOTAL: every `record.x` read is `has()`-guarded, so the
+  // rule returns a verdict even when the merged record has no such key. See
+  // AGENTS.md "Validation predicates must be TOTAL" and
+  // test/object-validation-predicates.test.ts, which fails the build otherwise.
   validations: [
     {
       name: 'completed_date_required',
       type: 'script',
       severity: 'error',
       message: 'Completed date is required when status is Completed',
-      condition: P`record.status == "completed" && isBlank(record.completed_date)`,
+      condition: P`has(record.status) && record.status == "completed" && (!has(record.completed_date) || isBlank(record.completed_date))`,
     },
     {
       name: 'recurrence_fields_required',
       type: 'script',
       severity: 'error',
       message: 'Recurrence type is required for recurring tasks',
-      condition: P`record.is_recurring == true && isBlank(record.recurrence_type)`,
+      condition: P`has(record.is_recurring) && record.is_recurring == true && (!has(record.recurrence_type) || isBlank(record.recurrence_type))`,
     },
     {
       name: 'related_to_required',
       type: 'script',
       severity: 'warning',
       message: 'At least one related record should be selected',
-      condition: P`isBlank(record.related_to_account) && isBlank(record.related_to_contact) && isBlank(record.related_to_opportunity) && isBlank(record.related_to_lead) && isBlank(record.related_to_case)`,
+      condition: P`(!has(record.related_to_account) || isBlank(record.related_to_account)) && (!has(record.related_to_contact) || isBlank(record.related_to_contact)) && (!has(record.related_to_opportunity) || isBlank(record.related_to_opportunity)) && (!has(record.related_to_lead) || isBlank(record.related_to_lead)) && (!has(record.related_to_case) || isBlank(record.related_to_case))`,
     },
   ],
   

@@ -1,7 +1,111 @@
-import { P } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { P } from '@objectstack/spec';
 import { defineView } from '@objectstack/spec/ui';
+import { DUPLICATE_OF_TYPE_AUTHORABLE_OPTIONS } from '../objects/_picklists';
+
+/**
+ * ═══ HOUSE RULE: form predicates are `record.`-bound AND TOTAL ═════════════
+ *
+ * Every `visibleOn` / `visibleWhen` below is a CEL predicate the *renderer*
+ * evaluates, and it must satisfy two properties. `test/view-predicate-dialect.test.ts`
+ * enforces both against the compiled stack, so you do not have to remember them.
+ *
+ * 1. **`record.`-bound.** The evaluation context binds field values under the
+ *    `record` namespace (`buildScope` in `@objectstack/formula` binds exactly
+ *    `record` / `previous` / `input` / `user` / `current_user` / `ctx` / `os`).
+ *    A bare field name is an unbound identifier, so it never evaluates:
+ *
+ *        evaluate('status == "unqualified"',        { record: { status: 'new' } })
+ *          → ok:false  type  "Unknown variable: status"       ← for EVERY record
+ *        evaluate('record.status == "unqualified"', { record: { status: 'new' } })
+ *          → ok:true   false
+ *
+ * 2. **TOTAL** — the same `has(record.x)` rule AGENTS.md states for
+ *    `validations[].condition` / `requiredWhen` / `readonlyWhen` / `visibleWhen`
+ *    (#630). Prefixing alone is not enough: on a *brand-new* record the key is
+ *    absent, and strict CEL aborts on the read:
+ *
+ *        evaluate('record.duplicate_of_type == "crm_lead"',                { record: {} })
+ *          → ok:false  "No such key: duplicate_of_type"
+ *        evaluate('has(record.duplicate_of_type) && record.duplicate_of_type == "crm_lead"',
+ *                                                                          { record: {} })
+ *          → ok:true   false
+ *
+ * Why both matter here and not only in theory (#688): the console's predicate
+ * evaluation **fails OPEN** — an unevaluable `visibleWhen` defaults the field to
+ * *visible*, with no diagnostic — and a visible field carries its `required: true`
+ * into client-side submit validation. So a predicate that cannot answer does not
+ * degrade to "shown but optional"; it makes the form unsatisfiable. On `crm_lead`
+ * this rendered all five conditional disqualification fields at once and demanded
+ * a new lead be a duplicate of *both* a lead and a contact — mutually exclusive by
+ * design — so no lead could be created through the UI at all. The fail-open half
+ * is tracked upstream at objectstack-ai/objectstack#5149; these predicates are the
+ * half this repo owns, and they must be able to answer.
+ *
+ * Numeric comparisons carry `!= null` on top of `has(...)`, matching the object
+ * files: `has(record.rating) && record.rating != null && record.rating >= 4`.
+ * Strict CEL aborts on `dyn<null> < int`, which `has()` alone does not prevent.
+ */
+
+/**
+ * The duplicate-link block (#598), spread into every form that offers
+ * `disqualification_reason`.
+ *
+ * `duplicate_disqualification_requires_survivor` on `crm_lead` rejects a lead
+ * closed as "Duplicate" that does not name the record it duplicates and confirm
+ * the match. So the same rule the `disqualification_reason` field itself follows
+ * applies one level down: a form that lets a user PICK "Duplicate" must also let
+ * them satisfy it, or the save fails with an error the form gives no way to
+ * clear. Declared once and reused rather than retyped eight times — the copies
+ * would drift, and a form that quietly lost the block is exactly the failure
+ * this shape is meant to make impossible.
+ *
+ * The two lookups mirror the object's `requiredWhen` predicates: each appears
+ * only when `duplicate_of_type` names its object — and now says so in the same
+ * words, character for character as the `requiredWhen` on those two fields in
+ * `lead.object.ts`, so the form shows a lookup exactly when the server will
+ * demand it. `test/view-predicate-dialect.test.ts` pins the two together.
+ */
+const DUPLICATE_LINK_FIELDS = [
+  {
+    field: 'duplicate_of_type',
+    required: true,
+    // The picker offers the AUTHORABLE half of the vocabulary only (#1164).
+    // `crm_lead.duplicate_of_type` also accepts `erased`, a tombstone
+    // `lead_duplicate_check` stamps when the engine's reference cleanup nulls
+    // the pointer — "confirmed duplicate of a record that has since been
+    // erased". Nobody authors that: it is an observation about a deletion that
+    // already happened, and offering it would let a reviewer close a lead as a
+    // duplicate of nothing while satisfying every rule that exists to stop
+    // exactly that. Narrowing here rather than deleting the value is the point
+    // — the record can still SAY it, and the field keeps its label in all four
+    // locales, so a tombstoned lead reads as "Erased Record" on the detail page
+    // instead of as a raw enum nobody can explain.
+    //
+    // Spread from `_picklists.ts` rather than retyped: the authorable set is
+    // the source both lists derive from, so a future object type added there
+    // reaches this picker automatically and the tombstone never can.
+    options: [...DUPLICATE_OF_TYPE_AUTHORABLE_OPTIONS],
+    visibleOn: P`has(record.disqualification_reason) && record.disqualification_reason == "duplicate"`,
+  },
+  {
+    field: 'duplicate_of_lead',
+    required: true,
+    visibleOn: P`has(record.duplicate_of_type) && record.duplicate_of_type == "crm_lead"`,
+  },
+  {
+    field: 'duplicate_of_contact',
+    required: true,
+    visibleOn: P`has(record.duplicate_of_type) && record.duplicate_of_type == "crm_contact"`,
+  },
+  {
+    field: 'duplicate_status',
+    required: true,
+    visibleOn: P`has(record.disqualification_reason) && record.disqualification_reason == "duplicate"`,
+    helpText: 'Confirmed means a human checked the two records and they are the same person.',
+  },
+];
 
 /**
  * Lead Views - Comprehensive UI Showcase
@@ -68,7 +172,7 @@ export const LeadViews = defineView({
         width: 120,
       },
       {
-        field: 'owner',
+        field: 'owner_id',
         label: 'Owner',
         width: 150,
       },
@@ -93,7 +197,7 @@ export const LeadViews = defineView({
     // Features
     pagination: { pageSize: 25, pageSizeOptions: [10, 25, 50, 100] },
     rowHeight: 'medium',
-    exportOptions: ['csv', 'xlsx'],
+    exportOptions: { formats: ['csv', 'xlsx'] },
     
     // Empty State
     emptyState: {
@@ -112,6 +216,7 @@ export const LeadViews = defineView({
     
     sections: [
       {
+        name: 'contact_information',
         label: 'Contact Information',
         collapsible: true,
         collapsed: false,
@@ -140,6 +245,7 @@ export const LeadViews = defineView({
         ],
       },
       {
+        name: 'lead_classification',
         label: 'Lead Classification',
         collapsible: true,
         collapsed: false,
@@ -156,7 +262,7 @@ export const LeadViews = defineView({
           'lead_source',
           'industry',
           {
-            field: 'owner',
+            field: 'owner_id',
             required: true,
           },
           // `disqualification_reason` is enforced by the
@@ -167,11 +273,13 @@ export const LeadViews = defineView({
           {
             field: 'disqualification_reason',
             required: true,
-            visibleOn: 'status == "unqualified"',
+            visibleOn: P`has(record.status) && record.status == "unqualified"`,
           },
+          ...DUPLICATE_LINK_FIELDS,
         ],
       },
       {
+        name: 'company_information',
         label: 'Company Information',
         collapsible: true,
         collapsed: true, // Collapsed by default
@@ -182,6 +290,7 @@ export const LeadViews = defineView({
         ],
       },
       {
+        name: 'address',
         label: 'Address',
         collapsible: true,
         collapsed: true,
@@ -198,6 +307,7 @@ export const LeadViews = defineView({
         ],
       },
       {
+        name: 'additional_information',
         label: 'Additional Information',
         collapsible: true,
         collapsed: true,
@@ -208,6 +318,7 @@ export const LeadViews = defineView({
         ],
       },
       {
+        name: 'privacy',
         label: 'Privacy',
         collapsible: true,
         collapsed: true,
@@ -243,7 +354,7 @@ export const LeadViews = defineView({
       },
       columns: ['full_name', 'company', 'email', 'status', 'rating'],
       filter: [
-        { field: 'owner', operator: 'equals', value: '{current_user_id}' },
+        { field: 'owner_id', operator: 'equals', value: '{current_user_id}' },
       ],
       sort: [
         { field: 'rating', order: 'desc' },
@@ -252,22 +363,47 @@ export const LeadViews = defineView({
     },
 
     /**
-     * Hot Leads — Ready for immediate follow-up
-     * (Set by the auto_flag_hot_lead workflow)
+     * Hot Leads — the working queue for the leads routing declared HOT.
+     *
+     * "Hot" is defined in exactly ONE place: the `lead_assignment` flow's
+     * `check_hot` decision (edge `e2`, `record.rating >= 4`). Crossing that
+     * line is what stamps the 1-day follow-up SLA and fires the "Hot lead —
+     * assign within 24h" alert at the owner, so this queue must hold precisely
+     * the leads that alert is about. (An earlier comment here credited a
+     * flagging workflow that has never existed in this repo — dead name
+     * removed, the routing flow is the producer.)
+     *
+     * The cut was `rating >= 4.5` (#766). `rating` is a WHOLE-star field —
+     * `lead.hook.ts` rounds its computed score ("round to WHOLE stars"), the
+     * `star_rating` widget offers nothing finer, and the one seeded 4.5 was
+     * deleted for the same reason (#591) — so `>= 4.5` meant `== 5` on every
+     * row that can actually exist. A 4-star lead was routed hot, alerted on,
+     * and then missing from the queue its owner was sent to.
+     *
+     * Sharing the population with "High Priority" is the deliberate cost of
+     * having one definition of hot, not an oversight: both views now show
+     * rating >= 4, still New or Contacted. What differs is what they are FOR.
+     * Hot Leads is the work order — sorted by next-follow-up (the SLA that
+     * routing just stamped), with phone, email and owner on the row so it can
+     * be dialled top to bottom. High Priority is the scan list — score-tinted
+     * rows and lead source, no SLA column, no time ordering. A 5-star-only
+     * queue, if it is ever a real need, gets its own view under its own name
+     * instead of squatting on "Hot".
+     *
+     * `test/hot-lead-threshold-parity.test.ts` derives this threshold and the
+     * flow's from the metadata and fails if they drift apart again.
      */
     hot_leads: {
       name: 'hot_leads',
       type: 'grid',
       label: '🔥 Hot Leads',
       data: { provider: 'object', object: 'crm_lead' },
-      columns: ['full_name', 'company', 'phone', 'email', 'rating', 'next_followup_date', 'owner'],
-      // The HOTTEST actionable subset (rating >= 4.5) — a tighter cut than the
-      // "High Priority" view (rating >= 4) so the two are not duplicates. Hot
-      // Leads is what a rep works first; sort by next-follow-up so the most
-      // time-sensitive surface on top. (Operator-only filters; the view runtime
+      columns: ['full_name', 'company', 'phone', 'email', 'rating', 'next_followup_date', 'owner_id'],
+      // Same rating cut as the `lead_assignment` hot branch, scoped to the
+      // statuses still worth working. (Operator-only filters; the view runtime
       // does not resolve date template strings.)
       filter: [
-        { field: 'rating', operator: 'greater_than_or_equal', value: 4.5 },
+        { field: 'rating', operator: 'greater_than_or_equal', value: 4 },
         { field: 'status', operator: 'in', value: ['new', 'contacted'] },
       ],
       sort: [{ field: 'next_followup_date', order: 'asc' }],
@@ -295,6 +431,38 @@ export const LeadViews = defineView({
           '5': '#00AA00',
           '4': '#FFA500',
         },
+      },
+    },
+
+    /**
+     * Suspected Duplicates — the review queue behind the intake flag (#598).
+     *
+     * `lead_duplicate_check` marks a re-captured email `suspected` and links it
+     * to the record it repeats. Without a place to SEE that set, the flag would
+     * be a column nobody reads: the reviewer opens this queue, compares the two
+     * records, and either clears the flag or disqualifies the lead as a
+     * confirmed duplicate. `confirmed` rows drop out of the queue, so it drains.
+     */
+    suspected_duplicates: {
+      name: 'suspected_duplicates',
+      type: 'grid',
+      label: 'Suspected Duplicates',
+      data: { provider: 'object', object: 'crm_lead' },
+      columns: [
+        'full_name', 'company', 'email',
+        'duplicate_of_type', 'duplicate_of_lead', 'duplicate_of_contact',
+        'status', 'owner_id',
+      ],
+      filter: [
+        { field: 'duplicate_status', operator: 'equals', value: 'suspected' },
+      ],
+      // Oldest suspicion first: an unreviewed duplicate is a second rep working
+      // the same person, so the queue is worked front to back.
+      sort: [{ field: 'created_at', order: 'asc' }],
+      emptyState: {
+        title: 'No Suspected Duplicates',
+        message: 'Nothing to review — every re-captured email has been checked.',
+        icon: 'copy',
       },
     },
 
@@ -379,6 +547,7 @@ export const LeadViews = defineView({
         {
           // Neutral label — this form backs BOTH the create and edit dialogs,
           // so "Quick Lead Creation" read wrong when editing.
+          name: 'lead_details',
           label: 'Lead Details',
           columns: 2,
           fields: [
@@ -391,14 +560,15 @@ export const LeadViews = defineView({
             // Source at intake — attribution is unrecoverable if not captured
             // when the lead is keyed in.
             'lead_source',
-            'owner',
+            'owner_id',
             // See the default form: `unqualified` requires a reason, so the
             // reason must be reachable wherever the status can be set.
             {
               field: 'disqualification_reason',
               required: true,
-              visibleOn: 'status == "unqualified"',
+              visibleOn: P`has(record.status) && record.status == "unqualified"`,
             },
+            ...DUPLICATE_LINK_FIELDS,
           ],
         },
       ],
@@ -412,6 +582,7 @@ export const LeadViews = defineView({
       type: 'tabbed',
       sections: [
         {
+          name: 'general',
           label: 'General',
           columns: 2,
           fields: [
@@ -426,6 +597,7 @@ export const LeadViews = defineView({
           ],
         },
         {
+          name: 'qualification',
           label: 'Qualification',
           columns: 2,
           fields: [
@@ -439,11 +611,13 @@ export const LeadViews = defineView({
             {
               field: 'disqualification_reason',
               required: true,
-              visibleOn: 'status == "unqualified"',
+              visibleOn: P`has(record.status) && record.status == "unqualified"`,
             },
+            ...DUPLICATE_LINK_FIELDS,
           ],
         },
         {
+          name: 'address',
           label: 'Address',
           columns: 2,
           // Single composite `Field.address` — see the note on the default
@@ -453,6 +627,7 @@ export const LeadViews = defineView({
           ],
         },
         {
+          name: 'details',
           label: 'Details',
           columns: 1,
           fields: [
@@ -477,6 +652,7 @@ export const LeadViews = defineView({
       },
       sections: [
         {
+          name: 'step_1_contact_details',
           label: 'Step 1: Contact Details',
           columns: 2,
           fields: [
@@ -488,6 +664,7 @@ export const LeadViews = defineView({
           ],
         },
         {
+          name: 'step_2_company_information',
           label: 'Step 2: Company Information',
           columns: 2,
           fields: [
@@ -500,6 +677,7 @@ export const LeadViews = defineView({
           ],
         },
         {
+          name: 'step_3_qualification',
           label: 'Step 3: Qualification',
           columns: 2,
           fields: [
@@ -509,17 +687,21 @@ export const LeadViews = defineView({
             {
               field: 'disqualification_reason',
               required: true,
-              visibleOn: 'status == "unqualified"',
+              visibleOn: P`has(record.status) && record.status == "unqualified"`,
             },
+            ...DUPLICATE_LINK_FIELDS,
             { field: 'rating', widget: 'star_rating' },
             'lead_source',
             {
-              field: 'owner',
-              visibleOn: 'rating >= 4', // Conditional visibility
+              field: 'owner_id',
+              // Conditional visibility. `!= null` on top of `has(...)`: strict
+              // CEL aborts on `dyn<null> < int`, which `has()` alone allows.
+              visibleOn: P`has(record.rating) && record.rating != null && record.rating >= 4`,
             },
           ],
         },
         {
+          name: 'step_4_review_and_convert',
           label: 'Step 4: Review & Convert',
           columns: 1,
           fields: [
@@ -544,6 +726,7 @@ export const LeadViews = defineView({
       },
       sections: [
         {
+          name: 'primary_information',
           label: 'Primary Information',
           columns: 1,
           fields: [
@@ -552,16 +735,18 @@ export const LeadViews = defineView({
             'company',
             'email',
             { field: 'status', required: true },
-            'owner',
+            'owner_id',
             // See the default form: `unqualified` requires a reason.
             {
               field: 'disqualification_reason',
               required: true,
-              visibleOn: 'status == "unqualified"',
+              visibleOn: P`has(record.status) && record.status == "unqualified"`,
             },
+            ...DUPLICATE_LINK_FIELDS,
           ],
         },
         {
+          name: 'extended_details',
           label: 'Extended Details',
           columns: 2,
           fields: [
@@ -590,6 +775,7 @@ export const LeadViews = defineView({
       },
       sections: [
         {
+          name: 'quick_edit',
           label: 'Quick Edit',
           columns: 1, // Drawers typically use single column
           fields: [
@@ -602,15 +788,19 @@ export const LeadViews = defineView({
             { field: 'rating', widget: 'star_rating' },
             'lead_source',
             {
-              field: 'owner',
-              visibleOn: 'status != "new"', // Only show owner after initial contact
+              field: 'owner_id',
+              // Only show owner after initial contact. A record with no status
+              // yet has not been contacted, so `!isBlank` keeps the blank case
+              // on the "hidden" side rather than letting `null != "new"` show it.
+              visibleOn: P`has(record.status) && !isBlank(record.status) && record.status != "new"`,
             },
             // See the default form: `unqualified` requires a reason.
             {
               field: 'disqualification_reason',
               required: true,
-              visibleOn: 'status == "unqualified"',
+              visibleOn: P`has(record.status) && record.status == "unqualified"`,
             },
+            ...DUPLICATE_LINK_FIELDS,
           ],
         },
       ],
@@ -628,6 +818,7 @@ export const LeadViews = defineView({
       },
       sections: [
         {
+          name: 'update_lead_status',
           label: 'Update Lead Status',
           columns: 1,
           fields: [
@@ -642,7 +833,8 @@ export const LeadViews = defineView({
             {
               field: 'rating',
               widget: 'star_rating',
-              visibleOn: 'status == "qualified"', // Only show rating for qualified leads
+              // Only show rating for qualified leads
+              visibleOn: P`has(record.status) && record.status == "qualified"`,
             },
             // The reason picklist, not just free-text notes: it is what the
             // `disqualification_reason_required` validation checks, and this
@@ -650,12 +842,14 @@ export const LeadViews = defineView({
             {
               field: 'disqualification_reason',
               required: true,
-              visibleOn: 'status == "unqualified"',
+              visibleOn: P`has(record.status) && record.status == "unqualified"`,
             },
+            ...DUPLICATE_LINK_FIELDS,
             {
               field: 'notes',
               placeholder: 'Add notes about this status change',
-              visibleOn: 'status == "unqualified"', // Free-text context alongside the reason
+              // Free-text context alongside the reason
+              visibleOn: P`has(record.status) && record.status == "unqualified"`,
             },
           ],
         },
@@ -669,7 +863,7 @@ export const LeadViews = defineView({
      * via iframe on a marketing site. Guests can ONLY submit (insert) — the
      * `guest_portal` profile denies read/edit/delete on `crm_lead`.
      *
-     * Fields not on the form (status, lead_source, owner, rating) are stamped
+     * Fields not on the form (status, lead_source, owner_id, rating) are stamped
      * by the `lead_automation` hook in `lead.hook.ts` after a guest submission.
      */
     web_to_lead: {
@@ -680,6 +874,7 @@ export const LeadViews = defineView({
       },
       sections: [
         {
+          name: 'tell_us_about_yourself',
           label: 'Tell us about yourself',
           columns: 2,
           fields: [
@@ -691,6 +886,7 @@ export const LeadViews = defineView({
           ],
         },
         {
+          name: 'about_your_company',
           label: 'About your company',
           columns: 2,
           fields: [
@@ -702,6 +898,7 @@ export const LeadViews = defineView({
           ],
         },
         {
+          name: 'how_can_we_help',
           label: 'How can we help?',
           columns: 1,
           fields: [
@@ -732,6 +929,7 @@ export const LeadViews = defineView({
       },
       sections: [
         {
+          name: 'lead_information',
           label: 'Lead Information',
           columns: 2,
           fields: [
@@ -744,7 +942,9 @@ export const LeadViews = defineView({
             {
               field: 'rating',
               widget: 'star_rating',
-              visibleOn: 'status != "new"', // Only show after first contact
+              // Only show after first contact — see the drawer form's note on
+              // why blank stays on the "hidden" side.
+              visibleOn: P`has(record.status) && !isBlank(record.status) && record.status != "new"`,
             },
             {
               field: 'industry',
@@ -752,32 +952,36 @@ export const LeadViews = defineView({
             },
             {
               field: 'annual_revenue',
-              visibleOn: 'rating >= 3', // Only for qualified leads
+              // Only for qualified leads
+              visibleOn: P`has(record.rating) && record.rating != null && record.rating >= 3`,
             },
             {
               field: 'number_of_employees',
-              visibleOn: P`record.rating >= 3`,
+              visibleOn: P`has(record.rating) && record.rating != null && record.rating >= 3`,
             },
             {
-              field: 'owner',
+              field: 'owner_id',
               required: true,
-              visibleOn: P`record.status == "contacted" || record.status == "qualified"`,
+              visibleOn: P`has(record.status) && (record.status == "contacted" || record.status == "qualified")`,
             },
             // See the default form: `unqualified` requires a reason.
             {
               field: 'disqualification_reason',
               required: true,
-              visibleOn: 'status == "unqualified"',
+              visibleOn: P`has(record.status) && record.status == "unqualified"`,
             },
+            ...DUPLICATE_LINK_FIELDS,
             {
               field: 'notes',
               colSpan: 2,
               required: true,
-              visibleOn: 'status == "unqualified"', // Require explanation for unqualified
+              // Require explanation for unqualified
+              visibleOn: P`has(record.status) && record.status == "unqualified"`,
             },
           ],
         },
         {
+          name: 'address_information',
           label: 'Address Information',
           collapsible: true,
           collapsed: true,
@@ -789,6 +993,7 @@ export const LeadViews = defineView({
           ],
         },
         {
+          name: 'privacy_preferences',
           label: 'Privacy Preferences',
           collapsible: true,
           collapsed: true,

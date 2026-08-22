@@ -17,6 +17,7 @@ export { QuoteGenerationFlow } from './quote-generation.flow';
 export { ContractRenewalFlow } from './contract-renewal.flow';
 export { CaseSlaMonitorFlow } from './case-sla-monitor.flow';
 export { OpportunityStagnationFlow } from './opportunity-stagnation.flow';
+export { ForecastSnapshotFlow } from './forecast-snapshot.flow';
 export { LeadAssignmentFlow } from './lead-assignment.flow';
 export { CaseCsatFollowupFlow } from './case-csat-followup.flow';
 // Migrated from object workflows[] (removed in 7.7): scheduled status-flips + notifications
@@ -27,6 +28,11 @@ export { ContactWelcomeFlow } from './contact-welcome.flow';
 export { OpportunityWonAlertFlow } from './opportunity-won-alert.flow';
 export { TaskUrgentAlertFlow } from './task-urgent-alert.flow';
 export { TaskDueReminderFlow } from './task-due-reminder.flow';
+// Outbound integration: the billing hand-off (#600) — where CRM scope ends.
+export {
+  BillingHandoffClosedWonFlow,
+  BillingHandoffContractActivatedFlow,
+} from './billing-handoff.flow';
 
 import { CampaignEnrollmentFlow } from './campaign-enrollment.flow';
 import { CaseEscalationFlow, CaseEscalationOnCreateFlow } from './case-escalation.flow';
@@ -39,6 +45,7 @@ import { QuoteGenerationFlow } from './quote-generation.flow';
 import { ContractRenewalFlow } from './contract-renewal.flow';
 import { CaseSlaMonitorFlow } from './case-sla-monitor.flow';
 import { OpportunityStagnationFlow } from './opportunity-stagnation.flow';
+import { ForecastSnapshotFlow } from './forecast-snapshot.flow';
 import { LeadAssignmentFlow } from './lead-assignment.flow';
 import { CaseCsatFollowupFlow } from './case-csat-followup.flow';
 import { CampaignCompletionFlow } from './campaign-completion.flow';
@@ -48,6 +55,10 @@ import { ContactWelcomeFlow } from './contact-welcome.flow';
 import { OpportunityWonAlertFlow } from './opportunity-won-alert.flow';
 import { TaskUrgentAlertFlow } from './task-urgent-alert.flow';
 import { TaskDueReminderFlow } from './task-due-reminder.flow';
+import {
+  BillingHandoffClosedWonFlow,
+  BillingHandoffContractActivatedFlow,
+} from './billing-handoff.flow';
 
 /** All flow definitions as a typed array for defineStack() */
 export const allFlows: Flow[] = [
@@ -67,6 +78,7 @@ export const allFlows: Flow[] = [
   ContractRenewalFlow,
   CaseSlaMonitorFlow,
   OpportunityStagnationFlow,
+  ForecastSnapshotFlow,
   LeadAssignmentFlow,
   CaseCsatFollowupFlow,
   // Migrated from object workflows[] (removed in 7.7)
@@ -77,4 +89,7 @@ export const allFlows: Flow[] = [
   OpportunityWonAlertFlow,
   TaskUrgentAlertFlow,
   TaskDueReminderFlow,
+  // Outbound integration (#600)
+  BillingHandoffClosedWonFlow,
+  BillingHandoffContractActivatedFlow,
 ];

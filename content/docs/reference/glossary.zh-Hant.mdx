@@ -15,7 +15,7 @@ description: CRM 與平台術語 —— 按字母排序，讓你在會議中不�
 
 **Activity（活動）** —— 針對某筆記錄記錄的任務、事件、通話或郵件。
 
-**Agent (AI)（AI 代理）** —— 捆綁技能 + 知識庫的複合型 AI 助手。Sales Copilot 和 Service Copilot 都是代理。
+**Agent (AI)（AI 代理）** —— 捆綁技能 + 知識庫的複合型 AI 助手。HotCRM 不定義任何自己的代理：它的六項技能附著在每個 ObjectStack 環境自帶的平台 `ask` 代理之上。
 
 **ARPU** *(Average Revenue Per User，每使用者平均收入)* —— 總收入 ÷ 活躍使用者數。
 
@@ -31,17 +31,17 @@ description: CRM 與平台術語 —— 按字母排序，讓你在會議中不�
 
 **Bookings（簽約額）** —— 某一期間內的贏單合約價值。包括新增 + 擴展 + 續約。
 
-**Business hours（營業時間）** —— SLA 計算中使用的工作日和工作時間。
+**Business hours（營業時間）** —— 在提供這項設定的 CRM 裡，指截止時間所對照的工作日與工作時段。**HotCRM 沒有這個概念**：沒有工作日日曆，沒有假日清單，沒有「Setup → Business Hours」這個畫面，中繼資料裡也不存在任何可供截止時間去對照的東西。它算得出來的那些截止時間 —— 工單 SLA 矩陣裡的每一個格子，從 Critical 的 4 小時到 SMB Low 的 7 天 —— 都是加在掛鐘上的，夜間、週末與假日一律照算。參見 [SLA 與升級](/zh-Hant/docs/service/sla-and-escalation)。
 
 ## C
 
-**Campaign（行銷活動）** —— 包含受眾、預算和成果（註冊 / 轉換的成員）的市場行銷計畫。
+**Campaign（行銷活動）** —— 包含受眾、預算和成果（註冊 / 轉化的成員）的市場行銷計畫。
 
 **Case（案例）** —— 客戶服務問題。具有 SLA、優先順序和狀態。
 
 **Churn（流失）** —— 客戶流失。Logo 流失（客戶數量）vs 收入流失（金額）。
 
-**Closed won / lost（贏單 / 輸單）** —— 商機的終止階段。
+**Closed won / lost（成交 / 失敗）** —— 商機的終止階段。
 
 **Commit（承諾）** —— 用於銷售代表*承諾*成交的商機的預測類別。
 
@@ -67,7 +67,7 @@ description: CRM 與平台術語 —— 按字母排序，讓你在會議中不�
 
 **FLS** *(Field-Level Security，欄位級安全)* —— 按設定檔劃分的逐欄位讀/寫權限。
 
-**Flow（流程）** —— 多步驟自動化。比工作流規則更強大。
+**Flow（流程）** —— 多步驟自動化，也是 ObjectStack 唯一的規則類自動化類型：本應用裡每一條「這條記錄一儲存就做某事」的規則都是記錄變更類流程。參見下方 *Workflow rule* 詞條。
 
 **Forecast（預測）** —— 某一期間的預測簽約額，分桶為 Closed / Commit / Best Case / Pipeline。
 
@@ -77,7 +77,7 @@ description: CRM 與平台術語 —— 按字母排序，讓你在會議中不�
 
 ## H
 
-**Hierarchy（層級）** *(role hierarchy，角色層級)* —— 驅動可見性的組織架構圖 —— 經理可以看到其團隊的記錄。
+**Hierarchy（層級）** —— 同一個詞指兩件事，本應用裡只有其中一件存在。**客戶層級**是真的：父子客戶，參見[客戶](/zh-Hant/docs/sales/accounts)。而驅動記錄可見性的*匯報*階層不存在 —— 職位是扁平的，職位之間什麼都不會上捲，每個需要某條記錄的層級都由它自己的共享規則點名。參見[共享與安全](/zh-Hant/docs/administration/sharing-and-security)。
 
 ## I
 
@@ -125,6 +125,8 @@ description: CRM 與平台術語 —— 按字母排序，讓你在會議中不�
 
 **Permission set（權限集）** —— 在使用者設定檔之上授予的一組額外權限。
 
+**Position（職位）** —— 用於分發記錄存取權限的扁平群體（`sales_manager`、`eu_sales_team` 等）。職位不巢狀，職位之間什麼都不會上捲：一條記錄只有經由點名該職位的共享規則才能到達它，因此沒有任何規則點名的職位什麼也授予不了。一個使用者可以持有多個職位。
+
 **Profile（設定檔）** —— 指派給每個使用者的基礎權限。
 
 **PWA** *(Progressive Web App，漸進式 Web 應用)* —— 將 HotCRM 作為「應用」安裝到手機主畫面上。
@@ -143,7 +145,7 @@ description: CRM 與平台術語 —— 按字母排序，讓你在會議中不�
 
 **Renewal（續約）** —— 在合約結束日期之前 / 當天延長合約。
 
-**Role（角色）** —— 角色層級中的一個位置（驅動共享）。
+**Role（角色）** —— **職位（position）** 的 v1 舊稱，因為舊介面和匯入檔案裡還在用而保留詞條。實際的東西就是職位；參見 *Position*。
 
 ## S
 
@@ -151,7 +153,7 @@ description: CRM 與平台術語 —— 按字母排序，讓你在會議中不�
 
 **SDR / BDR** *(Sales Development Rep / Business Development Rep，銷售開發代表 / 業務開發代表)* —— 專門從事線索開發的代表。
 
-**Sharing rule（共享規則）** —— 在 OWD + 層級之外授予可見性的例外。
+**Sharing rule（共享規則）** —— 在 OWD 基線之上放開記錄存取的例外，放開給它點名的那些職位。
 
 **Skill (AI)（AI 技能）** —— 一項小型 AI 能力（審定線索、起草郵件、分流案例）。
 
@@ -183,7 +185,7 @@ description: CRM 與平台術語 —— 按字母排序，讓你在會議中不�
 
 ## U
 
-**User（使用者）** —— 可以登入的人員。每人都有一個設定檔 + 角色。
+**User（使用者）** —— 可以登入的人員。每人都有一個設定檔，以及任意多個職位。
 
 ## V
 
@@ -195,9 +197,9 @@ description: CRM 與平台術語 —— 按字母排序，讓你在會議中不�
 
 **Webhook** —— 在 CRM 事件發生時觸發的 HTTP 回呼。
 
-**Workflow rule（工作流規則）** —— 一種簡單的儲存後自動化：條件 → 欄位更新 / 郵件 / 任務。
+**Workflow rule（工作流規則）** —— 並非 ObjectStack 的概念。平台已退休獨立的工作流規則類型（ADR-0019 / ADR-0020）：不存在 `workflow` 中繼資料類型，stack 上沒有 `workflows` 集合，**Studio → Automation** 下也沒有 *Workflow Rules* 入口，只有 *Flows*（平台未附繁體中文語言包，主控台介面顯示英文）。一條簡單的儲存後規則（條件 → 欄位更新 / 郵件 / 任務）應寫成 **記錄變更類流程**；參見 [Administration › Automation](/zh-Hant/docs/administration/automation)。
 
-**Win rate（贏單率）** —— 贏單 ÷（贏單 + 輸單）。不含「未決策即關閉」。
+**Win rate（贏單率）** —— 贏單 ÷（贏單 + 丟單）。不含「未決策即關閉」。
 
 ## Y
 

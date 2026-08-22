@@ -1,8 +1,8 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import type { ReportInput } from '@objectstack/spec/ui';
+import type { Report } from '@objectstack/spec/ui';
 
-export const AccountsByIndustryTypeReport: ReportInput = {
+export const AccountsByIndustryTypeReport: Report = {
   name: 'accounts_by_industry_type',
   label: 'Accounts by Industry and Type',
   description: 'Matrix report showing accounts by industry and type',

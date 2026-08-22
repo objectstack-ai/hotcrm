@@ -1,137 +1,130 @@
 ---
 title: Knowledge Bases
-description: The four searchable knowledge libraries that ground the AI Copilot — sales playbooks, product info, support articles, competitive intel.
+description: How the AI Copilot reaches knowledge — one Knowledge Article object, read with the same record tools as every other object.
 ---
 
 # Knowledge Bases
 
-A **knowledge base** is a searchable library of documents and articles the AI Copilot reads from when answering questions. HotCRM ships with **four** built-in knowledge bases, each tuned for a specific kind of question.
+Knowledge in HotCRM lives in **one** place: the **Knowledge Article** object
+(`crm_knowledge_article`), reachable from **Service → Knowledge** in the navigation.
+The Copilot reads it with the same record tools it uses for accounts, cases and
+opportunities. There is no separate retrieval subsystem underneath it, and no
+per-team library to choose between.
 
-This is the layer that makes the Copilot's answers **grounded** — every fact, talking point, or article suggestion is traceable to a source document.
+## There are no four knowledge bases
 
-## The four built-in knowledge bases
+This page used to describe four built-in knowledge bases — **Sales Knowledge**,
+**Product Information**, **Support Knowledge** and **Competitive Intel**. HotCRM
+ships none of them, and never did. No metadata declares a knowledge base under any
+of those names, no skill binds to one, and there is nothing in Setup to seed. If you
+went looking for them after reading the old page, that is why you found nothing.
 
-| Knowledge base | Used by | What's in it |
-| --- | --- | --- |
-| 📘 **Sales Knowledge** | Sales Copilot | Playbooks, objection handling, qualification frameworks, win/loss notes |
-| 📗 **Product Information** | Sales + Service | Product datasheets, feature specs, release notes, FAQs |
-| 🎧 **Support Knowledge** | Service Copilot | KB articles, troubleshooting guides, runbooks |
-| ⚔️ **Competitive Intel** | Sales | Competitor profiles, battle cards, win/loss analyses |
+What exists instead is one article object with a **Category** picklist. Here is
+where each of the four promises actually lands:
 
-## How they work (in plain terms)
+| The old name | What is true today |
+| --- | --- |
+| **Sales Knowledge** — playbooks, objection handling, qualification frameworks | No home in the shipped picklist. The seven categories are written for product and support content; there is no sales-playbook category. Filing a playbook under **How-To** or **Policy** works, but it is your convention, not a shipped one. |
+| **Product Information** — datasheets, specs, release notes | Articles under **Release Notes**, **API & Integrations** or **Billing & Pricing**. A product's own **Datasheet** file stays a file on the product record — see below. |
+| **Support Knowledge** — troubleshooting, runbooks, FAQs | Articles under **Troubleshooting**, **Getting Started** or **How-To**. This is what the picklist was written for, and the one promise the object mostly keeps. |
+| **Competitive Intel** — competitor profiles, battle cards | Nothing. HotCRM has no competitor object: the demo-only `crm_competitor` module was deleted, and this line is text that outlived it (the same removal #790 cleaned out of the sharing and profile pages). The only competitor data the app carries is the Opportunity's *Lost to Competitor* closed-lost reason and the free-text **Loss Details** beside it — the **Competitors** picklist that used to sit on the opportunity shipped placeholder options nothing read, and #1061 retired it. |
 
-Each knowledge base is a **library of documents** that the Copilot can search semantically — meaning it finds documents by meaning, not just keyword. When the Copilot needs to answer a question, it:
+## What an article is
 
-1. **Searches** the relevant knowledge bases for matching content.
-2. **Picks** the top 3-5 most relevant passages.
-3. **Grounds** its answer in those passages and **cites** them in the response.
+One record, with the fields that matter for retrieval:
 
-If the knowledge base doesn't have a good match, the Copilot **says so** rather than guessing. This is the *"I don't know, but here's what I found"* behavior — far safer than hallucination.
+| Field | What it does |
+| --- | --- |
+| **Article Number** | `KA-0001`, assigned automatically — this is what the Copilot cites. |
+| **Title** and **Summary** | Both searchable. The summary is the one-paragraph TL;DR shown in search results and in AI citations. |
+| **Body** | The article itself, in Markdown. |
+| **Category** | Getting Started · How-To · Troubleshooting · Billing & Pricing · API & Integrations · Release Notes · Policy. |
+| **Tags** | Auth · SSO · Mobile · Email · Reports · Performance · Data Import · Webhooks. |
+| **Status** | Draft → In Review → Published → Archived. |
+| **Audience** | Public or Internal. |
+| **Language** | English · Simplified Chinese · Spanish · Japanese. |
 
-## 📘 Sales Knowledge
+Category and tags are the fixed vocabulary the Copilot matches on, so they are the
+two fields that decide whether an article is findable. See
+[Service › Knowledge Base](/docs/service/knowledge-base) for how agents write,
+review and retire articles.
 
-The sales rep's playbook, in searchable form.
+## How the Copilot reaches an article
 
-**Typical contents**:
+By querying the object, exactly as it queries a case:
 
-- Discovery-call frameworks (BANT, MEDDIC, SPIN).
-- Objection-handling cheat sheets.
-- Email templates by stage and persona.
-- Deal-stage exit criteria.
-- Forecast definitions (commit vs best case vs pipeline).
-- Win-stories — examples of successful deals to mirror.
+1. It reads the cases in front of it and takes their **category** and **tags**.
+2. It queries `crm_knowledge_article` for **published** articles matching those.
+3. It cites what it used by article number (`KA-0007`), so you can open the record
+   and check.
 
-**Used by**:
+That is a filtered record query, not a semantic search. Matching is on the category
+and tags a person set, so an article filed under the wrong category is invisible to
+the Copilot no matter how well its body answers the question.
 
-- Lead Qualification skill — to score on the agreed framework.
-- Email Drafting skill — to match your company's voice.
-- Revenue Forecasting skill — for the methodology.
+### Which skills actually read articles
 
-## 📗 Product Information
+| Skill | Reads articles? |
+| --- | --- |
+| 🔭 **Customer 360°** | **Yes** — step 3 of its instructions queries published articles matched on the category or tags of the cases it just read. It is the only skill that does. |
+| 🚦 **Case Triage** | No. It declares two tools, `describe_object` and `get_record`, and has no query tool at all — it cannot search for anything, articles included. |
+| ✍️ **Email Drafting** | No. It *could* — it carries `query_records` — but nothing in its instructions reaches for an article, so no draft cites one. |
+| 🎯 **Lead Qualification** · 📈 **Revenue Forecasting** · 🔄 **Live Data** | No. None of them has a knowledge step. |
 
-Everything about what you sell. Read by both sales and service copilots.
+So "ask the Copilot and it will find the article" means **Customer 360°**
+specifically. Asking Case Triage for a matching article gets you a priority and
+nothing else.
 
-**Typical contents**:
+### Why there is no semantic search
 
-- Product datasheets (auto-pulled from the [product catalog](/docs/revenue/products)).
-- Feature specifications.
-- Pricing and packaging.
-- Release notes and changelogs.
-- Integration guides.
-- Common how-to articles.
+The platform does ship a knowledge-search tool, but it retrieves over a *declared
+knowledge source*, and a knowledge source can only be declared on an agent. HotCRM
+ships skills, not agents, so there is nowhere to declare one — the tool would
+resolve and return nothing. Querying the object is the honest version of the same
+thing, and it is what the skills do.
 
-**Used by**:
+## What does not exist
 
-- Email Drafting — to insert accurate product details into customer emails.
-- Case Triage — to find the right product context for a case.
-- Customer 360 — to summarise what a customer owns.
+Named plainly, because the old page promised all of it:
 
-## 🎧 Support Knowledge
+- **No document ingestion.** Nothing uploads PDFs, Word files or Markdown into a
+  knowledge index. An article is a record someone typed or pasted.
+- **No `/knowledge/...` folder.** There is no directory of Markdown files anywhere
+  in the app, and nothing watches one.
+- **No embeddings, chunking, retrieval thresholds or caching**, and therefore no
+  "top 5 most relevant snippets above a quality threshold". The query returns
+  matching records.
+- **No nightly re-index and no manual re-index button.** A published article is
+  queryable the moment it is saved, because it is a record.
+- **No connectors** to Confluence, Notion, Google Drive or SharePoint.
+- **No per-skill knowledge binding**, so no way to add a knowledge base (a
+  compliance library, say) and wire it to one skill. Adding a **Category** to the
+  article object is the shipped way to carve out a new body of content, and that is
+  a metadata change.
 
-The service team's article library.
-
-**Typical contents**:
-
-- Troubleshooting articles ("Symptom → Cause → Fix").
-- Step-by-step setup guides.
-- Error-code explanations.
-- Known issues with workarounds.
-- Internal runbooks (private to staff).
-
-**Used by**:
-
-- Case Triage skill — to recommend the top 3 matching articles.
-- Email Drafting skill — to ground customer-facing fixes in approved guidance.
-
-See also: [Service › Knowledge Base](/docs/service/knowledge-base) for how agents read, write, and rate these articles.
-
-## ⚔️ Competitive Intel
-
-Battle cards and competitor research — typically maintained by product marketing.
-
-**Typical contents**:
-
-- Competitor profiles (positioning, pricing, target market).
-- Feature-by-feature comparisons.
-- Battle cards by competitor (strengths, weaknesses, talk-tracks).
-- Win/loss analysis themes.
-- Quotes from won deals against each competitor.
-
-**Used by**:
-
-- Email Drafting skill — when a customer mentions a competitor.
-- Lead Qualification skill — when a lead's source suggests they're evaluating alternatives.
-
-## How content gets into a knowledge base
-
-Three ways:
-
-1. **Manual upload** — admins or knowledge managers upload PDFs, Word docs, Markdown.
-2. **Sync from objects** — product datasheets sync automatically from the [product catalog](/docs/revenue/products); KB articles sync from the [Knowledge Base object](/docs/service/knowledge-base).
-3. **External integrations** — pull from Confluence, Notion, Google Drive, SharePoint (via connectors).
-
-## How content stays fresh
-
-- **Auto re-indexing** runs nightly to pick up edits.
-- **Manual re-index** button in the admin console for urgent updates.
-- **Version tracking** — the Copilot always cites the latest version.
-
-## What every knowledge base respects
-
-- **Permissions** — internal-only articles aren't surfaced to customer-facing answers.
-- **Recency** — newer documents are weighted higher than stale ones.
-- **Source citations** — every answer links back to the originating document so the user can verify.
+The product **Datasheet** field is the one that most looks like an exception: it is
+a real file field on the product record, holding a PDF up to 20 MB. Nothing reads
+the file's contents — no skill, no index. It is there for people to download.
 
 ## Tips for admins
 
-- ✅ **Audit the citations** — at least monthly, review what articles the Copilot is citing. Frequently-cited articles deserve extra polish; never-cited articles may be dead weight.
-- ✅ **Watch the "no result" log** — questions the Copilot couldn't answer are gold for prioritising new content.
-- ✅ **Tag content with audience** (sales / service / customer-facing / internal) so the Copilot picks the right voice.
+- ✅ **Category and tags are the retrieval surface.** An article no one can find is
+  usually filed wrong, not written badly. Audit categories before rewriting bodies.
+- ✅ **Publish it or it does not exist.** The query filters on Published; drafts and
+  archived articles are invisible to the Copilot.
+- ✅ **Mark internal articles Internal.** Audience is an authored field, and a
+  customer-facing answer should not quote a runbook.
 
 ## Tips for knowledge managers
 
-- ✅ Keep articles **short and scannable** — the Copilot extracts passages, not whole documents.
-- ✅ Include **explicit symptoms** ("Error 503", "Cannot login") at the top — improves match quality.
-- ✅ **Date your release-note articles** clearly — the Copilot uses dates to prefer current info.
+- ✅ Keep articles **short and scannable**, and put the concrete symptom
+  ("Error 503", "Cannot log in") in the **Title** and **Summary** — those two fields
+  plus the article number are what search reads.
+- ✅ **One question per article.** Category matching is coarse, so an article that
+  answers three unrelated questions matches for the wrong one.
+- ✅ When **Customer 360°** matches no article to a case's category or tags, that is
+  a knowledge gap worth writing up.
 
-See [Customization › AI Skills](/docs/customization/ai-skills) for how to wire a new skill to a knowledge base.
+See [Skills](/docs/ai-copilot/skills) for what each skill reads and writes, and
+[Customization › AI Skills](/docs/customization/ai-skills) for authoring a skill of
+your own.

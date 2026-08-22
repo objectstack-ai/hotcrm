@@ -1,6 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { test, expect, recordsOf } from './fixtures';
+import { test, expect, recordOf, recordsOf, sessionUserId } from './fixtures';
 
 /**
  * Server smoke tests — the routes are mounted and the CRM data is reachable.
@@ -47,15 +47,40 @@ test('the CRM data API is auth-gated', async ({ request }) => {
   expect([401, 403]).toContain(res.status());
 });
 
-test('REST API serves seeded hotcrm records to an authenticated caller', async ({ api }) => {
-  const res = await api.get('/api/v1/data/crm_account?limit=5');
-  expect(res.ok(), `authenticated read failed: ${res.status()} ${await res.text()}`).toBeTruthy();
+test('the REST API serves an authenticated caller the records it owns', async ({ api, account }) => {
+  // This used to read the SEEDED accounts, and passed only while nobody owned
+  // them (#665). It now reads a record this caller created, and says out loud
+  // WHY that read is allowed: `crm_account` is `sharingModel: 'private'` and
+  // this account is a plain org member holding no grant, so the owner match
+  // below is the entire reason the row comes back rather than a 403 or an
+  // empty list. See the access-control note in `./fixtures.ts` (#669).
+  const single = await api.get(`/api/v1/data/crm_account/${account.id}`);
+  expect(single.ok(), `authenticated read failed: ${single.status()} ${await single.text()}`).toBeTruthy();
 
-  const records = recordsOf(await res.json());
-  expect(records.length, 'no seeded accounts returned').toBeGreaterThan(0);
+  const mine = recordOf(await single.json());
+  expect(mine.id).toBe(account.id);
+  expect(typeof mine.name).toBe('string');
+  expect(mine.owner_id, 'the caller reads this row because it OWNS it').toBe(sessionUserId());
+
+  // The collection route serves it too — a by-id read alone would not show that
+  // the row is reachable through a list, which is what every view issues.
+  const list = await api.get('/api/v1/data/crm_account?limit=200');
+  expect(list.ok(), `authenticated list failed: ${list.status()}`).toBeTruthy();
+  const records = recordsOf(await list.json());
+  expect(records.length, 'the list route returned no records at all').toBeGreaterThan(0);
   // A real record, not just a 200 with an empty envelope.
   expect(typeof records[0].id).toBe('string');
   expect(typeof records[0].name).toBe('string');
+
+  // Pinned to the row under test rather than to whatever the page happened to
+  // hold: the local database keeps every account past runs created (this
+  // account holds no delete grant), so an unfiltered page is not a place to
+  // look for one record.
+  const filtered = await api.get(
+    `/api/v1/data/crm_account?filters=${encodeURIComponent(JSON.stringify([['id', '=', account.id]]))}`,
+  );
+  expect(filtered.ok(), `filtered list failed: ${filtered.status()}`).toBeTruthy();
+  expect(recordsOf(await filtered.json()).map((r) => r.id)).toEqual([account.id]);
 });
 
 test('every core CRM object is queryable', async ({ api }) => {

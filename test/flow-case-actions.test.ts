@@ -20,10 +20,16 @@ import { makeFlowHarness, type Rec } from './helpers/flow-harness';
 
 const openCase = (over: Rec = {}): Rec => ({
   id: 'c1', case_number: 'CASE-1', status: 'new', priority: 'medium',
-  is_escalated: false, is_closed: false, owner: 'agent1', ...over,
+  is_escalated: false, is_closed: false, owner_id: 'agent1', ...over,
 });
 
-/** Start a screen flow and resume it with the values the screen collects. */
+/**
+ * Start a screen flow and resume it with the values the screen collects.
+ *
+ * `screen` carries the screen's DECLARED fields and nothing else: `recordId` is
+ * seeded once on the trigger, and from 17.0.0-rc.2 a resume that carries a key
+ * the screen never declared is refused with `INVALID_SCREEN_INPUT` (#4477).
+ */
 async function runScreen(
   flowName: string,
   flow: Rec,
@@ -47,7 +53,7 @@ describe('escalate_case — screen action', () => {
 
   it('flags, re-prioritises and stamps the case from the collected reason', async () => {
     const h = await runScreen('escalate_case', EscalateCaseFlow as unknown as Rec, [openCase()], {
-      recordId: 'c1', reason: 'Customer threatening churn',
+      reason: 'Customer threatening churn',
     });
 
     const updated = h.store.crm_case[0];
@@ -62,7 +68,7 @@ describe('escalate_case — screen action', () => {
     // `escalation_reason_required` rejects any write that flips is_escalated
     // without a reason, which silently aborted the action.
     const h = await runScreen('escalate_case', EscalateCaseFlow as unknown as Rec, [openCase()], {
-      recordId: 'c1', reason: 'Breach',
+      reason: 'Breach',
     });
     const updated = h.store.crm_case[0];
     expect(updated.is_escalated && !!updated.escalation_reason).toBe(true);
@@ -72,7 +78,7 @@ describe('escalate_case — screen action', () => {
     // `case_escalation`'s start condition is `escalated_date == null`; without
     // this stamp the record-change flow escalates the case a second time.
     const h = await runScreen('escalate_case', EscalateCaseFlow as unknown as Rec, [openCase()], {
-      recordId: 'c1', reason: 'Breach',
+      reason: 'Breach',
     });
     expect(h.store.crm_case[0].escalated_date).toBeTruthy();
   });
@@ -86,7 +92,7 @@ describe('close_case — screen action', () => {
 
   it('closes the case and records the resolution', async () => {
     const h = await runScreen('close_case', CloseCaseFlow as unknown as Rec, [openCase()], {
-      recordId: 'c1', resolution: 'Replaced the faulty unit',
+      resolution: 'Replaced the faulty unit',
     });
 
     const updated = h.store.crm_case[0];
@@ -100,7 +106,7 @@ describe('close_case — screen action', () => {
       'close_case',
       CloseCaseFlow as unknown as Rec,
       [openCase(), openCase({ id: 'c2', case_number: 'CASE-2' })],
-      { recordId: 'c1', resolution: 'Done' },
+      { resolution: 'Done' },
     );
     const other = h.store.crm_case.find((c) => c.id === 'c2')!;
     expect(other.status).toBe('new');

@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
-import { F, cel } from '@objectstack/spec';
+import { F } from '@objectstack/spec';
 import { SALUTATION_OPTIONS, LEAD_SOURCE_OPTIONS } from './_picklists';
 
 export const Contact = ObjectSchema.create({
@@ -24,6 +24,15 @@ export const Contact = ObjectSchema.create({
   ],
 
   fields: {
+    // Platform ownership anchor — canonical note in `account.object.ts` (#548).
+    owner_id: Field.lookup('sys_user', {
+      label: 'Contact Owner',
+      group: 'account_info',
+      system: true,
+      readonly: false,
+      trackHistory: true,
+    }),
+
     // Name fields
     salutation: Field.select({
       label: 'Salutation',
@@ -92,25 +101,15 @@ export const Contact = ObjectSchema.create({
         { label: 'Engineering', value: 'engineering' },
         { label: 'Support', value: 'support' },
         { label: 'Finance', value: 'finance' },
-        { label: 'HR', value: 'hr' },
+        { label: 'Human Resources', value: 'hr' },
         { label: 'Operations', value: 'operations' },
       ]
     }),
 
-    // Relationship fields
-    reports_to: Field.lookup('crm_contact', {
-      label: 'Reports To',
-      description: 'Direct manager/supervisor',
-      group: 'account_info',
-    }),
-
-    owner: Field.lookup('sys_user', {
-
-      defaultValue: cel`os.user.id`,
-      label: 'Contact Owner',
-      group: 'account_info',
-      trackHistory: true,
-    }),
+    // No `reports_to`. The org chart was declared and never built: no page
+    // rendered the tree the contact docs promised, no skill read the chain when
+    // summarising an account, and no flow escalated along it. Sharing derives
+    // from the master `crm_account`, never from this lookup.
 
     // Contact Information
     email: Field.email({
@@ -141,10 +140,11 @@ export const Contact = ObjectSchema.create({
     mailing_country: Field.text({ label: 'Mailing Country', group: 'mailing_address' }),
 
     // Additional Information
-    birthdate: Field.date({
-      label: 'Birthdate',
-      group: 'additional',
-    }),
+    //
+    // No `birthdate`. Nothing greeted, segmented or reported on it, and an
+    // importable date of birth with no consumer is personal data held for no
+    // stated purpose — the one field on this object where "declared but inert"
+    // also carries a data-protection cost.
 
     lead_source: Field.select({
       label: 'Lead Source',
@@ -178,13 +178,32 @@ export const Contact = ObjectSchema.create({
       defaultValue: false,
       group: 'preferences',
     }),
+
+    // Interaction recency for the PERSON (#592). `crm_account` carries
+    // `last_activity_date` for the company and `crm_lead` carries
+    // `last_contacted_date` for a prospect; the contact — the record a rep
+    // actually calls and emails — had neither, so "when did anyone last speak
+    // to our champion?" was unanswerable.
+    //
+    // Written by the activity bubble in `event.hook.ts` / `task.hook.ts` and by
+    // `send_email`. Deliberately NOT `readonly`: a readonly field is stripped
+    // from every non-system write whose caller supplied the key (#2948), which
+    // is exactly how the account and lead columns above ended up permanently
+    // null. It is kept off the form sections instead.
+    last_contacted_date: Field.datetime({
+      label: 'Last Contacted',
+      group: 'additional',
+    }),
   },
   
   // Enable features
-  // Dead object-level enable.* flags removed in @objectstack 12 (ADR-0049);
-  // only the live API surface remains. History → Field.trackHistory (ADR-0052).
+  // Dead enable.* flags (trash/mru) removed in @objectstack 12 (ADR-0049);
+  // History → Field.trackHistory (ADR-0052).
   enable: {
     apiEnabled: true,
+    // #602 — signed NDAs, business cards, meeting notes attach to the person.
+    // See the canonical capability note in `src/objects/index.ts`.
+    files: true,
   },
   
   // Database indexes for performance
@@ -199,7 +218,7 @@ export const Contact = ObjectSchema.create({
   // (framework#3991 `unique/double-declaration`).
   indexes: [
     { fields: ['crm_account'] },
-    { fields: ['owner'] },
+    { fields: ['owner_id'] },
     { fields: ['last_name', 'first_name'] },
   ],
   

@@ -9,12 +9,19 @@ import { avgDealSizeMetricWidget, pipelineByStageFunnelWidget } from './shared-w
  * Single-page snapshot of revenue, pipeline, and customer activity. Designed
  * to mirror the polished CRM dashboard reference at
  * https://github.com/objectstack-ai/objectui/tree/main/examples/crm/src/dashboards
- * — KPI tiles with trend indicators and icons, an area-chart revenue trend, a
- * lead-source donut, a pipeline funnel, and a recent-deals table.
+ * — KPI tiles with icons, an area-chart revenue trend, a lead-source donut, a
+ * pipeline funnel, and a recent-deals table.
  *
  * This dashboard intentionally uses the framework's first-class metadata fields
  * (colorVariant, chartConfig, header, dateRange, descriptions, action buttons)
  * rather than ad-hoc hex strings stuffed into `options.color`.
+ *
+ * No KPI tile declares a `trend`. A period-over-period delta is a measurement,
+ * so it has to come from a real comparison query (widget `compareTo`) once the
+ * renderer supports it for dataset metrics — the percentages this file used to
+ * carry were typed by hand and recomputed by nothing, so they kept asserting
+ * the same "+12.5% vs last month" on any data, including an empty database.
+ * Same rule as the executive dashboard (#500, #587).
  */
 export const CrmOverviewDashboard: Dashboard = {
   name: 'crm_overview_dashboard',
@@ -41,7 +48,7 @@ export const CrmOverviewDashboard: Dashboard = {
 
   globalFilters: [
     {
-      field: 'owner',
+      field: 'owner_id',
       label: 'Owner',
       type: 'lookup',
       scope: 'dashboard',
@@ -60,10 +67,7 @@ export const CrmOverviewDashboard: Dashboard = {
       colorVariant: 'success',
       dataset: 'opportunity_metrics', values: ['total_amount'],
       layout: { x: 0, y: 0, w: 3, h: 2 },
-      options: {
-        icon: 'DollarSign',
-        trend: { value: 12.5, direction: 'up', label: 'vs last month' },
-      },
+      options: { icon: 'DollarSign' },
     },
     {
       id: 'active_deals',
@@ -77,7 +81,6 @@ export const CrmOverviewDashboard: Dashboard = {
       options: {
         icon: 'Briefcase',
         format: '0,0',
-        trend: { value: 2.1, direction: 'down', label: 'vs last month' },
       },
     },
     {
@@ -92,15 +95,11 @@ export const CrmOverviewDashboard: Dashboard = {
       options: {
         icon: 'Trophy',
         format: '0,0',
-        trend: { value: 4.3, direction: 'up', label: 'vs last month' },
       },
     },
-    avgDealSizeMetricWidget({ x: 9, y: 0, w: 3, h: 2 }, {
-      options: {
-        icon: 'bar-chart',
-        trend: { value: 1.2, direction: 'up', label: 'vs last month' },
-      },
-    }),
+    // No overrides left once the fabricated trend is gone: the factory already
+    // declares `options: { icon: 'bar-chart' }`, so re-passing it said nothing.
+    avgDealSizeMetricWidget({ x: 9, y: 0, w: 3, h: 2 }),
 
     // ─── Charts Row 1 ─────────────────────────────────────────────────
     {
@@ -148,12 +147,14 @@ export const CrmOverviewDashboard: Dashboard = {
       description: 'Total list-price revenue by product category',
       type: 'bar',
       colorVariant: 'blue',
-      // crm_product has neither `close_date` nor `owner`; opt out of both
-      // dashboard filters bound to those fields. ObjectStack 15 (framework#2501)
-      // injects every dashboard filter (dateRange + globalFilters) into each
-      // widget's query, so a widget on an object lacking a filter field fails
-      // with `no such column`.
-      filterBindings: { dateRange: false, owner: false },
+      // crm_product has no `close_date`, so the date picker would fail it with
+      // `no such column`. ObjectStack 15 (framework#2501) injects every dashboard
+      // filter (dateRange + globalFilters) into each widget's query.
+      // The `owner_id` opt-out is SEMANTIC, not structural: since #548 every
+      // business object carries the injected `owner_id`, so the filter would now
+      // resolve — it just means nothing on a shared product catalog, where the
+      // column records whoever created the entry.
+      filterBindings: { dateRange: false, owner_id: false },
       dataset: 'product_metrics', dimensions: ['category'], values: ['list_price_sum'],
       layout: { x: 6, y: 6, w: 6, h: 4 },
       chartConfig: {

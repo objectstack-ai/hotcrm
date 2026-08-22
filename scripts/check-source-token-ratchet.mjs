@@ -1,0 +1,498 @@
+#!/usr/bin/env node
+// Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
+
+/**
+ * Source token ratchet — a shrink-only ceiling on the authored surface (#1183).
+ *
+ *   node scripts/check-source-token-ratchet.mjs          # the gate (CI runs this)
+ *   node scripts/check-source-token-ratchet.mjs --json   # the same measurement, machine-readable
+ *
+ * ## Why a ceiling
+ *
+ * HotCRM's headline positioning claim — the entire enterprise CRM fits in a
+ * single agent context window — is a number, and an ungated number drifts. It
+ * drifted before this gate existed: the README quoted a hand measurement that
+ * no longer matched the tree, and nothing anywhere could have noticed. This
+ * script is the one place that measurement is defined, so a doc citing it
+ * cites a command anyone can re-run instead of someone's afternoon with `wc`.
+ *
+ * ## What is measured, and why exactly this
+ *
+ * Maintainer rulings, 2026-08-17 (verbatim, PM session chat):
+ *
+ *   「translations + seed 肯定是不需要算 token 的」
+ *   「我觉得只需要写 业务语义 ~78k 交互层 ~40k ，这样客户更好理解，也更吸引开发者」
+ *
+ * So the measured surface is `src/**\/*.ts` (excluding `.d.ts`), **minus**
+ * `src/translations/` and `src/data/`, comment-stripped and blank-stripped,
+ * reported as two headline layers plus the authored total:
+ *
+ *   - **business semantics** — `src/objects/` `src/flows/` `src/actions/` `src/hooks/`
+ *   - **interaction layer**  — `src/views/` `src/pages/` `src/dashboards/` `src/apps/`
+ *
+ * Translations and seed data are outside the ratchet **entirely**, by ruling: a
+ * fifth locale or a richer demo dataset is healthy growth and must never
+ * compete with business logic for the budget. They are not measured, not
+ * ratcheted, and not reported as debt.
+ *
+ * The remaining authored directories (datasets, reports, profiles, sharing,
+ * skills, mappings, interfaces, …) are not a headline layer — they are printed
+ * as a residual and carried in the authored total, which has its own ceiling.
+ * Nothing under `src/` can therefore grow unwatched by hiding in a directory
+ * that predates or postdates the two headline layers.
+ *
+ * Because the measure is **comment-stripped**, comment-slimming work (#1184)
+ * does not move these numbers. That is deliberate: comments are for the humans
+ * and agents reading the repo, and a gate that rewarded deleting them would be
+ * a gate against explanation. If a change to this script ever makes comment
+ * mass affect the number, the measurement basis has been broken.
+ *
+ * ## The stripping rule — stated so the number is reproducible and arguable
+ *
+ * `stripComments()` is a character scanner, not a line matcher. Exactly this,
+ * and nothing more:
+ *
+ *   1. `//` to end of line, and `/* … *\/` however many lines it spans, are
+ *      removed — including a trailing comment that follows code on its line.
+ *   2. A comment opener inside a string literal (`'…'`, `"…"`, `` `…` ``) or
+ *      inside a regular-expression literal is **not** a comment. String and
+ *      regex bodies are preserved byte-for-byte, escapes included.
+ *   3. `/` is read as a regex literal when the previous significant character
+ *      cannot end an expression (`=`, `(`, `,`, `:`, `[`, `!`, `&`, `|`, `?`,
+ *      `{`, `}`, `;`, `return`-like positions) and as division otherwise. This
+ *      is the standard heuristic; it is ambiguous only after `)`, where this
+ *      scanner chooses division.
+ *   4. After stripping, lines that are empty or whitespace-only are dropped,
+ *      and every retained line is right-trimmed. Leading indentation is
+ *      **kept** — it is real input to a model reading the file, and dropping it
+ *      would make the number smaller than the thing it claims to measure.
+ *   5. `chars` is the length of the retained lines joined with `\n`. `~tokens`
+ *      is `chars / 4`, rounded.
+ *
+ * The line-oriented approximation this replaced (a line is a comment when it
+ * starts with `//`, `*` or `/*`) mis-handles both halves of rule 1 and 2. The
+ * difference is small on today's tree, but the point of a ratchet is that the
+ * *same* rule is applied on every future run, so the rule is written down here
+ * and pinned by `test/source-token-ratchet.test.ts` — which cross-checks this
+ * scanner against the TypeScript compiler's own comment-trivia ranges over
+ * every real file in `src/`. TypeScript is a devDependency and stays a
+ * *test-time* dependency on purpose: the gate itself must be runnable with
+ * nothing installed, and its number must not move because a compiler upgraded.
+ *
+ * ## Why `chars / 4` and not a tokenizer
+ *
+ * Deliberately crude. A ratchet compares like with like — the estimator's
+ * absolute accuracy never enters the verdict, only its stability does, and
+ * `chars / 4` is perfectly stable and needs no dependency. Adding a real BPE
+ * tokenizer would add a third-party runtime dependency to a repo that has none
+ * outside `@objectstack/*`, to move a headline number by a few percent in a
+ * direction nobody can act on. Measured before writing this: no tokenizer is
+ * already available in the dependency graph, so there was no free upgrade to
+ * take. If one is ever wanted, it changes the ceilings once and the ratchet
+ * continues from there.
+ *
+ * ## The ratchet discipline (shrink-only, over a 5% working buffer)
+ *
+ *   - A ceiling may be LOWERED by any PR that shrinks its scope. Lowering is
+ *     always legitimate and is the point.
+ *   - RAISING one requires a **maintainer ruling quoted in the raising PR's
+ *     body**. A feature that would cross a ceiling pays its way by compressing
+ *     elsewhere, or by getting an explicit decision that the claim has moved —
+ *     which is exactly the conversation the drift-prone number never triggered
+ *     on its own.
+ *   - Headroom is a **deliberate 5% working buffer**, by maintainer ruling of
+ *     2026-08-17: 「给 5% 缓冲」. The first anchor was set flush against the
+ *     reading, under 1%, and that was rejected: routine work must not be
+ *     interrupted, only real growth should be. So a red run here is not "someone
+ *     added a field" — it is "this surface has grown more than 5% past the last
+ *     agreed claim", which is worth a conversation.
+ *
+ * A scope that reads as empty is RED, never a pass: a gate that cannot find its
+ * input must fail rather than silently measure nothing.
+ */
+
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import process from 'node:process';
+
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
+
+/** Directories that never contain first-party source. */
+const SKIP_DIRS = new Set(['node_modules', 'dist', '.next', '.source', '.objectstack', '.git']);
+
+/**
+ * Outside the ratchet by maintainer ruling — not measured at all.
+ * 「translations + seed 肯定是不需要算 token 的」
+ */
+const EXCLUDED = ['src/translations', 'src/data'];
+
+/** The two headline layers, in the order the README card (#1187) cites them. */
+const LAYERS = [
+  {
+    key: 'business',
+    label: 'business semantics',
+    dirs: ['src/objects', 'src/flows', 'src/actions', 'src/hooks'],
+  },
+  {
+    key: 'interaction',
+    label: 'interaction layer',
+    dirs: ['src/views', 'src/pages', 'src/dashboards', 'src/apps'],
+  },
+];
+
+/** The ruled working buffer over a measured reading: 「给 5% 缓冲」. */
+const BUFFER = 0.05;
+
+/**
+ * The ceiling to commit for a given reading: `measured × 1.05`, rounded up to
+ * the next 1,000 tokens. Exported so the anchoring arithmetic lives in one
+ * place — the header, the advisory below and any re-anchoring PR all read it
+ * from here rather than repeating a multiplication by hand.
+ */
+export const anchor = (tokens) => Math.ceil((tokens * (1 + BUFFER)) / 1000) * 1000;
+
+/**
+ * Shrink-only ceilings, in estimated tokens.
+ *
+ * Anchored from a real run of this script, not from a hand measurement, taken
+ * after merging `main` at `d038b957` (#1189, which removed the account renewal
+ * fields, their view and their seed values):
+ *
+ *   node scripts/check-source-token-ratchet.mjs   # 2026-08-17 03:20 UTC
+ *   business semantics ~80,356 · interaction layer ~39,084 · authored total ~133,302
+ *
+ * Each ceiling is `anchor(reading)` — the reading plus the ruled 5% working
+ * buffer, rounded up to the next 1,000:
+ *
+ *   business semantics   80,356 × 1.05 =  84,374 -> ceil 1k ->  85,000  (headroom 4,644, 5.8%)
+ *   interaction layer    39,084 × 1.05 =  41,038 -> ceil 1k ->  42,000  (headroom 2,916, 7.5%)
+ *   authored total      133,302 × 1.05 = 139,967 -> ceil 1k -> 140,000  (headroom 6,698, 5.0%)
+ *
+ * The rounding step is what carries two of the three a little past 5%; it is
+ * kept because a ceiling a reader can hold in their head is worth more than the
+ * last few hundred tokens of precision on a number estimated as `chars / 4`.
+ *
+ * Lower them whenever the tree shrinks — that is free and encouraged. Raising
+ * one requires a maintainer ruling quoted in the raising PR's body.
+ */
+export const CEILINGS = new Map([
+  ['business semantics', 85000],
+  ['interaction layer', 42000],
+  ['authored total', 140000],
+]);
+
+/** Recursively collect files under `dir` (repo-relative paths). */
+function walk(dir) {
+  const out = [];
+  let entries;
+  try {
+    entries = readdirSync(join(ROOT, dir), { withFileTypes: true });
+  } catch {
+    return out; // directory absent — the caller decides whether that is fatal
+  }
+  for (const entry of entries) {
+    if (SKIP_DIRS.has(entry.name)) continue;
+    const rel = join(dir, entry.name);
+    if (entry.isDirectory()) out.push(...walk(rel));
+    else if (entry.isFile()) out.push(rel);
+  }
+  return out;
+}
+
+const isTs = (f) => f.endsWith('.ts') && !f.endsWith('.d.ts');
+
+/** True when `/` at this point opens a regex literal rather than dividing. */
+function regexCanFollow(prev) {
+  if (prev === '') return true;
+  return !/[\w$)\]]/.test(prev);
+}
+
+/**
+ * Remove comments, preserving everything else byte-for-byte.
+ *
+ * Newlines inside a removed block comment are kept so that line numbers and
+ * the blank-line pass below still see the file's real shape. See the stripping
+ * rule in this file's header — that prose and this function must agree, and
+ * `test/source-token-ratchet.test.ts` holds them to it.
+ */
+export function stripComments(source) {
+  let out = '';
+  let prev = ''; // last significant (non-whitespace) character emitted
+  let i = 0;
+
+  const emit = (text) => {
+    out += text;
+    const trimmed = text.trimEnd();
+    if (trimmed !== '') prev = trimmed[trimmed.length - 1];
+  };
+
+  while (i < source.length) {
+    const c = source[i];
+    const d = source[i + 1];
+
+    if (c === '/' && d === '/') {
+      while (i < source.length && source[i] !== '\n') i++;
+      continue;
+    }
+
+    if (c === '/' && d === '*') {
+      const end = source.indexOf('*/', i + 2);
+      const body = source.slice(i, end === -1 ? source.length : end + 2);
+      out += body.replace(/[^\n]/g, ''); // keep the newlines, drop the prose
+      i += body.length;
+      continue;
+    }
+
+    if (c === '"' || c === "'" || c === '`') {
+      let j = i + 1;
+      while (j < source.length) {
+        if (source[j] === '\\') {
+          j += 2;
+          continue;
+        }
+        if (source[j] === c) {
+          j++;
+          break;
+        }
+        // An unterminated ' or " cannot cross a line; a template literal can.
+        if (c !== '`' && source[j] === '\n') break;
+        j++;
+      }
+      emit(source.slice(i, j));
+      i = j;
+      continue;
+    }
+
+    if (c === '/' && regexCanFollow(prev)) {
+      let j = i + 1;
+      let inClass = false;
+      let closed = false;
+      while (j < source.length) {
+        const ch = source[j];
+        if (ch === '\\') {
+          j += 2;
+          continue;
+        }
+        if (ch === '\n') break; // unterminated — not a regex after all
+        if (ch === '[') inClass = true;
+        else if (ch === ']') inClass = false;
+        else if (ch === '/' && !inClass) {
+          j++;
+          closed = true;
+          break;
+        }
+        j++;
+      }
+      if (closed) {
+        while (j < source.length && /[a-z]/.test(source[j])) j++; // flags
+        emit(source.slice(i, j));
+        i = j;
+        continue;
+      }
+      // Not a regex literal after all — fall through and emit the bare slash.
+    }
+
+    emit(c);
+    i++;
+  }
+
+  return out;
+}
+
+/** Comment-stripped, blank-stripped text of one file, per the header's rule. */
+export function authoredText(source) {
+  return stripComments(source)
+    .split('\n')
+    .map((line) => line.trimEnd())
+    .filter((line) => line !== '')
+    .join('\n');
+}
+
+/** `~tokens = chars / 4`, rounded. Crude on purpose — see the header. */
+export const tokensOf = (chars) => Math.round(chars / 4);
+
+/** Measure one set of repo-relative files. */
+function measure(files) {
+  let chars = 0;
+  let lines = 0;
+  for (const file of files) {
+    const text = authoredText(readFileSync(join(ROOT, file), 'utf8'));
+    if (text === '') continue;
+    chars += text.length;
+    lines += text.split('\n').length;
+  }
+  return { files: files.length, lines, chars, tokens: tokensOf(chars) };
+}
+
+/**
+ * The verdict for one scope. Exported so the decision logic can be exercised
+ * without building a 300KB fixture tree for every case.
+ */
+export function verdict(label, tokens, ceiling) {
+  if (tokens === 0) {
+    return {
+      ok: false,
+      msg: `${label} measured 0 tokens — refusing to treat an empty read as a pass. Check the directory list in scripts/check-source-token-ratchet.mjs.`,
+    };
+  }
+  if (tokens > ceiling) {
+    return {
+      ok: false,
+      msg:
+        `${label} is ~${fmt(tokens)} tokens; the ratchet ceiling is ~${fmt(ceiling)} ` +
+        `(over by ~${fmt(tokens - ceiling)}). That ceiling already carries the ruled 5% working ` +
+        'buffer, so this is growth past the buffer, not routine drift. This surface is the ' +
+        "app's headline claim — shrink it back (compress metadata, drop duplication, move prose " +
+        'to content/docs), or raise the ceiling in a PR that quotes a maintainer ruling approving ' +
+        'the new number. Comments are already stripped, so deleting comments will not help.',
+    };
+  }
+  return {
+    ok: true,
+    msg: `${label} ~${fmt(tokens)} tokens (ceiling ~${fmt(ceiling)}; headroom ~${fmt(ceiling - tokens)}).`,
+  };
+}
+
+const fmt = (n) => n.toLocaleString('en-US');
+/** `78,123` -> `~78k`, the form the README card and CI summary quote. */
+const headline = (tokens) => `~${Math.round(tokens / 1000)}k`;
+
+const srcDirs = () =>
+  readdirSync(join(ROOT, 'src'), { withFileTypes: true })
+    .filter((e) => e.isDirectory() && !SKIP_DIRS.has(e.name))
+    .map((e) => `src/${e.name}`);
+
+function collect() {
+  const missing = [...LAYERS.flatMap((l) => l.dirs), ...EXCLUDED].filter((d) => {
+    try {
+      return !statSync(join(ROOT, d)).isDirectory();
+    } catch {
+      return true;
+    }
+  });
+  if (missing.length) {
+    console.error(`✗ source token ratchet: measured director(y|ies) missing: ${missing.join(', ')}`);
+    console.error('  Update LAYERS / EXCLUDED in scripts/check-source-token-ratchet.mjs —');
+    console.error('  a ratchet that measures a tree nobody writes to is worse than no ratchet.');
+    process.exit(1);
+  }
+
+  const all = walk('src').filter(isTs);
+  const authored = all.filter((f) => !EXCLUDED.some((d) => f.startsWith(`${d}/`)));
+  const layered = new Set();
+  const scopes = LAYERS.map((layer) => {
+    const files = authored.filter((f) => layer.dirs.some((d) => f.startsWith(`${d}/`)));
+    for (const f of files) layered.add(f);
+    return { ...layer, ...measure(files) };
+  });
+  const residual = measure(authored.filter((f) => !layered.has(f)));
+  const total = measure(authored);
+  return { scopes, residual, total, excluded: measure(all.filter((f) => !authored.includes(f))) };
+}
+
+function main() {
+  const report = collect();
+  const rows = [
+    ...report.scopes.map((s) => ({ label: s.label, ...s, ceiling: CEILINGS.get(s.label) })),
+    { label: 'other authored metadata', ...report.residual, ceiling: undefined },
+    { label: 'authored total', ...report.total, ceiling: CEILINGS.get('authored total') },
+  ];
+
+  if (process.argv.includes('--json')) {
+    console.log(
+      JSON.stringify(
+        {
+          surface: 'src/**/*.ts, comment-stripped and blank-stripped, minus ' + EXCLUDED.join(' + '),
+          estimator: 'chars / 4',
+          scopes: rows.map(({ label, files, lines, chars, tokens, ceiling }) => ({
+            label,
+            files,
+            lines,
+            chars,
+            tokens,
+            ceiling: ceiling ?? null,
+          })),
+        },
+        null,
+        2,
+      ),
+    );
+    return;
+  }
+
+  console.log(
+    `Source token ratchet — authored surface: src/**/*.ts minus ${EXCLUDED.join(', ')}\n` +
+      '  (comments and blank lines stripped; ~tokens = stripped chars / 4)\n',
+  );
+
+  const pad = (s, w) => String(s).padStart(w);
+  console.log(
+    `  ${'scope'.padEnd(24)}${pad('files', 6)}${pad('lines', 8)}${pad('chars', 10)}${pad('~tokens', 10)}`,
+  );
+  for (const row of rows) {
+    if (row.label === 'authored total') console.log(`  ${'─'.repeat(58)}`);
+    console.log(
+      `  ${row.label.padEnd(24)}${pad(row.files, 6)}${pad(fmt(row.lines), 8)}${pad(fmt(row.chars), 10)}${pad(fmt(row.tokens), 10)}`,
+    );
+  }
+  console.log(
+    `\n  outside the ratchet by ruling (${EXCLUDED.join(', ')}): ` +
+      `${report.excluded.files} files, ~${fmt(report.excluded.tokens)} tokens — healthy growth, never measured here.\n`,
+  );
+  console.log(
+    `  Headline: ${report.scopes
+      .map((s) => `${s.label} ${headline(s.tokens)}`)
+      .join(' · ')} · authored total ${headline(report.total.tokens)}\n`,
+  );
+
+  // A directory under src/ that is in neither headline layer nor the exclusion
+  // list still lands in the total, so it cannot grow unwatched — but a *new*
+  // metadata type usually belongs in one of the two layers, and saying so here
+  // is cheaper than noticing it a quarter later in a drifted headline number.
+  const known = new Set([...LAYERS.flatMap((l) => l.dirs), ...EXCLUDED]);
+  const unlayered = srcDirs().filter((d) => !known.has(d));
+  if (unlayered.length) {
+    console.log(`  ℹ️  not in a headline layer (counted in the total only): ${unlayered.join(', ')}\n`);
+  }
+
+  let failed = 0;
+  for (const row of rows) {
+    if (row.ceiling === undefined) continue;
+    const v = verdict(row.label, row.tokens, row.ceiling);
+    if (!v.ok) {
+      failed++;
+      console.error(`  ✗ ${v.msg}`);
+      continue;
+    }
+    console.log(`  ✓ ${v.msg}`);
+    // Nag only when the ceiling has drifted well past the ruled buffer — i.e.
+    // the tree has shrunk enough that `anchor()` would now commit a lower
+    // number. A flat "headroom is over Nk" threshold cannot be used any more:
+    // under 「给 5% 缓冲」 a healthy scope carries thousands of tokens of
+    // headroom by design, so a flat threshold would fire on every clean run and
+    // tell the author to undo the ruling. The trigger is therefore relative and
+    // one whole buffer clear of it (10% vs the ruled 5%), so ordinary shrinkage
+    // inside the buffer stays quiet.
+    const suggested = anchor(row.tokens);
+    if (row.ceiling - row.tokens > row.tokens * 2 * BUFFER) {
+      console.log(
+        `      ℹ️  headroom is ${fmt(row.ceiling - row.tokens)} tokens, over twice the 5% buffer — ` +
+          `re-anchor this ceiling to ~${fmt(suggested)} in your PR; shrink-only ratchets tighten opportunistically.`,
+      );
+    }
+  }
+
+  console.log('');
+  if (failed) {
+    console.error(`✗ source token ratchet failed: ${failed} scope(s) over ceiling`);
+    process.exit(1);
+  }
+  console.log('✓ source token ratchet clean');
+}
+
+// Run only when invoked directly. `stripComments`, `verdict` and the ceilings
+// are importable so `test/source-token-ratchet.test.ts` can cross-check the
+// stripping rule against the TypeScript scanner without spawning 300KB
+// fixtures for every case — importing must not run the gate or call exit().
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();

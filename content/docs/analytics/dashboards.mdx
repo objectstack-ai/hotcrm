@@ -1,122 +1,156 @@
 ---
 title: Dashboards
-description: Four ready-made dashboards — CRM overview, sales pipeline, service operations, and executive scorecard.
+description: Five ready-made dashboards — CRM overview, sales performance, sales activity, customer service, and executive overview.
 ---
 
 # Dashboards
 
-HotCRM ships with four dashboards. Each one is built for a specific role and answers the questions that role asks every day.
+HotCRM ships with five dashboards. Each one is built for a specific role and answers the questions that role asks every day.
 
-## The four dashboards
+Every tile listed on this page is a tile the app actually ships. The lists are checked against the dashboard metadata in CI (`test/docs-drift.test.ts`), so a tile that is renamed, added or removed in the product makes this page fail the build rather than quietly start lying.
+
+## The five dashboards
 
 | Dashboard | Built for | Answers |
 | --- | --- | --- |
 | 🏠 **CRM Overview** | Everyone | "What's going on across the business today?" |
-| 📈 **Sales Dashboard** | Sales reps, managers | "How healthy is my pipeline?" |
-| 🎧 **Service Dashboard** | Service agents, managers | "How are we doing on cases and SLAs?" |
-| 👔 **Executive Scorecard** | Execs, finance | "Are we hitting the number?" |
+| 📈 **Sales Performance** | Sales reps, managers | "How healthy is my pipeline, and are we winning?" |
+| ☎️ **Sales Activity** | Sales managers, account teams | "Who is talking to customers, and which accounts have gone quiet?" |
+| 🎧 **Customer Service** | Service agents, managers | "How are we doing on cases and SLAs?" |
+| 👔 **Executive Overview** | Execs, finance | "Are we hitting the number?" |
 
-All four respect [sharing rules](/docs/administration/sharing-and-security) — what you see depends on your role.
+All five respect [sharing rules](/docs/administration/sharing-and-security) — what you see depends on your role.
+
+### No tile shows a trend arrow
+
+None of the KPI tiles displays a "vs last period" delta, on any dashboard. A period-over-period comparison is a measurement: it has to come from a real comparison query, and until the renderer can run one for dataset-bound metrics, a percentage on the tile would be a number typed by hand that no data can change — it would read the same on a full database and an empty one. So the tiles show the figure that was actually queried, and nothing else.
 
 ## 🏠 CRM Overview
 
-The cross-functional home dashboard, visible by default to all users.
+The cross-functional home dashboard — revenue, pipeline and deal mix on one page.
 
 **Tiles**:
 
-- **Open Leads** — count, by status.
-- **New Leads This Week** — trend vs prior week.
-- **My Open Opportunities** — count and value.
-- **Cases Awaiting Response** — count, with SLA risk highlights.
-- **Top 5 Accounts by Pipeline** — bar chart.
-- **Recent Activity** — last 24 hours of calls, meetings, emails (yours).
+- **Total Revenue** — closed-won revenue in the selected period.
+- **Active Deals** — open opportunities in the pipeline.
+- **Won Deals** — closed-won deals in the selected period.
+- **Avg Deal Size** — average value of closed-won deals.
+- **Revenue Trends** — closed-won revenue over the last 12 months (area chart).
+- **Lead Source** — pipeline value by acquisition channel (donut).
+- **Pipeline by Stage** — open opportunity value at each sales stage (funnel).
+- **Top Products** — total list-price revenue by product category (bar).
+- **Pipeline by Owner** — open pipeline value, deal count and average deal size per rep (table).
+
+**Controls**: a date-range picker over the opportunity close date (defaults to this quarter) and an Owner filter.
 
 Great as a daily start-of-day landing page.
 
-## 📈 Sales Dashboard
+## 📈 Sales Performance
 
 The sales team's daily operational dashboard.
 
 **Tiles**:
 
-- **Pipeline by Stage** — funnel chart showing $ by stage.
-- **Forecast vs Quota** — gauge.
-- **Closed Won this Quarter** — running total with target line.
-- **Win Rate (last 90 days)** — percentage with trend.
-- **Average Deal Size** — current quarter vs last quarter.
-- **Average Sales Cycle** — days from creation to close (won deals).
-- **Top 10 Open Deals** — sortable table.
-- **Slipping Deals** — opportunities whose close date moved out this week.
-- **Activity Heatmap** — calls + meetings + emails per rep per day.
+- **Total Pipeline** — sum of open opportunity value.
+- **Closed Won (QTD)** — revenue closed this quarter.
+- **Open Opportunities** — active deals in flight.
+- **Avg Deal Size** — average value of the deals closed won this quarter.
+- **Win Rate (12M)** — deals won as a share of deals *settled* (won + lost) in the last 12 months. Open pipeline is not in the denominator.
+- **Deals Won (12M)** — the numerator behind that percentage.
+- **Deals Lost (12M)** — the other half of its denominator, so both numbers are always on screen next to the rate.
+- **Pipeline by Stage** — open opportunity value at each sales stage (funnel).
+- **Monthly Revenue Trend** — closed-won revenue, last 12 months.
+- **Pipeline by Forecast Category** — open pipeline grouped by forecast category.
+- **Lead Source** — where the pipeline is coming from (donut).
+- **Open Pipeline by Owner** — in-flight value, deal count and average win probability per rep (table).
+- **Quota Attainment by Rep** — current-quarter quota, closed revenue and attainment per rep, read from the forecast snapshots.
+- **Win / Loss by Rep** — won, lost, settled, win rate and won revenue per rep (table).
+- **Win / Loss by Lead Source** — the same breakdown by acquisition channel: which sources produce deals that actually close.
+- **Why We Lose** — lost deals by loss reason. Every closed-lost deal carries a reason (it is [required at close](/docs/sales/opportunities)), so this chart has no "unattributed" slice — an empty chart means no losses in the window, not an unfilled field.
+- **Pipeline by Stage × Lead Source** — cross-tab of open opportunity amount by stage and source (pivot).
 
-Role-aware: reps see their own, managers see their team, directors see the rollup.
+**Controls**: a date-range picker over the close date (defaults to this quarter), plus Sales Rep and Deal Type filters. Quota Attainment by Rep is pinned to the current quarter and ignores both, because a quota is defined for a period and re-slicing it by an arbitrary range would compare a full target against partial revenue.
 
-## 🎧 Service Dashboard
+Role-aware: reps see their own records, managers see their team, per the sharing rules.
+
+## ☎️ Sales Activity
+
+Coverage and customer-health view: who is talking to customers, how often, and where the silence is.
+
+**Tiles**:
+
+- **Interactions Logged** — calls and meetings that actually happened.
+- **Meetings Booked** — meetings on the calendar that have not happened yet.
+- **Customer Minutes** — total time spent in front of customers.
+- **Tasks Completed** — follow-ups closed out, the other half of activity.
+- **Activity by Rep** — logged interactions per owner (bar).
+- **Activity Volume by Week** — interactions per week: is the team speeding up or going quiet?
+- **Activity Mix** — calls vs meetings vs demos (donut).
+- **Where the Activity Lands** — which part of the funnel is getting the attention.
+- **Interactions on Deals** — logged interactions linked to an opportunity.
+- **Open Deals** — opportunities still in play, to read the previous tile against.
+- **Quiet 30+ Days** — active accounts with no logged interaction in a month.
+- **Quiet 60+ Days** — two months of silence, the at-risk threshold.
+- **Quiet 90+ Days** — a quarter with no contact: intervene or write it off.
+
+**Controls**: a Rep filter. There is deliberately **no** date-range picker — the interaction date is a datetime column, and the platform's datetime filter coercion currently zeroes every widget when a range is applied to one. Time is carried on an axis instead: Activity Volume by Week buckets by week, and the three quiet-account tiles window their own 30 / 60 / 90-day thresholds.
+
+## 🎧 Customer Service
 
 The service team's daily ops view.
 
 **Tiles**:
 
-- **Open Cases by Priority** — bar chart.
-- **Cases Approaching SLA** — table sorted by time-to-breach.
-- **Cases Breached** — last 7 days (with case owners).
-- **First Response Time** — average vs target.
-- **Resolution Time** — average vs target.
-- **Customer Satisfaction (CSAT)** — last 30 days, trend.
-- **Case Volume by Origin** — Email / Phone / Web / Chat / Portal.
-- **Top Case Categories** — to spot product issues.
-- **Agent Workload** — open cases per agent.
+- **Open Cases** — cases that are not yet closed.
+- **Critical Cases** — open cases at critical priority.
+- **Avg Resolution Time** — mean time to close, in hours.
+- **SLA Violations** — cases that breached their SLA.
+- **Cases by Status** — workload distribution across the pipeline (donut).
+- **Cases by Priority** — open case mix by urgency (pie).
+- **Cases by Origin** — Email / Phone / Web / Chat / Portal (bar).
+- **Daily Case Volume** — new cases created over the last 30 days.
+- **SLA Compliance** — share of cases resolved within SLA, against a 95% target line (gauge).
+- **Open Cases by Priority** — open cases and their SLA-violation rate per priority (table).
 
-The *Cases Approaching SLA* tile is the most-clicked widget on this dashboard — it's how agents prioritise.
+**Controls**: Agent and Priority filters, and a one-minute refresh — service desks need fresh numbers. As on Sales Activity there is deliberately no date-range picker, for the same datetime-filter reason; Daily Case Volume carries its own 30-day window.
 
-## 👔 Executive Scorecard
+## 👔 Executive Overview
 
 The exec / finance view of the business.
 
 **Tiles**:
 
-- **Bookings This Quarter** — closed-won, vs plan and prior year.
-- **Pipeline Coverage** — pipeline ÷ remaining quota.
-- **Forecast Confidence** — commit + best case vs target.
-- **Net New ARR** — for subscription businesses.
-- **Renewals This Quarter** — coming up, renewed, lost.
-- **CSAT and NPS** — customer health.
-- **Customer Acquisition Cost** — campaign spend ÷ new customers.
-- **Top 10 Accounts by ACV** — annual contract value leaderboard.
-- **Pipeline Trend** — 4-week pipeline value chart.
+- **Total Revenue (YTD)** — closed-won revenue this year.
+- **Active Accounts** — customers with at least one active relationship.
+- **Total Contacts** — people in the address book.
+- **Open Leads** — unconverted leads in the funnel.
+- **Revenue Trend** — closed-won revenue over the last 12 months.
+- **Revenue by Industry** — YTD closed-won revenue split by customer industry (donut).
+- **Pipeline by Stage** — open opportunity value at each sales stage (funnel).
+- **New Accounts** — account creation cadence over the last 6 months.
+- **Accounts by Industry** — total annual revenue and account count per industry (table).
+
+**Controls**: a date-range picker over the close date (defaults to this quarter), plus Owner and Lead Source filters. The four KPI tiles state their own period (YTD, "active", "unconverted") and are not narrowed by the picker.
 
 This dashboard is the basis for the weekly leadership review.
 
-## Personalising and creating dashboards
+## What you can change
 
-Every user can:
+- **Date range** — CRM Overview, Sales Performance and Executive Overview carry a picker over the opportunity close date, defaulting to this quarter. Sales Activity and Customer Service have none, for the reason given in their sections above.
+- **Filters** — each dashboard declares its own: Owner everywhere, plus Deal Type on Sales Performance, Priority on Customer Service, and Lead Source on Executive Overview.
+- **Refresh** — Customer Service refreshes every minute, Sales Performance every three, the other three every five.
 
-- **Pin** any dashboard as their landing page.
-- **Filter** the dashboard by date range, team, region, product.
-- **Drill in** to any tile to see the underlying records.
-- **Export** any tile to image or PDF.
-- **Subscribe** to receive a weekly PDF by email.
+Some tiles opt out of the dashboard's own filters on purpose. The 12-month revenue trends, Top Products and Quota Attainment by Rep keep the window they are labelled with, so a narrower date picker cannot silently redefine the number under its own title.
 
-Admins can:
+## Where the numbers come from
 
-- Create new dashboards from the **Analytics › Dashboards › New** menu.
-- Pick widgets from the standard library or build custom ones from [cubes](/docs/analytics/cubes).
-- Set audience — who sees each dashboard by default.
-- Schedule snapshots (e.g., a quarterly QBR deck auto-generated).
+Every tile is bound to a dataset — the semantic layer that defines what "pipeline", "settled deal" or "SLA violation" means, once, for every tile and report that uses it. See [Datasets and cubes](/docs/analytics/cubes) for the measures and dimensions available, and [Reports](/docs/analytics/reports) for the record-level views behind the aggregates.
 
-## Tips for managers
+Definitions that appear on more than one dashboard are shared rather than re-typed: Pipeline by Stage and Avg Deal Size are one definition each, used by three and two dashboards respectively, so "open pipeline" cannot come to mean different things on different pages.
 
-- ✅ **Subscribe to the dashboard PDF** for your team — Monday 8 AM is a great cadence.
-- ✅ Use the **Slipping Deals** tile every Friday to plan the next week's deal-review calls.
-- ✅ Don't manage from email — manage from the dashboard. Email is for actions; the dashboard is for the truth.
+## Tips
 
-## Tips for execs
-
-- ✅ Build a **board view** dashboard from cubes — bookings, pipeline, churn, CSAT — one page.
-- ✅ Set up **threshold alerts** (e.g., pipeline coverage &lt;2.5×) to get a nudge before it's a problem.
-
-## Tips for admins
-
-- ✅ When building dashboards, **start from cubes** rather than ad-hoc queries — they're faster and more consistent.
-- ✅ Encourage users to **clone and personalise** rather than rebuilding from scratch.
-- ✅ Audit dashboard usage quarterly — retire dashboards no one opens.
+- ✅ Before a pipeline review, read **Win / Loss by Rep** next to **Why We Lose** — the first says who is converting, the second says what is beating you.
+- ✅ Work the **Quiet 90+ Days** tile weekly. An account with no logged interaction in a quarter is either dormant or already gone, and the tile is only as good as the interactions your team logs.
+- ✅ On the service desk, watch **SLA Violations** (the count of breaches) alongside the **SLA Compliance** tile (the rate against target) — a small count on a small volume is not the same as a healthy rate.
+- ✅ Read **Interactions on Deals** against **Open Deals**: the ratio, not either number alone, is the coverage question.

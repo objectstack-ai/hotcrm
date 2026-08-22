@@ -11,9 +11,10 @@ The Revenue module covers everything that happens **after sales says "we won"**:
 
 | Area | What it does |
 | --- | --- |
-| [**Products**](/docs/revenue/products) | The catalog of what you sell — names, codes, list prices, billing types. |
+| [**Products**](/docs/revenue/products) | The catalog of what you sell — names, codes, list prices, SKUs. |
 | [**Contracts**](/docs/revenue/contracts) | Signed agreements with customers — terms, value, renewals. |
 | [**Approvals**](/docs/revenue/approvals) | Multi-step approval for high-value discounts. |
+| [**Billing Hand-off**](/docs/revenue/billing-handoff) | Where CRM scope ends — the two outbound events that hand a won deal and an activated contract to billing. |
 
 ## The revenue lifecycle
 
@@ -30,7 +31,7 @@ Contract (Activated)
 Renewal task ──► Renewal opportunity
 ```
 
-1. **Set up the catalog** — Products with codes, list prices, billing types.
+1. **Set up the catalog** — Products with codes, list prices and SKUs.
 2. **Build quotes** with line items from the catalog (see [Quotes](/docs/sales/quotes)).
 3. **On acceptance** the system creates a contract with the quote's terms.
 4. **Contract is activated** — the account is promoted to *Customer*.
@@ -40,24 +41,27 @@ Renewal task ──► Renewal opportunity
 ## What the system does for you
 
 - **Auto-promote account** to *Customer* the moment a contract is activated.
-- **Auto-stamp Customer Since** date on the first activation.
+- **Auto-stamp Signed Date** on the contract at that same activation — today's date, and only when the contract carries none yet. No date is stamped on the *account*: there is no **Customer Since** field, and no field of any name records when an account became a customer, so a cohort report has to read the contract's **Signed Date** or **Start Date**.
 - **Daily expiration sweep** — at midnight, contracts past their end date are marked *Expired* and the owner is notified.
-- **Daily renewal reminder** — when a contract is within its renewal-notice window (e.g., 60 days before end), the owner and the account owner get a reminder email.
+- **Daily renewal reminder** — when a contract is within its own notice window (**Renewal Notice (Days)**, 30 unless you change it), the **contract owner** gets a renewal task and a reminder in their inbox and by email. Nobody else is told — not the account owner, and there is no separate account-level renewal owner to tell: the contract owner is the single renewal contact by design.
 - **Discount approval** — opportunities over $500K auto-route for manager + director sign-off.
 
 ## Where to find things
 
-In the Enterprise CRM app, the **Products** group contains:
+There is no **Products** group in the HotCRM app. The catalog's only sidebar entry is **Products**, and it sits under the **Marketing** group — see [Marketing](/docs/marketing/index). Apart from that item and global search, a product record is reached only from a quote or an opportunity line item.
 
-- **Products** — the catalog
+**Contracts** is under the **Sales** group, alongside Leads, Accounts, Contacts, Opportunities, Pipeline and Quotes, because contracts belong to the sales process. That entry is the app's only sidebar route to a contract.
 
-And the **Sales** group contains **Contracts** (because they belong to the sales process).
+The **Approvals** group holds exactly one item:
 
-Approvals live in the **Approvals** group:
+- **Inbox** — opens the platform's **approval centre**, where the approvals waiting on you are approved or rejected. **Inbox** is the label you see in the sidebar; nothing in the app is called *Approval Requests*.
 
-- **Approval Requests** — what's pending
-- **Action History** — who approved what, when
-- **Processes** — admin view of the approval rules
+Two names this page used to list are not in that group:
+
+- **Action History** — no sidebar item carries that name. The audit trail is real data — the approvals plugin stores it as `sys_approval_action` — but no navigation entry in this app opens it.
+- **Processes** — deliberately removed, not an oversight: no `sys_approval_process` object exists in any installed plugin, so the item's *requires object* guard hid it on every install, forever. It stays out until such an object ships.
+
+**Marketing** and **Approvals** are both **collapsed by default** — unlike Sales, My Work, Activity and Service, they do not open when the app loads. Click a group open before deciding something isn't there.
 
 ## Start here
 

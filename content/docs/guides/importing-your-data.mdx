@@ -1,0 +1,255 @@
+---
+title: Import Your Own Data
+description: Load your accounts, contacts and leads from a spreadsheet using the ready-made HotCRM import mappings — dry-run first, then undo if it goes wrong.
+---
+
+# Import Your Own Data
+
+Evaluating HotCRM with somebody else's demo data tells you very little. This guide
+loads **your** accounts, contacts and leads from a spreadsheet — no column-by-column
+mapping, and with a one-call undo if the file turns out to be wrong.
+
+Two routes lead in, over one and the same server-side import path: the **import
+wizard** on the object's list view, and the **import API**. Take the wizard for a
+one-off file you want to eyeball before it writes — no token, no curl. Take the API
+for a scripted or repeatable load: it is the route that exposes the strict dry-run
+report, the per-row error codes and the undo call. The wizard gets one short
+section below; **Steps 1–4 are the API route**.
+
+HotCRM ships three **import mappings**. A mapping is a saved column→field
+projection: you name it in the request, and HotCRM already knows that a column
+headed *Account Owner Email* is the account owner and that *SaaS* means the
+*Software / SaaS* industry.
+
+| Mapping name | Loads into | Matches existing records on |
+| --- | --- | --- |
+| `crm_account_import` | Accounts | Account Name |
+| `crm_contact_import` | Contacts | Email |
+| `crm_lead_import` | Leads | Email |
+
+Because each mapping matches on a business key, **re-running the same file updates
+rather than duplicates** — fix a column in your spreadsheet, upload again, done.
+
+## From the list view — the import wizard
+
+Open the **Accounts**, **Contacts** or **Leads** list view and choose **Import** in
+the toolbar. The wizard runs three steps — **Upload**, **Mapping**, **Preview**.
+
+The three mappings above are not an API-only feature. The wizard lists the mappings
+whose target object is the one you started from, so those three turn up under
+**Saved mapping** on exactly those three list views. Pick one and the renames, the
+value transforms and the type coercion run on the server just as they do over the
+API — and the column mapping goes read-only, because there is nothing left to match
+by hand.
+
+The rest of the wizard is the steps below behind buttons: **Validate data** is the
+dry run of Step 2, a large file is handed to the same background job as Step 3, and
+**History** → **Undo import** is Step 4, undo window included.
+
+Click-by-click steps — the generated template, the write modes, **Match on** — are
+in [Import & Export](/docs/guides/import-and-export), where the in-app route is
+documented in full.
+
+## Step 1 — Start from the template
+
+Templates with exactly the right headers live in `assets/import-templates/`:
+
+- `accounts.csv`
+- `contacts.csv`
+- `leads.csv`
+
+Each ships 50 example rows. Delete them, paste your own data under the same
+headers, and keep the header row untouched — the header text is what the mapping
+matches on. Columns you add are ignored, so exporting extra columns from your old
+system is harmless.
+
+**Import in this order: accounts → contacts → leads.** Every contact must name an
+account that already exists (the *Account Name* column), so contacts loaded before
+their accounts fail.
+
+## Step 2 — Dry-run first
+
+A dry run validates and coerces every row and writes **nothing**. Always do this
+before a real import.
+
+```bash
+curl -X POST "$HOTCRM/api/v1/data/crm_account/import" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{
+        "format": "csv",
+        "csv": "<the file contents>",
+        "mappingName": "crm_account_import",
+        "dryRun": true,
+        "runAutomations": false
+      }'
+```
+
+You get a per-row report:
+
+```json
+{
+  "total": 6, "ok": 1, "errors": 5, "created": 1,
+  "results": [
+    { "row": 2, "ok": false, "action": "failed", "field": "name",
+      "code": "required", "error": "Account Name is required" },
+    { "row": 3, "ok": false, "action": "failed", "field": "industry",
+      "code": "invalid_option", "error": "Industry: \"Underwater Basket Weaving\" is not a known option" },
+    { "row": 5, "ok": false, "action": "failed", "field": "owner",
+      "code": "reference_not_found", "error": "Account Owner: no record matches \"nobody@nowhere.example.com\"" }
+  ]
+}
+```
+
+`row` is the row number in your file, so you can fix the sheet and re-run.
+
+> **Pass `runAutomations: false` on the dry run.** With automations on (the
+> default) the dry run skips the required-field pre-check, because a business rule
+> might fill a blank field in the real write — so a row missing *Account Name* is
+> reported as fine and then fails on import. `runAutomations: false` gives you the
+> strict report. Leave it at its default (`true`) for the real import so HotCRM's
+> business rules still run.
+
+## Step 3 — Run the import as a job
+
+For anything beyond a handful of rows, use the **job** endpoint: it processes in
+the background, reports progress — and it is the only path that can be undone.
+
+```bash
+curl -X POST "$HOTCRM/api/v1/data/crm_account/import/jobs" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{ "format": "csv", "csv": "<the file contents>", "mappingName": "crm_account_import" }'
+```
+
+```json
+{ "jobId": "imp_msbr5xelz33iwx6k", "object": "crm_account", "status": "pending", "total": 50 }
+```
+
+Poll it:
+
+```bash
+curl "$HOTCRM/api/v1/data/import/jobs/$JOB_ID" -H "Authorization: Bearer $TOKEN"
+```
+
+```json
+{
+  "jobId": "imp_msbr5xelz33iwx6k", "status": "succeeded", "total": 50, "processed": 50,
+  "created": 50, "updated": 0, "skipped": 0, "errors": 0,
+  "percentComplete": 100, "undoable": true
+}
+```
+
+`GET /api/v1/data/import/jobs/$JOB_ID/results` returns the same per-row report as
+the dry run. A running job can be stopped with
+`POST /api/v1/data/import/jobs/$JOB_ID/cancel`.
+
+From the JavaScript SDK the same three calls are
+`data.createImportJob(object, request)`, `data.getImportJobProgress(jobId)` and
+`data.getImportJobResults(jobId)`.
+
+## Step 4 — Undo a bad import
+
+If the file was wrong, roll the whole job back:
+
+```bash
+curl -X POST "$HOTCRM/api/v1/data/import/jobs/$JOB_ID/undo" -H "Authorization: Bearer $TOKEN"
+```
+
+```json
+{ "success": true, "jobId": "imp_msbr5xelz33iwx6k", "object": "crm_account",
+  "deleted": 50, "restored": 0, "failed": 0 }
+```
+
+Records the job **created** are deleted; records it **updated** are restored to
+their pre-import values. From the SDK: `data.undoImportJob(jobId)`.
+
+Undo an import in the reverse order of loading it — leads, then contacts, then
+accounts — so a contact is never left pointing at a deleted account.
+
+Undo is available when `undoable: true` on the job. It is `false` for a dry run
+(nothing was written), for a job over **5,000 rows**, for a job that is still
+running, and for one that has already been undone.
+
+## Owners
+
+Every template carries an owner column — *Account Owner Email*, *Contact Owner
+Email*, *Lead Owner Email* — matched against the email address of a HotCRM user.
+
+- **Filled with a user's email** → that user owns the imported record.
+- **Filled with an address that matches no user** → the row **fails** with
+  `reference_not_found`. Nothing is guessed. Invite the user first, or clear the
+  cell.
+- **Left blank** → the record is owned by **you**, the user running the import.
+
+That last case is worth knowing for leads too: a blank owner makes the importer the
+owner, and the usual round-robin lead assignment does **not** take over. Reassign
+after the import if you need the leads distributed.
+
+## What each mapping loads
+
+Only the columns below are read; everything else in your file is ignored.
+
+### Accounts (`crm_account_import`)
+
+`Account Name` · `Account Type` · `Industry` · `Website` · `Phone` ·
+`Annual Revenue` · `Employees` · `Account Owner Email` · `Parent Account` ·
+`Description`
+
+*Parent Account* names another account, and it may be one created later in the same
+file. *Website* must be a full URL (`https://…`) or the row is rejected.
+
+### Contacts (`crm_contact_import`)
+
+`Salutation` · `First Name` · `Last Name` · `Account Name` · `Title` ·
+`Department` · `Email` · `Phone` · `Mobile` · `Mailing Street` · `Mailing City` ·
+`Mailing State` · `Mailing Postal Code` · `Mailing Country` ·
+`Lead Source` · `Contact Owner Email` · `Description`
+
+*First Name*, *Last Name*, *Email* and *Account Name* are required.
+
+### Leads (`crm_lead_import`)
+
+`Salutation` · `First Name` · `Last Name` · `Company` · `Title` · `Industry` ·
+`Email` · `Phone` · `Mobile` · `Website` · `Lead Status` · `Lead Source` ·
+`Annual Revenue` · `Employees` · `Lead Owner Email` · `Description`
+
+*First Name*, *Last Name*, *Company* and *Email* are required. Leave *Lead Status*
+blank and the lead lands as **New**.
+
+## How values are matched
+
+- **Picklists** (*Industry*, *Lead Source*, *Account Type*, *Lead Status*,
+  *Department*, *Salutation*) accept HotCRM's own labels or codes, case-insensitively
+  — *Technology* and *technology* both work. The mappings additionally translate the
+  vocabulary other systems use: *SaaS*, *IT* and *Financial Services* become
+  *Software / SaaS*, *Technology* and *Finance*; *Trade Show* becomes *Event / Trade
+  Show*; *Working* and *Nurturing* become *Contacted*. Anything still unrecognised
+  fails its row rather than being silently dropped.
+- **Dates** are safest as `YYYY-MM-DD`.
+- **Numbers** must be plain (`1500000`, not `1.5M`).
+- **Blank cells** leave the field alone, so field defaults still apply.
+- **Whitespace** around a value is trimmed.
+
+## Known limits
+
+- **Addresses import for contacts only.** Contacts have separate mailing-address
+  fields, so their address columns land. Accounts and leads store their address as
+  one structured field that cannot be assembled from separate spreadsheet columns,
+  and a single joined address string is rejected row by row (*"Billing Address has
+  an invalid address value"*). Those two templates therefore carry no address
+  columns, and adding one to the sheet changes nothing — the mapping only reads the
+  headers it declares. Fill those addresses in after the import, in the record or
+  via the API.
+- **50,000 rows per job.** Split a bigger file.
+- **Undo covers 5,000 rows.** Larger imports finish but cannot be rolled back —
+  import big data sets in chunks if you want that safety net.
+- **Excel** works too: send `format: "xlsx"` with the workbook bytes as
+  `xlsxBase64` instead of `csv`. The same mapping applies.
+
+## Where to go next
+
+- [Import & Export](/docs/guides/import-and-export) — exports, migrations and
+  data-retention requests.
+- [Sharing & Security](/docs/administration/sharing-and-security) — who sees the
+  records once they are in.

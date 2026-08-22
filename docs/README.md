@@ -10,6 +10,7 @@ HotCRM also has product-facing documentation under [`content/docs/`](../content/
 | Need | Document |
 | --- | --- |
 | Current facts and verification commands | [STATUS.md](STATUS.md) |
+| Complete feature inventory (numbered, per capability domain) | [feature-inventory.md](feature-inventory.md) |
 | Runtime and metadata architecture | [ARCHITECTURE.md](ARCHITECTURE.md) |
 | Local, artifact, and marketplace deployment | [DEPLOYMENT.md](DEPLOYMENT.md) |
 | Versioning and distribution | [RELEASE_STRATEGY.md](RELEASE_STRATEGY.md) |
@@ -42,7 +43,7 @@ hotcrm/
 │   ├── reports/        # Report metadata
 │   ├── views/, pages/  # App UI metadata
 │   ├── profiles/       # Permission sets
-│   ├── sharing/        # Sharing rules and role hierarchy
+│   ├── sharing/        # Sharing rules and positions
 │   ├── translations/   # Locale bundles
 │   └── data/           # Seed data
 ├── content/docs/       # Product documentation site content

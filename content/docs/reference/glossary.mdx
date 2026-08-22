@@ -15,7 +15,7 @@ description: CRM and platform terms — alphabetised so you can stop bluffing in
 
 **Activity** — A task, event, call, or email logged against a record.
 
-**Agent (AI)** — A composite AI assistant that bundles skills + knowledge bases. The Sales Copilot and Service Copilot are agents.
+**Agent (AI)** — A composite AI assistant that bundles skills + knowledge bases. HotCRM defines no agents of its own: its six skills attach to the platform `ask` agent that every ObjectStack environment provides.
 
 **ARPU** *(Average Revenue Per User)* — Total revenue ÷ active users.
 
@@ -31,7 +31,7 @@ description: CRM and platform terms — alphabetised so you can stop bluffing in
 
 **Bookings** — Closed-won contract value in a period. Includes new + expansion + renewal.
 
-**Business hours** — Working days and hours used in SLA calculations.
+**Business hours** — The working days and hours a deadline is counted against, in CRMs that have them. **HotCRM does not have them**: no working-day calendar, no holiday list, no *Setup → Business Hours* screen, nothing in its metadata a deadline could be measured against. Its computed deadlines — every cell of the case SLA matrix, from four hours on a Critical case to seven days on an SMB Low one — are added to the wall clock, so nights, weekends and holidays all count. See [SLA & Escalation](/docs/service/sla-and-escalation).
 
 ## C
 
@@ -67,7 +67,7 @@ description: CRM and platform terms — alphabetised so you can stop bluffing in
 
 **FLS** *(Field-Level Security)* — Per-field read/edit permissions per profile.
 
-**Flow** — A multi-step automation. More powerful than a workflow rule.
+**Flow** — A multi-step automation, and the only rule-style automation type ObjectStack has: every *"when this record saves, do that"* rule in this app is a record-change flow. See *Workflow rule* below.
 
 **Forecast** — Predicted bookings for a period, bucketed Closed / Commit / Best Case / Pipeline.
 
@@ -77,7 +77,7 @@ description: CRM and platform terms — alphabetised so you can stop bluffing in
 
 ## H
 
-**Hierarchy** *(role hierarchy)* — The org chart that drives visibility — managers see their team's records.
+**Hierarchy** — Two different things share the word, and only one of them is in this app. **Account hierarchy** is real: parent and child accounts, see [Accounts](/docs/sales/accounts). A *reporting* hierarchy that drives record visibility is not — positions are flat, nothing rolls up between them, and each rung that needs a record is named by its own sharing rule. See [Sharing & Security](/docs/administration/sharing-and-security).
 
 ## I
 
@@ -125,6 +125,8 @@ description: CRM and platform terms — alphabetised so you can stop bluffing in
 
 **Permission set** — A bundle of extra permissions granted on top of a user's profile.
 
+**Position** — A flat group used to hand out record access (`sales_manager`, `eu_sales_team`, …). Positions do not nest and nothing rolls up between them: a record reaches a position only through a sharing rule that names it, so a position no rule names grants nothing. A user may hold several.
+
 **Profile** — The base permissions assigned to every user.
 
 **PWA** *(Progressive Web App)* — Install HotCRM as an "app" on your phone home screen.
@@ -143,7 +145,7 @@ description: CRM and platform terms — alphabetised so you can stop bluffing in
 
 **Renewal** — Extending a contract before / at its end date.
 
-**Role** — A position in the role hierarchy (drives sharing).
+**Role** — The v1 name for a **position**, kept here because older screens and imports still use it. The thing itself is a position; see *Position*.
 
 ## S
 
@@ -151,7 +153,7 @@ description: CRM and platform terms — alphabetised so you can stop bluffing in
 
 **SDR / BDR** *(Sales Development Rep / Business Development Rep)* — A rep specialised in prospecting leads.
 
-**Sharing rule** — An exception that grants visibility beyond OWD + hierarchy.
+**Sharing rule** — An exception that widens record access beyond the OWD baseline, to the positions it names.
 
 **Skill (AI)** — A bite-sized AI capability (qualify lead, draft email, triage case).
 
@@ -183,7 +185,7 @@ description: CRM and platform terms — alphabetised so you can stop bluffing in
 
 ## U
 
-**User** — A person who can log in. Each has a profile + role.
+**User** — A person who can log in. Each has a profile, and any number of positions.
 
 ## V
 
@@ -195,7 +197,7 @@ description: CRM and platform terms — alphabetised so you can stop bluffing in
 
 **Webhook** — An HTTP callback fired when CRM events happen.
 
-**Workflow rule** — A simple after-save automation: condition → field update / email / task.
+**Workflow rule** — Not an ObjectStack concept. The platform retired the standalone workflow-rule type (ADR-0019 / ADR-0020): there is no `workflow` metadata type, no `workflows` collection on a stack, and no *Workflow Rules* entry under **Studio → Automation** — only *Flows*. A simple after-save rule (condition → field update / email / task) is authored as a **record-change flow**; see [Administration › Automation](/docs/administration/automation).
 
 **Win rate** — Closed-won ÷ (closed-won + closed-lost). Excludes "closed without decision".
 

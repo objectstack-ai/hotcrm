@@ -12,10 +12,9 @@ flowchart TD
   Stack --> Objects["src/objects"]
   Stack --> Actions["src/actions"]
   Stack --> Flows["src/flows"]
-  Stack --> Agents["src/agents"]
   Stack --> Skills["src/skills"]
   Stack --> UI["src/apps, src/views, src/pages"]
-  Stack --> Analytics["src/dashboards, src/reports, src/cubes"]
+  Stack --> Analytics["src/datasets, src/dashboards, src/reports"]
   Stack --> Security["src/profiles, src/sharing"]
   Stack --> Data["src/data"]
   Stack --> Runtime["@objectstack/runtime"]
@@ -31,11 +30,19 @@ The stack manifest defines:
 | --- | --- |
 | id | `app.objectstack.hotcrm` |
 | namespace | `crm` |
-| version | `1.0.5` |
+| version | `2.2.2` |
 | type | `app` |
 | name | `HotCRM` |
+| engines.protocol | `^17.0.0-rc.1` |
 
-Runtime capabilities are declared in `requires`: `ai`, `automation`, `triggers`, `analytics`, `auth`, `ui`, `approvals`, and `sharing`.
+Runtime capabilities are declared in `requires`: `automation`, `triggers`, `analytics`, `auth`, `ui`, `approvals`, and `sharing`.
+
+`ai` is deliberately **not** in that list. ObjectStack 11.3.0 (ADR-0025 S2) moved the
+AI runtime out of the open edition, and under ObjectStack 16 `requires: ['ai']` is
+fail-fast — declaring it would hard-abort `objectstack start`/`dev` for this
+open-edition app. The AI metadata is unaffected: the skills still validate, build into
+the artifact, and run wherever a runtime provides the `ai` tier. See the comment in
+[`objectstack.config.ts`](../objectstack.config.ts) for the full rationale.
 
 ## Metadata Areas
 
@@ -48,7 +55,7 @@ Runtime capabilities are declared in `requires`: `ai`, `automation`, `triggers`,
 | AI skills | `src/skills/*.skill.ts` | `skills` |
 | Apps, views, pages | `src/apps/`, `src/views/`, `src/pages/` | `apps`, `views`, `pages` |
 | Analytics | `src/datasets/`, `src/dashboards/`, `src/reports/` | `datasets`, `dashboards`, `reports` |
-| Security | `src/profiles/`, `src/sharing/` | `permissions`, `sharingRules`, `roles` |
+| Security | `src/profiles/`, `src/sharing/` | `permissions`, `sharingRules`, `positions` |
 | i18n | `src/translations/` | `translations`, `i18n` |
 | Demo data | `src/data/` | `data` |
 
@@ -149,11 +156,15 @@ answering record questions, because admins can change metadata over time.
 
 Security is assembled from:
 
-- permission profiles in `src/profiles/`
-- sharing rules in `src/sharing/`
-- role hierarchy in `src/sharing/role-hierarchy.ts`
+- 6 permission profiles in `src/profiles/`
+- 9 sharing rules in `src/sharing/*.sharing.ts`
+- 12 positions in `src/sharing/positions.ts`
 
-The stack maps `RoleHierarchy.roles` into the ObjectStack `roles` field and registers sharing rules for accounts, opportunities, cases, and territory-style visibility.
+The stack registers sharing rules for accounts, opportunities, cases, campaigns, and
+territory-style visibility, and passes `CrmPositions` to `defineStack({ positions })`.
+Per ADR-0090 D3 positions are flat capability-distribution groups — the v1 role
+hierarchy's parent links are gone, because hierarchy belongs to the business-unit tree,
+which this app does not model.
 
 ## Verification
 

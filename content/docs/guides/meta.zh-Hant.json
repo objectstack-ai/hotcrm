@@ -4,8 +4,10 @@
   "pages": [
     "index",
     "search-and-navigation",
+    "files-and-comments",
     "email-and-calendar",
     "mobile",
+    "importing-your-data",
     "import-and-export",
     "integrations"
   ]

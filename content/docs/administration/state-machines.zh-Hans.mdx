@@ -1,90 +1,111 @@
 ---
 title: 状态机
-description: HotCRM 如何在潜在客户和商机上强制执行有效的状态转换 —— 以及如何扩展规则。
+description: HotCRM 如何在潜在客户和商机上声明有效的状态转换 —— 这些转换表做什么、不做什么，以及如何扩展规则。
 ---
 
 # 状态机
 
-某些对象有严格的 **生命周期** —— 潜在客户从 *New* 推进到 *Working* 再到 *Qualified*，绝不会倒退回 *New*。状态机强制执行这些转换，使用户无法把记录置于无意义的状态。
+某些对象有严格的 **生命周期** —— 潜在客户从 *New* 推进到 *Contacted*、*Qualified*，最后到 *Converted*。状态机把这条路线 **声明** 出来，但并不强制执行：本应用的五条状态机全是 **警告** 级，用户把记录挪出这条路线，**保存照样通过** —— 详见下文《声明出来的路线是建议，不是闸门》。
 
 ## 状态机在哪里适用
 
-HotCRM 在以下对象上使用状态机：
+HotCRM 在 **五个** 对象上使用状态机：
 
-- **潜在客户** —— *New → Working → Qualified → Converted / Disqualified*
-- **商机** —— 经过 7 个阶段 *Prospecting → Qualification → Proposal → Negotiation → Closed Won / Closed Lost / Closed Without Decision*
+- **潜在客户** —— *New → Contacted → Qualified → Converted*；*Unqualified* 从任何开放状态都能进入，而它唯一的出路是重新打开回 *New*
+- **商机** —— 经过 7 个阶段 *Prospecting → Qualification → Needs Analysis → Proposal → Negotiation → Closed Won / Closed Lost*
+- **案例** —— *New → In Progress → Resolved → Closed*；*Waiting on Customer* 与 *Waiting on Support* 用来把未结案的案例挂起，*Escalated* 从任何未解决的状态都能进入，*Resolved* 与 *Closed* 都可以重新打开回 *In Progress*
+- **合同** —— *Draft → In Approval → Activated → Expired*；*In Approval* 可以把文件退回 *Draft*，三种在途状态都能直接走到 *Terminated*，*Expired* 与 *Terminated* 都是终点
+- **报价** —— *Draft → In Review → Presented → Accepted*；*In Review* 可以退回 *Draft*，*Rejected* 会回到 *Draft* 重来，*Expired* 可从 *Draft*、*In Review*、*Presented* 进入，*Accepted* 与 *Expired* 都是终点
 
-其他对象（案例、合同、活动、报价）有状态字段，但使用 **更简单的工作流规则** 而非完整的状态机，因为它们的转换没那么严格。
+五者的声明方式完全相同 —— 都是对象上一条具名的 `state_machine` 验证规则，作用于该对象的生命周期字段（`status`，商机上是 `stage`）。案例、合同、报价用的不是比潜在客户和商机更轻的机制，就是同一套机制。顶层 `stateMachines` 键在平台 7.7 被移除后，所有状态机都迁到了各自的对象上。
+
+**声明出来的路线是建议，不是闸门。** 五条规则都是 **警告** 级：走出转换表的状态变更只会写进服务端日志——比如 *“Invalid contract status transition”*——而 **保存照样通过**。记录在 **新建** 时也根本不受检查：规则拿新值与前一个值比对，因此只在更新时运行，直接导入到后期状态的记录不会被碰。转换表给你的是一条声明出来、机器可读的路线，供自动化、报表和 Copilot 依赖——而不是给字段上锁。
+
+**营销活动没有状态机，这是有意的。** 营销活动的状态是描述性的（*Planning / In Progress / Completed / Aborted*），不是受控的生命周期；营销活动成员、活动、知识文章和任务的状态字段同理。给它们中任何一个加转换表，只会在正常编辑时报警告，教用户忽略警告。
 
 ## 潜在客户状态机
 
+主路线，以及从它岔出去的两条边：
+
 ```
-        ┌──────────────┐
-        │     New      │
-        └──────┬───────┘
-               │ Begin working
-               ▼
-        ┌──────────────┐
-        │   Working    │
-        └──┬────────┬──┘
-   Disqual │        │ Qualify
-           ▼        ▼
-   ┌────────────┐  ┌────────────┐
-   │Disqualified│  │ Qualified  │
-   └────────────┘  └─────┬──────┘
-                         │ Convert
-                         ▼
-                  ┌────────────┐
-                  │ Converted  │
-                  └────────────┘
+   New  ──Contact──▶  Contacted  ──Qualify──▶  Qualified  ──Convert──▶  Converted
+    ▲                     │                        │                   (terminal)
+    │                     │  Disqualify            │  Disqualify
+    │                     └───────────┬────────────┘
+    │                                 ▼
+    │                          ┌─────────────┐
+    └────────── Re-open ───────│ Unqualified │
+                               └─────────────┘
 ```
 
-**允许的转换**：
+**允许的转换** —— 下面就是整张表，照抄自 `src/objects/lead.object.ts` 里的 `lead_status_progression` 规则；它比上面那张图多带几条捷径：
 
-| 从 | 到 | 触发 |
+| 从 | 可以移动到 | 说明 |
 | --- | --- | --- |
-| New | Working | 手动（“Begin Working”）或首次活动时自动更新 |
-| Working | Qualified | 手动（“Mark Qualified”） |
-| Working | Disqualified | 手动（“Disqualify”），需填写原因 |
-| Qualified | Converted | 转换向导（创建客户/联系人/商机） |
-| Disqualified | （终态） | — |
-| Converted | （终态） | — |
+| New | Contacted、Qualified、Unqualified、Converted | 潜在客户可以不经过 *Contacted* 就被确认资格或被转化 |
+| Contacted | Qualified、Unqualified、Converted | |
+| Qualified | Converted、Unqualified | |
+| Unqualified | New | 重新打开。这是 *Unqualified* 唯一的出边 —— 它不是终态 |
+| Converted | — | 终态 |
 
-**不允许**：从 *New* 直接跳到 *Converted*；将 *Converted* 退回到 *Working*。
+其中两条边背后是有机制的。移动到 *Unqualified* 必须填写 **取消资格原因**：这是另一条名为 `disqualification_reason_required` 的验证规则，在状态为 `unqualified` 而原因为空时触发 —— 而且与转换表不同，它是 `error` 级，所以这一条 **确实** 会拒绝保存。移动到 *Converted* 走的是 **Convert Lead** 按钮，它运行 `lead_conversion` 流程 —— 流程创建客户、联系人和商机，最后盖上 `status: 'converted'`。
+
+**这是有意允许的**：从 *New* 直接到 *Converted*。Convert Lead 按钮在任何既未转化也未被取消资格的线索上都可见 —— 也就是 *New*、*Contacted*、*Qualified* 三种状态都会显示它 —— 而流程自己会盖状态，所以这条捷径必须写进表里，否则每一次从未跟进过的线索转化都会记下一条名不副实的「非法转换」警告。`lead.object.ts` 里表上方的注释说的正是这件事。
+
+**表里没有的**：*Converted* 的任何出边，它是终态；从 *Qualified* 退回 *Contacted* 或 *New*；以及把 *Unqualified* 一步重新确认资格 —— 从那里回来的路是重新打开到 *New*。
 
 ## 商机状态机
 
 ```
-Prospecting → Qualification → Proposal → Negotiation
-                                              │
-                            ┌─────────────────┼────────────────────────┐
-                            ▼                 ▼                        ▼
-                        Closed Won      Closed Lost        Closed Without Decision
+Prospecting → Qualification → Needs Analysis → Proposal → Negotiation
+                                                  │            │
+                                                  └─────┬──────┘
+                                                        ▼
+                                                   Closed Won
+
+Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ Closed Lost
 ```
 
-**规则**：
+已关闭阶段只有 **两个**，不是三个：*Closed Won* 与 *Closed Lost*。不存在 *Closed Without Decision* —— 一笔无声无息拖没了的交易就是 *Closed Lost*。
 
-- 你可以自由地 **向前** 经过 *Prospecting → Qualification → Proposal → Negotiation*。
-- 你可以 **向后** 移动（例如从 *Negotiation* 退回 *Proposal*）—— 有时交易会滑落。
-- 从任何开放阶段，你都可以移动到三个 **已关闭** 阶段之一。
-- 一旦 *Closed*，商机的金额/阶段编辑就被 **锁定**（除非重新打开 —— 仅限管理员）。
+**允许的转换**，照抄自 `src/objects/opportunity.object.ts` 里的 `opportunity_stage_progression` 规则：
+
+| 从 | 可以移动到 | 说明 |
+| --- | --- | --- |
+| Prospecting | Qualification、Proposal、Closed Lost | |
+| Qualification | Needs Analysis、Proposal、Closed Lost | |
+| Needs Analysis | Proposal、Closed Lost | 默认赢率 40%，预测类别为 *Best Case* |
+| Proposal | Negotiation、Closed Won、Closed Lost | |
+| Negotiation | Closed Won、Closed Lost | |
+| Closed Won | — | 终态 |
+| Closed Lost | — | 终态 |
+
+其中两条边是为 CPQ 路径存在的，不是给销售一个阶段一个阶段点出来的：*→ Proposal* 从每一个 Proposal 之前的阶段都合法，因为 `quote_generation` 流程一旦生成报价就把交易快进到 *Proposal*，而生成报价在任何开放阶段都可能发生；*Proposal → Closed Won* 合法，则是因为 `quote_on_accepted` 钩子会从一份被接受的报价上直接赢下关联交易，中间不再经过一次谈判。
+
+**表里没有的**：**向后** 移动。没有任何一个开放阶段声明了通往更早阶段的边，所以从 *Negotiation* 退回 *Proposal* —— 交易滑落 —— 是走出了这条路线，和其他任何一次出格一样只记一条警告（照样保存，见上文）。两个已关闭阶段也都没有出边，所以既不存在「重新打开」这条转换，也不存在管理员绕回开放阶段的通道。
+
+已关闭的商机另有一道 **冻结**，而且管的远不止阶段字段：`opportunity_lifecycle` 钩子会拒绝用户对 *Closed Won* / *Closed Lost* 记录的任何编辑，只放行 `description`、`next_step` 和 `notes` 三个字段；而且这次拒绝是抛出错误、并点名你试图改的那些字段 —— 不是警告。审批结论和平台托管的列被排除在外，好让一次在途审批仍能落地；而没有登录用户的写入（种子数据或回填）根本不受这道冻结管辖。
 
 系统还强制执行：
 
-- 移动到 *Proposal* 之前 **必须填写关闭日期**。
-- 移动到 *Negotiation* 之前 **必须填写金额**。
-- 进入 *Closed Lost* 或 *Closed Won* 时 **必须填写赢单/输单原因**。
-- 如果金额 > $500K 且尚未授予折扣审批，进入 *Closed Won* **可能需要审批**。
+- **必须填写关闭日期** —— 而且不是从 *Proposal* 开始才要求，是一直要求：`close_date` 带着 `required: true` 和 `notNull` 存储，没有它商机根本建不出来。
+- **必须填写金额** —— 同样是无条件的。这两个字段都不等哪个阶段。
+- 进入 *Closed Lost* 或 *Closed Won* 时 **必须填写赢单/丢单原因** —— 这是 `win_reason` 与 `loss_reason` 上按阶段生效的 `requiredWhen` 谓词。
+- **审批的入口是 $100K。** `opportunity_approval` 流程会在任何一次更新之后触发，只要这笔开放商机金额达到 **$100,000 或以上** 且还没有在案的审批，就把它送到 **销售经理** 那里。**$500K** 是第二档而不是入口：超过这个数，还要 **销售总监** 在经理之后加签。所以一笔 $200K 的单子是会进审批的。
 
-## 为什么状态机很重要
+对前三条来说，「强制执行」这个说法是站得住的 —— 与它们上面那些转换表不同：`required` 与 `requiredWhen` 是硬的，违反它们的保存会被拒绝。第四条则根本不是保存时的检查 —— `opportunity_approval` 是一条 `record_change` 流程，在更新**之后**才跑，然后在审批步骤挂起期间把记录锁住。
 
-没有它们，你会遇到：
+## 状态机给你的是什么
 
-- 代表不小心把潜在客户标记为 *Converted*。
-- 商机从 *Prospecting* 跳到 *Closed Won*（没有做真正的资格确认）。
-- 因为记录跳过阶段而导致漏斗报表不准确。
+不是拦截。本节原先列为「不会发生」的几件事，在转换表声明之后照样发生：代表仍可能不小心把潜在客户标记为 *Converted*，商机仍可以从 *Prospecting* 直接跳到 *Closed Won*，记录仍会跳过阶段。这些写入各自只在服务端日志里留下一条警告，然后照样落库。所以漏斗报表并不会因为存在一张表就 **反映现实** —— 它报的是记录实际走过的那些阶段。
 
-有了它们，你的漏斗报表 **反映现实** —— 每一笔赢单都经过了每一个阶段。
+转换表真正给你的，就是这条路线本身 —— **写在一个机器能读的地方**：
+
+- **生命周期只有一处定义。** 评审者、报表作者、为本应用编写元数据的 AI，都能直接从对象上读到设计意图中的路线，而不必从每一条写这个字段的流程和钩子里去反推。
+- **非法的移动会被报出来，而不是无声无息。** 移动照样落库，但引擎会在日志里点名 —— *「Invalid opportunity stage transition」*，并带上规则自己的名字 —— 所以一次糟糕的导入或一个行为异常的集成，事后是能被找出来的。走在表内的移动一条日志都不记，这正是那些警告值得一读的原因。
+- **给自动化与报表一个可以指向的基准。** 流程条件、报表或技能可以按声明出来的路线来写，而不是把一串状态手工抄过去。
+
+如果你需要某个状态变更真正不可能发生，状态机不是那个工具：能挡下保存的是 `error` 级的验证规则。这五条保持建议级是有意的 —— 理由就写在规则自己身边（`src/objects/quote.object.ts`）：售后的更正不该还要靠一次数据修复才能做到。
 
 ## 自定义状态机
 
@@ -94,40 +115,38 @@ Prospecting → Qualification → Proposal → Negotiation
 - **移除转换**（例如禁止在商机阶段中向后移动）。
 - **添加进入条件**（例如 *没有决策者联系人角色就不能进入 Proposal*）。
 - **添加退出条件**（例如 *没有更新关闭日期就不能离开 Negotiation*）。
-- 在每次转换时 **触发自动化**（工作流规则、流程、通知）。
+- 在每次转换时 **触发自动化**（对象钩子、流程、通知）。
 
-在 **设置 → 对象 → 状态 → 状态机** 中配置。
+上面这些都是改源码，不是在设置里点几下：**并不存在「设置 → 对象 → 状态 → 状态机」这个配置面**。每张转换表都是对象上的一条 `validations[]` 条目（类型 `state_machine`，见 `src/objects/*.object.ts`），而这条条目只带一张转换映射表，别的什么都没有 —— 所以上面前两项是改这张映射表，进入/退出条件是另外的 `validations[]` 规则或相关字段上的 `requiredWhen` 谓词，按转换触发自动化则是 `record_change` 流程或对象钩子。每一项都是代码改动加一次重新部署。
 
 ## 用户看到什么
 
-- 记录上的状态字段在下拉菜单中只显示 **有效的下一个状态**。
-- 尝试不允许的转换会显示错误：*“无法从 Converted 退回 Working。”*
-- 强制执行新状态的必填字段 —— 用户在保存前内联看到它们。
+- **状态下拉菜单不会被过滤。** 无论记录当前处于什么状态，它都列出该字段声明的全部选项。平台 *能* 算出合法的下一批状态 —— `@objectstack/objectql` 里的 `legalNextStates`，通过 `GET /objects/{name}/state/{field}?from=…` 可以取到 —— 但本应用没有任何一处调用它，也没有任何列表、表单或详情页按它收窄选项列表。
+- **不被允许的转换不会报错，也不会弹窗。** 保存照样通过，记录就停在新值上；唯一的痕迹是服务端的一行日志 —— `WARN Validation rule 'lead_status_progression' (warning): Invalid lead status transition` —— 在界面里工作的人永远看不到它。
+- 强制执行新状态的必填字段 —— 用户在保存前内联看到它们。这是另一套机制：字段上的 `requiredWhen` 谓词（例如阶段变为 *Closed Won* 时的 `win_reason`），它确实会拒绝保存。
 
 ## 状态机与 AI Copilot
 
-Copilot 理解状态机。在建议操作时：
+**本应用没有把这两者接起来。** `src/skills/` 下的六个技能、`src/actions/` 下的每一个操作，都没有提到转换表、状态机或「合法的下一批状态」这类查询，也没有任何一个技能的提示词里写着哪个状态之后可以接哪个状态。本页原先描述过 Copilot 会压住 *“确认这个潜在客户的资格”*、*“转化这个潜在客户”* 这类建议，直到记录的状态允许这次移动为止；HotCRM 并没有声明任何能产生这种行为的东西。
 
-- *“确认这个潜在客户的资格”* → 仅当状态为 *Working* 时建议。
-- *“转换这个潜在客户”* → 仅当状态为 *Qualified* 时建议。
-- *“将这个商机标记为 Closed Won”* → 仅当赢单条件满足时建议（金额、关闭日期、赢单原因、必要时的审批）。
+平台自己的 agent 在装载对象元数据时会不会把 `state_machine` 验证一并读进去、并据此收窄建议，这是运行时的问题，不是本应用的问题 —— 所以本页对它不作任何方向的断言。如果你正指望 Copilot 待在某条生命周期里，请在你自己的部署上验证，而不是照着本页相信。
 
-这可以防止 Copilot 建议非法的转换。
+转换表能给 agent 的，和它给报表作者的是同一样东西：那条路线，声明在对象上的一个地方，供技能或流程有意识地照着写。
 
 ## 给管理员的提示
 
 - ✅ **不要过度约束** —— 太多转换规则会成为团队的摩擦税。
 - ✅ 添加新状态时，**先决定进入和退出条件** —— 其余的自然就有了。
-- ✅ 使用状态机转换来 **触发自动化**，而非在每次保存时运行自动化 —— 性能要好得多。
-- ✅ 每次变更后 **测试向导流程**（转换潜在客户、关闭商机）。
+- ✅ **不要把自动化挂在转换上** —— 根本没有可挂的东西。转换表是一条验证规则，在做出这次移动的那一次保存里被求值；它写下一行日志，不产生任何可供自动化订阅的事件。只应在某一次移动上跑的自动化，是一条 `record_change` 流程：它在那次保存上触发，并在自己的起始条件里把 `record.stage` 与 `previous.stage` 比对来收窄 **自己** —— `opportunity_won_alert`（`src/flows/opportunity-won-alert.flow.ts`）正是这么写的，所以那条祝贺通知只在移入 *Closed Won* 的那一次发出，而不是在这笔已赢商机之后的每一次编辑上都发。
+- ✅ 每次变更后 **测试向导流程**（转化潜在客户、关闭商机）。
 
 ## 给用户的提示
 
-- 如果状态下拉菜单缺少你期望的选项，那是状态机在阻止它。检查当前状态、接下来是什么、以及需要哪些字段。
-- 如果你确实需要绕过规则（例如导入遗留数据），请询问管理员 —— 他们有一项 *“绕过状态机”* 权限可以临时授予。
+- 状态下拉菜单从不会因为状态机而少给你一个选项 —— 它根本不过滤这个选项列表。缺了你期望的选项，去看该字段自己的选项配置或你所属配置文件的字段级安全，而不是转换表。
+- 不存在 *“绕过状态机”* 这项权限可申请，也没有什么需要绕过。把遗留数据直接导入到后期状态不需要任何授权：**新建** 路径根本不查转换表，更新时走出转换表也是记一条日志然后照样保存。真正该做的是知会管理员一声，好让日志里冒出来的那些警告被认成这次导入，而不是被当成 bug 去追。
 
 ## 相关
 
 - [销售 › 潜在客户](/zh-Hans/docs/sales/leads) —— 面向用户的潜在客户生命周期。
 - [销售 › 商机](/zh-Hans/docs/sales/opportunities) —— 面向用户的商机生命周期。
-- [自动化](/zh-Hans/docs/administration/automation) —— 用于由转换触发的工作流。
+- [自动化](/zh-Hans/docs/administration/automation) —— 转换可以触发的流程与对象钩子。

@@ -99,6 +99,20 @@ fields this app declares (`crm_product.image`, `crm_product.datasheet`,
 install — no seed data populates a media field — but an in-place upgrade needs
 both before strict validation is safe to enable.
 
+`17.0.0-rc.5` adds a third, `os migrate summary-nulls`, which recomputes
+roll-up `count` / `sum` columns left `NULL` by rows inserted before the
+create-time fix. **It does not apply to HotCRM**, and the reason is worth
+writing down rather than re-deriving on the next upgrade: the migration walks
+*platform* roll-up columns, which only exist on `master_detail` relationships,
+and this app declares none — every line-item and member object reaches its
+parent through a `lookup`. The four aggregates HotCRM does show
+(`crm_opportunity.amount`, `crm_quote` totals, the campaign metrics, the case
+activity stamp) are ordinary number fields written by the hooks in
+`src/objects/*.hook.ts`, so no platform code has ever seeded or recomputed
+them. Re-check this if a future change converts a line-item lookup to
+`master_detail` — the lint rule `relationship/line-item-should-be-master-detail`
+suggests exactly that on four fields today.
+
 If a scan reports rows it cannot convert, the escape hatches downgrade the new
 enforcement to warnings while you fix the data. They are temporary, not a
 destination:
@@ -172,6 +186,74 @@ orphans (the `__search` class above is excluded until #3955 lands):
 `--allow-destructive` drops columns irreversibly — never run it without the
 backup from step 2, and never against a database whose plan you have not read.
 
+### 3.3 Backfilling a hook-derived column
+
+Some HotCRM columns are **derived**: no one authors them, a lifecycle hook
+computes them from another field on every write. Two of them are match keys the
+lead-conversion flow reads (#626):
+
+| Column | Derived from | Writer |
+| --- | --- | --- |
+| `crm_account.name_normalized` | `crm_account.name` | `account_protection` |
+| `crm_lead.company_normalized` | `crm_lead.company` | `lead_duplicate_check` |
+
+A **fresh install needs nothing here.** Seed writes run lifecycle hooks
+(`skipTriggers` suppresses record-change automation, not hooks — measured in
+#617), so every seeded and every subsequently created row gets its key stamped
+on insert.
+
+An **in-place upgrade does**. A row written before the column existed holds
+`NULL`, and the two objects then fail in two different ways — both measured, and
+worth knowing apart when triaging:
+
+- **An account with no key is invisible to the match.** The conversion finds
+  nothing and creates a *second* account for a company that already has one —
+  silently. This is the failure that makes the backfill non-optional: it is
+  more duplicates than the behaviour the change replaced.
+- **A lead with no key stops the conversion.** The filter value resolves to
+  nothing, and `get_record` refuses to run rather than widen the query:
+  *"refusing to run — 1 filter condition(s) resolved to nothing and were dropped
+  from the query: `{leadRecord.company_normalized}` (at name_normalized)"*. The
+  run is recorded failed and the lead stays unconverted. Loud, and the message
+  names the missing key — re-save that lead and convert again.
+
+> [!NOTE]
+> **This section is a contingency, not a step in any current upgrade.** HotCRM's
+> deployment shape today is **fresh installs only**, which is the whole reason
+> the procedure below is documented rather than automated, and the reason
+> `name_normalized` carries no unique index (see `src/objects/account.object.ts`).
+> Both conclusions are conditional on that premise. If HotCRM ever acquires
+> long-lived installs that upgrade in place, re-read this section and the index
+> decision together — neither is a universal judgement.
+
+The backfill is a **re-save**: write a row's own `name` / `company` back to it
+and the hook derives the key. Nothing else about the row changes, and re-saving
+a row that already has a key is a no-op — so the pass is idempotent and safe to
+repeat or to run over every row rather than hunting for the empty ones.
+
+1. **Take a database backup.** This rewrites every account and lead row.
+2. **Read the rows.** Any path you already use is fine — a Console export, a
+   `GET` against the record API, or a direct read replica query. You need only
+   `id` plus the source field (`name` for accounts, `company` for leads).
+3. **Write each row back to itself**, one `PATCH` per record, against the
+   record endpoint `PATCH {basePath}/data/:object/:id` (`basePath` is
+   `/api/v1`):
+
+   ```bash
+   curl -s -X PATCH "$HOTCRM/api/v1/data/crm_account/$ID" \
+     -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+     -d '{"name": "Acme Corp"}'          # the row's OWN current name
+   ```
+
+   Do **not** send `name_normalized` itself: it is `readonly`, so an incoming
+   value is stripped, and the hook would overwrite it anyway. Repeat for
+   `crm_lead` with `{"company": "…"}`; converted leads can be skipped
+   (`is_converted = true`) — nothing converts them again.
+4. **Verify.** No row should be left with an empty key, and the end-to-end
+   check is the one that matters: convert a lead whose company differs from an
+   existing account only in case or spacing, and confirm it **reuses** that
+   account instead of creating a second one.
+
 ## 4. Seed-data staleness — the #1 HotCRM pitfall
 
 Stale seed data is the most common cause of "Studio shows a red
@@ -189,6 +271,54 @@ After any platform upgrade, or whenever Studio shows validation banners:
    judging an empty card (see `AGENTS.md` → "Verifying UI in the browser").
 4. If a banner persists, fix the offending fixture in `src/data/`, not the
    designer or the platform.
+
+### 4.1 Staffing the demo org (`pnpm demo:staff`)
+
+A reseeded org has records but no PEOPLE. On a fresh install exactly one user
+exists (the dev admin), `demo_bootstrap` claims every seeded record for them,
+and `sys_user_position` is empty — so every position-based sharing rule this app
+ships grants nobody anything, and `opportunity_approval`'s `manager_review` node
+opens with an empty approver slate while `lockRecord` holds the record ([#640]).
+
+```bash
+pnpm dev          # terminal 1 — leave running
+pnpm demo:staff   # terminal 2 — once, after the server is up
+```
+
+That creates three non-admin demo users (`na.rep@` / `eu.rep@` /
+`sales.manager@objectos.ai`, all `demo1234`), assigns their positions, and
+re-evaluates every sharing rule so the already-seeded accounts materialise
+grants. It is idempotent, self-verifying (non-zero exit if the layers do not
+connect) and prints what each user can see:
+
+```
+north_america_territory  matched=  6  holders=1  granted=6
+europe_territory         matched=  2  holders=1  granted=2
+na.rep@objectos.ai sees 6 account(s) · countries: [CA, US]
+eu.rep@objectos.ai sees 2 account(s) · countries: [DE, UK]
+```
+
+Who exists and which positions they hold is a table —
+[`src/sharing/demo-staffing.ts`](../src/sharing/demo-staffing.ts). Adding a
+person is adding a row.
+
+Three things worth knowing before changing any of it:
+
+- **It is a script, not metadata, on purpose.** A real deployment must install
+  none of these accounts, so nothing in the published artifact may be able to
+  create a user. `test/demo-staffing.test.ts` fails if a seed dataset or a flow
+  node ever writes `sys_user` / `sys_member` / `sys_user_position`.
+- **Re-evaluating the rules is not optional.** `plugin-sharing` materialises
+  grants from a record-write hook that returns early on `isSystem` writes, and
+  every seeded row is written with `isSystem: true`. Staffing alone therefore
+  leaves `sys_record_share` empty until a rule is re-evaluated (a server restart
+  does it too, via the boot backfill).
+- **The reps must not own the accounts.** `crm_account` is `private`, so the OWD
+  baseline already admits a record's owner — a share to the owner demonstrates
+  nothing. Ownership stays with `demo_bootstrap`'s first user; the script exits
+  non-zero if a demo user turns out to own a seeded account.
+
+[#640]: https://github.com/objectstack-ai/hotcrm/issues/640
 
 ## 5. Releasing
 

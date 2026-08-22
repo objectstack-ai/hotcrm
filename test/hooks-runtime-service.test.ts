@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import campaignHooks from '../src/objects/campaign.hook';
+import campaignHooks, { CAMPAIGN_METRIC_WRITE_KEYS } from '../src/objects/campaign.hook';
 import caseHooks from '../src/objects/case.hook';
 import contractHooks from '../src/objects/contract.hook';
 import forecastHooks from '../src/objects/forecast.hook';
@@ -47,22 +47,31 @@ describe('case_sla_defaults', () => {
     expect(due).toBeLessThan(before + 4.1 * 3_600_000);
   });
 
-  it('does not give a non-critical case an SLA', async () => {
+  it('gives a non-critical case an SLA too, off the priority × tier matrix', async () => {
+    // This assertion used to read `expect(input.sla_due_date).toBeUndefined()`
+    // — High, Medium and Low cases got no clock at all, which is what kept
+    // `case_sla_monitor` from ever firing for three of the four priorities
+    // (#595). The cells themselves are pinned in `test/case-sla-matrix.test.ts`;
+    // here the point is only that the field is no longer blank. With no `api`
+    // the tier is unresolvable, so this lands on the default `smb` column.
     const input: Rec = { priority: 'high' };
+    const before = Date.now();
     await hook.handler(makeCtx({ event: 'beforeInsert', input, user: USER }));
-    expect(input.sla_due_date).toBeUndefined();
+    const due = new Date(input.sla_due_date as string).getTime();
+    expect(due).toBeGreaterThan(before + 7.9 * 3_600_000);
+    expect(due).toBeLessThan(before + 8.1 * 3_600_000);
   });
 
   it('stamps defaults and strips privileged fields on an anonymous guest submission', async () => {
     const input: Rec = {
-      subject: 'Help', owner: 'spoofed', is_escalated: true, is_closed: true,
+      subject: 'Help', owner_id: 'spoofed', is_escalated: true, is_closed: true,
       internal_notes: 'nope', resolution: 'nope',
     };
     await hook.handler(makeCtx({ event: 'beforeInsert', input, user: SYSTEM }));
     expect(input.origin).toBe('web');
     expect(input.status).toBe('new');
     expect(input.priority).toBe('medium');
-    for (const stripped of ['owner', 'is_escalated', 'is_closed', 'internal_notes', 'resolution']) {
+    for (const stripped of ['owner_id', 'is_escalated', 'is_closed', 'internal_notes', 'resolution']) {
       expect(input, `guest submission kept privileged field ${stripped}`).not.toHaveProperty(stripped);
     }
   });
@@ -91,7 +100,7 @@ describe('case_status_side_effects', () => {
 
   it('creates an urgent task for the account owner on escalation', async () => {
     const h = makeHarness({
-      crm_account: [{ id: 'acc1', owner: 'rep1' }],
+      crm_account: [{ id: 'acc1', owner_id: 'rep1' }],
       crm_task: [],
     });
     await hook.handler(makeCtx({
@@ -105,7 +114,7 @@ describe('case_status_side_effects', () => {
     const [task] = h.rows('crm_task');
     expect(task, 'no escalation task created').toBeTruthy();
     expect(task.priority).toBe('urgent');
-    expect(task.owner).toBe('rep1');
+    expect(task.owner_id).toBe('rep1');
     expect(task.related_to_case).toBe('case1');
     expect(task.due_date).toBe(daysFromNow(1));
   });
@@ -126,7 +135,7 @@ describe('case_status_side_effects', () => {
   });
 
   it('does not re-fire when the status did not change', async () => {
-    const h = makeHarness({ crm_account: [{ id: 'acc1', owner: 'rep1' }], crm_task: [] });
+    const h = makeHarness({ crm_account: [{ id: 'acc1', owner_id: 'rep1' }], crm_task: [] });
     await hook.handler(makeCtx({
       event: 'afterUpdate',
       input: { id: 'case1', status: 'escalated', crm_account: 'acc1' },
@@ -289,40 +298,46 @@ describe('campaign_validation', () => {
   });
 });
 
-describe('campaign_snapshot_metrics', () => {
-  const hook = hookNamed(campaignHooks, 'campaign_snapshot_metrics');
+describe('campaign_metrics_refresh', () => {
+  const hook = hookNamed(campaignHooks, 'campaign_metrics_refresh');
 
-  const complete = (h: ReturnType<typeof makeHarness>) =>
+  const transition = (
+    h: ReturnType<typeof makeHarness>,
+    status = 'completed',
+    from = 'in_progress',
+  ) =>
     hook.handler(makeCtx({
       event: 'afterUpdate',
-      input: { id: 'cmp1', status: 'completed' },
-      previous: { id: 'cmp1', status: 'in_progress' },
+      input: { id: 'cmp1', status },
+      previous: { id: 'cmp1', status: from },
       user: USER,
       api: h.api,
     }));
 
+  const populated = () => makeHarness({
+    crm_campaign: [{ id: 'cmp1', status: 'in_progress' }],
+    crm_campaign_member: [
+      { id: 'm1', crm_campaign: 'cmp1', crm_lead: 'l1', status: 'responded' },
+      { id: 'm2', crm_campaign: 'cmp1', crm_lead: 'l2', status: 'sent' },
+      { id: 'm3', crm_campaign: 'cmp1', crm_lead: 'l2', status: 'responded' }, // dup lead
+      { id: 'm4', crm_campaign: 'other', crm_lead: 'l9', status: 'responded' },
+    ],
+    crm_lead: [
+      { id: 'l1', is_converted: true },
+      { id: 'l2', is_converted: false },
+    ],
+    crm_opportunity: [
+      { id: 'o1', crm_campaign: 'cmp1', stage: 'closed_won', amount: 100 },
+      { id: 'o2', crm_campaign: 'cmp1', stage: 'proposal', amount: 50 },
+      { id: 'o3', crm_campaign: 'cmp1', stage: 'closed_won', amount: 400 },
+    ],
+  });
+
   it('counts leads through the campaign_member junction, not a lead.campaign field', async () => {
     // `crm_lead` has NO `campaign` field. The old direct-count queries matched
-    // nothing, so every lead metric snapshot was silently zero.
-    const h = makeHarness({
-      crm_campaign: [{ id: 'cmp1', status: 'completed' }],
-      crm_campaign_member: [
-        { id: 'm1', crm_campaign: 'cmp1', crm_lead: 'l1', status: 'responded' },
-        { id: 'm2', crm_campaign: 'cmp1', crm_lead: 'l2', status: 'sent' },
-        { id: 'm3', crm_campaign: 'cmp1', crm_lead: 'l2', status: 'responded' }, // dup lead
-        { id: 'm4', crm_campaign: 'other', crm_lead: 'l9', status: 'responded' },
-      ],
-      crm_lead: [
-        { id: 'l1', is_converted: true },
-        { id: 'l2', is_converted: false },
-      ],
-      crm_opportunity: [
-        { id: 'o1', crm_campaign: 'cmp1', stage: 'closed_won', amount: 100 },
-        { id: 'o2', crm_campaign: 'cmp1', stage: 'proposal', amount: 50 },
-        { id: 'o3', crm_campaign: 'cmp1', stage: 'closed_won', amount: 400 },
-      ],
-    });
-    await complete(h);
+    // nothing, so every lead metric was silently zero.
+    const h = populated();
+    await transition(h);
 
     const campaign = h.rows('crm_campaign')[0];
     expect(campaign.num_leads, 'distinct leads via the junction').toBe(2);
@@ -336,25 +351,212 @@ describe('campaign_snapshot_metrics', () => {
     expect(campaign.num_responses).toBe(2);
   });
 
-  it('snapshots zeroes rather than skipping when a campaign has no members', async () => {
+  it('writes zeroes rather than skipping when a campaign has no members', async () => {
     const h = makeHarness({
-      crm_campaign: [{ id: 'cmp1', status: 'completed' }],
+      crm_campaign: [{ id: 'cmp1', status: 'in_progress' }],
       crm_campaign_member: [],
       crm_lead: [],
       crm_opportunity: [],
     });
-    await complete(h);
+    await transition(h);
     const campaign = h.rows('crm_campaign')[0];
     expect(campaign.num_leads).toBe(0);
     expect(campaign.actual_revenue).toBe(0);
   });
 
-  it('is a no-op unless the campaign just became completed', async () => {
+  /**
+   * #597: the trigger is a status TRANSITION, not the `→ completed` one.
+   *
+   * The hook this replaced fired only on the move into `completed`, which meant
+   * a campaign reported zeros for its entire useful life. Pinning the
+   * in_progress transition is what separates "recompute" from "snapshot on
+   * completion" — the old handler was green on the completed case too.
+   */
+  it('recomputes on a transition that is not completion at all', async () => {
+    const h = populated();
+    h.rows('crm_campaign')[0].status = 'planning';
+    await transition(h, 'in_progress', 'planning');
+    expect(h.rows('crm_campaign')[0].num_sent, 'a live campaign reports live numbers').toBe(3);
+  });
+
+  it('is a no-op when the status did not move', async () => {
     const h = makeHarness({ crm_campaign: [{ id: 'cmp1' }] });
     await hook.handler(makeCtx({
       event: 'afterUpdate',
       input: { id: 'cmp1', status: 'completed' },
       previous: { id: 'cmp1', status: 'completed' },
+      user: USER,
+      api: h.api,
+    }));
+    expect(h.calls).toHaveLength(0);
+  });
+
+  /**
+   * THE RECURSION GUARD, both halves.
+   *
+   * This hook writes `crm_campaign` and listens on `crm_campaign`, so a refresh
+   * write that carried `status` would re-enter itself forever. Half one: the
+   * handler ignores a write with no status key. Half two: the write it emits
+   * carries only the metric block, which is what makes half one sufficient.
+   */
+  it('ignores a metric-only write, and emits one', async () => {
+    const h = populated();
+    await hook.handler(makeCtx({
+      event: 'afterUpdate',
+      input: { id: 'cmp1', num_sent: 3 },
+      previous: { id: 'cmp1', status: 'in_progress' },
+      user: USER,
+      api: h.api,
+    }));
+    expect(h.calls, 'a metric-only write must not re-enter the refresh').toHaveLength(0);
+
+    await transition(h);
+    const writes = h.callsFor('crm_campaign', 'update');
+    expect(writes).toHaveLength(1);
+    const doc = writes[0].args[0] as Rec;
+    expect(
+      Object.keys(doc).filter((k) => !CAMPAIGN_METRIC_WRITE_KEYS.includes(k)),
+      'the refresh write must carry nothing that could re-trigger it',
+    ).toEqual([]);
+  });
+});
+
+describe('campaign_attribution_refresh', () => {
+  const hook = hookNamed(campaignHooks, 'campaign_attribution_refresh');
+
+  /**
+   * `num_opportunities` / `num_won_opportunities` / `actual_revenue` derive from
+   * opportunities, so the membership trigger alone would leave exactly the
+   * three metrics `roi` is built on stale.
+   */
+  it('recomputes the campaign when an opportunity is won', async () => {
+    const h = makeHarness({
+      crm_campaign: [{ id: 'cmp1', status: 'in_progress', actual_revenue: 0 }],
+      crm_campaign_member: [{ id: 'm1', crm_campaign: 'cmp1', crm_lead: 'l1', status: 'responded' }],
+      crm_lead: [{ id: 'l1', is_converted: false }],
+      crm_opportunity: [{ id: 'o1', crm_campaign: 'cmp1', stage: 'closed_won', amount: 900 }],
+    });
+    await hook.handler(makeCtx({
+      event: 'afterUpdate',
+      input: { id: 'o1', crm_campaign: 'cmp1', stage: 'closed_won' },
+      previous: { id: 'o1', crm_campaign: 'cmp1', stage: 'negotiation' },
+      user: USER,
+      api: h.api,
+    }));
+    expect(h.rows('crm_campaign')[0].actual_revenue).toBe(900);
+    expect(h.rows('crm_campaign')[0].num_won_opportunities).toBe(1);
+  });
+
+  it('recomputes BOTH campaigns when an opportunity is re-attributed', async () => {
+    const h = makeHarness({
+      crm_campaign: [
+        { id: 'cmp1', status: 'in_progress' },
+        { id: 'cmp2', status: 'in_progress' },
+      ],
+      crm_campaign_member: [],
+      crm_lead: [],
+      crm_opportunity: [{ id: 'o1', crm_campaign: 'cmp2', stage: 'closed_won', amount: 700 }],
+    });
+    await hook.handler(makeCtx({
+      event: 'afterUpdate',
+      input: { id: 'o1', crm_campaign: 'cmp2' },
+      previous: { id: 'o1', crm_campaign: 'cmp1' },
+      user: USER,
+      api: h.api,
+    }));
+    const byId = Object.fromEntries(h.rows('crm_campaign').map((c) => [c.id, c]));
+    expect(byId.cmp2.actual_revenue, 'the new campaign gains it').toBe(700);
+    expect(byId.cmp1.actual_revenue, 'the old campaign gives it up').toBe(0);
+  });
+});
+
+describe('campaign_lead_conversion_refresh', () => {
+  const hook = hookNamed(campaignHooks, 'campaign_lead_conversion_refresh');
+
+  const convert = (h: ReturnType<typeof makeHarness>) =>
+    hook.handler(makeCtx({
+      event: 'afterUpdate',
+      input: { id: 'l1', is_converted: true },
+      previous: { id: 'l1', is_converted: false },
+      user: USER,
+      api: h.api,
+    }));
+
+  const store = () => ({
+    crm_campaign: [
+      { id: 'cmp1', status: 'in_progress' },
+      { id: 'cmp2', status: 'in_progress' },
+    ],
+    crm_campaign_member: [
+      { id: 'm1', crm_campaign: 'cmp1', crm_lead: 'l1', status: 'responded' },
+      { id: 'm2', crm_campaign: 'cmp2', crm_lead: 'l1', status: 'sent' },
+      { id: 'm3', crm_campaign: 'cmp1', crm_lead: 'l2', status: 'sent' },
+    ],
+    crm_lead: [
+      { id: 'l1', is_converted: true },
+      { id: 'l2', is_converted: false },
+    ],
+    crm_opportunity: [],
+  });
+
+  /**
+   * `converted` is a status option the picklist offers and the ROI surfaces
+   * segment by. This hook is its ONLY writer — without it the value would be
+   * exactly the inert vocabulary #597 removed `opened`/`clicked`/`bounced` for.
+   */
+  it('promotes every membership of the converting lead to `converted`', async () => {
+    const h = makeHarness(store());
+    await convert(h);
+    const byId = Object.fromEntries(h.rows('crm_campaign_member').map((m) => [m.id, m]));
+    expect(byId.m1.status, 'a responded member converts').toBe('converted');
+    expect(byId.m2.status, 'a sent member converts too').toBe('converted');
+    expect(byId.m3.status, "another lead's membership is untouched").toBe('sent');
+  });
+
+  it('never drags an unsubscribed member back into the funnel', async () => {
+    // That person asked to be left alone; `campaign_member_optout_sync` has
+    // already opted them out of email, and overwriting the status here would
+    // leave the two records disagreeing about the same human being.
+    const seed = store();
+    seed.crm_campaign_member[1].status = 'unsubscribed';
+    const h = makeHarness(seed);
+    await convert(h);
+    const byId = Object.fromEntries(h.rows('crm_campaign_member').map((m) => [m.id, m]));
+    expect(byId.m2.status).toBe('unsubscribed');
+  });
+
+  it('refreshes every campaign the lead belongs to', async () => {
+    const h = makeHarness(store());
+    await convert(h);
+    const byId = Object.fromEntries(h.rows('crm_campaign').map((c) => [c.id, c]));
+    expect(byId.cmp1.num_converted_leads).toBe(1);
+    expect(byId.cmp2.num_converted_leads).toBe(1);
+  });
+
+  /**
+   * The promotion moves m1 from `responded` to `converted`, and a response
+   * count matching only the exact `responded` string would DEDUCT the response
+   * it grew out of — response_rate falling as the campaign succeeded.
+   * `computeCampaignMetrics` counts both states for this reason, so cmp1's one
+   * response survives its own success. Under the narrow predicate this reads 0.
+   */
+  it('conversion does not deduct the response it grew out of', async () => {
+    const h = makeHarness(store());
+    const before = h.rows('crm_campaign_member').filter(
+      (m) => m.crm_campaign === 'cmp1' && m.status === 'responded',
+    ).length;
+    expect(before, 'cmp1 starts with exactly one responded member').toBe(1);
+    await convert(h);
+    expect(h.rows('crm_campaign_member').find((m) => m.id === 'm1')!.status).toBe('converted');
+    expect(h.rows('crm_campaign').find((c) => c.id === 'cmp1')!.num_responses).toBe(1);
+  });
+
+  it('does nothing when is_converted did not just flip', async () => {
+    const h = makeHarness(store());
+    await hook.handler(makeCtx({
+      event: 'afterUpdate',
+      input: { id: 'l1', is_converted: true },
+      previous: { id: 'l1', is_converted: true },
       user: USER,
       api: h.api,
     }));
@@ -411,16 +613,87 @@ describe('forecast_derive_period', () => {
     expect(input.period_end).toBeUndefined();
     expect(input.period_label).toBeUndefined();
   });
+
+  /**
+   * The two halves of the DERIVATION contract, pinned against the handler
+   * rather than against the wish (#748) — and, since #1111, deliberately not
+   * against the docs page either.
+   *
+   * The page used to claim the boundary is "always computed, never typed", one
+   * sentence after teaching that a caller may supply `period_start`. Only the
+   * first case below is a computed boundary; the second is kept verbatim. That
+   * is a statement about THIS HANDLER, and it is still exactly true: the hook
+   * fills blanks and never rewrites a supplied value. If the derivation ever
+   * starts snapping a supplied `period_start` to the calendar boundary — the
+   * contract change option #748 deliberately did NOT take — the second
+   * assertion goes red.
+   *
+   * What is no longer true is the *storage* claim the docs used to draw from
+   * it. A mid-quarter `period_start` reaches the driver only in this unit
+   * harness, which runs the handler alone; through a real ObjectQL the write
+   * is refused by `period_start_first_of_period` /
+   * `quarter_starts_on_quarter_boundary` (#1008 / PR #1081), with
+   * `period_end_matches_calendar_period` (#1093 / PR #1110) closing the other
+   * end. Those refusals are pinned in `forecast-period-boundary.test.ts` and
+   * `forecast-period-end-boundary.test.ts`; `content/docs/sales/forecasting*.mdx`
+   * was rewritten for the full rule set in #1111. Read the second case below as
+   * "the hook does not silently correct you" — the schema refuses you instead —
+   * and not as "such a row can be stored".
+   */
+  it('snaps to the calendar boundary only when the caller sends no period_start (#748)', async () => {
+    const derived: Rec = { period: 'quarter', snapshot_date: '2026-08-02' };
+    await hook.handler(makeCtx({ event: 'beforeInsert', input: derived }));
+    expect(derived.period_start).toBe('2026-07-01');
+    expect(derived.period_end).toBe('2026-09-30');
+    expect(derived.period_label).toBe('Q3 2026');
+  });
+
+  it('keeps a hand-supplied period_start verbatim, mid-period and all (#748)', async () => {
+    const typed: Rec = { period: 'quarter', period_start: '2026-07-15' };
+    await hook.handler(makeCtx({ event: 'beforeInsert', input: typed }));
+    // NOT snapped to 2026-07-01. The handler leaves the caller's value alone;
+    // the schema is what refuses it (see the note above) — so a mid-quarter
+    // start never reaches the surfaces that pin `period_start` to the quarter's
+    // first day (the `This Quarter` list view, the quota-attainment widget).
+    expect(typed.period_start).toBe('2026-07-15');
+    expect(typed.period_label).toBe('Q3 2026');
+  });
 });
 
 // ──────────────────────────────────────────────────── knowledge article ──
 
+/**
+ * The article lifecycle is `draft → in_review → published → archived`, and
+ * every arrow that ENDS on `published` is covered below, because the criterion
+ * the hook applies is not "which status did we come from" but "does this record
+ * already carry a `published_at`" (#780).
+ *
+ * The distinction is what the old implementation got wrong. It asked
+ * `previous.status === 'published'`, which recognises only the
+ * published → published edit as a re-publish; `archived → published` — the
+ * ordinary re-shelving move — therefore fell into the FIRST-publish branch and
+ * moved the original date to today. `all_articles` sorts `published_at desc`,
+ * so a 2024 article re-shelved this year jumped to the top of the list as if
+ * newly written. One test covering only published → published is exactly how
+ * the assertion below ("must not move the original publish date") stayed green
+ * while the invariant it names was broken on the other arrow.
+ */
 describe('knowledge_article_publish_timestamps', () => {
   const hook = hookNamed(knowledgeHooks, 'knowledge_article_publish_timestamps');
+  const ORIGINAL_PUBLISH = '2024-03-01T00:00:00.000Z';
 
-  it('stamps both timestamps on the transition into published', async () => {
+  it('stamps both timestamps on the draft → published first publish', async () => {
     const input: Rec = { status: 'published' };
     await hook.handler(makeCtx({ event: 'beforeUpdate', input, previous: { status: 'draft' } }));
+    expect(input.published_at).toBeTruthy();
+    expect(input.last_reviewed_at).toBe(input.published_at);
+  });
+
+  it('stamps both timestamps on the in_review → published first publish', async () => {
+    // The reviewed route to the same first publish — no `published_at` exists
+    // yet on either, so both must stamp one.
+    const input: Rec = { status: 'published' };
+    await hook.handler(makeCtx({ event: 'beforeUpdate', input, previous: { status: 'in_review' } }));
     expect(input.published_at).toBeTruthy();
     expect(input.last_reviewed_at).toBe(input.published_at);
   });
@@ -428,9 +701,50 @@ describe('knowledge_article_publish_timestamps', () => {
   it('refreshes only last_reviewed_at when editing an already-published article', async () => {
     const input: Rec = { title: 'Revised' };
     await hook.handler(makeCtx({
-      event: 'beforeUpdate', input, previous: { status: 'published', published_at: '2020-01-01T00:00:00.000Z' },
+      event: 'beforeUpdate', input, previous: { status: 'published', published_at: ORIGINAL_PUBLISH },
     }));
     expect(input.published_at, 'republishing must not move the original publish date').toBeUndefined();
+    expect(input.last_reviewed_at).toBeTruthy();
+  });
+
+  it('keeps the original published_at when an ARCHIVED article is re-published', async () => {
+    // The arrow the old status test could not see (#780): `previous.status` is
+    // 'archived', so it read as a first publish and re-stamped a date the
+    // article had held since 2024.
+    const input: Rec = { status: 'published' };
+    await hook.handler(makeCtx({
+      event: 'beforeUpdate', input, previous: { status: 'archived', published_at: ORIGINAL_PUBLISH },
+    }));
+    expect(input.published_at, 'republishing must not move the original publish date').toBeUndefined();
+    expect(input.last_reviewed_at, 're-shelving an article is itself a review').toBeTruthy();
+  });
+
+  it('stamps published_at when an article archived before it ever shipped is published', async () => {
+    // Existence of the date, not the previous status, is the criterion: a draft
+    // archived without ever being published has no original date to keep, so
+    // this IS its first publish. (This arrow behaves the same under the old
+    // status test — it pins the criterion, it does not discriminate between
+    // the two implementations.)
+    const input: Rec = { status: 'published' };
+    await hook.handler(makeCtx({ event: 'beforeUpdate', input, previous: { status: 'archived' } }));
+    expect(input.published_at).toBeTruthy();
+    expect(input.last_reviewed_at).toBe(input.published_at);
+  });
+
+  it('honours a published_at carried by the write itself', async () => {
+    // The other slot the date can arrive in, and it is not hypothetical:
+    // measured end-to-end on a real engine, an insert carrying `published_at`
+    // stores exactly what it supplied (the read-only strip runs on the update
+    // path only, and hooks run ahead of it regardless). So an import or
+    // migration publishing records with their historical dates — the shape the
+    // `src/data/service.seed.ts` records use — reaches this handler with
+    // `published_at` on `input` and no `previous`. Stamping over it rewrites
+    // imported history exactly as the archived case rewrites a re-shelved
+    // article's.
+    const input: Rec = { status: 'published', published_at: ORIGINAL_PUBLISH };
+    await hook.handler(makeCtx({ event: 'beforeInsert', input }));
+    expect(input.published_at, 'an explicitly supplied publish date is history, not a default')
+      .toBe(ORIGINAL_PUBLISH);
     expect(input.last_reviewed_at).toBeTruthy();
   });
 
@@ -488,14 +802,14 @@ describe('lead_automation', () => {
     const input: Rec = {
       company: 'FromWebForm', is_converted: true, converted_account: 'acc1',
       converted_contact: 'c1', converted_opportunity: 'o1', converted_date: '2020-01-01',
-      owner: 'spoofed',
+      owner_id: 'spoofed',
     };
     await hook.handler(makeCtx({ event: 'beforeInsert', input, user: SYSTEM }));
     expect(input.lead_source).toBe('web');
     expect(input.status).toBe('new');
     for (const stripped of [
       'is_converted', 'converted_account', 'converted_contact',
-      'converted_opportunity', 'converted_date', 'owner',
+      'converted_opportunity', 'converted_date', 'owner_id',
     ]) {
       expect(input, `public form kept ${stripped}`).not.toHaveProperty(stripped);
     }
@@ -503,9 +817,12 @@ describe('lead_automation', () => {
 
   it('locks identity fields on a converted lead but leaves notes editable', async () => {
     const previous: Rec = { id: 'l1', is_converted: true, company: 'Acme' };
+    // The refusal NAMES the lead (#693) — a converted-lead lock also fires on
+    // writes the caller never made, so "a converted lead" left the reader with
+    // no way to tell which record refused.
     await expect(
       hook.handler(makeCtx({ event: 'beforeUpdate', input: { company: 'Other' }, previous, user: USER })),
-    ).rejects.toThrow(/Cannot edit a converted lead/);
+    ).rejects.toThrow(/Cannot edit converted lead Acme \(l1\)/);
     await expect(
       hook.handler(makeCtx({ event: 'beforeUpdate', input: { description: 'note' }, previous, user: USER })),
     ).resolves.toBeUndefined();
@@ -522,7 +839,7 @@ describe('lead_automation', () => {
     const h = makeHarness({ crm_task: [] });
     await hook.handler(makeCtx({
       event: 'afterUpdate',
-      input: { id: 'l1', status: 'qualified', owner: 'rep1' },
+      input: { id: 'l1', status: 'qualified', owner_id: 'rep1' },
       previous: { id: 'l1', status: 'working' },
       user: USER,
       api: h.api,
@@ -530,7 +847,7 @@ describe('lead_automation', () => {
     const [task] = h.rows('crm_task');
     expect(task, 'no follow-up task created').toBeTruthy();
     expect(task.priority).toBe('high');
-    expect(task.owner).toBe('rep1');
+    expect(task.owner_id).toBe('rep1');
     expect(task.related_to_lead).toBe('l1');
     expect(task.due_date).toBe(daysFromNow(2));
   });
@@ -548,6 +865,157 @@ describe('lead_automation', () => {
   });
 });
 
+describe('lead_duplicate_check', () => {
+  const hook = hookNamed(leadHooks, 'lead_duplicate_check');
+
+  /** An intake insert, with whatever the caller supplied on top. */
+  const intake = async (input: Rec, store: Record<string, Rec[]> = {}) => {
+    const h = makeHarness(store);
+    await hook.handler(makeCtx({ event: 'beforeInsert', input, user: USER, api: h.api }));
+    return h;
+  };
+
+  it('normalizes the email it stores, which is what makes the lookup an equality match', async () => {
+    // There is no case-insensitive predicate to lean on: ObjectQL's `$regex`
+    // compiles to a LIKE SUBSTRING on SQL. The canonical form is established
+    // here, at the producer, exactly as contact_integrity does on crm_contact.
+    const input: Rec = { email: '  Ada.Lovelace@Acme.IO ' };
+    await intake(input);
+    expect(input.email).toBe('ada.lovelace@acme.io');
+  });
+
+  it('normalizes on update too — a later edit must not hide the record from dedupe', async () => {
+    const input: Rec = { id: 'l9', email: 'ADA@ACME.IO' };
+    await hook.handler(makeCtx({ event: 'beforeUpdate', input, previous: { id: 'l9' }, user: USER }));
+    expect(input.email).toBe('ada@acme.io');
+  });
+
+  it('leaves a partial update that does not touch email alone', async () => {
+    const input: Rec = { id: 'l9', phone: '555' };
+    await hook.handler(makeCtx({ event: 'beforeUpdate', input, previous: { id: 'l9' }, user: USER }));
+    expect(input).not.toHaveProperty('email');
+  });
+
+  it('flags a re-captured address as a SUSPECTED duplicate of the open lead it repeats', async () => {
+    // The acceptance case: the same web form, submitted twice. Under the old
+    // `unique: true` the second insert was rejected by the database.
+    const input: Rec = { email: 'Ada@acme.io', company: 'Acme' };
+    await intake(input, {
+      crm_lead: [
+        { id: 'lead_first', email: 'ada@acme.io', is_converted: false, created_at: '2026-03-01T00:00:00Z' },
+      ],
+    });
+    expect(input.duplicate_of_type).toBe('crm_lead');
+    expect(input.duplicate_of_lead).toBe('lead_first');
+    expect(input.duplicate_status).toBe('suspected');
+    expect(input.duplicate_of_contact).toBeUndefined();
+  });
+
+  it('prefers an existing contact over an open lead — the contact is the further-along record', async () => {
+    const input: Rec = { email: 'ada@acme.io' };
+    await intake(input, {
+      crm_contact: [{ id: 'con_1', email: 'ada@acme.io', created_at: '2026-01-01T00:00:00Z' }],
+      crm_lead: [{ id: 'lead_first', email: 'ada@acme.io', is_converted: false, created_at: '2026-03-01T00:00:00Z' }],
+    });
+    expect(input.duplicate_of_type).toBe('crm_contact');
+    expect(input.duplicate_of_contact).toBe('con_1');
+    expect(input.duplicate_of_lead).toBeUndefined();
+  });
+
+  it('points a whole cluster at the ORIGINAL, not at whichever row the driver returns first', async () => {
+    // Otherwise the third submission points at the second, the fourth at the
+    // third, and reviewing the cluster means walking a chain.
+    const input: Rec = { email: 'ada@acme.io' };
+    await intake(input, {
+      crm_lead: [
+        { id: 'lead_third',  email: 'ada@acme.io', is_converted: false, created_at: '2026-05-01T00:00:00Z' },
+        { id: 'lead_origin', email: 'ada@acme.io', is_converted: false, created_at: '2026-01-01T00:00:00Z' },
+        { id: 'lead_second', email: 'ada@acme.io', is_converted: false, created_at: '2026-03-01T00:00:00Z' },
+      ],
+    });
+    expect(input.duplicate_of_lead).toBe('lead_origin');
+  });
+
+  it('ignores a converted predecessor — its contact carries the same address', async () => {
+    const input: Rec = { email: 'ada@acme.io' };
+    await intake(input, {
+      crm_lead: [{ id: 'lead_converted', email: 'ada@acme.io', is_converted: true, created_at: '2026-01-01T00:00:00Z' }],
+    });
+    expect(input.duplicate_status).toBeUndefined();
+    expect(input.duplicate_of_type).toBeUndefined();
+  });
+
+  it('leaves a first-time address untouched', async () => {
+    const input: Rec = { email: 'newcomer@acme.io' };
+    await intake(input, { crm_lead: [{ id: 'other', email: 'someone@else.io', is_converted: false }] });
+    expect(input.duplicate_status).toBeUndefined();
+    expect(input.duplicate_of_type).toBeUndefined();
+    expect(input.duplicate_of_lead).toBeUndefined();
+  });
+
+  it('never overwrites a CONFIRMED verdict with its own guess', async () => {
+    // The whole reason suspicion and verdict share one field: a human who
+    // confirmed a match must not have it downgraded by a later automatic write.
+    const input: Rec = {
+      email: 'ada@acme.io',
+      duplicate_of_type: 'crm_contact',
+      duplicate_of_contact: 'con_human',
+      duplicate_status: 'confirmed',
+    };
+    await intake(input, {
+      crm_lead: [{ id: 'lead_first', email: 'ada@acme.io', is_converted: false, created_at: '2026-01-01T00:00:00Z' }],
+    });
+    expect(input.duplicate_status).toBe('confirmed');
+    expect(input.duplicate_of_type).toBe('crm_contact');
+    expect(input.duplicate_of_contact).toBe('con_human');
+    expect(input.duplicate_of_lead).toBeUndefined();
+  });
+
+  it('stands down on a record that already names a survivor', async () => {
+    const input: Rec = { email: 'ada@acme.io', duplicate_of_type: 'crm_lead', duplicate_of_lead: 'lead_chosen' };
+    await intake(input, {
+      crm_lead: [{ id: 'lead_first', email: 'ada@acme.io', is_converted: false, created_at: '2026-01-01T00:00:00Z' }],
+    });
+    expect(input.duplicate_of_lead).toBe('lead_chosen');
+    expect(input.duplicate_status).toBeUndefined();
+  });
+
+  it('writes nothing and throws nothing when the lookup is denied (anonymous Web-to-Lead)', async () => {
+    // A guest can INSERT on crm_lead and read NOTHING. Propagating that denial
+    // would reject the very submission this feature exists to accept — the
+    // duplicate lands unflagged rather than not landing at all.
+    const input: Rec = { email: 'ada@acme.io' };
+    await expect(
+      hook.handler(makeCtx({ event: 'beforeInsert', input, api: makeDeniedApi() })),
+    ).resolves.toBeUndefined();
+    expect(input.email).toBe('ada@acme.io');
+    expect(input.duplicate_status).toBeUndefined();
+  });
+
+  it('runs after lead_automation, so a guest cannot spoof its way out of the flag', async () => {
+    // Ascending priority order. At a lower number this hook would see the
+    // client-supplied `duplicate_status: 'confirmed'` that lead_automation's
+    // guest branch is there to delete, and stand down.
+    const automation = hookNamed(leadHooks, 'lead_automation');
+    expect(hook.priority).toBeGreaterThan(automation.priority);
+
+    const input: Rec = { email: 'ada@acme.io', duplicate_status: 'confirmed', duplicate_of_lead: 'guessed' };
+    await automation.handler(makeCtx({ event: 'beforeInsert', input, user: SYSTEM }));
+    for (const stripped of [
+      'duplicate_of_type', 'duplicate_of_lead', 'duplicate_of_contact', 'duplicate_status',
+    ]) {
+      expect(input, `public form kept ${stripped}`).not.toHaveProperty(stripped);
+    }
+
+    const h = makeHarness({
+      crm_lead: [{ id: 'lead_first', email: 'ada@acme.io', is_converted: false, created_at: '2026-01-01T00:00:00Z' }],
+    });
+    await hook.handler(makeCtx({ event: 'beforeInsert', input, api: h.api }));
+    expect(input.duplicate_status).toBe('suspected');
+    expect(input.duplicate_of_lead).toBe('lead_first');
+  });
+});
+
 describe('lead_auto_assign — permission resilience', () => {
   const hook = hookNamed(leadHooks, 'lead_auto_assign');
 
@@ -558,7 +1026,7 @@ describe('lead_auto_assign — permission resilience', () => {
     await expect(
       hook.handler(makeCtx({ event: 'beforeInsert', input, api: makeDeniedApi() })),
     ).resolves.toBeUndefined();
-    expect(input.owner).toBeUndefined();
+    expect(input.owner_id).toBeUndefined();
   });
 });
 
@@ -682,14 +1150,14 @@ describe('task_recurrence', () => {
     const h = makeHarness({ crm_task: [] });
     await completeRecurring(h, {
       subject: 'Weekly sync', is_recurring: true, recurrence_type: 'weekly',
-      recurrence_interval: 1, due_date: daysFromNow(0), owner: 'rep1',
+      recurrence_interval: 1, due_date: daysFromNow(0), owner_id: 'rep1',
     });
     const [next] = h.rows('crm_task');
     expect(next.status).toBe('not_started');
     expect(next.is_completed).toBe(false);
     expect(next.reminder_sent).toBe(false);
     expect(next.subject).toBe('Weekly sync');
-    expect(next.owner).toBe('rep1');
+    expect(next.owner_id).toBe('rep1');
     expect(next.is_recurring).toBe(true);
   });
 
@@ -739,68 +1207,99 @@ describe('task_recurrence', () => {
 describe('task_activity_bubble', () => {
   const hook = hookNamed(taskHooks, 'task_activity_bubble');
 
+  /** A completing task, which is the only transition that bubbles (#592). */
+  const completing = (extra: Rec) => ({
+    event: 'afterUpdate',
+    input: { id: 't1', status: 'completed', ...extra },
+    previous: { id: 't1', status: 'in_progress' },
+    user: USER,
+  });
+
   it('bubbles last_activity_date to a related account', async () => {
     const h = makeHarness({ crm_account: [{ id: 'acc1' }] });
-    await hook.handler(makeCtx({
-      event: 'afterUpdate',
-      input: { id: 't1', related_to_type: 'crm_account', related_to_account: 'acc1' },
-      previous: { id: 't1' },
-      user: USER,
-      api: h.api,
-    }));
+    await hook.handler(makeCtx({ ...completing({ related_to_account: 'acc1' }), api: h.api }));
     expect(h.rows('crm_account')[0].last_activity_date).toBe(today());
   });
 
   it('uses last_contacted_date for a lead, which has no last_activity_date', async () => {
     const h = makeHarness({ crm_lead: [{ id: 'l1' }] });
-    await hook.handler(makeCtx({
-      event: 'afterUpdate',
-      input: { id: 't1', related_to_type: 'crm_lead', related_to_lead: 'l1' },
-      previous: { id: 't1' },
-      user: USER,
-      api: h.api,
-    }));
+    await hook.handler(makeCtx({ ...completing({ related_to_lead: 'l1' }), api: h.api }));
     const lead = h.rows('crm_lead')[0];
     expect(lead.last_activity_date, 'crm_lead has no last_activity_date column').toBeUndefined();
     expect(typeof lead.last_contacted_date).toBe('string');
   });
 
-  it.each(['crm_contact', 'crm_opportunity', 'crm_case'])(
-    'writes nothing for %s, which carries no activity timestamp', async (type) => {
-      const h = makeHarness({ [type]: [{ id: 'x1' }] });
-      const refField = {
-        crm_contact: 'related_to_contact',
-        crm_opportunity: 'related_to_opportunity',
-        crm_case: 'related_to_case',
-      }[type]!;
-      await hook.handler(makeCtx({
-        event: 'afterUpdate',
-        input: { id: 't1', related_to_type: type, [refField]: 'x1' },
-        previous: { id: 't1' },
-        user: USER,
-        api: h.api,
-      }));
-      expect(h.calls).toHaveLength(0);
-    },
-  );
+  it('does not bubble while the task is still open — a promise is not contact', async () => {
+    const h = makeHarness({ crm_account: [{ id: 'acc1' }] });
+    await hook.handler(makeCtx({
+      event: 'afterUpdate',
+      input: { id: 't1', status: 'in_progress', related_to_account: 'acc1' },
+      previous: { id: 't1', status: 'not_started' },
+      user: USER,
+      api: h.api,
+    }));
+    expect(h.calls.filter((c) => c.op === 'update')).toHaveLength(0);
+  });
+
+  it('does not bubble twice for a task that was already completed', async () => {
+    const h = makeHarness({ crm_account: [{ id: 'acc1' }] });
+    await hook.handler(makeCtx({
+      event: 'afterUpdate',
+      input: { id: 't1', status: 'completed', related_to_account: 'acc1', subject: 'edited' },
+      previous: { id: 't1', status: 'completed' },
+      user: USER,
+      api: h.api,
+    }));
+    expect(h.calls.filter((c) => c.op === 'update')).toHaveLength(0);
+  });
+
+  it('walks UP to the account from a contact, an opportunity and a case (#592)', async () => {
+    // The defect this closes: a rep completes their work on the OPPORTUNITY,
+    // never on the account row, so bubbling to the named record alone left
+    // `crm_account.last_activity_date` untouched through a whole sales cycle
+    // and `at_risk_accounts` listed the busiest customers in the book.
+    for (const [field, object] of [
+      ['related_to_contact', 'crm_contact'],
+      ['related_to_opportunity', 'crm_opportunity'],
+      ['related_to_case', 'crm_case'],
+    ] as const) {
+      const h = makeHarness({
+        crm_account: [{ id: 'acc1' }],
+        [object]: [{ id: 'x1', crm_account: 'acc1' }],
+      });
+      await hook.handler(makeCtx({ ...completing({ [field]: 'x1' }), api: h.api }));
+      expect(h.rows('crm_account')[0].last_activity_date, `${object} did not reach its account`)
+        .toBe(today());
+    }
+  });
+
+  it('stamps the contact itself as well as its account', async () => {
+    const h = makeHarness({
+      crm_account: [{ id: 'acc1' }],
+      crm_contact: [{ id: 'c1', crm_account: 'acc1' }],
+    });
+    await hook.handler(makeCtx({ ...completing({ related_to_contact: 'c1' }), api: h.api }));
+    expect(typeof h.rows('crm_contact')[0].last_contacted_date).toBe('string');
+    expect(h.rows('crm_account')[0].last_activity_date).toBe(today());
+  });
+
+  it('no longer needs related_to_type to be set', async () => {
+    // It is a display hint a rep can leave blank, and while the bubble keyed
+    // off it a task with a perfectly good related_to_account bubbled nowhere.
+    const h = makeHarness({ crm_account: [{ id: 'acc1' }] });
+    await hook.handler(makeCtx({ ...completing({ related_to_account: 'acc1' }), api: h.api }));
+    expect(h.rows('crm_account')[0].last_activity_date).toBe(today());
+  });
 
   it('is a no-op with no parent, and never propagates a write failure', async () => {
     const h = makeHarness({});
-    await hook.handler(makeCtx({
-      event: 'afterUpdate', input: { id: 't1' }, previous: { id: 't1' }, user: USER, api: h.api,
-    }));
+    await hook.handler(makeCtx({ ...completing({}), api: h.api }));
     expect(h.calls).toHaveLength(0);
 
     // A denied write must be swallowed — the bubble is best-effort and must
     // never break the parent task write.
     await expect(
-      hook.handler(makeCtx({
-        event: 'afterUpdate',
-        input: { id: 't1', related_to_type: 'crm_account', related_to_account: 'acc1' },
-        previous: { id: 't1' },
-        user: USER,
-        api: makeDeniedApi('denied'),
-      })),
+      hook.handler(makeCtx({ ...completing({ related_to_account: 'acc1' }), api: makeDeniedApi('denied') })),
     ).resolves.toBeUndefined();
   });
 });

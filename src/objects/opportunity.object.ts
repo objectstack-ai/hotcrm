@@ -1,7 +1,7 @@
-import { F, P, cel } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
+import { F, P } from '@objectstack/spec';
 import { LEAD_SOURCE_OPTIONS, OPPORTUNITY_STAGE_OPTIONS } from './_picklists';
 
 export const Opportunity = ObjectSchema.create({
@@ -26,19 +26,31 @@ export const Opportunity = ObjectSchema.create({
   // $search resolves on its own here; the list is kept explicit to pin the
   // intent (other objects whose nameField IS a formula rely on it).
   searchableFields: ['name'],
-  highlightFields: ['name', 'crm_account', 'amount', 'stage', 'owner'],
+  highlightFields: ['name', 'crm_account', 'amount', 'stage', 'owner_id'],
 
   fieldGroups: [
     { key: 'basic',       label: 'Basic Information',   icon: 'dollar-sign' },
     { key: 'financials',  label: 'Financials',          icon: 'trending-up' },
     { key: 'sales_process', label: 'Sales Process',     icon: 'target' },
     { key: 'classification', label: 'Classification',   icon: 'tag' },
-    { key: 'competition', label: 'Competition & Campaigns', icon: 'flag', defaultExpanded: false },
+    // Was `competition` / "Competition & Campaigns" until #1061 retired the
+    // `competitors` placeholder picklist. Campaign attribution is all that ever
+    // lived here besides it, so the group is named for what it holds.
+    { key: 'campaign', label: 'Campaigns', icon: 'flag', defaultExpanded: false },
     { key: 'notes',       label: 'Notes & Next Steps',  icon: 'file-text' },
     { key: 'crm_forecast',    label: 'Forecast & Metrics',  icon: 'bar-chart', defaultExpanded: false },
   ],
 
   fields: {
+    // Platform ownership anchor — canonical note in `account.object.ts` (#548).
+    owner_id: Field.lookup('sys_user', {
+      label: 'Opportunity Owner',
+      group: 'basic',
+      system: true,
+      readonly: false,
+      trackHistory: true,
+    }),
+
     // Basic Information
     name: Field.text({
       label: 'Opportunity Name',
@@ -68,13 +80,6 @@ export const Opportunity = ObjectSchema.create({
       group: 'basic',
     }),
 
-    owner: Field.lookup('sys_user', {
-
-      defaultValue: cel`os.user.id`,
-      label: 'Opportunity Owner',
-      group: 'basic',
-      trackHistory: true,
-    }),
 
     // Financial Information
     amount: Field.currency({
@@ -166,23 +171,21 @@ export const Opportunity = ObjectSchema.create({
       options: [...LEAD_SOURCE_OPTIONS],
     }),
 
-    // Competitor Analysis
-    competitors: Field.select({
-      label: 'Competitors',
-      multiple: true,
-      group: 'competition',
-      options: [
-        { label: 'Competitor A', value: 'competitor_a' },
-        { label: 'Competitor B', value: 'competitor_b' },
-        { label: 'Competitor C', value: 'competitor_c' },
-      ]
-    }),
+    // `competitors` was retired in #1061: a `multiple` select whose only three
+    // options were the placeholders `Competitor A/B/C`. Measured before the
+    // removal, it had no reader anywhere in the app — no list column, filter,
+    // detail-page section, dashboard, report, dataset, flow, hook or AI skill —
+    // and no seed row ever set it, so it was a write-only field carrying
+    // fabricated values. Recording *which* competitor a deal is against is a
+    // real need, but it needs a display surface and a real source of names, not
+    // a picklist of invented ones; the closed-lost side of that story is already
+    // served by `loss_reason: 'competitor'` + the free-text `loss_details`.
 
     // Campaign tracking
     crm_campaign: Field.lookup('crm_campaign', {
       label: 'Campaign',
       description: 'Marketing campaign that generated this opportunity',
-      group: 'competition',
+      group: 'campaign',
     }),
 
     // Sales cycle metrics
@@ -263,23 +266,66 @@ export const Opportunity = ObjectSchema.create({
       group: 'sales_process',
     }),
 
-    // Win / Loss analysis — required when stage moves to closed_*
+    // ─── Win / Loss analysis ────────────────────────────────────────────
+    //
+    // The reason is captured AT CLOSE, and that is enforced, not requested
+    // (#593). This comment used to read "required when stage moves to
+    // closed_*" while nothing anywhere required anything: both fields were
+    // optional, so every seeded and user-closed deal landed with them empty
+    // and the win/loss widgets below had nothing to draw.
+    //
+    // `requiredWhen`, not a script validation, for the same reason
+    // `crm_lead.duplicate_of_lead` uses it (ADR-0113): "this field must hold a
+    // value when the record looks like X" is exactly a conditional write
+    // contract, the engine evaluates it on insert AND update inside
+    // `evaluateValidationRules`, and it reports against the FIELD — so the form
+    // marks the empty picklist instead of showing a record-level banner. It is
+    // ALSO the only shape the freeze below leaves usable: once a deal is
+    // closed, `opportunity.hook.ts` refuses every user edit outside the
+    // narrative fields, so a reason not captured in the closing write can never
+    // be added afterwards. Close time is the only chance.
+    //
+    // MEASURED, not assumed (the "declared ≠ enforced" family this repo keeps
+    // finding — #621 / #633 / #650 / #651): both predicates reject the write
+    // through a real ObjectQL over a real driver, on insert and on update, and
+    // the record stays at its previous stage. `crm_case`'s
+    // `resolution_required_for_closed` was re-measured the same way first and
+    // is genuinely blocking today. See `test/win-loss-capture.test.ts`.
+    //
+    // ⚠️ `has(...)` is load-bearing. A bare `record.stage == "closed_lost"`
+    // aborts with `No such key` on any merged record that simply omits the
+    // column, and the engine's answer to a predicate that cannot evaluate is to
+    // SKIP it ("requiredWhen for 'loss_reason' failed to evaluate — skipped"),
+    // which would make this read as enforced while requiring nothing at all.
     win_reason: Field.select({
       label: 'Win Reason',
+      description: 'Why this deal was won. Required to close an opportunity as Won.',
       group: 'classification',
+      requiredWhen: P`has(record.stage) && record.stage == "closed_won"`,
       options: [
         { label: 'Better Product', value: 'better_product' },
         { label: 'Better Price', value: 'better_price' },
         { label: 'Existing Relationship', value: 'relationship' },
         { label: 'Better Support', value: 'better_support' },
         { label: 'Best Fit / Features', value: 'best_fit' },
+        // Written by the machine, not chosen by a rep: `quote_on_accepted`
+        // (quote.hook.ts) wins the deal the moment a customer accepts the
+        // quote, and no human is in that write to attribute it. Naming the
+        // automated path is this repo's existing idiom for exactly that split
+        // (`crm_lead.duplicate_status` = machine `suspected` vs human
+        // `confirmed`) and it keeps the rule exception-free: every closed_won
+        // row carries a reason, and an analyst can still tell a CPQ close from
+        // a rep's attribution instead of reading a fabricated "Better Product".
+        { label: 'Quote Accepted', value: 'quote_accepted' },
         { label: 'Other', value: 'other' },
       ],
     }),
 
     loss_reason: Field.select({
       label: 'Loss Reason',
+      description: 'Why this deal was lost. Required to close an opportunity as Lost.',
       group: 'classification',
+      requiredWhen: P`has(record.stage) && record.stage == "closed_lost"`,
       options: [
         { label: 'Price Too High', value: 'price' },
         { label: 'Lost to Competitor', value: 'competitor' },
@@ -293,6 +339,7 @@ export const Opportunity = ObjectSchema.create({
 
     loss_details: Field.textarea({
       label: 'Loss/Win Details',
+      description: 'Free-text context behind the win or loss reason.',
       group: 'classification',
     }),
   },
@@ -301,7 +348,7 @@ export const Opportunity = ObjectSchema.create({
   indexes: [
     { fields: ['name'] },
     { fields: ['crm_account'] },
-    { fields: ['owner'] },
+    { fields: ['owner_id'] },
     { fields: ['stage'] },
     { fields: ['close_date'] },
     // The stagnation sweep filters on this every morning.
@@ -309,12 +356,18 @@ export const Opportunity = ObjectSchema.create({
   ],
   
   // Enable advanced features
-  // Dead object-level enable.* flags removed in @objectstack 12 (ADR-0049);
-  // only the live API surface remains. Stage/amount/owner history is tracked
-  // per-field via Field.trackHistory (ADR-0052).
+  // Dead enable.* flags (trash/mru) removed in @objectstack 12 (ADR-0049).
+  // Stage/amount history is tracked per-field via Field.trackHistory. Ownership
+  // is NOT: since #548 it lives on the platform's injected `owner_id`, which
+  // carries no `trackHistory` flag — a transfer is recorded in the compliance
+  // audit log (`sys_audit_log`, unconditional) rather than on the activity feed.
+  // (ADR-0052).
   enable: {
     apiEnabled: true,
     apiMethods: ['get', 'list', 'create', 'update', 'delete'], // Whitelist allowed API operations
+    // #602 — proposals, redlines and signed orders belong on the deal.
+    // See the canonical capability note in `src/objects/index.ts`.
+    files: true,
   },
 
   // ADR-0052 §5b.2 — declarative milestone activity. When `stage` enters these
@@ -332,20 +385,28 @@ export const Opportunity = ObjectSchema.create({
   // (see validations[] below). 7.7 removed the top-level `stateMachines` key.
 
   // Validation Rules
+  //
+  // Predicates below are TOTAL: every `record.x` read is `has()`-guarded, so the
+  // rule returns a verdict even when the merged record has no such key. See
+  // AGENTS.md "Validation predicates must be TOTAL" and
+  // test/object-validation-predicates.test.ts, which fails the build otherwise.
   validations: [
     {
       name: 'close_date_future',
       type: 'script',
       severity: 'warning',
       message: 'Close date should not be in the past unless opportunity is closed',
-      condition: P`record.close_date != null && record.close_date < today() && record.stage != "closed_won" && record.stage != "closed_lost"`,
+      // An absent `stage` key means "no stage recorded", which is not a closed
+      // stage — hence `!has(record.stage) || (…)` rather than a leading
+      // `has(record.stage) &&`, which would suppress the warning instead.
+      condition: P`has(record.close_date) && record.close_date != null && record.close_date < today() && (!has(record.stage) || (record.stage != "closed_won" && record.stage != "closed_lost"))`,
     },
     {
       name: 'amount_positive',
       type: 'script',
       severity: 'error',
       message: 'Amount must be greater than zero',
-      condition: P`record.amount != null && record.amount <= 0`,
+      condition: P`has(record.amount) && record.amount != null && record.amount <= 0`,
     },
     {
       // Migrated from the removed top-level `stateMachines` key (OpportunityStateMachine).

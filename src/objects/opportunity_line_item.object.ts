@@ -20,13 +20,32 @@ export const OpportunityLineItem = ObjectSchema.create({
 
   // ADR-0090 D1/D7: OWD is an authored decision. A line item has no meaning
   // apart from its deal, so its record access DERIVES from the opportunity
-  // (ADR-0055): reads are filtered to line items whose `crm_opportunity` the
-  // caller can read, and any write requires edit access to that opportunity.
-  // ADR-0055's relation resolver accepts a REQUIRED LOOKUP as the parent, so
-  // this works without converting the relationship to master-detail.
+  // (ADR-0055), and as of 17.0.0-rc.4 that derivation means what it says.
+  //
+  // MEASURED on 17.0.0-rc.4 and pinned by `test/parent-derived-reach.test.ts`
+  // on the twin `crm_quote_line_item` -> `crm_quote` chain: reads ARE filtered
+  // to line items whose `crm_opportunity` the caller can read, and master
+  // accessibility now resolves through the same paths a direct read of the
+  // opportunity takes — ownership and `sys_record_share` grants included, not
+  // the master's row-level security policies alone. So a rep reads the lines of
+  // the deals in their own book plus anything shared to them, and the
+  // private-deal RLS filter carried by the `sales_manager` and `marketing_user`
+  // sets narrows on top of that rather than being the only thing that narrows.
+  // The parent-write gate derives the same way: a line whose opportunity the
+  // caller cannot edit is refused.
+  //
+  // Until 17.0.0-rc.3 this was the opposite, and this note said so (#694): with
+  // the master set resolved from RLS policies alone, any caller without the
+  // private-deal policy — `sales_rep` included — reached EVERY opportunity's
+  // lines, whatever they owned or were shared.
+  // objectstack-ai/objectstack#5386 fixed that upstream and it shipped in rc.4;
+  // the guard test named above was written to go red the day the engine
+  // narrowed, and now pins the narrow semantics. ADR-0055's relation resolver
+  // accepts a REQUIRED LOOKUP as the parent, so this works without converting
+  // the relationship to master-detail.
   //
   // It was `private` before (#488), which was the wrong baseline twice over:
-  // this object has no owner field of its own, so "private" fell back to the
+  // this object has no owner of its own to speak of, so "private" fell back to the
   // platform's auto-stamped `owner_id` (whoever inserted the row) — the rep who
   // owns the deal could not see a line the quote-generation flow or their
   // manager added to it.
@@ -40,12 +59,41 @@ export const OpportunityLineItem = ObjectSchema.create({
   highlightFields: ['crm_product', 'quantity', 'unit_price', 'total_price'],
 
   fields: {
+    // The parent link, and the ONE field on this object that decides whether the
+    // deal it belongs to can be deleted at all (#727).
+    //
+    // Declaring nothing here does not mean "no opinion": `Field.lookup` resolves
+    // `deleteBehavior` to the spec default `set_null`, and the engine's
+    // `cascadeDeleteRelations` escalates a `set_null` default on a REQUIRED
+    // lookup to `restrict` — a NOT NULL column cannot be cleared. So the silent
+    // default made every itemised opportunity undeletable, with a message that
+    // told the API caller to `set deleteBehavior:'cascade'` on this very field:
+    //
+    //     DELETE /api/v1/data/crm_opportunity/<id>
+    //     → 409 DELETE_RESTRICTED "…1 dependent crm_opportunity_line_item
+    //       record(s) reference it via crm_opportunity…"
+    //
+    // `cascade` is the semantics this object already claims twice over: the
+    // header comment says a line has no meaning apart from its deal, and
+    // `opportunity_line_item.hook.ts` derives `crm_opportunity.amount` FROM the
+    // line set. A record whose parent is gone denotes nothing and would keep a
+    // dead deal's revenue in the line-level reports.
+    //
+    // This is deliberately NOT the campaign/event answer (#696, #711 kept
+    // `crm_campaign_member.crm_campaign` and `crm_event_attendee.crm_event` on
+    // the restricting default): a member list is a campaign's historical record
+    // and survives on its own terms. A price line does not.
     crm_opportunity: Field.lookup('crm_opportunity', {
       label: 'Opportunity',
       required: true,
       storage: { notNull: true },
+      deleteBehavior: 'cascade',
     }),
 
+    // Deliberately left on the default, which the same escalation turns into
+    // `restrict`: deleting a catalog product must NOT shred the priced history
+    // of deals that sold it. `product.hook.ts`'s own `beforeDelete` says the
+    // same thing in words ("Set is_active=false to retire instead").
     crm_product: Field.lookup('crm_product', {
       label: 'Product',
       required: true,
@@ -70,7 +118,7 @@ export const OpportunityLineItem = ObjectSchema.create({
     list_price: Field.currency({
       label: 'List Price',
       readonly: true,
-      description: 'Auto-populated from product.list_price',
+      description: "Auto-populated from the product's List Price.",
     }),
 
     unit_price: Field.currency({
@@ -102,19 +150,27 @@ export const OpportunityLineItem = ObjectSchema.create({
     }),
   },
 
+  // Predicates below are TOTAL: every `record.x` read is `has()`-guarded, so the
+  // rule returns a verdict even when the merged record has no such key. See
+  // AGENTS.md "Validation predicates must be TOTAL" and
+  // test/object-validation-predicates.test.ts, which fails the build otherwise.
   validations: [
     {
       name: 'unit_price_positive',
       type: 'script',
       severity: 'error',
       message: 'Sales price cannot be negative',
-      // The `!= null` guard is load-bearing, not defensive noise: strict CEL
+      // Both guards are load-bearing, not defensive noise. `has(...)` answers
+      // "is the key present at all": on update the predicate sees
+      // `{...previous, ...data}`, and a driver that stores only written columns
+      // returns no key, which aborts the whole predicate and silently skips the
+      // rule (#630). `!= null` answers "does it hold a value": strict CEL
       // ABORTS on `null < 0` instead of evaluating it false, so the unguarded
       // form left this rule inert on a blank price — it never fired at all,
-      // which is the opposite of what a validation is for. The hazard is
+      // which is the opposite of what a validation is for. The `null` hazard is
       // written up at `account.object.ts:244-245`; the same-named rule in
-      // `quote_line_item.object.ts` has carried the guard all along.
-      condition: P`record.unit_price != null && record.unit_price < 0`,
+      // `quote_line_item.object.ts` has carried that guard all along.
+      condition: P`has(record.unit_price) && record.unit_price != null && record.unit_price < 0`,
     },
   ],
 });

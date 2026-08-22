@@ -13,7 +13,7 @@ description: 接收客户问题，按优先级路由，达成 SLA 目标，并�
 | --- | --- |
 | [**工单**](/zh-Hans/docs/service/cases) | 工单记录——主题、优先级、状态、解决方案。 |
 | [**SLA 与升级**](/zh-Hans/docs/service/sla-and-escalation) | 自动截止时间、升级流程，以及系统如何呈现违约。 |
-| [**知识库**](/zh-Hans/docs/service/knowledge-base) | AI 服务 Copilot 读取的支持知识。 |
+| [**知识库**](/zh-Hans/docs/service/knowledge-base) | AI 助手读取的支持知识。 |
 
 ## 一个典型工单的生命周期
 
@@ -23,48 +23,52 @@ New ──► In Progress ──► Waiting on Customer ──► Resolved ─�
                    ╲ Escalated ────────────╱
 ```
 
-1. **创建工单**（通过电子邮件、网页表单、电话记录，或由 **Service Copilot** 对来访消息进行分流）。
-2. **分配优先级**——低、中、高或紧急。*紧急*会立即提醒支持经理。
+1. **创建工单**（通过电子邮件、网页表单、电话记录，或由 **AI 助手**对来访消息进行分流）。
+2. **分配优先级**——Low、Medium、High 或 Critical。*Critical* 会立即提醒**工单负责人**，而不是支持经理：这条提醒的收件人列表只有 `{caseRecord.owner_id}` 一项。
 3. **计算 SLA 目标**——每个工单都会根据优先级获得一个截止时间。
 4. **客服处理工单**，随进度推进状态。
-5. **如果卡住了**（或紧急，或来自客户），[升级流程](/zh-Hans/docs/service/sla-and-escalation#case-escalation)会将其重新分配给资深客服。
+5. **如果是 Critical**（或 SLA 截止日期已过），[升级流程](/zh-Hans/docs/service/sla-and-escalation)会把工单标记为 *Escalated*、移交给负载最轻的 **Service Manager**，并提醒它原来那位客服。移交的对象是一个扁平的岗位池，而不是向上的汇报线；若无人持有该岗位，工单就保留原负责人。没有任何升级条件会读取账户，所以 *Customer* 的工单没有属于自己的分支。
 6. **记录解决方案**，自动标记解决时间，并关闭工单。
 
 ## 系统为你做的事
 
-- **自动确定优先级**——通过工单分流技能（Service Copilot 阅读工单并推荐优先级）。
-- **自动升级**——将紧急工单或高优先级客户工单升级给资深客服。
-- **紧急时通知**——每当工单被设为紧急时，向支持经理发送邮件。
-- **升级时通知**——每当工单被升级时，向升级团队发送邮件。
+- **自动确定优先级**——通过工单分流技能（AI 助手阅读工单并推荐优先级）。
+- **自动升级**——只针对 Critical 工单：流程把它们标记为 *Escalated*、提醒原来那位客服，并把工单交给未结工单最少的那位服务经理（若无人持有该岗位，则原地不动）。High 工单永远不会被自动升级，无论账户是什么：要升级它，靠的是手动的 **Escalate Case** 按钮。
+- **紧急时通知**——每当工单被设为 Critical 时，站内消息 + 邮件只发给**工单负责人**。这就是工单升级流程的 notify 节点，其收件人列表只有 `{caseRecord.owner_id}` 一项；本应用中不存在 `support_manager@example.com` 这个收件人。
+- **升级时通知**——不会给任何升级团队发邮件：`escalation_team@example.com` 在本应用中根本不存在。状态转为 *Escalated* 真正触发的，是 `case_status_side_effects` 钩子开出的那条**次日到期、优先级为紧急、归账户负责人的跟进任务**。
 - **标记解决时间**——工单关闭时自动标记。
-- **标记 SLA 违约**——一旦 SLA 目标时间过去，显示红色横幅。
+- **标记 SLA 违约**——一旦 SLA 目标时间过去，工单会被标记为 **SLA 已违约**并升级，其负责人收到站内消息 + 邮件提醒。没有红色横幅：本应用没有任何横幅机制。
 - **阻止错误关闭**——未填写解决方案就不能将工单标记为已关闭。
 
-## Service Copilot
+## 服务 AI 技能
 
-[Service Copilot](/zh-Hans/docs/ai-copilot/service-copilot) 内置于每个工单中。你可以问它：
+[服务技能](/zh-Hans/docs/ai-copilot/service-copilot) 内置于每个工单中。你可以问助手：
 
 - *"分流这个工单"*——根据主题、描述和客户等级分配优先级。
-- *"建议一个解决方案"*——搜索支持知识库并起草客户回复。
+- *"建议一个解决方案"*——这是两个技能的事，不是一个。**Customer 360°** 读取已发布的知识文章（`crm_knowledge_article` 就是它查询的一个普通对象），**邮件撰写**写客户回复。工单分流两件都不做：它没有检索类工具，也没有起草这一步。
 - *"总结这个客户"*——包括过往工单和未结商机的 Customer 360 视图。
 
 ## 标准仪表盘与报表
 
-- **服务仪表盘**——按优先级划分的未结工单、SLA 表现、顶尖客服、最久未结工单。
-- **每日 × 优先级开单数**——每日流入量。
-- **按状态 × 优先级划分的工单**——当前快照。
-- **SLA 表现**——在 SLA 目标内解决的工单百分比。
+- **服务概览**（Service Overview；仪表盘自身的标题是 **Customer Service**）——KPI 有 **Open Cases**、**Critical Cases**、**Avg Resolution Time**、**SLA Violations**；分布图有 **Cases by Status**、**Cases by Priority**、**Cases by Origin**；再加 **Daily Case Volume**、一个 **SLA Compliance** 仪表图，一张 **Open Cases by Priority** 表格；以及知识转移那一行——**KB Deflection Rate**（知识库转移率）配上它的分子分母 **Resolved by KB** 与 **Closed Cases**，两个数字就印在百分比旁边，让人能核对而不是只能相信，再加一张 **Top Resolving Articles** 表格，按解决的已关闭工单数给文章排名。它没有 *顶尖客服* 部件，也没有 *最久未结工单* 部件，而且这两个都不是"只是还没做"那么简单：`case_metrics`——服务侧每个部件都建在它上面的那个数据集——没有负责人维度，所以分析层里没有任何东西能给客服排名（[工单](/zh-Hans/docs/service/cases)页写的是同一件事）；而仪表盘表格聚合的是数据集，不列出单条记录，所以最久未结的那几张单也放不进去。
+- **Cases Opened by Priority × Day**（按优先级 × 天的建单量）——每日流入量：一张优先级作行、天作列的矩阵，顺序就是这个。
+- **Cases by Status and Priority**（按状态与优先级划分的工单）——当前快照：按状态与优先级给出工单数与平均解决时长。
+- **SLA Performance Report**（SLA 表现报表）——按优先级给出工单数、**SLA Violation Rate**（SLA 违约率）与平均解决时长，并且只统计已关闭的工单。它报的不是达成率百分比：达成率在服务仪表盘的 **SLA Compliance** 仪表图上，绘制的是同一个数据集里的 `sla_compliance_rate`。参见 [SLA 与升级](/zh-Hans/docs/service/sla-and-escalation)。
 
 参见 [分析 › 仪表盘](/zh-Hans/docs/analytics/dashboards) 与 [报表](/zh-Hans/docs/analytics/reports)。
 
 ## 在哪里找到这些内容
 
-在 Enterprise CRM 应用中，**服务**分组包含：
+在 HotCRM 应用中，**服务**分组包含三项：
 
-- **工单**
-- **任务**
-- **服务看板**——看板式工单工作流
-- **服务仪表盘**
+- **工单**（Cases）——工单列表。
+- **知识**（Knowledge）——Copilot 读取的知识文章（`crm_knowledge_article`）。
+- **服务概览**（Service Overview）——服务的那个仪表盘。侧边栏上的 label 就是这个；没有任何侧边栏条目叫 *Service Dashboard*。
+
+有两个名字，人们会到**服务**分组下面找，但它们不在这里：
+
+- **任务**——`crm_task` 在侧边栏上是 **My Tasks**（我的任务）与 **All Tasks**（全部任务）两项，都挂在**我的工作**分组下，不在**服务**分组里。
+- **服务看板**——本应用里不存在叫这个名字的东西。看板是视图 `case_workflow`，label 为 **Service Workflow**，而且它根本不是侧边栏条目：要从工单列表视图切换器里的 **Workflow** 页签进入。
 
 ## 从这里开始
 

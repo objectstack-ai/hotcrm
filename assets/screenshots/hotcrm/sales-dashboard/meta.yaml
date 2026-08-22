@@ -1,0 +1,22 @@
+id: hotcrm-sales-dashboard
+kind: screenshot
+scope: hotcrm
+category: analytics
+status: published
+captured: '2026-08-01'
+capture:
+  application: HotCRM
+  theme: light
+  viewport: 1408x964
+locales:
+  en: en.jpg
+  zh-Hans: zh-Hans.jpg
+title:
+  en: Sales performance dashboard
+  zh-Hans: 销售业绩仪表盘
+alt:
+  en: A sales dashboard with KPI cards, a pipeline funnel, and revenue trends.
+  zh-Hans: 包含 KPI 卡片、销售漏斗和收入趋势的销售仪表盘。
+purpose:
+  en: Show a unified analytical workspace for operating metrics and pipeline health.
+  zh-Hans: 展示用于运营指标和销售管道健康度的统一分析工作区。

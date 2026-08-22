@@ -9,7 +9,9 @@ import type { HookApi } from './_hook-api';
  * - Re-derives `expected_revenue` from `amount * stageProbability` when either changes.
  * - Stamps `stage_entry_date` on insert and on every stage change — the stored
  *   clock behind the `days_in_stage` formula and the stagnation sweep (#489).
- * - Freezes most fields after stage is closed (won/lost) — only narrative fields editable.
+ * - Freezes most fields after stage is closed (won/lost) — only narrative fields
+ *   editable. The freeze yields to the engine's reference cleanup, so a closed
+ *   deal never makes the records it points at undeletable (#720).
  * - On `closed_won`: stamps `close_date=today`, promotes the parent account to `customer`,
  *   and asynchronously schedules an "Activate customer" task.
  */
@@ -22,6 +24,15 @@ const opportunityValidationHook: Hook = {
   description:
     'Recompute expected_revenue, freeze closed opportunities except narrative fields.',
   handler: async (ctx: HookContext) => {
+    // The refusal envelope (#1075). Mirrored from `./_refusal.ts` because a
+    // lowered body has no module scope and `extractHookBody` THROWS on an
+    // import; `test/refusal-envelope.test.ts` pins every copy against it.
+    function refuse(message: string, code: string, status: number): Error {
+      const err = new Error(message) as Error & { code: string; status: number };
+      err.code = code;
+      err.status = status;
+      return err;
+    }
     // NOTE: L2 hook bodies run *body-only* in a sandbox (QuickJS) — module-level
     // constants are NOT in scope at runtime. These MUST be declared inside the
     // handler or the body throws `ReferenceError` on every write. (See ADR on
@@ -42,7 +53,7 @@ const opportunityValidationHook: Hook = {
     // must never reject these system writes, only user edits to business fields.
     // (Declared in-handler: sandboxed bodies have no module scope.)
     const SYSTEM_FIELDS = new Set([
-      'id', 'owner', 'owner_id', 'created_at', 'updated_at',
+      'id', 'owner_id', 'created_at', 'updated_at',
       'created_by', 'updated_by', 'space_id', 'organization_id', 'org_id', 'version',
     ]);
     // Approval verdicts must be allowed to land even if the deal closes while
@@ -84,8 +95,52 @@ const opportunityValidationHook: Hook = {
           (k) => !NARRATIVE_FIELDS.has(k) && !SYSTEM_FIELDS.has(k) && !APPROVAL_FIELDS.has(k) && input[k] !== previous[k],
         );
         if (violating.length > 0) {
-          throw new Error(
-            `Opportunity is closed (${prevStage}); only ${[...NARRATIVE_FIELDS].join(', ')} may be edited. Attempted: ${violating.join(', ')}.`,
+          // Every lookup on `crm_opportunity` a referential clear can attack.
+          const REFERENCE_FIELDS = new Set(['crm_account', 'primary_contact', 'crm_campaign']);
+          // ───────────────────────────────────── the reference-cleanup yield ──
+          // #720. The engine implements `deleteBehavior: 'set_null'` by UPDATING
+          // the row that HOLDS the lookup, so deleting a contact or a campaign a
+          // CLOSED opportunity references arrives here as an ordinary user
+          // `beforeUpdate` — and this freeze refused it, which made the frozen
+          // opportunity able to keep a person undeletable forever (and, through
+          // the master-detail cascade, that person's account too — a GDPR
+          // erasure that cannot be carried out).
+          //
+          // Measured on 17.0.0-rc.6, not assumed: the payload is exactly
+          // `{ id, <link>: null, updated_at, updated_by }`; `ctx.user` is the
+          // CALLER; `ctx.session` is the caller's own `{ userId, isSystem }`.
+          // The engine DOES stamp a `__referentialFieldClear: true` marker, but
+          // on its internal operation context — `ObjectQL.buildSession` copies a
+          // fixed allow-list of keys into `ctx.session`, and `__`-prefixed
+          // operation-private keys are deliberately not among them (see the
+          // `__` convention note in `@objectstack/core`). So no marker reaches a
+          // hook, and the WRITE SHAPE is the only evidence there is.
+          //
+          // ⛔ Keep this narrow (maintainer's ruling on #720, Option A): a write
+          // yields ONLY when every one of its non-system changes is a DECLARED
+          // link going from a value to `null`. One business field alongside it,
+          // or a link repointed to a NEW value, and the refusal below still
+          // fires. The three freeze guards share this block verbatim — sharing
+          // it as an imported helper is not possible (hook bodies run body-only
+          // in the sandbox and cannot reach module scope), so
+          // `test/freeze-guard-reference-cleanup.test.ts` pins the three copies
+          // as identical text and pins both directions of the narrowness.
+          const isReferenceCleanup = violating.every(
+            (k) => REFERENCE_FIELDS.has(k) && input[k] === null && previous?.[k] != null,
+          );
+          if (isReferenceCleanup) return;
+
+          const name = typeof previous.name === 'string' ? previous.name : '';
+          const oppId =
+            (typeof previous.id === 'string' && previous.id) ||
+            (typeof input.id === 'string' && input.id) ||
+            '';
+          const label = [name, oppId ? `(${oppId})` : ''].filter(Boolean).join(' ');
+          const subject = label ? `Opportunity ${label}` : 'Opportunity';
+          throw refuse(
+            `${subject} is closed (${prevStage}); only ${[...NARRATIVE_FIELDS].join(', ')} may be edited. Attempted: ${violating.join(', ')}.`,
+            'RECORD_LOCKED',
+            409,
           );
         }
       }
@@ -168,13 +223,16 @@ const opportunityWonHook: Hook = {
 
     const account = await api.object('crm_account').findOne({ where: { id: accountId } });
     if (account && account.type !== 'customer') {
-      await api.object('crm_account').update(accountId, { type: 'customer' });
+      await api.object('crm_account').update(
+        { id: accountId, type: 'customer' },
+        { where: { id: accountId } },
+      );
     }
 
     const oppId = (typeof input.id === 'string' && input.id) || previous?.id;
     const ownerId =
-      (typeof input.owner === 'string' && input.owner) ||
-      (typeof previous?.owner === 'string' && previous.owner) ||
+      (typeof input.owner_id === 'string' && input.owner_id) ||
+      (typeof previous?.owner_id === 'string' && previous.owner_id) ||
       ctx.user?.id;
     const due = new Date();
     due.setDate(due.getDate() + 3);
@@ -184,7 +242,7 @@ const opportunityWonHook: Hook = {
       priority: 'high',
       type: 'follow_up',
       due_date: due.toISOString().slice(0, 10),
-      owner: ownerId,
+      owner_id: ownerId,
       related_to_type: 'crm_opportunity',
       related_to_opportunity: oppId,
       related_to_account: accountId,

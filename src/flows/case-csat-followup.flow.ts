@@ -23,6 +23,22 @@ export const CaseCsatFollowupFlow: Flow = {
   description: 'When a case closes, wait a day then prompt the owner to collect a satisfaction rating.',
   type: 'record_change',
   status: 'active',
+  // A record-change flow fired by a SYSTEM write carries no trigger user
+  // either (ADR-0049, #1888, #3760), and here that is the NORMAL path, not an
+  // edge case: the close transition this flow waits on is written by the
+  // `close_case` screen flow, which is itself `runAs: 'system'`, so runs
+  // spawned from the Close Case button are user-less by construction.
+  //
+  // Measured honestly on 17.0.0-rc.2: this flow has NO data node (start →
+  // wait → notify → end), and a user-less run was driven end to end through
+  // the real engine — it suspends at the P1D timer and, on resume, the notify
+  // node delivers. The refusal covers get/create/update/delete only, so
+  // declaring `system` changes nothing observable today. Declared for the same
+  // reason as `contact_welcome` — see the fuller note there — and with extra
+  // force here: this flow resumes long after its trigger, so any data node
+  // added to the post-wait leg would run in whatever identity the suspended
+  // run carried, which for the common path is none.
+  runAs: 'system',
 
   variables: [],
 
@@ -35,7 +51,18 @@ export const CaseCsatFollowupFlow: Flow = {
       config: {
         objectName: 'crm_case',
         triggerType: 'record-after-update',
-        condition: P`record.status == "closed" && (previous == null || previous.status != "closed")`,
+        // TOTALITY (#633): `has(...)` on every read, including the ones into
+        // `previous`. `previous` is the driver's PRIOR row, so it is sparse on
+        // driver-memory / driver-mongodb exactly like `record` is — measured,
+        // `previous == null || previous.status != "closed"` still aborts when
+        // `previous` is a row that simply has no `status` column. The
+        // `previous == null` term is kept because it is the author's declared
+        // intent for "no prior row: this is the close"; `!has(previous.status)`
+        // extends that same answer to a prior row the driver returned without
+        // the key. (`has()` on a null `previous` measures `false`, so the two
+        // terms agree rather than fight.)
+        condition: P`has(record.status) && record.status == "closed"
+          && (previous == null || !has(previous.status) || previous.status != "closed")`,
       },
     },
     {
@@ -47,7 +74,7 @@ export const CaseCsatFollowupFlow: Flow = {
     {
       id: 'notify_csat', type: 'notify', label: 'Request Satisfaction Rating',
       config: {
-        recipients: ['{record.owner}'],
+        recipients: ['{record.owner_id}'],
         channels: ['inbox', 'email'],
         topic: 'case_csat',
         title: 'Collect CSAT: case {record.case_number}',

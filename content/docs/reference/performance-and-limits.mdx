@@ -5,83 +5,142 @@ description: Records, API rate limits, AI quotas, file sizes — what HotCRM all
 
 # Performance & Limits
 
-The limits below are the **default Enterprise plan**. Other plans differ; self-hosted has no platform-imposed caps but bottlenecks shift to your infrastructure.
+> **Read this before you plan against a number below.** Every figure on this page was
+> checked against the app's own metadata (`src/`) and the installed `@objectstack/*`
+> packages (17.0.0-rc.6). Most of them turn out to be **enforced by nothing**: HotCRM
+> declares no such quota and the platform applies none, so the figure describes a plan
+> or a deployment rather than anything this app does. Each table below now says which
+> of the two it is, and every row that *does* have a source names it. Headings marked
+> *(not shipped)* describe a capability the app does not have today. Nothing has been
+> quietly dropped — a deleted claim and a false one look identical to the next reader.
+
+The figures were written as the **default Enterprise plan**. Plan tiers are a commercial
+arrangement and cannot be read out of the app, so treat every unsourced number as a
+target your own deployment has to set and hold, not as a ceiling HotCRM will apply for
+you. Self-hosted has no platform-imposed caps at all; the bottlenecks are your
+infrastructure's.
 
 ## Data volumes
 
 | Item | Limit | Notes |
 | --- | --- | --- |
-| Records per object | **100 million** | Practical; can go higher with archiving |
-| Custom objects | **1,000** per tenant | |
-| Custom fields per object | **800** | Standard + custom combined |
-| Picklist values per field | **2,000** | |
-| Relationships per object | **40** lookup / **2** master-detail | |
-| Validation rules per object | **500** | |
-| Workflow rules per object | **500** | |
+| Records per object | **100 million** | Unsourced — a practical figure, not a cap |
+| Custom objects | **1,000** per tenant | Unsourced |
+| Custom fields per object | **800** | Unsourced; standard + custom combined |
+| Picklist values per field | **2,000** | Unsourced |
+| Relationships per object | **40** lookup / **2** master-detail | Unsourced |
+| Validation rules per object | **500** | Unsourced |
+| Workflow rules per object | — | Not an ObjectStack type: ADR-0019 / ADR-0020 retired it, so there is no `workflow` metadata type to cap. See *Flows per object* below |
 | Flows per object | Unlimited | Each flow has its own complexity limits |
-| Page layouts per object | **200** | |
-| Record types per object | **200** | |
+| Page layouts per object | **200** | Unsourced |
+| Record types per object | **200** | Unsourced |
+
+*Not enforced.* `ObjectSchema` accepts as many fields, picklist options, relationships
+and validation rules as you declare, and neither `src/` nor the installed platform
+carries a counter for any row marked *Unsourced*. The real ceiling is your database's.
+The two unmarked rows are properties of the metadata model and are stated above.
 
 ## File storage
 
 | Item | Limit |
 | --- | --- |
-| Single file upload | **2 GB** |
+| Single file upload | **2 GB** (unsourced) |
 | Attachments per record | Unlimited |
 | Total file storage | Per plan (typically TB per tenant) |
 | Image preview formats | jpg, png, gif, webp, svg |
 | Document preview formats | pdf, docx, xlsx, pptx |
 
-Files over 100 MB upload via multi-part; the platform handles chunking.
+*Partly sourced.* The file limit HotCRM really enforces is **per field**, not per tenant:
+`Field.file()` and `Field.image()` take a server-enforced `maxSize`, and this app sets
+three — 2 MB on the account logo (`src/objects/account.object.ts:358`), 5 MB and 20 MB on
+product media (`src/objects/product.object.ts:157` and `:164`). No 2 GB platform cap, no
+multi-part chunking threshold and no preview-format list is declared in the app or in the
+installed packages; the preview formats above describe the viewer your deployment runs.
 
 ## API limits
 
 | Limit | Default |
 | --- | --- |
-| Requests per minute (per user) | **6,000** |
-| Requests per minute (per tenant) | **60,000** |
-| Concurrent connections (per user) | **25** |
-| Request body size | **20 MB** |
-| Response size (single record) | **10 MB** |
-| Max records per query | **2,000** (use cursor pagination for more) |
-| Max records per bulk write | **10,000** per batch |
-| Long-running query timeout | **120 s** |
+| Requests per minute (per user) | **6,000** (unsourced) |
+| Requests per minute (per tenant) | **60,000** (unsourced) |
+| Concurrent connections (per user) | **25** (unsourced) |
+| Request body size | **20 MB** (unsourced) |
+| Response size (single record) | **10 MB** (unsourced) |
+| Max records per query | Set it yourself with `limit` / `offset`; there is no platform default and no cap |
+| Max records per bulk write | **10,000** per predicate write when a per-row hook is contracted — see below |
+| Long-running query timeout | **120 s** (unsourced) |
 
-Rate-limit responses use HTTP **429** with `Retry-After` header. Always implement exponential back-off.
+*Not enforced by HotCRM.* The app declares no `server.security.rateLimit`
+(`objectstack.config.ts` has no `server` block at all), so **this app applies no inbound
+rate limit**. The platform's own reference budgets — `DEFAULT_RATE_LIMITS` in
+`@objectstack/runtime` — are **auth 10/min, write 60/min, read 600/min**, and that
+constant's comment states in as many words that nothing reads it: the live seam is a
+*single* token bucket per caller, sized by an authored `server.security.rateLimit`. The
+per-minute figures above sit one to two orders of magnitude above that reference scale
+and have no source anywhere.
+
+The **10,000** row ceiling is real and is the one number in this table with a source:
+`MAX_BULK_PER_ROW_HOOK_ROWS` in `@objectstack/spec/data`. A predicate bulk write matching
+more than 10,000 rows on an object whose `beforeUpdate` / `afterUpdate` / `beforeDelete` /
+`afterDelete` hook is contracted to fire per row is **refused whole** with
+`ERR_BULK_PER_ROW_HOOK_LIMIT` — nothing is written, and the write is never silently
+downgraded to one hook call for the batch. Narrow the predicate and paginate the write.
+
+Rate-limit responses use HTTP **429**: `THROTTLED` maps to 429 in the REST error table
+(`@objectstack/rest`). Whether a `Retry-After` header comes with it depends on the limiter
+your deployment configures — HotCRM configures none. Implement exponential back-off
+anyway.
 
 ## Search limits
 
 | Item | Limit |
 | --- | --- |
-| Global search results | Top **200** per object |
-| Search query length | **2,000 chars** |
-| Indexed fields per object | Top **30** by default (configurable) |
-| Search latency (p95) | **&lt;500 ms** |
+| Global search results | Top **200** per object (unsourced) |
+| Search query length | **2,000 chars** (unsourced) |
+| Indexed fields per object | Declared per object as `searchableFields` — no default cap |
+| Search latency (p95) | Unsourced — depends on your database and data volume |
+
+*Partly sourced.* Which fields a search reads **is** real and is declared per object:
+`searchableFields` on the object, set on eight of them today
+(`src/objects/account.object.ts:25`, `lead.object.ts:435`, `case.object.ts:387`,
+`opportunity.object.ts:28`, `product.object.ts:27`, `quote.object.ts:29`,
+`knowledge_article.object.ts:82`, `event.object.ts:224`). There is **no top-30 default and
+no configurable cap** — `resolveSearchFields` in `@objectstack/spec/data` returns exactly
+the declared list, so the "Top 30 by default (configurable)" this page used to quote
+described nothing. The result-count, query-length and latency figures have no source.
 
 ## AI Copilot limits
 
 | Item | Default |
 | --- | --- |
-| Skill invocations per user per day | **500** |
-| Skill invocations per tenant per day | **50,000** |
-| Knowledge base size | **100,000 chunks** per base |
-| Knowledge base re-index | **Nightly** or on-demand |
-| Max tokens per skill prompt | **8,000** (input) / **2,000** (output) |
-| Max simultaneous skill executions | **10** per user |
+| Skill invocations per user per day | **500** (unsourced) |
+| Skill invocations per tenant per day | **50,000** (unsourced) |
+| Knowledge base size | **100,000 chunks** per base (unsourced) |
+| Knowledge base re-index | Unsourced — no re-index schedule is declared |
+| Max tokens per skill prompt | **8,000** (input) / **2,000** (output) (unsourced) |
+| Max simultaneous skill executions | **10** per user (unsourced) |
 | Embedding storage | Per plan (typically GB per tenant) |
 
-Bulk-skill invocations (e.g., qualify 500 leads) count as 500 skill calls — be mindful of quotas.
+*Not enforced.* No invocation quota, token budget, concurrency cap or re-index schedule
+exists for the six skills in `src/skills/` or anywhere in the installed packages. Whatever
+metering you get is your model provider's and your deployment's, not the app's.
 
-## Reporting & cubes
+## Reporting & analytics
 
 | Item | Limit |
 | --- | --- |
-| Report rows displayed | **10,000** |
-| Report rows exported | **1,000,000** |
+| Report rows displayed | **10,000** (unsourced) |
+| Report rows exported | **1,000,000** (unsourced) |
 | Dashboards per user | Unlimited |
-| Widgets per dashboard | **50** |
-| Cube refresh frequency | Every **5 min** (incremental) / nightly (full) |
-| Concurrent report runs (per user) | **5** |
+| Widgets per dashboard | **50** (unsourced) |
+| Dashboard refresh interval | **60 s** on Customer Service, **180 s** on Sales Performance, **300 s** on the other three — declared per dashboard in `src/dashboards/` |
+| Cube refresh frequency | Owned by the analytics service. HotCRM declares no refresh schedule and no incremental-versus-full policy anywhere in `src/`, so there is no app-side figure to quote — check your deployment |
+| Concurrent report runs (per user) | **5** (unsourced) |
+
+*Partly sourced.* The two refresh rows are read out of `src/`. A row cap on reports does
+exist as a **host option** — `ReportServiceOptions.maxRows` in `@objectstack/plugin-reports`,
+"cap rows per report to protect both DB and email size" — but it has no default and HotCRM
+does not set it, so no report row limit is in force today.
 
 For deeper analysis, [export to a data warehouse](/docs/guides/import-and-export#scheduled-export).
 
@@ -89,59 +148,112 @@ For deeper analysis, [export to a data warehouse](/docs/guides/import-and-export
 
 | Item | Limit |
 | --- | --- |
-| Visible rows per page | **200** (configurable up to 500) |
-| Filter clauses | **20** per view |
-| Columns | **40** per view |
-| Saved views per user | **500** |
+| Visible rows per page | **200** (configurable up to 500) (unsourced) |
+| Filter clauses | **20** per view (unsourced) |
+| Columns | **40** per view (unsourced) |
+| Saved views per user | **500** (unsourced) |
+
+*Not enforced.* `ObjectSchema.listViews` and the `*.view.ts` metadata accept as many
+columns and filter clauses as you declare, and no page-size ceiling is applied by the app
+or by the installed platform.
 
 ## Automation limits
 
 | Item | Limit |
 | --- | --- |
-| Workflow re-evaluations per save | **5** (then halts) |
-| Flow steps | **500** per flow |
-| Flow loop iterations | **2,000** |
-| Scheduled job concurrency | **20** simultaneous tenant-wide |
-| Email alerts per hour | **1,000** per user / **50,000** per tenant |
-| Approval steps per process | **30** |
+| Flow re-evaluations per save | No fixed budget — a flow's own writes re-enter the trigger order; the engine breaks self-trigger loops with a **re-entrancy guard** rather than a counter (a backstop, not a cap). See [Automation](/docs/administration/automation) |
+| Flow steps | No cap |
+| Flow loop iterations | **100,000** ceiling per loop node, with each node's own `maxIterations` under it |
+| Scheduled job concurrency | Unsourced — no concurrency knob is declared |
+| Email alerts per hour | Unsourced |
+| Approval steps per process | Unsourced — no step cap exists |
 
-## Email & calendar sync
+*Partly sourced.* The loop ceiling is `LOOP_MAX_ITERATIONS_CEILING` in
+`@objectstack/spec/automation`; a loop node's authored `maxIterations` sits under it. The
+**2,000** this page used to quote was 50× below the real ceiling, and the **500** flow-step
+cap it quoted does not exist at all. The re-entrancy backstop referenced in the first row
+is `MAX_NODE_REENTRIES = 100` per node, with `DEFAULT_MAX_TERMINAL_RUNS_PER_FLOW = 100`
+(`@objectstack/service-automation`) — a loop-breaker, not a budget you can spend.
 
-| Item | Limit |
+## Email & calendar sync (not shipped)
+
+The intended surface: a mailbox connector that logs inbound and outbound mail against the
+record, calendar two-way sync, and open/click tracking — each with the quotas below. None
+of it ships today, so none of these limits binds anything. See
+[Email & Calendar](/docs/guides/email-and-calendar) for what the app really writes.
+
+| Item | Limit (intended) |
 | --- | --- |
 | Email body size logged | **5 MB** |
 | Calendar events synced per user | **5,000** active |
 | Email retention | **2 years** default (configurable) |
 | Tracking pixel events stored | Per email indefinitely |
 
+What ships instead: **Send Email** on a contact writes one queued message row through the
+platform email service, and **Log a Call / Log a Meeting / Schedule a Meeting** write real
+`crm_event` records with attendee rows. Nothing is retained on a schedule, nothing is
+tracked, and nothing syncs from your mailbox — so there is no retention window to
+configure and no tracking-event store to fill.
+
 ## Webhook & event bus
 
 | Item | Limit |
 | --- | --- |
-| Webhook payload | **1 MB** |
-| Webhook retries | **5** with exponential back-off |
-| Webhook timeout | **10 s** |
-| Event bus throughput | **1,000 events/sec** per tenant |
-| Event retention in bus | **7 days** |
+| Webhook payload | **1 MB** (unsourced) |
+| Webhook retries | **5** with exponential back-off (unsourced) |
+| Webhook timeout | Per webhook, via its own `timeoutMs` — no platform default is declared |
+| Event bus throughput | **1,000 events/sec** per tenant (unsourced) |
+| Event retention in bus | **7 days** (unsourced) |
+
+*Not enforced by HotCRM.* `@objectstack/plugin-webhooks` is installed and carries a
+per-webhook `timeoutMs`, but **this app registers no webhooks** — `src/` contains no
+webhook declaration, so every figure here describes a subscription your deployment would
+have to create and configure itself.
 
 ## User & session limits
 
 | Item | Limit |
 | --- | --- |
+| Concurrent sessions per user | `maxConcurrentSessions` — **off** unless your deployment sets it |
+| Session idle timeout | `sessionIdleTimeoutMinutes` — **off** unless your deployment sets it |
+| Session absolute timeout | `sessionAbsoluteMaxHours` — **off** unless your deployment sets it |
 | Users per tenant | Unlimited (subject to plan) |
-| Concurrent sessions per user | **5** (configurable) |
-| Session idle timeout | **30 min** (configurable) |
-| Session absolute timeout | **12 hr** (configurable) |
+
+*Sourced, and the defaults are the opposite of what this page used to say.* All three
+controls are real (ADR-0069 D4, `@objectstack/plugin-auth`): idle and absolute limits are
+enforced per request and the concurrent cap on sign-in, revoking the oldest sessions over
+the limit. But **`0` means off for each, and off is the default** — HotCRM sets none of
+them, so the **5 sessions / 30 min / 12 hr** this page used to present as defaults are in
+force nowhere. They are deployment settings, and they are not editable from any screen in
+this app.
 
 ## How to stay within limits
 
 ### Pagination
 
-When fetching >2,000 records:
+Page with `limit` and `offset` against the object's own REST path — the `crm_`-prefixed
+object name, under `/data`:
 
 ```http
-GET /api/v1/opportunities?limit=200&cursor=eyJpZCI6...
+GET /api/v1/data/crm_opportunity?limit=200&offset=400
 ```
+
+For a stable walk over a large result set, express the keyset as an ordinary predicate on
+your sort key and post it to the query route:
+
+```http
+POST /api/v1/data/crm_opportunity/query
+{ "where": { "created_at": { "$gt": "2026-01-01T00:00:00Z" } },
+  "orderBy": "created_at", "limit": 200 }
+```
+
+> **`cursor` was removed.** `query.cursor` and `QueryBuilder.cursor()` were removed in
+> `@objectstack/spec` 17 (#4286, ADR-0049) and the key is now rejected by name: no driver
+> ever implemented keyset pagination, so the cursor was accepted and ignored and every
+> page came back identical — a caller looping "until `hasMore` is false" never terminated.
+> The `?cursor=…` sample this page used to print could not have worked. A first-class
+> cursor, if one is ever built, will be a response-minted opaque token, not a caller-built
+> record.
 
 Always paginate; never load all records at once.
 
@@ -166,39 +278,73 @@ Or use the platform SDK which handles back-off automatically.
 
 ### Bulk operations
 
-For >100 records, use the **bulk API** rather than 100 single calls.
+For many records at once, use the batch routes rather than one call per record. All four
+ship: `POST /api/v1/data/:object/batch`, `/createMany`, `/updateMany` and `/deleteMany`,
+plus the cross-object `POST /api/v1/batch`. Mind the 10,000-row per-row-hook ceiling in
+*API limits* above.
 
 ### AI invocation batching
 
-When triaging many records, use a **bulk skill** invocation — it batches under the hood and counts as N invocations (so still respects per-user quota), but uses connection pooling for ~10× speedup.
+*Not shipped.* There is no bulk-skill invocation surface: the six skills in `src/skills/`
+are invoked one call at a time, and no batching, connection pooling or "~10× speedup" path
+exists in the app or the installed packages. Triaging many records means many invocations.
+Bulk **actions** on a list view are a different thing and are real — see
+[Automation](/docs/administration/automation).
 
 ### Field indexing
 
-For custom fields you query frequently, mark them **indexed** — speeds list filtering and report execution.
+Indexes are declared **on the object, not on the field**, and by a developer in metadata
+rather than by an admin in a screen:
+
+```ts
+indexes: [{ name: 'idx_account_name', fields: ['name'] }],
+```
+
+HotCRM already declares sixteen such blocks across fifteen objects (for example
+`src/objects/account.object.ts:442`); the SQL driver materialises them through
+`syncDeclaredIndexes`. There is **no per-field `indexed` toggle** — `FieldSchema` rejects
+the key by name, with the reason attached: *"never a FieldSchema key; a field-level index
+flag built no index (#2377). Declare the index in the object's `indexes[]`."* So the advice
+this page used to give — "mark the field indexed" — named a flag that never built an index.
+`indexes[].type` and `indexes[].partial` were removed in spec 17 (#5248) for the same
+reason; leave both out.
 
 ### Archive old data
 
-Records older than your operational window (e.g., closed cases >2 years) can be **archived**:
+Archiving is a real platform capability and a real **per-object** policy, but it is
+declared in the object's metadata — not configured in a screen — and **HotCRM declares it
+nowhere**:
 
-- Removed from hot storage; still queryable via the **archive API**.
-- Frees indexes and improves performance.
-- Auto-archive policies configurable per object.
+```ts
+lifecycle: { class: 'record', archive: { after: '2y', to: 'cold', keep: '7y' } },
+```
+
+`ObjectSchema.lifecycle.archive` takes `after` (how old), `to` (the datasource to copy to)
+and an optional `keep` (how long cold rows survive). ObjectQL's lifecycle sweep then copies
+rows past `after` from the hot store to that archive datasource and deletes the copied rows
+hot (ADR-0057 §3.3), which is what frees the indexes. No object in `src/` carries a
+`lifecycle` block today, so nothing in HotCRM is archived and nothing is expired.
+
+> **There is no archive API.** Archived rows do not stay reachable through the ordinary
+> record routes: they live in the datasource named by `archive.to`, and reading them means
+> querying that datasource. The REST surface has no archive route — the data plane is
+> `/data/:object`, `/:id`, `/query`, `/clone`, `/import*`, `/export`, `/batch`,
+> `/createMany`, `/updateMany`, `/deleteMany`, `/shares`, plus the reports and approvals
+> routes, and nothing else.
 
 ## Monitoring your usage
 
-Each tenant has a **Usage dashboard** at **Setup → Usage**:
+**There is no Setup → Usage screen and no usage dashboard.** Nothing in the app reports API calls per user, AI skill invocations, storage growth or anomaly alerts — those numbers are not collected anywhere a reader can look at them.
 
-- API calls per minute / day / month, by user.
-- AI skill invocations, by skill.
-- Storage growth.
-- Top users by record creation / API consumption.
-- Anomaly alerts.
-
-Enterprise tenants get a quarterly **usage review** with the account team.
+What Setup does ship is **Setup → System Overview**: total users, organizations, active sessions, installed packages, and audit-event counts (logins, permission changes, configuration changes). That is platform health and security activity, not quota consumption. For the quotas themselves the matrix above is the reference — you will hit a limit before you can watch yourself approach it.
 
 ## When you outgrow these limits
 
-- **Vertical** — Enterprise+ plan extends most quotas.
+These three are properties of your **plan and your deployment**, not of the app, and
+nothing in `src/` or the installed packages can confirm them — take them up with whoever
+runs your instance:
+
+- **Vertical** — an Enterprise+ plan extends most quotas.
 - **Sharded** — multi-region deployments for >1 billion records.
 - **Self-hosted** — eliminate platform caps; bottlenecks become infrastructure.
 

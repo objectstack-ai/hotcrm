@@ -47,7 +47,9 @@ export const CloneOpportunityAction: Action = {
         type: src.type ?? null,
         lead_source: src.lead_source ?? null,
         crm_campaign: src.crm_campaign ?? null,
-        owner: ctx.user?.id ?? null,
+        // Explicit because an action body runs \`isSystem\`, so nothing stamps
+        // \`owner_id\` for it — see the note in global.actions.ts (#548).
+        owner_id: ctx.user?.id ?? null,
       });
       return { id: inserted?.id ?? null };
     `,
@@ -62,15 +64,39 @@ export const CloneOpportunityAction: Action = {
 /**
  * Mass Update Opportunity Stage.
  *
- * KNOWN-BROKEN in console 16.1.0 — kept wired and tracked in issue #508.
- * No invocation path currently executes it: modal submits resolve `target`
- * as an object name (400), the selection-bar bulk button is a client-side
- * no-op (zero network requests), and the header toolbar path rejects
- * multi-row selections, so `input.selectedIds` never arrives. Script-typed
- * (modal is provably dead) with a recordId fallback so a single-row
- * invocation works the moment the toolbar delivers it. Until upstream ships
- * bulk-selection delivery, stage moves happen via the pipeline kanban
- * drag-and-drop, inline grid editing, or the record form.
+ * Both invocation halves work as of #508 (17.0.0-rc.2):
+ *
+ *   - SINGLE record (row selection / toolbar with one row): the console POSTs
+ *     `{ recordId, params: { stage } }` and the body reads `ctx.recordId`. The
+ *     write itself was fixed in #777 — this body used to call
+ *     `update(id, { stage })`, but `ctx.api` is the engine repo facade whose
+ *     update takes `(data, options)`, so the id landed in the `data` slot and
+ *     every invocation 400'd with `update('crm_opportunity') does not
+ *     recognise option 'stage'`.
+ *   - MULTI record: the selection arrives in the BUILT-IN `_selectedIds`
+ *     param — leading underscore — injected by the grid renderer for the
+ *     view's `bulkActionDefs` entry with `execution: 'aggregate'`, which
+ *     dispatches this action ONCE for the whole selection (no `recordId`).
+ *
+ * That underscore is the whole story of why #508 read as "bulk is impossible".
+ * A script body's `input` IS the action's params bag
+ * (`@objectstack/runtime` `sandbox/body-runner.ts:338`), and `_selectedIds` is
+ * one of the params gate's builtin keys
+ * (`@objectstack/spec` `ui/action-params.zod.ts:70`, alongside `recordId` /
+ * `objectName`). The three rc.2 failure reports all probed UNDECLARED shapes —
+ * a top-level `selectedIds` (never merged into the bag), and a
+ * `params.selectedIds` without the underscore (correctly refused by the strict
+ * params gate, ADR-0104) — while the console's own "select exactly one row"
+ * toast fires precisely when `_selectedIds` was NOT injected, which is what
+ * happens to a view carrying no bulk declaration at all (#588 had removed it).
+ * Platform verified the declared channel end to end and closed
+ * objectstack-ai/objectstack#5568 as works-as-declared.
+ *
+ * Do NOT declare `_selectedIds` in `params` below: builtin keys are injected by
+ * the renderer, and the gate admits them without a declaration (declaring one
+ * is not a supported authoring move). Do NOT re-add a no-underscore
+ * `input.selectedIds` read either — nothing can deliver that key, so it would
+ * be a limb that only ever reads `undefined`.
  */
 export const MassUpdateStageAction: Action = {
   name: 'mass_update_stage',
@@ -83,15 +109,70 @@ export const MassUpdateStageAction: Action = {
     source: `
       const newStage = input.stage ?? null;
       if (!newStage) throw new Error('mass_update_stage requires a stage');
-      // Selection first, single record as the fallback (see the note above —
-      // the console does not deliver multi-row selections to actions yet).
-      const selected = Array.isArray(input.selectedIds) ? input.selectedIds : [];
+      // Selection first, single record as the fallback. An aggregate dispatch
+      // carries the whole selection in \`_selectedIds\` and NO recordId; a
+      // single-record dispatch carries recordId and no selection. The two are
+      // never both present, so the order only decides which shape wins if the
+      // platform ever sends both.
+      const selected = Array.isArray(input._selectedIds) ? input._selectedIds : [];
       const ids = selected.length ? selected : (ctx.recordId ? [ctx.recordId] : []);
       if (!ids.length) throw new Error('mass_update_stage: no opportunity selected');
+      const missed = [];
+      let firstCause = '';
       let updated = 0;
       for (const id of ids) {
-        await ctx.api.object('crm_opportunity').update(id, { stage: newStage });
-        updated++;
+        // \`update(data, options)\` — \`ctx.api\` is the engine repo facade, whose
+        // update takes a DOCUMENT, not an id. \`updateById(id, data)\` exists on
+        // ObjectRepository but NOT on the facade the runtime builds when it has
+        // no scoped context, so this spelling is the only one live on both.
+        //
+        // An id that matches no row is a MISS, not an abort, and the engine has
+        // answered it both ways: through @objectstack/* 17.0.0-rc.6 \`update\`
+        // RESOLVED WITH NULL, and from 17.0.0 it REJECTS (RECORD_NOT_FOUND /
+        // 404). Both are handled here, and neither may end the loop — an
+        // uncaught rejection on the first stale id would leave every id after
+        // it unattempted, so re-running the action over the same selection
+        // would fail at the same row forever and the live rows behind it could
+        // never be covered. That is strictly worse than the silent-success
+        // failure #588 pulled this button for, because it is unrecoverable
+        // from the UI. Collect the miss, keep going, reject once at the end.
+        //
+        // The catch is deliberately cause-AGNOSTIC. A host rejection crosses
+        // the QuickJS boundary as \`{ name, message }\` only — \`code\`, \`status\`
+        // and \`details\` are dropped by the bridge (runtime \`vm.newError\`) — so
+        // a body physically cannot test for RECORD_NOT_FOUND, and sniffing the
+        // message text would pin engine wording that is not contract. Every
+        // per-row failure is therefore reported as what the aggregate error
+        // already claims — this id was not updated — with the first cause
+        // carried along so the reason is not lost.
+        let row = null;
+        try {
+          row = await ctx.api.object('crm_opportunity').update(
+            { id: id, stage: newStage },
+            { where: { id: id } },
+          );
+        } catch (err) {
+          row = null;
+          if (!firstCause) firstCause = (err && err.message) ? String(err.message) : String(err);
+        }
+        // Count only what came back: counting the ATTEMPT is how a stale or
+        // invisible id turns into a success toast for a write that never
+        // happened (#588).
+        if (row) { updated++; } else { missed.push(id); }
+      }
+      // Aggregate dispatch is all-or-nothing (objectui#3139): a handler that
+      // cannot cover the whole selection must reject rather than report partial
+      // work, because the bar offers no per-row retry — the retry IS re-running
+      // the action over the selection, which is safe here since setting a stage
+      // is idempotent. Rows already moved in this run keep the new stage; the
+      // error names the ones that did not so the rep can see the difference.
+      if (missed.length) {
+        throw new Error(
+          'mass_update_stage: ' + missed.length + ' of ' + ids.length
+          + ' selected opportunities could not be updated (' + missed.join(', ')
+          + '). Re-run the action on the selection to retry.'
+          + (firstCause ? ' First cause: ' + firstCause : '')
+        );
       }
       return { stage: newStage, updated };
     `,

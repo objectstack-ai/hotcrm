@@ -9,37 +9,66 @@ A guided tour through the screens you'll use every day.
 
 ## 1. The home dashboard
 
-The first thing you see is the **CRM Overview** dashboard. It tells you:
+The left nav opens with one pinned entry, **Home**, and that is where you land. **Home** opens the **Executive Overview** dashboard — nine tiles of revenue, customer and pipeline numbers:
 
-- How many **open leads** you have.
-- How many **opportunities** are in your pipeline.
-- Any **cases** awaiting your response.
-- Top accounts by pipeline value.
-- Recent activity (last calls, meetings, emails).
+| Tile | What it shows |
+| --- | --- |
+| **Total Revenue (YTD)** | Closed-won revenue this year |
+| **Active Accounts** | Customers with at least one active relationship |
+| **Total Contacts** | People in the address book |
+| **Open Leads** | Unconverted leads in the funnel |
+| **Revenue Trend** | Closed-won revenue over the last 12 months |
+| **Revenue by Industry** | YTD closed-won revenue split by customer industry |
+| **Pipeline by Stage** | Open opportunity value at each sales stage, drawn as a funnel — value, not a count of deals |
+| **New Accounts** | Account creation cadence over the last 6 months |
+| **Accounts by Industry** | Total annual revenue and account count per industry |
 
-Use it as your daily start-of-day landing page. If you're a manager, you also see team-level rollups.
+Above them sit a date-range picker over the close date (this quarter by default), an **Owner** filter and a **Lead Source** filter. The four KPI tiles state their own period — YTD, "active", "unconverted" — and are not narrowed by the picker, so those counts stay whole while the revenue charts follow it.
+
+Use it as your daily start-of-day landing page.
+
+Four things this page used to promise are on no tile here, and one name it used belongs to a different dashboard:
+
+- **CRM Overview** is a real dashboard, but it is not the one **Home** opens. It sits under **Insights** — one of the groups collapsed when the app loads — so it is two clicks away rather than the first thing you see. **Active Deals** (a count of open opportunities), **Won Deals** and **Pipeline by Owner** are its tiles, not this dashboard's.
+- *Cases awaiting your response* are on neither dashboard: no tile on **Executive Overview** or on **CRM Overview** counts a case. **Open Cases**, **Critical Cases** and **SLA Violations** are on **Service Overview**, under **Service** — see [Service](/docs/service/index).
+- *Top accounts by pipeline value* is not a tile in this app at all. **Accounts by Industry** groups by industry rather than ranking customers, and the nearest ranking anywhere — **Pipeline by Owner** on **CRM Overview** — ranks sales reps rather than customers.
+- *Recent activity (last calls, meetings, emails)* is not here either. **Interactions Logged**, **Meetings Booked** and **Customer Minutes** are on **Sales Activity**, under **Activity**.
+- *Team-level rollups for managers* are not something this dashboard does. Every tile runs the same query for everyone; what differs is which records you are allowed to read, and that comes from your permission set. Positions in this app are flat — there is no reporting line for visibility to roll up — and the **Sales Manager** set grants `viewAllRecords` outright, so a manager reads org-wide totals rather than a team slice.
 
 ➜ Learn more: [Dashboards](/docs/analytics/dashboards)
+
+![Sales performance dashboard](/screenshots/hotcrm/sales-dashboard/en.jpg)
 
 ## 2. The app launcher
 
 Click the **app launcher** (top-left grid icon) to switch between apps:
 
-- **Enterprise CRM** — the main app with all CRM functionality.
+- **HotCRM** — the main app with all CRM functionality.
 - **Admin** — for system administrators.
 
-Inside Enterprise CRM, the left nav groups things by:
+Inside HotCRM, the left nav opens with one pinned item — **Home**, which is the **Executive Overview** dashboard — and everything else sits in seven groups:
 
 | Group | Contents |
 | --- | --- |
-| **Sales** | Leads, Accounts, Contacts, Opportunities, Quotes, Contracts |
-| **Service** | Cases, Knowledge Base |
-| **Marketing** | Campaigns, Campaign Members |
-| **Products** | Products |
-| **Activities** | Tasks, Events |
-| **Analytics** | Dashboards, Reports |
-| **AI** | Copilot, Knowledge Bases |
-| **Approvals** | Approval Requests, Action History |
+| **Sales** | Leads, Accounts, Account Workbench, Contacts, Opportunities, Pipeline, Quotes, Contracts, Sales Performance |
+| **My Work** | My Tasks, My Deals, My Leads, My Cases, My Calendar, All Tasks |
+| **Activity** | Events, Calendar, Interaction History, Sales Activity |
+| **Marketing** | Campaigns, Products |
+| **Service** | Cases, Knowledge, Service Overview |
+| **Insights** | CRM Overview, Forecasts, Pipeline Coverage, Lead Inflow, SLA Performance |
+| **Approvals** | Inbox |
+
+**Marketing**, **Insights** and **Approvals** are collapsed when the app loads — only **Sales**, **My Work**, **Activity** and **Service** open themselves. Click a group open before deciding something isn't there.
+
+Four group names this page used to list are not in the app at all, and several item names sit somewhere other than where it put them:
+
+- *Products* is not a group. The catalog is the **Products** item under **Marketing** — see [Marketing](/docs/marketing/index).
+- *Activities* is not a group; the real one is **Activity**, and tasks are not in it. `crm_task` reaches the sidebar as **My Tasks** and **All Tasks**, both under **My Work**.
+- *Analytics* is not a group; the real one is **Insights**. Nothing in it is called *Dashboards* or *Reports* — the dashboard and the three reports it pins are listed above under their own names.
+- *AI* is not a group, and no sidebar item is called *Copilot* or *Knowledge Bases*. The Copilot is the right-side chat panel on every page (section 6 below), and the knowledge articles are **Knowledge** under **Service**.
+- *Knowledge Base* is not a label this app carries. The **Service** entry is **Knowledge**, and the service dashboard beside it is **Service Overview** — see [Service](/docs/service/index).
+- *Campaign Members* is not a sidebar item. Campaign membership is reached from the campaign detail page or from global search — see [Campaign Members](/docs/marketing/campaign-members).
+- *Approval Requests* and *Action History* are not items either: **Inbox** is the only entry under **Approvals**. The approval audit trail is real data — the approvals plugin stores it as `sys_approval_action` — but no navigation entry in this app opens it.
 
 ## 3. Your first lead
 
@@ -48,10 +77,12 @@ A **lead** is someone who's expressed interest but hasn't been qualified yet.
 1. Click **Sales → Leads → New**.
 2. Fill in **Name**, **Company**, **Email**.
 3. Save. The lead is automatically assigned to you.
-4. Click **🎯 Qualify** on the lead detail page — the [Sales Copilot](/docs/ai-copilot/sales-copilot) will score them as Hot / Warm / Cold and suggest the next action.
+4. Ask the assistant to *"qualify this lead"* on the lead detail page — the [Lead Qualification skill](/docs/ai-copilot/sales-copilot) scores them 0–100 on BANT and suggests the next action.
 5. When ready, click **Convert** to turn the lead into an Account + Contact + Opportunity in one step.
 
 ➜ Learn more: [Leads](/docs/sales/leads)
+
+![Qualified lead workspace](/screenshots/hotcrm/lead-detail/en.png)
 
 ## 4. Your first opportunity
 
@@ -66,13 +97,15 @@ An **opportunity** is a real deal you're working.
 
 ➜ Learn more: [Opportunities](/docs/sales/opportunities)
 
+![Sales pipeline kanban](/screenshots/hotcrm/sales-pipeline/en.png)
+
 ## 5. A service case
 
 A **case** is a customer issue.
 
 1. Cases arrive via email, web form, phone, chat, or portal.
 2. New cases land in a queue — agents pick them up.
-3. Click **🚦 Triage** on a new case — the [Service Copilot](/docs/ai-copilot/service-copilot) suggests priority, category, and the top 3 matching knowledge-base articles.
+3. Ask the assistant to *"triage this case"* on a new case — the [Case Triage skill](/docs/ai-copilot/service-copilot) suggests priority, category, and matching knowledge-base articles.
 4. The SLA clock starts — see the time-to-respond / time-to-resolve countdown on the case page.
 5. Reply to the customer; close the case when resolved.
 

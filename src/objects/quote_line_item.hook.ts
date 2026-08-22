@@ -94,11 +94,15 @@ const quoteTotalRollup: Hook = {
       const discountAmount = Math.round(subtotal * (quoteDiscountPct / 100) * 100) / 100;
       const total = Math.round((subtotal - discountAmount + tax + shipping) * 100) / 100;
 
-      await api.object('crm_quote').update(quoteId, {
-        subtotal,
-        discount_amount: discountAmount,
-        total_price: total,
-      });
+      await api.object('crm_quote').update(
+        {
+          id: quoteId,
+          subtotal,
+          discount_amount: discountAmount,
+          total_price: total,
+        },
+        { where: { id: quoteId } },
+      );
     }
   },
 };

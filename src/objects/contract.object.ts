@@ -1,7 +1,7 @@
-import { P, cel } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
+import { P } from '@objectstack/spec';
 import { PAYMENT_TERMS_OPTIONS } from './_picklists';
 
 /**
@@ -36,6 +36,15 @@ export const Contract = ObjectSchema.create({
   ],
 
   fields: {
+    // Platform ownership anchor — canonical note in `account.object.ts` (#548).
+    owner_id: Field.lookup('sys_user', {
+      label: 'Contract Owner',
+      group: 'parties',
+      system: true,
+      readonly: false,
+      trackHistory: true,
+    }),
+
     // AutoNumber field
     contract_number: Field.autonumber({
       label: 'Contract Number',
@@ -69,13 +78,6 @@ export const Contract = ObjectSchema.create({
       dependsOn: ['crm_account'],
     }),
     
-    owner: Field.lookup('sys_user', {
-
-      defaultValue: cel`os.user.id`,
-      label: 'Contract Owner',
-      group: 'parties',
-      trackHistory: true,
-    }),
 
     // Status
     status: Field.select({
@@ -141,7 +143,11 @@ export const Contract = ObjectSchema.create({
       label: 'Payment Terms',
       group: 'value',
       // Canonical set shared with Quote (#490): an accepted quote's terms
-      // (incl. due_on_receipt) must survive the copy onto the contract.
+      // (incl. due_on_receipt) must survive the copy onto the contract. That
+      // copy is `quote_on_accepted` (src/objects/quote.hook.ts), which did not
+      // make it until #873 — until then this field took the `net_30` option
+      // default on every auto-drafted contract. It still does when the quote
+      // itself carried no term, which is the intended fall-through, not a gap.
       options: [...PAYMENT_TERMS_OPTIONS],
     }),
     
@@ -213,25 +219,34 @@ export const Contract = ObjectSchema.create({
     { fields: ['status'] },
     { fields: ['start_date'] },
     { fields: ['end_date'] },
-    { fields: ['owner'] },
+    { fields: ['owner_id'] },
   ],
   
   // Enable advanced features
-  // Dead object-level enable.* flags removed in @objectstack 12 (ADR-0049);
-  // only the live API surface remains. History → Field.trackHistory (ADR-0052).
+  // Dead enable.* flags (trash/mru) removed in @objectstack 12 (ADR-0049);
+  // History → Field.trackHistory (ADR-0052).
   enable: {
     apiEnabled: true,
     apiMethods: ['get', 'list', 'create', 'update', 'delete'],
+    // #602 — the executed contract itself. `document_url` remains the pointer
+    // to an external DMS copy; this is where the file actually lives.
+    // See the canonical capability note in `src/objects/index.ts`.
+    files: true,
   },
   
   // Validation Rules
+  //
+  // Predicates below are TOTAL: every `record.x` read is `has()`-guarded, so the
+  // rule returns a verdict even when the merged record has no such key. See
+  // AGENTS.md "Validation predicates must be TOTAL" and
+  // test/object-validation-predicates.test.ts, which fails the build otherwise.
   validations: [
     {
       name: 'end_after_start',
       type: 'script',
       severity: 'error',
       message: 'End Date must be after Start Date',
-      condition: P`record.end_date != null && record.start_date != null && record.end_date <= record.start_date`,
+      condition: P`has(record.end_date) && record.end_date != null && has(record.start_date) && record.start_date != null && record.end_date <= record.start_date`,
     },
     // NOTE: the `valid_contract_term` warning (months-between term check) was
     // dropped in the 9.8.0 upgrade — its CEL predicate used `monthsBetween()`,

@@ -70,24 +70,25 @@ and **close date** current — the automation below keys off all three.
 
 ### Stalled-deal nudge (automatic)
 A daily **07:30** sweep finds any open opportunity that has sat in its current
-stage for **more than 14 days**. The owner and their manager are notified, and a
-**high-priority follow-up task** is created. Advance the stage or re-qualify the
-deal to clear it.
+stage for **more than 14 days**. The owner is notified — the owner alone, not
+their manager — and a **high-priority follow-up task** is created. Advance the
+stage or re-qualify the deal to clear it.
 
 ### Won-deal alert (automatic)
-When a deal over **$100,000** is marked **Closed Won**, the owner and manager are
-notified automatically.
+When a deal of **$100,000** or more is marked **Closed Won**, the owner is
+notified automatically — the owner alone, not their manager. A deal at exactly
+$100,000 counts: the large-deal line is inclusive everywhere.
 
 ## 4. Large-deal approval — when a deal pauses for sign-off
 
 Deals above a threshold **lock and wait** for approval. There is no "submit"
-step — the moment a deal's **amount** crosses $100K, it routes for approval
+step — the moment a deal's **amount** reaches $100K, it routes for approval
 automatically, and you can't move it forward until each required approver signs
 off.
 
 | Deal amount | Required approval |
 |---|---|
-| **> $100,000** | Sales Manager review |
+| **$100,000 or more** | Sales Manager review |
 | **> $500,000** | Sales Manager **and** Sales Director sign-off |
 
 While an approval is pending, the opportunity is **locked** and its

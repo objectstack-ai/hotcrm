@@ -2,6 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { isDateMacroToken } from '@objectstack/spec/data';
+import { DATE_RANGE_PRESETS } from '@objectstack/spec/ui';
 import stack from '../objectstack.config';
 
 /**
@@ -111,6 +112,62 @@ describe('dashboard widget bindings resolve', () => {
   });
 });
 
+describe('metric tiles carry no fabricated trend deltas', () => {
+  /**
+   * A period-over-period delta is a MEASUREMENT: it can only come from
+   * comparing this period's query result against the previous period's. A
+   * number sitting in static metadata was, by construction, typed by hand — no
+   * query produced it, nothing recomputes it, and it keeps asserting "+12.5% vs
+   * last month" forever, including on a freshly seeded database where it is
+   * provably false. The executive dashboard dropped its own on exactly this
+   * reasoning (#500); the CRM, Sales and Service tiles kept theirs until #587.
+   *
+   * The honest source of a delta is a real comparison query (widget
+   * `compareTo`) once the renderer supports it for dataset metrics. Until then
+   * a tile shows the number it actually measured and nothing else, so this
+   * guard rejects the literal — anywhere in a widget, under any nesting, since
+   * the console reads `options` as a free-form bag and a hand-written trend can
+   * reappear at any depth.
+   */
+
+  /** Every `[path, value]` pair whose key is `trend`, at any depth. */
+  function* trendDeclarations(node: unknown, path: string): Generator<[string, unknown]> {
+    if (!node || typeof node !== 'object') return;
+    if (Array.isArray(node)) {
+      for (const [i, item] of node.entries()) yield* trendDeclarations(item, `${path}[${i}]`);
+      return;
+    }
+    for (const [k, v] of Object.entries(node)) {
+      if (k === 'trend') yield [`${path}.${k}`, v];
+      yield* trendDeclarations(v, `${path}.${k}`);
+    }
+  }
+
+  /** `trend: 12.5` and `trend: { value: 12.5, … }` are both hand-typed deltas. */
+  const carriesLiteralNumber = (trend: unknown): boolean =>
+    typeof trend === 'number' ||
+    (!!trend && typeof trend === 'object' &&
+      Object.values(trend as AnyRec).some((v) => typeof v === 'number'));
+
+  it('no dashboard widget declares a literal trend value', () => {
+    const bad: string[] = [];
+    for (const d of dashboards) {
+      for (const w of d.widgets ?? []) {
+        for (const [path, trend] of trendDeclarations(w, `${d.name}/${w.id}`)) {
+          if (carriesLiteralNumber(trend)) {
+            bad.push(`${path} = ${JSON.stringify(trend)}`);
+          }
+        }
+      }
+    }
+    expect(
+      bad,
+      'hardcoded period-over-period deltas — a trend must be measured by a '
+        + `comparison query, not typed into metadata:\n  ${bad.join('\n  ')}`,
+    ).toEqual([]);
+  });
+});
+
 describe('time windows stay relative at runtime', () => {
   /**
    * A filter value like `2026-06-29` in the metadata means someone computed
@@ -148,6 +205,29 @@ describe('time windows stay relative at runtime', () => {
       }
     }
     expect(bad, `absolute dates frozen into metadata:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('no filter comparand is a bare date-range PRESET name (objectstack#8690)', () => {
+    // A preset name is the picker's vocabulary, not the query layer's. The
+    // console lowers `last_30_days` into `{ from: '{30_days_ago}', to:
+    // '{today}' }` before any filter is sent; a preset name written straight
+    // into metadata never gets that lowering. It is not a `{macro}` either, so
+    // the resolver does not reject it — it reaches the driver as a literal
+    // string, compares false against every row, and the query answers HTTP 200
+    // with ZERO rows and no diagnostic. The symptom is an all-zero dashboard,
+    // indistinguishable at a glance from the #460 defect that cost this
+    // dashboard its date picker for a release. Filed upstream as
+    // objectstack#8690; guarded here because the repair is one grep away.
+    const presets = new Set<string>(DATE_RANGE_PRESETS as readonly string[]);
+    const bad: string[] = [];
+    for (const [where, filter] of filterSources) {
+      for (const [path, value] of filterLeaves(filter ?? {}, '')) {
+        if (presets.has(value)) {
+          bad.push(`${where}${path} = "${value}" — write the macro bounds, e.g. { $gte: '{30_days_ago}' }`);
+        }
+      }
+    }
+    expect(bad, `preset names used as filter comparands:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
   it('every {placeholder} in a temporal filter position is a recognised date macro', () => {

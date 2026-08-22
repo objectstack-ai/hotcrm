@@ -1,11 +1,20 @@
 ---
-title: Sales Copilot
-description: The AI sales assistant — qualify leads, draft emails, forecast revenue, and get a 360° customer view.
+title: Sales Skills
+description: The sales-side AI skills — qualify leads, draft emails, forecast revenue, and get a 360° customer view.
 ---
 
-# Sales Copilot
+# Sales Skills
 
-The Sales Copilot is your AI partner for the sales process. It lives in the right-side chat panel and as inline buttons on lead, contact, account, and opportunity pages.
+HotCRM does not ship an assistant of its own. It ships **skills** — packaged AI
+abilities that attach to the **platform assistant** (`ask`) that every ObjectStack
+environment already provides. When you open the assistant panel inside HotCRM, the
+sales skills below are what it knows how to do.
+
+> **Where the personas went.** Earlier versions of this page described a "Sales
+> Copilot" agent. HotCRM no longer defines its own agents: the same capability now
+> lives in skills registered through `src/skills/`, and the platform assistant selects
+> among them. Nothing was lost — the wiring moved from an app-owned agent to the
+> platform one.
 
 ## Who it's for
 
@@ -13,44 +22,72 @@ The Sales Copilot is your AI partner for the sales process. It lives in the righ
 - **Sales managers** — pipeline and forecast intelligence.
 - **Sales operations** — bulk insights and what-if analysis.
 
-## What it can do
+## How a skill gets picked
 
-The Sales Copilot ships with five core skills. They can be invoked by chatting (*"Qualify this lead"*) or by clicking inline buttons.
+You do not choose a skill from a menu. Each skill declares the record context it
+belongs to, and the assistant activates it when that context matches:
+
+| Skill | Activates on |
+| --- | --- |
+| 🎯 Lead Qualification | a `crm_lead` record |
+| 📈 Revenue Forecasting | a `crm_opportunity` record or a dashboard |
+| 🔄 Live Data, ✍️ Email Drafting, 🔭 Customer 360° | any context — always available |
+
+So opening a lead and typing *"is this one worth a call?"* runs Lead Qualification
+without you naming it.
+
+## The sales skills
 
 ### 1. 🔄 Live Data — the foundation
 
-Before it qualifies a lead, drafts an email, or forecasts a number, the Sales Copilot grounds itself in **live data**. Every turn, it calls `describe_object` and `query_records` against the live metadata + record store — not a cached snapshot. That's why adding a field at 10:00:00 lets the Copilot answer a question about it at 10:00:05 with zero retraining.
+Before it qualifies a lead, drafts an email, or forecasts a number, the assistant
+grounds itself in **live data**. Every turn, it calls `describe_object` and
+`query_records` against the live metadata + record store — not a cached snapshot.
+That's why adding a field at 10:00:00 lets the assistant answer a question about it
+at 10:00:05 with zero retraining.
 
-See [Live Schema (Wow #1)](/docs/ai-copilot/live-schema) for the 30-second demo. Everything below composes on top of this skill.
+See [Live Schema (Wow #1)](/docs/ai-copilot/live-schema) for the 30-second demo.
+Everything below composes on top of this skill.
 
 ### 2. 🎯 Lead Qualification
 
-Ask the Copilot to qualify a lead and it scores them on the BANT framework:
+Ask the assistant to qualify a lead and it scores them 0–100 on the BANT framework:
 
 - **Budget** — is there budget for what you sell?
 - **Authority** — is this person the decision maker?
 - **Need** — is there a clear, articulated need?
 - **Timeline** — is there urgency?
 
-The Copilot pulls signals from the lead record, any campaign engagement history, related accounts (if matched), and recent emails. It returns:
+It reads the lead record and its related activity history, then returns:
 
-- A **score** (Hot 🔥 / Warm 🌡️ / Cold ❄️).
-- A **rationale** citing the signals.
-- A **recommended next action** ("schedule discovery call", "nurture", "disqualify").
+- A **score** (0–100) with one line of justification per BANT dimension.
+- The **field or activity** each judgement was drawn from.
+- The single **recommended next step**, with the lead ID cited.
 
-Click **Accept** to update the lead's status and rating automatically.
+If the score is 70 or above and you agree, the skill calls the real **Convert Lead**
+action. Otherwise it calls **Schedule Follow-up** with the date it recommends.
+Conversion is never performed without your explicit confirmation.
 
 ### 3. ✍️ Email Drafting
 
-Highlight any record (lead, contact, opportunity) and ask the Copilot to draft an email. It produces a context-aware draft using:
+On any record (lead, contact, opportunity), ask for an email draft. It produces a
+context-aware draft using:
 
 - The contact's name, role, and account.
 - The opportunity stage and amount (if relevant).
 - Past conversation history (recent emails and notes).
-- The relevant product datasheet from the Product Information knowledge base.
-- The sales playbook from the Sales Knowledge knowledge base.
 
-Common email templates the Copilot handles well:
+**Not the knowledge base, on two separate counts.** The *Product Information* and
+*Sales Knowledge* knowledge bases this list used to name do not exist — HotCRM ships
+no such libraries, only the one [Knowledge Article object](/docs/ai-copilot/knowledge-bases).
+And even where knowledge does exist, this skill does not read it: the drafting
+instructions are five steps about grounding the copy in the contact record and
+writing it, and not one of them reaches for an article. The skill carries
+`query_records` and could read `crm_knowledge_article` — it is simply never told to,
+so no draft quotes a datasheet or a playbook. When a draft should quote an article,
+ask **Customer 360°** for the matching one and paste it in.
+
+Common email shapes it handles well:
 
 - **Introduction** — first outreach after a lead is captured.
 - **Discovery follow-up** — after a discovery call.
@@ -59,49 +96,77 @@ Common email templates the Copilot handles well:
 - **Renewal reminder** — to a contract holder ahead of expiration.
 - **Win celebration** — to the customer after closed-won.
 
-You always **preview and edit** before sending. The Copilot never sends on its own.
+You always **preview and edit** before sending. The skill never sends on its own.
 
 ### 4. 📈 Revenue Forecasting
 
-Ask *"What's my forecast for this quarter?"* and the Copilot returns:
+Ask *"What's my forecast for this quarter?"* and you get:
 
-- **Closed** — committed revenue (closed-won this period).
-- **Commit** — opportunities >80% probability in the period.
-- **Best case** — opportunities 40-80% probability.
-- **Pipeline** — everything else.
-- **Risk callouts** — deals slipping, stale opportunities, missing close dates.
+- **Pipeline by stage** — count and summed amount grouped by stage, scoped to the period you name (default: the current quarter).
+- **Weighted value** — amount × probability, computed by the skill from what it read.
+- **At-risk deals** — named one by one with the signal behind each: a close date already past, no activity in 30+ days, or a stage held longer than its typical duration.
+- **A forecast given as a range** — commit-only (high-probability stages) to full weighted pipeline, with the assumption behind the number stated in one line, rather than false precision.
+- **A chart** — via `visualize_data`, when one carries the answer better than prose.
 
-Forecasts respect role hierarchy — a rep sees their own number, a manager sees their team's, a director sees the rollup.
+**Where the four buckets actually live.** This page used to present **Closed / Commit /
+Best Case / Pipeline** as the forecasting skill's output. Those names are real, but they
+belong elsewhere: they are options of `crm_opportunity`'s **Forecast Category** field
+(alongside **Omitted**), and the amounts carrying those names are what the scheduled
+forecast snapshot writes onto **Forecast** records. The skill neither reads
+`forecast_category` nor groups by it. The probability thresholds this page attached to
+two of them — Commit at >80%, Best case at 40-80% — had no source anywhere in HotCRM:
+the snapshot buckets by forecast category, not by probability band, and the skill uses
+probability only to compute weighted value.
+
+Forecasts respect your position and sharing rules — a rep sees their own number, a
+manager sees their team's, a director sees the rollup.
 
 ### 5. 🔭 Customer 360°
 
-On any account or contact, ask *"Give me a 360° view"* and the Copilot summarizes:
+On any account or contact, ask *"Give me a 360° view"* and you get:
 
-- **Relationship snapshot** — account tier, customer-since date, account owner.
-- **Active deals** — open opportunities with stage and amount.
-- **Recent activity** — last call, meeting, email.
-- **Open cases** — any service tickets, with priority and age.
-- **Contracts** — active and upcoming renewals.
-- **Marketing engagement** — recent campaigns the customer engaged with.
+- **Relationship snapshot** — the account's **Customer Tier** and its owner, read straight off the account record. There is no *customer-since* date to snapshot: `crm_account` carries no field of any name for when an account became a customer, so "how long have they been with us?" has to be answered from the contract's **Signed Date** or **Start Date**.
+- **The people** — the account's contacts, primary contact first.
+- **Active deals** — open opportunities with stage, amount and close date, plus the open pipeline total read from `aggregate_data` rather than added up row by row.
+- **Open cases** — service cases where `is_closed` is false, newest first, with the case count by status.
+- **Matching knowledge** — published `crm_knowledge_article` records, matched on the category or tags of those cases.
 
-Perfect for prep before a meeting — "give me Customer 360 on Acme" and you walk in informed.
+The answer comes back in three sections — **Account Snapshot** · **Active Work** ·
+**Risks & Notes** — with record IDs cited inline (`CASE-01234`, `KA-0007`) so the UI
+can deep link. A risk has to name its record and the signal behind it: an escalated
+case, a close date already past, a deal with no activity in 30+ days. A section with
+no records is reported as empty rather than filled.
+
+**What Customer 360° does not pull.** Three lines this page used to carry — **recent
+activity** (last call, meeting, email), **contracts** (active and upcoming renewals)
+and **marketing engagement** (recent campaigns the customer engaged with) — are not in
+the skill's instructions, so they will not appear in the answer. This is not a tool
+ceiling: the skill carries `query_records` and could reach `crm_contract`,
+`crm_campaign`, `crm_event` and `crm_task`. It is simply not told to read them, and
+widening what a skill reads is a product decision rather than a documentation one.
+Until then, read those from the account's own related lists.
+
+Perfect for prep before a meeting — "give me Customer 360 on Acme" and you walk in
+informed.
 
 ## Tips for reps
 
-- ✅ Use *Qualify this lead* the moment a new lead lands — it saves 15 minutes per lead.
-- ✅ For email drafts, give the Copilot the **goal** in one sentence: *"Push for a meeting next week"* — better than a generic *"draft a follow-up"*.
+- ✅ Ask to qualify the moment a new lead lands — it saves 15 minutes per lead.
+- ✅ For email drafts, give the **goal** in one sentence: *"Push for a meeting next week"* — better than a generic *"draft a follow-up"*.
 - ✅ Ask *"What's at risk in my pipeline?"* every Monday morning.
 
 ## Tips for managers
 
 - ✅ Use *Customer 360* before every customer-facing meeting your team has.
 - ✅ Run *Revenue forecast* mid-week to spot slipping deals before the EOQ scramble.
-- ✅ Ask *"Which reps need coaching?"* — the Copilot flags reps with stale pipelines or unusually long stage times.
+- ✅ Ask *"Which deals are slipping this quarter?"* — the forecasting skill names each at-risk deal and the signal behind it. It does not group by rep: stage and the period you name are its only groupings, so *"which reps need coaching?"* is not a question it answers.
 
 ## Limits
 
-- The Copilot **respects sharing** — it can only reference records you can see.
-- It **won't auto-send** emails, **won't auto-update** records, and **won't bulk-change** data without explicit confirmation.
-- For sensitive customers, the Copilot **redacts** flagged fields (configurable by admins).
+- Skills **respect sharing** — they can only reference records you can see.
+- They **won't auto-send** emails, **won't auto-update** records, and **won't bulk-change** data without explicit confirmation.
+- Skills declare no bespoke tools: every write goes through a real HotCRM action, so the same permission checks apply as when you click the button yourself.
 
-See [Skills](/docs/ai-copilot/skills) for the full skill specification and [Knowledge Bases](/docs/ai-copilot/knowledge-bases) for how to keep the Copilot's answers fresh and accurate.
+See [Skills](/docs/ai-copilot/skills) for the full skill specification and
+[Knowledge Bases](/docs/ai-copilot/knowledge-bases) for how to keep the answers fresh
+and accurate.

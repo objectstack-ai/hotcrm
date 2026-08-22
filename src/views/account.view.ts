@@ -22,13 +22,12 @@ export const AccountViews = defineView({
       { field: 'annual_revenue', width: 160, align: 'right', summary: 'sum' },
       { field: 'number_of_employees', width: 130, align: 'right', summary: 'avg' },
       { field: 'health_score', width: 140 },
-      { field: 'next_renewal_date', width: 160, sortable: true },
     ],
     sort: [{ field: 'annual_revenue', order: 'desc' }],
     rowColor: { field: 'is_active', colors: { true: '#16a34a', false: '#94a3b8' } },
     selection: { type: 'multiple' },
     pagination: { pageSize: 50, pageSizeOptions: [25, 50, 100] },
-    exportOptions: ['csv', 'xlsx'],
+    exportOptions: { formats: ['csv', 'xlsx'] },
     compactToolbar: true,
     bulkActionDefs: [
       {
@@ -59,7 +58,7 @@ export const AccountViews = defineView({
         operation: 'update',
         params: [
           {
-            name: 'owner',
+            name: 'owner_id',
             label: 'New Owner',
             type: 'lookup',
             // The platform registers `sys_user` — `user` matches no object and
@@ -90,7 +89,10 @@ export const AccountViews = defineView({
       { name: 'map', label: 'Map', icon: 'map', view: 'account_map' },
       { name: 'enterprise', label: 'Enterprise', icon: 'crown', view: 'enterprise_accounts' },
       { name: 'mine', label: 'My Accounts', icon: 'user', view: 'my_accounts' },
-      { name: 'renewals', label: 'Renewals', icon: 'refresh-cw', view: 'renewals_due' },
+      // No account-level "Renewals" tab (#1181). It listed `renewals_due`,
+      // which filtered and sorted on `crm_account.next_renewal_date` — a field
+      // nothing maintained. The renewals queue lives on `crm_contract`
+      // (`renewal_calendar`), over the `end_date` the daily sweep reads.
       { name: 'at_risk', label: 'At Risk', icon: 'triangle-alert', view: 'at_risk_accounts' },
     ],
   },
@@ -106,7 +108,7 @@ export const AccountViews = defineView({
       gallery: {
         cardSize: 'medium',
         titleField: 'name',
-        visibleFields: ['industry', 'annual_revenue', 'number_of_employees', 'phone', 'website', 'owner'],
+        visibleFields: ['industry', 'annual_revenue', 'number_of_employees', 'phone', 'website', 'owner_id'],
       },
     },
 
@@ -125,7 +127,7 @@ export const AccountViews = defineView({
       type: 'grid',
       label: 'Enterprise Accounts',
       data: { provider: 'object', object: 'crm_account' },
-      columns: ['name', 'industry', 'annual_revenue', 'number_of_employees', 'owner'],
+      columns: ['name', 'industry', 'annual_revenue', 'number_of_employees', 'owner_id'],
       filter: [{ field: 'annual_revenue', operator: 'greater_than_or_equal', value: 10000000 }],
       sort: [{ field: 'annual_revenue', order: 'desc' }],
 
@@ -133,7 +135,8 @@ export const AccountViews = defineView({
       // dropdowns). Lives on THIS view, not the default one: the default
       // view's `tabs` act as the view switcher, and filter tabs/dropdowns
       // are mutually exclusive with a tab row on the same toolbar.
-      // `owner` is a user lookup — it renders as a record-picker dropdown.
+      // `owner_id` is the platform ownership lookup (#548) — it renders as a
+      // record-picker dropdown.
       // NOTE: requires @objectstack/spec > 9.2.0 (ADR-0047 UserFiltersSchema);
       // on older specs defineStack strips this block — harmless no-op.
       ...({
@@ -142,7 +145,7 @@ export const AccountViews = defineView({
           fields: [
             { field: 'industry', showCount: true },
             { field: 'type' },
-            { field: 'owner' },
+            { field: 'owner_id' },
           ],
         },
         // typed via spread-as-any until @objectstack/spec ships ADR-0047
@@ -156,25 +159,15 @@ export const AccountViews = defineView({
       label: 'My Accounts',
       data: { provider: 'object', object: 'crm_account' },
       columns: ['name', 'industry', 'annual_revenue', 'phone', 'last_activity_date'],
-      filter: [{ field: 'owner', operator: 'equals', value: '{current_user_id}' }],
+      filter: [{ field: 'owner_id', operator: 'equals', value: '{current_user_id}' }],
       sort: [{ field: 'last_activity_date', order: 'desc' }],
     },
 
-    /** Customer-success: upcoming renewals, sorted by date ascending */
-    renewals_due: {
-      name: 'renewals_due',
-      type: 'grid',
-      label: '🔄 Upcoming Renewals',
-      data: { provider: 'object', object: 'crm_account' },
-      columns: ['name', 'tier', 'health_score', 'next_renewal_date', 'renewal_owner', 'annual_revenue'],
-      // Operator-only filter (no `{TODAY() + 90d}` template — sort exposes
-      // the soonest renewals at the top of the list).
-      filter: [
-        { field: 'type', operator: 'equals', value: 'customer' },
-        { field: 'next_renewal_date', operator: 'is_not_null' },
-      ],
-      sort: [{ field: 'next_renewal_date', order: 'asc' }],
-    },
+    // The `renewals_due` view is gone with the fields it was built on (#1181):
+    // both its `is_not_null` filter and its sort key were
+    // `crm_account.next_renewal_date`, so the view could not outlive the field.
+    // Nothing is lost — `crm_contract` ships the renewals queue that the daily
+    // sweep actually acts on (`renewal_calendar`, over `end_date`).
 
     /** At-risk customers — CSM action queue */
     at_risk_accounts: {
@@ -182,7 +175,7 @@ export const AccountViews = defineView({
       type: 'grid',
       label: '⚠️ At-Risk Accounts',
       data: { provider: 'object', object: 'crm_account' },
-      columns: ['name', 'tier', 'health_score', 'segment', 'renewal_owner', 'last_activity_date'],
+      columns: ['name', 'tier', 'health_score', 'segment', 'last_activity_date'],
       filter: [
         { field: 'type', operator: 'equals', value: 'customer' },
         { field: 'health_score', operator: 'in', value: ['at_risk', 'churning'] },
@@ -195,6 +188,7 @@ export const AccountViews = defineView({
     type: 'tabbed',
     sections: [
       {
+        name: 'profile',
         label: 'Profile',
         columns: 2,
         fields: [
@@ -207,31 +201,49 @@ export const AccountViews = defineView({
           'industry',
           'phone',
           'website',
-          'owner',
+          'owner_id',
           'parent_account',
           'is_active',
           'brand_color',
         ],
       },
       {
+        // `child_account_revenue` is a roll-up the engine maintains, so it is
+        // read-only on the form by construction — it is here because a hierarchy
+        // nobody can see the effect of is the decoration this field replaced.
+        name: 'financials',
         label: 'Financials',
         columns: 2,
-        fields: ['annual_revenue', 'number_of_employees'],
+        fields: ['annual_revenue', 'number_of_employees', 'child_account_revenue'],
       },
       {
-        // The customer-success fields the renewals_due / at_risk_accounts
-        // views list and filter on. They existed on the object but no form
-        // offered them, so the CS working queues stayed permanently empty.
+        // The customer-success fields the at_risk_accounts view lists and
+        // filters on. They existed on the object but no form offered them, so
+        // the CS working queue stayed permanently empty. (`renewal_owner` and
+        // `next_renewal_date` were removed from this section with the fields
+        // themselves — #1181.)
+        name: 'customer_success',
         label: 'Customer Success',
         columns: 2,
-        fields: ['tier', 'segment', 'health_score', 'renewal_owner', 'next_renewal_date'],
+        fields: ['tier', 'segment', 'health_score'],
       },
       {
+        name: 'locations',
         label: 'Locations',
         columns: 1,
-        fields: ['billing_address', 'office_location'],
+        // `billing_country` and `territory` are readonly and derived, but both
+        // are on the form on purpose: an admin asking "why does the NA team not
+        // see this account?" reads the answer off the record instead of
+        // guessing at the address blob (#621). `territory` is what the rules
+        // actually match (#639) and `billing_country` is the input it was
+        // classified from, so the two together show the whole derivation —
+        // including the case the picklist alone cannot explain, an account
+        // sitting in `Other` because its country was typed in a spelling the
+        // mapping does not know.
+        fields: ['billing_address', 'billing_country', 'territory', 'office_location'],
       },
       {
+        name: 'description',
         label: 'Description',
         columns: 1,
         fields: ['description'],

@@ -2,6 +2,11 @@
 
 import { Page } from '@objectstack/spec/ui';
 import { CloneOpportunityAction, GenerateQuoteAction } from '../actions/opportunity.actions';
+import {
+  OpportunityLogCallAction,
+  OpportunityLogMeetingAction,
+  OpportunityScheduleMeetingAction,
+} from '../actions/global.actions';
 
 /**
  * Opportunity Detail Record Page
@@ -44,8 +49,17 @@ export const OpportunityDetailPage: Page = {
             breadcrumb: true,
             // generate_quote is the CPQ entry point (opportunity → quote); a
             // custom record page replaces the default header, so the action
-            // must be listed here explicitly or it is unreachable.
-            actions: [GenerateQuoteAction, CloneOpportunityAction],
+            // must be listed here explicitly or it is unreachable. The same
+            // sentence is why the three activity actions are named here (#592):
+            // without them a rep can log a call on the deal only from the list
+            // row's ⋮ menu, never from the deal itself.
+            actions: [
+              GenerateQuoteAction,
+              CloneOpportunityAction,
+              OpportunityLogCallAction,
+              OpportunityLogMeetingAction,
+              OpportunityScheduleMeetingAction,
+            ],
           },
         },
         {
@@ -53,7 +67,7 @@ export const OpportunityDetailPage: Page = {
           id: 'opp_highlights',
           label: 'Key Information',
           properties: {
-            fields: ['amount', 'close_date', 'probability', 'expected_revenue', 'owner', 'crm_account'],
+            fields: ['amount', 'close_date', 'probability', 'expected_revenue', 'owner_id', 'crm_account'],
           },
         },
         {
@@ -62,9 +76,17 @@ export const OpportunityDetailPage: Page = {
           label: 'Opportunity Stage Path',
           properties: {
             statusField: 'stage',
+            // Every canonical value of `stage` must appear here, in funnel
+            // order — the path is the only place a rep reads "where is this
+            // deal". `needs_analysis` was missing, so a deal sitting in that
+            // stage lit up NO step at all and the strip read as if the deal
+            // had skipped from Qualification to Proposal. The two terminal
+            // stages stay last (won before lost), matching lead_detail's
+            // converted/unqualified tail.
             stages: [
               { value: 'prospecting', label: 'Prospecting' },
               { value: 'qualification', label: 'Qualification' },
+              { value: 'needs_analysis', label: 'Needs Analysis' },
               { value: 'proposal', label: 'Proposal' },
               { value: 'negotiation', label: 'Negotiation' },
               { value: 'closed_won', label: 'Closed Won' },
@@ -100,7 +122,7 @@ export const OpportunityDetailPage: Page = {
                         {
                           name: 'info',
                           label: 'Opportunity Information',
-                          fields: ['name', 'crm_account', 'owner', 'type', 'lead_source', 'crm_campaign'],
+                          fields: ['name', 'crm_account', 'owner_id', 'type', 'lead_source', 'crm_campaign'],
                         },
                         {
                           name: 'crm_forecast',
@@ -170,7 +192,7 @@ export const OpportunityDetailPage: Page = {
                               properties: {
                                 objectName: 'crm_task',
                                 relationshipField: 'related_to_opportunity',
-                                columns: ['subject', 'status', 'priority', 'due_date', 'owner'],
+                                columns: ['subject', 'status', 'priority', 'due_date', 'owner_id'],
                                 filter: [{ field: 'status', op: 'neq', value: 'completed' }],
                                 limit: 10,
                               },
@@ -209,23 +231,54 @@ export const OpportunityDetailPage: Page = {
           type: 'record:reference_rail',
           id: 'opp_reference_rail',
           properties: {
+            /**
+             * No entry declares a `title` — deliberately (#972).
+             *
+             * The rail resolves a card's heading as
+             * `entry.title || i18n.objectLabel({ name: objectName, … })`, so a
+             * literal `title` does not merely provide a default: it WINS, and
+             * the locale bundle is never consulted. The three literals that
+             * used to sit here (`Quotes` / `Products` / `Open Tasks`) therefore
+             * printed English into every one of the four locales this app
+             * ships, on top of `objects.<name>.label` already being translated
+             * in all of them. Dropping them hands the heading back to the
+             * translation bundle — the single source of truth for what an
+             * object is called — so a locale added later is covered for free.
+             *
+             * A translated literal is not available as an alternative: unlike
+             * `record:alert`, whose `title` is run through the inline
+             * translation-map resolver, the rail renders `entry.title` as a
+             * raw React child. An `{ en, 'zh-CN' }` map here would not be
+             * resolved — it would be handed to React as an object.
+             *
+             * The third card losing the word "Open" is a correction, not a
+             * casualty. A rail entry has no filter at all — the rail queries
+             * `{ $filter: { [relationshipField]: parentId }, $top: limit }` and
+             * reads nothing else — so that card always counted and listed this
+             * deal's tasks whatever their status. The heading claimed a filter
+             * the component cannot apply. The genuinely filtered view is the
+             * `opp_tasks` related list on the *Related* tab above, which does
+             * carry `status neq completed`.
+             *
+             * Pinned by `test/metadata-references.test.ts` (entries resolve,
+             * no literal titles) and `test/i18n-references.test.ts` (every
+             * rail object has a `label` in every locale, so the fallback
+             * lands on a translation rather than on a humanized object name).
+             */
             entries: [
               {
                 objectName: 'crm_quote',
                 relationshipField: 'crm_opportunity',
-                title: 'Quotes',
                 limit: 3,
               },
               {
                 objectName: 'crm_opportunity_line_item',
                 relationshipField: 'crm_opportunity',
-                title: 'Products',
                 limit: 3,
               },
               {
                 objectName: 'crm_task',
                 relationshipField: 'related_to_opportunity',
-                title: 'Open Tasks',
                 limit: 3,
               },
             ],

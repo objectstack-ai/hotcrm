@@ -31,6 +31,19 @@ export const LeadAssignmentFlow: Flow = {
   description: 'On new lead: set a rating-based follow-up SLA and alert the lead owner.',
   type: 'record_change',
   status: 'active',
+  // A record-change flow fired by a SYSTEM write carries no trigger user
+  // either (ADR-0049, #1888, #3760). This is the population the flow is FOR:
+  // leads arrive from web-to-lead, a CSV import, a partner integration or a
+  // seed load, none of which carry a user session. Measured on 17.0.0-rc.2, a
+  // user-less run refuses `sla_hot` / `sla_std` outright, so the lead lands
+  // with no follow-up SLA and no alert at all — silently, since the refusal
+  // surfaces only in the server log.
+  //
+  // Elevating the USER-driven runs too is correct: the SLA stamp is the
+  // platform's routing decision about the row that just fired the trigger
+  // (keyed to `{record.id}`), not the submitting rep's own edit, and a rep who
+  // may create a lead is not thereby guaranteed edit rights on it.
+  runAs: 'system',
 
   variables: [],
 
@@ -40,8 +53,12 @@ export const LeadAssignmentFlow: Flow = {
       config: { objectName: 'crm_lead', triggerType: 'record-after-create' },
     },
     {
+      // Branching lives on edges `e2` / `e3` — see the totality note there.
+      // This node carries no `config.condition`: the engine never evaluates a
+      // `decision` node's singular one, so a copy here would restate the gate
+      // without being the gate (17.0.0-rc.2's `flow-inert-node-condition`,
+      // #4414).
       id: 'check_hot', type: 'decision', label: 'Hot Lead (rating ≥ 4)?',
-      config: { condition: P`record.rating >= 4` },
     },
 
     // ── Hot path: 1-day SLA, high-severity alert ───────────────────
@@ -58,7 +75,7 @@ export const LeadAssignmentFlow: Flow = {
         // 'sales_manager' was stored verbatim as sys_inbox_message.user_id,
         // matching no real user, so these alerts reached nobody. owner is set
         // on insert (defaultValue os.user.id) and is the accountable party.
-        recipients: ['{record.owner}'],
+        recipients: ['{record.owner_id}'],
         channels: ['inbox', 'email'],
         severity: 'warning',
         topic: 'lead_routing',
@@ -78,7 +95,7 @@ export const LeadAssignmentFlow: Flow = {
       config: {
         // Route to the lead's owner — see notify_hot for why a bare
         // 'sales_manager' position never reached anyone.
-        recipients: ['{record.owner}'],
+        recipients: ['{record.owner_id}'],
         channels: ['inbox'],
         topic: 'lead_routing',
         title: 'New lead to assign: {record.first_name} {record.last_name}',
@@ -92,8 +109,23 @@ export const LeadAssignmentFlow: Flow = {
 
   edges: [
     { id: 'e1', source: 'start', target: 'check_hot', type: 'default' },
-    { id: 'e2', source: 'check_hot', target: 'sla_hot', type: 'conditional', condition: P`record.rating >= 4`, label: 'Hot' },
-    { id: 'e3', source: 'check_hot', target: 'sla_std', type: 'conditional', condition: P`record.rating < 4`, label: 'Standard' },
+    // TOTALITY (#633): these two edges must PARTITION every lead — a rating
+    // the predicate cannot read has to fall down one branch, never neither.
+    // Guarding both with `has(...) &&` would have traded a loud abort for a
+    // silent no-op (unrated lead → no SLA, no alert, no error), which is the
+    // "declared ≠ enforced" shape this repo keeps deleting rules over. So the
+    // hot branch demands a readable rating and the standard branch absorbs
+    // everything else: an unrated lead is, correctly, not a hot lead.
+    //
+    // `rating` is neither required nor defaulted, so a lead written without one
+    // is stored with NO `rating` column on driver-memory / driver-mongodb.
+    // Measured end-to-end: the unguarded `record.rating >= 4` aborted with `No
+    // such key: rating` and an unrated lead got no SLA stamp and no alert at
+    // all. `has()` alone is not enough on an ORDERING comparison — an explicit
+    // `rating: null` passes `has()` and then aborts with `no such overload:
+    // dyn<null> >= int` — so both guards are required, in this order.
+    { id: 'e2', source: 'check_hot', target: 'sla_hot', type: 'conditional', condition: P`has(record.rating) && record.rating != null && record.rating >= 4`, label: 'Hot' },
+    { id: 'e3', source: 'check_hot', target: 'sla_std', type: 'conditional', condition: P`!has(record.rating) || record.rating == null || record.rating < 4`, label: 'Standard' },
     { id: 'e4', source: 'sla_hot', target: 'notify_hot', type: 'default' },
     { id: 'e5', source: 'notify_hot', target: 'end', type: 'default' },
     { id: 'e6', source: 'sla_std', target: 'notify_std', type: 'default' },

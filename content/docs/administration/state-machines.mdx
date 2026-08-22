@@ -1,90 +1,111 @@
 ---
 title: State Machines
-description: How HotCRM enforces valid status transitions on leads and opportunities — and how to extend the rules.
+description: How HotCRM declares valid status transitions on leads and opportunities — what the tables do and do not do, and how to extend the rules.
 ---
 
 # State Machines
 
-Some objects have a strict **lifecycle** — a lead progresses from *New* to *Working* to *Qualified*, never jumping backwards into *New*. A state machine enforces these transitions so users can't put records into nonsensical states.
+Some objects have a strict **lifecycle** — a lead progresses from *New* to *Contacted* to *Qualified* and on to *Converted*. A state machine **declares** that route; it does not enforce it. All five machines in this app carry **warning** severity, so a user can move a record outside the route and **the save still goes through** — see *A declared route is advice, not a gate* below.
 
 ## Where state machines apply
 
-HotCRM uses state machines on:
+HotCRM uses state machines on **five** objects:
 
-- **Leads** — *New → Working → Qualified → Converted / Disqualified*
-- **Opportunities** — through the 7 stages *Prospecting → Qualification → Proposal → Negotiation → Closed Won / Closed Lost / Closed Without Decision*
+- **Leads** — *New → Contacted → Qualified → Converted*, with *Unqualified* reachable from every open status and the only way back out of it being a re-open to *New*
+- **Opportunities** — through the 7 stages *Prospecting → Qualification → Needs Analysis → Proposal → Negotiation → Closed Won / Closed Lost*
+- **Cases** — *New → In Progress → Resolved → Closed*, with *Waiting on Customer* and *Waiting on Support* to park an open case, *Escalated* reachable from any unresolved status, and both *Resolved* and *Closed* able to reopen to *In Progress*
+- **Contracts** — *Draft → In Approval → Activated → Expired*, with *In Approval* able to send the paperwork back to *Draft*, *Terminated* reachable from all three live statuses, and *Expired* and *Terminated* both final
+- **Quotes** — *Draft → In Review → Presented → Accepted*, with *In Review* able to return to *Draft*, *Rejected* starting over at *Draft*, *Expired* reachable from *Draft*, *In Review* and *Presented*, and *Accepted* and *Expired* both final
 
-Other objects (case, contract, campaign, quote) have status fields but use **simpler workflow rules** rather than full state machines, because their transitions are less strict.
+All five are declared the same way — a named `state_machine` validation rule on the object, over that object's lifecycle field (`status`, or `stage` on opportunities). Cases, contracts and quotes are not a lighter mechanism than leads and opportunities; they are the same one. The top-level `stateMachines` key was removed in platform 7.7 and every machine moved onto its object.
+
+**A declared route is advice, not a gate.** All five rules carry **warning** severity, so a move outside the transition table is written to the server log — *"Invalid contract status transition"*, and so on — and **the save still goes through**. Nor is a record checked when it is *created*: the rules compare a new value against the previous one, so they only run on update, and a record imported straight into a late state passes untouched. What the table buys you is a declared, machine-readable route that automation, reports and the Copilot can rely on — not a lock on the field.
+
+**Campaigns have no state machine, and that is deliberate.** A campaign's status is descriptive (*Planning / In Progress / Completed / Aborted*) rather than a controlled lifecycle, and the same is true of the status fields on campaign members, events, knowledge articles and tasks. A transition table on any of them would warn on ordinary edits and teach users to ignore the warning.
 
 ## The Lead state machine
 
+The main route, with the two side edges that leave it:
+
 ```
-        ┌──────────────┐
-        │     New      │
-        └──────┬───────┘
-               │ Begin working
-               ▼
-        ┌──────────────┐
-        │   Working    │
-        └──┬────────┬──┘
-   Disqual │        │ Qualify
-           ▼        ▼
-   ┌────────────┐  ┌────────────┐
-   │Disqualified│  │ Qualified  │
-   └────────────┘  └─────┬──────┘
-                         │ Convert
-                         ▼
-                  ┌────────────┐
-                  │ Converted  │
-                  └────────────┘
+   New  ──Contact──▶  Contacted  ──Qualify──▶  Qualified  ──Convert──▶  Converted
+    ▲                     │                        │                   (terminal)
+    │                     │  Disqualify            │  Disqualify
+    │                     └───────────┬────────────┘
+    │                                 ▼
+    │                          ┌─────────────┐
+    └────────── Re-open ───────│ Unqualified │
+                               └─────────────┘
 ```
 
-**Allowed transitions**:
+**Allowed transitions** — this is the whole table, copied from the `lead_status_progression` rule in `src/objects/lead.object.ts`, and it carries a few shortcuts the picture above leaves out:
 
-| From | To | Trigger |
+| From | May move to | Notes |
 | --- | --- | --- |
-| New | Working | Manual ("Begin Working") or auto-update on first activity |
-| Working | Qualified | Manual ("Mark Qualified") |
-| Working | Disqualified | Manual ("Disqualify") with required reason |
-| Qualified | Converted | The Convert wizard (creates account/contact/opportunity) |
-| Disqualified | (terminal) | — |
-| Converted | (terminal) | — |
+| New | Contacted, Qualified, Unqualified, Converted | A lead can be qualified or converted without ever passing through *Contacted* |
+| Contacted | Qualified, Unqualified, Converted | |
+| Qualified | Converted, Unqualified | |
+| Unqualified | New | Re-open. This is the only edge out of *Unqualified* — it is not a terminal status |
+| Converted | — | Terminal |
 
-**Disallowed**: jumping from *New* directly to *Converted*; reverting *Converted* back to *Working*.
+Two of those edges have machinery behind them. Moving to *Unqualified* needs a **Disqualification Reason**: a separate validation rule, `disqualification_reason_required`, fires when the status is `unqualified` and the reason is blank — and unlike the transition table it is `error` severity, so that one **does** reject the save. Moving to *Converted* is the **Convert Lead** button, which runs the `lead_conversion` flow — it creates the account, contact and opportunity and stamps `status: 'converted'` at the end.
+
+**Allowed on purpose**: *New* directly to *Converted*. Convert Lead is visible on any lead that is neither converted nor unqualified — so *New*, *Contacted* and *Qualified* all show it — and the flow stamps the status itself, so that shortcut has to be in the table or every conversion from an unworked lead would log a spurious "invalid transition" warning. The comment above the table in `lead.object.ts` says exactly this.
+
+**Not in the table**: anything out of *Converted*, which is terminal; stepping back from *Qualified* to *Contacted* or *New*; and re-qualifying an *Unqualified* lead in one move — the way back from there is a re-open to *New*.
 
 ## The Opportunity state machine
 
 ```
-Prospecting → Qualification → Proposal → Negotiation
-                                              │
-                            ┌─────────────────┼────────────────────────┐
-                            ▼                 ▼                        ▼
-                        Closed Won      Closed Lost        Closed Without Decision
+Prospecting → Qualification → Needs Analysis → Proposal → Negotiation
+                                                  │            │
+                                                  └─────┬──────┘
+                                                        ▼
+                                                   Closed Won
+
+Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ Closed Lost
 ```
 
-**Rules**:
+There are **two** closed stages, not three: *Closed Won* and *Closed Lost*. There is no *Closed Without Decision* — a deal that goes quiet is a *Closed Lost*.
 
-- You can move **forward** through *Prospecting → Qualification → Proposal → Negotiation* freely.
-- You can move **backwards** (e.g., from *Negotiation* back to *Proposal*) — sometimes deals slip.
-- From any open stage, you can move to one of the three **closed** stages.
-- Once *Closed*, the opportunity is **locked** for amount/stage edits (except via reopen — admin only).
+**Allowed transitions**, copied from the `opportunity_stage_progression` rule in `src/objects/opportunity.object.ts`:
+
+| From | May move to | Notes |
+| --- | --- | --- |
+| Prospecting | Qualification, Proposal, Closed Lost | |
+| Qualification | Needs Analysis, Proposal, Closed Lost | |
+| Needs Analysis | Proposal, Closed Lost | 40% default probability, *Best Case* forecast category |
+| Proposal | Negotiation, Closed Won, Closed Lost | |
+| Negotiation | Closed Won, Closed Lost | |
+| Closed Won | — | Terminal |
+| Closed Lost | — | Terminal |
+
+Two of those edges exist for the CPQ path rather than for a rep clicking through stages: *→ Proposal* is legal from every pre-proposal stage because the `quote_generation` flow fast-forwards the deal to *Proposal* the moment a quote is generated, which can happen at any open stage; and *Proposal → Closed Won* is legal because the `quote_on_accepted` hook wins the linked deal straight from an accepted quote, with no separate negotiation step.
+
+**Not in the table**: moving **backwards**. No open stage declares an edge to an earlier one, so *Negotiation* back to *Proposal* — a deal slipping — is outside the route and logs a warning like any other departure (it still saves, per the note above). Neither closed stage declares an edge either, so there is no reopen transition and no admin path back to an open stage.
+
+A closed opportunity is separately **frozen**, and by more than the stage field: the `opportunity_lifecycle` hook refuses any user edit to a *Closed Won* or *Closed Lost* record except to `description`, `next_step` and `notes`, and that refusal is a thrown error naming the fields attempted — not a warning. Approval verdicts and platform-managed columns are exempted so an in-flight approval can still land, and a write with no authenticated user (a seed or a backfill) is not guarded at all.
 
 The system also enforces:
 
-- **Close Date is required** before moving to *Proposal*.
-- **Amount is required** before moving to *Negotiation*.
-- **Won/Lost reason is required** when entering *Closed Lost* or *Closed Won*.
-- **Approval may be required** to enter *Closed Won* if amount > $500K and discount approval hasn't been granted.
+- **Close Date is required** — and not from *Proposal* onwards, but always: `close_date` carries `required: true` with `notNull` storage, so an opportunity cannot be created without one.
+- **Amount is required** — unconditional in the same way. Neither field waits for a stage.
+- **Won/Lost reason is required** when entering *Closed Lost* or *Closed Won* — `requiredWhen` predicates on `win_reason` and `loss_reason`, keyed on the stage.
+- **Approval starts at $100K.** The `opportunity_approval` flow fires on any update that leaves an open opportunity at **$100,000 or more** with no approval on file, and routes it to a **Sales Manager**. **$500K** is the second tier, not the entry: above that a **Sales Director** signs off after the manager. So a $200K deal does go through approval.
 
-## Why state machines matter
+The heading is fair for the first three, unlike the transition tables above them: `required` and `requiredWhen` are hard, and a save that violates one is refused. The fourth is not a save-time check at all — `opportunity_approval` is a `record_change` flow that runs *after* the update and then holds the record locked while a step is pending.
 
-Without them, you get:
+## What a state machine buys you
 
-- Reps marking leads *Converted* by accident.
-- Opportunities jumping from *Prospecting* to *Closed Won* (no real qualification done).
-- Inaccurate funnel reports because records skipped stages.
+Not prevention. Everything this section used to list as impossible still happens exactly as it did before the table was declared: a rep can mark a lead *Converted* by accident, an opportunity can go from *Prospecting* straight to *Closed Won*, and records can skip stages. Each of those writes one warning to the server log and is then saved. So a funnel report does **not** "reflect reality" by virtue of a table existing — it reports whatever stages the records actually passed through.
 
-With them, your funnel report **reflects reality** — every win went through every stage.
+What the table does buy you is the route itself, **written down in one machine-readable place**:
+
+- **One place the lifecycle lives.** A reviewer, a report author or an agent writing metadata for this app reads the intended route off the object, instead of inferring it from every flow and hook that writes the field.
+- **Illegal moves are reported rather than silent.** The move is saved, but the engine names it in the log — *"Invalid opportunity stage transition"*, with the rule's own name — so a bad import or a misbehaving integration can be found afterwards. A move inside the table logs nothing, which is what makes the warnings worth reading.
+- **Something for automation and reporting to point at.** A flow condition, a report or a skill can be written against the declared route instead of a list of statuses copied out by hand.
+
+If you need a status change to be genuinely impossible, the state machine is the wrong tool: an `error`-severity validation rule is the one that blocks a save. Keeping these five advisory is deliberate — the reasoning is written into the rules themselves (`src/objects/quote.object.ts`): a support-driven correction must not require a data fix.
 
 ## Customising state machines
 
@@ -94,40 +115,38 @@ Admins can:
 - **Remove transitions** (e.g., disallow going backwards through opportunity stages).
 - **Add entry conditions** (e.g., *Cannot enter Proposal without a Decision Maker contact role*).
 - **Add exit conditions** (e.g., *Cannot leave Negotiation without an updated Close Date*).
-- **Trigger automation** on each transition (workflow rule, flow, notification).
+- **Trigger automation** on each transition (object hook, flow, notification).
 
-Configure at **Setup → Object → Status → State Machine**.
+All of that is a source edit, not a Setup screen: **there is no Setup → Object → Status → State Machine page**. Each table is a `validations[]` entry of type `state_machine` on its object (`src/objects/*.object.ts`), and that entry carries a transition map and nothing else — so the first two changes above are edits to the map, entry and exit conditions are separate `validations[]` rules or `requiredWhen` predicates on the fields concerned, and per-transition automation is a `record_change` flow or an object hook. Each of them is a code change plus a redeploy.
 
 ## What users see
 
-- The status field on the record only shows **valid next states** in the dropdown.
-- Attempting a disallowed transition shows an error: *"Cannot move from Converted back to Working."*
-- Required fields for the new state are enforced — the user sees them inline before save.
+- **The status dropdown is not filtered.** It offers every option the field declares, whatever the record's current status is. The platform *can* compute the legal next states — `legalNextStates` in `@objectstack/objectql`, reachable over `GET /objects/{name}/state/{field}?from=…` — but nothing in this app calls it, and no list, form or detail page narrows a picklist by it.
+- **A disallowed transition raises no error and no dialog.** The save goes through and the record keeps its new value; the only trace is a single server-side log line — `WARN Validation rule 'lead_status_progression' (warning): Invalid lead status transition` — which nobody working in the UI ever sees.
+- Required fields for the new state are enforced — the user sees them inline before save. That is a different mechanism: a `requiredWhen` predicate on the field (for example `win_reason` when the stage becomes *Closed Won*), which does reject the save.
 
 ## State machines and the AI Copilot
 
-The Copilot understands the state machine. When suggesting an action:
+**Nothing in this app connects the two.** The six skills under `src/skills/` and every action under `src/actions/` name no transition table, no state machine and no legal-next-state lookup, and no skill's instructions carry a list of which statuses may follow which. This page previously described the Copilot withholding a *"Qualify this lead"* or *"Convert this lead"* suggestion until the record's status allowed the move; HotCRM declares nothing that would produce that behaviour.
 
-- *"Qualify this lead"* → only suggested if status is *Working*.
-- *"Convert this lead"* → only suggested if status is *Qualified*.
-- *"Mark this opportunity Closed Won"* → only suggested if win conditions are met (amount, close date, win reason, approval if required).
+Whether the platform's own agent reads a `state_machine` validation when it loads an object's metadata, and narrows its suggestions accordingly, is a question about the runtime rather than about this app — so this page makes no claim about it in either direction. If you are relying on the Copilot to stay inside a lifecycle, verify it against your deployment rather than against this page.
 
-This prevents the Copilot from suggesting illegal transitions.
+What the tables do give an agent is what they give a report author: the route, declared in one place on the object, for a skill or a flow to be written against deliberately.
 
 ## Tips for admins
 
 - ✅ **Don't over-constrain** — too many transition rules become a friction tax on the team.
 - ✅ When adding a new status, **decide the entry and exit conditions first** — the rest follows.
-- ✅ Use state-machine transitions to **trigger automation** rather than running automation on every save — much more performant.
+- ✅ **Don't hang automation off a transition** — there is nothing to hang it on. The table is a validation rule, evaluated on the save that makes the move; it writes a log line and emits no event for automation to subscribe to. Automation that should run on one move is a `record_change` flow that fires on the save and narrows *itself* in its start condition, comparing `record.stage` against `previous.stage` — `opportunity_won_alert` (`src/flows/opportunity-won-alert.flow.ts`) does exactly that, so the congratulations blast goes out on the move into *Closed Won* and not on every later edit of a won deal.
 - ✅ **Test the wizard flows** (convert lead, close opportunity) after every change.
 
 ## Tips for users
 
-- If a status dropdown is missing the option you expect, the state machine is blocking it. Check the current status, what comes next, and what fields are required.
-- If you genuinely need to bypass the rule (e.g., importing legacy data), ask an admin — they have a *"bypass state machine"* permission they can grant temporarily.
+- A status dropdown never hides an option on the state machine's account — it does not filter the picklist at all. If an option you expect is missing, look at the field's own options or at your profile's field-level security, not at the transition table.
+- There is no *"bypass state machine"* permission to ask for, and nothing to bypass. Importing legacy data straight into a late status needs no grant: on **create** the table is not consulted at all, and on update a move outside it is logged and saved. What you should still do is tell an admin, so the warnings that land in the log are recognised as the import rather than chased as a bug.
 
 ## Related
 
 - [Sales › Leads](/docs/sales/leads) — the user-facing lead lifecycle.
 - [Sales › Opportunities](/docs/sales/opportunities) — the user-facing opportunity lifecycle.
-- [Automation](/docs/administration/automation) — for transition-triggered workflows.
+- [Automation](/docs/administration/automation) — for the flows and object hooks a transition can trigger.

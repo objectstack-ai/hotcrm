@@ -2,6 +2,7 @@
 
 import { P } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
+import { HIGH_VALUE_DEAL_AMOUNT, LARGE_DEAL_AMOUNT } from '../objects/_thresholds';
 type Flow = Automation.Flow;
 
 /**
@@ -23,8 +24,17 @@ type Flow = Automation.Flow;
  * instead of the no-op `script` + `actionType:'email'` shape.
  *
  * Tiered policy (single source of truth — no double-firing):
- *   - amount > $100K          → Sales Manager review
+ *   - amount >= $100K         → Sales Manager review
  *   - amount > $500K          → additionally Sales Director sign-off
+ *
+ * The entry gate is INCLUSIVE at the line (`>=`, #1087) and the director tier is
+ * exclusive (`>`): those are not the same kind of number. `LARGE_DEAL_AMOUNT` is
+ * the one line this app draws around "large deal", and every consumer of it —
+ * this gate, its insert twin, the won-deal alert and both sharing rules — now
+ * cuts the same way, so a deal at exactly $100,000 is large everywhere or
+ * nowhere. `HIGH_VALUE_DEAL_AMOUNT` below is a matched PAIR (`> 500000` /
+ * `<= 500000`) whose two halves must partition, which is a different property
+ * and is left alone.
  * On full approval the deal is stamped `approval_status = approved` (+ date);
  * any rejection stamps `approval_status = rejected`. The record is locked while
  * a step is pending and `approval_status` mirrors the live request status.
@@ -32,9 +42,27 @@ type Flow = Automation.Flow;
 export const OpportunityApprovalFlow: Flow = {
   name: 'opportunity_approval',
   label: 'Large Deal Approval',
-  description: 'Tiered approval for opportunities: manager review > $100K, director sign-off > $500K.',
+  description: 'Tiered approval for opportunities: manager review at $100K or more, director sign-off > $500K.',
   type: 'record_change',
   status: 'active',
+  // Same user-less exposure as every record-change flow (ADR-0049, #1888,
+  // #3760) — and the one with teeth. Measured on 17.0.0-rc.2: a $150K renewal
+  // created by the `runAs: 'system'` contract_renewal sweep fired this flow
+  // with no trigger user, and the run died at `get_opportunity`. The deal sat
+  // at `approval_status: 'not_required'`, unlocked, with no approval request
+  // ever opened — the gate was bypassed by the writer simply not carrying a
+  // session. An approval control that only engages for logged-in writers is
+  // not a control.
+  //
+  // Elevating the USER-driven runs too is not merely acceptable here, it is
+  // required. This gate exists to CONSTRAIN the submitter, so the submitter's
+  // own scope is the wrong identity to evaluate it under; and
+  // `mark_approved` / `mark_rejected` stamp `approval_status` on a record the
+  // approval node holds locked (`lockRecord: true`), which only a platform
+  // write may land. The approval node itself already opens its request under
+  // the platform identity while re-attaching the deciding user for
+  // attribution, so this declaration aligns the flow with the node it drives.
+  runAs: 'system',
 
   variables: [
     { name: 'opportunityId', type: 'text', isInput: true, isOutput: false },
@@ -58,8 +86,18 @@ export const OpportunityApprovalFlow: Flow = {
         // freeze hook rejects approval-status writes on closed records, so
         // without this guard the flow opened a locked approval request it
         // could never resolve (lockRecord held the closed record hostage).
-        condition: P`record.amount > 100000 && (record.approval_status == "not_required" || record.approval_status == null)
-          && record.stage != "closed_won" && record.stage != "closed_lost"`,
+        // TOTALITY (#633): `has(...)` on every read, plus `!= null` on the
+        // ordering comparison — `has()` passes an explicit null and
+        // `record.amount >= 100000` then aborts with
+        // `no such overload: dyn<null> >= int`. Measured total as authored
+        // today (amount/stage are required, approval_status is defaulted), but
+        // that is `crm_opportunity`'s schema doing the work, not the
+        // predicate. An absent `approval_status` reads the same as the null
+        // this condition already tolerates; an absent `stage` is not a settled
+        // stage, so it must not block approval.
+        condition: P`has(record.amount) && record.amount != null && record.amount >= ${LARGE_DEAL_AMOUNT}
+          && (!has(record.approval_status) || record.approval_status == "not_required" || record.approval_status == null)
+          && (!has(record.stage) || (record.stage != "closed_won" && record.stage != "closed_lost"))`,
       },
     },
     {
@@ -69,7 +107,7 @@ export const OpportunityApprovalFlow: Flow = {
       config: { objectName: 'crm_opportunity', filter: { id: '{record.id}' }, outputVariable: 'oppRecord' },
     },
 
-    // ── Tier 1: Sales Manager review (all deals > $100K) ────────────
+    // ── Tier 1: Sales Manager review (all deals at $100K or more) ───
     {
       id: 'manager_review',
       type: 'approval',
@@ -95,10 +133,13 @@ export const OpportunityApprovalFlow: Flow = {
 
     // ── Tier gate: does this deal also need director sign-off? ──────
     {
+      // No `config.condition` here: the branch is on edges `e5` / `e6`, which
+      // is where the engine actually reads it. A copy on the node would be
+      // inert and indistinguishable from the live one (17.0.0-rc.2's
+      // `flow-inert-node-condition`, #4414).
       id: 'check_high_value',
       type: 'decision',
       label: 'High Value (> $500K)?',
-      config: { condition: P`oppRecord.amount > 500000` },
     },
 
     // ── Tier 2: Sales Director sign-off (deals > $500K only) ────────
@@ -132,7 +173,7 @@ export const OpportunityApprovalFlow: Flow = {
       type: 'notify',
       label: 'Notify Owner — Approved',
       config: {
-        recipients: ['{oppRecord.owner}'],
+        recipients: ['{oppRecord.owner_id}'],
         channels: ['inbox', 'email'],
         topic: 'opportunity_approved',
         title: 'Deal approved: {oppRecord.name}',
@@ -157,7 +198,7 @@ export const OpportunityApprovalFlow: Flow = {
       type: 'notify',
       label: 'Notify Owner — Rejected',
       config: {
-        recipients: ['{oppRecord.owner}'],
+        recipients: ['{oppRecord.owner_id}'],
         channels: ['inbox', 'email'],
         severity: 'warning',
         topic: 'opportunity_rejected',
@@ -178,9 +219,32 @@ export const OpportunityApprovalFlow: Flow = {
     { id: 'e3', source: 'manager_review', target: 'check_high_value', type: 'default', label: 'approve' },
     { id: 'e4', source: 'manager_review', target: 'mark_rejected', type: 'default', label: 'reject' },
 
-    // Tier gate (decision-node conditional branches)
-    { id: 'e5', source: 'check_high_value', target: 'director_signoff', type: 'conditional', condition: P`oppRecord.amount > 500000`, label: 'High value (> $500K)' },
-    { id: 'e6', source: 'check_high_value', target: 'mark_approved', type: 'conditional', condition: P`oppRecord.amount <= 500000`, label: 'Standard (≤ $500K)' },
+    // Tier gate (decision-node conditional branches). These EDGES are the live
+    // sites — the engine never evaluates a `decision` node's singular
+    // `config.condition` — and they must PARTITION, so the guards are written
+    // in opposite polarity. A deal whose amount cannot be read lands on
+    // `mark_approved`: the manager has already approved it, and an unreadable
+    // amount must not strand an approved deal in a locked, undecidable
+    // director step.
+    //
+    // TOTALITY (#643): `oppRecord` is a `get_record` OUTPUT, so the read needs
+    // `has(vars.oppRecord)` (the variable), `has(vars.oppRecord.amount)` (the
+    // column — `findOne` answers a miss with `null`, and a sparse driver row
+    // omits an unwritten column outright) and `!= null` (an explicit null
+    // passes `has()` and the ordering comparison then aborts with `no such
+    // overload: dyn<null> > int`). Measured total as authored today — `amount`
+    // is `required` on `crm_opportunity` and the `get_record` is keyed on the
+    // row that just fired the trigger — but that is the neighbouring schema
+    // doing the work, exactly as in the start condition above. `vars.`-scoped
+    // rather than bare: `has(oppRecord.amount)` still aborts with `Unknown
+    // variable: oppRecord` on an unbound variable, `has(vars.oppRecord)`
+    // answers `false` (measured). From 17.0.0-rc.2 an unevaluable condition
+    // ABORTS the step rather than skipping it (#4775), so a guard that was
+    // belt-and-braces is now what keeps the run alive.
+    { id: 'e5', source: 'check_high_value', target: 'director_signoff', type: 'conditional', condition: P`has(vars.oppRecord) && has(vars.oppRecord.amount)
+      && vars.oppRecord.amount != null && vars.oppRecord.amount > ${HIGH_VALUE_DEAL_AMOUNT}`, label: 'High value (> $500K)' },
+    { id: 'e6', source: 'check_high_value', target: 'mark_approved', type: 'conditional', condition: P`!has(vars.oppRecord) || !has(vars.oppRecord.amount)
+      || vars.oppRecord.amount == null || vars.oppRecord.amount <= ${HIGH_VALUE_DEAL_AMOUNT}`, label: 'Standard (≤ $500K)' },
 
     // Director decision (approval-node branch labels)
     { id: 'e7', source: 'director_signoff', target: 'mark_approved', type: 'default', label: 'approve' },

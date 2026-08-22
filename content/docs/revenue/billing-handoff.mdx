@@ -1,0 +1,163 @@
+---
+title: Billing Hand-off
+description: Where HotCRM's revenue scope ends — the two outbound events that hand a won deal and an activated contract to your billing system.
+---
+
+# Billing Hand-off
+
+HotCRM runs the **commercial** side of revenue: finding the customer, agreeing the price, signing the contract. It does not run the **financial** side. There is no Order, no Invoice, no Payment object in this app, and none is planned.
+
+That is a deliberate boundary, not a gap. Billing, tax, collections and revenue recognition are a different system's job, and a CRM that half-models them ends up with two disagreeing sets of numbers. What HotCRM owes that system is one thing done properly: a **reliable hand-off** at the two moments money becomes real.
+
+## The boundary
+
+| | HotCRM owns it | Handed off |
+| --- | --- | --- |
+| **Demand** | Campaigns, leads, qualification | — |
+| **Deal** | Accounts, contacts, opportunities, quotes, line items, discount approvals | — |
+| **Agreement** | Contracts: terms, dates, value, `billing_frequency`, `payment_terms`, renewal | — |
+| **Money** | — | Invoicing, billing schedules, tax, dunning, collections |
+| **Fulfilment** | — | Provisioning, shipping, inventory movement |
+| **Recognition** | — | Revenue schedules, deferred revenue, reporting to finance |
+
+Two consequences worth stating plainly, because people look for them:
+
+- **HotCRM holds no stock figure at all.** A product carries no quantity on hand, and closing a deal decrements nothing. Inventory is the fulfilment system’s record, and this app deliberately keeps no second copy of it.
+- **Payment status is never mirrored back.** Nothing in HotCRM tells you whether an invoice was paid. A future inbound integration could, but it does not exist today, and no field pretends otherwise.
+
+## The two events
+
+Both are outbound HTTP `POST`s, sent when a record **crosses into** a state — not on every later save of a record already in it.
+
+| Event | Fires when | Carries |
+| --- | --- | --- |
+| `crm.opportunity.closed_won` | An opportunity's stage moves **into** *Closed Won* from anything else | The deal, its account, its line items |
+| `crm.contract.activated` | A contract's status moves **into** *Activated* from anything else | The contract, its account, the originating deal's line items |
+
+The transition wording is the whole design. A won deal keeps being edited afterwards — a PO number is added, ownership changes, the description is tidied. Each of those is a save, and a hand-off that fired on "is currently won" would tell the billing system to bill the same deal again every time. Both events fire **once per crossing**.
+
+> A contract activated from a deal that was already handed off means the billing system hears about the same customer twice, deliberately: the first event says *we won it*, the second says *it is in force with these terms*. They carry different payloads and most receivers act on only one of them. Pick the one that matches when you actually start billing — for subscription businesses that is usually contract activation.
+
+## The payload
+
+One JSON document per event. `crm.opportunity.closed_won` looks like this:
+
+```json
+{
+  "event": "crm.opportunity.closed_won",
+  "version": 1,
+  "occurred_at": "2026-08-31T16:04:11.482Z",
+  "opportunity": {
+    "id": "opp_1",
+    "name": "Northwind — Platform Rollout",
+    "amount": 250000,
+    "close_date": "2026-08-31",
+    "stage": "closed_won",
+    "type": "new_business",
+    "account_id": "acc_1",
+    "owner_id": "user_7"
+  },
+  "account": {
+    "id": "acc_1",
+    "name": "Northwind Traders",
+    "account_number": "ACC-0001",
+    "billing_address": { "street": "1 Market St", "city": "Seattle", "country": "US" },
+    "billing_country": "US",
+    "phone": "+1-206-555-0100",
+    "website": "https://northwind.example.com"
+  },
+  "line_items": [
+    {
+      "id": "oli_1",
+      "line_number": 1,
+      "crm_product": "prod_1",
+      "description": "Platform subscription",
+      "quantity": 10,
+      "list_price": 20000,
+      "unit_price": 18000,
+      "discount": 10,
+      "total_price": 162000
+    }
+  ]
+}
+```
+
+`crm.contract.activated` has the same envelope with a `contract` block in place of `opportunity`:
+
+```json
+{
+  "event": "crm.contract.activated",
+  "version": 1,
+  "occurred_at": "2026-09-01T08:00:03.117Z",
+  "contract": {
+    "id": "ctr_1",
+    "contract_number": "CTR-0001",
+    "status": "activated",
+    "contract_type": "subscription",
+    "start_date": "2026-09-01",
+    "end_date": "2027-08-31",
+    "contract_term_months": 12,
+    "contract_value": 250000,
+    "billing_frequency": "monthly",
+    "payment_terms": "net_30",
+    "auto_renewal": true,
+    "signed_date": "2026-08-31",
+    "account_id": "acc_1",
+    "opportunity_id": "opp_1",
+    "owner_id": "user_7"
+  },
+  "account": { "…": "as above" },
+  "line_items": []
+}
+```
+
+Notes on the shape:
+
+- **`billing_frequency` and `payment_terms` are the point of the contract event.** HotCRM records them and does nothing with them; your billing system is what turns *monthly* / *net 30* into a schedule.
+- **`line_items` is always present**, as an array, possibly empty. A contract created directly — without an originating opportunity — has nothing to itemise, and you get `[]` rather than a missing key.
+- **The field lists are fixed**, not a dump of the record. Adding a field to Accounts or Opportunities in HotCRM does **not** silently change what you receive; the payload is a contract, and widening it is a deliberate edit with a `version` bump.
+
+## Delivery: what "reliable" means here
+
+The hand-off does not call your endpoint from the save. It **enqueues a durable delivery** on the platform's outbound-HTTP outbox, and a background dispatcher drains it. Concretely:
+
+- **Retries with backoff.** A failed attempt is retried up to seven times, waiting roughly 1 second, 10 seconds, 1 minute, 10 minutes, 1 hour, 6 hours, then 24 hours (jittered). A receiver that is down for a working day still gets the event.
+- **Retriable vs fatal.** `408`, `429` and any `5xx`, plus network errors and timeouts, are retried. Other `4xx` responses are treated as a permanent refusal and the delivery is dead-lettered immediately — if you answer `400` to a payload you dislike, you will not be asked again.
+- **Signed, when you configure a secret.** With a signing secret set, each request carries `X-Objectstack-Signature: sha256=<hex>`, an HMAC-SHA256 of the exact request body. Verify it before trusting the payload. With no secret configured, the header is simply absent — nothing is silently "signed" with an empty key.
+- **Deduplicate on `X-Objectstack-Delivery`.** Delivery is *at least once*: every retry of one enqueued event repeats that header value, so a receiver that records it can drop repeats safely. The `occurred_at` timestamp is not a dedupe key.
+- **Every attempt is recorded.** The platform stores each delivery as an `HTTP Delivery` row (`sys_http_delivery`) with its status, attempt count, response code, error and next retry time, and ships **Recent**, **Failures** and **Pending** list views over it. This is a platform system object: it is reached through the platform's own admin surface, not through a HotCRM sidebar entry — there is no *Billing* item in the CRM app's navigation.
+
+Requests also carry `X-Objectstack-Event: flow:send_closed_won_handoff` / `flow:send_contract_activated_handoff`, which is a second way to route the two events apart if you would rather not read the body's `event` field.
+
+## Pointing it at your billing system
+
+**This is a code change, not a Setup edit.** Read that sentence before you go looking for a screen: the endpoint and the signing secret live in the app's own metadata, so changing them means changing the app and redeploying it.
+
+Both values are read from one module, `src/flows/_billing-endpoint.ts`, and both accept an environment override at **build** time:
+
+```bash
+HOTCRM_BILLING_ENDPOINT=https://billing.acme.internal/hotcrm/events \
+HOTCRM_BILLING_SIGNING_SECRET=…                                    \
+pnpm build
+```
+
+Set nothing and the endpoint stays at its example default, `https://billing.example.com/hotcrm/events`, which is not a real receiver. Deliveries will still be enqueued, retried and finally dead-lettered — visibly, in the delivery log. That is intentional: an unconfigured hand-off that is loudly failing is easier to notice than one that quietly does nothing.
+
+> **Why not an admin-editable webhook?** The platform does have a declarative webhook surface whose rows *are* editable in Setup. It cannot express either of these events: a webhook subscribes to an object plus an action (`create` / `update` / `delete`), with no way to say "only on the transition into Closed Won" and no way to shape the body. Declared that way, `closed_won` would fire on every single opportunity edit and deliver a bare change envelope with no account and no line items — the receiver would have to detect the real event itself and call back for everything it needs. HotCRM chose exact events with a complete payload, and pays for it with an endpoint that moves at deploy time rather than in a form. If your situation reverses that trade, the webhook surface is still there to use.
+
+## Building the other side
+
+A minimal receiver needs to:
+
+1. Accept `POST` with a JSON body.
+2. Verify `X-Objectstack-Signature` against your shared secret, over the raw body bytes.
+3. Look at `X-Objectstack-Delivery`; if you have seen it, answer `200` and stop.
+4. Switch on `event`, do the work, and answer `2xx`. Answer `5xx` (or time out) to be retried; answer `4xx` only when the payload is permanently unacceptable.
+
+Nothing flows back. If your billing system needs to tell HotCRM that an invoice was raised or paid, that is a separate inbound integration and does not exist yet — see the boundary table at the top of this page.
+
+## Related
+
+- [Contracts](/docs/revenue/contracts) — the statuses, and what activation triggers inside HotCRM.
+- [Opportunities](/docs/sales/opportunities) — stages, and what *Closed Won* means.
+- [Automation](/docs/administration/automation) — both hand-offs appear in the built-in flow table, and their runs appear in **Studio → Developer → Flow Runs**.

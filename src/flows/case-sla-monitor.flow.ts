@@ -74,14 +74,14 @@ export const CaseSlaMonitorFlow: Flow = {
               },
             },
             {
-              // Owner only: `{currentCase.owner.manager}` cannot traverse a
+              // Owner only: `{currentCase.owner_id.manager}` cannot traverse a
               // lookup in flow templates — it interpolates to the literal
               // "undefined" (cf. case_escalation / opportunity_won_alert).
               id: 'notify_team', type: 'notify', label: 'Alert Owner',
               config: {
-                // Owner only — `{currentCase.owner.manager}` dot-walks a
+                // Owner only — `{currentCase.owner_id.manager}` dot-walks a
                 // lookup, which flow templates interpolate as "undefined".
-                recipients: ['{currentCase.owner}'],
+                recipients: ['{currentCase.owner_id}'],
                 channels: ['inbox', 'email'],
                 severity: 'critical',
                 topic: 'case_sla_breach',

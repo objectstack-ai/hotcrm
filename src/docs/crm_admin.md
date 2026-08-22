@@ -48,8 +48,11 @@ Manager's access; each rung that needs a record is named by its own sharing
 rule, which is why the leadership rules below come in pairs.
 
 These same names back the approval and escalation automation: large deals route
-to **Sales Manager** / **Sales Director**; critical cases reassign to the owner's
-**manager**.
+to **Sales Manager** / **Sales Director**; an escalated case is handed to the
+**Service Manager** holding the fewest open cases. Note what the flatness means
+there: the hand-off targets the *position*, not "the owner's manager" — there is
+no reporting line to walk — and with nobody holding it the case keeps its
+owner.
 
 ## Record visibility (sharing rules)
 
@@ -57,7 +60,7 @@ Ownership-based access is widened by these rules:
 
 | Rule | Object | Access | Purpose |
 |---|---|---|---|
-| Account Team | Account | **Edit** | Named account-team members can edit the account. |
+| Account Team | Account | **Edit** | Sales Managers edit active customer accounts. Criteria-based despite the name — there is no account-team roster object. |
 | Territory — North America / Europe | Account | **Edit** | Regional teams edit accounts in their territory. |
 | Sales Sharing | Opportunity | **Read** | Sales Director sees large open deals. |
 | Large Open Deals — Executive | Opportunity | **Read** | The same deals at the Executive rung. |
@@ -69,6 +72,14 @@ Detail objects — opportunity line items, quote line items, campaign members an
 contacts — carry **no** sharing rules by design: their record access derives
 from their parent (`controlled_by_parent`, ADR-0055), so a share on the parent
 is what widens them. Writing one requires edit access to that parent.
+
+**A rule widens one object, not the records under it.** The account rules above
+hand over the account and — through `controlled_by_parent` — its contacts.
+Quotes, contracts and tasks on that account are `private` with no rule of their
+own, and opportunities only widen for the ≥ $100k leadership rules, so those
+related lists stay own-only for a territory recipient. Whether that should
+change is an open product decision (#549); until it is made, the docs describe
+the own-only behaviour rather than promising a 360° view.
 
 ## Profiles
 
@@ -99,12 +110,12 @@ revisits:
 
 | Behavior | Current setting | Defined in |
 |---|---|---|
-| Large-deal approval (manager) | amount **> $100,000** | `opportunity-approval.flow.ts` |
+| Large-deal approval (manager) | amount **$100,000 or more** | `opportunity-approval.flow.ts` |
 | Large-deal approval (+ director) | amount **> $500,000** | `opportunity-approval.flow.ts` |
 | Hot-lead follow-up SLA | **1 day** (Lead Score ≥ 4★) | `lead-assignment.flow.ts` |
 | Standard-lead follow-up SLA | **3 days** | `lead-assignment.flow.ts` |
 | Stalled-deal nudge | **> 14 days** in stage, swept daily **07:30** | `opportunity-stagnation.flow.ts` |
-| Won-deal alert | **Closed Won** over **$100,000** | `opportunity-won-alert.flow.ts` |
+| Won-deal alert | **Closed Won** at **$100,000** or more | `opportunity-won-alert.flow.ts` |
 | Quote default validity | **30 days** | `quote-generation.flow.ts` |
 | Quote auto-expiration sweep | daily **01:00** | `quote-expiration.flow.ts` |
 | Case SLA breach sweep | **hourly** | `case-sla-monitor.flow.ts` |

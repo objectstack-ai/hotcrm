@@ -40,6 +40,49 @@ const RUNTIME_TEST_FILES = [
   'flow-record-change.test.ts',
   'flow-case-actions.test.ts',
   'flow-campaign-enrollment.test.ts',
+  // #597 — the campaign_member hooks (response lockstep, the opt-out
+  // round-trip, and the live metric refresh) run their real handlers here
+  // rather than in hooks-runtime-service.test.ts, because the same file also
+  // carries the metadata half of the trim they pair with.
+  'campaign-member-lifecycle.test.ts',
+  // #600 — the two outbound billing hand-off flows, driven through the real
+  // engine and the real builtin `http` executor's durable branch.
+  'flow-billing-handoff.test.ts',
+  // #592 — the activity model's own runtime file: both `crm_event` hooks, the
+  // parity check that keeps the duplicated bubble body from drifting, and the
+  // readonly-strip regression proof against a real engine.
+  'activity-recency.test.ts',
+  // #596 — case intake assignment. Same precedent as the line above: a feature
+  // whose runtime evidence is one story (the transfer-gate measurement, the
+  // assigned and pool-empty paths, the strip-then-assign ordering, and the
+  // triage view that makes the no-op visible) gets its own runtime file rather
+  // than being scattered across the by-domain ones.
+  'case-assignment.test.ts',
+  // #601 — the knowledge loop. Same precedent as the two lines above: each of
+  // these files carries one feature's runtime evidence together with the
+  // metadata half it only makes sense beside. `knowledge-feedback` runs the
+  // vote actions under the real sandbox and the recount hook against a real
+  // store; `knowledge-deflection` runs the close-case flow through the real
+  // automation engine, the normalisation hook, and the shipped deflection
+  // measures through the real analytics executor on both drivers.
+  'knowledge-feedback.test.ts',
+  'knowledge-deflection.test.ts',
+  // #1096 — the triage claim seam. Same precedent as the lines above, and a
+  // stronger case for it than most: `case_self_claim` cannot be exercised by a
+  // hook harness at all, because the behaviour under test is what the PLATFORM
+  // does either side of the hook (the transfer gate refusing a hand-written
+  // `owner_id` upstream of the hook phase, and accepting the hook's own stamp).
+  // Only a boot of the real stack can ask that, so the hook's runtime evidence
+  // lives beside the sharing rule it completes.
+  'unassigned-case-triage-reach.test.ts',
+  // #1180 — the `do_not_call` guards on `crm_task` and `crm_event`. Same
+  // precedent as the feature files above: one field's enforcement is one story,
+  // and it is only legible with both halves side by side — the refusals AND the
+  // deliberate non-refusals (`log_call`, a completed Call task, a held Call
+  // event) that draw the line between preventing a call and hiding one. Both
+  // hooks run their SHIPPED lowered bodies through the real QuickJS runner
+  // there, not their handlers.
+  'do-not-call-enforcement.test.ts',
 ];
 
 /**
@@ -49,12 +92,13 @@ const RUNTIME_TEST_FILES = [
  * shortcut — and a stale entry (a flow that has since gained coverage) fails
  * the suite too, so it cannot rot.
  */
-const PENDING_FLOWS = new Set([
-  // Spans a 24h `wait` node; needs timer-resume support in the harness.
-  'case_csat_followup',
-  // First-boot demo seeding. Exercised end to end every time the e2e suite
-  // boots a cold database (e2e/smoke.spec.ts asserts the seeded records).
-  'demo_bootstrap',
+const PENDING_FLOWS = new Set<string>([
+  // Empty, and the "no stale entries" case below is what emptied it.
+  // `case_csat_followup` was pending because it spans a 24h `wait` node — but
+  // the part of it that needed proving turned out to be reachable without
+  // timer-resume support: #684's user-less run drives it through the real
+  // engine as far as the suspension, which is where its execution identity is
+  // decided. See test/flow-record-change.test.ts.
 ]);
 
 const testSource = (() => {

@@ -14,8 +14,8 @@ release make it different from every CRM you've used before.
 
 ### ✨ Wow #1 — Live schema, live AI
 
-Add a field in the admin console. Ten seconds later, ask the Sales
-Copilot a question about it. It already knows. No retraining, no
+Add a field in the admin console. Ten seconds later, ask the AI
+assistant a question about it. It already knows. No retraining, no
 restart, no redeploy — the platform re-reads metadata on every
 agent turn and the Copilot's `describe_object` tool returns your
 new field as soon as it's saved.
@@ -63,53 +63,33 @@ http://localhost:4001 and create the first admin account.
 
 ---
 
-## v5.0 — Latest release
+## v2.2.2 — Latest release
 
-The biggest release yet — a foundational upgrade plus a major documentation overhaul.
+**HotCRM 2.2.2**, running on **ObjectStack 17.1.0** across every
+`@objectstack/*` package. The app manifest declares the matching
+`^17.1.0` protocol range, so a runtime on a different protocol major
+refuses the load up front with a structured diagnostic instead of failing deep
+in a schema parse.
 
-### Platform
+> **This page does not keep a second release table.** The release-by-release
+> history is `CHANGELOG.md` in the repository, compiled from the `.changeset/`
+> entry every pull request adds. The versions between v1.0 and 2.2.2 are
+> recorded there and are deliberately not re-listed here — a hand-maintained
+> copy of that history is exactly how this section came to advertise a "v5.0"
+> that was never an app version, on a platform major that never shipped it.
 
-- **🚀 Upgraded to ObjectStack 5.0** across all packages.
-- **New** `@objectstack/console@5.0` and `@objectstack/account@5.0` available on npm.
-- **Faster cold-start** and **lower memory footprint** in the runtime.
+### Where the current shape of the product is written down
 
-### Sales
+Rather than restate the inventory here — where nothing would check it — each
+area is described on the page that owns it, and those pages are held to the
+registered metadata by the repository's docs-drift guard:
 
-- **Refined opportunity stages** — clearer probability defaults, better forecast accuracy.
-- **Pipeline by Stage** dashboard now includes weighted and unweighted views side by side.
-- **Slipping deals report** added — surfaces opportunities whose close date moved out this week.
-
-### Service
-
-- **Case triage skill** — the AI Copilot now suggests priority, category, queue, and the top 3 matching KB articles in one click.
-- **SLA breach monitor** runs every 5 minutes (down from 15) — faster alerts on at-risk cases.
-
-### Revenue
-
-- **Contract renewal reminder** workflow now triggers based on `renewal_notice_days` on each contract.
-- **Discount approval** lock-fields behaviour added — amount/stage/close-date locked during approval.
-
-### Marketing
-
-- **Campaign auto-complete** runs nightly at 2 AM.
-- **Campaign auto-enroll** added — every Monday at 9 AM, active campaigns re-evaluate their audience.
-
-### AI Copilot
-
-- **Five built-in skills**: lead qualification, email drafting, revenue forecasting, customer 360°, case triage.
-- **Four built-in knowledge bases**: Sales Knowledge, Product Information, Support Knowledge, Competitive Intel.
-- The Copilot now **respects sharing and field-level security** end-to-end.
-
-### Analytics
-
-- **Four built-in cubes**: Sales, Pipeline, Service, Marketing — for self-service analysis.
-- **Subscription emails** for dashboards and reports — get the weekly digest in your inbox.
-
-### Documentation
-
-- 📚 **Documentation rewritten** for a business-and-admin audience — less code, more *"what you see, what you do, what happens automatically"*.
-- New sections: **Sales, Service, Marketing, Revenue, AI Copilot, Analytics, Administration**.
-- **Customization** section retained for developers building extensions.
+- **What ships in the box** — [Introduction](/docs/getting-started/introduction).
+- **Dashboards, reports, and the datasets underneath them** — [Analytics](/docs/analytics/index).
+- **Profiles, positions, and sharing** — [Sharing & security](/docs/administration/sharing-and-security).
+- **The AI surface** — [AI assistant](/docs/ai-copilot/index). HotCRM ships
+  skills only; they attach to the platform assistant, and the app defines no
+  agent of its own.
 
 ---
 

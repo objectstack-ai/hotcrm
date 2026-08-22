@@ -32,19 +32,24 @@ HotCRM is a single ObjectStack app. `objectstack.config.ts` is the source of tru
 hotcrm/
 ├── objectstack.config.ts
 ├── src/
-│   ├── objects/        # *.object.ts and object lifecycle hooks
+│   ├── objects/        # *.object.ts schemas and *.hook.ts lifecycle logic
+│   ├── hooks/          # barrel that hands the object hooks to the stack
 │   ├── actions/        # UI actions and executable action bodies
 │   ├── flows/          # automation flows
-│   ├── agents/         # AI agents
 │   ├── skills/         # AI skills
 │   ├── apps/, views/, pages/
-│   ├── dashboards/, reports/, cubes/
+│   ├── dashboards/, reports/, datasets/
+│   ├── mappings/       # import column-to-field projections
 │   ├── profiles/, sharing/
 │   ├── translations/
-│   └── data/
+│   ├── data/           # seed data
+│   ├── docs/           # package docs, shipped inside the built artifact
+│   └── interfaces/     # shared types (an empty barrel today)
 ├── apps/docs/          # Fumadocs app
 └── content/docs/       # documentation content
 ```
+
+HotCRM authors skills, not agents: the two app-owned copilots and the directory that held them were retired, and AI capability now comes from the platform assistant every ObjectStack environment provides. See [AI Skills](/docs/customization/ai-skills).
 
 ## File suffix protocol
 
@@ -55,7 +60,6 @@ hotcrm/
 | `*.actions.ts` | UI actions and AI-callable action bodies |
 | `*.flow.ts` | Automation |
 | `*.skill.ts` | AI skill |
-| `*.agent.ts` | AI agent |
 | `*.page.ts` | UI page |
 | `*.view.ts` | List or kanban view |
 | `*.dashboard.ts` | Dashboard |
@@ -84,7 +88,7 @@ export const Warranty = ObjectSchema.create({
 
 ### Add an AI skill
 
-Create `src/skills/<name>.skill.ts`, export it from `src/skills/index.ts`, and add the skill name to the relevant agent in `src/agents/`.
+Create `src/skills/<name>.skill.ts` and export it from `src/skills/index.ts`. Exporting it from that barrel is the whole wiring step — the skill attaches to the platform assistant (`ask`), and this app defines no agent of its own.
 
 ### Add UI metadata
 

@@ -1,20 +1,19 @@
 ---
 title: Automation
-description: Workflow rules, flows, validation rules and scheduled jobs — the business logic that runs without you.
+description: Validation rules, flows, scheduled jobs and approvals — the business logic that runs without you.
 ---
 
 # Automation
 
-Automation is what makes HotCRM *do work for you* — sending notifications, updating fields, creating tasks, escalating cases, all without anyone clicking a button. Five kinds of automation are available, each suited to a different job.
+Automation is what makes HotCRM *do work for you* — sending notifications, updating fields, creating tasks, escalating cases, all without anyone clicking a button. Four kinds of automation are available, each suited to a different job.
 
-> **How HotCRM implements them:** validation + field logic run as **object hooks** (`beforeInsert` / `beforeUpdate`); everything multi-step, scheduled, or approval-based runs as **flows**; and approvals are **`approval` nodes inside a flow** (ADR-0019), not a standalone process type. The platform also supports standalone workflow rules and approval-process metadata — listed below for completeness.
+> **How HotCRM implements them:** validation + field logic run as **object hooks** (`beforeInsert` / `beforeUpdate`); everything multi-step, scheduled, or approval-based runs as **flows**; and approvals are **`approval` nodes inside a flow** (ADR-0019), not a standalone process type. Standalone workflow-rule and approval-process metadata do not exist on the platform either — ADR-0019 and ADR-0020 removed both types.
 
-## The five kinds
+## The four kinds
 
 | Kind | When it fires | Best for |
 | --- | --- | --- |
 | **Validation rules** | Before save | Blocking bad data |
-| **Workflow rules** | After save | Field updates, simple email alerts |
 | **Flows** | On screen, on record change, or on a schedule | Multi-step logic, branching, loops, waits, approvals |
 | **Scheduled jobs** | On a schedule | Daily sweeps, weekly reports |
 | **Approval processes** | Inside a flow (approval node) | Multi-step sign-off with record locking |
@@ -30,31 +29,16 @@ The simplest kind. They block a save if a condition is true.
 - *"A campaign member must have either a Lead or a Contact, not both"* (on campaign members).
 - *"Discount % must be between 0 and 100"* (on quote line items).
 
-To add one:
+To add one — it is a source edit, not a Setup screen. **There is no Setup → Object entry**: the object roster the Console does show is **Studio → Data Model → Objects**, and a rule is a `validations[]` entry on the object itself (`src/objects/*.object.ts`), next to its fields.
 
-1. **Setup → Object → Validation Rules → New**.
+1. Add a `validations[]` entry to the object (`src/objects/*.object.ts`).
 2. Write the condition (the *fail* condition).
 3. Write the error message shown to the user.
-4. Activate.
-
-## Workflow rules
-
-Fire when a record matches a condition after save. Each rule can perform one or more **actions**.
-
-**Action types**:
-
-- **Field update** — change a field on the same record or a parent record.
-- **Email alert** — send a templated email to specific recipients.
-- **Create task** — for the record owner or another user.
-- **Outbound message** — fire a webhook.
-
-**Built-in examples**:
-
-- *Lead created with rating = Hot* → email to sales manager + create a *"qualify within 24 hours"* task.
-- *Opportunity won, amount ≥ $100K* → email celebration to the team, post in #wins channel.
-- *Case priority changed to Critical* → notify on-call engineer.
+4. Deploy — a rule runs unless it carries `active: false`.
 
 ## Flows (multi-step)
+
+> **Looking for "workflow rules"?** There is nothing to look for — not in this app, and not on the platform. ObjectStack retired the standalone workflow-rule type (ADR-0019 / ADR-0020): there is no `workflow` metadata type, no `workflows` collection on a stack, and no *Workflow Rules* entry under **Studio → Automation** — only *Flows*. A *"when this record saves, do that"* rule is a **record-change flow**, and every one this app ships is a row in the table below.
 
 When a single field update isn't enough — branching, loops, waits, multi-object writes, approvals — use a **flow**. A flow is a visual graph of nodes: get data → decide → create/update records → notify → wait → call a sub-flow.
 
@@ -66,20 +50,40 @@ A flow fires one of three ways, set by its start node:
 
 > **Auto-launch needs the `triggers` capability.** Record-change and scheduled flows only fire when the stack's `requires` list includes `triggers` — it installs the record-change + schedule trigger providers (schedule triggers also use the job service). Screen flows are always launched manually.
 
-**Built-in flows in HotCRM** (10):
+**Built-in flows in HotCRM** (26). Each row carries the flow's own label — the name listed in **Studio → Automation → Flows**, and the name you pick from in **Studio → Developer → Flow Runs**, so a run you are chasing can be looked up here verbatim:
 
 | Flow | Trigger | What it does |
 | --- | --- | --- |
-| **Lead Conversion** | Screen | Convert a qualified lead into an account + contact (+ optional opportunity), then notify |
-| **Quote Generation** | Screen | Build a quote from an opportunity and move it to *Proposal* |
-| **Lead Assignment & Routing** | Record change (insert) | Stamp a rating-based follow-up SLA and route the new lead to the sales-manager queue |
-| **Opportunity Approval** | Record change | Tiered sign-off via approval nodes — Sales Manager > $100K, Sales Director > $500K |
-| **Case Escalation** | Record change | When a case turns *Critical*, reassign to a senior agent, notify, create a follow-up task |
-| **Case CSAT Follow-up** | Record change + wait | When a case closes, wait 1 day, then prompt the owner to capture a satisfaction rating |
-| **Campaign Enrollment** | Schedule (Mon 9 AM) | Bulk-enroll matching leads into a campaign |
+| **Lead Conversion Process** | Screen | Convert a qualified lead into an account + contact (+ optional opportunity), then notify |
+| **Generate Quote from Opportunity** | Screen | Build a quote from an opportunity and move it to *Proposal* |
+| **Schedule Follow-up** | Screen | Create the next follow-up task on a lead, already linked to it and owned by the right user |
+| **Enroll Members in Campaign** | Screen | Bulk-enroll eligible leads or contacts into this campaign, skipping the already-enrolled and the opted-out |
+| **Escalate Case** | Screen | Collect an escalation reason, then flag and re-prioritise the case |
+| **Close Case** | Screen | Collect the resolution, then close the case and stop the SLA clock |
+| **New Lead Routing & SLA** | Record change (insert) | Stamp a rating-based follow-up SLA and alert the new lead's owner |
+| **Contact Welcome** | Record change (insert) | Prompt the owner to welcome a newly created contact |
+| **Urgent Task Alert** | Record change (insert) | Notify the owner when a task is created at *Urgent* |
+| **Large Deal Approval** | Record change (update) | Tiered sign-off via approval nodes — Sales Manager ≥ $100K, Sales Director > $500K |
+| **Large Deal Approval (on create)** | Record change (insert) | The same intake for opportunities *created* at or above the threshold |
+| **Large Deal Won Alert** | Record change (update) | When an opportunity of $100K or more turns *Closed Won*, notify the owner — the owner alone, not their manager |
+| **Billing Hand-off: Closed Won** | Record change (update) | On the transition into *Closed Won*, enqueue one durable POST of the deal + account + line items to the billing endpoint |
+| **Billing Hand-off: Contract Activated** | Record change (update) | On the transition into *Activated*, enqueue one durable POST of the contract + account + the originating deal's line items |
+| **Case Escalation Process** | Record change (update) | When a case turns *Critical*, flag it escalated, hand it to the least-loaded holder of the `service_manager` position (it stays with its owner while that pool is unstaffed) and notify the agent it came from; escalating also opens an urgent follow-up task for the account owner |
+| **Case Escalation Process (on create)** | Record change (insert) | The same escalation for cases *created* at *Critical* |
+| **Case CSAT Follow-up** | Record change (update) + wait | When a case closes, wait 1 day, then prompt the owner to capture a satisfaction rating |
+| **Contract Auto-Expiration** | Schedule (daily midnight) | Expire activated contracts past their `end_date` and notify the owner |
+| **Quote Auto-Expiration** | Schedule (daily 1 AM) | Expire quotes past their `expiration_date` that are still open |
+| **Campaign Auto-Completion** | Schedule (daily 2 AM) | Mark in-progress campaigns whose `end_date` has passed as *Completed* |
+| **Forecast Snapshot** | Schedule (daily 3 AM) | Upsert a current-quarter forecast row per active opportunity owner — pipeline, best case, commit and closed-won totals |
+| **Stalled Deal Alert** | Schedule (daily 7:30 AM) | Nudge owners about open opportunities stuck in a stage too long |
 | **Contract Renewal Reminder** | Schedule (daily 8 AM) | Open renewal tasks/opportunities for contracts nearing their `end_date` |
 | **Case SLA Monitor** | Schedule (hourly) | Flag and escalate open cases past their SLA due date |
-| **Stalled Deal Alert** | Schedule (daily 7:30 AM) | Nudge owners about open opportunities stuck in a stage too long |
+| **Task Due Reminder** | Schedule (hourly) | Notify owners of tasks whose reminder time has arrived |
+| **Demo Bootstrap** | Schedule (every 10 min) | Claim ownerless seeded records for the first user by stamping `owner_id` |
+
+Two entries carry an **(on create)** twin. Record-change flows subscribe to one trigger type each — `record-after-create` *or* `record-after-update` — so automation that has to catch both a newly created record and a later edit is authored as a pair of flows with the same condition. They are separate rows here because they are separate runs in **Flow Runs**.
+
+**Demo Bootstrap** is scaffolding, not business automation. Seed writes bypass the security middleware, so seeded rows arrive with no owner — which empties every *My …* view and sends owner-addressed notifications to nobody. This sweep stamps them onto the first user. On an org whose records already have owners it selects nothing and does nothing, every ten minutes.
 
 Notifications inside flows are delivered by the **`notify` node** (inbox + email via the messaging service) — not the legacy `script`/email step, which is a no-op in 7.4.
 
@@ -87,9 +91,11 @@ See [Customization › Extending Objects](/docs/customization/extending-objects)
 
 ## Scheduled automation
 
-Time-based automation is implemented as **scheduled flows** — flows whose start node carries a cron schedule. See the four `Schedule` rows above (campaign enrollment, contract renewal, SLA monitor, stalled-deal alert). They run via the job service, so the `triggers` capability is paired with `job` (both ship in the default slate).
+Time-based automation is implemented as **scheduled flows** — flows whose start node carries a cron schedule. The nine `Schedule` rows above are the complete set; there is no separate scheduled-job metadata to look for. They run via the job service, so the `triggers` capability is paired with `job` (both ship in the default slate).
 
 Date-driven field logic that needs no orchestration — defaulting a quote's expiration date, freezing an expired/accepted quote, deriving a forecast period — lives in lightweight **object hooks** (`beforeInsert` / `beforeUpdate`) rather than a scheduled sweep.
+
+The division of labour on forecasts is worth calling out, because it is the pattern to copy: the **Forecast Snapshot** flow decides *who* gets a snapshot and *what the totals are*, while the forecast object's hook decides *which calendar period the snapshot belongs to*. A cron expression can say "every night"; it cannot say "the first day of this quarter", so that boundary is derived once, by the object, for every writer.
 
 ## Approvals
 
@@ -104,36 +110,35 @@ When a record is saved, the order is fixed:
 1. **System** runs auto-calculations (formula fields, auto-numbering).
 2. **Validation rules** run — if any fail, the save is blocked.
 3. **The record is saved** to the database.
-4. **Workflow rules** fire.
-5. **Flow triggers** fire.
-6. **Field updates** from workflows / flows may cascade — re-evaluating workflows up to 5 times before stopping.
-7. **Email alerts** are queued.
+4. **Flow triggers** fire — `record-after-create` or `record-after-update`, whichever the save was.
+5. **`notify` nodes** inside those flows queue their inbox messages and email.
 
-Understanding this order helps debug *"why didn't my workflow fire?"* questions.
+A flow's own writes are ordinary saves, so they re-enter this list and can trigger further flows. There is no fixed re-evaluation budget to rely on: the engine breaks self-trigger loops with a **re-entrancy guard** — a flow re-entered for the *same record* while its previous run is still in flight is skipped, and the skip is logged as a warning. Write each record-change flow's start condition so it stops re-firing on its own writes; the guard is a backstop, not a stop condition.
+
+Understanding this order helps debug *"why didn't my flow fire?"* questions.
 
 ## Email templates
 
-Most automation actions send email. Templates live in **Setup → Email Templates** and support:
+Most automation actions send email. Templates live in **Studio → Integration → Email Templates** and support:
 
-- **Merge fields** — `{{Opportunity.Name}}`, `{{Account.Owner.Email}}`.
+- **Merge fields** — `{{path.to.value}}` placeholders, rendered against the `data` payload passed on that send. Spell every segment the way HotCRM spells it — objects are `crm_opportunity` and `crm_contact`, fields are `name`, `owner_id`, `email` — never Salesforce-style `Opportunity.Name`. What the path is rooted at depends on the payload shape the sender passes, and this app ships no `sendTemplate()` caller to copy one from, so declare the names your template reads in its `variables` list and agree the shape with whoever sends the mail.
 - **Conditional blocks** — show only if a condition is true.
 - **HTML + plain text** versions.
 - **Attachments** — quote PDFs, contract PDFs.
 
-Built-in templates cover lead-routing, opportunity wins, case acknowledgments, contract activations, renewal reminders.
+HotCRM itself ships no email templates: nothing under `src/` authors one, and the compiled app carries no email-template metadata at all. The lead-routing, opportunity-win, case and renewal notifications this app sends come from the **`notify` nodes** in the flows listed above — each one's subject and body text is written inline in its own flow, so that is where you change the wording. Contract activation sends nothing: it runs as an object hook (`src/objects/contract.hook.ts`) with no notification step, and the contract mail that does go out comes from the **Contract Auto-Expiration** and **Contract Renewal Reminder** flows. Author a template in **Studio → Integration → Email Templates** when you need a templated outbound email of your own.
 
 ## Where to monitor automation
 
-- **Setup → Process Monitor** — last 24 hours of automation runs with success/failure.
-- **Setup → Workflow Queue** — pending email alerts and field updates.
-- **Setup → Scheduled Jobs → History** — past runs of each scheduled job.
+- **Studio → Developer → Flow Runs** — pick a flow from the list, then read its recent runs and each run's status (*success* / *failed* / *running* / *skipped*). Scheduled flows appear here too: they are flows, so there is no separate scheduled-job history to go looking for.
+- **Studio → Automation → Flows** — the flow roster itself, when you need to check what a flow is wired to do before reading its runs.
 - **Object → audit log** — what changed on the record, who/what made the change.
 
 ## Tips for admins
 
 - ✅ **Validation rules** are the cheapest way to enforce data quality — use them liberally.
-- ✅ **One workflow per condition** is easier to maintain than mega-workflows with 10 branches.
-- ✅ For anything more complex than 2 actions, **use a flow** — much easier to debug.
+- ✅ **One flow per condition** is easier to maintain than a mega-flow with 10 branches.
+- ✅ Anything beyond a single field write — branching, multi-object writes, waits, approvals — belongs in a **flow** rather than an object hook: a flow run is visible in **Flow Runs**, hook code is not.
 - ✅ **Test in sandbox** before activating in production — bad automation can cascade fast.
 - ✅ **Document what each rule does** in its description field — your future self will thank you.
 
@@ -141,6 +146,6 @@ Built-in templates cover lead-routing, opportunity wins, case acknowledgments, c
 
 If a record isn't behaving as expected:
 
-1. Check the **audit log** — was the field updated by a workflow?
-2. Check the **task list** — did a workflow auto-create a task you missed?
-3. Ask an admin to inspect the **process monitor** for that record.
+1. Check the **audit log** — was the field updated by a flow or an object hook?
+2. Check the **task list** — did a flow auto-create a task you missed?
+3. Ask an admin to open **Studio → Developer → Flow Runs** and read the recent runs of the flow you expected to fire.

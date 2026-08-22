@@ -1,7 +1,7 @@
-import { F, P } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
+import { F, P } from '@objectstack/spec';
 
 /**
  * Product Object
@@ -29,7 +29,7 @@ export const Product = ObjectSchema.create({
 
   fieldGroups: [
     { key: 'basic',    label: 'Product Information', icon: 'info' },
-    { key: 'pricing',  label: 'Pricing & Billing',   icon: 'dollar-sign' },
+    { key: 'pricing',  label: 'Pricing',             icon: 'dollar-sign' },
     { key: 'metadata', label: 'Resources',           icon: 'link', defaultExpanded: false },
   ],
 
@@ -104,25 +104,18 @@ export const Product = ObjectSchema.create({
       min: 0,
     }),
     
-    // SKU and Inventory
+    // SKU
+    //
+    // `quantity_on_hand` / `reorder_point` were removed with the rest of the
+    // inventory surface: nothing in this app decremented stock, and the "Low
+    // Stock" view they fed compared against a hardcoded 10 rather than the
+    // reorder point beside it. HotCRM sells from a catalog; warehouse state
+    // belongs to the system of record that owns it.
     sku: Field.text({
       label: 'SKU',
       group: 'basic',
       maxLength: 50,
       unique: true,
-    }),
-    
-    quantity_on_hand: Field.number({
-      label: 'Quantity on Hand',
-      group: 'basic',
-      min: 0,
-      defaultValue: 0,
-    }),
-    
-    reorder_point: Field.number({
-      label: 'Reorder Point',
-      group: 'basic',
-      min: 0,
     }),
     
     // Status
@@ -131,12 +124,6 @@ export const Product = ObjectSchema.create({
       group: 'basic',
       defaultValue: true,
       trackHistory: true,
-    }),
-
-    is_taxable: Field.boolean({
-      label: 'Taxable',
-      group: 'pricing',
-      defaultValue: true,
     }),
     
     // Relationships
@@ -174,30 +161,12 @@ export const Product = ObjectSchema.create({
       defaultValue: 0,
     }),
 
-    billing_type: Field.select({
-      label: 'Billing Type',
-      group: 'pricing',
-      options: [
-        { label: 'One-Time',  value: 'one_time', default: true },
-        { label: 'Monthly',   value: 'monthly' },
-        { label: 'Quarterly', value: 'quarterly' },
-        { label: 'Annual',    value: 'annual' },
-        { label: 'Usage',     value: 'usage' },
-      ],
-    }),
-
-    unit_of_measure: Field.select({
-      label: 'Unit of Measure',
-      group: 'pricing',
-      options: [
-        { label: 'Each',       value: 'each', default: true },
-        { label: 'License',    value: 'license' },
-        { label: 'Seat',       value: 'seat' },
-        { label: 'Hour',       value: 'hour' },
-        { label: 'Day',        value: 'day' },
-        { label: 'Month',      value: 'month' },
-      ],
-    }),
+    // `billing_type` and `unit_of_measure` were removed with the tax flag: both
+    // were seeded on all 13 catalog products and read by nothing — no quote
+    // total, no revenue-recognition report and no line-item behaviour ever
+    // consulted either. A picklist that only ever renders itself is a
+    // maintenance obligation (four locales, an import column, every future
+    // migration) charged against a capability that does not exist.
   },
   
   // Database indexes
@@ -223,26 +192,34 @@ export const Product = ObjectSchema.create({
   },
   
   // Validation Rules
+  //
+  // Predicates below are TOTAL: every `record.x` read is `has()`-guarded, so the
+  // rule returns a verdict even when the merged record has no such key. See
+  // AGENTS.md "Validation predicates must be TOTAL" and
+  // test/object-validation-predicates.test.ts, which fails the build otherwise.
   validations: [
     {
       name: 'price_positive',
       type: 'script',
       severity: 'error',
       message: 'List Price must be positive',
-      // Null-guard: strict CEL cannot compare dyn<null> < int, and an
-      // unguarded predicate aborts evaluation (rule silently skipped) — the
-      // hazard written up on `account.object.ts`. `list_price` is `required`,
-      // but the rule also runs on partial updates that omit it.
-      condition: P`record.list_price != null && record.list_price < 0`,
+      // Two distinct guards, both required. `has(...)` answers "is the key
+      // there at all" — on update the merged record is `{...previous, ...data}`
+      // and a driver that stores only written columns hands back no key, which
+      // aborts the whole predicate (#630). `!= null` then answers "does it hold
+      // a value" — strict CEL cannot compare dyn<null> < int, the hazard
+      // written up on `account.object.ts`. `list_price` is `required`, but the
+      // rule also runs on partial updates that omit it.
+      condition: P`has(record.list_price) && record.list_price != null && record.list_price < 0`,
     },
     {
       name: 'cost_less_than_price',
       type: 'script',
       severity: 'warning',
       message: 'Cost should be less than List Price',
-      // Both operands need the guard: `cost` is optional and absent on every
+      // Both operands need both guards: `cost` is optional and absent on every
       // seeded product, so this warning has never once evaluated.
-      condition: P`record.cost != null && record.list_price != null && record.cost >= record.list_price`,
+      condition: P`has(record.cost) && record.cost != null && has(record.list_price) && record.list_price != null && record.cost >= record.list_price`,
     },
   ],
 });

@@ -24,14 +24,16 @@ A typical stuck case: **New → In Progress → Waiting on Customer → In Progr
 
 ## The 4 priority levels
 
-| Priority | Typical SLA target | When to use |
+| Priority | SLA target (SMB → Strategic) | When to use |
 | --- | --- | --- |
-| 🔵 **Low** | 7 business days | Cosmetic issue, low-impact question *(default)* |
-| 🟠 **Medium** | 2 business days | Standard issue, work continues |
-| 🔴 **High** | 8 hours | Significant impact, customer is upset |
-| 🔴 **Critical** | 4 hours | Production down, immediate response needed |
+| 🔵 **Low** | 7 days → 4 days | Cosmetic issue, low-impact question *(default)* |
+| 🟠 **Medium** | 2 days → 24 hours | Standard issue, work continues |
+| 🔴 **High** | 8 hours → 6 hours | Significant impact, customer is upset |
+| 🔴 **Critical** | 4 hours, every tier | Production down, immediate response needed |
 
-When a case is set to **Critical**, the support manager is notified by email. When set to **High** for a customer account, the case is auto-escalated.
+**Every row has a clock behind it now.** The `case_sla_defaults` hook stamps `sla_due_date` on every case from a **priority × account-tier matrix**, so the target tightens for a Strategic or Enterprise customer and the hourly breach sweep applies at all four priorities — see [SLA & Escalation](/docs/service/sla-and-escalation) for the full table and the mechanics. Those are **calendar** hours: this app has no business-hours calendar, so nights, weekends and holidays count against the target.
+
+When a case is set to **Critical**, the Case Escalation flow alerts the **case owner** by inbox message and email — its recipient list is the single entry `{caseRecord.owner_id}`, and there is no `support_manager@example.com` recipient anywhere in this app. A **High** case is never escalated automatically, whatever the account is: no escalation condition reads the account at all, and raising one is the manual **Escalate Case** button.
 
 ## Case types
 
@@ -50,88 +52,135 @@ This drives reporting (which channels generate the most volume) and is auto-fill
 
 ## What a case record stores
 
-The detail screen is organised into 6 sections:
+`crm_case` declares **27 fields** (`src/objects/case.object.ts`), and three different things organise them: the object's own field groups, the case detail screen, and the case form. Only the first of the three has six sections, and no two of them agree — so it is worth knowing which one you are being shown.
+
+### The object's field groups
+
+The six names below are real, but not one of them is a screen: they are `crm_case`'s **field groups** (`fieldGroups`), the object's own filing scheme for its fields. Neither the detail screen nor the form renders them — each declares sections of its own, listed below. This is, though, the one list that accounts for every field the object has:
+
+| Field group | Fields |
+| --- | --- |
+| **Case Information** | Case Number, Subject, Display Title, Description, Account, Contact, Status, Case Type |
+| **Origin & Routing** | Case Owner, Case Origin |
+| **SLA & Priority** | Priority, Created Date, Closed Date, First Response Date, Resolution Time (Hours), SLA Due Date, SLA Violated |
+| **Resolution** | Resolution, Resolved by Article, Customer Satisfaction, Customer Feedback |
+| **Escalation** *(collapsed by default)* | Escalated, Escalated Date, Escalation Reason |
+| **System** *(collapsed by default)* | Internal Notes, Is Closed |
+
+Five of those six rows used to be written differently on this page, and the differences were not cosmetic: **Status** and **Case Type** are in *Case Information*, not *SLA & Priority*; **Closed Date** is in *SLA & Priority*, not *Resolution*; and *System* holds **Internal Notes** and **Is Closed** — there is no *audit trail* field on a case at all, and the timestamps sit in *SLA & Priority*. Only *Escalation* was right as it stood. **Priority Rank**, the hidden sort key that orders *My Open Cases*, is in no group at all.
+
+### The detail screen
+
+The **Details** tab of the case detail page (`src/pages/case_detail.page.ts`) declares **three** sections, holding **16** of the 27 fields:
 
 | Section | Fields |
 | --- | --- |
-| **Case Information** | Case number, subject, description, account, contact |
-| **Origin & Routing** | Origin, owner, parent case |
-| **SLA & Priority** | Status, priority, type, first response time, SLA due date, breach flag |
-| **Resolution** | Closed date, resolution, customer signature |
-| **Escalation** *(collapsed by default)* | Escalation flag, escalated date, escalation reason |
-| **System** *(collapsed by default)* | Audit trail, timestamps |
+| **Case Information** | Case Number, Subject, Account, Contact, Case Type, Case Origin |
+| **Status & SLA** | Status, Priority, Case Owner, Escalated, Escalation Reason, SLA Due Date, SLA Violated, Resolution Time (Hours) |
+| **Description** *(collapsible)* | Description, Resolution |
+
+*Description* is the only one of the three that can be collapsed, and nothing marks it collapsed to begin with, so it opens along with the rest.
+
+### The form
+
+The case form (`src/views/case.view.ts`) is tabbed, and has three sections of its own — different names, different contents, 22 of the 27 fields:
+
+| Form tab | Fields |
+| --- | --- |
+| **Case** | Case Number, Subject, Account, Contact, Status, Priority, Case Origin, Case Owner, Description |
+| **SLA** | Created Date, First Response Date, SLA Due Date, Resolution Time (Hours), SLA Violated, Escalated, Escalation Reason |
+| **Resolution** | Resolution, Internal Notes, Customer Satisfaction, Customer Feedback, Closed Date, Is Closed |
+
+The two are not one screen wearing different chrome. **Case Type** is on the detail screen and nowhere else — the form carries it in no tab. The public support form at `/forms/support` is a third layout again: a single section with four fields (subject, description, type, priority).
 
 ## What happens automatically
 
-- **First response time** — stamped the first time an agent comments or replies.
+- **First response date** (`first_response_date`) — stamped the first time an interaction that **already took place** is recorded against the case. Its single writer is the `event_activity_bubble` hook (`src/objects/event.hook.ts`), which fires on any `crm_event` reaching **Held** status with the case as its related record — so **Log a Call** and **Log a Meeting** stamp it, and so does an interaction entered any other way, including straight onto the case's activity list. It reads the stored value back before writing, so a second interaction never overwrites the first. Two things are deliberately *not* a first response: a **status change** (an agent can move a case to *In Progress* and investigate for an hour while the customer hears nothing) and a meeting merely *scheduled*, which is `planned` rather than held. On a case worked entirely through comments the field stays empty.
 - **Closed flag** — set automatically when status changes to *Closed*.
 - **Closed date** — stamped to NOW when status changes to *Closed*.
 - **Resolution time (hours)** — calculated as the difference between *Created date* and *Closed date*.
-- **SLA due date** — calculated when the case is created, based on priority.
-- **SLA breached flag** — flipped to true if the resolution time exceeds the SLA target.
+- **SLA due date** — stamped on **every** case with a recognised priority. `case_sla_defaults` looks up the case's priority against its account's **Customer Tier** and fills the field with *now + the matching number of calendar hours*, when a case is created and whenever the field is still empty. It is written once and never recomputed, and a date somebody typed in by hand is never overwritten.
+- **SLA Violated** (`is_sla_violated`) — there is no field called *SLA Breached?*. The hourly `case_sla_monitor` sweep sets it to true on cases that are **still open** (status is neither *Resolved* nor *Closed*) and whose **SLA Due Date** has already passed. It never compares resolution time against the target, so a case with no due date is never a candidate, and a case resolved late but before the next sweep is never flagged.
 - **Account's last activity date** — bumped to today when the case is updated.
 
 ## Built-in rules
 
 - **Closed cases must have a resolution** — you can't close a case with an empty Resolution field.
 - **Escalated cases must have an escalation reason** — explains why a senior agent was pulled in.
-- **Status progression is enforced** — you can't jump from *New* straight to *Resolved* without going through *In Progress*.
+- **Status progression is advice, not a gate** — the transition table says *New* leads to *In Progress*, *Waiting on Customer*, *Escalated* or *Closed*, so jumping straight to *Resolved* is outside it. That does not stop the save: the case is stored as *Resolved* and the engine writes one line to the server log, `WARN Validation rule 'case_status_progression' (warning): Invalid status transition`. Unlike the two rules above — both `error` severity, both of which do reject the save — this one only advises. See [State Machines](/docs/administration/state-machines) for what the table is good for.
 
-## Workflow automation
+## Flow and hook automation
 
-- **Notify on Critical** — when priority is set to Critical, an email goes to `support_manager@example.com`.
-- **Notify on Escalation** — when a case is escalated, an email goes to the escalation team.
+- **Notify on Critical** — when priority is set to Critical, the Case Escalation flow's `notify` node sends an inbox message and an email to the **case owner alone**: its recipient list is the single entry `{caseRecord.owner_id}`. There is no `support_manager@example.com` recipient anywhere in this app.
+- **Notify on Escalation** — when the status changes to *Escalated*, no email goes out at all: `escalation_team@example.com` exists nowhere in this app, and neither does an escalation-team recipient. What the escalated status fires is the `case_status_side_effects` hook, which opens an **Urgent follow-up task due tomorrow for the account owner** — and only for cases that have an account, since the task is keyed to it.
 - **Calculate resolution time** — automatic on close.
 - **Auto-set closed date and flag** — on status change.
 
 ## Case escalation
 
-The [Case Escalation flow](/docs/service/sla-and-escalation#case-escalation) runs automatically when:
-
-- Priority is **Critical**, OR
-- Priority is **High** AND the account is a **Customer** (not a prospect)
+The [Case Escalation flow](/docs/service/sla-and-escalation#case-escalation) runs on exactly one condition: **the case is at Critical priority**. There is no High-priority branch, and no escalation condition reads the account — a *Customer*'s High case and a prospect's High case are treated identically: neither escalates on its own, and raising one is the manual **Escalate Case** button.
 
 It performs:
 
-1. **Reassign** the case to the agent's manager.
-2. **Flag** as escalated, stamp the escalated date.
-3. **Set status** to *Escalated*.
-4. **Create a follow-up task** on the original agent due tomorrow.
-5. **Notify** the agent, the manager, and the support team via email.
+1. **Flag** as escalated, stamp the escalated date.
+2. **Set status** to *Escalated*.
+3. **Hand the case over** — ownership moves to the service manager carrying the fewest open cases.
+4. **Notify the case owner** — inbox and email, carrying the case number and the priority.
+
+The hand-off goes to a **pool**, not up a chain. Positions in this app are flat, so "the owner's manager" is not something it can resolve; the case goes to whoever holds the **Service Manager** position and has the fewest open (neither *Resolved* nor *Closed*) cases, which spreads consecutive escalations across the team on its own. Three cases where it deliberately does nothing: **nobody holds the position** — the state a fresh install is in — so the case keeps its owner and the escalation completes exactly as before; the case is **already owned by a pool member**, so it stays with the manager working it; or the same edit **names an owner itself**, which wins over the pool.
+
+The status change to *Escalated* then fires the `case_status_side_effects` hook, which opens an **Urgent follow-up task due tomorrow for the account owner** — and only for cases that have an account, since the task is keyed to it.
+
+Two things this list deliberately does not claim, because the escalation does not do them:
+
+- **The notification goes to the previous case owner alone.** Its recipient list is the single entry `{caseRecord.owner_id}`, read before the hand-off — so it reaches the agent the case is being taken from, which is the point. Not the manager, and not a broader `support-team@example.com` list, an address that exists nowhere in this app.
+- **The follow-up task is not the original agent's.** It belongs to the **account owner**, not to the agent who was handling the case and not to a senior agent. The flow carries no task node at all — the hook is the single owner of escalation follow-up tasks, so there is exactly one task per escalation.
 
 See [SLA & Escalation](/docs/service/sla-and-escalation) for the full mechanics.
 
 ## Sharing — who can see which case
 
-- By default, cases are **private** — only the owner and managers above in the role hierarchy.
-- **Critical open cases** are auto-shared (read/edit) with all service managers and their subordinates. Critical issues get team-wide visibility.
+- By default, cases are **private** — only the owner. Positions are flat and **nothing rolls up**, so no manager sees a case by sitting above its owner.
+- **Critical open cases** are auto-shared by two rules, one per rung: *Escalated Cases Sharing* grants read/edit to `service_manager`, and *Escalated Cases — Service Director* grants read to `service_director`. Both rungs are named explicitly because neither inherits from the other.
 
 ## Field-level security
 
-- **SLA breach flag** and **Resolution time** are **read-only for agents** — these are auto-calculated and can't be hand-fudged.
+- **SLA Violated** (`is_sla_violated`) and **Resolution time** are **read-only for agents** — these are auto-calculated and can't be hand-fudged. The lock is field-level security: the Service Agent profile masks both as readable but not editable.
 
 ## Standard list views
 
-- **My Open Cases** — your cases not yet closed.
-- **Critical Cases** — priority = Critical, all owners.
-- **Cases Due Today** — SLA due date is today.
-- **Breached SLA** — SLA breach flag is true.
-- **Recently Closed** — closed in the last 7 days.
-- **By Account** — grouped by customer.
-- **Service Board** — kanban grouped by status.
+`crm_case` ships **eight** views (`src/views/case.view.ts`), and the case list surfaces them as tabs:
+
+| View | What it shows | Tab |
+| --- | --- | --- |
+| **All Cases** | Every case, sorted by priority then SLA due date, with a row tint keyed on **priority** | *All* |
+| **Service Workflow** | Kanban of open cases, grouped by status | *Workflow* |
+| **SLA Calendar** | Cases laid out on their **SLA Due Date** — every case carries one now, so the calendar shows the whole open backlog | *SLA* |
+| **Case Timeline** | Cases on a *created → closed* timeline, grouped by owner | *Timeline* |
+| **Escalated Cases** | `is_escalated` is true | *Escalated* |
+| **Unassigned — triage** | Open cases with no owner at all, urgent first then soonest due — where a web-to-case submission lands when nobody holds the Service Agent position | *Triage* |
+| **⏰ SLA at Risk** | Open **High and Critical** cases, soonest due date first | *SLA at Risk* |
+| **My Open Cases** | Your cases that are not closed | *My Cases* |
+
+Six names this section used to list are not views at all:
+
+- **Critical Cases** and **Breached SLA** are metric tiles, not lists. [Service Overview](/docs/analytics/dashboards) — the dashboard's own title is **Customer Service** — carries *Critical Cases* (open and Critical) and **SLA Violations** (`is_sla_violated` is true); no list view in this app filters on a breach. For a list you can actually work through, use **Escalated Cases** — the SLA sweep escalates every case it flags, so each breach lands there.
+- **Service Board** is not this app's name for anything. The kanban is **Service Workflow**, on the *Workflow* tab.
+- **Cases Due Today**, **Recently Closed** and **By Account** do not exist in any form: no view filters on today's due date or on `closed_date`, and `crm_case` has no grouped view.
 
 ## The case detail layout
 
 When you open a case, you'll see:
 
-- **Header** — case number, subject, status badge, priority badge, SLA countdown.
+- **Header** — the case number and subject as the title (`{case_number} · {subject}`), the **account** as the subtitle, plus an icon, a breadcrumb and the action buttons. That is the whole header: there is **no status badge, no priority badge and no SLA countdown** on it. Nothing in this app computes time remaining or time over — not here, not anywhere else on the case — so there is no countdown to render. See [SLA & Escalation](/docs/service/sla-and-escalation) for what the two SLA fields do instead.
+- **Key Information** — the highlights strip directly under the header, and where **Status** and **Priority** actually live: ordinary fields rather than badges, side by side with **SLA Due Date**, **SLA Violated**, **Owner** and **Account**.
 - **Status path** — a Salesforce-style horizontal flow showing New → In Progress → Waiting on Customer → Escalated → Resolved → Closed, so an agent can see at a glance where the case stands and what the next stop is.
-- **Customer panel** — account, primary contact, contract tier, open cases this month.
+- **Customer panel** — there is no such panel. The page (`src/pages/case_detail.page.ts`) declares two regions and nothing else: a header holding the three components above, and a main region holding the tab strip below. What customer context there is sits in those: the **account** appears three times over — the header subtitle, the Key Information strip, and a field in the *Details* tab — and the **primary contact** is a field in that same tab's *Case Information* section. **Contract tier** and **open cases this month** are on no case surface at all. A case links to no contract, and `crm_contract` carries no tier field either; the nearest real field is **Customer Tier** on the account record, which this page does not show. Nothing in this app counts a customer's cases by month.
 - **Three tabs:**
-  - **Details** — full case description and resolution, all metadata fields.
-  - **Related** — child tasks, attached files, linked opportunities, milestones.
+  - **Details** — the case description and resolution in full, but not "all metadata fields": **16** of the object's **27**, in the three sections listed under *What a case record stores* above. The eleven that are not on the tab are **First Response Date**, **Created Date**, **Closed Date**, **Escalated Date**, **Is Closed**, **Customer Satisfaction**, **Customer Feedback**, **Internal Notes**, **Priority Rank**, **Display Title** and **Resolved by Article**. Seven of them are on the case form instead; the remaining four are on no case screen at all — **Escalated Date** is written by the escalation flows and displayed nowhere, **Priority Rank** is the sort key behind *My Open Cases*, **Display Title** is the object's `nameField`, the title formula that names a case wherever one is referenced rather than a field you read here, and **Resolved by Article** is read by the deflection measures rather than by a screen. **First Response Date** is the omission worth knowing about: *What happens automatically* above explains at length how it gets stamped, and this is not the tab you can read it on.
+  - **Related** — one list, not four: **Open Tasks** — the `crm_task` records pointing at this case through **Related Case** (`related_to_case`), filtered to those whose status is not *Completed*, ten at a time. That is the whole tab. There is no attachments list: files can be attached to a case (the object enables them), but no component on this page lists them. There is no linked-opportunity list, because `crm_case` has no opportunity relationship in either direction. And there is no milestone list — the case's three milestones, *escalated*, *resolved* and *closed*, are emitted as entries in the **Activity** timeline, not as records here.
   - **Activity** — a unified timeline (more on this below).
-- **AI Reference Rail** — the Service Copilot's suggestions.
+- **AI Reference Rail** — there is no rail on this page, of any kind. The main region holds the tab strip and nothing else, and not one component on the page is AI-driven. The service skills are real — see *How the AI assistant helps* below — but you reach them by asking, not from a panel beside the case. The one reference rail this app does render sits on the opportunity detail page, and even there it lists related records (quotes, products, open tasks) rather than suggestions.
 
 ### The Activity timeline
 
@@ -148,32 +197,32 @@ You don't have to configure any of this — every CRM object ships with `trackHi
 
 > Tip — if you only want to see the discussion, use the filter dropdown at the top of the Activity tab; you can also subscribe to the case from there so any future post pings you in the bell.
 
-## How the AI Copilot helps
+## How the AI assistant helps
 
-The [Service Copilot](/docs/ai-copilot/service-copilot) auto-activates on any case. Ask:
+The [service skills](/docs/ai-copilot/service-copilot) auto-activate on any case. Ask:
 
 - *"Triage this case"* — Case Triage skill recommends a priority based on subject and description.
-- *"Suggest a resolution"* — searches the [Support Knowledge Base](/docs/service/knowledge-base) and drafts a customer reply.
+- *"Suggest a resolution"* — no one skill does this end to end. **Case Triage** declares two tools, `describe_object` and `get_record`, and no query tool at all, so it searches nothing. Ask **Customer 360°** for the published [knowledge articles](/docs/service/knowledge-base) matched on the case's category or tags, then **Email Drafting** for the customer reply — the draft is grounded in the contact and account records, not in those articles, so paste in whatever it should quote.
 - *"Customer 360"* — pulls the full account context (open opportunities, past cases, contract tier).
 
 If the Copilot decides the priority is *Critical*, it will also recommend immediate escalation and draft an internal notification message.
 
 ## Tips for service agents
 
-- ✅ **Triage incoming cases promptly** — *New* cases should not sit for more than the first-response SLA.
-- ✅ **Use "Waiting on Customer"** when you're blocked — it stops the SLA clock in some configurations.
+- ✅ **Triage incoming cases promptly** — but know that nothing in the app is watching. There is no first-response target to breach: **First Response Date** is recorded on the case and never compared against anything, `case_metrics` carries no first-response measure so no report or dashboard tile reports on it, and no flow alerts on it. Promptness here is the team's own commitment, not a clock the app runs.
+- ✅ **Use "Waiting on Customer"** when you're genuinely blocked — but it **does not stop the SLA clock**, in any configuration. `sla_due_date` is written once and never recomputed, and the hourly `case_sla_monitor` sweep collects open cases whose status is neither *Resolved* nor *Closed* — *Waiting on Customer* is not on that exclusion list. A case parked on the customer runs its clock down and is flagged **SLA Violated** and escalated on schedule, at every priority.
 - ✅ **Always write a resolution** — it's mandatory, but also feeds the knowledge base for future cases.
 - ✅ **Link a task** when the case requires future follow-up (e.g., "verify fix worked in 7 days").
 - ❌ Don't close a case without confirming the fix worked.
 
 ## Tips for service managers
 
-- ✅ Watch the **Breached SLA** view daily — every red badge represents a customer trust event.
-- ✅ Use the **Service Board** kanban for daily standups.
-- ✅ Coach agents whose **Resolution Time** trends up — there's a column on the agent leaderboard.
+- ✅ There is no **Breached SLA** view to watch, and no red badge either — the only colour rule on a case list is *All Cases*' row tint, and it is keyed on **priority**, not on a breach. Work **Escalated Cases** daily instead, and read the **SLA Violations** tile on Service Overview for the count.
+- ✅ Use the kanban for daily standups — it is named **Service Workflow** and reaches the case list as the *Workflow* tab.
+- ✅ Coach agents whose **Resolution Time** trends up — but you will be reading it off the cases themselves. There is no agent leaderboard: `case_metrics`, the dataset behind every service report and dashboard widget, declares Status, Priority, Origin, Type and Created as its only dimensions, so nothing in analytics can group cases by agent.
 
 ## Tips for admins
 
-- The SLA targets per priority are stored in the case object's automation. To change them, edit the case automation — see [Administration › Automation](/docs/administration/automation).
-- The escalation team email recipient (`escalation_team@example.com`) and support manager email (`support_manager@example.com`) are configured in case workflow rules.
+- The SLA targets per priority and account tier are stored in the case object's automation. To change them, edit `src/objects/_case-sla.ts` and the matching table inside `case_sla_defaults` in `src/objects/case.hook.ts` — both, because a sandboxed hook body cannot import a constant — see [SLA & Escalation](/docs/service/sla-and-escalation) and [Administration › Automation](/docs/administration/automation).
+- Neither `escalation_team@example.com` nor `support_manager@example.com` is configured anywhere — both addresses exist nowhere in this app. The one recipient list that does exist is the `notify` node of the Case Escalation flow, `recipients: ['{caseRecord.owner_id}']` — the case owner alone — and it is edited in `src/flows/case-escalation.flow.ts`, not on a Setup screen.
 - Email-to-case ingestion (auto-create case from an inbound email) requires the email plugin — see [Customization › Extending Objects](/docs/customization/extending-objects).

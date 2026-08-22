@@ -13,12 +13,12 @@ The contact detail screen has 6 collapsible sections:
 
 | Section | Fields |
 | --- | --- |
-| **Identity** | Salutation, first name, last name, full name |
-| **Account & Role** | Account, job title, department, primary contact flag |
-| **Contact Information** | Email, phone, mobile, fax |
-| **Mailing Address** | Full structured address |
-| **Additional Info** | Description, birthday, lead source, reports-to |
-| **Communication Preferences** | Email opt-out, do-not-call, fax opt-out |
+| **Identity** | Salutation, first name, last name, full name, profile picture |
+| **Account & Role** | Contact owner, account, job title, department |
+| **Contact Information** | Email, phone, mobile |
+| **Mailing Address** | Mailing street, city, state/province, postal code and country — five separate fields |
+| **Additional Info** | Lead source, description, last contacted |
+| **Communication Preferences** | Primary contact flag, do-not-call, email opt-out |
 
 ## The primary contact
 
@@ -32,35 +32,27 @@ The primary contact is auto-suggested as the default on:
 
 This saves a lot of clicks.
 
-## Org chart at the account
+## No org chart — and what to use instead
 
-Use **Reports To** to model the org structure inside an account:
+There is **no reporting line on a contact**. A `Reports To` field was declared for one, and the tree it promised was never built: no page rendered it, no report grouped by it, and the Copilot never read it when summarising an account. Rather than keep a field whose documented behaviour did not exist, HotCRM records seniority where something acts on it — **job title** and **department**, which reports do group by and the Copilot does read.
 
-```
-CEO
-├── VP Sales
-│   └── Sales Director
-└── VP Engineering
-```
-
-The account detail page renders this as a clickable tree, so you can see at a glance who reports to whom. The AI Copilot uses it when summarising the account — it can tell you which people are decision-makers vs. influencers.
+Nor is a date of birth stored. `Birthdate` was importable and read by nothing; personal data with no purpose is a liability rather than a feature, so it is gone too.
 
 ## Communication preferences (GDPR / CCPA)
 
-Three opt-out flags tell the system this person doesn't want to be contacted. Every flag is shown as a **red badge** at the top of the contact screen so it's impossible to miss:
+Two opt-out flags record that this person does not want to be contacted. Both are checkboxes in the **Communication Preferences** section of the contact record, and they differ in how much of the product actually acts on them:
 
-| Flag | What happens |
+| Flag | What it does today |
 | --- | --- |
-| **Email Opt-out** | The Sales Copilot refuses to draft outbound emails to this person; marketing campaigns exclude them. |
-| **Do Not Call** | The system blocks you from logging a *Call* task to this contact. |
-| **Fax Opt-out** | Fax-based campaigns skip this contact. |
+| **Email Opt Out** | **Enforced.** The **Send Email** action is hidden on a contact who has opted out — on the record header and on the list row — and creating such a contact raises no welcome prompt for its owner. |
+| **Do Not Call** | **Enforced for scheduling, not for logging.** HotCRM refuses to *schedule* a phone touch against a flagged contact: an open **Call** task and a **planned** *Call* calendar event are both rejected on save, wherever the write comes from — the Schedule Follow-up screen, a hand-created task, an import, or the API. Recording a call that already happened stays available on purpose: **Log a Call**, and a *Call* task saved as **Completed**, are never blocked, because refusing them would hide the evidence rather than prevent the call. The flag is about the phone only — email is governed by **Email Opt Out**, and meetings and demos are not restricted. |
 
-Reps can request a flag change but cannot remove these themselves — it's an admin-only action.
+Both are ordinary editable checkboxes: anyone who can edit the contact can set or clear them. There is no field-level rule reserving them to admins, so treat them as a record of the person's wishes that your team is expected to honour — not as a lock.
 
 ## Built-in rules
 
-- An **email address must be unique within the same account**. The same person can appear under multiple companies (a board member, for example) but not twice in one company.
-- **Welcome email** — when a contact is created, the system automatically sends them the *contact_welcome* email template.
+- An **email address must be unique within your organization**. The same address cannot be used by two contacts, even when those contacts sit under different accounts — the second save is rejected with *"Another contact … with email … already exists."* Another organization on the same platform is free to have its own contact at that address; the rule is scoped to your data, not the whole platform. Email is normalised to lower case before it is stored and compared, so `Ada@Example.com` and `ada@example.com` count as the same address. A person you deal with at two companies therefore needs a different address on each contact record.
+- **New-contact prompt** — creating a contact notifies its **owner**, in the inbox and by email: *"… was added as a contact. Reach out to welcome them."* Nothing is sent to the contact: *contact_welcome* is the name of the flow and of its notification topic, not an email template, and HotCRM ships no outbound welcome mail. Two cases raise no prompt at all — a contact with **no owner** (records written by seed data or an integration carry none) and a contact with **Email Opt Out** ticked.
 
 ## Sharing — who can see which contact
 
@@ -70,15 +62,19 @@ This makes the security story simple: get the account-sharing right and contacts
 
 ## Standard list views
 
-- **My Contacts** — contacts you own.
-- **Primary Contacts** — `is_primary = true`.
-- **Decision Makers** — title contains "VP", "Chief", or "Director".
-- **By Title** — grouped.
-- **Recently Added** — newest first.
+Contacts opens on **All Contacts**, and the switcher carries three saved views — these, and nothing else:
+
+| View | What it shows |
+| --- | --- |
+| **All Contacts** *(the landing view)* | Every contact, **grouped by account with the groups collapsed**: you expand the account you are working on instead of scrolling one flat roster. Inside a group, people are ordered by last name A→Z, with avatar, account, title, department, email, phone and owner on the row. 50 rows a page, export to CSV or XLSX. |
+| **People Directory** | The same people as photo cards, each card fronted by the contact's avatar — the fastest way to put faces to an account team before a meeting. Name, title, department, email, phone and account are on the card. |
+| **Primary Contacts** | Only the contacts flagged as primary — one per account, as described above — ordered by account. This is the list worth reviewing before a quote run or a mail-merge, because it is exactly the set every default draws from. |
+
+There is no owner-filtered contact view, and none is needed for access: contacts are not shared on their own, they inherit the account's sharing (see above). To work "your" people, start from **My Accounts** on the [Accounts](./accounts) list and open the account, or expand your accounts' groups on **All Contacts**.
 
 ## How the AI Copilot uses contacts
 
-When you ask the Sales Copilot to draft an email, it uses:
+When you ask the AI assistant to draft an email, it uses:
 
 - The contact's first name and title (for personalisation).
 - The account name and industry (for context).
@@ -90,11 +86,11 @@ So *"Draft a follow-up to Jane"* gives you a personalised, on-brand email in sec
 ## Tips for sales reps
 
 - ✅ Always set a job title and department — it's used by reports and by the Copilot.
-- ✅ Use the Reports To field — it makes account meetings much easier to prep for.
+- ✅ Fill in job title and department for every contact you meet — they are what the Copilot and the reports actually read.
 - ✅ Mark exactly one primary contact per account.
 
 ## Tips for admins
 
 - The list of departments (Sales, Marketing, Engineering, Finance, IT, Operations, HR, Legal, Executive, Other) is configurable per the picklist values. See [Customization › Extending Objects](/docs/customization/extending-objects).
-- The welcome email template can be customised in your email-template settings.
+- The new-contact prompt is a flow, not a template: edit `src/flows/contact-welcome.flow.ts` to change its wording, its channels, or who it goes to. There is no email-template setting behind it.
 - Sharing inheritance from accounts means you generally never need account-specific contact sharing rules.

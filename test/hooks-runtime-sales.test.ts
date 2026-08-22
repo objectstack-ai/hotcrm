@@ -105,13 +105,41 @@ describe('opportunity_lifecycle', () => {
     ).rejects.toThrow(/closed \(closed_won\)/);
   });
 
+  /**
+   * #693's defect class, on this guard, as #720 settled it: deleting a contact
+   * or a campaign a CLOSED opportunity references makes the engine clear that
+   * lookup, which arrives here as an ordinary `beforeUpdate`. It used to be
+   * refused — "Opportunity is closed (closed_won); … Attempted: primary_contact"
+   * — which made the frozen deal able to keep that person undeletable. The
+   * freeze now yields to that write shape and only to it; the full narrowness,
+   * and the end-to-end deletes, live in
+   * `test/freeze-guard-reference-cleanup.test.ts`.
+   */
+  it('lets the engine clear a link on a closed opportunity', async () => {
+    const previous: Rec = { id: 'o1', name: 'Acme Renewal', stage: 'closed_won', primary_contact: 'c1' };
+    await expect(
+      hook.handler(makeCtx({
+        event: 'beforeUpdate', input: { primary_contact: null }, previous, user: USER,
+      })),
+    ).resolves.toBeUndefined();
+  });
+
+  it('still reports a mixed write as the edit it is', async () => {
+    const previous: Rec = { id: 'o1', name: 'Acme Renewal', stage: 'closed_won', primary_contact: 'c1', amount: 10 };
+    await expect(
+      hook.handler(makeCtx({
+        event: 'beforeUpdate', input: { primary_contact: null, amount: 1 }, previous, user: USER,
+      })),
+    ).rejects.toThrow(/Opportunity Acme Renewal \(o1\) is closed \(closed_won\); only .* may be edited/);
+  });
+
   it('allows narrative, approval and system fields on a closed opportunity', async () => {
     const previous: Rec = { stage: 'closed_lost', amount: 100 };
     for (const input of [
       { description: 'post-mortem' },
       { next_step: 'nothing' },
       { approval_status: 'approved' },
-      { owner: 'user_2' },
+      { owner_id: 'user_2' },
       { updated_at: '2026-01-01' },
     ]) {
       await expect(
@@ -146,12 +174,12 @@ describe('opportunity_promote_account', () => {
 
   it('promotes the account to customer and schedules an activation task on close-won', async () => {
     const h = makeHarness({
-      crm_account: [{ id: 'acc1', type: 'prospect', owner: 'rep1' }],
+      crm_account: [{ id: 'acc1', type: 'prospect', owner_id: 'rep1' }],
       crm_task: [],
     });
     await hook.handler(makeCtx({
       event: 'afterUpdate',
-      input: { id: 'opp1', stage: 'closed_won', crm_account: 'acc1', owner: 'rep1' },
+      input: { id: 'opp1', stage: 'closed_won', crm_account: 'acc1', owner_id: 'rep1' },
       previous: { id: 'opp1', stage: 'negotiation', crm_account: 'acc1' },
       user: USER,
       api: h.api,
@@ -163,7 +191,7 @@ describe('opportunity_promote_account', () => {
     expect(task.priority).toBe('high');
     expect(task.status).toBe('not_started');
     expect(task.related_to_opportunity).toBe('opp1');
-    expect(task.owner).toBe('rep1');
+    expect(task.owner_id).toBe('rep1');
     expect(task.due_date).toBe(daysFromNow(3));
   });
 
@@ -224,9 +252,35 @@ describe('quote_workflow', () => {
     ).rejects.toThrow(new RegExp(`Quote is ${status}`));
   });
 
+  /**
+   * #693's defect class on this guard, as #720 settled it: deleting the
+   * opportunity (or contact) a frozen quote references makes the engine clear
+   * that lookup, and the freeze used to answer "Quote is accepted; only
+   * internal_notes may be edited. Attempted: crm_opportunity." — a settled
+   * quote keeping a deal undeletable. It now yields to that write shape and
+   * only to it; see `test/freeze-guard-reference-cleanup.test.ts`.
+   */
+  it('lets the engine clear a link on a frozen quote', async () => {
+    const previous: Rec = { id: 'q1', name: 'Q-1001', status: 'accepted', crm_opportunity: 'o1' };
+    await expect(
+      hook.handler(makeCtx({
+        event: 'beforeUpdate', input: { crm_opportunity: null }, previous, user: USER,
+      })),
+    ).resolves.toBeUndefined();
+  });
+
+  it('still reports a mixed write as the edit it is', async () => {
+    const previous: Rec = { id: 'q1', name: 'Q-1001', status: 'accepted', crm_opportunity: 'o1', total_price: 100 };
+    await expect(
+      hook.handler(makeCtx({
+        event: 'beforeUpdate', input: { crm_opportunity: null, total_price: 1 }, previous, user: USER,
+      })),
+    ).rejects.toThrow(/Quote Q-1001 \(q1\) is accepted; only internal_notes may be edited/);
+  });
+
   it('allows internal_notes and framework columns on a frozen quote', async () => {
     const previous: Rec = { status: 'accepted', total_price: 100 };
-    for (const input of [{ internal_notes: 'signed' }, { owner: 'user_2' }, { updated_at: 'x' }]) {
+    for (const input of [{ internal_notes: 'signed' }, { owner_id: 'user_2' }, { updated_at: 'x' }]) {
       await expect(
         hook.handler(makeCtx({ event: 'beforeUpdate', input, previous, user: USER })),
       ).resolves.toBeUndefined();
@@ -251,7 +305,7 @@ describe('quote_on_accepted', () => {
       event: 'afterUpdate',
       input: {
         id: 'q1', status: 'accepted', crm_account: 'acc1', crm_contact: 'con1',
-        crm_opportunity: 'opp1', total_price: 120_000, owner: 'rep1', ...extra,
+        crm_opportunity: 'opp1', total_price: 120_000, owner_id: 'rep1', ...extra,
       },
       previous: { id: 'q1', status: 'presented' },
       user: USER,
@@ -273,7 +327,7 @@ describe('quote_on_accepted', () => {
     expect(contract.crm_opportunity).toBe('opp1');
     expect(contract.contract_value).toBe(120_000);
     expect(contract.contract_term_months).toBe(12);
-    expect(contract.owner).toBe('rep1');
+    expect(contract.owner_id).toBe('rep1');
     expect(contract.start_date).toBe(today());
   });
 
@@ -389,9 +443,9 @@ describe('account_protection', () => {
   });
 
   it('stamps last_activity_date when a USER changes owner or type', async () => {
-    for (const input of [{ owner: 'rep2' }, { type: 'customer' }] as Rec[]) {
+    for (const input of [{ owner_id: 'rep2' }, { type: 'customer' }] as Rec[]) {
       await hook.handler(makeCtx({
-        event: 'beforeUpdate', input, previous: { owner: 'rep1', type: 'prospect' }, user: USER,
+        event: 'beforeUpdate', input, previous: { owner_id: 'rep1', type: 'prospect' }, user: USER,
       }));
       expect(input.last_activity_date).toBe(today());
     }
@@ -401,29 +455,63 @@ describe('account_protection', () => {
     // demo_bootstrap claims ownerless seeded accounts as a system write every
     // 10 minutes; stamping those flattened every seeded activity date to today
     // and emptied the churn report buckets.
-    const input: Rec = { owner: 'rep2' };
+    const input: Rec = { owner_id: 'rep2' };
     await hook.handler(makeCtx({
-      event: 'beforeUpdate', input, previous: { owner: null }, user: SYSTEM,
+      event: 'beforeUpdate', input, previous: { owner_id: null }, user: SYSTEM,
     }));
     expect(input.last_activity_date).toBeUndefined();
   });
 
-  it('refuses to delete a customer account with open opportunities', async () => {
+  /**
+   * The refusal is asserted as the WHOLE sentence, per branch (#721).
+   *
+   * The count switches noun, verb and closing pronoun together, and the
+   * singular branch used to get only the noun — "1 open opportunity still
+   * reference it. Close or reassign them first." The pin that was here,
+   * `/1 open opportunity still reference/`, could not see that: it is
+   * unanchored, so it matches the correct "still references" just as happily
+   * as the broken "still reference". A message pin that passes on both
+   * spellings of the thing it is pinning is not pinning anything — hence the
+   * full strings below, one per branch, ending at the final period.
+   */
+  const refuseDelete = (openStages: string[]) => {
     const h = makeHarness({
       crm_opportunity: [
-        { id: 'o1', crm_account: 'acc1', stage: 'proposal' },
-        { id: 'o2', crm_account: 'acc1', stage: 'closed_won' },   // closed — ignored
-        { id: 'o3', crm_account: 'other', stage: 'proposal' },    // other account
+        ...openStages.map((stage, i) => ({ id: `o${i + 1}`, crm_account: 'acc1', stage })),
+        { id: 'closed', crm_account: 'acc1', stage: 'closed_won' },  // closed — ignored
+        { id: 'elsewhere', crm_account: 'other', stage: 'proposal' }, // other account
       ],
     });
-    await expect(
-      hook.handler(makeCtx({
-        event: 'beforeDelete',
-        previous: { id: 'acc1', type: 'customer' },
-        user: USER,
-        api: h.api,
-      })),
-    ).rejects.toThrow(/1 open opportunity still reference/);
+    return hook.handler(makeCtx({
+      event: 'beforeDelete',
+      previous: { id: 'acc1', type: 'customer' },
+      user: USER,
+      api: h.api,
+    }));
+  };
+
+  it('refuses to delete a customer account with ONE open opportunity (singular agreement)', async () => {
+    await expect(refuseDelete(['proposal'])).rejects.toThrow(
+      'Cannot delete customer account: 1 open opportunity still references it. Close or reassign it first.',
+    );
+  });
+
+  it('refuses to delete a customer account with SEVERAL open opportunities (plural agreement)', async () => {
+    await expect(refuseDelete(['proposal', 'negotiation'])).rejects.toThrow(
+      'Cannot delete customer account: 2 open opportunities still reference it. Close or reassign them first.',
+    );
+  });
+
+  it('never mixes the two branches — no plural verb on 1, no singular verb on 2', async () => {
+    // The defect was a stitched sentence, so guard the halves that were wrong
+    // rather than only the halves that were right.
+    const one = await refuseDelete(['proposal']).catch((e: Error) => e.message);
+    expect(one).not.toMatch(/opportunity still reference /);   // plural verb on a singular noun
+    expect(one).not.toMatch(/reassign them/);                  // plural pronoun on one record
+
+    const two = await refuseDelete(['proposal', 'negotiation']).catch((e: Error) => e.message);
+    expect(two).not.toMatch(/opportunities still references/); // singular verb on a plural noun
+    expect(two).not.toMatch(/reassign it first/);              // singular pronoun on two records
   });
 
   it('allows deleting a customer account whose opportunities are all closed', async () => {
@@ -449,6 +537,126 @@ describe('account_protection', () => {
         event: 'beforeDelete', previous: { id: 'acc1', type: 'prospect' }, user: USER, api: h.api,
       })),
     ).resolves.toBeUndefined();
+  });
+
+  // ─── billing_country / territory derivation (#621, #639) ─────────────
+  //
+  // The territory sharing rules filter on `territory`, and this hook is the
+  // only writer of it AND of the `billing_country` it is classified from. If
+  // the derivation stops running, both rules still SEED (the column exists)
+  // but match nothing — the same silent territory outage #621 was filed for,
+  // one layer down. So the behaviour is pinned per shape.
+  //
+  // The mapping itself is not re-stated here: it is authored in
+  // `src/objects/_territory.ts` and pinned against this hook's LOWERED body by
+  // `test/territory-single-source.test.ts`. What these cases own is the
+  // handler's own contract — which writes derive, which leave the columns
+  // alone, and that nothing throws.
+
+  it.each([
+    ['a country code',            { country: 'US' },                    'US',             'na'],
+    ['lower case',                { country: 'de' },                    'DE',             'emea'],
+    ['surrounding whitespace',    { country: '  fr  ' },                'FR',             'emea'],
+    ['a full address',            { street: '1 Main', city: 'Austin', country: 'US' }, 'US', 'na'],
+    // #639 acceptance criterion 1: the three spellings the issue names, plus
+    // the legacy `UK` that the ISO rename must not have evicted.
+    ['a full country name',       { country: 'Germany' },               'GERMANY',        'emea'],
+    ['a trailing-space code',     { country: 'de ' },                   'DE',             'emea'],
+    ['the legacy UK spelling',    { country: 'UK' },                    'UK',             'emea'],
+    ['the ISO GB spelling',       { country: 'GB' },                    'GB',             'emea'],
+    ['an uncovered country',      { country: 'SG' },                    'SG',             'other'],
+  ] as [string, Rec, string, string][])(
+    'derives %s onto billing_country + territory on insert',
+    async (_label, billing_address, expectedCountry, expectedTerritory) => {
+      const input: Rec = { name: 'Acme', billing_address };
+      await hook.handler(makeCtx({ event: 'beforeInsert', input, user: USER }));
+      // `billing_country` is what was TYPED (normalised); `territory` is the
+      // classification. Keeping both visible is what lets an admin see why an
+      // account landed in `other` — the pair, not either one alone.
+      expect(input.billing_country).toBe(expectedCountry);
+      expect(input.territory).toBe(expectedTerritory);
+    },
+  );
+
+  it.each([
+    ['a null address',        null],
+    ['an address with no country', { city: 'Austin' }],
+    ['a blank country',       { country: '   ' }],
+    ['a non-string country',  { country: 42 }],
+    ['a non-object value',    'Austin, TX'],
+  ] as [string, unknown][])(
+    'projects %s onto null rather than throwing', async (_label, billing_address) => {
+      // A `before*` hook that throws rejects the whole write, so every shape an
+      // address column can hold must map to a value instead.
+      const input: Rec = { name: 'Acme', billing_address };
+      await expect(
+        hook.handler(makeCtx({ event: 'beforeInsert', input, user: USER })),
+      ).resolves.toBeUndefined();
+      expect(input.billing_country).toBeNull();
+      // …and the classification is STATED rather than left blank (#639): an
+      // account belonging to no territory must not look like one nobody has
+      // filled in yet.
+      expect(input.territory).toBe('other');
+    },
+  );
+
+  it('states territory on an insert that carries no address at all', async () => {
+    // The shape the `billing_address in input` guard alone would skip. There is
+    // no previous value to preserve on an insert, so leaving it unset would
+    // ship exactly the blank #639 ruled out.
+    const input: Rec = { name: 'Acme' };
+    await hook.handler(makeCtx({ event: 'beforeInsert', input, user: USER }));
+    expect(input.territory).toBe('other');
+    expect('billing_country' in input).toBe(false);
+  });
+
+  it('leaves billing_country alone when the write does not carry the address', async () => {
+    // The regression that would silently empty both territories: recomputing
+    // unconditionally would blank the column on every unrelated edit.
+    const input: Rec = { phone: '+1-512-555-0100' };
+    await hook.handler(makeCtx({
+      event: 'beforeUpdate',
+      input,
+      previous: { billing_address: { country: 'US' }, billing_country: 'US' },
+      user: USER,
+    }));
+    expect('billing_country' in input).toBe(false);
+    // Same rule for the classification: an unrelated edit must not re-derive
+    // it, or a partial update would silently reclassify the account.
+    expect('territory' in input).toBe(false);
+  });
+
+  it('clears billing_country and states `other` when the address is cleared', async () => {
+    const input: Rec = { billing_address: null };
+    await hook.handler(makeCtx({
+      event: 'beforeUpdate',
+      input,
+      previous: { billing_address: { country: 'US' }, billing_country: 'US', territory: 'na' },
+      user: USER,
+    }));
+    expect(input.billing_country).toBeNull();
+    expect(input.territory).toBe('other');
+  });
+
+  it('reclassifies when an update moves the account to another country', async () => {
+    const input: Rec = { billing_address: { country: 'Germany' } };
+    await hook.handler(makeCtx({
+      event: 'beforeUpdate',
+      input,
+      previous: { billing_address: { country: 'US' }, billing_country: 'US', territory: 'na' },
+      user: USER,
+    }));
+    expect(input.territory).toBe('emea');
+  });
+
+  it('derives on a SYSTEM write too — seeds and imports must land in a territory', async () => {
+    // Unlike `last_activity_date`, this derivation is not user-gated: a seeded
+    // or imported account with a billing country belongs to its territory
+    // however it was written.
+    const input: Rec = { name: 'Globex', billing_address: { country: 'DE' } };
+    await hook.handler(makeCtx({ event: 'beforeInsert', input, user: SYSTEM }));
+    expect(input.billing_country).toBe('DE');
+    expect(input.territory).toBe('emea');
   });
 });
 
@@ -504,6 +712,43 @@ describe('contact_integrity', () => {
         event: 'beforeDelete', previous: { id: 'c1' }, user: USER, api: h.api,
       })),
     ).rejects.toThrow(/still referenced by 1 open opportunity\(ies\), 1 active quote\(s\), 1 active contract\(s\)/);
+  });
+
+  /**
+   * #693: this guard also runs as a CASCADE child of an account delete
+   * (`crm_contact.crm_account` is master-detail / cascade), and the hook cannot
+   * tell the two apart. "Cannot delete contact" therefore told an account
+   * deleter they had asked to delete a contact. The refusal now names the
+   * contact and both consequences, which is true in either context.
+   */
+  it('names the contact it refuses, and says the account delete is blocked too', async () => {
+    const h = makeHarness({
+      crm_opportunity: [{ id: 'o1', primary_contact: 'c1', stage: 'proposal' }],
+    });
+    const err = await hook
+      .handler(makeCtx({
+        event: 'beforeDelete',
+        previous: { id: 'c1', first_name: 'Ada', last_name: 'Lovelace' },
+        user: USER,
+        api: h.api,
+      }))
+      .then(() => null, (e: Error) => e);
+    expect(err).toBeInstanceOf(Error);
+    expect(err!.message).toContain('Contact Ada Lovelace (c1)');
+    expect(err!.message).toContain('neither can its account');
+    // The old wording claimed an operation the caller may not have performed.
+    expect(err!.message).not.toContain('Cannot delete contact');
+  });
+
+  it('falls back to the bare id when the contact carries no name', async () => {
+    const h = makeHarness({
+      crm_contract: [{ id: 'k1', crm_contact: 'c1', status: 'activated' }],
+    });
+    await expect(
+      hook.handler(makeCtx({
+        event: 'beforeDelete', previous: { id: 'c1' }, user: USER, api: h.api,
+      })),
+    ).rejects.toThrow(/^Contact c1 is still referenced by/);
   });
 
   it('allows deleting a contact whose references are all settled', async () => {

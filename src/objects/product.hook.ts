@@ -20,6 +20,15 @@ const productHook: Hook = {
   priority: 200,
   description: 'Pricing sanity, SKU normalization, and protect referenced products from deletion.',
   handler: async (ctx: HookContext) => {
+    // The refusal envelope (#1075). Mirrored from `./_refusal.ts` because a
+    // lowered body has no module scope and `extractHookBody` THROWS on an
+    // import; `test/refusal-envelope.test.ts` pins every copy against it.
+    function refuse(message: string, code: string, status: number): Error {
+      const err = new Error(message) as Error & { code: string; status: number };
+      err.code = code;
+      err.status = status;
+      return err;
+    }
     const { event, input } = ctx;
     const previous = ctx.previous;
 
@@ -37,8 +46,10 @@ const productHook: Hook = {
             ? (previous.cost as number)
             : undefined;
       if (typeof listPrice === 'number' && typeof cost === 'number' && listPrice < cost) {
-        throw new Error(
+        throw refuse(
           `List Price (${listPrice}) must be greater than or equal to Cost (${cost}).`,
+          'VALIDATION_FAILED',
+          400,
         );
       }
       if (typeof input.sku === 'string') {
@@ -56,8 +67,10 @@ const productHook: Hook = {
       ]);
       const total = oppRefs + quoteRefs;
       if (total > 0) {
-        throw new Error(
+        throw refuse(
           `Cannot delete product: referenced by ${oppRefs} opportunity(ies) and ${quoteRefs} quote(s). Set is_active=false to retire instead.`,
+          'DELETE_RESTRICTED',
+          409,
         );
       }
     }

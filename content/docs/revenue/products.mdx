@@ -1,6 +1,6 @@
 ---
 title: Products
-description: The catalog of what you sell — codes, list prices, billing types and SKUs.
+description: The catalog of what you sell — codes, list prices, SKUs and tax rates.
 ---
 
 # Products
@@ -14,7 +14,7 @@ The detail screen has 3 sections:
 | Section | Fields |
 | --- | --- |
 | **Product Information** | Product code *(auto)*, name, description, category, family |
-| **Pricing & Billing** | List price, cost, SKU, billing type, unit of measure, tax rate, taxable flag |
+| **Pricing** | List price, cost, SKU, tax rate |
 | **Resources** | Product image, datasheet, product manager |
 
 ## Categories and families
@@ -38,57 +38,30 @@ Categorise products two ways:
 
 Categories and families let you slice reports by product mix — *"how much SMB-tier subscription revenue did we book this quarter?"*
 
-## Billing types
-
-| Billing type | Use for |
-| --- | --- |
-| **One-Time** *(default)* | Perpetual licenses, one-off purchases |
-| **Monthly** | Monthly subscriptions |
-| **Quarterly** | Quarterly subscriptions |
-| **Annual** | Annual subscriptions |
-| **Usage** | Consumption-based (per API call, per GB, etc.) |
-
-The billing type drives how the quote calculates totals (one-time fee vs. recurring) and feeds into revenue recognition reporting.
-
-## Units of measure
-
-Specify how the product is sold:
-
-- **Each** *(default)* — one unit per quantity
-- **License** — per software license
-- **Seat** — per named user
-- **Hour** — for services
-- **Day** — for services
-- **Month** — for time-bounded subscriptions
-
 ## Pricing fields
 
 | Field | Purpose |
 | --- | --- |
 | **List Price** | Standard published price — what shows up on a quote by default |
 | **Cost** | Your cost — used for margin calculation |
-| **Default Tax Rate %** | Auto-applied to quote line items |
-| **Taxable** | If unchecked, no tax is added (zero-rated products) |
+| **Default Tax Rate %** | Stored on the product. Nothing applies it — see below |
 
 The system warns you if Cost is greater than List Price (which would be a losing sale).
 
-## Inventory tracking
+**Tax is a quote-level figure, and the product rate is not applied anywhere.** The price fill that copies a product's List Price onto a quote or opportunity line item does not copy the rate, and a quote's total is *subtotal − discount + Tax + Shipping*, where **Tax** is an amount you type on the quote itself. A quote line item has its own **Tax Rate %**, defaulted to 0 and set per line. So setting *Default Tax Rate %* on a product changes no total anywhere today.
 
-For physical products:
+## No inventory, no billing schedule
 
-- **Quantity on Hand** — current inventory.
-- **Reorder Point** — when to reorder.
-
-These fields are optional — leave them empty for non-inventory items (software, services).
+A product record is a catalog entry and nothing more. HotCRM holds **no stock figure** — no quantity on hand, no reorder point, and nothing decrements on a closed deal — and **no billing schedule or unit of measure**: how a subscription is billed lives in the contract and the quote, not on the catalog row. Those fields used to be declared here and were read by nothing, which made the catalog look like an inventory and billing system it never was. Stock belongs to your fulfilment system; see [Billing Handoff](/docs/revenue/billing-handoff).
 
 ## The product image and datasheet
 
 Two attachment fields let you upload:
 
 - **Product Image** — shown on quote line items and product list views.
-- **Datasheet** — typically a PDF; surfaced to the Sales Copilot for AI-drafted emails and proposals.
+- **Datasheet** — a PDF of up to 20 MB, for people to open from the product record.
 
-The Product Information knowledge base reads these datasheets, so accurate, up-to-date docs make the Copilot smarter.
+Nothing reads the file's contents. There is no *Product Information* knowledge base — HotCRM ships no separate knowledge libraries at all — and no skill opens an attachment, so a datasheet never reaches an AI-drafted email or proposal. What the assistant can quote about a product is what is typed into the product's own fields. See [Knowledge Bases](/docs/ai-copilot/knowledge-bases).
 
 ## Built-in rules
 
@@ -102,24 +75,27 @@ The product catalog is **public read-only** for the whole organisation. Sales re
 
 ## Standard list views
 
-- **Active Products** — `is_active = true`.
-- **By Category** — grouped.
-- **By Family** — grouped.
-- **Subscriptions** — `category = subscription OR billing_type IN [monthly, quarterly, annual]`.
-- **Low Stock** — `quantity_on_hand < reorder_point` (for inventory products).
+Products saves **two** views (`src/views/product.view.ts`), and the two tabs above the list switch between them:
+
+| View | What it shows | Tab |
+| --- | --- | --- |
+| **All Products** | The grid: product code (pinned left, and the link into the record), name, category, family, SKU, list price with a column average, cost and Active. Sorted by name and **grouped by category**, 50 rows a page. | *All* |
+| **Product Catalog** | The same products drawn as cards, with the **Product Image** as the cover and product code, category, family, list price and SKU on the face. | *Catalog* |
+
+Neither view filters anything, so **every product appears in both**, inactive ones included, and switching tabs only redraws them. There is no saved *Active Products*, *By Category* or *By Family* view: grouping by category is a setting on the grid above, not a second saved view, and nothing groups by family at all. To work with active products only, sort or filter the **Active** column yourself.
 
 ## Tips for product managers
 
-- ✅ **Keep the datasheet up to date** — the Sales Copilot uses it to draft customer-facing content.
+- ✅ **Keep the datasheet up to date** — the AI assistant uses it to draft customer-facing content.
 - ✅ **Use the Product Image** — it dramatically improves the look of customer-facing quotes.
 - ✅ **Mark old products as inactive**, don't delete them — past quotes and contracts still reference them.
 
 ## Tips for sales reps
 
-- ✅ Use products from the catalog rather than typing line items by hand — pricing and tax are auto-filled.
+- ✅ Use products from the catalog rather than typing line items by hand — the List Price is filled in for you, and on a new line the Sales Price starts there too. Tax is not filled in: enter it on the quote.
 - ✅ Check the datasheet before proposing — it usually has the exact spec sheet you need for the proposal.
 
 ## Tips for admins
 
-- The category, family, billing type and unit-of-measure picklists can be extended. See [Customization › Extending Objects](/docs/customization/extending-objects).
+- The category and family picklists can be extended. See [Customization › Extending Objects](/docs/customization/extending-objects).
 - A product can be linked to multiple opportunities and quotes — deactivation doesn't break historical records.

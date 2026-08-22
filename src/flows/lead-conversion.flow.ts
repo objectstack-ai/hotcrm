@@ -18,13 +18,39 @@ export const LeadConversionFlow: Flow = {
     // dispatcher exposes them as params.recordId / params.crmLeadId. A custom
     // name like `leadId` never gets seeded (16.x runtime).
     { name: 'recordId', type: 'text', isInput: true, isOutput: false },
-    { name: 'createOpportunity', type: 'boolean', isInput: true, isOutput: false },
+    // THE authority for the conversion default (#1155). `defaultValue` is what
+    // makes declared mean BOUND: the engine seeds every declared variable that
+    // carries one before the run starts, so `createOpportunity` is bound on
+    // every path — including the one where the screen runner posts back only
+    // the fields the user touched, which is the #643 defect. The `init_defaults`
+    // assignment node that used to do this is gone; the screen field below
+    // derives its prefill from this line rather than restating `false`.
+    //
+    // Measured on 17.0.0 GA, by running flows (not by reading the engine):
+    //   · declared + nothing supplied  → bound to `false`; ablating this key
+    //     from the declaration re-fails the read with `No such key:
+    //     createOpportunity`, so the default is what binds it;
+    //   · seeded BEFORE the start condition is evaluated, so a start condition
+    //     could read it too;
+    //   · a caller-supplied `context.params.createOpportunity` WINS — the
+    //     boundary is `!== undefined`, so an explicit `false`/`null` is a
+    //     supplied answer, and only absence falls through to this default.
+    // The assignment node had none of that last property: it was unconditional,
+    // so it clobbered a supplied value. All three are pinned in
+    // `test/flow-variable-conditions.test.ts`.
+    { name: 'createOpportunity', type: 'boolean', isInput: true, isOutput: false, defaultValue: false },
     { name: 'opportunityName', type: 'text', isInput: true, isOutput: false },
     { name: 'opportunityAmount', type: 'text', isInput: true, isOutput: false },
   ],
 
   nodes: [
     { id: 'start', type: 'start', label: 'Start', config: { objectName: 'crm_lead' } },
+    // The `init_defaults` assignment node that used to sit here is RETIRED
+    // (#1155). It existed only because `FlowVariableSchema` had no
+    // `defaultValue` (#643 / #651); it does now, and the declaration on
+    // `createOpportunity` above binds the variable earlier and without the
+    // node's one real defect — being unconditional, it clobbered a
+    // caller-supplied `context.params` value it should have deferred to.
     {
       id: 'screen_1', type: 'screen', label: 'Conversion Details',
       config: {
@@ -34,11 +60,32 @@ export const LeadConversionFlow: Flow = {
         // client re-evaluates the predicate against the values collected so far,
         // which is why it cannot be a server-interpolated template.
         fields: [
-          // `defaultValue: false` is load-bearing. An untouched checkbox holds
-          // `undefined`, which the runner counts as an unanswered required
-          // field — so "convert this lead WITHOUT an opportunity", the commonest
-          // path, blocked Submit on a box the user deliberately left clear.
-          { name: 'createOpportunity', label: 'Create Opportunity?', type: 'boolean', required: true, defaultValue: false },
+          // NOT `required` (#4477). A checkbox has no unanswered state — clear
+          // IS an answer, and "convert this lead WITHOUT an opportunity" is the
+          // commonest path. `required: true` said otherwise on both sides of the
+          // wire: the client counted the untouched box as an unanswered field
+          // and blocked Submit, and from 17.0.0-rc.2 the SERVER enforces the
+          // screen's declared contract too, refusing the resume outright with
+          // `INVALID_SCREEN_INPUT: Screen field "createOpportunity" is required`
+          // — so a runner that posts only what the user touched could no longer
+          // convert a lead at all. The variable's declared `defaultValue` is
+          // what actually supplies the answer; the flag only ever contradicted
+          // it.
+          //
+          // DERIVED, not restated (#1155). `{createOpportunity}` reads the flow
+          // variable, so the literal `false` is written exactly once in this
+          // file — on the declaration — and the widget prefill cannot drift
+          // from the value the engine binds. That is the duplication #1155 was
+          // filed about; writing `defaultValue: false` here again would have
+          // moved it one level over rather than removed it.
+          //
+          // A screen field's `defaultValue` is server-interpolated before the
+          // descriptor goes on the wire, and a whole-string sole token returns
+          // the RAW value rather than a stringification — measured on GA, the
+          // client receives boolean `false`, byte-identical to what the literal
+          // sent. (`visibleWhen` below is the opposite case: forwarded raw,
+          // never interpolated. Same node, two different dialects.)
+          { name: 'createOpportunity', label: 'Create Opportunity?', type: 'boolean', defaultValue: '{createOpportunity}' },
           { name: 'opportunityName', label: 'Opportunity Name', type: 'text', required: true, visibleWhen: 'createOpportunity == true' },
           { name: 'opportunityAmount', label: 'Opportunity Amount', type: 'currency', visibleWhen: 'createOpportunity == true' },
         ],
@@ -50,19 +97,63 @@ export const LeadConversionFlow: Flow = {
     },
     {
       // Account dedupe: before creating a new account, look for an existing one
-      // with the same company name. Exact-name match (case/whitespace sensitive)
-      // — the standard lightweight dedupe; fuzzy matching is out of scope here.
+      // with the same company name — NORMALIZED (#626). This used to compare
+      // `crm_account.name` against the raw `{leadRecord.company}`, so
+      // "Acme Corp" and "ACME  Corp" produced two accounts.
+      //
+      // Both sides of this comparison are stored, hook-maintained columns, and
+      // that is forced rather than chosen: a flow template cannot normalize
+      // ANYTHING. `service-automation`'s `resolveToken` recognises exactly one
+      // function form — `NOW()` / `TODAY()` — and every bare identifier in the
+      // expression fallback is substituted before evaluation, so no string
+      // method is reachable either: `{LOWER(x)}`, `{TRIM(x)}` and
+      // `{x.toLowerCase()}` all resolve to `undefined`, and an unwrapped
+      // `LOWER({x})` interpolates literally to "LOWER(Acme Corp)". A formula
+      // field is no help either — it has no physical column to filter on. So
+      // the producer canonicalizes (`account_protection`,
+      // `lead_duplicate_check`) and this node does a plain, indexed equality
+      // match. `test/account-name-normalized-match.test.ts` re-measures all of
+      // that rather than trusting this paragraph.
+      //
+      // Normalize-then-EXACT only: lower + trim + collapse internal
+      // whitespace. Fuzzy matching stays out of scope, as before.
+      //
+      // If the lead carries NO `company_normalized`, this node does not fall
+      // back and does not match everything — `get_record` REFUSES TO RUN:
+      //
+      //   get_record: refusing to run — 1 filter condition(s) resolved to
+      //   nothing and were dropped from the query: `{leadRecord.company_
+      //   normalized}` (at name_normalized). An absent condition does not
+      //   narrow a query, it widens it …
+      //
+      // (measured on 17.0.0-rc.1; pinned in the test file). That is the right
+      // failure: the only way to reach it is a lead row written before this
+      // change, which is what the backfill in docs/MAINTENANCE.md §3.3 exists
+      // for, and a conversion that stops with that message is far cheaper to
+      // diagnose than one that quietly creates a duplicate account.
+      //
+      // Deliberately NOT papered over with a second, case-sensitive lookup on
+      // the raw `name`: a missing key means the producer did not run, and a
+      // tolerant consumer path would hide that while restoring the exact bug
+      // this node exists to fix.
       id: 'find_account', type: 'get_record', label: 'Find Existing Account',
-      config: { objectName: 'crm_account', filter: { name: '{leadRecord.company}' }, outputVariable: 'matchedAccount' },
+      config: { objectName: 'crm_account', filter: { name_normalized: '{leadRecord.company_normalized}' }, outputVariable: 'matchedAccount' },
     },
     {
+      // Branching is on edges `e5` / `e6`. No `config.condition` here: a
+      // `decision` node's singular one is never evaluated (#4414).
       id: 'decision_account', type: 'decision', label: 'Account Already Exists?',
-      config: { condition: P`vars.matchedAccount != null` },
     },
     {
       // NEW-account branch. outputVariable is `createdAccount`; the assignment
       // below normalizes both branches onto a single `accountId` id string so
       // downstream nodes don't need to know which path ran.
+      //
+      // `name` carries the lead's company VERBATIM — the display value. The
+      // match key `name_normalized` is deliberately absent: it is readonly and
+      // hook-owned, and `account_protection` derives it from the `name` written
+      // here, so an account created by this node is immediately findable by the
+      // next conversion.
       id: 'create_account', type: 'create_record', label: 'Create Account',
       config: {
         objectName: 'crm_account',
@@ -72,7 +163,7 @@ export const LeadConversionFlow: Flow = {
           annual_revenue: '{leadRecord.annual_revenue}',
           number_of_employees: '{leadRecord.number_of_employees}',
           billing_address: '{leadRecord.address}',
-          owner: '{$User.Id}', is_active: true,
+          owner_id: '{$User.Id}', is_active: true,
         },
         outputVariable: 'createdAccount',
       },
@@ -100,8 +191,8 @@ export const LeadConversionFlow: Flow = {
       },
     },
     {
+      // Branching is on edges `e11` / `e12` — see `decision_account`.
       id: 'decision_contact', type: 'decision', label: 'Contact Already Exists?',
-      config: { condition: P`vars.matchedContact != null` },
     },
     {
       // `accountId` is a bare id string from whichever account branch ran.
@@ -112,7 +203,7 @@ export const LeadConversionFlow: Flow = {
           first_name: '{leadRecord.first_name}', last_name: '{leadRecord.last_name}',
           email: '{leadRecord.email}', phone: '{leadRecord.phone}',
           title: '{leadRecord.title}', crm_account: '{accountId}',
-          is_primary: true, owner: '{$User.Id}',
+          is_primary: true, owner_id: '{$User.Id}',
         },
         outputVariable: 'createdContact',
       },
@@ -126,8 +217,8 @@ export const LeadConversionFlow: Flow = {
       config: { assignments: { contactId: '{matchedContact.id}' } },
     },
     {
+      // Branching is on edges `e16` / `e17` — see `decision_account`.
       id: 'decision_opportunity', type: 'decision', label: 'Create Opportunity?',
-      config: { condition: P`vars.createOpportunity == true` },
     },
     {
       id: 'create_opportunity', type: 'create_record', label: 'Create Opportunity',
@@ -136,7 +227,7 @@ export const LeadConversionFlow: Flow = {
         fields: {
           name: '{opportunityName}', crm_account: '{accountId}', primary_contact: '{contactId}',
           amount: '{opportunityAmount}', stage: 'prospecting', probability: 10,
-          lead_source: '{leadRecord.lead_source}', close_date: '{TODAY() + 90}', owner: '{$User.Id}',
+          lead_source: '{leadRecord.lead_source}', close_date: '{TODAY() + 90}', owner_id: '{$User.Id}',
         },
         outputVariable: 'createdOpportunity',
       },
@@ -185,7 +276,11 @@ export const LeadConversionFlow: Flow = {
   ],
 
   edges: [
-    { id: 'e1', source: 'start', target: 'screen_1', type: 'default' },
+    // `e0` used to run start → init_defaults, with `e1` carrying on to the
+    // screen. With the seeding node retired (#1155) the start edge goes
+    // straight to the screen and `e1` is gone; the gap in the numbering is
+    // deliberate, so every surviving edge keeps the id it has always had.
+    { id: 'e0', source: 'start', target: 'screen_1', type: 'default' },
     { id: 'e2', source: 'screen_1', target: 'get_lead', type: 'default' },
     { id: 'e3', source: 'get_lead', target: 'find_account', type: 'default' },
     { id: 'e4', source: 'find_account', target: 'decision_account', type: 'default' },

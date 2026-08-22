@@ -1,8 +1,19 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import { isDateMacroToken } from '@objectstack/spec/data';
+import { AgentSchema } from '@objectstack/spec/ai';
 import stack from '../objectstack.config';
+import {
+  type AnyRec,
+  objects,
+  pages,
+  views,
+  objectNames,
+  profileNames,
+  PLATFORM_OBJECTS,
+  fieldsOf,
+  walk,
+} from './helpers/metadata-fixtures';
 
 /**
  * Dangling-reference guards for UI metadata.
@@ -16,86 +27,42 @@ import stack from '../objectstack.config';
  *
  * These tests resolve every UI reference against the objects/profiles the app
  * really defines, so the next bad name fails in CI instead of in a demo.
- */
-
-type AnyRec = Record<string, any>;
-const objects: AnyRec[] = (stack as any).objects ?? [];
-const pages: AnyRec[] = (stack as any).pages ?? [];
-const views: AnyRec[] = (stack as any).views ?? [];
-const profiles: AnyRec[] = (stack as any).permissions ?? [];
-const stackActions: AnyRec[] = (stack as any).actions ?? [];
-
-const objectNames = new Set(objects.map((o) => o.name));
-const profileNames = new Set(profiles.map((p) => p.name));
-
-/**
- * Locale packs, flattened to `[locale, pack]` pairs.
  *
- * `stack.translations` holds ONE `TranslationBundle` keyed by locale
- * (`{ en: {...}, 'zh-CN': {...} }`) — NOT a list of per-locale records. A
- * `translations.find(t => t.locale === 'zh-CN')` therefore matches nothing and
- * silently turns its test into a no-op, which is how the navigation guard
- * below spent its life passing without asserting anything.
+ * ---
+ *
+ * SPLIT BY FAMILY (#814) — where the other guards went.
+ *
+ * This file reached 99,872 bytes against the 100KB ceiling in
+ * `scripts/check-source-hygiene.mjs`, so the next PR to add a guard would have
+ * been failed by `pnpm hygiene` before review (#815 had already been forced
+ * into one unplanned split for that reason). It now keeps the PAGE, FORM and
+ * cross-surface guards; three siblings own the rest, and each holds the whole
+ * family so a reader lands on the guard in one hop:
+ *
+ *   `test/view-references.test.ts`
+ *     view field references resolve · priority queues sort by urgency, not
+ *     alphabetically · filter template tokens are resolvable · row colors and
+ *     kanban groups key off real option values · every canonical opportunity
+ *     stage reaches the UI that enumerates stages · every named list view is
+ *     reachable
+ *
+ *   `test/action-references.test.ts`
+ *     navigation reaches everything the app ships · dashboard actions land on
+ *     real routes · list-level action references resolve · dashboard date
+ *     ranges window a field the query layer can actually compare
+ *
+ *   `test/i18n-references.test.ts`
+ *     picklist values never reach the UI unresolved · action labels are
+ *     translated in every locale · select fields are translated in every
+ *     locale · every locale is complete on every authored surface
+ *
+ *   `test/bulk-action-dispatch.test.ts` (split earlier, by #815)
+ *     the `bulkActionDefs` / `execution: 'aggregate'` dispatch contract
+ *
+ * The derivations all four share live in `test/helpers/metadata-fixtures.ts`.
+ * The split moved text only: no assertion, helper or fixture changed, and the
+ * suite runs the same 70 tests it ran before.
  */
-const localePacks: [string, AnyRec][] = ((stack as any).translations ?? []).flatMap(
-  (bundle: AnyRec) => Object.entries(bundle) as [string, AnyRec][],
-);
-const packFor = (locale: string): AnyRec | undefined =>
-  localePacks.find(([name]) => name === locale)?.[1];
-
-/**
- * Audit columns the platform adds to every object. They are real at runtime
- * (`?sort=created_at desc` works) but never appear in the authored `fields`
- * map, so a reference to one is legitimate.
- */
-const SYSTEM_FIELDS = ['id', 'created_at', 'updated_at', 'created_by', 'updated_by'];
-
-/**
- * System objects the installed platform plugins actually register, verified
- * against the 16.1.0 bundles in node_modules:
- *   - @objectstack/platform-objects — sys_user, sys_email, sys_file, … (the
- *     large core set; only the ones app metadata references are listed here)
- *   - @objectstack/plugin-approvals — sys_approval, sys_approval_request,
- *     sys_approval_action, … (note: there is NO `sys_approval_process`)
- *   - the activity/comment timeline objects used by `record:activity` and the
- *     log_call / log_meeting actions
- * A reference to a `sys_*` name outside this set matches nothing at runtime.
- */
-const PLATFORM_OBJECTS = new Set([
-  'sys_user',
-  'sys_organization',
-  'sys_team',
-  'sys_email',
-  'sys_email_template',
-  'sys_file',
-  'sys_attachment',
-  'sys_notification',
-  'sys_inbox_message',
-  'sys_activity',
-  'sys_comment',
-  'sys_approval',
-  'sys_approval_request',
-  'sys_approval_action',
-  'sys_approval_approver',
-  'sys_approval_delegation',
-]);
-
-const fieldsOf = (obj: string) => [
-  ...Object.keys(objects.find((o) => o.name === obj)?.fields ?? {}),
-  ...SYSTEM_FIELDS,
-];
-
-/** Walk an arbitrary metadata tree, yielding every node that has a `type`. */
-function* walk(node: unknown): Generator<AnyRec> {
-  if (Array.isArray(node)) {
-    for (const item of node) yield* walk(item);
-    return;
-  }
-  if (!node || typeof node !== 'object') return;
-  const rec = node as AnyRec;
-  if (typeof rec.type === 'string') yield rec;
-  for (const value of Object.values(rec)) yield* walk(value);
-}
 
 describe('page component references resolve', () => {
   const components = pages.flatMap((p) => [...walk(p.regions), ...walk(p.slots)]);
@@ -132,6 +99,81 @@ describe('page component references resolve', () => {
       }
     }
     expect(bad, `dangling related-list columns:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  /**
+   * `record:reference_rail` entries are the one page reference the dangling-name
+   * guards above never reached. An entry is a bare object inside
+   * `properties.entries` — it carries no `type`, so `walk` does not yield it —
+   * and the platform declares no schema for it either: `record:reference_rail`
+   * has no row in the spec's `ComponentPropsMap`, and a page component's
+   * `properties` is `z.record(z.string(), z.unknown())`. Nothing between the
+   * authored file and the browser reads these names before the rail queries
+   * them, so a typo is a card that silently comes back empty and — because
+   * `hideEmpty` defaults on — folds itself away.
+   */
+  const railEntries = components
+    .filter((c) => c.type === 'record:reference_rail')
+    .flatMap((c) => ((c.properties?.entries ?? []) as AnyRec[]).map((e) => ({ id: c.id, entry: e })));
+
+  it('every record:reference_rail entry names a real object and a real relationship field', () => {
+    expect(railEntries.length, 'no rail entries found — this guard would be vacuous').toBeGreaterThan(0);
+    const bad: string[] = [];
+    for (const { id, entry } of railEntries) {
+      const objectName = entry.objectName;
+      if (!objectNames.has(objectName)) {
+        bad.push(`${id}: objectName "${objectName}" is not a defined object`);
+        continue;
+      }
+      const relField = entry.relationshipField;
+      if (relField && !fieldsOf(objectName).includes(relField)) {
+        bad.push(`${id}: "${objectName}" has no field "${relField}"`);
+      }
+    }
+    expect(bad, `dangling reference-rail references:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  /**
+   * A rail card's heading resolves as
+   * `entry.title || i18n.objectLabel({ name: objectName, … })`. A literal
+   * `title` does not supply a default — it wins outright, and the locale bundle
+   * is never consulted, so one English string overrides all four locale packs
+   * at once (#972). Nor can the literal itself be translated: the rail renders
+   * `entry.title` as a raw React child, unlike `record:alert`, which runs its
+   * `title` through the inline translation-map resolver.
+   *
+   * So: until the rail gains a translated-title channel, "declares a title" and
+   * "is untranslatable" are the same fact, and the only correct number of
+   * literals is zero. The other half of this guard — that dropping the literal
+   * lands on a *translation* rather than on a humanized object name — is
+   * `test/i18n-references.test.ts`, which requires `objects.<name>.label` in
+   * every locale for exactly these objects.
+   */
+  it('no record:reference_rail entry declares a literal title', () => {
+    const bad = railEntries
+      .filter(({ entry }) => entry.title !== undefined)
+      .map(({ id, entry }) => `${id}: "${entry.objectName}" declares title ${JSON.stringify(entry.title)}`);
+    expect(
+      bad,
+      `reference-rail titles override the localized object label:\n  ${bad.join('\n  ')}`,
+    ).toEqual([]);
+  });
+
+  /**
+   * The same rail entry has no filter channel either: the rail issues
+   * `find(objectName, { $filter: { [relationshipField]: parentId }, $top: limit,
+   * $count: true })` and reads nothing else off the entry. Because `properties`
+   * is an unvalidated `z.record`, a `filter` written here would parse, ship, and
+   * do nothing — the card would keep counting every related record while the
+   * source claimed otherwise. That is the trap this guard exists to spring: an
+   * author reaching for the *Related* tab's `status neq completed` and putting
+   * it on a rail entry gets a red test instead of a silent lie.
+   */
+  it('no record:reference_rail entry declares a filter the rail cannot apply', () => {
+    const bad = railEntries
+      .filter(({ entry }) => entry.filter !== undefined)
+      .map(({ id, entry }) => `${id}: "${entry.objectName}" declares a filter; the rail queries on the relationship alone`);
+    expect(bad, `inert reference-rail filters:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
   it('record:activity only lists object types this app defines', () => {
@@ -199,55 +241,176 @@ describe('page component references resolve', () => {
     }
     expect(bad, `dangling profile assignments:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
-});
 
-describe('view field references resolve', () => {
-  /** Views are keyed by object; `defineView` output carries the object on its data provider. */
-  const viewObjectOf = (v: AnyRec): string | undefined =>
-    v.list?.data?.object ?? v.form?.data?.object ?? v.object;
+  /**
+   * Container types that render only what they are given.
+   *
+   * Hoisted out of the two rules below so the pin test at the end exercises
+   * the SAME predicate the live rules run. It used to be declared once per
+   * `it`, which meant the pin was pinning a copy: a refactor that turned the
+   * real `hasContent` into a pass-through would have left the pin green.
+   */
+  const CONTAINERS = new Set(['page:section', 'page:card', 'page:accordion']);
 
-  it('every form section field is a real field on the view object', () => {
+  /**
+   * Keys a container carries its content under.
+   *
+   * `body` is @objectstack/spec 17.0.0's RETIRED spelling of `children` on
+   * `page:card` (#5775, ADR-0087 D2) and this repo no longer authors it — it
+   * stays in the list because the renderer still reads both, so a card that
+   * authors `body` renders content and this rule must not call it empty.
+   */
+  const CONTENT_KEYS = ['body', 'children', 'items', 'components'];
+
+  const hasContent = (c: AnyRec): boolean => {
+    if (!CONTAINERS.has(c.type)) return true; // a real block renders itself
+    const props = c.properties ?? {};
+    return CONTENT_KEYS.some((k) => {
+      const v = (c as AnyRec)[k] ?? props[k];
+      return Array.isArray(v) ? v.length > 0 : !!v;
+    });
+  };
+
+  /**
+   * A tab whose name promises content must render content (#771).
+   *
+   * Sales Home's three tabs — My Leads / My Opportunities / My Tasks — each
+   * held one `{ type: 'page:section', properties: {} }`. That is a legal page
+   * schema and it validates, builds and renders: as `<section></section>`,
+   * literally nothing, measured in the browser. Three tab names over three
+   * blank panels, and no diagnostic anywhere, because there is no dangling
+   * reference to catch — the defect is the ABSENCE of one.
+   *
+   * The other tests in this block ask "does this reference resolve?". This one
+   * asks the prior question: is there a reference at all? A layout container
+   * (`page:section` / `page:card` / `page:accordion`) is a box; it shows what
+   * you put in it. Put nothing in it inside a tab and the tab is a lie.
+   *
+   * #771 scoped this to TAB children, deliberately, and #734 is the card that
+   * widens it: the sidebar rule below now covers every region, so the two
+   * together answer for the whole page.
+   */
+  it('no page tab renders an empty container', () => {
     const bad: string[] = [];
-    for (const v of views) {
-      const objectName = viewObjectOf(v);
-      if (!objectName || !objectNames.has(objectName)) continue;
-      const known = fieldsOf(objectName);
-      // The default `form` plus every named form under `formViews`. (The
-      // container key is `formViews` — iterating a non-existent `forms` key
-      // silently skipped every named form view.)
-      const forms = [v.form, ...Object.values(v.formViews ?? {})].filter(Boolean) as AnyRec[];
-      for (const form of forms) {
-        for (const section of form.sections ?? []) {
-          for (const f of section.fields ?? []) {
-            const name = typeof f === 'string' ? f : f?.field;
-            if (name && !known.includes(name)) {
-              bad.push(`${objectName} form "${form.name ?? 'default'}": no field "${name}"`);
-            }
+    let tabsSeen = 0;
+    for (const page of pages) {
+      for (const c of [...walk(page.regions), ...walk(page.slots)]) {
+        if (c.type !== 'page:tabs') continue;
+        for (const item of c.properties?.items ?? []) {
+          tabsSeen++;
+          const children: AnyRec[] = item.children ?? [];
+          if (children.length === 0) {
+            bad.push(`${page.name}/${c.id}: tab "${item.label}" has no children`);
+            continue;
+          }
+          if (!children.some(hasContent)) {
+            bad.push(
+              `${page.name}/${c.id}: tab "${item.label}" holds only empty containers ` +
+                `(${children.map((k) => k.type).join(', ')}) — it renders blank`,
+            );
           }
         }
       }
     }
-    expect(bad, `dangling form fields:\n  ${bad.join('\n  ')}`).toEqual([]);
+    // Without this the rule dies silently the day the walk stops finding tabs.
+    expect(tabsSeen, 'no page tabs were inspected — the walk found nothing').toBeGreaterThan(0);
+    expect(bad, `tabs that render blank:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
-  it('every list sort targets a real field', () => {
+  /**
+   * The same rule, everywhere else on the page (#734).
+   *
+   * The tab rule above covers panels behind a tab strip. Sales Home shipped
+   * the identical defect in its SIDEBARS, where nothing is hidden behind a
+   * click: `my_recent_items` and `upcoming_events` were `page:card`s with a
+   * title and no body, so the landing page of every `sales_rep` /
+   * `sales_manager` carried bordered boxes reading "Recent Items" and
+   * "Today's Schedule" with nothing under them. A third, `ai_briefing`, looked
+   * bound but was not — its paragraph was authored as `properties.description`,
+   * a key `page:card` does not declare, so the props schema stripped it and
+   * the card rendered as a title too.
+   *
+   * That last one is why this rule reads DECLARED content keys rather than
+   * "does the props bag have something in it": `PageComponent.properties` is
+   * an open bag, so an undeclared key is a success receipt for configuration
+   * that renders nothing. A container is full when it holds components.
+   *
+   * # The exemption list is the honest half
+   *
+   * #771 declined to widen its rule to sidebars because a rule that goes red
+   * on things the PR is not fixing gets suppressed rather than fixed. The way
+   * out is not a narrower rule, it is a rule that covers everything with the
+   * known-open cases named, dated and owned — so the debt is visible instead
+   * of invisible. Each entry needs an issue, and the assertion below fails
+   * when an entry is no longer reachable, so a fixed defect cannot leave its
+   * exemption behind to cover the next one.
+   */
+  it('no page region renders an empty container', () => {
+    /**
+     * `page.name/component.id` of containers that are known-empty and NOT this
+     * card's to fix. Shrink-only: adding a line needs an issue and a reason.
+     *
+     *   utility_bar_page/quick_notes — an empty `page:card` on a page #734
+     *   deliberately does not touch (that page is the reproduction of an
+     *   upstream renderer gap for `global:*` component types, and editing it
+     *   would destroy the evidence). Filed as #1215.
+     *
+     *   sales_home_page/ai_briefing — carries its copy under
+     *   `properties.description`, which `page:card` does not declare, so it
+     *   renders as a title too. The fix is to move that copy into an
+     *   `element:text` child — but the copy is pinned where it is by the
+     *   #1002 persona guard below, which reads `properties.description` and
+     *   encodes a maintainer ruling, so moving it is its own card rather than
+     *   a rider on this one. Filed as #1216.
+     */
+    const KNOWN_EMPTY = new Set(['utility_bar_page/quick_notes', 'sales_home_page/ai_briefing']);
+
     const bad: string[] = [];
-    for (const v of views) {
-      const objectName = viewObjectOf(v);
-      if (!objectName || !objectNames.has(objectName)) continue;
-      const known = fieldsOf(objectName);
-      // The container key is `listViews` — iterating a non-existent `views`
-      // key silently skipped every named list view.
-      const lists = [v.list, ...Object.values(v.listViews ?? {})].filter(Boolean) as AnyRec[];
-      for (const list of lists) {
-        for (const s of list.sort ?? []) {
-          if (s.field && !known.includes(s.field)) {
-            bad.push(`${objectName} view "${list.name ?? 'default'}": sorts on missing "${s.field}"`);
-          }
-        }
+    const emptyFound = new Set<string>();
+    let containersSeen = 0;
+    for (const page of pages) {
+      for (const c of [...walk(page.regions), ...walk(page.slots)] as AnyRec[]) {
+        if (!CONTAINERS.has(c.type)) continue;
+        containersSeen++;
+        if (hasContent(c)) continue;
+        const where = `${page.name}/${c.id}`;
+        emptyFound.add(where);
+        if (KNOWN_EMPTY.has(where)) continue;
+        bad.push(`${where}: ${c.type} "${c.properties?.title ?? c.label ?? ''}" has no body — it renders as a title over nothing`);
       }
     }
-    expect(bad, `dangling sort fields:\n  ${bad.join('\n  ')}`).toEqual([]);
+
+    // Same reason as `tabsSeen` above: the rule must not pass by finding nothing.
+    expect(containersSeen, 'no page containers were inspected — the walk found nothing').toBeGreaterThan(0);
+    expect(bad, `containers that render blank:\n  ${bad.join('\n  ')}`).toEqual([]);
+
+    // An exemption outlives its defect only if nobody checks. Keyed on still
+    // being EMPTY, not on still existing: a `quick_notes` that gets a body
+    // must drop its line here, or the next empty card inherits the cover.
+    const stale = [...KNOWN_EMPTY].filter((k) => !emptyFound.has(k));
+    expect(stale, `exemptions whose container is no longer empty — delete these lines:\n  ${stale.join('\n  ')}`).toEqual([]);
+  });
+
+  /**
+   * The rule above, exercised against the shape it exists to reject — so a
+   * later refactor of `hasContent` cannot quietly turn it into a pass-through.
+   */
+  it('the empty-tab rule still rejects the shape #771 found', () => {
+    // What Sales Home shipped: rejected.
+    expect(hasContent({ type: 'page:section', properties: {} })).toBe(false);
+    expect(hasContent({ type: 'page:card', properties: { title: 'Recent Items' } })).toBe(false);
+    // The #734 shape: a card whose only copy is under a key `page:card` does
+    // not declare. The props schema strips `description`, so this renders as a
+    // title over nothing and must not read as full.
+    expect(
+      hasContent({ type: 'page:card', properties: { title: 'Ask the AI Assistant', description: 'Open the panel…' } }),
+    ).toBe(false);
+    // What it ships now, and the shapes that must stay accepted.
+    expect(hasContent({ type: 'list-view', properties: { objectName: 'crm_lead' } })).toBe(true);
+    expect(hasContent({ type: 'page:card', properties: { children: [{ type: 'object-metric' }] } })).toBe(true);
+    // The retired `body` spelling still renders, so it still counts as content.
+    expect(hasContent({ type: 'page:card', properties: { body: [{ type: 'object-metric' }] } })).toBe(true);
+    expect(hasContent({ type: 'page:section', properties: { components: [{ type: 'text' }] } })).toBe(true);
   });
 });
 
@@ -370,304 +533,6 @@ describe('flow conditions reach the CEL engine', () => {
   });
 });
 
-describe('priority queues sort by urgency, not alphabetically', () => {
-  /**
-   * `priority desc` on the select itself compares the raw option strings, so
-   * cases came back medium > low > high > critical — the exact inversion of
-   * urgency. Queue views must sort on the materialised `priority_rank`.
-   */
-  const rankedObjects = ['crm_case', 'crm_task'];
-
-  it.each(rankedObjects)('%s defines a numeric priority_rank', (objectName) => {
-    const field = objects.find((o) => o.name === objectName)?.fields?.priority_rank;
-    expect(field, `${objectName}.priority_rank missing`).toBeTruthy();
-    expect(field.type).toBe('number');
-  });
-
-  it('no view sorts on the raw priority select', () => {
-    const bad: string[] = [];
-    for (const v of views) {
-      const lists = [v.list, ...Object.values(v.listViews ?? {})].filter(Boolean) as AnyRec[];
-      for (const list of lists) {
-        for (const s of list.sort ?? []) {
-          if (s.field === 'priority') {
-            bad.push(`view "${list.name ?? list.label ?? 'default'}" sorts on raw priority`);
-          }
-        }
-      }
-    }
-    expect(bad, `${bad.join('\n  ')}`).toEqual([]);
-  });
-});
-
-describe('navigation reaches everything the app ships', () => {
-  const apps: AnyRec[] = (stack as any).apps ?? [];
-  const dashboards: AnyRec[] = (stack as any).dashboards ?? [];
-  const reports: AnyRec[] = (stack as any).reports ?? [];
-
-  /** Flatten the (possibly nested) navigation tree. */
-  const navNodes = (app: AnyRec): AnyRec[] =>
-    (app.navigation ?? []).flatMap(function walk(n: AnyRec): AnyRec[] {
-      return [n, ...(n.children ?? []).flatMap(walk)];
-    });
-  const allNodes = apps.flatMap(navNodes);
-
-  it('every nav entry points at something that exists', () => {
-    const dashboardNames = new Set(dashboards.map((d) => d.name));
-    const reportNames = new Set(reports.map((r) => r.name));
-    const bad: string[] = [];
-    for (const n of allNodes) {
-      // `sys_*` are platform objects the app legitimately links to, but only
-      // ones an installed plugin actually registers. A `requiresObject` guard
-      // hides the item gracefully when a plugin is absent — it does not
-      // legitimise pointing at an object NO installed plugin ever registers
-      // (`sys_approval_process` was permanent dead weight: the guard hid it on
-      // every install, forever).
-      if (n.objectName && n.objectName.startsWith('sys_')) {
-        if (!PLATFORM_OBJECTS.has(n.objectName)) {
-          bad.push(`${n.id}: system object "${n.objectName}" is not registered by any installed plugin`);
-        }
-      } else if (n.objectName && !objectNames.has(n.objectName)) {
-        bad.push(`${n.id}: object "${n.objectName}" is not defined`);
-      }
-      if (n.dashboardName && !dashboardNames.has(n.dashboardName)) {
-        bad.push(`${n.id}: dashboard "${n.dashboardName}" is not defined`);
-      }
-      if (n.reportName && !reportNames.has(n.reportName)) {
-        bad.push(`${n.id}: report "${n.reportName}" is not defined`);
-      }
-    }
-    expect(bad, `dangling navigation targets:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-
-  it('no user-facing object is stranded without a way to reach it', () => {
-    // Campaigns, Contracts, Products, Forecasts and Tasks each shipped with
-    // views, seed data and automation — and no entry point. The only way to
-    // see a task was to open the record it hung off.
-    const reachable = new Set(allNodes.map((n) => n.objectName).filter(Boolean));
-    const stranded = objects
-      .map((o) => o.name)
-      .filter((name: string) =>
-        // Line items and junctions are edited inside their parent, never
-        // reached on their own.
-        !/_line_item$|_member$/.test(name) && !reachable.has(name));
-    expect(stranded, `objects with no navigation entry:\n  ${stranded.join('\n  ')}`).toEqual([]);
-  });
-
-  it('every dashboard is reachable', () => {
-    const reachable = new Set(allNodes.map((n) => n.dashboardName).filter(Boolean));
-    const stranded = dashboards.map((d) => d.name).filter((n: string) => !reachable.has(n));
-    expect(stranded, `dashboards nobody can open:\n  ${stranded.join('\n  ')}`).toEqual([]);
-  });
-
-  it('widgets that window the dateRange field opt out of the injected date range', () => {
-    // The runtime injects the dashboard-level dateRange into every widget
-    // query (framework#2501) unless the widget opts out via `filterBindings`.
-    // A widget that carries its OWN window on the same field gets the two
-    // ANDed: the Executive "Total Revenue (YTD)" tile silently showed
-    // this-quarter revenue (781k instead of the year's 2.6M), and the
-    // "last 12 months" trend chart collapsed to the current quarter's points.
-    // Self-described windows ("YTD", "QTD", "last 12 months") must not follow
-    // the picker — their titles don't.
-    const bad: string[] = [];
-    for (const d of dashboards) {
-      const rangeField = d.dateRange?.field;
-      if (!rangeField) continue;
-      for (const w of d.widgets ?? []) {
-        if (w.filter?.[rangeField] === undefined) continue;
-        if (w.filterBindings?.dateRange !== false) {
-          bad.push(`${d.name}/${w.id}: filters on "${rangeField}" but still binds the dashboard dateRange`);
-        }
-      }
-    }
-    expect(bad, `widgets fighting the dashboard date picker:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-
-  it('every navigation node has a zh-CN label', () => {
-    // The groups were translated and the leaves were not, so the sidebar read
-    // half Chinese, half English.
-    const zh = packFor('zh-CN');
-    // Assert, don't skip: the old lookup used the wrong bundle shape, found no
-    // pack, and returned early — a green test that checked nothing.
-    expect(zh, 'no zh-CN locale pack found in stack.translations').toBeTruthy();
-    const bad: string[] = [];
-    for (const app of apps) {
-      const nav = zh?.apps?.[app.name]?.navigation ?? {};
-      for (const n of navNodes(app)) {
-        if (n.id && !nav[n.id]?.label) bad.push(`${app.name}/${n.id}`);
-      }
-    }
-    expect(bad, `navigation nodes with no zh-CN label:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-});
-
-describe('dashboard actions land on real routes', () => {
-  /**
-   * A widget/header action with `actionType: 'url'` is pushed into the router
-   * verbatim (pushState, no normalisation). The 16.1.0 console serves in-app
-   * pages ONLY under `/apps/:appName/…` with these children (verified against
-   * the router in @objectstack/console):
-   *   :objectName | :objectName/view/:viewId | :objectName/record/:recordId |
-   *   dashboard/:dashboardName | report/:reportName | page/:pageName
-   * There is no top-level `/objects/…` or `/reports/…` route — 16 KPI tiles
-   * navigated to dead pages that way (issue #527).
-   */
-  const apps: AnyRec[] = (stack as any).apps ?? [];
-  const dashboards: AnyRec[] = (stack as any).dashboards ?? [];
-  const reports: AnyRec[] = (stack as any).reports ?? [];
-  const appNames = new Set(apps.map((a) => a.name));
-  const reportNames = new Set(reports.map((r) => r.name));
-  const dashboardNames = new Set(dashboards.map((d) => d.name));
-  const pageNames = new Set(pages.map((p) => p.name));
-
-  /** List-view names per object (the default list plus every named listView). */
-  const viewNamesByObject = new Map<string, Set<string>>();
-  for (const v of views) {
-    const objectName = v.list?.data?.object;
-    if (!objectName) continue;
-    const known = viewNamesByObject.get(objectName) ?? new Set<string>();
-    if (v.list?.name) known.add(v.list.name);
-    for (const lv of Object.values(v.listViews ?? {}) as AnyRec[]) {
-      if (lv?.name) known.add(lv.name);
-    }
-    viewNamesByObject.set(objectName, known);
-  }
-
-  /** Returns undefined when the URL resolves, else why it doesn't. */
-  const routeError = (url: string): string | undefined => {
-    if (/^https?:\/\//.test(url) || url.startsWith('//')) return undefined; // external
-    const [path] = url.split(/[?#]/);
-    const seg = path.split('/').filter(Boolean);
-    if (seg[0] !== 'apps') return 'in-app URLs must start with /apps/<appName>/';
-    if (!appNames.has(seg[1])) return `app "${seg[1]}" is not defined`;
-    const [head, second, third] = seg.slice(2);
-    if (head === 'dashboard') {
-      return dashboardNames.has(second) ? undefined : `dashboard "${second}" is not defined`;
-    }
-    if (head === 'report') {
-      return reportNames.has(second) ? undefined : `report "${second}" is not defined`;
-    }
-    if (head === 'page') {
-      return pageNames.has(second) ? undefined : `page "${second}" is not defined`;
-    }
-    // `<objectName>` optionally followed by `view/<viewId>` (record deep links
-    // carry ids, not metadata — dashboards don't author those).
-    const objectOk = objectNames.has(head) || PLATFORM_OBJECTS.has(head);
-    if (!objectOk) return `object "${head}" is not defined`;
-    if (second === undefined) return undefined;
-    if (second !== 'view') return `unknown object sub-route "${second}"`;
-    return viewNamesByObject.get(head)?.has(third)
-      ? undefined
-      : `object "${head}" has no list view "${third}"`;
-  };
-
-  it('every url-type widget and header action resolves', () => {
-    const bad: string[] = [];
-    for (const d of dashboards) {
-      const actions = [
-        ...(d.header?.actions ?? []),
-        ...(d.widgets ?? []),
-      ] as AnyRec[];
-      for (const a of actions) {
-        if (!a.actionUrl || (a.actionType ?? 'url') !== 'url') continue;
-        const err = routeError(a.actionUrl);
-        if (err) bad.push(`${d.name}/${a.id ?? a.label}: ${a.actionUrl} — ${err}`);
-      }
-    }
-    expect(bad, `dashboard actions navigating to dead routes:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-
-  /**
-   * The rule above currently iterates nothing: no dashboard declares a
-   * widget-level or header action any more, because the console renders no
-   * drill-through for a dataset-bound widget (measured on 16.1.0 — a KPI tile
-   * emits no link, no button and no icon, its cursor stays `auto`, and clicking
-   * it does not navigate). Removing the config was the point of this PR.
-   *
-   * A guard that iterates an empty list is a guard that passes without checking
-   * anything — the exact failure the navigation rule above was written to fix.
-   * So the checker is exercised directly here: it must still reject the two
-   * shapes #527 found in the wild, and still accept a real one. If someone
-   * re-adds an action later, the rule above resumes covering it for real.
-   */
-  it('the route checker still rejects the shapes #527 found', () => {
-    expect(routeError('/objects/opportunity?filter=open')).toBeTruthy();
-    expect(routeError('/reports/revenue')).toBeTruthy();
-    expect(routeError('/apps/no_such_app/crm_lead')).toBeTruthy();
-    expect(routeError('/apps/crm_enterprise/crm_lead/view/no_such_view')).toBeTruthy();
-    expect(routeError('/apps/crm_enterprise/crm_lead')).toBeUndefined();
-    expect(routeError('https://example.com/anything')).toBeUndefined();
-  });
-});
-
-describe('filter template tokens are resolvable', () => {
-  /**
-   * Token support differs per data path, verified empirically against the
-   * running 16.1.0 console (2026-07-28):
-   *
-   * - LIST-VIEW data path (`/api/v1/data/...`): resolves ONLY the user tokens
-   *   (`{current_user_id}`). Date macros ship to the server as literal
-   *   strings — and because `'2026-…' < '{…'` is lexicographically TRUE, a
-   *   `< {180_days_ago}` filter matched freshly-reviewed articles (inverted
-   *   semantics, not just empty results). Use operator-only filters + sort.
-   *
-   * - ANALYTICS path (dashboard widgets / dataset reports,
-   *   `/api/v1/analytics/...`): resolves the DATE_MACRO_TOKENS vocabulary
-   *   (the YTD revenue widget returns a non-zero sum, impossible with a
-   *   literal token), but NO user token — `{current_user}` and even
-   *   `{current_user_id}` match no owner (see crm.app.ts's My Work note).
-   */
-  const dashboards: AnyRec[] = (stack as any).dashboards ?? [];
-  const reports: AnyRec[] = (stack as any).reports ?? [];
-
-  const USER_TOKENS = new Set(['current_user_id', 'current_org_id']);
-
-  /** Yield every string inside an arbitrarily nested filter value. */
-  function* filterStrings(node: unknown): Generator<string> {
-    if (typeof node === 'string') { yield node; return; }
-    if (Array.isArray(node)) { for (const item of node) yield* filterStrings(item); return; }
-    if (node && typeof node === 'object') {
-      for (const value of Object.values(node)) yield* filterStrings(value);
-    }
-  }
-
-  const badTokensIn = (
-    where: string,
-    filter: unknown,
-    allowed: (token: string) => boolean,
-    bad: string[],
-  ) => {
-    for (const s of filterStrings(filter)) {
-      for (const m of s.matchAll(/\{([^{}]+)\}/g)) {
-        if (!allowed(m[1])) bad.push(`${where}: unresolvable token "{${m[1]}}"`);
-      }
-    }
-  };
-
-  it('list view and page filters only use user tokens', () => {
-    const allowed = (t: string) => USER_TOKENS.has(t);
-    const bad: string[] = [];
-    for (const v of views) {
-      const lists = [v.list, ...Object.values(v.listViews ?? {})].filter(Boolean) as AnyRec[];
-      for (const list of lists) badTokensIn(`view "${list.name ?? 'default'}"`, list.filter, allowed, bad);
-    }
-    for (const p of pages) {
-      badTokensIn(`page "${p.name}"`, p.interfaceConfig?.filterBy, allowed, bad);
-    }
-    expect(bad, `unresolvable view/page filter tokens:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-
-  it('dashboard widget and report filters only use date macros', () => {
-    const allowed = (t: string) => isDateMacroToken(t);
-    const bad: string[] = [];
-    for (const d of dashboards) {
-      for (const w of d.widgets ?? []) badTokensIn(`${d.name}/${w.id}`, w.filter, allowed, bad);
-    }
-    for (const r of reports) badTokensIn(`report "${r.name}"`, r.runtimeFilter, allowed, bad);
-    expect(bad, `unresolvable analytics filter tokens:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-});
-
 describe('object references outside views resolve', () => {
   const dashboards: AnyRec[] = (stack as any).dashboards ?? [];
   const actions: AnyRec[] = (stack as any).actions ?? [];
@@ -718,265 +583,6 @@ describe('object references outside views resolve', () => {
   });
 });
 
-describe('list-level action references resolve', () => {
-  const actions: AnyRec[] = (stack as any).actions ?? [];
-  const actionNames = new Set(actions.map((a) => a.name));
-
-  /**
-   * There is NO builtin escape hatch (@objectstack 17).
-   *
-   * This guard used to whitelist `edit` / `delete` / `view` as "affordances the
-   * list renderer provides without an Action def". 17.0's `action-name-undefined`
-   * validator rule refuses exactly that: a `rowActions` string naming no defined
-   * action is reported as a dead affordance — "the button renders and does
-   * nothing when clicked" — and `os validate` fails the build.
-   *
-   * So the whitelist was a trap: it let metadata pass CI that the platform then
-   * rejected. Row-menu entries come from an Action declaring
-   * `locations: ['list_item']`, which auto-injects them; naming one here as a
-   * string is the legacy path the next test forbids. Between the two rules,
-   * `rowActions` has no correct use in this app today — which is why no view
-   * declares it.
-   */
-  it('every rowAction / bulkAction names a defined action', () => {
-    const bad: string[] = [];
-    for (const v of views) {
-      const lists = [v.list, ...Object.values(v.listViews ?? {})].filter(Boolean) as AnyRec[];
-      for (const list of lists) {
-        for (const name of [...(list.rowActions ?? []), ...(list.bulkActions ?? [])]) {
-          if (typeof name === 'string' && !actionNames.has(name)) {
-            bad.push(`view "${list.name ?? 'default'}": action "${name}" is not defined`);
-          }
-        }
-      }
-    }
-    expect(bad, `dangling list action references:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-
-  it('no rowAction repeats an action that already declares list_item placement', () => {
-    // An Action with `locations: ['list_item']` auto-injects its row-menu
-    // entry. Naming it AGAIN as a rowActions string goes through objectui's
-    // legacy path, which dispatches the string as an action TYPE — producing
-    // a second, dead menu item (issue #535 / objectstack-ai/objectui#2960).
-    const listItemActions = new Set(
-      actions.filter((a) => (a.locations ?? []).includes('list_item')).map((a) => a.name),
-    );
-    const bad: string[] = [];
-    for (const v of views) {
-      const lists = [v.list, ...Object.values(v.listViews ?? {})].filter(Boolean) as AnyRec[];
-      for (const list of lists) {
-        for (const name of list.rowActions ?? []) {
-          if (typeof name === 'string' && listItemActions.has(name)) {
-            bad.push(`view "${list.name ?? 'default'}": "${name}" duplicates its list_item auto-injection`);
-          }
-        }
-      }
-    }
-    expect(bad, `redundant string rowActions:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-});
-
-describe('row colors and kanban groups key off real option values', () => {
-  const viewObjectOf = (v: AnyRec): string | undefined =>
-    v.list?.data?.object ?? v.form?.data?.object ?? v.object;
-
-  it('rowColor keys on select fields are actual option values', () => {
-    // Task rows were colored by `critical`/`medium` — Case values. Task
-    // priority is low/normal/high/urgent, so urgent rows rendered uncolored.
-    const bad: string[] = [];
-    for (const v of views) {
-      const objectName = viewObjectOf(v);
-      const objDef = objects.find((o) => o.name === objectName);
-      if (!objDef) continue;
-      const lists = [v.list, ...Object.values(v.listViews ?? {})].filter(Boolean) as AnyRec[];
-      for (const list of lists) {
-        const rc = list.rowColor;
-        if (!rc?.field) continue;
-        const options = objDef.fields?.[rc.field]?.options;
-        if (!Array.isArray(options) || !options.length) continue; // not a select — booleans/numbers are fine
-        const values = new Set(options.map((o: AnyRec) => String(o.value)));
-        for (const key of Object.keys(rc.colors ?? {})) {
-          if (!values.has(key)) {
-            bad.push(`view "${list.name ?? 'default'}": rowColor key "${key}" is not an option of ${objectName}.${rc.field}`);
-          }
-        }
-      }
-    }
-    expect(bad, `dangling rowColor keys:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-
-  it('kanban groupByField is a select field with options', () => {
-    const bad: string[] = [];
-    for (const v of views) {
-      const objectName = viewObjectOf(v);
-      const objDef = objects.find((o) => o.name === objectName);
-      if (!objDef) continue;
-      const lists = [v.list, ...Object.values(v.listViews ?? {})].filter(Boolean) as AnyRec[];
-      for (const list of lists) {
-        const groupBy = list.kanban?.groupByField;
-        if (!groupBy) continue;
-        const field = objDef.fields?.[groupBy];
-        if (!field) bad.push(`view "${list.name}": kanban groups by missing field "${groupBy}"`);
-        else if (!Array.isArray(field.options) || !field.options.length) {
-          bad.push(`view "${list.name}": kanban groupByField "${groupBy}" has no options`);
-        }
-      }
-    }
-    expect(bad, `broken kanban groupings:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-});
-
-describe('picklist values never reach the UI unresolved', () => {
-  /**
-   * A select field stores a VALUE (`ms`, `waiting_customer`, `existing_upgrade`)
-   * and the UI resolves it to the locale's label at render time. Every #461
-   * defect was that resolution failing, in one of two ways — a lookup that
-   * misses (the translation is keyed by something that is not an option value)
-   * or a lookup that never happens (a formula splices the stored value straight
-   * into a string). Both are invisible in review and only surface as English —
-   * or worse, `closed_won` — sitting in an otherwise-translated screen.
-   */
-  const selectOptionsOf = (objDef: AnyRec, field: string): string[] | undefined => {
-    const options = objDef.fields?.[field]?.options;
-    return Array.isArray(options) && options.length
-      ? options.map((o: AnyRec) => String(o.value))
-      : undefined;
-  };
-
-  it('option translations are keyed by option VALUE, not by English label', () => {
-    // Opportunity `type` was keyed by label ('Existing Customer - Upgrade':
-    // '老客户升级'). The resolver matches by value, so deal type rendered in
-    // English on every non-en locale while `stage`/`status` — keyed by value —
-    // translated fine, which is exactly what made it hard to spot.
-    const bad: string[] = [];
-    for (const [locale, pack] of localePacks) {
-      for (const [objName, objT] of Object.entries<AnyRec>(pack?.objects ?? {})) {
-        const objDef = objects.find((o) => o.name === objName);
-        if (!objDef) continue; // covered by the key-resolution test below
-        for (const [fieldName, fieldT] of Object.entries<AnyRec>(objT?.fields ?? {})) {
-          if (!fieldT?.options) continue;
-          const values = selectOptionsOf(objDef, fieldName);
-          if (!values) {
-            bad.push(`${locale}: ${objName}.${fieldName} translates options but the field has none`);
-            continue;
-          }
-          for (const key of Object.keys(fieldT.options)) {
-            if (!values.includes(key)) {
-              bad.push(`${locale}: ${objName}.${fieldName} option key "${key}" is not an option value`);
-            }
-          }
-        }
-      }
-    }
-    expect(bad, `option translations that resolve to nothing:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-
-  it('translated object and field keys name real objects and fields', () => {
-    // A translation keyed to a renamed/removed field is dead weight that reads
-    // as coverage — the bundle looks complete while the screen stays English.
-    const bad: string[] = [];
-    for (const [locale, pack] of localePacks) {
-      for (const [objName, objT] of Object.entries<AnyRec>(pack?.objects ?? {})) {
-        if (!objectNames.has(objName)) {
-          bad.push(`${locale}: translates "${objName}", which is not a defined object`);
-          continue;
-        }
-        const known = fieldsOf(objName);
-        for (const fieldName of Object.keys(objT?.fields ?? {})) {
-          if (!known.includes(fieldName)) {
-            bad.push(`${locale}: "${objName}" has no field "${fieldName}"`);
-          }
-        }
-      }
-    }
-    expect(bad, `translations keyed to nothing:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-
-  it('no formula renders a select field into its output string', () => {
-    // `full_name` = joinNonEmpty([salutation, first_name, last_name]) printed
-    // "ms Emily Davis"; opportunity `display_title` = name + " - " + stage
-    // titled deals "Enterprise Deal - closed_won". The formula language has no
-    // option-label lookup (only upper/lower), so a select simply cannot be
-    // rendered from a formula — it has to stay its own field.
-    //
-    // Only RENDERING is flagged. Branching on a select (`record.stage ==
-    // "closed_won" ? …`) never puts the value on screen and stays legal.
-    const rendersSelect = (source: string, field: string): boolean => {
-      const ref = `record\\.${field}\\b`;
-      // joinNonEmpty([...]) — every element lands in the output string.
-      for (const m of source.matchAll(/joinNonEmpty\(\s*\[([^\]]*)\]/g)) {
-        if (new RegExp(ref).test(m[1])) return true;
-      }
-      // String concatenation on either side: `" - " + record.x` / `record.x + " - "`.
-      return new RegExp(`(["']\\s*\\+\\s*${ref})|(${ref}\\s*\\+\\s*["'])`).test(source);
-    };
-
-    const bad: string[] = [];
-    for (const objDef of objects) {
-      for (const [fieldName, field] of Object.entries<AnyRec>(objDef.fields ?? {})) {
-        // `expression` is `{ dialect, source }` once the F tag is evaluated.
-        const source: unknown = field?.expression?.source ?? field?.expression;
-        if (typeof source !== 'string') continue;
-        for (const other of Object.keys(objDef.fields ?? {})) {
-          if (!selectOptionsOf(objDef, other)) continue;
-          if (rendersSelect(source, other)) {
-            bad.push(`${objDef.name}.${fieldName} renders select "${other}": ${source}`);
-          }
-        }
-      }
-    }
-    expect(bad, `formulas printing raw select values:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-});
-
-describe('every named list view is reachable', () => {
-  const apps: AnyRec[] = (stack as any).apps ?? [];
-  const navViewNames = new Set(
-    apps.flatMap((app) =>
-      (app.navigation ?? []).flatMap(function walk(n: AnyRec): string[] {
-        return [...(n.viewName ? [n.viewName] : []), ...(n.children ?? []).flatMap(walk)];
-      })),
-  );
-
-  it('every listViews entry is referenced by the switcher tabs or app navigation', () => {
-    // With no `tabs` declared, the data-mode switcher lists every saved view
-    // automatically (ADR-0047) — nothing to check. But once a view curates a
-    // `tabs` array, only the listed views render: seven working queues
-    // (renewals_due, at_risk_accounts, stale_opportunities,
-    // closing_this_quarter, sla_at_risk, todays_tasks, overdue_tasks) shipped
-    // outside their list's tabs — defined, tested, unreachable.
-    const bad: string[] = [];
-    for (const v of views) {
-      const tabs = v.list?.tabs;
-      if (!Array.isArray(tabs) || !tabs.length) continue;
-      const tabViews = new Set(tabs.map((t: AnyRec) => t.view).filter(Boolean));
-      for (const [key, def] of Object.entries(v.listViews ?? {}) as [string, AnyRec][]) {
-        const name = def.name ?? key;
-        if (!tabViews.has(name) && !navViewNames.has(name)) {
-          bad.push(`list view "${name}" (${def.data?.object}) is excluded from its list's tabs and has no navigation entry`);
-        }
-      }
-    }
-    expect(bad, `unreachable list views:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-
-  it('every switcher tab points at a defined view', () => {
-    const bad: string[] = [];
-    for (const v of views) {
-      const defined = new Set([
-        v.list?.name,
-        ...Object.entries(v.listViews ?? {}).map(([key, def]) => (def as AnyRec)?.name ?? key),
-      ].filter(Boolean));
-      for (const t of v.list?.tabs ?? []) {
-        if (t.view && !defined.has(t.view)) {
-          bad.push(`tab "${t.name}" targets undefined view "${t.view}"`);
-        }
-      }
-    }
-    expect(bad, `dangling tabs:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-});
-
 describe('forms can actually author the data the views depend on', () => {
   const viewObjectOf = (v: AnyRec): string | undefined =>
     v.list?.data?.object ?? v.form?.data?.object ?? v.object;
@@ -1024,9 +630,10 @@ describe('forms can actually author the data the views depend on', () => {
   });
 
   it('fields the list views filter on are editable in some form', () => {
-    // account views filter on type/health_score/next_renewal_date, but the
-    // account form never offered them — the views could never match anything
-    // a user created through the UI.
+    // account views filter on type/health_score, but the account form never
+    // offered them — the views could never match anything a user created
+    // through the UI. (The `next_renewal_date` filter this guard was also born
+    // on went away with the field itself, #1181.)
     const bad: string[] = [];
     for (const v of views) {
       const objectName = viewObjectOf(v);
@@ -1114,131 +721,6 @@ describe('page templates and record components stay inside their record context'
   });
 });
 
-describe('dashboard date ranges window a field the query layer can actually compare', () => {
-  /**
-   * A dashboard `dateRange` is ANDed into EVERY widget query, so if the
-   * comparison cannot match, the whole dashboard renders zeros. That is #460:
-   * the Service dashboard windowed `crm_case.created_date` — a
-   * `Field.datetime()` — and opened with every KPI at 0 and every chart empty,
-   * with 38 cases in the system.
-   *
-   * The mechanism is a storage disagreement, not a bad preset. On SQLite,
-   * `driver-sql` 16.1.0 coerces datetime filter values to epoch-millisecond
-   * INTEGERs (`coerceFilterValue`), documenting the assumption that datetime
-   * columns hold INTEGER ms. In this app they hold ISO TEXT — including the
-   * platform's own `created_at`/`updated_at`. SQLite orders every INTEGER
-   * before every TEXT, so `datetime_col >= <int>` is true for all rows and
-   * `datetime_col <= <int>` is true for none. Measured against the running
-   * 16.1.0 console: `$gte` alone → all 38 cases, `$lte` alone → 0, both → 0,
-   * in every date format tried.
-   *
-   * `Field.date()` is unaffected (TEXT `YYYY-MM-DD` on both sides), which is
-   * why the CRM/Sales/Executive dashboards — all windowing `close_date` — show
-   * data. So the rule is about the FIELD TYPE, not the preset: a dashboard may
-   * only window a `date` field. Note this deliberately fails if someone
-   * restores the Service dashboard's `dateRange` before the driver is fixed.
-   */
-  const dashboards: AnyRec[] = (stack as any).dashboards ?? [];
-  const datasets: AnyRec[] = (stack as any).datasets ?? [];
-
-  /** Objects the dashboard's widgets aggregate over, via their datasets. */
-  const objectsBehind = (d: AnyRec): string[] => {
-    const names = new Set<string>();
-    for (const w of d.widgets ?? []) {
-      const ds = datasets.find((x) => x.name === w.dataset);
-      if (ds?.object) names.add(ds.object);
-    }
-    return [...names];
-  };
-
-  const fieldType = (objectName: string, field: string): string | undefined =>
-    objects.find((o) => o.name === objectName)?.fields?.[field]?.type;
-
-  it('no dashboard windows a datetime field', () => {
-    const bad: string[] = [];
-    for (const d of dashboards) {
-      const field = d.dateRange?.field;
-      if (!field) continue;
-      for (const obj of objectsBehind(d)) {
-        const type = fieldType(obj, field);
-        if (type === 'datetime') {
-          bad.push(
-            `${d.name}: dateRange windows ${obj}.${field}, a datetime field — ` +
-            `the $lte bound matches no rows, so every widget renders empty`,
-          );
-        }
-      }
-    }
-    expect(bad, `dashboards that will render empty:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-
-  it('every dashboard dateRange field exists on the objects its widgets aggregate', () => {
-    // A range field that no underlying object defines is silently dropped or
-    // errors per widget — either way the picker cannot do what it claims.
-    const bad: string[] = [];
-    for (const d of dashboards) {
-      const field = d.dateRange?.field;
-      if (!field) continue;
-      const behind = objectsBehind(d);
-      if (!behind.length) continue;
-      const resolves = behind.filter((obj) => fieldType(obj, field) !== undefined);
-      if (!resolves.length) {
-        bad.push(`${d.name}: dateRange field "${field}" exists on none of ${behind.join(', ')}`);
-      }
-    }
-    expect(bad, `dangling dashboard date-range fields:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-});
-
-/**
- * Action labels are the most visible strings in the app — they render in row
- * menus, on detail-page headers and in list toolbars. They also had no guard,
- * so #494's i18n audit missed the whole class: three actions
- * (`enroll_leads`, `schedule_followup`, `generate_quote`) shipped with no label
- * entry in ANY locale pack, and `log_meeting` had one only in zh-CN.
- *
- * The gap only became visible as recent PRs surfaced those actions:
- * `generate_quote` moved onto the opportunity header (#515), `enroll_leads`
- * was introduced with the campaign-enrollment screen flow (#536), and
- * `schedule_followup` became the row menu's sole remaining entry once the dead
- * duplicate was removed (#537). A missing entry is not an error — it silently
- * falls back to the English `label` in code — which is exactly why it needs a
- * test rather than a warning.
- */
-describe('action labels are translated in every locale', () => {
-  it('every action has a label entry in every locale pack', () => {
-    expect(localePacks.length, 'no locale packs found in stack.translations').toBeGreaterThan(0);
-    const bad: string[] = [];
-    for (const action of stackActions) {
-      const { name, objectName } = action;
-      if (!name || !objectName) continue;
-      for (const [locale, pack] of localePacks) {
-        const label = pack?.objects?.[objectName]?._actions?.[name]?.label;
-        if (!label) bad.push(`${locale}: ${objectName}._actions.${name}.label`);
-      }
-    }
-    expect(bad, `actions with no translated label:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-
-  it('confirmText and successMessage are translated wherever the action declares them', () => {
-    // A half-translated action is worse than an untranslated one: the menu item
-    // reads Chinese and then the confirm dialog answers in English.
-    const bad: string[] = [];
-    for (const action of stackActions) {
-      const { name, objectName } = action;
-      if (!name || !objectName) continue;
-      for (const key of ['confirmText', 'successMessage'] as const) {
-        if (!action[key]) continue;
-        for (const [locale, pack] of localePacks) {
-          const entry = pack?.objects?.[objectName]?._actions?.[name];
-          if (entry && !entry[key]) bad.push(`${locale}: ${objectName}._actions.${name}.${key}`);
-        }
-      }
-    }
-    expect(bad, `action strings declared in code but not translated:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-});
-
 /**
  * `form.data` is a data provider the form renderer never reads: a form binds to
  * its object and record through the route context, so the block only *looked*
@@ -1281,5 +763,151 @@ describe('form views do not declare a dead data provider', () => {
       .filter((v) => !(v.list?.data?.object ?? v.object))
       .map((v) => v.list?.name ?? v.form?.type ?? '(unnamed view)');
     expect(unresolved, `views whose object no longer resolves:\n  ${unresolved.join('\n  ')}`).toEqual([]);
+  });
+});
+
+/**
+ * `App.defaultAgent` is a SURFACE BINDING, not a custom-agent slot.
+ *
+ * ADR-0063 §1/§2: the kernel ships exactly two agents — `ask` (the data
+ * surface, the implicit default) and `build` (authoring surfaces such as
+ * Studio). Tenant/app-package custom agents were withdrawn, and HotCRM's own
+ * app-authored agents were retired in #512; the app's AI capability now ships
+ * as skills, which attach to a platform agent by `surface` affinity.
+ *
+ * Nothing caught the dangling binding this replaces. `App.defaultAgent` is
+ * typed `SnakeCaseIdentifierSchema` — any well-formed snake_case name parses —
+ * so `os validate`, `pnpm build` and the platform's agent lint (which only
+ * walks `stack.agents`) all stayed green while `defaultAgent: 'sales_copilot'`
+ * pointed at an agent that had not existed for months. The failure is silent
+ * and late: `loadAgent()` refuses the non-platform record at chat time, so the
+ * only symptom is the ambient chatbot not answering in a demo.
+ *
+ * The platform set is READ FROM THE SPEC (`AgentSchema.shape.surface`), not
+ * transcribed here — the agent names and the surface names are the same two
+ * tokens, so this guard tracks the contract instead of drifting from it.
+ */
+describe('app AI bindings resolve to a platform agent', () => {
+  const apps: AnyRec[] = (stack as any).apps ?? [];
+
+  /** `['ask', 'build']` — straight off the spec's own surface enum. */
+  const PLATFORM_AGENTS: string[] = (() => {
+    const surface = (AgentSchema as AnyRec).shape.surface;
+    const enumSchema = typeof surface.removeDefault === 'function' ? surface.removeDefault() : surface;
+    return enumSchema.options as string[];
+  })();
+
+  it('the spec still exposes exactly the two platform agents', () => {
+    // Guard the guard: if this introspection ever returns [] the checks below
+    // would pass by asserting nothing (or fail for the wrong reason).
+    expect(PLATFORM_AGENTS).toEqual(['ask', 'build']);
+  });
+
+  it('every app defaultAgent names a platform agent', () => {
+    expect(apps.length, 'no apps found in the stack — the guard is vacuous').toBeGreaterThan(0);
+    const bad: string[] = [];
+    for (const app of apps) {
+      const agent = app.defaultAgent;
+      if (agent === undefined) continue; // omitting the key is legal — `ask` is implicit
+      if (!PLATFORM_AGENTS.includes(agent)) {
+        bad.push(
+          `${app.name}: defaultAgent "${agent}" is not a platform agent ` +
+            `(${PLATFORM_AGENTS.join(' | ')}) — it will not resolve at chat time`,
+        );
+      }
+    }
+    expect(bad, `dangling app agent bindings:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('the app authors no agents of its own — the surface is skills-only', () => {
+    // ADR-0063 §2. Re-introducing an app agent is what makes a name like
+    // `sales_copilot` look plausible in `defaultAgent` again; skills are the
+    // supported way to deepen an app's AI capability.
+    const agents: AnyRec[] = (stack as any).agents ?? [];
+    expect(
+      agents.map((a) => a.name),
+      'app-authored agents were retired in #512 — author skills instead (ADR-0063 §2)',
+    ).toEqual([]);
+    expect(((stack as any).skills ?? []).length, 'no skills registered').toBeGreaterThan(0);
+  });
+});
+
+/**
+ * The home page's AI card does not name a retired persona (#1002).
+ *
+ * The two guards above check agent BINDINGS — `defaultAgent`, `stack.agents` —
+ * because those are keys a schema can be pointed at. This one checks a
+ * paragraph, and that is the whole point: the card below said
+ * "Ask the Sales Copilot" for months while every gate stayed green. `os
+ * validate` and `pnpm lint` walk authored metadata and treat a card's `title` /
+ * `description` as free text; PR #1001's persona rule is deliberately scoped to
+ * `content/docs/**` (the range the maintainer drew for #612), so it never
+ * opened a `.page.ts`. A retired persona in `src/` had no guard at all — and
+ * this one was live UI copy, visible to a user today, not documentation.
+ *
+ * Two drifts were fixed here, both from the maintainer's 2026-08-04 ruling on
+ * #612 (Option A) and the architecture note that followed it:
+ *
+ * - **The persona.** `sales_copilot` was retired in #512 and ADR-0063 §2 made
+ *   the surface skills-only. AI capability is implemented by agents in
+ *   `objectstack-ai/cloud`; HotCRM contributes domain skills. So the copy names
+ *   the platform's assistant, never an app-owned one.
+ * - **The entry point.** The card sent users to "the floating Copilot
+ *   (bottom-right)"; `content/docs/ai-copilot/index.mdx` documents "the chat
+ *   panel the platform opens from the right edge of every page" (#611 / PR
+ *   #1001). Two descriptions of one entry point is drift whichever is right, so
+ *   the card now uses the documented one.
+ *
+ * SCOPE — read before extending. This pins the ONE card this PR rewrote. It is
+ * not the general rule, and it cannot catch the same persona reappearing in a
+ * different card, view, or skill description: that is a scan-surface question
+ * over every user-visible string in `src/` (`title` / `label` / `description` /
+ * `help`), which touches the public wording surface and needs its own ruling.
+ * Filed as #1003 for that reason — do not quietly grow this into it.
+ *
+ * Reverse verification: predicted red-before / green-after, the ordinary
+ * direction for a forbidden-string pin over copy that plainly contained the
+ * string. Measured by restoring the old three lines: 2 of 3 assertions fail
+ * ("Ask the Sales Copilot" on `title`, "Today with Copilot" on `label`, and the
+ * floating/bottom-right entry point), then green once rewritten.
+ */
+describe('live UI copy does not name a retired copilot persona (#1002)', () => {
+  const homePage = pages.find((p) => p.name === 'sales_home_page');
+
+  /** The card carries the app's only AI-facing home-page copy. */
+  const card = [...walk(homePage?.regions), ...walk(homePage?.slots)].find(
+    (c: AnyRec) => c.id === 'ai_briefing',
+  );
+
+  it('the card this rule reads is still on the home page', () => {
+    // Guard the guard: renamed away, every assertion below would pass by
+    // reading `undefined` — the empty-pass failure mode a copy rule dies of.
+    expect(homePage, 'sales_home_page is no longer registered in the stack').toBeDefined();
+    expect(card, 'no component with id "ai_briefing" on sales_home_page').toBeDefined();
+    expect(typeof card?.properties?.title).toBe('string');
+    expect(typeof card?.properties?.description).toBe('string');
+  });
+
+  it('no retired persona name in the card copy', () => {
+    const copy = [card?.label, card?.properties?.title, card?.properties?.description]
+      .filter((s): s is string => typeof s === 'string')
+      .join('\n');
+    // The bare word is included on purpose: "Copilot" alone reads as an
+    // app-owned assistant in UI copy, even though the DOCS keep *AI Copilot* as
+    // a section name (#611's line, which applies to a docs nav, not to a card).
+    const found = ['Sales Copilot', 'Service Copilot', 'Copilot'].filter((name) =>
+      copy.includes(name),
+    );
+    expect(found, `retired persona named in home-page card copy: ${found.join(', ')}`).toEqual([]);
+  });
+
+  it('the card points at the documented assistant entry point', () => {
+    const description: string = card?.properties?.description ?? '';
+    // The stale spelling, not a paraphrase of the new one: pinning the exact
+    // sentence would fail on any harmless rewording, while "floating" /
+    // "bottom-right" is precisely the claim that contradicts the docs.
+    expect(description.toLowerCase()).not.toContain('floating');
+    expect(description.toLowerCase()).not.toContain('bottom-right');
+    expect(description).toContain('right edge');
   });
 });

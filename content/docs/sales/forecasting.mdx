@@ -13,24 +13,39 @@ This page is about the **forecast object** that stores those snapshots. For the 
 
 | Section | Fields |
 | --- | --- |
-| **Period** | Owner, period (`month` / `quarter`), period start. Period end and the friendly label (e.g. **Q3 2026**) are derived. |
+| **Period** | Owner and period (`month` / `quarter`). The period start, the period end and the friendly label (e.g. **Q3 2026**) are all derived. |
 | **Numbers** | Quota, pipeline amount, best-case amount, commit amount, closed amount. |
-| **Source** | `scheduled` (nightly job), `ai` (Copilot-generated), `manual` (rep entry). |
+| **Derived** | **Expected**, **Attainment %** and **Coverage Ratio** — formula fields computed per row from the numbers above. Nobody types these in. |
+| **Source** | `scheduled` (nightly job), `ai` (reserved for an agent or integration of your own — nothing in HotCRM writes it), `manual` (rep entry). |
 | **Narrative** | Optional commentary — what changed, what's at risk, what to ask in the next 1:1. |
 
-Pipeline, best-case, commit and closed are independent buckets — they answer different questions:
+Pipeline, best case and commit are **nested**, not independent — each is a subset of the one above it, so you read them as a ladder of confidence rather than as slices of a pie:
 
-- **Pipeline** — every open deal in this period, regardless of confidence.
-- **Best case** — deals the rep believes are winnable with a stretch effort.
-- **Commit** — deals the rep is willing to put their name on (≥ 80% probability by convention).
-- **Closed** — already won; cannot move.
+- **Pipeline** — every open deal closing in this period, regardless of confidence.
+- **Best case** — the subset a rep believes is winnable: deals whose **Forecast Category** is *Best Case* or *Commit*.
+- **Commit** — the subset a rep will put their name on: **Forecast Category** *Commit*.
+- **Closed** — already won in this period; cannot move, and sits outside the three open buckets.
+
+A deal's Forecast Category is set automatically from its **Stage**, so the same boundary decides what shows up in the *Closing This Quarter* opportunity view, in the *Pipeline by Forecast Category* chart, and in the snapshot. There is nothing separate to maintain.
 
 ## How periods are derived
 
-You enter `period` and `period_start`; the system computes the rest. For a quarterly forecast starting 2026-07-01:
+You choose a `period`; the system computes the rest. Supply a `period_start` — that period's own first day — to snapshot a specific quarter or month, or leave it out and the snapshot lands on the calendar period containing its snapshot date. For a quarterly forecast taken on 2026-08-02:
 
+- `period_start` → 2026-07-01
 - `period_end` → 2026-09-30
 - `period_label` → **Q3 2026**
+
+Because that derivation lives in one place instead of in every writer, snapshots that leave `period_start` blank all land on the same boundary and line up exactly — which is what makes “this quarter” filters and quarter-over-quarter trends work at all. Every automated writer takes that route: the nightly sweep sends `period` and nothing else.
+
+**What you do supply is checked, not merely kept.** The derivation fills in the blanks, and it still never rewrites a value that arrived with the record — but a value that disagrees with the period it is labelled with is now refused outright rather than stored. The window is pinned at both ends:
+
+- **`period_start` must be the period's own first day.** A monthly snapshot starts on the 1st; a quarterly one must additionally start on a quarter boundary — January 1, April 1, July 1 or October 1. So a quarterly snapshot sent with `period_start` 2026-07-15 no longer lands mid-quarter under a **Q3 2026** label: the save is refused, with *Period Start must be the first day of the period — e.g. 2026-08-01 for Aug 2026*.
+- **`period_end` must close that same period — or be left blank.** Leave it out and the derivation fills it in. Type it by hand and it has to be the last day of the period `period_start` opens: 2026-09-30 for a quarter starting 2026-07-01, or 2026-08-31 for Aug 2026. A ten-month window cannot be filed under a one-quarter label.
+
+The advice is therefore what it always was — when you write a snapshot by hand or through the API, send the period's first day, or send no `period_start` at all and let the derivation place it. The reason is not what it used to be. It is no longer that a mid-period row is merely hard to find; it is that the row cannot be saved at all. Being hard to find is *why* the rules exist: the forecast list's *This Quarter* tab and the Sales dashboard's *Quota Attainment by Rep* table both match `period_start` against the quarter's real first day, and the nightly sweep picks a period's current row by the window that contains today.
+
+**A row stored before these rules shipped stays refused until its window is corrected.** The check reads the whole record on every save, not just the field you touched, so even an unrelated edit to such a row — a quota correction, a note — is rejected until the dates agree with the label. The correction itself is always accepted: put `period_start` and `period_end` back on the calendar period, and the row saves normally again.
 
 So you'll never see a record labelled “2026-07-01 through ???” — only the human label. The list view and dashboards group by `period_label` directly.
 
@@ -38,25 +53,34 @@ So you'll never see a record labelled “2026-07-01 through ???” — only the 
 
 There are three sources, recorded in the `source` field:
 
-1. **Scheduled** — a nightly job (built on the platform's flow engine) snapshots every rep's pipeline. This is the spine of the historical trend.
-2. **AI** — the Copilot skill generates a forecast from current pipeline + recent stage moves + similar past deals. The conversation transcript is stored alongside the record.
+1. **Scheduled** — the **Forecast Snapshot** flow runs nightly at 3 AM and snapshots the current quarter for every rep who owns at least one live deal. This is the spine of the historical trend. Re-running it refreshes the same row, so numbers move down as well as up; it never writes **Quota**, which stays whatever a manager set.
+2. **AI** — a value nothing in HotCRM writes. The **Revenue Forecasting** Copilot skill is read-only: it composes `describe_object`, `aggregate_data`, `query_records` and `visualize_data` over live opportunity data and answers **in the conversation** — weighted pipeline, at-risk deals, and a chart when one carries the answer better than prose. It opens no forecast row, and there is nowhere to file the exchange either: **Notes** is the only narrative column, and a person types it. The value is reserved for a snapshot some agent or integration of your own writes; a Copilot conversation will never produce one.
 3. **Manual** — a manager enters a number directly. Used for adjustments and overrides.
 
 You can have all three for the same owner/period — they sit next to each other in the trend chart, so disagreements are visible.
 
+**The current quarter has exactly one automated writer.** The nightly sweep opens the current quarter's rows and nothing else does — the demo data a new org ships with deliberately stops at that window's edge, seeding settled quarters and the current month only, so it can never collide with what the sweep writes. Two consequences on a freshly seeded org, both expected rather than broken:
+
+- **Rows for the current quarter do not exist until the 3 AM sweep has run once.** Until then, anything scoped to *this quarter* — the Sales dashboard's *Quota Attainment by Rep* table above all — is legitimately empty. Settled quarters and the current month are there from the start.
+- **Quota is blank on every row the sweep opens, and stays blank until someone sets it.** No automation writes it. Quota is the hand-maintained denominator of attainment, and a nightly job that reset it would erase the number a rep is actually on the hook for.
+
 ## What you do with them
 
-- **Roll-up dashboards** — Sales dashboard groups by `period_label` and sums `commit_amount` across the team.
+- **Roll-up dashboards** — the Sales dashboard's *Quota Attainment by Rep* table shows each rep's **current-quarter** quota, closed revenue and attainment. It reads these same snapshots, so it is empty until the nightly sweep opens the quarter, and a rep whose **Quota** nobody has set still appears — with no attainment, because the dataset's ratio measure returns nothing rather than dividing by a missing quota.
 - **Trend** — pick an owner and a period and chart `commit_amount` over the `created_at` of every snapshot. Sudden drops trigger the *“why did commit fall ¥800k this week?”* conversation.
-- **Attainment** — `closed_amount / quota` is computed in the report layer; no dedicated field.
+- **Attainment** — there is a dedicated field; you do not rebuild it in the report layer. **Attainment %** (`attainment_pct`) is a formula on every snapshot — `closed_amount ÷ quota × 100`, read from that row's own two columns — and it is a column on all three forecast list views as well as a field on the record form. The zero case is guarded: a quota of 0, or no quota yet, reads **0.00** instead of erroring, so an unset denominator never breaks a view. **Coverage Ratio** (`coverage_ratio`) sits beside it with the same shape — `pipeline ÷ (quota − closed)`, and 0.00 once the quota is already covered.
 - **AI grounding** — the AI agent reads recent snapshots to ground its narrative in real movement, not imagined deals.
+
+**A team's attainment is not the average of its reps' attainment.** The per-row **Attainment %** above and the roll-up you see on a dashboard are deliberately two different numbers. `attainment_pct` is per row and expressed as a percentage from 0 to 100, so `106.00` means 106%. The `forecast_metrics` dataset's **Attainment** measure — the one the *Quota Attainment by Rep* table and any widget built on that dataset use — is `closed ÷ quota` as a 0–1 ratio computed by **summing both sides first**. That is the point: summing before dividing weights each rep by the quota they carry, where averaging per-row percentages would give a rep on a ¥200k quota the same say as a rep on ¥2M. Group by owner or by period and the dataset does the right thing; averaging the field column yourself does not. The two also part ways when the quota is missing — the field's guard reads 0.00, the dataset measure reports no value at all.
+
+> **Always scope a roll-up to one period.** A forecast number is only meaningful *inside* its period. Because the object stores one row per owner **per period** — this quarter, this month, and every settled period before them — a chart or table that adds up **Quota** or **Closed Won** without saying which period it means will stack a quarter's quota on top of a month's on top of last quarter's. Scope every roll-up either by grouping on the period label (**Q3 2026**, **Aug 2026**), or by filtering to a single period type *and* period start.
 
 ## Who can edit
 
 Forecasts inherit the standard CRM permission model:
 
 - **Sales reps** see and edit their own forecasts.
-- **Sales managers** see and edit forecasts for everyone in their territory (via the role hierarchy).
+- **Sales managers** see and edit **every** forecast: the Sales Manager profile holds *View All* / *Modify All* on Forecast, so the reach is org-wide rather than a team slice. Positions are flat — there is no reporting line that could narrow it to "their" reps.
 - **Sales operations** see all forecasts and can override any number.
 - All edits are tracked in the platform audit log — every commit change is attributed and time-stamped.
 
@@ -69,7 +93,7 @@ Weekly. The whole value of forecasts is the trend, and a single snapshot at quar
 Both snapshots are preserved. The next dashboard refresh shows the new number; the trend chart shows the old one as a historical point.
 
 **Can a forecast roll up from opportunities automatically?**
-The numbers you put on the snapshot are whatever you want them to be — usually computed by your flow or your AI agent from live opportunities. The object itself doesn't recompute them; it preserves the value at the moment of the snapshot, on purpose.
+For the current quarter it already does — that is exactly what the nightly **Forecast Snapshot** flow is: pipeline, best case, commit and closed won are re-summed from live opportunities and written back onto the same row every night. **Quota** is the one number it never computes for you. What the object does *not* do is recompute a stored amount when you read it: a settled snapshot keeps the value it was written with, on purpose. The derived fields are the mirror image — **Attainment %** and **Coverage Ratio** are computed from that row's own stored columns each time it is read, so correcting a quota on an old snapshot re-derives that row's attainment without re-running anything.
 
 **How does this differ from a saved report?**
 A report runs against *current* data. A forecast is a *frozen* number — even six months later, looking at last quarter's commit will give you the number the rep was on the hook for, not a number recomputed from records that have since moved.

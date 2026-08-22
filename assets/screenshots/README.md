@@ -1,13 +1,43 @@
-# Screenshots
+# HotCRM screenshots
 
-Marketplace screenshots for HotCRM. Captured with Playwright (1280×577 viewport, `locale: en-US`) against a live `pnpm dev` instance using the bundled seed data. Captured in English (the default locale); zh-CN, es-ES, and ja-JP bundles are also included in the app.
+`assets/screenshots/hotcrm/` is the repository-owned source of truth for
+published HotCRM product screenshots. README and documentation-site images must
+reference a screen from this directory, never an ad hoc capture.
 
-| File | Page | Highlights |
-|---|---|---|
-| `01-sales-pipeline.png` | Opportunities kanban (`crm_opportunity/view/pipeline_kanban`) | Deals across stages, account + amount + close date per card |
-| `02-accounts-list.png` | Account cards view (`crm_account/view/account_gallery`) | Industry + annual revenue + employees + contact info |
-| `03-opportunities-list.png` | All opportunities table view (`crm_opportunity/view/all_opportunities`) | Sortable list with stage badges and probability bars |
-| `04-executive-dashboard.png` | Executive dashboard (`dashboard/executive_dashboard`) | Revenue / accounts / contacts / leads KPIs + revenue trend and industry charts |
-| `05-service-cases.png` | Service cases kanban (`crm_case/view/case_workflow`) | Cases by status (New / In Progress / Waiting on Customer) with priority badges |
+Each screen is a self-contained directory:
 
-To recapture: `pnpm dev` → log in as the seeded dev admin → open each URL under `/_console/apps/app.objectstack.hotcrm/` in a 1280×577 en-US browser → screenshot to the matching file.
+```text
+hotcrm/<screen>/
+├── meta.yaml       # ID, capture context, title, alt text, purpose, lifecycle
+├── en.png|jpg      # English image
+└── zh-Hans.png|jpg # Simplified Chinese image
+```
+
+`meta.yaml` is deliberately colocated with the two locale files so a visual,
+its accessible description, its intended story, and its capture conditions
+evolve together. `status: published` means the asset may be used in public
+README and docs content.
+
+## Documentation site
+
+The docs site consumes generated copies under
+`apps/docs/public/screenshots/hotcrm/`; that output is ignored by Git. Run:
+
+```bash
+pnpm -C apps/docs sync:screenshots
+```
+
+The `dev`, `types:check`, and `build` scripts run this sync automatically.
+Use public paths such as `/screenshots/hotcrm/lead-detail/en.png` from MDX.
+
+## Adding or refreshing a screen
+
+1. Capture the same reviewed product state in `en` and `zh-Hans`.
+2. Replace both locale files and update their colocated `meta.yaml` in one
+   change. Keep the real file extension (`.jpg` for JPEG, `.png` for PNG).
+3. Run the sync command and verify both documentation locales in a browser.
+4. Update the README or docs page that tells the corresponding product story.
+
+The numbered files at this directory's root are retained as historical capture
+sets. New product documentation should use the semantic `hotcrm/<screen>/`
+directories above.

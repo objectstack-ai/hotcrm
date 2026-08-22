@@ -32,19 +32,24 @@ HotCRM 是一个单体 ObjectStack 应用。`objectstack.config.ts` 是注册 `s
 hotcrm/
 ├── objectstack.config.ts
 ├── src/
-│   ├── objects/        # *.object.ts 和对象生命周期 hooks
+│   ├── objects/        # *.object.ts 模型和 *.hook.ts 生命周期逻辑
+│   ├── hooks/          # 把对象 hooks 汇总交给 stack 的 barrel
 │   ├── actions/        # UI 动作和可执行动作体
 │   ├── flows/          # 自动化流程
-│   ├── agents/         # AI agents
 │   ├── skills/         # AI skills
 │   ├── apps/, views/, pages/
-│   ├── dashboards/, reports/, cubes/
+│   ├── dashboards/, reports/, datasets/
+│   ├── mappings/       # 数据导入的列到字段映射
 │   ├── profiles/, sharing/
 │   ├── translations/
-│   └── data/
+│   ├── data/           # 种子数据
+│   ├── docs/           # 随构建产物一起分发的应用文档
+│   └── interfaces/     # 共享类型（目前是空 barrel）
 ├── apps/docs/          # Fumadocs 应用
 └── content/docs/       # 文档内容
 ```
+
+HotCRM 只定义 skills，不定义 agent：应用自带的两个 copilot 及其所在目录已被移除，AI 能力来自每个 ObjectStack 环境都提供的平台助手。参见 [AI Skills](/zh-Hans/docs/customization/ai-skills)。
 
 ## 文件后缀协议
 
@@ -55,7 +60,6 @@ hotcrm/
 | `*.actions.ts` | UI 动作和 AI 可调用动作体 |
 | `*.flow.ts` | 自动化 |
 | `*.skill.ts` | AI skill |
-| `*.agent.ts` | AI agent |
 | `*.page.ts` | UI 页面 |
 | `*.view.ts` | 列表或看板视图 |
 | `*.dashboard.ts` | 仪表盘 |
@@ -84,7 +88,7 @@ export const Warranty = ObjectSchema.create({
 
 ### 新增 AI skill
 
-创建 `src/skills/<name>.skill.ts`，从 `src/skills/index.ts` 导出，并把 skill 名称加入 `src/agents/` 中对应的 agent。
+创建 `src/skills/<name>.skill.ts`，并从 `src/skills/index.ts` 导出。从这个 barrel 导出就是全部的接线工作——skill 会附着到平台助手（`ask`）上，本应用不定义任何自己的 agent。
 
 ### 新增 UI 元数据
 

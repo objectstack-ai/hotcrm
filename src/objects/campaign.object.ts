@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
-import { F, P, cel } from '@objectstack/spec';
+import { F, P } from '@objectstack/spec';
 
 /**
  * Campaign Object
@@ -30,8 +30,10 @@ export const Campaign = ObjectSchema.create({
   // Every other business object with a detail page groups its fields; campaign
   // was one of the two that did not, so its detail page fell back to one flat
   // 30-field grid with the ROI formulas sitting next to the campaign name. The
-  // keys mirror the sections the campaign form already uses (Overview /
-  // Schedule & Budget / Performance) so the two surfaces agree.
+  // labels mirror the sections the campaign form uses (Campaign Information /
+  // Schedule / Budget & ROI / Performance) so the two surfaces agree — the
+  // form's old three-section shape buried the two manual-entry cost fields in a
+  // combined "Schedule & Budget" row and was split to match this one (#597).
   fieldGroups: [
     { key: 'basic',      label: 'Campaign Information', icon: 'megaphone' },
     { key: 'schedule',   label: 'Schedule',             icon: 'calendar' },
@@ -42,6 +44,15 @@ export const Campaign = ObjectSchema.create({
   ],
 
   fields: {
+    // Platform ownership anchor — canonical note in `account.object.ts` (#548).
+    owner_id: Field.lookup('sys_user', {
+      label: 'Campaign Owner',
+      group: 'assignment',
+      system: true,
+      readonly: false,
+      trackHistory: true,
+    }),
+
     // AutoNumber field
     campaign_code: Field.autonumber({
       group: 'basic',
@@ -224,19 +235,12 @@ export const Campaign = ObjectSchema.create({
       scale: 2,
     }),
     
-    // Relationships
-    parent_campaign: Field.lookup('crm_campaign', {
-      group: 'basic',
-      label: 'Parent Campaign',
-      description: 'Parent campaign in hierarchy',
-    }),
-    
-    owner: Field.lookup('sys_user', {
-      group: 'assignment',
-      defaultValue: cel`os.user.id`,
-      label: 'Campaign Owner',
-      trackHistory: true,
-    }),
+    // No `parent_campaign`. Campaign hierarchy was declared and never used: no
+    // page, doc or report mentioned it, and the honest consumer for it — a
+    // rolled-up ROI — cannot be one declaration. `roi` here is a formula over
+    // this campaign's OWN `actual_cost` / `actual_revenue`, so a hierarchy ROI
+    // would put a second, differently-scoped ROI on the same record and leave
+    // every reader to guess which one they were looking at.
     
     // Campaign Assets
     landing_page_url: Field.url({
@@ -257,7 +261,7 @@ export const Campaign = ObjectSchema.create({
     { fields: ['type'] },
     { fields: ['status'] },
     { fields: ['start_date'] },
-    { fields: ['owner'] },
+    { fields: ['owner_id'] },
   ],
   
   // Enable advanced features
@@ -269,6 +273,11 @@ export const Campaign = ObjectSchema.create({
   },
   
   // Validation Rules
+  //
+  // Predicates below are TOTAL: every `record.x` read is `has()`-guarded, so the
+  // rule returns a verdict even when the merged record has no such key. See
+  // AGENTS.md "Validation predicates must be TOTAL" and
+  // test/object-validation-predicates.test.ts, which fails the build otherwise.
   validations: [
     {
       name: 'end_after_start',
@@ -278,14 +287,14 @@ export const Campaign = ObjectSchema.create({
       // `<=`, not `<`: the message promises "after", so a campaign that ends
       // the day it starts is a violation. Matches `crm_contract`'s twin rule
       // and `crm_forecast.period_end_after_start` (#514 item 12).
-      condition: P`record.end_date != null && record.start_date != null && record.end_date <= record.start_date`,
+      condition: P`has(record.end_date) && record.end_date != null && has(record.start_date) && record.start_date != null && record.end_date <= record.start_date`,
     },
     {
       name: 'actual_cost_within_budget',
       type: 'script',
       severity: 'warning',
       message: 'Actual Cost exceeds Budgeted Cost',
-      condition: P`record.actual_cost != null && record.budgeted_cost != null && record.actual_cost > record.budgeted_cost`,
+      condition: P`has(record.actual_cost) && record.actual_cost != null && has(record.budgeted_cost) && record.budgeted_cost != null && record.actual_cost > record.budgeted_cost`,
     },
   ],
   

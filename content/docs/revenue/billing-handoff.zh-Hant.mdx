@@ -1,0 +1,163 @@
+---
+title: 計費交接
+description: HotCRM 營收範圍的終點——把贏單商機與已啟用合約交給計費系統的兩個出站事件。
+---
+
+# 計費交接
+
+HotCRM 負責營收的**商務**一側：找到客戶、談定價格、簽下合約。它不負責**財務**一側。這個應用裡沒有訂單、沒有發票、沒有收款對象，也不打算有。
+
+這是一條有意劃下的邊界，不是缺口。計費、稅務、催收與收入認列屬於另一個系統；一個把它們做一半的 CRM，最後只會得到兩套互相打架的數字。HotCRM 欠那個系統的只有一件事，而且要做扎實：在錢變成真金白銀的兩個時刻，完成一次**可靠的交接**。
+
+## 邊界在哪裡
+
+| | HotCRM 擁有 | 交接出去 |
+| --- | --- | --- |
+| **需求** | 行銷活動、線索、資格判定 | — |
+| **交易** | 客戶、聯絡人、商機、報價、行項目、折扣審批 | — |
+| **協議** | 合約：條款、日期、金額、`billing_frequency`、`payment_terms`、續約 | — |
+| **錢** | — | 開票、帳期計畫、稅務、催繳、收款 |
+| **履約** | — | 開通、出貨、庫存異動 |
+| **認列** | — | 收入排程、遞延收入、報送財務 |
+
+有兩點值得明說，因為總有人來找：
+
+- **HotCRM 根本不保存庫存數字。** 產品上沒有庫存數量欄位，贏單也不會扣減任何東西。庫存是履約系統的記錄，本應用刻意不保留第二份副本。
+- **收款狀態永遠不會寫回來。** HotCRM 裡沒有任何欄位告訴你發票是否已付。未來的入站整合可以做到這件事，但今天它不存在，也沒有欄位假裝它存在。
+
+## 兩個事件
+
+兩者都是出站 HTTP `POST`，在記錄**轉入**某個狀態時發出——而不是在已處於該狀態的記錄每次儲存時發出。
+
+| 事件 | 觸發時機 | 攜帶內容 |
+| --- | --- | --- |
+| `crm.opportunity.closed_won` | 商機階段從其他值**轉入** *Closed Won* | 商機、其客戶、其行項目 |
+| `crm.contract.activated` | 合約狀態從其他值**轉入** *Activated* | 合約、其客戶、來源商機的行項目 |
+
+「轉入」這個措辭就是整個設計。贏單之後記錄還會被繼續編輯——補一個採購單號、換負責人、順一遍描述。每一次都是一次儲存；如果交接按「當前等於贏單」觸發，那計費系統每次都會被告知再收一遍同一筆錢。兩個事件都**每次轉入只發一次**。
+
+> 一筆已經交接過的贏單，其合約啟用時會讓計費系統再聽到同一個客戶一次，這是有意的：第一個事件說「我們贏了」，第二個說「合約已生效，條款如下」。它們的載荷不同，多數接收方只對其中一個採取動作。挑與你真正開始計費的時點相符的那個——訂閱型業務通常是合約啟用。
+
+## 載荷
+
+每個事件一份 JSON 文件。`crm.opportunity.closed_won` 長這樣：
+
+```json
+{
+  "event": "crm.opportunity.closed_won",
+  "version": 1,
+  "occurred_at": "2026-08-31T16:04:11.482Z",
+  "opportunity": {
+    "id": "opp_1",
+    "name": "Northwind — Platform Rollout",
+    "amount": 250000,
+    "close_date": "2026-08-31",
+    "stage": "closed_won",
+    "type": "new_business",
+    "account_id": "acc_1",
+    "owner_id": "user_7"
+  },
+  "account": {
+    "id": "acc_1",
+    "name": "Northwind Traders",
+    "account_number": "ACC-0001",
+    "billing_address": { "street": "1 Market St", "city": "Seattle", "country": "US" },
+    "billing_country": "US",
+    "phone": "+1-206-555-0100",
+    "website": "https://northwind.example.com"
+  },
+  "line_items": [
+    {
+      "id": "oli_1",
+      "line_number": 1,
+      "crm_product": "prod_1",
+      "description": "Platform subscription",
+      "quantity": 10,
+      "list_price": 20000,
+      "unit_price": 18000,
+      "discount": 10,
+      "total_price": 162000
+    }
+  ]
+}
+```
+
+`crm.contract.activated` 用同一個信封，只是把 `opportunity` 區塊換成 `contract` 區塊：
+
+```json
+{
+  "event": "crm.contract.activated",
+  "version": 1,
+  "occurred_at": "2026-09-01T08:00:03.117Z",
+  "contract": {
+    "id": "ctr_1",
+    "contract_number": "CTR-0001",
+    "status": "activated",
+    "contract_type": "subscription",
+    "start_date": "2026-09-01",
+    "end_date": "2027-08-31",
+    "contract_term_months": 12,
+    "contract_value": 250000,
+    "billing_frequency": "monthly",
+    "payment_terms": "net_30",
+    "auto_renewal": true,
+    "signed_date": "2026-08-31",
+    "account_id": "acc_1",
+    "opportunity_id": "opp_1",
+    "owner_id": "user_7"
+  },
+  "account": { "…": "同上" },
+  "line_items": []
+}
+```
+
+關於形狀的幾點說明：
+
+- **`billing_frequency` 與 `payment_terms` 正是合約事件的意義所在。** HotCRM 記錄它們、不消費它們；把「按月」/「net 30」變成一張帳期計畫表的是你的計費系統。
+- **`line_items` 一定存在**，是陣列，可能為空。直接建立、沒有來源商機的合約沒有可列的明細，你拿到的是 `[]` 而不是缺失的鍵。
+- **欄位清單是固定的**，不是記錄的整列傾倒。在 HotCRM 裡給客戶或商機加一個欄位，**不會**悄悄改變你收到的內容；載荷是一份契約，加寬它是一次明確的改動，並伴隨 `version` 的提升。
+
+## 投遞：這裡的「可靠」指什麼
+
+交接不會在儲存時直接呼叫你的端點，而是把一次**持久化投遞**入列到平台的出站 HTTP outbox，由背景排程器負責發出。具體而言：
+
+- **帶退避的重試。** 一次失敗的嘗試最多重試七次，間隔大致為 1 秒、10 秒、1 分鐘、10 分鐘、1 小時、6 小時、24 小時（帶抖動）。接收方停機一個工作天，事件依然送得到。
+- **可重試與致命的區分。** `408`、`429` 以及任意 `5xx`，加上網路錯誤與逾時，都會重試。其他 `4xx` 被視為永久拒絕，投遞立即進入死信——如果你對不喜歡的載荷回 `400`，就不會再被問第二次。
+- **設定了密鑰就會簽章。** 設定簽章密鑰後，每個請求都帶 `X-Objectstack-Signature: sha256=<hex>`，即對請求主體原文做的 HMAC-SHA256。信任載荷之前請先驗章。沒有設定密鑰時，這個標頭直接不存在——不會用空密鑰「假簽」。
+- **依 `X-Objectstack-Delivery` 去重。** 投遞語義是**至少一次**：同一個入列事件的每次重試都重複該標頭的值，接收方記錄它即可安全丟棄重複。`occurred_at` 不是去重鍵。
+- **每一次嘗試都有紀錄。** 平台把每次投遞存為一列 `HTTP Delivery`（`sys_http_delivery`），帶狀態、嘗試次數、回應碼、錯誤與下次重試時間，並自帶 **Recent**、**Failures**、**Pending** 三個清單檢視。它是平台系統對象：要從平台自身的管理介面進入，而不是從 HotCRM 的側邊欄——CRM 應用的導覽裡沒有「計費」這一項。
+
+請求還會帶上 `X-Objectstack-Event: flow:send_closed_won_handoff` / `flow:send_contract_activated_handoff`；如果你不想讀 body 裡的 `event` 欄位，這是區分兩個事件的第二條路。
+
+## 指向你的計費系統
+
+**這是一次程式碼改動，不是在管理端編輯。** 去找介面之前請先讀這句話：端點與簽章密鑰位於應用自身的元資料裡，改它們意味著改應用並重新部署。
+
+兩個值都讀自同一個模組 `src/flows/_billing-endpoint.ts`，且都支援在**建置**時用環境變數覆寫：
+
+```bash
+HOTCRM_BILLING_ENDPOINT=https://billing.acme.internal/hotcrm/events \
+HOTCRM_BILLING_SIGNING_SECRET=…                                    \
+pnpm build
+```
+
+什麼都不設，端點就停留在範例預設值 `https://billing.example.com/hotcrm/events`，那不是一個真實接收方。投遞照樣會入列、重試，最終進入死信——而且是在投遞紀錄裡看得見地失敗。這是刻意的：一個大聲失敗的未設定交接，比一個悄無聲息什麼也不做的交接更容易被發現。
+
+> **為什麼不用管理端可編輯的 webhook？** 平台確實有一套宣告式 webhook 面，它的列**可以**在 Setup 裡編輯。但它表達不了這兩個事件：一個 webhook 訂閱的是「對象 + 動作」（`create` / `update` / `delete`），既無法表達「僅在轉入 Closed Won 時」，也無法塑造 body。照那樣宣告，`closed_won` 會在每一次商機編輯時觸發，並送出一個既無客戶、也無行項目的裸變更信封——接收方得自己偵測真正的事件，再回呼拿走它需要的一切。HotCRM 選擇了精確事件加完整載荷，代價是端點在部署時才能改，而不是在表單裡改。如果你的處境把這筆取捨反過來，那套 webhook 面依然在，隨時可用。
+
+## 另一端怎麼寫
+
+一個最小接收方需要做的是：
+
+1. 接受 `POST` 的 JSON 請求主體。
+2. 用共享密鑰對請求主體原始位元組驗證 `X-Objectstack-Signature`。
+3. 看 `X-Objectstack-Delivery`；見過就回 `200` 並停止。
+4. 依 `event` 分派、幹活、回 `2xx`。想被重試就回 `5xx`（或逾時）；只有當載荷永久不可接受時才回 `4xx`。
+
+沒有任何東西會流回來。如果你的計費系統需要告訴 HotCRM 發票已開或已付，那是一次獨立的入站整合，目前不存在——見本頁開頭的邊界表。
+
+## 相關
+
+- [合約](/zh-Hant/docs/revenue/contracts)——狀態清單，以及啟用在 HotCRM 內部觸發了什麼。
+- [商機](/zh-Hant/docs/sales/opportunities)——階段，以及 *Closed Won* 的含義。
+- [自動化](/zh-Hant/docs/administration/automation)——兩個交接都在內建流程表裡，它們的執行出現在 **Studio → Developer → Flow Runs** 裡。

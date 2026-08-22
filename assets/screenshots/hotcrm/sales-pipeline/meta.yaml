@@ -1,0 +1,24 @@
+id: hotcrm-sales-pipeline
+kind: screenshot
+scope: hotcrm
+category: ui
+status: published
+captured: '2026-08-01'
+capture:
+  application: HotCRM
+  theme: light
+  viewport: 1600x900
+  aspectRatio: '16:9'
+  dataset: curated-opportunities
+locales:
+  en: en.png
+  zh-Hans: zh-Hans.png
+title:
+  en: Sales pipeline kanban
+  zh-Hans: 销售流水线看板
+alt:
+  en: An opportunity kanban board organized by sales stages.
+  zh-Hans: 按销售阶段组织的商机看板。
+purpose:
+  en: Show stage-based work management and a visible sales process.
+  zh-Hans: 展示按阶段管理工作和可视化销售流程。

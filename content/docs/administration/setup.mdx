@@ -11,21 +11,17 @@ A practical, week-one checklist for the new HotCRM admin. Work through it in ord
 
 ### 1. Company profile
 
-Navigate to **Setup → Company Information**:
+Navigate to **Setup → Company**:
 
 - [ ] Company name, address, time zone, default currency
 - [ ] Fiscal year start month (used by all forecast reports)
 - [ ] Default language
 
-### 2. Business hours
+### 2. Business hours — nothing to configure
 
-**Setup → Business Hours**:
+**There is no Setup → Business Hours screen.** This app ships no working-day calendar, no working-hours window and no holiday list — nothing to fill in here, and nothing a deadline could be counted against. The section is kept only so the admin who came looking for that screen stops looking.
 
-- [ ] Working days (e.g., Mon–Fri)
-- [ ] Working hours (e.g., 9 AM – 6 PM)
-- [ ] Holidays for the year
-
-Business hours drive [SLA calculations](/docs/service/sla-and-escalation) — e.g., "resolve within 8 business hours" uses these.
+What follows from that is on the SLA side: deadlines run on **calendar hours**. Every case now gets a computed deadline — `src/objects/case.hook.ts` looks the case's priority up against its account's **Customer Tier** and adds that many elapsed hours to the wall clock — so a Critical case opened at 4pm on a Friday is due at 8pm that same Friday, and a Low case opened before a public holiday runs its week down through it. Nights, weekends and holidays all count against every target, at every priority. See [SLA & Escalation](/docs/service/sla-and-escalation).
 
 ### 3. Email setup
 
@@ -43,19 +39,19 @@ Business hours drive [SLA calculations](/docs/service/sla-and-escalation) — e.
 
 - [ ] Import or invite all users
 - [ ] Assign each user a [profile](/docs/administration/profiles)
-- [ ] Assign each user a role in the hierarchy
+- [ ] Assign each user their positions — a user may hold more than one
 - [ ] Set a manager for each user (drives approval routing)
 
-### 5. Role hierarchy
+### 5. Positions
 
-**Setup → Roles**:
+**Setup → Users**, and the 12 positions listed in [Sharing & security](/docs/administration/sharing-and-security):
 
-- [ ] Confirm the default hierarchy (Executive → Directors → Managers → Reps) matches your org
-- [ ] Add custom roles for regional or specialised teams
+- [ ] Map your org onto the shipped positions. They are **flat** — they distribute access, they do not stack into a reporting line, and nothing rolls up from one to another
+- [ ] For every position you add, add the sharing rule (or permission-set binding) that names it — a position no rule names grants nothing at all
 
 ### 6. Profiles & permissions
 
-**Setup → Profiles**:
+**Setup → Permission Sets** — what this checklist calls a *profile* is a permission set, and Setup ships no screen called *Profiles*:
 
 - [ ] Review the six built-in profiles (see [Profiles](/docs/administration/profiles))
 - [ ] Clone and customise if needed (e.g., a *Junior Sales Rep* profile with limited delete rights)
@@ -67,19 +63,18 @@ Business hours drive [SLA calculations](/docs/service/sla-and-escalation) — e.
 - [ ] Decide org-wide default for accounts and contacts (private vs public read vs public read/write) — see [Sharing & security](/docs/administration/sharing-and-security)
 - [ ] Configure account teams if you sell as pods rather than solo reps
 
-### 8. Lead routing
+### 8. Lead routing — nothing to configure
 
-**Setup → Lead Settings**:
+**There is no Setup → Lead Settings screen**, and there are no routing rules to write. An ownerless lead — web-to-lead, CSV import, API capture — is assigned on insert by `src/objects/lead.hook.ts`: it goes to whichever holder of the `sales_rep` position has the **fewest open leads**. That is a self-balancing round-robin, not a rule matching region, industry or source; there is no territory routing, no queue, and no auto-response email to the submitter. If nobody holds `sales_rep` the hook does nothing and the lead stays ownerless until someone claims it.
 
-- [ ] Default lead owner / queue (when no rule matches)
-- [ ] Routing rules (by region, industry, source)
-- [ ] Auto-response email to new leads from the web form
+- [ ] Assign the `sales_rep` position to every rep who should receive intake — that pool *is* the routing table
+- [ ] Read what happens next in the `lead_assignment` flow (a rating-based follow-up date, and an alert to the new owner) at **Studio → Automation → Flows**
 
 ### 9. Product catalog
 
-- [ ] Import [products](/docs/revenue/products) — at minimum: code, name, list price, billing type
+- [ ] Import [products](/docs/revenue/products) — at minimum: code, name, list price
 - [ ] Set up product manager (the contact for each product line)
-- [ ] Upload datasheets (feeds the AI Copilot's Product Information knowledge base)
+- [ ] Upload datasheets — a PDF file field on the product record, there for people to open; no knowledge base ingests it
 
 ## ✅ Day 4 — Process
 
@@ -91,26 +86,30 @@ Confirm the 7-stage default pipeline matches your sales process. Stages and prob
 | --- | --- |
 | Prospecting | 10% |
 | Qualification | 25% |
-| Proposal | 40% |
-| Negotiation | 60% |
+| Needs Analysis | 40% |
+| Proposal | 60% |
+| Negotiation | 80% |
 | Closed Won | 100% |
 | Closed Lost | 0% |
-| Closed Without Decision | 0% |
 
-If your process differs, adjust in **Setup → Opportunity → Stages**.
+If your process differs, that is a source edit rather than a screen: **there is no Setup → Opportunity → Stages page**. The seven stages are the `stage` field's own options (`OPPORTUNITY_STAGE_OPTIONS` in `src/objects/_picklists.ts`), and the probabilities are the `STAGE_PROBABILITY` map in `src/objects/opportunity.hook.ts` — which re-derives **Probability** and **Expected Revenue** from the stage on every save, so a probability typed onto a deal by hand does not survive the next one. Changing either is a code change plus a redeploy.
 
 ### 11. Case SLAs
 
 Confirm the default [SLA matrix](/docs/service/sla-and-escalation):
 
-| Priority | First response | Resolution |
-| --- | --- | --- |
-| Critical | 1 hour | 4 hours |
-| High | 2 hours | 8 hours |
-| Medium | 4 hours | 2 business days |
-| Low | 1 business day | 7 business days |
+| Priority | Strategic | Enterprise | Mid-Market | SMB |
+| --- | --- | --- | --- | --- |
+| Critical | 4h | 4h | 4h | 4h |
+| High | 6h | 8h | 8h | 8h |
+| Medium | 24h | 36h | 48h | 48h |
+| Low | 96h | 120h | 168h | 168h |
 
-Adjust if your support promise differs.
+**Every cell is a deadline the app keeps.** The `case_sla_defaults` hook (`src/objects/case.hook.ts`) stamps `sla_due_date` at *now + the matching number of calendar hours* on every case, and the hourly `case_sla_monitor` sweep picks up any of them whose due date has passed. The column is chosen by the account's **Customer Tier** — so part of confirming this matrix is confirming that your accounts are actually classified. An account with a blank tier, or one the case's creator cannot read, is treated as **SMB**.
+
+**There is no first-response target to confirm.** This checklist used to carry a whole *First response* column — 1 hour at Critical through 1 business day at Low — and none of those four numbers exists anywhere in the app; the SLA page this section links to does not carry a first-response target either. What does exist is the stamp: **First Response Date** is written the first time an interaction that already took place is recorded against the case (the `event_activity_bubble` hook, `src/objects/event.hook.ts`). It is never compared against anything — `case_metrics` declares no first-response measure, so no report or dashboard tile reports on it, and no flow alerts on it. Promise your customers a first response time by all means; the app records when it happened and nothing else.
+
+Adjust if your support promise differs — the sixteen numbers live in `src/objects/_case-sla.ts` and a matching table inside `src/objects/case.hook.ts`, not on a Setup screen, and both copies have to change together.
 
 ### 12. Approval process
 
@@ -120,14 +119,17 @@ Adjust if your support promise differs.
 
 ## ✅ Day 5 — Knowledge & AI
 
-### 13. Knowledge bases
+### 13. Knowledge articles
 
-- [ ] Seed **Support Knowledge** with your top 20 FAQ articles
-- [ ] Seed **Sales Knowledge** with your sales playbook
-- [ ] Seed **Competitive Intel** with battle cards for your top 5 competitors
-- [ ] Product datasheets — already in product records (synced automatically)
+HotCRM ships **one** knowledge object, not a set of knowledge bases. Everything below is an ordinary record you create under **Service → Knowledge**, filed under one of the seven categories the object defines.
 
-See [Knowledge Bases](/docs/ai-copilot/knowledge-bases).
+- [ ] Write your top 20 FAQs as articles under **Troubleshooting**, **How-To** or **Getting Started**
+- [ ] Put support hours, SLA promises and data-handling commitments under **Policy**
+- [ ] Set each article's **Audience** — *Internal* for runbooks, *Public* for anything you would send a customer
+- [ ] **Publish** them — the Copilot queries published articles only, so a draft may as well not exist
+- [ ] Check the categories and tags before you call it done: matching is by category and tags, not by meaning, so a misfiled article is an invisible one
+
+There is nothing to seed called *Sales Knowledge*, *Product Information* or *Competitive Intel* — HotCRM ships no such libraries, and no competitor object for battle cards to hang off. See [Knowledge Bases](/docs/ai-copilot/knowledge-bases) for what the Copilot can and cannot do with an article.
 
 ### 14. AI Copilot
 
