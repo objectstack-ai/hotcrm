@@ -233,8 +233,49 @@ const caseSideEffects: Hook = {
       const ownerId = (account as { owner_id?: string } | null)?.owner_id ?? ctx.user?.id;
       const due = new Date();
       due.setDate(due.getDate() + 1);
+      // Title the task with what the reader already knows the case by (#1208).
+      //
+      // It used to read `Escalated case ${caseId} needs attention` — the
+      // PRIMARY KEY. Nine seeded escalations therefore opened All Tasks on
+      // nine urgent rows that differ only in a 16-character opaque id, and the
+      // id matches nothing the reader has seen: every case surface in this app
+      // (record pages, list views, breadcrumbs, the `display_title` formula on
+      // `crm_case` itself) names a case `CASE-00039`. The id is not lost — it
+      // travels in `related_to_case` below, which is where a relationship
+      // belongs.
+      //
+      // Both parts are read off `previous`, not fetched: MEASURED against a
+      // real ObjectQL engine, an `afterUpdate` pre-image is the WHOLE stored
+      // row (`driver.findOne` with no projection), so `case_number` — an
+      // engine-issued autonumber, never present on an update payload — and
+      // `subject` are both already in hand. No second read. `subject` still
+      // prefers `input`, since an update may be changing it in this very write.
+      //
+      // The 255 cap is not cosmetic. `crm_task.subject` declares
+      // `maxLength: 255` and the engine ENFORCES it ("Subject must be ≤ 255
+      // characters (got 256)"), while `crm_case.subject` allows the same 255 —
+      // so `Escalated: ` + number + separator + a max-length case subject is
+      // 279 characters and the insert is REJECTED. This hook is
+      // `async: true` + `onError: 'log'`, so that rejection would not surface
+      // anywhere: the escalation task would simply never exist. Truncating the
+      // TAIL is what keeps the identifier — the discriminating half, and the
+      // reason it leads — intact in a column that visibly truncates anyway.
+      //
+      // Composed INLINE rather than in a shared helper: hook bodies ship
+      // body-only through QuickJS, and a module-scope reference makes
+      // `extractHookBody` throw — which the CLI build CATCHES, silently
+      // bundling the closure instead, with no gate going red. The pin runs
+      // this out of the LOWERED body for exactly that reason
+      // (`test/escalation-task-subject.test.ts`).
+      const caseNumber = typeof previous.case_number === 'string' ? previous.case_number.trim() : '';
+      const caseSubject =
+        (typeof input.subject === 'string' && input.subject.trim()) ||
+        (typeof previous.subject === 'string' && previous.subject.trim()) ||
+        '';
+      const label = [caseNumber, caseSubject].filter(Boolean).join(' · ');
+      const titled = label ? `Escalated: ${label}` : 'Escalated case needs attention';
       await api.object('crm_task').insert({
-        subject: `Escalated case ${caseId ?? ''} needs attention`.trim(),
+        subject: titled.length > 255 ? `${titled.slice(0, 254)}…` : titled,
         status: 'not_started',
         priority: 'urgent',
         type: 'follow_up',
