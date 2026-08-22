@@ -24,9 +24,10 @@
  * for `console.log` — those files are CLIs whose entire job is stdout.
  *
  * The checks do not all read the same tree, and that is deliberate — see
- * `SCANNED` and `TEXT_SCANNED` below. Three checks judge code; the byte-level
- * one judges first-party text wherever it lives (#818); the header check judges
- * `.ts` only, for the measured reason given at `scanHeaderPosition`.
+ * `SCANNED`, `TEXT_SCANNED` and `ROOT_TEXT_FILES` below. Three checks judge
+ * code; the byte-level one judges first-party text wherever it lives (#818,
+ * widened again in #838); the header check judges `.ts` only, for the measured
+ * reason given at `scanHeaderPosition`.
  */
 
 import { readdirSync, readFileSync, statSync } from 'node:fs';
@@ -97,10 +98,11 @@ const CONTROL_BYTE = /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/;
  * separator was fine, its spelling was not.
  *
  * Scans every file under the widest surface this script reads — `SCANNED` plus
- * `TEXT_SCANNED` — and not just `.ts`: the hazard is about the bytes on disk,
- * not the language, so it follows first-party text rather than code. Those
- * directories hold text only; a binary fixture arriving there should fail
- * loudly and be an explicit decision, not something a silent skip-list absorbs.
+ * `TEXT_SCANNED` plus `ROOT_TEXT_FILES` — and not just `.ts`: the hazard is
+ * about the bytes on disk, not the language, so it follows first-party text
+ * rather than code. Those directories hold text only; a binary fixture arriving
+ * there should fail loudly and be an explicit decision, not something a silent
+ * skip-list absorbs.
  *
  * Read as `latin1` so each byte maps 1:1 to a code point. utf8 decoding folds
  * an invalid byte into U+FFFD, which sits outside the control range and would
@@ -295,8 +297,92 @@ const SCANNED = ['src', 'test', 'e2e', 'scripts'];
  * doc screenshots live in `assets/screenshots/` and are referenced by URL). A
  * binary arriving here should fail loudly and be an explicit decision — the
  * same rule the code trees already live under.
+ *
+ * `docs/`, `.github/` and `.claude/` joined them in #838, on the same reasoning
+ * and measured the same way: 59 files, all text (28 `.md` under `docs/`; 17
+ * `.yml` + 12 `.md` + 1 `.json` under `.github/`; 1 `.json` under `.claude/`),
+ * with zero control bytes across all three at the time of the change.
+ *
+ *   - `docs/` is the internal maintenance documentation, and — with `AGENTS.md`
+ *     next door in `ROOT_TEXT_FILES` — is what agents grep daily. A file that
+ *     drops out of text search takes the means of investigating it along.
+ *   - `.claude/` holds a single `launch.json` today, but it is where skill and
+ *     hook files land as they are written. Upstream objectstack#4890 put a bare
+ *     NUL inside a `.claude/` `SKILL.md` *while writing the rule that forbids
+ *     bare NULs*; it survived because that path was outside every gate.
+ *   - `.github/` is workflow YAML, where a control byte is invisible to grep
+ *     and a parse hazard at the same time.
+ *
+ * ⛔ `assets/` is deliberately NOT here, and must not be added without changing
+ * what this check means. It holds 34 files, 22 of them images — 19 `.png`, 2
+ * `.jpg`, 1 `.svg` — so the rasters would be 21 immediate hits. Admitting it
+ * would force an extension predicate onto a check whose whole stance is "the
+ * surfaces I read hold text only, and a binary landing in one should be loud".
+ * That is an edit to the check's meaning, not a longer directory list, and it
+ * belongs on its own card if it is ever wanted.
  */
-const TEXT_SCANNED = ['content', '.changeset'];
+const TEXT_SCANNED = ['content', '.changeset', 'docs', '.github', '.claude'];
+
+/**
+ * Root-level first-party text files, read by the control-byte check and ONLY
+ * by it (#838).
+ *
+ * The three root `.ts` files are why this list exists at all:
+ * `objectstack.config.ts` is the app manifest AGENTS.md calls the source of
+ * truth, and `vitest.config.ts` / `playwright.config.ts` are the test entry
+ * points — first-class TypeScript that no check read before this one. They join
+ * the BYTE check only: the marker and copyright-header checks read `allTs`,
+ * which is derived from `SCANNED`, and widening *those* to the root is a
+ * different argument (`playwright.config.ts` carries no header today, so it
+ * would go red) belonging on a different card.
+ *
+ * The root is not a tree this script can walk: `walk()` recurses, and the root
+ * holds `node_modules`, build output and every directory already scanned. So
+ * the root needs its own take, and there were two shapes available — an
+ * explicit whitelist, or a non-recursive root-level pass. This is the
+ * whitelist, for one reason: a non-recursive pass asserts "every file at the
+ * repo root is first-party text", which is false at the root of a Node repo and
+ * gets falser over time. It would read whatever untracked, git-ignored junk a
+ * working copy keeps at root — `.env`, `*.tsbuildinfo`, a `.DS_Store` (binary,
+ * so an instant red) — and fail a local `pnpm hygiene` on files that are
+ * neither ours nor present in CI.
+ *
+ * The cost of that choice is stated rather than hidden: a whitelist cannot
+ * notice a NEW first-class root file, so adding one means adding it here. It IS
+ * loud in the other direction — a listed file that disappears fails the gate by
+ * name, exactly as a missing scanned directory does.
+ *
+ * ⛔ `pnpm-lock.yaml` and `package-lock.json` are deliberately absent. They are
+ * text, and they are the largest files at root (221KB and 320KB — 541KB of the
+ * 571KB this surface would otherwise add), but size is not the argument: they
+ * are generated by pnpm and npm, nobody hand-edits them, and the hazard this
+ * check guards is a writing-time one (during PR #835 an editing tool
+ * materialised escapes into real 0x01/0x00 bytes in a file being authored,
+ * confirmed with `od -c`). The remedy this check prints — "write the character
+ * as an escape sequence" — is advice to an author, and a lock file has none; a
+ * hit there would come from a package manager and could not be fixed in this
+ * repo. Their integrity already has a dedicated gate,
+ * `scripts/check-stackblitz-lock.mjs`. Admitting them later is one line, and
+ * should be its own decision rather than a side effect of this one.
+ */
+const ROOT_TEXT_FILES = [
+  '.gitignore',
+  '.npmrc',
+  '.nvmrc',
+  '.stackblitzrc',
+  'AGENTS.md',
+  'CHANGELOG.md',
+  'CONTRIBUTING.md',
+  'LICENSE',
+  'README.legacy.md',
+  'README.md',
+  'objectstack.config.ts',
+  'objectstack.manifest.json',
+  'package.json',
+  'playwright.config.ts',
+  'tsconfig.json',
+  'vitest.config.ts',
+];
 
 /** Every directory this script reads, in either surface. */
 const ALL_SCANNED = [...SCANNED, ...TEXT_SCANNED];
@@ -314,6 +400,23 @@ if (missing.length) {
   process.exit(1);
 }
 
+// Same loudness for the root whitelist, and a message that names the constant
+// to edit rather than the two above it — a listed file that has been renamed or
+// deleted scans nothing while still reading, in the source, as covered.
+const missingRootFiles = ROOT_TEXT_FILES.filter((f) => {
+  try {
+    return !statSync(join(ROOT, f)).isFile();
+  } catch {
+    return true;
+  }
+});
+if (missingRootFiles.length) {
+  console.error(`✗ source hygiene: scanned root file(s) missing: ${missingRootFiles.join(', ')}`);
+  console.error('  Update ROOT_TEXT_FILES in scripts/check-source-hygiene.mjs —');
+  console.error('  a check that scans nothing is worse than no check at all.');
+  process.exit(1);
+}
+
 const codeFiles = SCANNED.flatMap(walk);
 const textFiles = TEXT_SCANNED.flatMap(walk);
 const allTs = codeFiles.filter(isTs);
@@ -321,7 +424,8 @@ const srcTs = allTs.filter((f) => f.startsWith('src/'));
 
 console.log(
   `Source hygiene — ${codeFiles.length} files under ${SCANNED.join(', ')}; ` +
-    `the control-byte scan adds ${textFiles.length} under ${TEXT_SCANNED.join(', ')}\n`,
+    `the control-byte scan adds ${textFiles.length} under ${TEXT_SCANNED.join(', ')} ` +
+    `and ${ROOT_TEXT_FILES.length} root file(s)\n`,
 );
 
 check(
@@ -338,7 +442,7 @@ check(
 
 check(
   'no raw control bytes in first-party files',
-  scanControlBytes([...codeFiles, ...textFiles]),
+  scanControlBytes([...codeFiles, ...textFiles, ...ROOT_TEXT_FILES]),
   'write the character as an escape sequence (\\u0000 for NUL) — byte-identical at runtime, and it keeps the file findable by grep',
 );
 
