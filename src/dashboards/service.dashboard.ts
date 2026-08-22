@@ -225,7 +225,16 @@ export const ServiceDashboard: Dashboard = {
       type: 'gauge',
       filter: { is_closed: true },
       colorVariant: 'success',
-      dataset: 'case_metrics', values: ['avg_sla_violated'],
+      // Plots COMPLIANCE, the quantity the title, the description, the
+      // success colouring and the 0.95 target line all name (#1213). It used
+      // to plot `avg_sla_violated` — the complement — with `options.invert`
+      // asking the renderer to flip it. `invert` is not a declared key on
+      // `DashboardWidgetOptionsSchema`; it rode the `.passthrough()`, nothing
+      // could report it inert, and the gauge read 0.0% on an org with 100%
+      // compliance. The key is gone rather than left pretending: a measure
+      // that means what the widget says is the fix, and the measure's own
+      // label prints under the number, so the two cannot drift apart again.
+      dataset: 'case_metrics', values: ['sla_compliance_rate'],
       layout: { x: 8, y: 6, w: 4, h: 4 },
       chartConfig: {
         type: 'gauge',
@@ -236,9 +245,11 @@ export const ServiceDashboard: Dashboard = {
           { type: 'line', axis: 'y', value: 0.95, label: 'Target', style: 'dashed', color: '#10B981' },
         ],
       },
+      // The ladder and the target line were written for COMPLIANCE and are
+      // unchanged: 95%+ is green, 85–95% amber, below that red. They were
+      // always right — it was the plotted value that disagreed with them.
       options: {
         format: '0%',
-        invert: true, // value is sla_violated rate; gauge shows compliance = 1 - rate
         thresholds: [
           { value: 0.95, color: 'success' },
           { value: 0.85, color: 'warning' },
