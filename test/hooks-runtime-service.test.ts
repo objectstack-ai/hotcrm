@@ -822,7 +822,7 @@ describe('lead_automation', () => {
     // no way to tell which record refused.
     await expect(
       hook.handler(makeCtx({ event: 'beforeUpdate', input: { company: 'Other' }, previous, user: USER })),
-    ).rejects.toThrow(/Cannot edit converted lead Acme \(l1\)/);
+    ).rejects.toThrow(/Cannot edit converted lead Acme \(attempted: company\)\./);
     await expect(
       hook.handler(makeCtx({ event: 'beforeUpdate', input: { description: 'note' }, previous, user: USER })),
     ).resolves.toBeUndefined();

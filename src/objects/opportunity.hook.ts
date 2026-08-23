@@ -130,13 +130,11 @@ const opportunityValidationHook: Hook = {
           );
           if (isReferenceCleanup) return;
 
-          const name = typeof previous.name === 'string' ? previous.name : '';
-          const oppId =
-            (typeof previous.id === 'string' && previous.id) ||
-            (typeof input.id === 'string' && input.id) ||
-            '';
-          const label = [name, oppId ? `(${oppId})` : ''].filter(Boolean).join(' ');
-          const subject = label ? `Opportunity ${label}` : 'Opportunity';
+          // `crm_opportunity.nameField` IS `name`, so the name on its own is
+          // exactly how every other surface titles this record. The record id
+          // used to be appended to it and matched none of them (#1243).
+          const name = typeof previous.name === 'string' ? previous.name.trim() : '';
+          const subject = name ? `Opportunity ${name}` : 'Opportunity';
           throw refuse(
             `${subject} is closed (${prevStage}); only ${[...NARRATIVE_FIELDS].join(', ')} may be edited. Attempted: ${violating.join(', ')}.`,
             'RECORD_LOCKED',
@@ -236,8 +234,26 @@ const opportunityWonHook: Hook = {
       ctx.user?.id;
     const due = new Date();
     due.setDate(due.getDate() + 3);
+
+    // Title the task with the opportunity's NAME (#1243). This is one of the
+    // two rows a walkthrough of current main still writes with a raw key in it,
+    // and it lands in **All Tasks** next to the escalation rows #1208 already
+    // fixed. `crm_opportunity.name` is required + notNull, so the bare fallback
+    // is a shape the schema does not permit rather than an expected case — it
+    // exists so a pre-image that arrived without the column still produces a
+    // sentence instead of a dangling one. The 255 cap is the same one
+    // `case.hook.ts` documents: `crm_task.subject` enforces it, and this hook is
+    // `async: true` + `onError: 'log'`, so a rejected insert would surface
+    // nowhere at all.
+    const oppName =
+      (typeof input.name === 'string' && input.name.trim()) ||
+      (typeof previous?.name === 'string' && previous.name.trim()) ||
+      '';
+    const titled = oppName
+      ? `Activate new customer for opportunity ${oppName}`
+      : 'Activate new customer';
     await api.object('crm_task').insert({
-      subject: `Activate new customer for opportunity ${oppId ?? ''}`.trim(),
+      subject: titled.length > 255 ? `${titled.slice(0, 254)}…` : titled,
       status: 'not_started',
       priority: 'high',
       type: 'follow_up',

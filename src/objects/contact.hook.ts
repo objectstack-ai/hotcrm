@@ -88,11 +88,29 @@ const contactHook: Hook = {
           const dup = await api.object('crm_contact').findOne({
             where: organizationId ? { organization_id: organizationId, email } : { email },
           });
-          const dupId = (dup as { id?: string } | null)?.id;
+          const dupRow = dup as
+            | { id?: string; first_name?: unknown; last_name?: unknown }
+            | null;
+          const dupId = dupRow?.id;
           const selfId = ctx.previous?.id ?? input.id;
           if (dup && dupId !== selfId) {
+            // Name the colliding contact, not its primary key (#1243, the same
+            // class #1208 closed on the escalation task). This refusal is read
+            // by a rep in a dialog at the moment their save is blocked, and the
+            // one actionable thing it can say is WHOSE record already holds the
+            // address. The id was the opposite of that: a 16-character string
+            // that appears on no screen in this app and cannot be pasted into
+            // search. `full_name` is `crm_contact.nameField`, and it is composed
+            // from the same two stored columns here — a lowered hook body cannot
+            // read a formula field. No second read pays for it: the `findOne`
+            // above carries no projection, so the whole row is already in hand.
+            const dupName = [dupRow?.first_name, dupRow?.last_name]
+              .filter((part) => typeof part === 'string' && part.trim() !== '')
+              .join(' ');
             throw refuse(
-              `Another contact (${dupId}) with email ${email} already exists.`,
+              dupName
+                ? `Another contact (${dupName}) with email ${email} already exists.`
+                : `Another contact with email ${email} already exists.`,
               'DUPLICATE_VALUE',
               409,
             );
@@ -132,7 +150,12 @@ const contactHook: Hook = {
         const name = [ctx.previous?.first_name, ctx.previous?.last_name]
           .filter((part) => typeof part === 'string' && part.trim() !== '')
           .join(' ');
-        const subject = name ? `Contact ${name} (${id})` : `Contact ${id}`;
+        // Named, never keyed (#1243). `id` still does the work it is good at —
+        // it is what the three counts above were queried by — but the sentence
+        // the user reads names the contact the way `nameField` does. A contact
+        // with no name at all is referred to, not identified: a bare id told
+        // the reader nothing they could look up either.
+        const subject = name ? `Contact ${name}` : 'This contact';
         throw refuse(
           `${subject} is still referenced by ${openOpps} open opportunity(ies), ${openQuotes} active quote(s), ${activeContracts} active contract(s), so it cannot be deleted — and neither can its account, because deleting an account deletes its contacts. Close or reassign those records first.`,
           'DELETE_RESTRICTED',

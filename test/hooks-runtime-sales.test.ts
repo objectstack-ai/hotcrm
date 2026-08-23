@@ -130,7 +130,7 @@ describe('opportunity_lifecycle', () => {
       hook.handler(makeCtx({
         event: 'beforeUpdate', input: { primary_contact: null, amount: 1 }, previous, user: USER,
       })),
-    ).rejects.toThrow(/Opportunity Acme Renewal \(o1\) is closed \(closed_won\); only .* may be edited/);
+    ).rejects.toThrow(/Opportunity Acme Renewal is closed \(closed_won\); only .* may be edited/);
   });
 
   it('allows narrative, approval and system fields on a closed opportunity', async () => {
@@ -275,7 +275,7 @@ describe('quote_workflow', () => {
       hook.handler(makeCtx({
         event: 'beforeUpdate', input: { crm_opportunity: null, total_price: 1 }, previous, user: USER,
       })),
-    ).rejects.toThrow(/Quote Q-1001 \(q1\) is accepted; only internal_notes may be edited/);
+    ).rejects.toThrow(/Quote Q-1001 is accepted; only internal_notes may be edited/);
   });
 
   it('allows internal_notes and framework columns on a frozen quote', async () => {
@@ -734,21 +734,31 @@ describe('contact_integrity', () => {
       }))
       .then(() => null, (e: Error) => e);
     expect(err).toBeInstanceOf(Error);
-    expect(err!.message).toContain('Contact Ada Lovelace (c1)');
+    expect(err!.message).toContain('Contact Ada Lovelace');
     expect(err!.message).toContain('neither can its account');
     // The old wording claimed an operation the caller may not have performed.
     expect(err!.message).not.toContain('Cannot delete contact');
+    // …and the record id is not in the sentence either (#1243). It is what the
+    // three reference counts were queried BY; it is not how the reader finds
+    // the record.
+    expect(err!.message).not.toContain('c1');
   });
 
-  it('falls back to the bare id when the contact carries no name', async () => {
+  it('refers to an unnamed contact rather than keying it (#1243)', async () => {
     const h = makeHarness({
       crm_contract: [{ id: 'k1', crm_contact: 'c1', status: 'activated' }],
     });
-    await expect(
-      hook.handler(makeCtx({
+    // This used to read `Contact c1 is still referenced by …`. A bare record id
+    // is not a fallback identity — it names nothing the reader can open, search
+    // for, or match against any contact surface in the app.
+    const err = await hook
+      .handler(makeCtx({
         event: 'beforeDelete', previous: { id: 'c1' }, user: USER, api: h.api,
-      })),
-    ).rejects.toThrow(/^Contact c1 is still referenced by/);
+      }))
+      .then(() => null, (e: Error) => e);
+    expect(err).toBeInstanceOf(Error);
+    expect(err!.message).toMatch(/^This contact is still referenced by/);
+    expect(err!.message).not.toContain('c1');
   });
 
   it('allows deleting a contact whose references are all settled', async () => {

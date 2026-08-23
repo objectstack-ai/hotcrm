@@ -97,10 +97,17 @@ describe('the hook is the guard that actually speaks', () => {
   it('names the LEAD as well as the field (#693)', async () => {
     // The lock fires on writes the caller never made (a cascade clearing a
     // conversion link), so "a converted lead" was not enough to find the
-    // record that refused. The label falls back to the company when the lead
-    // carries no personal name, and to the bare id when it carries neither.
+    // record that refused. The label is `display_title`'s own pair — person and
+    // company — and drops whichever half the lead does not carry (#1243); a
+    // lead carrying neither gets "a converted lead" rather than a record id no
+    // lead surface in this app ever shows.
     await expect(editConverted({ company: 'Globex' })).rejects.toThrow(
-      /Cannot edit converted lead Ada Lovelace \(lead_1\)/,
+      /Cannot edit converted lead Ada Lovelace - Acme/,
+    );
+    // The id is not merely absent from the middle of the sentence — it is
+    // nowhere in it.
+    await expect(editConverted({ company: 'Globex' })).rejects.toThrow(
+      expect.objectContaining({ message: expect.not.stringContaining('lead_1') }),
     );
     await expect(
       guard.handler(
@@ -112,7 +119,7 @@ describe('the hook is the guard that actually speaks', () => {
           api: makeHarness().api,
         }),
       ),
-    ).rejects.toThrow(/Cannot edit converted lead Initech \(lead_2\)/);
+    ).rejects.toThrow(/Cannot edit converted lead Initech \(attempted: rating\)\./);
   });
 
   /**
