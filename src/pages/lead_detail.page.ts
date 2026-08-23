@@ -235,12 +235,46 @@ export const LeadDetailPage: Page = {
                     id: 'lead_activity',
                     label: 'Activity Timeline',
                     properties: {
-                      // Only `crm_task` exists in this app — `event` / `email` /
-                      // `call` / `note` were aspirational object names that the
-                      // timeline silently skipped.
-                      types: ['crm_task'],
+                      // `types` is keyed on FEED ITEM KIND, never on object name
+                      // (#1209). The old `['crm_task']` was not one of the kinds
+                      // the prop accepts, and nothing anywhere enforced that: the
+                      // page schema's `properties` is an open bag
+                      // (`z.record(z.string(), z.unknown())`) so the value was
+                      // stored verbatim, and the renderer's own sanitiser drops
+                      // members it does not recognise and then reads the EMPTY
+                      // remainder as "no filter authored" — measured on the
+                      // shipped bundle, `types: ['crm_task']`, `types: []` and
+                      // omitting `types` all render the same unfiltered stream.
+                      // That is why the tab showed `Created Lead` / `Updated
+                      // Lead` audit rows, which the History tab already covers.
+                      //
+                      // What this component can actually show is `sys_activity`
+                      // scoped to the record, through the renderer's own
+                      // type map — measured, not inferred:
+                      //
+                      //   sys_activity.type      feed kind      written by
+                      //   created/updated/…      field_change   platform audit
+                      //   system                 system         platform
+                      //   completed              task           log_call /
+                      //                                         log_meeting /
+                      //                                         send_email
+                      //   scheduled              (dropped)      schedule_meeting
+                      //
+                      // So `task` is the kind that carries a rep's logged
+                      // interactions, and it is the only reachable one worth
+                      // filtering to. `event` is NOT added: it is a legal kind
+                      // the prop accepts but no `sys_activity.type` maps to it,
+                      // so it would be a declared value enforced by nothing.
+                      // `scheduled` rows fall out of the map upstream — a
+                      // platform gap, not something to work around here.
+                      types: ['task'],
                       limit: 20,
-                      showCompleted: false,
+                      // Load-bearing, not cosmetic: the renderer strips every
+                      // `task` item BEFORE the `types` filter runs unless this is
+                      // true, and `task` items are exactly the `completed` rows.
+                      // `types: ['task']` with the old `showCompleted: false`
+                      // renders an empty tab.
+                      showCompleted: true,
                     },
                   },
                 ],

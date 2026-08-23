@@ -2,6 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { AgentSchema } from '@objectstack/spec/ai';
+import { RecordActivityProps } from '@objectstack/spec/ui';
 import stack from '../objectstack.config';
 import {
   type AnyRec,
@@ -176,15 +177,73 @@ describe('page component references resolve', () => {
     expect(bad, `inert reference-rail filters:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
-  it('record:activity only lists object types this app defines', () => {
+  /**
+   * `record:activity`'s `types` is keyed on FEED ITEM KIND, not on object name
+   * (#1209).
+   *
+   * The guard that used to stand here asserted the opposite — that every entry
+   * resolves to an object this app defines — and so it held the lead page's
+   * `types: ['crm_task']` in place, green, for as long as it existed. Nothing
+   * else could catch it: the page schema's `properties` is an open bag
+   * (`z.record(z.string(), z.unknown())`), so an illegal value is stored
+   * verbatim rather than rejected, and `build` says exactly that beside its
+   * warning ("the props bag is not parsed on the storage path either, so
+   * nothing rejects this today", objectstack#5068). Downstream, the console
+   * renderer sanitises the array itself: it drops members outside the enum and
+   * then reads the EMPTY remainder as "no filter authored". Measured against
+   * the shipped bundle, `types: ['crm_task']`, `types: []` and omitting `types`
+   * render byte-identical unfiltered streams — which is why the lead's Activity
+   * tab showed `Created Lead` / `Updated Lead` audit rows.
+   *
+   * So the legal values come from the contract itself — `RecordActivityProps`
+   * in `@objectstack/spec/ui` — never from a list copied into this file, which
+   * is how the old guard drifted from the prop it claimed to check.
+   */
+  it('record:activity filters on feed-item kinds the props contract accepts, never on object names', () => {
     const bad: string[] = [];
     for (const c of components) {
       if (c.type !== 'record:activity') continue;
-      for (const t of c.properties?.types ?? []) {
-        if (!objectNames.has(t)) bad.push(`${c.id}: activity type "${t}" is not a defined object`);
+      const types = c.properties?.types;
+      if (types === undefined) continue; // absent = show every kind, always legal
+      const parsed = RecordActivityProps.shape.types.safeParse(types);
+      if (!parsed.success) {
+        for (const issue of parsed.error.issues) {
+          bad.push(`${c.id}: types[${issue.path.join('.')}] ${issue.message}`);
+        }
+        continue;
+      }
+      // Legal but inert: the renderer's sanitiser turns an empty list back into
+      // "no filter", so an author asking for nothing is served everything.
+      if (Array.isArray(types) && types.length === 0) {
+        bad.push(`${c.id}: types is [] — the renderer reads that as "unfiltered", not "empty". Omit the key or name the kinds.`);
       }
     }
-    expect(bad, `dangling activity types:\n  ${bad.join('\n  ')}`).toEqual([]);
+    expect(bad, `record:activity type filters that cannot do what they say:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  /**
+   * The `task` kind is unreachable without `showCompleted` (#1209).
+   *
+   * `sys_activity.type: 'completed'` is the row HotCRM's own `log_call`,
+   * `log_meeting` and `send_email` bodies write, and the renderer maps it to
+   * feed kind `task`. But its `showCompleted` gate strips every `task` item
+   * BEFORE the `types` filter runs, so `types: ['task']` with the default
+   * `showCompleted: false` renders a guaranteed-empty tab — the same "success
+   * receipt for configuration that does nothing" shape as the bug above, one
+   * prop over, and invisible to `build` because both values are individually
+   * legal.
+   */
+  it('record:activity filtering to "task" turns showCompleted on, or it renders nothing', () => {
+    const bad: string[] = [];
+    for (const c of components) {
+      if (c.type !== 'record:activity') continue;
+      const types = c.properties?.types;
+      if (!Array.isArray(types) || !types.includes('task')) continue;
+      if (c.properties?.showCompleted !== true) {
+        bad.push(`${c.id}: types includes "task" but showCompleted is ${JSON.stringify(c.properties?.showCompleted)} — the renderer drops every task item before the filter runs`);
+      }
+    }
+    expect(bad, `guaranteed-empty activity timelines:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
   it('record:details / record:highlights / record:path only name real fields on the page object', () => {
