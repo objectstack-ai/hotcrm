@@ -92,6 +92,7 @@
  */
 
 import stack from '../objectstack.config';
+import { isMainModule } from './lib/main-module.mjs';
 
 type AnyRec = Record<string, unknown>;
 
@@ -491,4 +492,12 @@ const main = (): void => {
   );
 };
 
-if (process.argv[1] && process.argv[1].includes('scan-field-consumers')) main();
+// Run only when invoked directly; `rows`, `sitesOf` and friends stay importable
+// for `test/field-consumer-scan.test.ts`, so importing must not run the scan.
+//
+// The comparison lives in `scripts/lib/main-module.mjs` and is never hand-rolled
+// here: this line used to read `process.argv[1].includes('scan-field-consumers')`,
+// which survives symlinks by accident but silently stops matching the day this
+// file is renamed — `pnpm scan:fields` would then print nothing and exit 0,
+// which is indistinguishable from a clean ledger (#1252).
+if (isMainModule(import.meta.url)) main();

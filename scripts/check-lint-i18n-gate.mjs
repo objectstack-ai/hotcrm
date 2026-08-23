@@ -47,6 +47,8 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
+import { isMainModule } from './lib/main-module.mjs';
+
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 
 /** Only this rule family gates. Everything else lint reports is out of scope. */
@@ -143,8 +145,14 @@ export function main(argv = process.argv.slice(2), { log = console.log, error = 
   return 1;
 }
 
+// Run only when invoked directly. The comparison lives in
+// `scripts/lib/main-module.mjs` and is never hand-rolled here: this line used
+// to read ``import.meta.url === `file://${process.argv[1]}` ``, which is false
+// for every invocation through a symlinked path *and* for any checkout whose
+// path needs percent-encoding — the gate then checked nothing and exited 0
+// (#1252). See that file for the measurement.
 /* c8 ignore start -- exercised via the CLI and via test/lint-i18n-gate.test.ts's subprocess calls */
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMainModule(import.meta.url)) {
   process.exit(main());
 }
 /* c8 ignore stop */
