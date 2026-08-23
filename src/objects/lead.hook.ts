@@ -256,15 +256,19 @@ const leadHook: Hook = {
           );
           if (isReferenceCleanup) return;
 
+          // Name the lead the way `crm_lead.display_title` does — the person and
+          // the company, joined — rather than appending the record id (#1243,
+          // the class #1208 closed on the escalation task). The id was
+          // unmatchable against every lead surface in this app (record page,
+          // list view, breadcrumb, lookup picker), all of which title a lead
+          // `Ada Lovelace - Acme`. Composed from the two stored columns because
+          // a lowered hook body cannot read the `display_title` formula.
           const person = [previous?.first_name, previous?.last_name]
             .filter((part) => typeof part === 'string' && part.trim() !== '')
             .join(' ');
-          const name = person || (typeof previous?.company === 'string' ? previous.company : '');
-          const leadId =
-            (typeof previous?.id === 'string' && previous.id) ||
-            (typeof input.id === 'string' && input.id) ||
-            '';
-          const label = [name, leadId ? `(${leadId})` : ''].filter(Boolean).join(' ');
+          const company =
+            typeof previous?.company === 'string' ? previous.company.trim() : '';
+          const label = [person, company].filter(Boolean).join(' - ');
 
           throw refuse(
             `Cannot edit ${label ? `converted lead ${label}` : 'a converted lead'} (attempted: ${violating.join(', ')}). Make changes on the converted records instead.`,
@@ -296,9 +300,38 @@ const leadHook: Hook = {
       const dueDate = new Date();
       dueDate.setDate(dueDate.getDate() + 2);
 
+      // Title the task with the lead's name, not its record id (#1243, the same
+      // surface #1208 fixed for escalations). **All Tasks** is where a rep
+      // starts the day; a queue of rows reading `Follow up with qualified lead
+      // (EMtmaScoa3I-uYFG)` is a queue nobody can triage, and the key matches
+      // nothing on any lead page or in search. Both halves prefer the value
+      // THIS write is setting, since a qualifying write may be renaming the
+      // lead in the same payload.
+      //
+      // The 255 cap is load-bearing, exactly as in `case.hook.ts`:
+      // `crm_task.subject` declares `maxLength: 255` and the engine enforces
+      // it, while `crm_lead.company` alone allows 255 — so an uncapped title is
+      // rejected, and the `catch` below swallows that rejection, leaving no
+      // follow-up task and no trace. Truncating the TAIL keeps the
+      // discriminating head intact.
+      const person = [
+        (typeof input.first_name === 'string' && input.first_name) || previous?.first_name,
+        (typeof input.last_name === 'string' && input.last_name) || previous?.last_name,
+      ]
+        .filter((part) => typeof part === 'string' && part.trim() !== '')
+        .join(' ');
+      const company =
+        (typeof input.company === 'string' && input.company.trim()) ||
+        (typeof previous?.company === 'string' && previous.company.trim()) ||
+        '';
+      const label = [person, company].filter(Boolean).join(' - ');
+      const titled = label
+        ? `Follow up with qualified lead: ${label}`
+        : 'Follow up with qualified lead';
+
       try {
         await api.object('crm_task').insert({
-          subject: `Follow up with qualified lead${leadId ? ` (${leadId})` : ''}`,
+          subject: titled.length > 255 ? `${titled.slice(0, 254)}…` : titled,
           status: 'not_started',
           priority: 'high',
           type: 'follow_up',

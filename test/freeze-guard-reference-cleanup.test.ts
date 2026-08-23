@@ -501,7 +501,7 @@ const GUARDS: GuardCase[] = [
     other: 'c2',
     businessField: 'amount',
     businessValue: 1,
-    refusal: /Opportunity Acme Renewal \(o1\) is closed \(closed_won\); only .* may be edited/,
+    refusal: /Opportunity Acme Renewal is closed \(closed_won\); only .* may be edited/,
   },
   {
     label: 'quote_workflow',
@@ -511,7 +511,7 @@ const GUARDS: GuardCase[] = [
     other: 'o2',
     businessField: 'total_price',
     businessValue: 1,
-    refusal: /Quote Q-1001 \(q1\) is accepted; only internal_notes may be edited/,
+    refusal: /Quote Q-1001 is accepted; only internal_notes may be edited/,
   },
   {
     label: 'lead_automation',
@@ -524,7 +524,7 @@ const GUARDS: GuardCase[] = [
     other: 'opp_2',
     businessField: 'company',
     businessValue: 'Globex',
-    refusal: /Cannot edit converted lead Ada Lovelace \(lead_1\)/,
+    refusal: /Cannot edit converted lead Ada Lovelace - Acme/,
   },
 ];
 

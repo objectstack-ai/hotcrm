@@ -125,6 +125,162 @@ function scanControlBytes(files) {
 }
 
 /**
+ * An expression that yields a RECORD ID, by the name it is written under.
+ *
+ * `id`, anything ending `_id`, and the `<thing>Id` camel spelling — the three
+ * shapes this repo actually uses. Deliberately anchored on identifier
+ * boundaries, so `valid`, `uuid`, `idx` and `Idle` do not match: the check has
+ * to be worth reading a hit from, and a name-shaped heuristic that fires on
+ * ordinary words gets suppressed rather than obeyed.
+ */
+const ID_EXPRESSION = /\b(?:[Ii][Dd]|[A-Za-z_$][\w$]*_[Ii][Dd]|[a-z$][\w$]*Id)\b/;
+
+/**
+ * The sinks where an id is the RIGHT thing, recognised by the call it lands in.
+ *
+ * A diagnostic is for whoever reads the server log after a cascade failed —
+ * they have a database, and an opaque key is the most precise thing the message
+ * can carry. `quote.hook.ts` keeps two of these deliberately, and their own
+ * comments explain why (both feed the bare `Error` that maps to `500 /
+ * INTERNAL_ERROR`).
+ *
+ * This is an exemption on the SINK, never on the site, and that distinction is
+ * the whole design. A per-site suppression comment is a thing an author reaches
+ * for to get a red build green; moving a sentence into `failures.push(...)` is
+ * not — it stops being prose a user reads and becomes a log line, which is
+ * exactly the fact the exemption asserts. So the next instance of this class
+ * cannot be waved through without also being made true.
+ */
+const DIAGNOSTIC_SINK = /(?:failures\.push|(?:ctx\.)?log(?:ger)?\.\w+)\s*\(\s*$/;
+
+/**
+ * Blank out comments and quoted (non-template) strings, preserving offsets.
+ *
+ * Returned text is the same length as the input with the same line breaks, so
+ * an index into it is an index into the original. Template literals are kept —
+ * they are what the scan reads.
+ */
+function blankNonCode(text) {
+  const out = text.split('');
+  let i = 0;
+  const n = text.length;
+  const blankTo = (from, to) => {
+    for (let k = from; k < to; k += 1) if (out[k] !== '\n') out[k] = ' ';
+  };
+  while (i < n) {
+    const two = text.slice(i, i + 2);
+    if (two === '//') {
+      const end = text.indexOf('\n', i);
+      blankTo(i, end === -1 ? n : end);
+      i = end === -1 ? n : end;
+    } else if (two === '/*') {
+      const end = text.indexOf('*/', i + 2);
+      const stop = end === -1 ? n : end + 2;
+      blankTo(i, stop);
+      i = stop;
+    } else if (text[i] === "'" || text[i] === '"') {
+      const quote = text[i];
+      let k = i + 1;
+      while (k < n && text[k] !== quote && text[k] !== '\n') k += text[k] === '\\' ? 2 : 1;
+      blankTo(i, Math.min(k + 1, n));
+      i = Math.min(k + 1, n);
+    } else if (text[i] === '`') {
+      // Skip the template body wholesale here; `scanIdsInProse` walks it.
+      let k = i + 1;
+      let depth = 0;
+      while (k < n) {
+        if (text[k] === '\\') { k += 2; continue; }
+        if (depth === 0 && text[k] === '`') break;
+        if (text.slice(k, k + 2) === '${') { depth += 1; k += 2; continue; }
+        if (depth > 0 && text[k] === '}') depth -= 1;
+        k += 1;
+      }
+      i = Math.min(k + 1, n);
+    } else {
+      i += 1;
+    }
+  }
+  return out.join('');
+}
+
+/**
+ * No record id may be interpolated into prose a user reads (#1243).
+ *
+ * #1208 fixed one site by hand: an escalation follow-up task titled
+ * `Escalated case ${caseId} needs attention`, which gave a demo org nine urgent
+ * rows differing only in a 16-character opaque key. The class survived in eight
+ * more places across four hooks, and a walkthrough measured what that costs —
+ * 15 of 31 tasks in a demo org named by their primary key, a contract whose one
+ * provenance field pointed at a string no screen in the app displays, and a
+ * duplicate-email refusal that answered "which contact already has this
+ * address?" with a key the reader cannot paste into search.
+ *
+ * Hand-fixing instance ten buys nothing, for the same reason #1094's
+ * copyright-header sweep became this file's fifth check rather than a tenth
+ * hand fix. So the rule is a gate:
+ *
+ *   **An id may not appear inside a template literal in `src/`, unless the
+ *   template is an argument to a diagnostic sink.**
+ *
+ * `src/` only, and template literals only, because that is where the hazard
+ * lives: `src/` is the metadata and hook bodies whose strings ARE the product's
+ * user-facing sentences, and an interpolation is how a runtime value gets into
+ * one. Tests name ids in strings all day and are none of this check's business.
+ *
+ * What the author should do instead is what `case.hook.ts` does: name the record
+ * the way its `nameField` does, composed from the stored columns already in
+ * hand, and leave the id in the relationship field that exists to carry it.
+ *
+ * @returns {{file: string, line: number, text: string}[]}
+ */
+function scanIdsInProse(files) {
+  const hits = [];
+  for (const file of files) {
+    const raw = readFileSync(join(ROOT, file), 'utf8');
+    const text = blankNonCode(raw);
+    // Line starts, so an index can be reported as a line number.
+    const lineOf = (index) => raw.slice(0, index).split('\n').length;
+
+    for (let i = 0; i < text.length; i += 1) {
+      if (text[i] !== '`') continue;
+      const open = i;
+      let k = i + 1;
+      while (k < text.length) {
+        if (text[k] === '\\') { k += 2; continue; }
+        if (text[k] === '`') break;
+        if (text.slice(k, k + 2) === '${') {
+          // Read one interpolation, tracking nested braces.
+          let depth = 1;
+          let j = k + 2;
+          const from = j;
+          while (j < text.length && depth > 0) {
+            if (text[j] === '{') depth += 1;
+            else if (text[j] === '}') depth -= 1;
+            if (depth > 0) j += 1;
+          }
+          const expression = text.slice(from, j);
+          if (ID_EXPRESSION.test(expression)) {
+            const before = text.slice(Math.max(0, open - 400), open);
+            if (!DIAGNOSTIC_SINK.test(before)) {
+              hits.push({
+                file,
+                line: lineOf(from),
+                text: `record id in prose: \${${expression.trim()}}`,
+              });
+            }
+          }
+          k = j + 1;
+          continue;
+        }
+        k += 1;
+      }
+      i = k;
+    }
+  }
+  return hits;
+}
+
+/**
  * The license header, anchored to the start of its line.
  *
  * The year is `\d{4}` rather than `2025` because two files already say 2026 and
@@ -438,6 +594,12 @@ check(
   'no TODO/FIXME markers',
   grep(allTs, /\b(TODO|FIXME)\b/),
   'file an issue and link it, or finish the work — a marker in main is invisible',
+);
+
+check(
+  'no record id interpolated into user-visible prose in src/',
+  scanIdsInProse(srcTs),
+  'name the record the way its nameField does (compose it from the stored columns the hook already holds) and leave the id in the relationship field — see src/objects/case.hook.ts and test/record-id-not-in-prose.test.ts; an id meant for a server log belongs in a diagnostic sink, not in a sentence',
 );
 
 check(
