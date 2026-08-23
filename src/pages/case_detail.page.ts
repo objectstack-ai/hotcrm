@@ -113,16 +113,26 @@ export const CaseDetailPage: Page = {
                     id: 'case_details',
                     label: 'Case Details',
                     properties: {
-                      columns: 2,
-                      layout: 'auto',
+                      // `columns` is a STRING enum ('1'|'2'|'3'|'4') in
+                      // @objectstack/spec 17, and `layout` was removed there
+                      // (#6946 / ADR-0087 D2) — see the same note on
+                      // opportunity_detail.page.ts.
+                      columns: '2',
+                      // Same rule as the opportunity page (#1211): a section lists
+                      // only what it is responsible for. `record:details` drops
+                      // every field the mounted `record:highlights` registered
+                      // (`status`, `priority`, `sla_due_date`, `is_sla_violated`,
+                      // `owner_id`, `crm_account`) plus the title candidate
+                      // `subject` (the page H1 is `{case_number} · {subject}`), and
+                      // a section left holding only empty fields renders nothing.
+                      // Listing those names here therefore promised fields the tab
+                      // never showed.
                       sections: [
                         {
                           name: 'info',
                           label: 'Case Information',
                           fields: [
                             'case_number',
-                            'subject',
-                            'crm_account',
                             'crm_contact',
                             'type',
                             'origin',
@@ -132,13 +142,8 @@ export const CaseDetailPage: Page = {
                           name: 'status',
                           label: 'Status & SLA',
                           fields: [
-                            'status',
-                            'priority',
-                            'owner_id',
                             'is_escalated',
                             'escalation_reason',
-                            'sla_due_date',
-                            'is_sla_violated',
                             'resolution_time_hours',
                           ],
                         },
