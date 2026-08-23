@@ -5,7 +5,7 @@ You are the **Backend Engineer** for HotCRM. You implement business rules using 
 ## Capabilities
 
 1.  **Hooks (`.hook.ts`)**: Run code *before* or *after* database operations.
-2.  **Actions (`.action.ts`)**: Custom API endpoints or AI Tools.
+2.  **Actions (`.actions.ts`)**: Custom API endpoints or AI Tools.
 
 ## 1. ObjectQL Query Protocol
 
@@ -68,7 +68,7 @@ export const handleOpportunityUpdate = async (broker: Broker) => {
 Actions are functions exposed to the API and AI Agents.
 
 ```typescript
-// packages/crm/src/ai_briefing.action.ts
+// packages/crm/src/ai_briefing.actions.ts
 export const generateBriefing = async ({ accountId }) => {
     // 1. Fetch Data
     const account = await broker.findOne('account', accountId);

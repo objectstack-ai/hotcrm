@@ -10,9 +10,9 @@ HotCRM 是 ObjectStack 应用市场应用的**参考实现**。复刻它可以�
 一个可运行的 ObjectStack 应用需要正确连接约 15 项约定：
 
 - 每个对象上的命名空间前缀
-- 文件后缀协议（`*.object.ts`、`*.hook.ts`、`*.action.ts`）
+- 文件后缀协议（`*.object.ts`、`*.hook.ts`、`*.actions.ts`）
 - ObjectQL（不使用原生 SQL）
-- 通过 `*.action.ts` 暴露 AI 工具
+- 通过 `*.actions.ts` 暴露 AI 工具
 - 严格的 `@objectstack/spec` 模式校验
 - 你所发布的所有语言区域的 i18n 包
 - 配置文件 + 岗位 + 共享规则
@@ -91,7 +91,7 @@ rm src/objects/{case,knowledge_article,campaign,campaign_member,contract,quote,q
 |---|---|
 | 数据模型 | `src/objects/<entity>.object.ts` |
 | 服务端触发器 | `src/hooks/<entity>.hook.ts` |
-| API + AI 工具 | `src/actions/<entity>.action.ts` |
+| API + AI 工具 | `src/actions/<entity>.actions.ts` |
 | UI 布局 | `src/pages/<entity>.page.ts` |
 | 列表视图 | `src/views/<entity>.view.ts` |
 | i18n | 追加到 `src/translations/{en,zh-CN,es-ES,ja-JP}.ts` |

@@ -10,9 +10,9 @@ HotCRM is the **reference implementation** for ObjectStack marketplace apps. For
 A working ObjectStack app needs ~15 conventions wired correctly:
 
 - Namespace prefix on every object
-- File-suffix protocol (`*.object.ts`, `*.hook.ts`, `*.action.ts`)
+- File-suffix protocol (`*.object.ts`, `*.hook.ts`, `*.actions.ts`)
 - ObjectQL (no raw SQL)
-- AI tool exposure via `*.action.ts`
+- AI tool exposure via `*.actions.ts`
 - Strict `@objectstack/spec` schema validation
 - i18n bundles for all locales you ship
 - Profile + positions + sharing rules
@@ -91,7 +91,7 @@ Follow the file-suffix protocol:
 |---|---|
 | Data model | `src/objects/<entity>.object.ts` |
 | Server-side trigger | `src/hooks/<entity>.hook.ts` |
-| API + AI tool | `src/actions/<entity>.action.ts` |
+| API + AI tool | `src/actions/<entity>.actions.ts` |
 | UI layout | `src/pages/<entity>.page.ts` |
 | List view | `src/views/<entity>.view.ts` |
 | i18n | append to `src/translations/{en,zh-CN,es-ES,ja-JP}.ts` |
