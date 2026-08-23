@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
+import stack from '../objectstack.config';
 import { CrmSeedData } from '../src/data/index';
 import { CASE_SLA_DEFAULT_TIER, caseSlaHours } from '../src/objects/_case-sla';
 
@@ -507,5 +508,82 @@ describe('seeded case SLA due dates match the policy matrix (#595)', () => {
       }
     }
     expect(problems, problems.join('\n')).toEqual([]);
+  });
+});
+
+/**
+ * A seed can only target an object THIS app declares (#1258).
+ *
+ * `CrmSeedData` is an array of raw `Seed` values, and `Seed.object` is a plain
+ * `z.string()` — so naming a platform `sys_*` table there type-checks, builds,
+ * validates, and loads. It just cannot produce a usable row, and every part of
+ * the boot reports success while it happens.
+ *
+ * Measured against 17.1.0 by seeding three `sys_activity` rows for a demo lead
+ * — the shape #1258 asked for — and reading the result back out of the running
+ * server:
+ *
+ *   - the rows LAND. `pnpm build` is silent, the boot banner counts them
+ *     (`Seeds: … 345 rows`, up from 342), and every column arrives, readonly
+ *     ones included: seeds write under `{ isSystem: true }`, which exempts the
+ *     static readonly strip, and `sys_activity` declares EVERY field readonly.
+ *     `type: 'completed'` is accepted, `cel\`daysAgo(n)\`` resolves, and
+ *     `mode: 'upsert'` is accepted even though the object is
+ *     `managedBy: 'append-only'`.
+ *   - the rows attach to NOTHING. `sys_activity.record_id` is `Field.text()`,
+ *     not a lookup, and the loader resolves a natural key only for
+ *     `lookup` / `master_detail` fields — every other field is stored verbatim.
+ *     So `record_id: 'Lisa Thompson'` is stored as the literal string, while
+ *     the seeded lead's id is a runtime nanoid (`tgIjpNhjlfmWU8YF`) that does
+ *     not exist until first boot.
+ *
+ * The consequence, read off the shipped console bundle rather than inferred —
+ * `record:activity` queries
+ * `sys_activity, { $filter: { object_name, record_id }, $orderby: { timestamp: 'desc' } }`:
+ *
+ *   filter { object_name: 'crm_lead', record_id: 'tgIjpNhjlfmWU8YF' } → 0 rows
+ *   filter { object_name: 'crm_lead', record_id: 'Lisa Thompson'    } → 3 rows
+ *
+ * The tab stays empty and the seed book looks populated. This is the same
+ * failure the ownership note in `src/data/index.ts` records for
+ * `owner_id: 'Dev Admin'`, one column over — "a seed cannot name an id that
+ * does not exist yet" is the general rule, and reference resolution is the only
+ * exemption from it.
+ *
+ * Two further facts make the route worse, not better, if the id problem were
+ * ever solved locally: `sys_activity` is a `lifecycle.class: 'telemetry'`
+ * object with `retention: { maxAge: '14d' }` and day-shard rotation (rows live
+ * in `sys_activity__r<YYYYMMDD>` behind a view), so a demo narrative older than
+ * a fortnight is reaped by design; and the only writers of interaction rows are
+ * the `log_call` / `log_meeting` / `send_email` action bodies, so a second
+ * producer would be the `crm_forecast` two-producer conflict #702 ruled against.
+ *
+ * Hence the guard: seeds stay inside the app's own object graph, where natural
+ * keys resolve. If a future platform release makes an ActivityPointer target
+ * seedable, delete this test deliberately — do not widen it.
+ */
+describe('every seed dataset targets an object this app declares (#1258)', () => {
+  const declared = new Set(
+    ((stack as unknown as { objects?: { name?: string }[] }).objects ?? []).map((o) => String(o.name)),
+  );
+
+  it('registers the app objects this guard measures against', () => {
+    // Guard the guard: an empty set would make the assertion below vacuously
+    // green and hide exactly the class it exists to catch.
+    expect(declared.size, 'objectstack.config.ts registers no objects').toBeGreaterThan(10);
+  });
+
+  it('never seeds an object outside the app graph — those rows load but resolve to nothing', () => {
+    const foreign = datasets
+      .map((d) => String(d.object))
+      .filter((name) => !declared.has(name));
+    expect(
+      [...new Set(foreign)],
+      'these seed datasets name objects the app does not declare. Their rows will load and be\n' +
+        'counted at boot, but any field pointing at another record is stored as the literal\n' +
+        'natural key instead of an id — the loader resolves natural keys only for lookup /\n' +
+        'master_detail fields. See this block\'s comment for the measurement:\n  ' +
+        [...new Set(foreign)].join('\n  '),
+    ).toEqual([]);
   });
 });
