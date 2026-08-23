@@ -78,6 +78,33 @@ in a schema parse.
 > copy of that history is exactly how this section came to advertise a "v5.0"
 > that was never an app version, on a platform major that never shipped it.
 
+### Upgrading from 2.x — Owner is now one field
+
+**3.0.0 is a major because reassigning Owner now moves access.** Before it,
+every business object carried *two* owners: the **Owner** on forms, views and
+reports, and a separate hidden column the platform used for every access
+decision. Nothing kept them in step — changing Owner moved the record in every
+list and report and moved **no access at all**. The previous owner kept it; the
+new owner never got it.
+
+HotCRM now has exactly one Owner: the platform's ownership column.
+
+What this means for an existing deployment:
+
+- **Reassignment is gated separately from edit rights.** Because it really does
+  transfer access, changing Owner is its own permission rather than a side
+  effect of being able to edit the record.
+- **Run the backfill once.** Deployments where somebody reassigned an Owner
+  under 2.x have the two columns out of step; `pnpm backfill:owner` reconciles
+  them. It never blanks an existing owner and is safe to re-run — and it needs
+  an administrator account, because a bulk transfer is what it performs. If
+  nobody ever reassigned an Owner, the columns already agree and the backfill
+  reports zero divergences.
+
+The full entry — including the per-persona reassignment table — is the
+`Major Changes` section of `CHANGELOG.md`.
+
+
 ### Where the current shape of the product is written down
 
 Rather than restate the inventory here — where nothing would check it — each

@@ -126,6 +126,45 @@ async function postJson(path, body) {
   return { ok: false, status: 0, json: { error: `request failed: ${lastErr?.message ?? 'unknown'}` } };
 }
 
+/**
+ * Release notes for the version being published, read from `CHANGELOG.md`.
+ *
+ * The manifest used to be the only source (`mp.releaseNotes`), and it has never
+ * declared the key — so every publish so far sent `release_notes: undefined`
+ * and the marketplace listing carried no notes at all, while the notes the
+ * changesets had already written sat in `CHANGELOG.md` unread.
+ *
+ * The whole section is the wrong thing to send: 3.0.0's is 649 KB, because it
+ * is 292 changesets deep. What an installer needs is the part that changes
+ * their deployment, so `### Major Changes` is preferred when the release has
+ * one, and the head of the section otherwise. `mp.releaseNotes` still wins if
+ * a release ever wants to hand-write them.
+ */
+async function releaseNotesFor(version, manifestNotes) {
+  if (manifestNotes) return manifestNotes;
+  const changelogPath = join(ROOT, 'CHANGELOG.md');
+  if (!existsSync(changelogPath)) return undefined;
+  const md = await readFile(changelogPath, 'utf8');
+
+  // The section runs from this version's heading to the next version heading.
+  const start = md.search(new RegExp(`^## ${version.replace(/\./g, '\\.')}\\s*$`, 'm'));
+  if (start === -1) return undefined;
+  const rest = md.slice(start);
+  const nextIdx = rest.slice(1).search(/^## \d/m);
+  const section = nextIdx === -1 ? rest : rest.slice(0, nextIdx + 1);
+
+  const major = section.match(/^### Major Changes\s*$([\s\S]*?)(?=^### |\Z)/m);
+  const body = (major ? major[1] : section.replace(/^## .*$/m, '')).trim();
+  if (!body) return undefined;
+
+  const CAP = 8000;
+  const trimmed =
+    body.length > CAP
+      ? `${body.slice(0, CAP).trimEnd()}\n\n…truncated — the full entry is CHANGELOG.md in the repository.`
+      : body;
+  return `## ${version}\n\n${trimmed}`;
+}
+
 async function main() {
   const pkg = await readJson(join(ROOT, 'package.json'));
   const ver = pkg.version;
@@ -167,13 +206,16 @@ async function main() {
   const pkgId = upsertRes.json?.data?.id;
   log(`  ${upsertRes.json?.data?.created ? '✓ created' : '✓ patched'} sys_package id=${pkgId}`);
 
+  const notes = await releaseNotesFor(ver, mp.releaseNotes);
+  log(`  release notes: ${notes ? `${notes.length} chars` : '(none)'}`);
+
   // Step 2 — create sys_package_version (idempotent by 409). auto_approve is
   // honoured for service-mode callers (our CI's OS_CLOUD_API_KEY); without it
   // the version lands as draft and the public catalog hides it.
   const verRes = await postJson(`/api/v1/cloud/packages/${encodeURIComponent(pkgId)}/versions`, {
     version: ver,
     bundle,
-    release_notes: mp.releaseNotes,
+    release_notes: notes,
     auto_approve: true,
   });
   if (verRes.status === 409) {
