@@ -186,7 +186,11 @@ describe('deleting an account whose contact is still referenced', () => {
     const message = await deleteAndCatch('crm_account', account.id);
 
     expect(message, 'the account delete must still be refused').toBeTruthy();
-    expect(message).toContain(`Contact Ada Lovelace (${contact.id})`);
+    // Named, not keyed (#1243): the sentence carries `full_name`, which is what
+    // every contact surface in the app shows. The id is what the guard queried
+    // BY, and it stays out of the prose.
+    expect(message).toContain('Contact Ada Lovelace is still referenced by');
+    expect(message).not.toContain(contact.id);
     expect(message).toContain('1 open opportunity(ies)');
     expect(message).toContain('neither can its account');
     // The reported symptom: a caller who addressed an ACCOUNT was told they
@@ -206,7 +210,8 @@ describe('deleting an account whose contact is still referenced', () => {
     // named, so both invocations get one accurate sentence.
     const { contact } = await build();
     const message = await deleteAndCatch('crm_contact', contact.id);
-    expect(message).toContain(`Contact Ada Lovelace (${contact.id})`);
+    expect(message).toContain('Contact Ada Lovelace is still referenced by');
+    expect(message).not.toContain(contact.id);
     expect(message).toContain('1 open opportunity(ies)');
   });
 

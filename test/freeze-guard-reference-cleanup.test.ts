@@ -407,7 +407,10 @@ describe('an ordinary user edit to a settled record is still refused', () => {
       .then(() => null, (e: Error) => e);
 
     expect(err, 'a user edit to a frozen deal must still be refused').toBeInstanceOf(Error);
-    expect(err!.message).toContain(`Opportunity Settled Deal ${n} (${opportunity.id}) is closed (closed_won)`);
+    // `crm_opportunity.nameField` is `name`, so the name alone titles the
+    // record everywhere; the id used to be appended and matched nothing (#1243).
+    expect(err!.message).toContain(`Opportunity Settled Deal ${n} is closed (closed_won)`);
+    expect(err!.message).not.toContain(opportunity.id);
     expect(err!.message).toContain('only description, next_step, notes may be edited');
     expect(err!.message).toContain('Attempted: amount');
     // Refused for real, not merely announced.
@@ -438,7 +441,12 @@ describe('an ordinary user edit to a settled record is still refused', () => {
       .then(() => null, (e: Error) => e);
 
     expect(err, 'repointing a link is an edit, not a cleanup').toBeInstanceOf(Error);
-    expect(err!.message).toContain(`Quote QR-${n} (${quote.id}) is accepted`);
+    // `crm_quote.display_title` is `quote_number - name`, and this runs against
+    // a real engine, so the number is the one the autonumber sequence issued
+    // (#1243). Matching it loosely keeps the assertion about the SHAPE rather
+    // than about which position this quote took in the sequence.
+    expect(err!.message).toMatch(new RegExp(`Quote QTE-\\d+ - QR-${n} is accepted`));
+    expect(err!.message).not.toContain(quote.id);
     expect(err!.message).toContain('only internal_notes may be edited');
     expect(err!.message).toContain('Attempted: crm_opportunity');
   });
