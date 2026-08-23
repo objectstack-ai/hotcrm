@@ -147,11 +147,17 @@ async function releaseNotesFor(version, manifestNotes) {
   const md = await readFile(changelogPath, 'utf8');
 
   // The section runs from this version's heading to the next version heading.
-  const start = md.search(new RegExp(`^## ${version.replace(/\./g, '\\.')}\\s*$`, 'm'));
-  if (start === -1) return undefined;
-  const rest = md.slice(start);
-  const nextIdx = rest.slice(1).search(/^## \d/m);
-  const section = nextIdx === -1 ? rest : rest.slice(0, nextIdx + 1);
+  // Headings are located with ONE static pattern and the version is compared as
+  // a string: building `new RegExp(version)` would need the version escaped, and
+  // hand-escaping only `.` is the incomplete-sanitization shape CodeQL rejects
+  // (js/incomplete-sanitization). Nothing here is a pattern, so nothing needs
+  // escaping.
+  const headings = [...md.matchAll(/^## ([^\s]+)[^\S\n]*$/gm)];
+  const idx = headings.findIndex((h) => h[1] === version);
+  if (idx === -1) return undefined;
+  const start = headings[idx].index;
+  const end = idx + 1 < headings.length ? headings[idx + 1].index : md.length;
+  const section = md.slice(start, end);
 
   const major = section.match(/^### Major Changes\s*$([\s\S]*?)(?=^### |\Z)/m);
   const body = (major ? major[1] : section.replace(/^## .*$/m, '')).trim();
