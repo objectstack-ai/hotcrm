@@ -48,20 +48,20 @@ Renewal task ──► Renewal opportunity
 
 ## 在哪里找到这些内容
 
-HotCRM 应用里**没有 Products（产品）分组**。产品目录在侧边栏上唯一的入口是 **Marketing**（市场营销）分组下的 **Products**（产品）——参见 [Marketing](/zh-Hans/docs/marketing/index)。除了这一项和全局搜索之外，只能从报价或商机的明细行反查到产品记录。
+HotCRM 应用里**没有 Products（产品）分组**。产品目录在侧边栏上唯一的入口是 **Sales**（销售）分组下的 **Products**（产品）——产品目录是报价行项目与商机行项目所指向的主数据，因此与其余收入侧对象放在一起。除了这一项和全局搜索之外，只能从报价或商机的明细行反查到产品记录。
 
-**Contracts**（合同）挂在 **Sales**（销售）分组下，与 Leads、Accounts、Contacts、Opportunities、Pipeline、Quotes 并列——因为合同属于销售流程。这也是整个应用侧边栏里通往合同的唯一入口。
+**Contracts**（合同）同样挂在 **Sales**（销售）分组下，与 Leads、Accounts、Contacts、Opportunities、Quotes、Products 并列——因为合同属于销售流程。这也是整个应用侧边栏里通往合同的唯一入口。
 
-**Approvals**（审批）分组只有一项：
+也**没有 Approvals（审批）分组**了：该分组已被取消，它下面唯一的条目并入了 **My Work**（我的工作）——等着你处理的事情都在那里：
 
 - **Inbox**——点开后进入平台的**审批中心**，在那里把等着你处理的审批批准或拒绝。侧边栏上的 label 就是 **Inbox**，简体中文界面下显示为**待我审批**；应用里没有任何条目叫 *Approval Requests*（审批请求）。
 
-本页过去列出的另外两个名字，不在这个分组里：
+本页过去列出的另外两个名字，根本不是侧边栏条目：
 
 - **Action History**（操作历史）——侧边栏上没有叫这个名字的条目。审批的操作留痕本身是真实数据，由审批插件以 `sys_approval_action` 存储，但本应用里没有任何导航条目能打开它。
 - **Processes**（流程）——是被**刻意删掉**的，不是漏掉的：任何已安装的插件里都不存在 `sys_approval_process` 对象，该条目的 *requires object* 守卫会在每一次安装里把它永远隐藏。除非将来有这样一个对象上线，它不会回来。
 
-**Marketing** 与 **Approvals** 两个分组都**默认折叠**——与 Sales、My Work、Activity、Service 不同，它们不会在应用加载时自动展开。先把分组点开，再判断某样东西在不在这里。
+**Marketing** 与 **Insights** 两个分组**默认折叠**——与 Sales、My Work、Activity、Service 不同，它们不会在应用加载时自动展开。先把分组点开，再判断某样东西在不在这里。**Inbox** 已经不在其列：**My Work** 加载时就是展开的，待办审批不点任何东西就能看见。
 
 ## 从这里开始
 

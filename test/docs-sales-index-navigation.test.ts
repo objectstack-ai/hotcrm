@@ -54,11 +54,16 @@ const SALES = (() => {
 const SALES_CHILDREN = ((SALES.children ?? []) as AnyRec[]);
 
 /**
- * The six entries that open an object's own list, and the three that open
- * something else. `nav_pipeline` is `type: 'object'` too, but it pins a
- * `viewName` — it lands on one specific kanban view rather than on the
- * Opportunities list — which is why it gets its own bullet alongside the page
- * and the dashboard rather than joining the `·`-separated run.
+ * The entries that open an object's own list, and the ones that open something
+ * else.
+ *
+ * The split is `viewName`, not `type`: an entry can be `type: 'object'` and
+ * still land on one specific saved view rather than on the object's list. The
+ * group carried exactly one of those — `nav_pipeline`, the kanban board — and
+ * #1259 removed it (the board is the `pipeline` tab on the Opportunities list
+ * page). The `!c.viewName` test is kept anyway: it is what makes the two
+ * bullets mean different things, and a view entry landing back in this group
+ * must go in the second bullet, not the `·`-separated run.
  */
 const OBJECT_ENTRIES = SALES_CHILDREN.filter((c) => c.type === 'object' && !c.viewName);
 const OTHER_ENTRIES = SALES_CHILDREN.filter((c) => c.type !== 'object' || !!c.viewName);
@@ -164,14 +169,14 @@ describe('the source facts that section now rests on (#997)', () => {
       'Account Workbench',
       'Contacts',
       'Opportunities',
-      'Pipeline',
       'Quotes',
       'Contracts',
+      'Products',
       'Sales Performance',
     ]);
   });
 
-  it('six of them open an object list; three open something else', () => {
+  it('seven of them open an object list; two open something else', () => {
     expect(OBJECT_ENTRIES.map((c) => c.label)).toEqual([
       'Leads',
       'Accounts',
@@ -179,12 +184,24 @@ describe('the source facts that section now rests on (#997)', () => {
       'Opportunities',
       'Quotes',
       'Contracts',
+      'Products',
     ]);
     expect(OTHER_ENTRIES.map((c) => c.label)).toEqual([
       'Account Workbench',
-      'Pipeline',
       'Sales Performance',
     ]);
+  });
+
+  it('Products is a Sales entry, not a Marketing one (#1259)', () => {
+    // The catalogue is the master data quote lines and opportunity line items
+    // point at — revenue, not campaigns. It sat under Marketing because that
+    // is where it was first filed, and the sales index said nothing about it.
+    const marketing = NAV.find((n) => n.type === 'group' && n.label === 'Marketing');
+    expect(((marketing?.children ?? []) as AnyRec[]).map((c) => c.id)).toEqual(['nav_campaign']);
+    const product = SALES_CHILDREN.find((c) => c.id === 'nav_product');
+    expect(product?.objectName).toBe('crm_product');
+    expect(product?.viewName, 'Products opens the object list, so it belongs in the shared bullet')
+      .toBeUndefined();
   });
 
   it('Account Workbench is a page entry sitting directly under Accounts', () => {

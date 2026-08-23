@@ -118,14 +118,29 @@ const PHANTOMS = [
   'Action History',
   'Dashboards',
   'Reports',
+  // #1259 retired these four sidebar rows. Every one of their destinations is
+  // still shipping — as a tab on the list page of the object it belongs to —
+  // so the page owes the reader a re-point, not a deletion. Listing them here
+  // is what forces that: each must stay named in italics, and none may ever be
+  // bolded again while it is not a navigation label.
+  'Pipeline',
+  'Calendar',
+  'Interaction History',
+  'All Tasks',
 ] as const;
 
 /**
- * A name the old table used as a GROUP that is real only as an ITEM. It must be
- * named in italics (as the non-existent group) and may also appear in bold (as
- * the real item under Marketing), so it is exempt from the never-bold rule.
+ * Names the old table used as a GROUP that are real only as an ITEM. Each must
+ * be named in italics (as the non-existent group) and may also appear in bold
+ * (as the real item), so they are exempt from the never-bold rule.
+ *
+ * *Products* was never a group; it is the **Products** item, which #1259 moved
+ * from Marketing to Sales. *Approvals* WAS a group until #1259 dissolved it —
+ * its single child, **Inbox**, is a personal work queue, so it moved to **My
+ * Work**. Readers arrive holding both names; the page has to say where each
+ * one really lives.
  */
-const RETIRED_GROUP_NAMES = ['Products'] as const;
+const RETIRED_GROUP_NAMES = ['Products', 'Approvals'] as const;
 
 const PAGES = [
   {
@@ -285,7 +300,7 @@ describe('getting-started/quick-tour names the navigation the app really ships (
 });
 
 describe('the source facts the quick-tour table now rests on (#960)', () => {
-  it('the app has one pinned top-level entry and seven groups', () => {
+  it('the app has one pinned top-level entry and six groups', () => {
     expect(PINNED.map((p) => p.label)).toEqual(['Home']);
     expect(GROUP_LABELS).toEqual([
       'Sales',
@@ -294,7 +309,6 @@ describe('the source facts the quick-tour table now rests on (#960)', () => {
       'Marketing',
       'Service',
       'Insights',
-      'Approvals',
     ]);
   });
 
@@ -303,8 +317,8 @@ describe('the source facts the quick-tour table now rests on (#960)', () => {
     expect(PINNED[0].dashboardName).toBe(ExecutiveDashboard.name);
   });
 
-  it('Marketing, Insights and Approvals are the groups that stay collapsed', () => {
-    expect(COLLAPSED).toEqual(['Marketing', 'Insights', 'Approvals']);
+  it('Marketing and Insights are the groups that stay collapsed', () => {
+    expect(COLLAPSED).toEqual(['Marketing', 'Insights']);
     expect(EXPANDED).toEqual(['Sales', 'My Work', 'Activity', 'Service']);
   });
 

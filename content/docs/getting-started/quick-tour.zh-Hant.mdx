@@ -46,31 +46,34 @@ description: HotCRM 的 5 分鐘演練 —— 主頁、你的第一條線索、�
 - **HotCRM** —— 包含所有 CRM 功能的主應用。
 - **Admin** —— 面向系統管理員。
 
-在 HotCRM 內，左側導覽最上面是一個固定條目——**Home**，它打開的是 **Executive Overview** 儀表板；其餘內容分在 7 個群組裡：
+在 HotCRM 內，左側導覽最上面是一個固定條目——**Home**，它打開的是 **Executive Overview** 儀表板；其餘內容分在 6 個群組裡：
 
 | 分組 | 內容 |
 | --- | --- |
-| **Sales** | Leads、Accounts、Account Workbench、Contacts、Opportunities、Pipeline、Quotes、Contracts、Sales Performance |
-| **My Work** | My Tasks、My Deals、My Leads、My Cases、My Calendar、All Tasks |
-| **Activity** | Events、Calendar、Interaction History、Sales Activity |
-| **Marketing** | Campaigns、Products |
+| **Sales** | Leads、Accounts、Account Workbench、Contacts、Opportunities、Quotes、Contracts、Products、Sales Performance |
+| **My Work** | My Tasks、My Deals、My Leads、My Cases、My Calendar、Inbox |
+| **Activity** | Events、Sales Activity |
+| **Marketing** | Campaigns |
 | **Service** | Cases、Knowledge、Service Overview |
 | **Insights** | CRM Overview、Forecasts、Pipeline Coverage、Lead Inflow、SLA Performance |
-| **Approvals** | Inbox |
 
 上表用的是原始碼裡的英文 label，也就是英文介面上看到的名字。本應用提供 en / zh-CN / ja-JP / es-ES 四種介面語言，沒有繁體語言包——簡體中文介面下這些名字會顯示為語言包裡的譯名，例如 **Inbox** 顯示為「待我审批」、**Knowledge** 顯示為「知识库」、**My Work** 顯示為「我的工作」。
 
-**Marketing**、**Insights**、**Approvals** 這三個群組在應用載入時是摺疊的——只有 **Sales**、**My Work**、**Activity**、**Service** 會自動展開。先把群組點開，再判斷某樣東西在不在這裡。
+**Marketing**、**Insights** 這兩個群組在應用載入時是摺疊的——只有 **Sales**、**My Work**、**Activity**、**Service** 會自動展開。先把群組點開，再判斷某樣東西在不在這裡。
 
-本頁過去列出的 4 個群組名，應用裡根本不存在；另有幾個條目名，真身並不在它說的位置：
+一個去處只佔一列，這是刻意的。同一個物件如果有多種檢視方式，它們是該物件列表頁頂部的標籤頁，而不是導覽裡另起一列——這樣側邊欄才短到能一眼掃完。
 
-- *Products*（產品）不是群組。產品目錄是 **Marketing** 群組下的 **Products** 條目——參見 [Marketing](/zh-Hant/docs/marketing/index)。
-- *Activities* 不是群組，真實的群組叫 **Activity**，而且任務不在裡面。`crm_task` 在側邊欄上是 **My Tasks** 與 **All Tasks** 兩項，都掛在 **My Work** 群組下。
+本頁過去列出的 5 個群組名，應用裡根本不存在；另有幾個條目名，真身並不在它說的位置：
+
+- *Products*（產品）不是群組。產品目錄是 **Sales** 群組下的 **Products** 條目——產品是收入側的主資料，理應放在銷售裡——參見 [Products](/zh-Hant/docs/revenue/products)。
+- *Approvals* 現在也不是群組了。它下面唯一的條目 **Inbox** 本質上是一個「等你處理」的個人佇列，因此已併入 **My Work** 群組——參見 [Approvals](/zh-Hant/docs/revenue/approvals)。
+- 本頁過去列出的 4 個條目名已經不在側邊欄了，但功能一個都沒少——它們各自成了所屬列表頁上的一個標籤頁：*Pipeline* 是 **Opportunities** 頁面上的管道標籤頁；*Calendar* 與 *Interaction History* 是 **Events** 頁面上的標籤頁；*All Tasks* 則是 **My Tasks** 打開的那個頁面的第一個標籤頁。
+- *Activities* 不是群組，真實的群組叫 **Activity**，而且任務不在裡面。`crm_task` 在側邊欄上就是 **My Work** 群組下的 **My Tasks** 一項。
 - *Analytics* 不是群組，真實的群組叫 **Insights**。它裡面沒有任何條目叫 *Dashboards* 或 *Reports*——它釘住的那個儀表板和三張報表，上表已按各自的名字列出。
 - *AI* 不是群組，也沒有叫 *Copilot* 或 *Knowledge Bases* 的側邊欄條目。Copilot 是每個頁面右側的聊天面板（見下文第 6 節），知識文章則是 **Service** 群組下的 **Knowledge**。
 - *Knowledge Base* 不是本應用使用的 label。**Service** 群組下的條目叫 **Knowledge**，與它並列的服務儀表板叫 **Service Overview**——參見 [Service](/zh-Hant/docs/service/index)。
 - *Campaign Members* 不是側邊欄條目。行銷活動成員要從行銷活動詳情頁或全域搜尋進入——參見 [Campaign Members](/zh-Hant/docs/marketing/campaign-members)。
-- *Approval Requests* 與 *Action History* 也都不是條目：**Approvals** 群組下只有 **Inbox** 一項。審批的操作留痕本身是真實資料，由審批外掛以 `sys_approval_action` 儲存，但本應用裡沒有任何導覽條目能打開它。
+- *Approval Requests* 與 *Action History* 也都不是條目：本應用在審批側只有 **Inbox** 這一個入口。審批的操作留痕本身是真實資料，由審批外掛以 `sys_approval_action` 儲存，但本應用裡沒有任何導覽條目能打開它。
 
 ## 3. 你的第一條線索
 

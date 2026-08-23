@@ -1298,9 +1298,9 @@ export const jaJP: TranslationData = {
         nav_account_workbench: { label: '取引先ワークベンチ' },
         nav_contact: { label: '取引先責任者' },
         nav_opportunity: { label: '商談' },
-        nav_pipeline: { label: 'パイプライン' },
         nav_quote: { label: '見積' },
         nav_contract: { label: '契約' },
+        nav_product: { label: '製品' },
         nav_sales_dashboard: { label: '営業実績' },
 
         group_work: { label: 'マイワーク' },
@@ -1309,17 +1309,14 @@ export const jaJP: TranslationData = {
         nav_my_leads: { label: '私のリード' },
         nav_my_cases: { label: '私のケース' },
         nav_my_calendar: { label: 'マイカレンダー' },
-        nav_all_tasks: { label: '全タスク' },
+        nav_approval_requests: { label: '受信トレイ' },
 
         group_activity: { label: '活動' },
         nav_event: { label: 'イベント' },
-        nav_event_calendar: { label: 'カレンダー' },
-        nav_event_history: { label: '対話履歴' },
         nav_activity_dashboard: { label: '営業活動' },
 
         group_marketing: { label: 'マーケティング' },
         nav_campaign: { label: 'キャンペーン' },
-        nav_product: { label: '製品' },
 
         group_service: { label: 'サービス' },
         nav_case: { label: 'ケース' },
@@ -1332,9 +1329,6 @@ export const jaJP: TranslationData = {
         nav_report_pipeline_coverage: { label: 'パイプラインカバレッジ' },
         nav_report_lead_inflow: { label: 'リード流入' },
         nav_report_sla: { label: 'SLA 実績' },
-
-        group_approvals: { label: '承認' },
-        nav_approval_requests: { label: '受信トレイ' },
       },
     },
   },

@@ -48,20 +48,20 @@ Renewal task ──► Renewal opportunity
 
 ## Where to find things
 
-There is no **Products** group in the HotCRM app. The catalog's only sidebar entry is **Products**, and it sits under the **Marketing** group — see [Marketing](/docs/marketing/index). Apart from that item and global search, a product record is reached only from a quote or an opportunity line item.
+There is no **Products** group in the HotCRM app. The catalog's only sidebar entry is **Products**, and it sits under the **Sales** group — the catalogue is the master data quote lines and opportunity line items point at, so it belongs with the rest of the revenue objects. Apart from that item and global search, a product record is reached only from a quote or an opportunity line item.
 
-**Contracts** is under the **Sales** group, alongside Leads, Accounts, Contacts, Opportunities, Pipeline and Quotes, because contracts belong to the sales process. That entry is the app's only sidebar route to a contract.
+**Contracts** is under the **Sales** group too, alongside Leads, Accounts, Contacts, Opportunities, Quotes and Products, because contracts belong to the sales process. That entry is the app's only sidebar route to a contract.
 
-The **Approvals** group holds exactly one item:
+There is no **Approvals** group either — it was dissolved, and its one item moved to **My Work**, where the rest of what is waiting on you lives:
 
 - **Inbox** — opens the platform's **approval centre**, where the approvals waiting on you are approved or rejected. **Inbox** is the label you see in the sidebar; nothing in the app is called *Approval Requests*.
 
-Two names this page used to list are not in that group:
+Two names this page used to list are not sidebar items at all:
 
 - **Action History** — no sidebar item carries that name. The audit trail is real data — the approvals plugin stores it as `sys_approval_action` — but no navigation entry in this app opens it.
 - **Processes** — deliberately removed, not an oversight: no `sys_approval_process` object exists in any installed plugin, so the item's *requires object* guard hid it on every install, forever. It stays out until such an object ships.
 
-**Marketing** and **Approvals** are both **collapsed by default** — unlike Sales, My Work, Activity and Service, they do not open when the app loads. Click a group open before deciding something isn't there.
+**Marketing** and **Insights** are **collapsed by default** — unlike Sales, My Work, Activity and Service, they do not open when the app loads. Click a group open before deciding something isn't there. **Inbox** is not among them any more: **My Work** opens on load, so a pending approval is visible without clicking anything.
 
 ## Start here
 

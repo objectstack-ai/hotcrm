@@ -19,14 +19,16 @@ import { type AnyRec, packFor } from './helpers/metadata-fixtures';
  * and each is wrong in a different way, which is why they are pinned
  * separately:
  *
- *  1. **The sidebar item's label.** `group_approvals` carries exactly one
- *     child and its label is **Inbox** (zh-CN 待我审批). The page called it
- *     *Approval Requests*. That name is not invented — it is the plugin's
- *     label for the OBJECT (`sys_approval_request`: *Approval Request* /
- *     *Approval Requests*) — so the fix is to say where the name really lives,
- *     not to claim nothing carries it. #963's issue body asserted the string
- *     appears nowhere in the repo; it greps 0 in `src/`, but the installed
- *     plugin ships it as `pluralLabel`. Both halves are pinned below.
+ *  1. **The sidebar item's label.** The app carries exactly one approvals
+ *     entry and its label is **Inbox** (zh-CN 待我审批); it lived in a one-item
+ *     "Approvals" group until #1259 moved it under **My Work**. The page
+ *     called it *Approval Requests*. That name is not invented — it is the
+ *     plugin's label for the OBJECT (`sys_approval_request`: *Approval
+ *     Request* / *Approval Requests*) — so the fix is to say where the name
+ *     really lives, not to claim nothing carries it. #963's issue body
+ *     asserted the string appears nowhere in the repo; it greps 0 in `src/`,
+ *     but the installed plugin ships it as `pluralLabel`. Both halves are
+ *     pinned below.
  *  2. **A navigation item that does not exist.** No node in this app is
  *     labelled *Action History*. The data behind the name is real —
  *     `sys_approval_action` — and so is the way back to its request
@@ -81,13 +83,33 @@ const NAV_NODES: AnyRec[] = (() => {
   return walk(((CrmApp as AnyRec).navigation ?? []) as AnyRec[]);
 })();
 
-const APPROVALS_GROUP: AnyRec = (() => {
-  const group = NAV_NODES.find((n) => n.id === 'group_approvals');
-  if (!group) throw new Error('group_approvals is gone — this pin is out of date');
-  return group;
+/**
+ * The Inbox entry, found by id rather than by walking a group (#1259).
+ *
+ * This file used to reach it as `group_approvals.children[0]`, which tied
+ * every assertion below to a container that was never the point: #1259
+ * dissolved that one-item group and moved the entry into **My Work**, because
+ * an approval waiting on you *is* your work. Anchoring on the item survives
+ * that move and the next one; what the pages actually promise is a labelled
+ * entry that opens the approval centre, not a group with a particular name.
+ * The group it hangs off is asserted separately, below.
+ */
+const INBOX: AnyRec = (() => {
+  const inbox = NAV_NODES.find((n) => n.id === 'nav_approval_requests');
+  if (!inbox) throw new Error('nav_approval_requests is gone — this pin is out of date');
+  return inbox;
 })();
 
-const APPROVALS_CHILDREN = (APPROVALS_GROUP.children ?? []) as AnyRec[];
+/** The group that carries the Inbox entry — **My Work** since #1259. */
+const INBOX_GROUP: AnyRec = (() => {
+  const group = (((CrmApp as AnyRec).navigation ?? []) as AnyRec[]).find(
+    (n) =>
+      n.type === 'group' &&
+      ((n.children ?? []) as AnyRec[]).some((c) => c.id === 'nav_approval_requests'),
+  );
+  if (!group) throw new Error('the Inbox entry sits under no group — this pin is out of date');
+  return group;
+})();
 
 /** Built-in list-view labels the approvals plugin ships, per object. */
 const viewLabels = (schema: AnyRec): string[] =>
@@ -105,11 +127,9 @@ const ACTION_VIEWS = viewLabels(SysApprovalAction as unknown as AnyRec);
  * pages know how to describe.
  */
 const INBOX_DESTINATION: string = (() => {
-  const inbox = APPROVALS_CHILDREN[0];
-  if (!inbox) return 'missing';
-  if (inbox.type === 'component' && inbox.componentRef === 'approvals:inbox') return 'approval-centre';
-  if (inbox.type === 'object' && inbox.objectName === SysApprovalRequest.name) return 'request-object-list';
-  return `unpinned:${String(inbox.type)}`;
+  if (INBOX.type === 'component' && INBOX.componentRef === 'approvals:inbox') return 'approval-centre';
+  if (INBOX.type === 'object' && INBOX.objectName === SysApprovalRequest.name) return 'request-object-list';
+  return `unpinned:${String(INBOX.type)}`;
 })();
 
 /**
@@ -332,8 +352,9 @@ describe('the source facts the approvals navigation section rests on (#963)', ()
     expect(SRC_TEXT.length, 'src/ scan read nothing').toBeGreaterThan(100_000);
   });
 
-  it('the Approvals group holds exactly one item, labelled Inbox', () => {
-    expect(APPROVALS_CHILDREN.map((c) => c.label)).toEqual(['Inbox']);
+  it('the app carries exactly one approvals entry, labelled Inbox', () => {
+    const approvals = NAV_NODES.filter((n) => n.componentRef === 'approvals:inbox');
+    expect(approvals.map((c) => c.label)).toEqual(['Inbox']);
   });
 
   /**
@@ -349,7 +370,7 @@ describe('the source facts the approvals navigation section rests on (#963)', ()
    * base instead, so the entry cannot drift when either changes.
    */
   it('that item opens the approval centre by component ref, not the read-only object table', () => {
-    const inbox = APPROVALS_CHILDREN[0]!;
+    const inbox = INBOX;
     expect(inbox.type).toBe('component');
     expect(inbox.componentRef).toBe('approvals:inbox');
     expect(inbox.url, 'a raw console URL would rot on the next console release').toBeUndefined();
@@ -360,7 +381,7 @@ describe('the source facts the approvals navigation section rests on (#963)', ()
   });
 
   it('keeps the requiresObject guard, so the entry hides where approvals are not installed', () => {
-    expect(APPROVALS_CHILDREN[0]!.requiresObject).toBe(SysApprovalRequest.name);
+    expect(INBOX.requiresObject).toBe(SysApprovalRequest.name);
   });
 
   /**
@@ -376,7 +397,7 @@ describe('the source facts the approvals navigation section rests on (#963)', ()
    */
   it('the installed console actually registers that component ref', () => {
     const assets = join(REPO_ROOT, 'node_modules/@objectstack/console/dist/assets');
-    const ref = APPROVALS_CHILDREN[0]!.componentRef as string;
+    const ref = INBOX.componentRef as string;
     const bundles = readdirSync(assets).filter((f) => f.endsWith('.js'));
     expect(bundles.length, 'no console bundles found — this pin would pass vacuously').toBeGreaterThan(5);
     const registered = bundles.some((f) => readFileSync(join(assets, f), 'utf8').includes(ref));
@@ -394,7 +415,7 @@ describe('the source facts the approvals navigation section rests on (#963)', ()
     // era would name a view of an object this entry no longer opens — inert
     // metadata that reads, to anyone grepping, as though it still routes. The
     // pages' "That item pins no view of its own" sentence rests on this.
-    expect(APPROVALS_CHILDREN[0]!.viewName).toBeUndefined();
+    expect(INBOX.viewName).toBeUndefined();
   });
 
   /**
@@ -408,8 +429,15 @@ describe('the source facts the approvals navigation section rests on (#963)', ()
     expect(INBOX_DESTINATION).toBe('approval-centre');
   });
 
-  it('the Approvals group is collapsed by default', () => {
-    expect(APPROVALS_GROUP.expanded).toBeFalsy();
+  /**
+   * #1259 moved the entry out of its own collapsed "Approvals" group and into
+   * **My Work**, which is expanded on load — so the pending-approvals row is
+   * now visible without opening anything, and the pages may stop telling the
+   * reader to click a group open first.
+   */
+  it('the Inbox entry sits in My Work, which is open on load', () => {
+    expect(INBOX_GROUP.label).toBe('My Work');
+    expect(INBOX_GROUP.expanded).toBe(true);
   });
 
   it('zh-CN shows that item as 待我审批', () => {
