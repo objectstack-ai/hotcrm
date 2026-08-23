@@ -39,7 +39,6 @@ jobs:
             dist/ \
             package.json \
             pnpm-lock.yaml \
-            pnpm-workspace.yaml \
             README.md \
             LICENSE
       
