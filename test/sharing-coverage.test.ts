@@ -288,32 +288,11 @@ describe('who can read a case they do not own', () => {
 describe('the admin docs describe the sharing the app actually ships', () => {
   const doc = DOC(SHARING_DOC);
 
-  it('the built-in rules table lists exactly the shipped sharing rules', () => {
-    const documented = tableAfter(doc, '### Built-in sharing rules').map((r) => r[0]);
-    const shipped = sharingRules.map((r) => r.label as string);
-    expect(documented.slice().sort(), 'the docs’ rule table has drifted from src/sharing/')
-      .toEqual(shipped.slice().sort());
-  });
-
-  it('every documented rule states the object, access level and position it really grants', () => {
-    const byLabel = new Map(sharingRules.map((r) => [r.label as string, r]));
-    const labelOf = (name: string) => objectByName.get(name)?.label ?? name;
-    const bad: string[] = [];
-    for (const [label, objectLabel, access, grantee] of tableAfter(doc, '### Built-in sharing rules')) {
-      const rule = byLabel.get(label);
-      if (!rule) continue; // covered by the test above
-      if (objectLabel !== labelOf(rule.object)) {
-        bad.push(`${label}: doc says object "${objectLabel}", rule targets "${labelOf(rule.object)}"`);
-      }
-      if (access.toLowerCase() !== (rule.accessLevel ?? 'read')) {
-        bad.push(`${label}: doc says "${access}", rule grants "${rule.accessLevel ?? 'read'}"`);
-      }
-      if (rule.sharedWith?.type === 'position' && !grantee.includes(`\`${rule.sharedWith.value}\``)) {
-        bad.push(`${label}: doc does not name the position "${rule.sharedWith.value}"`);
-      }
-    }
-    expect(bad, `sharing-rule table drift:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
+  // The built-in rules table used to be checked by two rules right here, and
+  // they read the English page alone. They are now ONE per-locale block over
+  // {@link PAGES} — see 'the built-in sharing-rules table lists what the app
+  // ships, in every locale' further down (#809). Nothing was dropped: the
+  // English page is the `en` entry of that ledger.
 
   it('the positions block matches the shipped positions', () => {
     const block = doc.match(/## Layer 2 — Positions[\s\S]*?```\n([\s\S]*?)```/);
@@ -509,6 +488,8 @@ interface LocalePage {
    * locale rather than derived.
    */
   reachClaim: RegExp;
+  /** The heading the built-in sharing-rules table follows. */
+  rulesHeading: string;
   /** The heading the related-list table follows. */
   relatedListHeading: string;
   /** A related-list verdict reading "their own only" in this language. */
@@ -529,6 +510,7 @@ const PAGES: LocalePage[] = [
     },
     countSentence: /For the ([A-Za-z]+) parent-derived objects above/,
     reachClaim: /you see the rows whose parent you can see, and "can see" means every route/,
+    rulesHeading: '### Built-in sharing rules',
     relatedListHeading: '### A rule widens one object, not the records underneath it',
     saysOwnOnly: /own (deals |)only/i,
     saysFollowsAccount: /follows the account/i,
@@ -544,6 +526,7 @@ const PAGES: LocalePage[] = [
     },
     countSentence: /对于上面([一二三四五六七八九十]+)个由父级派生的对象/,
     reachClaim: /你看到的是那些父记录你能看到的行，而“能看到”指的是任何一条能让你直接打开该父记录的途径/,
+    rulesHeading: '### 内置共享规则',
     relatedListHeading: '### 一条规则放开的是一个对象，而不是它下面的记录',
     saysOwnOnly: /只有自己的/,
     saysFollowsAccount: /跟随客户/,
@@ -559,6 +542,7 @@ const PAGES: LocalePage[] = [
     },
     countSentence: /對於上面([一二三四五六七八九十]+)個由父層衍生的物件/,
     reachClaim: /你看到的是那些父記錄你能看到的列，而「能看到」指的是任何一條能讓你直接開啟該父記錄的途徑/,
+    rulesHeading: '### 內建共用規則',
     relatedListHeading: '### 一條規則放開的是一個物件，而不是它底下的記錄',
     saysOwnOnly: /只有自己的/,
     saysFollowsAccount: /跟隨客戶/,
@@ -788,6 +772,191 @@ describe('the OWD table lists every registered object, in every locale', () => {
           `${page.file} (${page.locale}) counts "${match?.[1]}" parent-derived objects; the ` +
             `stack ships ${parentDerived.length} (${parentDerived.join(', ')})`,
         ).toBe(expected);
+      });
+    });
+  }
+});
+
+/**
+ * The built-in sharing-rules table, on all three locale pages (#809).
+ *
+ * Layer 3's table is the admin's roster of what this app widens out of the box:
+ * one row per shipped rule, naming the object it targets, the access it grants
+ * and the position that receives it. Until now only the English page was held to
+ * it — the two rules this block replaces read {@link SHARING_DOC} alone, which
+ * is the same single-locale shape #710 closed for the OWD table and #791 for the
+ * related-list table one heading further down.
+ *
+ * ## This had stopped being dormant by the time it was widened
+ *
+ * The card asking for this (#809, filed 2026-08-05) had compared both Chinese
+ * tables against `src/sharing/` row by row and found them clean, and filed the
+ * gap as dormant. It did not stay dormant. On 2026-08-12 commit `4a0e1de`
+ * (#1096) added `case_unassigned_triage_sharing` **and** its English row —
+ * `| Unassigned Cases — Triage | Case | Edit | ... |` — and never touched the
+ * two Chinese pages. So widening these rules goes RED on `main`, on both Chinese
+ * pages, naming the rule they are missing.
+ *
+ * That red is the defect, not a fault in the guard, and it is the exact
+ * mechanism the card predicted one week before it fired: the English page is
+ * *forced* correct, the other two are merely watched by nobody. What the two
+ * pages are currently hiding is the app's only grant over records with **no
+ * owner at all** — `service_agent` gets EDIT on every open, unowned case. The
+ * two rows belong to the docs PR that follows this one; a docs correction riding
+ * along in here would make the guard and the correction unreviewable together.
+ *
+ * ## What is derived, and what is authored
+ *
+ * The ROW SET and every fact a row states are DERIVED from the compiled stack:
+ * the roster is `sharingRules` itself, the object cell must name the object the
+ * rule really targets, the Grants cell its real `accessLevel`, the To cell its
+ * real position. No fact about a rule is written down twice — adding or removing
+ * a sharing rule costs **zero** edits to any ledger here and three doc rows,
+ * which is the entire point of the block.
+ *
+ * Only the LANGUAGE is authored, each word exactly once:
+ *
+ *   - the object column reads {@link ROW_LABEL} on the Chinese pages — the same
+ *     ledger the OWD and related-list rules already read — and the stack's own
+ *     `label` on the English page, which is a derivation and so needs no entry;
+ *   - the Grants column needs {@link ACCESS_WORD}: three locales x two access
+ *     levels, the one genuinely new thing this card adds;
+ *   - the rule name and the position name are language-invariant (the Chinese
+ *     tables carry the English rule labels verbatim, and the position sits in
+ *     backticks), so both are compared directly against the stack, no ledger.
+ *
+ * That shape is deliberate about #549, which sits in the maintainer's inbox
+ * proposing to convert `crm_contract` to `controlled_by_parent`. A
+ * classification change moves {@link ACCOUNT_CHILD_COVERAGE} — one entry, one
+ * place — and nothing in this block has to move with it, because no per-object,
+ * per-locale fact about classification is copied in here. Closing a card about
+ * three tables drifting apart by adding three more locale-shaped copies would be
+ * a strange way to close it.
+ *
+ * ## Reverse verification (#809)
+ *
+ * Recorded with the measured output in the PR body. Two of the four directions
+ * needed no mutation at all: the roster rule is already red on `main` for both
+ * Chinese pages, which is the drift above.
+ */
+
+/**
+ * How each locale's Grants column spells an access level.
+ *
+ * `ShareAccessLevel` is a closed enum in `@objectstack/spec` (`read` | `edit`),
+ * so this map is complete today. An unmapped value throws on purpose — the same
+ * convention `owdCell` and `COUNT_WORD` use: a new access level has to be
+ * spelled out on all three pages, not quietly passed over by a rule that cannot
+ * name it.
+ */
+const ACCESS_WORD: Record<Locale, Record<string, string>> = {
+  en: { read: 'Read', edit: 'Edit' },
+  'zh-Hans': { read: '读取', edit: '编辑' },
+  'zh-Hant': { read: '讀取', edit: '編輯' },
+};
+
+describe('the built-in sharing-rules table lists what the app ships, in every locale', () => {
+  /**
+   * The word this page's object column uses for `name`.
+   *
+   * English is DERIVED from the stack's own `label` — the rule this block
+   * replaces always read it that way, and a derivation beats a ledger. The two
+   * Chinese pages translate object labels themselves (the app ships no zh-Hant
+   * pack, and the zh-Hans page translates independently of the one it does
+   * ship), so they are answered from {@link ROW_LABEL}, the ledger the OWD table
+   * already holds them to. One entry per object per locale, in one file.
+   */
+  const objectWord = (name: string, locale: Locale): string | undefined =>
+    locale === 'en'
+      ? ((objectByName.get(name)?.label as string | undefined) ?? name)
+      : ROW_LABEL[name]?.[locale];
+
+  it('the compiled stack still has a rule roster to compare against', () => {
+    // Anti-vacuum, the same one the OWD ledger opens with. Every rule below
+    // compares a page against `sharingRules`; a stack that compiled to zero
+    // rules would let a table of any shape pass by matching nothing at all.
+    expect(
+      sharingRules.length,
+      'fewer than eight sharing rules in the compiled stack — either the app genuinely ' +
+        'stopped shipping them (then this floor moves together with all three tables, ' +
+        'knowingly) or the derivation broke and every rule below is comparing empty sets',
+    ).toBeGreaterThanOrEqual(8);
+  });
+
+  for (const page of PAGES) {
+    describe(page.file, () => {
+      const rowsOf = () => tableAfter(DOC(page.file), page.rulesHeading, page.file);
+
+      it('the built-in rules table still parses', () => {
+        // Anti-vacuum #2: a table that stopped parsing would let both rules
+        // below pass over an empty row list.
+        expect(
+          rowsOf().length,
+          `no built-in rules row parsed out of ${page.file} after "${page.rulesHeading}" — the ` +
+            'table moved, changed shape, or lost its heading, and the two rules below have ' +
+            'gone blind',
+        ).toBeGreaterThan(0);
+      });
+
+      it('lists exactly the sharing rules this app ships', () => {
+        const documented = rowsOf().map((cells) => cells[0]);
+        const shipped = sharingRules.map((r) => r.label as string);
+        const missing = shipped.filter((label) => !documented.includes(label));
+        const ghost = documented.filter((label) => !shipped.includes(label));
+        expect(
+          { missing, ghost },
+          `${page.file} (${page.locale}): the built-in sharing-rules table has drifted from ` +
+            'src/sharing/.\n' +
+            `  shipped, but this page lists no row for it: ${missing.join(', ') || '(none)'}\n` +
+            `  row naming a rule this app does not ship:   ${ghost.join(', ') || '(none)'}\n` +
+            'This table is the admin’s roster of what is widened out of the box, on the app’s ' +
+            'security page. A missing row hides a live grant from every reader of that ' +
+            'language; a ghost row promises one nobody has.',
+        ).toEqual({ missing: [], ghost: [] });
+      });
+
+      it('every row states the object, access level and position it really grants', () => {
+        const byLabel = new Map(sharingRules.map((r) => [r.label as string, r]));
+        const bad: string[] = [];
+        for (const [label, objectCell, accessCell, granteeCell] of rowsOf()) {
+          const rule = byLabel.get(label);
+          if (!rule) continue; // reported by the roster rule above
+          const expectedObject = objectWord(rule.object as string, page.locale);
+          if (expectedObject === undefined) {
+            bad.push(
+              `${label}: no ${page.locale} label for "${rule.object}" — add it to ROW_LABEL, ` +
+                'the same entry the OWD table reads',
+            );
+          } else if (objectCell !== expectedObject) {
+            bad.push(
+              `${label}: row says object "${objectCell}", the rule targets "${expectedObject}"`,
+            );
+          }
+          const access = (rule.accessLevel ?? 'read') as string;
+          const expectedAccess = ACCESS_WORD[page.locale][access];
+          if (!expectedAccess) {
+            throw new Error(
+              `${rule.name} grants '${access}', which this ledger cannot spell — add it to ` +
+                'ACCESS_WORD for all three locales, and to the Grants column on all three pages',
+            );
+          }
+          if (accessCell !== expectedAccess) {
+            bad.push(`${label}: row grants "${accessCell}", the rule grants "${expectedAccess}"`);
+          }
+          if (
+            rule.sharedWith?.type === 'position' &&
+            !granteeCell.includes(`\`${rule.sharedWith.value}\``)
+          ) {
+            bad.push(`${label}: row does not name the position \`${rule.sharedWith.value}\``);
+          }
+        }
+        expect(
+          bad,
+          `${page.file} (${page.locale}): built-in sharing-rules table drift:\n  ` +
+            `${bad.join('\n  ')}\n` +
+            'The rows are the app’s security promise in this language. Re-take them against ' +
+            'src/sharing/ — do not edit ACCESS_WORD or ROW_LABEL to match a row that is wrong.',
+        ).toEqual([]);
       });
     });
   }
