@@ -116,18 +116,44 @@ export const OpportunityDetailPage: Page = {
                     id: 'opp_details',
                     label: 'Opportunity Details',
                     properties: {
-                      columns: 2,
-                      layout: 'auto',
+                      // `columns` is a STRING enum ('1'|'2'|'3'|'4') in
+                      // @objectstack/spec 17; the number form was rejected by the
+                      // props schema and only survived because `properties` is an
+                      // open bag. `layout` is gone entirely (removed in spec
+                      // 17.0.0, #6946 / ADR-0087 D2) — the body is chosen by what
+                      // you author, so the key selected nothing.
+                      columns: '2',
+                      // A section lists only the fields it is ACTUALLY responsible
+                      // for — never one the highlights strip above already shows,
+                      // and never the record's title field (#1211).
+                      //
+                      // Measured in the shipped console (17.1.0,
+                      // plugins-views bundle → objectui `RecordDetailsRenderer`):
+                      // a mounted `record:highlights` registers its field names in
+                      // HighlightFieldsContext, and `record:details` drops every
+                      // registered name from its sections; it then drops the first
+                      // non-empty title candidate (primaryField → name → full_name
+                      // → title → subject → …) because the page H1 already shows
+                      // it. `DetailSection` renders NOTHING at all when every field
+                      // it is left with is empty, so a section built only from
+                      // duplicates disappears silently — which is how this tab came
+                      // to author fourteen fields and render two.
+                      //
+                      // So `name` / `crm_account` / `owner_id` (header + strip) and
+                      // `amount` / `close_date` / `probability` / `expected_revenue`
+                      // (strip) are NOT repeated here. Object-level
+                      // `highlightFields` is a different list and is not consulted
+                      // by this component — `stage` sits in it and still renders.
                       sections: [
                         {
                           name: 'info',
                           label: 'Opportunity Information',
-                          fields: ['name', 'crm_account', 'owner_id', 'type', 'lead_source', 'crm_campaign'],
+                          fields: ['type', 'lead_source', 'crm_campaign'],
                         },
                         {
                           name: 'crm_forecast',
                           label: 'Stage & Forecast',
-                          fields: ['stage', 'probability', 'amount', 'expected_revenue', 'close_date', 'forecast_category'],
+                          fields: ['stage', 'forecast_category'],
                         },
                         {
                           name: 'description',
