@@ -33,7 +33,43 @@ import { REPO_ROOT } from './helpers/repo-root';
  */
 
 /** Every tree the gate insists on finding, or it exits before running a check. */
-const REQUIRED_TREES = ['src', 'test', 'e2e', 'scripts', 'content', '.changeset'];
+const REQUIRED_TREES = [
+  'src',
+  'test',
+  'e2e',
+  'scripts',
+  'content',
+  '.changeset',
+  'docs',
+  '.github',
+  '.claude',
+];
+
+/**
+ * Root-level files the gate insists on finding, for the same reason (#838).
+ * The header check does not judge them — they are outside `allTs`, which is
+ * derived from `SCANNED` — but the gate exits before any check runs if one is
+ * absent, so this sandbox has to materialise them. Kept in step with
+ * `ROOT_TEXT_FILES` in the gate.
+ */
+const REQUIRED_ROOT_FILES = [
+  '.gitignore',
+  '.npmrc',
+  '.nvmrc',
+  '.stackblitzrc',
+  'AGENTS.md',
+  'CHANGELOG.md',
+  'CONTRIBUTING.md',
+  'LICENSE',
+  'README.legacy.md',
+  'README.md',
+  'objectstack.config.ts',
+  'objectstack.manifest.json',
+  'package.json',
+  'playwright.config.ts',
+  'tsconfig.json',
+  'vitest.config.ts',
+];
 
 /** The four code trees the header check judges — all of them, not just `src/`. */
 const CODE_TREES = ['src', 'test', 'e2e', 'scripts'];
@@ -47,6 +83,7 @@ let root: string;
 beforeEach(() => {
   root = mkdtempSync(join(tmpdir(), 'hygiene-header-'));
   for (const dir of REQUIRED_TREES) mkdirSync(join(root, dir), { recursive: true });
+  for (const file of REQUIRED_ROOT_FILES) writeFileSync(join(root, file), 'placeholder\n');
   copyFileSync(join(REPO_ROOT, GATE), join(root, GATE));
 });
 

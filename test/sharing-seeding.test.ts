@@ -2,6 +2,8 @@
 
 import { describe, it, expect } from 'vitest';
 import { compileCelToFilter } from '@objectstack/formula';
+import { ObjectQL } from '@objectstack/objectql';
+import { InMemoryDriver } from '@objectstack/driver-memory';
 import stack from '../objectstack.config';
 import { COUNTRY_TERRITORY, TERRITORY_OPTIONS, territoryFor } from '../src/objects/_territory';
 
@@ -32,6 +34,19 @@ import { COUNTRY_TERRITORY, TERRITORY_OPTIONS, territoryFor } from '../src/objec
  * than a regex over the CEL source or a re-implementation of it. A platform
  * upgrade that narrows what compiles fails here, at PR time, instead of in a
  * log nobody reads.
+ *
+ * ### Compiling is not executing (#695)
+ *
+ * Everything above stops at the compiler. A condition that compiles can still
+ * be a filter the *configured driver* refuses to run, and the failure looks
+ * identical from the boot log: `plugin-sharing`'s rule evaluator catches the
+ * driver error, warns, and carries on, so the backfill still reports
+ * `reconciled: 9` while the rule grants nothing. Two rules shipped that way.
+ *
+ * `every seeded rule EXECUTES on the configured driver` below closes that gap
+ * by running each rule's compiled filter through a real ObjectQL engine on the
+ * real driver and asserting on **grants materialised** — the records the rule
+ * reaches — rather than on an error the evaluator swallows anyway.
  *
  * ### The measured operator matrix (17.0.0-rc.1)
  *
@@ -352,5 +367,269 @@ describe('what a sharing condition may contain (platform compiler, measured)', (
     // with the same `has()` shape that #630 used for validation predicates.
     expect(compiles('record.type == "customer"')).toBe(true);
     expect(compiles('has(record.type) && record.type == "customer"')).toBe(false);
+  });
+});
+
+/**
+ * From "compiles" to "the configured driver returns rows for it" (#695).
+ *
+ * ### The defect this block exists to catch
+ *
+ * `opportunity_sales_sharing` and `opportunity_executive_sharing` are authored
+ * as `!(record.stage in [...]) && record.amount >= …`. That compiled cleanly —
+ * every assertion above was green — and then the driver refused the filter it
+ * compiled to:
+ *
+ *     ERROR Find operation failed {"object":"crm_opportunity",
+ *       "error":{"message":"unknown top level operator: $not"}}
+ *     WARN  [sharing-rule] criteria query failed {"rule":"opportunity_executive_sharing", …}
+ *     WARN  [sharing-rule] criteria query failed {"rule":"opportunity_sales_sharing", …}
+ *     INFO  SharingServicePlugin: boot rule backfill done {"rules":9,"reconciled":9,"ms":8}
+ *
+ * `reconciled: 9` — success, reported over two rules that granted nothing to
+ * anybody. The evaluator catches the driver error and moves on, which is why
+ * **the assertion here is on grants materialised, not on a thrown error**: an
+ * error is exactly the thing production swallows, so a test that waits for one
+ * is testing the harness rather than the app.
+ *
+ * ### What each rule gets
+ *
+ * A hand-authored witness: one record the rule MUST reach, and records it must
+ * NOT. Those are deliberate statements of intent — "a large open deal is what
+ * leadership is supposed to see" — not derived from the filter, because
+ * deriving them from the filter would re-implement the matcher and could only
+ * ever agree with itself. The rule's compiled filter is then run against a real
+ * ObjectQL engine on the real driver, and must return **exactly** the witness.
+ *
+ * That catches both halves of the failure at PR time: a filter the driver
+ * cannot execute (it throws, so no rows come back) and a filter it executes
+ * into nothing (the silent half — it returns zero rows and the old boot log
+ * would still have said `reconciled`).
+ *
+ * ### Measured on `@objectstack/driver-memory` 17.1.0 — the card's half is dead
+ *
+ * `$not` no longer reaches mingo: the driver declares `$and`/`$or`/`$not` and
+ * refuses anything else with a coded `INVALID_FILTER` instead of passing it
+ * through. Measured directly, both the authored form and the portable
+ * `!=`-chain compile AND execute, and both return the same single row — so the
+ * `unknown top level operator: $not` failure does not reproduce on 17.1.0 and
+ * the rules' authoring is left exactly as it is. This block is what makes that
+ * a measurement someone can re-run rather than a claim, and what makes the
+ * *next* such regression fail here instead of in a boot log.
+ */
+
+/** Field types come from the app's own metadata; validation baggage does not. */
+function columnsFor(rule: AnyRec, names: string[]): AnyRec {
+  const declared = objectByName.get(rule.object as string)?.fields ?? {};
+  const shape: AnyRec = { id: { type: 'text' } };
+  for (const name of names) shape[name] = { type: declared[name]?.type ?? 'text' };
+  return shape;
+}
+
+/**
+ * One record each rule must reach, and records it must not.
+ *
+ * Persistence is off: the memory driver otherwise writes
+ * `.objectstack/data/memory-driver.json` and would carry rows between runs.
+ */
+const RULE_WITNESSES: Record<string, { reaches: AnyRec; misses: AnyRec[] }> = {
+  account_team_sharing: {
+    reaches: { type: 'customer', is_active: true },
+    misses: [{ type: 'prospect', is_active: true }, { type: 'customer', is_active: false }],
+  },
+  north_america_territory: {
+    reaches: { territory: 'na' },
+    misses: [{ territory: 'emea' }, { territory: 'other' }],
+  },
+  europe_territory: {
+    reaches: { territory: 'emea' },
+    misses: [{ territory: 'na' }, { territory: 'other' }],
+  },
+  campaign_leadership_manager: {
+    reaches: { status: 'planning', is_active: true },
+    misses: [{ status: 'completed', is_active: true }, { status: 'planning', is_active: false }],
+  },
+  campaign_leadership_director: {
+    reaches: { status: 'in_progress', is_active: true },
+    misses: [{ status: 'completed', is_active: true }, { status: 'in_progress', is_active: false }],
+  },
+  case_escalation_sharing: {
+    reaches: { priority: 'critical', is_closed: false },
+    misses: [{ priority: 'low', is_closed: false }, { priority: 'critical', is_closed: true }],
+  },
+  case_director_sharing: {
+    reaches: { priority: 'critical', is_closed: false },
+    misses: [{ priority: 'high', is_closed: false }, { priority: 'critical', is_closed: true }],
+  },
+  case_unassigned_triage_sharing: {
+    // `owner_id == null` is the one rule whose witness turns on a null, and
+    // null semantics are exactly where drivers have been measured to disagree
+    // (objectstack#11065). The assertion is on the ROW that comes back, never
+    // on a null value — an unowned open case is reachable, an owned one is not.
+    reaches: { owner_id: null, is_closed: false },
+    misses: [{ owner_id: 'usr_1', is_closed: false }, { owner_id: null, is_closed: true }],
+  },
+  opportunity_sales_sharing: {
+    reaches: { stage: 'proposal', amount: 250000 },
+    misses: [
+      { stage: 'closed_won', amount: 250000 },
+      { stage: 'closed_lost', amount: 250000 },
+      { stage: 'proposal', amount: 500 },
+    ],
+  },
+  opportunity_executive_sharing: {
+    reaches: { stage: 'negotiation', amount: 500000 },
+    misses: [{ stage: 'closed_won', amount: 500000 }, { stage: 'proposal', amount: 100 }],
+  },
+};
+
+describe('every seeded rule EXECUTES on the configured driver, not merely compiles', () => {
+  it('every seeded rule has a witness, and no witness is stale', () => {
+    // Guard the guard, both directions. Without the first, a rule added without
+    // a witness is silently unchecked — which is the shape of this very bug.
+    // Without the second, a renamed or retired rule leaves a witness that
+    // asserts nothing while still reading like coverage.
+    const seeded = sharingRules.filter((rule) => seedOutcome(rule).seeded).map((r) => r.name as string);
+    const missing = seeded.filter((name) => !(name in RULE_WITNESSES));
+    expect(
+      missing,
+      'These rules seed but nothing proves the driver can execute them. Add a witness ' +
+        '— the record the rule is supposed to reach — to RULE_WITNESSES:\n  ' + missing.join('\n  '),
+    ).toEqual([]);
+
+    const stale = Object.keys(RULE_WITNESSES).filter((name) => !seeded.includes(name));
+    expect(stale, `witnesses for rules that no longer seed:\n  ${stale.join('\n  ')}`).toEqual([]);
+  });
+
+  it.each(Object.keys(RULE_WITNESSES).map((name) => [name] as const))(
+    '%s materialises exactly the records it declares',
+    async (name) => {
+      const rule = sharingRules.find((r) => r.name === name);
+      expect(rule, `rule "${name}" is gone from the stack`).toBeDefined();
+
+      const compiled = compileCelToFilter(rule!.condition ?? '', { variables: {} });
+      expect(compiled.ok, `"${name}" no longer compiles`).toBe(true);
+
+      const witness = RULE_WITNESSES[name];
+      const columns = Object.keys(Object.assign({}, witness.reaches, ...witness.misses));
+      const ql = await ObjectQL.create({
+        datasources: { default: new InMemoryDriver({ persistence: false }) },
+        objects: {
+          [rule!.object as string]: { name: rule!.object, fields: columnsFor(rule!, columns) },
+        } as never,
+      });
+
+      try {
+        const api = ql.createContext({ isSystem: true });
+        const repo = () => api.object(rule!.object as string);
+        const reached = (await repo().insert(witness.reaches as never)) as AnyRec;
+        for (const miss of witness.misses) await repo().insert(miss as never);
+
+        // No try/catch: a driver that cannot execute this filter throws, and
+        // that throw IS the failure — the boot path swallows it, this does not.
+        const rows = (await repo().find({
+          where: (compiled as unknown as { filter: unknown }).filter,
+        })) as AnyRec[];
+
+        expect(
+          rows.map((r) => r.id),
+          `"${name}" is seeded and compiles, but on this driver it grants ${rows.length} ` +
+            `record(s) instead of the one it declares. A rule that matches nothing still ` +
+            `reports "reconciled" at boot — the positions it names simply see nothing.`,
+        ).toEqual([reached.id]);
+      } finally {
+        await ql.close();
+      }
+    },
+  );
+});
+
+/**
+ * The operator matrix, extended from "compiles" to "the driver runs it" (#695).
+ *
+ * The block above pins what the platform's *compiler* accepts. This one pins
+ * what the *driver* does with the result, on the same predicates, against a
+ * fixed three-row fixture — so the two halves of "a sharing rule works" are
+ * measured separately and a platform upgrade that breaks either one names
+ * which.
+ *
+ * The expected row sets are MEASURED against `driver-memory` 17.1.0, not
+ * reasoned about — including the two null-sensitive rows, which is the family
+ * objectstack#11065 records drivers disagreeing on (`avg` over a boolean
+ * answers `null` on memory and a number on sqlite). Note what was measured
+ * here: `Cyan` has a null `type`, and both `!= "customer"` and
+ * `!(… == "customer")` DO return it. That is this driver's answer, written
+ * down; if another driver answers differently, that difference belongs in a
+ * card, not in a `??` in this file.
+ */
+describe('what the configured driver does with a compiled condition (measured)', () => {
+  const FIXTURE = [
+    { name: 'Acme', type: 'customer', is_active: true, billing_country: 'US', annual_revenue: 5000, territory: 'na' },
+    { name: 'Beta', type: 'prospect', is_active: false, billing_country: 'DE', annual_revenue: 500, territory: 'emea' },
+    { name: 'Cyan', type: null, is_active: true, billing_country: 'JP', annual_revenue: 1000, territory: 'other' },
+  ];
+
+  const makeAccounts = () =>
+    ObjectQL.create({
+      datasources: { default: new InMemoryDriver({ persistence: false }) },
+      objects: {
+        crm_account: {
+          name: 'crm_account',
+          fields: {
+            id: { type: 'text' }, name: { type: 'text' }, type: { type: 'select' },
+            is_active: { type: 'boolean' }, billing_country: { type: 'text' },
+            annual_revenue: { type: 'number' }, territory: { type: 'select' },
+          },
+        },
+      } as never,
+    });
+
+  it.each([
+    ['equality + conjunction', 'record.type == "customer" && record.is_active == true', ['Acme']],
+    ['membership on a flat field', 'record.billing_country in ["US", "CA", "MX"]', ['Acme']],
+    ['inequality', 'record.type != "customer"', ['Beta', 'Cyan']],
+    ['ordering', 'record.annual_revenue >= 1000', ['Acme', 'Cyan']],
+    ['disjunction', 'record.billing_country == "US" || record.billing_country == "CA"', ['Acme']],
+    ['negation', '!(record.type == "customer")', ['Beta', 'Cyan']],
+    ['null comparison', 'record.type == null', ['Cyan']],
+    ['string predicate', 'record.name.startsWith("A")', ['Acme']],
+    // The shape this card was filed about: a negated membership test. It is
+    // what both opportunity leadership rules compile to, and on 17.1.0 the
+    // driver executes it — `$not` is a declared combinator now, not a
+    // passthrough to mingo.
+    ['negated membership (the #695 shape)', '!(record.territory in ["emea", "other"])', ['Acme']],
+  ])('executes: %s', async (_label, source, expected) => {
+    const compiled = compileCelToFilter(source, { variables: {} });
+    expect(compiled.ok, `${_label} no longer compiles`).toBe(true);
+
+    const ql = await makeAccounts();
+    try {
+      const api = ql.createContext({ isSystem: true });
+      for (const row of FIXTURE) await api.object('crm_account').insert(row as never);
+      const rows = (await api.object('crm_account').find({
+        where: (compiled as unknown as { filter: unknown }).filter,
+      })) as AnyRec[];
+      expect(rows.map((r) => r.name as string).sort()).toEqual([...expected].sort());
+    } finally {
+      await ql.close();
+    }
+  });
+
+  it('a filter the driver cannot execute is refused loudly, not answered wrongly', async () => {
+    // The property the whole block leans on: when this driver cannot run a
+    // filter it THROWS a coded error rather than dropping the branch and
+    // widening the result set. That is what makes "the rows came back" a
+    // trustworthy signal above — and it is the platform behaviour that
+    // replaced the mingo passthrough this card was filed against.
+    const ql = await makeAccounts();
+    try {
+      const api = ql.createContext({ isSystem: true });
+      for (const row of FIXTURE) await api.object('crm_account').insert(row as never);
+      await expect(
+        api.object('crm_account').find({ where: { $nor: [{ type: 'customer' }] } as never }),
+      ).rejects.toThrow(/\$nor/);
+    } finally {
+      await ql.close();
+    }
   });
 });

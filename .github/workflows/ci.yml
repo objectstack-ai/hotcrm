@@ -37,7 +37,7 @@ jobs:
       - name: Check the StackBlitz npm lockfile is in sync
         run: node scripts/check-stackblitz-lock.mjs
 
-      - name: Source hygiene (console.log / TODO / file size)
+      - name: Source hygiene (scripts/check-source-hygiene.mjs)
         run: node scripts/check-source-hygiene.mjs
 
       # The app's headline claim ("the whole CRM fits in one context window") is
