@@ -1277,8 +1277,6 @@ export const zhCN: TranslationData = {
       navigation: {
         group_activity: { label: '活动' },
         nav_event: { label: '活动' },
-        nav_event_calendar: { label: '日历' },
-        nav_event_history: { label: '互动历史' },
         nav_activity_dashboard: { label: '销售活动' },
         nav_my_calendar: { label: '我的日历' },
         nav_home: { label: '首页' },
@@ -1289,9 +1287,9 @@ export const zhCN: TranslationData = {
         nav_account_workbench: { label: '客户工作台' },
         nav_contact: { label: '联系人' },
         nav_opportunity: { label: '商机' },
-        nav_pipeline: { label: '销售管道' },
         nav_quote: { label: '报价' },
         nav_contract: { label: '合同' },
+        nav_product: { label: '产品' },
         nav_sales_dashboard: { label: '销售业绩' },
 
         group_work: { label: '我的工作' },
@@ -1299,11 +1297,10 @@ export const zhCN: TranslationData = {
         nav_my_deals: { label: '我的商机' },
         nav_my_leads: { label: '我的线索' },
         nav_my_cases: { label: '我的工单' },
-        nav_all_tasks: { label: '全部任务' },
+        nav_approval_requests: { label: '待我审批' },
 
         group_marketing: { label: '市场营销' },
         nav_campaign: { label: '营销活动' },
-        nav_product: { label: '产品' },
 
         group_service: { label: '服务' },
         nav_case: { label: '服务案例' },
@@ -1316,9 +1313,6 @@ export const zhCN: TranslationData = {
         nav_report_pipeline_coverage: { label: '管道覆盖率' },
         nav_report_lead_inflow: { label: '线索流入' },
         nav_report_sla: { label: 'SLA 达成' },
-
-        group_approvals: { label: '审批' },
-        nav_approval_requests: { label: '待我审批' },
       },
     },
   },

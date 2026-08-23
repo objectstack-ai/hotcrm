@@ -1348,8 +1348,6 @@ export const esES: TranslationData = {
       navigation: {
         group_activity: { label: 'Actividad' },
         nav_event: { label: 'Eventos' },
-        nav_event_calendar: { label: 'Calendario' },
-        nav_event_history: { label: 'Historial de Interacciones' },
         nav_activity_dashboard: { label: 'Actividad de Ventas' },
         nav_my_calendar: { label: 'Mi Calendario' },
         nav_home: { label: 'Inicio' },
@@ -1360,9 +1358,9 @@ export const esES: TranslationData = {
         nav_account_workbench: { label: 'Mesa de Trabajo de Cuentas' },
         nav_contact: { label: 'Contactos' },
         nav_opportunity: { label: 'Oportunidades' },
-        nav_pipeline: { label: 'Pipeline' },
         nav_quote: { label: 'Cotizaciones' },
         nav_contract: { label: 'Contratos' },
+        nav_product: { label: 'Productos' },
         nav_sales_dashboard: { label: 'Rendimiento de Ventas' },
 
         group_work: { label: 'Mi Trabajo' },
@@ -1370,7 +1368,7 @@ export const esES: TranslationData = {
         nav_my_deals: { label: 'Mis Negocios' },
         nav_my_leads: { label: 'Mis Prospectos' },
         nav_my_cases: { label: 'Mis Casos' },
-        nav_all_tasks: { label: 'Todas las Tareas' },
+        nav_approval_requests: { label: 'Bandeja de Entrada' },
 
         group_service: { label: 'Servicio' },
         nav_case: { label: 'Casos' },
@@ -1379,7 +1377,6 @@ export const esES: TranslationData = {
 
         group_marketing: { label: 'Marketing' },
         nav_campaign: { label: 'Campañas' },
-        nav_product: { label: 'Productos' },
 
         group_insights: { label: 'Análisis' },
         nav_crm_dashboard: { label: 'Resumen CRM' },
@@ -1387,9 +1384,6 @@ export const esES: TranslationData = {
         nav_report_pipeline_coverage: { label: 'Cobertura del Pipeline' },
         nav_report_lead_inflow: { label: 'Entrada de Prospectos' },
         nav_report_sla: { label: 'Cumplimiento de SLA' },
-
-        group_approvals: { label: 'Aprobaciones' },
-        nav_approval_requests: { label: 'Bandeja de Entrada' },
       },
     },
   },

@@ -46,29 +46,32 @@ Click the **app launcher** (top-left grid icon) to switch between apps:
 - **HotCRM** — the main app with all CRM functionality.
 - **Admin** — for system administrators.
 
-Inside HotCRM, the left nav opens with one pinned item — **Home**, which is the **Executive Overview** dashboard — and everything else sits in seven groups:
+Inside HotCRM, the left nav opens with one pinned item — **Home**, which is the **Executive Overview** dashboard — and everything else sits in six groups:
 
 | Group | Contents |
 | --- | --- |
-| **Sales** | Leads, Accounts, Account Workbench, Contacts, Opportunities, Pipeline, Quotes, Contracts, Sales Performance |
-| **My Work** | My Tasks, My Deals, My Leads, My Cases, My Calendar, All Tasks |
-| **Activity** | Events, Calendar, Interaction History, Sales Activity |
-| **Marketing** | Campaigns, Products |
+| **Sales** | Leads, Accounts, Account Workbench, Contacts, Opportunities, Quotes, Contracts, Products, Sales Performance |
+| **My Work** | My Tasks, My Deals, My Leads, My Cases, My Calendar, Inbox |
+| **Activity** | Events, Sales Activity |
+| **Marketing** | Campaigns |
 | **Service** | Cases, Knowledge, Service Overview |
 | **Insights** | CRM Overview, Forecasts, Pipeline Coverage, Lead Inflow, SLA Performance |
-| **Approvals** | Inbox |
 
-**Marketing**, **Insights** and **Approvals** are collapsed when the app loads — only **Sales**, **My Work**, **Activity** and **Service** open themselves. Click a group open before deciding something isn't there.
+**Marketing** and **Insights** are collapsed when the app loads — only **Sales**, **My Work**, **Activity** and **Service** open themselves. Click a group open before deciding something isn't there.
 
-Four group names this page used to list are not in the app at all, and several item names sit somewhere other than where it put them:
+One sidebar row per destination is deliberate. Where an object offers several ways of looking at the same records, those live as tabs across the top of that object's list page, not as extra rows in the nav — so the sidebar stays short enough to scan.
 
-- *Products* is not a group. The catalog is the **Products** item under **Marketing** — see [Marketing](/docs/marketing/index).
-- *Activities* is not a group; the real one is **Activity**, and tasks are not in it. `crm_task` reaches the sidebar as **My Tasks** and **All Tasks**, both under **My Work**.
+Five group names this page used to list are not in the app at all, and several item names sit somewhere other than where it put them:
+
+- *Products* is not a group. The catalog is the **Products** item under **Sales**, where the revenue master data belongs — see [Products](/docs/revenue/products).
+- *Approvals* is no longer a group either. Its one item, **Inbox**, is a personal queue, so it now sits under **My Work** with the rest of what is waiting on you — see [Approvals](/docs/revenue/approvals).
+- Four item names this page used to list have left the sidebar without leaving the product — each is now a tab on the list page it belongs to. *Pipeline* is the pipeline tab on **Opportunities**; *Calendar* and *Interaction History* are tabs on **Events**; *All Tasks* is the first tab on the page **My Tasks** opens.
+- *Activities* is not a group; the real one is **Activity**, and tasks are not in it. `crm_task` reaches the sidebar as **My Tasks**, under **My Work**.
 - *Analytics* is not a group; the real one is **Insights**. Nothing in it is called *Dashboards* or *Reports* — the dashboard and the three reports it pins are listed above under their own names.
 - *AI* is not a group, and no sidebar item is called *Copilot* or *Knowledge Bases*. The Copilot is the right-side chat panel on every page (section 6 below), and the knowledge articles are **Knowledge** under **Service**.
 - *Knowledge Base* is not a label this app carries. The **Service** entry is **Knowledge**, and the service dashboard beside it is **Service Overview** — see [Service](/docs/service/index).
 - *Campaign Members* is not a sidebar item. Campaign membership is reached from the campaign detail page or from global search — see [Campaign Members](/docs/marketing/campaign-members).
-- *Approval Requests* and *Action History* are not items either: **Inbox** is the only entry under **Approvals**. The approval audit trail is real data — the approvals plugin stores it as `sys_approval_action` — but no navigation entry in this app opens it.
+- *Approval Requests* and *Action History* are not items either: **Inbox** is the only approvals entry the app carries. The approval audit trail is real data — the approvals plugin stores it as `sys_approval_action` — but no navigation entry in this app opens it.
 
 ## 3. Your first lead
 
