@@ -34,8 +34,19 @@ import { REPO_ROOT } from './helpers/repo-root';
  * makes a throwaway directory its root — the same technique
  * `source-hygiene-scan-surface.test.ts` uses. That runs the real, unmodified
  * gate, with its real committed ceilings, against fixtures we control. The
- * script imports nothing outside `node:` builtins, so the sandbox needs no
- * `node_modules`.
+ * script imports nothing outside `node:` builtins and its own
+ * `scripts/lib/main-module.mjs` (copied alongside it by `beforeEach`), so the
+ * sandbox needs no `node_modules`.
+ *
+ * That sandbox lives under `mkdtempSync(tmpdir())`, which on macOS is
+ * `/var/folders/…` — and `/var` is a symlink to `/private/var`. Until #1252 the
+ * gate's own run-when-main guard compared `import.meta.url` (the realpath)
+ * against `pathToFileURL(process.argv[1])` (the path as spelled), so every case
+ * below spawned a gate that never called `main()`, printed zero bytes and
+ * exited 0 — ten of the fifteen failing as `SyntaxError: Unexpected end of JSON
+ * input` on any macOS checkout, and none of them on Linux CI where `/tmp` is a
+ * real directory. The guard now canonicalises both sides; `script-main-guard.test.ts`
+ * holds the whole class of scripts to it.
  *
  * ## The stripper's equivalence proof is a hand run, recorded here
  *
@@ -60,6 +71,9 @@ import { REPO_ROOT } from './helpers/repo-root';
  */
 
 const GATE = 'scripts/check-source-token-ratchet.mjs';
+
+/** First-party modules the gate imports — the sandbox copy needs them too. */
+const GATE_DEPENDENCIES = ['scripts/lib/main-module.mjs'];
 
 /** Every directory the gate insists on finding, so a fixture run is not a missing-dir run. */
 const LAYER_DIRS = [
@@ -93,6 +107,10 @@ beforeEach(() => {
     mkdirSync(join(root, dir), { recursive: true });
   }
   copyFileSync(join(REPO_ROOT, GATE), join(root, GATE));
+  for (const dep of GATE_DEPENDENCIES) {
+    mkdirSync(dirname(join(root, dep)), { recursive: true });
+    copyFileSync(join(REPO_ROOT, dep), join(root, dep));
+  }
 });
 
 afterEach(() => {

@@ -113,8 +113,10 @@
 
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 import process from 'node:process';
+
+import { isMainModule } from './lib/main-module.mjs';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 
@@ -495,4 +497,10 @@ function main() {
 // are importable so `test/source-token-ratchet.test.ts` can cross-check the
 // stripping rule against the TypeScript scanner without spawning 300KB
 // fixtures for every case — importing must not run the gate or call exit().
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();
+//
+// The comparison lives in `scripts/lib/main-module.mjs` and is never
+// hand-rolled here: this line used to read
+// `import.meta.url === pathToFileURL(process.argv[1]).href`, which is false for
+// every invocation through a symlinked path — the gate then measured nothing
+// and exited 0 (#1252). See that file for the measurement.
+if (isMainModule(import.meta.url)) main();
