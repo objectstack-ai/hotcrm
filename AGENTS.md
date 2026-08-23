@@ -75,11 +75,20 @@ hotcrm/
       Neither throws. This repo has already paid for that once — see
       `.changeset/hook-query-where-not-filter.md`. `HookQuery` in `src/objects/_hook-api.ts`
       deliberately omits the alias so the mistake is a compile error.
-      Other surfaces are **not** governed by this rule and have their own spelling: a
-      `*.flow.ts` node `config` takes `filter:` (44 occurrences across 17 of the 21 flow
-      files; `where:` in none), and a page component config takes `filter:` in the
-      AST-array form (`src/pages/lead_detail.page.ts:217`). Do not "fix" one surface's
-      spelling into another's.
+      Other surfaces are **not** governed by this rule and have their own spelling — but a
+      different surface never licenses a shape that surface's own schema rejects. A
+      `*.flow.ts` node `config` takes `filter:` (47 occurrences across 18 of the 22 flow
+      files; `where:` in none): do not "fix" that into a hook's `where:`, nor a hook's
+      `where:` into `filter:`. A **page component** also spells the key `filter:`, and its
+      shape is whatever that component's entry in `ComponentPropsMap`
+      (`@objectstack/spec/ui`) declares — for `record:related_list`, an array of rule
+      **objects**: `filter: [{ field, operator, value }]`, `operator` from a closed
+      vocabulary (`equals`, `not_equals`, `in`, …), no other key accepted. The AST array
+      (`[['status', '!=', 'completed']]`) and the `op:` key are not second spellings:
+      `objectstack build` rejects both and the list renders unfiltered. No in-repo example
+      is cited here on purpose — every `record:related_list` filter currently under
+      `src/pages/` is one of those rejected forms (#1248), so read the shape off the
+      schema instead.
 
 3.  **AI-Native**:
     - Every feature should consider AI augmentation (Co-Pilot, Agents).
