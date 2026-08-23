@@ -63,9 +63,9 @@ http://localhost:4001 and create the first admin account.
 
 ---
 
-## v2.2.2 — Latest release
+## v3.0.0 — Latest release
 
-**HotCRM 2.2.2**, running on **ObjectStack 17.1.0** across every
+**HotCRM 3.0.0**, running on **ObjectStack 17.1.0** across every
 `@objectstack/*` package. The app manifest declares the matching
 `^17.1.0` protocol range, so a runtime on a different protocol major
 refuses the load up front with a structured diagnostic instead of failing deep
@@ -73,10 +73,37 @@ in a schema parse.
 
 > **This page does not keep a second release table.** The release-by-release
 > history is `CHANGELOG.md` in the repository, compiled from the `.changeset/`
-> entry every pull request adds. The versions between v1.0 and 2.2.2 are
+> entry every pull request adds. The versions between v1.0 and 3.0.0 are
 > recorded there and are deliberately not re-listed here — a hand-maintained
 > copy of that history is exactly how this section came to advertise a "v5.0"
 > that was never an app version, on a platform major that never shipped it.
+
+### Upgrading from 2.x — Owner is now one field
+
+**3.0.0 is a major because reassigning Owner now moves access.** Before it,
+every business object carried *two* owners: the **Owner** on forms, views and
+reports, and a separate hidden column the platform used for every access
+decision. Nothing kept them in step — changing Owner moved the record in every
+list and report and moved **no access at all**. The previous owner kept it; the
+new owner never got it.
+
+HotCRM now has exactly one Owner: the platform's ownership column.
+
+What this means for an existing deployment:
+
+- **Reassignment is gated separately from edit rights.** Because it really does
+  transfer access, changing Owner is its own permission rather than a side
+  effect of being able to edit the record.
+- **Run the backfill once.** Deployments where somebody reassigned an Owner
+  under 2.x have the two columns out of step; `pnpm backfill:owner` reconciles
+  them. It never blanks an existing owner and is safe to re-run — and it needs
+  an administrator account, because a bulk transfer is what it performs. If
+  nobody ever reassigned an Owner, the columns already agree and the backfill
+  reports zero divergences.
+
+The full entry — including the per-persona reassignment table — is the
+`Major Changes` section of `CHANGELOG.md`.
+
 
 ### Where the current shape of the product is written down
 

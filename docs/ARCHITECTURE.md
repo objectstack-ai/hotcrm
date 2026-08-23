@@ -30,7 +30,7 @@ The stack manifest defines:
 | --- | --- |
 | id | `app.objectstack.hotcrm` |
 | namespace | `crm` |
-| version | `2.2.2` |
+| version | `3.0.0` |
 | type | `app` |
 | name | `HotCRM` |
 | engines.protocol | `^17.0.0-rc.1` |

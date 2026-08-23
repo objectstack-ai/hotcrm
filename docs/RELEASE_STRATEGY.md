@@ -11,7 +11,7 @@ HotCRM releases as one ObjectStack app package:
 | npm package name | `hotcrm` |
 | ObjectStack manifest id | `app.objectstack.hotcrm` |
 | Namespace | `crm` |
-| Current version | `2.2.2` |
+| Current version | `3.0.0` |
 | Publish artifact | output from `pnpm build` |
 
 The active repository is not released as separate scoped npm packages.
