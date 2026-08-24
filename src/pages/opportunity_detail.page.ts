@@ -45,7 +45,9 @@ export const OpportunityDetailPage: Page = {
             // The lookup field is `crm_account` — `{account}` matched nothing
             // and the subtitle rendered blank.
             subtitle: '{crm_account}',
-            icon: 'briefcase',
+            // `icon` removed from `page:header` in @objectstack/spec 17.0.0
+            // (#6946, ADR-0087 D2) — deleted, not renamed. See the full note on
+            // `account_detail.page.ts`; nothing ever drew it.
             breadcrumb: true,
             // generate_quote is the CPQ entry point (opportunity → quote); a
             // custom record page replaces the default header, so the action
@@ -104,7 +106,9 @@ export const OpportunityDetailPage: Page = {
           type: 'page:tabs',
           id: 'opp_main_tabs',
           properties: {
-            type: 'line',
+            // `type` → `tabStyle` (@objectstack/spec 17.0.0, #6776, ADR-0087
+            // D2). Same three values; see the full note on `home.page.ts`.
+            tabStyle: 'line',
             position: 'top',
             items: [
               {

@@ -114,7 +114,9 @@ export const SalesHomePage: Page = {
             // (`user:profile` and its neighbours are `emptyProps` rows), so
             // this is a static greeting rather than a widened accept surface.
             subtitle: 'Welcome back',
-            icon: 'home',
+            // `icon` removed from `page:header` in @objectstack/spec 17.0.0
+            // (#6946, ADR-0087 D2) — deleted, not renamed. See the full note on
+            // `account_detail.page.ts`; nothing ever drew it.
             breadcrumb: false,
           },
         },
@@ -227,7 +229,24 @@ export const SalesHomePage: Page = {
           id: 'home_tabs',
           label: 'Home Tabs',
           properties: {
-            type: 'card',
+            /**
+             * `type` → `tabStyle` (@objectstack/spec 17.0.0, #6776, ADR-0087
+             * D2). The concept and the value vocabulary (`line` | `card` |
+             * `pill`) are unchanged; only the spelling moved, because a props
+             * key named `type` collides with the page component's own dispatch
+             * key: objectui's `SchemaRenderer` hoists `properties` onto the node
+             * but deliberately skips `type` and `id` (or the inner value would
+             * shadow which renderer to dispatch to), and `sdui-parser` lists
+             * `type` in `BASE_PROPS`, so a manifest input by that name is never
+             * validated at all.
+             *
+             * Renaming is behaviour-preserving on this page and on the three
+             * record pages: the renderer resolves
+             * `schema?.properties?.type || schema?.tabStyle || 'line'`, so it
+             * has been honouring the retired spelling as a back-compat read all
+             * along and picks up the canonical one through the same hoist.
+             */
+            tabStyle: 'card',
             position: 'top',
             items: [
               {

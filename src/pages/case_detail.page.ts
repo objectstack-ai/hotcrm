@@ -48,7 +48,9 @@ export const CaseDetailPage: Page = {
             // The lookup field is `crm_account` — `{account}` matched nothing
             // and the subtitle rendered blank.
             subtitle: '{crm_account}',
-            icon: 'life-buoy',
+            // `icon` removed from `page:header` in @objectstack/spec 17.0.0
+            // (#6946, ADR-0087 D2) — deleted, not renamed. See the full note on
+            // `account_detail.page.ts`; nothing ever drew it.
             breadcrumb: true,
             actions: [EscalateCaseAction, CloseCaseAction, LogCallAction],
           },
@@ -101,7 +103,9 @@ export const CaseDetailPage: Page = {
           type: 'page:tabs',
           id: 'case_main_tabs',
           properties: {
-            type: 'line',
+            // `type` → `tabStyle` (@objectstack/spec 17.0.0, #6776, ADR-0087
+            // D2). Same three values; see the full note on `home.page.ts`.
+            tabStyle: 'line',
             position: 'top',
             items: [
               {

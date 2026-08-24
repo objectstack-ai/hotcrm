@@ -46,7 +46,9 @@ export const AppLauncherPage: Page = {
           properties: {
             title: 'App Launcher',
             subtitle: 'Select an app to get started',
-            icon: 'th',
+            // `icon` removed from `page:header` in @objectstack/spec 17.0.0
+            // (#6946, ADR-0087 D2) — deleted, not renamed. See the full note on
+            // `account_detail.page.ts`; nothing ever drew it.
             breadcrumb: false,
           },
         },

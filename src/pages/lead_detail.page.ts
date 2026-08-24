@@ -64,7 +64,9 @@ export const LeadDetailPage: Page = {
           properties: {
             title: '{first_name} {last_name}',
             subtitle: '{company}',
-            icon: 'user-plus',
+            // `icon` removed from `page:header` in @objectstack/spec 17.0.0
+            // (#6946, ADR-0087 D2) — deleted, not renamed. See the full note on
+            // `account_detail.page.ts`; nothing ever drew it.
             breadcrumb: true,
             // Convert is the outcome; scheduling the next touch is the daily
             // act. Both belong in the header — the follow-up used to be four
@@ -126,7 +128,9 @@ export const LeadDetailPage: Page = {
           id: 'main_tabs',
           label: 'Lead Information Tabs',
           properties: {
-            type: 'line',
+            // `type` → `tabStyle` (@objectstack/spec 17.0.0, #6776, ADR-0087
+            // D2). Same three values; see the full note on `home.page.ts`.
+            tabStyle: 'line',
             position: 'top',
             items: [
               {
@@ -139,7 +143,19 @@ export const LeadDetailPage: Page = {
                     label: 'Lead Details',
                     properties: {
                       columns: '2',
-                      layout: 'auto',
+                      // `layout` was REMOVED from `record:details` in
+                      // @objectstack/spec 17.0.0 (#6946, ADR-0087 D2) and is
+                      // deleted with no successor: its declared `auto` |
+                      // `custom` semantics were never implemented. objectui's
+                      // `RecordDetailsRenderer` tests `layout` only against
+                      // `inline` | `compact` — two values the enum never
+                      // permitted — so both legal values took the same branch
+                      // and the key selected nothing. The body is chosen by what
+                      // is authored: the `sections` below render the explicit
+                      // groups (the old `custom`), and omitting them would fall
+                      // back to the object's `highlightFields` (the old `auto`).
+                      // This page authors sections, so `auto` was already
+                      // contradicted by the line under it.
                       // Salesforce-style grouped sections so the Details
                       // tab actually presents a structured field grid
                       // instead of falling back to the bare auto-detected

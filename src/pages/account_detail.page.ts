@@ -51,7 +51,14 @@ export const AccountDetailPage = {
         title: '{name}',
         subtitle: '{industry} · {type}',
         eyebrow: 'ACCOUNT',
-        icon: 'building-2',
+        // `icon` was REMOVED from `page:header` in @objectstack/spec 17.0.0
+        // (#6946, ADR-0087 D2). It is deleted rather than renamed because no
+        // renderer ever read it: objectui resolves `icon` per header ACTION
+        // (`action.icon`) and never off the header's own props bag, and the
+        // component registry never published it as an input — which is what put
+        // the key in objectui's `UNPUBLISHED_EXEMPTIONS` as a "spec declares it,
+        // NO renderer read point" entry. The header's own identity comes from
+        // the record chrome (`recordChrome`, on by default).
         breadcrumb: true,
         // Overriding the `header` slot REPLACES the synthesized header, actions
         // and all — so this slot has to re-state every action it wants to keep.
