@@ -219,7 +219,7 @@ export const OpportunityDetailPage: Page = {
                                 objectName: 'crm_task',
                                 relationshipField: 'related_to_opportunity',
                                 columns: ['subject', 'status', 'priority', 'due_date', 'owner_id'],
-                                filter: [{ field: 'status', op: 'neq', value: 'completed' }],
+                                filter: [{ field: 'status', operator: 'not_equals', value: 'completed' }],
                                 limit: 10,
                               },
                             },
