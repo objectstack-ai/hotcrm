@@ -54,11 +54,45 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
  * it; it is recorded here only because this file's own argument once did.
  *
  * ⚠️ The payload is BATCH-scoped (D3): all N dispatches share ONE payload
- * object, so a rewrite CONDITIONED on the row widens to every matched row.
- * `last_reviewed_at` is unconditional and therefore row-invariant and safe. The
- * `published_at` existence criterion is NOT — on a predicate update, whichever
- * row stamps it sets that value for the whole batch. Measured on the pinned
- * 17.1.0 and filed as #1265; not fixed here.
+ * object, so a rewrite CONDITIONED on the row widens to every matched row. The
+ * `published_at` existence criterion is exactly such a rewrite — on a predicate
+ * update, whichever row stamps it sets that value for the whole batch.
+ * Re-measured on current `main` against a real `ObjectQL` + `InMemoryDriver`
+ * with a distinct marker per dispatch: two rows carrying their own 2024 dates
+ * each correctly DECLINED to stamp and were overwritten anyway with the value
+ * computed by the one row that took the branch. Filed as #1265; NOT fixed here,
+ * and the reason it is not fixed is itself a measured fact — read on before
+ * "fixing" it.
+ *
+ * `last_reviewed_at` is safe only under the narrower claim than the one #1265
+ * makes for it. It is unconditional *after* the `nextStatus !== 'published'`
+ * early return, and that return reads the ROW. So it is row-invariant only when
+ * every matched row is published — which is true of `where: { status:
+ * 'published' }` and false in general. Measured on a mixed batch
+ * (`where: { category }` over one published and two draft articles): both
+ * DRAFTS were stamped `last_reviewed_at` by the published row's dispatch. A
+ * review timestamp on a never-published draft is the same widening in a quieter
+ * key.
+ *
+ * ⛔ Do NOT "fix" this by branching on the dispatch path. D3 names three routes
+ * for row-specific work — throw, write per row through `ctx.api`, or have the
+ * caller paginate — and ALL THREE require the handler to know it is on the
+ * per-row predicate path. This handler cannot know that. Hooks ship body-only
+ * through QuickJS (`test/action-sandbox.test.ts` holds every hook to it), and
+ * the sandbox context the runtime builds for a body carries exactly `input`,
+ * `previous`, `user`, `session`, `event`, `object`, `api`, `log`, `crypto`.
+ * Measured on 17.1.0: `ctx.dispatch` is `undefined` there, and `input.id` /
+ * `input.options` are dropped with it — the engine hands the body a flattened
+ * payload snapshot whose `id`/`options`/`data` are non-enumerable, so
+ * `unwrapProxyToPlain`'s `Object.entries` never copies them. A `ctx.dispatch
+ * ?.mode === 'per-row'` guard therefore lowers cleanly, passes every in-process
+ * test in this repo, and is INERT in production — the widening continues and
+ * the guard reads as if it were preventing it. That failure mode is why this
+ * paragraph is longer than the fix would have been.
+ *
+ * The app half is blocked on the platform exposing a per-row signal to the
+ * body-only surface (declared ≠ observable); `test/hooks-runtime-service.test.ts`
+ * carries the tripwire that goes red when it lands.
  */
 const knowledgeArticlePublish: Hook = {
   name: 'knowledge_article_publish_timestamps',
