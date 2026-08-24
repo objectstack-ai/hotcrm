@@ -186,7 +186,7 @@ export const CaseDetailPage: Page = {
                                   'owner_id',
                                 ],
                                 filter: [
-                                  { field: 'status', op: 'neq', value: 'completed' },
+                                  { field: 'status', operator: 'not_equals', value: 'completed' },
                                 ],
                                 limit: 10,
                               },

@@ -2,7 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { AgentSchema } from '@objectstack/spec/ai';
-import { RecordActivityProps } from '@objectstack/spec/ui';
+import { RecordActivityProps, RecordRelatedListProps } from '@objectstack/spec/ui';
 import stack from '../objectstack.config';
 import {
   type AnyRec,
@@ -100,6 +100,86 @@ describe('page component references resolve', () => {
       }
     }
     expect(bad, `dangling related-list columns:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  /**
+   * A related list's `filter` is authored in ONE shape, and the component
+   * accepts only that one (#1248).
+   *
+   * `RecordRelatedListProps.filter` (`ComponentPropsMap`, `@objectstack/spec/ui`)
+   * is an array of rule OBJECTS — `{ field, operator, value }`, `operator` drawn
+   * from a closed vocabulary. Two other spellings look plausible and reached
+   * `main` anyway, one of them three times over:
+   *
+   *   filter: [{ field: 'status', op: 'neq', value: 'completed' }]  // `op`/`neq`
+   *   filter: [['status', '!=', 'completed']]                        // AST array
+   *
+   * Neither is a second dialect. The AST array is the spelling a `*.flow.ts`
+   * node `config` takes and `op:` is nothing's spelling at all, and both were
+   * authored here because a nearby surface reads that way — which is exactly
+   * why a grep for one of them misses the other.
+   *
+   * What made all three survive review is that NOTHING red went off. The props
+   * bag is `z.record(z.string(), z.unknown())` on `PageComponent`, so a rejected
+   * rule is dropped, not refused: `objectstack build` prints an advisory
+   * `component-props-invalid` / `component-props-unknown-key` warning among ~80
+   * others and still exits 0, the artifact still writes, and the list still
+   * renders — unfiltered. A heading reading "Open Tasks" over every task,
+   * completed ones included, is the whole symptom.
+   *
+   * So the legal shape comes from the contract itself, never from a list copied
+   * into this file — the same discipline the `record:activity` guard below
+   * states, applied to the prop next to it.
+   */
+  const relatedLists = components.filter((c) => c.type === 'record:related_list');
+
+  it('every record:related_list filter is in the shape the props contract accepts', () => {
+    const filtered = relatedLists.filter((c) => c.properties?.filter !== undefined);
+    expect(
+      filtered.length,
+      'no related list authors a filter — this guard would be vacuous',
+    ).toBeGreaterThan(0);
+
+    const bad: string[] = [];
+    for (const c of filtered) {
+      const parsed = RecordRelatedListProps.shape.filter.safeParse(c.properties.filter);
+      if (parsed.success) continue;
+      for (const issue of parsed.error.issues) {
+        bad.push(`${c.id}: filter.${issue.path.join('.')} ${issue.message}`);
+      }
+    }
+    expect(bad, `related-list filters the component drops:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  /**
+   * The other half: a filter that PARSES can still be missing.
+   *
+   * Every `crm_task` related list in this app is an open-tasks surface — the
+   * promise is authored on two different nodes (`opp_tasks` and `case_tasks`
+   * inherit it from their tab's `label: 'Open Tasks'`; `related_tasks` carries
+   * its own `title: 'Open Tasks'`), so this guard keys off the object the list
+   * shows rather than off where the heading happens to sit. All three shipped
+   * unfiltered for as long as the shapes above were wrong, and deleting the
+   * `filter` key entirely would restore exactly that symptom while leaving the
+   * shape guard green.
+   *
+   * A future task list that deliberately shows completed work is fine — it just
+   * has to say so here, which is the point of pinning the promise and not the
+   * bytes.
+   */
+  it('every crm_task related list actually excludes completed tasks', () => {
+    const taskLists = relatedLists.filter((c) => c.properties?.objectName === 'crm_task');
+    expect(taskLists.length, 'no crm_task related list found — this guard would be vacuous').toBe(3);
+
+    const excludesCompleted = (rule: AnyRec) =>
+      rule?.field === 'status' &&
+      ((rule.operator === 'not_equals' && rule.value === 'completed') ||
+        (rule.operator === 'not_in' && (rule.value as unknown[])?.includes?.('completed')));
+
+    const bad = taskLists
+      .filter((c) => !((c.properties?.filter ?? []) as AnyRec[]).some(excludesCompleted))
+      .map((c) => `${c.id}: no filter rule excludes status "completed" — the list is headed "Open Tasks"`);
+    expect(bad, `task lists that promise open tasks and show every task:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
   /**
