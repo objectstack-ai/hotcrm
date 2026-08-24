@@ -126,7 +126,11 @@ interface Guarded {
    * same observation, so "it is green" proves nothing on its own.
    *
    * `null` only for a script that is not a gate and has no cheaply stageable
-   * red path — stated per entry, never left implicit.
+   * red path — stated per entry, never left implicit. No entry uses it today:
+   * the last one that did was `scan-field-consumers.ts`, and #1255 handed it a
+   * fixture-free refusal path (#1268). The escape hatch and the `it.skipIf`
+   * that honours it stay, so a future guarded script can state "no red path"
+   * with its reason rather than quietly shipping a green leg alone.
    */
   red: Case | null;
 }
@@ -208,15 +212,20 @@ const GUARDED: Guarded[] = [
     script: 'scripts/scan-field-consumers.ts',
     runner: join(REPO_ROOT, 'node_modules/.bin/tsx'),
     green: { args: ['--json'], status: 0, says: '"field"' },
-    // No red leg, and that is a measured statement rather than an omission.
-    // This script says of itself "This is a ledger, not a gate"; its only
-    // non-zero exit is `✗ no field reference resolved anywhere`, which fires
-    // when the registered stack resolves nothing at all. Staging that means
-    // standing up a broken copy of `objectstack.config` — a fixture about the
-    // stack, not about the entry-point guard this file is holding. The green
-    // leg carries the property that matters here: invoked through a symlink it
-    // must print, and before #1252 it would have printed nothing.
-    red: null,
+    // This script is a ledger rather than a gate, and it has two non-zero
+    // exits. `✗ no field reference resolved anywhere` fires only when the
+    // registered stack resolves nothing at all, so staging it means standing up
+    // a broken copy of `objectstack.config` — a fixture about the stack, not
+    // about the entry-point guard this file is holding, which is why this entry
+    // carried `red: null` until #1255 landed. The second one needs no fixture:
+    // `--sites` refuses a name that does not exist, on stderr and with exit 1.
+    //
+    // What this leg proves is the GUARD, not the argument check. The refusal
+    // lives inside `main()`, so with the entry-point guard broken the spawn
+    // reaches neither: it prints zero bytes and exits 0, and both assertions
+    // below fail. Measured, not assumed — with `isMainModule()` forced to
+    // return `false` this leg fails as `expected 0 to be 1` with empty output.
+    red: { args: ['--sites', 'no_such_object.no_such_field'], status: 1, says: 'no object named' },
   },
 ];
 
@@ -272,6 +281,23 @@ describe('scripts/ entry-point guards — structural', () => {
 });
 
 describe('scripts/ entry-point guards — behavioural, through a symlinked path', () => {
+  /**
+   * One spawn per case, with the budget stated rather than defaulted.
+   *
+   * The `.ts` entry is the expensive one: `tsx` compiles the script and the
+   * script imports `objectstack.config`, i.e. the whole registered metadata
+   * stack. Measured here, one spawn per case: 1281–1379ms. Vitest's default is
+   * 5000ms, and CI measures the same import work ~1.7x slower — margin that
+   * holds today but is not stated anywhere, and `field-consumer-scan.test.ts`
+   * has already paid a patch cycle for leaning on it.
+   *
+   * Deliberately far above the real cost, for the same reason as there: this
+   * timeout exists to catch a spawn that HANGS, not to police how fast a script
+   * starts. A startup regression should be argued on its own evidence, never
+   * discovered as a flaky timeout in an entry-point test.
+   */
+  const SPAWN_TIMEOUT_MS = 30_000;
+
   for (const { script, runner, green, red } of GUARDED) {
     it(`${script} runs and speaks when invoked through a symlink`, () => {
       const { status, output } = runThroughSymlink(
@@ -287,7 +313,7 @@ describe('scripts/ entry-point guards — behavioural, through a symlinked path'
       expect(output.length, `${script} printed nothing`).toBeGreaterThan(0);
       expect(output).toContain(green.says);
       expect(status).toBe(green.status);
-    });
+    }, SPAWN_TIMEOUT_MS);
 
     it.skipIf(red === null)(`${script} goes RED through a symlink, and says why`, () => {
       const expected = red as Case;
@@ -301,6 +327,6 @@ describe('scripts/ entry-point guards — behavioural, through a symlinked path'
       );
       expect(status, `${script} should have failed`).toBe(expected.status);
       expect(output).toContain(expected.says);
-    });
+    }, SPAWN_TIMEOUT_MS);
   }
 });
