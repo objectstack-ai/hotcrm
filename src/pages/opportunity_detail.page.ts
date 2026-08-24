@@ -45,7 +45,9 @@ export const OpportunityDetailPage: Page = {
             // The lookup field is `crm_account` — `{account}` matched nothing
             // and the subtitle rendered blank.
             subtitle: '{crm_account}',
-            icon: 'briefcase',
+            // `icon` removed from `page:header` in @objectstack/spec 17.0.0
+            // (#6946, ADR-0087 D2) — deleted, not renamed. See the full note on
+            // `account_detail.page.ts`; nothing ever drew it.
             breadcrumb: true,
             // generate_quote is the CPQ entry point (opportunity → quote); a
             // custom record page replaces the default header, so the action
@@ -104,11 +106,16 @@ export const OpportunityDetailPage: Page = {
           type: 'page:tabs',
           id: 'opp_main_tabs',
           properties: {
-            type: 'line',
+            // `type` → `tabStyle` (@objectstack/spec 17.0.0, #6776, ADR-0087
+            // D2). Same three values; see the full note on `home.page.ts`.
+            tabStyle: 'line',
             position: 'top',
             items: [
               {
-                key: 'details',
+                // Tab item `key` → `value` (#1269): `value` is the stable
+                // `?tab=` URL token the renderer reads, `key` is read by
+                // nothing. See the full note on `case_detail.page.ts`.
+                value: 'details',
                 label: 'Details',
                 children: [
                   {
@@ -168,7 +175,7 @@ export const OpportunityDetailPage: Page = {
                 ],
               },
               {
-                key: 'related',
+                value: 'related',
                 label: 'Related',
                 children: [
                   {
@@ -177,7 +184,11 @@ export const OpportunityDetailPage: Page = {
                     properties: {
                       items: [
                         {
-                          key: 'quotes',
+                          // Accordion item `key` is DELETED, not renamed to
+                          // `value` — the opposite verdict to the tab items
+                          // above, because this renderer overwrites `value` with
+                          // `panel-<index>`. See the full note on
+                          // `case_detail.page.ts`.
                           label: 'Quotes',
                           children: [
                             {
@@ -193,7 +204,6 @@ export const OpportunityDetailPage: Page = {
                           ],
                         },
                         {
-                          key: 'products',
                           label: 'Products',
                           children: [
                             {
@@ -209,7 +219,6 @@ export const OpportunityDetailPage: Page = {
                           ],
                         },
                         {
-                          key: 'tasks',
                           label: 'Open Tasks',
                           children: [
                             {
@@ -231,14 +240,56 @@ export const OpportunityDetailPage: Page = {
                 ],
               },
               {
-                key: 'activity',
+                value: 'activity',
                 label: 'Activity',
                 children: [
                   {
                     type: 'record:activity',
                     id: 'opp_activity',
+                    /**
+                     * `filters` is deleted with nothing put in its place, and
+                     * that is the whole finding (#1269).
+                     *
+                     * It used to read `['all', 'tasks', 'meetings', 'calls',
+                     * 'emails']` — a vocabulary that exists nowhere in the
+                     * contract. `RecordActivityProps` has exactly two filter
+                     * channels and neither takes that list:
+                     *
+                     *   `types`      — an array of FEED ITEM KINDS
+                     *                  (`comment` | `field_change` | `task` |
+                     *                  `event` | `email` | `call` | …). Not
+                     *                  these values: `all` is not a kind and
+                     *                  `meetings` is not one either (the kind
+                     *                  is `event`), and all five are plural
+                     *                  where the enum is singular.
+                     *   `filterMode` — ONE default for the panel's dropdown,
+                     *                  from `all` | `comments_only` |
+                     *                  `changes_only` | `tasks_only`. The
+                     *                  dropdown's option list is the renderer's,
+                     *                  not authorable.
+                     *
+                     * So the list was reaching for a third thing — "offer these
+                     * filter chips" — that the component does not expose. What
+                     * it wanted is already delivered: `showFilterToggle`
+                     * defaults on, so the panel renders its filter dropdown, and
+                     * `filterMode` defaults to `all`, so it opens unfiltered.
+                     * Neither is restated here, because materializing a default
+                     * turns "the author said nothing" into "the author asked for
+                     * the default" — a different fact, and the one a later
+                     * liveness audit reads.
+                     *
+                     * Mapping it onto `types` instead was considered and
+                     * rejected: #1209 corrected exactly that mistake one page
+                     * over (the lead timeline's `types: ['crm_task']`), and the
+                     * renderer sanitises out-of-enum members then reads the
+                     * EMPTY remainder as "no filter authored" — so a bad `types`
+                     * is indistinguishable from no `types` on screen while
+                     * claiming otherwise in source. A `types` here would also
+                     * be a NEW restriction nobody asked for: it would drop
+                     * comments and field changes from a timeline that shows them
+                     * today.
+                     */
                     properties: {
-                      filters: ['all', 'tasks', 'meetings', 'calls', 'emails'],
                       limit: 25,
                     },
                   },

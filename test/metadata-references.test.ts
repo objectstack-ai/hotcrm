@@ -2,7 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { AgentSchema } from '@objectstack/spec/ai';
-import { RecordActivityProps, RecordRelatedListProps } from '@objectstack/spec/ui';
+import { ComponentPropsMap, RecordActivityProps, RecordRelatedListProps } from '@objectstack/spec/ui';
 import stack from '../objectstack.config';
 import {
   type AnyRec,
@@ -324,6 +324,226 @@ describe('page component references resolve', () => {
       }
     }
     expect(bad, `guaranteed-empty activity timelines:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  /**
+   * ── The general form of the two guards above (#1269) ──────────────────────
+   *
+   * EVERY page component's `properties` bag, parsed against ITS OWN entry in
+   * the spec's `ComponentPropsMap`. The two guards above pin one prop each
+   * (`record:related_list.filter`, `record:activity.types`) because those were
+   * the props somebody had already got wrong; this one closes the class they
+   * belong to, and it does not depend on anyone noticing the next instance.
+   *
+   * WHY A GUARD AND NOT A BUILD CHECK. `PageComponent.properties` is
+   * `z.record(z.string(), z.unknown())`, so a key the component does not
+   * declare is DROPPED, not refused: the page builds, the artifact writes, the
+   * component renders — minus whatever the key was meant to configure.
+   * `objectstack build` does report each one as an advisory
+   * `component-props-invalid` / `component-props-unknown-key` warning and still
+   * exits 0, and its printer caps the detail list at 50 entries with no
+   * "…and N more" line (objectstack#11529), so the visible count is a floor,
+   * never a total. 75 of these had accumulated across all eight pages by the
+   * time anyone counted. Zero printed warnings is corroboration; THIS is the
+   * measurement.
+   *
+   * WHAT COUNTS AS A PAGE COMPONENT. `walk` yields every object carrying a
+   * string `type`, which on these pages includes things that are not
+   * components at all: the ActionDefs inlined into `page:header.actions`
+   * (`type: 'script'` / `'flow'`) and their params (`type: 'text'`,
+   * `'lookup'`, `'date'`, …). A page component also carries an `id`; an
+   * ActionDef and an action param carry a `name` and no `id`. That is the
+   * split used below — measured, not assumed: every one of the 18 component
+   * types these pages author has an `id`, and none of the 8 action-shaped
+   * types does.
+   */
+  const PAGE_COMPONENTS = components.filter((c) => typeof c.id === 'string');
+
+  /**
+   * Component types this app authors that the spec declares NO props contract
+   * for, so nothing can parse them. Shrink-only: adding a line needs a reason.
+   *
+   *   list-view — the embedded saved-view panel `home.page.ts` builds for each
+   *   Sales Home tab. `ComponentPropsMap` has no `list-view` row, so its
+   *   `properties` (objectName / viewType / columns / filter / sort) are
+   *   checked by the field- and view-reference guards in this file and in
+   *   `test/view-references.test.ts`, and by nothing schema-shaped.
+   *
+   * The staleness half matters as much as the list: when the spec grows a row
+   * for one of these, the exemption must go so the type joins the parse below.
+   */
+  const NO_PROPS_CONTRACT = new Set(['list-view']);
+
+  it('every page component type has a props contract to parse against', () => {
+    expect(
+      PAGE_COMPONENTS.length,
+      'no page components were found — this guard and the one below would be vacuous',
+    ).toBeGreaterThan(0);
+
+    const map = ComponentPropsMap as Record<string, unknown>;
+    const uncovered = [
+      ...new Set(
+        PAGE_COMPONENTS.filter((c) => !map[c.type] && !NO_PROPS_CONTRACT.has(c.type)).map(
+          (c) => c.type as string,
+        ),
+      ),
+    ];
+    expect(
+      uncovered,
+      `page component types with no ComponentPropsMap row — the guard below cannot check these:\n  ${uncovered.join('\n  ')}`,
+    ).toEqual([]);
+
+    // An exemption outlives its reason only if nobody checks. Both directions:
+    // a type that gained a contract must be parsed, and a type this app no
+    // longer authors must not keep its line.
+    const stale = [...NO_PROPS_CONTRACT].filter(
+      (t) => !!map[t] || !PAGE_COMPONENTS.some((c) => c.type === t),
+    );
+    expect(
+      stale,
+      `NO_PROPS_CONTRACT entries that gained a contract or are no longer authored — delete these lines:\n  ${stale.join('\n  ')}`,
+    ).toEqual([]);
+  });
+
+  /**
+   * Props the components drop, that are NOT this card's to fix — each named,
+   * dated and owned, so the debt is visible instead of invisible.
+   *
+   * Keyed `page.name/component.id :: prop`, where `prop` is the issue path
+   * with array indices collapsed to `[]` (so a finding survives its list being
+   * reordered, and the five rejected entries of one `actions` array are one
+   * line rather than five).
+   *
+   *   …/*_header :: actions[] — the spec and the renderer disagree about this
+   *   key, and the source can only satisfy one of them. `PageHeaderProps.actions`
+   *   is `z.array(z.string())` ("Action IDs"), but objectui's canonical
+   *   `page:header` renderer consumes ActionDef OBJECTS: it filters the array
+   *   through `actionRendersAt(a, 'record_header')`, reads `a.requiredPermissions`
+   *   / `a.visible` / `a.name` / `a.order`, and every test it ships authors
+   *   objects. A string has no `.locations`, so rewriting these four arrays as
+   *   ids would turn this guard green and delete every header button from four
+   *   record pages — Convert Lead, Generate Quote, Escalate Case, and the
+   *   activity trio #592 put there. Deciding which side moves is a product
+   *   call, not a conformance edit. Filed as #1279, which carries the
+   *   renderer evidence and the three ways out.
+   *
+   *   …/*_details :: sections[].collapsible — the same disagreement pointing
+   *   the other way. `RecordDetailsProps`' section shape is strict
+   *   `{ name?, label?, columns?, fields }`, but objectui's record-details
+   *   renderer spreads the authored section through (`...s`) into
+   *   `DetailSection`, which reads `section.collapsible` and renders a
+   *   `<Collapsible>` card with a chevron. So this key WORKS today: deleting it
+   *   to satisfy the schema would remove a working affordance from both
+   *   Description sections. The spec's own rule (#5611/#6276 — the delivered
+   *   shape is the contract, which is how `alwaysShowStrip`, `maxVisible`,
+   *   `inlineEdit` and `hideFields` came to be declared) says the declaration
+   *   is what should move — and that is already filed upstream, with the same
+   *   measurement plus its `hideEmpty` sibling, as
+   *   objectstack-ai/objectstack#11289 (via #1249).
+   *
+   *   sales_home_page/ai_briefing :: description — `page:card` does not declare
+   *   `description`, so the paragraph renders nowhere; the fix is to move the
+   *   copy into an `element:text` child. It is pinned where it is by the #1002
+   *   persona guard at the bottom of this file, which reads
+   *   `properties.description` and encodes a maintainer ruling, so relocating
+   *   it means rewriting a ruling-backed guard. Filed as #1216.
+   */
+  const KNOWN_UNCONFORMING = new Set([
+    'account_detail_page/account_header_slotted :: actions[]',
+    'case_detail_page/case_header :: actions[]',
+    'lead_detail_page/lead_header :: actions[]',
+    'opportunity_detail_page/opp_header :: actions[]',
+    'case_detail_page/case_details :: sections[].collapsible',
+    'opportunity_detail_page/opp_details :: sections[].collapsible',
+    'sales_home_page/ai_briefing :: description',
+  ]);
+
+  it("every page component's properties parse against its own ComponentPropsMap entry", () => {
+    const map = ComponentPropsMap as Record<string, { safeParse: (v: unknown) => any }>;
+
+    /** Issue path → prop label: numeric segments collapse to `[]`. */
+    const propLabel = (path: readonly unknown[], key?: string): string => {
+      const parts = path.map((p) => (typeof p === 'number' ? '[]' : String(p)));
+      const joined = parts.reduce<string>(
+        (acc, p) => (p === '[]' ? `${acc}[]` : acc ? `${acc}.${p}` : p),
+        '',
+      );
+      if (!key) return joined || '<component>';
+      return joined ? `${joined}.${key}` : key;
+    };
+
+    const found = new Set<string>();
+    const bad: string[] = [];
+    const pagesSeen = new Set<string>();
+    const parsedTypes = new Set<string>();
+    let parsed = 0;
+
+    for (const page of pages) {
+      for (const c of [...walk(page.regions), ...walk(page.slots)] as AnyRec[]) {
+        if (typeof c.id !== 'string') continue;
+        const schema = map[c.type];
+        if (!schema) continue; // covered by the guard above
+        parsed++;
+        pagesSeen.add(page.name);
+        parsedTypes.add(c.type as string);
+        const result = schema.safeParse(c.properties ?? {});
+        if (result.success) continue;
+        for (const issue of result.error.issues) {
+          // `unrecognized_keys` reports every rejected key of one object in a
+          // single issue, so it expands to one finding per key.
+          const keys: (string | undefined)[] =
+            issue.code === 'unrecognized_keys' ? (issue.keys as string[]) : [undefined];
+          for (const key of keys) {
+            const where = `${page.name}/${c.id} :: ${propLabel(issue.path, key)}`;
+            found.add(where);
+            if (KNOWN_UNCONFORMING.has(where)) continue;
+            bad.push(`${where} [${c.type}] ${issue.message}`);
+          }
+        }
+      }
+    }
+
+    // ── Non-vacuity ──────────────────────────────────────────────────────
+    // Three ways a later refactor could empty this rule while it kept
+    // reporting clean, each closed by a check that does not read the same
+    // expression the loop above does.
+    //
+    // 1. Nothing parsed at all.
+    expect(parsed, 'no page component was parsed — the walk found nothing').toBeGreaterThan(0);
+
+    // 2. A whole page stops being reached. The expectation is derived
+    //    STRUCTURALLY — a page composes components iff it declares regions or
+    //    slots — so it stays true if the walk itself breaks. `account_workbench`
+    //    is correctly absent: an ADR-0047 interface page carries no components
+    //    at all (`regions: []`), its list surface being generated from
+    //    `interfaceConfig`. `account_detail` is the case this catches: it is
+    //    slots-only (`regions: []`), so a walk that stopped descending into
+    //    `slots` would drop it and nothing else would notice.
+    const composes = pages.filter((p) => (p.regions?.length ?? 0) > 0 || !!p.slots);
+    expect(
+      composes.map((p) => p.name).filter((n) => !pagesSeen.has(n)),
+      'pages that declare regions or slots but contributed no parsed component — the walk no longer reaches them',
+    ).toEqual([]);
+
+    // 3. The walk stops DESCENDING and only enumerates each region's top
+    //    level — which would still parse a dozen components and report clean.
+    //    Every `record:related_list` in this app sits three levels down (tab
+    //    item → accordion item → children), so its presence is the proof that
+    //    nested components are still being reached.
+    expect(
+      parsedTypes.has('record:related_list'),
+      'no nested record:related_list was parsed — the walk is no longer descending into tab/accordion children',
+    ).toBe(true);
+
+    expect(bad, `props the component drops:\n  ${bad.join('\n  ')}`).toEqual([]);
+
+    // Keyed on still being BROKEN, not on still existing: a header that starts
+    // conforming must drop its line, or the next bad prop inherits the cover.
+    const stale = [...KNOWN_UNCONFORMING].filter((k) => !found.has(k));
+    expect(
+      stale,
+      `exemptions whose prop now conforms — delete these lines:\n  ${stale.join('\n  ')}`,
+    ).toEqual([]);
   });
 
   it('record:details / record:highlights / record:path only name real fields on the page object', () => {
