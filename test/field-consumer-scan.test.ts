@@ -194,6 +194,27 @@ describe('--sites refuses a field name that does not exist (#1255)', () => {
   const TSX = join(REPO_ROOT, 'node_modules/.bin/tsx');
   const SCRIPT = join(REPO_ROOT, 'scripts/scan-field-consumers.ts');
 
+  /**
+   * Every case below spawns the real script, and that spawn is not cheap: `tsx`
+   * compiles the file and the script imports `objectstack.config`, i.e. the whole
+   * registered metadata stack, on each run. Measured here, one spawn per case:
+   * 1271–1313ms.
+   *
+   * Vitest's default budget is 5000ms, and a first version of this suite put
+   * THREE spawns in one case (`it` over an array of malformed targets). That
+   * measured 3802ms locally — inside the default, so it passed here — and timed
+   * out in CI, where the same import work measured ~1.7x slower. Splitting it
+   * into one case per target restored one spawn per case; the budget below is
+   * then stated rather than defaulted so the remaining margin does not depend on
+   * how loaded the runner is.
+   *
+   * Deliberately far above the real cost: this timeout exists to catch a spawn
+   * that HANGS, not to police how fast the script starts. A startup regression
+   * should be argued on its own evidence, never discovered as a flaky timeout in
+   * an argv test.
+   */
+  const SPAWN_TIMEOUT_MS = 30_000;
+
   /** Spawns the real script, never throwing, so the exit status can be read. */
   const run = (...args: string[]): { status: number; output: string } => {
     try {
@@ -209,7 +230,7 @@ describe('--sites refuses a field name that does not exist (#1255)', () => {
     expect(status).not.toBe(0);
     expect(output).not.toContain('this field is inert');
     expect(output).toContain("no object named 'no_such_object'");
-  });
+  }, SPAWN_TIMEOUT_MS);
 
   it('a known object with an UNDECLARED field exits non-zero', () => {
     // The card's own reproduction, verbatim.
@@ -217,7 +238,7 @@ describe('--sites refuses a field name that does not exist (#1255)', () => {
     expect(status).not.toBe(0);
     expect(output).not.toContain('this field is inert');
     expect(output).toContain("declares no field named 'no_such_field'");
-  });
+  }, SPAWN_TIMEOUT_MS);
 
   it('a DECLARED but genuinely inert field is still reported, still exit 0', () => {
     // The control. Without it, a change that rejected everything would pass.
@@ -227,23 +248,37 @@ describe('--sites refuses a field name that does not exist (#1255)', () => {
     expect(status).toBe(0);
     expect(output).toContain('crm_product.tax_rate — 4 site(s)');
     expect(output).toContain('translations[0].en.objects.crm_product.fields');
-  });
+  }, SPAWN_TIMEOUT_MS);
 
-  it('a malformed target exits non-zero rather than scanning a garbled name', () => {
-    // `crm_account` has no dot, so the old `lastIndexOf('.')` split it into
-    // object `crm_accoun` / field `crm_account` and reported that as inert.
-    for (const target of ['crm_account', 'crm_account.', '.tax_rate']) {
+  /**
+   * One case per target rather than a loop over three, for two reasons: each
+   * spawn then owns its own timeout budget, and a failure names the TARGET that
+   * broke instead of reporting only that a loop timed out.
+   *
+   * `crm_account` is the original of the three: with no dot, the old
+   * `lastIndexOf('.')` split it into object `crm_accoun` / field `crm_account`
+   * and called that inert with exit 0. The other two are the boundaries of the
+   * same split — a dot at either end leaves one half empty.
+   *
+   * These must stay SPAWNS. The garbled split was `main()`-path behaviour, so a
+   * direct `refuseSitesTarget()` call would not have caught the original defect;
+   * only the real script's exit status pins it.
+   */
+  it.each(['crm_account', 'crm_account.', '.tax_rate'])(
+    'a malformed target (%s) exits non-zero rather than scanning a garbled name',
+    (target) => {
       const { status, output } = run('--sites', target);
       expect(status, target).not.toBe(0);
       expect(output, target).toContain('--sites needs');
-    }
-  });
+    },
+    SPAWN_TIMEOUT_MS,
+  );
 
   it('--sites with no argument at all exits non-zero', () => {
     const { status, output } = run('--sites');
     expect(status).not.toBe(0);
     expect(output).toContain('none was given');
-  });
+  }, SPAWN_TIMEOUT_MS);
 
   /**
    * The near-miss correction, which is a LOOKUP and not fuzzy matching: the
