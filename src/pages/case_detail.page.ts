@@ -104,12 +104,22 @@ export const CaseDetailPage: Page = {
           id: 'case_main_tabs',
           properties: {
             // `type` → `tabStyle` (@objectstack/spec 17.0.0, #6776, ADR-0087
-            // D2). Same three values; see the full note on `home.page.ts`.
+            // D2). Same concept, same three values (`line` | `card` | `pill`);
+            // the rename exists because a props key called `type` collides with
+            // the component node's own dispatch key and is unauthorable in the
+            // flat and JSX carriers. See the full note on `home.page.ts`.
             tabStyle: 'line',
             position: 'top',
             items: [
               {
-                key: 'details',
+                // Tab item `key` → `value` (#1269). `value` is the stable
+                // `?tab=` URL token the renderer reads (`it.value`, falling back
+                // to an index-derived `tab-<i>`); `key` is read by nothing, so
+                // these tabs were addressable only as `tab-0`/`tab-1`/`tab-2`,
+                // which point at different tabs the moment the item list
+                // changes. `PageTabsProps`' own alias table answers `key` with
+                // `value` for exactly this reason.
+                value: 'details',
                 label: 'Details',
                 children: [
                   {
@@ -164,7 +174,7 @@ export const CaseDetailPage: Page = {
                 ],
               },
               {
-                key: 'related',
+                value: 'related',
                 label: 'Related',
                 children: [
                   {
@@ -173,7 +183,17 @@ export const CaseDetailPage: Page = {
                     properties: {
                       items: [
                         {
-                          key: 'tasks',
+                          // An accordion item `key` is DELETED, not renamed to
+                          // `value` — the opposite verdict to the tab items
+                          // above, and the difference is a read point (#1269).
+                          // `PageAccordionProps`' item shape is
+                          // `{ label, icon?, collapsed?, children }` and it
+                          // prescribes AGAINST `value` by name: the renderer
+                          // maps every item to `{ ...it, value: `panel-<idx>` }`
+                          // before rendering, so an authored value is
+                          // overwritten. `page:tabs` really does read `it.value`;
+                          // `page:accordion` does not. Nothing addresses these
+                          // panels, so the identifier has nowhere to land.
                           label: 'Open Tasks',
                           children: [
                             {
@@ -203,7 +223,7 @@ export const CaseDetailPage: Page = {
                 ],
               },
               {
-                key: 'activity',
+                value: 'activity',
                 label: 'Activity',
                 children: [
                   {
