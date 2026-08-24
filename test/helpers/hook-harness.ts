@@ -139,6 +139,22 @@ function project(row: Rec, fields?: string[]): Rec {
  * `isMultiValueField` from `@objectstack/spec/data`. A new lookup column, or a
  * new reference-valued field type on the platform, is covered the day it
  * lands, with nothing to update here.
+ *
+ * ### What this does NOT close
+ *
+ * Value shape is one dimension of fidelity. DISPATCH shape is another, and it
+ * is still wrong here: {@link makeCtx} builds a fresh `input` per handler call,
+ * so a test drives N per-row calls with N independent payload objects. A real
+ * predicate update builds exactly ONE payload shared by every per-row dispatch
+ * (ADR-0058 Addendum II D3) — which is why a rewrite conditioned on `previous`
+ * widens to the whole batch, and why tests written against this harness pass
+ * before and after any fix to that class.
+ *
+ * Deliberately not fixed here (#1265). A body-only hook cannot yet detect the
+ * per-row path at all — the sandbox context carries no dispatch signal — so a
+ * harness that modelled batch dispatch today would turn hooks red with no
+ * app-side fix available: the same "instrument that lies" failure, pointed the
+ * other way. Blocked on objectstack#11552.
  */
 type FieldDef = {
   type?: string;
