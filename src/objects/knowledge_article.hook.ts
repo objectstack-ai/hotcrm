@@ -27,9 +27,10 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
  * the two halves of one write, not a tolerated alias for one key, and both
  * halves are load-bearing:
  *
- *   - `previous` is the FULL stored row: the engine's `sys_fetch_previous_update`
- *     builtin fetches it with an unprojected `findOne`, so a re-publish sees the
- *     original date there.
+ *   - `previous` is the FULL stored row: `update()` reads it and binds it BEFORE
+ *     dispatching `beforeUpdate` (ADR-0058 Addendum II), so a re-publish sees
+ *     the original date there. The `sys_fetch_previous_update` builtin that used
+ *     to issue that `findOne` is retired.
  *   - `input` carries the date whenever the write supplies one, and on an INSERT
  *     that value is what gets stored: measured on 17.0.0-rc.2, the engine's
  *     read-only strip runs on the update path only, and hooks run before it in
@@ -45,11 +46,19 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
  * outcome is identical before and after this change; a lenient consumer here
  * would only hide it.
  *
- * Deliberately unchanged: this is the single-record path. On the bulk path
- * (`multi: true`) there is no `input.id`, so `sys_fetch_previous_update` fetches
- * nothing and `previous` is always absent — tracked separately as #779, and the
- * existence criterion above is the one that degrades most gracefully there
- * (a bulk write supplying its own `published_at` now keeps it).
+ * On the bulk path (`multi: true`) this handler now runs ONCE PER ROW, with
+ * `input.id` bound to the row and `previous` its pre-image (ADR-0058 Addendum
+ * II, D1/D2); past 10000 matched rows the whole write is refused with
+ * `ERR_BULK_PER_ROW_HOOK_LIMIT`. The rc.2-era account — no `input.id`, no
+ * `previous`, nothing stamped (#779, closed) — is HISTORY. Do not reason from
+ * it; it is recorded here only because this file's own argument once did.
+ *
+ * ⚠️ The payload is BATCH-scoped (D3): all N dispatches share ONE payload
+ * object, so a rewrite CONDITIONED on the row widens to every matched row.
+ * `last_reviewed_at` is unconditional and therefore row-invariant and safe. The
+ * `published_at` existence criterion is NOT — on a predicate update, whichever
+ * row stamps it sets that value for the whole batch. Measured on the pinned
+ * 17.1.0 and filed as #1265; not fixed here.
  */
 const knowledgeArticlePublish: Hook = {
   name: 'knowledge_article_publish_timestamps',

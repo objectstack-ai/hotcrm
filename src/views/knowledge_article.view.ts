@@ -97,20 +97,23 @@ export const KnowledgeArticleViews = defineView({
       //
       // 2. Expressible is not the same as expressible WITHOUT LOSS. A review
       //    queue's most overdue population is the never-reviewed one, and
-      //    `last_reviewed_at` is nullable in exactly the case that matters.
-      //    On the SINGLE-record path `knowledge_article_publish_timestamps`
-      //    keeps it stamped — the engine's `sys_fetch_previous_update` builtin
-      //    hands the hook a `previous`, so publishing and every later edit
-      //    re-stamp. On the BULK path (`multi: true`) there is no
-      //    `input.id`, that builtin cannot fetch anything, the hook sees no
-      //    status at all and stamps nothing — so a bulk load or mass edit,
-      //    which is how an org imports an existing knowledge base, leaves
-      //    published articles with no review timestamp (measured; filed
-      //    separately). `$lt` matches neither null nor an absent key, so a
-      //    bare window deletes precisely those rows — the imported ones, the
-      //    least reviewed of all. The honest condition is "earlier than
-      //    {180_days_ago} OR empty" — and a view `filter` cannot say that. It
-      //    is a FLAT, strict array of `{field, operator, value}` rules
+      //    `last_reviewed_at` is nullable.
+      //
+      //    ⚠️ HISTORY — this note's own premise, corrected in place because
+      //    the argument below was built on it. Through 17.0.0-rc.2 the bulk
+      //    path (`multi: true`) had no `input.id` and no `previous`, so
+      //    `knowledge_article_publish_timestamps` saw no status and stamped
+      //    nothing; a bulk load or mass edit, which is how an org imports an
+      //    existing knowledge base, left published articles with no review
+      //    timestamp (#779, closed). Since ADR-0058 Addendum II that path
+      //    dispatches PER ROW with `previous` bound, and on the pinned 17.1.0
+      //    every published row a bulk load or mass edit touches IS stamped.
+      //
+      //    The grammar limit is what still holds this view to a ranking here:
+      //    `$lt` matches neither null nor an absent key, so a window silently
+      //    drops any row that has none, and the honest condition "earlier than
+      //    {180_days_ago} OR empty" is unsayable — a view `filter` is a FLAT,
+      //    strict array of `{field, operator, value}` rules
       //    (`ViewFilterRuleSchema`) combined with AND; there is no `or`, no
       //    nesting, no logic key. Spelled as the two rules the grammar does
       //    allow, the window and the emptiness test AND together and the view
@@ -133,8 +136,10 @@ export const KnowledgeArticleViews = defineView({
       // pins all of the above against a real engine, including the day-window
       // claim vocabulary that would fail this view the day a label reclaims a
       // window. Whether the queue SHOULD become a 180-day cut is a product
-      // question that needs the null population handled first — filed
-      // separately, not decided by a translator.
+      // question — #781, open and `needs-user-decision`. The premise in 2 is
+      // dead, which is precisely why that card has to be DECIDED rather than
+      // re-derived from this file; it is not decided by a translator, and it
+      // was not decided by the correction above.
       label: 'Review Queue · Oldest First',
       data: { provider: 'object', object: 'crm_knowledge_article' },
       columns: ['article_number', 'title', 'category', 'owner_id', 'last_reviewed_at'],
