@@ -1,5 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { REFERENCE_VALUE_TYPES, isMultiValueField, AUDIT_PROVENANCE_FIELDS } from '@objectstack/spec/data';
+import * as appObjects from '../../src/objects/index';
 import type {
   HookApi,
   HookDeleteOptions,
@@ -76,6 +78,171 @@ function project(row: Rec, fields?: string[]): Rec {
   return out;
 }
 
+// ──────────────────────────────────── reference columns hold RECORD IDS ────
+
+/**
+ * ADR-0104 value shapes, mirrored from the engine's MEASURED behaviour.
+ *
+ * Both harnesses used to store a write verbatim, so a hook could put `false`,
+ * `42` or `{}` into a lookup column and every test stayed green — which is
+ * exactly how #714 shipped a boolean into `crm_contract.crm_contact` and was
+ * only caught in a release-candidate acceptance run.
+ *
+ * ### What the engine actually does (measured on the pinned 17.1.0, not guessed)
+ *
+ * A real `ObjectQL` on `InMemoryDriver` was driven with each value below, on a
+ * declared `Field.lookup` and on the app's real `crm_contract`, under both
+ * ADR-0104 postures:
+ *
+ * | value in a single-valued reference column | warn-first (default) | strict |
+ * | --- | --- | --- |
+ * | `'acc_1'` · `''` · `null` · `undefined` | accepted | **accepted** |
+ * | `false` · `true` · `0` · `42` · `{}` · `[]` · `NaN` · `Date` | accepted + `[value-shape]` warning, **value PERSISTED** | **refused** |
+ *
+ * Strict is `OS_DATA_VALUE_SHAPE_STRICT_ENABLED=1`, or any deployment that has
+ * run `os migrate value-shapes --apply`. The refusal reads
+ * `<Label> has an invalid <type> value: Invalid input: expected string,
+ * received <received>`.
+ *
+ * Neither posture makes a junk value *correct*: strict rejects the write
+ * outright, and warn-first keeps it — writing a boolean into a reference
+ * column and, via the admitted-violation tally, revoking the deployment's
+ * ADR-0104 certificate. So the harness refuses it in both cases, and the
+ * refusal is what a test sees.
+ *
+ * ### The line this must NOT cross
+ *
+ * The boundary is copied from the engine, never tightened past it. Four
+ * measurements a guessed "a lookup must be a non-empty record id" would get
+ * wrong, turning working code red:
+ *
+ *  - `null` and `undefined` are **accepted** — clearing a link is legal;
+ *  - `''` is **accepted** — the engine's empty-value skip runs before the
+ *    shape check, so an empty string is not a shape violation (that it is
+ *    nonetheless a poor value is a different assertion, and belongs to the
+ *    test that cares — see `test/quote-accepted-lookups.test.ts`);
+ *  - a `multiple: true` lookup takes an **array**, and its elements are
+ *    **not** checked — `[false]` is accepted by the real engine, so it is
+ *    accepted here too;
+ *  - a `system` or `readonly` column is **never validated at all**, which on
+ *    this app means every `owner_id` — see {@link ENGINE_SKIPPED_FIELDS}.
+ *
+ * The first draft of this file got the last one wrong, and the differential in
+ * `test/harness-lookup-shape.test.ts` is what caught it: 33 field × value
+ * combinations where the harness refused a write the real engine accepts.
+ * That test compares the two verdicts directly, so the boundary cannot drift
+ * from the engine without going red.
+ *
+ * The field set is not a hand-maintained list — the issue's own objection to
+ * one was that it rots. It is derived from the app's real `src/objects`
+ * metadata, classified by the platform's own `REFERENCE_VALUE_TYPES` and
+ * `isMultiValueField` from `@objectstack/spec/data`. A new lookup column, or a
+ * new reference-valued field type on the platform, is covered the day it
+ * lands, with nothing to update here.
+ */
+type FieldDef = {
+  type?: string;
+  label?: string;
+  multiple?: boolean;
+  system?: boolean;
+  readonly?: boolean;
+};
+
+/** `objectName` → its reference-valued fields, built once, lazily. */
+let referenceFields: Map<string, Map<string, FieldDef>> | undefined;
+
+function referenceFieldsOf(object: string): Map<string, FieldDef> | undefined {
+  if (!referenceFields) {
+    referenceFields = new Map();
+    for (const candidate of Object.values(appObjects as Record<string, unknown>)) {
+      const def = candidate as { name?: unknown; fields?: Record<string, FieldDef> };
+      if (!def || typeof def.name !== 'string' || !def.fields) continue;
+      const refs = new Map<string, FieldDef>();
+      for (const [field, fieldDef] of Object.entries(def.fields)) {
+        if (fieldDef && typeof fieldDef.type === 'string' && REFERENCE_VALUE_TYPES.has(fieldDef.type)) {
+          refs.set(field, fieldDef);
+        }
+      }
+      referenceFields.set(def.name, refs);
+    }
+  }
+  return referenceFields.get(object);
+}
+
+/**
+ * The columns the engine's `validateRecord` never even looks at — so neither
+ * may this. Measured, and NOT a detail worth guessing: `owner_id` is declared
+ * `system: true` on nearly every object here, the ownership hooks write it
+ * constantly, and a harness that policed it would have turned a large part of
+ * this suite red over values the real engine accepts without comment. That is
+ * the exact failure mode a value-shape check is supposed to prevent, pointed
+ * the other way.
+ *
+ * `id` plus the four audit columns is the engine's own `SKIP_FIELDS`;
+ * `AUDIT_PROVENANCE_FIELDS` comes from the platform so the set cannot drift.
+ */
+const ENGINE_SKIPPED_FIELDS = new Set<string>(['id', ...AUDIT_PROVENANCE_FIELDS]);
+
+function engineValidatesField(field: string, def: FieldDef): boolean {
+  if (ENGINE_SKIPPED_FIELDS.has(field)) return false;
+  return def.system !== true && def.readonly !== true;
+}
+
+/** Name the received value the way the engine's own diagnostic names it. */
+function describeReceived(value: unknown): string {
+  if (value === null) return 'null';
+  if (Array.isArray(value)) return 'array';
+  if (value instanceof Date) return 'Date';
+  if (typeof value === 'number' && Number.isNaN(value)) return 'NaN';
+  return typeof value;
+}
+
+/**
+ * The engine's verdict on one reference-column value, or `null` when it would
+ * be accepted. Exported so a test can pin this against a real ObjectQL.
+ */
+export function referenceValueShapeError(
+  field: string,
+  def: FieldDef,
+  value: unknown,
+): string | null {
+  if (!engineValidatesField(field, def)) return null;
+  // Empty values skip the shape check in the engine — measured, see above.
+  if (value === null || value === undefined || value === '') return null;
+  const label = def.label ?? field;
+  if (isMultiValueField(def as never)) {
+    // Elements are deliberately unchecked: the real engine does not check them.
+    return Array.isArray(value) ? null : `${label} must be an array of values`;
+  }
+  if (typeof value === 'string') return null;
+  return `${label} has an invalid ${def.type} value: Invalid input: expected string, received ${describeReceived(value)}`;
+}
+
+/**
+ * Throw if `doc` puts a value in a reference column that the engine refuses.
+ * Unknown objects (platform `sys_*`, a fixture's invented name) carry no
+ * metadata here, so they are skipped — the harness cannot be stricter than
+ * what it knows.
+ */
+export function assertReferenceValueShapes(harness: string, op: string, object: string, doc: Rec): void {
+  const refs = referenceFieldsOf(object);
+  if (!refs || refs.size === 0 || !doc || typeof doc !== 'object') return;
+  const problems: string[] = [];
+  for (const [field, value] of Object.entries(doc)) {
+    const def = refs.get(field);
+    if (!def) continue;
+    const problem = referenceValueShapeError(field, def, value);
+    if (problem) problems.push(problem);
+  }
+  if (problems.length === 0) return;
+  throw new Error(
+    `${harness}: ${op}('${object}', …) would be refused by the engine — ${problems.join('; ')}. ` +
+      'A reference column holds a RECORD ID; an absent link is an ABSENT KEY, never `false`/`0`/`{}` ' +
+      '(ADR-0104 value shapes, measured on 17.1.0: strict refuses this write, and the warn-first ' +
+      'default persists the junk into a reference column instead).',
+  );
+}
+
 export interface Harness {
   api: HookApi;
   store: Record<string, Rec[]>;
@@ -135,8 +302,13 @@ export function makeHarness(store: Record<string, Rec[]> = {}): Harness {
           return rows(name).filter((r) => matches(r, whereOf(q))).length;
         },
         async insert(doc: Rec) {
-          const rec = { id: doc.id ?? `${name}_${++seq}`, ...doc };
+          // Recorded BEFORE the refusal so a test can still inspect the
+          // document that was attempted — the engine would have stored
+          // nothing, but "what did the hook try to write" is the question a
+          // failing value-shape assertion sends you to ask.
           calls.push({ op: 'insert', object: name, args: [doc] });
+          assertReferenceValueShapes('hook-harness', 'insert', name, doc);
+          const rec = { id: doc.id ?? `${name}_${++seq}`, ...doc };
           rows(name).push(rec);
           return rec;
         },
@@ -182,6 +354,7 @@ export function makeHarness(store: Record<string, Rec[]> = {}): Harness {
             );
           }
           calls.push({ op: 'update', object: name, args: [doc, options] });
+          assertReferenceValueShapes('hook-harness', 'update', name, doc);
           const row = rows(name).find((r) => r.id === doc.id);
           if (row) Object.assign(row, doc);
           return row;
