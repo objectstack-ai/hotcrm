@@ -31,9 +31,64 @@
 export const EXPLICIT_ID = /\s*\[#(?<slug>[^]+?)]\s*$/;
 
 /**
+ * The **ornament run a heading opens with** — the emoji in `## 🎧 Customer
+ * Service`, and any punctuation, symbols or whitespace around it.
+ *
+ * ## Why this is not `/^[^A-Za-z]+/` (#1272)
+ *
+ * It used to be. That rule strips everything that is not a Latin letter, so a
+ * heading carrying no Latin letters at all is stripped down to nothing.
+ * Measured on `origin/main` @ `bd61468a`, before this change:
+ *
+ * ```
+ * content/docs/analytics/dashboards.zh-Hans.mdx | headings: 9 | resolve to "": 4
+ *   -> ["五个仪表盘","你可以改什么","数字是从哪里来的","提示"]
+ * content/docs/analytics/dashboards.zh-Hant.mdx | headings: 9 | resolve to "": 4
+ *   -> ["五個儀表板","你可以改什麼","數字是從哪裡來的","提示"]
+ * ```
+ *
+ * Four different sections on each zh page shared one label, `""`. Both
+ * consumers key on label equality — the coverage test builds a `Set` of labels,
+ * the per-dashboard rule takes the FIRST `.find()` hit — so the moment a
+ * dashboard `label` is localized, a rule would read the page intro's tile
+ * bullets and report clean about a section it never opened. Dormant, not
+ * harmless, and the same "guard goes green on the wrong input" class as #935.
+ *
+ * ## Why these classes, and not the obvious ones
+ *
+ * The classes come from the headings the pages actually ship, not from an
+ * enumeration of today's five emoji — an enumeration is a fix that breaks on
+ * the sixth.
+ *
+ * - `\p{Extended_Pictographic}`, **not** `\p{Emoji}`. `\p{Emoji}` is true for
+ *   ASCII `0`-`9`, `#` and `*` — they carry Emoji=Yes so keycap sequences can
+ *   be formed — so it would eat the ordinal off `## 1. The home dashboard` and
+ *   hand a rule the label `The home dashboard`. That is the over-permissive
+ *   direction `test/heading-label.test.ts` exists to forbid.
+ *   `\p{Emoji_Component}` is out for the same reason: it also contains them.
+ * - `\p{Variation_Selector}` is load-bearing, not defensive. `☎️` is TWO code
+ *   points, U+260E + U+FE0F, and U+FE0F is not `\p{Emoji}`, not `\p{S}` and not
+ *   `\p{P}` — it is a mark. Drop this class and the label for
+ *   `## ☎️ Sales Activity` keeps a stray U+FE0F and stops matching the
+ *   `Sales Activity` dashboard. It is the one way this change could have broken
+ *   a live rule, and the reason the class was read off the real headings.
+ * - `\p{Emoji_Modifier}` (skin tones), `\p{Regional_Indicator}` (a flag is two
+ *   of these and neither is Extended_Pictographic) and `\p{Join_Control}` (the
+ *   ZWJ inside a sequence like 👨‍👩‍👧) are the emoji spellings these pages do not
+ *   use yet but a translator can reach for.
+ * - `\p{P}`, `\p{S}` and `\s` are the punctuation half of "emoji/punctuation
+ *   run", and what lets the separator after an emoji go with it.
+ *
+ * What it deliberately does not strip is a letter or a digit in ANY script, so
+ * `## 提示` resolves to `提示` rather than to `""`.
+ */
+export const LEADING_ORNAMENT =
+  /^[\p{Extended_Pictographic}\p{Emoji_Modifier}\p{Regional_Indicator}\p{Variation_Selector}\p{Join_Control}\p{P}\p{S}\s]+/u;
+
+/**
  * A docs heading reduced to the label a guard can compare against metadata:
- * leading emoji dropped so `## 🎧 Customer Service` matches the dashboard's
- * `label`, and a trailing explicit id dropped so
+ * the leading ornament run dropped so `## 🎧 Customer Service` matches the
+ * dashboard's `label`, and a trailing explicit id dropped so
  * `## 📈 Sales Performance [#sales-performance]` matches it too (#935).
  *
  * The id half is not cosmetic. Every section heading on the three
@@ -59,4 +114,4 @@ export const EXPLICIT_ID = /\s*\[#(?<slug>[^]+?)]\s*$/;
  * report clean about a section it never read.
  */
 export const headingLabel = (h: string): string =>
-  h.replace(EXPLICIT_ID, '').replace(/^[^A-Za-z]+/, '').trim();
+  h.replace(EXPLICIT_ID, '').replace(LEADING_ORNAMENT, '').trim();
