@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { AgentSchema } from '@objectstack/spec/ai';
 import { REPO_ROOT } from './helpers/repo-root';
 import { headingLabel } from './helpers/heading-label';
+import { PERSONAS, normalise } from './helpers/persona-vocabulary';
 import stack from '../objectstack.config';
 
 /**
@@ -1009,33 +1010,12 @@ describe('product docs do not name a retired copilot persona (#612)', () => {
     'content/docs/whats-new.zh-Hant.mdx': 'the v1.0 release record (zh-Hant)',
   };
 
-  /** Soft wraps and blockquote continuation markers collapse to one space. */
-  const unwrap = (text: string): string => text.replace(/[ \t]*\n[ \t]*>?[ \t]*/g, ' ');
-
-  /**
-   * Whitespace BETWEEN two CJK characters is typesetting, not a word boundary
-   * (see the header) — `服 務` is one word that a line break split.
-   */
-  const CJK = '\\u4e00-\\u9fff';
-  const tighten = (text: string): string =>
-    text.replace(new RegExp(`([${CJK}])[ \\t]+(?=[${CJK}])`, 'g'), '$1');
-
-  const normalise = (text: string): string => tighten(unwrap(text));
-
-  /**
-   * The persona spellings, one regex each so the failure names the spelling it
-   * found. The separator is an OPTIONAL single space: after `normalise()` a
-   * wrapped phrase is space-joined, and Chinese typography writes 「服务Copilot」
-   * with no space at all.
-   */
-  const PERSONAS: { label: string; re: RegExp }[] = [
-    { label: 'Sales Copilot', re: /Sales ?Copilot/ },
-    { label: 'Service Copilot', re: /Service ?Copilot/ },
-    { label: '销售 Copilot', re: /销售 ?Copilot/ },
-    { label: '服务 Copilot', re: /服务 ?Copilot/ },
-    { label: '銷售 Copilot', re: /銷售 ?Copilot/ },
-    { label: '服務 Copilot', re: /服務 ?Copilot/ },
-  ];
+  // `PERSONAS` and `normalise` moved to `test/helpers/persona-vocabulary.ts`
+  // (#1003), unchanged, so the `src/` rule reads the SAME vocabulary instead of
+  // a second hand-written copy that would drift from this one and then report a
+  // clean surface in spellings this one had already widened. The two surfaces
+  // differ only in what each ADDS on top: the bare word "Copilot" is a `src/`
+  // term (#1002), never a docs term — #611 keeps *AI Copilot* as a section name.
 
   /** Depth-first walk of `content/docs`, REPO_ROOT-relative. */
   const walkDocs = (dir: string): string[] => {
