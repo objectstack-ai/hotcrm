@@ -414,6 +414,68 @@ export const rows: Row[] = [...fieldsByObject].flatMap(([object, fields]) =>
 
 export const sitesOf = (object: string, field: string): Site[] => byField.get(`${object}.${field}`) ?? [];
 
+/**
+ * Why `--sites` validates its argument, and why no other path needs to (#1255).
+ *
+ * `--json` and the default ledger both ENUMERATE `fieldsByObject`, so neither
+ * can name a field that does not exist. `--sites` is the only path that takes a
+ * field name from **argv**, and it used to hand whatever it was given straight
+ * to `sitesOf`, which answers `[]` for a misspelling exactly as it does for a
+ * field nothing reads. Both then printed the same sentence and exited 0.
+ *
+ * That sentence — `(none — this field is inert)` — is the one quoted into an
+ * enforce-or-remove decision; #1198 and #1199 are both adjudications driven by
+ * this reading. A typo producing it verbatim with a green exit is silent AND
+ * self-confirming: re-running the same misspelled command re-derives the same
+ * confident answer, forever. A tool that answers questions about fields that do
+ * not exist manufactures evidence, so an unresolvable name is now a refusal.
+ *
+ * Measured while fixing this: **no declared field currently has zero sites** —
+ * every one has at least a locale row — so on today's stack the inert sentence
+ * was reachable ONLY through a name that does not exist. The zero-site branch
+ * is kept regardless (a field can lose its last carrier, and then the sentence
+ * is the true answer); what changed is that a typo no longer reaches it.
+ *
+ * This is a lookup, not new machinery: `fieldsByObject` already holds the
+ * declared set the ledger itself is built from, and `objectsByField` already
+ * answers "this field exists — on which object?". Near-misses are named from
+ * those two maps and nothing else; there is deliberately **no fuzzy matching**,
+ * so the correction offered is always a fact rather than a guess.
+ *
+ * @returns the refusal lines, or `null` when `target` names a declared field.
+ */
+export const refuseSitesTarget = (target: string): string[] | null => {
+  const objectList = `  registered objects: ${[...fieldsByObject.keys()].sort().join(', ')}`;
+  const dot = target.lastIndexOf('.');
+  if (dot <= 0 || dot === target.length - 1) {
+    return [
+      target.length === 0
+        ? '✗ --sites needs an <object>.<field> argument; none was given.'
+        : `✗ --sites needs <object>.<field>, not '${target}'.`,
+      objectList,
+    ];
+  }
+  const [object, field] = [target.slice(0, dot), target.slice(dot + 1)];
+  /** Pure lookup: the objects that really do declare this name, if any. */
+  const elsewhere = objectsByField.get(field) ?? [];
+  const alsoOn =
+    elsewhere.length > 0
+      ? `  '${field}' is declared on ${elsewhere.join(', ')}.`
+      : `  no registered object declares a field named '${field}'.`;
+  const declared = fieldsByObject.get(object);
+  if (declared === undefined) {
+    return [`✗ no object named '${object}' is registered in this stack.`, alsoOn, objectList];
+  }
+  if (!declared.has(field)) {
+    return [
+      `✗ '${object}' declares no field named '${field}'.`,
+      alsoOn,
+      `  'pnpm scan:fields --json' lists every declared field with its verdict.`,
+    ];
+  }
+  return null;
+};
+
 // ───────────────────────────────────────────────────────────── reporting ──
 
 const argv = process.argv.slice(2);
@@ -437,6 +499,14 @@ const main = (): void => {
   const sitesFlag = argv.indexOf('--sites');
   if (sitesFlag !== -1) {
     const target = argv[sitesFlag + 1] ?? '';
+    // Refuse before reporting: `sitesOf` cannot tell a misspelling from a field
+    // nothing reads, so the check has to happen here. See `refuseSitesTarget`.
+    const refusal = refuseSitesTarget(target);
+    if (refusal !== null) {
+      for (const line of refusal) console.error(line);
+      process.exitCode = 1;
+      return;
+    }
     const dot = target.lastIndexOf('.');
     const [object, field] = [target.slice(0, dot), target.slice(dot + 1)];
     const found = sitesOf(object, field);

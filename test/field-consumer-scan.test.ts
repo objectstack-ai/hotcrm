@@ -1,13 +1,17 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
+import { execFileSync } from 'node:child_process';
+import { join } from 'node:path';
 import {
   rows,
   sitesOf,
   fieldsByObject,
   objectsByField,
+  refuseSitesTarget,
   type Row,
 } from '../scripts/scan-field-consumers';
+import { REPO_ROOT } from './helpers/repo-root';
 
 /**
  * The consumer scan stays OBJECT-AWARE (#1193).
@@ -146,5 +150,121 @@ describe('the scan is not vacuous (#1193)', () => {
     // agreeing with everything.
     const shared = [...objectsByField].filter(([, objects]) => objects.length > 1);
     expect(shared.length).toBeGreaterThan(10);
+  });
+});
+
+/**
+ * `--sites` refuses a name that does not exist, and the refusal is an EXIT CODE
+ * (#1255).
+ *
+ * ## Why the exit status is the assertion and the wording is not
+ *
+ * The regression is not "the message is wrong", it is **"exits 0 on a name that
+ * does not exist"**. `--sites` is the only path that takes a field name from
+ * argv (`--json` and the default ledger both enumerate `fieldsByObject`, so
+ * neither can name a field that does not exist), and it used to pass whatever it
+ * was handed to `sitesOf`, which returns `[]` for a misspelling exactly as it
+ * does for a field nothing reads. Both then printed `(none — this field is
+ * inert)` and exited 0.
+ *
+ * That sentence is what gets quoted into an enforce-or-remove decision — #1198
+ * and #1199 are live adjudications driven by this reading — so a typo answered
+ * with a green exit is silent AND self-confirming: the same misspelled command
+ * re-derives the same confident answer every time it is run. A test that only
+ * read stdout would have passed on the old behaviour the moment the wording
+ * happened to match, which is why every case below asserts `status`.
+ *
+ * ## The third case is the one that makes the first two mean something
+ *
+ * A "fix" that rejected every input would satisfy the two refusal cases
+ * perfectly. `crm_product.tax_rate` is the control: declared, genuinely inert
+ * (#1193's headline row), and it must still be ACCEPTED and reported with exit
+ * 0. Refusal is about the name not existing, never about the verdict.
+ *
+ * ## A measurement worth recording, because it dates
+ *
+ * On this tree **no declared field has zero sites** — every one carries at least
+ * a locale row — so the inert sentence is currently reachable only through a
+ * name that does not exist. The control below therefore pins a declared field
+ * that reports its four carrier sites, not one that prints the sentence. If a
+ * field ever loses its last carrier the sentence becomes reachable honestly,
+ * and `scan-field-consumers.ts` still prints it; nothing here forbids that.
+ */
+describe('--sites refuses a field name that does not exist (#1255)', () => {
+  const TSX = join(REPO_ROOT, 'node_modules/.bin/tsx');
+  const SCRIPT = join(REPO_ROOT, 'scripts/scan-field-consumers.ts');
+
+  /** Spawns the real script, never throwing, so the exit status can be read. */
+  const run = (...args: string[]): { status: number; output: string } => {
+    try {
+      return { status: 0, output: execFileSync(TSX, [SCRIPT, ...args], { encoding: 'utf8' }) };
+    } catch (error) {
+      const failure = error as { status?: number; stdout?: string; stderr?: string };
+      return { status: failure.status ?? -1, output: `${failure.stdout ?? ''}${failure.stderr ?? ''}` };
+    }
+  };
+
+  it('an UNKNOWN object exits non-zero instead of calling it inert', () => {
+    const { status, output } = run('--sites', 'no_such_object.no_such_field');
+    expect(status).not.toBe(0);
+    expect(output).not.toContain('this field is inert');
+    expect(output).toContain("no object named 'no_such_object'");
+  });
+
+  it('a known object with an UNDECLARED field exits non-zero', () => {
+    // The card's own reproduction, verbatim.
+    const { status, output } = run('--sites', 'crm_account.no_such_field');
+    expect(status).not.toBe(0);
+    expect(output).not.toContain('this field is inert');
+    expect(output).toContain("declares no field named 'no_such_field'");
+  });
+
+  it('a DECLARED but genuinely inert field is still reported, still exit 0', () => {
+    // The control. Without it, a change that rejected everything would pass.
+    expect(fieldsByObject.get('crm_product')?.has('tax_rate')).toBe(true);
+    expect(verdictOf('crm_product', 'tax_rate')).toBe('inert');
+    const { status, output } = run('--sites', 'crm_product.tax_rate');
+    expect(status).toBe(0);
+    expect(output).toContain('crm_product.tax_rate — 4 site(s)');
+    expect(output).toContain('translations[0].en.objects.crm_product.fields');
+  });
+
+  it('a malformed target exits non-zero rather than scanning a garbled name', () => {
+    // `crm_account` has no dot, so the old `lastIndexOf('.')` split it into
+    // object `crm_accoun` / field `crm_account` and reported that as inert.
+    for (const target of ['crm_account', 'crm_account.', '.tax_rate']) {
+      const { status, output } = run('--sites', target);
+      expect(status, target).not.toBe(0);
+      expect(output, target).toContain('--sites needs');
+    }
+  });
+
+  it('--sites with no argument at all exits non-zero', () => {
+    const { status, output } = run('--sites');
+    expect(status).not.toBe(0);
+    expect(output).toContain('none was given');
+  });
+
+  /**
+   * The near-miss correction, which is a LOOKUP and not fuzzy matching: the
+   * scan already knows every declared field, so when the misspelled half is the
+   * object name it can name the objects that really do declare the field.
+   */
+  it('names the objects that do declare the field, when any do', () => {
+    const lines = refuseSitesTarget('crm_accont.tax_rate');
+    expect(lines).not.toBeNull();
+    expect(lines!.join('\n')).toContain("'tax_rate' is declared on crm_product, crm_quote_line_item");
+  });
+
+  it('says so plainly when no object declares the name at all', () => {
+    const lines = refuseSitesTarget('crm_account.no_such_field');
+    expect(lines!.join('\n')).toContain("no registered object declares a field named 'no_such_field'");
+  });
+
+  it('accepts every declared field in the ledger — the refusal is not a blanket', () => {
+    // The broadest form of the control above: refusal must key on the NAME not
+    // existing, so nothing the ledger itself enumerates may ever be refused.
+    const refused = rows.filter((r) => refuseSitesTarget(`${r.object}.${r.field}`) !== null);
+    expect(refused.map((r) => `${r.object}.${r.field}`)).toEqual([]);
   });
 });
