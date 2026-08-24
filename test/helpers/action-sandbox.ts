@@ -2,6 +2,7 @@
 
 import { QuickJSScriptRunner, actionBodyRunnerFactory, hookBodyRunnerFactory } from '@objectstack/runtime';
 import { extractHookBody } from '@objectstack/cli/dist/utils/extract-hook-body.js';
+import { assertReferenceValueShapes } from './hook-harness';
 
 /**
  * REAL QuickJS harness for action and hook bodies (issue #575 A1).
@@ -84,9 +85,9 @@ function project(row: Rec, fields?: string[]): Rec {
  * meets the real `update(data, options)` / `delete(options)` signatures, not a
  * friendlier invention of this file.
  *
- * Two behaviours are copied from the kernel rather than guessed, and
- * `test/action-sandbox.test.ts` re-verifies both against a real ObjectQL on the
- * in-memory driver so they cannot rot:
+ * Three behaviours are copied from the kernel rather than guessed, and
+ * `test/action-sandbox.test.ts` re-verifies all of them against a real ObjectQL
+ * on the in-memory driver so they cannot rot:
  *
  *   1. `update` resolves the target id from `data.id`, falling back to
  *      `options.where.id`, and rejects with `Update requires an ID or
@@ -95,6 +96,11 @@ function project(row: Rec, fields?: string[]): Rec {
  *      `filter` misspelling `_hook-api.ts` documents) is not an error and not a
  *      synonym — it is ignored, which is how a `findOne` silently degrades to
  *      "the object's first row".
+ *   3. A reference column (`lookup` / `master_detail` / `user` / `tree`) holds
+ *      a record id, and a write that puts a boolean, number or object there is
+ *      refused — see `assertReferenceValueShapes` in `hook-harness.ts` for the
+ *      measured ADR-0104 table this mirrors, and `test/harness-lookup-shape.test.ts`
+ *      for the pin against the real engine.
  */
 export function makeSandboxEngine(seed: Record<string, Rec[]> = {}): SandboxEngine {
   const store: Record<string, Rec[]> = seed;
@@ -124,12 +130,14 @@ export function makeSandboxEngine(seed: Record<string, Rec[]> = {}): SandboxEngi
     },
     async insert(object: string, data: Rec) {
       record('insert', object, [data]);
+      assertReferenceValueShapes('action-sandbox', 'insert', object, data);
       const row = { id: data?.id ?? `${object}_${++seq}`, ...data };
       rows(object).push(row);
       return row;
     },
     async update(object: string, data: Rec, options: Rec = {}) {
       record('update', object, [data, options]);
+      assertReferenceValueShapes('action-sandbox', 'update', object, data);
       const id = resolveId(data, options);
       if (!id && options.multi !== true) {
         throw new Error('Update requires an ID or options.multi=true');
@@ -140,6 +148,7 @@ export function makeSandboxEngine(seed: Record<string, Rec[]> = {}): SandboxEngi
     },
     async upsert(object: string, data: Rec, options: Rec = {}) {
       record('upsert', object, [data, options]);
+      assertReferenceValueShapes('action-sandbox', 'upsert', object, data);
       const id = resolveId(data, options);
       const row = id ? rows(object).find((r) => r.id === id) : undefined;
       if (row) {
