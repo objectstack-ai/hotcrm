@@ -756,6 +756,121 @@ describe('knowledge_article_publish_timestamps', () => {
   });
 });
 
+/**
+ * The #1265 tripwire — why the batch-widening defect above is NOT fixed here,
+ * expressed as an assertion instead of a paragraph.
+ *
+ * ADR-0058 Addendum II D3 makes the predicate-update payload BATCH-scoped: all
+ * N per-row `beforeUpdate` dispatches share ONE payload object, so a rewrite
+ * conditioned on the row widens to every matched row. `published_at`'s
+ * existence criterion is exactly that, and it is measurably live.
+ *
+ * D3 also names the three routes out — throw, write per row through `ctx.api`,
+ * or have the caller paginate — and every one of them needs the handler to know
+ * it is on the per-row path. This asserts that it cannot know, on the surface
+ * this repo actually ships hooks on.
+ *
+ * Note what the tests above CANNOT see: each hands `hook.handler` a fresh
+ * `input` object, which is per-row payload COPIES — the shape D3 explicitly
+ * says the engine does not build for `beforeUpdate`. They would stay green
+ * before and after any fix, so they are no pin on row scoping. This is.
+ *
+ * WHEN THIS TEST GOES RED: the platform has started handing hook bodies a
+ * per-row signal. That is the blocker lifting, not a regression — implement the
+ * D3-conformant fix in `knowledge_article.hook.ts` (and see the same card for
+ * the other flagged hooks), then delete this block.
+ */
+describe('#1265 — the shipped hook body cannot tell it is on a per-row predicate dispatch', () => {
+  /**
+   * The keys `buildSandboxContext` (@objectstack/runtime) marshals across the
+   * QuickJS boundary. `dispatch` is absent, and `input` arrives as
+   * `unwrapProxyToPlain(ctx.input)` = `Object.fromEntries(Object.entries(…))`,
+   * which copies only ENUMERABLE own keys — and the engine's flattening proxy
+   * marks `id`, `options` and `data` non-enumerable.
+   */
+  const PROBE = `
+    return {
+      __probe: {
+        dispatch: typeof ctx.dispatch,
+        inputId: typeof ctx.input.id,
+        inputOptions: typeof ctx.input.options,
+        previousPublishedAt: typeof (ctx.previous && ctx.previous.published_at),
+      },
+    };
+  `;
+
+  /** The per-row `ctx.input` the engine builds: `{ id, data, options }` behind
+   *  `installFlatInput`'s proxy, whose non-data keys are non-enumerable. */
+  const perRowInput = (payload: Rec, id: string, options: Rec): Rec => {
+    const raw: Rec = { id, data: payload, options };
+    return new Proxy(raw, {
+      get: (t, p, r) =>
+        p === 'id' || p === 'options' || p === 'data'
+          ? Reflect.get(t, p, r)
+          : t.data && p in t.data
+            ? t.data[p as string]
+            : Reflect.get(t, p, r),
+      set: (t, p, v) => {
+        if (p === 'id' || p === 'options' || p === 'data') t[p as string] = v;
+        else (t.data ??= {})[p as string] = v;
+        return true;
+      },
+      has: (t, p) =>
+        p === 'id' || p === 'options' || p === 'data' ? p in t : (t.data && p in t.data) || p in t,
+      ownKeys: (t) => Object.keys(t.data ?? {}),
+      getOwnPropertyDescriptor: (t, p) => {
+        if (t.data && p in t.data) {
+          return { configurable: true, enumerable: true, writable: true, value: t.data[p as string] };
+        }
+        const d = Object.getOwnPropertyDescriptor(t, p);
+        return d ? { ...d, enumerable: false } : undefined;
+      },
+    }) as Rec;
+  };
+
+  it(
+    'sees no dispatch mode, no input.id and no input.options — so none of D3’s three routes are reachable',
+    async () => {
+      const { QuickJSScriptRunner, hookBodyRunnerFactory } = await import('@objectstack/runtime');
+      const { makeSandboxEngine } = await import('./helpers/action-sandbox');
+
+      const engine = makeSandboxEngine();
+      const bind = hookBodyRunnerFactory(new QuickJSScriptRunner(), {
+        ql: engine.engine,
+        appId: 'hotcrm',
+      } as never);
+      const run = bind({
+        name: 'probe_1265',
+        object: 'crm_knowledge_article',
+        events: ['beforeUpdate'],
+        body: { language: 'js', source: PROBE, capabilities: [], timeoutMs: 5000 },
+      } as never)!;
+
+      const payload: Rec = { title: 'batch edit' };
+      const engineCtx: Rec = {
+        event: 'beforeUpdate',
+        object: 'crm_knowledge_article',
+        input: perRowInput(payload, 'ka_1', { where: { status: 'published' }, multi: true }),
+        previous: { id: 'ka_1', status: 'published', published_at: '2024-01-01T00:00:00.000Z' },
+        dispatch: { mode: 'per-row', index: 0, scope: {} },
+      };
+
+      await run(engineCtx as never);
+      const probe = (payload as Rec).__probe as Rec;
+
+      // The row's pre-image DOES cross — which is exactly why a row-conditioned
+      // rewrite is expressible here, and why it is wrong.
+      expect(probe.previousPublishedAt, 'ctx.previous is the row pre-image and does cross').toBe('string');
+
+      // None of these do. Each `undefined` is one of D3's routes closed off.
+      expect(probe.dispatch, 'ctx.dispatch would name the per-row path').toBe('undefined');
+      expect(probe.inputId, 'ctx.input.id would name the row').toBe('undefined');
+      expect(probe.inputOptions, 'ctx.input.options would carry `multi`/`where`').toBe('undefined');
+    },
+    20_000,
+  );
+});
+
 // ─────────────────────────────────────────────────────────────── lead ──
 
 describe('lead_automation', () => {
