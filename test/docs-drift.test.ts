@@ -5,6 +5,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { AgentSchema } from '@objectstack/spec/ai';
 import { REPO_ROOT } from './helpers/repo-root';
+import { headingLabel } from './helpers/heading-label';
 import stack from '../objectstack.config';
 
 /**
@@ -584,8 +585,11 @@ describe('the dashboards docs page lists tiles that exist', () => {
     return out.map((s) => ({ heading: s.heading, body: s.body.join('\n') }));
   };
 
-  /** Drop the leading emoji so `## 🎧 Customer Service` matches the label. */
-  const headingLabel = (h: string): string => h.replace(/^[^A-Za-z]+/, '').trim();
+  // `headingLabel` — leading emoji and trailing fumadocs `[#id]` dropped — is
+  // imported from `./helpers/heading-label`, where its rationale lives and
+  // `test/heading-label.test.ts` pins it. Both consumers below go through it:
+  // the heading set built for the coverage test, and the `.find()` that locates
+  // a dashboard's section.
 
   /** `- **Total Revenue** — …` → `Total Revenue`. Opening bold only. */
   const listedTiles = (body: string): string[] =>
