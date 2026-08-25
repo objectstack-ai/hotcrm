@@ -42,6 +42,54 @@ const SKIP_DIRS = new Set(['node_modules', 'dist', '.next', '.source', '.objects
 /** Max byte size for a single first-party source file. */
 const MAX_FILE_BYTES = 100 * 1024;
 
+/**
+ * Where the size ADVISORY starts, as a fraction of the cap above (#1287).
+ *
+ * ⛔ This is not a second cap and it is not a lever on the first one. It only
+ * decides when a file gets *named* on an otherwise green run; `MAX_FILE_BYTES`
+ * is the only thing that can fail this check, and lowering or raising this
+ * fraction cannot make an oversized file pass.
+ *
+ * **Why an advisory exists at all.** The cap is silent at 99% and red at 101%,
+ * so the signal always arrived as a failed run on somebody else's change. It
+ * had done so three times when this was written — `test/metadata-references.ts`
+ * with 817 B of headroom left (#814), `src/data/index.ts` with ~1.5 KB (#635),
+ * `test/docs-drift.test.ts` with 2,654 B (#1196, which forced #1187 to re-home
+ * its rule mid-implementation). Every one of those is under a *median* commit's
+ * worth of growth, i.e. no lead time at all.
+ *
+ * **Why 70%, measured on `main` @ `7250a1f0` (333 files under `SCANNED`).**
+ * Two independent numbers bound the choice, and neither is the 90% the card
+ * that asked for this suggested:
+ *
+ *   - **A band must be wider than one commit, or a file jumps it whole.**
+ *     Growth of an already-existing code file in a single commit, over the 53
+ *     commits of available history: p50 1,004 B · p90 6,715 B · p95 8,640 B ·
+ *     p99 13,703 B · max 13,927 B. A 90% threshold is a 10,240 B band —
+ *     *narrower than the largest single commit observed* — so a file can cross
+ *     it entirely between two runs and never be named. That reproduces the
+ *     silent-then-red failure this check exists to end, 10 KB lower down.
+ *   - **The warning has to be seen on one PR and actable on the next**, which
+ *     is two touches of headroom: 2 × p99 ≈ 27.4 KB, so the threshold must sit
+ *     at or below 73.2%. 70% gives a 30,720 B band — 2.2 × p99, 4.6 × p90,
+ *     30.6 × p50 — with margin.
+ *
+ * **What it costs in noise.** At 70% exactly two of 333 files are named today
+ * (`src/translations/es-ES.ts` 75.3%, `src/translations/ja-JP.ts` 73.4%); the
+ * tree is otherwise small — median 10,034 B, 323 files under half the cap. Two
+ * lines is far inside what this gate already considers readable: `check()`
+ * truncates at 20 hits. The opposite error was the real risk. A guard that
+ * names nothing is the failure mode this script was written to end — its three
+ * original checks scanned `packages/`, a directory this repo has never had, and
+ * `SCANNED` carries the verdict in one line: *a check that scans nothing is
+ * worse than no check at all*. At the suggested 90%, **zero** of 333 files are
+ * named — the advisory would ship watching an empty set.
+ */
+const ADVISORY_FRACTION = 0.7;
+
+/** First byte at which a file is named by the advisory. Never a failure. */
+const ADVISORY_BYTES = Math.floor(MAX_FILE_BYTES * ADVISORY_FRACTION);
+
 /** Recursively collect files under `dir` (repo-relative paths). */
 function walk(dir) {
   const out = [];
@@ -418,6 +466,38 @@ function check(name, hits, remedy) {
   failures.push(name);
 }
 
+/**
+ * Report something WITHOUT failing the gate (#1287).
+ *
+ * Deliberately not a mode of `check()` above, and the difference is the whole
+ * point of the card: `failures` is never touched here, `process.exit` is never
+ * reached from here, and nothing this prints can change the exit code. A
+ * `hits`-shaped argument with a boolean "but do not fail" flag was the other
+ * shape available and is worse — the two calls would then differ by one
+ * argument at the call site, and the next person to widen the advisory would be
+ * one typo away from making it a gate.
+ *
+ * **It must not read like a failure**, or the reader who learns to skip a
+ * warning skips the next red too. So it shares nothing with a failure's
+ * vocabulary: `check()` writes `✗ <name> — N violation(s)`; this writes `ℹ️`,
+ * says "advisory", says in the same line that it does not fail the gate, and
+ * never uses the word "violation". It goes to **stdout**, never `console.error`
+ * — the two lines a reader of the verify log can already mistake for failures
+ * are fixture output, and this must not become a third.
+ *
+ * The shape is the token ratchet's re-anchor nag
+ * (`scripts/check-source-token-ratchet.mjs`), which is this repo's existing
+ * answer to "warn before the wall": same `ℹ️` marker, same indent under the
+ * check it belongs to, and silent when it has nothing to say.
+ */
+function advise(headline, hits, remedy) {
+  if (hits.length === 0) return;
+  console.log(`  ℹ️  ${headline} — advisory, this does not fail the gate`);
+  for (const h of hits.slice(0, 20)) console.log(`      ${h.file}  ${h.text}`);
+  if (hits.length > 20) console.log(`      … and ${hits.length - 20} more`);
+  console.log(`      → ${remedy}`);
+}
+
 // The code directories these checks are guarding. A typo here (or a directory
 // that gets renamed out from under us) must be loud, not silently vacuous —
 // that is the exact failure mode this script exists to fix.
@@ -608,16 +688,34 @@ check(
   'write the character as an escape sequence (\\u0000 for NUL) — byte-identical at runtime, and it keeps the file findable by grep',
 );
 
+// Sized once, and BOTH the cap and the advisory below read this one list. The
+// advisory is not allowed its own idea of what a source file is: a second walk
+// or a second filter is how the two drift apart, and a band that watches a
+// different set of files than the cap it warns about is worse than no band.
+const codeFileSizes = codeFiles.map((f) => ({ file: f, size: statSync(join(ROOT, f)).size }));
+
+const asKB = (bytes) => `${(bytes / 1024).toFixed(0)}KB`;
+
 check(
   `no source file over ${MAX_FILE_BYTES / 1024}KB`,
-  codeFiles
-    .filter((f) => statSync(join(ROOT, f)).size > MAX_FILE_BYTES)
-    .map((f) => ({
-      file: f,
-      line: 0,
-      text: `${(statSync(join(ROOT, f)).size / 1024).toFixed(0)}KB`,
-    })),
+  codeFileSizes
+    .filter((f) => f.size > MAX_FILE_BYTES)
+    .map((f) => ({ file: f.file, line: 0, text: asKB(f.size) })),
   'split the file — oversized modules defeat review',
+);
+
+advise(
+  `${ADVISORY_FRACTION * 100}% of the ${MAX_FILE_BYTES / 1024}KB cap reached, and not passed`,
+  codeFileSizes
+    .filter((f) => f.size > ADVISORY_BYTES && f.size <= MAX_FILE_BYTES)
+    .sort((a, b) => b.size - a.size)
+    .map((f) => ({
+      file: f.file,
+      text:
+        `${((f.size / MAX_FILE_BYTES) * 100).toFixed(1)}% of cap, ` +
+        `${asKB(MAX_FILE_BYTES - f.size)} of headroom left`,
+    })),
+  'split it while that is still a scheduled job rather than a detour on an unrelated PR — nothing here is a violation and the cap is unchanged',
 );
 
 check(
