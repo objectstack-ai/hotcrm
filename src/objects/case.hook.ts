@@ -46,16 +46,50 @@ const caseValidation: Hook = {
     const { input } = ctx;
     const api = ctx.api as HookApi | undefined;
 
+    // Guest (web-to-case) sanitisation. OVERWRITE with a safe value — never
+    // `delete` (#1133).
+    //
+    // ⚠️ `delete ctx.input.<field>` in a hook is a SILENT NO-OP. MEASURED
+    // against the real engine (17.1.0): the whole block below used to be five
+    // `delete` statements, and every one of them left the client's value in the
+    // stored row while the three assignments above them landed. The control
+    // read as enforced and did nothing.
+    //
+    // The mechanism, measured at the seam rather than inferred: ObjectQL hands
+    // a hook `ctx.input` as `{ data, options }` and swaps in a flat-record
+    // Proxy over it (`installFlatInput`, `@objectstack/objectql`
+    // `src/hook-wrappers.ts`). That Proxy traps `get` / `set` / `has` /
+    // `ownKeys` / `getOwnPropertyDescriptor` and routes each of them into
+    // `data` — but it declares NO `deleteProperty` trap. A missing trap falls
+    // back to `Reflect.deleteProperty(target, key)` on the WRAPPER, one level
+    // above the record, so the delete removes a key that was never there:
+    //
+    //   delete input.owner_id   -> returns TRUE  (JS reports success)
+    //   'owner_id' in input     -> still true
+    //   input.owner_id          -> still the caller's value
+    //   Object.keys(input)      -> still lists it
+    //
+    // Every read-back agrees the delete worked. Assignment survives because
+    // `set` is trapped and writes into `data`, which is the object the engine
+    // goes on to persist. Hence: assign, and never trust `delete` here.
+    //
+    // `null` rather than `''` or `undefined`, all three measured on the write
+    // path: `null` stores as null, `''` stores as an empty string (wrong in a
+    // lookup — the #601 lesson two hooks down), and `undefined` stores the KEY
+    // with an undefined value rather than omitting it, which is not the same as
+    // absent and is what a `has()`-guarded CEL predicate then trips over.
+    // `null` is also what the two downstream owner writers read as "ownerless":
+    // `case_auto_assign` stands down only on a non-empty STRING `owner_id`, so
+    // a nulled column still reaches the round-robin.
     const isGuestSubmission = !ctx.previous && !ctx.user?.id;
     if (isGuestSubmission) {
       if (!input.origin)   input.origin   = 'web';
       if (!input.status)   input.status   = 'new';
       if (!input.priority) input.priority = 'medium';
-      delete (input as Record<string, unknown>).owner_id;
-      delete (input as Record<string, unknown>).is_escalated;
-      delete (input as Record<string, unknown>).is_closed;
-      delete (input as Record<string, unknown>).internal_notes;
-      delete (input as Record<string, unknown>).resolution;
+      input.owner_id       = null;
+      input.is_escalated   = false;
+      input.internal_notes = null;
+      input.resolution     = null;
     }
 
     const priority =
@@ -153,15 +187,24 @@ const caseValidation: Hook = {
 
     // Closed flag/date + resolution time (migrated from removed `set_closed_flag`
     // / `set_closed_date` / `calculate_resolution_time` workflows — 7.7 dropped
-    // workflows[]). Guest submissions had is_closed stripped above; recompute it
-    // here for trusted writes.
-    if (!isGuestSubmission) {
-      const effStatus =
-        (typeof input.status === 'string' && input.status) ||
-        (typeof ctx.previous?.status === 'string' && (ctx.previous.status as string)) ||
-        undefined;
-      if (typeof effStatus === 'string') input.is_closed = effStatus === 'closed';
+    // workflows[]).
+    const effStatus =
+      (typeof input.status === 'string' && input.status) ||
+      (typeof ctx.previous?.status === 'string' && (ctx.previous.status as string)) ||
+      undefined;
 
+    // `is_closed` is DERIVED from `status`, on every write including a guest's
+    // (#1133). It used to be stripped for guests and recomputed only for
+    // trusted ones — which, once the strip is a real overwrite, would store a
+    // guest's `status: 'closed'` alongside `is_closed: false`. The two then
+    // contradict each other, and every consumer keyed on the flag — the pinned
+    // `unassigned_triage` view, the `case_unassigned_triage_sharing` rule —
+    // reads such a case as open backlog forever. A derived column is derived on
+    // every write or it is not derived at all; the guest's own `is_closed` is
+    // still ignored, because this recompute overwrites whatever they sent.
+    if (typeof effStatus === 'string') input.is_closed = effStatus === 'closed';
+
+    if (!isGuestSubmission) {
       const becameClosed = input.status === 'closed' && ctx.previous?.status !== 'closed';
       if (becameClosed && !input.closed_date && !ctx.previous?.closed_date) {
         input.closed_date = new Date().toISOString();
