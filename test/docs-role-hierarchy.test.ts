@@ -70,7 +70,9 @@ import { REPO_ROOT } from './helpers/repo-root';
  * file". A dedicated `docs-*.test.ts` per docs rule family is this repo's
  * standing shape anyway (`docs-object-coverage`, `docs-analytics-vocabulary`,
  * `docs-search-navigation-views`, …), so the rule is here and `docs-drift.test.ts`
- * is byte-for-byte unchanged.
+ * was left byte-for-byte unchanged. #1196 has since taken that same advice for
+ * the file itself: the #729 count guard this rule complements is now
+ * `test/docs-metadata-counts.test.ts`, and this rule's home is unchanged.
  *
  * ## Reverse verification (#1019)
  *

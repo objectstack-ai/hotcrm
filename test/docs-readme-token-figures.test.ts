@@ -22,12 +22,15 @@ import { REPO_ROOT } from './helpers/repo-root';
  *
  * This rule belongs to that file's "a doc states a number that must match the
  * source of truth" family — the #729 count rule is its closest relative and the
- * model for how it reads its expectations. It ships as its own file because
- * `docs-drift.test.ts` is 100,190 bytes against the 102,400-byte ceiling in
- * `scripts/check-source-hygiene.mjs`: appending this block put it at 107KB and
- * turned the hygiene gate red. Most of the family already lives in sibling
- * `test/docs-*.test.ts` files for the same reason, so this follows the
- * convention rather than inventing one.
+ * model for how it reads its expectations; that rule is
+ * `test/docs-metadata-counts.test.ts` since #1196. It shipped as its own file
+ * because `docs-drift.test.ts` was 100,190 bytes against the 102,400-byte
+ * ceiling in `scripts/check-source-hygiene.mjs`: appending this block put it at
+ * 107KB and turned the hygiene gate red. #1196 has since split that file along
+ * its family seams, so the ceiling is no longer what keeps this rule out of it —
+ * the subject is. A dedicated `test/docs-*.test.ts` per docs rule family is this
+ * repo's standing shape, so this follows the convention rather than inventing
+ * one.
  *
  * ## Why a tolerance, and why exactly 5%
  *

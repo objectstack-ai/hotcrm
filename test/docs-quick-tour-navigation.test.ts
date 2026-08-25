@@ -37,7 +37,7 @@ import { CrmPositions } from '../src/sharing/positions';
  *    in the section must resolve to a navigation label or to the dashboard the
  *    pinned Home entry opens. (Bold runs containing CJK are the locale prose's
  *    own emphasis and are skipped — product names stay English in every locale,
- *    the same convention `docs-drift.test.ts` leans on.)
+ *    the same convention `docs-dashboard-tiles.test.ts` leans on.)
  *  - *italic* is reserved for a name the product does NOT carry, the spelling
  *    #927 / PR #932 established. Every retired name must still be named in
  *    italics — the convention is to say where a reader's name really lives, not

@@ -2,8 +2,9 @@
 
 > **This page states the CURRENT state of `main` — it is not a dated snapshot.**
 > Every number below is transcribed from a command you can re-run, and the ones
-> that can be derived from the source tree are pinned by `test/docs-drift.test.ts`
-> against the registered stack and `package.json`. A count that drifts fails CI
+> that can be derived from the source tree are pinned by
+> `test/docs-declared-versions.test.ts` against the registered stack and
+> `package.json`. A count that drifts fails CI
 > here instead of quietly ageing on the page.
 > Source of truth: `pnpm validate`, `pnpm typecheck`, and `pnpm test`.
 
@@ -38,7 +39,7 @@ pnpm validate
 > every other number in the README's inventory sentence already uses, and the
 > only one a guard can re-derive from the stack instead of trusting a
 > hand-maintained figure. The README states the same 26, pinned by
-> `test/docs-drift.test.ts`.
+> `test/docs-metadata-counts.test.ts`.
 >
 > The two figures moved together in #597: `crm_campaign_member` gave up the
 > `first_opened_date` / `first_clicked_date` stamps no email-tracking engine
@@ -76,8 +77,9 @@ pnpm verify
 | Local dev port | `4001` |
 
 Each row above is asserted against `package.json` (`engines`, the `@objectstack/*`
-dependency line, and the `dev` script's port) by `test/docs-drift.test.ts` — this
-table is read as present-tense fact, so it is held to one.
+dependency line, and the `dev` script's port) by
+`test/docs-declared-versions.test.ts` — this table is read as present-tense
+fact, so it is held to one.
 
 ## Current Metadata Inventory
 
