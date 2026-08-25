@@ -163,28 +163,60 @@ const leadHook: Hook = {
       // by the client. Guests are unauthenticated, so we identify them
       // by the absence of `ctx.user?.id`. (The `guest_portal` profile
       // already restricts them to INSERT-only on `crm_lead`.)
-      const isGuestSubmission = !ctx.user?.id;
+      // `!ctx.session?.isSystem` is new (#1133) and is the same correction made
+      // on `case.hook.ts`'s guest branch, for the same measured reason: a SYSTEM
+      // write (seed load, backfill, demo bootstrap) also arrives with no user
+      // id, and once the strip below stops being a no-op it would blank the
+      // owner and conversion state of every system-written lead. This very
+      // handler already reads that absence the other way a few lines down — the
+      // converted-lead lock treats `!ctx.user?.id` as the system-write signal —
+      // so the two readings were in direct contradiction until now.
+      const isGuestSubmission = !ctx.user?.id && !ctx.session?.isSystem;
       if (isGuestSubmission) {
         if (!input.lead_source) input.lead_source = 'web';
         if (!input.status)      input.status      = 'new';
-        // Never trust client-supplied conversion / ownership fields on
-        // a public form — strip them defensively.
-        delete (input as Record<string, unknown>).is_converted;
-        delete (input as Record<string, unknown>).converted_account;
-        delete (input as Record<string, unknown>).converted_contact;
-        delete (input as Record<string, unknown>).converted_opportunity;
-        delete (input as Record<string, unknown>).converted_date;
-        delete (input as Record<string, unknown>).owner_id;
+        // Never trust client-supplied conversion / ownership fields on a public
+        // form — OVERWRITE them with a safe value.
+        //
+        // ⚠️ These were ten `delete` statements and every one was a SILENT
+        // NO-OP (#1133). MEASURED here on `crm_lead`, not assumed from the
+        // identical block on `crm_case`: a guest insert carrying
+        // `is_converted: true`, `converted_date`, `owner_id` and
+        // `duplicate_status: 'confirmed'` stored all four verbatim, while
+        // `lead_source = 'web'` — an assignment two lines up, same `input`,
+        // same call — landed. A second, sharper reading came from the engine
+        // refusing the write at all: a submission carrying only
+        // `duplicate_of_type: 'crm_lead'` is rejected with "Duplicate Of Lead
+        // is required", which is `duplicate_of_lead`'s `requiredWhen` firing on
+        // a key this branch believed it had already removed.
+        //
+        // The cause is a missing `deleteProperty` trap on ObjectQL's
+        // flat-record input Proxy; the full measurement is written up on
+        // `case.hook.ts`'s guest branch, which shares it. Assignment is trapped
+        // and survives, so assignment is what this block uses.
+        //
+        // `null` is the no-value spelling throughout, and it is load-bearing
+        // twice over: `lead_auto_assign` stands down only on a non-empty STRING
+        // `owner_id`, and `lead_duplicate_check` stands down only on a NON-BLANK
+        // `duplicate_status` / `duplicate_of_type` — where its own `isBlank`
+        // counts `null` as blank. Both therefore still run on a sanitised guest
+        // submission, which is exactly what the removed deletes were for.
+        input.is_converted           = false;
+        input.converted_account      = null;
+        input.converted_contact      = null;
+        input.converted_opportunity  = null;
+        input.converted_date         = null;
+        input.owner_id               = null;
         // Same reasoning for the duplicate link (#598): a submitter who can
         // post `duplicate_status: 'confirmed'` can switch OFF the intake
         // dedupe for their own submission (`lead_duplicate_check` stands down
         // on a record that already carries a verdict) and park a link to any
         // record id they care to guess. Guests state facts about themselves,
         // never about the pipeline.
-        delete (input as Record<string, unknown>).duplicate_of_type;
-        delete (input as Record<string, unknown>).duplicate_of_lead;
-        delete (input as Record<string, unknown>).duplicate_of_contact;
-        delete (input as Record<string, unknown>).duplicate_status;
+        input.duplicate_of_type      = null;
+        input.duplicate_of_lead      = null;
+        input.duplicate_of_contact   = null;
+        input.duplicate_status       = null;
       }
 
       if (typeof input.rating !== 'number') {
