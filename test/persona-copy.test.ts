@@ -7,8 +7,9 @@ import { PERSONAS, normalise } from './helpers/persona-vocabulary';
 /**
  * Retired personas must not reach a screen from `src/` (#1003).
  *
- * #612 / PR #1001 guarded the PROSE side: `test/docs-drift.test.ts` reads every
- * `.mdx` under `content/docs` and fails a page that names a retired copilot.
+ * #612 / PR #1001 guarded the PROSE side: `test/docs-retired-personas.test.ts`
+ * reads every `.mdx` under `content/docs` and fails a page that names a retired
+ * copilot.
  * The other side had no gate at all. Three rules looked like they covered it
  * and none did — `os validate` and `pnpm lint` walk authored metadata but treat
  * a card's `title` as free text; the "documented agent names resolve" rule and
@@ -57,7 +58,7 @@ import { PERSONAS, normalise } from './helpers/persona-vocabulary';
  *
  * Because "0 found" and "the detector stopped matching" read identically, the
  * two probes below are what actually protect this rule — the same reason
- * `docs-drift.test.ts` carries its own.
+ * `docs-retired-personas.test.ts` carries its own.
  */
 describe('authored metadata does not name a retired copilot persona (#1003)', () => {
   /**

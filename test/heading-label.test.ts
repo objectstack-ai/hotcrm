@@ -9,7 +9,8 @@ import stack from '../objectstack.config';
 
 /**
  * `headingLabel()` reduces a docs heading to the label a drift guard compares
- * against metadata. `test/docs-drift.test.ts` runs every dashboards-page rule
+ * against metadata. `test/docs-dashboard-tiles.test.ts` runs every
+ * dashboards-page rule
  * through it, so what it can and cannot see decides what those rules check.
  *
  * ## Why this file exists (#935)
@@ -111,7 +112,8 @@ describe('headingLabel() reads a heading the way fumadocs renders it', () => {
     // Vacuity guard. The probes are built by matching real headings against
     // real dashboards, so a renamed section or an emptied registry would leave
     // this green over nothing — the state a pin must never reach. Section
-    // coverage itself is `docs-drift.test.ts`'s job, not this file's; here it
+    // coverage itself is `docs-dashboard-tiles.test.ts`'s job, not this file's;
+    // here it
     // is only the evidence that the probes are real.
     expect(dashboards.length, 'no dashboards registered — this pin is vacuous').toBeGreaterThan(0);
     expect(
@@ -239,7 +241,7 @@ describe('headingLabel() reads a heading the way fumadocs renders it', () => {
     //
     // It is what turns the collapse from "unreachable, because every dashboard
     // `label` happens to be English" into an enforced invariant. Both consumers
-    // in `docs-drift.test.ts` key on label equality — one builds
+    // in `docs-dashboard-tiles.test.ts` key on label equality — one builds
     // `new Set(...map(headingLabel))` where duplicates silently dedupe, the
     // other does `.find(s => headingLabel(s.heading) === d.label)` and takes the
     // first hit — so two headings sharing a label is a rule reading the wrong

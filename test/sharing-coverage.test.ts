@@ -1054,7 +1054,8 @@ describe('the related-list table names the same account children on the Chinese 
  * Chinese pages did not follow, and for six weeks told their readers the
  * opposite of what the English page told theirs: "你能看到其父记录你能看到的那些行".
  * The existing doc rules all stop at the English page (#725 is the same shape),
- * and `docs-drift.test.ts` compares callout counts, which #699 did not change.
+ * and `docs-locale-callouts.test.ts` compares callout counts, which #699 did not
+ * change.
  *
  * What this pins is CO-MOVEMENT, not truth. The truth is pinned by
  * `test/parent-derived-reach.test.ts`, which measures the reach against the
@@ -1103,7 +1104,8 @@ describe('every locale states the parent-derived reach this release computes', (
  *
  * Nothing was red. The reach guard above stops at `sharing-and-security`, the
  * OWD and related-list rules read tables this page does not have, and
- * `docs-drift.test.ts` compares callout counts, which #699 did not change —
+ * `docs-locale-callouts.test.ts` compares callout counts, which #699 did not
+ * change —
  * `grep -rn "profiles.mdx" test/` was empty before this block.
  *
  * ## Why a second ledger rather than a fourth entry in PAGES

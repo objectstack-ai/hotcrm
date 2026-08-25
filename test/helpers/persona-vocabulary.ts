@@ -6,8 +6,8 @@
  * #512 removed the two app-authored agents and ADR-0063 §2 made the surface
  * skills-only. Two guards now enforce that on text, on two different surfaces:
  *
- *   `test/docs-drift.test.ts`   product prose under `content/docs`   (#612)
- *   `test/persona-copy.test.ts` authored metadata under `src/`       (#1003)
+ *   `test/docs-retired-personas.test.ts` product prose under `content/docs` (#612)
+ *   `test/persona-copy.test.ts`          authored metadata under `src/`     (#1003)
  *
  * They live in one module because the alternative was measured and rejected:
  * a second, hand-written copy would drift from the first, and the two would

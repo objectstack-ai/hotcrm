@@ -38,7 +38,7 @@ import {
  *
  * Nothing checks prose: `os validate` and `pnpm lint` walk authored metadata and
  * never open `content/docs`, so — as with the dashboards-page tile guard in
- * `docs-drift.test.ts` — the check has to live where the claim lives.
+ * `docs-dashboard-tiles.test.ts` — the check has to live where the claim lives.
  *
  * The rules below are deliberately two-directional, because the section makes
  * both positive and negative claims:
@@ -47,7 +47,8 @@ import {
  *    a real widget title, report label, dataset label, or the dashboard's two
  *    names. (Bold runs containing CJK are the locale prose's own emphasis and
  *    are skipped — product names stay English in every locale, which is the
- *    same convention `docs-drift.test.ts` leans on.) Phantom names are written
+ *    same convention `docs-dashboard-tiles.test.ts` leans on.) Phantom names are
+ *    written
  *    in *italics*, the spelling this page already uses for a name the product
  *    does not carry (`*Service Dashboard*`, #927/PR #932), so a phantom can
  *    never satisfy this rule by accident.

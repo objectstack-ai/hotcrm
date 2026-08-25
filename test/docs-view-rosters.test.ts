@@ -22,13 +22,17 @@ type AnyRec = Record<string, any>;
  *
  * That is the section a manager reads to learn what queues exist, so naming
  * three that cannot be found in the UI is a product defect. Nothing was
- * checking it. The #729 count rule in `docs-drift.test.ts` counts objects,
- * flows, dashboards, datasets, actions and positions, and views are not among
- * them; the STATUS.md transcript rule beside it counts registered view FILES
- * (one per object), not the individual saved views a page like this describes.
- * This file is that missing rule, and it lives here rather than in
- * `docs-drift.test.ts` because that file is 97KB against this repo's 100KB
- * source-file cap — adding it there fails `pnpm hygiene`, measured.
+ * checking it. The #729 count rule (`test/docs-metadata-counts.test.ts`) counts
+ * objects, flows, dashboards, datasets, actions and positions, and views are not
+ * among them; the STATUS.md transcript rule
+ * (`test/docs-declared-versions.test.ts`) counts registered view FILES (one per
+ * object), not the individual saved views a page like this describes. This file
+ * is that missing rule, and it lives here rather than beside them because a
+ * dedicated `test/docs-*.test.ts` per family is this repo's standing shape. When
+ * it was written the reason was arithmetic too — `docs-drift.test.ts` was 97KB
+ * against this repo's 100KB source-file cap, and adding it there failed `pnpm
+ * hygiene`, measured — which is the condition #1196 resolved by splitting that
+ * file into the two files named above and five more.
  *
  * ## The rule is COVERAGE, not "no phantom names" — and that was measured
  *
