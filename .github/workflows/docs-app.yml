@@ -7,17 +7,33 @@ name: Docs App
 # a dead internal link could land on main with every check green.
 #
 # This workflow is the only thing that compiles it.
+#
+# ⚠️ The pages it compiles do NOT live in `apps/docs`. `apps/docs/source.config.ts`
+# declares two collections that source their MDX from the repo root —
+# `docs` (`dir: '../../content/docs'`) and `blog` (`dir: '../../content/blog'`) —
+# and both are rendered by `apps/docs/lib/source.ts`. So the path filters below
+# must list every collection directory as well as `apps/docs` itself; a docs-only
+# PR (the shape of nearly every documentation change here) touches only
+# `content/**` and would otherwise never run this build (#1169).
+#
+# `test/docs-app-workflow-paths.test.ts` holds the two lists to that: it reads the
+# collection dirs out of `source.config.ts` and fails when a real file under one
+# of them is not matched by the `push` and `pull_request` filters here.
 
 on:
   push:
     branches: [ main, develop ]
     paths:
       - 'apps/docs/**'
+      - 'content/docs/**'
+      - 'content/blog/**'
       - '.github/workflows/docs-app.yml'
   pull_request:
     branches: [ main, develop ]
     paths:
       - 'apps/docs/**'
+      - 'content/docs/**'
+      - 'content/blog/**'
       - '.github/workflows/docs-app.yml'
   workflow_dispatch:
 
