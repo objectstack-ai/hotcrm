@@ -317,7 +317,11 @@ describe('the guest strip and the assignment are ordered, not merely coexisting'
       crm_case: [],
     });
     const input: Rec = { subject: 'Spoofed', description: 'x', owner_id: 'attacker_chosen_user' };
-    const ctx = { event: 'beforeInsert', input, user: undefined, api: harness.api };
+    // Through `makeCtx`, so both handlers see the wrapper-shaped `ctx.input`
+    // the engine passes rather than a plain object (#1295). This end-to-end
+    // case is the one the plain-object shape flattered most: a `delete`-based
+    // strip passed it while storing the spoofed owner in production.
+    const ctx = makeCtx({ event: 'beforeInsert', input, user: undefined, api: harness.api });
 
     await slaDefaults.handler(ctx as never);
     // Nulled, not removed (#1133): `delete` on a hook's `input` never reached
@@ -341,7 +345,7 @@ describe('the guest strip and the assignment are ordered, not merely coexisting'
       crm_case: [],
     });
     const input: Rec = { subject: 'Spoofed', description: 'x' };
-    const ctx = { event: 'beforeInsert', input, user: undefined, api: harness.api };
+    const ctx = makeCtx({ event: 'beforeInsert', input, user: undefined, api: harness.api });
 
     await assign.handler(ctx as never);
     expect(input.owner_id).toBe('agent_a');

@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { REFERENCE_VALUE_TYPES, isMultiValueField, AUDIT_PROVENANCE_FIELDS } from '@objectstack/spec/data';
+import { wrapDeclarativeHook } from '@objectstack/objectql';
 import * as appObjects from '../../src/objects/index';
 import type {
   HookApi,
@@ -452,11 +453,143 @@ export interface CtxOptions {
   api?: HookApi;
 }
 
-/** Build a `HookContext`-shaped object for a handler call. */
+// ──────────────────────────────── `ctx.input` is the ENGINE's shape, not a plain object ────
+
+/**
+ * The name the probe hook carries. Not load-bearing — it appears only in
+ * `@objectstack/objectql`'s own log lines, which are routed to a noop logger
+ * here — but a searchable one beats an anonymous frame if it ever surfaces.
+ */
+const FLAT_INPUT_PROBE = '__hook_harness_flat_input__';
+
+/**
+ * A wrapped no-op handler, built ONCE. Calling it installs the engine's
+ * flat-record Proxy on whatever ctx it is handed; see {@link engineFlatInput}.
+ */
+const installFlatInputProbe = wrapDeclarativeHook(
+  { name: FLAT_INPUT_PROBE } as never,
+  (async () => {}) as never,
+);
+
+/**
+ * Wrap a flat record in the object the ENGINE hands a hook as `ctx.input`.
+ *
+ * ### The gap this closes (#1295, the card that would have prevented #1133)
+ *
+ * This harness used to pass a hook handler a **plain object** as `ctx.input`.
+ * The real engine never does. ObjectQL hands a hook `{ data, options }` with a
+ * flat-record **Proxy** over it (`installFlatInput`, `@objectstack/objectql`
+ * `src/hook-wrappers.ts`). The two behave identically for reads and
+ * assignments — and differently for everything else, so any hook defect living
+ * in that difference was structurally invisible here **while the assertions
+ * reported success**.
+ *
+ * That is not a hypothesis. #1133: fifteen `delete` statements across two
+ * intake hooks were silent no-ops against the real engine, and the tests
+ * asserting that strip passed the entire time, because on a plain object
+ * `delete` genuinely works. They were not merely failing to catch the defect;
+ * they were actively certifying the opposite of what production did, for as
+ * long as the defect existed.
+ *
+ * ### Why this calls the real wrapper instead of reimplementing it
+ *
+ * `installFlatInput` is **not exported** — measured on the pinned 17.1.0: it
+ * appears in `dist/index.mjs` and `dist/core.mjs` as an internal function and
+ * in **neither** `.d.ts`, and it is absent from the bundle's export list.
+ *
+ * The two obvious routes from there are both bad. A faithful local
+ * reimplementation buys speed and then rots: the moment upstream adds a trap,
+ * changes `ownKeys` ordering, or extends the reserved-key set, the copy keeps
+ * answering with yesterday's engine — a *second* way to be confidently wrong,
+ * and a harder one to notice than the plain object was, because a
+ * wrapper-shaped lie reads as fidelity. Routing every one of these tests
+ * through a real kernel costs exactly the speed that makes the harness worth
+ * having (`test/guest-submission-sanitisation.test.ts` boots one, and is the
+ * slow file in this suite).
+ *
+ * There is a third route, and it is strictly better than both: the function
+ * that *calls* `installFlatInput` — `wrapDeclarativeHook` — **is** exported.
+ * Driving it gives us the genuine Proxy, constructed by the shipped engine
+ * code, with **no kernel and no copy**. There is nothing to drift: if upstream
+ * changes the wrapper, this harness changes with it on the next dependency
+ * bump, and the pins in `test/hook-input-shape.test.ts` report the change
+ * instead of silently absorbing it.
+ *
+ * ### Two measured facts this relies on
+ *
+ * 1. `wrapDeclarativeHook` installs the Proxy **synchronously**, before its
+ *    first `await` — so the wrapped object can be read straight back off the
+ *    probe ctx, with no async plumbing forced onto the ~270 call sites.
+ * 2. The wrapper `restore()`s `ctx.input` to the raw object when its promise
+ *    settles. That is why the probe ctx is a **throwaway**: the restore lands
+ *    on an object nobody holds, while the Proxy we captured stays valid (it
+ *    targets `raw`, which does not move).
+ *
+ * ### `data` is the caller's own object, on purpose
+ *
+ * `record` is installed AS `data`, not copied into it, so a test that holds a
+ * reference to the input it passed still sees every write a hook makes —
+ * `expect(input.priority_rank).toBe(2)` keeps working, unchanged, at every
+ * existing call site. Assignment routes through the `set` trap into `data`,
+ * and `data` *is* `input`.
+ *
+ * `id` is additionally hoisted onto the wrapper because that is where the
+ * engine puts it: the Proxy's `get` answers `id` from the WRAPPER, never from
+ * `data`, so an `id` left only in the record reads back as `undefined`
+ * (measured). Seven hooks here read `ctx.input.id`; without the hoist they
+ * would go red against a harness that is wrong, not against a defect.
+ *
+ * ### The residual divergence, stated rather than hidden
+ *
+ * Because `id` is hoisted by COPY (deleting it would mutate the caller's
+ * object), a record that carried `id` has it in both places, so
+ * `Object.keys(ctx.input)` lists `id` where a real per-row update dispatch
+ * would not. Reads and writes of `id` are unaffected — both sides hold the
+ * same value. This is the one place the shape is still approximate, and it is
+ * approximate in the enumerable direction only.
+ *
+ * Dispatch shape remains out of scope and still wrong here; see the
+ * batch-payload note on {@link referenceValueShapeError}'s block above (#1265,
+ * blocked on objectstack#11552).
+ */
+export function engineFlatInput(record: Rec): Rec {
+  const raw: Rec = { data: record, options: {} };
+  // The engine binds `id` on the wrapper for id-addressed dispatch, and the
+  // `get` trap reads it from there — see the block above.
+  if ('id' in record) raw.id = record.id;
+
+  const probe: Rec = { event: 'beforeInsert', input: raw };
+  const settled = installFlatInputProbe(probe as never) as unknown as Promise<void>;
+  // Read BEFORE the promise settles: the install is synchronous, the restore
+  // is not. The probe handler cannot throw, but an unhandled rejection would
+  // fail the run for the wrong reason, so it is absorbed explicitly.
+  const wrapped = probe.input as Rec;
+  void settled.catch(() => {});
+
+  if (wrapped === raw || typeof wrapped !== 'object' || wrapped === null) {
+    throw new Error(
+      'hook-harness: @objectstack/objectql no longer installs a flat-input Proxy through ' +
+        '`wrapDeclarativeHook`, so this harness has silently reverted to handing hooks a ' +
+        'PLAIN OBJECT — the exact under-approximation #1295 removed and #1133 shipped under. ' +
+        'Do NOT delete this check to get green: re-read `installFlatInput` in the installed ' +
+        '@objectstack/objectql and re-point the probe, or the whole suite goes back to ' +
+        'certifying behaviour production does not have.',
+    );
+  }
+  return wrapped;
+}
+
+/**
+ * Build a `HookContext`-shaped object for a handler call.
+ *
+ * `input` is the engine's wrapper shape, not a plain object — see
+ * {@link engineFlatInput} for why, and `test/hook-input-shape.test.ts` for the
+ * pins that hold it there.
+ */
 export function makeCtx(opts: CtxOptions): Rec {
   return {
     event: opts.event,
-    input: opts.input ?? {},
+    input: engineFlatInput(opts.input ?? {}),
     previous: opts.previous,
     user: opts.user,
     session: opts.session,
