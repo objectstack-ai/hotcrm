@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { Page } from '@objectstack/spec/ui';
+import { P } from '@objectstack/spec';
 import { ConvertLeadAction, ScheduleFollowUpAction } from '../actions/lead.actions';
 import {
   LeadLogCallAction,
@@ -85,6 +86,84 @@ export const LeadDetailPage: Page = {
               LeadLogMeetingAction,
               LeadScheduleMeetingAction,
             ],
+          },
+        },
+        // Suspected-duplicate banner (#1207).
+        //
+        // `lead_duplicate_check` (lead.hook.ts, job 2) already writes
+        // `duplicate_status: 'suspected'` and links the record the lead repeats
+        // — the flag existed, and this page never read it. A rep opened a
+        // flagged lead, saw a page identical to a clean one, and converted it
+        // into a second account, contact and opportunity. This banner and the
+        // `duplicates` section on the Details tab are the record-page half of
+        // that fix — the banner is the alarm, the section is the link to
+        // compare against; the conversion screen carries the other half.
+        //
+        // ⚠️ `visible` is the ONE record component whose PROPS carry a real row
+        // predicate: `record-alert.tsx` evaluates `properties.visible` through
+        // `toPredicateInput` + `useCondition` against the row
+        // (`usePredicateRecordContext`), the same pipeline as an action button.
+        // A node-level `visibleWhen` would be a different gate one tier up,
+        // evaluated by `SchemaRenderer` on `data` = the data-source ADAPTER,
+        // not the row — it cannot see `duplicate_status` at all.
+        //
+        // ⚠️ `has()` is load-bearing, and this surface is the WORST of the four
+        // this repo measures (cf. `test/view-predicate-dialect.test.ts`): the
+        // renderer's call site is FAIL-SOFT — an unevaluable predicate answers
+        // SHOWN. So a bare `record.duplicate_status == "suspected"` would abort
+        // with `No such key` on every clean lead whose driver omits the column
+        // (`driver-memory` / `driver-mongodb`; `driver-sql` returns it as null)
+        // and put a duplicate warning on leads that are not duplicates. The
+        // guard is what makes the predicate answer `false` instead of faulting.
+        // Pinned on the real engine in `test/lead-duplicate-visibility.test.ts`.
+        //
+        // `P` — an explicit `{ dialect: 'cel' }` envelope — is not decoration
+        // either: `ExpressionEvaluator.evaluateCondition` routes ONLY the
+        // envelope to `@objectstack/formula`'s CEL engine, where `has()` is a
+        // real function; a bare string takes the legacy JS path, whose
+        // `FormulaFunctions` has no CEL `has()`, so the guard would itself be
+        // the fault that fails soft to visible.
+        //
+        // `title` / `body` carry inline locale maps rather than plain strings:
+        // this renderer resolves both through `pickLocalized(…, language)`
+        // (the same capability `opportunity_detail.page.ts` records under
+        // #972), and `body` has no other channel — the i18n extractor's
+        // per-component copy keys are title/description/label/placeholder/
+        // emptyText/submitLabel, so a plain-string `body` would ship English to
+        // all four locales. Keeping both halves of one banner's copy in one
+        // place beats splitting `title` into the locale packs.
+        {
+          type: 'record:alert',
+          id: 'lead_duplicate_alert',
+          label: 'Suspected Duplicate',
+          properties: {
+            severity: 'warning',
+            visible: P`has(record.duplicate_status) && record.duplicate_status == "suspected"`,
+            title: {
+              // The words are the locale packs' own `duplicate_status` option
+              // labels, so the banner and the field chip say the same thing.
+              en: 'Suspected duplicate',
+              'zh-CN': '疑似重复',
+              'ja-JP': '重複の疑い',
+              'es-ES': 'Duplicado sospechoso',
+            },
+            body: {
+              en:
+                'Intake flagged this lead as repeating a record this app already has. '
+                + 'Compare it with the linked record below before you convert — converting '
+                + 'creates a second account, contact and opportunity for the same buyer.',
+              'zh-CN':
+                '录入时该线索已被标记为与系统中已有记录重复。转换前请先与下方关联的记录比对'
+                + '——转换会为同一客户再创建一套客户、联系人和商机。',
+              'ja-JP':
+                'このリードは登録時に既存レコードの重複候補としてフラグ付けされました。'
+                + '変換すると同じ相手に取引先・取引先責任者・商談がもう一組作成されます。'
+                + '変換する前に、下にリンクされたレコードと比較してください。',
+              'es-ES':
+                'Al capturarlo, este prospecto se marcó como duplicado de un registro que ya existe. '
+                + 'Compárelo con el registro vinculado más abajo antes de convertirlo: la conversión '
+                + 'crea una segunda cuenta, contacto y oportunidad para el mismo comprador.',
+            },
           },
         },
         // Salesforce-style Highlights Panel: a horizontal strip of the
@@ -184,6 +263,48 @@ export const LeadDetailPage: Page = {
                           name: 'address',
                           label: 'Address',
                           fields: ['address'],
+                        },
+                        // The LINK half of the duplicate banner (#1207) —
+                        // the banner says a record is repeated, this names it
+                        // and lets the rep open it to compare.
+                        //
+                        // ⚠️ NOT the highlights strip, which is where this
+                        // card's dispatch suggested it: `record:highlights`
+                        // caps `fields` at 7 and the strip already carries 6,
+                        // so the three duplicate fields would not fit without
+                        // evicting a chip every lead needs to serve a state
+                        // most leads are not in (measured: `objectstack
+                        // validate` reports `fields: Too big: expected array
+                        // to have <=7 items`, and
+                        // `test/metadata-references.test.ts` parses the same
+                        // props strictly, so it is a hard cap, not advice).
+                        //
+                        // A section costs nothing on a clean lead either, for
+                        // a better reason than the strip's: `record:details`
+                        // hides empty fields (`hideEmpty` defaults true in the
+                        // renderer) and a section whose fields are ALL empty
+                        // renders nothing — no heading, no empty shell (the
+                        // measurement is in `test/detail-section-dedup.test.ts`).
+                        // So this block appears exactly on the leads that carry
+                        // a duplicate claim.
+                        //
+                        // All four fields, not just `duplicate_of_lead`:
+                        // `lead_duplicate_check` matches CONTACTS first and
+                        // only then open leads, so a suspected lead's survivor
+                        // is a `crm_contact` at least as often as a `crm_lead`
+                        // — naming only the lead link would leave the commoner
+                        // half of the flagged population with a banner and
+                        // nothing to click. `duplicate_status` also covers the
+                        // state the banner deliberately does not: a `confirmed`
+                        // verdict, and the `erased` tombstone that outlives the
+                        // record it named.
+                        {
+                          name: 'duplicates',
+                          label: 'Duplicate Management',
+                          fields: [
+                            'duplicate_status', 'duplicate_of_type',
+                            'duplicate_of_lead', 'duplicate_of_contact',
+                          ],
                         },
                         {
                           name: 'description',
