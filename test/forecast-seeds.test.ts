@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { CrmSeedData } from '../src/data/index';
 import { Forecast } from '../src/objects/forecast.object';
 import { ForecastSnapshotFlow } from '../src/flows/forecast-snapshot.flow';
+import { ExpressionEngine } from '@objectstack/formula';
 
 /**
  * Forecast seed calendar-alignment guards (#530).
@@ -327,5 +328,144 @@ describe('the forecast seed keys on a seeder-only identity (#613)', () => {
     // and would pass by asserting nothing.
     expect(writers, 'walker found no record-writing node in the snapshot flow').toBeGreaterThanOrEqual(2);
     expect(bad, bad.join('\n')).toEqual([]);
+  });
+});
+/**
+ * The snapshot columns carry a number (#1244).
+ *
+ * `crm_forecast` renders thirteen columns and four of them are the open-pipeline
+ * story: `pipeline_amount`, `best_case_amount`, `commit_amount`, and the
+ * `coverage_ratio` formula that divides by the first. The seeds zeroed all three
+ * on every settled row, on the theory that a closed period has no pipeline left
+ * — so a fresh install opened the forecast module on six rows of zeros, and the
+ * one question the object exists to answer ("will we make the number?") had no
+ * data behind it. Closed-versus-quota alone is a scoreboard, not a forecast.
+ *
+ * A period-END snapshot is precisely the reading that theory cannot have: a
+ * period ends with deals still open, which is what the seeds' own "slipped into
+ * the next quarter" notes describe. So the settled rows carry a residual.
+ *
+ * These guards are about the DEMO DATA only. Nothing here licenses a row in the
+ * window `forecast_snapshot` owns — the #702 block above is the rule for that,
+ * and it stays green beside this one.
+ */
+describe('every seeded snapshot demonstrates the forecast columns (#1244)', () => {
+  const AMOUNTS = ['pipeline_amount', 'best_case_amount', 'commit_amount'] as const;
+  const today = isoDate(new Date());
+  const settled = records.filter((r) => String(r.period_end) < today);
+  const num = (r: SeedRec, field: string) => Number(r[field]);
+
+  /** Evaluate one of the object's OWN formula fields over a seeded record. */
+  const evalFormula = (field: string, record: SeedRec): number => {
+    const expression = (Forecast as any).fields?.[field]?.expression;
+    const source = String(expression?.source ?? expression);
+    const result = ExpressionEngine.evaluate({ dialect: 'cel', source }, { record }) as {
+      ok?: boolean;
+      value?: unknown;
+    };
+    expect(
+      result?.ok,
+      `${field} did not evaluate over ${String(record.seed_key)}: ${JSON.stringify(result)}`,
+    ).toBe(true);
+    return Number(result?.value);
+  };
+
+  it('the guard has rows to judge — anti-vacuity', () => {
+    // Every assertion below is over a filtered list, and an empty list passes
+    // each of them. The card's measurement was seven rows, six of them settled.
+    expect(records.length, 'the forecast seed is empty').toBeGreaterThanOrEqual(7);
+    expect(settled.length, 'no settled seeded period to judge').toBeGreaterThanOrEqual(6);
+  });
+
+  it('no seeded snapshot ships a zeroed amount column', () => {
+    const dead = records
+      .flatMap((r) => AMOUNTS.map((f) => ({ r, f })))
+      .filter(({ r, f }) => !(num(r, f) > 0))
+      .map(({ r, f }) => `${String(r.seed_key)} (${String(r.period_label)}): ${f} = ${String(r[f])}`);
+    expect(
+      dead,
+      'these seeded forecasts render a zero where the column has to demonstrate what it is\n'
+        + 'for. A settled period keeps a residual — the deals still open on its closing day:\n  '
+        + dead.join('\n  '),
+    ).toEqual([]);
+  });
+
+  it('the three buckets stay CUMULATIVE — pipeline >= best case >= commit', () => {
+    // `forecast.object.ts` defines them as nested subsets of one another
+    // (pipeline = all open, best_case = open in best_case OR commit, commit =
+    // open in commit), and `forecast-snapshot.flow.ts` accumulates them that
+    // way. A seed that inverts the order shows a demo the real producer could
+    // never write.
+    const bad = records
+      .filter((r) => !(num(r, 'pipeline_amount') >= num(r, 'best_case_amount')
+        && num(r, 'best_case_amount') >= num(r, 'commit_amount')))
+      .map((r) => `${String(r.seed_key)}: pipeline ${num(r, 'pipeline_amount')}, best case `
+        + `${num(r, 'best_case_amount')}, commit ${num(r, 'commit_amount')}`);
+    expect(bad, `these buckets are not nested:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it("a settled period's residual stays smaller than what it actually closed", () => {
+    // The shape guard on the fix. The obvious wrong way to make these columns
+    // non-zero is to copy the CURRENT-period row's figures onto the settled
+    // ones — that row is a mid-period book (pipeline 760000 against 295000
+    // closed) and it is correct there. On a period that is over, the same shape
+    // claims most of the quarter was still open on its last day, which no
+    // period this demo narrates ever was.
+    const bad = settled
+      .filter((r) => !(num(r, 'pipeline_amount') < num(r, 'closed_amount')))
+      .map((r) => `${String(r.seed_key)}: pipeline ${num(r, 'pipeline_amount')} vs closed `
+        + `${num(r, 'closed_amount')}`);
+    expect(bad, `these settled snapshots read like mid-period books:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('coverage_ratio computes from the seeded pipeline — non-zero exactly where a gap remains', () => {
+    // Evaluated through the field's OWN expression, not a restatement of it.
+    //
+    // MEASURED BOUNDARY, and it corrects the card: `coverage_ratio` does NOT
+    // simply follow `pipeline_amount`. Its expression is
+    // `(quota - closed) > 0 ? pipeline / (quota - closed) : 0.0` and its own
+    // description says so — "Reads 0 once the quota is already met". Three of
+    // the seeded periods over-attained (106% / 109% / 105%), so their gap is
+    // negative and they read 0 for a reason no seed value can or should
+    // change. The property that IS restorable, and the one pinned here, is
+    // that a remaining gap now has pipeline against it.
+    const withGap: string[] = [];
+    const quotaMet: string[] = [];
+    for (const r of records) {
+      const gap = num(r, 'quota') - num(r, 'closed_amount');
+      const coverage = evalFormula('coverage_ratio', r);
+      if (gap > 0) {
+        if (!(coverage > 0)) withGap.push(`${String(r.seed_key)}: gap ${gap}, coverage ${coverage}`);
+      } else if (coverage !== 0) {
+        quotaMet.push(`${String(r.seed_key)}: gap ${gap}, coverage ${coverage}`);
+      }
+    }
+    expect(
+      withGap,
+      'these snapshots have an unmet quota and still show no coverage — the seeded\n'
+        + `pipeline is not reaching the formula:\n  ${withGap.join('\n  ')}`,
+    ).toEqual([]);
+    expect(
+      quotaMet,
+      'coverage_ratio is documented to read 0 once the quota is met; these disagree:\n  '
+        + quotaMet.join('\n  '),
+    ).toEqual([]);
+    // Anti-vacuity for the half that matters: at least one row must actually
+    // exercise the non-zero branch, or the loop above proves nothing.
+    const covered = records.filter((r) => evalFormula('coverage_ratio', r) > 0);
+    expect(
+      covered.length,
+      'no seeded forecast produces a non-zero coverage ratio at all',
+    ).toBeGreaterThanOrEqual(3);
+  });
+
+  it('the amounts satisfy the non-negative validation the object declares', () => {
+    // `snapshot_amounts_non_negative` refuses a negative amount on any write,
+    // seeds included (a seed write is a system write and validations still run).
+    const negative = records
+      .flatMap((r) => [...AMOUNTS, 'closed_amount', 'quota'].map((f) => ({ r, f })))
+      .filter(({ r, f }) => Number.isFinite(num(r, f)) && num(r, f) < 0)
+      .map(({ r, f }) => `${String(r.seed_key)}: ${f} = ${String(r[f])}`);
+    expect(negative, `negative seeded amounts:\n  ${negative.join('\n  ')}`).toEqual([]);
   });
 });

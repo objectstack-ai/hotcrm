@@ -322,7 +322,37 @@ const quarterEndAgo = (n: number) => new Date(Date.UTC(forecastYear, forecastQua
 const monthStartAgo = (n: number) => new Date(Date.UTC(forecastYear, forecastMonth - n, 1));
 const monthEndAgo = (n: number) => new Date(Date.UTC(forecastYear, forecastMonth - n + 1, 0));
 
-/** A settled (past) period snapshot: pipeline is gone, only the closed number remains. */
+/**
+ * The three open-pipeline buckets of a settled snapshot, in the shape the
+ * forecast object defines them (`src/objects/forecast.object.ts`).
+ *
+ * The buckets are CUMULATIVE subsets of one another, so every row satisfies
+ * `pipeline >= bestCase >= commit`. Named rather than positional: three bare
+ * numbers in a row of eight arguments is the shape a later edit transposes
+ * without anything noticing.
+ */
+type OpenBuckets = { pipeline: number; bestCase: number; commit: number };
+
+/**
+ * A settled (past) period snapshot, captured on the day the period closed.
+ *
+ * `open` is what was still OPEN in the period at that moment — the deals that
+ * had not resolved by the last day and went on to slip into the next period.
+ *
+ * These rows carried `0` for all three buckets until #1244. The theory was
+ * "a closed period has no pipeline left", and it is the one reading a
+ * period-END snapshot cannot have: a period ends with deals still open, which
+ * is exactly what the "slipped into the next quarter" note below describes.
+ * The cost was not cosmetic — `pipeline_amount`, `best_case_amount`,
+ * `commit_amount` and the `coverage_ratio` formula that divides by the first
+ * of them are four of the thirteen columns the forecast list renders, so the
+ * module opened on six rows of zeros and could not answer the question the
+ * object exists for.
+ *
+ * NOT a licence to seed the CURRENT quarter: that window has exactly one
+ * producer, `forecast_snapshot` (#702), and the note above is the whole rule.
+ * Pinned by `test/forecast-seeds.test.ts`.
+ */
 const closedPeriod = (
   seed_key: string,
   period: 'month' | 'quarter',
@@ -330,6 +360,7 @@ const closedPeriod = (
   end: Date,
   quota: number,
   closed: number,
+  open: OpenBuckets,
   notes: string,
 ) => ({
   seed_key,
@@ -339,9 +370,9 @@ const closedPeriod = (
   period_end: forecastIsoDate(end),
   snapshot_date: forecastIsoDate(end),
   quota,
-  pipeline_amount: 0,
-  best_case_amount: 0,
-  commit_amount: 0,
+  pipeline_amount: open.pipeline,
+  best_case_amount: open.bestCase,
+  commit_amount: open.commit,
   closed_amount: closed,
   source: 'scheduled' as const,
   notes,
@@ -393,22 +424,27 @@ export const forecasts = defineSeed(Forecast, {
       period_end: forecastIsoDate(lastQuarterEnd),
       snapshot_date: forecastIsoDate(lastQuarterEnd),
       quota: 1400000,
-      pipeline_amount: 0,
-      best_case_amount: 0,
-      commit_amount: 0,
+      pipeline_amount: 240000,
+      best_case_amount: 150000,
+      commit_amount: 95000,
       closed_amount: 1485000,
       source: 'scheduled',
       notes: 'Closed at 106% of quota.',
     },
     closedPeriod('demo_quarter_minus_2', 'quarter', quarterStartAgo(2), quarterEndAgo(2), 1300000, 1196000,
+      { pipeline: 285000, bestCase: 190000, commit: 120000 },
       'Closed at 92% of quota — two enterprise deals slipped into the next quarter.'),
     closedPeriod('demo_quarter_minus_3', 'quarter', quarterStartAgo(3), quarterEndAgo(3), 1200000, 1308000,
+      { pipeline: 195000, bestCase: 130000, commit: 85000 },
       'Closed at 109% of quota, carried by the enterprise renewal cohort.'),
     closedPeriod('demo_quarter_minus_4', 'quarter', quarterStartAgo(4), quarterEndAgo(4), 1100000, 1045000,
+      { pipeline: 165000, bestCase: 110000, commit: 70000 },
       'Closed at 95% of quota in the first quarter on the new territory model.'),
     closedPeriod('demo_month_minus_1', 'month', monthStartAgo(1), monthEndAgo(1), 480000, 505000,
+      { pipeline: 96000, bestCase: 62000, commit: 40000 },
       'Closed at 105% of quota; the expansion motion covered a soft new-business month.'),
     closedPeriod('demo_month_minus_2', 'month', monthStartAgo(2), monthEndAgo(2), 460000, 414000,
+      { pipeline: 92000, bestCase: 58000, commit: 35000 },
       'Closed at 90% of quota — summer slowdown across the mid-market segment.'),
   ]
 });
