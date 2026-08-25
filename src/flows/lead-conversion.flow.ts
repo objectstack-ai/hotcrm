@@ -54,6 +54,31 @@ export const LeadConversionFlow: Flow = {
     {
       id: 'screen_1', type: 'screen', label: 'Conversion Details',
       config: {
+        // The suspected-duplicate warning (#1207). `lead_duplicate_check`
+        // flags a re-captured email at intake and links the record the lead
+        // repeats; until now the rep about to CONVERT — the last moment the
+        // flag is worth anything — was never told, and the duplicate became a
+        // second account, contact and opportunity.
+        //
+        // Why here and not on `convert_lead`'s `confirmText`: that string is
+        // static and unconditional, so it would warn identically on every
+        // clean lead (the cry-wolf that makes a confirm dialog furniture), and
+        // #1214 is queued to remove that confirm outright — a warning parked
+        // there dies with it. This screen is where the conversion decision is
+        // actually taken, and it is the one surface that can say something
+        // TRUE about THIS lead.
+        //
+        // Mechanism, measured on the shipped 17.1.0 bundles rather than
+        // assumed: the executor interpolates `config.description`
+        // (`interp(cfg.description)`) into the `ScreenSpec` it puts on the
+        // wire, and `FlowRunner.tsx` renders it — `{screen.description &&
+        // <DialogDescription>{screen.description}</DialogDescription>}`. A
+        // whole-string sole token returns the RAW value and `interp` maps
+        // null to `undefined`, so the clean-lead branch below (which assigns
+        // `null`) renders NO description at all rather than an empty
+        // paragraph. That is why the conditionality lives in an assignment
+        // and not in the copy: a screen `description` has no `visibleWhen`.
+        description: '{duplicateWarning}',
         // `visibleWhen` on a screen field is BARE CEL over the screen's own
         // field names — not the `{var}` template dialect the rest of this flow
         // uses for filters, `update_record` fields and decision conditions. The
@@ -92,8 +117,54 @@ export const LeadConversionFlow: Flow = {
       },
     },
     {
+      // Moved AHEAD of the screen (#1207). Nothing about the fetch changed —
+      // `{recordId}` is an input variable, seeded before the run starts, so
+      // this node never depended on the screen having run. What changed is
+      // that the screen can now say something about the lead: the warning
+      // below reads `leadRecord`, and a screen that suspends before the fetch
+      // has nothing to read.
       id: 'get_lead', type: 'get_record', label: 'Get Lead Record',
       config: { objectName: 'crm_lead', filter: { id: '{recordId}' }, outputVariable: 'leadRecord' },
+    },
+    {
+      // Branching is on edges `e21` / `e22` — see `decision_account`.
+      id: 'decision_duplicate', type: 'decision', label: 'Suspected Duplicate?',
+    },
+    {
+      // The warning names the record the way the UI names a person — by the
+      // email address the two records share — and NOT by
+      // `duplicate_of_lead` / `duplicate_of_contact`, which hold ids. That is
+      // the house rule `test/record-id-not-in-prose.test.ts` states for every
+      // sentence a user reads: "the id goes in the relationship field that
+      // exists to carry it, or nowhere". The link itself is on the lead's
+      // record page (`lead_detail.page.ts`), where it can be clicked.
+      //
+      // "flagged at intake" is the app's own published definition of this
+      // value, not a guess about provenance: `duplicate_status`'s help text
+      // reads "Suspected = flagged automatically at intake" in all four
+      // locales, and `lead_duplicate_check` is insert-only by design.
+      //
+      // Flow copy is English-only in this repo, deliberately and consistently:
+      // flows carry no entry in the locale packs (`src/translations/*.ts`
+      // translate objects, fields, views and actions), which
+      // `test/automation-docs-coverage.test.ts` records as the reason its
+      // Chinese flow labels are authored in the test itself. The banner on the
+      // record page — which DOES have a locale channel — carries all four.
+      id: 'warn_duplicate', type: 'assignment', label: 'Compose Duplicate Warning',
+      config: {
+        assignments: {
+          duplicateWarning:
+            'Suspected duplicate — intake flagged this lead as repeating an existing record with this email address ({leadRecord.email}). Converting creates a second account, contact and opportunity for the same buyer; compare the linked record on the lead page before you continue.',
+        },
+      },
+    },
+    {
+      // The other branch assigns `null`, which is what makes the warning
+      // CONDITIONAL: `interp` maps it to `undefined` and the dialog renders no
+      // description. Same shape as `no_opportunity` below — both branches
+      // write the variable so no downstream read ever meets an unset one.
+      id: 'no_duplicate_warning', type: 'assignment', label: 'No Duplicate Warning',
+      config: { assignments: { duplicateWarning: null } },
     },
     {
       // Account dedupe: before creating a new account, look for an existing one
@@ -280,9 +351,37 @@ export const LeadConversionFlow: Flow = {
     // screen. With the seeding node retired (#1155) the start edge goes
     // straight to the screen and `e1` is gone; the gap in the numbering is
     // deliberate, so every surviving edge keeps the id it has always had.
-    { id: 'e0', source: 'start', target: 'screen_1', type: 'default' },
-    { id: 'e2', source: 'screen_1', target: 'get_lead', type: 'default' },
-    { id: 'e3', source: 'get_lead', target: 'find_account', type: 'default' },
+    // #1207 reordered the head of the graph: start → get_lead → duplicate
+    // decision → screen → find_account. `e3` (get_lead → find_account) is
+    // retired and its id left vacant, same convention as `e1` above; `e0` and
+    // `e2` keep their ids and their meaning as "the first edge" and "the edge
+    // out of the screen".
+    { id: 'e0', source: 'start', target: 'get_lead', type: 'default' },
+    { id: 'e20', source: 'get_lead', target: 'decision_duplicate', type: 'default' },
+    // ⚠️ Both conditions are TOTAL, and on this surface that is not a style
+    // preference: a flow condition is interpreted strict CEL on every run, and
+    // an unguarded field read against a driver that omits absent columns
+    // (`driver-memory` / `driver-mongodb`) aborts — which FAILS THE RUN, so an
+    // unguarded read here would make ordinary leads unconvertible. Measured, in
+    // exactly that shape: `condition failed to evaluate as CEL: No such key:
+    // duplicate_status`. The full table is in
+    // `test/flow-condition-totality.test.ts`.
+    //
+    // TWO guards, in the spelling `test/flow-variable-conditions.test.ts`
+    // requires, and the outer one is not decoration: `vars.leadRecord` is a
+    // KEY, so a plain `vars.leadRecord != null` would itself abort with
+    // `Unknown variable` on the run where `get_lead` bound nothing — the guard
+    // would be the fault it was written to prevent. `has(vars.leadRecord)`
+    // answers instead of reading.
+    //
+    // The two edges PARTITION by De Morgan (`!(a && b && c)` written out as
+    // `!a || !b || !c`), so exactly one is true for every record shape,
+    // including the shapes where the column, the row or both are missing.
+    { id: 'e21', source: 'decision_duplicate', target: 'warn_duplicate', type: 'default', condition: P`has(vars.leadRecord) && has(vars.leadRecord.duplicate_status) && vars.leadRecord.duplicate_status == "suspected"`, label: 'Suspected' },
+    { id: 'e22', source: 'decision_duplicate', target: 'no_duplicate_warning', type: 'default', condition: P`!has(vars.leadRecord) || !has(vars.leadRecord.duplicate_status) || vars.leadRecord.duplicate_status != "suspected"`, label: 'Clean' },
+    { id: 'e23', source: 'warn_duplicate', target: 'screen_1', type: 'default' },
+    { id: 'e24', source: 'no_duplicate_warning', target: 'screen_1', type: 'default' },
+    { id: 'e2', source: 'screen_1', target: 'find_account', type: 'default' },
     { id: 'e4', source: 'find_account', target: 'decision_account', type: 'default' },
     // Existing account → reuse; no account → create. Both converge on create_contact.
     { id: 'e5', source: 'decision_account', target: 'use_existing_account', type: 'default', condition: P`vars.matchedAccount != null`, label: 'Existing' },
