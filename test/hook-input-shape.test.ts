@@ -1,6 +1,8 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { join, relative } from 'node:path';
 import { wrapDeclarativeHook } from '@objectstack/objectql';
 import caseHooks from '../src/objects/case.hook';
 import { makeCtx, makeHarness, engineFlatInput, hookNamed, type Rec } from './helpers/hook-harness';
@@ -192,6 +194,24 @@ describe('the harness hands a hook the ENGINE\'s input shape, not a plain object
     expect(probe.input.owner_id).toBe('attacker_chosen_user');
   });
 
+  it('a wrapper takes an `Object.assign` write-back into the record (the sandbox return path)', () => {
+    // `runHookBody` hands the platform's bound body handler a wrapper, and the
+    // runtime's `applyMutationsToInput` writes the sandbox's result back with
+    // `Object.assign(ctx.input, …)`. Against the wrapper those writes route
+    // through the `set` trap into `data` — which IS the caller's record — so
+    // the ~44 call sites that read `input.<field>` back are unaffected. This
+    // pins the mechanism that conversion depends on.
+    const record: Rec = { subject: 'x' };
+    const wrapped = engineFlatInput(record);
+
+    Object.assign(wrapped, { priority: 'high' });
+
+    expect(record.priority, 'the write-back did not reach the record').toBe('high');
+    expect(Object.keys(wrapped)).toEqual(['subject', 'priority']);
+    // ...and it did NOT land on the wrapper as a sibling of `data`/`options`.
+    expect(Object.getOwnPropertyDescriptor(record, 'priority')?.enumerable).toBe(true);
+  });
+
   it('the pre-#1295 shape would PASS these assertions — which is the whole point', async () => {
     // The executable contrast. This is what the harness used to hand a
     // handler; running the same defect against it reproduces the green that
@@ -227,5 +247,200 @@ describe('the #1133 repair holds under the engine\'s input shape', () => {
     expect(record.owner_id, 'the guest strip stopped neutralising the spoofed owner').toBeNull();
     expect('owner_id' in ctx.input, 'a nulled key is still a PRESENT key').toBe(true);
     expect(record.origin, 'the guest branch did not run at all (positive control)').toBe('web');
+  });
+});
+
+// ─────────────────── the guard that keeps the 40th call site from re-opening this ──
+
+/**
+ * #1298 — the residual half of #1295, and the reason it is a GATE and not a
+ * one-time sweep.
+ *
+ * #1295 gave `makeCtx` the engine's wrapper shape, which fixed every call site
+ * that went through it. It could not fix the ones that did not: a test that
+ * writes `handler({ event, input, api })` by hand hands the hook a PLAIN
+ * OBJECT, and is back in the blind spot #1133 shipped under — with its
+ * assertions still reporting success, because reads and assignments behave
+ * identically across the two shapes. Converting the sites that existed is
+ * worthless on its own; nothing stops the next one being written the old way,
+ * and nothing would report it.
+ *
+ * ### Why TWO rules and not one
+ *
+ * They fail on different things, and neither subsumes the other. Measured
+ * against the pre-conversion tree, rule A caught 22 of the 23 live sites and
+ * rule B caught all 6 files, including the one A structurally cannot see:
+ *
+ *  - **A** reads the CALL. It is the direct form (`handler({ … })`) and it
+ *    reports the exact line, which is what makes a violation actionable. It is
+ *    blind to a ctx built one line earlier, or by a local builder.
+ *  - **B** reads the FILE. Any file that calls a hook handler at all must
+ *    obtain its ctx from the shared harness. That catches the indirect forms
+ *    without needing to trace them — `test/priority-rank-parity.test.ts`'s
+ *    local `ctxFor` builder was invisible to A and caught by B.
+ *
+ * ### The counting trap, and the control that rules it out
+ *
+ * A naive `event:` grep does NOT discriminate: `makeCtx({ event: … })` and
+ * `handler({ event: … })` both match it and they are OPPOSITES here. Measured
+ * on this tree, `event:` hits 414 times across 53 files, of which 16 files hold
+ * no hook ctx at all (flow metadata, seed fixtures, prose). So both scans below
+ * key on the CONSUMER — what the object is handed to — never on the presence of
+ * an `event:` key, and rule A additionally requires the literal to carry an
+ * `event` key before judging it, so an ACTION ctx (`runActionBody`'s
+ * `{ record, user, session, params }`) is skipped rather than mis-flagged.
+ *
+ * ⛔ A violation is not fixed by adding a file to an exception list. Route the
+ * ctx through `makeCtx` (or `engineFlatInput` when a raw wrapper is what the
+ * call needs), the same way every other call site does.
+ */
+describe('no test may hand a hook handler a plain-object ctx (#1298)', () => {
+  const TEST_DIR = join(process.cwd(), 'test');
+
+  const testFiles = (dir: string, out: string[] = []): string[] => {
+    for (const entry of readdirSync(dir)) {
+      const p = join(dir, entry);
+      if (statSync(p).isDirectory()) testFiles(p, out);
+      else if (p.endsWith('.ts')) out.push(p);
+    }
+    return out;
+  };
+
+  /**
+   * Blank out comments and the BODIES of strings/templates, keeping newlines so
+   * line numbers still line up.
+   *
+   * Not optional: this file's own prose says `handler({ … })` several times,
+   * and several tests carry scanner regexes as string literals. A scan that
+   * read those would report itself.
+   */
+  const codeOnly = (src: string): string => {
+    let out = '';
+    let i = 0;
+    while (i < src.length) {
+      const c = src[i];
+      const d = src[i + 1];
+      if (c === '/' && d === '/') {
+        while (i < src.length && src[i] !== '\n') { out += ' '; i++; }
+        continue;
+      }
+      if (c === '/' && d === '*') {
+        out += '  '; i += 2;
+        while (i < src.length && !(src[i] === '*' && src[i + 1] === '/')) {
+          out += src[i] === '\n' ? '\n' : ' '; i++;
+        }
+        out += '  '; i += 2;
+        continue;
+      }
+      if (c === '"' || c === "'" || c === '`') {
+        out += c; i++;
+        while (i < src.length && src[i] !== c) {
+          if (src[i] === '\\') { out += '  '; i += 2; continue; }
+          out += src[i] === '\n' ? '\n' : ' '; i++;
+        }
+        out += c; i++;
+        continue;
+      }
+      out += c; i++;
+    }
+    return out;
+  };
+
+  /** The balanced `{ … }` beginning at `open`. */
+  const literalAt = (code: string, open: number): string => {
+    let depth = 0;
+    for (let i = open; i < code.length; i++) {
+      if (code[i] === '{') depth++;
+      else if (code[i] === '}') { depth--; if (depth === 0) return code.slice(open, i + 1); }
+    }
+    return code.slice(open);
+  };
+
+  const HAS_EVENT = /(^|[{,\s])event\s*:/;
+  const ROUTED_INPUT = /(^|[^\w$])input\s*:\s*(?:engineFlatInput|makeCtx)\s*\(/;
+  const IMPORTS_HARNESS = /from\s+'(?:\.\.?\/)*(?:helpers\/)?hook-harness'/;
+  const USES_ROUTER = /\b(?:makeCtx|engineFlatInput)\b/;
+
+  const sources = testFiles(TEST_DIR).map((path) => ({
+    file: relative(process.cwd(), path),
+    raw: readFileSync(path, 'utf8'),
+  }));
+
+  it('A · no hook handler is called with an object literal', () => {
+    const offenders: string[] = [];
+    for (const { file, raw } of sources) {
+      const code = codeOnly(raw);
+      const re = /(?<![\w$])handler\s*\(\s*\{/g;
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(code))) {
+        const literal = literalAt(code, code.indexOf('{', m.index));
+        // No `event` key ⇒ not a hook ctx (this is how an ACTION ctx passes).
+        if (!HAS_EVENT.test(literal)) continue;
+        // Already the engine's shape ⇒ this is a helper doing it correctly.
+        if (ROUTED_INPUT.test(literal)) continue;
+        offenders.push(`${file}:${code.slice(0, m.index).split('\n').length}`);
+      }
+    }
+
+    expect(
+      offenders,
+      'A hook handler was handed a PLAIN OBJECT as `ctx.input`. The engine hands it a ' +
+        'flat-record Proxy over `{ data, options }`, and the two differ on `delete`, ' +
+        '`ownKeys`, `has` and `getOwnPropertyDescriptor` — so a defect living in that ' +
+        'difference is invisible while the assertions report success (#1133 shipped ' +
+        'exactly that way). Build the ctx with `makeCtx({ … })` from ' +
+        '`test/helpers/hook-harness.ts`. ⛔ Do not add an exception here.',
+    ).toEqual([]);
+  });
+
+  it('B · a file that calls a hook handler builds its ctx with the shared harness', () => {
+    const offenders: string[] = [];
+    for (const { file, raw } of sources) {
+      const code = codeOnly(raw);
+      if (!/(?<![\w$])handler\s*\(\s*[^)\s]/.test(code)) continue;
+      if (IMPORTS_HARNESS.test(raw) && USES_ROUTER.test(code)) continue;
+      offenders.push(file);
+    }
+
+    expect(
+      offenders,
+      'This file invokes a hook handler but never reaches `makeCtx` / `engineFlatInput`, ' +
+        'so whatever it passes as `ctx` was built by hand — the shape production never ' +
+        'uses. This is the rule that catches a ctx built by a LOCAL BUILDER, which rule ' +
+        'A cannot see. Import from `test/helpers/hook-harness.ts` and route the ctx ' +
+        'through it.',
+    ).toEqual([]);
+  });
+
+  it('the guard reports the shape it is meant to report (self-test)', () => {
+    // Without this, both cases above pass just as happily when the scan is
+    // broken and matches nothing — the failure mode a static gate is most prone
+    // to, and the one that would let the 40th call site through silently.
+    const planted = [
+      "await rollup.handler({ event: 'afterInsert', input: { crm_opportunity: 'opp1' }, api } as any);",
+      'await lifecycle.handler({\n  event: "beforeUpdate",\n  input,\n  previous,\n} as any);',
+    ];
+    for (const sample of planted) {
+      const code = codeOnly(sample);
+      const m = /(?<![\w$])handler\s*\(\s*\{/.exec(code);
+      expect(m, `rule A stopped matching a known-bad ctx: ${sample}`).not.toBeNull();
+      const literal = literalAt(code, code.indexOf('{', m!.index));
+      expect(HAS_EVENT.test(literal), 'rule A stopped recognising the `event` key').toBe(true);
+      expect(ROUTED_INPUT.test(literal), 'rule A wrongly read a plain ctx as routed').toBe(false);
+    }
+
+    // ...and the two exemptions are real rather than accidental: an ACTION ctx
+    // carries no `event`, and a helper that routes its `input` is not a
+    // violation just because it writes a literal.
+    const actionCtx = codeOnly('await handler({ record, user, session, params });');
+    const actionLit = literalAt(actionCtx, actionCtx.indexOf('{'));
+    expect(HAS_EVENT.test(actionLit), 'an action ctx would now be mis-flagged').toBe(false);
+
+    const routed = codeOnly("await handler({ event: opts.event, input: engineFlatInput(input) });");
+    const routedLit = literalAt(routed, routed.indexOf('{'));
+    expect(ROUTED_INPUT.test(routedLit), 'a correctly-routed helper would now be flagged').toBe(true);
+
+    // The scan must read CODE, not prose: this very file documents the bad form.
+    expect(codeOnly("const s = 'handler({ event: 1 })';")).not.toContain('event');
   });
 });
