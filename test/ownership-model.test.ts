@@ -4,7 +4,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import stack from '../objectstack.config';
-import { hookNamed } from './helpers/hook-harness';
+import { hookNamed, makeCtx } from './helpers/hook-harness';
 import leadHooks from '../src/objects/lead.hook';
 
 /**
@@ -456,7 +456,7 @@ describe('lead_auto_assign assigns the platform column', () => {
 
   it('writes owner_id, not a second column', async () => {
     const input: AnyRec = { company: 'NewCo' };
-    await assign.handler({
+    await assign.handler(makeCtx({
       event: 'beforeInsert',
       input,
       api: makeApi(
@@ -466,8 +466,8 @@ describe('lead_auto_assign assigns the platform column', () => {
           { id: 'x3', owner_id: 'repB', is_converted: false },
         ],
         ['repA', 'repB'],
-      ),
-    } as never);
+      ) as never,
+    }) as never);
     expect(input.owner_id, 'did not assign the least-loaded rep on owner_id').toBe('repB');
     expect('owner' in input, 'wrote a second, unread ownership column').toBe(false);
   });
@@ -477,11 +477,11 @@ describe('lead_auto_assign assigns the platform column', () => {
     // the time this hook runs — which is what keeps the round-robin scoped to
     // genuinely ownerless intake (import, web-to-lead, API capture).
     const input: AnyRec = { company: 'NewCo', owner_id: 'usr_creator' };
-    await assign.handler({
+    await assign.handler(makeCtx({
       event: 'beforeInsert',
       input,
-      api: makeApi([], ['repA', 'repB']),
-    } as never);
+      api: makeApi([], ['repA', 'repB']) as never,
+    }) as never);
     expect(input.owner_id).toBe('usr_creator');
   });
 });

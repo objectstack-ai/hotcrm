@@ -2,7 +2,7 @@
 
 import { QuickJSScriptRunner, actionBodyRunnerFactory, hookBodyRunnerFactory } from '@objectstack/runtime';
 import { extractHookBody } from '@objectstack/cli/dist/utils/extract-hook-body.js';
-import { assertReferenceValueShapes } from './hook-harness';
+import { assertReferenceValueShapes, engineFlatInput } from './hook-harness';
 
 /**
  * REAL QuickJS harness for action and hook bodies (issue #575 A1).
@@ -321,7 +321,28 @@ export async function runHookBody(hook: Rec, opts: HookRunOpts): Promise<HookRun
   const input: Rec = opts.input ?? {};
   await handler({
     event: opts.event,
-    input,
+    // The ENGINE's flat-record wrapper, not a plain object (#1298). This is the
+    // single ctx every `runHookBody` caller reaches the body runner through, so
+    // the shape is fixed here once rather than at each call site.
+    //
+    // It is load-bearing on BOTH sides of the sandbox boundary, and neither is
+    // obvious from the call sites:
+    //
+    //  - inbound, `buildSandboxContext` calls `unwrapProxyToPlain(ctx.input)`,
+    //    so the body receives a plain snapshot either way — but only the
+    //    wrapper makes that unwrap a real step rather than a no-op, which is
+    //    what a body relying on a wrapper-only key would trip over;
+    //  - outbound, `applyMutationsToInput` does `Object.assign(ctx.input, …)`.
+    //    Against the wrapper those writes route through the `set` trap into
+    //    `data` — which IS `input` — so the read-backs below are unchanged,
+    //    while a write to a RESERVED key now lands where production puts it.
+    //
+    // Production reaches this same `boundBodyHandler` through
+    // `wrapDeclarativeHook`: `bindHooksToEngine` resolves a body hook via
+    // `bodyRunner(hook)` and wraps the result, so the engine ctx a shipped body
+    // sees is always the Proxy. Measured on the pinned 17.1.0 — see
+    // `resolveHandler` / `installFlatInput` in @objectstack/objectql.
+    input: engineFlatInput(input),
     previous: opts.previous,
     user: opts.user,
     object: hook.object,

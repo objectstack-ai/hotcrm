@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest';
 import stack from '../objectstack.config';
 import caseHooks from '../src/objects/case.hook';
 import taskHooks from '../src/objects/task.hook';
+import { makeCtx } from './helpers/hook-harness';
 
 /**
  * `priority_rank` parity between crm_case and crm_task (#575 A4).
@@ -38,14 +39,17 @@ const hookNamed = (hooks: AnyRec[], name: string): AnyRec => {
   return hook;
 };
 
-/** Minimal beforeInsert context — these hooks only touch `input` for ranking. */
-const ctxFor = (input: Rec): AnyRec => ({
-  event: 'beforeInsert',
-  input,
-  previous: undefined,
-  user: { id: 'user_1' },
-  api: undefined,
-});
+/**
+ * Minimal beforeInsert context — these hooks only touch `input` for ranking.
+ *
+ * Built through the shared harness so `ctx.input` is the ENGINE's flat-record
+ * Proxy rather than a plain object (#1298). A literal here would put this file
+ * back in the blind spot #1295 closed: reads and assignments behave the same
+ * across the two shapes, so the rank assertions below would pass either way
+ * while everything else about the payload diverged from production.
+ */
+const ctxFor = (input: Rec): AnyRec =>
+  makeCtx({ event: 'beforeInsert', input, previous: undefined, user: { id: 'user_1' } });
 
 /** Stamp `priority` through a hook and read back the rank it materialised. */
 const rankFor = async (hook: AnyRec, priority: string): Promise<unknown> => {

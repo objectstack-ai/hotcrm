@@ -12,6 +12,7 @@ import * as salesSeed from '../src/data/sales.seed';
 import * as serviceSeed from '../src/data/service.seed';
 import * as marketingSeed from '../src/data/marketing.seed';
 import * as revenueSeed from '../src/data/revenue.seed';
+import { makeCtx } from './helpers/hook-harness';
 
 /**
  * The territory rules must match REAL seeded accounts (#638).
@@ -83,7 +84,7 @@ const TERRITORY_RULES = ['north_america_territory', 'europe_territory'] as const
  */
 async function project(record: AnyRec): Promise<AnyRec> {
   const input: AnyRec = { ...record };
-  await (accountHook as AnyRec).handler({ event: 'beforeInsert', input });
+  await (accountHook as AnyRec).handler(makeCtx({ event: 'beforeInsert', input }));
   return input;
 }
 
