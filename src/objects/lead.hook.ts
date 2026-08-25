@@ -163,7 +163,15 @@ const leadHook: Hook = {
       // by the client. Guests are unauthenticated, so we identify them
       // by the absence of `ctx.user?.id`. (The `guest_portal` profile
       // already restricts them to INSERT-only on `crm_lead`.)
-      const isGuestSubmission = !ctx.user?.id;
+      // `!ctx.session?.isSystem` is new (#1133) and is the same correction made
+      // on `case.hook.ts`'s guest branch, for the same measured reason: a SYSTEM
+      // write (seed load, backfill, demo bootstrap) also arrives with no user
+      // id, and once the strip below stops being a no-op it would blank the
+      // owner and conversion state of every system-written lead. This very
+      // handler already reads that absence the other way a few lines down — the
+      // converted-lead lock treats `!ctx.user?.id` as the system-write signal —
+      // so the two readings were in direct contradiction until now.
+      const isGuestSubmission = !ctx.user?.id && !ctx.session?.isSystem;
       if (isGuestSubmission) {
         if (!input.lead_source) input.lead_source = 'web';
         if (!input.status)      input.status      = 'new';

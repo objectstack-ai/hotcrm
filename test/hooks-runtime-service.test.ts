@@ -71,8 +71,19 @@ describe('case_sla_defaults', () => {
     expect(input.origin).toBe('web');
     expect(input.status).toBe('new');
     expect(input.priority).toBe('medium');
-    for (const stripped of ['owner_id', 'is_escalated', 'is_closed', 'internal_notes', 'resolution']) {
-      expect(input, `guest submission kept privileged field ${stripped}`).not.toHaveProperty(stripped);
+    // The branch OVERWRITES with a safe value; it no longer removes the key
+    // (#1133). `delete` on a hook's `input` is a silent no-op through the real
+    // engine — this harness calls the handler with a plain object, where it
+    // works, which is exactly why an absence assertion here stayed green while
+    // nothing was being stripped in production. Assert the values instead.
+    for (const [stripped, safe] of [
+      ['owner_id', null], ['internal_notes', null], ['resolution', null],
+      ['is_escalated', false],
+      // Derived from the stored status rather than stripped, so a guest can no
+      // longer store `closed` and `is_closed: false` side by side.
+      ['is_closed', false],
+    ] as Array<[string, unknown]>) {
+      expect(input[stripped], `guest submission kept privileged field ${stripped}`).toBe(safe);
     }
   });
 
@@ -922,11 +933,15 @@ describe('lead_automation', () => {
     await hook.handler(makeCtx({ event: 'beforeInsert', input, user: SYSTEM }));
     expect(input.lead_source).toBe('web');
     expect(input.status).toBe('new');
+    // Overwritten with a safe value rather than removed (#1133) — see the
+    // matching note on `case_sla_defaults` above for why an absence assertion
+    // could never have caught the real defect.
+    expect(input.is_converted, 'public form kept is_converted').toBe(false);
     for (const stripped of [
-      'is_converted', 'converted_account', 'converted_contact',
+      'converted_account', 'converted_contact',
       'converted_opportunity', 'converted_date', 'owner_id',
     ]) {
-      expect(input, `public form kept ${stripped}`).not.toHaveProperty(stripped);
+      expect(input[stripped], `public form kept ${stripped}`).toBeNull();
     }
   });
 
@@ -1116,10 +1131,14 @@ describe('lead_duplicate_check', () => {
 
     const input: Rec = { email: 'ada@acme.io', duplicate_status: 'confirmed', duplicate_of_lead: 'guessed' };
     await automation.handler(makeCtx({ event: 'beforeInsert', input, user: SYSTEM }));
+    // Nulled rather than removed (#1133). `null` is what keeps this pin
+    // meaningful: `lead_duplicate_check` stands down on a NON-BLANK verdict and
+    // its own `isBlank` counts `null` as blank, so the check below still runs —
+    // which is the whole point of stripping the spoofed verdict first.
     for (const stripped of [
       'duplicate_of_type', 'duplicate_of_lead', 'duplicate_of_contact', 'duplicate_status',
     ]) {
-      expect(input, `public form kept ${stripped}`).not.toHaveProperty(stripped);
+      expect(input[stripped], `public form kept ${stripped}`).toBeNull();
     }
 
     const h = makeHarness({

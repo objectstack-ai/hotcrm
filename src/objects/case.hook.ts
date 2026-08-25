@@ -81,7 +81,28 @@ const caseValidation: Hook = {
     // `null` is also what the two downstream owner writers read as "ownerless":
     // `case_auto_assign` stands down only on a non-empty STRING `owner_id`, so
     // a nulled column still reaches the round-robin.
-    const isGuestSubmission = !ctx.previous && !ctx.user?.id;
+    // ⚠️ `!ctx.session?.isSystem` is load-bearing and is NEW (#1133). The
+    // predicate used to be `!ctx.previous && !ctx.user?.id`, which conflates the
+    // two callers that both arrive without a user id: an anonymous web-to-case
+    // submitter (untrusted, the caller this branch exists for) and a SYSTEM
+    // write — seed load, backfill, demo bootstrap, migration — which is the most
+    // trusted caller there is. Elsewhere in this app that same absence is read
+    // the opposite way: `lead_automation`'s converted-lead lock treats
+    // `!ctx.user?.id` as "system write, allow it", and says so.
+    //
+    // While the strip was inert the conflation cost nothing, which is why it
+    // survived. The moment the strip actually fires it is destructive: a system
+    // insert that names an owner would have that owner blanked, so every seeded
+    // and backfilled case would land ownerless — MEASURED, as eight red cases in
+    // `test/unassigned-case-triage-reach.test.ts`, whose fixture inserts owned
+    // cases exactly that way.
+    //
+    // `ctx.session.isSystem` is the discriminator, measured on the engine's own
+    // context builder: a system context arrives as `session: { isSystem: true }`
+    // and an anonymous one carries no session at all. Narrowing only ever
+    // REMOVES callers from the branch, so no caller sanitised today stops being
+    // sanitised.
+    const isGuestSubmission = !ctx.previous && !ctx.user?.id && !ctx.session?.isSystem;
     if (isGuestSubmission) {
       if (!input.origin)   input.origin   = 'web';
       if (!input.status)   input.status   = 'new';

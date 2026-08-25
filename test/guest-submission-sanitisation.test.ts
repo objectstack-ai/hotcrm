@@ -74,9 +74,16 @@ type AnyRec = Record<string, any>;
 
 process.env.OS_REGISTRY_LOG ??= 'silent';
 
-/** A userless context — exactly what both hooks classify as a guest. */
-const GUEST = { isSystem: true } as AnyRec;
-/** Read-back channel. Userless too, but reads never touch the guest branch. */
+/**
+ * A genuinely anonymous caller: no user id AND no `isSystem`. Both are needed.
+ * A userless-but-system context (`{ isSystem: true }`, which is what every
+ * fixture in this repo writes through) is NOT a guest — it is the most trusted
+ * caller there is, and treating it as one blanks the owner of every seeded row.
+ * The engine's context builder is what separates them: a system context reaches
+ * a hook as `session: { isSystem: true }`, an anonymous one carries no session.
+ */
+const GUEST = {} as AnyRec;
+/** The trusted write / read-back channel. */
 const SYS = { isSystem: true } as AnyRec;
 
 let kernel: AnyRec;
@@ -224,18 +231,23 @@ describe('crm_lead — guest submission sanitisation', () => {
     expect(stored.owner_id).not.toBe('planted_user');
   }, 60_000);
 
-  it('a planted duplicate verdict cannot switch the intake dedupe off', async () => {
+  it('a guest cannot park a duplicate verdict or a link of their choosing', async () => {
     // The consequence #598 named, asserted on stored values. `lead_duplicate_check`
     // stands down on a record that already carries a verdict, so a submitter who
     // can post `duplicate_status: 'confirmed'` turns the dedupe off for their own
-    // submission and parks a link on any record id they care to guess.
-    const email = 'grace@hopper.test';
-    const first = await insertAs(GUEST, 'crm_lead', {
-      first_name: 'Grace', last_name: 'Hopper', company: 'Mark I', email,
-    });
-
+    // submission — and the link beside it can name any record id they care to
+    // guess.
+    //
+    // What this case does NOT assert is that the dedupe then ran and wrote its
+    // own `suspected` verdict. It cannot: an anonymous submission holds the
+    // `guest_portal` grant, which is INSERT-only on `crm_lead` and denies the
+    // reads that check needs, so `lead_duplicate_check` swallows the denial by
+    // design and a guest's duplicate lands unflagged. Asserting `suspected` here
+    // would pin a fiction. The security property is that the guest's own verdict
+    // does not survive, and that is what is measured.
     const second = await insertAs(GUEST, 'crm_lead', {
-      first_name: 'Grace', last_name: 'Hopper', company: 'Mark II', email,
+      first_name: 'Grace', last_name: 'Hopper', company: 'Mark II',
+      email: 'grace@hopper.test',
       duplicate_status: 'confirmed',
       duplicate_of_type: 'crm_contact',
       duplicate_of_contact: 'planted-record-id',
@@ -244,12 +256,10 @@ describe('crm_lead — guest submission sanitisation', () => {
 
     expect(stored.lead_source).toBe('web'); // positive control
 
-    // The planted verdict is gone and the dedupe ran: the machine's own
-    // `suspected` guess, pointing at the record this one actually repeats.
-    expect(stored.duplicate_status).toBe('suspected');
-    expect(stored.duplicate_of_type).toBe('crm_lead');
-    expect(stored.duplicate_of_lead).toBe(first);
-    expect(stored.duplicate_of_contact).not.toBe('planted-record-id');
+    expect(stored.duplicate_status).toBeNull();
+    expect(stored.duplicate_of_type).toBeNull();
+    expect(stored.duplicate_of_contact).toBeNull();
+    expect(stored.duplicate_of_lead).toBeNull();
   }, 60_000);
 
   it('a planted type discriminator no longer reaches validation', async () => {

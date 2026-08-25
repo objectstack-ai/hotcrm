@@ -320,7 +320,11 @@ describe('the guest strip and the assignment are ordered, not merely coexisting'
     const ctx = { event: 'beforeInsert', input, user: undefined, api: harness.api };
 
     await slaDefaults.handler(ctx as never);
-    expect(input.owner_id, 'the guest strip stopped removing the spoofed owner').toBeUndefined();
+    // Nulled, not removed (#1133): `delete` on a hook's `input` never reached
+    // storage, so the strip overwrites instead. `null` is what keeps the
+    // hand-off below working — `case_auto_assign` stands down only on a
+    // non-empty STRING owner, so a nulled column still reads as ownerless.
+    expect(input.owner_id, 'the guest strip stopped removing the spoofed owner').toBeNull();
 
     await assign.handler(ctx as never);
     expect(input.owner_id, 'the assignment did not run after the strip').toBe('agent_a');
@@ -344,9 +348,9 @@ describe('the guest strip and the assignment are ordered, not merely coexisting'
     await slaDefaults.handler(ctx as never);
     expect(
       input.owner_id,
-      'the strip no longer removes owner_id — the priority ordering has stopped mattering, ' +
+      'the strip no longer clears owner_id — the priority ordering has stopped mattering, ' +
         'and so has this pin',
-    ).toBeUndefined();
+    ).toBeNull();
   });
 });
 
