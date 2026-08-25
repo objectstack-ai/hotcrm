@@ -360,15 +360,25 @@ export const LeadConversionFlow: Flow = {
     { id: 'e20', source: 'get_lead', target: 'decision_duplicate', type: 'default' },
     // ⚠️ Both conditions are TOTAL, and on this surface that is not a style
     // preference: a flow condition is interpreted strict CEL on every run, and
-    // an unguarded `record.x` read against a driver that omits absent columns
+    // an unguarded field read against a driver that omits absent columns
     // (`driver-memory` / `driver-mongodb`) aborts — which FAILS THE RUN, so an
-    // unguarded read here would make ordinary leads unconvertible. The full
-    // measurement is in `test/flow-condition-totality.test.ts`; the
-    // `vars.leadRecord != null` conjunct additionally absorbs the (unreachable
-    // in practice) shape where the fetch found nothing, because CEL's `&&`
-    // returns false rather than the error when the other side is false.
-    { id: 'e21', source: 'decision_duplicate', target: 'warn_duplicate', type: 'default', condition: P`vars.leadRecord != null && has(vars.leadRecord.duplicate_status) && vars.leadRecord.duplicate_status == "suspected"`, label: 'Suspected' },
-    { id: 'e22', source: 'decision_duplicate', target: 'no_duplicate_warning', type: 'default', condition: P`!(vars.leadRecord != null && has(vars.leadRecord.duplicate_status) && vars.leadRecord.duplicate_status == "suspected")`, label: 'Clean' },
+    // unguarded read here would make ordinary leads unconvertible. Measured, in
+    // exactly that shape: `condition failed to evaluate as CEL: No such key:
+    // duplicate_status`. The full table is in
+    // `test/flow-condition-totality.test.ts`.
+    //
+    // TWO guards, in the spelling `test/flow-variable-conditions.test.ts`
+    // requires, and the outer one is not decoration: `vars.leadRecord` is a
+    // KEY, so a plain `vars.leadRecord != null` would itself abort with
+    // `Unknown variable` on the run where `get_lead` bound nothing — the guard
+    // would be the fault it was written to prevent. `has(vars.leadRecord)`
+    // answers instead of reading.
+    //
+    // The two edges PARTITION by De Morgan (`!(a && b && c)` written out as
+    // `!a || !b || !c`), so exactly one is true for every record shape,
+    // including the shapes where the column, the row or both are missing.
+    { id: 'e21', source: 'decision_duplicate', target: 'warn_duplicate', type: 'default', condition: P`has(vars.leadRecord) && has(vars.leadRecord.duplicate_status) && vars.leadRecord.duplicate_status == "suspected"`, label: 'Suspected' },
+    { id: 'e22', source: 'decision_duplicate', target: 'no_duplicate_warning', type: 'default', condition: P`!has(vars.leadRecord) || !has(vars.leadRecord.duplicate_status) || vars.leadRecord.duplicate_status != "suspected"`, label: 'Clean' },
     { id: 'e23', source: 'warn_duplicate', target: 'screen_1', type: 'default' },
     { id: 'e24', source: 'no_duplicate_warning', target: 'screen_1', type: 'default' },
     { id: 'e2', source: 'screen_1', target: 'find_account', type: 'default' },
