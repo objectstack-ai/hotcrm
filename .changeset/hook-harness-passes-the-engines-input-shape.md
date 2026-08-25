@@ -40,14 +40,23 @@ from there and never consults `data` — measured; without the hoist the seven
 hooks that read `ctx.input.id` would go red against a harness that is wrong
 rather than against a defect.
 
-`test/hook-input-shape.test.ts` is the new pin, and every case in it is written
-to go RED against the pre-#1295 plain-object harness — verified by restoring the
-old harness over the new pin and watching 8 of 12 cases fail, including the
-`delete` no-op that #1133 shipped under. It also covers the traps the failure
-mode generalises to (`has`, `ownKeys`, `getOwnPropertyDescriptor`, the
-non-enumerable reserved keys) and carries an executable contrast case asserting
-that a plain object still honours `delete`, so the reason the pin matters cannot
-quietly stop being true.
+`test/hook-input-shape.test.ts` is the new pin, and it was verified to fail
+against the pre-#1295 harness rather than merely asserted to. Restoring the old
+plain-object shape turns 5 of its 12 cases red: the `delete` no-op that #1133
+shipped under, the two cases that read that no-op from the other side (`delete`
+reporting success while doing nothing, and assign-then-delete keeping the
+assigned value), the wrapper-shape case, and the `id`-from-the-wrapper case. The
+remaining 7 pass under both shapes by construction — reads, assignments, `has`,
+`ownKeys` and `getOwnPropertyDescriptor` are exactly the operations a plain
+object and the Proxy agree on, which is why the old harness looked trustworthy.
+
+The pin also covers the traps the failure mode generalises to, and carries an
+executable contrast case asserting that a plain object still honours `delete`,
+so the reason the pin matters cannot quietly stop being true. Its header states
+how to read each direction of failure: `delete` becoming effective means the
+engine grew a `deleteProperty` trap (upstream objectstack#12277) and the
+assign-instead-of-delete repairs should be re-read, not that the assertion
+should be relaxed.
 
 Landing the shape changed no verdict anywhere in the suite (135 files / 2931
 tests, green before and after), because PR #1294 had already replaced the last
