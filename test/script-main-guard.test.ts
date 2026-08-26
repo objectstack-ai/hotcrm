@@ -229,7 +229,15 @@ const GUARDED: Guarded[] = [
   },
 ];
 
-/** Spawns `script` through `root` (a symlink), never throwing on a non-zero exit. */
+/**
+ * Spawns `script` through `root` (a symlink), never throwing on a non-zero exit.
+ *
+ * `stdio` is pinned so the child's stderr is CAPTURED rather than echoed into
+ * the parent's log (#1302) — these fixtures are copies of the REAL gate
+ * scripts, so their red legs printed gate-shaped `✗` lines straight into
+ * `pnpm verify`. `error.stderr` is populated either way; every assertion on the
+ * failure text is unchanged. See test/verify-log-decoy-pin.test.ts.
+ */
 function runThroughSymlink(
   runner: string,
   root: string,
@@ -237,7 +245,10 @@ function runThroughSymlink(
   args: string[],
 ): { status: number; output: string } {
   try {
-    const stdout = execFileSync(runner, [join(root, script), ...args], { encoding: 'utf8' });
+    const stdout = execFileSync(runner, [join(root, script), ...args], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
     return { status: 0, output: stdout };
   } catch (error) {
     const failure = error as { status?: number; stdout?: string; stderr?: string };
