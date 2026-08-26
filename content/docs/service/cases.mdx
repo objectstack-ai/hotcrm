@@ -149,23 +149,23 @@ See [SLA & Escalation](/docs/service/sla-and-escalation) for the full mechanics.
 
 ## Standard list views
 
-`crm_case` ships **eight** views (`src/views/case.view.ts`), and the case list surfaces them as tabs:
+`crm_case` ships **eight** views (`src/views/case.view.ts`), and the case list surfaces them as tabs, each labelled with the view's own name:
 
-| View | What it shows | Tab |
-| --- | --- | --- |
-| **All Cases** | Every case, sorted by priority then SLA due date, with a row tint keyed on **priority** | *All* |
-| **Service Workflow** | Kanban of open cases, grouped by status | *Workflow* |
-| **SLA Calendar** | Cases laid out on their **SLA Due Date** — every case carries one now, so the calendar shows the whole open backlog | *SLA* |
-| **Case Timeline** | Cases on a *created → closed* timeline, grouped by owner | *Timeline* |
-| **Escalated Cases** | `is_escalated` is true | *Escalated* |
-| **Unassigned — triage** | Open cases with no owner at all, urgent first then soonest due — where a web-to-case submission lands when nobody holds the Service Agent position | *Triage* |
-| **⏰ SLA at Risk** | Open **High and Critical** cases, soonest due date first | *SLA at Risk* |
-| **My Open Cases** | Your cases that are not closed | *My Cases* |
+| View | What it shows |
+| --- | --- |
+| **All Cases** | Every case, sorted by priority then SLA due date, with a row tint keyed on **priority** |
+| **Service Workflow** | Kanban of open cases, grouped by status |
+| **SLA Calendar** | Cases laid out on their **SLA Due Date** — every case carries one now, so the calendar shows the whole open backlog |
+| **Case Timeline** | Cases on a *created → closed* timeline, grouped by owner |
+| **Escalated Cases** | `is_escalated` is true |
+| **Unassigned — triage** | Open cases with no owner at all, urgent first then soonest due — where a web-to-case submission lands when nobody holds the Service Agent position |
+| **⏰ SLA at Risk** | Open **High and Critical** cases, soonest due date first |
+| **My Open Cases** | Your cases that are not closed |
 
 Six names this section used to list are not views at all:
 
 - **Critical Cases** and **Breached SLA** are metric tiles, not lists. [Service Overview](/docs/analytics/dashboards) — the dashboard's own title is **Customer Service** — carries *Critical Cases* (open and Critical) and **SLA Violations** (`is_sla_violated` is true); no list view in this app filters on a breach. For a list you can actually work through, use **Escalated Cases** — the SLA sweep escalates every case it flags, so each breach lands there.
-- **Service Board** is not this app's name for anything. The kanban is **Service Workflow**, on the *Workflow* tab.
+- **Service Board** is not this app's name for anything. The kanban is **Service Workflow**, and that is what its tab reads.
 - **Cases Due Today**, **Recently Closed** and **By Account** do not exist in any form: no view filters on today's due date or on `closed_date`, and `crm_case` has no grouped view.
 
 ## The case detail layout
@@ -218,7 +218,7 @@ If the Copilot decides the priority is *Critical*, it will also recommend immedi
 ## Tips for service managers
 
 - ✅ There is no **Breached SLA** view to watch, and no red badge either — the only colour rule on a case list is *All Cases*' row tint, and it is keyed on **priority**, not on a breach. Work **Escalated Cases** daily instead, and read the **SLA Violations** tile on Service Overview for the count.
-- ✅ Use the kanban for daily standups — it is named **Service Workflow** and reaches the case list as the *Workflow* tab.
+- ✅ Use the kanban for daily standups — it is named **Service Workflow** and reaches the case list as the **Service Workflow** tab.
 - ✅ Coach agents whose **Resolution Time** trends up — but you will be reading it off the cases themselves. There is no agent leaderboard: `case_metrics`, the dataset behind every service report and dashboard widget, declares Status, Priority, Origin, Type and Created as its only dimensions, so nothing in analytics can group cases by agent.
 
 ## Tips for admins

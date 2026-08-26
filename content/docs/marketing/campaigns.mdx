@@ -94,14 +94,14 @@ For deals influenced by multiple campaigns (multi-touch), the convention is to r
 
 ## Standard list views
 
-Campaigns saves **four** views (`src/views/campaign.view.ts`), and the tab row above the list changes how the same campaigns are *drawn*, not which campaigns are in them:
+Campaigns saves **four** views (`src/views/campaign.view.ts`), and the tab row above the list changes how the same campaigns are *drawn*, not which campaigns are in them. One tab per view, each labelled with the view's own name:
 
-| View | What it shows | Tab |
-| --- | --- | --- |
-| **All Campaigns** | The grid: name (pinned left, and the link into the record), channel, status, start and end date, budgeted cost and expected revenue — the last two with column totals. Ordered by **Start Date**, earliest first. 25 rows a page. | *All* |
-| **Campaign Schedule** | One gantt bar per campaign, from start date to end date, titled by name, so overlapping runs line up against one another. | *Schedule* |
-| **Launch Calendar** | The same campaigns on a month calendar, placed on their **Start Date** and coloured by channel. | *Launches* |
-| **Marketing Timeline** | The same start-to-end spans on a month scale, grouped by channel and coloured by status. | *Timeline* |
+| View | What it shows |
+| --- | --- |
+| **All Campaigns** | The grid: name (pinned left, and the link into the record), channel, status, start and end date, budgeted cost and expected revenue — the last two with column totals. Ordered by **Start Date**, earliest first. 25 rows a page. |
+| **Campaign Schedule** | One gantt bar per campaign, from start date to end date, titled by name, so overlapping runs line up against one another. |
+| **Launch Calendar** | The same campaigns on a month calendar, placed on their **Start Date** and coloured by channel. |
+| **Marketing Timeline** | The same start-to-end spans on a month scale, grouped by channel and coloured by status. |
 
 None of the four filters anything, so **every campaign you can see appears in all four** and switching tabs only redraws them. There is no saved *Active Campaigns*, *Upcoming Campaigns*, *Completed This Quarter*, *Over Budget*, *By Type* or *Best ROI*: to narrow the list to one status, sort and filter the grid columns yourself. **ROI** is not among those columns — it is on the campaign record, under *Costs*, and in the marketing dashboards.
 
