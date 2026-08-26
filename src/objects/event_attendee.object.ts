@@ -254,8 +254,8 @@ export const EventAttendee = ObjectSchema.create({
     //    runs the referential pass. So `set_null` here is not dormant: it broke
     //    account erasure for any colleague who had ever attended a meeting.
     //  · The app's shipped stance is already "a deleted user's references
-    //    degrade". HotCRM holds 15 lookups on `sys_user`; the other 14 (every
-    //    `owner_id`, plus `product_manager`) are `set_null`
+    //    degrade". EVERY other `sys_user` lookup in HotCRM (every `owner_id`,
+    //    plus `product_manager`) is `set_null`
     //    and NO validation rule reads any of them — the rule below is the only
     //    one in the app that reads a user reference at all, which is precisely
     //    why this is the only lookup where the default misbehaved. `restrict`
