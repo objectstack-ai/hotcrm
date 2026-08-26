@@ -31,4 +31,14 @@ now also names the run each row was anchored from — the three rows no longer
 come from one run — and states that its `headroom` column is the headroom at
 anchor time, not the live figure the gate prints.
 
+`test/source-token-ratchet.test.ts` is recalibrated in the same commit, because
+it must be. One case there writes a fixture and asserts it sits quietly *inside*
+the buffer — a claim that was calibrated in absolute tokens against the old
+42,000 ceiling (~40,010 tokens, `headroom ~1,990`). The suite runs the real gate
+with its real committed ceilings, so lowering the ceiling to 40,000 put that
+fixture over it. The fixture is now sized at ~38,095 tokens, which is
+`headroom 1,905` — the same 5.0% of the reading the case claimed before, against
+the new ceiling. The case still pins exactly what it pinned: a scope inside the
+buffer draws a clean check and no advisory. Nothing was skipped or disabled.
+
 No `src/` metadata changed; the app bundle is byte-identical.
