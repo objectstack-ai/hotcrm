@@ -239,8 +239,16 @@ export const CaseViews = defineView({
       columns: ['case_number', 'subject', 'crm_account', 'priority', 'sla_due_date', 'owner_id'],
       // Operator-only filter — sort by SLA due date ascending so the soonest
       // surface first. (The view runtime does not interpolate `{NOW() + 4h}`.)
+      //
+      // ⚠️ `status not_in CLOSED_CASE_STATUSES`, NOT `is_closed == false`: the
+      // flag is derived as `effStatus === 'closed'` and never flips on
+      // `resolved`, so the flag spelling listed resolved cases as at risk while
+      // `case_sla_monitor` — the automation that OWNS SLA — had already
+      // excluded them (`status: { $nin: ['resolved', 'closed'] }`). The tab a
+      // human reads and the sweep that acts must answer this one question the
+      // same way. Pinned by `test/live-work-predicate-parity.test.ts` (#1145).
       filter: [
-        { field: 'is_closed', operator: 'equals', value: false },
+        { field: 'status', operator: 'not_in', value: ['resolved', 'closed'] },
         { field: 'priority', operator: 'in', value: ['high', 'critical'] },
       ],
       sort: [{ field: 'sla_due_date', order: 'asc' }],

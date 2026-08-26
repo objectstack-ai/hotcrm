@@ -33,6 +33,18 @@ import { CLOSED_CASE_STATUSES } from '../src/objects/_case-assignment';
  * what stops a fifth spelling growing back, because "one concept, three
  * spellings" is the root cause and a fix without a guard only resets the clock.
  *
+ * ### The roster earning its keep (#1325)
+ *
+ * `sla_at_risk` was pinned BELOW, on the boundary roster, as a same-shape view
+ * left alone by #1145's scope. It was then measured against the producer that
+ * owns SLA — `case_sla_monitor` already excludes `['resolved', 'closed']` —
+ * and the two were found to CONTRADICT each other: the sweep would not flag a
+ * resolved case as breached while the ⏰ SLA at Risk tab still listed that same
+ * case for an agent to work. That is not a second concept, it is the #1145
+ * defect wearing a sixth spelling, so the view moved onto the status predicate
+ * and its name moved from the boundary roster into the consumer roster in the
+ * same change. `test/sla-at-risk-live-work.test.ts` is its behavioural half.
+ *
  * ### ⚠️ BY NAME, never by count
  *
  * The roster below is a list of NAMES, and every name must resolve. A guard
@@ -195,6 +207,11 @@ const LIVE_WORK_CONSUMERS: { name: string; surface: string; excluded: () => stri
     excluded: () => excludedValues(loweredViewFilter('unassigned_triage'), 'status'),
   },
   {
+    name: 'sla_at_risk',
+    surface: 'view filter[] — src/views/case.view.ts',
+    excluded: () => excludedValues(loweredViewFilter('sla_at_risk'), 'status'),
+  },
+  {
     name: 'case_unassigned_triage_sharing',
     surface: 'sharing condition (CEL) — src/sharing/case.sharing.ts',
     excluded: () => excludedValues(loweredSharingCondition('case_unassigned_triage_sharing'), 'status'),
@@ -270,7 +287,7 @@ describe('the "no longer live work" predicate is ONE set, and the roster is by n
     // above would also pass a consumer that excluded the right statuses AND
     // additionally narrowed on the flag.
     const offenders: string[] = [];
-    for (const name of ['unassigned_triage']) {
+    for (const name of ['unassigned_triage', 'sla_at_risk']) {
       const fields = narrowedFields(loweredViewFilter(name));
       if (fields.includes('is_closed')) offenders.push(`${name} (view filter)`);
     }
@@ -292,11 +309,20 @@ describe('the "no longer live work" predicate is ONE set, and the roster is by n
  *
  * ⚠️ These entries record a MEASUREMENT, not a decision anyone is free to make
  * here. `case_workflow` was measured and ruled a different concept (below).
- * `my_open_cases`, `sla_at_risk`, `case_escalation_sharing` and
- * `case_director_sharing` were measured, reported, and left exactly as they
- * are: widening #1145's ruling to them was explicitly out of scope, so what is
- * pinned is their CURRENT shape — if one of them changes, that change becomes
- * visible here instead of arriving as a silent widening.
+ * `my_open_cases`, `case_escalation_sharing` and `case_director_sharing` were
+ * measured, reported, and left exactly as they are: widening #1145's ruling to
+ * them was explicitly out of scope, so what is pinned is their CURRENT shape —
+ * if one of them changes, that change becomes visible here instead of arriving
+ * as a silent widening.
+ *
+ * ⚠️ `sla_at_risk` was on this roster and has LEFT it (#1325). It is the one
+ * entry that turned out not to be a judgement call: `case_sla_monitor` owns SLA
+ * and had already answered the same question the other way, so the view was
+ * contradicting the automation rather than expressing a different concept. It
+ * is now in `LIVE_WORK_CONSUMERS` above. `my_open_cases` and the two sharing
+ * rules are NOT that case — they are open on decision card #1328, and moving
+ * one of them here on the strength of #1325 is exactly the silent widening this
+ * roster exists to make visible.
  */
 const NOT_LIVE_WORK: { name: string; surface: 'view' | 'sharing'; why: string }[] = [
   {
@@ -312,11 +338,6 @@ const NOT_LIVE_WORK: { name: string; surface: 'view' | 'sharing'; why: string }[
   },
   {
     name: 'my_open_cases',
-    surface: 'view',
-    why: 'Same shape, outside #1145\'s ruling. Measured and reported; not decided here.',
-  },
-  {
-    name: 'sla_at_risk',
     surface: 'view',
     why: 'Same shape, outside #1145\'s ruling. Measured and reported; not decided here.',
   },
