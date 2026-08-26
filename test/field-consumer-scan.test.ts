@@ -215,10 +215,23 @@ describe('--sites refuses a field name that does not exist (#1255)', () => {
    */
   const SPAWN_TIMEOUT_MS = 30_000;
 
-  /** Spawns the real script, never throwing, so the exit status can be read. */
+  /**
+   * Spawns the real script, never throwing, so the exit status can be read.
+   *
+   * `stdio` is pinned so the child's stderr is CAPTURED rather than echoed into
+   * the parent's log (#1302) — `error.stderr` below is populated either way, so
+   * every assertion on the failure text still reads exactly what it read
+   * before. See test/verify-log-decoy-pin.test.ts.
+   */
   const run = (...args: string[]): { status: number; output: string } => {
     try {
-      return { status: 0, output: execFileSync(TSX, [SCRIPT, ...args], { encoding: 'utf8' }) };
+      return {
+        status: 0,
+        output: execFileSync(TSX, [SCRIPT, ...args], {
+          encoding: 'utf8',
+          stdio: ['ignore', 'pipe', 'pipe'],
+        }),
+      };
     } catch (error) {
       const failure = error as { status?: number; stdout?: string; stderr?: string };
       return { status: failure.status ?? -1, output: `${failure.stdout ?? ''}${failure.stderr ?? ''}` };

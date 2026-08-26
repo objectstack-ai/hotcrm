@@ -67,10 +67,20 @@ function fixture(report: unknown): string {
   return path;
 }
 
-/** Runs the real script against a fixture, without throwing on a non-zero exit. */
+/**
+ * Runs the real script against a fixture, without throwing on a non-zero exit.
+ *
+ * `stdio` is pinned so the child's stderr is CAPTURED rather than echoed into
+ * the parent's log (#1302). `err.stderr` below is populated either way — the
+ * `no \`issues\` array` assertion reads exactly what it read before. See
+ * test/verify-log-decoy-pin.test.ts.
+ */
 function run(fixturePath: string): { status: number; stdout: string; stderr: string } {
   try {
-    const stdout = execFileSync('node', [SCRIPT, '--fixture', fixturePath], { encoding: 'utf8' });
+    const stdout = execFileSync('node', [SCRIPT, '--fixture', fixturePath], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
     return { status: 0, stdout, stderr: '' };
   } catch (err: any) {
     return { status: err.status ?? 1, stdout: err.stdout ?? '', stderr: err.stderr ?? '' };
@@ -172,7 +182,13 @@ describe("real end-to-end run against this repo (today's baseline)", () => {
     // Same command CI runs (no --fixture: spawns the real objectstack lint).
     // If this ever regresses, `pnpm test` catches it alongside the dedicated
     // CI step, not only there.
-    const out = execFileSync('node', [SCRIPT], { cwd: REPO_ROOT, encoding: 'utf8' });
+    // `stdio` pinned so the real lint's own stderr chatter stays out of the
+    // parent log (#1302); the assertion below reads the returned stdout.
+    const out = execFileSync('node', [SCRIPT], {
+      cwd: REPO_ROOT,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
     expect(out).toContain('i18n lint gate: 0 `i18n/missing-*` issues');
   }, 60_000);
 });

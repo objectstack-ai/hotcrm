@@ -97,10 +97,20 @@ function write(rel: string, contents: string): void {
   writeFileSync(path, contents);
 }
 
-/** Run the gate against the sandbox root; never throws. */
+/**
+ * Run the gate against the sandbox root; never throws, never inherits stderr.
+ *
+ * `stdio` is pinned so the fixture-driven `✗ source hygiene failed: …` lines
+ * are CAPTURED rather than echoed into the parent's log (#1302).
+ * `error.stderr` is populated either way, so every assertion on the failure
+ * text below is unchanged. See test/verify-log-decoy-pin.test.ts.
+ */
 function runGate(): { status: number; output: string } {
   try {
-    const stdout = execFileSync(process.execPath, [join(root, GATE)], { encoding: 'utf8' });
+    const stdout = execFileSync(process.execPath, [join(root, GATE)], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
     return { status: 0, output: stdout };
   } catch (error) {
     const failure = error as { status?: number; stdout?: string; stderr?: string };

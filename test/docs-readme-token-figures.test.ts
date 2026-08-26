@@ -87,8 +87,11 @@ describe('the README headline figures match the token gate (#1187)', () => {
 
   /** Today's reading, straight from the gate CI runs. Never hard-coded here. */
   const measured: Record<string, Scope> = (() => {
+    // `stdio` pinned so the child's stderr is CAPTURED, not echoed into the
+    // parent's log (#1302). See test/verify-log-decoy-pin.test.ts for why.
     const stdout = execFileSync(process.execPath, [join(REPO_ROOT, GATE), '--json'], {
       encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
     });
     const parsed = JSON.parse(stdout) as { scopes: Scope[] };
     return Object.fromEntries(parsed.scopes.map((scope) => [scope.label, scope]));
