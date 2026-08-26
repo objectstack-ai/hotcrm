@@ -34,11 +34,6 @@ export const QuoteViews = defineView({
     appearance: {
       allowedVisualizations: ['grid', 'kanban', 'calendar'],
     },
-    tabs: [
-      { name: 'all', view: 'all_quotes', isDefault: true, pinned: true },
-      { name: 'pipeline', icon: 'columns-3', view: 'quote_pipeline' },
-      { name: 'calendar', icon: 'calendar', view: 'quote_calendar' },
-    ],
   },
 
   listViews: {

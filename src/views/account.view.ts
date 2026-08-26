@@ -83,18 +83,6 @@ export const AccountViews = defineView({
       showDescription: true,
       allowedVisualizations: ['grid', 'gallery', 'map'],
     },
-    tabs: [
-      { name: 'all', view: 'all_accounts', isDefault: true, pinned: true },
-      { name: 'cards', icon: 'gallery-thumbnails', view: 'account_gallery' },
-      { name: 'map', icon: 'map', view: 'account_map' },
-      { name: 'enterprise', icon: 'crown', view: 'enterprise_accounts' },
-      { name: 'mine', icon: 'user', view: 'my_accounts' },
-      // No account-level "Renewals" tab (#1181). It listed `renewals_due`,
-      // which filtered and sorted on `crm_account.next_renewal_date` — a field
-      // nothing maintained. The renewals queue lives on `crm_contract`
-      // (`renewal_calendar`), over the `end_date` the daily sweep reads.
-      { name: 'at_risk', icon: 'triangle-alert', view: 'at_risk_accounts' },
-    ],
   },
 
   listViews: {
@@ -132,9 +120,13 @@ export const AccountViews = defineView({
       sort: [{ field: 'annual_revenue', order: 'desc' }],
 
       // ADR-0047 end-user quick filters (Airtable "User filters", Elements:
-      // dropdowns). Lives on THIS view, not the default one: the default
-      // view's `tabs` act as the view switcher, and filter tabs/dropdowns
-      // are mutually exclusive with a tab row on the same toolbar.
+      // dropdowns). `element: 'dropdown'`, deliberately — on an object list
+      // the view SWITCHER owns the tab bar (it builds one entry per `list` /
+      // `listViews` descriptor), so a quick-filter block shaped as tabs is
+      // dropped there: the console logs `defines userFilters (element:
+      // "tabs"), which are ignored on an object list view (ADR-0047 "views"
+      // mode — the view switcher owns the tab bar here)` and renders nothing.
+      // Dropdowns sit beside the switcher and are unaffected.
       // `owner_id` is the platform ownership lookup (#548) — it renders as a
       // record-picker dropdown.
       // NOTE: requires @objectstack/spec > 9.2.0 (ADR-0047 UserFiltersSchema);

@@ -365,12 +365,21 @@ describe('unassigned_triage makes the empty-pool path visible', () => {
     .find((v: AnyRec) => v.list?.data?.object === 'crm_case');
   const triage = caseViews?.listViews?.unassigned_triage;
 
-  it('exists on crm_case as a pinned tab', () => {
+  it('exists on crm_case, which is what puts it on the switcher strip', () => {
+    // Reachability IS existence here (#1307). This used to look up a
+    // `list.tabs[]` entry pointing at the view and assert it was `pinned`,
+    // on the belief that a curated `tabs` array decided which views render.
+    // Measured on the shipped renderer (`@objectstack/console` 17.1.0), the
+    // object-view switcher builds its strip from `listViews` + the primary
+    // `list` and never reads `tabs`, so a `listViews` entry is on the strip
+    // by being defined and `pinned` was inert. `tabs` is gone from every view
+    // file; the surviving assertion is the one that was always load-bearing.
     expect(triage, 'the triage view is gone — the pool-empty path is silent again').toBeTruthy();
     expect(triage.data?.object).toBe('crm_case');
-    const tab = (caseViews?.list?.tabs ?? []).find((t: AnyRec) => t.view === 'unassigned_triage');
-    expect(tab, 'no tab reaches the triage view — an unreachable view is not visibility').toBeTruthy();
-    expect(tab.pinned, 'the triage tab is not pinned').toBe(true);
+    expect(
+      Object.keys(caseViews?.listViews ?? {}),
+      'the triage view left `listViews`, so the switcher no longer lists it',
+    ).toContain('unassigned_triage');
   });
 
   it('filters on the ABSENCE of an owner, and excludes closed cases', () => {

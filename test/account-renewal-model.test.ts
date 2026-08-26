@@ -70,20 +70,30 @@ describe('the account-level renewal model is retired (#1181)', () => {
    * The view built ON the removed date could not outlive it: both its
    * `is_not_null` filter and its sort key were `next_renewal_date`, so what
    * remained would have been a view listing every customer in date order with
-   * no date. It is gone with its switcher tab — asserted together, because a
-   * tab pointing at a deleted view and a view unreachable from any tab are two
-   * different broken states and this removal must produce neither.
+   * no date.
+   *
+   * Dropping it from `listViews` is the whole removal (#1307). This used to
+   * assert the view's absence and the absence of a `list.tabs[]` entry naming
+   * it as two separate broken states, on the belief that a curated `tabs`
+   * array decided which views the switcher rendered. Measured on the shipped
+   * console (17.1.0), the switcher builds its strip from `listViews` plus the
+   * primary `list` and never reads `tabs` — so there is exactly ONE place a
+   * view can be reachable from, and `tabs` is now gone from every view file.
+   * That one place is what this asserts, over the whole strip rather than over
+   * `listViews` alone, so that reintroducing the view as the primary `list`
+   * would fail too.
    */
-  it('drops the renewals_due view and its switcher tab together', () => {
+  it('drops the renewals_due view, and with it the only way to reach it', () => {
+    const strip = [
+      ...(AccountViews.list?.name ? [String(AccountViews.list.name)] : []),
+      ...Object.entries(AccountViews.listViews ?? {}).map(
+        ([key, def]) => String((def as AnyRec)?.name ?? key),
+      ),
+    ];
+    // Guards the guard: an empty strip would pass every line below.
+    expect(strip.length, 'crm_account puts no view on the switcher at all').toBeGreaterThan(1);
+    expect(strip, 'renewals_due is back on the switcher strip').not.toContain('renewals_due');
     expect(Object.keys(AccountViews.listViews ?? {})).not.toContain('renewals_due');
-    const tabViews = (AccountViews.list?.tabs ?? []).map((t: AnyRec) => t.view);
-    expect(tabViews).not.toContain('renewals_due');
-    // and nothing else was orphaned on the way out
-    const declared = new Set(Object.keys(AccountViews.listViews ?? {}));
-    for (const view of tabViews) {
-      if (view === AccountViews.list?.name) continue;
-      expect(declared, `tab points at missing view "${view}"`).toContain(view);
-    }
   });
 });
 

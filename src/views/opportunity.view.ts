@@ -63,17 +63,6 @@ export const OpportunityViews = defineView({
       showDescription: true,
       allowedVisualizations: ['grid', 'kanban', 'calendar', 'timeline', 'gallery'],
     },
-    tabs: [
-      { name: 'open', icon: 'target', view: 'open_opportunities', isDefault: true, pinned: true },
-      { name: 'mine', icon: 'user', view: 'my_open_deals' },
-      { name: 'pipeline', icon: 'columns-3', view: 'pipeline_kanban' },
-      { name: 'all', view: 'all_opportunities' },
-      { name: 'crm_forecast', icon: 'calendar', view: 'close_date_calendar' },
-      { name: 'timeline', icon: 'git-commit-horizontal', view: 'deal_timeline' },
-      { name: 'cards', icon: 'gallery-thumbnails', view: 'deal_gallery' },
-      { name: 'stale', icon: 'triangle-alert', view: 'stale_opportunities' },
-      { name: 'closing', icon: 'calendar-check', view: 'closing_this_quarter' },
-    ],
     // List-level entry points: generate_quote reaches the row menu via its
     // own `locations: ['list_item']`. Built-in `exportOptions` covers CSV
     // export.

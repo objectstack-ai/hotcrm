@@ -37,11 +37,6 @@ export const ForecastViews = defineView({
     grouping: { fields: [{ field: 'period_label', order: 'desc' }] },
     pagination: { pageSize: 50 },
     appearance: { allowedVisualizations: ['grid'] },
-    tabs: [
-      { name: 'all',          view: 'all_forecasts',  isDefault: true, pinned: true },
-      { name: 'this_quarter', icon: 'calendar',       view: 'this_quarter_forecasts' },
-      { name: 'mine',         icon: 'user',           view: 'my_forecast' },
-    ],
   },
 
   listViews: {
