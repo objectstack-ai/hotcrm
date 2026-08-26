@@ -578,9 +578,9 @@ const ROW_LABEL: Record<string, Record<Locale, string>> = {
   crm_forecast: { en: 'Forecast', 'zh-Hans': '预测', 'zh-Hant': '預測' },
   crm_product: { en: 'Product', 'zh-Hans': '产品', 'zh-Hant': '產品' },
   // zh-Hans is 「营销活动」, the label the locale pack ships (`zh-CN.ts`
-  // `objects.crm_campaign.label`) and the word the other 14 zh-Hans doc pages
-  // already used. This row read 「市场活动」 until #830, which left the master
-  // spelled one way and the detail below spelled the other on the same page.
+  // `objects.crm_campaign.label`) and the word the zh-Hans doc pages already
+  // use. This row read 「市场活动」 until #830, which left the master spelled
+  // one way and the detail below spelled the other on the same page.
   crm_campaign: { en: 'Campaign', 'zh-Hans': '营销活动', 'zh-Hant': '行銷活動' },
   // Both Chinese labels carry the marketing word on purpose (#810). Without it,
   // 「活动成员」/「活動成員」 sit two rows under 「活动」/「活動」 (`crm_event`) and
