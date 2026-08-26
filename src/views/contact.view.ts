@@ -41,9 +41,9 @@ export const ContactViews = defineView({
       allowedVisualizations: ['grid', 'gallery'],
     },
     tabs: [
-      { name: 'all', label: 'All', view: 'all_contacts', isDefault: true, pinned: true },
-      { name: 'directory', label: 'Directory', icon: 'gallery-thumbnails', view: 'contact_directory' },
-      { name: 'primary', label: 'Primary', icon: 'star', view: 'primary_contacts' },
+      { name: 'all', view: 'all_contacts', isDefault: true, pinned: true },
+      { name: 'directory', icon: 'gallery-thumbnails', view: 'contact_directory' },
+      { name: 'primary', icon: 'star', view: 'primary_contacts' },
     ],
   },
 

@@ -84,16 +84,16 @@ export const AccountViews = defineView({
       allowedVisualizations: ['grid', 'gallery', 'map'],
     },
     tabs: [
-      { name: 'all', label: 'All', view: 'all_accounts', isDefault: true, pinned: true },
-      { name: 'cards', label: 'Cards', icon: 'gallery-thumbnails', view: 'account_gallery' },
-      { name: 'map', label: 'Map', icon: 'map', view: 'account_map' },
-      { name: 'enterprise', label: 'Enterprise', icon: 'crown', view: 'enterprise_accounts' },
-      { name: 'mine', label: 'My Accounts', icon: 'user', view: 'my_accounts' },
+      { name: 'all', view: 'all_accounts', isDefault: true, pinned: true },
+      { name: 'cards', icon: 'gallery-thumbnails', view: 'account_gallery' },
+      { name: 'map', icon: 'map', view: 'account_map' },
+      { name: 'enterprise', icon: 'crown', view: 'enterprise_accounts' },
+      { name: 'mine', icon: 'user', view: 'my_accounts' },
       // No account-level "Renewals" tab (#1181). It listed `renewals_due`,
       // which filtered and sorted on `crm_account.next_renewal_date` — a field
       // nothing maintained. The renewals queue lives on `crm_contract`
       // (`renewal_calendar`), over the `end_date` the daily sweep reads.
-      { name: 'at_risk', label: 'At Risk', icon: 'triangle-alert', view: 'at_risk_accounts' },
+      { name: 'at_risk', icon: 'triangle-alert', view: 'at_risk_accounts' },
     ],
   },
 

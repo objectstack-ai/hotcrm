@@ -43,10 +43,10 @@ export const KnowledgeArticleViews = defineView({
       allowedVisualizations: ['grid', 'kanban'],
     },
     tabs: [
-      { name: 'all',       label: 'All',         view: 'all_articles', isDefault: true, pinned: true },
-      { name: 'published', label: 'Published',   icon: 'check-circle-2', view: 'published_articles' },
-      { name: 'drafts',    label: 'My Drafts',   icon: 'pencil',         view: 'my_drafts' },
-      { name: 'stale',     label: 'Review Queue', icon: 'clock-alert',  view: 'stale_articles' },
+      { name: 'all',       view: 'all_articles', isDefault: true, pinned: true },
+      { name: 'published', icon: 'check-circle-2', view: 'published_articles' },
+      { name: 'drafts',    icon: 'pencil',         view: 'my_drafts' },
+      { name: 'stale',     icon: 'clock-alert',  view: 'stale_articles' },
     ],
   },
 
