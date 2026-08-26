@@ -65,12 +65,29 @@ describe('case_sla_defaults', () => {
   it('stamps defaults and strips privileged fields on an anonymous guest submission', async () => {
     const input: Rec = {
       subject: 'Help', owner_id: 'spoofed', is_escalated: true, is_closed: true,
-      internal_notes: 'nope', resolution: 'nope',
+      internal_notes: 'nope', resolution: 'nope', escalation_reason: 'nope',
     };
     await hook.handler(makeCtx({ event: 'beforeInsert', input, user: SYSTEM }));
     expect(input.origin).toBe('web');
     expect(input.status).toBe('new');
-    expect(input.priority).toBe('medium');
+    // ⚠️ NOT 'medium', and NOT 'low' either (#1296). This assertion is the ONLY
+    // place in the repo where the branch's deleted `if (!input.priority)
+    // input.priority = 'medium'` was ever observable — and it was observable
+    // here precisely because this harness does NOT model the engine's insert
+    // path. `crm_case.priority` declares its `low` option `default: true`, and
+    // the engine's `applyFieldDefaults` builds the row that BECOMES
+    // `ctx.input.data` before `beforeInsert` is triggered, so in production the
+    // slot was always already full and that line never once fired. The fast
+    // harness applies no field defaults, so the key simply never arrives. A
+    // dead line looked alive for as long as it did because of this gap.
+    // The hook must not invent a priority: the field owns it.
+    expect(
+      input.priority,
+      'the guest branch must not default `priority` — the field declares `low` as ' +
+        '`default: true` and the engine applies it before beforeInsert. This harness ' +
+        'applies no field defaults, so an ABSENT key is the correct reading here; ' +
+        "'low' would be asserting a default this harness never applies.",
+    ).toBeUndefined();
     // The branch OVERWRITES with a safe value; it no longer removes the key
     // (#1133). `delete` on a hook's `input` is a silent no-op through the real
     // engine — this harness calls the handler with a plain object, where it
@@ -78,13 +95,33 @@ describe('case_sla_defaults', () => {
     // nothing was being stripped in production. Assert the values instead.
     for (const [stripped, safe] of [
       ['owner_id', null], ['internal_notes', null], ['resolution', null],
-      ['is_escalated', false],
+      // The flag AND the prose explaining it (#1296): a case stating an escalation
+      // reason while not escalated contradicts itself in one field group.
+      ['is_escalated', false], ['escalation_reason', null],
       // Derived from the stored status rather than stripped, so a guest can no
       // longer store `closed` and `is_closed: false` side by side.
       ['is_closed', false],
     ] as Array<[string, unknown]>) {
       expect(input[stripped], `guest submission kept privileged field ${stripped}`).toBe(safe);
     }
+  });
+
+  it('leaves a priority the engine already defaulted alone', async () => {
+    // The other half of the deleted line, in the one shape where `'low'` IS a
+    // true statement about this harness: hand the hook the input the ENGINE
+    // would have handed it — `applyFieldDefaults` has already stamped the
+    // field's `default: true` option — and the guest branch must leave it be.
+    // Before #1296 the branch's own `if (!input.priority)` guard made this pass
+    // too; what changed is that there is no longer any code here that could
+    // overwrite it, so the field is now the single source of the default.
+    const input: Rec = { subject: 'Help', priority: 'low' };
+    await hook.handler(makeCtx({ event: 'beforeInsert', input, user: SYSTEM }));
+
+    expect(input.origin, 'the guest branch did not run at all (positive control)').toBe('web');
+    expect(input.priority, 'the guest branch overwrote a priority the engine had defaulted').toBe('low');
+    // Derived by the hook FROM what it saw, so it reports the value the branch
+    // actually read rather than the one that ended up stored.
+    expect(input.priority_rank, 'the rank must follow the priority the hook saw').toBe(1);
   });
 
   it('derives is_closed from status for trusted writes', async () => {
