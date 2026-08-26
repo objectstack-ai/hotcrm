@@ -38,8 +38,8 @@ export const ProductViews = defineView({
       allowedVisualizations: ['grid', 'gallery'],
     },
     tabs: [
-      { name: 'all', label: 'All', view: 'all_products', isDefault: true, pinned: true },
-      { name: 'catalog', label: 'Catalog', icon: 'gallery-thumbnails', view: 'product_catalog' },
+      { name: 'all', view: 'all_products', isDefault: true, pinned: true },
+      { name: 'catalog', icon: 'gallery-thumbnails', view: 'product_catalog' },
     ],
   },
 

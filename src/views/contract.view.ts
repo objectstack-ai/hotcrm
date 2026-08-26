@@ -35,10 +35,10 @@ export const ContractViews = defineView({
       allowedVisualizations: ['grid', 'calendar', 'gantt', 'timeline'],
     },
     tabs: [
-      { name: 'all', label: 'All', view: 'all_contracts', isDefault: true, pinned: true },
-      { name: 'renewals', label: 'Renewals', icon: 'calendar', view: 'renewal_calendar' },
-      { name: 'terms', label: 'Terms', icon: 'gantt-chart', view: 'contract_gantt' },
-      { name: 'timeline', label: 'Timeline', icon: 'git-commit-horizontal', view: 'contract_timeline' },
+      { name: 'all', view: 'all_contracts', isDefault: true, pinned: true },
+      { name: 'renewals', icon: 'calendar', view: 'renewal_calendar' },
+      { name: 'terms', icon: 'gantt-chart', view: 'contract_gantt' },
+      { name: 'timeline', icon: 'git-commit-horizontal', view: 'contract_timeline' },
     ],
   },
 
