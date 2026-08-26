@@ -39,9 +39,11 @@ jobs:
 
       # Replaces three inline greps that scanned `packages/` — a directory this
       # repo does not have — each with `continue-on-error: true`. The script
-      # scans the real tree (src, test, e2e, scripts) and fails on a hit; it
-      # also fails loudly if a scanned directory ever disappears, so the check
-      # can never silently go vacuous again.
+      # scans this repo's first-party files and fails on a hit; it also fails
+      # loudly, each guard with its own message, when a directory or a root
+      # file it is told to scan has gone missing, so the check can never
+      # silently go vacuous again. It prints the surface it actually reads on
+      # every run — read that banner; every copy of it kept here has gone stale.
       - name: Source hygiene (scripts/check-source-hygiene.mjs)
         run: node scripts/check-source-hygiene.mjs
 
