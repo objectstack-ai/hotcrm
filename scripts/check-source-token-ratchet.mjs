@@ -143,8 +143,14 @@ const LAYERS = [
   },
 ];
 
-/** The ruled working buffer over a measured reading: 「给 5% 缓冲」. */
-const BUFFER = 0.05;
+/**
+ * The ruled working buffer over a measured reading: 「给 5% 缓冲」.
+ *
+ * Exported for the same reason `anchor()` is: the buffer is an input to every
+ * figure derived from a ceiling, so a test fixture or a doc pin sizes itself
+ * from this constant rather than restating `1.05` by hand beside it.
+ */
+export const BUFFER = 0.05;
 
 /**
  * The ceiling to commit for a given reading: `measured × 1.05`, rounded up to
@@ -371,7 +377,11 @@ export function verdict(label, tokens, ceiling) {
   };
 }
 
-const fmt = (n) => n.toLocaleString('en-US');
+/**
+ * Thousands-separated — the form every figure this gate prints carries.
+ * Exported so a pin quotes the gate's own formatting instead of restating it.
+ */
+export const fmt = (n) => n.toLocaleString('en-US');
 /** `78,123` -> `~78k`, the form the README card and CI summary quote. */
 const headline = (tokens) => `~${Math.round(tokens / 1000)}k`;
 
@@ -508,10 +518,15 @@ function main() {
   console.log('✓ source token ratchet clean');
 }
 
-// Run only when invoked directly. `stripComments`, `verdict` and the ceilings
-// are importable so `test/source-token-ratchet.test.ts` can cross-check the
-// stripping rule against the TypeScript scanner without spawning 300KB
-// fixtures for every case — importing must not run the gate or call exit().
+// Run only when invoked directly. `stripComments`, `verdict`, `anchor`,
+// `BUFFER`, `fmt` and the ceilings are importable so
+// `test/source-token-ratchet.test.ts` can cross-check the stripping rule
+// against the TypeScript scanner without spawning 300KB fixtures for every
+// case — and so that every figure derived from a ceiling is DERIVED there
+// rather than transcribed beside it: the suite sizes its fixtures from
+// `CEILINGS`/`BUFFER` and pins the worked table in the header above against
+// `anchor()`, so a re-anchoring moves the constant and the copies follow.
+// Importing must not run the gate or call exit().
 //
 // The comparison lives in `scripts/lib/main-module.mjs` and is never
 // hand-rolled here: this line used to read
