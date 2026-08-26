@@ -25,7 +25,7 @@ import { makeFlowHarness, type Rec } from './helpers/flow-harness';
 /**
  * Runtime tests for the SCHEDULED sweeps.
  *
- * All six scheduled flows were previously untested at runtime, and they are the
+ * Scheduled flows were previously untested at runtime, and they are the
  * hardest flows to get right for exactly the reason that makes them hard to
  * test: they select their own work. A sweep whose filter matches nothing is
  * indistinguishable from a sweep with nothing to do — it runs, logs nothing,
