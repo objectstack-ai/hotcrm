@@ -135,8 +135,8 @@ describe('forecast seed periods are calendar-true (#530)', () => {
     // `forecast_snapshot` sweep (#590) writes one row per active opportunity
     // owner per quarter and every one of them reads 'Q3 2026'.
     //
-    // What survives is a much narrower property: these eight authored records
-    // must not collide with EACH OTHER, so the demo shows eight distinct
+    // What survives is a much narrower property: these authored records
+    // must not collide with EACH OTHER, so the demo shows distinct
     // periods rather than two rows fighting over one label. Asserting anything
     // wider would advertise an invariant the database does not hold.
     const labels = records.map((r) => String(r.period_label));
