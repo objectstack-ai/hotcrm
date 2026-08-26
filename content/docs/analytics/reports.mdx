@@ -27,7 +27,7 @@ All four bind `opportunity_metrics` (`src/datasets/opportunity.dataset.ts`), whi
 The eight names this section used to list are published nowhere. Two of them are real names that belong to something other than a report:
 
 - **Pipeline by Stage** is a dashboard **tile** and a chart title, not a report. The tile is the open-pipeline funnel that **CRM Overview**, **Sales Performance** and **Executive Overview** all share (`src/dashboards/shared-widgets.ts`); the chart is the bar chart on **Opportunities by Stage** above, whose title reads *Pipeline by Stage*. Searching the report library for the name finds nothing; the report you want is **Opportunities by Stage**.
-- **Stale Opportunities** is a **list view** on the opportunity — *⚠️ Stale Opportunities · Longest in Stage First*, the **Stale** tab (`src/views/opportunity.view.ts`) — and it does not apply the 14-day cut this table claimed. It lists **every** open deal, ordered by **Stage Entry Date** ascending, so the longest-parked sit on top; the 14 days belongs to the `opportunity_stagnation` flow that nudges owners, not to the view. Analytics cannot rebuild it either: **Days in Current Stage** is a formula evaluated after the query, so nothing can group, filter or sort on it, and no dataset exposes it.
+- **Stale Opportunities** is a **list view** on the opportunity — *⚠️ Stale Opportunities · Longest in Stage First*, and that is what its tab reads (`src/views/opportunity.view.ts`) — and it does not apply the 14-day cut this table claimed. It lists **every** open deal, ordered by **Stage Entry Date** ascending, so the longest-parked sit on top; the 14 days belongs to the `opportunity_stagnation` flow that nudges owners, not to the view. Analytics cannot rebuild it either: **Days in Current Stage** is a formula evaluated after the query, so nothing can group, filter or sort on it, and no dataset exposes it.
 - **Top Performing Reps** exists, under its real name: **Won Opportunities by Owner** is the bookings leaderboard, and **Opportunity Funnel by Owner → Stage** is the same ranking with each rep's stages underneath it. `opportunity_metrics` declares an **Owner** dimension — unlike `case_metrics`, which is why the service side has no agent ranking.
 
 Of the five that are simply absent, three are a custom report away and two are not:
@@ -84,7 +84,7 @@ The five other reports this section used to list are published nowhere, and most
 
 The three contract reports this section used to list are published nowhere, and none of them can be built as written, for one shared reason: **there is no contract dataset**. `src/datasets/` covers nine objects — account, case, contact, event, forecast, lead, opportunity, product and task — and `crm_contract` is not among them, so nothing in analytics counts, sums or groups contracts.
 
-- **Contracts Expiring** — the question is real and it is answered by a **view**, not a report: **Renewal Calendar** (the *Renewals* tab on Contracts) plots every contract on its **End Date**, and **Contract Terms** shows the same terms as a Gantt (`src/views/contract.view.ts`). Both list records; neither totals them, because there is no dataset behind them to total.
+- **Contracts Expiring** — the question is real and it is answered by a **view**, not a report: **Renewal Calendar** (the tab of that name on Contracts) plots every contract on its **End Date**, and **Contract Terms** shows the same terms as a Gantt (`src/views/contract.view.ts`). Both list records; neither totals them, because there is no dataset behind them to total.
 - **Active Contracts by Product** — unreachable twice over: no contract dataset, and `product_metrics` is a catalog rollup — **Category**, the product count and the list-price sum — that never crosses to contracts or to line items.
 - **Renewal Pipeline** — as written, *opportunities tied to renewing contracts*, it cannot be built: the link runs the other way (`crm_contract.crm_opportunity`) and no dimension exposes it. The renewal pipeline itself is buildable, though: **Deal Type** is a dimension on `opportunity_metrics`, and *Existing Customer - Renewal* is one of its values.
 
@@ -157,7 +157,7 @@ A common pattern:
 
 ## Tips for managers
 
-- ✅ Schedule **Opportunity Funnel by Owner → Stage** weekly to your team — it forces follow-up discipline, rep by rep. For the stalled deals themselves, send people to the **Stale** tab on Opportunities: it is a list view, so it cannot be scheduled, but it is where the parked deals are ranked.
+- ✅ Schedule **Opportunity Funnel by Owner → Stage** weekly to your team — it forces follow-up discipline, rep by rep. For the stalled deals themselves, send people to the **⚠️ Stale Opportunities · Longest in Stage First** tab on Opportunities: it is a list view, so it cannot be scheduled, but it is where the parked deals are ranked.
 - ✅ There is no win/loss report to schedule, but the analysis is a custom report away — group `opportunity_metrics` by **Loss Reason** and read **Lost Deals** next to **Win Rate**. Run it monthly with sales coaches; it is the single best coaching tool.
 
 ## Tips for admins

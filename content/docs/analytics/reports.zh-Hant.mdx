@@ -27,7 +27,7 @@ HotCRM 開箱即用地發布 **十份** 報表 —— `src/reports/index.ts` 這
 本節曾經列出的八個名字哪兒都沒有發布。其中兩個是真名，但它們屬於報表以外的東西：
 
 - **Pipeline by Stage** 是儀表板**磁貼**標題和圖表標題，不是報表。磁貼是 **CRM Overview**、**Sales Performance** 與 **Executive Overview** 三個儀表板共用的未結管道漏斗（`src/dashboards/shared-widgets.ts`）；圖表則是上面 **Opportunities by Stage** 那張長條圖，它的標題就寫作 *Pipeline by Stage*。在報表庫裡按這個名字搜，一份都搜不到；你要的那份叫 **Opportunities by Stage**。
-- **Stale Opportunities** 是商機上的**清單檢視** —— *⚠️ Stale Opportunities · Longest in Stage First*，也就是 **Stale** 標籤頁（`src/views/opportunity.view.ts`）—— 而且它並不施加本表所說的 14 天篩選。它列出**所有**未結交易，按 **Stage Entry Date** 升冪排，停留最久的排在最上面；那 14 天屬於負責催辦的 `opportunity_stagnation` 流程，不屬於這個檢視。分析側也重建不出來：**Days in Current Stage** 是查詢之後才求值的公式，任何東西都無法按它分組、篩選或排序，也沒有任何資料集把它暴露出來。
+- **Stale Opportunities** 是商機上的**清單檢視** —— *⚠️ Stale Opportunities · Longest in Stage First*，標籤頁上寫的也是這個名字（`src/views/opportunity.view.ts`）—— 而且它並不施加本表所說的 14 天篩選。它列出**所有**未結交易，按 **Stage Entry Date** 升冪排，停留最久的排在最上面；那 14 天屬於負責催辦的 `opportunity_stagnation` 流程，不屬於這個檢視。分析側也重建不出來：**Days in Current Stage** 是查詢之後才求值的公式，任何東西都無法按它分組、篩選或排序，也沒有任何資料集把它暴露出來。
 - **Top Performing Reps** 是存在的，只是真名不同：**Won Opportunities by Owner** 就是贏單排行榜，**Opportunity Funnel by Owner → Stage** 則是同一份排名再把每人的各階段攤開。`opportunity_metrics` 宣告了 **Owner** 維度 —— 這一點和 `case_metrics` 不同，也正是服務側沒有客服排行的原因。
 
 剩下五個只是單純不存在，其中三個自己建得出來、兩個建不出來：
@@ -84,7 +84,7 @@ HotCRM 開箱即用地發布 **十份** 報表 —— `src/reports/index.ts` 這
 
 本節曾經列出的三份合約報表哪兒都沒有發布，而且按它們寫的口徑一份都建不出來，原因是同一個：**沒有合約資料集**。`src/datasets/` 涵蓋九個物件 —— 客戶、工單、聯絡人、活動、預測、潛在客戶、商機、產品、任務 —— `crm_contract` 不在其中，所以分析側根本無法對合約計數、求和或分組。
 
-- **Contracts Expiring** —— 問題本身是真實的，回答它的是**檢視**而不是報表：**Renewal Calendar**（合約的 *Renewals* 標籤頁）把每份合約按 **End Date** 擺在日曆上，**Contract Terms** 則把同樣的合約期畫成甘特圖（`src/views/contract.view.ts`）。兩者都在列記錄，都不做合計 —— 因為它們背後沒有可供合計的資料集。
+- **Contracts Expiring** —— 問題本身是真實的，回答它的是**檢視**而不是報表：**Renewal Calendar**（合約上同名的那個標籤頁）把每份合約按 **End Date** 擺在日曆上，**Contract Terms** 則把同樣的合約期畫成甘特圖（`src/views/contract.view.ts`）。兩者都在列記錄，都不做合計 —— 因為它們背後沒有可供合計的資料集。
 - **Active Contracts by Product** —— 兩頭都夠不著：既沒有合約資料集，`product_metrics` 又只是產品目錄的彙總（**Category**、產品數與目錄價合計），它從不跨到合約，也不跨到行項目。
 - **Renewal Pipeline** —— 按它寫的口徑（*與續約合約關聯的商機*）建不出來：這條關聯是反著走的（`crm_contract.crm_opportunity`），而且沒有任何維度把它暴露出來。不過續約管道本身建得出來：**Deal Type** 是 `opportunity_metrics` 上的維度，*Existing Customer - Renewal* 正是它的取值之一。
 
@@ -157,7 +157,7 @@ HotCRM 開箱即用地發布 **十份** 報表 —— `src/reports/index.ts` 這
 
 ## 給經理的提示
 
-- ✅ 每週向你的團隊安排 **Opportunity Funnel by Owner → Stage**——它能逐人強制跟進紀律。至於停滯的交易本身，請把人指到商機的 **Stale** 標籤頁：它是清單檢視，定時推送不了，但停擺最久的交易就排在那兒。
+- ✅ 每週向你的團隊安排 **Opportunity Funnel by Owner → Stage**——它能逐人強制跟進紀律。至於停滯的交易本身，請把人指到商機的 **⚠️ Stale Opportunities · Longest in Stage First** 標籤頁：它是清單檢視，定時推送不了，但停擺最久的交易就排在那兒。
 - ✅ 沒有贏單/丟單報表可以安排，但這份分析只差一份自建報表——把 `opportunity_metrics` 按 **Loss Reason** 分組，並把 **Lost Deals** 與 **Win Rate** 並排看。每月與銷售教練一起跑，它是最好的單一輔導工具。
 
 ## 給管理員的提示
