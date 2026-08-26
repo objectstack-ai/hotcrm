@@ -5,7 +5,7 @@ import oppLineItemHooks from '../src/objects/opportunity_line_item.hook';
 import quoteLineItemHooks from '../src/objects/quote_line_item.hook';
 import leadHooks from '../src/objects/lead.hook';
 import opportunityHooks from '../src/objects/opportunity.hook';
-import { makeHarness } from './helpers/hook-harness';
+import { makeCtx, makeHarness } from './helpers/hook-harness';
 
 /**
  * Runtime hook tests — the REAL handler code, executed against a controllable
@@ -59,7 +59,7 @@ describe('opportunity_amount_rollup', () => {
       ],
     };
     const api = makeApi(store);
-    await rollup.handler({ event: 'afterInsert', input: { crm_opportunity: 'opp1' }, api } as any);
+    await rollup.handler(makeCtx({ event: 'afterInsert', input: { crm_opportunity: 'opp1' }, api }));
     expect(store.crm_opportunity[0].amount).toBe(2450); // 2000 + 450
     expect(api.calls.some((c) => c.op === 'update' && c.object === 'crm_opportunity')).toBe(true);
   });
@@ -70,7 +70,7 @@ describe('opportunity_amount_rollup', () => {
       crm_opportunity_line_item: [],
     };
     const api = makeApi(store);
-    await rollup.handler({ event: 'afterDelete', input: {}, previous: { crm_opportunity: 'opp1' }, api } as any);
+    await rollup.handler(makeCtx({ event: 'afterDelete', input: {}, previous: { crm_opportunity: 'opp1' }, api }));
     expect(store.crm_opportunity[0].amount).toBe(500000);
     expect(api.calls.length).toBe(0);
   });
@@ -81,7 +81,7 @@ describe('opportunity_amount_rollup', () => {
       crm_opportunity_line_item: [{ id: 'li1', crm_opportunity: 'opp1', quantity: 5, unit_price: 100, discount: 0 }],
     };
     const api = makeApi(store);
-    await rollup.handler({ event: 'afterUpdate', input: { crm_opportunity: 'opp1' }, api } as any);
+    await rollup.handler(makeCtx({ event: 'afterUpdate', input: { crm_opportunity: 'opp1' }, api }));
     expect(store.crm_opportunity[0].amount).toBe(999); // unchanged
   });
 });
@@ -100,39 +100,39 @@ describe('opportunity_lifecycle · stage-age clock', () => {
 
   it('starts the clock on insert', async () => {
     const input: Rec = { name: 'New Deal', stage: 'prospecting', amount: 1000 };
-    await lifecycle.handler({ event: 'beforeInsert', input } as any);
+    await lifecycle.handler(makeCtx({ event: 'beforeInsert', input }));
     expect(input.stage_entry_date).toBe(today());
   });
 
   it('does not overwrite a stage_entry_date the caller supplied', async () => {
     const input: Rec = { name: 'Backfilled', stage: 'proposal', amount: 1000, stage_entry_date: '2020-01-01' };
-    await lifecycle.handler({ event: 'beforeInsert', input } as any);
+    await lifecycle.handler(makeCtx({ event: 'beforeInsert', input }));
     expect(input.stage_entry_date).toBe('2020-01-01');
   });
 
   it('restarts the clock when the stage changes', async () => {
     const input: Rec = { stage: 'negotiation' };
     const previous: Rec = { stage: 'proposal', stage_entry_date: '2020-01-01' };
-    await lifecycle.handler({ event: 'beforeUpdate', input, previous } as any);
+    await lifecycle.handler(makeCtx({ event: 'beforeUpdate', input, previous }));
     expect(input.stage_entry_date).toBe(today());
   });
 
   it('leaves the clock alone when the stage does not change', async () => {
     const input: Rec = { amount: 250000 };
     const previous: Rec = { stage: 'proposal', stage_entry_date: '2020-01-01' };
-    await lifecycle.handler({ event: 'beforeUpdate', input, previous } as any);
+    await lifecycle.handler(makeCtx({ event: 'beforeUpdate', input, previous }));
     expect(input.stage_entry_date).toBeUndefined();
   });
 
   it('never writes days_in_stage — it is a formula, not a stored counter', async () => {
     const insert: Rec = { name: 'D', stage: 'prospecting', amount: 1 };
-    await lifecycle.handler({ event: 'beforeInsert', input: insert } as any);
+    await lifecycle.handler(makeCtx({ event: 'beforeInsert', input: insert }));
     const update: Rec = { stage: 'closed_won' };
-    await lifecycle.handler({
+    await lifecycle.handler(makeCtx({
       event: 'beforeUpdate',
       input: update,
       previous: { stage: 'negotiation', stage_entry_date: '2020-01-01' },
-    } as any);
+    }));
     expect('days_in_stage' in insert).toBe(false);
     expect('days_in_stage' in update).toBe(false);
   });
@@ -150,7 +150,7 @@ describe('quote_total_rollup', () => {
       ],
     };
     const api = makeApi(store);
-    await rollup.handler({ event: 'afterInsert', input: { crm_quote: 'q1' }, api } as any);
+    await rollup.handler(makeCtx({ event: 'afterInsert', input: { crm_quote: 'q1' }, api }));
     const q = store.crm_quote[0];
     expect(q.subtotal).toBe(700);           // 400 + 300
     expect(q.discount_amount).toBe(70);     // 700 × 10%
@@ -163,7 +163,7 @@ describe('quote_total_rollup', () => {
       crm_quote_line_item: [{ id: 'l1', crm_quote: 'q1', quantity: 9, unit_price: 100, discount: 0 }],
     };
     const api = makeApi(store);
-    await rollup.handler({ event: 'afterUpdate', input: { crm_quote: 'q1' }, api } as any);
+    await rollup.handler(makeCtx({ event: 'afterUpdate', input: { crm_quote: 'q1' }, api }));
     expect(store.crm_quote[0].total_price).toBe(111);
   });
 });
@@ -174,7 +174,7 @@ describe('line-item price fill', () => {
   it('defaults list_price + unit_price from the product on insert', async () => {
     const store: Record<string, Rec[]> = { crm_product: [{ id: 'p1', list_price: 250 }] };
     const input: Rec = { crm_product: 'p1' }; // no unit_price entered
-    await fill.handler({ event: 'beforeInsert', input, api: makeApi(store) } as any);
+    await fill.handler(makeCtx({ event: 'beforeInsert', input, api: makeApi(store) }));
     expect(input.list_price).toBe(250);
     expect(input.unit_price).toBe(250);
   });
@@ -182,7 +182,7 @@ describe('line-item price fill', () => {
   it('never clobbers a negotiated unit_price on update (only re-syncs list_price)', async () => {
     const store: Record<string, Rec[]> = { crm_product: [{ id: 'p1', list_price: 250 }] };
     const input: Rec = { crm_product: 'p1', unit_price: 199 };
-    await fill.handler({ event: 'beforeUpdate', input, api: makeApi(store) } as any);
+    await fill.handler(makeCtx({ event: 'beforeUpdate', input, api: makeApi(store) }));
     expect(input.list_price).toBe(250);
     expect(input.unit_price).toBe(199); // preserved
   });
@@ -204,14 +204,14 @@ describe('lead_auto_assign', () => {
       ],
     };
     const input: Rec = { company: 'NewCo' }; // no owner
-    await assign.handler({ event: 'beforeInsert', input, api: makeApi(store) } as any);
+    await assign.handler(makeCtx({ event: 'beforeInsert', input, api: makeApi(store) }));
     expect(input.owner_id).toBe('repB'); // least-loaded
   });
 
   it('is a no-op when there is no rep pool (never blocks intake)', async () => {
     const store: Record<string, Rec[]> = { sys_user_position: [], crm_lead: [] };
     const input: Rec = { company: 'NewCo' };
-    await assign.handler({ event: 'beforeInsert', input, api: makeApi(store) } as any);
+    await assign.handler(makeCtx({ event: 'beforeInsert', input, api: makeApi(store) }));
     expect(input.owner_id).toBeUndefined();
   });
 
@@ -220,7 +220,7 @@ describe('lead_auto_assign', () => {
       sys_user_position: [{ position: 'sales_rep', user_id: 'repA' }],
     };
     const input: Rec = { company: 'NewCo', owner_id: 'someone' };
-    await assign.handler({ event: 'beforeInsert', input, api: makeApi(store) } as any);
+    await assign.handler(makeCtx({ event: 'beforeInsert', input, api: makeApi(store) }));
     expect(input.owner_id).toBe('someone');
   });
 
@@ -237,7 +237,7 @@ describe('lead_auto_assign', () => {
     };
     const input: Rec = { company: 'FromWebForm' };
     await expect(
-      assign.handler({ event: 'beforeInsert', input, api } as any),
+      assign.handler(makeCtx({ event: 'beforeInsert', input, api })),
     ).resolves.toBeUndefined();
     expect(input.owner_id).toBeUndefined(); // ownerless, but the insert proceeds
   });

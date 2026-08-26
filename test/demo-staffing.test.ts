@@ -7,6 +7,7 @@ import accountHook from '../src/objects/account.hook';
 import { CrmSeedData } from '../src/data/index';
 import { DemoOrgStaffing } from '../src/sharing/demo-staffing';
 import * as sharingBarrel from '../src/sharing/index';
+import { makeCtx } from './helpers/hook-harness';
 
 /**
  * Demo-org staffing (#640) — the third layer of position-based access.
@@ -282,7 +283,7 @@ describe('what each staffed person actually receives', () => {
 
   const project = async (record: AnyRec): Promise<AnyRec> => {
     const input: AnyRec = { ...record };
-    await (accountHook as AnyRec).handler({ event: 'beforeInsert', input });
+    await (accountHook as AnyRec).handler(makeCtx({ event: 'beforeInsert', input }));
     return input;
   };
 
