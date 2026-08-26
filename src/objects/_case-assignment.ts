@@ -224,7 +224,7 @@ export const CLAIMABLE_TARGET_STATUSES = [
  * ## Priority 250: it MUST run after `case_sla_defaults` (200)
  *
  * Hooks run in ASCENDING priority order, and `case_sla_defaults` is where the
- * guest-sanitisation branch does `delete input.owner_id` to drop a
+ * guest-sanitisation branch assigns `input.owner_id = null` to drop a
  * client-spoofed owner from an anonymous submission. Assigning first and being
  * stripped afterwards would land every web-to-case ownerless — the exact case
  * this hook exists for. `lead_auto_assign` shipped at priority 150 and had to

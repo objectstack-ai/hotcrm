@@ -102,15 +102,57 @@ const caseValidation: Hook = {
     // and an anonymous one carries no session at all. Narrowing only ever
     // REMOVES callers from the branch, so no caller sanitised today stops being
     // sanitised.
+    //
+    // ⚠️ `escalation_reason` is stripped ALONGSIDE `is_escalated`, and the pair
+    // is why (#1296). Before #1133 neither was cleaned and the record was at
+    // least self-consistent; cleaning only the FLAG left the prose that explains
+    // the flag writable, so a case could carry a stated escalation reason while
+    // `is_escalated` is false — a contradiction on the record page's own
+    // `escalation` field group, where a service agent reads both.
+    //
+    // It IS a widening of a security control, so it is argued rather than
+    // assumed. `escalation_reason` is pipeline, not a fact a submitter states
+    // about themselves — the rule this branch declares two paragraphs down —
+    // and every real writer is staff-side: `case_escalation`,
+    // `case_sla_monitor` and the `escalate_case` screen flow. The public
+    // `web_to_case` form (`src/views/case.view.ts`) collects exactly `subject`,
+    // `description`, `type` and `priority`, so nulling this drops nothing any
+    // guest surface asks for. `guest_portal` grants `crm_case.allowCreate` at
+    // the OBJECT level with no field allow-list, which is precisely why this
+    // branch is the field-level control and why an omission from it is a hole
+    // rather than a second layer of defence.
+    //
+    // ⚠️ What is measured here is the HOOK-LEVEL control, exactly as in #1133.
+    // A real anonymous write also crosses `plugin-security`'s middleware, and
+    // nobody has measured that path — so this is coherence and defence in
+    // depth, NOT a claim that a guest reaches the column in production.
+    //
+    // Nulling it cannot trip the object's `escalation_reason_required`
+    // validation: that rule fires only on `is_escalated == true`, this same
+    // branch forces `is_escalated = false`, and MEASURED on the engine's insert
+    // path `validateRecord` / `evaluateValidationRules` run AFTER the
+    // `beforeInsert` hooks, against the row the hook has already rewritten.
     const isGuestSubmission = !ctx.previous && !ctx.user?.id && !ctx.session?.isSystem;
     if (isGuestSubmission) {
       if (!input.origin)   input.origin   = 'web';
       if (!input.status)   input.status   = 'new';
-      if (!input.priority) input.priority = 'medium';
-      input.owner_id       = null;
-      input.is_escalated   = false;
-      input.internal_notes = null;
-      input.resolution     = null;
+      // ⚠️ No `priority` default here, and the absence is deliberate (#1296).
+      // This branch used to carry `if (!input.priority) input.priority =
+      // 'medium'`, which never once executed: `crm_case.priority` declares its
+      // `low` option `default: true`, and MEASURED on the engine's own insert
+      // path (`@objectstack/objectql`) `applyFieldDefaults` produces the row
+      // that BECOMES `ctx.input.data` before `triggerHooks('beforeInsert')` is
+      // called — so the slot is already full every time this branch runs. The
+      // line read as a declared intent ("guest submissions start at medium")
+      // that the app did not honour: a guest naming no priority stores `low`.
+      // Whether a web-submitted case SHOULD outrank a staff-created one is a
+      // product question with no measured pull behind it; it is not settled by
+      // leaving dead code here that says it already is.
+      input.owner_id          = null;
+      input.is_escalated      = false;
+      input.escalation_reason = null;
+      input.internal_notes    = null;
+      input.resolution        = null;
     }
 
     const priority =
