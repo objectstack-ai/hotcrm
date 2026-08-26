@@ -19,9 +19,14 @@ Both copies now read the producer.
 
 **The test fixtures.** `test/source-token-ratchet.test.ts` imports `CEILINGS`,
 `BUFFER`, `anchor()` and `fmt()` from the gate it runs. The in-buffer case sizes
-its scope as `ceiling / (1 + BUFFER)` — the reading whose `anchor()` *is* that
-ceiling, which is what "inside the buffer" means — and asserts headroom
-relatively, as `ceiling - reading` in the gate's own formatting. The
+its scope as `Math.floor(ceiling / (1 + BUFFER))` — the largest reading whose
+`anchor()` *is* that ceiling, which is what "inside the buffer" means — and
+asserts headroom relatively, as `ceiling - reading` in the gate's own
+formatting. Floor, not round: rounding up pushes `reading × (1 + BUFFER)` past
+the ceiling and `anchor()` then returns ceiling + 1,000, so a rounded fixture is
+not the reading the ceiling was anchored from. The two agree at 40,000 and
+disagree at 39,000 and 41,000, which is why only a re-anchoring exposes it —
+`expect(anchor(reading)).toBe(ceiling)` is now the assertion that does. The
 over-ceiling case likewise sizes itself from the committed ceiling and reads its
 over-by figures back off the measurement instead of quoting `~86,005`. Both
 cases pin exactly what they pinned before, and now follow the constant instead

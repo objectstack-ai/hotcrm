@@ -296,13 +296,21 @@ describe('source token ratchet — the ratchet itself', () => {
 
     // A scope sitting inside the buffer says nothing at all: it draws a clean ✓
     // and no advisory under it. Size that scope from the COMMITTED ceiling
-    // rather than from a literal — `ceiling / (1 + BUFFER)` is the reading whose
-    // `anchor()` is exactly this ceiling, i.e. the freshly-anchored reading, the
-    // canonical "inside the buffer". That is what this case is about, and it
-    // stays true at every ceiling: the headroom it leaves is BUFFER/(1 + BUFFER)
-    // of the reading, always under the advisory's 2 × BUFFER trigger.
+    // rather than from a literal — the largest reading whose `anchor()` is
+    // exactly this ceiling is the freshly-anchored one, the canonical "inside
+    // the buffer", and that is what this case is about. It stays true at every
+    // ceiling: the headroom it leaves is BUFFER/(1 + BUFFER) of the reading,
+    // always under the advisory's 2 × BUFFER trigger.
+    //
+    // ⚠️ FLOOR, not round. Rounding up makes `reading × (1 + BUFFER)` exceed the
+    // ceiling, and `anchor()` then rounds that over the next 1k boundary and
+    // hands back ceiling + 1,000 — so a rounded fixture is NOT the reading this
+    // ceiling was anchored from. It happens to agree at 40,000, which is why
+    // only re-anchoring exposes it: at a 39,000 or 41,000 ceiling
+    // `Math.round` is off by one token and `anchor()` is off by a thousand.
+    // `expect(anchor(...))` below is the assertion that catches it.
     const ceiling = ceilingOf('interaction layer');
-    const target = Math.round(ceiling / (1 + BUFFER));
+    const target = Math.floor(ceiling / (1 + BUFFER));
 
     // Fill to exactly `target` tokens. `~tokens` is stripped chars / 4, so
     // subtract what the layer already holds and the wrapper the stripper keeps
