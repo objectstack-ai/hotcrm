@@ -83,15 +83,51 @@ export const CaseDirectorSharingRule = {
  * `test/unassigned-case-triage-reach.test.ts`; the compiler's own verdict on
  * `has()` is pinned in `test/sharing-seeding.test.ts`.
  *
- * A closed unowned case stays hidden on purpose: it is history, not backlog,
- * and the tab's row count has to keep meaning "work waiting for a human".
+ * ### ⚠️ Why the second clause is a STATUS chain, not `is_closed == false`
+ *
+ * This grant is deliberately NARROWER than it was. `is_closed` is derived by
+ * `case_sla_defaults` as `effStatus === 'closed'`, so it never flips on
+ * `resolved` — and the old predicate therefore handed every service agent
+ * `edit` on every RESOLVED ownerless case, forever. A resolved case is not
+ * backlog and not work waiting for a human, so the grant is now the same
+ * "no longer live work" predicate the load-balancing hooks
+ * (`CLOSED_CASE_STATUSES` in `_case-assignment.ts`) and `case_sla_monitor`
+ * already use: the case is shared only while its status is neither `resolved`
+ * nor `closed`. `test/live-work-predicate-parity.test.ts` holds the four
+ * consumers to that one set, BY NAME.
+ *
+ * ⚠️ The tightening does NOT break the claim seam. Record access is resolved
+ * against the STORED row, so an agent resolving an unowned open case straight
+ * out of triage is still reachable (the case is open at the moment of the
+ * write) — #1143's "finishing a case is not picking it up" is unchanged. What
+ * the agent loses is reopening an *already* resolved ownerless case, which puts
+ * `resolved` in exactly the bucket `closed` has been in since #1134: reopening
+ * a terminal unowned case is an admin move, not a triage move.
+ *
+ * The spelling is the `!=` chain rather than `!(record.status in [...])`, and
+ * that is measured, not stylistic. Both compile, but the membership form lowers
+ * to a TOP-LEVEL `$not` wrapping an `$in`, a combination absent from the
+ * measured operator matrix in `test/sharing-seeding.test.ts` and on the one
+ * operator that file records a driver regression for. The chain lowers to
+ * `{ $and: [{ status: { $ne: … } }, …] }` — plain conjunction of the operator
+ * that matrix lists as supported. An untranslatable or unexecutable sharing
+ * condition is not a loud failure: the seeder DROPS the rule and the tab goes
+ * empty again (#621), so this rule takes the portable form.
+ *
+ * `status` needs no totality guard the way `owner_id` does: it is `required`
+ * with `storage: { notNull: true }` on `crm_case`, so unlike the ownerless
+ * column it is never the absent-key shape.
+ *
+ * A resolved or closed unowned case stays hidden on purpose: it is history, not
+ * backlog, and the tab's row count has to keep meaning "work waiting for a
+ * human".
  */
 export const CaseUnassignedTriageSharingRule = {
   name: 'case_unassigned_triage_sharing',
   label: 'Unassigned Cases — Triage',
   object: 'crm_case',
   type: 'criteria' as const,
-  condition: P`record.owner_id == null && record.is_closed == false`,
+  condition: P`record.owner_id == null && record.status != "resolved" && record.status != "closed"`,
   accessLevel: 'edit' as const,
   sharedWith: { type: 'position' as const, value: 'service_agent' },
 };

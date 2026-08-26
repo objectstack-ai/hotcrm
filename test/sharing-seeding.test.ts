@@ -466,8 +466,14 @@ const RULE_WITNESSES: Record<string, { reaches: AnyRec; misses: AnyRec[] }> = {
     // null semantics are exactly where drivers have been measured to disagree
     // (objectstack#11065). The assertion is on the ROW that comes back, never
     // on a null value — an unowned open case is reachable, an owned one is not.
-    reaches: { owner_id: null, is_closed: false },
-    misses: [{ owner_id: 'usr_1', is_closed: false }, { owner_id: null, is_closed: true }],
+    // The second clause is `status`, not `is_closed` (#1145) — the derived flag
+    // never flips on `resolved`, so it could not express "no longer live work".
+    reaches: { owner_id: null, status: 'new' },
+    misses: [
+      { owner_id: 'usr_1', status: 'new' },
+      { owner_id: null, status: 'resolved' },
+      { owner_id: null, status: 'closed' },
+    ],
   },
   opportunity_sales_sharing: {
     reaches: { stage: 'proposal', amount: 250000 },
