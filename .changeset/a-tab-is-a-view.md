@@ -16,11 +16,15 @@ eight view types (`grid`, `kanban`, `calendar`, `gallery`, `timeline`, `gantt`,
 `map`, `chart`).
 
 So the 48 authored `icon:` keys were the same trap `label` was, only quieter.
-All 48 were inert — the authored string is never looked up anywhere; the icon
-is chosen by the view's `type`. And 39 of the 48 did not so much as coincide
-with a name that map knows (`crown`, `inbox`, `git-commit-horizontal`,
-`triangle-alert`, `gantt-chart`, …), so an author editing `icon: 'crown'` to
-change what a user sees gets nothing and has no way to find that out. `name`, `order`, `pinned`, `isDefault`, `visible` and `filter` were
+All 48 are inert — the authored string is never looked up anywhere; the icon
+beside a tab is chosen by the view's `type`. Measured against what each tab's
+target view actually renders, 33 of the 48 name an icon that cannot appear
+there at all (`crown`, `inbox`, `git-commit-horizontal`, `triangle-alert`,
+`user`, `columns-3`, …). The 15 that appear to match do so by coincidence: 8
+exactly (`calendar`, `map`) and 7 by prefix (`gallery-thumbnails` on a
+`gallery` view, `gantt-chart` on a `gantt` one) — which is precisely why the
+strip read as authored. An author editing `icon: 'crown'` to change what a
+user sees gets nothing, and has no way to find that out. `name`, `order`, `pinned`, `isDefault`, `visible` and `filter` were
 inert for the same reason. Under ADR-0049 the honest treatments are enforce or
 remove; this repo removed, and #1283 already ruled remove over enforce here.
 

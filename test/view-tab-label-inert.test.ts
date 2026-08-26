@@ -35,13 +35,16 @@ import { type AnyRec, views } from './helpers/metadata-fixtures';
  * `label` was only the loudest key. Re-measuring the renderer for #1307 found
  * the same hole under every other one: `icon`, and `name`, `order`, `pinned`,
  * `isDefault`, `visible` and `filter` alongside it. All 48 authored `icon:`
- * values were inert — the string is never looked up anywhere, the icon is
- * chosen by the view's `type` — and 39 of the 48 did not even coincide with a
- * name that map knows (`crown`, `inbox`, `git-commit-horizontal`,
- * `gantt-chart`, …; only `calendar` ×8 and `map` ×1 did). An author editing
- * `icon: 'crown'` to change what a user sees gets nothing, and has no way to
- * find that out. Under ADR-0049 the honest treatments are enforce or remove;
- * this repo removed — the whole block, from all 12 files.
+ * values were inert — the string is never looked up anywhere, the icon beside
+ * a tab is chosen by the view's `type`. Resolved against what each tab's
+ * target view renders, 33 of the 48 named an icon that could not appear there
+ * at all (`crown`, `inbox`, `git-commit-horizontal`, `user`, `columns-3`, …);
+ * the 15 that seemed to match did so by coincidence — 8 exactly (`calendar`,
+ * `map`) and 7 by prefix (`gallery-thumbnails` on a `gallery` view,
+ * `gantt-chart` on a `gantt` one), which is why the strip read as authored.
+ * An author editing `icon: 'crown'` to change what a user sees gets nothing,
+ * and has no way to find that out. Under ADR-0049 the honest treatments are
+ * enforce or remove; this repo removed — the whole block, from all 12 files.
  *
  * So this pin was re-aimed rather than retired: "carries no `label`" would now
  * pass vacuously, since there are no entries left to carry one. It asserts the
