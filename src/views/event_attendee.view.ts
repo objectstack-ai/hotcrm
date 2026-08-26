@@ -6,9 +6,9 @@ import { defineView } from '@objectstack/spec/ui';
  * Event Attendee Views (#592)
  *
  * A junction object is normally edited inside its parent's related list, and
- * `crm_event_attendee` is no exception. It carries no `tabs` and no navigation
- * entry: an attendee is never something you go looking for on its own, you
- * reach it through the meeting.
+ * `crm_event_attendee` is no exception. It carries no navigation entry: an
+ * attendee is never something you go looking for on its own, you reach it
+ * through the meeting.
  *
  * # What each half of this bundle actually renders — measured (#944)
  *

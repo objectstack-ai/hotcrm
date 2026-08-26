@@ -93,7 +93,7 @@
 | OPP-006 | 赢单后置动作 | 赢单后把客户 type 升级为 customer,并创建 +3 天到期的"激活新客户"任务 | `src/objects/opportunity.hook.ts`(`opportunity_promote_account`) |
 | OPP-007 | 商机行项目与金额汇总 | 明细对象(`crm_opportunity_line_item`,受父控共享、删商机级联):从原始列重算并回写商机 `amount`,已关闭商机跳过、空行集不清零 | `src/objects/opportunity_line_item.object.ts` + `.hook.ts` |
 | OPP-008 | 行项目价格填充 | 选择产品即填充 `list_price`,插入时空 `unit_price` 默认为目录价(不覆盖已谈判价);商机/报价行共用一份工厂 | `src/objects/_line-item-price-fill.ts` |
-| OPP-009 | 销售管道看板 | `pipeline_kanban`:按阶段分列、列头按金额汇总、拖拽推进、640px 抽屉,排除已关闭交易;#1259 起入口是商机列表页的 `pipeline` 标签页,侧边栏不再单列一行 | `src/views/opportunity.view.ts`(`list.tabs`) |
+| OPP-009 | 销售管道看板 | `pipeline_kanban`:按阶段分列、列头按金额汇总、拖拽推进、640px 抽屉,排除已关闭交易;#1259 起入口是商机列表页的 "Sales Pipeline" 标签页,侧边栏不再单列一行 | `src/views/opportunity.view.ts`(`listViews.pipeline_kanban`) |
 | OPP-010 | 商机视图族 | 默认"Open Deals" + 我的/全量/关闭日日历/timeline/卡片/停滞(按阶段龄排序)/本季关单(预测类别+季度窗口)共 9 个 tab | `src/views/opportunity.view.ts` |
 | OPP-011 | 批量更新阶段 | 全仓唯一聚合式批量动作:整个选择集一次 dispatch(`_selectedIds`),全有或全无,失败 id 汇总报错 | `src/actions/opportunity.actions.ts`(`mass_update_stage`) |
 | OPP-012 | 克隆商机 | 复制客户/联系人/金额/来源等为新 prospecting 商机,关闭日重置为 +90 天 | `src/actions/opportunity.actions.ts`(`clone_opportunity`) |
