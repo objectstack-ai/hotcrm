@@ -151,9 +151,17 @@ export const CaseViews = defineView({
      * with `No such key`) as well as a NULL one on SQL, and only the operator
      * form answers the same way for both.
      *
-     * Closed cases are excluded: an ownerless case that has already been closed
-     * is history, not backlog, and leaving it here would make the count stop
-     * meaning "work waiting for a human".
+     * The predicate for "no longer live work" is `status not_in ['resolved',
+     * 'closed']`, NOT `is_closed == false`. `is_closed` is derived by
+     * `case_sla_defaults` as `effStatus === 'closed'`, so it never flips on
+     * `resolved` — and a resolved ownerless case satisfied both of this view's
+     * old filters and sat here forever, which is neither "arrives with no
+     * owner" nor "work waiting for a human". `not_in` lowers to the `$nin` the
+     * load-balancing hooks and `case_sla_monitor` already use for the same
+     * concept, so the four consumers now state one predicate; the roster that
+     * holds them together by NAME is `test/live-work-predicate-parity.test.ts`.
+     * `closed` stays excluded for the reason it always was: history, not
+     * backlog.
      *
      * ⚠️ WHO ACTUALLY SEES ROWS HERE is decided by record-level access, not by
      * this view, and the answer today is narrower than the tab suggests. A
@@ -188,7 +196,7 @@ export const CaseViews = defineView({
       columns: ['case_number', 'subject', 'crm_account', 'crm_contact', 'priority', 'status', 'origin', 'sla_due_date'],
       filter: [
         { field: 'owner_id', operator: 'is_null' },
-        { field: 'is_closed', operator: 'equals', value: false },
+        { field: 'status', operator: 'not_in', value: ['resolved', 'closed'] },
       ],
       // Same ordering as the main queue: urgency first (on the materialised
       // ordinal, never the raw select), then soonest deadline.

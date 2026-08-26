@@ -382,7 +382,7 @@ describe('unassigned_triage makes the empty-pool path visible', () => {
     ).toContain('unassigned_triage');
   });
 
-  it('filters on the ABSENCE of an owner, and excludes closed cases', () => {
+  it('filters on the ABSENCE of an owner, and excludes work that is no longer live', () => {
     const byField = new Map<string, AnyRec>(
       (triage.filter ?? []).map((f: AnyRec) => [f.field, f]),
     );
@@ -392,8 +392,17 @@ describe('unassigned_triage makes the empty-pool path visible', () => {
     // driver-memory as well as a NULL one on SQL, and only the operator form
     // answers the same way for both.
     expect(owner!.operator, 'an equals-null filter cannot see an absent column').toBe('is_null');
-    expect(byField.get('is_closed'), 'closed ownerless cases are history, not backlog').toMatchObject({
-      operator: 'equals', value: false,
+    // `status not_in ['resolved','closed']`, NOT `is_closed == false` (#1145):
+    // `is_closed` is derived as `status === 'closed'` and never flips on
+    // `resolved`, so a resolved ownerless case used to satisfy both filters and
+    // sit in the tab forever. `test/live-work-predicate-parity.test.ts` holds
+    // this consumer and the other four to one set, by name.
+    expect(
+      byField.get('is_closed'),
+      'the triage view is back on the derived flag, which never flips on `resolved`',
+    ).toBeUndefined();
+    expect(byField.get('status'), 'resolved/closed ownerless cases are history, not backlog').toMatchObject({
+      operator: 'not_in', value: ['resolved', 'closed'],
     });
   });
 

@@ -466,16 +466,30 @@ describe('sharing rules and positions line up', () => {
       expect(r!.sharedWith).toEqual({ type: 'position', value: 'service_agent' });
     });
 
-    it('its criteria is exactly "unowned AND open" — both halves, and nothing wider', () => {
+    it('its criteria is exactly "unowned AND live work" — both halves, and nothing wider', () => {
       // Asserted verbatim, because every token is load-bearing and each fails
       // differently: drop `owner_id == null` and the rule shares the whole case
-      // table with every agent (option C by accident); drop
-      // `is_closed == false` and closed history joins the backlog, so the tab's
-      // row count stops meaning "work waiting for a human"; and `!= null` in
-      // place of `== null` inverts the grant into precisely the leak
-      // acceptance #2 forbids.
+      // table with every agent (option C by accident); drop the status clause
+      // and finished work joins the backlog, so the tab's row count stops
+      // meaning "work waiting for a human"; and `!= null` in place of
+      // `== null` inverts the grant into precisely the leak acceptance #2
+      // forbids.
+      //
+      // ⚠️ The second half is `status`, not `is_closed` (#1145), and that made
+      // this grant NARROWER: `is_closed` is derived as `status === 'closed'`
+      // and never flips on `resolved`, so the old spelling handed every agent
+      // `edit` on every resolved ownerless case forever. The set is
+      // `CLOSED_CASE_STATUSES`, shared with the load-balancing hooks and
+      // `case_sla_monitor`; `test/live-work-predicate-parity.test.ts` holds all
+      // five consumers to it by name.
+      //
+      // The `!=` chain rather than `!(record.status in [...])` is measured, not
+      // stylistic — the membership form lowers to a top-level `$not` wrapping
+      // an `$in`, which is not in the operator matrix at the head of
+      // `test/sharing-seeding.test.ts`, and an uncompilable or unexecutable
+      // sharing condition is DROPPED silently rather than failing loudly.
       expect(String(rule()!.condition?.source ?? '')).toBe(
-        'record.owner_id == null && record.is_closed == false',
+        'record.owner_id == null && record.status != "resolved" && record.status != "closed"',
       );
     });
 

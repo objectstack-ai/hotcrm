@@ -223,6 +223,20 @@ async function boot(driver: string, config: AnyRec): Promise<Fixture> {
     { context: SYS },
   );
 
+  // The #1145 exclusion, and the reason it needed its own row: a RESOLVED
+  // ownerless case used to satisfy `is_closed == false` — the flag is derived
+  // as `status === 'closed'` and never flips on `resolved` — so it sat in the
+  // triage tab forever AND carried an `edit` grant for every service agent.
+  // Seeded `in_progress` first because `new → resolved` is not a declared
+  // transition, then moved on a second call so the derivation runs against a
+  // previous row (same reason as `unowned_closed` above).
+  id.unowned_resolved = await insert('crm_case', caseDoc('Unowned, resolved', { status: 'in_progress' }));
+  await ql.update(
+    'crm_case',
+    { id: id.unowned_resolved, status: 'resolved', resolution: 'Answered on the public thread.' },
+    { context: SYS },
+  );
+
   // ── the claim population (#1096's write half) ─────────────────────────
   // One row per boundary, because every claim case CONSUMES its row: a
   // successful claim gives the case an owner, and a second test reusing it
@@ -459,10 +473,44 @@ for (const { label, driver } of DRIVERS) {
     });
 
     it('a CLOSED unowned case stays hidden — the deliberate exclusion', async () => {
-      // `is_closed == false` is part of the predicate on purpose: an ownerless
+      // The status exclusion is part of the predicate on purpose: an ownerless
       // case that is already closed is history, not backlog, and counting it
       // would stop the tab's row count meaning "work waiting for a human".
       expect(await F().sees('crm_case')).not.toContain('unowned_closed');
+    });
+
+    it('a RESOLVED unowned case stays hidden too — #1145, and this is a TIGHTENING', async () => {
+      // ⚠️ This grant got NARROWER. Before #1145 the rule said
+      // `is_closed == false`, and `is_closed` is derived as `status ===
+      // 'closed'` — so it never flipped on `resolved` and every service agent
+      // held `edit` on every resolved ownerless case, indefinitely. The rule
+      // now says the same thing the load-balancing hooks and `case_sla_monitor`
+      // say: the case is live work only while its status is neither `resolved`
+      // nor `closed`.
+      //
+      // 🔴 If this goes green-to-red, agents have regained sight of finished
+      // work — the tab's row count has stopped meaning "work waiting for a
+      // human" again, which is the whole of #1145.
+      const { ql, id, sees } = F();
+      // The row really is in the state under test, and really is ownerless:
+      // a fixture that failed to reach `resolved` would make this pass for the
+      // wrong reason.
+      const stored = await F().raw('crm_case', id.unowned_resolved);
+      expect(stored.status, 'the resolved fixture is not resolved').toBe('resolved');
+      expect(stored.owner_id ?? null, 'the resolved fixture acquired an owner').toBeNull();
+
+      expect(await sees('crm_case')).not.toContain('unowned_resolved');
+
+      const shares = await ql.find(
+        'sys_record_share',
+        { where: { object_name: 'crm_case', record_id: id.unowned_resolved } },
+        { context: SYS },
+      );
+      expect(
+        (shares as AnyRec[]).length,
+        'the triage rule still grants edit on a RESOLVED ownerless case — the tightening #1145 ' +
+          'ruled did not reach the seeded shares',
+      ).toBe(0);
     });
 
     it('the share carries real EDIT — an agent can work the case they can now see', async () => {
@@ -646,18 +694,43 @@ for (const { label, driver } of DRIVERS) {
       });
 
       it('RESOLVING is not claiming — finishing a case is not picking it up', async () => {
-        const { id, writes, ownerOf } = F();
-        expect(await writes('crm_case', id.claim_resolve, { status: 'resolved' })).toBe('allowed');
+        // ⚠️ This is also #1145's claim-seam check, and it is the reason the
+        // tightening does not break anything. Record access is resolved against
+        // the STORED row, so the case is still OPEN at the moment of this
+        // write — the agent reaches it, resolves it, and #1143's "finishing a
+        // case is not picking it up" is untouched. What #1145 changes is what
+        // happens NEXT: the row leaves the grant instead of staying in it.
+        const { id, ql, kernel, writes, ownerOf } = F();
+        expect(
+          await writes('crm_case', id.claim_resolve, { status: 'resolved' }),
+          'an agent can no longer resolve an unowned case out of triage — #1145 was supposed to ' +
+            'tighten what happens AFTER the resolve, not block the resolve itself',
+        ).toBe('allowed');
         expect(
           await ownerOf(id.claim_resolve),
           'resolving an unowned case claimed it — the ownership column should stay honest about ' +
             'the fact that nobody ever took the work',
         ).toBeNull();
+
+        // …and now the row is no longer live work, so the grant lets go of it.
+        // Before #1145 it stayed shared forever, because the derived flag it
+        // keyed on never flips on `resolved`.
+        await kernel.getService('sharingRules').evaluateRule(RULE, SYS);
+        const shares = await ql.find(
+          'sys_record_share',
+          { where: { object_name: 'crm_case', record_id: id.claim_resolve } },
+          { context: SYS },
+        );
+        expect(
+          (shares as AnyRec[]).length,
+          'a case an agent resolved out of triage stayed shared with every agent — the resolved ' +
+            'ownerless row is back to reading as backlog',
+        ).toBe(0);
       });
 
       it('an unowned CLOSED case cannot be claimed — the record-level half', async () => {
-        // Layer one: the sharing rule's `is_closed == false` never grants the
-        // agent the row, so the write is refused before any hook runs. This is
+        // Layer one: the sharing rule's status exclusion never grants the agent
+        // the row, so the write is refused before any hook runs. This is
         // a record-level FORBIDDEN, not the transfer gate's PermissionDenied —
         // a different refusal from the one pinned above, which is why it is
         // matched loosely and asserted on the stored row as well.
