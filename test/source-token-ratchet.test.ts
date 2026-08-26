@@ -269,16 +269,16 @@ describe('source token ratchet — the ratchet itself', () => {
     expect(tiny.output).toContain('over twice the 5% buffer');
     expect(tiny.output).toContain('re-anchor this ceiling to ~1,000');
 
-    // A scope sitting inside the buffer says nothing at all: ~40,010 tokens
-    // against the committed 42,000 interaction ceiling is 5.0% of headroom, so
+    // A scope sitting inside the buffer says nothing at all: ~38,095 tokens
+    // against the committed 40,000 interaction ceiling is 5.0% of headroom, so
     // that line gets a clean ✓ and no advisory under it.
-    write('src/views/bulk.view.ts', `export const v = "${'y'.repeat(40_000 * 4)}";\n`);
+    write('src/views/bulk.view.ts', `export const v = "${'y'.repeat(38_085 * 4)}";\n`);
     const inBuffer = run(root);
     expect(inBuffer.status).toBe(0);
 
     const lines = inBuffer.output.split('\n');
     const at = lines.findIndex((l) => l.includes('✓ interaction layer'));
-    expect(lines[at]).toContain('headroom ~1,990');
+    expect(lines[at]).toContain('headroom ~1,905');
     expect(lines[at + 1] ?? '').not.toContain('over twice the 5% buffer');
   });
 
