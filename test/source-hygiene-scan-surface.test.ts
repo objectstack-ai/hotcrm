@@ -23,15 +23,23 @@ import { REPO_ROOT } from './helpers/repo-root';
  * blind to all of it: the same planted bytes that make the current gate report
  * four violations left the pre-#838 gate reporting "source hygiene clean".
  *
- * The code-level checks deliberately did NOT move with it — `console.log` is
- * legitimate prose in the marketplace docs, the marker and copyright-header
- * checks read `.ts` via `allTs` (derived from `SCANNED`), and the 100KB cap's
- * remedy ("split the file") is a review argument about modules, not
- * documentation pages (#814). Both halves are pinned below: widening the byte
- * scan is asserted, and NOT widening the others is asserted just as explicitly,
- * so a later change to either is a deliberate edit to this file rather than an
- * accident. The two lock files are pinned the same way — they are text, they
- * sit at the root, and they are excluded on purpose.
+ * The code-level checks did NOT move to the TEXT TREES with it, and still have
+ * not — `console.log` is legitimate prose in the marketplace docs, and the
+ * 100KB cap's remedy ("split the file") is a review argument about modules, not
+ * documentation pages (#814).
+ *
+ * The ROOT is the half that did move. #838 left it in the byte check alone and
+ * recorded widening the two `.ts` checks as "a different argument"; #1236 made
+ * it, because the root `.ts` files are first-party TypeScript and the header
+ * check's requirement of PRESENCE has the same force there as under `src/`. So
+ * `allTs` is now `SCANNED`'s `.ts` plus the `.ts` members of the root
+ * whitelist. Every boundary is pinned below in the direction it actually runs:
+ * the byte scan's width, the text trees still being off the code-level checks,
+ * the root `.ts` now being ON the marker and header checks, and the root still
+ * being off `console.log` and the size cap. A later change to any of them is a
+ * deliberate edit to this file rather than an accident. The two lock files are
+ * pinned the same way — they are text, they sit at the root, and they are
+ * excluded on purpose.
  *
  * Mechanics: the script derives its repo root from its own location
  * (`new URL('..', import.meta.url)`), so copying it into `<sandbox>/scripts/`
@@ -76,12 +84,31 @@ const ROOT_EXCLUDED_FILES = ['pnpm-lock.yaml', 'package-lock.json'];
 
 const GATE = 'scripts/check-source-hygiene.mjs';
 
+const HEADER = '// Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.';
+
+/**
+ * Root fixture contents. The root `.ts` files joined the copyright-header and
+ * marker checks in #1236, so a bare `placeholder` there would make every
+ * clean-tree run in this file red on a header finding instead of proving what
+ * the case is about.
+ */
+function rootFixture(file: string): string {
+  return file.endsWith('.ts') ? `${HEADER}\nplaceholder\n` : 'placeholder\n';
+}
+
 /**
  * Assembled at runtime on purpose: this file is itself scanned by the gate's
  * marker check, and spelling the marker literally would fail the very check it
  * is here to exercise.
  */
 const MARKER = ['TO', 'DO'].join('');
+
+/**
+ * The marker check's own headline, assembled for exactly the reason `MARKER`
+ * is: asserting on it is asserting on a string that contains both marker
+ * words, and spelling either one here would fail the check under test.
+ */
+const MARKER_CHECK = `no ${MARKER}/${['FIX', 'ME'].join('')} markers`;
 
 /**
  * The bytes under test, built from their code points instead of being spelled
@@ -99,7 +126,7 @@ let root: string;
 beforeEach(() => {
   root = mkdtempSync(join(tmpdir(), 'hygiene-surface-'));
   for (const dir of [...CODE_TREES, ...TEXT_TREES]) mkdirSync(join(root, dir), { recursive: true });
-  for (const file of ROOT_TEXT_FILES) writeFileSync(join(root, file), 'placeholder\n');
+  for (const file of ROOT_TEXT_FILES) writeFileSync(join(root, file), rootFixture(file));
   copyFileSync(join(REPO_ROOT, GATE), join(root, GATE));
 });
 
@@ -150,6 +177,11 @@ describe('source hygiene — scan surface', () => {
     // which surface produced the finding — trees by name, root files by count.
     expect(output).toContain('content, .changeset, docs, .github, .claude');
     expect(output).toContain(`${ROOT_TEXT_FILES.length} root file(s)`);
+    // The `.ts` surface names its root count too (#1236) — a widened check that
+    // scanned an empty set would print 0 here and pass every case in this file.
+    expect(output).toContain(
+      `plus ${ROOT_TEXT_FILES.filter((f) => f.endsWith('.ts')).length} root .ts file(s)`,
+    );
   });
 
   it('reports a control byte under content/, naming the file, byte and column', () => {
@@ -185,12 +217,17 @@ describe('source hygiene — scan surface', () => {
   });
 
   it.each(ROOT_TEXT_FILES)('reports a control byte in the root file %s (#838)', (file) => {
-    write(file, `placeholder${SOH}\n`);
+    // The `.ts` members keep their header (#1236) so this case stays about the
+    // byte: without it the run would also carry a header violation, and the
+    // planted byte moves one line down accordingly.
+    const isTs = file.endsWith('.ts');
+    write(file, `${isTs ? `${HEADER}\n` : ''}placeholder${SOH}\n`);
 
     const { status, output } = runGate();
     expect(status).toBe(1);
-    expect(output).toContain(`${file}:1`);
+    expect(output).toContain(`${file}:${isTs ? 2 : 1}`);
     expect(output).toContain('control byte 0x01 at column 12');
+    expect(output).not.toContain('no copyright header');
   });
 
   it('does NOT read the lock files, which are excluded on purpose (#838)', () => {
@@ -204,14 +241,44 @@ describe('source hygiene — scan surface', () => {
     expect(output).toContain('source hygiene clean');
   });
 
-  it('does not extend the code-level checks to the new trees or the root (#838)', () => {
+  it('does not extend the code-level checks to the new trees (#838)', () => {
     // Each of these would be a violation if a code-level check had been widened
-    // along with the byte scan: a marker and a header-less .ts file in the new
-    // trees and at the root, and a doc page well past the 100KB cap.
+    // along with the byte scan: a marker in a stray .ts under a text tree, a
+    // documented CLI one-liner that prints, and a doc page past the 100KB cap.
+    // The ROOT no longer belongs in this list — see the two cases below (#1236).
     write('docs/stray.ts', `export const x = 1; // ${MARKER}: not judged here\n`);
-    write('objectstack.config.ts', 'export default { name: "hotcrm" };\n');
     write('.github/notes.md', '```bash\nnode -e "console.log(1)"\n```\n');
     write('docs/huge.md', `${'x'.repeat(120 * 1024)}\n`);
+
+    const { status, output } = runGate();
+    expect(status).toBe(0);
+    expect(output).toContain('source hygiene clean');
+  });
+
+  it('DOES extend the marker and header checks to the root .ts files (#1236)', () => {
+    // #838 put the root in the byte check only and called widening the two
+    // `.ts` checks "a different argument", which #1236 then settled: these are
+    // first-party TypeScript, and the header check requires PRESENCE for a
+    // reason (deleting the header must not satisfy a position-only rule) that
+    // does not stop at the repo root. Both halves are asserted, so narrowing
+    // this back is a deliberate edit to this file rather than an accident.
+    write('objectstack.config.ts', 'export default { name: "hotcrm" };\n');
+    write('vitest.config.ts', `${HEADER}\nexport const x = 1; // ${MARKER}: judged now\n`);
+
+    const { status, output } = runGate();
+    expect(status).toBe(1);
+    expect(output).toContain('objectstack.config.ts:1');
+    expect(output).toContain('no copyright header');
+    expect(output).toContain('vitest.config.ts:2');
+    expect(output).toContain(MARKER_CHECK);
+  });
+
+  it('leaves the console.log and size checks off the root .ts files (#1236)', () => {
+    // Only the two `.ts` checks moved. `console.log` stays `src/`-only — the
+    // root configs are entry points, not runtime hook bodies — and the size cap
+    // keeps reading the walked code trees, so neither of these is a violation.
+    write('objectstack.config.ts', `${HEADER}\nconsole.log('config loaded');\n`);
+    write('vitest.config.ts', `${HEADER}\nexport const big = '${'y'.repeat(120 * 1024)}';\n`);
 
     const { status, output } = runGate();
     expect(status).toBe(0);
