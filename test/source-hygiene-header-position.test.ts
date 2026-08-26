@@ -78,12 +78,21 @@ const GATE = 'scripts/check-source-hygiene.mjs';
 
 const HEADER = '// Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.';
 
+/**
+ * Root fixture contents. The three root `.ts` files are read by this very
+ * check as of #1236, so a bare `placeholder` there would make every case in
+ * this file red for a reason none of them is about.
+ */
+function rootFixture(file: string): string {
+  return file.endsWith('.ts') ? `${HEADER}\nplaceholder\n` : 'placeholder\n';
+}
+
 let root: string;
 
 beforeEach(() => {
   root = mkdtempSync(join(tmpdir(), 'hygiene-header-'));
   for (const dir of REQUIRED_TREES) mkdirSync(join(root, dir), { recursive: true });
-  for (const file of REQUIRED_ROOT_FILES) writeFileSync(join(root, file), 'placeholder\n');
+  for (const file of REQUIRED_ROOT_FILES) writeFileSync(join(root, file), rootFixture(file));
   copyFileSync(join(REPO_ROOT, GATE), join(root, GATE));
 });
 

@@ -27,7 +27,9 @@
  * `SCANNED`, `TEXT_SCANNED` and `ROOT_TEXT_FILES` below. Three checks judge
  * code; the byte-level one judges first-party text wherever it lives (#818,
  * widened again in #838); the header check judges `.ts` only, for the measured
- * reason given at `scanHeaderPosition`.
+ * reason given at `scanHeaderPosition`. The two `.ts` checks read first-party
+ * TypeScript wherever it lives too — the `SCANNED` trees plus the root `.ts`
+ * files named in `ROOT_TEXT_FILES` (#1236).
  */
 
 import { readdirSync, readFileSync, statSync } from 'node:fs';
@@ -401,9 +403,15 @@ const INDENTED_COPYRIGHT_HEADER = /^\s+\/\/ Copyright \(c\) \d{4} ObjectStack\./
  * demand a header in files this card cannot touch, or force the weaker
  * position-only rule on everyone to accommodate them. Filed separately instead.
  *
- * There is no skip-list and no path list — a new `.ts` file with its header in
- * the wrong place goes red, which is the entire point. Generated output is
- * already outside the walk (`dist`, `.source`, `.objectstack` are in
+ * There is no skip-list and no exemption — a `.ts` file with its header in the
+ * wrong place goes red, which is the entire point. Under the scanned trees that
+ * needs no list at all: they are walked, so a NEW file is caught the moment it
+ * lands. The root is the one place a path list is unavoidable (`walk()`
+ * recurses, and the root holds `node_modules` and build output), so root
+ * coverage is exactly what `ROOT_TEXT_FILES` names — a new first-class root
+ * `.ts` is covered once it is added there, the cost that constant's own
+ * docstring states rather than a loophole this check invents. Generated output
+ * is already outside the walk (`dist`, `.source`, `.objectstack` are in
  * `SKIP_DIRS`), and no generated `.ts` lives in the scanned trees, so no
  * exemption is invented for a case that does not exist.
  *
@@ -512,7 +520,7 @@ const SCANNED = ['src', 'test', 'e2e', 'scripts'];
  * of them. The hazard the byte scan guards is about the bytes on disk, so its
  * surface is "first-party text", not "code".
  *
- * The other three checks stay on `SCANNED`. That split is measured, not
+ * The other three checks do not read these trees. That split is measured, not
  * assumed — as of this change, over `content/` + `.changeset/`:
  *
  *   - `console.log` is already `src/`-only, and docs legitimately print it:
@@ -560,17 +568,25 @@ const SCANNED = ['src', 'test', 'e2e', 'scripts'];
 const TEXT_SCANNED = ['content', '.changeset', 'docs', '.github', '.claude'];
 
 /**
- * Root-level first-party text files, read by the control-byte check and ONLY
- * by it (#838).
+ * Root-level first-party text files (#838). Read in full by the control-byte
+ * check; the `.ts` members are read by the marker and copyright-header checks
+ * as well (#1236).
  *
  * The three root `.ts` files are why this list exists at all:
  * `objectstack.config.ts` is the app manifest AGENTS.md calls the source of
  * truth, and `vitest.config.ts` / `playwright.config.ts` are the test entry
- * points — first-class TypeScript that no check read before this one. They join
- * the BYTE check only: the marker and copyright-header checks read `allTs`,
- * which is derived from `SCANNED`, and widening *those* to the root is a
- * different argument (`playwright.config.ts` carries no header today, so it
- * would go red) belonging on a different card.
+ * points — first-class TypeScript that no check read before #838. They joined
+ * the byte check there, and the two `.ts` checks in #1236, which derives
+ * `rootTs` from this list where the checks are wired.
+ *
+ * #838 deferred that second step because `playwright.config.ts` carried no
+ * header and would have gone red. #1236 settled it the other way — widen
+ * first, then add the missing header — because the header check requires
+ * PRESENCE, and the reason it does (deleting the header must not become a way
+ * to satisfy a position-only rule, see `scanHeaderPosition`) covers
+ * first-party TypeScript at the root exactly as it covers `src/`. The old
+ * boundary was an artefact of the `.ts` surface being expressed as a directory
+ * list, not a judgement that root files answer to less.
  *
  * The root is not a tree this script can walk: `walk()` recurses, and the root
  * holds `node_modules`, build output and every directory already scanned. So
@@ -655,11 +671,19 @@ if (missingRootFiles.length) {
 
 const codeFiles = SCANNED.flatMap(walk);
 const textFiles = TEXT_SCANNED.flatMap(walk);
-const allTs = codeFiles.filter(isTs);
+
+// The root `.ts` files are first-party TypeScript, so they belong to the two
+// `.ts` checks as much as anything under `SCANNED` does. Derived from
+// `ROOT_TEXT_FILES` rather than listed a second time: one root whitelist is
+// already maintained and already fails loudly when an entry disappears, and a
+// second list is how the two drift apart.
+const rootTs = ROOT_TEXT_FILES.filter(isTs);
+const allTs = [...codeFiles.filter(isTs), ...rootTs];
 const srcTs = allTs.filter((f) => f.startsWith('src/'));
 
 console.log(
-  `Source hygiene — ${codeFiles.length} files under ${SCANNED.join(', ')}; ` +
+  `Source hygiene — ${codeFiles.length} files under ${SCANNED.join(', ')}, ` +
+    `plus ${rootTs.length} root .ts file(s) in the marker and header checks; ` +
     `the control-byte scan adds ${textFiles.length} under ${TEXT_SCANNED.join(', ')} ` +
     `and ${ROOT_TEXT_FILES.length} root file(s)\n`,
 );

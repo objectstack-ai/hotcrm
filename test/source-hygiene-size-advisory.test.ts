@@ -80,6 +80,15 @@ const ADVISORY_AT = Math.floor(CAP * 0.7);
  * an unrelated reason and every "exits 0" assertion below would be vacuous.
  */
 const HEADER = '// Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.\n';
+
+/**
+ * Root fixture contents. The root `.ts` files joined the copyright-header and
+ * marker checks in #1236, so a bare `placeholder` there would fail this
+ * suite's runs on a header finding rather than on anything about the band.
+ */
+function rootFixture(file: string): string {
+  return file.endsWith('.ts') ? `${HEADER}placeholder\n` : 'placeholder\n';
+}
 function sizedTs(bytes: number): string {
   return HEADER + 'x'.repeat(bytes - HEADER.length);
 }
@@ -89,7 +98,7 @@ let root: string;
 beforeEach(() => {
   root = mkdtempSync(join(tmpdir(), 'hygiene-advisory-'));
   for (const dir of [...CODE_TREES, ...TEXT_TREES]) mkdirSync(join(root, dir), { recursive: true });
-  for (const file of ROOT_TEXT_FILES) writeFileSync(join(root, file), 'placeholder\n');
+  for (const file of ROOT_TEXT_FILES) writeFileSync(join(root, file), rootFixture(file));
   copyFileSync(join(REPO_ROOT, GATE), join(root, GATE));
 });
 
