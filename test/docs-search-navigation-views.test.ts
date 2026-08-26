@@ -48,15 +48,23 @@ import { type AnyRec, packFor, views } from './helpers/metadata-fixtures';
  * the claim lives.
  */
 
-/** Every label a list view of this app shows a user, plus its tab labels. */
+/**
+ * Every label a list view of this app shows a user.
+ *
+ * A tab on the object-view switcher is a VIEW, so this set is already every
+ * string the strip can show (#1307). This used to add `list.tabs[].label` on
+ * top, on the belief that `my_open_deals` was labelled *My Open Deals* on the
+ * view and *My Deals* on its tab — the #760 misreading. The console labels a
+ * tab with the view's own `label`, `tabs[].label` was removed from every entry
+ * by #1304 (leaving this map yielding `undefined` for all of them, discarded by
+ * the `filter(Boolean)` below), and `list.tabs` is now gone entirely. Nothing
+ * is lost either way: a tab pointed only ever at the primary `list` or at a
+ * `listViews` entry, so its label was always already in this set.
+ */
 const APP_VIEW_LABELS: string[] = views.flatMap((set: AnyRec) => {
   const list = (set.list ?? {}) as AnyRec;
   const extra = Object.values((set.listViews ?? {}) as Record<string, AnyRec>);
-  // Tab labels count too: `my_open_deals` is labelled *My Open Deals* on the
-  // view and *My Deals* on the tab, and a reader naming either one is naming
-  // something they can actually see.
-  const tabs = ((list.tabs ?? []) as AnyRec[]).map((t) => t.label);
-  return [list.label, ...extra.map((v) => v.label), ...tabs].filter(Boolean) as string[];
+  return [list.label, ...extra.map((v) => v.label)].filter(Boolean) as string[];
 });
 
 /** Built-in list-view labels the approvals plugin ships for the request object. */
@@ -173,11 +181,14 @@ describe('the source facts the built-in-views example rests on (#973)', () => {
   });
 
   it('Opportunities opens on Open Deals and keeps All Opportunities one tab over', () => {
+    // "Opens on" is a property of being the PRIMARY list, not of a tab flag
+    // (#1307): the switcher moves `list` to the front of the strip and marks
+    // it default, so `open_opportunities` being `opp.list` is the whole claim.
+    // This used to read `isDefault` off the `list.tabs[]` entry naming it —
+    // an inert key on an array the console never looked at.
     const opp = views.find((v: AnyRec) => v.list?.name === 'open_opportunities') as AnyRec;
     expect(opp, 'the opportunity view set is gone — this pin is out of date').toBeTruthy();
     expect(opp.list.label).toBe('Open Deals');
-    const openTab = (opp.list.tabs as AnyRec[]).find((t) => t.view === 'open_opportunities');
-    expect(openTab?.isDefault, 'Open Deals is no longer the default tab').toBe(true);
     const all = (opp.listViews as AnyRec).all_opportunities as AnyRec;
     expect(all.label).toBe('All Opportunities');
     // "unfiltered" is a claim the bullet makes in all three locales.

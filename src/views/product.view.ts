@@ -37,10 +37,6 @@ export const ProductViews = defineView({
     appearance: {
       allowedVisualizations: ['grid', 'gallery'],
     },
-    tabs: [
-      { name: 'all', view: 'all_products', isDefault: true, pinned: true },
-      { name: 'catalog', icon: 'gallery-thumbnails', view: 'product_catalog' },
-    ],
   },
 
   listViews: {

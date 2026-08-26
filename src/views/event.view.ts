@@ -49,14 +49,6 @@ export const EventViews = defineView({
       showDescription: true,
       allowedVisualizations: ['grid', 'calendar', 'timeline', 'kanban'],
     },
-    tabs: [
-      { name: 'all', view: 'all_events', isDefault: true, pinned: true },
-      { name: 'calendar', icon: 'calendar', view: 'event_calendar' },
-      { name: 'team', icon: 'git-commit-horizontal', view: 'event_timeline' },
-      { name: 'mine', icon: 'user', view: 'my_events' },
-      { name: 'upcoming', icon: 'calendar-clock', view: 'upcoming_events' },
-      { name: 'history', icon: 'history', view: 'held_events' },
-    ],
   },
 
   listViews: {

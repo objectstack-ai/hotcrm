@@ -19,11 +19,11 @@ import {
  *
  * Everything a list view or form view names — the fields it sections, sorts and
  * filters on, the option values it tints rows and kanban columns by, the stage
- * enumerations it draws, the tabs that reach it. `os validate` checks that a
- * view has the SHAPE of a view; nothing checked that the names inside it
- * resolve, and every guard here started as a defect found by clicking through
- * the app, where the bad name rendered as an empty column or a silently
- * untinted row rather than as an error.
+ * enumerations it draws, the navigation entries that reach it. `os validate`
+ * checks that a view has the SHAPE of a view; nothing checked that the names
+ * inside it resolve, and every guard here started as a defect found by clicking
+ * through the app, where the bad name rendered as an empty column or a
+ * silently untinted row rather than as an error.
  *
  * ---
  *
@@ -408,51 +408,84 @@ describe('every canonical opportunity stage reaches the UI that enumerates stage
   });
 });
 
+/**
+ * ── What actually reaches a named list view (#1307) ──────────────────────────
+ *
+ * This block used to assert that a `listViews` entry left out of its list's
+ * `tabs` array was UNREACHABLE, and named seven working queues (renewals_due,
+ * at_risk_accounts, stale_opportunities, closing_this_quarter, sla_at_risk,
+ * todays_tasks, overdue_tasks) as having shipped "defined, tested,
+ * unreachable". Both halves were false, and re-measuring the shipped renderer
+ * (`@objectstack/console` 17.1.0) is what showed it: the object-view switcher
+ * builds its strip from VIEW DESCRIPTORS and never reads `tabs` at all —
+ *
+ *   Dm({ definedViews: U.listViews ?? U.list_views ?? {}, primary: U.list,
+ *        primaryId, savedViews, viewOverrides, fallbackTab })
+ *
+ * — one entry per `listViews` key plus the primary `list` (unshifted to the
+ * front and marked default), each labelled with that view's own `label` and
+ * iconed from a `viewTypeIcons` map the console hardcodes. So a `listViews`
+ * entry was on the strip whether or not a tab named it: those seven queues
+ * were reachable the whole time, and `tabs` curated nothing. The inert key is
+ * gone from every view file; `test/view-tab-label-inert.test.ts` pins that it
+ * stays gone.
+ *
+ * What is left to guard here is the direction that CAN still dangle. A view is
+ * on its own object's strip by existing, but a NAVIGATION entry names a view
+ * by string — `{ type: 'object', objectName, viewName }` — and that string is
+ * resolved against the object's views at render time. A rename on either side
+ * leaves an entry that opens on nothing, and no other suite checks it:
+ * `app-navigation-shape.test.ts` asserts a view entry HAS a non-empty
+ * `viewName`, never that the name resolves.
+ */
 describe('every named list view is reachable', () => {
   const apps: AnyRec[] = (stack as any).apps ?? [];
-  const navViewNames = new Set(
-    apps.flatMap((app) =>
-      (app.navigation ?? []).flatMap(function walk(n: AnyRec): string[] {
-        return [...(n.viewName ? [n.viewName] : []), ...(n.children ?? []).flatMap(walk)];
+
+  /** Every `viewName` an app navigation entry pins, with its object and id. */
+  const navViewTargets: { id: string; object: string; view: string }[] = apps.flatMap((app) =>
+    [...walk(app.navigation ?? [])]
+      .filter((n) => typeof n.viewName === 'string' && n.viewName)
+      .map((n) => ({
+        id: String(n.id ?? '(unnamed entry)'),
+        object: String(n.objectName ?? ''),
+        view: String(n.viewName),
       })),
   );
 
-  it('every listViews entry is referenced by the switcher tabs or app navigation', () => {
-    // With no `tabs` declared, the data-mode switcher lists every saved view
-    // automatically (ADR-0047) — nothing to check. But once a view curates a
-    // `tabs` array, only the listed views render: seven working queues
-    // (renewals_due, at_risk_accounts, stale_opportunities,
-    // closing_this_quarter, sla_at_risk, todays_tasks, overdue_tasks) shipped
-    // outside their list's tabs — defined, tested, unreachable.
-    const bad: string[] = [];
-    for (const v of views) {
-      const tabs = v.list?.tabs;
-      if (!Array.isArray(tabs) || !tabs.length) continue;
-      const tabViews = new Set(tabs.map((t: AnyRec) => t.view).filter(Boolean));
-      for (const [key, def] of Object.entries(v.listViews ?? {}) as [string, AnyRec][]) {
-        const name = def.name ?? key;
-        if (!tabViews.has(name) && !navViewNames.has(name)) {
-          bad.push(`list view "${name}" (${def.data?.object}) is excluded from its list's tabs and has no navigation entry`);
-        }
-      }
+  /** The view names the switcher enumerates for an object: `list` + `listViews`. */
+  const switcherViewsByObject = new Map<string, Set<string>>();
+  for (const v of views) {
+    const object = v.list?.data?.object;
+    if (!object) continue;
+    const names = switcherViewsByObject.get(object) ?? new Set<string>();
+    if (v.list?.name) names.add(String(v.list.name));
+    for (const [key, def] of Object.entries(v.listViews ?? {}) as [string, AnyRec][]) {
+      names.add(String(def?.name ?? key));
     }
-    expect(bad, `unreachable list views:\n  ${bad.join('\n  ')}`).toEqual([]);
+    switcherViewsByObject.set(object, names);
+  }
+
+  it('sees navigation entries that pin a view, and objects that define some', () => {
+    // Guards the guard: either side coming back empty would make the rule
+    // below pass by checking nothing — the exact failure the `tabs` model hid.
+    expect(navViewTargets.length, 'no navigation entry pins a viewName at all').toBeGreaterThan(0);
+    expect(switcherViewsByObject.size, 'no object defines a list view').toBeGreaterThan(0);
   });
 
-  it('every switcher tab points at a defined view', () => {
+  it('every navigation entry that pins a view names one its object defines', () => {
     const bad: string[] = [];
-    for (const v of views) {
-      const defined = new Set([
-        v.list?.name,
-        ...Object.entries(v.listViews ?? {}).map(([key, def]) => (def as AnyRec)?.name ?? key),
-      ].filter(Boolean));
-      for (const t of v.list?.tabs ?? []) {
-        if (t.view && !defined.has(t.view)) {
-          bad.push(`tab "${t.name}" targets undefined view "${t.view}"`);
-        }
+    for (const { id, object, view } of navViewTargets) {
+      const known = switcherViewsByObject.get(object);
+      if (!known) {
+        bad.push(`${id}: object "${object}" has no view file, so "${view}" resolves to nothing`);
+      } else if (!known.has(view)) {
+        bad.push(
+          `${id}: "${object}" defines no view "${view}" — the entry opens on nothing. ` +
+            `It ships: ${[...known].sort().join(', ')}`,
+        );
       }
     }
-    expect(bad, `dangling tabs:\n  ${bad.join('\n  ')}`).toEqual([]);
+    expect(bad, `navigation entries pinning an undefined view:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 });
 

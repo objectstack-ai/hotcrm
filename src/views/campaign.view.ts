@@ -32,12 +32,6 @@ export const CampaignViews = defineView({
       showDescription: true,
       allowedVisualizations: ['grid', 'gantt', 'calendar', 'timeline'],
     },
-    tabs: [
-      { name: 'all', view: 'all_campaigns', isDefault: true, pinned: true },
-      { name: 'schedule', icon: 'gantt-chart', view: 'campaign_gantt' },
-      { name: 'launches', icon: 'calendar', view: 'campaign_calendar' },
-      { name: 'timeline', icon: 'git-commit-horizontal', view: 'campaign_timeline' },
-    ],
   },
 
   listViews: {

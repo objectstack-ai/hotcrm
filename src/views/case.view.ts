@@ -54,19 +54,6 @@ export const CaseViews = defineView({
       showDescription: true,
       allowedVisualizations: ['grid', 'kanban', 'calendar', 'timeline'],
     },
-    tabs: [
-      { name: 'all', view: 'all_cases', isDefault: true, pinned: true },
-      { name: 'workflow', icon: 'columns-3', view: 'case_workflow' },
-      { name: 'sla', icon: 'calendar', view: 'sla_calendar' },
-      { name: 'timeline', icon: 'git-commit-horizontal', view: 'case_timeline' },
-      // Pinned, and second only to All: the triage queue is the first thing a
-      // service role must be able to reach, because a case sitting in it is a
-      // case nobody owns. See `unassigned_triage` below.
-      { name: 'triage', icon: 'inbox', view: 'unassigned_triage', pinned: true },
-      { name: 'escalated', icon: 'triangle-alert', view: 'escalated_cases' },
-      { name: 'at_risk', icon: 'clock-alert', view: 'sla_at_risk' },
-      { name: 'mine', icon: 'user', view: 'my_open_cases' },
-    ],
     // Escalate straight from the queue: escalate_case's own
     // `locations: ['list_item']` auto-injects the row-menu item.
   },

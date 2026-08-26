@@ -104,20 +104,29 @@ describe('every reader of a removed field went with it (#1182)', () => {
   /**
    * `low_stock` was a whole list view built on two of the removed fields — its
    * columns, its `less_than_or_equal` filter and its sort key were all
-   * `quantity_on_hand` / `reorder_point` — so it could not outlive them. View
-   * and switcher tab are asserted together: a tab pointing at a deleted view
-   * and a view unreachable from any tab are two different broken states, and
-   * this removal must produce neither.
+   * `quantity_on_hand` / `reorder_point` — so it could not outlive them.
+   *
+   * Dropping it from `listViews` is the whole removal (#1307). This used to
+   * assert the view's absence and the absence of a `list.tabs[]` entry naming
+   * it as two separate broken states, on the belief that a curated `tabs`
+   * array decided which views the switcher rendered. Measured on the shipped
+   * console (17.1.0), the switcher builds its strip from `listViews` plus the
+   * primary `list` and never reads `tabs` — so there is exactly ONE place a
+   * view can be reachable from, and `tabs` is now gone from every view file.
+   * The assertion runs over the whole strip rather than over `listViews`
+   * alone, so reintroducing the view as the primary `list` would fail too.
    */
-  it('drops the low_stock view and its switcher tab together', () => {
+  it('drops the low_stock view, and with it the only way to reach it', () => {
+    const strip = [
+      ...(ProductViews.list?.name ? [String(ProductViews.list.name)] : []),
+      ...Object.entries(ProductViews.listViews ?? {}).map(
+        ([key, def]) => String((def as AnyRec)?.name ?? key),
+      ),
+    ];
+    // Guards the guard: an empty strip would pass every line below.
+    expect(strip.length, 'crm_product puts no view on the switcher at all').toBeGreaterThan(1);
+    expect(strip, 'low_stock is back on the switcher strip').not.toContain('low_stock');
     expect(Object.keys(ProductViews.listViews ?? {})).not.toContain('low_stock');
-    const tabViews = ((ProductViews.list?.tabs ?? []) as AnyRec[]).map((t) => t.view);
-    expect(tabViews).not.toContain('low_stock');
-    const declared = new Set(Object.keys(ProductViews.listViews ?? {}));
-    for (const view of tabViews) {
-      if (view === ProductViews.list?.name) continue;
-      expect(declared, `tab points at missing view "${view}"`).toContain(view);
-    }
   });
 
   /**

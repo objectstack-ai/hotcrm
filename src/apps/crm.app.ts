@@ -16,9 +16,13 @@ import { App } from '@objectstack/spec/ui';
  * `crm_event` had four entries, `crm_opportunity` three — while every list
  * page already carries a view-switcher tab strip that reaches all of them.
  * Those redundant view entries are gone; each removed destination stays one
- * click away on its object's tab strip (`list.tabs` in `src/views/*.view.ts`),
- * and that reachability is guarded by
- * `test/view-references.test.ts` → "every named list view is reachable".
+ * click away on its object's tab strip — which the console builds from the
+ * VIEW DESCRIPTORS in `src/views/*.view.ts`: the primary `list` plus every
+ * `listViews` entry, one tab each, carrying that view's own `label`. So
+ * reachability needs nothing authored; a `listViews` entry is on the strip by
+ * existing. What `test/view-references.test.ts` → "every named list view is
+ * reachable" holds is the half that CAN dangle — a navigation entry naming a
+ * view no view file defines.
  *
  * What is NOT trimmed is the demonstration. This is the exemplar app, and
  * nav items come in six kinds — plain `object`, object + `viewName` (a view
@@ -82,9 +86,11 @@ export const CrmApp = App.create({
         // object entry (quick filters only; activates with spec > 9.2.0).
         { id: 'nav_account_workbench', type: 'page', pageName: 'account_workbench', label: 'Account Workbench', icon: 'sliders-horizontal' },
         { id: 'nav_contact',     type: 'object', objectName: 'crm_contact',     label: 'Contacts',      icon: 'user' },
-        // No separate "Pipeline" entry: the kanban board is the `pipeline`
-        // tab on this same list page (`OpportunityViews.list.tabs`), one click
-        // from here and zero clicks further than a second sidebar row. The
+        // No separate "Pipeline" entry: the kanban board is another tab on
+        // this same list page — `pipeline_kanban` in
+        // `OpportunityViews.listViews`, which the switcher puts on the strip
+        // under its own label, *Sales Pipeline* — one click from here and
+        // zero clicks further than a second sidebar row. The
         // view-entry exemplar duty this item used to carry now sits with the
         // "My Work" items below, which are all object + `viewName`.
         { id: 'nav_opportunity', type: 'object', objectName: 'crm_opportunity', label: 'Opportunities', icon: 'target' },
@@ -136,9 +142,12 @@ export const CrmApp = App.create({
         // nowhere else), so the personal calendar is a view, not a dashboard.
         { id: 'nav_my_calendar', type: 'object', objectName: 'crm_event', viewName: 'my_events', label: 'My Calendar', icon: 'calendar-days' },
         // No "All Tasks" entry: "My Tasks" opens the `crm_task` list page,
-        // whose tab strip leads with the `all` tab (`TaskViews.list`, name
-        // `all_tasks`, `isDefault` + `pinned`). The whole book is one tab
-        // away, and the sidebar keeps one row per object instead of two.
+        // whose tab strip leads with *All Tasks* — `TaskViews.list`, name
+        // `all_tasks`. It leads because it is the object's PRIMARY list: the
+        // switcher moves the primary to the front of the strip and marks it
+        // default, so nothing has to be authored to say so. The whole book is
+        // one tab away, and the sidebar keeps one row per object instead of
+        // two.
         //
         // ── The approvals Inbox lives here, not in a group of its own (#1259)
         //
@@ -201,9 +210,11 @@ export const CrmApp = App.create({
       expanded: true,
       children: [
         // One row for the object, one for the dashboard. The calendar and the
-        // interaction history are the `calendar` and `history` tabs on this
-        // same list page (`EventViews.list.tabs`) — #1259 removed the sidebar
-        // duplicates, not the surfaces. `crm_event` had four sidebar rows;
+        // interaction history are two more tabs on this same list page —
+        // `event_calendar` and `held_events` in `EventViews.listViews`, which
+        // the switcher puts on the strip under each view's own label — #1259
+        // removed the sidebar duplicates, not the surfaces. `crm_event` had
+        // four sidebar rows;
         // it was the single largest source of the nav's growth.
         { id: 'nav_event',          type: 'object',    objectName: 'crm_event',   label: 'Events',          icon: 'calendar-days' },
         { id: 'nav_activity_dashboard', type: 'dashboard', dashboardName: 'sales_activity_dashboard', label: 'Sales Activity', icon: 'activity' },

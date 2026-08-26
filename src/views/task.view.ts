@@ -44,16 +44,6 @@ export const TaskViews = defineView({
       showDescription: true,
       allowedVisualizations: ['grid', 'kanban', 'calendar', 'gantt', 'timeline'],
     },
-    tabs: [
-      { name: 'all', view: 'all_tasks', isDefault: true, pinned: true },
-      { name: 'board', icon: 'columns-3', view: 'task_board' },
-      { name: 'schedule', icon: 'calendar', view: 'task_calendar' },
-      { name: 'plan', icon: 'gantt-chart', view: 'task_gantt' },
-      { name: 'worklog', icon: 'git-commit-horizontal', view: 'task_timeline' },
-      { name: 'mine', icon: 'user', view: 'my_open_tasks' },
-      { name: 'priority', icon: 'flag', view: 'todays_tasks' },
-      { name: 'backlog', icon: 'clock-alert', view: 'overdue_tasks' },
-    ],
   },
 
   listViews: {
