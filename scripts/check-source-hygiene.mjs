@@ -388,12 +388,13 @@ const INDENTED_COPYRIGHT_HEADER = /^\s+\/\/ Copyright \(c\) \d{4} ObjectStack\./
  *     header. (No `.ts` file in this repo has a shebang today; the two `.mjs`
  *     gates in `scripts/` do, and they carry the header on line 2, which is the
  *     shape this allows.)
- *   - **A missing header is an error, not out of scope.** Measured before
- *     writing this: all 282 `.ts` files under the scanned trees carry the
- *     header, 274 of them on line 1. So requiring presence costs zero collateral
- *     fixes — and without it the check would police the symptom while leaving
- *     the invariant open, since deleting the header would be a way to satisfy a
- *     position-only rule.
+ *   - **A missing header is an error, not out of scope.** Every `.ts` file this
+ *     check reads — `allTs`: the `SCANNED` trees plus the root `.ts` files —
+ *     carries the header on line 1, so requiring presence costs zero collateral
+ *     fixes. That is `scanHeaderPosition`'s own postcondition rather than a
+ *     snapshot, which is why no count is quoted. Without presence the check
+ *     would police the symptom while leaving the invariant open, since deleting
+ *     the header would be a way to satisfy a position-only rule.
  *
  * **Why `.ts` only** (`allTs`, the same predicate the marker check uses, so
  * `.d.ts` is excluded exactly as #1094's own reproduce loop excluded it): the
