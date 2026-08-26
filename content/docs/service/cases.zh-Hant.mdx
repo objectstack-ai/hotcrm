@@ -149,23 +149,23 @@ description: 客戶支援工單——主題、優先順序、狀態、解決方�
 
 ## 標準列表檢視
 
-`crm_case` 一共發布 **8 個**檢視（`src/views/case.view.ts`），工單列表把它們做成頁籤：
+`crm_case` 一共發布 **8 個**檢視（`src/views/case.view.ts`），工單列表把它們做成頁籤，每個頁籤用的就是檢視自己的名字：
 
-| 檢視 | 展示什麼 | 頁籤 |
-| --- | --- | --- |
-| **All Cases** | 全部工單，先按優先順序、再按 SLA 截止日期排序，列底色鍵在**優先順序**上 | *All* |
-| **Service Workflow** | 未結工單的看板，按狀態分欄 | *Workflow* |
-| **SLA Calendar** | 按 **SLA 截止日期** 把工單鋪在行事曆上——現在每張工單都帶截止日期，所以它顯示的是整個未結積壓 | *SLA* |
-| **Case Timeline** | 工單按「建立 → 關閉」鋪在時間軸上，按負責人分組 | *Timeline* |
-| **Escalated Cases** | `is_escalated` 為真 | *Escalated* |
-| **Unassigned — triage** | 完全沒有負責人的未結工單，先按緊急程度、再按最近的截止日期——沒有人擔任服務座席時，Web 提交的工單就落在這裡 | *Triage* |
-| **⏰ SLA at Risk** | 未結的 **High 與 Critical** 工單，截止日期最近的排在前面 | *SLA at Risk* |
-| **My Open Cases** | 你名下尚未關閉的工單 | *My Cases* |
+| 檢視 | 展示什麼 |
+| --- | --- |
+| **All Cases** | 全部工單，先按優先順序、再按 SLA 截止日期排序，列底色鍵在**優先順序**上 |
+| **Service Workflow** | 未結工單的看板，按狀態分欄 |
+| **SLA Calendar** | 按 **SLA 截止日期** 把工單鋪在行事曆上——現在每張工單都帶截止日期，所以它顯示的是整個未結積壓 |
+| **Case Timeline** | 工單按「建立 → 關閉」鋪在時間軸上，按負責人分組 |
+| **Escalated Cases** | `is_escalated` 為真 |
+| **Unassigned — triage** | 完全沒有負責人的未結工單，先按緊急程度、再按最近的截止日期——沒有人擔任服務座席時，Web 提交的工單就落在這裡 |
+| **⏰ SLA at Risk** | 未結的 **High 與 Critical** 工單，截止日期最近的排在前面 |
+| **My Open Cases** | 你名下尚未關閉的工單 |
 
 本節原先列的七個名字裡，有六個根本不是檢視：
 
 - **Critical Cases** 與 **Breached SLA** 是指標磁磚，不是列表。[服務概覽](/zh-Hant/docs/analytics/dashboards)（Service Overview；該儀表板自身的標題是 **Customer Service**）上有 *Critical Cases*（未結且 Critical）和 **SLA Violations**（`is_sla_violated` 為真）兩個磁磚；本應用裡沒有任何一個列表檢視按違約過濾。真要有一份能逐條處理的清單，用 **Escalated Cases**——SLA 掃描會把它標記的每一條都升級，所以每次違約都會落到那裡。
-- **Service Board** 不是本應用裡任何東西的名字。看板叫 **Service Workflow**，在 *Workflow* 頁籤上。
+- **Service Board** 不是本應用裡任何東西的名字。看板叫 **Service Workflow**，頁籤上寫的也是這個名字。
 - **Cases Due Today**、**Recently Closed** 與 **By Account** 以任何形式都不存在：沒有任何檢視按「截止日期 = 今天」或 `closed_date` 過濾，`crm_case` 上也沒有任何分組檢視。
 
 ## 工單詳情佈局
@@ -218,7 +218,7 @@ Activity 標籤頁是工單上發生過什麼的唯一可信來源。它將四�
 ## 給服務經理的提示
 
 - ✅ 沒有 **Breached SLA** 這個檢視可看，也沒有什麼紅色徽章——工單列表上唯一的顏色規則是 *All Cases* 的列底色，它鍵在**優先順序**上，不是違約。每天改看 **Escalated Cases**，數量則看服務概覽上的 **SLA Violations** 磁磚。
-- ✅ 用看板開每日站會——它叫 **Service Workflow**，在工單列表的 *Workflow* 頁籤上。
+- ✅ 用看板開每日站會——它叫 **Service Workflow**，在工單列表的 **Service Workflow** 頁籤上。
 - ✅ 輔導那些 **Resolution Time** 趨勢上升的客服——但這個趨勢只能從工單本身讀出來。不存在什麼客服排行榜：`case_metrics` 這個資料集（服務側每一張報表和每一個儀表板部件都建在它上面）只宣告了 Status、Priority、Origin、Type、Created 五個維度，所以分析層裡沒有任何東西能按客服分組。
 
 ## 給管理員的提示
