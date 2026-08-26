@@ -5,6 +5,7 @@ import { execFileSync } from 'node:child_process';
 import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
+import { anchor, fmt, BUFFER, CEILINGS } from '../scripts/check-source-token-ratchet.mjs';
 import { REPO_ROOT } from './helpers/repo-root';
 
 /**
@@ -97,6 +98,25 @@ interface Scope {
   chars: number;
   tokens: number;
   ceiling: number | null;
+}
+
+/**
+ * The committed ceiling for a label, read from the producer.
+ *
+ * Every figure below that used to be a literal comes from here instead. The
+ * ceilings sit on a shrink-only ratchet whose own discipline is to tighten
+ * opportunistically, so a literal calibrated against today's constant is in
+ * permanent tension with the gate it tests: it reads correctly until the next
+ * legitimate re-anchoring and then goes red for having been right (#1317 had to
+ * buy a fence extension to rewrite one). Throws rather than returning
+ * `undefined`, so a label that stops being a ceiling names itself.
+ */
+function ceilingOf(label: string): number {
+  const ceiling = CEILINGS.get(label);
+  if (typeof ceiling !== 'number') {
+    throw new Error(`'${label}' is not a committed ceiling — the gate's CEILINGS keys moved`);
+  }
+  return ceiling;
 }
 
 let root: string;
@@ -238,13 +258,18 @@ describe('source token ratchet — measurement basis', () => {
 
 describe('source token ratchet — the ratchet itself', () => {
   it('fails when a scope exceeds its ceiling, naming the scope and the only way up', () => {
-    const ceiling = 85_000; // business semantics, as committed in the gate
+    // Sized from the committed ceiling, never from a copy of it, and the two
+    // figures the message quotes are read back off the gate's own measurement.
+    const ceiling = ceilingOf('business semantics');
     write('src/objects/crm_bloat.object.ts', `export const a = "${'x'.repeat((ceiling + 1000) * 4)}";\n`);
 
     const { status, output } = run(root);
     expect(status).toBe(1);
-    expect(output).toContain('business semantics is ~86,005');
-    expect(output).toContain('the ratchet ceiling is ~85,000');
+    const over = measure()['business semantics'].tokens;
+    expect(over).toBeGreaterThan(ceiling);
+    expect(output).toContain(`business semantics is ~${fmt(over)}`);
+    expect(output).toContain(`the ratchet ceiling is ~${fmt(ceiling)}`);
+    expect(output).toContain(`over by ~${fmt(over - ceiling)}`);
     expect(output).toContain('quotes a maintainer ruling');
     // The buffer is spent before the gate ever goes red, and the message says
     // so — otherwise a red run reads as "the ratchet is too tight" when it
@@ -269,16 +294,40 @@ describe('source token ratchet — the ratchet itself', () => {
     expect(tiny.output).toContain('over twice the 5% buffer');
     expect(tiny.output).toContain('re-anchor this ceiling to ~1,000');
 
-    // A scope sitting inside the buffer says nothing at all: ~38,095 tokens
-    // against the committed 40,000 interaction ceiling is 5.0% of headroom, so
-    // that line gets a clean ✓ and no advisory under it.
-    write('src/views/bulk.view.ts', `export const v = "${'y'.repeat(38_085 * 4)}";\n`);
+    // A scope sitting inside the buffer says nothing at all: it draws a clean ✓
+    // and no advisory under it. Size that scope from the COMMITTED ceiling
+    // rather than from a literal — `ceiling / (1 + BUFFER)` is the reading whose
+    // `anchor()` is exactly this ceiling, i.e. the freshly-anchored reading, the
+    // canonical "inside the buffer". That is what this case is about, and it
+    // stays true at every ceiling: the headroom it leaves is BUFFER/(1 + BUFFER)
+    // of the reading, always under the advisory's 2 × BUFFER trigger.
+    const ceiling = ceilingOf('interaction layer');
+    const target = Math.round(ceiling / (1 + BUFFER));
+
+    // Fill to exactly `target` tokens. `~tokens` is stripped chars / 4, so
+    // subtract what the layer already holds and the wrapper the stripper keeps
+    // — the reading is then exact rather than approximately sized, and it
+    // re-derives itself the next time the ceiling is tightened.
+    const view = (filler: string) => `export const v = "${filler}";\n`;
+    const held = measure()['interaction layer'].chars;
+    write('src/views/bulk.view.ts', view('y'.repeat(target * 4 - held - view('').trimEnd().length)));
+
     const inBuffer = run(root);
     expect(inBuffer.status).toBe(0);
 
+    const scope = measure()['interaction layer'];
+    expect(scope.ceiling).toBe(ceiling);
+    expect(scope.tokens).toBe(target);
+    // What the case pins, as the property rather than as two calibrated
+    // numbers: under the ceiling, and clear of the advisory's trigger.
+    expect(scope.tokens).toBeLessThanOrEqual(ceiling);
+    expect(ceiling - scope.tokens).toBeLessThanOrEqual(scope.tokens * 2 * BUFFER);
+    expect(anchor(scope.tokens)).toBe(ceiling);
+
     const lines = inBuffer.output.split('\n');
     const at = lines.findIndex((l) => l.includes('✓ interaction layer'));
-    expect(lines[at]).toContain('headroom ~1,905');
+    expect(at).toBeGreaterThan(-1);
+    expect(lines[at]).toContain(`headroom ~${fmt(ceiling - scope.tokens)}`);
     expect(lines[at + 1] ?? '').not.toContain('over twice the 5% buffer');
   });
 
@@ -333,6 +382,142 @@ describe('source token ratchet — this repository, today', () => {
     const parts = ['business semantics', 'interaction layer', 'other authored metadata'];
     expect(parts.reduce((n, l) => n + scopes[l].chars, 0)).toBe(scopes['authored total'].chars);
     expect(parts.reduce((n, l) => n + scopes[l].files, 0)).toBe(scopes['authored total'].files);
+  });
+});
+
+/**
+ * The header's worked table — the second hand-calibrated copy of the ceilings,
+ * and until now the one with no producer-side pin at all (#1321).
+ *
+ * The gate computes every figure in that table: `anchor()` turns a reading into
+ * the ceiling, `CEILINGS` holds what was committed, and the headroom and
+ * percentage fall out of the two. The table restates all of it in prose beside
+ * the constants, so it rots the moment one moves — which is exactly what #1317
+ * found when it re-anchored the interaction layer and the row went false.
+ *
+ * ⚠️ `headroom` on a row is the headroom **at anchor time** — that row's own
+ * reading against its own ceiling — and is deliberately NOT what the gate prints
+ * today: the tree keeps moving between re-anchorings, and since #1320 the three
+ * rows do not even come from one run (hence the per-row date column). So every
+ * assertion here is internal to the row plus the committed constant, and none of
+ * them reads a live measurement. Comparing a row's headroom against a live run
+ * would be wrong by design, not merely flaky.
+ */
+describe('source token ratchet — the header table is derived from the ceilings, not transcribed beside them', () => {
+  const source = () => readFileSync(join(REPO_ROOT, GATE), 'utf8');
+  const num = (figure: string) => Number(figure.replace(/,/g, ''));
+
+  /**
+   * One worked row of the header table, in its post-#1320 shape:
+   *
+   *   *   interaction layer    37,424 × 1.05 =  39,295 -> ceil 1k ->  40,000  (headroom 2,576, 6.9%)  2026-08-26
+   *
+   * Column widths are free — the rows are hand-aligned and realigning them must
+   * not be a test failure — but every field is captured, the date column
+   * included, so a row that quietly loses one stops parsing instead of passing.
+   */
+  const TABLE_ROW =
+    / \* {2,}(?<label>\S.*?\S) {2,}(?<reading>[\d,]+) × (?<multiplier>\d+\.\d+) = +(?<product>[\d,]+) -> ceil 1k -> +(?<ceiling>[\d,]+) +\(headroom (?<headroom>[\d,]+), (?<pct>\d+\.\d)%\) +(?<date>\d{4}-\d{2}-\d{2})\s*$/;
+
+  interface Row {
+    label: string;
+    reading: number;
+    multiplier: string;
+    product: number;
+    ceiling: number;
+    headroom: number;
+    pct: string;
+    date: string;
+    line: string;
+  }
+
+  function rows(): Row[] {
+    return source()
+      .split('\n')
+      .flatMap((line) => {
+        const found = TABLE_ROW.exec(line);
+        if (!found?.groups) return [];
+        const g = found.groups;
+        return [
+          {
+            label: g.label,
+            reading: num(g.reading),
+            multiplier: g.multiplier,
+            product: num(g.product),
+            ceiling: num(g.ceiling),
+            headroom: num(g.headroom),
+            pct: g.pct,
+            date: g.date,
+            line: line.trim(),
+          },
+        ];
+      });
+  }
+
+  /**
+   * A recorded anchoring run: the command, the date it was run, and the reading
+   * it produced per layer. Since #1320 each table row is dated with the run its
+   * reading came from, so these are what makes that column mean something.
+   */
+  const RUN = / \* +node scripts\/check-source-token-ratchet\.mjs +# (?<date>\d{4}-\d{2}-\d{2}) [\d:]+ UTC, `main` at (?<sha>[0-9a-f]{7,40})\s*$/;
+  const RUN_READINGS = / \* +(?<readings>\S[^~]*~[\d,]+.*)$/;
+
+  function runs(): { date: string; readings: Map<string, number> }[] {
+    const lines = source().split('\n');
+    return lines.flatMap((line, i) => {
+      const found = RUN.exec(line);
+      if (!found?.groups) return [];
+      const next = lines.slice(i + 1, i + 4).find((l) => RUN_READINGS.test(l));
+      const readings = new Map<string, number>();
+      for (const part of (next ? (RUN_READINGS.exec(next)?.groups?.readings ?? '') : '').split('·')) {
+        const pair = /^\s*(?<label>\S.*?)\s+~(?<tokens>[\d,]+)\s*$/.exec(part);
+        if (pair?.groups) readings.set(pair.groups.label, num(pair.groups.tokens));
+      }
+      return [{ date: found.groups.date, readings }];
+    });
+  }
+
+  it('carries exactly one worked row per committed ceiling, in the committed order', () => {
+    // A failure here means the table did not parse, not that a figure is wrong.
+    // The fix is to teach TABLE_ROW the header's new shape — never to relax it,
+    // and never to drop the row: a ceiling with no worked row is a ceiling
+    // nobody can check the arithmetic of.
+    expect(rows().map((row) => row.label)).toEqual([...CEILINGS.keys()]);
+  });
+
+  it('commits exactly `anchor(reading)` on every row', () => {
+    for (const row of rows()) {
+      // The number printed in the row IS the constant committed below it …
+      expect(row.ceiling, row.line).toBe(ceilingOf(row.label));
+      // … and that constant is what `anchor()` makes of the row's own reading.
+      expect(anchor(row.reading), row.line).toBe(ceilingOf(row.label));
+    }
+  });
+
+  it('derives the buffered product, the headroom and the percentage it prints', () => {
+    for (const row of rows()) {
+      // The `× 1.05` in the row is the ruled buffer, not a number of its own.
+      expect(Number(row.multiplier), row.line).toBe(1 + BUFFER);
+      expect(row.product, row.line).toBe(Math.round(row.reading * (1 + BUFFER)));
+      // Headroom and percentage are at ANCHOR time: the row's own reading
+      // against the row's own ceiling, never against a live run.
+      expect(row.headroom, row.line).toBe(row.ceiling - row.reading);
+      expect(row.pct, row.line).toBe(((row.headroom / row.reading) * 100).toFixed(1));
+    }
+  });
+
+  it('dates every row with the anchoring run its reading came from', () => {
+    // #1320 split the table across runs and added this column. It is only worth
+    // the space if it points at something, so the row's reading must be the
+    // reading that run recorded for that layer.
+    const recorded = runs();
+    expect(recorded.length).toBeGreaterThan(0);
+
+    for (const row of rows()) {
+      const run = recorded.find((r) => r.date === row.date);
+      expect(run, `${row.line}\n  no anchoring run is recorded for ${row.date}`).toBeDefined();
+      expect(run?.readings.get(row.label), row.line).toBe(row.reading);
+    }
   });
 });
 
