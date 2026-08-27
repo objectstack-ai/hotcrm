@@ -133,6 +133,11 @@ HotCRM itself ships no email templates: nothing under `src/` authors one, and th
 - **Studio → Developer → Flow Runs** — pick a flow from the list, then read its recent runs and each run's status (*success* / *failed* / *running* / *skipped*). Scheduled flows appear here too: they are flows, so there is no separate scheduled-job history to go looking for.
 - **Studio → Automation → Flows** — the flow roster itself, when you need to check what a flow is wired to do before reading its runs.
 - **Object → audit log** — what changed on the record, who/what made the change.
+- **The run's outcome counters** — each run also records **Records Selected**, **Records Acted On**, **Gate Skips** and **Uncountable Effects**, with a per-node breakdown in **Run Summary**. These are real columns rather than one JSON blob, so you can filter and alert on them. Terminal runs are kept for 30 days.
+
+A green run and a run that did something are not the same thing: a sweep that selects records and then writes none reports *success* exactly like a sweep with nothing to do. **Records Acted On** is what separates them. The alert worth wiring is **Records Selected > 0 and Records Acted On = 0 and Uncountable Effects = 0**, sustained over consecutive runs — that last term is not optional, because a run that reached something the platform cannot count has an *incomplete* acted count rather than a zero one. On runs recorded before these counters existed the fields are empty, and empty is not `0`.
+
+Read one qualifier alongside it, or HotCRM's own sweeps will trip that alert while working perfectly. **Stalled Deal Alert** and **Contract Renewal Reminder** re-select the same records every morning and then gate each one on whether it has already been handled, so a steady state of "everything has already been nudged" also reads as selected-but-not-acted. **Run Summary** tells the two apart: if the run's *Already Nudged?* / *Already Reminded?* lookup found the existing tasks, the gate skips are accounted for and the sweep is healthy; if it found none and the gate closed anyway, the skips are unexplained and the gate is the suspect.
 
 ## Tips for admins
 
