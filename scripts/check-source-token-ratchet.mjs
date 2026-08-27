@@ -73,11 +73,28 @@
  * starts with `//`, `*` or `/*`) mis-handles both halves of rule 1 and 2. The
  * difference is small on today's tree, but the point of a ratchet is that the
  * *same* rule is applied on every future run, so the rule is written down here
- * and pinned by `test/source-token-ratchet.test.ts` — which cross-checks this
- * scanner against the TypeScript compiler's own comment-trivia ranges over
- * every real file in `src/`. TypeScript is a devDependency and stays a
- * *test-time* dependency on purpose: the gate itself must be runnable with
- * nothing installed, and its number must not move because a compiler upgraded.
+ * and pinned by `test/source-token-ratchet.test.ts`, which asserts it against
+ * fixtures for the hazard classes it covers — a comment opener inside a
+ * string, a regex literal carrying quote and comment characters, a trailing
+ * comment after code, a multi-line block, blank-line collapse.
+ *
+ * That suite does **not** cross-check this scanner against a compiler, and
+ * nothing in this repo does: TypeScript 7's npm package exposes no compiler
+ * API, so there is no comment-trivia scanner to borrow. What proved the rule
+ * over the *whole real tree* was a one-off hand run against esbuild — every
+ * first-party `.ts` file minified twice, once as authored and once
+ * comment-stripped, and the two outputs compared byte for byte. That run, its
+ * figures, and the reason it is **not** automated here (`esbuild` is not a
+ * declared dependency of this repo; it arrives under the ObjectStack CLI) are
+ * recorded in that suite's docstring, under the heading
+ * "The stripper's equivalence proof is a hand run, recorded here".
+ *
+ * `typescript` IS a devDependency of this repo, but it belongs to `tsc
+ * --noEmit` and is evidence for none of the above — confirming that the
+ * dependency exists is not confirming this paragraph. The gate itself imports
+ * nothing outside `node:` builtins and `scripts/lib/main-module.mjs`, so it
+ * runs with nothing installed and its number cannot move because a compiler
+ * upgraded.
  *
  * ## Why `chars / 4` and not a tokenizer
  *
