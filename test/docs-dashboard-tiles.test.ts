@@ -1,8 +1,8 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync, readdirSync } from 'node:fs';
+import { join, relative } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
 import { headingLabel } from './helpers/heading-label';
 import stack from '../objectstack.config';
@@ -44,7 +44,7 @@ import stack from '../objectstack.config';
  * bit.
  *
  * Locale note (#685): `dashboards.zh-Hans.mdx` / `.zh-Hant.mdx` were retranslated
- * against the current English page and now sit in `DOC_PAGES` alongside it. The
+ * against the current English page and now sit in `DASHBOARD_PAGES` alongside it. The
  * extraction is locale-agnostic on purpose — the section headings carry each
  * dashboard's own English `label` and the bold tile names are left in English in
  * every locale, so the same two extractions resolve all three files. That is what
@@ -60,12 +60,50 @@ import stack from '../objectstack.config';
  * page). No page had to move a word: every tile the zh prose names was already a
  * real widget, which is why this was filed as a dormant coverage gap rather than
  * a live defect.
+ *
+ * ## What #949 changed: the coverage half, not the pattern half
+ *
+ * #725 closed the PATTERN half and left the COVERAGE half open, in two places
+ * with the same shape. Its self-check probes each word ALREADY IN `TILE_WORDS`,
+ * so it proves those words are readable and structurally cannot notice that a
+ * page uses one the list does not carry. And `DOC_PAGES` was a hand-written
+ * three-entry list, so it proved things about those three pages and could not
+ * notice a fourth page naming tiles. Both are guards that are self-consistent
+ * with their own inputs and silent about reality.
+ *
+ * Measured on `main` @ c772cbe: `content/docs/service/cases.zh-Hant.mdx` wrote
+ * 「磁磚」 where every other Traditional page writes 「磁貼」, so its
+ * `**SLA Violations** 磁磚` was read by nothing — while the character-for-
+ * character identical sentence in `cases.zh-Hans.mdx` WAS a readable reference,
+ * had that page been in scope. It was not: five service pages, three sales
+ * pages and the service index all carried `**Name** tile` references outside
+ * the three-page list.
+ *
+ * Three things changed here, and the third is the one that generalises:
+ *
+ * 1. `TILE_WORDS` gained 「磁磚」 as a BACKSTOP. The page itself was converged to
+ *    「磁貼」 in the same PR — that is the terminology fix — but a vocabulary
+ *    carrying only the spellings currently in use goes blind the moment a
+ *    translator reaches for the other one, so the word stays listed.
+ * 2. The prose rule reads every `.mdx` under `content/docs`, DERIVED from the
+ *    tree rather than listed. A page cannot fall outside the rule by not being
+ *    remembered.
+ * 3. Three rules were added that FAIL on a vocabulary or terminology gap instead
+ *    of being silent about one — the 磁-family subset check, the one-word-per-
+ *    locale check, and the script-parity check below.
  */
 describe('the dashboards docs page lists tiles that exist', () => {
   type AnyRec = Record<string, any>;
   const dashboards: AnyRec[] = (stack as any).dashboards ?? [];
 
-  const DOC_PAGES = [
+  /**
+   * The pages the SECTION rules read — the ones laid out as one
+   * `## <dashboard label>` section per dashboard. Section coverage and the
+   * per-section tile list are both shaped by that layout and can only run here.
+   *
+   * The prose rule does NOT read this list any more; see {@link PROSE_PAGES}.
+   */
+  const DASHBOARD_PAGES = [
     'content/docs/analytics/dashboards.mdx',
     'content/docs/analytics/dashboards.zh-Hans.mdx',
     'content/docs/analytics/dashboards.zh-Hant.mdx',
@@ -101,46 +139,160 @@ describe('the dashboards docs page lists tiles that exist', () => {
    * Entries are plain words: they are joined into an alternation verbatim, so
    * anything carrying regex punctuation would not mean what it reads as.
    */
-  const TILE_WORDS = ['tiles', 'tile', '磁贴', '磁貼'];
+  const TILE_WORDS = ['tiles', 'tile', '磁贴', '磁貼', '磁磚'];
 
   /**
-   * `the **Quiet 90+ Days** tile` / `**Quiet 90+ Days** 磁贴` — anywhere in the
-   * prose, in any locale the page ships (#725).
+   * 「磁磚」 (#949) is in that list as a BACKSTOP, not as a spelling this repo
+   * uses. `service/cases.zh-Hant.mdx` was the one Traditional page writing it,
+   * and that page was converged to 「磁貼」 in the same PR. Converging WITHOUT
+   * listing the word is the trap: 磁磚 is an ordinary Traditional word for a
+   * tile, the next translator reaches for it, and the reference silently stops
+   * being read again. Listing it costs one alternation branch and makes the
+   * relapse visible instead of invisible: the reference goes on being checked,
+   * and the terminology split it reopens is caught by the one-word-per-locale
+   * rule — the backstop keeps a relapse READABLE, that rule keeps it LOUD.
    *
-   * Two details are load-bearing rather than style:
+   * What keeps this list honest in the OTHER direction — a live word nobody
+   * added — is the 磁-family subset rule further down. Neither the self-check
+   * nor this comment can do that job; only a rule that reads the tree can.
+   */
+
+  /**
+   * What must follow a `**Name**` run for it to be a tile reference.
+   *
+   * Two details are load-bearing rather than style, both established by #725:
    *
    * - the separator is `\s*`, not `\s+`. Chinese typography does not put a space
-   *   before the noun, so `\s+` would leave `**Quiet 90+ Days**磁贴` unchecked —
-   *   the same hole this rule just closed, in the spelling the next translator
-   *   is most likely to reach for.
+   *   before the noun, so `\s+` would leave `**Quiet 90+ Days**磁貼` unchecked —
+   *   the same hole that rule closed, in the spelling the next translator is
+   *   most likely to reach for.
    * - the tail guard is a lookahead, not `\b`. A JS word boundary is defined
    *   against `[A-Za-z0-9_]` on BOTH sides, so there is no boundary between the
-   *   last character of 磁贴 and the full stop after it, and `磁贴\b` would never
+   *   last character of 磁貼 and the full stop after it, and `磁貼\b` would never
    *   match anything the zh pages actually write. The lookahead accepts exactly
    *   the strings `tiles?\b` accepted, so the English half is untouched, and
    *   lets the CJK half end on punctuation.
    */
-  const TILE_REFERENCE = new RegExp(
-    String.raw`\*\*([^*\n]+)\*\*\s*(?:${TILE_WORDS.join('|')})(?![A-Za-z0-9_])`,
-    'g',
+  const TILE_TAIL = new RegExp(
+    String.raw`^\s*(?:${TILE_WORDS.join('|')})(?![A-Za-z0-9_])`,
   );
+
+  /**
+   * `the **Quiet 90+ Days** tile` / `**SLA Violations** 磁貼` — anywhere in the
+   * prose, in any locale the page ships (#725).
+   *
+   * ## Why this walks bold RUNS instead of matching one regex (#949)
+   *
+   * Until #949 this was a single regex: `\*\*([^*\n]+)\*\*` followed by the
+   * alternation above. A regex cannot tell an OPENING `**` from a CLOSING one,
+   * and markdown that bolds the noun ITSELF makes that difference matter:
+   *
+   *     - **Pipeline by Stage** is a dashboard **tile** and a chart title
+   *
+   * The engine fails at the real opener (` is a…` is not a tile word), restarts
+   * at the CLOSING `**`, and matches the prose BETWEEN the two bold runs —
+   * reporting a tile named `is a dashboard`. The phantom was invisible while
+   * the rule read three pages that happen not to write that sentence;
+   * `analytics/reports.mdx` and both its translations do write it, so widening
+   * the page set to the tree surfaced three phantoms at once.
+   *
+   * Splitting a line on `**` is what markdown itself does: segments alternate
+   * plain / bold, so an odd index IS a bold run and the segment after it IS
+   * that run's tail. ` is a dashboard ` lands on an even index and can never be
+   * read as a name. Measured over all of `content/docs`, the two extractions
+   * agree on every real reference and differ only by those three phantoms.
+   *
+   * The `i + 1 < parts.length` bound is the unterminated-run guard: a line with
+   * an odd number of `**` ends with a segment nothing closes, and a name with
+   * no closing `**` is not a bold run.
+   */
+  const tileReferences = (text: string): string[] => {
+    const out: string[] = [];
+    for (const line of text.split('\n')) {
+      const parts = line.split('**');
+      for (let i = 1; i + 1 < parts.length; i += 2) {
+        const name = parts[i];
+        // `[^*\n]+` from the old regex, kept: a run holding a stray `*` was
+        // never a name, and splitting per line already excludes `\n`.
+        if (name.trim() === '' || name.includes('*')) continue;
+        if (TILE_TAIL.test(parts[i + 1])) out.push(name.trim());
+      }
+    }
+    return out;
+  };
 
   const titlesOf = (d: AnyRec): Set<string> =>
     new Set((d.widgets ?? []).map((w: AnyRec) => w.title).filter(Boolean));
 
+  /**
+   * Every widget title on every dashboard, in one set.
+   *
+   * ## The scope decision widening the page set forced (#949)
+   *
+   * A reference on a `dashboards` page sits inside a `## <dashboard>` section,
+   * so it COULD be resolved against that dashboard's own widgets — strictly
+   * stronger than the union. A reference on `service/cases.zh-Hant.mdx` cannot:
+   * nothing on that page says which dashboard is meant, so the union is the
+   * only set it can be checked against. Widening therefore forced a choice, and
+   * the choice made here is THE UNION, FOR EVERY PAGE. In order of weight:
+   *
+   * - Per-section narrowing is wrong even on the page that affords it. Running
+   *   prose is exactly where cross-dashboard advice belongs — "compare this
+   *   with the **SLA Violations** tile on Customer Service" is correct writing
+   *   that a narrowed rule would fail, with no way to spell the intent. The
+   *   case this rule was written for, #610's "use the **Slipping Deals** tile
+   *   every Friday", sits in a Tips section belonging to no dashboard at all.
+   * - The strength given up is smaller than it looks, because the strong
+   *   per-dashboard check still runs on the page that affords it: the tile LIST
+   *   rule above resolves `- **Name** — …` against THAT dashboard only. What
+   *   relaxes to the union is running prose, and only running prose.
+   * - One rule with one meaning beats two strengths for the same sentence
+   *   depending on which file it was written in.
+   *
+   * Stated plainly, then: this enforces that a documented tile name exists
+   * SOMEWHERE in the app. That is a notch weaker per reference than what a
+   * three-page rule could have been, applied to the whole docs tree instead of
+   * to three pages.
+   */
   const ALL_TITLES = new Set(dashboards.flatMap((d) => [...titlesOf(d)]));
 
-  const PAGES = DOC_PAGES.map((file) => ({
+  const DASHBOARD_DOCS = DASHBOARD_PAGES.map((file) => ({
     file,
     text: readFileSync(join(REPO_ROOT, file), 'utf8'),
   }));
+
+  /**
+   * Every `.mdx` under `content/docs`, DERIVED — the prose rule's page set.
+   *
+   * Blind spot #1 of #949: this used to be the three-page `DOC_PAGES`, so
+   * `**SLA Violations** tile` on five service pages, `**Tasks Completed** tile`
+   * on three sales pages and `**KB Deflection Rate** tile` on the service index
+   * were checked by nothing. The card's evidence for why that matters is
+   * historical, not hypothetical: `Breached SLA` and `Critical Cases` were
+   * wrong ON SERVICE PAGES and were caught by a human reading them
+   * (#914 / #915 / #917), never by this rule.
+   *
+   * Deriving the set rather than extending the list is the point. A
+   * hand-written page set has the same defect as a hand-written `TILE_WORDS`:
+   * it is self-consistent and cannot report what it omits. Walking the tree
+   * puts the next page that names a tile in scope on the day it is written.
+   */
+  const mdxUnder = (dir: string): string[] =>
+    readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+      const child = join(dir, e.name);
+      return e.isDirectory() ? mdxUnder(child) : e.name.endsWith('.mdx') ? [child] : [];
+    });
+
+  const PROSE_PAGES = mdxUnder(join(REPO_ROOT, 'content/docs'))
+    .sort()
+    .map((abs) => ({ file: relative(REPO_ROOT, abs), text: readFileSync(abs, 'utf8') }));
 
   it('every registered dashboard has a section on the page', () => {
     // Vacuity guard #1, and the case #592 walked into: a dashboard shipped with
     // no section here reads to a user as a dashboard that does not exist, and
     // leaves the per-section rules below with nothing to check for it.
     expect(dashboards.length, 'no dashboards registered — this whole guard is vacuous').toBeGreaterThan(0);
-    for (const { file, text } of PAGES) {
+    for (const { file, text } of DASHBOARD_DOCS) {
       const headings = new Set(sectionsOf(text).map((s) => headingLabel(s.heading)));
       const undocumented = dashboards.map((d) => d.label).filter((l: string) => !headings.has(l));
       expect(
@@ -156,7 +308,7 @@ describe('the dashboards docs page lists tiles that exist', () => {
   for (const d of dashboards) {
     it(`${d.label}: every tile the page lists is a widget on this dashboard`, () => {
       const titles = titlesOf(d);
-      for (const { file, text } of PAGES) {
+      for (const { file, text } of DASHBOARD_DOCS) {
         const section = sectionsOf(text).find((s) => headingLabel(s.heading) === d.label);
         if (!section) continue; // reported by the coverage test above
         const listed = listedTiles(section.body);
@@ -193,31 +345,46 @@ describe('the dashboards docs page lists tiles that exist', () => {
     // the three pages, so deleting a locale from TILE_WORDS keeps it green on
     // the English hits alone — silently reopening the gap this closed. Probe
     // each word directly, spaced and unspaced, with a CJK full stop as the tail
-    // (the character `\b` cannot follow — see TILE_REFERENCE).
-    const reads = (probe: string): string[] =>
-      [...probe.matchAll(TILE_REFERENCE)].map((m) => m[1].trim());
+    // (the character `\b` cannot follow — see TILE_TAIL).
     const unread = TILE_WORDS.flatMap((word) =>
       [' ', ''].map((gap) => `每周都处理一次 **Open Deals**${gap}${word}。`),
-    ).filter((probe) => reads(probe)[0] !== 'Open Deals');
+    ).filter((probe) => tileReferences(probe)[0] !== 'Open Deals');
     // Collected rather than asserted per probe, so a narrowed regex names every
     // spelling it stopped reading in one run instead of only the first.
     expect(
       unread,
-      `TILE_REFERENCE no longer reads:\n  ${unread.join('\n  ')}\n` +
+      `the tile-reference extraction no longer reads:\n  ${unread.join('\n  ')}\n` +
         'A locale whose word for "tile" this regex cannot see is a page whose running prose ' +
         'nobody checks — which is exactly the state the zh pages were in between #685 and #725.',
     ).toEqual([]);
   });
 
-  it('every "**Name** tile" / "**Name** 磁贴" reference names a real tile', () => {
-    const refs = PAGES.flatMap(({ file, text }) =>
-      [...text.matchAll(TILE_REFERENCE)].map((m) => ({ file, name: m[1].trim() })),
+  it('every "**Name** tile" / "**Name** 磁貼" reference names a real tile', () => {
+    // Vacuity guard #3a (#949): the page set is DERIVED, so a walk that stopped
+    // finding files would shrink this rule to nothing while still passing. Pin
+    // a floor well under today's count, and pin that the three pages this rule
+    // started life on are still inside the derived set — a walk that silently
+    // stopped descending would otherwise read as a healthy run.
+    expect(
+      PROSE_PAGES.length,
+      'the content/docs walk found almost no .mdx pages — the tree moved, or the ' +
+        'walk stopped descending. A derived page set that derives nothing is worse ' +
+        'than the hand-written list it replaced.',
+    ).toBeGreaterThan(100);
+    const covered = new Set(PROSE_PAGES.map((pg) => pg.file));
+    expect(
+      DASHBOARD_PAGES.filter((f) => !covered.has(f)),
+      'the derived page set does not contain the dashboards pages this rule was ' +
+        'written for — the walk and DASHBOARD_PAGES disagree about where the docs are.',
+    ).toEqual([]);
+    const refs = PROSE_PAGES.flatMap(({ file, text }) =>
+      tileReferences(text).map((name) => ({ file, name })),
     );
     // Vacuity guard #3. If the prose legitimately stops naming tiles outside the
     // lists, delete this check rather than leaving it green over nothing.
     expect(
       refs.length,
-      `no \`**Name** ${TILE_WORDS.join(' / ')}\` reference found in the dashboards docs — ` +
+      `no \`**Name** ${TILE_WORDS.join(' / ')}\` reference found under content/docs — ` +
         'this check has gone vacuous.',
     ).toBeGreaterThan(0);
     const bad = refs
@@ -228,6 +395,152 @@ describe('the dashboards docs page lists tiles that exist', () => {
       `tile references that do not resolve:\n  ${bad.join('\n  ')}\n` +
         'Name a tile that exists, or drop the advice — a workflow built on a tile ' +
         'nobody can open is worse than no advice.',
+    ).toEqual([]);
+  });
+
+  /**
+   * Every Chinese spelling of "tile" this repo has ever used is 磁 followed by
+   * one character: 磁贴 (Simplified), 磁貼 (Traditional), 磁磚 (the Traditional
+   * variant #949 found). Collecting that bigram off the pages is therefore a
+   * read of what the docs ACTUALLY say, independent of what `TILE_WORDS` says.
+   */
+  const TILE_VARIANT = /磁[\u4e00-\u9fff]/g;
+
+  it('every Chinese tile spelling the docs use is one TILE_WORDS can read (#949)', () => {
+    // ⭐ The half #725's self-check structurally cannot do. That check probes
+    // each word ALREADY IN TILE_WORDS, so it answers "can the extraction read
+    // the words I listed?" and is silent on "did I list the words the pages
+    // use?". 磁磚 lived in the gap between those two questions for as long as
+    // the page existed — the rule was self-consistent with its own vocabulary
+    // and inconsistent with reality.
+    //
+    // This asks the second question against the tree, so a vocabulary gap is a
+    // failing test that NAMES the word and the page instead of a silence.
+    //
+    // Its bound, stated rather than implied: it covers the 磁 family and
+    // nothing else — a translator writing 區塊 or 卡片 is outside it. Measured
+    // over the whole tree the family has exactly three members and no other 磁
+    // word occurs at all, and the script-parity rule below is the half that
+    // does not depend on the family at all.
+    const seen = new Map<string, string[]>();
+    for (const { file, text } of PROSE_PAGES)
+      for (const [word] of text.matchAll(TILE_VARIANT))
+        seen.set(word, [...new Set([...(seen.get(word) ?? []), file])]);
+    // Vacuity guard: a subset check over an empty set passes while proving
+    // nothing, and "no 磁 word anywhere" means the walk or the tree moved.
+    expect(
+      [...seen.keys()],
+      'no 磁-family word found under content/docs — this coverage check has gone vacuous.',
+    ).not.toEqual([]);
+    const unknown = [...seen]
+      .filter(([word]) => !TILE_WORDS.includes(word))
+      .map(([word, files]) => `${word} — in ${files.slice(0, 3).join(', ')}`);
+    expect(
+      unknown,
+      `tile spellings the docs use that TILE_WORDS cannot read:\n  ${unknown.join('\n  ')}\n` +
+        'Add the word to TILE_WORDS: a reference written with a spelling this rule ' +
+        'cannot see is a reference nobody checks. Converging the page onto an existing ' +
+        'spelling is the OTHER half of the fix, never a substitute for this one — the ' +
+        'next translator writes the variant back.',
+    ).toEqual([]);
+  });
+
+  it('each locale spells "tile" exactly one way (#949)', () => {
+    // The backstop in TILE_WORDS keeps a relapse READABLE; it does not keep the
+    // docs CONSISTENT, and the triage on #949 called the inconsistency itself a
+    // user-visible defect: a Traditional reader met 磁磚 on the cases page and
+    // 磁貼 on dashboards, sla-and-escalation and faq — two names for one screen
+    // element. Converging the page fixed that once. Without this rule it
+    // reverts silently: with 磁磚 listed, a translator writing it back leaves
+    // every other rule here green, which is exactly the "nothing sees it"
+    // state the convergence was meant to end.
+    //
+    // Nothing canonical is authored here. The rule is that ONE LOCALE USES ONE
+    // WORD, and which word is whatever that locale already uses — so it holds
+    // the tree to its own convention instead of to a preference written down in
+    // a test, and a deliberate repo-wide re-spelling stays a one-line change.
+    const perLocale = new Map<string, Map<string, string[]>>();
+    for (const { file, text } of PROSE_PAGES) {
+      const locale = /\.(zh-Hans|zh-Hant)\.mdx$/.exec(file)?.[1] ?? 'en';
+      if (!perLocale.has(locale)) perLocale.set(locale, new Map());
+      const spellings = perLocale.get(locale)!;
+      for (const [word] of text.matchAll(TILE_VARIANT))
+        spellings.set(word, [...new Set([...(spellings.get(word) ?? []), file])]);
+    }
+    // Vacuity guard: "every locale uses at most one word" is trivially true of
+    // a tree where no locale uses any, so require the zh locales to be carrying
+    // a spelling at all before believing this passed.
+    for (const locale of ['zh-Hans', 'zh-Hant'])
+      expect(
+        [...(perLocale.get(locale)?.keys() ?? [])],
+        `${locale} pages carry no 磁-family word at all — this check has gone vacuous.`,
+      ).not.toEqual([]);
+    const split = [...perLocale]
+      .filter(([, spellings]) => spellings.size > 1)
+      .map(
+        ([locale, spellings]) =>
+          `${locale} uses ${spellings.size} spellings: ` +
+          [...spellings].map(([w, files]) => `${w} (${files.join(', ')})`).join(' vs '),
+      );
+    expect(
+      split,
+      `one locale, two words for "tile":\n  ${split.join('\n  ')}\n` +
+        'Pick the spelling the rest of that locale already uses and converge the odd ' +
+        'page onto it. Leaving both in circulation shows a reader two names for one ' +
+        'screen element — and the word staying in TILE_WORDS means every other rule ' +
+        'here goes on passing while it happens.',
+    ).toEqual([]);
+  });
+
+  it('both Chinese scripts read the same tile references (#949)', () => {
+    // The family-agnostic half of the coverage question. The zh-Hans and
+    // zh-Hant pages here are character-parallel translations of one another, so
+    // a sentence that is a tile reference in one script is a tile reference in
+    // the other — whatever noun it uses. When a spelling falls outside
+    // TILE_WORDS' reach, that side of the pair loses a reference and this goes
+    // red naming the page, without anyone having had to guess the missing word.
+    //
+    // Measured on `main` @ c772cbe this was RED on exactly one pair —
+    // `service/cases.zh-Han*.mdx` at 1 vs 0, which is 磁磚 — and green on the
+    // five other pairs carrying references.
+    //
+    // Deliberately NOT run against the English page. `service/index.mdx` says
+    // "a **KB Deflection Rate** tile" where both translations write a
+    // parenthetical gloss instead; that is ordinary translation, not drift, and
+    // English-vs-zh equality would report it as a defect. The two Chinese
+    // scripts are held to each other because they really are parallel.
+    const byBase = new Map<string, Map<string, string[]>>();
+    for (const { file, text } of PROSE_PAGES) {
+      const m = /^(.*)\.(zh-Hans|zh-Hant)\.mdx$/.exec(file);
+      if (!m) continue;
+      if (!byBase.has(m[1])) byBase.set(m[1], new Map());
+      byBase.get(m[1])!.set(m[2], tileReferences(text).sort());
+    }
+    const pairs = [...byBase].filter(([, scripts]) => scripts.size === 2);
+    // Vacuity guards: no pairs at all, or pairs that all read zero references,
+    // would compare empty lists and pass forever.
+    expect(
+      pairs.length,
+      'no zh-Hans/zh-Hant page pair found — this check has gone vacuous.',
+    ).toBeGreaterThan(0);
+    expect(
+      pairs.filter(([, s]) => s.get('zh-Hans')!.length > 0).length,
+      'no zh page pair carries a tile reference — this check is comparing empty lists.',
+    ).toBeGreaterThan(0);
+    const drifted = pairs
+      .filter(([, s]) => s.get('zh-Hans')!.join(' | ') !== s.get('zh-Hant')!.join(' | '))
+      .map(
+        ([base, s]) =>
+          `${base}: zh-Hans reads [${s.get('zh-Hans')!.join(', ')}] but ` +
+          `zh-Hant reads [${s.get('zh-Hant')!.join(', ')}]`,
+      );
+    expect(
+      drifted,
+      `the two Chinese scripts do not read the same tile references:\n  ${drifted.join('\n  ')}\n` +
+        'Either one script names a tile the other does not, or one of them spells "tile" ' +
+        'with a word TILE_WORDS cannot read. Check the spelling before editing the prose — ' +
+        'a page that drops out of this rule looks identical to a page that never had a ' +
+        'reference.',
     ).toEqual([]);
   });
 });
