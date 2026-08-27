@@ -88,8 +88,9 @@ import stack from '../objectstack.config';
  * 2. The prose rule reads every `.mdx` under `content/docs`, DERIVED from the
  *    tree rather than listed. A page cannot fall outside the rule by not being
  *    remembered.
- * 3. Two rules were added that FAIL on a vocabulary gap instead of being silent
- *    about one — the 磁-family subset check and the script-parity check below.
+ * 3. Three rules were added that FAIL on a vocabulary or terminology gap instead
+ *    of being silent about one — the 磁-family subset check, the one-word-per-
+ *    locale check, and the script-parity check below.
  */
 describe('the dashboards docs page lists tiles that exist', () => {
   type AnyRec = Record<string, any>;
@@ -147,8 +148,9 @@ describe('the dashboards docs page lists tiles that exist', () => {
    * listing the word is the trap: 磁磚 is an ordinary Traditional word for a
    * tile, the next translator reaches for it, and the reference silently stops
    * being read again. Listing it costs one alternation branch and makes the
-   * relapse visible instead of invisible — the relapse still gets caught as a
-   * reference, and the terminology drift is caught by the script-parity rule.
+   * relapse visible instead of invisible: the reference goes on being checked,
+   * and the terminology split it reopens is caught by the one-word-per-locale
+   * rule — the backstop keeps a relapse READABLE, that rule keeps it LOUD.
    *
    * What keeps this list honest in the OTHER direction — a live word nobody
    * added — is the 磁-family subset rule further down. Neither the self-check
@@ -440,6 +442,53 @@ describe('the dashboards docs page lists tiles that exist', () => {
         'cannot see is a reference nobody checks. Converging the page onto an existing ' +
         'spelling is the OTHER half of the fix, never a substitute for this one — the ' +
         'next translator writes the variant back.',
+    ).toEqual([]);
+  });
+
+  it('each locale spells "tile" exactly one way (#949)', () => {
+    // The backstop in TILE_WORDS keeps a relapse READABLE; it does not keep the
+    // docs CONSISTENT, and the triage on #949 called the inconsistency itself a
+    // user-visible defect: a Traditional reader met 磁磚 on the cases page and
+    // 磁貼 on dashboards, sla-and-escalation and faq — two names for one screen
+    // element. Converging the page fixed that once. Without this rule it
+    // reverts silently: with 磁磚 listed, a translator writing it back leaves
+    // every other rule here green, which is exactly the "nothing sees it"
+    // state the convergence was meant to end.
+    //
+    // Nothing canonical is authored here. The rule is that ONE LOCALE USES ONE
+    // WORD, and which word is whatever that locale already uses — so it holds
+    // the tree to its own convention instead of to a preference written down in
+    // a test, and a deliberate repo-wide re-spelling stays a one-line change.
+    const perLocale = new Map<string, Map<string, string[]>>();
+    for (const { file, text } of PROSE_PAGES) {
+      const locale = /\.(zh-Hans|zh-Hant)\.mdx$/.exec(file)?.[1] ?? 'en';
+      if (!perLocale.has(locale)) perLocale.set(locale, new Map());
+      const spellings = perLocale.get(locale)!;
+      for (const [word] of text.matchAll(TILE_VARIANT))
+        spellings.set(word, [...new Set([...(spellings.get(word) ?? []), file])]);
+    }
+    // Vacuity guard: "every locale uses at most one word" is trivially true of
+    // a tree where no locale uses any, so require the zh locales to be carrying
+    // a spelling at all before believing this passed.
+    for (const locale of ['zh-Hans', 'zh-Hant'])
+      expect(
+        [...(perLocale.get(locale)?.keys() ?? [])],
+        `${locale} pages carry no 磁-family word at all — this check has gone vacuous.`,
+      ).not.toEqual([]);
+    const split = [...perLocale]
+      .filter(([, spellings]) => spellings.size > 1)
+      .map(
+        ([locale, spellings]) =>
+          `${locale} uses ${spellings.size} spellings: ` +
+          [...spellings].map(([w, files]) => `${w} (${files.join(', ')})`).join(' vs '),
+      );
+    expect(
+      split,
+      `one locale, two words for "tile":\n  ${split.join('\n  ')}\n` +
+        'Pick the spelling the rest of that locale already uses and converge the odd ' +
+        'page onto it. Leaving both in circulation shows a reader two names for one ' +
+        'screen element — and the word staying in TILE_WORDS means every other rule ' +
+        'here goes on passing while it happens.',
     ).toEqual([]);
   });
 
