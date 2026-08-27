@@ -39,11 +39,18 @@ import { DemoOrgStaffing } from '../src/sharing/demo-staffing';
 
 type AnyRec = Record<string, any>;
 
-/** Load `objectstack.config` afresh under a given composition value. */
-async function loadStack(value: string | undefined): Promise<AnyRec> {
+/**
+ * Load `objectstack.config` afresh under a given composition value.
+ *
+ * `value` is a plain `string`: every caller names a composition, so an
+ * "unset it instead" branch here would be code no test can reach. The RESTORE
+ * side below is a different question and does keep its guard — the ambient
+ * environment genuinely may not have the variable set, and `delete` and
+ * `= undefined` are not the same thing to `process.env`.
+ */
+async function loadStack(value: string): Promise<AnyRec> {
   const previous = process.env[COMPOSITION_ENV_VAR];
-  if (value === undefined) delete process.env[COMPOSITION_ENV_VAR];
-  else process.env[COMPOSITION_ENV_VAR] = value;
+  process.env[COMPOSITION_ENV_VAR] = value;
   vi.resetModules();
   try {
     return ((await import('../objectstack.config')) as AnyRec).default as AnyRec;
