@@ -63,6 +63,73 @@ type AnyRec = Record<string, any>;
  * happen any more is a roster written from imagination instead of from source,
  * which is what all four instances of this defect have been.
  *
+ * ## The NAME COLUMN is checkable, and the thirteen do not transfer (#1326)
+ *
+ * The rejection above is of the phantom rule at its WIDEST — every bolded run
+ * anywhere in the section — and at that width it stands. Narrowed to the **name
+ * column** of the roster table, the same rule costs nothing: measured across the
+ * ten English pages it reads 55 name cells and raises ZERO false positives.
+ * Every one of the thirteen lives outside that column:
+ *
+ *   - column and filter names (`**Health Score**`, `**Annual Revenue of $10M or
+ *     more**`) sit in the *What it shows* column, never in the first one;
+ *   - the whole-sentence bolds (`**Status is the filter you already have.**`)
+ *     are bullets beneath the table, not rows in it;
+ *   - `service/cases` names its six retired non-views in a bullet list below
+ *     the table, so the page that was RIGHT is the page this rule never reads;
+ *   - and the TAB-label shape — the one the list above tolerates, *"TAB labels
+ *     in the first column where the view name is in a later one"* — is not a
+ *     legitimate exception at all. It was the #1318 defect, in the one page
+ *     cited as carrying it.
+ *
+ * That last line is why the narrow rule is worth having. `list.tabs[].name` was
+ * never read: the object-view switcher labels each tab with the target view's
+ * own `label`, so #1304 dropped those entries' labels, #1316 deleted the key
+ * outright, and #1322 took the invented Tab column off fifteen pages across
+ * three faces. A tab has no second, shorter name, so a roster's first column
+ * has nothing to carry but view names — and holding it to that costs no page
+ * anything, which is the measurement above.
+ *
+ * ## What this adds that coverage cannot (#1326)
+ *
+ * The limitation stated above — "a roster that names every real view AND one
+ * invented one passes" — is not a theoretical corner. It was measured: the
+ * #1318 dev restored `sales/activities.mdx` to its pre-fix bytes on top of the
+ * fix, reinstating the false prose claim and all eight fictional tab names, and
+ * this file ran **4/4 green**. Coverage only ever asks whether each shipped
+ * label appears SOMEWHERE in the section, so a first column written entirely
+ * from imagination passes as long as a later column is right.
+ *
+ * Two rules, two directions, and neither subsumes the other: coverage says no
+ * shipped view may go unnamed, and this one says the name column may name
+ * nothing else. Both are needed — this rule alone would pass a roster that
+ * dropped a view, and coverage alone passed the whole of #1318.
+ *
+ * ### `getting-started/quick-tour` does not collide with this (#1326)
+ *
+ * `docs-quick-tour-navigation.test.ts` reserves **bold** on that page for names
+ * the app really carries, and it failed 3/3 the first time #1324 tried to bold
+ * a view label there — so a rule REQUIRING bold in a name column reads like a
+ * head-on conflict. Measured, it is not one: quick-tour carries no
+ * `## Standard list views` heading at all (its sections are the seven numbered
+ * tour steps), so `rosterOf` returns null for it, vacuity guard #1 does not
+ * demand it be mapped, and it never enters PAGE_OBJECT. The two rules never see
+ * each other's page. No exemption is needed, and adding one would be a lie
+ * about a conflict that does not exist.
+ *
+ * ### Reverse verification (#1326)
+ *
+ * Predicted **red on the pre-#1322 bytes and green on `main`**, and measured as
+ * such — green-on-main alone is what coverage already achieved while the defect
+ * was present, so it proves nothing on its own. Writing
+ * `git show 794d6fe~1:content/docs/sales/activities.mdx` to disk (blob
+ * `3fc1568` against HEAD's `0f7117e`, hashed before the verdict was read) fails
+ * this rule with eight name-column entries — *All*, *Board*, *Schedule*,
+ * *Plan*, *Worklog*, *My Tasks*, *Priority*, *Backlog* — none of which
+ * `crm_task` ships, while the coverage rule beside it stays green. Restored
+ * with `git checkout HEAD -- <path>` and proved by an empty `git diff HEAD`,
+ * the count is 0 across 55 cells.
+ *
  * ## Why only the English face resolves names
  *
  * The translated faces spell view labels in Chinese on most pages
@@ -143,6 +210,37 @@ describe('a docs list-view roster names the views the app ships (#1194)', () => 
   const entryCount = (body: string): number =>
     [...body.matchAll(/^\| *\*\*/gm)].length + [...body.matchAll(/^- +\*\*/gm)].length;
 
+  /** The delimiter row that sits under a markdown table's header (`| --- |`). */
+  const TABLE_DELIMITER = /^\| *:?-{2,}/;
+
+  /**
+   * Body rows of every markdown table inside a roster section — the header row
+   * and the delimiter row under it dropped, so what is left is one line per
+   * roster entry. Detecting the header by the delimiter BELOW it rather than by
+   * its wording is what lets `revenue/contracts` head its first column *Tab*
+   * and `sales/leads` head its own *View* without either being written down.
+   */
+  const tableBodyRows = (body: string): string[] => {
+    const lines = body.split('\n');
+    return lines.filter(
+      (line, i) =>
+        /^\|/.test(line) &&
+        !TABLE_DELIMITER.test(line) &&
+        !(i + 1 < lines.length && TABLE_DELIMITER.test(lines[i + 1])),
+    );
+  };
+
+  /** The name column: the first cell of a table row. */
+  const nameCell = (row: string): string => (row.replace(/^\|/, '').split('|')[0] ?? '').trim();
+
+  /**
+   * The bolded name a name-column cell opens with, or null when it opens with
+   * none. Only the leading run is taken, so the trailing annotations these
+   * pages carry — `**All Accounts** *(the landing view)*` — are not part of the
+   * name being resolved.
+   */
+  const boldName = (cell: string): string | null => /^\*\*(.+?)\*\*/.exec(cell)?.[1].trim() ?? null;
+
   const walkMdxPages = (dir: string): string[] => {
     const root = join(REPO_ROOT, dir);
     if (!existsSync(root)) return [];
@@ -208,6 +306,62 @@ describe('a docs list-view roster names the views the app ships (#1194)', () => 
         'shows), or delete the view. Do not remove the section to get green: it is the section ' +
         'a manager reads to learn which queues exist.',
     ).toEqual([]);
+  });
+
+  it('the name column of every roster names only views the app ships (#1326)', () => {
+    const rosters = Object.entries(PAGE_OBJECT).map(([file, object]) => ({
+      file,
+      object,
+      cells: tableBodyRows(rosterOf(file) ?? '').map(nameCell),
+    }));
+
+    // Vacuity guard #3, and the one this rule needs most: it reads TABLE rows,
+    // and `entryCount` above shows the sections may also be written as bolded
+    // bullets. A page that switched to that shape — or a table this parser
+    // stopped recognising — would hand the rule an empty cell list and pass by
+    // checking nothing, which is precisely the failure #1318 already survived.
+    const unread = rosters.filter((r) => r.cells.length === 0).map((r) => r.file);
+    expect(
+      unread,
+      `roster sections this rule read no name column out of:\n  ${unread.join('\n  ')}\n` +
+        'Every mapped page carried a table roster when this was written. If one is now a ' +
+        'bulleted list, teach tableBodyRows that shape — do not let the page fall out of the ' +
+        'rule silently, which is how a roster written from imagination passes.',
+    ).toEqual([]);
+
+    // De-bolding is not an escape hatch. Every roster row on every page opens
+    // its name column with a bold run today, so a plain-text name column is a
+    // new shape and must be looked at rather than skipped.
+    const unbolded = rosters.flatMap(({ file, cells }) =>
+      cells
+        .filter((cell) => boldName(cell) === null)
+        .map((cell) => `${file}: name column reads ${JSON.stringify(cell)}, unbolded`),
+    );
+    expect(
+      unbolded,
+      `roster rows whose name column is not a bolded name:\n  ${unbolded.join('\n  ')}\n` +
+        'The first column of a roster table is the view’s own name and every page bolds it. ' +
+        'Bold it too, rather than leaving a name this rule cannot check.',
+    ).toEqual([]);
+
+    const phantom = rosters.flatMap(({ file, object, cells }) =>
+      cells
+        .map(boldName)
+        .filter((name): name is string => name !== null)
+        .filter((name) => !(LABELS.get(object) ?? []).includes(name))
+        .map((name) => `${file} names "${name}", and ${object} ships no view with that label`),
+    );
+    expect(
+      phantom,
+      `names in a roster’s name column that no shipped view carries:\n  ${phantom.join('\n  ')}\n` +
+        'The registered view label is the source of truth and the switcher prints it verbatim, ' +
+        'emoji included — `list.tabs[].name` was never read by anything and #1316 deleted the ' +
+        'key. So a tab has no second, shorter name to put here: print the label. If the app ' +
+        'really did lose the view, delete the row rather than renaming it to something findable.',
+    ).toEqual([]);
+
+    const checked = rosters.reduce((n, r) => n + r.cells.length, 0);
+    expect(checked, 'this rule is reading no name cells at all').toBeGreaterThan(40);
   });
 
   it('every translated face carries the same roster, entry for entry', () => {
