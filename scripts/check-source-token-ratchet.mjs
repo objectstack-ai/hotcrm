@@ -189,12 +189,18 @@ export const anchor = (tokens) => Math.ceil((tokens * (1 + BUFFER)) / 1000) * 10
  * last few hundred tokens of precision on a number estimated as `chars / 4`.
  *
  * Only the interaction layer re-anchored on 2026-08-26, and the other two rows
- * are left alone on purpose. On that same run `anchor()` would have set business
- * semantics to 87,000 and the authored total to 141,000 — both ABOVE the
- * ceilings committed below. Re-anchoring either would therefore be a RAISE, and
- * a raise sits on the maintainer floor. So a shrink-only ratchet re-anchors a
- * layer only when `anchor(reading) < ceiling`; when it is greater the committed
- * ceiling is already the tighter of the two and stands.
+ * are left alone on purpose: on that same run `anchor()` of each of their
+ * readings lands ABOVE the ceiling committed below it. One worked line per
+ * declined re-anchoring, in the shape of the table above — reading, its
+ * `anchor()`, and the committed ceiling it would have raised:
+ *
+ *   business semantics  anchor( 82,489) =  87,000  > ceiling  85,000  2026-08-26
+ *   authored total      anchor(133,840) = 141,000  > ceiling 140,000  2026-08-26
+ *
+ * Re-anchoring either would therefore be a RAISE, and a raise sits on the
+ * maintainer floor. So a shrink-only ratchet re-anchors a layer only when
+ * `anchor(reading) < ceiling`; when it is greater the committed ceiling is
+ * already the tighter of the two and stands.
  *
  * Lower them whenever the tree shrinks — that is free and encouraged. Raising
  * one requires a maintainer ruling quoted in the raising PR's body.
