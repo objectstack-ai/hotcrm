@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { BUFFER, CEILINGS } from '../scripts/check-source-token-ratchet.mjs';
 import { REPO_ROOT } from './helpers/repo-root';
 
 /**
@@ -49,13 +50,24 @@ import { REPO_ROOT } from './helpers/repo-root';
  * Against today's committed ceilings:
  *
  *   business semantics  banner ~81k -> band 76,950–85,050 · ceiling 85,000
- *   interaction layer   banner ~39k -> band 37,050–40,950 · ceiling 42,000
+ *   interaction layer   banner ~39k -> band 37,050–40,950 · ceiling 40,000
  *
- * On business semantics the band's upper edge sits just past the ceiling, so the
- * ratchet fails first and the banner cannot be lying while CI is green. On the
- * interaction layer the ceiling's round-up-to-1k left it 7.5% of headroom rather
- * than 5%, so this rule is the tighter of the two and fires ~1k early. Early is
- * the safe direction for a doc guard; late is the one that cost #1187.
+ * On both layers the band's upper edge sits past the committed ceiling, so on
+ * growth the ratchet fails first and the banner cannot be advertising a surface
+ * CI is already configured to reject. Shrinkage is the direction this rule owns
+ * alone: a banner left behind by a shrinking tree breaks no ceiling, and only
+ * the band's lower edge objects. Early is the safe direction for a doc guard;
+ * late is the one that cost #1187.
+ *
+ * ⚠️ That paragraph read the other way round until #1320 re-anchored the
+ * interaction ceiling 42,000 -> 40,000. The table above went on saying 42,000,
+ * and the paragraph went on arguing from it that this rule was the tighter of
+ * the two — false from the moment the constant moved, and noticed by nobody,
+ * because it was the one figure-bearing artefact in this family with no
+ * producer-side pin. That is what the last `describe` below is: every field of
+ * both rows read back off the README banner, the imported `BUFFER` and the
+ * committed `CEILINGS`, so the next re-anchoring reddens this file instead of
+ * quietly falsifying it (#1335).
  *
  * ## The measurement is the gate's, not a copy of it
  *
@@ -80,8 +92,16 @@ import { REPO_ROOT } from './helpers/repo-root';
 describe('the README headline figures match the token gate (#1187)', () => {
   const GATE = 'scripts/check-source-token-ratchet.mjs';
 
-  /** The ruled working buffer, 「给 5% 缓冲」 — the ratchet's own, reused. */
-  const TOLERANCE = 0.05;
+  /**
+   * The ruled working buffer, 「给 5% 缓冲」 — the ratchet's own, imported.
+   *
+   * It said "reused" while being a hand copy (#1335). A literal that claims a
+   * wiring it does not have is worse than a bare literal: the reader who checks
+   * the comment stops looking, so the copy survives every review that was
+   * looking for exactly this. `BUFFER` has been exported since #1334; the value
+   * is unchanged and now has one home.
+   */
+  const TOLERANCE = BUFFER;
 
   type Scope = { label: string; tokens: number; ceiling: number | null };
 
@@ -221,5 +241,159 @@ describe('the README headline figures match the token gate (#1187)', () => {
         'Raising a ceiling takes a maintainer ruling quoted in the raising PR; the banner cannot ' +
         'get there first.',
     ).toEqual([]);
+  });
+  /**
+   * The docstring's band table is derived from the producers, not transcribed
+   * beside them (#1335).
+   *
+   * Every other figure in this file is read from the gate at run time. That
+   * table was the exception: two rows restating the banner, the buffer and both
+   * ceilings, checked by nothing — and it had already rotted. #1320 re-anchored
+   * the interaction ceiling to 40,000, the row went on saying 42,000, and the
+   * paragraph under it went on reasoning from the stale number. Nothing could
+   * have caught that, which is the point: a restated figure whose producer is
+   * one import away is not a smaller version of the #1187 defect, it is the
+   * same one, in the file written to retire it.
+   *
+   * So each field is asserted against where it comes from — the banner figure
+   * against the README (the same `CLAIMS` patterns the cases above read), the
+   * band edges against the imported `BUFFER`, the ceiling against `CEILINGS` —
+   * and the paragraph's own claim, that the ratchet goes red before the band
+   * does, against the two together. None of it is calibrated against today's
+   * constants, so a re-anchoring moves the constant and the row follows it or
+   * fails; the table cannot be quietly wrong again.
+   *
+   * ⚠️ When the table's SHAPE changes, teach `BAND_ROW` the new shape — ⛔ never
+   * relax it to get a run green, and never drop a row: a restated figure with
+   * no worked row is the state this block exists to end. A reflow that stops
+   * the rows parsing is a failure of the first case, not a silent skip.
+   *
+   * ⚠️ Unlike the gate's header pin (`test/source-token-ratchet.test.ts`), this
+   * one reads its OWN file, so no sample row is written out in these comments —
+   * a pasted example would parse as a third row and assert against a layer the
+   * banner never claimed.
+   */
+  describe('the docstring band table is derived from the ceilings, not transcribed beside them', () => {
+    const SELF = 'test/docs-readme-token-figures.test.ts';
+    const source = () => readFileSync(join(REPO_ROOT, SELF), 'utf8');
+    const num = (figure: string) => Number(figure.replace(/,/g, ''));
+    const fmt = (n: number) => n.toLocaleString('en-US');
+
+    /**
+     * One worked row of the band table in the file docstring above: the layer,
+     * the banner figure it quotes, both band edges, and the committed ceiling.
+     * Column widths are free — the rows are hand-aligned and realigning them
+     * must not be a test failure — but every field is captured, so a row that
+     * quietly loses one stops parsing instead of passing.
+     */
+    const BAND_ROW =
+      / \* {2,}(?<label>\S.*?\S) {2,}banner ~(?<banner>[\d.]+)k -> band (?<low>[\d,]+)–(?<high>[\d,]+) · ceiling (?<ceiling>[\d,]+)\s*$/;
+
+    interface Row {
+      label: string;
+      banner: number;
+      low: number;
+      high: number;
+      ceiling: number;
+      line: string;
+    }
+
+    const rows = (): Row[] =>
+      source()
+        .split('\n')
+        .flatMap((line) => {
+          const found = BAND_ROW.exec(line);
+          if (!found?.groups) return [];
+          const g = found.groups;
+          return [
+            {
+              label: g.label,
+              banner: Math.round(parseFloat(g.banner) * 1000),
+              low: num(g.low),
+              high: num(g.high),
+              ceiling: num(g.ceiling),
+              line: line.trim(),
+            },
+          ];
+        });
+
+    const where = (row: Row) => `${SELF} docstring row:\n  ${row.line}\n`;
+
+    it('carries one worked row per headline layer, in the order the banner states them', () => {
+      // A failure here means the table did not parse, not that a figure is
+      // wrong — every case below is trivially true against a table this regex
+      // cannot read, which is the vacuity the rest of this file already guards
+      // against for the README. Teach BAND_ROW the new shape; never drop a row.
+      expect(
+        rows().map((row) => row.label),
+        `the band table in ${SELF}'s docstring no longer states one worked row per headline ` +
+          'layer. Either the table was reformatted — teach BAND_ROW its new shape — or a row ' +
+          'was dropped, which leaves a ceiling restated in prose with nothing checking it.',
+      ).toEqual(CLAIMS.map((claim) => claim.label));
+    });
+
+    it('quotes the banner figure the README actually states', () => {
+      for (const row of rows()) {
+        const claim = CLAIMS.find((c) => c.label === row.label);
+        const [banner] = claim ? stated(claim) : [];
+        expect(
+          banner,
+          `${where(row)}the row works from a banner figure the README does not state ` +
+            `(the README says ~${banner === undefined ? 'nothing' : `${banner / 1000}k`}).`,
+        ).toBe(row.banner);
+      }
+    });
+
+    it('derives both band edges from the imported buffer', () => {
+      for (const row of rows()) {
+        // The same arithmetic the tolerance case above runs, so the table
+        // cannot describe a band this file does not actually enforce.
+        expect(row.low, `${where(row)}the lower band edge is not banner - ${BUFFER * 100}%.`).toBe(
+          Math.round(row.banner * (1 - BUFFER)),
+        );
+        expect(row.high, `${where(row)}the upper band edge is not banner + ${BUFFER * 100}%.`).toBe(
+          Math.round(row.banner * (1 + BUFFER)),
+        );
+      }
+    });
+
+    it('quotes the committed ceiling rather than a copy of it', () => {
+      for (const row of rows()) {
+        const committed = CEILINGS.get(row.label);
+        expect(
+          committed,
+          `${where(row)}'${row.label}' is not a committed ceiling — the gate's CEILINGS keys ` +
+            'moved, so this row describes a layer the ratchet does not ceiling.',
+        ).toBeTypeOf('number');
+        expect(
+          row.ceiling,
+          `${where(row)}the row restates a ceiling the gate no longer commits (it commits ` +
+            `${committed === undefined ? 'none' : fmt(committed)}). This is the #1320 rot, ` +
+            'recurring: correct the row rather than the constant.',
+        ).toBe(committed);
+      }
+    });
+
+    it('still supports the claim the paragraph draws from it', () => {
+      // The prose argues that on growth the ratchet fails before this rule
+      // does, on BOTH layers. That is a relation between two constants, so it
+      // is pinned as one — it was true of one layer only before #1320, and read
+      // as true of both for the eleven days after.
+      //
+      // Deliberately read against the ROW's ceiling rather than the committed
+      // one: the case above already ties the row to `CEILINGS`, so a moved
+      // constant reddens exactly one case with an exact message, and this one
+      // fires next — when the row has been corrected and the paragraph over it
+      // has not. One cause, one red, in the order a maintainer fixes them.
+      for (const row of rows()) {
+        expect(
+          row.high,
+          `${where(row)}the docstring argues the ratchet fails first on growth, but this ` +
+            `layer's band now closes at ${fmt(row.high)}, at or below the committed ceiling ` +
+            `${fmt(row.ceiling)} — so this rule fires first and the paragraph above needs ` +
+            'rewriting, not relaxing.',
+        ).toBeGreaterThan(row.ceiling);
+      }
+    });
   });
 });
