@@ -1458,7 +1458,7 @@ export const esES: TranslationData = {
         open_leads: { title: 'Prospectos abiertos', description: 'Prospectos sin convertir en el embudo' },
         revenue_trend: { title: 'Tendencia de ingresos', description: 'Ingresos cerrados ganados de los últimos 12 meses' },
         revenue_by_industry: { title: 'Ingresos por industria', description: 'Ingresos YTD ganados separados por industria del cliente' },
-        pipeline_by_stage: { title: 'Pipeline por etapa', description: 'Valor de oportunidades abiertas por etapa de venta' },
+        pipeline_by_stage: { title: 'Pipeline por etapa', description: 'Valor de oportunidades abiertas en cada etapa de venta' },
         new_accounts_by_month: { title: 'Cuentas nuevas', description: 'Ritmo de creación de cuentas en los últimos 6 meses' },
         accounts_by_industry: { title: 'Cuentas por sector', description: 'Ingreso anual total y número de cuentas por sector' },
       },

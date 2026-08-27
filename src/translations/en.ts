@@ -1392,7 +1392,7 @@ export const en: TranslationData = {
         open_leads: { title: 'Open Leads', description: 'Unconverted leads in the funnel' },
         revenue_trend: { title: 'Revenue Trend', description: 'Closed-won revenue over the last 12 months' },
         revenue_by_industry: { title: 'Revenue by Industry', description: 'YTD closed-won revenue split by customer industry' },
-        pipeline_by_stage: { title: 'Pipeline by Stage', description: 'Open opportunity value by sales stage' },
+        pipeline_by_stage: { title: 'Pipeline by Stage', description: 'Open opportunity value at each sales stage' },
         new_accounts_by_month: { title: 'New Accounts', description: 'Account creation cadence — last 6 months' },
         accounts_by_industry: { title: 'Accounts by Industry', description: 'Total annual revenue and account count per industry' },
       },
