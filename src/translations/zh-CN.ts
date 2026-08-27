@@ -1387,7 +1387,7 @@ export const zhCN: TranslationData = {
         open_leads: { title: '未转化线索', description: '漏斗中尚未转化的线索' },
         revenue_trend: { title: '收入趋势', description: '过去 12 个月的已成交收入' },
         revenue_by_industry: { title: '行业收入分布', description: '本年度已成交收入按客户行业拆分' },
-        pipeline_by_stage: { title: '阶段管道分布', description: '按销售阶段统计的进行中商机金额' },
+        pipeline_by_stage: { title: '阶段管道分布', description: '按阶段统计的进行中商机金额' },
         new_accounts_by_month: { title: '新增客户', description: '过去 6 个月的客户创建节奏' },
         accounts_by_industry: { title: '按行业统计客户', description: '各行业的年营收总额与客户数' },
       },

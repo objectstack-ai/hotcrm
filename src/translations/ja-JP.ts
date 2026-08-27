@@ -1403,7 +1403,7 @@ export const jaJP: TranslationData = {
         open_leads: { title: 'オープンリード', description: '未変換のリード' },
         revenue_trend: { title: '売上トレンド', description: '過去12か月の成立済み売上' },
         revenue_by_industry: { title: '業種別売上', description: '本年度の成立済み売上を業種別に分類' },
-        pipeline_by_stage: { title: 'ステージ別パイプライン', description: '営業ステージ別のオープン商談金額' },
+        pipeline_by_stage: { title: 'ステージ別パイプライン', description: '各営業ステージのオープン商談金額' },
         new_accounts_by_month: { title: '新規取引先', description: '過去6か月の取引先作成ペース' },
         accounts_by_industry: { title: '業種別取引先', description: '業種ごとの年間売上合計と取引先数' },
       },
