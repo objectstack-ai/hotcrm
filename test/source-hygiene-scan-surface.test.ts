@@ -194,6 +194,83 @@ describe('source hygiene — scan surface', () => {
     );
   });
 
+  it('binds each banner figure to the surface its own checks read (#1339)', () => {
+    // ## What was wrong
+    //
+    // The banner was one sentence, and its opening figure was
+    // `codeFiles.length` — EVERY file type the walk returns — while the clause
+    // that figure sat in named the marker and copyright-header checks, which
+    // read `allTs`: `.ts` only. On `main` when this was written the sentence
+    // said "340 files … plus 3 root .ts file(s) in the marker and header
+    // checks" where those checks were reading 329 files.
+    //
+    // ⚠️ Not a stale constant: the gap WIDENS on its own, because every
+    // non-`.ts` file added anywhere under the scanned trees moves
+    // `codeFiles.length` and leaves `allTs` alone. #1343 added one and took the
+    // gap from 13 to 14 without touching the banner.
+    //
+    // ## Why this fixture is shaped this way
+    //
+    // ⭐ A green run proves nothing here — the gate was green all along, and so
+    // was this file. What the assertion needs is a sandbox where the two
+    // figures DISAGREE, so that printing the wrong one is visible. So the tree
+    // below carries three `.ts` files under the code trees and six non-`.ts`
+    // beside them (four written here, plus the gate and its dependency that
+    // `beforeEach` copies into `scripts/`). Marker/header surface = 3 + the
+    // root `.ts`; walk surface = 9. Print the walk figure in the marker clause
+    // and this case goes red.
+    const gateCopies = [GATE, ...GATE_DEPENDENCIES];
+    // The arithmetic below counts them as non-`.ts`; a `.ts` dependency added
+    // to the gate must move this fixture rather than silently skew it.
+    expect(gateCopies.every((f) => !f.endsWith('.ts'))).toBe(true);
+
+    write('src/objects/account.object.ts', `${HEADER}\nexport const account = 1;\n`);
+    write('test/account.test.ts', `${HEADER}\nexport const spec = 1;\n`);
+    write('e2e/smoke.spec.ts', `${HEADER}\nexport const smoke = 1;\n`);
+
+    // Non-`.ts` under the SAME trees, every one carrying a marker. The size cap
+    // and the byte scan read them; the marker and header checks never open one
+    // — which is the whole reason the two figures may not share a clause, and
+    // is asserted below by the run staying green.
+    write('src/docs/overview.md', `# Overview — ${MARKER}: prose, not judged here\n`);
+    write('scripts/helper.mjs', `export const x = 1; // ${MARKER}: not judged here\n`);
+    write('scripts/live-schema.sh', `#!/usr/bin/env bash\n# ${MARKER}: not judged here\n`);
+    write('test/fixture.json', `{ "note": "${MARKER}: not judged here" }\n`);
+
+    const rootTs = ROOT_TEXT_FILES.filter((f) => f.endsWith('.ts'));
+    const tsUnderCodeTrees = 3;
+    const nonTsUnderCodeTrees = 4 + gateCopies.length;
+
+    const markerHeaderSurface = tsUnderCodeTrees + rootTs.length;
+    const walkSurface = tsUnderCodeTrees + nonTsUnderCodeTrees;
+    // The control that makes the two assertions below discriminating rather
+    // than decorative. If a later change to `beforeEach` ever made these equal,
+    // this case would pass on a mis-bound banner and say nothing.
+    expect(walkSurface).toBeGreaterThan(markerHeaderSurface);
+
+    const { status, output } = runGate();
+    expect(status).toBe(0);
+
+    const bannerLine = (label: string): string =>
+      output.split('\n').find((l) => l.includes(label)) ?? '';
+
+    // ⭐ The card's acceptance: the figure printed beside the marker and header
+    // checks equals what those checks consume — `allTs`, which in this sandbox
+    // is exactly the `.ts` written above plus the root `.ts` whitelist.
+    expect(bannerLine('markers, copyright header')).toContain(`${markerHeaderSurface} .ts file(s)`);
+    expect(bannerLine('markers, copyright header')).not.toContain(`${walkSurface} .ts file(s)`);
+
+    // …and `codeFiles.length` is not deleted, it is re-homed: it is a live
+    // reading, and this is the pair of checks that actually measures that set.
+    expect(bannerLine('size cap, size advisory')).toContain(`${walkSurface} file(s) under`);
+
+    // The gap is real, not a wording difference: six marker-bearing non-`.ts`
+    // files sit inside the walked trees and the marker check opens none of
+    // them. Whatever number that clause prints, this is the set behind it.
+    expect(output).toContain(`\u2713 ${MARKER_CHECK}`);
+    expect(output).toContain('source hygiene clean');
+  });
+
   it('reports a control byte under content/, naming the file, byte and column', () => {
     write('content/docs/guide.mdx', `# Guide\n\nbefore${SOH}after\n`);
 
