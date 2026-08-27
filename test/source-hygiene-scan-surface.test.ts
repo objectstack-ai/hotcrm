@@ -6,6 +6,11 @@ import { copyFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
+import {
+  SCANNED,
+  TEXT_SCANNED,
+  ROOT_TEXT_FILES,
+} from '../scripts/lib/source-hygiene-surface.mjs';
 
 /**
  * `scripts/check-source-hygiene.mjs` scan-surface guard (#818, #838).
@@ -48,41 +53,43 @@ import { REPO_ROOT } from './helpers/repo-root';
  * tooling and without ever writing a control byte into the real tree.
  */
 
+/**
+ * The gate's scan surface, imported from the gate's own producer instead of
+ * copied (#1314).
+ *
+ * All three lists used to be spelled out here by hand, and nothing checked them
+ * against the gate. #1236 made that load-bearing: `rootFixture()` below
+ * branches on `ROOT_TEXT_FILES` to decide which fixtures need a copyright
+ * header, so a root file added to the gate and not to this copy left every case
+ * in this file green while silently never exercising it. The fixtures now
+ * follow the surface.
+ */
+
 /** Trees the code-level checks judge. */
-const CODE_TREES = ['src', 'test', 'e2e', 'scripts'];
+const CODE_TREES = SCANNED;
 
 /** Trees only the control-byte check judges. */
-const TEXT_TREES = ['content', '.changeset', 'docs', '.github', '.claude'];
+const TEXT_TREES = TEXT_SCANNED;
 
-/**
- * Root-level files only the control-byte check judges (#838), mirroring
- * `ROOT_TEXT_FILES` in the gate. The gate requires every one of them to exist —
- * a listed file that vanished would scan nothing — so the sandbox has to
- * materialise all of them before any run.
- */
-const ROOT_TEXT_FILES = [
-  '.gitignore',
-  '.npmrc',
-  '.nvmrc',
-  '.stackblitzrc',
-  'AGENTS.md',
-  'CHANGELOG.md',
-  'CONTRIBUTING.md',
-  'LICENSE',
-  'README.legacy.md',
-  'README.md',
-  'objectstack.config.ts',
-  'objectstack.manifest.json',
-  'package.json',
-  'playwright.config.ts',
-  'tsconfig.json',
-  'vitest.config.ts',
-];
+// `ROOT_TEXT_FILES` — the root-level files only the control-byte check judges
+// (#838) — is used below under the gate's own name. The gate requires every one
+// of them to exist (a listed file that vanished would scan nothing), so the
+// sandbox materialises all of them before any run.
 
 /** Root-level text files the control-byte check deliberately does NOT read. */
 const ROOT_EXCLUDED_FILES = ['pnpm-lock.yaml', 'package-lock.json'];
 
 const GATE = 'scripts/check-source-hygiene.mjs';
+
+/**
+ * First-party modules the gate imports — the sandbox copy needs them too.
+ *
+ * Hand-maintained, and safe to be: an import the sandbox does not carry makes
+ * the spawned gate die with `ERR_MODULE_NOT_FOUND` and takes every case in this
+ * file down with it. It cannot rot quietly, which is exactly the property the
+ * surface lists lacked while they were copied by hand (#1314).
+ */
+const GATE_DEPENDENCIES = ['scripts/lib/source-hygiene-surface.mjs'];
 
 const HEADER = '// Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.';
 
@@ -127,7 +134,10 @@ beforeEach(() => {
   root = mkdtempSync(join(tmpdir(), 'hygiene-surface-'));
   for (const dir of [...CODE_TREES, ...TEXT_TREES]) mkdirSync(join(root, dir), { recursive: true });
   for (const file of ROOT_TEXT_FILES) writeFileSync(join(root, file), rootFixture(file));
-  copyFileSync(join(REPO_ROOT, GATE), join(root, GATE));
+  for (const dep of [GATE, ...GATE_DEPENDENCIES]) {
+    mkdirSync(dirname(join(root, dep)), { recursive: true });
+    copyFileSync(join(REPO_ROOT, dep), join(root, dep));
+  }
 });
 
 afterEach(() => {
@@ -175,7 +185,7 @@ describe('source hygiene — scan surface', () => {
     expect(output).toContain('source hygiene clean');
     // The header names the byte-scan surface, so a reader of a red run can tell
     // which surface produced the finding — trees by name, root files by count.
-    expect(output).toContain('content, .changeset, docs, .github, .claude');
+    expect(output).toContain(TEXT_SCANNED.join(', '));
     expect(output).toContain(`${ROOT_TEXT_FILES.length} root file(s)`);
     // The `.ts` surface names its root count too (#1236) — a widened check that
     // scanned an empty set would print 0 here and pass every case in this file.
