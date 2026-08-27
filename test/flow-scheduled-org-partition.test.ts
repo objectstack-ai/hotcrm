@@ -599,8 +599,9 @@ const ORGANIZATION_NEUTRALITY_EXEMPTIONS: OrganizationNeutralityExemption[] = [
       + 'general case: `sys_user` is a GLOBAL identity carrying no `organization_id` '
       + '(see the header), so an owner holding deals in two organizations would sum '
       + 'both into one snapshot row. That residual is a property of the flow, not of '
-      + 'this guard, and is filed separately rather than quietly fixed here. Narrow on '
-      + 'purpose: a FIFTH column added to this node is a fresh red.',
+      + 'this guard, so it is filed as #1372 rather than quietly fixed from here — this '
+      + 'file\'s surface is the guard. Narrow on purpose: a FIFTH column added to this '
+      + 'node is a fresh red.',
   },
 ];
 
