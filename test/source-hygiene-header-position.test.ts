@@ -247,10 +247,10 @@ describe('source hygiene — copyright header position', () => {
   it('does not judge .d.ts, or anything that is not .ts', () => {
     // `.d.ts` is excluded by the same predicate the marker check uses, and by
     // #1094's own reproduce loop. The rest of the scanned trees genuinely have
-    // no header today — 3 of 5 `.mjs` under scripts/, the `.sh`, the four
-    // `src/docs/*.md` pages — so widening this check would demand headers in
-    // files nobody has decided about. Pinned here so that widening it later is
-    // a deliberate edit to this file rather than an accident.
+    // no header today — some of the `.mjs` under scripts/, plus the `.sh` and
+    // the `src/docs/*.md` pages — so widening this check would demand headers
+    // in files nobody has decided about. Pinned here so that widening it later
+    // is a deliberate edit to this file rather than an accident.
     write('src/types/generated.d.ts', 'export declare const x: number;\n');
     write('scripts/plain.mjs', "import { x } from './x.mjs';\nexport const y = x;\n");
     write('scripts/drifted.mjs', `import './x.mjs';\n${HEADER}\n`);
