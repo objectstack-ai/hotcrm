@@ -12,11 +12,21 @@ HotCRM 的設計目標是**融入你的技術堆疊**，而非取代它。今天
 ## 今天已落地的能力
 
 - 🔌 **平台資料 API**——每個 CRM 物件都可以透過執行階段的 HTTP API 存取，支援 ObjectQL 形態的篩選與欄位選擇。參見 [API 參考](/zh-Hant/docs/customization/api-reference)。
+- 🤖 **面向 AI Agent 的 MCP 端點**（`/api/v1/mcp`）——預設開啟。任何支援 MCP 的用戶端（Claude Code、Claude Desktop、Cursor、VS Code / Copilot、Codex CLI）都能接上這個部署，並透過與人相同的物件、相同的驗證、相同的權限檢查來操作 CRM。身分是自助的——該部署本身就是一台 OAuth 2.1 授權伺服器——而且**每一次呼叫都以呼叫者自己的權限與列級安全執行**，不是共用的服務帳號。各用戶端的複製貼上設定就在應用裡，位於 **Setup → Integrations → Connect an Agent**。
 - 📤 **清單檢視的 CSV / XLSX 匯出**——客戶、聯絡人、潛在客戶、商機與工單的清單檢視各自宣告了 `exportOptions: ['csv', 'xlsx']`。
 - 📥 **試算表匯入**，帶可重複使用的欄位對應，並可先試算。參見[匯入你自己的資料](/zh-Hant/docs/guides/importing-your-data)。
 - ✉️ **對外郵件**——聯絡人上的**傳送郵件**，把郵件排入平台郵件服務。只有出站方向，而且只有在部署設定了傳輸方式時才真的寄得出去。參見[郵件與行事曆](/zh-Hant/docs/guides/email-and-calendar)。
 - 🔔 **應用內通知**——`notify` 流程節點經平台訊息服務送達 Console 鈴鐺。是在 HotCRM 內部，而不是送進 Slack 或某個收件匣。
 - 🧩 **你自己的程式碼**——掛鉤、流程與操作主體在行程內針對同一批物件、同一套權限檢查執行。參見[自訂 › 擴充物件](/zh-Hant/docs/customization/extending-objects)。
+
+### Setup → Integrations 底下今天真正有什麼
+
+這個分組**不是空的**，而填滿它的並不是廠商連接器。有兩個條目由平台自身貢獻 —— HotCRM 兩個都沒有宣告，而且兩個都不需要另行開啟：
+
+- 🤖 **Connect an Agent** —— 上面那個 MCP 端點的入口頁。它給出本環境的端點 URL、面向 Claude / Claude Code / Cursor / VS Code / Copilot / Codex CLI 的一鍵與複製貼上設定、供 CI 與腳本使用的無頭 **API keys** 通道，以及一份可下載的 `SKILL.md`——它教會任何支援 skill 的 agent 如何在本環境裡幹活。
+- 🗄️ **Datasources** —— 註冊一個*外部*資料庫，把它的資料表同步進來當作物件使用，與本應用自己的物件並列。全新安裝時這裡已經列出部署自己的儲存，名為 **Default**，並帶 **Test** 與 **Sync objects** 兩個操作。
+
+兩者都受 `manage_platform_settings` 權限管轄 —— 那是分組自身的門，兩個條目都沒有把它收緊或放寬 —— 所以一般業務看不到它們。
 
 ## 內建連接器（尚未落地）
 

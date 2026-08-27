@@ -12,11 +12,21 @@ HotCRM is designed to **fit into your stack**, not replace it. Today it does tha
 ## What ships today
 
 - 🔌 **The platform data API** — every CRM object is reachable over the runtime's HTTP API, with ObjectQL-shaped filters and field selection. See [API reference](/docs/customization/api-reference).
+- 🤖 **MCP endpoint for AI agents** (`/api/v1/mcp`) — on by default. Any MCP-capable client (Claude Code, Claude Desktop, Cursor, VS Code / Copilot, Codex CLI) connects to this deployment and works the CRM through the same objects, the same validation and the same permission checks a person gets. Identity is self-serve — the deployment is its own OAuth 2.1 authorization server — and **every call runs under the caller's own permissions and row-level security**, not a shared service account. The copy-paste setup for each client lives in the app, under **Setup → Integrations → Connect an Agent**.
 - 📤 **CSV / XLSX export** from a list view — the account, contact, lead, opportunity and case list views each declare `exportOptions: ['csv', 'xlsx']`.
 - 📥 **Spreadsheet import** with reusable column mappings and a dry-run first. See [Import your own data](/docs/guides/importing-your-data).
 - ✉️ **Outbound email** — **Send Email** on a contact, queued through the platform email service. Outbound only, and it leaves the building only if the deployment configures a transport. See [Email & Calendar](/docs/guides/email-and-calendar).
 - 🔔 **In-app notification** — the `notify` flow node delivers through the platform messaging service to the Console bell. Inside HotCRM, not into Slack or an inbox.
 - 🧩 **Your own code** — hooks, flows and action bodies run in-process against the same objects and the same permission checks. See [Customization › Extending Objects](/docs/customization/extending-objects).
+
+### What is actually under Setup → Integrations
+
+The group is **not empty**, and what fills it is not a vendor connector. Two entries are contributed by the platform itself — HotCRM declares neither, and neither has to be switched on:
+
+- 🤖 **Connect an Agent** — the front door for the MCP endpoint above. It shows this environment's endpoint URL, one-click and copy-paste setup for Claude, Claude Code, Cursor, VS Code / Copilot and Codex CLI, a headless **API keys** route for CI and scripts, and a downloadable `SKILL.md` that teaches any skills-capable agent how to work with this environment.
+- 🗄️ **Datasources** — register an *external* database and sync its tables in as objects, alongside the app's own. A fresh install already lists the deployment's own store here as **Default**, with **Test** and **Sync objects** actions.
+
+Both sit behind the `manage_platform_settings` permission — the group's gate, which neither entry narrows or widens — so a sales rep does not see either one.
 
 ## Built-in connectors (not shipped yet)
 
