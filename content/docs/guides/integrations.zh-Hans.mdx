@@ -12,11 +12,21 @@ HotCRM 的设计目标是**融入你的技术栈**，而非取代它。今天它
 ## 今天已落地的能力
 
 - 🔌 **平台数据 API**——每个 CRM 对象都可以通过运行时的 HTTP API 访问，支持 ObjectQL 形态的筛选与字段选择。参见 [API 参考](/zh-Hans/docs/customization/api-reference)。
+- 🤖 **面向 AI Agent 的 MCP 端点**（`/api/v1/mcp`）——默认开启。任何支持 MCP 的客户端（Claude Code、Claude Desktop、Cursor、VS Code / Copilot、Codex CLI）都能接上这个部署，并通过与人相同的对象、相同的校验、相同的权限检查来操作 CRM。身份是自助的——该部署本身就是一台 OAuth 2.1 授权服务器——而且**每一次调用都以调用者自己的权限与行级安全执行**，不是共享的服务账号。各客户端的复制粘贴配置就在应用里，位于 **设置 → 集成 → 连接智能体**。
 - 📤 **列表视图的 CSV / XLSX 导出**——客户、联系人、线索、商机与工单的列表视图各自声明了 `exportOptions: ['csv', 'xlsx']`。
 - 📥 **电子表格导入**，带可复用的列映射，并可先试运行。参见[导入你自己的数据](/zh-Hans/docs/guides/importing-your-data)。
 - ✉️ **对外邮件**——联系人上的**发送邮件**，把邮件排入平台邮件服务。只有出站方向，而且只有在部署配置了传输方式时才真的发得出去。参见[邮件与日历](/zh-Hans/docs/guides/email-and-calendar)。
 - 🔔 **应用内通知**——`notify` 流程节点经平台消息服务送达 Console 铃铛。是在 HotCRM 内部，而不是送进 Slack 或某个收件箱。
 - 🧩 **你自己的代码**——钩子、流程与操作体在进程内针对同一批对象、同一套权限校验运行。参见[自定义 › 扩展对象](/zh-Hans/docs/customization/extending-objects)。
+
+### 设置 → 集成 下面今天真正有什么
+
+这个分组**不是空的**，而填满它的并不是厂商连接器。有两个条目由平台自身贡献 —— HotCRM 两个都没有声明，而且两个都不需要另行开启：
+
+- 🤖 **连接智能体**（Connect an Agent）—— 上面那个 MCP 端点的入口页。它给出本环境的端点 URL、面向 Claude / Claude Code / Cursor / VS Code / Copilot / Codex CLI 的一键与复制粘贴配置、供 CI 与脚本使用的无头 **API 密钥**通道，以及一份可下载的 `SKILL.md`——它教会任何支持 skill 的 agent 如何在本环境里干活。
+- 🗄️ **数据源**（Datasources）—— 注册一个*外部*数据库，把它的表同步进来当作对象使用，与本应用自己的对象并列。全新安装时这里已经列出部署自己的存储，名为 **Default**，并带 **Test** 与 **Sync objects** 两个操作。
+
+两者都受 `manage_platform_settings` 权限管辖 —— 那是分组自身的门，两个条目都没有把它收紧或放宽 —— 所以普通销售看不到它们。
 
 ## 内置连接器（尚未落地）
 
