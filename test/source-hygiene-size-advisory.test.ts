@@ -6,6 +6,11 @@ import { copyFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
+import {
+  SCANNED,
+  TEXT_SCANNED,
+  ROOT_TEXT_FILES,
+} from '../scripts/lib/source-hygiene-surface.mjs';
 
 /**
  * `scripts/check-source-hygiene.mjs` size-ADVISORY guard (#1287).
@@ -42,33 +47,38 @@ import { REPO_ROOT } from './helpers/repo-root';
  * capturing stderr is what keeps it from adding more of them.
  */
 
+/**
+ * The gate's scan surface, imported from the gate's own producer instead of
+ * copied (#1314).
+ *
+ * All three lists used to be spelled out here by hand, and nothing checked them
+ * against the gate. #1236 made that load-bearing: `rootFixture()` below
+ * branches on `ROOT_TEXT_FILES` to decide which fixtures need a copyright
+ * header, so a root file added to the gate and not to this copy left every case
+ * in this file green while silently never exercising it. The fixtures now
+ * follow the surface.
+ */
+
 /** Trees the gate's code-level checks — including the cap and the advisory — judge. */
-const CODE_TREES = ['src', 'test', 'e2e', 'scripts'];
+const CODE_TREES = SCANNED;
 
 /** Trees only the control-byte check judges; created so the gate does not abort. */
-const TEXT_TREES = ['content', '.changeset', 'docs', '.github', '.claude'];
+const TEXT_TREES = TEXT_SCANNED;
 
-/** Root files the gate requires to exist before it will run at all. */
-const ROOT_TEXT_FILES = [
-  '.gitignore',
-  '.npmrc',
-  '.nvmrc',
-  '.stackblitzrc',
-  'AGENTS.md',
-  'CHANGELOG.md',
-  'CONTRIBUTING.md',
-  'LICENSE',
-  'README.legacy.md',
-  'README.md',
-  'objectstack.config.ts',
-  'objectstack.manifest.json',
-  'package.json',
-  'playwright.config.ts',
-  'tsconfig.json',
-  'vitest.config.ts',
-];
+// `ROOT_TEXT_FILES` — the root files the gate requires to exist before it will
+// run at all — is used below under the gate's own name.
 
 const GATE = 'scripts/check-source-hygiene.mjs';
+
+/**
+ * First-party modules the gate imports — the sandbox copy needs them too.
+ *
+ * Hand-maintained, and safe to be: an import the sandbox does not carry makes
+ * the spawned gate die with `ERR_MODULE_NOT_FOUND` and takes every case in this
+ * file down with it. It cannot rot quietly, which is exactly the property the
+ * surface lists lacked while they were copied by hand (#1314).
+ */
+const GATE_DEPENDENCIES = ['scripts/lib/source-hygiene-surface.mjs'];
 
 /** The gate's own numbers, restated here so a change to either side is loud. */
 const CAP = 100 * 1024;
@@ -99,7 +109,10 @@ beforeEach(() => {
   root = mkdtempSync(join(tmpdir(), 'hygiene-advisory-'));
   for (const dir of [...CODE_TREES, ...TEXT_TREES]) mkdirSync(join(root, dir), { recursive: true });
   for (const file of ROOT_TEXT_FILES) writeFileSync(join(root, file), rootFixture(file));
-  copyFileSync(join(REPO_ROOT, GATE), join(root, GATE));
+  for (const dep of [GATE, ...GATE_DEPENDENCIES]) {
+    mkdirSync(dirname(join(root, dep)), { recursive: true });
+    copyFileSync(join(REPO_ROOT, dep), join(root, dep));
+  }
 });
 
 afterEach(() => {

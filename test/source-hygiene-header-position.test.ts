@@ -6,6 +6,11 @@ import { copyFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
+import {
+  SCANNED,
+  TEXT_SCANNED,
+  ROOT_TEXT_FILES,
+} from '../scripts/lib/source-hygiene-surface.mjs';
 
 /**
  * `scripts/check-source-hygiene.mjs` copyright-header check (#1094).
@@ -32,49 +37,49 @@ import { REPO_ROOT } from './helpers/repo-root';
  * TREES each check reads; this one pins what the header check DECIDES.
  */
 
+/**
+ * The gate's scan surface, imported from the gate's own producer instead of
+ * copied (#1314).
+ *
+ * All three lists used to be spelled out here by hand, and nothing checked them
+ * against the gate. #1236 made that load-bearing: `rootFixture()` below
+ * branches on `ROOT_TEXT_FILES` to decide which fixtures need a copyright
+ * header, so a root file added to the gate and not to this copy left every case
+ * in this file green while silently never exercising it. The fixtures now
+ * follow the surface.
+ *
+ * ⚠️ This suite spelled the same three lists a THIRD way — `REQUIRED_TREES` and
+ * `REQUIRED_ROOT_FILES` rather than the sibling suites' `*_TREES` /
+ * `ROOT_TEXT_FILES` — so a grep for a constant name found two of the three
+ * copies. The local names are kept because they say what this file needs them
+ * for; only the values are now derived.
+ */
+
 /** Every tree the gate insists on finding, or it exits before running a check. */
-const REQUIRED_TREES = [
-  'src',
-  'test',
-  'e2e',
-  'scripts',
-  'content',
-  '.changeset',
-  'docs',
-  '.github',
-  '.claude',
-];
+const REQUIRED_TREES = [...SCANNED, ...TEXT_SCANNED];
 
 /**
  * Root-level files the gate insists on finding, for the same reason (#838).
  * The header check does not judge them — they are outside `allTs`, which is
  * derived from `SCANNED` — but the gate exits before any check runs if one is
- * absent, so this sandbox has to materialise them. Kept in step with
- * `ROOT_TEXT_FILES` in the gate.
+ * absent, so this sandbox has to materialise them.
  */
-const REQUIRED_ROOT_FILES = [
-  '.gitignore',
-  '.npmrc',
-  '.nvmrc',
-  '.stackblitzrc',
-  'AGENTS.md',
-  'CHANGELOG.md',
-  'CONTRIBUTING.md',
-  'LICENSE',
-  'README.legacy.md',
-  'README.md',
-  'objectstack.config.ts',
-  'objectstack.manifest.json',
-  'package.json',
-  'playwright.config.ts',
-  'tsconfig.json',
-  'vitest.config.ts',
-];
+const REQUIRED_ROOT_FILES = ROOT_TEXT_FILES;
 
 /** The four code trees the header check judges — all of them, not just `src/`. */
-const CODE_TREES = ['src', 'test', 'e2e', 'scripts'];
+const CODE_TREES = SCANNED;
 
 const GATE = 'scripts/check-source-hygiene.mjs';
+
+/**
+ * First-party modules the gate imports — the sandbox copy needs them too.
+ *
+ * Hand-maintained, and safe to be: an import the sandbox does not carry makes
+ * the spawned gate die with `ERR_MODULE_NOT_FOUND` and takes every case in this
+ * file down with it. It cannot rot quietly, which is exactly the property the
+ * surface lists lacked while they were copied by hand (#1314).
+ */
+const GATE_DEPENDENCIES = ['scripts/lib/source-hygiene-surface.mjs'];
 
 const HEADER = '// Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.';
 
@@ -93,7 +98,10 @@ beforeEach(() => {
   root = mkdtempSync(join(tmpdir(), 'hygiene-header-'));
   for (const dir of REQUIRED_TREES) mkdirSync(join(root, dir), { recursive: true });
   for (const file of REQUIRED_ROOT_FILES) writeFileSync(join(root, file), rootFixture(file));
-  copyFileSync(join(REPO_ROOT, GATE), join(root, GATE));
+  for (const dep of [GATE, ...GATE_DEPENDENCIES]) {
+    mkdirSync(dirname(join(root, dep)), { recursive: true });
+    copyFileSync(join(REPO_ROOT, dep), join(root, dep));
+  }
 });
 
 afterEach(() => {
@@ -177,7 +185,7 @@ describe('source hygiene — copyright header position', () => {
     const { status, output } = runGate();
     expect(status).toBe(1);
     for (const tree of CODE_TREES) expect(output).toContain(`${tree}/drifted.ts:2`);
-    expect(output).toContain('4 violation(s)');
+    expect(output).toContain(`${CODE_TREES.length} violation(s)`);
   });
 
   it('reports a file with no header at all, and says so in those words', () => {
