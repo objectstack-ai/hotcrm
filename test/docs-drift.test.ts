@@ -27,7 +27,8 @@ import stack from '../objectstack.config';
  *   docs-src-tree-paths.test.ts     `src/<dir>/` paths a doc names or draws
  *   docs-runnable-samples.test.ts   samples a reader runs: documented agent
  *                                   names (#606), the action example (#813)
- *   docs-dashboard-tiles.test.ts    the dashboards page lists tiles that exist
+ *   docs-dashboard-tiles.test.ts    the dashboards page lists tiles that exist,
+ *                                   and no docs page names one that does not (#949)
  *   docs-locale-callouts.test.ts    translated pages keep the English callouts
  *   docs-retired-personas.test.ts   product prose does not re-personify the
  *                                   retired copilots (#612)

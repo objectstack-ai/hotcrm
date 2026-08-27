@@ -164,7 +164,7 @@ description: 客戶支援工單——主題、優先順序、狀態、解決方�
 
 本節原先列的七個名字裡，有六個根本不是檢視：
 
-- **Critical Cases** 與 **Breached SLA** 是指標磁磚，不是列表。[服務概覽](/zh-Hant/docs/analytics/dashboards)（Service Overview；該儀表板自身的標題是 **Customer Service**）上有 *Critical Cases*（未結且 Critical）和 **SLA Violations**（`is_sla_violated` 為真）兩個磁磚；本應用裡沒有任何一個列表檢視按違約過濾。真要有一份能逐條處理的清單，用 **Escalated Cases**——SLA 掃描會把它標記的每一條都升級，所以每次違約都會落到那裡。
+- **Critical Cases** 與 **Breached SLA** 是指標磁貼，不是列表。[服務概覽](/zh-Hant/docs/analytics/dashboards)（Service Overview；該儀表板自身的標題是 **Customer Service**）上有 *Critical Cases*（未結且 Critical）和 **SLA Violations**（`is_sla_violated` 為真）兩個磁貼；本應用裡沒有任何一個列表檢視按違約過濾。真要有一份能逐條處理的清單，用 **Escalated Cases**——SLA 掃描會把它標記的每一條都升級，所以每次違約都會落到那裡。
 - **Service Board** 不是本應用裡任何東西的名字。看板叫 **Service Workflow**，頁籤上寫的也是這個名字。
 - **Cases Due Today**、**Recently Closed** 與 **By Account** 以任何形式都不存在：沒有任何檢視按「截止日期 = 今天」或 `closed_date` 過濾，`crm_case` 上也沒有任何分組檢視。
 
@@ -209,7 +209,7 @@ Activity 標籤頁是工單上發生過什麼的唯一可信來源。它將四�
 
 ## 給服務客服的提示
 
-- ✅ **及時分流來訪工單**——但要知道，應用裡沒有任何東西在盯著這件事。不存在可供違反的首次回應目標：**First Response Date** 只是記錄在工單上，從不與任何東西比對，`case_metrics` 裡沒有首次回應這個度量，所以沒有任何報表或儀表板磁磚報它，也沒有任何流程為它告警。這裡的「及時」是團隊自己的承諾，不是應用跑著的一隻時鐘。
+- ✅ **及時分流來訪工單**——但要知道，應用裡沒有任何東西在盯著這件事。不存在可供違反的首次回應目標：**First Response Date** 只是記錄在工單上，從不與任何東西比對，`case_metrics` 裡沒有首次回應這個度量，所以沒有任何報表或儀表板磁貼報它，也沒有任何流程為它告警。這裡的「及時」是團隊自己的承諾，不是應用跑著的一隻時鐘。
 - ✅ **當你確實被阻塞時使用 "Waiting on Customer"**——但它**不會停止 SLA 計時**，任何設定下都不會。`sla_due_date` 只寫一次，從不重算；每小時的 `case_sla_monitor` 掃描收的是狀態既不是 *Resolved* 也不是 *Closed* 的未結工單，而 *Waiting on Customer* 不在這份排除名單上。一張掛在客戶那邊的工單照樣把時鐘走完，照樣被標記 **SLA Violated** 並按時升級——四個優先順序都是如此。
 - ✅ **始終寫下解決方案**——這是強制的，但也會為未來的工單提供知識庫素材。
 - ✅ **關聯一個任務**——當工單需要未來跟進時（例如"7 天後驗證修復是否有效"）。
@@ -217,7 +217,7 @@ Activity 標籤頁是工單上發生過什麼的唯一可信來源。它將四�
 
 ## 給服務經理的提示
 
-- ✅ 沒有 **Breached SLA** 這個檢視可看，也沒有什麼紅色徽章——工單列表上唯一的顏色規則是 *All Cases* 的列底色，它鍵在**優先順序**上，不是違約。每天改看 **Escalated Cases**，數量則看服務概覽上的 **SLA Violations** 磁磚。
+- ✅ 沒有 **Breached SLA** 這個檢視可看，也沒有什麼紅色徽章——工單列表上唯一的顏色規則是 *All Cases* 的列底色，它鍵在**優先順序**上，不是違約。每天改看 **Escalated Cases**，數量則看服務概覽上的 **SLA Violations** 磁貼。
 - ✅ 用看板開每日站會——它叫 **Service Workflow**，在工單列表的 **Service Workflow** 頁籤上。
 - ✅ 輔導那些 **Resolution Time** 趨勢上升的客服——但這個趨勢只能從工單本身讀出來。不存在什麼客服排行榜：`case_metrics` 這個資料集（服務側每一張報表和每一個儀表板部件都建在它上面）只宣告了 Status、Priority、Origin、Type、Created 五個維度，所以分析層裡沒有任何東西能按客服分組。
 
