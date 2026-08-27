@@ -230,7 +230,18 @@ export const CaseViews = defineView({
       sort: [{ field: 'priority_rank', order: 'desc' }],
     },
 
-    /** SLA-at-risk: open, high/urgent priority cases needing attention */
+    /**
+     * SLA-at-risk: open cases at High or Critical priority needing attention.
+     *
+     * ⚠️ Names what the filter below actually selects. This read
+     * "high/urgent" until #1333 — but `crm_case.priority` is
+     * low/medium/high/critical (`case.object.ts:138-142`) and has NO `urgent`;
+     * that value belongs to `crm_task`. The mirror-image crossing already
+     * shipped a real defect once (`task.view.ts:35` — Case colour keys on the
+     * task view left every urgent and normal row uncoloured), and the
+     * direction that cost something was the one where the comment was
+     * believed. Two overlapping-but-unequal vocabularies: keep them apart.
+     */
     sla_at_risk: {
       name: 'sla_at_risk',
       type: 'grid',
