@@ -57,6 +57,10 @@
     "@objectstack/formula": "17.1.0",
     "@playwright/test": "^1.61.1",
     "@vitest/coverage-v8": "^4.1.10",
+    "fumadocs-core": "16.9.3",
+    "remark": "^15.0.1",
+    "remark-frontmatter": "^5.0.0",
+    "remark-mdx": "^3.1.1",
     "tsx": "^4.23.1",
     "typescript": "^7.0.2",
     "vitest": "^4.1.9"
