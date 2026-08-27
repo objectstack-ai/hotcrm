@@ -8,14 +8,16 @@ import * as dashboards from './src/dashboards/index.js';
 import * as datasets from './src/datasets/index.js';
 import * as reports from './src/reports/index.js';
 import * as mappings from './src/mappings/index.js';
-import { allFlows } from './src/flows/index.js';
+import { allFlows, DemoBootstrapFlow } from './src/flows/index.js';
 import { allSkills } from './src/skills/index.js';
 import * as profiles from './src/profiles/index.js';
+import { SystemAdminProfile } from './src/profiles/index.js';
+import { TenantAdminProfile } from './src/profiles/tenant-admin.profile.js';
 import * as apps from './src/apps/index.js';
 import * as views from './src/views/index.js';
 import * as pages from './src/pages/index.js';
 import * as translations from './src/translations/index.js';
-import { CrmSeedData } from './src/data/index.js';
+import { resolveComposition, seedDataFor } from './src/data/index.js';
 
 import {
   AccountTeamSharingRule, TerritorySharingRules,
@@ -26,6 +28,64 @@ import {
 } from './src/sharing/index.js';
 
 import { allHooks } from './src/hooks/index.js';
+
+// ─── Which SHAPE of HotCRM this build assembles (#1361) ───────────────────
+//
+// `default` (unset, or `HOTCRM_COMPOSITION=default`) is the community app and
+// is byte-for-byte what it always was — every field below that a composition
+// touches falls through to the same value it had before this knob existed.
+// `HOTCRM_COMPOSITION=saas` assembles the shape a multi-org operator deploys on
+// the enterprise runtime under a walled tenancy posture; an unrecognised value
+// throws here rather than quietly assembling the wrong app (see
+// `resolveComposition`).
+//
+// The knob is deliberately COMPOSITION-time and uniform. The platform's
+// `seed-replayer` gives every newly founded organization its own private copy
+// of the registered dataset union (maintainer ruling 2026-08-27,
+// objectstack#12701: 「种子也不应该是全局的呀 …只是参考呀，租户要自己删除呀」),
+// but it has no per-family or per-tenant selection and none is chartered — so
+// WHAT gets replayed is decided once, here, for every tenant alike.
+//
+// Three things change, and nothing else. There is no runtime branch anywhere in
+// `src/`, and no enterprise package is imported: an artifact built either way
+// runs on the community runtime.
+//
+//  1. `data` — the catalogue family only. See `SaasTenantSeedData`.
+//  2. `flows` — `demo_bootstrap` is dropped. It is a DEMO sweep (its own header
+//     says so) and under the wall it is actively wrong, not merely useless: it
+//     runs `runAs: 'system'`, and a system context is the one context the
+//     organization predicate does not apply to. Measured on a real engine under
+//     `OS_TENANCY_POSTURE=isolated` — the sweep's own shape, a system-context
+//     select of ownerless rows followed by an owner stamp, sees rows in EVERY
+//     organization and writes org A's first user onto org B's row. That is an
+//     identity crossing the wall. `test/saas-composition.test.ts` reproduces it
+//     rather than asserting it in prose. (It is also redundant in this shape:
+//     the catalogue's `crm_product` declares no `owner_id`, so a catalog-only
+//     tenant has nothing ownerless for the sweep to claim.)
+//     `demo-staffing` needs no exclusion — `src/sharing/demo-staffing.ts` is
+//     deliberately not exported from `src/sharing/index.js` and not registered
+//     in any composition (#640, pinned by `test/demo-staffing.test.ts`).
+//  3. `permissions` — `system_admin` is replaced by `tenant_admin`, which holds
+//     org-scoped `manage_org_users` instead of platform-scope `manage_users`.
+//     Read `src/profiles/tenant-admin.profile.ts` for the full audit, including
+//     what `view_all_data` / `modify_all_data` mean under the wall.
+const composition = resolveComposition();
+const isSaas = composition === 'saas';
+
+/**
+ * Flows this composition registers.
+ *
+ * Filtered by IDENTITY, not by name string: renaming `demo_bootstrap` must not
+ * silently turn the exclusion into a no-op that ships the sweep to every
+ * tenant. `test/saas-composition.test.ts` additionally asserts the filter
+ * removed exactly one flow, so a refactor that makes it match nothing is red.
+ */
+const compositionFlows = isSaas ? allFlows.filter((flow) => flow !== DemoBootstrapFlow) : allFlows;
+
+/** Permission sets this composition registers — same identity discipline. */
+const compositionPermissions = isSaas
+  ? [...Object.values(profiles).filter((set) => set !== SystemAdminProfile), TenantAdminProfile]
+  : Object.values(profiles);
 
 export default defineStack({
   manifest: {
@@ -124,9 +184,9 @@ export default defineStack({
   // spreadsheet loads without per-column mapping by hand. Templates:
   // `assets/import-templates/`.
   mappings: Object.values(mappings),
-  flows: allFlows,
+  flows: compositionFlows,
   skills: allSkills,
-  permissions: Object.values(profiles),
+  permissions: compositionPermissions,
   apps: Object.values(apps),
   views: Object.values(views),
   pages: Object.values(pages),
@@ -139,7 +199,7 @@ export default defineStack({
 
   hooks: allHooks,
 
-  data: CrmSeedData,
+  data: seedDataFor(composition),
 
   i18n: {
     defaultLocale: 'en',
