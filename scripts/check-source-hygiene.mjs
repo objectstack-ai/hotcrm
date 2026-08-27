@@ -389,9 +389,9 @@ const INDENTED_COPYRIGHT_HEADER = /^\s+\/\/ Copyright \(c\) \d{4} ObjectStack\./
  *     construct whose position is load-bearing — the kernel requires it at byte
  *     0. `/* eslint-disable *\/`, `'use strict'` and JSDoc banners all behave
  *     identically one line lower, so none of them earns a place above the
- *     header. (No `.ts` file in this repo has a shebang today; the two `.mjs`
- *     gates in `scripts/` do, and they carry the header on line 2, which is the
- *     shape this allows.)
+ *     header. (No `.ts` file in this repo has a shebang today; some of the
+ *     `.mjs` under `scripts/` do, and where one of those carries the header it
+ *     sits on line 2, which is the shape this allows.)
  *   - **A missing header is an error, not out of scope.** Every `.ts` file this
  *     check reads — `allTs`: the `SCANNED` trees plus the root `.ts` files —
  *     carries the header on line 1, so requiring presence costs zero collateral
@@ -402,9 +402,9 @@ const INDENTED_COPYRIGHT_HEADER = /^\s+\/\/ Copyright \(c\) \d{4} ObjectStack\./
  *
  * **Why `.ts` only** (`allTs`, the same predicate the marker check uses, so
  * `.d.ts` is excluded exactly as #1094's own reproduce loop excluded it): the
- * header is universal in `.ts` and is *not* in the rest of the scanned trees —
- * 3 of the 5 `.mjs` files under `scripts/`, the `.sh` script and the four
- * `src/docs/*.md` pages have none. Widening the surface would therefore either
+ * header is universal in `.ts` and is *not* universal in the rest of the
+ * scanned trees — some of the `.mjs` under `scripts/`, plus the `.sh` and the
+ * `src/docs/*.md` pages, have none. Widening the surface would therefore either
  * demand a header in files this card cannot touch, or force the weaker
  * position-only rule on everyone to accommodate them. Filed separately instead.
  *
