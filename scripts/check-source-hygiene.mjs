@@ -565,11 +565,46 @@ const rootTs = ROOT_TEXT_FILES.filter(isTs);
 const allTs = [...codeFiles.filter(isTs), ...rootTs];
 const srcTs = allTs.filter((f) => f.startsWith('src/'));
 
+/**
+ * The surface banner — one line per surface, each count printed beside the
+ * checks that consume it (#1339).
+ *
+ * It used to be one sentence: *"N files under src, test, e2e, scripts, plus 3
+ * root .ts file(s) in the marker and header checks"*. That `N` was
+ * `codeFiles.length` — **every file type the walk returns** — while the marker
+ * and copyright-header checks read `allTs`, which is `.ts` only. So the clause
+ * naming those two checks carried a figure counting 14 files neither of them
+ * ever opens (340 against `allTs` = 329 when this was written), and a reader
+ * taking the sentence at face value got 343 where the truth was 329.
+ *
+ * ⚠️ The gap is not a stale constant that could be corrected once: it widens on
+ * its own. Every non-`.ts` file added anywhere under `SCANNED` moves
+ * `codeFiles.length` while `allTs` stands still — #1343 added one
+ * (`scripts/lib/source-hygiene-surface.mjs`) and moved it from 13 to 14 without
+ * touching this line. The remedy therefore has to be a binding, not a new
+ * number.
+ *
+ * ⛔ And the mis-bound figure is not deletable: `codeFiles.length` is a live
+ * reading — it is exactly the set the size cap and its advisory measure — so it
+ * keeps its own line, next to those two checks, where it is true. Nothing here
+ * is a constant or a snapshot; every figure is interpolated from the same array
+ * its checks are handed below, which is what stops the two drifting apart
+ * again. `test/source-hygiene-scan-surface.test.ts` asserts that binding on a
+ * sandbox built so the `.ts` count and the walk count differ — the old sentence
+ * goes red there.
+ *
+ * ⛔ Nothing below may reach for a count of its own. A figure computed here
+ * rather than read off the array the check receives is the defect this comment
+ * is about, re-introduced.
+ */
 console.log(
-  `Source hygiene — ${codeFiles.length} files under ${SCANNED.join(', ')}, ` +
-    `plus ${rootTs.length} root .ts file(s) in the marker and header checks; ` +
-    `the control-byte scan adds ${textFiles.length} under ${TEXT_SCANNED.join(', ')} ` +
-    `and ${ROOT_TEXT_FILES.length} root file(s)\n`,
+  `Source hygiene — the surface each check reads:\n` +
+    `  console.log, id-in-prose  : ${srcTs.length} .ts file(s) under src\n` +
+    `  markers, copyright header : ${allTs.length} .ts file(s) — ${allTs.length - rootTs.length} ` +
+    `under ${SCANNED.join(', ')} plus ${rootTs.length} root .ts file(s)\n` +
+    `  size cap, size advisory   : ${codeFiles.length} file(s) under ${SCANNED.join(', ')}\n` +
+    `  control bytes             : those ${codeFiles.length}, plus ${textFiles.length} under ` +
+    `${TEXT_SCANNED.join(', ')} and ${ROOT_TEXT_FILES.length} root file(s)\n`,
 );
 
 check(
