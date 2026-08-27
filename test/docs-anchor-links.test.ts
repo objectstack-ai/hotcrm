@@ -1,6 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
@@ -49,17 +49,33 @@ import {
 describe('content/docs anchored links', () => {
   const pages = readDocsPages();
 
-  it('every page parses as MDX', async () => {
-    const { parseFailures } = await auditAnchors(pages);
+  /**
+   * Audited once, asserted twice.
+   *
+   * Running the pipeline over 201 pages costs ~3 s on an idle machine, and the
+   * first version of this file paid it per test. That was fine in isolation and
+   * flaky in `pnpm verify`: sharing the box with the rest of the suite pushed
+   * each call past vitest's 5 s default and the guard failed on a tree it had
+   * just passed. A guard that goes red on correct docs when the machine is busy
+   * is the muted-guard failure mode arriving by a different road, so the work
+   * is hoisted into one hook with a timeout that describes the work rather than
+   * the default.
+   */
+  let audit: Awaited<ReturnType<typeof auditAnchors>>;
+  beforeAll(async () => {
+    audit = await auditAnchors(pages);
+  }, 120_000);
+
+  it('every page parses as MDX', () => {
     // A page that does not parse cannot ship: `{#id}` — the wrong spelling of
     // an explicit heading id — reaches acorn as a JSX expression and takes the
     // whole page's build down. Reading the ids through the real MDX pipeline is
     // what turns that into a test failure instead of a red deploy.
-    expect(parseFailures).toEqual([]);
+    expect(audit.parseFailures).toEqual([]);
   });
 
-  it('resolves every anchor against the heading ids fumadocs emits', async () => {
-    const { issues, anchoredLinks } = await auditAnchors(pages);
+  it('resolves every anchor against the heading ids fumadocs emits', () => {
+    const { issues, anchoredLinks } = audit;
     expect(
       issues.map((i) => `content/docs/${i.file}:${i.line} ${i.href} — ${i.reason}`),
     ).toEqual([]);
@@ -99,7 +115,7 @@ describe('content/docs anchored links', () => {
     expect(
       pages.find((p) => p.file === 'reference/performance-and-limits.mdx')?.source,
     ).toContain('(/docs/guides/import-and-export#scheduled-export)');
-  });
+  }, 60_000);
 
   /**
    * "The renderer's own rule" is only true while there is one renderer.
