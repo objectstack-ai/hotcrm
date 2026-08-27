@@ -34,6 +34,14 @@ import { REPO_ROOT } from './helpers/repo-root';
  *      answer was to SKIP the rule; from 17.0.0-rc.2 it REJECTS the write. See
  *      the house rule below — this is #630.
  *
+ *   4. **Unguarded stdlib call argument.** `daysBetween(null, ...)` reaches
+ *      `BigInt(NaN)` and THROWS *inside the function*, so a key that is present
+ *      and null clears `has()` and detonates anyway. Same engine outcome as (3)
+ *      — a rejected ordinary save — reached by a route neither (1) nor (3)
+ *      inspects, because the null-sensitive site is a function ARGUMENT and the
+ *      predicate need not contain a comparison operator at all. This is #1115;
+ *      the sweep for it is `every stdlib call argument is null-guarded`.
+ *
  * None is visible in review without reading the CEL character by character,
  * which is exactly why they survived. See #514 (items 3 and 12) and #630.
  */
@@ -410,6 +418,227 @@ describe('every authored predicate guards every field it reads', () => {
         '17.0.0-rc.1 and rejects the write from 17.0.0-rc.2 (#4649). ' +
         'Use `(!has(record.f) || isBlank(record.f))` for "f is empty" and ' +
         '`has(record.f) && record.f <op> …` for "f holds a value".',
+    ).toEqual([]);
+  });
+});
+
+/**
+ * ═══ The same guard, on the ARGUMENTS OF STDLIB CALLS (#1115) ══════════════
+ *
+ * `unguardedFields` at the top of this file walks the operands of ORDERING
+ * comparisons, because `dyn<null> < int` is the abort AGENTS.md names. A
+ * predicate whose only null-sensitive site is a **function argument** has no
+ * ordering operator at all, so that sweep passed it *vacuously* — green,
+ * having checked nothing. `crm_forecast.period_end_matches_calendar_period` is
+ * exactly that shape, and until this sweep landed the only thing standing under
+ * it was a pin in its own card's test file: the sweep protected the one
+ * predicate that happened to have a test, not the class.
+ *
+ * The third abort, measured in PR #1110:
+ *
+ *     daysBetween(null, …) → BigInt(NaN) → THROWS inside the stdlib function
+ *                          → engine reports `predicate failed to evaluate`
+ *                          → an ordinary save is REJECTED (17.0.0-rc.2, #4649)
+ *
+ * `has()` does not cover it. A key that is **present and null** passes
+ * `has(record.f)` and still detonates the call — which is why this is the
+ * `!= null` family of guard, not the `has()` family, and why it is checked
+ * here rather than folded into `unhas` above.
+ *
+ * ### Why the engine-driven sweep below does not catch this — measured
+ *
+ * With the `!= null` guards stripped from that predicate, `answers when every
+ * field is present but null` stays **GREEN**. With every field null,
+ * `record.period == "month"` is false and `record.period == "quarter"` is
+ * false, so `&&` short-circuits and the `daysBetween(…)` call is never
+ * reached. Only the MIXED shape — `period` and `period_start` set, `period_end`
+ * null — reaches it, and no sweep in this file constructs that shape. Extending
+ * the engine half to mixed shapes is strictly stronger and strictly more
+ * expensive (one run per field per object); it is deliberately NOT done here.
+ *
+ * ### Deny by default
+ *
+ * Every field handed to a function must carry `record.f != null` **unless the
+ * function is on the tolerant list below**. That direction is the whole point:
+ * the next stdlib function someone reaches for is guarded *before* anyone
+ * measures whether it aborts on null. The list is the exception and it costs a
+ * measurement; silence is guarded.
+ */
+
+/**
+ * Functions measured NOT to abort on a null argument — the table in the HOUSE
+ * RULE block at the top of this file is the measurement:
+ *
+ *   - `has(record.f)`         — the totality accessor itself; total by definition.
+ *   - `isBlank(record.f)`     — key null → `true`. The house rule's own "f holds
+ *                               no value" shape, `(!has(record.f) ||
+ *                               isBlank(record.f))`, is 13 predicates wide and
+ *                               CANNOT carry a `!= null` guard — the empty case
+ *                               is its entire subject.
+ *   - `coalesce(record.f, …)` — key null → the fallback.
+ *
+ * ⚠️ Do not add a name here to turn a red sweep green. Each entry costs a
+ * measurement across `{key absent, key null, key set}`, and an UNMEASURED
+ * function belongs on the guarded side — that is what makes this list safe to
+ * be short.
+ */
+const NULL_TOLERANT_FUNCTIONS = new Set(['has', 'isBlank', 'coalesce']);
+
+/**
+ * String-literal contents blanked to spaces, offsets preserved.
+ *
+ * `matches(string(record.period_start), "^[0-9]{4}-(01|04|07|10)-01")` carries
+ * parens inside a regex literal, and a `record.` spelled inside a literal would
+ * be a phantom field read. Blanking the contents rather than deleting them
+ * keeps every index below aligned with the original source.
+ */
+function blankStringLiterals(source: string): string {
+  return source.replace(
+    /"[^"]*"|'[^']*'/g,
+    (lit) => lit[0] + ' '.repeat(Math.max(lit.length - 2, 0)) + lit[0],
+  );
+}
+
+/**
+ * Every function call in a predicate, with its full paren-BALANCED argument
+ * text and the record fields read anywhere inside it.
+ *
+ * Balanced, not `[^()]*`: the hazard nests. In
+ * `daysBetween(record.period_end, addDays(addMonths(record.period_start, 1), -1))`
+ * an innermost-only match sees `addMonths(…)` and `today()` and never sees
+ * `record.period_end` at all — the argument that actually detonates.
+ *
+ * A field inside a *tolerant* call nested within a hostile one still counts:
+ * this sweep does not model which inner function neutralises which outer
+ * hazard, and the conservative reading is deliberate.
+ */
+function stdlibCalls(source: string): { fn: string; args: string; fields: string[] }[] {
+  const scan = blankStringLiterals(source);
+  const calls: { fn: string; args: string; fields: string[] }[] = [];
+
+  for (const match of scan.matchAll(/\b([A-Za-z_]\w*)\s*\(/g)) {
+    if (match.index === undefined) continue;
+    const open = match.index + match[0].length - 1;
+
+    let depth = 0;
+    let close = -1;
+    for (let i = open; i < scan.length; i++) {
+      if (scan[i] === '(') depth += 1;
+      else if (scan[i] === ')') {
+        depth -= 1;
+        if (depth === 0) {
+          close = i;
+          break;
+        }
+      }
+    }
+    // Unbalanced: not a call this sweep can reason about, and the CEL compiler
+    // refuses it long before here.
+    if (close === -1) continue;
+
+    const args = scan.slice(open + 1, close);
+    calls.push({
+      fn: match[1],
+      args,
+      fields: [...new Set([...args.matchAll(/record\.(\w+)/g)].map((f) => f[1]))],
+    });
+  }
+
+  return calls;
+}
+
+/** Fields handed to a null-hostile function with no `record.f != null` in the same expression. */
+function unguardedCallArguments(source: string): string[] {
+  const risky = new Set<string>();
+  for (const call of stdlibCalls(source)) {
+    if (NULL_TOLERANT_FUNCTIONS.has(call.fn)) continue;
+    for (const field of call.fields) risky.add(field);
+  }
+  return [...risky].filter(
+    (field) => !new RegExp(String.raw`record\.${field}\s*!=\s*null`).test(source),
+  );
+}
+
+describe('every stdlib call argument is null-guarded', () => {
+  it('locates the stdlib call sites it is meant to police', () => {
+    // ⚠️ THE VACUITY GUARD, and the reason it is the FIRST test here. A matcher
+    // that finds zero call sites is green forever and worthless — and from the
+    // outside it is indistinguishable from a clean tree. That is precisely the
+    // failure #1115 records about the sweep above, so this one asserts its own
+    // reach before asserting anything about the tree.
+    const policed = allPredicates.flatMap((p) =>
+      stdlibCalls(p.source)
+        .filter((c) => !NULL_TOLERANT_FUNCTIONS.has(c.fn) && c.fields.length > 0)
+        .map((c) => `${p.id}::${c.fn}`),
+    );
+    expect(policed.length, 'the matcher found no stdlib call to police').toBeGreaterThan(0);
+
+    // The predicate this card was filed about, by name and by function.
+    const anchor = allPredicates.find(
+      (p) => p.id === 'crm_forecast.period_end_matches_calendar_period',
+    );
+    expect(anchor, 'the anchor predicate is gone — re-point this sweep').toBeDefined();
+
+    const fns = stdlibCalls(anchor!.source).map((c) => c.fn);
+    expect(fns).toContain('daysBetween');
+    expect(fns).toContain('addDays');
+    expect(fns).toContain('addMonths');
+
+    // …and the balanced scan really does reach through the nesting to both
+    // reads, including the one an innermost-only matcher would miss.
+    const reached = [
+      ...new Set(
+        stdlibCalls(anchor!.source)
+          .filter((c) => !NULL_TOLERANT_FUNCTIONS.has(c.fn))
+          .flatMap((c) => c.fields),
+      ),
+    ];
+    expect(reached.sort()).toEqual(['period_end', 'period_start']);
+  });
+
+  it('fires on an unguarded argument and stays quiet on a guarded one', () => {
+    // The matcher proved against fixtures, so its ability to go RED does not
+    // depend on the tree ever being wrong. Both strings are the shipped
+    // predicate's shape — one without the guards, one with them.
+    const call = 'daysBetween(record.period_end, addMonths(record.period_start, 1)) != 0';
+
+    expect(unguardedCallArguments(`has(record.period_end) && ${call}`).sort()).toEqual([
+      'period_end',
+      'period_start',
+    ]);
+    expect(
+      unguardedCallArguments(
+        'has(record.period_end) && record.period_end != null && ' +
+          'has(record.period_start) && record.period_start != null && ' +
+          call,
+      ),
+    ).toEqual([]);
+
+    // Tolerant functions are exempt, or the house rule's own "f holds no value"
+    // shape would be an offender in 13 shipped predicates.
+    expect(unguardedCallArguments('(!has(record.x) || isBlank(record.x))')).toEqual([]);
+
+    // A `record.` spelled inside a string literal is not a field read: without
+    // the blanking pass this returns ['f', 'g'].
+    expect(unguardedCallArguments('matches(string(record.f), "record.g (x|y)")')).toEqual(['f']);
+  });
+
+  it('hands no field to a stdlib call without a != null guard', () => {
+    const offenders = allPredicates
+      .map((p) => ({ id: p.id, unguarded: unguardedCallArguments(p.source) }))
+      .filter((p) => p.unguarded.length > 0);
+
+    expect(
+      offenders,
+      'These predicates pass a record field to a function with no ' +
+        '`record.f != null` guard in the same expression. `daysBetween(null, …)` ' +
+        'reaches BigInt(NaN) and THROWS inside the function; the engine reports ' +
+        '`predicate failed to evaluate` and REJECTS an ordinary save (17.0.0-rc.2, ' +
+        '#4649) — on records the rule was never meant to touch. `has()` alone does ' +
+        'NOT cover this: a key that is present and null passes has() and still ' +
+        'aborts the call. Write `has(record.f) && record.f != null && fn(record.f, …)`. ' +
+        'If the function is genuinely null-tolerant, measure it and add it to ' +
+        'NULL_TOLERANT_FUNCTIONS with the measurement.',
     ).toEqual([]);
   });
 });
