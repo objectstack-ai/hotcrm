@@ -1,4 +1,5 @@
 ---
+'hotcrm': patch
 ---
 
 Make the Executive dashboard's pipeline tile say what the shared factory says,
@@ -19,17 +20,22 @@ drifting the same way is a translation lineage, not four typos — they were
 rendered from one early copy. Four strings are aligned back to the factory's
 wording, one per locale; `title` was already uniform and is untouched.
 
-**No user reads a different meaning.** The Executive tile now reads exactly as
-the identical tile already read on the CRM and Sales dashboards. The frontmatter
-above is therefore deliberately empty — the sanctioned "releases nothing"
-declaration that `.github/workflows/changeset-check.yml` documents, on par with
-the `skip-changeset` label. Noted for the release process rather than hidden:
-unlike the other empty-frontmatter changesets in this directory, this one does
-edit `src/` — four user-visible strings under `src/translations/`. They are
-classified as shipping nothing because each is a synonym being conformed to the
-string its own source of truth already produces, not because `src/` was
-untouched. Re-frontmattering this as a `patch` costs one line if the release
-process would rather count it.
+**This ships, so it is a `patch`.** Four user-visible strings under
+`src/translations/` change, in four locales, and the shipped artifact changes
+with them: the locale bundles compile into `dist/objectstack.json`, which the
+same `pnpm verify` run that gates this PR prints as
+`Artifact: dist/objectstack.json (1969.8 KB)`.
+
+The change *is* a synonym, and that context is worth keeping — no user reads a
+different meaning, and the Executive tile now reads exactly as the identical
+tile already read on the CRM and Sales dashboards. But "synonym" is a statement
+about severity, not about whether something shipped. The empty-frontmatter
+exemption that `.github/workflows/changeset-check.yml` documents declares that a
+PR publishes *nothing*, and every other empty-frontmatter changeset in this
+directory earns that declaration the same way: test-only, prose-only, CI-only,
+"no `src/` metadata changed". This one cannot borrow that sentence. Claiming it
+anyway would put a false declaration in the release ledger, which is worse than
+an over-counted patch.
 
 The guard is `test/i18n-shared-widget-parity.test.ts`, and its rule is stated
 against the source rather than as "all entries for a shared widget must match":
