@@ -541,14 +541,22 @@ function main() {
   console.log('✓ source token ratchet clean');
 }
 
-// Run only when invoked directly. `stripComments`, `verdict`, `anchor`,
-// `BUFFER`, `fmt` and the ceilings are importable so
-// `test/source-token-ratchet.test.ts` can cross-check the stripping rule
-// against the TypeScript scanner without spawning 300KB fixtures for every
-// case — and so that every figure derived from a ceiling is DERIVED there
-// rather than transcribed beside it: the suite sizes its fixtures from
+// Run only when invoked directly. `anchor`, `fmt`, `BUFFER` and the ceilings
+// are importable so that every figure derived from a ceiling is DERIVED by
+// the test quoting it rather than transcribed beside it:
+// `test/source-token-ratchet.test.ts` sizes its fixtures from
 // `CEILINGS`/`BUFFER` and pins the worked table in the header above against
-// `anchor()`, so a re-anchoring moves the constant and the copies follow.
+// `anchor()`, and `test/docs-readme-token-figures.test.ts` reads the same two
+// constants to check the README banner — so a re-anchoring moves the constant
+// and the copies follow.
+//
+// Those two suites import nothing else from here, and need nothing else: the
+// stripping rule and the verdict are exercised by RUNNING this file, not by
+// importing it. `test/source-token-ratchet.test.ts` copies the gate into a
+// sandbox root, writes fixtures under it, and asserts the stripped `chars`
+// and the verdict text off that real run. No cross-check against a TypeScript
+// scanner is involved — not here, and nowhere in this repo; the header
+// paragraph on the stripping rule says why.
 // Importing must not run the gate or call exit().
 //
 // The comparison lives in `scripts/lib/main-module.mjs` and is never
