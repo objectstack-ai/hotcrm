@@ -45,8 +45,16 @@ type AnyRec = Record<string, any>;
  *   - column and filter names inside the same table (`**Health Score**`,
  *     `**Annual Revenue of $10M or more**`);
  *   - whole sentences (`**Status is the filter you already have.**`);
- *   - TAB labels in the first column where the view name is in a later one
- *     (`sales/activities` is written that way throughout);
+ *   - what read as a fourth class — TAB labels in the first column where the
+ *     view name is in a later one, `sales/activities` "written that way
+ *     throughout" — was never a legitimate shape, and this list no longer asks
+ *     anyone to step over it (#1350). It was the #1318 defect on the one page
+ *     cited as carrying it: those first-column names were invented, #1322 took
+ *     the column off fifteen pages across three faces, and the name-column rule
+ *     below rejects the shape outright (#1347). The entry stays because the
+ *     thirteen were counted with it in — so that figure includes cases the
+ *     widest rule was RIGHT about, and the case against that rule rests on the
+ *     three classes above, each of which is still on the pages today;
  *   - and, worst, the pages that are RIGHT: `service/cases` closes with
  *     "Six names this section used to list are not views at all" and then names
  *     them, so the corrected page fails hardest.
@@ -77,10 +85,10 @@ type AnyRec = Record<string, any>;
  *     are bullets beneath the table, not rows in it;
  *   - `service/cases` names its six retired non-views in a bullet list below
  *     the table, so the page that was RIGHT is the page this rule never reads;
- *   - and the TAB-label shape — the one the list above tolerates, *"TAB labels
- *     in the first column where the view name is in a later one"* — is not a
- *     legitimate exception at all. It was the #1318 defect, in the one page
- *     cited as carrying it.
+ *   - and the TAB-label shape is the exception that was not one. It did sit in
+ *     the first column, but it was the #1318 defect rather than a legitimate
+ *     bold — which is what the list above now records (#1350) and what the rule
+ *     below now enforces.
  *
  * That last line is why the narrow rule is worth having. `list.tabs[].name` was
  * never read: the object-view switcher labels each tab with the target view's
@@ -206,10 +214,6 @@ describe('a docs list-view roster names the views the app ships (#1194)', () => 
     return lines.slice(start + 1, end).join('\n');
   };
 
-  /** Roster entries: bolded table rows plus bolded top-level bullets. */
-  const entryCount = (body: string): number =>
-    [...body.matchAll(/^\| *\*\*/gm)].length + [...body.matchAll(/^- +\*\*/gm)].length;
-
   /** The delimiter row that sits under a markdown table's header (`| --- |`). */
   const TABLE_DELIMITER = /^\| *:?-{2,}/;
 
@@ -229,6 +233,41 @@ describe('a docs list-view roster names the views the app ships (#1194)', () => 
         !(i + 1 < lines.length && TABLE_DELIMITER.test(lines[i + 1])),
     );
   };
+
+  /**
+   * Roster entries: the body rows of the section's table, and nothing else.
+   *
+   * It counted bolded top-level bullets as entries too until #1350, and that
+   * was a latent false red. Every bolded bullet inside these sections is PROSE:
+   * `sales/accounts` explains that Health Score is hand-maintained,
+   * `sales/opportunities` lists the three filters behind *Closing This
+   * Quarter*, `sales/quotes` opens two whole-sentence bolds, and
+   * `service/cases` names its six retired non-views — the same bullets the
+   * docstring above records as false positives for the widest phantom rule.
+   * Counting them held the three faces to WORDING where the rule claims to hold
+   * them to STRUCTURE: it passed only because all three faces happened to word
+   * those sentences in parallel. Measured — rewording the `accounts.mdx`
+   * English bullet so it opens with no bold turns this red with *"7 roster
+   * entr(y|ies), but … has 6"* on both faces, blaming roster drift for a prose
+   * edit. A guard that goes red for a reason it does not name sends the next
+   * person hunting a roster problem that does not exist.
+   *
+   * Bounding the count to the text above the first `###` was the other route
+   * on offer, and it is not enough: `sales/quotes` and `service/cases` carry
+   * their prose bullets with no `###` between the table and them, so six of
+   * the twelve faces would keep the defect.
+   *
+   * A roster written AS a bulleted list counts zero here — caught loudly rather
+   * than tolerated. Vacuity guard #1 fails when an English page grows a roster
+   * section PAGE_OBJECT does not map, and vacuity guard #3 fails when a mapped
+   * page yields no name cells, saying in as many words to teach
+   * `tableBodyRows` that shape. `service/knowledge-base` really is a
+   * bullet-list roster — four bullets naming the four views that
+   * `crm_knowledge_article` ships — and it sits outside this rule for an
+   * unrelated reason, heading that section *Finding articles*, so `rosterOf`
+   * returns null for it and it never entered the rule before #1350 either.
+   */
+  const entryCount = (body: string): number => tableBodyRows(body).length;
 
   /** The name column: the first cell of a table row. */
   const nameCell = (row: string): string => (row.replace(/^\|/, '').split('|')[0] ?? '').trim();
@@ -316,10 +355,14 @@ describe('a docs list-view roster names the views the app ships (#1194)', () => 
     }));
 
     // Vacuity guard #3, and the one this rule needs most: it reads TABLE rows,
-    // and `entryCount` above shows the sections may also be written as bolded
-    // bullets. A page that switched to that shape — or a table this parser
-    // stopped recognising — would hand the rule an empty cell list and pass by
-    // checking nothing, which is precisely the failure #1318 already survived.
+    // and a roster section can be written as a bulleted list instead —
+    // `service/knowledge-base` writes its four article views that way, under a
+    // heading this rule does not read. A mapped page that switched to that
+    // shape — or a table this parser stopped recognising — would hand the rule
+    // an empty cell list and pass by checking nothing, which is precisely the
+    // failure #1318 already survived. Since #1350 `entryCount` counts table
+    // rows only, so this guard is what keeps that shape from going quiet in
+    // BOTH rules at once.
     const unread = rosters.filter((r) => r.cells.length === 0).map((r) => r.file);
     expect(
       unread,
