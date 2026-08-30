@@ -140,9 +140,40 @@ const CURRENT_PERIOD_FILTER = {
  */
 const OWNED_PERIOD_FILTER = { ...CURRENT_PERIOD_FILTER, source: 'scheduled' };
 
-/** Opportunities of the owner in flight during the snapshot window. */
+/**
+ * Opportunities of the owner in flight during the snapshot window.
+ *
+ * ORG PARTITION (#1372). `owner_id` and the close-date window are both
+ * organization-BLIND, and this sweep runs `runAs: 'system'`, so its reads are
+ * NOT constrained by the driver's organization predicate. `sys_user` is a
+ * global identity carrying no `organization_id`, so an owner holding deals in
+ * two organizations had all of them summed into the ONE snapshot row
+ * `OWNED_PERIOD_FILTER` selects: one tenant's forecast row reporting another
+ * tenant's pipeline, with no NULL partition, no index violation and no error
+ * to catch it -- the numbers were simply wrong, and wrong in the direction
+ * that looks plausible.
+ *
+ * The pin is the same "prove the source carries the right organization"
+ * mechanism `{ownerAnyDeal.organization_id}` already establishes on
+ * `create_forecast`, inverted: the FETCH pins `organization_id` to the row
+ * being written. No second mechanism is invented -- the #1363 guard clears a
+ * fetch on exactly this shape, which is why `write_snapshot` needs no
+ * exemption once this line is here.
+ *
+ * `{currentForecast.…}` is in scope at this point: this same filter already
+ * reads `period_start` / `period_end` off it, and `reload_forecast` binds it
+ * ahead of every bucket in `OWNER_CHAIN`.
+ *
+ * ⚠️ This does NOT give a cross-organization owner one row per organization.
+ * `CURRENT_PERIOD_FILTER` and what `crm_forecast` is keyed by are deliberately
+ * unchanged, so such an owner still gets ONE row -- now reporting only its own
+ * organization's numbers. That is INCOMPLETE where it was previously WRONG,
+ * which needs no ruling. Whether the shape should instead be one row per
+ * organization is a product-semantics decision, left open in #1372.
+ */
 const inPeriod = (extra: Record<string, unknown>) => ({
   owner_id: '{currentOwner.id}',
+  organization_id: '{currentForecast.organization_id}',
   close_date: {
     $gte: '{currentForecast.period_start}',
     $lte: '{currentForecast.period_end}',
