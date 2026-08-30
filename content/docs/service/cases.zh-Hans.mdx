@@ -164,7 +164,7 @@ description: 客户支持工单——主题、优先级、状态、解决方案�
 
 本节原先列的七个名字里，有六个根本不是视图：
 
-- **Critical Cases** 与 **Breached SLA** 是指标磁贴，不是列表。[服务概览](/zh-Hans/docs/analytics/dashboards)（Service Overview；该仪表盘自身的标题是 **Customer Service**）上有 *Critical Cases*（未结且 Critical）和 **SLA Violations**（`is_sla_violated` 为真）两个磁贴；本应用里没有任何一个列表视图按违约过滤。真要有一份能逐条处理的清单，用 **Escalated Cases**——SLA 扫描会把它标记的每一条都升级，所以每次违约都会落到那里。
+- **Critical Cases** 是指标磁贴，不是列表。*Breached SLA* 这个名字本应用根本没有：按违约计数的是 **SLA Violations** 磁贴。[服务概览](/zh-Hans/docs/analytics/dashboards)（Service Overview；该仪表盘自身的标题是 **Customer Service**）上有 **Critical Cases**（未结且 Critical）和 **SLA Violations**（`is_sla_violated` 为真）两个磁贴；本应用里没有任何一个列表视图按违约过滤。真要有一份能逐条处理的清单，用 **Escalated Cases**——SLA 扫描会把它标记的每一条都升级，所以每次违约都会落到那里。
 - **Service Board** 不是本应用里任何东西的名字。看板叫 **Service Workflow**，页签上写的也是这个名字。
 - **Cases Due Today**、**Recently Closed** 与 **By Account** 以任何形式都不存在：没有任何视图按「截止日期 = 今天」或 `closed_date` 过滤，`crm_case` 上也没有任何分组视图。
 
@@ -217,7 +217,7 @@ Activity 标签页是工单上发生过什么的唯一可信来源。它将四�
 
 ## 给服务经理的提示
 
-- ✅ 没有 **Breached SLA** 这个视图可看，也没有什么红色徽章——工单列表上唯一的颜色规则是 *All Cases* 的行底色，它键在**优先级**上，不是违约。每天改看 **Escalated Cases**，数量则看服务概览上的 **SLA Violations** 磁贴。
+- ✅ 没有 *Breached SLA* 这个视图可看，也没有什么红色徽章——工单列表上唯一的颜色规则是 *All Cases* 的行底色，它键在**优先级**上，不是违约。每天改看 **Escalated Cases**，数量则看服务概览上的 **SLA Violations** 磁贴。
 - ✅ 用看板开每日站会——它叫 **Service Workflow**，在工单列表的 **Service Workflow** 页签上。
 - ✅ 辅导那些 **Resolution Time** 趋势上升的客服——但这个趋势只能从工单本身读出来。不存在什么客服排行榜：`case_metrics` 这个数据集（服务侧每一张报表和每一个仪表盘部件都建在它上面）只声明了 Status、Priority、Origin、Type、Created 五个维度，所以分析层里没有任何东西能按客服分组。
 
