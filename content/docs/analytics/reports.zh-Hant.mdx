@@ -80,7 +80,7 @@ HotCRM 開箱即用地發布 **十份** 報表 —— `src/reports/index.ts` 這
 | 報表 | 顯示內容 |
 | --- | --- |
 | **Accounts by Industry and Type** | 有效客戶的矩陣 —— 列是產業，欄是客戶類型，每格給出客戶數與 **Annual Revenue** 合計 |
-| **Customer Churn Signals** | 面向主動挽留的三塊面板：**At-Risk Accounts**（有效但 60 天以上無活動，按產業）、**Silent High-Value Accounts**（策略級與企業級客戶沉默 90 天以上，按類型）與 **Recently Lost Opportunities**（最近 30 天丟單，按負責人） |
+| **Customer Churn Signals** | 面向主動挽留的四塊面板：**CSM-Flagged Accounts**（**Health Score** 為 *At Risk* 或 *Churning*，按類型——唯一不帶時間窗的面板）、**At-Risk Accounts**（有效但 60 天以上無活動，按產業）、**Silent High-Value Accounts**（策略級與企業級客戶沉默 90 天以上，按類型）與 **Recently Lost Opportunities**（最近 30 天丟單，按負責人） |
 
 本節曾經列出的三份合約報表哪兒都沒有發布，而且按它們寫的口徑一份都建不出來，原因是同一個：**沒有合約資料集**。`src/datasets/` 涵蓋九個物件 —— 客戶、工單、聯絡人、活動、預測、潛在客戶、商機、產品、任務 —— `crm_contract` 不在其中，所以分析側根本無法對合約計數、求和或分組。
 
