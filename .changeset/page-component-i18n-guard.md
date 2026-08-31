@@ -13,3 +13,8 @@ against a running server rather than read off the schema.
 
 `src/translations/en.ts` gains the `components` face for the six pages that
 carry component copy; it was the only bundle with none.
+
+Nested component copy (the four `object-metric` KPI labels on the sales home
+page) stays out of both the bundles and the guard: the resolver does not reach
+it on the installed 17.1.0, so writing it would be inert. That half is fixed
+upstream (objectstack#12961) but not in any published release yet.

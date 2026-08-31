@@ -430,11 +430,25 @@ describe('every locale is complete on every authored surface', () => {
    * demand copy that no locale can make reach a screen — the guard would go
    * green on strings the platform throws away, which is worse than not checking.
    *
-   * The nested half is a real gap, and it is a PLATFORM gap rather than missing
-   * copy here: `Revenue (Won)`, `Deals Won`, `Pipeline Value` and `Open Leads`
+   * The nested half is a real gap, it is a PLATFORM gap rather than missing copy
+   * here, and it is already fixed upstream — just not in the version this repo
+   * installs. `Revenue (Won)`, `Deals Won`, `Pipeline Value` and `Open Leads`
    * are still English on an otherwise Chinese landing page because the four
-   * `object-metric` tiles are children of the `key_metrics` card. Filed upstream
-   * rather than worked around here.
+   * `object-metric` tiles are children of the `key_metrics` card, which is the
+   * consumer case objectstack#12961 was filed on by name. That card was ruled on
+   * 2026-08-29 (option A: descend declared `properties.children`) and its fix
+   * merged as objectstack#13111, with the extractor's matching walk following in
+   * objectstack#13109 / #13215.
+   *
+   * Neither is in a published release yet: `translatePage` in the shipped
+   * 17.2.0 tarball still maps `region.components` only, and this repo pins
+   * 17.1.0. So the KPI labels are NOT authorable here today, and writing them
+   * would be inert copy. When the pin moves (hotcrm#1376 owns that chain), the
+   * walk below should widen to `properties.children` to match `translatePage` —
+   * and to `properties.children` ONLY. `slots.*` and a `page:tabs` item's
+   * `children` are deliberately outside the resolver's scope, so widening to
+   * them would recreate the other half of the drift pair: offering keys the
+   * resolver ignores.
    *
    * `description` is included even though `page:card` does not currently draw it
    * (#1216 moves that copy to a component that does): the platform accepts and
