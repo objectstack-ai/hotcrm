@@ -9,6 +9,8 @@ import {
   SETUP_NAV_CONTRIBUTIONS,
   SetupAppTranslations,
 } from '@objectstack/platform-objects/apps';
+import { CrmApp } from '../src/apps';
+import { CrmTranslations } from '../src/translations';
 import { REPO_ROOT } from './helpers/repo-root';
 
 /**
@@ -45,6 +47,12 @@ import { REPO_ROOT } from './helpers/repo-root';
  *     navigation label the platform really ships, resolved live from the
  *     package. This is the rule that catches a wrong name nobody has thought of
  *     yet.
+ *  3. {@link KNOWN_UNRESOLVED_CRM} + {@link crmCitations} — the same claim for
+ *     **this app's own** navigation. `**Sales → Leads**`, `**Service →
+ *     Knowledge**`, `**My Work → My Tasks**` name a group and a child of
+ *     `src/apps/crm.app.ts`, and both halves are resolved live against that
+ *     file plus `src/translations/*`. Added by #1117 — see "The third app"
+ *     below.
  *
  * ## The roster is resolved live, not transcribed
  *
@@ -74,6 +82,55 @@ import { REPO_ROOT } from './helpers/repo-root';
  * 20 / 32 and 13 / 21 after #1113's first two passes; #1113 closed the gap,
  * not the rule. That the all-segment residue is now only those two buttons is
  * the evidence the split was drawn in the right place.)
+ *
+ * ## The third app, and the edge of what bold-arrow prose can be held to (#1117)
+ *
+ * Rule 2's matcher is built from {@link APP_WORDS}, so for a long time a bold
+ * path was extracted **only** when its first segment was Setup or Studio.
+ * Everything else was invisible — not quarantined, not counted, not failed.
+ * Re-measured on `main` at `4c6add4`: 307 bold `**… → …**` runs across 201
+ * pages, of which rule 2 sees 144 (Setup 87, Studio 42, 设置 15, 設定 0).
+ *
+ * The largest coherent thing in that remainder was **this app's own
+ * navigation**. `Sales`, `My Work`, `Service` and `Activity` are not loose
+ * product words — they are groups declared in `src/apps/crm.app.ts`, relabelled
+ * per locale in `src/translations/*`, and rendered in the sidebar of the app
+ * these docs are about. Rule 3 resolves them the same way rule 2 resolves
+ * Setup's: live, from the metadata, in every shipped locale. It is also
+ * **stricter** than rule 2 in one respect — rule 2 takes the app word itself on
+ * trust (`APP_WORDS` is hand-written), while rule 3's matcher is generated from
+ * the shipped group labels, so the group half cannot drift unnoticed either.
+ * It found 30 citations and 8 unresolved ones on its first run.
+ *
+ * ⛔ **Do not extend this to every bold arrow in the docs.** The measurement
+ * says plainly that `**X → Y**` is not a navigation marker in this repo — it is
+ * just an arrow that happens to be inside bold. Of the 163 runs rule 2 does not
+ * see, 61 are whole bolded *sentences* (`**There is no Setup → Business Hours
+ * screen.**` — a denial, and correct), and most of the rest are other
+ * relations entirely: object → field (`**Account → Last Activity Date**`),
+ * field → value (`**Status → Held**`), a state transition (`**Queued →
+ * Sent**`), an explicitly unshipped design sketch (`**Deploy → pick target
+ * tenant**`, marked *(not shipped)* on the same line), a report name
+ * (`**Opportunity Funnel by Owner → …**`), or two adjacent bold runs a regex
+ * reads as one (`**⋮** menu → **Install app**`). A rule demanding that every
+ * such first segment resolve, or be declared, would spend its entries on
+ * parser artifacts and go red on ordinary prose. Widen where the vocabulary is
+ * resolvable; leave the rest to rule 1, which needs no arrow.
+ *
+ * Two names in that remainder resolved to nothing in `src/`, and #1117 asked
+ * which of them were wrong. They landed on opposite sides:
+ *
+ *  - **`AI Copilot → Revenue Forecasting`** (`sales/forecasting*.mdx`) is
+ *    CORRECT and is deliberately not covered. `Revenue Forecasting` is a real
+ *    skill label (`src/skills/revenue-forecasting.skill.ts`), and *AI Copilot*
+ *    is this product's name for the platform assistant panel — see
+ *    `content/docs/ai-copilot/index.mdx`, which spends a section saying the
+ *    assistant is the platform's `ask` agent and what HotCRM adds to it are
+ *    skills. It is a surface, not a sidebar entry: the app switcher offers
+ *    exactly two apps, HotCRM and Setup. Renaming it to something that
+ *    resolves would corrupt correct documentation to satisfy a test.
+ *  - **`Stripe Sync → Re-link`** (`reference/faq*.mdx`) was WRONG, and is now
+ *    rule 1's problem instead — see {@link RETIRED_UI_NAMES}.
  *
  * ## Why there is a quarantine ledger, and what it is not
  *
@@ -138,6 +195,19 @@ type AnyRec = Record<string, any>;
 /** Locale bundles the platform ships for the Setup / Studio / Account apps. */
 const SHIPPED_LOCALES = Object.keys(SetupAppTranslations as AnyRec);
 
+/** Locale bundles THIS app ships for its own navigation (`src/translations/`). */
+const CRM_LOCALES = Object.keys(CrmTranslations as AnyRec);
+
+/** The app id `src/translations/*` files their navigation overrides under. */
+const CRM_APP_ID = (CrmApp as AnyRec).name as string;
+
+/** One locale's navigation overrides for this app, `id → { label }`. */
+const crmNavOverrides = (locale: string): Record<string, AnyRec> =>
+  ((CrmTranslations as AnyRec)[locale]?.apps?.[CRM_APP_ID]?.navigation ?? {}) as Record<
+    string,
+    AnyRec
+  >;
+
 /**
  * Every navigation label each app really shows, per app, across every shipped
  * locale — group headers and leaf items alike.
@@ -188,7 +258,46 @@ const shipsNavLabel = (app: 'setup' | 'studio', name: string): boolean =>
 
 /** Does ANY app ship this label — used to prove a retired name is retired. */
 const shipsAnywhere = (name: string): boolean =>
-  shipsNavLabel('setup', name) || shipsNavLabel('studio', name);
+  shipsNavLabel('setup', name) || shipsNavLabel('studio', name) || CRM_LABELS.has(name);
+
+/** Ledger key for one `group → child` citation into this app's navigation. */
+const crmPairKey = (group: string, child: string): string => `${group} → ${child}`;
+
+/**
+ * This app's own navigation, resolved live from `src/apps/crm.app.ts` and the
+ * four locale bundles in `src/translations/` — the same "resolve, don't
+ * transcribe" rule the Setup/Studio roster above follows, pointed at the app
+ * these docs actually document.
+ *
+ * {@link CRM_GROUP_LABELS} is every spelling of a sidebar GROUP header (the
+ * first segment a citation can open with). {@link CRM_PAIRS} is every real
+ * group → child pair, keyed within ONE locale, so a citation cannot pass by
+ * naming a group and a child that both exist but sit apart. The label a locale
+ * does not override falls back to the shell's own, exactly as the Console does.
+ */
+const { CRM_GROUP_LABELS, CRM_PAIRS, CRM_LABELS } = (() => {
+  const groups = new Set<string>();
+  const pairs = new Set<string>();
+  const all = new Set<string>();
+  for (const locale of CRM_LOCALES) {
+    const nav = crmNavOverrides(locale);
+    const labelOf = (id: string, fallback: string): string => nav[id]?.label ?? fallback;
+    for (const entry of ((CrmApp as AnyRec).navigation ?? []) as AnyRec[]) {
+      if (!entry?.label) continue;
+      const entryLabel = labelOf(entry.id, entry.label);
+      all.add(entryLabel);
+      if (entry.type !== 'group') continue;
+      groups.add(entryLabel);
+      for (const child of (entry.children ?? []) as AnyRec[]) {
+        if (!child?.label) continue;
+        const childLabel = labelOf(child.id, child.label);
+        all.add(childLabel);
+        pairs.add(crmPairKey(entryLabel, childLabel));
+      }
+    }
+  }
+  return { CRM_GROUP_LABELS: groups, CRM_PAIRS: pairs, CRM_LABELS: all };
+})();
 
 /**
  * Resolve `group → item` against one app's shipped navigation, in one locale.
@@ -225,10 +334,17 @@ const resolvesPath = (app: 'setup' | 'studio', locale: string, path: [string, st
  * spelling, in every locale, that must not appear in first-party text;
  * `replacement` is the real path, asserted to resolve live so this table cannot
  * point somewhere that has itself gone stale.
+ *
+ * `replacement: null` is for the case where there is no real path to send the
+ * reader to, because the capability itself does not exist. #1113's first pass
+ * established the prose form — a plain statement that the screen does not
+ * exist — and #1117 added the first ledger entry of that shape. A null entry
+ * still carries the full both-directions check: the name must appear nowhere,
+ * and must still resolve to nothing.
  */
 const RETIRED_UI_NAMES: {
   wrong: string[];
-  replacement: { app: 'setup' | 'studio'; path: [string, string]; locale: string };
+  replacement: { app: 'setup' | 'studio'; path: [string, string]; locale: string } | null;
   why: string;
 }[] = [
   {
@@ -243,6 +359,20 @@ const RETIRED_UI_NAMES: {
     // so the gloss is pinned live: if the platform relabels it, this goes red.
     replacement: { app: 'studio', path: ['开发者', '流程运行记录'], locale: 'zh-CN' },
     why: '#853 — the zh-CN spelling the zh-Hans page glosses; pinned, not banned.',
+  },
+  {
+    wrong: ['Stripe Sync'],
+    replacement: null,
+    why:
+      '#1117 — `reference/faq*.mdx` told a reader whose Stripe customer had not ' +
+      'linked to "use the Stripe Sync → Re-link action". There is no such action ' +
+      'and no such surface: zero occurrences of Stripe in `src/`, no connector ' +
+      'among the installed platform packages, and `guides/integrations.mdx` says ' +
+      'in its own words that no packaged vendor connector ships and that the ' +
+      'closest thing to Stripe today is "Nothing". The FAQ now says that instead. ' +
+      'Banned rather than redirected because there is nowhere to redirect to — ' +
+      'and if a Stripe connector ever ships, the both-directions check below ' +
+      'retires this entry loudly.',
   },
 ];
 
@@ -277,6 +407,38 @@ const KNOWN_UNRESOLVED = new Set<string>([
 
 /** Ledger key for one citation. */
 const ledgerKey = (app: 'setup' | 'studio', name: string): string => `${app}:${name}`;
+
+/**
+ * `group → child` citations into THIS app's navigation that resolve to
+ * nothing. Keyed by the pair, because both halves carry information.
+ *
+ * ADDING ONE IS A ONE-LINE CHANGE — and the same warning as
+ * {@link KNOWN_UNRESOLVED} applies: do not reach for it to silence a path you
+ * just wrote. Every entry below is drift that pre-dates rule 3 and was found
+ * by its first run, not by anyone writing a new page.
+ */
+const KNOWN_UNRESOLVED_CRM = new Set<string>([
+  // All five are zh-Hant, and all five are structural rather than drift: this
+  // app ships `en` / `zh-CN` / `ja-JP` / `es-ES` and NO Traditional-Chinese
+  // bundle, so a Traditional leaf label is a screen that exists in no
+  // configuration. It is #1113's third sub-class again, one app over.
+  //
+  // ⚠️ They are quarantined rather than rewritten ON PURPOSE: **which** locale
+  // a zh-Hant reader should be sent to is the open question on #1368, which
+  // carries `needs-user-decision` and argues the console falls back to
+  // Simplified rather than to English — the opposite of the convention #1113
+  // applied. Rewriting five pages here would pre-empt that ruling. When #1368
+  // is decided, these five lines are the worklist, and the staleness checks
+  // below make sure they cannot outlive it quietly.
+  //
+  // The GROUP halves resolve at all only because 我的工作 and 活動 collide with
+  // this app's zh-CN and ja-JP spellings.
+  crmPairKey('我的工作', '我的行事曆'),
+  crmPairKey('我的工作', '我的任務'),
+  crmPairKey('我的工作', '我的線索'),
+  crmPairKey('我的工作', '我的日曆'),
+  crmPairKey('活動', '活動'),
+]);
 
 /**
  * First-party text trees: the reader-facing docs, plus the TypeScript that
@@ -349,6 +511,42 @@ function navigationCitations(): { file: string; app: 'setup' | 'studio'; name: s
   return out;
 }
 
+/** Longest-first, so `My Work` cannot be shadowed by a shorter alternative. */
+const escapeRe = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * `**Group → Child**` — a path into this app's own sidebar, written without an
+ * app word because the reader is already in the app the page describes.
+ *
+ * The group alternation is GENERATED from the shipped labels, so unlike
+ * {@link CITATION} this matcher cannot see a group that does not exist. That
+ * is deliberate: it means a wrong group name is invisible here — and invisible
+ * is correct, because `**Stripe Sync → Re-link**` was never a claim about this
+ * app's sidebar. Rule 1 is what holds a name that exists nowhere.
+ */
+const CRM_CITATION = new RegExp(
+  `\\*\\*(${[...CRM_GROUP_LABELS]
+    .sort((a, b) => b.length - a.length)
+    .map(escapeRe)
+    .join('|')})\\s*(?:→|›)\\s*([^*\\n]+)\\*\\*`,
+  'g',
+);
+
+/** Every bold `**Group → Child**` citation into this app's navigation. */
+function crmCitations(): { file: string; group: string; child: string }[] {
+  const out: { file: string; group: string; child: string }[] = [];
+  for (const file of DOC_PAGES) {
+    for (const match of read(file).matchAll(CRM_CITATION)) {
+      const child = match[2]
+        .split(/→|›/)[0]
+        .replace(/[`*]/g, '')
+        .trim();
+      if (child) out.push({ file, group: match[1], child });
+    }
+  }
+  return out;
+}
+
 describe('docs cite navigation names the platform actually ships (#853)', () => {
   describe('the roster this file judges against is real', () => {
     // Without this, every assertion below passes vacuously the day the package
@@ -393,15 +591,18 @@ describe('docs cite navigation names the platform actually ships (#853)', () => 
       }
     });
 
-    it.each(RETIRED_UI_NAMES)('$wrong has a replacement that still resolves', (entry) => {
-      const { app, path, locale } = entry.replacement;
-      expect(
-        resolvesPath(app, locale, path),
-        `the replacement path ${app} > ${path[0]} > ${path[1]} (${locale}) no longer ` +
-          'resolves. The docs now send readers somewhere that does not exist — ' +
-          'update the pages and this entry together.',
-      ).toBe(true);
-    });
+    it.each(RETIRED_UI_NAMES.filter((e) => e.replacement !== null))(
+      '$wrong has a replacement that still resolves',
+      (entry) => {
+        const { app, path, locale } = entry.replacement!;
+        expect(
+          resolvesPath(app, locale, path),
+          `the replacement path ${app} > ${path[0]} > ${path[1]} (${locale}) no longer ` +
+            'resolves. The docs now send readers somewhere that does not exist — ' +
+            'update the pages and this entry together.',
+        ).toBe(true);
+      },
+    );
 
     it('appear nowhere in first-party text, in any locale or casing', () => {
       const banned = RETIRED_UI_NAMES.flatMap((e) => e.wrong).filter((w) => !NOT_BANNED.has(w));
@@ -446,6 +647,64 @@ describe('docs cite navigation names the platform actually ships (#853)', () => 
           'export their navigation from @objectstack/platform-objects). If the page ' +
           'genuinely does not exist, say what the reader should click instead — do ' +
           'not add it to KNOWN_UNRESOLVED to get this green.',
+      ).toEqual([]);
+    });
+  });
+
+  describe("bold navigation paths into this app's own sidebar (#1117)", () => {
+    it('resolves a substantial roster from src/apps + src/translations', () => {
+      // Same vacuity guard as the platform roster: if the app module or the
+      // locale bundles move, every assertion below would pass on an empty set.
+      expect(CRM_LOCALES).toEqual(expect.arrayContaining(['en', 'zh-CN', 'ja-JP', 'es-ES']));
+      expect(CRM_GROUP_LABELS.size).toBeGreaterThan(15);
+      expect(CRM_PAIRS.size).toBeGreaterThan(60);
+      for (const label of ['Sales', 'My Work', 'Service', '销售', '我的工作']) {
+        expect(CRM_GROUP_LABELS.has(label), `this app should ship the group '${label}'`).toBe(true);
+      }
+      expect(CRM_PAIRS.has(crmPairKey('Service', 'Knowledge'))).toBe(true);
+      expect(CRM_PAIRS.has(crmPairKey('销售', '线索'))).toBe(true);
+    });
+
+    it('parses citations at all', () => {
+      const found = crmCitations();
+      expect(found.length).toBeGreaterThan(20);
+      expect(found.some((c) => c.group === 'Service' && c.child === 'Knowledge')).toBe(true);
+    });
+
+    it('name a group and a child this app really ships, in one locale', () => {
+      const bad = crmCitations()
+        .filter(
+          (c) =>
+            !CRM_PAIRS.has(crmPairKey(c.group, c.child)) &&
+            !KNOWN_UNRESOLVED_CRM.has(crmPairKey(c.group, c.child)),
+        )
+        .map((c) => `${c.file}: '${c.group} → ${c.child}'`);
+      expect(
+        [...new Set(bad)],
+        `docs cite sidebar paths this app does not ship:\n  ${[...new Set(bad)].join('\n  ')}\n` +
+          'Resolve the pair against src/apps/crm.app.ts and the locale bundles in ' +
+          'src/translations — the child must be a child of that group, in the same ' +
+          'locale. Do not add it to KNOWN_UNRESOLVED_CRM to get this green.',
+      ).toEqual([]);
+    });
+
+    it('holds no quarantined pair this app has started shipping', () => {
+      const fixed = [...KNOWN_UNRESOLVED_CRM].filter((key) => CRM_PAIRS.has(key));
+      expect(
+        fixed,
+        `KNOWN_UNRESOLVED_CRM pairs this app now ships: ${fixed.join(', ')}. ` +
+          'Delete these lines — they are no longer exceptions.',
+      ).toEqual([]);
+    });
+
+    it('holds no quarantined pair the docs no longer cite', () => {
+      const cited = new Set(crmCitations().map((c) => crmPairKey(c.group, c.child)));
+      const dead = [...KNOWN_UNRESOLVED_CRM].filter((key) => !cited.has(key));
+      expect(
+        dead,
+        `KNOWN_UNRESOLVED_CRM entries no longer cited by any page: ${dead.join(', ')}. ` +
+          'Someone fixed the prose — delete these lines so the ledger keeps ' +
+          'measuring the real remainder.',
       ).toEqual([]);
     });
   });
