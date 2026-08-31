@@ -5,7 +5,10 @@ Enterprise CRM built on the **@objectstack/runtime** engine. Tool-specific files
 (e.g. `.github/copilot-instructions.md`) point here.
 
 You are an expert developer working on HotCRM, delivering business capabilities
-as metadata on top of the ObjectStack platform.
+as metadata on top of the ObjectStack platform. HotCRM is a **pure metadata
+application**: business features are built here, platform capability is built on the
+platform. Read **🚫 Scope — a pure metadata application** before your first edit; it
+governs every other chapter in this file.
 
 ## 🗣️ 沟通语言 / Communication Language
 
@@ -77,10 +80,12 @@ hotcrm/
       deliberately omits the alias so the mistake is a compile error.
       Other surfaces are **not** governed by this rule and have their own spelling — but a
       different surface never licenses a shape that surface's own schema rejects. A
-      `*.flow.ts` node `config` takes `filter:` (47 occurrences across 18 of the 22 flow
-      files; `where:` in none): do not "fix" that into a hook's `where:`, nor a hook's
-      `where:` into `filter:`. A **page component** also spells the key `filter:`, and its
-      shape is whatever that component's entry in `ComponentPropsMap`
+      `*.flow.ts` node `config` takes `filter:`, and `where:` appears in no flow file at
+      all — grep `src/flows/` for the current spread rather than trusting a number in
+      prose (*the hand-copied occurrence counts that stood here had already drifted;
+      superseded by the 2026-08-31 ruling, item 5*). Do not "fix" that into a hook's
+      `where:`, nor a hook's `where:` into `filter:`. A **page component** also spells
+      the key `filter:`, and its shape is whatever that component's entry in `ComponentPropsMap`
       (`@objectstack/spec/ui`) declares — for `record:related_list`, an array of rule
       **objects**: `filter: [{ field, operator, value }]`, `operator` from a closed
       vocabulary (`equals`, `not_equals`, `in`, …), no other key accepted. The AST array
@@ -157,7 +162,9 @@ All metadata files MUST be validated against their corresponding `@objectstack/s
 > node inside a flow. A record **lifecycle** constraint is not item 4 either — it is a
 > `validations[]` entry with `type: 'state_machine'` on the object, validated by
 > `ObjectSchema.parse()` (item 1); item 4's `StateMachineSchema` is a different shape
-> (`initial` / `states` / `on`) and does not validate that entry.
+> (`initial` / `states` / `on`) and does not validate that entry. Whether a given
+> constraint wants an invariant or a transition gate at all is decided by **Metadata
+> semantics rule 7** below.
 
 ## 🏷️ Field Type Guidance
 
@@ -177,6 +184,75 @@ Use the most specific `Field` type available from `@objectstack/spec/data`:
 | GPS coordinates | `Field.location()` | Geographic location data |
 | Mailing address | `Field.address()` | Structured postal address |
 
+## 🧩 Metadata semantics — say what you mean (2026-08-31 ruling)
+
+Five rules on which construct carries which intent, plus the escape-hatch clause that
+closes the chapter — distilled from the 2026-08-31 rulings (verbatim source:
+**objectstack#13848**). Prose in a `description` is not one of those constructs.
+
+**7. Invariant, or transition gate — pick the tool by the intent.**
+An **invariant** ("X may never exceed Y") is a `validations[]` script: existing
+violations are frozen rather than bricked. A **transition gate** ("by the time the record
+reaches state S, X must be filled") is `requiredWhen`, or a bound on the field: records
+that predate the rule are let through. ⛔ Do not let prose describe a transition gate as
+an invariant. Which construct a lifecycle constraint takes is the same question the
+Schema Validation note answers for state machines.
+
+> Precedent: #1069 (its platform-teaching half is objectstack#13879).
+
+**8. Interception stands on a person's judgement.**
+A machine signal (`suspected`) warns and lets the write through. Only a value a person
+wrote down (`confirmed`) may block one. ⛔ Do not build an override escape hatch.
+
+> Precedent: #1288.
+
+**9. Elevate as little as possible.**
+A screen flow stays `runAs: 'user'`. A write that genuinely needs elevation is split into
+a dedicated `system` sub-flow and called through a `subflow` node. ⛔ Do not elevate a
+whole flow to make `readonly` take effect. `close_case` is a historical precedent, not a
+policy.
+
+> Precedent: #1434.
+
+**10. The organization dimension.**
+Any `runAs: 'system'` scan or rollup MUST pin an organization predicate — the #1363 guard
+is the acceptance criterion. The tenant column (`organization_id`) is a uniform platform
+capability, injected by default: ⛔ do not declare it object by object, and ⛔ do not "add
+a tenant dimension" object by object.
+
+> Precedents: #1372 · #1177 (the mechanism reading).
+
+**11. A deliberate deviation must be written down.**
+A choice that departs from a repo-wide convention — a demo position left empty, a board
+that keeps `resolved`, a standing grant for the review window, two priority vocabularies
+— carries a comment beside the code **and** an entry in the roster of the guard that
+would otherwise flag it. Without both, the next agent tidies it away.
+
+> Precedents: #1102 (the fence was strengthened) · #1328 (the boundary roster) · #1342
+> (the vocabulary comment).
+
+**Escape hatches are for extreme cases — layout is derived by default.**
+Maintainer ruling, 2026-08-31 (verbatim, kept untranslated):
+
+> 「或者说 skills 应该说明，逃生仓是极端场景按照客户需求自定义的场景下才需要，应该尽量避免。」
+
+A layout escape hatch — authoring `record:details` sections on a custom record page, or
+enumerating fields in a view's `form.sections` — is reached for **only** in the extreme
+case, a named customer-demanded customization. ⛔ Avoid it everywhere else. The ladder,
+in order:
+
+1. **`fieldGroups` on the object, each field opting in with `group: '<key>'`** — the
+   norm, and it authors no sections at all: the layout is *derived*.
+2. **The group-reference form** (`{ group: '<key>' }`, objectstack#13897) when partial
+   arrangement is genuinely needed. No in-repo example is cited on purpose — nothing here
+   uses it yet, so read the shape off the spec rather than off a neighbour.
+3. **Per-field enumeration** only in the extreme case, and then with a comment beside the
+   code naming the customer need and why a group reference cannot express it (composing a
+   capture across groups; a wizard or pane structure). That comment is rule 11 applying
+   itself, not an extra ask.
+
+> Mechanism: objectstack#13855 · objectstack#13897.
+
 ## 🚀 Development Workflow
 
 1.  **Define Object**: Create `src/objects/{entity}.object.ts`.
@@ -186,10 +262,10 @@ Use the most specific `Field` type available from `@objectstack/spec/data`:
 
 ## ⚠️ Constraint Checklist
 
-- **Object Naming**: All HotCRM business objects MUST be prefixed with `crm_` (e.g., `crm_account`, `crm_opportunity`, `crm_case`, `crm_lead`, `crm_campaign`, `crm_contact`, `crm_contract`, `crm_product`, `crm_quote`, `crm_quote_line_item`, `crm_opportunity_line_item`, `crm_task`, `crm_campaign_member`, `crm_knowledge_article`, `crm_forecast`). All references — `reference_to`, `lookup`, `masterDetail`, cube `sql`, view `data.object`, hook `object`, navigation `objectName`, action `objectName`, dashboard `object` — MUST use the prefixed form. Platform objects keep their existing `sys_*` prefix.
+- **Object Naming**: All HotCRM business objects MUST be prefixed with `crm_` (e.g. `crm_account`, `crm_opportunity`). The roster is deliberately **not** restated here — `src/objects/*.object.ts` is its source of truth. *Supersedes the hand-maintained fifteen-name list that stood in this bullet, which had already drifted three objects behind the tree — 2026-08-31 ruling, item 5.* All references — `reference_to`, `lookup`, `masterDetail`, cube `sql`, view `data.object`, hook `object`, navigation `objectName`, action `objectName`, dashboard `object` — MUST use the prefixed form. Platform objects keep their existing `sys_*` prefix.
 - **i18n**: Every new object must have entries in all 4 locale files (`src/translations/{en,zh-CN,es-ES,ja-JP}.ts`) — label, pluralLabel, all field labels + option labels, view labels, navigation labels. No new feature ships without all 4 locales.
-- **Docs**: Every new object/feature requires user-facing documentation under `content/docs/` (e.g. `getting-started/`, `guides/`, `marketing/`, `analytics/`, `administration/`) written for business users + admins (not developers).
-- **Documentation**: All documentation MUST be in English.
+- **Docs**: Every new object/feature requires user-facing documentation under `content/docs/` (e.g. `getting-started/`, `guides/`, `marketing/`, `analytics/`, `administration/`) written for business users + admins (not developers) — business concepts, never a hand-copied machine roster (see **Documentation discipline** below).
+- **Documentation**: written in English, then translated — `content/docs` ships `.zh-Hans.mdx` and `.zh-Hant.mdx` pages beside the English ones, and that Chinese surface follows the three rules under **Documentation discipline** below. *Supersedes "All documentation MUST be in English", a blanket the shipped tree already contradicted — 2026-08-31 ruling, item 6.*
 - **Validation predicates must be TOTAL**: every `record.x` read in an authored
   CEL predicate — `validations[].condition`, `requiredWhen`, `readonlyWhen`,
   `visibleWhen` — carries a `has(record.x)` guard. See below.
@@ -245,6 +321,29 @@ carries the full measurement table, the driver-by-driver findings, and why this
 route was chosen over making the in-memory test driver column-complete. Read it
 before adding a rule.
 
+### Documentation discipline (2026-08-31 ruling)
+
+**5. Docs explain business concepts. ⛔ They never hand-copy a machine list.**
+The single source of truth for a machine fact — a dataset's dimensions, an object's
+fields, the roster of objects itself — is the self-describing metadata under `src/`.
+A table transcribed into prose drifts, and this repo has measured it drifting four
+times. The boundary is one question: **can a reader see this directly in the product
+UI?** A navigation fact (which views a user is offered) may be documented and guarded;
+a machine semantic layer may not.
+
+> Drift measured: #610, #965, #977, #1228. Boundary precedents: #1422 (documentable)
+> against #1329 / #1326 (not).
+
+**6. The Chinese doc surface has three rules.**
+
+- UI nouns take the **zh-CN language-pack** wording. ⛔ Never coin a fresh translation
+  for something the app already labels (#1329).
+- A Chinese heading carries an **explicit English anchor id**, and one anchor word is
+  used across every language, so a link survives translation (#1359).
+- zh-Hant conventions are stated by their **real** reason, not a style preference: the
+  console falls back to Simplified, so a Traditional page labels platform navigation in
+  English rather than ship mixed Simplified/Traditional script (#1368).
+
 ## ⬆️ Platform Upgrades (ObjectStack version bumps)
 
 When upgrading the `@objectstack/*` dependency line, **start from the official
@@ -263,7 +362,71 @@ changelogs**:
 4. Record the upgrade in `CHANGELOG.md` following the existing entry format
    (what changed on the platform, what metadata was migrated and why).
 
-## 🚫 Out of Scope (Platform Features)
+> A platform fix that has **merged** is not yet a fix you can use. Before resuming a card
+> that was blocked on one, confirm the pinned `@objectstack/*` version actually carries it
+> — that is the second half of Scope rule 2.
+
+## 🚫 Scope — a pure metadata application (2026-08-31 ruling)
+
+Maintainer ruling, 2026-08-31 (verbatim, kept untranslated):
+
+> 「基于以上决裁，对于hotcrm 元数据项目，需要补充哪些 agents.md ，比如纯元数据应用应该简化，只开发业务功能，平台能力全部在平台开发。」
+
+The four rules below are distilled from that day's rulings. The verbatim quotes and the
+precedent ledger they were drawn from are single-sourced in **objectstack#13848** —
+read that card before arguing with one of these. Every rule carries its precedent cards
+on purpose: they are tombstones, and they are what stops the same card being filed again
+next quarter.
+
+### 1. What HotCRM is
+
+HotCRM is the **simplified implementation of business capability**: metadata authored
+under the platform spec, guided by the platform's published skills, checked for legality
+by the `os` commands (`pnpm validate`, `pnpm lint` here). ⛔ Do not re-invent what the
+platform already owns.
+
+**Build business features here; build platform capability on the platform.** A gap you
+find in the platform is filed as a platform card upstream — ⛔ it is never compensated
+for in this repo.
+
+> Precedents: #806 → objectstack#13855 · #1203 → objectstack#13889 · #1212 →
+> objectui#7063 · #1247 → objectui#7064 · #1301 → objectstack#13894 · #1185 →
+> objectstack#13881 · #1069 → objectstack#13879 · #1231 (credential mechanism voided).
+
+### 2. A platform defect means you WAIT for the platform fix
+
+⛔ Do not route around it — no defensive coding, no shape tolerance, no hand-written
+predicate re-implementing a rule that lives inside the platform. ⛔ Do not split a ruling
+into "the half we can land now" and land that half.
+
+File the blocked card and make the dependency machine-visible with a `Blocked-by:` line
+pointing at the platform card. When the fix lands, resume the **original** ruling — and
+before resuming, confirm the pinned version actually contains it (**merged is not the
+same as available in the pin**; see Platform Upgrades) and re-run the defect card's own
+fixture. Red means stop.
+
+> Precedent: #549 / objectstack#11082 / objectstack PR #11183 — waiting was proved right.
+
+### 3. ⛔ Do not build platform-level tooling here
+
+Lint, validation, gates and diagnostics belong to the platform, uniformly. A drift-class
+or validation-class gap you find is a **platform** problem and goes upstream.
+
+Tests in this repo pin **this repo's own business facts** and nothing else — a seed-row
+pin, a "doc wording equals the language-pack label" guard. ⛔ Do not grow a gate farm.
+
+> Precedents: #806 (its lint half was retired) · #1423 (the comment-volume gate was
+> deliberately not built).
+
+### 4. A bad platform default is fixed at the default
+
+Writing an `emptyState` string on every tile, or hand-tuning which tile a row lands on to
+dodge a collapsing render, is paying the same tax over and over again. Change the default
+upstream instead.
+
+> Precedents: #1212 → objectui#7063 · #1247 → objectui#7064.
+
+### Out of scope: platform features
 
 The following are **NOT** in HotCRM's scope — they are platform-level features provided by `@objectstack/runtime` or other platform packages:
 
@@ -273,17 +436,30 @@ The following are **NOT** in HotCRM's scope — they are platform-level features
 
 **Focus Area**: HotCRM focuses exclusively on **business domains** (CRM, Finance, HR, Marketing, Products, Support) and their **business logic, data models, and AI capabilities** — authored as metadata in `src/`.
 
+## ⚖️ Ruling discipline (2026-08-31 ruling)
+
+**12. Look for an existing ruling before you escalate.**
+When a card already records a maintainer ruling, ⛔ do not re-escalate it and ⛔ do not
+re-decide it. The authoritative ledger of rulings is the director seat's pinned post
+(**objectstack#13766**, ruling B); the comments on the card itself are the detail notes.
+
+> Precedent: #1198 — the 8/22 mistake.
+
 ---
 
 ## ✅ Verifying changes
 
 ### Verify before opening a PR
 
-Run the full suite and make sure it's green:
+Run the repo's own verify chain and make sure it's green:
 
 ```
-pnpm validate && pnpm typecheck && pnpm build && pnpm test
+pnpm verify
 ```
+
+`package.json` is the single source of truth for what that chain runs. *Supersedes the
+hand-copied `pnpm validate && pnpm typecheck && pnpm build && pnpm test` line that stood
+here and named half of it — 2026-08-31 ruling, item 5.*
 
 `pnpm validate` enforces ADR-0021 dashboard-widget binding integrity: a chart's
 `chartConfig.xAxis.field` must resolve to a dataset **dimension** and
