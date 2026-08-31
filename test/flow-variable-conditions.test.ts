@@ -553,8 +553,10 @@ describe('every variable a flow condition reads is BOUND on every path to it', (
     })).toEqual(['q']);
 
     // …and the pre-#1155 remedy, an `assignment` ahead of the screen, still
-    // works. Retiring the node from `lead_conversion` did not retire the
-    // graph-binding route: `campaign_enrollment` still uses it.
+    // works as an ANALYSIS route, kept measurable here because it is the
+    // documented way back if a platform upgrade ever drops the seeding. No
+    // flow in the tree uses it any more: `campaign_enrollment` was the last
+    // holder and retired its node in #1173.
     const fixed: AnyRec = {
       ...synthetic,
       nodes: [
@@ -596,6 +598,73 @@ describe('every variable a flow condition reads is BOUND on every path to it', (
         /has\(vars\.(createOpportunity|matchedAccount|matchedContact)\)/.test(s.source),
         `${s.id} guards a flow VARIABLE with has(...) — bind it in the graph instead`,
       ).toBe(false);
+    }
+  });
+
+  it('binds `memberSource` before campaign_enrollment reads it, by declaration (#1173)', () => {
+    // Same CLASS 2 remedy as `lead_conversion`, reached for a partly different
+    // reason — see the engine block below. `memberSource` is read by BOTH
+    // branch edges, so an unbound run picks no branch and enrols nobody.
+    const flow = flows.find((f) => f.name === 'campaign_enrollment')!;
+    const declared = (flow.variables as AnyRec[]).find((v) => v.name === 'memberSource');
+    expect(declared, 'campaign_enrollment no longer declares memberSource').toBeDefined();
+    expect(
+      declared!.defaultValue,
+      'campaign_enrollment no longer seeds memberSource — the edge e4/e7 read is unbound again (#643)',
+    ).toBe('leads');
+    for (const id of ['campaign_enrollment.edge:e4', 'campaign_enrollment.edge:e7']) {
+      expect(guaranteedAt(flow, sites.find((s) => s.id === id)!).has('memberSource'), id).toBe(true);
+    }
+
+    // ABLATION, structural half: strip the declared default and the same sweep
+    // must report the read as unbound. Without this the assertion above could
+    // be passing because `guaranteedAt` counts something else entirely.
+    const stripped: AnyRec = {
+      ...flow,
+      variables: (flow.variables as AnyRec[]).map((v) =>
+        v.name === 'memberSource' ? Object.fromEntries(Object.entries(v).filter(([k]) => k !== 'defaultValue')) : v),
+    };
+    expect(guaranteedAt(stripped, sites.find((s) => s.id === 'campaign_enrollment.edge:e4')!).has('memberSource')).toBe(false);
+
+    // The workaround is gone and stays gone.
+    const init = (flow.nodes as AnyRec[]).find((n) => n.type === 'assignment' && 'memberSource' in (n.config?.assignments ?? {}));
+    expect(init, 'the init_defaults workaround is back — the declared default already binds it (#1173)').toBeUndefined();
+
+    // …and it was not swapped for the guard the class table forbids.
+    for (const s of sites.filter((x) => x.flow === 'campaign_enrollment')) {
+      expect(
+        /has\(vars\.memberSource\)/.test(s.source),
+        `${s.id} guards a flow VARIABLE with has(...) — bind it in the graph instead`,
+      ).toBe(false);
+    }
+  });
+
+  it('the enrolment default has exactly ONE authority (#1173)', () => {
+    // The duplication the card names: `'leads'` used to be written on the
+    // screen field AND on the assignment node, with nothing reconciling them.
+    const flow = flows.find((f) => f.name === 'campaign_enrollment')!;
+    const screen = (flow.nodes as AnyRec[]).find((n) => n.id === 'screen_1')!;
+    const field = (screen.config.fields as AnyRec[]).find((f) => f.name === 'memberSource')!;
+    expect(
+      field.defaultValue,
+      'the screen field restates the default instead of deriving it — that is the ' +
+        'duplication #1173 removed, moved one level over',
+    ).toBe('{memberSource}');
+    const literals = (flow.variables as AnyRec[])
+      .filter((v) => v.name === 'memberSource' && v.defaultValue !== undefined).length +
+      (field.defaultValue === 'leads' ? 1 : 0);
+    expect(literals, 'the enrolment default is stated more than once').toBe(1);
+
+    // `leadStatus` / `contactDepartment` are the DELIBERATE asymmetry, pinned
+    // so a later reader does not "finish the job" by seeding them too. No
+    // condition reads either one — they are interpolated into a `get_record`
+    // filter, where an unresolved interpolation makes the node refuse to run
+    // and name the culprit. A declared default would replace that loud refusal
+    // with a silent enrolment of a segment nobody chose.
+    for (const name of ['leadStatus', 'contactDepartment']) {
+      const v = (flow.variables as AnyRec[]).find((x) => x.name === name)!;
+      expect(v.defaultValue, `${name} gained a defaultValue — no condition reads it, so this buys nothing`).toBeUndefined();
+      expect(sites.some((s) => s.flow === 'campaign_enrollment' && variableRoots(s.source).includes(name))).toBe(false);
     }
   });
 
@@ -977,6 +1046,85 @@ describe('the two defects, reproduced end-to-end', () => {
       expect(done.error ?? null).toBeNull();
       const members = await api.object('crm_campaign_member').find({ where: { crm_campaign: camp.id } });
       expect(members.length, 'the guard suppressed a legitimate enrolment').toBe(1);
+    } finally {
+      await b.close();
+    }
+  }, 60_000);
+
+  it('campaign_enrollment: the server refuses a resume that omits the required memberSource (#4477)', async () => {
+    // THE reason `campaign_enrollment`'s seeding node was dead weight for a
+    // different reason than `lead_conversion`'s (#1173). `createOpportunity` is
+    // a checkbox deliberately NOT `required`, so a runner posting only what the
+    // user touched leaves it unanswered and the binding has to carry the run.
+    // `memberSource` is a `select` with `required: true`, and since 17.0.0-rc.2
+    // the SERVER holds the resume to that contract — so the unanswered state is
+    // unreachable on this path, and the node was protecting against a shape the
+    // engine refuses to produce. If a platform upgrade drops that enforcement,
+    // this goes red and the declared default becomes the only thing standing
+    // between edge e4/e7 and a `No such key` abort.
+    const b = await boot(['campaign_enrollment']);
+    try {
+      const api = b.ql.createContext({ isSystem: true });
+      const camp = await api.object('crm_campaign').insert({
+        name: 'Spring', type: 'email', status: 'planning',
+        start_date: '2026-01-01', end_date: '2026-03-01',
+      });
+      const started = await b.engine.execute('campaign_enrollment', asUser({ recordId: camp.id }));
+      expect(started.status).toBe('paused');
+
+      const refused = await b.engine.resume(started.runId, {
+        variables: { leadStatus: 'new', contactDepartment: 'executive' },
+      });
+      expect(refused.success).toBe(false);
+      expect(refused.code).toBe('INVALID_SCREEN_INPUT');
+      expect(refused.error).toMatch(/Screen field "memberSource" is required/);
+
+      // …and the refusal did not consume the run: the same run still resumes
+      // once the field is supplied. A refusal that also killed the run would be
+      // a different (and worse) story about what the node was protecting.
+      const done = await b.engine.resume(started.runId, {
+        variables: { memberSource: 'leads', leadStatus: 'new', contactDepartment: 'executive' },
+      });
+      expect(done.error ?? null).toBeNull();
+    } finally {
+      await b.close();
+    }
+  }, 60_000);
+
+  it('campaign_enrollment: the derived prefill reaches the client as the raw value, and a caller param wins', async () => {
+    // Single authority on the wire (#1173), and the clobber the retired
+    // `init_defaults` node had. The node assigned unconditionally ahead of the
+    // screen, so a caller who launched with `memberSource: 'contacts'` got a
+    // dialog pre-set to `leads` and the LEAD branch. The declared default
+    // defers to the param, and the screen field derives its prefill from the
+    // variable — so what the caller asked for is what the user sees.
+    const b = await boot(['campaign_enrollment']);
+    try {
+      const api = b.ql.createContext({ isSystem: true });
+      const camp = await api.object('crm_campaign').insert({
+        name: 'Spring', type: 'email', status: 'planning',
+        start_date: '2026-01-01', end_date: '2026-03-01',
+      });
+
+      const prefillOf = async (params: AnyRec) => {
+        const started = await b.engine.execute('campaign_enrollment', asUser({ recordId: camp.id, ...params }));
+        const screen = started.screen ?? started.output?.screen ?? null;
+        return ((screen?.fields ?? []) as AnyRec[]).find((f) => f.name === 'memberSource');
+      };
+
+      const plain = await prefillOf({});
+      expect(plain, 'the enrolment screen no longer offers memberSource').toBeDefined();
+      // Interpolated to the raw value — NOT the literal '{memberSource}', which
+      // a `select` would match against no option and render as nothing chosen.
+      expect(plain!.defaultValue).toBe('leads');
+      expect(typeof plain!.defaultValue).toBe('string');
+      expect(plain!.required, 'memberSource stopped being required — the refusal test above no longer measures this flow').toBe(true);
+
+      const supplied = await prefillOf({ memberSource: 'contacts' });
+      expect(
+        supplied!.defaultValue,
+        'the caller-supplied memberSource was clobbered — that is the behaviour the retired assignment node had',
+      ).toBe('contacts');
     } finally {
       await b.close();
     }
