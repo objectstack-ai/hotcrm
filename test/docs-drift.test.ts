@@ -345,7 +345,16 @@ describe('published docs pages do not drift from the large-deal condition', () =
     return forms;
   };
 
-  /** Ways of saying "strictly greater than", in the three locales the docs ship. */
+  /**
+   * Ways of saying "strictly greater than", in the three locales the docs ship.
+   *
+   * The scan is anchored on the large-deal AMOUNT, which is what keeps it from
+   * flagging the director tier: `HIGH_VALUE_DEAL_AMOUNT` is deliberately
+   * exclusive, so `> $500K` is correct prose on a dozen pages. The one case
+   * that collides is the two thresholds becoming the same number — measured
+   * while proving this guard can fail, and it reports 27 pages. If that day
+   * comes the collision is the defect, not the prose.
+   */
   const EXCLUSIVE_LEAD_INS = [
     'over ',
     'above ',
