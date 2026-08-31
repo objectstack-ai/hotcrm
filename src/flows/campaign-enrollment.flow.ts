@@ -55,7 +55,52 @@ export const CampaignEnrollmentFlow: Flow = {
     // `recordId` matches the console's flow-action trigger contract
     // ({ recordId, objectName }) — cf. lead_conversion / quote_generation.
     { name: 'recordId', type: 'text', isInput: true, isOutput: false },
-    { name: 'memberSource', type: 'text', isInput: true, isOutput: false },
+    /**
+     * `memberSource` is BOUND BY THIS DECLARATION — not by a seeding node.
+     *
+     * Both branch edges (`e4` / `e7`) read `vars.memberSource`, so it must be
+     * bound on every path reaching them. On the pinned 17.1.0 spec
+     * `FlowVariableSchema` DOES carry `defaultValue`, and the engine seeds it
+     * before the start node runs, so this key alone binds the name — while a
+     * caller-supplied `context.params.memberSource` still WINS over it.
+     *
+     * That retires the `init_defaults` assignment node that used to sit ahead
+     * of the screen (#1173, after #1155 did the same to `lead_conversion`).
+     * The node was unconditional, so it CLOBBERED a supplied param — measured:
+     * launching with `params.memberSource = 'contacts'` ran the LEAD branch.
+     * It also restated a default the screen field carried too, with nothing
+     * keeping the two in step.
+     *
+     * A second, independent reason it had nothing left to protect, and the one
+     * specific to THIS flow: the `memberSource` screen field below is
+     * `required: true`, and since 17.0.0-rc.2 the SERVER holds a screen resume
+     * to the declared field contract (#4477). A resume signal omitting
+     * `memberSource` is refused with `INVALID_SCREEN_INPUT` and the run stays
+     * paused, so the ordinary resume path cannot reach an unbound read at all
+     * — unlike `lead_conversion`'s checkbox, which is deliberately not
+     * `required` and therefore has an unanswered state. The one path that
+     * skips that check is a resume carrying NO signal object; measured, it
+     * fails one node later at `query_leads` regardless of this binding,
+     * because `{leadStatus}` resolves to nothing and `get_record` refuses to
+     * run rather than widen the query.
+     *
+     * The literal lives HERE and nowhere else: the screen field derives its
+     * prefill from this variable (`defaultValue: '{memberSource}'`).
+     */
+    { name: 'memberSource', type: 'text', isInput: true, isOutput: false, defaultValue: 'leads' },
+    /**
+     * `leadStatus` / `contactDepartment` deliberately carry NO `defaultValue`,
+     * and the asymmetry with `memberSource` is the point. No condition in this
+     * flow reads either one — they are interpolated into a `get_record`
+     * `filter` — so the binding analysis in
+     * `test/flow-variable-conditions.test.ts` does not cover them, and the CEL
+     * abort it exists to prevent cannot happen here. An unresolved
+     * interpolation makes `get_record` REFUSE TO RUN and name the offending
+     * condition, because an absent condition widens a query instead of
+     * narrowing it. Seeding these two would turn that loud refusal into a
+     * silent enrolment of a segment nobody chose; their `required: true`
+     * screen fields are what supply them.
+     */
     { name: 'leadStatus', type: 'text', isInput: true, isOutput: false },
     { name: 'contactDepartment', type: 'text', isInput: true, isOutput: false },
   ],
@@ -63,34 +108,17 @@ export const CampaignEnrollmentFlow: Flow = {
   nodes: [
     { id: 'start', type: 'start', label: 'Start', config: { objectName: 'crm_campaign' } },
     {
-      /**
-       * BIND `memberSource` before anything reads it — the house rule from
-       * `lead_conversion`'s `init_defaults`, not a `has()` guard.
-       *
-       * Both branch edges below read `vars.memberSource`, and a screen-collected
-       * value is unbound on any run whose runner did not send it back. Under
-       * strict CEL that read ABORTS (`No such key: memberSource`), the engine
-       * records the run FAILED and nobody is enrolled — the same class of defect
-       * `lead_conversion` hit with `createOpportunity`. Declaring the variable in
-       * `flow.variables` does not bind it: `FlowVariableSchema` has no
-       * `defaultValue`, and the engine binds a declared input only when the
-       * caller passed it in `context.params`.
-       *
-       * This node has to sit AHEAD of the screen so the resume signal overwrites
-       * it whenever the runner does answer. `leads` mirrors the screen field's
-       * own `defaultValue` and is the historical behaviour of this flow, so an
-       * unanswered run does what it has always done rather than nothing.
-       */
-      id: 'init_defaults', type: 'assignment', label: 'Default Enrollment Options',
-      config: { assignments: { memberSource: 'leads' } },
-    },
-    {
       id: 'screen_1', type: 'screen', label: 'Enrollment Criteria',
       config: {
         fields: [
           {
+            // Prefill DERIVED from the variable, so the default is written
+            // once (on the declaration) rather than restated here — the
+            // single-authority form #1155 settled on. It reaches the client
+            // interpolated to the raw value, the string `leads`, which is what
+            // a literal `defaultValue: 'leads'` used to send.
             name: 'memberSource', label: 'Enroll', type: 'select', required: true,
-            defaultValue: 'leads',
+            defaultValue: '{memberSource}',
             options: [
               { label: 'Leads', value: 'leads' },
               { label: 'Contacts', value: 'contacts' },
@@ -254,8 +282,11 @@ export const CampaignEnrollmentFlow: Flow = {
   ],
 
   edges: [
-    { id: 'e1', source: 'start', target: 'init_defaults', type: 'default' },
-    { id: 'e1b', source: 'init_defaults', target: 'screen_1', type: 'default' },
+    // `e1` used to run start → init_defaults, with `e1b` carrying on to the
+    // screen. The seeding node is retired (#1173) — the declared
+    // `defaultValue` on `memberSource` binds it ahead of the start node — so
+    // the start edge goes straight to the screen and `e1b` is gone.
+    { id: 'e1', source: 'start', target: 'screen_1', type: 'default' },
     { id: 'e2', source: 'screen_1', target: 'get_campaign', type: 'default' },
     { id: 'e3', source: 'get_campaign', target: 'check_campaign_open', type: 'default' },
     // Closed campaign → no edge → flow ends without enrolling.
@@ -289,10 +320,13 @@ export const CampaignEnrollmentFlow: Flow = {
     { id: 'e5', source: 'query_leads', target: 'loop_leads', type: 'default' },
     { id: 'e6', source: 'loop_leads', target: 'end', type: 'default' },
     // The contact branch. `memberSource` carries no `has()` guard on either
-    // edge, deliberately: the `init_defaults` assignment BINDS it on every path
-    // that reaches here, which is the fix the house rule asks for. A guard would
-    // have buried the policy ("no answer means leads") inside a predicate and
-    // left the graph defect in place — see test/flow-variable-conditions.ts.
+    // edge, deliberately: its `flow.variables` declaration carries
+    // `defaultValue: 'leads'`, which the engine seeds before the start node, so
+    // it is bound on every path that reaches here — and on the ordinary resume
+    // path the server has already refused any signal that omitted the
+    // `required` screen field. A guard would have buried the policy ("no answer
+    // means leads") inside a predicate and left the graph defect in place — see
+    // test/flow-variable-conditions.test.ts.
     { id: 'e7', source: 'check_campaign_open', target: 'query_contacts', type: 'conditional', condition: P`has(vars.campaignRecord) && has(vars.campaignRecord.status)
       && (vars.campaignRecord.status == "planning" || vars.campaignRecord.status == "in_progress")
       && vars.memberSource == "contacts"`, label: 'Open · Contacts' },
