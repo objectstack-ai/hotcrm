@@ -261,8 +261,7 @@ export const Quote = ObjectSchema.create({
   ],
   
   // Enable advanced features
-  // Dead enable.* flags (trash/mru) removed in @objectstack 12 (ADR-0049);
-  // History → Field.trackHistory (ADR-0052).
+  // API surface. History → Field.trackHistory (ADR-0052).
   enable: {
     apiEnabled: true,
     apiMethods: ['get', 'list', 'create', 'update', 'delete'],
@@ -292,15 +291,11 @@ export const Quote = ObjectSchema.create({
       // approval flow keys on the opportunity's AMOUNT, and $99K is under the
       // large-deal line. This is the policy ceiling that constraint never was.
       //
-      // ### It replaces a rule that could never fire
-      //
-      // The predicate here used to read `record.discount > 100` under the
-      // message "Discount cannot exceed 100%". Measured: field-level bounds are
-      // evaluated BEFORE object validations, so `discount: 150` was already
-      // refused by `max: 100` with `code: 'max_value'` and the message
-      // "Discount % must be ≤ 100" — the rule's own message was unreachable on
-      // every input that could reach it. Tightening the number in place removes
-      // a dead rule rather than adding a second one; the count is unchanged.
+      // ⚠️ A predicate of `record.discount > 100` here would be DEAD: field-level
+      // bounds are evaluated BEFORE object validations, so `discount: 150` is
+      // already refused by `max: 100` with `code: 'max_value'` and the message
+      // "Discount % must be ≤ 100", and the rule's own message is unreachable on
+      // every input that could reach it.
       //
       // ### Why a script validation and not a lower `max` on the field
       //
@@ -362,7 +357,7 @@ export const Quote = ObjectSchema.create({
   ],
   
   // Workflow Rules
-  // NOTE: object `workflows[]` were removed in @objectstack 7.7. Field-updates
-  // moved to this object's *.hook.ts; scheduled status-flips & notifications
-  // moved to src/flows/*.flow.ts (see flows/index.ts).
+  // ⚠️ No `workflows[]` here, and none is possible: object `workflows[]` were
+  // removed from the platform. Field updates live in this object's `*.hook.ts`;
+  // scheduled status flips and notifications live in `src/flows/*.flow.ts`.
 });

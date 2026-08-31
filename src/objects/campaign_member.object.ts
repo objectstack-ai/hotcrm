@@ -39,37 +39,29 @@ export const CampaignMember = ObjectSchema.create({
   // resolver accepts the REQUIRED `crm_campaign` LOOKUP as the parent, so no
   // master-detail conversion is needed.
   //
-  // As of 17.0.0-rc.4 that derivation delivers exactly "members whose
-  // `crm_campaign` the caller can read". MEASURED on 17.0.0-rc.4 and pinned by
-  // `test/parent-derived-reach.test.ts`: master accessibility resolves through
-  // the same paths a direct read of the campaign takes — ownership and
-  // `sys_record_share` grants folded in alongside the master's row-level
-  // security policies.
+  // The derivation delivers exactly "members whose `crm_campaign` the caller
+  // can read". ⚠️ Master accessibility resolves through the same paths a direct
+  // read of the campaign takes — ownership and `sys_record_share` grants folded
+  // in ALONGSIDE the master's row-level security policies, not the policies
+  // alone. `test/parent-derived-reach.test.ts` pins that, and was written to go
+  // red the day the platform changes it: an earlier version consulted master
+  // RLS ONLY, under a SYSTEM context, so with no policy narrowing a SELECT on
+  // `crm_campaign` a member row was readable by every holder of object-level
+  // read on this object.
   //
-  // The practical delta is smaller here than on the app's other parent-derived
-  // objects: `crm_campaign` is `public_read`, so a caller who holds campaign
-  // read already reads every campaign, and the derivation returns the same rows
-  // for them either way. What changed is that member rows now DEPEND on the
-  // campaign grant. The write side already bit before the fix: the platform's
-  // `member_default` set carries an owner-only-writes RLS policy on updates, and
-  // because the derivation folds master RLS in, that policy reaches through to
-  // member writes — see the `marketing_campaign_updates` note in
+  // ⚠️ The write side reaches further than reads: the platform's
+  // `member_default` set carries an owner-only-writes RLS policy on updates,
+  // and because the derivation folds master RLS in, that policy reaches through
+  // to member writes — see the `marketing_campaign_updates` note in
   // `src/profiles/marketing-user.profile.ts`.
   //
-  // Until 17.0.0-rc.3 the derivation consulted master RLS policies ONLY, under a
-  // SYSTEM context, so with no policy narrowing a SELECT on `crm_campaign` a
-  // member row was readable by every holder of object-level read on this object,
-  // campaign grant or not (#694). objectstack-ai/objectstack#5386 fixed that
-  // upstream and it shipped in rc.4.
-  //
-  // It was `private` before (#488) — with no owner field on the junction row
-  // that meant "whoever inserted it", which is nobody's idea of campaign
-  // membership and hid rows written by the enrollment flow.
+  // ⛔ Not `private`: with no owner field on the junction row that resolves to
+  // "whoever inserted it", which is nobody's idea of campaign membership and
+  // hides rows written by the enrollment flow.
   sharingModel: 'controlled_by_parent',
 
-  // @objectstack 12: the dead object-level `enable.trackHistory` flag was
-  // removed (ADR-0049) — per-field history is opt-in via `Field.trackHistory`
-  // (ADR-0052), set on `status` below.
+  // Per-field history is opt-in via `Field.trackHistory` (ADR-0052), set on
+  // `status` below — there is no object-level history flag.
 
   // ADR-0079: junction rows have no derivable text title; point the canonical
   // nameField at the stored autonumber explicitly (autonumber is not in the

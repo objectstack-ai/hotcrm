@@ -61,8 +61,7 @@ const opportunityValidationHook: Hook = {
     // via the user-context resume, and rejecting them left the record locked
     // with a permanently pending approval.
     const APPROVAL_FIELDS = new Set(['approval_status', 'approved_date']);
-    // Stage → forecast category (migrated from the removed
-    // `set_forecast_category_by_stage` object workflow — 7.7 dropped workflows[]).
+    // Stage → forecast category.
     const STAGE_FORECAST: Record<string, string> = {
       prospecting: 'pipeline',
       qualification: 'pipeline',
@@ -131,8 +130,8 @@ const opportunityValidationHook: Hook = {
           if (isReferenceCleanup) return;
 
           // `crm_opportunity.nameField` IS `name`, so the name on its own is
-          // exactly how every other surface titles this record. The record id
-          // used to be appended to it and matched none of them (#1243).
+          // exactly how every other surface titles this record. ⛔ Never append
+          // the record id — it matches none of them.
           const name = typeof previous.name === 'string' ? previous.name.trim() : '';
           const subject = name ? `Opportunity ${name}` : 'Opportunity';
           throw refuse(

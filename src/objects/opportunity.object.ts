@@ -13,14 +13,12 @@ export const Opportunity = ObjectSchema.create({
 
   // ADR-0090 D1/D7: OWD is an authored decision. Owner + high-value management sharing rule.
   sharingModel: 'private',
-  // ADR-0079: render-only `titleFormat` retired in favor of `nameField`.
-  // The original template was '{name} - {stage}'. A render-time template could
-  // resolve `stage` to its translated label; a FORMULA cannot — it sees the
-  // stored select VALUE — so the migrated `display_title` titled every deal
-  // "Enterprise Deal - closed_won" in lookups, related lists and search, in
-  // every locale (#461, same defect as Contact `full_name`). The formula
-  // language has no option-label lookup, so the title is now the plain `name`
-  // column; `stage` still leads the highlight strip below, translated.
+  // ⚠️ ADR-0079 `nameField` is a FIELD, not a render template, and a FORMULA
+  // sees the stored select VALUE rather than its translated label — so a
+  // `'{name} - {stage}'` title renders every deal "Enterprise Deal -
+  // closed_won" in lookups, related lists and search, in every locale. The
+  // formula language has no option-label lookup, so the title is the plain
+  // `name` column; `stage` still leads the highlight strip below, translated.
   nameField: 'name',
   // Explicit search targets (ADR-0061). `name` is a real indexed column, so
   // $search resolves on its own here; the list is kept explicit to pin the
@@ -33,9 +31,6 @@ export const Opportunity = ObjectSchema.create({
     { key: 'financials',  label: 'Financials',          icon: 'trending-up' },
     { key: 'sales_process', label: 'Sales Process',     icon: 'target' },
     { key: 'classification', label: 'Classification',   icon: 'tag' },
-    // Was `competition` / "Competition & Campaigns" until #1061 retired the
-    // `competitors` placeholder picklist. Campaign attribution is all that ever
-    // lived here besides it, so the group is named for what it holds.
     { key: 'campaign', label: 'Campaigns', icon: 'flag', defaultExpanded: false },
     { key: 'notes',       label: 'Notes & Next Steps',  icon: 'file-text' },
     { key: 'crm_forecast',    label: 'Forecast & Metrics',  icon: 'bar-chart', defaultExpanded: false },
@@ -171,15 +166,6 @@ export const Opportunity = ObjectSchema.create({
       options: [...LEAD_SOURCE_OPTIONS],
     }),
 
-    // `competitors` was retired in #1061: a `multiple` select whose only three
-    // options were the placeholders `Competitor A/B/C`. Measured before the
-    // removal, it had no reader anywhere in the app — no list column, filter,
-    // detail-page section, dashboard, report, dataset, flow, hook or AI skill —
-    // and no seed row ever set it, so it was a write-only field carrying
-    // fabricated values. Recording *which* competitor a deal is against is a
-    // real need, but it needs a display surface and a real source of names, not
-    // a picklist of invented ones; the closed-lost side of that story is already
-    // served by `loss_reason: 'competitor'` + the free-text `loss_details`.
 
     // Campaign tracking
     crm_campaign: Field.lookup('crm_campaign', {
@@ -190,20 +176,20 @@ export const Opportunity = ObjectSchema.create({
 
     // Sales cycle metrics
     //
-    // FORMULA, not a stored counter (#489). As a plain number column nothing
-    // ever raised it: the hook reset it to 0 on a stage change and no sweep or
-    // hook anywhere incremented it, so `days_in_stage > 14` matched only the
-    // rows the seed hardcoded — the `opportunity_stagnation` flow never fired
-    // on real data. Deriving it from `stage_entry_date` is correct on every
-    // read and costs no nightly full-table pass.
+    // ⚠️ FORMULA, not a stored counter. As a plain number column nothing ever
+    // raises it: the hook resets it to 0 on a stage change and no sweep
+    // increments it, so `days_in_stage > 14` matches only rows a seed hardcoded
+    // and the `opportunity_stagnation` flow never fires on real data. Deriving
+    // it from `stage_entry_date` is correct on every read and costs no nightly
+    // full-table pass.
     //
-    // The trade-off: formulas are evaluated AFTER the query (the engine's
-    // `applyFormulaPlan` walks the returned rows), so this is not a real
-    // column and CANNOT appear in a filter or a sort. Anything that needs to
-    // *select* stalled deals predicates on `stage_entry_date` instead — see
+    // ⚠️ The trade-off: formulas are evaluated AFTER the query (the engine's
+    // `applyFormulaPlan` walks the returned rows), so this is not a real column
+    // and CANNOT appear in a filter or a sort. Anything that needs to *select*
+    // stalled deals predicates on `stage_entry_date` instead — see
     // `opportunity-stagnation.flow.ts` and the `stale_opportunities` view.
     //
-    // `has()` + null guard: `daysBetween(null, …)` faults and the whole field
+    // ⚠️ `has()` + null guard: `daysBetween(null, …)` faults and the whole field
     // silently evaluates to null, so an unstamped row is spelled out as null
     // rather than arriving there by accident.
     days_in_stage: Field.formula({
@@ -244,11 +230,11 @@ export const Opportunity = ObjectSchema.create({
     }),
 
     // Approval workflow tracking.
-    // NOT `readonly`: the opportunity_approval flow writes pending/approved/
-    // rejected here, and since 16.x readonly writes are dropped (#2948).
-    // `defaultValue` at field level: option-level `default: true` only
-    // preselects in UI forms — API/flow inserts land null without it, and a
-    // null approval_status never matches the flow's entry condition.
+    // ⛔ NOT `readonly`: the `opportunity_approval` flow writes
+    // pending/approved/rejected here, and the platform drops writes to readonly
+    // fields. ⚠️ `defaultValue` at FIELD level: option-level `default: true`
+    // only preselects in UI forms — API and flow inserts land null without it,
+    // and a null `approval_status` never matches the flow's entry condition.
     approval_status: Field.select({
       label: 'Approval Status',
       group: 'sales_process',
@@ -266,13 +252,11 @@ export const Opportunity = ObjectSchema.create({
       group: 'sales_process',
     }),
 
-    // ─── Win / Loss analysis ────────────────────────────────────────────
+    // ─── Win / Loss analysis ───────────────────────────────────────────
     //
-    // The reason is captured AT CLOSE, and that is enforced, not requested
-    // (#593). This comment used to read "required when stage moves to
-    // closed_*" while nothing anywhere required anything: both fields were
-    // optional, so every seeded and user-closed deal landed with them empty
-    // and the win/loss widgets below had nothing to draw.
+    // ⛔ The reason is captured AT CLOSE, and that is enforced, not requested.
+    // Leaving both fields optional means every seeded and user-closed deal
+    // lands with them empty and the win/loss widgets below have nothing to draw.
     //
     // `requiredWhen`, not a script validation, for the same reason
     // `crm_lead.duplicate_of_lead` uses it (ADR-0113): "this field must hold a
@@ -280,23 +264,18 @@ export const Opportunity = ObjectSchema.create({
     // contract, the engine evaluates it on insert AND update inside
     // `evaluateValidationRules`, and it reports against the FIELD — so the form
     // marks the empty picklist instead of showing a record-level banner. It is
-    // ALSO the only shape the freeze below leaves usable: once a deal is
-    // closed, `opportunity.hook.ts` refuses every user edit outside the
-    // narrative fields, so a reason not captured in the closing write can never
-    // be added afterwards. Close time is the only chance.
-    //
-    // MEASURED, not assumed (the "declared ≠ enforced" family this repo keeps
-    // finding — #621 / #633 / #650 / #651): both predicates reject the write
-    // through a real ObjectQL over a real driver, on insert and on update, and
-    // the record stays at its previous stage. `crm_case`'s
-    // `resolution_required_for_closed` was re-measured the same way first and
-    // is genuinely blocking today. See `test/win-loss-capture.test.ts`.
+    // ALSO the only shape the freeze below leaves usable: once a deal is closed,
+    // `opportunity.hook.ts` refuses every user edit outside the narrative
+    // fields, so a reason not captured in the closing write can never be added
+    // afterwards. Close time is the only chance.
+    // `test/win-loss-capture.test.ts` drives both predicates through a real
+    // ObjectQL over a real driver, on insert and on update.
     //
     // ⚠️ `has(...)` is load-bearing. A bare `record.stage == "closed_lost"`
-    // aborts with `No such key` on any merged record that simply omits the
-    // column, and the engine's answer to a predicate that cannot evaluate is to
-    // SKIP it ("requiredWhen for 'loss_reason' failed to evaluate — skipped"),
-    // which would make this read as enforced while requiring nothing at all.
+    // aborts with `No such key` on any merged record that omits the column, and
+    // the engine's answer to a predicate that cannot evaluate is to SKIP it
+    // ("requiredWhen for 'loss_reason' failed to evaluate — skipped"), which
+    // would make this read as enforced while requiring nothing at all.
     win_reason: Field.select({
       label: 'Win Reason',
       description: 'Why this deal was won. Required to close an opportunity as Won.',
@@ -356,12 +335,12 @@ export const Opportunity = ObjectSchema.create({
   ],
   
   // Enable advanced features
-  // Dead enable.* flags (trash/mru) removed in @objectstack 12 (ADR-0049).
-  // Stage/amount history is tracked per-field via Field.trackHistory. Ownership
-  // is NOT: since #548 it lives on the platform's injected `owner_id`, which
-  // carries no `trackHistory` flag — a transfer is recorded in the compliance
-  // audit log (`sys_audit_log`, unconditional) rather than on the activity feed.
-  // (ADR-0052).
+  //
+  // Stage/amount history is tracked per-field via `Field.trackHistory`
+  // (ADR-0052). ⚠️ Ownership is NOT: it lives on the platform's injected
+  // `owner_id`, which carries no `trackHistory` flag — a transfer is recorded
+  // in the compliance audit log (`sys_audit_log`, unconditional) rather than on
+  // the activity feed.
   enable: {
     apiEnabled: true,
     apiMethods: ['get', 'list', 'create', 'update', 'delete'], // Whitelist allowed API operations
@@ -371,9 +350,9 @@ export const Opportunity = ObjectSchema.create({
   },
 
   // ADR-0052 §5b.2 — declarative milestone activity. When `stage` enters these
-  // values the platform emits a semantic timeline entry (no hook code). Combined
-  // with the field-level `trackHistory` above (stage-change rows), this fully
-  // replaces the former hand-coded `opportunityActivityHook`.
+  // values the platform emits a semantic timeline entry (no hook code).
+  // Combined with the field-level `trackHistory` above (stage-change rows) this
+  // replaces any hand-coded activity hook.
   activityMilestones: [
     { field: 'stage', value: 'closed_won', summary: 'Deal won — {name}', type: 'completed' },
     { field: 'stage', value: 'closed_lost', summary: 'Deal lost — {name}', type: 'completed' },
@@ -382,7 +361,8 @@ export const Opportunity = ObjectSchema.create({
   // Removed: list_views and form_views belong in UI configuration, not object definition
   
   // Lifecycle transitions are enforced via a `state_machine` validation rule
-  // (see validations[] below). 7.7 removed the top-level `stateMachines` key.
+  // (see validations[] below). ⚠️ There is no top-level `stateMachines` key on
+  // the platform — status state machines live in the validation union.
 
   // Validation Rules
   //
@@ -409,7 +389,6 @@ export const Opportunity = ObjectSchema.create({
       condition: P`has(record.amount) && record.amount != null && record.amount <= 0`,
     },
     {
-      // Migrated from the removed top-level `stateMachines` key (OpportunityStateMachine).
       name: 'opportunity_stage_progression',
       type: 'state_machine',
       severity: 'warning',
@@ -434,15 +413,12 @@ export const Opportunity = ObjectSchema.create({
     },
   ],
   
-  // Workflow Rules
-  //
-  // NOTE: `probability` and `expected_revenue` are NOT computed here. They are
-  // derived imperatively in `opportunity.hook.ts` (single source of truth =
-  // stage → STAGE_PROBABILITY). Keeping the math in one place avoids drift
+  // ⚠️ `probability` and `expected_revenue` are NOT computed declaratively.
+  // They are derived in `opportunity.hook.ts` (single source of truth =
+  // stage → STAGE_PROBABILITY); keeping the math in one place avoids drift
   // between a declarative CASE() table and the hook's lookup table.
-  // `forecast_category` remains a declarative workflow below since the hook
-  // does not own it.
-  // NOTE: object `workflows[]` were removed in @objectstack 7.7. Field-updates
-  // moved to this object's *.hook.ts; scheduled status-flips & notifications
-  // moved to src/flows/*.flow.ts (see flows/index.ts).
+  //
+  // ⚠️ No `workflows[]` here, and none is possible: object `workflows[]` were
+  // removed from the platform. Field updates live in this object's `*.hook.ts`;
+  // scheduled status flips and notifications live in `src/flows/*.flow.ts`.
 });

@@ -1,46 +1,44 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 /**
- * The refusal envelope, authored once (#1075).
+ * The refusal envelope, authored once.
  *
  * ### What this file is for
  *
- * Every business refusal this app raises used to be a bare `Error`, so a REST
- * consumer could not machine-distinguish "this quote is frozen" from "the
- * server fell over" — the only signal was the message string, which is prose,
- * is localised in places, and is the one part of a refusal that is MEANT to
- * change (#693 / #719). The platform maps a thrown error to an HTTP envelope
- * with `resolveThrownHttpError`, and that mapper reads exactly two things off
- * the error: `code` and `status`. Nothing in this app set either.
+ * ⚠️ A business refusal thrown as a bare `Error` is indistinguishable, to a
+ * REST consumer, from the server falling over — the only signal is the message
+ * string, which is prose, is localised in places, and is the one part of a
+ * refusal that is MEANT to change. The platform maps a thrown error to an HTTP
+ * envelope with `resolveThrownHttpError`, and that mapper reads exactly two
+ * things off the error: `code` and `status`.
  *
  * ### The two facts that shape every decision below
  *
- * **1. A guard cannot import this file.** A hook handler is lowered to a
+ * **1. ⛔ A guard cannot import this file.** A hook handler is lowered to a
  * metadata-only `body.source` and evaluated inside QuickJS with no module
- * scope. `extractHookBody` does not merely warn about that — it THROWS:
+ * scope. `extractHookBody` does not merely warn — it THROWS:
  *
  *     [hook-body-extract] hook 'x': handler references identifier(s) not in
  *     scope at runtime: refuse. Module-scope helpers/imports aren't shipped
  *     with a metadata-only body, so this handler will be BUNDLED instead …
  *
- * The CLI build catches that throw and silently bundles the closure, so an
- * imported helper would not go red — it would just stop the hook being
- * shippable as pure metadata. So the helper is INLINED into each handler, the
- * same way `account_protection` inlines the territory table rather than
- * importing `./_territory.ts`, and the same way the four campaign refresh hooks
- * inline their recompute block. This file is the DECLARATION those copies are
- * held to; `test/refusal-envelope.test.ts` reads each copy back out of the
- * LOWERED body and fails when one drifts.
+ * …and the CLI build CATCHES that throw and silently bundles the closure, so an
+ * imported helper does not go red — it just stops the hook being shippable as
+ * pure metadata. So the helper is INLINED into each handler, the same way
+ * `account_protection` inlines the territory table rather than importing
+ * `./_territory.ts`. This file is the DECLARATION those copies are held to;
+ * `test/refusal-envelope.test.ts` reads each copy back out of the LOWERED body
+ * and fails when one drifts.
  *
- * **2. Exactly three properties cross the sandbox boundary.** The runner
+ * **2. ⚠️ Exactly three properties cross the sandbox boundary.** The runner
  * marshals an allowlist — `code` (a non-empty **string**), `status` (a **finite
  * number**), `fields` (an **array**) — and drops everything else; the error is
- * always re-thrown as `SandboxError`. Re-measured on 17.1.0 for this change:
- * `hint` arrives `undefined`, `status: '409'` as a string arrives `undefined`,
- * `code: 4001` as a number arrives `undefined`. So a vocabulary riding a fourth
- * key, or on `instanceof` / `err.name`, would pass an in-process test and be
- * silently dead in production. `refuse()` takes three arguments and sets two
- * properties for that reason: its signature is the guard.
+ * always re-thrown as `SandboxError`. Measured on 17.1.0: `hint` arrives
+ * `undefined`, `status: '409'` as a string arrives `undefined`, `code: 4001` as
+ * a number arrives `undefined`. So a vocabulary riding a fourth key, or on
+ * `instanceof` / `err.name`, would pass an in-process test and be silently dead
+ * in production. `refuse()` takes three arguments and sets two properties for
+ * that reason: its signature is the guard.
  *
  * `fields` is allowlisted and deliberately unused. No consumer reads per-field
  * detail off these refusals today, and the mapper already synthesises an empty
@@ -48,17 +46,17 @@
  *
  * ### Why the codes are the platform's, not this app's
  *
- * Ruled 2026-08-16 (「主线1 3 4：同意」). The mapper only echoes a `code` that is
- * a member of the platform's `ErrorCode` enum (`@objectstack/spec/api`, **290
- * members** on 17.1.0, up from the 269 measured on 17.0.0 GA). An invented
- * spelling is not rejected and not lost — it is demoted to `declaredCode` and
- * the `code` callers branch on is derived from the HTTP status instead. So an
- * app dialect would degrade the branchable channel to a status echo. Per-guard
- * specificity may ride `declaredCode` IN ADDITION if a consumer ever needs it.
+ * ⚠️ The mapper only echoes a `code` that is a member of the platform's
+ * `ErrorCode` enum (`@objectstack/spec/api`, 290 members on 17.1.0). An
+ * invented spelling is not rejected and not lost — it is demoted to
+ * `declaredCode` and the `code` callers branch on is derived from the HTTP
+ * status instead. So an app dialect would degrade the branchable channel to a
+ * status echo. Per-guard specificity may ride `declaredCode` IN ADDITION if a
+ * consumer ever needs it.
  *
  * ### Why `status` is not optional
  *
- * Measured on 17.1.0, `resolveThrownHttpError` reads `status` FIRST:
+ * ⚠️ Measured on 17.1.0, `resolveThrownHttpError` reads `status` FIRST:
  *
  *     code + status  →  409 / DELETE_RESTRICTED   (declaredCode preserved)
  *     status only    →  409 / RESOURCE_CONFLICT

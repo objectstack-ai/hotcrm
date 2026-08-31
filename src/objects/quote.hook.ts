@@ -8,15 +8,15 @@ import type { HookApi } from './_hook-api';
  *
  * - Defaults `expiration_date` to `quote_date + 30 days` when missing.
  * - Freezes quotes once `accepted` or `expired` — against USER edits only: a
- *   write that is purely the engine clearing a link is let through (#720).
+ *   write that is purely the engine clearing a link is let through.
  * - On `accepted`, drafts a contract — carrying the quote's negotiated
- *   `payment_terms` onto it (#873) — and pushes the linked opportunity to
+ *   `payment_terms` onto it — and pushes the linked opportunity to
  *   `closed_won`.
  */
 
-// NB: helpers used by handlers are declared INSIDE each handler — L2 hook
-// bodies run body-only in the QuickJS sandbox, so module scope is not
-// available at runtime (cf. opportunity.hook.ts).
+// ⚠️ Helpers used by handlers are declared INSIDE each handler — L2 hook bodies
+// run body-only in the QuickJS sandbox, so module scope is not available at
+// runtime (cf. opportunity.hook.ts).
 
 const quoteValidation: Hook = {
   name: 'quote_workflow',
@@ -25,9 +25,9 @@ const quoteValidation: Hook = {
   priority: 200,
   description: 'Default expiration date and freeze accepted/expired quotes.',
   handler: async (ctx: HookContext) => {
-    // The refusal envelope (#1075). Mirrored from `./_refusal.ts` because a
-    // lowered body has no module scope and `extractHookBody` THROWS on an
-    // import; `test/refusal-envelope.test.ts` pins every copy against it.
+    // The refusal envelope. ⚠️ Mirrored from `./_refusal.ts` because a lowered
+    // body has no module scope and `extractHookBody` THROWS on an import;
+    // `test/refusal-envelope.test.ts` pins every copy against it.
     function refuse(message: string, code: string, status: number): Error {
       const err = new Error(message) as Error & { code: string; status: number };
       err.code = code;
@@ -51,11 +51,11 @@ const quoteValidation: Hook = {
       input.expiration_date = addDays(base, 30);
     }
 
-    // Guard ONLY genuine USER edits (`ctx.user?.id` present). System / seed /
+    // ⚠️ Guard ONLY genuine USER edits (`ctx.user?.id` present). System / seed /
     // backfill writes carry no user and legitimately re-apply business fields
     // (the seed's quote_date/expiration_date re-evaluate on every reboot), so
-    // guarding them threw boot-time BodyRunner errors (#459). Matches the
-    // system-write convention used across the case/lead/opportunity hooks.
+    // guarding them throws boot-time BodyRunner errors. Matches the system-write
+    // convention used across the case/lead/opportunity hooks.
     if (event === 'beforeUpdate' && previous && ctx.user?.id) {
       const frozen = previous.status === 'accepted' || previous.status === 'expired';
       if (frozen) {
@@ -67,9 +67,9 @@ const quoteValidation: Hook = {
           'id', 'owner_id', 'created_at', 'updated_at',
           'created_by', 'updated_by', 'space_id', 'organization_id', 'org_id', 'version',
         ]);
-        // `violating` rather than `changed` (#720): the three freeze guards now
-        // share one reference-cleanup predicate verbatim, and a shared block can
-        // only be shared if it reads the same variable in all three.
+        // ⚠️ `violating` rather than `changed`: the three freeze guards share
+        // one reference-cleanup predicate verbatim, and a shared block can only
+        // be shared if it reads the same variable in all three.
         const violating = Object.keys(input).filter(
           (k) => !allowed.has(k) && !SYSTEM_FIELDS.has(k) && input[k] !== previous[k],
         );
@@ -109,10 +109,10 @@ const quoteValidation: Hook = {
           if (isReferenceCleanup) return;
 
           // `crm_quote.display_title` is `quote_number - name`; compose the same
-          // pair from the two stored columns rather than appending the record id
-          // (#1243). A lowered hook body cannot read the formula field itself,
-          // and both of its sources are already on the pre-image — the number is
-          // an engine-issued autonumber, so it is read from `previous` only.
+          // pair from the two stored columns rather than appending the record
+          // id. A lowered hook body cannot read the formula field itself, and
+          // both of its sources are already on the pre-image — the number is an
+          // engine-issued autonumber, so it is read from `previous` only.
           const quoteNumber =
             typeof previous.quote_number === 'string' ? previous.quote_number.trim() : '';
           const name = typeof previous.name === 'string' ? previous.name.trim() : '';
@@ -195,23 +195,21 @@ const quoteAccepted: Hook = {
           : 0;
 
     /**
-     * The payment terms the customer actually negotiated (#873).
+     * The payment terms the customer actually negotiated.
      *
-     * `_picklists.ts` justifies Quote and Contract sharing one `payment_terms`
-     * vocabulary with "an accepted quote's terms carry over to the contract",
-     * and `contract.object.ts` repeats it — but nothing carried them: the
-     * drafted contract took `crm_contract.payment_terms`'s own option default
-     * `net_30` on every accepted quote, including one negotiated at
-     * `due_on_receipt`. The value is not cosmetic downstream either — the
+     * Quote and Contract share one `payment_terms` vocabulary because an
+     * accepted quote's terms carry over to the contract — but only if something
+     * carries them. Without this the drafted contract takes
+     * `crm_contract.payment_terms`'s own option default `net_30` on every
+     * accepted quote, including one negotiated at `due_on_receipt`; and the
      * contract's `payment_terms` is one of the fields
      * `src/flows/billing-handoff.flow.ts` POSTs to billing when the contract
      * activates, so a defaulted term becomes an invoicing term.
      *
      * Read like `totalPrice` above: the patch's value when the accepting write
-     * carried one, else the value already on the quote. A quote that never
-     * chose a term yields `undefined`, which drops the key (see `pickId`) and
-     * lets the contract's own default apply — exactly today's behaviour for
-     * that case, so this copy is strictly additive.
+     * carried one, else the value already on the quote. A quote that never chose
+     * a term yields `undefined`, which drops the key (see `pickId`) and lets the
+     * contract's own default apply.
      */
     const paymentTerms =
       typeof input.payment_terms === 'string' && input.payment_terms
@@ -223,13 +221,12 @@ const quoteAccepted: Hook = {
     const today = new Date().toISOString().slice(0, 10);
     const months = 12;
 
-    // The contract's ONE field explaining where it came from used to hold the
-    // quote's record id (#1243) — `Auto-drafted from accepted quote
-    // MvNopWgEDZwm2T5L`, naming a string no surface in this app ever shows, on a
-    // quote every screen calls `QTE-0006`. Name it the way
-    // `crm_quote.display_title` does instead. Unlike the task sites in this
-    // class, there is no relationship field to hold the id afterwards:
-    // `crm_contract` links account, contact and opportunity but not the quote,
+    // The contract's ONE field explaining where it came from. ⛔ Never a record
+    // id: `Auto-drafted from accepted quote MvNopWgEDZwm2T5L` names a string no
+    // surface in this app ever shows, on a quote every screen calls `QTE-0006`.
+    // Name it the way `crm_quote.display_title` does. Unlike the task sites in
+    // this class there is no relationship field to hold the id afterwards —
+    // `crm_contract` links account, contact and opportunity but not the quote —
     // so this sentence is the whole provenance record and had better be
     // readable. `quote_number` is an engine-issued autonumber and never appears
     // on an update payload, so it is read from the pre-image alone; `name` can
@@ -266,15 +263,15 @@ const quoteAccepted: Hook = {
     // value the contract's default would otherwise have supplied.
     if (paymentTerms) contract.payment_terms = paymentTerms;
 
-    // The two legs are INDEPENDENT, and this is the other half of #714: they
-    // used to be one straight-line sequence, so anything that made the contract
-    // insert throw also swallowed the close-won below it — an accepted quote on
-    // a live opportunity left the deal open, with the hook's `onError: 'log'`
-    // making the whole thing invisible to the user. Winning the deal is keyed on
-    // the quote being ACCEPTED, not on the contract being draftable, so a
-    // refusal from `crm_contract` must not decide the opportunity's stage.
-    // Failures are collected and re-thrown together at the end, so the log the
-    // runtime writes still names everything that went wrong.
+    // ⚠️ The two legs are INDEPENDENT and must stay so. As one straight-line
+    // sequence, anything that made the contract insert throw also swallowed the
+    // close-won below it — an accepted quote on a live opportunity left the deal
+    // open, with the hook's `onError: 'log'` making the whole thing invisible to
+    // the user. Winning the deal is keyed on the quote being ACCEPTED, not on
+    // the contract being draftable, so a refusal from `crm_contract` must not
+    // decide the opportunity's stage. Failures are collected and re-thrown
+    // together at the end, so the log the runtime writes still names everything
+    // that went wrong.
     const failures: string[] = [];
 
     try {

@@ -22,26 +22,17 @@ export const KnowledgeArticle = ObjectSchema.create({
   // ADR-0090 D1/D7: OWD is an authored decision. Knowledge base is org-readable; authors edit.
   sharingModel: 'public_read',
 
-  // ─── Public access (#601 item 3 → #1104) — DECLARED, and this is the ───
-  //     record of why it is safe to declare NOW and was not before.
+  // ─── Public access ─────────────────────────────────────────────────────
   //
   // Publishing a public article mints a share link through the platform's
-  // `publicSharing` surface (maintainer ruling, 2026-08-02: no customer
-  // portal, no anonymous-grant widening). The whole safety of that rests on
+  // `publicSharing` surface (maintainer ruling, 2026-08-02: no customer portal,
+  // no anonymous-grant widening). ⛔ The whole safety of that rests on
   // `eligibility`, which is the ONLY thing standing between a share dialog and
-  // a stranger reading an internal or draft article.
+  // a stranger reading an internal or draft article — so this block may only be
+  // declared while every key below is enforced.
   //
-  // ⚠️ This block was DELIBERATELY ABSENT until 17.1.0, and the reason is the
-  // inverse of what it looks like. On 17.0.0-rc.6 `eligibility` had NO
-  // consumer: `getPolicy()` dropped the key and `createLink()` evaluated no
-  // predicate. With `publicSharing` absent altogether every link creation was
-  // refused outright, so declaring this block back then would have OPENED
-  // anonymous access to internal and draft articles rather than restricting
-  // links to public ones. A stale note claiming the key is inert is worse than
-  // no note once it stops being true, so it is replaced rather than amended.
-  //
-  // RE-MEASURED on the installed `@objectstack/plugin-sharing@17.1.0`, against
-  // the real `ShareLinkService` and a real engine — not read off a grep count:
+  // MEASURED on the installed `@objectstack/plugin-sharing@17.1.0`, against the
+  // real `ShareLinkService` and a real engine — not read off a grep count:
   //
   //   | key                  | measured on 17.1.0                             |
   //   | -------------------- | ---------------------------------------------- |
@@ -66,8 +57,8 @@ export const KnowledgeArticle = ObjectSchema.create({
   //  2. Every field read is `record.`-PREFIXED. The evaluator is
   //     `ExpressionEngine` from `@objectstack/formula` (record-level CEL), and
   //     `record` is the ONLY binding it is given. The bare-identifier spelling
-  //     `status == 'published' && audience == 'public'` — the one #601 wrote —
-  //     COMPILES and then fails at evaluate with `Unknown variable: audience`,
+  //     `status == 'published' && audience == 'public'` COMPILES and then fails
+  //     at evaluate with `Unknown variable: audience`,
   //     which `assertEligible` turns into ELIGIBILITY_UNEVALUABLE 422. That
   //     fails CLOSED, so it is not a security hole; it is a feature that never
   //     mints a single link while reading as if it works.
@@ -314,8 +305,7 @@ export const KnowledgeArticle = ObjectSchema.create({
     { fields: ['language'] },
   ],
 
-  // Dead object-level enable.* flags removed in @objectstack 12 (ADR-0049);
-  // only the live API surface remains. History → Field.trackHistory (ADR-0052).
+  // API surface. History → Field.trackHistory (ADR-0052).
   enable: {
     apiEnabled: true,
     apiMethods: ['get', 'list', 'create', 'update', 'delete'],

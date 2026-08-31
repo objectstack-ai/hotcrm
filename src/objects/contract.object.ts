@@ -142,12 +142,11 @@ export const Contract = ObjectSchema.create({
     payment_terms: Field.select({
       label: 'Payment Terms',
       group: 'value',
-      // Canonical set shared with Quote (#490): an accepted quote's terms
-      // (incl. due_on_receipt) must survive the copy onto the contract. That
-      // copy is `quote_on_accepted` (src/objects/quote.hook.ts), which did not
-      // make it until #873 — until then this field took the `net_30` option
-      // default on every auto-drafted contract. It still does when the quote
-      // itself carried no term, which is the intended fall-through, not a gap.
+      // Canonical set shared with Quote: an accepted quote's terms (incl.
+      // due_on_receipt) must survive the copy onto the contract. That copy is
+      // `quote_on_accepted` (src/objects/quote.hook.ts). This field's `net_30`
+      // option default applies only when the quote itself carried no term,
+      // which is the intended fall-through, not a gap.
       options: [...PAYMENT_TERMS_OPTIONS],
     }),
     
@@ -223,8 +222,7 @@ export const Contract = ObjectSchema.create({
   ],
   
   // Enable advanced features
-  // Dead enable.* flags (trash/mru) removed in @objectstack 12 (ADR-0049);
-  // History → Field.trackHistory (ADR-0052).
+  // API surface. History → Field.trackHistory (ADR-0052).
   enable: {
     apiEnabled: true,
     apiMethods: ['get', 'list', 'create', 'update', 'delete'],
@@ -280,7 +278,7 @@ export const Contract = ObjectSchema.create({
   ],
   
   // Workflow Rules
-  // NOTE: object `workflows[]` were removed in @objectstack 7.7. Field-updates
-  // moved to this object's *.hook.ts; scheduled status-flips & notifications
-  // moved to src/flows/*.flow.ts (see flows/index.ts).
+  // ⚠️ No `workflows[]` here, and none is possible: object `workflows[]` were
+  // removed from the platform. Field updates live in this object's `*.hook.ts`;
+  // scheduled status flips and notifications live in `src/flows/*.flow.ts`.
 });

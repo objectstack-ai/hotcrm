@@ -152,9 +152,9 @@ export const Case = ObjectSchema.create({
     // `0` is the UNRANKED sentinel, shared with crm_task.priority_rank: it is
     // what a record carries when no recognised priority has been stamped, and
     // it sorts below every real rank (1–4) on the `priority_rank desc` queues.
-    // It used to be `1` here and `2` on crm_task, so the same unknown priority
-    // ordered differently on the two objects — and on this object it was
-    // indistinguishable from a genuine `low`.
+    // ⛔ It must not be `1` here (or `2` on crm_task): a non-zero sentinel
+    // orders the same unknown priority differently on the two objects, and on
+    // this one it is indistinguishable from a genuine `low`.
     priority_rank: Field.number({
       label: 'Priority Rank',
       readonly: true,
@@ -199,19 +199,17 @@ export const Case = ObjectSchema.create({
       readonly: true,
     }),
     
-    // NOT `readonly`: stamped by `event_activity_bubble`
-    // (`src/objects/event.hook.ts`) on the first HELD `crm_event` related to
-    // the case — whoever wrote that event, `log_call` / `log_meeting` included
-    // (#595 moved the stamp out of the two action bodies so every path is
-    // covered, not just those two buttons). 16.x drops writes to readonly
-    // fields on user-context writes (#2948) and that hook runs under the
-    // acting user's context, so `readonly` here silently disabled the stamp.
-    // Same reason `is_sla_violated` and `escalated_date` below are not readonly.
+    // ⛔ NOT `readonly`: stamped by `event_activity_bubble`
+    // (`src/objects/event.hook.ts`) on the first HELD `crm_event` related to the
+    // case, whoever wrote that event. ⚠️ The platform drops writes to readonly
+    // fields on user-context writes, and that hook runs under the acting user's
+    // context, so `readonly` here silently disables the stamp. Same reason
+    // `is_sla_violated` and `escalated_date` below are not readonly.
     //
     // Definition: the moment the customer first heard back from us, matching
     // Salesforce `FirstResponseDateTime` / Zendesk first reply time — NOT an
-    // internal status change, which would report "responded" while the
-    // customer is still waiting (#575 B2).
+    // internal status change, which would report "responded" while the customer
+    // is still waiting.
     first_response_date: Field.datetime({
       label: 'First Response Date',
       group: 'sla',
@@ -235,9 +233,9 @@ export const Case = ObjectSchema.create({
       group: 'sla',
     }),
     
-    // NOT `readonly`: the case_sla_monitor flow stamps this, and 16.x drops
-    // writes to readonly fields (#2948) — readonly here silently disabled
-    // SLA violation tracking.
+    // ⛔ NOT `readonly`: the `case_sla_monitor` flow stamps this, and the
+    // platform drops writes to readonly fields — readonly here silently
+    // disables SLA violation tracking.
     is_sla_violated: Field.boolean({
       label: 'SLA Violated',
       group: 'sla',
@@ -251,8 +249,8 @@ export const Case = ObjectSchema.create({
       defaultValue: false,
     }),
     
-    // NOT `readonly`: written by case_escalation / case_sla_monitor flows
-    // (16.x drops readonly writes, #2948).
+    // ⛔ NOT `readonly`: written by the `case_escalation` / `case_sla_monitor`
+    // flows, and the platform drops writes to readonly fields.
     escalated_date: Field.datetime({
       label: 'Escalated Date',
       group: 'escalation',
@@ -350,8 +348,7 @@ export const Case = ObjectSchema.create({
     { fields: ['priority'] },
   ],
   
-  // Dead enable.* flags (trash/mru) removed in @objectstack 12 (ADR-0049);
-  // History → Field.trackHistory (ADR-0052).
+  // API surface. History → Field.trackHistory (ADR-0052).
   enable: {
     apiEnabled: true,
     // #602 — screenshots and logs are how a support case gets diagnosed.
@@ -423,7 +420,7 @@ export const Case = ObjectSchema.create({
     },
   ],
   
-  // NOTE: object `workflows[]` were removed in @objectstack 7.7. Field-updates
-  // moved to this object's *.hook.ts; scheduled status-flips & notifications
-  // moved to src/flows/*.flow.ts (see flows/index.ts).
+  // ⚠️ No `workflows[]` here, and none is possible: object `workflows[]` were
+  // removed from the platform. Field updates live in this object's `*.hook.ts`;
+  // scheduled status flips and notifications live in `src/flows/*.flow.ts`.
 });

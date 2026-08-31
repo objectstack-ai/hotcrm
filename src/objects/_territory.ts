@@ -3,31 +3,19 @@
 import type { SelectOption } from '@objectstack/spec/data';
 
 /**
- * Territory — the ONE place the country-to-territory mapping is authored (#639).
+ * Territory — the ONE place the country-to-territory mapping is authored.
  *
- * ### What this replaces
- *
- * Until now "which territory is this account in?" was answered by matching the
- * free-text `crm_account.billing_country` inside two CEL condition strings, and
- * the same country lists were restated in prose in six documentation files
- * (three languages x two pages). Four consequences, all of them silent:
- *
- *   1. An account whose billing country read `United States` rather than `US`
- *      landed in NO territory. Nothing errored; Setup listed two territories
- *      and one of them simply did not contain the account.
- *   2. Adding a country meant editing a CEL string AND three localised tables,
- *      with nothing to fail if you edited fewer than all four.
- *   3. The Europe rule matched `UK`, which is not the ISO 3166-1 alpha-2 code
- *      for the United Kingdom (`GB`) — and "fixing" it in isolation would have
- *      evicted every account already typed as `UK`.
- *   4. The field's DOMAIN was unknowable: free text has no enumerable set, so
- *      no authoring surface, import mapping or generated seed could be checked
- *      against it.
- *
- * Under the 2026-08-11 ruling on #639 (option B), territory is a first-class
- * `select` on `crm_account`, derived from the billing country by
- * `account_protection`, and the sharing rules compare `record.territory`
- * against a declared value. A country string is never compared again.
+ * ⛔ Territory is a declared `select` on `crm_account`, derived from the billing
+ * country by `account_protection`, and the sharing rules compare
+ * `record.territory` against a declared value. A country string is never
+ * compared again. Matching free text inside a CEL condition fails four ways,
+ * all of them silent: an account whose country reads `United States` rather
+ * than `US` lands in NO territory with nothing errored; adding a country means
+ * editing a CEL string AND three localised tables with nothing to fail if you
+ * edit fewer than all four; a wrong code (`UK` for `GB`) cannot be corrected
+ * without evicting every account already typed that way; and free text has no
+ * enumerable DOMAIN, so no authoring surface, import mapping or generated seed
+ * can be checked against it.
  *
  * ### The three authored tables, and everything derived from them
  *
@@ -36,35 +24,30 @@ import type { SelectOption } from '@objectstack/spec/data';
  * may be spelled) are AUTHORED. {@link COUNTRY_TERRITORY} and
  * {@link territoryFor} are DERIVED from them, and so are the sharing rule
  * conditions, the account form's picklist and the documentation tables — see
- * `test/territory-single-source.test.ts`, which pins every derivation
- * (including the copy the sandboxed hook body is forced to carry, below).
+ * `test/territory-single-source.test.ts`, which pins every derivation.
  *
- * ### Why `account.hook.ts` still carries a copy of this map
+ * ### ⚠️ Why `account.hook.ts` still carries a copy of this map
  *
- * It has to, and the copy is mechanically pinned rather than trusted. A hook
- * handler is lowered to a metadata-only `body.source` and evaluated inside
- * QuickJS with NO module scope: a reference to anything exported here is not a
- * closure at runtime, it is a `ReferenceError`. `extractHookBody` rejects such
- * a handler outright (`detectFreeIdentifiers`), and
- * `test/action-sandbox.test.ts` fails the build's own lowering pass for every
- * registered hook. So the derivation cannot import this module — the table has
- * to be inline in the handler.
+ * It has to. A hook handler is lowered to a metadata-only `body.source` and
+ * evaluated inside QuickJS with NO module scope: a reference to anything
+ * exported here is not a closure at runtime, it is a `ReferenceError`.
+ * `extractHookBody` rejects such a handler outright
+ * (`detectFreeIdentifiers`), and `test/action-sandbox.test.ts` fails the
+ * build's own lowering pass for every registered hook. So the derivation cannot
+ * import this module — the table has to be inline in the handler.
  *
  * `test/territory-single-source.test.ts` closes that gap from both directions:
  * it parses the inline table out of the LOWERED body source and asserts deep
  * equality with {@link COUNTRY_TERRITORY} (so a country added to either side
  * alone is red), and it runs the real body in the real sandbox over every
- * declared spelling and asserts the territory it produces. The map is
- * therefore authored once even though it is stored twice.
+ * declared spelling and asserts the territory it produces. The map is therefore
+ * authored once even though it is stored twice.
  *
  * ### Scope of the country list
  *
- * This is a SPELLING table for the countries the two staffed territories
- * cover, not a world country list. #639 decided the value domain
- * (`na` / `emea` / `other`); it did not widen which countries a territory
- * covers, so the covered set is exactly the one the CEL strings named, with
- * `GB` promoted to the canonical code and `UK` kept as an accepted spelling.
- * Everything else — `SG`, `JP`, an empty address — is `other`, explicitly.
+ * This is a SPELLING table for the countries the two staffed territories cover,
+ * not a world country list. The value domain is `na` / `emea` / `other`;
+ * everything else — `SG`, `JP`, an empty address — is `other`, explicitly.
  */
 
 /** The declared territory domain. `other` is a stated fact, never a blank. */
@@ -117,17 +100,15 @@ export const TERRITORY_COUNTRIES: Record<Exclude<Territory, 'other'>, readonly s
  * {@link normalizeCountry} when it flattens them, so the lookup is
  * case-insensitive without the authored table having to be shouted.
  *
- * `UK -> GB` is the one that carries history: the Europe rule was authored
- * against `UK` for years, so the stock London account and every customer
- * record typed the same way must keep landing in `emea`. Because the rules no
- * longer compare a country at all, `GB` can be the canonical code AND `UK` can
- * keep working — which is what dissolved the migration #639 was worried about.
+ * `UK -> GB` is deliberate: `UK` is not the ISO 3166-1 alpha-2 code for the
+ * United Kingdom, but the stock London account and every customer record typed
+ * the same way must keep landing in `emea`. Because the rules no longer compare
+ * a country at all, `GB` can be canonical AND `UK` can keep working.
  *
  * English names are here because they are what a CSV import, a generated seed
- * or a person typing into the address form actually produces — `Germany` was
- * the acceptance criterion of #639 precisely because it silently matched
- * nothing. Native-language spellings are NOT here: they are unbounded, and the
- * failure they would prevent is now visible (`other`) rather than silent.
+ * or a person typing into the address form actually produces. Native-language
+ * spellings are NOT: they are unbounded, and the failure they would prevent is
+ * now visible (`other`) rather than silent.
  */
 export const COUNTRY_ALIASES: Record<string, string> = {
   'United States': 'US',

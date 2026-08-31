@@ -18,39 +18,35 @@ export const QuoteLineItem = ObjectSchema.create({
   icon: 'package',
   description: 'A single product line on a Quote',
 
-  // ADR-0090 D1/D7: OWD is an authored decision. Record access DERIVES from the
-  // quote (ADR-0055), and as of 17.0.0-rc.4 that derivation means what it says.
+  // OWD is an authored decision (ADR-0090 D1/D7). Record access DERIVES from
+  // the quote (ADR-0055).
   //
-  // MEASURED on 17.0.0-rc.4 and pinned by `test/parent-derived-reach.test.ts`:
-  // reads ARE filtered to lines whose `crm_quote` the caller can read, and "can
-  // read" resolves through the same paths a direct read of the quote takes —
-  // owner scope and `sys_record_share` grants included, not the master's
+  // ⚠️ Reads ARE filtered to lines whose `crm_quote` the caller can read, and
+  // "can read" resolves through the same paths a direct read of the quote takes
+  // — owner scope and `sys_record_share` grants included, NOT the master's
   // row-level security policies alone. A rep who owns one quote reads that
   // quote's lines and no others. The parent-write gate derives the same way: a
   // line whose quote the caller cannot edit is refused with a
   // `PermissionDeniedError` naming the master.
   //
-  // Until 17.0.0-rc.3 this was the opposite, and this note said so (#694): the
-  // derivation consulted master RLS policies only, under a SYSTEM context, so
-  // with no policy authored on `crm_quote` the master set was EVERY quote and a
-  // line item was readable — and writable — by every holder of object-level read
-  // on this object. objectstack-ai/objectstack#5386 fixed that upstream and it
-  // shipped in rc.4. The guard test named above was written to go red the day
-  // the engine narrowed; it did, and it now pins the narrow semantics with
-  // positive controls, so a regression is caught in either direction. The
+  // `test/parent-derived-reach.test.ts` pins those semantics with positive
+  // controls, so a regression is caught in either direction — it was written to
+  // go red the day the platform widens them: with the derivation consulting
+  // master RLS policies only, under a SYSTEM context, and no policy authored on
+  // `crm_quote`, the master set is EVERY quote and a line item is readable —
+  // and writable — by every holder of object-level read on this object. The
   // relation resolver accepts a REQUIRED LOOKUP as the parent, so no
   // master-detail conversion is needed.
   //
-  // It was `private` before (#488). With no owner field on this object that
-  // resolved to the platform's auto-stamped `owner_id` — the row's inserter —
-  // so lines cloned onto a quote by the `quote_generation` flow were invisible
-  // to the rep who owns the quote.
+  // ⛔ Not `private`: with no owner field on this object that resolves to the
+  // platform's auto-stamped `owner_id` — the row's inserter — so lines cloned
+  // onto a quote by the `quote_generation` flow are invisible to the rep who
+  // owns the quote.
   sharingModel: 'controlled_by_parent',
 
-  // @objectstack 12: the dead object-level `enable.trackHistory` flag was
-  // removed (ADR-0049) — per-field history is opt-in via `Field.trackHistory`
-  // (ADR-0052), set on quantity/unit_price/discount below. Master-detail
-  // children still inherit the master's sharing automatically.
+  // Per-field history is opt-in via `Field.trackHistory` (ADR-0052), set on
+  // quantity/unit_price/discount below. Master-detail children still inherit
+  // the master's sharing automatically.
 
   highlightFields: ['crm_product', 'quantity', 'unit_price', 'total_price'],
 

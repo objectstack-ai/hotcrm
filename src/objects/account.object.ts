@@ -37,23 +37,22 @@ export const Account = ObjectSchema.create({
   ],
 
   fields: {
-    // ─── Ownership (#548) ─────────────────────────────────────────────
+    // ─── Ownership ─────────────────────────────────────────────────────
     //
     // `owner_id` is the PLATFORM ownership anchor, not an app invention: the
     // registry injects exactly this column into every user-owned object
     // (`applySystemFields`), and it is the one OWD, sharing rules, owner-scope
-    // widening and the `is_private` row filter all read. This app used to
-    // author a SECOND `owner` lookup beside it — reassigning that moved the
-    // record in every list and report and moved no access at all (#548).
+    // widening and the `is_private` row filter all read. ⛔ Never author a
+    // SECOND `owner` lookup beside it — reassigning that moves the record in
+    // every list and report and moves no access at all.
     //
-    // Declared rather than left to injection, which the platform supports
+    // ⚠️ Declared rather than left to injection, which the platform supports
     // explicitly ("author-declared fields with the same name always win over
-    // injection, no overwrite"). Three things only a declaration buys, each
-    // one measured rather than assumed:
+    // injection, no overwrite"). Three things only a declaration buys:
     //   • `os validate` resolves it. An injected column is invisible to every
-    //     author-time rule, so `highlightFields: ['owner_id']` was reported as
+    //     author-time rule, so `highlightFields: ['owner_id']` is reported as
     //     "not a field on this object — silently skipped by every consumer",
-    //     and a CEL predicate reading `record.owner_id` failed outright.
+    //     and a CEL predicate reading `record.owner_id` fails outright.
     //   • the per-object label and `group` survive (an injected field carries
     //     the generic label "Owner" and no group at all);
     //   • `trackHistory` survives, so a transfer still renders on the record
@@ -63,10 +62,9 @@ export const Account = ObjectSchema.create({
     // stamped to the cloner rather than inheriting the source's owner.
     //
     // No `defaultValue`: the security middleware stamps `owner_id` to the
-    // acting user on any insert that leaves it empty, and denies one that
-    // names another user without `allowTransfer` (#3004). That is a stronger
-    // guarantee than a field default, which evaluated to nothing on every
-    // user-less write (#620).
+    // acting user on any insert that leaves it empty, and denies one that names
+    // another user without `allowTransfer` (#3004). That is stronger than a
+    // field default, which evaluates to nothing on every user-less write.
     owner_id: Field.lookup('sys_user', {
       label: 'Account Owner',
       group: 'ownership',
@@ -84,15 +82,14 @@ export const Account = ObjectSchema.create({
 
     // Basic Information
     //
-    // `unique: true` is declared HERE, on the field, and deliberately NOT as a
-    // `{ fields: ['name'], unique: true }` entry in `indexes[]` below (#625).
-    // Since framework #3696 the field-level form is tenant-scoped — it
-    // materializes as `(organization_id, name)`, unique WITHIN an organization —
-    // while a declared index is taken verbatim, i.e. platform-wide. The table
-    // form is what this object used to carry, and it meant the SECOND
-    // organization to create an "Acme Corp" was rejected by the database.
-    // Account name is also the seed data's external-id / upsert key
-    // (`src/data/sales.seed.ts`), so that bit the very first multi-tenant
+    // ⚠️ `unique: true` is declared HERE, on the field, and deliberately NOT as
+    // a `{ fields: ['name'], unique: true }` entry in `indexes[]` below. The
+    // field-level form is tenant-scoped — it materializes as
+    // `(organization_id, name)`, unique WITHIN an organization — while a
+    // declared index is taken verbatim, i.e. platform-wide. The table form
+    // means the SECOND organization to create an "Acme Corp" is rejected by the
+    // database, and account name is also the seed data's external-id / upsert
+    // key (`src/data/sales.seed.ts`), so it bites the first multi-tenant
     // install. The composite also indexes the column, so no separate
     // `{ fields: ['name'] }` entry is needed for the `searchableFields` /
     // seed-upsert read paths.
@@ -108,17 +105,15 @@ export const Account = ObjectSchema.create({
 
     /**
      * Case- and whitespace-folded copy of `name` — the key lead conversion
-     * matches accounts on (#626).
+     * matches accounts on.
      *
      * ### Why a stored column, and not any of the cheaper shapes
      *
-     * `lead_conversion` used to dedupe on the raw `name`, so `"Acme Corp"` and
-     * `"ACME  Corp"` produced two accounts. Three cheaper fixes were measured
-     * against 17.0.0-rc.1 and all three are dead ends — `test/account-name-
-     * normalized-match.test.ts` re-measures each one so this comment cannot
-     * quietly go stale:
+     * ⚠️ Three cheaper fixes are all dead ends, and each is a live platform
+     * constraint. `test/account-name-normalized-match.test.ts` re-measures every
+     * one so this note cannot quietly go stale:
      *
-     * - **The flow cannot normalize.** `service-automation`'s `resolveToken`
+     * - **A flow cannot normalize.** `service-automation`'s `resolveToken`
      *   understands exactly one function form, `/^(NOW|TODAY)\s*\(\s*\)…/`.
      *   `{LOWER(x)}`, `{TRIM(x)}` and `{x.toLowerCase()}` all resolve to
      *   `undefined` (every bare identifier is substituted before the expression
@@ -127,15 +122,15 @@ export const Account = ObjectSchema.create({
      * - **A formula field cannot be the match key.** `driver-sql`'s
      *   `fieldHasColumn` returns false for `type: 'formula'`, so a computed
      *   value has no physical column and nothing can filter on it.
-     * - **`$regex` is not an answer.** On `driver-sql` it does not even run as a
-     *   regex: it compiles to `LIKE '%value%'`, a SUBSTRING match, so
-     *   `"Acme Corp"` would also match `"Not Acme Corp Ltd"`. It cannot collapse
+     * - **`$regex` is not an answer.** On `driver-sql` it does not run as a
+     *   regex at all: it compiles to `LIKE '%value%'`, a SUBSTRING match, so
+     *   `"Acme Corp"` also matches `"Not Acme Corp Ltd"`. It cannot collapse
      *   internal whitespace, the leading wildcard defeats the index, and on the
      *   in-memory driver it does compile user-controlled text into a `RegExp`.
      *
      * So the canonical form is established by the PRODUCER at write time — the
-     * same doctrine `crm_lead.email` / `crm_contact.email` already follow — and
-     * the reader does a plain, indexed equality match. The other side of that
+     * same doctrine `crm_lead.email` / `crm_contact.email` follow — and the
+     * reader does a plain, indexed equality match. The other side of that
      * comparison is `crm_lead.company_normalized`, which exists for the same
      * reason: a flow can compare two stored columns, it cannot compute either.
      *
@@ -148,11 +143,11 @@ export const Account = ObjectSchema.create({
      * needs a human review affordance this app does not have.
      *
      * Derived, never authored: `account.hook.ts` recomputes it on every write
-     * that carries `name`, and leaves it alone on every write that does not.
-     * `readonly` keeps user/API writes off it (INSERT is exempt from the strip
-     * and UPDATE strips only CALLER-supplied keys, so the hook's own write
-     * always survives); `hidden` keeps a machine-owned column out of forms and
-     * pickers — the same pairing `crm_forecast.seed_key` uses.
+     * that carries `name`, and leaves it alone otherwise. `readonly` keeps
+     * user/API writes off it (INSERT is exempt from the strip and UPDATE strips
+     * only CALLER-supplied keys, so the hook's own write always survives);
+     * `hidden` keeps a machine-owned column out of forms and pickers — the same
+     * pairing `crm_forecast.seed_key` uses.
      */
     name_normalized: Field.text({
       label: 'Account Name (Normalized)',
@@ -209,26 +204,17 @@ export const Account = ObjectSchema.create({
     /**
      * Rolled-up annual revenue of this account's direct children.
      *
-     * MEASURED against the installed engine (17.0.0) before being declared, on
-     * all four legs of the lifecycle — a roll-up that is only right at insert
-     * is a stale number, which is the same defect one layer over:
-     *
-     *   insert two children (1,000 + 2,500)      -> 3,500
-     *   raise one child to 4,000                 -> 6,500
-     *   re-parent the other child away           -> 4,000
-     *   delete the remaining child               -> 0
-     *
-     * Self-referencing roll-ups are the case worth measuring rather than
-     * assuming, because parent and child are the same object and the engine's
-     * summary index is keyed by child object. `test/decorative-field-sweep.test.ts`
-     * re-runs that measurement so a platform regression cannot quietly turn
-     * this back into the decoration it replaced.
-     *
-     * DIRECT children only, one level — the engine aggregates over the rows
+     * ⚠️ DIRECT children only, one level — the engine aggregates over the rows
      * whose `parent_account` is this account, not over a transitive closure. A
-     * grandparent therefore shows the sum of its own children, and the docs say
-     * so; anything else would need a different (and much more expensive)
-     * primitive than the one the platform ships.
+     * grandparent shows the sum of its own children, and the docs say so;
+     * anything else needs a different (and much more expensive) primitive than
+     * the one the platform ships.
+     *
+     * Self-referencing roll-ups are worth measuring rather than assuming,
+     * because parent and child are the same object and the engine's summary
+     * index is keyed by child object. `test/decorative-field-sweep.test.ts`
+     * drives all four legs of the lifecycle (insert, raise, re-parent, delete)
+     * so a platform regression cannot quietly turn this back into decoration.
      */
     child_account_revenue: Field.summary({
       label: 'Child Account Revenue',
@@ -267,49 +253,41 @@ export const Account = ObjectSchema.create({
     }),
 
     /**
-     * Flat projection of `billing_address.country` (#621).
+     * Flat projection of `billing_address.country`.
      *
-     * NOTE — the territory sharing rules no longer filter on this column;
-     * they filter on `territory` below (#639). What survives is the reason the
-     * flat column exists at all, which is still worth stating because the same
-     * trap catches every rule authored against an `address`:
+     * ### Why the flat column exists — the trap that catches every rule
+     * ### authored against an `address`
      *
-     * ### Why this field exists
-     *
-     * `billing_address` is an `address` field: the platform stores the whole
-     * {street, city, state, postalCode, country, countryCode, formatted}
-     * value in ONE column. A sharing rule's CEL condition is compiled to a
-     * pushdown-able `FilterCondition` by `compileCelToFilter`, and that
-     * compiler rejects every path that reaches INSIDE such a value:
+     * ⚠️ `billing_address` is an `address` field: the platform stores the whole
+     * {street, city, state, postalCode, country, countryCode, formatted} value
+     * in ONE column. A sharing rule's CEL condition is compiled to a
+     * pushdown-able `FilterCondition` by `compileCelToFilter`, and that compiler
+     * rejects every path reaching INSIDE such a value:
      *
      *     record.billing_address.country in ["US","CA","MX"]
      *       → unsupported: cross-object/nested field path
      *         "record.billing_address.country" is not pushdown-able
      *
      * `plugin-sharing` then refuses to seed the rule rather than degrade it to
-     * match-all, so both territory rules were dropped on every boot and
-     * `na_sales_team` / `eu_sales_team` received nothing at all. Measured: the
-     * blocker is the NESTED PATH, not the `in [...]` operator — `in [...]`,
-     * `==`, `!=`, `<`, `>`, `&&`, `||`, `!`, `startsWith()` and `== null` all
-     * compile fine against a FLAT field. Rewriting the condition as a
-     * disjunction of `==` (issue #621 option A) would therefore NOT have
-     * helped; only a flat column does. See `test/sharing-seeding.test.ts`,
-     * which measures that matrix instead of assuming it.
+     * match-all, so the rule is dropped on every boot and its recipients get
+     * nothing at all. Measured: the blocker is the NESTED PATH, not the
+     * `in [...]` operator — `in [...]`, `==`, `!=`, `<`, `>`, `&&`, `||`, `!`,
+     * `startsWith()` and `== null` all compile fine against a FLAT field.
+     * Rewriting the condition as a disjunction of `==` therefore does NOT help;
+     * only a flat column does. `test/sharing-seeding.test.ts` measures that
+     * matrix instead of assuming it.
      *
      * ### What it holds
      *
      * `billing_address.country`, trimmed, internal whitespace collapsed, and
      * upper-cased — nothing else. It is what was TYPED, so it is still free
-     * text and still capable of holding `Deutschland`. That is no longer a
-     * silent failure, because nothing matches against it: `territory` below
-     * classifies it, and an unrecognised spelling lands in a stated `other`.
-     *
-     * `countryCode` is deliberately not consulted; see the note in
-     * `account.hook.ts` for why the ISO slot is not the input.
+     * text and still capable of holding `Deutschland`. Nothing matches against
+     * it: `territory` below classifies it, and an unrecognised spelling lands in
+     * a stated `other`. `countryCode` is deliberately not consulted; see the
+     * note in `account.hook.ts` for why the ISO slot is not the input.
      *
      * Derived, never authored: `account.hook.ts` recomputes it on every write
-     * that carries `billing_address`, and leaves it untouched on every write
-     * that does not.
+     * that carries `billing_address`, and leaves it untouched otherwise.
      */
     billing_country: Field.text({
       label: 'Billing Country',
@@ -321,18 +299,17 @@ export const Account = ObjectSchema.create({
     }),
 
     /**
-     * Territory — the declared value the territory sharing rules filter on
-     * (#639).
+     * Territory — the declared value the territory sharing rules filter on.
      *
      * ### Why a select and not the country
      *
-     * The rules used to match `billing_country` against a list of country
-     * codes inside a CEL string. `billing_country` is free text, so an account
-     * whose address read `United States` belonged to NO territory, silently —
-     * the metadata said territory sharing worked and for that account it did
-     * nothing, with no error anywhere. A `select` makes the domain knowable:
-     * three values, declared, every one of them reachable, and an account
-     * outside the staffed territories says `other` rather than nothing.
+     * Matching free-text `billing_country` against a list of country codes
+     * inside a CEL string means an account whose address reads `United States`
+     * belongs to NO territory, silently — the metadata says territory sharing
+     * works and for that account it does nothing, with no error anywhere. A
+     * `select` makes the domain knowable: three values, declared, every one
+     * reachable, and an account outside the staffed territories says `other`
+     * rather than nothing.
      *
      * It also collapses four copies of the country list (two CEL strings and
      * six localised documentation tables) into one authored table in
@@ -344,9 +321,9 @@ export const Account = ObjectSchema.create({
      *
      * Derived by `account_protection` from `billing_address.country`, never
      * authored — correcting an account's territory means correcting its
-     * address, which is what keeps ONE fact behind the classification. Every
-     * insert states it (an account with no address at all is `other`), and an
-     * update that does not carry the address leaves it alone.
+     * address, which keeps ONE fact behind the classification. Every insert
+     * states it (an account with no address at all is `other`), and an update
+     * that does not carry the address leaves it alone.
      */
     territory: Field.select({
       label: 'Territory',
@@ -366,15 +343,9 @@ export const Account = ObjectSchema.create({
     // Relationship fields
 
     /**
-     * The account hierarchy — kept because it now has a reader.
-     *
-     * This lookup was declared and traversed by nothing, while
-     * `content/docs/sales/accounts` sold the hierarchy with a diagram and
-     * promised "roll-up reports — annual revenue of the global parent sums all
-     * children". `child_account_revenue` below is that promise, and it is the
-     * whole of the enforcement: the platform computes roll-up summaries
-     * itself, so the honest consumer here is one declaration rather than the
-     * hand-written recompute hooks the line-item totals need.
+     * The account hierarchy. `child_account_revenue` below is its one reader —
+     * the platform computes roll-up summaries itself, so the honest consumer is
+     * a single declaration rather than hand-written recompute hooks.
      */
     parent_account: Field.lookup('crm_account', {
       label: 'Parent Account',
@@ -407,21 +378,19 @@ export const Account = ObjectSchema.create({
 
     // Date field
     //
-    // NOT `readonly` (#592). This is the signal `at_risk_accounts` and
-    // `customer_churn_signals` are built on, and it is written by ONE path:
-    // another object's hook calling
+    // ⛔ NOT `readonly`, and it must not become readonly. This is the signal
+    // `at_risk_accounts` and `customer_churn_signals` are built on, and it is
+    // written by ONE path: another object's hook calling
     // `api.object('crm_account').update({ last_activity_date }, …)`.
     //
-    // That write was being thrown away on every invocation. `stripReadonlyFields`
-    // deletes a readonly key from any payload whose CALLER supplied it, for every
-    // context that is not `isSystem` (#2948) — and a hook's `ctx.api` is a
-    // `ScopedContext` over the *acting user's* execution context, not a system
-    // one. So the engine logged `Field 'last_activity_date' is read-only —
-    // ignoring incoming change` and moved on; the column stayed null for the
-    // life of the app, and the churn report has been counting every account as
-    // silent since the day it was written.
+    // ⚠️ Platform constraint: `stripReadonlyFields` deletes a readonly key from
+    // any payload whose CALLER supplied it, for every context that is not
+    // `isSystem` — and a hook's `ctx.api` is a `ScopedContext` over the ACTING
+    // USER's execution context, not a system one. So a readonly field a hook
+    // writes is silently dropped: the engine logs `Field '…' is read-only —
+    // ignoring incoming change` and the column stays null forever.
     //
-    // Same reasoning, same fix as `crm_campaign_member.added_date` and
+    // Same reasoning, same shape as `crm_campaign_member.added_date` and
     // `crm_case.is_sla_violated`: a field a hook or flow must write cannot be
     // `readonly`. It stays out of every form section instead, which is the
     // protection that actually holds. `test/activity-recency.test.ts` proves
@@ -466,100 +435,74 @@ export const Account = ObjectSchema.create({
       ],
     }),
 
-    // No account-level renewal model here (#1181). `renewal_owner` and
-    // `next_renewal_date` used to sit in this group, declared and inert:
-    // nothing wrote the date, and no automation ever read the owner, so an
-    // admin naming a CSM here was told a renewal would reach them and it never
-    // did. Renewal is a CONTRACT-level process and has exactly one home —
-    // `crm_contract.end_date` + `renewal_notice_days`, swept daily by
-    // `src/flows/contract-renewal.flow.ts`, which books the task and notifies
-    // the CONTRACT owner. The user-facing renewal queue is the contract
-    // object's own `renewal_calendar` view. If an account-level renewal owner
-    // is ever wanted, it is a change to that flow plus a real writer for the
-    // date — not a second pair of fields beside the first.
+    // ⛔ No account-level renewal model here, on purpose. Renewal is a
+    // CONTRACT-level process with exactly one home — `crm_contract.end_date` +
+    // `renewal_notice_days`, swept daily by `src/flows/contract-renewal.flow.ts`,
+    // which books the task and notifies the CONTRACT owner; the user-facing
+    // queue is that object's `renewal_calendar` view. A `renewal_owner` /
+    // `next_renewal_date` pair here would be declared and inert, telling an
+    // admin a renewal reaches the CSM they named when nothing would. If an
+    // account-level renewal owner is ever wanted, it is a change to that flow
+    // plus a real writer for the date — not a second pair of fields.
   },
   
   // Database indexes for performance
   //
-  // No `{ fields: ['name'], unique: true }` here (#625). Account-name
-  // uniqueness is declared on the `name` field itself, which since framework
-  // #3696 builds the tenant composite `(organization_id, name)`. Declaring the
-  // single-column index too makes the platform-wide constraint win and leaves
-  // the per-tenant one unreachable (framework#3991 `unique/double-declaration`)
-  // — the same trap `crm_contact`, `crm_lead` and `crm_product` document. Two
+  // ⚠️ No `{ fields: ['name'], unique: true }` here. Account-name uniqueness is
+  // declared on the `name` field itself, which the framework builds as the
+  // tenant composite `(organization_id, name)`. Declaring the single-column
+  // index too makes the platform-wide constraint win and leaves the per-tenant
+  // one unreachable (framework#3991 `unique/double-declaration`) — the same
+  // trap `crm_contact`, `crm_lead` and `crm_product` document. Two
   // organizations must be able to each have their own "Acme Corp".
   indexes: [
     { fields: ['owner_id'] },
     { fields: ['type', 'is_active'] },
-    // The territory sharing rules filter on this column, so it is read on
-    // every account query a territory recipient makes (#621, retargeted from
-    // `billing_country` to `territory` by #639). `billing_country` carries no
-    // index of its own any more: nothing filters on it — it is displayed, and
-    // classified into this column by the hook.
+    // The territory sharing rules filter on this column, so it is read on every
+    // account query a territory recipient makes. `billing_country` carries no
+    // index of its own: nothing filters on it — it is displayed, and classified
+    // into this column by the hook.
     { fields: ['territory'] },
-    // Lead conversion filters on this column on every single conversion, and
-    // the whole point of the column is to replace an unindexed `$regex` scan
-    // (#626). Plain index — NOT `unique: true`, deliberately:
+    // Lead conversion filters on this column on every conversion — the column
+    // exists to replace an unindexed `$regex` scan. Plain index, NOT
+    // `unique: true`, deliberately:
     //
-    // 1. Uniqueness of account names is already declared, per tenant, on the
-    //    `name` field (#625). A unique `name_normalized` SUBSUMES it (equal
-    //    names normalize equally), so adding one would force a re-decision of
-    //    the constraint #625 landed one round earlier — for a guarantee this
-    //    issue does not need.
-    // 2. This column is a MATCH key, not a policy. The defect was "the flow
-    //    fails to reuse an existing account"; the fix is for the flow to find
-    //    it. Rejecting a near-duplicate name outright is a separate,
-    //    data-quality decision — and this repo has already chosen the soft
-    //    shape for exactly that question once (#598 removed the hard unique on
-    //    `crm_lead.email` because refusing a repeat enquiry is worse than
-    //    recording it).
-    // 3. Measured hazard: `create_index` FAILS on any deployment that already
-    //    holds `Acme Corp` and `ACME  Corp` separately, so a unique index could
-    //    not be an upgrade step without a merge pass first. That hazard is
-    //    bounded today ONLY because this repo's deployment shape is fresh
-    //    installs — see docs/MAINTENANCE.md §3.3. If that premise ever changes,
-    //    this conclusion changes with it; it is conditional, not universal.
+    // 1. Per-tenant uniqueness of account names is already declared on the
+    //    `name` field. A unique `name_normalized` would SUBSUME it (equal names
+    //    normalize equally) and force that constraint to be re-decided.
+    // 2. This column is a MATCH key, not a policy. Rejecting a near-duplicate
+    //    name outright is a separate data-quality decision, and this repo has
+    //    already chosen the soft shape for that question once (the hard unique
+    //    on `crm_lead.email` was removed because refusing a repeat enquiry is
+    //    worse than recording it).
+    // 3. ⚠️ Measured hazard: `create_index` FAILS on any deployment already
+    //    holding `Acme Corp` and `ACME  Corp` separately, so a unique index
+    //    could not be an upgrade step without a merge pass first. That hazard
+    //    is bounded today ONLY because this repo's deployment shape is fresh
+    //    installs — see docs/MAINTENANCE.md §3.3. The conclusion is conditional
+    //    on that premise, not universal.
     //
     // Consequence, recorded rather than hidden: two accounts CAN still hold the
     // same normalized name if something outside the flow creates them, and
     // `get_record` has no `sort` option, so the conversion would reuse an
-    // arbitrary one of them. Reusing one of N is still strictly better than
-    // creating the N+1th, which is what happens today.
+    // arbitrary one. Reusing one of N is still better than creating the N+1th.
     { fields: ['name_normalized'] },
   ],
   
-  // API surface + capabilities. `trash` / `mru` were removed in @objectstack 12
-  // as dead no-ops (ADR-0049 liveness); `files` and `feeds` were NOT — both are
-  // live and enforced in 17 (see the canonical note in `src/objects/index.ts`).
-  // Field history lives on individual `Field.trackHistory` (ADR-0052); global
-  // search uses `searchableFields`/per-field `searchable`.
+  // API surface + capabilities. `files` and `feeds` are live and enforced (see
+  // the canonical note in `src/objects/index.ts`). Field history lives on
+  // individual `Field.trackHistory` (ADR-0052); global search uses
+  // `searchableFields` / per-field `searchable`.
   enable: {
     apiEnabled: true,       // Expose via REST/GraphQL
     apiMethods: ['get', 'list', 'create', 'update', 'delete'], // Whitelist allowed API operations
-    // #602 — contracts, org charts and RFPs live on the account record.
-    // Opt-in (spec default false); attach/download/delete authority is the
-    // parent record's own, so this adds a surface, not a grant.
+    // Contracts, org charts and RFPs live on the account record. Opt-in (spec
+    // default false); attach/download/delete authority is the parent record's
+    // own, so this adds a surface, not a grant.
     files: true,
   },
   
-  // Validation Rules
-  // This object declares none. Two entries used to live here:
-  //
-  // - `account_name_unique` (type: 'unique') was removed in 7.6 — uniqueness
-  //   now lives on the `name` field above (`unique: true`), which the driver
-  //   materializes as the per-tenant `(organization_id, name)` index (#625).
-  // - `revenue_positive` was removed in #514 (item 7) as a duplicate. It
-  //   restated a check `account.hook.ts` already performs on beforeInsert /
-  //   beforeUpdate, and the two disagreed in wording: the validation said
-  //   "Annual Revenue must be positive" while the hook said "greater than or
-  //   equal to 0". Both compared `< 0`, so the hook's wording was the accurate
-  //   one and zero has always been allowed. The hook is now the single
-  //   enforcement point, and it is the tested one — see
-  //   `test/hooks-runtime-sales.test.ts`, which executes the handler, whereas
-  //   the declaration was never evaluated by any test.
-
-  // Workflow Rules
-  // NOTE: object `workflows[]` were removed in @objectstack 7.7. Field-updates
-  // moved to this object's *.hook.ts; scheduled status-flips & notifications
-  // moved to src/flows/*.flow.ts (see flows/index.ts).
+  // ⚠️ No `workflows[]` here, and none is possible: object `workflows[]` were
+  // removed from the platform. Field updates live in this object's `*.hook.ts`;
+  // scheduled status flips and notifications live in `src/flows/*.flow.ts`.
 });

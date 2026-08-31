@@ -28,8 +28,7 @@ import type { HookApi } from './_hook-api';
  * `refreshCampaignMetrics()` import would be a free identifier — the CLI build
  * silently declines to lower the handler, keeps it in a bundled runtime file,
  * and the hook stops being deployable as pure metadata (the build says so in
- * one line nobody reads). The first draft of this change did exactly that, and
- * `test/action-sandbox.test.ts` caught it.
+ * one line nobody reads). `test/action-sandbox.test.ts` is what catches it.
  *
  * So the arithmetic is inlined per handler, the same way `account_protection`
  * inlines the territory table rather than importing `_territory.ts`. The

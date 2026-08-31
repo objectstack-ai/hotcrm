@@ -64,9 +64,9 @@ export const ArticleFeedback = ObjectSchema.create({
   // nothing apart from the article it is about, and `crm_knowledge_article` is
   // `public_read`, so anyone who can read the article can read its feedback.
   //
-  // `private` would have been wrong in the way it was wrong on
-  // `crm_campaign_member` before #488: with the voter as owner, the counters'
-  // own evidence would be invisible to the author trying to understand them.
+  // ⛔ Not `private`: with the voter as owner, the counters' own evidence would
+  // be invisible to the author trying to understand them — the same way it was
+  // wrong on `crm_campaign_member`.
   sharingModel: 'controlled_by_parent',
 
   // ADR-0079: junction rows have no derivable text title; point the canonical
