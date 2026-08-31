@@ -74,6 +74,21 @@ import stack from '../objectstack.config';
  * The consequence is pinned explicitly below (`a hand-clear of the lookup
  * retires the claim too`) so that it reads as the measured trade it is.
  *
+ * ⚠️ That reading was re-taken on 17.1.0 and CONFIRMED, but for a while this
+ * repo answered the question two ways: the note in
+ * `test/freeze-guard-reference-cleanup.test.ts` recorded the cascade as
+ * carrying no `updated_by`, no `ctx.user` and no `ctx.session` at all. Both
+ * notes were labelled measurements, and the difference was in the rigs, not in
+ * the engine — the reading above was taken through a `DELETE` carrying a real
+ * `userId` (the path this app takes), and that one through a `DELETE` carrying
+ * no caller. The engine builds its cleanup write as
+ * `{ ...callerContext, transaction, __referentialFieldClear: true }`, so it
+ * inherits whatever identity the `DELETE` supplied: `updated_by` and the
+ * identity appear together and vanish together. That file now carries the
+ * three-row variation and agrees with this one (#1424); if the two ever read
+ * differently again, the first thing to check is which context each `DELETE`
+ * carried, not which engine version was pinned.
+ *
  * ### The second rule on the same path (#1164)
  *
  * Retiring the claim whole cleared the field pairing and immediately tripped
