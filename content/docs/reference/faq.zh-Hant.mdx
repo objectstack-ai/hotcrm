@@ -157,7 +157,7 @@ Copilot 遵守你的共享設定 —— 如果你看不到它，它也看不到�
 
 ### Stripe 說客戶 X 存在；HotCRM 說沒有。
 
-Stripe 透過信箱或 external ID 匹配 HotCRM 客戶。如果兩者都不匹配，則不會建立關聯。手動加入 external ID 或使用 **Stripe Sync → Re-link** 操作。
+兩邊不會建立任何關聯，在 Stripe 連接器落地之前也不會。HotCRM 不附帶任何打包的廠商連接器——`src/` 裡沒有連接器中繼資料，已安裝的平台套件也沒有提供——所以 Stripe 的客戶、訂閱和發票都不會自行到達任何客戶或合約記錄，無論是按信箱匹配、按 external ID 還是別的方式。[整合](/docs/guides/integrations)頁面上的 Stripe 一行是設計意圖，不是一個可以打開的開關，也沒有可執行的重新關聯操作。在它落地之前，客戶及其合約都是有人在 HotCRM 裡建立的記錄。
 
 ## 🚀 效能
 

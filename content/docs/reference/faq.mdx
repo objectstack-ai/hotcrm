@@ -157,7 +157,7 @@ Check the **DocuSign integration log** (Setup → Integrations → DocuSign → 
 
 ### Stripe says customer X exists; HotCRM says no.
 
-Stripe matches HotCRM accounts by email or external ID. If neither matches, no link is made. Add the external ID manually or use the **Stripe Sync → Re-link** action.
+Nothing links them, and nothing will until a Stripe connector ships. HotCRM has no packaged vendor connectors — `src/` carries no connector metadata and no installed platform package supplies one — so no Stripe customer, subscription or invoice reaches an account or a contract on its own, by email match, by external ID or otherwise. The Stripe row on [Integrations](/docs/guides/integrations) is design intent, not a switch, and there is no re-link action to run. Until it ships, an account and its contracts are records someone creates in HotCRM.
 
 ## 🚀 Performance
 
