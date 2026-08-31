@@ -186,9 +186,9 @@ Use the most specific `Field` type available from `@objectstack/spec/data`:
 
 ## 🧩 Metadata semantics — say what you mean (2026-08-31 ruling)
 
-Five rules on which construct carries which intent, distilled from the 2026-08-31
-rulings (verbatim source: **objectstack#13848**). Prose in a `description` is not one of
-those constructs.
+Five rules on which construct carries which intent, plus the escape-hatch clause that
+closes the chapter — distilled from the 2026-08-31 rulings (verbatim source:
+**objectstack#13848**). Prose in a `description` is not one of those constructs.
 
 **7. Invariant, or transition gate — pick the tool by the intent.**
 An **invariant** ("X may never exceed Y") is a `validations[]` script: existing
@@ -230,6 +230,28 @@ would otherwise flag it. Without both, the next agent tidies it away.
 
 > Precedents: #1102 (the fence was strengthened) · #1328 (the boundary roster) · #1342
 > (the vocabulary comment).
+
+**Escape hatches are for extreme cases — layout is derived by default.**
+Maintainer ruling, 2026-08-31 (verbatim, kept untranslated):
+
+> 「或者说 skills 应该说明，逃生仓是极端场景按照客户需求自定义的场景下才需要，应该尽量避免。」
+
+A layout escape hatch — authoring `record:details` sections on a custom record page, or
+enumerating fields in a view's `form.sections` — is reached for **only** in the extreme
+case, a named customer-demanded customization. ⛔ Avoid it everywhere else. The ladder,
+in order:
+
+1. **`fieldGroups` on the object, each field opting in with `group: '<key>'`** — the
+   norm, and it authors no sections at all: the layout is *derived*.
+2. **The group-reference form** (`{ group: '<key>' }`, objectstack#13897) when partial
+   arrangement is genuinely needed. No in-repo example is cited on purpose — nothing here
+   uses it yet, so read the shape off the spec rather than off a neighbour.
+3. **Per-field enumeration** only in the extreme case, and then with a comment beside the
+   code naming the customer need and why a group reference cannot express it (composing a
+   capture across groups; a wizard or pane structure). That comment is rule 11 applying
+   itself, not an extra ask.
+
+> Mechanism: objectstack#13855 · objectstack#13897.
 
 ## 🚀 Development Workflow
 

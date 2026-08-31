@@ -14,3 +14,9 @@ Checklist, authoring semantics as a new Metadata semantics chapter, ruling disci
 its own short chapter — plus the contradiction sweep those principles forced: four
 passages that disagreed with them were superseded in place, each with a one-line note
 naming the ruling.
+
+A later ruling from the same day closes the Metadata semantics chapter with the
+escape-hatch clause: a layout escape hatch (authoring `record:details` sections, or
+enumerating fields in a view's `form.sections`) is for the extreme, customer-demanded
+case only, and the default ladder is `fieldGroups` derivation first, the group-reference
+form second, per-field enumeration last and commented.
