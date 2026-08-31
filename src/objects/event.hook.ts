@@ -19,12 +19,11 @@ import type { HookApi } from './_hook-api';
  * # Why the walk-up matters
  *
  * `at_risk_accounts` and `customer_churn_signals` are built on
- * `crm_account.last_activity_date`, but a rep logs a call on the OPPORTUNITY
- * or the CONTACT — almost never on the account row itself. Bubbling only to
- * the directly-named record (what `task_activity_bubble` used to do) therefore
- * left the account clock untouched through an entire sales cycle, and the
- * churn report counted a busy customer as silent. The walk-up is the whole
- * reason the signal becomes real.
+ * `crm_account.last_activity_date`, but a rep logs a call on the OPPORTUNITY or
+ * the CONTACT — almost never on the account row itself. ⛔ Bubbling only to the
+ * directly-named record leaves the account clock untouched through an entire
+ * sales cycle, and the churn report then counts a busy customer as silent. The
+ * walk-up is the whole reason the signal becomes real.
  */
 
 const eventScheduleDerive: Hook = {

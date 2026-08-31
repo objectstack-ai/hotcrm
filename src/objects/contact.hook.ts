@@ -40,10 +40,10 @@ import type { HookApi } from './_hook-api';
  * - On delete, refuses if the contact is referenced by an active opportunity,
  *   open quote or active contract.
  *
- * No email/phone propagation to opportunities: `crm_opportunity` has no
- * `contact_email` / `contact_phone` columns — the old afterUpdate rollup
- * wrote nonexistent fields and was silently swallowed. Opportunities reach
- * the live values through their `primary_contact` lookup.
+ * ⛔ No email/phone propagation to opportunities: `crm_opportunity` has no
+ * `contact_email` / `contact_phone` columns, and a rollup writing nonexistent
+ * fields is silently swallowed. Opportunities reach the live values through
+ * their `primary_contact` lookup.
  */
 
 const contactHook: Hook = {
