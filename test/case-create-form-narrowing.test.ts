@@ -214,6 +214,26 @@ describe('crm_case create form — retention direction', () => {
     });
   }
 
+  /**
+   * ⛔ The tempting "fix" for the guard this change tripped
+   * (`test/metadata-references.test.ts` → "fields the list views filter on are
+   * editable in some form") is to mark the escalation flags `readonly` so the
+   * guard skips them. `case.object.ts` records — on `is_sla_violated` and on
+   * `escalated_date` — that the platform DROPS writes to readonly fields, so
+   * that edit would silently stop `case_escalation` / `case_sla_monitor` from
+   * maintaining them. The exemption in that guard exists because this
+   * declaration cannot be made; this assertion is what stops someone undoing
+   * it from the other end.
+   */
+  it('the flow-stamped escalation flags stay declarable — i.e. NOT readonly', () => {
+    for (const name of ['is_escalated', 'is_sla_violated', 'escalated_date']) {
+      expect(
+        objectFields[name]?.readonly,
+        `${name} must stay writable: the platform drops writes to readonly fields and the escalation flows write it`,
+      ).not.toBe(true);
+    }
+  });
+
   it('the queue still sorts on the SLA deadline', () => {
     const sort = ((CaseViews as AnyRec).list?.sort ?? []).map((x: any) => x.field);
     expect(sort).toContain('sla_due_date');
