@@ -348,7 +348,11 @@ describe('the eligibility predicate runs on the record-level CEL evaluator', () 
     const v = ExpressionEngine.evaluate(expr, {
       record: materializeDeclaredFields({ ...record }, FIELDS),
     });
-    return { stage: 'evaluate' as const, ok: v.ok, value: v.value };
+    // `EvalResult` is a discriminated union — `value` exists only on the ok
+    // branch, so it is narrowed here rather than read off the union.
+    return v.ok
+      ? { stage: 'evaluate' as const, ok: true, value: v.value }
+      : { stage: 'evaluate' as const, ok: false, value: undefined };
   };
 
   it('answers true only for published + public, and never aborts', () => {
