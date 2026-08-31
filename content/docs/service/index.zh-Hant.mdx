@@ -36,6 +36,7 @@ New ──► In Progress ──► Waiting on Customer ──► Resolved ─�
 - **自動升級**——只針對 Critical 工單：流程把它們標記為 *Escalated*、提醒原來那位客服，並把工單交給未結工單最少的那位服務經理（若無人持有該職位，則原地不動）。High 工單永遠不會被自動升級，無論帳戶是什麼：要升級它，靠的是手動的 **Escalate Case** 按鈕。
 - **緊急時通知**——每當工單被設為 Critical 時，站內訊息 + 郵件只發給**工單負責人**。這就是工單升級流程的 notify 節點，其收件人列表只有 `{caseRecord.owner_id}` 一項；本應用中不存在 `support_manager@example.com` 這個收件人。
 - **升級時通知**——不會給任何升級團隊發郵件：`escalation_team@example.com` 在本應用中根本不存在。狀態轉為 *Escalated* 真正觸發的，是 `case_status_side_effects` 鉤子開出的那條**次日到期、優先順序為緊急、歸帳戶負責人的跟進任務**。
+- **誰接手就歸誰**——停在 **Unassigned — triage** 裡的工單，只要你把它轉到 *In Progress*、*Waiting on Customer* 或 *Waiting on Support*，它就歸你，並轉入 **My Open Cases**。見[認領待分流的工單](/docs/service/cases)。
 - **標記解決時間**——工單關閉時自動標記。
 - **標記 SLA 違約**——一旦 SLA 目標時間過去，工單會被標記為 **SLA 已違約**並升級，其負責人收到站內訊息 + 郵件提醒。沒有紅色橫幅：本應用沒有任何橫幅機制。
 - **阻止錯誤關閉**——未填寫解決方案就不能將工單標記為已關閉。

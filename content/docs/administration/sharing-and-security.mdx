@@ -94,7 +94,7 @@ Criteria-based rules are the enforced flavour: matching records materialise real
 | Large Open Deals — Executive | Opportunity | Read | `executive` — the same deals, one rung up |
 | Escalated Cases Sharing | Case | Edit | `service_manager` — open critical cases |
 | Escalated Cases — Service Director | Case | Read | `service_director` — the same cases, one rung up |
-| Unassigned Cases — Triage | Case | Edit | `service_agent` — open cases with no owner |
+| Unassigned Cases — Triage | Case | Edit | `service_agent` — unowned cases, until they are Resolved or Closed |
 | Live Campaigns — Marketing Manager | Campaign | Edit | `marketing_manager` — planning / in-progress campaigns |
 | Live Campaigns — Marketing Director | Campaign | Edit | `marketing_director` — the same campaigns |
 
@@ -110,6 +110,28 @@ Create your own in **Setup → Sharing Rules**.
 > never installed, and the position it names receives nothing. Nothing in the
 > UI marks such a rule as broken, so when a team reports missing records, check
 > that every field the rule names is a plain field on the object.
+
+### A grant meant to be spent: *Unassigned Cases — Triage*
+
+Most sharing rules are standing openings: a rule that matches a record today matches it again tomorrow, and the recipients keep the access for as long as the record fits the criteria. *Unassigned Cases — Triage* is the one rule built to be **used up**. It grants every `service_agent` **Edit** on cases that have no owner and are neither *Resolved* nor *Closed* — the grant behind the case list's **Unassigned — triage** tab — and it exists so that an agent can take one of those cases. Taking it is what ends the grant:
+
+1. A case arrives with **no owner** — a web-to-case submission that landed while nobody held the Service Agent position. The rule matches it, so every service agent can see and edit it.
+2. An agent moves it to **In Progress**, **Waiting on Customer** or **Waiting on Support**. The app stamps that agent as the case's **Owner** in the same save.
+3. The case now has an owner, so the rule no longer matches. It drops out of the shared pool and out of the tab, and the agent holds it the ordinary way — as its owner.
+
+> **The claim writes Owner without anyone holding a transfer permission, and
+> that is the design rather than a gap.** Service Agent may reassign tasks only
+> (see *Ownership and transfers* below), and a save that carries Owner is
+> refused for an agent whatever name it holds — their own included. So the claim
+> is not an owner edit that got approved: it is a **status move the app reads as
+> "I am taking this"**, and the only name it can write is the caller's own, onto
+> a case that has no owner yet. *Claim it for somebody else* and *claim a case
+> somebody already owns* have no spelling at all, which is why the gesture needs
+> no new permission. It is not agent-only either: anyone who moves an unowned
+> open case into one of those three statuses claims it that way, an
+> administrator or a service manager included. Automation does not — a seeded or
+> system write leaves the case ownerless, which is what keeps first-install
+> intake visible in the tab.
 
 ### A rule widens one object, not the records underneath it
 
@@ -166,7 +188,7 @@ from ordinary edit rights:
 | Service Agent | tasks only (so an escalation can hand work to the account owner) |
 | Sales Rep, Marketing User | nothing — records are assigned *to* them |
 
-Three everyday actions are **not** transfers and need no such permission:
+Four everyday actions are **not** transfers and need no such permission:
 
 - **Creating a record.** New records are stamped to their creator automatically —
   you never pick yourself.
@@ -174,6 +196,11 @@ Three everyday actions are **not** transfers and need no such permission:
   field.
 - **Automation acting on your behalf** — the round-robin that routes an incoming
   lead, the nightly sweeps that book renewal and follow-up tasks.
+- **Claiming an unowned case.** Moving a case that has nobody on it into *In
+  Progress*, *Waiting on Customer* or *Waiting on Support* makes you its owner
+  (see *A grant meant to be spent* above). Owner does change — but the move
+  names no one, takes the record away from no one, and works only while the case
+  is ownerless, so it is not a reassignment and needs no reassignment right.
 
 A user without the permission who tries to reassign gets a clear refusal rather
 than a silent no-op. If you need to move a book of business, ask an

@@ -95,6 +95,7 @@ The two are not one screen wearing different chrome. **Case Type** is on the det
 
 ## What happens automatically
 
+- **Owner, when a case is claimed** — a case with **no owner** gets one the moment somebody moves it to *In Progress*, *Waiting on Customer* or *Waiting on Support*: whoever makes that change is stamped as the case's Owner in the same save. A case that already has an owner is never touched, and an automated or seeded write never claims — those leave the case ownerless, for the **Unassigned — triage** tab to keep showing. See *Claiming a case out of triage* below.
 - **First response date** (`first_response_date`) — stamped the first time an interaction that **already took place** is recorded against the case. Its single writer is the `event_activity_bubble` hook (`src/objects/event.hook.ts`), which fires on any `crm_event` reaching **Held** status with the case as its related record — so **Log a Call** and **Log a Meeting** stamp it, and so does an interaction entered any other way, including straight onto the case's activity list. It reads the stored value back before writing, so a second interaction never overwrites the first. Two things are deliberately *not* a first response: a **status change** (an agent can move a case to *In Progress* and investigate for an hour while the customer hears nothing) and a meeting merely *scheduled*, which is `planned` rather than held. On a case worked entirely through comments the field stays empty.
 - **Closed flag** — set automatically when status changes to *Closed*.
 - **Closed date** — stamped to NOW when status changes to *Closed*.
@@ -138,10 +139,27 @@ Two things this list deliberately does not claim, because the escalation does no
 
 See [SLA & Escalation](/docs/service/sla-and-escalation) for the full mechanics.
 
+## Claiming a case out of triage
+
+Some cases arrive with **no owner at all** — a web-to-case submission that landed while nobody held the Service Agent position is the usual way. They wait in the **Unassigned — triage** tab, where every service agent can see and edit them until somebody picks one up.
+
+**Taking a case is a status move, not an owner edit.** Move an unowned case to **In Progress**, **Waiting on Customer** or **Waiting on Support** and it becomes yours: the app stamps you as its Owner in that same save. The case then leaves **Unassigned — triage** — that tab lists unowned cases only — and appears in **My Open Cases**.
+
+Nothing else claims a case, and each exclusion is deliberate:
+
+| Move an unowned case to | What happens to ownership |
+| --- | --- |
+| **New** | Nothing — it is the state a triage row is already in, so it is not a move at all |
+| **Escalated** | Nothing for you: that transition belongs to the escalation hand-off, which sends the case to the least-loaded **Service Manager** (see *Case escalation* above) |
+| **Resolved**, **Closed** | Nothing — finishing a case is not picking it up. You may resolve an unowned case straight out of triage; it stays ownerless, and the record shows you as the one who last updated it |
+
+> **You cannot claim a case by editing Owner, and you cannot claim one for anybody but yourself.** Owner is not a field an agent sets on a case — a save carrying it is refused whatever name it holds, your own included — so the status move is the claim's only spelling, and the only name it can write is yours. The gesture is equally inert on a case that already has an owner: move that case's status and the status is all that changes. A case that genuinely has to change hands needs an administrator or a service manager; see [Sharing & Security](/docs/administration/sharing-and-security).
+
 ## Sharing — who can see which case
 
 - By default, cases are **private** — only the owner. Positions are flat and **nothing rolls up**, so no manager sees a case by sitting above its owner.
 - **Critical open cases** are auto-shared by two rules, one per rung: *Escalated Cases Sharing* grants read/edit to `service_manager`, and *Escalated Cases — Service Director* grants read to `service_director`. Both rungs are named explicitly because neither inherits from the other.
+- **Unowned open cases** are shared with every `service_agent` by *Unassigned Cases — Triage*, read and edit — the grant behind the **Unassigned — triage** tab. It lasts exactly as long as the case has no owner and is neither *Resolved* nor *Closed*, and claiming the case is what ends it: from that point you hold the case the ordinary way, as its owner.
 
 ## Field-level security
 
