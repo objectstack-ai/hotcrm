@@ -44,7 +44,7 @@
     "@objectstack/driver-sqlite-wasm": "17.1.0",
     "@objectstack/metadata": "17.1.0",
     "@objectstack/objectql": "17.1.0",
-    "@objectstack/runtime": "17.1.0",
+    "@objectstack/runtime": "17.2.0",
     "@objectstack/service-analytics": "17.1.0",
     "@objectstack/service-automation": "17.1.0",
     "@objectstack/spec": "17.1.0"
