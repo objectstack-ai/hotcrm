@@ -239,16 +239,15 @@ const taskBubble: Hook = {
      * `priority_rank` table above). `test/activity-recency.test.ts` runs BOTH
      * copies through the same cases so they cannot diverge silently.
      *
-     * Two things changed here versus the version this replaces (#592):
+     * ⛔ Two properties this must keep:
      *
-     *   1. It no longer keys off `related_to_type`. That discriminator is a
-     *      display hint a rep can leave blank — and when they did, a task with a
-     *      perfectly good `related_to_account` bubbled to nothing at all.
+     *   1. It does NOT key off `related_to_type`. That discriminator is a
+     *      display hint a rep can leave blank, and a task with a perfectly good
+     *      `related_to_account` then bubbles to nothing at all.
      *   2. It WALKS UP to the account. A rep completes a task on the
      *      opportunity, not on the account row, so bubbling only to the named
-     *      record left `crm_account.last_activity_date` untouched through an
-     *      entire deal — which is why `at_risk_accounts` listed active
-     *      customers.
+     *      record leaves `crm_account.last_activity_date` untouched through an
+     *      entire deal — and `at_risk_accounts` then lists active customers.
      */
     const { input } = ctx;
     const previous = ctx.previous;

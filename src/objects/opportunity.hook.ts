@@ -130,8 +130,8 @@ const opportunityValidationHook: Hook = {
           if (isReferenceCleanup) return;
 
           // `crm_opportunity.nameField` IS `name`, so the name on its own is
-          // exactly how every other surface titles this record. The record id
-          // used to be appended to it and matched none of them (#1243).
+          // exactly how every other surface titles this record. ⛔ Never append
+          // the record id — it matches none of them.
           const name = typeof previous.name === 'string' ? previous.name.trim() : '';
           const subject = name ? `Opportunity ${name}` : 'Opportunity';
           throw refuse(

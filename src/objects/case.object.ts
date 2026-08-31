@@ -199,19 +199,17 @@ export const Case = ObjectSchema.create({
       readonly: true,
     }),
     
-    // NOT `readonly`: stamped by `event_activity_bubble`
-    // (`src/objects/event.hook.ts`) on the first HELD `crm_event` related to
-    // the case — whoever wrote that event, `log_call` / `log_meeting` included
-    // (#595 moved the stamp out of the two action bodies so every path is
-    // covered, not just those two buttons). 16.x drops writes to readonly
-    // fields on user-context writes (#2948) and that hook runs under the
-    // acting user's context, so `readonly` here silently disabled the stamp.
-    // Same reason `is_sla_violated` and `escalated_date` below are not readonly.
+    // ⛔ NOT `readonly`: stamped by `event_activity_bubble`
+    // (`src/objects/event.hook.ts`) on the first HELD `crm_event` related to the
+    // case, whoever wrote that event. ⚠️ The platform drops writes to readonly
+    // fields on user-context writes, and that hook runs under the acting user's
+    // context, so `readonly` here silently disables the stamp. Same reason
+    // `is_sla_violated` and `escalated_date` below are not readonly.
     //
     // Definition: the moment the customer first heard back from us, matching
     // Salesforce `FirstResponseDateTime` / Zendesk first reply time — NOT an
-    // internal status change, which would report "responded" while the
-    // customer is still waiting (#575 B2).
+    // internal status change, which would report "responded" while the customer
+    // is still waiting.
     first_response_date: Field.datetime({
       label: 'First Response Date',
       group: 'sla',
@@ -235,9 +233,9 @@ export const Case = ObjectSchema.create({
       group: 'sla',
     }),
     
-    // NOT `readonly`: the case_sla_monitor flow stamps this, and 16.x drops
-    // writes to readonly fields (#2948) — readonly here silently disabled
-    // SLA violation tracking.
+    // ⛔ NOT `readonly`: the `case_sla_monitor` flow stamps this, and the
+    // platform drops writes to readonly fields — readonly here silently
+    // disables SLA violation tracking.
     is_sla_violated: Field.boolean({
       label: 'SLA Violated',
       group: 'sla',
@@ -251,8 +249,8 @@ export const Case = ObjectSchema.create({
       defaultValue: false,
     }),
     
-    // NOT `readonly`: written by case_escalation / case_sla_monitor flows
-    // (16.x drops readonly writes, #2948).
+    // ⛔ NOT `readonly`: written by the `case_escalation` / `case_sla_monitor`
+    // flows, and the platform drops writes to readonly fields.
     escalated_date: Field.datetime({
       label: 'Escalated Date',
       group: 'escalation',

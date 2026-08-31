@@ -165,21 +165,20 @@ const eventActivityBubble: Hook = {
 
     // ── First response on a case (#595) ──────────────────────────────────
     //
-    // The SINGLE writer of `crm_case.first_response_date`. It used to live in
-    // the `log_call` / `log_meeting` action body (#575 B2), which stamped it
-    // only when the interaction was recorded through one of those two buttons —
-    // an event created any other way (the Activity tab, an import, an
-    // integration, a future action) left the most standard SLA metric a service
-    // desk reports permanently null, under a comment asking every future author
-    // to remember to stamp it too. The rule those two actions were really
-    // expressing is the one this hook already computes for recency: an
-    // interaction that HAPPENED. So it belongs here, once, where every writer
-    // of a held event passes through it — the same argument that made this hook
-    // the single writer of recency, and `case_status_side_effects` the single
-    // owner of escalation follow-up tasks.
+    // ⛔ The SINGLE writer of `crm_case.first_response_date`, and it belongs
+    // here rather than in the `log_call` / `log_meeting` action bodies: stamping
+    // it per-button covers only interactions recorded through those two
+    // buttons, and an event created any other way (the Activity tab, an import,
+    // an integration, a future action) leaves the most standard SLA metric a
+    // service desk reports permanently null. The rule those actions express is
+    // the one this hook already computes for recency — an interaction that
+    // HAPPENED — so it lives once, where every writer of a held event passes
+    // through it. Same argument that makes this hook the single writer of
+    // recency, and `case_status_side_effects` the single owner of escalation
+    // follow-up tasks.
     //
-    // A status change is deliberately NOT a first response, and #595 does not
-    // change that: an agent can move a case to "in progress" and investigate
+    // A status change is deliberately NOT a first response: an agent can move a
+    // case to "in progress" and investigate
     // for an hour while the customer hears nothing, so a status-derived number
     // would report a response that never happened. Neither is a meeting merely
     // BOOKED — that is the `held` gate above, which this block sits under.
