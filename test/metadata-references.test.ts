@@ -988,6 +988,33 @@ describe('forms can actually author the data the views depend on', () => {
     expect(bad, `required fields no form can supply:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
+  /**
+   * Fields this guard's `isAuthorable` proxy calls authorable and the app
+   * knows are STAMPED — written only by a hook, a flow or an action, never
+   * typed by a person.
+   *
+   * The proxy reads `readonly` to mean "stamped", and on `crm_case` that read
+   * is unavailable: `case.object.ts` records — twice, on `is_sla_violated` and
+   * on `escalated_date` — that **the platform drops writes to readonly
+   * fields**, so declaring an escalation flag readonly silently disables the
+   * flow that maintains it. The declaration cannot be made honest, so the
+   * exception is recorded here instead of hidden by putting the field back on
+   * a form.
+   *
+   * ⛔ An entry needs the writers that own the field and the reason a person
+   * never types it. "It fails the guard" is not a reason.
+   */
+  const STAMPED_NOT_TYPED: Record<string, string> = {
+    // #1214 item 3: the case create form is the intake form, and escalation is
+    // not an intake fact. `is_escalated` is written by `case_escalation`,
+    // `case_sla_monitor` and the `escalate_case` screen flow, plus the
+    // guest-submission branch of `case.hook.ts` that forces it false — and by
+    // nothing a user types. `escalated_cases` filtering on it is correct:
+    // the rows come from those flows.
+    'crm_case.is_escalated':
+      'stamped by case_escalation / case_sla_monitor / escalate_case; cannot be declared readonly (the platform drops flow writes to readonly fields — see case.object.ts)',
+  };
+
   it('fields the list views filter on are editable in some form', () => {
     // account views filter on type/health_score, but the account form never
     // offered them — the views could never match anything a user created
@@ -1007,6 +1034,7 @@ describe('forms can actually author the data the views depend on', () => {
       for (const name of filtered) {
         const field = objDef.fields?.[name];
         if (!isAuthorable(field)) continue; // readonly/derived fields are hook-stamped, not typed in
+        if (`${objectName}.${name}` in STAMPED_NOT_TYPED) continue; // stamped, but undeclarable as such
         if (!editable.has(name)) {
           bad.push(`${objectName}: views filter on "${name}" but no form lets a user set it`);
         }
