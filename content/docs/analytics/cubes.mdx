@@ -22,7 +22,7 @@ A **cube** is a pre-modeled, multi-dimensional dataset: a set of named **measure
 | Dataset | Reads | Dimensions | Measures |
 | --- | --- | --- | --- |
 | **Opportunity Metrics** (`opportunity_metrics`) | `crm_opportunity`, joined to `crm_account` | Stage, Lead Source, Forecast Category, Deal Type, Owner, Win Reason, Loss Reason, Close Date (month), Close Quarter, Account Industry | Opportunities, Total Amount, Avg Deal Size, Avg Probability, Won Deals, Lost Deals, Settled Deals, Won Revenue, Lost Revenue, Win Rate |
-| **Case Metrics** (`case_metrics`) | `crm_case` | Status, Priority, Origin, Type, Created (day) | Cases, Avg Resolution (h), SLA Violation Rate |
+| **Case Metrics** (`case_metrics`) | `crm_case` | Status, Priority, Origin, Type, Created (day), Resolving Article | Cases, Avg Resolution (h), SLA Violation Rate, Closed Cases, Resolved by KB, KB Deflection Rate, Cases Within SLA, SLA Compliance Rate |
 | **Lead Metrics** (`lead_metrics`) | `crm_lead` | Status, Source, Created, Last Contacted (month) | Leads |
 | **Account Metrics** (`account_metrics`) | `crm_account` | Industry, Type, Created (month) | Accounts, Annual Revenue |
 | **Forecast Metrics** (`forecast_metrics`) | `crm_forecast` | Owner, Period Type, Period, Period Start | Quota, Closed, Pipeline, Commit, Attainment |
@@ -63,17 +63,22 @@ Both cubes this page described are answered by the same place: **Opportunity Met
 
 ## 🎧 Service — `case_metrics`
 
-The dataset behind every case-related dashboard tile and all three case reports. Five dimensions — **Status**, **Priority**, **Origin**, **Type**, **Created** (bucketed by day) — and three measures:
+The dataset behind every case-related dashboard tile and all three case reports. Six dimensions — **Status**, **Priority**, **Origin**, **Type**, **Created** (bucketed by day), **Resolving Article** — and eight measures:
 
-- **Cases** — the case count.
-- **Avg Resolution (h)** — average resolution time.
-- **SLA Violation Rate** — the average of the **SLA Violated** flag (`avg_sla_violated` in `case_metrics`), which is a breach rate and not a compliance percentage
+- **Cases** — the case count (`case_count`).
+- **Avg Resolution (h)** — average resolution time (`avg_resolution`).
+- **SLA Violation Rate** — the average of the **SLA Violated** flag (`avg_sla_violated`), which is a breach rate and not a compliance percentage.
+- **Closed Cases** — the count of closed cases (`closed_count`), the denominator both rates below divide by.
+- **Resolved by KB** — closed cases that carry a resolving article (`kb_resolved_count`).
+- **KB Deflection Rate** — **Resolved by KB** ÷ **Closed Cases** (`kb_deflection_rate`), declared as a derived ratio so no widget improvises a denominator.
+- **Cases Within SLA** — closed cases that did not breach (`sla_met_count`).
+- **SLA Compliance Rate** — **Cases Within SLA** ÷ **Closed Cases** (`sla_compliance_rate`); this is the on-time percentage, the complement of **SLA Violation Rate**.
 
-**There is no first-response measure here**, and no "SLA met %". `case_metrics` (`src/datasets/case.dataset.ts`) declares neither, so nothing in analytics can aggregate, compare or chart a first response. The **First Response Date** stamp on the case is real — see [Cases](/docs/service/cases) for when it is written — but it stops there: nothing measures it, and nothing alerts on it.
+**There is no first-response measure here.** `case_metrics` (`src/datasets/case.dataset.ts`) declares none, so nothing in analytics can aggregate, compare or chart a first response. An "SLA met %" *does* exist — **SLA Compliance Rate** above — and the Service dashboard's SLA gauge plots it. The **First Response Date** stamp on the case is real — see [Cases](/docs/service/cases) for when it is written — but it stops there: nothing measures it, and nothing alerts on it.
 
 The rest of what this section used to list is not reachable either:
 
-- **Open / New / Resolved case count** — there is one count measure, not three. **Status** is a dimension, so a count *split by* status gives the same breakdown; what does not exist is a pre-filtered measure you can drop on a tile by itself.
+- **Open / New / Resolved case count** — no measure is pre-filtered to *those* three states. **Status** is a dimension, so a count *split by* status gives the same breakdown. The dataset does declare pre-filtered counts, but on the closed side only: **Closed Cases**, **Resolved by KB** and **Cases Within SLA**.
 - **Agent (and team)** — `case_metrics` declares **no owner dimension**, so nothing in analytics can group, rank or filter cases by agent. `owner_id` is a field on the case; no dimension exposes it. This is why the service pages carry no agent leaderboard and *"reopened cases by agent"* is doubly impossible — nothing records a reopen either.
 - **Account (and tier)** — the dataset reads `crm_case` alone and never crosses to `crm_account`.
 - **Product** — cases carry no product link that analytics can read, so *"cases by category by product"* has no path.

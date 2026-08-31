@@ -63,7 +63,7 @@ HotCRM 开箱即用地发布 **十份** 报表 —— `src/reports/index.ts` 这
 | **SLA Performance Report** | 工单数、**SLA 违约率** 与平均解决时长，按优先级 —— 只统计已关闭的工单 |
 | **Cases Opened by Priority × Day** | 每日新增工单的矩阵：行是优先级，列是工单开出来的那一天 |
 
-本节曾经列出的另外五份报表哪儿都没有发布，而且其中多数是在向语义层要它根本没有的东西。`case_metrics`（`src/datasets/case.dataset.ts`）只读 `crm_case` 一个对象，五个维度 —— **Status**、**Priority**、**Origin**、**Type**、**Created**（按天分桶）—— 外加三个度量：工单数、平均解决时长、SLA 违约率。
+本节曾经列出的另外五份报表哪儿都没有发布，而且其中多数是在向语义层要它根本没有的东西。`case_metrics`（`src/datasets/case.dataset.ts`）只读 `crm_case` 一个对象，六个维度 —— **Status**、**Priority**、**Origin**、**Type**、**Created**（按天分桶）、**Resolving Article** —— 外加八个度量：**Cases**、**Avg Resolution (h)**、**SLA Violation Rate**、**Closed Cases**、**Resolved by KB**、**KB Deflection Rate**、**Cases Within SLA** 与 **SLA Compliance Rate**。
 
 - **Case Volume by Origin** 是这五份里唯一你自己建得出来的：**Origin** 是维度，所以「按 Email / Phone / Web / Chat / Portal 数工单」只差一份自建报表。它只是不在随应用发布的那几份里。
 - **Case Resolution Time** *按类别和客服* —— 度量本身是真的，上面两份汇总报表都带着它；但 **客服** 这一维根本够不着：`owner_id` 是工单上的字段，没有任何维度把它暴露出来。最接近「类别」的是 **Type**（*Question / Problem / Feature Request / Bug*）。
@@ -71,7 +71,7 @@ HotCRM 开箱即用地发布 **十份** 报表 —— `src/reports/index.ts` 这
 - **Reopened Cases** 数的是没有任何东西在记的事。工单确实会重开 —— 状态机允许 *Resolved* 与 *Closed* 回到 *In Progress* —— 但没有任何字段标记一张工单曾被重开，也没有任何度量在数它。
 - **CSAT by Agent** 两头都不成立：**Customer Satisfaction**（`customer_rating`）是工单上真实的 1–5 星字段，但 `case_metrics` 没有为它声明任何度量，也没有「客服」这一维可分组。
 
-**SLA Performance Report 里同样没有任何首次响应数字**，而且它那个 SLA 数字是 **SLA Violated** 标志的平均值，也就是违约 *率*，不是准时率。本应用根本不度量首次响应：**First Response Date** 只在工单上第一次记录 *已经发生过* 的通话或会议时被盖上，此后从不与任何目标比较；`case_metrics` 没有声明任何首次响应度量，所以没有报表、也没有仪表盘磁贴能报出一个来。参见 [SLA 与升级](/zh-Hans/docs/service/sla-and-escalation)。
+**SLA Performance Report 里同样没有任何首次响应数字**，而且它那个 SLA 数字是 **SLA Violated** 标志的平均值，也就是违约 *率*，不是准时率。（准时率本身是有声明的：**SLA Compliance Rate**，服务仪表盘的 SLA 仪表盘图画的就是它。只是这份报表没有带上它。）本应用根本不度量首次响应：**First Response Date** 只在工单上第一次记录 *已经发生过* 的通话或会议时被盖上，此后从不与任何目标比较；`case_metrics` 没有声明任何首次响应度量，所以没有报表、也没有仪表盘磁贴能报出一个来。参见 [SLA 与升级](/zh-Hans/docs/service/sla-and-escalation)。
 
 ### 💰 客户与收入报表
 
