@@ -249,15 +249,42 @@ const leadHook: Hook = {
           // lead able to keep all three of its conversion products undeletable
           // forever (a GDPR erasure that cannot be carried out).
           //
-          // Measured on 17.0.0-rc.6, not assumed: the payload is exactly
-          // `{ id, <link>: null, updated_at, updated_by }`; `ctx.user` is the
-          // CALLER; `ctx.session` is the caller's own `{ userId, isSystem }`.
-          // The engine DOES stamp a `__referentialFieldClear: true` marker, but
-          // on its internal operation context — `ObjectQL.buildSession` copies a
-          // fixed allow-list of keys into `ctx.session`, and `__`-prefixed
-          // operation-private keys are deliberately not among them (see the
-          // `__` convention note in `@objectstack/core`). So no marker reaches a
-          // hook, and the WRITE SHAPE is the only evidence there is.
+          // Re-measured on 17.1.0 — the version this repo pins — with a probe
+          // hook at priority 199 immediately ahead of each guard, not assumed.
+          // The engine builds its cleanup write on the CALLER's own context
+          // plus two engine keys, so on the path a REST `DELETE` takes, the
+          // cascade and a user's hand-clear of the same lookup are identical
+          // everywhere a guard can look: payload
+          // `{ id, <link>: null, updated_at, updated_by }`, `ctx.user` the
+          // CALLER, `ctx.session` the caller's own `{ userId, isSystem }`.
+          // (Both `updated_by` and the identity drop out together when the
+          // DELETE itself carried no `userId` — a rig artefact, not this app's
+          // path.) So the WRITE SHAPE is not a discriminator, and the yield
+          // below is not one either: it lets ANY caller clear a declared link
+          // on a settled record. That is the trade #720 accepted, not a side
+          // effect of it.
+          //
+          // ⚠️ A marker DOES reach a hook — and is deliberately not read. An
+          // earlier version of this note concluded "no marker reaches a hook,
+          // and the WRITE SHAPE is the only evidence there is"; it reasoned
+          // only about `ctx.session`, whose allow-list really does omit
+          // `__`-prefixed operation-private keys, and missed the other route
+          // into the context. `ObjectQL.cascadeDeleteRelations` builds
+          // `{ ...context, __referentialFieldClear: true }`, readable at
+          // `ctx.api.executionContext.__referentialFieldClear`: measured `true`
+          // on every cascade into `crm_opportunity`, `crm_quote` and
+          // `crm_lead`, `undefined` on every hand-clear (#1165, #1412).
+          //
+          // ⛔ The #1165 ruling (2026-08-25) reviewed that and upheld NOT
+          // reading it, on two grounds. It is an operation-private key — an
+          // undeclared dependency that can vanish in a patch release. And
+          // reachability through the SHIPPED path is unproven: a hook body runs
+          // body-only in QuickJS, where `buildSandboxApi` passes `engineCtx.api`
+          // only when that exposes `object()`, and otherwise a shim with no
+          // `executionContext` at all. Green in a kernel rig and silently false
+          // in production is the worst outcome a guard can have. The declared
+          // replacement `ctx.referentialFieldClear` is asked for upstream as
+          // objectstack-ai/objectstack#13644.
           //
           // ⛔ Keep this narrow (maintainer's ruling on #720, Option A): a write
           // yields ONLY when every one of its non-system changes is a DECLARED
@@ -495,14 +522,23 @@ const leadDuplicateCheckHook: Hook = {
     //
     //     ⚠️ This is deliberately NOT a second spelling of #720's "is this write
     //     the engine's reference cleanup?" predicate in `lead_automation` above.
-    //     It cannot be: measured on 17.0.0 GA, the engine's cleanup write and a
-    //     user's hand-clear of the same lookup are indistinguishable — identical
-    //     `input` (`{ id, <link>: null, updated_at, updated_by }`), identical
-    //     `ctx.user`, identical `ctx.session`. Asking a question the context
-    //     cannot answer is what forces shape-sniffing; asking "is the pair still
-    //     whole?" needs no provenance at all, and answers both callers the same
-    //     correct way — a lead whose link you removed no longer duplicates
-    //     anything, however the removal was spelled.
+    //     Re-measured on 17.1.0 with a probe hook at priority 199: the engine's
+    //     cleanup write and a user's hand-clear of the same lookup are identical
+    //     in everything this block could read — identical `input`
+    //     (`{ id, <link>: null, updated_at, updated_by }`), identical
+    //     `ctx.user`, identical `ctx.session` — because the engine builds the
+    //     cleanup on the CALLER's own context. They are not indistinguishable
+    //     outright, though: a marker is reachable at
+    //     `ctx.api.executionContext.__referentialFieldClear`, `true` on the
+    //     cascade and `undefined` on the hand-clear. The #1165 ruling of
+    //     2026-08-25 upheld NOT reading it — an operation-private key is an
+    //     undeclared dependency, and a hook body in QuickJS can be handed an
+    //     api shim with no `executionContext` at all (#1412; the declared
+    //     replacement is asked for as objectstack-ai/objectstack#13644).
+    //     None of which changes this block, and that is the point: asking "is
+    //     the pair still whole?" needs no provenance at all, and answers both
+    //     callers the same correct way — a lead whose link you removed no
+    //     longer duplicates anything, however the removal was spelled.
     //
     //     It does NOT loosen the pairing, which is the thing to check when
     //     reading this: a write that STATES a type without naming a record is
