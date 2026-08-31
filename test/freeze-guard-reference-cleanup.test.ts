@@ -37,27 +37,98 @@ import { extractSandboxBody } from './helpers/action-sandbox';
  *
  * ### The measurement the yield rests on
  *
- * Taken on `@objectstack/*` 17.0.0-rc.6 (the issue was filed against rc.2), by
- * instrumenting each of the three handlers on the real kernel below:
+ * Re-taken on `@objectstack/*` 17.1.0 — the version this repo pins — by
+ * registering a probe hook at priority 199 (immediately ahead of each guard) on
+ * `crm_opportunity`, `crm_quote` and `crm_lead`, and walking the context of the
+ * engine's cleanup write against a user's hand-clear of the SAME lookup:
  *
- *     input   = { id, <link>: null, updated_at, updated_by }
- *     user    = { id: <the caller> }            ← the CALLER, not a system id
- *     session = { userId: <the caller>, isSystem: true }
- *     provenance = undefined
+ *                    cascade (the engine's)      hand-clear (a user's)
+ *     input          { id, LINK: null,           { id, LINK: null,
+ *                      updated_at }                updated_at, updated_by }
+ *     user           undefined                   { id: the CALLER }
+ *     session        undefined                   { userId: caller, isSystem: true }
+ *     provenance     undefined                   undefined
  *
- * All three objects produce that same shape, which is why one predicate serves
+ * All three objects produce that same pair, which is why one predicate serves
  * all three and no per-object differentiation was needed.
  *
- * A marker DOES exist, and it is deliberately out of reach: the engine tags its
- * own cleanup write with `__referentialFieldClear: true` on the internal
- * operation context (`ObjectQL.cascadeDeleteRelations`), but `buildSession`
- * copies a fixed allow-list of keys into `ctx.session` and the `__`-prefixed
- * operation-private keys are not among them (that stripping is a rule, not an
- * oversight — see the `__` convention note in `@objectstack/core`). Preferring a
- * first-class marker over shape-sniffing was the instruction; the marker is not
- * offered to hooks, so the WRITE SHAPE is the only evidence there is. If a
- * future platform release surfaces one, the drift pin at the bottom of this
- * file is where to start, and switching to it is strictly better.
+ * ⚠️ The cascade column REPLACED a 17.0.0-rc.6 reading that recorded the
+ * caller's `user` and `session` there too. That is no longer true: the cleanup
+ * write now runs on a transaction-scoped context carrying no identity
+ * (`executionContext` measured as `{ __referentialFieldClear, transaction }`),
+ * and `buildSession` returns `undefined` when every key it copies is absent.
+ *
+ * ⛔ Do NOT turn that difference into a discriminator. `!ctx.session` means
+ * "no identity envelope was supplied" — `buildSession`'s own documented
+ * contract — which is equally true of any bare-kernel or programmatic write.
+ * Reading it as "this is a reference cleanup" would yield the freeze for a
+ * whole class of writes that are not one.
+ *
+ * ### The marker EXISTS, it is reachable from a hook, and it is still not read
+ *
+ * An earlier version of this note said the opposite — "the marker is not
+ * offered to hooks, so the WRITE SHAPE is the only evidence there is" — and
+ * that conclusion was measurably wrong on the version we ship. It is corrected
+ * here rather than deleted, because its job was to tell the next reader not to
+ * look any further, and a note that keeps a reader away from the truth is
+ * worse than no note (#1165).
+ *
+ * The engine tags its own cleanup write with `__referentialFieldClear: true`
+ * (`ObjectQL.cascadeDeleteRelations` builds
+ * `referentialCtx = { ...context, __referentialFieldClear: true }`), and on
+ * 17.1.0 that tag IS readable from a hook — at
+ *
+ *     ctx.api.executionContext.__referentialFieldClear
+ *
+ * measured `true` on all three cascade writes above, and `undefined` on all
+ * three hand-clears. The old note reasoned only about `ctx.session`, and that
+ * half of it remains correct: `buildSession` builds the session field by field
+ * from a fixed, named allow-list, and `__`-prefixed operation-private keys are
+ * deliberately not in it (a rule, not an oversight — see the `__` convention
+ * note in `@objectstack/core`). `ctx.session` is simply not the only route
+ * into the context.
+ *
+ * The marker also answers a question the shape predicate cannot. Shape only
+ * separates these two writes at all because the engine happens to omit
+ * `updated_by` on the cascade: nothing declares that, both writes clear the
+ * same declared link from a value to `null`, and the referenced row is still
+ * readable from either. So the predicate below is a fail-safe approximation,
+ * not a decision procedure — which is exactly why it is pinned narrow.
+ *
+ * ⛔ Even so, the guards deliberately do NOT read the marker. The ruling on
+ * #1165 (2026-08-25) reviewed both reasons and upheld them:
+ *
+ *   1. It is an OPERATION-PRIVATE key. The `__` prefix is the platform's own
+ *      convention for "not part of the contract" — the same convention
+ *      `buildSession` enforces when it leaves those keys out. Building app
+ *      correctness on it is an UNDECLARED DEPENDENCY that can vanish in a
+ *      patch release without anyone calling it a break.
+ *   2. Reachability through the SHIPPED path is UNPROVEN. The reading above was
+ *      taken in this kernel rig, where handlers run natively and `ctx.api` is
+ *      the engine's own `ScopedContext` (keys measured as
+ *      `[engine, executionContext, joinedHandles]`). In production a hook body
+ *      runs body-only inside QuickJS (see `test/action-sandbox.test.ts`), and
+ *      `ctx.api` there is whatever `buildSandboxApi` hands it: `engineCtx.api`
+ *      when that exposes `object()`, and OTHERWISE a shim of `{ object }`
+ *      carrying no `executionContext` at all. A predicate reading the marker
+ *      could be green here and silently false in production — the worst
+ *      available outcome for a guard. Same family as
+ *      `ctx.dispatch?.mode === 'per-row'` (#1265 / objectstack#11552), a shape
+ *      this repo has already paid for once.
+ *
+ * ### What would have to change upstream for that to flip
+ *
+ * A first-class, DECLARED marker on the hook context: `ctx.referentialFieldClear`,
+ * declared on `HookContextSchema` in `packages/spec` and populated on every
+ * cleanup write — declared, so it is part of the contract and crosses the
+ * sandbox boundary by design rather than by luck. That is the half
+ * `__referentialFieldClear` cannot offer at any level of care on this side.
+ * Filed upstream as objectstack-ai/objectstack#13644.
+ *
+ * When it lands: the three verbatim copies of the predicate collapse into one
+ * honest read, #720's narrowness caveats stop being load-bearing, and the
+ * `REFERENCE_FIELDS`-completeness pin at the bottom of this file becomes
+ * unnecessary — that pin is where to start.
  *
  * ### Why the narrowness is pinned in both directions
  *
