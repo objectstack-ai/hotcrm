@@ -45,7 +45,7 @@ Permission sets are **explicit-allow only**: if an object is not listed in a set
 - **Contacts**: the contacts on accounts the rep can see — their own, plus every account a territory rule or manual share put in reach. Contact is Controlled by Parent, and that derivation follows the account's sharing (see [Sharing & security](/docs/administration/sharing-and-security), *Controlled by Parent, in practice*)
 - **Opportunity and quote line items** — full control, which is what the "Products" related list and quote building need. Controlled by Parent again, so this reaches the lines of the deals and quotes the rep can see, and no others
 - Read the **product** catalog, **campaigns**, **campaign members** and **knowledge articles**
-- Read their **own forecast snapshots** (they are written by the nightly forecast job, never by hand)
+- Read their **own forecast snapshots** — a rep never writes one. The nightly forecast job opens and refreshes them, and a manager or an admin may also enter one by hand; a hand-entered current-quarter row stands that nightly job down for the owner and period until the row is deleted (see [Forecasting](/docs/sales/forecasting))
 - Read their own **contracts** and **cases**; deleting is a manager privilege (their own tasks excepted)
 
 ### 🎧 Service Agent
