@@ -18,8 +18,8 @@ importers:
         specifier: 17.1.0
         version: 17.1.0
       '@objectstack/driver-sql':
-        specifier: 17.1.0
-        version: 17.1.0
+        specifier: 17.2.0
+        version: 17.2.0
       '@objectstack/driver-sqlite-wasm':
         specifier: 17.1.0
         version: 17.1.0(better-sqlite3@12.11.1)
@@ -736,6 +736,10 @@ packages:
     resolution: {integrity: sha512-4R+rmaNWNmW6K2hMK2GihCAYwLPJr9csqpq0Rmegs79ElXPRy93JNoVy5LG3WotVnIvUdPlGCWogdRhc4lRhqw==}
     engines: {node: '>=22.0.0'}
 
+  '@objectstack/core@17.2.0':
+    resolution: {integrity: sha512-82I4eL/qcuFKOBhXWEGjJPAS9mOfwGVd9jeRbhRGuUZTm282sCuVoR/QC1JkDVxsFE0kSAtE4ej0XsYxP/spZQ==}
+    engines: {node: '>=22.0.0'}
+
   '@objectstack/driver-memory@17.1.0':
     resolution: {integrity: sha512-dtjWNJQ65POjdrItkppAmiDp2U6l/4XvR7VpNyKPlUuyfQ7anB2qQq5UylWb+NjGYfE9M2yR0R9rU52QdygNjw==}
     engines: {node: '>=22.0.0'}
@@ -746,6 +750,21 @@ packages:
 
   '@objectstack/driver-sql@17.1.0':
     resolution: {integrity: sha512-CkLGMcYbXPlv8ycB0XpNg2X3M3Lgwhu8AUv6/AQKD2obEC2+/RycChySrF9I6QDoaqaqDnLTLwQLXXW6AFdPlg==}
+    engines: {node: '>=22.0.0'}
+    peerDependencies:
+      mysql2: ^3.0.0
+      pg: ^8.0.0
+      tedious: ^18.0.0
+    peerDependenciesMeta:
+      mysql2:
+        optional: true
+      pg:
+        optional: true
+      tedious:
+        optional: true
+
+  '@objectstack/driver-sql@17.2.0':
+    resolution: {integrity: sha512-9yYEY2HOEfp2LuaTrVYdbYOBUnf08qSPF8+qsKRAMuPkIPqO3kVg7v+S/uAooUhqf/G/jthFk+hRk5fg+RIYBQ==}
     engines: {node: '>=22.0.0'}
     peerDependencies:
       mysql2: ^3.0.0
@@ -801,6 +820,10 @@ packages:
 
   '@objectstack/observability@17.1.0':
     resolution: {integrity: sha512-03BB7fBkCJ/xuKQrhTBdXCpm0q44XSP13O+HexfIhOwqNEAsmHVGPgARazL1miik61EcFD7KlkEoMUpFKusywg==}
+    engines: {node: '>=22.0.0'}
+
+  '@objectstack/observability@17.2.0':
+    resolution: {integrity: sha512-sohqkmsU18u4sILJrd6/p8BI08PvuU23wfs6XNDE3YBfIxHfgeiRQzUj9iiHNIgv8Lcsa+xlHM6UAku4RF1QAg==}
     engines: {node: '>=22.0.0'}
 
   '@objectstack/platform-objects@17.1.0':
@@ -926,6 +949,15 @@ packages:
       ai:
         optional: true
 
+  '@objectstack/spec@17.2.0':
+    resolution: {integrity: sha512-nQzyR9+9JQEtLzFastQbj0ETLLbOm4sSY+sNUEX2k0QgZThCsMB1rKPv100c6GQZYg1BaLfz5xc8tv9oH3cKqg==}
+    engines: {node: '>=22.0.0'}
+    peerDependencies:
+      ai: ^7.0.0
+    peerDependenciesMeta:
+      ai:
+        optional: true
+
   '@objectstack/trigger-api@17.1.0':
     resolution: {integrity: sha512-KI9F4DiB3q9ph0auO5xgLHbFPiPfUYa1IJfyxNDp5oJVbn7ObcgrOPNJ40jb7zM5DMoGConITQ5C3fgIeUOT3w==}
 
@@ -939,6 +971,10 @@ packages:
 
   '@objectstack/types@17.1.0':
     resolution: {integrity: sha512-cjwGIcxr6cRqBBCwneMrXxaUwQvWYfFqtbevHjtbq74PqfrOE6kWLSXxtLSO5UKkDEuTKgfX2dnpKC1Hly95Jg==}
+    engines: {node: '>=22.0.0'}
+
+  '@objectstack/types@17.2.0':
+    resolution: {integrity: sha512-bgeX9wzajlG+WFutsRKEIWPIxCR2u1kN8aEsFRcvtWV5jyuAuIA8tVTIhEs9yy2BwefeAWwouJrDZbv1Si8+bw==}
     engines: {node: '>=22.0.0'}
 
   '@objectstack/verify@17.1.0':
@@ -1318,6 +1354,7 @@ packages:
   '@xmldom/xmldom@0.9.11':
     resolution: {integrity: sha512-tW8bcK3hsG0/uqSnNz6TK4BkcuZSezoU7DlnYssILmZDktPnSHHuDJJFM0AJv+13gz2r0iGdrj6qqKeUnxXEDg==}
     engines: {node: '>=14.6'}
+    deprecated: this version has critical issues, please update to the latest version
 
   accepts@2.0.0:
     resolution: {integrity: sha512-5cvg6CtKwfgdmVqY1WIiXKc3Q1bkRqGLi+2W/6ao+6Y7gu/RCwRuAhGEzh5B4KlszSuTLgZYuqFqo5bImjNKng==}
@@ -2760,8 +2797,8 @@ packages:
   mz@2.7.0:
     resolution: {integrity: sha512-z81GNO7nnYMEhrGh9LeymoE4+Yr0Wn5McHIZMK5cfQCl+NDX08sCZgUc9/6MHni9IWuFLm1Z3HTCXu2z9fN62Q==}
 
-  nanoid@3.3.16:
-    resolution: {integrity: sha512-bzlKTyNJ7+LdGIIwy8ijFpIqEQIvafahV7eYykJ8Cvh42EdJeODoJ6gUJXpQJvej1BddH8OqTXZNE/KfbWAu8Q==}
+  nanoid@3.3.18:
+    resolution: {integrity: sha512-DTg4MJbGMWkfi6VZFdNt2/caMbQy4Ou+Op/hJQvGEWcnVfoA1QA+xzRKAzw9jD6+GVOOeYr/mIcuDSdug6F6+w==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
@@ -2785,8 +2822,8 @@ packages:
     resolution: {integrity: sha512-W5ZNO5KRPB5TkYmGVD9F6YqhsglXJzE6etpbmT+f6EQElhiX/UTG551cnsRGvLG3fyZEg9HwaDmNmj5nwJ4z9g==}
     engines: {node: '>=10'}
 
-  node-addon-api@8.9.0:
-    resolution: {integrity: sha512-ekZMeaaIzSQTSpr7X2X3iJM7lTzgnx8ahAG9pJfT/7+14mlEM8ZYQ9cgCDvSSRbReFK0oHli3WrZdCiRsgAT9Q==}
+  node-addon-api@8.9.2:
+    resolution: {integrity: sha512-VijLXbi3UACN69I0JVXJsX4tjACjNoQDgv2gTF6sx2wWEi8tkSg2eX8p5gSIFi8z2+DL3oHmY6OyKce38SDolg==}
     engines: {node: ^18 || ^20 || >= 21}
 
   node-rsa@1.1.1:
@@ -4197,7 +4234,7 @@ snapshots:
       '@objectstack/core': 17.1.0
       '@objectstack/driver-memory': 17.1.0
       '@objectstack/driver-mongodb': 17.1.0
-      '@objectstack/driver-sql': 17.1.0
+      '@objectstack/driver-sql': 17.2.0
       '@objectstack/driver-sqlite-wasm': 17.1.0(better-sqlite3@13.0.3)
       '@objectstack/formula': 17.1.0
       '@objectstack/lint': 17.1.0
@@ -4360,6 +4397,13 @@ snapshots:
     transitivePeerDependencies:
       - ai
 
+  '@objectstack/core@17.2.0':
+    dependencies:
+      '@objectstack/spec': 17.2.0
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - ai
+
   '@objectstack/driver-memory@17.1.0':
     dependencies:
       '@objectstack/core': 17.1.0
@@ -4392,6 +4436,25 @@ snapshots:
       '@objectstack/observability': 17.1.0
       '@objectstack/spec': 17.1.0
       '@objectstack/types': 17.1.0
+      knex: 3.3.0(better-sqlite3@13.0.3)
+      nanoid: 6.0.1
+    optionalDependencies:
+      better-sqlite3: 13.0.3
+    transitivePeerDependencies:
+      - ai
+      - mariadb
+      - mysql
+      - pg-native
+      - pg-query-stream
+      - sqlite3
+      - supports-color
+
+  '@objectstack/driver-sql@17.2.0':
+    dependencies:
+      '@objectstack/core': 17.2.0
+      '@objectstack/observability': 17.2.0
+      '@objectstack/spec': 17.2.0
+      '@objectstack/types': 17.2.0
       knex: 3.3.0(better-sqlite3@13.0.3)
       nanoid: 6.0.1
     optionalDependencies:
@@ -4545,6 +4608,12 @@ snapshots:
   '@objectstack/observability@17.1.0':
     dependencies:
       '@objectstack/spec': 17.1.0
+    transitivePeerDependencies:
+      - ai
+
+  '@objectstack/observability@17.2.0':
+    dependencies:
+      '@objectstack/spec': 17.2.0
     transitivePeerDependencies:
       - ai
 
@@ -5054,6 +5123,11 @@ snapshots:
       pg-connection-string: 2.14.0
       zod: 4.4.3
 
+  '@objectstack/spec@17.2.0':
+    dependencies:
+      pg-connection-string: 2.14.0
+      zod: 4.4.3
+
   '@objectstack/trigger-api@17.1.0':
     dependencies:
       '@objectstack/core': 17.1.0
@@ -5078,6 +5152,12 @@ snapshots:
   '@objectstack/types@17.1.0':
     dependencies:
       '@objectstack/spec': 17.1.0
+    transitivePeerDependencies:
+      - ai
+
+  '@objectstack/types@17.2.0':
+    dependencies:
+      '@objectstack/spec': 17.2.0
     transitivePeerDependencies:
       - ai
 
@@ -5621,7 +5701,7 @@ snapshots:
 
   better-sqlite3@13.0.3:
     dependencies:
-      node-addon-api: 8.9.0
+      node-addon-api: 8.9.2
     optional: true
 
   big-integer@1.6.52: {}
@@ -7125,7 +7205,7 @@ snapshots:
       object-assign: 4.1.1
       thenify-all: 1.6.0
 
-  nanoid@3.3.16: {}
+  nanoid@3.3.18: {}
 
   nanoid@6.0.1: {}
 
@@ -7141,7 +7221,7 @@ snapshots:
       semver: 7.8.5
     optional: true
 
-  node-addon-api@8.9.0:
+  node-addon-api@8.9.2:
     optional: true
 
   node-rsa@1.1.1:
@@ -7261,7 +7341,7 @@ snapshots:
 
   postcss@8.5.23:
     dependencies:
-      nanoid: 3.3.16
+      nanoid: 3.3.18
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
