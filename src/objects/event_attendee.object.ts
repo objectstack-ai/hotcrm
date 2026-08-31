@@ -6,31 +6,20 @@ import { ATTENDEE_RESPONSE_OPTIONS } from './_picklists';
 
 /**
  * The ways an attendee row can name a person — ONE declaration, not two lists
- * that happen to line up (#740).
+ * that happen to line up.
  *
  * `attendee_type` is the discriminator and each of the four columns below is a
- * resolution; before #740 the two were authored separately and had drifted
- * apart. `external_name` was one of the four resolutions `attendee_resolves`
- * accepted, and `attendee_type` had no value for it — so an external guest
- * could only be STORED MISLABELLED. Measured on 17.0.0-rc.6, before the fix,
- * against the real engine (`test/attendee-type-resolution.test.ts` now pins the
- * other direction):
- *
- *     insert { attendee_type: "contact", external_name: "the prospect's lawyer" }
- *       -> ACCEPTED   (row claims to be a Contact and points at no contact)
- *     insert { external_name: "no type given" }        // type omitted
- *       -> ACCEPTED as attendee_type: "contact"        (the field default)
- *     insert { attendee_type: "external", external_name: "Jane Roe" }
- *       -> ValidationError: Attendee Type must be one of: contact, lead, user
- *
- * The Console's attendee form reaches all three; `src/actions/global.actions.ts`
- * never writes `external_name`, which is why the defect was live but dormant.
+ * resolution. ⛔ Authoring the two separately lets them drift, and the failure
+ * is silent: a type with no matching resolution means an external guest can
+ * only be STORED MISLABELLED (a row claiming to be a Contact while pointing at
+ * no contact is ACCEPTED, and an omitted type falls to the field default).
  *
  * Deriving BOTH the picklist and the two rules from this table is the point: a
  * fifth resolution cannot be added without its type, and a type cannot be added
- * without saying which column it names — the failure #740 records is not
- * expressible in this shape. Everything downstream (options, `attendee_resolves`,
+ * without saying which column it names — the failure is not expressible in this
+ * shape. Everything downstream (options, `attendee_resolves`,
  * `attendee_type_exclusive`) is generated below; nothing repeats the pairing.
+ * `test/attendee-type-resolution.test.ts` pins it.
  *
  * Adding a row here is a user-visible picklist change: it needs a label in all
  * four locale packs (`test/i18n-references.test.ts` fails otherwise) and a
@@ -78,62 +67,50 @@ const EXCLUSIVE_CONDITION = ATTENDEE_RESOLUTIONS
 
 /**
  * `requiredWhen` for one party column — the SAME correspondence the two rules
- * enforce, asked for one layer earlier so the form marks the column the chosen
- * type names instead of letting the save discover it is empty (#1078). Derived
- * from `ATTENDEE_RESOLUTIONS` like everything else in this file: a fifth
- * resolution gets its hint for free and cannot get it wrong.
+ * enforce, asked one layer earlier so the form marks the column the chosen type
+ * names instead of letting the save discover it is empty. Derived from
+ * `ATTENDEE_RESOLUTIONS` like everything else here: a fifth resolution gets its
+ * hint for free and cannot get it wrong.
  *
  * This is a HINT, not the contract. `attendee_resolves` and
  * `attendee_type_exclusive` at the bottom of this file are the contract every
  * writer meets — REST, ObjectQL, seeds, flows — and nothing here relaxes
- * either. `requiredWhen` is a transition gate, not an invariant: it asks the
+ * either. ⚠️ `requiredWhen` is a transition gate, not an invariant: it asks the
  * write in front of it for the column, it does not state a property of stored
- * rows. The duplication with `attendee_resolves` is deliberate, and it is
- * visible: a REST insert that omits the named column now answers twice, once
- * per layer. MEASURED on 17.1.0 against the running app, POST
- * `{crm_event, attendee_type: "lead"}`:
+ * rows. The duplication is deliberate and visible — a REST insert omitting the
+ * named column answers twice, once per layer, and the accepted set is
+ * unchanged.
  *
- *     before   400  ["_record"  An attendee must fill the party its Attendee Type names …]
- *     after    400  ["crm_lead" Lead is required,
- *                    "_record"  An attendee must fill the party its Attendee Type names …]
- *
- * The accepted set is unchanged — same rows in, same rows out, verified insert
- * by insert — so the second message is the cost of naming the FIELD, which is
- * what lets the Console mark it. A partial update that touches neither column
- * (`PATCH {response}`) still returns 200.
- *
- * The predicate is TOTAL (`has()`-guarded via `typeIs`), the same house rule
+ * ⚠️ The predicate is TOTAL (`has()`-guarded via `typeIs`), the same house rule
  * AGENTS.md states for every authored CEL predicate. `requiredWhen` fails
  * CLOSED in the Console — an unevaluable predicate demands nothing — so an
  * unguarded one would read as enforced here and require nothing at the form.
  *
  * # ⛔ Why there is no `visibleWhen` beside it
  *
- * The obvious other half — hide the three columns the type does not name — was
- * built and MEASURED in the browser on 17.1.0, and it is NOT shipped, because
- * the Console hides a populated field without clearing it and submits the
- * stale value anyway. Fill Contact, then change the type to Lead: the Contact
- * column leaves the DOM, its value stays in form state, and the write carries
- * it —
+ * ⚠️ Platform constraint, measured in the browser on 17.1.0: the Console hides
+ * a populated field WITHOUT clearing it and submits the stale value anyway.
+ * Fill Contact, then change the type to Lead — the Contact column leaves the
+ * DOM, its value stays in form state, and the write carries it:
  *
  *     POST  {"attendee_type":"lead", …, "crm_contact":"AEwPffbkMvx-OlC4",
  *                                       "crm_lead":"0AM_zbdjuLcXMdnL"}
  *     400   An attendee names exactly one party — clear every party column
  *           its Attendee Type does not name
  *
- * — so the row is refused, correctly, by a message naming a column that is no
- * longer on screen to clear. On the EDIT path it is a dead end rather than a
- * puzzle: retyping any of the 12 seeded `contact` rows to `user` re-sends the
- * stored `crm_contact` on every attempt, and the Console offers no way to
- * empty it. Today's form is worse-looking and strictly more usable: the
- * offending column is visible, so the error can be acted on.
+ * — so the row is refused, correctly, by a message naming a column no longer on
+ * screen to clear. On the EDIT path it is a dead end rather than a puzzle:
+ * retyping a stored `contact` row to `user` re-sends the stored `crm_contact`
+ * on every attempt, and the Console offers no way to empty it. Today's form is
+ * worse-looking and strictly more usable: the offending column is visible, so
+ * the error can be acted on.
  *
  * Nothing in `@objectstack/spec` 17.1.0 or the shipped Console clears a value
  * when its field goes invisible — no `clearOnHide`-shaped key exists on either
  * surface — so `visibleWhen` here cannot be paired into safety from this repo.
- * The half that would need to change is upstream, and it is the same
- * fail-open/stale-state family as the note in `src/views/lead.view.ts`. Do not
- * add `visibleWhen` to these four columns until a hidden field stops being
+ * The half that would need to change is upstream; it is the same
+ * fail-open/stale-state family as the note in `src/views/lead.view.ts`. ⛔ Do
+ * not add `visibleWhen` to these four columns until a hidden field stops being
  * submitted; the rules above will keep refusing the row, but the person in
  * front of the form will have no way to fix it.
  */
@@ -148,28 +125,26 @@ const partyFormHints = (column: string) => {
 };
 
 /**
- * Event Attendee — who was in the room (#592).
+ * Event Attendee — who was in the room.
  *
  * # Why a junction object, and not multi-value lookups
  *
- * The acceptance criterion is "attendees are queryable RECORDS, not JSON
- * strings", and three properties decide the shape:
+ * "Attendees are queryable RECORDS, not JSON strings", and three properties
+ * decide the shape:
  *
  *  1. **Attendees are heterogeneous.** A customer meeting has internal people
  *     (`sys_user`), existing customers (`crm_contact`) and prospects
  *     (`crm_lead`) in it. A `Field.lookup(..., { multiple: true })` points at
  *     exactly ONE object, so a multi-lookup design needs three parallel
  *     multi-lookups and no way to order or de-duplicate across them.
- *  2. **An attendee carries its own attributes.** `response` (accepted /
- *     declined / tentative) and `is_organizer` belong to the *pairing* of a
- *     person and an event, not to either side. A multi-value lookup stores a
- *     bare id array with nowhere to hang them, which is how the old design
- *     ended up smuggling the whole list into a JSON string in the first place.
- *  3. **A junction is queryable the way the issue asks for.** "Meetings this
- *     rep attended", "contacts who declined twice this quarter" and "accounts
- *     whose champion has not attended anything in 90 days" are all `find()`
- *     calls on this object. Against an id array inside a multi-value column
- *     they are not expressible in ObjectQL at all.
+ *  2. **An attendee carries its own attributes.** `response` and `is_organizer`
+ *     belong to the *pairing* of a person and an event, not to either side. A
+ *     multi-value lookup stores a bare id array with nowhere to hang them.
+ *  3. **A junction is queryable.** "Meetings this rep attended", "contacts who
+ *     declined twice this quarter" and "accounts whose champion has not
+ *     attended anything in 90 days" are all `find()` calls on this object.
+ *     Against an id array inside a multi-value column they are not expressible
+ *     in ObjectQL at all.
  *
  * This mirrors `crm_campaign_member`, the app's existing junction, down to the
  * autonumber `nameField` and the `controlled_by_parent` OWD.
@@ -180,25 +155,16 @@ const partyFormHints = (column: string) => {
  * accepts the REQUIRED `crm_event` lookup as the parent, so no master-detail
  * conversion is needed — same construction as `crm_campaign_member`.
  *
- * The INTENT of that model is "reads are filtered to attendees whose
- * `crm_event` the caller can read, and adding or updating an attendee requires
- * edit access to that event", and as of 17.0.0-rc.4 that is what the platform
- * does. MEASURED on 17.0.0-rc.4 and pinned by
- * `test/parent-derived-reach.test.ts`: master accessibility resolves through
- * the same paths a direct read of the event takes — ownership scope and
- * `sys_record_share` grants folded in, not the master's row-level security
- * policies alone. `crm_event` is `private` and reps hold it `own`-only, so a
- * rep's attendee rows are the attendees of their own calendar. The parent-write
- * gate derives the same way and refuses a child of an event the caller cannot
- * edit.
- *
- * The gap was at its widest here until 17.0.0-rc.3, and this note said so
- * (#694): the derivation consulted master RLS policies ONLY, under a SYSTEM
- * context, and HotCRM authors none on `crm_event`, so every attendee row of
- * every meeting reached every holder of object-level read on this object.
- * objectstack-ai/objectstack#5386 fixed that upstream and it shipped in rc.4;
- * the guard test named above was written to go red the day the platform
- * narrowed, and it did.
+ * Reads are filtered to attendees whose `crm_event` the caller can read, and
+ * adding or updating an attendee requires edit access to that event. ⚠️ That
+ * derivation resolves through the same paths a direct read of the event takes —
+ * ownership scope and `sys_record_share` grants folded in, not the master's
+ * row-level security policies alone. The distinction is not academic: an
+ * earlier platform version consulted master RLS policies ONLY, under a SYSTEM
+ * context, and HotCRM authors none on `crm_event` — so every attendee row of
+ * every meeting reached every holder of object-level read.
+ * `test/parent-derived-reach.test.ts` pins the narrow behaviour and was written
+ * to go red the day the platform changed it.
  */
 export const EventAttendee = ObjectSchema.create({
   name: 'crm_event_attendee',
@@ -228,16 +194,15 @@ export const EventAttendee = ObjectSchema.create({
       format: 'EA-{00000}',
     }),
 
-    // Deliberately left on the spec default, and NOT cascaded with the party
-    // lookups below (#711). Because it is REQUIRED, the engine escalates the
-    // stored `set_null` to a refusal at delete time, with a message that names
-    // the real obstacle instead of an unrelated rule — measured on
-    // 17.0.0-rc.2: "Cannot delete crm_event (...): 3 dependent
-    // crm_event_attendee record(s) reference it via crm_event (crm_event is
-    // required, so it cannot be cleared)." That is the correct answer on this
-    // side, for the same reason `crm_campaign_member.crm_campaign` keeps it
-    // (#696): a meeting's attendee list is the meeting's historical record, not
-    // a per-person artefact. `test/event-attendee-cascade.test.ts` pins the
+    // ⚠️ Deliberately left on the spec default, and NOT cascaded with the party
+    // lookups below. Because it is REQUIRED, the engine escalates the stored
+    // `set_null` to a refusal at delete time, with a message naming the real
+    // obstacle instead of an unrelated rule: "Cannot delete crm_event (...): 3
+    // dependent crm_event_attendee record(s) reference it via crm_event
+    // (crm_event is required, so it cannot be cleared)." That is the correct
+    // answer on this side, for the same reason `crm_campaign_member.crm_campaign`
+    // keeps it: a meeting's attendee list is the meeting's historical record,
+    // not a per-person artefact. `test/event-attendee-cascade.test.ts` pins the
     // resolved value so a copy-paste of the three cascades cannot reach here.
     crm_event: Field.lookup('crm_event', {
       group: 'basic',
@@ -246,11 +211,11 @@ export const EventAttendee = ObjectSchema.create({
       storage: { notNull: true },
     }),
 
-    // The discriminator says which of the four columns below is the live one.
-    // It is authored rather than derived so a query can filter "internal
-    // attendees only" without four OR'd null checks — and that filter is
-    // exactly what a mislabelled row used to break (#740), which is why the
-    // options are generated from the resolution table rather than retyped.
+    // The discriminator says which of the four columns below is the live one. It
+    // is authored rather than derived so a query can filter "internal attendees
+    // only" without four OR'd null checks. The options are GENERATED from the
+    // resolution table rather than retyped — see the note at the top of this
+    // file for why the pairing is declared once.
     attendee_type: Field.select({
       group: 'basic',
       label: 'Attendee Type',
@@ -265,38 +230,28 @@ export const EventAttendee = ObjectSchema.create({
       })),
     }),
 
-    // `deleteBehavior: 'cascade'` on ALL THREE party lookups (#711, the same
-    // construction and the same defect as #696/`crm_campaign_member`). A lookup
-    // defaults to `set_null`, and that default made every person who had ever
-    // been logged as a meeting attendee permanently undeletable: deleting the
-    // party cleared this column, the row the engine had just edited instantly
-    // violated `attendee_resolves` below, and the whole delete rolled back with
-    // an error naming an object the caller never addressed. Measured on
-    // 17.0.0-rc.2, before the fix:
+    // ⛔ `deleteBehavior: 'cascade'` on ALL THREE party lookups, not the default.
     //
-    //   DELETE lead    -> "An attendee must point at a Contact, a Lead, a User,
-    //                      or name an external guest"  (lead survives)
-    //   DELETE contact -> same        DELETE user -> same
-    //
-    // (The message above is the pre-#740 wording, kept verbatim because it is
-    // what was measured on 17.0.0-rc.2. `attendee_resolves` says something
-    // narrower now — see the rules at the bottom of this file.)
+    // ⚠️ Platform constraint: a lookup defaults to `set_null`, and the engine
+    // implements `set_null` by UPDATING the row that holds it. On a column a
+    // validation rule reads, that makes the referenced party permanently
+    // UNDELETABLE: clearing this column leaves the row the engine just edited in
+    // violation of `attendee_resolves` below, and the whole delete rolls back
+    // with an error naming an object the caller never addressed. The same
+    // construction bites `crm_campaign_member`.
     //
     // `external_name` is the fourth resolution, but it is blank on every row the
     // product actually writes (`src/actions/global.actions.ts` logs attendees
-    // with a party reference and never an external name), so it rescues nothing
-    // in practice. #740 gave it its own `attendee_type` value rather than a
-    // second job; it still rescues nothing here, and now it cannot be reached
-    // by a row that calls itself a Contact either.
+    // with a party reference and never an external name), so it rescues nothing.
     //
     // Cascade rather than `restrict`: an attendee row is a JUNCTION whose whole
-    // meaning is "this person was in this room". Once the person is gone the
-    // row denotes nothing, and the query it exists to serve ("meetings this
-    // person attended") has lost its subject. `restrict` would produce an
-    // accurate message but keep the person undeletable until someone deleted
-    // their attendance by hand, and undeletable PEOPLE is the impact being
-    // fixed. Cascade also leaves no reachable state in which a stored attendee
-    // row breaks its own object's rule.
+    // meaning is "this person was in this room". Once the person is gone the row
+    // denotes nothing, and the query it exists to serve ("meetings this person
+    // attended") has lost its subject. `restrict` would produce an accurate
+    // message but keep the person undeletable until someone deleted their
+    // attendance by hand, and undeletable PEOPLE is the impact being fixed.
+    // Cascade also leaves no reachable state in which a stored attendee row
+    // breaks its own object's rule.
     crm_contact: Field.lookup('crm_contact', {
       group: 'basic',
       label: 'Contact',
@@ -313,9 +268,8 @@ export const EventAttendee = ObjectSchema.create({
       ...partyFormHints('crm_lead'),
     }),
 
-    // `sys_user` gets the SAME answer as the two CRM parties, and it was the one
-    // worth a second look rather than a copy-paste (#711 raises it explicitly).
-    // What decided it, measured rather than assumed:
+    // `sys_user` gets the SAME answer as the two CRM parties, and it was worth a
+    // second look rather than a copy-paste:
     //
     //  · Deleting a user is a real, reachable operation. Generic CRUD delete on
     //    the identity table is off (`sys_user` ships `apiMethods: ['get',
@@ -324,24 +278,24 @@ export const EventAttendee = ObjectSchema.create({
     //    surfaces as the "Delete My Account" record action, and
     //    `/api/v1/auth/admin/remove-user` — resolve `user` to `sys_user` and
     //    land on `dataEngine.delete(...)`, i.e. the SAME ObjectQL delete that
-    //    runs the referential pass. So `set_null` here is not dormant: it broke
-    //    account erasure for any colleague who had ever attended a meeting.
+    //    runs the referential pass. So `set_null` here is not dormant: it breaks
+    //    account erasure for any colleague who ever attended a meeting.
     //  · The app's shipped stance is already "a deleted user's references
     //    degrade". EVERY other `sys_user` lookup in HotCRM (every `owner_id`,
-    //    plus `product_manager`) is `set_null`
-    //    and NO validation rule reads any of them — the rule below is the only
-    //    one in the app that reads a user reference at all, which is precisely
-    //    why this is the only lookup where the default misbehaved. `restrict`
-    //    here would make this junction the ONE app row able to veto a platform
-    //    identity erasure — an app object holding a `protection: { lock:
-    //    'full' }`, better-auth-managed table hostage, surfacing as an opaque
-    //    failure from an auth route. That is the layering inversion, not the fix.
+    //    plus `product_manager`) is `set_null` and NO validation rule reads any
+    //    of them — the rule below is the only one in the app that reads a user
+    //    reference at all, which is precisely why this is the only lookup where
+    //    the default misbehaves. `restrict` here would make this junction the
+    //    ONE app row able to veto a platform identity erasure — an app object
+    //    holding a `protection: { lock: 'full' }`, better-auth-managed table
+    //    hostage, surfacing as an opaque failure from an auth route. That is a
+    //    layering inversion, not a fix.
     //  · The cost of cascade is bounded and is the right half to lose: the
     //    meeting itself (`crm_event` — subject, times, outcome notes) survives
     //    untouched; only the per-person row goes, and it goes because the
-    //    person's identity record was erased. Deactivation, not deletion, is
-    //    the ordinary offboarding path (the platform ships ban/unban for that),
-    //    and it touches nothing here.
+    //    person's identity record was erased. Deactivation, not deletion, is the
+    //    ordinary offboarding path (the platform ships ban/unban), and it
+    //    touches nothing here.
     sys_user: Field.lookup('sys_user', {
       group: 'basic',
       label: 'User',
@@ -352,10 +306,10 @@ export const EventAttendee = ObjectSchema.create({
 
     // Free text is the LAST resort, not the default: it exists only for the
     // genuinely unmodelled guest (a prospect's lawyer who is in no CRM object).
-    // Since #740 it is the resolution of ONE attendee type — `external` — and
-    // the rules below enforce that both ways: an `external` row must fill it,
-    // and no other type may. It is not a place to paste a list, and it is not a
-    // note field to hang off a Contact row.
+    // It is the resolution of ONE attendee type — `external` — and the rules
+    // below enforce that both ways: an `external` row must fill it, and no
+    // other type may. It is not a place to paste a list, and not a note field
+    // to hang off a Contact row.
     external_name: Field.text({
       group: 'basic',
       label: 'External Attendee',
@@ -380,8 +334,8 @@ export const EventAttendee = ObjectSchema.create({
       defaultValue: false,
     }),
 
-    // NOT `readonly`: written by the activity actions on insert, and 16.x/17.x
-    // strip a readonly key the CALLER supplied (#2948) — the same reason
+    // ⛔ NOT `readonly`: written by the activity actions on insert, and the
+    // engine strips a readonly key the CALLER supplied — the same reason
     // `crm_campaign_member.added_date` is open.
     invited_date: Field.datetime({
       group: 'response',
@@ -395,20 +349,18 @@ export const EventAttendee = ObjectSchema.create({
     { fields: ['sys_user'] },
   ],
 
-  // Predicates below are TOTAL: every `record.x` read is `has()`-guarded, so the
-  // rule returns a verdict even when the merged record has no such key. See
+  // ⚠️ Predicates below are TOTAL: every `record.x` read is `has()`-guarded, so
+  // the rule returns a verdict even when the merged record has no such key. See
   // AGENTS.md "Validation predicates must be TOTAL" and
   // test/object-validation-predicates.test.ts, which fails the build otherwise.
   //
   // Both rules are GENERATED from `ATTENDEE_RESOLUTIONS` at the top of this
-  // file (`expression(..., 'cel')` is the same envelope the ``P`…` `` tag
-  // produces; the tag JSON-quotes an interpolated string, so it cannot splice a
-  // source fragment). The pairing is declared once and read twice — see the
-  // note up there for why that is the fix and not a style choice.
+  // file. ⚠️ `expression(..., 'cel')` is the same envelope the ``P`…` `` tag
+  // produces, but the tag JSON-quotes an interpolated string and so cannot
+  // splice a source fragment — which is why these use the function form. The
+  // pairing is declared once and read twice; see the note up there.
   validations: [
-    // The type's own column must be filled. Until #740 this rule accepted ANY
-    // of the four resolutions regardless of the type, which is what let a row
-    // say `contact` while pointing at no contact.
+    // The type's own column must be filled.
     {
       name: 'attendee_resolves',
       type: 'script',
@@ -421,12 +373,6 @@ export const EventAttendee = ObjectSchema.create({
     // condition, one wording. Folding both into `attendee_resolves` would make
     // its message a lie for half the rows it rejects, and "you filled the wrong
     // column" is not the same instruction as "you filled nothing".
-    //
-    // This also retires a documented cost of #711: a row naming two parties was
-    // removed when EITHER was deleted, "accepted because no such row is
-    // reachable today". It is now unwritable, so the question cannot arise —
-    // `test/event-attendee-cascade.test.ts` pins the refusal where it used to
-    // pin the double-cascade.
     {
       name: 'attendee_type_exclusive',
       type: 'script',
