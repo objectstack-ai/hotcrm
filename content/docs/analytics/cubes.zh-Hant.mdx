@@ -22,7 +22,7 @@ description: HotCRM 分析底下的語義層——九個 dataset，各自能回�
 | Dataset | 讀取 | 維度 | 度量 |
 | --- | --- | --- | --- |
 | **Opportunity Metrics**（`opportunity_metrics`） | `crm_opportunity`，並聯結 `crm_account` | Stage、Lead Source、Forecast Category、Deal Type、Owner、Win Reason、Loss Reason、Close Date（按月）、Close Quarter、Account Industry | Opportunities、Total Amount、Avg Deal Size、Avg Probability、Won Deals、Lost Deals、Settled Deals、Won Revenue、Lost Revenue、Win Rate |
-| **Case Metrics**（`case_metrics`） | `crm_case` | Status、Priority、Origin、Type、Created（按天） | Cases、Avg Resolution (h)、SLA Violation Rate |
+| **Case Metrics**（`case_metrics`） | `crm_case` | Status、Priority、Origin、Type、Created（按天）、Resolving Article | Cases、Avg Resolution (h)、SLA Violation Rate、Closed Cases、Resolved by KB、KB Deflection Rate、Cases Within SLA、SLA Compliance Rate |
 | **Lead Metrics**（`lead_metrics`） | `crm_lead` | Status、Source、Created、Last Contacted（按月） | Leads |
 | **Account Metrics**（`account_metrics`） | `crm_account` | Industry、Type、Created（按月） | Accounts、Annual Revenue |
 | **Forecast Metrics**（`forecast_metrics`） | `crm_forecast` | Owner、Period Type、Period、Period Start | Quota、Closed、Pipeline、Commit、Attainment |
@@ -63,17 +63,22 @@ description: HotCRM 分析底下的語義層——九個 dataset，各自能回�
 
 ## 🎧 服務 —— `case_metrics`
 
-每個工單相關的儀表板磁貼與全部三份工單報表背後的那個 dataset。五個維度 —— **Status**、**Priority**、**Origin**、**Type**、**Created**（按天分桶）—— 與三個度量：
+每個工單相關的儀表板磁貼與全部三份工單報表背後的那個 dataset。六個維度 —— **Status**、**Priority**、**Origin**、**Type**、**Created**（按天分桶）、**Resolving Article** —— 與八個度量：
 
-- **Cases** —— 工單數。
-- **Avg Resolution (h)** —— 平均解決時長。
-- **SLA 違約率** —— **SLA Violated** 標誌的平均值（`case_metrics` 裡的 `avg_sla_violated`），它是違約率，不是達標率
+- **Cases** —— 工單數（`case_count`）。
+- **Avg Resolution (h)** —— 平均解決時長（`avg_resolution`）。
+- **SLA 違約率** —— **SLA Violated** 標誌的平均值（`avg_sla_violated`），它是違約率，不是達標率。
+- **Closed Cases** —— 已關閉工單數（`closed_count`），下面兩個比率共用的分母。
+- **Resolved by KB** —— 帶有解決知識文章的已關閉工單數（`kb_resolved_count`）。
+- **KB Deflection Rate** —— **Resolved by KB** ÷ **Closed Cases**（`kb_deflection_rate`），宣告為衍生比率，任何小工具都不必臨時湊一個分母。
+- **Cases Within SLA** —— 未違約的已關閉工單數（`sla_met_count`）。
+- **SLA Compliance Rate** —— **Cases Within SLA** ÷ **Closed Cases**（`sla_compliance_rate`）；這就是達標率，**SLA 違約率**的補數。
 
-**這裡沒有首次回應度量**，也沒有「SLA 達標 %」。`case_metrics`（`src/datasets/case.dataset.ts`）兩者都沒有宣告，所以分析側根本無法對首次回應做彙總、比較或出圖。工單上的 **First Response Date** 時間戳是真的 —— 它何時被寫入見 [工單](/zh-Hant/docs/service/cases) —— 但也就到此為止：沒有任何東西度量它，也沒有任何東西為它告警。
+**這裡沒有首次回應度量。** `case_metrics`（`src/datasets/case.dataset.ts`）沒有宣告任何一個，所以分析側根本無法對首次回應做彙總、比較或出圖。但「SLA 達標 %」*是*存在的 —— 就是上面的 **SLA Compliance Rate**，服務儀表板的 SLA 儀表圖正是在畫它。工單上的 **First Response Date** 時間戳是真的 —— 它何時被寫入見 [工單](/zh-Hant/docs/service/cases) —— 但也就到此為止：沒有任何東西度量它，也沒有任何東西為它告警。
 
 本節曾經列出的其餘條目同樣夠不著：
 
-- **未結 / 新建 / 已解決工單數** —— 這裡只有一個計數度量，不是三個。**Status** 是維度，所以按狀態*拆開*的計數能給出同樣的分解；不存在的是那種可以單獨丟到磁貼上的預篩度量。
+- **未結 / 新建 / 已解決工單數** —— 沒有任何度量是按*這三個*狀態預篩的。**Status** 是維度，所以按狀態*拆開*的計數能給出同樣的分解。這個 dataset 確實宣告了預篩計數，但只在已關閉這一側：**Closed Cases**、**Resolved by KB** 與 **Cases Within SLA**。
 - **客服（及團隊）** —— `case_metrics` **沒有負責人維度**，所以分析側無法按客服分組、排名或篩選。`owner_id` 是工單上的欄位，沒有任何維度把它暴露出來。這也是服務側各頁都沒有客服排行榜的原因，而「按客服看重開工單」更是兩頭都不成立 —— 也沒有任何東西在記錄「重開」。
 - **客戶（及層級）** —— 這個 dataset 只讀 `crm_case`，從不跨到 `crm_account`。
 - **產品** —— 工單上沒有分析側讀得到的產品關聯，所以「按類別按產品看工單」沒有路徑。
