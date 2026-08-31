@@ -27,3 +27,6 @@ metadata, same hook, three behaviours. That half is a platform gap and is filed
 upstream; it is deliberately NOT worked around here, because a key allowlist
 wrapped around this repo's hooks would hide a platform defect inside the
 exemplar rather than fix it.
+
+The hook-path half is filed upstream as objectstack-ai/objectstack#13657, with
+both readings and the schema survey attached.

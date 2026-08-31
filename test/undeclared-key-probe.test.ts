@@ -60,9 +60,10 @@ import { QuoteLineItem } from '../src/objects/quote_line_item.object';
  * a behaviour that DIFFERS by driver is worse than either consistent answer.
  *
  * ⚠️ Half 2 pins a KNOWN-BAD state on purpose, so read a red here as good news
- * before treating it as a regression: it means the platform moved, and the
- * upstream card should be re-read and this half rewritten (or deleted) to match
- * whatever it moved to. It is NOT a licence to work around the gap in this
+ * before treating it as a regression: it means the platform moved, and
+ * objectstack-ai/objectstack#13657 — the upstream card carrying these readings
+ * — should be re-read and this half rewritten (or deleted) to match whatever it
+ * moved to. It is NOT a licence to work around the gap in this
  * repo. Half 1 is the opposite — a red there means a guarantee this repo relies
  * on was withdrawn.
  *
