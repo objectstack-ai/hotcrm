@@ -52,9 +52,9 @@ Two views help with that, neither of them a timer:
 
 ## SLA performance reporting
 
-The **SLA Performance** report breaks its numbers down by **one** dimension: **priority**. Its `rows` are `['priority']` and nothing else (`src/reports/case.report.ts`). What it reports is not a compliance percentage either, but the **SLA Violation Rate** — the average of the **SLA Violated** flag — shown next to the case count and the average resolution time, and computed over **closed cases only** (`runtimeFilter: { is_closed: true }`). Of the four questions this page used to promise, it answers one: *which priority bucket is leaking?*
+The **SLA Performance** report breaks its numbers down by **one** dimension: **priority**. Its `rows` are `['priority']` and nothing else (`src/reports/case.report.ts`). What it reports is not a compliance percentage either, but the **SLA Violation Rate** — the average of the **SLA Violated** flag — shown next to the case count and the average resolution time, and computed over **closed cases only** (`runtimeFilter: { is_closed: true }`). (The on-time percentage itself is declared: **SLA Compliance Rate**, which the Service Overview dashboard's **SLA Compliance** gauge plots. This report simply does not carry it.) Of the four questions this page used to promise, it answers one: *which priority bucket is leaking?*
 
-The other three are not merely missing from the report — they are unreachable in the semantic layer underneath it. The `case_metrics` dataset (`src/datasets/case.dataset.ts`) declares exactly five dimensions — **Status**, **Priority**, **Origin**, **Type** and **Created** — so:
+The other three are not merely missing from the report — they are unreachable in the semantic layer underneath it. The `case_metrics` dataset (`src/datasets/case.dataset.ts`) declares six dimensions — **Status**, **Priority**, **Origin**, **Type**, **Created** and **Resolving Article** — so:
 
 - **Agent** — there is no owner or agent dimension. `owner_id` is a field on the case, but the dataset does not expose it, so no report and no dashboard widget can group by it.
 - **Account tier** — `crm_account.tier` exists on the account object, but `case_metrics` reads `crm_case` alone and never crosses over to the account, so tier is not selectable anywhere in analytics.

@@ -237,7 +237,7 @@ Activity 标签页是工单上发生过什么的唯一可信来源。它将四�
 
 - ✅ 没有 *Breached SLA* 这个视图可看，也没有什么红色徽章——工单列表上唯一的颜色规则是 *All Cases* 的行底色，它键在**优先级**上，不是违约。每天改看 **Escalated Cases**，数量则看服务概览上的 **SLA Violations** 磁贴。
 - ✅ 用看板开每日站会——它叫 **Service Workflow**，在工单列表的 **Service Workflow** 页签上。
-- ✅ 辅导那些 **Resolution Time** 趋势上升的客服——但这个趋势只能从工单本身读出来。不存在什么客服排行榜：`case_metrics` 这个数据集（服务侧每一张报表和每一个仪表盘部件都建在它上面）只声明了 Status、Priority、Origin、Type、Created 五个维度，所以分析层里没有任何东西能按客服分组。
+- ✅ 辅导那些 **Resolution Time** 趋势上升的客服——但这个趋势只能从工单本身读出来。不存在什么客服排行榜：`case_metrics` 这个数据集（服务侧每一张报表和每一个仪表盘部件都建在它上面）只声明了 Status、Priority、Origin、Type、Created、Resolving Article 六个维度，所以分析层里没有任何东西能按客服分组。
 
 ## 给管理员的提示
 
