@@ -421,11 +421,18 @@ const KNOWN_UNRESOLVED_CRM = new Set<string>([
   // All five are zh-Hant, and all five are structural rather than drift: this
   // app ships `en` / `zh-CN` / `ja-JP` / `es-ES` and NO Traditional-Chinese
   // bundle, so a Traditional leaf label is a screen that exists in no
-  // configuration. It is #1113's third sub-class again, one app over — and the
-  // fix is the same ruling (spell the navigation in the locale the app really
-  // renders), which is a rewrite of five pages rather than a rename, so it is
-  // filed rather than smuggled in here. The GROUP halves resolve only because
-  // 我的工作 and 活動 collide with this app's zh-CN and ja-JP spellings.
+  // configuration. It is #1113's third sub-class again, one app over.
+  //
+  // ⚠️ They are quarantined rather than rewritten ON PURPOSE: **which** locale
+  // a zh-Hant reader should be sent to is the open question on #1368, which
+  // carries `needs-user-decision` and argues the console falls back to
+  // Simplified rather than to English — the opposite of the convention #1113
+  // applied. Rewriting five pages here would pre-empt that ruling. When #1368
+  // is decided, these five lines are the worklist, and the staleness checks
+  // below make sure they cannot outlive it quietly.
+  //
+  // The GROUP halves resolve at all only because 我的工作 and 活動 collide with
+  // this app's zh-CN and ja-JP spellings.
   crmPairKey('我的工作', '我的行事曆'),
   crmPairKey('我的工作', '我的任務'),
   crmPairKey('我的工作', '我的線索'),
