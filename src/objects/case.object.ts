@@ -201,10 +201,13 @@ export const Case = ObjectSchema.create({
     
     // ⛔ NOT `readonly`: stamped by `event_activity_bubble`
     // (`src/objects/event.hook.ts`) on the first HELD `crm_event` related to the
-    // case, whoever wrote that event. ⚠️ The platform drops writes to readonly
-    // fields on user-context writes, and that hook runs under the acting user's
-    // context, so `readonly` here silently disables the stamp. Same reason
-    // `is_sla_violated` and `escalated_date` below are not readonly.
+    // case, whoever wrote that event. ⚠️ That hook reaches this case through
+    // `ctx.api`, a `ScopedContext` over the ACTING USER's execution context —
+    // so its write is a CALLER-supplied write from a non-`isSystem` context,
+    // which `stripReadonlyFields` deletes. `readonly` here silently disables
+    // the stamp. (A hook writing its OWN record's `ctx.input.data` is a
+    // different case and SURVIVES `readonly` — hook-written keys are not
+    // caller-supplied. Measured in `test/readonly-write-semantics.test.ts`.)
     //
     // Definition: the moment the customer first heard back from us, matching
     // Salesforce `FirstResponseDateTime` / Zendesk first reply time — NOT an
@@ -233,9 +236,16 @@ export const Case = ObjectSchema.create({
       group: 'sla',
     }),
     
-    // ⛔ NOT `readonly`: the `case_sla_monitor` flow stamps this, and the
-    // platform drops writes to readonly fields — readonly here silently
-    // disables SLA violation tracking.
+    // Stamped by the `case_sla_monitor` schedule flow.
+    //
+    // NOT `readonly` — but NOT for the reason this comment used to give, and
+    // the difference is measured in `test/readonly-write-semantics.test.ts`
+    // (#1429). `case_sla_monitor` declares `runAs: 'system'`, so its writes
+    // would SURVIVE a `readonly: true` here. This field is therefore the one
+    // escalation flag that is not hard-blocked from being declared readonly.
+    // It stays writable pending a decision that has to weigh the other
+    // surfaces (seed data, `service-agent.profile.ts`, the create form), not
+    // because the platform would drop the sweep's write.
     is_sla_violated: Field.boolean({
       label: 'SLA Violated',
       group: 'sla',
@@ -243,14 +253,27 @@ export const Case = ObjectSchema.create({
     }),
     
     // Escalation
+    //
+    // ⛔ NOT `readonly`, and this one is HARD-blocked — it is the field the
+    // `STAMPED_NOT_TYPED` exemption in `test/metadata-references.test.ts`
+    // exists for. Three flows write it and they do NOT agree on privilege:
+    // `case_escalation` and `case_sla_monitor` declare `runAs: 'system'`
+    // (their writes would survive), but the `escalate_case` screen flow
+    // (`src/flows/case-actions.flow.ts`) declares no `runAs` at all and the
+    // engine defaults it to `'user'` (`runAs: flow.runAs ?? 'user'`). A
+    // `runAs: 'user'` flow write is caller-supplied from a non-`isSystem`
+    // context, so `readonly: true` here would silently drop the escalation
+    // the agent just confirmed on screen — while the flow still reports
+    // success. The deciding writer is the LEAST privileged one.
     is_escalated: Field.boolean({
       label: 'Escalated',
       group: 'escalation',
       defaultValue: false,
     }),
     
-    // ⛔ NOT `readonly`: written by the `case_escalation` / `case_sla_monitor`
-    // flows, and the platform drops writes to readonly fields.
+    // ⛔ NOT `readonly`, same hard block as `is_escalated` above and for the
+    // same writer: besides `case_escalation` (`runAs: 'system'`), this field
+    // is written by the `escalate_case` screen flow, which runs as the USER.
     escalated_date: Field.datetime({
       label: 'Escalated Date',
       group: 'escalation',

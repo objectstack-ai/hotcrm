@@ -222,8 +222,15 @@ export const Task = ObjectSchema.create({
 
     // Set by the `task_due_reminder` schedule flow once a reminder has fired
     // (the sweep de-dups on `reminder_date`, which it clears; this flag is the
-    // audit trail). NOT readonly: 16.x drops flow writes to readonly fields
-    // (#2948) — same reason crm_case.is_sla_violated/escalated_date are open.
+    // audit trail), and defaulted to `false` by `task.hook.ts` on insert.
+    //
+    // NOT readonly — but the old reason here ("16.x drops flow writes to
+    // readonly fields") does not survive measurement on the pinned 17.1.0:
+    // `task_due_reminder` declares `runAs: 'system'`, so its write WOULD
+    // survive a `readonly: true`, and the hook's insert-time default is on the
+    // insert path, which is exempt from the strip anyway. See
+    // `test/readonly-write-semantics.test.ts` (#1429). Left writable as-is;
+    // flipping it is a separate decision, not a comment fix.
     reminder_sent: Field.boolean({
       group: 'system',
       label: 'Reminder Sent',
