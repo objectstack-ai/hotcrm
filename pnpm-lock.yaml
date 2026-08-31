@@ -27,8 +27,8 @@ importers:
         specifier: 17.1.0
         version: 17.1.0(vitest@4.1.10)
       '@objectstack/objectql':
-        specifier: 17.1.0
-        version: 17.1.0(vitest@4.1.10)
+        specifier: 17.2.0
+        version: 17.2.0(vitest@4.1.10)
       '@objectstack/runtime':
         specifier: 17.1.0
         version: 17.1.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-sqlite3@12.11.1)(kysely@0.29.4)(mongodb@7.5.0)(nanostores@1.4.2)(vitest@4.1.10)
@@ -736,6 +736,10 @@ packages:
     resolution: {integrity: sha512-4R+rmaNWNmW6K2hMK2GihCAYwLPJr9csqpq0Rmegs79ElXPRy93JNoVy5LG3WotVnIvUdPlGCWogdRhc4lRhqw==}
     engines: {node: '>=22.0.0'}
 
+  '@objectstack/core@17.2.0':
+    resolution: {integrity: sha512-82I4eL/qcuFKOBhXWEGjJPAS9mOfwGVd9jeRbhRGuUZTm282sCuVoR/QC1JkDVxsFE0kSAtE4ej0XsYxP/spZQ==}
+    engines: {node: '>=22.0.0'}
+
   '@objectstack/driver-memory@17.1.0':
     resolution: {integrity: sha512-dtjWNJQ65POjdrItkppAmiDp2U6l/4XvR7VpNyKPlUuyfQ7anB2qQq5UylWb+NjGYfE9M2yR0R9rU52QdygNjw==}
     engines: {node: '>=22.0.0'}
@@ -766,8 +770,15 @@ packages:
   '@objectstack/formula@17.1.0':
     resolution: {integrity: sha512-u54fhrTxkUySKHuRwA4XjFi8i4SEYemMI9dlA+GGubguwtoE27gTvH5J4CTWcrVb3oN9Cf+3Aymw3yrfFWirkA==}
 
+  '@objectstack/formula@17.2.0':
+    resolution: {integrity: sha512-5p6gn92AwNj0e1tfT6mCjBkIUOPjjPr4C6K7GtOAfL20MRIILKgVtf94rZBpWr8+WBGRND050RpssgtN8CqQ/A==}
+
   '@objectstack/lint@17.1.0':
     resolution: {integrity: sha512-qHh6oRHsjUGSzd8X3hiKQeV0jqFg2J98YxAArdaWV14AzJkYXnmQNv7bzLAdVyV1VWbnp/nPWprUVc3FTzjzBg==}
+    engines: {node: '>=22.0.0'}
+
+  '@objectstack/lint@17.2.0':
+    resolution: {integrity: sha512-PbyvKuiDdIQ61nVTy2y+19wl3bFJ3uTQk8u0l+OpNJsUYR1YxXCMnayC/h7h66kTPLs4IgjVTOedc3hV0CiSkg==}
     engines: {node: '>=22.0.0'}
 
   '@objectstack/mcp@17.1.0':
@@ -783,20 +794,45 @@ packages:
       vitest:
         optional: true
 
+  '@objectstack/metadata-core@17.2.0':
+    resolution: {integrity: sha512-lr8ireU2nglhDzFNxA3yHlmCs5oIPFVTbl7AAvZDcb/EhE+bFH2IMa2pggc5srETSgrQwIgtYP9I3VsnR4nYOw==}
+    engines: {node: '>=22.0.0'}
+    peerDependencies:
+      vitest: ^4.0.0
+    peerDependenciesMeta:
+      vitest:
+        optional: true
+
   '@objectstack/metadata-fs@17.1.0':
     resolution: {integrity: sha512-3CR5JOkrs80ulpjqlWoFbPjKhuJ9eQ3gW0U8uoWHm4yAKCWMjTp35wQ3+wn3FsMCMDzjGcjFgoCa8tZvorJafg==}
+    engines: {node: '>=22.0.0'}
+
+  '@objectstack/metadata-fs@17.2.0':
+    resolution: {integrity: sha512-xSCkwqAC9CA+eMeWVUeao5uUm/cNeTWjLegs9X76Lygj69NvS3YETgxVgXjqrfp677ILYq5y5Jn5WwIcfPRqPg==}
     engines: {node: '>=22.0.0'}
 
   '@objectstack/metadata-protocol@17.1.0':
     resolution: {integrity: sha512-mt3veVMdafR6dF1vRioWqqKE/Ir/zJHFIGuIp2lawENUGurtBuPfq4MoTST7IyNTDhqSrHyVb8rS01Oo9nkq/w==}
     engines: {node: '>=22.0.0'}
 
+  '@objectstack/metadata-protocol@17.2.0':
+    resolution: {integrity: sha512-hQG8tlDBf/7y6XGEULbrY2OxKI4cDv+jvD18KhgJ1602+KfxVXjoAxLHVPZIiLKIIsldut75K409+HxeX8/zhw==}
+    engines: {node: '>=22.0.0'}
+
   '@objectstack/metadata@17.1.0':
     resolution: {integrity: sha512-Xn3hoGu1NZdpC0EwjxuPuoh3vJvE3LIyPuEPLzKmWUGpmI768rpywX4+ruB8UIHM9NB2iUWaF5Q5AqKCB2wU/A==}
     engines: {node: '>=22.0.0'}
 
+  '@objectstack/metadata@17.2.0':
+    resolution: {integrity: sha512-ZZ9LGyQHG+qA2sJGdPBdXj+8wOO6ZqwGhREFH+FgNfbE5xqq1h8gspyo7bcDVqWFSDS/UQ6vHuiOLF8yvsoY7Q==}
+    engines: {node: '>=22.0.0'}
+
   '@objectstack/objectql@17.1.0':
     resolution: {integrity: sha512-ZFvEIjSx/OHgtqBP9p2S0aMesWJcQvpSQ/sj6uV3tvHneWbyXo6Jkc7j7uVdUhTe/KIRsseZLqXlr649kpI7VA==}
+    engines: {node: '>=22.0.0'}
+
+  '@objectstack/objectql@17.2.0':
+    resolution: {integrity: sha512-2CC7hLvp7IwItb8XihYSLFYcRD1Yn7YDbgJWb9/3SqtEDMID9uNV7PxUIahPkyqb6x4jnFOZSIxuGXzadUtFeA==}
     engines: {node: '>=22.0.0'}
 
   '@objectstack/observability@17.1.0':
@@ -805,6 +841,10 @@ packages:
 
   '@objectstack/platform-objects@17.1.0':
     resolution: {integrity: sha512-qFg1ITnsdTf+FYiQwlyu9BZx+qcxW/WNSNVi0P24lUYB4sh2+QA3ykXcx+AGv03D60g+tTpBz+vOPAOIhA4dCw==}
+    engines: {node: '>=22.0.0'}
+
+  '@objectstack/platform-objects@17.2.0':
+    resolution: {integrity: sha512-DrTP3XJE3U9Juu97d5iA07H0XNeHTgjXoJLsxMH1G6hnWtdGoG/JQZYg7VQAFIjlE890x0nsZw+y8hRlIeQ+7A==}
     engines: {node: '>=22.0.0'}
 
   '@objectstack/plugin-approvals@17.1.0':
@@ -851,6 +891,9 @@ packages:
 
   '@objectstack/sdui-parser@17.1.0':
     resolution: {integrity: sha512-D6LuWbi6MlHrrQSX+4/MXx+n4M79PZtgOa9uOgyMVd/JoTVR/waWrIu2qrhkKP7TX/P9KNGql2ahR3fOPJ2txQ==}
+
+  '@objectstack/sdui-parser@17.2.0':
+    resolution: {integrity: sha512-ntkTsawiwCVx1wubBdLqfuM1KslPy+PwRTevX2YqBC567KVsRMyn2RbmcDXTAVLUDQNOl2yab7oI7vXZO82mag==}
 
   '@objectstack/service-analytics@17.1.0':
     resolution: {integrity: sha512-cyileD08DN8PkE3M36rP0/T136BBV5YF93wlGGbEL9rdk9hYO2Cpd+s0TcRdRnYuodpfxVkRZ6hSCl7sT1m1/Q==}
@@ -926,6 +969,15 @@ packages:
       ai:
         optional: true
 
+  '@objectstack/spec@17.2.0':
+    resolution: {integrity: sha512-nQzyR9+9JQEtLzFastQbj0ETLLbOm4sSY+sNUEX2k0QgZThCsMB1rKPv100c6GQZYg1BaLfz5xc8tv9oH3cKqg==}
+    engines: {node: '>=22.0.0'}
+    peerDependencies:
+      ai: ^7.0.0
+    peerDependenciesMeta:
+      ai:
+        optional: true
+
   '@objectstack/trigger-api@17.1.0':
     resolution: {integrity: sha512-KI9F4DiB3q9ph0auO5xgLHbFPiPfUYa1IJfyxNDp5oJVbn7ObcgrOPNJ40jb7zM5DMoGConITQ5C3fgIeUOT3w==}
 
@@ -939,6 +991,10 @@ packages:
 
   '@objectstack/types@17.1.0':
     resolution: {integrity: sha512-cjwGIcxr6cRqBBCwneMrXxaUwQvWYfFqtbevHjtbq74PqfrOE6kWLSXxtLSO5UKkDEuTKgfX2dnpKC1Hly95Jg==}
+    engines: {node: '>=22.0.0'}
+
+  '@objectstack/types@17.2.0':
+    resolution: {integrity: sha512-bgeX9wzajlG+WFutsRKEIWPIxCR2u1kN8aEsFRcvtWV5jyuAuIA8tVTIhEs9yy2BwefeAWwouJrDZbv1Si8+bw==}
     engines: {node: '>=22.0.0'}
 
   '@objectstack/verify@17.1.0':
@@ -1318,6 +1374,7 @@ packages:
   '@xmldom/xmldom@0.9.11':
     resolution: {integrity: sha512-tW8bcK3hsG0/uqSnNz6TK4BkcuZSezoU7DlnYssILmZDktPnSHHuDJJFM0AJv+13gz2r0iGdrj6qqKeUnxXEDg==}
     engines: {node: '>=14.6'}
+    deprecated: this version has critical issues, please update to the latest version
 
   accepts@2.0.0:
     resolution: {integrity: sha512-5cvg6CtKwfgdmVqY1WIiXKc3Q1bkRqGLi+2W/6ao+6Y7gu/RCwRuAhGEzh5B4KlszSuTLgZYuqFqo5bImjNKng==}
@@ -1900,8 +1957,8 @@ packages:
     resolution: {integrity: sha512-7MptL8U0cqcFdzIzwOTHoilX9x5BrNqye7Z/LuC7kCMRio1EMSyqRK3BEAUD7sXRq4iT4AzTVuZdhgQ2TCvYLg==}
     engines: {node: '>=8.6.0'}
 
-  fast-uri@3.1.5:
-    resolution: {integrity: sha512-gHwA1O9LDIcKunMKhObS/HimwtehO1nPUECKAu5TpKgaO19fcWEl4bliWe1jWxVFvIXztJjjQ4L8XQ1EU9f7Jw==}
+  fast-uri@3.1.6:
+    resolution: {integrity: sha512-7Ical1vFEMr0onbVzEDIreM22I4khW+fzyQPwvAFWBp1iwdshSZRsL4jjRvPG9JP1uiqMHRto+YU6R2/CzDz5Q==}
 
   fast-xml-builder@1.3.0:
     resolution: {integrity: sha512-F74cZEdCvuw9P41GAC3rod4X04jjWGM1JPEv/GWSqFTWLsdyMSBMBMlm9Hk3GLBgLBbdBNY8yee0pQh2RBVESQ==}
@@ -2267,16 +2324,24 @@ packages:
   js-tokens@10.0.0:
     resolution: {integrity: sha512-lM/UBzQmfJRo9ABXbPWemivdCW8V2G8FHaHdypQaIy523snUjog0W71ayWXTjiR+ixeMyVHN2XcpnTd/liPg/Q==}
 
-  js-yaml@3.15.0:
-    resolution: {integrity: sha512-ttBQIIQPDeLjpPOohtUdXuXUVoA2uIB6fEH9HyJ7234s5mBJ5wTx20njxplLZQgLaOfpmPQA7X2t5AX6tIPbog==}
+  js-yaml@3.15.2:
+    resolution: {integrity: sha512-6EuL879VkRA+1Cz578mKMiKvjPNEuk6+r1JaFzoSWejZmtf7xWbIyw1e3KkxlkzTIt9Taw6JBhEppG7utc1P+w==}
     hasBin: true
 
   js-yaml@4.3.0:
     resolution: {integrity: sha512-1td788aAnnZ5qs7V2QIRl1owjtYpbKt749Y3xauqQgwIIGF/xXWz1wMTEBx5O3LK3lXLVuqXPdPxj2BoFHaW9Q==}
     hasBin: true
 
+  js-yaml@4.3.2:
+    resolution: {integrity: sha512-SFNOvSJ+Dgf/9An904Yx+CgSlIPCkIpao4qo51lpee25TIRejdH3rhR4EZMGoNx3/TP3O+wzWuiTFl4sqbltzA==}
+    hasBin: true
+
   js-yaml@5.3.0:
     resolution: {integrity: sha512-muutsYr+e2+d3rTgUGslq5rxbBlUy3cJ61IsHag2QNDQV+7zXWjkUpmALIajhrlLlrgRUiymj6U3zUr/TMK84Q==}
+    hasBin: true
+
+  js-yaml@5.4.1:
+    resolution: {integrity: sha512-28R/k+NAjeuf7+CKlTxWZVExJGwVVLwY06DgEnOMz2gEpfNkDcD7QvyiVPT0xy0XXhU8vHsd4Ot42OOPdJG7dQ==}
     hasBin: true
 
   json-schema-traverse@1.0.0:
@@ -3838,7 +3903,7 @@ snapshots:
   '@changesets/parse@0.4.3':
     dependencies:
       '@changesets/types': 6.1.0
-      js-yaml: 4.3.0
+      js-yaml: 4.3.2
 
   '@changesets/pre@2.0.2':
     dependencies:
@@ -4204,7 +4269,7 @@ snapshots:
       '@objectstack/mcp': 17.1.0
       '@objectstack/metadata': 17.1.0(vitest@4.1.10)
       '@objectstack/metadata-protocol': 17.1.0(vitest@4.1.10)
-      '@objectstack/objectql': 17.1.0(vitest@4.1.10)
+      '@objectstack/objectql': 17.2.0(vitest@4.1.10)
       '@objectstack/observability': 17.1.0
       '@objectstack/platform-objects': 17.1.0(vitest@4.1.10)
       '@objectstack/plugin-approvals': 17.1.0(vitest@4.1.10)
@@ -4360,6 +4425,13 @@ snapshots:
     transitivePeerDependencies:
       - ai
 
+  '@objectstack/core@17.2.0':
+    dependencies:
+      '@objectstack/spec': 17.2.0
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - ai
+
   '@objectstack/driver-memory@17.1.0':
     dependencies:
       '@objectstack/core': 17.1.0
@@ -4454,11 +4526,30 @@ snapshots:
     transitivePeerDependencies:
       - ai
 
+  '@objectstack/formula@17.2.0':
+    dependencies:
+      '@marcbachmann/cel-js': 8.0.0
+      '@objectstack/spec': 17.2.0
+    transitivePeerDependencies:
+      - ai
+
   '@objectstack/lint@17.1.0':
     dependencies:
       '@objectstack/formula': 17.1.0
       '@objectstack/sdui-parser': 17.1.0
       '@objectstack/spec': 17.1.0
+      ajv: 8.20.0
+      ajv-formats: 3.0.1
+      sucrase: 3.35.1
+      typescript: 6.0.3
+    transitivePeerDependencies:
+      - ai
+
+  '@objectstack/lint@17.2.0':
+    dependencies:
+      '@objectstack/formula': 17.2.0
+      '@objectstack/sdui-parser': 17.2.0
+      '@objectstack/spec': 17.2.0
       ajv: 8.20.0
       ajv-formats: 3.0.1
       sucrase: 3.35.1
@@ -4488,9 +4579,26 @@ snapshots:
     transitivePeerDependencies:
       - ai
 
+  '@objectstack/metadata-core@17.2.0(vitest@4.1.10)':
+    dependencies:
+      '@objectstack/spec': 17.2.0
+      zod: 4.4.3
+    optionalDependencies:
+      vitest: 4.1.10(@vitest/coverage-v8@4.1.10)(esbuild@0.28.2)(tsx@4.23.1)(yaml@2.9.0)
+    transitivePeerDependencies:
+      - ai
+
   '@objectstack/metadata-fs@17.1.0(vitest@4.1.10)':
     dependencies:
       '@objectstack/metadata-core': 17.1.0(vitest@4.1.10)
+      chokidar: 5.0.0
+    transitivePeerDependencies:
+      - ai
+      - vitest
+
+  '@objectstack/metadata-fs@17.2.0(vitest@4.1.10)':
+    dependencies:
+      '@objectstack/metadata-core': 17.2.0(vitest@4.1.10)
       chokidar: 5.0.0
     transitivePeerDependencies:
       - ai
@@ -4505,6 +4613,20 @@ snapshots:
       '@objectstack/metadata-core': 17.1.0(vitest@4.1.10)
       '@objectstack/spec': 17.1.0
       '@objectstack/types': 17.1.0
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - ai
+      - vitest
+
+  '@objectstack/metadata-protocol@17.2.0(vitest@4.1.10)':
+    dependencies:
+      '@objectstack/core': 17.2.0
+      '@objectstack/formula': 17.2.0
+      '@objectstack/lint': 17.2.0
+      '@objectstack/metadata': 17.2.0(vitest@4.1.10)
+      '@objectstack/metadata-core': 17.2.0(vitest@4.1.10)
+      '@objectstack/spec': 17.2.0
+      '@objectstack/types': 17.2.0
       zod: 4.4.3
     transitivePeerDependencies:
       - ai
@@ -4526,6 +4648,22 @@ snapshots:
       - ai
       - vitest
 
+  '@objectstack/metadata@17.2.0(vitest@4.1.10)':
+    dependencies:
+      '@objectstack/core': 17.2.0
+      '@objectstack/metadata-core': 17.2.0(vitest@4.1.10)
+      '@objectstack/metadata-fs': 17.2.0(vitest@4.1.10)
+      '@objectstack/platform-objects': 17.2.0(vitest@4.1.10)
+      '@objectstack/spec': 17.2.0
+      '@objectstack/types': 17.2.0
+      chokidar: 5.0.0
+      glob: 13.0.6
+      js-yaml: 5.4.1
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - ai
+      - vitest
+
   '@objectstack/objectql@17.1.0(vitest@4.1.10)':
     dependencies:
       '@objectstack/core': 17.1.0
@@ -4535,6 +4673,22 @@ snapshots:
       '@objectstack/metadata-protocol': 17.1.0(vitest@4.1.10)
       '@objectstack/spec': 17.1.0
       '@objectstack/types': 17.1.0
+      ajv: 8.20.0
+      ajv-formats: 3.0.1
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - ai
+      - vitest
+
+  '@objectstack/objectql@17.2.0(vitest@4.1.10)':
+    dependencies:
+      '@objectstack/core': 17.2.0
+      '@objectstack/formula': 17.2.0
+      '@objectstack/metadata': 17.2.0(vitest@4.1.10)
+      '@objectstack/metadata-core': 17.2.0(vitest@4.1.10)
+      '@objectstack/metadata-protocol': 17.2.0(vitest@4.1.10)
+      '@objectstack/spec': 17.2.0
+      '@objectstack/types': 17.2.0
       ajv: 8.20.0
       ajv-formats: 3.0.1
       zod: 4.4.3
@@ -4552,6 +4706,14 @@ snapshots:
     dependencies:
       '@objectstack/metadata-core': 17.1.0(vitest@4.1.10)
       '@objectstack/spec': 17.1.0
+    transitivePeerDependencies:
+      - ai
+      - vitest
+
+  '@objectstack/platform-objects@17.2.0(vitest@4.1.10)':
+    dependencies:
+      '@objectstack/metadata-core': 17.2.0(vitest@4.1.10)
+      '@objectstack/spec': 17.2.0
     transitivePeerDependencies:
       - ai
       - vitest
@@ -4890,6 +5052,8 @@ snapshots:
 
   '@objectstack/sdui-parser@17.1.0': {}
 
+  '@objectstack/sdui-parser@17.2.0': {}
+
   '@objectstack/service-analytics@17.1.0':
     dependencies:
       '@objectstack/core': 17.1.0
@@ -5054,6 +5218,11 @@ snapshots:
       pg-connection-string: 2.14.0
       zod: 4.4.3
 
+  '@objectstack/spec@17.2.0':
+    dependencies:
+      pg-connection-string: 2.14.0
+      zod: 4.4.3
+
   '@objectstack/trigger-api@17.1.0':
     dependencies:
       '@objectstack/core': 17.1.0
@@ -5078,6 +5247,12 @@ snapshots:
   '@objectstack/types@17.1.0':
     dependencies:
       '@objectstack/spec': 17.1.0
+    transitivePeerDependencies:
+      - ai
+
+  '@objectstack/types@17.2.0':
+    dependencies:
+      '@objectstack/spec': 17.2.0
     transitivePeerDependencies:
       - ai
 
@@ -5458,7 +5633,7 @@ snapshots:
   ajv@8.20.0:
     dependencies:
       fast-deep-equal: 3.1.3
-      fast-uri: 3.1.5
+      fast-uri: 3.1.6
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
 
@@ -6058,7 +6233,7 @@ snapshots:
       merge2: 1.4.1
       micromatch: 4.0.8
 
-  fast-uri@3.1.5: {}
+  fast-uri@3.1.6: {}
 
   fast-xml-builder@1.3.0:
     dependencies:
@@ -6417,7 +6592,7 @@ snapshots:
 
   js-tokens@10.0.0: {}
 
-  js-yaml@3.15.0:
+  js-yaml@3.15.2:
     dependencies:
       argparse: 1.0.10
       esprima: 4.0.1
@@ -6426,7 +6601,15 @@ snapshots:
     dependencies:
       argparse: 2.0.1
 
+  js-yaml@4.3.2:
+    dependencies:
+      argparse: 2.0.1
+
   js-yaml@5.3.0:
+    dependencies:
+      argparse: 2.0.1
+
+  js-yaml@5.4.1:
     dependencies:
       argparse: 2.0.1
 
@@ -7343,7 +7526,7 @@ snapshots:
   read-yaml-file@1.1.0:
     dependencies:
       graceful-fs: 4.2.11
-      js-yaml: 3.15.0
+      js-yaml: 3.15.2
       pify: 4.0.1
       strip-bom: 3.0.0
 
