@@ -77,6 +77,77 @@ const EXCLUSIVE_CONDITION = ATTENDEE_RESOLUTIONS
   .join(' || ');
 
 /**
+ * `requiredWhen` for one party column — the SAME correspondence the two rules
+ * enforce, asked for one layer earlier so the form marks the column the chosen
+ * type names instead of letting the save discover it is empty (#1078). Derived
+ * from `ATTENDEE_RESOLUTIONS` like everything else in this file: a fifth
+ * resolution gets its hint for free and cannot get it wrong.
+ *
+ * This is a HINT, not the contract. `attendee_resolves` and
+ * `attendee_type_exclusive` at the bottom of this file are the contract every
+ * writer meets — REST, ObjectQL, seeds, flows — and nothing here relaxes
+ * either. `requiredWhen` is a transition gate, not an invariant: it asks the
+ * write in front of it for the column, it does not state a property of stored
+ * rows. The duplication with `attendee_resolves` is deliberate, and it is
+ * visible: a REST insert that omits the named column now answers twice, once
+ * per layer. MEASURED on 17.1.0 against the running app, POST
+ * `{crm_event, attendee_type: "lead"}`:
+ *
+ *     before   400  ["_record"  An attendee must fill the party its Attendee Type names …]
+ *     after    400  ["crm_lead" Lead is required,
+ *                    "_record"  An attendee must fill the party its Attendee Type names …]
+ *
+ * The accepted set is unchanged — same rows in, same rows out, verified insert
+ * by insert — so the second message is the cost of naming the FIELD, which is
+ * what lets the Console mark it. A partial update that touches neither column
+ * (`PATCH {response}`) still returns 200.
+ *
+ * The predicate is TOTAL (`has()`-guarded via `typeIs`), the same house rule
+ * AGENTS.md states for every authored CEL predicate. `requiredWhen` fails
+ * CLOSED in the Console — an unevaluable predicate demands nothing — so an
+ * unguarded one would read as enforced here and require nothing at the form.
+ *
+ * # ⛔ Why there is no `visibleWhen` beside it
+ *
+ * The obvious other half — hide the three columns the type does not name — was
+ * built and MEASURED in the browser on 17.1.0, and it is NOT shipped, because
+ * the Console hides a populated field without clearing it and submits the
+ * stale value anyway. Fill Contact, then change the type to Lead: the Contact
+ * column leaves the DOM, its value stays in form state, and the write carries
+ * it —
+ *
+ *     POST  {"attendee_type":"lead", …, "crm_contact":"AEwPffbkMvx-OlC4",
+ *                                       "crm_lead":"0AM_zbdjuLcXMdnL"}
+ *     400   An attendee names exactly one party — clear every party column
+ *           its Attendee Type does not name
+ *
+ * — so the row is refused, correctly, by a message naming a column that is no
+ * longer on screen to clear. On the EDIT path it is a dead end rather than a
+ * puzzle: retyping any of the 12 seeded `contact` rows to `user` re-sends the
+ * stored `crm_contact` on every attempt, and the Console offers no way to
+ * empty it. Today's form is worse-looking and strictly more usable: the
+ * offending column is visible, so the error can be acted on.
+ *
+ * Nothing in `@objectstack/spec` 17.1.0 or the shipped Console clears a value
+ * when its field goes invisible — no `clearOnHide`-shaped key exists on either
+ * surface — so `visibleWhen` here cannot be paired into safety from this repo.
+ * The half that would need to change is upstream, and it is the same
+ * fail-open/stale-state family as the note in `src/views/lead.view.ts`. Do not
+ * add `visibleWhen` to these four columns until a hidden field stops being
+ * submitted; the rules above will keep refusing the row, but the person in
+ * front of the form will have no way to fix it.
+ */
+const partyFormHints = (column: string) => {
+  const resolution = ATTENDEE_RESOLUTIONS.find((r) => r.column === column);
+  if (!resolution) {
+    throw new Error(`No attendee resolution declares the column "${column}"`);
+  }
+  return {
+    requiredWhen: expression(typeIs(resolution.value), 'cel'),
+  };
+};
+
+/**
  * Event Attendee — who was in the room (#592).
  *
  * # Why a junction object, and not multi-value lookups
@@ -231,6 +302,7 @@ export const EventAttendee = ObjectSchema.create({
       label: 'Contact',
       deleteBehavior: 'cascade',
       description: 'Set when the attendee is an existing customer contact',
+      ...partyFormHints('crm_contact'),
     }),
 
     crm_lead: Field.lookup('crm_lead', {
@@ -238,6 +310,7 @@ export const EventAttendee = ObjectSchema.create({
       label: 'Lead',
       deleteBehavior: 'cascade',
       description: 'Set when the attendee is still an unconverted lead',
+      ...partyFormHints('crm_lead'),
     }),
 
     // `sys_user` gets the SAME answer as the two CRM parties, and it was the one
@@ -274,6 +347,7 @@ export const EventAttendee = ObjectSchema.create({
       label: 'User',
       deleteBehavior: 'cascade',
       description: 'Set when the attendee is a colleague',
+      ...partyFormHints('sys_user'),
     }),
 
     // Free text is the LAST resort, not the default: it exists only for the
@@ -287,6 +361,7 @@ export const EventAttendee = ObjectSchema.create({
       label: 'External Attendee',
       maxLength: 255,
       description: 'Name of an attendee who is in no CRM object — set when Attendee Type is External',
+      ...partyFormHints('external_name'),
     }),
 
     response: Field.select({

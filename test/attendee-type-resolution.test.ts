@@ -287,6 +287,35 @@ describe('the acceptance surface, on a real engine', () => {
     expect(error.message).toMatch(/must fill the party its Attendee Type names/i);
   });
 
+  /**
+   * The `requiredWhen` hints added for #1078 DUPLICATE `attendee_resolves` and
+   * do not replace it — asserted here on the engine rather than trusted,
+   * because "a usability layer on top" is only true while the layer underneath
+   * still speaks. A row missing the party its type names is answered twice: by
+   * the field, which names the column, and by the rule, which is the contract.
+   */
+  it('answers a missing party from BOTH layers, field and rule (#1078)', async () => {
+    const error = await refusal({ attendee_type: 'lead' });
+    const fields = (error.fields ?? []) as AnyRec[];
+    expect(fields.some((f) => f.field === 'crm_lead' && f.code === 'required')).toBe(true);
+    expect(fields.some((f) => /must fill the party its Attendee Type names/i.test(String(f.message)))).toBe(true);
+  });
+
+  /**
+   * ...and the duplication costs nothing at the boundary: the ACCEPTED set is
+   * the same set. Each type's own correct shape still lands, which is the half
+   * a new refusal would silently take away.
+   */
+  it('leaves the accepted set unchanged — every correct shape still lands (#1078)', async () => {
+    for (const r of ATTENDEE_RESOLUTIONS) {
+      const row = await insert({ attendee_type: r.value, [r.column]: party[r.column] });
+      expect(row[r.column], `${r.value} -> ${r.column}`).toBe(party[r.column]);
+    }
+    expect(await api.object('crm_event_attendee').find({ where: {} })).toHaveLength(
+      ATTENDEE_RESOLUTIONS.length,
+    );
+  });
+
   it('refuses an undeclared attendee_type, so the option set is the vocabulary', async () => {
     // What `external` itself hit before this change. Pinned because it is the
     // reason the mislabelling was forced rather than merely convenient.
@@ -390,5 +419,77 @@ describe('every seeded attendee row satisfies the tightened rule', () => {
       }
     }
     expect(bad, `seeded rows the rules would refuse:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+});
+
+// ──────────────────────────────────────── the form hints (#1078) ──
+
+describe('the form hints derive from the same table, and stop where the measurement stopped them', () => {
+  const partyColumns = ATTENDEE_RESOLUTIONS.map((r) => r.column);
+
+  it('gives every party column a requiredWhen naming its OWN type', () => {
+    // Generated from `ATTENDEE_RESOLUTIONS`, same as the two rules: a fifth
+    // resolution must not be able to arrive without its hint.
+    for (const r of ATTENDEE_RESOLUTIONS) {
+      const source = sourceOf(EVENT_ATTENDEE.fields[r.column]?.requiredWhen);
+      expect(source, `${r.column} has no requiredWhen`).not.toBe('');
+      expect(source, `${r.column} does not name "${r.value}"`).toContain(`"${r.value}"`);
+      for (const other of ATTENDEE_RESOLUTIONS.filter((x) => x.value !== r.value)) {
+        expect(source, `${r.column} also names "${other.value}"`).not.toContain(`"${other.value}"`);
+      }
+    }
+  });
+
+  it('keeps every hint predicate total', () => {
+    // Same house rule as the validations. `requiredWhen` fails CLOSED in the
+    // Console — an unevaluable predicate demands nothing — so an unguarded one
+    // reads as enforced at the form and requires nothing at all.
+    for (const column of partyColumns) {
+      const source = sourceOf(EVENT_ATTENDEE.fields[column]?.requiredWhen);
+      const reads = [...new Set([...source.matchAll(/record\.(\w+)/g)].map((m) => m[1]))];
+      // Guard the guard: with no predicate to read, the loop below is vacuous
+      // and this test would go green on a field that lost its hint entirely.
+      expect(reads.length, `${column} has no readable requiredWhen predicate`).toBeGreaterThan(0);
+      for (const read of reads) {
+        expect(source, `${column} reads ${read} unguarded`).toContain(`has(record.${read})`);
+      }
+    }
+  });
+
+  it('leaves every party column optional at the schema level', () => {
+    // `required: true` on any of the four would demand it for all four types
+    // and make the object unwritable. The conditional hint is the whole point.
+    for (const column of partyColumns) {
+      expect(EVENT_ATTENDEE.fields[column]?.required, column).not.toBe(true);
+    }
+  });
+
+  /**
+   * ⛔ The half that was built, measured in the browser on 17.1.0, and NOT
+   * shipped. `visibleWhen` on these columns hides a POPULATED field without
+   * clearing it, and the Console submits the stale value anyway:
+   *
+   *     fill Contact, switch attendee_type to "lead", save
+   *       POST {"attendee_type":"lead", …, "crm_contact":"AEwP…", "crm_lead":"0AM_…"}
+   *       400  An attendee names exactly one party — clear every party column
+   *            its Attendee Type does not name
+   *
+   * The row is refused correctly, by a message naming a column no longer on
+   * screen to clear; on the edit path a stored `contact` row can then never be
+   * retyped through the Console at all. Nothing in `@objectstack/spec` 17.1.0
+   * or the shipped Console clears a value when its field goes invisible, so
+   * this cannot be paired into safety from this repo.
+   *
+   * This pin is not style policing — it is the measurement, kept where the
+   * next author will trip over it. Deleting it is fine once a hidden field
+   * stops being submitted; deleting it before that re-opens the dead end.
+   */
+  it('ships NO visibleWhen on the party columns, because the stale value survives the save', () => {
+    for (const column of partyColumns) {
+      expect(
+        EVENT_ATTENDEE.fields[column]?.visibleWhen,
+        `${column} carries visibleWhen — re-measure the Console's hidden-field submit before shipping it`,
+      ).toBeUndefined();
+    }
   });
 });
