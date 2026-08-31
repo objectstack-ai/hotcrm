@@ -152,9 +152,9 @@ export const Case = ObjectSchema.create({
     // `0` is the UNRANKED sentinel, shared with crm_task.priority_rank: it is
     // what a record carries when no recognised priority has been stamped, and
     // it sorts below every real rank (1–4) on the `priority_rank desc` queues.
-    // It used to be `1` here and `2` on crm_task, so the same unknown priority
-    // ordered differently on the two objects — and on this object it was
-    // indistinguishable from a genuine `low`.
+    // ⛔ It must not be `1` here (or `2` on crm_task): a non-zero sentinel
+    // orders the same unknown priority differently on the two objects, and on
+    // this one it is indistinguishable from a genuine `low`.
     priority_rank: Field.number({
       label: 'Priority Rank',
       readonly: true,
@@ -350,8 +350,7 @@ export const Case = ObjectSchema.create({
     { fields: ['priority'] },
   ],
   
-  // Dead enable.* flags (trash/mru) removed in @objectstack 12 (ADR-0049);
-  // History → Field.trackHistory (ADR-0052).
+  // API surface. History → Field.trackHistory (ADR-0052).
   enable: {
     apiEnabled: true,
     // #602 — screenshots and logs are how a support case gets diagnosed.
@@ -423,7 +422,7 @@ export const Case = ObjectSchema.create({
     },
   ],
   
-  // NOTE: object `workflows[]` were removed in @objectstack 7.7. Field-updates
-  // moved to this object's *.hook.ts; scheduled status-flips & notifications
-  // moved to src/flows/*.flow.ts (see flows/index.ts).
+  // ⚠️ No `workflows[]` here, and none is possible: object `workflows[]` were
+  // removed from the platform. Field updates live in this object's `*.hook.ts`;
+  // scheduled status flips and notifications live in `src/flows/*.flow.ts`.
 });

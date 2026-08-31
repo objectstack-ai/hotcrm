@@ -41,16 +41,15 @@ export const QuoteLineItem = ObjectSchema.create({
   // relation resolver accepts a REQUIRED LOOKUP as the parent, so no
   // master-detail conversion is needed.
   //
-  // It was `private` before (#488). With no owner field on this object that
-  // resolved to the platform's auto-stamped `owner_id` — the row's inserter —
-  // so lines cloned onto a quote by the `quote_generation` flow were invisible
-  // to the rep who owns the quote.
+  // ⛔ Not `private`: with no owner field on this object that resolves to the
+  // platform's auto-stamped `owner_id` — the row's inserter — so lines cloned
+  // onto a quote by the `quote_generation` flow are invisible to the rep who
+  // owns the quote.
   sharingModel: 'controlled_by_parent',
 
-  // @objectstack 12: the dead object-level `enable.trackHistory` flag was
-  // removed (ADR-0049) — per-field history is opt-in via `Field.trackHistory`
-  // (ADR-0052), set on quantity/unit_price/discount below. Master-detail
-  // children still inherit the master's sharing automatically.
+  // Per-field history is opt-in via `Field.trackHistory` (ADR-0052), set on
+  // quantity/unit_price/discount below. Master-detail children still inherit
+  // the master's sharing automatically.
 
   highlightFields: ['crm_product', 'quantity', 'unit_price', 'total_price'],
 

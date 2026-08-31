@@ -265,8 +265,7 @@ export const Campaign = ObjectSchema.create({
   ],
   
   // Enable advanced features
-  // Dead object-level enable.* flags removed in @objectstack 12 (ADR-0049);
-  // only the live API surface remains. History → Field.trackHistory (ADR-0052).
+  // API surface. History → Field.trackHistory (ADR-0052).
   enable: {
     apiEnabled: true,
     apiMethods: ['get', 'list', 'create', 'update', 'delete'],
@@ -299,7 +298,7 @@ export const Campaign = ObjectSchema.create({
   ],
   
   // Workflow Rules
-  // NOTE: object `workflows[]` were removed in @objectstack 7.7. Field-updates
-  // moved to this object's *.hook.ts; scheduled status-flips & notifications
-  // moved to src/flows/*.flow.ts (see flows/index.ts).
+  // ⚠️ No `workflows[]` here, and none is possible: object `workflows[]` were
+  // removed from the platform. Field updates live in this object's `*.hook.ts`;
+  // scheduled status flips and notifications live in `src/flows/*.flow.ts`.
 });

@@ -44,17 +44,15 @@ export const OpportunityLineItem = ObjectSchema.create({
   // accepts a REQUIRED LOOKUP as the parent, so this works without converting
   // the relationship to master-detail.
   //
-  // It was `private` before (#488), which was the wrong baseline twice over:
-  // this object has no owner of its own to speak of, so "private" fell back to the
-  // platform's auto-stamped `owner_id` (whoever inserted the row) — the rep who
-  // owns the deal could not see a line the quote-generation flow or their
-  // manager added to it.
+  // ⛔ Not `private`: this object has no owner of its own, so `private` falls
+  // back to the platform's auto-stamped `owner_id` (whoever inserted the row) —
+  // and the rep who owns the deal then cannot see a line the quote-generation
+  // flow or their manager added to it.
   sharingModel: 'controlled_by_parent',
 
-  // @objectstack 12: the dead object-level `enable.trackHistory` flag was
-  // removed (ADR-0049) — per-field history is opt-in via `Field.trackHistory`
-  // (ADR-0052), set on quantity/unit_price/discount below. Master-detail
-  // children still inherit the master's sharing automatically.
+  // Per-field history is opt-in via `Field.trackHistory` (ADR-0052), set on
+  // quantity/unit_price/discount below. Master-detail children still inherit
+  // the master's sharing automatically.
 
   highlightFields: ['crm_product', 'quantity', 'unit_price', 'total_price'],
 

@@ -197,8 +197,7 @@ export const Contact = ObjectSchema.create({
   },
   
   // Enable features
-  // Dead enable.* flags (trash/mru) removed in @objectstack 12 (ADR-0049);
-  // History → Field.trackHistory (ADR-0052).
+  // API surface. History → Field.trackHistory (ADR-0052).
   enable: {
     apiEnabled: true,
     // #602 — signed NDAs, business cards, meeting notes attach to the person.
@@ -222,10 +221,8 @@ export const Contact = ObjectSchema.create({
     { fields: ['last_name', 'first_name'] },
   ],
   
-  // Display configuration
-  // ADR-0079: render-only `titleFormat` retired in favor of `nameField`,
-  // which names the real field holding the record title (here: the `full_name`
-  // formula field already defined above).
+  // Display configuration. ADR-0079 `nameField` names the real field holding
+  // the record title — here the `full_name` formula field defined above.
   nameField: 'full_name',
   // Explicit search targets (ADR-0061). REQUIRED because nameField is a
   // FORMULA (display_title/full_name): without this, $search auto-defaults to
@@ -234,14 +231,11 @@ export const Contact = ObjectSchema.create({
   searchableFields: ['first_name', 'last_name', 'email'],
   highlightFields: ['full_name', 'email', 'crm_account', 'phone'],
   
-  // Validation Rules
-  // `email_unique_per_account` (type: 'unique') was removed in 7.6 — the
-  // standalone unique-validation type no longer exists (ADR-0032 validation
-  // union). Email uniqueness is enforced by the field-level `unique: true`
-  // above, scoped per organization since framework #3696.
+  // ⚠️ No standalone `type: 'unique'` validation exists on this platform
+  // (ADR-0032 validation union). Email uniqueness is enforced by the
+  // field-level `unique: true` above, scoped per organization.
 
-  // Workflow Rules
-  // NOTE: object `workflows[]` were removed in @objectstack 7.7. Field-updates
-  // moved to this object's *.hook.ts; scheduled status-flips & notifications
-  // moved to src/flows/*.flow.ts (see flows/index.ts).
+  // ⚠️ No `workflows[]` here, and none is possible: object `workflows[]` were
+  // removed from the platform. Field updates live in this object's `*.hook.ts`;
+  // scheduled status flips and notifications live in `src/flows/*.flow.ts`.
 });

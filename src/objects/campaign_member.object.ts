@@ -62,14 +62,13 @@ export const CampaignMember = ObjectSchema.create({
   // campaign grant or not (#694). objectstack-ai/objectstack#5386 fixed that
   // upstream and it shipped in rc.4.
   //
-  // It was `private` before (#488) — with no owner field on the junction row
-  // that meant "whoever inserted it", which is nobody's idea of campaign
-  // membership and hid rows written by the enrollment flow.
+  // ⛔ Not `private`: with no owner field on the junction row that resolves to
+  // "whoever inserted it", which is nobody's idea of campaign membership and
+  // hides rows written by the enrollment flow.
   sharingModel: 'controlled_by_parent',
 
-  // @objectstack 12: the dead object-level `enable.trackHistory` flag was
-  // removed (ADR-0049) — per-field history is opt-in via `Field.trackHistory`
-  // (ADR-0052), set on `status` below.
+  // Per-field history is opt-in via `Field.trackHistory` (ADR-0052), set on
+  // `status` below — there is no object-level history flag.
 
   // ADR-0079: junction rows have no derivable text title; point the canonical
   // nameField at the stored autonumber explicitly (autonumber is not in the

@@ -61,8 +61,7 @@ const opportunityValidationHook: Hook = {
     // via the user-context resume, and rejecting them left the record locked
     // with a permanently pending approval.
     const APPROVAL_FIELDS = new Set(['approval_status', 'approved_date']);
-    // Stage → forecast category (migrated from the removed
-    // `set_forecast_category_by_stage` object workflow — 7.7 dropped workflows[]).
+    // Stage → forecast category.
     const STAGE_FORECAST: Record<string, string> = {
       prospecting: 'pipeline',
       qualification: 'pipeline',

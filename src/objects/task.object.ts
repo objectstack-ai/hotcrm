@@ -102,10 +102,10 @@ export const Task = ObjectSchema.create({
     // the select itself compares raw strings (normal > low > high > urgent),
     // which pushes urgent work to the bottom of the to-do queue.
     //
-    // `0` is the UNRANKED sentinel, identical to crm_case.priority_rank. It
-    // used to be `2` here and `1` there, so the same unknown priority ordered
-    // differently on the two objects; `2` also made an unranked task
-    // indistinguishable from a genuine `normal`.
+    // `0` is the UNRANKED sentinel, identical to crm_case.priority_rank. ⛔ It
+    // must stay identical on both: a differing sentinel orders the same unknown
+    // priority differently on the two objects, and `2` here would make an
+    // unranked task indistinguishable from a genuine `normal`.
     priority_rank: Field.number({
       label: 'Priority Rank',
       readonly: true,
@@ -245,8 +245,7 @@ export const Task = ObjectSchema.create({
     // Effort on a task is `progress_percent`, which the task views do read.
   },
   
-  // Dead object-level enable.* flags removed in @objectstack 12 (ADR-0049);
-  // only the live API surface remains. History → Field.trackHistory (ADR-0052).
+  // API surface. History → Field.trackHistory (ADR-0052).
   enable: {
     apiEnabled: true,
   },
@@ -294,7 +293,7 @@ export const Task = ObjectSchema.create({
     },
   ],
   
-  // NOTE: object `workflows[]` were removed in @objectstack 7.7. Field-updates
-  // moved to this object's *.hook.ts; scheduled status-flips & notifications
-  // moved to src/flows/*.flow.ts (see flows/index.ts).
+  // ⚠️ No `workflows[]` here, and none is possible: object `workflows[]` were
+  // removed from the platform. Field updates live in this object's `*.hook.ts`;
+  // scheduled status flips and notifications live in `src/flows/*.flow.ts`.
 });

@@ -167,8 +167,7 @@ const accountHook: Hook = {
       }
     }
 
-    // Stamp last_activity_date when ownership or type changes (migrated from the
-    // removed `update_last_activity` object workflow — 7.7 dropped workflows[]).
+    // Stamp last_activity_date when ownership or type changes.
     // USER writes only (`ctx.user?.id` — this repo's system-write signal, cf.
     // opportunity/quote hooks): the demo_bootstrap flow claims ownerless seeded
     // accounts as a system write every 10 minutes, and stamping those flattened

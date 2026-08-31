@@ -197,15 +197,7 @@ export const Event = ObjectSchema.create({
     // `start_datetime` instead.
   },
 
-  // Dead object-level enable.* flags removed in @objectstack 12 (ADR-0049);
-  // only the live API surface remains. History → Field.trackHistory (ADR-0052).
-  //
-  // No `enable.files`: attachments are a REVIEWED set (see the canonical note
-  // in `src/objects/index.ts` and the ledger in
-  // `test/collaboration-capabilities.test.ts`), and `crm_event` follows
-  // `crm_task` — an activity record, not a document home. Meeting decks belong
-  // to the account or the opportunity the meeting was about. Enabling it here
-  // is a decision to take on its own, not a rider on this object's creation.
+  // API surface. History → Field.trackHistory (ADR-0052).
   enable: {
     apiEnabled: true,
   },

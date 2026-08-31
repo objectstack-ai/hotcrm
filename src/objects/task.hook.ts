@@ -64,8 +64,7 @@ const taskValidation: Hook = {
       if (typeof input.progress_percent !== 'number') input.progress_percent = 100;
     }
 
-    // Derived flags (migrated from removed `set_completed_flag` / `check_overdue`
-    // object workflows — 7.7 dropped workflows[]).
+    // Derived flags.
     const effStatus =
       (typeof input.status === 'string' && input.status) ||
       (typeof previous?.status === 'string' && (previous.status as string)) ||
