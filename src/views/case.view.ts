@@ -266,8 +266,93 @@ export const CaseViews = defineView({
     },
   },
 
+  /**
+   * The record form — and, because the platform has ONE, the CREATE form too.
+   *
+   * ## ⚠️ This object's `form` IS the create dialog (#1214 item 3)
+   *
+   * Measured against the console this app ships (`@objectstack/console`
+   * 17.1.0, `dist/assets/`), BOTH entry points that open a case form resolve
+   * it the same way and neither takes a create/edit argument:
+   *
+   *   RecordFormPage (`/{object}/new`, `/{object}/record/{id}/edit`)
+   *       view.form ?? view.formViews?.default
+   *   useActionModal (the `+ New` modal off a list view)
+   *       view.form ?? view.formViews?.default
+   *
+   * ⇒ There is no create-only form to author. `ListViewSchema.addRecord`
+   * carries a `formView` key in `@objectstack/spec`, but NO console code path
+   * reads it (the string appears only in the view designer's own i18n table),
+   * so pointing it at a second form view would ship an ADR-0049
+   * declared-but-unenforced shape and change nothing on screen.
+   *
+   * ⇒ Therefore the create-safe field set has to BE this form's field set.
+   * That is why the SLA and Resolution sections are gone rather than gated.
+   *
+   * ## ⛔ Why the tab strip was not the object's `fieldGroups`
+   *
+   * `crm_case.fieldGroups` declares SIX groups (Case Information / Origin &
+   * Routing / SLA & Priority / Resolution / Escalation / System) and the
+   * dialog showed THREE tabs — these sections. The renderer only reaches for
+   * `fieldGroups` on its AUTO-DERIVED path, taken when a form authors no
+   * `sections` at all; an authored `sections` array wins outright. So
+   * `src/objects/case.object.ts` is not part of this surface.
+   *
+   * ## ⚠️ Authoring `sections` OPTS OUT of the create-mode field strip
+   *
+   * That auto-derived path also runs two filters the authored path never sees
+   * (`plugin-form`: `Qe` → `qe` drops `readonly`/`hidden` fields, and on
+   * `mode === 'create'` `Je` additionally drops formula / summary / autonumber
+   * fields). An authored section renders its list VERBATIM. That is the whole
+   * mechanism behind this defect: the platform would have hidden
+   * `created_date`, `closed_date`, `resolution_time_hours` and `is_closed`
+   * from a creator by itself, and naming them in a section put them back.
+   *
+   * ## ⛔ Why not gate the old sections on a predicate instead
+   *
+   * A section-level `visibleWhen` is parsed by `FormSectionSchema` and read by
+   * NOTHING in the form renderer (only FIELD-level `visibleWhen` is
+   * evaluated), so it would hide nothing. And field-level predicate evaluation
+   * FAILS OPEN — an unevaluable predicate renders the field visible, with no
+   * diagnostic (the house rule at the top of `lead.view.ts`, upstream
+   * objectstack-ai/objectstack#5149). A gate that fails open is not a gate for
+   * a data-integrity control, which is what this one is.
+   *
+   * ## What a creator may author here, and why the rest left
+   *
+   * Everything below is a fact the person raising the case HAS at intake.
+   * `case_number` stays because it is `readonly: true` on the object, so the
+   * renderer disables it — it is shown, never authored.
+   *
+   * The removed fields are all written by the lifecycle, and every one of them
+   * still has the surface it belongs on (pinned in
+   * `test/case-create-form-narrowing.test.ts`, both directions):
+   *
+   *   created_date, closed_date        readonly; `case_timeline` start/end
+   *   sla_due_date                     `case.hook.ts` stamps it from the
+   *                                    priority × tier matrix; list column,
+   *                                    sort key, `sla_calendar.startDateField`,
+   *                                    detail-page highlights
+   *   first_response_date              `event.hook.ts` is its SINGLE writer
+   *   resolution_time_hours            readonly; derived at close; detail page
+   *   is_sla_violated                  list column + detail-page highlights
+   *   is_escalated, escalation_reason  written by `case_escalation` /
+   *                                    `case_sla_monitor` / `escalate_case`;
+   *                                    detail page's Status & SLA section
+   *   resolution                       detail page's Description section
+   *                                    (the `resolution_required_on_close`
+   *                                    validation still has its surface)
+   *   is_closed                        readonly; derived from `status`
+   *
+   * ⚠️ `internal_notes`, `customer_rating` and `customer_feedback` leave with
+   * the Resolution section and have NO other authoring surface today. They
+   * belong on the record page, whose file is outside this card's surface —
+   * filed separately rather than fixed here or left unsaid.
+   *
+   * `type: 'simple'`, not `'tabbed'`: one section is not a tab strip.
+   */
   form: {
-    type: 'tabbed',
+    type: 'simple',
     sections: [
       {
         name: 'case',
@@ -286,30 +371,6 @@ export const CaseViews = defineView({
           // never save a new case.
           { field: 'description', required: true, colSpan: 2 },
         ],
-      },
-      {
-        // Named `sla_overview`, not `sla` — `sla` is already a distinct
-        // fieldGroup key on `crm_case` ("SLA & Priority"), and reusing it here
-        // would make this section's translated heading follow that group's
-        // wording instead of its own "SLA".
-        name: 'sla_overview',
-        label: 'SLA',
-        columns: 2,
-        fields: [
-          'created_date',
-          'first_response_date',
-          'sla_due_date',
-          'resolution_time_hours',
-          'is_sla_violated',
-          'is_escalated',
-          'escalation_reason',
-        ],
-      },
-      {
-        name: 'resolution',
-        label: 'Resolution',
-        columns: 1,
-        fields: ['resolution', 'internal_notes', 'customer_rating', 'customer_feedback', 'closed_date', 'is_closed'],
       },
     ],
   },
