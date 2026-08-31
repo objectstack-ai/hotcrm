@@ -390,10 +390,15 @@ export const Account = ObjectSchema.create({
     // writes is silently dropped: the engine logs `Field '…' is read-only —
     // ignoring incoming change` and the column stays null forever.
     //
-    // Same reasoning, same shape as `crm_campaign_member.added_date` and
-    // `crm_case.is_sla_violated`: a field a hook or flow must write cannot be
-    // `readonly`. It stays out of every form section instead, which is the
-    // protection that actually holds. `test/activity-recency.test.ts` proves
+    // Same reasoning, same shape as `crm_campaign_member.added_date`: a field
+    // written through a hook's `ctx.api` cannot be `readonly`. Note the rule
+    // is about the CONTEXT, not about hooks or flows as such — a hook stamping
+    // its own `ctx.input.data` survives, and a flow survives when its `runAs`
+    // is `'system'` (measured: `test/readonly-write-semantics.test.ts`, #1429;
+    // `crm_case.is_sla_violated` is cited elsewhere as a twin of this field
+    // and is NOT one — its writer is a system flow). This field stays out of
+    // every form section instead, which is the protection that actually
+    // holds. `test/activity-recency.test.ts` proves
     // the write lands — and fails if the flag comes back.
     last_activity_date: Field.date({
       label: 'Last Activity Date',

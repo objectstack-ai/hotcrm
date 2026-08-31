@@ -218,18 +218,35 @@ describe('crm_case create form — retention direction', () => {
    * ⛔ The tempting "fix" for the guard this change tripped
    * (`test/metadata-references.test.ts` → "fields the list views filter on are
    * editable in some form") is to mark the escalation flags `readonly` so the
-   * guard skips them. `case.object.ts` records — on `is_sla_violated` and on
-   * `escalated_date` — that the platform DROPS writes to readonly fields, so
-   * that edit would silently stop `case_escalation` / `case_sla_monitor` from
-   * maintaining them. The exemption in that guard exists because this
-   * declaration cannot be made; this assertion is what stops someone undoing
-   * it from the other end.
+   * guard skips them. This assertion is what stops someone doing that from the
+   * other end.
+   *
+   * The reason is NOT the blanket this comment used to carry ("the platform
+   * DROPS writes to readonly fields"). Measured on the pinned 17.1.0 in
+   * `test/readonly-write-semantics.test.ts`: the strip is one branch of the
+   * UPDATE path, `if (!opCtx.context?.isSystem)`, over CALLER-supplied keys —
+   * so a `beforeUpdate` hook's own stamp survives it, an insert is exempt from
+   * it entirely, and a FLOW write survives it exactly when the flow's
+   * effective `runAs` is `'system'` (the engine defaults it to `'user'`).
+   *
+   * Per field, on today's flows:
+   *   - `is_escalated` / `escalated_date` — HARD-blocked. Both are written by
+   *     the `escalate_case` screen flow, which declares no `runAs` and so runs
+   *     as the USER; `readonly` would silently drop the escalation an agent
+   *     just confirmed, while the flow still reported success.
+   *   - `is_sla_violated` — NOT hard-blocked: its only writer,
+   *     `case_sla_monitor`, is `runAs: 'system'` and would survive. It stays
+   *     pinned here anyway, because flipping it is a real decision about the
+   *     seed/profile/form surfaces — not a shortcut for silencing a guard,
+   *     which is the move this pin exists to block.
    */
   it('the flow-stamped escalation flags stay declarable — i.e. NOT readonly', () => {
     for (const name of ['is_escalated', 'is_sla_violated', 'escalated_date']) {
       expect(
         objectFields[name]?.readonly,
-        `${name} must stay writable: the platform drops writes to readonly fields and the escalation flows write it`,
+        `${name} must stay writable — see the note above: escalate_case runs runAs:"user", ` +
+          'so a readonly is_escalated/escalated_date silently drops its write ' +
+          '(measured, test/readonly-write-semantics.test.ts). Do not flip these to skip a guard.',
       ).not.toBe(true);
     }
   });
