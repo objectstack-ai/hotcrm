@@ -66,9 +66,10 @@ export const Lead = ObjectSchema.create({
       group: 'identity',
     }),
 
-    // `salutation` is a picklist, so the formula sees the raw VALUE (`ms`, `dr`),
-    // not the label — names rendered as "ms Emily Davis" in lists and details
-    // (#461). Dropped here and from `display_title` below, matching Contact.
+    // ⚠️ `salutation` is a picklist, so a formula sees the raw VALUE (`ms`,
+    // `dr`), not the label — including it renders names as "ms Emily Davis" in
+    // lists and details. Dropped here and from `display_title` below, matching
+    // Contact.
     full_name: Field.formula({
       label: 'Full Name',
       expression: F`joinNonEmpty([record.first_name, record.last_name], ' ')`,
@@ -95,20 +96,18 @@ export const Lead = ObjectSchema.create({
 
     /**
      * Case- and whitespace-folded copy of `company` — the value lead conversion
-     * compares against `crm_account.name_normalized` (#626).
+     * compares against `crm_account.name_normalized`.
      *
      * ### Why the LEAD needs one too
      *
-     * A normalized column on `crm_account` alone does not fix anything: the
-     * conversion flow would then be comparing a raw company string against a
-     * folded account name, and `"ACME  Corp"` still would not match
-     * `acme corp`. Both sides of the comparison have to be canonical, and the
-     * flow cannot canonicalize either one — measured on 17.0.0-rc.1,
+     * ⚠️ A normalized column on `crm_account` alone fixes nothing: the
+     * conversion flow would then compare a raw company string against a folded
+     * account name, and `"ACME  Corp"` still would not match `acme corp`. Both
+     * sides have to be canonical, and the flow can canonicalize neither —
      * `service-automation`'s `resolveToken` accepts exactly one function form
      * (`NOW()` / `TODAY()`), so `{LOWER(x)}`, `{TRIM(x)}` and
      * `{x.toLowerCase()}` all resolve to `undefined`. See the field comment on
-     * `crm_account.name_normalized` for the full measurement, and
-     * `test/account-name-normalized-match.test.ts`, which re-runs it.
+     * `crm_account.name_normalized` for the full measurement.
      *
      * `company` itself is NOT folded in place: it is the display value, it is
      * copied verbatim onto the account the conversion creates, and lower-casing
@@ -143,19 +142,14 @@ export const Lead = ObjectSchema.create({
       options: [...INDUSTRY_OPTIONS],
     }),
 
-    // Contact Information
-    //
-    // NOT `unique` (#598). A hard uniqueness constraint on a lead's email is a
-    // statement that a person may enquire once, ever — and the database
-    // enforced it by REJECTING the second enquiry. Real funnels re-capture the
-    // same address routinely (a prospect who filled the web form in March comes
-    // back in August), so the constraint turned an ordinary follow-up into a
-    // 500 on the public form. Duplicates are now a fact to be RECORDED, not an
-    // error: `lead_duplicate_check` in lead.hook.ts links the new lead to the
-    // record it repeats (see the `duplicates` field group below).
-    //
-    // Because the field-level `unique: true` is what used to index this column,
-    // the plain index below replaces it — the intake dedupe lookup, the
+    // ⚠️ NOT `unique`. A hard uniqueness constraint on a lead's email says a
+    // person may enquire once, ever, and the database enforces it by REJECTING
+    // the second enquiry — turning an ordinary follow-up into a 500 on the
+    // public form. Real funnels re-capture the same address routinely.
+    // Duplicates are a fact to be RECORDED, not an error: `lead_duplicate_check`
+    // in lead.hook.ts links the new lead to the record it repeats (see the
+    // `duplicates` field group below). The plain index below is what keeps the
+    // column indexed in the constraint's absence — the intake dedupe lookup, the
     // `crm_lead_import` upsert key and the conversion flow all read leads by
     // email on every write.
     email: Field.email({
@@ -219,17 +213,12 @@ export const Lead = ObjectSchema.create({
     // Assignment
 
     // Conversion tracking.
-    // NOT `readonly`: since 16.x the platform drops writes to readonly fields
-    // outright (#2948), including the lead_conversion flow's mark_converted
-    // update. Edit-protection is the beforeUpdate guard in lead.hook.ts, which
-    // rejects any USER edit to a converted lead outside a small allow-list.
-    // A `cannot_edit_converted` validation used to sit beside it covering the
-    // four identity fields, described as the friendlier recoverable half of a
-    // two-layer design. It was dead configuration and was removed in #575 B1:
-    // the hook's beforeUpdate throws first, so the validation never produced
-    // the error it promised (measured on 16.1.0 — a `PATCH company` on a
-    // converted lead returns the hook's message). Same shape as the
-    // `revenue_positive` rule removed in #571.
+    // ⛔ NOT `readonly`: the platform drops writes to readonly fields outright,
+    // including the `lead_conversion` flow's `mark_converted` update.
+    // Edit-protection is the `beforeUpdate` guard in `lead.hook.ts`, which
+    // rejects any USER edit to a converted lead outside a small allow-list —
+    // and it is the ONLY guard, deliberately: a script validation beside it
+    // never fires, because the hook's throw always wins the race.
     is_converted: Field.boolean({
       label: 'Converted',
       defaultValue: false,
@@ -331,34 +320,33 @@ export const Lead = ObjectSchema.create({
       ],
     }),
 
-    // ── Duplicate management (#598) ──────────────────────────────────────
+    // ── Duplicate management ───────────────────────────────────────────
     //
-    // `disqualification_reason: 'duplicate'` shipped for a long time with
-    // nothing behind it: a rep could close a lead as a duplicate and the record
-    // never said WHAT it duplicated, so the "duplicate" bar on the
-    // disqualification breakdown pointed at nothing you could open.
+    // `disqualification_reason: 'duplicate'` is only meaningful if the record
+    // says WHAT it duplicates — otherwise the "duplicate" bar on the
+    // disqualification breakdown points at nothing you can open.
     //
-    // The surviving record can live on either object — a still-open lead, or a
-    // contact the prospect already became — and `Field.lookup` takes exactly one
-    // target (`Field.lookup(['crm_lead','crm_contact'])` is rejected at schema
-    // parse: "reference: expected string, received array"). So the link is the
-    // same TYPE-DISCRIMINATOR shape `crm_task.related_to_*` already uses on this
-    // repo: one select naming the object, one lookup per object, and the pairing
-    // enforced declaratively. This is deliberately not a new pattern.
+    // ⚠️ The surviving record can live on either object — a still-open lead, or
+    // a contact the prospect already became — and `Field.lookup` takes exactly
+    // one target (`Field.lookup(['crm_lead','crm_contact'])` is rejected at
+    // schema parse: "reference: expected string, received array"). So the link
+    // is the same TYPE-DISCRIMINATOR shape `crm_task.related_to_*` already uses:
+    // one select naming the object, one lookup per object, and the pairing
+    // enforced declaratively.
     //
-    // The vocabulary is TWO sets, declared in `_picklists.ts` and split there:
-    // the two object names an author may pick, plus `erased` — a tombstone the
-    // form does not offer and only `lead_duplicate_check` ever writes (#1164).
+    // The vocabulary is TWO sets, declared and split in `_picklists.ts`: the two
+    // object names an author may pick, plus `erased` — a tombstone the form does
+    // not offer and only `lead_duplicate_check` ever writes.
     //
     // The tombstone is what lets an erasure COMPLETE against a lead a human
-    // confirmed as a duplicate, and it does so without relaxing one rule. That
-    // is its whole justification, so read it as a constraint rather than as a
-    // spare value: `requiredWhen` below pairs only `crm_lead` / `crm_contact`,
-    // so a tombstoned type never fires either pairing and never demands a
-    // pointer to a record that is gone; and
+    // confirmed as a duplicate, without relaxing one rule, so read it as a
+    // constraint rather than as a spare value: `requiredWhen` below pairs only
+    // `crm_lead` / `crm_contact`, so a tombstoned type never fires either
+    // pairing and never demands a pointer to a record that is gone; and
     // `duplicate_disqualification_requires_survivor` asks for a NON-BLANK type
     // plus `duplicate_status == "confirmed"`, both of which a tombstoned lead
     // still satisfies — so the verdict a reviewer recorded survives the erasure
+    // instead of being deleted as a side effect of someone else's GDPR request.
     // instead of being deleted as a side effect of someone else's GDPR request.
     duplicate_of_type: Field.select({
       label: 'Duplicate Of',
@@ -367,32 +355,30 @@ export const Lead = ObjectSchema.create({
       options: [...DUPLICATE_OF_TYPE_OPTIONS],
     }),
 
-    // The type↔lookup pairing is `requiredWhen`, not a script validation:
+    // ⚠️ The type↔lookup pairing is `requiredWhen`, not a script validation:
     // "the lookup named by the type must be populated" is exactly a conditional
-    // write contract, the engine evaluates it on insert and update
-    // (objectql `evaluateValidationRules`), and it reports against the FIELD, so
-    // the form marks the empty lookup instead of showing a record-level error.
-    // `crm_task` states the same intent as a warning-severity script rule
-    // (`related_to_required`) because it predates `requiredWhen` (ADR-0113);
-    // it is the same rule, declared where the platform can act on it.
+    // write contract, the engine evaluates it on insert and update, and it
+    // reports against the FIELD, so the form marks the empty lookup instead of
+    // showing a record-level error. (`crm_task` states the same intent as a
+    // warning-severity script rule because it predates `requiredWhen`,
+    // ADR-0113.)
     //
-    // ⚠️ `has(...)` is load-bearing, not decoration — see the note on
-    // `duplicate_disqualification_requires_survivor` below. A bare
+    // ⚠️ `has(...)` is load-bearing, not decoration. A bare
     // `record.duplicate_of_type == "crm_lead"` aborts with `No such key` on any
-    // record whose merged shape simply omits the column, and the engine's
-    // response to a predicate that fails to evaluate is to SKIP it
-    // ("requiredWhen for 'duplicate_of_lead' failed to evaluate — skipped").
-    // The rule would then read as enforced and require nothing at all.
+    // record whose merged shape omits the column, and the engine's response to a
+    // predicate that fails to evaluate is to SKIP it ("requiredWhen for
+    // 'duplicate_of_lead' failed to evaluate — skipped"). The rule would then
+    // read as enforced and require nothing at all.
     //
-    // Both lookups take the spec default `deleteBehavior: 'set_null'`, and that
-    // is deliberate: a lead is a first-class record that happens to carry a
+    // ⚠️ Both lookups take the spec default `deleteBehavior: 'set_null'`, and
+    // that is deliberate: a lead is a first-class record that happens to carry a
     // flag, so `cascade` would destroy the lead because the record it was
     // compared against was deleted. What keeps the pairing honest under a
     // `set_null` clear is the retirement block in `lead_duplicate_check`
     // (`lead.hook.ts`, job 1c): when a write leaves the named lookup blank it
     // drops `duplicate_of_type` and `duplicate_status` in the same write, so the
     // pair is never left half-stated and this rule never has to be loosened to
-    // tolerate one (#1072). Read that note before changing either predicate.
+    // tolerate one. Read that note before changing either predicate.
     duplicate_of_lead: Field.lookup('crm_lead', {
       label: 'Duplicate Of Lead',
       group: 'duplicates',
@@ -423,20 +409,20 @@ export const Lead = ObjectSchema.create({
   },
 
   // Lifecycle transitions are enforced via a `state_machine` validation rule
-  // (see validations[] below). 7.7 removed the top-level `stateMachines` key —
-  // status state machines are now expressed in the validation union.
+  // (see validations[] below). ⚠️ There is no top-level `stateMachines` key on
+  // the platform — status state machines are expressed in the validation union.
 
   // Database indexes for performance
   //
-  // `email` is indexed but NOT unique (#598). It used to be indexed only as a
-  // side effect of the field-level `unique: true`, which built the tenant
-  // composite `(organization_id, email)`; dropping the constraint would
-  // otherwise have dropped the index with it and left three read paths — the
-  // `lead_duplicate_check` intake lookup, the `crm_lead_import` upsert key and
-  // the conversion flow — scanning the table on every write.
+  // ⚠️ `email` is indexed but NOT unique, and the index must stay explicit: it
+  // used to exist only as a side effect of a field-level `unique: true`, so
+  // dropping that constraint would otherwise have dropped the index with it and
+  // left three read paths — the `lead_duplicate_check` intake lookup, the
+  // `crm_lead_import` upsert key and the conversion flow — scanning the table
+  // on every write.
   //
-  // Do NOT add `unique: true` back here either: a single-column unique index
-  // makes the platform-wide constraint win over the per-tenant composite
+  // ⛔ Do NOT add `unique: true` back here: a single-column unique index makes
+  // the platform-wide constraint win over the per-tenant composite
   // (framework#3991), so two organizations could not work the same address
   // independently. Uniqueness is not the rule this object wants at all.
   indexes: [
@@ -446,14 +432,12 @@ export const Lead = ObjectSchema.create({
     { fields: ['email'] },
   ],
   
-  // Dead object-level enable.* flags removed in @objectstack 12 (ADR-0049);
-  // only the live API surface remains. History → Field.trackHistory (ADR-0052).
+  // API surface. History → Field.trackHistory (ADR-0052).
   enable: {
     apiEnabled: true,
   },
   
-  // ADR-0079: render-only `titleFormat` retired in favor of `nameField`
-  // (the `display_title` formula field defined above).
+  // ADR-0079 record title — the `display_title` formula field defined above.
   nameField: 'display_title',
   // Explicit search targets (ADR-0061). REQUIRED because nameField is a
   // FORMULA (display_title/full_name): without this, $search auto-defaults to
@@ -477,12 +461,10 @@ export const Lead = ObjectSchema.create({
       condition: P`!has(record.email) || isBlank(record.email)`,
     },
     {
-      // The field description has promised "Required when status is
-      // Unqualified" since the field was added, and nothing enforced it — a
-      // lead could sit in `unqualified` with no recorded reason, which is the
-      // one datum a disqualification review needs. Same shape as
-      // `crm_case.escalation_reason_required` (the repo's existing
-      // "required when state is X" idiom).
+      // The field description promises "Required when status is Unqualified";
+      // this is what enforces it. A lead in `unqualified` with no recorded
+      // reason loses the one datum a disqualification review needs. Same shape
+      // as `crm_case.escalation_reason_required`.
       name: 'disqualification_reason_required',
       type: 'script',
       severity: 'error',
@@ -490,12 +472,12 @@ export const Lead = ObjectSchema.create({
       condition: P`has(record.status) && record.status == "unqualified" && (!has(record.disqualification_reason) || isBlank(record.disqualification_reason))`,
     },
     {
-      // "Disqualified as a duplicate" has to name the survivor (#598).
+      // "Disqualified as a duplicate" has to name the survivor.
       //
       // Same shape as `disqualification_reason_required` directly above — a
-      // declarative condition on the record, evaluated by the engine on insert
-      // and update, with no hook involved. The two clauses are the two things
-      // the field-level `requiredWhen` on the lookups cannot say:
+      // declarative condition evaluated by the engine on insert and update, with
+      // no hook involved. The two clauses are the two things the field-level
+      // `requiredWhen` on the lookups cannot say:
       //
       //   1. `duplicate_of_type` must be chosen, which is what makes exactly one
       //      of the two `requiredWhen` predicates fire and demand its lookup.
@@ -504,28 +486,20 @@ export const Lead = ObjectSchema.create({
       //      closed on the machine's `suspected` guess is precisely the outcome
       //      this rule exists to prevent. A human has to look and agree.
       //
-      // Neither clause duplicates the `requiredWhen` predicates: those pair the
-      // type with its lookup, this one requires the type in the first place.
+      // ⚠️ Every field reference is wrapped in `has(...)`, and that is what makes
+      // this an enforced rule rather than a decorative one. The engine evaluates
+      // a validation against `{...previous, ...data}` and fills absent fields
+      // with null on INSERT — but not on UPDATE, where `previous` is whatever
+      // the driver returned, and a driver that stores only the columns a row was
+      // written with hands back a record with no `duplicate_status` key at all.
+      // Strict CEL then aborts the whole predicate with `No such key`, and a
+      // predicate that fails to evaluate is SKIPPED, not failed:
       //
-      // ⚠️ Every field reference is wrapped in `has(...)`, and that is what
-      // makes this rule an enforced rule rather than a decorative one.
+      //     WARN Validation rule '…' predicate failed to evaluate (…) — skipped
       //
-      // The engine evaluates a validation against `{...previous, ...data}`. It
-      // fills absent fields with null on INSERT — but not on UPDATE, where
-      // `previous` is whatever the driver returned, and a driver that stores
-      // only the columns a row was written with hands back a record with no
-      // `duplicate_status` key at all. Strict CEL then aborts the whole
-      // predicate with `No such key: duplicate_status`, and a predicate that
-      // fails to evaluate is SKIPPED, not failed:
-      //
-      //     WARN Validation rule 'duplicate_disqualification_requires_survivor'
-      //          predicate failed to evaluate (…) — skipped
-      //
-      // Measured, not theorised: the unguarded first draft of this rule let a
-      // lead be closed as a duplicate with no survivor named, silently, on the
-      // in-memory driver — which is the driver the whole test suite runs on.
-      // `has()` makes the predicate TOTAL, so it returns a verdict for every
-      // record shape instead of an error for some of them.
+      // The unguarded first draft of this rule let a lead be closed as a
+      // duplicate with no survivor named, silently, on the in-memory driver —
+      // the driver the whole test suite runs on.
       name: 'duplicate_disqualification_requires_survivor',
       type: 'script',
       severity: 'error',
@@ -534,7 +508,6 @@ export const Lead = ObjectSchema.create({
       condition: P`has(record.disqualification_reason) && record.disqualification_reason == "duplicate" && !(has(record.duplicate_of_type) && !isBlank(record.duplicate_of_type) && has(record.duplicate_status) && record.duplicate_status == "confirmed")`,
     },
     {
-      // Migrated from the removed top-level `stateMachines` key (LeadStateMachine).
       name: 'lead_status_progression',
       type: 'state_machine',
       severity: 'warning',
@@ -554,7 +527,7 @@ export const Lead = ObjectSchema.create({
     },
   ],
   
-  // NOTE: object `workflows[]` were removed in @objectstack 7.7. Field-updates
-  // moved to this object's *.hook.ts; scheduled status-flips & notifications
-  // moved to src/flows/*.flow.ts (see flows/index.ts).
+  // ⚠️ No `workflows[]` here, and none is possible: object `workflows[]` were
+  // removed from the platform. Field updates live in this object's `*.hook.ts`;
+  // scheduled status flips and notifications live in `src/flows/*.flow.ts`.
 });
