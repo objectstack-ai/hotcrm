@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
 import stack from '../objectstack.config';
@@ -58,6 +58,11 @@ import stack from '../objectstack.config';
  *
  * It is intentionally low-tech (regex over source text, substring over the
  * markdown) so it stays readable and has no runtime/server dependency.
+ *
+ * Since #1135 it also pins the two `content/docs/**` pages that quote a CEL
+ * condition VERBATIM — see the second `describe` at the bottom of this file.
+ * Same subject (a value read out of a flow), same extractor, a different
+ * publication surface.
  */
 
 // Resolved from this file's own location, not `process.cwd()`. The previous
@@ -242,4 +247,189 @@ describe('package docs do not drift from the flows they document', () => {
       }
     });
   }
+});
+
+/*
+ * ─── THE `content/docs/**` THRESHOLD CELL (#1135) ────────────────────────────
+ *
+ * The rules above pin `src/docs/*.md`. That is one of two documentation
+ * surfaces stating the large-deal operator, and until now the only guarded one:
+ * #1128 flipped the gate from `>` to `>=`, the extractor above stopped matching
+ * and threw, and `src/docs` was corrected in the same PR — while the 21
+ * `content/docs/**` product pages shipped the old operator for about two hours
+ * until #1127 was dispatched by hand. `automation-docs-coverage.test.ts` does
+ * read those pages, but keys on each flow's row label and trigger cell and
+ * never on the threshold cell.
+ *
+ * Two assertions, both keyed on the SAME compiled condition the rules above
+ * read — no phrase table, no locale judgement, no prose (a per-locale phrase
+ * table over prose is #1018's subject: Chinese carries no word-for-word "or
+ * more", `超过` being strictly exclusive against `及以上` / `达到`, so such a
+ * table is not a transliteration of the English one and getting its strictness
+ * right is its own design).
+ *
+ *   1. The two pages that quote the condition VERBATIM — `sales/opportunities`
+ *      and `sales/pipeline-management`, three locales each, six lines — quote
+ *      the condition the compiled stack actually carries. String equality
+ *      against the artefact.
+ *
+ *   2. The reverse direction, which is the check #1127 used by hand: no page
+ *      under `content/docs/**` states the threshold EXCLUSIVELY. Cheap to keep,
+ *      and it covers the prose pages that do not quote the CEL at all.
+ *
+ * ## Loud by construction, in both directions
+ *
+ * Every extraction goes through `capCel`, so a pattern that stops matching
+ * throws `drift test out of date` instead of quietly asserting nothing —
+ * deliberately, and it is what makes the exclusive-phrasing scan honest:
+ * banning "over $100K" is only correct while the compiled gate is inclusive.
+ * Flip the flow back to `>` and this block does not go on banning the now-
+ * correct wording, it throws and demands a rewrite. ⛔ Never turn any of it
+ * into "skip if not found" — that is the false green this repo keeps paying
+ * for.
+ *
+ * The `$100K` abbreviation the pages use is DERIVED from the compiled amount
+ * rather than written here, so a value change moves the scan with it; an amount
+ * that has no such abbreviation throws rather than silently scanning for a
+ * phrasing no page could contain.
+ */
+describe('published docs pages do not drift from the large-deal condition', () => {
+  /** Depth-first walk of `content/docs`, REPO_ROOT-relative. */
+  const walkDocs = (dir: string): string[] => {
+    const root = join(REPO_ROOT, dir);
+    if (!existsSync(root)) return [];
+    return readdirSync(root, { withFileTypes: true }).flatMap((entry) => {
+      const rel = join(dir, entry.name);
+      return entry.isDirectory() ? walkDocs(rel) : rel.endsWith('.mdx') ? [rel] : [];
+    });
+  };
+
+  const PAGES = walkDocs('content/docs');
+  const PAGE = (rel: string) => readFileSync(join(REPO_ROOT, rel), 'utf8');
+
+  /**
+   * The pages that present the condition as the authoritative "where is this
+   * configured?" answer — the copy-paste surface that motivated #1127.
+   */
+  const VERBATIM_PAGES = [
+    'content/docs/sales/opportunities.mdx',
+    'content/docs/sales/opportunities.zh-Hans.mdx',
+    'content/docs/sales/opportunities.zh-Hant.mdx',
+    'content/docs/sales/pipeline-management.mdx',
+    'content/docs/sales/pipeline-management.zh-Hans.mdx',
+    'content/docs/sales/pipeline-management.zh-Hant.mdx',
+  ];
+
+  /**
+   * The whole expression, captured out of the compiled stack — operator
+   * included, which is the half `#1128` moved. The digits stay a `\d+` so a
+   * VALUE change is caught as a failing assertion naming the page, while an
+   * OPERATOR change misses the pattern and throws.
+   */
+  const condition = () => capCel('opportunity_won_alert', /(record\.amount >= \d+)/);
+  const amount = () => capCel('opportunity_won_alert', /record\.amount >= (\d+)/);
+
+  /** `100000` → the money spellings the pages actually use: `$100,000`, `$100K`. */
+  const moneyForms = (raw: string): string[] => {
+    const n = Number(raw);
+    const forms = [`$${n.toLocaleString('en-US')}`];
+    if (n % 1000 !== 0) {
+      throw new Error(
+        `drift test out of date: large-deal amount ${raw} is not a whole number of thousands, ` +
+          `so the "$100K"-style abbreviation the docs pages use cannot be derived from it. ` +
+          `Teach moneyForms the new spelling rather than dropping the scan.`,
+      );
+    }
+    forms.push(`$${n / 1000}K`);
+    if (n % 1_000_000 === 0) forms.push(`$${n / 1_000_000}M`);
+    return forms;
+  };
+
+  /**
+   * Ways of saying "strictly greater than", in the three locales the docs ship.
+   *
+   * The scan is anchored on the large-deal AMOUNT, which is what keeps it from
+   * flagging the director tier: `HIGH_VALUE_DEAL_AMOUNT` is deliberately
+   * exclusive, so `> $500K` is correct prose on a dozen pages. The one case
+   * that collides is the two thresholds becoming the same number — measured
+   * while proving this guard can fail, and it reports 27 pages. If that day
+   * comes the collision is the defect, not the prose.
+   */
+  const EXCLUSIVE_LEAD_INS = [
+    'over ',
+    'above ',
+    'more than ',
+    'greater than ',
+    'exceeds ',
+    'exceeding ',
+    '超过',
+    '超过 ',
+    '超過',
+    '超過 ',
+    '高于',
+    '高于 ',
+    '高於',
+    '高於 ',
+    '大于',
+    '大于 ',
+    '大於',
+    '大於 ',
+    '>',
+    '> ',
+  ];
+
+  const exclusivePhrasings = (raw: string): string[] => [
+    ...moneyForms(raw).flatMap((m) => EXCLUSIVE_LEAD_INS.map((lead) => `${lead}${m}`)),
+    // The raw CEL an author could paste back in — the exact shape #1128 left behind.
+    `record.amount > ${raw}`,
+  ];
+
+  it('reads the real published pages, and the pages it names still exist', () => {
+    // Vacuity guard. A walk that returned nothing would pass both assertions
+    // below by scanning nothing at all.
+    expect(
+      PAGES.length,
+      'no `.mdx` pages found under content/docs — this guard has gone vacuous',
+    ).toBeGreaterThan(100);
+
+    const missing = VERBATIM_PAGES.filter((p) => !existsSync(join(REPO_ROOT, p)));
+    if (missing.length > 0) {
+      throw new Error(
+        `drift test out of date: these pages no longer exist: ${missing.join(', ')}. ` +
+          `They were guarded because they quote the large-deal CEL condition verbatim — ` +
+          `point this list at wherever that quote moved to, do not delete the entry.`,
+      );
+    }
+  });
+
+  it('the pages quoting the CEL condition verbatim quote the compiled one', () => {
+    const expected = condition();
+    for (const page of VERBATIM_PAGES) {
+      expect(
+        PAGE(page).includes(expected),
+        `${page} should quote the large-deal condition exactly as the compiled stack ` +
+          `carries it — \`${expected}\`. The published page presents this string as the ` +
+          `authoritative answer to "where is this configured?", so a reader copies it. ` +
+          `Update the page (all three locales quote the same condition).`,
+      ).toBe(true);
+    }
+  });
+
+  it('no content/docs page states the large-deal threshold exclusively', () => {
+    const phrasings = exclusivePhrasings(amount());
+    const hits = PAGES.flatMap((page) => {
+      const text = PAGE(page).toLowerCase();
+      return phrasings
+        .filter((p) => text.includes(p.toLowerCase()))
+        .map((p) => `${page}: "${p}"`);
+    });
+
+    expect(
+      hits,
+      `these pages state the large-deal threshold as strictly greater-than, but the compiled ` +
+        `gate is \`${condition()}\` — inclusive:\n  ${hits.join('\n  ')}\n` +
+        `A deal at exactly the threshold DOES route and DOES alert (#1087). Reword the page ` +
+        `inclusively ("or more", "及以上" / "以上", "≥") — do not relax this scan.`,
+    ).toEqual([]);
+  });
 });
