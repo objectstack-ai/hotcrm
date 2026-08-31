@@ -16,7 +16,7 @@ This page is about the **forecast object** that stores those snapshots. For the 
 | **Period** | Owner and period (`month` / `quarter`). The period start, the period end and the friendly label (e.g. **Q3 2026**) are all derived. |
 | **Numbers** | Quota, pipeline amount, best-case amount, commit amount, closed amount. |
 | **Derived** | **Expected**, **Attainment %** and **Coverage Ratio** — formula fields computed per row from the numbers above. Nobody types these in. |
-| **Source** | `scheduled` (nightly job), `ai` (reserved for an agent or integration of your own — nothing in HotCRM writes it), `manual` (rep entry). |
+| **Source** | `scheduled` (nightly job), `ai` (reserved for an agent or integration of your own — nothing in HotCRM writes it), `manual` (rep entry). Not only a label: on the current quarter, an `ai` or `manual` row **stands the nightly job down** for that owner and period — see *How forecasts get created* below. |
 | **Narrative** | Optional commentary — what changed, what's at risk, what to ask in the next 1:1. |
 
 Pipeline, best case and commit are **nested**, not independent — each is a subset of the one above it, so you read them as a ladder of confidence rather than as slices of a pie:
@@ -53,7 +53,7 @@ So you'll never see a record labelled “2026-07-01 through ???” — only the 
 
 There are three sources, recorded in the `source` field:
 
-1. **Scheduled** — the **Forecast Snapshot** flow runs nightly at 3 AM and snapshots the current quarter for every rep who owns at least one live deal. This is the spine of the historical trend. Re-running it refreshes the same row, so numbers move down as well as up; it never writes **Quota**, which stays whatever a manager set.
+1. **Scheduled** — the **Forecast Snapshot** flow runs nightly at 3 AM and snapshots the current quarter for every rep who owns at least one live deal. This is the spine of the historical trend. Re-running it refreshes **the row it wrote itself** — the one whose **Source** is *Scheduled snapshot* — so numbers move down as well as up. It refreshes nothing else: a row a person or an agent entered is never adopted, overwritten or re-stamped. It never writes **Quota**, which stays whatever a manager set.
 2. **AI** — a value nothing in HotCRM writes. The **Revenue Forecasting** Copilot skill is read-only: it composes `describe_object`, `aggregate_data`, `query_records` and `visualize_data` over live opportunity data and answers **in the conversation** — weighted pipeline, at-risk deals, and a chart when one carries the answer better than prose. It opens no forecast row, and there is nowhere to file the exchange either: **Notes** is the only narrative column, and a person types it. The value is reserved for a snapshot some agent or integration of your own writes; a Copilot conversation will never produce one.
 3. **Manual** — a manager enters a number directly. Used for adjustments and overrides.
 
@@ -63,6 +63,12 @@ You can have all three for the same owner/period — they sit next to each other
 
 - **Rows for the current quarter do not exist until the 3 AM sweep has run once.** Until then, anything scoped to *this quarter* — the Sales dashboard's *Quota Attainment by Rep* table above all — is legitimately empty. Settled quarters and the current month are there from the start.
 - **Quota is blank on every row the sweep opens, and stays blank until someone sets it.** No automation writes it. Quota is the hand-maintained denominator of attainment, and a nightly job that reset it would erase the number a rep is actually on the hook for.
+
+**A manual or AI forecast stands the nightly job down.** The sweep asks two questions and they have different answers. *Has this period been handled?* looks at the owner's whole current-quarter window — any row answers it, whoever wrote it. *Which row is mine to write?* matches only rows whose **Source** is *Scheduled snapshot*. So when the window holds a row a person entered (**Manual entry**) or an agent wrote (**AI skill**), the 3 AM sweep does nothing at all for that owner and period: it does not overwrite the typed amounts, does not re-stamp **Source** or **Snapshot Date**, and does not open a second row beside it. The number you entered stays exactly as you left it until you change it. Three things follow:
+
+- **The way back is to delete the row.** Once the window is empty again, the next sweep opens its own snapshot and the period is back on automation — there is nothing else to switch off or on. Note who can do it: deleting a forecast is an **admin** action. A sales manager can create and edit forecasts, not delete them.
+- **A *Scheduled snapshot* row is still refreshed in place** every night, exactly as before, and an empty window is still the sweep's to open. What suppresses the sweep is a row it did not write — not the period itself.
+- **A manual row added *beside* an existing scheduled row suppresses nothing.** The sweep still finds and refreshes its own row, and both sit in the trend together — which is the point of having three sources. Suppression is what happens when the sweep's own row is not there to write.
 
 ## What you do with them
 
@@ -93,7 +99,7 @@ Weekly. The whole value of forecasts is the trend, and a single snapshot at quar
 Both snapshots are preserved. The next dashboard refresh shows the new number; the trend chart shows the old one as a historical point.
 
 **Can a forecast roll up from opportunities automatically?**
-For the current quarter it already does — that is exactly what the nightly **Forecast Snapshot** flow is: pipeline, best case, commit and closed won are re-summed from live opportunities and written back onto the same row every night. **Quota** is the one number it never computes for you. What the object does *not* do is recompute a stored amount when you read it: a settled snapshot keeps the value it was written with, on purpose. The derived fields are the mirror image — **Attainment %** and **Coverage Ratio** are computed from that row's own stored columns each time it is read, so correcting a quota on an old snapshot re-derives that row's attainment without re-running anything.
+For the current quarter it already does — that is exactly what the nightly **Forecast Snapshot** flow is: pipeline, best case, commit and closed won are re-summed from live opportunities and written back every night onto the row the sweep itself wrote. Enter that period's row by hand instead (**Source** *Manual entry*, or *AI skill*) and the nightly roll-up stands down for that owner and period until the row is deleted. **Quota** is the one number it never computes for you. What the object does *not* do is recompute a stored amount when you read it: a settled snapshot keeps the value it was written with, on purpose. The derived fields are the mirror image — **Attainment %** and **Coverage Ratio** are computed from that row's own stored columns each time it is read, so correcting a quota on an old snapshot re-derives that row's attainment without re-running anything.
 
 **How does this differ from a saved report?**
 A report runs against *current* data. A forecast is a *frozen* number — even six months later, looking at last quarter's commit will give you the number the rep was on the hook for, not a number recomputed from records that have since moved.
