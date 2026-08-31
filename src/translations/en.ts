@@ -1455,18 +1455,32 @@ export const en: TranslationData = {
       label: 'App Launcher',
       description: 'Central hub for accessing all applications',
       subtitle: 'Select an app to get started',
+      components: {
+        app_search: { label: 'Search Apps' },
+        app_grid: { label: 'Application Grid' },
+      },
     },
     case_detail_page: {
       label: 'Case Detail',
       description: 'Service-agent case record: highlights, SLA path, details and activity timeline.',
       title: '{case_number} · {subject}',
       subtitle: '{crm_account}',
+      components: {
+        case_highlights: { label: 'Key Information' },
+        case_status_path: { label: 'Case Status Path' },
+      },
     },
     lead_detail_page: {
       label: 'Lead Detail',
       description: 'Comprehensive lead detail page with highlights, details, and related information',
       title: '{first_name} {last_name}',
       subtitle: '{company}',
+      components: {
+        lead_duplicate_alert: { label: 'Suspected Duplicate' },
+        lead_highlights: { label: 'Key Information' },
+        lead_path: { label: 'Lead Status Path' },
+        main_tabs: { label: 'Lead Information Tabs' },
+      },
     },
     opportunity_detail_page: {
       label: 'Opportunity Detail',
@@ -1474,16 +1488,37 @@ export const en: TranslationData = {
         'Comprehensive opportunity detail page with path, highlights, details, and related lists',
       title: '{name}',
       subtitle: '{crm_account}',
+      components: {
+        opp_highlights: { label: 'Key Information' },
+        opp_stage_path: { label: 'Opportunity Stage Path' },
+      },
     },
     sales_home_page: {
       label: 'Sales Home',
       description: 'Sales team home page with key metrics and quick actions',
       title: 'Sales Dashboard',
       subtitle: 'Welcome back',
+      components: {
+        quick_create: { title: 'Quick Create', label: 'Quick Create' },
+        key_metrics: { title: 'Key Performance Indicators', label: 'Key Metrics' },
+        home_tabs: { label: 'Home Tabs' },
+        ai_briefing: {
+          title: 'Ask the AI Assistant',
+          description:
+            'Open the assistant panel from the right edge of the page and ask "what should I focus on today?" — it sees your live pipeline, schema, and accounts.',
+          label: 'Today with the AI Assistant',
+        },
+        upcoming_events: { title: 'Upcoming Events', label: 'Upcoming Events' },
+      },
     },
     utility_bar_page: {
       label: 'Utility Bar',
       description: 'Quick access utility bar with floating tools',
+      components: {
+        notifications_panel: { label: 'Notifications' },
+        quick_notes: { title: 'Quick Notes', label: 'Quick Notes' },
+        quick_search: { label: 'Quick Search' },
+      },
     },
   },
 };

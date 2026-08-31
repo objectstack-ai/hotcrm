@@ -395,6 +395,97 @@ describe('every locale is complete on every authored surface', () => {
   });
 
   /**
+   * Page COMPONENT copy — the card titles, panel headings and alert labels that
+   * sit inside a page, addressed by the component's own `id`.
+   *
+   * The guard above stops at the page's nav copy and its `page:header`. Every
+   * other string a page owns lives on a component, and until `@objectstack/spec`
+   * 17.0.0-rc.6 the translation contract had nowhere to put it: `pages` was four
+   * strict keys, so a locale pack was *refused permission* to carry component
+   * copy (#1004). The contract now carries `pages.<name>.components.<id>`, this
+   * repo installs 17.1.0, and the three non-English bundles were populated
+   * against it — but nothing held them there, which is the gap this closes.
+   *
+   * ### The surface below is MEASURED, not read off the schema (#1004)
+   *
+   * The schema accepts `components.<id>` for ANY id — it is a `Record(string, …)`
+   * — so the schema cannot tell you which ids the platform actually honours.
+   * Driven in a browser against a running server on 17.1.0, the answer is
+   * narrower than the schema, and the platform drops the rest **silently**:
+   *
+   *   - a component reached through `regions[].components[]` IS translated;
+   *   - a NESTED component is not — anything under `properties.children`, or
+   *     under a `page:tabs` item's `children`, is dropped before the pack ever
+   *     reaches the client (`GET /api/v1/i18n/translations/<locale>` returns the
+   *     page with those ids removed);
+   *   - a component in a `slots` map is dropped the same way;
+   *   - `page:header` is excluded on purpose, and correctly: its copy is
+   *     addressed by the PAGE name (`pages.<name>.title` / `.subtitle`, the
+   *     guard above), because header instances carry no stable id.
+   *
+   * Measured with probe strings written into `zh-CN`, rebuilt and served: 16
+   * top-level ids were honoured and rendered, and all 11 nested ids plus both
+   * slot ids came back stripped. So this walk deliberately covers ONLY the
+   * top-level, non-header components. Widening it to the nested tree would
+   * demand copy that no locale can make reach a screen — the guard would go
+   * green on strings the platform throws away, which is worse than not checking.
+   *
+   * The nested half is a real gap, and it is a PLATFORM gap rather than missing
+   * copy here: `Revenue (Won)`, `Deals Won`, `Pipeline Value` and `Open Leads`
+   * are still English on an otherwise Chinese landing page because the four
+   * `object-metric` tiles are children of the `key_metrics` card. Filed upstream
+   * rather than worked around here.
+   *
+   * `description` is included even though `page:card` does not currently draw it
+   * (#1216 moves that copy to a component that does): the platform accepts and
+   * serves the key, all four bundles now agree on it, and excluding it would
+   * need an exemption that goes wrong the moment #1216 lands.
+   */
+  it('every top-level page component has translated copy', () => {
+    // The authored key on the left, the translation key it is addressed by on
+    // the right. A component's own `label` overlays `label`; the rest are read
+    // off `properties`.
+    const bad: string[] = [];
+    let checked = 0;
+
+    for (const [locale, pack] of packs()) {
+      for (const page of pages) {
+        const t = pack.pages?.[page.name]?.components ?? {};
+
+        for (const c of (page.regions ?? []).flatMap((r: AnyRec) => r.components ?? [])) {
+          const comp = c as AnyRec;
+          // Addressed by the page name instead — see the guard above.
+          if (!comp?.id || comp.type === 'page:header') continue;
+
+          const authored: [string, unknown][] = [
+            ['label', comp.label],
+            ['title', comp.properties?.title],
+            ['description', comp.properties?.description],
+          ];
+
+          for (const [key, value] of authored) {
+            if (typeof value !== 'string' || value.length === 0) continue;
+            checked++;
+            if (!t[comp.id]?.[key]) {
+              bad.push(`${locale}: ${page.name}.components.${comp.id}.${key}`);
+            }
+          }
+        }
+      }
+    }
+
+    // Guards the guard: if the walk ever stops finding component copy — a page
+    // shape change, a renamed `regions` key — an empty `bad` would read as
+    // "everything is translated" while nothing was inspected at all.
+    expect(checked, 'the component walk inspected no authored copy at all').toBeGreaterThan(0);
+    expect(
+      bad,
+      `page components with untranslated copy:\n  ${bad.join('\n  ')}\n` +
+        'These render as the authored English literal under every other locale.',
+    ).toEqual([]);
+  });
+
+  /**
    * Reference-rail cards are headed by the OBJECT's label, not by any copy the
    * page owns. The rail resolves
    * `entry.title || i18n.objectLabel({ name, label: humanize(name) })`, and
