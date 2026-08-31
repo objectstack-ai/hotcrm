@@ -22,54 +22,89 @@ export const KnowledgeArticle = ObjectSchema.create({
   // ADR-0090 D1/D7: OWD is an authored decision. Knowledge base is org-readable; authors edit.
   sharingModel: 'public_read',
 
-  // ─── Public access (#601) — NOT declared, and this is the record of why ──
+  // ─── Public access (#601 item 3 → #1104) — DECLARED, and this is the ───
+  //     record of why it is safe to declare NOW and was not before.
   //
-  // Scope item 3 of #601 asked for `publicSharing` here: share-link publishing
-  // for public articles, `allowedAudiences: ['public','link_only']`, CEL
-  // eligibility `status == 'published' && audience == 'public'`, and
-  // `redactFields`. It is NOT declared, because on 17.0.0-rc.6 this app cannot
-  // enforce the half that keeps INTERNAL articles unreachable, and the
-  // acceptance criterion is two-sided.
+  // Publishing a public article mints a share link through the platform's
+  // `publicSharing` surface (maintainer ruling, 2026-08-02: no customer
+  // portal, no anonymous-grant widening). The whole safety of that rests on
+  // `eligibility`, which is the ONLY thing standing between a share dialog and
+  // a stranger reading an internal or draft article.
   //
-  // MEASURED against the real `ShareLinkService` from
-  // `@objectstack/plugin-sharing`, not read off the schema:
+  // ⚠️ This block was DELIBERATELY ABSENT until 17.1.0, and the reason is the
+  // inverse of what it looks like. On 17.0.0-rc.6 `eligibility` had NO
+  // consumer: `getPolicy()` dropped the key and `createLink()` evaluated no
+  // predicate. With `publicSharing` absent altogether every link creation was
+  // refused outright, so declaring this block back then would have OPENED
+  // anonymous access to internal and draft articles rather than restricting
+  // links to public ones. A stale note claiming the key is inert is worse than
+  // no note once it stops being true, so it is replaced rather than amended.
   //
-  //   | key                  | measured on rc.6                                 |
-  //   | -------------------- | ------------------------------------------------ |
-  //   | `enabled`            | ENFORCED — false ⇒ SHARING_NOT_ENABLED           |
-  //   | `allowedAudiences`   | ENFORCED — `signed_in` refused 422               |
-  //   | `allowedPermissions` | ENFORCED — non-`view` refused 422                |
-  //   | `maxExpiryDays`      | ENFORCED — longer expiry refused 422             |
-  //   | `redactFields`       | APPLIED to every token-served response           |
-  //   | `eligibility`        | **INERT — read by NO consumer on this version**  |
+  // RE-MEASURED on the installed `@objectstack/plugin-sharing@17.1.0`, against
+  // the real `ShareLinkService` and a real engine — not read off a grep count:
   //
-  // `getPolicy()` never carries `eligibility` into the policy it returns and
-  // `createLink()` evaluates no predicate; nothing else in the installed
-  // platform reads the key. Driven end to end with the key declared: a DRAFT
-  // article and an INTERNAL-audience article each minted a `public` link and
-  // each was SERVED to a caller with no principal at all.
+  //   | key                  | measured on 17.1.0                             |
+  //   | -------------------- | ---------------------------------------------- |
+  //   | `enabled`            | ENFORCED — false ⇒ SHARING_NOT_ENABLED 422     |
+  //   | `allowedAudiences`   | ENFORCED — `signed_in` refused 422             |
+  //   | `allowedPermissions` | ENFORCED — non-`view` refused 422              |
+  //   | `redactFields`       | APPLIED to every token-served response         |
+  //   | `eligibility`        | **ENFORCED — false verdict ⇒ 422, no link**    |
   //
-  // So declaring this block would have OPENED an anonymous-read path to
-  // internal articles that does not exist today (with `enabled` absent, every
-  // create is refused outright) — a strictly wider approximation of what was
-  // asked for, in the one surface where the failure is a stranger reading
-  // internal content. The guest profile is likewise untouched: widening it was
-  // never on the table (maintainer decision, 2026-08-02).
+  // `test/knowledge-article-share-links.test.ts` drives all of it end to end
+  // and is the acceptance evidence; read it before changing anything here.
   //
-  // The enforcement seam DOES exist on the platform and was measured working —
-  // a `beforeInsert` hook on `sys_share_link` fires on the plugin's own
-  // system-context insert, `ctx.api` can read the candidate article, and a
-  // throw refuses the link, covering the console's share dialog and a raw
-  // `POST /api/v1/share-links` alike. It is unreachable from a METADATA app:
-  // `validateCrossReferences` in `@objectstack/spec` refuses any hook whose
-  // `object` is not in this stack's own `objects`, and `sys_share_link` belongs
-  // to the platform ("Hook 'x' references object 'sys_share_link' which is not
-  // defined in objects."). No wildcard escape either — `'*'` is not in that set.
+  // ⚠️ TWO SPELLING TRAPS, both measured, both of which produce a block that
+  // LOOKS declared and silently is not:
   //
-  // Blocked on upstream giving `publicSharing.eligibility` a consumer (or an
-  // app-reachable equivalent). Until then `audience: 'public'` stays an
-  // internal editorial classification, which is what it has always actually
-  // been. See #601 for the full measurement.
+  //  1. `eligibility` must be a PLAIN STRING. It is `z.ZodString` in the spec
+  //     and `getPolicy()` keeps it only when `typeof raw.eligibility ===
+  //     'string'`. The `P` tagged template used by `validations[].condition`
+  //     below returns an Expression OBJECT `{ dialect, source }` — passing one
+  //     here does not narrow anything, it makes the predicate vanish.
+  //
+  //  2. Every field read is `record.`-PREFIXED. The evaluator is
+  //     `ExpressionEngine` from `@objectstack/formula` (record-level CEL), and
+  //     `record` is the ONLY binding it is given. The bare-identifier spelling
+  //     `status == 'published' && audience == 'public'` — the one #601 wrote —
+  //     COMPILES and then fails at evaluate with `Unknown variable: audience`,
+  //     which `assertEligible` turns into ELIGIBILITY_UNEVALUABLE 422. That
+  //     fails CLOSED, so it is not a security hole; it is a feature that never
+  //     mints a single link while reading as if it works.
+  //
+  // The predicate is TOTAL for the same reason the `validations` below are:
+  // `has()` guards every read. `assertEligible` materializes declared fields to
+  // `null` first, so an absent key would not abort here today — the guards keep
+  // that true if the field set changes. (The `has(record.x)` caveat carried
+  // from objectstack#7861 is about `compileCelToFilter`, the SHARING-RULE path.
+  // That is a different evaluator, it is not on this code path, and it is not
+  // even exported from `@objectstack/plugin-sharing`. Verified, not assumed.)
+  //
+  // ⚠️ Eligibility is evaluated at MINT time only; `resolveToken()` does not
+  // re-check it. Re-classifying a published/public article to internal or back
+  // to draft does NOT revoke links already minted from it — those must be
+  // revoked explicitly. That is platform behaviour, filed upstream, not
+  // something this app compensates for app-side.
+  publicSharing: {
+    enabled: true,
+    // `public` and `link_only` only. `signed_in` would be a different feature
+    // and `email` is refused at creation without an allowlist.
+    allowedAudiences: ['public', 'link_only'],
+    // Read-only. Same as the platform default, declared anyway: this is a
+    // security boundary, and a default is not a decision.
+    allowedPermissions: ['view'],
+    // The gate. Published AND public-audience, nothing else — a draft, an
+    // in_review, an archived, or any internal-audience article is refused at
+    // `createLink` with RECORD_NOT_ELIGIBLE 422 and no row is written.
+    eligibility:
+      'has(record.status) && record.status == "published" && ' +
+      'has(record.audience) && record.audience == "public"',
+    // Stripped from every token-served response. These are the fields that
+    // exist for staff: who owns the article, which customer case it was
+    // written from, and when an editor last reviewed it. None of them are part
+    // of the answer a reader followed the link for.
+    redactFields: ['owner_id', 'related_to_case', 'last_reviewed_at'],
+  },
 
   // ADR-0079: render-only `titleFormat` retired in favor of `nameField`,
   // which names a real field. The former template composed two local fields, so
