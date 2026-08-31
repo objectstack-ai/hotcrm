@@ -38,7 +38,7 @@ answer about rolling up from opportunities automatically.
 `content/docs/administration/profiles.mdx` loses a claim that was already
 inaccurate before any of this: forecast snapshots were said to be written by
 the nightly job *"never by hand"*. A sales rep indeed never writes one — that
-is what the bullet is about — but managers and sales ops do, and now that hand
+is what the bullet is about — but managers and admins do, and now that hand
 entry has a defined effect on the nightly job, the parenthetical was teaching
 the opposite of the rule.
 
