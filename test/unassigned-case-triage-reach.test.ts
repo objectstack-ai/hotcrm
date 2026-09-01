@@ -11,6 +11,7 @@ import {
   buildContextForUser,
 } from '@objectstack/plugin-security';
 import { SharingServicePlugin } from '@objectstack/plugin-sharing';
+import { tenancyProbe } from './helpers/tenancy-probe';
 import { SysUser, SysMember, SysOrganization } from '@objectstack/platform-objects/identity';
 import stack from '../objectstack.config';
 import caseHooks from '../src/objects/case.hook';
@@ -158,6 +159,11 @@ async function boot(driver: string, config: AnyRec): Promise<Fixture> {
       fallbackPermissionSet: appDefaultPermissionSetName((stack as AnyRec).permissions),
     } as never),
   );
+  // 17.2.0: declared sharing rules are only seeded once this stack states its
+  // tenancy posture — see `test/helpers/tenancy-probe.ts` for the measurement.
+  // Mounted BEFORE SharingServicePlugin, which reads the posture during its own
+  // boot.
+  await kernel.use(tenancyProbe('single') as never);
   await kernel.use(new SharingServicePlugin());
   await kernel.bootstrap();
   const ql: AnyRec = kernel.getService('objectql');
