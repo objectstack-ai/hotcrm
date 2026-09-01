@@ -55,7 +55,7 @@
   "devDependencies": {
     "@changesets/cli": "^2.31.1",
     "@objectstack/formula": "17.2.0",
-    "@playwright/test": "^1.61.1",
+    "@playwright/test": "^1.62.1",
     "@vitest/coverage-v8": "^4.1.10",
     "fumadocs-core": "16.9.3",
     "remark": "^15.0.1",
