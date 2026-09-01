@@ -37,24 +37,24 @@
   },
   "packageManager": "pnpm@10.33.0",
   "dependencies": {
-    "@objectstack/account": "17.1.0",
-    "@objectstack/cli": "17.1.0",
-    "@objectstack/driver-memory": "17.1.0",
-    "@objectstack/driver-sql": "17.1.0",
-    "@objectstack/driver-sqlite-wasm": "17.1.0",
-    "@objectstack/metadata": "17.1.0",
-    "@objectstack/objectql": "17.1.0",
-    "@objectstack/runtime": "17.1.0",
-    "@objectstack/service-analytics": "17.1.0",
-    "@objectstack/service-automation": "17.1.0",
-    "@objectstack/spec": "17.1.0"
+    "@objectstack/account": "17.2.0",
+    "@objectstack/cli": "17.2.0",
+    "@objectstack/driver-memory": "17.2.0",
+    "@objectstack/driver-sql": "17.2.0",
+    "@objectstack/driver-sqlite-wasm": "17.2.0",
+    "@objectstack/metadata": "17.2.0",
+    "@objectstack/objectql": "17.2.0",
+    "@objectstack/runtime": "17.2.0",
+    "@objectstack/service-analytics": "17.2.0",
+    "@objectstack/service-automation": "17.2.0",
+    "@objectstack/spec": "17.2.0"
   },
   "optionalDependencies": {
     "better-sqlite3": "^12.11.1"
   },
   "devDependencies": {
     "@changesets/cli": "^2.31.1",
-    "@objectstack/formula": "17.1.0",
+    "@objectstack/formula": "17.2.0",
     "@playwright/test": "^1.61.1",
     "@vitest/coverage-v8": "^4.1.10",
     "fumadocs-core": "16.9.3",
