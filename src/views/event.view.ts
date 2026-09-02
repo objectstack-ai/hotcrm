@@ -49,6 +49,16 @@ export const EventViews = defineView({
       showDescription: true,
       allowedVisualizations: ['grid', 'calendar', 'timeline', 'kanban'],
     },
+    // Binds the 'calendar' entry above: the same span the dedicated
+    // `event_calendar` view shows. `start_datetime` is required + notNull;
+    // `end_datetime` is optional, so an event without one stays a single point
+    // in time rather than borrowing a neighbour's end.
+    calendar: {
+      startDateField: 'start_datetime',
+      endDateField: 'end_datetime',
+      titleField: 'subject',
+      colorField: 'type',
+    },
   },
 
   listViews: {
