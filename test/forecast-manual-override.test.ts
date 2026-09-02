@@ -86,10 +86,10 @@ const users = (): Rec[] => [
  * numbers the manager typed, so "unchanged" cannot pass by coincidence.
  */
 const opps = (): Rec[] => [
-  { id: 'o1', owner_id: 'rep_manual', stage: 'qualification', forecast_category: 'pipeline', amount: 100_000, close_date: inPeriod },
-  { id: 'o2', owner_id: 'rep_manual', stage: 'negotiation', forecast_category: 'commit', amount: 30_000, close_date: inPeriod },
-  { id: 'o3', owner_id: 'rep_manual', stage: 'closed_won', forecast_category: 'closed', amount: 70_000, close_date: inPeriod },
-  { id: 'o4', owner_id: 'rep_control', stage: 'proposal', forecast_category: 'commit', amount: 55_000, close_date: inPeriod },
+  { id: 'o1', owner_id: 'rep_manual', stage: 'qualification', forecast_category: 'pipeline', amount: 100_000, close_date: inPeriod, organization_id: null },
+  { id: 'o2', owner_id: 'rep_manual', stage: 'negotiation', forecast_category: 'commit', amount: 30_000, close_date: inPeriod, organization_id: null },
+  { id: 'o3', owner_id: 'rep_manual', stage: 'closed_won', forecast_category: 'closed', amount: 70_000, close_date: inPeriod, organization_id: null },
+  { id: 'o4', owner_id: 'rep_control', stage: 'proposal', forecast_category: 'commit', amount: 55_000, close_date: inPeriod, organization_id: null },
 ];
 
 /** What the sweep computes for `rep_manual` from the pipeline above. */
@@ -100,6 +100,14 @@ const TYPED = { pipeline: 4_242_000, bestCase: 3_100_000, commit: 2_000_000, clo
 
 const forecastRow = (over: Rec): Rec => ({
   owner_id: 'rep_manual',
+  // Stated, null — not omitted. A real driver returns every DECLARED column, so
+  // a row written with no organization reads back `organization_id: null`
+  // (measured on `SqliteWasmDriver` through `ObjectQL`); this harness's store is
+  // schemaless and omits keys nobody wrote. An ABSENT key is not a null one, and
+  // `forecast_snapshot`'s bucket pin (`{currentForecast.organization_id}`,
+  // #1372) resolves against the null and has nothing to resolve against the
+  // absence — the same distinction `flow-scheduled.test.ts` draws for `owner_id`.
+  organization_id: null,
   period: 'quarter',
   period_start: inPeriod,
   period_end: isoUtc(qEnd),
