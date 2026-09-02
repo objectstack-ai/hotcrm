@@ -271,6 +271,103 @@ describe('the declared organization_id actually resolves (#700)', () => {
   });
 });
 
+/**
+ * The pin on the bucket fetches, RUN rather than read (#1372).
+ *
+ * The metadata half below proves the four totals are now derived from a fetch
+ * the analyser can prove. It cannot prove the pin selects the right rows: a
+ * `filter` key is inert metadata until an engine applies it. So this runs the
+ * real sweep over the one shape the defect needs and nothing less — ONE owner,
+ * TWO organizations. A single-organization seed cannot tell the fix from the
+ * bug, because both readings produce the same four numbers there; that is
+ * asserted below rather than trusted.
+ */
+describe('forecast_snapshot sums only the target row\u2019s organization (#1372)', () => {
+  const ORG_A = 'org_alpha';
+  const ORG_B = 'org_beta';
+
+  /** The four buckets inside `org_alpha` alone — what the pin should produce. */
+  const OWN_ORG_TOTALS = { pipeline: 250_000, best_case: 200_000, commit: 200_000, closed: 90_000 };
+  /** …and summed across both organizations — what the defect produced. */
+  const CROSS_ORG_TOTALS = { pipeline: 950_000, best_case: 900_000, commit: 900_000, closed: 390_000 };
+
+  /** Today's calendar-quarter start, the window `forecast.hook.ts` derives. */
+  const quarterStart = (): string => {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const now = new Date();
+    const d = new Date(Date.UTC(now.getUTCFullYear(), Math.floor(now.getUTCMonth() / 3) * 3, 1));
+    return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+  };
+
+  /**
+   * One human owning deals in two tenants — the shape `sys_user` makes
+   * reachable, since identity is global and the per-owner loop item therefore
+   * narrows nothing. `org_alpha` is seeded FIRST so `find_any_deal` binds
+   * `ownerAnyDeal` there and the row is born in that partition.
+   */
+  const seedCrossOrganizationOwner = () => {
+    const close = quarterStart();
+    const deal = (id: string, org: string, stage: string, category: string, amount: number): Rec =>
+      ({ id, owner_id: 'rep1', stage, forecast_category: category, amount, close_date: close, organization_id: org });
+    return makeFlowHarness(
+      { forecast_snapshot: ForecastSnapshotFlow },
+      {
+        sys_user: [{ id: 'rep1', name: 'Rep One' }],
+        crm_opportunity: [
+          deal('a_commit', ORG_A, 'negotiation', 'commit', 200_000),
+          deal('a_pipe', ORG_A, 'qualification', 'pipeline', 50_000),
+          deal('a_won', ORG_A, 'closed_won', 'closed', 90_000),
+          deal('b_commit', ORG_B, 'negotiation', 'commit', 700_000),
+          deal('b_won', ORG_B, 'closed_won', 'closed', 300_000),
+        ],
+        crm_forecast: [],
+      },
+      { hooks: [forecastDerive] },
+    );
+  };
+
+  it('is a seed the fix and the defect disagree on', () => {
+    // Anti-vacuity. If these two readings ever coincided, the case below would
+    // pass with the pin deleted and would be measuring nothing at all.
+    expect(OWN_ORG_TOTALS).not.toEqual(CROSS_ORG_TOTALS);
+  });
+
+  it('writes its own organization\u2019s totals, not the sum across both', async () => {
+    const h = seedCrossOrganizationOwner();
+    await h.run('forecast_snapshot', {}, { event: 'schedule' });
+
+    expect(h.store.crm_forecast, 'the sweep opened no snapshot row').toHaveLength(1);
+    const row = h.store.crm_forecast[0];
+    expect(row.organization_id, 'the snapshot row is outside every partition').toBe(ORG_A);
+
+    expect(
+      {
+        pipeline: row.pipeline_amount,
+        best_case: row.best_case_amount,
+        commit: row.commit_amount,
+        closed: row.closed_amount,
+      },
+      'The four bucket fetches are not pinned to the snapshot row\u2019s organization, so\n'
+        + 'this row reports the owner\u2019s deals in EVERY organization — org_beta\u2019s\n'
+        + 'pipeline inside org_alpha\u2019s forecast. Nothing is NULL-partitioned and no\n'
+        + 'index is violated; the numbers are simply another tenant\u2019s. Pin the fetches\n'
+        + 'to `{currentForecast.organization_id}` (#1372).',
+    ).toEqual(OWN_ORG_TOTALS);
+  });
+
+  it('still reports only ONE row for a cross-organization owner', async () => {
+    // The half deliberately NOT undertaken (#1372, ruling 2026-08-31 item 3):
+    // `crm_forecast` stays keyed by (owner, period), so such an owner gets one
+    // row reporting one organization — true but INCOMPLETE, and strictly better
+    // than the cross-tenant total above. Pinned here so a later change to that
+    // key has to edit this expectation deliberately rather than drift past it.
+    const h = seedCrossOrganizationOwner();
+    await h.run('forecast_snapshot', {}, { event: 'schedule' });
+
+    expect(h.store.crm_forecast.map((r: Rec) => r.organization_id)).toEqual([ORG_A]);
+  });
+});
+
 // ═══════════════════════════════════════════════════════════════════════════
 // #1363 — the same walk, extended from `create_record` to `update_record`
 // ═══════════════════════════════════════════════════════════════════════════
@@ -586,22 +683,6 @@ const ORGANIZATION_NEUTRALITY_EXEMPTIONS: OrganizationNeutralityExemption[] = [
       + 'there is. The claim is not taken on trust: the test below reads the flow\'s '
       + 'absence out of the SaaS composition, so re-registering it revokes this '
       + 'exemption automatically.',
-  },
-  {
-    flow: 'forecast_snapshot',
-    nodeId: 'write_snapshot',
-    fields: ['pipeline_amount', 'best_case_amount', 'commit_amount', 'closed_amount'],
-    reason:
-      'The four totals are accumulators over `crm_opportunity` rows fetched by '
-      + '`owner_id = {currentOwner.id}` inside the target row\'s own period window — the '
-      + '"swept row\'s own aggregates" reading, and exactly right in the '
-      + 'single-organization shape this sweep was written for. It is NOT proven in the '
-      + 'general case: `sys_user` is a GLOBAL identity carrying no `organization_id` '
-      + '(see the header), so an owner holding deals in two organizations would sum '
-      + 'both into one snapshot row. That residual is a property of the flow, not of '
-      + 'this guard, so it is filed as #1372 rather than quietly fixed from here — this '
-      + 'file\'s surface is the guard. Narrow on purpose: a FIFTH column added to this '
-      + 'node is a fresh red.',
   },
 ];
 
