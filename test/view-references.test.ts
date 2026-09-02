@@ -596,3 +596,114 @@ describe('objects reached only through a parent curate that related list', () =>
     expect(bad, `related lists with nothing to show:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 });
+
+/**
+ * A list that offers the calendar switch must say which field dates it (#1445).
+ *
+ * `appearance.allowedVisualizations: [... 'calendar']` renders a calendar
+ * toggle on that list. Nothing in the list itself said which field supplies the
+ * event date, and the renderer's answer to that gap was to invent one
+ * (`due_date`): every record without that field piled onto "today" — a
+ * plausible-looking, fully wrong screen. Seven of this app's default lists were
+ * in exactly that state, their `calendar:` blocks authored only on the sibling
+ * NAMED view, which the toggle does not read.
+ *
+ * The platform now refuses the shape at parse
+ * (objectstack-ai/objectstack#14075, ruled on #13748 option A) — but the
+ * refusal ships in a framework newer than the `@objectstack/*` line pinned in
+ * `package.json`, so `pnpm build` here still accepts it. Until that line moves,
+ * this is the only thing standing between an author and a calendar that lies;
+ * after it moves, it is the cheap local half that fails in seconds instead of
+ * at publish.
+ *
+ * The date is the load-bearing key and the only required one: an absent title
+ * falls back to the record display name (ADR-0079), an absent color to the
+ * theme default. A date has no such fallback.
+ */
+describe('a list offering the calendar switch says which field dates it', () => {
+  const viewObjectOf = (v: AnyRec): string | undefined =>
+    v.list?.data?.object ?? v.form?.data?.object ?? v.object;
+
+  /**
+   * Every list on every view — the default `list` plus each named `listViews`
+   * entry. `isDefault` is carried explicitly rather than derived from the name:
+   * a default list has a `name` of its own (`all_campaigns`), so it is
+   * indistinguishable from a named one once flattened.
+   */
+  const allLists: { object: string; view: string; isDefault: boolean; list: AnyRec }[] = views.flatMap((v) => {
+    const objectName = viewObjectOf(v);
+    if (!objectName || !objectNames.has(objectName)) return [];
+    const entries: [AnyRec, boolean][] = [
+      ...(v.list ? ([[v.list, true]] as [AnyRec, boolean][]) : []),
+      ...Object.values(v.listViews ?? {}).map((l) => [l as AnyRec, false] as [AnyRec, boolean]),
+    ];
+    return entries.map(([list, isDefault]) => ({
+      object: objectName,
+      view: isDefault ? `default (${list.name ?? '-'})` : (list.name ?? '-'),
+      isDefault,
+      list,
+    }));
+  });
+
+  /** A list renders a calendar if it IS one, or if the switcher can turn it into one. */
+  const offersCalendar = (l: AnyRec): boolean =>
+    l.type === 'calendar' || (l.appearance?.allowedVisualizations ?? []).includes('calendar');
+
+  const calendarLists = allLists.filter((e) => offersCalendar(e.list));
+
+  it('the derivation finds the lists it is meant to cover', () => {
+    // Guard the guard: both junctions — the list walk and the `offersCalendar`
+    // predicate — would turn every assertion below into a no-op by yielding
+    // nothing, and a green suite is exactly what that failure looks like.
+    expect(allLists.length, 'no lists parsed out of the view surface').toBeGreaterThan(20);
+    const defaults = calendarLists.filter((e) => e.isDefault).map((e) => e.object);
+    // The seven default lists #1445 is about, named so a later edit that drops
+    // `calendar` from one of them has to say so here rather than silently
+    // shrinking the population this suite measures.
+    for (const name of [
+      'crm_campaign', 'crm_case', 'crm_contract', 'crm_event',
+      'crm_opportunity', 'crm_quote', 'crm_task',
+    ]) {
+      expect(defaults, `${name}'s default list no longer offers a calendar`).toContain(name);
+    }
+  });
+
+  it.each(calendarLists.map((e) => [`${e.object} / ${e.view}`, e] as const))(
+    '%s declares calendar.startDateField',
+    (_label, entry) => {
+      expect(
+        entry.list.calendar?.startDateField,
+        `${entry.object} list "${entry.view}" offers a calendar with no ` +
+          '`calendar.startDateField` — the renderer would guess one and land every ' +
+          'record without it on today. Declare the field, or drop \'calendar\' from ' +
+          '`appearance.allowedVisualizations`.',
+      ).toBeTruthy();
+    },
+  );
+
+  it.each(calendarLists.map((e) => [`${e.object} / ${e.view}`, e] as const))(
+    '%s dates its calendar with a real date field',
+    (_label, entry) => {
+      const fields: AnyRec = objects.find((o) => o.name === entry.object)?.fields ?? {};
+      const known = fieldsOf(entry.object);
+      const cal: AnyRec = entry.list.calendar ?? {};
+      const bad: string[] = [];
+
+      for (const key of ['startDateField', 'endDateField', 'titleField', 'colorField']) {
+        const name = cal[key];
+        if (name && !known.includes(name)) bad.push(`${key} names missing field "${name}"`);
+      }
+      // Only the two date keys are type-checked: a title or color may legitimately
+      // read a select, a text or a lookup. A calendar dated by a non-date field
+      // renders nothing at all.
+      for (const key of ['startDateField', 'endDateField']) {
+        const name = cal[key];
+        const type = name ? fields[name]?.type : undefined;
+        if (name && type && type !== 'date' && type !== 'datetime') {
+          bad.push(`${key} "${name}" is a ${type}, not a date/datetime`);
+        }
+      }
+      expect(bad, `${entry.object} list "${entry.view}":\n  ${bad.join('\n  ')}`).toEqual([]);
+    },
+  );
+});

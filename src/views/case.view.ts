@@ -54,6 +54,17 @@ export const CaseViews = defineView({
       showDescription: true,
       allowedVisualizations: ['grid', 'kanban', 'calendar', 'timeline'],
     },
+    // Binds the 'calendar' entry above: the switcher opens the same deadlines
+    // the dedicated `sla_calendar` view shows, on the field this list already
+    // sorts by. `sla_due_date` is optional — a case the SLA monitor has not
+    // stamped carries no date at all, which is the truthful answer; the
+    // alternative the platform refuses is a guessed field putting every such
+    // case on today.
+    calendar: {
+      startDateField: 'sla_due_date',
+      titleField: 'subject',
+      colorField: 'priority',
+    },
     // Escalate straight from the queue: escalate_case's own
     // `locations: ['list_item']` auto-injects the row-menu item.
   },

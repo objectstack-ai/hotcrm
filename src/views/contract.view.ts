@@ -34,6 +34,16 @@ export const ContractViews = defineView({
     appearance: {
       allowedVisualizations: ['grid', 'calendar', 'gantt', 'timeline'],
     },
+    // Binds the 'calendar' entry above: renewal dates, same as the dedicated
+    // `renewal_calendar` view and the field this list sorts by. A contract
+    // calendar answers "what renews when" — the start -> end term SPAN is
+    // already carried by `contract_gantt` and `contract_timeline`, which is
+    // why `end_date` is the start of the event here rather than an end.
+    calendar: {
+      startDateField: 'end_date',
+      titleField: 'contract_number',
+      colorField: 'status',
+    },
   },
 
   listViews: {
