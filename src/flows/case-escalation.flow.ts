@@ -240,7 +240,7 @@ export const CaseEscalationFlow: Flow = {
     // GONE by the time `get_case` reads it — `get_record` with no match sets
     // the variable to `null`, key present. Measured INERT and removed: `has()`
     // on a null base answers `false` rather than aborting, so the four terms
-    // above already close that shape (`test/flow-escalation-ownerless-case.ts`
+    // above already close that shape (`test/flow-escalation-ownerless-case.test.ts`
     // covers it). A term that cannot change an answer is the inert-copy shape
     // #4414 deletes, not defence in depth.
     { id: 'e4', source: 'check_owner', target: 'notify_team', type: 'conditional', condition: P`has(vars.caseRecord) && has(vars.caseRecord.owner_id)

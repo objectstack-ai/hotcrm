@@ -82,7 +82,7 @@ const runEscalation = async (flowName: FlowName, row: Rec | null, trigger: Rec =
 /**
  * The three shapes of "no owner", each reachable in production and each with
  * its OWN failure mode against a weaker predicate — which is why the gate is
- * five terms and none of them is decoration.
+ * four terms and none of them is decoration.
  */
 const OWNERLESS: Record<string, Rec> = {
   // The key is ABSENT. A driver row never written with the column is sparse
@@ -132,6 +132,10 @@ describe.each(FLOW_NAMES)('%s — an ownerless critical case (#1430)', (flowName
 
     it('records the skip as a NAMED GATE, not as silence', async () => {
       const { result, nodeOf, gateOf } = await runEscalation(flowName, row);
+      // The gate accounting below is only meaningful on a run that COMPLETED:
+      // a summary from a failed run would satisfy every assertion in this body
+      // while the thing under test was broken. So state that first.
+      expect(result.success, `the run failed: ${result.error ?? ''}`).toBe(true);
       // The second half of "visible, not silent": besides the escalation
       // landing on the record, the engine's own run summary attributes the
       // skipped notification to the named gate — so run history shows WHY it
