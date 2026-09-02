@@ -372,6 +372,30 @@ here:
    artifact — this is item class (1) for the analytics surface specifically, and it decides
    whether a module can ship its own dashboard.
 
+## Decisions recorded (2026-09-02)
+
+The maintainer ruled on the three choices this plan left open. They are recorded here so the
+plan is the document of record; the sections above are left as written so the reasoning stays
+readable.
+
+1. **R4 — the two campaign hooks: option A.** `campaign_attribution_refresh` and
+   `campaign_lead_conversion_refresh` move into `sales` beside `crm_opportunity` and
+   `crm_lead`; the campaign rows they update are reached through `ctx.api` at run time.
+   `test/campaign-member-lifecycle.test.ts` keeps its four character-identical copies and
+   guards them across the `sales` / `marketing` boundary. `marketing` stays a module.
+2. **AGENTS.md's `packages/<x>/src/` rule: defer to objectstack#14439, then prefer the flat
+   tree.** The compile path decides whether N packages need N source roots. If it accepts N
+   `defineStack` calls composed with `composeStacks(..., { manifest: 'preserve' })` from one
+   project config, the split is expressed as N manifests over today's flat `src/{type}/` tree,
+   each stack importing its own share of the index files; the AGENTS.md prohibition then
+   needs no amendment and the token ratchet's `LAYERS` list is untouched. Only a compile path
+   that mandates per-package directories reopens the rule.
+3. **Permission sets: option B now, option A as a second phase.** For this release the six
+   permission sets stay whole in the app package and ADR-0130 records that the permission
+   matrix is outside the boundary's payoff (objectstack#14487, docs-only). Per-package
+   composition of grants — a module contributing its own objects' grants into an app-owned
+   role — is filed as objectstack#14488 for the phase in which a module ships on its own.
+
 ## References
 
 - ADR-0130 — the release artifact is the co-ownership boundary (one artifact, N packages)
