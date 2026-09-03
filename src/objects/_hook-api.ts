@@ -31,22 +31,40 @@ type Doc = Record<string, unknown>;
 /**
  * Query options accepted by read operations.
  *
- * The predicate key is `where` — and ONLY `where`. An earlier version of this
- * type also allowed `filter`, on the belief that "drivers accept either". They
- * do not, and the mismatch fails SILENTLY:
+ * The predicate key is `where` — and ONLY `where`. `filter` is deliberately
+ * absent so a hook that reaches for it fails at COMPILE time.
  *
- *   - `find`   normalizes `filter` → `where`, so it happens to work.
- *   - `findOne` spreads the query straight into the AST (`{...query, limit: 1}`)
- *     and never aliases. An unknown `filter` key is dropped by the driver, so
- *     the query degrades to "first row of the object" — no error, no null, just
- *     the wrong record.
- *   - `count`  reads `query.where` explicitly, so `filter` is dropped and the
- *     call counts the WHOLE object.
+ * ⚠️ The RULE is unchanged; the REASON below is not the one this block used to
+ * give, and the old one is still quoted around the repo, so it is named rather
+ * than quietly replaced (#1229). This block used to say that `filter` "fails
+ * SILENTLY" — that `findOne` dropped the key and degraded to "first row of the
+ * object", and that `count` counted the WHOLE object. That described a real
+ * kernel. It does not describe this one, and the two readings have OPPOSITE
+ * safety consequences: believing the stale one makes an author over-estimate
+ * the blast radius of every `filter` call site, in the unsafe direction.
  *
- * `filter` is therefore deliberately absent: a hook that reaches for it must
- * fail at compile time rather than silently compute against a stranger's row.
- * (See `test/hook-query-predicate.test.ts`, which pins this against the real
- * kernel rather than the test harness.)
+ * MEASURED per method against the pinned `@objectstack` packages (17.2.0), on
+ * the object the kernel actually injects as `ctx.api`. Every line is pinned by
+ * an assertion in `test/hook-query-predicate.test.ts`, against a real engine
+ * rather than the test harness:
+ *
+ *   - `find`    — `filter` is ALIASED to `where`; the predicate is applied.
+ *   - `findOne` — `filter` is ALIASED to `where`; the predicate is applied.
+ *   - `count`   — `filter` is ALIASED to `where`; the predicate is applied.
+ *   - `update` / `delete` — the same fold on the options bag.
+ *
+ * Nothing is silently dropped on this version: the engine REJECTS any option it
+ * does not recognise, so `filters` (plural) and every misspelling throw, and
+ * `findOne` with no predicate at all throws rather than returning an arbitrary
+ * row. A bad predicate key can no longer produce an unscoped read here.
+ *
+ * So the reason for `where`-only is ONE IDIOM, not silent data loss — and it is
+ * still a real reason, because MIXING the spellings is what breaks. A query
+ * assembled in two places that ends up carrying both keys with different values
+ * throws `Conflicting options … 'where', 'filter' are spellings of the same
+ * parameter (canonical 'where')`, and an empty `where: {}` counts as a
+ * different value, so a base predicate plus a `filter:` override is a runtime
+ * throw rather than a merge. One spelling in this repo makes that unreachable.
  */
 export interface HookQuery {
   where?: Doc;

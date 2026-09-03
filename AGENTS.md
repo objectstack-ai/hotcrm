@@ -70,14 +70,33 @@ hotcrm/
       cast once — `const api = ctx.api as HookApi | undefined`, from `src/objects/_hook-api.ts`
       — and then called as `api.object(...)`; action script bodies call `ctx.api.object(...)`
       directly.
-    - On `ctx.api`, the predicate key is **`where`**, and only `where`. `filter` (canonical)
-      and `filters` (deprecated alias) are *HTTP query-param* spellings carrying a JSON
-      **string**, not keys of the in-process query object — passing either in process fails
-      **silently**: `findOne` spreads the query into the AST without aliasing and returns the
-      object's **first row**, `count` reads `query.where` only and counts the **whole object**.
-      Neither throws. This repo has already paid for that once — see
-      `.changeset/hook-query-where-not-filter.md`. `HookQuery` in `src/objects/_hook-api.ts`
-      deliberately omits the alias so the mistake is a compile error.
+    - On `ctx.api`, the predicate key is **`where`**, and only `where` — but read the
+      **reason** rather than recalling it, because the reason this file used to give has
+      been measured false. **Measured per method against the pinned `@objectstack`
+      packages (17.2.0)**, on the object the kernel injects as `ctx.api`, and pinned
+      assertion-by-assertion in `test/hook-query-predicate.test.ts`: `filter` is a **live
+      alias of `where`** — on `find`, on `findOne`, on `count`, and on the `update` /
+      `delete` options bag — folded to the canonical key before the query executes. It is
+      **not** dropped and it does **not** widen the row set. Nothing degrades quietly
+      either: the engine **throws** on any option it does not recognise, so `filters`
+      (plural — still not an alias) and every misspelling fail loudly, and `findOne` with
+      no predicate at all throws rather than returning an arbitrary row.
+      ⚠️ **Superseded**, and quoted widely enough to be worth naming: the claim that
+      passing `filter` in process "fails **silently**", that `findOne` returns the object's
+      **first row** and `count` counts the **whole object**. That was true of an older
+      kernel — the repo really did pay for it once, seventeen hook calls whose predicate
+      vanished (`CHANGELOG.md`, the `hook-query-where-not-filter` entry) — and it is the
+      error that is **unsafe in the wrong direction**: it invites an author to imagine an
+      unscoped read where this engine either applies the predicate or throws.
+      So the reason to write `where` is **one idiom**, not silent data loss — and it is
+      still a real reason, because *mixing* the spellings is what breaks. A query assembled
+      in two places that ends up carrying **both** keys with different values throws
+      `Conflicting options … 'where', 'filter' are spellings of the same parameter`, and an
+      empty `where: {}` counts as a different value, so a base predicate plus a `filter:`
+      override is a runtime throw and not a merge. `HookQuery` in
+      `src/objects/_hook-api.ts` therefore still omits the alias, which keeps the mistake a
+      **compile** error, and the repo-wide guard in `test/hook-query-predicate.test.ts`
+      keeps `src/objects/` to the one spelling.
       Other surfaces are **not** governed by this rule and have their own spelling — but a
       different surface never licenses a shape that surface's own schema rejects. A
       `*.flow.ts` node `config` takes `filter:`, and `where:` appears in no flow file at
