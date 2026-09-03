@@ -237,6 +237,94 @@ type AnyRec = Record<string, any>;
  *     rule read no name column out of: content/docs/revenue/
  *     products.zh-Hant.mdx`* rather than passing over an empty set.
  *
+ * ## The translated faces get COVERAGE too, and it is a THIRD direction (#1557)
+ *
+ * #1551 gave those faces name exactness — the name column may name nothing but
+ * a view the face's own source spells — and left the third rule below holding
+ * them to the English page's row COUNT. Three rules, and one shape walks
+ * between them: a `.zh-Hans.mdx` or `.zh-Hant.mdx` roster that keeps the row
+ * count, names only lawful names, but names one view TWICE and omits another.
+ * Every name is lawful, the count never moves, and the omission is invisible
+ * because nothing on those faces ever asked whether a shipped view is named.
+ *
+ * Measured before the rules below were written, on the tree #1556 landed:
+ * `revenue/products.zh-Hans` with both of its rows renamed to **全部产品**
+ * (dropping **产品目录**, 2 rows in and 2 rows out) ran **9 passed** — green
+ * over the defect, on the file whose whole purpose is that defect's class.
+ *
+ * ### ⛔ The English coverage rule's SHAPE does not transfer, and that is why
+ *
+ * The obvious move is to point the English rule at the translated faces. It
+ * does not work, for a reason worth writing down rather than rediscovering:
+ * that rule asks `body.includes(label)` — does the name appear ANYWHERE in the
+ * section — which is a pure existence question over prose as well as table, so
+ * it is blind to multiplicity by construction and cannot see a duplicate at
+ * all. It is also blind to the OMISSION whenever the section's prose happens to
+ * mention the dropped name, and that is not a corner: measured, **9 of the 55
+ * names on each of the three faces** are echoed in the section body outside
+ * their own table row.
+ *
+ * Measured on one of those nine: `service/cases.zh-Hans` with its
+ * **已升级工单** row renamed to **全部工单** — the same duplicate-and-drop, on
+ * a page whose bullets below the table still say 已升级工单 — leaves a
+ * body-shaped coverage rule GREEN (measured, 1 passed) as well as the suite
+ * (9 passed). So the rules below read the NAME COLUMN, via the same
+ * `nameColumns` parse the name rules use, and not the body.
+ *
+ * ### Why coverage, and not set equality
+ *
+ * Asserting the name column's SET equals the source set closes this in one
+ * line, and it was rejected: it implies name exactness, which would make
+ * #1551's two rules dead weight, and this file is deliberate that each rule
+ * earns its place. Coverage is the missing DIRECTION and only that — every
+ * name the face's own source produces must appear in that face's name column —
+ * so each face now carries the same complementary pair the English face has
+ * carried since #1326: coverage says no shipped view may go unnamed, exactness
+ * says the column may name nothing else, and neither implies the other.
+ *
+ * The row-count rule below is not made redundant either, and the division is
+ * exact: coverage and exactness together pin the SET of names on a face, and
+ * say nothing about multiplicity. A face growing a third row that repeats a
+ * lawful name passes both and fails only the count rule. It is the other way
+ * round for this card's shape — with the count pinned, a duplicate forces an
+ * omission, and the omission is what coverage sees.
+ *
+ * Neither new rule carries a source-side floor of its own, deliberately: the
+ * `zh-CN` producer rule already fails when fewer than 40 pack spellings
+ * resolve and the pin audit already fails when the pinned table falls below
+ * the same floor, exactly as vacuity guard #2 carries that floor for the
+ * English coverage rule. The page-side floor each new rule DOES need is
+ * `expectNameColumnIsReadable`, called first thing in both.
+ *
+ * `revenue/approvals` stays outside these rules for the structural reason
+ * recorded above, inherited rather than restated: they read `nameColumns`,
+ * which walks PAGE_OBJECT and `rosterOf`, and that page carries no roster
+ * heading on any of its three faces (measured again here — `rosterOf` is null
+ * for all three). No exemption list grew, and **#1552** is left as open as it
+ * was.
+ *
+ * ### Reverse verification (#1557)
+ *
+ * Each new rule ablated, every mutation confirmed on disk by its blob hash and
+ * by anchored counts on the removed AND injected text, every restore proved by
+ * state — blob hash back at its HEAD value and an empty `git diff HEAD`:
+ *
+ *   - **the card's own shape, on zh-Hans.** `revenue/products.zh-Hans`
+ *     **产品目录** → **全部产品** fails with *`content/docs/revenue/
+ *     products.zh-Hans.mdx never names "产品目录", the zh-CN spelling of a view
+ *     crm_product ships`* — 1 failed, 9 passed, where before it was 9 passed.
+ *   - **the same shape where the prose still names the dropped view.**
+ *     `service/cases.zh-Hans` **已升级工单** → **全部工单** fails the same rule
+ *     naming 已升级工单, which is the case a body-shaped rule stayed green on.
+ *   - **the card's shape on zh-Hant.** `revenue/contracts.zh-Hant`
+ *     **合約時間線** → **全部合約** fails with *`… never names "合約時間線",
+ *     the pinned Traditional name of a view crm_contract ships`*.
+ *   - **vacuity, on each face.** Renaming the roster heading on one page fails
+ *     `expectNameColumnIsReadable` inside the new rule — *`zh-Hans: roster
+ *     sections this rule read no name column out of: …`* — rather than letting
+ *     coverage pass over an empty cell list, which is the failure mode a
+ *     coverage rule is most exposed to.
+ *
  * ## Reverse verification
  *
  * Predicted **red before the content fix, green after**, and measured as such.
@@ -707,6 +795,35 @@ describe('a docs list-view roster names the views the app ships (#1194)', () => 
     expect(resolved, 'the zh-Hans rule is comparing against an empty label set').toBeGreaterThan(40);
   });
 
+  it('every view the app ships is named in the zh-Hans roster’s name column (#1557)', () => {
+    const rosters = nameColumns('.zh-Hans');
+    expectNameColumnIsReadable(rosters, 'zh-Hans');
+
+    // Coverage, the direction #1551 did not give this face. It reads the NAME
+    // COLUMN rather than the section body the English coverage rule reads: a
+    // body substring search cannot see multiplicity at all, and 9 of the 55
+    // names on this face are echoed in the prose beneath the table, so a
+    // dropped row whose name survives in a bullet would pass. Measured — see
+    // the header.
+    const missing = rosters.flatMap(({ file, object, cells }) => {
+      const named = new Set(cells.map(boldName).filter((n): n is string => n !== null));
+      return zhCnLabels(object)
+        .filter((label) => !named.has(label))
+        .map(
+          (label) =>
+            `${file} never names "${label}", the zh-CN spelling of a view ${object} ships`,
+        );
+    });
+    expect(
+      missing,
+      `views the zh-CN pack spells that this zh-Hans roster’s name column never names:\n  ${missing.join('\n  ')}\n` +
+        'Every view the app ships gets a row, on every face. A name missing from this column ' +
+        'while the row count still matches the English page means some other name is written ' +
+        'twice — the one shape name exactness and the count rule both pass (#1557). Add the row ' +
+        'with the pack spelling; if the PACK is wrong, change it there and this follows.',
+    ).toEqual([]);
+  });
+
   it('the name column of every zh-Hans roster names views as the zh-CN pack spells them (#1551)', () => {
     const rosters = nameColumns('.zh-Hans');
     expectNameColumnIsReadable(rosters, 'zh-Hans');
@@ -766,6 +883,36 @@ describe('a docs list-view roster names the views the app ships (#1194)', () => 
       0,
     );
     expect(pinned, 'the pinned Traditional roster is empty').toBeGreaterThan(40);
+  });
+
+  it('every view the app ships is named in the zh-Hant roster’s name column (#1557)', () => {
+    const rosters = nameColumns('.zh-Hant');
+    expectNameColumnIsReadable(rosters, 'zh-Hant');
+
+    // Coverage for the pinned face. Same direction and same reading of the
+    // name column as the zh-Hans rule above, against the one source this face
+    // has: ZH_HANT_VIEW_NAMES, which the audit above holds one-to-one against
+    // the shipped views. Kept as a separate rule rather than parameterised
+    // with that one, because what a failure MEANS differs — there, a page and
+    // a live pack disagree; here, a page and a hand-written table do.
+    const missing = rosters.flatMap(({ file, object, cells }) => {
+      const named = new Set(cells.map(boldName).filter((n): n is string => n !== null));
+      return zhHantNames(object)
+        .filter((label) => !named.has(label))
+        .map(
+          (label) =>
+            `${file} never names "${label}", the pinned Traditional name of a view ${object} ships`,
+        );
+    });
+    expect(
+      missing,
+      `pinned Traditional names this zh-Hant roster’s name column never names:\n  ${missing.join('\n  ')}\n` +
+        'Every view the app ships gets a row, on every face. A name missing from this column ' +
+        'while the row count still matches the English page means some other name is written ' +
+        'twice — the one shape name exactness and the count rule both pass (#1557). ⚠️ Nothing ' +
+        'produces these strings, so the pin above and the .zh-Hant.mdx pages are the whole ' +
+        'chain: add the row by hand, and keep it spelled exactly as the pin.',
+    ).toEqual([]);
   });
 
   it('the name column of every zh-Hant roster names only the pinned Traditional roster (#1551)', () => {
