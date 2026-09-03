@@ -228,7 +228,7 @@ describe('NULL is not orderable, so a range predicate excludes it (#1480)', () =
     const engine = makeDataEngine({
       crm_opportunity: [
         { id: 'o_val', amount: 5 },
-        { id: 'o_null' }, // declared, materialised to `amount: null` (#1490)
+        { id: 'o_null' }, // declared, materialised to `amount: null` (#1458)
       ],
     });
     const ids = async (where: Rec) => (await engine.find('crm_opportunity', { where })).map((r) => r.id);
@@ -266,7 +266,7 @@ describe('NULL is not orderable, so a range predicate excludes it (#1480)', () =
   });
 
   it('a genuinely ABSENT key behaves exactly like a materialised null', async () => {
-    // #1490 materialises DECLARED columns, so on a declared object the two
+    // #1458 materialises DECLARED columns, so on a declared object the two
     // spellings converge before a filter can see them. They do not converge on
     // an object nothing declares — `test/flow-decision-authority.test.ts` drives
     // a node against exactly such a name — and both drivers answer identically

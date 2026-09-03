@@ -239,7 +239,7 @@ function matchCondition(value: unknown, cond: unknown): boolean {
  * happened to point the wrong way — and a sweep that wrongly includes undated
  * or unpriced records passes while computing plausible-looking numbers.
  *
- * `#1490` raised the REACH rather than moving the rule: materialising declared
+ * `#1458` raised the REACH rather than moving the rule: materialising declared
  * columns means many more rows now carry an explicit `null` here to misjudge.
  *
  * ### Measured, not assumed — both shipped drivers, through real ObjectQL
