@@ -21,7 +21,7 @@ loader registers:
 HotCRM v3.0.0
 Data: 18 Objects  334 Fields
 UI: 1 Apps  14 Views  8 Pages  5 Dashboards  10 Reports  30 Actions
-Logic: 26 Flows
+Logic: 27 Flows
 Security: 12 Positions  6 Permissions
 ```
 
@@ -38,7 +38,7 @@ pnpm validate
 > ([#1012](https://github.com/objectstack-ai/hotcrm/issues/1012)): it is the one
 > every other number in the README's inventory sentence already uses, and the
 > only one a guard can re-derive from the stack instead of trusting a
-> hand-maintained figure. The README states the same 26, pinned by
+> hand-maintained figure. The README states the same 27, pinned by
 > `test/docs-metadata-counts.test.ts`.
 >
 > The two figures moved together in #597: `crm_campaign_member` gave up the

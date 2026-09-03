@@ -241,11 +241,16 @@ export const Case = ObjectSchema.create({
     // NOT `readonly` — but NOT for the reason this comment used to give, and
     // the difference is measured in `test/readonly-write-semantics.test.ts`
     // (#1429). `case_sla_monitor` declares `runAs: 'system'`, so its writes
-    // would SURVIVE a `readonly: true` here. This field is therefore the one
-    // escalation flag that is not hard-blocked from being declared readonly.
-    // It stays writable pending a decision that has to weigh the other
-    // surfaces (seed data, `service-agent.profile.ts`, the create form), not
-    // because the platform would drop the sweep's write.
+    // would SURVIVE a `readonly: true` here. It stays writable pending a
+    // decision that has to weigh the other surfaces (seed data,
+    // `service-agent.profile.ts`, the create form), not because the platform
+    // would drop the sweep's write.
+    //
+    // ⚠️ This is now the ONLY escalation-group flag still declared writable:
+    // `is_escalated` and `escalated_date` became `readonly: true` when #1434
+    // moved their user-context writer into a system sub-flow. So the open
+    // question here is narrower than it was — it is purely about this field's
+    // authoring surfaces, with no platform obstacle left to blame.
     is_sla_violated: Field.boolean({
       label: 'SLA Violated',
       group: 'sla',
@@ -254,31 +259,58 @@ export const Case = ObjectSchema.create({
     
     // Escalation
     //
-    // ⛔ NOT `readonly`, and this one is HARD-blocked — it is the field the
-    // `STAMPED_NOT_TYPED` exemption in `test/metadata-references.test.ts`
-    // exists for. Three flows write it and they do NOT agree on privilege:
-    // `case_escalation` and `case_sla_monitor` declare `runAs: 'system'`
-    // (their writes would survive), but the `escalate_case` screen flow
-    // (`src/flows/case-actions.flow.ts`) declares no `runAs` at all and the
-    // engine defaults it to `'user'` (`runAs: flow.runAs ?? 'user'`). A
-    // `runAs: 'user'` flow write is caller-supplied from a non-`isSystem`
-    // context, so `readonly: true` here would silently drop the escalation
-    // the agent just confirmed on screen — while the flow still reports
-    // success. The deciding writer is the LEAST privileged one.
+    // `readonly: true` — the honest declaration, because nobody types this.
+    // Its three writers are now unanimously elevated (#1434, maintainer-
+    // approved decision batch #21 ②):
+    //
+    //   case_escalation        runAs: 'system'  (record-change)
+    //   case_sla_monitor       runAs: 'system'  (schedule)
+    //   case_escalation_stamp  runAs: 'system'  (called by the escalate_case
+    //                                            screen flow via a subflow node)
+    //
+    // ⭐ What changed, and why the readonly declaration is now safe: the
+    // `escalate_case` screen flow used to write this field itself, and it
+    // stays `runAs: 'user'` because a person clicks it. The platform's
+    // readonly strip is one branch of the UPDATE path
+    // (`if (!opCtx.context?.isSystem)`, over CALLER-supplied keys), so that
+    // user-context write WOULD have been silently dropped. Rather than
+    // elevating the whole screen flow, the stamp moved into the dedicated
+    // `case_escalation_stamp` sub-flow. The agent's own writes
+    // (`escalation_reason`, `priority`, `status`) still carry their identity;
+    // only these two stamps are elevated.
+    //
+    // The guest-submission branch of `case.hook.ts` also forces this false, and
+    // is unaffected: it is a `beforeInsert` hook, so its key is not
+    // caller-supplied AND the INSERT path is exempt from the strip entirely.
+    // Seed data (`service.seed.ts`) is exempt for the same reason.
+    //
+    // ⛔ If you find yourself reverting this to writable so a user-context flow
+    // write lands, you are re-opening #1434 — add a `subflow` step instead.
+    // Semantics measured in `test/readonly-write-semantics.test.ts`.
     is_escalated: Field.boolean({
       label: 'Escalated',
       group: 'escalation',
+      readonly: true,
       defaultValue: false,
     }),
     
-    // ⛔ NOT `readonly`, same hard block as `is_escalated` above and for the
-    // same writer: besides `case_escalation` (`runAs: 'system'`), this field
-    // is written by the `escalate_case` screen flow, which runs as the USER.
+    // `readonly: true`, same reasoning as `is_escalated` above and stamped by
+    // the same writers — `case_escalation` and the `case_escalation_stamp`
+    // sub-flow, both `runAs: 'system'`. Never typed by a person.
     escalated_date: Field.datetime({
       label: 'Escalated Date',
       group: 'escalation',
+      readonly: true,
     }),
     
+    // ⛔ DELIBERATELY NOT `readonly`, and this is load-bearing (#1434). This is
+    // the agent's own screen input — `escalate_case`'s screen collects it and
+    // writes it with the USER's context. Declaring it readonly would make the
+    // platform silently strip the reason the agent just typed, which is the
+    // harm #1434 was filed about, inverted onto user input. It is also
+    // required whenever `is_escalated` flips true (the
+    // `escalation_reason_required` validation below), so dropping it would
+    // reject the escalation outright.
     escalation_reason: Field.textarea({
       label: 'Escalation Reason',
       group: 'escalation',

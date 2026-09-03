@@ -110,7 +110,9 @@ const LIFECYCLE_MAINTAINED: Record<string, { why: string; keeps: string[] }> = {
     keeps: ['list.columns', 'detail.highlights'],
   },
   is_escalated: {
-    why: 'written by `case_escalation` / `escalate_case`',
+    // readonly since #1434 — stamped by `case_escalation`, `case_sla_monitor`
+    // and the `case_escalation_stamp` sub-flow, all `runAs: 'system'`.
+    why: 'readonly on the object; stamped by the escalation flows, never typed',
     keeps: ['list.columns', 'escalated_cases.filter', 'detail.details'],
   },
   escalation_reason: {
@@ -251,9 +253,9 @@ describe('crm_case create form — retention direction', () => {
   /**
    * ⛔ The tempting "fix" for the guard this change tripped
    * (`test/metadata-references.test.ts` → "fields the list views filter on are
-   * editable in some form") is to mark the escalation flags `readonly` so the
-   * guard skips them. This assertion is what stops someone doing that from the
-   * other end.
+   * editable in some form") is to mark a stamped flag `readonly` so the guard
+   * skips it. This assertion is what stops someone doing that from the other
+   * end.
    *
    * The reason is NOT the blanket this comment used to carry ("the platform
    * DROPS writes to readonly fields"). Measured in
@@ -264,24 +266,36 @@ describe('crm_case create form — retention direction', () => {
    * it entirely, and a FLOW write survives it exactly when the flow's
    * effective `runAs` is `'system'` (the engine defaults it to `'user'`).
    *
-   * Per field, on today's flows:
-   *   - `is_escalated` / `escalated_date` — HARD-blocked. Both are written by
-   *     the `escalate_case` screen flow, which declares no `runAs` and so runs
-   *     as the USER; `readonly` would silently drop the escalation an agent
-   *     just confirmed, while the flow still reported success.
-   *   - `is_sla_violated` — NOT hard-blocked: its only writer,
-   *     `case_sla_monitor`, is `runAs: 'system'` and would survive. It stays
-   *     pinned here anyway, because flipping it is a real decision about the
-   *     seed/profile/form surfaces — not a shortcut for silencing a guard,
-   *     which is the move this pin exists to block.
+   * ⭐ NARROWED BY #1434, and the two fields that left did so for the RIGHT
+   * reason. `is_escalated` / `escalated_date` used to be pinned here as
+   * HARD-blocked, because the `escalate_case` screen flow wrote them while
+   * running as the USER. The maintainer-approved ruling (decision batch #21 ②)
+   * removed that cause instead of documenting it: the stamp moved into the
+   * dedicated `runAs: 'system'` `case_escalation_stamp` sub-flow, reached by a
+   * `subflow` node, so `escalate_case` still runs as the acting agent and both
+   * columns are now honestly `readonly: true`. They are consequently NOT
+   * pinned as writable any more — pinning them so would now be the false
+   * statement. The forward direction is pinned instead, in
+   * `test/readonly-write-semantics.test.ts`.
+   *
+   * `is_sla_violated` remains, and its rationale never depended on the
+   * platform: its only writer, `case_sla_monitor`, is `runAs: 'system'` and
+   * would survive a `readonly` declaration. It stays pinned because flipping
+   * it is a real decision about the seed/profile/form surfaces — not a
+   * shortcut for silencing a guard, which is the move this pin exists to
+   * block.
+   *
+   * ⛔ Do not re-add an escalation field to this list to make a user-context
+   * write land. That is #1434 re-opened; the answer was a `subflow` node.
    */
-  it('the flow-stamped escalation flags stay declarable — i.e. NOT readonly', () => {
-    for (const name of ['is_escalated', 'is_sla_violated', 'escalated_date']) {
+  it('the flow-stamped SLA flag stays declarable — i.e. NOT readonly', () => {
+    for (const name of ['is_sla_violated']) {
       expect(
         objectFields[name]?.readonly,
-        `${name} must stay writable — see the note above: escalate_case runs runAs:"user", ` +
-          'so a readonly is_escalated/escalated_date silently drops its write ' +
-          '(measured, test/readonly-write-semantics.test.ts). Do not flip these to skip a guard.',
+        `${name} must stay writable — see the note above: flipping it is a decision ` +
+          'about its authoring surfaces, not a way to skip a guard. Its writer is ' +
+          'runAs:"system" and would survive readonly, so the platform is not the ' +
+          'obstacle (measured, test/readonly-write-semantics.test.ts).',
       ).not.toBe(true);
     }
   });
