@@ -56,7 +56,7 @@ async function runScreen(
   alsoRegister: Record<string, Rec> = {},
 ): Promise<ReturnType<typeof makeFlowHarness>> {
   const h = makeFlowHarness(
-    { [flowName]: flow as never, ...(alsoRegister as never) },
+    { [flowName]: flow as never, ...(alsoRegister as Record<string, never>) },
     { crm_case: seed },
   );
   const runId = await h.run(flowName, { recordId: 'c1' });
