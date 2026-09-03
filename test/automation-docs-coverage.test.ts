@@ -176,10 +176,17 @@ const CRON_LABEL: Record<string, Record<Locale, string>> = {
 };
 
 /** The trigger vocabulary each page uses, per kind. */
-const TRIGGER_WORD: Record<Locale, { screen: string; record_change: string; schedule: string }> = {
-  en: { screen: 'Screen', record_change: 'Record change', schedule: 'Schedule' },
-  'zh-Hans': { screen: '屏幕', record_change: '记录变更', schedule: '计划' },
-  'zh-Hant': { screen: '螢幕', record_change: '記錄變更', schedule: '排程' },
+const TRIGGER_WORD: Record<
+  Locale,
+  { screen: string; record_change: string; schedule: string; autolaunched: string }
+> = {
+  // `autolaunched` arrived with #1434: a flow with no trigger of its own, run
+  // only because another flow calls it through a `subflow` node. The admin
+  // reading this table needs to know it fires as part of another action rather
+  // than on a schedule nobody can find.
+  en: { screen: 'Screen', record_change: 'Record change', schedule: 'Schedule', autolaunched: 'Subflow' },
+  'zh-Hans': { screen: '屏幕', record_change: '记录变更', schedule: '计划', autolaunched: '子流程' },
+  'zh-Hant': { screen: '螢幕', record_change: '記錄變更', schedule: '排程', autolaunched: '子流程' },
 };
 
 /** …and the insert/update half of a record-change trigger. */
@@ -215,6 +222,7 @@ const ROW_LABEL: Record<string, Record<'zh-Hans' | 'zh-Hant', string>> = {
   // is 工单 since #837. These rows spelled it 案例 until then — the page and
   // the pack contradicting each other, both green.
   escalate_case: { 'zh-Hans': '升级工单', 'zh-Hant': '升級工單' },
+  case_escalation_stamp: { 'zh-Hans': '标记工单升级', 'zh-Hant': '標記工單升級' },
   close_case: { 'zh-Hans': '关闭工单', 'zh-Hant': '關閉工單' },
   lead_assignment: { 'zh-Hans': '新线索路由与 SLA', 'zh-Hant': '新線索路由與 SLA' },
   contact_welcome: { 'zh-Hans': '联系人欢迎', 'zh-Hant': '聯絡人歡迎' },
@@ -310,6 +318,11 @@ const triggerParts = (flow: AnyRec, locale: Locale): string[] => {
       );
     }
     return [words.record_change, word];
+  }
+  if (kind === 'autolaunched') {
+    // No trigger to spell — it has none. The cell names the caller instead, so
+    // the row answers "what makes this run?" rather than leaving it blank.
+    return [words.autolaunched];
   }
   if (kind === 'schedule') {
     const cron = cronOf(flow);

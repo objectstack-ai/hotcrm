@@ -5,7 +5,7 @@
 # HotCRM
 
 > **The reference app for AI-written enterprise software.** A complete CRM —
-> 18 objects, 26 flows, 5 dashboards, 6 AI skills, 4 languages — carries its
+> 18 objects, 27 flows, 5 dashboards, 6 AI skills, 4 languages — carries its
 > whole business semantics (objects, flows, actions, hooks) in **~81k tokens**
 > of typed [ObjectStack](https://github.com/objectstack-ai/objectstack) metadata,
 > and its whole interaction layer (views, pages, dashboards, app shell) in
@@ -63,7 +63,7 @@ HotCRM is a complete, opinionated CRM built as the **first official application*
 | `crm_event` | | | |
 | `crm_event_attendee` | | | |
 
-Plus **6 AI skills** (a skills-only surface — HotCRM defines no agents of its own; the skills attach to the platform `ask` assistant), **5 dashboards**, **26 flows**, **30 actions**, **9 datasets**, **4 language bundles** (en, zh-CN, es-ES, ja-JP), **6 permission profiles**, **12 positions**, and **9 sharing rules**.
+Plus **6 AI skills** (a skills-only surface — HotCRM defines no agents of its own; the skills attach to the platform `ask` assistant), **5 dashboards**, **27 flows**, **30 actions**, **9 datasets**, **4 language bundles** (en, zh-CN, es-ES, ja-JP), **6 permission profiles**, **12 positions**, and **9 sharing rules**.
 
 > **Business reader?** The ObjectStack docs tour every one of these capabilities in plain business language — [What Can It Do?](https://objectstack.ai/docs/capabilities) — with HotCRM as the running example on every page.
 
@@ -132,7 +132,7 @@ hotcrm/
 ├── src/
 │   ├── objects/                  # *.object.ts — data model (18 objects)
 │   ├── actions/                  # *.actions.ts — server actions + AI tools (30)
-│   ├── flows/                    # *.flow.ts — visual flows (26): screen, record-change & scheduled
+│   ├── flows/                    # *.flow.ts — visual flows (27): screen, record-change, scheduled & subflow
 │   ├── hooks/                    # hook registry barrel
 │   ├── skills/                   # *.skill.ts — AI skills (6) — skills-only surface, no agents
 │   ├── datasets/                 # *.dataset.ts — analytics semantic layer (9)
