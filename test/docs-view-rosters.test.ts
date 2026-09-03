@@ -325,6 +325,100 @@ type AnyRec = Record<string, any>;
  *     coverage pass over an empty cell list, which is the failure mode a
  *     coverage rule is most exposed to.
  *
+ * ## The ENGLISH face gets a name-column coverage rule too (#1562)
+ *
+ * #1557 closed this shape on the two translated faces and left the English
+ * face on the rule it has carried since #1194 — which is the ORIGINAL of the
+ * shape that section rejects, and it carries the same hole. Measured on the
+ * tree PR #1561 landed, before the rule below was written:
+ * `service/cases.mdx`'s **Escalated Cases** row renamed to **All Cases**
+ * leaves the name column naming *All Cases* twice and never naming *Escalated
+ * Cases*, row count unchanged — and this file ran **Tests 11 passed (11)**.
+ * Body coverage passed because the bullets below the table still say
+ * **Escalated Cases**; name exactness passed because *All Cases* is a lawful
+ * label; the count rule passed because no row moved. Blob `2e2ac02` →
+ * `aec1304`, `**Escalated Cases**` 3 → 2 and `**All Cases**` 1 → 2, restored
+ * to an empty `git diff HEAD` with the blob back at `2e2ac02`.
+ *
+ * The exposure is the same one measured on the translated faces, re-derived
+ * here on English: **9 of the 55** name cells echo their view name in the
+ * section body outside their own table row — *All Accounts*, *All Contacts*,
+ * *Open Deals*, *Closing This Quarter*, *All Tasks*, *All Quotes*, *Service
+ * Workflow*, *Escalated Cases*, *All Contracts*. Those nine rows are the ones
+ * a body-shaped coverage rule cannot protect.
+ *
+ * ### Which rule keeps which job — the reverse of what was expected
+ *
+ * The card that filed this read the body rule as the WIDER net: the one that
+ * still catches a view named nowhere on the page at all, prose included, where
+ * a name-column rule only reads the table. That reading is **false**, and this
+ * file does not keep a claim it has measured to be wrong.
+ *
+ * Name-column coverage STRICTLY IMPLIES body coverage. `boldName` returns a
+ * substring of the name cell, the name cell is a substring of its table row,
+ * and the row is part of the section body — so a label the name column names
+ * is a label `body.includes` finds, always. Contrapositive: every label the
+ * body rule reports missing is one the name-column rule reports missing too.
+ * There is no page and no label on which the body rule fires alone.
+ *
+ * Measured in both directions rather than argued only:
+ *
+ *   - **the shape only the name column sees.** `service/cases.mdx`
+ *     **Escalated Cases** → **All Cases**, prose below the table still naming
+ *     it: body coverage GREEN, the rule below RED.
+ *   - **the shape the body rule was supposed to own.** `revenue/products.mdx`
+ *     **Product Catalog** → **All Products**, where *Product Catalog* occurs
+ *     exactly once in the section — its own row — so the name is then absent
+ *     from the body entirely: BOTH rules red. The body rule caught nothing
+ *     there that the name-column rule did not.
+ *
+ * ⇒ the **name-column rule is the DETECTOR**, and the one that would be kept
+ * if only one could be. The **body rule is kept as a DIAGNOSTIC**, and is
+ * labelled as one where it stands rather than dressed up as coverage it does
+ * not provide: when both fire, the view is named NOWHERE in the section and
+ * the page needs writing; when only the name-column rule fires, the view is
+ * named in the prose but has no ROW, and the table needs a line. Folding them
+ * into one message loses the split, which is the first thing a reader fixing
+ * the page needs to know. ⛔ Do not restate the body rule as the wider net: it
+ * is measurably the narrower one, and a guard that oversells itself is worse
+ * than none — this file's own opening position.
+ *
+ * ### `entryCount` is NOT a third instance of this, and that was checked
+ *
+ * The count rule at the bottom also binds `const body = rosterOf(translated)`,
+ * which reads like a third body-shaped rule. It is not one. That binding is
+ * consumed ONLY by `entryCount` → `tableBodyRows`, which keeps the lines
+ * matching `/^\|/` less the header and delimiter — a structural row count,
+ * never a substring search. The one `body.includes(label)` in this file is the
+ * body coverage rule. Measured rather than read: a prose bullet naming a
+ * lawful view name (**全部工单**) injected into `service/cases.zh-Hans.mdx`'s
+ * roster section leaves all 11 rules green — blob `3799917` → `c0397b4`, the
+ * injected anchor 0 → 1 while the removed anchor stayed 3 → 3, which is why
+ * the hash and the INJECTED count are what an insertion is read by. Prose
+ * cannot move that rule's verdict in either direction.
+ *
+ * ### Reverse verification (#1562)
+ *
+ * Every mutation confirmed on disk by its blob hash and by anchored counts on
+ * the removed AND injected text, every restore proved by state — blob hash
+ * back at its HEAD value and an empty `git diff HEAD`:
+ *
+ *   - **the card's own shape.** `service/cases.mdx` **Escalated Cases** →
+ *     **All Cases** fails the rule below with *`content/docs/service/cases.mdx
+ *     never names "Escalated Cases" in its name column, which crm_case
+ *     ships`* — 1 failed, 11 passed, where the same tree ran 11 passed before
+ *     the rule existed.
+ *   - **the name absent from the section entirely.** `revenue/products.mdx`
+ *     **Product Catalog** → **All Products** fails the rule below AND the body
+ *     coverage rule above it — 2 failed, 10 passed — which is the measurement
+ *     behind the subsumption stated above.
+ *   - **vacuity, on the English face.** Renaming the `## Standard list views`
+ *     heading on `revenue/products.mdx` fails `expectNameColumnIsReadable`
+ *     inside the new rule — *`English: roster sections this rule read no name
+ *     column out of: content/docs/revenue/products.mdx`* — rather than letting
+ *     coverage pass over an empty cell list, which is the failure mode a
+ *     coverage rule is most exposed to.
+ *
  * ## Reverse verification
  *
  * Predicted **red before the content fix, green after**, and measured as such.
@@ -733,6 +827,12 @@ describe('a docs list-view roster names the views the app ships (#1194)', () => 
   });
 
   it('every view the app ships is named in its page’s roster', () => {
+    // The DIAGNOSTIC half of the English coverage pair, not the detector — the
+    // name-column rule below is strictly stronger and every failure here is
+    // also a failure there (see the header). What this one still says that the
+    // other cannot: the view is named NOWHERE in the section, prose included,
+    // so the page needs writing rather than the table needing a row. ⛔ Do not
+    // read it as the wider net; measured, it is the narrower one.
     const drifted = Object.entries(PAGE_OBJECT).flatMap(([file, object]) => {
       const body = rosterOf(file) ?? '';
       return (LABELS.get(object) ?? [])
@@ -745,6 +845,34 @@ describe('a docs list-view roster names the views the app ships (#1194)', () => 
         'The registered view is the source of truth — name it on the page (and say what it ' +
         'shows), or delete the view. Do not remove the section to get green: it is the section ' +
         'a manager reads to learn which queues exist.',
+    ).toEqual([]);
+  });
+
+  it('every view the app ships is named in the English roster’s name column (#1562)', () => {
+    const rosters = nameColumns('');
+    expectNameColumnIsReadable(rosters, 'English');
+
+    // Coverage read off the NAME COLUMN — the direction #1557 gave the two
+    // translated faces, on the face whose body-shaped rule was the original of
+    // the shape it rejected. A body substring search cannot see multiplicity at
+    // all, and 9 of the 55 English names are echoed in the section body outside
+    // their own row, so a row renamed onto a lawful sibling — naming one view
+    // twice, dropping another, count untouched — passed every rule in this
+    // file. Measured on the tree #1561 landed: 11 passed over exactly that.
+    const missing = rosters.flatMap(({ file, object, cells }) => {
+      const named = new Set(cells.map(boldName).filter((n): n is string => n !== null));
+      return (LABELS.get(object) ?? [])
+        .filter((label) => !named.has(label))
+        .map((label) => `${file} never names "${label}" in its name column, which ${object} ships`);
+    });
+    expect(
+      missing,
+      `views the app ships that this roster’s name column never names:\n  ${missing.join('\n  ')}\n` +
+        'Every view the app ships gets a row. A name missing from this column while the row ' +
+        'count still matches means some other name is written twice — the one shape body ' +
+        'coverage, name exactness and the count rule all pass (#1562). Add the row with the ' +
+        'registered label; if the app really did lose the view, delete it from src/views and ' +
+        'take the row with it.',
     ).toEqual([]);
   });
 
