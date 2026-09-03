@@ -209,10 +209,10 @@ function matchCondition(value: unknown, cond: unknown): boolean {
         case '$in': return Array.isArray(operand) && operand.includes(value as never);
         case '$nin': return Array.isArray(operand) && !operand.includes(value as never);
         case '$ne': return value !== operand;
-        case '$gt': return compare(value, operand) > 0;
-        case '$gte': return compare(value, operand) >= 0;
-        case '$lt': return compare(value, operand) < 0;
-        case '$lte': return compare(value, operand) <= 0;
+        case '$gt': return range(value, operand, (c) => c > 0);
+        case '$gte': return range(value, operand, (c) => c >= 0);
+        case '$lt': return range(value, operand, (c) => c < 0);
+        case '$lte': return range(value, operand, (c) => c <= 0);
         default:
           throw new Error(`flow-harness: unsupported query operator "${op}"`);
       }
@@ -222,9 +222,85 @@ function matchCondition(value: unknown, cond: unknown): boolean {
 }
 
 /**
+ * Apply one of the four ORDERING operators, with NULL's three-valued semantics
+ * (#1480).
+ *
+ * ### What was wrong
+ *
+ * The four operators went straight to {@link compare}, whose fallback is
+ * `String(a) < String(b)`. `String(null)` is `"null"`, so `compare(null, 0)`
+ * compared `"null"` against `"0"` — and lexicographically `"n" > "0"`. The
+ * answer was not merely wrong, it was ASYMMETRIC: the same null row was
+ * ADMITTED by `$gt` / `$gte` and REJECTED by `$lt` / `$lte`, and `"null"` sorts
+ * above any `2xxx` date string too, so a date window was wrong the same way.
+ * Which half a given sweep got wrong depended only on the direction its window
+ * happened to be written in. A symmetric bug gets noticed because everything
+ * shifts; this one stayed invisible until someone wrote the filter that
+ * happened to point the wrong way — and a sweep that wrongly includes undated
+ * or unpriced records passes while computing plausible-looking numbers.
+ *
+ * `#1490` raised the REACH rather than moving the rule: materialising declared
+ * columns means many more rows now carry an explicit `null` here to misjudge.
+ *
+ * ### Measured, not assumed — both shipped drivers, through real ObjectQL
+ *
+ * Three `crm_case` rows over ObjectStack 17.2.0 — `c_val`
+ * (`resolution_time_hours: 5`, `closed_date: '2024-06-01'`), `c_absent` (key
+ * omitted), `c_null` (key written as an explicit `null`) — under all four
+ * operators, on `SqliteWasmDriver` AND `InMemoryDriver`. Both drivers returned
+ * `[c_val]` for every predicate `c_val` satisfies and NOTHING for the rest:
+ * neither the null row nor the absent-key row was selected by ANY of the four,
+ * in EITHER direction. The two drivers agree, so this is settled rather than a
+ * platform question, and `undefined` and `null` are not distinguishable here —
+ * `SqliteWasmDriver` materialises the omitted key to `null` and
+ * `InMemoryDriver` leaves it sparse, and the two shapes answer identically.
+ *
+ * Hence: an unorderable VALUE never satisfies any of the four. That is what
+ * this repo's own flow authors already wrote down — `knowledge_article.view.ts`
+ * states "`$lt` matches neither null nor an absent key", and
+ * `opportunity-stagnation.flow.ts` relies on it to leave unstamped rows out of
+ * a stagnation sweep. The harness was the one place that disagreed.
+ *
+ * ### The null OPERAND, where the two drivers DIVERGE
+ *
+ * Same probe, with `null` on the operand side (`{ rth: { $gte: null } }`):
+ * `SqliteWasmDriver` returned `[]` for all four (SQL's three-valued logic);
+ * `InMemoryDriver` returned `[]` for `$gt` / `$lt` but `[c_null]` for `$gte` /
+ * `$lte` (Mongo/mingo orders BSON null as a VALUE). ⚠️ That divergence is a
+ * platform question and is reported as one, not decided here. It does not
+ * reach this file's choice, because the two cases it could bear on are already
+ * settled by the rule above: they need a null on the VALUE side too, and a
+ * null value satisfies none of the four on either driver.
+ *
+ * What the operand guard does settle is the case the drivers AGREE on and this
+ * helper used to get wrong on its own: `compare(5, null)` was `"5" < "null"`,
+ * so `{ rth: { $lt: null } }` selected `c_val` — a row BOTH drivers exclude.
+ *
+ * ⛔ Not fixed by teaching {@link compare} about `null`: the coercion is the
+ * bug, not its spelling. An unorderable operand has no place in an ordering at
+ * all, so it never reaches the comparison.
+ */
+function range(
+  value: unknown,
+  operand: unknown,
+  satisfied: (ordering: number) => boolean,
+): boolean {
+  if (!orderable(value) || !orderable(operand)) return false;
+  return satisfied(compare(value, operand));
+}
+
+/** Whether a value can take part in an ordering at all. NULL cannot. */
+function orderable(v: unknown): boolean {
+  return v !== null && v !== undefined;
+}
+
+/**
  * Order two values. Date-shaped strings are compared as instants so that
  * `'2026-01-02' > '2026-01-01T23:00:00Z'` behaves the way the driver does;
  * everything else falls back to native comparison.
+ *
+ * Only ever reached through {@link range}, so both sides are orderable and the
+ * `String()` fallback can never see a `null` or an `undefined`.
  */
 function compare(a: unknown, b: unknown): number {
   const da = toTime(a);
