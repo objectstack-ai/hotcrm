@@ -14,6 +14,7 @@ HotCRM also has product-facing documentation under [`content/docs/`](../content/
 | Runtime and metadata architecture | [ARCHITECTURE.md](ARCHITECTURE.md) |
 | Local, artifact, and marketplace deployment | [DEPLOYMENT.md](DEPLOYMENT.md) |
 | Versioning and distribution | [RELEASE_STRATEGY.md](RELEASE_STRATEGY.md) |
+| Module boundaries and the ADR-0130 multi-package split plan | [architecture/module-split-plan.md](architecture/module-split-plan.md) |
 | Upgrade, seeding, and version alignment | [MAINTENANCE.md](MAINTENANCE.md) |
 | Customer requirements and product disposition | [requirements/README.md](requirements/README.md) |
 | Object field reference | [developers/api_reference.md](developers/api_reference.md) |
@@ -26,6 +27,7 @@ HotCRM also has product-facing documentation under [`content/docs/`](../content/
 | `content/docs/` | Product users, admins, customizers | Fumadocs content, localized docs, marketplace guides |
 | `docs/` | Maintainers and contributors | Current architecture, status, deployment, release, developer reference |
 | `docs/archive/` | Maintainers | Historical strategy reports, retired sprint plans, legacy package specs |
+| `docs/architecture/` | Maintainers | Design proposals for shapes this repository does not have yet |
 
 ## Current Repository Shape
 

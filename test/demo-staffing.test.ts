@@ -4,10 +4,11 @@ import { describe, it, expect } from 'vitest';
 import { compileCelToFilter } from '@objectstack/formula';
 import stack from '../objectstack.config';
 import accountHook from '../src/objects/account.hook';
+import caseHooks from '../src/objects/case.hook';
 import { CrmSeedData } from '../src/data/index';
 import { DemoOrgStaffing } from '../src/sharing/demo-staffing';
 import * as sharingBarrel from '../src/sharing/index';
-import { makeCtx } from './helpers/hook-harness';
+import { makeCtx, makeHarness, hookNamed } from './helpers/hook-harness';
 
 /**
  * Demo-org staffing (#640) — the third layer of position-based access.
@@ -78,7 +79,8 @@ const IDENTITY_OBJECTS = [
 describe('the staffing table is well-formed', () => {
   it('has people at all', () => {
     // Guard the guard: an empty table would make every assertion below vacuous.
-    expect(DemoOrgStaffing.length).toBeGreaterThanOrEqual(3);
+    // Five since the 2026-08-31 ruling added the two case-routing pools.
+    expect(DemoOrgStaffing.length).toBeGreaterThanOrEqual(5);
   });
 
   it('gives every row a unique key, a unique email, a login and a reason', () => {
@@ -112,9 +114,10 @@ describe('the staffing table is well-formed', () => {
 });
 
 describe('the staffing table encodes the #640 decision, not an org chart', () => {
-  it('staffs both territories and the sales manager — and nothing else', () => {
-    // The three people are exactly the ones that turn a dark mechanism on:
-    // two territory holders (who must not own the accounts) and one approver.
+  it('staffs both territories, the sales manager and the two case pools — one holder each', () => {
+    // The five people are exactly the ones that turn a dark mechanism on: two
+    // territory holders (who must not own the accounts), one approver, and the
+    // two case-routing pools a shipped hook picks an owner out of.
     expect(holdersOf('na_sales_team').length, 'nobody holds na_sales_team').toBe(1);
     expect(holdersOf('eu_sales_team').length, 'nobody holds eu_sales_team').toBe(1);
     expect(holdersOf('sales_manager').length, 'nobody holds sales_manager').toBe(1);
@@ -122,6 +125,26 @@ describe('the staffing table encodes the #640 decision, not an org chart', () =>
       holdersOf('na_sales_team')[0].email,
       'the two territories must be held by DIFFERENT people, or neither rule is distinguishable',
     ).not.toBe(holdersOf('eu_sales_team')[0].email);
+
+    // ONE is the whole allowance the 2026-08-31 ruling granted — "the minimum
+    // that lights the mechanism, NOT an org chart". A second holder in either
+    // pool is org-chart growth and needs the same conversation the first one
+    // had, so it fails here rather than arriving as a tidy-up.
+    expect(
+      holdersOf('service_agent').length,
+      'the case INTAKE pool must hold exactly one demo agent (2026-08-31: the minimum that lights ' +
+      'case_auto_assign, not an org chart)',
+    ).toBe(1);
+    expect(
+      holdersOf('service_manager').length,
+      'the ESCALATION pool must hold exactly one demo manager (2026-08-31: the minimum that lights ' +
+      'case_escalation_reassign, not an org chart)',
+    ).toBe(1);
+    expect(
+      holdersOf('service_agent')[0].email,
+      'one person holding BOTH case pools would make intake and escalation indistinguishable — the ' +
+      'case would land on the same desk either way, and neither hook would prove anything',
+    ).not.toBe(holdersOf('service_manager')[0].email);
   });
 
   it('leaves the leadership bench empty on purpose', () => {
@@ -130,15 +153,33 @@ describe('the staffing table encodes the #640 decision, not an org chart', () =>
     // empty bench is the honest depiction of that. Filling one of these in
     // needs the same conversation the first three had — hence a failing test,
     // not a silent addition.
+    //
+    // The list is SIX, not the eight it was, and the two that left it are why
+    // this message now draws a DISTINCTION instead of stating a blanket. The
+    // 2026-08-31 ruling staffed `service_agent` and `service_manager` for a
+    // reason none of the six shares — see the failure text, which is where the
+    // next agent standing at this fence will actually read it.
     const DELIBERATELY_UNSTAFFED = [
-      'executive', 'sales_director', 'service_director', 'service_manager',
-      'service_agent', 'marketing_director', 'marketing_manager', 'marketing_user',
+      'executive', 'sales_director', 'service_director',
+      'marketing_director', 'marketing_manager', 'marketing_user',
     ];
     const surprises = DELIBERATELY_UNSTAFFED.filter((p) => staffedPositions.has(p));
     expect(
       surprises,
       `these positions were deliberately left unstaffed in #640 — staffing them is a decision, ` +
-      `not a tidy-up: ${surprises.join(', ')}`,
+      `not a tidy-up: ${surprises.join(', ')}\n` +
+      `\n` +
+      `  WHY TWO POSITIONS ARE STAFFED AND THESE SIX ARE NOT. Exactly two have ever crossed this ` +
+      `fence — service_agent and service_manager, maintainer ruling 2026-08-31 — and the bar they ` +
+      `cleared is the only one that opens it: a shipped HOOK PICKS AN OWNER out of that pool ` +
+      `(case_auto_assign #596, case_escalation_reassign #1070 — src/objects/_case-assignment.ts), ` +
+      `so an empty pool was not a bench nobody sits on but a code path that never ran on a demo ` +
+      `box at all.\n` +
+      `  Every position above fails that bar. Each one only RECEIVES a share or an approval — a ` +
+      `mechanism the staffed sales_manager and the two territory reps already demonstrate — and ` +
+      `the approval nodes routing to them declare onEmptyApprovers: 'admin_rescue', so the empty ` +
+      `bench is itself part of what the demo shows. "It looks unstaffed" is NOT the bar; neither ` +
+      `is "the rule has no holder". Get a ruling first, the way #640 and 2026-08-31 both did.`,
     ).toEqual([]);
   });
 
@@ -331,6 +372,111 @@ describe('what each staffed person actually receives', () => {
       outside.length,
       `every seeded account falls in a territory, so a match-all regression would be invisible`,
     ).toBeGreaterThan(0);
+  });
+});
+
+/**
+ * The two case-routing pools, DEMONSTRATED rather than asserted into existence.
+ *
+ * Everything above this point checks the TABLE. This block checks the POINT of
+ * the table: it builds `sys_user_position` exactly as `pnpm demo:staff` leaves
+ * it — one row per person per position they hold — and drives the two REAL
+ * hooks against it. Before the 2026-08-31 ruling both pools were empty here and
+ * both hooks took their no-op path on every demo box, which is what the card
+ * behind that ruling was about. Delete either staffing row and these go red
+ * with the sentence that says which feature went dark again.
+ *
+ * The pool rows key on the person's login rather than a user id: the real ids
+ * are minted by better-auth when the script runs, and the email is the stable
+ * identifier this table declares. The hooks only ever compare and copy the
+ * value, so it stands in exactly.
+ */
+describe('the case-routing pools actually route (what this staffing lights)', () => {
+  const assign = hookNamed(caseHooks, 'case_auto_assign');
+  const escalationReassign = hookNamed(caseHooks, 'case_escalation_reassign');
+
+  /** `sys_user_position` as the demo box would hold it after `pnpm demo:staff`. */
+  const demoPositionRows = DemoOrgStaffing.flatMap((m) =>
+    m.positions.map((position) => ({ user_id: m.email, position })),
+  );
+  /**
+   * The demo person this pool routes to — pinned as a STRING before it is
+   * compared to anything.
+   *
+   * Measured while writing this block: comparing `input.owner_id` straight to
+   * `holdersOf(p)[0]?.email` passes VACUOUSLY on an unstaffed pool, because a
+   * hook that no-ops leaves `owner_id` undefined and the lookup returns
+   * undefined too — the two demonstrations below stayed green with both
+   * staffing rows deleted, i.e. exactly when the feature was dark again. So
+   * the empty pool fails here, on its own line, before any comparison.
+   */
+  const holderOf = (position: string): string => {
+    const email = holdersOf(position)[0]?.email;
+    expect(
+      email,
+      `nobody in the demo org holds "${position}" — the pool the hook reads is empty, so the ` +
+      `assertion below would be comparing undefined to undefined and would pass while the ` +
+      `mechanism is dark`,
+    ).toBeTypeOf('string');
+    return String(email);
+  };
+
+  it('round-robins an ownerless case onto the demo service agent (#596)', async () => {
+    const harness = makeHarness({ sys_user_position: demoPositionRows, crm_case: [] });
+    const input: AnyRec = { subject: 'Web-to-case: cannot sign in', status: 'new', origin: 'web' };
+
+    await assign.handler(makeCtx({ event: 'beforeInsert', input, api: harness.api }));
+
+    expect(
+      input.owner_id,
+      `case_auto_assign left the case OWNERLESS against the demo org's own position rows — the ` +
+      `service_agent pool is empty again, so intake round-robin is back to the no-op path on every ` +
+      `demo box and the unassigned_triage tab is the whole story.`,
+    ).toBe(holderOf('service_agent'));
+  });
+
+  it('hands an escalating case to the demo service manager (#1070)', async () => {
+    const harness = makeHarness({ sys_user_position: demoPositionRows, crm_case: [] });
+    const previous: AnyRec = { id: 'case_1', status: 'in_progress', owner_id: 'someone_else' };
+    const input: AnyRec = { status: 'escalated' };
+
+    await escalationReassign.handler(
+      makeCtx({ event: 'beforeUpdate', input, previous, api: harness.api }),
+    );
+
+    expect(
+      input.owner_id,
+      `case_escalation_reassign moved NOTHING against the demo org's own position rows — the ` +
+      `service_manager pool is empty again, so escalation is only a flag and a status and the ` +
+      `agent who could not get to the case in time stays the only person who can work it.`,
+    ).toBe(holderOf('service_manager'));
+  });
+
+  it('lands intake and escalation on DIFFERENT desks', async () => {
+    // The negative control for the two assertions above: if one person held
+    // both pools, each hook would still look like it worked while proving
+    // nothing about which pool it read.
+    expect(holderOf('service_agent')).not.toBe(holderOf('service_manager'));
+  });
+
+  it('gives each crm_case position rule its first holder — and names the one it does NOT', () => {
+    // The mechanism census, pinned as an exact list because the interesting
+    // part is the ZERO. The ruling that authorised this staffing counted FOUR
+    // mechanisms lit, `case_director_sharing` among them — measured, that one
+    // is NOT lit: its recipient is `service_director`, which the same ruling
+    // leaves empty. The fourth mechanism these rows actually reach is
+    // `case_unassigned_triage_sharing` (#1096's read side), which the ruling
+    // did not name. Staffing service_director to "finish the set" is the
+    // org-chart move the fence above exists to stop.
+    const census = sharingRules
+      .filter((r) => r.object === 'crm_case' && r.sharedWith?.type === 'position')
+      .map((r) => `${String(r.name)}\u2192${String(r.sharedWith.value)}: ${holdersOf(String(r.sharedWith.value)).length} holder(s)`)
+      .sort();
+    expect(census).toEqual([
+      'case_director_sharing\u2192service_director: 0 holder(s)',
+      'case_escalation_sharing\u2192service_manager: 1 holder(s)',
+      'case_unassigned_triage_sharing\u2192service_agent: 1 holder(s)',
+    ]);
   });
 });
 

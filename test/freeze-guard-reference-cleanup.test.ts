@@ -37,7 +37,10 @@ import { extractSandboxBody } from './helpers/action-sandbox';
  *
  * ### The measurement the yield rests on
  *
- * Re-taken on `@objectstack/*` 17.1.0 — the version this repo pins — by
+ * Re-taken on `@objectstack/*` 17.1.0 — the version this repo pinned AT THE
+ * TIME of the measurement, not the current pin (#1460: this repo has pinned
+ * 17.2.0 since PR #1442, and the CONTEXT table below has not been re-taken on
+ * it, though this file's own behavioural assertions do run green there) — by
  * registering a probe hook at priority 199 (immediately ahead of each guard) on
  * `crm_opportunity`, `crm_quote` and `crm_lead`, and varying the one thing an
  * earlier taking of this table held fixed: the CONTEXT handed to the `DELETE`.

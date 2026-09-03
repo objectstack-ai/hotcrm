@@ -181,6 +181,19 @@ const leadHook: Hook = {
         // assignment is what this block uses. The same note sits on
         // `case.hook.ts`'s guest branch, which shares the finding.
         //
+        // ⚠️ RE-MEASURED ON 17.2.0 — the version this repo pins and installs
+        // (#1416) — and still TRUE: a probe hook deleting a planted key on a
+        // real insert stored it verbatim, and the installed `installFlatInput`
+        // still declares no `deleteProperty` trap. ⛔ Upstream objectstack#12277
+        // is CLOSED, by MERGED PR objectstack#12396 — but that fix is in no
+        // published release: 17.2.0 was cut before the merge and is still the
+        // registry's `latest`, so "closed upstream" is not "fixed in the pin".
+        // `case.hook.ts`'s copy carries the full version note, including why a
+        // shipped trap would still not license `delete` here — the assignments
+        // below are load-bearing as WRITES: `lead_duplicate_check` stands down
+        // only on a NON-BLANK verdict, so these columns must arrive `null`
+        // rather than absent.
+        //
         // `null` is the no-value spelling throughout, and it is load-bearing
         // twice over: `lead_auto_assign` stands down only on a non-empty STRING
         // `owner_id`, and `lead_duplicate_check` stands down only on a NON-BLANK
@@ -249,8 +262,11 @@ const leadHook: Hook = {
           // lead able to keep all three of its conversion products undeletable
           // forever (a GDPR erasure that cannot be carried out).
           //
-          // Re-measured on 17.1.0 — the version this repo pins — with a probe
-          // hook at priority 199 immediately ahead of each guard, not assumed.
+          // Measured on 17.1.0 — the version this repo pinned AT THE TIME of
+          // the measurement, not the current pin (#1416: this repo has pinned
+          // 17.2.0 since PR #1442, and the cascade shape below has NOT been
+          // re-measured on it) — with a probe hook at priority 199 immediately
+          // ahead of each guard, not assumed.
           // The engine builds its cleanup write on the CALLER's own context
           // plus two engine keys, so on the path a REST `DELETE` takes, the
           // cascade and a user's hand-clear of the same lookup are identical

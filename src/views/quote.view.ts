@@ -34,6 +34,15 @@ export const QuoteViews = defineView({
     appearance: {
       allowedVisualizations: ['grid', 'kanban', 'calendar'],
     },
+    // Binds the 'calendar' entry above: the same span the dedicated
+    // `quote_calendar` view shows. `quote_date` and `expiration_date` are both
+    // required + notNull on crm_quote, so every quote lands on a real window.
+    calendar: {
+      startDateField: 'quote_date',
+      endDateField: 'expiration_date',
+      titleField: 'quote_number',
+      colorField: 'status',
+    },
   },
 
   listViews: {
