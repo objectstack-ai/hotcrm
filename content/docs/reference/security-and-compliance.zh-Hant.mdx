@@ -9,11 +9,11 @@ description: SSO、MFA、稽核日誌、secret 欄位通道、GDPR —— HotCRM
 
 > **下面每一條斷言都經過實測，其中好幾條沒能活下來。** 本頁逐條對照本應用自己的中繼資料
 > （`src/`、`objectstack.config.ts`）與整棵已安裝的 `@objectstack/*` 依賴樹 —— 全部已安裝的
-> 包，而不只是 `package.json` 宣告的那些 —— 做了核驗；實測取在 **17.1.0** 上，那是當時已
-> 安裝的版本。⚠️ **它不是現在安裝的版本：** `package.json` 自 2026-09-01 起已釘在
-> **17.2.0**，而本頁尚未對照它重新核驗。下面的斷言刻意**沒有**被改標到新的釘版 —— 把一次
-> 沒人重新做過的實測改標日期，等於用一份捏造的憑據替換一份過期的憑據，在這樣的頁面上，那
-> 是兩種錯誤裡更壞的一種。標註 *(not shipped)* 的標題與表格行描述的是一項缺失的能力：沒有物件、
+> 包，而不只是 `package.json` 宣告的那些 —— 做了核驗，並已於 **2026-09-03 對照 17.2.0
+> 重新實測**，那正是 `package.json` 自 2026-09-01 起釘住的版本。凡是這兩個來源能回答的斷言，
+> 都是重新取數而不是照搬舊結論；其中三條沒能通過複測，下面是把它們改對，而不是繞過它們改標
+> 日期。這裡的實測夠不到的，是每一條 *(your deployment)* 行中屬於你所運行的實例、以及營運它
+> 的那一方的那一半 —— 它們保持其標註給出的範圍。標註 *(not shipped)* 的標題與表格行描述的是一項缺失的能力：沒有物件、
 > 沒有 schema 鍵、沒有設定項。標註 *(unsourced)* 的行保留了一個數字，但應用與平台都沒有任何
 > 東西在強制它。標註 *(your deployment)* 的行，其真假取決於你運行其上的實例以及運營它的
 > 那一方 —— 本頁看不見這兩者，所以它只說 HotCRM 與已安裝依賴樹做了什麼，到此為止。
@@ -99,7 +99,7 @@ description: SSO、MFA、稽核日誌、secret 欄位通道、GDPR —— HotCRM
 | **IP 允許清單** | ✅ 真實，**部署級** | **Setup → Authentication**（*Network*）下的 `allowed_ip_ranges`。CIDR 段或精確 IP，每行一個或逗號分隔。留空 = 不限制。來自這些範圍之外的登入會被拒絕。需要一個可信代理設定 `X-Forwarded-For` |
 | **並行工作階段** | ✅ 真實，**部署級** | **Setup → Authentication**（*Sessions*）下的 `max_concurrent_sessions_per_user`。預設 **0 = 不限**，上限 100；超過上限時最舊的工作階段會被登出 |
 | **工作階段逾時** | ✅ 真實，但**預設關閉** | `session_idle_timeout_minutes` 與 `session_absolute_max_hours`，兩者預設都是 **0 = 關閉**。工作階段本身的生命週期是 `session_expiry_days`，預設 7 天。舊頁面把 30 分鐘閒置 / 12 小時絕對逾時說成生效中的預設值；它們既沒生效，也不是預設值 |
-| **登入時間** | *(not shipped)* | 在 51 個已安裝包的 1,186 個非 map 分發檔案中，任何 login-hours、login-window 或 allowed-hours 表面都是零命中 |
+| **登入時間** | *(not shipped)* | 在 51 個已安裝包的 1,204 個非 map 分發檔案中，任何 login-hours、login-window 或 allowed-hours 表面都是零命中 |
 | **裝置信任** | *(not shipped)* | 同樣零命中：任何可信裝置、裝置指紋或新裝置確認表面都不存在 |
 
 ⚠️ **「按設定檔」這個說法對它們全都是錯的。** 舊條目寫著「（按設定檔）」。存在的那兩項是 `auth` 命名空間下的**部署級設定** —— 整個實例一份 IP 允許清單、一個工作階段上限，不是你能在 Sales Rep 與 System Admin 之間取不同值的東西。如果你的策略需要按設定檔的網路規則，這裡沒有任何東西做這件事。
@@ -108,7 +108,7 @@ description: SSO、MFA、稽核日誌、secret 欄位通道、GDPR —— HotCRM
 
 ## 稽核日誌
 
-`sys_audit_log` 是真的，而且確實不可變：該物件是 `managedBy: 'append-only'`，其上每個欄位都是 `readonly: true`。它隨 `@objectstack/plugin-audit` 一起發布，而**本應用拿得到它** —— 在 `requires` 中宣告 `auth` 會讓 CLI 把 auth、security、audit 三個外掛作為一組註冊。在 **Setup → Audit Logs**（位於 *Diagnostics* 群組下）讀取，它帶了五個列表檢視：*Recent*、*Auth*、*Record Views*、*Config* 與 *All*。
+`sys_audit_log` 是真的，而且確實不可變：該物件是 `managedBy: 'append-only'`，其上每個欄位都是 `readonly: true`。它隨 `@objectstack/plugin-audit` 一起發布，而**本應用拿得到它** —— 在 `requires` 中宣告 `auth` 會讓 CLI 把 auth、security、audit 三個外掛作為一組註冊。在 **Setup → Audit Logs**（位於 *Diagnostics* 群組下）讀取，它帶了六個列表檢視：*Recent*、*Writes*、*Auth*、*Record Views*、*Config* 與 *All*。
 
 分類表是沒測過的那部分。對照真正存在的寫入方重新判定：
 
@@ -191,7 +191,7 @@ Unrecognized key(s) on this field: `encrypted`.
 
 *(your deployment。)* 你的資料存在哪裡 —— 美國、歐盟、亞太、你自己的 VPC —— 以及跨區傳輸是否被阻斷，是你所運行實例及其運營方的屬性。**本應用裡沒有任何東西、已安裝平台依賴樹裡也沒有任何東西強制甚至記錄一個區域。** 支撐這一點的兩項測量：
 
-- `@objectstack/spec/kernel` 的產物裡確實存在一個 `dataResidency` 形狀（`region`、`excludeRegions`），旁邊還有一個點名 `sox | hipaa | gdpr | pci_dss | iso_27001 | fedramp` 的 `compliance` 塊。它**沒有被匯出，也沒有類型宣告** —— 編寫者寫不出它，也沒有任何東西讀它。它描述的是一個意圖，不是一個控制。
+- 確實存在一個 `dataResidency` 形狀（`region`、`excludeRegions`），它位於 `@objectstack/spec/system` 的 `TenantSecurityPolicySchema` 裡，旁邊還有一個點名 `sox | hipaa | gdpr | pci_dss | iso_27001 | fedramp` 的 `compliance` 塊。它被匯出、也有類型，所以編寫者*寫得出*它 —— 而 **`@objectstack/spec` 之外沒有任何東西讀它**，這才是決定問題的那一半。它描述的是一個意圖，不是一個控制。
 - 已安裝包中，任何跨區傳輸阻斷、區域鎖定或駐留強制都是零命中。
 
 如果駐留是一項硬要求，回答它的是你的部署拓撲，而不是 Setup 裡的某個設定。
