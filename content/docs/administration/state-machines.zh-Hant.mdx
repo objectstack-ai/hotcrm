@@ -117,7 +117,7 @@ Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ 
 - **新增退出條件**（例如 *沒有更新關閉日期就不能離開 Negotiation*）。
 - 在每次轉換時 **觸發自動化**（物件鉤子、流程、通知）。
 
-上面這些都是改原始碼，不是在設定裡點幾下：**並不存在「設定 → 物件 → 狀態 → 狀態機」這個設定面**。每張轉換表都是物件上的一條 `validations[]` 條目（型別 `state_machine`，見 `src/objects/*.object.ts`），而這條條目只帶一張轉換對應表，別的什麼都沒有 —— 所以上面前兩項是改這張對應表，進入/退出條件是另外的 `validations[]` 規則或相關欄位上的 `requiredWhen` 述詞，按轉換觸發自動化則是 `record_change` 流程或物件鉤子。每一項都是程式碼改動加一次重新部署。
+上面這些都是改原始碼，不是在 Setup 裡點幾下：**並不存在「Setup → Object → Status → State Machine」這個頁面**。每張轉換表都是物件上的一條 `validations[]` 條目（型別 `state_machine`，見 `src/objects/*.object.ts`），而這條條目只帶一張轉換對應表，別的什麼都沒有 —— 所以上面前兩項是改這張對應表，進入/退出條件是另外的 `validations[]` 規則或相關欄位上的 `requiredWhen` 述詞，按轉換觸發自動化則是 `record_change` 流程或物件鉤子。每一項都是程式碼改動加一次重新部署。
 
 ## 使用者看到什麼
 
