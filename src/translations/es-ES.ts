@@ -1317,6 +1317,10 @@ export const esES: TranslationData = {
         total_price: { label: 'Total' },
         line_number: { label: 'Nº de Línea' },
       },
+      _sections: {
+        basic: { label: 'Línea' },
+        pricing: { label: 'Precios' },
+      },
     },
 
     crm_quote_line_item: {
@@ -1335,6 +1339,10 @@ export const esES: TranslationData = {
         tax_rate: { label: 'Tasa de Impuesto (%)' },
         total_price: { label: 'Total' },
         line_number: { label: 'Nº de Línea' },
+      },
+      _sections: {
+        basic: { label: 'Línea' },
+        pricing: { label: 'Precios' },
       },
     },
   },

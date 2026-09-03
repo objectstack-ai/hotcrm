@@ -50,6 +50,23 @@ export const QuoteLineItem = ObjectSchema.create({
 
   highlightFields: ['crm_product', 'quantity', 'unit_price', 'total_price'],
 
+  // The same two-group split as `crm_opportunity_line_item` (#1453), derived
+  // from the eleven fields declared here: every factor `total_price` multiplies
+  // is `pricing`, everything that says WHICH line this is is `basic`.
+  //
+  // `tax_rate` and `subtotal` are pricing, not a section of their own — the
+  // parent `crm_quote` keeps subtotal / discount / discount_amount / tax /
+  // shipping_handling / total_price in one `pricing` group, and `crm_product`
+  // keeps `tax_rate` there too. A separate tax section would be this repo's
+  // only one.
+  //
+  // ⚠️ Neither group may be a subset of the highlight strip — see the twin
+  // object for the hoisting rule this satisfies.
+  fieldGroups: [
+    { key: 'basic',   label: 'Line Item', icon: 'package' },
+    { key: 'pricing', label: 'Pricing',   icon: 'dollar-sign' },
+  ],
+
   fields: {
     // The parent link — same decision, same reasoning, as
     // `opportunity_line_item.crm_opportunity` (#727); read the long note there.
@@ -60,6 +77,7 @@ export const QuoteLineItem = ObjectSchema.create({
     // the quote's subtotal/total UP from these rows), so it goes with it.
     crm_quote: Field.lookup('crm_quote', {
       label: 'Quote',
+      group: 'basic',
       required: true,
       storage: { notNull: true },
       deleteBehavior: 'cascade',
@@ -69,17 +87,20 @@ export const QuoteLineItem = ObjectSchema.create({
     // product's catalog entry must not take priced quote history with it.
     crm_product: Field.lookup('crm_product', {
       label: 'Product',
+      group: 'basic',
       required: true,
       storage: { notNull: true },
     }),
 
     description: Field.text({
       label: 'Description',
+      group: 'basic',
       maxLength: 500,
     }),
 
     quantity: Field.number({
       label: 'Quantity',
+      group: 'pricing',
       required: true,
       storage: { notNull: true },
       scale: 2,
@@ -90,11 +111,13 @@ export const QuoteLineItem = ObjectSchema.create({
 
     list_price: Field.currency({
       label: 'List Price',
+      group: 'pricing',
       readonly: true,
     }),
 
     unit_price: Field.currency({
       label: 'Sales Price',
+      group: 'pricing',
       required: true,
       storage: { notNull: true },
       trackHistory: true,
@@ -102,6 +125,7 @@ export const QuoteLineItem = ObjectSchema.create({
 
     discount: Field.percent({
       label: 'Discount %',
+      group: 'pricing',
       scale: 2,
       min: 0,
       max: 100,
@@ -111,11 +135,13 @@ export const QuoteLineItem = ObjectSchema.create({
 
     subtotal: Field.formula({
       label: 'Subtotal',
+      group: 'pricing',
       expression: F`record.quantity * record.unit_price * (1 - record.discount / 100)`,
     }),
 
     tax_rate: Field.percent({
       label: 'Tax Rate %',
+      group: 'pricing',
       scale: 2,
       min: 0,
       max: 100,
@@ -129,11 +155,13 @@ export const QuoteLineItem = ObjectSchema.create({
     // `subtotal`'s expression with the tax multiplier applied on top.
     total_price: Field.formula({
       label: 'Total',
+      group: 'pricing',
       expression: F`record.quantity * record.unit_price * (1 - record.discount / 100) * (1 + record.tax_rate / 100)`,
     }),
 
     line_number: Field.number({
       label: 'Line #',
+      group: 'basic',
       scale: 0,
       readonly: true,
     }),
