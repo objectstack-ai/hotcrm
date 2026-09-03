@@ -155,6 +155,10 @@ describe('crm_case — guest submission sanitisation', () => {
       is_escalated: true,
       escalation_reason: 'PLANTED-REASON',
       is_closed: true,
+      // The customer's own verdict on how the case was handled, planted at
+      // intake by the person opening it (#1505).
+      customer_rating: 5,
+      customer_feedback: 'PLANTED-FEEDBACK',
     });
     const stored = await rowById('crm_case', caseId);
 
@@ -166,6 +170,20 @@ describe('crm_case — guest submission sanitisation', () => {
     expect(stored.internal_notes).toBeNull();
     expect(stored.resolution).toBeNull();
     expect(stored.is_escalated).toBe(false);
+
+    // #1505. The satisfaction survey is the CUSTOMER's verdict on how the case
+    // was handled — `case_csat_followup` collects it after the work — so a
+    // submitter must not be able to answer it in the same request that opens
+    // the case. `crm_case.customer_rating` declares no `defaultValue`, so a
+    // stored `null` here means the planted value did not survive rather than
+    // that a default overwrote it.
+    expect(
+      stored.customer_rating,
+      'a guest-planted satisfaction rating survived the strip. This is the one ' +
+        'column an outsider could self-report that `case_metrics` reads back as a ' +
+        'quality measure. If this came back as 5, ⛔ do not relax the assertion.',
+    ).toBeNull();
+    expect(stored.customer_feedback).toBeNull();
 
     // The planted owner is gone, and `case_auto_assign` — which runs after this
     // strip, and only on a case the strip left ownerless — placed the case on
@@ -202,12 +220,21 @@ describe('crm_case — guest submission sanitisation', () => {
       resolution: 'STAFF-RESOLUTION',
       is_escalated: true,
       escalation_reason: 'Customer is a strategic account',
+      customer_rating: 4,
+      customer_feedback: 'STAFF-LOGGED-FEEDBACK',
     });
     const stored = await rowById('crm_case', caseId);
 
     expect(stored.internal_notes).toBe('STAFF-NOTES');
     expect(stored.resolution).toBe('STAFF-RESOLUTION');
     expect(stored.is_escalated).toBe(true);
+    // #1505's half of the negative control. `case_csat_followup` notifies the
+    // case OWNER to log the satisfaction rating, so the new strip must stay
+    // guest-scoped: if it ever lost its `isGuestSubmission` guard it would
+    // silently blank the value that flow exists to collect, and the guest
+    // assertions above would still pass.
+    expect(stored.customer_rating).toBe(4);
+    expect(stored.customer_feedback).toBe('STAFF-LOGGED-FEEDBACK');
   }, 60_000);
 });
 
