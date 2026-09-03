@@ -41,13 +41,13 @@ The knobs below are real, and they all live in one place: **Setup → Authentica
 | No reuse of the last N passwords | `password_history_count` | **0 — no history kept** |
 | Password expiry | `password_expiry_days` | **0 — never expires** |
 | Reject known-breached passwords | `password_reject_breached` | **off** |
-| Account lockout threshold | `lockout_threshold` | **0 — lockout disabled** |
+| Account lockout threshold | `lockout_threshold` | **0 — password-stage lockout disabled** |
 | Lockout duration | `lockout_duration_minutes` | 15 |
 | Auth rate limit (per IP) | `rate_limit_max` / `rate_limit_window_seconds` | 10 per 60 s |
 
 Two corrections a reader could otherwise act on and get a wrong answer from:
 
-- **"Account lockout after N failed attempts (configurable; default 5)."** The default is **`0`, which disables lockout entirely**. Five was never the default. Lockout is enforced per identity (so it survives IP rotation, unlike the rate limit beside it), and it is worth turning on — but a security review that assumed it was already on would have been reading the opposite of the truth.
+- **"Account lockout after N failed attempts (configurable; default 5)."** The default is **`0`, which disables the password-stage lockout**. Five was never the default. Lockout is enforced per identity (so it survives IP rotation, unlike the rate limit beside it), and it is worth turning on — but a security review that assumed it was already on would have been reading the opposite of the truth. ⚠️ But `0` does not mean "no limit anywhere", and it does not mean the account is protected either. Two-factor verification keeps **a built-in limit of 10 attempts per 15 minutes** that no setting reaches, because it is the last check before a session is issued. That limit guards the *second* factor only, and two-factor is off by default here (see MFA below) — so a stock deployment signs in with a password alone and has no account lockout at all.
 - **"Bcrypt-hashed."** *(not shipped — different algorithm.)* Passwords are hashed with **scrypt**, not bcrypt (`@objectstack/plugin-auth` uses better-auth's native hasher, and swaps in a pure-JS `@noble/hashes/scrypt` with byte-identical parameters under WebContainer). The substance of the claim holds — passwords are never stored in plain text — but the algorithm name was wrong, and it is the sort of detail that gets pasted into a security questionnaire.
 
 ### Multi-factor authentication (MFA)
@@ -253,7 +253,7 @@ Establish, and write down where your users can find them: who to contact, where 
 ## Tips for admins
 
 - ✅ **Turn the password policy on.** Complexity, history and expiry all default to off. `password_reject_breached` is one toggle and is the highest-value of the three.
-- ✅ **Set `lockout_threshold`.** It is `0` today, which means no account lockout at all. This is the single most consequential default on the page.
+- ✅ **Set `lockout_threshold`.** It is `0` today, which leaves the password stage with no lockout at all — and on a stock deployment that is the only stage there is. This is the single most consequential default on the page.
 - ✅ **Mandate MFA** — `mfa_required` at **Setup → Authentication**, with a grace window. Biggest security ROI, and it is off until you set it.
 - ✅ **Set an idle and absolute session timeout**, and a concurrent-session cap if your policy has one. All three default to unlimited.
 - ✅ **Turn on SSO** as soon as you have >10 users. SCIM has no screen, so plan for it as a deployment change rather than an admin task.
