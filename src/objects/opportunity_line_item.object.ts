@@ -51,6 +51,29 @@ export const OpportunityLineItem = ObjectSchema.create({
 
   highlightFields: ['crm_product', 'quantity', 'unit_price', 'total_price'],
 
+  // Two groups, derived from the nine fields this object actually declares
+  // rather than copied off a neighbour (#1453). The split is the one the
+  // arithmetic already makes: everything `total_price` multiplies together is
+  // `pricing`, everything that says WHICH line this is is `basic`.
+  //
+  // `quantity` is a pricing field here, not an identity one — it is a factor in
+  // `total_price`, and separating it from the price it multiplies would put the
+  // two halves of one product on two sections. `crm_quote_line_item` takes the
+  // same split over its eleven fields, and the parents agree: `crm_quote` and
+  // `crm_product` both keep every money field — tax included — in `pricing`,
+  // and both keep `description` in `basic`.
+  //
+  // ⚠️ Neither group may be a subset of the highlight strip: a synthesized
+  // detail page hoists the title plus the first four `highlightFields` out of
+  // the body, so an all-hoisted group renders on forms and nowhere else
+  // (`field-group-shadowed`; `test/field-groups-coverage.test.ts` pins it).
+  // `basic` keeps crm_opportunity/description/line_number and `pricing` keeps
+  // list_price/discount outside that strip, so both survive the hoist.
+  fieldGroups: [
+    { key: 'basic',   label: 'Line Item', icon: 'package' },
+    { key: 'pricing', label: 'Pricing',   icon: 'dollar-sign' },
+  ],
+
   fields: {
     // The parent link, and the ONE field on this object that decides whether the
     // deal it belongs to can be deleted at all (#727).
@@ -78,6 +101,7 @@ export const OpportunityLineItem = ObjectSchema.create({
     // and survives on its own terms. A price line does not.
     crm_opportunity: Field.lookup('crm_opportunity', {
       label: 'Opportunity',
+      group: 'basic',
       required: true,
       storage: { notNull: true },
       deleteBehavior: 'cascade',
@@ -89,17 +113,20 @@ export const OpportunityLineItem = ObjectSchema.create({
     // same thing in words ("Set is_active=false to retire instead").
     crm_product: Field.lookup('crm_product', {
       label: 'Product',
+      group: 'basic',
       required: true,
       storage: { notNull: true },
     }),
 
     description: Field.text({
       label: 'Description',
+      group: 'basic',
       maxLength: 500,
     }),
 
     quantity: Field.number({
       label: 'Quantity',
+      group: 'pricing',
       required: true,
       storage: { notNull: true },
       scale: 2,
@@ -110,12 +137,14 @@ export const OpportunityLineItem = ObjectSchema.create({
 
     list_price: Field.currency({
       label: 'List Price',
+      group: 'pricing',
       readonly: true,
       description: "Auto-populated from the product's List Price.",
     }),
 
     unit_price: Field.currency({
       label: 'Sales Price',
+      group: 'pricing',
       required: true,
       storage: { notNull: true },
       description: 'Negotiated unit price (may differ from list price)',
@@ -124,6 +153,7 @@ export const OpportunityLineItem = ObjectSchema.create({
 
     discount: Field.percent({
       label: 'Discount %',
+      group: 'pricing',
       scale: 2,
       min: 0,
       max: 100,
@@ -133,11 +163,13 @@ export const OpportunityLineItem = ObjectSchema.create({
 
     total_price: Field.formula({
       label: 'Total',
+      group: 'pricing',
       expression: F`record.quantity * record.unit_price * (1 - record.discount / 100)`,
     }),
 
     line_number: Field.number({
       label: 'Line #',
+      group: 'basic',
       scale: 0,
       readonly: true,
     }),

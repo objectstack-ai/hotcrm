@@ -1262,6 +1262,10 @@ export const jaJP: TranslationData = {
         total_price: { label: '合計' },
         line_number: { label: '行番号' },
       },
+      _sections: {
+        basic: { label: '明細行' },
+        pricing: { label: '価格' },
+      },
     },
 
     crm_quote_line_item: {
@@ -1280,6 +1284,10 @@ export const jaJP: TranslationData = {
         tax_rate: { label: '税率（%）' },
         total_price: { label: '合計' },
         line_number: { label: '行番号' },
+      },
+      _sections: {
+        basic: { label: '明細行' },
+        pricing: { label: '価格' },
       },
     },
   },
