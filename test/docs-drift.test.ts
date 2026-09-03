@@ -24,7 +24,9 @@ import stack from '../objectstack.config';
  * Where the others went. Add a new rule to the file whose subject it shares —
  * this one only if it reads a value out of a flow:
  *
- *   docs-src-tree-paths.test.ts     `src/<dir>/` paths a doc names or draws
+ *   docs-src-tree-paths.test.ts     `src/<dir>/` paths a doc names or draws, and the
+ *                                   layout the `.github/instructions/` agent briefs
+ *                                   name (#1233)
  *   docs-runnable-samples.test.ts   samples a reader runs: documented agent
  *                                   names (#606), the action example (#813)
  *   docs-dashboard-tiles.test.ts    the dashboards page lists tiles that exist,

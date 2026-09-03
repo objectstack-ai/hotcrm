@@ -44,7 +44,7 @@ Hooks trigger on database events.
 **Types**: `before_create`, `after_create`, `before_update`, `after_update`, `before_delete`, `after_delete`.
 
 ```typescript
-// packages/crm/src/opportunity.hook.ts
+// src/objects/opportunity.hook.ts
 import { Broker } from '@objectstack/runtime';
 
 export const handleOpportunityUpdate = async (broker: Broker) => {
@@ -68,7 +68,7 @@ export const handleOpportunityUpdate = async (broker: Broker) => {
 Actions are functions exposed to the API and AI Agents.
 
 ```typescript
-// packages/crm/src/ai_briefing.actions.ts
+// src/actions/ai_briefing.actions.ts
 export const generateBriefing = async ({ accountId }) => {
     // 1. Fetch Data
     const account = await broker.findOne('account', accountId);
