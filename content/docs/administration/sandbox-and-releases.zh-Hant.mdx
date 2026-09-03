@@ -41,7 +41,7 @@ production | sandbox | development | test | staging | preview | trial
 
 設計意圖是這樣的：有一個*沙箱管理*畫面，在那裡選擇**類型**（設定 / 部分 / 完整）、命名（`dev`、`uat`、`training`）並點擊**建立**；每一行上還有一個**重新整理**，把最新的生產資料重新拉下來 —— 同時清掉沙箱裡原有的一切。
 
-並沒有這樣一個畫面。開出一個環境是 ObjectStack Cloud 控制面的事，不是本租戶設定裡的某一頁；設定裡唯一與雲相關的入口是 **Setup → Cloud Connection**。
+並沒有這樣一個畫面。開出一個環境是 ObjectStack Cloud 控制面的事，不是本租戶 Setup 裡的某一頁；Setup 裡唯一與雲相關的入口是 **Setup → Cloud Connection**。
 
 有一件事值得知道，因為它是這個應用真正能表達的唯一一條環境軸：在 `objectstack.config.ts` 裡宣告的種子資料是**按環境區分**的。每個 `data[]` 條目接受一個 `env` 清單，而這套詞彙恰好只有三個取值：
 
@@ -152,7 +152,7 @@ tiers devPlugins runtimeModule
 - 每次變更的 **歷史**。
 - 在合併前執行 `pnpm typecheck` 等的 **CI**。
 
-把團隊指向儲存庫，而不是設定頁。
+把團隊指向儲存庫，而不是 Setup。
 
 ## 回滾
 
