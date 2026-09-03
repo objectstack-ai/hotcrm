@@ -8,6 +8,9 @@ import type { Flow } from '@objectstack/spec/automation';
 export { CampaignEnrollmentFlow } from './campaign-enrollment.flow';
 export { CaseEscalationFlow, CaseEscalationOnCreateFlow } from './case-escalation.flow';
 export { EscalateCaseFlow, CloseCaseFlow } from './case-actions.flow';
+// The one elevated step behind Escalate Case (#1434) — called by
+// `escalate_case` through a `subflow` node, never invoked directly from the UI.
+export { CaseEscalationStampFlow } from './case-escalation-stamp.flow';
 export { LeadConversionFlow } from './lead-conversion.flow';
 export { ScheduleFollowUpFlow } from './schedule-followup.flow';
 export { DemoBootstrapFlow } from './demo-bootstrap.flow';
@@ -37,6 +40,7 @@ export {
 import { CampaignEnrollmentFlow } from './campaign-enrollment.flow';
 import { CaseEscalationFlow, CaseEscalationOnCreateFlow } from './case-escalation.flow';
 import { EscalateCaseFlow, CloseCaseFlow } from './case-actions.flow';
+import { CaseEscalationStampFlow } from './case-escalation-stamp.flow';
 import { LeadConversionFlow } from './lead-conversion.flow';
 import { ScheduleFollowUpFlow } from './schedule-followup.flow';
 import { DemoBootstrapFlow } from './demo-bootstrap.flow';
@@ -68,6 +72,8 @@ export const allFlows: Flow[] = [
   CaseEscalationOnCreateFlow,
   EscalateCaseFlow,
   CloseCaseFlow,
+  // Registered so `escalate_case`'s `subflow` node can resolve it by name.
+  CaseEscalationStampFlow,
   LeadConversionFlow,
   ScheduleFollowUpFlow,
   DemoBootstrapFlow,

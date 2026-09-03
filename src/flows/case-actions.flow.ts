@@ -49,21 +49,64 @@ export const EscalateCaseFlow: Flow = {
       },
     },
     {
-      // Same writes as the case_escalation record-change flow: the
-      // escalation_reason_required validation demands a reason whenever
-      // is_escalated flips true, and status: 'escalated' is what suppresses a
-      // double-fire of the automatic escalation flow.
+      // The USER-CONTEXT half of the escalation (#1434). Everything here is a
+      // column the acting agent may legitimately write, so it is written with
+      // their identity — this flow stays `runAs: 'user'`.
+      //
+      //   escalation_reason  the agent's own screen input
+      //   priority           an ordinary editable field
+      //   status             ordinary, and the hook trigger (below)
+      //
+      // The two stamps a person never types — `is_escalated` and
+      // `escalated_date` — are `readonly: true` on `crm_case` and are written
+      // by the `case_escalation_stamp` subflow that follows, with the system
+      // context. See `src/flows/case-escalation-stamp.flow.ts`.
+      //
+      // ⚠️ `status: 'escalated'` MUST stay in this node, and not only because
+      // it is user-writable: it is the trigger both escalation hooks key off —
+      // `case_escalation_reassign` (`_case-assignment.ts`) gates on
+      // `input.status !== 'escalated' || previous.status === 'escalated'`, and
+      // `case_status_side_effects` (`case.hook.ts`) reads the same transition.
+      // Keeping it here keeps the ownership hand-off and the side-effect tasks
+      // firing from the ACTING USER's write, exactly as they did before the
+      // split. Moving it into the elevated subflow would silently re-attribute
+      // both to the system.
+      //
+      // It is also what suppresses a double-fire of the automatic
+      // `case_escalation` record-change flow.
       id: 'escalate', type: 'update_record', label: 'Escalate Case',
       config: {
         objectName: 'crm_case',
         filter: { id: '{recordId}' },
         fields: {
-          is_escalated: true,
           escalation_reason: '{reason}',
-          escalated_date: '{NOW()}',
           status: 'escalated',
           priority: 'critical',
         },
+      },
+    },
+    {
+      // The ELEVATED half, and the only elevation in this flow: one
+      // `runAs: 'system'` flow, one `update_record`, two readonly columns.
+      // #1434's approved direction (decision batch #21 ②) — elevate the write,
+      // not the flow.
+      //
+      // ⚠️ THIS NODE MUST RUN AFTER `escalate`, NOT BEFORE. `crm_case`'s
+      // `escalation_reason_required` validation rejects any write whose merged
+      // record has `is_escalated == true` and a blank `escalation_reason`. The
+      // reason is written by the node above, so by the time the flag flips it
+      // is already stored. Reversing these two nodes fires that validation
+      // against a record with no reason yet and the stamp is rejected.
+      //
+      // ⛔ Do not "simplify" this by giving THIS flow `runAs: 'system'` and
+      // folding the stamp back into the node above. That is option A, costed
+      // and explicitly not adopted: it elevates every write this screen flow
+      // makes and stops it carrying the acting user's context downstream.
+      // `AGENTS.md` house rule 9 states it as standing policy.
+      id: 'stamp_escalation', type: 'subflow', label: 'Stamp Escalation Flags',
+      config: {
+        flowName: 'case_escalation_stamp',
+        input: { recordId: '{recordId}' },
       },
     },
     { id: 'end', type: 'end', label: 'End' },
@@ -72,7 +115,8 @@ export const EscalateCaseFlow: Flow = {
   edges: [
     { id: 'e1', source: 'start', target: 'screen_1', type: 'default' },
     { id: 'e2', source: 'screen_1', target: 'escalate', type: 'default' },
-    { id: 'e3', source: 'escalate', target: 'end', type: 'default' },
+    { id: 'e3', source: 'escalate', target: 'stamp_escalation', type: 'default' },
+    { id: 'e4', source: 'stamp_escalation', target: 'end', type: 'default' },
   ],
 };
 
@@ -84,6 +128,17 @@ export const CloseCaseFlow: Flow = {
   status: 'active',
   // `is_closed` is a readonly lifecycle field. This trusted screen flow owns
   // the transition and must therefore run with the system writer.
+  //
+  // ⛔ A HISTORICAL PRECEDENT, NOT A POLICY — do not cite this line to justify
+  // elevating another screen flow (#1434, maintainer-approved decision batch
+  // #21 ②). The standing rule is the opposite one: a screen flow stays
+  // `runAs: 'user'` and a write that genuinely needs elevation is split into a
+  // dedicated `system` sub-flow reached by a `subflow` node — see
+  // `escalate_case` above and `src/flows/case-escalation-stamp.flow.ts`.
+  // "Readonly stripped my write, so I made the flow system" is the pattern
+  // that ruling exists to stop being copied; `AGENTS.md` house rule 9 carries
+  // it as house policy. This flow predates that rule and has not been
+  // re-shaped to match it.
   runAs: 'system',
 
   variables: [

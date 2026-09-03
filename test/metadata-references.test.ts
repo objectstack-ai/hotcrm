@@ -989,42 +989,23 @@ describe('forms can actually author the data the views depend on', () => {
   });
 
   /**
-   * Fields this guard's `isAuthorable` proxy calls authorable and the app
-   * knows are STAMPED — written only by a hook, a flow or an action, never
-   * typed by a person.
+   * ⭐ The `STAMPED_NOT_TYPED` exemption that stood here is DELETED (#1434,
+   * maintainer-approved decision batch #21 ②), together with its reverse pins.
    *
-   * The proxy reads `readonly` to mean "stamped", and on `crm_case.is_escalated`
-   * that read is unavailable — though NOT for the blanket reason this block
-   * used to give ("the platform drops writes to readonly fields"). Measured in
-   * `test/readonly-write-semantics.test.ts` (#1429) on 17.1.0 and RE-MEASURED
-   * there on the current pin 17.2.0 (#1460), same result both times: the
-   * strip is one branch of the UPDATE path — `if (!opCtx.context?.isSystem)` —
-   * applied to CALLER-supplied keys only. So a `beforeUpdate` hook's own stamp
-   * survives it, an insert is exempt from it, and a flow write survives it
-   * exactly when the flow's effective `runAs` is `'system'`.
+   * It existed for exactly one field, `crm_case.is_escalated`, and only because
+   * one of that field's writers — the `escalate_case` screen flow — ran
+   * `runAs: 'user'`, so a `readonly: true` declaration would have silently
+   * dropped its write. The ruling removed the cause rather than documenting it:
+   * the stamp moved into the dedicated `runAs: 'system'` `case_escalation_stamp`
+   * sub-flow, `escalate_case` kept the acting user's context, and
+   * `is_escalated` / `escalated_date` are now honestly `readonly: true`.
    *
-   * `is_escalated` still cannot be declared readonly, because the LEAST
-   * privileged of its three writers decides: `case_escalation` and
-   * `case_sla_monitor` declare `runAs: 'system'`, but the `escalate_case`
-   * screen flow declares no `runAs` and the engine defaults it to `'user'`.
-   * Declaring the field readonly would silently drop that flow's write while
-   * it still reported success. The declaration cannot be made honest, so the
-   * exception is recorded here instead of hidden by putting the field back on
-   * a form.
-   *
-   * ⛔ An entry needs the writers that own the field and the reason a person
-   * never types it. "It fails the guard" is not a reason.
+   * With that, `isAuthorable()` below skips both fields for the RIGHT reason —
+   * they are declared readonly — and no exemption list is needed to hide them
+   * from this guard. If you are about to re-add one here for an escalation
+   * field, re-read #1434 first: the answer was a `subflow` node, not an
+   * exemption.
    */
-  const STAMPED_NOT_TYPED: Record<string, string> = {
-    // #1214 item 3: the case create form is the intake form, and escalation is
-    // not an intake fact. `is_escalated` is written by `case_escalation`,
-    // `case_sla_monitor` and the `escalate_case` screen flow, plus the
-    // guest-submission branch of `case.hook.ts` that forces it false — and by
-    // nothing a user types. `escalated_cases` filtering on it is correct:
-    // the rows come from those flows.
-    'crm_case.is_escalated':
-      'stamped by case_escalation / case_sla_monitor / escalate_case; cannot be declared readonly because escalate_case runs runAs:"user" and a user-context flow write to a readonly field IS stripped (measured on 17.1.0 — test/readonly-write-semantics.test.ts). Note this is NOT the blanket "the platform drops flow writes to readonly fields": the other two writers declare runAs:"system" and would survive. The least-privileged writer decides.',
-  };
 
   it('fields the list views filter on are editable in some form', () => {
     // account views filter on type/health_score, but the account form never
@@ -1045,7 +1026,6 @@ describe('forms can actually author the data the views depend on', () => {
       for (const name of filtered) {
         const field = objDef.fields?.[name];
         if (!isAuthorable(field)) continue; // readonly/derived fields are hook-stamped, not typed in
-        if (`${objectName}.${name}` in STAMPED_NOT_TYPED) continue; // stamped, but undeclarable as such
         if (!editable.has(name)) {
           bad.push(`${objectName}: views filter on "${name}" but no form lets a user set it`);
         }
