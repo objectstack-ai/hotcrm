@@ -10,8 +10,9 @@ import type { HookApi } from './_hook-api';
  * - Freezes quotes once `accepted` or `expired` — against USER edits only: a
  *   write that is purely the engine clearing a link is let through.
  * - On `accepted`, drafts a contract — carrying the quote's negotiated
- *   `payment_terms` onto it — and pushes the linked opportunity to
- *   `closed_won`.
+ *   `payment_terms` onto it, and filling what the quote cannot express from
+ *   `DRAFT_CONTRACT_DEFAULTS`, declared placeholders rather than decisions
+ *   (#1129) — and pushes the linked opportunity to `closed_won`.
  */
 
 // ⚠️ Helpers used by handlers are declared INSIDE each handler — L2 hook bodies
@@ -249,7 +250,49 @@ const quoteAccepted: Hook = {
           : undefined;
 
     const today = new Date().toISOString().slice(0, 10);
-    const months = 12;
+
+    /**
+     * PLACEHOLDER DEFAULTS — declared as defaults, NOT decided as business
+     * facts (#1129 ruling, 2026-08-31). An auto-drafted contract is a STARTING
+     * DRAFT an admin completes, not a faithful transcription of what was sold.
+     * `crm_contract` requires all three, a quote can express none of them, so
+     * the hook has to supply something; none of it is evidence about the deal:
+     *
+     *   - `contract_term_months` — `required + notNull + min: 1` on the
+     *     contract, and the quote has nowhere to record a term. 12 is a guess
+     *     with nothing behind it;
+     *   - `contract_type` — the contract declares six values (subscription /
+     *     service / license / partnership / nda / msa) and NO option default,
+     *     so this line is the only thing that ever picks one: every
+     *     auto-drafted contract in the app is a subscription and the other
+     *     five types are unreachable on this path. It does not stay here
+     *     either — `src/flows/billing-handoff.flow.ts` POSTs `contract_type`
+     *     to billing when the contract activates;
+     *   - `start_date` — the one member that is not a literal: the date the
+     *     quote happened to be ACCEPTED, which is not necessarily the date the
+     *     customer's term begins. A placeholder RULE rather than a placeholder
+     *     value. It sits in the block because the block is itself per-draft:
+     *     an L2 body has no module scope at runtime (see the file header), so
+     *     these are handler-local by construction, not module constants.
+     *
+     * `end_date` is not a fourth default — it is DERIVED from the two above
+     * (`addMonths`, real calendar months), so it inherits their guesses rather
+     * than adding one of its own.
+     *
+     * ⛔ Do not read these as decisions and do not quietly re-tune them. The
+     * alternative — the quote carrying a real term and type so the draft
+     * transcribes what was sold — is option A of #1129: recorded, not
+     * undertaken, unfrozen only by measured evidence that real sales processes
+     * fix the term and type at acceptance time. This block is then the list of
+     * values that move onto `crm_quote`. Leaving them unmarked was excluded by
+     * the same ruling: an unmarked hardcode is exactly how the `payment_terms`
+     * drift of #873 happened.
+     */
+    const DRAFT_CONTRACT_DEFAULTS = {
+      contract_term_months: 12,
+      contract_type: 'subscription',
+      start_date: today,
+    } as const;
 
     // The contract's ONE field explaining where it came from. ⛔ Never a record
     // id: `Auto-drafted from accepted quote MvNopWgEDZwm2T5L` names a string no
@@ -275,11 +318,14 @@ const quoteAccepted: Hook = {
     // required `crm_contact`, and one idiom for both is what keeps this honest.
     const contract: Record<string, unknown> = {
       status: 'draft',
-      contract_term_months: months,
-      start_date: today,
-      end_date: addMonths(today, months),
+      contract_term_months: DRAFT_CONTRACT_DEFAULTS.contract_term_months,
+      start_date: DRAFT_CONTRACT_DEFAULTS.start_date,
+      end_date: addMonths(
+        DRAFT_CONTRACT_DEFAULTS.start_date,
+        DRAFT_CONTRACT_DEFAULTS.contract_term_months,
+      ),
       contract_value: totalPrice,
-      contract_type: 'subscription',
+      contract_type: DRAFT_CONTRACT_DEFAULTS.contract_type,
       description: quoteLabel
         ? `Auto-drafted from accepted quote ${quoteLabel}`
         : 'Auto-drafted from an accepted quote',
@@ -292,6 +338,15 @@ const quoteAccepted: Hook = {
     // so "the quote chose nothing" stays an absent key rather than becoming a
     // value the contract's default would otherwise have supplied.
     if (paymentTerms) contract.payment_terms = paymentTerms;
+
+    // What the draft deliberately does NOT carry (#1129 ruling, 2026-08-31) —
+    // DECIDED, not overlooked. `crm_quote.shipping_terms` and
+    // `crm_quote.shipping_address` have no counterpart column on
+    // `crm_contract` at all; `crm_quote.billing_address` has one and is left
+    // for the admin completing the draft; and the quote's `description` would
+    // displace the provenance sentence written above, which is this contract's
+    // only record of where it came from. Copying any of them is part of option
+    // A (faithful transcription) and unfreezes with it, not before.
 
     // ⚠️ The two legs are INDEPENDENT and must stay so. As one straight-line
     // sequence, anything that made the contract insert throw also swallowed the
