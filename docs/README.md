@@ -17,7 +17,7 @@ HotCRM also has product-facing documentation under [`content/docs/`](../content/
 | Module boundaries and the ADR-0130 multi-package split plan | [architecture/module-split-plan.md](architecture/module-split-plan.md) |
 | Upgrade, seeding, and version alignment | [MAINTENANCE.md](MAINTENANCE.md) |
 | Customer requirements and product disposition | [requirements/README.md](requirements/README.md) |
-| Object field reference | [developers/api_reference.md](developers/api_reference.md) |
+| Where object and field metadata is declared | [developers/api_reference.md](developers/api_reference.md) |
 | ObjectStack code examples | [developers/code_examples.md](developers/code_examples.md) |
 
 ## Documentation Boundaries
@@ -60,7 +60,10 @@ When changing metadata or runtime behavior:
 
 1. Update the closest product docs in `content/docs/` if the user-facing behavior changed.
 2. Update `docs/STATUS.md` when counts or verification commands change.
-3. Update `docs/developers/api_reference.md` when object fields change.
+3. Leave `docs/developers/api_reference.md` alone when object fields change — the `fields:`
+   block of `src/objects/*.object.ts` is the reference, and that page points at it rather
+   than restating it. *Supersedes the instruction to hand-update that page, which asked for
+   the field transcript since removed from it — 2026-08-31 ruling, item 5.*
 4. Update `docs/developers/code_examples.md` when ObjectStack conventions change.
 5. Run the checks listed in `docs/STATUS.md`.
 
