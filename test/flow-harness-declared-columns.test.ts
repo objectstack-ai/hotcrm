@@ -6,6 +6,7 @@ import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import stack from '../objectstack.config';
 import { declaredRow, makeDataEngine, makeFlowHarness, type Rec } from './helpers/flow-harness';
 import { ForecastSnapshotFlow } from '../src/flows/forecast-snapshot.flow';
+import { QuoteGenerationFlow } from '../src/flows/quote-generation.flow';
 import forecastDerive from '../src/objects/forecast.hook';
 
 type AnyRec = Record<string, any>;
@@ -96,6 +97,29 @@ describe('the harness row shape is DERIVED from the registry, and matches a real
     },
   );
 
+  it('a real driver hands back a DETACHED row — the contract #1490 aligned to', async () => {
+    // The harness models a materialising driver. Row IDENTITY is part of that
+    // shape, and it is measured here rather than assumed so the two cannot drift
+    // apart silently: if a future platform version started handing back live
+    // rows, this is what would notice.
+    const api = ql.createContext({ isSystem: true });
+    const inserted = await api.object('crm_case').insert({
+      subject: 'detach probe', description: 'detach probe',
+    });
+    const earlier = await api.object('crm_case').findOne({ where: { id: inserted.id } });
+    const alsoEarlier = await api.object('crm_case').findOne({ where: { id: inserted.id } });
+
+    await api.object('crm_case').update({ subject: 'REWRITTEN' }, { where: { id: inserted.id } });
+
+    expect(earlier.subject, 'a real driver retro-mutated an earlier read').toBe('detach probe');
+    expect(inserted.subject, 'a real driver retro-mutated its insert result').toBe('detach probe');
+    expect(alsoEarlier, 'two reads of one row came back as one object').not.toBe(earlier);
+    expect(
+      (await api.object('crm_case').findOne({ where: { id: inserted.id } })).subject,
+      'a fresh read did not see the write',
+    ).toBe('REWRITTEN');
+  });
+
   it('SENTINEL — the driver really returns columns nobody wrote', () => {
     // Without this the comparison above could pass by both sides being sparse,
     // which is precisely the bug. `crm_case` declares far more than the two
@@ -123,7 +147,16 @@ describe('every route a row arrives by lands it in its declared shape', () => {
     const engine = makeDataEngine();
     const inserted = await engine.insert('crm_forecast', { owner_id: 'rep_1' });
     expect(inserted.organization_id).toBeNull();
-    expect(inserted).toBe(engine.store.crm_forecast[0]);
+    // CONTENT, not identity. This read `toBe` until #1490: `insert` handed back
+    // the stored object itself, and `update` mutates that object in place, so an
+    // earlier binding was retro-mutated by a later write in the same run. The
+    // claim being made here is "what insert returns is what the store holds" —
+    // that is a claim about VALUE, and it is unchanged. The detachment it used
+    // to also assert, in the opposite direction, is pinned deliberately below.
+    expect(inserted).toEqual(engine.store.crm_forecast[0]);
+    expect(inserted, 'insert() handed back the live stored row').not.toBe(
+      engine.store.crm_forecast[0],
+    );
   });
 
   it('materialises a row PUSHED into the store after the harness was built', async () => {
@@ -200,6 +233,106 @@ describe('the difference the shape makes to a filter — the reason for the chan
     // And the work actually happened, so the four queries above are not four
     // reads of an empty set.
     expect(Number(h.store.crm_forecast[0].commit_amount)).toBe(30_000);
+  });
+});
+
+describe('rows handed out by the data engine are DETACHED from the store (#1490)', () => {
+  /**
+   * The harness has two surfaces with OPPOSITE contracts, and this block pins
+   * both — they are independent, and the header comment that conflated them is
+   * what made #1490 look like a 19-file change.
+   *
+   *  - the METHODS are the DRIVER surface, and they hand back DETACHED rows.
+   *  - `store` is the INSPECTION surface, and it is LIVE.
+   *
+   * Measured before the fix: of the 19 files importing the harness, exactly one
+   * assertion anywhere depended on read-side identity — the `toBe` above, in
+   * this file. The other 18 read results back through `store`, which is
+   * untouched by the split.
+   */
+
+  it('does not retro-mutate a row a caller read BEFORE a write — the defect itself', async () => {
+    const engine = makeDataEngine({ crm_opportunity: [{ id: 'o1', stage: 'qualification' }] });
+    const earlier = await engine.findOne('crm_opportunity', { where: { id: 'o1' } });
+
+    await engine.update('crm_opportunity', { stage: 'proposal' }, { where: { id: 'o1' } });
+
+    expect(
+      earlier!.stage,
+      'the earlier read was retro-mutated by a later write — a guard evaluated\n'
+        + 'after that write would read POST-write state, which no driver would show it.',
+    ).toBe('qualification');
+    expect(engine.store.crm_opportunity[0].stage, 'the write did not land').toBe('proposal');
+  });
+
+  it('detaches on all three read routes, and hands two reads two objects', async () => {
+    const engine = makeDataEngine({ crm_opportunity: [{ id: 'o1', stage: 'qualification' }] });
+    const stored = engine.store.crm_opportunity[0];
+
+    expect(await engine.findOne('crm_opportunity', { where: { id: 'o1' } })).not.toBe(stored);
+    expect((await engine.find('crm_opportunity', { where: { id: 'o1' } }))[0]).not.toBe(stored);
+    expect(await engine.insert('crm_opportunity', { id: 'o2' })).not.toBe(
+      engine.store.crm_opportunity[1],
+    );
+
+    const a = await engine.findOne('crm_opportunity', { where: { id: 'o1' } });
+    const b = await engine.findOne('crm_opportunity', { where: { id: 'o1' } });
+    expect(a, 'two reads of one row came back as one object').not.toBe(b);
+    expect(a, 'the two reads disagree on content').toEqual(b);
+  });
+
+  it('a caller mutating a row it read does not reach the store', async () => {
+    const engine = makeDataEngine({ crm_opportunity: [{ id: 'o1', stage: 'qualification' }] });
+    const read = await engine.findOne('crm_opportunity', { where: { id: 'o1' } });
+    read!.stage = 'MUTATED BY CALLER';
+    expect(engine.store.crm_opportunity[0].stage).toBe('qualification');
+  });
+
+  it('but `store` stays LIVE — the contract 18 of the 19 suites actually use', async () => {
+    // The other half of the split, pinned so a later "make it all copies" change
+    // has to break this on purpose. A fixture seeds a row, the flow writes it,
+    // and the fixture reads the result back through the object it seeded.
+    const seeded: Rec = { id: 'o1', stage: 'qualification' };
+    const engine = makeDataEngine({ crm_opportunity: [seeded] });
+
+    await engine.update('crm_opportunity', { stage: 'proposal' }, { where: { id: 'o1' } });
+
+    expect(seeded.stage, 'the seeded object no longer tracks the store').toBe('proposal');
+    expect(engine.store.crm_opportunity[0], 'the store forked from the seed').toBe(seeded);
+  });
+
+  it('ACCEPTANCE — a partition stays a partition, so `quote_generation` notifies ONCE', async () => {
+    // The end-to-end symptom, and the measurement that says the mechanism above
+    // is the whole story. `quote_generation`'s `check_stage` has two conditional
+    // edges written as exact complements: `e4a` advances when the stage is one
+    // of prospecting/qualification/needs_analysis, `e4b` keeps the stage when it
+    // is none of them. The advance branch writes `stage: 'proposal'` — and while
+    // reads were live, it wrote into the very object `vars.oppRecord` points at,
+    // so `e4b` then read `proposal` and was satisfied too. Both edges were taken
+    // and `notify_owner` — reachable from `e4b` and from `e5` — ran TWICE.
+    //
+    // Measured: harness 2, deleted private engine 2, real ObjectQL 1. Now 1.
+    //
+    // ⛔ The flow's graph is NOT the defect and was not touched: it is correct on
+    // a real driver. Whether `notify_owner` should sit on two edges of a
+    // partition at all is a separate legibility question.
+    const h = makeFlowHarness({ quote_generation: QuoteGenerationFlow }, {
+      crm_opportunity: [{
+        id: 'opp_1', name: 'Globex Deal', amount: 200_000,
+        crm_account: 'acc_1', primary_contact: 'con_1', stage: 'qualification',
+      }],
+    });
+    const runId = await h.run('quote_generation', { recordId: 'opp_1' });
+    await h.resume(runId!, { quoteName: 'Q-1', expirationDays: 30, discount: 10 });
+
+    expect(
+      h.notifications,
+      'both edges of an exclusive partition were taken — the apparatus invented\n'
+        + 'a defect against a flow that is correct on a real driver.',
+    ).toHaveLength(1);
+    // And the advance branch really ran, so the single notification is not the
+    // keep-stage path passing by accident.
+    expect(h.store.crm_opportunity[0].stage, 'the advance branch did not run').toBe('proposal');
   });
 });
 
