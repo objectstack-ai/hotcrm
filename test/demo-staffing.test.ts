@@ -399,7 +399,27 @@ describe('the case-routing pools actually route (what this staffing lights)', ()
   const demoPositionRows = DemoOrgStaffing.flatMap((m) =>
     m.positions.map((position) => ({ user_id: m.email, position })),
   );
-  const holderOf = (position: string) => holdersOf(position)[0]?.email;
+  /**
+   * The demo person this pool routes to — pinned as a STRING before it is
+   * compared to anything.
+   *
+   * Measured while writing this block: comparing `input.owner_id` straight to
+   * `holdersOf(p)[0]?.email` passes VACUOUSLY on an unstaffed pool, because a
+   * hook that no-ops leaves `owner_id` undefined and the lookup returns
+   * undefined too — the two demonstrations below stayed green with both
+   * staffing rows deleted, i.e. exactly when the feature was dark again. So
+   * the empty pool fails here, on its own line, before any comparison.
+   */
+  const holderOf = (position: string): string => {
+    const email = holdersOf(position)[0]?.email;
+    expect(
+      email,
+      `nobody in the demo org holds "${position}" — the pool the hook reads is empty, so the ` +
+      `assertion below would be comparing undefined to undefined and would pass while the ` +
+      `mechanism is dark`,
+    ).toBeTypeOf('string');
+    return String(email);
+  };
 
   it('round-robins an ownerless case onto the demo service agent (#596)', async () => {
     const harness = makeHarness({ sys_user_position: demoPositionRows, crm_case: [] });
