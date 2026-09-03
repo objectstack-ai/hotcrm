@@ -3,6 +3,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL, applySystemFields } from '@objectstack/objectql';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
+import { InMemoryDriver } from '@objectstack/driver-memory';
 import stack from '../objectstack.config';
 import { declaredRow, makeDataEngine, makeFlowHarness, type Rec } from './helpers/flow-harness';
 import { ForecastSnapshotFlow } from '../src/flows/forecast-snapshot.flow';
@@ -10,6 +11,15 @@ import { QuoteGenerationFlow } from '../src/flows/quote-generation.flow';
 import forecastDerive from '../src/objects/forecast.hook';
 
 type AnyRec = Record<string, any>;
+
+const objects: AnyRec[] = (stack as AnyRec).objects ?? [];
+
+/** The app registry in the shape a driver's `initObjects` takes. */
+const shapedObjects = () =>
+  objects.map((o) => {
+    const shaped = applySystemFields(o as never, { multiTenant: false }) as AnyRec;
+    return { name: o.name, fields: shaped.fields, indexes: shaped.indexes };
+  });
 
 /**
  * The flow harness store returns the row shape a driver returns (#1458).
@@ -54,19 +64,13 @@ const PROBES: Record<string, Rec> = {
 };
 
 describe('the harness row shape is DERIVED from the registry, and matches a real driver', () => {
-  const objects: AnyRec[] = (stack as AnyRec).objects ?? [];
-  let ql: AnyRec;
+    let ql: AnyRec;
   const driverRows: Record<string, AnyRec> = {};
 
   beforeAll(async () => {
     const driver = new SqliteWasmDriver({ filename: ':memory:' });
     await driver.connect();
-    await driver.initObjects(
-      objects.map((o) => {
-        const shaped = applySystemFields(o as never, { multiTenant: false }) as AnyRec;
-        return { name: o.name, fields: shaped.fields, indexes: shaped.indexes };
-      }) as never,
-    );
+    await driver.initObjects(shapedObjects() as never);
     ql = (await ObjectQL.create({
       datasources: { default: driver as never },
       objects: Object.fromEntries(objects.map((o) => [o.name, o])) as never,
@@ -131,6 +135,189 @@ describe('the harness row shape is DERIVED from the registry, and matches a real
       unwritten.filter((k) => driverRows.crm_case[k] === null).length,
       'the unwritten columns came back as something other than null',
     ).toBeGreaterThan(10);
+  });
+
+  it('range operators exclude a NULL row BOTH ways — on both shipped drivers, and here (#1480)', async () => {
+    // The measurement the fix rests on, kept as a pin so it cannot drift.
+    //
+    // The harness used to route all four ordering operators through a
+    // `String(a) < String(b)` fallback. `String(null)` is `"null"`, which sorts
+    // ABOVE `"0"` and above any `2xxx` date string — so one null row was
+    // ADMITTED by `$gt` / `$gte` and REJECTED by `$lt` / `$lte`. A symmetric
+    // bug gets noticed; that asymmetry stayed invisible until someone wrote the
+    // filter that happened to point the wrong way.
+    //
+    // ⭐ BOTH shipped drivers are asked, not one. Encoding a semantic on the
+    // word of a single driver is how a harness ends up modelling something the
+    // platform does not agree with itself about — and the agreement measured
+    // here is exactly what licenses the harness to pick this answer.
+    const rows = [
+      { subject: 'c_val', description: 'x', resolution_time_hours: 5 },
+      { subject: 'c_null', description: 'x' },
+    ];
+
+    /** `op -> the subjects that operator selects`, for one query surface. */
+    const answers = async (find: (where: AnyRec) => Promise<AnyRec[]>) => {
+      const out: Record<string, string[]> = {};
+      for (const [op, operand] of [
+        ['$gt', 0], ['$gte', 0], ['$lt', 100], ['$lte', 100],
+      ] as const) {
+        out[op] = (await find({ resolution_time_hours: { [op]: operand } }))
+          .map((r) => r.subject).sort();
+      }
+      return out;
+    };
+
+    const viaDriver = async (driver: AnyRec) => {
+      await driver.connect?.();
+      await driver.initObjects?.(shapedObjects() as never);
+      const engine = (await ObjectQL.create({
+        datasources: { default: driver as never },
+        objects: Object.fromEntries(objects.map((o) => [o.name, o])) as never,
+      } as never)) as AnyRec;
+      const api = engine.createContext({ isSystem: true });
+      for (const row of rows) await api.object('crm_case').insert(row);
+      const result = await answers((where) => api.object('crm_case').find({ where }));
+      await engine.close?.();
+      return result;
+    };
+
+    const sqlite = await viaDriver(new SqliteWasmDriver({ filename: ':memory:' }) as never);
+    const memory = await viaDriver(new InMemoryDriver({} as never) as never);
+
+    expect(
+      memory,
+      'the two shipped drivers disagree about NULL under a range operator. The\n'
+        + 'harness models ONE semantic; if the platform no longer has one, that is a\n'
+        + 'platform question and this file must not paper over it.',
+    ).toEqual(sqlite);
+
+    expect(
+      sqlite,
+      'a driver ordered NULL — the premise this harness encodes has moved',
+    ).toEqual({ $gt: ['c_val'], $gte: ['c_val'], $lt: ['c_val'], $lte: ['c_val'] });
+
+    const store = makeDataEngine();
+    for (const row of rows) await store.insert('crm_case', row);
+    expect(
+      await answers((where) => store.find('crm_case', { where })),
+      'the harness selects a different set than a real driver does. Before #1480\n'
+        + 'it answered { $gt: [c_null, c_val], $gte: [c_null, c_val], $lt: [c_val],\n'
+        + '$lte: [c_val] } — the null row admitted by half the operators and\n'
+        + 'rejected by the other half.',
+    ).toEqual(sqlite);
+  }, 60_000);
+});
+
+describe('NULL is not orderable, so a range predicate excludes it (#1480)', () => {
+  /**
+   * The harness-side half of the contract measured above. These cases run
+   * against the store alone, so they state the rule in the shape a fixture
+   * meets it: what a sweep's window does to a row that has no value.
+   *
+   * ⚠️ Fixing this surfaced NO reds across the 19 suites importing the harness
+   * (350 tests, all green before and after). That is not evidence the rule was
+   * already covered — it is evidence of the opposite, and the reason this block
+   * exists. Instrumented across those 19 suites the new guard fires 9 times,
+   * and every one of the 9 is `$lt` / `$lte`: the direction the string
+   * comparison happened to get RIGHT. The over-admitting half — `$gt` / `$gte`
+   * silently keeping a row a driver drops — was exercised by nothing at all.
+   */
+
+  it('the ASYMMETRY is gone — all four operators drop the null row', async () => {
+    const engine = makeDataEngine({
+      crm_opportunity: [
+        { id: 'o_val', amount: 5 },
+        { id: 'o_null' }, // declared, materialised to `amount: null` (#1490)
+      ],
+    });
+    const ids = async (where: Rec) => (await engine.find('crm_opportunity', { where })).map((r) => r.id);
+
+    expect(await ids({ amount: { $gt: 0 } }), '`String(null)` sorts above `"0"`').toEqual(['o_val']);
+    expect(await ids({ amount: { $gte: 0 } }), '`String(null)` sorts above `"0"`').toEqual(['o_val']);
+    expect(await ids({ amount: { $lt: 100 } })).toEqual(['o_val']);
+    expect(await ids({ amount: { $lte: 100 } })).toEqual(['o_val']);
+  });
+
+  it('a date WINDOW excludes an undated row from both bounds — the sweep case', async () => {
+    // The reason this is worth a card rather than a footnote. A scheduled sweep
+    // bounded by `{ $gte: period_start, $lte: period_end }` is a window, and a
+    // row with no close date is not in it. `"null"` sorts above any `2xxx` date
+    // string, so it used to be in exactly half of it.
+    const engine = makeDataEngine({
+      crm_opportunity: [
+        { id: 'o_dated', close_date: '2026-06-15' },
+        { id: 'o_undated' },
+      ],
+    });
+    const inWindow = await engine.find('crm_opportunity', {
+      where: { close_date: { $gte: '2026-01-01', $lte: '2026-12-31' } },
+    });
+    expect(inWindow.map((r) => r.id), 'an undated row landed inside a date window').toEqual(['o_dated']);
+    // And each bound alone, so the pair above cannot pass by the two halves
+    // cancelling out — which is precisely how the defect hid.
+    expect(
+      (await engine.find('crm_opportunity', { where: { close_date: { $gte: '2026-01-01' } } })).map((r) => r.id),
+      'the OVER-ADMITTING direction — nothing in the 19 suites covered it',
+    ).toEqual(['o_dated']);
+    expect(
+      (await engine.find('crm_opportunity', { where: { close_date: { $lte: '2026-12-31' } } })).map((r) => r.id),
+    ).toEqual(['o_dated']);
+  });
+
+  it('a genuinely ABSENT key behaves exactly like a materialised null', async () => {
+    // #1490 materialises DECLARED columns, so on a declared object the two
+    // spellings converge before a filter can see them. They do not converge on
+    // an object nothing declares — `test/flow-decision-authority.test.ts` drives
+    // a node against exactly such a name — and both drivers answer identically
+    // either way (`SqliteWasmDriver` materialises the omitted key, the memory
+    // driver leaves it sparse; the four operators select the same rows). So the
+    // rule is about ORDERABILITY, not about which of the two spellings a row
+    // happens to carry.
+    const engine = makeDataEngine({
+      crm_audit: [{ id: 'a_val', score: 5 }, { id: 'a_absent' }],
+    });
+    expect(Object.keys(engine.store.crm_audit[1]), 'the undeclared row was materialised after all')
+      .toEqual(['id']);
+    for (const [op, operand] of [['$gt', 0], ['$gte', 0], ['$lt', 100], ['$lte', 100]] as const) {
+      expect(
+        (await engine.find('crm_audit', { where: { score: { [op]: operand } } })).map((r) => r.id),
+        `an absent key satisfied ${op}`,
+      ).toEqual(['a_val']);
+    }
+  });
+
+  it('an unorderable OPERAND never reaches the comparison either', async () => {
+    // The same coercion, the other side of it: `compare(5, null)` was
+    // `"5" < "null"`, so `{ $lt: null }` SELECTED the valued row — a row both
+    // drivers exclude. ⚠️ The two drivers do diverge on whether the NULL row
+    // itself answers `$gte: null` / `$lte: null` (sqlite says no, mingo says
+    // yes); that divergence is reported as a platform question and is not
+    // decided here, because a null VALUE is already excluded by the rule above.
+    const engine = makeDataEngine({ crm_opportunity: [{ id: 'o_val', amount: 5 }] });
+    for (const op of ['$gt', '$gte', '$lt', '$lte'] as const) {
+      expect(
+        await engine.find('crm_opportunity', { where: { amount: { [op]: null } } }),
+        `a valued row was ordered against a null operand by ${op}`,
+      ).toHaveLength(0);
+    }
+  });
+
+  it('SENTINEL — equality-shaped operators are untouched, and rows still match', async () => {
+    // Without this the block above could pass by the store returning nothing at
+    // all, which is the other way to be wrong. `$eq` / `$ne` / `$in` / `$nin`
+    // are equality-shaped: the store models `IS NULL` rather than SQL's unknown,
+    // and both drivers agree with it on every one of these.
+    const engine = makeDataEngine({
+      crm_opportunity: [{ id: 'o_val', amount: 5 }, { id: 'o_null' }],
+    });
+    const ids = async (where: Rec) => (await engine.find('crm_opportunity', { where })).map((r) => r.id).sort();
+
+    expect(await ids({ amount: 5 }), 'a plain equality stopped matching').toEqual(['o_val']);
+    expect(await ids({ amount: null }), '`IS NULL` stopped matching the null row').toEqual(['o_null']);
+    expect(await ids({ amount: { $ne: null } })).toEqual(['o_val']);
+    expect(await ids({ amount: { $nin: [5] } })).toEqual(['o_null']);
+    expect(await ids({ amount: { $gt: -1 } }), 'a valued row stopped satisfying $gt').toEqual(['o_val']);
   });
 });
 
