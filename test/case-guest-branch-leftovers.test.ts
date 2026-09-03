@@ -41,10 +41,39 @@ import stack from '../objectstack.config';
  * why "the branch ran" is a measurement here rather than an assumption.
  *
  * ⚠️ The boundary from #1133 is unchanged and is not quietly widened here.
- * What these cases measure is the HOOK-LEVEL control. A real anonymous write
- * also crosses `plugin-security`'s middleware, and nobody has measured that
- * path — so nothing below is evidence that a guest reaches these columns in
- * production, and a failure here should not be read that way either.
+ * What these cases measure is the HOOK-LEVEL control, and that stays the whole
+ * of what a red below proves: they call ObjectQL directly with a guest context
+ * and make no HTTP request, so the REST layer and `plugin-security`'s
+ * middleware — which a real anonymous write does cross — are not in play here.
+ *
+ * That middleware path is no longer unmeasured. ⚠️ The reading is INHERITED,
+ * not taken for this file: PR #1515 drove it against a real server
+ * (`objectstack start`, the production plugin set) unauthenticated over HTTP,
+ * and it was NOT re-run when this paragraph was rewritten. In that run every
+ * generic anonymous write surface answered `401 UNAUTHENTICATED`, and the one
+ * surviving route is the public form submit, which filters the body against an
+ * allow-list built from the matched form view's OWN declared sections.
+ * `src/objects/case.hook.ts` carries that measurement in full, at the branch
+ * these cases exercise — read it there rather than a second copy of the table
+ * here.
+ *
+ * ⛔ The answer is PER-COLUMN, and flattening it into one reassuring sentence
+ * gets one of the two columns below wrong. `web_to_case` declares exactly
+ * `subject`, `description`, `type` and `priority` (`src/views/case.view.ts` —
+ * that list WAS re-read here, unlike the route readings above), so against the
+ * allow-list mechanism the two columns this file pins land differently:
+ *
+ *   escalation_reason  NOT declared ⇒ dropped before ObjectQL and before the
+ *                      hook, so a guest does not reach it on the shipped app.
+ *   priority           DECLARED ⇒ the form ASKS the guest for it, so a guest
+ *                      DOES reach it — by design, and that is exactly what
+ *                      item 2 below is about.
+ *
+ * ⛔ Nor do those 401s make this branch redundant. What holds is that declared
+ * field list — a product decision, not a security declaration — and #1515
+ * measured it as such by widening the form by one field, after which the same
+ * anonymous POST stored the planted value. The strip is the layer that has to
+ * hold when the list moves.
  *
  * ### Item 1 — why `escalation_reason` belongs in the strip
  *
