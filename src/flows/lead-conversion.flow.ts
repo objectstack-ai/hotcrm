@@ -441,7 +441,17 @@ export const LeadConversionFlow: Flow = {
     // `e2` keep their ids and their meaning as "the first edge" and "the edge
     // out of the screen".
     { id: 'e0', source: 'start', target: 'get_lead', type: 'default' },
-    { id: 'e20', source: 'get_lead', target: 'decision_duplicate', type: 'default' },
+    // That same reorder gave this edge (get_lead → decision_duplicate) the id
+    // `e20`, which the terminal edge `send_notification → end` had already held
+    // since the original graph — so the file carried `e20` TWICE. The collision
+    // was inert, because traversal filters out-edges by `source` and never by
+    // `id`, but it contradicted the convention above, and it was a trap for the
+    // next editor picking a "free" id out of the sequence — #1288 had to add
+    // `e25` to this very file. The convention decides which of the two moves:
+    // the terminal edge keeps the id it has always had, so the newer edge takes
+    // a fresh `e27` — the next id after the highest in use. `e1` and `e3` stay
+    // vacant, as retired ids do.
+    { id: 'e27', source: 'get_lead', target: 'decision_duplicate', type: 'default' },
     // ⚠️ Both conditions are TOTAL, and on this surface that is not a style
     // preference: a flow condition is interpreted strict CEL on every run, and
     // an unguarded field read against a driver that omits absent columns
