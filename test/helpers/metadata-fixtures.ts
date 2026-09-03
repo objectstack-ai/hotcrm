@@ -1,5 +1,11 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import * as PlatformObjects from '@objectstack/platform-objects';
+import * as PluginApprovals from '@objectstack/plugin-approvals';
+import * as PluginSharing from '@objectstack/plugin-sharing';
+import * as ServiceAutomation from '@objectstack/service-automation';
+import * as ServiceMessaging from '@objectstack/service-messaging';
+import * as ServiceStorage from '@objectstack/service-storage';
 import stack from '../../objectstack.config';
 
 /**
@@ -53,33 +59,98 @@ export const packFor = (locale: string): AnyRec | undefined =>
 const SYSTEM_FIELDS = ['id', 'created_at', 'updated_at', 'created_by', 'updated_by'];
 
 /**
- * System objects the installed platform plugins actually register, verified
- * against the 16.1.0 bundles in node_modules:
- *   - @objectstack/platform-objects — sys_user, sys_email, sys_file, … (the
- *     large core set; only the ones app metadata references are listed here)
- *   - @objectstack/plugin-approvals — sys_approval, sys_approval_request,
- *     sys_approval_action, … (note: there is NO `sys_approval_process`)
- *   - the activity/comment timeline objects used by `record:activity` and the
- *     log_call / log_meeting actions
- * A reference to a `sys_*` name outside this set matches nothing at runtime.
+ * System objects the installed platform actually registers — DERIVED from the
+ * packages' own rosters rather than hand-copied out of them.
+ *
+ * Both dangling-reference guards spell a resolvable object as
+ * `objectNames.has(n) || PLATFORM_OBJECTS.has(n)`, so this set is the half of
+ * that predicate covering names this app does not author. It used to be
+ * sixteen names typed out by hand, with the citation *"verified against the
+ * 16.1.0 bundles in node_modules"* — against a 17.2.0 pin. A machine roster
+ * kept by hand fails in both directions once it drifts, and it had: a
+ * registered object missing from the set makes a valid reference look dangling
+ * (a false red on an unrelated PR), and a listed name that nothing registers
+ * lets a genuinely dangling reference pass — a false green in the guard whose
+ * whole job is to catch that. Reading the rosters removes the copy, and with
+ * it the version citation that could go stale.
+ *
+ * ### The predicate, and why `name` + `fields` is the right anchor
+ *
+ * A roster entry is an `ObjectSchema.create(...)` descriptor, and what makes
+ * it an OBJECT rather than some other metadata is that it carries a `fields`
+ * map. Measured on 17.2.0 across the six packages below: 62 exported values
+ * carry both `name` and `fields`, and all 62 names are `sys_*` — no
+ * non-platform name slips in. The control is the near miss: 7 exported values
+ * carry a `name` but NO `fields`, and they are exactly the things that are not
+ * objects — `ACCOUNT_APP` / `SETUP_APP` / `STUDIO_APP` (apps), the three
+ * `sys_*_detail` pages, and `system_overview` (a dashboard). The predicate
+ * excludes precisely those. Nothing exports `fields` without a `name`.
+ *
+ * ### Which packages, and why these
+ *
+ * Each roster below is loaded by something this stack declares, so a name it
+ * registers really does resolve at runtime. The capability→package map lives
+ * in the CLI's `CAPABILITY_PROVIDERS` and is not exported, so the packages —
+ * not the object names — are the part still written out here.
+ *
+ * ### The residue, which is expected and not a failure
+ *
+ * `@objectstack/plugin-audit` registers `sys_audit_log`, `sys_activity` and
+ * `sys_comment` by calling `syncObjectSchema()` on each from its
+ * `provisionSystemTables()` at plugin init. Its descriptors are module-private
+ * — `'SysActivity' in require('@objectstack/plugin-audit')` is `false` — so
+ * they are not statically derivable from any public surface, and no deep
+ * export subpath offers them (its `exports` map has only `"."`). They stay
+ * hand-listed, with that as the reason. `sys_activity` is live app metadata
+ * (`ctx.api.object('sys_activity').insert(...)` in two action bodies), so
+ * dropping it would be a false red, not a tidy-up.
+ *
+ * ### Deriving WIDENS this set, deliberately
+ *
+ * 16 names become 65: 50 enter, and exactly one leaves — `sys_approval`,
+ * which NOTHING registers. `@objectstack/plugin-approvals` exports
+ * `SysApprovalRequest` / `SysApprovalAction` / `SysApprovalApprover` /
+ * `SysApprovalDelegation` and no `SysApproval`; the only occurrence of the
+ * bare token in any installed bundle is a `startsWith('sys_approval')` prefix
+ * guard. So the old set admitted a name matching nothing at runtime — exactly
+ * the class it exists to reject. The widening is the accurate direction, not a
+ * relaxation: this set's contract is *"a reference to a `sys_*` name outside
+ * it matches nothing at runtime"*, and a name the platform really registers
+ * does resolve, so withholding it makes the guard wrong in the false-red
+ * direction. Every one of the 50 arrivals is backed by a roster entry read
+ * from the installed package, and no `sys_*` reference in today's app metadata
+ * changes verdict: the guards were green before this derivation and are green
+ * after it.
  */
-export const PLATFORM_OBJECTS = new Set([
-  'sys_user',
-  'sys_organization',
-  'sys_team',
-  'sys_email',
-  'sys_email_template',
-  'sys_file',
-  'sys_attachment',
-  'sys_notification',
-  'sys_inbox_message',
-  'sys_activity',
-  'sys_comment',
-  'sys_approval',
-  'sys_approval_request',
-  'sys_approval_action',
-  'sys_approval_approver',
-  'sys_approval_delegation',
+const ROSTER_MODULES: Record<string, unknown> = {
+  '@objectstack/platform-objects': PlatformObjects, //   core roster, always loaded
+  '@objectstack/plugin-approvals': PluginApprovals, //   requires: 'approvals'
+  '@objectstack/plugin-sharing': PluginSharing, //       requires: 'sharing'
+  '@objectstack/service-automation': ServiceAutomation, // requires: 'automation'
+  '@objectstack/service-messaging': ServiceMessaging, // always-on slate (email)
+  '@objectstack/service-storage': ServiceStorage, //     always-on slate (storage)
+};
+
+/** A roster entry is a metadata value carrying both a `name` and a `fields` map. */
+const isRegisteredObject = (value: unknown): value is { name: string; fields: AnyRec } => {
+  if (!value || typeof value !== 'object') return false;
+  const rec = value as AnyRec;
+  return typeof rec.name === 'string' && !!rec.fields && typeof rec.fields === 'object';
+};
+
+/**
+ * Provisioned imperatively by `@objectstack/plugin-audit` and not exported by
+ * it — see "The residue" above. Hand-listed because it is not derivable.
+ */
+const AUDIT_PROVISIONED = ['sys_audit_log', 'sys_activity', 'sys_comment'];
+
+export const PLATFORM_OBJECTS = new Set<string>([
+  ...Object.values(ROSTER_MODULES).flatMap((mod) =>
+    Object.values(mod as AnyRec)
+      .filter(isRegisteredObject)
+      .map((obj) => obj.name),
+  ),
+  ...AUDIT_PROVISIONED,
 ]);
 
 export const fieldsOf = (obj: string) => [

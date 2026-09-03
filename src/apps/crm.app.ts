@@ -189,8 +189,10 @@ export const CrmApp = App.create({
         // on.
         //
         // There is no "Processes" item either: @objectstack/plugin-approvals
-        // registers sys_approval / sys_approval_request / sys_approval_action …,
-        // but no `sys_approval_process` object exists in any installed plugin,
+        // registers sys_approval_request / sys_approval_action /
+        // sys_approval_approver / sys_approval_delegation — but neither a bare
+        // `sys_approval` nor a `sys_approval_process` object exists in any
+        // installed plugin (measured on the 17.2.0 rosters),
         // so the old item's requiresObject guard hid it on every install,
         // forever.
         { id: 'nav_approval_requests', type: 'component', componentRef: 'approvals:inbox', label: 'Inbox', icon: 'inbox', requiresObject: 'sys_approval_request' },
