@@ -412,19 +412,72 @@ export function makeDataEngine(seed: Record<string, Rec[]> = {}): DataEngine {
  *
  * `previous` for an update is the first matching row — the flows here update
  * by `id`, and `update_record` cannot fan out anyway (no `options.multi`).
+ *
+ * ### `ctx.api` is part of the shape, not an extra (#1405)
+ *
+ * A hook that READS to decide what to write — every ownership writer in
+ * `src/objects/_case-assignment.ts` counts rows to pick a pool member — opens
+ * with `const api = ctx.api as HookApi | undefined; if (!api) return;`. Hand it
+ * a ctx with no `api` and it stands down on line two, so the hook "runs",
+ * nothing throws, and the write it exists to make silently does not happen.
+ * That is the shape of failure this repo keeps paying for: a green test over a
+ * body that never reached its own work. The api reads through the SAME store
+ * the flow writes to, so a hook sees the run's own rows.
+ *
+ * Ordered by `priority` ascending, the way the engine runs them — the ownership
+ * writers here are a priority CHAIN (`case_sla_defaults` 200 strips a
+ * guest-supplied owner, `case_escalation_reassign` 250 assigns one,
+ * `case_self_claim` 260 stands down when 250 already wrote), and array order
+ * would run them in whatever order a fixture happened to list them in.
  */
 function withHooks(engine: DataEngine, hooks: Hook[]): DataEngine {
+  /**
+   * The `ctx.api` surface, over this run's own store.
+   *
+   * `where` and only `where`, the same line `test/helpers/hook-harness.ts`
+   * draws: the kernel's `findOne` spreads an unknown `filter` key into the AST
+   * and answers with the object's FIRST row, and `count` ignores it and counts
+   * everything. A harness that quietly honoured both spellings would certify a
+   * hook the engine silently mis-runs.
+   */
+  const hookApi = {
+    object(name: string) {
+      const scoped = (q: Rec = {}): Rec => {
+        if ('filter' in q) {
+          throw new Error(
+            'flow-harness: hook ctx.api query key "filter" is not a predicate — the kernel ' +
+              'ignores it on findOne/count and reads the wrong record. Use "where".',
+          );
+        }
+        return { where: q.where ?? {}, ...(q.fields ? { fields: q.fields } : {}), ...(typeof q.top === 'number' ? { limit: q.top } : {}) };
+      };
+      return {
+        find: (q: Rec = {}) => engine.find(name, scoped(q)),
+        findOne: (q: Rec = {}) => engine.findOne(name, scoped(q)),
+        count: (q: Rec = {}) => engine.count(name, scoped(q)),
+        insert: (doc: Rec) => engine.insert(name, doc),
+        update: (doc: Rec, options: Rec) => engine.update(name, doc, options),
+        delete: (options: Rec) => engine.delete(name, options),
+      };
+    },
+  };
+
+  const ordered = [...hooks].sort(
+    (a, b) => ((a as Rec).priority ?? 0) - ((b as Rec).priority ?? 0),
+  );
+
   const run = async (
     object: string,
     event: 'beforeInsert' | 'beforeUpdate',
     input: Rec,
     previous?: Rec,
   ) => {
-    for (const hook of hooks) {
+    for (const hook of ordered) {
       if (hook.object !== object) continue;
       if (!(hook.events ?? []).includes(event as never)) continue;
       await (hook.handler as (ctx: Rec) => unknown)({
         event, object, input, previous, user: undefined, logger: silentLogger,
+        api: hookApi,
       });
     }
   };

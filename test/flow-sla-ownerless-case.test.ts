@@ -21,8 +21,18 @@ import { makeFlowHarness, type Rec } from './helpers/flow-harness';
  * flagged.
  *
  * That blast radius — not the missing notification — is what these tests pin.
- * Who an ownerless breach should escalate TO is a product decision and stays
- * open on #1405.
+ *
+ * ⚠️ SCOPE, after the 2026-09-03 ruling: who an ownerless breach reaches is no
+ * longer open, and it is NOT pinned here. The sweep now re-reads the case after
+ * `flag_breach` and alerts the owner the escalation hand-off assigned — see
+ * `test/flow-sla-ownerless-assignment.test.ts`, which drives both ruled
+ * branches with the app's real `crm_case` hooks installed.
+ *
+ * This file deliberately keeps running the flow with NO hooks, which is the
+ * shape where no assignment can happen: every ownerless case reaches the second
+ * gate still ownerless. That makes it the survival pin — the sweep completes and
+ * flags every case even when nothing can be done about ownership — and it is
+ * the reason the two files do not overlap.
  */
 
 const iso = (daysFromNow: number): string => {
@@ -90,7 +100,7 @@ const OWNERLESS = ['c_absent', 'c_null', 'c_blank'];
 interface RunSummary {
   selected?: number;
   acted?: number;
-  nodes?: { nodeId: string; status?: string; runs?: number; skipped?: number; acted?: number }[];
+  nodes?: { nodeId: string; status?: string; runs?: number; skipped?: number; acted?: number; selected?: number }[];
   gates?: { nodeId: string; targetNodeId?: string; edgeId?: string; label?: string; skipped?: number }[];
 }
 interface RunResult { success?: boolean; status?: string; error?: string; summary?: RunSummary }
@@ -122,11 +132,18 @@ describe('case_sla_monitor — an ownerless breached case (#1405)', () => {
   });
 
   it('reaches EVERY selected case, and the run summary says so', async () => {
-    const { result, nodeOf } = await runSweep();
+    const { nodeOf } = await runSweep();
     // 5 breached rows selected (the 6th is not due). `flag_breach` running once
     // per selected case is the machine-checkable form of "the sweep finished
     // its work" — before the fix it ran twice and the run reported `acted: 0`.
-    expect(result.summary?.selected, 'the sweep selected the wrong set').toBe(5);
+    //
+    // Read off the QUERY NODE, not off `summary.selected`. The run-level figure
+    // is the SUM of every `get_record`'s `selected` metric, so the per-case
+    // `reload_case` added by the assignment half of #1405 now contributes to it
+    // (measured: 5 + 3 = 8 here). The node-level number is the one that means
+    // "how many breached cases this sweep picked up", and it is what the
+    // selection claim was always about.
+    expect(nodeOf('query_breached')?.selected, 'the sweep selected the wrong set').toBe(5);
     expect(nodeOf('flag_breach')?.runs, 'flag_breach did not reach every case').toBe(5);
     expect(nodeOf('check_owner')?.runs, 'the gate did not see every case').toBe(5);
   });
@@ -137,13 +154,25 @@ describe('case_sla_monitor — an ownerless breached case (#1405)', () => {
     // the record, the engine's own run summary attributes the three skipped
     // notifications to the named gate — so run history shows WHY they were
     // skipped rather than just showing fewer notifications than cases.
-    const gate = (result.summary?.gates ?? []).find((g) => g.nodeId === 'check_owner');
+    //
+    // Selected by EDGE id, never by node id alone: `check_owner` now carries
+    // TWO out-edges (`b2` to the notify, `b3` to the re-read the assignment
+    // half of #1405 added), so a `find` on the node id would return whichever
+    // the engine happened to emit first — and the emission order is completion
+    // order, which varies run to run (measured: `b3` and `b5` swap).
+    const gates = result.summary?.gates ?? [];
+    const gate = gates.find((g) => g.edgeId === 'b2');
     expect(gate, 'the gate is absent from the run summary').toBeTruthy();
+    expect(gate?.nodeId).toBe('check_owner');
     expect(gate?.targetNodeId).toBe('notify_team');
     expect(gate?.skipped, 'the gate did not account for the ownerless cases').toBe(OWNERLESS.length);
+    // …and the second gate accounts for the same three cases again, after the
+    // re-read found no owner to have been assigned. Two named skips per case,
+    // not one — this run has no hooks installed, so nothing could place them.
+    expect(gates.find((g) => g.edgeId === 'b5')?.skipped).toBe(OWNERLESS.length);
     const notify = nodeOf('notify_team');
     expect(notify?.status, 'notify recorded a failure').toBe('success');
-    expect(notify?.skipped).toBe(OWNERLESS.length);
+    expect(notify?.skipped, 'the notify skips are unaccounted for').toBe(OWNERLESS.length * 2);
     expect(notify?.runs, 'notify ran for a case with no owner').toBe(2);
   });
 

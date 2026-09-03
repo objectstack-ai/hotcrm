@@ -77,6 +77,8 @@ Two conditions this page used to list do not exist:
 - **There is no High-priority branch.** A High case is never escalated automatically. Raising one is a manual step — the **Escalate Case** button on the case record.
 - **No escalation condition reads the account.** Neither *Customer* nor *prospect*, nor any account tier, appears in any of them — no flow in this app reads an account's type at all. A Customer's High case and a prospect's High case are treated identically: neither escalates on its own.
 
+A breach on a case **nobody owns** is handled the same way, and it is worth stating separately because it used to be the one case nobody was told about. The sweep escalates it like any other, the hand-off below gives it a Service Manager, and the alert goes to that new owner. If nobody holds the Service Manager position, the case stays unowned and no alert is sent — the breach is still recorded on the case and still shows in **Escalated Cases**, and the rest of the sweep runs as normal.
+
 The time-based path is what catches them. `case_sla_monitor` escalates any open case whose **SLA Due Date** has passed, and since the matrix landed every priority has one — so a High case nobody touches is escalated when its 6-to-8-hour clock runs out, and a Low case when its week does. That is a change in behaviour worth planning for: priorities that used to sit silently now escalate on time, which is the point, but it also means the **Escalated Cases** view fills up with more than Critical work.
 
 ### What the escalation does
@@ -90,7 +92,7 @@ When triggered, the flow performs these steps in order:
 
 The status change to *Escalated* then fires the `case_status_side_effects` hook, which opens a **follow-up task** due tomorrow at **Urgent** priority — for cases that have an account, since the task is keyed to that account.
 
-The hand-off is **least-loaded**, not round-robin by rotation: whoever holds the position with the fewest open (neither *Resolved* nor *Closed*) cases takes it, so consecutive escalations spread across the team without any counter to keep. It steps aside in three situations, each of them deliberate: **nobody holds the position** — the state a fresh install is in, and the demo org too — so the case keeps its owner and the escalation completes as it always did; the case is **already owned by a pool member**, so it is left with the manager working it; or the same write **names an owner itself**, which wins.
+The hand-off is **least-loaded**, not round-robin by rotation: whoever holds the position with the fewest open (neither *Resolved* nor *Closed*) cases takes it, so consecutive escalations spread across the team without any counter to keep. It steps aside in three situations, each of them deliberate: **nobody holds the position** — the state a fresh install is in — so the case keeps its owner and the escalation completes as it always did; the case is **already owned by a pool member**, so it is left with the manager working it; or the same write **names an owner itself**, which wins.
 
 The mechanics, for the record: the reassignment is not a second write. It rides on the escalation update itself (a `beforeUpdate` hook, `case_escalation_reassign` in `src/objects/_case-assignment.ts`) — which is why it fires no extra automation and cannot loop, and why the flow's own `update_record` node still writes no owner. A flow could not do this: `{caseRecord.owner_id.manager}` dot-walks a lookup and interpolates to the literal `undefined`.
 

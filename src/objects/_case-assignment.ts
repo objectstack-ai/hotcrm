@@ -265,11 +265,27 @@ export function createCaseRoundRobinAssign(hookName = 'case_auto_assign'): Hook 
  * is idempotent — a case already owned by a pool member is left alone.
  * `test/case-assignment.test.ts` drives all three properties.
  *
+ * ## The SLA sweep reaches this hook, and depends on it (#1405)
+ *
+ * `case_sla_monitor`'s `flag_breach` node writes `status: 'escalated'` on every
+ * breached case, which IS the transition below — so the scheduled sweep puts an
+ * ownerless breached case through this assignment without any flow-callable
+ * seam, and the flow then re-reads the case (`reload_case`) to alert the owner
+ * this hook produced. ⚠️ That makes the TRANSITION predicate load-bearing for a
+ * second caller: narrowing it to record-triggered escalations, or moving the
+ * assignment to an `afterUpdate` write, silently returns the sweep to alerting
+ * nobody for an unowned breach. `test/flow-sla-ownerless-assignment.test.ts`
+ * drives the real flow through the real hook chain and goes red if it does.
+ *
  * ## The empty pool: a no-op that is still VISIBLE
  *
  * `sys_user_position` membership is runtime data, and `service_manager` is
- * unstaffed on a fresh install and in the demo org (`src/sharing/demo-staffing.ts`
- * leaves the leadership bench empty deliberately). With no pool the case keeps
+ * unstaffed on a fresh install. ⚠️ The demo org is NO LONGER one of those: #1102
+ * staffs Tomas Okafor into the position (`src/sharing/demo-staffing.ts`), so the
+ * exemplar now demonstrates the hand-off rather than the stand-down — which is
+ * also what makes the sweep's assignment visible on this repo's own seed.
+ *
+ * With no pool the case keeps
  * its owner and the escalation completes as before. Unlike the intake path that
  * needs no new surface to stay visible: an escalated case is not ownerless, it
  * sits in the `escalated_cases` view, and `case_escalation_sharing` already
