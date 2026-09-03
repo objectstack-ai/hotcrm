@@ -156,9 +156,10 @@ import { REPO_ROOT } from './helpers/repo-root';
  *    Automation** — only *Flows*」 is both true and the more useful sentence.
  *  - **13 → 0**, the zh-Hant strings, all of them structural: the platform
  *    ships `en` / `zh-CN` / `ja-JP` / `es-ES` and **no Traditional-Chinese
- *    pack**, so a zh-Hant reader sees the English UI and every one of the 13
+ *    pack**, so the console falls back to Simplified and every one of the 13
  *    described a surface that existed in no configuration. Ruled on the card:
- *    zh-Hant pages spell platform navigation in **English**, the convention
+ *    zh-Hant pages spell platform navigation in **English** rather than ship
+ *    mixed Simplified/Traditional script, the convention
  *    `getting-started/quick-tour.zh-Hant.mdx` already followed and the same
  *    fact `docs-search-navigation-views.test.ts` recorded for 待我審核 (#973).
  *    Each was ALSO an instance of one of the two sub-classes above wearing a
@@ -167,6 +168,8 @@ import { REPO_ROOT } from './helpers/repo-root';
  *    *物件* / *電子郵件範本* were Studio's, and the two on
  *    `guides/email-and-calendar.zh-Hant.mdx` were surface-denials that
  *    resisted renaming for the same reason their zh-Hans twin did.
+ *    ⛔ The reason is the FALLBACK, not the reader — stated in full, with
+ *    the ban on the form #1368 retired, at {@link KNOWN_UNRESOLVED_CRM}.
  *
  * ⛔ **Do not delete {@link KNOWN_UNRESOLVED} because it is empty.** An empty
  * ledger that is still checked in both directions is the strongest state this
