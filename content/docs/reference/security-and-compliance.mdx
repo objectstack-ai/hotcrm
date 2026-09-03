@@ -9,7 +9,13 @@ This page covers the security and compliance controls a HotCRM admin can actuall
 
 > **Every claim below was measured, and several did not survive.** The page was checked
 > claim by claim against this app's own metadata (`src/`, `objectstack.config.ts`) and the
-> installed `@objectstack/*` packages — **17.1.0**, all 51 of them. Headings and rows
+> whole installed `@objectstack/*` tree — every package installed, not only the ones
+> `package.json` declares — on **17.1.0**, the version installed at the time of that
+> measurement. ⚠️ **That is not the version installed now:** `package.json` has pinned
+> **17.2.0** since 2026-09-01, and this page has not been re-checked against it. The
+> claims below are deliberately **not** re-dated to the newer pin — re-dating a
+> measurement nobody re-took would replace a stale warrant with a fabricated one, which
+> is the worse of the two errors on a page like this. Headings and rows
 > marked *(not shipped)* describe a capability that is absent: no object, no schema key,
 > no setting. Rows marked *(unsourced)* keep a figure nothing in the app or the platform
 > enforces. Rows marked *(your deployment)* are true or false of the instance you run on
