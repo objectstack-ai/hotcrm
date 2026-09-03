@@ -10,12 +10,12 @@ This page covers the security and compliance controls a HotCRM admin can actuall
 > **Every claim below was measured, and several did not survive.** The page was checked
 > claim by claim against this app's own metadata (`src/`, `objectstack.config.ts`) and the
 > whole installed `@objectstack/*` tree — every package installed, not only the ones
-> `package.json` declares — on **17.1.0**, the version installed at the time of that
-> measurement. ⚠️ **That is not the version installed now:** `package.json` has pinned
-> **17.2.0** since 2026-09-01, and this page has not been re-checked against it. The
-> claims below are deliberately **not** re-dated to the newer pin — re-dating a
-> measurement nobody re-took would replace a stale warrant with a fabricated one, which
-> is the worse of the two errors on a page like this. Headings and rows
+> `package.json` declares — and **re-measured against 17.2.0 on 2026-09-03**, the version
+> `package.json` has pinned since 2026-09-01. Every claim those two sources can answer was
+> re-taken rather than carried forward, and three did not survive the re-check: they are
+> corrected below, not re-dated around. What a re-measurement here cannot reach is the
+> half of each *(your deployment)* row that belongs to your instance and to whoever
+> operates it; those keep the scope their marker gives them. Headings and rows
 > marked *(not shipped)* describe a capability that is absent: no object, no schema key,
 > no setting. Rows marked *(unsourced)* keep a figure nothing in the app or the platform
 > enforces. Rows marked *(your deployment)* are true or false of the instance you run on
@@ -103,7 +103,7 @@ That sixth row used to read *Account teams*. **There is no account-team object a
 | **IP allowlist** | ✅ real, **deployment-wide** | `allowed_ip_ranges` at **Setup → Authentication** (*Network*). CIDR ranges or exact IPs, one per line or comma-separated. Empty = no restriction. Sign-in from outside the ranges is rejected. Needs a trusted proxy setting `X-Forwarded-For` |
 | **Concurrent sessions** | ✅ real, **deployment-wide** | `max_concurrent_sessions_per_user` at **Setup → Authentication** (*Sessions*). Default **0 = unlimited**, max 100; past the cap the oldest sessions are signed out |
 | **Session timeout** | ✅ real, but **off by default** | `session_idle_timeout_minutes` and `session_absolute_max_hours`, both default **0 = off**. The session lifetime itself is `session_expiry_days`, default 7. The old page presented 30 min idle / 12 hr absolute as active defaults; they are neither active nor the defaults |
-| **Login hours** | *(not shipped)* | Zero hits for any login-hours, login-window or allowed-hours surface across the 1,186 non-map distribution files of the 51 installed packages |
+| **Login hours** | *(not shipped)* | Zero hits for any login-hours, login-window or allowed-hours surface across the 1,204 non-map distribution files of the 51 installed packages |
 | **Device trust** | *(not shipped)* | Same, zero hits: no trusted-device, device-fingerprint or new-device-confirmation surface anywhere |
 
 ⚠️ **The per-profile framing was wrong for all of them.** The old bullets said "(per profile)". The two that exist are **deployment-wide settings in the `auth` namespace** — one IP allowlist and one session cap for the whole instance, not a value you vary between Sales Rep and System Admin. If your policy needs per-profile network rules, nothing here does that.
@@ -112,7 +112,7 @@ That sixth row used to read *Account teams*. **There is no account-team object a
 
 ## Audit logs
 
-`sys_audit_log` is real and it is genuinely immutable: the object is `managedBy: 'append-only'` and every field on it is `readonly: true`. It ships with `@objectstack/plugin-audit`, and **this app gets it** — declaring `auth` in `requires` makes the CLI register the auth, security and audit plugins as a set. Read it at **Setup → Audit Logs**, under *Diagnostics*, which ships five list views: *Recent*, *Auth*, *Record Views*, *Config* and *All*.
+`sys_audit_log` is real and it is genuinely immutable: the object is `managedBy: 'append-only'` and every field on it is `readonly: true`. It ships with `@objectstack/plugin-audit`, and **this app gets it** — declaring `auth` in `requires` makes the CLI register the auth, security and audit plugins as a set. Read it at **Setup → Audit Logs**, under *Diagnostics*, which ships six list views: *Recent*, *Writes*, *Auth*, *Record Views*, *Config* and *All*.
 
 The category table was the unmeasured part. Re-judged against the writers that actually exist:
 
@@ -195,7 +195,7 @@ The old *Field-level encryption* section told admins to "mark sensitive fields a
 
 *(your deployment.)* Where your data is stored — US, EU, APAC, your own VPC — and whether cross-region transfer is blocked are properties of the instance you run on and of whoever operates it. **Nothing in this app, and nothing in the installed platform tree, enforces or even records a region.** Two measurements behind that:
 
-- A `dataResidency` shape (`region`, `excludeRegions`) does exist inside `@objectstack/spec/kernel`'s bundle, alongside a `compliance` block naming `sox | hipaa | gdpr | pci_dss | iso_27001 | fedramp`. It is **not exported and has no type declaration** — an author cannot write it and nothing reads it. It describes an intention, not a control.
+- A `dataResidency` shape (`region`, `excludeRegions`) does exist, in `@objectstack/spec/system`'s `TenantSecurityPolicySchema`, alongside a `compliance` block naming `sox | hipaa | gdpr | pci_dss | iso_27001 | fedramp`. It is exported and typed, so an author *can* write it — and **nothing anywhere outside `@objectstack/spec` reads it**, which is the half that decides the question. It describes an intention, not a control.
 - Zero hits for any cross-region transfer block, region lock or residency enforcement across the installed packages.
 
 If residency is a requirement, it is answered by your deployment topology, not by a setting in Setup.
