@@ -355,10 +355,30 @@ export const CaseViews = defineView({
    *                                    validation still has its surface)
    *   is_closed                        readonly; derived from `status`
    *
-   * ⚠️ `internal_notes`, `customer_rating` and `customer_feedback` leave with
-   * the Resolution section and have NO other authoring surface today. They
-   * belong on the record page, whose file is outside this card's surface —
-   * filed separately rather than fixed here or left unsaid.
+   * ⚠️ `internal_notes`, `customer_rating` and `customer_feedback` left with
+   * the Resolution section and had NO other authoring surface at all. #1428
+   * closed HALF of that, on the record page rather than here:
+   *
+   *   internal_notes                   `case_detail.page.ts`'s Description
+   *                                    section, authored by inline edit —
+   *                                    staff prose an agent writes while
+   *                                    WORKING a case, which is why it did not
+   *                                    come back to this form. The guest
+   *                                    branch of `case.hook.ts` nulls the
+   *                                    column on anonymous intake, so an
+   *                                    intake surface for it would be a
+   *                                    surface for a value the app discards.
+   *
+   * ⛔ `customer_rating` and `customer_feedback` still have NO authoring
+   * surface anywhere in this app, and that is HELD, not forgotten. Whether a
+   * person should type a customer's satisfaction score on the customer's
+   * behalf is a product question — the alternative is a survey the customer
+   * answers — and adding two inputs anywhere would settle it by accident.
+   * #1428 carries the question. Two consequences are recorded there rather
+   * than hidden: `case_csat_followup` already notifies the case owner to "log
+   * their satisfaction rating" against a record with nowhere to put it, and
+   * unlike `internal_notes` neither field is named in ANY profile's `fields`
+   * map — which in this platform means unrestricted, not restricted.
    *
    * `type: 'simple'`, not `'tabbed'`: one section is not a tab strip.
    */
