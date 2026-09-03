@@ -131,10 +131,54 @@ const caseValidation: Hook = {
     // allow-list, which is precisely why this branch is the field-level control
     // and why an omission from it is a hole rather than a second layer.
     //
-    // ⚠️ What is measured here is the HOOK-LEVEL control. A real anonymous
-    // write also crosses `plugin-security`'s middleware, and nobody has
-    // measured that path — so this is coherence and defence in depth, NOT a
-    // claim that a guest reaches the column in production.
+    // `customer_rating` and `customer_feedback` are stripped for the same
+    // stated rule, and are argued rather than assumed exactly as
+    // `escalation_reason` was. They are the CUSTOMER's verdict on how a case
+    // was HANDLED — an outcome collected after the work, which is what
+    // `case_csat_followup` exists to ask for — never a fact a submitter states
+    // about themselves at intake. A case that arrives already rated five stars
+    // is a satisfaction score with no service behind it, on the one column
+    // `case_metrics` reporting would read back as a quality measure. Neither
+    // appears in the public `web_to_case` form, so nulling them drops nothing
+    // any guest surface asks for.
+    //
+    // Field-level permissions cannot cover them, and this was re-measured
+    // against the INSTALLED 17.2.0 tree rather than taken on report:
+    // `PermissionEvaluator.getFieldPermissions` builds its mask ONLY from
+    // `<object>.<field>` keys a permission set names in its `fields` map, and
+    // `FieldMasker.detectForbiddenWrites` returns early on an empty mask and
+    // otherwise flags only names present in it. So a field NO profile names is
+    // unrestricted, not restricted — and `guest_portal` declares no `fields`
+    // key at all, which makes its mask empty and skips the write guard
+    // outright.
+    //
+    // ⚠️ The middleware path is now MEASURED, and the answer bounds what this
+    // branch may claim. A real anonymous write does NOT reach these columns on
+    // the shipped app today — and this branch is not what stops it. Driven
+    // against a real server (`objectstack start`, the production plugin set:
+    // Auth, Security, Sharing, RestAPI), unauthenticated over HTTP:
+    //
+    //   POST  /api/v1/data/crm_case         401 UNAUTHENTICATED
+    //   PATCH /api/v1/data/crm_case/:id     401 UNAUTHENTICATED
+    //   POST  /api/v1/actions/...           401 UNAUTHENTICATED
+    //   POST  /api/v1/mcp                   401 UNAUTHENTICATED
+    //   POST  /api/v1/forms/support/submit  201 — the ONE anonymous write path
+    //
+    // and that surviving route filters the body against an allow-list built
+    // from the matched form view's OWN declared sections
+    // (`@objectstack/rest`, `registerFormEndpoints`), so a planted
+    // `customer_rating` is dropped before ObjectQL and before this hook.
+    // ⛔ So do NOT write down that a guest reaches the column in production.
+    //
+    // ⛔ And do not read that as "this branch is cosmetic". That allow-list is
+    // the form's FIELD LIST — a product decision, not a security declaration —
+    // and it was measured by widening it: adding `customer_rating` to
+    // `web_to_case`'s sections, ONE line, the exact edit #1428's open product
+    // question would make, and the same anonymous POST stored
+    // `customer_rating: 5` with `origin: 'web'` beside it on the pre-fix hook.
+    // `customer_feedback`, left off the widened form, stayed null in that same
+    // request — which is what identifies the form list as the only thing
+    // holding, and this branch as the layer that has to hold when it moves.
     //
     // Nulling `escalation_reason` cannot trip the object's
     // `escalation_reason_required` validation: that rule fires only on
@@ -161,6 +205,8 @@ const caseValidation: Hook = {
       input.escalation_reason = null;
       input.internal_notes    = null;
       input.resolution        = null;
+      input.customer_rating   = null;
+      input.customer_feedback = null;
     }
 
     const priority =
