@@ -238,7 +238,7 @@
 | PRM-007 | 扁平岗位结构 | 12 个岗位(销售/服务/营销三线 + NA/EU 区域组),无层级、可见性不向上滚动,每个层级各带自己的授权 | `src/sharing/positions.ts` |
 | PRM-008 | 行级安全(RLS) | 私密商机仅 owner 可见(经理与营销两份 select 规则);营销对活动/成员的 update 放宽 | `src/profiles/sales-manager.profile.ts`、`src/profiles/marketing-user.profile.ts` |
 | PRM-009 | OWD 共享模型分布 | 销售/服务核心对象 private;产品/活动/知识库 public_read;联系人与四个明细/联结对象 controlled_by_parent | `src/objects/*.object.ts`(sharingModel) |
-| PRM-010 | 演示人员编制 | `pnpm demo:staff` 脚本(刻意非元数据、不进发布产物):造 3 个可登录演示账号补齐岗位授权链 | `src/sharing/demo-staffing.ts` |
+| PRM-010 | 演示人员编制 | `pnpm demo:staff` 脚本(刻意非元数据、不进发布产物):按 `src/sharing/demo-staffing.ts` 的编制表造可登录演示账号,补齐岗位授权链 | `src/sharing/demo-staffing.ts` |
 
 ## ADM — 管理与设置
 
