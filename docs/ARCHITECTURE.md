@@ -138,7 +138,7 @@ the platform assistant by surface affinity.
 
 | Layer | Files | Examples |
 | --- | --- | --- |
-| Skills | `src/skills/*.skill.ts` | `live_data`, `lead_qualification`, `email_drafting`, `revenue_forecasting`, `case_triage`, `customer_360` |
+| Skills | `src/skills/*.skill.ts` | `live_data`, `lead_qualification`, `revenue_forecasting` |
 | Actions and flows | `src/actions/`, `src/flows/` | lead conversion, case triage, alerts |
 
 Skills declare no bespoke tools (ADR-0109). They compose the platform's data
