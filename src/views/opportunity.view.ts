@@ -63,6 +63,14 @@ export const OpportunityViews = defineView({
       showDescription: true,
       allowedVisualizations: ['grid', 'kanban', 'calendar', 'timeline', 'gallery'],
     },
+    // Binds the 'calendar' entry above: the same forecast dates the dedicated
+    // `close_date_calendar` view shows, on the field this list sorts by.
+    // `close_date` is required + notNull on crm_opportunity.
+    calendar: {
+      startDateField: 'close_date',
+      titleField: 'name',
+      colorField: 'stage',
+    },
     // List-level entry points: generate_quote reaches the row menu via its
     // own `locations: ['list_item']`. Built-in `exportOptions` covers CSV
     // export.

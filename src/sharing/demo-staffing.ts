@@ -3,6 +3,22 @@
 /**
  * Demo-org staffing — WHO HOLDS THE POSITIONS `positions.ts` DECLARES (#640).
  *
+ * ### ⛔ A row exists to make a MECHANISM visible. This is NOT an org chart.
+ *
+ * Every person below is the minimum needed to turn one dark mechanism on. A
+ * position with no mechanism behind it stays EMPTY however tidy filling it in
+ * would look, and `test/demo-staffing.test.ts` fails the build when one is
+ * filled without a decision behind it. #640's principle, unchanged and quoted
+ * verbatim where that guard enforces it: staffing a position is **a decision,
+ * not a tidy-up**.
+ *
+ * Exactly two rows have ever crossed that fence — `service_agent` and
+ * `service_manager`, on the maintainer ruling of 2026-08-31 — and the bar they
+ * cleared is the only one that opens it: a shipped hook PICKS AN OWNER out of
+ * that pool, so an empty pool is not a bench nobody sits on but a code path
+ * that never runs on a demo box at all. "It looks unstaffed" is not the bar.
+ * The other six leadership positions do not clear it and are still empty.
+ *
  * ### The gap this table closes
  *
  * The app ships three layers of position-based access and, until now, only two
@@ -48,7 +64,7 @@
  * by the ADR-0092 write guard, which is also why a seed cannot do this and why
  * the note at the foot of `src/data/index.ts` says a seed can never name a user.
  *
- * ### Why exactly these three people
+ * ### Why exactly these five people
  *
  * Not an org chart — the smallest set that makes each dark mechanism visible:
  *
@@ -60,13 +76,32 @@
  *     the reps stay non-owners, which is the whole point.
  *   - the sales manager makes `opportunity_approval`'s `manager_review` resolve
  *     to a non-empty slate for the first time.
+ *   - the service AGENT is the case INTAKE POOL. `case_auto_assign`
+ *     (`src/objects/_case-assignment.ts`) round-robins an ownerless case — a
+ *     web-to-case submission, an email import — to the least-loaded holder of
+ *     `service_agent`. With nobody holding it the hook took its no-op path on
+ *     every demo box and the `unassigned_triage` tab was the entire story. The
+ *     same row gives `case_unassigned_triage_sharing` its first recipient.
+ *   - the service MANAGER is the ESCALATION POOL. `case_escalation_reassign`
+ *     hands a case being escalated to the least-loaded `service_manager`, and
+ *     `case_escalation_sharing` grants that position edit on open critical
+ *     cases. Both had zero holders, so escalating a case moved nothing and
+ *     granted nobody anything.
  *
- * The other seven positions (`sales_director`, `executive`, `service_manager`,
- * `service_director`, `marketing_manager`, `marketing_director`,
- * `marketing_user`) stay UNSTAFFED on purpose: a real deployment staffs its own
- * people, and an empty bench is the honest depiction of that. The approval
- * nodes that route to them declare `onEmptyApprovers: 'admin_rescue'`, so an
- * empty bench holds for admin takeover instead of stranding the record.
+ * ⚠️ Measured, and written down because the card that authorised those two
+ * rows over-counted: staffing them does NOT light `case_director_sharing`. That
+ * rule's recipient is `service_director`, which the same ruling leaves empty.
+ * The fourth mechanism these two rows actually reach is
+ * `case_unassigned_triage_sharing`, not the director rule.
+ *
+ * The other six positions (`sales_director`, `executive`, `service_director`,
+ * `marketing_manager`, `marketing_director`, `marketing_user`) stay UNSTAFFED
+ * on purpose: a real deployment staffs its own people, and an empty bench is
+ * the honest depiction of that. None of them is an assignment POOL — each only
+ * RECEIVES a share or an approval, a mechanism the staffed reps and sales
+ * manager already demonstrate — and the approval nodes that route to them
+ * declare `onEmptyApprovers: 'admin_rescue'`, so an empty bench holds for admin
+ * takeover instead of stranding the record.
  *
  * ### Why a rep holds TWO positions — and what actually bounds the territory
  *
@@ -168,5 +203,27 @@ export const DemoOrgStaffing: readonly DemoStaffMember[] = [
     demonstrates:
       "opportunity_approval's manager_review node resolves to a non-empty approver slate, and " +
       'account_team_sharing hands her the active customer accounts.',
+  },
+  {
+    key: 'service_agent',
+    name: 'Priya Raman',
+    email: 'service.agent@objectos.ai',
+    password: 'demo1234',
+    positions: ['service_agent'],
+    demonstrates:
+      'case_auto_assign: an ownerless case round-robins onto her as the least-loaded holder of ' +
+      'the service_agent pool, and case_unassigned_triage_sharing gives her edit on the open ' +
+      'cases nobody owns.',
+  },
+  {
+    key: 'service_manager',
+    name: 'Tomas Okafor',
+    email: 'service.manager@objectos.ai',
+    password: 'demo1234',
+    positions: ['service_manager'],
+    demonstrates:
+      'case_escalation_reassign: a case moves to him on the escalation transition as the ' +
+      'least-loaded holder of the service_manager pool, and case_escalation_sharing grants him ' +
+      'edit on the open critical cases he does not own.',
   },
 ];

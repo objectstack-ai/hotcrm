@@ -23,6 +23,24 @@ import * as allFlows from '../src/flows';
 import { makeFlowHarness, type Rec } from './helpers/flow-harness';
 
 /**
+ * State `organization_id` on a seeded row, null.
+ *
+ * A real driver returns every DECLARED column, so a row written with no
+ * organization reads back `organization_id: null` — measured on
+ * `SqliteWasmDriver` through `ObjectQL`, whose returned record carries the key.
+ * This harness's store is schemaless and omits keys nobody wrote, and an ABSENT
+ * key is not a null one: `forecast_snapshot`'s bucket pin
+ * (`{currentForecast.organization_id}`, #1372) resolves against a null and has
+ * nothing to resolve against an absence. Exactly the distinction the
+ * `owner_id: null` note further down draws for `demo_bootstrap`'s filter.
+ *
+ * Null rather than an organization id on purpose: these cases describe the
+ * single-organization shape, and stating the column keeps them describing it.
+ */
+const inNoOrganization = <T extends Rec>(rows: T[]): T[] =>
+  rows.map((r) => ({ organization_id: null, ...r }));
+
+/**
  * Runtime tests for the SCHEDULED sweeps.
  *
  * Scheduled flows were previously untested at runtime, and they are the
@@ -618,7 +636,11 @@ describe('forecast_snapshot — nightly per-owner pipeline snapshot', () => {
   const harness = (forecasts: Rec[] = []) =>
     makeFlowHarness(
       { forecast_snapshot: ForecastSnapshotFlow },
-      { sys_user: users(), crm_opportunity: opps(), crm_forecast: forecasts },
+      {
+        sys_user: users(),
+        crm_opportunity: inNoOrganization(opps()),
+        crm_forecast: inNoOrganization(forecasts),
+      },
       { hooks: [forecastDerive] },
     );
 
@@ -754,7 +776,9 @@ describe('forecast_snapshot — nightly per-owner pipeline snapshot', () => {
       { forecast_snapshot: ForecastSnapshotFlow },
       {
         sys_user: [{ id: 'rep9', name: 'Idle' }],
-        crm_opportunity: [{ id: 'ox', owner_id: 'rep9', stage: 'closed_lost', amount: 10, close_date: inPeriod }],
+        crm_opportunity: inNoOrganization([
+          { id: 'ox', owner_id: 'rep9', stage: 'closed_lost', amount: 10, close_date: inPeriod },
+        ]),
         crm_forecast: [],
       },
       { hooks: [forecastDerive] },
@@ -833,14 +857,18 @@ describe('re-seed × snapshot leaves one row per (owner, period, window) (#702)'
     for (const rec of seedRecords) {
       const existing = rows.find((r) => r.seed_key === rec.seed_key);
       if (existing) Object.assign(existing, rec);
-      else rows.push({ id: `seed_${String(rec.seed_key)}`, owner_id: null, ...rec });
+      else rows.push({ id: `seed_${String(rec.seed_key)}`, owner_id: null, organization_id: null, ...rec });
     }
   };
 
   const makeHarness = (forecasts: Rec[] = []) =>
     makeFlowHarness(
       { demo_bootstrap: DemoBootstrapFlow, forecast_snapshot: ForecastSnapshotFlow },
-      { sys_user: users(), crm_opportunity: opps(), crm_forecast: forecasts },
+      {
+        sys_user: users(),
+        crm_opportunity: inNoOrganization(opps()),
+        crm_forecast: inNoOrganization(forecasts),
+      },
       { hooks: [forecastDerive] },
     );
 

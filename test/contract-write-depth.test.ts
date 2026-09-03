@@ -11,6 +11,7 @@ import {
   buildContextForUser,
 } from '@objectstack/plugin-security';
 import { SharingServicePlugin } from '@objectstack/plugin-sharing';
+import { tenancyProbe } from './helpers/tenancy-probe';
 import { defineStack, PLATFORM_CAPABILITY_PROVIDERS } from '@objectstack/spec';
 import stack from '../objectstack.config';
 
@@ -231,6 +232,11 @@ beforeAll(async () => {
   // NB: no `hierarchy-scope-resolver` is registered — that service ships in
   // `@objectstack/security-enterprise`, which this repo does not depend on.
   // That absence is the whole subject of the block below.
+  // 17.2.0: declared sharing rules are only seeded once this stack states its
+  // tenancy posture — see `test/helpers/tenancy-probe.ts` for the measurement.
+  // Mounted BEFORE SharingServicePlugin, which reads the posture during its own
+  // boot.
+  await kernel.use(tenancyProbe('single') as never);
   await kernel.use(new SharingServicePlugin());
   await kernel.bootstrap();
   ql = kernel.getService('objectql');

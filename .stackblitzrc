@@ -1,9 +1,0 @@
-{
-  "installDependencies": false,
-  "startCommand": "npm install --omit=dev --omit=optional --prefer-offline --no-audit --no-fund && npm run dev",
-  "env": {
-    "OS_DATABASE_URL": ".objectstack/data/hotcrm.wasm.db",
-    "OS_DATABASE_DRIVER": "sqlite-wasm",
-    "OS_OIDC_PROVIDER_ENABLED": "false"
-  }
-}
