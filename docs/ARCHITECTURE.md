@@ -76,14 +76,11 @@ export const Account = ObjectSchema.create({
 });
 ```
 
-Current objects:
-
-| Domain | Objects |
-| --- | --- |
-| Sales | `crm_lead`, `crm_account`, `crm_contact`, `crm_opportunity`, `crm_opportunity_line_item`, `crm_forecast` |
-| Service | `crm_case`, `crm_knowledge_article`, `crm_task` |
-| Marketing | `crm_campaign`, `crm_campaign_member` |
-| Revenue | `crm_product`, `crm_quote`, `crm_quote_line_item`, `crm_contract` |
+The object roster is deliberately **not** restated here — `src/objects/*.object.ts` is
+its source of truth, one file per object, each registering its `crm_`-prefixed `name`.
+The model spans four business domains: Sales, Service, Marketing, and Revenue.
+*Supersedes the hand-maintained fifteen-name domain table that stood here, which had
+already drifted three objects behind the tree — 2026-08-31 ruling, item 5.*
 
 ## Hooks
 
