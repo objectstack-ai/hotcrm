@@ -1,9 +1,10 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
+import { AutomationEngine } from '@objectstack/service-automation';
 import { ExpressionEngine } from '@objectstack/formula';
 import { LeadConversionFlow } from '../src/flows/lead-conversion.flow';
-import { makeFlowHarness, type Rec } from './helpers/flow-harness';
+import { makeFlowHarness, type FlowHarness, type Rec } from './helpers/flow-harness';
 import { type AnyRec, objects, pages } from './helpers/metadata-fixtures';
 import stack from '../objectstack.config';
 
@@ -28,7 +29,7 @@ import stack from '../objectstack.config';
  * | surface | carries | unevaluable predicate ⇒ |
  * | ------- | ------- | ----------------------- |
  * | `lead_detail_page` `record:alert` | `properties.visible`, client CEL | FAIL-SOFT: banner SHOWN |
- * | `lead_conversion` edges `e21`/`e22` | flow condition, server CEL | RUN FAILS |
+ * | `lead_conversion` edges `e21`/`e22`/`e25` | flow condition, server CEL | RUN FAILS |
  *
  * They fail in opposite directions and both are ugly: a fail-soft banner cries
  * wolf on every clean lead (and a warning nobody believes is worse than no
@@ -250,6 +251,52 @@ async function startConversion(lead: Rec) {
   return { harness, started, screen };
 }
 
+/**
+ * Everything the flow WROTE, counted off the store.
+ *
+ * The three states of #1288 differ in exactly this, so every pin below reads
+ * the same four numbers rather than asserting on the shape of a screen: "the
+ * dialog said no" and "nothing was created" are two different claims, and only
+ * the second one is the refusal.
+ */
+const productsOf = (harness: FlowHarness) => ({
+  accounts: harness.store.crm_account?.length ?? 0,
+  contacts: harness.store.crm_contact?.length ?? 0,
+  opportunities: harness.store.crm_opportunity?.length ?? 0,
+  isConverted: harness.store.crm_lead[0].is_converted === true,
+  leadStatus: harness.store.crm_lead[0].status,
+});
+
+/** Nothing at all — the shape a refused conversion leaves behind. */
+const NOTHING_CONVERTED = {
+  accounts: 0, contacts: 0, opportunities: 0, isConverted: false, leadStatus: 'qualified',
+};
+/** One of each, lead stamped — the shape an allowed conversion leaves behind. */
+const FULLY_CONVERTED = {
+  accounts: 1, contacts: 1, opportunities: 1, isConverted: true, leadStatus: 'converted',
+};
+
+/**
+ * Start the conversion AND submit the screen it stops on, whichever that is.
+ *
+ * The resume is what makes an "it refused" pin mean something: a run that has
+ * merely paused has not created anything YET on any branch, so a test that
+ * stopped at the pause would pass identically on a flow with no refusal in it.
+ * Submitting the refusal dialog is also the rep's most likely next click, and
+ * the state after it is the claim — the refusal branch reaches `end` without
+ * passing a single create/update node.
+ */
+async function convert(lead: Rec) {
+  const { harness, started, screen } = await startConversion(lead);
+  const runId = started.runId ?? started.run?.id;
+  expect(started.error ?? null, 'the run failed before it reached a screen').toBeNull();
+  expect(started.status, 'the conversion never suspended on a screen').toBe('paused');
+  const done: AnyRec = (await harness.resume(runId, {
+    createOpportunity: true, opportunityName: 'Skyline Deal', opportunityAmount: 50_000,
+  })) as AnyRec;
+  return { harness, screen, done, products: productsOf(harness) };
+}
+
 describe('lead_conversion — the warning at the moment of conversion', () => {
   it('warns on a suspected duplicate, and names the record by its email', async () => {
     const { screen } = await startConversion(seedLead({
@@ -313,20 +360,6 @@ describe('lead_conversion — the warning at the moment of conversion', () => {
     expect(harness.store.crm_lead[0].is_converted).toBe(true);
   });
 
-  it('a confirmed duplicate is out of the warning\'s scope, deliberately', async () => {
-    // Same boundary as the banner, stated once more where the other half of it
-    // lives. `confirmed` is a human's verdict, and what follows it is
-    // disqualification, not conversion. Widening either surface to it is a
-    // product call (reported to the PM, not decided here) — so this pin exists
-    // to make that widening a deliberate edit rather than a side effect.
-    const { screen } = await startConversion(seedLead({
-      duplicate_of_type: 'crm_lead',
-      duplicate_of_lead: SURVIVOR_LEAD_ID,
-      duplicate_status: 'confirmed',
-    }));
-    expect(screen!.description).toBeUndefined();
-  });
-
   it('still collects the conversion inputs it always did', async () => {
     // Anti-regression on the reorder: `get_lead` now runs BEFORE the screen, so
     // the screen's own contract is worth re-stating here — a screen that lost
@@ -338,5 +371,203 @@ describe('lead_conversion — the warning at the moment of conversion', () => {
     ]);
     expect(fields[0].defaultValue, 'the declared default no longer reaches the client')
       .toBe(false);
+  });
+});
+
+/**
+ * The refusal, and the three states it partitions the flag into (#1288).
+ *
+ * Ruled 2026-08-31: interception stands on a PERSON's judgement. A lead a
+ * reviewer marked `confirmed` is refused conversion, with copy naming the
+ * verdict and the surviving record; the machine's `suspected` guess keeps
+ * #1207's warn-and-allow, because `lead_duplicate_check` matches on email
+ * EQUALITY and shared inboxes make false positives certain — blocking on a
+ * guess would need an override flag, and an override flag is the shape this
+ * exhibit must not demonstrate.
+ *
+ * ## Why these pins resume the run instead of reading the screen
+ *
+ * A paused run has created nothing on ANY branch yet, so a pin that stopped at
+ * the pause would be green against a flow with no refusal in it at all. Each
+ * case below submits the screen it stopped on and then counts what the store
+ * holds — the refusal is the four zeroes, not the dialog.
+ *
+ * ## The before-picture these replace
+ *
+ * Measured on the parent commit, through this same harness: a `confirmed` lead
+ * suspended on `screen_1` with NO description (the #1207 warning is gated on
+ * `suspected`) and then converted — one account, one contact, one opportunity,
+ * `is_converted: true`. All three of `crm_lead` / `crm_contact` / `erased`
+ * survivors did. That is the behaviour the changeset announces changing.
+ */
+describe('lead_conversion — a confirmed duplicate is refused (#1288)', () => {
+  const CONFIRMED_SURVIVORS: Array<[string, Rec]> = [
+    ['a still-open lead', { duplicate_of_type: 'crm_lead', duplicate_of_lead: SURVIVOR_LEAD_ID }],
+    ['a contact the prospect already became', { duplicate_of_type: 'crm_contact', duplicate_of_contact: SURVIVOR_CONTACT_ID }],
+    // `erased` is not an exotic third case, it is the state `lead.hook.ts`
+    // (job 1c) leaves behind when the survivor is deleted: the pointer goes,
+    // the VERDICT stays `confirmed` on purpose. So the refusal has to hold for
+    // a lead whose survivor no longer exists — and the copy has to stay true
+    // for it, which is why it names the section rather than a record.
+    ['a survivor that has since been erased', { duplicate_of_type: 'erased' }],
+  ];
+
+  it.each(CONFIRMED_SURVIVORS)('refuses, and creates nothing — %s', async (_label, link) => {
+    const { screen, products } = await convert(seedLead({ ...link, duplicate_status: 'confirmed' }));
+
+    expect(screen!.nodeId, 'the run did not stop on the refusal screen')
+      .toBe('refuse_confirmed_duplicate');
+    expect(products, 'a confirmed duplicate was converted anyway').toEqual(NOTHING_CONVERTED);
+  });
+
+  it('says why, naming the verdict and where the surviving record is', async () => {
+    const { screen } = await convert(seedLead({
+      duplicate_of_type: 'crm_lead', duplicate_of_lead: SURVIVOR_LEAD_ID,
+      duplicate_status: 'confirmed',
+    }));
+
+    const description = String(screen!.description ?? '');
+    expect(String(screen!.title ?? ''), 'the refusal dialog has no title of its own')
+      .toContain('refused');
+
+    // The ruling's item 1, both halves. The VERDICT, in the vocabulary the
+    // record itself publishes: `duplicate_status`'s label is "Duplicate Status"
+    // and its `confirmed` option's label is "Confirmed" in every locale pack,
+    // so the sentence is readable against the field the rep can see.
+    expect(description, 'the refusal never says which verdict stopped it')
+      .toContain('Duplicate Status is Confirmed');
+    expect(description, 'the refusal does not say a person recorded the verdict')
+      .toMatch(/reviewer/);
+
+    // The SURVIVOR, named through the fields that carry it. `duplicate_of_lead`
+    // / `duplicate_of_contact` hold ids, and #1243's house rule keeps an id out
+    // of any sentence a user reads — so the copy names the `duplicates` field
+    // group by its shipped label and sends the rep to the links themselves.
+    const groupLabel = ((objects.find((o) => o.name === 'crm_lead') as AnyRec)
+      ?.fieldGroups as AnyRec[] | undefined)?.find((g) => g.key === 'duplicates')?.label;
+    expect(groupLabel, 'crm_lead no longer declares a `duplicates` field group').toBeTruthy();
+    expect(description, 'the refusal does not point at the surviving record')
+      .toContain(String(groupLabel));
+    expect(description).toContain('surviving record');
+
+    // …and no id reached it, on either lookup.
+    expect(description).not.toContain(SURVIVOR_LEAD_ID);
+    expect(description).not.toContain(SURVIVOR_CONTACT_ID);
+    expect(description).not.toContain('lead_1');
+
+    // ⛔ No override hatch is offered — AGENTS.md metadata rule 8. The way out
+    // is revising the verdict itself, which is a reviewer's edit on a field
+    // that carries `trackHistory: true`, not a flag on this dialog.
+    expect(description.toLowerCase()).not.toMatch(/convert anyway|override|ignore this|proceed anyway/);
+  });
+
+  it('leaves the machine\'s guess alone: suspected still warns AND converts', async () => {
+    // The other half of the ruling, and the half a careless widening would
+    // take with it. The warning's wording is pinned above; what this adds is
+    // that the run still finishes.
+    const { screen, done, products } = await convert(seedLead({
+      duplicate_of_type: 'crm_lead', duplicate_of_lead: SURVIVOR_LEAD_ID,
+      duplicate_status: 'suspected',
+    }));
+
+    expect(screen!.nodeId, 'a suspected duplicate was routed to the refusal').toBe('screen_1');
+    expect(String(screen!.description ?? '')).toContain('Suspected duplicate');
+    expect(done.error ?? null, 'a suspected lead could no longer be converted').toBeNull();
+    expect(products, 'the warn-and-allow branch stopped converting').toEqual(FULLY_CONVERTED);
+  });
+
+  it('clearing the verdict restores conversion, with the link still on the record', async () => {
+    // The ruling's third state. `duplicate_status: null` with the survivor
+    // pointer LEFT IN PLACE is the sharp version of it: the refusal has to be
+    // reading the verdict, not the presence of a duplicate link. (What a
+    // reviewer has to write to get here, and the one spelling that does NOT,
+    // is measured in `test/lead-duplicate-link-cleanup.test.ts`.)
+    const { screen, products } = await convert(seedLead({
+      duplicate_of_type: 'crm_lead', duplicate_of_lead: SURVIVOR_LEAD_ID,
+      duplicate_status: null,
+    }));
+
+    expect(screen!.nodeId, 'a lead with no verdict was still refused').toBe('screen_1');
+    expect(screen!.description, 'a lead with no verdict was warned about one').toBeUndefined();
+    expect(products, 'clearing the verdict did not restore conversion').toEqual(FULLY_CONVERTED);
+  });
+});
+
+/**
+ * The three branches PARTITION — measured, not read off the source.
+ *
+ * A `decision` node that declares no `config.conditions` reports no branch, so
+ * traversal takes EVERY out-edge whose condition holds, in parallel. Adding
+ * `e25` to a `decision_duplicate` whose "Clean" edge still said
+ * `!= "suspected"` would therefore have refused a confirmed lead AND converted
+ * it in the same run — a green refusal pin sitting on top of a conversion that
+ * still happened. So the exclusivity is pinned separately from the behaviour,
+ * on the real evaluator, across every record shape a driver can produce.
+ */
+describe('the duplicate decision answers with exactly one branch', () => {
+  const silent: AnyRec = { info() {}, warn() {}, error() {}, debug() {}, trace() {} };
+  silent.child = () => silent;
+  const engine = new AutomationEngine(silent as never);
+
+  const evaluate = (source: string, vars: AnyRec) =>
+    (engine as unknown as {
+      evaluateCondition(e: unknown, v: Map<string, unknown>): boolean;
+    }).evaluateCondition({ dialect: 'cel', source }, new Map(Object.entries(vars)));
+
+  const edges = (LeadConversionFlow.edges ?? []) as AnyRec[];
+  const outOfDecision = edges.filter((e) => e.source === 'decision_duplicate');
+
+  /** Every shape `get_lead` can bind, including the ones that used to abort. */
+  const SHAPES: Array<[string, AnyRec]> = [
+    ['leadRecord unbound', {}],
+    ['leadRecord null (findOne missed)', { leadRecord: null }],
+    ['column absent (driver-memory / driver-mongodb)', { leadRecord: { id: 'lead_1' } }],
+    ['column null (driver-sql)', { leadRecord: { duplicate_status: null } }],
+    ['suspected', { leadRecord: { duplicate_status: 'suspected' } }],
+    ['confirmed', { leadRecord: { duplicate_status: 'confirmed' } }],
+    ['a value neither option declares', { leadRecord: { duplicate_status: 'merged' } }],
+  ];
+
+  it('routes the three verdicts to three different nodes', () => {
+    expect(outOfDecision.map((e) => e.id).sort()).toEqual(['e21', 'e22', 'e25']);
+    expect(outOfDecision.map((e) => e.target).sort()).toEqual(
+      ['no_duplicate_warning', 'refuse_confirmed_duplicate', 'warn_duplicate'],
+    );
+    // No `config.conditions` on the node ⇒ the edges are the whole branching
+    // model, which is what makes the exclusivity below load-bearing (#4414).
+    const decision = (LeadConversionFlow.nodes as AnyRec[]).find((n) => n.id === 'decision_duplicate');
+    expect(decision?.config?.conditions ?? null).toBeNull();
+  });
+
+  it.each(SHAPES)('answers with exactly one live edge — %s', (_name, vars) => {
+    const live = outOfDecision.filter((e) => {
+      const source = typeof e.condition === 'string' ? e.condition : String(e.condition?.source ?? '');
+      expect(source, `edge ${e.id} carries no condition`).not.toBe('');
+      return evaluate(source, vars) === true;
+    });
+    expect(
+      live.map((e) => e.id),
+      'two branches of one decision were live at once — the refusal and the conversion ' +
+        'would both run, in parallel, on the same lead',
+    ).toHaveLength(1);
+  });
+
+  it('the narrowing on the Clean edge is what makes that true', () => {
+    // Reverse verification, pinned rather than asserted: the PREVIOUS spelling
+    // of `e22` — the one that shipped with #1207 — is rebuilt from the shipped
+    // one by deleting the `confirmed` term, and it really does double-fire.
+    const clean = outOfDecision.find((e) => e.id === 'e22')!;
+    const shipped = String((clean.condition as AnyRec).source);
+    const previous = shipped.replace(
+      ' && vars.leadRecord.duplicate_status != "confirmed"', '',
+    ).replace('(', '').replace(')', '');
+    expect(previous, 'the shipped Clean edge no longer contains the term this removes')
+      .not.toBe(shipped);
+
+    const confirmed = { leadRecord: { duplicate_status: 'confirmed' } };
+    expect(evaluate(shipped, confirmed), 'the shipped Clean edge fires on a confirmed lead')
+      .toBe(false);
+    expect(evaluate(previous, confirmed), 'the pre-#1288 Clean edge no longer double-fires — re-measure this')
+      .toBe(true);
   });
 });

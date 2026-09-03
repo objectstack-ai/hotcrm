@@ -118,6 +118,15 @@ Deleting a Contact, or the Account above it, is never blocked by a lead that poi
 
 ## Converting a qualified lead
 
+A lead whose **Duplicate Status** is **Confirmed** cannot be converted. **Convert**
+opens a refusal instead of the conversion form: a reviewer has already compared this
+lead against an existing record and recorded that it repeats one, so converting it
+would create a second account, contact and opportunity for the same buyer. The
+**Duplicate Management** section on the lead names the surviving record — close a
+confirmed duplicate as one instead. A lead flagged only *Suspected* still converts;
+that flag is a machine's guess, and the conversion screen warns about it rather than
+stopping you.
+
 When a lead is qualified, click **Convert**. A small form pops up asking:
 
 - Should we also create an Opportunity?

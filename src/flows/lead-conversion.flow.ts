@@ -127,8 +127,13 @@ export const LeadConversionFlow: Flow = {
       config: { objectName: 'crm_lead', filter: { id: '{recordId}' }, outputVariable: 'leadRecord' },
     },
     {
-      // Branching is on edges `e21` / `e22` — see `decision_account`.
-      id: 'decision_duplicate', type: 'decision', label: 'Suspected Duplicate?',
+      // Branching is on edges `e21` / `e22` / `e25` — see `decision_account`.
+      // Three ways out since #1288, because `duplicate_status` carries two
+      // different KINDS of fact and they get different answers: the machine's
+      // `suspected` guess warns and lets the rep decide (`e21`), a person's
+      // `confirmed` verdict refuses outright (`e25`), and everything else
+      // converts silently (`e22`).
+      id: 'decision_duplicate', type: 'decision', label: 'Duplicate Verdict?',
     },
     {
       // The warning names the record the way the UI names a person — by the
@@ -165,6 +170,85 @@ export const LeadConversionFlow: Flow = {
       // write the variable so no downstream read ever meets an unset one.
       id: 'no_duplicate_warning', type: 'assignment', label: 'No Duplicate Warning',
       config: { assignments: { duplicateWarning: null } },
+    },
+    {
+      // The REFUSAL (#1288). A `confirmed` duplicate is a person's verdict, and
+      // the app stops converting on it — the ruling's item 1, and the rule
+      // AGENTS.md now states as "interception stands on a person's judgement".
+      // `suspected` keeps #1207's warn-and-allow above: a machine's guess stays
+      // advisory, because `lead_duplicate_check` matches on email EQUALITY and
+      // a shared inbox (`info@`, a switchboard address) false-positives by
+      // construction. Blocking on the guess would need an override flag to be
+      // usable, and an override flag is the one shape this exhibit must not
+      // demonstrate.
+      //
+      // ## Why the refusal is HERE and not on `convert_lead`'s predicate
+      //
+      // The ruling allowed either ("谓词或 flow 拒绝") and also required the
+      // refusal to NAME the verdict and the surviving record. Measured against
+      // `@objectstack/spec` 17.2.0, the action predicates cannot do the second
+      // half: `visible` and `disabled` are each a bare boolean/CEL envelope
+      // with nowhere to put a sentence, so `visible` hides a button that cannot
+      // then explain itself and `disabled` greys one out with no reason
+      // attached. `errorMessage` on the Action is a single static string — it
+      // is what the console toasts on a FAILED run — and cannot say anything
+      // about this lead. A screen node's `description`, by contrast, is
+      // interpolated per run and rendered by `FlowRunner` as the dialog body,
+      // which is why the #1207 warning already lives on one.
+      //
+      // The flow is also the only choke point that covers every door: the
+      // record-header button, the list-row button and the `action_convert_lead`
+      // AI tool all dispatch `POST /automation/lead_conversion/trigger`, while
+      // `visible` / `disabled` are console-side and say nothing to the other
+      // two.
+      //
+      // ## What the rep sees, measured on the shipped console bundle
+      //
+      // A run that PAUSES returns `{ success: true, silent: true }` to the
+      // action framework (`RecordDetailView`'s flow handler), and `silent`
+      // suppresses the success toast — so `convert_lead`'s
+      // `successMessage: 'Lead converted successfully!'` does NOT fire behind
+      // this dialog. The rep gets the refusal and nothing else. Submitting it
+      // resumes into `end`, where the runner's own neutral "Flow completed"
+      // toast appears; nothing is created and the lead is untouched on either
+      // path, because every write in this flow is downstream of `screen_1`.
+      //
+      // ## What the copy may claim
+      //
+      // ⚠️ NOT the shared email address, which is what `warn_duplicate` above
+      // uses. That claim is safe for `suspected` because only
+      // `lead_duplicate_check` writes it and it matches on email; `confirmed`
+      // is written by a PERSON, and the lead form lets a reviewer point
+      // `duplicate_of_type` + its lookup at any record they like. So the
+      // refusal names the survivor the way the house rule prescribes — through
+      // the relationship fields that exist to carry it
+      // (`test/record-id-not-in-prose.test.ts`: "the id goes in the
+      // relationship field that exists to carry it, or nowhere"), naming the
+      // `duplicates` field group by its shipped label, "Duplicate Management".
+      // That sentence also stays true on the `erased` tombstone, where the
+      // verdict survives its pointer (`lead.hook.ts`, job 1c).
+      //
+      // ⛔ The vocabulary of `duplicate_of_type` is deliberately NOT
+      // transcribed into this sentence ("an existing Lead" / "an existing
+      // Contact"). Those labels are locale-pack facts with one source of truth,
+      // the rep can see them on the section this line points at, and a
+      // hand-copied machine list in prose is the drift AGENTS.md documentation
+      // rule 5 forbids.
+      //
+      // Flow copy is English-only in this repo — see `warn_duplicate` above for
+      // the measurement; a flow has no entry in `src/translations/*.ts`.
+      id: 'refuse_confirmed_duplicate', type: 'screen', label: 'Conversion Refused',
+      config: {
+        title: 'Conversion refused',
+        description:
+          "This lead's Duplicate Status is Confirmed: a reviewer compared it against an existing record and recorded that it repeats one. Converting would create a second account, contact and opportunity for the same buyer. The Duplicate Management section on this lead names the surviving record; disqualify this lead as a duplicate instead. Only a reviewer revising that verdict reopens conversion.",
+        // A message-only screen: no fields, so the pause has to be asked for.
+        // `waitForInput` is what turns a field-less screen from a server-side
+        // pass-through into the dialog the rep reads (the executor's
+        // `shouldPause`), and without it this node would fall through to `end`
+        // in silence — a refusal nobody is told about.
+        waitForInput: true,
+      },
     },
     {
       // Account dedupe: before creating a new account, look for an existing one
@@ -374,13 +458,29 @@ export const LeadConversionFlow: Flow = {
     // would be the fault it was written to prevent. `has(vars.leadRecord)`
     // answers instead of reading.
     //
-    // The two edges PARTITION by De Morgan (`!(a && b && c)` written out as
-    // `!a || !b || !c`), so exactly one is true for every record shape,
-    // including the shapes where the column, the row or both are missing.
+    // The THREE edges PARTITION by De Morgan (`!(a && b && c)` written out as
+    // `!a || !b || !c`, with the two verdict tests conjoined under the last
+    // term), so exactly one is true for every record shape, including the
+    // shapes where the column, the row or both are missing.
+    //
+    // ⚠️ `e22`'s third term carries BOTH inequalities since #1288, and that is
+    // the load-bearing half of adding `e25` — not a tidy-up. A decision node
+    // that declares no `config.conditions` reports no branch, so traversal
+    // takes EVERY out-edge whose condition holds, in parallel. With `e22` left
+    // at `!= "suspected"` a confirmed lead satisfied `e22` AND `e25`: it would
+    // have shown the refusal and converted the lead in the same run. Measured
+    // on `AutomationEngine.evaluateCondition`, all seven record shapes, before
+    // and after; the pin is in `test/lead-duplicate-visibility.test.ts`.
     { id: 'e21', source: 'decision_duplicate', target: 'warn_duplicate', type: 'default', condition: P`has(vars.leadRecord) && has(vars.leadRecord.duplicate_status) && vars.leadRecord.duplicate_status == "suspected"`, label: 'Suspected' },
-    { id: 'e22', source: 'decision_duplicate', target: 'no_duplicate_warning', type: 'default', condition: P`!has(vars.leadRecord) || !has(vars.leadRecord.duplicate_status) || vars.leadRecord.duplicate_status != "suspected"`, label: 'Clean' },
+    { id: 'e25', source: 'decision_duplicate', target: 'refuse_confirmed_duplicate', type: 'default', condition: P`has(vars.leadRecord) && has(vars.leadRecord.duplicate_status) && vars.leadRecord.duplicate_status == "confirmed"`, label: 'Confirmed' },
+    { id: 'e22', source: 'decision_duplicate', target: 'no_duplicate_warning', type: 'default', condition: P`!has(vars.leadRecord) || !has(vars.leadRecord.duplicate_status) || (vars.leadRecord.duplicate_status != "suspected" && vars.leadRecord.duplicate_status != "confirmed")`, label: 'Clean' },
     { id: 'e23', source: 'warn_duplicate', target: 'screen_1', type: 'default' },
     { id: 'e24', source: 'no_duplicate_warning', target: 'screen_1', type: 'default' },
+    // The refusal branch rejoins nothing: it goes straight to `end`, so no
+    // node that writes is downstream of it. That is the refusal — the flow's
+    // every create/update sits behind `screen_1`, which this path never
+    // reaches.
+    { id: 'e26', source: 'refuse_confirmed_duplicate', target: 'end', type: 'default' },
     { id: 'e2', source: 'screen_1', target: 'find_account', type: 'default' },
     { id: 'e4', source: 'find_account', target: 'decision_account', type: 'default' },
     // Existing account → reuse; no account → create. Both converge on create_contact.
