@@ -485,6 +485,49 @@ describe('source token ratchet — the header table is derived from the ceilings
     });
   }
 
+  /**
+   * One worked line for a re-anchoring that was DECLINED as a raise:
+   *
+   *   *   business semantics  anchor( 82,489) =  87,000  > ceiling  85,000  2026-08-26
+   *
+   * #1341 reflowed these out of a wrapped sentence into rows shaped like the
+   * table above, which is what makes them pinnable at all — so they are located
+   * by content, never by line number. Same discipline as TABLE_ROW: the column
+   * widths are free, but every field is captured, and when the header's shape
+   * changes the fix is to teach this regex the new shape — never to relax it.
+   */
+  const DECLINED_ROW =
+    / \* {2,}(?<label>\S.*?\S) {2,}anchor\( *(?<reading>[\d,]+)\) = +(?<anchored>[\d,]+) +> ceiling +(?<ceiling>[\d,]+) +(?<date>\d{4}-\d{2}-\d{2})\s*$/;
+
+  interface Declined {
+    label: string;
+    reading: number;
+    anchored: number;
+    ceiling: number;
+    date: string;
+    line: string;
+  }
+
+  function declined(): Declined[] {
+    return source()
+      .split('\n')
+      .flatMap((line) => {
+        const found = DECLINED_ROW.exec(line);
+        if (!found?.groups) return [];
+        const g = found.groups;
+        return [
+          {
+            label: g.label,
+            reading: num(g.reading),
+            anchored: num(g.anchored),
+            ceiling: num(g.ceiling),
+            date: g.date,
+            line: line.trim(),
+          },
+        ];
+      });
+  }
+
   it('carries exactly one worked row per committed ceiling, in the committed order', () => {
     // A failure here means the table did not parse, not that a figure is wrong.
     // The fix is to teach TABLE_ROW the header's new shape — never to relax it,
@@ -522,6 +565,38 @@ describe('source token ratchet — the header table is derived from the ceilings
     expect(recorded.length).toBeGreaterThan(0);
 
     for (const row of rows()) {
+      const run = recorded.find((r) => r.date === row.date);
+      expect(run, `${row.line}\n  no anchoring run is recorded for ${row.date}`).toBeDefined();
+      expect(run?.readings.get(row.label), row.line).toBe(row.reading);
+    }
+  });
+
+  it('carries a declined row for every ceiling the latest anchoring run left alone', () => {
+    // Non-vacuity, derived rather than listed: a layer that re-anchored carries
+    // that run's own date in the table above, so every OTHER committed ceiling
+    // was left alone on that run and owes a worked line saying why. A header
+    // whose sentence stops parsing therefore fails here instead of passing as
+    // an empty set — and a legitimate future re-anchoring retires its own row
+    // without this list having to be edited by hand.
+    const latest = [...runs()].sort((a, b) => a.date.localeCompare(b.date)).at(-1);
+    expect(latest, 'no anchoring run is recorded in the header').toBeDefined();
+    const leftAlone = rows().filter((row) => row.date !== latest?.date).map((row) => row.label);
+    expect(declined().map((row) => row.label)).toEqual(leftAlone);
+  });
+
+  it('proves every declined re-anchoring really would have been a raise', () => {
+    const recorded = runs();
+    for (const row of declined()) {
+      // The figure stated IS `anchor()` of the reading beside it …
+      expect(anchor(row.reading), row.line).toBe(row.anchored);
+      // … the ceiling it is weighed against is the constant committed below …
+      expect(row.ceiling, row.line).toBe(ceilingOf(row.label));
+      // … and it lands ABOVE that ceiling. This inequality is the claim itself:
+      // it is what makes the row a re-anchoring DECLINED as a raise, rather
+      // than arithmetic that merely parses.
+      expect(row.anchored, row.line).toBeGreaterThan(ceilingOf(row.label));
+      // And the reading is the one the run named on the row actually produced,
+      // so the row cannot quietly be re-dated onto a run that never read it.
       const run = recorded.find((r) => r.date === row.date);
       expect(run, `${row.line}\n  no anchoring run is recorded for ${row.date}`).toBeDefined();
       expect(run?.readings.get(row.label), row.line).toBe(row.reading);
