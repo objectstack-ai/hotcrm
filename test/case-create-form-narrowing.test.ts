@@ -138,7 +138,13 @@ const LIFECYCLE_MAINTAINED: Record<string, { why: string; keeps: string[] }> = {
   closed_date: { why: 'readonly on the object; stamped at close', keeps: ['case_timeline.endDateField'] },
   is_closed: {
     why: 'readonly on the object; derived from `status` on every write',
-    keeps: ['case_workflow.filter', 'my_open_cases.filter'],
+    // `my_open_cases.filter` was on this line until #1328 moved that view onto
+    // `status not_in ['resolved', 'closed']`: the flag is derived as
+    // `status === 'closed'` and never flips on `resolved`, so it could not
+    // express the tab's own label. `case_workflow` keeps the flag — that kanban
+    // is the lifecycle itself and `resolved` is a real swimlane on it. Both
+    // facts are pinned in `test/live-work-predicate-parity.test.ts`.
+    keeps: ['case_workflow.filter'],
   },
 };
 
