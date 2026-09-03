@@ -271,7 +271,6 @@ export const zhCN: TranslationData = {
         all_articles: { label: '全部文章' },
         published_articles: { label: '已发布' },
         my_drafts: { label: '我的草稿' },
-        stale_articles: { label: '复核队列 · 最久未复核在前' },
       },
       _sections: {
         basic: { label: '文章信息' },

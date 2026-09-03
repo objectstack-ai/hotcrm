@@ -165,7 +165,7 @@
 | KB-003 | 发布门槛 | 无正文禁止发布(error);无摘要发布告警(摘要供搜索结果与 AI 引用) | `src/objects/knowledge_article.object.ts`(validations) |
 | KB-004 | 发布时间戳 | 首次发布写 `published_at`(重新上架不重置,导入可带历史日期);处于已发布态的写入刷新 `last_reviewed_at` | `src/objects/knowledge_article.hook.ts` |
 | KB-005 | 参与度指标 | `view_count`/`helpful_count`/`not_helpful_count` 只读计数字段 | `src/objects/knowledge_article.object.ts` |
-| KB-006 | 知识库视图 | 已发布按浏览量、我的草稿(draft+in_review)、复审队列(published 按 `last_reviewed_at` 最旧优先)、按分类分组全量 | `src/views/knowledge_article.view.ts` |
+| KB-006 | 知识库视图 | 已发布按浏览量、我的草稿(draft+in_review)、按分类分组全量(复审队列已随 #781 裁决删除) | `src/views/knowledge_article.view.ts` |
 | KB-007 | 知识库权限面 | 服务坐席可建/改(无删,归档留给管理员),销售只读,匿名访客一律拒绝(门户走 `allowAnonymous` 视图而非放宽对象读) | `src/profiles/service-agent.profile.ts`、`src/profiles/guest-portal.profile.ts` |
 
 ## MKT — 营销活动

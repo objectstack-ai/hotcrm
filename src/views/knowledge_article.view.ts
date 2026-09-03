@@ -7,11 +7,18 @@ import { defineView } from '@objectstack/spec/ui';
  *
  *   • grid      — agent-facing article queue (status / category / audience)
  *   • published — public articles only
- *   • stale     — every published article, least-recently-reviewed first
+ *   • my drafts — the author's own drafts and in-review articles
  *
- * The third one is a RANKING, not a cut: `stale_articles` is the metadata
- * item's name, not a claim about which rows come back. See its own note below
- * for why it stays a ranking (#769).
+ * A fourth tab, `stale_articles` ('Review Queue · Oldest First'), shipped here
+ * until #781 and is deliberately absent: the maintainer ruled the knowledge
+ * review queue out of the product rather than settling whether it should have
+ * become a real 180-day cut. ⛔ Do not reinstate it as a ranking either — the
+ * ruling removed the FEATURE, not just the window question.
+ *
+ * `last_reviewed_at` is untouched by that removal and stays a data-layer
+ * field: the publish hook still stamps it, and the Engagement form section
+ * below still shows it. Whether the field itself should retire is a separate
+ * question and is not answered here.
  */
 export const KnowledgeArticleViews = defineView({
   list: {
@@ -66,89 +73,6 @@ export const KnowledgeArticleViews = defineView({
         { field: 'owner_id',  operator: 'equals', value: '{current_user_id}' },
       ],
       sort: [{ field: 'updated_at', order: 'desc' }],
-    },
-    stale_articles: {
-      name: 'stale_articles',
-      type: 'grid',
-      // Operator-only filter + least-recently-reviewed-first sort. This view
-      // is a RANKING and the label says so; it deliberately applies no
-      // 180-day cut. Both halves of that sentence were settled by measurement
-      // (#769), so the reasoning is recorded here rather than re-derived.
-      //
-      // 1. The old note's premise expired (#744, #773). It read: the list data
-      //    path does NOT resolve date macros, so `last_reviewed_at <
-      //    '{180_days_ago}'` compared the literal string, and since '2026-…' <
-      //    '{…' is lexicographically true it matched EVERY published article.
-      //    True on @objectstack 16.1.0; false from 17.0.0-rc.0, when
-      //    `resolveFilterTokens()` was wired into the ObjectQL read path
-      //    (objectql #3582) ahead of the middleware chain —
-      //    `find`/`findOne`/`count`/`aggregate`, saved-view filters included.
-      //    Measured on 17.0.0-rc.2 and RE-MEASURED 2026-09-03 on
-      //    the pinned 17.2.0 (#1467: the current pin since PR #1442) —
-      //    unchanged: `{180_days_ago}` resolves to the START of the calendar
-      //    day 180 days ago (00:00:00.000Z), so as an EXCLUSIVE upper bound
-      //    under `less_than` it excludes that whole day — the #3777
-      //    day-boundary convention, and the right sense for a label reading
-      //    "> 180d". The re-measurement is the `stale_articles` runtime block
-      //    in `test/forecast-current-quarter-view.test.ts`: it drives the
-      //    macro and the equivalent day-start literal through a real engine
-      //    and requires them to select the same rows.
-      //
-      // 2. Expressible is not the same as expressible WITHOUT LOSS. A review
-      //    queue's most overdue population is the never-reviewed one, and
-      //    `last_reviewed_at` is nullable.
-      //
-      //    ⚠️ HISTORY — this note's own premise, corrected in place because
-      //    the argument below was built on it. Through 17.0.0-rc.2 the bulk
-      //    path (`multi: true`) had no `input.id` and no `previous`, so
-      //    `knowledge_article_publish_timestamps` saw no status and stamped
-      //    nothing; a bulk load or mass edit, which is how an org imports an
-      //    existing knowledge base, left published articles with no review
-      //    timestamp (#779, closed). Since ADR-0058 Addendum II that path
-      //    dispatches PER ROW with `previous` bound, and on 17.1.0 — the
-      //    version this repo pinned AT THE TIME of the measurement, not the
-      //    current pin (#1460: 17.2.0 since PR #1442, and this has not been
-      //    re-measured on it) — every published row a bulk load or mass edit
-      //    touches IS stamped.
-      //
-      //    The grammar limit is what still holds this view to a ranking here:
-      //    `$lt` matches neither null nor an absent key, so a window silently
-      //    drops any row that has none, and the honest condition "earlier than
-      //    {180_days_ago} OR empty" is unsayable — a view `filter` is a FLAT,
-      //    strict array of `{field, operator, value}` rules
-      //    (`ViewFilterRuleSchema`) combined with AND; there is no `or`, no
-      //    nesting, no logic key. Spelled as the two rules the grammar does
-      //    allow, the window and the emptiness test AND together and the view
-      //    returns ZERO rows. (The engine itself has `$or` and answers the
-      //    question correctly — this is a view-authoring limit, not an engine
-      //    limit.)
-      //
-      // So the label is what changed in #769, not the filter: the four locale
-      // packs had translated this view as 'Stale (>180d)' / '过期 (>180 天)' /
-      // 'Obsoletos (>180d)' / '古い (>180日)', promising a window the filter
-      // never expressed — the #730 defect class, living (as it did there) only
-      // in the translated half. They now render the metadata label faithfully,
-      // and every user-visible name for this view again promises exactly the
-      // ordering it delivers. No `emptyState` is authored because the change
-      // introduces no new empty state: "no published articles" is the same
-      // zero this tab has always had, unlike `closing_this_quarter` (#746),
-      // where scoping made "empty" newly reachable.
-      //
-      // `test/forecast-current-quarter-view.test.ts` owns the house rule and
-      // pins all of the above against a real engine, including the day-window
-      // claim vocabulary that would fail this view the day a label reclaims a
-      // window. Whether the queue SHOULD become a 180-day cut is a product
-      // question — #781, open and `needs-user-decision`. The premise in 2 is
-      // dead, which is precisely why that card has to be DECIDED rather than
-      // re-derived from this file; it is not decided by a translator, and it
-      // was not decided by the correction above.
-      label: 'Review Queue · Oldest First',
-      data: { provider: 'object', object: 'crm_knowledge_article' },
-      columns: ['article_number', 'title', 'category', 'owner_id', 'last_reviewed_at'],
-      filter: [
-        { field: 'status', operator: 'equals', value: 'published' },
-      ],
-      sort: [{ field: 'last_reviewed_at', order: 'asc' }],
     },
   },
 
