@@ -225,7 +225,8 @@ export const Task = ObjectSchema.create({
     // audit trail), and defaulted to `false` by `task.hook.ts` on insert.
     //
     // NOT readonly — but the old reason here ("16.x drops flow writes to
-    // readonly fields") does not survive measurement on the pinned 17.1.0:
+    // readonly fields") does not survive measurement. Taken on 17.1.0 and
+    // RE-TAKEN on the current pin 17.2.0 (#1460), same verdict both times:
     // `task_due_reminder` declares `runAs: 'system'`, so its write WOULD
     // survive a `readonly: true`, and the hook's insert-time default is on the
     // insert path, which is exempt from the strip anyway. See

@@ -22,8 +22,10 @@ import { QuoteLineItem } from '../src/objects/quote_line_item.object';
  * declare cannot be governed by them: the shadow write sat outside `allowEdit`
  * and field-level security by construction.
  *
- * This file is the re-measurement on the pinned 17.1.0, and it says two
- * different things about two different write paths.
+ * This file is the re-measurement taken on 17.1.0 — the version this repo
+ * pinned AT THE TIME, not the current pin (#1460: 17.2.0 since PR #1442; the
+ * probe below has not been re-taken on it, though its assertions do run green
+ * there) — and it says two different things about two different write paths.
  *
  * ## The caller path is CLOSED, and that is what half 1 pins
  *

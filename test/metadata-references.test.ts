@@ -995,8 +995,9 @@ describe('forms can actually author the data the views depend on', () => {
    *
    * The proxy reads `readonly` to mean "stamped", and on `crm_case.is_escalated`
    * that read is unavailable — though NOT for the blanket reason this block
-   * used to give ("the platform drops writes to readonly fields"). Measured on
-   * the pinned 17.1.0 in `test/readonly-write-semantics.test.ts` (#1429), the
+   * used to give ("the platform drops writes to readonly fields"). Measured in
+   * `test/readonly-write-semantics.test.ts` (#1429) on 17.1.0 and RE-MEASURED
+   * there on the current pin 17.2.0 (#1460), same result both times: the
    * strip is one branch of the UPDATE path — `if (!opCtx.context?.isSystem)` —
    * applied to CALLER-supplied keys only. So a `beforeUpdate` hook's own stamp
    * survives it, an insert is exempt from it, and a flow write survives it

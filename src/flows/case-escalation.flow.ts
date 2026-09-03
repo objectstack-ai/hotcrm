@@ -117,6 +117,47 @@ export const CaseEscalationFlow: Flow = {
     // action and the SLA monitor). A second task node here produced duplicate,
     // disagreeing tasks (case owner/high vs account owner/urgent) per escalation.
     {
+      // Gateway only — the live predicate is on the out-edge `e4` (#650). The
+      // engine never reads a `decision` node's singular `config.condition`, so
+      // a copy here would restate the gate without BEING the gate
+      // (`flow-inert-node-condition`, #4414); `test/flow-decision-authority.test.ts`
+      // enforces that.
+      //
+      // #1430: `crm_case.owner_id` is NULLABLE and an unowned case is an
+      // ordinary state — this repo ships `scripts/backfill-owner-id.ts` and
+      // `pnpm backfill:owner` precisely because ownerless rows happen, and
+      // ordinary REST creation / import reach the same state. `notify_team`
+      // below addresses exactly ONE recipient, so an ownerless case left it
+      // with an empty slate, which the builtin node treats as a HARD failure:
+      // `execute` returns `success: false`, `executeNode` turns that into a
+      // throw, and the run ends `status: 'failed'`.
+      //
+      // BLAST RADIUS, stated precisely because it differs from the sibling
+      // defect #1405 and the difference is structural: these two are
+      // `record_change` flows with NO loop, so one ownerless case kills only
+      // its OWN run — there is no queue of other records behind it. #1405 was
+      // a `schedule` flow whose work sat inside a `loop` that awaits
+      // `runRegion` with no try/catch, and there one ownerless row took down
+      // every breached case ordered behind it.
+      //
+      // The gate sits AFTER `assign_senior_agent`, which stays UNCONDITIONAL:
+      // the escalation itself must still land (measured `is_escalated: true`,
+      // `status: 'escalated'` on every failing run), so an ownerless critical
+      // case stays visible in views and reports. Only the notify is gated —
+      // and here that loses nothing a reader would want, because `caseRecord`
+      // is read by `get_case` UPSTREAM of the escalation write, so
+      // `{caseRecord.owner_id}` is deliberately the owner the case had BEFORE
+      // the hand-off. With no such person there is no "previous owner" for the
+      // message to be addressed to.
+      //
+      // ⚠️ This guard is exactly the duplication objectstack#13682 exists to
+      // retire — `notify` should treat an empty audience as a RECORDED SKIP
+      // rather than a hard failure. When #13682 lands, delete this node and
+      // edge `e4`'s predicate here, and the same pair in
+      // `case-sla-monitor.flow.ts`.
+      id: 'check_owner', type: 'decision', label: 'Case Has an Owner?',
+    },
+    {
       // ADR-0012: the dedicated `notify` node dispatches through the messaging
       // service (inbox + email + push). The legacy `script` + `actionType:'email'`
       // shape is a no-op stub in 7.4 and never delivered anything.
@@ -156,8 +197,55 @@ export const CaseEscalationFlow: Flow = {
   edges: [
     { id: 'e1', source: 'start', target: 'get_case', type: 'default' },
     { id: 'e2', source: 'get_case', target: 'assign_senior_agent', type: 'default' },
-    { id: 'e3', source: 'assign_senior_agent', target: 'notify_team', type: 'default' },
-    { id: 'e4', source: 'notify_team', target: 'end', type: 'default' },
+    { id: 'e3', source: 'assign_senior_agent', target: 'check_owner', type: 'default' },
+    // The gate. A `decision` with no matching out-edge simply ends the run
+    // here, after the escalation has already been written.
+    //
+    // TOTALITY (#643): `caseRecord` is a `get_record` OUTPUT — a raw driver
+    // row, sparse in exactly the way #633 measured, so only `has()` is total
+    // and it must be `vars.`-scoped (measured: bare `has(caseRecord.owner_id)`
+    // still aborts with `Unknown variable` on an unbound root, while
+    // `has(vars.caseRecord)` answers `false`).
+    //
+    // EVERY TERM IS LOAD-BEARING, and the last one MIRRORS THE NOTIFY NODE'S
+    // OWN emptiness rule rather than guessing at it: builtin `notify` builds
+    // its audience with `String(v).trim()` + `.filter(Boolean)`, so null,
+    // undefined, `''` and any all-whitespace value all collapse to the same
+    // empty slate. Each term was measured through `evaluateCondition` on the
+    // shape it alone covers, by dropping it and recording what the rest do:
+    //   - `has(vars.caseRecord)` — an UNBOUND root. Without it the predicate
+    //     aborts with `No such key: caseRecord`. `get_case` binds the variable
+    //     on every path here (it sets it even when it matched nothing), so
+    //     this term is the one that keeps a future graph edit from turning a
+    //     gate into an abort — and the `vars.`-scoped `has()` pair is the
+    //     house rule `test/flow-variable-conditions.test.ts` enforces.
+    //   - `has(vars.caseRecord.owner_id)` — the ABSENT key (driver-memory /
+    //     driver-mongodb store only the columns a row was written with).
+    //     Without it, `vars.caseRecord.owner_id != null` aborts with
+    //     `No such key: owner_id`.
+    //   - `vars.caseRecord.owner_id != null` — the explicit NULL. Without it
+    //     the wrap is handed one and aborts with
+    //     `no matching overload for 'string(null)'`, so this term must
+    //     short-circuit in front of it.
+    //   - `string(...).trim() != ""` — the BLANK/whitespace id. `'   ' != ""`
+    //     is TRUE in CEL, so a gate written that way opens for a whitespace
+    //     owner_id and reproduces this very defect one input narrower. The
+    //     `string()` wrap is not decoration either: measured, a bare
+    //     `.trim()` on a numeric id aborts with
+    //     `no matching overload for 'double.trim()'` and `.matches()` with
+    //     `'double.matches(string)'` — a thrown condition, which is the fault
+    //     mode this fix exists to remove, reintroduced on a different input.
+    //
+    // A `vars.caseRecord != null` term was drafted here for the row that is
+    // GONE by the time `get_case` reads it — `get_record` with no match sets
+    // the variable to `null`, key present. Measured INERT and removed: `has()`
+    // on a null base answers `false` rather than aborting, so the four terms
+    // above already close that shape (`test/flow-escalation-ownerless-case.test.ts`
+    // covers it). A term that cannot change an answer is the inert-copy shape
+    // #4414 deletes, not defence in depth.
+    { id: 'e4', source: 'check_owner', target: 'notify_team', type: 'conditional', condition: P`has(vars.caseRecord) && has(vars.caseRecord.owner_id)
+      && vars.caseRecord.owner_id != null && string(vars.caseRecord.owner_id).trim() != ""`, label: 'Has owner' },
+    { id: 'e5', source: 'notify_team', target: 'end', type: 'default' },
   ],
 };
 

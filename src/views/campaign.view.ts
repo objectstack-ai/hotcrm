@@ -32,6 +32,15 @@ export const CampaignViews = defineView({
       showDescription: true,
       allowedVisualizations: ['grid', 'gantt', 'calendar', 'timeline'],
     },
+    // Binds the 'calendar' entry above: the switcher opens the same schedule
+    // the dedicated `campaign_calendar` view shows. Both dates are required +
+    // notNull on crm_campaign, so every campaign spans a truthful range.
+    calendar: {
+      startDateField: 'start_date',
+      endDateField: 'end_date',
+      titleField: 'name',
+      colorField: 'channel',
+    },
   },
 
   listViews: {

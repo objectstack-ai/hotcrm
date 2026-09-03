@@ -44,6 +44,15 @@ export const TaskViews = defineView({
       showDescription: true,
       allowedVisualizations: ['grid', 'kanban', 'calendar', 'gantt', 'timeline'],
     },
+    // Binds the 'calendar' entry above: the same schedule the dedicated
+    // `task_calendar` view shows, on the field this list sorts by. `due_date`
+    // is optional — an undated task stays off the calendar instead of being
+    // dropped on today by a guessed field.
+    calendar: {
+      startDateField: 'due_date',
+      titleField: 'subject',
+      colorField: 'priority',
+    },
   },
 
   listViews: {

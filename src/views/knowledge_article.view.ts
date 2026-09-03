@@ -100,8 +100,11 @@ export const KnowledgeArticleViews = defineView({
       //    nothing; a bulk load or mass edit, which is how an org imports an
       //    existing knowledge base, left published articles with no review
       //    timestamp (#779, closed). Since ADR-0058 Addendum II that path
-      //    dispatches PER ROW with `previous` bound, and on the pinned 17.1.0
-      //    every published row a bulk load or mass edit touches IS stamped.
+      //    dispatches PER ROW with `previous` bound, and on 17.1.0 — the
+      //    version this repo pinned AT THE TIME of the measurement, not the
+      //    current pin (#1460: 17.2.0 since PR #1442, and this has not been
+      //    re-measured on it) — every published row a bulk load or mass edit
+      //    touches IS stamped.
       //
       //    The grammar limit is what still holds this view to a ranking here:
       //    `$lt` matches neither null nor an absent key, so a window silently

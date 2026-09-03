@@ -140,9 +140,39 @@ const CURRENT_PERIOD_FILTER = {
  */
 const OWNED_PERIOD_FILTER = { ...CURRENT_PERIOD_FILTER, source: 'scheduled' };
 
-/** Opportunities of the owner in flight during the snapshot window. */
+/**
+ * Opportunities of the owner in flight during the snapshot window.
+ *
+ * ## The organization pin (#1372)
+ *
+ * `owner_id` and the period window are both organization-NEUTRAL predicates,
+ * and this sweep runs `runAs: 'system'` — the one context the driver's
+ * organization predicate does not constrain. Without the pin below, an owner
+ * holding opportunities in more than one organization has every one of them
+ * summed into the single row `CURRENT_PERIOD_FILTER` selects: one tenant's
+ * forecast row reporting another tenant's pipeline. Nothing is NULL-partitioned
+ * and no index is violated — the numbers are simply wrong, and wrong in the
+ * direction that looks plausible. `sys_user` is what makes it reachable:
+ * identity is GLOBAL and declares no `organization_id`, so the per-owner loop
+ * item cannot narrow anything.
+ *
+ * The pin is the target row's own organization, read back off
+ * `currentForecast`. That is the SAME "prove the source carries the right
+ * organization" mechanism `{ownerAnyDeal.organization_id}` establishes on
+ * `create_forecast`, inverted — not a second one. It is in scope by
+ * construction: `currentForecast` already supplies the window boundaries in
+ * this very filter, and `reload_forecast` binds it before any bucket runs.
+ *
+ * What this does NOT do: give a cross-organization owner one row per
+ * organization. `crm_forecast` is still keyed by (owner, period), so such an
+ * owner's snapshot now reports THIS organization's numbers only — true but
+ * incomplete, and strictly better than the cross-tenant total it replaces.
+ * Whether that key should widen is a product decision, recorded on #1372 and
+ * deliberately not undertaken here.
+ */
 const inPeriod = (extra: Record<string, unknown>) => ({
   owner_id: '{currentOwner.id}',
+  organization_id: '{currentForecast.organization_id}',
   close_date: {
     $gte: '{currentForecast.period_start}',
     $lte: '{currentForecast.period_end}',
