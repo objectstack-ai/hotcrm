@@ -413,8 +413,11 @@ export const CaseViews = defineView({
    * Web-to-Case equivalent). Hosted at `/forms/support` and embeddable in
    * a help center. Guests can ONLY submit — the `guest_portal` profile
    * denies read/edit/delete on `crm_case`. Internal fields (status, origin,
-   * priority defaults, owner_id, SLA) are stamped by `case.hook.ts` after a
-   * guest submission.
+   * owner_id, SLA) are stamped by `case.hook.ts` after a guest submission.
+   * `priority` is NOT one of them: this form asks the guest for it, and an
+   * unset one is filled by the `low` option `crm_case.priority` declares
+   * `default: true`. Field defaults are applied before `beforeInsert`, so the
+   * hook only ever reads `priority` (to derive `priority_rank`).
    */
   formViews: {
     web_to_case: {
