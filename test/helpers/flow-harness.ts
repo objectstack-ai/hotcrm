@@ -126,15 +126,63 @@ function fillDeclared(object: string, row: Rec): Rec {
 /**
  * Bring a STORED row to its declared shape, in place.
  *
- * In place because callers hold references into `store` — `update` mutates the
- * stored row with `Object.assign`, and fixtures assert against the very objects
- * they seeded. Returning a copy would fork those.
+ * In place because `store` is the INSPECTION surface and it is LIVE: `update`
+ * mutates the stored row with `Object.assign`, and a fixture reads the result
+ * back through `store[object]` — which, for a seeded row, is the very object it
+ * seeded. Filling into a copy here would fork the store from the seed.
+ *
+ * ⚠️ This governs the STORE. It says nothing about what a caller of the data
+ * engine gets back: `insert` / `find` / `findOne` hand out DETACHED rows, see
+ * {@link detach}. #1490 was filed reading this paragraph as the reason those
+ * three returned references — it is not. The two contracts are independent, and
+ * measured across all 19 suites that back onto this harness, detaching the reads
+ * costs the store contract nothing.
  */
 function materialise(object: string, row: Rec): Rec {
   if (MATERIALISED.has(row)) return row;
   MATERIALISED.add(row);
   return fillDeclared(object, row);
 }
+
+/**
+ * The row a caller of the DATA ENGINE gets back — a copy, detached from `store`.
+ *
+ * ### The defect this closes (#1490)
+ *
+ * `insert` / `find` / `findOne` used to hand out the stored row object itself,
+ * and `update` mutates that same object with `Object.assign`. So a variable an
+ * earlier node bound — a `get_record` output, a `create_record` output — was
+ * RETRO-MUTATED by a later write in the same run, and any guard evaluated after
+ * that write read POST-write state.
+ *
+ * Measured on `quote_generation`, whose `check_stage` edges are written as an
+ * exact partition (`e4a` advance / `e4b` keep-stage, opposite polarity): the
+ * advance branch writes `stage: 'proposal'` into the very object `vars.oppRecord`
+ * points at, so the keep-stage guard then reads `proposal` and is satisfied too.
+ * Both edges are taken and `notify_owner` runs TWICE — against a flow whose
+ * author got the partition right. That is the cheap direction, because something
+ * visible is wrong. The expensive direction is silent: any predicate reading a
+ * field an earlier node in the same run wrote was being evaluated against state
+ * no driver would ever show it.
+ *
+ * ### What a real driver does — measured, not assumed
+ *
+ * ObjectStack 17.2.0, one object, one write, over BOTH shipped driver shapes
+ * (`InMemoryDriver` and `SqliteWasmDriver`), through `ObjectQL`: an earlier
+ * `findOne` result still reads `qualification` after a write set `proposal`; the
+ * `insert` result is detached the same way; two reads of one row are two
+ * objects; and mutating any returned row never reaches the store. All four now
+ * hold here too, and `test/flow-harness-declared-columns.test.ts` pins them.
+ *
+ * ### Shallow, deliberately
+ *
+ * The measured defect is ROW identity, and every write path here replaces
+ * top-level keys (`update` is `Object.assign`), so a shallow copy is total
+ * against it. A deep clone would additionally have to preserve `Date`, which is
+ * a further step and should be a deliberate one — taken when something needs it,
+ * not on speculation.
+ */
+const detach = (row: Rec): Rec => ({ ...row });
 
 /**
  * The row a materialising driver returns for `row` — a COPY, with every unset
@@ -197,6 +245,22 @@ export function matches(row: Rec, where: Rec = {}): boolean {
   return Object.entries(where).every(([field, cond]) => matchCondition(row[field], cond));
 }
 
+/**
+ * The in-memory data service a flow runs against.
+ *
+ * Two surfaces, with OPPOSITE contracts, on purpose:
+ *
+ *  - the METHODS are the DRIVER surface. Every row they hand back is DETACHED
+ *    ({@link detach}), the way a real driver's is, so a variable an earlier node
+ *    bound cannot be retro-mutated by a later write in the same run (#1490).
+ *  - `store` is the INSPECTION surface, and it is LIVE. `update` mutates the
+ *    stored row in place, so a fixture reads the result back through
+ *    `store[object]` — or through the object it seeded, which is that same one.
+ *
+ * ⛔ Do not assert IDENTITY across the two (`await findOne(…)` `toBe`
+ * `store[o][0]`). A real driver offers no such identity, and the point of the
+ * split is that this harness no longer does either. Assert on CONTENT.
+ */
 export interface DataEngine {
   store: Record<string, Rec[]>;
   insert(object: string, data: Rec): Promise<Rec>;
@@ -237,15 +301,16 @@ export function makeDataEngine(seed: Record<string, Rec[]> = {}): DataEngine {
     async insert(object, data) {
       const rec = materialise(object, { id: data.id ?? `${object}_${++seq}`, ...data });
       rows(object).push(rec);
-      return rec;
+      return detach(rec);
     },
     async find(object, opts = {}) {
       const hits = rows(object).filter((r) => matches(r, whereOf(opts)));
       const limit = opts.limit ?? opts.top;
-      return typeof limit === 'number' ? hits.slice(0, limit) : hits;
+      return (typeof limit === 'number' ? hits.slice(0, limit) : hits).map(detach);
     },
     async findOne(object, opts = {}) {
-      return rows(object).find((r) => matches(r, whereOf(opts))) ?? null;
+      const hit = rows(object).find((r) => matches(r, whereOf(opts)));
+      return hit ? detach(hit) : null;
     },
     async update(object, data, opts = {}) {
       const affected = rows(object).filter((r) => matches(r, whereOf(opts)));
