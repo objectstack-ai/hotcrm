@@ -1,8 +1,11 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-automation';
+import { applySystemFields } from '@objectstack/objectql';
+import * as PlatformObjects from '@objectstack/platform-objects';
 import type * as Automation from '@objectstack/spec/automation';
 import type { Hook } from '@objectstack/spec/data';
+import stack from '../../objectstack.config';
 
 type Flow = Automation.Flow;
 
@@ -19,6 +22,137 @@ type Flow = Automation.Flow;
  */
 
 export type Rec = Record<string, any>;
+
+/**
+ * The DECLARED columns of every object this repo can name, derived from the
+ * platform's own registry rather than from a hand-written list.
+ *
+ * ### Why the store has to know them (#1458)
+ *
+ * A real driver returns every declared column, system columns included, with
+ * `null` where nothing set one. This store used to be schemaless — `insert`
+ * did `{ id, ...data }` and the array held exactly what was written — so a
+ * column nobody wrote was **absent**, and an absent key is not a null one to a
+ * filter. That cost real work in both directions:
+ *
+ *  - a CORRECT change to `forecast_snapshot` (pinning its bucket queries to
+ *    `{currentForecast.organization_id}`) went red across two files, describing
+ *    a sweep abort no install can have; and, the expensive direction,
+ *  - a flow whose filter is WRONG against real rows passes here, because the
+ *    fixture happens not to carry the column the filter names.
+ *
+ * ### Measured, not assumed — the shape is derivable, so nothing is hand-listed
+ *
+ * `['id', ...Object.keys(applySystemFields(schema, opts).fields)]` reproduces a
+ * materialising driver's row shape EXACTLY. Measured on ObjectStack 17.2.0 over
+ * `SqliteWasmDriver` through `ObjectQL`, one row inserted per object from a
+ * system context: for all twelve of the eighteen app objects whose validations
+ * admit a minimal row, `declared === returned`, with no column missing and none
+ * extra (`crm_lead` 43, `crm_case` 34, `crm_account` 32, `crm_task` 31,
+ * `crm_contact` / `crm_opportunity` 30 …). That is what makes this a derivation
+ * and not the hand-maintained column list #1314 warns about: adding a field to
+ * an object under `src/objects/` moves this map with it, and nothing here has
+ * to be remembered.
+ *
+ * ### Which driver shape is "faithful"
+ *
+ * Both shapes ship. `driver-memory` and `driver-mongodb` store only the columns
+ * a row was written with and hand back the SPARSE shape — the same measurement
+ * above returns 10 of `crm_account`'s 32 columns over `InMemoryDriver`, and
+ * `test/sla-at-risk-live-work.test.ts` already runs its predicate over both on
+ * purpose. This harness models the MATERIALISING shape, for two reasons:
+ * it is what the shipped app runs on (`objectstack start` over SQLite), and it
+ * is the shape under which a wrong filter fails loudly instead of passing by
+ * accident, which is the whole point of a flow test.
+ *
+ * ### Tenancy posture
+ *
+ * The column SET is posture-independent, measured: `applySystemFields` returns
+ * byte-identical field descriptors for `{ multiTenant: false }` and
+ * `{ multiTenant: true }`, `organization_id` included — the tenant column is a
+ * uniform platform capability, injected either way. What the posture decides is
+ * whether the WRITE is allowed: under `OS_TENANCY_POSTURE=isolated` a system
+ * write carrying no organization is refused outright
+ * (`SystemWriteOrganizationRequiredError`), so the organization-less row this
+ * harness serves cannot exist there at all. This harness therefore models the
+ * `single` (default) posture — the one the community app ships in, and the one
+ * `test/helpers/tenancy-probe.ts` measured `objectstack start` running under.
+ * `multiTenant: false` below is the matching flag; it is inert for the column
+ * set, and stated rather than defaulted so the choice is readable.
+ */
+const DECLARED_COLUMNS: ReadonlyMap<string, readonly string[]> = (() => {
+  const map = new Map<string, readonly string[]>();
+  const register = (schema: unknown): void => {
+    const obj = schema as { name?: unknown; fields?: unknown } | null;
+    if (!obj || typeof obj.name !== 'string') return;
+    if (!obj.fields || typeof obj.fields !== 'object') return;
+    // First registration wins: `@objectstack/platform-objects` exports two
+    // shapes under the name `sys_metadata`, and app objects take precedence
+    // over a platform object of the same name by construction (this repo has
+    // no such collision today — `crm_` vs `sys_` — and if one appears, the
+    // app's own declaration is the one its flows are written against).
+    if (map.has(obj.name)) return;
+    const shaped = applySystemFields(schema as never, { multiTenant: false }) as {
+      fields?: Record<string, unknown>;
+    };
+    // `id` is deliberately excluded from the fill: `insert` always sets one,
+    // and a real row's id is never null. A seeded row without an id is a
+    // fixture bug, not a shape to invent a null for.
+    map.set(obj.name, Object.keys(shaped.fields ?? {}).filter((c) => c !== 'id'));
+  };
+  for (const object of ((stack as { objects?: unknown[] }).objects ?? [])) register(object);
+  for (const exported of Object.values(PlatformObjects as Record<string, unknown>)) register(exported);
+  return map;
+})();
+
+/** Rows already brought to their declared shape — materialising is idempotent. */
+const MATERIALISED = new WeakSet<Rec>();
+
+/**
+ * Fill a row's unset DECLARED columns with `null`, in place.
+ *
+ * An object with no declaration is passed through untouched: a flow test may
+ * exercise a node against a synthetic object name (`crm_audit` in
+ * `test/flow-decision-authority.test.ts`), and there is no declared shape to be
+ * faithful to. Absence is the honest answer there, not an invented one.
+ */
+function fillDeclared(object: string, row: Rec): Rec {
+  const columns = DECLARED_COLUMNS.get(object);
+  if (!columns) return row;
+  for (const column of columns) if (!(column in row)) row[column] = null;
+  return row;
+}
+
+/**
+ * Bring a STORED row to its declared shape, in place.
+ *
+ * In place because callers hold references into `store` — `update` mutates the
+ * stored row with `Object.assign`, and fixtures assert against the very objects
+ * they seeded. Returning a copy would fork those.
+ */
+function materialise(object: string, row: Rec): Rec {
+  if (MATERIALISED.has(row)) return row;
+  MATERIALISED.add(row);
+  return fillDeclared(object, row);
+}
+
+/**
+ * The row a materialising driver returns for `row` — a COPY, with every unset
+ * declared column filled with `null`.
+ *
+ * For the expectation side of a whole-row `toEqual`. A fixture that builds its
+ * expected row by hand would otherwise have to hand-declare the columns the
+ * flow never wrote, one at a time — the accreting workaround #1458 exists to
+ * retire. Derived from the same registry the store is, so it cannot drift from
+ * it, and it moves when an object under `src/objects/` gains a field.
+ *
+ * A copy rather than an in-place fill so a fixture template can be reused: the
+ * seeded row and the expected row must be separate objects, or a whole-row
+ * comparison compares the row the flow just mutated against itself.
+ */
+export function declaredRow(object: string, row: Rec = {}): Rec {
+  return fillDeclared(object, { ...row });
+}
 
 function matchCondition(value: unknown, cond: unknown): boolean {
   if (cond !== null && typeof cond === 'object' && !Array.isArray(cond)) {
@@ -75,14 +209,33 @@ export interface DataEngine {
 
 export function makeDataEngine(seed: Record<string, Rec[]> = {}): DataEngine {
   const store: Record<string, Rec[]> = seed;
+  // Seeded rows are brought to their declared shape up front, so `store` reads
+  // faithfully even in a case that asserts on it before running a flow.
+  for (const [object, list] of Object.entries(store)) for (const row of list) materialise(object, row);
   let seq = 0;
-  const rows = (o: string) => (store[o] ??= []);
+  /**
+   * The single accessor for a table — and therefore the single place the
+   * declared shape has to be applied.
+   *
+   * Materialising HERE rather than only at construction is what covers rows a
+   * fixture pushes straight into `store` after the harness is built: the
+   * seed-replay cases in `test/flow-scheduled.test.ts` do exactly that to
+   * model a warm boot, and before #1458 they had to hand-declare
+   * `owner_id: null` on every pushed row to be visible to the sweep that
+   * filters on it. Every read and every write goes through here, so a row is
+   * in its declared shape before anything can observe it.
+   */
+  const rows = (o: string) => {
+    const list = (store[o] ??= []);
+    for (const row of list) materialise(o, row);
+    return list;
+  };
   const whereOf = (opts: Rec = {}) => opts.where ?? opts.filter ?? {};
 
   return {
     store,
     async insert(object, data) {
-      const rec = { id: data.id ?? `${object}_${++seq}`, ...data };
+      const rec = materialise(object, { id: data.id ?? `${object}_${++seq}`, ...data });
       rows(object).push(rec);
       return rec;
     },
