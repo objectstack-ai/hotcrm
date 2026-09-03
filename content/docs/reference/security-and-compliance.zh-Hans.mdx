@@ -8,8 +8,12 @@ description: SSO、MFA、审计日志、secret 字段通道、GDPR —— HotCRM
 本页介绍 HotCRM 管理员真正能触及的安全与合规控制。其中大多数位于平台层，在 **Setup → Authentication** 配置；少数几项是你所运行的部署的属性，而不是本应用的属性。
 
 > **下面每一条断言都经过实测，其中好几条没能活下来。** 本页逐条对照本应用自己的元数据
-> （`src/`、`objectstack.config.ts`）与已安装的 `@objectstack/*` 包 —— **17.1.0**，全部
-> 51 个 —— 做了核验。标注 *(not shipped)* 的标题与表格行描述的是一项缺失的能力：没有对象、
+> （`src/`、`objectstack.config.ts`）与整棵已安装的 `@objectstack/*` 依赖树 —— 全部已安装的
+> 包，而不只是 `package.json` 声明的那些 —— 做了核验，并已于 **2026-09-03 对照 17.2.0
+> 重新实测**，那正是 `package.json` 自 2026-09-01 起钉住的版本。凡是这两个来源能回答的断言，
+> 都是重新取数而不是照搬旧结论；其中三条没能通过复测，下面是把它们改对，而不是绕过它们改标
+> 日期。这里的实测够不到的，是每一条 *(your deployment)* 行中属于你所运行的实例、以及运营它
+> 的那一方的那一半 —— 它们保持其标注给出的范围。标注 *(not shipped)* 的标题与表格行描述的是一项缺失的能力：没有对象、
 > 没有 schema 键、没有设置项。标注 *(unsourced)* 的行保留了一个数字，但应用与平台都没有任何
 > 东西在强制它。标注 *(your deployment)* 的行，其真假取决于你运行其上的实例以及运营它的
 > 那一方 —— 本页看不见这两者，所以它只说 HotCRM 与已安装依赖树做了什么，到此为止。
@@ -95,7 +99,7 @@ description: SSO、MFA、审计日志、secret 字段通道、GDPR —— HotCRM
 | **IP 允许列表** | ✅ 真实，**部署级** | **Setup → Authentication**（*Network*）下的 `allowed_ip_ranges`。CIDR 段或精确 IP，每行一个或逗号分隔。留空 = 不限制。来自这些范围之外的登录会被拒绝。需要一个可信代理设置 `X-Forwarded-For` |
 | **并发会话** | ✅ 真实，**部署级** | **Setup → Authentication**（*Sessions*）下的 `max_concurrent_sessions_per_user`。默认 **0 = 不限**，上限 100；超过上限时最旧的会话会被登出 |
 | **会话超时** | ✅ 真实，但**默认关闭** | `session_idle_timeout_minutes` 与 `session_absolute_max_hours`，两者默认都是 **0 = 关闭**。会话本身的生命周期是 `session_expiry_days`，默认 7 天。旧页面把 30 分钟空闲 / 12 小时绝对超时说成生效中的默认值；它们既没生效，也不是默认值 |
-| **登录时间** | *(not shipped)* | 在 51 个已安装包的 1,186 个非 map 分发文件中，任何 login-hours、login-window 或 allowed-hours 表面都是零命中 |
+| **登录时间** | *(not shipped)* | 在 51 个已安装包的 1,204 个非 map 分发文件中，任何 login-hours、login-window 或 allowed-hours 表面都是零命中 |
 | **设备信任** | *(not shipped)* | 同样零命中：任何可信设备、设备指纹或新设备确认表面都不存在 |
 
 ⚠️ **「按简档」这个说法对它们全都是错的。** 旧条目写着「（按简档）」。存在的那两项是 `auth` 命名空间下的**部署级设置** —— 整个实例一份 IP 允许列表、一个会话上限，不是你能在 Sales Rep 与 System Admin 之间取不同值的东西。如果你的策略需要按简档的网络规则，这里没有任何东西做这件事。
@@ -104,7 +108,7 @@ description: SSO、MFA、审计日志、secret 字段通道、GDPR —— HotCRM
 
 ## 审计日志
 
-`sys_audit_log` 是真的，而且确实不可变：该对象是 `managedBy: 'append-only'`，其上每个字段都是 `readonly: true`。它随 `@objectstack/plugin-audit` 一起发布，而**本应用拿得到它** —— 在 `requires` 中声明 `auth` 会让 CLI 把 auth、security、audit 三个插件作为一组注册。在 **Setup → Audit Logs**（位于 *Diagnostics* 分组下）读取，它带了五个列表视图：*Recent*、*Auth*、*Record Views*、*Config* 与 *All*。
+`sys_audit_log` 是真的，而且确实不可变：该对象是 `managedBy: 'append-only'`，其上每个字段都是 `readonly: true`。它随 `@objectstack/plugin-audit` 一起发布，而**本应用拿得到它** —— 在 `requires` 中声明 `auth` 会让 CLI 把 auth、security、audit 三个插件作为一组注册。在 **Setup → Audit Logs**（位于 *Diagnostics* 分组下）读取，它带了六个列表视图：*Recent*、*Writes*、*Auth*、*Record Views*、*Config* 与 *All*。
 
 分类表是没测过的那部分。对照真正存在的写入方重新判定：
 
@@ -187,7 +191,7 @@ Unrecognized key(s) on this field: `encrypted`.
 
 *(your deployment。)* 你的数据存在哪里 —— 美国、欧盟、亚太、你自己的 VPC —— 以及跨区传输是否被阻断，是你所运行实例及其运营方的属性。**本应用里没有任何东西、已安装平台依赖树里也没有任何东西强制甚至记录一个区域。** 支撑这一点的两项测量：
 
-- `@objectstack/spec/kernel` 的产物里确实存在一个 `dataResidency` 形状（`region`、`excludeRegions`），旁边还有一个点名 `sox | hipaa | gdpr | pci_dss | iso_27001 | fedramp` 的 `compliance` 块。它**没有被导出，也没有类型声明** —— 编写者写不出它，也没有任何东西读它。它描述的是一个意图，不是一个控制。
+- 确实存在一个 `dataResidency` 形状（`region`、`excludeRegions`），它位于 `@objectstack/spec/system` 的 `TenantSecurityPolicySchema` 里，旁边还有一个点名 `sox | hipaa | gdpr | pci_dss | iso_27001 | fedramp` 的 `compliance` 块。它被导出、也有类型，所以编写者*写得出*它 —— 而 **`@objectstack/spec` 之外没有任何东西读它**，这才是决定问题的那一半。它描述的是一个意图，不是一个控制。
 - 已安装包中，任何跨区传输阻断、区域锁定或驻留强制都是零命中。
 
 如果驻留是一项硬要求，回答它的是你的部署拓扑，而不是 Setup 里的某个设置。

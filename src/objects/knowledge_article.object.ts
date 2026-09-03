@@ -131,6 +131,7 @@ export const KnowledgeArticle = ObjectSchema.create({
     article_number: Field.autonumber({
       label: 'Article Number',
       format: 'KA-{0000}',
+      group: 'basic',
     }),
 
     title: Field.text({

@@ -23,24 +23,6 @@ import * as allFlows from '../src/flows';
 import { makeFlowHarness, type Rec } from './helpers/flow-harness';
 
 /**
- * State `organization_id` on a seeded row, null.
- *
- * A real driver returns every DECLARED column, so a row written with no
- * organization reads back `organization_id: null` — measured on
- * `SqliteWasmDriver` through `ObjectQL`, whose returned record carries the key.
- * This harness's store is schemaless and omits keys nobody wrote, and an ABSENT
- * key is not a null one: `forecast_snapshot`'s bucket pin
- * (`{currentForecast.organization_id}`, #1372) resolves against a null and has
- * nothing to resolve against an absence. Exactly the distinction the
- * `owner_id: null` note further down draws for `demo_bootstrap`'s filter.
- *
- * Null rather than an organization id on purpose: these cases describe the
- * single-organization shape, and stating the column keeps them describing it.
- */
-const inNoOrganization = <T extends Rec>(rows: T[]): T[] =>
-  rows.map((r) => ({ organization_id: null, ...r }));
-
-/**
  * Runtime tests for the SCHEDULED sweeps.
  *
  * Scheduled flows were previously untested at runtime, and they are the
@@ -130,7 +112,7 @@ describe('case_sla_monitor — hourly breach sweep', () => {
   it('does not re-process a case already marked as violated', async () => {
     const h = await runSweep();
     const already = h.store.crm_case.find((c) => c.id === 'c_already')!;
-    expect(already.escalation_reason, 'already-flagged case was re-written').toBeUndefined();
+    expect(already.escalation_reason, 'already-flagged case was re-written').toBeNull();
   });
 
   it('alerts the case owner, and only for the newly-breached case', async () => {
@@ -638,8 +620,8 @@ describe('forecast_snapshot — nightly per-owner pipeline snapshot', () => {
       { forecast_snapshot: ForecastSnapshotFlow },
       {
         sys_user: users(),
-        crm_opportunity: inNoOrganization(opps()),
-        crm_forecast: inNoOrganization(forecasts),
+        crm_opportunity: opps(),
+        crm_forecast: forecasts,
       },
       { hooks: [forecastDerive] },
     );
@@ -751,9 +733,10 @@ describe('forecast_snapshot — nightly per-owner pipeline snapshot', () => {
 
     const snap = byOwner(h).rep1;
     expect(Number(snap.quota), 'the sweep clobbered a hand-maintained quota').toBe(1_500_000);
-    // And a freshly opened row leaves quota unset rather than zeroing it,
-    // so `attainment_pct` guards on quota > 0 instead of dividing by a lie.
-    expect(byOwner(h).rep2.quota).toBeUndefined();
+    // And a freshly opened row leaves quota NULL rather than zeroing it — the
+    // column the sweep never writes, as a materialising driver returns it — so
+    // `attainment_pct` guards on quota > 0 instead of dividing by a lie.
+    expect(byOwner(h).rep2.quota).toBeNull();
   });
 
   it('does not touch a snapshot belonging to a different period', async () => {
@@ -776,9 +759,9 @@ describe('forecast_snapshot — nightly per-owner pipeline snapshot', () => {
       { forecast_snapshot: ForecastSnapshotFlow },
       {
         sys_user: [{ id: 'rep9', name: 'Idle' }],
-        crm_opportunity: inNoOrganization([
+        crm_opportunity: [
           { id: 'ox', owner_id: 'rep9', stage: 'closed_lost', amount: 10, close_date: inPeriod },
-        ]),
+        ],
         crm_forecast: [],
       },
       { hooks: [forecastDerive] },
@@ -846,18 +829,21 @@ describe('re-seed × snapshot leaves one row per (owner, period, window) (#702)'
    * claimed owner SURVIVES a warm-boot replay. If it did not, the ownerless
    * state would return on every boot and no claim could ever settle it.
    *
-   * A fresh insert lands with `owner_id: null`, not with the key absent: the
+   * A fresh insert lands with `owner_id: null`, not with the key absent — the
    * registry injects the column into every user-owned object, and the seed
-   * write only skips the security plugin's insert-time STAMP. The distinction
-   * decides whether `demo_bootstrap` can see the row at all — its filter is
-   * `{ owner_id: null }`, and an absent key is not null.
+   * write only skips the security plugin's insert-time STAMP. That distinction
+   * decides whether `demo_bootstrap` can see the row at all: its filter is
+   * `{ owner_id: null }`, and an absent key is not null. The row below states
+   * neither `owner_id` nor `organization_id` any more; the harness store
+   * materialises every declared column the way a driver does (#1458), so the
+   * fixture no longer has to name the columns the filters happen to read.
    */
   const loadSeeds = (store: Record<string, Rec[]>) => {
     const rows = (store.crm_forecast ??= []);
     for (const rec of seedRecords) {
       const existing = rows.find((r) => r.seed_key === rec.seed_key);
       if (existing) Object.assign(existing, rec);
-      else rows.push({ id: `seed_${String(rec.seed_key)}`, owner_id: null, organization_id: null, ...rec });
+      else rows.push({ id: `seed_${String(rec.seed_key)}`, ...rec });
     }
   };
 
@@ -866,8 +852,8 @@ describe('re-seed × snapshot leaves one row per (owner, period, window) (#702)'
       { demo_bootstrap: DemoBootstrapFlow, forecast_snapshot: ForecastSnapshotFlow },
       {
         sys_user: users(),
-        crm_opportunity: inNoOrganization(opps()),
-        crm_forecast: inNoOrganization(forecasts),
+        crm_opportunity: opps(),
+        crm_forecast: forecasts,
       },
       { hooks: [forecastDerive] },
     );
@@ -1373,7 +1359,9 @@ describe('demo_bootstrap claims the real campaign and knowledge seeds (#716)', (
    * column into every user-owned object, and the seed write only skips the
    * security plugin's insert-time STAMP. That distinction decides whether the
    * sweep can see the row at all — its filter is `{ owner_id: null }`, and an
-   * absent key is not null.
+   * absent key is not null. The pushed row no longer states the column: the
+   * harness store materialises every declared column the way a driver does
+   * (#1458), which is what makes the seeded row visible to that filter.
    */
   const loadSeeds = (store: Record<string, Rec[]>) => {
     for (const [object, externalId] of FAMILIES) {
@@ -1382,7 +1370,7 @@ describe('demo_bootstrap claims the real campaign and knowledge seeds (#716)', (
         const key = String(rec[externalId]);
         const existing = rows.find((r) => String(r[externalId]) === key);
         if (existing) Object.assign(existing, rec);
-        else rows.push({ id: `seed_${object}_${key}`, [PLATFORM_OWNER]: null, ...rec });
+        else rows.push({ id: `seed_${object}_${key}`, ...rec });
       }
     }
   };

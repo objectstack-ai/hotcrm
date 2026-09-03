@@ -73,9 +73,15 @@ const CREATOR_AUTHORABLE = new Set([
 
 /**
  * Every field the create form used to carry that the LIFECYCLE owns, with the
- * writer that owns it and the surface it must keep. An empty `keeps` is a
- * claim in its own right: the field has no human surface BY DESIGN, and `why`
- * says which code writes it.
+ * writer that owns it and the surface it must keep.
+ *
+ * An empty `keeps` is a claim in its own right — the field is reachable from
+ * NO surface in the roster below — and since #1428 it is asserted in that
+ * direction too, not just documented. Two different things produce it: a
+ * field no human ever authors (`first_response_date`), and a field whose
+ * surface is an OPEN PRODUCT QUESTION (`customer_rating` /
+ * `customer_feedback`). `why` says which, because the second kind is a debt
+ * and the first is not.
  */
 const LIFECYCLE_MAINTAINED: Record<string, { why: string; keeps: string[] }> = {
   created_date: {
@@ -115,8 +121,20 @@ const LIFECYCLE_MAINTAINED: Record<string, { why: string; keeps: string[] }> = {
     why: 'authored when CLOSING a case, not when raising one',
     keeps: ['detail.details'],
   },
-  customer_rating: { why: 'post-resolution survey data', keeps: [] },
-  customer_feedback: { why: 'post-resolution survey data', keeps: [] },
+  // ⛔ HELD, not "by design" (#1428). Whether staff should type a customer's
+  // satisfaction score on the customer's behalf is a product question, and the
+  // alternative — a survey the customer answers — is a different feature. Both
+  // fields stay reachable from nowhere until that is ruled on; `case_csat_
+  // followup` meanwhile notifies the owner to log a rating they cannot enter.
+  // Adding a surface for either is a DECISION: record it here as well.
+  customer_rating: {
+    why: 'post-resolution survey data — no surface pending the product ruling (#1428)',
+    keeps: [],
+  },
+  customer_feedback: {
+    why: 'post-resolution survey data — no surface pending the product ruling (#1428)',
+    keeps: [],
+  },
   closed_date: { why: 'readonly on the object; stamped at close', keeps: ['case_timeline.endDateField'] },
   is_closed: {
     why: 'readonly on the object; derived from `status` on every write',
@@ -203,13 +221,23 @@ describe('crm_case create form — retention direction', () => {
   const s = surfaces();
 
   for (const [field, { why, keeps }] of Object.entries(LIFECYCLE_MAINTAINED)) {
-    it(`${field} keeps ${keeps.length ? keeps.join(' + ') : 'no human surface (by design)'}`, () => {
+    it(`${field} keeps ${keeps.length ? keeps.join(' + ') : 'no human surface'}`, () => {
       for (const surface of keeps) {
         expect(s[surface], `unknown surface "${surface}" in the roster`).toBeDefined();
         expect(
           Array.from(s[surface]),
           `${field} left ${surface} — narrowing the create form must not strip the views (${why})`,
         ).toContain(field);
+      }
+      if (keeps.length === 0) {
+        const found = Object.entries(s)
+          .filter(([, names]) => names.has(field))
+          .map(([surface]) => surface);
+        expect(
+          found,
+          `${field} gained a surface (${found.join(', ')}) while its roster entry still claims none. ` +
+            `That is a decision, not a detail — update the entry with the reason (${why})`,
+        ).toEqual([]);
       }
     });
   }
@@ -250,6 +278,30 @@ describe('crm_case create form — retention direction', () => {
           '(measured, test/readonly-write-semantics.test.ts). Do not flip these to skip a guard.',
       ).not.toBe(true);
     }
+  });
+
+  /**
+   * #1428 — `internal_notes` was the third field that left with the Resolution
+   * section, and unlike the ten above it kept NO surface: not a list column,
+   * not a filter, not a section on the record page. It is staff prose somebody
+   * has to type, so "no human surface" was never a design, and this is the pin
+   * that keeps its replacement surface from being refactored away silently.
+   *
+   * BOTH directions, and the second is the load-bearing one: it belongs on the
+   * record page (inline edit on the Details tab) and it must stay OFF the
+   * create form. That form is also the edit form, so the one thing that cannot
+   * be done to fix a missing edit surface is to put the field back at intake —
+   * where `case.hook.ts`'s guest branch nulls the column anyway.
+   */
+  it('internal_notes is authorable on the record page and nowhere at intake (#1428)', () => {
+    expect(
+      Array.from(s['detail.details']),
+      'internal_notes lost its only authoring surface — see #1428; do not solve it on the create form',
+    ).toContain('internal_notes');
+    expect(
+      formFields(),
+      'internal_notes is not an intake field: the guest branch of case.hook.ts nulls it',
+    ).not.toContain('internal_notes');
   });
 
   it('the queue still sorts on the SLA deadline', () => {

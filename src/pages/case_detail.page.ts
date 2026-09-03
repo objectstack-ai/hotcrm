@@ -162,11 +162,59 @@ export const CaseDetailPage: Page = {
                           ],
                         },
                         {
+                          // `internal_notes` lives HERE, in the prose section
+                          // that always renders, and NOT in an "Internal
+                          // Notes" section of its own (#1428). A section is not
+                          // a container an author can rely on: measured in the
+                          // shipped console (`@objectstack/console` 17.2.0,
+                          // `dist/assets/plugins-views-*.js` -> `DetailSection`),
+                          // a section whose fields are ALL empty returns
+                          // `null` — no heading, no shell, no toggle. A section
+                          // holding only `internal_notes` would therefore
+                          // render nothing until the field is non-empty, and
+                          // the only way to make it non-empty is to author it
+                          // in that section. That circle is the whole reason
+                          // this field had no surface to begin with, and a
+                          // dedicated section would have re-created it while
+                          // looking like a fix.
+                          //
+                          // This section escapes it because `description` is
+                          // REQUIRED on the object, so it is never empty and
+                          // the section always renders. An unwritten
+                          // `internal_notes` is then reachable the same way
+                          // every other empty field on this page is: the
+                          // section's own "Show N empty fields" toggle
+                          // (rendered whenever `hideEmpty` — default true —
+                          // hid at least one field), and inline edit
+                          // (`inlineEdit` defaults true where the profile
+                          // grants update) authors it in place.
+                          //
+                          // ⛔ Inline edit is the surface on purpose; the
+                          // header's Edit button is not an alternative. Both
+                          // `/new` and edit resolve `view.form`, so the record
+                          // form IS the create form (`src/views/case.view.ts`),
+                          // and #1427 narrowed it to what a creator legitimately
+                          // authors at intake. Putting `internal_notes` back on
+                          // that form would hand it to the intake path, where
+                          // `case.hook.ts` nulls the column for anonymous
+                          // web-to-case submissions anyway.
+                          //
+                          // ⛔ `customer_rating` / `customer_feedback` are NOT
+                          // added alongside it, and their absence is a decision
+                          // rather than an oversight: whether staff should type
+                          // a customer's satisfaction score on the customer's
+                          // behalf is a product question (#1428), open. Do not
+                          // "complete the set" here without that ruling.
+                          //
+                          // Field-level security is untouched by any of this —
+                          // `crm_case.internal_notes` stays editable for
+                          // `service_agent`, read-only for `sales_manager` and
+                          // unreadable for `sales_rep` (`src/profiles/`).
                           name: 'description',
                           label: 'Description',
                           columns: 1,
                           collapsible: true,
-                          fields: ['description', 'resolution'],
+                          fields: ['description', 'resolution', 'internal_notes'],
                         },
                       ],
                     },

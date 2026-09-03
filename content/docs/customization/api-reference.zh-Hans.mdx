@@ -7,8 +7,6 @@ description: HotCRM 对象、ObjectQL 查询和本地开发的 ObjectStack API �
 
 HotCRM 运行在 ObjectStack 上。Web UI、自动化、动作和 AI skills 都使用 `objectstack.config.ts` 注册的同一套对象元数据。
 
-当前对象和字段清单见内部参考：[`docs/developers/api_reference.md`](../../../docs/developers/api_reference.md)。
-
 ## 本地地址
 
 本地运行：
@@ -27,12 +25,8 @@ http://localhost:4001
 
 ## 当前对象
 
-| 领域 | 对象 |
-| --- | --- |
-| 销售 | `crm_lead`, `crm_account`, `crm_contact`, `crm_opportunity`, `crm_opportunity_line_item`, `crm_forecast` |
-| 服务 | `crm_case`, `crm_knowledge_article`, `crm_task` |
-| 市场 | `crm_campaign`, `crm_campaign_member` |
-| 营收 | `crm_product`, `crm_quote`, `crm_quote_line_item`, `crm_contract` |
+对象清单在此**不再**转抄 —— `src/objects/*.object.ts` 是它的事实来源，一个对象一个文件，
+各自注册以 `crm_` 为前缀的 `name`。数据模型覆盖四个业务领域：销售、服务、市场和营收。
 
 ## ObjectQL 形态
 

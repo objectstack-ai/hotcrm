@@ -1,173 +1,129 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-automation';
+import { makeFlowHarness, type FlowHarness, type Rec } from './helpers/flow-harness';
 import { LeadConversionFlow } from '../src/flows/lead-conversion.flow';
 
 /**
  * Flow runtime harness — executes the REAL lead_conversion flow through the
  * REAL AutomationEngine (node traversal, decision evaluation, {var}
- * interpolation, assignment convergence) against an in-memory data engine.
+ * interpolation, assignment convergence) against the SHARED in-memory data
+ * engine in `test/helpers/flow-harness.ts`.
  *
  * This is the layer above the hook-runtime tests: it proves the FLOW GRAPH
  * behaves — specifically that the account + contact dedupe branches route and
  * converge correctly — not just that the nodes are wired. Runs in vitest/CI
  * (no server, no kernel), deterministically.
+ *
+ * This file used to carry its OWN copy of the data engine, matching rows with
+ * `===` only and storing exactly the columns a row was written with (#1479).
+ * Both halves of that copy were wrong in ways that pass silently: an operand
+ * like `{ $gt: 0 }` is an object compared with `===` against a scalar, so every
+ * range predicate selected nothing; and a column nobody wrote was ABSENT rather
+ * than null, which is not the shape the shipped app's materialising driver
+ * returns. The shared engine is measured against a real driver — see the header
+ * of the harness for that measurement — so a filter that is wrong against real
+ * rows now fails here instead of passing by accident.
  */
-
-type Rec = Record<string, any>;
-
-/** In-memory data engine matching the CRUD node executors' call surface. */
-function makeDataEngine() {
-  const store: Record<string, Rec[]> = {};
-  let seq = 0;
-  const rows = (o: string) => (store[o] ??= []);
-  const match = (r: Rec, where: Rec = {}) =>
-    Object.entries(where).every(([k, v]) => r[k] === v);
-  return {
-    store,
-    async insert(object: string, data: Rec) {
-      const rec = { id: `${object}_${++seq}`, ...data };
-      rows(object).push(rec);
-      return rec;
-    },
-    async find(object: string, opts: Rec = {}) {
-      return rows(object).filter((r) => match(r, opts.where ?? opts.filter ?? {}));
-    },
-    async findOne(object: string, opts: Rec = {}) {
-      return rows(object).find((r) => match(r, opts.where ?? opts.filter ?? {})) ?? null;
-    },
-    async update(object: string, data: Rec, opts: Rec = {}) {
-      const affected = rows(object).filter((r) => match(r, opts.where ?? opts.filter ?? {}));
-      for (const r of affected) Object.assign(r, data);
-      return { modified: affected.length };
-    },
-  };
-}
-
-const logger: any = {
-  info() {}, warn() {}, error() {}, debug() {}, trace() {},
-  child() { return logger; },
-};
-
-function buildEngine(data: ReturnType<typeof makeDataEngine>) {
-  const ctx: any = {
-    logger,
-    getService: (name: string) =>
-      name === 'data' || name === 'objectql' ? data : undefined,
-  };
-  const engine = new AutomationEngine(logger);
-  installBuiltinNodes(engine, ctx);
-  engine.registerFlow('lead_conversion', LeadConversionFlow);
-  return engine;
-}
-
-async function runConversion(
-  engine: AutomationEngine,
-  leadId: string,
-  screen: Rec = { createOpportunity: true, opportunityName: 'Deal', opportunityAmount: 100000 },
-) {
-  const started: any = await engine.execute('lead_conversion', {
-    params: { recordId: leadId },
-    userId: 'user_1',
-    event: 'manual',
-  } as any);
-  // Screen flow pauses at screen_1; resume with the collected inputs.
-  const runId = started.runId ?? started.run?.id;
-  const resumed: any = await engine.resume(runId, { variables: screen } as any);
-  return { started, resumed };
-}
 
 /**
  * Fold a name the way the producer hooks do (#626).
  *
- * This harness has no hooks — it writes rows straight into the store — so the
+ * This harness is built WITHOUT hooks (`makeFlowHarness`'s third argument is
+ * left at its default) — it writes rows straight into the store — so the
  * fixtures have to carry the derived match keys that `lead_duplicate_check` and
  * `account_protection` stamp on every real write. Without them the flow's
  * account lookup has no value to filter on and `get_record` refuses to run.
  * The hook-owned columns themselves are exercised in
- * `test/account-name-normalized-match.test.ts`, which runs the real handlers.
+ * `test/account-name-normalized-match.test.ts`, which runs the real handlers
+ * through this same harness's `hooks` option.
  */
 const fold = (value: string): string => value.trim().toLowerCase().replace(/\s+/g, ' ');
 
-const seedLead = (data: ReturnType<typeof makeDataEngine>, over: Rec = {}) => {
+const leadRow = (over: Rec = {}): Rec => {
   const company = (over.company as string) ?? 'Globex Industries';
-  const lead = {
+  return {
     id: 'lead_1', company, company_normalized: fold(company),
     email: 'joe@globex.example.com',
     first_name: 'Joe', last_name: 'Green', phone: '555', title: 'Buyer',
     lead_source: 'web', is_converted: false, status: 'qualified', ...over,
   };
-  data.store.crm_lead = [lead];
-  return lead;
 };
+
+/** A harness seeded with the standard lead, plus whatever else a case needs. */
+const makeConversion = (seed: Record<string, Rec[]> = {}): FlowHarness =>
+  makeFlowHarness({ lead_conversion: LeadConversionFlow }, { crm_lead: [leadRow()], ...seed });
+
+async function runConversion(
+  h: FlowHarness,
+  leadId: string,
+  screen: Rec = { createOpportunity: true, opportunityName: 'Deal', opportunityAmount: 100000 },
+) {
+  const runId = await h.run('lead_conversion', { recordId: leadId });
+  // Screen flow pauses at screen_1; resume with the collected inputs.
+  return h.resume(runId!, screen);
+}
 
 describe('lead_conversion flow — runtime', () => {
   it('creates account + contact + opportunity for a brand-new lead', async () => {
-    const data = makeDataEngine();
-    seedLead(data);
-    const engine = buildEngine(data);
-    await runConversion(engine, 'lead_1');
+    const h = makeConversion();
+    await runConversion(h, 'lead_1');
 
-    expect(data.store.crm_account?.length, 'one account created').toBe(1);
-    expect(data.store.crm_contact?.length, 'one contact created').toBe(1);
-    expect(data.store.crm_opportunity?.length, 'one opportunity created').toBe(1);
-    const acct = data.store.crm_account[0];
+    expect(h.store.crm_account?.length, 'one account created').toBe(1);
+    expect(h.store.crm_contact?.length, 'one contact created').toBe(1);
+    expect(h.store.crm_opportunity?.length, 'one opportunity created').toBe(1);
+    const acct = h.store.crm_account[0];
     expect(acct.name).toBe('Globex Industries');
     // Contact + opportunity link to that account id.
-    expect(data.store.crm_contact[0].crm_account).toBe(acct.id);
-    expect(data.store.crm_opportunity[0].crm_account).toBe(acct.id);
+    expect(h.store.crm_contact[0].crm_account).toBe(acct.id);
+    expect(h.store.crm_opportunity[0].crm_account).toBe(acct.id);
     // Lead stamped converted.
-    expect(data.store.crm_lead[0].is_converted).toBe(true);
-    expect(data.store.crm_lead[0].status).toBe('converted');
+    expect(h.store.crm_lead[0].is_converted).toBe(true);
+    expect(h.store.crm_lead[0].status).toBe('converted');
   });
 
   it('REUSES an existing account with the same company (no duplicate)', async () => {
-    const data = makeDataEngine();
-    seedLead(data);
-    data.store.crm_account = [{
-      id: 'acc_existing', name: 'Globex Industries',
-      name_normalized: fold('Globex Industries'), is_active: true,
-    }];
-    const engine = buildEngine(data);
-    await runConversion(engine, 'lead_1');
+    const h = makeConversion({
+      crm_account: [{
+        id: 'acc_existing', name: 'Globex Industries',
+        name_normalized: fold('Globex Industries'), is_active: true,
+      }],
+    });
+    await runConversion(h, 'lead_1');
 
-    expect(data.store.crm_account.length, 'no duplicate account').toBe(1);
-    expect(data.store.crm_account[0].id).toBe('acc_existing');
+    expect(h.store.crm_account.length, 'no duplicate account').toBe(1);
+    expect(h.store.crm_account[0].id).toBe('acc_existing');
     // The new contact + opportunity hang off the reused account.
-    expect(data.store.crm_contact[0].crm_account).toBe('acc_existing');
-    expect(data.store.crm_opportunity[0].crm_account).toBe('acc_existing');
+    expect(h.store.crm_contact[0].crm_account).toBe('acc_existing');
+    expect(h.store.crm_opportunity[0].crm_account).toBe('acc_existing');
   });
 
   it('REUSES an existing contact (same email in the account) — no duplicate', async () => {
-    const data = makeDataEngine();
-    seedLead(data);
-    data.store.crm_account = [{
-      id: 'acc_existing', name: 'Globex Industries',
-      name_normalized: fold('Globex Industries'), is_active: true,
-    }];
-    data.store.crm_contact = [{
-      id: 'con_existing', email: 'joe@globex.example.com', crm_account: 'acc_existing',
-      first_name: 'Joe', last_name: 'Green',
-    }];
-    const engine = buildEngine(data);
-    await runConversion(engine, 'lead_1');
+    const h = makeConversion({
+      crm_account: [{
+        id: 'acc_existing', name: 'Globex Industries',
+        name_normalized: fold('Globex Industries'), is_active: true,
+      }],
+      crm_contact: [{
+        id: 'con_existing', email: 'joe@globex.example.com', crm_account: 'acc_existing',
+        first_name: 'Joe', last_name: 'Green',
+      }],
+    });
+    await runConversion(h, 'lead_1');
 
-    expect(data.store.crm_account.length).toBe(1);
-    expect(data.store.crm_contact.length, 'no duplicate contact').toBe(1);
-    expect(data.store.crm_contact[0].id).toBe('con_existing');
-    expect(data.store.crm_opportunity[0].primary_contact).toBe('con_existing');
+    expect(h.store.crm_account.length).toBe(1);
+    expect(h.store.crm_contact.length, 'no duplicate contact').toBe(1);
+    expect(h.store.crm_contact[0].id).toBe('con_existing');
+    expect(h.store.crm_opportunity[0].primary_contact).toBe('con_existing');
   });
 
   it('skips opportunity creation when the screen says no', async () => {
-    const data = makeDataEngine();
-    seedLead(data);
-    const engine = buildEngine(data);
-    await runConversion(engine, 'lead_1', { createOpportunity: false });
+    const h = makeConversion();
+    await runConversion(h, 'lead_1', { createOpportunity: false });
 
-    expect(data.store.crm_account.length).toBe(1);
-    expect(data.store.crm_contact.length).toBe(1);
-    expect(data.store.crm_opportunity?.length ?? 0, 'no opportunity').toBe(0);
-    expect(data.store.crm_lead[0].is_converted).toBe(true);
+    expect(h.store.crm_account.length).toBe(1);
+    expect(h.store.crm_contact.length).toBe(1);
+    expect(h.store.crm_opportunity?.length ?? 0, 'no opportunity').toBe(0);
+    expect(h.store.crm_lead[0].is_converted).toBe(true);
   });
 });

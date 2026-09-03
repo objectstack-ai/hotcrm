@@ -7,8 +7,6 @@ description: ObjectStack API basics for HotCRM objects, ObjectQL queries, and lo
 
 HotCRM runs on ObjectStack. The web UI, automation, actions, and AI skills all work against the same object metadata registered by `objectstack.config.ts`.
 
-For the current object and field inventory, see the internal reference at [`docs/developers/api_reference.md`](../../../docs/developers/api_reference.md).
-
 ## Local base URL
 
 When running HotCRM locally:
@@ -27,12 +25,9 @@ Object API routes are served by the ObjectStack runtime. Route shape can vary by
 
 ## Current objects
 
-| Area | Objects |
-| --- | --- |
-| Sales | `crm_lead`, `crm_account`, `crm_contact`, `crm_opportunity`, `crm_opportunity_line_item`, `crm_forecast` |
-| Service | `crm_case`, `crm_knowledge_article`, `crm_task` |
-| Marketing | `crm_campaign`, `crm_campaign_member` |
-| Revenue | `crm_product`, `crm_quote`, `crm_quote_line_item`, `crm_contract` |
+The object roster is deliberately **not** restated here — `src/objects/*.object.ts` is
+its source of truth, one file per object, each registering its `crm_`-prefixed `name`.
+The model spans four business domains: Sales, Service, Marketing, and Revenue.
 
 ## ObjectQL shape
 
