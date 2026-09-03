@@ -210,8 +210,12 @@ const ROW_LABEL: Record<string, Record<'zh-Hans' | 'zh-Hant', string>> = {
   // English label moved to "Enroll Members in Campaign" with it. 「成员」 follows
   // the locale packs, where `crm_campaign_member` is 营销活动成员.
   campaign_enrollment: { 'zh-Hans': '将成员登记进营销活动', 'zh-Hant': '將成員登記進行銷活動' },
-  escalate_case: { 'zh-Hans': '升级案例', 'zh-Hant': '升級案例' },
-  close_case: { 'zh-Hans': '关闭案例', 'zh-Hant': '關閉案例' },
+  // 工单/工單, not 案例: the locale pack labels these two screen actions
+  // 升级工单 / 关闭工单 (`crm_case._actions`), and the pack's own object label
+  // is 工单 since #837. These rows spelled it 案例 until then — the page and
+  // the pack contradicting each other, both green.
+  escalate_case: { 'zh-Hans': '升级工单', 'zh-Hant': '升級工單' },
+  close_case: { 'zh-Hans': '关闭工单', 'zh-Hant': '關閉工單' },
   lead_assignment: { 'zh-Hans': '新线索路由与 SLA', 'zh-Hant': '新線索路由與 SLA' },
   contact_welcome: { 'zh-Hans': '联系人欢迎', 'zh-Hant': '聯絡人歡迎' },
   task_urgent_alert: { 'zh-Hans': '紧急任务提醒', 'zh-Hant': '緊急任務提醒' },
@@ -221,19 +225,19 @@ const ROW_LABEL: Record<string, Record<'zh-Hans' | 'zh-Hant', string>> = {
     'zh-Hant': '大額商機審批（新建時）',
   },
   opportunity_won_alert: { 'zh-Hans': '大额商机赢单提醒', 'zh-Hant': '大額商機贏單提醒' },
-  case_escalation: { 'zh-Hans': '案例升级流程', 'zh-Hant': '案例升級流程' },
+  case_escalation: { 'zh-Hans': '工单升级流程', 'zh-Hant': '工單升級流程' },
   case_escalation_on_create: {
-    'zh-Hans': '案例升级流程（新建时）',
-    'zh-Hant': '案例升級流程（新建時）',
+    'zh-Hans': '工单升级流程（新建时）',
+    'zh-Hant': '工單升級流程（新建時）',
   },
-  case_csat_followup: { 'zh-Hans': '案例满意度回访', 'zh-Hant': '案例滿意度回訪' },
+  case_csat_followup: { 'zh-Hans': '工单满意度回访', 'zh-Hant': '工單滿意度回訪' },
   contract_expiration: { 'zh-Hans': '合同自动到期', 'zh-Hant': '合約自動到期' },
   quote_expiration: { 'zh-Hans': '报价自动过期', 'zh-Hant': '報價自動過期' },
   campaign_completion: { 'zh-Hans': '营销活动自动完成', 'zh-Hant': '行銷活動自動完成' },
   forecast_snapshot: { 'zh-Hans': '预测快照', 'zh-Hant': '預測快照' },
   opportunity_stagnation: { 'zh-Hans': '停滞商机提醒', 'zh-Hant': '停滯商機提醒' },
   contract_renewal: { 'zh-Hans': '合同续约提醒', 'zh-Hant': '合約續約提醒' },
-  case_sla_monitor: { 'zh-Hans': '案例 SLA 监控', 'zh-Hant': '案例 SLA 監控' },
+  case_sla_monitor: { 'zh-Hans': '工单 SLA 监控', 'zh-Hant': '工單 SLA 監控' },
   task_due_reminder: { 'zh-Hans': '任务到期提醒', 'zh-Hant': '任務到期提醒' },
   demo_bootstrap: { 'zh-Hans': '演示数据引导', 'zh-Hant': '展示資料啟動' },
   // 计费/計費, not 账单/帳單: the pages call the outbound target 「计费端点」 and the

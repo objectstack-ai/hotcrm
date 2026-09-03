@@ -260,7 +260,7 @@ export const zhCN: TranslationData = {
           options: { en: '英语', zh_cn: '简体中文', es_es: '西班牙语', ja_jp: '日语' },
         },
         owner_id: { label: '负责人' },
-        related_to_case: { label: '来源案例', help: '本文所依据的工单（可选）。' },
+        related_to_case: { label: '来源工单', help: '本文所依据的工单（可选）。' },
         published_at: { label: '发布时间' },
         last_reviewed_at: { label: '最近复核' },
         helpful_count: { label: '有用', help: '由 crm_article_feedback 重新统计得出，不可手工填写。' },
@@ -649,11 +649,11 @@ export const zhCN: TranslationData = {
     },
 
     crm_case: {
-      label: '服务案例',
-      pluralLabel: '服务案例',
-      description: '客户支持案例与服务请求',
+      label: '工单',
+      pluralLabel: '工单',
+      description: '客户支持工单与服务请求',
       fields: {
-        case_number: { label: '案例编号' },
+        case_number: { label: '工单编号' },
         subject: { label: '主题' },
         description: { label: '描述' },
         crm_account: { label: '所属客户' },
@@ -1310,7 +1310,7 @@ export const zhCN: TranslationData = {
         nav_campaign: { label: '营销活动' },
 
         group_service: { label: '服务' },
-        nav_case: { label: '服务案例' },
+        nav_case: { label: '工单' },
         nav_knowledge: { label: '知识库' },
         nav_service_dashboard: { label: '服务概览' },
 

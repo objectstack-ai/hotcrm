@@ -27,7 +27,7 @@ description: 讓 HotCRM 為你的團隊做好生產準備的第一週任務。
 
 **Setup → Email**：
 
-- [ ] 案例的入站郵件轉發（例如 `support@yourdomain.com`）
+- [ ] 工單的入站郵件轉發（例如 `support@yourdomain.com`）
 - [ ] 出站郵件簽名範本
 - [ ] 用於寄件人身份驗證的 DKIM / SPF
 
@@ -94,7 +94,7 @@ description: 讓 HotCRM 為你的團隊做好生產準備的第一週任務。
 
 如果你的流程不同，那是一次原始碼修改，不是在某個畫面上調整：**並不存在「Setup → Opportunity → Stages」這個頁面**。七個階段是 `stage` 欄位自己的選項（`src/objects/_picklists.ts` 裡的 `OPPORTUNITY_STAGE_OPTIONS`），機率則是 `src/objects/opportunity.hook.ts` 裡的 `STAGE_PROBABILITY` 對應表 —— 它在每次儲存時都按階段重新推導 **Probability** 與 **Expected Revenue**，所以手工填在商機上的機率撐不過下一次儲存。改動其中任何一項都是程式碼改動加一次重新部署。
 
-### 11. 案例 SLA
+### 11. 工單 SLA
 
 確認預設的 [SLA 矩陣](/zh-Hant/docs/service/sla-and-escalation)：
 

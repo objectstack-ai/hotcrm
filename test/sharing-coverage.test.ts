@@ -571,7 +571,11 @@ const ROW_LABEL: Record<string, Record<Locale, string>> = {
   crm_quote: { en: 'Quote', 'zh-Hans': '报价', 'zh-Hant': '報價' },
   crm_quote_line_item: { en: 'Quote Line Item', 'zh-Hans': '报价行项', 'zh-Hant': '報價明細' },
   crm_contract: { en: 'Contract', 'zh-Hans': '合同', 'zh-Hant': '合約' },
-  crm_case: { en: 'Case', 'zh-Hans': '工单', 'zh-Hant': '案件' },
+  // Both Chinese labels are 工单/工單, the pack's `crm_case.label` and its
+  // Traditional form. The zh-Hant cell read 「案件」 until #837 — a fourth
+  // spelling of this one object, green here while the automation page spelled
+  // it a fifth way. `docs-object-term-consistency.test.ts` now fails on that.
+  crm_case: { en: 'Case', 'zh-Hans': '工单', 'zh-Hant': '工單' },
   crm_task: { en: 'Task', 'zh-Hans': '任务', 'zh-Hant': '任務' },
   crm_event: { en: 'Event', 'zh-Hans': '活动', 'zh-Hant': '活動' },
   crm_event_attendee: { en: 'Event Attendee', 'zh-Hans': '活动参与者', 'zh-Hant': '活動參與者' },

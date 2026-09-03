@@ -32,7 +32,7 @@ description: HotCRM 的 5 分钟演练 —— 主页、你的第一条线索、�
 本节过去承诺的 4 样东西，这块盘上没有任何磁贴对应；另有一个名字，它属于另一块盘：
 
 - **CRM Overview** 是一块真实存在的仪表盘，但它不是 **Home** 打开的那块。它挂在 **Insights** 分组下，而 **Insights** 在应用加载时是折叠的——所以它离你两次点击，不是"第一眼看到"的东西。**Active Deals**（进行中商机的条数）、**Won Deals** 与 **Pipeline by Owner** 是它的磁贴，不是这块盘的。
-- *等待你响应的案例*：两块盘上都没有。**Executive Overview** 与 **CRM Overview** 都没有任何磁贴在数案例。**Open Cases**、**Critical Cases**、**SLA Violations** 在 **Service** 分组下的 **Service Overview** 上——参见 [Service](/zh-Hans/docs/service/index)。
+- *等待你响应的工单*：两块盘上都没有。**Executive Overview** 与 **CRM Overview** 都没有任何磁贴在数工单。**Open Cases**、**Critical Cases**、**SLA Violations** 在 **Service** 分组下的 **Service Overview** 上——参见 [Service](/zh-Hans/docs/service/index)。
 - *按管道价值排名的顶级客户*：本应用里根本没有这样一个磁贴。**Accounts by Industry** 是按行业归组，不是给客户排名；全应用最接近的排名是 **CRM Overview** 上的 **Pipeline by Owner**，那是按销售代表排，不是按客户排。
 - *近期活动（最近的通话、会议、邮件）*：也不在这里。**Interactions Logged**、**Meetings Booked** 与 **Customer Minutes** 在 **Activity** 分组下的 **Sales Activity** 上。
 - *给经理看的团队级汇总*：这块盘不做这件事。每个磁贴对所有人跑的都是同一个查询，变的是你被允许读到哪些记录，而那由你的权限集决定。本应用的岗位是扁平的——没有可供可见性向上汇总的汇报线——而 **Sales Manager** 权限集直接授予 `viewAllRecords`，所以经理读到的是全组织的合计，而不是某个团队的切片。
@@ -104,17 +104,17 @@ description: HotCRM 的 5 分钟演练 —— 主页、你的第一条线索、�
 
 ![销售管道看板](/screenshots/hotcrm/sales-pipeline/zh-Hans.png)
 
-## 5. 一个服务案例
+## 5. 一个工单
 
-**案例**是一个客户问题。
+**工单**是一个客户问题。
 
-1. 案例通过邮件、Web 表单、电话、聊天或门户到达。
-2. 新案例进入队列 —— 坐席接手。
+1. 工单通过邮件、Web 表单、电话、聊天或门户到达。
+2. 新工单进入队列 —— 坐席接手。
 3. 在新工单上请助手 *"分流此工单"* —— [工单分流技能](/zh-Hans/docs/ai-copilot/service-copilot) 会建议优先级、分类以及匹配的知识库文章。
-4. SLA 计时器开始 —— 在案例页面查看响应时间 / 解决时间倒计时。
-5. 回复客户；解决后关闭案例。
+4. SLA 计时器开始 —— 在工单页面查看响应时间 / 解决时间倒计时。
+5. 回复客户；解决后关闭工单。
 
-➜ 了解更多：[案例](/zh-Hans/docs/service/cases)
+➜ 了解更多：[工单](/zh-Hans/docs/service/cases)
 
 ## 6. AI Copilot
 
