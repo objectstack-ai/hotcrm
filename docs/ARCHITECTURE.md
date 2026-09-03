@@ -33,7 +33,17 @@ The stack manifest defines:
 | version | `3.0.0` |
 | type | `app` |
 | name | `HotCRM` |
-| engines.protocol | `^17.0.0-rc.1` |
+
+`engines.protocol` is deliberately **not** transcribed into that table. The
+protocol major this app's metadata is authored against is declared in
+[`objectstack.config.ts`](../objectstack.config.ts) (`manifest.engines.protocol`)
+and restated by `objectstack.manifest.json` (`engines.protocol` and `specVersion`)
+and by the `@objectstack/spec` range `package.json` installs.
+`test/docs-declared-versions.test.ts` pins those three files to each other, so the
+fact is already gated where it lives — a copy here would be the one copy nothing
+compares against.
+*Supersedes the transcribed `^17.0.0-rc.1` row that stood here while all three
+sources declared `^17.2.0` — 2026-08-31 ruling, item 5.*
 
 Runtime capabilities are declared in `requires`: `automation`, `triggers`, `analytics`, `auth`, `ui`, `approvals`, and `sharing`.
 
@@ -151,17 +161,30 @@ answering record questions, because admins can change metadata over time.
 
 ## Security
 
-Security is assembled from:
+Security is assembled from three kinds of metadata. Each entry below names where that
+metadata lives and what registers it; the counts are deliberately **not** restated here:
 
-- 6 permission profiles in `src/profiles/`
-- 9 sharing rules in `src/sharing/*.sharing.ts`
-- 12 positions in `src/sharing/positions.ts`
+- **Permission profiles** — `src/profiles/*.profile.ts`, registered as `permissions`.
+  That directory holds every profile any composition can author; which of them a given
+  build registers is decided by `compositionPermissions` in
+  [`objectstack.config.ts`](../objectstack.config.ts). The default build registers
+  `system_admin`; `HOTCRM_COMPOSITION=saas` registers `tenant_admin` in its place.
+- **Sharing rules** — `src/sharing/*.sharing.ts`, spread into the `sharingRules` array
+  in `objectstack.config.ts`. One file may declare several rules, so that glob counts
+  files, not rules.
+- **Positions** — `src/sharing/positions.ts`, exported as `CrmPositions` and passed to
+  `defineStack({ positions })`.
 
 The stack registers sharing rules for accounts, opportunities, cases, campaigns, and
-territory-style visibility, and passes `CrmPositions` to `defineStack({ positions })`.
+territory-style visibility.
 Per ADR-0090 D3 positions are flat capability-distribution groups — the v1 role
 hierarchy's parent links are gone, because hierarchy belongs to the business-unit tree,
 which this app does not model.
+
+*Supersedes the hand-copied `6` / `9` / `12` counts that stood in that list. `9 sharing
+rules` had drifted one behind the ten the stack registers, and `6 permission profiles in
+src/profiles/` counted registered profiles while pointing at a directory that holds
+seven files — 2026-08-31 ruling, item 5.*
 
 ## Verification
 
