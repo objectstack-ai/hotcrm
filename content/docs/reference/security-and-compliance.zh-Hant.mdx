@@ -51,7 +51,7 @@ description: SSO、MFA、稽核日誌、secret 欄位通道、GDPR —— HotCRM
 - **TOTP**（Google Authenticator、Authy、1Password）—— 真實：註冊狀態記在 `sys_user.two_factor_enabled` 上，驗證碼與鎖定狀態記在 `sys_two_factor` 上。
 - **備用恢復碼** —— 真實，存為 `sys_two_factor.backup_codes`。
 - **WebAuthn / 硬體金鑰（YubiKey、Touch ID）** —— *(not shipped，作為管理員設定而言。)* passkey 能力存在於 `@objectstack/plugin-auth` 中，但它預設 `passkeys: false`，而且**唯一**的開關是手工實例化 `AuthPlugin` 時的建構參數。沒有環境變數，Setup 裡也沒有對應欄位，而 HotCRM 不實例化自己的外掛，所以管理員點不到任何能打開它的東西。
-- **雙因素預設關閉。** 整個 TOTP 外掛是被門控的：`twoFactor` 依次取自 `OS_AUTH_TWO_FACTOR`、外掛選項，最後落到 `false`。在 **Setup → Authentication** 打開 **Require multi-factor authentication**（`mfa_required`，預設關閉）會啟用它，並開啟一個寬限期（`mfa_grace_period_days`，預設 7 天），寬限期過後未註冊 TOTP 的使用者會被 `MFA_REQUIRED` 擋在門外。
+- **兩步驗證預設關閉。** 整個 TOTP 外掛是被門控的：`twoFactor` 依次取自 `OS_AUTH_TWO_FACTOR`、外掛選項，最後落到 `false`。在 **Setup → Authentication** 打開 **Require multi-factor authentication**（`mfa_required`，預設關閉）會啟用它，並開啟一個寬限期（`mfa_grace_period_days`，預設 7 天），寬限期過後未註冊 TOTP 的使用者會被 `MFA_REQUIRED` 擋在門外。
 - ⚠️ 舊建議指向 *Setup → Security → MFA Policy*。**Setup 裡沒有 *Security* 群組，也沒有 *MFA Policy* 這個畫面。** Setup 的群組是 Overview、Apps、People & Organization、Access Control、Approvals、Configuration、Diagnostics、Integrations 與 Advanced；MFA 設定在 **Setup → Authentication** 的 *Multi-factor* 群組裡。
 
 ### 單一登入（SSO）

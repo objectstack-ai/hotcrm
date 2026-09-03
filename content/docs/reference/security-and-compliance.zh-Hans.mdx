@@ -51,7 +51,7 @@ description: SSO、MFA、审计日志、secret 字段通道、GDPR —— HotCRM
 - **TOTP**（Google Authenticator、Authy、1Password）—— 真实：注册状态记在 `sys_user.two_factor_enabled` 上，验证码与锁定状态记在 `sys_two_factor` 上。
 - **备用恢复码** —— 真实，存为 `sys_two_factor.backup_codes`。
 - **WebAuthn / 硬件密钥（YubiKey、Touch ID）** —— *(not shipped，作为管理员设置而言。)* passkey 能力存在于 `@objectstack/plugin-auth` 中，但它默认 `passkeys: false`，而且**唯一**的开关是手工实例化 `AuthPlugin` 时的构造参数。没有环境变量，Setup 里也没有对应字段，而 HotCRM 不实例化自己的插件，所以管理员点不到任何能打开它的东西。
-- **双因素默认关闭。** 整个 TOTP 插件是被门控的：`twoFactor` 依次取自 `OS_AUTH_TWO_FACTOR`、插件选项，最后落到 `false`。在 **Setup → Authentication** 打开 **Require multi-factor authentication**（`mfa_required`，默认关闭）会启用它，并开启一个宽限窗口（`mfa_grace_period_days`，默认 7 天），窗口过后未注册 TOTP 的用户会被 `MFA_REQUIRED` 挡在门外。
+- **两步验证默认关闭。** 整个 TOTP 插件是被门控的：`twoFactor` 依次取自 `OS_AUTH_TWO_FACTOR`、插件选项，最后落到 `false`。在 **Setup → Authentication** 打开 **Require multi-factor authentication**（`mfa_required`，默认关闭）会启用它，并开启一个宽限窗口（`mfa_grace_period_days`，默认 7 天），窗口过后未注册 TOTP 的用户会被 `MFA_REQUIRED` 挡在门外。
 - ⚠️ 旧建议指向 *Setup → Security → MFA Policy*。**Setup 里没有 *Security* 分组，也没有 *MFA Policy* 这个屏幕。** Setup 的分组是 Overview、Apps、People & Organization、Access Control、Approvals、Configuration、Diagnostics、Integrations 与 Advanced；MFA 设置在 **Setup → Authentication** 的 *Multi-factor* 分组里。
 
 ### 单点登录（SSO）
