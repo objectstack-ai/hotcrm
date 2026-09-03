@@ -57,3 +57,24 @@ every face answers the same way (`expectNameColumnIsReadable` — read a name
 column out of every mapped page at all, and every cell opens with a bold run).
 What each rule ALLOWS in that column, and what its failure means, stays in the
 rule with its own message, because those are three different facts.
+
+**Reverse-verified, not asserted.** The rules are green on this tree — 55 name
+cells read on each translated face, 0 unresolved on either — and a new guard
+accepted on a green run alone is not evidence it works. Each was ablated, with
+every mutation proved on disk by blob hash and by anchored counts on both the
+removed and the injected text, and every restore proved by an empty `git diff
+HEAD` and the blob hash back at its HEAD value:
+
+| mutation | red |
+| --- | --- |
+| `service/cases.zh-Hans` 全部工单 → 全部工單 | zh-Hans rule: `names "全部工單", which is not the zh-CN spelling of any view crm_case ships` |
+| `revenue/contracts.zh-Hant` 合約條款 → 合同條款 | zh-Hant rule: `names "合同條款", which is in no pinned Traditional roster for crm_contract` |
+| `zh-CN.ts` `all_products` 全部产品 → 全部产品清单 | zh-Hans rule, on `revenue/products.zh-Hans` — the page did not move, the pack did |
+| `zh-CN.ts` `crm_case._views.all_cases` key renamed | producer rule: `crm_case._views.all_cases is missing — "All Cases" is named on content/docs/service/cases.mdx` |
+| `src/views/product.view.ts` `product_catalog` → `catalog_gallery` | four rules, pin audit among them: `crm_product.catalog_gallery ("Product Catalog", …) has no pinned name` |
+| a `phantom_view` entry added to `ZH_HANT_VIEW_NAMES` | pin audit: `crm_product.phantom_view is pinned as "幻影檢視", which the app does not ship` |
+| `## 標準列表檢視` renamed on `revenue/products.zh-Hant` | vacuity guard: `zh-Hant: roster sections this rule read no name column out of: content/docs/revenue/products.zh-Hant.mdx` |
+
+The third row is the one the derived side exists for: a rename in the producer
+turns the page red without the page changing. The second is the mistake a
+glyph-derived zh-Hant rule would have made, caught by the pinned one.

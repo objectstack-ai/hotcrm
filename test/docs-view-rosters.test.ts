@@ -199,6 +199,44 @@ type AnyRec = Record<string, any>;
  * Whether those names should be checked, and against what, is open on **#1552**
  * — this guard neither answers that nor forecloses any answer to it.
  *
+ * ### Reverse verification (#1551)
+ *
+ * Green on the tree these rules landed against — 55 name cells read per
+ * translated face, 0 unresolved on each — and green alone proves nothing about
+ * a new guard, so each rule was ablated. Every mutation was verified on disk by
+ * its blob hash and by anchored counts on both the removed and the injected
+ * text, and every restore by `git checkout HEAD -- <abs path>` with an empty
+ * `git diff HEAD` and the blob hash back at its HEAD value:
+ *
+ *   - **a Traditional name on a Simplified face.** `service/cases.zh-Hans`
+ *     全部工单 → 全部工單 fails the zh-Hans rule with *`content/docs/service/
+ *     cases.zh-Hans.mdx names "全部工單", which is not the zh-CN spelling of any
+ *     view crm_case ships`*, and nothing else — 1 failed, 8 passed.
+ *   - **the glyph-derived name a derivation would have produced.**
+ *     `revenue/contracts.zh-Hant` 合約條款 → 合同條款 fails the zh-Hant rule
+ *     with *`… names "合同條款", which is in no pinned Traditional roster for
+ *     crm_contract`*. That is the exact mistake the ⛔ above forbids, caught.
+ *   - **a rename in the producer, which is the property the derived side
+ *     exists for.** `zh-CN.ts` `all_products` 全部产品 → 全部产品清单 turns the
+ *     zh-Hans rule red on `revenue/products.zh-Hans` — the page did not move,
+ *     the pack did, and the rule followed it.
+ *   - **a pack entry going missing.** Renaming the `crm_case._views.all_cases`
+ *     KEY fails the producer rule first, with *`crm_case._views.all_cases is
+ *     missing — "All Cases" is named on content/docs/service/cases.mdx`*,
+ *     which points at the pack rather than at the page.
+ *   - **a view renamed in `src/views/**`.** `product_catalog` →
+ *     `catalog_gallery` turns four rules red at once, the pin audit among them:
+ *     *`crm_product.catalog_gallery ("Product Catalog", named on content/docs/
+ *     revenue/products.mdx) has no pinned name`*. A view cannot arrive without
+ *     someone writing its Traditional name.
+ *   - **the pin rotting the other way.** A `phantom_view` entry added to
+ *     `ZH_HANT_VIEW_NAMES` fails with *`crm_product.phantom_view is pinned as
+ *     "幻影檢視", which the app does not ship`*.
+ *   - **vacuity, on a translated face.** Renaming the `## 標準列表檢視` heading
+ *     on `revenue/products.zh-Hant` fails with *`zh-Hant: roster sections this
+ *     rule read no name column out of: content/docs/revenue/
+ *     products.zh-Hant.mdx`* rather than passing over an empty set.
+ *
  * ## Reverse verification
  *
  * Predicted **red before the content fix, green after**, and measured as such.
