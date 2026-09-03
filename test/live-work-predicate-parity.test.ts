@@ -45,6 +45,23 @@ import { CLOSED_CASE_STATUSES } from '../src/objects/_case-assignment';
  * and its name moved from the boundary roster into the consumer roster in the
  * same change. `test/sla-at-risk-live-work.test.ts` is its behavioural half.
  *
+ * ### The three that were left, answered one by one (#1328)
+ *
+ * #1145 left three same-shape consumers undecided and forbade widening to them.
+ * They were ruled 2026-08-31, and NOT the same way — which is the point:
+ *
+ *   - `my_open_cases` JOINED the roster above. A tab labelled "My Open Cases"
+ *     that lists resolved cases is a label saying one thing and a filter doing
+ *     another; measured on the seeded demo population the flag returned 30 of
+ *     38 cases and 7 of those 30 were resolved.
+ *   - `case_escalation_sharing` and `case_director_sharing` STAYED below, and
+ *     stayed on `is_closed == false` on purpose. `resolved → closed` is the
+ *     review window, and standing manager/director reach INSIDE that window is
+ *     the workflow those grants exist for. Their entries carry the reasoning.
+ *
+ * ⛔ So "these three have the same shape" is not an argument for giving them the
+ * same predicate. Each entry below says which answer it got and why.
+ *
  * ### ⚠️ BY NAME, never by count
  *
  * The roster below is a list of NAMES, and every name must resolve. A guard
@@ -212,6 +229,11 @@ const LIVE_WORK_CONSUMERS: { name: string; surface: string; excluded: () => stri
     excluded: () => excludedValues(loweredViewFilter('sla_at_risk'), 'status'),
   },
   {
+    name: 'my_open_cases',
+    surface: 'view filter[] — src/views/case.view.ts',
+    excluded: () => excludedValues(loweredViewFilter('my_open_cases'), 'status'),
+  },
+  {
     name: 'case_unassigned_triage_sharing',
     surface: 'sharing condition (CEL) — src/sharing/case.sharing.ts',
     excluded: () => excludedValues(loweredSharingCondition('case_unassigned_triage_sharing'), 'status'),
@@ -287,7 +309,7 @@ describe('the "no longer live work" predicate is ONE set, and the roster is by n
     // above would also pass a consumer that excluded the right statuses AND
     // additionally narrowed on the flag.
     const offenders: string[] = [];
-    for (const name of ['unassigned_triage', 'sla_at_risk']) {
+    for (const name of ['unassigned_triage', 'sla_at_risk', 'my_open_cases']) {
       const fields = narrowedFields(loweredViewFilter(name));
       if (fields.includes('is_closed')) offenders.push(`${name} (view filter)`);
     }
@@ -307,22 +329,23 @@ describe('the "no longer live work" predicate is ONE set, and the roster is by n
  * The consumers that deliberately do NOT belong to the set above — pinned by
  * name too, so the boundary is visible rather than inferred from an absence.
  *
- * ⚠️ These entries record a MEASUREMENT, not a decision anyone is free to make
- * here. `case_workflow` was measured and ruled a different concept (below).
- * `my_open_cases`, `case_escalation_sharing` and `case_director_sharing` were
- * measured, reported, and left exactly as they are: widening #1145's ruling to
- * them was explicitly out of scope, so what is pinned is their CURRENT shape —
- * if one of them changes, that change becomes visible here instead of arriving
- * as a silent widening.
+ * ⚠️ Every entry here is a RULED KEEP, not an unexamined leftover, and it is
+ * not a decision anyone is free to re-make in passing. `case_workflow` was
+ * measured and ruled a different concept; the two sharing rules were ruled a
+ * deliberate standing grant on 2026-08-31 (#1328). What is pinned is that they
+ * still key on `is_closed` and still exclude no status, so a later "tidy-up"
+ * onto the status predicate turns red here instead of landing silently.
  *
- * ⚠️ `sla_at_risk` was on this roster and has LEFT it (#1325). It is the one
- * entry that turned out not to be a judgement call: `case_sla_monitor` owns SLA
- * and had already answered the same question the other way, so the view was
- * contradicting the automation rather than expressing a different concept. It
- * is now in `LIVE_WORK_CONSUMERS` above. `my_open_cases` and the two sharing
- * rules are NOT that case — they are open on decision card #1328, and moving
- * one of them here on the strength of #1325 is exactly the silent widening this
- * roster exists to make visible.
+ * ⚠️ TWO entries have LEFT this roster, and reading how is the fastest way to
+ * see what the boundary is for. `sla_at_risk` left in #1325: `case_sla_monitor`
+ * owns SLA and had already answered the same question the other way, so the
+ * view was contradicting the automation rather than expressing a second
+ * concept. `my_open_cases` left in #1328: its label promises "open" and its
+ * filter delivered "not closed", which is a user-visible inconsistency rather
+ * than a deliberate reach. Neither departure licenses the next one — the two
+ * rules below were examined in that SAME ruling and kept, so moving one of
+ * them up on the strength of the other two leaving is exactly the silent
+ * widening this roster exists to make visible.
  */
 const NOT_LIVE_WORK: { name: string; surface: 'view' | 'sharing'; why: string }[] = [
   {
@@ -337,19 +360,26 @@ const NOT_LIVE_WORK: { name: string; surface: 'view' | 'sharing'; why: string }[
       'is "work waiting for a human"; this board\'s contract is the lifecycle itself.',
   },
   {
-    name: 'my_open_cases',
-    surface: 'view',
-    why: 'Same shape, outside #1145\'s ruling. Measured and reported; not decided here.',
-  },
-  {
     name: 'case_escalation_sharing',
     surface: 'sharing',
-    why: 'Critical-escalation sharing, not triage. Ruled out of scope by #1145.',
+    why:
+      'The post-resolution REVIEW WINDOW, kept deliberately (ruled 2026-08-31). `resolved` ' +
+      'is the state in which a critical case gets quality-checked, called back on, or ' +
+      'reopened, and the manager holding `edit` is who does that — so the reach this rule ' +
+      'has over a resolved case is the feature, not the #1145 defect wearing another ' +
+      'spelling. It is narrow (critical only) and it is BOUNDED: `is_closed` flips at ' +
+      '`closed`, which ends the grant. Moving it onto the status predicate would revoke ' +
+      'access inside the window it exists for. The reasoning is beside the rule itself in ' +
+      '`src/sharing/case.sharing.ts`; changing it needs the same standing to be re-argued.',
   },
   {
     name: 'case_director_sharing',
     surface: 'sharing',
-    why: 'Critical-escalation sharing, not triage. Ruled out of scope by #1145.',
+    why:
+      'The same review window one rung up, kept deliberately (ruled 2026-08-31), and ' +
+      '`read` rather than `edit` — the director watches the window, the manager works it. ' +
+      'Same boundary as the rule above: narrow (critical only), bounded (ends at `closed`). ' +
+      'See `src/sharing/case.sharing.ts` for the reasoning beside the rule.',
   },
 ];
 

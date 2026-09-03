@@ -129,9 +129,20 @@ export const CaseViews = defineView({
       label: 'My Open Cases',
       data: { provider: 'object', object: 'crm_case' },
       columns: ['case_number', 'subject', 'crm_account', 'priority', 'status', 'sla_due_date'],
+      // ⚠️ `status not_in CLOSED_CASE_STATUSES`, NOT `is_closed == false`: the
+      // flag is derived as `effStatus === 'closed'` and never flips on
+      // `resolved`, so the flag spelling listed every RESOLVED case under a tab
+      // labelled "My Open Cases" — measured on the seeded demo population, the
+      // flag returned 30 of 38 cases and 7 of those 30 were resolved. A resolved
+      // case is finished work awaiting closure, not an open queue, and the
+      // mainstream service-cloud reading of "open" excludes it (Zendesk's open
+      // set omits Solved; ServiceNow's OOTB Open filter is
+      // `state not in (Resolved, Closed, Cancelled)`). Ruled 2026-08-31; pinned by
+      // `test/live-work-predicate-parity.test.ts` (#1145), whose consumer roster
+      // this view joined in the same change.
       filter: [
         { field: 'owner_id', operator: 'equals', value: '{current_user_id}' },
-        { field: 'is_closed', operator: 'equals', value: false },
+        { field: 'status', operator: 'not_in', value: ['resolved', 'closed'] },
       ],
       sort: [
         { field: 'priority_rank', order: 'desc' },
