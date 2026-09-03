@@ -535,7 +535,7 @@ describe('record-change flows under a user-less trigger (#684)', () => {
       lead, {}, { crm_lead: [{ ...lead }] },
     );
     expect(String(result.error)).toContain('[runAs] refusing a data operation');
-    expect(h.store.crm_lead[0].next_followup_date).toBeUndefined();
+    expect(h.store.crm_lead[0].next_followup_date, 'no SLA date was stamped').toBeNull();
     expect(h.notifications).toHaveLength(0);
   });
 
