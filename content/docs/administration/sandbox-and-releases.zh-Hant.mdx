@@ -7,7 +7,7 @@ description: 安全地進行設定變更 —— HotCRM 今天真正的發布管�
 
 切勿直接在生產中進行設定變更。本頁介紹安全的工作流：在沙箱中建構、測試、打包、提升到生產，必要時回滾。
 
-**下文點名的這些畫面，一個也不存在。** Setup 裡沒有 *Sandbox Management*，沒有 *Change Packages*，也沒有 *Git Sync* 入口 —— 它的導覽是 Overview、Apps、People & Organization、Access Control、Approvals、Configuration、Diagnostics、Integrations、Advanced，而這些分組底下沒有任何東西能開出一個租戶或攢出一個變更集。下面寫的是發布管理*應有*的形態，之所以保留，是因為它講的紀律是對的。HotCRM 今天真正的做法是：它的中繼資料就是 `src/` 下的 TypeScript，在 git 裡審查，隨應用一起發布；已安裝的套件列在 **Setup → Packages**。（平台未附繁體中文語言包，主控台介面顯示英文，因此本頁的導覽路徑一律以英文標示。）
+**下文點名的這些畫面，一個也不存在。** Setup 裡沒有 *Sandbox Management*，沒有 *Change Packages*，也沒有 *Git Sync* 入口 —— 它的導覽是 Overview、Apps、People & Organization、Access Control、Approvals、Configuration、Diagnostics、Integrations、Advanced，而這些分組底下沒有任何東西能開出一個租戶或攢出一個變更集。下面寫的是發布管理*應有*的形態，之所以保留，是因為它講的紀律是對的。HotCRM 今天真正的做法是：它的中繼資料就是 `src/` 下的 TypeScript，在 git 裡審查，隨應用一起發布；已安裝的套件列在 **Setup → Packages**。（平台未附繁體中文語言包，主控台介面會回退為簡體中文，因此本頁的導覽路徑一律以英文標示，以免簡繁混用。）
 
 > **下面每一條斷言都被實測過，而且大多數沒能存活。** 本頁逐條對照應用自身的中繼資料
 > （`src/`、`objectstack.config.ts`）與已安裝的 `@objectstack/*` 套件（spec 17.0.0-rc.6）
