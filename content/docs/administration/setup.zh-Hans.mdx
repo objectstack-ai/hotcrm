@@ -27,7 +27,7 @@ description: 让 HotCRM 为你的团队做好生产准备的第一周任务。
 
 **设置 → 邮件**：
 
-- [ ] 案例的入站邮件转发（例如 `support@yourdomain.com`）
+- [ ] 工单的入站邮件转发（例如 `support@yourdomain.com`）
 - [ ] 出站邮件签名模板
 - [ ] 用于发件人身份验证的 DKIM / SPF
 
@@ -94,7 +94,7 @@ description: 让 HotCRM 为你的团队做好生产准备的第一周任务。
 
 如果你的流程不同，那是一次源码修改，不是在某个屏上调整：**并不存在「设置 → 商机 → 阶段」这个页面**。七个阶段是 `stage` 字段自己的选项（`src/objects/_picklists.ts` 里的 `OPPORTUNITY_STAGE_OPTIONS`），概率则是 `src/objects/opportunity.hook.ts` 里的 `STAGE_PROBABILITY` 映射 —— 它在每次保存时都按阶段重新推导 **Probability** 与 **Expected Revenue**，所以手工填在商机上的概率撑不过下一次保存。改动其中任何一项都是代码改动加一次重新部署。
 
-### 11. 案例 SLA
+### 11. 工单 SLA
 
 确认默认的 [SLA 矩阵](/zh-Hans/docs/service/sla-and-escalation)：
 
