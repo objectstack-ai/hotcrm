@@ -411,33 +411,37 @@ const ledgerKey = (app: 'setup' | 'studio', name: string): string => `${app}:${n
 /**
  * `group → child` citations into THIS app's navigation that resolve to
  * nothing. Keyed by the pair, because both halves carry information.
+ * **Empty since #1368's worklist was executed** — see the set below.
  *
  * ADDING ONE IS A ONE-LINE CHANGE — and the same warning as
  * {@link KNOWN_UNRESOLVED} applies: do not reach for it to silence a path you
- * just wrote. Every entry below is drift that pre-dates rule 3 and was found
- * by its first run, not by anyone writing a new page.
+ * just wrote. The five entries that stood here were drift that pre-dated
+ * rule 3 and were found by its first run, not by anyone writing a new page,
+ * and there is no longer any backlog for a new entry to hide in.
  */
 const KNOWN_UNRESOLVED_CRM = new Set<string>([
-  // All five are zh-Hant, and all five are structural rather than drift: this
-  // app ships `en` / `zh-CN` / `ja-JP` / `es-ES` and NO Traditional-Chinese
-  // bundle, so a Traditional leaf label is a screen that exists in no
-  // configuration. It is #1113's third sub-class again, one app over.
+  // EMPTY, and deliberately kept. The five zh-Hant pairs that stood here were
+  // this block's declared worklist for #1368, and #1368 was DECIDED on
+  // 2026-08-31: a zh-Hant page names navigation in ENGLISH. The measured
+  // reason is the FALLBACK, not the reader — this app ships `en` / `zh-CN` /
+  // `ja-JP` / `es-ES` and NO Traditional-Chinese bundle, so the console falls
+  // back to Simplified, and a Traditional page names navigation in English
+  // rather than mix Simplified glyphs into Traditional prose. ⛔ It is NOT
+  // that a zh-Hant reader sees an English console; that reason was measured
+  // false and is retired, so do not write it back in.
   //
-  // ⚠️ They are quarantined rather than rewritten ON PURPOSE: **which** locale
-  // a zh-Hant reader should be sent to is the open question on #1368, which
-  // carries `needs-user-decision` and argues the console falls back to
-  // Simplified rather than to English — the opposite of the convention #1113
-  // applied. Rewriting five pages here would pre-empt that ruling. When #1368
-  // is decided, these five lines are the worklist, and the staleness checks
-  // below make sure they cannot outlive it quietly.
+  // The six citation sites across four pages and these five lines landed in
+  // ONE commit, because the two staleness checks below fail in opposite
+  // directions and each catches exactly half a change: the prose without the
+  // ledger reds `holds no quarantined pair the docs no longer cite`, and the
+  // ledger without the prose reds `name a group and a child this app really
+  // ships, in one locale`. Both reds were captured by ablation before the fix,
+  // so the pairing is measured rather than argued.
   //
-  // The GROUP halves resolve at all only because 我的工作 and 活動 collide with
-  // this app's zh-CN and ja-JP spellings.
-  crmPairKey('我的工作', '我的行事曆'),
-  crmPairKey('我的工作', '我的任務'),
-  crmPairKey('我的工作', '我的線索'),
-  crmPairKey('我的工作', '我的日曆'),
-  crmPairKey('活動', '活動'),
+  // Keep the set — those two checks run against it in both directions, so an
+  // empty ledger is an ASSERTED zero rather than an absent one, and the next
+  // unresolvable pair has something to fail against instead of a deleted
+  // mechanism.
 ]);
 
 /**
