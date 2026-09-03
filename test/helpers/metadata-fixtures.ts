@@ -59,7 +59,6 @@ export const packFor = (locale: string): AnyRec | undefined =>
 const SYSTEM_FIELDS = ['id', 'created_at', 'updated_at', 'created_by', 'updated_by'];
 
 /**
-/**
  * System objects the installed platform actually registers — DERIVED from the
  * packages' own rosters rather than hand-copied out of them.
  *
