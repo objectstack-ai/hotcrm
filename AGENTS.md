@@ -168,7 +168,7 @@ All metadata files MUST be validated against their corresponding `@objectstack/s
 
 1. **Objects**: Use `ObjectSchema.parse()` from `@objectstack/spec/data`
 2. **Pages/Views/Dashboards/Forms**: Use schemas from `@objectstack/spec/ui`
-3. **Flows**: Use `FlowSchema.parse()` from `@objectstack/spec/automation` (`defineFlow()` is that call)
+3. **Flows**: Author a typed object literal, not a parse call — `import type * as Automation from '@objectstack/spec/automation'`, then `export const XFlow: Automation.Flow = { … }`, the form every `src/flows/*.flow.ts` file uses. Validation is not performed in the file: `pnpm validate` rejects an invalid flow (an unknown `type`, for instance, fails as `flows.N.type: Invalid value …`), and the platform parses again at `AutomationEngine.registerFlow` on boot. `FlowSchema.parse()` — and `defineFlow()`, which is exactly that call — are real exports of `@objectstack/spec/automation` for building a flow programmatically (e.g. in a test); they are not the authoring form for `src/flows/`.
 4. **State Machines**: Use `StateMachineSchema.parse()` from `@objectstack/spec/automation`
 5. **Plugins**: Use `PluginSchema.parse()` from `@objectstack/spec/kernel` (remove `: any` annotations)
 6. **Permissions**: Use `PermissionSetSchema.parse()` from `@objectstack/spec/security`
