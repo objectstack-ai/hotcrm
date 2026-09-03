@@ -268,8 +268,10 @@ export const OpportunityViews = defineView({
       // whether this queue should be a cut or a ranking at all — this label
       // promises a ranking and honours it. `stale_articles` in
       // `src/views/knowledge_article.view.ts` carried the same expired premise
-      // and was corrected in the same pass; its label does promise a window, so
-      // it has a defect this view does not (#769). Nothing below was touched.
+      // and was corrected in the same pass (#769); that tab was then DELETED
+      // outright (#781, the review queue ruled out of the product), so it is no
+      // longer a comparison available in this tree — the surviving precedent
+      // for "ranking, not cut" is this view. Nothing below was touched.
       //
       // As shipped: operator-only filter, ordered by the stored
       // `stage_entry_date` ascending — longest-parked on top, which is the
