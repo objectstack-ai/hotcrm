@@ -66,6 +66,30 @@ const caseValidation: Hook = {
     // `data`, which is the object the engine persists. Hence: assign, and never
     // trust `delete` here.
     //
+    // ⚠️ VERSION-QUALIFIED — this is a platform property, not a law of the
+    // language. RE-MEASURED ON 17.2.0, the version `package.json` pins and
+    // `node_modules` installs (#1416), and it STILL HOLDS on both readings:
+    // a probe hook that deleted a planted `internal_notes` on a real insert
+    // stored the planted string verbatim, while the same key assigned `null`
+    // in the same hook on the same object stored `null`; and the installed
+    // `dist/core.js` `installFlatInput` declares exactly the five traps named
+    // above, with `deleteProperty` AND `defineProperty` both absent.
+    //
+    // ⛔ Do not read "upstream is closed" as "fixed here". objectstack#12277 is
+    // closed as completed by MERGED PR objectstack#12396 — and that fix is in
+    // NO published release: 17.2.0 was cut 2026-08-23, the PR merged 08-26, and
+    // 17.2.0 is still the registry's `latest`. Merged is not the same as
+    // available in the pin. The trigger to re-measure is a platform release
+    // that POSTDATES 2026-08-26 — never the upstream issue's state.
+    //
+    // ⚠️ When that release lands, the trap arriving is NOT a licence to spell
+    // this block with `delete` again. What these lines WRITE is load-bearing
+    // independently of how it is written — `case_auto_assign` stands down only
+    // on a non-empty STRING `owner_id`, so the column must arrive `null` rather
+    // than absent (see the `null` note below). Removing a key and writing
+    // `null` are different downstream, so retiring the workaround would be a
+    // behaviour change on the public-form boundary, not a re-spelling.
+    //
     // ⚠️ `null` rather than `''` or `undefined`, all three measured on the
     // write path: `null` stores as null, `''` stores as an empty string (wrong
     // in a lookup — see `case_resolution_article_normalize` below), and
