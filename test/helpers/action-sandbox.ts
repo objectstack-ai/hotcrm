@@ -340,8 +340,11 @@ export async function runHookBody(hook: Rec, opts: HookRunOpts): Promise<HookRun
     // Production reaches this same `boundBodyHandler` through
     // `wrapDeclarativeHook`: `bindHooksToEngine` resolves a body hook via
     // `bodyRunner(hook)` and wraps the result, so the engine ctx a shipped body
-    // sees is always the Proxy. Measured on the pinned 17.1.0 — see
-    // `resolveHandler` / `installFlatInput` in @objectstack/objectql.
+    // sees is always the Proxy. Measured on 17.1.0 — the version this repo
+    // pinned AT THE TIME of the measurement, not the current pin (#1460:
+    // 17.2.0 since PR #1442; both symbols are still present there, but this
+    // wiring was not re-measured end to end) — see `resolveHandler` /
+    // `installFlatInput` in @objectstack/objectql.
     input: engineFlatInput(input),
     previous: opts.previous,
     user: opts.user,

@@ -11,7 +11,7 @@ type AnyRec = Record<string, any>;
 type Flow = Automation.Flow;
 
 /**
- * WHAT `readonly: true` ACTUALLY STRIPS ON THE PINNED 17.1.0 (#1429).
+ * WHAT `readonly: true` ACTUALLY STRIPS ON THE PINNED 17.2.0 (#1429, #1460).
  *
  * `case.object.ts` carried a blanket claim — "the platform drops writes to
  * readonly fields" — that had grown load-bearing: it was the stated reason for
@@ -53,8 +53,17 @@ type Flow = Automation.Flow;
  * `InMemoryDriver`. The probe object is purpose-built so the measurement never
  * depends on, or perturbs, the shipped `crm_case` declaration.
  *
- * Measured on the PINNED `@objectstack/* 17.1.0` in `package.json` (dependabot
- * PRs #1388-#1393 propose 17.2.0; this is not that).
+ * First measured on `@objectstack/* 17.1.0`. RE-MEASURED 2026-09-03 against
+ * the PINNED `@objectstack/* 17.2.0` in `package.json` (#1460) — every case
+ * below reports the same verdict it did then, and the two engine internals
+ * quoted above still read as quoted: the strip is still guarded by
+ * `if (!opCtx.context?.isSystem)` in `@objectstack/objectql/dist/core.js`,
+ * and `resolveRunDataContext` still returns `isSystem: true` for
+ * `runAs: 'system'` and only for it.
+ *
+ * ⚠️ The parenthetical this replaces ("dependabot PRs #1388-#1393 propose
+ * 17.2.0; this is not that") was false in a second way by the time it was
+ * swept: 17.2.0 stopped being a proposal when PR #1442 landed it.
  */
 
 const PROBE = 'probe_readonly';

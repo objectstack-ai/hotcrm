@@ -89,7 +89,14 @@ function project(row: Rec, fields?: string[]): Rec {
  * exactly how #714 shipped a boolean into `crm_contract.crm_contact` and was
  * only caught in a release-candidate acceptance run.
  *
- * ### What the engine actually does (measured on the pinned 17.1.0, not guessed)
+ * ### What the engine actually does (measured on the pinned 17.2.0, not guessed)
+ *
+ * First taken on 17.1.0; RE-TAKEN 2026-09-03 on 17.2.0 — the version
+ * `package.json` now pins and `node_modules` installs (#1460, after the
+ * #1442 bump) — and every row below still holds, in BOTH postures.
+ * `test/harness-lookup-shape.test.ts` is that re-measurement: it drives each
+ * probe value against a real `ObjectQL` and requires the harness verdict to
+ * match the engine's, field by field.
  *
  * A real `ObjectQL` on `InMemoryDriver` was driven with each value below, on a
  * declared `Field.lookup` and on the app's real `crm_contract`, under both
@@ -493,9 +500,12 @@ const installFlatInputProbe = wrapDeclarativeHook(
  *
  * ### Why this calls the real wrapper instead of reimplementing it
  *
- * `installFlatInput` is **not exported** — measured on the pinned 17.1.0: it
- * appears in `dist/index.mjs` and `dist/core.mjs` as an internal function and
- * in **neither** `.d.ts`, and it is absent from the bundle's export list.
+ * `installFlatInput` is **not exported** — first measured on 17.1.0 and
+ * RE-MEASURED 2026-09-03 on the pinned 17.2.0 (#1460), unchanged: it appears
+ * in `dist/index.mjs` and `dist/core.mjs` as an internal function and in
+ * **neither** `.d.ts` nor `.d.mts`, and the runtime export list (103 names)
+ * does not carry it. `wrapDeclarativeHook` — the route this harness takes
+ * instead, below — IS still exported there.
  *
  * The two obvious routes from there are both bad. A faithful local
  * reimplementation buys speed and then rots: the moment upstream adds a trap,
