@@ -52,10 +52,12 @@ export const ForecastViews = defineView({
       // `feat(filters): evaluate {filter-token} placeholders server-side`,
       // #3582) — `find`/`findOne`/`count`/`aggregate`, ahead of the middleware
       // chain, which is the one gate every server-side read passes through,
-      // saved-view filters included. Measured on the pinned 17.0.0-rc.2 rather
-      // than inferred; `test/forecast-current-quarter-view.test.ts` runs THIS
-      // filter through a real engine and pins the three-way outcome (one
-      // quarter selected, not zero and not all of them).
+      // saved-view filters included. Measured rather than inferred;
+      // `test/forecast-current-quarter-view.test.ts` runs THIS filter through a
+      // real engine and pins the three-way outcome (one quarter selected, not
+      // zero and not all of them). First taken on 17.0.0-rc.2 and RE-RUN
+      // 2026-09-03 on the pinned 17.2.0 (#1467: the current pin since PR
+      // #1442), green both times — so this is a reading on the CURRENT pin.
       //
       // Both halves of the key are load-bearing, same as the quota-attainment
       // widget in `src/dashboards/sales.dashboard.ts`: `period: 'quarter'`

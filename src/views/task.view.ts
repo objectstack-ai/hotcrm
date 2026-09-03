@@ -139,7 +139,11 @@ export const TaskViews = defineView({
       columns: ['subject', 'priority', 'status', 'due_date', 'related_to_type', 'owner_id'],
       // Operator-only filter — priority and status, no tokens — and the reason
       // recorded here for that has expired (#782). Two claims stood here; both
-      // are wrong on the pinned 17.0.0-rc.2, in different ways.
+      // were wrong already on 17.0.0-rc.2 — the version this repo pinned AT
+      // THE TIME they were measured, not the current pin, which is 17.2.0
+      // since PR #1442 (#1467; every reading below is re-taken on it) — in
+      // different ways. "Wrong" is about those two retired claims, not about
+      // the engine: nothing in this block reports broken platform behaviour.
       //
       // `{current_user_id}` DOES interpolate. `resolveFilterTokens()` was wired
       // into the ObjectQL READ path at 17.0.0-rc.0 (objectql #3582) ahead of
@@ -150,28 +154,51 @@ export const TaskViews = defineView({
       // {current_org_id}` returned 0 rows (the filter is not being dropped)
       // while `owner_id = {current_user_id}` returned every seeded task (not a
       // literal-string compare either — the literal matches no owner at all).
+      // RE-MEASURED 2026-09-03 on the pinned 17.2.0 (#1467), unchanged: both
+      // probes report exactly those results on the current pin.
       //
       // `{TODAY()}` is not a spelling of anything and never was. The vocabulary
       // is `{today}` / `{yesterday}` / `{tomorrow}` / `{now}`, the period
-      // tokens, and the parameterised `{N_days_ago}` family. Nor is `{TODAY()}`
-      // REJECTED, which is the part worth writing down: the placeholder grammar
-      // is `/^\$?\{([a-zA-Z0-9_]+)\}$/`, parentheses fall outside it, so
-      // `classifyFilterToken('{TODAY()}')` returns null — it is never treated
-      // as a token, ships to the driver verbatim, and compares as text.
+      // tokens, and the parameterised `{N_days_ago}` family.
+      //
+      // ⚠️ WHAT CHANGED between rc.2 and the current pin — the one reading in
+      // this block that did NOT survive re-measurement, and the reason the
+      // version qualifiers here are load-bearing rather than bookkeeping. On
+      // rc.2 `{TODAY()}` was not REJECTED either: the placeholder grammar was
+      // `/^\$?\{([a-zA-Z0-9_]+)\}$/`, parentheses fell outside it,
+      // `classifyFilterToken('{TODAY()}')` returned null, and the string
+      // reached the driver verbatim and compared as text. On the pinned 17.2.0
+      // that is FALSE — `FILTER_TOKEN_WRAPPED_RE` in `@objectstack/spec/data`
+      // now reads `/^\$?\{([^{}]+)\}$/`, which DOES match `TODAY()`, so it
+      // classifies as `kind: 'unknown'` and `resolveFilterTokens()` throws
+      // `UnknownFilterTokenError` (`FILTER_TOKEN_UNKNOWN`, HTTP 400) — the same
+      // envelope `{TODAY}` gets. The change landed at 17.0.0-rc.6 and this repo
+      // already pins it elsewhere: `test/flow-filter-today-token.test.ts`
+      // (#1107). That is also why the `src/flows` sweeps that still spell
+      // `{TODAY()}` work — `interpolateFilter()` resolves it before ObjectQL
+      // sees the filter at all.
+      //
       // Measured on rc.2 over a four-row `crm_task` fixture (due 30d ago / 1d
-      // ago / today / in 7d):
+      // ago / today / in 7d), and RE-MEASURED 2026-09-03 on the pinned 17.2.0
+      // (#1467) over the same fixture — three rows unchanged, the fourth not:
       //
-      //     due_date <  '{today}'     ->  2 rows (the two past-due)
-      //     due_date <= '{today}'     ->  3 rows
-      //     due_date <  '{TODAY}'     ->  throws UnknownFilterTokenError
-      //                                   (code FILTER_TOKEN_UNKNOWN)
-      //     due_date <  '{TODAY()}'   ->  ALL 4 rows, including next week's
+      //                                  rc.2               17.2.0
+      //     due_date <  '{today}'    ->  2 rows (past-due)  2 rows
+      //     due_date <= '{today}'    ->  3 rows             3 rows
+      //     due_date <  '{TODAY}'    ->  throws             throws
+      //     due_date <  '{TODAY()}'  ->  ALL 4 rows         throws
       //
-      // That last line is the #744 lexicographic inversion ('2026-…' sorts
-      // below '{'), still live for spellings the grammar cannot see. Nothing in
-      // this repo can ship one: the author-time guard in
-      // `test/metadata-references.test.ts` scans the broader `/\{([^{}]+)\}/`
-      // and rejects any token neither path resolves.
+      // (Both throws are `UnknownFilterTokenError`, `FILTER_TOKEN_UNKNOWN`.)
+      //
+      // So the #744 lexicographic inversion ('2026-…' sorts below '{') is NOT
+      // still live on this path, and ⛔ nothing here should carry a workaround
+      // for it: on rc.2 it reached every spelling the grammar could not see,
+      // and the 17.2.0 grammar sees them all. The author-time guard in
+      // `test/metadata-references.test.ts` — it scans the broader
+      // `/\{([^{}]+)\}/` and rejects any token neither path resolves — still
+      // earns its keep, by failing at authoring time rather than as a 400 in a
+      // user's face, and by covering the analytics path the engine gate does
+      // not.
       //
       // Correcting the comment is not a licence to change the filter. Whether
       // this view should carry a date bound at all — and whether a label
@@ -208,14 +235,20 @@ export const TaskViews = defineView({
       //
       // EXPIRED — the other reason said the view layer cannot resolve
       // `due_date < {TODAY()}`, and that only `{current_user_id}` interpolates.
-      // Both halves are wrong on the pinned 17.0.0-rc.2, and the file said the
-      // opposite of itself: the note on `todays_tasks` above asserted that
-      // `{current_user_id}` does NOT interpolate. It does. That comment carries
-      // the measurements — including why `{TODAY()}` is not a spelling of
-      // anything, and is not rejected either. The canonical `{today}` resolves
-      // on the read path, so a strictly past-due filter IS expressible now:
-      // `due_date < '{today}'` selected exactly the past-due rows out of four
-      // on rc.2.
+      // Both halves were wrong already on 17.0.0-rc.2 — the version this repo
+      // pinned AT THE TIME they were measured, not the current pin, which is
+      // 17.2.0 since PR #1442 (#1467) — and the file said the opposite of
+      // itself: the note on `todays_tasks` above asserted that
+      // `{current_user_id}` does NOT interpolate. It does.
+      // That comment carries the measurements, re-taken there on the current
+      // pin, INCLUDING the one that moved: `{TODAY()}` is REJECTED on 17.2.0
+      // (`FILTER_TOKEN_UNKNOWN`) where on rc.2 it shipped to the driver as
+      // text, so "cannot resolve `{TODAY()}`" is wrong on the current pin for a
+      // different reason than it was wrong on rc.2. The canonical `{today}`
+      // resolves on the read path either way, so a strictly past-due filter IS
+      // expressible: `due_date < '{today}'` selected exactly the past-due rows
+      // out of four on rc.2, and does again on 17.2.0 (RE-MEASURED
+      // 2026-09-03).
       //
       // So the honest statement is narrower than the one that stood here: this
       // view CAN be given a strictly past-due cut through `{today}`, and is not

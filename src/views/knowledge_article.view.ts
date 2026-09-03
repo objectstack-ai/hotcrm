@@ -83,11 +83,16 @@ export const KnowledgeArticleViews = defineView({
       //    `resolveFilterTokens()` was wired into the ObjectQL read path
       //    (objectql #3582) ahead of the middleware chain —
       //    `find`/`findOne`/`count`/`aggregate`, saved-view filters included.
-      //    Measured on the pinned 17.0.0-rc.2: `{180_days_ago}` resolves to
-      //    the START of the calendar day 180 days ago (00:00:00.000Z), so as
-      //    an EXCLUSIVE upper bound under `less_than` it excludes that whole
-      //    day — the #3777 day-boundary convention, and the right sense for a
-      //    label reading "> 180d".
+      //    Measured on 17.0.0-rc.2 and RE-MEASURED 2026-09-03 on
+      //    the pinned 17.2.0 (#1467: the current pin since PR #1442) —
+      //    unchanged: `{180_days_ago}` resolves to the START of the calendar
+      //    day 180 days ago (00:00:00.000Z), so as an EXCLUSIVE upper bound
+      //    under `less_than` it excludes that whole day — the #3777
+      //    day-boundary convention, and the right sense for a label reading
+      //    "> 180d". The re-measurement is the `stale_articles` runtime block
+      //    in `test/forecast-current-quarter-view.test.ts`: it drives the
+      //    macro and the equivalent day-start literal through a real engine
+      //    and requires them to select the same rows.
       //
       // 2. Expressible is not the same as expressible WITHOUT LOSS. A review
       //    queue's most overdue population is the never-reviewed one, and
