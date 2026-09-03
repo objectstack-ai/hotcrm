@@ -184,6 +184,7 @@ export const Forecast = ObjectSchema.create({
       description: 'Closed Won + Commit — what the owner reasonably expects to land.',
       expression: F`coalesce(record.closed_amount, 0) + coalesce(record.commit_amount, 0)`,
       scale: 2,
+      group: 'amounts',
     }),
 
     attainment_pct: Field.formula({
@@ -191,6 +192,7 @@ export const Forecast = ObjectSchema.create({
       description: 'Closed Won ÷ Quota × 100. Reads 0% until a positive quota is set.',
       expression: F`coalesce(record.quota, 0) > 0 ? (coalesce(record.closed_amount, 0) * 100.0) / record.quota : 0.0`,
       scale: 2,
+      group: 'amounts',
     }),
 
     coverage_ratio: Field.formula({
@@ -198,6 +200,7 @@ export const Forecast = ObjectSchema.create({
       description: 'Pipeline ÷ (Quota − Closed Won) — whether enough pipeline remains to cover the gap. Reads 0 once the quota is already met.',
       expression: F`(coalesce(record.quota, 0) - coalesce(record.closed_amount, 0)) > 0 ? coalesce(record.pipeline_amount, 0) / (record.quota - coalesce(record.closed_amount, 0)) : 0.0`,
       scale: 2,
+      group: 'amounts',
     }),
 
     source: Field.select({

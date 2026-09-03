@@ -317,8 +317,12 @@ export const SalesDashboard: Dashboard = {
       // quarter with this same macro. Measured, not inferred:
       // `test/forecast-current-quarter-view.test.ts` runs both filter shapes —
       // the `period_start` equality (#730) and the `close_date` range (#743) —
-      // through a real engine on the pinned 17.0.0-rc.2 and pins a three-way
-      // outcome (current quarter only: not zero rows, not every quarter).
+      // through a real engine and pins a three-way outcome (current quarter
+      // only: not zero rows, not every quarter). First taken on 17.0.0-rc.2;
+      // RE-RUN 2026-09-03 on the pinned 17.2.0 (#1467) — the version
+      // `package.json` pins and `node_modules` installs since PR #1442 — green
+      // both times, so the outcome holds on the CURRENT pin and not only on
+      // the one it was first taken on.
       //
       // What stood here before described the two paths as asymmetric and told
       // the next author not to generalise between them. That was true on

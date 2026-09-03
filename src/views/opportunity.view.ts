@@ -247,8 +247,14 @@ export const OpportunityViews = defineView({
       // was wired into the ObjectQL read path (objectql #3582). `{14_days_ago}`
       // is a first-class vocabulary member — it matches the parameterised
       // grammar `DATE_MACRO_PARAM_RE`, `{N_(minutes|hours|days|weeks|months|
-      // years)_(ago|from_now)}` — and on the pinned 17.0.0-rc.2 it reaches the
-      // driver already substituted for an ISO date. It is the same seam
+      // years)_(ago|from_now)}` — and it reaches the driver already substituted
+      // for an ISO date. Measured on 17.0.0-rc.2 and RE-MEASURED 2026-09-03
+      // on the pinned 17.2.0 (#1467: the current pin since PR #1442), so it
+      // is a reading on the CURRENT pin, and unchanged: over four rows parked
+      // 30d / 15d / 13d / 1d, `stage_entry_date < {14_days_ago}` returned the
+      // 30d and 15d rows — the same two the equivalent day-start literal
+      // returns, and not all four, which is what an unsubstituted token would
+      // have matched. It is the same seam
       // `closing_this_quarter` — the very next view in this file — relies on,
       // pinned against a real engine in
       // `test/forecast-current-quarter-view.test.ts`.
@@ -295,8 +301,11 @@ export const OpportunityViews = defineView({
       // was wired into the ObjectQL read path in 17.0.0-rc.0 (objectql #3582,
       // covering find/findOne/count/aggregate ahead of the middleware chain),
       // so a saved-view filter value reaches the driver already substituted.
-      // Measured on the pinned 17.0.0-rc.2, not inferred — see the runtime
-      // block in `test/forecast-current-quarter-view.test.ts`.
+      // Measured on 17.0.0-rc.2 and RE-MEASURED 2026-09-03 on
+      // the pinned 17.2.0 (#1467: the current pin since PR #1442),
+      // unchanged — see the runtime block in
+      // `test/forecast-current-quarter-view.test.ts`, which is that
+      // re-measurement and runs green on the current pin.
       //
       // The upper bound is INCLUSIVE against `{current_quarter_end}` rather
       // than half-open against `{next_quarter_start}`, and that choice is

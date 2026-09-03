@@ -28,14 +28,20 @@ management surface. Know which file owns which fact:
 ## 2. Everyday change loop (per PR)
 
 1. Author metadata under the correct `src/{type}/` folder (see `AGENTS.md`).
-2. Keep all 4 locale bundles in sync (`src/translations/{en,zh-CN,es-ES,ja-JP}.ts`).
+2. Keep the locale bundles in sync — `src/translations/` is the source of truth for
+   which locales ship. *Supersedes the hand-copied count and locale enumeration that
+   stood here — 2026-08-31 ruling, item 5.*
 3. Add the matching user doc under `content/docs/` if behaviour changed.
 4. Add a changeset describing the change.
 5. Run the full gate and make sure it is green:
 
    ```bash
-   pnpm verify   # = validate && typecheck && build && test
+   pnpm verify
    ```
+
+   `package.json` is the single source of truth for what that chain runs.
+   *Supersedes the hand-copied `validate && typecheck && build && test` comment that
+   stood here and named half of it — 2026-08-31 ruling, item 5.*
 
 6. Open the PR. **Merge only after remote CI is fully green** — never `--auto`
    ahead of CI, and never edit on a shared `main` checkout (use a worktree).

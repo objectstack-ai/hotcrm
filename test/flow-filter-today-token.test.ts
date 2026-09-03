@@ -162,9 +162,60 @@ const OBJECTS = {
   },
 } as never;
 
+/**
+ * A fixture date `daysFromToday` away, spelled on the **UTC** calendar —
+ * arithmetic and rendering both, on purpose.
+ *
+ * ### Why UTC, and not the local calendar (#1462)
+ *
+ * This is not a free choice: the helper's calendar has to be the one the
+ * engine resolves `{TODAY()}` in, because the assertions below compare the two
+ * directly. Both layers were measured on 17.2.0 rather than assumed:
+ *
+ *   - `service-automation`'s `resolveToken()` renders a bare `{TODAY()}` as
+ *     `new Date().toISOString().slice(0, 10)` — the **UTC** calendar day, with
+ *     no reference to the ambient zone.
+ *   - `@objectstack/core`'s `{today}` filter macro resolves through
+ *     `proxyDay(now, ctx.timezone)`, and a context with no `timezone` (which is
+ *     what a bare `ql.find()` here carries) falls back to the **UTC** parts.
+ *
+ * So both tokens this file asserts against mean "the UTC day", and the fixtures
+ * must be spelled the same way for `$lt` to land where the assertions say.
+ *
+ * ### What the previous spelling did
+ *
+ * It did the arithmetic on the LOCAL calendar and rendered on the UTC one:
+ *
+ *     const d = new Date();
+ *     d.setDate(d.getDate() + daysFromToday);   // local
+ *     return d.toISOString().slice(0, 10);      // UTC
+ *
+ * Those two agree whenever a local day is exactly 24h long, which is why the
+ * file passed everywhere it had ever been run. They disagree across a DST
+ * transition: `setDate` keeps the wall-clock time, so a "spring forward" day is
+ * 23h long and the shifted instant lands one UTC day later than intended. In
+ * the hour after a transition that collapses `ymd(-1)` onto `ymd(0)`, which
+ * puts `k_yesterday` exactly ON the `$lt` boundary instead of below it — the
+ * sweep then leaves it `activated` and only one owner is notified.
+ *
+ * Measured before the fix (`TZ` × faked clock, this file):
+ *
+ *     America/New_York    2026-03-08T23:00:00Z   2 failed | 6 passed
+ *     America/Los_Angeles 2026-03-08T23:00:00Z   2 failed | 6 passed
+ *     Europe/Berlin       2026-03-29T23:00:00Z   2 failed | 6 passed
+ *     America/Santiago    2026-09-06T23:00:00Z   2 failed | 6 passed
+ *     Pacific/Auckland    2026-09-26T23:00:00Z   2 failed | 6 passed
+ *     Australia/Sydney    2026-10-03T23:00:00Z   2 failed | 6 passed
+ *
+ * ⚠️ Note for anyone re-checking this: no run at `TZ=UTC` can have teeth here.
+ * Local and UTC coincide there, so the broken spelling and this one are
+ * indistinguishable — which is exactly why a suite that is only ever run on a
+ * UTC CI runner reported a clean bill of health. Reproducing it needs a
+ * DST-observing zone AND an instant inside that zone's transition hour.
+ */
 const ymd = (daysFromToday: number): string => {
   const d = new Date();
-  d.setDate(d.getDate() + daysFromToday);
+  d.setUTCDate(d.getUTCDate() + daysFromToday);
   return d.toISOString().slice(0, 10);
 };
 

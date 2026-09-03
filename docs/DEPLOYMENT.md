@@ -90,11 +90,9 @@ Run:
 pnpm verify
 ```
 
-The script currently chains:
-
-```text
-pnpm validate && pnpm typecheck && pnpm build && pnpm test
-```
+`package.json` is the single source of truth for what that chain runs. *Supersedes the
+hand-copied `pnpm validate && pnpm typecheck && pnpm build && pnpm test` line that stood
+here and named half of it — 2026-08-31 ruling, item 5.*
 
 If `pnpm verify` fails, fix the first failing stage before publishing.
 

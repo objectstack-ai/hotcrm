@@ -138,7 +138,7 @@ describe('campaign_enrollment — contacts (#597)', () => {
     expect(members.map((m) => m.crm_contact).sort()).toEqual(['c_eng', 'c_eng2']);
     for (const m of members) {
       expect(m.crm_campaign).toBe('cmp1');
-      expect(m.crm_lead, 'a contact member must not also claim a lead').toBeUndefined();
+      expect(m.crm_lead, 'a contact member must not also claim a lead').toBeNull();
       expect(m.status).toBe('sent');
       expect(m.added_date, 'added_date should be stamped').toBeTruthy();
     }

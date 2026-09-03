@@ -1247,6 +1247,10 @@ export const zhCN: TranslationData = {
         total_price: { label: '总计' },
         line_number: { label: '行号' },
       },
+      _sections: {
+        basic: { label: '明细行' },
+        pricing: { label: '价格' },
+      },
     },
 
     crm_quote_line_item: {
@@ -1265,6 +1269,10 @@ export const zhCN: TranslationData = {
         tax_rate: { label: '税率（%）' },
         total_price: { label: '总计' },
         line_number: { label: '行号' },
+      },
+      _sections: {
+        basic: { label: '明细行' },
+        pricing: { label: '价格' },
       },
     },
   },

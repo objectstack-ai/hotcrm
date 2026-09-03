@@ -146,10 +146,21 @@ describe('filter template tokens are resolvable', () => {
    *   `Unresolvable filter placeholder` naming the near-miss fix instead of
    *   comparing as text.
    *
-   *   Measured on the pinned 17.0.0-rc.2, not inferred from the changelog:
+   *   Measured, not inferred from the changelog:
    *   `test/forecast-current-quarter-view.test.ts` runs a shipped view filter
    *   through a real engine and pins one quarter selected out of three, plus
-   *   the throw on the retired `{this_quarter_start}` spelling.
+   *   the throw on the retired `{this_quarter_start}` spelling. First taken on
+   *   17.0.0-rc.2 and RE-RUN 2026-09-03 on the pinned 17.2.0 (#1467: the
+   *   current pin since PR #1442), green both times.
+   *
+   *   What DID move between those two pins is WHICH spellings throw. The
+   *   wrapped-token grammar widened at 17.0.0-rc.6 from
+   *   `/^\$?\{([a-zA-Z0-9_]+)\}$/` to `/^\$?\{([^{}]+)\}$/`, so a spelling
+   *   with parentheses — `{TODAY()}` — is now classified `kind: 'unknown'` and
+   *   raises `FILTER_TOKEN_UNKNOWN` instead of reaching the driver as a
+   *   literal (#1107; the reading is in `src/views/task.view.ts`). That makes
+   *   the paragraph above STRONGER, not weaker: there is no longer a spelling
+   *   the gate cannot see.
    *
    * - ANALYTICS path (dashboard widgets / dataset reports,
    *   `/api/v1/analytics/...`): resolves the DATE_MACRO_TOKENS vocabulary (the
