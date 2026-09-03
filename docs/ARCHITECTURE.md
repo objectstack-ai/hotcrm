@@ -20,6 +20,10 @@ flowchart TD
   Stack --> Runtime["@objectstack/runtime"]
 ```
 
+The diagram sketches the assembly path and draws only the largest metadata areas; it is
+deliberately not a roster. [Metadata Areas](#metadata-areas) below is the complete
+directory-to-key map.
+
 The compiled marketplace artifact is produced by `pnpm build`. The generated artifact is the package that gets published, not the TypeScript source layout itself.
 
 ## Stack Manifest
@@ -45,16 +49,42 @@ compares against.
 *Supersedes the transcribed `^17.0.0-rc.1` row that stood here while all three
 sources declared `^17.2.0` — 2026-08-31 ruling, item 5.*
 
-Runtime capabilities are declared in `requires`: `automation`, `triggers`, `analytics`, `auth`, `ui`, `approvals`, and `sharing`.
+The runtime capabilities this app needs are declared in `requires` in
+[`objectstack.config.ts`](../objectstack.config.ts), and that roster is deliberately
+**not** transcribed here — it is not a fact this page can keep true, and a copy here
+would be the one copy nothing compares against.
 
-`ai` is deliberately **not** in that list. ObjectStack 11.3.0 (ADR-0025 S2) moved the
-AI runtime out of the open edition, and under ObjectStack 16 `requires: ['ai']` is
-fail-fast — declaring it would hard-abort `objectstack start`/`dev` for this
-open-edition app. The AI metadata is unaffected: the skills still validate, build into
-the artifact, and run wherever a runtime provides the `ai` tier. See the comment in
-[`objectstack.config.ts`](../objectstack.config.ts) for the full rationale.
+What the roster cannot tell a reader is why two capabilities are where they are. Those
+two decisions are the architecture, so this section states them instead:
+
+- **`ai` is deliberately absent.** ObjectStack 11.3.0 (ADR-0025 S2) moved the AI runtime
+  out of the open edition, and under ObjectStack 16 `requires: ['ai']` is *fail-fast* —
+  declaring it would hard-abort `objectstack start`/`dev` for this open-edition app. The
+  AI metadata is unaffected: the skills still validate, build into the artifact, and run
+  wherever a runtime provides the `ai` tier.
+- **`hierarchy-security` is deliberately present** — the one enterprise-edition
+  capability this app declares. `sales_manager` authors `writeScope: 'own_and_reports'`
+  on `crm_contract`, an ADR-0057 hierarchy scope resolved by a service that ships only in
+  `@objectstack/security-enterprise`, and `defineStack` refuses that grant outright
+  without the capability, so the scope and the declaration move together or not at all.
+  Unlike `ai` it is **safe** on an open-edition boot and does not fail fast: nothing
+  aborts, the resolver is simply absent, and the scope fails *closed* to owner-only — a
+  Sales Manager still cannot edit a rep's contract there.
+
+The config comments carry the full rationale for both.
+*Supersedes the seven-name roster transcribed here, which named seven of the eight
+capabilities declared and closed with "and". The member it dropped was
+`hierarchy-security` — half of the very contrast the paragraph beneath it was drawing —
+2026-08-31 ruling, item 5.*
 
 ## Metadata Areas
+
+Every `src/` directory the stack registers has a row below, and the right-hand column
+names the `defineStack` key it registers as. Where the `requires` roster above points at
+its source, this table is *meant* to be exhaustive — a directory-to-key map is worth nothing if a reader has to
+wonder what is missing from it — so it carries the rule that makes it checkable:
+**every directory under `src/` is either a row here or one of the two named beneath the
+table.** Adding a `src/` area is not finished until it is one or the other.
 
 | Area | Files | Registered as |
 | --- | --- | --- |
@@ -65,9 +95,28 @@ the artifact, and run wherever a runtime provides the `ai` tier. See the comment
 | AI skills | `src/skills/*.skill.ts` | `skills` |
 | Apps, views, pages | `src/apps/`, `src/views/`, `src/pages/` | `apps`, `views`, `pages` |
 | Analytics | `src/datasets/`, `src/dashboards/`, `src/reports/` | `datasets`, `dashboards`, `reports` |
+| Import mappings | `src/mappings/*.mapping.ts` | `mappings` |
 | Security | `src/profiles/`, `src/sharing/` | `permissions`, `sharingRules`, `positions` |
 | i18n | `src/translations/` | `translations`, `i18n` |
 | Demo data | `src/data/` | `data` |
+
+Import mappings are reusable projections referenced by name from the import endpoint
+(`mappingName: 'crm_account_import'`), so a customer's own spreadsheet loads without
+mapping every column by hand; the matching templates live in `assets/import-templates/`.
+
+Two directories under `src/` are deliberately not rows, because neither registers
+anything:
+
+- `src/docs/` — the `crm_*.md` package documentation pages. They are prose about the app,
+  not metadata the stack loads; `test/docs-drift.test.ts` pins their business-rule claims
+  to the same compiled conditions the objects declare.
+- `src/interfaces/` — a barrel that currently exports nothing at all; its `index.ts` is
+  the licence header and no more.
+
+*Supersedes the table that omitted `mappings` while presenting itself as the map of the
+tree. Appending that one row was declined as the whole fix: nothing on the page said what
+the table was a complete list **of**, so the next registration key would have gone
+missing the same way — 2026-08-31 ruling, item 5.*
 
 ## Data Model
 
