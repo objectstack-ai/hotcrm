@@ -41,14 +41,40 @@ import stack from '../objectstack.config';
  *     everything — that half of #3912 returned MORE rows, not fewer;
  *   - it re-runs on every platform bump, which is when this class regresses.
  *
+ * # What the window MEANS, measured rather than assumed (#1450)
+ *
+ * `{today}` and `{N_days_ago}` are resolved SERVER-SIDE, on UTC calendar days.
+ * `@objectstack/core`'s `resolveFilterToken()` buckets the process instant with
+ * `proxyDay(now, ctx.timezone)` → `calendarPartsInTzOrUtc()`, which reads
+ * `ctx.timezone` when the request declares one and otherwise falls back to
+ * `getUTC*`. The HOST zone (`TZ`) is never an input: at one fixed instant,
+ * `{today}` resolves to `2026-09-02` under `TZ=UTC` and under
+ * `TZ=Asia/Shanghai` alike. The one override is `ExecutionContext.timezone`
+ * (ADR-0053 Phase 2), which `service-analytics` defaults as
+ * `selection.timezone ?? context?.timezone ?? 'UTC'` — and which hotcrm never
+ * sets, because the app declares no user or organization timezone anywhere.
+ *
+ * ⇒ On a hotcrm dashboard, "last 7 days" means the seven UTC calendar days
+ * ending with today's UTC date, both ends inclusive. The two tests below named
+ * for that sentence ASSERT it instead of describing it, so it cannot quietly
+ * stop being true at a platform bump.
+ *
  * # Fixture rules that keep this deterministic
  *
- * Every seeded case is timestamped at LOCAL NOON of its day offset. Date-macro
- * tokens resolve to day boundaries, so a fixture row is never closer than 12
- * hours to any boundary the tests below compare against — the assertions do not
- * depend on which timezone the resolver works in. A noon row is also a valid
- * witness for objectstack#3777, whose symptom was a bare-date upper bound
- * truncating to 00:00 and dropping everything created later that day.
+ * Every seeded case is timestamped at UTC NOON of its day offset — the same
+ * calendar the window is resolved on — so a fixture row sits exactly 12 hours
+ * from every boundary the tests below compare against, in every host zone and
+ * at every hour of the day. A noon row is also a valid witness for
+ * objectstack#3777, whose symptom was a bare-date upper bound truncating to
+ * 00:00 and dropping everything created later that day.
+ *
+ * ⛔ LOCAL noon is what this fixture used until #1450, and local noon is NOT a
+ * safe distance from a UTC boundary — it is up to 14 hours from one. East of
+ * UTC, between midnight and the zone's offset, the newest row landed on the
+ * NEXT UTC day and fell outside `$lte {today}`: exactly one row dropped out of
+ * every windowed count, and 5 of these 13 tests failed on a clean checkout for
+ * any contributor whose local date was ahead of UTC. CI runs UTC, so CI never
+ * saw it. Stamp fixtures on the window's calendar, never on the runner's.
  *
  * The offsets are deliberately spread away from the preset edges (…, 89, 100,
  * …) so that an off-by-one day in boundary handling cannot silently change a
@@ -93,10 +119,10 @@ const FIXTURED_OBJECTS = new Set(['crm_case']);
 
 const DAY = 86_400_000;
 
-/** Local noon, `offset` days ago — see "Fixture rules" above. */
-const noonDaysAgo = (offset: number): Date => {
+/** UTC noon, `offset` days ago — see "Fixture rules" above. */
+const utcNoonDaysAgo = (offset: number): Date => {
   const d = new Date(Date.now() - offset * DAY);
-  d.setHours(12, 0, 0, 0);
+  d.setUTCHours(12, 0, 0, 0);
   return d;
 };
 
@@ -211,7 +237,7 @@ beforeAll(async () => {
 
   for (const row of CASE_ROWS) {
     const { offset, ...rest } = row;
-    await api.object('crm_case').insert({ ...rest, created_date: noonDaysAgo(offset).toISOString() });
+    await api.object('crm_case').insert({ ...rest, created_date: utcNoonDaysAgo(offset).toISOString() });
   }
 
   analytics = new AnalyticsService({
@@ -274,11 +300,51 @@ describe('a datetime window compares correctly on the real SQL path', () => {
 
   it('keeps same-day rows under a bare-date upper bound — objectstack#3777', async () => {
     // The bug truncated `YYYY-MM-DD` to 00:00 on a datetime column, dropping
-    // every record created later that day. The fixture's newest case is at
-    // local noon today, so a regression here loses exactly one row.
+    // every record created later that day. The fixture's newest case is at UTC
+    // noon today, so a regression here loses exactly one row.
+    //
+    // The bare date is spelled from `getUTC*`, not the local getters: a bare
+    // comparand is read as midnight UTC (`readsAsInstant` in
+    // `@objectstack/core`), so a locally-spelled date west of UTC names
+    // YESTERDAY's UTC day and drops today's row for a reason that has nothing
+    // to do with #3777.
     const today = new Date();
-    const bareDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const bareDate = `${today.getUTCFullYear()}-${String(today.getUTCMonth() + 1).padStart(2, '0')}-${String(today.getUTCDate()).padStart(2, '0')}`;
     expect(await count({ created_date: { $lte: bareDate } })).toBe(CASE_ROWS.length);
+  });
+
+  it('reads `{today}` as the END of the UTC day, and `{yesterday}` as the one before', async () => {
+    // The window's semantics, executed. The newest fixture row sits at 12:00Z
+    // today, so this pair separates the three readings a "last N days" ceiling
+    // could have: end-of-UTC-day (13 and 12 — the measured behaviour),
+    // midnight-UTC (12 and 12 — objectstack#3777's symptom), and a ceiling
+    // resolved on some other calendar (12 and 11, the #1450 failure).
+    expect(await count({ created_date: { $lte: '{today}' } })).toBe(CASE_ROWS.length);
+    expect(await count({ created_date: { $lte: '{yesterday}' } })).toBe(CASE_ROWS.length - 1);
+  });
+
+  it('stamps the fixture on the window\'s calendar in EVERY host zone', () => {
+    // What keeps #1450 from coming back on a runner that cannot see it. CI runs
+    // UTC, where local noon and UTC noon are the same instant, so a `setHours`
+    // regression is invisible to every assertion above. Flipping `TZ` here
+    // makes it visible: a local-noon stamp reads 04:00:00.000Z in +08:00 and
+    // 23:00:00.000Z in -11:00, and only a UTC-noon stamp holds at 12:00:00.000Z
+    // everywhere — exactly 12 hours from the boundary the window compares to.
+    const original = process.env.TZ;
+    try {
+      for (const tz of ['UTC', 'Asia/Shanghai', 'Pacific/Kiritimati', 'Pacific/Niue', 'America/New_York']) {
+        process.env.TZ = tz;
+        for (const row of CASE_ROWS) {
+          expect(
+            utcNoonDaysAgo(row.offset).toISOString().slice(11),
+            `offset ${row.offset} is not stamped at UTC noon under TZ=${tz}`,
+          ).toBe('12:00:00.000Z');
+        }
+      }
+    } finally {
+      if (original === undefined) delete process.env.TZ;
+      else process.env.TZ = original;
+    }
   });
 });
 

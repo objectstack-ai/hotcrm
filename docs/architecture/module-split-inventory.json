@@ -1,0 +1,3376 @@
+{
+  "$schema_note": "Generated for docs/architecture/module-split-plan.md. Regenerate from the artifact; never hand-edit.",
+  "generated": {
+    "repo": "objectstack-ai/hotcrm",
+    "commit": "a6be39a3d5d3ce5cc8b8852b48e7de4f326c3d1b",
+    "basis": "dist/objectstack.json (pnpm build) for every declaration and reference; src/** for file identity; token counts from scripts/check-source-token-ratchet.mjs (its exported authoredText + tokensOf, unmodified)",
+    "platform_pin": "^17.2.0",
+    "decision_record": "ADR-0130 — the release artifact is the co-ownership boundary (one artifact, N packages)"
+  },
+  "namespace": "crm",
+  "cross_package_rules": [
+    {
+      "id": "R1",
+      "statement": "A lookup / master-detail field pointing at an object in another package",
+      "verdict": "ALLOWED",
+      "source": "objectstack#14122 §4, measured on 17.2.0"
+    },
+    {
+      "id": "R2",
+      "statement": "navigationContributions injecting navigation into another package's app",
+      "verdict": "ALLOWED",
+      "source": "objectstack#14122 §4, measured on 17.2.0"
+    },
+    {
+      "id": "R3",
+      "statement": "A package's own app navigation pointing at an object in another package",
+      "verdict": "REFUSED",
+      "source": "objectstack#14122 §4: \"App 'x' navigation references object 'core_account' which is not defined in objects.\""
+    },
+    {
+      "id": "R4",
+      "statement": "A hook attached to an object in another package",
+      "verdict": "REFUSED",
+      "source": "objectstack#14122 §4: \"Hook 'h' references object 'core_account' which is not defined in objects.\""
+    }
+  ],
+  "modules": [
+    {
+      "id": "app.objectstack.hotcrm",
+      "type": "app",
+      "namespace": "crm",
+      "label": "HotCRM (application shell)",
+      "objects": [],
+      "files": 54,
+      "ratcheted_files": 42,
+      "authored_tokens": 21606,
+      "outside_ratchet_tokens": 60152,
+      "refused_edges_in": 0,
+      "refused_edges_out": 17
+    },
+    {
+      "id": "app.objectstack.hotcrm.core",
+      "type": "module",
+      "namespace": "crm",
+      "label": "Customer Core",
+      "objects": [
+        "crm_account",
+        "crm_contact"
+      ],
+      "files": 18,
+      "ratcheted_files": 18,
+      "authored_tokens": 11498,
+      "outside_ratchet_tokens": 0,
+      "refused_edges_in": 2,
+      "refused_edges_out": 0
+    },
+    {
+      "id": "app.objectstack.hotcrm.sales",
+      "type": "module",
+      "namespace": "crm",
+      "label": "Sales",
+      "objects": [
+        "crm_lead",
+        "crm_opportunity",
+        "crm_forecast"
+      ],
+      "files": 31,
+      "ratcheted_files": 30,
+      "authored_tokens": 41743,
+      "outside_ratchet_tokens": 9841,
+      "refused_edges_in": 7,
+      "refused_edges_out": 0
+    },
+    {
+      "id": "app.objectstack.hotcrm.cpq",
+      "type": "module",
+      "namespace": "crm",
+      "label": "CPQ & Contracts",
+      "objects": [
+        "crm_product",
+        "crm_quote",
+        "crm_quote_line_item",
+        "crm_opportunity_line_item",
+        "crm_contract"
+      ],
+      "files": 21,
+      "ratcheted_files": 19,
+      "authored_tokens": 15630,
+      "outside_ratchet_tokens": 4142,
+      "refused_edges_in": 3,
+      "refused_edges_out": 0
+    },
+    {
+      "id": "app.objectstack.hotcrm.service",
+      "type": "module",
+      "namespace": "crm",
+      "label": "Service",
+      "objects": [
+        "crm_case",
+        "crm_knowledge_article",
+        "crm_article_feedback"
+      ],
+      "files": 23,
+      "ratcheted_files": 22,
+      "authored_tokens": 19062,
+      "outside_ratchet_tokens": 7388,
+      "refused_edges_in": 3,
+      "refused_edges_out": 0
+    },
+    {
+      "id": "app.objectstack.hotcrm.marketing",
+      "type": "module",
+      "namespace": "crm",
+      "label": "Marketing",
+      "objects": [
+        "crm_campaign",
+        "crm_campaign_member"
+      ],
+      "files": 10,
+      "ratcheted_files": 9,
+      "authored_tokens": 9441,
+      "outside_ratchet_tokens": 2834,
+      "refused_edges_in": 1,
+      "refused_edges_out": 2
+    },
+    {
+      "id": "app.objectstack.hotcrm.activity",
+      "type": "module",
+      "namespace": "crm",
+      "label": "Activity",
+      "objects": [
+        "crm_task",
+        "crm_event",
+        "crm_event_attendee"
+      ],
+      "files": 14,
+      "ratcheted_files": 14,
+      "authored_tokens": 15194,
+      "outside_ratchet_tokens": 0,
+      "refused_edges_in": 3,
+      "refused_edges_out": 0
+    }
+  ],
+  "totals": {
+    "src_files": 171,
+    "ratcheted_files": 154,
+    "authored_tokens": 134174,
+    "objects": 18,
+    "hooks": 39,
+    "flows": 26,
+    "views": 14,
+    "pages": 8,
+    "actions": 30,
+    "apps": 1,
+    "edges": 73,
+    "allowed_edges": 54,
+    "refused_edges": 19
+  },
+  "first_cut_ranking": {
+    "criterion": "A module is cheap to lift out when nothing points INTO it (inbound lookups), it owns no hook attached to a foreign object (R4 needs real code motion, not a manifest edit), and it touches few of the item classes the four rules never measured. R1 and R2 edges are proven and carry no risk; R3 is a mechanical manifest change.",
+    "ranked": [
+      {
+        "id": "app.objectstack.hotcrm.cpq",
+        "objects": 5,
+        "authored_tokens": 15630,
+        "inbound_field_references": 0,
+        "outbound_field_references": 7,
+        "refused_navigation_nodes_R3": 3,
+        "hooks_on_foreign_objects_R4": 0,
+        "unmeasured_class_touches": 12
+      },
+      {
+        "id": "app.objectstack.hotcrm.service",
+        "objects": 3,
+        "authored_tokens": 19062,
+        "inbound_field_references": 2,
+        "outbound_field_references": 2,
+        "refused_navigation_nodes_R3": 3,
+        "hooks_on_foreign_objects_R4": 0,
+        "unmeasured_class_touches": 27
+      },
+      {
+        "id": "app.objectstack.hotcrm.activity",
+        "objects": 3,
+        "authored_tokens": 15194,
+        "inbound_field_references": 0,
+        "outbound_field_references": 12,
+        "refused_navigation_nodes_R3": 3,
+        "hooks_on_foreign_objects_R4": 0,
+        "unmeasured_class_touches": 31
+      },
+      {
+        "id": "app.objectstack.hotcrm.marketing",
+        "objects": 2,
+        "authored_tokens": 9441,
+        "inbound_field_references": 1,
+        "outbound_field_references": 2,
+        "refused_navigation_nodes_R3": 1,
+        "hooks_on_foreign_objects_R4": 2,
+        "unmeasured_class_touches": 11
+      },
+      {
+        "id": "app.objectstack.hotcrm.sales",
+        "objects": 3,
+        "authored_tokens": 41743,
+        "inbound_field_references": 9,
+        "outbound_field_references": 6,
+        "refused_navigation_nodes_R3": 5,
+        "hooks_on_foreign_objects_R4": 0,
+        "unmeasured_class_touches": 41
+      },
+      {
+        "id": "app.objectstack.hotcrm.core",
+        "objects": 2,
+        "authored_tokens": 11498,
+        "inbound_field_references": 17,
+        "outbound_field_references": 0,
+        "refused_navigation_nodes_R3": 2,
+        "hooks_on_foreign_objects_R4": 0,
+        "unmeasured_class_touches": 38
+      }
+    ]
+  },
+  "ratchet": {
+    "script": "scripts/check-source-token-ratchet.mjs",
+    "surface": "src/**/*.ts, comment-stripped and blank-stripped, minus src/translations + src/data",
+    "estimator": "chars / 4 (its own, reused here unmodified)",
+    "reading_at_this_commit": {
+      "authored_total": 134174,
+      "ceiling": 140000,
+      "headroom": 5826
+    },
+    "note": "Per-module figures are round(module chars / 4) and are therefore each rounded once; they are estimates of the same surface the gate measures, split by module."
+  },
+  "edges": [
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.core",
+        "item": "crm_account.owner_id"
+      },
+      "to": {
+        "module": "(platform)",
+        "item": "sys_user"
+      },
+      "note": "crosses a package boundary today and always has — sys_user is platform-owned",
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.service",
+        "item": "crm_article_feedback.owner_id"
+      },
+      "to": {
+        "module": "(platform)",
+        "item": "sys_user"
+      },
+      "note": "crosses a package boundary today and always has — sys_user is platform-owned",
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.marketing",
+        "item": "crm_campaign.owner_id"
+      },
+      "to": {
+        "module": "(platform)",
+        "item": "sys_user"
+      },
+      "note": "crosses a package boundary today and always has — sys_user is platform-owned",
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.marketing",
+        "item": "crm_campaign_member.crm_lead"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.sales",
+        "item": "crm_lead"
+      },
+      "note": null,
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.marketing",
+        "item": "crm_campaign_member.crm_contact"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.core",
+        "item": "crm_contact"
+      },
+      "note": null,
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.service",
+        "item": "crm_case.owner_id"
+      },
+      "to": {
+        "module": "(platform)",
+        "item": "sys_user"
+      },
+      "note": "crosses a package boundary today and always has — sys_user is platform-owned",
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.service",
+        "item": "crm_case.crm_account"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.core",
+        "item": "crm_account"
+      },
+      "note": null,
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.service",
+        "item": "crm_case.crm_contact"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.core",
+        "item": "crm_contact"
+      },
+      "note": null,
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.core",
+        "item": "crm_contact.owner_id"
+      },
+      "to": {
+        "module": "(platform)",
+        "item": "sys_user"
+      },
+      "note": "crosses a package boundary today and always has — sys_user is platform-owned",
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.cpq",
+        "item": "crm_contract.owner_id"
+      },
+      "to": {
+        "module": "(platform)",
+        "item": "sys_user"
+      },
+      "note": "crosses a package boundary today and always has — sys_user is platform-owned",
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.cpq",
+        "item": "crm_contract.crm_account"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.core",
+        "item": "crm_account"
+      },
+      "note": null,
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.cpq",
+        "item": "crm_contract.crm_contact"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.core",
+        "item": "crm_contact"
+      },
+      "note": null,
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.cpq",
+        "item": "crm_contract.crm_opportunity"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.sales",
+        "item": "crm_opportunity"
+      },
+      "note": null,
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.activity",
+        "item": "crm_event.owner_id"
+      },
+      "to": {
+        "module": "(platform)",
+        "item": "sys_user"
+      },
+      "note": "crosses a package boundary today and always has — sys_user is platform-owned",
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.activity",
+        "item": "crm_event.related_to_account"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.core",
+        "item": "crm_account"
+      },
+      "note": null,
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.activity",
+        "item": "crm_event.related_to_contact"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.core",
+        "item": "crm_contact"
+      },
+      "note": null,
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.activity",
+        "item": "crm_event.related_to_opportunity"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.sales",
+        "item": "crm_opportunity"
+      },
+      "note": null,
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.activity",
+        "item": "crm_event.related_to_lead"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.sales",
+        "item": "crm_lead"
+      },
+      "note": null,
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.activity",
+        "item": "crm_event.related_to_case"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.service",
+        "item": "crm_case"
+      },
+      "note": null,
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.activity",
+        "item": "crm_event_attendee.crm_contact"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.core",
+        "item": "crm_contact"
+      },
+      "note": null,
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.activity",
+        "item": "crm_event_attendee.crm_lead"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.sales",
+        "item": "crm_lead"
+      },
+      "note": null,
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.activity",
+        "item": "crm_event_attendee.sys_user"
+      },
+      "to": {
+        "module": "(platform)",
+        "item": "sys_user"
+      },
+      "note": "crosses a package boundary today and always has — sys_user is platform-owned",
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.sales",
+        "item": "crm_forecast.owner_id"
+      },
+      "to": {
+        "module": "(platform)",
+        "item": "sys_user"
+      },
+      "note": "crosses a package boundary today and always has — sys_user is platform-owned",
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.service",
+        "item": "crm_knowledge_article.owner_id"
+      },
+      "to": {
+        "module": "(platform)",
+        "item": "sys_user"
+      },
+      "note": "crosses a package boundary today and always has — sys_user is platform-owned",
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.sales",
+        "item": "crm_lead.owner_id"
+      },
+      "to": {
+        "module": "(platform)",
+        "item": "sys_user"
+      },
+      "note": "crosses a package boundary today and always has — sys_user is platform-owned",
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.sales",
+        "item": "crm_lead.converted_account"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.core",
+        "item": "crm_account"
+      },
+      "note": null,
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.sales",
+        "item": "crm_lead.converted_contact"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.core",
+        "item": "crm_contact"
+      },
+      "note": null,
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.sales",
+        "item": "crm_lead.duplicate_of_contact"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.core",
+        "item": "crm_contact"
+      },
+      "note": null,
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.sales",
+        "item": "crm_opportunity.owner_id"
+      },
+      "to": {
+        "module": "(platform)",
+        "item": "sys_user"
+      },
+      "note": "crosses a package boundary today and always has — sys_user is platform-owned",
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.sales",
+        "item": "crm_opportunity.crm_account"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.core",
+        "item": "crm_account"
+      },
+      "note": null,
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.sales",
+        "item": "crm_opportunity.primary_contact"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.core",
+        "item": "crm_contact"
+      },
+      "note": null,
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.sales",
+        "item": "crm_opportunity.crm_campaign"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.marketing",
+        "item": "crm_campaign"
+      },
+      "note": null,
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.cpq",
+        "item": "crm_opportunity_line_item.crm_opportunity"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.sales",
+        "item": "crm_opportunity"
+      },
+      "note": null,
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.cpq",
+        "item": "crm_product.product_manager"
+      },
+      "to": {
+        "module": "(platform)",
+        "item": "sys_user"
+      },
+      "note": "crosses a package boundary today and always has — sys_user is platform-owned",
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.cpq",
+        "item": "crm_quote.owner_id"
+      },
+      "to": {
+        "module": "(platform)",
+        "item": "sys_user"
+      },
+      "note": "crosses a package boundary today and always has — sys_user is platform-owned",
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.cpq",
+        "item": "crm_quote.crm_account"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.core",
+        "item": "crm_account"
+      },
+      "note": null,
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.cpq",
+        "item": "crm_quote.crm_contact"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.core",
+        "item": "crm_contact"
+      },
+      "note": null,
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.cpq",
+        "item": "crm_quote.crm_opportunity"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.sales",
+        "item": "crm_opportunity"
+      },
+      "note": null,
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.activity",
+        "item": "crm_task.owner_id"
+      },
+      "to": {
+        "module": "(platform)",
+        "item": "sys_user"
+      },
+      "note": "crosses a package boundary today and always has — sys_user is platform-owned",
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.activity",
+        "item": "crm_task.related_to_account"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.core",
+        "item": "crm_account"
+      },
+      "note": null,
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.activity",
+        "item": "crm_task.related_to_contact"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.core",
+        "item": "crm_contact"
+      },
+      "note": null,
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.activity",
+        "item": "crm_task.related_to_opportunity"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.sales",
+        "item": "crm_opportunity"
+      },
+      "note": null,
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.activity",
+        "item": "crm_task.related_to_lead"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.sales",
+        "item": "crm_lead"
+      },
+      "note": null,
+      "cut": null
+    },
+    {
+      "rule": "R1",
+      "verdict": "ALLOWED",
+      "kind": "field:lookup",
+      "from": {
+        "module": "app.objectstack.hotcrm.activity",
+        "item": "crm_task.related_to_case"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.service",
+        "item": "crm_case"
+      },
+      "note": null,
+      "cut": null
+    },
+    {
+      "rule": "R4",
+      "verdict": "REFUSED",
+      "kind": "hook-on-foreign-object",
+      "from": {
+        "module": "app.objectstack.hotcrm.marketing",
+        "item": "src/objects/campaign.hook.ts :: campaign_attribution_refresh"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.sales",
+        "item": "crm_opportunity"
+      },
+      "cut": "Move 'campaign_attribution_refresh' out of src/objects/campaign.hook.ts and into the app.objectstack.hotcrm.sales package beside crm_opportunity. What it needs from app.objectstack.hotcrm.marketing it already reads through ctx.api at run time, which is not an authoring-time package reference."
+    },
+    {
+      "rule": "R4",
+      "verdict": "REFUSED",
+      "kind": "hook-on-foreign-object",
+      "from": {
+        "module": "app.objectstack.hotcrm.marketing",
+        "item": "src/objects/campaign.hook.ts :: campaign_lead_conversion_refresh"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.sales",
+        "item": "crm_lead"
+      },
+      "cut": "Move 'campaign_lead_conversion_refresh' out of src/objects/campaign.hook.ts and into the app.objectstack.hotcrm.sales package beside crm_lead. What it needs from app.objectstack.hotcrm.marketing it already reads through ctx.api at run time, which is not an authoring-time package reference."
+    },
+    {
+      "rule": "R3",
+      "verdict": "REFUSED",
+      "kind": "app-navigation-to-foreign-object",
+      "from": {
+        "module": "app.objectstack.hotcrm",
+        "item": "crm_app.navigation.nav_lead"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.sales",
+        "item": "crm_lead"
+      },
+      "cut": "app.objectstack.hotcrm.sales declares manifest.navigationContributions: [{ app: 'app.objectstack.hotcrm', group: 'group_sales', items: [ nav_lead ] }] — that is rule R2 and is ALLOWED."
+    },
+    {
+      "rule": "R3",
+      "verdict": "REFUSED",
+      "kind": "app-navigation-to-foreign-object",
+      "from": {
+        "module": "app.objectstack.hotcrm",
+        "item": "crm_app.navigation.nav_account"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.core",
+        "item": "crm_account"
+      },
+      "cut": "app.objectstack.hotcrm.core declares manifest.navigationContributions: [{ app: 'app.objectstack.hotcrm', group: 'group_sales', items: [ nav_account ] }] — that is rule R2 and is ALLOWED."
+    },
+    {
+      "rule": "R3",
+      "verdict": "REFUSED",
+      "kind": "app-navigation-to-foreign-object",
+      "from": {
+        "module": "app.objectstack.hotcrm",
+        "item": "crm_app.navigation.nav_contact"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.core",
+        "item": "crm_contact"
+      },
+      "cut": "app.objectstack.hotcrm.core declares manifest.navigationContributions: [{ app: 'app.objectstack.hotcrm', group: 'group_sales', items: [ nav_contact ] }] — that is rule R2 and is ALLOWED."
+    },
+    {
+      "rule": "R3",
+      "verdict": "REFUSED",
+      "kind": "app-navigation-to-foreign-object",
+      "from": {
+        "module": "app.objectstack.hotcrm",
+        "item": "crm_app.navigation.nav_opportunity"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.sales",
+        "item": "crm_opportunity"
+      },
+      "cut": "app.objectstack.hotcrm.sales declares manifest.navigationContributions: [{ app: 'app.objectstack.hotcrm', group: 'group_sales', items: [ nav_opportunity ] }] — that is rule R2 and is ALLOWED."
+    },
+    {
+      "rule": "R3",
+      "verdict": "REFUSED",
+      "kind": "app-navigation-to-foreign-object",
+      "from": {
+        "module": "app.objectstack.hotcrm",
+        "item": "crm_app.navigation.nav_quote"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.cpq",
+        "item": "crm_quote"
+      },
+      "cut": "app.objectstack.hotcrm.cpq declares manifest.navigationContributions: [{ app: 'app.objectstack.hotcrm', group: 'group_sales', items: [ nav_quote ] }] — that is rule R2 and is ALLOWED."
+    },
+    {
+      "rule": "R3",
+      "verdict": "REFUSED",
+      "kind": "app-navigation-to-foreign-object",
+      "from": {
+        "module": "app.objectstack.hotcrm",
+        "item": "crm_app.navigation.nav_contract"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.cpq",
+        "item": "crm_contract"
+      },
+      "cut": "app.objectstack.hotcrm.cpq declares manifest.navigationContributions: [{ app: 'app.objectstack.hotcrm', group: 'group_sales', items: [ nav_contract ] }] — that is rule R2 and is ALLOWED."
+    },
+    {
+      "rule": "R3",
+      "verdict": "REFUSED",
+      "kind": "app-navigation-to-foreign-object",
+      "from": {
+        "module": "app.objectstack.hotcrm",
+        "item": "crm_app.navigation.nav_product"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.cpq",
+        "item": "crm_product"
+      },
+      "cut": "app.objectstack.hotcrm.cpq declares manifest.navigationContributions: [{ app: 'app.objectstack.hotcrm', group: 'group_sales', items: [ nav_product ] }] — that is rule R2 and is ALLOWED."
+    },
+    {
+      "rule": "R3",
+      "verdict": "REFUSED",
+      "kind": "app-navigation-to-foreign-object",
+      "from": {
+        "module": "app.objectstack.hotcrm",
+        "item": "crm_app.navigation.nav_my_tasks"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.activity",
+        "item": "crm_task"
+      },
+      "cut": "app.objectstack.hotcrm.activity declares manifest.navigationContributions: [{ app: 'app.objectstack.hotcrm', group: 'group_work', items: [ nav_my_tasks ] }] — that is rule R2 and is ALLOWED."
+    },
+    {
+      "rule": "R3",
+      "verdict": "REFUSED",
+      "kind": "app-navigation-to-foreign-object",
+      "from": {
+        "module": "app.objectstack.hotcrm",
+        "item": "crm_app.navigation.nav_my_deals"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.sales",
+        "item": "crm_opportunity"
+      },
+      "cut": "app.objectstack.hotcrm.sales declares manifest.navigationContributions: [{ app: 'app.objectstack.hotcrm', group: 'group_work', items: [ nav_my_deals ] }] — that is rule R2 and is ALLOWED."
+    },
+    {
+      "rule": "R3",
+      "verdict": "REFUSED",
+      "kind": "app-navigation-to-foreign-object",
+      "from": {
+        "module": "app.objectstack.hotcrm",
+        "item": "crm_app.navigation.nav_my_leads"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.sales",
+        "item": "crm_lead"
+      },
+      "cut": "app.objectstack.hotcrm.sales declares manifest.navigationContributions: [{ app: 'app.objectstack.hotcrm', group: 'group_work', items: [ nav_my_leads ] }] — that is rule R2 and is ALLOWED."
+    },
+    {
+      "rule": "R3",
+      "verdict": "REFUSED",
+      "kind": "app-navigation-to-foreign-object",
+      "from": {
+        "module": "app.objectstack.hotcrm",
+        "item": "crm_app.navigation.nav_my_cases"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.service",
+        "item": "crm_case"
+      },
+      "cut": "app.objectstack.hotcrm.service declares manifest.navigationContributions: [{ app: 'app.objectstack.hotcrm', group: 'group_work', items: [ nav_my_cases ] }] — that is rule R2 and is ALLOWED."
+    },
+    {
+      "rule": "R3",
+      "verdict": "REFUSED",
+      "kind": "app-navigation-to-foreign-object",
+      "from": {
+        "module": "app.objectstack.hotcrm",
+        "item": "crm_app.navigation.nav_my_calendar"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.activity",
+        "item": "crm_event"
+      },
+      "cut": "app.objectstack.hotcrm.activity declares manifest.navigationContributions: [{ app: 'app.objectstack.hotcrm', group: 'group_work', items: [ nav_my_calendar ] }] — that is rule R2 and is ALLOWED."
+    },
+    {
+      "rule": "R3",
+      "verdict": "REFUSED",
+      "kind": "app-navigation-to-foreign-object",
+      "from": {
+        "module": "app.objectstack.hotcrm",
+        "item": "crm_app.navigation.nav_event"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.activity",
+        "item": "crm_event"
+      },
+      "cut": "app.objectstack.hotcrm.activity declares manifest.navigationContributions: [{ app: 'app.objectstack.hotcrm', group: 'group_activity', items: [ nav_event ] }] — that is rule R2 and is ALLOWED."
+    },
+    {
+      "rule": "R3",
+      "verdict": "REFUSED",
+      "kind": "app-navigation-to-foreign-object",
+      "from": {
+        "module": "app.objectstack.hotcrm",
+        "item": "crm_app.navigation.nav_campaign"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.marketing",
+        "item": "crm_campaign"
+      },
+      "cut": "app.objectstack.hotcrm.marketing declares manifest.navigationContributions: [{ app: 'app.objectstack.hotcrm', group: 'group_marketing', items: [ nav_campaign ] }] — that is rule R2 and is ALLOWED."
+    },
+    {
+      "rule": "R3",
+      "verdict": "REFUSED",
+      "kind": "app-navigation-to-foreign-object",
+      "from": {
+        "module": "app.objectstack.hotcrm",
+        "item": "crm_app.navigation.nav_case"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.service",
+        "item": "crm_case"
+      },
+      "cut": "app.objectstack.hotcrm.service declares manifest.navigationContributions: [{ app: 'app.objectstack.hotcrm', group: 'group_service', items: [ nav_case ] }] — that is rule R2 and is ALLOWED."
+    },
+    {
+      "rule": "R3",
+      "verdict": "REFUSED",
+      "kind": "app-navigation-to-foreign-object",
+      "from": {
+        "module": "app.objectstack.hotcrm",
+        "item": "crm_app.navigation.nav_knowledge"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.service",
+        "item": "crm_knowledge_article"
+      },
+      "cut": "app.objectstack.hotcrm.service declares manifest.navigationContributions: [{ app: 'app.objectstack.hotcrm', group: 'group_service', items: [ nav_knowledge ] }] — that is rule R2 and is ALLOWED."
+    },
+    {
+      "rule": "R3",
+      "verdict": "REFUSED",
+      "kind": "app-navigation-to-foreign-object",
+      "from": {
+        "module": "app.objectstack.hotcrm",
+        "item": "crm_app.navigation.nav_forecast"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm.sales",
+        "item": "crm_forecast"
+      },
+      "cut": "app.objectstack.hotcrm.sales declares manifest.navigationContributions: [{ app: 'app.objectstack.hotcrm', group: 'group_insights', items: [ nav_forecast ] }] — that is rule R2 and is ALLOWED."
+    },
+    {
+      "rule": "R2",
+      "verdict": "ALLOWED",
+      "kind": "navigation-contribution",
+      "state": "planned",
+      "from": {
+        "module": "app.objectstack.hotcrm.sales",
+        "item": "manifest.navigationContributions -> group_sales"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm",
+        "item": "app.objectstack.hotcrm navigation"
+      },
+      "note": "carries 2 node(s) the cut moves out of the app: nav_lead, nav_opportunity",
+      "cut": null
+    },
+    {
+      "rule": "R2",
+      "verdict": "ALLOWED",
+      "kind": "navigation-contribution",
+      "state": "planned",
+      "from": {
+        "module": "app.objectstack.hotcrm.core",
+        "item": "manifest.navigationContributions -> group_sales"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm",
+        "item": "app.objectstack.hotcrm navigation"
+      },
+      "note": "carries 2 node(s) the cut moves out of the app: nav_account, nav_contact",
+      "cut": null
+    },
+    {
+      "rule": "R2",
+      "verdict": "ALLOWED",
+      "kind": "navigation-contribution",
+      "state": "planned",
+      "from": {
+        "module": "app.objectstack.hotcrm.cpq",
+        "item": "manifest.navigationContributions -> group_sales"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm",
+        "item": "app.objectstack.hotcrm navigation"
+      },
+      "note": "carries 3 node(s) the cut moves out of the app: nav_quote, nav_contract, nav_product",
+      "cut": null
+    },
+    {
+      "rule": "R2",
+      "verdict": "ALLOWED",
+      "kind": "navigation-contribution",
+      "state": "planned",
+      "from": {
+        "module": "app.objectstack.hotcrm.activity",
+        "item": "manifest.navigationContributions -> group_work"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm",
+        "item": "app.objectstack.hotcrm navigation"
+      },
+      "note": "carries 2 node(s) the cut moves out of the app: nav_my_tasks, nav_my_calendar",
+      "cut": null
+    },
+    {
+      "rule": "R2",
+      "verdict": "ALLOWED",
+      "kind": "navigation-contribution",
+      "state": "planned",
+      "from": {
+        "module": "app.objectstack.hotcrm.sales",
+        "item": "manifest.navigationContributions -> group_work"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm",
+        "item": "app.objectstack.hotcrm navigation"
+      },
+      "note": "carries 2 node(s) the cut moves out of the app: nav_my_deals, nav_my_leads",
+      "cut": null
+    },
+    {
+      "rule": "R2",
+      "verdict": "ALLOWED",
+      "kind": "navigation-contribution",
+      "state": "planned",
+      "from": {
+        "module": "app.objectstack.hotcrm.service",
+        "item": "manifest.navigationContributions -> group_work"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm",
+        "item": "app.objectstack.hotcrm navigation"
+      },
+      "note": "carries 1 node(s) the cut moves out of the app: nav_my_cases",
+      "cut": null
+    },
+    {
+      "rule": "R2",
+      "verdict": "ALLOWED",
+      "kind": "navigation-contribution",
+      "state": "planned",
+      "from": {
+        "module": "app.objectstack.hotcrm.activity",
+        "item": "manifest.navigationContributions -> group_activity"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm",
+        "item": "app.objectstack.hotcrm navigation"
+      },
+      "note": "carries 1 node(s) the cut moves out of the app: nav_event",
+      "cut": null
+    },
+    {
+      "rule": "R2",
+      "verdict": "ALLOWED",
+      "kind": "navigation-contribution",
+      "state": "planned",
+      "from": {
+        "module": "app.objectstack.hotcrm.marketing",
+        "item": "manifest.navigationContributions -> group_marketing"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm",
+        "item": "app.objectstack.hotcrm navigation"
+      },
+      "note": "carries 1 node(s) the cut moves out of the app: nav_campaign",
+      "cut": null
+    },
+    {
+      "rule": "R2",
+      "verdict": "ALLOWED",
+      "kind": "navigation-contribution",
+      "state": "planned",
+      "from": {
+        "module": "app.objectstack.hotcrm.service",
+        "item": "manifest.navigationContributions -> group_service"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm",
+        "item": "app.objectstack.hotcrm navigation"
+      },
+      "note": "carries 2 node(s) the cut moves out of the app: nav_case, nav_knowledge",
+      "cut": null
+    },
+    {
+      "rule": "R2",
+      "verdict": "ALLOWED",
+      "kind": "navigation-contribution",
+      "state": "planned",
+      "from": {
+        "module": "app.objectstack.hotcrm.sales",
+        "item": "manifest.navigationContributions -> group_insights"
+      },
+      "to": {
+        "module": "app.objectstack.hotcrm",
+        "item": "app.objectstack.hotcrm navigation"
+      },
+      "note": "carries 1 node(s) the cut moves out of the app: nav_forecast",
+      "cut": null
+    }
+  ],
+  "unmeasured_edge_classes": {
+    "summary": [
+      {
+        "item_class": "flow node reads or writes an object in another module",
+        "instances": 9
+      },
+      {
+        "item_class": "action body writes an object in another module",
+        "instances": 19
+      },
+      {
+        "item_class": "dashboard widget binds a dataset in another module",
+        "instances": 3
+      },
+      {
+        "item_class": "page component binds an object in another module",
+        "instances": 5
+      },
+      {
+        "item_class": "permission set grants on objects in several modules",
+        "instances": 6
+      },
+      {
+        "item_class": "translation bundle labels objects in every module",
+        "instances": 1
+      }
+    ],
+    "instances": [
+      {
+        "item_class": "flow node reads or writes an object in another module",
+        "item": "campaign_enrollment",
+        "home_module": "app.objectstack.hotcrm.marketing",
+        "reaches": [
+          "app.objectstack.hotcrm.core",
+          "app.objectstack.hotcrm.sales"
+        ],
+        "disposition": "internal by construction is impossible — a flow spanning modules stays in the module that owns its trigger object; the reads are run-time ObjectQL, not an authoring-time package reference."
+      },
+      {
+        "item_class": "flow node reads or writes an object in another module",
+        "item": "lead_conversion",
+        "home_module": "app.objectstack.hotcrm.sales",
+        "reaches": [
+          "app.objectstack.hotcrm.core"
+        ],
+        "disposition": "internal by construction is impossible — a flow spanning modules stays in the module that owns its trigger object; the reads are run-time ObjectQL, not an authoring-time package reference."
+      },
+      {
+        "item_class": "flow node reads or writes an object in another module",
+        "item": "schedule_followup",
+        "home_module": "app.objectstack.hotcrm.activity",
+        "reaches": [
+          "app.objectstack.hotcrm.sales"
+        ],
+        "disposition": "internal by construction is impossible — a flow spanning modules stays in the module that owns its trigger object; the reads are run-time ObjectQL, not an authoring-time package reference."
+      },
+      {
+        "item_class": "flow node reads or writes an object in another module",
+        "item": "demo_bootstrap",
+        "home_module": "app.objectstack.hotcrm",
+        "reaches": [
+          "app.objectstack.hotcrm.activity",
+          "app.objectstack.hotcrm.core",
+          "app.objectstack.hotcrm.cpq",
+          "app.objectstack.hotcrm.marketing",
+          "app.objectstack.hotcrm.sales",
+          "app.objectstack.hotcrm.service"
+        ],
+        "disposition": "internal by construction is impossible — a flow spanning modules stays in the module that owns its trigger object; the reads are run-time ObjectQL, not an authoring-time package reference."
+      },
+      {
+        "item_class": "flow node reads or writes an object in another module",
+        "item": "quote_generation",
+        "home_module": "app.objectstack.hotcrm.cpq",
+        "reaches": [
+          "app.objectstack.hotcrm.core",
+          "app.objectstack.hotcrm.sales"
+        ],
+        "disposition": "internal by construction is impossible — a flow spanning modules stays in the module that owns its trigger object; the reads are run-time ObjectQL, not an authoring-time package reference."
+      },
+      {
+        "item_class": "flow node reads or writes an object in another module",
+        "item": "contract_renewal",
+        "home_module": "app.objectstack.hotcrm.cpq",
+        "reaches": [
+          "app.objectstack.hotcrm.activity",
+          "app.objectstack.hotcrm.core",
+          "app.objectstack.hotcrm.sales"
+        ],
+        "disposition": "internal by construction is impossible — a flow spanning modules stays in the module that owns its trigger object; the reads are run-time ObjectQL, not an authoring-time package reference."
+      },
+      {
+        "item_class": "flow node reads or writes an object in another module",
+        "item": "opportunity_stagnation",
+        "home_module": "app.objectstack.hotcrm.sales",
+        "reaches": [
+          "app.objectstack.hotcrm.activity"
+        ],
+        "disposition": "internal by construction is impossible — a flow spanning modules stays in the module that owns its trigger object; the reads are run-time ObjectQL, not an authoring-time package reference."
+      },
+      {
+        "item_class": "flow node reads or writes an object in another module",
+        "item": "billing_handoff_closed_won",
+        "home_module": "app.objectstack.hotcrm.sales",
+        "reaches": [
+          "app.objectstack.hotcrm.core",
+          "app.objectstack.hotcrm.cpq"
+        ],
+        "disposition": "internal by construction is impossible — a flow spanning modules stays in the module that owns its trigger object; the reads are run-time ObjectQL, not an authoring-time package reference."
+      },
+      {
+        "item_class": "flow node reads or writes an object in another module",
+        "item": "billing_handoff_contract_activated",
+        "home_module": "app.objectstack.hotcrm.sales",
+        "reaches": [
+          "app.objectstack.hotcrm.core",
+          "app.objectstack.hotcrm.cpq"
+        ],
+        "disposition": "internal by construction is impossible — a flow spanning modules stays in the module that owns its trigger object; the reads are run-time ObjectQL, not an authoring-time package reference."
+      },
+      {
+        "item_class": "action body writes an object in another module",
+        "item": "log_call@crm_account",
+        "home_module": "app.objectstack.hotcrm.core",
+        "reaches": [
+          "app.objectstack.hotcrm.activity",
+          "app.objectstack.hotcrm.sales",
+          "app.objectstack.hotcrm.service"
+        ],
+        "disposition": "ships in the module owning its host object; the write is run-time ObjectQL."
+      },
+      {
+        "item_class": "action body writes an object in another module",
+        "item": "log_meeting@crm_account",
+        "home_module": "app.objectstack.hotcrm.core",
+        "reaches": [
+          "app.objectstack.hotcrm.activity",
+          "app.objectstack.hotcrm.sales",
+          "app.objectstack.hotcrm.service"
+        ],
+        "disposition": "ships in the module owning its host object; the write is run-time ObjectQL."
+      },
+      {
+        "item_class": "action body writes an object in another module",
+        "item": "schedule_meeting@crm_account",
+        "home_module": "app.objectstack.hotcrm.core",
+        "reaches": [
+          "app.objectstack.hotcrm.activity",
+          "app.objectstack.hotcrm.sales",
+          "app.objectstack.hotcrm.service"
+        ],
+        "disposition": "ships in the module owning its host object; the write is run-time ObjectQL."
+      },
+      {
+        "item_class": "action body writes an object in another module",
+        "item": "add_contact_to_campaign@crm_contact",
+        "home_module": "app.objectstack.hotcrm.core",
+        "reaches": [
+          "app.objectstack.hotcrm.marketing"
+        ],
+        "disposition": "ships in the module owning its host object; the write is run-time ObjectQL."
+      },
+      {
+        "item_class": "action body writes an object in another module",
+        "item": "schedule_meeting@crm_case",
+        "home_module": "app.objectstack.hotcrm.service",
+        "reaches": [
+          "app.objectstack.hotcrm.activity",
+          "app.objectstack.hotcrm.core",
+          "app.objectstack.hotcrm.sales"
+        ],
+        "disposition": "ships in the module owning its host object; the write is run-time ObjectQL."
+      },
+      {
+        "item_class": "action body writes an object in another module",
+        "item": "clone_opportunity@crm_opportunity",
+        "home_module": "app.objectstack.hotcrm.sales",
+        "reaches": [
+          "app.objectstack.hotcrm.core",
+          "app.objectstack.hotcrm.marketing"
+        ],
+        "disposition": "ships in the module owning its host object; the write is run-time ObjectQL."
+      },
+      {
+        "item_class": "action body writes an object in another module",
+        "item": "log_call@crm_contact",
+        "home_module": "app.objectstack.hotcrm.core",
+        "reaches": [
+          "app.objectstack.hotcrm.activity",
+          "app.objectstack.hotcrm.sales",
+          "app.objectstack.hotcrm.service"
+        ],
+        "disposition": "ships in the module owning its host object; the write is run-time ObjectQL."
+      },
+      {
+        "item_class": "action body writes an object in another module",
+        "item": "log_meeting@crm_contact",
+        "home_module": "app.objectstack.hotcrm.core",
+        "reaches": [
+          "app.objectstack.hotcrm.activity",
+          "app.objectstack.hotcrm.sales",
+          "app.objectstack.hotcrm.service"
+        ],
+        "disposition": "ships in the module owning its host object; the write is run-time ObjectQL."
+      },
+      {
+        "item_class": "action body writes an object in another module",
+        "item": "schedule_meeting@crm_contact",
+        "home_module": "app.objectstack.hotcrm.core",
+        "reaches": [
+          "app.objectstack.hotcrm.activity",
+          "app.objectstack.hotcrm.sales",
+          "app.objectstack.hotcrm.service"
+        ],
+        "disposition": "ships in the module owning its host object; the write is run-time ObjectQL."
+      },
+      {
+        "item_class": "action body writes an object in another module",
+        "item": "create_campaign@crm_lead",
+        "home_module": "app.objectstack.hotcrm.sales",
+        "reaches": [
+          "app.objectstack.hotcrm.marketing"
+        ],
+        "disposition": "ships in the module owning its host object; the write is run-time ObjectQL."
+      },
+      {
+        "item_class": "action body writes an object in another module",
+        "item": "log_call@crm_lead",
+        "home_module": "app.objectstack.hotcrm.sales",
+        "reaches": [
+          "app.objectstack.hotcrm.activity",
+          "app.objectstack.hotcrm.core",
+          "app.objectstack.hotcrm.service"
+        ],
+        "disposition": "ships in the module owning its host object; the write is run-time ObjectQL."
+      },
+      {
+        "item_class": "action body writes an object in another module",
+        "item": "log_meeting@crm_lead",
+        "home_module": "app.objectstack.hotcrm.sales",
+        "reaches": [
+          "app.objectstack.hotcrm.activity",
+          "app.objectstack.hotcrm.core",
+          "app.objectstack.hotcrm.service"
+        ],
+        "disposition": "ships in the module owning its host object; the write is run-time ObjectQL."
+      },
+      {
+        "item_class": "action body writes an object in another module",
+        "item": "schedule_meeting@crm_lead",
+        "home_module": "app.objectstack.hotcrm.sales",
+        "reaches": [
+          "app.objectstack.hotcrm.activity",
+          "app.objectstack.hotcrm.core",
+          "app.objectstack.hotcrm.service"
+        ],
+        "disposition": "ships in the module owning its host object; the write is run-time ObjectQL."
+      },
+      {
+        "item_class": "action body writes an object in another module",
+        "item": "log_call@crm_case",
+        "home_module": "app.objectstack.hotcrm.service",
+        "reaches": [
+          "app.objectstack.hotcrm.activity",
+          "app.objectstack.hotcrm.core",
+          "app.objectstack.hotcrm.sales"
+        ],
+        "disposition": "ships in the module owning its host object; the write is run-time ObjectQL."
+      },
+      {
+        "item_class": "action body writes an object in another module",
+        "item": "log_meeting@crm_case",
+        "home_module": "app.objectstack.hotcrm.service",
+        "reaches": [
+          "app.objectstack.hotcrm.activity",
+          "app.objectstack.hotcrm.core",
+          "app.objectstack.hotcrm.sales"
+        ],
+        "disposition": "ships in the module owning its host object; the write is run-time ObjectQL."
+      },
+      {
+        "item_class": "action body writes an object in another module",
+        "item": "log_call@crm_opportunity",
+        "home_module": "app.objectstack.hotcrm.sales",
+        "reaches": [
+          "app.objectstack.hotcrm.activity",
+          "app.objectstack.hotcrm.core",
+          "app.objectstack.hotcrm.service"
+        ],
+        "disposition": "ships in the module owning its host object; the write is run-time ObjectQL."
+      },
+      {
+        "item_class": "action body writes an object in another module",
+        "item": "log_meeting@crm_opportunity",
+        "home_module": "app.objectstack.hotcrm.sales",
+        "reaches": [
+          "app.objectstack.hotcrm.activity",
+          "app.objectstack.hotcrm.core",
+          "app.objectstack.hotcrm.service"
+        ],
+        "disposition": "ships in the module owning its host object; the write is run-time ObjectQL."
+      },
+      {
+        "item_class": "action body writes an object in another module",
+        "item": "schedule_meeting@crm_opportunity",
+        "home_module": "app.objectstack.hotcrm.sales",
+        "reaches": [
+          "app.objectstack.hotcrm.activity",
+          "app.objectstack.hotcrm.core",
+          "app.objectstack.hotcrm.service"
+        ],
+        "disposition": "ships in the module owning its host object; the write is run-time ObjectQL."
+      },
+      {
+        "item_class": "action body writes an object in another module",
+        "item": "send_email@crm_contact",
+        "home_module": "app.objectstack.hotcrm.core",
+        "reaches": [
+          "app.objectstack.hotcrm.activity"
+        ],
+        "disposition": "ships in the module owning its host object; the write is run-time ObjectQL."
+      },
+      {
+        "item_class": "dashboard widget binds a dataset in another module",
+        "item": "sales_activity_dashboard",
+        "home_module": "app.objectstack.hotcrm.activity",
+        "reaches": [
+          "app.objectstack.hotcrm.core",
+          "app.objectstack.hotcrm.sales"
+        ],
+        "disposition": "a dashboard reaching several modules moves to the app package; a single-module one ships with its module."
+      },
+      {
+        "item_class": "dashboard widget binds a dataset in another module",
+        "item": "crm_overview_dashboard",
+        "home_module": "app.objectstack.hotcrm",
+        "reaches": [
+          "app.objectstack.hotcrm.cpq",
+          "app.objectstack.hotcrm.sales"
+        ],
+        "disposition": "a dashboard reaching several modules moves to the app package; a single-module one ships with its module."
+      },
+      {
+        "item_class": "dashboard widget binds a dataset in another module",
+        "item": "executive_dashboard",
+        "home_module": "app.objectstack.hotcrm",
+        "reaches": [
+          "app.objectstack.hotcrm.core",
+          "app.objectstack.hotcrm.sales"
+        ],
+        "disposition": "a dashboard reaching several modules moves to the app package; a single-module one ships with its module."
+      },
+      {
+        "item_class": "page component binds an object in another module",
+        "item": "account_detail_page",
+        "home_module": "app.objectstack.hotcrm.core",
+        "reaches": [
+          "app.objectstack.hotcrm.activity",
+          "app.objectstack.hotcrm.sales",
+          "app.objectstack.hotcrm.service"
+        ],
+        "disposition": "ships with the object of its record page; related lists over other modules are the untested part."
+      },
+      {
+        "item_class": "page component binds an object in another module",
+        "item": "case_detail_page",
+        "home_module": "app.objectstack.hotcrm.service",
+        "reaches": [
+          "app.objectstack.hotcrm.activity",
+          "app.objectstack.hotcrm.core",
+          "app.objectstack.hotcrm.sales"
+        ],
+        "disposition": "ships with the object of its record page; related lists over other modules are the untested part."
+      },
+      {
+        "item_class": "page component binds an object in another module",
+        "item": "lead_detail_page",
+        "home_module": "app.objectstack.hotcrm.sales",
+        "reaches": [
+          "app.objectstack.hotcrm.activity",
+          "app.objectstack.hotcrm.core",
+          "app.objectstack.hotcrm.service"
+        ],
+        "disposition": "ships with the object of its record page; related lists over other modules are the untested part."
+      },
+      {
+        "item_class": "page component binds an object in another module",
+        "item": "opportunity_detail_page",
+        "home_module": "app.objectstack.hotcrm.sales",
+        "reaches": [
+          "app.objectstack.hotcrm.activity",
+          "app.objectstack.hotcrm.core",
+          "app.objectstack.hotcrm.cpq",
+          "app.objectstack.hotcrm.marketing",
+          "app.objectstack.hotcrm.service"
+        ],
+        "disposition": "ships with the object of its record page; related lists over other modules are the untested part."
+      },
+      {
+        "item_class": "page component binds an object in another module",
+        "item": "sales_home_page",
+        "home_module": "app.objectstack.hotcrm",
+        "reaches": [
+          "app.objectstack.hotcrm.activity",
+          "app.objectstack.hotcrm.core",
+          "app.objectstack.hotcrm.sales"
+        ],
+        "disposition": "ships with the object of its record page; related lists over other modules are the untested part."
+      },
+      {
+        "item_class": "permission set grants on objects in several modules",
+        "item": "guest_portal",
+        "home_module": "app.objectstack.hotcrm",
+        "reaches": [
+          "app.objectstack.hotcrm.sales",
+          "app.objectstack.hotcrm.service"
+        ],
+        "disposition": "stays whole in the app package — no module owns a role."
+      },
+      {
+        "item_class": "permission set grants on objects in several modules",
+        "item": "marketing_user",
+        "home_module": "app.objectstack.hotcrm",
+        "reaches": [
+          "app.objectstack.hotcrm.core",
+          "app.objectstack.hotcrm.marketing",
+          "app.objectstack.hotcrm.sales",
+          "app.objectstack.hotcrm.service"
+        ],
+        "disposition": "stays whole in the app package — no module owns a role."
+      },
+      {
+        "item_class": "permission set grants on objects in several modules",
+        "item": "sales_manager",
+        "home_module": "app.objectstack.hotcrm",
+        "reaches": [
+          "app.objectstack.hotcrm.activity",
+          "app.objectstack.hotcrm.core",
+          "app.objectstack.hotcrm.cpq",
+          "app.objectstack.hotcrm.marketing",
+          "app.objectstack.hotcrm.sales",
+          "app.objectstack.hotcrm.service"
+        ],
+        "disposition": "stays whole in the app package — no module owns a role."
+      },
+      {
+        "item_class": "permission set grants on objects in several modules",
+        "item": "sales_rep",
+        "home_module": "app.objectstack.hotcrm",
+        "reaches": [
+          "app.objectstack.hotcrm.activity",
+          "app.objectstack.hotcrm.core",
+          "app.objectstack.hotcrm.cpq",
+          "app.objectstack.hotcrm.marketing",
+          "app.objectstack.hotcrm.sales",
+          "app.objectstack.hotcrm.service"
+        ],
+        "disposition": "stays whole in the app package — no module owns a role."
+      },
+      {
+        "item_class": "permission set grants on objects in several modules",
+        "item": "service_agent",
+        "home_module": "app.objectstack.hotcrm",
+        "reaches": [
+          "app.objectstack.hotcrm.activity",
+          "app.objectstack.hotcrm.core",
+          "app.objectstack.hotcrm.cpq",
+          "app.objectstack.hotcrm.sales",
+          "app.objectstack.hotcrm.service"
+        ],
+        "disposition": "stays whole in the app package — no module owns a role."
+      },
+      {
+        "item_class": "permission set grants on objects in several modules",
+        "item": "system_admin",
+        "home_module": "app.objectstack.hotcrm",
+        "reaches": [
+          "app.objectstack.hotcrm.activity",
+          "app.objectstack.hotcrm.core",
+          "app.objectstack.hotcrm.cpq",
+          "app.objectstack.hotcrm.marketing",
+          "app.objectstack.hotcrm.sales",
+          "app.objectstack.hotcrm.service"
+        ],
+        "disposition": "stays whole in the app package — no module owns a role."
+      },
+      {
+        "item_class": "translation bundle labels objects in every module",
+        "item": "bundle",
+        "home_module": "app.objectstack.hotcrm",
+        "reaches": [
+          "app.objectstack.hotcrm.activity",
+          "app.objectstack.hotcrm.core",
+          "app.objectstack.hotcrm.cpq",
+          "app.objectstack.hotcrm.marketing",
+          "app.objectstack.hotcrm.sales",
+          "app.objectstack.hotcrm.service"
+        ],
+        "disposition": "stays whole in the app package."
+      }
+    ]
+  },
+  "files": [
+    {
+      "path": "src/actions/campaign.actions.ts",
+      "kind": "actions",
+      "module": "app.objectstack.hotcrm.marketing",
+      "anchor_object": "crm_campaign",
+      "reason": "authored against crm_campaign",
+      "ratcheted": true,
+      "authored_tokens": 337
+    },
+    {
+      "path": "src/actions/case.actions.ts",
+      "kind": "actions",
+      "module": "app.objectstack.hotcrm.service",
+      "anchor_object": "crm_case",
+      "reason": "authored against crm_case",
+      "ratcheted": true,
+      "authored_tokens": 234
+    },
+    {
+      "path": "src/actions/contact.actions.ts",
+      "kind": "actions",
+      "module": "app.objectstack.hotcrm.core",
+      "anchor_object": "crm_contact",
+      "reason": "authored against crm_contact",
+      "ratcheted": true,
+      "authored_tokens": 1577
+    },
+    {
+      "path": "src/actions/global.actions.ts",
+      "kind": "actions",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "SPLIT REQUIRED — a factory declaring actions on five host objects in four modules",
+      "ratcheted": true,
+      "authored_tokens": 4120
+    },
+    {
+      "path": "src/actions/index.ts",
+      "kind": "barrel",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "registration barrel — one per package after the split",
+      "ratcheted": true,
+      "authored_tokens": 244
+    },
+    {
+      "path": "src/actions/knowledge_article.actions.ts",
+      "kind": "actions",
+      "module": "app.objectstack.hotcrm.service",
+      "anchor_object": "crm_knowledge_article",
+      "reason": "authored against crm_knowledge_article",
+      "ratcheted": true,
+      "authored_tokens": 596
+    },
+    {
+      "path": "src/actions/lead.actions.ts",
+      "kind": "actions",
+      "module": "app.objectstack.hotcrm.sales",
+      "anchor_object": "crm_lead",
+      "reason": "authored against crm_lead",
+      "ratcheted": true,
+      "authored_tokens": 961
+    },
+    {
+      "path": "src/actions/opportunity.actions.ts",
+      "kind": "actions",
+      "module": "app.objectstack.hotcrm.sales",
+      "anchor_object": "crm_opportunity",
+      "reason": "authored against crm_opportunity",
+      "ratcheted": true,
+      "authored_tokens": 1828
+    },
+    {
+      "path": "src/apps/crm.app.ts",
+      "kind": "app",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "the app and its navigation tree — the one consumer unit (ADR-0019 D1)",
+      "ratcheted": true,
+      "authored_tokens": 1238
+    },
+    {
+      "path": "src/apps/index.ts",
+      "kind": "barrel",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "registration barrel — one per package after the split",
+      "ratcheted": true,
+      "authored_tokens": 9
+    },
+    {
+      "path": "src/dashboards/activity.dashboard.ts",
+      "kind": "dashboard",
+      "module": "app.objectstack.hotcrm.activity",
+      "anchor_object": "crm_event",
+      "reason": "authored against crm_event",
+      "ratcheted": true,
+      "authored_tokens": 1758
+    },
+    {
+      "path": "src/dashboards/crm.dashboard.ts",
+      "kind": "dashboard",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "cross-domain: opportunity and product datasets",
+      "ratcheted": true,
+      "authored_tokens": 1274
+    },
+    {
+      "path": "src/dashboards/executive.dashboard.ts",
+      "kind": "dashboard",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "cross-domain: opportunity, account, contact and lead datasets",
+      "ratcheted": true,
+      "authored_tokens": 1115
+    },
+    {
+      "path": "src/dashboards/index.ts",
+      "kind": "barrel",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "registration barrel — one per package after the split",
+      "ratcheted": true,
+      "authored_tokens": 70
+    },
+    {
+      "path": "src/dashboards/sales.dashboard.ts",
+      "kind": "dashboard",
+      "module": "app.objectstack.hotcrm.sales",
+      "anchor_object": "crm_opportunity",
+      "reason": "authored against crm_opportunity",
+      "ratcheted": true,
+      "authored_tokens": 3091
+    },
+    {
+      "path": "src/dashboards/service.dashboard.ts",
+      "kind": "dashboard",
+      "module": "app.objectstack.hotcrm.service",
+      "anchor_object": "crm_case",
+      "reason": "authored against crm_case",
+      "ratcheted": true,
+      "authored_tokens": 2151
+    },
+    {
+      "path": "src/dashboards/shared-widgets.ts",
+      "kind": "source-helper",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "shared source: widget factory used by every dashboard",
+      "ratcheted": true,
+      "authored_tokens": 244
+    },
+    {
+      "path": "src/data/_shared.ts",
+      "kind": "seed",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "shared source: seed helpers",
+      "ratcheted": false,
+      "authored_tokens": 156
+    },
+    {
+      "path": "src/data/catalog.seed.ts",
+      "kind": "seed",
+      "module": "app.objectstack.hotcrm.cpq",
+      "anchor_object": "crm_product",
+      "reason": "authored against crm_product",
+      "ratcheted": false,
+      "authored_tokens": 1229
+    },
+    {
+      "path": "src/data/index.ts",
+      "kind": "barrel",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "registration barrel — one per package after the split",
+      "ratcheted": false,
+      "authored_tokens": 423
+    },
+    {
+      "path": "src/data/marketing.seed.ts",
+      "kind": "seed",
+      "module": "app.objectstack.hotcrm.marketing",
+      "anchor_object": "crm_campaign",
+      "reason": "authored against crm_campaign",
+      "ratcheted": false,
+      "authored_tokens": 2834
+    },
+    {
+      "path": "src/data/revenue.seed.ts",
+      "kind": "seed",
+      "module": "app.objectstack.hotcrm.cpq",
+      "anchor_object": "crm_quote",
+      "reason": "authored against crm_quote",
+      "ratcheted": false,
+      "authored_tokens": 2913
+    },
+    {
+      "path": "src/data/sales.seed.ts",
+      "kind": "seed",
+      "module": "app.objectstack.hotcrm.sales",
+      "anchor_object": "crm_opportunity",
+      "reason": "authored against crm_opportunity",
+      "ratcheted": false,
+      "authored_tokens": 9841
+    },
+    {
+      "path": "src/data/service.seed.ts",
+      "kind": "seed",
+      "module": "app.objectstack.hotcrm.service",
+      "anchor_object": "crm_case",
+      "reason": "authored against crm_case",
+      "ratcheted": false,
+      "authored_tokens": 7388
+    },
+    {
+      "path": "src/datasets/account.dataset.ts",
+      "kind": "dataset",
+      "module": "app.objectstack.hotcrm.core",
+      "anchor_object": "crm_account",
+      "reason": "authored against crm_account",
+      "ratcheted": true,
+      "authored_tokens": 185
+    },
+    {
+      "path": "src/datasets/case.dataset.ts",
+      "kind": "dataset",
+      "module": "app.objectstack.hotcrm.service",
+      "anchor_object": "crm_case",
+      "reason": "authored against crm_case",
+      "ratcheted": true,
+      "authored_tokens": 470
+    },
+    {
+      "path": "src/datasets/contact.dataset.ts",
+      "kind": "dataset",
+      "module": "app.objectstack.hotcrm.core",
+      "anchor_object": "crm_contact",
+      "reason": "authored against crm_contact",
+      "ratcheted": true,
+      "authored_tokens": 83
+    },
+    {
+      "path": "src/datasets/event.dataset.ts",
+      "kind": "dataset",
+      "module": "app.objectstack.hotcrm.activity",
+      "anchor_object": "crm_event",
+      "reason": "authored against crm_event",
+      "ratcheted": true,
+      "authored_tokens": 283
+    },
+    {
+      "path": "src/datasets/forecast.dataset.ts",
+      "kind": "dataset",
+      "module": "app.objectstack.hotcrm.sales",
+      "anchor_object": "crm_forecast",
+      "reason": "authored against crm_forecast",
+      "ratcheted": true,
+      "authored_tokens": 292
+    },
+    {
+      "path": "src/datasets/index.ts",
+      "kind": "barrel",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "registration barrel — one per package after the split",
+      "ratcheted": true,
+      "authored_tokens": 114
+    },
+    {
+      "path": "src/datasets/lead.dataset.ts",
+      "kind": "dataset",
+      "module": "app.objectstack.hotcrm.sales",
+      "anchor_object": "crm_lead",
+      "reason": "authored against crm_lead",
+      "ratcheted": true,
+      "authored_tokens": 172
+    },
+    {
+      "path": "src/datasets/opportunity.dataset.ts",
+      "kind": "dataset",
+      "module": "app.objectstack.hotcrm.sales",
+      "anchor_object": "crm_opportunity",
+      "reason": "authored against crm_opportunity",
+      "ratcheted": true,
+      "authored_tokens": 602
+    },
+    {
+      "path": "src/datasets/product.dataset.ts",
+      "kind": "dataset",
+      "module": "app.objectstack.hotcrm.cpq",
+      "anchor_object": "crm_product",
+      "reason": "authored against crm_product",
+      "ratcheted": true,
+      "authored_tokens": 140
+    },
+    {
+      "path": "src/datasets/task.dataset.ts",
+      "kind": "dataset",
+      "module": "app.objectstack.hotcrm.activity",
+      "anchor_object": "crm_task",
+      "reason": "authored against crm_task",
+      "ratcheted": true,
+      "authored_tokens": 255
+    },
+    {
+      "path": "src/docs/crm_admin.md",
+      "kind": "package-doc",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "whole-app surface — one file covers every module",
+      "ratcheted": false,
+      "authored_tokens": 0
+    },
+    {
+      "path": "src/docs/crm_overview.md",
+      "kind": "package-doc",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "whole-app surface — one file covers every module",
+      "ratcheted": false,
+      "authored_tokens": 0
+    },
+    {
+      "path": "src/docs/crm_sales.md",
+      "kind": "package-doc",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "whole-app surface — one file covers every module",
+      "ratcheted": false,
+      "authored_tokens": 0
+    },
+    {
+      "path": "src/docs/crm_service.md",
+      "kind": "package-doc",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "whole-app surface — one file covers every module",
+      "ratcheted": false,
+      "authored_tokens": 0
+    },
+    {
+      "path": "src/flows/_billing-endpoint.ts",
+      "kind": "source-helper",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "shared source: outbound billing endpoint",
+      "ratcheted": true,
+      "authored_tokens": 142
+    },
+    {
+      "path": "src/flows/billing-handoff.flow.ts",
+      "kind": "flow",
+      "module": "app.objectstack.hotcrm.sales",
+      "anchor_object": "crm_opportunity",
+      "reason": "authored against crm_opportunity",
+      "ratcheted": true,
+      "authored_tokens": 1825
+    },
+    {
+      "path": "src/flows/campaign-completion.flow.ts",
+      "kind": "flow",
+      "module": "app.objectstack.hotcrm.marketing",
+      "anchor_object": "crm_campaign",
+      "reason": "authored against crm_campaign",
+      "ratcheted": true,
+      "authored_tokens": 400
+    },
+    {
+      "path": "src/flows/campaign-enrollment.flow.ts",
+      "kind": "flow",
+      "module": "app.objectstack.hotcrm.marketing",
+      "anchor_object": "crm_campaign",
+      "reason": "authored against crm_campaign",
+      "ratcheted": true,
+      "authored_tokens": 1838
+    },
+    {
+      "path": "src/flows/case-actions.flow.ts",
+      "kind": "flow",
+      "module": "app.objectstack.hotcrm.service",
+      "anchor_object": "crm_case",
+      "reason": "authored against crm_case",
+      "ratcheted": true,
+      "authored_tokens": 782
+    },
+    {
+      "path": "src/flows/case-csat-followup.flow.ts",
+      "kind": "flow",
+      "module": "app.objectstack.hotcrm.service",
+      "anchor_object": "crm_case",
+      "reason": "authored against crm_case",
+      "ratcheted": true,
+      "authored_tokens": 413
+    },
+    {
+      "path": "src/flows/case-escalation.flow.ts",
+      "kind": "flow",
+      "module": "app.objectstack.hotcrm.service",
+      "anchor_object": "crm_case",
+      "reason": "authored against crm_case",
+      "ratcheted": true,
+      "authored_tokens": 718
+    },
+    {
+      "path": "src/flows/case-sla-monitor.flow.ts",
+      "kind": "flow",
+      "module": "app.objectstack.hotcrm.service",
+      "anchor_object": "crm_case",
+      "reason": "authored against crm_case",
+      "ratcheted": true,
+      "authored_tokens": 764
+    },
+    {
+      "path": "src/flows/contact-welcome.flow.ts",
+      "kind": "flow",
+      "module": "app.objectstack.hotcrm.core",
+      "anchor_object": "crm_contact",
+      "reason": "authored against crm_contact",
+      "ratcheted": true,
+      "authored_tokens": 349
+    },
+    {
+      "path": "src/flows/contract-expiration.flow.ts",
+      "kind": "flow",
+      "module": "app.objectstack.hotcrm.cpq",
+      "anchor_object": "crm_contract",
+      "reason": "authored against crm_contract",
+      "ratcheted": true,
+      "authored_tokens": 564
+    },
+    {
+      "path": "src/flows/contract-renewal.flow.ts",
+      "kind": "flow",
+      "module": "app.objectstack.hotcrm.cpq",
+      "anchor_object": "crm_contract",
+      "reason": "authored against crm_contract",
+      "ratcheted": true,
+      "authored_tokens": 1637
+    },
+    {
+      "path": "src/flows/demo-bootstrap.flow.ts",
+      "kind": "flow",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "demo sweep spanning twelve objects in every module",
+      "ratcheted": true,
+      "authored_tokens": 860
+    },
+    {
+      "path": "src/flows/forecast-snapshot.flow.ts",
+      "kind": "flow",
+      "module": "app.objectstack.hotcrm.sales",
+      "anchor_object": "crm_forecast",
+      "reason": "authored against crm_forecast",
+      "ratcheted": true,
+      "authored_tokens": 1858
+    },
+    {
+      "path": "src/flows/index.ts",
+      "kind": "barrel",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "registration barrel — one per package after the split",
+      "ratcheted": true,
+      "authored_tokens": 960
+    },
+    {
+      "path": "src/flows/lead-assignment.flow.ts",
+      "kind": "flow",
+      "module": "app.objectstack.hotcrm.sales",
+      "anchor_object": "crm_lead",
+      "reason": "authored against crm_lead",
+      "ratcheted": true,
+      "authored_tokens": 700
+    },
+    {
+      "path": "src/flows/lead-conversion.flow.ts",
+      "kind": "flow",
+      "module": "app.objectstack.hotcrm.sales",
+      "anchor_object": "crm_lead",
+      "reason": "authored against crm_lead",
+      "ratcheted": true,
+      "authored_tokens": 2394
+    },
+    {
+      "path": "src/flows/opportunity-approval.flow.ts",
+      "kind": "flow",
+      "module": "app.objectstack.hotcrm.sales",
+      "anchor_object": "crm_opportunity",
+      "reason": "authored against crm_opportunity",
+      "ratcheted": true,
+      "authored_tokens": 1400
+    },
+    {
+      "path": "src/flows/opportunity-stagnation.flow.ts",
+      "kind": "flow",
+      "module": "app.objectstack.hotcrm.sales",
+      "anchor_object": "crm_opportunity",
+      "reason": "authored against crm_opportunity",
+      "ratcheted": true,
+      "authored_tokens": 926
+    },
+    {
+      "path": "src/flows/opportunity-won-alert.flow.ts",
+      "kind": "flow",
+      "module": "app.objectstack.hotcrm.sales",
+      "anchor_object": "crm_opportunity",
+      "reason": "authored against crm_opportunity",
+      "ratcheted": true,
+      "authored_tokens": 402
+    },
+    {
+      "path": "src/flows/quote-expiration.flow.ts",
+      "kind": "flow",
+      "module": "app.objectstack.hotcrm.cpq",
+      "anchor_object": "crm_quote",
+      "reason": "authored against crm_quote",
+      "ratcheted": true,
+      "authored_tokens": 395
+    },
+    {
+      "path": "src/flows/quote-generation.flow.ts",
+      "kind": "flow",
+      "module": "app.objectstack.hotcrm.cpq",
+      "anchor_object": "crm_quote",
+      "reason": "authored against crm_quote",
+      "ratcheted": true,
+      "authored_tokens": 1000
+    },
+    {
+      "path": "src/flows/schedule-followup.flow.ts",
+      "kind": "flow",
+      "module": "app.objectstack.hotcrm.activity",
+      "anchor_object": "crm_task",
+      "reason": "authored against crm_task",
+      "ratcheted": true,
+      "authored_tokens": 800
+    },
+    {
+      "path": "src/flows/task-due-reminder.flow.ts",
+      "kind": "flow",
+      "module": "app.objectstack.hotcrm.activity",
+      "anchor_object": "crm_task",
+      "reason": "authored against crm_task",
+      "ratcheted": true,
+      "authored_tokens": 582
+    },
+    {
+      "path": "src/flows/task-urgent-alert.flow.ts",
+      "kind": "flow",
+      "module": "app.objectstack.hotcrm.activity",
+      "anchor_object": "crm_task",
+      "reason": "authored against crm_task",
+      "ratcheted": true,
+      "authored_tokens": 338
+    },
+    {
+      "path": "src/hooks/index.ts",
+      "kind": "barrel",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "registration barrel — one per package after the split",
+      "ratcheted": true,
+      "authored_tokens": 359
+    },
+    {
+      "path": "src/interfaces/index.ts",
+      "kind": "barrel",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "shared TypeScript types",
+      "ratcheted": true,
+      "authored_tokens": 0
+    },
+    {
+      "path": "src/mappings/_shared.ts",
+      "kind": "source-helper",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "shared source: import-mapping helpers",
+      "ratcheted": true,
+      "authored_tokens": 326
+    },
+    {
+      "path": "src/mappings/account_import.mapping.ts",
+      "kind": "mapping",
+      "module": "app.objectstack.hotcrm.core",
+      "anchor_object": "crm_account",
+      "reason": "authored against crm_account",
+      "ratcheted": true,
+      "authored_tokens": 306
+    },
+    {
+      "path": "src/mappings/contact_import.mapping.ts",
+      "kind": "mapping",
+      "module": "app.objectstack.hotcrm.core",
+      "anchor_object": "crm_contact",
+      "reason": "authored against crm_contact",
+      "ratcheted": true,
+      "authored_tokens": 345
+    },
+    {
+      "path": "src/mappings/index.ts",
+      "kind": "barrel",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "registration barrel — one per package after the split",
+      "ratcheted": true,
+      "authored_tokens": 47
+    },
+    {
+      "path": "src/mappings/lead_import.mapping.ts",
+      "kind": "mapping",
+      "module": "app.objectstack.hotcrm.sales",
+      "anchor_object": "crm_lead",
+      "reason": "authored against crm_lead",
+      "ratcheted": true,
+      "authored_tokens": 417
+    },
+    {
+      "path": "src/objects/_case-assignment.ts",
+      "kind": "source-helper",
+      "module": "app.objectstack.hotcrm.service",
+      "anchor_object": "crm_case",
+      "reason": "authored against crm_case",
+      "ratcheted": true,
+      "authored_tokens": 1167
+    },
+    {
+      "path": "src/objects/_case-sla.ts",
+      "kind": "source-helper",
+      "module": "app.objectstack.hotcrm.service",
+      "anchor_object": "crm_case",
+      "reason": "authored against crm_case",
+      "ratcheted": true,
+      "authored_tokens": 241
+    },
+    {
+      "path": "src/objects/_hook-api.ts",
+      "kind": "source-helper",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "shared source: the ctx.api cast imported by all 17 hook files",
+      "ratcheted": true,
+      "authored_tokens": 176
+    },
+    {
+      "path": "src/objects/_line-item-price-fill.ts",
+      "kind": "source-helper",
+      "module": "app.objectstack.hotcrm.cpq",
+      "anchor_object": "crm_opportunity_line_item",
+      "reason": "authored against crm_opportunity_line_item",
+      "ratcheted": true,
+      "authored_tokens": 280
+    },
+    {
+      "path": "src/objects/_picklists.ts",
+      "kind": "source-helper",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "shared source: picklist vocabulary, imported across five modules",
+      "ratcheted": true,
+      "authored_tokens": 1247
+    },
+    {
+      "path": "src/objects/_refusal.ts",
+      "kind": "source-helper",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "shared source: the hook refusal envelope",
+      "ratcheted": true,
+      "authored_tokens": 122
+    },
+    {
+      "path": "src/objects/_territory.ts",
+      "kind": "source-helper",
+      "module": "app.objectstack.hotcrm.core",
+      "anchor_object": "crm_account",
+      "reason": "authored against crm_account",
+      "ratcheted": true,
+      "authored_tokens": 504
+    },
+    {
+      "path": "src/objects/_thresholds.ts",
+      "kind": "source-helper",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "shared source: numeric thresholds, imported by sales and cpq",
+      "ratcheted": true,
+      "authored_tokens": 33
+    },
+    {
+      "path": "src/objects/account.hook.ts",
+      "kind": "hook",
+      "module": "app.objectstack.hotcrm.core",
+      "anchor_object": "crm_account",
+      "reason": "authored against crm_account",
+      "ratcheted": true,
+      "authored_tokens": 963
+    },
+    {
+      "path": "src/objects/account.object.ts",
+      "kind": "object",
+      "module": "app.objectstack.hotcrm.core",
+      "anchor_object": "crm_account",
+      "reason": "authored against crm_account",
+      "ratcheted": true,
+      "authored_tokens": 1632
+    },
+    {
+      "path": "src/objects/article_feedback.hook.ts",
+      "kind": "hook",
+      "module": "app.objectstack.hotcrm.service",
+      "anchor_object": "crm_article_feedback",
+      "reason": "authored against crm_article_feedback",
+      "ratcheted": true,
+      "authored_tokens": 365
+    },
+    {
+      "path": "src/objects/article_feedback.object.ts",
+      "kind": "object",
+      "module": "app.objectstack.hotcrm.service",
+      "anchor_object": "crm_article_feedback",
+      "reason": "authored against crm_article_feedback",
+      "ratcheted": true,
+      "authored_tokens": 472
+    },
+    {
+      "path": "src/objects/campaign.hook.ts",
+      "kind": "hook",
+      "module": "app.objectstack.hotcrm.marketing",
+      "anchor_object": "crm_campaign",
+      "reason": "authored against crm_campaign",
+      "ratcheted": true,
+      "authored_tokens": 2346
+    },
+    {
+      "path": "src/objects/campaign.object.ts",
+      "kind": "object",
+      "module": "app.objectstack.hotcrm.marketing",
+      "anchor_object": "crm_campaign",
+      "reason": "authored against crm_campaign",
+      "ratcheted": true,
+      "authored_tokens": 1598
+    },
+    {
+      "path": "src/objects/campaign_member.hook.ts",
+      "kind": "hook",
+      "module": "app.objectstack.hotcrm.marketing",
+      "anchor_object": "crm_campaign_member",
+      "reason": "authored against crm_campaign_member",
+      "ratcheted": true,
+      "authored_tokens": 1278
+    },
+    {
+      "path": "src/objects/campaign_member.object.ts",
+      "kind": "object",
+      "module": "app.objectstack.hotcrm.marketing",
+      "anchor_object": "crm_campaign_member",
+      "reason": "authored against crm_campaign_member",
+      "ratcheted": true,
+      "authored_tokens": 627
+    },
+    {
+      "path": "src/objects/case.hook.ts",
+      "kind": "hook",
+      "module": "app.objectstack.hotcrm.service",
+      "anchor_object": "crm_case",
+      "reason": "authored against crm_case",
+      "ratcheted": true,
+      "authored_tokens": 1883
+    },
+    {
+      "path": "src/objects/case.object.ts",
+      "kind": "object",
+      "module": "app.objectstack.hotcrm.service",
+      "anchor_object": "crm_case",
+      "reason": "authored against crm_case",
+      "ratcheted": true,
+      "authored_tokens": 1942
+    },
+    {
+      "path": "src/objects/contact.hook.ts",
+      "kind": "hook",
+      "module": "app.objectstack.hotcrm.core",
+      "anchor_object": "crm_contact",
+      "reason": "authored against crm_contact",
+      "ratcheted": true,
+      "authored_tokens": 873
+    },
+    {
+      "path": "src/objects/contact.object.ts",
+      "kind": "object",
+      "module": "app.objectstack.hotcrm.core",
+      "anchor_object": "crm_contact",
+      "reason": "authored against crm_contact",
+      "ratcheted": true,
+      "authored_tokens": 1186
+    },
+    {
+      "path": "src/objects/contract.hook.ts",
+      "kind": "hook",
+      "module": "app.objectstack.hotcrm.cpq",
+      "anchor_object": "crm_contract",
+      "reason": "authored against crm_contract",
+      "ratcheted": true,
+      "authored_tokens": 1017
+    },
+    {
+      "path": "src/objects/contract.object.ts",
+      "kind": "object",
+      "module": "app.objectstack.hotcrm.cpq",
+      "anchor_object": "crm_contract",
+      "reason": "authored against crm_contract",
+      "ratcheted": true,
+      "authored_tokens": 1452
+    },
+    {
+      "path": "src/objects/event.hook.ts",
+      "kind": "hook",
+      "module": "app.objectstack.hotcrm.activity",
+      "anchor_object": "crm_event",
+      "reason": "authored against crm_event",
+      "ratcheted": true,
+      "authored_tokens": 1734
+    },
+    {
+      "path": "src/objects/event.object.ts",
+      "kind": "object",
+      "module": "app.objectstack.hotcrm.activity",
+      "anchor_object": "crm_event",
+      "reason": "authored against crm_event",
+      "ratcheted": true,
+      "authored_tokens": 1137
+    },
+    {
+      "path": "src/objects/event_attendee.object.ts",
+      "kind": "object",
+      "module": "app.objectstack.hotcrm.activity",
+      "anchor_object": "crm_event_attendee",
+      "reason": "authored against crm_event_attendee",
+      "ratcheted": true,
+      "authored_tokens": 1224
+    },
+    {
+      "path": "src/objects/forecast.hook.ts",
+      "kind": "hook",
+      "module": "app.objectstack.hotcrm.sales",
+      "anchor_object": "crm_forecast",
+      "reason": "authored against crm_forecast",
+      "ratcheted": true,
+      "authored_tokens": 696
+    },
+    {
+      "path": "src/objects/forecast.object.ts",
+      "kind": "object",
+      "module": "app.objectstack.hotcrm.sales",
+      "anchor_object": "crm_forecast",
+      "reason": "authored against crm_forecast",
+      "ratcheted": true,
+      "authored_tokens": 1920
+    },
+    {
+      "path": "src/objects/index.ts",
+      "kind": "barrel",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "registration barrel — one per package after the split",
+      "ratcheted": true,
+      "authored_tokens": 221
+    },
+    {
+      "path": "src/objects/knowledge_article.hook.ts",
+      "kind": "hook",
+      "module": "app.objectstack.hotcrm.service",
+      "anchor_object": "crm_knowledge_article",
+      "reason": "authored against crm_knowledge_article",
+      "ratcheted": true,
+      "authored_tokens": 226
+    },
+    {
+      "path": "src/objects/knowledge_article.object.ts",
+      "kind": "object",
+      "module": "app.objectstack.hotcrm.service",
+      "anchor_object": "crm_knowledge_article",
+      "reason": "authored against crm_knowledge_article",
+      "ratcheted": true,
+      "authored_tokens": 1608
+    },
+    {
+      "path": "src/objects/lead.hook.ts",
+      "kind": "hook",
+      "module": "app.objectstack.hotcrm.sales",
+      "anchor_object": "crm_lead",
+      "reason": "authored against crm_lead",
+      "ratcheted": true,
+      "authored_tokens": 2745
+    },
+    {
+      "path": "src/objects/lead.object.ts",
+      "kind": "object",
+      "module": "app.objectstack.hotcrm.sales",
+      "anchor_object": "crm_lead",
+      "reason": "authored against crm_lead",
+      "ratcheted": true,
+      "authored_tokens": 2419
+    },
+    {
+      "path": "src/objects/opportunity.hook.ts",
+      "kind": "hook",
+      "module": "app.objectstack.hotcrm.sales",
+      "anchor_object": "crm_opportunity",
+      "reason": "authored against crm_opportunity",
+      "ratcheted": true,
+      "authored_tokens": 1575
+    },
+    {
+      "path": "src/objects/opportunity.object.ts",
+      "kind": "object",
+      "module": "app.objectstack.hotcrm.sales",
+      "anchor_object": "crm_opportunity",
+      "reason": "authored against crm_opportunity",
+      "ratcheted": true,
+      "authored_tokens": 2105
+    },
+    {
+      "path": "src/objects/opportunity_line_item.hook.ts",
+      "kind": "hook",
+      "module": "app.objectstack.hotcrm.cpq",
+      "anchor_object": "crm_opportunity_line_item",
+      "reason": "authored against crm_opportunity_line_item",
+      "ratcheted": true,
+      "authored_tokens": 546
+    },
+    {
+      "path": "src/objects/opportunity_line_item.object.ts",
+      "kind": "object",
+      "module": "app.objectstack.hotcrm.cpq",
+      "anchor_object": "crm_opportunity_line_item",
+      "reason": "authored against crm_opportunity_line_item",
+      "ratcheted": true,
+      "authored_tokens": 536
+    },
+    {
+      "path": "src/objects/product.hook.ts",
+      "kind": "hook",
+      "module": "app.objectstack.hotcrm.cpq",
+      "anchor_object": "crm_product",
+      "reason": "authored against crm_product",
+      "ratcheted": true,
+      "authored_tokens": 576
+    },
+    {
+      "path": "src/objects/product.object.ts",
+      "kind": "object",
+      "module": "app.objectstack.hotcrm.cpq",
+      "anchor_object": "crm_product",
+      "reason": "authored against crm_product",
+      "ratcheted": true,
+      "authored_tokens": 988
+    },
+    {
+      "path": "src/objects/quote.hook.ts",
+      "kind": "hook",
+      "module": "app.objectstack.hotcrm.cpq",
+      "anchor_object": "crm_quote",
+      "reason": "authored against crm_quote",
+      "ratcheted": true,
+      "authored_tokens": 1644
+    },
+    {
+      "path": "src/objects/quote.object.ts",
+      "kind": "object",
+      "module": "app.objectstack.hotcrm.cpq",
+      "anchor_object": "crm_quote",
+      "reason": "authored against crm_quote",
+      "ratcheted": true,
+      "authored_tokens": 1502
+    },
+    {
+      "path": "src/objects/quote_line_item.hook.ts",
+      "kind": "hook",
+      "module": "app.objectstack.hotcrm.cpq",
+      "anchor_object": "crm_quote_line_item",
+      "reason": "authored against crm_quote_line_item",
+      "ratcheted": true,
+      "authored_tokens": 676
+    },
+    {
+      "path": "src/objects/quote_line_item.object.ts",
+      "kind": "object",
+      "module": "app.objectstack.hotcrm.cpq",
+      "anchor_object": "crm_quote_line_item",
+      "reason": "authored against crm_quote_line_item",
+      "ratcheted": true,
+      "authored_tokens": 654
+    },
+    {
+      "path": "src/objects/task.hook.ts",
+      "kind": "hook",
+      "module": "app.objectstack.hotcrm.activity",
+      "anchor_object": "crm_task",
+      "reason": "authored against crm_task",
+      "ratcheted": true,
+      "authored_tokens": 2652
+    },
+    {
+      "path": "src/objects/task.object.ts",
+      "kind": "object",
+      "module": "app.objectstack.hotcrm.activity",
+      "anchor_object": "crm_task",
+      "reason": "authored against crm_task",
+      "ratcheted": true,
+      "authored_tokens": 1664
+    },
+    {
+      "path": "src/pages/account_detail.page.ts",
+      "kind": "page",
+      "module": "app.objectstack.hotcrm.core",
+      "anchor_object": "crm_account",
+      "reason": "authored against crm_account",
+      "ratcheted": true,
+      "authored_tokens": 239
+    },
+    {
+      "path": "src/pages/account_workbench.page.ts",
+      "kind": "page",
+      "module": "app.objectstack.hotcrm.core",
+      "anchor_object": "crm_account",
+      "reason": "authored against crm_account",
+      "ratcheted": true,
+      "authored_tokens": 233
+    },
+    {
+      "path": "src/pages/app_launcher.page.ts",
+      "kind": "page",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "global launcher, no object binding",
+      "ratcheted": true,
+      "authored_tokens": 310
+    },
+    {
+      "path": "src/pages/case_detail.page.ts",
+      "kind": "page",
+      "module": "app.objectstack.hotcrm.service",
+      "anchor_object": "crm_case",
+      "reason": "authored against crm_case",
+      "ratcheted": true,
+      "authored_tokens": 1531
+    },
+    {
+      "path": "src/pages/home.page.ts",
+      "kind": "page",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "landing page; its widgets read lead and opportunity data",
+      "ratcheted": true,
+      "authored_tokens": 1460
+    },
+    {
+      "path": "src/pages/index.ts",
+      "kind": "barrel",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "registration barrel — one per package after the split",
+      "ratcheted": true,
+      "authored_tokens": 112
+    },
+    {
+      "path": "src/pages/lead_detail.page.ts",
+      "kind": "page",
+      "module": "app.objectstack.hotcrm.sales",
+      "anchor_object": "crm_lead",
+      "reason": "authored against crm_lead",
+      "ratcheted": true,
+      "authored_tokens": 2191
+    },
+    {
+      "path": "src/pages/opportunity_detail.page.ts",
+      "kind": "page",
+      "module": "app.objectstack.hotcrm.sales",
+      "anchor_object": "crm_opportunity",
+      "reason": "authored against crm_opportunity",
+      "ratcheted": true,
+      "authored_tokens": 1915
+    },
+    {
+      "path": "src/pages/utility_bar.page.ts",
+      "kind": "page",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "global utility bar, no object binding",
+      "ratcheted": true,
+      "authored_tokens": 279
+    },
+    {
+      "path": "src/profiles/guest-portal.profile.ts",
+      "kind": "profile",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "whole-app surface — one file covers every module",
+      "ratcheted": true,
+      "authored_tokens": 161
+    },
+    {
+      "path": "src/profiles/index.ts",
+      "kind": "barrel",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "whole-app surface — one file covers every module",
+      "ratcheted": true,
+      "authored_tokens": 92
+    },
+    {
+      "path": "src/profiles/marketing-user.profile.ts",
+      "kind": "profile",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "whole-app surface — one file covers every module",
+      "ratcheted": true,
+      "authored_tokens": 655
+    },
+    {
+      "path": "src/profiles/sales-manager.profile.ts",
+      "kind": "profile",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "whole-app surface — one file covers every module",
+      "ratcheted": true,
+      "authored_tokens": 949
+    },
+    {
+      "path": "src/profiles/sales-rep.profile.ts",
+      "kind": "profile",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "whole-app surface — one file covers every module",
+      "ratcheted": true,
+      "authored_tokens": 924
+    },
+    {
+      "path": "src/profiles/service-agent.profile.ts",
+      "kind": "profile",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "whole-app surface — one file covers every module",
+      "ratcheted": true,
+      "authored_tokens": 562
+    },
+    {
+      "path": "src/profiles/system-admin.profile.ts",
+      "kind": "profile",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "whole-app surface — one file covers every module",
+      "ratcheted": true,
+      "authored_tokens": 852
+    },
+    {
+      "path": "src/profiles/tenant-admin.profile.ts",
+      "kind": "profile",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "whole-app surface — one file covers every module",
+      "ratcheted": true,
+      "authored_tokens": 84
+    },
+    {
+      "path": "src/reports/account.report.ts",
+      "kind": "report",
+      "module": "app.objectstack.hotcrm.core",
+      "anchor_object": "crm_account",
+      "reason": "authored against crm_account",
+      "ratcheted": true,
+      "authored_tokens": 108
+    },
+    {
+      "path": "src/reports/case.report.ts",
+      "kind": "report",
+      "module": "app.objectstack.hotcrm.service",
+      "anchor_object": "crm_case",
+      "reason": "authored against crm_case",
+      "ratcheted": true,
+      "authored_tokens": 320
+    },
+    {
+      "path": "src/reports/churn.report.ts",
+      "kind": "report",
+      "module": "app.objectstack.hotcrm.core",
+      "anchor_object": "crm_account",
+      "reason": "authored against crm_account",
+      "ratcheted": true,
+      "authored_tokens": 517
+    },
+    {
+      "path": "src/reports/index.ts",
+      "kind": "barrel",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "registration barrel — one per package after the split",
+      "ratcheted": true,
+      "authored_tokens": 122
+    },
+    {
+      "path": "src/reports/lead.report.ts",
+      "kind": "report",
+      "module": "app.objectstack.hotcrm.sales",
+      "anchor_object": "crm_lead",
+      "reason": "authored against crm_lead",
+      "ratcheted": true,
+      "authored_tokens": 116
+    },
+    {
+      "path": "src/reports/opportunity.report.ts",
+      "kind": "report",
+      "module": "app.objectstack.hotcrm.sales",
+      "anchor_object": "crm_opportunity",
+      "reason": "authored against crm_opportunity",
+      "ratcheted": true,
+      "authored_tokens": 494
+    },
+    {
+      "path": "src/sharing/account.sharing.ts",
+      "kind": "sharing",
+      "module": "app.objectstack.hotcrm.core",
+      "anchor_object": "crm_account",
+      "reason": "authored against crm_account",
+      "ratcheted": true,
+      "authored_tokens": 264
+    },
+    {
+      "path": "src/sharing/campaign.sharing.ts",
+      "kind": "sharing",
+      "module": "app.objectstack.hotcrm.marketing",
+      "anchor_object": "crm_campaign",
+      "reason": "authored against crm_campaign",
+      "ratcheted": true,
+      "authored_tokens": 203
+    },
+    {
+      "path": "src/sharing/case.sharing.ts",
+      "kind": "sharing",
+      "module": "app.objectstack.hotcrm.service",
+      "anchor_object": "crm_case",
+      "reason": "authored against crm_case",
+      "ratcheted": true,
+      "authored_tokens": 281
+    },
+    {
+      "path": "src/sharing/demo-staffing.ts",
+      "kind": "sharing",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "deliberately unregistered (#640)",
+      "ratcheted": true,
+      "authored_tokens": 320
+    },
+    {
+      "path": "src/sharing/index.ts",
+      "kind": "barrel",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "registration barrel — one per package after the split",
+      "ratcheted": true,
+      "authored_tokens": 106
+    },
+    {
+      "path": "src/sharing/opportunity.sharing.ts",
+      "kind": "sharing",
+      "module": "app.objectstack.hotcrm.sales",
+      "anchor_object": "crm_opportunity",
+      "reason": "authored against crm_opportunity",
+      "ratcheted": true,
+      "authored_tokens": 222
+    },
+    {
+      "path": "src/sharing/positions.ts",
+      "kind": "sharing",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "the position hierarchy every sharing rule resolves against",
+      "ratcheted": true,
+      "authored_tokens": 187
+    },
+    {
+      "path": "src/skills/case-triage.skill.ts",
+      "kind": "skill",
+      "module": "app.objectstack.hotcrm.service",
+      "anchor_object": "crm_case",
+      "reason": "authored against crm_case",
+      "ratcheted": true,
+      "authored_tokens": 392
+    },
+    {
+      "path": "src/skills/customer-360.skill.ts",
+      "kind": "skill",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "cross-domain skill: account, contact, case, opportunity, article",
+      "ratcheted": true,
+      "authored_tokens": 460
+    },
+    {
+      "path": "src/skills/email-drafting.skill.ts",
+      "kind": "skill",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "no object binding",
+      "ratcheted": true,
+      "authored_tokens": 330
+    },
+    {
+      "path": "src/skills/index.ts",
+      "kind": "barrel",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "registration barrel — one per package after the split",
+      "ratcheted": true,
+      "authored_tokens": 237
+    },
+    {
+      "path": "src/skills/lead-qualification.skill.ts",
+      "kind": "skill",
+      "module": "app.objectstack.hotcrm.sales",
+      "anchor_object": "crm_lead",
+      "reason": "authored against crm_lead",
+      "ratcheted": true,
+      "authored_tokens": 382
+    },
+    {
+      "path": "src/skills/live-data.skill.ts",
+      "kind": "skill",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "no object binding",
+      "ratcheted": true,
+      "authored_tokens": 320
+    },
+    {
+      "path": "src/skills/revenue-forecasting.skill.ts",
+      "kind": "skill",
+      "module": "app.objectstack.hotcrm.sales",
+      "anchor_object": "crm_opportunity",
+      "reason": "authored against crm_opportunity",
+      "ratcheted": true,
+      "authored_tokens": 441
+    },
+    {
+      "path": "src/translations/crm.translation.ts",
+      "kind": "translation",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "whole-app surface — one file covers every module",
+      "ratcheted": false,
+      "authored_tokens": 75
+    },
+    {
+      "path": "src/translations/en.ts",
+      "kind": "source-helper",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "whole-app surface — one file covers every module",
+      "ratcheted": false,
+      "authored_tokens": 15919
+    },
+    {
+      "path": "src/translations/es-ES.ts",
+      "kind": "source-helper",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "whole-app surface — one file covers every module",
+      "ratcheted": false,
+      "authored_tokens": 17734
+    },
+    {
+      "path": "src/translations/index.ts",
+      "kind": "barrel",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "whole-app surface — one file covers every module",
+      "ratcheted": false,
+      "authored_tokens": 13
+    },
+    {
+      "path": "src/translations/ja-JP.ts",
+      "kind": "source-helper",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "whole-app surface — one file covers every module",
+      "ratcheted": false,
+      "authored_tokens": 13133
+    },
+    {
+      "path": "src/translations/zh-CN.ts",
+      "kind": "source-helper",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "whole-app surface — one file covers every module",
+      "ratcheted": false,
+      "authored_tokens": 12699
+    },
+    {
+      "path": "src/views/account.view.ts",
+      "kind": "view",
+      "module": "app.objectstack.hotcrm.core",
+      "anchor_object": "crm_account",
+      "reason": "authored against crm_account",
+      "ratcheted": true,
+      "authored_tokens": 1441
+    },
+    {
+      "path": "src/views/campaign.view.ts",
+      "kind": "view",
+      "module": "app.objectstack.hotcrm.marketing",
+      "anchor_object": "crm_campaign",
+      "reason": "authored against crm_campaign",
+      "ratcheted": true,
+      "authored_tokens": 815
+    },
+    {
+      "path": "src/views/case.view.ts",
+      "kind": "view",
+      "module": "app.objectstack.hotcrm.service",
+      "anchor_object": "crm_case",
+      "reason": "authored against crm_case",
+      "ratcheted": true,
+      "authored_tokens": 1661
+    },
+    {
+      "path": "src/views/contact.view.ts",
+      "kind": "view",
+      "module": "app.objectstack.hotcrm.core",
+      "anchor_object": "crm_contact",
+      "reason": "authored against crm_contact",
+      "ratcheted": true,
+      "authored_tokens": 695
+    },
+    {
+      "path": "src/views/contract.view.ts",
+      "kind": "view",
+      "module": "app.objectstack.hotcrm.cpq",
+      "anchor_object": "crm_contract",
+      "reason": "authored against crm_contract",
+      "ratcheted": true,
+      "authored_tokens": 805
+    },
+    {
+      "path": "src/views/event.view.ts",
+      "kind": "view",
+      "module": "app.objectstack.hotcrm.activity",
+      "anchor_object": "crm_event",
+      "reason": "authored against crm_event",
+      "ratcheted": true,
+      "authored_tokens": 1076
+    },
+    {
+      "path": "src/views/event_attendee.view.ts",
+      "kind": "view",
+      "module": "app.objectstack.hotcrm.activity",
+      "anchor_object": "crm_event_attendee",
+      "reason": "authored against crm_event_attendee",
+      "ratcheted": true,
+      "authored_tokens": 353
+    },
+    {
+      "path": "src/views/forecast.view.ts",
+      "kind": "view",
+      "module": "app.objectstack.hotcrm.sales",
+      "anchor_object": "crm_forecast",
+      "reason": "authored against crm_forecast",
+      "ratcheted": true,
+      "authored_tokens": 857
+    },
+    {
+      "path": "src/views/index.ts",
+      "kind": "barrel",
+      "module": "app.objectstack.hotcrm",
+      "anchor_object": null,
+      "reason": "registration barrel — one per package after the split",
+      "ratcheted": true,
+      "authored_tokens": 169
+    },
+    {
+      "path": "src/views/knowledge_article.view.ts",
+      "kind": "view",
+      "module": "app.objectstack.hotcrm.service",
+      "anchor_object": "crm_knowledge_article",
+      "reason": "authored against crm_knowledge_article",
+      "ratcheted": true,
+      "authored_tokens": 848
+    },
+    {
+      "path": "src/views/lead.view.ts",
+      "kind": "view",
+      "module": "app.objectstack.hotcrm.sales",
+      "anchor_object": "crm_lead",
+      "reason": "authored against crm_lead",
+      "ratcheted": true,
+      "authored_tokens": 4911
+    },
+    {
+      "path": "src/views/opportunity.view.ts",
+      "kind": "view",
+      "module": "app.objectstack.hotcrm.sales",
+      "anchor_object": "crm_opportunity",
+      "reason": "authored against crm_opportunity",
+      "ratcheted": true,
+      "authored_tokens": 1888
+    },
+    {
+      "path": "src/views/product.view.ts",
+      "kind": "view",
+      "module": "app.objectstack.hotcrm.cpq",
+      "anchor_object": "crm_product",
+      "reason": "authored against crm_product",
+      "ratcheted": true,
+      "authored_tokens": 516
+    },
+    {
+      "path": "src/views/quote.view.ts",
+      "kind": "view",
+      "module": "app.objectstack.hotcrm.cpq",
+      "anchor_object": "crm_quote",
+      "reason": "authored against crm_quote",
+      "ratcheted": true,
+      "authored_tokens": 705
+    },
+    {
+      "path": "src/views/task.view.ts",
+      "kind": "view",
+      "module": "app.objectstack.hotcrm.activity",
+      "anchor_object": "crm_task",
+      "reason": "authored against crm_task",
+      "ratcheted": true,
+      "authored_tokens": 1340
+    }
+  ]
+}

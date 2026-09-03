@@ -56,7 +56,17 @@ import { SystemAdminProfile } from './system-admin.profile';
  *
  * They are KEPT, and they are bounded by the organization, not by them.
  *
- * Two measurements, both against the installed 17.1.0 line:
+ * Two measurements, both against the 17.1.0 line — the version
+ * installed AT THE TIME they were taken, not the current pin (#1460: this
+ * repo has installed 17.2.0 since PR #1442).
+ *
+ * ⚠️ The zero-occurrence result in 1 — the load-bearing half — still
+ * reproduces on 17.2.0. The three CONTROL counts in it do NOT: they are
+ * as-measured-then figures and have since moved. They are kept at their
+ * measured values on purpose rather than refreshed, because what they are
+ * evidence FOR is that the sweep can find a name it looks for — never a
+ * current total. ⛔ Do not cite them as one, and ⛔ do not "fix" them by
+ * pasting today's numbers over a 17.1.0 measurement.
  *
  *  1. **Neither string is read by anything.** `view_all_data` and
  *     `modify_all_data` occur in ZERO installed `@objectstack/*` JavaScript

@@ -23,7 +23,7 @@ documentation:
 
 dependencies:
   - changed-files:
-    - any-glob-to-any-file: ['package.json', 'package-lock.json', 'pnpm-lock.yaml', 'apps/docs/package.json', 'apps/docs/pnpm-lock.yaml']
+    - any-glob-to-any-file: ['package.json', 'pnpm-lock.yaml', 'apps/docs/package.json', 'apps/docs/pnpm-lock.yaml']
 
 # CI plumbing and the verification pipeline itself — workflows, helper scripts,
 # and the test suites those workflows run.

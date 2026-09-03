@@ -11,6 +11,7 @@ import {
   buildContextForUser,
 } from '@objectstack/plugin-security';
 import { SharingServicePlugin } from '@objectstack/plugin-sharing';
+import { tenancyProbe } from './helpers/tenancy-probe';
 import stack from '../objectstack.config';
 
 /**
@@ -113,6 +114,11 @@ beforeAll(async () => {
       fallbackPermissionSet: appDefaultPermissionSetName((stack as AnyRec).permissions),
     } as never),
   );
+  // 17.2.0: declared sharing rules are only seeded once this stack states its
+  // tenancy posture — see `test/helpers/tenancy-probe.ts` for the measurement.
+  // Mounted BEFORE SharingServicePlugin, which reads the posture during its own
+  // boot.
+  await kernel.use(tenancyProbe('single') as never);
   await kernel.use(new SharingServicePlugin());
   await kernel.bootstrap();
   ql = kernel.getService('objectql');
