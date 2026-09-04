@@ -27,11 +27,29 @@ import { makeCtx, makeHarness, engineFlatInput, hookNamed, type Rec } from './he
  *
  * ### How to read a failure here — the two directions are NOT the same
  *
- * **`delete` became effective.** The engine grew a `deleteProperty` trap
- * (upstream objectstack#12277). Production changed underneath this app: that is
- * NEWS, and the right response is to re-read the hooks that were rewritten to
- * assign-instead-of-delete (`case_sla_defaults`, `lead_automation`) and decide
- * whether the workaround can be retired — ⛔ not to relax the assertion.
+ * **`delete` became effective.** This is what happened, on the 17.2.0 -> 17.3.0
+ * upgrade: the engine grew the `deleteProperty` trap (upstream
+ * objectstack#12277, shipped in the platform 17.3.0 line — objectql's changelog
+ * grades it `minor` precisely because "any shipped hook that already contains
+ * `delete ctx.input.<field>` has been a no-op until now and starts taking effect
+ * on upgrade"). Both mechanisms closed together: the in-process flat-record
+ * Proxy now traps `deleteProperty`, and the sandbox path diffs deletions
+ * against the entry snapshot instead of writing mutations home with
+ * `Object.assign`, which cannot represent a removal.
+ *
+ * The instruction this paragraph used to carry — re-read the hooks rewritten to
+ * assign-instead-of-delete and decide whether the workaround can be retired —
+ * was followed, and the answer is NO, on the ground those hooks already stated
+ * before the trap existed. What they WRITE is load-bearing independently of how
+ * it is spelled: `case_auto_assign` stands down only on a non-empty STRING
+ * `owner_id`, and `lead_duplicate_check` only on a non-blank verdict, so those
+ * columns must arrive `null` and not ABSENT. Removing a key and writing `null`
+ * are different downstream. The assertions below therefore move to the new
+ * contract; the hooks do not move at all.
+ *
+ * If a future release takes the trap away again, this file goes red in the
+ * other direction and that too is NEWS — ⛔ neither direction is a licence to
+ * relax an assertion.
  *
  * **The wrapper stopped being installed.** The harness has reverted to a plain
  * object and the whole suite is back to certifying behaviour production does
@@ -91,9 +109,10 @@ describe('the harness hands a hook the ENGINE\'s input shape, not a plain object
 
   // ───────────────────────────── the pin the card exists for ──
 
-  it('⛔ `delete` on a hook\'s input is a SILENT NO-OP, exactly as in production', async () => {
-    // THIS IS THE CASE THAT MUST FAIL ON THE OLD HARNESS. On a plain object
-    // `delete` genuinely removes the key and all five read-backs below flip.
+  it('`delete` on a hook\'s input REMOVES the field, and the removal reaches the record', async () => {
+    // Through 17.2.0 this case asserted the opposite: the delete was a silent
+    // no-op and every read-back below still answered with the caller's value.
+    // objectstack#12277 landed in 17.3.0 and closed it on both execution paths.
     const record: Rec = { subject: 'Spoofed', owner_id: 'attacker_chosen_user' };
     const ctx = makeCtx({ event: 'beforeInsert', input: record });
 
@@ -101,37 +120,43 @@ describe('the harness hands a hook the ENGINE\'s input shape, not a plain object
 
     expect(
       ctx.input.owner_id,
-      'a hook\'s `delete` now REMOVES the key. Either the engine grew a `deleteProperty` ' +
-        'trap (objectstack#12277 — re-read the assign-instead-of-delete repairs in ' +
-        'case.hook.ts / lead.hook.ts) or this harness reverted to a plain object. ' +
-        'Do not relax this assertion; find out which.',
-    ).toBe('attacker_chosen_user');
-    expect('owner_id' in ctx.input, 'the key stopped surviving `delete`').toBe(true);
-    expect(Object.keys(ctx.input)).toContain('owner_id');
-    expect(record.owner_id, 'the record the engine would persist lost the key').toBe('attacker_chosen_user');
+      'the `deleteProperty` trap has gone away again — production changed under this app ' +
+        'a second time. Find out which release, and do not relax this assertion.',
+    ).toBeUndefined();
+    expect('owner_id' in ctx.input, 'the key survived `delete`').toBe(false);
+    expect(Object.keys(ctx.input)).not.toContain('owner_id');
+    // The removal routes into `data` — the object the engine persists — exactly
+    // as an assignment does. That symmetry is the whole point of the fix.
+    expect(record.owner_id, 'the record the engine would persist kept the key').toBeUndefined();
   });
 
-  it('delete reports SUCCESS while doing nothing — which is why it stayed hidden', async () => {
+  it('delete reports success AND does it — JS, the read-back and storage now agree', async () => {
     const record: Rec = { owner_id: 'attacker_chosen_user' };
     const ctx = makeCtx({ event: 'beforeInsert', input: record });
 
-    // JS says it worked. Every read-back says it worked. Storage disagrees.
+    // `true` was always the answer here; what changed is that it is now true.
     expect(Reflect.deleteProperty(ctx.input, 'owner_id')).toBe(true);
-    expect(ctx.input.owner_id).toBe('attacker_chosen_user');
+    expect(ctx.input.owner_id).toBeUndefined();
+    expect(record.owner_id).toBeUndefined();
   });
 
-  it('assign-then-delete keeps the ASSIGNED value — no merge, a delete aimed one level too high', async () => {
-    // The discriminator that rules out "the engine merges caller data over hook
-    // input": `set` is trapped into `data`, `delete` falls through to the
-    // wrapper, so the assignment survives its own removal.
+  it('assign-then-delete removes the ASSIGNED value — both operations reach `data` now', async () => {
+    // Through 17.2.0 this was the discriminator that ruled out "the engine
+    // merges caller data over hook input": `set` was trapped into `data` while
+    // `delete` fell through to the wrapper, so an assignment survived its own
+    // removal. Both operations land in `data` from 17.3.0, so the later one
+    // wins — which is what an author reading the two lines would expect.
+    //
+    // ⚠️ This is exactly why `case.hook.ts` and `lead.hook.ts` still ASSIGN
+    // rather than delete: they need the column to arrive `null`, not absent.
     const record: Rec = { owner_id: 'attacker_chosen_user' };
     const ctx = makeCtx({ event: 'beforeInsert', input: record });
 
     ctx.input.owner_id = null;
     await deletingHandler(ctx);
 
-    expect(ctx.input.owner_id).toBeNull();
-    expect(record.owner_id).toBeNull();
+    expect(ctx.input.owner_id).toBeUndefined();
+    expect(record.owner_id).toBeUndefined();
   });
 
   // ─────────────── the failure mode generalises past `delete` ──
@@ -191,7 +216,8 @@ describe('the harness hands a hook the ENGINE\'s input shape, not a plain object
 
     expect(probe.input, 'wrapDeclarativeHook stopped installing the flat-input Proxy').not.toBe(raw);
     delete probe.input.owner_id;
-    expect(probe.input.owner_id).toBe('attacker_chosen_user');
+    expect(probe.input.owner_id).toBeUndefined();
+    expect(record.owner_id, 'the engine wrapper deleted from the wrapper, not the record').toBeUndefined();
   });
 
   it('a wrapper takes an `Object.assign` write-back into the record (the sandbox return path)', () => {

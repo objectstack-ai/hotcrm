@@ -80,15 +80,30 @@ describe('the physical index set is tenant-scoped', () => {
     physicalColumns,
   });
 
-  it('expects exactly one unique index, on (organization_id, name)', () => {
+  it('expects two unique indexes — (organization_id, account_number) and (organization_id, name)', () => {
     // `nullSafeColumns` arrived with platform 17.0.0-rc.4 (ADR-0120 D3): the
     // tenant column's key part is the NULL-safe COALESCE form rather than the
     // bare column. It is named here, not loosened away with `objectContaining`,
     // because it is the difference between an index that enforces this
     // constraint on an untenanted install and one that does not — see the
     // null-safe case in the SQLite block below.
+    //
+    // `account_number` joined the set on the 17.2.0 -> 17.3.0 upgrade and is NOT
+    // an authoring change here: platform 17.3.0 makes an `autonumber` field
+    // parse to `unique: 'organization'` when it omits `unique` (spec #13894),
+    // materialized by the drivers exactly as a hand-written declaration is. The
+    // ruling that flipped the default is hotcrm#1301, and the defect behind it
+    // was measured on THIS object — objectstack#12394 re-issued `ACC-000009`.
+    // Nine of this app's ten autonumber identifiers gain the index; only
+    // `crm_case.case_number` already carried it, hand-written.
     const unique = indexes.filter((i) => i.unique);
     expect(unique).toEqual([
+      {
+        name: 'uniq_crm_account_organization_id_account_number',
+        columns: ['organization_id', 'account_number'],
+        nullSafeColumns: ['organization_id'],
+        unique: true,
+      },
       {
         name: 'uniq_crm_account_organization_id_name',
         columns: ['organization_id', 'name'],

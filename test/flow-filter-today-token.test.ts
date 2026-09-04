@@ -505,9 +505,17 @@ describe('{TODAY()} through a real ObjectQL + real AutomationEngine', () => {
     // silently dropping the condition and widening the sweep. The `success:
     // false` assertion in the census case above is what would catch that — here
     // it is, catching it.
+    // ⚠️ The refusal MESSAGE changed on the 17.2.0 -> 17.3.0 upgrade; the
+    // refusal itself did not. Through 17.2.0 the node was refused for being
+    // unresolved ("resolved to nothing and were dropped"). Platform 17.3.0
+    // (objectstack#11060) refuses one step earlier and more precisely: the
+    // value-expression evaluator now knows its own closed vocabulary, so an
+    // unknown NAME is named as such instead of being reported as an empty
+    // resolution. What this case guards — `success: false`, and nothing
+    // reaching the query layer — is asserted on both sides of that wording.
     const { run, issued } = await runProbe({ $lt: '{TOMORROW()}' });
     expect(run?.success).toBe(false);
-    expect(String(run?.error)).toMatch(/resolved to nothing and were dropped/);
+    expect(String(run?.error)).toMatch(/unknown function 'TOMORROW'|resolved to nothing and were dropped/);
     expect(issued, 'a refused node must not reach the query layer at all').toBeUndefined();
   });
 });

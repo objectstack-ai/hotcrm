@@ -823,18 +823,37 @@ describe('knowledge_article_publish_timestamps', () => {
  * says the engine does not build for `beforeUpdate`. They would stay green
  * before and after any fix, so they are no pin on row scoping. This is.
  *
- * WHEN THIS TEST GOES RED: the platform has started handing hook bodies a
- * per-row signal. That is the blocker lifting, not a regression — implement the
- * D3-conformant fix in `knowledge_article.hook.ts` (and see the same card for
- * the other flagged hooks), then delete this block.
+ * ✅ THE BLOCKER HAS LIFTED — on the 17.2.0 -> 17.3.0 upgrade, and this block
+ * is now the pin that says so rather than the pin that says it cannot be done.
+ * Platform 17.3.0 (objectstack#11552) marshals the per-row signal across the
+ * QuickJS boundary: a shipped body observes `ctx.dispatch`, a frozen
+ * `{ mode: 'record' | 'per-row', index }` copy of the engine's #6966 marker, and
+ * `ctx.input.options`, a frozen non-enumerable `{ multi?, where? }` projection —
+ * the two members ADR-0058 Addendum II D2 declares visible to `before*`. A guard
+ * written `ctx.dispatch?.mode === 'per-row'` used to evaluate `false` on every
+ * production dispatch; it now answers truthfully.
+ *
+ * Two things deliberately did NOT change and are still pinned below, because
+ * D3's route 2 has to be written against what actually crosses: `ctx.input.id`
+ * stays absent (read `ctx.previous.id`), and `scope` does not cross with
+ * `dispatch` (a JSON copy cannot keep its shared-identity contract).
+ *
+ * ⛔ This upgrade does NOT implement the D3-conformant fix. The batch-widening
+ * defect in `knowledge_article.hook.ts` is a behaviour change on shipped
+ * automation and belongs to #1265 on its own terms, not to a dependency bump —
+ * mixing them would put a product decision inside a version PR. What this block
+ * now does is hold the capability open and say, in an assertion, that the reason
+ * #1265 was parked has gone.
  */
-describe('#1265 — the shipped hook body cannot tell it is on a per-row predicate dispatch', () => {
+describe('#1265 — the shipped hook body CAN now tell it is on a per-row predicate dispatch', () => {
   /**
    * The keys `buildSandboxContext` (@objectstack/runtime) marshals across the
-   * QuickJS boundary. `dispatch` is absent, and `input` arrives as
+   * QuickJS boundary. From 17.3.0 that includes `dispatch` and an `options`
+   * projection on `input`; `input` otherwise still arrives as
    * `unwrapProxyToPlain(ctx.input)` = `Object.fromEntries(Object.entries(…))`,
    * which copies only ENUMERABLE own keys — and the engine's flattening proxy
-   * marks `id`, `options` and `data` non-enumerable.
+   * marks `id`, `options` and `data` non-enumerable, which is why `id` is still
+   * not there.
    */
   const PROBE = `
     return {
@@ -877,7 +896,7 @@ describe('#1265 — the shipped hook body cannot tell it is on a per-row predica
   };
 
   it(
-    'sees no dispatch mode, no input.id and no input.options — so none of D3’s three routes are reachable',
+    'sees the dispatch mode and input.options — D3’s routes are reachable; input.id still is not',
     async () => {
       const { QuickJSScriptRunner, hookBodyRunnerFactory } = await import('@objectstack/runtime');
       const { makeSandboxEngine } = await import('./helpers/action-sandbox');
@@ -910,10 +929,18 @@ describe('#1265 — the shipped hook body cannot tell it is on a per-row predica
       // rewrite is expressible here, and why it is wrong.
       expect(probe.previousPublishedAt, 'ctx.previous is the row pre-image and does cross').toBe('string');
 
-      // None of these do. Each `undefined` is one of D3's routes closed off.
-      expect(probe.dispatch, 'ctx.dispatch would name the per-row path').toBe('undefined');
-      expect(probe.inputId, 'ctx.input.id would name the row').toBe('undefined');
-      expect(probe.inputOptions, 'ctx.input.options would carry `multi`/`where`').toBe('undefined');
+      // These two crossed the boundary from 17.3.0 — the signal D3's routes 1
+      // and 2 need in order to be expressible from a body-only hook at all.
+      expect(probe.dispatch, 'ctx.dispatch stopped naming the per-row path').toBe('object');
+      expect(
+        probe.inputOptions,
+        'ctx.input.options stopped carrying the `multi`/`where` projection',
+      ).toBe('object');
+
+      // And this one still does not: read the row id from `ctx.previous.id`.
+      expect(probe.inputId, 'ctx.input.id started crossing — D3 route 2 should be rewritten').toBe(
+        'undefined',
+      );
     },
     20_000,
   );

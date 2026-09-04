@@ -132,7 +132,34 @@ export const esES: TranslationData = {
         },
       },
       _views: {
-        all_accounts: { label: 'Todas las Cuentas', description: 'Lista maestra de cuentas con ingresos e industria' },
+        all_accounts: {
+          label: 'Todas las Cuentas', description: 'Lista maestra de cuentas con ingresos e industria',
+          bulkActions: {
+            delete: {
+              label: 'Eliminar',
+              confirmLabel: 'Eliminar',
+              confirmText: '¿Eliminar permanentemente {{count}} cuenta(s)? Esta acción no se puede deshacer.',
+            },
+            transfer_owner: {
+              label: 'Transferir propietario',
+              confirmText: '¿Transferir la propiedad de {{count}} cuenta(s)?',
+              params: {
+                owner_id: {
+                  label: 'Nuevo propietario',
+                },
+              },
+            },
+            update_tier: {
+              label: 'Actualizar nivel',
+              confirmText: '¿Actualizar el nivel de {{count}} cuenta(s) a {{tier}}?',
+              params: {
+                tier: {
+                  label: 'Nivel de cliente',
+                },
+              },
+            },
+          },
+        },
         account_gallery: { label: 'Galería de Cuentas', description: 'Vista de tarjetas con colores de marca' },
         account_map: { label: 'Mapa de Cuentas', description: 'Distribución geográfica de cuentas' },
         enterprise_accounts: { label: 'Cuentas Empresariales', description: 'Cuentas con mayores ingresos anuales' },
@@ -248,6 +275,14 @@ export const esES: TranslationData = {
     },
 
     crm_knowledge_article: {
+      _validations: {
+        published_requires_body: {
+          message: 'No se pueden publicar artículos sin cuerpo.',
+        },
+        published_requires_summary: {
+          message: 'Los artículos publicados deben tener un resumen para los resultados de búsqueda y las citas de IA.',
+        },
+      },
       label: 'Artículo de Conocimiento',
       pluralLabel: 'Base de Conocimiento',
       description: 'Respuestas y guías reutilizables para clientes y agentes',
@@ -320,6 +355,23 @@ export const esES: TranslationData = {
     },
 
     crm_forecast: {
+      _validations: {
+        period_end_after_start: {
+          message: 'El fin del periodo debe ser posterior a su inicio.',
+        },
+        period_end_matches_calendar_period: {
+          message: 'El fin del periodo debe ser el último día del periodo: p. ej. 2026-09-30 para un trimestre que empieza el 2026-07-01, o 2026-08-31 para agosto de 2026.',
+        },
+        period_start_first_of_period: {
+          message: 'El inicio del periodo debe ser el primer día del periodo: p. ej. 2026-08-01 para agosto de 2026.',
+        },
+        quarter_starts_on_quarter_boundary: {
+          message: 'Una previsión trimestral debe comenzar en un límite de trimestre: 1 de enero, 1 de abril, 1 de julio o 1 de octubre.',
+        },
+        snapshot_amounts_non_negative: {
+          message: 'Los importes de la instantánea no pueden ser negativos.',
+        },
+      },
       label: 'Previsión',
       pluralLabel: 'Previsiones',
       description: 'Instantánea periódica del pipeline por propietario para previsión de ingresos',
@@ -377,6 +429,20 @@ export const esES: TranslationData = {
     },
 
     crm_lead: {
+      _validations: {
+        disqualification_reason_required: {
+          message: 'El motivo de descalificación es obligatorio cuando un prospecto no está cualificado',
+        },
+        duplicate_disqualification_requires_survivor: {
+          message: 'Descalificar un prospecto como duplicado exige nombrar el registro superviviente y marcar el estado de duplicado como Confirmado',
+        },
+        email_required: {
+          message: 'El correo electrónico es obligatorio',
+        },
+        lead_status_progression: {
+          message: 'Transición de estado de prospecto no válida',
+        },
+      },
       label: 'Prospecto',
       pluralLabel: 'Prospectos',
       description: 'Clientes potenciales todavía sin calificar',
@@ -555,6 +621,17 @@ export const esES: TranslationData = {
     },
 
     crm_opportunity: {
+      _validations: {
+        amount_positive: {
+          message: 'El importe debe ser mayor que cero',
+        },
+        close_date_future: {
+          message: 'La fecha de cierre no debería estar en el pasado salvo que la oportunidad esté cerrada',
+        },
+        opportunity_stage_progression: {
+          message: 'Transición de etapa de oportunidad no válida',
+        },
+      },
       label: 'Oportunidad',
       pluralLabel: 'Oportunidades',
       description: 'Oportunidades de venta y negocios en el pipeline',
@@ -711,6 +788,17 @@ export const esES: TranslationData = {
     },
 
     crm_case: {
+      _validations: {
+        resolution_required_for_closed: {
+          message: 'La resolución es obligatoria al cerrar un caso',
+        },
+        escalation_reason_required: {
+          message: 'El motivo de escalado es obligatorio al escalar un caso',
+        },
+        case_status_progression: {
+          message: 'Transición de estado no válida',
+        },
+      },
       label: 'Caso',
       pluralLabel: 'Casos',
       description: 'Casos de soporte y solicitudes de servicio de clientes',
@@ -818,6 +906,14 @@ export const esES: TranslationData = {
     },
 
     crm_contract: {
+      _validations: {
+        end_after_start: {
+          message: 'La fecha de fin debe ser posterior a la de inicio',
+        },
+        contract_status_progression: {
+          message: 'Transición de estado de contrato no válida',
+        },
+      },
       label: 'Contrato',
       pluralLabel: 'Contratos',
       description: 'Contratos y acuerdos legales',
@@ -888,6 +984,14 @@ export const esES: TranslationData = {
     },
 
     crm_product: {
+      _validations: {
+        cost_less_than_price: {
+          message: 'El coste debería ser inferior al precio de lista',
+        },
+        price_positive: {
+          message: 'El precio de lista debe ser positivo',
+        },
+      },
       label: 'Producto',
       pluralLabel: 'Productos',
       description: 'Productos y servicios que ofrece la empresa',
@@ -935,6 +1039,17 @@ export const esES: TranslationData = {
     },
 
     crm_quote: {
+      _validations: {
+        discount_within_ceiling: {
+          message: 'El descuento no puede superar el 60 %',
+        },
+        expiration_after_quote: {
+          message: 'La fecha de vencimiento debe ser posterior a la de la cotización',
+        },
+        quote_status_progression: {
+          message: 'Transición de estado de cotización no válida',
+        },
+      },
       label: 'Cotización',
       pluralLabel: 'Cotizaciones',
       description: 'Cotizaciones de precios para clientes',
@@ -998,6 +1113,17 @@ export const esES: TranslationData = {
     },
 
     crm_task: {
+      _validations: {
+        completed_date_required: {
+          message: 'La fecha de finalización es obligatoria cuando el estado es Completada',
+        },
+        recurrence_fields_required: {
+          message: 'El tipo de recurrencia es obligatorio para las tareas recurrentes',
+        },
+        related_to_required: {
+          message: 'Debe seleccionarse al menos un registro relacionado',
+        },
+      },
       label: 'Tarea',
       pluralLabel: 'Tareas',
       description: 'Actividades y tareas pendientes',
@@ -1079,6 +1205,14 @@ export const esES: TranslationData = {
     },
 
     crm_campaign: {
+      _validations: {
+        end_after_start: {
+          message: 'La fecha de fin debe ser posterior a la de inicio',
+        },
+        actual_cost_within_budget: {
+          message: 'El coste real supera el coste presupuestado',
+        },
+      },
       label: 'Campaña',
       pluralLabel: 'Campañas',
       description: 'Campañas e iniciativas de marketing',
@@ -1153,6 +1287,14 @@ export const esES: TranslationData = {
     },
 
     crm_event: {
+      _validations: {
+        end_after_start: {
+          message: 'La hora de fin debe ser posterior a la de inicio',
+        },
+        related_to_required: {
+          message: 'Debe seleccionarse al menos un registro relacionado',
+        },
+      },
       label: 'Evento',
       pluralLabel: 'Eventos',
       description: 'Reuniones, llamadas y otras interacciones programadas con clientes',
@@ -1212,6 +1354,14 @@ export const esES: TranslationData = {
     },
 
     crm_event_attendee: {
+      _validations: {
+        attendee_resolves: {
+          message: 'Un asistente debe indicar la parte que nombra su tipo: el tipo Contacto requiere un contacto y el tipo Externo requiere un nombre de asistente externo',
+        },
+        attendee_type_exclusive: {
+          message: 'Un asistente nombra exactamente una parte: borre las columnas que su tipo de asistente no nombra',
+        },
+      },
       label: 'Asistente al evento',
       pluralLabel: 'Asistentes al evento',
       description: 'Persona invitada o presente en un evento',
@@ -1270,6 +1420,11 @@ export const esES: TranslationData = {
     },
 
     crm_campaign_member: {
+      _validations: {
+        lead_or_contact_required: {
+          message: 'Un miembro de campaña debe referenciar un prospecto o un contacto',
+        },
+      },
       label: 'Miembro de Campaña',
       pluralLabel: 'Miembros de Campaña',
       description: 'Prospectos y contactos alcanzados por una campaña, con su estado de respuesta',
@@ -1302,6 +1457,11 @@ export const esES: TranslationData = {
     },
 
     crm_opportunity_line_item: {
+      _validations: {
+        unit_price_positive: {
+          message: 'El precio de venta no puede ser negativo',
+        },
+      },
       label: 'Línea de Oportunidad',
       pluralLabel: 'Líneas de Oportunidad',
       description: 'Líneas de precio por producto dentro de una oportunidad',
@@ -1323,6 +1483,14 @@ export const esES: TranslationData = {
     },
 
     crm_quote_line_item: {
+      _validations: {
+        discount_within_ceiling: {
+          message: 'El descuento de línea no puede superar el 60 %',
+        },
+        unit_price_positive: {
+          message: 'El precio de venta no puede ser negativo',
+        },
+      },
       label: 'Línea de Presupuesto',
       pluralLabel: 'Líneas de Presupuesto',
       description: 'Líneas de precio por producto dentro de un presupuesto',
@@ -1518,6 +1686,301 @@ export const esES: TranslationData = {
   // `title` / `subtitle` son las propiedades del componente `page:header`.
   // Los marcadores `{…}` se sustituyen sobre la cadena TRADUCIDA, así que el
   // token debe conservarse tal cual: traducido, no resuelve y se ve vacío.
+  datasets: {
+    account_metrics: {
+      label: 'Métricas de cuentas',
+      description: 'Capa semántica para el recuento de cuentas por sector y tipo',
+      dimensions: {
+        industry: {
+          label: 'Sector',
+        },
+        type: {
+          label: 'Tipo',
+        },
+        created_at: {
+          label: 'Creado',
+        },
+      },
+      measures: {
+        account_count: {
+          label: 'Cuentas',
+        },
+        annual_revenue_sum: {
+          label: 'Ingresos anuales',
+        },
+      },
+    },
+    case_metrics: {
+      label: 'Métricas de casos',
+      description: 'Capa semántica para el recuento de casos, el tiempo de resolución y el SLA',
+      dimensions: {
+        created_date: {
+          label: 'Creado',
+        },
+        origin: {
+          label: 'Origen',
+        },
+        priority: {
+          label: 'Prioridad',
+        },
+        resolved_article: {
+          label: 'Artículo de resolución',
+        },
+        status: {
+          label: 'Estado',
+        },
+        type: {
+          label: 'Tipo',
+        },
+      },
+      measures: {
+        avg_resolution: {
+          label: 'Resolución media (h)',
+        },
+        avg_sla_violated: {
+          label: 'Tasa de incumplimiento del SLA',
+        },
+        case_count: {
+          label: 'Casos',
+        },
+        closed_count: {
+          label: 'Casos cerrados',
+        },
+        kb_deflection_rate: {
+          label: 'Tasa de desvío por base de conocimiento',
+        },
+        kb_resolved_count: {
+          label: 'Resueltos por base de conocimiento',
+        },
+        sla_compliance_rate: {
+          label: 'Tasa de cumplimiento del SLA',
+        },
+        sla_met_count: {
+          label: 'Casos dentro del SLA',
+        },
+      },
+    },
+    contact_metrics: {
+      label: 'Métricas de contactos',
+      description: 'Capa semántica para el recuento de contactos',
+      measures: {
+        contact_count: {
+          label: 'Contactos',
+        },
+      },
+    },
+    event_metrics: {
+      label: 'Métricas de actividad',
+      description: 'Capa semántica para reuniones, llamadas y recencia de interacción',
+      dimensions: {
+        owner: {
+          label: 'Propietario',
+        },
+        related_to_type: {
+          label: 'Relacionado con',
+        },
+        start_datetime: {
+          label: 'Semana de actividad',
+        },
+        status: {
+          label: 'Estado',
+        },
+        type: {
+          label: 'Tipo de actividad',
+        },
+      },
+      measures: {
+        avg_minutes: {
+          label: 'Duración media',
+        },
+        event_count: {
+          label: 'Actividades',
+        },
+        total_minutes: {
+          label: 'Minutos',
+        },
+      },
+    },
+    forecast_metrics: {
+      label: 'Métricas de previsión',
+      description: 'Capa semántica para cuota, cumplimiento y cobertura de pipeline por propietario',
+      dimensions: {
+        owner: {
+          label: 'Propietario',
+        },
+        period: {
+          label: 'Tipo de periodo',
+        },
+        period_label: {
+          label: 'Periodo',
+        },
+        period_start: {
+          label: 'Inicio del periodo',
+        },
+      },
+      measures: {
+        attainment: {
+          label: 'Cumplimiento',
+        },
+        closed_sum: {
+          label: 'Cerrado',
+        },
+        commit_sum: {
+          label: 'Comprometido',
+        },
+        pipeline_sum: {
+          label: 'Pipeline',
+        },
+        quota_sum: {
+          label: 'Cuota',
+        },
+      },
+    },
+    lead_metrics: {
+      label: 'Métricas de prospectos',
+      description: 'Capa semántica para el recuento de prospectos',
+      dimensions: {
+        created_at: {
+          label: 'Creado',
+        },
+        last_contacted_date: {
+          label: 'Último contacto',
+        },
+        lead_source: {
+          label: 'Origen',
+        },
+        status: {
+          label: 'Estado',
+        },
+      },
+      measures: {
+        lead_count: {
+          label: 'Prospectos',
+        },
+      },
+    },
+    opportunity_metrics: {
+      label: 'Métricas de oportunidades',
+      description: 'Capa semántica para el recuento y los importes del pipeline de ventas',
+      dimensions: {
+        account_industry: {
+          label: 'Sector de la cuenta',
+        },
+        close_date: {
+          label: 'Fecha de cierre',
+        },
+        close_quarter: {
+          label: 'Trimestre de cierre',
+        },
+        forecast_category: {
+          label: 'Categoría de previsión',
+        },
+        lead_source: {
+          label: 'Origen del prospecto',
+        },
+        loss_reason: {
+          label: 'Motivo de pérdida',
+        },
+        owner: {
+          label: 'Propietario',
+        },
+        stage: {
+          label: 'Etapa',
+        },
+        type: {
+          label: 'Tipo de negocio',
+        },
+        win_reason: {
+          label: 'Motivo de ganancia',
+        },
+      },
+      measures: {
+        avg_amount: {
+          label: 'Tamaño medio del negocio',
+        },
+        avg_probability: {
+          label: 'Probabilidad media',
+        },
+        decided_count: {
+          label: 'Negocios resueltos',
+        },
+        lost_amount: {
+          label: 'Ingresos perdidos',
+        },
+        lost_count: {
+          label: 'Negocios perdidos',
+        },
+        opp_count: {
+          label: 'Oportunidades',
+        },
+        total_amount: {
+          label: 'Importe total',
+        },
+        win_rate: {
+          label: 'Tasa de ganancia',
+        },
+        won_amount: {
+          label: 'Ingresos ganados',
+        },
+        won_count: {
+          label: 'Negocios ganados',
+        },
+      },
+    },
+    product_metrics: {
+      label: 'Métricas de productos',
+      description: 'Capa semántica para el recuento del catálogo y el precio de lista',
+      dimensions: {
+        category: {
+          label: 'Categoría',
+        },
+      },
+      measures: {
+        list_price_sum: {
+          label: 'Precio de lista total',
+        },
+        product_count: {
+          label: 'Productos',
+        },
+      },
+    },
+    task_metrics: {
+      label: 'Métricas de tareas',
+      description: 'Capa semántica para la carga de trabajo y la finalización de tareas',
+      dimensions: {
+        due_date: {
+          label: 'Fecha de vencimiento',
+        },
+        is_completed: {
+          label: 'Completada',
+        },
+        is_overdue: {
+          label: 'Vencida',
+        },
+        priority: {
+          label: 'Prioridad',
+        },
+        priority_rank: {
+          label: 'Urgencia',
+        },
+        status: {
+          label: 'Estado',
+        },
+        type: {
+          label: 'Tipo',
+        },
+      },
+      measures: {
+        avg_progress: {
+          label: 'Progreso medio',
+        },
+        task_count: {
+          label: 'Tareas',
+        },
+      },
+    },
+  },
+
   pages: {
     account_detail_page: {
       label: 'Detalle de Cuenta',
@@ -1574,6 +2037,21 @@ export const esES: TranslationData = {
       title: 'Panel de Ventas',
       subtitle: 'Bienvenido de nuevo',
       components: {
+        kpi_revenue_won: {
+          label: 'Ingresos (ganados)',
+        },
+        kpi_deals_won: {
+          label: 'Negocios ganados',
+        },
+        kpi_pipeline_value: {
+          label: 'Valor del pipeline',
+        },
+        kpi_open_leads: {
+          label: 'Prospectos abiertos',
+        },
+        home_upcoming_events: {
+          label: '📅 Próximos · Más cercanos primero',
+        },
         quick_create: { title: 'Creación Rápida', label: 'Creación Rápida' },
         key_metrics: { title: 'Indicadores Clave de Rendimiento', label: 'Métricas Clave' },
         home_tabs: { label: 'Pestañas de Inicio' },

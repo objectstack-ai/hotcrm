@@ -296,31 +296,50 @@ describe.each(DRIVERS.map((d) => d.driver))(
   },
 );
 
-describe('half 2 — a key a HOOK writes has no door, and the drivers disagree (#1200)', () => {
-  it('memory accepts it, stores it, and hands it back on read', () => {
+/**
+ * ✅ #1200 IS CLOSED BY THE PLATFORM — recorded here as the re-measurement that
+ * found it, on the 17.2.0 -> 17.3.0 upgrade.
+ *
+ * Through 17.2.0 this block pinned a three-way DIVERGENCE as the finding: a key
+ * a hook wrote that the object never declared had no door, and each driver
+ * answered differently. `driver-memory` ACCEPTED it, stored it and handed it
+ * back on read — a value outside field-level security by construction, since an
+ * undeclared field can carry no `fieldPermissions` entry. The two SQLite drivers
+ * refused it, but as a raw driver error carrying neither the ADR-0112 `code` nor
+ * a `status`, so no caller could handle it by shape.
+ *
+ * On 17.3.0 all three agree, and they agree on the strict answer: the write is
+ * refused with the same `INVALID_FIELD` / 400 envelope the declared-surface door
+ * already produced (asserted in half 1 above). The hook door and the caller door
+ * are now one contract.
+ *
+ * ⚠️ Read this as a REAL behaviour change for any app whose hook quietly wrote a
+ * key its object does not declare: on `driver-memory` that write used to land
+ * and now refuses. This app writes no such key outside this probe.
+ */
+describe('half 2 — a key a HOOK writes is refused by every driver, in one envelope (#1200, closed)', () => {
+  it('memory no longer accepts it — the permissive driver came into line', () => {
     const R = readings.get('memory')!;
-    expect(R.viaHook.ok).toBe(true);
-    // The value is IN the row — not merely absent from an error.
-    expect(R.viaHookRow && Object.hasOwn(R.viaHookRow, KEY)).toBe(true);
-    expect(R.viaHookRow?.[KEY]).toBe(10);
-    // And the object declares no such field, so no `fieldPermissions` entry can
-    // name it: this value is outside field-level security by construction.
+    expect(R.viaHook.ok, 'driver-memory accepted an undeclared key again').toBe(false);
+    expect(R.viaHookRow).toBeUndefined();
+    // The object still declares no such field — the premise is unchanged; what
+    // changed is that the platform now refuses instead of storing it.
     expect(Object.keys((OpportunityLineItem as AnyRec).fields)).not.toContain(KEY);
   });
 
-  it.each(['sqlite', 'sqlite-wasm'])('%s refuses it — but as a raw driver error, not an envelope', (driver) => {
+  it.each(['sqlite', 'sqlite-wasm'])('%s refuses it as an ADR-0112 envelope now', (driver) => {
     const R = readings.get(driver)!;
     expect(R.viaHook.ok).toBe(false);
-    // The point is not that it fails; it is that the failure carries neither
-    // the ADR-0112 code nor a status, so no caller can handle it by shape.
-    expect(R.viaHook.code).not.toBe('INVALID_FIELD');
-    expect(R.viaHook.status).toBeUndefined();
+    // This is the half that used to fail the shape test: a raw driver error
+    // with no code and no status. Both are present now.
+    expect(R.viaHook.code).toBe('INVALID_FIELD');
     expect(R.viaHook.message).toContain(KEY);
     expect(R.viaHookRow).toBeUndefined();
   });
 
-  it('so the three drivers do NOT agree — the divergence itself is the finding', () => {
+  it('so the three drivers DO agree — the convergence is the finding', () => {
     const outcomes = DRIVERS.map((d) => readings.get(d.driver)!.viaHook.ok);
-    expect(new Set(outcomes).size).toBe(2);
+    expect(new Set(outcomes).size).toBe(1);
+    expect(outcomes.every((ok) => ok === false)).toBe(true);
   });
 });

@@ -47,48 +47,37 @@ const caseValidation: Hook = {
     // Guest (web-to-case) sanitisation. OVERWRITE with a safe value — never
     // `delete`.
     //
-    // ⛔ Platform constraint: `delete ctx.input.<field>` in a hook is a SILENT
-    // NO-OP. ObjectQL hands a hook `ctx.input` as `{ data, options }` and swaps
-    // in a flat-record Proxy over it (`installFlatInput`, `@objectstack/objectql`
-    // `src/hook-wrappers.ts`). That Proxy traps `get` / `set` / `has` /
-    // `ownKeys` / `getOwnPropertyDescriptor` and routes each into `data` — but
-    // it declares NO `deleteProperty` trap. A missing trap falls back to
-    // `Reflect.deleteProperty(target, key)` on the WRAPPER, one level above the
-    // record, so the delete removes a key that was never there:
+    // ✅ HISTORY, RESOLVED — and the conclusion is unchanged. Through 17.2.0,
+    // `delete ctx.input.<field>` in a hook was a SILENT NO-OP: ObjectQL hands a
+    // hook `ctx.input` as `{ data, options }` behind a flat-record Proxy
+    // (`installFlatInput`, `@objectstack/objectql` `src/hook-wrappers.ts`) that
+    // trapped `get` / `set` / `has` / `ownKeys` / `getOwnPropertyDescriptor` and
+    // routed each into `data` — but declared no `deleteProperty` trap, so the
+    // delete fell through to the WRAPPER, one level above the record:
     //
-    //   delete input.owner_id   -> returns TRUE  (JS reports success)
+    //   delete input.owner_id   -> returned TRUE  (JS reported success)
     //   'owner_id' in input     -> still true
     //   input.owner_id          -> still the caller's value
-    //   Object.keys(input)      -> still lists it
     //
-    // Every read-back agrees the delete worked; the client's value reaches the
-    // stored row. Assignment survives because `set` is trapped and writes into
-    // `data`, which is the object the engine persists. Hence: assign, and never
-    // trust `delete` here.
+    // Fifteen such statements across two intake hooks did nothing in production
+    // while their tests passed (#1133). This block was rewritten to ASSIGN.
     //
-    // ⚠️ VERSION-QUALIFIED — this is a platform property, not a law of the
-    // language. RE-MEASURED ON 17.2.0, the version `package.json` pins and
-    // `node_modules` installs (#1416), and it STILL HOLDS on both readings:
-    // a probe hook that deleted a planted `internal_notes` on a real insert
-    // stored the planted string verbatim, while the same key assigned `null`
-    // in the same hook on the same object stored `null`; and the installed
-    // `dist/core.js` `installFlatInput` declares exactly the five traps named
-    // above, with `deleteProperty` AND `defineProperty` both absent.
+    // The block above predicted its own trigger — "a platform release that
+    // POSTDATES 2026-08-26" — and that release is **17.3.0**, the version
+    // `package.json` now pins. objectstack#12277 shipped: the in-process Proxy
+    // traps `deleteProperty`, and the sandbox path diffs deletions against the
+    // entry snapshot rather than writing mutations home with `Object.assign`,
+    // which cannot represent a removal. Re-measured through the engine's own
+    // `wrapDeclarativeHook` in `test/hook-input-shape.test.ts`, which now pins
+    // the new contract in both directions.
     //
-    // ⛔ Do not read "upstream is closed" as "fixed here". objectstack#12277 is
-    // closed as completed by MERGED PR objectstack#12396 — and that fix is in
-    // NO published release: 17.2.0 was cut 2026-08-23, the PR merged 08-26, and
-    // 17.2.0 is still the registry's `latest`. Merged is not the same as
-    // available in the pin. The trigger to re-measure is a platform release
-    // that POSTDATES 2026-08-26 — never the upstream issue's state.
-    //
-    // ⚠️ When that release lands, the trap arriving is NOT a licence to spell
-    // this block with `delete` again. What these lines WRITE is load-bearing
-    // independently of how it is written — `case_auto_assign` stands down only
-    // on a non-empty STRING `owner_id`, so the column must arrive `null` rather
-    // than absent (see the `null` note below). Removing a key and writing
-    // `null` are different downstream, so retiring the workaround would be a
-    // behaviour change on the public-form boundary, not a re-spelling.
+    // ⛔ The trap arriving is NOT a licence to spell this block with `delete`.
+    // What these lines WRITE is load-bearing independently of how it is spelled:
+    // `case_auto_assign` stands down only on a non-empty STRING `owner_id`, so
+    // the column must arrive `null` rather than ABSENT (see the `null` note
+    // below). Removing a key and writing `null` are different downstream, so
+    // switching to `delete` would be a behaviour change on the public-form
+    // boundary, not a re-spelling. Assign — for the reason, not the constraint.
     //
     // ⚠️ `null` rather than `''` or `undefined`, all three measured on the
     // write path: `null` stores as null, `''` stores as an empty string (wrong

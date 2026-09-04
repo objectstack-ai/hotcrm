@@ -75,7 +75,7 @@ export const QuoteLineItem = ObjectSchema.create({
     // that had been itemised refused to delete with a 409 quoting this field.
     // A quote line is subordinate to its quote (`quote_line_item.hook.ts` rolls
     // the quote's subtotal/total UP from these rows), so it goes with it.
-    crm_quote: Field.lookup('crm_quote', {
+    crm_quote: Field.masterDetail('crm_quote', {
       label: 'Quote',
       group: 'basic',
       required: true,

@@ -99,7 +99,7 @@ export const OpportunityLineItem = ObjectSchema.create({
     // `crm_campaign_member.crm_campaign` and `crm_event_attendee.crm_event` on
     // the restricting default): a member list is a campaign's historical record
     // and survives on its own terms. A price line does not.
-    crm_opportunity: Field.lookup('crm_opportunity', {
+    crm_opportunity: Field.masterDetail('crm_opportunity', {
       label: 'Opportunity',
       group: 'basic',
       required: true,

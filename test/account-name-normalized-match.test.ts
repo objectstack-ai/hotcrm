@@ -38,15 +38,25 @@ const lead = objects.find((o) => o.name === 'crm_lead') as AnyRec;
 // ══════════════════════════════════ premise 1: a flow cannot normalize ══
 
 /**
- * `service-automation`'s `resolveToken` recognises exactly ONE function form,
- * `NOW()` / `TODAY()`. Everything else falls through to an expression
- * evaluator that substitutes every bare identifier with its value BEFORE
- * evaluating, so a string method is never reachable — `{x.toLowerCase()}`
- * resolves the whole dotted path `x.company.toLowerCase` to `undefined` and
- * then tries to call `null`.
+ * `service-automation`'s value expressions support a small closed vocabulary —
+ * `round`, `floor`, `ceil`, `abs`, `min`, `max` (1:1 with the CEL stdlib) plus
+ * the whole-token date macros `NOW()` / `TODAY()`. There is no `LOWER`, no
+ * `TRIM`, and no string method: the evaluator substitutes every bare identifier
+ * with its value BEFORE evaluating, so `{x.company.toLowerCase()}` resolves the
+ * whole dotted path to `undefined` and then tries to call it.
  *
- * Run through the REAL engine, because the interesting failure is silent: an
- * unrecognised token does not raise, it interpolates to `""` or to itself.
+ * Run through the REAL engine. ⚠️ HOW this premise holds changed on the
+ * 17.2.0 -> 17.3.0 upgrade, and it changed for the better. Through 17.2.0 an
+ * unrecognised name did not raise: `{LOWER(x)}` resolved to `undefined` and the
+ * unwrapped `LOWER({x})` interpolated to the LITERAL TEXT `LOWER(ACME  Corp)`,
+ * which is the worst shape of all — it looks like it worked and would be
+ * written to the database verbatim. Platform 17.3.0 (objectstack#11060) makes
+ * an unknown function REFUSE the run and name itself, so the silent-wrong
+ * branch this file was written to expose no longer exists.
+ *
+ * The premise is therefore asserted the way the platform now expresses it: the
+ * whole run fails, the message names the offending function, and NOTHING is
+ * written. A separate control proves the one form that does work still does.
  */
 describe('premise: a flow template cannot fold a string', () => {
   const CANDIDATES: Record<string, string> = {
@@ -59,6 +69,8 @@ describe('premise: a flow template cannot fold a string', () => {
   };
 
   let out: Rec = {};
+  let refusal = '';
+  let wroteProbeOut = false;
 
   beforeAll(async () => {
     const store: Record<string, Rec[]> = { crm_lead: [{ id: 'lead_1', company: 'ACME  Corp' }] };
@@ -120,29 +132,73 @@ describe('premise: a flow template cannot fold a string', () => {
       ],
     } as never);
 
-    await engine.execute('probe_normalize', {
+    const run: AnyRec = (await engine.execute('probe_normalize', {
+      params: { recordId: 'lead_1' },
+      userId: 'user_1',
+      event: 'manual',
+    } as never)) as AnyRec;
+    refusal = String(run?.error ?? '');
+    wroteProbeOut = (store.probe_out ?? []).length > 0;
+
+    // The control: the same probe carrying ONLY the form that works.
+    engine.registerFlow('probe_passthrough', {
+      name: 'probe_passthrough',
+      label: 'probe',
+      type: 'autolaunched',
+      status: 'active',
+      variables: [{ name: 'recordId', type: 'text', isInput: true, isOutput: false }],
+      nodes: [
+        { id: 'start', type: 'start', label: 'Start', config: {} },
+        {
+          id: 'get_lead',
+          type: 'get_record',
+          label: 'Get Lead',
+          config: {
+            objectName: 'crm_lead',
+            filter: { id: '{recordId}' },
+            outputVariable: 'leadRecord',
+          },
+        },
+        {
+          id: 'probe',
+          type: 'create_record',
+          label: 'Probe',
+          config: {
+            objectName: 'probe_ok',
+            fields: { passthrough: CANDIDATES.passthrough },
+            outputVariable: 'probeOut',
+          },
+        },
+        { id: 'end', type: 'end', label: 'End' },
+      ],
+      edges: [
+        { id: 'e1', source: 'start', target: 'get_lead', type: 'default' },
+        { id: 'e2', source: 'get_lead', target: 'probe', type: 'default' },
+        { id: 'e3', source: 'probe', target: 'end', type: 'default' },
+      ],
+    } as never);
+    await engine.execute('probe_passthrough', {
       params: { recordId: 'lead_1' },
       userId: 'user_1',
       event: 'manual',
     } as never);
-    out = store.probe_out?.[0] ?? {};
+    out = store.probe_ok?.[0] ?? {};
   });
 
   it('passes the raw value through unchanged — the only thing that works', () => {
     expect(out.passthrough).toBe('ACME  Corp');
   });
 
-  it.each(['fn_lower', 'fn_trim', 'method_lower', 'parenthesised_method'])(
-    'resolves %s to undefined — no LOWER/TRIM/string method exists',
-    (key) => {
-      expect(out[key]).toBeUndefined();
-    },
-  );
+  it('refuses the run on the first unknown function, naming it', () => {
+    // Through 17.2.0 this run SUCCEEDED and wrote a row of silent wrong answers.
+    expect(refusal).toMatch(/unknown function/i);
+    expect(refusal).toMatch(/LOWER|TRIM/);
+  });
 
-  it('interpolates an unwrapped LOWER(...) literally, silently', () => {
-    // The worst shape of all: it looks like it worked and would be written to
-    // the database as the literal text.
-    expect(out.unwrapped_lower).toBe('LOWER(ACME  Corp)');
+  it('writes NOTHING when it refuses — no partial row of wrong answers', () => {
+    // The refusal is the whole point: the `LOWER({x})` form used to interpolate
+    // to the literal string `LOWER(ACME  Corp)` and land in the database.
+    expect(wroteProbeOut).toBe(false);
   });
 });
 
@@ -264,7 +320,14 @@ describe('crm_account.name_normalized is a machine-owned match key', () => {
       declaredIndexes: (orgScoped.indexes ?? []) as AnyRec[],
       physicalColumns,
     });
+    // `(organization_id, account_number)` leads the set from platform 17.3.0:
+    // an `autonumber` field omitting `unique` now parses to
+    // `unique: 'organization'` (spec #13894, ruled on hotcrm#1301). It is a
+    // platform default, not an authoring change in this repo. What this
+    // assertion still guards is the #625 constraint: `name_normalized` must NOT
+    // acquire one.
     expect(indexes.filter((i) => i.unique).map((i) => i.columns)).toEqual([
+      ['organization_id', 'account_number'],
       ['organization_id', 'name'],
     ]);
     expect(indexes.some((i) => i.columns.includes('name_normalized'))).toBe(true);
