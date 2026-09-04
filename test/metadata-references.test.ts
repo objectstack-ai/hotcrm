@@ -427,19 +427,18 @@ describe('page component references resolve', () => {
    *   call, not a conformance edit. Filed as #1279, which carries the
    *   renderer evidence and the three ways out.
    *
-   *   …/*_details :: sections[].collapsible — the same disagreement pointing
-   *   the other way. `RecordDetailsProps`' section shape is strict
-   *   `{ name?, label?, columns?, fields }`, but objectui's record-details
-   *   renderer spreads the authored section through (`...s`) into
-   *   `DetailSection`, which reads `section.collapsible` and renders a
-   *   `<Collapsible>` card with a chevron. So this key WORKS today: deleting it
-   *   to satisfy the schema would remove a working affordance from both
-   *   Description sections. The spec's own rule (#5611/#6276 — the delivered
-   *   shape is the contract, which is how `alwaysShowStrip`, `maxVisible`,
-   *   `inlineEdit` and `hideFields` came to be declared) says the declaration
-   *   is what should move — and that is already filed upstream, with the same
-   *   measurement plus its `hideEmpty` sibling, as
-   *   objectstack-ai/objectstack#11289 (via #1249).
+   *   …/*_details :: sections[].collapsible — RESOLVED UPSTREAM, exemption
+   *   removed. The disagreement pointed the other way: the key WORKED (objectui
+   *   spreads the authored section into `DetailSection`, which renders a
+   *   `<Collapsible>` card) while `RecordDetailsProps` refused to declare it, so
+   *   the spec's own rule — the delivered shape is the contract, which is how
+   *   `alwaysShowStrip`, `maxVisible`, `inlineEdit` and `hideFields` came to be
+   *   declared — said the DECLARATION should move. Filed as
+   *   objectstack-ai/objectstack#11289 (via #1249); it landed in the platform
+   *   17.3.0 line, and the 17.2.0 -> 17.3.0 upgrade is what surfaced it here:
+   *   `os validate` stopped raising the two `collapsible` advisories and this
+   *   guard's own stale-exemption arm went red naming both lines. Nothing in
+   *   this repo changed shape — the schema caught up with the renderer.
    *
    *   sales_home_page/ai_briefing :: description — `page:card` does not declare
    *   `description`, so the paragraph renders nowhere; the fix is to move the
@@ -453,8 +452,6 @@ describe('page component references resolve', () => {
     'case_detail_page/case_header :: actions[]',
     'lead_detail_page/lead_header :: actions[]',
     'opportunity_detail_page/opp_header :: actions[]',
-    'case_detail_page/case_details :: sections[].collapsible',
-    'opportunity_detail_page/opp_details :: sections[].collapsible',
     'sales_home_page/ai_briefing :: description',
   ]);
 

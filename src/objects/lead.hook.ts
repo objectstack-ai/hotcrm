@@ -171,28 +171,22 @@ const leadHook: Hook = {
         // Never trust client-supplied conversion / ownership fields on a public
         // form — OVERWRITE them with a safe value.
         //
-        // ⛔ Platform constraint: `delete input.x` in a hook is a SILENT NO-OP.
-        // ObjectQL's flat-record input Proxy has no `deleteProperty` trap, so
-        // the key survives the delete and reaches storage, while an ASSIGNMENT
-        // to the same key on the same `input` lands normally. This block was
-        // ten `delete` statements and every one of them did nothing; the
-        // symptom was a guest insert storing `is_converted: true` and an
-        // `owner_id` it supplied itself. Assignment is trapped and survives, so
-        // assignment is what this block uses. The same note sits on
-        // `case.hook.ts`'s guest branch, which shares the finding.
+        // ✅ HISTORY, RESOLVED — and the conclusion is unchanged. Through
+        // 17.2.0, `delete input.x` in a hook was a SILENT NO-OP: ObjectQL's
+        // flat-record input Proxy had no `deleteProperty` trap, so the key
+        // survived the delete and reached storage, while an ASSIGNMENT to the
+        // same key on the same `input` landed normally. This block was ten
+        // `delete` statements and every one of them did nothing; the symptom was
+        // a guest insert storing `is_converted: true` and an `owner_id` it
+        // supplied itself. Assignment is what this block uses.
         //
-        // ⚠️ RE-MEASURED ON 17.2.0 — the version this repo pins and installs
-        // (#1416) — and still TRUE: a probe hook deleting a planted key on a
-        // real insert stored it verbatim, and the installed `installFlatInput`
-        // still declares no `deleteProperty` trap. ⛔ Upstream objectstack#12277
-        // is CLOSED, by MERGED PR objectstack#12396 — but that fix is in no
-        // published release: 17.2.0 was cut before the merge and is still the
-        // registry's `latest`, so "closed upstream" is not "fixed in the pin".
-        // `case.hook.ts`'s copy carries the full version note, including why a
-        // shipped trap would still not license `delete` here — the assignments
-        // below are load-bearing as WRITES: `lead_duplicate_check` stands down
-        // only on a NON-BLANK verdict, so these columns must arrive `null`
-        // rather than absent.
+        // Upstream objectstack#12277 shipped in **17.3.0**, the version this
+        // repo now pins, and `delete` is effective on both execution paths.
+        // ⛔ That is still not a licence to spell this block with `delete`: the
+        // assignments are load-bearing as WRITES — `lead_duplicate_check` stands
+        // down only on a NON-BLANK verdict, so these columns must arrive `null`
+        // rather than ABSENT. `case.hook.ts`'s copy carries the full note and
+        // the measurement; `test/hook-input-shape.test.ts` pins the new contract.
         //
         // `null` is the no-value spelling throughout, and it is load-bearing
         // twice over: `lead_auto_assign` stands down only on a non-empty STRING

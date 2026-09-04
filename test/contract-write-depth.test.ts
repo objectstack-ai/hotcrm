@@ -340,12 +340,22 @@ describe('open edition: the hierarchy scope fails closed to owner-only (#880)', 
     // edition this same metadata lets the manager through.
     const r = await attempt('crm_contract', { id: id.repContract, contract_value: 2500 }, mgrCtx);
     expect(r.ok, 'without the enterprise resolver this must still be refused').toBe(false);
-    // MEASURED refusal shape on 17.0.0-rc.6 — the record-level write gate
-    // answers with a bare `Error` carrying `code`/`status`, NOT an ADR-0112
-    // envelope. Pinned as measured rather than as expected.
+    // MEASURED refusal shape — the record-level write gate answers with a bare
+    // `Error` carrying `code`/`status`, NOT an ADR-0112 envelope. Pinned as
+    // measured rather than as expected.
+    //
+    // ⚠️ RE-MEASURED on the 17.2.0 -> 17.3.0 upgrade. `code` and `status` are
+    // unchanged; the MESSAGE was rewritten from the internal-sounding
+    // "insufficient privileges to update crm_contract" into prose addressed to
+    // the person who hit it ("You do not have access to change or delete this
+    // record. Contact the person who owns it, or your administrator…"). The
+    // code/status pair is the contract a caller switches on, so that is what is
+    // pinned tightly; the message is asserted only for the fact that it names a
+    // record-level access refusal, which is what keeps this case from passing
+    // against some other 403.
     expect(r.code).toBe('FORBIDDEN');
     expect(r.status).toBe(403);
-    expect(r.message).toContain('insufficient privileges to update crm_contract');
+    expect(r.message).toMatch(/do not have access to change or delete this record|insufficient privileges to update crm_contract/);
 
     const rows = (await ql.find(
       'crm_contract', { where: { id: id.repContract }, fields: ['id', 'contract_value'] }, { context: SYS },

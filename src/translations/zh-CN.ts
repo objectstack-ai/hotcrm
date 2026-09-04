@@ -115,7 +115,34 @@ export const zhCN: TranslationData = {
         display_title: { label: '显示名称' },
       },
       _views: {
-        all_accounts: { label: '全部客户', description: '客户主列表，包含营收与行业摘要' },
+        all_accounts: {
+          label: '全部客户', description: '客户主列表，包含营收与行业摘要',
+          bulkActions: {
+            delete: {
+              label: '删除',
+              confirmLabel: '删除',
+              confirmText: '确定要永久删除 {{count}} 个客户吗？此操作无法撤销。',
+            },
+            transfer_owner: {
+              label: '转移负责人',
+              confirmText: '确定要转移 {{count}} 个客户的负责人吗？',
+              params: {
+                owner_id: {
+                  label: '新负责人',
+                },
+              },
+            },
+            update_tier: {
+              label: '更新客户等级',
+              confirmText: '确定要将 {{count}} 个客户的等级更新为 {{tier}} 吗？',
+              params: {
+                tier: {
+                  label: '客户等级',
+                },
+              },
+            },
+          },
+        },
         account_gallery: { label: '客户卡片', description: '使用品牌色高亮的客户卡片视图' },
         account_map: { label: '客户地图', description: '客户的地理分布' },
         enterprise_accounts: { label: '企业客户', description: '年营收最高的大客户' },
@@ -226,6 +253,14 @@ export const zhCN: TranslationData = {
     },
 
     crm_knowledge_article: {
+      _validations: {
+        published_requires_body: {
+          message: '没有正文的文章无法发布。',
+        },
+        published_requires_summary: {
+          message: '已发布的文章应填写摘要，供搜索结果与 AI 引用使用。',
+        },
+      },
       label: '知识文章',
       pluralLabel: '知识库',
       description: '面向客户和坐席的可复用问答与操作指南',
@@ -294,6 +329,23 @@ export const zhCN: TranslationData = {
     },
 
     crm_forecast: {
+      _validations: {
+        period_end_after_start: {
+          message: '周期结束必须晚于周期开始。',
+        },
+        period_end_matches_calendar_period: {
+          message: '周期结束必须是该周期的最后一天——例如以 2026-07-01 开始的季度对应 2026-09-30，2026 年 8 月对应 2026-08-31。',
+        },
+        period_start_first_of_period: {
+          message: '周期开始必须是该周期的第一天——例如 2026 年 8 月对应 2026-08-01。',
+        },
+        quarter_starts_on_quarter_boundary: {
+          message: '季度预测必须从季度边界开始——1 月 1 日、4 月 1 日、7 月 1 日或 10 月 1 日。',
+        },
+        snapshot_amounts_non_negative: {
+          message: '快照金额不能为负数。',
+        },
+      },
       label: '销售预测',
       pluralLabel: '销售预测',
       description: '按销售负责人定期记录的管道快照，用于收入预测',
@@ -348,6 +400,20 @@ export const zhCN: TranslationData = {
     },
 
     crm_lead: {
+      _validations: {
+        disqualification_reason_required: {
+          message: '线索标记为不合格时必须填写取消资格原因',
+        },
+        duplicate_disqualification_requires_survivor: {
+          message: '以重复为由取消线索资格时，必须指明保留的记录并将重复状态设为已确认',
+        },
+        email_required: {
+          message: '电子邮件为必填项',
+        },
+        lead_status_progression: {
+          message: '无效的线索状态流转',
+        },
+      },
       label: '线索',
       pluralLabel: '线索',
       description: '尚未确认的潜在客户',
@@ -519,6 +585,17 @@ export const zhCN: TranslationData = {
     },
 
     crm_quote: {
+      _validations: {
+        discount_within_ceiling: {
+          message: '折扣不能超过 60%',
+        },
+        expiration_after_quote: {
+          message: '失效日期必须晚于报价日期',
+        },
+        quote_status_progression: {
+          message: '无效的报价单状态流转',
+        },
+      },
       label: '报价单',
       pluralLabel: '报价单',
       description: '发送给客户的价格报价',
@@ -581,6 +658,14 @@ export const zhCN: TranslationData = {
     },
 
     crm_contract: {
+      _validations: {
+        end_after_start: {
+          message: '结束日期必须晚于开始日期',
+        },
+        contract_status_progression: {
+          message: '无效的合同状态流转',
+        },
+      },
       label: '合同',
       pluralLabel: '合同',
       description: '与客户签署的法律合同',
@@ -649,6 +734,17 @@ export const zhCN: TranslationData = {
     },
 
     crm_case: {
+      _validations: {
+        resolution_required_for_closed: {
+          message: '关闭工单时必须填写解决方案',
+        },
+        escalation_reason_required: {
+          message: '升级工单时必须填写升级原因',
+        },
+        case_status_progression: {
+          message: '无效的状态流转',
+        },
+      },
       label: '工单',
       pluralLabel: '工单',
       description: '客户支持工单与服务请求',
@@ -749,6 +845,17 @@ export const zhCN: TranslationData = {
     },
 
     crm_task: {
+      _validations: {
+        completed_date_required: {
+          message: '状态为已完成时必须填写完成日期',
+        },
+        recurrence_fields_required: {
+          message: '重复任务必须填写重复类型',
+        },
+        related_to_required: {
+          message: '至少需要选择一条关联记录',
+        },
+      },
       label: '任务',
       pluralLabel: '任务',
       description: '活动与待办事项',
@@ -827,6 +934,14 @@ export const zhCN: TranslationData = {
     },
 
     crm_campaign: {
+      _validations: {
+        end_after_start: {
+          message: '结束日期必须晚于开始日期',
+        },
+        actual_cost_within_budget: {
+          message: '实际成本超出预算成本',
+        },
+      },
       label: '营销活动',
       pluralLabel: '营销活动',
       description: '市场营销活动与推广',
@@ -896,6 +1011,14 @@ export const zhCN: TranslationData = {
     },
 
     crm_product: {
+      _validations: {
+        cost_less_than_price: {
+          message: '成本应低于标价',
+        },
+        price_positive: {
+          message: '标价必须为正数',
+        },
+      },
       label: '产品',
       pluralLabel: '产品',
       description: '公司提供的产品与服务',
@@ -943,6 +1066,17 @@ export const zhCN: TranslationData = {
     },
 
     crm_opportunity: {
+      _validations: {
+        amount_positive: {
+          message: '金额必须大于零',
+        },
+        close_date_future: {
+          message: '除非商机已结束，否则预计成交日不应早于今天',
+        },
+        opportunity_stage_progression: {
+          message: '无效的商机阶段流转',
+        },
+      },
       label: '商机',
       pluralLabel: '商机',
       description: '销售流程中的商机与交易',
@@ -1081,6 +1215,14 @@ export const zhCN: TranslationData = {
     },
 
     crm_event: {
+      _validations: {
+        end_after_start: {
+          message: '结束时间必须晚于开始时间',
+        },
+        related_to_required: {
+          message: '至少需要选择一条关联记录',
+        },
+      },
       label: '活动',
       pluralLabel: '活动',
       description: '与客户的会议、通话及其他已安排的互动',
@@ -1140,6 +1282,14 @@ export const zhCN: TranslationData = {
     },
 
     crm_event_attendee: {
+      _validations: {
+        attendee_resolves: {
+          message: '参与者必须填写其参与者类型所指的一方——联系人类型需要填写联系人，外部类型需要填写外部参与者姓名',
+        },
+        attendee_type_exclusive: {
+          message: '参与者只能指定一方——请清空其参与者类型未指明的所有字段',
+        },
+      },
       label: '活动参与者',
       pluralLabel: '活动参与者',
       description: '受邀参加或实际出席活动的人员',
@@ -1196,6 +1346,11 @@ export const zhCN: TranslationData = {
     },
 
     crm_campaign_member: {
+      _validations: {
+        lead_or_contact_required: {
+          message: '营销活动成员必须关联线索或联系人之一',
+        },
+      },
       // 「营销活动成员」, not 「活动成员」: this object's master is `crm_campaign`
       // (营销活动), while 「活动」 is already this pack's label for `crm_event` and
       // 「活动参与者」 its child `crm_event_attendee`. Dropping 「营销」 put a
@@ -1232,6 +1387,11 @@ export const zhCN: TranslationData = {
     },
 
     crm_opportunity_line_item: {
+      _validations: {
+        unit_price_positive: {
+          message: '销售价格不能为负数',
+        },
+      },
       label: '商机产品明细',
       pluralLabel: '商机产品明细',
       description: '商机下按产品拆分的报价行',
@@ -1253,6 +1413,14 @@ export const zhCN: TranslationData = {
     },
 
     crm_quote_line_item: {
+      _validations: {
+        discount_within_ceiling: {
+          message: '行折扣不能超过 60%',
+        },
+        unit_price_positive: {
+          message: '销售价格不能为负数',
+        },
+      },
       label: '报价单明细',
       pluralLabel: '报价单明细',
       description: '报价单下按产品拆分的报价行',
@@ -1449,6 +1617,301 @@ export const zhCN: TranslationData = {
   // Header strings carrying `{field}` tokens keep the token spelling verbatim —
   // the console substitutes on the raw key, so a translated token resolves to
   // nothing and the header renders blank.
+  datasets: {
+    account_metrics: {
+      label: '客户指标',
+      description: '按行业与类型统计客户数量的语义层',
+      dimensions: {
+        industry: {
+          label: '行业',
+        },
+        type: {
+          label: '类型',
+        },
+        created_at: {
+          label: '创建时间',
+        },
+      },
+      measures: {
+        account_count: {
+          label: '客户数',
+        },
+        annual_revenue_sum: {
+          label: '年营收',
+        },
+      },
+    },
+    case_metrics: {
+      label: '工单指标',
+      description: '统计工单数量、解决时长与 SLA 的语义层',
+      dimensions: {
+        created_date: {
+          label: '创建时间',
+        },
+        origin: {
+          label: '来源',
+        },
+        priority: {
+          label: '优先级',
+        },
+        resolved_article: {
+          label: '解决用知识文章',
+        },
+        status: {
+          label: '状态',
+        },
+        type: {
+          label: '类型',
+        },
+      },
+      measures: {
+        avg_resolution: {
+          label: '平均解决时长（小时）',
+        },
+        avg_sla_violated: {
+          label: 'SLA 违约率',
+        },
+        case_count: {
+          label: '工单数',
+        },
+        closed_count: {
+          label: '已关闭工单',
+        },
+        kb_deflection_rate: {
+          label: '知识库自助解决率',
+        },
+        kb_resolved_count: {
+          label: '知识库解决数',
+        },
+        sla_compliance_rate: {
+          label: 'SLA 达标率',
+        },
+        sla_met_count: {
+          label: 'SLA 达标工单',
+        },
+      },
+    },
+    contact_metrics: {
+      label: '联系人指标',
+      description: '统计联系人数量的语义层',
+      measures: {
+        contact_count: {
+          label: '联系人数',
+        },
+      },
+    },
+    event_metrics: {
+      label: '活动指标',
+      description: '统计会议、通话与互动新近度的语义层',
+      dimensions: {
+        owner: {
+          label: '负责人',
+        },
+        related_to_type: {
+          label: '关联对象',
+        },
+        start_datetime: {
+          label: '活动周',
+        },
+        status: {
+          label: '状态',
+        },
+        type: {
+          label: '活动类型',
+        },
+      },
+      measures: {
+        avg_minutes: {
+          label: '平均时长',
+        },
+        event_count: {
+          label: '活动数',
+        },
+        total_minutes: {
+          label: '总分钟数',
+        },
+      },
+    },
+    forecast_metrics: {
+      label: '销售预测指标',
+      description: '按负责人统计配额、达成率与管道覆盖倍数的语义层',
+      dimensions: {
+        owner: {
+          label: '负责人',
+        },
+        period: {
+          label: '周期类型',
+        },
+        period_label: {
+          label: '周期',
+        },
+        period_start: {
+          label: '周期开始',
+        },
+      },
+      measures: {
+        attainment: {
+          label: '达成率',
+        },
+        closed_sum: {
+          label: '已成交',
+        },
+        commit_sum: {
+          label: '承诺',
+        },
+        pipeline_sum: {
+          label: '销售管道',
+        },
+        quota_sum: {
+          label: '配额',
+        },
+      },
+    },
+    lead_metrics: {
+      label: '线索指标',
+      description: '统计线索数量的语义层',
+      dimensions: {
+        created_at: {
+          label: '创建时间',
+        },
+        last_contacted_date: {
+          label: '最近联系',
+        },
+        lead_source: {
+          label: '来源',
+        },
+        status: {
+          label: '状态',
+        },
+      },
+      measures: {
+        lead_count: {
+          label: '线索数',
+        },
+      },
+    },
+    opportunity_metrics: {
+      label: '商机指标',
+      description: '统计销售管道数量与金额的语义层',
+      dimensions: {
+        account_industry: {
+          label: '客户行业',
+        },
+        close_date: {
+          label: '预计成交日',
+        },
+        close_quarter: {
+          label: '成交季度',
+        },
+        forecast_category: {
+          label: '预测类别',
+        },
+        lead_source: {
+          label: '线索来源',
+        },
+        loss_reason: {
+          label: '失单原因',
+        },
+        owner: {
+          label: '负责人',
+        },
+        stage: {
+          label: '阶段',
+        },
+        type: {
+          label: '商机类型',
+        },
+        win_reason: {
+          label: '赢单原因',
+        },
+      },
+      measures: {
+        avg_amount: {
+          label: '平均单笔金额',
+        },
+        avg_probability: {
+          label: '平均赢单概率',
+        },
+        decided_count: {
+          label: '已定局商机',
+        },
+        lost_amount: {
+          label: '失单金额',
+        },
+        lost_count: {
+          label: '失单数',
+        },
+        opp_count: {
+          label: '商机数',
+        },
+        total_amount: {
+          label: '总金额',
+        },
+        win_rate: {
+          label: '赢单率',
+        },
+        won_amount: {
+          label: '赢单金额',
+        },
+        won_count: {
+          label: '赢单数',
+        },
+      },
+    },
+    product_metrics: {
+      label: '产品指标',
+      description: '统计产品目录数量与标价的语义层',
+      dimensions: {
+        category: {
+          label: '类别',
+        },
+      },
+      measures: {
+        list_price_sum: {
+          label: '标价合计',
+        },
+        product_count: {
+          label: '产品数',
+        },
+      },
+    },
+    task_metrics: {
+      label: '任务指标',
+      description: '统计任务工作量与完成情况的语义层',
+      dimensions: {
+        due_date: {
+          label: '截止日期',
+        },
+        is_completed: {
+          label: '已完成',
+        },
+        is_overdue: {
+          label: '已逾期',
+        },
+        priority: {
+          label: '优先级',
+        },
+        priority_rank: {
+          label: '紧急度',
+        },
+        status: {
+          label: '状态',
+        },
+        type: {
+          label: '类型',
+        },
+      },
+      measures: {
+        avg_progress: {
+          label: '平均进度',
+        },
+        task_count: {
+          label: '任务数',
+        },
+      },
+    },
+  },
+
   pages: {
     account_detail_page: {
       label: '客户详情',
@@ -1505,6 +1968,21 @@ export const zhCN: TranslationData = {
       title: '销售看板',
       subtitle: '欢迎回来',
       components: {
+        kpi_revenue_won: {
+          label: '赢单营收',
+        },
+        kpi_deals_won: {
+          label: '赢单数',
+        },
+        kpi_pipeline_value: {
+          label: '销售管道金额',
+        },
+        kpi_open_leads: {
+          label: '开放线索',
+        },
+        home_upcoming_events: {
+          label: '📅 即将开始 · 最近优先',
+        },
         quick_create: { title: '快速创建', label: '快速创建' },
         key_metrics: { title: '关键绩效指标', label: '关键指标' },
         home_tabs: { label: '主页标签页' },

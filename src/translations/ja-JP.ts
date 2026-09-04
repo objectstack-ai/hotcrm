@@ -156,7 +156,34 @@ export const jaJP: TranslationData = {
         },
       },
       _views: {
-        all_accounts: { label: '全取引先', description: '売上と業種を含む取引先の一覧' },
+        all_accounts: {
+          label: '全取引先', description: '売上と業種を含む取引先の一覧',
+          bulkActions: {
+            delete: {
+              label: '削除',
+              confirmLabel: '削除',
+              confirmText: '{{count}} 件の取引先を完全に削除しますか？この操作は取り消せません。',
+            },
+            transfer_owner: {
+              label: '所有者の変更',
+              confirmText: '{{count}} 件の取引先の所有者を変更しますか？',
+              params: {
+                owner_id: {
+                  label: '新しい所有者',
+                },
+              },
+            },
+            update_tier: {
+              label: '顧客ランクの更新',
+              confirmText: '{{count}} 件の取引先の顧客ランクを {{tier}} に更新しますか？',
+              params: {
+                tier: {
+                  label: '顧客ランク',
+                },
+              },
+            },
+          },
+        },
         account_gallery: { label: '取引先カード', description: 'ブランドカラー付きのカードビュー' },
         account_map: { label: '取引先マップ', description: '取引先の地理的分布' },
         enterprise_accounts: { label: 'エンタープライズ取引先', description: '年商最上位の主要顧客' },
@@ -256,6 +283,14 @@ export const jaJP: TranslationData = {
     },
 
     crm_knowledge_article: {
+      _validations: {
+        published_requires_body: {
+          message: '本文のない記事は公開できません。',
+        },
+        published_requires_summary: {
+          message: '公開済みの記事には、検索結果と AI の引用のために概要を記載してください。',
+        },
+      },
       label: 'ナレッジ記事',
       pluralLabel: 'ナレッジベース',
       description: '顧客とエージェントが再利用できる回答とハウツーガイド',
@@ -328,6 +363,23 @@ export const jaJP: TranslationData = {
     },
 
     crm_forecast: {
+      _validations: {
+        period_end_after_start: {
+          message: '期間終了は期間開始より後である必要があります。',
+        },
+        period_end_matches_calendar_period: {
+          message: '期間終了はその期間の最終日である必要があります。例：2026-07-01 開始の四半期なら 2026-09-30、2026 年 8 月なら 2026-08-31。',
+        },
+        period_start_first_of_period: {
+          message: '期間開始はその期間の初日である必要があります。例：2026 年 8 月なら 2026-08-01。',
+        },
+        quarter_starts_on_quarter_boundary: {
+          message: '四半期フォーキャストは四半期の境界（1 月 1 日、4 月 1 日、7 月 1 日、10 月 1 日）から開始する必要があります。',
+        },
+        snapshot_amounts_non_negative: {
+          message: 'スナップショット金額は負の値にできません。',
+        },
+      },
       label: 'フォーキャスト',
       pluralLabel: 'フォーキャスト',
       description: '担当者ごとの定期パイプラインスナップショットで収益予測に使用',
@@ -406,6 +458,20 @@ export const jaJP: TranslationData = {
     },
 
     crm_lead: {
+      _validations: {
+        disqualification_reason_required: {
+          message: 'リードを「対象外」にする場合は失格理由が必要です',
+        },
+        duplicate_disqualification_requires_survivor: {
+          message: '重複を理由にリードを失格とする場合は、残すレコードを指定し、重複ステータスを「確認済み」にする必要があります',
+        },
+        email_required: {
+          message: 'メールアドレスは必須です',
+        },
+        lead_status_progression: {
+          message: '無効なリードステータス遷移です',
+        },
+      },
       label: 'リード',
       pluralLabel: 'リード',
       description: 'まだ適格判定を受けていない見込み客',
@@ -561,6 +627,17 @@ export const jaJP: TranslationData = {
     },
 
     crm_opportunity: {
+      _validations: {
+        amount_positive: {
+          message: '金額は 0 より大きい必要があります',
+        },
+        close_date_future: {
+          message: '商談がクローズしている場合を除き、完了予定日を過去に設定することはできません',
+        },
+        opportunity_stage_progression: {
+          message: '無効な商談ステージ遷移です',
+        },
+      },
       label: '商談',
       pluralLabel: '商談',
       description: 'パイプライン上の商談・案件',
@@ -687,6 +764,17 @@ export const jaJP: TranslationData = {
     },
 
     crm_case: {
+      _validations: {
+        resolution_required_for_closed: {
+          message: 'ケースをクローズするには解決内容が必要です',
+        },
+        escalation_reason_required: {
+          message: 'ケースをエスカレーションするには理由が必要です',
+        },
+        case_status_progression: {
+          message: '無効なステータス遷移です',
+        },
+      },
       label: 'ケース',
       pluralLabel: 'ケース',
       description: 'カスタマーサポートのケースとサービス依頼',
@@ -789,6 +877,14 @@ export const jaJP: TranslationData = {
     },
 
     crm_contract: {
+      _validations: {
+        end_after_start: {
+          message: '終了日は開始日より後である必要があります',
+        },
+        contract_status_progression: {
+          message: '無効な契約ステータス遷移です',
+        },
+      },
       label: '契約',
       pluralLabel: '契約',
       description: '顧客と締結した法的な契約・合意',
@@ -852,6 +948,14 @@ export const jaJP: TranslationData = {
     },
 
     crm_product: {
+      _validations: {
+        cost_less_than_price: {
+          message: '原価は定価より低くしてください',
+        },
+        price_positive: {
+          message: '定価は正の値である必要があります',
+        },
+      },
       label: '製品',
       pluralLabel: '製品',
       description: '自社が提供する製品・サービス',
@@ -899,6 +1003,17 @@ export const jaJP: TranslationData = {
     },
 
     crm_quote: {
+      _validations: {
+        discount_within_ceiling: {
+          message: '割引率は 60% を超えられません',
+        },
+        expiration_after_quote: {
+          message: '有効期限は見積日より後である必要があります',
+        },
+        quote_status_progression: {
+          message: '無効な見積ステータス遷移です',
+        },
+      },
       label: '見積',
       pluralLabel: '見積',
       description: '顧客に提示する価格見積',
@@ -955,6 +1070,17 @@ export const jaJP: TranslationData = {
     },
 
     crm_task: {
+      _validations: {
+        completed_date_required: {
+          message: 'ステータスが「完了」の場合は完了日が必要です',
+        },
+        recurrence_fields_required: {
+          message: '繰り返しタスクには繰り返し種別が必要です',
+        },
+        related_to_required: {
+          message: '関連レコードを少なくとも 1 件選択してください',
+        },
+      },
       label: 'タスク',
       pluralLabel: 'タスク',
       description: '活動と ToDo',
@@ -1030,6 +1156,14 @@ export const jaJP: TranslationData = {
     },
 
     crm_campaign: {
+      _validations: {
+        end_after_start: {
+          message: '終了日は開始日より後である必要があります',
+        },
+        actual_cost_within_budget: {
+          message: '実績コストが予算コストを超えています',
+        },
+      },
       label: 'キャンペーン',
       pluralLabel: 'キャンペーン',
       description: 'マーケティングキャンペーンと施策',
@@ -1103,6 +1237,14 @@ export const jaJP: TranslationData = {
     },
 
     crm_event: {
+      _validations: {
+        end_after_start: {
+          message: '終了時刻は開始時刻より後である必要があります',
+        },
+        related_to_required: {
+          message: '関連レコードを少なくとも 1 件選択してください',
+        },
+      },
       label: 'イベント',
       pluralLabel: 'イベント',
       description: '顧客との会議・電話などの予定された対話',
@@ -1159,6 +1301,14 @@ export const jaJP: TranslationData = {
     },
 
     crm_event_attendee: {
+      _validations: {
+        attendee_resolves: {
+          message: '参加者は参加者種別が示す相手を指定する必要があります。取引先責任者の場合は取引先責任者を、社外の場合は社外参加者名を入力してください',
+        },
+        attendee_type_exclusive: {
+          message: '参加者が指定できる相手は 1 つだけです。参加者種別が示さない項目はすべて空にしてください',
+        },
+      },
       label: 'イベント参加者',
       pluralLabel: 'イベント参加者',
       description: 'イベントに招待された、または出席した人',
@@ -1215,6 +1365,11 @@ export const jaJP: TranslationData = {
     },
 
     crm_campaign_member: {
+      _validations: {
+        lead_or_contact_required: {
+          message: 'キャンペーンメンバーはリードまたは取引先責任者のいずれかを参照する必要があります',
+        },
+      },
       label: 'キャンペーンメンバー',
       pluralLabel: 'キャンペーンメンバー',
       description: 'キャンペーンの対象となったリード・取引先責任者とその反応状況',
@@ -1247,6 +1402,11 @@ export const jaJP: TranslationData = {
     },
 
     crm_opportunity_line_item: {
+      _validations: {
+        unit_price_positive: {
+          message: '販売価格を負の値にすることはできません',
+        },
+      },
       label: '商談商品明細',
       pluralLabel: '商談商品明細',
       description: '商談配下の製品別価格明細行',
@@ -1268,6 +1428,14 @@ export const jaJP: TranslationData = {
     },
 
     crm_quote_line_item: {
+      _validations: {
+        discount_within_ceiling: {
+          message: '明細の割引率は 60% を超えられません',
+        },
+        unit_price_positive: {
+          message: '販売価格を負の値にすることはできません',
+        },
+      },
       label: '見積明細',
       pluralLabel: '見積明細',
       description: '見積配下の製品別価格明細行',
@@ -1465,6 +1633,301 @@ export const jaJP: TranslationData = {
   // Header strings carrying `{field}` tokens keep the token spelling verbatim —
   // the console substitutes on the raw key, so a translated token resolves to
   // nothing and the header renders blank.
+  datasets: {
+    account_metrics: {
+      label: '取引先指標',
+      description: '業種・種別ごとに取引先数を集計するセマンティックレイヤー',
+      dimensions: {
+        industry: {
+          label: '業種',
+        },
+        type: {
+          label: '種別',
+        },
+        created_at: {
+          label: '作成日',
+        },
+      },
+      measures: {
+        account_count: {
+          label: '取引先数',
+        },
+        annual_revenue_sum: {
+          label: '年間売上',
+        },
+      },
+    },
+    case_metrics: {
+      label: 'ケース指標',
+      description: 'ケース数・解決時間・SLA を集計するセマンティックレイヤー',
+      dimensions: {
+        created_date: {
+          label: '作成日',
+        },
+        origin: {
+          label: '発生元',
+        },
+        priority: {
+          label: '優先度',
+        },
+        resolved_article: {
+          label: '解決に使用したナレッジ記事',
+        },
+        status: {
+          label: 'ステータス',
+        },
+        type: {
+          label: '種別',
+        },
+      },
+      measures: {
+        avg_resolution: {
+          label: '平均解決時間（時間）',
+        },
+        avg_sla_violated: {
+          label: 'SLA 違反率',
+        },
+        case_count: {
+          label: 'ケース数',
+        },
+        closed_count: {
+          label: 'クローズ済みケース',
+        },
+        kb_deflection_rate: {
+          label: 'ナレッジベース自己解決率',
+        },
+        kb_resolved_count: {
+          label: 'ナレッジベースで解決した件数',
+        },
+        sla_compliance_rate: {
+          label: 'SLA 遵守率',
+        },
+        sla_met_count: {
+          label: 'SLA を満たしたケース',
+        },
+      },
+    },
+    contact_metrics: {
+      label: '取引先責任者指標',
+      description: '取引先責任者数を集計するセマンティックレイヤー',
+      measures: {
+        contact_count: {
+          label: '取引先責任者数',
+        },
+      },
+    },
+    event_metrics: {
+      label: '活動指標',
+      description: '会議・通話・接触の新しさを集計するセマンティックレイヤー',
+      dimensions: {
+        owner: {
+          label: '所有者',
+        },
+        related_to_type: {
+          label: '関連先',
+        },
+        start_datetime: {
+          label: '活動週',
+        },
+        status: {
+          label: 'ステータス',
+        },
+        type: {
+          label: '活動種別',
+        },
+      },
+      measures: {
+        avg_minutes: {
+          label: '平均所要時間',
+        },
+        event_count: {
+          label: '活動件数',
+        },
+        total_minutes: {
+          label: '合計分数',
+        },
+      },
+    },
+    forecast_metrics: {
+      label: 'フォーキャスト指標',
+      description: '担当者ごとの目標・達成率・パイプラインカバレッジを集計するセマンティックレイヤー',
+      dimensions: {
+        owner: {
+          label: '所有者',
+        },
+        period: {
+          label: '期間種別',
+        },
+        period_label: {
+          label: '期間',
+        },
+        period_start: {
+          label: '期間開始',
+        },
+      },
+      measures: {
+        attainment: {
+          label: '達成率',
+        },
+        closed_sum: {
+          label: 'クローズ済み',
+        },
+        commit_sum: {
+          label: 'コミット',
+        },
+        pipeline_sum: {
+          label: 'パイプライン',
+        },
+        quota_sum: {
+          label: '目標',
+        },
+      },
+    },
+    lead_metrics: {
+      label: 'リード指標',
+      description: 'リード数を集計するセマンティックレイヤー',
+      dimensions: {
+        created_at: {
+          label: '作成日',
+        },
+        last_contacted_date: {
+          label: '最終接触日',
+        },
+        lead_source: {
+          label: 'ソース',
+        },
+        status: {
+          label: 'ステータス',
+        },
+      },
+      measures: {
+        lead_count: {
+          label: 'リード数',
+        },
+      },
+    },
+    opportunity_metrics: {
+      label: '商談指標',
+      description: '営業パイプラインの件数と金額を集計するセマンティックレイヤー',
+      dimensions: {
+        account_industry: {
+          label: '取引先の業種',
+        },
+        close_date: {
+          label: '完了予定日',
+        },
+        close_quarter: {
+          label: '完了四半期',
+        },
+        forecast_category: {
+          label: 'フォーキャスト区分',
+        },
+        lead_source: {
+          label: 'リードソース',
+        },
+        loss_reason: {
+          label: '失注理由',
+        },
+        owner: {
+          label: '所有者',
+        },
+        stage: {
+          label: 'ステージ',
+        },
+        type: {
+          label: '商談種別',
+        },
+        win_reason: {
+          label: '受注理由',
+        },
+      },
+      measures: {
+        avg_amount: {
+          label: '平均商談金額',
+        },
+        avg_probability: {
+          label: '平均確度',
+        },
+        decided_count: {
+          label: '決着した商談',
+        },
+        lost_amount: {
+          label: '失注金額',
+        },
+        lost_count: {
+          label: '失注件数',
+        },
+        opp_count: {
+          label: '商談数',
+        },
+        total_amount: {
+          label: '合計金額',
+        },
+        win_rate: {
+          label: '受注率',
+        },
+        won_amount: {
+          label: '受注金額',
+        },
+        won_count: {
+          label: '受注件数',
+        },
+      },
+    },
+    product_metrics: {
+      label: '製品指標',
+      description: '製品カタログの件数と定価を集計するセマンティックレイヤー',
+      dimensions: {
+        category: {
+          label: 'カテゴリ',
+        },
+      },
+      measures: {
+        list_price_sum: {
+          label: '定価合計',
+        },
+        product_count: {
+          label: '製品数',
+        },
+      },
+    },
+    task_metrics: {
+      label: 'タスク指標',
+      description: 'タスクの作業量と完了状況を集計するセマンティックレイヤー',
+      dimensions: {
+        due_date: {
+          label: '期限',
+        },
+        is_completed: {
+          label: '完了済み',
+        },
+        is_overdue: {
+          label: '期限超過',
+        },
+        priority: {
+          label: '優先度',
+        },
+        priority_rank: {
+          label: '緊急度',
+        },
+        status: {
+          label: 'ステータス',
+        },
+        type: {
+          label: '種別',
+        },
+      },
+      measures: {
+        avg_progress: {
+          label: '平均進捗',
+        },
+        task_count: {
+          label: 'タスク数',
+        },
+      },
+    },
+  },
+
   pages: {
     account_detail_page: {
       label: '取引先詳細',
@@ -1521,6 +1984,21 @@ export const jaJP: TranslationData = {
       title: '営業ダッシュボード',
       subtitle: 'おかえりなさい',
       components: {
+        kpi_revenue_won: {
+          label: '受注売上',
+        },
+        kpi_deals_won: {
+          label: '受注件数',
+        },
+        kpi_pipeline_value: {
+          label: 'パイプライン金額',
+        },
+        kpi_open_leads: {
+          label: 'オープンリード',
+        },
+        home_upcoming_events: {
+          label: '📅 開催予定 · 直近順',
+        },
         quick_create: { title: 'クイック作成', label: 'クイック作成' },
         key_metrics: { title: '主要業績評価指標', label: '主要指標' },
         home_tabs: { label: 'ホームタブ' },
