@@ -100,13 +100,27 @@ export const AccountViews = defineView({
       },
     },
 
-    /** Geospatial distribution */
+    /**
+     * Geospatial distribution.
+     *
+     * The `map` block is what BINDS the view to a coordinate source. Without it
+     * the renderer falls back to literal default field names, which resolve on
+     * `crm_account` only by luck — the view draws no marker while authoring
+     * reports success (`view/layout-without-binding`). `office_location` is the
+     * object's `Field.location(...)`, which is the one field on `crm_account`
+     * carrying coordinates; `billing_address` is an `address` field and is a
+     * postal shape, not a coordinate one, so it stays a column rather than the
+     * binding. `titleField` names the marker label — `name`, not the object's
+     * `nameField` (`display_title`), because the map's own `columns` show
+     * `name` and the two should agree.
+     */
     account_map: {
       name: 'account_map',
       type: 'map',
       label: 'Accounts by Location',
       data: { provider: 'object', object: 'crm_account' },
       columns: ['name', 'industry', 'office_location', 'billing_address'],
+      map: { locationField: 'office_location', titleField: 'name' },
     },
 
     /** Tier accounts: Enterprise (>= $10M ARR) */
