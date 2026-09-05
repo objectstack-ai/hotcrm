@@ -888,7 +888,6 @@ export const en: TranslationData = {
         image: { label: 'Product Image' },
         datasheet: { label: 'Datasheet' },
         display_title: { label: 'Display Title' },
-        tax_rate: { label: 'Default Tax Rate %' },
       },
       _views: {
         all_products: { label: 'All Products' },

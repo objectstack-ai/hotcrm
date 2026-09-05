@@ -1,6 +1,6 @@
 ---
 title: Products
-description: The catalog of what you sell — codes, list prices, SKUs and tax rates.
+description: The catalog of what you sell — codes, list prices and SKUs.
 ---
 
 # Products
@@ -14,7 +14,7 @@ The detail screen has 3 sections:
 | Section | Fields |
 | --- | --- |
 | **Product Information** | Product code *(auto)*, name, description, category, family |
-| **Pricing** | List price, cost, SKU, tax rate |
+| **Pricing** | List price, cost, SKU |
 | **Resources** | Product image, datasheet, product manager |
 
 ## Categories and families
@@ -44,11 +44,10 @@ Categories and families let you slice reports by product mix — *"how much SMB-
 | --- | --- |
 | **List Price** | Standard published price — what shows up on a quote by default |
 | **Cost** | Your cost — used for margin calculation |
-| **Default Tax Rate %** | Stored on the product. Nothing applies it — see below |
 
 The system warns you if Cost is greater than List Price (which would be a losing sale).
 
-**Tax is a quote-level figure, and the product rate is not applied anywhere.** The price fill that copies a product's List Price onto a quote or opportunity line item does not copy the rate, and a quote's total is *subtotal − discount + Tax + Shipping*, where **Tax** is an amount you type on the quote itself. A quote line item has its own **Tax Rate %**, defaulted to 0 and set per line. So setting *Default Tax Rate %* on a product changes no total anywhere today.
+**Tax is a quote-level figure, and the catalog carries no rate.** A quote's total is *subtotal − discount + Tax + Shipping*, where **Tax** is an amount you type on the quote itself, and a quote line item has its own **Tax Rate %**, defaulted to 0 and set per line. A product record stores nothing about tax.
 
 ## No inventory, no billing schedule
 

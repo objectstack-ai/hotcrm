@@ -1018,7 +1018,6 @@ export const esES: TranslationData = {
         cost: { label: 'Costo' },
         sku: { label: 'SKU' },
         is_active: { label: 'Activo' },
-        tax_rate: { label: 'Tasa de Impuesto por Defecto %' },
         product_manager: { label: 'Gerente de Producto' },
         image: { label: 'Imagen de Producto' },
         datasheet: { label: 'Ficha Técnica' },

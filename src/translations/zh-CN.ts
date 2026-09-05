@@ -1048,7 +1048,6 @@ export const zhCN: TranslationData = {
         image: { label: '产品图片' },
         datasheet: { label: '规格书' },
         display_title: { label: '显示名称' },
-        tax_rate: { label: '默认税率 %' },
       },
       _views: {
         all_products: { label: '全部产品' },
