@@ -28,12 +28,17 @@ export const ConvertLeadAction: Action = {
   refreshAfter: true,
   // ADR-0011 — opt this Action in to AI, which materialises the
   // `action_convert_lead` tool the `lead_qualification` skill references.
-  // Flow-typed with a target, so it has a headless path. `confirmText` makes
-  // the runtime treat it as approval-requiring, so an agent invocation lands
-  // in the HITL queue rather than converting a lead unattended — which is the
-  // behaviour we want for an irreversible outcome.
+  // Flow-typed with a target, so it has a headless path. `requiresConfirmation`
+  // is the only key the AI path reads: `actionLooksDestructive` consults
+  // `ai.requiresConfirmation` and nothing else. `confirmText` above is the
+  // console's confirm-dialog string for a human click and reaches no AI code.
+  // The flag is SURFACED, not enforced — `list_actions` reports
+  // `requiresConfirmation: true` and the calling client decides what to do
+  // with it, while `run_action` dispatches the flow with no server-side pause.
+  // It warns the caller that this is irreversible; it is not a lock.
   ai: {
     exposed: true,
+    requiresConfirmation: true,
     description:
       'Converts a qualified lead into an account, contact and opportunity. Irreversible — requires human approval before it runs.',
   },
