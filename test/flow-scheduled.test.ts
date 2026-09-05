@@ -21,6 +21,7 @@ import forecastDerive from '../src/objects/forecast.hook';
 import { TaskDueReminderFlow } from '../src/flows/task-due-reminder.flow';
 import * as allFlows from '../src/flows';
 import { makeFlowHarness, type Rec } from './helpers/flow-harness';
+import { regionsOf } from './helpers/flow-regions';
 
 /**
  * Runtime tests for the SCHEDULED sweeps.
@@ -1029,8 +1030,15 @@ describe('loop-nested conditions must be explicit CEL envelopes', () => {
             condition: node.config.condition,
           });
         }
-        // A loop nested in a loop is subject to the same rule.
-        if (node?.type === 'loop') visitBody(flowName, `${loopId}/${node.id}`, node.config?.body);
+        // Any region nested inside this one is subject to the same rule: a loop
+        // in a loop, and — since `src/flows/_guarded-iteration.ts` — the
+        // `try_catch` guard every loop body now opens with, whose `try` region
+        // holds what used to sit here directly. `regionsOf` reads the
+        // platform's own slot map, so a region type added later is descended
+        // into without this walk being remembered.
+        for (const nested of regionsOf(node)) {
+          visitBody(flowName, `${loopId}/${node.id}`, nested as Rec);
+        }
       }
       for (const edge of (body.edges ?? []) as Rec[]) {
         if (edge?.condition !== undefined) {

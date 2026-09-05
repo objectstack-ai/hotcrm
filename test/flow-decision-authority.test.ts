@@ -5,6 +5,7 @@ import { P } from '@objectstack/spec';
 import { OpportunityStagnationFlow } from '../src/flows/opportunity-stagnation.flow';
 import { allFlows } from '../src/flows/index';
 import { makeFlowHarness } from './helpers/flow-harness';
+import { flowGraphDeep } from './helpers/flow-regions';
 
 /**
  * ═══ HOUSE RULE: a `decision` node's OUT-EDGES are the only branch site ═════
@@ -87,20 +88,15 @@ import { makeFlowHarness } from './helpers/flow-harness';
 
 type AnyRec = Record<string, any>;
 
-/** A flow's nodes and edges with every `loop` body region flattened in. */
+/**
+ * A flow's nodes and edges with EVERY control-flow region flattened in, not
+ * just `loop`'s body. Since `src/flows/_guarded-iteration.ts` a loop body is
+ * one `try_catch` guard and the gates live in its `try` region, so a walk that
+ * knew only about `config.body` would reach the guard and stop — and the
+ * "finds decision nodes to check at all" guard below is what would say so.
+ */
 function graphOf(flow: AnyRec): { nodes: AnyRec[]; edges: AnyRec[] } {
-  const nodes: AnyRec[] = [];
-  const edges: AnyRec[] = [];
-  const walk = (ns: AnyRec[], es: AnyRec[]) => {
-    for (const n of ns ?? []) {
-      nodes.push(n);
-      const body = n.config?.body;
-      if (body) walk(body.nodes ?? [], body.edges ?? []);
-    }
-    edges.push(...(es ?? []));
-  };
-  walk(flow.nodes ?? [], flow.edges ?? []);
-  return { nodes, edges };
+  return flowGraphDeep(flow);
 }
 
 interface DecisionSite {

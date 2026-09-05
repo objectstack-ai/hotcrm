@@ -5,6 +5,7 @@ import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-automation';
 import stack from '../objectstack.config';
+import { flowGraphDeep, regionsOf } from './helpers/flow-regions';
 
 /**
  * ═══ HOUSE RULE: flow conditions over FLOW VARIABLES ═══════════════════════
@@ -223,20 +224,19 @@ interface Site {
   kind: 'start' | 'node:condition' | 'node:conditions' | 'edge';
 }
 
-/** A flow's nodes and edges, with every `loop` body region flattened in. */
+/**
+ * A flow's nodes and edges, with EVERY control-flow region flattened in.
+ *
+ * Not just `loop`'s body: since `src/flows/_guarded-iteration.ts` a loop body
+ * is one `try_catch` guard whose `try` region holds the work, and this census
+ * is of the "every site that reads a variable satisfies X" shape — so a walk
+ * that reached the guard and stopped would keep passing over an emptied set
+ * rather than failing. `flowGraphDeep` reads the platform's own region slot
+ * map, so a region type added later is descended into without this walk having
+ * to be remembered.
+ */
 function graphOf(flow: AnyRec): { nodes: AnyRec[]; edges: AnyRec[] } {
-  const nodes: AnyRec[] = [];
-  const edges: AnyRec[] = [];
-  const walk = (ns: AnyRec[], es: AnyRec[]) => {
-    for (const n of ns ?? []) {
-      nodes.push(n);
-      const body = n.config?.body;
-      if (body) walk(body.nodes ?? [], body.edges ?? []);
-    }
-    edges.push(...(es ?? []));
-  };
-  walk(flow.nodes ?? [], flow.edges ?? []);
-  return { nodes, edges };
+  return flowGraphDeep(flow);
 }
 
 /** Every condition site in every flow that reads at least one flow variable. */
@@ -422,12 +422,15 @@ function boundOnEntry(flow: AnyRec): Map<string, Set<string>> {
   /** Region entries: the container's exit set flows into the region's entry node. */
   const seeds = new Map<string, () => Set<string>>();
   for (const n of nodes) {
-    const body = n.config?.body;
-    if (!body) continue;
-    const bodyIds = new Set<string>((body.nodes ?? []).map((b: AnyRec) => b.id as string));
-    const bodyTargets = new Set<string>((body.edges ?? []).map((b: AnyRec) => b.target as string));
-    for (const id of bodyIds) {
-      if (!bodyTargets.has(id)) seeds.set(id, () => new Set([...(entry.get(n.id) ?? []), ...binds(n)]));
+    // Every region a node declares, not just a loop's body — the `try_catch`
+    // guard each loop body now opens with is itself a container whose `try`
+    // region has an entry node needing the same seed.
+    for (const region of regionsOf(n)) {
+      const bodyIds = new Set<string>((region.nodes ?? []).map((b: AnyRec) => b.id as string));
+      const bodyTargets = new Set<string>((region.edges ?? []).map((b: AnyRec) => b.target as string));
+      for (const id of bodyIds) {
+        if (!bodyTargets.has(id)) seeds.set(id, () => new Set([...(entry.get(n.id) ?? []), ...binds(n)]));
+      }
     }
   }
 

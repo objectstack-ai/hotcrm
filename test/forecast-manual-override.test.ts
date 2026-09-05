@@ -3,6 +3,7 @@
 import { describe, it, expect } from 'vitest';
 import { declaredRow, makeFlowHarness, type Rec } from './helpers/flow-harness';
 import { ForecastSnapshotFlow } from '../src/flows/forecast-snapshot.flow';
+import { nodesUnder, edgesUnder } from './helpers/flow-regions';
 import forecastDerive from '../src/objects/forecast.hook';
 
 /**
@@ -308,10 +309,20 @@ describe('path 3 — an empty window is still the sweep\'s to open (#1082)', () 
 });
 
 describe('the two scopes are authored as two filters, and stay that way (#1082)', () => {
-  /** The loop body, flattened out of the `loop` container. */
-  const body = (ForecastSnapshotFlow.nodes as any[])
-    .find((n) => n.id === 'loop_owners').config.body;
-  const node = (id: string) => (body.nodes as any[]).find((n) => n.id === id);
+  /**
+   * The loop body, flattened out of the `loop` container — every region depth,
+   * not just `config.body`. Since `src/flows/_guarded-iteration.ts` the body is
+   * one `try_catch` guard and the per-owner chain this pins lives in its `try`
+   * region, so a single-level read would find the guard and nothing else.
+   */
+  const loop = (ForecastSnapshotFlow.nodes as any[]).find((n) => n.id === 'loop_owners');
+  const bodyNodes = nodesUnder(loop);
+  const bodyEdges = edgesUnder(loop);
+  const node = (id: string): Record<string, any> => {
+    const hit = bodyNodes.find((n) => n.id === id);
+    if (!hit) throw new Error(`forecast_snapshot: no node '${id}' under loop_owners`);
+    return hit;
+  };
 
   it('the idempotency gate reads the window source-blind', () => {
     // If `source` ever appears here, the gate stops seeing the manual row and
@@ -329,7 +340,7 @@ describe('the two scopes are authored as two filters, and stay that way (#1082)'
     expect(gate.type).toBe('decision');
     expect(gate.config?.condition, 'an inert singular condition — see #650').toBeUndefined();
 
-    const out = (body.edges as any[]).filter((e) => e.source === 'check_owned');
+    const out = bodyEdges.filter((e) => e.source === 'check_owned');
     expect(out).toHaveLength(1);
     expect(out[0].target).toBe('reset_totals');
     expect(out[0].condition, 'the gate branches on nothing').toBeTruthy();

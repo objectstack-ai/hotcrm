@@ -9,6 +9,7 @@ import { CrmSeedData } from '../src/data/index';
 import { DemoOrgStaffing } from '../src/sharing/demo-staffing';
 import * as sharingBarrel from '../src/sharing/index';
 import { makeCtx, makeHarness, hookNamed } from './helpers/hook-harness';
+import { regionsOf } from './helpers/flow-regions';
 
 /**
  * Demo-org staffing (#640) — the third layer of position-based access.
@@ -502,7 +503,12 @@ describe('the published artifact cannot create these people (#640 hard constrain
         if (writes && IDENTITY_OBJECTS.includes(String(objectName))) {
           bad.push(`${flowName} · ${node.id}: ${node.type} on ${objectName}`);
         }
-        if (node?.config?.body?.nodes) walk(node.config.body.nodes as AnyRec[], flowName);
+        // Every control-flow region, not just `config.body`. Since
+        // `src/flows/_guarded-iteration.ts` a loop body is one `try_catch`
+        // guard and the writes sit in its `try` region — and this assertion is
+        // of the "nothing anywhere does X" shape, so a walk that stopped at the
+        // guard would keep passing while inspecting nothing at all.
+        for (const region of regionsOf(node)) walk(region.nodes as AnyRec[], flowName);
       }
     };
     for (const flow of flows) walk((flow.nodes ?? []) as AnyRec[], String(flow.name));

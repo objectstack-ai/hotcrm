@@ -3,6 +3,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
 import stack from '../objectstack.config';
+import { nodesUnder, flowNodesDeep } from './helpers/flow-regions';
 
 /**
  * Action & flow contract guards — the CI net for the class of defect that
@@ -262,11 +263,13 @@ describe('demo data is demo-ready', () => {
     const loops = (f!.nodes ?? []).filter((n: AnyRec) => n.type === 'loop');
     expect(loops.length).toBeGreaterThanOrEqual(5);
     for (const loop of loops) {
-      const body = loop.config?.body?.nodes ?? [];
+      // Regions included: the body is one `try_catch` guard since
+      // `src/flows/_guarded-iteration.ts`, and the stamp is inside its `try`.
+      const body = nodesUnder(loop);
       const update = body.find((n: AnyRec) => n.type === 'update_record');
       expect(update, `loop ${loop.id} has no update_record`).toBeTruthy();
       // Keyed by the iterator's id — the only shape update_record supports.
-      expect(String(update.config?.filter?.id ?? '')).toMatch(/^\{current_\w+\.id\}$/);
+      expect(String(update?.config?.filter?.id ?? '')).toMatch(/^\{current_\w+\.id\}$/);
     }
   });
 
@@ -298,11 +301,8 @@ describe('flow notification templates stay within what the engine interpolates',
    */
   const DOT_WALK = /\{(?!\$)([A-Za-z_$][\w$]*)\.([\w$]+)\.([\w$]+)\}/;
 
-  /** All nodes of a flow, including nodes nested inside loop bodies. */
-  const allNodes = (f: AnyRec): AnyRec[] =>
-    (f.nodes ?? []).flatMap(function expand(n: AnyRec): AnyRec[] {
-      return [n, ...((n.config?.body?.nodes ?? []) as AnyRec[]).flatMap(expand)];
-    });
+  /** All nodes of a flow, including every node nested inside a control-flow region. */
+  const allNodes = (f: AnyRec): AnyRec[] => flowNodesDeep(f);
 
   it('no notify node dot-walks a lookup in recipients, title, or body', () => {
     const bad: string[] = [];

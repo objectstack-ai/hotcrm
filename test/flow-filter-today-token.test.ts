@@ -7,6 +7,7 @@ import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-auto
 import type * as Automation from '@objectstack/spec/automation';
 import * as allFlows from '../src/flows';
 import { ContractExpirationFlow } from '../src/flows/contract-expiration.flow';
+import { flowNodesDeep, regionsOf } from './helpers/flow-regions';
 
 type Flow = Automation.Flow;
 type AnyRec = Record<string, any>;
@@ -91,14 +92,19 @@ const filterTokens = (value: unknown, path: string[] = []): { path: string; temp
   return [];
 };
 
-/** Walk a flow's nodes, including `loop` bodies, collecting filter tokens. */
+/**
+ * Walk a flow's nodes, including every control-flow region, collecting filter
+ * tokens. `regionsOf` rather than a bare `config.body` read: a loop body is one
+ * `try_catch` guard since `src/flows/_guarded-iteration.ts`, and the reads this
+ * censuses sit inside its `try` region.
+ */
 const censusOf = (flowName: string, nodes: AnyRec[]): TokenSite[] =>
   nodes.flatMap((node) => {
     const here = filterTokens(node?.config?.filter).map((t) => ({
       flow: flowName, node: String(node.id), ...t,
     }));
-    const body = node?.config?.body?.nodes;
-    return Array.isArray(body) ? [...here, ...censusOf(flowName, body)] : here;
+    const nested = regionsOf(node).flatMap((r) => censusOf(flowName, r.nodes as AnyRec[]));
+    return [...here, ...nested];
   });
 
 // `src/flows/index.ts` exports every flow twice — once by name and once inside
@@ -436,18 +442,10 @@ describe('{TODAY()} through a real ObjectQL + real AutomationEngine', () => {
       const [field] = site.path.split('.');
       const authored = (() => {
         const flow = flows.find((f) => f.name === site.flow)!;
-        const findNode = (nodes: AnyRec[]): AnyRec | undefined => {
-          for (const n of nodes) {
-            if (String(n.id) === site.node) return n;
-            const body = n?.config?.body?.nodes;
-            if (Array.isArray(body)) {
-              const hit = findNode(body);
-              if (hit) return hit;
-            }
-          }
-          return undefined;
-        };
-        return findNode(((flow as AnyRec).nodes ?? []) as AnyRec[])?.config?.filter?.[field];
+        // Regions included, for the same reason `censusOf` above descends them.
+        const findNode = (f: AnyRec): AnyRec | undefined =>
+          flowNodesDeep(f).find((n) => String(n.id) === site.node);
+        return findNode(flow as AnyRec)?.config?.filter?.[field];
       })();
       expect(authored, `${site.flow}/${site.node}: no condition at '${field}'`).toBeDefined();
 
