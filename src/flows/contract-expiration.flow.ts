@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type * as Automation from '@objectstack/spec/automation';
+import { guarded } from './_guarded-iteration';
 type Flow = Automation.Flow;
 
 /**
@@ -38,7 +39,7 @@ export const ContractExpirationFlow: Flow = {
       config: {
         collection: '{contractList}',
         iteratorVariable: 'currentContract',
-        body: {
+        body: guarded('contract', {
           nodes: [
             {
               id: 'mark_expired', type: 'update_record', label: 'Mark Expired',
@@ -59,7 +60,7 @@ export const ContractExpirationFlow: Flow = {
           edges: [
             { id: 'b1', source: 'mark_expired', target: 'notify_owner', type: 'default' },
           ],
-        },
+        }),
       },
     },
     { id: 'end', type: 'end', label: 'End' },

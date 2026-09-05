@@ -2,6 +2,7 @@
 
 import { P } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
+import { guarded } from './_guarded-iteration';
 type Flow = Automation.Flow;
 
 /**
@@ -113,7 +114,7 @@ export const CaseSlaMonitorFlow: Flow = {
       config: {
         collection: '{caseList}',
         iteratorVariable: 'currentCase',
-        body: {
+        body: guarded('case', {
           nodes: [
             {
               id: 'flag_breach', type: 'update_record', label: 'Flag SLA Breach',
@@ -268,7 +269,7 @@ export const CaseSlaMonitorFlow: Flow = {
             // the property this flow was repaired for.
             { id: 'b5', source: 'check_assigned', target: 'notify_team', type: 'conditional', condition: CASE_HAS_OWNER(), label: 'Escalation assigned an owner' },
           ],
-        },
+        }),
       },
     },
     { id: 'end', type: 'end', label: 'End' },

@@ -2,6 +2,7 @@
 
 import { P } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
+import { guarded } from './_guarded-iteration';
 type Flow = Automation.Flow;
 
 /**
@@ -119,7 +120,7 @@ const claim = (key: string, objectName: string, label: string) => ({
     config: {
       collection: `{${key}List}`,
       iteratorVariable: `current_${key}`,
-      body: {
+      body: guarded(key, {
         nodes: [
           {
             id: `stamp_${key}`,
@@ -138,7 +139,7 @@ const claim = (key: string, objectName: string, label: string) => ({
           },
         ],
         edges: [],
-      },
+      }),
     },
   },
 });

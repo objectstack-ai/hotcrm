@@ -6,6 +6,7 @@ import { AccountViews } from '../src/views/account.view';
 import { ContractRenewalFlow } from '../src/flows/contract-renewal.flow';
 import { accounts } from '../src/data/sales.seed';
 import { localePacks, type AnyRec } from './helpers/metadata-fixtures';
+import { flowNodesDeep } from './helpers/flow-regions';
 
 /**
  * Renewal is a CONTRACT-level process, and it has exactly one home (#1181).
@@ -100,8 +101,10 @@ describe('the account-level renewal model is retired (#1181)', () => {
 // ─────────────────────── 2. the renewal model that runs is unchanged ──
 
 describe('renewal stays a contract-level process (#1181)', () => {
-  const nodesOf = (flow: AnyRec): AnyRec[] =>
-    (flow.nodes ?? []).flatMap((n: AnyRec) => [n, ...(n.config?.body?.nodes ?? [])]);
+  // Regions included: a loop body is one `try_catch` guard whose `try` region
+  // holds the work (`src/flows/_guarded-iteration.ts`), so a one-level flatten
+  // over `config.body.nodes` would find the guard and miss every node below it.
+  const nodesOf = (flow: AnyRec): AnyRec[] => flowNodesDeep(flow);
 
   it('sweeps crm_contract on end_date, not any account field', () => {
     const query = nodesOf(ContractRenewalFlow).find((n) => n.id === 'query_contracts');

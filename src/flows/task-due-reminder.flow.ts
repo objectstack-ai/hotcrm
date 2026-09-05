@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type * as Automation from '@objectstack/spec/automation';
+import { guarded } from './_guarded-iteration';
 type Flow = Automation.Flow;
 
 /**
@@ -64,7 +65,7 @@ export const TaskDueReminderFlow: Flow = {
       config: {
         collection: '{reminderList}',
         iteratorVariable: 'currentTask',
-        body: {
+        body: guarded('task', {
           nodes: [
             {
               id: 'notify_owner', type: 'notify', label: 'Notify Owner',
@@ -92,7 +93,7 @@ export const TaskDueReminderFlow: Flow = {
           edges: [
             { id: 'b1', source: 'notify_owner', target: 'mark_sent', type: 'default' },
           ],
-        },
+        }),
       },
     },
     { id: 'end', type: 'end', label: 'End' },

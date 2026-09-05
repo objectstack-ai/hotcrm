@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { CrmSeedData } from '../src/data/index';
 import { Forecast } from '../src/objects/forecast.object';
 import { ForecastSnapshotFlow } from '../src/flows/forecast-snapshot.flow';
+import { flowNodesDeep, regionsOf } from './helpers/flow-regions';
 import { ExpressionEngine } from '@objectstack/formula';
 
 /**
@@ -166,18 +167,14 @@ describe('forecast seed periods are calendar-true (#530)', () => {
  * restated here: change `SNAPSHOT_PERIOD` and this guard follows.
  */
 describe('the seeds stay out of the window forecast_snapshot owns (#702)', () => {
-  /** Any node in the flow, loop bodies included. */
-  const findNode = (id: string): Record<string, any> | undefined => {
-    const walk = (nodes: any[]): any => {
-      for (const node of nodes ?? []) {
-        if (node?.id === id) return node;
-        const hit = walk(node?.config?.body?.nodes ?? []);
-        if (hit) return hit;
-      }
-      return undefined;
-    };
-    return walk(((ForecastSnapshotFlow as any).nodes ?? []) as any[]);
-  };
+  /**
+   * Any node in the flow, every control-flow region included. `find_forecast`
+   * sits inside `loop_owners`, which since `src/flows/_guarded-iteration.ts`
+   * opens with a `try_catch` guard — so a walk over `config.body.nodes` alone
+   * would reach the guard and stop one region short of it.
+   */
+  const findNode = (id: string): Record<string, any> | undefined =>
+    flowNodesDeep(ForecastSnapshotFlow as any).find((node) => node?.id === id);
 
   const sweepLookup = (findNode('find_forecast')?.config?.filter ?? {}) as Record<string, any>;
   const sweptPeriod = String(sweepLookup.period ?? '');
@@ -320,7 +317,11 @@ describe('the forecast seed keys on a seeder-only identity (#613)', () => {
           bad.push(`${ForecastSnapshotFlow.name}.${node.id} writes seed_key`);
         }
       }
-      for (const child of node?.config?.body?.nodes ?? []) walk(child);
+      // Every region, not just `config.body`: the writers this counts are
+      // inside the loop's `try_catch` guard (`_guarded-iteration.ts`), and the
+      // "found no record-writing node" guard below is what would catch a walk
+      // that stopped above them.
+      for (const region of regionsOf(node)) for (const child of region.nodes as any[]) walk(child);
     };
     for (const node of (ForecastSnapshotFlow as any).nodes ?? []) walk(node);
     // Guard the guard: the sweep creates a row and updates it, so a walker

@@ -2,6 +2,7 @@
 
 import { P } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
+import { guarded } from './_guarded-iteration';
 type Flow = Automation.Flow;
 
 /**
@@ -55,7 +56,7 @@ export const ContractRenewalFlow: Flow = {
       config: {
         collection: '{contractList}',
         iteratorVariable: 'currentContract',
-        body: {
+        body: guarded('contract', {
           nodes: [
             {
               // Gateway only — the predicate lives on the out-edge (#650).
@@ -207,7 +208,7 @@ export const ContractRenewalFlow: Flow = {
             { id: 'b7', source: 'find_existing_renewal_opp', target: 'check_no_open_renewal', type: 'default' },
             { id: 'b8', source: 'check_no_open_renewal', target: 'create_renewal_opp', type: 'conditional', condition: P`existingRenewalOpp == null`, label: 'Open renewal deal' },
           ],
-        },
+        }),
       },
     },
     { id: 'end', type: 'end', label: 'End' },
