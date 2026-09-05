@@ -56,9 +56,8 @@ export const QuoteLineItem = ObjectSchema.create({
   //
   // `tax_rate` and `subtotal` are pricing, not a section of their own — the
   // parent `crm_quote` keeps subtotal / discount / discount_amount / tax /
-  // shipping_handling / total_price in one `pricing` group, and `crm_product`
-  // keeps `tax_rate` there too. A separate tax section would be this repo's
-  // only one.
+  // shipping_handling / total_price in one `pricing` group. A separate tax
+  // section would be this repo's only one.
   //
   // ⚠️ Neither group may be a subset of the highlight strip — see the twin
   // object for the hoisting rule this satisfies.

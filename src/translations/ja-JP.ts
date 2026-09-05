@@ -982,7 +982,6 @@ export const jaJP: TranslationData = {
         cost: { label: 'コスト' },
         sku: { label: 'SKU' },
         is_active: { label: '有効' },
-        tax_rate: { label: '既定の税率 %' },
         product_manager: { label: 'プロダクトマネージャー' },
         image: { label: '製品画像' },
         datasheet: { label: 'データシート' },

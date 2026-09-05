@@ -151,16 +151,6 @@ export const Product = ObjectSchema.create({
       maxSize: 20 * 1024 * 1024,
     }),
 
-    // Tax & billing
-    tax_rate: Field.percent({
-      label: 'Default Tax Rate %',
-      group: 'pricing',
-      scale: 2,
-      min: 0,
-      max: 100,
-      defaultValue: 0,
-    }),
-
     // `billing_type` and `unit_of_measure` were removed with the tax flag: both
     // were seeded on all 13 catalog products and read by nothing — no quote
     // total, no revenue-recognition report and no line-item behaviour ever

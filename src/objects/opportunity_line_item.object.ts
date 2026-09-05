@@ -60,8 +60,8 @@ export const OpportunityLineItem = ObjectSchema.create({
   // `total_price`, and separating it from the price it multiplies would put the
   // two halves of one product on two sections. `crm_quote_line_item` takes the
   // same split over its eleven fields, and the parents agree: `crm_quote` and
-  // `crm_product` both keep every money field — tax included — in `pricing`,
-  // and both keep `description` in `basic`.
+  // `crm_product` both keep every money field in `pricing` — `crm_quote`'s
+  // `tax` included — and both keep `description` in `basic`.
   //
   // ⚠️ Neither group may be a subset of the highlight strip: a synthesized
   // detail page hoists the title plus the first four `highlightFields` out of
