@@ -49,6 +49,11 @@ import { REPO_ROOT } from './helpers/repo-root';
  * `pnpm scan:fields` prints nothing and exits 0, which is indistinguishable
  * from a clean ledger. Same failure mode, different trigger.
  *
+ * That third file was retired outright in #1543 — "does a declared field have a
+ * consumer" is a platform diagnostic, not a HotCRM business fact (objectstack#15922
+ * is the successor) — so two of the three spellings still have a file. The record
+ * stays: it is why the shared helper exists.
+ *
  * ## How this file closes it rather than fixing three files
  *
  * Two assertions, one structural and one behavioural:
@@ -207,25 +212,6 @@ const GUARDED: Guarded[] = [
     runner: process.execPath,
     green: { args: [], status: 0, says: '0 `i18n/missing-*` issues' },
     red: { args: [], status: 1, says: '✗ i18n lint gate' },
-  },
-  {
-    script: 'scripts/scan-field-consumers.ts',
-    runner: join(REPO_ROOT, 'node_modules/.bin/tsx'),
-    green: { args: ['--json'], status: 0, says: '"field"' },
-    // This script is a ledger rather than a gate, and it has two non-zero
-    // exits. `✗ no field reference resolved anywhere` fires only when the
-    // registered stack resolves nothing at all, so staging it means standing up
-    // a broken copy of `objectstack.config` — a fixture about the stack, not
-    // about the entry-point guard this file is holding, which is why this entry
-    // carried `red: null` until #1255 landed. The second one needs no fixture:
-    // `--sites` refuses a name that does not exist, on stderr and with exit 1.
-    //
-    // What this leg proves is the GUARD, not the argument check. The refusal
-    // lives inside `main()`, so with the entry-point guard broken the spawn
-    // reaches neither: it prints zero bytes and exits 0, and both assertions
-    // below fail. Measured, not assumed — with `isMainModule()` forced to
-    // return `false` this leg fails as `expected 0 to be 1` with empty output.
-    red: { args: ['--sites', 'no_such_object.no_such_field'], status: 1, says: 'no object named' },
   },
 ];
 
