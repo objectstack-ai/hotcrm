@@ -2,6 +2,7 @@
 
 import { P } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
+import { guarded } from './_guarded-iteration';
 type Flow = Automation.Flow;
 
 /**
@@ -289,7 +290,7 @@ export const ForecastSnapshotFlow: Flow = {
       config: {
         collection: '{ownerList}',
         iteratorVariable: 'currentOwner',
-        body: {
+        body: guarded('owner', {
           nodes: [
             {
               // Cheap findOne gate: a user with no live opportunity is not a
@@ -464,7 +465,7 @@ export const ForecastSnapshotFlow: Flow = {
               type: 'default' as const,
             })),
           ],
-        },
+        }),
       },
     },
     { id: 'end', type: 'end', label: 'End' },

@@ -2,6 +2,7 @@
 
 import { P } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
+import { guarded } from './_guarded-iteration';
 type Flow = Automation.Flow;
 
 /**
@@ -60,7 +61,7 @@ export const OpportunityStagnationFlow: Flow = {
       config: {
         collection: '{oppList}',
         iteratorVariable: 'currentOpp',
-        body: {
+        body: guarded('opp', {
           nodes: [
             {
               // Idempotency gate: a still-open stall task means this deal was
@@ -129,7 +130,7 @@ export const OpportunityStagnationFlow: Flow = {
             { id: 'b2', source: 'check_not_nudged', target: 'notify_owner', type: 'conditional', condition: P`existingStallTask == null`, label: 'First nudge' },
             { id: 'b3', source: 'notify_owner', target: 'create_followup_task', type: 'default' },
           ],
-        },
+        }),
       },
     },
     { id: 'end', type: 'end', label: 'End' },

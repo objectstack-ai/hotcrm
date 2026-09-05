@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type * as Automation from '@objectstack/spec/automation';
+import { guarded } from './_guarded-iteration';
 type Flow = Automation.Flow;
 
 /**
@@ -39,7 +40,7 @@ export const CampaignCompletionFlow: Flow = {
       config: {
         collection: '{campaignList}',
         iteratorVariable: 'currentCampaign',
-        body: {
+        body: guarded('campaign', {
           nodes: [
             {
               id: 'mark_completed', type: 'update_record', label: 'Mark Completed',
@@ -47,7 +48,7 @@ export const CampaignCompletionFlow: Flow = {
             },
           ],
           edges: [],
-        },
+        }),
       },
     },
     { id: 'end', type: 'end', label: 'End' },

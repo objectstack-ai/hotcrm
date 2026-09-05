@@ -2,6 +2,7 @@
 
 import { P } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
+import { guarded } from './_guarded-iteration';
 type Flow = Automation.Flow;
 
 /**
@@ -194,7 +195,7 @@ export const CampaignEnrollmentFlow: Flow = {
       config: {
         collection: '{leadList}',
         iteratorVariable: 'currentLead',
-        body: {
+        body: guarded('lead', {
           nodes: [
             {
               // Dedupe: skip leads already enrolled in THIS campaign, so a
@@ -226,7 +227,7 @@ export const CampaignEnrollmentFlow: Flow = {
             // `config.condition` is never read, so a node copy would be inert.
             { id: 'b2', source: 'check_not_enrolled', target: 'create_campaign_member', type: 'conditional', condition: P`existingMember == null`, label: 'Enroll' },
           ],
-        },
+        }),
       },
     },
     {
@@ -249,7 +250,7 @@ export const CampaignEnrollmentFlow: Flow = {
       config: {
         collection: '{contactList}',
         iteratorVariable: 'currentContact',
-        body: {
+        body: guarded('contact', {
           nodes: [
             {
               // Dedupe scoped on `crm_contact`, so a person enrolled as a LEAD
@@ -279,7 +280,7 @@ export const CampaignEnrollmentFlow: Flow = {
             { id: 'c1', source: 'find_existing_contact_member', target: 'check_contact_not_enrolled', type: 'default' },
             { id: 'c2', source: 'check_contact_not_enrolled', target: 'create_contact_member', type: 'conditional', condition: P`existingContactMember == null`, label: 'Enroll' },
           ],
-        },
+        }),
       },
     },
     { id: 'end', type: 'end', label: 'End' },

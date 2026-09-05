@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type * as Automation from '@objectstack/spec/automation';
+import { guarded } from './_guarded-iteration';
 type Flow = Automation.Flow;
 
 /**
@@ -37,7 +38,7 @@ export const QuoteExpirationFlow: Flow = {
       config: {
         collection: '{quoteList}',
         iteratorVariable: 'currentQuote',
-        body: {
+        body: guarded('quote', {
           nodes: [
             {
               id: 'mark_expired', type: 'update_record', label: 'Mark Expired',
@@ -45,7 +46,7 @@ export const QuoteExpirationFlow: Flow = {
             },
           ],
           edges: [],
-        },
+        }),
       },
     },
     { id: 'end', type: 'end', label: 'End' },
