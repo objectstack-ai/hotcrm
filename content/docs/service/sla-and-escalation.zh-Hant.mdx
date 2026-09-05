@@ -141,7 +141,7 @@ SLA（服務級別協議）系統為**每一張工單**打上一個**截止時�
 | **服務總監** | SLA 表現報表 | 每週 |
 | **高管** | 服務概覽 | 每週 |
 
-這張表過去寫的兩個名字根本不是檢視。**Breached SLA** 與 **Critical Cases** 都不存在於列表檢視裡：`crm_case` 隨產品提供的檢視一共七個——*All Cases*、*Service Workflow*、*SLA Calendar*、*Case Timeline*、*My Open Cases*、*Escalated Cases* 與 *⏰ SLA at Risk*（`src/views/case.view.ts`）——其中沒有任何一個以 **SLA 已違約**為過濾條件。真正按違約過濾的只有[服務概覽](/zh-Hant/docs/analytics/dashboards)上的兩個指標磁貼：**SLA Violations**（`is_sla_violated: true`）與 **Critical Cases**（未結 + Critical）。如果你要的是一份能逐條處理的列表，**Escalated Cases** 是最接近的那個：`case_sla_monitor` 會把它標記為違約的每一個工單都升級掉，所以每一次違約都會落進這個檢視——只是會和那些僅因優先順序而升級的工單混在一起。
+這張表過去寫的兩個名字根本不是檢視。**Breached SLA** 與 **Critical Cases** 都不存在於列表檢視裡：`crm_case` 隨產品提供的檢視一共八個——*All Cases*、*Service Workflow*、*SLA Calendar*、*Case Timeline*、*My Open Cases*、*Unassigned — triage*、*Escalated Cases* 與 *⏰ SLA at Risk*（`src/views/case.view.ts`）——其中沒有任何一個以 **SLA 已違約**為過濾條件。真正按違約過濾的只有[服務概覽](/zh-Hant/docs/analytics/dashboards)上的兩個指標磁貼：**SLA Violations**（`is_sla_violated: true`）與 **Critical Cases**（未結 + Critical）。如果你要的是一份能逐條處理的列表，**Escalated Cases** 是最接近的那個：`case_sla_monitor` 會把它標記為違約的每一個工單都升級掉，所以每一次違約都會落進這個檢視——只是會和那些僅因優先順序而升級的工單混在一起。
 
 **My Open Cases 是按優先順序排序的，不是按 SLA 截止日期。** 它的排序鍵是 `priority_rank` 降序在先、`sla_due_date` 升序僅作次級鍵（`src/views/case.view.ts`）——所以一個一小時後就到期的 Low 工單，仍然排在每一個 Critical 工單下面。不過次級鍵現在在每一檔裡都有值可排了，同一檔內最早到期的排在最前面。如果你是按截止時間在幹活，請在它旁邊同時開著 **SLA at Risk** 或 **SLA Calendar**。
 
