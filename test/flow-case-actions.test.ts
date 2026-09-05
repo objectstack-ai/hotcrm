@@ -220,6 +220,24 @@ describe('close_case — screen action', () => {
  * every DECLARED column and normalises an absent one to `null`
  * (`test/flow-harness-declared-columns.test.ts` pins that). So the assertion is
  * that the column holds no user — not that the key is missing.
+ *
+ * ⚠️ MEASURED BLIND SPOT, stated so nobody reads this pair as covering more
+ * than it does. Both directions were run against the same mutation site (the
+ * `claim` node's field map), and they did NOT agree:
+ *
+ *   | mutation added beside `status`  | this file      | claim-case-one-owner-writer |
+ *   | ------------------------------- | -------------- | --------------------------- |
+ *   | `owner_id: 'agent-literal'`     | RED, 2 cases   | RED                          |
+ *   | `owner_id: '{$user.id}'`        | **GREEN**      | RED                          |
+ *
+ * The template form is the one an author would actually reach for, and this
+ * harness cannot see it: it binds no user, so `{$user.id}` resolves to nothing
+ * and the column still reads empty. That is not a bug to fix here — a harness
+ * with no identity is what makes the negative observation meaningful in the
+ * first place — but it does mean the METADATA guard is the one that catches the
+ * realistic mistake. These cases are its behavioural companion, not its
+ * replacement, and deleting it because "the runtime test covers it" would leave
+ * the likely regression unguarded.
  */
 const unownedCase = (over: Rec = {}): Rec => {
   const rec = openCase(over);
