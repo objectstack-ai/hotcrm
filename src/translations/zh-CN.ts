@@ -833,10 +833,8 @@ export const zhCN: TranslationData = {
         info: { label: '工单信息' },
         status: { label: '状态与 SLA' },
         description: { label: '描述' },
-        // case.view.ts 表单区块名称 (#1100)。使用 sla_overview 而非 sla ——
-        // sla 已是「SLA 与优先级」字段分组的键。
+        // case.view.ts 表单区块名称 (#1100)。
         case: { label: '工单' },
-        sla_overview: { label: 'SLA' },
         how_can_we_help: { label: '我们能帮您什么？' },
         // Object-level section keys (case.object.ts) used by record forms
         basic: { label: '工单信息' },

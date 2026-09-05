@@ -847,11 +847,8 @@ export const jaJP: TranslationData = {
         info: { label: 'ケース情報' },
         status: { label: 'ステータス・SLA' },
         description: { label: '説明' },
-        // case.view.ts のフォームセクション名 (#1100)。sla ではなく
-        // sla_overview — sla は「SLA・優先度」フィールドグループのキーとして
-        // 既に使われている。
+        // case.view.ts のフォームセクション名 (#1100)。
         case: { label: 'ケース' },
-        sla_overview: { label: 'SLA' },
         how_can_we_help: { label: 'どのようなご用件でしょうか？' },
         // オブジェクト定義のセクションキー（case.object.ts）— 入力フォームで使用
         basic: { label: 'ケース情報' },
