@@ -5,7 +5,13 @@ import { execFileSync } from 'node:child_process';
 import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { anchor, fmt, BUFFER, CEILINGS } from '../scripts/check-source-token-ratchet.mjs';
+import {
+  anchor,
+  fmt,
+  BUFFER,
+  CEILINGS,
+  CEILING_KINDS,
+} from '../scripts/check-source-token-ratchet.mjs';
 import { REPO_ROOT } from './helpers/repo-root';
 
 /**
@@ -339,6 +345,71 @@ describe('source token ratchet — the ratchet itself', () => {
     expect(lines[at + 1] ?? '').not.toContain('over twice the 5% buffer');
   });
 
+  it('exempts a RULED ceiling from that nag, and exempts only the ruled kind', () => {
+    // The #1607 hazard, run rather than read. Tiny fixtures put EVERY layer far
+    // past the advisory's trigger, so before the exemption existed all three
+    // rows carried `re-anchor this ceiling to ~1,000` — and on the ruled row
+    // that is an instruction, printed as this gate's own recommendation, to
+    // hand back the headroom a maintainer had just granted.
+    //
+    // Which rows are expected to nag is DERIVED from the kinds the gate
+    // declares, never listed here. That is the property the card turns on: the
+    // exemption keys on the ruled/anchored distinction rather than on a label,
+    // so a case naming 'business semantics' would pass for the wrong reason and
+    // would need rewriting by the next ruling instead of following it.
+    write('src/objects/crm_thing.object.ts', 'export const a = 1;\n');
+    write('src/views/thing.view.ts', 'export const c = 2;\n');
+
+    const { status, output } = run(root);
+    expect(status).toBe(0);
+    const lines = output.split('\n');
+    const scopes = measure();
+
+    // Non-vacuity, and the half that keeps this from measuring a quiet run:
+    // every committed ceiling here really is past the trigger, so each row
+    // below WOULD nag if the kind were not consulted.
+    for (const label of CEILINGS.keys()) {
+      const headroom = ceilingOf(label) - scopes[label].tokens;
+      expect(headroom, label).toBeGreaterThan(scopes[label].tokens * 2 * BUFFER);
+    }
+
+    for (const [label, kind] of CEILING_KINDS) {
+      const at = lines.findIndex((l) => l.includes(`✓ ${label} ~`));
+      expect(at, `no ✓ row for '${label}'`).toBeGreaterThan(-1);
+      const under = lines[at + 1] ?? '';
+
+      if (kind === 'anchored') {
+        // ⛔ Unchanged for the anchored kind. This is the control: a change that
+        // silenced the advisory generally would be a weakened ratchet, and it
+        // would pass every other assertion in this case.
+        expect(under, label).toContain('over twice the 5% buffer');
+        expect(under, label).toContain(`re-anchor this ceiling to ~${fmt(anchor(scopes[label].tokens))}`);
+      } else {
+        // Never the instruction — and never merely blank either. The row says
+        // which kind of ceiling it is and who may lower it, because an
+        // exemption a reader cannot see reads like a ceiling nobody weighed.
+        // The INSTRUCTION is what must be gone, not the word: the ruled row
+        // says the gate does not offer to re-anchor it, so a bare 're-anchor'
+        // substring is present on purpose and asserting its absence would pin
+        // the sentence's wording instead of its content.
+        expect(under, label).not.toContain('re-anchor this ceiling to');
+        expect(under, label).not.toContain('over twice the 5% buffer');
+        expect(under, label).toContain('ruled ceiling');
+        expect(under, label).toContain('Lowering it needs a ruling');
+      }
+
+      // The ✓ row itself is untouched by the kind: the ceiling and the headroom
+      // are still reported, so exempting a row is not hiding it.
+      expect(lines[at], label).toContain(`ceiling ~${fmt(ceilingOf(label))}`);
+      expect(lines[at], label).toContain(`headroom ~${fmt(ceilingOf(label) - scopes[label].tokens)}`);
+    }
+
+    // Both branches above are actually exercised, so neither is vacuous.
+    const kinds = [...CEILING_KINDS.values()];
+    expect(kinds).toContain('anchored');
+    expect(kinds).toContain('ruled');
+  });
+
   it('is red — not silently green — when a measured scope reads as empty', () => {
     write('src/reports/thing.report.ts', 'export const d = 1;\n');
 
@@ -606,6 +677,32 @@ describe('source token ratchet — the header table is derived from the ceilings
     ].sort((a, b) => a.index - b.index);
 
     expect(documented.map((entry) => entry.label)).toEqual([...CEILINGS.keys()]);
+  });
+
+  it('declares in code the same kinds the header states in prose', () => {
+    // The ruled/anchored distinction has two halves now. The header's rows are
+    // the half a reader meets; `CEILING_KINDS` is the half the advisory asks at
+    // run time (#1607). Until that card the concept lived only in this prose,
+    // so nothing could disagree with it — now something can, and the two ways
+    // to disagree are both silent. A row rewritten as ruled while the constant
+    // stays anchored documents an exemption that never fires; the reverse drops
+    // the advisory for a layer that owes it, which is a weakened ratchet.
+    //
+    // Read off the parsers above rather than listed, so a future ruling moves
+    // the header and the constant together and this case follows both.
+    const declared = (kind: string) =>
+      [...CEILING_KINDS]
+        .filter(([, declaredKind]) => declaredKind === kind)
+        .map(([label]) => label)
+        .sort();
+
+    expect(ruledRows().map((row) => row.label).sort()).toEqual(declared('ruled'));
+    expect(rows().map((row) => row.label).sort()).toEqual(declared('anchored'));
+
+    // Non-vacuity: both kinds are present, so neither comparison is an
+    // empty-to-empty pass — the failure mode this whole block exists to avoid.
+    expect(declared('ruled').length).toBeGreaterThan(0);
+    expect(declared('anchored').length).toBeGreaterThan(0);
   });
 
   it('states a ruled ceiling as ruled, and proves no recorded reading anchored it', () => {
