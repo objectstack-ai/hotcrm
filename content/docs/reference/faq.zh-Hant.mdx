@@ -145,15 +145,11 @@ Copilot 遵守你的共享設定 —— 如果你看不到它，它也看不到�
 
 ### 我的郵件未被記錄。
 
-檢查：
-
-- **Gmail / Outlook 連接器**已連接（Settings → Email）。
-- 郵件發往/來自**已知聯絡人**（透過信箱匹配）。
-- 寄件人/收件人信箱不在你的**排除**清單中。
+沒有任何東西在記錄它，在收件匣連接器落地之前也不會有。HotCRM 不含 Gmail 或 Outlook 連接器——`src/` 裡沒有連接器中繼資料，已安裝的平台套件也沒有提供——所以一封郵件不會僅僅因為到了你的信箱就出現在某筆記錄上，無論它是否匹配某位聯絡人的地址；也沒有什麼排除清單在把郵件擋在外面。這個產品裡也不存在 `Settings` 應用，所以 `Settings → Email` 指向的是一個不存在的畫面。真正落地的是出站那一半：聯絡人上的**傳送郵件**會把郵件寫成一筆記錄，並在該聯絡人的**活動**時間軸上留下一條條目。如果那裡什麼都沒有，就是沒有人寄過——而對勾選了*拒絕郵件*的聯絡人，這個操作壓根就是隱藏的。已經寄出的郵件是否真的寄得出去是另一個問題，它取決於你的部署設定了什麼郵件傳輸方式。參見[郵件與行事曆](/zh-Hant/docs/guides/email-and-calendar)與[整合](/zh-Hant/docs/guides/integrations)。
 
 ### 我的 DocuSign 信封沒有更新合約。
 
-檢查 **DocuSign 整合日誌**（Setup → Integrations → DocuSign → Activity）。來自 DocuSign 的 Webhook 投遞可能正在重試。
+沒有人寄出那個信封，也沒有任何東西在等它。HotCRM 不含 DocuSign 連接器——`src/` 裡沒有連接器中繼資料，已安裝的平台套件也沒有提供——所以既沒有整合日誌可開，也沒有 Webhook 投遞會重試。**Setup → Integrations** 確實是一個真實的分組，但就本應用發出的形態而言，它底下只有平台自己貢獻的兩個條目——*Connect an Agent* 與 *Datasources*——沒有任何廠商往那裡掛東西。[整合](/zh-Hant/docs/guides/integrations)頁面上的 DocuSign 一行是設計意圖，不是一個可以打開的開關。在它落地之前，報價或合約的狀態是一個由人手動設定的欄位，簽署完的文件是由人上傳的附件——參見[合約](/zh-Hant/docs/revenue/contracts)。
 
 ### Stripe 說客戶 X 存在；HotCRM 說沒有。
 
