@@ -902,6 +902,10 @@ export const esES: TranslationData = {
           confirmText: '¿Está seguro de querer cerrar este caso?',
           successMessage: '¡Caso cerrado con éxito!',
         },
+        claim_case: {
+          label: 'Tomar Caso',
+          successMessage: 'Caso tomado: ahora es suyo.',
+        },
       },
     },
 

@@ -1,10 +1,12 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type * as Automation from '@objectstack/spec/automation';
+import { CLAIMABLE_TARGET_STATUSES } from '../objects/_case-assignment';
 type Flow = Automation.Flow;
 
 /**
- * Screen flows behind the Escalate Case / Close Case header actions.
+ * Screen flows behind the Claim Case / Escalate Case / Close Case header
+ * actions.
  *
  * Why flows and not `body`-typed actions (verified against the running
  * 16.1.0 console, 2026-07-28):
@@ -212,5 +214,116 @@ export const CloseCaseFlow: Flow = {
     { id: 'e1', source: 'start', target: 'screen_1', type: 'default' },
     { id: 'e2', source: 'screen_1', target: 'close', type: 'default' },
     { id: 'e3', source: 'close', target: 'end', type: 'default' },
+  ],
+};
+
+/**
+ * Claim Case — the triage claim gesture, given a button (#1144, piece 2).
+ *
+ * ## What this flow is, and what it deliberately is NOT
+ *
+ * The claim already exists as behaviour: an agent moves an unowned case out of
+ * **Unassigned — triage** by setting its status to one that means a person is
+ * on it, and `case_self_claim` (`src/objects/_case-assignment.ts`, priority
+ * 260) stamps `owner_id` with the caller. Nothing on the screen said so, which
+ * is the whole complaint this card carried.
+ *
+ * So this flow is **pure UI over the existing seam**. Its one write is the
+ * STATUS MOVE. It does not write `owner_id`, and that is not a style choice:
+ *
+ *  - the #3004 transfer gate refuses any payload carrying `owner_id` inside the
+ *    sharing MIDDLEWARE, upstream of the hook phase, and a screen flow's
+ *    `update_record` runs as the caller — so a flow that wrote the column would
+ *    be refused exactly like a hand-written update, loudly and always;
+ *  - and `case_self_claim` guard 2 stands down the moment `owner_id` is already
+ *    in the payload, so even a caller holding `allowTransfer` would take the
+ *    claim seam out of the picture rather than drive it.
+ *
+ * Ownership therefore keeps exactly ONE writer. `test/claim-case-one-owner-writer.test.ts`
+ * is that sentence turned into a guard, so it is enforced rather than intended.
+ *
+ * ## Why `runAs: 'user'`, spelled out rather than defaulted
+ *
+ * House rule 9 (`AGENTS.md`) already says a screen flow stays `runAs: 'user'`,
+ * but here the default is LOAD-BEARING and worth reading twice: `case_self_claim`
+ * returns early for a write with no user, and again for `ctx.session.isSystem`.
+ * An elevated run of this flow would move the status and claim NOTHING — the
+ * case would leave the triage tab still ownerless. The declaration is explicit
+ * so the next author sees the coupling before reaching for elevation.
+ *
+ * ## Why a screen, and why the picker is derived
+ *
+ * The three statuses that claim are one concept with three faces, and which one
+ * an agent picks is real information (`waiting_customer` straight off a triage
+ * row is a different day's work from `in_progress`). The options are built from
+ * {@link CLAIMABLE_TARGET_STATUSES} — the seam's own declared set — rather than
+ * hand-copied, which is #490's lesson: a hand-copied subset silently dropped an
+ * option from a picker and nothing noticed. A fourth claimable status makes the
+ * label map below a COMPILE error rather than a quietly short picker.
+ */
+const CLAIM_STATUS_LABEL: Record<(typeof CLAIMABLE_TARGET_STATUSES)[number], string> = {
+  in_progress: 'In Progress',
+  waiting_customer: 'Waiting on Customer',
+  waiting_support: 'Waiting on Support',
+};
+
+/** The picker, derived from the seam's set. Labels are pinned to `crm_case.status`'s own. */
+const CLAIM_STATUS_OPTIONS = CLAIMABLE_TARGET_STATUSES.map((value) => ({
+  value,
+  label: CLAIM_STATUS_LABEL[value],
+}));
+
+export const ClaimCaseFlow: Flow = {
+  name: 'claim_case',
+  label: 'Claim Case',
+  description: 'Take an unowned case out of triage by moving it to a status that means you are on it.',
+  type: 'screen',
+  status: 'active',
+  // Load-bearing, not boilerplate — see the header. A system run claims nobody.
+  runAs: 'user',
+
+  variables: [
+    // MUST be `recordId` — the console's flow-action contract seeds only that
+    // name (and its camelCase object alias); a custom name arrives undefined.
+    { name: 'recordId', type: 'text', isInput: true, isOutput: false },
+    { name: 'claimStatus', type: 'text', isInput: true, isOutput: false },
+  ],
+
+  nodes: [
+    { id: 'start', type: 'start', label: 'Start', config: { objectName: 'crm_case' } },
+    {
+      id: 'screen_1', type: 'screen', label: 'Claim Case',
+      config: {
+        fields: [
+          {
+            name: 'claimStatus', label: 'Working status', type: 'select', required: true,
+            defaultValue: 'in_progress',
+            options: CLAIM_STATUS_OPTIONS,
+          },
+        ],
+      },
+    },
+    {
+      // ⛔ `status` is the ONLY field this node may ever carry. Adding
+      // `owner_id` here does not "make the claim explicit" — it makes the write
+      // refused by the transfer gate before any hook runs, and it takes
+      // `case_self_claim` out of the path on the one caller it would reach.
+      // The guard beside this file fails on any such addition.
+      id: 'claim', type: 'update_record', label: 'Claim Case',
+      config: {
+        objectName: 'crm_case',
+        filter: { id: '{recordId}' },
+        fields: {
+          status: '{claimStatus}',
+        },
+      },
+    },
+    { id: 'end', type: 'end', label: 'End' },
+  ],
+
+  edges: [
+    { id: 'e1', source: 'start', target: 'screen_1', type: 'default' },
+    { id: 'e2', source: 'screen_1', target: 'claim', type: 'default' },
+    { id: 'e3', source: 'claim', target: 'end', type: 'default' },
   ],
 };

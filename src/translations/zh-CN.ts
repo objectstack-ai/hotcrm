@@ -823,6 +823,10 @@ export const zhCN: TranslationData = {
           confirmText: '确定要关闭此工单吗？',
           successMessage: '工单已成功关闭！',
         },
+        claim_case: {
+          label: '认领工单',
+          successMessage: '工单已认领，现在归你负责。',
+        },
       },
       _sections: {
         // Detail-page `record:details` section names (case_detail.page.ts)

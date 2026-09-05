@@ -221,6 +221,10 @@ const ROW_LABEL: Record<string, Record<'zh-Hans' | 'zh-Hant', string>> = {
   // 升级工单 / 关闭工单 (`crm_case._actions`), and the pack's own object label
   // is 工单 since #837. These rows spelled it 案例 until then — the page and
   // the pack contradicting each other, both green.
+  // 认领/認領, not 领取/接手: the locale packs label the action 认领工单
+  // (`crm_case._actions.claim_case`), and this page's row follows the pack the
+  // same way the two rows below it do (#837).
+  claim_case: { 'zh-Hans': '认领工单', 'zh-Hant': '認領工單' },
   escalate_case: { 'zh-Hans': '升级工单', 'zh-Hant': '升級工單' },
   case_escalation_stamp: { 'zh-Hans': '标记工单升级', 'zh-Hant': '標記工單升級' },
   close_case: { 'zh-Hans': '关闭工单', 'zh-Hant': '關閉工單' },

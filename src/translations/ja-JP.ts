@@ -873,6 +873,10 @@ export const jaJP: TranslationData = {
           confirmText: 'このケースをクローズしてもよろしいですか？',
           successMessage: 'ケースをクローズしました！',
         },
+        claim_case: {
+          label: 'ケースを引き受ける',
+          successMessage: 'ケースを引き受けました。担当者はあなたです。',
+        },
       },
     },
 
