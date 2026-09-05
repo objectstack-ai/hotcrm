@@ -202,14 +202,19 @@ export const anchor = (tokens) => Math.ceil((tokens * (1 + BUFFER)) / 1000) * 10
  *
  *   「解耦:banner 钉实测,ceiling 独立」
  *
- * ⚠️ A ruled ceiling still prints this gate's opportunistic-tightening
- * advisory: at 84,579 against 100,000 the headroom is over twice the buffer, so
- * every run now suggests re-anchoring down to ~89,000. Following that advice
- * would hand back the headroom the ruling was made to create. The advisory is
- * left as-is deliberately — changing when it fires is gate behaviour, and this
- * card was scoped to the constant, the docs and the banner rule — but ⛔ a
- * ruled ceiling is not tightened on the strength of that line alone. It moves
- * on another ruling, or on a PR that genuinely shrinks the layer and says so.
+ * ⚠️ A ruled ceiling is EXEMPT from this gate's opportunistic-tightening
+ * advisory, and since #1607 that exemption is mechanism rather than prose. The
+ * advisory offers to re-derive a ceiling from the current reading, which only
+ * means something for a ceiling that was derived from a reading in the first
+ * place. On this one it was not, and the arithmetic bit: at 84,579 against
+ * 100,000 the headroom is over twice the buffer, so every run used to suggest
+ * re-anchoring down to ~89,000 — handing back, as the gate's own
+ * recommendation, the 15,421 tokens the ruling had just been made to create.
+ * So the advisory is now a property of the ANCHORED kind, asked as
+ * `isAnchored(label)` at the one place it fires, and the ruled row prints what
+ * it is instead of a nag. ⛔ A ruled ceiling is still not tightened on the
+ * strength of any advisory line: it moves on another ruling, or on a PR that
+ * genuinely shrinks the layer and says so.
  *
  * The anchoring runs the two anchored ceilings below come from:
  *
@@ -257,13 +262,63 @@ export const anchor = (tokens) => Math.ceil((tokens * (1 + BUFFER)) / 1000) * 10
  * ruled ceiling, so the declined-raise reasoning no longer describes it at all.
  *
  * Lower them whenever the tree shrinks — that is free and encouraged. Raising
- * one requires a maintainer ruling quoted in the raising PR's body.
+ * one requires a maintainer ruling quoted in the raising PR's body. Both of
+ * those sentences are about an ANCHORED ceiling, which is a function of the
+ * tree: it follows the reading down for free and needs a ruling to go up. A
+ * RULED ceiling is not a function of the tree, so it is symmetric — LOWERING
+ * one requires a ruling quoted in the lowering PR's body, exactly as raising it
+ * does. That is the half no automated suggestion can supply, and the reason
+ * this gate stopped offering one.
  */
-export const CEILINGS = new Map([
-  ['business semantics', 100000],
-  ['interaction layer', 40000],
-  ['authored total', 140000],
-]);
+const CEILING_KIND = { ANCHORED: 'anchored', RULED: 'ruled' };
+
+/**
+ * The committed ceilings: each number, and the kind that says where it came
+ * from. One declaration — `CEILINGS` and `CEILING_KINDS` below are both derived
+ * from it, so a ceiling cannot carry its number in one table and its kind in
+ * another that disagrees.
+ */
+const COMMITTED = [
+  { label: 'business semantics', ceiling: 100000, kind: CEILING_KIND.RULED },
+  { label: 'interaction layer', ceiling: 40000, kind: CEILING_KIND.ANCHORED },
+  { label: 'authored total', ceiling: 140000, kind: CEILING_KIND.ANCHORED },
+];
+
+// Every committed ceiling declares a kind this module recognises. A ceiling
+// that does not is a hard error rather than a default, in either direction: an
+// unknown kind that silently read as ruled would drop the advisory for a layer
+// that owes it (a weakened ratchet), and one that silently read as anchored
+// would restore the #1607 hazard on the next grant. A gate cannot pick the
+// safe side here, so it refuses to run — the same reflex as the empty-scope
+// rule at the top of this file.
+for (const row of COMMITTED) {
+  if (!Object.values(CEILING_KIND).includes(row.kind)) {
+    throw new Error(
+      `ceiling '${row.label}' declares kind '${row.kind}' — expected one of ` +
+        `${Object.values(CEILING_KIND).join(', ')}. See the ANCHORED/RULED paragraphs above.`,
+    );
+  }
+}
+
+/** The committed ceiling per scope label, in the header table's order. */
+export const CEILINGS = new Map(COMMITTED.map((row) => [row.label, row.ceiling]));
+
+/**
+ * The kind per scope label — `'anchored'` or `'ruled'`, the distinction #1601
+ * introduced and #1607 lifted out of this header's prose into the code, so a
+ * reader and a run answer the question the same way.
+ */
+export const CEILING_KINDS = new Map(COMMITTED.map((row) => [row.label, row.kind]));
+
+/**
+ * Is this ceiling derived from a reading this gate printed?
+ *
+ * The one question the opportunistic-tightening advisory needs to ask before
+ * it offers to re-derive a ceiling. False for a maintainer grant, and false
+ * for a label that is not a committed ceiling at all — nothing can be
+ * re-anchored from a reading it never had.
+ */
+export const isAnchored = (label) => CEILING_KINDS.get(label) === CEILING_KIND.ANCHORED;
 
 /** Recursively collect files under `dir` (repo-relative paths). */
 function walk(dir) {
@@ -499,6 +554,8 @@ function main() {
             chars,
             tokens,
             ceiling: ceiling ?? null,
+            // `null` where there is no committed ceiling to have a kind.
+            kind: CEILING_KINDS.get(label) ?? null,
           })),
         },
         null,
@@ -553,6 +610,25 @@ function main() {
       continue;
     }
     console.log(`  ✓ ${v.msg}`);
+
+    // A RULED ceiling is never offered for opportunistic tightening (#1607).
+    // The advisory below says "your reading anchors lower than the committed
+    // ceiling, so re-derive it" — a sentence that presumes the ceiling was
+    // derived from a reading. A maintainer grant was not: its headroom IS the
+    // grant, so an automated offer to reclaim the headroom is an automated
+    // offer to undo the ruling, printed fresh on every run and reading as this
+    // gate's own recommendation. It says what the row is instead, because the
+    // exemption is worth stating where a reader meets it — silence would look
+    // like a ceiling nobody had thought about.
+    if (!isAnchored(row.label)) {
+      console.log(
+        '      ℹ️  ruled ceiling — a maintainer grant, not `anchor()` of a reading, so this gate does ' +
+          `not offer to re-anchor it; the ~${fmt(row.ceiling - row.tokens)} tokens of headroom are the ` +
+          "ruling's. Lowering it needs a ruling quoted in the lowering PR, exactly as raising it does.",
+      );
+      continue;
+    }
+
     // Nag only when the ceiling has drifted well past the ruled buffer — i.e.
     // the tree has shrunk enough that `anchor()` would now commit a lower
     // number. A flat "headroom is over Nk" threshold cannot be used any more:
@@ -583,9 +659,11 @@ function main() {
 //
 // GROUP 1 — the ceiling figures. Every number derived from a ceiling is
 // DERIVED by the test quoting it rather than transcribed beside it:
-// `test/source-token-ratchet.test.ts` imports `anchor`, `fmt`, `BUFFER` and
-// `CEILINGS` (it sizes its fixtures from `CEILINGS`/`BUFFER` and pins the
-// worked table in the header above against `anchor()`), and
+// `test/source-token-ratchet.test.ts` imports `anchor`, `fmt`, `BUFFER`,
+// `CEILINGS` and `CEILING_KINDS` (it sizes its fixtures from
+// `CEILINGS`/`BUFFER`, pins the worked table in the header above against
+// `anchor()`, and holds that table's ruled/anchored rows to the kinds
+// `CEILING_KINDS` declares), and
 // `test/docs-readme-token-figures.test.ts` imports `BUFFER` and `CEILINGS` to
 // check the README banner. So a re-anchoring moves the constant and the copies
 // follow.
@@ -611,7 +689,7 @@ function main() {
 // Importing must not run the gate or call exit().
 //
 // ⚠️ The list above is hand-written and nothing holds it to the tree. It was
-// re-derived at 81a79ee (2026-09-05). Its predecessor said only two suites
+// re-derived at 57ce720 (2026-09-05). Its predecessor said only two suites
 // imported from here and that the stripping rule was never imported: true when
 // written (#1380), false three days later when #802 landed the `stripComments`
 // importer, and nothing here could notice (#1533). Re-derive before relying on
