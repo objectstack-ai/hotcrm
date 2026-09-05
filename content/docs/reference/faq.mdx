@@ -145,15 +145,11 @@ The field must be enabled for **reporting** in the field definition. Ask your ad
 
 ### My email isn't logging.
 
-Check:
-
-- The **Gmail / Outlook connector** is connected (Settings → Email).
-- The email is to/from a **known contact** (matched by email).
-- The sender/recipient email isn't on your **excluded** list.
+Nothing logs it, and nothing will until an inbox connector ships. HotCRM has no Gmail or Outlook connector — `src/` carries no connector metadata and no installed platform package supplies one — so no message reaches a record because it arrived in your mailbox, whether or not it matches a contact's address, and there is no exclusion list keeping one out either. There is no `Settings` app in this product, so `Settings → Email` names nothing. What ships is the outbound half: **Send Email** on a contact writes the message as a record and leaves an entry on that contact's **Activity** timeline. If nothing is there, nobody sent one — and the action is hidden altogether on a contact with *Email Opt Out* ticked. Whether a message that was sent left the building is a different question, and it belongs to the mail transport your deployment configures. See [Email & Calendar](/docs/guides/email-and-calendar) and [Integrations](/docs/guides/integrations).
 
 ### My DocuSign envelope isn't updating the contract.
 
-Check the **DocuSign integration log** (Setup → Integrations → DocuSign → Activity). Webhook delivery from DocuSign may be retrying.
+Nothing sent that envelope, and nothing is listening for one. HotCRM has no DocuSign connector — `src/` carries no connector metadata and no installed platform package supplies one — so there is no integration log to open and no webhook delivery to retry. **Setup → Integrations** is a real group, but as this app ships it holds exactly the two entries the platform contributes — *Connect an Agent* and *Datasources* — and no vendor mounts anything under it. The DocuSign row on [Integrations](/docs/guides/integrations) is design intent, not a switch. Until it ships, a quote's or a contract's status is a field someone sets by hand and the signed document is a file someone attaches — see [Contracts](/docs/revenue/contracts).
 
 ### Stripe says customer X exists; HotCRM says no.
 
