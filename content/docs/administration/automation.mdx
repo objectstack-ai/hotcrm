@@ -50,7 +50,7 @@ A flow fires one of three ways, set by its start node:
 
 > **Auto-launch needs the `triggers` capability.** Record-change and scheduled flows only fire when the stack's `requires` list includes `triggers` — it installs the record-change + schedule trigger providers (schedule triggers also use the job service). Screen flows are always launched manually.
 
-**Built-in flows in HotCRM** (27). Each row carries the flow's own label — the name listed in **Studio → Automation → Flows**, and the name you pick from in **Studio → Developer → Flow Runs**, so a run you are chasing can be looked up here verbatim:
+**Built-in flows in HotCRM** (28). Each row carries the flow's own label — the name listed in **Studio → Automation → Flows**, and the name you pick from in **Studio → Developer → Flow Runs**, so a run you are chasing can be looked up here verbatim:
 
 | Flow | Trigger | What it does |
 | --- | --- | --- |
@@ -58,6 +58,7 @@ A flow fires one of three ways, set by its start node:
 | **Generate Quote from Opportunity** | Screen | Build a quote from an opportunity and move it to *Proposal* |
 | **Schedule Follow-up** | Screen | Create the next follow-up task on a lead, already linked to it and owned by the right user |
 | **Enroll Members in Campaign** | Screen | Bulk-enroll eligible leads or contacts into this campaign, skipping the already-enrolled and the opted-out |
+| **Claim Case** | Screen | Take an unowned case out of triage by moving it to a status that means you are on it |
 | **Escalate Case** | Screen | Collect an escalation reason, then flag and re-prioritise the case |
 | **Stamp Case Escalation** | Subflow | Called by **Escalate Case** to write the escalation stamps with system privilege |
 | **Close Case** | Screen | Collect the resolution, then close the case and stop the SLA clock |

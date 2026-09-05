@@ -785,6 +785,10 @@ export const en: TranslationData = {
           confirmText: 'Are you sure you want to close this case?',
           successMessage: 'Case closed successfully!',
         },
+        claim_case: {
+          label: 'Claim Case',
+          successMessage: 'Case claimed — it is yours now.',
+        },
       },
     },
 
