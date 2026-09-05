@@ -141,7 +141,7 @@ SLA（服务级别协议）系统为**每一张工单**打上一个**截止时�
 | **服务总监** | SLA 表现报表 | 每周 |
 | **高管** | 服务概览 | 每周 |
 
-这张表过去写的两个名字根本不是视图。**Breached SLA** 与 **Critical Cases** 都不存在于列表视图里：`crm_case` 随产品提供的视图一共七个——*All Cases*、*Service Workflow*、*SLA Calendar*、*Case Timeline*、*My Open Cases*、*Escalated Cases* 与 *⏰ SLA at Risk*（`src/views/case.view.ts`）——其中没有任何一个以 **SLA 已违约**为过滤条件。真正按违约过滤的只有[服务概览](/zh-Hans/docs/analytics/dashboards)上的两个指标磁贴：**SLA Violations**（`is_sla_violated: true`）与 **Critical Cases**（未结 + Critical）。如果你要的是一份能逐条处理的列表，**Escalated Cases** 是最接近的那个：`case_sla_monitor` 会把它标记为违约的每一个工单都升级掉，所以每一次违约都会落进这个视图——只是会和那些仅因优先级而升级的工单混在一起。
+这张表过去写的两个名字根本不是视图。**Breached SLA** 与 **Critical Cases** 都不存在于列表视图里：`crm_case` 随产品提供的视图一共八个——*All Cases*、*Service Workflow*、*SLA Calendar*、*Case Timeline*、*My Open Cases*、*Unassigned — triage*、*Escalated Cases* 与 *⏰ SLA at Risk*（`src/views/case.view.ts`）——其中没有任何一个以 **SLA 已违约**为过滤条件。真正按违约过滤的只有[服务概览](/zh-Hans/docs/analytics/dashboards)上的两个指标磁贴：**SLA Violations**（`is_sla_violated: true`）与 **Critical Cases**（未结 + Critical）。如果你要的是一份能逐条处理的列表，**Escalated Cases** 是最接近的那个：`case_sla_monitor` 会把它标记为违约的每一个工单都升级掉，所以每一次违约都会落进这个视图——只是会和那些仅因优先级而升级的工单混在一起。
 
 **My Open Cases 是按优先级排序的，不是按 SLA 截止日期。** 它的排序键是 `priority_rank` 降序在先、`sla_due_date` 升序仅作次级键（`src/views/case.view.ts`）——所以一个一小时后就到期的 Low 工单，仍然排在每一个 Critical 工单下面。不过次级键现在在每一档里都有值可排了，同一档内最早到期的排在最前面。如果你是按截止时间在干活，请在它旁边同时开着 **SLA at Risk** 或 **SLA Calendar**。
 
