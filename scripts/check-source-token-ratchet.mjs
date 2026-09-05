@@ -178,10 +178,40 @@ export const BUFFER = 0.05;
 export const anchor = (tokens) => Math.ceil((tokens * (1 + BUFFER)) / 1000) * 1000;
 
 /**
- * Shrink-only ceilings, in estimated tokens.
+ * Ceilings, in estimated tokens — and since #1601 there are two KINDS of them.
  *
- * A ceiling moves only in the PR that shrinks its own scope, so re-anchoring is
- * per-layer and these three no longer come from one run. Both anchoring runs:
+ * An ANCHORED ceiling is `anchor(reading)`: a reading this gate actually
+ * printed, plus the ruled 5% working buffer, rounded up to the next 1,000. It
+ * is shrink-only, it moves in the PR that shrinks its own scope, and it owes a
+ * worked row below so anyone can re-run the arithmetic.
+ *
+ * A RULED ceiling is a maintainer grant. It is NOT derived from any reading,
+ * so there is no `anchor()` arithmetic to show for it and no worked row that
+ * could honestly be written: the only record it can carry is the ruling. Do
+ * not reverse-engineer a reading that would produce it — on this layer no real
+ * reading can (a reading between 94,286 and 95,238 would be needed to anchor
+ * to 100,000, and the tree measures 84,579), so any such row would be a
+ * fabricated measurement dressed as arithmetic.
+ *
+ * `business semantics` became a ruled ceiling on 2026-09-05 (#1601). The
+ * ruling, verbatim and untranslated:
+ *
+ *   「business-semantics 棘轮 提升到 100000」
+ *
+ * and the shape it was given, from the same exchange, 选项 A:
+ *
+ *   「解耦:banner 钉实测,ceiling 独立」
+ *
+ * ⚠️ A ruled ceiling still prints this gate's opportunistic-tightening
+ * advisory: at 84,579 against 100,000 the headroom is over twice the buffer, so
+ * every run now suggests re-anchoring down to ~89,000. Following that advice
+ * would hand back the headroom the ruling was made to create. The advisory is
+ * left as-is deliberately — changing when it fires is gate behaviour, and this
+ * card was scoped to the constant, the docs and the banner rule — but ⛔ a
+ * ruled ceiling is not tightened on the strength of that line alone. It moves
+ * on another ruling, or on a PR that genuinely shrinks the layer and says so.
+ *
+ * The anchoring runs the two anchored ceilings below come from:
  *
  *   node scripts/check-source-token-ratchet.mjs   # 2026-08-17 03:20 UTC, `main` at d038b957
  *     #1189 — removed the account renewal fields, their view and their seed values
@@ -191,39 +221,46 @@ export const anchor = (tokens) => Math.ceil((tokens * (1 + BUFFER)) / 1000) * 10
  *     #1316 — removed the inert `list.tabs[]` block from every view file
  *     business semantics ~82,489 · interaction layer ~37,424 · authored total ~133,840
  *
- * Each ceiling is `anchor(reading)` — the reading plus the ruled 5% working
- * buffer, rounded up to the next 1,000. `headroom` is the headroom **at anchor
- * time** (`ceiling - reading`, on that row's own run): it is a derivation of the
- * constant beside it, not a live figure, so it deliberately does not track what
- * the gate prints today — the tree keeps moving between re-anchorings.
+ * `headroom` is the headroom **at anchor time** (`ceiling - reading`, on that
+ * row's own run): it is a derivation of the constant beside it, not a live
+ * figure, so it deliberately does not track what the gate prints today — the
+ * tree keeps moving between re-anchorings.
  *
- *   business semantics   80,356 × 1.05 =  84,374 -> ceil 1k ->  85,000  (headroom 4,644, 5.8%)  2026-08-17
+ *   business semantics   ruled 100,000 — a maintainer grant, no reading derives it   2026-09-05
  *   interaction layer    37,424 × 1.05 =  39,295 -> ceil 1k ->  40,000  (headroom 2,576, 6.9%)  2026-08-26
  *   authored total      133,302 × 1.05 = 139,967 -> ceil 1k -> 140,000  (headroom 6,698, 5.0%)  2026-08-17
  *
- * The rounding step is what carries two of the three a little past 5%; it is
+ * The rounding step is what carries the anchored rows a little past 5%; it is
  * kept because a ceiling a reader can hold in their head is worth more than the
  * last few hundred tokens of precision on a number estimated as `chars / 4`.
  *
- * Only the interaction layer re-anchored on 2026-08-26, and the other two rows
- * are left alone on purpose: on that same run `anchor()` of each of their
- * readings lands ABOVE the ceiling committed below it. One worked line per
- * declined re-anchoring, in the shape of the table above — reading, its
- * `anchor()`, and the committed ceiling it would have raised:
+ * The ruled row is deliberately NOT in the worked-row shape, and that is a
+ * measurement in itself: `test/source-token-ratchet.test.ts` pins one worked
+ * row per committed ceiling and reads every ceiling as `anchor()` of the
+ * reading beside it. That model has no ruled ceiling in it, so it goes red on
+ * this row — correctly, and with the message that says teach the shape. ⛔ The
+ * fix there is to teach that suite the ruled kind, never to relax the pin and
+ * never to fabricate a reading for this row.
  *
- *   business semantics  anchor( 82,489) =  87,000  > ceiling  85,000  2026-08-26
+ * Of the ceilings left alone by the latest ANCHORING run (2026-08-26), one
+ * worked line each — reading, its `anchor()`, and the committed ceiling it
+ * would have raised:
+ *
  *   authored total      anchor(133,840) = 141,000  > ceiling 140,000  2026-08-26
  *
- * Re-anchoring either would therefore be a RAISE, and a raise sits on the
+ * Re-anchoring it would therefore be a RAISE, and a raise sits on the
  * maintainer floor. So a shrink-only ratchet re-anchors a layer only when
  * `anchor(reading) < ceiling`; when it is greater the committed ceiling is
- * already the tighter of the two and stands.
+ * already the tighter of the two and stands. `business semantics` has no such
+ * line any more: it left the anchored kind entirely, and on the reading current
+ * at #1601 (~84,579, `main` at a4e5ea3e) `anchor()` lands at 89,000 — BELOW its
+ * ruled ceiling, so the declined-raise reasoning no longer describes it at all.
  *
  * Lower them whenever the tree shrinks — that is free and encouraged. Raising
  * one requires a maintainer ruling quoted in the raising PR's body.
  */
 export const CEILINGS = new Map([
-  ['business semantics', 85000],
+  ['business semantics', 100000],
   ['interaction layer', 40000],
   ['authored total', 140000],
 ]);

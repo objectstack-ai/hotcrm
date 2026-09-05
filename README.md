@@ -6,10 +6,10 @@
 
 > **The reference app for AI-written enterprise software.** A complete CRM —
 > 18 objects, 28 flows, 5 dashboards, 6 AI skills, 4 languages — carries its
-> whole business semantics (objects, flows, actions, hooks) in **~81k tokens**
+> whole business semantics (objects, flows, actions, hooks) in **~85k tokens**
 > of typed [ObjectStack](https://github.com/objectstack-ai/objectstack) metadata,
 > and its whole interaction layer (views, pages, dashboards, app shell) in
-> another **~39k**. An agent holds every business rule of a real enterprise CRM
+> another **~37k**. An agent holds every business rule of a real enterprise CRM
 > in a fraction of one context window — and the entire authored app still fits
 > comfortably — so it can reason about the system whole and refactor it safely.
 > **Install it online in one click, or fork it and build & ask with Claude

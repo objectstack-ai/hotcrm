@@ -44,20 +44,37 @@ import { REPO_ROOT } from './helpers/repo-root';
  *
  * So the banner is held to the maintainer's already-ruled working buffer rather
  * than to a fresh number invented here: 「给 5% 缓冲」 (2026-08-17), the same 5%
- * the ratchet's ceilings carry via its `anchor()`. Reusing it is the point — the
- * README figure and the ratchet ceiling then go stale at nearly the same
- * reading, so re-stating the claim is a maintainer-ruling moment, not a chore.
- * Against today's committed ceilings:
+ * the ratchet's ceilings carry via its `anchor()`. Reusing it keeps one buffer
+ * in this repo rather than two that drift apart.
  *
- *   business semantics  banner ~81k -> band 76,950–85,050 · ceiling 85,000
- *   interaction layer   banner ~39k -> band 37,050–40,950 · ceiling 40,000
+ * ## What this rule is FOR, since #1601: honesty, not a budget
  *
- * On both layers the band's upper edge sits past the committed ceiling, so on
- * growth the ratchet fails first and the banner cannot be advertising a surface
- * CI is already configured to reject. Shrinkage is the direction this rule owns
- * alone: a banner left behind by a shrinking tree breaks no ceiling, and only
- * the band's lower edge objects. Early is the safe direction for a doc guard;
- * late is the one that cost #1187.
+ * Maintainer ruling, 2026-09-05 (verbatim, kept untranslated):
+ *
+ *   「解耦:banner 钉实测,ceiling 独立」
+ *
+ * The banner is pinned to the MEASURED reading; the ceiling stands on its own.
+ * So this rule caps nothing. Its whole job is that the README may not advertise
+ * a size the app does not have — the ratchet owns the growth budget, alone, and
+ * a raise there sits on the maintainer floor where it always did.
+ *
+ *   business semantics  banner ~85k -> band 80,750–89,250 · ceiling 100,000
+ *   interaction layer   banner ~37k -> band 35,150–38,850 · ceiling 40,000
+ *
+ * ⚠️ The ceiling column is still worked out per row, and still pinned to
+ * `CEILINGS` below — that is what stops the README quoting a ceiling the gate no
+ * longer commits. What it is NOT any more is an input to this rule. Until #1601
+ * the paragraph here compared each band's upper edge against its ceiling and
+ * argued from the result that the ratchet failed first on growth; that
+ * comparison was the coupling, and it is gone. Which of the two reddens first on
+ * growth is deliberately no longer a fact this file reasons from, because the
+ * two reds are not paid in the same currency: this one is cleared by restating
+ * the banner, which any PR may do, and the ratchet's only by shrinking the layer
+ * or by another ruling.
+ *
+ * Shrinkage is the direction this rule owns alone: a banner left behind by a
+ * shrinking tree breaks no ceiling, and only the band's lower edge objects.
+ * Early is the safe direction for a doc guard; late is the one that cost #1187.
  *
  * ⚠️ That paragraph read the other way round until #1320 re-anchored the
  * interaction ceiling 42,000 -> 40,000. The table above went on saying 42,000,
@@ -374,25 +391,44 @@ describe('the README headline figures match the token gate (#1187)', () => {
       }
     });
 
-    it('still supports the claim the paragraph draws from it', () => {
-      // The prose argues that on growth the ratchet fails before this rule
-      // does, on BOTH layers. That is a relation between two constants, so it
-      // is pinned as one — it was true of one layer only before #1320, and read
-      // as true of both for the eleven days after.
+    it('works from a band that actually holds the measured reading', () => {
+      // The relation the paragraph draws from the table, re-aimed by the #1601
+      // ruling 「解耦:banner 钉实测,ceiling 独立」. It used to compare the band's
+      // upper edge against the ceiling and argue that the ratchet failed first;
+      // that comparison WAS the coupling the ruling removed, so it is not
+      // inverted here, it is replaced. What the rows must support now is the
+      // truthfulness claim: the band each row prints is one today's reading
+      // actually falls inside.
       //
-      // Deliberately read against the ROW's ceiling rather than the committed
-      // one: the case above already ties the row to `CEILINGS`, so a moved
-      // constant reddens exactly one case with an exact message, and this one
-      // fires next — when the row has been corrected and the paragraph over it
-      // has not. One cause, one red, in the order a maintainer fixes them.
+      // Read against the ROW's own edges rather than recomputed from the
+      // README: the two cases above already tie the row to the banner and to
+      // `BUFFER`, so a moved figure reddens exactly one of them with an exact
+      // message and this one fires next — when the rows are self-consistent and
+      // the tree has moved out from under them anyway. One cause, one red, in
+      // the order a maintainer fixes them. The edges read here are also the
+      // ROUNDED, published ones, so what is checked is the band as a reader
+      // reads it rather than the unrounded band the tolerance case computes.
       for (const row of rows()) {
+        const tokens = measured[row.label]?.tokens;
         expect(
-          row.high,
-          `${where(row)}the docstring argues the ratchet fails first on growth, but this ` +
-            `layer's band now closes at ${fmt(row.high)}, at or below the committed ceiling ` +
-            `${fmt(row.ceiling)} — so this rule fires first and the paragraph above needs ` +
-            'rewriting, not relaxing.',
-        ).toBeGreaterThan(row.ceiling);
+          tokens,
+          `${where(row)}the gate reports no reading for '${row.label}', so this row's band is ` +
+            'checked against nothing. Vacuity, not a pass.',
+        ).toBeTypeOf('number');
+        expect(
+          tokens,
+          `${where(row)}the gate measures ${tokens === undefined ? 'nothing' : fmt(tokens)}, ` +
+            `below the band this row publishes (${fmt(row.low)}–${fmt(row.high)}). The banner ` +
+            'is advertising a bigger surface than the app has: restate it from the gate and ' +
+            'correct this row.',
+        ).toBeGreaterThanOrEqual(row.low);
+        expect(
+          tokens,
+          `${where(row)}the gate measures ${tokens === undefined ? 'nothing' : fmt(tokens)}, ` +
+            `above the band this row publishes (${fmt(row.low)}–${fmt(row.high)}). The banner ` +
+            'understates the surface: restate it from the gate and correct this row. This is ' +
+            'not a ceiling — the ratchet owns growth, and it has its own verdict on it.',
+        ).toBeLessThanOrEqual(row.high);
       }
     });
   });
