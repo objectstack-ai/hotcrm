@@ -403,6 +403,16 @@ describe('source token ratchet — this repository, today', () => {
  * the constants, so it rots the moment one moves — which is exactly what #1317
  * found when it re-anchored the interaction layer and the row went false.
  *
+ * Since #1601 the table carries TWO shapes, because a ceiling can now be
+ * reached two ways. An ANCHORED row shows its arithmetic — `anchor()` of a
+ * reading this gate printed — and every case below still holds it to that. A
+ * RULED row is a maintainer grant: no reading derives it, so there is no
+ * arithmetic to show and the row states the constant and the date it was ruled.
+ * Both kinds are pinned and neither may go missing. The kind is not a free
+ * choice either: the ruled case checks that no reading recorded here could have
+ * anchored the constant, which is what stops a ceiling being filed as "ruled"
+ * to dodge arithmetic that did in fact apply.
+ *
  * ⚠️ `headroom` on a row is the headroom **at anchor time** — that row's own
  * reading against its own ceiling — and is deliberately NOT what the gate prints
  * today: the tree keeps moving between re-anchorings, and since #1320 the three
@@ -437,17 +447,19 @@ describe('source token ratchet — the header table is derived from the ceilings
     pct: string;
     date: string;
     line: string;
+    index: number;
   }
 
   function rows(): Row[] {
     return source()
       .split('\n')
-      .flatMap((line) => {
+      .flatMap((line, index) => {
         const found = TABLE_ROW.exec(line);
         if (!found?.groups) return [];
         const g = found.groups;
         return [
           {
+            index,
             label: g.label,
             reading: num(g.reading),
             multiplier: g.multiplier,
@@ -483,6 +495,55 @@ describe('source token ratchet — the header table is derived from the ceilings
       }
       return [{ date: found.groups.date, readings }];
     });
+  }
+
+  /**
+   * One RULED row — a ceiling granted by a maintainer rather than anchored:
+   *
+   *   *   business semantics   ruled 100,000 — a maintainer grant, no reading derives it   2026-09-05
+   *
+   * There is no arithmetic in it because there is none to state: the constant
+   * comes from a ruling, not from a reading. The reason it is captured at all
+   * is that it still restates a committed ceiling in prose, which is the whole
+   * hazard this describe block exists for. Same discipline as `TABLE_ROW`: the
+   * column widths and the prose between the constant and the date are free, but
+   * the label, the ceiling and the date are captured, so a row that quietly
+   * loses one stops parsing instead of passing.
+   *
+   * ⛔ Never widen this to make an anchored row match it. A ceiling that a
+   * recorded reading anchors to is an anchored ceiling and owes a worked row;
+   * the case below is what holds that line.
+   */
+  const RULED_ROW =
+    / \* {2,}(?<label>\S.*?\S) {2,}ruled (?<ceiling>[\d,]+) — (?<why>\S.*?\S) +(?<date>\d{4}-\d{2}-\d{2})\s*$/;
+
+  interface Ruled {
+    label: string;
+    ceiling: number;
+    why: string;
+    date: string;
+    line: string;
+    index: number;
+  }
+
+  function ruledRows(): Ruled[] {
+    return source()
+      .split('\n')
+      .flatMap((line, index) => {
+        const found = RULED_ROW.exec(line);
+        if (!found?.groups) return [];
+        const g = found.groups;
+        return [
+          {
+            index,
+            label: g.label,
+            ceiling: num(g.ceiling),
+            why: g.why,
+            date: g.date,
+            line: line.trim(),
+          },
+        ];
+      });
   }
 
   /**
@@ -528,12 +589,53 @@ describe('source token ratchet — the header table is derived from the ceilings
       });
   }
 
-  it('carries exactly one worked row per committed ceiling, in the committed order', () => {
+  it('carries exactly one row per committed ceiling, of either kind, in the committed order', () => {
     // A failure here means the table did not parse, not that a figure is wrong.
-    // The fix is to teach TABLE_ROW the header's new shape — never to relax it,
-    // and never to drop the row: a ceiling with no worked row is a ceiling
-    // nobody can check the arithmetic of.
-    expect(rows().map((row) => row.label)).toEqual([...CEILINGS.keys()]);
+    // The fix is to teach TABLE_ROW or RULED_ROW the header's new shape — never
+    // to relax either, and never to drop the row: a ceiling with no row at all
+    // is a ceiling nobody can check.
+    //
+    // This is also the vacuity guard for BOTH parsers. Every case below is
+    // trivially true against a table its regex cannot read, so a ruled row that
+    // stops parsing has to surface HERE, as a missing label, rather than as an
+    // empty set that passes. Merged on document position so the header's
+    // reading order is still what is asserted, whichever kind each row is.
+    const documented = [
+      ...rows().map((row) => ({ label: row.label, index: row.index })),
+      ...ruledRows().map((row) => ({ label: row.label, index: row.index })),
+    ].sort((a, b) => a.index - b.index);
+
+    expect(documented.map((entry) => entry.label)).toEqual([...CEILINGS.keys()]);
+  });
+
+  it('states a ruled ceiling as ruled, and proves no recorded reading anchored it', () => {
+    for (const row of ruledRows()) {
+      // The number printed in the row IS the constant committed below it …
+      expect(row.ceiling, row.line).toBe(ceilingOf(row.label));
+
+      // … and the row's own claim, that no reading derives this ceiling, is
+      // checked rather than taken on trust.
+      //
+      // NOT as "no integer anchors here": that is false of every multiple of
+      // 1,000 — readings 94,286 through 95,238 all anchor to 100,000 — so a
+      // case asserting it could never pass, and one asserting its negation
+      // would pass on every ceiling and mean nothing. The honest form is
+      // header-internal, like every other assertion in this block: none of the
+      // readings recorded above for that layer produces this constant. If one
+      // did, the ceiling would be an ordinary anchoring wearing a grant's
+      // clothes, and it owes the worked arithmetic instead — which is the one
+      // way "ruled" could be used to dodge a discipline that did apply.
+      for (const run of runs()) {
+        const reading = run.readings.get(row.label);
+        if (reading === undefined) continue;
+        expect(
+          anchor(reading),
+          `${row.line}\n  the ${run.date} run read ${reading.toLocaleString('en-US')} for ` +
+            `'${row.label}', and that anchors to exactly the ceiling this row calls a grant. ` +
+            'It is an anchored ceiling: give it a worked row rather than a ruling.',
+        ).not.toBe(row.ceiling);
+      }
+    }
   });
 
   it('commits exactly `anchor(reading)` on every row', () => {
@@ -574,7 +676,13 @@ describe('source token ratchet — the header table is derived from the ceilings
   it('carries a declined row for every ceiling the latest anchoring run left alone', () => {
     // Non-vacuity, derived rather than listed: a layer that re-anchored carries
     // that run's own date in the table above, so every OTHER committed ceiling
-    // was left alone on that run and owes a worked line saying why. A header
+    // was left alone on that run and owes a worked line saying why.
+    //
+    // Read off `rows()`, so RULED ceilings are outside this ledger by
+    // construction, and that is deliberate (#1601): "declined as a raise" is
+    // reasoning inside the shrink-only discipline, and a maintainer grant is
+    // not a re-anchoring that was weighed and declined. A ruled ceiling owes no
+    // line here; it owes the ruling, which is in the header beside it. A header
     // whose sentence stops parsing therefore fails here instead of passing as
     // an empty set — and a legitimate future re-anchoring retires its own row
     // without this list having to be edited by hand.
