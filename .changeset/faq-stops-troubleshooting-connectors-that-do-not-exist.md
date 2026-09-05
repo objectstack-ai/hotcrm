@@ -14,8 +14,8 @@ Integrations` is real, but as this app ships it holds exactly the two entries
 the platform contributes, *Connect an Agent* and *Datasources*; no vendor
 mounts anything under it.
 
-Both answers now say what actually ships and point at
-[Integrations](/docs/guides/integrations), the same shape #1401 gave the
+Both answers now say what actually ships and point the reader at the
+Integrations guide (`/docs/guides/integrations`), the same shape #1401 gave the
 neighbouring Stripe answer on this page:
 
 - **Email.** Nothing logs an inbound message, by address match or otherwise,
@@ -23,7 +23,8 @@ neighbouring Stripe answer on this page:
   Email** on a contact, which writes the message as a record and leaves an
   entry on that contact's Activity timeline, is hidden on a contact with *Email
   Opt Out* ticked, and delivers only through the mail transport a deployment
-  configures. Also linked: [Email & Calendar](/docs/guides/email-and-calendar).
+  configures. Also linked: the Email & Calendar guide
+  (`/docs/guides/email-and-calendar`).
 - **DocuSign.** There is no integration log to open and no webhook delivery to
   retry. Until a connector ships, a quote's or a contract's status is a field
   someone sets by hand and the signed document is a file someone attaches.
