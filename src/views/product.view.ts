@@ -66,7 +66,7 @@ export const ProductViews = defineView({
         columns: 2,
         fields: [
           'product_code',
-          { field: 'name', required: true, colSpan: 2 },
+          { field: 'name', required: true, span: 'full' },
           'category',
           'family',
           'sku',

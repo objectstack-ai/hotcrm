@@ -198,7 +198,7 @@ export const AccountViews = defineView({
         label: 'Profile',
         columns: 2,
         fields: [
-          { field: 'name', required: true, colSpan: 2 },
+          { field: 'name', required: true, span: 'full' },
           'account_number',
           // `type` (prospect / customer / partner …) drives the Renewals and
           // At-Risk views' `type = customer` filter — with no form field it

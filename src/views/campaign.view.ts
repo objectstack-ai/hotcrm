@@ -109,7 +109,7 @@ export const CampaignViews = defineView({
         label: 'Campaign Information',
         columns: 2,
         fields: [
-          { field: 'name', required: true, colSpan: 2 },
+          { field: 'name', required: true, span: 'full' },
           'campaign_code',
           'type',
           'channel',

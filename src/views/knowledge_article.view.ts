@@ -85,8 +85,8 @@ export const KnowledgeArticleViews = defineView({
         columns: 2,
         fields: [
           'article_number',
-          { field: 'title', required: true, colSpan: 2 },
-          { field: 'summary', colSpan: 2 },
+          { field: 'title', required: true, span: 'full' },
+          { field: 'summary', span: 'full' },
           'category',
           'tags',
           'status',

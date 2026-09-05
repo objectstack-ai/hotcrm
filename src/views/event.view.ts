@@ -142,12 +142,12 @@ export const EventViews = defineView({
         label: 'Event',
         columns: 2,
         fields: [
-          { field: 'subject', required: true, colSpan: 2 },
+          { field: 'subject', required: true, span: 'full' },
           { field: 'type', required: true },
           { field: 'status', required: true },
           'owner_id',
           'location',
-          { field: 'description', colSpan: 2 },
+          { field: 'description', span: 'full' },
         ],
       },
       {

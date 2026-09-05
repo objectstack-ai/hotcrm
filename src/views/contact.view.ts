@@ -80,7 +80,7 @@ export const ContactViews = defineView({
         fields: [
           'salutation',
           { field: 'first_name', required: true },
-          { field: 'last_name', required: true, colSpan: 2 },
+          { field: 'last_name', required: true, span: 'full' },
           { field: 'crm_account', required: true },
           'title',
           'department',
