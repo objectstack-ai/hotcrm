@@ -541,23 +541,50 @@ function main() {
   console.log('✓ source token ratchet clean');
 }
 
-// Run only when invoked directly. `anchor`, `fmt`, `BUFFER` and the ceilings
-// are importable so that every figure derived from a ceiling is DERIVED by
-// the test quoting it rather than transcribed beside it:
-// `test/source-token-ratchet.test.ts` sizes its fixtures from
-// `CEILINGS`/`BUFFER` and pins the worked table in the header above against
-// `anchor()`, and `test/docs-readme-token-figures.test.ts` reads the same two
-// constants to check the README banner — so a re-anchoring moves the constant
-// and the copies follow.
+// Run only when invoked directly. Three suites import from this module, in two
+// groups — and the second group is why an edit here is not a local edit.
 //
-// Those two suites import nothing else from here, and need nothing else: the
-// stripping rule and the verdict are exercised by RUNNING this file, not by
-// importing it. `test/source-token-ratchet.test.ts` copies the gate into a
-// sandbox root, writes fixtures under it, and asserts the stripped `chars`
-// and the verdict text off that real run. No cross-check against a TypeScript
-// scanner is involved — not here, and nowhere in this repo; the header
-// paragraph on the stripping rule says why.
+// GROUP 1 — the ceiling figures. Every number derived from a ceiling is
+// DERIVED by the test quoting it rather than transcribed beside it:
+// `test/source-token-ratchet.test.ts` imports `anchor`, `fmt`, `BUFFER` and
+// `CEILINGS` (it sizes its fixtures from `CEILINGS`/`BUFFER` and pins the
+// worked table in the header above against `anchor()`), and
+// `test/docs-readme-token-figures.test.ts` imports `BUFFER` and `CEILINGS` to
+// check the README banner. So a re-anchoring moves the constant and the copies
+// follow.
+//
+// GROUP 2 — the stripper. `test/docs-object-term-consistency.test.ts` imports
+// `stripComments` and runs every `.ts` file through it to decide what the #802
+// Chinese-term guard is allowed to see: a retired spelling may sit in a
+// comment, but not in the code. ⇒ EDITING `stripComments` EDITS WHAT THAT
+// GUARD SCANS. Strip more than intended and offending literals stop being
+// read — the guard then passes by finding nothing, which reads exactly like
+// clean. That suite's own defence is a single assertion, that stripping a
+// known file leaves its ledger standing; it catches a stripper that returns
+// nothing, not one that returns too little. ⛔ So this is not a private
+// helper: change it with that suite in hand and re-run it, not just this gate.
+//
+// `verdict` is exported and imported by nothing. It, and the stripping rule as
+// this gate applies it, are also exercised by RUNNING this file:
+// `test/source-token-ratchet.test.ts` copies the gate into a sandbox root,
+// writes fixtures under it, and asserts the stripped `chars` and the verdict
+// text off that real run. No cross-check against a TypeScript scanner is
+// involved — not here, and nowhere in this repo; the header paragraph on the
+// stripping rule says why.
 // Importing must not run the gate or call exit().
+//
+// ⚠️ The list above is hand-written and nothing holds it to the tree. It was
+// re-derived at 81a79ee (2026-09-05). Its predecessor said only two suites
+// imported from here and that the stripping rule was never imported: true when
+// written (#1380), false three days later when #802 landed the `stripComments`
+// importer, and nothing here could notice (#1533). Re-derive before relying on
+// it — resolved imports, not name matches:
+//
+//   grep -rn "from '.*check-source-token-ratchet" test/
+//
+// `test/deal-threshold-parity.test.ts` declares a local `const stripComments`
+// of its own and `test/script-main-guard.test.ts` spawns this file by path;
+// neither imports from here, and a name-only grep counts both.
 //
 // The comparison lives in `scripts/lib/main-module.mjs` and is never
 // hand-rolled here: this line used to read
