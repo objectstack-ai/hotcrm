@@ -353,7 +353,7 @@ export const OpportunityViews = defineView({
         label: 'Overview',
         columns: 2,
         fields: [
-          { field: 'name', required: true, colSpan: 2 },
+          { field: 'name', required: true, span: 'full' },
           { field: 'crm_account', required: true },
           'primary_contact',
           { field: 'stage', required: true },
@@ -395,7 +395,7 @@ export const OpportunityViews = defineView({
         collapsible: true,
         collapsed: true,
         columns: 2,
-        fields: ['win_reason', 'loss_reason', { field: 'loss_details', colSpan: 2 }],
+        fields: ['win_reason', 'loss_reason', { field: 'loss_details', span: 'full' }],
       },
     ],
   },

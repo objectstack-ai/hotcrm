@@ -767,10 +767,8 @@ export const en: TranslationData = {
         info: { label: 'Case Information' },
         status: { label: 'Status & SLA' },
         description: { label: 'Description' },
-        // Form section names on case.view.ts (#1100). `sla_overview`, not
-        // `sla` — `sla` is already the fieldGroup key for "SLA & Priority".
+        // Form section names on case.view.ts (#1100).
         case: { label: 'Case' },
-        sla_overview: { label: 'SLA' },
         how_can_we_help: { label: 'How can we help?' },
       },
       _actions: {

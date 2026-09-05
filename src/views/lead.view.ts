@@ -113,7 +113,7 @@ const DUPLICATE_LINK_FIELDS = [
  * This file demonstrates:
  * 1. All 6 FormView layout types (simple, tabbed, wizard, split, drawer, modal)
  * 2. Section features (collapsible, 1-4 column layouts)
- * 3. Field-level controls (readonly, required, hidden, colSpan, visibleOn, dependsOn, custom widget)
+ * 3. Field-level controls (readonly, required, hidden, span, visibleOn, dependsOn, custom widget)
  * 4. Multiple named formViews for different scenarios
  * 5. Various list view types
  */
@@ -224,17 +224,15 @@ export const LeadViews = defineView({
         fields: [
           {
             field: 'salutation',
-            colSpan: 1,
           },
           {
             field: 'first_name',
             required: true,
-            colSpan: 1,
           },
           {
             field: 'last_name',
             required: true,
-            colSpan: 2, // Span both columns
+            span: 'full',
           },
           'company',
           'title',
@@ -302,7 +300,7 @@ export const LeadViews = defineView({
         fields: [
           {
             field: 'address',
-            colSpan: 2,
+            span: 'full',
           },
         ],
       },
@@ -553,7 +551,7 @@ export const LeadViews = defineView({
           fields: [
             { field: 'first_name', required: true },
             { field: 'last_name', required: true },
-            { field: 'company', required: true, colSpan: 2 },
+            { field: 'company', required: true, span: 'full' },
             { field: 'email', required: true },
             'phone',
             'status',
@@ -623,7 +621,7 @@ export const LeadViews = defineView({
           // Single composite `Field.address` — see the note on the default
           // form's Address section.
           fields: [
-            { field: 'address', colSpan: 2 },
+            { field: 'address', span: 'full' },
           ],
         },
         {
@@ -658,7 +656,7 @@ export const LeadViews = defineView({
           fields: [
             { field: 'first_name', required: true, readonly: true },
             { field: 'last_name', required: true, readonly: true },
-            { field: 'email', readonly: true, colSpan: 2 },
+            { field: 'email', readonly: true, span: 'full' },
             'phone',
             'mobile',
           ],
@@ -880,7 +878,7 @@ export const LeadViews = defineView({
           fields: [
             { field: 'first_name', required: true },
             { field: 'last_name',  required: true },
-            { field: 'email',      required: true, colSpan: 2 },
+            { field: 'email',      required: true, span: 'full' },
             'phone',
             'title',
           ],
@@ -890,7 +888,7 @@ export const LeadViews = defineView({
           label: 'About your company',
           columns: 2,
           fields: [
-            { field: 'company', required: true, colSpan: 2 },
+            { field: 'company', required: true, span: 'full' },
             'website',
             'industry',
             'number_of_employees',
@@ -973,7 +971,7 @@ export const LeadViews = defineView({
             ...DUPLICATE_LINK_FIELDS,
             {
               field: 'notes',
-              colSpan: 2,
+              span: 'full',
               required: true,
               // Require explanation for unqualified
               visibleOn: P`has(record.status) && record.status == "unqualified"`,
@@ -989,7 +987,7 @@ export const LeadViews = defineView({
           // Single composite `Field.address` — the discrete street/city/state/
           // postal_code/country columns do not exist on crm_lead.
           fields: [
-            { field: 'address', colSpan: 2 },
+            { field: 'address', span: 'full' },
           ],
         },
         {

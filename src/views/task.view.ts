@@ -287,14 +287,14 @@ export const TaskViews = defineView({
         // section: a task being filed is 0% by definition, so a percentage
         // slider on the create form is noise.
         fields: [
-          { field: 'subject', required: true, colSpan: 2 },
+          { field: 'subject', required: true, span: 'full' },
           { field: 'type', required: false },
           { field: 'status', required: true },
           'priority',
           'due_date',
           'owner_id',
           'reminder_date',
-          { field: 'description', colSpan: 2 },
+          { field: 'description', span: 'full' },
         ],
       },
       {

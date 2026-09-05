@@ -875,10 +875,7 @@ export const esES: TranslationData = {
         status: { label: 'Estado y SLA' },
         description: { label: 'Descripción' },
         // Nombres de sección del formulario en case.view.ts (#1100).
-        // `sla_overview`, no `sla` — `sla` ya es la clave del fieldGroup
-        // «SLA & Priority».
         case: { label: 'Caso' },
-        sla_overview: { label: 'SLA' },
         how_can_we_help: { label: '¿Cómo podemos ayudarte?' },
         // Claves de sección del objeto (case.object.ts) que usan los
         // formularios de registro. `basic` repite el inglés de `info`
