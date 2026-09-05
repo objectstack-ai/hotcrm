@@ -402,7 +402,7 @@ export const CaseViews = defineView({
         columns: 2,
         fields: [
           'case_number',
-          { field: 'subject', required: true, colSpan: 2 },
+          { field: 'subject', required: true, span: 'full' },
           { field: 'crm_account', required: true },
           'crm_contact',
           { field: 'status', required: true },
@@ -411,7 +411,7 @@ export const CaseViews = defineView({
           'owner_id',
           // Required on the object with no default — a form without it could
           // never save a new case.
-          { field: 'description', required: true, colSpan: 2 },
+          { field: 'description', required: true, span: 'full' },
         ],
       },
     ],
