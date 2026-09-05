@@ -43,6 +43,16 @@ and the tree measures 84,579. The header records it as a ruled ceiling and
 deliberately writes no worked row for it, rather than reverse-engineering a
 reading that would produce the constant.
 
+`test/source-token-ratchet.test.ts` learns that second kind. It modelled every
+ceiling as `anchor()` of a measured reading, so a maintainer grant could not be
+expressed in it at all. It now parses a ruled row as well as a worked one, still
+asserts one row per committed ceiling in the committed order, and keeps every
+anchored-row case exactly as it was. The kind is not a free choice: a ruled row
+must restate the committed constant, and no reading recorded in the header may
+anchor to it — which is what stops a ceiling being filed as "ruled" to dodge
+arithmetic that did in fact apply. That is a new invariant, so the suite is
+strictly more expressive than before, not weaker.
+
 Two consequences are recorded in the header rather than silently absorbed. The
 gate's opportunistic-tightening advisory now fires on this layer every run,
 suggesting a re-anchor down to ~89,000 — following it would hand back the
