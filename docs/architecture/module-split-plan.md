@@ -53,14 +53,15 @@ R1 is not a hypothesis in this repository. 15 of the 18 objects already carry a 
 child rows: `crm_campaign_member`, `crm_opportunity_line_item`, `crm_quote_line_item`.)
 Cross-package lookups are what this app has been doing in production since it was written.
 
-## Method, and how to regenerate the inventory
+## Method, and how the inventory is maintained
 
-The companion [`module-split-inventory.json`](./module-split-inventory.json) is **generated,
-never hand-written**, and carries the commit it was measured at. It is the machine-readable
+The companion [`module-split-inventory.json`](./module-split-inventory.json) was
+**generated once**, and carries the commit it was measured at. It is the machine-readable
 half of this plan: file → module, every edge with its rule and verdict, and the item classes
-the four rules do not cover.
+the four rules do not cover. It is **hand-maintained from here on** — see the paragraph below
+and the `$maintenance` block in the file itself.
 
-Its inputs are, in order of authority:
+The inputs the one-off analysis read were, in order of authority:
 
 1. **`dist/objectstack.json`** — the compiled artifact from `pnpm build`. Every reference in
    the graph (a field's target object, a hook's `object`, a nav node's `objectName`, a view's
@@ -75,8 +76,13 @@ Its inputs are, in order of authority:
 The generator itself is deliberately **not committed**. Lint, validation and diagnostics are
 platform-level tooling and do not live in this repository (AGENTS.md, *Do not build
 platform-level tooling here*); a one-off analysis script that produced a design artefact is
-not a gate and must not become one. The inventory is a snapshot frozen at its stamped commit,
-not a live index — read it as evidence for this plan, and regenerate rather than patch it.
+not a gate and must not become one. That decision stands — but it means **there is nothing in
+the tree that can regenerate the inventory**, so patching it by hand is the only maintenance
+available, and the file used to forbid exactly that (#1698). It is a snapshot frozen at its
+stamped commit, not a live index: read it as evidence for this plan, and when a path it names
+is deleted or moved, **edit it by hand and record the edit in its `$hand_edits` list**. Its
+measured figures — token counts, totals and edges — are readings at the stamped commit; leave
+them as measured rather than adjusting them to look current.
 
 For the same reason the per-file roster lives only in the JSON. This document carries the
 module-level rollups and the judgements; it does not transcribe a machine list into prose,
@@ -407,4 +413,5 @@ readable.
 - ADR-0048 §3.5 — namespace rename-on-install is an explicit non-goal
 - [objectstack#14122](https://github.com/objectstack-ai/objectstack/issues/14122) — the
   proposal, the measured cross-package matrix (§4), and the epic tracking this work
-- [`module-split-inventory.json`](./module-split-inventory.json) — the generated inventory
+- [`module-split-inventory.json`](./module-split-inventory.json) — the inventory, hand-maintained
+  and stamped with the commit it was measured at
