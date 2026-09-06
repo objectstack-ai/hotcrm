@@ -1,6 +1,6 @@
 ---
 title: 多維資料集
-description: HotCRM 分析底下的語義層——九個 dataset，各自能回答什麼、不能回答什麼。
+description: HotCRM 分析底下的語義層——它是什麼、回答哪些業務問題、又到哪裡為止。
 ---
 
 # 多維資料集
@@ -15,76 +15,50 @@ description: HotCRM 分析底下的語義層——九個 dataset，各自能回�
 2. **速度** — 預彙總，而不是每問一個問題就臨時全表掃一遍。
 3. **重用** — 度量只宣告一次，之後按名字取用。`win_rate` 把自己的分子分母一起帶著，任何小工具都不必臨時湊一個分母。
 
-## 九個 dataset
+## 語義層住在哪裡
 
-`src/datasets/index.ts` 就是整個語義層：
+`src/datasets/index.ts` **就是**語義層，也是唯一一個把自己描述完整的地方：每個 dataset 的維度與度量、以及報表和磁貼按之選取的那些標籤，全都寫在原始碼裡。
 
-| Dataset | 讀取 | 維度 | 度量 |
-| --- | --- | --- | --- |
-| **Opportunity Metrics**（`opportunity_metrics`） | `crm_opportunity`，並聯結 `crm_account` | Stage、Lead Source、Forecast Category、Deal Type、Owner、Win Reason、Loss Reason、Close Date（按月）、Close Quarter、Account Industry | Opportunities、Total Amount、Avg Deal Size、Avg Probability、Won Deals、Lost Deals、Settled Deals、Won Revenue、Lost Revenue、Win Rate |
-| **Case Metrics**（`case_metrics`） | `crm_case` | Status、Priority、Origin、Type、Created（按天）、Resolving Article | Cases、Avg Resolution (h)、SLA Violation Rate、Closed Cases、Resolved by KB、KB Deflection Rate、Cases Within SLA、SLA Compliance Rate |
-| **Lead Metrics**（`lead_metrics`） | `crm_lead` | Status、Source、Created、Last Contacted（按月） | Leads |
-| **Account Metrics**（`account_metrics`） | `crm_account` | Industry、Type、Created（按月） | Accounts、Annual Revenue |
-| **Forecast Metrics**（`forecast_metrics`） | `crm_forecast` | Owner、Period Type、Period、Period Start | Quota、Closed、Pipeline、Commit、Attainment |
-| **Activity Metrics**（`event_metrics`） | `crm_event` | Activity Type、Status、Owner、Related To、Activity Week | Activities、Minutes、Avg Duration |
-| **Task Metrics**（`task_metrics`） | `crm_task` | Status、Priority、Urgency、Type、Due Date、Overdue、Completed | Tasks、Avg Progress |
-| **Product Metrics**（`product_metrics`） | `crm_product` | Category | Products、Total List Price |
-| **Contact Metrics**（`contact_metrics`） | `crm_contact` | *無* | Contacts |
+**本頁有意不再複製那份清單。** 手抄進散文的清單沒有生產者：它在寫下來的那天是對的，而在有人添一個度量的那天就悄悄變成假的——這筆帳這一帶已經付過四次。所以當你需要某個確切的名字去填進報表或磁貼時，請讀 `src/datasets/`：那是唯一真相來源，任何一份副本都不可能比它更新。本頁要講的是這一層的*含義*：它是什麼、今天能回答哪些業務問題、又到哪裡為止。
 
-先從這張表上讀出兩件事。**Contact Metrics 一個維度都沒有宣告** —— 它只數聯絡人，別的什麼都不做。以及**沒有任何 dataset 讀 `crm_campaign`、`crm_contract`、`crm_quote` 或兩個行項目物件**，下面大多數缺口都由此而來。
+值得帶走的事實是它的涵蓋範圍。語義層涵蓋的是 CRM 日常運轉所依賴的記錄——客戶與客戶那邊的聯絡人、潛在客戶、交易與預測、支援工單、活動與任務，以及產品目錄。而它**夠不到**的部分更要緊，因為下面大多數限制都由此而來：**沒有任何 dataset 讀行銷活動、合約、報價，也不讀交易底下的行項目。**
 
 本頁曾經描述過四個 cube —— *Sales*、*Pipeline*、*Service*、*Marketing*。這四個名字在應用裡一個都不存在。其中三個能對應到確實存在的 dataset，只是名字不同、內容也不同；第四個則連資料來源都沒有。下面每一節分別說清楚。
 
 ## 💰 銷售與 📊 管道 —— 是一個 dataset，不是兩個
 
-本頁描述的這兩個 cube，答案都在同一個地方：**Opportunity Metrics** —— 每個管道小工具和全部四份商機報表繫結的那個 dataset。
+本頁描述的這兩個 cube，答案都在同一個地方：**Opportunity Metrics** —— 每個管道小工具和全部四份商機報表繫結的那個 dataset。正是這一層繫結，讓 *pipeline* 在全應用裡是同一個數字，而不是一個畫面一個數字。
 
-**今天夠得著的**，按應用裡用的名字：
+**它回答什麼。** 銷售管理者真正會問的那些交易問題：有多少金額在盤子裡、分別停在哪個階段、歸誰、從哪兒來、贏單或丟單的原因是什麼、客戶屬於哪個產業 —— 按這個月看，或者按這個季度看。它還把贏單率宣告成一個比值，並把已贏、已丟與已結的交易數一併發布在旁邊，讓這個百分比可以被核對而不是被相信。帶著 *bookings*、*管道金額*、*平均交易額*、*機率分檔* 這些詞過來的讀者，都能在這裡找到對應的東西，用的是這個 dataset 自己宣告的名字；那些名字寫在 `src/datasets/opportunity.dataset.ts` 裡。
 
-- *Bookings* → **Won Revenue**（贏單金額），旁邊還有 **Won Deals**。
-- *交易數* → **Opportunities**；*管道金額* → **Total Amount**；*平均交易額* → **Avg Deal Size**。
-- *贏單率* → **Win Rate**，它被宣告為一個比值，並把 **Won Deals**、**Lost Deals** 與 **Settled Deals** 一併發布在旁邊，好讓這個百分比背後的算術可以被核對。
-- *階段*、*負責人*、*來源*、*贏單/丟單原因* → **Stage**、**Owner**、**Lead Source**、**Win Reason**、**Loss Reason**。
-- *機率分檔（commit / best case / pipeline）* → **Forecast Category**。缺的只是本頁當時用的那個叫法。
-- *客戶產業* → **Account Industry**，經這個 dataset 已包含的 `crm_account` 聯結取到。
-- *週期* → **Close Date**（按**月**分桶）與 **Close Quarter**（按**季度**分桶）。
+**它到哪裡為止，以及為什麼：**
 
-**夠不著的，以及為什麼：**
+- **週期時長** —— *sales cycle days*、*days in pipeline*、*days in stage*。沒有任何地方存著時長。商機上有 **Stage Entry Date** 與 **Close Date**，但沒有「已過天數」這樣的欄；而它唯一帶的時長 **Days in Current Stage** 是查詢*之後*才求值的公式（`src/objects/opportunity.object.ts`），因此無法被彙總、篩選或排序，也沒有任何 dataset 把它暴露出來。
+- **Weighted pipeline（金額 × 機率）** —— 這個數字在記錄上是有的：**Expected Revenue** 就是金額乘以階段機率，由 `src/objects/opportunity.hook.ts` 在每次儲存時重算，商機清單檢視也會對這一欄求和。但沒有任何度量為它而宣告，所以沒有磁貼、也沒有報表能給出它。
+- **一切住在行項目上的東西** —— *平均折扣 %*、*product*、*category*、*family*。折扣是 `crm_opportunity_line_item` 上的百分比，而沒有任何 dataset 讀行項目。產品目錄確實有自己的 dataset，但它從不聯結到交易，所以「按產品系列看平均交易額」根本沒有路徑 —— 儘管 **Family** 是產品上真實存在的欄位。
+- **Account tier 與 account size** —— `crm_account.tier` 與 **Number of Employees** 都是真實欄位，但從一筆交易這一側夠得著的客戶切法只有它的產業。
+- **Team、region** —— 這兩者都不是交易上的欄位，也沒有任何 dataset 宣告它們。團隊與地區在本應用裡是以**職位**（`src/sharing/positions.ts` 裡的 *NA Sales Team*、*EU Sales Team*）和客戶上的 **Billing Country**（territory 共享規則比對的那個扁平投影）形式存在的 —— 兩者都是存取控制的機件，沒有任何 dataset 讀它們。「按地區按季度看簽單」問不出來；最接近的、答得出來的切法是按負責人。
+- **按天 / 週 / 年的週期粒度** —— 交易只按月和季度分桶。換一個粒度就意味著再加一個維度。
+- **管道歷史** —— 沒有任何東西給管道打快照，所以「今天的按階段管道 vs 30 天前」沒有歷史可比。最接近的真實存在物是 **Forecast Metrics**：一位負責人一個週期一列的結算快照 —— 配額、已成交、管道與 commit —— 它回答的是另一個問題：「按代表看覆蓋率（管道 ÷ 配額）」，前提是把週期釘死。
 
-- **Sales cycle days** 與 **Days in pipeline** —— 沒有任何地方存著時長。商機上有 **Stage Entry Date** 與 **Close Date**，但沒有「已過天數」這樣的欄；而它唯一帶的時長 **Days in Current Stage** 是查詢*之後*才求值的公式（`src/objects/opportunity.object.ts`），因此無法被彙總、篩選或排序，也沒有任何 dataset 把它暴露出來。
-- **Days in stage** —— 同一個欄位，同一個原因。
-- **Weighted pipeline（金額 × 機率）** —— 這個數字在記錄上是有的：**Expected Revenue** 就是金額乘以階段機率，由 `src/objects/opportunity.hook.ts` 在每次儲存時重算，商機清單檢視也會對這一欄求和。但 `opportunity_metrics` 沒有為它宣告任何度量，所以沒有磁貼、也沒有報表能給出它。
-- **Average discount %** —— 折扣是行項目上的百分比（`crm_opportunity_line_item.discount`），而沒有任何 dataset 讀行項目。
-- **Product、category、family** —— 同樣的原因。**Product Metrics** 涵蓋的是產品目錄（**Category**、產品數、目錄價合計），它從不聯結到交易，所以「按產品系列看平均交易額」根本沒有路徑 —— 儘管 **Family** 是產品上真實存在的欄位。
-- **Account、account tier、account size** —— `crm_account.tier` 與 **Number of Employees** 都是真實欄位，但從交易這一側夠得著的客戶切法只有 **Account Industry**；**Account Metrics** 再多給 **Type** 與 **Created**，也就到此為止。
-- **Team、region** —— 沒有任何 dataset 宣告這兩者，交易上也沒有對應欄位可暴露。團隊與地區在本應用裡是以**職位**（`src/sharing/positions.ts` 裡的 *NA Sales Team*、*EU Sales Team*）和客戶上的 **Billing Country**（territory 共享規則比對的那個扁平投影）形式存在的 —— 兩者都是存取控制的機件，沒有任何 dataset 讀它們。「按地區按季度看簽單」問不出來；最接近的、答得出來的切法是按 **Owner**。
-- **按天 / 週 / 年的週期粒度** —— 宣告出來的分桶只有月和季度。換一個粒度就意味著再加一個維度。
-- **Snapshot date** —— 沒有任何東西給管道打快照。「今天的按階段管道 vs 30 天前」沒有歷史可比。最接近的真實存在物是 **Forecast Metrics**：一位負責人一個週期一列，是配額、已成交、管道與 commit 的結算快照，它回答的是另一個問題 ——「按代表看覆蓋率（管道 ÷ 配額）」，前提是把週期釘死（按 **Period** 分組，或篩到單個 **Period Type** + **Period Start**）。
+## 🎧 服務
 
-## 🎧 服務 —— `case_metrics`
+每個工單相關的儀表板磁貼與全部三份工單報表背後都站著同一個 dataset，而它只讀 `crm_case` 一個物件。
 
-每個工單相關的儀表板磁貼與全部三份工單報表背後的那個 dataset。六個維度 —— **Status**、**Priority**、**Origin**、**Type**、**Created**（按天分桶）、**Resolving Article** —— 與八個度量：
+**它回答什麼。** 工單有多少、從哪些管道進來、平均要多久解決、知識文章分流掉了多少負荷、SLA 有沒有守住 —— 這幾件事都可以按狀態、優先順序、來源、工單類型，或按工單開出來的那一天來切。其中兩個比率被宣告成比值，並把各自的分子分母一併發布在旁邊，任何小工具都不必臨時湊一個分母，任何讀者也都能自己核那道算術。
 
-- **Cases** —— 工單數（`case_count`）。
-- **Avg Resolution (h)** —— 平均解決時長（`avg_resolution`）。
-- **SLA 違約率** —— **SLA Violated** 標誌的平均值（`avg_sla_violated`），它是違約率，不是達標率。
-- **Closed Cases** —— 已關閉工單數（`closed_count`），下面兩個比率共用的分母。
-- **Resolved by KB** —— 帶有解決知識文章的已關閉工單數（`kb_resolved_count`）。
-- **KB Deflection Rate** —— **Resolved by KB** ÷ **Closed Cases**（`kb_deflection_rate`），宣告為衍生比率，任何小工具都不必臨時湊一個分母。
-- **Cases Within SLA** —— 未違約的已關閉工單數（`sla_met_count`）。
-- **SLA Compliance Rate** —— **Cases Within SLA** ÷ **Closed Cases**（`sla_compliance_rate`）；這就是達標率，**SLA 違約率**的補數。
+⚠️ SLA 是兩個數字，不是一個：一個**違約率**，一個**達標率**，互為補數。服務儀表板的儀表圖畫的是達標率。一份只說「那個 SLA 數字」而不說是哪一個的報表，等於什麼都沒說。
 
-**這裡沒有首次回應度量。** `case_metrics`（`src/datasets/case.dataset.ts`）沒有宣告任何一個，所以分析側根本無法對首次回應做彙總、比較或出圖。但「SLA 達標 %」*是*存在的 —— 就是上面的 **SLA Compliance Rate**，服務儀表板的 SLA 儀表圖正是在畫它。工單上的 **First Response Date** 時間戳是真的 —— 它何時被寫入見 [工單](/zh-Hant/docs/service/cases) —— 但也就到此為止：沒有任何東西度量它，也沒有任何東西為它告警。
+**這裡沒有首次回應度量。** `case_metrics`（`src/datasets/case.dataset.ts`）沒有宣告任何一個，所以分析側根本無法對首次回應做彙總、比較或出圖。工單上的 **First Response Date** 時間戳是真的 —— 它何時被寫入見 [工單](/zh-Hant/docs/service/cases) —— 但也就到此為止：沒有任何東西度量它，也沒有任何東西為它告警。
 
-本節曾經列出的其餘條目同樣夠不著：
+**它還到哪裡為止：**
 
-- **未結 / 新建 / 已解決工單數** —— 沒有任何度量是按*這三個*狀態預篩的。**Status** 是維度，所以按狀態*拆開*的計數能給出同樣的分解。這個 dataset 確實宣告了預篩計數，但只在已關閉這一側：**Closed Cases**、**Resolved by KB** 與 **Cases Within SLA**。
-- **客服（及團隊）** —— `case_metrics` **沒有負責人維度**，所以分析側無法按客服分組、排名或篩選。`owner_id` 是工單上的欄位，沒有任何維度把它暴露出來。這也是服務側各頁都沒有客服排行榜的原因，而「按客服看重開工單」更是兩頭都不成立 —— 也沒有任何東西在記錄「重開」。
-- **客戶（及層級）** —— 這個 dataset 只讀 `crm_case`，從不跨到 `crm_account`。
-- **產品** —— 工單上沒有分析側讀得到的產品關聯，所以「按類別按產品看工單」沒有路徑。
-- **類別** —— 最接近的真實維度是 **Type**（*Question / Problem / Feature Request / Bug*）。
-- **週期** —— **Created** 只按**天**分桶。
+- **客服（及團隊）** —— 這個 dataset **沒有負責人維度**，所以分析側無法按客服分組、排名或篩選。`owner_id` 是工單上的欄位，沒有任何維度把它暴露出來。這也是服務側各頁都沒有客服排行榜的原因，而「按客服看重開工單」更是兩頭都不成立 —— 也沒有任何東西在記錄「重開」。
+- **客戶（及層級）** —— 它只讀 `crm_case`，從不跨到 `crm_account`。
+- **產品** —— 工單上沒有分析側讀得到的產品關聯，所以「按類別按產品看工單」沒有路徑。最接近「類別」的真實切法是工單的 **Type**（*Question / Problem / Feature Request / Bug*）。
 - **CSAT 評分** —— **Customer Satisfaction**（`customer_rating`）是工單上真實的 1–5 星欄位，但沒有任何度量在彙總它。
+- **把未結 / 新建 / 已解決當作各自獨立的數字** —— 這個 dataset 宣告的預篩計數都在已關閉那一側。狀態是維度，所以按狀態*拆開*的計數能給出同樣的分解。
+- **除天以外的任何週期粒度** —— 建立日期維度只按天分桶。
 
 **這個 dataset 答得出來的範例問題**：
 - *"按優先順序的 SLA 違約率。"*
@@ -93,7 +67,7 @@ description: HotCRM 分析底下的語義層——九個 dataset，各自能回�
 
 ## 📣 行銷 —— 沒有 dataset，也就沒有 cube
 
-**沒有行銷 dataset，也就沒有任何東西可切。** `src/datasets/` 讀九個物件，`crm_campaign` 不在其中 —— 這讓本節成為全頁唯一一處：缺的不是某個度量，而是資料來源本身。它曾經列出的七個度量與五個維度全都夠不著，而且沒有一個能從報表或 cube 介面上補出來。
+**沒有行銷 dataset，也就沒有任何東西可切。** `crm_campaign` 不在 `src/datasets/` 讀取的那些物件之列 —— 這讓本節成為全頁唯一一處：缺的不是某個度量，而是資料來源本身。本頁曾經給出的每一個行銷數字都夠不著，而且沒有一個能從報表或 cube 介面上補出來。
 
 記錄本身是帶著這些數字的。`crm_campaign` 上有 **Budgeted Cost**、**Actual Cost**、**Expected Revenue**、**Actual Revenue**，有 **Num Sent / Responses / Leads / Converted Leads / Opportunities / Won Opportunities** 這一組計數器，還有兩個公式欄位 —— **Response Rate %** 與 **ROI %** —— 它們都擺在行銷活動記錄的 **Performance** 分區裡。`crm_campaign_member` 則逐個成員蓋上 **First Opened**、**First Clicked**、**Response Date** 與 **Responded**。以上每一項都是記錄級的數字，而沒有任何東西在彙總它們。
 
@@ -103,14 +77,14 @@ description: HotCRM 分析底下的語義層——九個 dataset，各自能回�
 - **來源收入與影響收入** —— 從交易這一側同樣夠不著：`crm_opportunity.crm_campaign` 是真實的 lookup，但 `opportunity_metrics` 沒有宣告行銷活動維度，所以分析側任何地方都無法把收入歸因到某個行銷活動。
 - **行銷活動支出**、**每潛在客戶成本**、**每商機成本**、**ROI %** —— ROI 百分比作為公式在每筆記錄上是有的；但沒有任何東西在彙總支出、也沒有任何東西在比較活動之間的高低。
 - **行銷活動（及類型）**、**通路**、**週期** —— 都是 `crm_campaign` 上真實的欄位，而在任何地方都不是維度。
-- **潛在客戶來源** —— 它是 **Lead Metrics** 與 **Opportunity Metrics** 上的維度，所以「哪些來源帶來了交易」答得出來；來源背後的那個*行銷活動*則答不出來。
-- **人物誌（職位角色）** —— 完全沒有路徑：**Title** 在聯絡人和潛在客戶上都是自由文字，而 **Contact Metrics** 一個維度都沒有宣告。
+- **潛在客戶來源** —— 它在潛在客戶側和交易側都是維度，所以「哪些來源帶來了交易」答得出來；來源背後的那個*行銷活動*則答不出來。
+- **人物誌（職位角色）** —— 完全沒有路徑：**Title** 在聯絡人和潛在客戶上都是自由文字，而聯絡人那個 dataset 一個維度都沒有宣告。
 
 所以本節給出的那三個問題 —— 「按行銷活動類型的 ROI」「按通路的每商機成本」「按人物誌的轉化率」 —— 今天在這裡一個都答不出來。要補上這個缺口，得新增 `src/datasets/campaign.dataset.ts`：那是改原始碼加重新部署，不是一個設定項。行銷活動記錄今天能看到什麼，見 [行銷活動](/zh-Hant/docs/marketing/campaigns)。
 
 ## 使用者如何與 dataset 打交道
 
-應用能保證的是這層繫結：報表或儀表板磁貼按名字點出一個 dataset，並按名字選它的度量與維度，而 `test/analytics-integrity.test.ts` 會在其中任何一個名字解析不到時讓建構失敗。正是這一點讓兩個磁貼顯示同一個數字。
+應用能保證的是這層繫結：報表或儀表板磁貼按名字點出一個 dataset，並按名字選它的度量與維度，而 `test/analytics-integrity.test.ts` 會在其中任何一個名字解析不到時讓建構失敗。正是這一點讓兩個磁貼顯示同一個數字 —— 這同時也是為什麼 `src/datasets/` 裡的那些名字值得直接去讀，而不是隔著一份副本讀。
 
 本節曾經描述的那套拖放樞紐體驗 —— 選一個 cube、把維度拖到列和欄、篩選、樞紐、出圖、把檢視存成報表、釘到儀表板 —— 是**平台**側的介面，而不是 HotCRM 宣告出來的東西。本應用的中繼資料裡沒有任何東西組態這樣一塊螢幕，本倉也沒有任何測試涵蓋它，所以本頁對它不做任何方向上的斷言。如果你的工作流依賴自助樞紐分析，請對著你自己的部署去驗證，而不是對著本頁。
 
@@ -118,7 +92,7 @@ description: HotCRM 分析底下的語義層——九個 dataset，各自能回�
 
 重新整理是分析服務的事，不是本應用的事。HotCRM 在 `src/` 裡沒有宣告任何重新整理計畫、沒有增量與全量重新整理策略、也沒有快照作業 —— 它宣告的定時工作只有自己的流程（`src/flows/`）。本節曾經引用的那些數字 —— 每幾分鐘增量重新整理、每晚全量重新整理、每日快照、管理主控台裡可見的重新整理狀態 —— 在這裡既沒有被組態，也沒有被實測；請把它們當作面向你自己部署的問題。
 
-其中有一半確實握在應用手裡，而且正是今天不成立的那一半：趨勢圖需要一個快照維度作為比較對象，而沒有任何 dataset 宣告快照維度。時間序列問題只能沿著 dataset 已經帶著的日期維度來問 —— **Close Date**（按月）、**Close Quarter**、**Created**（按天）、**Activity Week**、**Last Contacted**（按月）。
+其中有一半確實握在應用手裡，而且正是今天不成立的那一半：趨勢圖需要一個快照維度作為比較對象，而沒有任何 dataset 宣告快照維度。時間序列問題只能沿著 dataset 已經帶著的日期來問 —— 一個成交日期、一個建立日期、一個活動週、一個最後聯絡月份 —— 而且只能按各自 dataset 宣告的那個粒度。
 
 ## AI Copilot 與多維資料集
 
@@ -128,7 +102,7 @@ description: HotCRM 分析底下的語義層——九個 dataset，各自能回�
 
 ## 自訂多維資料集
 
-在 HotCRM 裡，一個新 cube 的起點是**原始碼裡的一個新 dataset**：在 `src/datasets/<object>.dataset.ts` 寫一個 `defineDataset(...)`，從 `src/datasets/index.ts` 匯出，由 `objectstack.config.ts` 註冊，然後部署。上面那九個走的都是這條路，這也正是行銷側的缺口是一次程式碼改動、而不是一次組態改動的原因。
+在 HotCRM 裡，一個新 cube 的起點是**原始碼裡的一個新 dataset**：在 `src/datasets/<object>.dataset.ts` 寫一個 `defineDataset(...)`，從 `src/datasets/index.ts` 匯出，由 `objectstack.config.ts` 註冊，然後部署。應用裡的每一個 dataset 走的都是這條路，這也正是行銷側的缺口是一次程式碼改動、而不是一次組態改動的原因。
 
 本節曾經給出的三個例子 —— *Subscriptions Cube*、*Renewal Cube*、*Partner Cube* —— 以任何形式都不存在；本應用裡既沒有訂閱物件，也沒有合作夥伴物件可以拿來建。至於主控台是否另外提供面向管理員的 cube 建構器，同樣是本頁不作答的平台問題。
 
@@ -142,4 +116,4 @@ description: HotCRM 分析底下的語義層——九個 dataset，各自能回�
 
 - ✅ 當同一個度量在不同報表裡演算法不一致時，**把它提升進 dataset** —— 宣告一次，各處按名字取用。
 - ✅ 補一個維度，是用來關掉上面那些「夠不著」的缺口的；補一個 dataset，則是用來關掉「連資料來源都沒有」的缺口。兩者都是原始碼改動，因此和其他中繼資料一樣要走評審。
-- ✅ 把每個 dataset 能答什麼、不能答什麼寫下來 —— 本頁裡的這些缺口，恰恰就是使用者一直在問的那些問題。
+- ✅ 要寫就寫業務問題，別寫清單。每個 dataset *能答什麼、不能答什麼* 值得寫下來 —— 本頁裡的這些缺口，恰恰就是使用者一直在問的那些問題。維度和度量本身則不值得：它們已經在 `src/datasets/` 裡描述了自己，散文裡的第二份副本只能告訴你它被敲下來的那天是什麼樣。

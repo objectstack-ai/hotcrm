@@ -1,6 +1,6 @@
 ---
 title: Cubes
-description: The semantic layer under HotCRM analytics — nine datasets, what each one can answer, and what it cannot.
+description: The semantic layer under HotCRM analytics — what it is, the business questions it answers, and where it stops.
 ---
 
 # Cubes
@@ -15,85 +15,59 @@ A **cube** is a pre-modeled, multi-dimensional dataset: a set of named **measure
 2. **Speed** — pre-aggregated, rather than one ad-hoc scan per question.
 3. **Reuse** — a measure is declared once and picked by name. `win_rate` carries its own two halves with it, so no widget has to improvise a denominator.
 
-## The nine datasets
+## Where the semantic layer lives
 
-`src/datasets/index.ts` is the whole semantic layer:
+`src/datasets/index.ts` **is** the semantic layer, and it is the one place that describes itself completely: every dataset declares its own dimensions and measures, with the labels a report or a tile selects them by, right there in source.
 
-| Dataset | Reads | Dimensions | Measures |
-| --- | --- | --- | --- |
-| **Opportunity Metrics** (`opportunity_metrics`) | `crm_opportunity`, joined to `crm_account` | Stage, Lead Source, Forecast Category, Deal Type, Owner, Win Reason, Loss Reason, Close Date (month), Close Quarter, Account Industry | Opportunities, Total Amount, Avg Deal Size, Avg Probability, Won Deals, Lost Deals, Settled Deals, Won Revenue, Lost Revenue, Win Rate |
-| **Case Metrics** (`case_metrics`) | `crm_case` | Status, Priority, Origin, Type, Created (day), Resolving Article | Cases, Avg Resolution (h), SLA Violation Rate, Closed Cases, Resolved by KB, KB Deflection Rate, Cases Within SLA, SLA Compliance Rate |
-| **Lead Metrics** (`lead_metrics`) | `crm_lead` | Status, Source, Created, Last Contacted (month) | Leads |
-| **Account Metrics** (`account_metrics`) | `crm_account` | Industry, Type, Created (month) | Accounts, Annual Revenue |
-| **Forecast Metrics** (`forecast_metrics`) | `crm_forecast` | Owner, Period Type, Period, Period Start | Quota, Closed, Pipeline, Commit, Attainment |
-| **Activity Metrics** (`event_metrics`) | `crm_event` | Activity Type, Status, Owner, Related To, Activity Week | Activities, Minutes, Avg Duration |
-| **Task Metrics** (`task_metrics`) | `crm_task` | Status, Priority, Urgency, Type, Due Date, Overdue, Completed | Tasks, Avg Progress |
-| **Product Metrics** (`product_metrics`) | `crm_product` | Category | Products, Total List Price |
-| **Contact Metrics** (`contact_metrics`) | `crm_contact` | *none* | Contacts |
+**This page does not reproduce that list, on purpose.** A roster copied into prose has no producer. It is right on the day it is written and quietly wrong on the day someone adds a measure — a bill this neighbourhood has already paid four times. So when you need the exact name to put in a report or a tile, read `src/datasets/`; that is the source of truth, and nothing here can be fresher than it. What this page is for is the layer's *meaning*: what it is, which business questions it answers today, and where it stops.
 
-Two things to read off that table before anything else. **Contact Metrics declares no dimension at all** — it counts contacts and nothing more. And **no dataset reads `crm_campaign`, `crm_contract`, `crm_quote` or either line-item object**, which is where most of the gaps below come from.
+Reach is the fact worth carrying away. The semantic layer covers the records the CRM runs on — customers and the people at them, leads, deals and forecasts, support cases, activities and tasks, and the product catalogue. What it does **not** reach matters more, because most of the limits below come straight from it: **no dataset reads campaigns, contracts, quotes, or the line items under a deal.**
 
 This page used to describe four cubes — *Sales*, *Pipeline*, *Service* and *Marketing*. None of those four names exists in the app. Three of them map onto datasets that do exist, under different names and with different contents; the fourth has no data source at all. Each section below says which.
 
 ## 💰 Sales and 📊 pipeline — one dataset, not two
 
-Both cubes this page described are answered by the same place: **Opportunity Metrics**, the dataset every pipeline widget and all four opportunity reports bind.
+Both cubes this page described are answered by the same place: **Opportunity Metrics**, the dataset every pipeline widget and all four opportunity reports bind. That single binding is why *pipeline* is one number across the app instead of one number per screen.
 
-**Reachable today**, with the name the app uses:
+**What it answers.** The deal questions a sales manager actually asks: how much is in play and at which stage, who owns it, where it came from, why deals were won or lost, and which industry the customer sits in — this month, or this quarter. It also publishes the win rate as a declared ratio with the won, lost and settled deal counts beside it, so the percentage can be checked instead of trusted. A reader arriving with the words *bookings*, *pipeline value*, *average deal size* or *probability bucket* will find each of them here under the name this dataset declares; `src/datasets/opportunity.dataset.ts` is where those names are written down.
 
-- *Bookings* → **Won Revenue** (closed-won amount), with **Won Deals** beside it.
-- *Deal count* → **Opportunities**; *pipeline value* → **Total Amount**; *average deal size* → **Avg Deal Size**.
-- *Win rate* → **Win Rate**, declared as a ratio with **Won Deals**, **Lost Deals** and **Settled Deals** published next to it so the arithmetic behind the percentage can be checked.
-- *Stage*, *owner*, *source*, *won/lost reason* → **Stage**, **Owner**, **Lead Source**, **Win Reason**, **Loss Reason**.
-- *Probability bucket (commit / best case / pipeline)* → **Forecast Category**. The page's own name for it was the only thing missing.
-- *Account industry* → **Account Industry**, reached through the `crm_account` join this dataset includes.
-- *Period* → **Close Date**, bucketed by **month**, and **Close Quarter**, bucketed by **quarter**.
+**Where it stops, and why:**
 
-**Not reachable, and why:**
+- **Cycle time** — *sales cycle days*, *days in pipeline*, *days in stage*. Nothing stores a duration. The opportunity carries **Stage Entry Date** and **Close Date** but no elapsed-days column, and the one duration it does carry, **Days in Current Stage**, is a formula evaluated *after* the query (`src/objects/opportunity.object.ts`), so it cannot be aggregated, filtered or sorted, and no dataset exposes it.
+- **Weighted pipeline (value × probability)** — the number exists per record: **Expected Revenue** is the amount times the stage probability, recomputed by `src/objects/opportunity.hook.ts` on every save, and the opportunity list views total that column. No measure is declared over it, so no tile and no report can.
+- **Anything that lives on a line item** — *average discount %*, *product*, *category*, *family*. The discount is a percent on `crm_opportunity_line_item`, and no dataset reads line items. The product catalogue does have a dataset of its own, but it never joins to deals, so *"average deal size by product family"* has no path even though **Family** is a real field on the product.
+- **Account tier and account size** — `crm_account.tier` and **Number of Employees** are real fields, but the only account cut reachable from a deal is its industry.
+- **Team and region** — neither is a field on the deal, and no dataset declares either. Team and territory exist in this app as **positions** (*NA Sales Team*, *EU Sales Team* in `src/sharing/positions.ts`) and as **Billing Country** on the account, a flat projection the territory sharing rules match on — both are access-control machinery, and no dataset reads either. *"Bookings by region by quarter"* cannot be asked; the nearest answerable cut is by owner.
+- **Period at day, week or year grain** — deals bucket by month and by quarter. Another grain means another dimension.
+- **Pipeline history** — nothing snapshots the pipeline, so *"pipeline by stage today vs 30 days ago"* has no history to compare against. The nearest real thing is **Forecast Metrics**, which holds one settled row per owner per period — quota, closed, pipeline and commit — and answers the coverage question instead: *"coverage ratio (pipeline ÷ quota) by rep"*, provided the period is pinned.
 
-- **Sales cycle days** and **Days in pipeline** — nothing stores a duration. The opportunity carries **Stage Entry Date** and **Close Date** but no elapsed-days column, and the one duration it does carry, **Days in Current Stage**, is a formula evaluated *after* the query (`src/objects/opportunity.object.ts`), so it cannot be aggregated, filtered or sorted, and no dataset exposes it.
-- **Days in stage** — same field, same reason.
-- **Weighted pipeline (value × probability)** — the number exists per record: **Expected Revenue** is the amount times the stage probability, recomputed by `src/objects/opportunity.hook.ts` on every save, and the opportunity list views total that column. `opportunity_metrics` declares no measure over it, so no tile and no report can.
-- **Average discount %** — the discount is a percent on the line item (`crm_opportunity_line_item.discount`), and no dataset reads line items.
-- **Product, category, family** — same reason. **Product Metrics** covers the catalogue (**Category**, product count, list-price sum) and never joins to deals, so *"average deal size by product family"* has no path even though **Family** is a real field on the product.
-- **Account, account tier, account size** — `crm_account.tier` and **Number of Employees** are real fields, but the only account cut reachable from deals is **Account Industry**; **Account Metrics** adds **Type** and **Created** and stops there.
-- **Team, region** — no dataset declares either, and neither is a field on the deal to expose. Team and territory exist in this app as **positions** (*NA Sales Team*, *EU Sales Team* in `src/sharing/positions.ts`) and as **Billing Country** on the account, a flat projection the territory sharing rules match on — both are access-control machinery, and no dataset reads either. *"Bookings by region by quarter"* cannot be asked; the nearest answerable cut is by **Owner**.
-- **Period at day, week or year grain** — the two buckets declared are month and quarter. Another grain means another dimension.
-- **Snapshot date** — nothing snapshots the pipeline. *"Pipeline by stage today vs 30 days ago"* has no history to compare against. The nearest real thing is **Forecast Metrics**, which holds one row per owner per period — a settled snapshot of quota, closed, pipeline and commit — and answers the coverage question instead: *"coverage ratio (pipeline ÷ quota) by rep"*, provided the period is pinned (group by **Period**, or filter to a single **Period Type** + **Period Start**).
+## 🎧 Service
 
-## 🎧 Service — `case_metrics`
+One dataset stands behind every case-related dashboard tile and all three case reports, and it reads `crm_case` alone.
 
-The dataset behind every case-related dashboard tile and all three case reports. Six dimensions — **Status**, **Priority**, **Origin**, **Type**, **Created** (bucketed by day), **Resolving Article** — and eight measures:
+**What it answers.** How many cases there are and where they come in from, how long they take to resolve, how much of the load knowledge articles are deflecting, and whether SLAs are being met — each of those cut by status, priority, origin, case type, or the day the case was opened. The two rates are declared as ratios with both of their halves published beside them, so no widget improvises a denominator and any reader can check the arithmetic.
 
-- **Cases** — the case count (`case_count`).
-- **Avg Resolution (h)** — average resolution time (`avg_resolution`).
-- **SLA Violation Rate** — the average of the **SLA Violated** flag (`avg_sla_violated`), which is a breach rate and not a compliance percentage.
-- **Closed Cases** — the count of closed cases (`closed_count`), the denominator both rates below divide by.
-- **Resolved by KB** — closed cases that carry a resolving article (`kb_resolved_count`).
-- **KB Deflection Rate** — **Resolved by KB** ÷ **Closed Cases** (`kb_deflection_rate`), declared as a derived ratio so no widget improvises a denominator.
-- **Cases Within SLA** — closed cases that did not breach (`sla_met_count`).
-- **SLA Compliance Rate** — **Cases Within SLA** ÷ **Closed Cases** (`sla_compliance_rate`); this is the on-time percentage, the complement of **SLA Violation Rate**.
+⚠️ The SLA figures are two numbers, not one: a **violation rate** and a **compliance rate**, complements of each other. The Service dashboard's gauge plots compliance. A report that quotes "the SLA number" without saying which one has said nothing.
 
-**There is no first-response measure here.** `case_metrics` (`src/datasets/case.dataset.ts`) declares none, so nothing in analytics can aggregate, compare or chart a first response. An "SLA met %" *does* exist — **SLA Compliance Rate** above — and the Service dashboard's SLA gauge plots it. The **First Response Date** stamp on the case is real — see [Cases](/docs/service/cases) for when it is written — but it stops there: nothing measures it, and nothing alerts on it.
+**There is no first-response measure.** `case_metrics` (`src/datasets/case.dataset.ts`) declares none, so nothing in analytics can aggregate, compare or chart a first response. The **First Response Date** stamp on the case is real — see [Cases](/docs/service/cases) for when it is written — but it stops there: nothing measures it, and nothing alerts on it.
 
-The rest of what this section used to list is not reachable either:
+**Where else it stops:**
 
-- **Open / New / Resolved case count** — no measure is pre-filtered to *those* three states. **Status** is a dimension, so a count *split by* status gives the same breakdown. The dataset does declare pre-filtered counts, but on the closed side only: **Closed Cases**, **Resolved by KB** and **Cases Within SLA**.
-- **Agent (and team)** — `case_metrics` declares **no owner dimension**, so nothing in analytics can group, rank or filter cases by agent. `owner_id` is a field on the case; no dimension exposes it. This is why the service pages carry no agent leaderboard and *"reopened cases by agent"* is doubly impossible — nothing records a reopen either.
-- **Account (and tier)** — the dataset reads `crm_case` alone and never crosses to `crm_account`.
-- **Product** — cases carry no product link that analytics can read, so *"cases by category by product"* has no path.
-- **Category** — the nearest real dimension is **Type** (*Question / Problem / Feature Request / Bug*).
-- **Period** — **Created** buckets by **day** only.
+- **Agent, and team** — the dataset declares **no owner dimension**, so nothing in analytics can group, rank or filter cases by agent. `owner_id` is a field on the case; no dimension exposes it. This is why the service pages carry no agent leaderboard, and why *"reopened cases by agent"* is doubly impossible — nothing records a reopen either.
+- **Account, and account tier** — it reads `crm_case` alone and never crosses to `crm_account`.
+- **Product** — cases carry no product link that analytics can read, so *"cases by category by product"* has no path. The nearest real cut to a category is the case **Type** (*Question / Problem / Feature Request / Bug*).
 - **CSAT score** — **Customer Satisfaction** (`customer_rating`) is a real 1–5 field on the case, and no measure aggregates it.
+- **Open / new / resolved counts as numbers of their own** — the pre-filtered counts this dataset declares are on the closed side only. Status is a dimension, so a count *split by* status gives the same breakdown.
+- **Period at any grain but day** — the created-date dimension buckets by day.
 
 **Sample questions this dataset answers**:
-- *"SLA Violation Rate by priority."*
+- *"SLA violation rate by priority."*
 - *"Case volume by origin — where is the load coming in?"*
 - *"Average resolution time by type."*
 
 ## 📣 Marketing — no dataset, no cube
 
-**There is no marketing dataset, so there is nothing to slice.** `src/datasets/` reads nine objects and `crm_campaign` is not one of them, which makes this the one section on the page where the gap is not a missing measure but a missing data source: all seven measures and all five dimensions it used to list are unreachable, and none of them can be added from a report or a cube screen.
+**There is no marketing dataset, so there is nothing to slice.** `crm_campaign` is not one of the objects `src/datasets/` reads, which makes this the one section on the page where the gap is not a missing measure but a missing data source: every campaign number this page used to offer is unreachable, and none of them can be added from a report or a cube screen.
 
 The records do carry the numbers. `crm_campaign` has **Budgeted Cost**, **Actual Cost**, **Expected Revenue**, **Actual Revenue**, the **Num Sent / Responses / Leads / Converted Leads / Opportunities / Won Opportunities** counters, and two formula fields — **Response Rate %** and **ROI %** — shown in the **Performance** section of the campaign record. `crm_campaign_member` stamps **First Opened**, **First Clicked**, **Response Date** and **Responded** per member. Every one of those is a per-record figure that nothing aggregates.
 
@@ -103,14 +77,14 @@ Name by name:
 - **Sourced and influenced revenue** — unreachable from the deal side too: `crm_opportunity.crm_campaign` is a real lookup, but `opportunity_metrics` declares no campaign dimension, so revenue cannot be attributed to a campaign anywhere in analytics.
 - **Campaign spend**, **cost per lead**, **cost per opportunity**, **ROI %** — the ROI percentage exists on each record as a formula; nothing sums the spend or compares campaigns.
 - **Campaign (and type)**, **channel**, **period** — real fields on `crm_campaign`, and dimensions nowhere.
-- **Lead source** — a dimension on **Lead Metrics** and on **Opportunity Metrics**, so *"which sources produce deals"* is answerable; the *campaign* behind the source is not.
-- **Persona (job role)** — no path at all: **Title** is free text on the contact and the lead, and **Contact Metrics** declares no dimensions.
+- **Lead source** — a dimension on both the lead and the deal side, so *"which sources produce deals"* is answerable; the *campaign* behind the source is not.
+- **Persona (job role)** — no path at all: **Title** is free text on the contact and the lead, and the contact dataset declares no dimensions.
 
 So the three questions this section offered — *"ROI by campaign type"*, *"cost per opportunity by channel"*, *"conversion rate by persona"* — cannot be answered here today. Closing the gap means adding `src/datasets/campaign.dataset.ts`: a source change and a redeploy, not a setting. See [Campaigns](/docs/marketing/campaigns) for what the campaign record shows today.
 
 ## How users interact with datasets
 
-What the app guarantees is the binding: a report or a dashboard tile names a dataset and selects its measures and dimensions by name, and `test/analytics-integrity.test.ts` fails the build if any of those names does not resolve. That is what keeps two tiles showing the same number.
+What the app guarantees is the binding: a report or a dashboard tile names a dataset and selects its measures and dimensions by name, and `test/analytics-integrity.test.ts` fails the build if any of those names does not resolve. That is what keeps two tiles showing the same number — and it is also why the names in `src/datasets/` are worth reading directly rather than through a copy.
 
 The drag-and-drop pivot experience this section used to describe — pick a cube, drag dimensions to rows and columns, filter, pivot, chart, save the view as a report, pin it to a dashboard — is a **platform** surface rather than something HotCRM declares. Nothing in this app's metadata configures such a screen, and nothing here tests one, so this page makes no claim about it in either direction. If your workflow depends on self-service pivoting, verify it against your deployment rather than against this page.
 
@@ -118,7 +92,7 @@ The drag-and-drop pivot experience this section used to describe — pick a cube
 
 Refresh belongs to the analytics service, not to this app. HotCRM declares no refresh schedule, no incremental-versus-full-refresh policy and no snapshot job anywhere in `src/` — the only scheduled work it declares is its own flows (`src/flows/`). The figures this section used to quote — incremental refresh every few minutes, a nightly full refresh, daily snapshots, a refresh status screen in the admin console — are not configured here and are not measured here; treat them as questions for your deployment.
 
-One half of it *is* in the app's hands, and it is the half that fails today: a trend chart needs a snapshot dimension to compare against, and no dataset declares one. Time-series questions are answerable only along a date dimension a dataset already carries — **Close Date** by month, **Close Quarter**, **Created** by day, **Activity Week**, **Last Contacted** by month.
+One half of it *is* in the app's hands, and it is the half that fails today: a trend chart needs a snapshot dimension to compare against, and no dataset declares one. Time-series questions are answerable only along a date a dataset already carries — a close date, a created date, an activity week, a last-contacted month — each at the grain its own dataset declares.
 
 ## AI Copilot and cubes
 
@@ -128,7 +102,7 @@ Whether the platform's own agent additionally reads the compiled cubes, and whet
 
 ## Custom cubes
 
-In HotCRM a new cube starts as a new **dataset in source**: a `defineDataset(...)` in `src/datasets/<object>.dataset.ts`, exported from `src/datasets/index.ts`, registered by `objectstack.config.ts`, then deployed. That is the route all nine above took, and the reason the marketing gap is a code change rather than a configuration one.
+In HotCRM a new cube starts as a new **dataset in source**: a `defineDataset(...)` in `src/datasets/<object>.dataset.ts`, exported from `src/datasets/index.ts`, registered by `objectstack.config.ts`, then deployed. That is the route every dataset in the app took, and the reason the marketing gap is a code change rather than a configuration one.
 
 The three examples this section used to offer — a *Subscriptions Cube*, a *Renewal Cube*, a *Partner Cube* — exist in no form; there is no subscription or partner object to build them on. Whether the console additionally offers an admin-facing cube builder is, again, a platform question this page does not answer.
 
@@ -142,4 +116,4 @@ The three examples this section used to offer — a *Subscriptions Cube*, a *Ren
 
 - ✅ When a measure is computed inconsistently across reports, **promote it into the dataset** — one declaration, selected by name everywhere.
 - ✅ Adding a dimension is how you close an "unreachable" gap above; adding a dataset is how you close a missing-source one. Both are source changes, so they go through review like any other metadata.
-- ✅ Document what each dataset can and cannot answer — the gaps in this page are exactly the questions users kept asking.
+- ✅ Document the business question, not the inventory. What each dataset *can and cannot answer* is worth writing down — the gaps on this page are exactly the questions users kept asking. The dimensions and measures themselves are not: they already describe themselves in `src/datasets/`, and a second copy in prose only tells you what was true the day it was typed.
