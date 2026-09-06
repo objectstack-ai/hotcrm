@@ -93,7 +93,7 @@ HotCRM 内置五个仪表盘。每个都为特定角色而构建，回答该角�
 - **Quiet 60+ Days** — 沉默两个月，风险阈值。
 - **Quiet 90+ Days** — 整整一个季度没有联系：要么介入，要么放弃。
 
-**控件**：一个 Rep 筛选器。这里**故意没有**日期范围选择器——互动日期是 datetime 列，而平台的 datetime 筛选器转换目前会在这类列上套用范围时把每个小部件都清零。时间改由坐标轴承载：Activity Volume by Week 按周分桶，三个沉默客户磁贴各自框住自己的 30 / 60 / 90 天阈值。
+**控件**：一个 Rep 筛选器。这里**故意没有**日期范围选择器：时间改由坐标轴承载——Activity Volume by Week 按周分桶，三个沉默客户磁贴各自框住自己的 30 / 60 / 90 天阈值。
 
 ## 🎧 Customer Service
 
@@ -112,7 +112,7 @@ HotCRM 内置五个仪表盘。每个都为特定角色而构建，回答该角�
 - **SLA Compliance** — 在 SLA 内解决的工单占比，对比 95% 的目标线（仪表图）。
 - **Open Cases by Priority** — 每个优先级的未结工单数及其 SLA 违约率（表格）。
 
-**控件**：Agent 和 Priority 筛选器，外加每分钟一次的刷新——服务台需要新鲜的数字。和 Sales Activity 一样，这里同样故意没有日期范围选择器，原因是同一个 datetime 筛选器问题；Daily Case Volume 自带 30 天的时间窗。
+**控件**：一个基于工单创建日期的日期范围选择器（默认最近 90 天），外加 Agent 和 Priority 筛选器，以及每分钟一次的刷新——服务台需要新鲜的数字。它是唯一一个按工单日期、而不是按商机预计成交日期取窗的选择器，也是唯一一个不默认本季度的，所以在你把窗口放宽之前，这一页上的每一个数字都被最近 90 天限定着。Daily Case Volume 退出了这个选择器，保留自带的 30 天时间窗，因此那张图始终覆盖它标题上写的 30 天。
 
 ## 👔 Executive Overview
 
@@ -136,7 +136,7 @@ HotCRM 内置五个仪表盘。每个都为特定角色而构建，回答该角�
 
 ## 你可以改什么
 
-- **日期范围** — CRM Overview、Sales Performance 和 Executive Overview 各带一个基于商机预计成交日期的选择器，默认本季度。Sales Activity 和 Customer Service 没有，原因见上面各自的章节。每一个时间窗都由服务端解析，按 UTC 日历日算："最近 7 天"指的是以今天的 UTC 日期结尾的那七个 UTC 日历日，两端都含。你自己的时钟不参与其中——一位在 UTC+8 的读者在当地时间凌晨 3 点打开仪表盘，看到的窗口是在上一个 UTC 午夜结束的，而不是在他自己的午夜。
+- **日期范围** — 五个仪表盘里有四个带选择器，且四个都支持自定义区间。CRM Overview、Sales Performance 和 Executive Overview 基于商机预计成交日期取窗，默认本季度；Customer Service 基于工单创建日期取窗，默认最近 90 天。Sales Activity 是唯一没有选择器的，原因见上面它自己的章节。每一个时间窗都由服务端解析，按 UTC 日历日算："最近 7 天"指的是以今天的 UTC 日期结尾的那七个 UTC 日历日，两端都含。你自己的时钟不参与其中——一位在 UTC+8 的读者在当地时间凌晨 3 点打开仪表盘，看到的窗口是在上一个 UTC 午夜结束的，而不是在他自己的午夜。
 - **筛选器** — 每个仪表盘声明自己的一套：Owner 各处都有，另外 Sales Performance 有 Deal Type、Customer Service 有 Priority、Executive Overview 有 Lead Source。
 - **刷新** — Customer Service 每分钟刷新一次，Sales Performance 每三分钟，其余三个每五分钟。
 

@@ -93,7 +93,7 @@ Coverage and customer-health view: who is talking to customers, how often, and w
 - **Quiet 60+ Days** — two months of silence, the at-risk threshold.
 - **Quiet 90+ Days** — a quarter with no contact: intervene or write it off.
 
-**Controls**: a Rep filter. There is deliberately **no** date-range picker — the interaction date is a datetime column, and the platform's datetime filter coercion currently zeroes every widget when a range is applied to one. Time is carried on an axis instead: Activity Volume by Week buckets by week, and the three quiet-account tiles window their own 30 / 60 / 90-day thresholds.
+**Controls**: a Rep filter. There is deliberately **no** date-range picker: time is carried on an axis instead — Activity Volume by Week buckets by week, and the three quiet-account tiles window their own 30 / 60 / 90-day thresholds.
 
 ## 🎧 Customer Service
 
@@ -112,7 +112,7 @@ The service team's daily ops view.
 - **SLA Compliance** — share of cases resolved within SLA, against a 95% target line (gauge).
 - **Open Cases by Priority** — open cases and their SLA-violation rate per priority (table).
 
-**Controls**: Agent and Priority filters, and a one-minute refresh — service desks need fresh numbers. As on Sales Activity there is deliberately no date-range picker, for the same datetime-filter reason; Daily Case Volume carries its own 30-day window.
+**Controls**: a date-range picker over the date a case was created (defaults to the last 90 days), Agent and Priority filters, and a one-minute refresh — service desks need fresh numbers. It is the only picker that windows a case date rather than the opportunity close date, and the only one that does not default to this quarter, so every number on this page is bounded by the last 90 days until you widen it. Daily Case Volume opts out of the picker and keeps its own 30-day window, so the chart under that title always covers the 30 days it names.
 
 ## 👔 Executive Overview
 
@@ -136,7 +136,7 @@ This dashboard is the basis for the weekly leadership review.
 
 ## What you can change
 
-- **Date range** — CRM Overview, Sales Performance and Executive Overview carry a picker over the opportunity close date, defaulting to this quarter. Sales Activity and Customer Service have none, for the reason given in their sections above. Every window is resolved on the server, on UTC calendar days: "last 7 days" means the seven UTC calendar days ending with today's UTC date, both ends inclusive. Your own clock does not enter into it — a reader in UTC+8 opening a dashboard at 03:00 local time is looking at a window that ended at the previous UTC midnight, not at their own.
+- **Date range** — four of the five dashboards carry a picker, and all four accept a custom range. CRM Overview, Sales Performance and Executive Overview window the opportunity close date and default to this quarter; Customer Service windows the date a case was created and defaults to the last 90 days. Sales Activity is the only dashboard with no picker, for the reason given in its section above. Every window is resolved on the server, on UTC calendar days: "last 7 days" means the seven UTC calendar days ending with today's UTC date, both ends inclusive. Your own clock does not enter into it — a reader in UTC+8 opening a dashboard at 03:00 local time is looking at a window that ended at the previous UTC midnight, not at their own.
 - **Filters** — each dashboard declares its own: Owner everywhere, plus Deal Type on Sales Performance, Priority on Customer Service, and Lead Source on Executive Overview.
 - **Refresh** — Customer Service refreshes every minute, Sales Performance every three, the other three every five.
 
