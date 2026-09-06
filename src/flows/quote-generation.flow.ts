@@ -47,9 +47,37 @@ export const QuoteGenerationFlow: Flow = {
           crm_account: '{oppRecord.crm_account}', crm_contact: '{oppRecord.primary_contact}',
           owner_id: '{$User.Id}', status: 'draft',
           quote_date: '{TODAY()}', expiration_date: '{TODAY() + expirationDays}',
+          // `subtotal` is a bare path pass-through and needs no rounding:
+          // `crm_opportunity.amount` is itself `Field.currency({ scale: 2 })`,
+          // so it cannot arrive here unrounded.
           subtotal: '{oppRecord.amount}', discount: '{discount}',
-          discount_amount: '{oppRecord.amount * (discount / 100)}',
-          total_price: '{oppRecord.amount * (1 - discount / 100)}',
+          // ⛔ A currency × percentage MUST be rounded to the field's declared
+          // scale inside the expression — the quote's own money fields are the
+          // contract, and the flow meets it rather than handing the engine an
+          // unrounded double. `discount_amount` / `total_price` are both
+          // `Field.currency({ scale: 2 })`, while `discount / 100` is inexact
+          // for every percentage whose hundredth is not a dyadic rational, so a
+          // BARE product carries a tail the field refuses: 180,000 at 30% is
+          // 125999.99999999999 and the insert is rejected with `Total Price must
+          // have at most 2 decimal places (got 11)`. That made quote generation
+          // depend on an arithmetic accident of amount × discount — 20% of 180K
+          // worked, 30% of the same 180K did not, and the 400 never reached the
+          // seller (#1206).
+          //
+          // `round()` is the CEL stdlib's, mirrored 1:1 into flow value
+          // expressions from service-automation 17.3.0. It is INTEGER-ONLY and
+          // single-argument, so N-decimal rounding is spelled `round(x * 100) /
+          // 100` — the platform's own arity diagnostic names this exact pattern.
+          // ⛔ Not `round(x, 2)`: there is no precision form, and it now fails
+          // loudly. ⛔ Never an operator trick like `(x * 100 + 0.5 | 0) / 100`
+          // either — `|0` is an int32 coercion that SILENTLY overflows above
+          // ~21.5M, which on a money field is worse than the defect it dodges;
+          // `round()` refuses loudly past `Number.MAX_SAFE_INTEGER` instead.
+          //
+          // ⭐ This shape applies ANYWHERE a flow multiplies a currency by a
+          // percentage. Write the rounding, not the bare product.
+          discount_amount: '{round(oppRecord.amount * (discount / 100) * 100) / 100}',
+          total_price: '{round(oppRecord.amount * (1 - discount / 100) * 100) / 100}',
           payment_terms: 'net_30',
         },
         outputVariable: 'quoteId',
