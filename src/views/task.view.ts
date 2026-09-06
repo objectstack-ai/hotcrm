@@ -17,13 +17,47 @@ export const TaskViews = defineView({
     name: 'all_tasks',
     label: 'All Tasks',
     data: { provider: 'object', object: 'crm_task' },
+    // NO `progress_percent` column here (#1214 item 5). The default grid used
+    // to render completion THREE times on one row — 是否完成 (tick), 状态, and
+    // 进度(%) — and the percent was the one that carried nothing.
+    //
+    // ⚠️ The card justified the removal as "every seeded row is 0%". That is
+    // FALSE as stated and was re-measured before deleting: two of the seven
+    // seeded tasks carry 100. What is TRUE is the claim underneath it — nobody
+    // maintains a percent per task — and the seed shows it more sharply than
+    // the card did:
+    //   · every value that exists is 100, and every one of those rows is
+    //     `status: 'completed'` (`service.seed.ts` mirrors what the hook would
+    //     stamp, since hooks do not run over seeds);
+    //   · `task_completion` stamps 100 on the completed transition and writes
+    //     the field at no other time;
+    //   · both `in_progress` rows sit at 0 — the one status where a percent
+    //     could say something a status cannot, and it says nothing.
+    // ⇒ On this grid the column is `status` re-rendered at LOWER resolution: it
+    // cannot tell `not_started` from `in_progress` (both 0), while the `status`
+    // column beside it can. Dropping it loses no fact this row does not already
+    // carry twice.
+    //
+    // ⛔ The FIELD stays, and so does every other reader — this is one column
+    // on one view, not a retirement: `task_gantt` fills its bars from
+    // `gantt.progressField`, `task_board` and `my_open_tasks` show it (neither
+    // carries `status` AND `is_completed`, so there it is not a third spelling),
+    // `avg_progress` in `task.dataset.ts` aggregates it, and the Effort section
+    // of this file's form still lets a user author one.
+    //
+    // ⛔ `is_completed` STAYS, and is not the second half of this cleanup: it is
+    // not an independent shadow that can contradict `status` — `task_completion`
+    // recomputes it from status on every insert and update
+    // (`input.is_completed = effStatus === 'completed'`), which is precisely the
+    // "render completion from status" the card asks for, already done at the
+    // data layer. It is also this list's first sort key and its completion
+    // control.
     columns: [
       { field: 'is_completed', width: 60, align: 'center' },
       { field: 'subject', width: 280, sortable: true, link: true },
       { field: 'status', width: 130, sortable: true },
       { field: 'priority', width: 110, sortable: true },
       { field: 'due_date', width: 140, sortable: true },
-      { field: 'progress_percent', width: 130, align: 'right' },
       { field: 'owner_id', width: 150 },
       { field: 'is_overdue', width: 100, align: 'center' },
     ],
