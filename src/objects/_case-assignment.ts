@@ -462,10 +462,30 @@ export function createCaseSelfClaim(hookName = 'case_self_claim'): Hook {
       //    "no owner": the key ABSENT (memory/mongo) and the column NULL (SQL).
       if (typeof previous.owner_id === 'string' && previous.owner_id) return;
 
-      // 4. …and only one that is not CLOSED — the same line the sharing rule
-      //    draws with `is_closed == false`. `status` is read first because it
-      //    is a string on every driver; `is_closed` is accepted as `true` or
-      //    `1` because SQLite hands booleans back as integers.
+      // 4. …and only one that is not CLOSED. ⚠️ This guard and the triage
+      //    sharing grant draw DIFFERENT lines on purpose, and ⛔ neither is to
+      //    be "aligned" onto the other. `case_unassigned_triage_sharing`
+      //    (`src/sharing/case.sharing.ts`) excludes `resolved` as well as
+      //    `closed`, because a resolved unowned case is history, not backlog,
+      //    and the tab's row count has to keep meaning "work waiting for a
+      //    human". This guard stops at `closed` alone, because REOPENING a
+      //    resolved case IS picking the work up, so whoever does it should
+      //    become its owner. The gap between the two lines is live for exactly
+      //    the callers that rule does not reach — the admin, the manager
+      //    holding the escalation share — which is why
+      //    `test/unassigned-case-triage-reach.test.ts` drives the closed guard
+      //    once per layer, the second time with an actor that CAN reach the
+      //    row.
+      //
+      //    ⚠️ The `is_closed == false` conditions elsewhere in that sharing
+      //    file are NOT this grant and NOT drift: they belong to the manager
+      //    and director rules on critical-priority cases, which keep standing
+      //    reach through the `resolved → closed` review window by their own
+      //    ruling. Their ⚠️ headers carry it; ⛔ do not read them as this one.
+      //
+      //    `status` is read first because it is a string on every driver;
+      //    `is_closed` is accepted as `true` or `1` because SQLite hands
+      //    booleans back as integers.
       if (previous.status === 'closed') return;
       if (previous.is_closed === true || previous.is_closed === 1) return;
 
