@@ -213,8 +213,20 @@ export const Lead = ObjectSchema.create({
     // Assignment
 
     // Conversion tracking.
-    // ⛔ NOT `readonly`: the platform drops writes to readonly fields outright,
-    // including the `lead_conversion` flow's `mark_converted` update.
+    // ⛔ NOT `readonly`: the `lead_conversion` flow's `mark_converted` node
+    // UPDATEs this column and the four `converted_*` ones below, and that flow
+    // declares no `runAs` — so it runs at the engine default `'user'`, which is
+    // also where house rule 9 keeps a screen flow. `stripReadonlyFields` runs
+    // under `if (!opCtx.context?.isSystem)` and deletes every readonly key the
+    // CALLER supplied, so `readonly` here would silently un-convert every
+    // conversion.
+    // ⚠️ The other writer is unaffected, and is not the reason: the
+    // guest-submission sanitiser in `lead.hook.ts` ASSIGNS these on
+    // `beforeInsert`, and hook-written keys are not caller-supplied — nor does
+    // the strip run on INSERT at all. Measured in
+    // `test/readonly-write-semantics.test.ts`.
+    // ⇒ Declaring these `readonly` would need the flow's write ELEVATED, which
+    // is a privilege decision on the maintainer's floor, not this file's (#1435).
     // Edit-protection is the `beforeUpdate` guard in `lead.hook.ts`, which
     // rejects any USER edit to a converted lead outside a small allow-list —
     // and it is the ONLY guard, deliberately: a script validation beside it
