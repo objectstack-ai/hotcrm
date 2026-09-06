@@ -41,6 +41,17 @@ export const LeadConversionFlow: Flow = {
     { name: 'createOpportunity', type: 'boolean', isInput: true, isOutput: false, defaultValue: false },
     { name: 'opportunityName', type: 'text', isInput: true, isOutput: false },
     { name: 'opportunityAmount', type: 'text', isInput: true, isOutput: false },
+    // The conversion's close date (#1708), collected on the screen below
+    // instead of stamped inside `create_opportunity`. Declared with NO
+    // `defaultValue`, and that is measured rather than chosen: the engine
+    // binds a DECLARATION's default raw — `seedDeclaredVariables` does a plain
+    // `variables.set(name, defaultValue)` with no `interpolate` call — so
+    // `'{TODAY() + 90}'` written here would bind that string verbatim and
+    // `create_opportunity` would post the braces into a date column. Measured
+    // on 17.3.0 by running a probe flow, not by reading the engine. The screen
+    // field is therefore the only layer that can carry the expression, which
+    // is where the +90 lives and why this line is deliberately bare.
+    { name: 'closeDate', type: 'date', isInput: true, isOutput: false },
   ],
 
   nodes: [
@@ -113,6 +124,40 @@ export const LeadConversionFlow: Flow = {
           { name: 'createOpportunity', label: 'Create Opportunity?', type: 'boolean', defaultValue: '{createOpportunity}' },
           { name: 'opportunityName', label: 'Opportunity Name', type: 'text', required: true, visibleWhen: 'createOpportunity == true' },
           { name: 'opportunityAmount', label: 'Opportunity Amount', type: 'currency', visibleWhen: 'createOpportunity == true' },
+          // The close date, DEFAULTED AND VISIBLE (#1708). It used to be
+          // stamped inside `create_opportunity` as `TODAY() + 90` and never
+          // shown. `close_date` is what files an opportunity into a forecast
+          // PERIOD, so a silent +90 days filed every converted deal a quarter
+          // out and moved the forecast where nobody could see it — the number
+          // nobody saw was the number the forecast believed.
+          //
+          // The +90 is written HERE and nowhere else, the same
+          // single-authority rule the checkbox above follows (#1155) — but
+          // here the layer is FORCED rather than preferred. A screen field's
+          // `defaultValue` is interpolated before the descriptor goes on the
+          // wire and a flow variable's is not (see the declaration above), so
+          // this is the only place the expression can be written at all.
+          // `resolveToken` recognises exactly one function form — `NOW()` /
+          // `TODAY()` with an optional `+`/`-` offset — and this is that form,
+          // not an arbitrary expression: measured on 17.3.0, the client
+          // receives the `YYYY-MM-DD` string 90 days out, and the value the
+          // rep sees is the value `create_opportunity` writes.
+          //
+          // `required` mirrors the column — `crm_opportunity.close_date` is
+          // `required` + `notNull` — and it is what keeps the refusal at the
+          // SCREEN boundary. Measured both ways against a real ObjectQL
+          // engine: WITHOUT it, a submission carrying no date reaches
+          // `create_opportunity` and fails there with `Close Date is
+          // required`, by which point the account and the contact have
+          // already been written and the lead is left half-converted; WITH
+          // it the resume is refused before any node runs, nothing is
+          // written, and the message names the field. That path is not
+          // hypothetical — a rep who CLEARS the prefilled date posts the key
+          // empty, and `isPresent('')` is false. A hidden `required` never
+          // fires: the server contract skips it when `visibleWhen` evaluates
+          // false, and so does the console, which is the untouched-checkbox
+          // path this screen has always had to keep working.
+          { name: 'closeDate', label: 'Close Date', type: 'date', required: true, defaultValue: '{TODAY() + 90}', visibleWhen: 'createOpportunity == true' },
         ],
       },
     },
@@ -376,13 +421,19 @@ export const LeadConversionFlow: Flow = {
       id: 'decision_opportunity', type: 'decision', label: 'Create Opportunity?',
     },
     {
+      // `close_date` is read from the screen now (#1708) — the +90 literal
+      // that used to sit in the field map below is authored once, on the
+      // screen field, so the date the rep approved is the date the forecast
+      // gets. An unbound `{closeDate}` resolves to nothing and the platform
+      // refuses the write rather than inventing a quarter, which is the
+      // failure this node is allowed to have.
       id: 'create_opportunity', type: 'create_record', label: 'Create Opportunity',
       config: {
         objectName: 'crm_opportunity',
         fields: {
           name: '{opportunityName}', crm_account: '{accountId}', primary_contact: '{contactId}',
           amount: '{opportunityAmount}', stage: 'prospecting', probability: 10,
-          lead_source: '{leadRecord.lead_source}', close_date: '{TODAY() + 90}', owner_id: '{$User.Id}',
+          lead_source: '{leadRecord.lead_source}', close_date: '{closeDate}', owner_id: '{$User.Id}',
         },
         outputVariable: 'createdOpportunity',
       },
