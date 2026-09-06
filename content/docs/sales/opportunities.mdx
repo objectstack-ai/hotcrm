@@ -45,17 +45,48 @@ Those two fields are what the Sales dashboard's **win rate** and **Why We Lose**
 
 ## What an opportunity record stores
 
-The detail screen has 7 sections:
+Three different things organise `crm_opportunity`'s fields — the object's own field groups, the opportunity detail screen, and the opportunity form — and no two of them agree, so it is worth knowing which one you are being shown.
+
+### The object's field groups
+
+The seven names below are real, but not one of them is a screen: they are `crm_opportunity`'s **field groups** (`fieldGroups` in `src/objects/opportunity.object.ts`), the object's own filing scheme for its fields. Neither the detail screen nor the form renders them — each declares sections of its own, listed below. This is, though, the one list that accounts for every field the object has:
+
+| Field group | Fields |
+| --- | --- |
+| **Basic Information** | Opportunity Owner, Opportunity Name, Account, Primary Contact |
+| **Financials** | Amount, Expected Revenue |
+| **Sales Process** | Stage, Probability (%), Close Date, Stage Entry Date, Approval Status, Approved Date |
+| **Classification** | Opportunity Type, Lead Source, Win Reason, Loss Reason, Loss/Win Details |
+| **Campaigns** *(collapsed by default)* | Campaign |
+| **Notes & Next Steps** | Description, Next Steps |
+| **Forecast & Metrics** *(collapsed by default)* | Days in Current Stage, Private, Forecast Category |
+
+Four of those seven rows used to be written differently on this page, and the differences were not cosmetic: **Probability (%)** is in *Sales Process*, not *Financials*; *Sales Process* also holds **Approval Status** and **Approved Date**, and an opportunity has no *created date* field at all; the campaign field's label is **Campaign**, not *Source campaign*; and *Forecast & Metrics* holds **Days in Current Stage**, **Private** and **Forecast Category** — not *line item totals*, which is not a field on this object, and not **Approval Status**, which is one row further up.
+
+### The detail screen
+
+The **Details** tab of the opportunity detail page (`src/pages/opportunity_detail.page.ts`) declares **three** sections, holding **seven** fields:
 
 | Section | Fields |
 | --- | --- |
-| **Basic Information** | Name, account, primary contact, owner |
-| **Financials** | Amount, expected revenue *(auto)*, probability *(auto from stage)* |
-| **Sales Process** | Stage, close date, created date, stage entry date |
-| **Classification** | Type (New Business / Upgrade / Renewal / Expansion), lead source, Win Reason, Loss Reason, Loss/Win Details |
-| **Campaigns** | Source campaign |
-| **Notes & Next Steps** | Description, next steps |
-| **Forecast & Metrics** | Line item totals, approval status |
+| **Opportunity Information** | Opportunity Type, Lead Source, Campaign |
+| **Stage & Forecast** | Stage, Forecast Category |
+| **Description** *(collapsible)* | Description, Next Steps |
+
+*Description* is the only one of the three that can be collapsed, and nothing marks it collapsed to begin with, so it opens along with the rest.
+
+The tab is shorter than its section names suggest, and that is deliberate: a section here lists only the fields it is responsible for. **Amount**, **Close Date**, **Probability (%)**, **Expected Revenue**, **Opportunity Owner** and **Account** are already on the **Key Information** strip above the tabs, and **Opportunity Name** is the page title — so the tab repeats none of them.
+
+### The form
+
+The opportunity form (`src/views/opportunity.view.ts`) is tabbed, and its **four** sections are its tabs:
+
+| Section | Fields |
+| --- | --- |
+| **Overview** | Opportunity Name, Account, Primary Contact, Stage, Amount, Probability (%), Close Date, Opportunity Owner |
+| **Forecast** | Expected Revenue, Forecast Category, Opportunity Type, Lead Source, Campaign, Stage Entry Date, Days in Current Stage, Private |
+| **Sales Strategy** | Next Steps |
+| **Win / Loss** *(collapsed by default)* | Win Reason, Loss Reason, Loss/Win Details |
 
 ## Opportunity types
 
