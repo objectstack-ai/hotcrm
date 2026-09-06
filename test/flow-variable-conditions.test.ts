@@ -1190,8 +1190,17 @@ describe('the two defects, reproduced end-to-end', () => {
         status: 'qualified', email: 'jo@acme.com',
       });
       const started = await b.engine.execute('lead_conversion', asUser({ recordId: lead.id }));
+      // `closeDate` joined the screen's contract in #1708, so the bag carries
+      // it — taken from the descriptor rather than hand-written, because that
+      // is what the console posts (the runner seeds its value state from every
+      // field carrying a `defaultValue`) and because the +90-day literal is
+      // authored in exactly one place, on the screen field. Hand-writing a
+      // date here would be a second authority for it AND would rot: the
+      // object's `close_date_future` rule refuses a close date in the past.
+      const screen = started.screen ?? started.output?.screen ?? null;
+      const closeDate = ((screen?.fields ?? []) as AnyRec[]).find((f) => f.name === 'closeDate')?.defaultValue;
       const done = await b.engine.resume(started.runId, {
-        variables: { createOpportunity: true, opportunityName: 'Acme Deal', opportunityAmount: 50_000 },
+        variables: { createOpportunity: true, opportunityName: 'Acme Deal', opportunityAmount: 50_000, closeDate },
       });
       expect(done.error ?? null).toBeNull();
       const opp = await api.object('crm_opportunity').findOne({ where: { name: 'Acme Deal' } });

@@ -424,6 +424,21 @@ async function startConversion(lead: Rec) {
  * dialog said no" and "nothing was created" are two different claims, and only
  * the second one is the refusal.
  */
+/**
+ * What the console posts for a field it prefilled.
+ *
+ * The runner seeds its value state from EVERY field carrying a `defaultValue`
+ * — visible or not — and submits that bag whole; `visibleWhen` gates only the
+ * required-completeness check. So reading the value back off the descriptor is
+ * what these fixtures would post for real, and it keeps them from restating
+ * the conversion's +90-day literal, which the flow authors in exactly one
+ * place on purpose (#1155's rule, applied to `closeDate` by #1708). A prefill
+ * that stopped arriving comes back here as an absent key, and the screen's own
+ * `required` then fails the resume — which is the point.
+ */
+const prefillOf = (screen: AnyRec | null, name: string): unknown =>
+  ((screen?.fields ?? []) as AnyRec[]).find((f) => f.name === name)?.defaultValue;
+
 const productsOf = (harness: FlowHarness) => ({
   accounts: harness.store.crm_account?.length ?? 0,
   contacts: harness.store.crm_contact?.length ?? 0,
@@ -458,6 +473,7 @@ async function convert(lead: Rec) {
   expect(started.status, 'the conversion never suspended on a screen').toBe('paused');
   const done: AnyRec = (await harness.resume(runId, {
     createOpportunity: true, opportunityName: 'Skyline Deal', opportunityAmount: 50_000,
+    closeDate: prefillOf(screen, 'closeDate'),
   })) as AnyRec;
   return { harness, screen, done, products: productsOf(harness) };
 }
@@ -519,6 +535,7 @@ describe('lead_conversion — the warning at the moment of conversion', () => {
     const runId = started.runId ?? started.run?.id;
     const done: AnyRec = (await harness.resume(runId, {
       createOpportunity: true, opportunityName: 'Skyline Deal', opportunityAmount: 50_000,
+      closeDate: prefillOf(screen, 'closeDate'),
     })) as AnyRec;
     expect(done.error ?? null, 'the clean lead could no longer be converted').toBeNull();
     expect(harness.store.crm_account?.length).toBe(1);
@@ -529,10 +546,23 @@ describe('lead_conversion — the warning at the moment of conversion', () => {
     // Anti-regression on the reorder: `get_lead` now runs BEFORE the screen, so
     // the screen's own contract is worth re-stating here — a screen that lost
     // its fields would still pass every assertion above.
+    //
+    // ## Why this list grew by one (#1708), on purpose
+    //
+    // `closeDate` is the widening this pin exists to catch, and catching it is
+    // what made the decision explicit rather than incidental: the flow used to
+    // stamp `crm_opportunity.close_date` at `TODAY() + 90` inside
+    // `create_opportunity`, where no rep ever saw it, and `close_date` is what
+    // files a deal into a forecast PERIOD. Surfacing it moves a number out of
+    // the flow body and onto a screen, which is exactly the kind of change a
+    // conversion screen should not be able to make quietly — so the list is
+    // still EXACT and still ordered. It is not `toContain`, not a length
+    // check, and not a subset: the next field added here has to be argued the
+    // same way this one was.
     const { screen } = await startConversion(seedLead());
     const fields = (screen!.fields ?? []) as AnyRec[];
     expect(fields.map((f) => f.name)).toEqual([
-      'createOpportunity', 'opportunityName', 'opportunityAmount',
+      'createOpportunity', 'opportunityName', 'opportunityAmount', 'closeDate',
     ]);
     expect(fields[0].defaultValue, 'the declared default no longer reaches the client')
       .toBe(false);
