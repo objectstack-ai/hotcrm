@@ -24,21 +24,45 @@ export const contracts = defineSeed(Contract, {
   mode: 'upsert',
   externalId: 'description',
   records: [
+    // The one ACTIVATED contract in the app — `contract_renewal`,
+    // `contract_expiration` and `billing_handoff` all filter on exactly that
+    // status — so it has to be a contract that was really signed, off a deal
+    // that was really won.
+    //
+    // It used to link `Acme Platform Upgrade` and carry that deal's line total
+    // (150000) while that deal is still `proposal`, closing `daysFromNow(30)`
+    // (#1661). Nothing in this app can produce that pairing: `quote_on_accepted`
+    // close-wins an opportunity the moment its quote is accepted, and
+    // `closed_won` is TERMINAL in `opportunity_stage_progression` — so a signed
+    // contract can never sit on an open deal, from either direction.
+    //
+    // Every field below is now derived from `Acme Annual Renewal 2025`, the
+    // `closed_won` deal this contract's own description was already describing:
+    //   contract_value — that deal's line-item total, which is also the ARR the
+    //                    account description reports. 150000 was the upgrade's
+    //                    total, i.e. the value came from a different deal than
+    //                    the link did;
+    //   signed_date    — its `close_date`: you sign when you win, and
+    //                    `quote_on_accepted` stamps that same day;
+    //   start_date     — signature + 14d, because that deal's description says
+    //                    it was "signed two weeks ahead of the renewal date";
+    //   end_date       — start + 365d, the span every other row here uses for a
+    //                    12-month term.
     {
       crm_account: 'Acme Corporation',
       crm_contact: 'john.smith@acme.example.com',
-      crm_opportunity: 'Acme Platform Upgrade',
+      crm_opportunity: 'Acme Annual Renewal 2025',
       status: 'activated',
       contract_term_months: 12,
-      start_date: cel`daysAgo(30)`,
-      end_date: cel`daysFromNow(335)`,
-      contract_value: 150000,
+      start_date: cel`daysAgo(1)`,
+      end_date: cel`daysFromNow(364)`,
+      contract_value: 220000,
       billing_frequency: 'annually',
       payment_terms: 'net_30',
       auto_renewal: true,
       renewal_notice_days: 60,
       contract_type: 'subscription',
-      signed_date: cel`daysAgo(32)`,
+      signed_date: cel`daysAgo(15)`,
       signed_by: 'John Smith',
       description: 'Annual platform subscription with premium support tier.',
     },
@@ -103,6 +127,7 @@ export const contracts = defineSeed(Contract, {
  */
 const QUOTE_LINES: Record<string, readonly LineSpec[]> = {
   'Acme Platform Upgrade Quote': OPPORTUNITY_LINES['Acme Platform Upgrade'],
+  'Acme Annual Renewal 2025 Quote': OPPORTUNITY_LINES['Acme Annual Renewal 2025'],
   'Globex Manufacturing Suite Proposal': OPPORTUNITY_LINES['Globex Manufacturing Suite'],
   'Wayne Enterprise License Quote': OPPORTUNITY_LINES['Wayne Enterprise License'],
   'Initech Cloud Migration Estimate': OPPORTUNITY_LINES['Initech Cloud Migration'],
@@ -156,12 +181,44 @@ export const quotes = defineSeed(Quote, {
       crm_account: 'Acme Corporation',
       crm_contact: 'john.smith@acme.example.com',
       crm_opportunity: 'Acme Platform Upgrade',
-      status: 'accepted',
+      // `expired`, not `accepted` (#1661). Accepting this quote would have
+      // close-won `Acme Platform Upgrade`, which is `proposal` and 30 days from
+      // close — the same impossible pairing the contract above carried, one
+      // object over. `expired` is what `quote_expiration` computes for a
+      // presented quote past its `expiration_date`, and it is what the deal's
+      // own next step assumes: the revised Enterprise proposal still has to go
+      // out. Its `crm_contact` stays put — the row is no longer gated by
+      // `requiredWhen`, but the recipient is still who it was sent to.
+      status: 'expired',
       quote_date: cel`daysAgo(45)`,
       expiration_date: cel`daysAgo(15)`,
       ...quoteTotals('Acme Platform Upgrade Quote', { discount: 10, tax: 11475, shipping_handling: 0 }),
       payment_terms: 'net_30',
       description: 'Platform upgrade with 10% loyalty discount applied.',
+    },
+    // The renewal's own quote, and the seed's one ACCEPTED quote. Acceptance is
+    // only coherent here: `quote_on_accepted` close-wins whatever opportunity a
+    // quote links, so an accepted quote can only ever point at a `closed_won`
+    // deal. It also completes the provenance chain the contract above needs —
+    // deal won, quote accepted, contract drafted, then completed and activated
+    // by an admin (the draft the hook writes is explicitly a starting point).
+    // `Acme Annual Renewal 2025` keeps its rep-recorded `relationship` win
+    // reason: the hook only supplies `quote_accepted` when nobody recorded one.
+    {
+      name: 'Acme Annual Renewal 2025 Quote',
+      crm_account: 'Acme Corporation',
+      crm_contact: 'john.smith@acme.example.com',
+      crm_opportunity: 'Acme Annual Renewal 2025',
+      status: 'accepted',
+      quote_date: cel`daysAgo(30)`,
+      expiration_date: cel`daysAgo(1)`,
+      // No discount — the renewal went at list ("multi-year option declined
+      // this round"), which is what its 22% YoY uplift is made of. Tax is 8.5%
+      // of the post-discount subtotal, the rate the other Acme quote bills at;
+      // every non-Acme quote here bills 8%.
+      ...quoteTotals('Acme Annual Renewal 2025 Quote', { discount: 0, tax: 18700, shipping_handling: 0 }),
+      payment_terms: 'net_30',
+      description: 'Annual renewal — three production tenants, premium support and the EMEA seat expansion.',
     },
     {
       name: 'Globex Manufacturing Suite Proposal',
