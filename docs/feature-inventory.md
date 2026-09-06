@@ -52,7 +52,7 @@
 | LEA-012 | 排定跟进 | 屏幕流收集下一步动作/到期日/类型/优先级,创建任务并同步线索 `next_followup_date` | `src/flows/schedule-followup.flow.ts` + `src/actions/lead.actions.ts`(`schedule_followup`) |
 | LEA-013 | 批量加入活动 | 列表多选批量动作:逐行去重后插入活动成员(记录选择器选活动) | `src/actions/lead.actions.ts`(`create_campaign`) |
 | LEA-014 | 线索列表视图族 | 默认列表 + 7 个具名视图:我的/热线索/高优/疑似重复/状态看板/日历/卡片 | `src/views/lead.view.ts` |
-| LEA-015 | 线索表单族 | 8 个具名表单覆盖全部布局类型:快速新建/分 tab 详情/转化向导/分栏/抽屉/弹窗/公开表单/条件示范 | `src/views/lead.view.ts`(formViews) |
+| LEA-015 | 线索表单族 | 7 个具名表单覆盖全部布局类型:分 tab 详情/转化向导/分栏/抽屉/弹窗/公开表单/条件示范(SIMPLE 由默认 `form` 演示) | `src/views/lead.view.ts`(formViews) |
 | LEA-016 | 线索详情页 | header 挂转化/跟进/三个活动动作,highlights 条,5 阶段 path,Details/Related/Activity/History 四 tab | `src/pages/lead_detail.page.ts` |
 | LEA-017 | AI 线索鉴定技能 | 按 BANT 四维打 0–100 分并给下一步建议;≥70 且经人工确认才调用转化动作 | `src/skills/lead-qualification.skill.ts` |
 | LEA-018 | 线索导入 | CSV/XLSX 导入映射,按 email upsert,状态/来源/行业同义词表;owner 留空归导入者 | `src/mappings/lead_import.mapping.ts` |
