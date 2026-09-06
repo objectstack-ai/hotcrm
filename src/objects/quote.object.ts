@@ -173,9 +173,21 @@ export const Quote = ObjectSchema.create({
     }),
     
     // Pricing
-    // subtotal/discount_amount/total_price are NOT `readonly`: the
-    // quote_generation flow writes them at create time, and 16.x silently
-    // drops writes to readonly fields (#2948).
+    // subtotal/discount_amount/total_price are NOT `readonly`, and the writer
+    // that decides it is the LINE-ITEM ROLLUP — not the flow this note used to
+    // name. `quote_total_rollup` (`quote_line_item.hook.ts`) recomputes all
+    // three on every line insert/update/delete through
+    // `api.object('crm_quote').update(...)`: a cross-record write via `ctx.api`,
+    // which is a `ScopedContext` over the ACTING USER's context. The keys are
+    // therefore CALLER-supplied to a non-`isSystem` UPDATE, exactly what
+    // `stripReadonlyFields` deletes — with `readonly` on, a quote's totals would
+    // freeze at whatever the flow first seeded and never track its lines again.
+    // ⚠️ `quote_generation` writes them too, but at CREATE time, and the strip
+    // is an UPDATE-path rule — that write would survive `readonly` untouched.
+    // The retired 16.x claim rested on that create-time write, which is how this
+    // note reached a right conclusion from the wrong writer.
+    // Measured in `test/readonly-write-semantics.test.ts` (insert is exempt) and
+    // `test/activity-recency.test.ts` (the `ctx.api` strip, on the real engine).
     subtotal: Field.currency({ 
       label: 'Subtotal',
       group: 'pricing',

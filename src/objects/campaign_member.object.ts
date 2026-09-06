@@ -138,9 +138,18 @@ export const CampaignMember = ObjectSchema.create({
       description: 'Set when the member is an existing Contact',
     }),
 
-    // NOT `readonly`: the campaign_enrollment flow writes this stamp, and
-    // 16.x drops writes to readonly fields (#2948) — every member landed with
-    // a null Added Date while the flag was on.
+    // ⚠️ NOT `readonly` — and on the pinned engine that is the status quo, not
+    // a constraint. The 16.x claim this note used to carry ("every member landed
+    // with a null Added Date while the flag was on") is a historical statement
+    // this repo can no longer re-run, and it does not describe 17.3.0: the
+    // readonly strip is an UPDATE-path rule, and every writer of this stamp is
+    // an INSERT — `campaign_enrollment`'s `create_campaign_member` and
+    // `create_contact_member` nodes, plus the marketing seed. Nothing updates
+    // it. The insert exemption is measured in
+    // `test/readonly-write-semantics.test.ts`.
+    // ⇒ It COULD honestly be declared `readonly: true`. Filed as #1667 rather
+    // than flipped here, for the same reason as the sibling finding: that is a
+    // behaviour change, not a comment correction.
     //
     // Grouped under `basic`, not `response` (#715): it records when the
     // membership was created, which is a fact about the enrollment, not a step

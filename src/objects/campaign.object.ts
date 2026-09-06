@@ -162,11 +162,22 @@ export const Campaign = ObjectSchema.create({
       min: 0,
     }),
     
-    // NOT `readonly` (here and on the num_* snapshot fields below): the
-    // campaign_snapshot_metrics hook writes these through the data API, and
-    // 16.x drops writes to readonly fields (#2948) — same reason num_sent was
-    // already opened up. With readonly on, the completion snapshot silently
-    // persisted nothing but num_sent.
+    // ⛔ NOT `readonly` (here and on the num_* snapshot fields below), and the
+    // reason holds on the pinned engine rather than on the retired 16.x claim
+    // this note used to carry. The metric block — `CAMPAIGN_METRIC_FIELDS` in
+    // `campaign.hook.ts` — is written by FOUR refresh hooks, not by the
+    // long-retired `campaign_snapshot_metrics`: `campaign_metrics_refresh`,
+    // `campaign_attribution_refresh`, `campaign_lead_conversion_refresh` and
+    // `campaign_member_metrics_refresh`. Every one of them writes
+    // `api.object('crm_campaign').update(...)`, and none declares `Hook.runAs`,
+    // which defaults to `'inherit'` — so `ctx.api` is a `ScopedContext` over the
+    // ACTING USER's context, and the keys are CALLER-supplied to a
+    // non-`isSystem` UPDATE, exactly what `stripReadonlyFields` deletes. Their
+    // least-privileged trigger is an ordinary user edit — a rep moving a
+    // campaign's status, saving an opportunity, enrolling a member — so
+    // `readonly` here would freeze the whole block at its seeded values.
+    // Measured in `test/activity-recency.test.ts`, which runs this same
+    // `ctx.api` shape through the real engine under a plain user context.
     actual_revenue: Field.currency({ 
       group: 'budget',
       label: 'Actual Revenue',
@@ -182,8 +193,9 @@ export const Campaign = ObjectSchema.create({
       min: 0,
     }),
     
-    // NOT `readonly`: the campaign_snapshot_metrics hook writes this rollup
-    // (16.x drops readonly writes, #2948). Definition: total members enrolled.
+    // NOT `readonly`: written by the same four refresh hooks, and for the same
+    // reason — see the note on `actual_revenue` above.
+    // Definition: total members enrolled.
     num_sent: Field.number({
       group: 'metrics',
       label: 'Number Sent',

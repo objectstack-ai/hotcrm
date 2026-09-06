@@ -230,9 +230,19 @@ export const Opportunity = ObjectSchema.create({
     }),
 
     // Approval workflow tracking.
-    // ⛔ NOT `readonly`: the `opportunity_approval` flow writes
-    // pending/approved/rejected here, and the platform drops writes to readonly
-    // fields. ⚠️ `defaultValue` at FIELD level: option-level `default: true`
+    // ⚠️ NOT `readonly` — but NOT because a write would be dropped. Audited per
+    // writer: every writer of this column and of `approved_date` is elevated or
+    // an insert. `opportunity_approval` declares `runAs: 'system'`, and
+    // `opportunity_approval_on_create` inherits it by spreading that flow, so
+    // `resolveRunDataContext` hands the engine `isSystem: true` and the
+    // `if (!opCtx.context?.isSystem)` strip branch is skipped outright; the
+    // `approval` node's own `approvalStatusField` write runs inside those same
+    // system runs; seeds write on INSERT, which the strip never touches. No
+    // view, page or action writes either column.
+    // ⇒ Both COULD honestly be declared `readonly: true`. Filed as #1666 rather
+    // than flipped here: removing a column from the editable surface is a
+    // behaviour change, not a comment correction.
+    // ⚠️ `defaultValue` at FIELD level: option-level `default: true`
     // only preselects in UI forms — API and flow inserts land null without it,
     // and a null `approval_status` never matches the flow's entry condition.
     approval_status: Field.select({
