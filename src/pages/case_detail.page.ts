@@ -1,11 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { Page } from '@objectstack/spec/ui';
-import {
-  EscalateCaseAction,
-  CloseCaseAction,
-} from '../actions/case.actions';
-import { LogCallAction } from '../actions/global.actions';
 
 /**
  * Case Detail Record Page
@@ -52,7 +47,14 @@ export const CaseDetailPage: Page = {
             // (#6946, ADR-0087 D2) — deleted, not renamed. See the full note on
             // `account_detail.page.ts`; nothing ever drew it.
             breadcrumb: true,
-            actions: [EscalateCaseAction, CloseCaseAction, LogCallAction],
+            // Action IDs, not `ActionDef` objects: `PageHeaderProps.actions` is
+            // `z.array(z.string())` ("Action IDs to show in header") in
+            // @objectstack/spec 17.3.0, and this repo authors against the
+            // protocol (#1653). Each id is the `name` of a crm_case-scoped
+            // action — `escalate_case` / `close_case` in
+            // `src/actions/case.actions.ts`, `log_call` in
+            // `src/actions/global.actions.ts`.
+            actions: ['escalate_case', 'close_case', 'log_call'],
           },
         },
         {

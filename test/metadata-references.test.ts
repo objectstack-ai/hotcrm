@@ -414,18 +414,18 @@ describe('page component references resolve', () => {
    * reordered, and the five rejected entries of one `actions` array are one
    * line rather than five).
    *
-   *   …/*_header :: actions[] — the spec and the renderer disagree about this
-   *   key, and the source can only satisfy one of them. `PageHeaderProps.actions`
-   *   is `z.array(z.string())` ("Action IDs"), but objectui's canonical
-   *   `page:header` renderer consumes ActionDef OBJECTS: it filters the array
-   *   through `actionRendersAt(a, 'record_header')`, reads `a.requiredPermissions`
-   *   / `a.visible` / `a.name` / `a.order`, and every test it ships authors
-   *   objects. A string has no `.locations`, so rewriting these four arrays as
-   *   ids would turn this guard green and delete every header button from four
-   *   record pages — Convert Lead, Generate Quote, Escalate Case, and the
-   *   activity trio #592 put there. Deciding which side moves is a product
-   *   call, not a conformance edit. Filed as #1279, which carries the
-   *   renderer evidence and the three ways out.
+   *   …/*_header :: actions[] — RESOLVED, exemption removed (#1653). The entry
+   *   rested on a renderer argument: `PageHeaderProps.actions` is
+   *   `z.array(z.string())` ("Action IDs"), objectui's `page:header` renderer
+   *   was measured consuming ActionDef OBJECTS, and the exemption held the
+   *   source on the renderer's side. Maintainer ruling of 2026-09-06, verbatim
+   *   and untranslated — 「元数据项目不应该依赖 @object-ui/components」 — settles
+   *   which side moves: this repo declares zero `@object-ui/*` dependencies, so
+   *   a renderer's current behaviour was never its authority, and cannot even
+   *   be measured from here. The four headers now author action ids per
+   *   `@objectstack/spec` 17.3.0 and conform. Renderer-side id resolution is
+   *   objectui#6252 / #7182 (ruled 2026-09-02, option C, "ids are the
+   *   contract"), not this repo's.
    *
    *   …/*_details :: sections[].collapsible — RESOLVED UPSTREAM, exemption
    *   removed. The disagreement pointed the other way: the key WORKED (objectui
@@ -448,10 +448,6 @@ describe('page component references resolve', () => {
    *   it means rewriting a ruling-backed guard. Filed as #1216.
    */
   const KNOWN_UNCONFORMING = new Set([
-    'account_detail_page/account_header_slotted :: actions[]',
-    'case_detail_page/case_header :: actions[]',
-    'lead_detail_page/lead_header :: actions[]',
-    'opportunity_detail_page/opp_header :: actions[]',
     'sales_home_page/ai_briefing :: description',
   ]);
 

@@ -2,12 +2,6 @@
 
 import { Page } from '@objectstack/spec/ui';
 import { P } from '@objectstack/spec';
-import { ConvertLeadAction, ScheduleFollowUpAction } from '../actions/lead.actions';
-import {
-  LeadLogCallAction,
-  LeadLogMeetingAction,
-  LeadScheduleMeetingAction,
-} from '../actions/global.actions';
 
 /**
  * Lead Detail Record Page
@@ -79,12 +73,20 @@ export const LeadDetailPage: Page = {
             // only the list-row ⋮ menu can fire it. Logging the call you just
             // made is the single most frequent thing a rep does on a lead, and
             // it was two navigations away.
+            //
+            // Action IDs, not `ActionDef` objects: `PageHeaderProps.actions` is
+            // `z.array(z.string())` ("Action IDs to show in header") in
+            // @objectstack/spec 17.3.0, and this repo authors against the
+            // protocol (#1653). Each id is the `name` of a crm_lead-scoped
+            // action — `convert_lead` / `schedule_followup` in
+            // `src/actions/lead.actions.ts`, the activity trio in
+            // `src/actions/global.actions.ts`.
             actions: [
-              ConvertLeadAction,
-              ScheduleFollowUpAction,
-              LeadLogCallAction,
-              LeadLogMeetingAction,
-              LeadScheduleMeetingAction,
+              'convert_lead',
+              'schedule_followup',
+              'log_call',
+              'log_meeting',
+              'schedule_meeting',
             ],
           },
         },

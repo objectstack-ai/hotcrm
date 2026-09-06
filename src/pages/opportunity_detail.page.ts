@@ -1,12 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { Page } from '@objectstack/spec/ui';
-import { CloneOpportunityAction, GenerateQuoteAction } from '../actions/opportunity.actions';
-import {
-  OpportunityLogCallAction,
-  OpportunityLogMeetingAction,
-  OpportunityScheduleMeetingAction,
-} from '../actions/global.actions';
 
 /**
  * Opportunity Detail Record Page
@@ -55,12 +49,20 @@ export const OpportunityDetailPage: Page = {
             // sentence is why the three activity actions are named here (#592):
             // without them a rep can log a call on the deal only from the list
             // row's ⋮ menu, never from the deal itself.
+            //
+            // Action IDs, not `ActionDef` objects: `PageHeaderProps.actions` is
+            // `z.array(z.string())` ("Action IDs to show in header") in
+            // @objectstack/spec 17.3.0, and this repo authors against the
+            // protocol (#1653). Each id is the `name` of a
+            // crm_opportunity-scoped action — `generate_quote` /
+            // `clone_opportunity` in `src/actions/opportunity.actions.ts`, the
+            // activity trio in `src/actions/global.actions.ts`.
             actions: [
-              GenerateQuoteAction,
-              CloneOpportunityAction,
-              OpportunityLogCallAction,
-              OpportunityLogMeetingAction,
-              OpportunityScheduleMeetingAction,
+              'generate_quote',
+              'clone_opportunity',
+              'log_call',
+              'log_meeting',
+              'schedule_meeting',
             ],
           },
         },
