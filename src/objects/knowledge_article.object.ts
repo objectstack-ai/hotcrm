@@ -32,8 +32,8 @@ export const KnowledgeArticle = ObjectSchema.create({
   // declared while every key below is enforced.
   //
   // MEASURED on `@objectstack/plugin-sharing@17.1.0` — the version
-  // installed AT THE TIME of the measurement, not the current pin (#1460: this
-  // repo has installed 17.2.0 since PR #1442, and this table has NOT been
+  // installed AT THE TIME of the measurement, not the current pin (#1676: this
+  // repo has installed 17.3.0 since PR #1577, and this table has NOT been
   // re-taken on it) — against the real `ShareLinkService` and a real engine,
   // not read off a grep count:
   //

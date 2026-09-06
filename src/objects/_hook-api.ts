@@ -47,10 +47,13 @@ type Doc = Record<string, unknown>;
  * safety consequences: believing the stale one makes an author over-estimate
  * the blast radius of every `filter` call site, in the unsafe direction.
  *
- * MEASURED per method against the pinned `@objectstack` packages (17.2.0), on
- * the object the kernel actually injects as `ctx.api`. Every line is pinned by
- * an assertion in `test/hook-query-predicate.test.ts`, against a real engine
- * rather than the test harness:
+ * MEASURED per method against the object the kernel actually injects as
+ * `ctx.api`. First taken on 17.2.0; RE-TAKEN on the current pin 17.3.0 during
+ * #1528 — the legal key sets and the `filter` fold both came back UNCHANGED,
+ * so the readings below are current, not merely inherited. Every line is
+ * pinned by an assertion in `test/hook-query-predicate.test.ts`, against a
+ * real engine rather than the test harness, and that file runs green on the
+ * current pin:
  *
  *   - `find`    — `filter` is ALIASED to `where`; the predicate is applied.
  *   - `findOne` — `filter` is ALIASED to `where`; the predicate is applied.

@@ -21,8 +21,10 @@ import { REPO_ROOT } from './helpers/repo-root';
  * **zero** rules — where 17.1.0 seeded them unconditionally, once,
  * organization-less.
  *
- * Re-measured on the pin this repo runs (17.2.0), same config, `memory`
- * driver, zero organizations:
+ * Re-measured on 17.2.0 — the pin this repo ran AT THE TIME, not the current
+ * pin (17.3.0 since PR #1577; not re-taken on it, though this file's own
+ * assertions run green there) — same config, `memory` driver, zero
+ * organizations:
  *
  *   | tenancy service     | `sys_sharing_rule` rows        |
  *   | ------------------- | ------------------------------ |

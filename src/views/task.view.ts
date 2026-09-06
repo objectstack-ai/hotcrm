@@ -140,10 +140,15 @@ export const TaskViews = defineView({
       // Operator-only filter — priority and status, no tokens — and the reason
       // recorded here for that has expired (#782). Two claims stood here; both
       // were wrong already on 17.0.0-rc.2 — the version this repo pinned AT
-      // THE TIME they were measured, not the current pin, which is 17.2.0
-      // since PR #1442 (#1467; every reading below is re-taken on it) — in
-      // different ways. "Wrong" is about those two retired claims, not about
-      // the engine: nothing in this block reports broken platform behaviour.
+      // THE TIME they were measured, not the current pin, which is 17.3.0
+      // since PR #1577 (#1676) — in different ways. "Wrong" is about those two
+      // retired claims, not about the engine: nothing in this block reports
+      // broken platform behaviour.
+      //
+      // ⚠️ READ THE VERSION ON EACH READING BELOW. They were taken at three
+      // different pins and are labelled individually; a reading labelled
+      // 17.2.0 was taken there and has NOT been re-taken on 17.3.0 unless it
+      // says so.
       //
       // `{current_user_id}` DOES interpolate. `resolveFilterTokens()` was wired
       // into the ObjectQL READ path at 17.0.0-rc.0 (objectql #3582) ahead of
@@ -154,8 +159,12 @@ export const TaskViews = defineView({
       // {current_org_id}` returned 0 rows (the filter is not being dropped)
       // while `owner_id = {current_user_id}` returned every seeded task (not a
       // literal-string compare either — the literal matches no owner at all).
-      // RE-MEASURED 2026-09-03 on the pinned 17.2.0 (#1467), unchanged: both
-      // probes report exactly those results on the current pin.
+      // RE-MEASURED 2026-09-03 on 17.2.0 (#1467), unchanged: both probes
+      // reported exactly those results there. NOT re-run on 17.3.0 (#1676) —
+      // the two-probe result is a 17.2.0 reading, and the seam it rests on
+      // (`resolveFilterTokens()` on the read path) is re-confirmed on the
+      // current pin by `test/flow-filter-today-token.test.ts`, which runs
+      // green there.
       //
       // `{TODAY()}` is not a spelling of anything and never was. The vocabulary
       // is `{today}` / `{yesterday}` / `{tomorrow}` / `{now}`, the period
@@ -167,8 +176,10 @@ export const TaskViews = defineView({
       // rc.2 `{TODAY()}` was not REJECTED either: the placeholder grammar was
       // `/^\$?\{([a-zA-Z0-9_]+)\}$/`, parentheses fell outside it,
       // `classifyFilterToken('{TODAY()}')` returned null, and the string
-      // reached the driver verbatim and compared as text. On the pinned 17.2.0
-      // that is FALSE — `FILTER_TOKEN_WRAPPED_RE` in `@objectstack/spec/data`
+      // reached the driver verbatim and compared as text. From 17.2.0 on —
+      // re-confirmed on the current pin 17.3.0 (#1676) by the PREMISE case in
+      // `test/flow-filter-today-token.test.ts`, which drives a real engine —
+      // that is FALSE: `FILTER_TOKEN_WRAPPED_RE` in `@objectstack/spec/data`
       // now reads `/^\$?\{([^{}]+)\}$/`, which DOES match `TODAY()`, so it
       // classifies as `kind: 'unknown'` and `resolveFilterTokens()` throws
       // `UnknownFilterTokenError` (`FILTER_TOKEN_UNKNOWN`, HTTP 400) — the same
@@ -179,8 +190,11 @@ export const TaskViews = defineView({
       // sees the filter at all.
       //
       // Measured on rc.2 over a four-row `crm_task` fixture (due 30d ago / 1d
-      // ago / today / in 7d), and RE-MEASURED 2026-09-03 on the pinned 17.2.0
-      // (#1467) over the same fixture — three rows unchanged, the fourth not:
+      // ago / today / in 7d), and RE-MEASURED 2026-09-03 on 17.2.0 (#1467)
+      // over the same fixture — three rows unchanged, the fourth not. ⛔ The
+      // row COUNTS below are a 17.2.0 reading and were NOT re-taken on 17.3.0
+      // (#1676); what WAS re-confirmed there is the throw/resolve verdict in
+      // the right-hand column, by `test/flow-filter-today-token.test.ts`:
       //
       //                                  rc.2               17.2.0
       //     due_date <  '{today}'    ->  2 rows (past-due)  2 rows
@@ -237,18 +251,21 @@ export const TaskViews = defineView({
       // `due_date < {TODAY()}`, and that only `{current_user_id}` interpolates.
       // Both halves were wrong already on 17.0.0-rc.2 — the version this repo
       // pinned AT THE TIME they were measured, not the current pin, which is
-      // 17.2.0 since PR #1442 (#1467) — and the file said the opposite of
+      // 17.3.0 since PR #1577 (#1676) — and the file said the opposite of
       // itself: the note on `todays_tasks` above asserted that
       // `{current_user_id}` does NOT interpolate. It does.
-      // That comment carries the measurements, re-taken there on the current
-      // pin, INCLUDING the one that moved: `{TODAY()}` is REJECTED on 17.2.0
-      // (`FILTER_TOKEN_UNKNOWN`) where on rc.2 it shipped to the driver as
-      // text, so "cannot resolve `{TODAY()}`" is wrong on the current pin for a
-      // different reason than it was wrong on rc.2. The canonical `{today}`
-      // resolves on the read path either way, so a strictly past-due filter IS
-      // expressible: `due_date < '{today}'` selected exactly the past-due rows
-      // out of four on rc.2, and does again on 17.2.0 (RE-MEASURED
-      // 2026-09-03).
+      // That comment carries the measurements with their versions, INCLUDING
+      // the one that moved: `{TODAY()}` is REJECTED from 17.2.0 on
+      // (`FILTER_TOKEN_UNKNOWN`, re-confirmed on the current pin 17.3.0 by
+      // `test/flow-filter-today-token.test.ts`) where on rc.2 it shipped to
+      // the driver as text, so "cannot resolve `{TODAY()}`" is wrong on the
+      // current pin for a different reason than it was wrong on rc.2. The
+      // canonical `{today}` resolves on the read path either way, so a
+      // strictly past-due filter IS expressible: `due_date < '{today}'`
+      // selected exactly the past-due rows out of four on rc.2, and did again
+      // on 17.2.0 (RE-MEASURED 2026-09-03; that row count was not re-taken on
+      // 17.3.0, where the token's resolution is re-confirmed by the test file
+      // named above).
       //
       // So the honest statement is narrower than the one that stood here: this
       // view CAN be given a strictly past-due cut through `{today}`, and is not

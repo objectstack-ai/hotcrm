@@ -166,7 +166,9 @@ navigationContributions: [
 ]
 ```
 
-The shape is read off `ManifestSchema` in the pinned `@objectstack/spec` 17.2.0:
+The shape is read off `ManifestSchema` in `@objectstack/spec` 17.2.0 — the version
+this repo pinned when this plan was measured, not the current pin (17.3.0 since PR
+#1577); the shape has not been re-read on it (#1676):
 `{ app, group?, priority, items }`. The app package keeps the group scaffolding — `Sales`,
 `My Work`, `Activity`, `Marketing`, `Service`, `Insights` — and each module contributes its
 items into the named group, so the information architecture a user sees is unchanged.
@@ -336,8 +338,9 @@ would otherwise slug the heading to `#上游缺口--upstream-gaps` — the exact
 - Studio's writable verdict —
   [objectstack#14430](https://github.com/objectstack-ai/objectstack/issues/14430).
 - An objectstack release carrying both, and the version bump in this repository. HotCRM is
-  pinned to `@objectstack/*` 17.2.0 today. Merged upstream is not the same as available in
-  the pin (AGENTS.md, *Platform Upgrades*).
+  pinned to `@objectstack/*` 17.3.0 today (PR #1577; this plan's own measurements were taken
+  at the 17.2.0 pin and are labelled as such). Merged upstream is not the same as available
+  in the pin (AGENTS.md, *Platform Upgrades*).
 
 **New, found by this analysis — for the PM to file upstream.** None of these is worked around
 here:
