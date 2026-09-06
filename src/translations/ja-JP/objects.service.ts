@@ -77,8 +77,6 @@ export const service: Record<string, ObjectTranslationData> = {
       escalation_reason: { label: 'エスカレーション理由' },
       resolution: { label: '解決内容' },
       resolved_by_article: { label: '解決したナレッジ記事', help: 'このケースを解決したナレッジ記事 — 逸らし率の指標。' },
-      customer_rating: { label: '顧客満足度', help: '顧客満足度の評価（1〜5 段階）' },
-      customer_feedback: { label: '顧客フィードバック' },
       internal_notes: { label: '内部メモ', help: '顧客には表示されない社内向けメモ' },
       is_closed: { label: 'クローズ済' },
     },

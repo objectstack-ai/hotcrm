@@ -201,12 +201,17 @@ export const CaseDetailPage: Page = {
                           // `case.hook.ts` nulls the column for anonymous
                           // web-to-case submissions anyway.
                           //
-                          // ⛔ `customer_rating` / `customer_feedback` are NOT
-                          // added alongside it, and their absence is a decision
-                          // rather than an oversight: whether staff should type
-                          // a customer's satisfaction score on the customer's
-                          // behalf is a product question (#1428), open. Do not
-                          // "complete the set" here without that ruling.
+                          // ⛔ `customer_rating` / `customer_feedback` are not
+                          // here because they no longer exist: #1428 retired
+                          // both under ADR-0049 enforce-or-remove (maintainer
+                          // ruling, decision batch #21, 2026-09-03), together
+                          // with the `case_csat_followup` flow whose only job
+                          // was to prompt for them. Do not "complete the set"
+                          // here: a satisfaction score the customer did not
+                          // give is a different fact from one they did, and
+                          // neither field was named in any profile, so an input
+                          // would have been open to every profile that can edit
+                          // a case.
                           //
                           // Field-level security is untouched by any of this —
                           // `crm_case.internal_notes` stays editable for

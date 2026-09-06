@@ -93,12 +93,11 @@ const RUNTIME_TEST_FILES = [
  * the suite too, so it cannot rot.
  */
 const PENDING_FLOWS = new Set<string>([
-  // Empty, and the "no stale entries" case below is what emptied it.
-  // `case_csat_followup` was pending because it spans a 24h `wait` node — but
-  // the part of it that needed proving turned out to be reachable without
-  // timer-resume support: #684's user-less run drives it through the real
-  // engine as far as the suspension, which is where its execution identity is
-  // decided. See test/flow-record-change.test.ts.
+  // Empty, and the "no stale entries" case below is what emptied it. The last
+  // entry was `case_csat_followup`, pending because it spanned a 24h `wait`
+  // node — #684 showed the part that needed proving was reachable without
+  // timer-resume support, and #1428 then retired the flow outright along with
+  // the two fields it existed to collect.
 ]);
 
 const testSource = (() => {

@@ -23,7 +23,7 @@ Each guide is written for the people who operate that area.
 - **[Sales](crm_sales.md)** — for sales reps and managers. Lead routing,
   conversion, opportunity stages, large-deal approvals, quotes.
 - **[Service](crm_service.md)** — for service agents and managers. Case
-  priority, SLA breaches, escalation, and satisfaction follow-up.
+  priority, SLA breaches, and escalation.
 - **[Administration](crm_admin.md)** — for administrators. Roles, record
   visibility (sharing), and where to tune every automated threshold.
 

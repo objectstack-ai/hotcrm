@@ -79,8 +79,6 @@ export const service: Record<string, ObjectTranslationData> = {
       escalation_reason: { label: 'Motivo de Escalación' },
       resolution: { label: 'Resolución' },
       resolved_by_article: { label: 'Resuelto por Artículo', help: 'Artículo de la base de conocimiento que resolvió este caso — la señal de desvío.' },
-      customer_rating: { label: 'Satisfacción del Cliente', help: 'Valoración de satisfacción del cliente (1-5 estrellas)' },
-      customer_feedback: { label: 'Comentarios del Cliente' },
       internal_notes: { label: 'Notas Internas', help: 'Notas internas no visibles para el cliente' },
       is_closed: { label: 'Está Cerrado' },
     },
