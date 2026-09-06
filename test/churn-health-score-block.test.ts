@@ -32,15 +32,16 @@ import { CrmSeedData } from '../src/data/index';
  *    same reason.
  *
  * 3. **The block is not a restatement of the three that were already there.**
- *    On today's seed book the single flagged account (Initech, `at_risk`) is
- *    ALSO 72 days quiet, so it happens to appear in `at_risk_accounts` too —
- *    which, read alone, would make this block look redundant. It is not
- *    redundant by construction, and the difference is not a matter of which
- *    rows the seed book happens to carry: this block carries no date term, so
- *    an account that is being talked to every day and is still flagged
- *    `churning` lands here and in NO other block. That case is asserted
- *    directly, with a synthetic row, because it is the population the whole
- *    card is about and the seed book does not currently contain one.
+ *    Initech (`at_risk`) is ALSO 72 days quiet, so it happens to appear in
+ *    `at_risk_accounts` too — which, read alone, would make this block look
+ *    redundant. It is not redundant by construction, and the difference is not
+ *    a matter of which rows the seed book happens to carry: this block carries
+ *    no date term, so an account that is being talked to every day and is
+ *    still flagged `churning` lands here and in NO other block. That case is
+ *    asserted directly, with a synthetic row, so the claim is isolated from
+ *    whatever the seed book happens to carry: the assertion holds whether or
+ *    not the seeds contain a real equivalent, and it therefore stays a guard
+ *    rather than a restatement of today's demo data.
  */
 
 type AnyRec = Record<string, any>;
@@ -183,7 +184,7 @@ const makeEngine = () =>
     } as never,
   });
 
-/** The synthetic row the seed book does not contain — see the header, point 3. */
+/** The synthetic row that isolates the claim from the seeds — header, point 3. */
 const ACTIVE_AND_CHURNING = 'Zzz Actively-Worked Churning Account';
 
 describe('the health_score block returns rows over the shipped seeds (#1186)', () => {
