@@ -58,9 +58,14 @@ const INTENDED_BUCKET: Record<string, Granularity> = {
   'opportunity_metrics.close_date': 'month',
   'opportunity_metrics.close_quarter': 'quarter',
   // #592. Every widget over this dimension asks "how much activity per
-  // week", and the week bucket is what puts the trend on an AXIS instead of
-  // in a datetime filter bound — which is the thing the app cannot trust yet
-  // (see the Activity dashboard's header note on #3912/#3777).
+  // week", and the week bucket declared on this dataset dimension is what
+  // puts the trend on an AXIS instead of in a dashboard date range. That is
+  // a PRODUCT reason and it stands on its own: the runtime ANDs `dateRange`
+  // into every widget query, and "is the team speeding up or going quiet?"
+  // is read ACROSS the history, so a range would truncate the axis that is
+  // the whole point of the chart. The datetime filter bound itself works —
+  // objectstack#3912 and objectstack#3777 are both released as of 17.0.0 GA
+  // (see the Activity dashboard's header note, which now says the same).
   'event_metrics.start_datetime': 'week',
 };
 
