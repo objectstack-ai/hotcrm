@@ -182,7 +182,8 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       title: '{first_name} {last_name}',
       subtitle: '{company}',
       components: {
-        lead_duplicate_alert: { label: 'Duplicate Flagged' },
+        lead_duplicate_alert_confirmed: { label: 'Confirmed Duplicate Alert' },
+        lead_duplicate_alert_suspected: { label: 'Suspected Duplicate Alert' },
         lead_highlights: { label: 'Key Information' },
         lead_path: { label: 'Lead Status Path' },
         main_tabs: { label: 'Lead Information Tabs' },

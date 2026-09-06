@@ -517,7 +517,8 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       title: '{first_name} {last_name}',
       subtitle: '{company}',
       components: {
-        lead_duplicate_alert: { label: '重複マークの警告' },
+        lead_duplicate_alert_confirmed: { label: '重複確定の警告' },
+        lead_duplicate_alert_suspected: { label: '重複の疑いの警告' },
         lead_highlights: { label: '重要情報' },
         lead_path: { label: 'リードステータスの進捗' },
         main_tabs: { label: 'リード情報タブ' },
