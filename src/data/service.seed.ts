@@ -317,6 +317,47 @@ export const cases = defineSeed(Case, {
     // ─── Generated demo cases — 30 cases over the last 30 days, mixed across
     // priorities. Powers `CasesOpenedByDayPriorityReport` (daily bucketing
     // matrix) and the service dashboard's daily-volume area chart.
+    //
+    // ### Why every axis carries a rotation, and not just `i % length` (#1659)
+    //
+    // These rows used to read ONE counter for every axis: `crm_account` and
+    // `status` both took `i % 5`, and `priority`, `type` and `origin` all took
+    // `i % 4`. Equal-length lists walked by one index advance in lockstep, so
+    // each group came out PERFECTLY correlated — every Acme case `new`, every
+    // Globex case `in_progress`, and every `low` case a `question` raised by
+    // `email`. Thirty rows of volume with no variety, which is the opposite of
+    // what a volume generator is for: the account × status cross-tab held 5 of
+    // its 25 cells, and priority × type × origin 4 of 16 apiece.
+    //
+    // Each list now advances one step per row PLUS a rotation — `c` extra steps
+    // every `m` rows. Two axes stay correlated exactly when their relative
+    // offset never moves, so the rotations are chosen to make every relative
+    // offset sweep its whole cycle. `crm_account` is the anchor and carries no
+    // rotation; the other four are stated relative to it.
+    //
+    // `account × status` is complete BY CONSTRUCTION rather than by luck, and
+    // the proof is one line: account `a` takes rows i = a, a+5 … a+25, whose
+    // block numbers run 0…5, so its statuses are `(a + b) % 5` over b = 0…5 —
+    // all five of them. The thirty rows therefore walk the whole 5 × 5 grid,
+    // twenty-five cells once and five of them a second time.
+    //
+    // ⚠️ The remaining three constants are TUNED, not derived. They were picked
+    // by computing all ten pairwise cross-tabs and keeping the assignment that
+    // left the fewest empty cells. Measured over the lists as shipped: 188 of
+    // the 193 pairwise cells are occupied, no cell holds more than 3 rows, and
+    // the marginals stay as flat as thirty rows allow — 6/6/6/6/6 by account
+    // and by status, 8/7/7/8 by priority, type and origin. ⛔ Changing the
+    // LENGTH of any list below voids that tuning: re-measure the cross-tabs
+    // rather than assuming the rotations still separate the axes.
+    //
+    // Two schemes that read as more principled than they measure were rejected
+    // here, and are recorded so they are not re-derived: rotating the 5-lists
+    // on the 4-block and the 4-lists on the 5-block ("the lengths are coprime,
+    // so they cannot resonate") empties one status completely; and rotating
+    // `crm_account` as well — to break the every-fifth-day beat it walks the
+    // calendar on — costs twelve further empty cells. That beat is the
+    // deliberate price of anchoring: with one row per day, some axis has to be
+    // the fixed one the other four are measured against.
     ...((): readonly Record<string, unknown>[] => {
       const priorities = ['low', 'medium', 'high', 'critical'] as const;
       // Mirror of case.hook's priority rank map — hooks don't run over seeds.
@@ -327,8 +368,14 @@ export const cases = defineSeed(Case, {
       const accountsList = ['Acme Corporation', 'Globex Industries', 'Wayne Enterprises', 'Initech Solutions', 'Stark Medical'] as const;
       const out: Record<string, unknown>[] = [];
       for (let i = 0; i < 30; i++) {
-        const priority = priorities[i % priorities.length];
-        const status = statuses[i % statuses.length];
+        // The anchor, then the four rotations the block comment above derives.
+        // `10` is the one constant with no reading off a list length — it is
+        // the rotation that measured best for `origin` against the other four.
+        const account = accountsList[i % accountsList.length];
+        const status = statuses[(i + Math.floor(i / accountsList.length)) % statuses.length];
+        const priority = priorities[(i + Math.floor(i / priorities.length)) % priorities.length];
+        const type = types[(i + 2 * Math.floor(i / types.length)) % types.length];
+        const origin = origins[(i + Math.floor(i / 10)) % origins.length];
         const settled = status === 'resolved' || status === 'closed';
         const ageDays = 1 + (i % 30);
         // Settled cases get a resolution delay of 1–3 days (capped at the
@@ -348,14 +395,14 @@ export const cases = defineSeed(Case, {
         // shows before the first hourly sweep lands.
         const slaViolated = !settled && priority === 'critical' && i % 3 === 0;
         out.push({
-          subject: `Demo case ${String(i + 1).padStart(2, '0')} — ${priority} ${types[i % types.length]}`,
+          subject: `Demo case ${String(i + 1).padStart(2, '0')} — ${priority} ${type}`,
           description: `Auto-generated demo case for ${priority} priority on day -${ageDays}.`,
-          crm_account: accountsList[i % accountsList.length],
+          crm_account: account,
           status,
           priority,
           priority_rank: rankByPriority[priority],
-          type: types[i % types.length],
-          origin: origins[i % origins.length],
+          type,
+          origin,
           // is_closed strictly mirrors case.hook: true ONLY for status
           // 'closed' — a resolved case is NOT closed yet.
           is_closed: status === 'closed',
@@ -371,7 +418,7 @@ export const cases = defineSeed(Case, {
           // Resolved cases also carry closed_date: case.hook stamps it as the
           // resolved-date proxy while keeping is_closed=false.
           ...(settled ? { closed_date: celDaysAgo(ageDays - resolutionDays) } : {}),
-          sla_due_date: celCaseSlaDue(ageDays, priority, accountsList[i % accountsList.length]),
+          sla_due_date: celCaseSlaDue(ageDays, priority, account),
         });
       }
       return out;
