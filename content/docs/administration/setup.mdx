@@ -111,7 +111,14 @@ Confirm the default [SLA matrix](/docs/service/sla-and-escalation):
 
 Adjust if your support promise differs — the sixteen numbers live in `src/objects/_case-sla.ts` and a matching table inside `src/objects/case.hook.ts`, not on a Setup screen, and both copies have to change together.
 
-### 12. Approval process
+### 12. Case routing — nothing to configure
+
+**There is no Setup → Case Settings screen**, and there are no routing rules to write. An ownerless case — a web-to-case submission is the usual way one arrives — is assigned on insert by `case_auto_assign` (`src/objects/_case-assignment.ts`): it goes to whichever holder of the `service_agent` position has the **fewest open cases**, counting every case whose status is neither *Resolved* nor *Closed*. It is the same self-balancing round-robin leads get: least-loaded wins, not a rotation and not a rule matching product, region or origin; there is no territory routing and no queue. It runs **on insert only**, and only on a case that arrives with no owner — it never takes a case off an owner later, and it never fires on a case an agent creates, because the platform has already stamped that agent as the owner by the time the hook runs. It never blocks intake either: when the pool cannot be read at all — which is what the anonymous web-to-case form hits — the case is still captured, just ownerless. And if nobody holds `service_agent` the hook does nothing, so the case stays ownerless and waits in the **Unassigned — triage** tab on [Cases](/docs/service/cases). That tab is this hook's do-nothing path made visible, which makes staffing the position a behaviour change in itself: new cases stop arriving ownerless, and stop appearing there. **This is not the escalation hand-off**, which is a different pool at a different moment — that one rides on the transition to *Escalated* and moves the case to the least-loaded holder of `service_manager` (see [SLA & escalation](/docs/service/sla-and-escalation)).
+
+- [ ] Assign the `service_agent` position to every agent who should receive intake — that pool *is* the routing table
+- [ ] While nobody holds it, watch the **Unassigned — triage** tab on Cases: it lists exactly the cases this hook could not place
+
+### 13. Approval process
 
 - [ ] Confirm the discount approval threshold ($500K default) — see [Approvals](/docs/revenue/approvals)
 - [ ] Confirm approvers (manager + director by role)
@@ -119,7 +126,7 @@ Adjust if your support promise differs — the sixteen numbers live in `src/obje
 
 ## ✅ Day 5 — Knowledge & AI
 
-### 13. Knowledge articles
+### 14. Knowledge articles
 
 HotCRM ships **one** knowledge object, not a set of knowledge bases. Everything below is an ordinary record you create under **Service → Knowledge**, filed under one of the seven categories the object defines.
 
@@ -131,7 +138,7 @@ HotCRM ships **one** knowledge object, not a set of knowledge bases. Everything 
 
 There is nothing to seed called *Sales Knowledge*, *Product Information* or *Competitive Intel* — HotCRM ships no such libraries, and no competitor object for battle cards to hang off. See [Knowledge Bases](/docs/ai-copilot/knowledge-bases) for what the Copilot can and cannot do with an article.
 
-### 14. AI Copilot
+### 15. AI Copilot
 
 There is no *AI* group in Setup, and no screen turns the Copilot on. Setup carries exactly two AI surfaces: **Setup → Configuration → AI & Embedder**, which configures the provider, model and embedder, and a beta *AI Assistant* toggle under **Setup → Configuration → Feature Flags** that ships off and that nothing in the platform reads. What makes the Copilot answer is a configured provider; which skills it can run belongs to the app, not to setup. *AI* as a navigation group is **Studio → AI** (Agents / Tools / Skills).
 
