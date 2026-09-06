@@ -1191,20 +1191,42 @@ describe('the two defects, reproduced end-to-end', () => {
       });
       const started = await b.engine.execute('lead_conversion', asUser({ recordId: lead.id }));
       // `closeDate` joined the screen's contract in #1708, so the bag carries
-      // it — taken from the descriptor rather than hand-written, because that
-      // is what the console posts (the runner seeds its value state from every
-      // field carrying a `defaultValue`) and because the +90-day literal is
-      // authored in exactly one place, on the screen field. Hand-writing a
-      // date here would be a second authority for it AND would rot: the
-      // object's `close_date_future` rule refuses a close date in the past.
+      // it — and it carries a date the REP CHOSE, which is the half that can
+      // be measured. The prefill is what the console would post untouched, but
+      // posting it back cannot tell "the node wrote what the screen collected"
+      // apart from "the node stamped its own +90 that happens to equal the
+      // prefill": measured by ablation, restoring `close_date: '{TODAY() +
+      // 90}'` inside `create_opportunity` left every case in this file and its
+      // two siblings green while the resume posted the prefill. So this one
+      // edits it, the way a rep does.
+      //
+      // Derived from the prefill and stepped on ONE calendar (`setUTCDate`),
+      // for two reasons: a hand-written date would rot past the object's
+      // `close_date_future` rule, and it must not restate the +90-day literal,
+      // which the screen field authors in exactly one place. The two sibling
+      // conversion suites post the prefill untouched, so the default path is
+      // covered there.
       const screen = started.screen ?? started.output?.screen ?? null;
-      const closeDate = ((screen?.fields ?? []) as AnyRec[]).find((f) => f.name === 'closeDate')?.defaultValue;
+      const prefill = ((screen?.fields ?? []) as AnyRec[]).find((f) => f.name === 'closeDate')?.defaultValue;
+      expect(typeof prefill, 'the conversion screen no longer prefills a close date').toBe('string');
+      const chosen = new Date(`${String(prefill)}T00:00:00Z`);
+      chosen.setUTCDate(chosen.getUTCDate() + 7);
+      const closeDate = chosen.toISOString().slice(0, 10);
+      expect(closeDate, 'the chosen date collapsed onto the prefill — this pin would prove nothing')
+        .not.toBe(prefill);
       const done = await b.engine.resume(started.runId, {
         variables: { createOpportunity: true, opportunityName: 'Acme Deal', opportunityAmount: 50_000, closeDate },
       });
       expect(done.error ?? null).toBeNull();
       const opp = await api.object('crm_opportunity').findOne({ where: { name: 'Acme Deal' } });
       expect(opp, 'the seeded default overrode the user answer').toBeTruthy();
+      // The date the rep ANSWERED is the date the opportunity carries (#1708).
+      // The field list pins that the screen asks; this pins that the answer is
+      // what gets written, which is the whole card: `close_date` is what files
+      // a deal into a forecast period, so a date nobody chose is a forecast
+      // nobody chose.
+      expect(opp?.close_date, 'the opportunity was filed on a date the rep never chose')
+        .toBe(closeDate);
       // The resume signal wins over the declared default, same as it won over
       // the assignment node it replaced (#1155) — a default that could not be
       // answered would make the checkbox decorative.
