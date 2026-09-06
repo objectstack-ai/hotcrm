@@ -1,6 +1,12 @@
 # HotCRM Docs
 
-> Last reviewed: June 4, 2026
+> **Maintained per change, not on a review cadence.** A pull request that adds, moves,
+> retires or renames a document under `docs/` updates the tables below in the same PR;
+> that is the whole mechanism, and no periodic review stands behind it. For when any page
+> here last changed, read its `git log` — the one freshness record that cannot go stale.
+> *Supersedes the "Last reviewed: June 4, 2026" stamp that stood here: a review date
+> nothing produced and nothing checked, written once when this tree was reorganised and
+> left untouched by every commit that maintained the file after it — #1570.*
 > Scope: internal engineering, release, and operational documentation for this repository.
 
 HotCRM also has product-facing documentation under [`content/docs/`](../content/docs/). Use that tree for user, admin, and marketplace docs. Use this `docs/` tree for implementation notes, current technical status, deployment, release, and developer reference.
