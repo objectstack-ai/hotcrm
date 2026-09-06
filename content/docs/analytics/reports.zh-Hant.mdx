@@ -32,8 +32,8 @@ HotCRM 開箱即用地發布 **十份** 報表 —— `src/reports/index.ts` 這
 
 剩下五個只是單純不存在，其中三個自己建得出來、兩個建不出來：
 
-- **Forecast vs Actual** —— 建得出來，但不是從管道資料集：配額在 `forecast_metrics`（`src/datasets/forecast.dataset.ts`）裡，一位負責人一個週期一列，帶 **Quota**、**Closed**、**Pipeline**、**Commit** 以及衍生的 **Attainment**。基於它的任何報表都必須把週期釘死 —— 要麼按 **Period** 分組，要麼篩到單個 **Period Type** + **Period Start** —— 因為這些度量都是普通求和，而表裡同時存著好幾個週期。
-- **Win/Loss Analysis** —— 建得出來：**Win Reason** 與 **Loss Reason** 是維度，**Won Deals**、**Lost Deals**、**Settled Deals**、**Won Revenue**、**Lost Revenue** 與 **Win Rate** 都是 `opportunity_metrics` 上已宣告的度量。
+- **Forecast vs Actual** —— 建得出來，但不是從管道資料集：配額在 `forecast_metrics`（`src/datasets/forecast.dataset.ts`）裡，一位負責人一個週期一列的結算快照，並把「相對配額的達成」宣告成了它自己的一個度量。基於它的任何報表都必須把週期釘死 —— 要麼按 **Period** 分組，要麼篩到單個 **Period Type** + **Period Start** —— 因為這些度量都是普通求和，而表裡同時存著好幾個週期。
+- **Win/Loss Analysis** —— 建得出來：**Win Reason** 與 **Loss Reason** 都是 `opportunity_metrics` 上的維度，而一筆交易贏與丟的那一面在那裡已經宣告成了度量 —— **Win Rate** 就在其中，並與構成它分子分母的那幾個交易數一併發布。
 - **Big Deals Won** —— 建得出來：贏單金額就是 **Won Revenue**，而按金額卡一個閾值是普通的報表篩選條件。
 - **Sales Cycle Length** —— 建不出來。沒有任何地方存著銷售週期時長：商機上有 **Stage Entry Date** 和 **Close Date**，但沒有「已過天數」這樣的欄，而它唯一帶的時長 **Days in Current Stage** 就是上面那個查詢後公式。*按產品* 也沒有落點 —— 沒有任何資料集讀 `crm_opportunity_line_item`。
 - **Discount Approval Activity** —— 建不出來。審批本身是真的（`src/flows/opportunity-approval.flow.ts`，以及商機上的 **Approval Status**），但沒有任何維度把那個欄位暴露出來；折扣則是行項目上的百分比（`crm_opportunity_line_item.discount`），而沒有任何資料集讀行項目。
@@ -49,7 +49,7 @@ HotCRM 開箱即用地發布 **十份** 報表 —— `src/reports/index.ts` 這
 本節曾經列出的三份報表，一份都沒有發布，其中兩份還用了一個並不存在的潛在客戶狀態：
 
 - **Lead Conversion Funnel** 與 **Aged Leads** 以任何形式都不存在。兩者都依賴一個 *Working* 狀態，而 `crm_lead.status` 根本沒有這個取值 —— 真實路線是 *New → Contacted → Qualified → Unqualified → Converted*（`src/objects/lead.object.ts`），其中 *Unqualified* 從任何開放狀態都能進入。*Working* 是匯入別名表（`src/mappings/lead_import.mapping.ts`）裡的一行，它在記錄匯入時把這個歷史寫法對應到 **Contacted**；產品從不顯示這個詞。宣告出來的路線見 [狀態機](/zh-Hant/docs/administration/state-machines)。
-- **Lead Source ROI** 同樣不存在，而且按它寫的口徑，語義層也答不出來：`lead_metrics`（`src/datasets/lead.dataset.ts`）只宣告了一個度量 —— 潛在客戶計數 —— 外加四個維度（狀態、來源、建立日期、最後聯絡月份）。「按來源的數量」可以直接從它得到；轉化率要你自己在按狀態分組的計數上做除法；而收入根本不在這個資料集裡 —— 它從不跨到商機那一側。
+- **Lead Source ROI** 同樣不存在，而且按它寫的口徑，語義層也答不出來：`lead_metrics`（`src/datasets/lead.dataset.ts`）只宣告了一個度量 —— 潛在客戶計數 —— 而且它從不跨到商機那一側。「按來源的數量」可以直接從它得到，因為 **Source** 就是它的維度之一；轉化率要你自己在按狀態分組的計數上做除法；而收入那一半無處可取。
 
 潛在客戶計數也是別處唯一會讀的潛在客戶數字：[Executive Overview](/zh-Hant/docs/analytics/dashboards) 儀表板上的 **Open Leads** 磁貼正是用同一個資料集數未轉化的潛在客戶。其餘的請自建 —— 見下文《自訂報表》。
 
@@ -63,7 +63,7 @@ HotCRM 開箱即用地發布 **十份** 報表 —— `src/reports/index.ts` 這
 | **SLA Performance Report** | 工單數、**SLA 違約率** 與平均解決時長，按優先順序 —— 只統計已關閉的工單 |
 | **Cases Opened by Priority × Day** | 每日新增工單的矩陣：橫列是優先順序，直欄是工單開出來的那一天 |
 
-本節曾經列出的另外五份報表哪兒都沒有發布，而且其中多數是在向語義層要它根本沒有的東西。`case_metrics`（`src/datasets/case.dataset.ts`）只讀 `crm_case` 一個物件，六個維度 —— **Status**、**Priority**、**Origin**、**Type**、**Created**（按天分桶）、**Resolving Article** —— 外加八個度量：**Cases**、**Avg Resolution (h)**、**SLA Violation Rate**、**Closed Cases**、**Resolved by KB**、**KB Deflection Rate**、**Cases Within SLA** 與 **SLA Compliance Rate**。
+本節曾經列出的另外五份報表哪兒都沒有發布，而且其中多數是在向語義層要它根本沒有的東西。`case_metrics`（`src/datasets/case.dataset.ts`）只讀 `crm_case` 一個物件 —— 不聯結、也不跨第二個物件 —— 而下面每一條都點名了卡住它的那一件事。它能答的那些問題在 [多維資料集](/zh-Hant/docs/analytics/cubes) 上；維度與度量本身則宣告在 `src/datasets/case.dataset.ts` 裡，那是唯一會保持最新的地方。
 
 - **Case Volume by Origin** 是這五份裡唯一你自己建得出來的：**Origin** 是維度，所以「按 Email / Phone / Web / Chat / Portal 數工單」只差一份自建報表。它只是不在隨應用發布的那幾份裡。
 - **Case Resolution Time** *按類別和客服* —— 度量本身是真的，上面兩份彙總報表都帶著它；但 **客服** 這一維根本搆不著：`owner_id` 是工單上的欄位，沒有任何維度把它暴露出來。最接近「類別」的是 **Type**（*Question / Problem / Feature Request / Bug*）。
@@ -82,10 +82,10 @@ HotCRM 開箱即用地發布 **十份** 報表 —— `src/reports/index.ts` 這
 | **Accounts by Industry and Type** | 有效客戶的矩陣 —— 列是產業，欄是客戶類型，每格給出客戶數與 **Annual Revenue** 合計 |
 | **Customer Churn Signals** | 面向主動挽留的四塊面板：**CSM-Flagged Accounts**（**Health Score** 為 *At Risk* 或 *Churning*，按類型——唯一不帶時間窗的面板）、**At-Risk Accounts**（有效但 60 天以上無活動，按產業）、**Silent High-Value Accounts**（策略級與企業級客戶沉默 90 天以上，按類型）與 **Recently Lost Opportunities**（最近 30 天丟單，按負責人） |
 
-本節曾經列出的三份合約報表哪兒都沒有發布，而且按它們寫的口徑一份都建不出來，原因是同一個：**沒有合約資料集**。`src/datasets/` 涵蓋九個物件 —— 客戶、工單、聯絡人、活動、預測、潛在客戶、商機、產品、任務 —— `crm_contract` 不在其中，所以分析側根本無法對合約計數、求和或分組。
+本節曾經列出的三份合約報表哪兒都沒有發布，而且按它們寫的口徑一份都建不出來，原因是同一個：**沒有合約資料集**。`crm_contract` 不在 `src/datasets/` 讀取的那些物件之列，所以分析側根本無法對合約計數、求和或分組。
 
 - **Contracts Expiring** —— 問題本身是真實的，回答它的是**檢視**而不是報表：**Renewal Calendar**（合約上同名的那個標籤頁）把每份合約按 **End Date** 擺在日曆上，**Contract Terms** 則把同樣的合約期畫成甘特圖（`src/views/contract.view.ts`）。兩者都在列記錄，都不做合計 —— 因為它們背後沒有可供合計的資料集。
-- **Active Contracts by Product** —— 兩頭都夠不著：既沒有合約資料集，`product_metrics` 又只是產品目錄的彙總（**Category**、產品數與目錄價合計），它從不跨到合約，也不跨到行項目。
+- **Active Contracts by Product** —— 兩頭都夠不著：既沒有合約資料集，`product_metrics` 又只是產品目錄的彙總，它從不跨到合約，也不跨到行項目。
 - **Renewal Pipeline** —— 按它寫的口徑（*與續約合約關聯的商機*）建不出來：這條關聯是反著走的（`crm_contract.crm_opportunity`），而且沒有任何維度把它暴露出來。不過續約管道本身建得出來：**Deal Type** 是 `opportunity_metrics` 上的維度，*Existing Customer - Renewal* 正是它的取值之一。
 
 ### 📣 行銷報表
