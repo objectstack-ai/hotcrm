@@ -978,8 +978,17 @@ describe('docs cite navigation names the platform actually ships (#853)', () => 
       // English and another in Chinese, ON THE SAME PAGE, and every one of them
       // is right: Studio is labelled `Studio` in all four shipped locales while
       // its groups are translated, and the Setup paths carry zh-CN leaf labels.
-      // A rule demanding that both halves of a citation come from one locale
-      // goes red on all four — a guard that punishes accurate documentation.
+      //
+      // Measured, because "a naive rule would go red on correct prose" is worth
+      // a number rather than a warning. Two naive rules, both tempting:
+      // requiring a page in Chinese to open its paths with a Chinese app word
+      // reds on 91 citations across 22 Chinese pages — every `Studio → …` on
+      // this list among them, since Studio has no Chinese spelling to switch
+      // to. Requiring the two halves of one citation to come from a single
+      // locale reds on 19, which is the 设置 set quarantined above and nothing
+      // else. So the register mixes ACROSS citations on a page, not inside one,
+      // and no rule in this file may compare the locale of one half, or of one
+      // page, against another.
       const MIXED = [
         'content/docs/administration/automation.zh-Hans.mdx',
         'content/docs/administration/setup.zh-Hans.mdx',
