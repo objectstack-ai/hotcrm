@@ -12,25 +12,42 @@ import type { Dashboard } from '@objectstack/spec/ui';
  * dashboard is what `crm_event` makes possible, and it is where the churn story
  * finally has numbers behind it.
  *
- * # No `dateRange`, deliberately
+ * # No `dateRange`, deliberately — a design choice, not a blocked one
  *
- * `crm_event.start_datetime` is a `Field.datetime()`, which is the exact column
- * shape that zeroed the Service dashboard (#460): `driver-sql` coerces a
+ * `crm_event.start_datetime` is a `Field.datetime()`, the exact column shape
+ * that once zeroed the Service dashboard (#460): `driver-sql` 16.1.0 coerced a
  * datetime filter bound to epoch-millisecond INTEGER while every datetime in
  * the database is ISO TEXT, and SQLite orders every INTEGER before every TEXT —
- * so `$gte` matches every row (no floor) and `$lte` matches none (empty
- * dashboard). Upstream #3912 lands in the 17.0 train, but #3777 — a bare
- * `YYYY-MM-DD` upper bound silently dropping everything created after
- * midnight — is a separate, still-open defect. Until both are settled and
- * browser-verified, a date picker on this dashboard would be a control that
- * lies.
+ * so `$gte` matched every row (no floor) and `$lte` matched none (empty
+ * dashboard). That is history, not a live constraint. Both named preconditions
+ * are fixed and released: objectstack#3912 (the coercion) and objectstack#3777
+ * (a bare-date `$lte` dropping same-day rows) — both under the **17.0.0**
+ * heading of the installed `driver-sql` and `service-analytics` CHANGELOGs,
+ * and this app pins 17.3.0. `service.dashboard.ts` records the same two
+ * closures, which is why #1157 restored the Service picker; the two files
+ * agree, and neither states an upstream fix as an unmet precondition.
  *
- * The time dimension is served instead by the `start_datetime` dataset
- * dimension, bucketed to `week` (@objectstack 17 honours a bucketed
- * dimension), which puts the trend on an AXIS rather than in a filter. The
- * churn tiles do window a date, but on `crm_account.last_activity_date` — a
- * `Field.date()`, TEXT `YYYY-MM-DD` on both sides of the comparison, which is
- * why the same windows already work in `customer_churn_signals`.
+ * The reason this dashboard still carries no picker is therefore a PRODUCT
+ * one, and it stands on its own: both questions a date range would answer are
+ * already answered here, by widgets a dashboard range would narrow rather than
+ * serve — the runtime ANDs `dateRange` into every widget query.
+ *
+ *   - The trend is on an AXIS, not in a filter. `activity_by_week` groups on
+ *     the `event_metrics.start_datetime` dimension, which declares
+ *     `dateGranularity: 'week'`; "is the team speeding up or going quiet?" is
+ *     read ACROSS the history, so a picker would truncate the axis that is the
+ *     whole point of the chart.
+ *   - Recency is already SELF-SCOPED. The three quiet-account tiles each carry
+ *     their own window on `crm_account.last_activity_date` — `$lt`
+ *     `{30_days_ago}` / `{60_days_ago}` / `{90_days_ago}` — and "quiet for 90
+ *     days" means ninety days, not ninety days re-cut by whatever the picker
+ *     says. On the sibling dashboards that DO have one, that is spelled
+ *     `filterBindings: { dateRange: false }`; here it would have to be spelled
+ *     on every tile that matters.
+ *
+ * ⇒ Adding a picker is a product judgement to be made on its merits, not a
+ * platform unblock to be collected. If it is ever made, the work is a
+ * `dateRange` plus explicit `filterBindings` opt-outs on the widgets above.
  *
  * No KPI tile declares a `trend`: a period-over-period delta is a measurement
  * and has to come from a real comparison query, not from a number typed by
@@ -137,7 +154,9 @@ export const ActivityDashboard: Dashboard = {
       filter: { status: 'held' },
       colorVariant: 'blue',
       // The week bucket lives on the DIMENSION, not in a filter — see the
-      // header note on why a datetime filter bound cannot be trusted yet.
+      // header note on why the trend belongs on an axis here. The datetime
+      // filter bound itself works (objectstack#3912 / #3777, 17.0.0); putting
+      // the trend in a filter would narrow it, which is a different objection.
       dataset: 'event_metrics', dimensions: ['start_datetime'], values: ['event_count'],
       layout: { x: 6, y: 2, w: 6, h: 4 },
       chartConfig: {
