@@ -133,10 +133,12 @@ HotCRM 只附帶**一個**知識物件，而不是一組知識庫。下面每一
 
 ### 14. AI Copilot
 
-- [ ] 確認 AI Copilot 已啟用（Setup → AI）
-- [ ] 選擇要啟用哪些技能
-- [ ] 執行一個範例查詢（*「給我 [測試客戶] 的 Customer 360」*）以驗證
-- [ ] 設定資料敏感性規則 —— Copilot 必須脫敏哪些欄位
+Setup 裡沒有 *AI* 分組，也沒有任何畫面能把 Copilot 打開。Setup 裡與 AI 相關的只有兩處：**Setup → Configuration → AI & Embedder**（設定供應商、模型與 Embedder），以及 **Setup → Configuration → Feature Flags** 底下那個預設關閉、平台裡沒有任何東西讀取的測試版 *AI Assistant* 開關。讓 Copilot 能作答的是一個設定好的供應商；它能跑哪些技能由應用本身決定，不屬於安裝環節。作為導覽分組的 *AI* 在 **Studio → AI**（Agents / Tools / Skills）。
+
+- [ ] 確認 **Setup → Configuration → AI & Embedder** 裡選的是一個真實供應商 —— 它預設是 *Memory (echo — testing only)*，只把你的輸入原樣回顯而不作答 —— 然後按 *Test connection*
+- [ ] 執行一個範例查詢（*「給我 [測試客戶] 的 Customer 360」*）以驗證 —— 能引用真實記錄作答，就表示供應商已生效
+- [ ] 在 **Studio → AI → Skills** 裡過一遍 Copilot 隨附的技能 —— 它們都是啟用的；有哪些技能由應用決定，而不是在這裡挑選（參見 [技能](/zh-Hant/docs/ai-copilot/skills)）
+- [ ] 不要去找 AI 脫敏規則，去看欄位層級安全：Copilot 以目前登入使用者的身分讀取，某個欄位在他的權限設定檔裡被遮罩，就永遠到不了 Copilot（參見 [共用與安全](/zh-Hant/docs/administration/sharing-and-security)）
 
 ## ✅ 第 6 天 —— 儀表板與報表
 
