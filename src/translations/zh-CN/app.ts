@@ -516,7 +516,8 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       title: '{first_name} {last_name}',
       subtitle: '{company}',
       components: {
-        lead_duplicate_alert: { label: '重复标记提醒' },
+        lead_duplicate_alert_confirmed: { label: '已确认重复提醒' },
+        lead_duplicate_alert_suspected: { label: '疑似重复提醒' },
         lead_highlights: { label: '关键信息' },
         lead_path: { label: '线索状态进度' },
         main_tabs: { label: '线索信息标签页' },

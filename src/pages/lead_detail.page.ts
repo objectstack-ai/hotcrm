@@ -90,30 +90,47 @@ export const LeadDetailPage: Page = {
             ],
           },
         },
-        // Duplicate banner (#1207, widened to every verdict by #1289).
+        // Duplicate banners — ONE PER VERDICT (#1207 · widened by #1289 ·
+        // split by #1628).
         //
         // `lead_duplicate_check` (lead.hook.ts, job 2) already writes
         // `duplicate_status: 'suspected'` and links the record the lead repeats
         // — the flag existed, and this page never read it. A rep opened a
         // flagged lead, saw a page identical to a clean one, and converted it
-        // into a second account, contact and opportunity. This banner and the
+        // into a second account, contact and opportunity. These banners and the
         // `duplicates` section on the Details tab are the record-page half of
         // that fix — the banner is the alarm, the section is the link to
         // compare against; the conversion screen carries the other half.
         //
-        // ## Why it covers `confirmed` too (#1289)
+        // ## Why there are TWO of them (#1628)
         //
-        // #1207 shipped this gated on `== "suspected"` alone, which left the
-        // STRONGER state silent: a `confirmed` duplicate is a person's verdict,
-        // and it got no banner at all. That narrowness was a ruling, not an
-        // oversight in the code, and #1289 is the ruling being corrected.
+        // #1207 shipped one banner gated on `== "suspected"`, which left the
+        // STRONGER state silent. #1289 widened the predicate to every verdict
+        // and, being one component, had to pick copy that named NEITHER state:
+        // a `record:alert` carries a single `visible` and a single title/body
+        // pair, and `pickLocalized` picks by LANGUAGE, not by row — so naming
+        // one verdict would have mislabelled every lead in the other.
         //
-        // Since #1288 the gap also changed shape. `confirmed` is now the state
-        // on which the conversion flow REFUSES outright
-        // (`lead-conversion.flow.ts`, `refuse_confirmed_duplicate`), so a
-        // silent banner meant the record page said nothing about the one fact
-        // that stops the rep's next click — they pressed Convert and met a
-        // refusal dialog with no warning on the record behind it.
+        // That was correct for one banner, and it is why one banner is not
+        // enough. Since #1288 the two verdicts have OPPOSITE next steps:
+        //
+        //   suspected — the intake hook's guess. Conversion PROCEEDS; the rep
+        //               should compare against the linked record first.
+        //   confirmed — a reviewer's verdict. Conversion is REFUSED outright
+        //               (`lead-conversion.flow.ts`, `refuse_confirmed_duplicate`).
+        //
+        // One sentence cannot state either without being false for the other,
+        // so it stated neither, and the rep had to scroll to the Duplicate
+        // Status chip to learn which situation they were in. A banner that
+        // announces something is wrong but not what to do is not doing the one
+        // job a banner has. Two components, two predicates, two next steps.
+        //
+        // ⚠️ Two sibling `record:alert` nodes really do BOTH render: a region
+        // renders as `components.map((node, i) => <SchemaRenderer key={node?.id
+        // || fallback} …>)` — read out of the shipped console bundle at the
+        // `.objectui-sha` pin — so each is mounted separately and evaluates its
+        // own `visible` against the same row. Their `id`s are their React keys,
+        // which is why the two ids differ rather than sharing one.
         //
         // ⚠️ `visible` is the ONE record component whose PROPS carry a real row
         // predicate: `record-alert.tsx` evaluates `properties.visible` through
@@ -126,22 +143,34 @@ export const LeadDetailPage: Page = {
         // ⚠️ `has()` is load-bearing, and this surface is the WORST of the four
         // this repo measures (cf. `test/view-predicate-dialect.test.ts`): the
         // renderer's call site is FAIL-SOFT — an unevaluable predicate answers
-        // SHOWN. So a bare `record.duplicate_status != null` would abort with
-        // `No such key` on every clean lead whose driver omits the column
+        // SHOWN. So a bare `record.duplicate_status == "suspected"` would abort
+        // with `No such key` on every clean lead whose driver omits the column
         // (`driver-memory` / `driver-mongodb`; `driver-sql` returns it as null)
         // and put a duplicate warning on leads that are not duplicates. The
         // guard is what makes the predicate answer `false` instead of faulting.
         // Pinned on the real engine in `test/lead-duplicate-visibility.test.ts`.
         //
-        // ⛔ And the guard is NOT the whole predicate. "Any verdict the record
-        // actually carries" reads like a job for `has()` alone, and `has()`
-        // alone is wrong here: it is TRUE for a key that is PRESENT AND NULL,
-        // which is precisely what `driver-sql` hands back for a clean lead.
-        // Measured on this engine — `has(record.duplicate_status)` against
-        // `{ duplicate_status: null }` answers `{ ok: true, value: true }` — so
-        // dropping the comparison would reach the same cry-wolf banner as
-        // dropping the guard, just by the other road. `!= null` is what makes
-        // "set" mean set; both halves are pinned, shape by shape.
+        // ⛔ And the guard is NOT the whole predicate — `has()` ALONE is wrong
+        // here, in either shape. It is TRUE for a key that is PRESENT AND NULL,
+        // which is precisely what `driver-sql` hands back for a clean lead
+        // (measured: `has(record.duplicate_status)` against
+        // `{ duplicate_status: null }` answers `{ ok: true, value: true }`), so
+        // the guard needs a comparison beside it or the banner cries wolf on
+        // every clean lead. #1289, covering both verdicts at once, spelled that
+        // comparison `&& … != null`. A per-verdict banner spells it with the
+        // EQUALITY, which is strictly narrower and subsumes it: measured on
+        // this engine, `null == "suspected"` is a clean `false`, not a fault,
+        // and the two spellings agree on every record shape a driver can
+        // produce. Both halves of the shape #1289 ruled for are intact — the
+        // `has()` guard verbatim, and a comparison that makes "set" mean set —
+        // and the comparison got STRICTER, which is the point of the split. The
+        // same spelling already ships one file over, on this same field: the
+        // conversion flow's `e21` / `e25` edges (#1288) read
+        // `has(vars.leadRecord.duplicate_status) && … == "suspected"`.
+        //
+        // ⛔ Neither half may be simplified away. Both are pinned, shape by
+        // shape, including the reverse pin that the unguarded tail really does
+        // fault.
         //
         // `P` — an explicit `{ dialect: 'cel' }` envelope — is not decoration
         // either: `ExpressionEvaluator.evaluateCondition` routes ONLY the
@@ -158,57 +187,103 @@ export const LeadDetailPage: Page = {
         // emptyText/submitLabel, so a plain-string `body` would ship English to
         // all four locales. Keeping both halves of one banner's copy in one
         // place beats splitting `title` into the locale packs.
+        //
+        // ⭐ Each banner's copy NAMES ITS OWN VERDICT, in the vocabulary the
+        // `duplicate_status` chip below publishes, and never the other one —
+        // pinned against the option labels read out of the locale packs in
+        // `test/lead-duplicate-visibility.test.ts`, so renaming an option
+        // re-aims the assertion rather than retiring it.
         {
           type: 'record:alert',
-          id: 'lead_duplicate_alert',
-          label: 'Duplicate Flagged',
+          id: 'lead_duplicate_alert_suspected',
+          label: 'Suspected Duplicate Alert',
           properties: {
+            // `warning`, not `error`: conversion still PROCEEDS on this
+            // verdict, and the renderer maps `error` to `role="alert"` /
+            // `aria-live="assertive"` — an interruption this state has not
+            // earned.
             severity: 'warning',
-            visible: P`has(record.duplicate_status) && record.duplicate_status != null`,
+            visible: P`has(record.duplicate_status) && record.duplicate_status == "suspected"`,
             title: {
-              // ⛔ The words are deliberately NOT the locale packs'
-              // `duplicate_status` option labels any more (#1289). One banner
-              // now covers two states with one title, and `pickLocalized`
-              // picks by LANGUAGE, not by row — so naming either verdict here
-              // would label the other one wrongly, and calling a reviewer's
-              // finished verdict a machine's suspicion is the one sentence
-              // this banner must not say. It names the FACT both states share
-              // and sends the rep to the chip below for the verdict itself.
-              // Pinned against the option labels in
-              // `test/lead-duplicate-visibility.test.ts`.
-              en: 'Marked as a duplicate',
-              'zh-CN': '已标记为重复',
-              'ja-JP': '重複としてマークされています',
-              'es-ES': 'Marcado como duplicado',
+              en: 'Suspected duplicate — compare before you convert',
+              'zh-CN': '疑似重复——转换前请先比对',
+              'ja-JP': '重複の疑い — 変換する前に照合してください',
+              'es-ES': 'Duplicado Sospechoso: compare antes de convertir',
             },
             body: {
-              // Same discipline as `title`: says WHAT is true of both states
-              // and points at the field that distinguishes them, rather than
-              // asserting one. "Intake flagged this lead", the #1207 wording,
-              // is a claim only `suspected` supports — `confirmed` is written
-              // by a person, not by the hook.
               en:
-                'This lead is marked as repeating a record this app already has. '
-                + 'Duplicate Status below says whether that is an automatic match from '
-                + 'intake or a reviewer\'s verdict, and Duplicate Management links the '
-                + 'record it repeats — compare them before you convert, because converting '
-                + 'creates a second account, contact and opportunity for the same buyer.',
+                'Intake matched this lead to a record this app already has. Duplicate '
+                + 'Management below links that record — open it and compare. You can still '
+                + 'convert this lead: this is the match intake guessed at, not a reviewer\'s '
+                + 'decision. But if it is the same buyer, disqualify it instead, because '
+                + 'converting creates a second account, contact and opportunity for them.',
               'zh-CN':
-                '该线索已被标记为与系统中已有记录重复。下方的「重复状态」会说明这是录入时的'
-                + '自动匹配还是审核人的判定，「重复线索管理」中是它重复的那条记录'
-                + '——转换前请先比对，转换会为同一客户再创建一套客户、联系人和商机。',
+                '录入时发现该线索与系统中已有记录匹配。下方「重复线索管理」中是它重复的那条记录，'
+                + '请先打开比对。该线索仍然可以转换：这是录入时的自动判断，不是审核人的结论。'
+                + '但若确属同一客户，请改为取消资格——转换会为同一客户再创建一套客户、联系人和商机。',
               'ja-JP':
-                'このリードは既存レコードと重複するものとしてマークされています。'
-                + '下の「重複ステータス」が登録時の自動照合か担当者の判定かを示し、'
-                + '「重複管理」に重複先のレコードがあります。変換すると同じ相手に'
-                + '取引先・取引先責任者・商談がもう一組作成されるため、変換する前に比較してください。',
+                '登録時に、このリードが既存レコードと一致しました。下の「重複管理」に重複先の'
+                + 'レコードがあります。まず開いて照合してください。このリードはまだ変換できます。'
+                + 'これは登録時の自動判定であり、担当者の結論ではありません。ただし同じ相手で'
+                + 'あれば、変換せず不適格にしてください。変換すると同じ相手に取引先・取引先'
+                + '責任者・商談がもう一組作成されます。',
               'es-ES':
-                'Este prospecto está marcado como duplicado de un registro que ya existe. '
-                + 'El campo Estado del Duplicado indica si se trata de una coincidencia '
-                + 'automática de la captura o del veredicto de una persona, y Gestión de '
-                + 'Duplicados enlaza el registro que repite: compárelos antes de convertirlo, '
-                + 'porque la conversión crea una segunda cuenta, contacto y oportunidad para '
-                + 'el mismo comprador.',
+                'La captura encontró que este prospecto coincide con un registro que ya '
+                + 'existe. Gestión de Duplicados, más abajo, enlaza ese registro: ábralo y '
+                + 'compárelo. Todavía puede convertir este prospecto, porque se trata de una '
+                + 'coincidencia automática de la captura y no del veredicto de una persona. '
+                + 'Pero si es el mismo comprador, descalifíquelo en su lugar: convertirlo '
+                + 'crea una segunda cuenta, contacto y oportunidad para él.',
+            },
+          },
+        },
+        {
+          type: 'record:alert',
+          id: 'lead_duplicate_alert_confirmed',
+          label: 'Confirmed Duplicate Alert',
+          properties: {
+            // `error`, and the level is the message: this is the state on which
+            // the app REFUSES the rep's next click, and the renderer gives
+            // `error` `role="alert"` / `aria-live="assertive"` rather than the
+            // polite `role="status"` every other level gets. ⛔ The severity is
+            // presentation only — what the app refuses was ruled by #1288 and
+            // shipped by PR #1555, and nothing here changes it.
+            severity: 'error',
+            visible: P`has(record.duplicate_status) && record.duplicate_status == "confirmed"`,
+            title: {
+              en: 'Confirmed duplicate — conversion will be refused',
+              'zh-CN': '已确认重复——转换将被拒绝',
+              'ja-JP': '重複確定 — 変換は拒否されます',
+              'es-ES': 'Duplicado Confirmado: la conversión será rechazada',
+            },
+            body: {
+              // ⭐ The only place a rep learns the Convert button will refuse
+              // them BEFORE they press it — until this banner, the refusal
+              // dialog was the first they heard of it.
+              en:
+                'A reviewer checked this lead and recorded that it repeats a record this app '
+                + 'already has, so Convert Lead refuses it — this banner is the only warning '
+                + 'you get before you press the button. Disqualify this lead instead, naming '
+                + 'the surviving record from Duplicate Management below. If the verdict is '
+                + 'wrong, a reviewer revises Duplicate Status; there is no override here.',
+              'zh-CN':
+                '审核人已核实该线索与系统中已有记录重复，因此「转换线索」会拒绝执行——'
+                + '本提示是你按下按钮前唯一的预警。请改为取消该线索的资格，并在下方'
+                + '「重复线索管理」中注明保留的那条记录。若判定有误，应由审核人修改'
+                + '「重复状态」，此处不提供强制转换的入口。',
+              'ja-JP':
+                '担当者が確認し、このリードは既存レコードの重複であると記録されました。'
+                + 'そのため「リード変換」は拒否されます。この通知が、ボタンを押す前に得られる'
+                + '唯一の警告です。このリードは不適格にしたうえで、下の「重複管理」で残す'
+                + 'レコードを明記してください。判定が誤っている場合は担当者が「重複ステータス」'
+                + 'を修正します。ここに強制変換の手段はありません。',
+              'es-ES':
+                'Una persona verificó que este prospecto repite un registro que ya existe, '
+                + 'por lo que Convertir Prospecto lo rechazará: este aviso es la única '
+                + 'advertencia antes de pulsar el botón. Descalifique el prospecto e indique '
+                + 'el registro que sobrevive desde Gestión de Duplicados, más abajo. Si el '
+                + 'veredicto es incorrecto, una persona debe cambiar el Estado del Duplicado; '
+                + 'aquí no hay forma de forzar la conversión.',
             },
           },
         },
