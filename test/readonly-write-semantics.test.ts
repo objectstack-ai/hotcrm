@@ -12,7 +12,8 @@ type AnyRec = Record<string, any>;
 type Flow = Automation.Flow;
 
 /**
- * WHAT `readonly: true` ACTUALLY STRIPS ON THE PINNED 17.2.0 (#1429, #1460).
+ * WHAT `readonly: true` ACTUALLY STRIPS ON THE PINNED 17.3.0 (#1429, #1460,
+ * #1676).
  *
  * `case.object.ts` carried a blanket claim — "the platform drops writes to
  * readonly fields" — that had grown load-bearing: it was the stated reason for
@@ -64,12 +65,15 @@ type Flow = Automation.Flow;
  * depends on, or perturbs, the shipped `crm_case` declaration.
  *
  * First measured on `@objectstack/* 17.1.0`. RE-MEASURED 2026-09-03 against
- * the PINNED `@objectstack/* 17.2.0` in `package.json` (#1460) — every case
- * below reports the same verdict it did then, and the two engine internals
- * quoted above still read as quoted: the strip is still guarded by
+ * `@objectstack/* 17.2.0` (#1460), and RE-MEASURED AGAIN against the PINNED
+ * `@objectstack/* 17.3.0` in `package.json` (#1676, after the PR #1577 bump)
+ * — every case below reports the same verdict it did at both earlier takings,
+ * and the two engine internals quoted above still read as quoted on the
+ * current pin: the strip is still guarded by
  * `if (!opCtx.context?.isSystem)` in `@objectstack/objectql/dist/core.js`,
- * and `resolveRunDataContext` still returns `isSystem: true` for
- * `runAs: 'system'` and only for it.
+ * and `resolveRunDataContext` in
+ * `@objectstack/service-automation/dist/index.js` still returns
+ * `isSystem: true` for `runAs: 'system'` and only for it.
  *
  * ⚠️ The parenthetical this replaces ("dependabot PRs #1388-#1393 propose
  * 17.2.0; this is not that") was false in a second way by the time it was

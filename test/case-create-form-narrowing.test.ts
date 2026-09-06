@@ -259,8 +259,9 @@ describe('crm_case create form — retention direction', () => {
    *
    * The reason is NOT the blanket this comment used to carry ("the platform
    * DROPS writes to readonly fields"). Measured in
-   * `test/readonly-write-semantics.test.ts` on 17.1.0 and re-measured there on
-   * the current pin 17.2.0 (#1460), same result: the strip is one branch of the
+   * `test/readonly-write-semantics.test.ts` on 17.1.0, re-measured there on
+   * 17.2.0 (#1460) and re-measured again on the current pin 17.3.0 (#1676),
+   * same result every time: the strip is one branch of the
    * UPDATE path, `if (!opCtx.context?.isSystem)`, over CALLER-supplied keys —
    * so a `beforeUpdate` hook's own stamp survives it, an insert is exempt from
    * it entirely, and a FLOW write survives it exactly when the flow's

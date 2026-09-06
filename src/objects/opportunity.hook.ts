@@ -106,8 +106,8 @@ const opportunityValidationHook: Hook = {
           // erasure that cannot be carried out).
           //
           // Measured on 17.1.0 — the version this repo pinned AT THE TIME of
-          // the measurement, not the current pin (#1416: this repo has pinned
-          // 17.2.0 since PR #1442, and the cascade shape below has NOT been
+          // the measurement, not the current pin (#1676: this repo has pinned
+          // 17.3.0 since PR #1577, and the cascade shape below has NOT been
           // re-measured on it) — with a probe hook at priority 199 immediately
           // ahead of each guard, not assumed.
           // The engine builds its cleanup write on the CALLER's own context

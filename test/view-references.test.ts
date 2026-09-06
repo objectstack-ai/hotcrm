@@ -130,8 +130,9 @@ describe('filter template tokens are resolvable', () => {
    *   `test/forecast-current-quarter-view.test.ts` runs a shipped view filter
    *   through a real engine and pins one quarter selected out of three, plus
    *   the throw on the retired `{this_quarter_start}` spelling. First taken on
-   *   17.0.0-rc.2 and RE-RUN 2026-09-03 on the pinned 17.2.0 (#1467: the
-   *   current pin since PR #1442), green both times.
+   *   17.0.0-rc.2, RE-RUN 2026-09-03 on 17.2.0 (#1467) and RE-RUN on the
+   *   current pin 17.3.0 (#1676: the pin since PR #1577), green all three
+   *   times.
    *
    *   What DID move between those two pins is WHICH spellings throw. The
    *   wrapped-token grammar widened at 17.0.0-rc.6 from

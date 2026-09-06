@@ -440,11 +440,19 @@ describe('every locale is complete on every authored surface', () => {
    * merged as objectstack#13111, with the extractor's matching walk following in
    * objectstack#13109 / #13215.
    *
-   * Neither is in a published release yet: `translatePage` in the shipped
-   * 17.2.0 tarball still maps `region.components` only, and this repo pins
-   * 17.1.0. So the KPI labels are NOT authorable here today, and writing them
-   * would be inert copy. When the pin moves (hotcrm#1376 owns that chain), the
-   * walk below should widen to `properties.children` to match `translatePage` —
+   * That reading was taken while this repo pinned 17.1.0 and the newest
+   * published tarball was 17.2.0: `translatePage` there mapped
+   * `region.components` only, so the KPI labels were NOT authorable and
+   * writing them would have been inert copy.
+   *
+   * ⚠️ The pin has since moved TWICE and this paragraph has NOT been re-taken
+   * on it — the repo pins 17.3.0 (PR #1577; #1676 re-scoped this label without
+   * re-measuring). ⛔ Do not read "not authorable" as a current fact: whether
+   * `translatePage` widened to `properties.children` on 17.3.0 is unmeasured
+   * here, and the assertions below are unaffected either way. When that is
+   * measured and the walk is confirmed to have widened (hotcrm#1376 owns that
+   * chain), the walk below should widen to `properties.children` to match
+   * `translatePage` —
    * and to `properties.children` ONLY. `slots.*` and a `page:tabs` item's
    * `children` are deliberately outside the resolver's scope, so widening to
    * them would recreate the other half of the drift pair: offering keys the

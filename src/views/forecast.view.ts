@@ -55,9 +55,10 @@ export const ForecastViews = defineView({
       // saved-view filters included. Measured rather than inferred;
       // `test/forecast-current-quarter-view.test.ts` runs THIS filter through a
       // real engine and pins the three-way outcome (one quarter selected, not
-      // zero and not all of them). First taken on 17.0.0-rc.2 and RE-RUN
-      // 2026-09-03 on the pinned 17.2.0 (#1467: the current pin since PR
-      // #1442), green both times — so this is a reading on the CURRENT pin.
+      // zero and not all of them). First taken on 17.0.0-rc.2, RE-RUN
+      // 2026-09-03 on 17.2.0 (#1467) and RE-RUN again on the current pin
+      // 17.3.0 (#1676, after the PR #1577 bump), green all three times — so
+      // this is a reading on the CURRENT pin.
       //
       // Both halves of the key are load-bearing, same as the quota-attainment
       // widget in `src/dashboards/sales.dashboard.ts`: `period: 'quarter'`
