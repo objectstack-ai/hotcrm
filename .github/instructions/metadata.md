@@ -11,7 +11,7 @@ You must adhere to the `ServiceObject` interface:
 import { ObjectSchema } from '@objectstack/spec';
 
 export default {
-  name: 'contract',          // snake_case, Singular. DB Table Name.
+  name: 'crm_contract',      // snake_case, Singular, crm_ prefixed. DB Table Name.
   label: 'Contract',         // Human readable label.
   pluralLabel: 'Contracts',
   description: 'Manages customer binding agreements',
@@ -34,6 +34,10 @@ export default {
 
 ### Constraint Checklist
 - **Name**: Must be `snake_case` (e.g., `project_task`, not `ProjectTask`).
+- **Prefix**: Every HotCRM business object name MUST carry the `crm_` prefix, written out
+  (`crm_contract`, `crm_project_task`). The runtime injects nothing: the name in source is the
+  name at runtime, in the DB and in the REST URL. The FILE stays unprefixed
+  (`src/objects/contract.object.ts` declares `name: 'crm_contract'`).
 - **Label**: User-friendly Title Case.
 
 ## 2. Field Definitions
@@ -75,7 +79,7 @@ status: {
 account: {
   type: 'lookup',
   label: 'Account',
-  reference_to: 'account', // Points to account.object.ts
+  reference_to: 'crm_account', // The prefixed object name, declared in account.object.ts
   required: true
 },
 
