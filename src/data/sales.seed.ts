@@ -124,7 +124,7 @@ import { lineItemRecords } from './catalog.seed';
 // population it exists for is an account being worked right now and still
 // flagged. The seed book has to contain one, or the demo renders a panel that
 // merely restates the 60-day window stacked below it (#1414). Hence a
-// deliberate two-way split, the same shape as the territory and activity
+// deliberate three-way split, the same shape as the territory and activity
 // partitions above:
 //
 //   Initech  `at_risk`  + 72 days quiet — flagged AND derived. It lands in
@@ -135,10 +135,24 @@ import { lineItemRecords } from './catalog.seed';
 //            so the clock alone keeps it out of BOTH windowed panels: the
 //            account no derived signal can see. It is what makes the set
 //            difference FLAGGED \ QUIET60 non-empty.
+//   Stark    `at_risk`  + clock at today(), and NOT a customer — the row the
+//            panel's `rows: ['type']` grouping exists for (#1647). While every
+//            flagged account was a `customer` the grouping rendered a single
+//            row and could demonstrate nothing; the grid view
+//            `crm_account.at_risk_accounts` filters `type == 'customer'`
+//            before anything else, so a flagged PARTNER is a row the report
+//            block can show and that grid cannot.
 //
 // The other customers stay `healthy` on purpose. A severity every record
 // carries demonstrates nothing, and `churning` is the most severe option in
 // the model — one record is what makes it real rather than declared.
+//
+// The three PROSPECTS carry no `health_score` at all, and that blank is a
+// stated choice rather than an oversight: the column is what a CSM asserts
+// about a RELATIONSHIP, and nobody has been in the room with an account that
+// was never won. The criterion `$in [at_risk, churning]` does not match an
+// absent value, so a blank row is outside the panel either way — it says
+// "nobody has assessed this", which is exactly true of a prospect.
 export const accounts = defineSeed(Account, {
   mode: 'upsert',
   externalId: 'name',
@@ -177,13 +191,16 @@ three regional teams (NA, EMEA, APAC).
 - 1 open enterprise opportunity ($150K platform upgrade) in proposal
   stage, 1 service ticket open (login issues), 1 billing dispute
   awaiting customer response.
-- Renewal due in 45 days — they've already verbally committed but
-  want a workshop on AI agent governance before signing.
+- That upgrade closes in 30 days — AI agent governance became a
+  hard requirement after their internal compliance review, so the
+  workshop now on the calendar is the gate on signature.
 
 **Red flags**
-- Slipped one opportunity ($75K add-on) in the last quarter due
-  to slow procurement cycle on their side.
-- Login issues ticket is approaching its SLA — needs eyes today.`,
+- Lost the $75K Marketing Cloud add-on on timing — their marketing
+  org is locked into a 2-year HubSpot contract, and the buying
+  window opens when that contract renews.
+- Login issues ticket is already past its SLA clock — needs eyes
+  today.`,
     },
     {
       name: 'Globex Industries',
@@ -231,6 +248,21 @@ three regional teams (NA, EMEA, APAC).
       website: 'https://starkmed.example.com',
       tier: 'mid_market',
       segment: 'stable',
+      // `at_risk` rather than `churning`, and the distinction is the reason
+      // this row can exist at all: a partner whose pilot was WON and whose
+      // expansion then died on a capital freeze can be at risk, but it was
+      // never a subscription that could churn. The records say it — `Stark
+      // Expansion (Lost)` closed `no_budget` 60 days ago and the partnership
+      // contract is still in legal review — and the panel's criterion admits
+      // both values, so the honest severity is also the one that flags.
+      //
+      // Diverging from `segment: 'stable'` is deliberate, the same split
+      // Wayne demonstrates below: `segment` is how the book classifies the
+      // account, `health_score` is what a person asserts about it. The clock
+      // stays at today(), so like Wayne this row is outside every windowed
+      // panel on that report: it reaches `csm_flagged_accounts` and no other
+      // block.
+      health_score: 'at_risk',
       // The completed 'Send welcome package' task bubbles here on every seed
       // load, so this has ALWAYS resolved to today — the previous `daysAgo(5)`
       // was authored and then overwritten before anyone could read it.
