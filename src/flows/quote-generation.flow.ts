@@ -2,6 +2,7 @@
 
 import { P } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
+import { QUOTE_DISCOUNT_CEILING } from '../objects/_thresholds';
 type Flow = Automation.Flow;
 
 /** Quote Generation — screen flow to create a quote from an opportunity */
@@ -30,7 +31,34 @@ export const QuoteGenerationFlow: Flow = {
         fields: [
           { name: 'quoteName', label: 'Quote Name', type: 'text', required: true },
           { name: 'expirationDays', label: 'Valid For (Days)', type: 'number', required: true, defaultValue: 30 },
-          { name: 'discount', label: 'Discount %', type: 'percent', defaultValue: 0 },
+          // The ceiling is a HARD block with no override
+          // (`crm_quote.discount_within_ceiling`), so until it is written here
+          // a rep meets the number only by having the quote refused. Both
+          // strings below interpolate `QUOTE_DISCOUNT_CEILING` — imported,
+          // never retyped, the same rule the two object rules follow — so the
+          // hint cannot drift from the rule it describes.
+          //
+          // ⛔ There is deliberately NO `max`, and adding one does not work:
+          // `ScreenFieldConfigSchema` is STRICT at 17.3.0 and its entire key
+          // set is `name` / `label` / `type` / `required` / `options` /
+          // `defaultValue` / `placeholder` / `visibleWhen`. `max` is rejected
+          // BY NAME (`Unrecognized key(s) on this screen field: max`), so
+          // it fails `pnpm validate` rather than quietly doing nothing, and
+          // the executor forwards no such key into the `ScreenSpec` the client
+          // renders. `helpText` is rejected the same way — the console's
+          // dialog would render one, but no flow screen can carry it there.
+          //
+          // That leaves two carriers, and the label is the load-bearing one:
+          // `placeholder` renders only while the input is empty and
+          // `defaultValue: 0` seeds it, so it surfaces for the moment the rep
+          // clears the box to type — real, but not enough on its own.
+          {
+            name: 'discount',
+            label: `Discount % (≤ ${QUOTE_DISCOUNT_CEILING})`,
+            type: 'percent',
+            defaultValue: 0,
+            placeholder: `0-${QUOTE_DISCOUNT_CEILING}`,
+          },
         ],
       },
     },
@@ -47,9 +75,37 @@ export const QuoteGenerationFlow: Flow = {
           crm_account: '{oppRecord.crm_account}', crm_contact: '{oppRecord.primary_contact}',
           owner_id: '{$User.Id}', status: 'draft',
           quote_date: '{TODAY()}', expiration_date: '{TODAY() + expirationDays}',
+          // `subtotal` is a bare path pass-through and needs no rounding:
+          // `crm_opportunity.amount` is itself `Field.currency({ scale: 2 })`,
+          // so it cannot arrive here unrounded.
           subtotal: '{oppRecord.amount}', discount: '{discount}',
-          discount_amount: '{oppRecord.amount * (discount / 100)}',
-          total_price: '{oppRecord.amount * (1 - discount / 100)}',
+          // ⛔ A currency × percentage MUST be rounded to the field's declared
+          // scale inside the expression — the quote's own money fields are the
+          // contract, and the flow meets it rather than handing the engine an
+          // unrounded double. `discount_amount` / `total_price` are both
+          // `Field.currency({ scale: 2 })`, while `discount / 100` is inexact
+          // for every percentage whose hundredth is not a dyadic rational, so a
+          // BARE product carries a tail the field refuses: 180,000 at 30% is
+          // 125999.99999999999 and the insert is rejected with `Total Price must
+          // have at most 2 decimal places (got 11)`. That made quote generation
+          // depend on an arithmetic accident of amount × discount — 20% of 180K
+          // worked, 30% of the same 180K did not, and the 400 never reached the
+          // seller (#1206).
+          //
+          // `round()` is the CEL stdlib's, mirrored 1:1 into flow value
+          // expressions from service-automation 17.3.0. It is INTEGER-ONLY and
+          // single-argument, so N-decimal rounding is spelled `round(x * 100) /
+          // 100` — the platform's own arity diagnostic names this exact pattern.
+          // ⛔ Not `round(x, 2)`: there is no precision form, and it now fails
+          // loudly. ⛔ Never an operator trick like `(x * 100 + 0.5 | 0) / 100`
+          // either — `|0` is an int32 coercion that SILENTLY overflows above
+          // ~21.5M, which on a money field is worse than the defect it dodges;
+          // `round()` refuses loudly past `Number.MAX_SAFE_INTEGER` instead.
+          //
+          // ⭐ This shape applies ANYWHERE a flow multiplies a currency by a
+          // percentage. Write the rounding, not the bare product.
+          discount_amount: '{round(oppRecord.amount * (discount / 100) * 100) / 100}',
+          total_price: '{round(oppRecord.amount * (1 - discount / 100) * 100) / 100}',
           payment_terms: 'net_30',
         },
         outputVariable: 'quoteId',

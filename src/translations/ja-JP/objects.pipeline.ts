@@ -155,7 +155,6 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       company_information: { label: '会社情報' },
       additional_information: { label: '追加情報' },
       privacy: { label: 'プライバシー' },
-      lead_details: { label: 'リード詳細' },
       general: { label: '一般' },
       details: { label: '詳細' },
       step_1_contact_details: { label: 'ステップ1：連絡先情報' },
@@ -177,7 +176,6 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       ...activityActions,
       convert_lead: {
         label: 'リード変換',
-        confirmText: 'このリードを変換してもよろしいですか？',
         successMessage: 'リードの変換に成功しました！',
       },
       create_campaign: {

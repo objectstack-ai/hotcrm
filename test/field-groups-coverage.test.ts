@@ -185,7 +185,10 @@ describe('fieldGroups are internally consistent', () => {
         if (members.every((m) => hiddenFromBody.has(m))) {
           bad.push(
             `${obj.name}: group "${key}" (${members.join(', ')}) is entirely title-or-strip — ` +
-              'it renders on forms and never on detail pages',
+              'it renders on forms and nowhere on a SYNTHESIZED detail page. An object that ' +
+              'AUTHORS its own `record:details` is outside the reach of this check: measured ' +
+              'in a browser on @objectstack/console 17.3.0, such a page drops the fields ITS ' +
+              'OWN `record:highlights` lists, not the `highlightFields` read here',
           );
         }
       }

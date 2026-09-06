@@ -56,7 +56,7 @@ One dataset stands behind every case-related dashboard tile and all three case r
 - **Agent, and team** — the dataset declares **no owner dimension**, so nothing in analytics can group, rank or filter cases by agent. `owner_id` is a field on the case; no dimension exposes it. This is why the service pages carry no agent leaderboard, and why *"reopened cases by agent"* is doubly impossible — nothing records a reopen either.
 - **Account, and account tier** — it reads `crm_case` alone and never crosses to `crm_account`.
 - **Product** — cases carry no product link that analytics can read, so *"cases by category by product"* has no path. The nearest real cut to a category is the case **Type** (*Question / Problem / Feature Request / Bug*).
-- **CSAT score** — **Customer Satisfaction** (`customer_rating`) is a real 1–5 field on the case, and no measure aggregates it.
+- **CSAT score** — there is no satisfaction data to aggregate. The case object used to declare a **Customer Satisfaction** rating, but nothing in the product ever collected it — no screen offered it and no automation wrote it — so it was retired rather than left standing as a column a report could point at.
 - **Open / new / resolved counts as numbers of their own** — the pre-filtered counts this dataset declares are on the closed side only. Status is a dimension, so a count *split by* status gives the same breakdown.
 - **Period at any grain but day** — the created-date dimension buckets by day.
 

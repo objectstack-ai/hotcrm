@@ -59,9 +59,24 @@ async function runConversion(
   leadId: string,
   screen: Rec = { createOpportunity: true, opportunityName: 'Deal', opportunityAmount: 100000 },
 ) {
-  const runId = await h.run('lead_conversion', { recordId: leadId });
-  // Screen flow pauses at screen_1; resume with the collected inputs.
-  return h.resume(runId!, screen);
+  const started: Rec = (await h.engine.execute('lead_conversion', {
+    params: { recordId: leadId }, userId: 'user_1', event: 'manual',
+  } as never)) as Rec;
+  const runId: string = started.runId ?? started.run?.id;
+  // Screen flow pauses at screen_1; resume with the collected inputs — ON TOP
+  // OF WHAT THE SCREEN PREFILLED. The runner seeds its value state from every
+  // field carrying a `defaultValue`, visible or not, and submits that bag
+  // whole, so a payload holding only the answers a user types is not the one
+  // the console sends. `closeDate` (#1708) arrives that way: prefilled to the
+  // conversion's default close date and `required`, so omitting it here would
+  // be refused by the screen's own contract — correctly, since the flow no
+  // longer has a date of its own to fall back on. Read off the descriptor
+  // rather than restated, because the default is authored in exactly one place.
+  const prefilled: Rec = {};
+  for (const f of ((started.screen ?? started.output?.screen)?.fields ?? []) as Rec[]) {
+    if (f.defaultValue !== undefined) prefilled[f.name] = f.defaultValue;
+  }
+  return h.resume(runId, { ...prefilled, ...screen });
 }
 
 describe('lead_conversion flow — runtime', () => {

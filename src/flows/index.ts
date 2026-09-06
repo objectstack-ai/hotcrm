@@ -22,7 +22,6 @@ export { CaseSlaMonitorFlow } from './case-sla-monitor.flow';
 export { OpportunityStagnationFlow } from './opportunity-stagnation.flow';
 export { ForecastSnapshotFlow } from './forecast-snapshot.flow';
 export { LeadAssignmentFlow } from './lead-assignment.flow';
-export { CaseCsatFollowupFlow } from './case-csat-followup.flow';
 // Migrated from object workflows[] (removed in 7.7): scheduled status-flips + notifications
 export { CampaignCompletionFlow } from './campaign-completion.flow';
 export { QuoteExpirationFlow } from './quote-expiration.flow';
@@ -51,7 +50,6 @@ import { CaseSlaMonitorFlow } from './case-sla-monitor.flow';
 import { OpportunityStagnationFlow } from './opportunity-stagnation.flow';
 import { ForecastSnapshotFlow } from './forecast-snapshot.flow';
 import { LeadAssignmentFlow } from './lead-assignment.flow';
-import { CaseCsatFollowupFlow } from './case-csat-followup.flow';
 import { CampaignCompletionFlow } from './campaign-completion.flow';
 import { QuoteExpirationFlow } from './quote-expiration.flow';
 import { ContractExpirationFlow } from './contract-expiration.flow';
@@ -89,7 +87,6 @@ export const allFlows: Flow[] = [
   OpportunityStagnationFlow,
   ForecastSnapshotFlow,
   LeadAssignmentFlow,
-  CaseCsatFollowupFlow,
   // Migrated from object workflows[] (removed in 7.7)
   CampaignCompletionFlow,
   QuoteExpirationFlow,

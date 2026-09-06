@@ -353,18 +353,6 @@ export const Case = ObjectSchema.create({
     }),
 
 
-    // Customer satisfaction
-    customer_rating: Field.rating(5, {
-      label: 'Customer Satisfaction',
-      group: 'resolution',
-      description: 'Customer satisfaction rating (1-5 stars)',
-    }),
-    
-    customer_feedback: Field.textarea({
-      label: 'Customer Feedback',
-      group: 'resolution',
-    }),
-    
     // Internal notes
     internal_notes: Field.markdown({
       label: 'Internal Notes',

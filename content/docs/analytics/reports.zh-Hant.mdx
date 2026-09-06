@@ -69,7 +69,7 @@ HotCRM 開箱即用地發布 **十份** 報表 —— `src/reports/index.ts` 這
 - **Case Resolution Time** *按類別和客服* —— 度量本身是真的，上面兩份彙總報表都帶著它；但 **客服** 這一維根本搆不著：`owner_id` 是工單上的欄位，沒有任何維度把它暴露出來。最接近「類別」的是 **Type**（*Question / Problem / Feature Request / Bug*）。
 - **Top Accounts by Case Volume** 同樣建不出來 —— 沒有客戶維度，這個資料集也從不跨到 `crm_account`。
 - **Reopened Cases** 數的是沒有任何東西在記的事。工單確實會重開 —— 狀態機允許 *Resolved* 與 *Closed* 回到 *In Progress* —— 但沒有任何欄位標記一張工單曾被重開，也沒有任何度量在數它。
-- **CSAT by Agent** 兩頭都不成立：**Customer Satisfaction**（`customer_rating`）是工單上真實的 1–5 星欄位，但 `case_metrics` 沒有為它宣告任何度量，也沒有「客服」這一維可分組。
+- **CSAT by Agent** 兩頭都不成立：根本沒有滿意度資料 —— 工單物件上的**客戶滿意度**評分因為產品裡從來沒有任何環節採集它而被退役 —— 也沒有「客服」這一維可分組。
 
 **SLA Performance Report 裡同樣沒有任何首次回應數字**，而且它那個 SLA 數字是 **SLA Violated** 標誌的平均值，也就是違約 *率*，不是準時率。（準時率本身是有宣告的：**SLA Compliance Rate**，服務儀表板的 SLA 儀表圖畫的就是它。只是這份報表沒有帶上它。）本應用根本不度量首次回應：**First Response Date** 只在工單上第一次記錄 *已經發生過* 的通話或會議時被蓋上，此後從不與任何目標比較；`case_metrics` 沒有宣告任何首次回應度量，所以沒有報表、也沒有儀表板磁貼能報出一個來。參見 [SLA 與升級](/zh-Hant/docs/service/sla-and-escalation)。
 

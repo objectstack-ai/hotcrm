@@ -242,7 +242,6 @@ const ROW_LABEL: Record<string, Record<'zh-Hans' | 'zh-Hant', string>> = {
     'zh-Hans': '工单升级流程（新建时）',
     'zh-Hant': '工單升級流程（新建時）',
   },
-  case_csat_followup: { 'zh-Hans': '工单满意度回访', 'zh-Hant': '工單滿意度回訪' },
   contract_expiration: { 'zh-Hans': '合同自动到期', 'zh-Hant': '合約自動到期' },
   quote_expiration: { 'zh-Hans': '报价自动过期', 'zh-Hant': '報價自動過期' },
   campaign_completion: { 'zh-Hans': '营销活动自动完成', 'zh-Hant': '行銷活動自動完成' },

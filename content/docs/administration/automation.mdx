@@ -50,7 +50,7 @@ A flow fires one of three ways, set by its start node:
 
 > **Auto-launch needs the `triggers` capability.** Record-change and scheduled flows only fire when the stack's `requires` list includes `triggers` — it installs the record-change + schedule trigger providers (schedule triggers also use the job service). Screen flows are always launched manually.
 
-**Built-in flows in HotCRM** (28). Each row carries the flow's own label — the name listed in **Studio → Automation → Flows**, and the name you pick from in **Studio → Developer → Flow Runs**, so a run you are chasing can be looked up here verbatim:
+**Built-in flows in HotCRM** (27). Each row carries the flow's own label — the name listed in **Studio → Automation → Flows**, and the name you pick from in **Studio → Developer → Flow Runs**, so a run you are chasing can be looked up here verbatim:
 
 | Flow | Trigger | What it does |
 | --- | --- | --- |
@@ -72,7 +72,6 @@ A flow fires one of three ways, set by its start node:
 | **Billing Hand-off: Contract Activated** | Record change (update) | On the transition into *Activated*, enqueue one durable POST of the contract + account + the originating deal's line items |
 | **Case Escalation Process** | Record change (update) | When a case turns *Critical*, flag it escalated, hand it to the least-loaded holder of the `service_manager` position (it stays with its owner while that pool is unstaffed) and notify the agent it came from; escalating also opens an urgent follow-up task for the account owner |
 | **Case Escalation Process (on create)** | Record change (insert) | The same escalation for cases *created* at *Critical* |
-| **Case CSAT Follow-up** | Record change (update) + wait | When a case closes, wait 1 day, then prompt the owner to capture a satisfaction rating |
 | **Contract Auto-Expiration** | Schedule (daily midnight) | Expire activated contracts past their `end_date` and notify the owner |
 | **Quote Auto-Expiration** | Schedule (daily 1 AM) | Expire quotes past their `expiration_date` that are still open |
 | **Campaign Auto-Completion** | Schedule (daily 2 AM) | Mark in-progress campaigns whose `end_date` has passed as *Completed* |

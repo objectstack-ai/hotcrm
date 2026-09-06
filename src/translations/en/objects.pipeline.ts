@@ -153,7 +153,6 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       company_information: { label: 'Company Information' },
       additional_information: { label: 'Additional Information' },
       privacy: { label: 'Privacy' },
-      lead_details: { label: 'Lead Details' },
       general: { label: 'General' },
       details: { label: 'Details' },
       step_1_contact_details: { label: 'Step 1: Contact Details' },
@@ -175,7 +174,6 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       ...activityActions,
       convert_lead: {
         label: 'Convert Lead',
-        confirmText: 'Are you sure you want to convert this lead?',
         successMessage: 'Lead converted successfully!',
       },
       create_campaign: {

@@ -62,11 +62,6 @@ export const service: Record<string, ObjectTranslationData> = {
       escalation_reason: { label: 'Escalation Reason' },
       resolution: { label: 'Resolution' },
       resolved_by_article: { label: 'Resolved by Article', help: 'Knowledge article that resolved this case — the deflection signal.' },
-      customer_rating: {
-        label: 'Customer Satisfaction',
-        help: 'Customer satisfaction rating (1-5 stars)',
-      },
-      customer_feedback: { label: 'Customer Feedback' },
       internal_notes: { label: 'Internal Notes', help: 'Internal notes; not visible to the customer.' },
       is_closed: { label: 'Is Closed' },
       display_title: { label: 'Display Title' },

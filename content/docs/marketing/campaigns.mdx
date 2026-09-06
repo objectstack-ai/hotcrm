@@ -13,7 +13,7 @@ A **campaign** is any marketing initiative — an email blast, a webinar, a trad
 | --- | --- |
 | ⚪ **Planning** | Being designed — audience, budget, content *(default)* |
 | 🟠 **In Progress** | Live — members are enrolled, engagement is being tracked |
-| 🟢 **Completed** | Finished — metrics are final, ROI is calculated |
+| 🟢 **Completed** | Finished — the run is over; the metrics stay live |
 | 🔴 **Aborted** | Cancelled before completion |
 
 The system auto-moves campaigns from *In Progress* to *Completed* the day after their end date — so you don't have to remember.
@@ -55,7 +55,8 @@ The **Campaign Code** is auto-generated (e.g., CAMP-000123) so every campaign ha
 
 ## What happens automatically
 
-- **Auto-complete** — at 2 AM daily, any *In Progress* campaign past its end date is marked *Completed*. The campaign's final metrics (sent, responded, converted, ROI) snapshot at that moment.
+- **Auto-complete** — at 2 AM daily, any *In Progress* campaign past its end date is marked *Completed*. The sweep flips the status and only the status — the numbers were already current before it ran.
+- **Live metrics** — the metric block (sent, responded, converted, ROI) is recomputed as members are enrolled, as members respond, as their leads convert, and as opportunities are attributed to the campaign. A campaign you are running right now reports real numbers; you do not wait for it to finish to read them.
 - **Member enrollment** — when a campaign goes *In Progress*, the [Campaign Enrollment flow](#campaign-enrollment-flow) runs every Monday at 9 AM and adds new matching audience members.
 - **ROI calculation** — the campaign's actual revenue is the rolled-up sum of related closed-won opportunity amounts. ROI = (actual revenue − actual cost) ÷ actual cost.
 

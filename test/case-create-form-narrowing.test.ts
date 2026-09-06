@@ -77,11 +77,16 @@ const CREATOR_AUTHORABLE = new Set([
  *
  * An empty `keeps` is a claim in its own right — the field is reachable from
  * NO surface in the roster below — and since #1428 it is asserted in that
- * direction too, not just documented. Two different things produce it: a
- * field no human ever authors (`first_response_date`), and a field whose
- * surface is an OPEN PRODUCT QUESTION (`customer_rating` /
- * `customer_feedback`). `why` says which, because the second kind is a debt
- * and the first is not.
+ * direction too, not just documented. One field carries it today:
+ * `first_response_date`, which no human ever authors, so it is not a debt.
+ *
+ * The other thing that used to produce an empty `keeps` was a field whose
+ * surface was an OPEN PRODUCT QUESTION — `customer_rating` and
+ * `customer_feedback` sat here on exactly that footing. The question was
+ * answered rather than left open: #1428 retired both under ADR-0049
+ * enforce-or-remove instead of giving them a surface, so their entries left
+ * with the fields. ⛔ An empty `keeps` is therefore a statement about a field
+ * that exists; a field with no surface AND no answer does not belong here.
  */
 const LIFECYCLE_MAINTAINED: Record<string, { why: string; keeps: string[] }> = {
   created_date: {
@@ -122,20 +127,6 @@ const LIFECYCLE_MAINTAINED: Record<string, { why: string; keeps: string[] }> = {
   resolution: {
     why: 'authored when CLOSING a case, not when raising one',
     keeps: ['detail.details'],
-  },
-  // ⛔ HELD, not "by design" (#1428). Whether staff should type a customer's
-  // satisfaction score on the customer's behalf is a product question, and the
-  // alternative — a survey the customer answers — is a different feature. Both
-  // fields stay reachable from nowhere until that is ruled on; `case_csat_
-  // followup` meanwhile notifies the owner to log a rating they cannot enter.
-  // Adding a surface for either is a DECISION: record it here as well.
-  customer_rating: {
-    why: 'post-resolution survey data — no surface pending the product ruling (#1428)',
-    keeps: [],
-  },
-  customer_feedback: {
-    why: 'post-resolution survey data — no surface pending the product ruling (#1428)',
-    keeps: [],
   },
   closed_date: { why: 'readonly on the object; stamped at close', keeps: ['case_timeline.endDateField'] },
   is_closed: {
@@ -259,8 +250,9 @@ describe('crm_case create form — retention direction', () => {
    *
    * The reason is NOT the blanket this comment used to carry ("the platform
    * DROPS writes to readonly fields"). Measured in
-   * `test/readonly-write-semantics.test.ts` on 17.1.0 and re-measured there on
-   * the current pin 17.2.0 (#1460), same result: the strip is one branch of the
+   * `test/readonly-write-semantics.test.ts` on 17.1.0, re-measured there on
+   * 17.2.0 (#1460) and re-measured again on the current pin 17.3.0 (#1676),
+   * same result every time: the strip is one branch of the
    * UPDATE path, `if (!opCtx.context?.isSystem)`, over CALLER-supplied keys —
    * so a `beforeUpdate` hook's own stamp survives it, an insert is exempt from
    * it entirely, and a FLOW write survives it exactly when the flow's

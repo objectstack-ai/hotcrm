@@ -52,7 +52,7 @@
 | LEA-012 | 排定跟进 | 屏幕流收集下一步动作/到期日/类型/优先级,创建任务并同步线索 `next_followup_date` | `src/flows/schedule-followup.flow.ts` + `src/actions/lead.actions.ts`(`schedule_followup`) |
 | LEA-013 | 批量加入活动 | 列表多选批量动作:逐行去重后插入活动成员(记录选择器选活动) | `src/actions/lead.actions.ts`(`create_campaign`) |
 | LEA-014 | 线索列表视图族 | 默认列表 + 7 个具名视图:我的/热线索/高优/疑似重复/状态看板/日历/卡片 | `src/views/lead.view.ts` |
-| LEA-015 | 线索表单族 | 8 个具名表单覆盖全部布局类型:快速新建/分 tab 详情/转化向导/分栏/抽屉/弹窗/公开表单/条件示范 | `src/views/lead.view.ts`(formViews) |
+| LEA-015 | 线索表单族 | 7 个具名表单覆盖全部布局类型:分 tab 详情/转化向导/分栏/抽屉/弹窗/公开表单/条件示范(SIMPLE 由默认 `form` 演示) | `src/views/lead.view.ts`(formViews) |
 | LEA-016 | 线索详情页 | header 挂转化/跟进/三个活动动作,highlights 条,5 阶段 path,Details/Related/Activity/History 四 tab | `src/pages/lead_detail.page.ts` |
 | LEA-017 | AI 线索鉴定技能 | 按 BANT 四维打 0–100 分并给下一步建议;≥70 且经人工确认才调用转化动作 | `src/skills/lead-qualification.skill.ts` |
 | LEA-018 | 线索导入 | CSV/XLSX 导入映射,按 email upsert,状态/来源/行业同义词表;owner 留空归导入者 | `src/mappings/lead_import.mapping.ts` |
@@ -147,7 +147,7 @@
 | SVC-008 | SLA 每小时违约扫描 | 过期未结工单标 `is_sla_violated`、升级并通知 owner(topic `case_sla_breach`) | `src/flows/case-sla-monitor.flow.ts` |
 | SVC-009 | 升级派发跟进任务 | 升级时的唯一任务产出点:给客户负责人创建次日到期的 urgent 跟进任务;解决时更新客户活动时钟 | `src/objects/case.hook.ts`(`case_status_side_effects`) |
 | SVC-010 | 手动升级/关闭工单 | 两个屏幕流动作:升级必填原因并置 critical;关闭必填解决方案(系统身份写只读生命周期字段) | `src/flows/case-actions.flow.ts` + `src/actions/case.actions.ts` |
-| SVC-011 | CSAT 关单回访 | 工单关闭 1 天后通知 owner 联系客户记录满意度评分 | `src/flows/case-csat-followup.flow.ts` |
+| SVC-011 | CSAT 关单回访 | **已移除 (#1428)**:曾在工单关闭 1 天后通知 owner 联系客户记录满意度评分。它唯一喂养的 `crm_case.customer_rating` / `customer_feedback` 从来没有任何输入面,两个字段与本流程一并按 ADR-0049 enforce-or-remove 退役 | 已删除 |
 | SVC-012 | 首次响应打戳 | 工单上出现任何一条 held 互动事件时,自动补 `first_response_date`(SLA 首次响应指标) | `src/objects/event.hook.ts`(`event_activity_bubble`) |
 | SVC-013 | 工单视图族 | 默认按优先级序排 + 状态看板(抽屉)/SLA 日历/timeline/已升级/SLA 风险/我的未结共 7 个 tab | `src/views/case.view.ts` |
 | SVC-014 | 工单详情页 | SLA highlights 条、6 阶段 path、升级/关闭/记录通话动作,统一活动时间线(评论/提及/线程/表情全开) | `src/pages/case_detail.page.ts` |
@@ -256,7 +256,7 @@
 | ADM-010 | 种子数据 | 19 个幂等 upsert 数据集(客户 9/线索 21/商机 23/工单 8/事件 27/活动成员 ~52 等),金额自明细派生、区域与流失时钟按演示可观测性设计 | `src/data/` |
 | ADM-011 | 演示数据认领 | 每 10 分钟扫描:把 12 个对象的无主种子记录认领给首个真实用户(种子无法命名 owner 的补偿机制) | `src/flows/demo-bootstrap.flow.ts` |
 | ADM-012 | AI Live Data 技能 | 每次先读取当前活 schema 再查询——管理员新加字段后 AI 立即可用(平台 `ask` 助手挂载,skills-only 架构) | `src/skills/live-data.skill.ts` |
-| ADM-013 | 应用内规则手册 | 4 篇随包文档:总览/销售规则(路由、审批阈值、停滞窗口)/服务规则(SLA、升级、CSAT)/管理手册(岗位、共享、13 个自动化旋钮) | `src/docs/` |
+| ADM-013 | 应用内规则手册 | 4 篇随包文档:总览/销售规则(路由、审批阈值、停滞窗口)/服务规则(SLA、升级)/管理手册(岗位、共享、12 个自动化旋钮) | `src/docs/` |
 | ADM-014 | 字段历史跟踪 | 各对象关键字段 `trackHistory`(owner、状态/阶段/优先级、金额/营收等)驱动记录页 History 审计流 | `src/objects/*.object.ts` |
 | ADM-015 | 平台能力声明 | `requires: automation/triggers/analytics/auth/ui/approvals/sharing`;`ai` 刻意不列(开源版无 AI service,技能仍编入产物在云端运行) | `objectstack.config.ts` |
 
