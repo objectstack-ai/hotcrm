@@ -36,13 +36,23 @@ const contractValidation: Hook = {
     const { event, input } = ctx;
     const previous = ctx.previous;
 
+    // Both operands are stored `YYYY-MM-DD` values, which the date-only parse
+    // anchors at UTC MIDNIGHT — so they are read here on the calendar they were
+    // written on. The local accessors are one day earlier west of Greenwich
+    // (`new Date('2026-01-01').getDate()` answers 31 in `America/New_York`, 1 in
+    // `Europe/Berlin`), and this count feeds a hard refusal that the +/-1 month
+    // tolerance does not absorb at the boundary: a legal contract spanning
+    // `term + 1` months measured `term + 2` and the save was rejected, quoting a
+    // month count its own dates do not have.
     function monthsBetween(startISO: string, endISO: string): number {
       const s = new Date(startISO);
       const e = new Date(endISO);
       return (
-        (e.getFullYear() - s.getFullYear()) * 12 +
-        (e.getMonth() - s.getMonth()) +
-        (e.getDate() >= s.getDate() ? 0 : -1)
+        (e.getUTCFullYear() - s.getUTCFullYear()) * 12 +
+        (e.getUTCMonth() - s.getUTCMonth()) +
+        // Unchanged intent: has the end day-of-month reached the start's yet?
+        // If not, the last month is not complete and does not count.
+        (e.getUTCDate() >= s.getUTCDate() ? 0 : -1)
       );
     }
 
