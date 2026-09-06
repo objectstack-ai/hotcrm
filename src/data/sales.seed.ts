@@ -115,6 +115,30 @@ import { lineItemRecords } from './catalog.seed';
 // `test/activity-seed-coverage.test.ts` recomputes the bubble's reachability
 // from the seeds themselves and fails if a held event ever reaches one of the
 // three quiet accounts, so the split above cannot rot into a comment.
+//
+// ─── `health_score`: the churn signal a HUMAN asserts ─────────────────────
+//
+// Four options ship (`healthy` / `watching` / `at_risk` / `churning`) and the
+// churn report's first panel, `csm_flagged_accounts`, selects the worst two.
+// That panel is the ONLY one on the report with no time window, so the
+// population it exists for is an account being worked right now and still
+// flagged. The seed book has to contain one, or the demo renders a panel that
+// merely restates the 60-day window stacked below it (#1414). Hence a
+// deliberate two-way split, the same shape as the territory and activity
+// partitions above:
+//
+//   Initech  `at_risk`  + 72 days quiet — flagged AND derived. It lands in
+//            this panel and in `at_risk_accounts`; the report's own header
+//            says the two blocks are allowed to overlap.
+//   Wayne    `churning` + clock at today() — flagged and NOT derived. Its
+//            `strategic` tier is inside `silent_high_value`'s scope as well,
+//            so the clock alone keeps it out of BOTH windowed panels: the
+//            account no derived signal can see. It is what makes the set
+//            difference FLAGGED \ QUIET60 non-empty.
+//
+// The other customers stay `healthy` on purpose. A severity every record
+// carries demonstrates nothing, and `churning` is the most severe option in
+// the model — one record is what makes it real rather than declared.
 export const accounts = defineSeed(Account, {
   mode: 'upsert',
   externalId: 'name',
@@ -223,7 +247,20 @@ three regional teams (NA, EMEA, APAC).
       website: 'https://wayne.example.com',
       tier: 'strategic',
       segment: 'growth',
-      health_score: 'healthy',
+      // CHURNING, with the clock still running — the population
+      // `csm_flagged_accounts` exists for (#1414). Every DERIVED signal on
+      // this row reads healthy: an operations rollout closed four days ago, a
+      // licence sits at 80% two weeks from signature, three meetings were held
+      // this month. The CSM who has been in the room says the account is going
+      // anyway, and `health_score` is the only churn signal in the model a
+      // person ASSERTS — which is why the panel that reads it is first on the
+      // report and carries no time window.
+      //
+      // ⛔ Do not "correct" this to `at_risk` to agree with the pipeline, and
+      // ⛔ do not stop the clock to agree with the health score: either edit
+      // folds the row back into `at_risk_accounts` (60-day window) and the
+      // flagged panel goes back to restating its neighbour.
+      health_score: 'churning',
       // Held: negotiation meeting, security-addendum call, governance webinar.
       last_activity_date: cel`today()`,
     },
