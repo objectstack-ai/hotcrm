@@ -171,6 +171,17 @@ export const accounts = defineSeed(Account, {
       health_score: 'healthy',
       // Held: workshop, demo, calls and an onsite visit — see `service.seed.ts`.
       last_activity_date: cel`today()`,
+      // The ARR line below used to read "signed Q1 2025 renewal" while the
+      // deal it describes closes `daysAgo(15)` — a fixed calendar quarter on a
+      // relative-date record, wrong in both the quarter and the year (#1692).
+      // The label is not re-derived here either: that date belongs to
+      // `Acme Annual Renewal 2025` (`close_date`) and to its contract
+      // (`signed_date`, `revenue.seed.ts`), and computing a copy in this module
+      // means re-stating that record's own offset — a second source of truth
+      // for a value two records already own. Same ruling as the `next_step`
+      // block below (#1660): no date goes back into this prose, absolute OR
+      // relative. What stays true however the renewal is dated is that it IS
+      // signed: the deal is `closed_won` and its contract `activated`.
       description: `**Strategic Customer · Enterprise Tier**
 
 Acme Corporation is a Series-C robotics & industrial automation
@@ -187,7 +198,7 @@ three regional teams (NA, EMEA, APAC).
   net-30 terms.
 
 **Current state**
-- ARR: $220K (signed Q1 2025 renewal). Up 22% YoY.
+- ARR: $220K (signed renewal). Up 22% YoY.
 - 1 open enterprise opportunity ($150K platform upgrade) in proposal
   stage, 1 service ticket open (login issues), 1 billing dispute
   awaiting customer response.
