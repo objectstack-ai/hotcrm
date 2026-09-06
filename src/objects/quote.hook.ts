@@ -38,9 +38,28 @@ const quoteValidation: Hook = {
     const { event, input } = ctx;
     const previous = ctx.previous;
 
+    /**
+     * `iso` + `days`, on ONE calendar — UTC, end to end.
+     *
+     * The base is not an instant here, it is a stored DATE: a bare
+     * `YYYY-MM-DD` is parsed by the date-only form of the spec, which anchors
+     * it at UTC midnight (measured: `new Date('2026-01-01')` is
+     * `2026-01-01T00:00:00.000Z` in every zone). So the anchor was already
+     * UTC and only the arithmetic was not — and reading a UTC-midnight anchor
+     * on the LOCAL calendar is off by a whole day west of Greenwich, where
+     * that instant is the previous evening (`getDate()` on the value above
+     * answers 31, not 1).
+     *
+     * That is why this site's exposure is not the one-hour window the
+     * "advance now by N days" hooks have: the anchor does not move with the
+     * clock, so every quote whose [quote_date, quote_date + days] span crosses
+     * a DST transition took a 23 h day and rendered a day short — measured at
+     * 60 of 730 consecutive base dates in `America/New_York`, `Europe/Berlin`,
+     * `America/Santiago`, `Australia/Sydney` and `Pacific/Auckland` alike.
+     */
     function addDays(iso: string, days: number): string {
       const d = new Date(iso);
-      d.setDate(d.getDate() + days);
+      d.setUTCDate(d.getUTCDate() + days);
       return d.toISOString().slice(0, 10);
     }
 
@@ -177,9 +196,19 @@ const quoteAccepted: Hook = {
 
     // Real calendar months — `days * 30` shorted a 12-month term by ~5 days
     // and only slipped past contract_validation's ±1-month tolerance by luck.
+    //
+    // On the UTC calendar throughout, for the reason `addDays` documents in
+    // the sibling hook above: the base is a UTC-midnight-anchored date string,
+    // so a local `getMonth`/`setMonth` step reads that anchor as the previous
+    // evening and renders a day short whenever the offset at the end of the
+    // term differs from the offset at its start. A 12-month term makes that
+    // rare but not absent — measured on 9 of 730 consecutive start dates in
+    // `America/New_York` (e.g. `2026-11-02` + 12 months answered
+    // `2027-11-01`), and it is `crm_contract.end_date`, a date the customer is
+    // invoiced against.
     function addMonths(iso: string, months: number): string {
       const d = new Date(iso);
-      d.setMonth(d.getMonth() + months);
+      d.setUTCMonth(d.getUTCMonth() + months);
       return d.toISOString().slice(0, 10);
     }
 

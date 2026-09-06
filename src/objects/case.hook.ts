@@ -370,8 +370,12 @@ const caseSideEffects: Hook = {
     if (input.status === 'escalated' && previous.status !== 'escalated' && accountId) {
       const account = await api.object('crm_account').findOne({ where: { id: accountId } });
       const ownerId = (account as { owner_id?: string } | null)?.owner_id ?? ctx.user?.id;
+      // UTC calendar for the step, matching the `toISOString()` render below
+      // (same shape as `lead.hook.ts` / `opportunity.hook.ts`): a local
+      // `setDate` step preserves wall-clock time, so a one-day follow-up filed
+      // across a spring-forward lands on the day of the escalation itself.
       const due = new Date();
-      due.setDate(due.getDate() + 1);
+      due.setUTCDate(due.getUTCDate() + 1);
       // Title the task with what the reader already knows the case by (#1208).
       // Title the task with what the reader already knows the case by. The
       // PRIMARY KEY is not that: every case surface in this app (record pages,
