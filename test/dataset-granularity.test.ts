@@ -11,29 +11,49 @@ import stack from '../objectstack.config';
  * `dateGranularity` — that is the only supported place to say "bucket this by
  * month". The v9 single-form migration dropped the old
  * `groupingsAcross[].dateGranularity` declarations and nothing carried them to
- * the new location, so every date axis has been grouping by the raw timestamp
- * (one column per distinct value) ever since.
+ * the new location, so for the whole 16.x line every date axis grouped by the
+ * raw timestamp — one column per distinct value.
  *
- * Re-declaring them is blocked on the platform, not on us. On @objectstack
- * 16.x a bucketed dimension makes the surface render EMPTY — strictly worse
- * than the un-bucketed columns — for two independent reasons, both verified
- * against the pinned packages and both fixed in 17.0.0-rc.0:
+ * That migration is FINISHED. All six entries in `INTENDED_BUCKET` below are
+ * declared on their dataset dimensions under `src/datasets/`, and this guard
+ * runs its 17+ face asserting exactly that. Nothing here waits on the platform.
  *
- *   1. A granular dimension is refused by NativeSQLStrategy, so the query
- *      falls to ObjectQLStrategy → the auto-bridged `executeAggregate`, which
- *      calls `engine.aggregate()` with no ExecutionContext; the sharing
- *      middleware composes `{ id: '__deny_all__' }` for every private object
- *      (upstream #3602/#3597).
- *   2. A `Field.datetime()` column is INTEGER epoch millis in SQLite and 16.x
- *      buckets it with a bare `strftime()`, which returns NULL for every row.
+ * Why it waited — history, not a live constraint. On @objectstack 16.x a
+ * bucketed dimension made the surface render EMPTY, strictly worse than the
+ * un-bucketed columns, for two independent reasons. Both are fixed and
+ * RELEASED; each was re-verified against the version heading it sits under in
+ * the INSTALLED package CHANGELOG, and nothing between that heading and the
+ * pinned 17.3.0 reverts it:
+ *
+ *   1. A granular dimension is refused by NativeSQLStrategy — still true — so
+ *      the query falls to ObjectQLStrategy → the auto-bridged
+ *      `executeAggregate`. On 16.x that bridge called `engine.aggregate()`
+ *      with no ExecutionContext, and the sharing middleware then composed
+ *      `{ id: '__deny_all__' }` for every private object (upstream
+ *      #3602/#3597). Fixed in `@objectstack/service-analytics` under its
+ *      `17.0.0-rc.0` heading, republished under `17.0.0` GA: the bridge now
+ *      forwards the caller's ExecutionContext and ObjectQLStrategy enforces
+ *      the read scope itself. 17.1–17.3 only ADD read-scope doors.
+ *   2. A `Field.datetime()` column was INTEGER epoch millis in SQLite and 16.x
+ *      bucketed it with a bare `strftime()`, which returned NULL for every
+ *      row. Fixed by the one-UTC-storage-form change (upstream #3912/#3942) in
+ *      `@objectstack/driver-sql` under `17.0.0-rc.1`, republished under
+ *      `17.0.0` GA and carried into `@objectstack/driver-sqlite-wasm` as a
+ *      dependency update: SQLite stores ISO text, which `strftime` parses, so
+ *      the bucket expression needs no CASE. Same pair the
+ *      `event_metrics.start_datetime` note below records as released.
  *
  * So this guard has two faces, and the platform major flips between them:
  *
  *   · on 16.x — assert NOBODY re-declares a bucket (the #500 regression), and
  *     keep the intended buckets recorded below so they are not lost again;
  *   · on 17+  — assert every intended bucket IS declared, and that each matrix
- *     report's date axis carries the bucket that report is named after. The
- *     upgrade cannot go green without finishing the migration.
+ *     report's date axis carries the bucket that report is named after. This
+ *     is the face that runs today, and it went green when the migration was
+ *     finished.
+ *
+ * The 16.x face stays. It is what makes the tables a migration RECORD rather
+ * than a second copy of the metadata, and it is what would catch a downgrade.
  *
  * The tables below are the migration's source of truth. Keep them in sync with
  * the surfaces, not with the current platform version.
