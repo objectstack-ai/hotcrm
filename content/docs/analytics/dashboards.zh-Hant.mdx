@@ -136,9 +136,11 @@ HotCRM 內建五個儀表板。每個都為特定角色而建構，回答該角�
 
 ## 你可以改什麼
 
-- **日期範圍** — CRM Overview、Sales Performance 和 Executive Overview 各帶一個以商機預計成交日期為準的選擇器，預設本季。Sales Activity 和 Customer Service 沒有，原因見上面各自的章節。
+- **日期範圍** — CRM Overview、Sales Performance 和 Executive Overview 各帶一個以商機預計成交日期為準的選擇器，預設本季。Sales Activity 和 Customer Service 沒有，原因見上面各自的章節。每一個時間窗都由伺服器端解析，按 UTC 日曆日算："最近 7 天"指的是以今天的 UTC 日期結尾的那七個 UTC 日曆日，兩端都含。你自己的時鐘不參與其中——一位在 UTC+8 的讀者在當地時間凌晨 3 點打開儀表板，看到的時間窗是在上一個 UTC 午夜結束的，而不是在他自己的午夜。
 - **篩選器** — 每個儀表板宣告自己的一套：Owner 各處都有，另外 Sales Performance 有 Deal Type、Customer Service 有 Priority、Executive Overview 有 Lead Source。
 - **重新整理** — Customer Service 每分鐘重新整理一次，Sales Performance 每三分鐘，其餘三個每五分鐘。
+
+儀表板的篩選器比對的是每個部件所綁資料集背後的那個**物件**，而不是該資料集宣告的維度，並且它會被 AND 進每個受它約束的部件的查詢裡。所以 Customer Service 能提供 Agent 篩選器，哪怕 `case_metrics` 沒有宣告任何負責人維度：`owner_id` 是工單上的欄位，篩選器要的就只是這個。但它買到的只有篩選這一件事——部件依然不能按資料集沒有宣告的欄位**分組**，所以 [SLA 與升級](/zh-Hant/docs/service/sla-and-escalation) 說"沒有任何報表、也沒有任何儀表板部件能按它分組"是對的，它和同一個應用裡按 Agent 篩選的服務台儀表板並不矛盾。反過來同樣成立：篩選器若點名了某個部件自己的物件沒有的欄位，那個部件的查詢就會去要一個並不存在的欄位，所以答不了某個篩選器的部件會按名字顯式退出它（`filterBindings`），而不是默默忽略它。
 
 有些磁貼刻意不接受所在儀表板的篩選器。12 個月的收入趨勢、Top Products 和 Quota Attainment by Rep 都保持自己標題上寫明的那個時間窗，這樣更窄的日期選擇器就無法在標題不變的情況下悄悄改掉數字的定義。
 

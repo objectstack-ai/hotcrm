@@ -136,9 +136,11 @@ This dashboard is the basis for the weekly leadership review.
 
 ## What you can change
 
-- **Date range** — CRM Overview, Sales Performance and Executive Overview carry a picker over the opportunity close date, defaulting to this quarter. Sales Activity and Customer Service have none, for the reason given in their sections above.
+- **Date range** — CRM Overview, Sales Performance and Executive Overview carry a picker over the opportunity close date, defaulting to this quarter. Sales Activity and Customer Service have none, for the reason given in their sections above. Every window is resolved on the server, on UTC calendar days: "last 7 days" means the seven UTC calendar days ending with today's UTC date, both ends inclusive. Your own clock does not enter into it — a reader in UTC+8 opening a dashboard at 03:00 local time is looking at a window that ended at the previous UTC midnight, not at their own.
 - **Filters** — each dashboard declares its own: Owner everywhere, plus Deal Type on Sales Performance, Priority on Customer Service, and Lead Source on Executive Overview.
 - **Refresh** — Customer Service refreshes every minute, Sales Performance every three, the other three every five.
+
+A dashboard filter is matched against the **object** behind each widget's dataset, not against that dataset's declared dimensions, and it is ANDed into the query of every widget bound to it. That is why Customer Service can offer an Agent filter even though `case_metrics` declares no owner dimension: `owner_id` is a field on the case, and the filter needs nothing more than that. Filtering is all it buys — a widget still cannot **group by** a field the dataset does not declare, which is how [SLA & Escalation](/docs/service/sla-and-escalation) can say, correctly, that no report and no dashboard widget breaks cases down by agent, on the same app whose service desk filters by one. It cuts the other way too: a filter naming a field a widget's own object lacks would ask that widget's query for a column that does not exist, so a widget that cannot answer a filter opts out of it by name (`filterBindings`) instead of quietly ignoring it.
 
 Some tiles opt out of the dashboard's own filters on purpose. The 12-month revenue trends, Top Products and Quota Attainment by Rep keep the window they are labelled with, so a narrower date picker cannot silently redefine the number under its own title.
 
