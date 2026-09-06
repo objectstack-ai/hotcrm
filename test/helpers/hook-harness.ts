@@ -610,9 +610,24 @@ export function makeCtx(opts: CtxOptions): Rec {
 /** Today as `YYYY-MM-DD`, matching what the hooks stamp. */
 export const today = (): string => new Date().toISOString().slice(0, 10);
 
-/** `YYYY-MM-DD` `days` from now (negative for the past). */
+/**
+ * `YYYY-MM-DD` `days` from now (negative for the past), on the **UTC calendar
+ * throughout** — the same calendar `today()` above renders on, and the one the
+ * platform resolves a bare `{TODAY()}` token to. That second half was
+ * re-measured here rather than inherited: driving a real `AutomationEngine`
+ * (`@objectstack/service-automation` 17.3.0) at a pinned instant returns the
+ * same `$lt` day in `UTC`, `America/New_York`, `Europe/Berlin` and
+ * `Australia/Sydney`, so bare `{TODAY()}` is UTC everywhere.
+ *
+ * ⚠️ The arithmetic must NOT go through `setDate`/`getDate`. Those read and
+ * write the **local** calendar, and rendering the result with `toISOString()`
+ * then mixes two calendars inside one expression. Across a DST spring-forward
+ * the local day is 23 h long, so a `setDate` shift preserves wall-clock time and
+ * the instant lands one UTC day late. No run at `TZ=UTC` can catch that — there
+ * the two calendars coincide and both spellings are behaviourally identical.
+ */
 export const daysFromNow = (days: number): string => {
   const d = new Date();
-  d.setDate(d.getDate() + days);
+  d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString().slice(0, 10);
 };

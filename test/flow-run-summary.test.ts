@@ -34,9 +34,15 @@ import { edgesUnder } from './helpers/flow-regions';
  * is permanent now that the platform ships the measurement for every flow.
  */
 
+/**
+ * UTC calendar throughout — `setUTCDate`, not `setDate`. Mixing local-calendar
+ * arithmetic with UTC rendering lands one UTC day late across a DST
+ * spring-forward, and no `TZ=UTC` run can tell the two spellings apart.
+ * `test/helpers/hook-harness.ts`'s `daysFromNow` carries the full reasoning.
+ */
 const day = (d: number): string => {
   const x = new Date();
-  x.setDate(x.getDate() + d);
+  x.setUTCDate(x.getUTCDate() + d);
   return x.toISOString().slice(0, 10);
 };
 
