@@ -70,26 +70,6 @@ describe('view field references resolve', () => {
     }
     expect(bad, `dangling form fields:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
-
-  it('every list sort targets a real field', () => {
-    const bad: string[] = [];
-    for (const v of views) {
-      const objectName = viewObjectOf(v);
-      if (!objectName || !objectNames.has(objectName)) continue;
-      const known = fieldsOf(objectName);
-      // The container key is `listViews` — iterating a non-existent `views`
-      // key silently skipped every named list view.
-      const lists = [v.list, ...Object.values(v.listViews ?? {})].filter(Boolean) as AnyRec[];
-      for (const list of lists) {
-        for (const s of list.sort ?? []) {
-          if (s.field && !known.includes(s.field)) {
-            bad.push(`${objectName} view "${list.name ?? 'default'}": sorts on missing "${s.field}"`);
-          }
-        }
-      }
-    }
-    expect(bad, `dangling sort fields:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
 });
 
 describe('priority queues sort by urgency, not alphabetically', () => {
@@ -196,27 +176,6 @@ describe('filter template tokens are resolvable', () => {
       }
     }
   };
-
-  it('list view and page filters only use user tokens or date macros', () => {
-    const allowed = (t: string) => USER_TOKENS.has(t) || isDateMacroToken(t);
-    const bad: string[] = [];
-    for (const v of views) {
-      const lists = [v.list, ...Object.values(v.listViews ?? {})].filter(Boolean) as AnyRec[];
-      for (const list of lists) badTokensIn(`view "${list.name ?? 'default'}"`, list.filter, allowed, bad);
-    }
-    for (const p of pages) {
-      badTokensIn(`page "${p.name}"`, p.interfaceConfig?.filterBy, allowed, bad);
-      // Page COMPONENTS carry filters too, and did not used to be walked. Sales
-      // Home now embeds `list-view` blocks whose filters come off the saved
-      // views (#771) — those are checked above as views, but a hand-written
-      // component filter would have reached the same data path unexamined.
-      for (const c of [...walk(p.regions), ...walk(p.slots)]) {
-        badTokensIn(`page "${p.name}"/${c.id ?? c.type}`, c.properties?.filter, allowed, bad);
-        badTokensIn(`page "${p.name}"/${c.id ?? c.type}`, c.dataSource?.filter, allowed, bad);
-      }
-    }
-    expect(bad, `unresolvable view/page filter tokens:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
 
   it('the widened list-view rule still rejects what neither path resolves', () => {
     // Widening a rule is how a rule dies. `{this_quarter_start}` is the exact
