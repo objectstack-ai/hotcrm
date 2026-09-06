@@ -34,8 +34,17 @@ export const CloneOpportunityAction: Action = {
       }
       // Give the clone a fresh 90-day close horizon so a copied past date can't
       // trip the "close date in the past" validation on a new prospecting deal.
+      //
+      // The step is on the UTC calendar because the render below is
+      // (\`toISOString()\`). The base is \`new Date()\` — an instant, not a
+      // stored \`YYYY-MM-DD\` — so unlike quote.hook/task.hook there is no
+      // UTC-midnight anchor being read back on the wrong calendar here; the
+      // only mixture was the step itself. A local \`getDate\`/\`setDate\` step
+      // preserves WALL-CLOCK time, so a 90-day window containing a DST
+      // transition is 23 h or 25 h long and the rendered UTC day lands one off
+      // whenever the clone instant is within an hour of a UTC day boundary.
       const horizon = new Date();
-      horizon.setDate(horizon.getDate() + 90);
+      horizon.setUTCDate(horizon.getUTCDate() + 90);
       const inserted = await ctx.api.object('crm_opportunity').insert({
         name: 'Copy of ' + (src.name ?? ('opportunity ' + id)),
         crm_account: src.crm_account,
