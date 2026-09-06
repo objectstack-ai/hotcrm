@@ -926,11 +926,13 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       win_reason: 'better_price',
     },
     // ─── Campaign-attributed wins ───────────────────────────────────────
-    // `crm_campaign` is what `campaign_snapshot_metrics` counts when a campaign
-    // completes (`num_opportunities` / `num_won_opportunities` / the summed
-    // `actual_revenue`). Before #591 not one opportunity carried it, so those
+    // `crm_campaign` is what `campaign_attribution_refresh` counts
+    // (`num_opportunities` / `num_won_opportunities` / the summed
+    // `actual_revenue`) — on every opportunity insert, update and delete, not
+    // once at completion. Before #591 not one opportunity carried it, so those
     // three metrics were structurally zero and every campaign's seeded
-    // `actual_revenue` was a number the hook would have erased on completion.
+    // `actual_revenue` was a number the hook would have overwritten on the
+    // first attributed write.
     // These three wins are what make the marketing ROI numbers below TRUE.
     {
       name: 'Lattice Analytics Expansion',

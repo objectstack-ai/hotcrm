@@ -232,11 +232,13 @@ describe('campaign_member_metrics_refresh — LIVE, not at completion', () => {
    * ⚠️ THE ACCEPTANCE CRITERION, and the one assertion the removed behaviour
    * would also have passed if it were written any other way.
    *
-   * `campaign_snapshot_metrics` fired on the `→ completed` transition ONLY, so
-   * "the numbers are right once the campaign is completed" was true before this
-   * change and proves nothing about it. What has to be shown is that the
-   * numbers move while the campaign is still `in_progress` — the state it
-   * spends its entire useful life in, and during which every metric read 0.
+   * The RETIRED `campaign_snapshot_metrics` — gone since #597, replaced by the
+   * four refresh hooks this file exercises — fired on the `→ completed`
+   * transition ONLY, so "the numbers are right once the campaign is completed"
+   * was true before this change and proves nothing about it. What has to be
+   * shown is that the numbers move while the campaign is still `in_progress` —
+   * the state it spends its entire useful life in, and during which every
+   * metric read 0.
    *
    * So: enrol a third member, do NOT touch the campaign's status, and read the
    * campaign back.
