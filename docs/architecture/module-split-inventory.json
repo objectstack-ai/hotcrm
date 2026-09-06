@@ -1,8 +1,28 @@
 {
-  "$schema_note": "Generated for docs/architecture/module-split-plan.md. Regenerate from the artifact; never hand-edit.",
-  "generated": {
+  "$schema_note": "Companion to docs/architecture/module-split-plan.md — the machine-readable half of that plan. HAND-MAINTAINED: read $maintenance before you edit it. This is a snapshot of src/** measured at measured_at.commit, not a live index of the current tree.",
+  "$maintenance": {
+    "how": "By hand. There is no generator in this repository and one is deliberately not committed: the analysis that produced this file was a one-off, and a one-off analysis script that produced a design artefact is not a gate and must not become one (commit 36dc36c0; AGENTS.md, 'Do not build platform-level tooling here').",
+    "why_this_note_exists": "The header used to read 'Generated for docs/architecture/module-split-plan.md. Regenerate from the artifact; never hand-edit.' That named the one action nobody in-tree could take and forbade the only action available, so the rational move was to do nothing — which is the mechanism by which this file went stale. The 'generated' stamp made it worse by inviting readers to trust the file as current (#1698).",
+    "who": "Whoever changes the module split, or whoever deletes or moves an authored src/** file that files[] names.",
+    "when": "When an edit would otherwise leave a files[] row pointing at a path that no longer exists, or would make a statement here untrue of measured_at.commit. Not on every file added: this is evidence for one plan, not an index of the tree.",
+    "do_not_hand_patch": "The figures — totals, ratchet, edges, modules[].files, modules[].authored_tokens and files[].authored_tokens — are one measurement taken at measured_at.commit. They are true of that commit, they cannot be re-derived by hand, and no generator exists to re-derive them. Leave them as measured and read them as history; never adjust them to look current.",
+    "record_every_edit_in": "$hand_edits"
+  },
+  "$hand_edits": [
+    {
+      "date": "2026-09-06",
+      "issue": 1698,
+      "change": "Removed the files[] row for src/flows/case-csat-followup.flow.ts (kind 'flow', module app.objectstack.hotcrm.service, 413 authored tokens). The file existed at measured_at.commit and was deleted afterwards by #1699, so the row was correct as history but was being read as a pointer to a live file.",
+      "figures_left_as_measured": "totals.src_files stays 171 and modules[] 'Service'.files stays 23, per do_not_hand_patch, so files[] now holds 170 rows. Putting the removed path back gives the roster exactly as measured: it was a 171/171 match with `git ls-tree -r --name-only a6be39a3 src/` restricted to *.ts and *.md.",
+      "roster_drift_measured_at_this_date": "Apart from that one row, files[] had no error against measured_at.commit. Against the tree at 523eb0de it is short 34 authored files added since the measurement: 32 locale sub-bundles under src/translations/{en,es-ES,ja-JP,zh-CN}/ from the #1311 bundle split (the six barrels files[] lists still exist), plus src/flows/_guarded-iteration.ts and src/flows/case-escalation-stamp.flow.ts. They are absent by design — a snapshot is not an index — and are listed here so the gap is known rather than assumed."
+    }
+  ],
+  "measured_at": {
     "repo": "objectstack-ai/hotcrm",
     "commit": "a6be39a3d5d3ce5cc8b8852b48e7de4f326c3d1b",
+    "date": "2026-09-01",
+    "subject": "chore(deps): upgrade the ObjectStack platform to 17.2.0 (#1442)",
+    "meaning": "The commit every figure below was measured at. It is NOT a claim that this file was generated from the current tree, and NOT a claim that files[] matches it. docs/architecture/module-split-plan.md anchors its own 'Measured against' line to this stamp, so the stamp stays — it is a measurement stamp, not a generation stamp.",
     "basis": "dist/objectstack.json (pnpm build) for every declaration and reference; src/** for file identity; token counts from scripts/check-source-token-ratchet.mjs (its exported authoredText + tokensOf, unmodified)",
     "platform_pin": "^17.2.0",
     "decision_record": "ADR-0130 — the release artifact is the co-ownership boundary (one artifact, N packages)"
@@ -2219,15 +2239,6 @@
       "reason": "authored against crm_case",
       "ratcheted": true,
       "authored_tokens": 782
-    },
-    {
-      "path": "src/flows/case-csat-followup.flow.ts",
-      "kind": "flow",
-      "module": "app.objectstack.hotcrm.service",
-      "anchor_object": "crm_case",
-      "reason": "authored against crm_case",
-      "ratcheted": true,
-      "authored_tokens": 413
     },
     {
       "path": "src/flows/case-escalation.flow.ts",
