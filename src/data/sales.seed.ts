@@ -809,7 +809,18 @@ export const opportunities = defineSeed(Opportunity, {
 NA + EMEA teams. Drivers: (1) AI agent governance becomes a hard
 requirement after their internal compliance review, (2) advanced
 analytics seats for the Ops org, (3) priority support SLA.`,
-      next_step: `Send the revised proposal (Enterprise edition, 18-month term, 12% multi-year discount) to Jordan Park by EOW. Schedule the AI governance workshop for the week of close_date - 14d.`,
+      // This sentence used to DATE the workshop itself ("the week of
+      // close_date - 14d" => daysFromNow(16)) while the seeded event had it at
+      // daysFromNow(6) and a seeded task chased it at daysFromNow(7) — three
+      // records, three answers (#1660). The date now lives in exactly ONE
+      // place, the `crm_event` row in service.seed.ts, and this prose states
+      // only what stays true however that event is scheduled: it is booked,
+      // and its invitation has gone out (the attendee builder clamps
+      // `invited_date` at daysAgo(0), so a planned event's invite is never in
+      // the future). Re-dating the event therefore cannot strand this line.
+      // Do not put a date back here, absolute OR relative: a second copy is
+      // a second thing to drift.
+      next_step: `Send the revised proposal (Enterprise edition, 18-month term, 12% multi-year discount) to Jordan Park by EOW. The AI governance workshop with their compliance team is already booked and the invitation is out.`,
     },
     {
       name: 'Globex Manufacturing Suite',
