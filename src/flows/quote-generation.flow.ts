@@ -2,6 +2,7 @@
 
 import { P } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
+import { QUOTE_DISCOUNT_CEILING } from '../objects/_thresholds';
 type Flow = Automation.Flow;
 
 /** Quote Generation — screen flow to create a quote from an opportunity */
@@ -30,7 +31,34 @@ export const QuoteGenerationFlow: Flow = {
         fields: [
           { name: 'quoteName', label: 'Quote Name', type: 'text', required: true },
           { name: 'expirationDays', label: 'Valid For (Days)', type: 'number', required: true, defaultValue: 30 },
-          { name: 'discount', label: 'Discount %', type: 'percent', defaultValue: 0 },
+          // The ceiling is a HARD block with no override
+          // (`crm_quote.discount_within_ceiling`), so until it is written here
+          // a rep meets the number only by having the quote refused. Both
+          // strings below interpolate `QUOTE_DISCOUNT_CEILING` — imported,
+          // never retyped, the same rule the two object rules follow — so the
+          // hint cannot drift from the rule it describes.
+          //
+          // ⛔ There is deliberately NO `max`, and adding one does not work:
+          // `ScreenFieldConfigSchema` is STRICT at 17.3.0 and its entire key
+          // set is `name` / `label` / `type` / `required` / `options` /
+          // `defaultValue` / `placeholder` / `visibleWhen`. `max` is rejected
+          // BY NAME (`Unrecognized key(s) on this screen field: max`), so
+          // it fails `pnpm validate` rather than quietly doing nothing, and
+          // the executor forwards no such key into the `ScreenSpec` the client
+          // renders. `helpText` is rejected the same way — the console's
+          // dialog would render one, but no flow screen can carry it there.
+          //
+          // That leaves two carriers, and the label is the load-bearing one:
+          // `placeholder` renders only while the input is empty and
+          // `defaultValue: 0` seeds it, so it surfaces for the moment the rep
+          // clears the box to type — real, but not enough on its own.
+          {
+            name: 'discount',
+            label: `Discount % (≤ ${QUOTE_DISCOUNT_CEILING})`,
+            type: 'percent',
+            defaultValue: 0,
+            placeholder: `0-${QUOTE_DISCOUNT_CEILING}`,
+          },
         ],
       },
     },
