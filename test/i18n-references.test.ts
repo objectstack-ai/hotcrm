@@ -742,6 +742,134 @@ describe('every locale is complete on every authored surface', () => {
     expect(bad, `en view labels that drifted from the metadata label:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
+  /**
+   * ── App navigation, the direction nothing was asking (#1262) ─────────────
+   *
+   * Every other assertion in this describe walks the metadata and asks whether
+   * each locale has a translation for it. That direction structurally cannot
+   * see a key whose target is gone: deleting a navigation entry leaves its
+   * `apps.*.navigation` rows behind in all four bundles, and a forward check
+   * has nothing left to iterate that would ever reach them.
+   *
+   * The near miss this is written from: #1259 cut four navigation entries, and
+   * PR #1261 removed their `nav_pipeline` / `nav_all_tasks` /
+   * `nav_event_calendar` / `nav_event_history` keys — plus `group_approvals` —
+   * from `zh-CN`, `es-ES` and `ja-JP` BY HAND. Had that author not remembered,
+   * `pnpm verify` would have stayed fully green carrying 15 dead keys. An
+   * orphan is worse than a gap: grepping `nav_pipeline` afterwards returns
+   * three confident-looking hits in three locales, which reads as "this entry
+   * exists and is translated" — the exact wrong conclusion, and the evidence
+   * shape an agent is most likely to believe.
+   *
+   * ⚠️ What is NOT true, though the card that asked for this said it was, and
+   * it changes what this assertion is for. Measured on this tree by planting a
+   * `nav_ablation_orphan` key in all four bundles and running the real
+   * `objectstack lint --json`: the platform's `translation-target-unknown` rule
+   * DOES report a navigation orphan — one finding per locale, naming the id and
+   * printing the remedy. Orphans are not invisible. What is true is that
+   * nothing FAILS on them: the finding is a `warning`, `objectstack lint` exits
+   * 0 on warnings (13 issues / 1 warning at baseline, 21 / 9 with the orphans
+   * planted, `passed: true` both times), and `scripts/check-lint-i18n-gate.mjs`
+   * gates the `i18n/missing-*` family, which is the forward direction. The
+   * platform rule id carries no `i18n/` namespace at all, so it is outside that
+   * gate's world rather than merely unlisted in it.
+   *
+   * ⇒ This assertion is the thing that turns one orphan key red. It is also
+   * deliberately not a re-implementation of the linter: per this file's own
+   * header, every guard here walks the metadata and asks what it declares, and
+   * none of them asks a linter what it noticed.
+   *
+   * Scope is `apps.*.navigation` and stops there, per the 2026-08-25 ruling:
+   * the keyspace is flat and the nav tree is right beside it. `objects.*`,
+   * `actions.*` and the rest generalise from this shape once it is agreed —
+   * and the forward direction for navigation already gates, as
+   * `i18n/missing-navigation`, so it is not restated here.
+   */
+
+  /**
+   * Every navigation node id each app declares, keyed by app name.
+   *
+   * Groups count: `group_sales` is a translated key like any other, and
+   * `group_approvals` was one of the five orphans #1261 removed by hand. The
+   * walk follows `children` to any depth and also covers each area's own id
+   * and navigation, so an id counts as declared exactly when something can
+   * render it — the same reachability the console builds the sidebar from.
+   */
+  const declaredNavIds = (): Map<string, Set<string>> => {
+    const byApp = new Map<string, Set<string>>();
+    const walk = (nodes: unknown, into: Set<string>): void => {
+      if (!Array.isArray(nodes)) return;
+      for (const node of nodes as AnyRec[]) {
+        if (node?.id) into.add(String(node.id));
+        walk(node?.children, into);
+      }
+    };
+    for (const app of ((stack as AnyRec).apps ?? []) as AnyRec[]) {
+      if (!app?.name) continue;
+      const ids = byApp.get(String(app.name)) ?? new Set<string>();
+      walk(app.navigation, ids);
+      for (const area of (app.areas ?? []) as AnyRec[]) {
+        if (area?.id) ids.add(String(area.id));
+        walk(area?.navigation, ids);
+      }
+      byApp.set(String(app.name), ids);
+    }
+    return byApp;
+  };
+
+  it('sees a real navigation tree and an apps.*.navigation table in every locale', () => {
+    // Guards the guard. The orphan assertion below iterates two derived
+    // collections and would pass by checking nothing if `stack.apps` came back
+    // empty, if the walk stopped yielding ids (a renamed `children`), or if the
+    // bundles stopped exposing `apps` at all — which is exactly how the
+    // navigation guard in `test/action-references.test.ts` spent its life green.
+    const declared = declaredNavIds();
+    expect(declared.size, 'no apps found in stack.apps').toBeGreaterThan(0);
+    for (const [app, ids] of declared) {
+      expect(ids.size, `app "${app}" declares no navigation ids`).toBeGreaterThanOrEqual(20);
+    }
+    for (const [locale, pack] of packs()) {
+      const tables = Object.entries<AnyRec>(pack.apps ?? {}).filter(([, a]) => a?.navigation);
+      expect(
+        tables.length,
+        `${locale}: no apps.*.navigation table parsed out of the bundle`,
+      ).toBeGreaterThan(0);
+      for (const [app, entry] of tables) {
+        expect(
+          Object.keys(entry.navigation ?? {}).length,
+          `${locale}: apps.${app}.navigation is empty`,
+        ).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('no locale carries an apps.*.navigation entry the app does not declare', () => {
+    const declared = declaredNavIds();
+    const bad: string[] = [];
+    for (const [locale, pack] of packs()) {
+      for (const [app, entry] of Object.entries<AnyRec>(pack.apps ?? {})) {
+        const ids = declared.get(app);
+        for (const navId of Object.keys(entry?.navigation ?? {})) {
+          // An unknown app name is reported, never skipped: no key under it can
+          // resolve, and quietly skipping the case is the very shape — a check
+          // that is always green in the orphan direction — this card records.
+          if (ids === undefined) {
+            bad.push(`${locale}: apps.${app}.navigation.${navId} (no app "${app}" in stack.apps)`);
+          } else if (!ids.has(navId)) {
+            bad.push(`${locale}: apps.${app}.navigation.${navId}`);
+          }
+        }
+      }
+    }
+    expect(
+      bad,
+      `navigation translations naming no declared nav item:\n  ${bad.join('\n  ')}\n` +
+        'Delete the key from src/translations/<locale>/app.ts — the entry it was ' +
+        'written for is gone. Leaving it there makes a grep for the id return a ' +
+        'hit in every locale, which reads as "shipped and translated".',
+    ).toEqual([]);
+  });
+
   it('every action parameter label is translated', () => {
     // A param label is the field caption inside an action's modal — untranslated,
     // it is a bare English word on an otherwise localized form.
