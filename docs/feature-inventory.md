@@ -116,9 +116,9 @@
 | QUO-007 | 报价行项目与总额汇总 | 明细对象(`crm_quote_line_item`,受父控、删报价级联,行级税率公式):重算 subtotal/discount_amount/total_price 回写报价,已结报价跳过 | `src/objects/quote_line_item.object.ts` + `.hook.ts` |
 | QUO-008 | 报价自动过期 | 每日 01:00 把过了 `expiration_date` 的未结报价置 expired | `src/flows/quote-expiration.flow.ts` |
 | QUO-009 | 报价视图 | 状态看板(按 total_price 汇总)、报价日→失效日日历、总额汇总列表 | `src/views/quote.view.ts` |
-| QUO-010 | 产品目录对象 | `crm_product`:PRD-{0000} 编号、SKU 租户唯一、类别/产品族/计费类型/计量单位、定价与库存、图片与 PDF datasheet,全组织可读 | `src/objects/product.object.ts` |
+| QUO-010 | 产品目录对象 | `crm_product`:PRD-{0000} 编号、SKU 租户唯一、类别/产品族、定价(目录价/成本)、图片与 PDF datasheet,全组织可读 | `src/objects/product.object.ts` |
 | QUO-011 | 产品目录保护 | `list_price ≥ cost` 硬校验、SKU 自动大写;被任何行项目引用的产品禁删(用 `is_active=false` 退役) | `src/objects/product.hook.ts` |
-| QUO-012 | 产品视图 | 按类别分组列表、产品图封面 gallery 目录、低库存(≤10)标红视图 | `src/views/product.view.ts` |
+| QUO-012 | 产品视图 | 按类别分组列表、产品图封面 gallery 目录 | `src/views/product.view.ts` |
 | QUO-013 | 产品分析 | `product_metrics` 数据集(按类别的数量与目录价汇总) | `src/datasets/product.dataset.ts` |
 
 ## CON — 合同
