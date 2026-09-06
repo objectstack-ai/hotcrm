@@ -104,7 +104,7 @@ Normal. Sequences reserve numbers in batches for performance; gaps occur when re
 
 Three causes:
 
-- **Stale knowledge base** — re-index at *Setup → AI → Knowledge Bases → Refresh*.
+- **Stale knowledge** — there is no index to refresh: the Copilot queries published **Knowledge Article** records directly, so an edit is live the moment it is saved. Setup ships no *AI* group, no *Knowledge Bases* screen and no re-index action; if an answer is stale, correct the article itself at **Service → Knowledge**.
 - **Outdated source document** — the cited article needs updating.
 - **Prompt could be tighter** — for custom skills, refine the prompt; for built-in skills, file a feedback report via the thumbs-down button.
 
@@ -117,7 +117,7 @@ Two possibilities:
 
 ### Why are AI responses slow today?
 
-Check the AI dashboard (*Setup → AI → Health*). Common causes: upstream LLM provider latency, knowledge-base re-indexing in progress, or rate-limit throttling.
+**There is no AI dashboard and no AI health screen.** Setup has no *AI* group at all — that one is **Studio → AI**, and it holds Agents, Tools and Skills, not health — and nothing in Setup reports model latency. The nearest real surface is **Setup → Configuration → AI & Embedder**, which configures the provider, model and embedder and carries *Test connection* and *Test embedder* buttons: a point-in-time probe, not a monitor. Slowness is upstream almost every time — the LLM provider itself, or its rate limits. Re-indexing is never the cause, because nothing re-indexes.
 
 ## 📊 Reports & dashboards
 
