@@ -43,9 +43,15 @@ import { makeFlowHarness, type Rec } from './helpers/flow-harness';
  * hook.
  */
 
+/**
+ * UTC calendar throughout — `setUTCDate`, not `setDate`. Mixing local-calendar
+ * arithmetic with UTC rendering lands one UTC day late across a DST
+ * spring-forward, and no `TZ=UTC` run can tell the two spellings apart.
+ * `test/helpers/hook-harness.ts`'s `daysFromNow` carries the full reasoning.
+ */
 const iso = (daysFromNow: number): string => {
   const d = new Date();
-  d.setDate(d.getDate() + daysFromNow);
+  d.setUTCDate(d.getUTCDate() + daysFromNow);
   return d.toISOString();
 };
 

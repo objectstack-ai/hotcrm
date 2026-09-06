@@ -198,9 +198,15 @@ describe('scheduled create_record declares organization_id (#700)', () => {
 describe('the declared organization_id actually resolves (#700)', () => {
   const ORG = 'org_alpha';
 
+  /**
+   * UTC calendar throughout — `setUTCDate`, not `setDate`. Mixing
+   * local-calendar arithmetic with UTC rendering lands one UTC day late across
+   * a DST spring-forward, and no `TZ=UTC` run can tell the two spellings apart.
+   * `test/helpers/hook-harness.ts`'s `daysFromNow` carries the full reasoning.
+   */
   const day = (offset: number): string => {
     const d = new Date();
-    d.setDate(d.getDate() + offset);
+    d.setUTCDate(d.getUTCDate() + offset);
     return d.toISOString().slice(0, 10);
   };
 

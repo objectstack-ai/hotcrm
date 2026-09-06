@@ -39,9 +39,16 @@ import { regionsOf } from './helpers/flow-regions';
  * older flow tests carried — implements `$lt` / `$lte` / `$nin` / `$in`.
  */
 
+/**
+ * UTC calendar throughout — `setUTCDate`, not `setDate`. The flows under test
+ * filter on a bare `{TODAY()}`, which the engine resolves on UTC; doing the
+ * day arithmetic on the local calendar and rendering it with `toISOString()`
+ * mixes two calendars and lands one UTC day late across a DST spring-forward.
+ * `test/helpers/hook-harness.ts`'s `daysFromNow` carries the full reasoning.
+ */
 const iso = (daysFromNow: number): string => {
   const d = new Date();
-  d.setDate(d.getDate() + daysFromNow);
+  d.setUTCDate(d.getUTCDate() + daysFromNow);
   return d.toISOString();
 };
 const day = (daysFromNow: number): string => iso(daysFromNow).slice(0, 10);
