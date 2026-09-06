@@ -36,11 +36,13 @@ unchanged.
 
 Two occurrences were false in a second way and are corrected:
 `test/i18n-references.test.ts` claimed the repo pins `17.1.0` (two bumps stale)
-and read "the KPI labels are not authorable" as a current fact; whether
-`translatePage` widened on 17.3.0 is now marked unmeasured rather than answered
-by guess. `src/views/task.view.ts` carried a four-row fixture count that was not
-re-taken, so the counts are labelled a 17.2.0 reading while the throw/resolve
-verdict beside them is re-confirmed on the current pin.
+and read "the KPI labels are not authorable" as a current fact — it now cites
+the probe on #1639, which verified against the installed 17.3.0 that
+`translatePage` DOES descend `properties.children`, and points at that card
+rather than the closed #1376. `src/views/task.view.ts` carried a four-row
+fixture count that was not re-taken, so the counts are labelled a 17.2.0
+reading while the throw/resolve verdict beside them is re-confirmed on the
+current pin.
 
 Of the 89 lines under `src/` `test/` `docs/` that named `17.2.0`, 33 carried a
 present-tense pin claim and are re-scoped here. The other 56 say only "measured

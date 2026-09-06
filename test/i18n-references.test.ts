@@ -445,14 +445,18 @@ describe('every locale is complete on every authored surface', () => {
    * `region.components` only, so the KPI labels were NOT authorable and
    * writing them would have been inert copy.
    *
-   * ⚠️ The pin has since moved TWICE and this paragraph has NOT been re-taken
-   * on it — the repo pins 17.3.0 (PR #1577; #1676 re-scoped this label without
-   * re-measuring). ⛔ Do not read "not authorable" as a current fact: whether
-   * `translatePage` widened to `properties.children` on 17.3.0 is unmeasured
-   * here, and the assertions below are unaffected either way. When that is
-   * measured and the walk is confirmed to have widened (hotcrm#1376 owns that
-   * chain), the walk below should widen to `properties.children` to match
-   * `translatePage` —
+   * ⚠️ The pin has since moved TWICE — the repo pins 17.3.0 (PR #1577) — and
+   * that paragraph is now history in BOTH halves. ⛔ Do not read "not
+   * authorable" as a current fact: the upstream precondition IS met at the
+   * installed 17.3.0. `translatePage` descends a container's declared
+   * `properties.children`, probed directly against the installed tree on
+   * hotcrm#1639 (which re-homed the work item off the now-closed hotcrm#1376;
+   * #1676 re-scoped this label and did not re-take that probe).
+   *
+   * So what is outstanding is no longer the platform — it is this repo's own
+   * walk, which has NOT been widened yet. The assertions below are unaffected
+   * either way. When it is widened it should widen to `properties.children` to
+   * match `translatePage` —
    * and to `properties.children` ONLY. `slots.*` and a `page:tabs` item's
    * `children` are deliberately outside the resolver's scope, so widening to
    * them would recreate the other half of the drift pair: offering keys the
