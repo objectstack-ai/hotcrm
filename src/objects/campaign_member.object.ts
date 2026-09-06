@@ -80,9 +80,10 @@ export const CampaignMember = ObjectSchema.create({
 
   // Both groups render on detail pages as well as on forms, and keeping them
   // that way is a constraint on the two lists above, not a free choice (#715).
-  // A detail page hoists the record title plus the first four highlightFields
-  // out of the body, so a group whose every field is hoisted keeps its heading
-  // on forms and silently disappears from detail pages (`field-group-shadowed`).
+  // A synthesized detail page hoists the record title plus the first four
+  // highlightFields out of the body, so a group whose every field is hoisted
+  // keeps its heading on forms and silently disappears from detail pages
+  // (`field-group-shadowed`).
   // `basic` was exactly that: member_number is the title, and campaign/lead/
   // contact are the first three of the strip. `added_date` — the enrollment
   // stamp, which describes the MEMBERSHIP rather than the person's response —
