@@ -368,7 +368,7 @@ export const CaseViews = defineView({
    *
    * ⚠️ `internal_notes`, `customer_rating` and `customer_feedback` left with
    * the Resolution section and had NO other authoring surface at all. #1428
-   * closed HALF of that, on the record page rather than here:
+   * settled both halves of that, and neither answer was "put them back here":
    *
    *   internal_notes                   `case_detail.page.ts`'s Description
    *                                    section, authored by inline edit —
@@ -380,16 +380,21 @@ export const CaseViews = defineView({
    *                                    intake surface for it would be a
    *                                    surface for a value the app discards.
    *
-   * ⛔ `customer_rating` and `customer_feedback` still have NO authoring
-   * surface anywhere in this app, and that is HELD, not forgotten. Whether a
-   * person should type a customer's satisfaction score on the customer's
-   * behalf is a product question — the alternative is a survey the customer
-   * answers — and adding two inputs anywhere would settle it by accident.
-   * #1428 carries the question. Two consequences are recorded there rather
-   * than hidden: `case_csat_followup` already notifies the case owner to "log
-   * their satisfaction rating" against a record with nowhere to put it, and
-   * unlike `internal_notes` neither field is named in ANY profile's `fields`
-   * map — which in this platform means unrestricted, not restricted.
+   *   customer_rating,                 RETIRED under ADR-0049 enforce-or-remove
+   *   customer_feedback                (maintainer ruling, decision batch #21,
+   *                                    2026-09-03). Neither column exists on
+   *                                    `crm_case` any more, so there is nothing
+   *                                    here to omit and nothing anywhere to
+   *                                    author.
+   *
+   * ⛔ Do not re-introduce either field, here or elsewhere. The ruling was not
+   * "no room on this form": a satisfaction score typed by the person being
+   * scored is not the same fact as one the customer gave, and neither field was
+   * named in ANY profile's `fields` map — which on this platform means
+   * unrestricted, not restricted. `case_csat_followup`, whose only purpose was
+   * to notify the case owner to log a rating, was retired in the same change.
+   * A customer-answered survey is a feature and would arrive as its own card,
+   * not as two inputs added back here.
    *
    * `type: 'simple'`, not `'tabbed'`: one section is not a tab strip.
    */
