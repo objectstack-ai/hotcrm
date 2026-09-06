@@ -5,7 +5,7 @@ import { AutomationEngine } from '@objectstack/service-automation';
 import { ExpressionEngine } from '@objectstack/formula';
 import { LeadConversionFlow } from '../src/flows/lead-conversion.flow';
 import { makeFlowHarness, type FlowHarness, type Rec } from './helpers/flow-harness';
-import { type AnyRec, objects, pages } from './helpers/metadata-fixtures';
+import { type AnyRec, localePacks, objects, pages } from './helpers/metadata-fixtures';
 import stack from '../objectstack.config';
 
 /**
@@ -82,7 +82,7 @@ const leadFields = Object.keys(
 const evaluate = (source: string, record: Rec) =>
   ExpressionEngine.evaluate({ dialect: 'cel', source }, { record });
 
-describe('lead record page — the suspected-duplicate banner', () => {
+describe('lead record page — the duplicate banner', () => {
   it('ships a warning-severity `record:alert` on the lead detail page', () => {
     expect(leadPage, 'lead_detail_page is not registered').toBeDefined();
     expect(duplicateAlert, 'the lead detail page carries no record:alert').toBeDefined();
@@ -117,7 +117,15 @@ describe('lead record page — the suspected-duplicate banner', () => {
 
     // 2. The same lead on `driver-sql`, which returns the column as null.
     //    `has()` is TRUE for a present-but-null key, so this shape is a
-    //    different question from the one above, not a restatement of it.
+    //    different question from the one above, not a restatement of it —
+    //    and since #1289 it is the shape that decides how the widening is
+    //    SPELLED. `has(record.duplicate_status)` on its own is the obvious
+    //    way to write "any value the record actually carries", and it is
+    //    wrong: measured on this engine it answers TRUE here, which would put
+    //    a duplicate banner on every clean lead `driver-sql` returns — the
+    //    fail-soft cry-wolf this whole file exists to prevent, arrived at by
+    //    a different road. The comparison beside the guard is what makes
+    //    "set" mean set.
     expect(evaluate(source, { duplicate_status: null }))
       .toEqual({ ok: true, value: false });
 
@@ -125,15 +133,17 @@ describe('lead record page — the suspected-duplicate banner', () => {
     expect(evaluate(source, { duplicate_status: 'suspected' }))
       .toEqual({ ok: true, value: true });
 
-    // 4. The boundary this card deliberately does NOT cross: a human's
-    //    `confirmed` verdict is a different state with a different next step
-    //    (disqualify as a duplicate, which the `crm_lead` validation already
-    //    requires a survivor for). It is surfaced by the `duplicates` section
-    //    below — which renders on ANY duplicate state — not by this banner.
-    //    Widening the banner to `confirmed` is a product call, not a defect
-    //    repair; this line is here so the widening is a deliberate edit.
+    // 4. The boundary #1289 MOVED, and the line that was here to make the
+    //    move deliberate did its job: this used to read `false`, with a
+    //    comment saying widening to `confirmed` was a product call rather
+    //    than a defect repair. The product call was taken — a human's
+    //    `confirmed` verdict is STRONGER evidence than the machine's guess,
+    //    and it was the one duplicate state the banner stayed silent on.
+    //    Since #1288 it is also the state on which the app REFUSES to
+    //    convert, so a rep who reaches Convert without a banner meets a
+    //    refusal dialog with no warning on the record behind it.
     expect(evaluate(source, { duplicate_status: 'confirmed' }))
-      .toEqual({ ok: true, value: false });
+      .toEqual({ ok: true, value: true });
   });
 
   it('the guard is load-bearing — the unguarded spelling really does fault', () => {
@@ -175,6 +185,48 @@ describe('lead record page — the suspected-duplicate banner', () => {
       for (const locale of LOCALES) {
         expect(typeof copy[locale], `${key} has no ${locale} copy`).toBe('string');
         expect(copy[locale].trim().length, `${key}.${locale} is empty`).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('describes the flag without asserting WHICH verdict it is (#1289)', () => {
+    // The half of the widening that is not a predicate. One banner now covers
+    // two states that mean different things — a machine's guess and a
+    // person's verdict — and it has ONE title and ONE body with no
+    // per-state channel: `record:alert` carries a single `visible`, and
+    // `pickLocalized` picks by LANGUAGE, not by row. So the copy may not
+    // assert either state, and the failure is silent and one-directional:
+    // widening the predicate while leaving the old words behind labels every
+    // `confirmed` lead "suspected" — telling a rep a reviewer's finished
+    // verdict is a machine's guess, which is the one sentence this banner
+    // must never say.
+    //
+    // The forbidden words are READ FROM the locale packs rather than typed
+    // here, so this cannot drift from the option labels a rep actually sees
+    // on the `duplicate_status` chip below the banner: renaming an option
+    // re-aims the assertion instead of quietly retiring it.
+    const packs = new Map(localePacks);
+    expect([...packs.keys()].sort(), 'the locale packs no longer cover these four')
+      .toEqual([...LOCALES].sort());
+
+    for (const locale of LOCALES) {
+      const options: AnyRec =
+        packs.get(locale)?.objects?.crm_lead?.fields?.duplicate_status?.options ?? {};
+      const verdicts = [options.suspected, options.confirmed].filter(
+        (w): w is string => typeof w === 'string' && w.trim() !== '',
+      );
+      expect(verdicts.length, `${locale} has no duplicate_status option labels to check against`)
+        .toBe(2);
+
+      const copy = [
+        duplicateAlert!.properties?.title?.[locale],
+        duplicateAlert!.properties?.body?.[locale],
+      ].join(' ');
+      for (const verdict of verdicts) {
+        expect(
+          copy,
+          `the ${locale} banner copy says "${verdict}" — it is shown on BOTH verdicts and may name neither`,
+        ).not.toContain(verdict);
       }
     }
   });
