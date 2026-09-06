@@ -1,11 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { Page } from '@objectstack/spec/ui';
-import {
-  AccountLogCallAction,
-  AccountLogMeetingAction,
-  AccountScheduleMeetingAction,
-} from '../actions/global.actions';
 
 /**
  * Account Detail — slotted record page.
@@ -80,7 +75,13 @@ export const AccountDetailPage = {
         // and all — so this slot has to re-state every action it wants to keep.
         // Before #592 it named none, which is why an account record showed no
         // activity buttons at all while the list row's ⋮ menu showed three.
-        actions: [AccountLogCallAction, AccountLogMeetingAction, AccountScheduleMeetingAction],
+        //
+        // Action IDs, not `ActionDef` objects: `PageHeaderProps.actions` is
+        // `z.array(z.string())` ("Action IDs to show in header") in
+        // @objectstack/spec 17.3.0, and this repo authors against the protocol
+        // (#1653). Each id is the `name` of a crm_account-scoped action in
+        // `src/actions/global.actions.ts`.
+        actions: ['log_call', 'log_meeting', 'schedule_meeting'],
       },
     },
 

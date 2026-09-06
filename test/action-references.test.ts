@@ -9,6 +9,7 @@ import {
   views,
   objectNames,
   packFor,
+  walk,
   PLATFORM_OBJECTS,
 } from './helpers/metadata-fixtures';
 
@@ -288,6 +289,79 @@ describe('list-level action references resolve', () => {
    * too, was one edit from the 100KB hygiene ceiling. #814 has since split the
    * rest of that file by family, which is how this guard came to sit here.
    */
+});
+
+describe('record-page header action references resolve', () => {
+  const actions: AnyRec[] = (stack as any).actions ?? [];
+
+  /**
+   * `page:header` names its buttons by ACTION ID: `PageHeaderProps.actions` is
+   * `z.array(z.string())` — "Action IDs to show in header" (@objectstack/spec
+   * 17.3.0). Until #1653 these four headers authored whole `ActionDef` objects
+   * instead, imported from `src/actions/`, which violated the props schema
+   * (`os lint` reported all sixteen entries as `component-props-invalid`) but
+   * did give the reference a compile-time check for free: a renamed export
+   * broke the build.
+   *
+   * A bare string has no such check. Conforming to the protocol therefore
+   * trades a shape error for the risk of a DANGLING one, which is the worse
+   * defect and the class this suite exists to catch — so the resolution the
+   * type system used to perform is asserted here instead.
+   *
+   * An id resolves when a registered action carries that `name` AND is
+   * reachable from the page's object: the runtime registers a body action
+   * under `<objectName>:<action.name>` and the dispatcher probes `<objectName>`
+   * first (the mechanism note in `src/actions/global.actions.ts`), so an action
+   * scoped to a DIFFERENT object is not reachable from this header even though
+   * its name exists somewhere in the app.
+   */
+  const resolveHeaderAction = (id: string, object: string | undefined): AnyRec[] =>
+    actions.filter(
+      (a) =>
+        a.name === id &&
+        (a.objectName == null || a.objectName === '*' || a.objectName === object),
+    );
+
+  const headers = pages.flatMap((p) =>
+    [...walk(p.regions), ...walk(p.slots)]
+      .filter((c) => c.type === 'page:header')
+      .map((c) => ({ page: p, component: c })),
+  );
+
+  it('every page:header action id names an action reachable from the page object', () => {
+    const bad: string[] = [];
+    let checked = 0;
+    for (const { page, component } of headers) {
+      for (const id of component.properties?.actions ?? []) {
+        checked++;
+        if (typeof id !== 'string') {
+          bad.push(
+            `${page.name}/${component.id}: ${JSON.stringify(id)} is not an action id — ` +
+              '`PageHeaderProps.actions` takes strings',
+          );
+          continue;
+        }
+        if (resolveHeaderAction(id, page.object).length === 0) {
+          bad.push(`${page.name}/${component.id}: "${id}" names no action on "${page.object}"`);
+        }
+      }
+    }
+    expect(
+      checked,
+      'no header action id was checked — the walk no longer reaches any page:header that names actions',
+    ).toBeGreaterThan(0);
+    expect(bad, `header actions that resolve to nothing:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  /**
+   * A clean sweep above is only evidence if the same resolver, on the same
+   * data, is shown REFUSING as well as firing — both ways an id goes dangling.
+   */
+  it('the resolver still refuses an unknown name and a wrong-object name', () => {
+    expect(resolveHeaderAction('convert_lead', 'crm_lead')).not.toEqual([]);
+    expect(resolveHeaderAction('no_such_action', 'crm_lead')).toEqual([]);
+    expect(resolveHeaderAction('convert_lead', 'crm_case')).toEqual([]);
+  });
 });
 
 describe('dashboard date ranges window a field the query layer can actually compare', () => {
