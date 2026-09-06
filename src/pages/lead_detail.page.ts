@@ -276,15 +276,82 @@ export const LeadDetailPage: Page = {
                       // `inline` | `compact` — two values the enum never
                       // permitted — so both legal values took the same branch
                       // and the key selected nothing. The body is chosen by what
-                      // is authored: the `sections` below render the explicit
-                      // groups (the old `custom`), and omitting them would fall
-                      // back to the object's `highlightFields` (the old `auto`).
-                      // This page authors sections, so `auto` was already
-                      // contradicted by the line under it.
-                      // Salesforce-style grouped sections so the Details
-                      // tab actually presents a structured field grid
-                      // instead of falling back to the bare auto-detected
-                      // header chip. Field names map to lead.object.ts.
+                      // is authored — and on an authored `record:details` the
+                      // `sections` below ARE the body, not a preference over
+                      // some default one.
+                      //
+                      // ⛔ There is NO fallback. Omitting `sections` here does
+                      // not fall back to the object's `highlightFields`, nor to
+                      // its `fieldGroups`, nor to a bare auto-detected header
+                      // chip. It renders an EMPTY body.
+                      //
+                      // ⚠️ Read that twice before editing, because both of the
+                      // wrong answers were once written down as fact. THIS
+                      // comment used to assert the `highlightFields` fallback;
+                      // a `crm_forecast` reading recorded on #1452 asserted the
+                      // `fieldGroups` one. Both read as authoritative, they
+                      // contradicted each other, and neither had ever been run
+                      // against the pinned version — so #806's ruling was
+                      // written on a mechanism that does not exist, and that
+                      // cost a full round before anybody measured it. #1521 is
+                      // the card that replaced both guesses with the numbers
+                      // below. ⛔ Do not restore a fallback claim here without
+                      // re-measuring it first.
+                      //
+                      // How it was measured (#806's R28 os-dev report) —
+                      // measured, not inferred: headless Chromium driving a
+                      // real `objectstack start` against a wiped DB,
+                      // `@objectstack/console` 17.2.0, two full runs over the
+                      // same records. Run A, unmutated: 6 sections, 20 field
+                      // rows. Run B, `properties.sections` deleted: 0 and 0 —
+                      // the entire body between the tab strip and the
+                      // "Created by" footer simply absent. Negative control in
+                      // both runs: `crm_contact`, which authors no record page,
+                      // kept rendering its five `fieldGroups`-derived headings
+                      // in A and in B alike, so run B's nothing is this page's
+                      // nothing and not a dead instrument.
+                      //
+                      // Why the two wrong answers looked right: `fieldGroups`
+                      // derivation is real, but it lives in the console's page
+                      // SYNTHESIZER — the path that fabricates a record page
+                      // for an object that has none authored (which is exactly
+                      // why the `crm_contact` control shows it). The synthesizer
+                      // takes authored sections when they are non-empty and
+                      // derives from `fieldGroups` otherwise. The
+                      // `record:details` RENDERER, which is what draws THIS
+                      // page, reads neither `fieldGroups` nor `highlightFields`
+                      // at all: it forwards `sections`/`fields`, and the detail
+                      // view guards each one with `.length > 0` and no else
+                      // branch. An authored page opts out of the synthesizer,
+                      // so it opts out of the derivation with it.
+                      //
+                      // ⚠️ Version caveat: those browser numbers are 17.2.0 and
+                      // this repo now pins 17.3.0. #1521 did NOT re-run the
+                      // browser measurement. What it did do is read the
+                      // installed 17.3.0 console bundle (static, not run), and
+                      // the mechanism is unchanged there: both guards are still
+                      // `sections.length > 0` and `fields.length > 0` with no
+                      // else, the renderer still reads neither of the two
+                      // fallback sources, and the synthesizer still hands the
+                      // derived `highlightFields` to the details node as
+                      // `hideFields` — highlight fields are SUBTRACTED from
+                      // this body, never substituted into it, which is the
+                      // opposite of what the old sentence claimed. Treat the
+                      // 0/0 as a 17.2.0 reading corroborated statically at
+                      // 17.3.0; re-measure in a browser before quoting it for
+                      // any later version. (`fieldGroups` does reach a section
+                      // one way, per the installed spec: a section may name
+                      // `group:` to inherit one group's members and
+                      // presentation. That is a per-section opt-in, not a
+                      // page-level fallback, and this page does not use it.)
+                      //
+                      // So the sections below are load-bearing, not decorative:
+                      // they are the Salesforce-style structured field grid the
+                      // Details tab presents, and with them gone the tab draws
+                      // nothing at all. ⛔ Whether this page should keep
+                      // authoring them is #806's subject and a maintainer
+                      // decision — not a drive-by edit from here. Field names
+                      // map to lead.object.ts.
                       sections: [
                         {
                           name: 'info',
