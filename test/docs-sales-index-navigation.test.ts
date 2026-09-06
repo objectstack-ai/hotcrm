@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
 import { CrmApp } from '../src/apps/crm.app';
+import { CrmTranslations } from '../src/translations';
 import { AccountWorkbenchPage } from '../src/pages/account_workbench.page';
 
 /**
@@ -224,13 +225,29 @@ describe('the source facts that section now rests on (#997)', () => {
     ]);
   });
 
+  /**
+   * Read off the assembled bundle, not off a locale file's source text.
+   *
+   * This used to `readFileSync` `src/translations/<locale>.ts` and regex for
+   * `nav_account_workbench: { label:`. That was a proxy for the fact it means
+   * — "the entry has a label in this locale" — and the proxy broke the moment
+   * the bundles were split into `src/translations/<locale>/` (#1311): the
+   * label was still there, still exported, still in the built artifact, and
+   * the rule went red because the bytes had moved to a sibling file.
+   *
+   * `CrmTranslations` is the surface the app and the i18n gate consume, so a
+   * label reachable through it is a label the product actually shows, however
+   * the files behind it are laid out. It is also the stronger assertion: a
+   * present-but-empty label matched the old regex and fails this.
+   */
   it('every locale bundle gives that nav entry a real label', () => {
     (['zh-CN', 'es-ES', 'ja-JP'] as const).forEach((locale) => {
-      const src = readFileSync(join(REPO_ROOT, `src/translations/${locale}.ts`), 'utf8');
+      const label =
+        CrmTranslations[locale]?.apps?.[CrmApp.name]?.navigation?.nav_account_workbench?.label;
       expect(
-        src,
+        label,
         `${locale}: nav_account_workbench has no label — the docs claim it is not a hidden item`,
-      ).toMatch(/nav_account_workbench:\s*\{\s*label:/);
+      ).toBeTruthy();
     });
   });
 });
