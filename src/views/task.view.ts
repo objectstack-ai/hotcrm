@@ -17,13 +17,47 @@ export const TaskViews = defineView({
     name: 'all_tasks',
     label: 'All Tasks',
     data: { provider: 'object', object: 'crm_task' },
+    // NO `progress_percent` column here (#1214 item 5). The default grid used
+    // to render completion THREE times on one row — 是否完成 (tick), 状态, and
+    // 进度(%) — and the percent was the one that carried nothing.
+    //
+    // ⚠️ The card justified the removal as "every seeded row is 0%". That is
+    // FALSE as stated and was re-measured before deleting: two of the seven
+    // seeded tasks carry 100. What is TRUE is the claim underneath it — nobody
+    // maintains a percent per task — and the seed shows it more sharply than
+    // the card did:
+    //   · every value that exists is 100, and every one of those rows is
+    //     `status: 'completed'` (`service.seed.ts` mirrors what the hook would
+    //     stamp, since hooks do not run over seeds);
+    //   · `task_completion` stamps 100 on the completed transition and writes
+    //     the field at no other time;
+    //   · both `in_progress` rows sit at 0 — the one status where a percent
+    //     could say something a status cannot, and it says nothing.
+    // ⇒ On this grid the column is `status` re-rendered at LOWER resolution: it
+    // cannot tell `not_started` from `in_progress` (both 0), while the `status`
+    // column beside it can. Dropping it loses no fact this row does not already
+    // carry twice.
+    //
+    // ⛔ The FIELD stays, and so does every other reader — this is one column
+    // on one view, not a retirement: `task_gantt` fills its bars from
+    // `gantt.progressField`, `task_board` and `my_open_tasks` show it (neither
+    // carries `status` AND `is_completed`, so there it is not a third spelling),
+    // `avg_progress` in `task.dataset.ts` aggregates it, and the Effort section
+    // of this file's form still lets a user author one.
+    //
+    // ⛔ `is_completed` STAYS, and is not the second half of this cleanup: it is
+    // not an independent shadow that can contradict `status` — `task_completion`
+    // recomputes it from status on every insert and update
+    // (`input.is_completed = effStatus === 'completed'`), which is precisely the
+    // "render completion from status" the card asks for, already done at the
+    // data layer. It is also this list's first sort key and its completion
+    // control.
     columns: [
       { field: 'is_completed', width: 60, align: 'center' },
       { field: 'subject', width: 280, sortable: true, link: true },
       { field: 'status', width: 130, sortable: true },
       { field: 'priority', width: 110, sortable: true },
       { field: 'due_date', width: 140, sortable: true },
-      { field: 'progress_percent', width: 130, align: 'right' },
       { field: 'owner_id', width: 150 },
       { field: 'is_overdue', width: 100, align: 'center' },
     ],
@@ -140,10 +174,15 @@ export const TaskViews = defineView({
       // Operator-only filter — priority and status, no tokens — and the reason
       // recorded here for that has expired (#782). Two claims stood here; both
       // were wrong already on 17.0.0-rc.2 — the version this repo pinned AT
-      // THE TIME they were measured, not the current pin, which is 17.2.0
-      // since PR #1442 (#1467; every reading below is re-taken on it) — in
-      // different ways. "Wrong" is about those two retired claims, not about
-      // the engine: nothing in this block reports broken platform behaviour.
+      // THE TIME they were measured, not the current pin, which is 17.3.0
+      // since PR #1577 (#1676) — in different ways. "Wrong" is about those two
+      // retired claims, not about the engine: nothing in this block reports
+      // broken platform behaviour.
+      //
+      // ⚠️ READ THE VERSION ON EACH READING BELOW. They were taken at three
+      // different pins and are labelled individually; a reading labelled
+      // 17.2.0 was taken there and has NOT been re-taken on 17.3.0 unless it
+      // says so.
       //
       // `{current_user_id}` DOES interpolate. `resolveFilterTokens()` was wired
       // into the ObjectQL READ path at 17.0.0-rc.0 (objectql #3582) ahead of
@@ -154,8 +193,12 @@ export const TaskViews = defineView({
       // {current_org_id}` returned 0 rows (the filter is not being dropped)
       // while `owner_id = {current_user_id}` returned every seeded task (not a
       // literal-string compare either — the literal matches no owner at all).
-      // RE-MEASURED 2026-09-03 on the pinned 17.2.0 (#1467), unchanged: both
-      // probes report exactly those results on the current pin.
+      // RE-MEASURED 2026-09-03 on 17.2.0 (#1467), unchanged: both probes
+      // reported exactly those results there. NOT re-run on 17.3.0 (#1676) —
+      // the two-probe result is a 17.2.0 reading, and the seam it rests on
+      // (`resolveFilterTokens()` on the read path) is re-confirmed on the
+      // current pin by `test/flow-filter-today-token.test.ts`, which runs
+      // green there.
       //
       // `{TODAY()}` is not a spelling of anything and never was. The vocabulary
       // is `{today}` / `{yesterday}` / `{tomorrow}` / `{now}`, the period
@@ -167,8 +210,10 @@ export const TaskViews = defineView({
       // rc.2 `{TODAY()}` was not REJECTED either: the placeholder grammar was
       // `/^\$?\{([a-zA-Z0-9_]+)\}$/`, parentheses fell outside it,
       // `classifyFilterToken('{TODAY()}')` returned null, and the string
-      // reached the driver verbatim and compared as text. On the pinned 17.2.0
-      // that is FALSE — `FILTER_TOKEN_WRAPPED_RE` in `@objectstack/spec/data`
+      // reached the driver verbatim and compared as text. From 17.2.0 on —
+      // re-confirmed on the current pin 17.3.0 (#1676) by the PREMISE case in
+      // `test/flow-filter-today-token.test.ts`, which drives a real engine —
+      // that is FALSE: `FILTER_TOKEN_WRAPPED_RE` in `@objectstack/spec/data`
       // now reads `/^\$?\{([^{}]+)\}$/`, which DOES match `TODAY()`, so it
       // classifies as `kind: 'unknown'` and `resolveFilterTokens()` throws
       // `UnknownFilterTokenError` (`FILTER_TOKEN_UNKNOWN`, HTTP 400) — the same
@@ -179,8 +224,11 @@ export const TaskViews = defineView({
       // sees the filter at all.
       //
       // Measured on rc.2 over a four-row `crm_task` fixture (due 30d ago / 1d
-      // ago / today / in 7d), and RE-MEASURED 2026-09-03 on the pinned 17.2.0
-      // (#1467) over the same fixture — three rows unchanged, the fourth not:
+      // ago / today / in 7d), and RE-MEASURED 2026-09-03 on 17.2.0 (#1467)
+      // over the same fixture — three rows unchanged, the fourth not. ⛔ The
+      // row COUNTS below are a 17.2.0 reading and were NOT re-taken on 17.3.0
+      // (#1676); what WAS re-confirmed there is the throw/resolve verdict in
+      // the right-hand column, by `test/flow-filter-today-token.test.ts`:
       //
       //                                  rc.2               17.2.0
       //     due_date <  '{today}'    ->  2 rows (past-due)  2 rows
@@ -237,18 +285,21 @@ export const TaskViews = defineView({
       // `due_date < {TODAY()}`, and that only `{current_user_id}` interpolates.
       // Both halves were wrong already on 17.0.0-rc.2 — the version this repo
       // pinned AT THE TIME they were measured, not the current pin, which is
-      // 17.2.0 since PR #1442 (#1467) — and the file said the opposite of
+      // 17.3.0 since PR #1577 (#1676) — and the file said the opposite of
       // itself: the note on `todays_tasks` above asserted that
       // `{current_user_id}` does NOT interpolate. It does.
-      // That comment carries the measurements, re-taken there on the current
-      // pin, INCLUDING the one that moved: `{TODAY()}` is REJECTED on 17.2.0
-      // (`FILTER_TOKEN_UNKNOWN`) where on rc.2 it shipped to the driver as
-      // text, so "cannot resolve `{TODAY()}`" is wrong on the current pin for a
-      // different reason than it was wrong on rc.2. The canonical `{today}`
-      // resolves on the read path either way, so a strictly past-due filter IS
-      // expressible: `due_date < '{today}'` selected exactly the past-due rows
-      // out of four on rc.2, and does again on 17.2.0 (RE-MEASURED
-      // 2026-09-03).
+      // That comment carries the measurements with their versions, INCLUDING
+      // the one that moved: `{TODAY()}` is REJECTED from 17.2.0 on
+      // (`FILTER_TOKEN_UNKNOWN`, re-confirmed on the current pin 17.3.0 by
+      // `test/flow-filter-today-token.test.ts`) where on rc.2 it shipped to
+      // the driver as text, so "cannot resolve `{TODAY()}`" is wrong on the
+      // current pin for a different reason than it was wrong on rc.2. The
+      // canonical `{today}` resolves on the read path either way, so a
+      // strictly past-due filter IS expressible: `due_date < '{today}'`
+      // selected exactly the past-due rows out of four on rc.2, and did again
+      // on 17.2.0 (RE-MEASURED 2026-09-03; that row count was not re-taken on
+      // 17.3.0, where the token's resolution is re-confirmed by the test file
+      // named above).
       //
       // So the honest statement is narrower than the one that stood here: this
       // view CAN be given a strictly past-due cut through `{today}`, and is not

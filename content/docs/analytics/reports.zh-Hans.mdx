@@ -32,8 +32,8 @@ HotCRM 开箱即用地发布 **十份** 报表 —— `src/reports/index.ts` 这
 
 剩下五个只是单纯不存在，其中三个自己建得出来、两个建不出来：
 
-- **Forecast vs Actual** —— 建得出来，但不是从管道数据集：配额在 `forecast_metrics`（`src/datasets/forecast.dataset.ts`）里，一位负责人一个周期一行，带 **Quota**、**Closed**、**Pipeline**、**Commit** 以及派生的 **Attainment**。基于它的任何报表都必须把周期钉死 —— 要么按 **Period** 分组，要么筛到单个 **Period Type** + **Period Start** —— 因为这些度量都是普通求和，而表里同时存着好几个周期。
-- **Win/Loss Analysis** —— 建得出来：**Win Reason** 与 **Loss Reason** 是维度，**Won Deals**、**Lost Deals**、**Settled Deals**、**Won Revenue**、**Lost Revenue** 与 **Win Rate** 都是 `opportunity_metrics` 上已声明的度量。
+- **Forecast vs Actual** —— 建得出来，但不是从管道数据集：配额在 `forecast_metrics`（`src/datasets/forecast.dataset.ts`）里，一位负责人一个周期一行的结算快照，并把「相对配额的达成」声明成了它自己的一个度量。基于它的任何报表都必须把周期钉死 —— 要么按 **Period** 分组，要么筛到单个 **Period Type** + **Period Start** —— 因为这些度量都是普通求和，而表里同时存着好几个周期。
+- **Win/Loss Analysis** —— 建得出来：**Win Reason** 与 **Loss Reason** 都是 `opportunity_metrics` 上的维度，而一笔交易赢与丢的那一面在那里已经声明成了度量 —— **Win Rate** 就在其中，并与构成它分子分母的那几个交易数一并发布。
 - **Big Deals Won** —— 建得出来：赢单金额就是 **Won Revenue**，而按金额卡一个阈值是普通的报表筛选条件。
 - **Sales Cycle Length** —— 建不出来。没有任何地方存着销售周期时长：商机上有 **Stage Entry Date** 和 **Close Date**，但没有「已过天数」这样的列，而它唯一带的时长 **Days in Current Stage** 就是上面那个查询后公式。*按产品* 也没有落点 —— 没有任何数据集读 `crm_opportunity_line_item`。
 - **Discount Approval Activity** —— 建不出来。审批本身是真的（`src/flows/opportunity-approval.flow.ts`，以及商机上的 **Approval Status**），但没有任何维度把那个字段暴露出来；折扣则是行项目上的百分比（`crm_opportunity_line_item.discount`），而没有任何数据集读行项目。
@@ -49,7 +49,7 @@ HotCRM 开箱即用地发布 **十份** 报表 —— `src/reports/index.ts` 这
 本节曾经列出的三份报表，一份都没有发布，其中两份还用了一个并不存在的线索状态：
 
 - **Lead Conversion Funnel** 与 **Aged Leads** 以任何形式都不存在。两者都依赖一个 *Working* 状态，而 `crm_lead.status` 根本没有这个取值 —— 真实路线是 *New → Contacted → Qualified → Unqualified → Converted*（`src/objects/lead.object.ts`），其中 *Unqualified* 从任何开放状态都能进入。*Working* 是导入别名表（`src/mappings/lead_import.mapping.ts`）里的一行，它在记录导入时把这个历史写法映射到 **Contacted**；产品从不显示这个词。声明出来的路线见 [状态机](/zh-Hans/docs/administration/state-machines)。
-- **Lead Source ROI** 同样不存在，而且按它写的口径，语义层也答不出来：`lead_metrics`（`src/datasets/lead.dataset.ts`）只声明了一个度量 —— 线索计数 —— 外加四个维度（状态、来源、创建日期、最后联系月份）。「按来源的数量」可以直接从它得到；转化率要你自己在按状态分组的计数上做除法；而收入根本不在这个数据集里 —— 它从不跨到商机那一侧。
+- **Lead Source ROI** 同样不存在，而且按它写的口径，语义层也答不出来：`lead_metrics`（`src/datasets/lead.dataset.ts`）只声明了一个度量 —— 线索计数 —— 而且它从不跨到商机那一侧。「按来源的数量」可以直接从它得到，因为 **Source** 就是它的维度之一；转化率要你自己在按状态分组的计数上做除法；而收入那一半无处可取。
 
 线索计数也是别处唯一会读的线索数字：[Executive Overview](/zh-Hans/docs/analytics/dashboards) 仪表盘上的 **Open Leads** 磁贴正是用同一个数据集数未转化线索。其余的请自建 —— 见下文《自定义报表》。
 
@@ -63,13 +63,13 @@ HotCRM 开箱即用地发布 **十份** 报表 —— `src/reports/index.ts` 这
 | **SLA Performance Report** | 工单数、**SLA 违约率** 与平均解决时长，按优先级 —— 只统计已关闭的工单 |
 | **Cases Opened by Priority × Day** | 每日新增工单的矩阵：行是优先级，列是工单开出来的那一天 |
 
-本节曾经列出的另外五份报表哪儿都没有发布，而且其中多数是在向语义层要它根本没有的东西。`case_metrics`（`src/datasets/case.dataset.ts`）只读 `crm_case` 一个对象，六个维度 —— **Status**、**Priority**、**Origin**、**Type**、**Created**（按天分桶）、**Resolving Article** —— 外加八个度量：**Cases**、**Avg Resolution (h)**、**SLA Violation Rate**、**Closed Cases**、**Resolved by KB**、**KB Deflection Rate**、**Cases Within SLA** 与 **SLA Compliance Rate**。
+本节曾经列出的另外五份报表哪儿都没有发布，而且其中多数是在向语义层要它根本没有的东西。`case_metrics`（`src/datasets/case.dataset.ts`）只读 `crm_case` 一个对象 —— 不联接、也不跨第二个对象 —— 而下面每一条都点名了卡住它的那一件事。它能答的那些问题在 [多维数据集](/zh-Hans/docs/analytics/cubes) 上；维度与度量本身则声明在 `src/datasets/case.dataset.ts` 里，那是唯一会保持最新的地方。
 
 - **Case Volume by Origin** 是这五份里唯一你自己建得出来的：**Origin** 是维度，所以「按 Email / Phone / Web / Chat / Portal 数工单」只差一份自建报表。它只是不在随应用发布的那几份里。
 - **Case Resolution Time** *按类别和客服* —— 度量本身是真的，上面两份汇总报表都带着它；但 **客服** 这一维根本够不着：`owner_id` 是工单上的字段，没有任何维度把它暴露出来。最接近「类别」的是 **Type**（*Question / Problem / Feature Request / Bug*）。
 - **Top Accounts by Case Volume** 同样建不出来 —— 没有客户维度，这个数据集也从不跨到 `crm_account`。
 - **Reopened Cases** 数的是没有任何东西在记的事。工单确实会重开 —— 状态机允许 *Resolved* 与 *Closed* 回到 *In Progress* —— 但没有任何字段标记一张工单曾被重开，也没有任何度量在数它。
-- **CSAT by Agent** 两头都不成立：**Customer Satisfaction**（`customer_rating`）是工单上真实的 1–5 星字段，但 `case_metrics` 没有为它声明任何度量，也没有「客服」这一维可分组。
+- **CSAT by Agent** 两头都不成立：根本没有满意度数据 —— 工单对象上的**客户满意度**评分因为产品里从来没有任何环节采集它而被退役 —— 也没有「客服」这一维可分组。
 
 **SLA Performance Report 里同样没有任何首次响应数字**，而且它那个 SLA 数字是 **SLA Violated** 标志的平均值，也就是违约 *率*，不是准时率。（准时率本身是有声明的：**SLA Compliance Rate**，服务仪表盘的 SLA 仪表盘图画的就是它。只是这份报表没有带上它。）本应用根本不度量首次响应：**First Response Date** 只在工单上第一次记录 *已经发生过* 的通话或会议时被盖上，此后从不与任何目标比较；`case_metrics` 没有声明任何首次响应度量，所以没有报表、也没有仪表盘磁贴能报出一个来。参见 [SLA 与升级](/zh-Hans/docs/service/sla-and-escalation)。
 
@@ -82,10 +82,10 @@ HotCRM 开箱即用地发布 **十份** 报表 —— `src/reports/index.ts` 这
 | **Accounts by Industry and Type** | 有效客户的矩阵 —— 行是行业，列是客户类型，每格给出客户数与 **Annual Revenue** 合计 |
 | **Customer Churn Signals** | 面向主动挽留的四块面板：**CSM-Flagged Accounts**（**Health Score** 为 *At Risk* 或 *Churning*，按类型——唯一不带时间窗的面板）、**At-Risk Accounts**（有效但 60 天以上无活动，按行业）、**Silent High-Value Accounts**（战略级与企业级客户沉默 90 天以上，按类型）与 **Recently Lost Opportunities**（最近 30 天丢单，按负责人） |
 
-本节曾经列出的三份合同报表哪儿都没有发布，而且按它们写的口径一份都建不出来，原因是同一个：**没有合同数据集**。`src/datasets/` 覆盖九个对象 —— 客户、工单、联系人、活动、预测、线索、商机、产品、任务 —— `crm_contract` 不在其中，所以分析侧根本无法对合同计数、求和或分组。
+本节曾经列出的三份合同报表哪儿都没有发布，而且按它们写的口径一份都建不出来，原因是同一个：**没有合同数据集**。`crm_contract` 不在 `src/datasets/` 读取的那些对象之列，所以分析侧根本无法对合同计数、求和或分组。
 
 - **Contracts Expiring** —— 问题本身是真实的，回答它的是**视图**而不是报表：**Renewal Calendar**（合同上同名的那个标签页）把每份合同按 **End Date** 摆在日历上，**Contract Terms** 则把同样的合同期画成甘特图（`src/views/contract.view.ts`）。两者都在列记录，都不做合计 —— 因为它们背后没有可供合计的数据集。
-- **Active Contracts by Product** —— 两头都够不着：既没有合同数据集，`product_metrics` 又只是产品目录的汇总（**Category**、产品数与目录价合计），它从不跨到合同，也不跨到行项目。
+- **Active Contracts by Product** —— 两头都够不着：既没有合同数据集，`product_metrics` 又只是产品目录的汇总，它从不跨到合同，也不跨到行项目。
 - **Renewal Pipeline** —— 按它写的口径（*与续约合同关联的商机*）建不出来：这条关联是反着走的（`crm_contract.crm_opportunity`），而且没有任何维度把它暴露出来。不过续约管道本身建得出来：**Deal Type** 是 `opportunity_metrics` 上的维度，*Existing Customer - Renewal* 正是它的取值之一。
 
 ### 📣 市场营销报表

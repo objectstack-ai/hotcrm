@@ -23,19 +23,37 @@ export const ConvertLeadAction: Action = {
   // hid the button on most seeded leads, so it read as "conversion is missing".
   // Only already-converted or disqualified leads hide it.
   visible: P`record.is_converted == false && record.status != "unqualified" && record.status != "converted"`,
-  confirmText: 'Are you sure you want to convert this lead?',
+  // NO `confirmText` (#1214 item 1). A screen flow IS the confirmation, and
+  // this one opens `Conversion Details` — a screen carrying the decision
+  // (`Create Opportunity?`, and the deal's name and amount), a Cancel button,
+  // and the suspected-duplicate warning that says something TRUE about THIS lead.
+  // The dialog that used to sit in front of it asked `Are you sure you want to
+  // convert this lead?` and carried no information the next screen did not
+  // carry better, so it cost every conversion one extra click to answer a
+  // question it could not help anyone answer. Confirms are for DESTRUCTIVE
+  // actions with no follow-up UI — `close_case` / `escalate_case` in
+  // `case.actions.ts` are the shape that still earns one.
+  //
+  // Mechanism, measured on the console this app pins (@objectstack/console
+  // 17.3.0, `dist/assets/`) rather than assumed: the runner gates the dialog on
+  // the key's presence alone —
+  //     if (action.confirmText && !await confirmHandler(evaluate(action.confirmText)))
+  //         return { success: false, error: 'Action cancelled by user' };
+  // — so REMOVING the key is what removes the dialog; there is no `confirm:
+  // false` to write, and no other key re-raises it.
   successMessage: 'Lead converted successfully!',
   refreshAfter: true,
   // ADR-0011 — opt this Action in to AI, which materialises the
   // `action_convert_lead` tool the `lead_qualification` skill references.
   // Flow-typed with a target, so it has a headless path. `requiresConfirmation`
   // is the only key the AI path reads: `actionLooksDestructive` consults
-  // `ai.requiresConfirmation` and nothing else. `confirmText` above is the
-  // console's confirm-dialog string for a human click and reaches no AI code.
-  // The flag is SURFACED, not enforced — `list_actions` reports
-  // `requiresConfirmation: true` and the calling client decides what to do
-  // with it, while `run_action` dispatches the flow with no server-side pause.
-  // It warns the caller that this is irreversible; it is not a lock.
+  // `ai.requiresConfirmation` and nothing else, and the console's
+  // confirm-dialog string reached no AI code — so dropping `confirmText` above
+  // leaves the AI approval signal exactly where it was. The flag is SURFACED,
+  // not enforced — `list_actions` reports `requiresConfirmation: true` and the
+  // calling client decides what to do with it, while `run_action` dispatches
+  // the flow with no server-side pause. It warns the caller that this is
+  // irreversible; it is not a lock.
   ai: {
     exposed: true,
     requiresConfirmation: true,

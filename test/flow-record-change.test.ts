@@ -1,7 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import { CaseCsatFollowupFlow } from '../src/flows/case-csat-followup.flow';
 import { CaseEscalationFlow, CaseEscalationOnCreateFlow } from '../src/flows/case-escalation.flow';
 import { ContactWelcomeFlow } from '../src/flows/contact-welcome.flow';
 import { LeadAssignmentFlow } from '../src/flows/lead-assignment.flow';
@@ -541,12 +540,18 @@ describe('record-change flows under a user-less trigger (#684)', () => {
 
   /**
    * MEASURED, and deliberately recorded because the issue that prompted #684
-   * over-stated it: the four notify-only record-change flows
-   * (`contact_welcome`, `task_urgent_alert`, `opportunity_won_alert`,
-   * `case_csat_followup`) were NOT refused on 17.0.0-rc.2. The guard fires at
-   * `get_record` / `create_record` / `update_record` / `delete_record`, and
-   * `notify` dispatches through the messaging service without a run data
-   * context, so a user-less run of these completes and delivers.
+   * over-stated it: the notify-only record-change flows (`contact_welcome`,
+   * `task_urgent_alert`, `opportunity_won_alert`) were NOT refused on
+   * 17.0.0-rc.2. The guard fires at `get_record` / `create_record` /
+   * `update_record` / `delete_record`, and `notify` dispatches through the
+   * messaging service without a run data context, so a user-less run of these
+   * completes and delivers.
+   *
+   * `case_csat_followup` was the fourth flow this case covered, and it was the
+   * one that carried the measurement through a `wait` node — the run suspended
+   * at its P1D timer with the notify on the far side. #1428 retired that flow
+   * with the two fields it existed to collect, so the leg went with it; the
+   * three above still pin the same measurement.
    *
    * They carry `runAs: 'system'` anyway — the declaration records that
    * record-change automation runs as the platform, so a data node added later
@@ -555,16 +560,6 @@ describe('record-change flows under a user-less trigger (#684)', () => {
    * so the day it DOES start being refused, we hear about it here.
    */
   it('the notify-only siblings deliver either way (they were never the broken ones)', async () => {
-    const closed = { id: 'c2', case_number: 'CASE-2', status: 'closed', owner_id: 'agent1' };
-    for (const flow of [CaseCsatFollowupFlow, withoutRunAs(CaseCsatFollowupFlow as unknown as Rec)]) {
-      const { h, result } = await fire(
-        'case_csat_followup', flow as unknown as Rec, closed, { status: 'open' },
-      );
-      expect(String(result.error ?? '')).not.toContain('[runAs]');
-      // The run suspends at the P1D timer; the notify is on the other side.
-      expect(h.notifications).toHaveLength(0);
-    }
-
     const contact = {
       id: 'ct1', first_name: 'Ada', last_name: 'Lovelace',
       owner_id: 'rep1', email_opt_out: false,

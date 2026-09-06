@@ -165,7 +165,6 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       company_information: { label: '公司信息' },
       additional_information: { label: '附加信息' },
       privacy: { label: '隐私' },
-      lead_details: { label: '线索详情' },
       general: { label: '常规信息' },
       details: { label: '详情' },
       step_1_contact_details: { label: '第一步：联系方式' },
@@ -187,7 +186,6 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       ...activityActions,
       convert_lead: {
         label: '转化线索',
-        confirmText: '确认要转化此线索吗？',
         successMessage: '线索转化成功！',
       },
       create_campaign: {

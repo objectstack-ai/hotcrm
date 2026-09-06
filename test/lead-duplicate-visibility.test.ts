@@ -28,7 +28,7 @@ import stack from '../objectstack.config';
  *
  * | surface | carries | unevaluable predicate ⇒ |
  * | ------- | ------- | ----------------------- |
- * | `lead_detail_page` `record:alert` | `properties.visible`, client CEL | FAIL-SOFT: banner SHOWN |
+ * | `lead_detail_page` `record:alert` ×2 | `properties.visible`, client CEL | FAIL-SOFT: banner SHOWN |
  * | `lead_conversion` edges `e21`/`e22`/`e25` | flow condition, server CEL | RUN FAILS |
  *
  * They fail in opposite directions and both are ugly: a fail-soft banner cries
@@ -45,6 +45,18 @@ import stack from '../objectstack.config';
  * `test/flow-condition-totality.test.ts` (record-change flow conditions) and
  * `test/view-predicate-dialect.test.ts` (view `visibleWhen`). This is the
  * fourth: a record PAGE component predicate.
+ *
+ * ## One banner per verdict (#1628)
+ *
+ * The record-page half is TWO `record:alert` components, not one. #1207 gated
+ * a single banner on `suspected`; #1289 widened it to every verdict and, being
+ * one component with one `visible` and one title/body pair, had to word it so
+ * it named NEITHER state. Since #1288 the two verdicts have opposite next
+ * steps — `suspected` warns and conversion proceeds, `confirmed` is refused —
+ * so the neutral wording told the rep something was wrong without telling them
+ * what to do. Splitting the component is what buys that back, and it moves
+ * three of the pins below: the shape, the predicates, and the copy rule, which
+ * INVERTS from "names neither verdict" to "names its own and never the other".
  */
 
 const LOCALES = ['en', 'zh-CN', 'ja-JP', 'es-ES'] as const;
@@ -66,7 +78,42 @@ function componentsOf(node: unknown, out: AnyRec[] = []): AnyRec[] {
 
 const leadPage: AnyRec | undefined = pages.find((p) => p.name === 'lead_detail_page');
 const leadPageComponents = componentsOf(leadPage?.regions ?? []);
-const duplicateAlert = leadPageComponents.find((c) => c.type === 'record:alert');
+const duplicateAlerts = leadPageComponents.filter((c) => c.type === 'record:alert');
+
+/**
+ * One banner per verdict, addressed by the id the page gives it (#1628).
+ *
+ * The id is not decoration. A region renders as
+ * `components.map((node, i) => <SchemaRenderer key={node?.id || fallback} …>)`
+ * — read out of the shipped console bundle at the `.objectui-sha` pin — so two
+ * sibling `record:alert` nodes are two MOUNTED components, each evaluating its
+ * own `properties.visible` against the same row, and each node's `id` is its
+ * React key. That is what makes one-banner-per-verdict expressible at all, and
+ * it is why the ids must differ.
+ */
+const ALERT_IDS = {
+  suspected: 'lead_duplicate_alert_suspected',
+  confirmed: 'lead_duplicate_alert_confirmed',
+} as const;
+
+type Verdict = keyof typeof ALERT_IDS;
+const VERDICTS = Object.keys(ALERT_IDS) as Verdict[];
+const OTHER_VERDICT: Record<Verdict, Verdict> = {
+  suspected: 'confirmed',
+  confirmed: 'suspected',
+};
+
+const alertFor = (verdict: Verdict): AnyRec | undefined =>
+  duplicateAlerts.find((c) => c.id === ALERT_IDS[verdict]);
+
+/** Every record shape a driver can hand the renderer, plus the verdicts. */
+const RECORD_SHAPES: Array<[string, Rec]> = [
+  ['a record with no keys at all (driver-memory / driver-mongodb)', {}],
+  ['a clean lead on driver-sql (present and null)', { duplicate_status: null }],
+  ['suspected', { duplicate_status: 'suspected' }],
+  ['confirmed', { duplicate_status: 'confirmed' }],
+  ['a value neither option declares', { duplicate_status: 'merged' }],
+];
 const leadFields = Object.keys(
   (objects.find((o) => o.name === 'crm_lead')?.fields ?? {}) as AnyRec,
 );
@@ -82,22 +129,56 @@ const leadFields = Object.keys(
 const evaluate = (source: string, record: Rec) =>
   ExpressionEngine.evaluate({ dialect: 'cel', source }, { record });
 
-describe('lead record page — the duplicate banner', () => {
-  it('ships a warning-severity `record:alert` on the lead detail page', () => {
+describe('lead record page — the duplicate banners, one per verdict', () => {
+  it('ships ONE `record:alert` per verdict, under distinct ids (#1628)', () => {
     expect(leadPage, 'lead_detail_page is not registered').toBeDefined();
-    expect(duplicateAlert, 'the lead detail page carries no record:alert').toBeDefined();
-    expect(duplicateAlert!.properties?.severity).toBe('warning');
+
+    // Two nodes rather than one widened node. Since #1288 the verdicts have
+    // OPPOSITE next steps — `suspected` warns and conversion proceeds,
+    // `confirmed` is refused outright — while one `record:alert` carries one
+    // `visible` and one title/body pair, resolved per LANGUAGE and not per
+    // row. So a single banner can state one next step or neither; #1289
+    // rightly chose neither, and that is the gap this card closes.
+    expect(
+      duplicateAlerts.map((c) => c.id).sort(),
+      'the lead page no longer carries exactly the two per-verdict banners',
+    ).toEqual([ALERT_IDS.confirmed, ALERT_IDS.suspected].sort());
+
+    // Distinct ids are load-bearing: the region renderer keys each child by
+    // `node.id`, so two siblings sharing one id would collide as React keys.
+    expect(
+      new Set(duplicateAlerts.map((c) => c.id)).size,
+      'two sibling banners share one id — they would collide as React keys',
+    ).toBe(duplicateAlerts.length);
   });
 
-  it('gates the banner with a CEL ENVELOPE, not a bare string', () => {
+  /**
+   * Severity is measured, not decorative. `RecordAlertProps` in
+   * `@objectstack/spec` documents that `error` renders `role="alert"` /
+   * `aria-live="assertive"` and every other level `role="status"` / polite,
+   * and `record-alert.tsx` implements exactly that at the pin. `confirmed` is
+   * the state on which the app REFUSES the rep's next click, so it is
+   * announced assertively; `suspected` stays a polite caution, because
+   * conversion still goes through.
+   */
+  it.each([
+    ['suspected', 'warning'],
+    ['confirmed', 'error'],
+  ] as Array<[Verdict, string]>)('the %s banner ships at `%s` severity', (verdict, severity) => {
+    const alert = alertFor(verdict);
+    expect(alert, `the lead detail page carries no ${verdict} banner`).toBeDefined();
+    expect(alert!.properties?.severity).toBe(severity);
+  });
+
+  it.each(VERDICTS)('gates the %s banner with a CEL ENVELOPE, not a bare string', (verdict) => {
     // Not a style point. `ExpressionEvaluator.evaluateCondition` routes only an
     // explicit `{ dialect: 'cel' }` envelope to `@objectstack/formula`; a bare
     // string takes the legacy JS path, whose `FormulaFunctions` carries no CEL
     // `has()`. There the guard below would itself be the fault — and this call
     // site is fail-soft, so the banner would show on every lead. `P` from
     // `@objectstack/spec` is what produces the envelope.
-    const visible = duplicateAlert!.properties?.visible;
-    expect(visible, 'the banner has no visibility predicate — it would show on every lead')
+    const visible = alertFor(verdict)!.properties?.visible;
+    expect(visible, `the ${verdict} banner has no visibility predicate — it would show on every lead`)
       .toBeTruthy();
     expect(typeof visible).toBe('object');
     expect(visible.dialect).toBe('cel');
@@ -105,57 +186,79 @@ describe('lead record page — the duplicate banner', () => {
     expect(visible.source.trim()).not.toBe('');
   });
 
-  it('answers with a VERDICT on every record shape a driver can hand it', () => {
-    const source: string = duplicateAlert!.properties.visible.source;
+  /**
+   * Each banner answers with a VERDICT on every record shape a driver can hand
+   * it, and answers TRUE on exactly its own verdict.
+   *
+   * Row 2 is the one that decides how a per-verdict predicate is SPELLED.
+   * `has()` is TRUE for a present-but-null key — measured, and re-measured
+   * here — so `has(record.duplicate_status)` alone would put a duplicate
+   * banner on every clean lead `driver-sql` returns. #1289 answered that with
+   * `&& … != null`; a per-verdict banner answers it with the equality itself,
+   * which is strictly narrower: `null == "suspected"` is a clean `false` on
+   * this engine, not a fault. Both halves of the shape #1289 ruled for survive
+   * — the `has()` guard verbatim, and a comparison that makes "set" mean set —
+   * and the comparison got stricter, which is the whole point of the split.
+   * The same spelling already ships one file over, on this same field: the
+   * conversion flow's `e21` / `e25` edges (#1288) read
+   * `has(vars.leadRecord.duplicate_status) && … == "suspected"`.
+   *
+   * Row 5 is a behaviour change this card MAKES, deliberately. A value neither
+   * option declares used to raise the widened banner, while the conversion
+   * flow's `e22` Clean edge treats it as clean and converts it — the page and
+   * the flow disagreed about the same row. Two verdict-scoped predicates make
+   * the page agree with the flow: no banner, and conversion proceeds.
+   */
+  it.each(VERDICTS)('the %s banner answers with a verdict on every record shape', (verdict) => {
+    const source: string = alertFor(verdict)!.properties.visible.source;
 
-    // 1. A brand-new / clean lead on a driver that omits absent columns. This
-    //    is the shape that decides whether the banner is trustworthy: an abort
-    //    here answers SHOWN, and a duplicate warning on a lead that is not a
-    //    duplicate teaches reps to dismiss the banner they need.
-    expect(evaluate(source, {}), 'faults on a record with no keys at all')
-      .toEqual({ ok: true, value: false });
-
-    // 2. The same lead on `driver-sql`, which returns the column as null.
-    //    `has()` is TRUE for a present-but-null key, so this shape is a
-    //    different question from the one above, not a restatement of it —
-    //    and since #1289 it is the shape that decides how the widening is
-    //    SPELLED. `has(record.duplicate_status)` on its own is the obvious
-    //    way to write "any value the record actually carries", and it is
-    //    wrong: measured on this engine it answers TRUE here, which would put
-    //    a duplicate banner on every clean lead `driver-sql` returns — the
-    //    fail-soft cry-wolf this whole file exists to prevent, arrived at by
-    //    a different road. The comparison beside the guard is what makes
-    //    "set" mean set.
-    expect(evaluate(source, { duplicate_status: null }))
-      .toEqual({ ok: true, value: false });
-
-    // 3. The lead the card is about.
-    expect(evaluate(source, { duplicate_status: 'suspected' }))
-      .toEqual({ ok: true, value: true });
-
-    // 4. The boundary #1289 MOVED, and the line that was here to make the
-    //    move deliberate did its job: this used to read `false`, with a
-    //    comment saying widening to `confirmed` was a product call rather
-    //    than a defect repair. The product call was taken — a human's
-    //    `confirmed` verdict is STRONGER evidence than the machine's guess,
-    //    and it was the one duplicate state the banner stayed silent on.
-    //    Since #1288 it is also the state on which the app REFUSES to
-    //    convert, so a rep who reaches Convert without a banner meets a
-    //    refusal dialog with no warning on the record behind it.
-    expect(evaluate(source, { duplicate_status: 'confirmed' }))
-      .toEqual({ ok: true, value: true });
+    for (const [label, record] of RECORD_SHAPES) {
+      const expected = record.duplicate_status === verdict;
+      expect(
+        evaluate(source, record),
+        `the ${verdict} banner misreads ${label}`,
+      ).toEqual({ ok: true, value: expected });
+    }
   });
 
-  it('the guard is load-bearing — the unguarded spelling really does fault', () => {
+  it.each(RECORD_SHAPES)('at most one banner is ever shown — %s', (_label, record) => {
+    // The record-page twin of the flow's "exactly one live edge" pin. Two
+    // banners on one row would stack two contradictory next steps on the same
+    // lead; nothing structural prevents that, so it is measured.
+    const shown = VERDICTS.filter((v) => {
+      const result = evaluate(alertFor(v)!.properties.visible.source, record);
+      expect(result.ok, `the ${v} banner faulted — this surface is FAIL-SOFT, so it would SHOW`)
+        .toBe(true);
+      // `expect` does not narrow the union for tsc, so the discriminant is
+      // re-read here rather than asserted away.
+      return result.ok === true && result.value === true;
+    });
+    expect(
+      shown.length,
+      `both banners are visible at once on this row: ${shown.join(' + ')}`,
+    ).toBeLessThanOrEqual(1);
+  });
+
+  it.each(VERDICTS)('the %s banner\u2019s guard is load-bearing — the unguarded spelling really does fault', (verdict) => {
     // Reverse verification of the premise, pinned rather than assumed: if a
     // future engine starts answering `false` for an absent key, this flips and
     // the next reader is told the premise changed instead of finding a guard
-    // that protects nothing. The unguarded text is built from the shipped
-    // predicate's own comparison so the two cannot drift apart.
-    const source: string = duplicateAlert!.properties.visible.source;
+    // that protects nothing.
+    //
+    // The unguarded text is still BUILT FROM the shipped predicate's own
+    // comparison (`split('&&').pop()`) so the two cannot drift apart — the
+    // property #1289 gave this pin. Splitting the banner changed what that
+    // tail SAYS: it used to be `!= null`, and is now `== "<this banner's
+    // verdict>"`. So the second leg has to ask for the banner's OWN verdict
+    // row rather than a fixed one — the unguarded `== "confirmed"` tail is
+    // correctly FALSE on a suspected lead, and asserting `true` there would
+    // pin the wrong claim.
+    const source: string = alertFor(verdict)!.properties.visible.source;
     const unguarded = source.split('&&').pop()!.trim();
     expect(unguarded, 'the shipped predicate no longer ends in the comparison')
       .toContain('record.duplicate_status');
+    expect(unguarded, 'the shipped predicate no longer compares against its own verdict')
+      .toContain(`"${verdict}"`);
 
     const faulted = evaluate(unguarded, {});
     expect(faulted.ok, `\`${unguarded}\` answered on a keyless record — the guard is now decorative`)
@@ -163,10 +266,10 @@ describe('lead record page — the duplicate banner', () => {
 
     // …and it is the ABSENT key that faults it, not the text: the same
     // predicate answers cleanly the moment the column is present.
-    expect(evaluate(unguarded, { duplicate_status: 'suspected' })).toEqual({ ok: true, value: true });
+    expect(evaluate(unguarded, { duplicate_status: verdict })).toEqual({ ok: true, value: true });
   });
 
-  it('carries its copy in all four shipped locales', () => {
+  it.each(VERDICTS)('the %s banner carries its copy in all four shipped locales', (verdict) => {
     // `record:alert` resolves `title` / `body` through `pickLocalized(…,
     // language)`, so an inline `{ en, 'zh-CN', … }` map is a delivered
     // capability — and for `body` it is the ONLY channel: the i18n extractor's
@@ -178,8 +281,8 @@ describe('lead record page — the duplicate banner', () => {
       .toEqual([...LOCALES].sort());
 
     for (const key of ['title', 'body'] as const) {
-      const copy = duplicateAlert!.properties?.[key];
-      expect(copy, `the banner has no ${key}`).toBeTruthy();
+      const copy = alertFor(verdict)!.properties?.[key];
+      expect(copy, `the ${verdict} banner has no ${key}`).toBeTruthy();
       expect(typeof copy, `${key} is a bare string — three locales would read English`)
         .toBe('object');
       for (const locale of LOCALES) {
@@ -189,45 +292,55 @@ describe('lead record page — the duplicate banner', () => {
     }
   });
 
-  it('describes the flag without asserting WHICH verdict it is (#1289)', () => {
-    // The half of the widening that is not a predicate. One banner now covers
-    // two states that mean different things — a machine's guess and a
-    // person's verdict — and it has ONE title and ONE body with no
-    // per-state channel: `record:alert` carries a single `visible`, and
-    // `pickLocalized` picks by LANGUAGE, not by row. So the copy may not
-    // assert either state, and the failure is silent and one-directional:
-    // widening the predicate while leaving the old words behind labels every
-    // `confirmed` lead "suspected" — telling a rep a reviewer's finished
-    // verdict is a machine's guess, which is the one sentence this banner
-    // must never say.
+  it.each(VERDICTS)('the %s banner names ITS OWN verdict, and never the other one (#1628)', (verdict) => {
+    // The copy half of the split, and it inverts the #1289 pin this replaces.
     //
-    // The forbidden words are READ FROM the locale packs rather than typed
-    // here, so this cannot drift from the option labels a rep actually sees
-    // on the `duplicate_status` chip below the banner: renaming an option
-    // re-aims the assertion instead of quietly retiring it.
+    // While ONE banner covered both states it could assert neither: a single
+    // `visible` and a single title/body pair, picked by LANGUAGE and not by
+    // row, meant naming a verdict would mislabel every lead in the other
+    // state — telling a rep that a reviewer's finished verdict was a machine's
+    // guess. #1289's pin therefore forbade BOTH words on the one banner.
+    //
+    // With one banner per verdict that constraint reverses in one direction
+    // and hardens in the other. Each banner is now shown on exactly one state,
+    // so it MUST name that state — a banner whose whole job is "here is what
+    // to do next" has to say which situation it is talking about, and the
+    // vocabulary the rep can check it against is the `duplicate_status` chip
+    // below it. And it must still never name the OTHER verdict, for exactly
+    // the reason #1289 gave.
+    //
+    // ⭐ Both words are still READ FROM the locale packs rather than typed
+    // here — the property #1289 built in, deliberately preserved: renaming an
+    // option re-aims both assertions instead of quietly retiring them.
     const packs = new Map(localePacks);
     expect([...packs.keys()].sort(), 'the locale packs no longer cover these four')
       .toEqual([...LOCALES].sort());
 
+    const other = OTHER_VERDICT[verdict];
+
     for (const locale of LOCALES) {
       const options: AnyRec =
         packs.get(locale)?.objects?.crm_lead?.fields?.duplicate_status?.options ?? {};
-      const verdicts = [options.suspected, options.confirmed].filter(
-        (w): w is string => typeof w === 'string' && w.trim() !== '',
-      );
-      expect(verdicts.length, `${locale} has no duplicate_status option labels to check against`)
-        .toBe(2);
+      const own = options[verdict];
+      const foreign = options[other];
+      expect(typeof own, `${locale} has no \`${verdict}\` option label to check against`)
+        .toBe('string');
+      expect(typeof foreign, `${locale} has no \`${other}\` option label to check against`)
+        .toBe('string');
 
       const copy = [
-        duplicateAlert!.properties?.title?.[locale],
-        duplicateAlert!.properties?.body?.[locale],
+        alertFor(verdict)!.properties?.title?.[locale],
+        alertFor(verdict)!.properties?.body?.[locale],
       ].join(' ');
-      for (const verdict of verdicts) {
-        expect(
-          copy,
-          `the ${locale} banner copy says "${verdict}" — it is shown on BOTH verdicts and may name neither`,
-        ).not.toContain(verdict);
-      }
+
+      expect(
+        copy,
+        `the ${locale} ${verdict} banner never says "${own}" — the rep cannot tell which verdict it is reading`,
+      ).toContain(own);
+      expect(
+        copy,
+        `the ${locale} ${verdict} banner says "${foreign}" — it is shown only on ${verdict} and would mislabel the verdict`,
+      ).not.toContain(foreign);
     }
   });
 
@@ -311,6 +424,21 @@ async function startConversion(lead: Rec) {
  * dialog said no" and "nothing was created" are two different claims, and only
  * the second one is the refusal.
  */
+/**
+ * What the console posts for a field it prefilled.
+ *
+ * The runner seeds its value state from EVERY field carrying a `defaultValue`
+ * — visible or not — and submits that bag whole; `visibleWhen` gates only the
+ * required-completeness check. So reading the value back off the descriptor is
+ * what these fixtures would post for real, and it keeps them from restating
+ * the conversion's +90-day literal, which the flow authors in exactly one
+ * place on purpose (#1155's rule, applied to `closeDate` by #1708). A prefill
+ * that stopped arriving comes back here as an absent key, and the screen's own
+ * `required` then fails the resume — which is the point.
+ */
+const prefillOf = (screen: AnyRec | null, name: string): unknown =>
+  ((screen?.fields ?? []) as AnyRec[]).find((f) => f.name === name)?.defaultValue;
+
 const productsOf = (harness: FlowHarness) => ({
   accounts: harness.store.crm_account?.length ?? 0,
   contacts: harness.store.crm_contact?.length ?? 0,
@@ -345,6 +473,7 @@ async function convert(lead: Rec) {
   expect(started.status, 'the conversion never suspended on a screen').toBe('paused');
   const done: AnyRec = (await harness.resume(runId, {
     createOpportunity: true, opportunityName: 'Skyline Deal', opportunityAmount: 50_000,
+    closeDate: prefillOf(screen, 'closeDate'),
   })) as AnyRec;
   return { harness, screen, done, products: productsOf(harness) };
 }
@@ -406,6 +535,7 @@ describe('lead_conversion — the warning at the moment of conversion', () => {
     const runId = started.runId ?? started.run?.id;
     const done: AnyRec = (await harness.resume(runId, {
       createOpportunity: true, opportunityName: 'Skyline Deal', opportunityAmount: 50_000,
+      closeDate: prefillOf(screen, 'closeDate'),
     })) as AnyRec;
     expect(done.error ?? null, 'the clean lead could no longer be converted').toBeNull();
     expect(harness.store.crm_account?.length).toBe(1);
@@ -416,10 +546,23 @@ describe('lead_conversion — the warning at the moment of conversion', () => {
     // Anti-regression on the reorder: `get_lead` now runs BEFORE the screen, so
     // the screen's own contract is worth re-stating here — a screen that lost
     // its fields would still pass every assertion above.
+    //
+    // ## Why this list grew by one (#1708), on purpose
+    //
+    // `closeDate` is the widening this pin exists to catch, and catching it is
+    // what made the decision explicit rather than incidental: the flow used to
+    // stamp `crm_opportunity.close_date` at `TODAY() + 90` inside
+    // `create_opportunity`, where no rep ever saw it, and `close_date` is what
+    // files a deal into a forecast PERIOD. Surfacing it moves a number out of
+    // the flow body and onto a screen, which is exactly the kind of change a
+    // conversion screen should not be able to make quietly — so the list is
+    // still EXACT and still ordered. It is not `toContain`, not a length
+    // check, and not a subset: the next field added here has to be argued the
+    // same way this one was.
     const { screen } = await startConversion(seedLead());
     const fields = (screen!.fields ?? []) as AnyRec[];
     expect(fields.map((f) => f.name)).toEqual([
-      'createOpportunity', 'opportunityName', 'opportunityAmount',
+      'createOpportunity', 'opportunityName', 'opportunityAmount', 'closeDate',
     ]);
     expect(fields[0].defaultValue, 'the declared default no longer reaches the client')
       .toBe(false);

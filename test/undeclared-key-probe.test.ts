@@ -23,9 +23,14 @@ import { QuoteLineItem } from '../src/objects/quote_line_item.object';
  * and field-level security by construction.
  *
  * This file is the re-measurement taken on 17.1.0 — the version this repo
- * pinned AT THE TIME, not the current pin (#1460: 17.2.0 since PR #1442; the
- * probe below has not been re-taken on it, though its assertions do run green
- * there) — and it says two different things about two different write paths.
+ * pinned AT THE TIME, not the current pin (#1676: 17.3.0 since PR #1577) —
+ * and it says two different things about two different write paths.
+ *
+ * ⚠️ The two halves are at DIFFERENT takings, so read the label on each. Half
+ * 1 (the caller path) is still the 17.1.0 reading and has not been re-taken
+ * since, though its assertions run green on the current pin. Half 2 (the hook
+ * path) WAS re-taken on the 17.2.0 -> 17.3.0 upgrade and its finding changed
+ * — see the block above that `describe`.
  *
  * ## The caller path is CLOSED, and that is what half 1 pins
  *

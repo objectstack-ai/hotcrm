@@ -21,7 +21,7 @@ import { CASE_SLA_DEFAULT_TIER, caseSlaHours } from '../src/objects/_case-sla';
  *
  *   - `opportunity_amount_rollup`  → opportunity.amount
  *   - `quote_total_rollup`         → quote subtotal / discount_amount / total_price
- *   - `campaign_snapshot_metrics`  → the campaign num_* / actual_revenue block
+ *   - the four #597 refresh hooks  → the campaign num_* / actual_revenue block
  *   - `_line-item-price-fill`      → line list_price
  *   - `lead.hook` whole-star rounding, and the product cost/price rule
  *
@@ -271,7 +271,13 @@ describe('line items carry what the price-fill hook would have stamped', () => {
   });
 });
 
-describe('campaign_snapshot_metrics would be a no-op over the seeds', () => {
+// Since #597 the campaign metric block is owned by FOUR refresh hooks, not by
+// one completion-time snapshot: `campaign_metrics_refresh`,
+// `campaign_attribution_refresh` and `campaign_lead_conversion_refresh` in
+// `campaign.hook.ts`, plus `campaign_member_metrics_refresh` in
+// `campaign_member.hook.ts`. All four reach the same inlined recompute, and it
+// is that one arithmetic the block below re-derives from the seed rows.
+describe('the campaign metric refresh would be a no-op over the seeds', () => {
   it('every campaign metric equals what the hook recomputes from members and attributed deals', () => {
     const drift: string[] = [];
     for (const campaign of campaigns) {
@@ -314,9 +320,10 @@ describe('campaign_snapshot_metrics would be a no-op over the seeds', () => {
     expect(withResponses.length, 'no campaign would render a response rate').toBeGreaterThan(0);
   });
 
-  it('completed campaigns are the ones whose snapshot has actually happened', () => {
-    // The hook only fires on the transition INTO `completed`; a completed
-    // campaign with no membership would mean the snapshot ran against nothing.
+  it('completed campaigns are the ones whose metrics have something to count', () => {
+    // Not a completion-time snapshot any more — the refresh runs on every
+    // input change. A completed campaign with no membership would mean its
+    // metric block had nothing to count on any of those runs.
     const completed = campaigns.filter((c) => String(c.status) === 'completed');
     expect(completed.length, 'no completed campaign to carry the ROI narrative').toBeGreaterThan(0);
     for (const c of completed) {

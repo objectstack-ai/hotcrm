@@ -61,11 +61,11 @@ export const CampaignEnrollmentFlow: Flow = {
      *
      * Both branch edges (`e4` / `e7`) read `vars.memberSource`, so it must be
      * bound on every path reaching them. On the 17.1.0 spec — the version this
-     * repo pinned AT THE TIME of the measurement, not the current pin (#1460:
-     * 17.2.0 since PR #1442) — `FlowVariableSchema` DOES carry `defaultValue`,
-     * and it still does on 17.2.0 (schema key re-checked 2026-09-03; the
-     * SEEDING behaviour asserted next was not re-measured), and the engine
-     * seeds it
+     * repo pinned AT THE TIME of the measurement, not the current pin (#1676:
+     * 17.3.0 since PR #1577) — `FlowVariableSchema` DOES carry `defaultValue`,
+     * and it still did on 17.2.0 (schema key re-checked 2026-09-03; neither
+     * that key nor the SEEDING behaviour asserted next has been re-checked on
+     * 17.3.0), and the engine seeds it
      * before the start node runs, so this key alone binds the name — while a
      * caller-supplied `context.params.memberSource` still WINS over it.
      *

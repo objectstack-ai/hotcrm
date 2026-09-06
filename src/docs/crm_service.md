@@ -1,12 +1,11 @@
 ---
 title: Service Process & SLA Rules
-description: Case priority, SLA breach handling, automatic escalation, and satisfaction follow-up — the rules behind the Service desk.
+description: Case priority, SLA breach handling, and automatic escalation — the rules behind the Service desk.
 # sources: flows/objects this doc documents. Schedules/rules here are guarded by
 # test/docs-drift.test.ts; build ignores unknown frontmatter keys.
 sources:
   - flow:case_sla_monitor
   - flow:case_escalation
-  - flow:case_csat_followup
   - object:crm_case
   - object:crm_knowledge_article
 ---
@@ -65,12 +64,6 @@ for the SLA clock:
 > a **missed SLA Due Date** escalates *on breach*. Both flag, hand the case to
 > the Service Manager pool, and alert the agent it came from — and both leave it
 > where it is when that pool is unstaffed.
-
-## After a case closes — satisfaction follow-up (automatic)
-
-When a case is set to **Closed**, the system waits **one day** and then prompts
-the case owner to collect a **satisfaction (CSAT) rating** from the customer.
-This keeps CSAT capture consistent without anyone remembering to chase it.
 
 ## Knowledge articles
 

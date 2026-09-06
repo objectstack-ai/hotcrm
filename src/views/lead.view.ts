@@ -529,49 +529,13 @@ export const LeadViews = defineView({
 
   /**
    * Additional Named Form Views - Demonstrating All 6 Layout Types
+   *
+   * One example per layout type. The SIMPLE one is the default `form`
+   * above, so this block carries the other five, plus the public and the
+   * conditional-visibility examples. Every layout is demonstrated exactly
+   * once across the file: each entry below is the only example of its own.
    */
   formViews: {
-    /**
-     * 1. SIMPLE Layout (already shown as default form above)
-     * Basic sectioned form
-     */
-    quick_create: {
-      type: 'simple',
-      data: {
-        provider: 'object',
-        object: 'crm_lead',
-      },
-      sections: [
-        {
-          // Neutral label — this form backs BOTH the create and edit dialogs,
-          // so "Quick Lead Creation" read wrong when editing.
-          name: 'lead_details',
-          label: 'Lead Details',
-          columns: 2,
-          fields: [
-            { field: 'first_name', required: true },
-            { field: 'last_name', required: true },
-            { field: 'company', required: true, span: 'full' },
-            { field: 'email', required: true },
-            'phone',
-            'status',
-            // Source at intake — attribution is unrecoverable if not captured
-            // when the lead is keyed in.
-            'lead_source',
-            'owner_id',
-            // See the default form: `unqualified` requires a reason, so the
-            // reason must be reachable wherever the status can be set.
-            {
-              field: 'disqualification_reason',
-              required: true,
-              visibleOn: P`has(record.status) && record.status == "unqualified"`,
-            },
-            ...DUPLICATE_LINK_FIELDS,
-          ],
-        },
-      ],
-    },
-    
     /**
      * 2. TABBED Layout
      * Organize complex forms with tabs

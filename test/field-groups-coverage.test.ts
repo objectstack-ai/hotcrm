@@ -6,11 +6,50 @@ import stack from '../objectstack.config';
 /**
  * `fieldGroups` coverage and integrity (#575 A3).
  *
- * `fieldGroups` is what turns a detail page from one flat grid of every column
- * into the sectioned layout the rest of the app uses. It is pure metadata, so
- * `os validate` is happy either way: an object with no groups renders, it just
- * renders badly, and an object whose fields point at a group key that was
- * renamed renders *those fields* into nothing at all. Both fail silently.
+ * Where `fieldGroups` is actually read — measured, not inferred (#1674).
+ * Derivation lives in the console's page SYNTHESIZER, the path that
+ * fabricates a record page for an object that has NONE authored. The
+ * `record:details` RENDERER that draws an authored page reads neither
+ * `fieldGroups` nor `highlightFields`: it forwards `sections`/`fields`, and
+ * the detail view guards each with `.length > 0` and no else branch. An
+ * authored page opts out of the synthesizer, and out of the derivation with
+ * it.
+ *
+ * ⛔ Two sentences stood here before and both were wrong. "`fieldGroups` is
+ * what turns a detail page into the sectioned layout" holds only on the
+ * synthesized path — `crm_lead` is the standing counter-example, with
+ * `src/pages/lead_detail.page.ts` authoring six sections while
+ * `src/objects/lead.object.ts` declares ten groups the detail renderer never
+ * consults. And "an object with no groups renders, it just renders badly"
+ * understated the failure in the one direction that mattered: an authored
+ * `record:details` that omits `sections` renders 0 sections and 0 field rows
+ * — an empty body, not an ugly one. ⭐ Understating a failure until it reads
+ * as harmless is how #806's ruling came to be written on a mechanism that
+ * does not exist.
+ *
+ * ⚠️ Provenance, with its expiry stated: the 0/0 is R28's browser measurement
+ * on #806 — headless Chromium against a wiped DB, `@objectstack/console`
+ * 17.2.0, negative control included, 6 sections / 20 field rows collapsing to
+ * 0/0 once `sections` was deleted. #1521 corroborated the mechanism
+ * statically on the installed 17.3.0 bundle. ⛔ Neither #1521 nor this card
+ * re-ran the browser, so treat it as a 17.2.0 reading corroborated at 17.3.0
+ * rather than a standing fact, and re-measure before quoting it for a later
+ * pin. `src/pages/lead_detail.page.ts` carries the long form and
+ * `src/views/case.view.ts` states the same split for forms. ⛔ Do not write a
+ * fourth account of this mechanism without measuring it first.
+ *
+ * ⚠️ ⛔ Do not over-read the correction. `fieldGroups` DOES reach an authored
+ * `record:details`, one way: a section may name `group:` in place of
+ * `fields:` and inherit that group's members and presentation
+ * (`deriveFieldGroupLayout`, ADR-0085 §5 — verified on the installed 17.3.0
+ * spec, which makes the two keys mutually exclusive). That is a per-section
+ * opt-in, not a page-level fallback.
+ *
+ * ⇒ So these assertions still stand: `fieldGroups` is load-bearing for every
+ * FORM and every SYNTHESIZED detail page, where a field pointing at a group
+ * key that was renamed still renders into nothing at all. It is pure metadata
+ * on both paths — `os validate` is happy either way, and both failures are
+ * silent.
  *
  * `crm_campaign` and `crm_task` were the two business objects with a full
  * detail page and zero groups. The two line-item objects are deliberately
@@ -146,7 +185,10 @@ describe('fieldGroups are internally consistent', () => {
         if (members.every((m) => hiddenFromBody.has(m))) {
           bad.push(
             `${obj.name}: group "${key}" (${members.join(', ')}) is entirely title-or-strip — ` +
-              'it renders on forms and never on detail pages',
+              'it renders on forms and nowhere on a SYNTHESIZED detail page. An object that ' +
+              'AUTHORS its own `record:details` is outside the reach of this check: measured ' +
+              'in a browser on @objectstack/console 17.3.0, such a page drops the fields ITS ' +
+              'OWN `record:highlights` lists, not the `highlightFields` read here',
           );
         }
       }

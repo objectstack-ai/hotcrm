@@ -29,7 +29,11 @@
 type Doc = Record<string, unknown>;
 
 /**
- * Query options accepted by read operations.
+ * Query options accepted by `find` and `findOne`.
+ *
+ * NOT by `count` — see `HookCountQuery` below, whose legal set is smaller and
+ * was measured rather than assumed. The predicate reasoning in the rest of this
+ * block governs both types.
  *
  * The predicate key is `where` — and ONLY `where`. `filter` is deliberately
  * absent so a hook that reaches for it fails at COMPILE time.
@@ -43,10 +47,13 @@ type Doc = Record<string, unknown>;
  * safety consequences: believing the stale one makes an author over-estimate
  * the blast radius of every `filter` call site, in the unsafe direction.
  *
- * MEASURED per method against the pinned `@objectstack` packages (17.2.0), on
- * the object the kernel actually injects as `ctx.api`. Every line is pinned by
- * an assertion in `test/hook-query-predicate.test.ts`, against a real engine
- * rather than the test harness:
+ * MEASURED per method against the object the kernel actually injects as
+ * `ctx.api`. First taken on 17.2.0; RE-TAKEN on the current pin 17.3.0 during
+ * #1528 — the legal key sets and the `filter` fold both came back UNCHANGED,
+ * so the readings below are current, not merely inherited. Every line is
+ * pinned by an assertion in `test/hook-query-predicate.test.ts`, against a
+ * real engine rather than the test harness, and that file runs green on the
+ * current pin:
  *
  *   - `find`    — `filter` is ALIASED to `where`; the predicate is applied.
  *   - `findOne` — `filter` is ALIASED to `where`; the predicate is applied.
@@ -70,6 +77,50 @@ export interface HookQuery {
   where?: Doc;
   fields?: string[];
   top?: number;
+}
+
+/**
+ * Query options accepted by `count`.
+ *
+ * Deliberately narrow, in the same sense as `HookUpdateOptions` below — except
+ * that this one is not a policy choice about what a hook SHOULD reach for. It
+ * is the engine's own legal set, and `count`'s really is just the predicate.
+ *
+ * This type exists because the alternative was measured wrong. All three read
+ * methods were declared `HookQuery`, so the compiler blessed
+ * `count({ where, fields })` and `count({ where, top })` — and the engine
+ * throws on both, on every call. That is this file being WIDER than the surface
+ * it describes, which is the failure it exists to prevent and the one it is
+ * worst at noticing: nothing here is machine-checked, so a declaration is only
+ * as true as the last person to measure it (#1528, the same class as #616).
+ * Reaching for a projection or a row cap on a call that returns a NUMBER is a
+ * compile error again.
+ *
+ * MEASURED against the pinned `@objectstack` packages (17.3.0), on the object
+ * the kernel injects as `ctx.api`, by handing each key to the engine and
+ * reading its unknown-option guard — which prints the legal set verbatim, and
+ * is the cheapest authoritative reading of it:
+ *
+ *   count('crm_account') does not recognise option 'top'. The engine executes
+ *   none of it, so the call would succeed with the option silently ignored
+ *   (#4371). Legal keys for count: context, where.
+ *
+ * `fields` produces the same message, word for word; the two were measured
+ * separately rather than one inferred from the other. `find` / `findOne` accept
+ * both — their legal set is `bypassTenantAudit, context, expand, fields, limit,
+ * offset, orderBy, preserveAudit, search, searchFields, tenantId, tenantIds,
+ * timezone, transaction, where`, and `top` reaches them as a declared alias of
+ * `limit`, the same fold that makes `filter` an alias of `where` above. So the
+ * asymmetry is real and belongs in the types, not in a comment asking the
+ * reader to remember it.
+ *
+ * `context` is legal on the engine and omitted here on purpose, exactly as
+ * `HookUpdateOptions` omits `multi`: a hook has no business rebuilding the
+ * scope the kernel already handed it. Excess-property checking rejects it at
+ * the call site.
+ */
+export interface HookCountQuery {
+  where?: Doc;
 }
 
 /**
@@ -122,7 +173,7 @@ export interface HookDeleteOptions {
  * that may not be there at runtime.
  */
 export interface HookObjectApi {
-  count: (q: HookQuery) => Promise<number>;
+  count: (q: HookCountQuery) => Promise<number>;
   find: (q: HookQuery) => Promise<Array<Doc>>;
   findOne: (q: HookQuery) => Promise<Doc | null>;
   insert: (doc: Doc) => Promise<unknown>;

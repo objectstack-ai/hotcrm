@@ -73,8 +73,6 @@ export const service: Record<string, ObjectTranslationData> = {
       escalation_reason: { label: '升级原因' },
       resolution: { label: '解决方案' },
       resolved_by_article: { label: '解决该工单的知识文章', help: '解决此工单的知识库文章 —— 转移率的统计口径。' },
-      customer_rating: { label: '客户满意度', help: '客户满意度评分（1-5 星）' },
-      customer_feedback: { label: '客户反馈' },
       internal_notes: { label: '内部备注', help: '内部备注，客户不可见' },
       is_closed: { label: '是否关闭' },
       display_title: { label: '显示名称' },

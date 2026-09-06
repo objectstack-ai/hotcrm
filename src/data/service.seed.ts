@@ -86,12 +86,28 @@ export const tasks = defineSeed(Task, {
       related_to_opportunity: 'Acme Platform Upgrade',
     },
     {
+      // The workshop this task asks someone to book is ALREADY on the
+      // calendar: the `Acme — AI agent governance workshop` event lower in
+      // this file is `planned` at daysFromNow(6), and the attendee builder
+      // dates its invitation `daysAgo(max(-6 + invitedDaysBefore(9), 0))` =
+      // daysAgo(3) — already sent, and already answered `tentative`. So the
+      // booking task is DONE, and it was done the day the invitation went
+      // out. An open "schedule it" task beside a booked-and-invited meeting
+      // is the contradiction itself, not a due date to nudge (#1660).
+      //
+      // The EVENT owns the workshop's date. Nothing here restates it — both
+      // dates below derive from the invitation instant — so there is no
+      // second copy to drift out of step.
       subject: 'Acme — schedule AI governance workshop',
       description: 'Block a 90-min joint workshop with Acme’s compliance team to walk through how HotCRM agents handle data scoping, RBAC, audit trails, and human-in-the-loop. Pre-read: ADR-0007 + the governance demo deck.',
-      status: 'not_started',
+      status: 'completed',
       priority: 'high',
       priority_rank: 3,
-      due_date: cel`daysFromNow(7)`,
+      due_date: cel`daysAgo(3)`,
+      completed_date: cel`daysAgo(3)`,
+      // Hooks don't run over seeds — mirror what task_completion would stamp.
+      is_completed: true,
+      progress_percent: 100,
       related_to_type: 'crm_opportunity',
       related_to_account: 'Acme Corporation',
       related_to_opportunity: 'Acme Platform Upgrade',

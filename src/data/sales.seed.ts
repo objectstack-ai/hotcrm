@@ -171,6 +171,17 @@ export const accounts = defineSeed(Account, {
       health_score: 'healthy',
       // Held: workshop, demo, calls and an onsite visit — see `service.seed.ts`.
       last_activity_date: cel`today()`,
+      // The ARR line below used to read "signed Q1 2025 renewal" while the
+      // deal it describes closes `daysAgo(15)` — a fixed calendar quarter on a
+      // relative-date record, wrong in both the quarter and the year (#1692).
+      // The label is not re-derived here either: that date belongs to
+      // `Acme Annual Renewal 2025` (`close_date`) and to its contract
+      // (`signed_date`, `revenue.seed.ts`), and computing a copy in this module
+      // means re-stating that record's own offset — a second source of truth
+      // for a value two records already own. Same ruling as the `next_step`
+      // block below (#1660): no date goes back into this prose, absolute OR
+      // relative. What stays true however the renewal is dated is that it IS
+      // signed: the deal is `closed_won` and its contract `activated`.
       description: `**Strategic Customer · Enterprise Tier**
 
 Acme Corporation is a Series-C robotics & industrial automation
@@ -187,7 +198,7 @@ three regional teams (NA, EMEA, APAC).
   net-30 terms.
 
 **Current state**
-- ARR: $220K (signed Q1 2025 renewal). Up 22% YoY.
+- ARR: $220K (signed renewal). Up 22% YoY.
 - 1 open enterprise opportunity ($150K platform upgrade) in proposal
   stage, 1 service ticket open (login issues), 1 billing dispute
   awaiting customer response.
@@ -809,7 +820,18 @@ export const opportunities = defineSeed(Opportunity, {
 NA + EMEA teams. Drivers: (1) AI agent governance becomes a hard
 requirement after their internal compliance review, (2) advanced
 analytics seats for the Ops org, (3) priority support SLA.`,
-      next_step: `Send the revised proposal (Enterprise edition, 18-month term, 12% multi-year discount) to Jordan Park by EOW. Schedule the AI governance workshop for the week of close_date - 14d.`,
+      // This sentence used to DATE the workshop itself ("the week of
+      // close_date - 14d" => daysFromNow(16)) while the seeded event had it at
+      // daysFromNow(6) and a seeded task chased it at daysFromNow(7) — three
+      // records, three answers (#1660). The date now lives in exactly ONE
+      // place, the `crm_event` row in service.seed.ts, and this prose states
+      // only what stays true however that event is scheduled: it is booked,
+      // and its invitation has gone out (the attendee builder clamps
+      // `invited_date` at daysAgo(0), so a planned event's invite is never in
+      // the future). Re-dating the event therefore cannot strand this line.
+      // Do not put a date back here, absolute OR relative: a second copy is
+      // a second thing to drift.
+      next_step: `Send the revised proposal (Enterprise edition, 18-month term, 12% multi-year discount) to Jordan Park by EOW. The AI governance workshop with their compliance team is already booked and the invitation is out.`,
     },
     {
       name: 'Globex Manufacturing Suite',
@@ -915,11 +937,13 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       win_reason: 'better_price',
     },
     // ─── Campaign-attributed wins ───────────────────────────────────────
-    // `crm_campaign` is what `campaign_snapshot_metrics` counts when a campaign
-    // completes (`num_opportunities` / `num_won_opportunities` / the summed
-    // `actual_revenue`). Before #591 not one opportunity carried it, so those
+    // `crm_campaign` is what `campaign_attribution_refresh` counts
+    // (`num_opportunities` / `num_won_opportunities` / the summed
+    // `actual_revenue`) — on every opportunity insert, update and delete, not
+    // once at completion. Before #591 not one opportunity carried it, so those
     // three metrics were structurally zero and every campaign's seeded
-    // `actual_revenue` was a number the hook would have erased on completion.
+    // `actual_revenue` was a number the hook would have overwritten on the
+    // first attributed write.
     // These three wins are what make the marketing ROI numbers below TRUE.
     {
       name: 'Lattice Analytics Expansion',

@@ -10,8 +10,16 @@ type Flow = Automation.Flow;
  * Migrated from the removed `campaign_completion_check` object workflow (7.7
  * dropped `workflows[]` on object schemas; scheduled automation is now a
  * `type: 'schedule'` flow). Each night it flips `in_progress` campaigns whose
- * `end_date` has passed to `completed` — which the existing
- * `campaign_snapshot_metrics` afterUpdate hook then snapshots into metrics.
+ * `end_date` has passed to `completed` — a `status` transition, which is one of
+ * the triggers `campaign_metrics_refresh` (`campaign.hook.ts`) recomputes the
+ * metric block on.
+ *
+ * ⚠️ That is a REFRESH, not a snapshot. Since #597 the block is kept live by
+ * four refresh hooks — `campaign_metrics_refresh`,
+ * `campaign_attribution_refresh`, `campaign_lead_conversion_refresh` and
+ * `campaign_member_metrics_refresh` — so this sweep is not the moment the
+ * numbers arrive, it is just one more transition over numbers that were already
+ * current.
  */
 export const CampaignCompletionFlow: Flow = {
   name: 'campaign_completion',

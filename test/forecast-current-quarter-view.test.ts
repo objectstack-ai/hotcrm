@@ -46,10 +46,11 @@ import stack from '../objectstack.config';
  *   | all       | the filter is unscoped — the #730 defect             |
  *   | 1 quarter | resolved AND scoped — the contract                    |
  *
- * First taken on 17.0.0-rc.2; RE-RUN 2026-09-03 on the pinned 17.2.0 (#1467 —
- * the version `package.json` pins and `node_modules` installs since PR #1442),
- * green on both. So the outcome above is a reading on the CURRENT pin, not only
- * on the one it was first taken on.
+ * First taken on 17.0.0-rc.2; RE-RUN 2026-09-03 on 17.2.0 (#1467) and RE-RUN
+ * again on the pinned 17.3.0 (#1676 — the version `package.json` pins and
+ * `node_modules` installs since PR #1577), green on all three. So the outcome
+ * above is a reading on the CURRENT pin, not only on the one it was first
+ * taken on.
  *
  * The STRUCTURAL block is the one that stops the lie coming back: it re-derives
  * the claim from the labels themselves, in all four locales, so a view renamed
