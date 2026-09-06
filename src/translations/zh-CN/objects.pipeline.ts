@@ -187,7 +187,6 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       ...activityActions,
       convert_lead: {
         label: '转化线索',
-        confirmText: '确认要转化此线索吗？',
         successMessage: '线索转化成功！',
       },
       create_campaign: {

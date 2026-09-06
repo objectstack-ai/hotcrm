@@ -177,7 +177,6 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       ...activityActions,
       convert_lead: {
         label: 'リード変換',
-        confirmText: 'このリードを変換してもよろしいですか？',
         successMessage: 'リードの変換に成功しました！',
       },
       create_campaign: {

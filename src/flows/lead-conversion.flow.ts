@@ -63,10 +63,10 @@ export const LeadConversionFlow: Flow = {
         // Why here and not on `convert_lead`'s `confirmText`: that string is
         // static and unconditional, so it would warn identically on every
         // clean lead (the cry-wolf that makes a confirm dialog furniture), and
-        // #1214 is queued to remove that confirm outright — a warning parked
-        // there dies with it. This screen is where the conversion decision is
-        // actually taken, and it is the one surface that can say something
-        // TRUE about THIS lead.
+        // #1214 item 1 has since removed that confirm outright — a warning
+        // parked there would have died with it. This screen is where the
+        // conversion decision is actually taken, and it is the one surface
+        // that can say something TRUE about THIS lead.
         //
         // Mechanism, measured on the shipped 17.1.0 bundles rather than
         // assumed: the executor interpolates `config.description`

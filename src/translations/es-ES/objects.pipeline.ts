@@ -194,7 +194,6 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       ...activityActions,
       convert_lead: {
         label: 'Convertir Prospecto',
-        confirmText: '¿Está seguro de querer convertir este prospecto?',
         successMessage: '¡Prospecto convertido con éxito!',
       },
       create_campaign: {
