@@ -192,6 +192,43 @@ export const OpportunityDetailPage: Page = {
                           // `panel-<index>`. See the full note on
                           // `case_detail.page.ts`.
                           label: 'Quotes',
+                          // OPEN on arrival (#1214 item 6). All three panels
+                          // used to start shut, so the Related tab opened on
+                          // three closed bars whose headers already carried the
+                          // counts — the click bought the user nothing the page
+                          // had not already told them.
+                          //
+                          // `collapsed: false` is the whole mechanism, and it is
+                          // needed even though the schema DEFAULTS it to false:
+                          // the renderer opens the panels it finds by strict
+                          // identity — `items.filter(i => i.collapsed === false)`
+                          // — so an item that simply omits the key is
+                          // `undefined`, not `false`, and stays shut. Measured
+                          // on the pinned @objectstack/console 17.3.0 bundle,
+                          // and the component's own designer text says the same
+                          // ("collapsed: false opens a panel by default").
+                          //
+                          // ⚠️ ONLY the first panel, and that is the renderer's
+                          // choice rather than a preference: with `allowMultiple`
+                          // absent (it defaults false) the accordion mounts as
+                          // `type="single"` and takes `defaultValue={open[0]}` —
+                          // one panel, the first in declaration order. Marking
+                          // Products or Open Tasks too would change nothing on
+                          // screen. Opening more than one means declaring
+                          // `allowMultiple: true`, which changes the interaction
+                          // model (panels stop closing each other) and is not
+                          // this card's ask.
+                          //
+                          // ⛔ NOT "default-open the sections that have rows",
+                          // which the card asked for first: that is not
+                          // expressible here. `collapsed` is a static boolean on
+                          // a strict item shape (`label` / `icon` / `collapsed` /
+                          // `children` — nothing else parses), the page is
+                          // authored metadata evaluated before any row is read,
+                          // and the related lists below fetch their own rows
+                          // after mount. Reported rather than worked around; ⛔
+                          // the component is not this repo's to change.
+                          collapsed: false,
                           children: [
                             {
                               type: 'record:related_list',
