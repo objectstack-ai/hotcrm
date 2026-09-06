@@ -46,7 +46,9 @@ import { REPO_ROOT } from './helpers/repo-root';
  *     segment of every bold `**App → …**` path in `content/docs/**` must be a
  *     navigation label the platform really ships, resolved live from the
  *     package. This is the rule that catches a wrong name nobody has thought of
- *     yet.
+ *     yet. Its APP half — the word in front of the arrow — is resolved live
+ *     too since #1403, together with {@link KNOWN_UNRESOLVED_APP_WORDS} and
+ *     {@link appWordDrift}; see "The app word" below.
  *  3. {@link KNOWN_UNRESOLVED_CRM} + {@link crmCitations} — the same claim for
  *     **this app's own** navigation. `**Sales → Leads**`, `**Service →
  *     Knowledge**`, `**My Work → My Tasks**` name a group and a child of
@@ -89,7 +91,12 @@ import { REPO_ROOT } from './helpers/repo-root';
  * path was extracted **only** when its first segment was Setup or Studio.
  * Everything else was invisible — not quarantined, not counted, not failed.
  * Re-measured on `main` at `4c6add4`: 307 bold `**… → …**` runs across 201
- * pages, of which rule 2 sees 144 (Setup 87, Studio 42, 设置 15, 設定 0).
+ * pages, of which rule 2 saw 142 — Setup 86, Studio 42, 设置 14, 設定 0.
+ * (Recorded here, and on #1403, as 144 / 87 / 42 / 15 / 0. Re-running the
+ * extractor in this file against that same commit yields the four numbers
+ * above, so the transcription was off by one in two places. They have moved
+ * since regardless: 166 citations — Setup 96, Studio 51, 设置 19 — when #1403
+ * landed.)
  *
  * The largest coherent thing in that remainder was **this app's own
  * navigation**. `Sales`, `My Work`, `Service` and `Activity` are not loose
@@ -97,10 +104,11 @@ import { REPO_ROOT } from './helpers/repo-root';
  * per locale in `src/translations/*`, and rendered in the sidebar of the app
  * these docs are about. Rule 3 resolves them the same way rule 2 resolves
  * Setup's: live, from the metadata, in every shipped locale. It is also
- * **stricter** than rule 2 in one respect — rule 2 takes the app word itself on
- * trust (`APP_WORDS` is hand-written), while rule 3's matcher is generated from
- * the shipped group labels, so the group half cannot drift unnoticed either.
- * It found 30 citations and 8 unresolved ones on its first run.
+ * **stricter** than rule 2 in one respect — rule 2 took the app word itself on
+ * trust (`APP_WORDS` was hand-written), while rule 3's matcher is generated
+ * from the shipped group labels, so the group half cannot drift unnoticed
+ * either. It found 30 citations and 8 unresolved ones on its first run. That
+ * asymmetry is what #1403 closed; the section below is rule 2's half of it.
  *
  * ⛔ **Do not extend this to every bold arrow in the docs.** The measurement
  * says plainly that `**X → Y**` is not a navigation marker in this repo — it is
@@ -131,6 +139,66 @@ import { REPO_ROOT } from './helpers/repo-root';
  *    resolves would corrupt correct documentation to satisfy a test.
  *  - **`Stripe Sync → Re-link`** (`reference/faq*.mdx`) was WRONG, and is now
  *    rule 1's problem instead — see {@link RETIRED_UI_NAMES}.
+ *
+ * ## The app word, resolved live (#1403)
+ *
+ * Rule 2 resolved every LEAF live from the day it was written and took the APP
+ * word on trust: {@link APP_WORDS} was a hand-written map of four spellings, so
+ * `设置 → 用户` was proved by proving the platform ships a navigation label
+ * 用户, while 设置 itself was checked against nothing. The Setup app's shipped
+ * zh-CN label is 系统设置. The map is now GENERATED from {@link APP_LABELS} —
+ * the app shells plus every shipped locale bundle — the same way rule 3
+ * generates its group alternation. Three things follow, and the third is the
+ * one that makes this hard.
+ *
+ * **A drifted app word is quarantined, not silently dropped.** Generating the
+ * alternation on its own would have made the 19 设置 citations invisible: no
+ * red, no finding, and 19 leaves that used to be resolved live quietly stop
+ * being resolved at all. {@link KNOWN_UNRESOLVED_APP_WORDS} holds the word
+ * instead, so those citations keep being extracted and their leaves keep being
+ * checked, and the ledger is checked in both directions like every other
+ * ledger in this file. The hand-written map also carried 設定, which no page
+ * has ever cited — the "no longer cited" direction is why the ledger cannot
+ * inherit it.
+ *
+ * **A word that names no app at all is caught by BEHAVIOUR.** A generated
+ * alternation cannot see a first segment the product does not ship, so a
+ * swapped app word would simply stop matching — the failure mode that made
+ * rule 2's app half invisible in the first place. {@link appWordDrift} is the
+ * counterweight: it reads every bold run and reports one whose LEAF is a live
+ * navigation label sitting behind a first segment that names nothing the
+ * product ships. Anchoring on the leaf is what keeps it quiet on ordinary
+ * prose — `**Status → Held**` and `**Queued → Sent**` are invisible to it
+ * because their leaves are not navigation labels, and this file's ban on
+ * widening rule 2 to every bold arrow stands unchanged.
+ *
+ * **⚠️ A legitimately MIXED REGISTER must stay green — this is the acceptance
+ * criterion, not a footnote.** `administration/automation.zh-Hans.mdx` names
+ * Studio paths in ENGLISH and the console's zh-CN group labels in the same
+ * list, and both are correct: Studio is labelled `Studio` in every locale the
+ * platform ships, while its groups are translated.
+ * `administration/setup.zh-Hans.mdx`, `administration/sandbox-and-releases.zh-Hans.mdx`
+ * and `reference/faq.zh-Hans.mdx` open some paths with 设置 and others with
+ * `Setup` / `Studio`, on the same page, for the same reason. ⛔ A rule
+ * demanding that both halves of a citation come from ONE locale goes red on
+ * all four — it would be a guard that punishes accurate documentation. So the
+ * app word is resolved against every shipped locale at once, exactly as
+ * {@link shipsNavLabel} already resolves the leaf, and no rule anywhere in
+ * this file compares the locale of one half against the other.
+ *
+ * ⛔ What this section does NOT decide: whether 设置 is acceptable prose for an
+ * app whose shipped zh-CN label is 系统设置. That is a docs-register question,
+ * it is not mechanical, and #1403 was ruled to quarantine those citations
+ * rather than answer it in passing. If it needs an answer it gets its own card.
+ *
+ * Two more things worth knowing before changing this rule. It scans
+ * {@link DOC_PAGES} and nothing else, so it never reads this file — the
+ * {@link SELF} exemption stays a rule-1 concern, and the citations quoted in
+ * the ledger's `why` strings below are out of every scan by construction.
+ * And the drift check declines a first segment that CONTAINS a known app word
+ * without being one, because a denial that quotes a path is prose about the
+ * path rather than a citation of it — `**并不存在「设置 → 对象 → 状态 →
+ * 状态机」这个配置面**` is the measured instance, and it is correct prose.
  *
  * ## Why there is a quarantine ledger, and what it is not
  *
@@ -258,6 +326,46 @@ const NAV_LABELS: Record<'setup' | 'studio', Set<string>> = (() => {
 /** Does `app` ship a navigation label spelled exactly `name`, in any locale? */
 const shipsNavLabel = (app: 'setup' | 'studio', name: string): boolean =>
   NAV_LABELS[app].has(name);
+
+/**
+ * Every spelling of an APP NAME each app really shows in the app switcher,
+ * across every shipped locale — the half of a `**App → Entry**` citation that
+ * used to be taken on trust (#1403).
+ *
+ * Two sources, and the second alone is not complete: the app SHELL carries the
+ * label a locale does not override, and each locale bundle overrides it under
+ * that app's id. The value path is the one measured here rather than the one
+ * the card guessed — `apps` is keyed by app id (`setup` / `studio` /
+ * `account`) and each entry carries a `label`, so the live roster is
+ * `SETUP_APP.label` plus `SetupAppTranslations[locale].apps[app].label` for
+ * every shipped locale. Reading only the second would miss the fallback the
+ * Console itself uses, which is the same `labelOf(id, fallback)` shape
+ * {@link resolvesPath} and the CRM roster already follow.
+ *
+ * Measured against `@objectstack/platform-objects` 17.3.0: setup ships
+ * `Setup` / `系统设置` / `セットアップ` / `Configuración`, and studio ships
+ * `Studio` in all four locales. That asymmetry is exactly why a page can mix
+ * registers and still be right — see "The app word" in this file's header.
+ */
+const APP_LABELS: Record<'setup' | 'studio', Set<string>> = (() => {
+  const out = { setup: new Set<string>(), studio: new Set<string>() };
+  for (const app of ['setup', 'studio'] as const) {
+    const shell = (app === 'setup' ? SETUP_APP : STUDIO_APP) as AnyRec;
+    if (typeof shell.label === 'string') out[app].add(shell.label);
+    for (const locale of SHIPPED_LOCALES) {
+      const label = (SetupAppTranslations as AnyRec)[locale]?.apps?.[app]?.label;
+      if (typeof label === 'string') out[app].add(label);
+    }
+  }
+  return out;
+})();
+
+/** Does `app` ship an app-switcher label spelled exactly `word`, in any locale? */
+const shipsAppLabel = (app: 'setup' | 'studio', word: string): boolean => APP_LABELS[app].has(word);
+
+/** Which app does the platform ship under exactly this label, if any? */
+const appNamedBy = (word: string): 'setup' | 'studio' | undefined =>
+  shipsAppLabel('setup', word) ? 'setup' : shipsAppLabel('studio', word) ? 'studio' : undefined;
 
 /** Does ANY app ship this label — used to prove a retired name is retired. */
 const shipsAnywhere = (name: string): boolean =>
@@ -489,17 +597,99 @@ const DOC_PAGES: string[] = walk('content/docs').filter((f) => f.endsWith('.mdx'
 
 const read = (file: string): string => readFileSync(join(REPO_ROOT, file), 'utf8');
 
-/** App words that open a navigation path, mapped to the app they name. */
-const APP_WORDS: Record<string, 'setup' | 'studio'> = {
-  Setup: 'setup',
-  设置: 'setup',
-  設定: 'setup',
-  Studio: 'studio',
-};
+/**
+ * App words `content/docs/**` opens a bold path with that the platform ships
+ * under no app label, quarantined so the citation is still parsed and its leaf
+ * is still resolved live (#1403).
+ *
+ * ADDING ONE IS A ONE-LINE CHANGE — and the same warning as
+ * {@link KNOWN_UNRESOLVED} applies: this is not a place to park an app word
+ * you just wrote to get a red check green. Every entry carries the reason it
+ * is not simply a mistake.
+ *
+ * `app` is the app the word names, and a citation opening with it has its leaf
+ * resolved against that app exactly as a shipped app word's would be.
+ * `app: null` is for a word that names no app at all, so there is nothing to
+ * resolve a leaf against — the shape `replacement: null` already has in
+ * {@link RETIRED_UI_NAMES}.
+ *
+ * The two staleness checks run against this ledger in opposite directions: an
+ * entry the platform starts shipping retires itself loudly, and an entry no
+ * page opens a path with any more must be deleted rather than left as
+ * decoration. The second is why the hand-written map's 設定 could not be
+ * carried over — no page has ever cited it.
+ */
+const KNOWN_UNRESOLVED_APP_WORDS: {
+  word: string;
+  app: 'setup' | 'studio' | null;
+  why: string;
+}[] = [
+  {
+    word: '设置',
+    app: 'setup',
+    why:
+      '#1403 — 19 bold citations open with 设置 while the Setup app ships 系统设置 as ' +
+      'its zh-CN label. Whether 设置 is acceptable prose for an app labelled 系统设置 ' +
+      'is a docs-REGISTER question, not a mechanical one, and #1403 was ruled to do ' +
+      'the mechanical half only: the word is quarantined here rather than answered ' +
+      'in passing, and every one of those leaves is still resolved live against ' +
+      'Setup. Rewriting the citations, or deciding they are fine, is its own card.',
+  },
+  {
+    word: 'Settings',
+    app: null,
+    why:
+      '#1403 — guides/email-and-calendar.mdx sketches an intended surface, ' +
+      '"reusable templates saved in Settings > Email Templates", inside a section ' +
+      'headed "Email templates (not shipped yet)" whose next paragraph says HotCRM ' +
+      'ships none of it. There is no Settings app. The only real Email Templates ' +
+      'page is Studio > Integration > Email Templates, and it is not what the ' +
+      'sentence promises (per-team folders, approval gating), so pointing the sketch ' +
+      'at it would make the page claim a screen that does not do those things. Found ' +
+      'by the drift check below — the first rule in this file able to see it — and ' +
+      'quarantined rather than reworded, because rewording is a docs call, not a ' +
+      'mechanical one. Filed as #1730.',
+  },
+];
+
+/** The quarantine entry for `word`, if it has one. */
+const quarantinedAppWord = (word: string): (typeof KNOWN_UNRESOLVED_APP_WORDS)[number] | undefined =>
+  KNOWN_UNRESOLVED_APP_WORDS.find((entry) => entry.word === word);
+
+/**
+ * App words that open a navigation path, mapped to the app they name —
+ * GENERATED from {@link APP_LABELS} plus the quarantine ledger above (#1403).
+ *
+ * It was a hand-written map of four spellings, which is what let the app half
+ * of every rule-2 citation be checked against nothing: 设置 resolved because
+ * someone had typed it here, and a platform-side rename of the app itself
+ * would have gone unnoticed on every one of the 166 citations at once.
+ */
+const APP_WORDS: Record<string, 'setup' | 'studio'> = (() => {
+  const out: Record<string, 'setup' | 'studio'> = {};
+  for (const app of ['setup', 'studio'] as const) {
+    for (const label of APP_LABELS[app]) out[label] = app;
+  }
+  for (const entry of KNOWN_UNRESOLVED_APP_WORDS) {
+    if (entry.app) out[entry.word] = entry.app;
+  }
+  return out;
+})();
+
+const escapeRe = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * One alternation source for both generated matchers: longest first, so
+ * `My Work` cannot be shadowed by a shorter alternative, and every branch
+ * escaped, because a shipped label may contain regex punctuation
+ * (`Delegations (OOO)` does).
+ */
+const alternation = (words: Iterable<string>): string =>
+  [...words].sort((a, b) => b.length - a.length).map(escapeRe).join('|');
 
 /** `**App → First → …**` — bold is how this repo's docs mark a real UI path. */
 const CITATION = new RegExp(
-  `\\*\\*(${Object.keys(APP_WORDS).join('|')})\\s*(?:→|›)\\s*([^*\\n]+)\\*\\*`,
+  `\\*\\*(${alternation(Object.keys(APP_WORDS))})\\s*(?:→|›)\\s*([^*\\n]+)\\*\\*`,
   'g',
 );
 
@@ -518,9 +708,6 @@ function navigationCitations(): { file: string; app: 'setup' | 'studio'; name: s
   return out;
 }
 
-/** Longest-first, so `My Work` cannot be shadowed by a shorter alternative. */
-const escapeRe = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
 /**
  * `**Group → Child**` — a path into this app's own sidebar, written without an
  * app word because the reader is already in the app the page describes.
@@ -532,10 +719,7 @@ const escapeRe = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
  * app's sidebar. Rule 1 is what holds a name that exists nowhere.
  */
 const CRM_CITATION = new RegExp(
-  `\\*\\*(${[...CRM_GROUP_LABELS]
-    .sort((a, b) => b.length - a.length)
-    .map(escapeRe)
-    .join('|')})\\s*(?:→|›)\\s*([^*\\n]+)\\*\\*`,
+  `\\*\\*(${alternation(CRM_GROUP_LABELS)})\\s*(?:→|›)\\s*([^*\\n]+)\\*\\*`,
   'g',
 );
 
@@ -552,6 +736,68 @@ function crmCitations(): { file: string; group: string; child: string }[] {
     }
   }
   return out;
+}
+
+/**
+ * `**X → Y**` — every bold run in the docs, whatever X turns out to be.
+ *
+ * {@link CITATION} and {@link CRM_CITATION} are both generated from a shipped
+ * vocabulary, which is right for what they assert and is also how a drifted
+ * first segment leaves rule 2 in silence rather than in red. This sweep is
+ * what {@link appWordDrift} judges instead; nothing else reads it.
+ */
+const BOLD_RUN = /\*\*([^*\n]+?)\s*(?:→|›)\s*([^*\n]+)\*\*/g;
+
+function boldRuns(): { file: string; first: string; leaf: string }[] {
+  const out: { file: string; first: string; leaf: string }[] = [];
+  for (const file of DOC_PAGES) {
+    for (const match of read(file).matchAll(BOLD_RUN)) {
+      const first = match[1].replace(/[`*]/g, '').trim();
+      const leaf = match[2]
+        .split(/→|›/)[0]
+        .replace(/[`*]/g, '')
+        .trim();
+      if (first && leaf) out.push({ file, first, leaf });
+    }
+  }
+  return out;
+}
+
+/**
+ * Bold runs that put a REAL navigation entry behind a word naming no app.
+ *
+ * This is the check that fails when an app word is swapped for one the
+ * platform does not ship — the direction a generated alternation cannot cover
+ * on its own, because an unknown word simply stops matching. It is anchored on
+ * the LEAF, not on a vocabulary of words that look like app names, which is
+ * what keeps it off ordinary prose: `**Status → Held**`, `**Queued → Sent**`
+ * and `**Account → Last Activity Date**` never reach the filters below,
+ * because their leaves are not navigation labels.
+ *
+ * Four kinds of run are then declined on purpose, each measured against
+ * `content/docs/**` rather than imagined:
+ *
+ *  - a first segment that IS a navigation label — `**开发者 → 流程运行记录**`,
+ *    `**对象 → 审计日志**` — names a group, or a record's own section, not an
+ *    app. Rule 2 has never claimed those and does not start here.
+ *  - a first segment that is one of this app's own group labels
+ *    (`**Service → Knowledge**`) belongs to rule 3, which resolves the pair
+ *    properly instead of judging the halves apart.
+ *  - a first segment quoting a known app word inside more text — the denial
+ *    `**并不存在「设置 → 对象 → 状态 → 状态机」这个配置面**` is prose ABOUT a
+ *    path, and correct prose at that.
+ *  - a quarantined word, judged by the two ledger checks instead.
+ */
+function appWordDrift(): { file: string; first: string; leaf: string }[] {
+  const known = [...Object.keys(APP_WORDS), ...KNOWN_UNRESOLVED_APP_WORDS.map((e) => e.word)];
+  return boldRuns().filter(({ first, leaf }) => {
+    if (!shipsNavLabel('setup', leaf) && !shipsNavLabel('studio', leaf)) return false;
+    if (appNamedBy(first) || quarantinedAppWord(first)) return false;
+    if (shipsNavLabel('setup', first) || shipsNavLabel('studio', first)) return false;
+    if (CRM_GROUP_LABELS.has(first)) return false;
+    if (known.some((word) => first !== word && first.includes(word))) return false;
+    return true;
+  });
 }
 
 describe('docs cite navigation names the platform actually ships (#853)', () => {
@@ -655,6 +901,112 @@ describe('docs cite navigation names the platform actually ships (#853)', () => 
           'genuinely does not exist, say what the reader should click instead — do ' +
           'not add it to KNOWN_UNRESOLVED to get this green.',
       ).toEqual([]);
+    });
+  });
+
+  describe('the app word in front of the arrow (#1403)', () => {
+    it('resolves an app-switcher roster live, in every shipped locale', () => {
+      // Same vacuity guard as the two rosters above: if the app shells or the
+      // locale bundles move, every assertion below would judge an empty set.
+      expect(APP_LABELS.setup.size).toBeGreaterThanOrEqual(SHIPPED_LOCALES.length);
+      expect(APP_LABELS.studio.size).toBeGreaterThan(0);
+      for (const [app, label] of [
+        ['setup', 'Setup'],
+        ['setup', '系统设置'],
+        ['studio', 'Studio'],
+      ] as const) {
+        expect(shipsAppLabel(app, label), `${app} should ship the app label '${label}'`).toBe(true);
+      }
+      // The matcher moves with that roster rather than with a hand-written map.
+      expect(APP_WORDS['系统设置']).toBe('setup');
+      expect(APP_WORDS.Studio).toBe('studio');
+      // Two apps sharing one spelling would make the app word ambiguous, and
+      // the generated map would silently keep whichever was built last.
+      const shared = [...APP_LABELS.setup].filter((label) => APP_LABELS.studio.has(label));
+      expect(shared, `both apps ship the label(s) ${shared.join(', ')}`).toEqual([]);
+    });
+
+    it('reads every bold run, not only the ones a matcher recognises', () => {
+      // Vacuity guard for the drift check: an extraction that silently stopped
+      // matching would make it permanently, invisibly green.
+      const runs = boldRuns();
+      expect(runs.length).toBeGreaterThan(250);
+      expect(runs.some((r) => r.first === 'Studio' && r.leaf === 'Developer')).toBe(true);
+      expect(runs.some((r) => r.first === '设置' && r.leaf === '用户')).toBe(true);
+    });
+
+    it('names an app the platform ships, or is quarantined', () => {
+      const bad = [...new Set(appWordDrift().map((h) => `${h.file}: '${h.first} → ${h.leaf}'`))];
+      expect(
+        bad,
+        `docs put a real navigation entry behind a word that names no app:\n  ${bad.join('\n  ')}\n` +
+          'The app half of a bold path is resolved live against what the app switcher ' +
+          'shows — SETUP_APP/STUDIO_APP plus every locale bundle in ' +
+          '@objectstack/platform-objects. Use the shipped spelling. If the run is not a ' +
+          'navigation path at all, it is prose: say it without the arrow, or quote the ' +
+          'path inside the sentence the way the denials on this repo do. Do not add it ' +
+          'to KNOWN_UNRESOLVED_APP_WORDS to get this green.',
+      ).toEqual([]);
+    });
+
+    it('holds no quarantined app word the platform has started shipping', () => {
+      const fixed = KNOWN_UNRESOLVED_APP_WORDS.filter((e) => appNamedBy(e.word) !== undefined).map(
+        (e) => e.word,
+      );
+      expect(
+        fixed,
+        `KNOWN_UNRESOLVED_APP_WORDS words the platform now ships as an app label: ` +
+          `${fixed.join(', ')}. Delete these lines — the prose has become correct, and ` +
+          'a quarantine on a correct spelling is worse than no quarantine at all.',
+      ).toEqual([]);
+    });
+
+    it('holds no quarantined app word the docs no longer open a path with', () => {
+      const opened = new Set(boldRuns().map((r) => r.first));
+      const dead = KNOWN_UNRESOLVED_APP_WORDS.filter((e) => !opened.has(e.word)).map((e) => e.word);
+      expect(
+        dead,
+        `KNOWN_UNRESOLVED_APP_WORDS words no page opens a bold path with: ${dead.join(', ')}. ` +
+          'Someone fixed the prose — delete these lines so the ledger keeps measuring the ' +
+          'real remainder. (This is the check the hand-written map could not have passed: ' +
+          'it carried 設定, which no page has ever cited.)',
+      ).toEqual([]);
+    });
+
+    it('leaves a legitimately mixed register alone', () => {
+      // ⛔ The load-bearing half of #1403. These four pages name one app in
+      // English and another in Chinese, ON THE SAME PAGE, and every one of them
+      // is right: Studio is labelled `Studio` in all four shipped locales while
+      // its groups are translated, and the Setup paths carry zh-CN leaf labels.
+      // A rule demanding that both halves of a citation come from one locale
+      // goes red on all four — a guard that punishes accurate documentation.
+      const MIXED = [
+        'content/docs/administration/automation.zh-Hans.mdx',
+        'content/docs/administration/setup.zh-Hans.mdx',
+        'content/docs/administration/sandbox-and-releases.zh-Hans.mdx',
+        'content/docs/reference/faq.zh-Hans.mdx',
+      ];
+      const runs = boldRuns();
+      const drift = appWordDrift();
+      const unresolved = navigationCitations().filter(
+        (c) => !shipsNavLabel(c.app, c.name) && !KNOWN_UNRESOLVED.has(ledgerKey(c.app, c.name)),
+      );
+      for (const page of MIXED) {
+        expect(DOC_PAGES, `${page} should still be a docs page`).toContain(page);
+        // The mixing has to still be there, or this test passes on prose that
+        // has since been made uniform and proves nothing.
+        const opens = new Set(runs.filter((r) => r.file === page).map((r) => r.first));
+        expect(
+          [...opens].some((word) => /[A-Za-z]/.test(word)),
+          `${page} should still open a bold path with a Latin-script word`,
+        ).toBe(true);
+        expect(
+          [...opens].some((word) => /[\u4e00-\u9fff]/.test(word)),
+          `${page} should still open a bold path with a Chinese word`,
+        ).toBe(true);
+        expect(drift.filter((h) => h.file === page)).toEqual([]);
+        expect(unresolved.filter((c) => c.file === page)).toEqual([]);
+      }
     });
   });
 
