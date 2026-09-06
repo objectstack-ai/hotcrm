@@ -387,14 +387,6 @@ describe('how the shipped escalate path splits privilege (#1434)', () => {
     // trigger both escalation hooks key off, so moving it would re-attribute
     // the ownership hand-off to the system.
     expect(written.sort()).toEqual(['escalation_reason', 'priority', 'status']);
-    for (const stamped of ['is_escalated', 'escalated_date']) {
-      expect(
-        written,
-        `${stamped} is readonly and must be written by the case_escalation_stamp ` +
-          'subflow, not by this user-context node — a user-context write to it is ' +
-          'STRIPPED (measured above) and the flow would still report success.',
-      ).not.toContain(stamped);
-    }
   });
 
   it('the stamping subflow is system, minimal, and writes exactly the two readonly stamps', async () => {

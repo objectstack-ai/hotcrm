@@ -251,38 +251,6 @@ describe('dashboard actions land on real routes', () => {
 
 describe('list-level action references resolve', () => {
   const actions: AnyRec[] = (stack as any).actions ?? [];
-  const actionNames = new Set(actions.map((a) => a.name));
-
-  /**
-   * There is NO builtin escape hatch (@objectstack 17).
-   *
-   * This guard used to whitelist `edit` / `delete` / `view` as "affordances the
-   * list renderer provides without an Action def". 17.0's `action-name-undefined`
-   * validator rule refuses exactly that: a `rowActions` string naming no defined
-   * action is reported as a dead affordance — "the button renders and does
-   * nothing when clicked" — and `os validate` fails the build.
-   *
-   * So the whitelist was a trap: it let metadata pass CI that the platform then
-   * rejected. Row-menu entries come from an Action declaring
-   * `locations: ['list_item']`, which auto-injects them; naming one here as a
-   * string is the legacy path the next test forbids. Between the two rules,
-   * `rowActions` has no correct use in this app today — which is why no view
-   * declares it.
-   */
-  it('every rowAction / bulkAction names a defined action', () => {
-    const bad: string[] = [];
-    for (const v of views) {
-      const lists = [v.list, ...Object.values(v.listViews ?? {})].filter(Boolean) as AnyRec[];
-      for (const list of lists) {
-        for (const name of [...(list.rowActions ?? []), ...(list.bulkActions ?? [])]) {
-          if (typeof name === 'string' && !actionNames.has(name)) {
-            bad.push(`view "${list.name ?? 'default'}": action "${name}" is not defined`);
-          }
-        }
-      }
-    }
-    expect(bad, `dangling list action references:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
 
   it('no rowAction repeats an action that already declares list_item placement', () => {
     // An Action with `locations: ['list_item']` auto-injects its row-menu

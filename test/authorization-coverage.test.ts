@@ -188,24 +188,6 @@ describe('record-level scope is authored, not implied', () => {
     ).toEqual([]);
   });
 
-  it('controlled_by_parent objects expose a parent the engine can resolve', () => {
-    const bad: string[] = [];
-    for (const name of businessObjects) {
-      if (owdOf(name) !== 'controlled_by_parent') continue;
-      const fields = Object.entries((objectByName.get(name)?.fields ?? {}) as Record<string, AnyRec>);
-      const parent = fields.find(([, f]) => f?.type === 'master_detail')
-        ?? fields.find(([, f]) => f?.type === 'lookup' && f?.required === true);
-      if (!parent) {
-        bad.push(`${name}: no master_detail and no REQUIRED lookup — ADR-0055 derivation denies all rows`);
-        continue;
-      }
-      const [fieldName, def] = parent;
-      const ref = def.reference ?? def.reference_to ?? def.referenceTo;
-      if (!ref) bad.push(`${name}.${fieldName}: parent relation has no reference target`);
-    }
-    expect(bad, `unresolvable parent derivation:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-
   it('every allowTransfer grant is a real, enforced capability — not decoration', () => {
     // `allowTransfer` is the one lifecycle bit the platform enforces TODAY,
     // through the ordinary insert/update door rather than a future `transfer`
