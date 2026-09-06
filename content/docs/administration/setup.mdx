@@ -133,10 +133,12 @@ There is nothing to seed called *Sales Knowledge*, *Product Information* or *Com
 
 ### 14. AI Copilot
 
-- [ ] Confirm the AI Copilot is enabled (Setup → AI)
-- [ ] Choose which skills to enable
-- [ ] Run a sample query (*"Give me Customer 360 on [test account]"*) to verify
-- [ ] Configure data sensitivity rules — which fields the Copilot must redact
+There is no *AI* group in Setup, and no screen turns the Copilot on. Setup carries exactly two AI surfaces: **Setup → Configuration → AI & Embedder**, which configures the provider, model and embedder, and a beta *AI Assistant* toggle under **Setup → Configuration → Feature Flags** that ships off and that nothing in the platform reads. What makes the Copilot answer is a configured provider; which skills it can run belongs to the app, not to setup. *AI* as a navigation group is **Studio → AI** (Agents / Tools / Skills).
+
+- [ ] Confirm the provider at **Setup → Configuration → AI & Embedder** is a real one — it defaults to *Memory (echo — testing only)*, which replays your input instead of answering — then press *Test connection*
+- [ ] Run a sample query (*"Give me Customer 360 on [test account]"*) to verify — an answer that cites real records means the provider is live
+- [ ] Review the skills the Copilot ships with at **Studio → AI → Skills** — they all ship active, and which ones exist is decided in the app rather than picked here (see [Skills](/docs/ai-copilot/skills))
+- [ ] Look at field-level security rather than for AI redaction rules: the Copilot reads as the signed-in user, so a field masked on their profile never reaches it (see [Sharing & security](/docs/administration/sharing-and-security))
 
 ## ✅ Day 6 — Dashboards & reports
 
