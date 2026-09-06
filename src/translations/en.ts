@@ -1484,7 +1484,7 @@ export const en: TranslationData = {
       title: '{first_name} {last_name}',
       subtitle: '{company}',
       components: {
-        lead_duplicate_alert: { label: 'Suspected Duplicate' },
+        lead_duplicate_alert: { label: 'Duplicate Flagged' },
         lead_highlights: { label: 'Key Information' },
         lead_path: { label: 'Lead Status Path' },
         main_tabs: { label: 'Lead Information Tabs' },

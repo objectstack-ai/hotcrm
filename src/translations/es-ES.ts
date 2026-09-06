@@ -2015,7 +2015,7 @@ export const esES: TranslationData = {
       title: '{first_name} {last_name}',
       subtitle: '{company}',
       components: {
-        lead_duplicate_alert: { label: 'Aviso de duplicado sospechoso' },
+        lead_duplicate_alert: { label: 'Aviso de duplicado' },
         lead_highlights: { label: 'Información Clave' },
         lead_path: { label: 'Progreso del Estado del Prospecto' },
         main_tabs: { label: 'Pestañas de Información del Prospecto' },

@@ -88,7 +88,7 @@ export const LeadDetailPage: Page = {
             ],
           },
         },
-        // Suspected-duplicate banner (#1207).
+        // Duplicate banner (#1207, widened to every verdict by #1289).
         //
         // `lead_duplicate_check` (lead.hook.ts, job 2) already writes
         // `duplicate_status: 'suspected'` and links the record the lead repeats
@@ -98,6 +98,20 @@ export const LeadDetailPage: Page = {
         // `duplicates` section on the Details tab are the record-page half of
         // that fix — the banner is the alarm, the section is the link to
         // compare against; the conversion screen carries the other half.
+        //
+        // ## Why it covers `confirmed` too (#1289)
+        //
+        // #1207 shipped this gated on `== "suspected"` alone, which left the
+        // STRONGER state silent: a `confirmed` duplicate is a person's verdict,
+        // and it got no banner at all. That narrowness was a ruling, not an
+        // oversight in the code, and #1289 is the ruling being corrected.
+        //
+        // Since #1288 the gap also changed shape. `confirmed` is now the state
+        // on which the conversion flow REFUSES outright
+        // (`lead-conversion.flow.ts`, `refuse_confirmed_duplicate`), so a
+        // silent banner meant the record page said nothing about the one fact
+        // that stops the rep's next click — they pressed Convert and met a
+        // refusal dialog with no warning on the record behind it.
         //
         // ⚠️ `visible` is the ONE record component whose PROPS carry a real row
         // predicate: `record-alert.tsx` evaluates `properties.visible` through
@@ -110,12 +124,22 @@ export const LeadDetailPage: Page = {
         // ⚠️ `has()` is load-bearing, and this surface is the WORST of the four
         // this repo measures (cf. `test/view-predicate-dialect.test.ts`): the
         // renderer's call site is FAIL-SOFT — an unevaluable predicate answers
-        // SHOWN. So a bare `record.duplicate_status == "suspected"` would abort
-        // with `No such key` on every clean lead whose driver omits the column
+        // SHOWN. So a bare `record.duplicate_status != null` would abort with
+        // `No such key` on every clean lead whose driver omits the column
         // (`driver-memory` / `driver-mongodb`; `driver-sql` returns it as null)
         // and put a duplicate warning on leads that are not duplicates. The
         // guard is what makes the predicate answer `false` instead of faulting.
         // Pinned on the real engine in `test/lead-duplicate-visibility.test.ts`.
+        //
+        // ⛔ And the guard is NOT the whole predicate. "Any verdict the record
+        // actually carries" reads like a job for `has()` alone, and `has()`
+        // alone is wrong here: it is TRUE for a key that is PRESENT AND NULL,
+        // which is precisely what `driver-sql` hands back for a clean lead.
+        // Measured on this engine — `has(record.duplicate_status)` against
+        // `{ duplicate_status: null }` answers `{ ok: true, value: true }` — so
+        // dropping the comparison would reach the same cry-wolf banner as
+        // dropping the guard, just by the other road. `!= null` is what makes
+        // "set" mean set; both halves are pinned, shape by shape.
         //
         // `P` — an explicit `{ dialect: 'cel' }` envelope — is not decoration
         // either: `ExpressionEvaluator.evaluateCondition` routes ONLY the
@@ -135,34 +159,54 @@ export const LeadDetailPage: Page = {
         {
           type: 'record:alert',
           id: 'lead_duplicate_alert',
-          label: 'Suspected Duplicate',
+          label: 'Duplicate Flagged',
           properties: {
             severity: 'warning',
-            visible: P`has(record.duplicate_status) && record.duplicate_status == "suspected"`,
+            visible: P`has(record.duplicate_status) && record.duplicate_status != null`,
             title: {
-              // The words are the locale packs' own `duplicate_status` option
-              // labels, so the banner and the field chip say the same thing.
-              en: 'Suspected duplicate',
-              'zh-CN': '疑似重复',
-              'ja-JP': '重複の疑い',
-              'es-ES': 'Duplicado sospechoso',
+              // ⛔ The words are deliberately NOT the locale packs'
+              // `duplicate_status` option labels any more (#1289). One banner
+              // now covers two states with one title, and `pickLocalized`
+              // picks by LANGUAGE, not by row — so naming either verdict here
+              // would label the other one wrongly, and calling a reviewer's
+              // finished verdict a machine's suspicion is the one sentence
+              // this banner must not say. It names the FACT both states share
+              // and sends the rep to the chip below for the verdict itself.
+              // Pinned against the option labels in
+              // `test/lead-duplicate-visibility.test.ts`.
+              en: 'Marked as a duplicate',
+              'zh-CN': '已标记为重复',
+              'ja-JP': '重複としてマークされています',
+              'es-ES': 'Marcado como duplicado',
             },
             body: {
+              // Same discipline as `title`: says WHAT is true of both states
+              // and points at the field that distinguishes them, rather than
+              // asserting one. "Intake flagged this lead", the #1207 wording,
+              // is a claim only `suspected` supports — `confirmed` is written
+              // by a person, not by the hook.
               en:
-                'Intake flagged this lead as repeating a record this app already has. '
-                + 'Compare it with the linked record below before you convert — converting '
+                'This lead is marked as repeating a record this app already has. '
+                + 'Duplicate Status below says whether that is an automatic match from '
+                + 'intake or a reviewer\'s verdict, and Duplicate Management links the '
+                + 'record it repeats — compare them before you convert, because converting '
                 + 'creates a second account, contact and opportunity for the same buyer.',
               'zh-CN':
-                '录入时该线索已被标记为与系统中已有记录重复。转换前请先与下方关联的记录比对'
-                + '——转换会为同一客户再创建一套客户、联系人和商机。',
+                '该线索已被标记为与系统中已有记录重复。下方的「重复状态」会说明这是录入时的'
+                + '自动匹配还是审核人的判定，「重复线索管理」中是它重复的那条记录'
+                + '——转换前请先比对，转换会为同一客户再创建一套客户、联系人和商机。',
               'ja-JP':
-                'このリードは登録時に既存レコードの重複候補としてフラグ付けされました。'
-                + '変換すると同じ相手に取引先・取引先責任者・商談がもう一組作成されます。'
-                + '変換する前に、下にリンクされたレコードと比較してください。',
+                'このリードは既存レコードと重複するものとしてマークされています。'
+                + '下の「重複ステータス」が登録時の自動照合か担当者の判定かを示し、'
+                + '「重複管理」に重複先のレコードがあります。変換すると同じ相手に'
+                + '取引先・取引先責任者・商談がもう一組作成されるため、変換する前に比較してください。',
               'es-ES':
-                'Al capturarlo, este prospecto se marcó como duplicado de un registro que ya existe. '
-                + 'Compárelo con el registro vinculado más abajo antes de convertirlo: la conversión '
-                + 'crea una segunda cuenta, contacto y oportunidad para el mismo comprador.',
+                'Este prospecto está marcado como duplicado de un registro que ya existe. '
+                + 'El campo Estado del Duplicado indica si se trata de una coincidencia '
+                + 'automática de la captura o del veredicto de una persona, y Gestión de '
+                + 'Duplicados enlaza el registro que repite: compárelos antes de convertirlo, '
+                + 'porque la conversión crea una segunda cuenta, contacto y oportunidad para '
+                + 'el mismo comprador.',
             },
           },
         },
