@@ -214,15 +214,54 @@ describe('record-level scope is authored, not implied', () => {
     expect(holders.length, 'no set grants allowTransfer — ownership cannot be reassigned at all').toBeGreaterThan(0);
   });
 
-  it('the lifecycle bits nobody enforces yet are not authored', () => {
-    // `allowRestore` / `allowPurge` are RBAC-gated but their operations do not
-    // exist yet, so authoring one grants nothing while reading as a capability
-    // the persona has. `allowTransfer` is deliberately NOT in this list — it is
-    // the documented exception (#3004), enforced now.
+  it('the retired lifecycle bits are not authored anywhere', () => {
+    // `allowRestore` / `allowPurge` are TOMBSTONES — not, as this comment used
+    // to say, RBAC-gated bits whose operations have not shipped yet. ADR-0049
+    // enforce-or-remove retired them (objectstack#12497), and on the pinned
+    // `@objectstack/spec` 17.3.0 the schema refuses `allowRestore: true` at
+    // parse time with its own prescription. Measured verbatim against the
+    // installed package:
+    //
+    //   `objects.<object>.allowRestore` was removed in @objectstack/spec 17
+    //   (ADR-0049) — the `restore` ObjectQL operation it claimed to gate has
+    //   never shipped (roadmap M2), so granting the bit delivered nothing.
+    //   Delete the key — a dispatched `restore` stays denied fail-closed by
+    //   the permission evaluator's destructive-operation backstop, and the bit
+    //   returns with the M2 lifecycle initiative alongside the operation it
+    //   gates. Run `os migrate meta --from 17` to list the mechanical edits
+    //   for existing sources; apply them by hand.
+    //
+    // The prescription names the MAJOR, and so does this comment: the
+    // retirement changeset is listed under 17.3.0 in `@objectstack/spec`'s own
+    // CHANGELOG, so ⛔ do not "correct" this to an earlier minor.
+    //
+    // Only `true` is refused. The `false` that the pre-retirement schema
+    // defaulted into every artifact the published 17.x toolchain built parses
+    // as inert residue and is STRIPPED (objectstack#12840), so `=== true` is
+    // both what the scan below tests and the only value worth testing for.
+    //
+    // ⛔ Do not delete this guard now that the platform refuses the key. It is
+    // a backstop for the one layer that refusal does not reach: in the
+    // `pnpm verify` chain `validate` and `build` both reject such a source
+    // before `test` runs, but `pnpm typecheck` does not. `src/profiles/*.profile.ts`
+    // are untyped object literals and this file reads the RAW
+    // `objectstack.config` rather than a schema-parsed object, so nothing ever
+    // gives the literal a contextual type — a bare `pnpm test` still trips
+    // here. objectstack#1883 also stays open as the M2 lifecycle anchor: the
+    // keys return with that initiative as bits that really are enforced, and
+    // "we do not grant them inertly" is load-bearing again rather than
+    // something to re-derive from scratch.
+    //
+    // `allowTransfer` is deliberately NOT in this list — it is the documented
+    // exception (#3004), enforced now.
     const bad = grants
       .filter((g) => g.perm.allowRestore === true || g.perm.allowPurge === true)
       .map((g) => `${g.set}.${g.objectName}`);
-    expect(bad, `declared-but-unenforced lifecycle grants:\n  ${bad.join('\n  ')}`).toEqual([]);
+    expect(bad, `retired lifecycle bits authored as grants:\n  ${bad.join('\n  ')}`).toEqual([]);
+
+    // Guard the guard: if the grants ever vanish this test must not pass by
+    // checking an empty list.
+    expect(grants.length, 'no permission grants resolved at all — this scan proves nothing').toBeGreaterThan(0);
   });
 
   it('controlled_by_parent grants do not author an inert readScope', () => {
