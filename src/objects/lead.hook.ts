@@ -350,8 +350,14 @@ const leadHook: Hook = {
         (typeof previous?.owner_id === 'string' && previous.owner_id) ||
         ctx.user?.id;
 
+      // ONE calendar, and it is UTC — the day step is taken with `setUTCDate`
+      // because the result is rendered with `toISOString()` below. `setDate`
+      // reads and writes the LOCAL calendar and preserves wall-clock time, so
+      // in a DST-observing deployment a two-day step across a spring-forward
+      // advances 47 h, not 48, and the rendered UTC day is one short. It is
+      // invisible at `TZ=UTC`, where the two calendars coincide.
       const dueDate = new Date();
-      dueDate.setDate(dueDate.getDate() + 2);
+      dueDate.setUTCDate(dueDate.getUTCDate() + 2);
 
       // Title the task with the lead's name, not its record id. **All Tasks**
       // is where a rep starts the day; a queue of rows reading `Follow up with

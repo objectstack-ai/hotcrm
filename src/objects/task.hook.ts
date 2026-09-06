@@ -131,29 +131,44 @@ const taskRecurrence: Hook = {
      * forward into the next month — Jan 31 + 1 month landed on Mar 3, so a
      * month-end recurring task walked further into the following month on every
      * occurrence and, for the 31st, skipped February entirely.
+     *
+     * ⚠️ Every read and write below is on the UTC calendar, and that is the
+     * whole point of the spelling rather than a style choice. The base is the
+     * stored `due_date` — a bare `YYYY-MM-DD`, which the spec's date-only form
+     * anchors at UTC midnight — and the result is rendered with
+     * `toISOString()`. A local `getDate`/`setDate`/`setMonth` step in between
+     * reads that UTC anchor on a different calendar (west of Greenwich it is
+     * the previous evening, so `getDate()` on `2026-01-15` answers 14) and
+     * preserves wall-clock time across a DST transition, which is a 23 h or
+     * 25 h day. Both errors render as a day the series never recovers from:
+     * each occurrence is computed from the previous one.
+     *
+     * The clamp probe is built with `Date.UTC` for the same reason — a
+     * `new Date(y, m, d)` constructor reads its arguments as LOCAL fields, so
+     * it would answer the length of the wrong month at either end of the year.
      */
     function advanceDate(d: Date, type: string, interval: number): Date {
       const next = new Date(d);
       if (type === 'daily') {
-        next.setDate(next.getDate() + interval);
+        next.setUTCDate(next.getUTCDate() + interval);
         return next;
       }
       if (type === 'weekly') {
-        next.setDate(next.getDate() + 7 * interval);
+        next.setUTCDate(next.getUTCDate() + 7 * interval);
         return next;
       }
       const months = type === 'monthly' ? interval : type === 'yearly' ? 12 * interval : 0;
       if (months === 0) return next;
 
-      const day = next.getDate();
+      const day = next.getUTCDate();
       // Move to the 1st first so the month arithmetic can never overflow, then
       // clamp the day to the target month's length.
-      next.setDate(1);
-      next.setMonth(next.getMonth() + months);
-      const lastDayOfTargetMonth = new Date(
-        next.getFullYear(), next.getMonth() + 1, 0,
-      ).getDate();
-      next.setDate(Math.min(day, lastDayOfTargetMonth));
+      next.setUTCDate(1);
+      next.setUTCMonth(next.getUTCMonth() + months);
+      const lastDayOfTargetMonth = new Date(Date.UTC(
+        next.getUTCFullYear(), next.getUTCMonth() + 1, 0,
+      )).getUTCDate();
+      next.setUTCDate(Math.min(day, lastDayOfTargetMonth));
       return next;
     }
 

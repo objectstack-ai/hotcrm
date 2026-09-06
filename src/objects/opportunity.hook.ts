@@ -261,8 +261,12 @@ const opportunityWonHook: Hook = {
       (typeof input.owner_id === 'string' && input.owner_id) ||
       (typeof previous?.owner_id === 'string' && previous.owner_id) ||
       ctx.user?.id;
+    // UTC calendar for the step, matching the `toISOString()` render below —
+    // see the note on the same shape in `lead.hook.ts`. A local `setDate` step
+    // preserves wall-clock time, so across a spring-forward the activation task
+    // is filed a day early in every non-UTC deployment.
     const due = new Date();
-    due.setDate(due.getDate() + 3);
+    due.setUTCDate(due.getUTCDate() + 3);
 
     // Title the task with the opportunity's NAME (#1243). This is one of the
     // two rows a walkthrough of current main still writes with a raw key in it,
