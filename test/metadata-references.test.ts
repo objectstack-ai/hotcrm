@@ -1106,8 +1106,8 @@ describe('page templates and record components stay inside their record context'
  * (`first_name: "Mira"`, `company: "Atlas Construction"`, `status: "contacted"`,
  * …), no console errors.
  *
- * Scope note: named forms under `formViews` (`quick_create`,
- * `lead_conversion_wizard`, …) still carry `data` blocks. The liveness rule does
+ * Scope note: named forms under `formViews` (`lead_conversion_wizard`,
+ * `split_edit`, …) still carry `data` blocks. The liveness rule does
  * NOT flag those and they have not been measured — a create form has no record
  * in the route context, so the same reasoning may not hold. They are left alone
  * deliberately; measure first if you plan to remove them.

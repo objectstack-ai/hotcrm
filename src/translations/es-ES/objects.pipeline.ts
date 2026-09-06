@@ -172,7 +172,6 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       company_information: { label: 'Información de la Empresa' },
       additional_information: { label: 'Información Adicional' },
       privacy: { label: 'Privacidad' },
-      lead_details: { label: 'Detalles del Lead' },
       general: { label: 'General' },
       details: { label: 'Detalles' },
       step_1_contact_details: { label: 'Paso 1: Datos de Contacto' },
