@@ -136,9 +136,11 @@ HotCRM 内置五个仪表盘。每个都为特定角色而构建，回答该角�
 
 ## 你可以改什么
 
-- **日期范围** — CRM Overview、Sales Performance 和 Executive Overview 各带一个基于商机预计成交日期的选择器，默认本季度。Sales Activity 和 Customer Service 没有，原因见上面各自的章节。
+- **日期范围** — CRM Overview、Sales Performance 和 Executive Overview 各带一个基于商机预计成交日期的选择器，默认本季度。Sales Activity 和 Customer Service 没有，原因见上面各自的章节。每一个时间窗都由服务端解析，按 UTC 日历日算："最近 7 天"指的是以今天的 UTC 日期结尾的那七个 UTC 日历日，两端都含。你自己的时钟不参与其中——一位在 UTC+8 的读者在当地时间凌晨 3 点打开仪表盘，看到的窗口是在上一个 UTC 午夜结束的，而不是在他自己的午夜。
 - **筛选器** — 每个仪表盘声明自己的一套：Owner 各处都有，另外 Sales Performance 有 Deal Type、Customer Service 有 Priority、Executive Overview 有 Lead Source。
 - **刷新** — Customer Service 每分钟刷新一次，Sales Performance 每三分钟，其余三个每五分钟。
+
+仪表盘的筛选器匹配的是每个部件所绑数据集背后的那个**对象**，而不是该数据集声明的维度，并且它会被 AND 进每个受它约束的部件的查询里。所以 Customer Service 能提供 Agent 筛选器，哪怕 `case_metrics` 没有声明任何负责人维度：`owner_id` 是工单上的字段，筛选器要的就只是这个。但它买到的只有筛选这一件事——部件依然不能按数据集没有声明的字段**分组**，所以 [SLA 与升级](/zh-Hans/docs/service/sla-and-escalation) 说"没有任何报表、也没有任何仪表盘部件能按它分组"是对的，它和同一个应用里按 Agent 筛选的服务台仪表盘并不矛盾。反过来同样成立：筛选器若点名了某个部件自己的对象没有的字段，那个部件的查询就会去要一个并不存在的列，所以答不了某个筛选器的部件会按名字显式退出它（`filterBindings`），而不是默默忽略它。
 
 有些磁贴刻意不接受所在仪表盘的筛选器。12 个月的收入趋势、Top Products 和 Quota Attainment by Rep 都保持自己标题上写明的那个时间窗，这样更窄的日期选择器就无法在标题不变的情况下悄悄改掉数字的定义。
 
