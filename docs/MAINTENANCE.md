@@ -73,7 +73,12 @@ can silently invalidate existing metadata or **seed data** (see §4). Treat ever
 6. If `better-sqlite3` floods `NODE_MODULE_VERSION ... requires ...` on boot, the
    native binary was built for a different Node ABI — `pnpm rebuild better-sqlite3`
    and restart. This is an environment issue, not an app change.
-7. Note the new platform version in `CHANGELOG.md`.
+7. Record the upgrade in the PR's **changeset**, not in `CHANGELOG.md`. The
+   changeset *is* the upgrade's release-notes entry — what changed on the
+   platform, what metadata was migrated and why — and it is the same entry §2
+   step 4 already requires of every PR; the upgrade does not get a second one.
+   ⛔ `CHANGELOG.md` is not hand-edited: `changeset version` owns it. Full rule
+   in [`AGENTS.md`](../AGENTS.md), §⬆️ Platform Upgrades step 4.
 8. **Check the release notes for `os migrate` steps that run against DATA, not
    metadata** — see §3.2. `pnpm verify` cannot catch these: they gate runtime
    behaviour on a deployment flag, so a fresh install is clean and an in-place
