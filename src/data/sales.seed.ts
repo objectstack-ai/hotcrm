@@ -202,9 +202,9 @@ three regional teams (NA, EMEA, APAC).
 - 1 open enterprise opportunity ($150K platform upgrade) in proposal
   stage, 1 service ticket open (login issues), 1 billing dispute
   awaiting customer response.
-- That upgrade closes in 30 days — AI agent governance became a
-  hard requirement after their internal compliance review, so the
-  workshop now on the calendar is the gate on signature.
+- AI agent governance became a hard requirement for that upgrade
+  after their internal compliance review, so the workshop now on
+  the calendar is the gate on signature.
 
 **Red flags**
 - Lost the $75K Marketing Cloud add-on on timing — their marketing
