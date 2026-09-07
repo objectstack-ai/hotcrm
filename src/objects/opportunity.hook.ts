@@ -57,9 +57,28 @@ const opportunityValidationHook: Hook = {
       'created_by', 'updated_by', 'space_id', 'organization_id', 'org_id', 'version',
     ]);
     // Approval verdicts must be allowed to land even if the deal closes while
-    // the request is in flight — the opportunity_approval flow writes these
-    // via the user-context resume, and rejecting them left the record locked
-    // with a permanently pending approval.
+    // the request is in flight — rejecting them left the record locked with a
+    // permanently pending approval.
+    //
+    // ⚠️ Why this exemption is still needed even though `opportunity_approval`
+    // declares `runAs: 'system'`, and why that is not a contradiction:
+    // ELEVATION IS NOT ANONYMITY (objectstack#5494). `resolveRunDataContext`
+    // returns `{ isSystem: true, actor, ...userId }` for a `runAs: 'system'`
+    // run — it carries the triggering user through rather than erasing them.
+    // So ONE approval write is seen by TWO guards keyed on DIFFERENT halves of
+    // that context, and both fire as designed:
+    //   • this freeze guard keys on `ctx.user?.id`, which is PRESENT ⇒ the
+    //     write is judged as a user edit and would be rejected on a closed
+    //     deal — hence this allow-list.
+    //   • the engine's readonly strip keys on `isSystem`, which is TRUE ⇒ the
+    //     strip branch (`if (!opCtx.context?.isSystem)`) is skipped, so the
+    //     stamps land even though both columns are declared `readonly: true`
+    //     (#1666).
+    // ⛔ Neither mechanism needs changing, and neither is a substitute for the
+    // other: dropping this allow-list re-locks in-flight approvals, and the
+    // readonly declaration is what keeps a hand-edit out. Measured in
+    // `test/readonly-write-semantics.test.ts` and pinned for these two columns
+    // in `test/audit-stamp-readonly.test.ts`.
     const APPROVAL_FIELDS = new Set(['approval_status', 'approved_date']);
     // Stage → forecast category.
     const STAGE_FORECAST: Record<string, string> = {

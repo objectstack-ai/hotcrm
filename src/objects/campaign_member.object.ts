@@ -139,18 +139,22 @@ export const CampaignMember = ObjectSchema.create({
       description: 'Set when the member is an existing Contact',
     }),
 
-    // ⚠️ NOT `readonly` — and on the pinned engine that is the status quo, not
-    // a constraint. The 16.x claim this note used to carry ("every member landed
-    // with a null Added Date while the flag was on") is a historical statement
-    // this repo can no longer re-run, and it does not describe 17.3.0: the
+    // ⭐ `readonly: true` — DECLARED, and it costs no writer its write. The
     // readonly strip is an UPDATE-path rule, and every writer of this stamp is
     // an INSERT — `campaign_enrollment`'s `create_campaign_member` and
     // `create_contact_member` nodes, plus the marketing seed. Nothing updates
-    // it. The insert exemption is measured in
-    // `test/readonly-write-semantics.test.ts`.
-    // ⇒ It COULD honestly be declared `readonly: true`. Filed as #1667 rather
-    // than flipped here, for the same reason as the sibling finding: that is a
-    // behaviour change, not a comment correction.
+    // it: there is no `update_record` node, no hook and no action that writes
+    // `added_date`. The insert exemption is measured in
+    // `test/readonly-write-semantics.test.ts`, and this column's own two halves
+    // are pinned in `test/audit-stamp-readonly.test.ts` — the enrollment
+    // writers still stamp it on INSERT, and a user-context UPDATE of it is
+    // stripped.
+    // Ruled #1667 (director seat, decision batch #74, 2026-09-07): an
+    // enrollment stamp nobody is meant to hand-edit gets the declaration that
+    // says so. ⛔ The 16.x claim this note used to carry ("every member landed
+    // with a null Added Date while the flag was on") described an engine this
+    // repo no longer runs; ⛔ do not resurrect it as a reason to open the
+    // column back up.
     //
     // Grouped under `basic`, not `response` (#715): it records when the
     // membership was created, which is a fact about the enrollment, not a step
@@ -158,6 +162,7 @@ export const CampaignMember = ObjectSchema.create({
     added_date: Field.datetime({
       label: 'Added Date',
       group: 'basic',
+      readonly: true,
     }),
 
     // Writers, one per surviving value (#597):
