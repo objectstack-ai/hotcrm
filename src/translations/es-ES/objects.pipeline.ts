@@ -289,7 +289,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
           better_product: 'Mejor Producto', better_price: 'Mejor Precio',
           relationship: 'Relación Existente', better_support: 'Mejor Soporte',
           best_fit: 'Mejor Ajuste / Funcionalidades',
-          quote_accepted: 'Presupuesto Aceptado', other: 'Otro',
+          quote_accepted: 'Cotización Aceptada', other: 'Otro',
         },
       },
       loss_reason: {
@@ -369,8 +369,8 @@ export const pipeline: Record<string, ObjectTranslationData> = {
         },
       },
       generate_quote: {
-        label: 'Generar Presupuesto',
-        successMessage: '¡Presupuesto creado desde la oportunidad!',
+        label: 'Generar Cotización',
+        successMessage: '¡Cotización creada desde la oportunidad!',
       },
     },
   },
