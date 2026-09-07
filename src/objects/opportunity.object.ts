@@ -230,24 +230,32 @@ export const Opportunity = ObjectSchema.create({
     }),
 
     // Approval workflow tracking.
-    // ⚠️ NOT `readonly` — but NOT because a write would be dropped. Audited per
-    // writer: every writer of this column and of `approved_date` is elevated or
-    // an insert. `opportunity_approval` declares `runAs: 'system'`, and
+    // ⭐ `readonly: true` — DECLARED, and the declaration is the honest one
+    // rather than a hopeful one. Audited per writer (#1666): every writer of
+    // this column and of `approved_date` is elevated or an insert.
+    // `opportunity_approval` declares `runAs: 'system'`, and
     // `opportunity_approval_on_create` inherits it by spreading that flow, so
     // `resolveRunDataContext` hands the engine `isSystem: true` and the
     // `if (!opCtx.context?.isSystem)` strip branch is skipped outright; the
     // `approval` node's own `approvalStatusField` write runs inside those same
     // system runs; seeds write on INSERT, which the strip never touches. No
-    // view, page or action writes either column.
-    // ⇒ Both COULD honestly be declared `readonly: true`. Filed as #1666 rather
-    // than flipped here: removing a column from the editable surface is a
-    // behaviour change, not a comment correction.
+    // view, page or action writes either column. ⇒ No writer loses its write.
+    // Ruled #1666 (director seat, decision batch #74, 2026-09-07): "Declared =
+    // enforced" applies to the audit surface too. ⛔ The hand-edit escape hatch
+    // — an admin clearing a stuck approval by typing over the stamp — is given
+    // up ON PURPOSE: a stuck approval is a platform or flow defect to be fixed
+    // as one, not a reason to keep an audit stamp hand-editable. ⛔ Do not
+    // reintroduce a bypass, and do not soften either column back to editable
+    // without a new ruling. Both halves are pinned in
+    // `test/audit-stamp-readonly.test.ts`: the system path still lands both
+    // stamps, and a plain user-context UPDATE of either is stripped.
     // ⚠️ `defaultValue` at FIELD level: option-level `default: true`
     // only preselects in UI forms — API and flow inserts land null without it,
     // and a null `approval_status` never matches the flow's entry condition.
     approval_status: Field.select({
       label: 'Approval Status',
       group: 'sales_process',
+      readonly: true,
       defaultValue: 'not_required',
       options: [
         { label: 'Not Required', value: 'not_required', default: true },
@@ -260,6 +268,7 @@ export const Opportunity = ObjectSchema.create({
     approved_date: Field.datetime({
       label: 'Approved Date',
       group: 'sales_process',
+      readonly: true,
     }),
 
     // ─── Win / Loss analysis ───────────────────────────────────────────
