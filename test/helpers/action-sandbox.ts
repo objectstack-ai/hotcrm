@@ -32,6 +32,26 @@ import { assertReferenceValueShapes, engineFlatInput } from './hook-harness';
  * recorder whose contract is pinned against the real kernel in
  * `test/action-sandbox.test.ts`.
  *
+ * PINNING A CLOCK AROUND A BODY (#1665). Fake ONLY `Date`:
+ *
+ *     vi.useFakeTimers({ toFake: ['Date'] });
+ *     vi.setSystemTime(new Date('2026-03-08T06:30:00.000Z'));
+ *
+ * The bare `vi.useFakeTimers()` DEADLOCKS this harness: `runActionBody` and
+ * `runHookBody` never resolve, and the only symptom is `Error: Test timed out
+ * in 5000ms.` — which names nothing about the clock and reads exactly like a
+ * body that hangs. `setImmediate` is the one member of vitest's default fake
+ * set that does it; faking `Date`, `setTimeout`, `clearTimeout`, `setInterval`
+ * and `clearInterval` together is harmless. Nor is it a cold-start effect: it
+ * hangs on every call, including after a real-timer run has warmed the runner.
+ *
+ * The `Date`-only pin does reach inside the VM, which makes two things true of
+ * a body: it sees the process `TZ`, with zone rules resolved for the PINNED
+ * instant — under `TZ=America/New_York` the instant above answers
+ * `getTimezoneOffset() === 300`, because 06:30Z is 01:30 EST, half an hour
+ * before that day's spring-forward, where a summer instant answers `240` — and
+ * `getUTCDate` / `setUTCDate` exist, so a body may rely on them.
+ *
  * `extractHookBody` is reached by a deep path because the CLI publishes no
  * public entry for it. Both packages are pinned to an exact version in
  * `package.json`, and if a platform upgrade moves the file the load fails —
