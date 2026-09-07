@@ -378,8 +378,17 @@ changelogs**:
 3. Bump all `@objectstack/*` packages **together** (they are version-locked),
    update `specVersion` in `objectstack.manifest.json` to the new major,
    then run the full verify suite and browser-verify (see below).
-4. Record the upgrade in `CHANGELOG.md` following the existing entry format
-   (what changed on the platform, what metadata was migrated and why).
+4. Record the upgrade in the PR's **changeset**, not in `CHANGELOG.md`. The
+   changeset *is* the upgrade's release-notes entry, and it carries exactly what
+   this step has always asked for — what changed on the platform, what metadata
+   was migrated and why. It is the entry §Verifying changes already requires of
+   every PR; the upgrade does not get a second one.
+   ⛔ `CHANGELOG.md` is not hand-edited. `changeset version` owns it: it splices
+   each release in under the `# Changelog` title and keeps everything already in
+   the file below that, byte-for-byte and unread. So the generated section at the
+   top is machine territory, and the hand-written history under it was closed when
+   the 3.0.0 release consumed the pending changesets — an entry appended there is
+   published by nothing, and one written at the top duplicates your changeset.
 
 > A platform fix that has **merged** is not yet a fix you can use. Before resuming a card
 > that was blocked on one, confirm the pinned `@objectstack/*` version actually carries it

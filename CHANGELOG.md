@@ -9006,9 +9006,9 @@ Compliance Rate` instead of contradicting the title above it. Widget titles and
 
 All notable changes to HotCRM are documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); HotCRM follows [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## Pre-3.0.0 hand-written history (closed — not a live section)
 
-Everything merged after the 2.2.2 tag. Not yet versioned or published.
+Everything merged between the 2.2.2 tag and the 3.0.0 release, recorded here by hand while this file was still hand-maintained. It shipped in 3.0.0 — the generated section at the top of this file — so nothing below is unreleased. ⛔ Nothing is added here: `changeset version` writes `CHANGELOG.md` from the `.changeset/*.md` entries each PR commits, and it splices every new release in under the `# Changelog` title above, never into this block.
 
 ### Changed
 
