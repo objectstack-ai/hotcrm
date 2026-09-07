@@ -294,21 +294,23 @@ const packagesPathsIn = (docFile: string): string[] => [
  * So the list can only shrink, and an exception cannot outlive the defect it
  * was granted for.
  *
- * `architect.md` is here rather than fixed alongside `logic.md` because its
- * remedy is not a path rewrite. Its `packages/` references are not only the
- * worked "Recruiting System" example (which is arguably illustrative): the
- * standing "Dependency Management Rules" name three packages that do not
- * exist, and the MANDATORY Output Format template — "Always start your
- * response with the Architecture Plan" — heads every plan the architect emits
- * with `### 📦 Package: packages/[name]`. Rewriting those needs a decision
- * about whether this repo's architect plans in packages at all, and the same
- * example routes files to `.mask.ts` / `.workflow.ts` / `.rls.ts` kinds that
- * have no directory here, so stripping the prefix would only trade one absent
- * path for another. #1518 carries the measurement and the two questions.
+ * The list is now EMPTY, and that is the finished state, not a disabled one:
+ * every brief names the real single-package tree. `architect.md` was the last
+ * entry, and it outlived `logic.md` because its remedy was not a path rewrite
+ * — the standing "Dependency Management Rules" named three packages that do
+ * not exist, and the MANDATORY Output Format headed every plan the architect
+ * emits with a `📦 Package:` heading, so it needed a scope ruling before a
+ * line could be written. #1518 carries that ruling (the architect brief
+ * describes THIS workspace) and the rewrite; deleting its entry here is what
+ * the equality below demanded the moment the file was fixed, which is the
+ * ratchet working, not an obstacle to it.
+ *
+ * ⛔ Do not add an entry to turn a red build green. An entry is a dated
+ * exception with a card behind it, and an empty object is not a weaker guard:
+ * the equality still fails loudly the day any brief picks the retired layout
+ * back up.
  */
-const PENDING_PACKAGES_REFS: Record<string, string> = {
-  '.github/instructions/architect.md': '#1518',
-};
+const PENDING_PACKAGES_REFS: Record<string, string> = {};
 
 /**
  * The one brief that points into `src/` in prose, and so can carry rule 1
