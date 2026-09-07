@@ -333,16 +333,17 @@ Three things worth knowing before changing any of it:
 
 ## 5. Releasing
 
-HotCRM ships as **one** app package (`hotcrm` / `app.objectstack.hotcrm`). Before
-publishing, keep the version aligned across all four places:
+HotCRM ships as **one** app package (`hotcrm` / `app.objectstack.hotcrm`).
+`changeset version` writes `package.json` and `CHANGELOG.md`; the
+`objectstack.config.ts` manifest `version` and the marketplace publish note are
+matched to it by hand, and `pnpm verify` fails if the config drifts from
+`package.json`.
 
-- `package.json` `version`
-- `objectstack.config.ts` manifest `version`
-- `CHANGELOG.md`
-- the marketplace publish note
-
-Full procedure (build artifact, dry-run, publish) lives in
-[`RELEASE_STRATEGY.md`](RELEASE_STRATEGY.md). Do not duplicate it here.
+Which file each of those is, and the full procedure (cut the version, build the
+artifact, dry-run, publish), live in [`RELEASE_STRATEGY.md`](RELEASE_STRATEGY.md)
+§Version Sources and §Release Checklist. Do not duplicate them here — this list
+was a fourth copy of that one, and it is what let `CHANGELOG.md` go on reading as
+a file a releaser aligns by hand.
 
 > **Keep `STATUS.md` honest.** It is a snapshot, not live — regenerate its counts
 > and version from `pnpm validate` whenever they drift from `package.json`.

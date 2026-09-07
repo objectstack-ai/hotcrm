@@ -38,4 +38,18 @@ asserts `package.json` agrees with the manifest, which is the loud failure the
 `CHANGELOG.md` instruction never had. Writing "one tool writes all three" would have put a
 fresh confidently-wrong instruction into the same two files this change exists to correct.
 
-No new gate, guard or test: both sites point at enforcement that already exists.
+`docs/MAINTENANCE.md` §5 Releasing carried a fourth copy of the same four-item "keep the
+version aligned" list, `CHANGELOG.md` included — the same defect as §Version Sources, in the
+same file as site 1. It now states who writes what and defers the rest to
+`RELEASE_STRATEGY.md`, which is what that block already instructed ("Do not duplicate it
+here") and had stopped doing. Correcting the other two sites while leaving this one would
+have left the two files contradicting each other, which is the seam this change exists to
+remove.
+
+Two `CHANGELOG.md` mentions were deliberately left alone. `docs/MAINTENANCE.md` §1's
+doc-map row names `CHANGELOG.md` + `.changeset/` as where "what changed, per release"
+lives: that is true, names both halves, and is a source-of-truth map rather than an
+instruction to write anything. `docs/RELEASE_STRATEGY.md` §Release Artifacts To Check does
+not mention the file at all.
+
+No new gate, guard or test: all three sites point at enforcement that already exists.
