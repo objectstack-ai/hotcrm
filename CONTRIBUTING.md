@@ -149,6 +149,17 @@ Maintainers will run this command to consume all changesets and update package v
 pnpm changeset:version
 ```
 
+It runs `changeset version` through `scripts/changeset-version.mjs`. Two things
+about this repo make that wrapper necessary rather than decorative:
+
+- `hotcrm` is `private: true` and versions **itself** — `.changeset/config.json`
+  sets `privatePackages: { version: true }`, without which `@changesets/cli` 3.x
+  stops bumping the version and stops writing `CHANGELOG.md` **while exiting 0
+  with a success message**.
+- Running it with nothing pending is an ordinary answer, not a broken release.
+  `@changesets/cli` 3.x exits 1 there (2.x exited 0); the wrapper reports it as
+  "nothing to release" and exits 0. Every other failure still exits non-zero.
+
 ### Publishing
 
 After versions are updated, maintainers can publish all packages:

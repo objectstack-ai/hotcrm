@@ -573,7 +573,12 @@ describe('docs/STATUS.md states the current repository (#1011)', () => {
     return Object.fromEntries(
       [...section.body.matchAll(/^\|\s*([^|]+?)\s*\|\s*`([^`]+)`\s*\|/gm)].map((m) => [
         m[1].trim(),
-        m[2].trim(),
+        // A literal `|` ends a table cell, so markdown requires it escaped as
+        // `\|`. `engines.node` is a `||` range, so the page and package.json
+        // differ by exactly that escaping and the row could never agree until
+        // it is undone here. Unescaping normalises in one direction only: it
+        // cannot make a genuinely drifted value match.
+        m[2].trim().replace(/\\\|/g, '|'),
       ]),
     );
   })();

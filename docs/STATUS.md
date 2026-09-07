@@ -71,7 +71,7 @@ pnpm verify
 
 | Requirement | Value |
 | --- | --- |
-| Node.js | `>=22` |
+| Node.js | `^22.11 \|\| ^24 \|\| >=26` |
 | pnpm | `>=10.0.0` |
 | ObjectStack packages | `17.3.0` |
 | Local dev port | `4001` |
