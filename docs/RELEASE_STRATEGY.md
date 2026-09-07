@@ -18,11 +18,17 @@ The active repository is not released as separate scoped npm packages.
 
 ## Version Sources
 
-Keep these aligned for each release:
+`changeset version` writes the first two from the changesets a release has
+accumulated — ⛔ do not hand-edit either:
 
 - `package.json` `version`
-- `objectstack.config.ts` manifest `version`
-- `CHANGELOG.md`
+- `CHANGELOG.md` — the new release section is spliced in under the `# Changelog`
+  title, and everything already below it is kept byte-for-byte
+
+The remaining two are matched by hand to the version it just wrote:
+
+- `objectstack.config.ts` manifest `version` — `pnpm verify` fails if this drifts
+  from `package.json`
 - marketplace publish note
 
 ## Release Checklist
@@ -34,15 +40,24 @@ Keep these aligned for each release:
    pnpm verify
    ```
 
-3. Update `CHANGELOG.md`.
-4. Confirm `package.json` and `objectstack.config.ts` carry the same version.
-5. Build the artifact:
+3. Cut the version. This one command writes `CHANGELOG.md` and bumps
+   `package.json` — ⛔ do not hand-write either:
+
+   ```bash
+   pnpm changeset:version   # changeset version
+   ```
+
+   Then set the `objectstack.config.ts` manifest `version` to the version it just
+   wrote — `changeset version` does not touch that file, and `pnpm verify` is
+   what catches the drift.
+
+4. Build the artifact:
 
    ```bash
    pnpm build
    ```
 
-6. Publish or dry-run publish:
+5. Publish or dry-run publish:
 
    ```bash
    pnpm publish:marketplace:dry-run
