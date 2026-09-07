@@ -334,9 +334,16 @@ export const EventAttendee = ObjectSchema.create({
       defaultValue: false,
     }),
 
-    // ⛔ NOT `readonly`: written by the activity actions on insert, and the
-    // engine strips a readonly key the CALLER supplied — the same reason
-    // `crm_campaign_member.added_date` is open.
+    // ⛔ NOT `readonly` — but the cross-reference this note used to carry is
+    // retired, not merely reworded: `crm_campaign_member.added_date` was ruled
+    // `readonly: true` in #1667, so it is no longer a precedent for keeping an
+    // insert-stamped column open, and the reason it cited ("the engine strips a
+    // readonly key the CALLER supplied") does not reach an INSERT at all — the
+    // strip is an UPDATE-path rule (`test/readonly-write-semantics.test.ts`).
+    // What holds this column open today is that nobody has ruled on it. ⛔ Do
+    // not flip it on the strength of the sibling ruling: #1666 / #1667 were two
+    // separate product decisions about two specific columns, and this one has
+    // had neither. It needs its own writer census and its own ruling.
     invited_date: Field.datetime({
       group: 'response',
       label: 'Invited',

@@ -7,6 +7,7 @@ import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-auto
 import type * as Automation from '@objectstack/spec/automation';
 import stack from '../objectstack.config';
 import { OpportunityApprovalFlow, OpportunityApprovalOnCreateFlow } from '../src/flows/opportunity-approval.flow';
+import { CampaignEnrollmentFlow } from '../src/flows/campaign-enrollment.flow';
 import { silentLogger } from './helpers/flow-harness';
 
 /**
@@ -64,6 +65,7 @@ beforeAll(async () => {
       crm_account: shippedFields('crm_account'),
       crm_opportunity: shippedFields('crm_opportunity'),
       crm_campaign: shippedFields('crm_campaign'),
+      crm_lead: shippedFields('crm_lead'),
       crm_campaign_member: shippedFields('crm_campaign_member'),
     } as never,
   });
@@ -100,7 +102,10 @@ function automation(flows: Record<string, Flow>) {
 const runnable = (name: string, runAs: 'system' | 'user', node: AnyRec, addressing: AnyRec): Flow =>
   ({
     name, label: name, type: 'schedule', status: 'active', runAs,
-    variables: [{ name: 'rowId', type: 'text', isInput: true, isOutput: false }],
+    variables: [
+      { name: 'rowId', type: 'text', isInput: true, isOutput: false },
+      { name: 'linkId', type: 'text', isInput: true, isOutput: false },
+    ],
     nodes: [
       { id: 'start', type: 'start', label: 'Start', config: {} },
       { ...node, config: { ...node.config, ...addressing } },
@@ -112,17 +117,34 @@ const runnable = (name: string, runAs: 'system' | 'user', node: AnyRec, addressi
     ],
   }) as AnyRec as Flow;
 
-/** Recursively find a node by id — the enrollment writers live inside loop bodies. */
+/**
+ * Recursively find a node by id.
+ *
+ * The enrollment writers are two regions deep — a `loop`'s `config.body`, then
+ * the `try_catch` that `guarded()` wraps every iteration in (`config.try`). So
+ * this walks EVERY nested `{ nodes: [...] }` region rather than a fixed list of
+ * keys: a node that moves into a different region kind must keep being found,
+ * or these pins would go quietly green by finding nothing.
+ */
 function findNode(flow: AnyRec, id: string): AnyRec | undefined {
-  const walk = (nodes: AnyRec[] | undefined): AnyRec | undefined => {
-    for (const n of nodes ?? []) {
-      if (n?.id === id) return n;
-      const nested = walk(n?.config?.body?.nodes ?? n?.config?.nodes);
-      if (nested) return nested;
+  const walk = (value: unknown): AnyRec | undefined => {
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        const hit = walk(item);
+        if (hit) return hit;
+      }
+      return undefined;
+    }
+    if (!value || typeof value !== 'object') return undefined;
+    const node = value as AnyRec;
+    if (node.id === id && node.type) return node;
+    for (const nested of Object.values(node)) {
+      const hit = walk(nested);
+      if (hit) return hit;
     }
     return undefined;
   };
-  return walk(flow.nodes as AnyRec[]);
+  return walk(flow.nodes);
 }
 
 const sysCtx = { isSystem: true, userId: 'seed' };
@@ -237,5 +259,108 @@ describe('#1666 — crm_opportunity approval stamps are declared readonly', () =
       'a hand-edited approval verdict LANDED. The declaration is decorative and #1666 did not ship.',
     ).toBe('pending');
     expect(after.approved_date, 'a hand-edited approval date landed').toBeFalsy();
+  });
+});
+
+// ───────────────────────────────────────────────────── #1667 · enrollment ──
+
+describe('#1667 — crm_campaign_member.added_date is declared readonly', () => {
+  /** A campaign and a lead the enrollment writers can legitimately point at. */
+  async function seedEnrollmentTargets(): Promise<{ campaignId: string; leadId: string }> {
+    const campaign = await ql.insert(
+      'crm_campaign',
+      { name: 'Spring Push', status: 'in_progress', start_date: '2026-03-01', end_date: '2026-04-30' },
+      { context: sysCtx },
+    );
+    const lead = await ql.insert(
+      'crm_lead',
+      { first_name: 'Ada', last_name: 'Lovelace', company: 'Acme', email: 'ada@acme.test', status: 'new' },
+      { context: sysCtx },
+    );
+    return { campaignId: String(campaign.id), leadId: String(lead.id) };
+  }
+
+  it('the column carries readonly: true on the shipped schema', () => {
+    const fields = objectByName.get('crm_campaign_member')?.fields as AnyRec;
+    expect(
+      fields.added_date?.readonly,
+      'added_date is the enrollment stamp. Ruled readonly in #1667 (decision batch #74) ' +
+        'because nobody is meant to hand-edit when a membership was created.',
+    ).toBe(true);
+  });
+
+  it('the enrollment flow is NOT elevated — which is exactly why the INSERT exemption is load-bearing', () => {
+    expect(
+      (CampaignEnrollmentFlow as AnyRec).runAs ?? 'user',
+      'campaign_enrollment is a screen action a marketer clicks, and it must keep their ' +
+        'identity. It therefore writes added_date WITHOUT isSystem — the stamp survives only ' +
+        'because the strip is an UPDATE-path rule and these writers are INSERTs. ' +
+        "Declaring runAs: 'system' here to 'protect' the stamp would be the wrong fix and " +
+        'would re-attribute every enrollment to the platform.',
+    ).toBe('user');
+  });
+
+  it('both shipped create nodes still carry the stamp', () => {
+    for (const id of ['create_campaign_member', 'create_contact_member']) {
+      const node = findNode(CampaignEnrollmentFlow as AnyRec, id);
+      expect(node, `${id} is one of the two writers the #1667 census rests on`).toBeTruthy();
+      expect(node!.type, 'an INSERT. If this ever becomes update_record, the strip DOES reach it ' +
+        'and the stamp is silently dropped — that is the failure #1667 trades against.').toBe('create_record');
+      expect(node!.config.objectName).toBe('crm_campaign_member');
+      expect(node!.config.fields.added_date, 'the stamp itself, taken from source').toBe('{NOW()}');
+    }
+  });
+
+  it('the shipped create_campaign_member node still stamps added_date on INSERT', async () => {
+    const node = findNode(CampaignEnrollmentFlow as AnyRec, 'create_campaign_member')!;
+    const { campaignId, leadId } = await seedEnrollmentTargets();
+    const engine = automation({
+      pin_enrol: runnable(
+        'pin_enrol',
+        (CampaignEnrollmentFlow as AnyRec).runAs ?? 'user',
+        node,
+        // Addressing only — `status` and `added_date` stay exactly as authored.
+        { fields: { ...node.config.fields, crm_campaign: '{rowId}', crm_lead: '{linkId}' } },
+      ),
+    });
+    await engine.execute('pin_enrol', {
+      params: { rowId: campaignId, linkId: leadId }, userId: 'user_1', event: 'manual',
+    } as never);
+
+    const members = await ql.find('crm_campaign_member', { where: { crm_campaign: campaignId }, context: sysCtx });
+    expect(members, 'the enrollment write did not land at all').toHaveLength(1);
+    expect(members[0].status, 'the CONTROL column did not land — harness fault, not a strip').toBe('sent');
+    expect(
+      members[0].added_date,
+      'added_date came back null after the readonly declaration. Every campaign member would ' +
+        'now be born without an enrollment date — the exact 16.x symptom #1667 measured away.',
+    ).toBeTruthy();
+  });
+
+  it('a user-context UPDATE of added_date is STRIPPED', async () => {
+    const { campaignId, leadId } = await seedEnrollmentTargets();
+    const row = await ql.insert(
+      'crm_campaign_member',
+      { crm_campaign: campaignId, crm_lead: leadId, status: 'sent', added_date: '2026-03-02T00:00:00.000Z' },
+      { context: { userId: 'user_1' } },
+    );
+    // The insert above is itself half the reading: a plain USER context seeded a
+    // readonly column, because insert is exempt.
+    expect(
+      (await readBack('crm_campaign_member', String(row.id))).added_date,
+      'a user-context INSERT must still seed the stamp — this is the exemption #1667 rests on',
+    ).toBeTruthy();
+
+    await ql.update(
+      'crm_campaign_member',
+      { added_date: '2020-01-01T00:00:00.000Z', status: 'responded' },
+      { where: { id: row.id }, context: { userId: 'user_1' } },
+    );
+    const after = await readBack('crm_campaign_member', String(row.id));
+    expect(after.status, 'the CONTROL column did not land — harness fault, not a strip').toBe('responded');
+    expect(
+      String(after.added_date),
+      'the enrollment date was back-dated by hand. The declaration is decorative and #1667 did not ship.',
+    ).toContain('2026-03-02');
   });
 });

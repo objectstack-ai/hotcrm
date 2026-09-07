@@ -390,8 +390,11 @@ export const Account = ObjectSchema.create({
     // writes is silently dropped: the engine logs `Field '…' is read-only —
     // ignoring incoming change` and the column stays null forever.
     //
-    // Same reasoning, same shape as `crm_campaign_member.added_date`: a field
-    // written through a hook's `ctx.api` cannot be `readonly`. Note the rule
+    // ⛔ `crm_campaign_member.added_date` was cited here as a twin and is NOT
+    // one — it was ruled `readonly: true` in #1667 precisely because its
+    // writers are INSERTs, which the strip never reaches. THIS field is an
+    // UPDATE through a hook's `ctx.api`, which is the one shape that cannot be
+    // `readonly`. Note the rule
     // is about the CONTEXT, not about hooks or flows as such — a hook stamping
     // its own `ctx.input.data` survives, and a flow survives when its `runAs`
     // is `'system'` (measured: `test/readonly-write-semantics.test.ts`, #1429;
