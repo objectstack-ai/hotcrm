@@ -832,15 +832,34 @@ describe('docs cite navigation names the platform actually ships (#853)', () => 
   });
 
   describe('retired page names', () => {
+    // A NOT_BANNED spelling is an EXEMPT one, not an UN-JUDGED one, and until
+    // #1772 this read `if (NOT_BANNED.has(wrong)) continue;` — which had two
+    // costs. The row whose every spelling is exempt (`['流程运行记录']`) executed
+    // its walker and made ZERO `expect()` calls: a green parameterised case
+    // pinning no fact, in a table whose own comment says that entry is "listed
+    // so the gloss is pinned live". And the exemption became a silencer: adding
+    // a genuinely retired name to NOT_BANNED removed all judgement of it and
+    // nothing noticed — measured, this file stayed green at 24 passed with
+    // 'Process Monitor' exempted.
+    //
+    // So judge every spelling against the same roster, in the direction the
+    // entry claims: a banned name must resolve to NOTHING, an exempt one must
+    // still RESOLVE. One assertion, both directions — no case is skipped.
     it.each(RETIRED_UI_NAMES)('$wrong is judged against the live roster', (entry) => {
       for (const wrong of entry.wrong) {
-        if (NOT_BANNED.has(wrong)) continue;
+        const exempt = NOT_BANNED.has(wrong);
         expect(
           shipsAnywhere(wrong),
-          `'${wrong}' now resolves to a real navigation label. The platform started ` +
-            'shipping it — retire this entry from RETIRED_UI_NAMES instead of ' +
-            'keeping a ban on a name that has become correct.',
-        ).toBe(false);
+          exempt
+            ? `'${wrong}' is exempted from the ban as a spelling that is correct ` +
+              'somewhere, but the platform ships no navigation label by that name ' +
+              'any more. Either it was relabelled — move the entry and the docs ' +
+              'that gloss it together — or the exemption is wrong and this name ' +
+              'belongs under the ban, not above it.'
+            : `'${wrong}' now resolves to a real navigation label. The platform started ` +
+              'shipping it — retire this entry from RETIRED_UI_NAMES instead of ' +
+              'keeping a ban on a name that has become correct.',
+        ).toBe(exempt);
       }
     });
 

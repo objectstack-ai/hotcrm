@@ -236,16 +236,36 @@ describe('lead_assignment — hot-lead SLA routing', () => {
     id: 'l1', company: 'Acme', rating: 5, owner_id: 'rep1', ...over,
   });
 
+  /**
+   * Both branch guards assert the population this flow actually writes.
+   *
+   * They read `h.notifications.length + h.store.crm_task.length` until #1772 —
+   * a sum over two populations, which proves NEITHER is non-empty. That shape
+   * is worth naming, because it is what an author reaches for when they are
+   * already thinking about vacuity: it looks like it covers both walks below
+   * and covers neither.
+   *
+   * Here the disjunct that can never contribute is the task half:
+   * `lead_assignment` authors `update_record` (the SLA date stamp on the lead)
+   * and `notify`, and NO `create_record` node at all, so `h.store.crm_task`
+   * cannot receive a row from this flow on any input. Its "SLA" is a
+   * `next_followup_date` value, never a task row.
+   *
+   * Measured, both legs in the same file and command: with edge `e4`
+   * retargeted from `notify_hot` to `end` (the hot lead loses its alert) and
+   * one pre-existing `crm_task` row seeded into the store, the sum form stayed
+   * GREEN — the seeded row alone satisfied it while the alert was gone.
+   */
   it('routes a hot lead (rating ≥ 4) down the accelerated SLA branch', async () => {
     const h = makeFlowHarness({ lead_assignment: LeadAssignmentFlow }, { crm_task: [] });
     await h.trigger('lead_assignment', lead({ rating: 5 }));
-    expect(h.notifications.length + h.store.crm_task.length, 'hot lead produced no follow-up').toBeGreaterThan(0);
+    expect(h.notifications.length, 'hot lead produced no follow-up alert').toBeGreaterThan(0);
   });
 
   it('routes a cold lead down the standard branch', async () => {
     const h = makeFlowHarness({ lead_assignment: LeadAssignmentFlow }, { crm_task: [] });
     await h.trigger('lead_assignment', lead({ rating: 1 }));
-    expect(h.notifications.length + h.store.crm_task.length, 'cold lead produced no follow-up').toBeGreaterThan(0);
+    expect(h.notifications.length, 'cold lead produced no follow-up alert').toBeGreaterThan(0);
   });
 
   it('sends every SLA task to the lead owner, never a dot-walked manager', async () => {
@@ -256,6 +276,14 @@ describe('lead_assignment — hot-lead SLA routing', () => {
         expect(JSON.stringify(n), `rating ${rating} notification dot-walked a lookup`)
           .not.toContain('undefined');
       }
+      // ⚠️ UNREACHABLE POPULATION, stated rather than silently carried
+      // (#1772). `lead_assignment` has no `create_record` node, so this walk
+      // inspects zero rows on both ratings and can inspect none until the flow
+      // grows one. It is left in place, not deleted, because it is the guard
+      // that would catch a dot-walked owner the day a task node lands; what was
+      // removed is the disjunctive guard above that made it LOOK covered. The
+      // live half of this test is the notification walk, which inspects 1 row
+      // per rating.
       for (const t of h.store.crm_task) {
         expect(String(t.owner_id), `rating ${rating} task has a phantom owner`).not.toBe('undefined');
       }

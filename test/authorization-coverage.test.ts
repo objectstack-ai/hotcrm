@@ -314,6 +314,19 @@ describe('field-level security resolves', () => {
   it('a masked (unreadable) field is never filtered or sorted on by a view', () => {
     // Querying a hidden field throws `field_predicate_denied` (the filter-oracle
     // guard), so a masked field in a view's filter/sort breaks the whole list.
+    //
+    // The filter half read `node.filters` (plural) until #1772 and therefore
+    // never once ran: `filters` is present on ZERO walked view nodes, because
+    // no view/page node schema in `@objectstack/spec` has that key at all —
+    // `ListViewSchema.filter`, `ViewTabSchema.filter` and friends are singular
+    // arrays of `ViewFilterRuleSchema`. Where `filters` DOES appear in the spec
+    // is in the alias tables (`chart.zod.ts`, `app.zod.ts`), as a spelling the
+    // protocol normalises away — so this was the wrong-but-natural spelling the
+    // protocol anticipates, and because the walk reads the AUTHORED object
+    // rather than the normalised one, the alias never rescued it. Measured on
+    // this app: `filters` 0 nodes, `filter` 29, `sort` 39. The sibling `sort`
+    // half was live the whole time, which is why the assertion looked healthy.
+    // ⚠️ Read the singular key here; do not "fix" it back to the plural.
     const hidden = new Set(
       flsEntries.filter(({ perm }) => perm.readable === false).map(({ key }) => key),
     );
@@ -324,7 +337,7 @@ describe('field-level security resolves', () => {
       const objectName = v.list?.data?.object ?? v.form?.data?.object ?? v.object;
       if (!objectName) continue;
       for (const node of walk(v)) {
-        for (const f of node.filters ?? []) {
+        for (const f of node.filter ?? []) {
           const field = typeof f === 'string' ? f : f?.field;
           if (field && hidden.has(`${objectName}.${field}`)) {
             bad.push(`${v.name}: filters on masked field "${objectName}.${field}"`);
