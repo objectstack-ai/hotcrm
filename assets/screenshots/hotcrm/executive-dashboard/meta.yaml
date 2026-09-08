@@ -1,0 +1,45 @@
+id: hotcrm-executive-dashboard
+kind: screenshot
+scope: hotcrm
+category: analytics
+status: published
+captured: '2026-09-08'
+capture:
+  application: HotCRM
+  theme: light
+  viewport: 1440x1024
+  dashboard: executive_dashboard
+  navigation: nav_home
+# Two locale files and deliberately no zh-Hant one. Ruled on #1397, derived
+# from the #1368 ruling rather than chosen as a style preference. The causal
+# chain matters more than the rule, because the chain is what makes this
+# convention falsifiable:
+#
+#   the platform ships no Traditional Chinese language pack
+#     => the console falls back to Simplified whenever the UI language is
+#        Traditional
+#     => a zh-Hant capture would be the same pixels as the zh-Hans one, at
+#        twice the maintenance, and the two would drift apart the first time
+#        only one of them was refreshed
+#     => Traditional documentation pages borrow the Simplified capture.
+#
+# Measured here, on the installed platform (17.3.0), rather than inherited:
+# driving the console with navigator.language set to zh-TW, zh-Hant and
+# zh-HK in turn renders Simplified in all three -- 高管总览 / 仪表盘 / 线索,
+# with no Traditional glyph anywhere on the page.
+#
+# If the platform ever ships a Traditional pack, that middle step stops being
+# true and this convention should be revisited. Re-run the probe above before
+# assuming it still holds.
+locales:
+  en: en.png
+  zh-Hans: zh-Hans.png
+title:
+  en: Executive Overview dashboard
+  zh-Hans: 高管总览仪表盘
+alt:
+  en: The Executive Overview dashboard that Home opens, with revenue, account, contact and lead KPI tiles above the revenue trend and revenue-by-industry charts.
+  zh-Hans: Home 打开的高管总览仪表盘，上方是收入、客户、联系人与线索 KPI 磁贴，下方是收入趋势与行业收入分布图表。
+purpose:
+  en: Show the dashboard every HotCRM user lands on, as the opening figure of the onboarding quick tour.
+  zh-Hans: 展示每位 HotCRM 用户登录后落地的仪表盘，作为新手快速导览的开篇配图。
