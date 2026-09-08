@@ -182,10 +182,19 @@ export const LeadViews = defineView({
       { field: 'created_at', order: 'desc' }
     ],
     
-    // Navigation to Form
+    // A row click opens the record page. There is deliberately no
+    // `navigation.view` here: measured in the browser on console 17.3.0
+    // (#1716), the key is not resolved as a form-view name. The navigation
+    // hook reads it into the SECOND argument of `onNavigate` — the slot that
+    // otherwise carries the literal mode string, `r(t, d ?? 'view')` — so it
+    // named nothing and selected nothing. The record page here is rendered by
+    // `lead_detail_page` (`src/pages/lead_detail.page.ts`), not by a named
+    // form view, and clicking a row behaved identically with the key present,
+    // with it absent, and on a list that never declared it. `detail_form`
+    // below stays: it is this file's one TABBED layout example, and it was
+    // already reachable by no path.
     navigation: {
       mode: 'page',
-      view: 'detail_form', // Use named form view
     },
     
     // `convert_lead` / `schedule_followup` declare `locations: ['list_item']`
