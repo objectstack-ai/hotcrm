@@ -143,7 +143,7 @@ See [SLA & Escalation](/docs/service/sla-and-escalation) for the full mechanics.
 
 ## Claiming a case out of triage
 
-Some cases arrive with **no owner at all** — a web-to-case submission that landed while nobody held the Service Agent position is the usual way. They wait in the **Unassigned — triage** tab, where every service agent can see and edit them until somebody picks one up.
+Some cases arrive with **no owner at all** — a web-to-case submission that landed while nobody held the Service Agent position is the usual way, which is the do-nothing path of the intake assignment described under [Case routing](/docs/administration/setup#12-case-routing--nothing-to-configure). They wait in the **Unassigned — triage** tab, where every service agent can see and edit them until somebody picks one up.
 
 **Taking a case is a status move, not an owner edit.** Move an unowned case to **In Progress**, **Waiting on Customer** or **Waiting on Support** and it becomes yours: the app stamps you as its Owner in that same save. The case then leaves **Unassigned — triage** — that tab lists unowned cases only — and appears in **My Open Cases**.
 
@@ -178,7 +178,7 @@ Nothing else claims a case, and each exclusion is deliberate:
 | **SLA Calendar** | Cases laid out on their **SLA Due Date** — every case carries one now, so the calendar shows the whole open backlog |
 | **Case Timeline** | Cases on a *created → closed* timeline, grouped by owner |
 | **Escalated Cases** | `is_escalated` is true |
-| **Unassigned — triage** | Open cases with no owner at all, urgent first then soonest due — where a web-to-case submission lands when nobody holds the Service Agent position |
+| **Unassigned — triage** | Open cases with no owner at all, urgent first then soonest due — where a web-to-case submission lands when nobody holds the Service Agent position (see [Case routing](/docs/administration/setup#12-case-routing--nothing-to-configure)) |
 | **⏰ SLA at Risk** | Open **High and Critical** cases, soonest due date first |
 | **My Open Cases** | Your cases whose status is neither *Resolved* nor *Closed* |
 
