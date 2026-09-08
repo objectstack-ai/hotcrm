@@ -575,6 +575,25 @@ The lone exception is the **`skip-changeset`** label, for PRs that ship nothing 
 users (CI-only chores, repo housekeeping). Do not reach for it to get a red check
 green — write the changeset instead.
 
+### How a green PR lands
+
+**A seat may take a PR out of draft and arm auto-merge once every check on it has
+finished and none has failed — unless its diff touches a governed path.** The governed
+paths are `AGENTS.md`, `CLAUDE.md`, `.claude/**` and `.github/instructions/**`, and one
+governed path governs the whole diff however small that part of it is. A governed PR
+**stays a draft** and is the maintainer's own merge: ⛔ a seat never flips it ready and
+⛔ never arms auto-merge on it. Arming auto-merge is a seat's only landing route —
+⛔ never merge by hand. A check that concluded `skipped` (`Check Changeset` under the
+`skip-changeset` label) or that never ran because a path filter excluded it
+(`link-check` on a diff carrying no `.md`) is not a failure.
+
+Written down because an unwritten landing rule is re-derived by every seat, and
+re-derivation is where seats diverge — invisibly, until the divergence produces a merge
+nobody authorised.
+
+> Ruling: #1742, decision batch #81 (2026-09-08), which chose this over "every PR waits
+> for the maintainer". Governed surfaces graded on #1233.
+
 ### Verifying UI in the browser
 
 The Console renders dashboards, charts, and views from metadata. When verifying a
