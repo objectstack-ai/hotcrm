@@ -301,7 +301,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
         label: '本季度待成交商机',
         emptyState: {
           title: '本季度暂无待成交商机',
-          message: '本标签页列出成交日期落在当前季度内、且处于承诺（Commit）或最佳可能（Best Case）的进行中商机。当前没有符合条件的记录——成交日期更晚的商机请见“进行中商机”标签页。',
+          message: '本标签页列出预计成交日期落在当前季度内、且处于承诺（Commit）或最佳可能（Best Case）的进行中商机。当前没有符合条件的记录——预计成交日期更晚的商机请见“进行中商机”标签页。',
         },
       },
     },
