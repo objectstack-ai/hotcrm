@@ -249,7 +249,28 @@ const SPARED: readonly string[] = [
 
 const DOCS_ROOT = join(REPO_ROOT, 'content/docs');
 const TEST_ROOT = join(REPO_ROOT, 'test');
-const PACK_FILE = 'src/translations/zh-CN.ts';
+
+/**
+ * The zh-CN pack, as a TREE rather than one path (#1755).
+ *
+ * This was a single literal, `'src/translations/zh-CN.ts'`, and it was correct
+ * when written. The #1311 split then moved every string out from under it into
+ * `./zh-CN/`, leaving a 77-line barrel of `import`/re-export rows. Measured on
+ * `2e0f4dd1`: that barrel carries ZERO occurrences of either canonical term
+ * while the tree it re-exports carries them 65 and 12 times. The pack rule kept
+ * scanning the barrel, so it could not fire — and it did not: #1530's dev
+ * re-injected #1529's defect verbatim into the live pack and this suite still
+ * reported 33 passed. A rule that goes quiet reads as coverage.
+ *
+ * The surface is therefore derived the way the three that SURVIVED that split
+ * are — walk a root, filter by suffix — instead of naming a file. `_shared.ts`
+ * is why a walk beats resolving the barrel's imports: it holds real pack
+ * strings and the barrel does not import it, the family files do. The next
+ * module added under `zh-CN/` is picked up with no edit here, which is exactly
+ * the property the literal lacked.
+ */
+const PACK_BARREL = 'src/translations/zh-CN.ts';
+const PACK_ROOT = join(REPO_ROOT, 'src/translations/zh-CN');
 
 const walk = (dir: string): string[] =>
   readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
@@ -263,6 +284,7 @@ const read = (f: string): string => readFileSync(join(REPO_ROOT, f), 'utf8');
 const HANS_PAGES = walk(DOCS_ROOT).filter((f) => f.endsWith('.zh-Hans.mdx')).map(rel);
 const HANT_PAGES = walk(DOCS_ROOT).filter((f) => f.endsWith('.zh-Hant.mdx')).map(rel);
 const TEST_FILES = walk(TEST_ROOT).filter((f) => f.endsWith('.test.ts')).map(rel);
+const PACK_FILES = [PACK_BARREL, ...walk(PACK_ROOT).filter((f) => f.endsWith('.ts')).map(rel)];
 const ZH_PAGES = [...HANS_PAGES, ...HANT_PAGES];
 
 /** MDX ships whole; TypeScript ships only its string literals. */
@@ -370,6 +392,18 @@ describe.each(Object.entries(TERMS))('%s is one Chinese word everywhere (#837)',
       expect(HANS_PAGES.length, 'no zh-Hans pages found').toBeGreaterThan(50);
       expect(HANT_PAGES.length, 'no zh-Hant pages found').toBeGreaterThan(50);
       expect(TEST_FILES.length, 'no test files found').toBeGreaterThan(100);
+      // The pack scan is the one that went quiet (#1755), and a file COUNT
+      // would not have caught it — the barrel it used to name is still one
+      // real file. So the surface is proved against the pack the rules above
+      // resolve through the stack: the files scanned must be the files that
+      // carry this object's live label. On the pre-fix surface this reads 0,
+      // which is the reading that was missing for the whole life of the bug.
+      expect(
+        carrying(PACK_FILES, hans).length,
+        `no file in the zh-CN pack surface carries ${name}'s label ${hans} — the surface has ` +
+          'come loose from the pack again, so the retired-spelling rule below scans nothing. ' +
+          'Re-derive the surface against the tree; do not delete the rule.',
+      ).toBeGreaterThan(0);
     });
 
     it('comment stripping leaves the code it is meant to judge', () => {
@@ -403,10 +437,10 @@ describe.each(Object.entries(TERMS))('%s is one Chinese word everywhere (#837)',
     });
 
     it('from the language pack itself', () => {
-      const bad = offenders([PACK_FILE], allRetired);
+      const bad = offenders(PACK_FILES, allRetired);
       expect(
         bad,
-        `${PACK_FILE} still spells something with a retired word — the pack IS the product ` +
+        'the zh-CN pack still spells something with a retired word — the pack IS the product ' +
           'UI, so a label, an option or a `help` sentence left behind puts the old word back ' +
           `on screen and sends the reader looking for a status that does not exist:\n  ` +
           bad.join('\n  '),
