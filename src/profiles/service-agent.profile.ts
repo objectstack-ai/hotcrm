@@ -73,3 +73,61 @@ export const ServiceAgentProfile = {
     'crm_account.health_score':        { readable: true, editable: false },
   },
 };
+
+/**
+ * The SERVICE MANAGER binding (#1779) — the same set, under the position's name.
+ *
+ * ### What was ruled
+ *
+ * `service_manager` is a declared position (`src/sharing/positions.ts`) that
+ * `case_escalation_sharing` names and that `case_escalation_reassign` routes
+ * escalating cases to — measured, 35 of them on a demo box — and no permission
+ * set reached it, so the persona was denied every CRM object (403). Director
+ * seat, decision batch #92, 2026-09-08, under the maintainer's standing
+ * 「继续决策」 delegation: bind the EXISTING `service_agent` set to the
+ * `service_manager` position. ⛔ B (author a manager-specific profile) was
+ * refused — no measured puller for a manager-only grant. ⛔ C (reroute the
+ * escalation pool) was refused — it deletes the persona's reason to exist.
+ *
+ * ### Why the binding is a NAME and not a key — measured, not inferred
+ *
+ * There is no authorable binding on either side. `PermissionSetSchema` rejects
+ * `profiles` / `roles` / `users`, and `PositionSchema` rejects `permissionSets`
+ * with its own prescription: capability reaches a position ONLY through
+ * `sys_position_permission_set` rows, "created in Setup or by an app's
+ * `kernel:ready` binder" — and a pure-metadata app ships neither.
+ *
+ * What it ships instead is a name. Measured on a fresh 17.3.0 SQLite box:
+ * `sys_position_permission_set` holds exactly ONE row (`everyone` →
+ * `member_default`, the ADR-0090 D5 baseline the platform binds itself), and
+ * yet `POST /api/v1/security/explain` for a `service_agent` position holder
+ * answers `permissionSets: [service_agent, member_default]`, crediting the
+ * object-level grant to `[service_agent]` `via: position:service_agent`. The
+ * resolver is `resolvePermissionSets()` in `@objectstack/plugin-security`: it
+ * matches the caller's POSITION NAMES against declared `PermissionSet.name`,
+ * so a set named for a position is bound to it with no row at all.
+ *
+ * ⇒ For this app, "bind set X to position P" has exactly one spelling: declare
+ * X's grants under the name P. Hence this export rather than a new file.
+ *
+ * ### Why a spread and not a copy
+ *
+ * `objects` and `fields` are carried by REFERENCE, so the two personas share
+ * one grant table and cannot drift: nothing here can widen the agent's grants,
+ * and a future edit to them lands on both at once. That is the ruling's own
+ * finding — escalation handling is the same object access as working a ticket —
+ * expressed in a way the next reader cannot half-apply. ⛔ Do not expand this
+ * into a literal second grant table to "make it explicit"; that would be
+ * option B, refused, and it would let the two silently diverge.
+ *
+ * ### Reversal (ruling item 4)
+ *
+ * If a customer needs a manager grant that DIFFERS from an agent's, it comes
+ * back as a product card with the puller named — and only then does this become
+ * an authored set of its own.
+ */
+export const ServiceManagerProfile = {
+  ...ServiceAgentProfile,
+  name: 'service_manager',
+  label: 'Service Manager',
+};
