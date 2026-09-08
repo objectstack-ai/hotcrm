@@ -64,21 +64,38 @@ The remaining two are matched by hand to the version it just wrote:
    pnpm publish:marketplace
    ```
 
+   The dry-run needs no credentials. The real publish reads `OS_CLOUD_URL` and
+   `OS_CLOUD_API_KEY` from the environment and exits before doing any work if
+   either is missing — see §Marketplace Publish below.
+
 ## Marketplace Publish
 
 The publish script is [`scripts/publish-marketplace.mjs`](../scripts/publish-marketplace.mjs). It is the preferred release path because it keeps marketplace package metadata in one place.
 
-Authenticate once:
+It authenticates in **service mode**: it takes both credentials from the process
+environment and from nowhere else — it reads no credential file and no stored
+session — and it exits before doing any work if either is missing.
+
+| Variable | Value |
+| --- | --- |
+| `OS_CLOUD_URL` | Control plane for the target environment — `https://cloud.objectos.app` (staging), `https://cloud.objectos.ai` (production) |
+| `OS_CLOUD_API_KEY` | Service token: a per-env, org-level secret |
+
+⛔ `objectstack cloud login` does not satisfy this. That command authenticates the
+CLI and stores its own session, which this script never reads — so it reports
+success and the publish still dies with `OS_CLOUD_URL is required`.
+
+Publish:
 
 ```bash
-objectstack cloud login
-```
-
-Then publish:
-
-```bash
+export OS_CLOUD_URL=https://cloud.objectos.app
+export OS_CLOUD_API_KEY=…   # the service token, not a personal login
 pnpm publish:marketplace
 ```
+
+The same two variables are what CI sets, from the secret for the environment it
+publishes to: [`publish-staging.yml`](../.github/workflows/publish-staging.yml) and
+[`publish-production.yml`](../.github/workflows/publish-production.yml).
 
 ## Source Availability
 
