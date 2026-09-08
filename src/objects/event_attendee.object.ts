@@ -340,10 +340,29 @@ export const EventAttendee = ObjectSchema.create({
     // insert-stamped column open, and the reason it cited ("the engine strips a
     // readonly key the CALLER supplied") does not reach an INSERT at all — the
     // strip is an UPDATE-path rule (`test/readonly-write-semantics.test.ts`).
-    // What holds this column open today is that nobody has ruled on it. ⛔ Do
-    // not flip it on the strength of the sibling ruling: #1666 / #1667 were two
-    // separate product decisions about two specific columns, and this one has
-    // had neither. It needs its own writer census and its own ruling.
+    // What holds it open is now MEASURED (#1747, the per-writer census #1435
+    // ran for the other three), not "nobody has ruled on it": this column has a
+    // user-context UPDATE writer, which none of the three columns #1666 / #1667
+    // moved had. The census, in full:
+    //   • the fifteen generated activity actions (5 `ACTIVITY_TARGETS` × 3
+    //     kinds, one shared body in `global.actions.ts`) INSERT it, and an
+    //     action body runs `isSystem` — exempt twice over;
+    //   • the two `service.seed.ts` attendee seeds write it, and their
+    //     `mode: 'upsert'` replay UPDATE is exempt too, because seed writes are
+    //     `isSystem` (`flow-scheduled.test.ts` pins that via ownerless rows);
+    //   • the record form — `event_attendee.view.ts` lists it in the
+    //     `invitation` section, AUTHORED rather than synthesized, and the four
+    //     profiles that name the object all grant `allowEdit`. A rep correcting
+    //     Invited on a saved row is a non-`isSystem` UPDATE carrying a
+    //     caller-supplied key: precisely what the strip deletes. The three
+    //     flipped columns appear in NO form section anywhere in `src/views/`,
+    //     `crm_opportunity`'s authored form included.
+    // ⭐ It is also not the same KIND of column. `added_date` / `approved_date`
+    // are stamped `{NOW()}` by the writer, so their value IS the write moment;
+    // `invited_date` records when the invitation went out, and the seed dates it
+    // 3-10 days before its own event, per row. A column whose value is not the
+    // write moment is one a person can be right about. ⛔ Do not flip it on the
+    // strength of the sibling ruling.
     invited_date: Field.datetime({
       group: 'response',
       label: 'Invited',
