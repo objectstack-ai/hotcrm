@@ -882,7 +882,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       forecast_category: 'closed',
       lead_source: 'partner',
       win_reason: 'relationship',
-      description: `Annual renewal of the Acme Standard subscription (40 seats), signed two weeks ahead of the renewal date. 22% YoY uplift driven by seat expansion in the new EMEA team. Multi-year option declined this round — they want to see how the platform upgrade lands first.`,
+      description: `Annual renewal of the Acme Standard subscription, signed two weeks ahead of the renewal date. 22% YoY uplift driven by seat expansion in the new EMEA team. Multi-year option declined this round — they want to see how the platform upgrade lands first.`,
     },
     {
       name: 'Stark Medical Pilot',
