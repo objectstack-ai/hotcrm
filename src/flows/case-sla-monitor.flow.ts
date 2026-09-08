@@ -229,6 +229,32 @@ export const CaseSlaMonitorFlow: Flow = {
               // `reload_case` re-bound. One node, one wording, one recipient
               // rule — a second notify node would be the same alert authored
               // twice, free to drift on the half nobody is looking at.
+              //
+              // ⚠️ THE RECIPIENT IS RULED, NOT INCIDENTAL — #1535, maintainer
+              // ruling 2026-09-07 (director batch #73), option A. On a breached
+              // case that ALREADY HAS AN OWNER, `flag_breach` writes
+              // `status: 'escalated'` and `case_escalation_reassign` hands the
+              // case to the least-loaded `service_manager` inside that same
+              // write — yet this node addresses `currentCase` as
+              // `query_breached` bound it, BEFORE the hand-off. So the breach
+              // alert deliberately reaches the agent the case is being taken
+              // FROM, not the manager who now owns it.
+              //
+              // It is the SAME etiquette `case_escalation` already states in
+              // `content/docs/service/sla-and-escalation.mdx` — "the
+              // notification goes to the previous owner alone" — and that page
+              // now states it for this sweep too. One escalation etiquette
+              // across both mechanisms.
+              //
+              // ⛔ Do not "fix" this into an alert for the new owner. That is
+              // option C, and it would have to re-rule `case_escalation` in the
+              // same stroke — ⛔ never one mechanism only.
+              //
+              // `test/flow-sla-ownerless-assignment.test.ts` pins the pairing
+              // (the owned breach IS handed over AND its alert still goes to
+              // the pre-hand-off owner), and records the ruling's declared gap
+              // as measured: the hand-off hook issues no notice of its own, so
+              // the receiving manager is told nothing by this run.
               id: 'notify_team', type: 'notify', label: 'Alert Owner',
               config: {
                 // Owner only — `{currentCase.owner_id.manager}` dot-walks a
@@ -253,8 +279,8 @@ export const CaseSlaMonitorFlow: Flow = {
             // ⚠️ The owned branch reads `currentCase` as `query_breached` bound
             // it, deliberately unchanged by #1405: a case that already had an
             // owner keeps alerting THAT owner, which is what the sweep has
-            // always done. Re-routing an owned case's alert is a separate
-            // product question and is filed as one, not decided here.
+            // always done. ⚠️ That is RULED intent now, no longer an open
+            // question — the `notify_team` node carries the ruling.
             { id: 'b2', source: 'check_owner', target: 'notify_team', type: 'conditional', condition: CASE_HAS_OWNER(), label: 'Has owner' },
             { id: 'b3', source: 'check_owner', target: 'reload_case', type: 'conditional', condition: CASE_HAS_NO_OWNER(), label: 'No owner — re-read after escalation' },
             { id: 'b4', source: 'reload_case', target: 'check_assigned', type: 'default' },

@@ -23,7 +23,7 @@ New ──► In Progress ──► Waiting on Customer ──► Resolved ─�
                    ╲ Escalated ────────────╱
 ```
 
-1. **Case is created** (via email, web form, phone log or the **AI assistant** triaging an inbound message).
+1. **Case is created** (via email, web form, phone log or the **AI assistant** triaging an inbound message). One that arrives with no owner is assigned on insert to the least-loaded **Service Agent** — see [Case routing](/docs/administration/setup#12-case-routing--nothing-to-configure).
 2. **Priority is assigned** — Low, Medium, High or Critical. *Critical* alerts the **case owner** immediately, not a support manager: the alert's recipient list is `{caseRecord.owner_id}` alone.
 3. **SLA target is calculated** — every case gets a deadline based on priority.
 4. **Agent works the case**, moving status as they go.
