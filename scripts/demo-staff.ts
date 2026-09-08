@@ -159,6 +159,19 @@ class Api {
     return (json.records ?? []) as Json[];
   }
 
+  /**
+   * Rows of `object`, or the server's REFUSAL — for a read that may legitimately
+   * be denied. `query` throws, which aborts the whole run on the first persona
+   * the org has not granted the object to; that is a finding to report, not a
+   * crash to die on.
+   */
+  async tryQuery(object: string, fields: string[]): Promise<{ rows: Json[] } | { denied: string }> {
+    const { status, json } = await this.post(`/api/v1/data/${object}/query`, { filters: [], fields, top: 500 });
+    if (status >= 200 && status < 300) return { rows: (json.records ?? []) as Json[] };
+    const msg = json?.error?.message ?? json?.error ?? json?.message ?? JSON.stringify(json);
+    return { denied: `${status} ${String(json?.code ?? '')} ${msg}`.trim() };
+  }
+
   /** Sign in and keep the session cookie for every later call. */
   async signIn(email: string, password: string): Promise<Json> {
     this.cookie = '';
@@ -247,13 +260,13 @@ async function evaluateRules(api: Api) {
   return results;
 }
 
-/** One routed object after the re-stamp, with the census this run aimed at. */
+/** One routed object after the re-stamp. */
 type OwnershipOutcome = {
   route: DemoOwnershipRoute;
-  total: number;
+  /** rowId → the owner this run settled on: the routed one, or the one it left alone. */
+  settled: Map<string, string>;
   written: number;
-  /** userId → how many rows this run intends them to own. */
-  intended: Map<string, number>;
+  leftAlone: number;
 };
 
 /**
@@ -267,14 +280,24 @@ type OwnershipOutcome = {
  * up with a SUBSET, which is the demonstration. `crm_account` is not routed at
  * all; see `DemoPipelineOwnership`.
  *
- * Idempotent and order-independent: it compares each row against the owner the
- * routes ask for and writes only the difference, so it is correct whether
- * `demo_bootstrap` has already claimed the rows for the dev admin or has not
- * run yet and left them ownerless.
+ * ### What it claims, and what it deliberately does not
+ *
+ * Only rows sitting on the DEV ADMIN or on nobody. Those two states are the
+ * seed book: `demo_bootstrap` stamps the first user onto everything it finds
+ * ownerless, and anything it has not reached yet is still null. A row some LIVE
+ * WORKFLOW has already assigned is left exactly where it is — measured on a
+ * staffed box, the SLA sweep escalates cases and the escalation hook hands the
+ * resulting tasks to the service manager, and re-routing those by territory
+ * would overwrite the app demonstrating itself.
+ *
+ * That also makes the run idempotent and order-independent: correct whether
+ * `demo_bootstrap` has already claimed the rows or has not run yet, and a
+ * second pass over a converged org writes nothing.
  */
 async function handBookToRoster(
   api: Api,
   userIdByKey: Map<string, string>,
+  adminId: string,
 ): Promise<OwnershipOutcome[]> {
   // The account hook stores a declared `territory` (never a country string —
   // `src/objects/_territory.ts`), so this reads the same value the sharing
@@ -295,17 +318,24 @@ async function handBookToRoster(
   for (const route of DemoPipelineOwnership) {
     const fields = ['id', 'owner_id', ...(route.accountField ? [route.accountField] : [])];
     const rows = await api.query(route.object, [], fields);
-    const intended = new Map<string, number>();
+    const settled = new Map<string, string>();
     let written = 0;
+    let leftAlone = 0;
     for (const row of rows) {
+      const id = String(row.id);
+      const current = String(row.owner_id ?? '');
+      if (current !== '' && current !== adminId) {
+        settled.set(id, current);
+        leftAlone++;
+        continue;
+      }
       const accountId = route.accountField ? row[route.accountField] : undefined;
       const wanted = ownerFor(accountId ? territoryOf.get(String(accountId)) : undefined);
-      intended.set(wanted, (intended.get(wanted) ?? 0) + 1);
-      if (String(row.owner_id ?? '') === wanted) continue;
-      await api.patchOk(route.object, String(row.id), { owner_id: wanted });
+      settled.set(id, wanted);
+      await api.patchOk(route.object, id, { owner_id: wanted });
       written++;
     }
-    outcomes.push({ route, total: rows.length, written, intended });
+    outcomes.push({ route, settled, written, leftAlone });
   }
   return outcomes;
 }
@@ -322,8 +352,10 @@ async function handBookToRoster(
  *
  * Re-READ from the server rather than reported from the plan: a census printed
  * off the intent would stay green through a PATCH that silently did nothing.
- * Anything that does not balance against the intent is reported as a broken
- * instrument, not as a pass.
+ * It judges only the rows this run settled, by id. Rows that APPEAR while it
+ * runs — the scheduled sweeps do create some — are reported on their own line
+ * and never counted as a disagreement, because a census that failed on the app
+ * doing its job would be a broken instrument, not a finding.
  */
 async function ownershipCensus(
   api: Api,
@@ -334,64 +366,63 @@ async function ownershipCensus(
   const failures: string[] = [];
   const nameOf = (userId: string) =>
     roster.find((r) => r.userId === userId)?.email ?? (userId === adminId ? 'the dev admin' : userId);
-  const width = 18;
+  const w = 16;
   const ownedOverall = new Map<string, number>();
   let grandTotal = 0;
 
   console.log(
-    `   ${'object'.padEnd(20)}${'total'.padStart(6)}` +
-    `${roster.map((r) => r.email.split('@')[0].padStart(width)).join('')}` +
-    `${'dev admin'.padStart(width)}${'nobody'.padStart(10)}`,
+    `   ${'object'.padEnd(18)}${'routed'.padStart(7)}` +
+    `${roster.map((r) => r.email.split('@')[0].padStart(w)).join('')}` +
+    `${'dev admin'.padStart(w)}${'nobody'.padStart(8)}${'new'.padStart(6)}`,
   );
 
-  for (const { route, total, intended } of outcomes) {
+  for (const { route, settled } of outcomes) {
     const rows = await api.query(route.object, [], ['id', 'owner_id']);
+    const ownerById = new Map(rows.map((r) => [String(r.id), String(r.owner_id ?? '')]));
     const observed = new Map<string, number>();
-    for (const row of rows) {
-      const owner = String(row.owner_id ?? '');
-      observed.set(owner, (observed.get(owner) ?? 0) + 1);
-      ownedOverall.set(owner, (ownedOverall.get(owner) ?? 0) + 1);
+    const wrong: string[] = [];
+    for (const [id, wanted] of settled) {
+      const got = ownerById.get(id);
+      if (got === undefined) {
+        wrong.push(`${id} is gone from ${route.object}`);
+        continue;
+      }
+      observed.set(got, (observed.get(got) ?? 0) + 1);
+      ownedOverall.set(got, (ownedOverall.get(got) ?? 0) + 1);
+      grandTotal++;
+      if (got !== wanted) wrong.push(`${id}: expected ${nameOf(wanted)}, found ${nameOf(got)}`);
     }
-    grandTotal += rows.length;
     const admin = observed.get(adminId) ?? 0;
     const ownerless = observed.get('') ?? 0;
 
     console.log(
-      `   ${route.object.padEnd(20)}${String(rows.length).padStart(6)}` +
-      `${roster.map((r) => String(observed.get(r.userId) ?? 0).padStart(width)).join('')}` +
-      `${String(admin).padStart(width)}${String(ownerless).padStart(10)}`,
+      `   ${route.object.padEnd(18)}${String(settled.size).padStart(7)}` +
+      `${roster.map((r) => String(observed.get(r.userId) ?? 0).padStart(w)).join('')}` +
+      `${String(admin).padStart(w)}${String(ownerless).padStart(8)}${String(rows.length - settled.size).padStart(6)}`,
     );
 
-    // Guard the guard: an empty object balances trivially and proves nothing.
-    if (rows.length === 0) {
-      failures.push(`${route.object} has no rows at all — its clean-looking row above is vacuous, not clean`);
+    // Guard the guard: an object with no routed rows balances trivially and
+    // proves nothing, so its clean-looking line above is not a pass.
+    if (settled.size === 0) {
+      failures.push(`${route.object} routed no rows at all — its line above is vacuous, not clean`);
       continue;
     }
-    if (rows.length !== total) {
+    if (wrong.length > 0) {
       failures.push(
-        `${route.object}: ${total} row(s) were routed but ${rows.length} are here now — the census ` +
-        `is reading a moving target, so none of its numbers can be trusted.`,
+        `${route.object}: ${wrong.length} row(s) did not land where they were sent — a PATCH ` +
+        `reported success and changed nothing, or something re-claimed them. ${wrong.slice(0, 5).join('; ')}`,
       );
-    }
-    for (const [userId, want] of intended) {
-      const got = observed.get(userId) ?? 0;
-      if (got !== want) {
-        failures.push(
-          `${route.object}: ${nameOf(userId)} should own ${want} row(s) and owns ${got} — a PATCH ` +
-          `reported success and changed nothing, or something re-claimed the row afterwards.`,
-        );
-      }
     }
     if (admin > 0) {
       failures.push(
-        `${route.object}: the dev admin still owns ${admin} row(s), so a demo salesperson's agent ` +
-        `session still cannot see them (#1759).`,
+        `${route.object}: the dev admin still owns ${admin} routed row(s), so a demo salesperson's ` +
+        `agent session still cannot see them (#1759).`,
       );
     }
     if (ownerless > 0) {
       failures.push(
-        `${route.object}: ${ownerless} row(s) are owned by NOBODY — under a private OWD such a row ` +
-        `is editable by no one at all, admin included.`,
+        `${route.object}: ${ownerless} routed row(s) are owned by NOBODY — under a private OWD such ` +
+        `a row is editable by no one at all, admin included.`,
       );
     }
   }
@@ -433,7 +464,19 @@ async function verify(base: URL, outcomes: StaffOutcome[], adminAccounts: Json[]
   for (const { member, userId } of outcomes) {
     const asUser = new Api(base);
     await asUser.signIn(member.email, member.password);
-    const rows = await asUser.query('crm_account', [], ['id', 'name', 'territory', 'billing_country', 'owner_id']);
+    const read = await asUser.tryQuery('crm_account', ['id', 'name', 'territory', 'billing_country', 'owner_id']);
+    if ('denied' in read) {
+      // Reported, not thrown. A persona the org opens no CRM object to is a real
+      // defect in the staffing — and dying here would take the ownership census
+      // below down with it, which is the one reading that speaks to #1759.
+      failures.push(
+        `${member.email} cannot read crm_account AT ALL (${read.denied}). Their positions bind no ` +
+        `permission set that grants the object, and the additive member baseline does not open it ` +
+        `either — so this demo persona sees an empty app, whatever is shared with them.`,
+      );
+      continue;
+    }
+    const rows = read.rows;
     const names = rows.map((r) => String(r.name)).sort();
     const territories = [...new Set(names.map(territoryOf))].sort();
     console.log(`   ${member.email} sees ${rows.length} account(s): ${names.join(', ') || '—'}`);
@@ -505,11 +548,15 @@ async function main(): Promise<number> {
   // Ownership BEFORE rule evaluation, so the evaluator reconciles against the
   // final owner rather than one this run is about to move.
   console.log('\n── Handing the demo book to the roster (#1759) ──');
-  const ownership = await handBookToRoster(api, new Map(outcomes.map((o) => [o.member.key, o.userId])));
+  const ownership = await handBookToRoster(
+    api,
+    new Map(outcomes.map((o) => [o.member.key, o.userId])),
+    String(admin.id),
+  );
   for (const o of ownership) {
     console.log(
-      `   ${o.route.object.padEnd(20)} re-stamped ${String(o.written).padStart(3)} of ` +
-      `${String(o.total).padStart(3)} — ${o.route.why}`,
+      `   ${o.route.object.padEnd(18)} re-stamped ${String(o.written).padStart(3)}, left ` +
+      `${String(o.leftAlone).padStart(3)} with a live owner — ${o.route.why}`,
     );
   }
 
