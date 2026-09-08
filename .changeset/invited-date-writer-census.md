@@ -20,7 +20,8 @@ an `isSystem` seed context — neither would lose its write to a `readonly: true
 declaration, since the strip is an UPDATE-path rule and skips `isSystem` runs
 anyway. The third is the record form: `src/views/event_attendee.view.ts` lists
 `invited_date` in its `invitation` section, authored by hand rather than
-synthesized, and all four profiles grant `allowEdit` on the object. A rep
+synthesized, and the four profiles that name the object all grant `allowEdit`
+on it. A rep
 correcting Invited on a saved attendee row is a non-`isSystem` UPDATE carrying a
 caller-supplied key — exactly what the strip deletes. The three columns #1666
 and #1667 moved appear in no form section anywhere in `src/views/`, including

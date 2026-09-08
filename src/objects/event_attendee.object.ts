@@ -351,12 +351,12 @@ export const EventAttendee = ObjectSchema.create({
     //     `mode: 'upsert'` replay UPDATE is exempt too, because seed writes are
     //     `isSystem` (`flow-scheduled.test.ts` pins that via ownerless rows);
     //   • the record form — `event_attendee.view.ts` lists it in the
-    //     `invitation` section, AUTHORED rather than synthesized, and all four
-    //     profiles grant `allowEdit`. A rep correcting Invited on a saved row
-    //     is a non-`isSystem` UPDATE carrying a caller-supplied key: precisely
-    //     what the strip deletes. The three flipped columns appear in NO form
-    //     section anywhere in `src/views/`, `crm_opportunity`'s authored form
-    //     included.
+    //     `invitation` section, AUTHORED rather than synthesized, and the four
+    //     profiles that name the object all grant `allowEdit`. A rep correcting
+    //     Invited on a saved row is a non-`isSystem` UPDATE carrying a
+    //     caller-supplied key: precisely what the strip deletes. The three
+    //     flipped columns appear in NO form section anywhere in `src/views/`,
+    //     `crm_opportunity`'s authored form included.
     // ⭐ It is also not the same KIND of column. `added_date` / `approved_date`
     // are stamped `{NOW()}` by the writer, so their value IS the write moment;
     // `invited_date` records when the invitation went out, and the seed dates it
