@@ -31,13 +31,13 @@ claimed and narrower than "the SLA stamp and the owner-addressed alert".** The
 `crm_lead` row and reads the stamp back; breaking the stamp reds that test and
 leaves this one green. And this test asserts only that no field of the emitted
 notification renders as the literal string `undefined`; it does not assert who
-the recipient is. On the pinned engine (17.2.0) an unresolvable recipient no
+the recipient is. On the pinned engine (17.3.0 — read from package.json and the installed @objectstack/spec) an unresolvable recipient no
 longer interpolates to `undefined` — the `notify` node fails and emits nothing —
 so the dot-walk the old title named now reds the two branch tests above it
-instead. Five flow mutations were tried (`{record.owner_id.manager_id}`,
+instead. Six flow mutations were tried (`{record.owner_id.manager_id}`,
 `{record.owner.manager_id}`, `{record.manager_id}` as recipients; two dot-walked
 title templates; the `next_followup_date` field name) and none of them reds this
-test. It is live but, through those five, unfalsifiable — recorded here rather
+test. It is live but, through those six, unfalsifiable — recorded here rather
 than fixed, because this change is a rename and a deletion.
 
 No new test, no new assertion, no new file: the repo's test file count is
