@@ -145,9 +145,10 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       crm_contact: { label: 'Contact' },
       detail: { label: 'Lead Detail' },
       description: { label: 'Description' },
-      // Form section names on lead.view.ts (#1100) — the default form and
-      // its six named formViews. `address` / `qualification` above are
-      // reused (identical fieldGroup wording); every other name here is new.
+      // Form section names on lead.view.ts (#1100). The sections of the
+      // default form and of every named formView live here — add a form
+      // there, add its section names here. `address` / `qualification` above
+      // are reused (identical fieldGroup wording); every other name here is new.
       contact_information: { label: 'Contact Information' },
       lead_classification: { label: 'Lead Classification' },
       company_information: { label: 'Company Information' },

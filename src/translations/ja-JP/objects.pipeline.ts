@@ -149,7 +149,8 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       conversion: { label: '変換' },
       duplicates: { label: '重複管理' },
       // lead.view.ts のフォームセクション名 (#1100) — デフォルトフォームと
-      // 名前付き formView 6 種。
+      // 名前付き formView すべてのセクション名がここに集まる。あちらにフォームを
+      // 追加したら、そのセクション名をここに追加する。
       contact_information: { label: '連絡先情報' },
       lead_classification: { label: 'リード分類' },
       company_information: { label: '会社情報' },

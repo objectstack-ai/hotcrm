@@ -159,7 +159,8 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       preferences: { label: '沟通偏好' },
       conversion: { label: '转化' },
       duplicates: { label: '重复线索管理' },
-      // lead.view.ts 表单区块名称 (#1100) —— 默认表单及六个具名 formView。
+      // lead.view.ts 表单区块名称 (#1100) —— 默认表单与每一个具名 formView
+      // 的区块名字都住在这里：那边新增一个表单，这里就补上它的区块名。
       contact_information: { label: '联系信息' },
       lead_classification: { label: '线索分类' },
       company_information: { label: '公司信息' },
