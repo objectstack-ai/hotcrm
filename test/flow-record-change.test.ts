@@ -268,24 +268,13 @@ describe('lead_assignment — hot-lead SLA routing', () => {
     expect(h.notifications.length, 'cold lead produced no follow-up alert').toBeGreaterThan(0);
   });
 
-  it('sends every SLA task to the lead owner, never a dot-walked manager', async () => {
+  it('renders both SLA branch alerts with no field left as the literal "undefined"', async () => {
     for (const rating of [5, 1]) {
       const h = makeFlowHarness({ lead_assignment: LeadAssignmentFlow }, { crm_task: [] });
       await h.trigger('lead_assignment', lead({ rating }));
       for (const n of h.notifications) {
         expect(JSON.stringify(n), `rating ${rating} notification dot-walked a lookup`)
           .not.toContain('undefined');
-      }
-      // ⚠️ UNREACHABLE POPULATION, stated rather than silently carried
-      // (#1772). `lead_assignment` has no `create_record` node, so this walk
-      // inspects zero rows on both ratings and can inspect none until the flow
-      // grows one. It is left in place, not deleted, because it is the guard
-      // that would catch a dot-walked owner the day a task node lands; what was
-      // removed is the disjunctive guard above that made it LOOK covered. The
-      // live half of this test is the notification walk, which inspects 1 row
-      // per rating.
-      for (const t of h.store.crm_task) {
-        expect(String(t.owner_id), `rating ${rating} task has a phantom owner`).not.toBe('undefined');
       }
     }
   });
