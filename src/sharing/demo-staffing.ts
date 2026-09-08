@@ -311,9 +311,16 @@ export const TERRITORY_OWNER: Readonly<Record<Territory, string>> = {
 };
 
 /**
- * The objects `pnpm demo:staff` re-stamps. Adding one is adding a ROW here;
- * `test/demo-ownership-routing.test.ts` checks each against the real objects,
- * the real seeds and the claim list in `demo_bootstrap`.
+ * The objects `pnpm demo:staff` re-stamps. Adding one is adding a ROW here.
+ *
+ * ⚠️ Checked at RUN time, not at build time — there is no static suite behind
+ * this table, so read what the script does and does not catch before adding a
+ * row. An `object` no org declares fails the run outright, on the query. An
+ * `accountField` that does not resolve does NOT: the row simply falls to the
+ * declared fallback bucket and lands on the manager, which looks like a routing
+ * decision rather than a typo. What the run does prove is the outcome — the
+ * ownership census re-reads every routed row from the server afterwards and
+ * fails on any that did not land where this table sent it.
  */
 export const DemoPipelineOwnership: readonly DemoOwnershipRoute[] = [
   {
