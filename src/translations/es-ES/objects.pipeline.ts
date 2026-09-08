@@ -165,8 +165,10 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       additional: { label: 'Información Adicional' },
       preferences: { label: 'Preferencias de Comunicación' },
       duplicates: { label: 'Gestión de Duplicados' },
-      // Nombres de sección del formulario en lead.view.ts (#1100) — el
-      // formulario por defecto y sus seis formViews con nombre.
+      // Nombres de sección del formulario en lead.view.ts (#1100) — aquí
+      // viven las secciones del formulario por defecto y las de cada formView
+      // con nombre: si se añade un formulario allí, se añaden aquí sus
+      // nombres de sección.
       contact_information: { label: 'Información de Contacto' },
       lead_classification: { label: 'Clasificación del Lead' },
       company_information: { label: 'Información de la Empresa' },
