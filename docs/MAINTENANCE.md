@@ -296,17 +296,23 @@ pnpm dev          # terminal 1 — leave running
 pnpm demo:staff   # terminal 2 — once, after the server is up
 ```
 
-That creates three non-admin demo users (`na.rep@` / `eu.rep@` /
-`sales.manager@objectos.ai`, all `demo1234`), assigns their positions, and
-re-evaluates every sharing rule so the already-seeded accounts materialise
-grants. It is idempotent, self-verifying (non-zero exit if the layers do not
-connect) and prints what each user can see:
+That creates the non-admin demo users the table declares (`na.rep@` /
+`eu.rep@` / `sales.manager@` / `service.agent@` / `service.manager@objectos.ai`,
+all `demo1234`), assigns their positions, hands them the demo book by
+re-stamping `owner_id` on the routed objects, and re-evaluates every sharing
+rule so the already-seeded accounts materialise grants. It is idempotent,
+self-verifying (non-zero exit if the layers do not connect) and prints both what
+each user can see and what each user owns:
 
 ```
 north_america_territory  matched=  6  holders=1  granted=6
 europe_territory         matched=  2  holders=1  granted=2
 na.rep@objectos.ai sees 6 account(s) · countries: [CA, US]
 eu.rep@objectos.ai sees 2 account(s) · countries: [DE, UK]
+
+── Ownership census (rows each identity owns = the agent-visible floor) ──
+   object               total          na.rep          eu.rep   sales.manager
+   crm_opportunity         23              16               5               2
 ```
 
 Who exists and which positions they hold is a table —
@@ -324,12 +330,27 @@ Three things worth knowing before changing any of it:
   every seeded row is written with `isSystem: true`. Staffing alone therefore
   leaves `sys_record_share` empty until a rule is re-evaluated (a server restart
   does it too, via the boot backfill).
-- **The reps must not own the accounts.** `crm_account` is `private`, so the OWD
-  baseline already admits a record's owner — a share to the owner demonstrates
-  nothing. Ownership stays with `demo_bootstrap`'s first user; the script exits
+- **The reps must not own the ACCOUNTS — but they must own their pipeline.**
+  `crm_account` is `private`, so the OWD baseline already admits a record's
+  owner: a share to the owner demonstrates nothing, and account ownership
+  therefore stays with `demo_bootstrap`'s first user. The script still exits
   non-zero if a demo user turns out to own a seeded account.
+  Every OTHER routed object is the opposite case ([#1759]). `demo_bootstrap`
+  claims them all for the dev admin, which an API key never notices — it runs as
+  the human, so `viewAllRecords` applies — while an agent connecting over OAuth
+  sees only what its user owns or holds a share on (the ceiling in
+  [objectstack#16549], which `viewAllRecords` deliberately does not lift). So a
+  demo salesperson asking their agent about the pipeline got **0** opportunities
+  and **0** tasks. The routes in `src/sharing/demo-staffing.ts` fix that by
+  ownership alone — no profile, permission set or sharing rule is touched — and
+  they hand each identity a SUBSET (NA rows to the NA rep, EMEA to the EU rep,
+  everything with no resolvable territory to the manager), because putting the
+  whole book on one demo user would replace "sees 0" with "sees all" and lose
+  the demonstration that row-level security is on at all.
 
 [#640]: https://github.com/objectstack-ai/hotcrm/issues/640
+[#1759]: https://github.com/objectstack-ai/hotcrm/issues/1759
+[objectstack#16549]: https://github.com/objectstack-ai/objectstack/issues/16549
 
 ## 5. Releasing
 

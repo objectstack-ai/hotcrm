@@ -1,5 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import type { Territory } from '../objects/_territory';
+
 /**
  * Demo-org staffing — WHO HOLDS THE POSITIONS `positions.ts` DECLARES (#640).
  *
@@ -225,5 +227,113 @@ export const DemoOrgStaffing: readonly DemoStaffMember[] = [
       'case_escalation_reassign: a case moves to him on the escalation transition as the ' +
       'least-loaded holder of the service_manager pool, and case_escalation_sharing grants him ' +
       'edit on the open critical cases he does not own.',
+  },
+];
+
+// ───────────────────────── who OWNS the demo book (#1759) ────────────────
+
+/**
+ * Which demo person owns each seeded row — the third thing staffing settles,
+ * after "who exists" and "which positions they hold".
+ *
+ * ### The defect
+ *
+ * `demo_bootstrap` claims every ownerless seeded row for the FIRST user, the
+ * dev admin (`src/flows/demo-bootstrap.flow.ts`). That flow has to do it and
+ * has to do it that way: a seed cannot name a user, and the flow SHIPS IN THE
+ * ARTIFACT, so it must not know these people — `test/demo-staffing.test.ts`
+ * fails the build if any staffing email reaches the manifest. Correct as far
+ * as it goes (an ownerless row under a `private` OWD is editable by nobody at
+ * all), and it leaves the entire demo book on one identity.
+ *
+ * Which is invisible on the API-key path and fatal on the OAuth one. Measured
+ * 2026-09-07 on hotcrm `789a7324` / objectstack 17.3.0 as
+ * `sales.manager@objectos.ai`: `crm_opportunity` **0**, `crm_task` **0**,
+ * `crm_account` 5 — where the same objects answer 23 / 59 / 9 over an API key.
+ * An API key runs as the human, so `viewAllRecords` applies; an agent session
+ * does not get that. The agent ceiling (objectstack#16549) admits the rows the
+ * user OWNS or holds a SHARE on, and `viewAllRecords` deliberately does not
+ * lift it. So the accounts survived — the territory rules materialise real
+ * `sys_record_share` rows — and everything nobody had shared came back empty.
+ *
+ * ⛔ That ceiling is the platform working, and nothing here is allowed to
+ * argue with it. No profile, permission set or sharing rule is touched to
+ * raise those numbers: the fix is that the demo book has OWNERS, which is what
+ * a real org's data has. Widening a grant instead would turn a demo-fidelity
+ * defect into a security-shaped one.
+ *
+ * ### ⛔ Why `crm_account` is NOT in this table
+ *
+ * Because the reps must not own the accounts — that is the whole territory
+ * demonstration, and it is stated twice above (see "Why exactly these five
+ * people", and the `verify()` assertion in `scripts/demo-staff.ts` that fails
+ * when a demo user owns a seeded account). `crm_account` is `private`, so the
+ * OWD baseline already admits an owner: a share to the owner proves nothing.
+ * The accounts are also the one object that already answered non-zero over
+ * OAuth, precisely because a share — not ownership — was carrying them. Moving
+ * that to ownership would delete the only working demonstration in the
+ * measurement above.
+ *
+ * ### Routing: by the account's TERRITORY, so each identity holds a SUBSET
+ *
+ * Handing everything to one demo user would replace "sees 0" with "sees all"
+ * and lose the demonstration that row-level security is on at all. So a row
+ * goes to the territory that owns its account, and a row whose account cannot
+ * be resolved — no lookup, or an account outside both staffed territories —
+ * goes to the manager. The territory VALUES are spelled through
+ * {@link TERRITORY}, so a renamed territory cannot be half-applied here.
+ */
+export type DemoOwnershipRoute = {
+  /** The object whose seeded rows get re-stamped. */
+  readonly object: string;
+  /**
+   * Lookup field resolving this row's `crm_account`, or `null` when the object
+   * has none — those rows all fall to the `other` bucket.
+   */
+  readonly accountField: string | null;
+  /** Why this object is routed. Asserted non-empty, like `demonstrates`. */
+  readonly why: string;
+};
+
+/**
+ * Territory → the demo staff `key` that owns rows in it.
+ *
+ * The `Record<Territory, …>` annotation is what keeps this in step with the one
+ * authored domain: rename or add a territory in `src/objects/_territory.ts` and
+ * this object stops compiling — a missing key on one side, an excess one on the
+ * other. A renamed territory therefore cannot be half-applied here, the same
+ * property the sharing-rule conditions get from interpolating `TERRITORY`.
+ */
+export const TERRITORY_OWNER: Readonly<Record<Territory, string>> = {
+  na: 'na_rep',
+  emea: 'eu_rep',
+  other: 'sales_manager',
+};
+
+/**
+ * The objects `pnpm demo:staff` re-stamps. Adding one is adding a ROW here;
+ * `test/demo-ownership-routing.test.ts` checks each against the real objects,
+ * the real seeds and the claim list in `demo_bootstrap`.
+ */
+export const DemoPipelineOwnership: readonly DemoOwnershipRoute[] = [
+  {
+    object: 'crm_opportunity',
+    accountField: 'crm_account',
+    why: 'the pipeline the OAuth measurement read as 0; every deal hangs off an account',
+  },
+  {
+    object: 'crm_lead',
+    accountField: null,
+    why: 'a lead has no account yet, so the whole top of funnel sits with the manager',
+  },
+  {
+    object: 'crm_task',
+    accountField: 'related_to_account',
+    why: '"last follow-up" is derived from tasks, so an unowned one reads as no follow-up',
+  },
+  {
+    object: 'crm_event',
+    accountField: 'related_to_account',
+    why: 'the other half of last-follow-up, and the owner axis of the Activity by Rep bar',
   },
 ];
