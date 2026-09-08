@@ -21,20 +21,42 @@
 //      insert, which ADR-0092's write guard refuses and which would produce an
 //      un-loginable row anyway);
 //   2. assign the positions they hold (`sys_user_position`);
-//   3. RE-EVALUATE every active sharing rule. This step is not optional and is
+//   3. HAND THE DEMO BOOK TO THEM (#1759). `demo_bootstrap` claims every
+//      ownerless seeded row for the FIRST user — it has to; a seed cannot name
+//      a user and that flow ships in the artifact — which leaves the whole
+//      book on the dev admin. Invisible over an API key (it runs as the human,
+//      so `viewAllRecords` applies) and fatal over OAuth, where the agent
+//      ceiling admits only what the caller OWNS or holds a share on
+//      (objectstack-ai/objectstack#16549). So a demo salesperson asking their
+//      agent about the pipeline got 0 opportunities and 0 tasks. This step
+//      re-stamps `owner_id` per the routes in `src/sharing/demo-staffing.ts`;
+//      `crm_account` is deliberately NOT among them (see step 5);
+//   4. RE-EVALUATE every active sharing rule. This step is not optional and is
 //      the reason staffing alone was never enough: `plugin-sharing` materialises
 //      grants from a record-write hook that returns early on `isSystem` writes,
 //      and every seeded row is written with `isSystem: true`. So the seeded
 //      accounts carry no grants no matter who holds a position, until a rule is
 //      re-evaluated (boot backfill does it too — this just avoids the restart);
-//   4. VERIFY, as each demo user, that the three layers actually connect, and
-//      exit non-zero if they do not.
+//   5. VERIFY, as each demo user, that the three layers actually connect —
+//      plus an OWNERSHIP CENSUS over the routed objects, which is the only
+//      evidence that speaks to step 3: the reps must still OWN NO ACCOUNT (a
+//      share to an owner proves nothing under a `private` OWD, so owning them
+//      would delete the territory demonstration), while every routed row must
+//      sit on a demo persona and none of them may hold the lot. Exits non-zero
+//      if any of that fails.
 //
 // Flags: --url (default http://localhost:4001, the port `pnpm dev` binds),
 //        --admin-email / --admin-password (default the platform's dev-admin
 //        seed, which only exists when NODE_ENV=development).
 
-import { DemoOrgStaffing, type DemoStaffMember } from '../src/sharing/demo-staffing.js';
+import {
+  DemoOrgStaffing,
+  DemoPipelineOwnership,
+  TERRITORY_OWNER,
+  type DemoOwnershipRoute,
+  type DemoStaffMember,
+} from '../src/sharing/demo-staffing.js';
+import { TERRITORY, type Territory } from '../src/objects/_territory.js';
 
 type Json = Record<string, any>;
 
@@ -115,6 +137,18 @@ class Api {
     return json;
   }
 
+  /** PATCH one record, throwing with the server's own message when it is not a 2xx. */
+  async patchOk(object: string, id: string, body: Json): Promise<void> {
+    const { status, json } = await this.call('PATCH', `/api/v1/data/${object}/${id}`, body);
+    if (status < 200 || status >= 300) {
+      const msg = json?.error?.message ?? json?.error ?? json?.message ?? JSON.stringify(json);
+      // Planting a record under another user is a TRANSFER, gated on
+      // `allowTransfer`; a refusal here means the signed-in account is not an
+      // administrator, exactly as `scripts/backfill-owner-id.ts` reports it.
+      throw new Error(`PATCH ${object}/${id} → ${status}: ${msg}`);
+    }
+  }
+
   /** Rows of `object` matching `filters` (the data API's own query verb). */
   async query(object: string, filters: unknown[][], fields?: string[]): Promise<Json[]> {
     const json = await this.postOk(`/api/v1/data/${object}/query`, {
@@ -123,6 +157,19 @@ class Api {
       top: 500,
     });
     return (json.records ?? []) as Json[];
+  }
+
+  /**
+   * Rows of `object`, or the server's REFUSAL — for a read that may legitimately
+   * be denied. `query` throws, which aborts the whole run on the first persona
+   * the org has not granted the object to; that is a finding to report, not a
+   * crash to die on.
+   */
+  async tryQuery(object: string, fields: string[]): Promise<{ rows: Json[] } | { denied: string }> {
+    const { status, json } = await this.post(`/api/v1/data/${object}/query`, { filters: [], fields, top: 500 });
+    if (status >= 200 && status < 300) return { rows: (json.records ?? []) as Json[] };
+    const msg = json?.error?.message ?? json?.error ?? json?.message ?? JSON.stringify(json);
+    return { denied: `${status} ${String(json?.code ?? '')} ${msg}`.trim() };
   }
 
   /** Sign in and keep the session cookie for every later call. */
@@ -213,6 +260,191 @@ async function evaluateRules(api: Api) {
   return results;
 }
 
+/** One routed object after the re-stamp. */
+type OwnershipOutcome = {
+  route: DemoOwnershipRoute;
+  /** rowId → the owner this run settled on: the routed one, or the one it left alone. */
+  settled: Map<string, string>;
+  written: number;
+  leftAlone: number;
+};
+
+/**
+ * Hand the seeded demo book to the roster — the fix for #1759.
+ *
+ * ⛔ Not a mass update and not a security change. Ownership is the ONE thing
+ * that moves: no profile, permission set or sharing rule is touched, because
+ * the agent ceiling that produced the zeros is the platform behaving
+ * correctly. A row goes to whoever owns its account's TERRITORY, and a row
+ * whose account cannot be resolved goes to the manager — so each identity ends
+ * up with a SUBSET, which is the demonstration. `crm_account` is not routed at
+ * all; see `DemoPipelineOwnership`.
+ *
+ * ### What it claims, and what it deliberately does not
+ *
+ * Only rows sitting on the DEV ADMIN or on nobody. Those two states are the
+ * seed book: `demo_bootstrap` stamps the first user onto everything it finds
+ * ownerless, and anything it has not reached yet is still null. A row some LIVE
+ * WORKFLOW has already assigned is left exactly where it is — measured on a
+ * staffed box, the SLA sweep escalates cases and the escalation hook hands the
+ * resulting tasks to the service manager, and re-routing those by territory
+ * would overwrite the app demonstrating itself.
+ *
+ * That also makes the run idempotent and order-independent: correct whether
+ * `demo_bootstrap` has already claimed the rows or has not run yet, and a
+ * second pass over a converged org writes nothing.
+ */
+async function handBookToRoster(
+  api: Api,
+  userIdByKey: Map<string, string>,
+  adminId: string,
+): Promise<OwnershipOutcome[]> {
+  // The account hook stores a declared `territory` (never a country string —
+  // `src/objects/_territory.ts`), so this reads the same value the sharing
+  // rules match on rather than re-deriving one.
+  const accountRows = await api.query('crm_account', [], ['id', 'territory']);
+  const territoryOf = new Map(accountRows.map((a) => [String(a.id), String(a.territory ?? '')]));
+
+  const ownerFor = (territory: string | undefined): string => {
+    const key = TERRITORY_OWNER[(territory ?? '') as Territory] ?? TERRITORY_OWNER[TERRITORY.OTHER];
+    const userId = userIdByKey.get(key);
+    if (!userId) {
+      throw new Error(`ownership routing names demo staff key "${key}", who is not in DemoOrgStaffing`);
+    }
+    return userId;
+  };
+
+  const outcomes: OwnershipOutcome[] = [];
+  for (const route of DemoPipelineOwnership) {
+    const fields = ['id', 'owner_id', ...(route.accountField ? [route.accountField] : [])];
+    const rows = await api.query(route.object, [], fields);
+    const settled = new Map<string, string>();
+    let written = 0;
+    let leftAlone = 0;
+    for (const row of rows) {
+      const id = String(row.id);
+      const current = String(row.owner_id ?? '');
+      if (current !== '' && current !== adminId) {
+        settled.set(id, current);
+        leftAlone++;
+        continue;
+      }
+      const accountId = route.accountField ? row[route.accountField] : undefined;
+      const wanted = ownerFor(accountId ? territoryOf.get(String(accountId)) : undefined);
+      settled.set(id, wanted);
+      await api.patchOk(route.object, id, { owner_id: wanted });
+      written++;
+    }
+    outcomes.push({ route, settled, written, leftAlone });
+  }
+  return outcomes;
+}
+
+/**
+ * The ownership census — the evidence #1759 actually turns on.
+ *
+ * ⚠️ It counts rows each identity OWNS, and that is deliberate rather than
+ * lazy. Signing in and listing would measure the HUMAN path, where
+ * `viewAllRecords` applies and the sales manager reads all 23 opportunities
+ * whether or not this script ever ran — the exact reading that hid the defect
+ * for months. The agent ceiling admits what the caller owns or holds a share
+ * on, so ownership is what moved and ownership is what is counted.
+ *
+ * Re-READ from the server rather than reported from the plan: a census printed
+ * off the intent would stay green through a PATCH that silently did nothing.
+ * It judges only the rows this run settled, by id. Rows that APPEAR while it
+ * runs — the scheduled sweeps do create some — are reported on their own line
+ * and never counted as a disagreement, because a census that failed on the app
+ * doing its job would be a broken instrument, not a finding.
+ */
+async function ownershipCensus(
+  api: Api,
+  outcomes: OwnershipOutcome[],
+  roster: ReadonlyArray<{ userId: string; email: string }>,
+  adminId: string,
+): Promise<string[]> {
+  const failures: string[] = [];
+  const nameOf = (userId: string) =>
+    roster.find((r) => r.userId === userId)?.email ?? (userId === adminId ? 'the dev admin' : userId);
+  const w = 16;
+  const ownedOverall = new Map<string, number>();
+  let grandTotal = 0;
+
+  console.log(
+    `   ${'object'.padEnd(18)}${'routed'.padStart(7)}` +
+    `${roster.map((r) => r.email.split('@')[0].padStart(w)).join('')}` +
+    `${'dev admin'.padStart(w)}${'nobody'.padStart(8)}${'new'.padStart(6)}`,
+  );
+
+  for (const { route, settled } of outcomes) {
+    const rows = await api.query(route.object, [], ['id', 'owner_id']);
+    const ownerById = new Map(rows.map((r) => [String(r.id), String(r.owner_id ?? '')]));
+    const observed = new Map<string, number>();
+    const wrong: string[] = [];
+    for (const [id, wanted] of settled) {
+      const got = ownerById.get(id);
+      if (got === undefined) {
+        wrong.push(`${id} is gone from ${route.object}`);
+        continue;
+      }
+      observed.set(got, (observed.get(got) ?? 0) + 1);
+      ownedOverall.set(got, (ownedOverall.get(got) ?? 0) + 1);
+      grandTotal++;
+      if (got !== wanted) wrong.push(`${id}: expected ${nameOf(wanted)}, found ${nameOf(got)}`);
+    }
+    const admin = observed.get(adminId) ?? 0;
+    const ownerless = observed.get('') ?? 0;
+
+    console.log(
+      `   ${route.object.padEnd(18)}${String(settled.size).padStart(7)}` +
+      `${roster.map((r) => String(observed.get(r.userId) ?? 0).padStart(w)).join('')}` +
+      `${String(admin).padStart(w)}${String(ownerless).padStart(8)}${String(rows.length - settled.size).padStart(6)}`,
+    );
+
+    // Guard the guard: an object with no routed rows balances trivially and
+    // proves nothing, so its clean-looking line above is not a pass.
+    if (settled.size === 0) {
+      failures.push(`${route.object} routed no rows at all — its line above is vacuous, not clean`);
+      continue;
+    }
+    if (wrong.length > 0) {
+      failures.push(
+        `${route.object}: ${wrong.length} row(s) did not land where they were sent — a PATCH ` +
+        `reported success and changed nothing, or something re-claimed them. ${wrong.slice(0, 5).join('; ')}`,
+      );
+    }
+    if (admin > 0) {
+      failures.push(
+        `${route.object}: the dev admin still owns ${admin} routed row(s), so a demo salesperson's ` +
+        `agent session still cannot see them (#1759).`,
+      );
+    }
+    if (ownerless > 0) {
+      failures.push(
+        `${route.object}: ${ownerless} routed row(s) are owned by NOBODY — under a private OWD such ` +
+        `a row is editable by no one at all, admin included.`,
+      );
+    }
+  }
+
+  // The routed book must be SPLIT. Handing every row to one demo user would
+  // replace "sees 0" with "sees all" and lose the demonstration that row-level
+  // security is on at all.
+  const holders = roster.filter((r) => (ownedOverall.get(r.userId) ?? 0) > 0);
+  if (holders.length < 2) {
+    failures.push(
+      `the whole routed book sits on ${holders.length} identity — the identity-switch demo needs a ` +
+      `SUBSET per person, not everything on one desk`,
+    );
+  }
+  for (const holder of holders) {
+    if ((ownedOverall.get(holder.userId) ?? 0) === grandTotal) {
+      failures.push(`${holder.email} owns every routed row (${grandTotal}) — that is "sees all", not a subset`);
+    }
+  }
+  return failures;
+}
+
 /**
  * The point of the whole exercise, asserted rather than assumed: each demo user
  * signs in and reads the accounts, and none of them may OWN what they were
@@ -232,7 +464,19 @@ async function verify(base: URL, outcomes: StaffOutcome[], adminAccounts: Json[]
   for (const { member, userId } of outcomes) {
     const asUser = new Api(base);
     await asUser.signIn(member.email, member.password);
-    const rows = await asUser.query('crm_account', [], ['id', 'name', 'territory', 'billing_country', 'owner_id']);
+    const read = await asUser.tryQuery('crm_account', ['id', 'name', 'territory', 'billing_country', 'owner_id']);
+    if ('denied' in read) {
+      // Reported, not thrown. A persona the org opens no CRM object to is a real
+      // defect in the staffing — and dying here would take the ownership census
+      // below down with it, which is the one reading that speaks to #1759.
+      failures.push(
+        `${member.email} cannot read crm_account AT ALL (${read.denied}). Their positions bind no ` +
+        `permission set that grants the object, and the additive member baseline does not open it ` +
+        `either — so this demo persona sees an empty app, whatever is shared with them.`,
+      );
+      continue;
+    }
+    const rows = read.rows;
     const names = rows.map((r) => String(r.name)).sort();
     const territories = [...new Set(names.map(territoryOf))].sort();
     console.log(`   ${member.email} sees ${rows.length} account(s): ${names.join(', ') || '—'}`);
@@ -301,6 +545,21 @@ async function main(): Promise<number> {
     );
   }
 
+  // Ownership BEFORE rule evaluation, so the evaluator reconciles against the
+  // final owner rather than one this run is about to move.
+  console.log('\n── Handing the demo book to the roster (#1759) ──');
+  const ownership = await handBookToRoster(
+    api,
+    new Map(outcomes.map((o) => [o.member.key, o.userId])),
+    String(admin.id),
+  );
+  for (const o of ownership) {
+    console.log(
+      `   ${o.route.object.padEnd(18)} re-stamped ${String(o.written).padStart(3)}, left ` +
+      `${String(o.leftAlone).padStart(3)} with a live owner — ${o.route.why}`,
+    );
+  }
+
   console.log('\n── Re-evaluating sharing rules ──');
   for (const r of await evaluateRules(api)) {
     console.log(
@@ -313,6 +572,19 @@ async function main(): Promise<number> {
   const accounts = await api.query('crm_account', [], ['name', 'territory', 'billing_country']);
   console.log(`\n── Verifying (sys_record_share: ${shares.length} rule-materialised grants) ──`);
   const failures = await verify(base, outcomes, accounts);
+
+  // The reading #1759 turns on: what each identity OWNS, which is what an agent
+  // session can reach. Printed whether or not it passes — a census nobody can
+  // read is not evidence.
+  console.log('\n── Ownership census (rows each identity owns = the agent-visible floor) ──');
+  failures.push(
+    ...(await ownershipCensus(
+      api,
+      ownership,
+      outcomes.map((o) => ({ userId: o.userId, email: o.member.email })),
+      String(admin.id),
+    )),
+  );
 
   if (failures.length > 0) {
     console.log('\n🔴 staffing did not connect:');
