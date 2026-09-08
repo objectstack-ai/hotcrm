@@ -14,7 +14,6 @@ updates:
     # `@objectstack/*` upgrade, say), drop the label and add a changeset by hand.
     labels:
       - "dependencies"
-      - "automated"
       - "skip-changeset"
     commit-message:
       prefix: "chore"
@@ -28,7 +27,6 @@ updates:
       interval: "monthly"
     labels:
       - "dependencies"
-      - "github-actions"
       - "skip-changeset"
     commit-message:
       prefix: "ci"
