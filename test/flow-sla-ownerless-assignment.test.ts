@@ -221,17 +221,50 @@ describe('pool NON-EMPTY: the ownerless breach is assigned, then that owner is a
     }
   });
 
-  it('leaves an already-owned breach with its own owner and its own alert', async () => {
-    const { byId, audiences } = await runSweep(staffedPool());
-    // ⚠️ The OWNED path is deliberately untouched by #1405. The escalation
-    // hand-off does move an owned case to the manager pool — that is
-    // `case_escalation_reassign`'s shipped behaviour, not this card's — and the
-    // alert still goes to the agent the case is being taken FROM, exactly as
-    // the sweep has always addressed it. Re-routing that alert is a separate
-    // product question and is filed as one.
-    expect(audiences).toContain('rep1');
+  it('hands an already-owned breach over AND still alerts the owner it was taken from', async () => {
+    const { byId, audiences, alertFor } = await runSweep(staffedPool());
+    // ⚠️ RULED, not incidental — #1535, maintainer ruling 2026-09-07
+    // (director batch #73), option A: `case_sla_monitor` follows the
+    // `case_escalation` precedent, so the breach alert goes to the PREVIOUS
+    // owner — the agent the case is being taken from — and
+    // `content/docs/service/sla-and-escalation.mdx` now states that as intent
+    // for this sweep the way it always has for `case_escalation`. ⛔ Alerting
+    // the receiving manager instead is option C, and it would have to re-rule
+    // `case_escalation` in the same stroke.
+    //
+    // The two halves are pinned TOGETHER because either one alone is satisfied
+    // by the wrong app: `rep1` was alerted holds on a build where no hand-off
+    // happens at all, and the case is owned by a manager holds on one that
+    // re-routed the alert. Only the PAIR says what was ruled.
+    expect(
+      MANAGERS,
+      `the owned breach was not handed to the manager pool (got ${JSON.stringify(byId.c_owned.owner_id)})`,
+    ).toContain(byId.c_owned.owner_id);
+    expect(
+      alertFor(byId.c_owned.case_number as string),
+      'the breach alert did not reach the pre-hand-off owner alone',
+    ).toEqual(['rep1']);
     expect(audiences).toContain('rep2');
     expect(byId.c_owned.is_sla_violated, 'the owned breach was not flagged').toBe(true);
+  });
+
+  it('sends one alert per breach — the hand-off issues no notice of its own', async () => {
+    const { h, nodeOf } = await runSweep(staffedPool());
+    // The ruling's DECLARED GAP, measured instead of left open: whether
+    // `case_escalation_reassign` tells the NEW owner anything itself. It does
+    // not — the hook mutates the payload of the update already in flight and
+    // performs no operation at all — so five breaches produce five
+    // notifications and `notify_team` is the run's only sender.
+    //
+    // ⚠️ The frame, stated rather than implied: `withHooks` in
+    // `test/helpers/flow-harness.ts` hands a hook `ctx.api` and no messaging
+    // service, so a hook that DID notify could not deliver here. What this
+    // pins is the count the sweep produces; the source reading
+    // (`src/objects/_case-assignment.ts` — no notify node, no `ctx.api`
+    // write) is what makes that count evidence about the hook rather than
+    // about the harness.
+    expect(h.notifications.length, 'a second sender added a notice to the run').toBe(5);
+    expect(nodeOf('notify_team')?.runs, 'notify did not run once per breach').toBe(5);
   });
 
   it('records the breach on every case and reaches the ones queued behind', async () => {

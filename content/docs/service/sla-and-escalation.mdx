@@ -79,6 +79,8 @@ Two conditions this page used to list do not exist:
 
 A breach on a case **nobody owns** is handled the same way, and it is worth stating separately because it used to be the one case nobody was told about. The sweep escalates it like any other, the hand-off below gives it a Service Manager, and the alert goes to that new owner. If nobody holds the Service Manager position, the case stays unowned and no alert is sent — the breach is still recorded on the case and still shows in **Escalated Cases**, and the rest of the sweep runs as normal.
 
+A breach on a case that **already has an owner** is handed over the same way, and its alert is addressed the same way the escalation's is: **the notification goes to the previous owner alone.** `case_sla_monitor` reads the recipient before the hand-off, so the breach alert reaches the agent the case is being taken from, not the service manager who now owns it. That is deliberate — one escalation etiquette on both paths — and it is the whole notice: the hand-off itself sends nothing of its own, so the manager who picks the case up finds it in **Escalated Cases** rather than in an inbox message.
+
 The time-based path is what catches them. `case_sla_monitor` escalates any open case whose **SLA Due Date** has passed, and since the matrix landed every priority has one — so a High case nobody touches is escalated when its 6-to-8-hour clock runs out, and a Low case when its week does. That is a change in behaviour worth planning for: priorities that used to sit silently now escalate on time, which is the point, but it also means the **Escalated Cases** view fills up with more than Critical work.
 
 ### What the escalation does
