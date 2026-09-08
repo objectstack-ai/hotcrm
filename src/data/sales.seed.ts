@@ -1021,7 +1021,16 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       lead_source: 'cold_call',
       loss_reason: 'timing',
       loss_details: 'Marketing is locked into a 2-year HubSpot contract; the buying window opens when that renews.',
-      description: `Tried to bolt on the Marketing Cloud module via cold outbound. Lost because Acme's marketing org is already on a 2-year HubSpot contract. Revisit in Q3 when that contract is up for renewal.`,
+      // This line used to end "Revisit in Q3" — a hand-typed calendar quarter
+      // on a record whose `close_date` is `daysAgo(25)`, so the quarter it told
+      // a rep to wait for is the one the deal was already lost in, and it
+      // contradicted this record's own `loss_details`: a 2-year lock does not
+      // reopen inside the quarter the deal closed in (#1712). Same ruling as
+      // the `next_step` block above (#1660): no date goes back into this prose,
+      // absolute OR relative. The renewal is the anchor that stays true however
+      // this record is dated — which is how `loss_details` and the account
+      // description already state it.
+      description: `Tried to bolt on the Marketing Cloud module via cold outbound. Lost because Acme's marketing org is already on a 2-year HubSpot contract. Revisit when that contract comes up for renewal — that is when the buying window opens.`,
     },
     {
       name: 'Stark Expansion (Lost)',
