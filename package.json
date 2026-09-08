@@ -38,15 +38,24 @@
   "dependencies": {
     "@objectstack/account": "17.3.0",
     "@objectstack/cli": "17.3.0",
+    "@objectstack/core": "17.3.0",
     "@objectstack/driver-memory": "17.3.0",
     "@objectstack/driver-sql": "17.3.0",
     "@objectstack/driver-sqlite-wasm": "17.3.0",
     "@objectstack/metadata": "17.3.0",
     "@objectstack/objectql": "17.3.0",
+    "@objectstack/platform-objects": "17.3.0",
+    "@objectstack/plugin-approvals": "17.3.0",
+    "@objectstack/plugin-auth": "17.3.0",
+    "@objectstack/plugin-security": "17.3.0",
+    "@objectstack/plugin-sharing": "17.3.0",
     "@objectstack/runtime": "17.3.0",
     "@objectstack/service-analytics": "17.3.0",
     "@objectstack/service-automation": "17.3.0",
-    "@objectstack/spec": "17.3.0"
+    "@objectstack/service-messaging": "17.3.0",
+    "@objectstack/service-storage": "17.3.0",
+    "@objectstack/spec": "17.3.0",
+    "@objectstack/trigger-record-change": "17.3.0"
   },
   "optionalDependencies": {
     "better-sqlite3": "^12.11.1"
