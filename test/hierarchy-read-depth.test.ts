@@ -222,7 +222,7 @@ describe('the hierarchy READ capability in the platform vocabulary (#1378)', () 
   });
 });
 
-describe('the spec gate accepts the read half and refuses the half (#1378)', () => {
+describe('the spec gate accepts a hierarchy readScope only when the capability is declared (#1378)', () => {
   // `defineStack` THROWS on a hierarchy scope with no capability declared —
   // pinned for `readScope` as `contract-write-depth.test.ts` pins it for
   // `writeScope`, so the `requires` line cannot be deleted as "unused" without
