@@ -49,8 +49,17 @@ export const service: Record<string, ObjectTranslationData> = {
         },
       },
       priority: {
+        // `critical` MUST NOT render 紧急 — that word belongs to
+        // `crm_task.priority.urgent`, and the two vocabularies are different
+        // sets (case: low/medium/high/critical · task: low/normal/high/urgent).
+        // When both rendered 紧急 the screen showed one word for two values the
+        // model treats as distinct, which is how a case value ends up in a task
+        // predicate (`src/views/task.view.ts` carries the tombstone of that
+        // crossing). Maintainer ruling 2026-08-31, #1342: case `critical` is
+        // 严重, task `urgent` keeps 紧急. en/es-ES/ja-JP already separate them
+        // (Critical/Urgent · Crítica/Urgente · 重大/緊急); zh-CN was the outlier.
         label: '优先级',
-        options: { low: '低', medium: '中', high: '高', critical: '紧急' },
+        options: { low: '低', medium: '中', high: '高', critical: '严重' },
       },
       type: {
         label: '类型',

@@ -43,6 +43,14 @@ export const activity: Record<string, ObjectTranslationData> = {
         },
       },
       priority: {
+        // `urgent` KEEPS 紧急, and ⛔ nothing may re-point it at `crm_case`'s
+        // top value: the two vocabularies are different sets (task:
+        // low/normal/high/urgent · case: low/medium/high/critical), so the two
+        // zh-CN words must stay different or the screen stops distinguishing
+        // two values the model treats as distinct — the crossing
+        // `src/views/task.view.ts` carries the tombstone of. Maintainer ruling
+        // 2026-08-31, #1342: 紧急 stays here (urgent is this object's literal
+        // word) and case `critical` moved to 严重.
         label: '优先级',
         options: { low: '低', normal: '普通', high: '高', urgent: '紧急' },
       },
