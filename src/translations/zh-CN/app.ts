@@ -167,7 +167,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       description: '工单负载、SLA 健康度与处理绩效',
       widgets: {
         open_cases: { title: '未关闭工单', description: '尚未关闭的工单' },
-        critical_cases: { title: '紧急工单', description: '标记为紧急优先级的未关闭工单' },
+        critical_cases: { title: '严重工单', description: '标记为严重优先级的未关闭工单' },
         avg_resolution_time: { title: '平均解决时长', description: '关闭工单的平均处理时长（小时）' },
         sla_violations: { title: 'SLA 违约', description: '已超出 SLA 的工单' },
         cases_by_status: { title: '按状态分布', description: '工单在各处理阶段的分布' },

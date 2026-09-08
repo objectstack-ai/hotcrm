@@ -160,7 +160,7 @@ description: 客户支持工单——主题、优先级、状态、解决方案�
 ## 共享——谁可以看到哪个工单
 
 - 默认情况下，工单是**私有的**——只有所有者可见。岗位是扁平的，**什么都不会上卷**，没有哪位经理因为“在所有者之上”就能看到某个工单。
-- **紧急未结工单**由两条规则自动共享，一个层级一条：*Escalated Cases Sharing* 把读/写授予 `service_manager`，*Escalated Cases — Service Director* 把读授予 `service_director`。两个层级都被显式点名，因为谁也不会从对方那里继承。
+- **严重未结工单**由两条规则自动共享，一个层级一条：*Escalated Cases Sharing* 把读/写授予 `service_manager`，*Escalated Cases — Service Director* 把读授予 `service_director`。两个层级都被显式点名，因为谁也不会从对方那里继承。
 - **无主的未结工单**由 *Unassigned Cases — Triage* 共享给每一位 `service_agent`，读 + 编辑——这就是 **未分派 — 待分诊** 标签页背后的那条授权。它的有效期恰好是「这张工单没有负责人，且既不是 *Resolved* 也不是 *Closed*」这段时间，而认领正是终结它的那个动作：从那一刻起，你以负责人的身份、用最普通的方式持有这张工单。
 
 ## 字段级安全
