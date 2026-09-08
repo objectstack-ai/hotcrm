@@ -146,44 +146,108 @@ After generating code, ask yourself:
 
 We enforce strict file naming to separate concerns. Files live under `src/{type}/`, grouped by metadata type (e.g. `src/objects/`, `src/flows/`, `src/views/`).
 
+The authoring form per type, the one place validation is enforced, and the traps in
+between are in **🔒 Schema Validation Requirements** below.
+
 ### Core File Types
-- `*.object.ts`: Data Model (Schema) — validated with `ObjectSchema.parse()`
+- `*.object.ts`: Data Model (Schema) — built with `ObjectSchema.create()` from `@objectstack/spec/data`, which validates as it constructs
 - `*.hook.ts`: Server-side Business Logic (Triggers)
 - `*.actions.ts`: API Endpoints & AI Tools — the one PLURAL suffix in this protocol; one file bundles an entity's actions (e.g. `src/actions/lead.actions.ts`)
 - `*.flow.ts`: Automation Flows — typed as `Automation.Flow` from `@objectstack/spec/automation`
-- `*.page.ts`: UI Page Layouts — validated with `PageSchema` from `@objectstack/spec/ui`
-- `*.view.ts`: List View Configurations — validated with `ViewSchema` from `@objectstack/spec/ui`
+- `*.page.ts`: UI Page Layouts — a literal annotated with the `Page` type from `@objectstack/spec/ui`
+- `*.view.ts`: List View Configurations — built with `defineView()` from `@objectstack/spec/ui`
 
 ### Extended File Types (Phase 6+)
-- `*.dashboard.ts`: Dashboard Definitions — validated with `DashboardSchema` from `@objectstack/spec/ui`
+- `*.dashboard.ts`: Dashboard Definitions — a literal annotated with the `Dashboard` type from `@objectstack/spec/ui`
 - `*.form.ts`: Form View Definitions — validated with `FormViewSchema` from `@objectstack/spec/ui`
 - `*.statemachine.ts`: State Machine Definitions — validated with `StateMachineSchema` from `@objectstack/spec/automation`
-- `*.permission.ts`: Permission Set Definitions — validated with `PermissionSetSchema` from `@objectstack/spec/security`
+- `*.profile.ts`: Permission Set Definitions — a plain literal in `src/profiles/`, registered as `defineStack({ permissions })` and validated against `PermissionSetSchema` (`@objectstack/spec/security`) there. ⛔ Not `*.permission.ts`, which this app authors nowhere
 - `*.capabilities.ts`: Plugin Capability Manifests — validated with `PluginCapabilityManifestSchema` from `@objectstack/spec/kernel`
 - `*.events.ts`: Domain Event Definitions — validated with `EventSchema` from `@objectstack/spec/kernel`
 
 ## 🔒 Schema Validation Requirements
 
-All metadata files MUST be validated against their corresponding `@objectstack/spec` schemas:
+Every metadata file under `src/` is validated — but ⛔ **not by a `parse()` call you write in
+the file.** No file under `src/` makes one. Authoring form and enforcement point are two
+separate questions, and only the first is yours to get right.
 
-1. **Objects**: Use `ObjectSchema.parse()` from `@objectstack/spec/data`
-2. **Pages/Views/Dashboards/Forms**: Use schemas from `@objectstack/spec/ui`
-3. **Flows**: Author a typed object literal, not a parse call — `import type * as Automation from '@objectstack/spec/automation'`, then `export const XFlow: Automation.Flow = { … }`, the form every `src/flows/*.flow.ts` file uses. Validation is not performed in the file: `pnpm validate` rejects an invalid flow (an unknown `type`, for instance, fails as `flows.N.type: Invalid value …`), and the platform parses again at `AutomationEngine.registerFlow` on boot. `FlowSchema.parse()` — and `defineFlow()`, which is exactly that call — are real exports of `@objectstack/spec/automation` for building a flow programmatically (e.g. in a test); they are not the authoring form for `src/flows/`.
-4. **State Machines**: Use `StateMachineSchema.parse()` from `@objectstack/spec/automation`
-5. **Plugins**: Use `PluginSchema.parse()` from `@objectstack/spec/kernel` (remove `: any` annotations)
-6. **Permissions**: Use `PermissionSetSchema.parse()` from `@objectstack/spec/security`
-7. **AI Agents**: Use `AgentSchema.parse()` from `@objectstack/spec/ai`
+### Author the file the way its neighbours are authored
+
+The form is **not uniform across metadata types**, so the reliable move is to open the file
+next to the one you are creating and copy its shape. The directory is the source of truth;
+the map below says which shape to expect, not what to transcribe.
+
+1. **A validating constructor, called in the file.** `src/objects/*.object.ts` uses
+   `ObjectSchema.create({ … })` (`@objectstack/spec/data`), `src/views/*.view.ts` uses
+   `defineView({ … })` and `src/skills/*.skill.ts` uses `defineSkill({ … })`. These reject
+   at author time — `ObjectSchema.create()` names an unknown key back to you
+   (`unknown key(s) — workflows`) rather than stripping it in silence.
+2. **A typed object literal, with no runtime call in the file.** `src/pages/*.page.ts`
+   annotate with `Page`, `src/dashboards/*.dashboard.ts` with `Dashboard` (both
+   `@objectstack/spec/ui`), and `src/flows/*.flow.ts` with `Automation.Flow`
+   (`import type * as Automation from '@objectstack/spec/automation'`). The type is what
+   your editor and `pnpm typecheck` read.
+3. **A plain object literal with no schema import at all.** `src/profiles/*.profile.ts` —
+   where this app's **permission sets** live — and `src/sharing/*.sharing.ts`.
+
+⚠️ The form does not follow the metadata type in any tidy way: pages and views come from the
+same `@objectstack/spec/ui` module and are authored differently. ⛔ Do not generalise from
+one directory to its neighbour. The `define*` names are the trap here — `defineView()` and
+`defineSkill()` **are** the form for their directories, while `defineFlow()` (which is
+exactly `FlowSchema.parse(config)`) is **not** the form for `src/flows/`.
+
+### Where the validation actually happens
+
+All three forms converge on one enforcement point: `objectstack.config.ts` hands every
+collection to `defineStack()`, which validates each against its `@objectstack/spec` schema.
+`pnpm validate` and `pnpm build` run it, and the platform parses again at registration on
+boot (for flows, `AutomationEngine.registerFlow`).
+
+Measured rather than asserted — an unknown key added on disk to a page (form 2), and to a
+permission set (form 3, whose file imports nothing from `@objectstack/spec`):
+
+```
+✗ pages.7: Unrecognized key(s) on this page: `bogusUnknownKey`. …
+✗ permissions.1: Unrecognized key(s) on this permission set: `bogusUnknownKey`. …
+```
+
+Both fail `pnpm validate` with exit 1. Nothing in either metadata file performed that check.
+
+### ⚠️ A file missing from its barrel is validated by nothing
+
+Registration is explicit, file by file: each `src/{type}/index.ts` re-exports its files and
+`objectstack.config.ts` feeds those barrels to `defineStack()`. A new file that compiles and
+satisfies its schema but never reaches the barrel is **silently ignored** — measured: a valid
+new `src/objects/*.object.ts` left out of `src/objects/index.ts` leaves `pnpm validate` at
+exit 0, still reporting `Data: 18 Objects`, naming the new file nowhere in its output.
+Exporting it is part of authoring it, not a follow-up.
+
+### `XSchema.parse()` is a real API — for tests, not for `src/`
+
+Those schemas are genuine exports and do carry `.parse()`: `ObjectSchema` (`/data`),
+`PageSchema` / `ViewSchema` / `DashboardSchema` / `FormViewSchema` (`/ui`), `FlowSchema` /
+`StateMachineSchema` (`/automation`), `PluginSchema` (`/kernel`), `PermissionSetSchema`
+(`/security`), `AgentSchema` (`/ai`). Calling one is right in a **test**, or when building
+metadata programmatically — `content/docs/customization/testing-and-ci.mdx` shows that shape,
+and `scripts/analytics-reconcile/run.ts` calls `DatasetSchema.parse()`. It is ⛔ not the
+authoring form for a file under `src/`.
+
+⚠️ Several of those types have **no instance in this app**: no `*.form.ts`,
+`*.statemachine.ts`, `*.capabilities.ts` or `*.agent.ts` exists under `src/`, and
+`pnpm validate` reports `Runtime: 0 plugins`. App-authored agents were **retired** (#512) and
+the AI surface is skills-only (ADR-0063 §2) — `src/skills/*.skill.ts` via `defineSkill()`,
+attached to a platform agent by `surface`. ⛔ Do not author a `*.agent.ts`.
 
 > **There is no `workflow` metadata type** (ADR-0019/0020): `WorkflowRuleSchema` is not
 > exported by any installed `@objectstack/*` package, and `ObjectSchema` rejects
 > `workflows:` / `workflow:` by name. Field updates belong in `*.hook.ts`; status flips and
-> notifications in a `record_change` / `schedule` flow (item 3); approvals in an `approval`
-> node inside a flow. A record **lifecycle** constraint is not item 4 either — it is a
-> `validations[]` entry with `type: 'state_machine'` on the object, validated by
-> `ObjectSchema.parse()` (item 1); item 4's `StateMachineSchema` is a different shape
-> (`initial` / `states` / `on`) and does not validate that entry. Whether a given
-> constraint wants an invariant or a transition gate at all is decided by **Metadata
-> semantics rule 7** below.
+> notifications in a `record_change` / `schedule` flow; approvals in an `approval` node
+> inside a flow. A record **lifecycle** constraint is not a `StateMachineSchema` either — it
+> is a `validations[]` entry with `type: 'state_machine'` on the object, validated with the
+> rest of the object by `ObjectSchema.create()`; `StateMachineSchema` is a different shape
+> (`initial` / `states` / `on`) and does not validate that entry. Whether a given constraint
+> wants an invariant or a transition gate at all is decided by **Metadata semantics rule 7**
+> below.
 
 ## 🏷️ Field Type Guidance
 
