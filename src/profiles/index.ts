@@ -131,4 +131,9 @@ export { MarketingUserProfile } from './marketing-user.profile';
 export { SalesManagerProfile } from './sales-manager.profile';
 export { SalesRepProfile } from './sales-rep.profile';
 export { ServiceAgentProfile } from './service-agent.profile';
+// `service_manager` is the SAME set under the escalation pool's position name
+// (#1779) — the only spelling this platform has for binding a set to a second
+// position. The full ruling, the measurement behind it and the reversal path
+// are beside the export in `./service-agent.profile`.
+export { ServiceManagerProfile } from './service-agent.profile';
 export { SystemAdminProfile } from './system-admin.profile';
