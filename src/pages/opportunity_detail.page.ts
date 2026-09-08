@@ -253,6 +253,85 @@ export const OpportunityDetailPage: Page = {
                                 relationshipField: 'crm_opportunity',
                                 columns: ['crm_product', 'quantity', 'unit_price', 'total_price'],
                                 limit: 10,
+                                // The entry point that was missing (#1731). Every
+                                // OTHER surface already treated line items as
+                                // live — three profiles grant `allowCreate`, the
+                                // docs describe the amount rolling up from them,
+                                // and `billing-handoff.flow.ts`'s
+                                // `load_line_items` reads them on every won deal
+                                // — while nothing in the app could create one:
+                                // no action, no list view, no navigation entry,
+                                // no seed. A rep who wanted to itemise a deal had
+                                // to type the Amount by hand. Declared surface and
+                                // reachable surface now coincide again.
+                                //
+                                // What `add` writes is the whole reason a picker
+                                // is sufficient here. It creates a row carrying
+                                // exactly two authored keys —
+                                // `{ [relationshipField]: <opportunityId>,
+                                //    [linkField]: <pickedProductId> }` — and
+                                // nothing else. On this object that would leave
+                                // `quantity` and `unit_price` unset, and both are
+                                // `required` + `storage.notNull`, so the insert
+                                // would be refused. It is not, because the two
+                                // gaps are already filled by machinery that
+                                // predates this list:
+                                //
+                                //   quantity   -> the field's own `defaultValue: 1`
+                                //   unit_price -> `_line-item-price-fill.ts`, which
+                                //                 on `beforeInsert` stamps
+                                //                 `list_price` from the chosen
+                                //                 product and defaults the
+                                //                 negotiated `unit_price` to it
+                                //   discount   -> the field's own `defaultValue: 0`
+                                //   total_price-> the formula over the three above
+                                //
+                                // and `crm_product.list_price` is itself `required`
+                                // + `notNull`, so the hook can never fail to find a
+                                // source. Measured end-to-end, not reasoned:
+                                // `test/opportunity-line-item-add-picker.test.ts`
+                                // inserts the picker's exact two-key shape and
+                                // asserts the complete priced row, with an ablation
+                                // that unbinds the hook and shows the same insert
+                                // rejected as "Sales Price is required" — so the
+                                // assertion cannot pass vacuously.
+                                //
+                                // ⛔ Do not add a `label`. The button falls back to
+                                // the platform's own localized "Add"; the
+                                // translation bundles reach a page component through
+                                // `pages.<page>.components.<id>`, which carries
+                                // `label`/`title`/`description` for the COMPONENT
+                                // and has no route to a nested `add.label`. A
+                                // hand-authored string here would ship English into
+                                // the zh-CN / es-ES / ja-JP bundles with no key to
+                                // translate it under.
+                                //
+                                // `valueField` and `labelField` are both omitted on
+                                // purpose rather than restated: `valueField`
+                                // defaults to `id`, which is what the `crm_product`
+                                // lookup stores, and `labelField` defaults to the
+                                // picked object's own title field — `crm_product`
+                                // declares `nameField: 'display_title'` (ADR-0079),
+                                // so the picker labels rows "PRD-0001 - Widget" and
+                                // keeps ONE source of truth for a product's title.
+                                // That formula title is searchable only because the
+                                // object also declares `searchableFields`, which it
+                                // already does for exactly this reason.
+                                add: {
+                                  picker: {
+                                    object: 'crm_product',
+                                    // A retired product must not be sellable onto a
+                                    // new deal. `product.hook.ts`'s `beforeDelete`
+                                    // defines retirement as precisely this flag
+                                    // ("Set is_active=false to retire instead"),
+                                    // so the catalog's own retirement mechanism is
+                                    // what scopes the picker. All 13 seeded
+                                    // products carry `is_active: true`, so this
+                                    // narrows without emptying.
+                                    filter: [{ field: 'is_active', operator: 'equals', value: true }],
+                                  },
+                                  linkField: 'crm_product',
+                                },
                               },
                             },
                           ],
