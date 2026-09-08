@@ -162,19 +162,24 @@ about this repo make that wrapper necessary rather than decorative:
 
 ### Publishing
 
-After versions are updated, maintainers can publish all packages:
+Nothing in this repo is published to an npm registry. `hotcrm` is the only package
+Changesets sees and it is `private: true`, so `changeset publish` has an empty set
+to work on — Changesets' job here ends with the version bump and the `CHANGELOG.md`
+entry it writes.
+
+The app ships to the ObjectStack marketplace instead. Maintainers publish the bundle
+`pnpm build` compiles:
 
 ```bash
-pnpm release
+pnpm publish:marketplace:dry-run   # print the payloads without sending them
+pnpm publish:marketplace           # publish
 ```
 
-This command runs `pnpm build && changeset publish`, which:
-1. Compiles all TypeScript source into `dist/` (JavaScript + type declarations)
-2. Publishes each non-private package to the configured npm registry
-
-Only the compiled `dist/` folder is included in published packages (controlled by the `files` field in each `package.json`). Source code (`.ts` files) is **never** published to the registry.
-
-> **Note**: Packages are published to a private GitHub Packages registry (`https://npm.pkg.github.com`) with `restricted` access. The root `hotcrm` package is `private: true` — Changesets versions it and writes its `CHANGELOG.md`, but never publishes it to a registry; the app ships through the marketplace instead (`pnpm publish:marketplace`). See `docs/RELEASE_STRATEGY.md` for the full distribution strategy.
+> **Note**: publishing is one step of a longer release sequence, and
+> [`docs/RELEASE_STRATEGY.md`](docs/RELEASE_STRATEGY.md) is that runbook — version
+> sources, the `objectstack.config.ts` manifest version `changeset version` does not
+> touch, and the artifacts to confirm before announcing. It is the single source of
+> truth for the release process, so this section links to it rather than restating it.
 
 ## 🔄 Pull Request Process
 
