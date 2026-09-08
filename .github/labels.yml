@@ -18,6 +18,12 @@
 #               prio:p2 — triaged backlog, no near-term schedule
 #   provenance  upstream:objectstack — blocked on / caused by the platform
 #   workflow    needs-user-decision / skip-changeset
+#   pm state    pm:queue / pm:dispatched / pm:blocked / pm:on-hold /
+#               pm:awaiting-maintainer / pm:blocking / pm:epic / pm:retriage / pm:seat
+#   triage      duplicate / invalid / question / wontfix /
+#               good first issue / help wanted
+#   routing     docs / i18n / testing / ui / upstream
+#   lifecycle   finding / stale / post-preview / preview-1
 
 # --- type ---
 - name: bug
@@ -76,3 +82,94 @@
 - name: skip-changeset
   color: cccccc
   description: PR ships nothing to users (pure CI/docs chore) — changeset gate waived
+
+# ---------------------------------------------------------------------------
+# Inventory catch-up (#1501). The 22 entries below already existed as live
+# label objects but were undeclared, so `skip-delete: true` was the only thing
+# keeping them alive. Colors and descriptions are transcribed from the live
+# objects via `get_label` — NOT invented — so applying this manifest is a
+# no-op on every label's appearance; it only makes the manifest agree with
+# reality. 13 of them carry GitHub's default grey (ededed) and an empty
+# description because nothing ever styled them; declaring them here is what
+# makes styling them a reviewable one-line change later, and that pass is
+# deliberately NOT bundled into this inventory PR.
+#
+# ⛔ `priority:p0` is live, undeclared, and deliberately NOT declared here: its
+# description makes it a dispatch queue-jump control rather than a spelling
+# variant of the `prio:*` release axis, and `priority:p1`/`priority:p2` do not
+# exist. Deciding what it is belongs to #1792, not to this file.
+# ---------------------------------------------------------------------------
+
+# --- pm state machine (the dispatch protocol; pm:queue / pm:dispatched above) ---
+- name: "pm:blocked"
+  color: "ededed"
+  description: ""
+- name: "pm:on-hold"
+  color: "ededed"
+  description: ""
+- name: "pm:awaiting-maintainer"
+  color: "ededed"
+  description: ""
+- name: "pm:blocking"
+  color: "8250df"
+  description: "Derived cache from the Blocked-by reverse index: open card with open dependents — never hand-set"
+- name: "pm:epic"
+  color: "5319e7"
+  description: Parent delegated to a dedicated epic PM — other PMs never dispatch into its subtree
+- name: "pm:retriage"
+  color: "d4c5f9"
+  description: Awaiting triage re-judgement — coexists with the standing pm:* label; queued cards skip dispatch
+- name: "pm:seat"
+  color: "ededed"
+  description: ""
+
+# --- triage (GitHub's default set, in use since repo creation) ---
+- name: duplicate
+  color: "cfd3d7"
+  description: This issue or pull request already exists
+- name: invalid
+  color: "e4e669"
+  description: This doesn't seem right
+- name: question
+  color: "d876e3"
+  description: Further information is requested
+- name: wontfix
+  color: "ffffff"
+  description: This will not be worked on
+- name: good first issue
+  color: "7057ff"
+  description: Good for newcomers
+- name: help wanted
+  color: "008672"
+  description: Extra attention is needed
+
+# --- routing ---
+- name: docs
+  color: "ededed"
+  description: ""
+- name: i18n
+  color: "ededed"
+  description: ""
+- name: testing
+  color: "ededed"
+  description: ""
+- name: ui
+  color: "ededed"
+  description: ""
+- name: upstream
+  color: "ededed"
+  description: ""
+
+# --- lifecycle ---
+- name: finding
+  color: "ededed"
+  description: ""
+- name: stale
+  color: "ededed"
+  description: ""
+- name: post-preview
+  color: "ededed"
+  description: ""
+- name: preview-1
+  color: "ededed"
+  description: ""
