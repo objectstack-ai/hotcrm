@@ -92,8 +92,18 @@ export const AccountViews = defineView({
       type: 'gallery',
       label: 'Account Cards',
       data: { provider: 'object', object: 'crm_account' },
-      columns: ['name', 'industry', 'annual_revenue', 'phone'],
+      // `logo` rides in the projection for the same reason the timeline view
+      // carries its date fields: the list data source projects the configured
+      // columns, and `coverField` reads off that projection.
+      columns: ['name', 'industry', 'annual_revenue', 'phone', 'logo'],
       gallery: {
+        // The card art this view was named for. "Branded account cards" had a
+        // brand COLOUR and no brand IMAGE — `crm_account.logo` is the object's
+        // only image field and nothing displayed it, so every card drew the
+        // same blank cover. `coverFit` is left unstated: the schema's default
+        // is the crop these cards want, and materialising a default rewrites
+        // "the author said nothing" into "the author asked for this".
+        coverField: 'logo',
         cardSize: 'medium',
         titleField: 'name',
         visibleFields: ['industry', 'annual_revenue', 'number_of_employees', 'phone', 'website', 'owner_id'],
@@ -211,6 +221,11 @@ export const AccountViews = defineView({
           'parent_account',
           'is_active',
           'brand_color',
+          // The other half of the `branding` group. Without a form field there
+          // is no upload control anywhere in the app, so the logo the gallery
+          // cards now cover with could never have been set. Full span: an
+          // image drop target in a half-width cell is a thumbnail-sized one.
+          { field: 'logo', span: 'full' },
         ],
       },
       {

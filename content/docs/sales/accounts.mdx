@@ -35,7 +35,7 @@ The account detail screen is organised into 6 sections:
 | **Financials** | Annual revenue, number of employees, child account revenue |
 | **Contact Information** | Phone, website, billing address, office location (with map) |
 | **Ownership & Status** | Owner, parent account, active flag |
-| **Branding** | Brand color (used as the avatar accent) |
+| **Branding** | Brand color (used as the avatar accent), company logo (uploaded image — PNG, JPEG, SVG or WebP, up to 2 MB) |
 | **System** | Timestamps, audit trail |
 
 ## Account hierarchy
@@ -127,7 +127,7 @@ Accounts opens on **All Accounts**, and the switcher along the top of the list c
 | View | What it shows |
 | --- | --- |
 | **All Accounts** *(the landing view)* | Every account whatever its type, highest **Annual Revenue** first. Annual Revenue carries a column total and **Employees** a column average, so the header line is the whole book at a glance. Rows are tinted by the **Active** flag — the grey rows are the inactive ones (`is_active = false`), which is where retired accounts stay visible instead of needing a list of their own. 50 rows a page, export to CSV or XLSX, and with rows selected: **Update Tier**, **Transfer Owner**, **Delete**. |
-| **Account Cards** | The same accounts as branded cards — industry, annual revenue, employees, phone, website and owner under the account name. |
+| **Account Cards** | The same accounts as branded cards, each one headed by the account's **Company Logo** — industry, annual revenue, employees, phone, website and owner under the account name. An account with no logo uploaded keeps the card, without the image. |
 | **Accounts by Location** | Accounts plotted on a map. The pin comes from **Office Location**, not from the billing address, so an account that has a billing address but no office location is missing from this view — and only from this view. |
 | **Enterprise Accounts** | Accounts with **Annual Revenue of $10M or more**, biggest first, with quick-filter dropdowns for **Industry** (with a count per value), **Type** and **Owner** above the grid. This is a revenue cut, not the **Customer Tier** field: an account you tiered *Enterprise* at $5M of revenue is not here. |
 | **My Accounts** | The accounts you own, most recently active first (**Last Activity Date**, descending). |

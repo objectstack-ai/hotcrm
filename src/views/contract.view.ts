@@ -128,10 +128,22 @@ export const ContractViews = defineView({
         fields: ['signed_date', 'signed_by', 'document_url'],
       },
       {
+        // The contract's two markdown bodies, together and in the order a
+        // reader needs them — the question #1826 asked this form to answer.
+        // They are not redundant, and `content/docs/revenue/contracts.mdx`
+        // already rules which is which: **Description** is the plain summary
+        // of what this contract is (declared on the `basic` group, listed
+        // there under "Contract Information"), while **Special Terms** is
+        // where every free-text TERM goes — the doc sends renewal
+        // instructions, an unlisted billing cadence and an unlisted payment
+        // arrangement to Special Terms by name, three separate times.
+        // Description was the one field in that inventory no form offered, so
+        // the summary a reader was told the record carries could not be
+        // written. One column, because both are long-form.
         name: 'notes',
         label: 'Notes',
         columns: 1,
-        fields: ['special_terms', 'billing_address'],
+        fields: ['description', 'special_terms', 'billing_address'],
       },
     ],
   },
