@@ -587,12 +587,23 @@ governed path governs the whole diff however small that part of it is. A governe
 `skip-changeset` label) or that never ran because a path filter excluded it
 (`link-check` on a diff carrying no `.md`) is not a failure.
 
+**Arming does not itself merge — it enqueues.** This repo's `main` ruleset carries a
+**merge queue**, and the queue is what performs the (squash) merge. Because a seat arms
+only once every check has finished, the enqueue fires at once and the queue merges within
+seconds — a green PR that pauses briefly after arming is landing, not stuck. ⛔ Do not
+re-derive a five-minute wait from the ruleset's `min_entries_to_merge_wait_minutes`: that
+parameter caps how long the queue *gathers* a group, and never engages while
+`min_entries_to_merge` is `1`.
+
 Written down because an unwritten landing rule is re-derived by every seat, and
 re-derivation is where seats diverge — invisibly, until the divergence produces a merge
 nobody authorised.
 
 > Ruling: #1742, decision batch #81 (2026-09-08), which chose this over "every PR waits
-> for the maintainer". Governed surfaces graded on #1233.
+> for the maintainer". Governed surfaces graded on #1233. *The queue is named here on
+> #1815 — PR #1798 omitted it after two probes that cannot see a queue at rest; the
+> repo's **rulesets** are the channel that answers, and the ruling's own "the merge
+> queue remains the only route in" was right.*
 
 ### Verifying UI in the browser
 
