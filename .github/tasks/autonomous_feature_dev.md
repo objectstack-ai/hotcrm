@@ -14,7 +14,7 @@ Here is a prompt you can copy-paste to GitHub Copilot to trigger the **Autonomou
 1.  **Architecture Phase**: strictly follow the **"Feature-to-File" Mapping Strategy** in basic `architect.md`. Output a table of all files to be created.
 2.  **Metadata Phase**: Create the `*.object.ts` files first. These are the foundation.
 3.  **Review Phase**: Stop and ask me if the schema looks correct before proceeding to Logic and UI.
-4.  **Implementation Phase**: Once approved, generate the Logic (`.hook.ts`), Automation (`.workflow.ts`), and UI (`.page.ts`) files.
+4.  **Implementation Phase**: Once approved, generate the Logic (`.hook.ts`), Automation (`.flow.ts` — there is no `workflow` metadata type, see `AGENTS.md` §Schema Validation Requirements), and UI (`.page.ts`) files.
 
 **Self-Correction**:
 - Ensure all lookup / master-detail targets (`Field.lookup(...)` / `Field.masterDetail(...)`) name real objects defined in Phase 2.
