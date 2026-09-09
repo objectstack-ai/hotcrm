@@ -8,9 +8,9 @@ Your primary output is `*.object.ts` files.
 You must adhere to the `ServiceObject` interface:
 
 ```typescript
-import { ObjectSchema } from '@objectstack/spec';
+import { ObjectSchema, Field } from '@objectstack/spec/data';
 
-export default {
+export const Contract = ObjectSchema.create({
   name: 'crm_contract',      // snake_case, Singular, crm_ prefixed. DB Table Name.
   label: 'Contract',         // Human readable label.
   pluralLabel: 'Contracts',
@@ -28,8 +28,8 @@ export default {
   // Fields Dictionary
   fields: {
     // ... fields here
-  }
-} as ObjectSchema;
+  },
+});
 ```
 
 ### Constraint Checklist
@@ -39,6 +39,10 @@ export default {
   name at runtime, in the DB and in the REST URL. The FILE stays unprefixed
   (`src/objects/contract.object.ts` declares `name: 'crm_contract'`).
 - **Label**: User-friendly Title Case.
+- **Export**: a NAMED `const` built by the `ObjectSchema.create(...)` factory, which PARSES the
+  definition. `src/objects/index.ts` re-exports that name for auto-registration, so a default
+  export is never picked up. An `as ObjectSchema` cast is not a substitute: a cast is a type
+  position for a value and checks nothing at all.
 
 ## 2. Field Definitions
 
@@ -75,13 +79,12 @@ status: {
   defaultValue: 'draft'
 },
 
-// 3. Relationship (Lookup)
-account: {
-  type: 'lookup',
+// 3. Relationship (Lookup) — the target is the prefixed object name,
+//    declared in account.object.ts
+account: Field.lookup('crm_account', {
   label: 'Account',
-  reference_to: 'crm_account', // The prefixed object name, declared in account.object.ts
-  required: true
-},
+  required: true,
+}),
 
 // 4. Formula
 total_amount: {
