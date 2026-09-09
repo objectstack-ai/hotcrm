@@ -107,6 +107,32 @@ export const CampaignMember = ObjectSchema.create({
       required: true,
       storage: { notNull: true },
       group: 'basic',
+
+      // Curates the members panel on a campaign — and it is the ONE mechanism
+      // that actually reaches that panel. Measured in #944 and restated in
+      // `test/view-references.test.ts`: a detail-page related list reads
+      // `relatedListColumns` on the CHILD's lookup first, and only without it
+      // falls back to the child's `highlightFields` minus this lookup. The
+      // child's `list` view is never consulted, which is why authoring one
+      // here would not have shown anything.
+      //
+      // It is a SUPERSET of the fallback it replaces — Lead / Contact /
+      // Status / Response Date, in that order — plus the one column the panel
+      // was missing. `added_date` is the enrollment stamp: `readonly: true`
+      // (#1667) and written on every enrollment by the two elevated sub-flows
+      // #1807 built for it, so a marketer could see WHEN a member responded
+      // but not when they were added, on a register whose whole subject is
+      // the enrollment. It sits after the person and before the response
+      // lifecycle, which is the order the row happens in.
+      //
+      // ⛔ Deliberately NOT solved by adding `added_date` to
+      // `highlightFields`: that strip is hoisted out of the detail body, and
+      // `added_date` is the only field in the `basic` group that is neither
+      // the record title nor already in the strip — hoisting it would leave
+      // the group with nothing of its own and silently vanish its heading
+      // from every detail page (`field-group-shadowed`, the trap the note
+      // above this object's `fieldGroups` records being rescued from).
+      relatedListColumns: ['crm_lead', 'crm_contact', 'added_date', 'status', 'response_date'],
     }),
 
     // `deleteBehavior: 'cascade'` on BOTH party lookups (#696). A lookup

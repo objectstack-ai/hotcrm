@@ -117,6 +117,11 @@ export const CampaignViews = defineView({
           'owner_id',
           'is_active',
           'landing_page_url',
+          // The markdown body of the campaign brief. Declared on the `basic`
+          // group and filled by seven of the seed campaigns, but omitted from
+          // this enumeration — so the only surface that could show it did not,
+          // and a marketer could neither read nor write the brief they wrote.
+          { field: 'description', span: 'full' },
         ],
       },
       {

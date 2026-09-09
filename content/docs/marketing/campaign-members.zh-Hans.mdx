@@ -84,12 +84,12 @@ Conversion rate = members where status == Converted ÷ Sent
 
 ## 成员在哪里查看
 
-在营销活动详情页的 **Related**（相关）选项卡下，一个标题为 **Campaign Members** 的面板里。该面板列出这个活动的每一位成员，四列——**Lead**（线索）、**Contact**（联系人）、**Status**（状态）和 **Response Date**（响应日期）——并带着上面提到的 **New**（新建）按钮。
+在营销活动详情页的 **Related**（相关）选项卡下，一个标题为 **Campaign Members** 的面板里。该面板列出这个活动的每一位成员，五列——**Lead**（线索）、**Contact**（联系人）、**Added Date**（加入日期）、**Status**（状态）和 **Response Date**（响应日期）——并带着上面提到的 **New**（新建）按钮。列的顺序就是这行记录发生的顺序：谁被加入、什么时候加入、后来怎么响应。
 
 读者常带着两个预期过来，它们真正的落点是：
 
 - **没有 *Members* 选项卡。** 成员面板只是活动在共用的 *Related* 选项卡上的关联记录面板之一。
-- **没有任何成员列表视图** —— *All Members*、*Responded*、*Bounced / Unsubscribed*、*Converted to Opportunity* 都不存在。Campaign Member 对象一个列表视图都没有；即便有，关联列表面板也不读子对象的列表视图：它的列来自对象的 highlight 字段。产品里没有任何东西能把这个面板按状态筛选，也没有面向 Campaign Member 的报表，所以「所有退信」「所有转化」这类子集是活动上的一个**数字**而不是一份名单——见上文《指标如何汇总》一节，那里的每个比率都由成员状态实时算出。
+- **没有任何成员列表视图** —— *All Members*、*Responded*、*Bounced / Unsubscribed*、*Converted to Opportunity* 都不存在。Campaign Member 对象一个列表视图都没有；即便有，关联列表面板也不读子对象的列表视图：面板的列是在活动关联字段上直接定好的，从来不来自视图。产品里没有任何东西能把这个面板按状态筛选，也没有面向 Campaign Member 的报表，所以「所有退信」「所有转化」这类子集是活动上的一个**数字**而不是一份名单——见上文《指标如何汇总》一节，那里的每个比率都由成员状态实时算出。
 
 ## 给营销人员的提示
 
