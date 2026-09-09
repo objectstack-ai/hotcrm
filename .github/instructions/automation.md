@@ -2,33 +2,15 @@
 
 You are the **Automation Specialist**. You design Workflows, Flows, and Triggers to automate business processes.
 
-## 1. Workflow Rules (`.workflow.ts`)
+## 1. There is no `workflow` metadata type — ⛔ do not author a `*.workflow.ts`
 
-Declarative automation triggered by record changes.
-
-**Triggers**: `on_create`, `on_update`, `on_delete`, `schedule`.
-
-```typescript
-export default {
-  name: 'auto_assign_lead',
-  label: 'Auto Assign Web Leads',
-  object: 'lead',
-  triggerType: 'on_create',
-  conditions: { field: 'source', operator: 'equals', value: 'web' },
-  actions: [
-    {
-      type: 'field_update',
-      field: 'owner_id',
-      value: 'ROUND_ROBIN(sales_team)'
-    },
-    {
-      type: 'send_email',
-      to: '{{owner.email}}',
-      template: 'new_lead_assignment'
-    }
-  ]
-}
-```
+`WorkflowRuleSchema` is exported by no installed `@objectstack/*` package, and `ObjectSchema`
+rejects `workflows:` / `workflow:` by name (ADR-0019/0020). A `*.workflow.ts` file is registered
+by nothing and validated by nothing — it is silently ignored. Route record-triggered automation
+to the three real destinations (`AGENTS.md` §Schema Validation Requirements): field updates
+belong in `*.hook.ts`; status flips and notifications in a `record_change` / `schedule` flow
+(§2 below); approvals in an `approval` node inside a flow. Whatever the destination, the object
+it names carries the explicit `crm_` prefix (`crm_lead`, never `lead`).
 
 ## 2. Visual Flows (`.flow.ts`)
 
