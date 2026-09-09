@@ -59,7 +59,7 @@ hotcrm/
     - strictly typed using `@objectstack/spec`.
     - **NEVER** use YAML or JSON for metadata.
     - Object names must be `snake_case`.
-    - **All HotCRM business object names MUST use the `crm_` prefix and the prefix MUST be written explicitly in source** (e.g., `crm_account`, `crm_opportunity`, `crm_knowledge_article`). **No automatic prefix injection by the runtime.** Open architectural decision: AI-authored metadata is fragile around "context-aware" naming, so we trade verbosity for grep-ability. Cross-references via `reference_to` / `lookup` / `masterDetail` MUST use the prefixed name. Cube `sql:` fields, view `data.object`, hook `object:`, action `objectName:`, navigation `objectName:`, dashboard `object:`, translation `objects.{key}`, REST URLs, and DB table names ALL use the same prefixed name. The name in source = the name at runtime = the name in DB = the name in URL = the name in docs. No translation layer.
+    - **All HotCRM business object names MUST use the `crm_` prefix and the prefix MUST be written explicitly in source** (e.g., `crm_account`, `crm_opportunity`, `crm_knowledge_article`). **No automatic prefix injection by the runtime.** Open architectural decision: AI-authored metadata is fragile around "context-aware" naming, so we trade verbosity for grep-ability. Lookup and master-detail targets (`Field.lookup(...)` / `Field.masterDetail(...)`) MUST use the prefixed name. Cube `sql:` fields, view `data.object`, hook `object:`, action `objectName:`, navigation `objectName:`, dashboard `object:`, translation `objects.{key}`, REST URLs, and DB table names ALL use the same prefixed name. The name in source = the name at runtime = the name in DB = the name in URL = the name in docs. No translation layer.
 
 2.  **ObjectQL (No-SQL)**:
     - Data access MUST use **ObjectQL**, reached through the `ctx.api` surface. There is
@@ -138,7 +138,7 @@ When asked to implement a feature, you MUST follow this **Thinking Process**:
 ### Phase 3: Self-Correction
 After generating code, ask yourself:
 *   [ ] Did I respect the strictly typed `ServiceObject` interface?
-*   [ ] Are all `reference_to` pointing to real objects?
+*   [ ] Do all lookup / master-detail targets name real objects?
 *   [ ] Did I use ObjectQL instead of SQL?
 *   [ ] are file names strictly `snake_case`?
 
@@ -345,7 +345,7 @@ in order:
 
 ## ⚠️ Constraint Checklist
 
-- **Object Naming**: All HotCRM business objects MUST be prefixed with `crm_` (e.g. `crm_account`, `crm_opportunity`). The roster is deliberately **not** restated here — `src/objects/*.object.ts` is its source of truth. *Supersedes the hand-maintained fifteen-name list that stood in this bullet, which had already drifted three objects behind the tree — 2026-08-31 ruling, item 5.* All references — `reference_to`, `lookup`, `masterDetail`, cube `sql`, view `data.object`, hook `object`, navigation `objectName`, action `objectName`, dashboard `object` — MUST use the prefixed form. Platform objects keep their existing `sys_*` prefix.
+- **Object Naming**: All HotCRM business objects MUST be prefixed with `crm_` (e.g. `crm_account`, `crm_opportunity`). The roster is deliberately **not** restated here — `src/objects/*.object.ts` is its source of truth. *Supersedes the hand-maintained fifteen-name list that stood in this bullet, which had already drifted three objects behind the tree — 2026-08-31 ruling, item 5.* All references — `Field.lookup(...)` / `Field.masterDetail(...)` targets, cube `sql`, view `data.object`, hook `object`, navigation `objectName`, action `objectName`, dashboard `object` — MUST use the prefixed form. Platform objects keep their existing `sys_*` prefix.
 - **i18n**: Every new object must have entries in all 4 locale files (`src/translations/{en,zh-CN,es-ES,ja-JP}.ts`) — label, pluralLabel, all field labels + option labels, view labels, navigation labels. No new feature ships without all 4 locales.
 - **Docs**: Every new object/feature requires user-facing documentation under `content/docs/` (e.g. `getting-started/`, `guides/`, `marketing/`, `analytics/`, `administration/`) written for business users + admins (not developers) — business concepts, never a hand-copied machine roster (see **Documentation discipline** below).
 - **Documentation**: written in English, then translated — `content/docs` ships `.zh-Hans.mdx` and `.zh-Hant.mdx` pages beside the English ones, and that Chinese surface follows the three rules under **Documentation discipline** below. *Supersedes "All documentation MUST be in English", a blanket the shipped tree already contradicted — 2026-08-31 ruling, item 6.*
