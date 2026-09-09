@@ -382,6 +382,15 @@ describe('no test may hand a hook handler a plain-object ctx (#1298)', () => {
     return code.slice(open);
   };
 
+  /**
+   * A hook handler being INVOKED — the call site both rules key on.
+   *
+   * Single-sourced because rule B and the surface check in the self-test have
+   * to discriminate the same class: a cross-reference that proves the presence
+   * of something other than what is judged proves nothing.
+   */
+  const CALLS_HANDLER = /(?<![\w$])handler\s*\(\s*[^)\s]/;
+
   const HAS_EVENT = /(^|[{,\s])event\s*:/;
   const ROUTED_INPUT = /(^|[^\w$])input\s*:\s*(?:engineFlatInput|makeCtx)\s*\(/;
   const IMPORTS_HARNESS = /from\s+'(?:\.\.?\/)*(?:helpers\/)?hook-harness'/;
@@ -423,7 +432,7 @@ describe('no test may hand a hook handler a plain-object ctx (#1298)', () => {
     const offenders: string[] = [];
     for (const { file, raw } of sources) {
       const code = codeOnly(raw);
-      if (!/(?<![\w$])handler\s*\(\s*[^)\s]/.test(code)) continue;
+      if (!CALLS_HANDLER.test(code)) continue;
       if (IMPORTS_HARNESS.test(raw) && USES_ROUTER.test(code)) continue;
       offenders.push(file);
     }
@@ -468,5 +477,28 @@ describe('no test may hand a hook handler a plain-object ctx (#1298)', () => {
 
     // The scan must read CODE, not prose: this very file documents the bad form.
     expect(codeOnly("const s = 'handler({ event: 1 })';")).not.toContain('event');
+
+    // ...and the SURFACE still carries what the detector is tuned to read. The
+    // probes above prove the detector on planted text; nothing above proves the
+    // scanned tree holds a single call site for it to read, and a file COUNT
+    // would not prove it either — 175 real `.ts` files under `test/` stay 175
+    // real files whichever way they invoke a hook.
+    //
+    // The gap is not hypothetical here. 13 files already reach a hook through
+    // `runHookBody(...)` instead of `handler(...)`, a form neither rule matches;
+    // the class these rules discriminate within is actively migrating out of
+    // the surface. Finish that migration and rules A and B both report clean
+    // over a real, non-empty tree that carries nothing they can judge — the
+    // #1755 shape, one tree over, where a real file that could not carry the
+    // thing kept a rule green for the whole life of the bug. Measured on this
+    // branch's base: 31 files still call a handler directly.
+    const callers = sources.filter(({ raw }) => CALLS_HANDLER.test(codeOnly(raw)));
+    expect(
+      callers.length,
+      'no file in the scanned tree invokes a hook handler at all, so rules A and B are ' +
+        'reading past every hook invocation in the repo and reporting clean over it. The ' +
+        'tree has moved to another invocation form — teach both rules that form; ⛔ do not ' +
+        'delete them, and ⛔ do not widen the walk to make this number come back.',
+    ).toBeGreaterThan(0);
   });
 });
