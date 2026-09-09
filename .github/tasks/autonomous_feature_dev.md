@@ -17,7 +17,7 @@ Here is a prompt you can copy-paste to GitHub Copilot to trigger the **Autonomou
 4.  **Implementation Phase**: Once approved, generate the Logic (`.hook.ts`), Automation (`.workflow.ts`), and UI (`.page.ts`) files.
 
 **Self-Correction**:
-- Ensure all foreign keys (`reference_to`) point to valid objects defined in Phase 2.
+- Ensure all lookup / master-detail targets (`Field.lookup(...)` / `Field.masterDetail(...)`) name real objects defined in Phase 2.
 - Ensure all ObjectQL queries in Phase 4 match the fields defined in Phase 2.
 
 Start by analyzing the requirements and presenting the **Architecture Plan**.
