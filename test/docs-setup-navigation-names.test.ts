@@ -635,21 +635,6 @@ const KNOWN_UNRESOLVED_APP_WORDS: {
       'in passing, and every one of those leaves is still resolved live against ' +
       'Setup. Rewriting the citations, or deciding they are fine, is its own card.',
   },
-  {
-    word: 'Settings',
-    app: null,
-    why:
-      '#1403 — guides/email-and-calendar.mdx sketches an intended surface, ' +
-      '"reusable templates saved in Settings > Email Templates", inside a section ' +
-      'headed "Email templates (not shipped yet)" whose next paragraph says HotCRM ' +
-      'ships none of it. There is no Settings app. The only real Email Templates ' +
-      'page is Studio > Integration > Email Templates, and it is not what the ' +
-      'sentence promises (per-team folders, approval gating), so pointing the sketch ' +
-      'at it would make the page claim a screen that does not do those things. Found ' +
-      'by the drift check below — the first rule in this file able to see it — and ' +
-      'quarantined rather than reworded, because rewording is a docs call, not a ' +
-      'mechanical one. Filed as #1730.',
-  },
 ];
 
 /** The quarantine entry for `word`, if it has one. */
