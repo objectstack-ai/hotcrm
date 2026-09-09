@@ -204,7 +204,10 @@ pnpm publish:marketplace           # publish
    - Ensure CI checks pass
 
 4. **Getting Merged**
-   - At least one approval required
+   - Who may land a PR, and when, is defined in [`AGENTS.md`](AGENTS.md)
+     §How a green PR lands — a PR whose checks have all finished with none
+     failed lands via auto-merge; a diff touching a governed path stays a
+     draft for the maintainer
    - All CI checks must pass
    - No merge conflicts
    - Branch will be squash-merged
