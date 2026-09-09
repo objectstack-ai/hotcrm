@@ -21,7 +21,7 @@ loader registers:
 HotCRM v3.0.0
 Data: 18 Objects  331 Fields
 UI: 1 Apps  14 Views  8 Pages  5 Dashboards  10 Reports  31 Actions
-Logic: 27 Flows
+Logic: 29 Flows
 Security: 12 Positions  7 Permissions
 ```
 
@@ -73,7 +73,7 @@ pnpm verify
 | --- | --- |
 | Node.js | `^22.11 \|\| ^24 \|\| >=26` |
 | pnpm | `>=10.0.0` |
-| ObjectStack packages | `17.3.0` |
+| ObjectStack packages | `17.4.0` |
 | Local dev port | `4001` |
 
 Each row above is asserted against `package.json` (`engines`, the `@objectstack/*`

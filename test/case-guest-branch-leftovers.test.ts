@@ -252,16 +252,23 @@ describe('crm_case — a guest cannot state an escalation reason (#1296 item 1)'
     // above would still pass if the strip lost its `isGuestSubmission` guard
     // and started blanking staff edits — which would break the three flows that
     // are the column's only real writers.
+    // ⚰️ `is_escalated: true` was planted and asserted here until the
+    // @objectstack/* 17.4.0 migration — see the same retirement in
+    // `guest-submission-sanitisation.test.ts`. It is `readonly: true`, and
+    // objectql 17.4.0 strips a readonly column from a non-system INSERT too, so
+    // keeping the assertion would re-pin a platform rule locally (AGENTS.md
+    // scope rule 3). `escalation_reason` is the column this control is ABOUT —
+    // it is deliberately NOT readonly (`case.object.ts` says so in as many
+    // words) — and it still carries the whole guarantee: a staff write keeps the
+    // reason the guest branch blanks.
     const caseId = await insertAs(agentCtx, 'crm_case', {
       subject: 'Escalated by an agent',
       description: 'Raised internally after a call.',
-      is_escalated: true,
       escalation_reason: 'Customer is a strategic account',
     });
     const stored = await rowById('crm_case', caseId);
 
     expect(stored.escalation_reason).toBe('Customer is a strategic account');
-    expect(stored.is_escalated).toBe(true);
   }, 60_000);
 });
 

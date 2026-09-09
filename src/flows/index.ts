@@ -6,6 +6,12 @@ import type { Flow } from '@objectstack/spec/automation';
  * Flow Definitions Barrel
  */
 export { CampaignEnrollmentFlow } from './campaign-enrollment.flow';
+// The one elevated step behind Enroll Members (AGENTS.md house rule 9) — called
+// by `campaign_enrollment` through `subflow` nodes, never invoked from the UI.
+export {
+  CampaignLeadMemberEnrollFlow,
+  CampaignContactMemberEnrollFlow,
+} from './campaign-member-enroll.flow';
 export { CaseEscalationFlow, CaseEscalationOnCreateFlow } from './case-escalation.flow';
 export { EscalateCaseFlow, CloseCaseFlow, ClaimCaseFlow } from './case-actions.flow';
 // The one elevated step behind Escalate Case (#1434) — called by
@@ -37,6 +43,10 @@ export {
 } from './billing-handoff.flow';
 
 import { CampaignEnrollmentFlow } from './campaign-enrollment.flow';
+import {
+  CampaignLeadMemberEnrollFlow,
+  CampaignContactMemberEnrollFlow,
+} from './campaign-member-enroll.flow';
 import { CaseEscalationFlow, CaseEscalationOnCreateFlow } from './case-escalation.flow';
 import { EscalateCaseFlow, CloseCaseFlow, ClaimCaseFlow } from './case-actions.flow';
 import { CaseEscalationStampFlow } from './case-escalation-stamp.flow';
@@ -66,6 +76,9 @@ import {
 export const allFlows: Flow[] = [
   // Core process flows
   CampaignEnrollmentFlow,
+  // Registered so `campaign_enrollment`'s `subflow` nodes can resolve them by name.
+  CampaignLeadMemberEnrollFlow,
+  CampaignContactMemberEnrollFlow,
   CaseEscalationFlow,
   CaseEscalationOnCreateFlow,
   EscalateCaseFlow,

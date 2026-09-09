@@ -1001,7 +1001,7 @@ describe('the two defects, reproduced end-to-end', () => {
   }, 60_000);
 
   it('campaign_enrollment: a campaign that vanished still reaches a verdict', async () => {
-    const b = await boot(['campaign_enrollment']);
+    const b = await boot(['campaign_enrollment', 'campaign_lead_member_enroll', 'campaign_contact_member_enroll']);
     try {
       const api = b.ql.createContext({ isSystem: true });
       const camp = await api.object('crm_campaign').insert({
@@ -1028,7 +1028,7 @@ describe('the two defects, reproduced end-to-end', () => {
   }, 60_000);
 
   it('campaign_enrollment: an OPEN campaign still enrols, so the guard did not close the door', async () => {
-    const b = await boot(['campaign_enrollment']);
+    const b = await boot(['campaign_enrollment', 'campaign_lead_member_enroll', 'campaign_contact_member_enroll']);
     try {
       const api = b.ql.createContext({ isSystem: true });
       const camp = await api.object('crm_campaign').insert({
@@ -1065,7 +1065,7 @@ describe('the two defects, reproduced end-to-end', () => {
     // engine refuses to produce. If a platform upgrade drops that enforcement,
     // this goes red and the declared default becomes the only thing standing
     // between edge e4/e7 and a `No such key` abort.
-    const b = await boot(['campaign_enrollment']);
+    const b = await boot(['campaign_enrollment', 'campaign_lead_member_enroll', 'campaign_contact_member_enroll']);
     try {
       const api = b.ql.createContext({ isSystem: true });
       const camp = await api.object('crm_campaign').insert({
@@ -1101,7 +1101,7 @@ describe('the two defects, reproduced end-to-end', () => {
     // dialog pre-set to `leads` and the LEAD branch. The declared default
     // defers to the param, and the screen field derives its prefill from the
     // variable — so what the caller asked for is what the user sees.
-    const b = await boot(['campaign_enrollment']);
+    const b = await boot(['campaign_enrollment', 'campaign_lead_member_enroll', 'campaign_contact_member_enroll']);
     try {
       const api = b.ql.createContext({ isSystem: true });
       const camp = await api.object('crm_campaign').insert({

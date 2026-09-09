@@ -254,19 +254,26 @@ describe('crm_case — guest submission sanitisation', () => {
     // instead of a guest: nothing is blanked. Without this, every assertion
     // above would still pass if the sanitisation lost its `isGuestSubmission`
     // guard and started blanking staff edits too.
+    // ⚰️ `is_escalated: true` was planted here too, and asserted back, until the
+    // @objectstack/* 17.4.0 migration. It is `readonly: true` on `crm_case`, and
+    // objectql 17.4.0 strips a static readonly field from a NON-SYSTEM caller's
+    // INSERT payload as well as from an update. Asserting it came back would now
+    // be pinning a platform write rule locally, which AGENTS.md scope rule 3
+    // forbids — so the planted value is gone rather than re-aimed at the new
+    // contract. The control is unchanged in what it CONTROLS FOR: three distinct
+    // planted values became two, both on user-writable columns, and either one
+    // failing still means the guest strip stopped being guest-scoped.
     const caseId = await insertAs(agentCtx, 'crm_case', {
       subject: 'Escalated by an agent',
       description: 'Raised internally.',
       internal_notes: 'STAFF-NOTES',
       resolution: 'STAFF-RESOLUTION',
-      is_escalated: true,
       escalation_reason: 'Customer is a strategic account',
     });
     const stored = await rowById('crm_case', caseId);
 
     expect(stored.internal_notes).toBe('STAFF-NOTES');
     expect(stored.resolution).toBe('STAFF-RESOLUTION');
-    expect(stored.is_escalated).toBe(true);
     // #1505's half of this control was `customer_rating` / `customer_feedback`:
     // an authenticated agent logging a rating had to keep it, or the strip had
     // stopped being guest-scoped. #1428 retired both columns, so there is no
