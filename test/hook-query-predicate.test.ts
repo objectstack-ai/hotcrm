@@ -312,19 +312,47 @@ describe('no hook-side code may query by `filter`', () => {
   const hookDir = join(process.cwd(), 'src', 'objects');
   const hookFiles = readdirSync(hookDir).filter((f) => f.endsWith('.ts'));
 
+  /**
+   * A predicate key written as an OBJECT KEY — `.filter(` the array method is
+   * not one. Single-sourced so the rule below and the surface check above
+   * cannot come to discriminate different classes: the thing the rule judges
+   * is the thing the surface must still hold.
+   */
+  const predicateKey = (key: 'where' | 'filter'): RegExp =>
+    new RegExp(`(^|[{,\\s])${key}\\s*:`);
+
+  const codeOf = (file: string): string => readFileSync(join(hookDir, file), 'utf8');
+
   it('finds files to check (guards against a silently empty scan)', () => {
     expect(hookFiles.length).toBeGreaterThan(10);
     // The shared modules are the ones a `*.hook.ts` glob would have skipped.
     expect(hookFiles).toContain('_line-item-price-fill.ts');
+    // …but that is a FILENAME, and this rule judges QUERIES. `readdirSync` does
+    // not recurse, so hook bodies relocated under `src/objects/<sub>/` would
+    // leave a real, non-empty surface of schema files here — 44 files stay
+    // dozens of files — carrying not one predicate for the rule to read, and
+    // the name above can survive that as an empty shim. Equality against a
+    // second population is what `hook-write-shape.test.ts:444` can do because
+    // its runtime half enumerates the writes; this file's runtime half queries
+    // a synthetic engine and enumerates nothing, so the honest form is the
+    // weaker one: the surface still holds an instance of the class.
+    const querying = hookFiles.filter((f) => predicateKey('where').test(codeOf(f)));
+    expect(
+      querying.length,
+      'no file under src/objects/ writes a `where:` predicate at all, so the rule below is ' +
+        'reading past every hook query in the repo and would report clean over a tree that ' +
+        'cannot contain the defect. Re-derive the surface against wherever the hook bodies ' +
+        'went; do not delete the rule.',
+    ).toBeGreaterThan(0);
   });
 
   it.each(hookFiles)('%s uses `where:`, never `filter:`', (file) => {
-    const src = readFileSync(join(hookDir, file), 'utf8');
+    const src = codeOf(file);
     // `.filter(` (the array method) is fine; `filter:` as an object key is not.
     const offenders = src
       .split('\n')
       .map((line, i) => ({ line: line.trim(), no: i + 1 }))
-      .filter(({ line }) => /(^|[{,\s])filter\s*:/.test(line));
+      .filter(({ line }) => predicateKey('filter').test(line));
     expect(
       offenders,
       `${file} passes a \`filter:\` query key. On the pinned engine that is an ALIAS of ` +

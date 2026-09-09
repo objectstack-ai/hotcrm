@@ -287,6 +287,13 @@ const TEST_FILES = walk(TEST_ROOT).filter((f) => f.endsWith('.test.ts')).map(rel
 const PACK_FILES = [PACK_BARREL, ...walk(PACK_ROOT).filter((f) => f.endsWith('.ts')).map(rel)];
 const ZH_PAGES = [...HANS_PAGES, ...HANT_PAGES];
 
+/**
+ * The ledger this file reads by LITERAL path, in two blocks below — single-
+ * sourced so those reads and the walk-reaches-it cross beside `TEST_FILES`
+ * cannot come to name different files.
+ */
+const ROW_LABEL_LEDGER = 'test/sharing-coverage.test.ts';
+
 /** MDX ships whole; TypeScript ships only its string literals. */
 const scannable = (file: string): string =>
   file.endsWith('.ts') ? stripComments(read(file)) : read(file);
@@ -392,6 +399,21 @@ describe.each(Object.entries(TERMS))('%s is one Chinese word everywhere (#837)',
       expect(HANS_PAGES.length, 'no zh-Hans pages found').toBeGreaterThan(50);
       expect(HANT_PAGES.length, 'no zh-Hant pages found').toBeGreaterThan(50);
       expect(TEST_FILES.length, 'no test files found').toBeGreaterThan(100);
+      // The pack cross below is one half of the #1778 lesson; this is the
+      // other half, for the test-ledger walk. `TEST_FILES` feeds the
+      // retired-spelling rule, while the two blocks that pin what a ledger
+      // must still SAY reach it by literal path — so a walk that stopped
+      // reaching the ledgers would leave both readings healthy: the count is
+      // made up of 100+ other suites and the literal read still opens the
+      // file. Cross the two, or the absence rule scans a real, non-empty tree
+      // that no longer holds a single ledger it is meant to judge.
+      expect(
+        TEST_FILES,
+        `the test walk no longer reaches ${ROW_LABEL_LEDGER}, which the blocks below read by ` +
+          'literal path — so the retired-spelling rule is no longer scanning the ledger whose ' +
+          'ROW_LABEL row it exists to police. Re-derive the surface against the tree; do not ' +
+          'delete the rule.',
+      ).toContain(ROW_LABEL_LEDGER);
       // The pack scan is the one that went quiet (#1755), and a file COUNT
       // would not have caught it — the barrel it used to name is still one
       // real file. So the surface is proved against the pack the rules above
@@ -409,7 +431,7 @@ describe.each(Object.entries(TERMS))('%s is one Chinese word everywhere (#837)',
     it('comment stripping leaves the code it is meant to judge', () => {
       // If the stripper ever returned '' the ledger scan would pass by reading
       // nothing — the exact vacuity this file is supposed to be immune to.
-      const stripped = scannable('test/sharing-coverage.test.ts');
+      const stripped = scannable(ROW_LABEL_LEDGER);
       expect(stripped.length, 'stripComments returned almost nothing').toBeGreaterThan(2000);
       expect(stripped, 'the ROW_LABEL ledger was stripped away with the comments').toContain(
         'ROW_LABEL',
@@ -523,6 +545,16 @@ describe.each(Object.entries(TERMS))('%s is one Chinese word everywhere (#837)',
         `no ledger list recorded for ${name} — write one, or write [] once you have checked`,
       ).toContain(name);
       const files = LEDGERS[name] ?? [];
+      // Same crossing as the one beside `TEST_FILES`, but derived rather than
+      // by exemplar: EVERY ledger this row names is read below by literal
+      // path, so every one of them has to be inside the walk that the
+      // retired-spelling rule scans. A new TERMS row gets the cross for free.
+      const unscanned = files.filter((f) => !TEST_FILES.includes(f));
+      expect(
+        unscanned,
+        `ledger(s) pinned by literal path that the test walk no longer reaches, so the ` +
+          `retired-spelling rule is not scanning them: ${unscanned.join(', ')}`,
+      ).toEqual([]);
       const missing = files.filter((f) => !scannable(f).includes(hans));
       expect(
         missing,
@@ -530,7 +562,7 @@ describe.each(Object.entries(TERMS))('%s is one Chinese word everywhere (#837)',
       ).toEqual([]);
       if (name === 'crm_case') {
         expect(
-          scannable('test/sharing-coverage.test.ts'),
+          scannable(ROW_LABEL_LEDGER),
           `sharing-coverage's ROW_LABEL lost its Traditional cell for ${name}`,
         ).toContain(term.hant ?? hans);
       }

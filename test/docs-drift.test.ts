@@ -402,6 +402,21 @@ describe('published docs pages do not drift from the large-deal condition', () =
           `point this list at wherever that quote moved to, do not delete the entry.`,
       );
     }
+
+    // …and the walk must actually REACH them. `existsSync` answers about the
+    // disk, `PAGES.length` answers about the 100+ other pages: neither notices
+    // a walk narrowed to skip the directory these six live in, and the
+    // exclusive-phrasing sweep below would then stop covering precisely the
+    // pages that publish the condition. Their CONTENT is pinned by the block
+    // after this one, so crossing the literal list against the walk's output
+    // completes the pair rather than restating a filename.
+    const unreached = VERBATIM_PAGES.filter((p) => !PAGES.includes(p));
+    expect(
+      unreached,
+      `these pages exist but the content/docs walk no longer reaches them, so the scan below ` +
+        `is not reading them:\n  ${unreached.join('\n  ')}\n` +
+        `Re-derive the walk against the tree; do not delete the entry.`,
+    ).toEqual([]);
   });
 
   it('the pages quoting the CEL condition verbatim quote the compiled one', () => {
