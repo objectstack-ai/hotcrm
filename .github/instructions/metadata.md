@@ -86,13 +86,11 @@ account: Field.lookup('crm_account', {
   required: true,
 }),
 
-// 4. Formula
-total_amount: {
-  type: 'formula',
+// 4. Formula — `F` is the CEL template tag, imported from '@objectstack/spec'
+total_amount: Field.formula({
   label: 'Total',
-  formula: 'quantity * unit_price',
-  return_type: 'currency'
-}
+  expression: F`record.quantity * record.unit_price`,
+}),
 ```
 
 ## 3. Validation Rules
