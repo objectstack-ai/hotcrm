@@ -13,9 +13,10 @@
 # Taxonomy:
 #   type        bug / enhancement / documentation / dependencies
 #   area        metadata / backend / ci/cd / configuration
-#   priority    prio:p0 — blocking the current release goal
-#               prio:p1 — next in line once P0s clear
-#               prio:p2 — triaged backlog, no near-term schedule
+#   priority    priority:p0 — critical blocker; also the dispatch loop queue-jump
+#               priority:p1 — required for production / M2
+#               priority:p2 — important, M3
+#               priority:p3 — lowest tier (no fleet description authored)
 #   provenance  upstream:objectstack — blocked on / caused by the platform
 #   workflow    needs-user-decision / skip-changeset
 #   pm state    pm:queue / pm:dispatched / pm:blocked / pm:on-hold /
@@ -53,16 +54,29 @@
   color: "bfd4f2"
   description: Build and app configuration files
 
-# --- priority ---
-- name: "prio:p0"
+# --- priority (the fleet axis; #1792 / decision batch #97 migrated prio:* onto it) ---
+# ⚠️ #1792 ruled this description verbatim, appending the queue-jump sentence to
+# the fleet wording. GitHub caps a label description at 100 characters and the
+# ruled string is 133, so it CANNOT be stored — the API rejects it with 422
+# "description is too long (maximum is 100 characters)", and `label-sync` would
+# fail on it. Declared here is the ruling main clause (the fleet description,
+# verbatim, 39 chars). The full ruled string, for the record and unabridged:
+#   "Critical: blocker, must ship before MVP. Queue-jump: outranks batch and
+#    breaks the round — never exempts claiming or same-file serial"
+# ⇒ which storable form the seat wants is the open question on #1792; the
+#   queue-jump semantics is protocol behaviour and lives in the PM protocol.
+- name: "priority:p0"
   color: "b60205"
-  description: Blocking the current release goal — do first
-- name: "prio:p1"
+  description: "Critical: blocker, must ship before MVP"
+- name: "priority:p1"
   color: "d93f0b"
-  description: Next in line once P0s clear
-- name: "prio:p2"
-  color: "fef2c0"
-  description: Triaged backlog — no near-term schedule
+  description: "High: required for production / M2"
+- name: "priority:p2"
+  color: "fbca04"
+  description: "Medium: important, M3"
+- name: "priority:p3"
+  color: "ededed"
+  description: ""
 
 # --- provenance ---
 - name: "upstream:objectstack"
@@ -94,10 +108,19 @@
 # makes styling them a reviewable one-line change later, and that pass is
 # deliberately NOT bundled into this inventory PR.
 #
-# ⛔ `priority:p0` is live, undeclared, and deliberately NOT declared here: its
-# description makes it a dispatch queue-jump control rather than a spelling
-# variant of the `prio:*` release axis, and `priority:p1`/`priority:p2` do not
-# exist. Deciding what it is belongs to #1792, not to this file.
+# `priority:p0` was the one label that pass left undeclared, pending #1792. It is
+# declared now, in the priority section above: decision batch #97 — recorded on
+# #1792 and confirmed by the maintainer — ruled that its queue-jump wording IS the
+# fleet p0 the dispatch loop reads, not a third concept, so hotcrm adopts the
+# fleet axis `priority:p0..p3` and the `prio:*` spelling of that same axis was
+# migrated card-by-card onto it and retired.
+#
+# ⛔ The three `prio:*` labels were DELETED, not merely undeclared — the one
+# deliberate exception to `skip-delete` above, taken only after a read-back
+# showed zero cards still carrying them. `priority:p1`, `priority:p2` and
+# `priority:p3` are transcribed from the objectstack fleet labels; p3 carries the
+# fleet default grey and an empty description because the fleet never authored
+# one, and inventing one here was out of scope for the ruling.
 # ---------------------------------------------------------------------------
 
 # --- pm state machine (the dispatch protocol; pm:queue / pm:dispatched above) ---
