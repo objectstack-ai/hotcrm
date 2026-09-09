@@ -21,7 +21,7 @@ export const Contract = ObjectSchema.create({
   enable: {
     trackHistory: true,      // Audit field changes
     apiEnabled: true,        // Expose to REST/GraphQL
-    search: true,            // Index in global search
+    searchable: true,        // Index in global search
     activities: true,        // Allow tasks/events attachment
   },
 
