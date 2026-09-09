@@ -28,7 +28,7 @@ export const ExecutiveDashboard: Dashboard = {
 
   columns: 12,
   gap: 4,
-  refreshInterval: 300, // 5 minutes
+  refreshIntervalSeconds: 300, // 5 minutes
 
   header: {
     showTitle: true,

@@ -337,24 +337,25 @@ describe('writer: a screen flow (the escalate_case shape)', () => {
 });
 
 // ────────────────────────────────────────── the INSERT path, separately ──
-
-describe('the strip is an UPDATE-path rule — insert is deliberately exempt', () => {
-  it('a plain user-context INSERT seeds the readonly column', async () => {
-    // `@objectstack/objectql/dist/core.js`: "INSERT remains deliberately exempt
-    // from the AUTHOR-declared readonly/readonlyWhen strips (a create may
-    // legitimately seed read-only columns…)". So "the platform drops writes to
-    // readonly fields" is not even true of every write VERB — seed data and
-    // any create path are unaffected.
-    const row = await ql.insert(
-      PROBE,
-      { name: 'seeded', locked_flag: true, open_flag: true },
-      { context: { userId: 'user_1' } },
-    );
-    const after = await readBack(String(row.id));
-    expect(after.open_flag).toBe(true);
-    expect(after.locked_flag, 'insert must not strip a readonly column').toBe(true);
-  });
-});
+//
+// ⚰️ RETIRED on the @objectstack/* 17.4.0 migration, not repaired.
+//
+// What stood here was `describe('the strip is an UPDATE-path rule — insert is
+// deliberately exempt')`, asserting that a plain user-context INSERT seeds a
+// readonly column. `@objectstack/objectql@17.4.0` reversed that as a declared
+// BREAKING behaviour change: *"a static `readonly` field is now stripped from a
+// non-system caller's INSERT payload inside `engine.insert`, exactly as it
+// already was on `engine.update`"* — the create-side strip moved out of the
+// DataProtocol ingress and into the engine, so `engine.insert` callers (the
+// automation engine's `create_record` among them) are no longer exempt.
+//
+// ⛔ It was NOT rewritten to assert the new contract. Restating a platform write
+// rule here is what AGENTS.md scope rule 3 forbids ("Tests in this repo pin this
+// repo's own business facts and nothing else"), and re-pinning it would grow the
+// gate farm this epic exists to shrink. The row belongs upstream: handed to epic
+// step 5c (objectstack#15953) with the rest of this file's platform-semantic
+// describes, which are still here only because the shipped `escalate_case` /
+// `campaign_enrollment` split cites them as its measured premise.
 
 // ───────────────── what the measurement means for the SHIPPED case flows ──
 

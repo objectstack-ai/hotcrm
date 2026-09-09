@@ -30,7 +30,7 @@ export const CrmOverviewDashboard: Dashboard = {
 
   columns: 12,
   gap: 4,
-  refreshInterval: 300,
+  refreshIntervalSeconds: 300,
 
   header: {
     showTitle: true,

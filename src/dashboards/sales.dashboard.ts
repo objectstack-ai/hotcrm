@@ -24,7 +24,7 @@ export const SalesDashboard: Dashboard = {
 
   columns: 12,
   gap: 4,
-  refreshInterval: 180, // 3 minutes
+  refreshIntervalSeconds: 180, // 3 minutes
 
   header: {
     showTitle: true,

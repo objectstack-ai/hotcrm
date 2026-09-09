@@ -37,7 +37,7 @@ import { pipelineByStageFunnelWidget } from '../src/dashboards/shared-widgets';
  * the dashboard barrel, report labels off the report barrel, the dataset count
  * off the dataset barrel, the navigation group and its children off
  * `CrmApp.navigation`, the refresh cadence off each dashboard's
- * `refreshInterval`. Change the app and this file goes red at PR time, in all
+ * `refreshIntervalSeconds`. Change the app and this file goes red at PR time, in all
  * three locales — the failure mode the landing page had for months.
  *
  * The authored parts are the count WORDS (the pages spell them, and each is
@@ -99,11 +99,11 @@ const ALL_NAV_LABELS: string[] = (() => {
   return walk(NAV).map((n) => n.label as string);
 })();
 
-/** Distinct `refreshInterval` values declared across the dashboards, in seconds. */
+/** Distinct `refreshIntervalSeconds` values declared across the dashboards, in seconds. */
 const REFRESH_INTERVALS: number[] = [
   ...new Set(
     Object.values(dashboards as Record<string, AnyRec>)
-      .map((d) => d.refreshInterval as number | undefined)
+      .map((d) => d.refreshIntervalSeconds as number | undefined)
       .filter((n): n is number => typeof n === 'number'),
   ),
 ].sort((a, b) => a - b);
@@ -319,11 +319,11 @@ describe('the cube vocabulary retired with src/cubes/ is gone from the docs (#97
   it('the pages that quote a refresh cadence quote the declared one', () => {
     // The retired claim was "incremental refresh every 5 min / every few
     // minutes", a figure nothing in `src/` configures. What IS declared is each
-    // dashboard's own `refreshInterval` — derived here rather than transcribed,
+    // dashboard's own `refreshIntervalSeconds` — derived here rather than transcribed,
     // so a change in source lands on the docs at PR time.
     expect(
       REFRESH_INTERVALS.length,
-      'no dashboard declares a refreshInterval — this rule has gone vacuous',
+      'no dashboard declares a refreshIntervalSeconds — this rule has gone vacuous',
     ).toBeGreaterThan(1);
     const carriers = [
       'content/docs/reference/faq.mdx',
@@ -354,7 +354,7 @@ describe('the cube vocabulary retired with src/cubes/ is gone from the docs (#97
       expect(
         REFRESH_GLYPH.test(read(f)),
         `${f}: names a refresh button by its glyph. No dashboard in src/dashboards/ declares a ` +
-          'manual refresh control — state what the app declares (refreshInterval) and leave the ' +
+          'manual refresh control — state what the app declares (refreshIntervalSeconds) and leave the ' +
           "console's own chrome to the platform.",
       ).toBe(false);
     }

@@ -213,10 +213,22 @@ export const CampaignEnrollmentFlow: Flow = {
               id: 'check_not_enrolled', type: 'decision', label: 'New Member?',
             },
             {
-              id: 'create_campaign_member', type: 'create_record', label: 'Add to Campaign',
+              // ⭐ The INSERT is elevated, this flow is NOT. `added_date` is
+              // `readonly: true`, and from @objectstack/objectql 17.4.0 the
+              // readonly strip runs inside `engine.insert` for a non-system
+              // caller as well as on update — so a write from this screen
+              // flow's user context now loses the stamp. The remedy the
+              // platform names is a system context; the remedy AGENTS.md house
+              // rule 9 names is a dedicated `system` sub-flow rather than
+              // elevating the screen flow. Both are satisfied here. ⛔ Do not
+              // fold this back by giving THIS flow `runAs: 'system'`: it would
+              // also lift RLS off `query_leads` / `query_contacts`, and
+              // `crm_lead` is `sharingModel: 'private'`.
+              // See `src/flows/campaign-member-enroll.flow.ts`.
+              id: 'create_campaign_member', type: 'subflow', label: 'Add to Campaign',
               config: {
-                objectName: 'crm_campaign_member',
-                fields: { crm_campaign: '{recordId}', crm_lead: '{currentLead.id}', status: 'sent', added_date: '{NOW()}' },
+                flowName: 'campaign_lead_member_enroll',
+                input: { campaignId: '{recordId}', leadId: '{currentLead.id}' },
               },
             },
           ],
@@ -269,10 +281,12 @@ export const CampaignEnrollmentFlow: Flow = {
               id: 'check_contact_not_enrolled', type: 'decision', label: 'New Member?',
             },
             {
-              id: 'create_contact_member', type: 'create_record', label: 'Add Contact to Campaign',
+              // The contact mirror of `create_campaign_member` above — same
+              // elevation, same reason. See that node's note.
+              id: 'create_contact_member', type: 'subflow', label: 'Add Contact to Campaign',
               config: {
-                objectName: 'crm_campaign_member',
-                fields: { crm_campaign: '{recordId}', crm_contact: '{currentContact.id}', status: 'sent', added_date: '{NOW()}' },
+                flowName: 'campaign_contact_member_enroll',
+                input: { campaignId: '{recordId}', contactId: '{currentContact.id}' },
               },
             },
           ],

@@ -238,7 +238,15 @@ describe('{TODAY()} through a real ObjectQL + real AutomationEngine', () => {
   let data: AnyRec;
 
   const seedContracts = async () => {
-    const api: AnyRec = ql.createContext({ isSystem: true, userId: 'u1', tenantId: 'org_1' } as never);
+    // ⛔ No `tenantId` here. From @objectstack/driver-memory 17.4.0 the in-memory
+    // driver REFUSES any call the engine hands a tenant scope
+    // (`MemoryMultiTenantUnsupportedError`, objectstack#16589): it has no
+    // row-level tenant isolation, so answering would read across organizations.
+    // This fixture holds one implicit tenant and measures nothing about tenancy,
+    // so the honest shape is not to ask an unisolating driver to isolate. ⛔ Do
+    // NOT reach for `tenancy: { enabled: false }` instead — the refusal names that
+    // as the wrong answer for data that really is per-organization.
+    const api: AnyRec = ql.createContext({ isSystem: true, userId: 'u1' } as never);
     await api.object('crm_contract').insert({
       id: 'k_past', contract_number: 'C-1', status: 'activated', end_date: ymd(-3), owner_id: 'rep1',
     });
@@ -408,7 +416,15 @@ describe('{TODAY()} through a real ObjectQL + real AutomationEngine', () => {
     // 2. The rows really moved — the query selected, and only the right ones.
     //    `k_today` is the boundary row and `k_future` the control; either one
     //    flipping means the resolved value was not today.
-    const api: AnyRec = ql.createContext({ isSystem: true, userId: 'u1', tenantId: 'org_1' } as never);
+    // ⛔ No `tenantId` here. From @objectstack/driver-memory 17.4.0 the in-memory
+    // driver REFUSES any call the engine hands a tenant scope
+    // (`MemoryMultiTenantUnsupportedError`, objectstack#16589): it has no
+    // row-level tenant isolation, so answering would read across organizations.
+    // This fixture holds one implicit tenant and measures nothing about tenancy,
+    // so the honest shape is not to ask an unisolating driver to isolate. ⛔ Do
+    // NOT reach for `tenancy: { enabled: false }` instead — the refusal names that
+    // as the wrong answer for data that really is per-organization.
+    const api: AnyRec = ql.createContext({ isSystem: true, userId: 'u1' } as never);
     const rows: AnyRec[] = await api.object('crm_contract').find({ where: {} });
     const byId = Object.fromEntries(rows.map((r) => [r.id, r.status]));
     expect(byId).toEqual({

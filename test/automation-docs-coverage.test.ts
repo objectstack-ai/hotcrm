@@ -217,6 +217,11 @@ const ROW_LABEL: Record<string, Record<'zh-Hans' | 'zh-Hant', string>> = {
   // English label moved to "Enroll Members in Campaign" with it. 「成员」 follows
   // the locale packs, where `crm_campaign_member` is 营销活动成员.
   campaign_enrollment: { 'zh-Hans': '将成员登记进营销活动', 'zh-Hant': '將成員登記進行銷活動' },
+  // The two elevated callees behind Enroll Members (AGENTS.md house rule 9),
+  // labelled off the same 营销活动/行銷活動 + 登记/登記 vocabulary as their caller
+  // one line up, and 子流程 in the type column like `case_escalation_stamp`.
+  campaign_lead_member_enroll: { 'zh-Hans': '将线索登记进营销活动', 'zh-Hant': '將線索登記進行銷活動' },
+  campaign_contact_member_enroll: { 'zh-Hans': '将联系人登记进营销活动', 'zh-Hant': '將聯絡人登記進行銷活動' },
   // 工单/工單, not 案例: the locale pack labels these two screen actions
   // 升级工单 / 关闭工单 (`crm_case._actions`), and the pack's own object label
   // is 工单 since #837. These rows spelled it 案例 until then — the page and

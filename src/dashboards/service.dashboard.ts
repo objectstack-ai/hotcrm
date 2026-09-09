@@ -24,7 +24,7 @@ export const ServiceDashboard: Dashboard = {
 
   columns: 12,
   gap: 4,
-  refreshInterval: 60, // 1 minute — service desks need fresh numbers
+  refreshIntervalSeconds: 60, // 1 minute — service desks need fresh numbers
 
   header: {
     showTitle: true,

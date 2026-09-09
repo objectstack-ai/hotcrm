@@ -157,7 +157,15 @@ describe('the 255 cap, against a real ObjectQL', () => {
 
   beforeAll(async () => {
     ql = await makeEngine();
-    api = ql.createContext({ isSystem: true, tenantId: 'org_1' } as never);
+    // ⛔ No `tenantId` here. From @objectstack/driver-memory 17.4.0 the in-memory
+    // driver REFUSES any call the engine hands a tenant scope
+    // (`MemoryMultiTenantUnsupportedError`, objectstack#16589): it has no
+    // row-level tenant isolation, so answering would read across organizations.
+    // This fixture holds one implicit tenant and measures nothing about tenancy,
+    // so the honest shape is not to ask an unisolating driver to isolate. ⛔ Do
+    // NOT reach for `tenancy: { enabled: false }` instead — the refusal names that
+    // as the wrong answer for data that really is per-organization.
+    api = ql.createContext({ isSystem: true } as never);
   });
   afterAll(async () => {
     await ql?.close();

@@ -139,16 +139,22 @@ export const CampaignMember = ObjectSchema.create({
       description: 'Set when the member is an existing Contact',
     }),
 
-    // ⭐ `readonly: true` — DECLARED, and it costs no writer its write. The
-    // readonly strip is an UPDATE-path rule, and every writer of this stamp is
-    // an INSERT — `campaign_enrollment`'s `create_campaign_member` and
-    // `create_contact_member` nodes, plus the marketing seed. Nothing updates
-    // it: there is no `update_record` node, no hook and no action that writes
-    // `added_date`. The insert exemption is measured in
-    // `test/readonly-write-semantics.test.ts`, and this column's own two halves
-    // are pinned in `test/audit-stamp-readonly.test.ts` — the enrollment
-    // writers still stamp it on INSERT, and a user-context UPDATE of it is
-    // stripped.
+    // ⭐ `readonly: true` — DECLARED, and it still costs no writer its write,
+    // but the reason CHANGED on the @objectstack/* 17.4.0 migration. It used to
+    // be "the strip is an UPDATE-path rule and every writer here is an INSERT".
+    // objectql 17.4.0 retired that: a static readonly field is now stripped from
+    // a NON-SYSTEM caller's INSERT payload inside `engine.insert` too, so an
+    // ordinary user-context create no longer seeds this column.
+    //
+    // Every writer is therefore elevated now, and the elevation is scoped as
+    // narrowly as AGENTS.md house rule 9 requires — the `campaign_enrollment`
+    // SCREEN flow stays `runAs: 'user'` and hands only the insert to
+    // `campaign_lead_member_enroll` / `campaign_contact_member_enroll`
+    // (`runAs: 'system'`, one `create_record` each); the marketing seed is a
+    // system write already. Nothing updates it: there is no `update_record`
+    // node, no hook and no action that writes `added_date`. This column's own
+    // two halves are pinned in `test/audit-stamp-readonly.test.ts` — the
+    // enrollment writers still stamp it, and a user-context UPDATE is stripped.
     // Ruled #1667 (director seat, decision batch #74, 2026-09-07): an
     // enrollment stamp nobody is meant to hand-edit gets the declaration that
     // says so. ⛔ The 16.x claim this note used to carry ("every member landed

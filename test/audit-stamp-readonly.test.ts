@@ -8,6 +8,10 @@ import type * as Automation from '@objectstack/spec/automation';
 import stack from '../objectstack.config';
 import { OpportunityApprovalFlow, OpportunityApprovalOnCreateFlow } from '../src/flows/opportunity-approval.flow';
 import { CampaignEnrollmentFlow } from '../src/flows/campaign-enrollment.flow';
+import {
+  CampaignLeadMemberEnrollFlow,
+  CampaignContactMemberEnrollFlow,
+} from '../src/flows/campaign-member-enroll.flow';
 import { silentLogger } from './helpers/flow-harness';
 
 /**
@@ -23,7 +27,13 @@ import { silentLogger } from './helpers/flow-harness';
  *
  *   • `crm_opportunity.approval_status` / `approved_date` (#1666) — every
  *     writer is the `runAs: 'system'` approval flow or an insert.
- *   • `crm_campaign_member.added_date` (#1667) — every writer is an INSERT.
+ *   • `crm_campaign_member.added_date` (#1667) — every writer is a
+ *     `runAs: 'system'` flow. ⭐ It used to read "every writer is an INSERT",
+ *     which stopped being a reason on the @objectstack/* 17.4.0 migration:
+ *     objectql 17.4.0 strips a static readonly column from a non-system
+ *     INSERT too. The enrollment insert therefore moved into the dedicated
+ *     `campaign_lead_member_enroll` / `campaign_contact_member_enroll`
+ *     callees (AGENTS.md house rule 9), and this file follows it there.
  *
  * ⭐ A declaration without these pins is just a flag. What has to stay true is
  * a CONJUNCTION, and each half fails in a different direction:
@@ -289,35 +299,74 @@ describe('#1667 — crm_campaign_member.added_date is declared readonly', () => 
     ).toBe(true);
   });
 
-  it('the enrollment flow is NOT elevated — which is exactly why the INSERT exemption is load-bearing', () => {
+  it('the enrollment SCREEN flow is still NOT elevated — house rule 9', () => {
     expect(
       (CampaignEnrollmentFlow as AnyRec).runAs ?? 'user',
       'campaign_enrollment is a screen action a marketer clicks, and it must keep their ' +
-        'identity. It therefore writes added_date WITHOUT isSystem — the stamp survives only ' +
-        'because the strip is an UPDATE-path rule and these writers are INSERTs. ' +
-        "Declaring runAs: 'system' here to 'protect' the stamp would be the wrong fix and " +
-        'would re-attribute every enrollment to the platform.',
+        "identity. AGENTS.md house rule 9: a screen flow stays runAs: 'user' and a write " +
+        'that genuinely needs elevation is split into a dedicated system sub-flow. ' +
+        'Elevating THIS flow to protect added_date would also lift row-level security off ' +
+        'its two bulk reads, and crm_lead is sharingModel: private — a rep would enroll ' +
+        'the whole organisation instead of the leads they can see.',
     ).toBe('user');
   });
 
+  it('the elevation lives in the two callees, and nowhere else', () => {
+    for (const callee of [CampaignLeadMemberEnrollFlow, CampaignContactMemberEnrollFlow]) {
+      expect(
+        (callee as AnyRec).runAs,
+        `${(callee as AnyRec).name} is the whole reason the split exists: it is the only ` +
+          'place the enrollment insert runs elevated.',
+      ).toBe('system');
+      const writes = ((callee as AnyRec).nodes as AnyRec[])
+        .filter((n) => n.type !== 'start' && n.type !== 'end')
+        .map((n) => n.config?.objectName);
+      expect(
+        writes,
+        'an elevated callee must stay minimal — one write, on the membership object',
+      ).toEqual(['crm_campaign_member']);
+    }
+  });
+
   it('both shipped create nodes still carry the stamp', () => {
-    for (const id of ['create_campaign_member', 'create_contact_member']) {
-      const node = findNode(CampaignEnrollmentFlow as AnyRec, id);
+    const callees: [AnyRec, string][] = [
+      [CampaignLeadMemberEnrollFlow as AnyRec, 'create_campaign_member'],
+      [CampaignContactMemberEnrollFlow as AnyRec, 'create_contact_member'],
+    ];
+    for (const [flow, id] of callees) {
+      const node = findNode(flow, id);
       expect(node, `${id} is one of the two writers the #1667 census rests on`).toBeTruthy();
-      expect(node!.type, 'an INSERT. If this ever becomes update_record, the strip DOES reach it ' +
-        'and the stamp is silently dropped — that is the failure #1667 trades against.').toBe('create_record');
+      expect(node!.type, 'an INSERT on an elevated callee. If this ever becomes update_record it ' +
+        'is a different write with different ordering — that is the failure #1667 trades against.').toBe('create_record');
       expect(node!.config.objectName).toBe('crm_campaign_member');
       expect(node!.config.fields.added_date, 'the stamp itself, taken from source').toBe('{NOW()}');
     }
   });
 
+  it('the screen flow still reaches both writers, through subflow nodes', () => {
+    const hops: [string, string][] = [
+      ['create_campaign_member', 'campaign_lead_member_enroll'],
+      ['create_contact_member', 'campaign_contact_member_enroll'],
+    ];
+    for (const [id, flowName] of hops) {
+      const node = findNode(CampaignEnrollmentFlow as AnyRec, id);
+      expect(node, `${id} must still exist in campaign_enrollment, as the hop to its callee`).toBeTruthy();
+      expect(node!.type, 'the parent hands the insert off, it no longer performs it').toBe('subflow');
+      expect(node!.config.flowName).toBe(flowName);
+    }
+  });
+
   it('the shipped create_campaign_member node still stamps added_date on INSERT', async () => {
-    const node = findNode(CampaignEnrollmentFlow as AnyRec, 'create_campaign_member')!;
+    // Both halves come from the SHIPPED callee now: its node AND its `runAs`.
+    // Reading the runAs off the flow that owns the node is what makes this a
+    // measurement rather than a restatement — hard-code 'system' here and the
+    // pin would stay green through exactly the regression it exists to catch.
+    const node = findNode(CampaignLeadMemberEnrollFlow as AnyRec, 'create_campaign_member')!;
     const { campaignId, leadId } = await seedEnrollmentTargets();
     const engine = automation({
       pin_enrol: runnable(
         'pin_enrol',
-        (CampaignEnrollmentFlow as AnyRec).runAs ?? 'user',
+        (CampaignLeadMemberEnrollFlow as AnyRec).runAs ?? 'user',
         node,
         // Addressing only — `status` and `added_date` stay exactly as authored.
         { fields: { ...node.config.fields, crm_campaign: '{rowId}', crm_lead: '{linkId}' } },
@@ -339,17 +388,22 @@ describe('#1667 — crm_campaign_member.added_date is declared readonly', () => 
 
   it('a user-context UPDATE of added_date is STRIPPED', async () => {
     const { campaignId, leadId } = await seedEnrollmentTargets();
+    // ⚰️ The seed used to run under `{ userId: 'user_1' }`, and the row that
+    // followed asserted that a plain user-context INSERT seeds a readonly
+    // column — "the exemption #1667 rests on". objectql 17.4.0 retired that
+    // exemption (the static-readonly strip moved inside `engine.insert`), so the
+    // assertion is GONE rather than re-aimed at the new rule: restating a
+    // platform write rule here is what AGENTS.md scope rule 3 forbids, and that
+    // row is handed to epic step 5c (objectstack#15953) with the rest.
+    //
+    // What is left is the half this file is FOR — is this column's own
+    // declaration decorative or enforced — so the fixture is seeded the way the
+    // shipped writer now seeds it, through the system context.
     const row = await ql.insert(
       'crm_campaign_member',
       { crm_campaign: campaignId, crm_lead: leadId, status: 'sent', added_date: '2026-03-02T00:00:00.000Z' },
-      { context: { userId: 'user_1' } },
+      { context: sysCtx },
     );
-    // The insert above is itself half the reading: a plain USER context seeded a
-    // readonly column, because insert is exempt.
-    expect(
-      (await readBack('crm_campaign_member', String(row.id))).added_date,
-      'a user-context INSERT must still seed the stamp — this is the exemption #1667 rests on',
-    ).toBeTruthy();
 
     await ql.update(
       'crm_campaign_member',
