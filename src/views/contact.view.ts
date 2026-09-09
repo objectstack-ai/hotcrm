@@ -99,6 +99,40 @@ export const ContactViews = defineView({
         fields: ['email', 'phone', 'mobile', 'avatar'],
       },
       {
+        // Named `mailing_address` — deliberately the SAME key as the
+        // `mailing_address` fieldGroup on `crm_contact`, which is the opposite
+        // call from the two sections either side of it and for the same
+        // reason. Reusing a group key makes the section's translated heading
+        // follow that group's wording; `contact_details` and
+        // `comm_preferences` wanted their own shorter wording, so they had to
+        // avoid the collision. This section wants exactly the group's wording
+        // ("Mailing Address"), which every locale already carries under
+        // `objects.crm_contact._sections.mailing_address`, so the collision is
+        // the feature: one heading, one translation, four locales, no new row.
+        //
+        // Why the section exists at all: an authored `sections` array wins
+        // outright over the renderer's `fieldGroups` auto-derivation (the
+        // mechanism is written up at length in `case.view.ts`), and this form
+        // is also the CREATE dialog. The five `mailing_*` fields were
+        // therefore readable on the SYNTHESIZED detail page — which does
+        // derive from `fieldGroups` — while no form in the app could enter or
+        // edit them, even though `contact_import.mapping.ts` writes all five
+        // from the shipped CSV template. Address entry only existed on the
+        // import path; this tab is the authoring half of it.
+        name: 'mailing_address',
+        label: 'Mailing Address',
+        columns: 2,
+        fields: [
+          // `mailing_street` is a textarea — full width, like `last_name`
+          // above, so the two-column grid holds the four short fields.
+          { field: 'mailing_street', span: 'full' },
+          'mailing_city',
+          'mailing_state',
+          'mailing_postal_code',
+          'mailing_country',
+        ],
+      },
+      {
         // Named `comm_preferences`, not `preferences` — `preferences` is
         // already a distinct fieldGroup key on `crm_contact` ("Communication
         // Preferences"), and reusing it here would make this section's
