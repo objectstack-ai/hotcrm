@@ -545,6 +545,16 @@ describe.each(Object.entries(TERMS))('%s is one Chinese word everywhere (#837)',
         `no ledger list recorded for ${name} — write one, or write [] once you have checked`,
       ).toContain(name);
       const files = LEDGERS[name] ?? [];
+      // Same crossing as the one beside `TEST_FILES`, but derived rather than
+      // by exemplar: EVERY ledger this row names is read below by literal
+      // path, so every one of them has to be inside the walk that the
+      // retired-spelling rule scans. A new TERMS row gets the cross for free.
+      const unscanned = files.filter((f) => !TEST_FILES.includes(f));
+      expect(
+        unscanned,
+        `ledger(s) pinned by literal path that the test walk no longer reaches, so the ` +
+          `retired-spelling rule is not scanning them: ${unscanned.join(', ')}`,
+      ).toEqual([]);
       const missing = files.filter((f) => !scannable(f).includes(hans));
       expect(
         missing,
