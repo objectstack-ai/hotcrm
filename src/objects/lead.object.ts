@@ -359,7 +359,6 @@ export const Lead = ObjectSchema.create({
     // plus `duplicate_status == "confirmed"`, both of which a tombstoned lead
     // still satisfies — so the verdict a reviewer recorded survives the erasure
     // instead of being deleted as a side effect of someone else's GDPR request.
-    // instead of being deleted as a side effect of someone else's GDPR request.
     duplicate_of_type: Field.select({
       label: 'Duplicate Of',
       group: 'duplicates',
