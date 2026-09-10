@@ -1,7 +1,50 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import type { Dashboard } from '@objectstack/spec/ui';
+import type { Dashboard, InlineLocaleMap } from '@objectstack/spec/ui';
+import { LEAD_SOURCE_OPTIONS } from '../objects/_picklists';
 import { pipelineByStageFunnelWidget } from './shared-widgets';
+
+/**
+ * `lead_source` filter option labels, keyed by the CANONICAL stored value.
+ *
+ * Only the WORDING is written here. The ROSTER is derived below from
+ * {@link LEAD_SOURCE_OPTIONS} — the one constant `crm_lead`, `crm_contact` and
+ * `crm_opportunity` each spread into their own `lead_source` field — so this
+ * control can only ever offer values a record can actually hold. It used to
+ * hand-copy six of the twelve, and one of those six was spelled `advertising`
+ * against a canonical `advertisement`: picking it ANDed a term no row matches
+ * into every bound widget and the whole dashboard read zero with no error and
+ * no empty state (#1849).
+ *
+ * A value added to the constant with no row here renders `label: undefined`,
+ * which `pnpm validate` rejects by name — the roster cannot drift back
+ * silently, which is the property a second hand-copy could not have.
+ *
+ * The strings are the language packs' own, copied from
+ * `src/translations/<locale>/objects.pipeline.ts`
+ * (`crm_lead.fields.lead_source.options`; ja-JP resolves them through
+ * `src/translations/ja-JP/_shared.ts`), so the filter bar does not coin a
+ * second vocabulary for a value the record page already labels. They are
+ * spelled inline rather than reached through `GlobalFilterSchema.object`,
+ * which is inert in this Console build — measured on #1822, see `./index.ts`.
+ */
+const LEAD_SOURCE_FILTER_LABELS: Record<
+  string,
+  InlineLocaleMap & Record<'en' | 'zh-CN' | 'es-ES' | 'ja-JP', string>
+> = {
+  web:             { en: 'Web',             'zh-CN': '网站',      'es-ES': 'Web',                'ja-JP': 'ウェブ' },
+  referral:        { en: 'Referral',        'zh-CN': '推荐',      'es-ES': 'Referencia',         'ja-JP': '紹介' },
+  event:           { en: 'Event / Trade Show', 'zh-CN': '活动 / 展会', 'es-ES': 'Evento / Feria', 'ja-JP': 'イベント・展示会' },
+  webinar:         { en: 'Webinar',         'zh-CN': '线上研讨会', 'es-ES': 'Seminario Web',      'ja-JP': 'ウェビナー' },
+  partner:         { en: 'Partner',         'zh-CN': '合作伙伴',   'es-ES': 'Socio',              'ja-JP': 'パートナー' },
+  advertisement:   { en: 'Advertisement',   'zh-CN': '广告',      'es-ES': 'Publicidad',         'ja-JP': '広告' },
+  paid_search:     { en: 'Paid Search',     'zh-CN': '付费搜索',   'es-ES': 'Búsqueda de Pago',   'ja-JP': '有料検索' },
+  social:          { en: 'Social Media',    'zh-CN': '社交媒体',   'es-ES': 'Redes Sociales',     'ja-JP': 'ソーシャルメディア' },
+  content:         { en: 'Content / Blog',  'zh-CN': '内容 / 博客', 'es-ES': 'Contenido / Blog',  'ja-JP': 'コンテンツ・ブログ' },
+  cold_call:       { en: 'Cold Call',       'zh-CN': '陌生拜访',   'es-ES': 'Llamada en Frío',    'ja-JP': 'コールドコール' },
+  email_campaign:  { en: 'Email Campaign',  'zh-CN': '邮件营销',   'es-ES': 'Campaña de Email',   'ja-JP': 'メールキャンペーン' },
+  other:           { en: 'Other',           'zh-CN': '其他',      'es-ES': 'Otro',               'ja-JP': 'その他' },
+};
 
 /**
  * Executive Overview Dashboard
@@ -58,14 +101,12 @@ export const ExecutiveDashboard: Dashboard = {
       label: { en: 'Lead Source', 'zh-CN': '线索来源', 'es-ES': 'Origen del Prospecto', 'ja-JP': 'リードソース' },
       type: 'select',
       scope: 'dashboard',
-      options: [
-        { value: 'web',         label: { en: 'Web', 'zh-CN': '网站', 'es-ES': 'Web', 'ja-JP': 'ウェブ' } },
-        { value: 'referral',    label: { en: 'Referral', 'zh-CN': '推荐', 'es-ES': 'Referencia', 'ja-JP': '紹介' } },
-        { value: 'partner',     label: { en: 'Partner', 'zh-CN': '合作伙伴', 'es-ES': 'Socio', 'ja-JP': 'パートナー' } },
-        { value: 'event',       label: { en: 'Event', 'zh-CN': '活动 / 展会', 'es-ES': 'Evento / Feria', 'ja-JP': 'イベント・展示会' } },
-        { value: 'cold_call',   label: { en: 'Cold Call', 'zh-CN': '陌生拜访', 'es-ES': 'Llamada en Frío', 'ja-JP': 'コールドコール' } },
-        { value: 'advertising', label: { en: 'Advertising', 'zh-CN': '广告', 'es-ES': 'Publicidad', 'ja-JP': '広告' } },
-      ],
+      // Roster derived, wording from the language packs — see
+      // LEAD_SOURCE_FILTER_LABELS above. Order follows the canonical constant.
+      options: LEAD_SOURCE_OPTIONS.map(({ value }) => ({
+        value,
+        label: LEAD_SOURCE_FILTER_LABELS[String(value)],
+      })),
     },
   ],
 
