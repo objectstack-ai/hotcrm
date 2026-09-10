@@ -92,10 +92,10 @@ HotCRM 开箱即用地发布 **十份** 报表 —— `src/reports/index.ts` 这
 
 **`src/reports/` 没有发布任何营销报表，而且自建也建不出来** —— 全页只有这一节缺的不是报表，而是数据源。`src/datasets/` 里没有营销活动数据集，所以没有任何报表、也没有任何仪表盘磁贴能对营销活动的数字做聚合。
 
-记录本身是带着这些数字的。`crm_campaign` 上有 **Budgeted Cost**、**Actual Cost**、**Expected Revenue**、**Actual Revenue**，有 **Num Sent / Responses / Leads / Converted Leads / Opportunities / Won Opportunities** 这一组计数器，还有两个公式字段 —— **Response Rate %** 与 **ROI %** —— 它们都摆在营销活动记录的 **Performance** 分区里（`src/views/campaign.view.ts`）。`crm_campaign_member` 则逐个成员盖上 **First Opened**、**First Clicked**、**Response Date** 与 **Responded**。
+记录本身是带着这些数字的。`crm_campaign` 上有 **Number Sent / Number of Responses / Number of Leads / Converted Leads / Opportunities Created / Won Opportunities** 这一组计数器，还有 **Response Rate %** 公式字段，它们都摆在营销活动记录的 **Performance** 分区里；**Budgeted Cost**、**Actual Cost**、**Expected Revenue**、**Actual Revenue** 与 **ROI %** 公式则在隔壁的 **Budget & ROI** 分区（`src/views/campaign.view.ts`）。`crm_campaign_member` 只记成员的响应，别的什么都不记：**Status**、**Response Date** 与 **Has Responded**，都在 **Response Tracking** 分区里。
 
 - **Campaign ROI** —— 单个营销活动的数字在记录上是有的，就是上面那个 **ROI %** 公式。没有的是任何聚合或排名的办法：没有营销活动数据集，就没有度量、没有维度、也没有分组。从商机那一侧做归因同样缺一块 —— `crm_opportunity.crm_campaign` 是真实的 lookup，但 `opportunity_metrics` 没有声明营销活动维度，所以*来源*收入与*影响*收入在分析侧也归不了因。
-- **Campaign Engagement** —— 同样的原因，只是低一层：打开、点击与响应都盖在各个成员记录上，而没有任何东西把它们汇总起来。「按营销活动的转化」还多一个问题：`lead_metrics` 从不跨到营销活动。
+- **Campaign Engagement** —— 同样的原因，只是低一层：成员是否响应、何时响应，盖在各个成员记录上，而没有任何东西把它汇总起来。打开与点击则不是低一层，而是根本不存在 —— 应用在任何地方都不记录打开、点击或退信 —— 所以即便真有一个 dataset 撑在后面，这份报表也只有「响应」这一半可报。「按营销活动的转化」还多一个问题：`lead_metrics` 从不跨到营销活动。
 
 要补上这个缺口，得新增 `src/datasets/campaign.dataset.ts` —— 那是改源码加重新部署，不是报表构建器够得着的事。营销活动记录今天能看到什么，见 [营销活动](/zh-Hans/docs/marketing/campaigns)。
 
