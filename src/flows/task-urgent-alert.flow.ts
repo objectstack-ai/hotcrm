@@ -7,9 +7,7 @@ type Flow = Automation.Flow;
 /**
  * Urgent task alert — record-change flow on task insert.
  *
- * Migrated from the removed `notify_on_urgent` object workflow (7.7 dropped
- * `workflows[]`). When an urgent, not-yet-completed task is created, notify its
- * owner.
+ * When an urgent, not-yet-completed task is created, notify its owner.
  */
 export const TaskUrgentAlertFlow: Flow = {
   name: 'task_urgent_alert',
@@ -18,7 +16,7 @@ export const TaskUrgentAlertFlow: Flow = {
   type: 'record_change',
   status: 'active',
   // A record-change flow fired by a SYSTEM write carries no trigger user
-  // either (ADR-0049, #1888, #3760), and most urgent tasks in this app are
+  // either (ADR-0049), and most urgent tasks in this app are
   // machine-written: `case_status_side_effects` opens the escalation follow-up
   // task, and the scheduled sweeps create their own — none of those writes
   // carries a session.
@@ -43,7 +41,7 @@ export const TaskUrgentAlertFlow: Flow = {
         // SQLite/libsql booleans persist as integer 1, so `is_completed != true`
         // is `1 != true` = always true and the guard never trips (cf. the same
         // hazard documented in case_escalation).
-        // TOTALITY (#633): `has(...)` on every read. Both fields are `required`
+        // TOTALITY: `has(...)` on every read. Both fields are `required`
         // AND defaulted today, so this predicate measured total as authored —
         // but that is a property of `crm_task`'s schema, not of the predicate.
         // Drop either default and the flow goes silently inert on

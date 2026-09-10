@@ -8,33 +8,26 @@ type Flow = Automation.Flow;
 /**
  * Opportunity Approval — tiered sign-off for large deals.
  *
- * ADR-0019 / ADR-0012 migration note
- * ----------------------------------
- * This flow replaces TWO legacy implementations that used capabilities removed
- * in ObjectStack 7.4:
- *   - the old `opportunity-approval` flow, which requested approvals through a
- *     `connector_action` (`connectorId: 'approval'`) — the pre-ADR-0019 pattern,
- *     no longer registered (it only ever type-checked behind an `as any` cast); and
- *   - the standalone `OpportunityDiscountApproval` `ApprovalProcess`, whose
- *     authoring type was deleted in 7.4.
- * Both are now expressed natively as **Approval nodes** (`type: 'approval'`,
- * ADR-0019): the engine opens an approval request on entry, suspends the run,
- * and resumes down the out-edge whose `label` matches the decision
- * (`approve` / `reject`). Notifications use the **`notify` node** (ADR-0012)
- * instead of the no-op `script` + `actionType:'email'` shape.
+ * Expressed as **Approval nodes** (`type: 'approval'`, ADR-0019): the engine
+ * opens an approval request on entry, suspends the run, and resumes down the
+ * out-edge whose `label` matches the decision (`approve` / `reject`).
+ * Notifications use the **`notify` node** (ADR-0012). ⛔ Neither a
+ * `connector_action` nor a standalone `ApprovalProcess` is available — both
+ * authoring surfaces were removed in ObjectStack 7.4.
  *
  * Tiered policy (single source of truth — no double-firing):
  *   - amount >= $100K         → Sales Manager review
  *   - amount > $500K          → additionally Sales Director sign-off
  *
- * The entry gate is INCLUSIVE at the line (`>=`, #1087) and the director tier is
+ * The entry gate is INCLUSIVE at the line (`>=`) and the director tier is
  * exclusive (`>`): those are not the same kind of number. `LARGE_DEAL_AMOUNT` is
  * the one line this app draws around "large deal", and every consumer of it —
- * this gate, its insert twin, the won-deal alert and both sharing rules — now
- * cuts the same way, so a deal at exactly $100,000 is large everywhere or
+ * this gate, its insert twin, the won-deal alert and both sharing rules — must
+ * cut the same way, so a deal at exactly $100,000 is large everywhere or
  * nowhere. `HIGH_VALUE_DEAL_AMOUNT` below is a matched PAIR (`> 500000` /
  * `<= 500000`) whose two halves must partition, which is a different property
  * and is left alone.
+ *
  * On full approval the deal is stamped `approval_status = approved` (+ date);
  * any rejection stamps `approval_status = rejected`. The record is locked while
  * a step is pending and `approval_status` mirrors the live request status.
@@ -45,8 +38,8 @@ export const OpportunityApprovalFlow: Flow = {
   description: 'Tiered approval for opportunities: manager review at $100K or more, director sign-off > $500K.',
   type: 'record_change',
   status: 'active',
-  // Same user-less exposure as every record-change flow (ADR-0049, #1888,
-  // #3760) — and the one with teeth. Measured on 17.0.0-rc.2: a $150K renewal
+  // Same user-less exposure as every record-change flow (ADR-0049) — and the
+  // one with teeth. Measured on 17.0.0-rc.2: a $150K renewal
   // created by the `runAs: 'system'` contract_renewal sweep fired this flow
   // with no trigger user, and the run died at `get_opportunity`. The deal sat
   // at `approval_status: 'not_required'`, unlocked, with no approval request
@@ -86,7 +79,7 @@ export const OpportunityApprovalFlow: Flow = {
         // freeze hook rejects approval-status writes on closed records, so
         // without this guard the flow opened a locked approval request it
         // could never resolve (lockRecord held the closed record hostage).
-        // TOTALITY (#633): `has(...)` on every read, plus `!= null` on the
+        // TOTALITY: `has(...)` on every read, plus `!= null` on the
         // ordering comparison — `has()` passes an explicit null and
         // `record.amount >= 100000` then aborts with
         // `no such overload: dyn<null> >= int`. Measured total as authored
@@ -113,14 +106,14 @@ export const OpportunityApprovalFlow: Flow = {
       type: 'approval',
       label: 'Sales Manager Review',
       config: {
-        // The empty-position dead-end (approvers snapshot at request creation,
-        // so a position with no holders left the request undecidable while
-        // lockRecord held the record hostage) is a NODE POLICY on @objectstack
-        // 17, not something the approver list has to work around. The
-        // `{ type: 'org_membership_level', value: 'owner' }` entry that used to
-        // sit here was that workaround, and it overshot: with
-        // `behavior: 'first_response'` it made an org owner a routine approver
-        // for every deal, not just a rescue when the bench is empty.
+        // ⛔ Never add an org-owner approver as an empty-bench workaround.
+        // `onEmptyApprovers: 'admin_rescue'` is the node policy for an empty
+        // position on @objectstack 17 (approvers snapshot at request creation,
+        // so a position with no holders would otherwise leave the request
+        // undecidable while `lockRecord` held the record hostage). An
+        // `{ type: 'org_membership_level', value: 'owner' }` entry overshoots:
+        // with `behavior: 'first_response'` it makes an org owner a routine
+        // approver for every deal, not a rescue when the bench is empty.
         approvers: [{ type: 'position', value: 'sales_manager' }],
         // Explicit even though `admin_rescue` is the schema default — this is
         // the mechanism the node depends on, so it is authored, not inherited.
@@ -136,7 +129,7 @@ export const OpportunityApprovalFlow: Flow = {
       // No `config.condition` here: the branch is on edges `e5` / `e6`, which
       // is where the engine actually reads it. A copy on the node would be
       // inert and indistinguishable from the live one (17.0.0-rc.2's
-      // `flow-inert-node-condition`, #4414).
+      // `flow-inert-node-condition`).
       id: 'check_high_value',
       type: 'decision',
       label: 'High Value (> $500K)?',
@@ -227,7 +220,7 @@ export const OpportunityApprovalFlow: Flow = {
     // amount must not strand an approved deal in a locked, undecidable
     // director step.
     //
-    // TOTALITY (#643): `oppRecord` is a `get_record` OUTPUT, so the read needs
+    // TOTALITY: `oppRecord` is a `get_record` OUTPUT, so the read needs
     // `has(vars.oppRecord)` (the variable), `has(vars.oppRecord.amount)` (the
     // column — `findOne` answers a miss with `null`, and a sparse driver row
     // omits an unwritten column outright) and `!= null` (an explicit null
@@ -239,7 +232,7 @@ export const OpportunityApprovalFlow: Flow = {
     // rather than bare: `has(oppRecord.amount)` still aborts with `Unknown
     // variable: oppRecord` on an unbound variable, `has(vars.oppRecord)`
     // answers `false` (measured). From 17.0.0-rc.2 an unevaluable condition
-    // ABORTS the step rather than skipping it (#4775), so a guard that was
+    // ABORTS the step rather than skipping it, so a guard that was
     // belt-and-braces is now what keeps the run alive.
     { id: 'e5', source: 'check_high_value', target: 'director_signoff', type: 'conditional', condition: P`has(vars.oppRecord) && has(vars.oppRecord.amount)
       && vars.oppRecord.amount != null && vars.oppRecord.amount > ${HIGH_VALUE_DEAL_AMOUNT}`, label: 'High value (> $500K)' },
@@ -259,14 +252,14 @@ export const OpportunityApprovalFlow: Flow = {
 };
 
 /**
- * Insert-time twin of `opportunity_approval`: a record-change flow binds
- * exactly one hook event, so the afterUpdate flow above never saw
+ * Insert-time twin of `opportunity_approval`. A record-change flow binds
+ * exactly one hook event, so the afterUpdate flow above never sees
  * opportunities BORN over the threshold — flow-created deals (contract
- * renewals, lead conversion) and API inserts skipped approval entirely,
- * which is the exact population the start condition's null-tolerance was
- * written for. Same nodes/edges, only the start node is rebound to
- * afterInsert (mirrors `CaseEscalationOnCreateFlow`). The stage guard
- * carries over, keeping seeded/imported closed deals out of approval.
+ * renewals, lead conversion) and API inserts. ⛔ Do not delete this twin
+ * expecting the afterUpdate flow to cover them; that population is exactly what
+ * the start condition's null-tolerance is written for. Same nodes/edges, only
+ * the start node is rebound to afterInsert (mirrors `CaseEscalationOnCreateFlow`).
+ * The stage guard carries over, keeping seeded/imported closed deals out.
  */
 export const OpportunityApprovalOnCreateFlow: Flow = {
   ...OpportunityApprovalFlow,

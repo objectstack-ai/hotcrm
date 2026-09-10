@@ -7,23 +7,22 @@ type Flow = Automation.Flow;
 /**
  * Lead Assignment & Routing — react the instant a new lead lands.
  *
- * New leads previously sat with no follow-up SLA and no routing, so hot leads
- * could go cold before anyone looked. This flow fires on lead *insert*, sets a
- * rating-based `next_followup_date` SLA, and alerts the lead's OWNER (the
- * accountable party) to follow up. The alert originally targeted a
- * 'sales_manager' position, but positions aren't a messaging audience so it
- * reached nobody; with no territory / round-robin table modelled, the owner is
- * the correct recipient. (Swap to a `team:`/`role:` audience once a manager
- * group is seeded.)
+ * Fires on lead *insert*, sets a rating-based `next_followup_date` SLA, and
+ * alerts the lead's OWNER — the accountable party — to follow up.
  *
- * Trigger wiring (7.4): the `start` node declares `triggerType:
- * 'record-after-create'` so the record-change trigger provider binds it to the
- * ObjectQL `afterInsert` lifecycle hook. Firing on insert only means the SLA
- * write does not re-trigger the flow. The full record is seeded into the run,
- * so fields are read via `{record.*}` (no get_record round-trip needed).
+ * ⛔ Never address a CRM position (`sales_manager` and friends) as a recipient.
+ * Positions are not a messaging audience: the messaging service resolves
+ * `user:` / `role:` (sys_member) / `team:` / `owner_of:`, and a bare position
+ * name is stored verbatim as `sys_inbox_message.user_id`, matching no real user,
+ * so the alert reaches nobody. With no territory / round-robin table modelled,
+ * the owner is the correct recipient. (Swap to a `team:`/`role:` audience once a
+ * manager group is seeded.)
  *
- * Capabilities exercised: record-change trigger + `decision` branching on lead
- * quality + `update_record` (SLA stamp) + `notify` to a role queue.
+ * Trigger wiring: the `start` node declares `triggerType: 'record-after-create'`
+ * so the record-change trigger provider binds it to the ObjectQL `afterInsert`
+ * lifecycle hook. Firing on insert only means the SLA write does not re-trigger
+ * the flow. The full record is seeded into the run, so fields are read via
+ * `{record.*}` (no get_record round-trip needed).
  */
 export const LeadAssignmentFlow: Flow = {
   name: 'lead_assignment',
@@ -32,7 +31,7 @@ export const LeadAssignmentFlow: Flow = {
   type: 'record_change',
   status: 'active',
   // A record-change flow fired by a SYSTEM write carries no trigger user
-  // either (ADR-0049, #1888, #3760). This is the population the flow is FOR:
+  // either (ADR-0049). This is the population the flow is FOR:
   // leads arrive from web-to-lead, a CSV import, a partner integration or a
   // seed load, none of which carry a user session. Measured on 17.0.0-rc.2, a
   // user-less run refuses `sla_hot` / `sla_std` outright, so the lead lands
@@ -56,8 +55,7 @@ export const LeadAssignmentFlow: Flow = {
       // Branching lives on edges `e2` / `e3` — see the totality note there.
       // This node carries no `config.condition`: the engine never evaluates a
       // `decision` node's singular one, so a copy here would restate the gate
-      // without being the gate (17.0.0-rc.2's `flow-inert-node-condition`,
-      // #4414).
+      // without being the gate (17.0.0-rc.2's `flow-inert-node-condition`).
       id: 'check_hot', type: 'decision', label: 'Hot Lead (rating ≥ 4)?',
     },
 
@@ -109,7 +107,7 @@ export const LeadAssignmentFlow: Flow = {
 
   edges: [
     { id: 'e1', source: 'start', target: 'check_hot', type: 'default' },
-    // TOTALITY (#633): these two edges must PARTITION every lead — a rating
+    // TOTALITY: these two edges must PARTITION every lead — a rating
     // the predicate cannot read has to fall down one branch, never neither.
     // Guarding both with `has(...) &&` would have traded a loud abort for a
     // silent no-op (unrated lead → no SLA, no alert, no error), which is the

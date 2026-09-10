@@ -7,9 +7,8 @@ type Flow = Automation.Flow;
 /**
  * Quote auto-expiration — scheduled daily sweep.
  *
- * Migrated from the removed `quote_expired_check` object workflow (7.7 dropped
- * `workflows[]`). Flips quotes past their `expiration_date` to `expired` unless
- * already accepted/rejected/expired.
+ * Flips quotes past their `expiration_date` to `expired` unless already
+ * accepted/rejected/expired.
  */
 export const QuoteExpirationFlow: Flow = {
   name: 'quote_expiration',
@@ -19,7 +18,7 @@ export const QuoteExpirationFlow: Flow = {
   status: 'active',
   // Scheduled runs have no trigger user, so under the default runAs:'user' the
   // data nodes execute UNSCOPED anyway. Declare runAs:'system' to make that
-  // RLS-bypassing elevation explicit and intended (ADR-0049, #1888).
+  // RLS-bypassing elevation explicit and intended (ADR-0049).
   runAs: 'system',
   variables: [],
   nodes: [

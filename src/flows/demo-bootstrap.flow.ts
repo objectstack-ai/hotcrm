@@ -34,61 +34,51 @@ type Flow = Automation.Flow;
  * user is. A real deployment assigns ownership through import or territory
  * rules instead, and by then nothing is ownerless for this to pick up.
  *
- * ─── This flow must NOT staff anybody (#640) ─────────────────────────────
+ * ─── ⛔ This flow must NOT staff anybody ──────────────────────────────────
  *
- * The demo org now also has PEOPLE — an NA rep, an EU rep and a sales manager
- * holding the positions the sharing rules and `opportunity_approval` route to
- * (`src/sharing/demo-staffing.ts`). That staffing deliberately does not happen
- * here, and the obvious "just add a create_record on sys_user" is refused twice
- * over:
+ * ⛔ Never add a `create_record` on `sys_user`, or on any identity table, to
+ * this flow. It ships in the ARTIFACT, so it runs in a customer's org too, and
+ * the only way to make synthetic users there impossible rather than unlikely is
+ * for the artifact to contain no mechanism that can create one.
+ * `test/demo-staffing.test.ts` fails on any flow node that writes an identity
+ * table. Such a node would not produce usable people anyway: identity tables are
+ * `managedBy: 'better-auth'` (ADR-0092), and a row inserted around that surface
+ * has no credential — an account nobody can sign in as.
  *
- *   - This flow ships in the ARTIFACT, so it runs in a customer's org too. The
- *     one outcome #640 rules out unconditionally is synthetic users appearing
- *     there, and the only way to make that impossible rather than unlikely is
- *     for the artifact to contain no mechanism that can create one.
- *     `test/demo-staffing.test.ts` fails on any flow node that writes an
- *     identity table.
- *   - It would not produce usable people anyway: identity tables are
- *     `managedBy: 'better-auth'` (ADR-0092), and a row inserted around that
- *     surface has no credential — an account nobody can sign in as.
+ * Staffing lives in `pnpm demo:staff`, which drives a LOCAL dev server through
+ * the platform's own admin endpoints. It depends on this flow's behaviour
+ * staying exactly as it is: the demo's whole point is that a rep reads accounts
+ * they do NOT own (a `private` OWD already admits the owner, so a share to the
+ * owner proves nothing). The reps are created after the dev admin and appended
+ * to `sys_user`, so `get_user`'s unordered "first user" is unaffected by
+ * staffing — and the staffing script re-checks that from the other side,
+ * failing if any demo user turns out to own a seeded account.
  *
- * Staffing therefore lives in `pnpm demo:staff`, which drives a LOCAL dev
- * server through the platform's own admin endpoints. It also depends on this
- * flow's behaviour staying exactly as it is: the demo's whole point is that a
- * rep reads accounts they do NOT own (a `private` OWD already admits the owner,
- * so a share to the owner proves nothing). The reps are created after the dev
- * admin and appended to `sys_user`, so `get_user`'s unordered "first user" is
- * unchanged by staffing — and the staffing script re-checks that from the other
- * side, failing if any demo user turns out to own a seeded account — a check
- * that now reads `owner_id`, the one column ownership lives in (#548).
- *
- * ─── ONE ownership column (#548, and the #622 lesson it settles) ─────────
+ * ─── ONE ownership column ────────────────────────────────────────────────
  *
  * `owner_id` is the ONLY owner this app has. It is the column ObjectQL injects
  * into every user-owned object, and the only one the sharing service reads:
  * under `sharingModel: 'private'` the OWD baseline admits the owner of
  * `owner_id` and a share can only WIDEN from there. It also drives the "My …"
  * views, the owner-addressed `notify` in every sweep, and the owner axis of the
- * analytics datasets — because #548 pointed all of those at it.
+ * analytics datasets.
  *
- * Until #548 the app ALSO authored its own `owner` lookup, and this flow had to
- * stamp both. That is what #622 was: a row claimed on `owner` alone came out of
- * the sweep looking claimed everywhere a human would check, while still being
- * owned by nobody as far as access control was concerned — `PATCH` answered 403
- * for EVERY user including the admin, and the attachment surface, which gates on
- * `canEdit(parent)`, answered 403 `ATTACHMENT_PARENT_ACCESS` on upload. Worse,
- * the sweep's own filter then read `owner != null` and never looked at the row
- * again: the state was terminal. With one column that whole failure mode is
- * structurally gone, not merely guarded against — there is no second column left
- * to disagree with the first.
+ * ⛔ Never author a second, app-level owner lookup beside it. A row claimed on
+ * such a column comes out of a sweep looking claimed everywhere a human would
+ * check, while still being owned by nobody as far as access control is
+ * concerned: `PATCH` answers 403 for EVERY user including the admin, and the
+ * attachment surface, which gates on `canEdit(parent)`, answers 403
+ * `ATTACHMENT_PARENT_ACCESS` on upload. A sweep whose filter then reads the
+ * second column never looks at the row again, so the state is terminal. With one
+ * column that failure mode is structurally gone rather than guarded against —
+ * there is no second column left to disagree with the first.
  *
- * Why rows reach the platform ownerless at all — unchanged by #548, and the
- * reason this flow still exists: seed writes run under `{ isSystem: true }`,
- * which short-circuits the security middleware entirely, so the insert-time
- * auto-stamp of `owner_id` never fires ("seeds either declare those fields
- * explicitly per record"). HotCRM's seeds cannot declare it — no seed can name a
- * user. So ownership at the platform level is THIS flow's job, and nothing
- * else's.
+ * Why rows reach the platform ownerless at all, and the reason this flow exists:
+ * seed writes run under `{ isSystem: true }`, which short-circuits the security
+ * middleware entirely, so the insert-time auto-stamp of `owner_id` never fires
+ * ("seeds either declare those fields explicitly per record"). HotCRM's seeds
+ * cannot declare it — no seed can name a user. So ownership at the platform
+ * level is THIS flow's job, and nothing else's.
  *
  * One pass per object, selecting `{ owner_id: null }`. On a healthy org it
  * selects nothing.
@@ -132,7 +122,7 @@ const claim = (key: string, objectName: string, label: string) => ({
               // A foreign owner on an update is an ownership TRANSFER, denied
               // without `allowTransfer` — but this flow is `runAs: 'system'`,
               // which short-circuits the security middleware before that guard
-              // (#548). The claim is deliberately outside the user gate: there
+              // The claim is deliberately outside the user gate: there
               // is no user to hold the grant when it runs.
               fields: { [OWNERSHIP_COLUMN]: '{firstUser.id}' },
             },
@@ -147,103 +137,58 @@ const claim = (key: string, objectName: string, label: string) => ({
 /**
  * The objects whose seeded rows this flow claims.
  *
- * Quotes and contracts are in the list because they are seeded ownerless too —
- * without claiming them the contract_renewal / contract_expiration /
- * quote_expiration notifies address a null owner and reach nobody (the exact
- * failure this flow exists to fix), and they additionally stay uneditable for
- * everyone under a `private` OWD (#622).
- *
- * `crm_forecast` is here for the same reason plus one sharper one (#702). A
- * forecast row IS a per-owner object — `sharingModel: 'private'`, and
- * `sales_rep` reads it with `readScope: 'own'` — so an ownerless snapshot is
- * not merely blank on the owner axis of `forecast_metrics` and absent from "My
- * Forecast": it is invisible to every rep and editable by nobody, admin
- * included. It was the one owner-scoped seeded object this list omitted.
- *
- * Claiming it is only CORRECT because the seeds no longer ship a row in the
- * window `forecast_snapshot` owns (`src/data/revenue.seed.ts`). While they did,
- * stamping an owner here would have moved the phantom onto the first user
- * rather than removing it — and left a permanent duplicate on any boot where
- * the 03:00 sweep reached the window before this ten-minute sweep did. Order
- * independence comes from the seeds staying out of that window, not from this
- * claim; the claim only settles who owns the SETTLED periods.
- *
- * `crm_campaign` and `crm_knowledge_article` came next (#716). Cross the
+ * MEMBERSHIP RULE, computed rather than curated: an object belongs here when it
+ * is seeded AND declares `owner_id`. `test/flow-scheduled.test.ts` crosses the
  * registered objects three ways — seeded × declares `owner_id` × claimed here —
- * and after those two the "seeded and owner-scoped but unclaimed" cell was
- * EMPTY. `test/flow-scheduled.test.ts` computes that cross-table rather than
- * reading a hand-written roster, so the next seeded owner-scoped object cannot
- * be forgotten the way these two were — and `crm_event` at the foot of this
- * list is that mechanism paying out for the first time (see below).
+ * and fails while the "seeded and owner-scoped but unclaimed" cell is non-empty,
+ * so the next seeded owner-scoped object cannot be forgotten. ⛔ Do not
+ * hand-maintain this list against a written roster instead.
  *
- * What hid them is their OWD. The nine above are `private` (or
- * `controlled_by_parent`), where an ownerless row is INVISIBLE and the defect
- * announces itself on the first list view. These two are `public_read`, so
- * their seeded rows read fine for everybody and look perfectly healthy. But
- * `public_read` opens the read baseline only — the platform's write filter
- * applies to it exactly as it does to `private`: "public_read is read-open but
- * write-owned; only a fully public object is write-open"
- * (`@objectstack/plugin-sharing` 17.0.0-rc.2, `buildWriteFilter`). A write
- * still needs owner-match, or a share at a write level.
+ * An object declaring NO `owner_id` stays OUT — `crm_product` (a shared
+ * catalogue) and `crm_event_attendee` (`sharingModel: 'controlled_by_parent'`,
+ * its access derived from the event it hangs off). There is no ownership to
+ * claim and stamping one would write a column the object does not have; the
+ * same test asserts that direction too.
  *
- * Which turns two GRANTED permissions into permanent 403s. `marketing_user`
- * holds `crm_campaign` at `allowEdit: true, modifyAllRecords: false`, and
+ * ⚠️ OWD does not decide membership, and reading it as if it did is what hides
+ * an omission. On a `private` (or `controlled_by_parent`) object an ownerless
+ * row is INVISIBLE and the defect announces itself on the first list view. On a
+ * `public_read` object the seeded rows read fine for everybody and look
+ * perfectly healthy — but `public_read` opens the READ baseline only:
+ * "public_read is read-open but write-owned; only a fully public object is
+ * write-open" (`@objectstack/plugin-sharing` 17.0.0-rc.2, `buildWriteFilter`).
+ * A write still needs owner-match, or a share at a write level.
+ *
+ * Which turns a GRANTED permission into a permanent 403. `marketing_user` holds
+ * `crm_campaign` at `allowEdit: true, modifyAllRecords: false`, and
  * `service_agent` holds `crm_knowledge_article` the same way. With
- * `modifyAllRecords: false` and no `writeScope`, the effective write depth is
+ * `modifyAllRecords: false` and no `writeScope` the effective write depth is
  * `own`, whose filter is `owner_id == caller` — a predicate no null-owner row
- * can ever satisfy. So the permission table says "can edit" while every seeded
- * row answers 403 for everyone but `system_admin`. That is #622's failure shape
- * on two more objects, and it is why this is worth fixing past the cosmetic
- * complaint of a blank owner column (empty "My …" lists, an empty owner axis in
- * the campaign analytics, owner-addressed `notify` reaching nobody).
+ * can satisfy. So the permission table says "can edit" while every seeded row
+ * answers 403 for everyone but `system_admin`. ⛔ Criteria shares are not a
+ * substitute: `campaign_leadership_*` (`src/sharing/campaign.sharing.ts`) widens
+ * edit to two marketing POSITIONS and only while a campaign is
+ * `planning`/`in_progress`, so it covers neither the finished seeded campaigns
+ * nor any knowledge article, and nobody holding the plain `marketing_user` grant
+ * is reached by it at all.
  *
- * The `campaign_leadership_*` criteria shares (`src/sharing/campaign.sharing.ts`)
- * are not a substitute: they widen edit to two marketing POSITIONS and only
- * while a campaign is `planning`/`in_progress`, so they cover neither the
- * finished seeded campaigns nor any knowledge article, and nobody holding the
- * plain `marketing_user` grant is reached by them at all.
+ * ⚠️ Before adding an object, check for a SECOND PRODUCER of the same row. A
+ * claim is correct only while nothing else writes rows in the window this sweep
+ * would stamp. `crm_forecast` is claimable because the seeds ship no row in the
+ * window `forecast_snapshot` owns (`src/data/revenue.seed.ts`); while they did,
+ * stamping an owner here would have moved the phantom onto the first user rather
+ * than removing it, and left a permanent duplicate on any boot where the 03:00
+ * sweep reached the window first. `crm_event` has no such overlap: `log_call` /
+ * `log_meeting` / `schedule_meeting` insert their row with an explicit
+ * `owner_id` (an action body runs `isSystem`, so it stamps ownership itself —
+ * `src/actions/global.actions.ts`), so a rep's own interactions are never
+ * ownerless and this sweep never selects them.
  *
- * Both objects are owner-scoped by history rather than shared catalogue:
- * `scripts/backfill-owner-id.ts` lists both in its `OBJECTS`, i.e. both carried
- * the app-level `owner` lookup #548 retired. `crm_product` — the other seeded
- * `public_read` object — declares no `owner_id` at all and stays OUT: it is a
- * shared catalogue, so there is no ownership to claim and stamping one would
- * write a column the object does not have. Until #669 it was also the e2e
- * suite's ownership-blind probe, which gave it a second reason to stay out;
- * that suite no longer reads seeded rows at all, so the first reason is the
- * only one left — and it is the one that was always doing the work.
- *
- * Who owns a seeded knowledge article, recorded rather than decided (#716, PM
- * ruling): the first user, by the same demo convention every other object here
- * follows. Whether a real deployment's article owner means its AUTHOR or its
- * MAINTAINER is a product question, and this claim deliberately does not
- * prejudge it — a real deployment assigns ownership through import or territory
- * rules before this sweep has anything to pick up (see the header). The demo's
- * job is only that no seeded row is left owned by nobody.
- *
- * `crm_event` joins the list the day the activity model gets demo rows (#671),
- * and it is the computed cross-table above doing its job rather than an
- * obstacle: `crm_event` declares `owner_id`, so the moment `src/data/` shipped
- * events the "seeded AND owner-scoped AND unclaimed" cell stopped being empty
- * and `test/flow-scheduled.test.ts` went red. Its OWD is `private` and
- * `sales_rep` reads it `own`-only, which is #702's shape exactly: an ownerless
- * interaction is invisible to every rep, absent from the owner axis of
- * `event_metrics` (the Sales Activity dashboard's "Activity by Rep" bar) and
- * editable by nobody, `system_admin` aside.
- *
- * `crm_event_attendee` is seeded alongside it and deliberately stays OUT. It
- * declares no `owner_id` at all — `sharingModel: 'controlled_by_parent'`, its
- * access derived from the event it hangs off — so there is no ownership to
- * claim, and stamping one would write a column the object does not have. That
- * is the cross-table's OTHER direction, which the same test asserts.
- *
- * No collision with the runtime writer, the question #702 taught us to ask
- * before claiming anything: `log_call` / `log_meeting` / `schedule_meeting`
- * insert their `crm_event` row with an explicit `owner_id` (an action body runs
- * `isSystem`, so it stamps ownership itself — see `src/actions/global.actions.ts`),
- * which means a rep's own interactions are never ownerless and this sweep never
- * selects them. Unlike `crm_forecast` there is no shared window to keep clear:
- * seeds and the actions write disjoint rows, not two producers of one row.
+ * Who owns a seeded knowledge article, recorded rather than decided (PM ruling):
+ * the first user, by the same demo convention every other object here follows.
+ * Whether a real deployment's article owner means its AUTHOR or its MAINTAINER
+ * is a product question this claim deliberately does not prejudge — a real
+ * deployment assigns ownership before this sweep has anything to pick up.
  */
 const CLAIMED_OBJECTS: ReadonlyArray<[key: string, objectName: string, label: string]> = [
   ['leads', 'crm_lead', 'Leads'],
@@ -293,23 +238,18 @@ export const DemoBootstrapFlow: Flow = {
       config: { schedule: '*/10 * * * *' },
     },
     {
-      // A LIST read, deliberately (#4419). 17.0.0-rc.2 refuses a `findOne` that
-      // names no record: `filter: {}` with no ordering made the platform pick an
-      // arbitrary row and hand it back as if it were "the" user, so the read is
-      // now rejected outright — `get_record(sys_user) failed: findOne('sys_user')
-      // selects no particular record`. That aborts the sweep on its second node
-      // and leaves every seeded row ownerless, which is the whole failure this
-      // flow exists to prevent.
+      // A LIST read, deliberately. ⛔ Never lower this to `limit: 1`: the
+      // executor routes `limit <= 1` to `findOne`, and 17.0.0-rc.2 refuses a
+      // `findOne` that names no record — `get_record(sys_user) failed:
+      // findOne('sys_user') selects no particular record` — which aborts the
+      // sweep on its second node and leaves every seeded row ownerless, the
+      // whole failure this flow exists to prevent.
       //
-      // "Any row will genuinely do" is the honest description here — see the
-      // header: the reps are appended after the dev admin, and `demo:staff`
-      // asserts from the other side that no demo rep owns a seeded record. The
-      // prescription for that case is `find`, and the only way to reach `find`
-      // from this node is `limit > 1` (the executor routes `limit <= 1` to
-      // `findOne`, and offers no `orderBy` at all) — hence 2, not 1. The pick is
-      // the same first row as before; what changed is that it is now STATED as
-      // "some row out of this set" instead of smuggled through a call that
-      // claimed to name one.
+      // "Any row will genuinely do" is the honest description, and `find` is
+      // the prescription for that case: the reps are appended after the dev
+      // admin, and `demo:staff` asserts from the other side that no demo rep
+      // owns a seeded record. `limit: 2` is the smallest value that reaches
+      // `find` (this node offers no `orderBy` at all).
       id: 'get_user', type: 'get_record', label: 'First Users',
       config: { objectName: 'sys_user', limit: 2, outputVariable: 'userList' },
     },
@@ -324,7 +264,7 @@ export const DemoBootstrapFlow: Flow = {
     {
       // Branching is on the two out-edges below; a `decision` node's singular
       // `config.condition` is never evaluated, so a copy here would be inert
-      // (17.0.0-rc.2's `flow-inert-node-condition`, #4414).
+      // (17.0.0-rc.2's `flow-inert-node-condition`).
       id: 'has_user', type: 'decision', label: 'Any user yet?',
     },
     ...TARGETS.flatMap((t) => [t.find, t.loop]),

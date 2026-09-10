@@ -8,17 +8,15 @@ type Flow = Automation.Flow;
  *
  * ## Why these two flows exist
  *
- * `crm_campaign_member.added_date` is `readonly: true` (#1667): nobody is meant
- * to hand-edit when a membership was created. Until `@objectstack/objectql`
- * 17.4.0 the readonly strip was an UPDATE-path rule and every writer of this
- * stamp was an INSERT, so `campaign_enrollment` could write it as the marketer
- * who clicked the button.
+ * `crm_campaign_member.added_date` is `readonly: true`: nobody is meant to
+ * hand-edit when a membership was created.
  *
- * ⭐ 17.4.0 changed that, and the change is the reason this file exists.
- * `@objectstack/objectql`'s own changelog states it as a BREAKING behaviour
- * change: *"a static `readonly` field is now stripped from a **non-system
- * caller's INSERT payload inside `engine.insert`**, exactly as it already was
- * on `engine.update`"*, and it names the remedy in the same sentence —
+ * ⭐ From `@objectstack/objectql` 17.4.0 the readonly strip covers INSERT as
+ * well as UPDATE, which is the reason this file exists. Its changelog states
+ * the BREAKING behaviour change: *"a static `readonly` field is now stripped
+ * from a **non-system caller's INSERT payload inside `engine.insert`**, exactly
+ * as it already was on `engine.update`"*, and it names the remedy in the same
+ * sentence —
  * *"Seeding a read-only column at create time is a **system** act — use
  * `context.isSystem`, a flow's `runAs: 'system'`, a system hook or a seed."*
  * `objectstack validate` says the same thing at author time through
@@ -26,7 +24,7 @@ type Flow = Automation.Flow;
  *
  * ⛔ The remedy is NOT to elevate `campaign_enrollment`. That flow is a screen
  * flow a marketer launches from a campaign record, and `AGENTS.md` house rule 9
- * ("Elevate as little as possible", precedent #1434) is explicit: *"A screen
+ * ("Elevate as little as possible") is explicit: *"A screen
  * flow stays `runAs: 'user'`. A write that genuinely needs elevation is split
  * into a dedicated `system` sub-flow and called through a `subflow` node. ⛔ Do
  * not elevate a whole flow to make `readonly` take effect."* Elevating the
@@ -40,7 +38,7 @@ type Flow = Automation.Flow;
  * read, the eligibility queries and the per-member dedupe, and hands ONLY the
  * insert to a dedicated `runAs: 'system'` callee.
  *
- * ELEVATION IS NOT ANONYMITY (objectstack#5494): `resolveRunDataContext`
+ * ELEVATION IS NOT ANONYMITY: `resolveRunDataContext`
  * returns `{ isSystem: true, actor, ...userId }` for a `runAs: 'system'` run, so
  * the membership row is still attributed to the marketer who enrolled it — only
  * the readonly strip's `if (!opCtx.context?.isSystem)` branch is skipped.

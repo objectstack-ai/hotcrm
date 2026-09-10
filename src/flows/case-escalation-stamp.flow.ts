@@ -5,7 +5,7 @@ type Flow = Automation.Flow;
 
 /**
  * The escalation STAMP — the one elevated step behind the Escalate Case
- * action (#1434, maintainer-approved decision batch #21 ②).
+ * action (maintainer-approved).
  *
  * ## Why this flow exists at all
  *
@@ -49,7 +49,7 @@ type Flow = Automation.Flow;
  * `runAs: flow.runAs ?? 'user'` AFTER spreading the caller's context, so the
  * callee's own declaration wins: "a COPY, never mutating the caller's context,
  * so the elevation is scoped to this run and the caller's identity is restored
- * when the run returns" (ADR-0049 / #1888).
+ * when the run returns" (ADR-0049).
  *
  * ## ⛔ What this flow deliberately does NOT write
  *
@@ -62,8 +62,7 @@ type Flow = Automation.Flow;
  * are ordinary editable columns — all three stay in `escalate_case`, written
  * with the USER's context. Moving `escalation_reason` here (or declaring it
  * `readonly`) would make the platform silently strip the reason the agent just
- * typed, which is the exact harm #1434 was filed about, inverted onto user
- * input.
+ * typed — the exact harm this split exists to prevent, inverted onto user input.
  *
  * ⚠️ ORDERING IS LOAD-BEARING, and it is why this flow runs LAST rather than
  * first. `crm_case`'s `escalation_reason_required` validation rejects any write

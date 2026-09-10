@@ -34,12 +34,12 @@ type Flow = Automation.Flow;
  *
  * Authored ONCE and used on two edges (`b2` and `b5`) because the two ask the
  * same question at two points in the iteration — before the sweep's write and
- * after it — and a hand-copied second spelling is exactly the drift `#650`
- * measured on decision nodes. {@link CASE_HAS_NO_OWNER} is its complement.
+ * after it — and a hand-copied second spelling is exactly the drift measured on
+ * decision nodes. {@link CASE_HAS_NO_OWNER} is its complement.
  *
- * TOTALITY (#643): `currentCase` is a LOOP ITEM over `caseList`, which
+ * TOTALITY: `currentCase` is a LOOP ITEM over `caseList`, which
  * `get_record` filled from `data.find` — every element is a raw driver row,
- * sparse in exactly the way #633 measured. A case that was never written with
+ * sparse in the way a raw driver row is. A case that was never written with
  * an `owner_id` column carries no key at all, so `has()` is the only total
  * accessor; an unguarded `vars.currentCase.owner_id != null` aborts with
  * `No such key` and takes the run down the same way an empty recipient slate
@@ -85,7 +85,7 @@ export const CaseSlaMonitorFlow: Flow = {
   status: 'active',
   // Scheduled runs have no trigger user, so under the default runAs:'user' the
   // data nodes execute UNSCOPED anyway. Declare runAs:'system' to make that
-  // RLS-bypassing elevation explicit and intended (ADR-0049, #1888).
+  // RLS-bypassing elevation explicit and intended (ADR-0049).
   runAs: 'system',
 
   variables: [],
@@ -96,10 +96,10 @@ export const CaseSlaMonitorFlow: Flow = {
       id: 'query_breached', type: 'get_record', label: 'Find Breached Cases',
       config: {
         objectName: 'crm_case',
-        // `$nin` (not `is_closed: false`): a case in `resolved` has met its SLA —
-        // work is finished — but `is_closed` only flips on `closed`, so the old
-        // filter stamped false breaches on resolved cases and dragged them back
-        // to `escalated`.
+        // ⛔ `$nin` on `status`, never `is_closed: false`: a case in `resolved`
+        // has met its SLA — work is finished — but `is_closed` only flips on
+        // `closed`, so the boolean filter stamps false breaches on resolved
+        // cases and drags them back to `escalated`.
         filter: {
           status: { $nin: ['resolved', 'closed'] },
           is_sla_violated: false,
@@ -135,9 +135,9 @@ export const CaseSlaMonitorFlow: Flow = {
               },
             },
             {
-              // Gateway only — the predicate lives on the out-edge (#650).
+              // Gateway only — the predicate lives on the out-edge.
               //
-              // #1405: `crm_case.owner_id` is NULLABLE and an unowned case is an
+              // `crm_case.owner_id` is NULLABLE and an unowned case is an
               // ordinary state (this repo ships `scripts/backfill-owner-id.ts` /
               // `pnpm backfill:owner` precisely because ownerless rows happen;
               // ordinary REST creation and import reach it too). The `notify`
@@ -156,15 +156,14 @@ export const CaseSlaMonitorFlow: Flow = {
               // finds it. Gating both would trade a dead run for a silently
               // dropped alert on exactly the cases most likely to be neglected.
               //
-              // #1405, second half (maintainer ruling 2026-09-03, option C):
-              // the ownerless branch is no longer a dead end. It now goes to
+              // The ownerless branch is not a dead end: it goes to
               // `reload_case`, because by the time the gate is reached the
               // sweep's own write may ALREADY HAVE GIVEN THE CASE AN OWNER —
-              // see that node.
+              // see that node (maintainer ruling 2026-09-03, option C).
               id: 'check_owner', type: 'decision', label: 'Case Has an Owner?',
             },
             {
-              // Re-read the case the sweep just wrote (#1405).
+              // Re-read the case the sweep just wrote.
               //
               // ⚠️ THE ASSIGNMENT IS NOT AUTHORED HERE, AND MUST NOT BE.
               // `flag_breach` writes `status: 'escalated'`, and that IS the
@@ -186,7 +185,7 @@ export const CaseSlaMonitorFlow: Flow = {
               // mutates the in-flight payload and issues no operation of its
               // own.
               //
-              // What the flow was missing is therefore the READ, not the write:
+              // ⛔ The READ is what this node is for, not a second write:
               // `currentCase` is the loop item bound by `query_breached` BEFORE
               // `flag_breach` ran, so the owner the sweep just assigned is
               // invisible to it and `{currentCase.owner_id}` addresses the
@@ -207,7 +206,7 @@ export const CaseSlaMonitorFlow: Flow = {
               },
             },
             {
-              // Gateway only — the predicate lives on the out-edge (#650).
+              // Gateway only — the predicate lives on the out-edge.
               //
               // The ruled empty-pool clause, as a gate rather than a failure:
               // when the `service_manager` pool resolves empty the hook assigns
@@ -231,7 +230,7 @@ export const CaseSlaMonitorFlow: Flow = {
               // twice, free to drift on the half nobody is looking at.
               //
               // ⚠️ THE RECIPIENT IS RULED, NOT INCIDENTAL — #1535, maintainer
-              // ruling 2026-09-07 (director batch #73), option A. On a breached
+              // ruling 2026-09-07, option A. On a breached
               // case that ALREADY HAS AN OWNER, `flag_breach` writes
               // `status: 'escalated'` and `case_escalation_reassign` hands the
               // case to the least-loaded `service_manager` inside that same
@@ -277,7 +276,7 @@ export const CaseSlaMonitorFlow: Flow = {
             // conditional one, which would traverse BOTH and notify twice.
             //
             // ⚠️ The owned branch reads `currentCase` as `query_breached` bound
-            // it, deliberately unchanged by #1405: a case that already had an
+            // it, deliberately: a case that already had an
             // owner keeps alerting THAT owner, which is what the sweep has
             // always done. ⚠️ That is RULED intent now, no longer an open
             // question — the `notify_team` node carries the ruling.

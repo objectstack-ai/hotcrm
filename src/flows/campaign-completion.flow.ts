@@ -7,19 +7,16 @@ type Flow = Automation.Flow;
 /**
  * Campaign auto-completion — scheduled daily sweep.
  *
- * Migrated from the removed `campaign_completion_check` object workflow (7.7
- * dropped `workflows[]` on object schemas; scheduled automation is now a
- * `type: 'schedule'` flow). Each night it flips `in_progress` campaigns whose
- * `end_date` has passed to `completed` — a `status` transition, which is one of
- * the triggers `campaign_metrics_refresh` (`campaign.hook.ts`) recomputes the
- * metric block on.
+ * Each night it flips `in_progress` campaigns whose `end_date` has passed to
+ * `completed` — a `status` transition, which is one of the triggers
+ * `campaign_metrics_refresh` (`campaign.hook.ts`) recomputes the metric block
+ * on.
  *
- * ⚠️ That is a REFRESH, not a snapshot. Since #597 the block is kept live by
- * four refresh hooks — `campaign_metrics_refresh`,
- * `campaign_attribution_refresh`, `campaign_lead_conversion_refresh` and
- * `campaign_member_metrics_refresh` — so this sweep is not the moment the
- * numbers arrive, it is just one more transition over numbers that were already
- * current.
+ * ⚠️ That is a REFRESH, not a snapshot. The block is kept live by four refresh
+ * hooks — `campaign_metrics_refresh`, `campaign_attribution_refresh`,
+ * `campaign_lead_conversion_refresh` and `campaign_member_metrics_refresh` — so
+ * this sweep is not the moment the numbers arrive, just one more transition
+ * over numbers that were already current.
  */
 export const CampaignCompletionFlow: Flow = {
   name: 'campaign_completion',
@@ -29,7 +26,7 @@ export const CampaignCompletionFlow: Flow = {
   status: 'active',
   // Scheduled runs have no trigger user, so under the default runAs:'user' the
   // data nodes execute UNSCOPED anyway. Declare runAs:'system' to make that
-  // RLS-bypassing elevation explicit and intended (ADR-0049, #1888).
+  // RLS-bypassing elevation explicit and intended (ADR-0049).
   runAs: 'system',
   variables: [],
   nodes: [

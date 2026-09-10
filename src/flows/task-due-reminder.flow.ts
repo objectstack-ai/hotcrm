@@ -8,8 +8,7 @@ type Flow = Automation.Flow;
  * Task Due Reminder — scheduled time-based reminders.
  *
  * The task schema carries `reminder_date` (and `due_date`), and the calendar /
- * gantt views can *display* them — but nothing watched the clock, so a reminder
- * never actually fired. This flow adds the missing *time* dimension: it sweeps
+ * gantt views *display* them; this flow is what watches the clock. It sweeps
  * tasks whose `reminder_date` has arrived (and that are still open and not yet
  * reminded), notifies the owner on the inbox + email channels, and stamps
  * `reminder_sent` so the same task is never alerted twice.
@@ -26,7 +25,7 @@ export const TaskDueReminderFlow: Flow = {
   status: 'active',
   // Scheduled runs have no trigger user, so under the default runAs:'user' the
   // data nodes execute UNSCOPED anyway. Declare runAs:'system' to make that
-  // RLS-bypassing elevation explicit and intended (ADR-0049, #1888).
+  // RLS-bypassing elevation explicit and intended (ADR-0049).
   runAs: 'system',
 
   variables: [],

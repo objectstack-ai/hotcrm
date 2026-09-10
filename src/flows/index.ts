@@ -14,7 +14,7 @@ export {
 } from './campaign-member-enroll.flow';
 export { CaseEscalationFlow, CaseEscalationOnCreateFlow } from './case-escalation.flow';
 export { EscalateCaseFlow, CloseCaseFlow, ClaimCaseFlow } from './case-actions.flow';
-// The one elevated step behind Escalate Case (#1434) — called by
+// The one elevated step behind Escalate Case — called by
 // `escalate_case` through a `subflow` node, never invoked directly from the UI.
 export { CaseEscalationStampFlow } from './case-escalation-stamp.flow';
 export { LeadConversionFlow } from './lead-conversion.flow';
@@ -28,7 +28,7 @@ export { CaseSlaMonitorFlow } from './case-sla-monitor.flow';
 export { OpportunityStagnationFlow } from './opportunity-stagnation.flow';
 export { ForecastSnapshotFlow } from './forecast-snapshot.flow';
 export { LeadAssignmentFlow } from './lead-assignment.flow';
-// Migrated from object workflows[] (removed in 7.7): scheduled status-flips + notifications
+// Scheduled status-flips + notifications
 export { CampaignCompletionFlow } from './campaign-completion.flow';
 export { QuoteExpirationFlow } from './quote-expiration.flow';
 export { ContractExpirationFlow } from './contract-expiration.flow';
@@ -36,7 +36,7 @@ export { ContactWelcomeFlow } from './contact-welcome.flow';
 export { OpportunityWonAlertFlow } from './opportunity-won-alert.flow';
 export { TaskUrgentAlertFlow } from './task-urgent-alert.flow';
 export { TaskDueReminderFlow } from './task-due-reminder.flow';
-// Outbound integration: the billing hand-off (#600) — where CRM scope ends.
+// Outbound integration: the billing hand-off — where CRM scope ends.
 export {
   BillingHandoffClosedWonFlow,
   BillingHandoffContractActivatedFlow,
@@ -83,8 +83,8 @@ export const allFlows: Flow[] = [
   CaseEscalationOnCreateFlow,
   EscalateCaseFlow,
   CloseCaseFlow,
-  // The claim gesture given a button (#1144) — pure UI over the seam that
-  // already writes ownership; `case_self_claim` stamps `owner_id`, not this.
+  // Pure UI over the seam that already writes ownership: `case_self_claim`
+  // stamps `owner_id`, not this flow.
   ClaimCaseFlow,
   // Registered so `escalate_case`'s `subflow` node can resolve it by name.
   CaseEscalationStampFlow,
@@ -100,7 +100,7 @@ export const allFlows: Flow[] = [
   OpportunityStagnationFlow,
   ForecastSnapshotFlow,
   LeadAssignmentFlow,
-  // Migrated from object workflows[] (removed in 7.7)
+  // Scheduled status-flips + notifications
   CampaignCompletionFlow,
   QuoteExpirationFlow,
   ContractExpirationFlow,
@@ -108,7 +108,7 @@ export const allFlows: Flow[] = [
   OpportunityWonAlertFlow,
   TaskUrgentAlertFlow,
   TaskDueReminderFlow,
-  // Outbound integration (#600)
+  // Outbound integration
   BillingHandoffClosedWonFlow,
   BillingHandoffContractActivatedFlow,
 ];

@@ -8,20 +8,20 @@ type Flow = Automation.Flow;
 /**
  * Large-deal-won alert — record-change flow on opportunity update.
  *
- * Migrated from the removed `notify_on_large_deal_won` object workflow (7.7
- * dropped `workflows[]`). When a deal of $100K or more is marked closed_won,
- * notify the owner — the owner alone, not their manager (see the notify node
- * for why the manager cannot be reached).
+ * When a deal of $100K or more is marked closed_won, notify the owner — the
+ * owner alone, not their manager (see the notify node for why the manager
+ * cannot be reached).
  *
- * The cut is INCLUSIVE (`>=`, #1087): `LARGE_DEAL_AMOUNT` means one thing across
+ * The cut is INCLUSIVE (`>=`): `LARGE_DEAL_AMOUNT` must mean one thing across
  * this alert, the approval entry gate and both sharing rules, so a deal at
  * exactly $100,000 is announced on win for the same reason it is shared with
- * leadership. Before #1087 this site cut at `>` and the sharing rules at `>=`,
- * which made that deal visible to leadership and invisible to governance.
+ * leadership. ⛔ Never let this site and the sharing rules cut differently — a
+ * deal on the line then becomes visible to leadership and invisible to
+ * governance.
  *
- * NB: `record.amount >= 100000` is authored as bare CEL against the (string-
- * serialized) currency field — this relies on the 7.7 numeric-hydration fix
- * (framework #1534); pre-7.7 it would have needed `double(record.amount)`.
+ * NB: `record.amount >= 100000` is authored as bare CEL against the
+ * (string-serialized) currency field, which relies on the 7.7 numeric-hydration
+ * fix; pre-7.7 it would have needed `double(record.amount)`.
  */
 export const OpportunityWonAlertFlow: Flow = {
   name: 'opportunity_won_alert',
@@ -30,7 +30,7 @@ export const OpportunityWonAlertFlow: Flow = {
   type: 'record_change',
   status: 'active',
   // A record-change flow fired by a SYSTEM write carries no trigger user
-  // either (ADR-0049, #1888, #3760). Deals reach `closed_won` through
+  // either (ADR-0049). Deals reach `closed_won` through
   // machinery as well as through a rep's own save — `lead_conversion` and the
   // `contract_renewal` sweep both write opportunities, and the latter is
   // itself `runAs: 'system'`.
@@ -53,7 +53,7 @@ export const OpportunityWonAlertFlow: Flow = {
         // claims, approval-status stamps, description tweaks) re-sent the
         // congratulations blast. The trigger forwards `previous` into the
         // condition scope (cf. the engine's record-change context).
-        // TOTALITY (#633): `has(...)` on every read, plus `!= null` on the
+        // TOTALITY: `has(...)` on every read, plus `!= null` on the
         // ordering comparison (`has()` passes an explicit null and
         // `record.amount >= 100000` then aborts with
         // `no such overload: dyn<null> >= int`).

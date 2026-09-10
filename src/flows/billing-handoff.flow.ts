@@ -33,19 +33,19 @@ import {
  * Nothing here is custom plumbing; it is the platform's own outbound-callout
  * verb, on the same outbox the declarative `webhooks` surface uses.
  *
- * ## Why flows and not stack `webhooks` (hotcrm#600)
+ * ## ⛔ Do not re-express these as declared `webhooks`
  *
- * The card originally asked for declared `webhooks`. Measured on 17.0.0-rc.6,
- * that surface cannot express either event: `WebhookSchema` is `.strict` and
- * rejects `condition` / `filter` / `body` / `payloadFields` / `retryPolicy`; its
- * `triggers` vocabulary is `create / update / delete / bulk_*` with no
- * transition form; and the auto-enqueuer matches on object + trigger alone and
- * delivers a fixed `DataEvent` envelope carrying neither the account nor the
- * line items. A `sys_webhook` row named for closed-won would fire on *every*
- * opportunity edit — a declaration that lies about itself, in the app other
- * people copy. Dispatch there is additionally gated on the `realtime`
- * capability, which this app does not require, so such a row would be visible
- * in Setup and never fire at all.
+ * Measured on 17.0.0-rc.6, that surface cannot express either event:
+ * `WebhookSchema` is `.strict` and rejects `condition` / `filter` / `body` /
+ * `payloadFields` / `retryPolicy`; its `triggers` vocabulary is
+ * `create / update / delete / bulk_*` with no transition form; and the
+ * auto-enqueuer matches on object + trigger alone and delivers a fixed
+ * `DataEvent` envelope carrying neither the account nor the line items. A
+ * `sys_webhook` row named for closed-won would fire on *every* opportunity edit
+ * — a declaration that lies about itself, in the app other people copy.
+ * Dispatch there is additionally gated on the `realtime` capability, which this
+ * app does not require, so such a row would be visible in Setup and never fire
+ * at all.
  *
  * The cost of this route is stated in `_billing-endpoint.ts` and in
  * `content/docs/revenue/billing-handoff.mdx`: the endpoint and secret live in
@@ -53,9 +53,9 @@ import {
  *
  * ## Exactly once per transition, not once per edit
  *
- * Both start conditions test the TRANSITION (`record.x == v && previous.x != v`),
- * not the current value. This is the idiom `opportunity_won_alert` already uses
- * on this very object, and its header explains why at length: without the
+ * ⛔ Both start conditions must test the TRANSITION
+ * (`record.x == v && previous.x != v`), never the current value. This is the
+ * idiom `opportunity_won_alert` uses on this very object: without the
  * `previous.*` term, every later edit of a won deal — a demo-bootstrap owner
  * claim, an approval stamp, a description tweak — re-fires the flow. For a
  * congratulations notification that is noise; for a billing hand-off it is a
@@ -152,7 +152,7 @@ export const BillingHandoffClosedWonFlow: Flow = {
   type: 'record_change',
   status: 'active',
   // A record-change flow fired by a SYSTEM write carries no trigger user
-  // (ADR-0049, #1888, #3760), and opportunities reach `closed_won` through
+  // (ADR-0049), and opportunities reach `closed_won` through
   // machinery as well as a rep's own save — `lead_conversion` writes them, and
   // the `contract_renewal` sweep is itself `runAs: 'system'`. This flow has two
   // data nodes, so under the default `runAs: 'user'` those reads would be
@@ -249,8 +249,7 @@ export const BillingHandoffClosedWonFlow: Flow = {
  *
  * NB the value is `activated`. `crm_contract.status` has no `active` member —
  * the options are `draft / in_approval / activated / expired / terminated`,
- * governed by the `contract_status_progression` state machine (#600 corrected
- * the card's text on this).
+ * governed by the `contract_status_progression` state machine.
  */
 export const BillingHandoffContractActivatedFlow: Flow = {
   name: 'billing_handoff_contract_activated',
@@ -327,9 +326,9 @@ export const BillingHandoffContractActivatedFlow: Flow = {
             end_date: '{record.end_date}',
             contract_term_months: '{record.contract_term_months}',
             contract_value: '{record.contract_value}',
-            // The two fields the card names as consumer-less today: this is the
-            // consumer. They are what the billing system needs to raise the
-            // schedule HotCRM deliberately does not model.
+            // This flow is the consumer of these two fields: they are what the
+            // billing system needs to raise the schedule HotCRM deliberately
+            // does not model.
             billing_frequency: '{record.billing_frequency}',
             payment_terms: '{record.payment_terms}',
             auto_renewal: '{record.auto_renewal}',
