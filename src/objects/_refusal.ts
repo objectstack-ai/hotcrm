@@ -117,11 +117,13 @@ export const REFUSAL_CODES = {
  *
  * Compared against each lowered copy with whitespace collapsed — the pin is
  * about what the code DOES, not how a transform chose to indent it. A copy that
- * forgot `err.status`, or grew a third LOWER-CASE property, fails; a re-indent
- * does not. Read off the assertion itself, that is its exact reach: it matches
- * `err.` followed by a LOWER-CASE name, so it counts what this helper WRITES
- * and stops there. Which of those writes survive the sandbox is fact 2 above,
- * and since `userMessage` joined the allowlist the two are no longer one list.
+ * forgot `err.status`, or grew a third property in EITHER case, fails; a
+ * re-indent does not. Read off the assertion itself, that is its exact reach:
+ * it matches `err.` followed by a dot-notation name in any case, so it counts
+ * what this helper WRITES and stops there. It was LOWER-CASE only until #1868,
+ * which is to say blind to `userMessage` — the one key 17.4.0 added to the
+ * allowlist. Which of those writes survive the sandbox is fact 2 above, and
+ * since `userMessage` joined it the two are no longer one list.
  */
 export const REFUSE_HELPER = `function refuse(message, code, status) {
   const err = new Error(message);
