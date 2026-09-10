@@ -7,10 +7,9 @@ type Flow = Automation.Flow;
 /**
  * Contract auto-expiration — scheduled daily sweep.
  *
- * Migrated from the removed `contract_expiration_check` object workflow (7.7
- * dropped `workflows[]`). Flips `activated` contracts past their `end_date` to
- * `expired` and notifies the owner. (Renewal *reminders* are a separate concern
- * already handled by the `contract_renewal` flow.)
+ * Flips `activated` contracts past their `end_date` to `expired` and notifies
+ * the owner. (Renewal *reminders* are a separate concern, handled by the
+ * `contract_renewal` flow.)
  */
 export const ContractExpirationFlow: Flow = {
   name: 'contract_expiration',
@@ -20,7 +19,7 @@ export const ContractExpirationFlow: Flow = {
   status: 'active',
   // Scheduled runs have no trigger user, so under the default runAs:'user' the
   // data nodes execute UNSCOPED anyway. Declare runAs:'system' to make that
-  // RLS-bypassing elevation explicit and intended (ADR-0049, #1888).
+  // RLS-bypassing elevation explicit and intended (ADR-0049).
   runAs: 'system',
   variables: [],
   nodes: [

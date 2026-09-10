@@ -8,8 +8,8 @@ type Flow = Automation.Flow;
  * Screen flows behind the Claim Case / Escalate Case / Close Case header
  * actions.
  *
- * Why flows and not `body`-typed actions (verified against the running
- * 16.1.0 console, 2026-07-28):
+ * ⛔ Never re-express these as `body`-typed actions (verified against the
+ * running 16.1.0 console, 2026-07-28):
  *
  *  - `type: 'modal'` never executes the body at all — on submit the console
  *    resolves the action `target` as an OBJECT name and dies on
@@ -51,7 +51,7 @@ export const EscalateCaseFlow: Flow = {
       },
     },
     {
-      // The USER-CONTEXT half of the escalation (#1434). Everything here is a
+      // The USER-CONTEXT half of the escalation. Everything here is a
       // column the acting agent may legitimately write, so it is written with
       // their identity — this flow stays `runAs: 'user'`.
       //
@@ -90,8 +90,7 @@ export const EscalateCaseFlow: Flow = {
     {
       // The ELEVATED half, and the only elevation in this flow: one
       // `runAs: 'system'` flow, one `update_record`, two readonly columns.
-      // #1434's approved direction (decision batch #21 ②) — elevate the write,
-      // not the flow.
+      // The maintainer-approved direction — elevate the write, not the flow.
       //
       // ⚠️ THIS NODE MUST RUN AFTER `escalate`, NOT BEFORE. `crm_case`'s
       // `escalation_reason_required` validation rejects any write whose merged
@@ -132,8 +131,8 @@ export const CloseCaseFlow: Flow = {
   // the transition and must therefore run with the system writer.
   //
   // ⛔ A HISTORICAL PRECEDENT, NOT A POLICY — do not cite this line to justify
-  // elevating another screen flow (#1434, maintainer-approved decision batch
-  // #21 ②). The standing rule is the opposite one: a screen flow stays
+  // elevating another screen flow (#1434, the maintainer ruling that settled
+  // it). The standing rule is the opposite one: a screen flow stays
   // `runAs: 'user'` and a write that genuinely needs elevation is split into a
   // dedicated `system` sub-flow reached by a `subflow` node — see
   // `escalate_case` above and `src/flows/case-escalation-stamp.flow.ts`.
@@ -152,7 +151,7 @@ export const CloseCaseFlow: Flow = {
   nodes: [
     { id: 'start', type: 'start', label: 'Start', config: { objectName: 'crm_case' } },
     {
-      // The "attach the article that resolved it" affordance (#601). Optional
+      // The "attach the article that resolved it" affordance. Optional
       // on purpose: most cases are not resolved out of the knowledge base, and
       // a required field here would be answered with a junk value rather than
       // left honest — which is worse than an absent link for a measure whose
@@ -218,20 +217,19 @@ export const CloseCaseFlow: Flow = {
 };
 
 /**
- * Claim Case — the triage claim gesture, given a button (#1144, piece 2).
+ * Claim Case — the triage claim gesture, given a button.
  *
  * ## What this flow is, and what it deliberately is NOT
  *
  * The claim already exists as behaviour: an agent moves an unowned case out of
  * **Unassigned — triage** by setting its status to one that means a person is
  * on it, and `case_self_claim` (`src/objects/_case-assignment.ts`, priority
- * 260) stamps `owner_id` with the caller. Nothing on the screen said so, which
- * is the whole complaint this card carried.
+ * 260) stamps `owner_id` with the caller. This flow is the screen that says so.
  *
- * So this flow is **pure UI over the existing seam**. Its one write is the
+ * It is **pure UI over the existing seam**. Its one write is the
  * STATUS MOVE. It does not write `owner_id`, and that is not a style choice:
  *
- *  - the #3004 transfer gate refuses any payload carrying `owner_id` inside the
+ *  - the ownership-transfer gate refuses any payload carrying `owner_id` in the
  *    sharing MIDDLEWARE, upstream of the hook phase, and a screen flow's
  *    `update_record` runs as the caller — so a flow that wrote the column would
  *    be refused exactly like a hand-written update, loudly and always;
@@ -257,9 +255,9 @@ export const CloseCaseFlow: Flow = {
  * an agent picks is real information (`waiting_customer` straight off a triage
  * row is a different day's work from `in_progress`). The options are built from
  * {@link CLAIMABLE_TARGET_STATUSES} — the seam's own declared set — rather than
- * hand-copied, which is #490's lesson: a hand-copied subset silently dropped an
- * option from a picker and nothing noticed. A fourth claimable status makes the
- * label map below a COMPILE error rather than a quietly short picker.
+ * hand-copied. ⛔ Never hand-copy the subset: it silently drops an option from
+ * the picker and nothing notices. A fourth claimable status makes the label map
+ * below a COMPILE error rather than a quietly short picker.
  */
 const CLAIM_STATUS_LABEL: Record<(typeof CLAIMABLE_TARGET_STATUSES)[number], string> = {
   in_progress: 'In Progress',

@@ -7,18 +7,16 @@ type Flow = Automation.Flow;
 /**
  * Schedule Follow-up — one screen, one task, straight off the lead header.
  *
- * The gap this closes: `log_call` / `log_meeting` record what already happened,
- * but nothing put the NEXT touch on the rep's list. Filing that follow-up meant
- * leaving the lead, opening the Related tab, finding the Tasks block and
- * re-picking the lead as the parent — four steps for the single most common
- * thing a rep does after a call.
+ * `log_call` / `log_meeting` record what already happened; this flow puts the
+ * NEXT touch on the rep's list without leaving the lead — the single most
+ * common thing a rep does after a call.
  *
- * Implemented as a SCREEN FLOW rather than a `type: 'modal'` action: modal
- * actions are non-functional in 16.1.0 (the console resolves the action's
- * `target` as an object name and the submit dies on
- * `GET /api/v1/meta/object/<target>` → 400, even though the spec defines
- * `target` for modals as "the modal/page name to open"). Flow-typed actions
- * are the mechanism that demonstrably works today — `convert_lead` uses it.
+ * ⛔ Implemented as a SCREEN FLOW, never a `type: 'modal'` action: modal actions
+ * are non-functional in 16.1.0 — the console resolves the action's `target` as
+ * an object name and the submit dies on `GET /api/v1/meta/object/<target>` →
+ * 400, even though the spec defines `target` for modals as "the modal/page name
+ * to open". Flow-typed actions are the mechanism that demonstrably works today;
+ * `convert_lead` uses it.
  */
 export const ScheduleFollowUpFlow: Flow = {
   name: 'schedule_followup',
@@ -48,8 +46,8 @@ export const ScheduleFollowUpFlow: Flow = {
           { name: 'dueDate', label: 'Due Date', type: 'date', required: true },
           {
             name: 'activityType', label: 'Activity Type', type: 'select',
-            // Mirrors crm_task.type exactly (#490) — a hand-copied subset here
-            // silently dropped `other` from the picker.
+            // Mirrors crm_task.type exactly. ⛔ Never hand-copy the subset — it
+            // silently drops an option (`other`) from the picker.
             options: plainOptions(TASK_TYPE_OPTIONS),
           },
           {

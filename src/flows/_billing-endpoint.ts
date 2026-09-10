@@ -14,19 +14,13 @@
  * `billing-handoff.flow.ts`, and `objectstack build` bakes their values into the
  * compiled artifact's flow metadata. There is no Setup screen for them.
  *
- * That is a real cost of the mechanism, stated rather than buried. The
- * declarative `webhooks` surface (`sys_webhook` rows) IS admin-editable, but it
- * cannot express either of these events: `WebhookSchema` is `.strict` and
- * rejects `condition` / `filter` / `body` / `payloadFields` / `retryPolicy`, its
- * `triggers` vocabulary is `create / update / delete / bulk_*` with no
- * transition form, and the auto-enqueuer matches on object + trigger alone and
- * ships a fixed `DataEvent` envelope with no account and no line items. A
- * webhook named `billing_handoff_closed_won` on that surface would fire on
- * *every* opportunity edit. See hotcrm#600 for the measurements.
- *
- * So the trade is: exact events with a shaped payload, at the price of
- * repointing being a rebuild. `content/docs/revenue/billing-handoff.mdx`
- * documents that plainly instead of teaching a Setup screen that does not apply.
+ * That is a real cost of the mechanism, stated rather than buried: the
+ * admin-editable `webhooks` surface cannot express either of these events, so
+ * the trade is exact events with a shaped payload at the price of repointing
+ * being a rebuild. The measurements behind that are in
+ * `billing-handoff.flow.ts`; `content/docs/revenue/billing-handoff.mdx`
+ * documents the cost plainly instead of teaching a Setup screen that does not
+ * apply.
  *
  * ## Overriding without editing this file
  *

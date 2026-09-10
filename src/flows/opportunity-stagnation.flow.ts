@@ -8,11 +8,10 @@ type Flow = Automation.Flow;
 /**
  * Opportunity Stagnation — scheduled "deal-rot" detector.
  *
- * The opportunity carries `stage_entry_date` (stamped by the lifecycle hook on
- * insert and on every stage change), but nothing acted on it, so deals could
- * sit untouched in a stage indefinitely. This daily sweep finds open
- * opportunities stalled longer than the threshold, nudges the owner and books
- * a follow-up task so the deal re-enters the working set. A deal with an
+ * This daily sweep is what acts on `stage_entry_date` (stamped by the lifecycle
+ * hook on insert and on every stage change): it finds open opportunities
+ * stalled longer than the threshold, nudges the owner and books a follow-up
+ * task so the deal re-enters the working set. A deal with an
  * open stall task is skipped (idempotency), so each stall episode produces
  * exactly one nudge; completing the task re-arms it.
  *
@@ -30,7 +29,7 @@ export const OpportunityStagnationFlow: Flow = {
   status: 'active',
   // Scheduled runs have no trigger user, so under the default runAs:'user' the
   // data nodes execute UNSCOPED anyway. Declare runAs:'system' to make that
-  // RLS-bypassing elevation explicit and intended (ADR-0049, #1888).
+  // RLS-bypassing elevation explicit and intended (ADR-0049).
   runAs: 'system',
 
   variables: [],
@@ -41,9 +40,10 @@ export const OpportunityStagnationFlow: Flow = {
       id: 'query_stalled', type: 'get_record', label: 'Find Stalled Deals',
       config: {
         objectName: 'crm_opportunity',
-        // Predicate on the STORED `stage_entry_date`, not on `days_in_stage`:
-        // the latter is a formula, computed after the query, so as a filter key
-        // it addressed a column that does not exist (#489). `entry < today − N`
+        // ⛔ Predicate on the STORED `stage_entry_date`, never on
+        // `days_in_stage`: the latter is a formula, computed after the query, so
+        // as a filter key it addresses a column that does not exist.
+        // `entry < today − N`
         // is the same test as `days_in_stage > N`, resolved by the flow
         // template engine (same `{TODAY() ± n}` token as contract-renewal).
         // A row with a null `stage_entry_date` does not satisfy `$lt` and is
@@ -65,9 +65,9 @@ export const OpportunityStagnationFlow: Flow = {
           nodes: [
             {
               // Idempotency gate: a still-open stall task means this deal was
-              // already nudged. Without this the daily sweep re-notified and
-              // re-created an identical task every morning for as long as the
-              // deal stayed stalled (unbounded duplicate pile-up).
+              // already nudged. ⛔ Without it the daily sweep re-notifies and
+              // re-creates an identical task every morning for as long as the
+              // deal stays stalled — an unbounded duplicate pile-up.
               id: 'find_existing_task', type: 'get_record', label: 'Already Nudged?',
               config: {
                 objectName: 'crm_task',
@@ -80,7 +80,7 @@ export const OpportunityStagnationFlow: Flow = {
               },
             },
             {
-              // Gateway only — the predicate lives on the out-edge (#650).
+              // Gateway only — the predicate lives on the out-edge.
               id: 'check_not_nudged', type: 'decision', label: 'First Nudge?',
             },
             {
@@ -106,7 +106,7 @@ export const OpportunityStagnationFlow: Flow = {
                   type: 'follow_up', priority: 'high', status: 'not_started',
                   due_date: '{TODAY() + 2}',
                   owner_id: '{currentOpp.owner_id}',
-                  // ORG PARTITION (#700). A schedule trigger carries no
+                  // ORG PARTITION. A schedule trigger carries no
                   // organization, so without this the nudge task is born
                   // `organization_id` NULL — outside every org partition.
                   // Upstream ruling objectstack#6155 Q2=A assigns the answer to
@@ -124,7 +124,7 @@ export const OpportunityStagnationFlow: Flow = {
           edges: [
             { id: 'b1', source: 'find_existing_task', target: 'check_not_nudged', type: 'default' },
             // "Already nudged" has no edge, so the loop moves to the next item.
-            // This edge is the ONLY site for the predicate (#650): a `decision`
+            // This edge is the ONLY site for the predicate: a `decision`
             // node's singular `config.condition` is never read, so a node copy
             // would be inert metadata free to drift away from what runs.
             { id: 'b2', source: 'check_not_nudged', target: 'notify_owner', type: 'conditional', condition: P`existingStallTask == null`, label: 'First nudge' },

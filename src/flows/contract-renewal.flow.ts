@@ -9,14 +9,12 @@ type Flow = Automation.Flow;
  * Contract Renewal — scheduled daily sweep for contracts entering their
  * renewal-notice window.
  *
- * Business gap this closes: the data model ships `end_date`, `auto_renewal`
- * and `renewal_notice_days` on every contract, but nothing consumed them —
- * renewals depended on someone remembering. This flow operationalises those
- * fields: each morning it finds `activated` contracts whose `end_date` falls
- * inside their per-contract notice window, books a renewal task for the owner,
- * notifies them, and — when `auto_renewal` is on — opens an `existing_renewal`
- * opportunity pre-filled from the contract value so the deal is already in the
- * pipeline.
+ * This flow is what consumes `end_date`, `auto_renewal` and
+ * `renewal_notice_days`: each morning it finds `activated` contracts whose
+ * `end_date` falls inside their per-contract notice window, books a renewal task
+ * for the owner, notifies them, and — when `auto_renewal` is on — opens an
+ * `existing_renewal` opportunity pre-filled from the contract value so the deal
+ * is already in the pipeline.
  *
  * Capabilities exercised: scheduled trigger + `loop` over a query result +
  * per-record `decision` gates + `notify` (ADR-0012).
@@ -29,7 +27,7 @@ export const ContractRenewalFlow: Flow = {
   status: 'active',
   // Scheduled runs have no trigger user, so under the default runAs:'user' the
   // data nodes execute UNSCOPED anyway. Declare runAs:'system' to make that
-  // RLS-bypassing elevation explicit and intended (ADR-0049, #1888).
+  // RLS-bypassing elevation explicit and intended (ADR-0049).
   runAs: 'system',
 
   variables: [],
@@ -37,12 +35,12 @@ export const ContractRenewalFlow: Flow = {
   nodes: [
     { id: 'start', type: 'start', label: 'Start (daily 08:00)', config: { schedule: '0 8 * * *' } },
     {
-      // Broad pre-filter (next 120 days — must cover the LARGEST
-      // renewal_notice_days in use, seeds go up to 90); the per-record notice
+      // Broad pre-filter (next 120 days — ⛔ must cover the LARGEST
+      // renewal_notice_days in use; seeds go up to 90). The per-record notice
       // window is applied in the decision node below so each contract honours
       // its own renewal_notice_days. A pre-filter narrower than the largest
-      // notice period silently truncates it (a 90-day contract was invisible
-      // until 60 days out).
+      // notice period silently truncates it: a 90-day contract stays invisible
+      // until 60 days out.
       id: 'query_contracts', type: 'get_record', label: 'Find Expiring Contracts',
       config: {
         objectName: 'crm_contract',
@@ -59,15 +57,15 @@ export const ContractRenewalFlow: Flow = {
         body: guarded('contract', {
           nodes: [
             {
-              // Gateway only — the predicate lives on the out-edge (#650).
+              // Gateway only — the predicate lives on the out-edge.
               id: 'check_notice_window', type: 'decision', label: 'Within Notice Window?',
             },
             {
-              // Idempotency gate: the sweep matches the same contract every
-              // day of its notice window — without this it created a duplicate
-              // task + notification (and, below, a duplicate pipeline-inflating
-              // renewal opportunity) per day. An open renewal task for this
-              // contract means this window was already handled.
+              // Idempotency gate: the sweep matches the same contract every day
+              // of its notice window, so ⛔ without it every day produces a
+              // duplicate task + notification (and, below, a duplicate
+              // pipeline-inflating renewal opportunity). An open renewal task
+              // for this contract means this window was already handled.
               id: 'find_existing_task', type: 'get_record', label: 'Already Reminded?',
               config: {
                 objectName: 'crm_task',
@@ -80,7 +78,7 @@ export const ContractRenewalFlow: Flow = {
               },
             },
             {
-              // Gateway only — the predicate lives on the out-edge (#650).
+              // Gateway only — the predicate lives on the out-edge.
               id: 'check_not_reminded', type: 'decision', label: 'First Reminder?',
             },
             {
@@ -92,7 +90,7 @@ export const ContractRenewalFlow: Flow = {
                   type: 'follow_up', priority: 'high', status: 'not_started',
                   due_date: '{currentContract.end_date}',
                   owner_id: '{currentContract.owner_id}',
-                  // ORG PARTITION (#700). A schedule trigger carries no
+                  // ORG PARTITION. A schedule trigger carries no
                   // organization, so the engine has nothing to fill this from
                   // and the row would be born `organization_id` NULL — outside
                   // every org partition, where an `(organization_id, …)` unique
@@ -123,7 +121,7 @@ export const ContractRenewalFlow: Flow = {
               },
             },
             {
-              // Gateway only — the predicate lives on the out-edge (#650).
+              // Gateway only — the predicate lives on the out-edge.
               id: 'check_auto_renewal', type: 'decision', label: 'Auto-Renewal On?',
             },
             {
@@ -142,7 +140,7 @@ export const ContractRenewalFlow: Flow = {
               },
             },
             {
-              // Gateway only — the predicate lives on the out-edge (#650).
+              // Gateway only — the predicate lives on the out-edge.
               id: 'check_no_open_renewal', type: 'decision', label: 'No Open Renewal Deal?',
             },
             {
@@ -157,7 +155,7 @@ export const ContractRenewalFlow: Flow = {
                   type: 'existing_renewal',
                   close_date: '{currentContract.end_date}',
                   owner_id: '{currentContract.owner_id}',
-                  // ORG PARTITION (#700) — see `create_renewal_task` above.
+                  // ORG PARTITION — see `create_renewal_task` above.
                   // The renewal deal belongs to the same org as the contract.
                   organization_id: '{currentContract.organization_id}',
                   next_step: 'Confirm renewal terms with customer',
@@ -169,7 +167,7 @@ export const ContractRenewalFlow: Flow = {
             // Only act when inside the per-contract notice window; gates with
             // no matching edge simply end the iteration, so the loop moves on.
             //
-            // The EDGE is the ONLY site (#650): a `decision` node's singular
+            // The EDGE is the ONLY site: a `decision` node's singular
             // `config.condition` is never read — the executor reads the plural
             // `config.conditions[]` and nothing else — so a copy on the node
             // would be inert metadata that drifts silently. `check_notice_window`
@@ -181,10 +179,10 @@ export const ContractRenewalFlow: Flow = {
             // Appending the time part is what makes this evaluate instead of
             // blowing up mid-sweep.
             //
-            // TOTALITY (#643): `currentContract` is a LOOP ITEM over
+            // TOTALITY: `currentContract` is a LOOP ITEM over
             // `contractList`, which `get_record` filled from `data.find` —
             // every element is a raw driver row, sparse in exactly the way
-            // #633 measured. `end_date` is `required` on `crm_contract` so
+            // a raw driver row is. `end_date` is `required` on `crm_contract` so
             // that column is always written, but `renewal_notice_days`
             // (`defaultValue: 30`) and `auto_renewal` (`defaultValue: false`)
             // are only DEFAULTED, and a row written before the default existed
@@ -200,7 +198,7 @@ export const ContractRenewalFlow: Flow = {
             { id: 'b3', source: 'check_not_reminded', target: 'create_renewal_task', type: 'conditional', condition: P`existingRenewalTask == null`, label: 'First reminder' },
             { id: 'b4', source: 'create_renewal_task', target: 'notify_owner', type: 'default' },
             { id: 'b5', source: 'notify_owner', target: 'check_auto_renewal', type: 'default' },
-            // TOTALITY (#643): same loop item, same sparse driver row. Only an
+            // TOTALITY: same loop item, same sparse driver row. Only an
             // explicit `true` opens a renewal deal, so an absent column reads
             // as "auto-renewal off" — the conservative branch.
             { id: 'b6', source: 'check_auto_renewal', target: 'find_existing_renewal_opp', type: 'conditional', condition: P`has(vars.currentContract) && has(vars.currentContract.auto_renewal)

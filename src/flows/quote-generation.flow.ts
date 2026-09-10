@@ -14,9 +14,9 @@ export const QuoteGenerationFlow: Flow = {
   status: 'active',
 
   variables: [
-    // `recordId` matches the console's flow-action trigger contract
-    // ({ recordId, objectName }); a custom name like `opportunityId` is never
-    // seeded — same lesson as lead_conversion.
+    // MUST be `recordId` — the console's flow-action trigger contract seeds
+    // only that name ({ recordId, objectName }); a custom name like
+    // `opportunityId` arrives undefined.
     { name: 'recordId', type: 'text', isInput: true, isOutput: false },
     { name: 'quoteName', type: 'text', isInput: true, isOutput: false },
     { name: 'expirationDays', type: 'number', isInput: true, isOutput: false },
@@ -87,10 +87,10 @@ export const QuoteGenerationFlow: Flow = {
           // for every percentage whose hundredth is not a dyadic rational, so a
           // BARE product carries a tail the field refuses: 180,000 at 30% is
           // 125999.99999999999 and the insert is rejected with `Total Price must
-          // have at most 2 decimal places (got 11)`. That made quote generation
-          // depend on an arithmetic accident of amount × discount — 20% of 180K
-          // worked, 30% of the same 180K did not, and the 400 never reached the
-          // seller (#1206).
+          // have at most 2 decimal places (got 11)`. A bare product therefore
+          // makes quote generation depend on an arithmetic accident of
+          // amount × discount — 20% of 180K works, 30% of the same 180K does
+          // not — and the 400 never reaches the seller.
           //
           // `round()` is the CEL stdlib's, mirrored 1:1 into flow value
           // expressions from service-automation 17.3.0. It is INTEGER-ONLY and
@@ -112,22 +112,22 @@ export const QuoteGenerationFlow: Flow = {
       },
     },
     {
-      // Advance to `proposal` only from a PRE-proposal stage (the state
-      // machine allows `→ proposal` from all three). Re-writing `proposal` on
-      // a deal already at proposal/negotiation was an illegal self/backward
-      // transition — those deals keep their stage; the quote is still created.
+      // Advance to `proposal` only from a PRE-proposal stage (the state machine
+      // allows `→ proposal` from all three). ⛔ Never re-write `proposal` on a
+      // deal already at proposal/negotiation: that is an illegal self/backward
+      // transition. Those deals keep their stage; the quote is still created.
       //
       // The predicate itself lives on edges `e4a` / `e4b` — a `decision` node's
       // singular `config.condition` is never evaluated, so a copy here would be
-      // inert (17.0.0-rc.2's `flow-inert-node-condition`, #4414). The totality
+      // inert (17.0.0-rc.2's `flow-inert-node-condition`). The totality
       // rationale is on those edges, where the guards are.
       id: 'check_stage', type: 'decision', label: 'Can Advance to Proposal?',
     },
     {
       id: 'update_opportunity', type: 'update_record', label: 'Update Opportunity',
       config: {
-        // No `last_activity_date` write: crm_opportunity has no such field
-        // (it lives on crm_account) — the unknown column made this node fail.
+        // ⛔ No `last_activity_date` write: `crm_opportunity` has no such field
+        // (it lives on `crm_account`), and an unknown column fails this node.
         objectName: 'crm_opportunity', filter: { id: '{recordId}' },
         fields: { stage: 'proposal' },
       },
@@ -160,7 +160,7 @@ export const QuoteGenerationFlow: Flow = {
     // These EDGES are the live sites; `check_stage` carries no
     // `config.condition` at all, because the engine never evaluates one.
     //
-    // TOTALITY (#643): `oppRecord` is a `get_record` OUTPUT — `findOne` answers
+    // TOTALITY: `oppRecord` is a `get_record` OUTPUT — `findOne` answers
     // a miss with `null`, and reading a field off it then aborts with `No such
     // key: stage`. Measured unreachable TODAY only because two neighbouring
     // schemas happen to close it: `crm_opportunity.stage` is `required` (never
@@ -168,7 +168,7 @@ export const QuoteGenerationFlow: Flow = {
     // `oppRecord` makes `create_quote` fail one node earlier. Both are one
     // `required: false` away from re-opening it, so the predicate carries its
     // own guard — and from 17.0.0-rc.2 an unevaluable condition aborts the step
-    // instead of skipping it (#4775), so the guard is load-bearing, not
+    // instead of skipping it, so the guard is load-bearing, not
     // decorative. Note the scope is `vars.oppRecord`, not bare `oppRecord`:
     // measured, `has(oppRecord.stage)` still aborts with `Unknown variable:
     // oppRecord` when the variable is unbound, while `has(vars.oppRecord)`

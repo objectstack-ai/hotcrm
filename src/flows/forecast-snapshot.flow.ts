@@ -8,22 +8,19 @@ type Flow = Automation.Flow;
 /**
  * Forecast Snapshot — nightly per-owner pipeline snapshot into `crm_forecast`.
  *
- * The gap this closes: `crm_forecast` documented a nightly writer that did not
- * exist. `forecast.hook.ts` only DERIVES fields on a row someone else creates,
- * and nothing in `src/` ever created one — so the forecast object, its
+ * `forecast.hook.ts` only DERIVES fields on a row someone else creates, so this
+ * sweep is what creates them. Without it the forecast object, its
  * `attainment_pct` / `coverage_ratio` formulas, the `forecast_metrics` dataset
- * and the dashboard's quota-attainment table all ran on the three hand-seeded
- * demo rows. On any live install the whole forecasting story was an empty
- * shell (#590).
+ * and the dashboard's quota-attainment table all run on hand-seeded demo rows.
  *
  * ## Buckets
  *
  * Amounts are aggregated from `crm_opportunity` by `forecast_category` — the
  * stored, indexed column the opportunity lifecycle hook derives from `stage`,
  * and the same column the "Commit & Best Case" list view and the
- * `pipeline_by_forecast_category` dashboard widget already group on. Reading
- * the snapshot off `probability` instead would create a SECOND definition of
- * "commit" that silently disagrees with those surfaces.
+ * `pipeline_by_forecast_category` dashboard widget already group on. ⛔ Never
+ * read the snapshot off `probability` instead: that creates a SECOND definition
+ * of "commit" that silently disagrees with those surfaces.
  *
  * The buckets are CUMULATIVE, the standard forecast ladder — and the shape the
  * object's own fields already assume (`pipeline` is "all open opportunities",
@@ -64,17 +61,17 @@ type Flow = Automation.Flow;
  * `opportunity_stagnation`. Re-running is how a snapshot stays current, and it
  * is the only way an amount ever decreases.
  *
- * ## Two questions, two scopes — a manual forecast SUPPRESSES the sweep (#1082)
+ * ## Two questions, two scopes — a manual forecast SUPPRESSES the sweep
  *
- * The window above answers "has this period been handled?". It does NOT answer
- * "which row do I own?", and using it for both is what destroyed a manager's
- * typed numbers: `source: 'manual'` is one of three documented origins, and a
- * hand-entered current-quarter row satisfies the window filter exactly as the
- * sweep's own row does — by construction, since #1008/#1093 pinned both ends of
- * the window to the calendar quarter. At 03:00 the sweep adopted it, overwrote
- * the four amounts, restamped `snapshot_date` and flipped `source` to
- * `scheduled`. `quota` survived (it is never written), so attainment silently
- * re-based onto swept numbers and the row still looked plausible.
+ * ⛔ Never answer both questions with one filter. The window answers "has this
+ * period been handled?" and does NOT answer "which row do I own?". Used for
+ * both, it destroys a manager's typed numbers: `source: 'manual'` is one of
+ * three documented origins, and a hand-entered current-quarter row satisfies the
+ * window filter exactly as the sweep's own row does, since both ends of the
+ * window are pinned to the calendar quarter. The sweep then adopts it,
+ * overwrites the four amounts, restamps `snapshot_date` and flips `source` to
+ * `scheduled`. `quota` survives (it is never written), so attainment silently
+ * re-bases onto swept numbers and the row still looks plausible.
  *
  * So the two jobs read through two filters:
  *
@@ -85,15 +82,16 @@ type Flow = Automation.Flow;
  *                               wrote (`source: 'scheduled'`).
  *
  * and `check_owned` turns "the window is handled, but not by a row I own" into
- * a stand-down: no write, and — this is the half option 1 of #1082 got wrong —
- * no second row either. A sweep that merely excluded non-`scheduled` rows from
- * one shared filter would stop finding the manual row, decide the period was
- * unhandled and OPEN a duplicate in the same window, which is #702 again:
- * `this_quarter_forecasts` and the quota-attainment widget pin `period_start`
- * by equality and would match two rows.
+ * a stand-down: no write, and — equally load-bearing — no second row.
+ *
+ * ⛔ Never reach that by excluding non-`scheduled` rows from ONE shared filter.
+ * The sweep would stop finding the manual row, decide the period was unhandled
+ * and OPEN a duplicate in the same window — and `this_quarter_forecasts` and the
+ * quota-attainment widget pin `period_start` by equality, so both would match
+ * two rows.
  *
  * The way out stays open: delete the manual row and the next sweep opens its
- * own again (path 3). Automation an override cannot silence is not an override.
+ * own again. Automation an override cannot silence is not an override.
  *
  * Note the scope is `source == 'scheduled'`, not `source != 'manual'`: an `ai`
  * row is equally not the sweep's to overwrite, and gets the same deference.
@@ -119,7 +117,7 @@ const OPEN_STAGES = { $nin: ['closed_won', 'closed_lost'] };
  *
  * The IDEMPOTENCY scope — deliberately source-blind. "Has this period been
  * handled?" is a question about the window, so a manual row answers it just as
- * a scheduled one does, and the sweep opens nothing beside it (#1082/#702).
+ * a scheduled one does, and the sweep opens nothing beside it.
  */
 const CURRENT_PERIOD_FILTER = {
   owner_id: '{currentOwner.id}',
@@ -131,7 +129,7 @@ const CURRENT_PERIOD_FILTER = {
 /**
  * The same window narrowed to the rows this sweep OWNS — its WRITE scope.
  *
- * `source` is what separates the two jobs (#1082). Anything else in the window
+ * `source` is what separates the two jobs. Anything else in the window
  * belongs to a human (`manual`) or an agent (`ai`) and is theirs to keep; a
  * miss here is the stand-down signal `check_owned` reads, not a reason to
  * create a second row. Narrowing the write scope also makes the target
@@ -144,7 +142,7 @@ const OWNED_PERIOD_FILTER = { ...CURRENT_PERIOD_FILTER, source: 'scheduled' };
 /**
  * Opportunities of the owner in flight during the snapshot window.
  *
- * ## The organization pin (#1372)
+ * ## The organization pin
  *
  * `owner_id` and the period window are both organization-NEUTRAL predicates,
  * and this sweep runs `runAs: 'system'` — the one context the driver's
@@ -244,9 +242,8 @@ const BUCKETS = [
  * The per-owner body runs as one straight line once the THREE gates pass:
  * reset → (find/sum) × 4 → write.
  *
- * `reload_forecast` is no longer the head of this chain: its successor is the
- * `check_owned` gateway (#1082), whose out-edge is conditional, and every edge
- * derived from this list is unconditional.
+ * ⛔ The chain must start AFTER the `check_owned` gateway: every edge derived
+ * from this list is unconditional, and `check_owned`'s out-edge is not.
  */
 const OWNER_CHAIN = [
   'reset_totals',
@@ -263,7 +260,7 @@ export const ForecastSnapshotFlow: Flow = {
   status: 'active',
   // Scheduled runs have no trigger user, so under the default runAs:'user' the
   // data nodes execute UNSCOPED anyway. Declare runAs:'system' to make that
-  // RLS-bypassing elevation explicit and intended (ADR-0049, #1888) — and it
+  // RLS-bypassing elevation explicit and intended (ADR-0049) — and it
   // is load-bearing here: `crm_forecast` is `sharingModel: 'private'`, so a
   // user-scoped sweep could only ever see its own rows.
   runAs: 'system',
@@ -304,7 +301,7 @@ export const ForecastSnapshotFlow: Flow = {
               },
             },
             {
-              // Gateway only — the predicate lives on the out-edge (#650).
+              // Gateway only — the predicate lives on the out-edge.
               id: 'has_deals', type: 'decision', label: 'Active Owner?',
             },
             {
@@ -318,13 +315,13 @@ export const ForecastSnapshotFlow: Flow = {
               },
             },
             {
-              // Gateway only — the predicate lives on the out-edges (#650).
+              // Gateway only — the predicate lives on the out-edges.
               id: 'check_missing', type: 'decision', label: 'First Snapshot This Period?',
             },
             {
               // Only `period` is supplied: `forecast.hook.ts` derives
               // period_start/period_end/period_label so the boundaries are
-              // calendar-true (#530) without the flow doing date arithmetic it
+              // calendar-true without the flow doing date arithmetic it
               // cannot do. `quota` is omitted on purpose — see the header.
               // A leaf node: the two mutually-exclusive edges out of
               // `check_missing` both converge on `reload_forecast`, so the
@@ -334,7 +331,7 @@ export const ForecastSnapshotFlow: Flow = {
                 objectName: 'crm_forecast',
                 fields: {
                   owner_id: '{currentOwner.id}',
-                  // ORG PARTITION (#700). A schedule trigger carries no
+                  // ORG PARTITION. A schedule trigger carries no
                   // organization, so without this the snapshot row is born
                   // `organization_id` NULL — outside every org partition, where
                   // an `(organization_id, …)` unique index does not constrain
@@ -371,11 +368,11 @@ export const ForecastSnapshotFlow: Flow = {
               // (row already existed / row just created) hand the rest of the
               // body ONE variable carrying the hook-derived period window.
               //
-              // Scoped to OWNED_PERIOD_FILTER, not the gate's window (#1082):
-              // this read chooses the row that gets WRITTEN, and the sweep only
-              // ever owns its own. A miss binds `currentForecast` to null —
-              // `get_record` always binds — which is exactly what `check_owned`
-              // below is there to read.
+              // ⛔ Scope this to OWNED_PERIOD_FILTER, never to the gate's
+              // window: this read chooses the row that gets WRITTEN, and the
+              // sweep only ever owns its own. A miss binds `currentForecast` to
+              // null — `get_record` always binds — which is exactly what
+              // `check_owned` below is there to read.
               id: 'reload_forecast', type: 'get_record', label: 'Load Snapshot Row',
               config: {
                 objectName: 'crm_forecast',
@@ -384,15 +381,15 @@ export const ForecastSnapshotFlow: Flow = {
               },
             },
             {
-              // Gateway only — the predicate lives on the out-edge (#650).
+              // Gateway only — the predicate lives on the out-edge.
               //
-              // The stand-down gate (#1082). The window is handled either way
-              // by the time we get here; this asks whether the row handling it
-              // is the sweep's. It is the same single-out-edge skip shape as
-              // `has_deals`: when the only conditional edge does not match, the
-              // iteration simply ends, and the engine records the unreached
-              // nodes as `skipped` with this node as `skippedBy` — so a
-              // stand-down is visible in the run log rather than silent.
+              // The stand-down gate. The window is handled either way by the
+              // time we get here; this asks whether the row handling it is the
+              // sweep's. Same single-out-edge skip shape as `has_deals`: when
+              // the only conditional edge does not match, the iteration ends and
+              // the engine records the unreached nodes as `skipped` with this
+              // node as `skippedBy` — so a stand-down is visible in the run log
+              // rather than silent.
               id: 'check_owned', type: 'decision', label: 'Sweep Owns This Row?',
             },
             {
@@ -434,9 +431,9 @@ export const ForecastSnapshotFlow: Flow = {
             // conversion pass that wraps bare strings only walks a flow's
             // TOP-LEVEL edges, so a bare string in here would fall through to
             // the legacy template path and compare as text — a gate that never
-            // opens, silently (#567 / upstream #4347).
+            // opens, silently.
             //
-            // These edges are the ONLY site for their predicates (#650): a
+            // These edges are the ONLY site for their predicates: a
             // `decision` node's singular `config.condition` is never read, so a
             // node-level copy would be inert metadata free to drift.
             { id: 'b1', source: 'find_any_deal', target: 'has_deals', type: 'default' },
@@ -451,7 +448,7 @@ export const ForecastSnapshotFlow: Flow = {
             { id: 'b5', source: 'check_missing', target: 'reload_forecast', type: 'conditional', condition: P`existingForecast != null`, label: 'Refresh existing row' },
             { id: 'b6', source: 'create_forecast', target: 'reload_forecast', type: 'default' },
             { id: 'b7', source: 'reload_forecast', target: 'check_owned', type: 'default' },
-            // The stand-down (#1082). No complementary edge, on purpose: the
+            // The stand-down. No complementary edge, on purpose: the
             // false branch is "this window belongs to a manual/ai row", and the
             // whole point is that the sweep then does NOTHING — no write, and
             // no second row. A variable-root null test, so no `has()` guard is

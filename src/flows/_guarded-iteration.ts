@@ -57,8 +57,8 @@
  * feature this card does not have a ruling for. The run log is the record.
  *
  * ⛔ Not every loop wants this. A sweep MEANT to stop at its first failure is a
- * legitimate reading and keeps its warning; the per-flow reading for each loop
- * that DOES use this helper is stated in the PR that introduced it.
+ * legitimate reading and keeps its warning, so decide per loop rather than
+ * wrapping every warned site by reflex.
  */
 
 /**
