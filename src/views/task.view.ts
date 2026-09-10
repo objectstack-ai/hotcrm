@@ -174,15 +174,15 @@ export const TaskViews = defineView({
       // Operator-only filter — priority and status, no tokens — and the reason
       // recorded here for that has expired (#782). Two claims stood here; both
       // were wrong already on 17.0.0-rc.2 — the version this repo pinned AT
-      // THE TIME they were measured, not the current pin, which is 17.3.0
-      // since PR #1577 (#1676) — in different ways. "Wrong" is about those two
+      // THE TIME they were measured, not the current pin, which is 17.4.0
+      // since PR #1814 (#1807) — in different ways. "Wrong" is about those two
       // retired claims, not about the engine: nothing in this block reports
       // broken platform behaviour.
       //
-      // ⚠️ READ THE VERSION ON EACH READING BELOW. They were taken at three
-      // different pins and are labelled individually; a reading labelled
-      // 17.2.0 was taken there and has NOT been re-taken on 17.3.0 unless it
-      // says so.
+      // ⚠️ READ THE VERSION ON EACH READING BELOW. They were taken at
+      // several different pins and are labelled individually; a reading
+      // labelled 17.2.0 was taken there and has NOT been re-taken on any later
+      // pin unless it says so.
       //
       // `{current_user_id}` DOES interpolate. `resolveFilterTokens()` was wired
       // into the ObjectQL READ path at 17.0.0-rc.0 (objectql #3582) ahead of
@@ -211,7 +211,8 @@ export const TaskViews = defineView({
       // `/^\$?\{([a-zA-Z0-9_]+)\}$/`, parentheses fell outside it,
       // `classifyFilterToken('{TODAY()}')` returned null, and the string
       // reached the driver verbatim and compared as text. From 17.2.0 on —
-      // re-confirmed on the current pin 17.3.0 (#1676) by the PREMISE case in
+      // re-confirmed on 17.3.0 (#1676) and again on the current pin 17.4.0
+      // (#1883) by the PREMISE case in
       // `test/flow-filter-today-token.test.ts`, which drives a real engine —
       // that is FALSE: `FILTER_TOKEN_WRAPPED_RE` in `@objectstack/spec/data`
       // now reads `/^\$?\{([^{}]+)\}$/`, which DOES match `TODAY()`, so it
@@ -285,12 +286,13 @@ export const TaskViews = defineView({
       // `due_date < {TODAY()}`, and that only `{current_user_id}` interpolates.
       // Both halves were wrong already on 17.0.0-rc.2 — the version this repo
       // pinned AT THE TIME they were measured, not the current pin, which is
-      // 17.3.0 since PR #1577 (#1676) — and the file said the opposite of
+      // 17.4.0 since PR #1814 (#1807) — and the file said the opposite of
       // itself: the note on `todays_tasks` above asserted that
       // `{current_user_id}` does NOT interpolate. It does.
       // That comment carries the measurements with their versions, INCLUDING
       // the one that moved: `{TODAY()}` is REJECTED from 17.2.0 on
-      // (`FILTER_TOKEN_UNKNOWN`, re-confirmed on the current pin 17.3.0 by
+      // (`FILTER_TOKEN_UNKNOWN`, re-confirmed on 17.3.0 and again on the
+      // current pin 17.4.0 by
       // `test/flow-filter-today-token.test.ts`) where on rc.2 it shipped to
       // the driver as text, so "cannot resolve `{TODAY()}`" is wrong on the
       // current pin for a different reason than it was wrong on rc.2. The

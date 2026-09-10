@@ -63,8 +63,9 @@ const caseValidation: Hook = {
     // while their tests passed (#1133). This block was rewritten to ASSIGN.
     //
     // The block above predicted its own trigger — "a platform release that
-    // POSTDATES 2026-08-26" — and that release is **17.3.0**, the version
-    // `package.json` now pins. objectstack#12277 shipped: the in-process Proxy
+    // POSTDATES 2026-08-26" — and that release is **17.3.0** (`package.json`
+    // has pinned 17.4.0 since PR #1814, #1807, so the fix is in the installed
+    // tree either way). objectstack#12277 shipped: the in-process Proxy
     // traps `deleteProperty`, and the sandbox path diffs deletions against the
     // entry snapshot rather than writing mutations home with `Object.assign`,
     // which cannot represent a removal. Re-measured through the engine's own

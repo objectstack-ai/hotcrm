@@ -249,8 +249,9 @@ export const OpportunityViews = defineView({
       // grammar `DATE_MACRO_PARAM_RE`, `{N_(minutes|hours|days|weeks|months|
       // years)_(ago|from_now)}` — and it reaches the driver already substituted
       // for an ISO date. Measured on 17.0.0-rc.2, RE-MEASURED 2026-09-03 on
-      // 17.2.0 (#1467) and RE-RUN on the current pin 17.3.0 (#1676, after the
-      // PR #1577 bump), so it is a reading on the CURRENT pin, and unchanged
+      // 17.2.0 (#1467), RE-RUN on 17.3.0 (#1676, after the PR #1577 bump) and
+      // RE-RUN again on the current pin 17.4.0 (#1883, after the PR #1814
+      // bump), so it is a reading on the CURRENT pin, and unchanged
       // at every taking: over four rows parked
       // 30d / 15d / 13d / 1d, `stage_entry_date < {14_days_ago}` returned the
       // 30d and 15d rows — the same two the equivalent day-start literal
@@ -304,9 +305,10 @@ export const OpportunityViews = defineView({
       // was wired into the ObjectQL read path in 17.0.0-rc.0 (objectql #3582,
       // covering find/findOne/count/aggregate ahead of the middleware chain),
       // so a saved-view filter value reaches the driver already substituted.
-      // Measured on 17.0.0-rc.2, RE-MEASURED 2026-09-03 on 17.2.0 (#1467)
-      // and RE-RUN on the current pin 17.3.0 (#1676, after the PR #1577
-      // bump), unchanged at every taking — see the runtime block in
+      // Measured on 17.0.0-rc.2, RE-MEASURED 2026-09-03 on 17.2.0 (#1467),
+      // RE-RUN on 17.3.0 (#1676, after the PR #1577 bump) and RE-RUN again on
+      // the current pin 17.4.0 (#1883, after the PR #1814 bump), unchanged at
+      // every taking — see the runtime block in
       // `test/forecast-current-quarter-view.test.ts`, which is that
       // re-measurement and runs green on the current pin.
       //

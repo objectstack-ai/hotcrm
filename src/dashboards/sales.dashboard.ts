@@ -322,9 +322,10 @@ export const SalesDashboard: Dashboard = {
       // the `period_start` equality (#730) and the `close_date` range (#743) —
       // through a real engine and pins a three-way outcome (current quarter
       // only: not zero rows, not every quarter). First taken on 17.0.0-rc.2;
-      // RE-RUN 2026-09-03 on 17.2.0 (#1467) and RE-RUN again on 17.3.0
-      // (#1676) — the version `package.json` pins and `node_modules` installs
-      // since PR #1577 — green all three times, so the outcome holds on the
+      // RE-RUN 2026-09-03 on 17.2.0 (#1467), RE-RUN on 17.3.0 (#1676, the PR
+      // #1577 pin) and RE-RUN again on 17.4.0 — the version `package.json`
+      // pins and `node_modules` installs since PR #1814 (#1807) — green all
+      // four times, so the outcome holds on the
       // CURRENT pin and not only on the one it was first taken on.
       //
       // What stood here before described the two paths as asymmetric and told

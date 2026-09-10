@@ -226,13 +226,20 @@ export const Task = ObjectSchema.create({
     //
     // NOT readonly — but the old reason here ("16.x drops flow writes to
     // readonly fields") does not survive measurement. Taken on 17.1.0,
-    // RE-TAKEN on 17.2.0 (#1460) and RE-CONFIRMED on the current pin 17.3.0
-    // (#1676), same verdict all three times:
-    // `task_due_reminder` declares `runAs: 'system'`, so its write WOULD
-    // survive a `readonly: true`, and the hook's insert-time default is on the
-    // insert path, which is exempt from the strip anyway. See
-    // `test/readonly-write-semantics.test.ts` (#1429). Left writable as-is;
-    // flipping it is a separate decision, not a comment fix.
+    // RE-TAKEN on 17.2.0 (#1460) and RE-CONFIRMED on 17.3.0 (#1676) — the pin
+    // at each of those takings, none of them the current one (17.4.0 since PR
+    // #1814, #1807) — same verdict all three times: `task_due_reminder`
+    // declares `runAs: 'system'`, so its write WOULD survive a
+    // `readonly: true`.
+    //
+    // ⚠️ The other half of that reason EXPIRED at 17.4.0 and is ⛔ NOT
+    // renumbered here: "the insert path is exempt from the strip" held through
+    // 17.3.0 and was reversed as a declared BREAKING change — the retirement
+    // is recorded in the INSERT-path section of
+    // `test/readonly-write-semantics.test.ts` (#1429) and in
+    // `campaign_member.object.ts`. Neither half moves this field, which is not
+    // `readonly` at all. Left writable as-is; flipping it is a separate
+    // decision, not a comment fix.
     reminder_sent: Field.boolean({
       group: 'system',
       label: 'Reminder Sent',

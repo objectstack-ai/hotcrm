@@ -190,8 +190,9 @@ const leadHook: Hook = {
         // a guest insert storing `is_converted: true` and an `owner_id` it
         // supplied itself. Assignment is what this block uses.
         //
-        // Upstream objectstack#12277 shipped in **17.3.0**, the version this
-        // repo now pins, and `delete` is effective on both execution paths.
+        // Upstream objectstack#12277 shipped in **17.3.0**; this repo pins
+        // 17.4.0 (PR #1814, #1807), so it carries the fix and `delete` is
+        // effective on both execution paths.
         // ⛔ That is still not a licence to spell this block with `delete`: the
         // assignments are load-bearing as WRITES — `lead_duplicate_check` stands
         // down only on a NON-BLANK verdict, so these columns must arrive `null`
@@ -267,9 +268,10 @@ const leadHook: Hook = {
           // forever (a GDPR erasure that cannot be carried out).
           //
           // Measured on 17.1.0 — the version this repo pinned AT THE TIME of
-          // the measurement, not the current pin (#1676: this repo has pinned
-          // 17.3.0 since PR #1577, and the cascade shape below has NOT been
-          // re-measured on it) — with a probe hook at priority 199 immediately
+          // the measurement, not the current pin (this repo has pinned 17.4.0
+          // since PR #1814, #1807, and the cascade shape below has NOT been
+          // re-measured on it; it was not re-measured on the 17.3.0 pin either,
+          // #1676) — with a probe hook at priority 199 immediately
           // ahead of each guard, not assumed.
           // The engine builds its cleanup write on the CALLER's own context
           // plus two engine keys, so on the path a REST `DELETE` takes, the

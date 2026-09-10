@@ -115,9 +115,10 @@ const quoteValidation: Hook = {
           // master-detail cascade) that person's account undeletable forever.
           //
           // Measured on 17.1.0 — the version this repo pinned AT THE TIME of
-          // the measurement, not the current pin (#1676: this repo has pinned
-          // 17.3.0 since PR #1577, and the cascade shape below has NOT been
-          // re-measured on it) — with a probe hook at priority 199 immediately
+          // the measurement, not the current pin (this repo has pinned 17.4.0
+          // since PR #1814, #1807, and the cascade shape below has NOT been
+          // re-measured on it; it was not re-measured on the 17.3.0 pin either,
+          // #1676) — with a probe hook at priority 199 immediately
           // ahead of each guard, not assumed.
           // The engine builds its cleanup write on the CALLER's own context
           // plus two engine keys, so on the path a REST `DELETE` takes, the

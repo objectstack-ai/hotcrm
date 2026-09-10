@@ -23,7 +23,8 @@ import type { Dashboard } from '@objectstack/spec/ui';
  * are fixed and released: objectstack#3912 (the coercion) and objectstack#3777
  * (a bare-date `$lte` dropping same-day rows) — both under the **17.0.0**
  * heading of the installed `driver-sql` and `service-analytics` CHANGELOGs,
- * and this app pins 17.3.0. `service.dashboard.ts` records the same two
+ * and this app pins 17.4.0 (PR #1814, #1807). `service.dashboard.ts` records
+ * the same two
  * closures, which is why #1157 restored the Service picker; the two files
  * agree, and neither states an upstream fix as an unmet precondition.
  *

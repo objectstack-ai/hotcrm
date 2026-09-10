@@ -32,8 +32,10 @@ export const ConvertLeadAction: Action = {
   // with no follow-up UI — `close_case` / `escalate_case` in `case.actions.ts`
   // are the shape that still earns one.
   //
-  // Mechanism, measured on the console this app pins (@objectstack/console
-  // 17.3.0, `dist/assets/`) rather than assumed: the runner gates the dialog on
+  // Mechanism, measured on the console this app pinned at that taking
+  // (@objectstack/console 17.3.0, `dist/assets/`; the app pins 17.4.0 since PR
+  // #1814, #1807, and this bundle read was ⛔ NOT re-taken there) rather than
+  // assumed: the runner gates the dialog on
   // the key's presence alone —
   //     if (action.confirmText && !await confirmHandler(evaluate(action.confirmText)))
   //         return { success: false, error: 'Action cancelled by user' };

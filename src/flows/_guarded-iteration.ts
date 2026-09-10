@@ -29,7 +29,14 @@
  * body keeps its own indentation byte-for-byte and the whole change costs a few
  * tokens per loop instead of sixty.
  *
- * ## Verified against the pinned `@objectstack/*` 17.3.0 this repo installs
+ * ## Verified against the pinned `@objectstack/*` this repo installs
+ *
+ * First taken on 17.3.0; RE-TAKEN on the current pin 17.4.0 (#1883, after the
+ * PR #1814 bump), same verdict: a 5-item sweep whose body fails on every item
+ * ran to completion — all 5 items touched, run `success: true` — where the
+ * same sweep with the body UNWRAPPED stopped at the first failure with 1 item
+ * touched and the run `failed`. That contrast IS the measurement; a guarded
+ * run alone cannot tell containment from a body that never failed.
  *
  * (Not against the platform source tree — the containment has to work on the
  * artifact that actually ships here.)
