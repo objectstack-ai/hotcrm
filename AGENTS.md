@@ -196,9 +196,18 @@ navigation fact may be documented and guarded; a machine semantic layer may not.
   `test/docs-dashboard-tiles.test.ts` resolves each `**Name** 磁贴` to an English widget title and goes red on a converted one. The
   guard's ablation is the discriminator, not pack-carriage; measures are the same class and currently unguarded (#1618).
 - A Chinese heading carries an **explicit English anchor id**, and one anchor word is used across every language, so a link survives translation (#1359).
-- zh-Hant conventions are stated by their **real** reason, not a style preference: the
-  console falls back to Simplified, so a Traditional page labels platform navigation in
-  English rather than ship mixed Simplified/Traditional script (#1368).
+- zh-Hant conventions are stated by their **real** reason, not a style preference: the app
+  ships **no Traditional locale** — `src/translations/` and the `supportedLocales` in
+  `objectstack.config.ts` carry none, so open them rather than trust a list — the console
+  therefore falls back to Simplified, and a Traditional page labels platform navigation in
+  English rather than ship mixed Simplified/Traditional script (#1368). ⇒ With no Traditional
+  pack to source from, a UI noun on a zh-Hant page takes, in order: (1) the zh-CN pack wording
+  written in Traditional characters, for the classes the bullet above sources from the pack at
+  all (list view names); (2) otherwise the English label exactly as shipped — which is what
+  that bullet already requires of every other pack-carried noun in every locale. ⛔ Never coin
+  a Traditional translation. Each zh-Hant page carries one identical standing sentence saying
+  so; ⛔ no guard asserts free prose (#1646 refused prose guards, #1755 measured an idle one).
+  (#1767)
 
 ## ⬆️ Platform Upgrades (ObjectStack version bumps)
 
