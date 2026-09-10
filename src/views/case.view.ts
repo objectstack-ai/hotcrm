@@ -293,8 +293,10 @@ export const CaseViews = defineView({
    *
    * ## ⚠️ This object's `form` IS the create dialog (#1214 item 3)
    *
-   * Measured against the console this app ships (`@objectstack/console`
-   * 17.1.0, `dist/assets/`), BOTH entry points that open a case form resolve
+   * Measured against the console this app shipped at that taking
+   * (`@objectstack/console` 17.1.0, `dist/assets/`; the app ships 17.4.0 since
+   * PR #1814, #1807, and this bundle read was ⛔ NOT re-taken there), BOTH
+   * entry points that open a case form resolve
    * it the same way and neither takes a create/edit argument:
    *
    *   RecordFormPage (`/{object}/new`, `/{object}/record/{id}/edit`)
