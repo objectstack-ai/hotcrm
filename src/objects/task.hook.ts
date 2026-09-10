@@ -24,10 +24,20 @@ const taskValidation: Hook = {
     // The refusal envelope (#1075). Mirrored from `./_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
     // import; `test/refusal-envelope.test.ts` pins every copy against it.
-    function refuse(message: string, code: string, status: number): Error {
-      const err = new Error(message) as Error & { code: string; status: number };
+    function refuse(
+      message: string,
+      code: string,
+      status: number,
+      userMessage: string = message,
+    ): Error {
+      const err = new Error(message) as Error & {
+        code: string;
+        status: number;
+        userMessage: string;
+      };
       err.code = code;
       err.status = status;
+      err.userMessage = userMessage;
       return err;
     }
     const { input } = ctx;
@@ -384,10 +394,20 @@ const taskDoNotCallGuard: Hook = {
     // The refusal envelope (#1075). Mirrored from `./_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
     // import; `test/refusal-envelope.test.ts` pins every copy against it.
-    function refuse(message: string, code: string, status: number): Error {
-      const err = new Error(message) as Error & { code: string; status: number };
+    function refuse(
+      message: string,
+      code: string,
+      status: number,
+      userMessage: string = message,
+    ): Error {
+      const err = new Error(message) as Error & {
+        code: string;
+        status: number;
+        userMessage: string;
+      };
       err.code = code;
       err.status = status;
+      err.userMessage = userMessage;
       return err;
     }
     const { input } = ctx;
