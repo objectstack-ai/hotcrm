@@ -31,9 +31,9 @@ export const Opportunity = ObjectSchema.create({
     { key: 'financials',  label: 'Financials',          icon: 'trending-up' },
     { key: 'sales_process', label: 'Sales Process',     icon: 'target' },
     { key: 'classification', label: 'Classification',   icon: 'tag' },
-    { key: 'campaign', label: 'Campaigns', icon: 'flag', defaultExpanded: false },
+    { key: 'campaign', label: 'Campaigns', icon: 'flag', collapse: 'collapsed' },
     { key: 'notes',       label: 'Notes & Next Steps',  icon: 'file-text' },
-    { key: 'crm_forecast',    label: 'Forecast & Metrics',  icon: 'bar-chart', defaultExpanded: false },
+    { key: 'crm_forecast',    label: 'Forecast & Metrics',  icon: 'bar-chart', collapse: 'collapsed' },
   ],
 
   fields: {

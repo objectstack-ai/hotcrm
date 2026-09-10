@@ -32,7 +32,7 @@ export const Contract = ObjectSchema.create({
     { key: 'terms',     label: 'Terms & Dates',        icon: 'calendar' },
     { key: 'value',     label: 'Contract Value',       icon: 'dollar-sign' },
     { key: 'status',    label: 'Status & Approval',    icon: 'check-circle' },
-    { key: 'renewal',   label: 'Renewal',              icon: 'refresh-ccw', defaultExpanded: false },
+    { key: 'renewal',   label: 'Renewal',              icon: 'refresh-ccw', collapse: 'collapsed' },
   ],
 
   fields: {

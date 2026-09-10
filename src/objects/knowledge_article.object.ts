@@ -115,7 +115,7 @@ export const KnowledgeArticle = ObjectSchema.create({
     { key: 'basic',     label: 'Article Information', icon: 'info' },
     { key: 'content',   label: 'Content',             icon: 'file-text' },
     { key: 'taxonomy',  label: 'Categorization',      icon: 'tag' },
-    { key: 'metrics',   label: 'Engagement',          icon: 'activity', defaultExpanded: false },
+    { key: 'metrics',   label: 'Engagement',          icon: 'activity', collapse: 'collapsed' },
   ],
 
   fields: {
