@@ -41,12 +41,18 @@ import eventHooks from '../src/objects/event.hook';
  * #1167: the in-process path is what this repo tests, and the body-only path is
  * what it ships. They differ — the shipped path re-throws as `SandboxError` and
  * rewrites the message to `hook 'NAME' threw: Error: ORIGINAL`, preserving the
- * original on `innerMessage`. More sharply, the sandbox marshals an allowlist of
- * exactly three properties (`code` as a non-empty string, `status` as a finite
- * number, `fields` as an array) and drops everything else, so an envelope riding
- * a fourth key or on `instanceof` would pass a handler-level test and be
- * silently dead in production. Re-measured on 17.1.0 for this change. Every
- * behavioural assertion below therefore runs the lowered body.
+ * original on `innerMessage`. More sharply, the sandbox marshals an allowlist
+ * and drops everything else, so an envelope riding a key OUTSIDE it — `hint`,
+ * `detail`, or a branch on `instanceof` — would pass a handler-level test and
+ * be silently dead in production. Re-measured on 17.4.0 (#1863 / #1867): the
+ * allowlist is FOUR properties — `code` as a non-empty string, `status` as a
+ * finite number, `fields` as an array, `userMessage` as a string with
+ * non-whitespace in it. This file said three, anchored to 17.1.0, and reached
+ * for "a fourth key" as its example of something silently dead: `userMessage`
+ * IS the fourth key, and it crosses. `refuse()` writes two of the four, so what
+ * this app writes and what can cross are no longer one list —
+ * `src/objects/_refusal.ts` carries the full reading. Every behavioural
+ * assertion below therefore runs the lowered body.
  *
  * The wording pins live alongside the envelope, never instead of it — the
  * phrasing is a real contract (#693 / #719).
@@ -90,14 +96,21 @@ describe('the refusal vocabulary is declared once (#1075)', () => {
     expect(unique[0]).toBe(flat(REFUSE_HELPER));
   });
 
-  it('sets exactly the two properties that cross the sandbox boundary', () => {
-    // `hint`, `detail`, `err.name` and `instanceof` are all dropped at the
-    // boundary. The helper's own body is the only place this app writes onto a
-    // refusal, so pinning it here covers every guard at once.
+  it('writes exactly two properties onto the error — what refuse() sets, not what crosses', () => {
+    // Counts WRITES, deliberately, and says so: measured on 17.4.0 four
+    // properties cross and this helper writes two of them, so one assertion
+    // must not claim both lists. The header above pins what crosses.
+    //
+    // The character class covers BOTH cases on purpose. It was `[a-z]+` until
+    // #1868 — lower-case only, so a third write named `err.userMessage` was
+    // undetectable while `err.hint` was caught, i.e. the guard was blind to
+    // precisely the key 17.4.0 added to the allowlist. Its exact reach, so the
+    // next reader does not over-read it: dot-notation writes only, in any case;
+    // `err['userMessage'] = …` would still be invisible.
     const body = flat(REFUSE_HELPER);
     expect(body).toContain('err.code = code');
     expect(body).toContain('err.status = status');
-    expect(body.match(/err\.[a-z]+ =/g)).toEqual(['err.code =', 'err.status =']);
+    expect(body.match(/err\.[A-Za-z_$][A-Za-z0-9_$]* =/g)).toEqual(['err.code =', 'err.status =']);
   });
 });
 
@@ -157,13 +170,17 @@ const refusalFrom = async (hook: AnyRec, opts: AnyRec): Promise<AnyRec | null> =
 /**
  * The envelope AND the wording, on the body that ships.
  *
- * `code`/`status` are read as a pair on purpose: `resolveThrownHttpError` reads
- * `status` first, so a code without a status still falls through to
- * 500 / INTERNAL_ERROR. Asserting them separately would let half an envelope
- * pass. The wording is asserted against `innerMessage` — the shipped path
- * rewrites `message` to `hook 'NAME' threw: Error: ORIGINAL` and keeps the
- * original there — and the rewrite itself is pinned, since it is what a REST
- * consumer reading `message` would see.
+ * `code`/`status` are read as a pair on purpose: measured on 17.4.0,
+ * `resolveThrownHttpError` still reads `status` FIRST, so a code with no status
+ * is filed as a 500 — carrying the code itself, not `INTERNAL_ERROR`
+ * (`code only` maps to 500 / `DELETE_RESTRICTED`). `VALIDATION_FAILED` is the
+ * single exception: the mapper supplies 400 for that code itself, so that one
+ * class survives a dropped status entirely. For the other four, asserting the
+ * pair separately would let half an envelope pass. The wording is asserted
+ * against `innerMessage` — the shipped path rewrites `message` to
+ * `hook 'NAME' threw: Error: ORIGINAL` and keeps the original there — and the
+ * rewrite itself is pinned, since it is what a REST consumer reading `message`
+ * would see.
  */
 const expectEnvelope = (
   err: AnyRec | null,
