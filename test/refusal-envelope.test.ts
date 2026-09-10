@@ -49,10 +49,12 @@ import eventHooks from '../src/objects/event.hook';
  * finite number, `fields` as an array, `userMessage` as a string with
  * non-whitespace in it. This file said three, anchored to 17.1.0, and reached
  * for "a fourth key" as its example of something silently dead: `userMessage`
- * IS the fourth key, and it crosses. `refuse()` writes two of the four, so what
- * this app writes and what can cross are no longer one list —
- * `src/objects/_refusal.ts` carries the full reading. Every behavioural
- * assertion below therefore runs the lowered body.
+ * IS the fourth key, and it crosses. #1869 adopted it, so `refuse()` now writes
+ * THREE of the four and the clean sentence reaches a consumer on a channel the
+ * `hook 'NAME' threw:` rewrite cannot touch — `src/objects/_refusal.ts` carries
+ * the reading and why the fourth argument defaults to the author's message.
+ * `fields` stays declined. Every behavioural assertion below runs the lowered
+ * body.
  *
  * The wording pins live alongside the envelope, never instead of it — the
  * phrasing is a real contract (#693 / #719).
@@ -87,7 +89,9 @@ describe('the refusal vocabulary is declared once (#1075)', () => {
 
   it('inlines a helper identical in every copy, and identical to the declaration', () => {
     const copies = carriers.map((h) => {
-      const m = /function refuse\(message, code, status\) \{[\s\S]*?\n\s*\}/.exec(h.source);
+      const m = /function refuse\(message, code, status, userMessage = message\) \{[\s\S]*?\n\s*\}/.exec(
+        h.source,
+      );
       expect(m, `hook '${h.name}' carries no extractable refuse() helper`).toBeTruthy();
       return { name: h.name, text: flat(m![0]) };
     });
@@ -96,21 +100,32 @@ describe('the refusal vocabulary is declared once (#1075)', () => {
     expect(unique[0]).toBe(flat(REFUSE_HELPER));
   });
 
-  it('writes exactly two properties onto the error — what refuse() sets, not what crosses', () => {
+  it('writes exactly three properties onto the error — what refuse() sets, not what crosses', () => {
     // Counts WRITES, deliberately, and says so: measured on 17.4.0 four
-    // properties cross and this helper writes two of them, so one assertion
+    // properties cross and this helper writes three of them, so one assertion
     // must not claim both lists. The header above pins what crosses.
     //
+    // Two, until #1869 adopted `userMessage`. The expected value moved with the
+    // helper and not on its own — which is the whole point of counting the
+    // written set here: adding the key had to be a deliberate edit to this
+    // line, and dropping it again turns this red.
+    //
     // The character class covers BOTH cases on purpose. It was `[a-z]+` until
-    // #1868 — lower-case only, so a third write named `err.userMessage` was
+    // #1868 — lower-case only, so a write named `err.userMessage` was
     // undetectable while `err.hint` was caught, i.e. the guard was blind to
-    // precisely the key 17.4.0 added to the allowlist. Its exact reach, so the
-    // next reader does not over-read it: dot-notation writes only, in any case;
-    // `err['userMessage'] = …` would still be invisible.
+    // precisely the key 17.4.0 added to the allowlist, and precisely the key
+    // this helper now writes. Its exact reach, so the next reader does not
+    // over-read it: dot-notation writes only, in any case; `err['userMessage']
+    // = …` would still be invisible.
     const body = flat(REFUSE_HELPER);
     expect(body).toContain('err.code = code');
     expect(body).toContain('err.status = status');
-    expect(body.match(/err\.[A-Za-z_$][A-Za-z0-9_$]* =/g)).toEqual(['err.code =', 'err.status =']);
+    expect(body).toContain('err.userMessage = userMessage');
+    expect(body.match(/err\.[A-Za-z_$][A-Za-z0-9_$]* =/g)).toEqual([
+      'err.code =',
+      'err.status =',
+      'err.userMessage =',
+    ]);
   });
 });
 
@@ -180,7 +195,10 @@ const refusalFrom = async (hook: AnyRec, opts: AnyRec): Promise<AnyRec | null> =
  * against `innerMessage` — the shipped path rewrites `message` to
  * `hook 'NAME' threw: Error: ORIGINAL` and keeps the original there — and the
  * rewrite itself is pinned, since it is what a REST consumer reading `message`
- * would see.
+ * would see. `userMessage` is pinned EQUAL to `innerMessage`: since #1869
+ * `refuse()` marks the sentence, and that mark is the half a consumer can read
+ * without the wrapper. `innerMessage` is not a wire field, so asserting only it
+ * would leave the user-facing outcome unpinned.
  */
 const expectEnvelope = (
   err: AnyRec | null,
@@ -193,6 +211,9 @@ const expectEnvelope = (
   expect([err!.code, err!.status]).toEqual([REFUSAL_CODES[cls].code, REFUSAL_CODES[cls].status]);
   expect(String(err!.innerMessage)).toMatch(wording);
   expect(String(err!.message)).toBe(`hook '${hookName}' threw: Error: ${err!.innerMessage}`);
+  expect(err!.userMessage, 'the marked channel carries the sentence, unwrapped').toBe(
+    String(err!.innerMessage),
+  );
 };
 
 describe('every refusal class survives the QuickJS boundary (#1167)', () => {
@@ -279,6 +300,9 @@ const expectInProcess = (
   expect(e.message).toMatch(wording);
   expect(e.innerMessage, 'only the sandbox adds innerMessage').toBeUndefined();
   expect([e.code, e.status]).toEqual([REFUSAL_CODES[cls].code, REFUSAL_CODES[cls].status]);
+  // The mark is written by `refuse()`, so it is identical on both paths — here
+  // `message` is unrewritten, so the two are the same string.
+  expect(e.userMessage, 'refuse() marks the sentence on both paths').toBe(e.message);
 };
 
 const inProcess = async (hook: AnyRec, opts: AnyRec): Promise<unknown> =>

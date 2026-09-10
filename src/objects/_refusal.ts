@@ -47,19 +47,42 @@
  * in-process test and is silently dead in production.
  *
  * ⚠️ This paragraph said **three** and was anchored to 17.1.0 until #1863
- * re-measured it. `userMessage` is the fourth, so `refuse()`'s three arguments
- * are no longer a PROOF that nothing else can cross: the signature is a choice
- * this app has not revisited, and the allowlist above is what actually guards.
+ * re-measured it. `userMessage` is the fourth, and #1869 revisited the
+ * signature that count falsified: `refuse()` now takes FOUR arguments and
+ * writes THREE properties. The allowlist above is what guards, not the arity.
  *
- * `fields` and `userMessage` are both allowlisted and both unused today.
- * `fields`: no consumer reads per-field detail off these refusals, and the
- * mapper already synthesises an empty `details.fields` for `VALIDATION_FAILED`
- * (measured on 17.4.0). `userMessage`: nothing under `src/` sets it, and the
- * cost of that is measured rather than assumed — a hook refusal reaches the
- * mapper with `message` still carrying the `hook 'NAME' threw: Error: …` debug
- * wrapper and no `userMessage` field at all, so adopting it would change what
- * an end user reads. Both are additive, and neither is decided here: correcting
- * a false count must not become an API change (#1863).
+ * `fields` is allowlisted and still deliberately unused — no consumer reads
+ * per-field detail off these refusals, and the mapper already synthesises an
+ * empty `details.fields` for `VALIDATION_FAILED` (measured on 17.4.0). Adding
+ * it later is additive.
+ *
+ * ### `userMessage` defaults to the author's message — the reason, measured
+ *
+ * The platform declares `userMessage` a producer-side opt-in: a consumer
+ * renders it verbatim and keeps a generic substitution for everything
+ * unmarked. So the default is a real decision, and the opposite one — make
+ * every site write it — is right for an app whose refusal prose is addressed
+ * to a developer reading a log. ⚠️ Measured before choosing, this app's is
+ * not:
+ *
+ *   1. All 17 call sites carry a business sentence naming a remedy the reader
+ *      can act on, and two guards already hold them to that.
+ *      `test/record-id-not-in-prose.test.ts` runs the LOWERED bodies under the
+ *      heading *refusals a user reads name the record they are about*, and
+ *      `test/docs-contact-email-uniqueness.test.ts` ties one of these
+ *      sentences to the documentation page a user follows.
+ *   2. The default discloses nothing new. Measured on 17.4.0, all five classes
+ *      ALREADY reach a REST consumer carrying that same sentence — inside
+ *      `hook 'NAME' threw: Error: …`, on `message`. Marking it does not put
+ *      author prose on the wire; it puts the sentence on the one channel no
+ *      boundary rewraps, which is what the platform declares the key FOR.
+ *   3. The argument is therefore the seam for DIVERGENCE, not the opt-in: pass
+ *      it where the diagnostic and the user-facing sentence must differ. No
+ *      site needs that today, and one that does no longer costs an API change.
+ *
+ * ⛔ A blank or whitespace-only override is dropped at the boundary, so it
+ * suppresses nothing — it only returns the reader to the wrapper. The answer
+ * to a sentence that should not be shown is a better sentence.
  *
  * ### Why the codes are the platform's, not this app's
  *
@@ -117,17 +140,18 @@ export const REFUSAL_CODES = {
  *
  * Compared against each lowered copy with whitespace collapsed — the pin is
  * about what the code DOES, not how a transform chose to indent it. A copy that
- * forgot `err.status`, or grew a third property in EITHER case, fails; a
+ * forgot `err.status`, or grew a FOURTH property in EITHER case, fails; a
  * re-indent does not. Read off the assertion itself, that is its exact reach:
  * it matches `err.` followed by a dot-notation name in any case, so it counts
- * what this helper WRITES and stops there. It was LOWER-CASE only until #1868,
- * which is to say blind to `userMessage` — the one key 17.4.0 added to the
- * allowlist. Which of those writes survive the sandbox is fact 2 above, and
- * since `userMessage` joined it the two are no longer one list.
+ * what this helper WRITES — three — and stops there. It was LOWER-CASE only
+ * until #1868, i.e. blind to `userMessage`, which is why that repair had to
+ * land before this helper could adopt the key at all. Which of those writes
+ * survive the sandbox is fact 2 above: three are written, four can cross.
  */
-export const REFUSE_HELPER = `function refuse(message, code, status) {
+export const REFUSE_HELPER = `function refuse(message, code, status, userMessage = message) {
   const err = new Error(message);
   err.code = code;
   err.status = status;
+  err.userMessage = userMessage;
   return err;
 }`;
