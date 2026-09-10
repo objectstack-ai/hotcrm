@@ -23,16 +23,14 @@ export const ConvertLeadAction: Action = {
   // hid the button on most seeded leads, so it read as "conversion is missing".
   // Only already-converted or disqualified leads hide it.
   visible: P`record.is_converted == false && record.status != "unqualified" && record.status != "converted"`,
-  // NO `confirmText` (#1214 item 1). A screen flow IS the confirmation, and
-  // this one opens `Conversion Details` — a screen carrying the decision
-  // (`Create Opportunity?`, and the deal's name and amount), a Cancel button,
-  // and the suspected-duplicate warning that says something TRUE about THIS lead.
-  // The dialog that used to sit in front of it asked `Are you sure you want to
-  // convert this lead?` and carried no information the next screen did not
-  // carry better, so it cost every conversion one extra click to answer a
-  // question it could not help anyone answer. Confirms are for DESTRUCTIVE
-  // actions with no follow-up UI — `close_case` / `escalate_case` in
-  // `case.actions.ts` are the shape that still earns one.
+  // NO `confirmText`. A screen flow IS the confirmation, and this one opens
+  // `Conversion Details` — a screen carrying the decision (`Create
+  // Opportunity?`, and the deal's name and amount), a Cancel button, and the
+  // suspected-duplicate warning that says something TRUE about THIS lead. A
+  // dialog in front of it costs every conversion one extra click to answer a
+  // question it cannot help anyone answer. Confirms are for DESTRUCTIVE actions
+  // with no follow-up UI — `close_case` / `escalate_case` in `case.actions.ts`
+  // are the shape that still earns one.
   //
   // Mechanism, measured on the console this app pins (@objectstack/console
   // 17.3.0, `dist/assets/`) rather than assumed: the runner gates the dialog on
@@ -117,26 +115,25 @@ export const ScheduleFollowUpAction: Action = {
  *     10-lead selection is 10 dispatches through this body, one lead each.
  *   - `bulkActionDefs` + `execution: 'aggregate'` → ONE dispatch for the whole
  *     selection, every id in the builtin `params._selectedIds` and no
- *     `recordId` (see `mass_update_stage` in `opportunity.actions.ts`, #508).
+ *     `recordId` (see `mass_update_stage` in `opportunity.actions.ts`).
  *
  * So multi-select enrollment already works here — it just arrives one lead at a
  * time. This body reads `ctx.recordId` and nothing else, which is exactly what
  * the fan-out delivers.
  *
- * There is NO `input.selectedIds` read (no underscore), and re-adding one would
- * be dead code, not a fallback: nothing can deliver that key on either contract
- * (#813). A top-level `selectedIds` is never merged into the params bag, and a
+ * ⛔ Never add an `input.selectedIds` read (no underscore). Nothing can deliver
+ * that key on either contract, so it is dead code and not a fallback: a
+ * top-level `selectedIds` is never merged into the params bag, and a
  * `params.selectedIds` is refused by the strict params gate (ADR-0104) with
  * `Unknown action param "selectedIds" — not declared on this action`. The only
  * selection channel is the underscore-prefixed builtin, and only the aggregate
  * contract injects it (`@objectstack/spec` `ui/action-params.zod.ts`,
- * `ACTION_PARAM_BUILTIN_KEYS`; verified end to end in
- * objectstack-ai/objectstack#5568).
+ * `ACTION_PARAM_BUILTIN_KEYS`).
  *
  * Switching this action to the aggregate contract would be a PRODUCT change —
  * one audit entry and one dedupe read per run instead of per lead, and
  * all-or-nothing failure semantics — so it needs `lead.view.ts` changed with it
- * and is deliberately not done here (#813).
+ * and is deliberately not done here.
  */
 export const CreateCampaignAction: Action = {
   name: 'create_campaign',

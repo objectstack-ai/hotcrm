@@ -12,7 +12,7 @@ A **campaign** is any marketing initiative — an email blast, a webinar, a trad
 | Status | What it means |
 | --- | --- |
 | ⚪ **Planning** | Being designed — audience, budget, content *(default)* |
-| 🟠 **In Progress** | Live — members are enrolled, engagement is being tracked |
+| 🟠 **In Progress** | Live — members are enrolled, and the responses that come back are recorded on them |
 | 🟢 **Completed** | Finished — the run is over; the metrics stay live |
 | 🔴 **Aborted** | Cancelled before completion |
 
@@ -35,16 +35,18 @@ And 5 primary channels: **Digital · Social · Email · Events · Partner**. Pic
 
 ## What a campaign record stores
 
-The detail screen has several sections:
+The campaign has no hand-built detail page: the record screen is derived from the object's own field groups, six sections in this order.
 
-| Section | Fields |
+| Section | What is in it |
 | --- | --- |
-| **Basic** | Campaign code, name, description, type, channel, status |
+| **Campaign Information** | Campaign code, name, description, type, channel, status |
 | **Schedule** | Start date, end date |
-| **Budget** | Budgeted cost, actual cost, expected revenue, actual revenue *(rolled up)* |
-| **Audience** | Target size, number sent |
-| **Engagement** *(rollup)* | Opens, clicks, responses, conversions |
-| **Attribution** *(rollup)* | Leads generated, opportunities created, closed-won revenue |
+| **Budget & ROI** | Budgeted cost, actual cost, expected revenue, actual revenue *(rolled up)*, ROI *(calculated)* |
+| **Performance** | Target size, the rollup counters, and the response rate *(calculated)* — see [Measuring a campaign](#measuring-a-campaign) |
+| **Ownership** | Campaign owner |
+| **Campaign Assets** | Landing page, and whether the campaign is active *(collapsed until you open it)* |
+
+There is no *Engagement* section, and no open or click column anywhere on the campaign: what it rolls up is enrollments, responses, conversions, and the revenue attributed back to it.
 
 The **Campaign Code** is auto-generated (e.g., CAMP-000123) so every campaign has a unique short reference for email subject lines and tracking URLs.
 
@@ -57,35 +59,39 @@ The **Campaign Code** is auto-generated (e.g., CAMP-000123) so every campaign ha
 
 - **Auto-complete** — at 2 AM daily, any *In Progress* campaign past its end date is marked *Completed*. The sweep flips the status and only the status — the numbers were already current before it ran.
 - **Live metrics** — the metric block (sent, responded, converted, ROI) is recomputed as members are enrolled, as members respond, as their leads convert, and as opportunities are attributed to the campaign. A campaign you are running right now reports real numbers; you do not wait for it to finish to read them.
-- **Member enrollment** — when a campaign goes *In Progress*, the [Campaign Enrollment flow](#campaign-enrollment-flow) runs every Monday at 9 AM and adds new matching audience members.
 - **ROI calculation** — the campaign's actual revenue is the rolled-up sum of related closed-won opportunity amounts. ROI = (actual revenue − actual cost) ÷ actual cost.
+
+Member enrollment is deliberately not on that list: nothing enrolls members when a campaign goes *In Progress*, and no schedule enrolls them later. It is a button someone presses — see [Campaign enrollment flow](#campaign-enrollment-flow) below.
 
 ## Campaign enrollment flow
 
-When you launch a campaign (status → *In Progress*), the system bulk-enrolls your target audience as [campaign members](/docs/marketing/campaign-members).
+Bulk enrollment is a step you run, not one that happens to you. Open the campaign and click **Enroll Members** in the record header — the action is offered while the campaign is *Planning* or *In Progress* — and the flow opens its *Enrollment Criteria* screen on that campaign.
 
-The flow runs on a schedule (default Monday 9 AM) and:
+You choose the audience on that screen:
 
-1. Reads the campaign's target audience criteria (e.g., "all leads in Technology industry with rating ≥ 3").
-2. Finds matching leads and contacts.
-3. Creates a campaign member record per person with status = *Sent*.
-4. Optionally triggers the campaign's send action (email send, mailer dispatch, etc.).
+1. **Enroll** — *Leads* or *Contacts*. One run enrolls one side, not both.
+2. The segment on that side — leads by **status**, contacts by **department**. Both fields carry a default, so you change the one that matches the side you picked.
+
+The flow then takes everyone eligible in that segment — they have an email address, they are not opted out of email, and a lead must not already be converted — and creates a [campaign member](/docs/marketing/campaign-members) per person with status *Sent*. Anyone already on the campaign is skipped, so running it again tops the campaign up instead of counting a touch twice.
+
+There is no schedule behind this, and the criteria are the reason. They are answered on the screen, and a scheduled run would arrive with nobody to answer them — no campaign, no segment — so enrolling is deliberately something a person does.
 
 For real-time campaigns (e.g., a webinar with a registration form), you can also add members **manually** from the campaign detail page or via the **Add to Campaign** action on any lead/contact.
 
 ## Measuring a campaign
 
-The right-hand panel of the campaign detail page shows:
+The numbers live on the campaign record itself — the counters and the response rate in *Performance*, the money and ROI in *Budget & ROI*. Every one of them is recomputed as members are enrolled or answer, as their leads convert, and as opportunities are attributed to the campaign:
 
-- **Sent** — number of members enrolled.
-- **Open rate** — % of members with status ≥ Opened.
-- **Click rate** — % of members with status ≥ Clicked.
-- **Response rate** — % of members with status ≥ Responded.
-- **Conversion rate** — % of members with status = Converted (i.e., became opportunities).
-- **Opportunities generated** — count of opportunities with this campaign as the source.
-- **Pipeline value** — sum of those opportunities' amount.
-- **Closed-won revenue** — sum of those opportunities' amount where stage = closed_won.
-- **ROI** — (closed-won revenue − actual cost) ÷ actual cost.
+- **Number Sent** — every member enrolled in the campaign, whatever their status.
+- **Number of Responses** — members at *Responded* **or** *Converted*: a member whose lead converted answered too, and the counter says so.
+- **Response Rate %** — responses ÷ number sent, as a percentage. It is the only rate the campaign carries.
+- **Number of Leads** — the distinct leads among those members.
+- **Converted Leads** — how many of those leads have since been converted.
+- **Opportunities Created** and **Won Opportunities** — opportunities naming this campaign as their source, and how many of them closed won.
+- **Actual Revenue** — the sum of those won opportunities' amounts. Open pipeline is not summed anywhere on the campaign; closed-won is the only money it rolls up.
+- **ROI %** — (actual revenue − actual cost) ÷ actual cost, as a percentage.
+
+> **A campaign has no open rate, click rate or conversion rate.** Its members are *Sent*, *Responded*, *Converted* or *Unsubscribed* — four values with no order between them, so "the members at or above *Opened*" is not a question this app can be asked; opens, clicks and bounces are not tracked at all, and [Campaign Members](/docs/marketing/campaign-members) explains why. Conversion reaches the campaign as the **Converted Leads** and **Opportunities Created** counts, never as a percentage.
 
 ## Attribution: from campaign to revenue
 
@@ -104,7 +110,7 @@ Campaigns saves **four** views (`src/views/campaign.view.ts`), and the tab row a
 | **Launch Calendar** | The same campaigns on a month calendar, placed on their **Start Date** and coloured by channel. |
 | **Marketing Timeline** | The same start-to-end spans on a month scale, grouped by channel and coloured by status. |
 
-None of the four filters anything, so **every campaign you can see appears in all four** and switching tabs only redraws them. There is no saved *Active Campaigns*, *Upcoming Campaigns*, *Completed This Quarter*, *Over Budget*, *By Type* or *Best ROI*: to narrow the list to one status, sort and filter the grid columns yourself. **ROI** is not among those columns — it is on the campaign record, under *Costs*, and in the marketing dashboards.
+None of the four filters anything, so **every campaign you can see appears in all four** and switching tabs only redraws them. There is no saved *Active Campaigns*, *Upcoming Campaigns*, *Completed This Quarter*, *Over Budget*, *By Type* or *Best ROI*: to narrow the list to one status, sort and filter the grid columns yourself. **ROI** is not among those columns — it is on the campaign record, under *Budget & ROI*, and in the marketing dashboards.
 
 ## Sharing — campaigns are public by default
 
@@ -119,11 +125,11 @@ Campaigns are **public read-only** for the whole organisation. Anyone in sales c
 
 ## Tips for sales reps
 
-- ✅ When a lead arrives, check whether they're in a campaign — it tells you what they've already seen.
+- ✅ When a lead arrives, check whether they're in a campaign — it tells you which campaigns they were sent, and how they answered.
 - ✅ Set **Source Campaign** on opportunities you closed — marketing can't measure ROI without this.
 
 ## Tips for admins
 
-- The auto-complete cron (2 AM daily) and the enrollment cron (Monday 9 AM) are configurable. See [Administration › Automation](/docs/administration/automation).
+- The auto-complete cron (2 AM daily) is configurable. There is no enrollment cron to configure — enrollment is the **Enroll Members** screen flow, which someone runs from a campaign. See [Administration › Automation](/docs/administration/automation).
 - To add a new campaign type or channel, edit the campaign object's picklists. See [Customization › Extending Objects](/docs/customization/extending-objects).
 - For multi-touch attribution, see the customisation guide.

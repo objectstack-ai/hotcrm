@@ -1,42 +1,45 @@
 ---
 title: Marketing Cloud
-description: Plan campaigns, enroll leads and contacts, track engagement and measure ROI.
+description: Plan campaigns, enroll leads and contacts, track responses and measure ROI.
 ---
 
 # Marketing Cloud
 
-The Marketing module lets you **plan campaigns, enroll the right leads and contacts, track who engaged, and prove the ROI** to sales and finance.
+The Marketing module lets you **plan campaigns, enroll the right leads and contacts, track who responded, and prove the ROI** to sales and finance.
 
 ## What's included
 
 | Area | What it does |
 | --- | --- |
 | [**Campaigns**](/docs/marketing/campaigns) | Marketing initiatives — emails, webinars, trade shows, social, content. |
-| [**Campaign Members**](/docs/marketing/campaign-members) | The leads and contacts enrolled in each campaign and their engagement status. |
+| [**Campaign Members**](/docs/marketing/campaign-members) | The leads and contacts enrolled in each campaign, and how each of them responded. |
 
 ## A typical campaign life
 
 ```
-Planning ──► In Progress ──► Completed
-              │
-              ▼
-       Enroll leads/contacts ──► Track responses ──► Convert to opportunities
+STATUS    Planning ──► In Progress ──► Completed
+          the first two moves are yours; the last is a nightly sweep
+
+MEMBERS   Enroll Members ──► Track responses ──► Convert to opportunities
+          Enroll Members is a button you press, not a trigger
 ```
 
 1. **Planning** — define the campaign, budget, expected revenue, target audience.
-2. **In Progress** — launch the campaign; the system bulk-enrolls the target audience as campaign members.
-3. **Track engagement** — members move through *Sent → Opened → Clicked → Responded → Converted*.
-4. **Completed** — the campaign's run ends and the system flips its status; the metrics (sent, responded, converted, ROI) go on updating, the same as they did while it ran.
-5. **Attribute revenue** — opportunities linked to the campaign roll up into the campaign's actual revenue.
+2. **Enroll members** — press **Enroll Members** on the campaign and answer its *Enrollment Criteria* screen; everyone eligible in the segment you pick joins as a campaign member at *Sent*. The action is offered while the campaign is *Planning* or *In Progress*, so you can build the audience before you launch and top it up afterwards — see [Campaign enrollment flow](/docs/marketing/campaigns#campaign-enrollment-flow).
+3. **In Progress** — launch the campaign. Moving the status is the launch, and that is all the move does: it enrolls nobody.
+4. **Track responses** — a member stays at *Sent* until they answer (*Responded*) or their lead converts (*Converted*); someone who asks to stop hearing from you is *Unsubscribed*. There is no ladder between the four, and no open or click step.
+5. **Completed** — once its end date has passed, a nightly sweep flips an *In Progress* campaign to *Completed*; the metrics (sent, responded, converted, ROI) go on updating, the same as they did while it ran.
+6. **Attribute revenue** — opportunities linked to the campaign roll up into the campaign's actual revenue.
 
 ## What the system does for you
 
-- **Automatic enrollment** — when a campaign moves to *In Progress*, a scheduled flow bulk-enrolls members matching your target audience.
-- **Automatic status updates** — opens, clicks, bounces, unsubscribes update the member status as engagement happens.
-- **Automatic completion** — campaigns whose end date passes are auto-marked *Completed* at 2 AM daily.
-- **Live metrics** — sent, responded, converted and ROI are recomputed as engagement and attribution happen, so an in-flight campaign's numbers are real numbers you can act on today.
+- **Automatic conversion tracking** — when an enrolled person's lead is converted, every campaign they are in promotes their member row to *Converted* and recomputes its numbers. That is the one member status the app writes by itself: *Responded* is a rep pressing **Mark Responded**, and *Unsubscribed* is a rep or an opt-out request. Opens, clicks and bounces are not tracked at all.
+- **Automatic completion** — an *In Progress* campaign whose end date has passed is marked *Completed* by a sweep that runs at 2 AM daily.
+- **Live metrics** — sent, responses, conversions and ROI are recomputed as memberships change and as opportunities are attributed, so an in-flight campaign's numbers are real numbers you can act on today.
 - **Budget warnings** — if actual cost exceeds the budgeted cost, you get an over-budget warning.
 - **ROI rollup** — the campaign's actual revenue is the sum of related opportunity revenue; ROI = (actual revenue − actual cost) ÷ actual cost.
+
+Enrolling members is deliberately not on that list. Nothing enrolls anybody when a campaign moves to *In Progress*, and no schedule enrolls them later: the audience is answered on a screen, and a scheduled run would arrive with nobody to answer it. Enrolling is a button a marketer presses — see [Campaign enrollment flow](/docs/marketing/campaigns#campaign-enrollment-flow).
 
 ## What you can run
 

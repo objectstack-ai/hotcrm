@@ -56,7 +56,7 @@ One dataset stands behind every case-related dashboard tile and all three case r
 - **Agent, and team** — the dataset declares **no owner dimension**, so nothing in analytics can group, rank or filter cases by agent. `owner_id` is a field on the case; no dimension exposes it. This is why the service pages carry no agent leaderboard, and why *"reopened cases by agent"* is doubly impossible — nothing records a reopen either.
 - **Account, and account tier** — it reads `crm_case` alone and never crosses to `crm_account`.
 - **Product** — cases carry no product link that analytics can read, so *"cases by category by product"* has no path. The nearest real cut to a category is the case **Type** (*Question / Problem / Feature Request / Bug*).
-- **CSAT score** — there is no satisfaction data to aggregate. The case object used to declare a **Customer Satisfaction** rating, but nothing in the product ever collected it — no screen offered it and no automation wrote it — so it was retired rather than left standing as a column a report could point at.
+- **CSAT score** — there is no satisfaction data to aggregate. The case object used to declare a *Customer Satisfaction* rating, but nothing in the product ever collected it — no screen offered it and no automation wrote it — so it was retired rather than left standing as a column a report could point at.
 - **Open / new / resolved counts as numbers of their own** — the pre-filtered counts this dataset declares are on the closed side only. Status is a dimension, so a count *split by* status gives the same breakdown.
 - **Period at any grain but day** — the created-date dimension buckets by day.
 
@@ -69,16 +69,16 @@ One dataset stands behind every case-related dashboard tile and all three case r
 
 **There is no marketing dataset, so there is nothing to slice.** `crm_campaign` is not one of the objects `src/datasets/` reads, which makes this the one section on the page where the gap is not a missing measure but a missing data source: every campaign number this page used to offer is unreachable, and none of them can be added from a report or a cube screen.
 
-The records do carry the numbers. `crm_campaign` has **Budgeted Cost**, **Actual Cost**, **Expected Revenue**, **Actual Revenue**, the **Num Sent / Responses / Leads / Converted Leads / Opportunities / Won Opportunities** counters, and two formula fields — **Response Rate %** and **ROI %** — shown in the **Performance** section of the campaign record. `crm_campaign_member` stamps **First Opened**, **First Clicked**, **Response Date** and **Responded** per member. Every one of those is a per-record figure that nothing aggregates.
+The records do carry the numbers. `crm_campaign` has the **Number Sent / Number of Responses / Number of Leads / Converted Leads / Opportunities Created / Won Opportunities** counters and the **Response Rate %** formula in the **Performance** section of the campaign record, and **Budgeted Cost**, **Actual Cost**, **Expected Revenue**, **Actual Revenue** and the **ROI %** formula one heading along in **Budget & ROI**. `crm_campaign_member` records one thing per member — the response: **Status**, **Response Date** and **Has Responded**, under **Response Tracking**. Every one of those is a per-record figure that nothing aggregates. An open or a click is a different case: not an unaggregated figure but an unrecorded one — this app tracks no opens, clicks or bounces, and no *First Opened* or *First Clicked* stamp exists on a member for a cube to roll up.
 
 Name by name:
 
-- **Members enrolled / responded**, **conversion count** — per-campaign counters on the record; no measure, so no total and no ranking across campaigns.
-- **Sourced and influenced revenue** — unreachable from the deal side too: `crm_opportunity.crm_campaign` is a real lookup, but `opportunity_metrics` declares no campaign dimension, so revenue cannot be attributed to a campaign anywhere in analytics.
-- **Campaign spend**, **cost per lead**, **cost per opportunity**, **ROI %** — the ROI percentage exists on each record as a formula; nothing sums the spend or compares campaigns.
-- **Campaign (and type)**, **channel**, **period** — real fields on `crm_campaign`, and dimensions nowhere.
+- *Members enrolled / responded*, *conversion count* — per-campaign counters on the record; no measure, so no total and no ranking across campaigns.
+- *Sourced and influenced revenue* — unreachable from the deal side too: `crm_opportunity.crm_campaign` is a real lookup, but `opportunity_metrics` declares no campaign dimension, so revenue cannot be attributed to a campaign anywhere in analytics.
+- *Campaign spend*, *cost per lead*, *cost per opportunity*, **ROI %** — the ROI percentage exists on each record as a formula; nothing sums the spend or compares campaigns.
+- **Campaign (and type)**, **channel** — real fields on `crm_campaign`, and dimensions nowhere. A *period* is not one of them: the campaign carries **Start Date** and **End Date**, and no dataset reads either.
 - **Lead source** — a dimension on both the lead and the deal side, so *"which sources produce deals"* is answerable; the *campaign* behind the source is not.
-- **Persona (job role)** — no path at all: **Title** is free text on the contact and the lead, and the contact dataset declares no dimensions.
+- *Persona (job role)* — no path at all: **Title** is free text on the contact and the lead, and the contact dataset declares no dimensions.
 
 So the three questions this section offered — *"ROI by campaign type"*, *"cost per opportunity by channel"*, *"conversion rate by persona"* — cannot be answered here today. Closing the gap means adding `src/datasets/campaign.dataset.ts`: a source change and a redeploy, not a setting. See [Campaigns](/docs/marketing/campaigns) for what the campaign record shows today.
 

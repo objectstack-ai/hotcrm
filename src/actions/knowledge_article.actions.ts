@@ -4,24 +4,23 @@ import type { Action } from '@objectstack/spec/ui';
 import { P } from '@objectstack/spec';
 
 /**
- * Knowledge article feedback actions (#601).
+ * Knowledge article feedback actions.
  *
- * The two buttons that finally make `helpful_count` / `not_helpful_count`
- * move. Neither writes a counter: each records the reader's own
- * `crm_article_feedback` row, and `article_feedback_metrics_refresh` recounts
- * the article from that table. The full reasoning for the indirection — a
- * sandboxed action body cannot UPDATE a sharing-ruled object, the article is
- * write-owned, and there is no atomic increment — is on
- * `src/objects/article_feedback.object.ts`.
+ * The two buttons that make `helpful_count` / `not_helpful_count` move. Neither
+ * writes a counter: each records the reader's own `crm_article_feedback` row,
+ * and `article_feedback_metrics_refresh` recounts the article from that table.
+ * The full reasoning for the indirection — a sandboxed action body cannot
+ * UPDATE a sharing-ruled object, the article is write-owned, and there is no
+ * atomic increment — is on `src/objects/article_feedback.object.ts`.
  *
  * ### One body, generated twice
  *
  * `feedbackBody(verdict)` composes the source string both actions ship. This is
  * FACTORY composition, which is allowed and is what `_case-assignment.ts` does
  * for hooks: the string it returns is complete and self-contained, so the body
- * that reaches the QuickJS sandbox reaches for no module scope. The forbidden
- * shape is the other one — a body that CALLS a shared function at runtime,
- * which lowers to a `ReferenceError` because the body ships without its module
+ * that reaches the QuickJS sandbox reaches for no module scope. ⛔ Never write
+ * the other shape — a body that CALLS a shared function at runtime lowers to a
+ * `ReferenceError`, because the body ships without its module
  * (`test/action-sandbox.test.ts` fails the build on it, and
  * `test/knowledge-feedback.test.ts` pins that these two bodies stay
  * character-identical apart from the verdict).
@@ -35,10 +34,10 @@ import { P } from '@objectstack/spec';
  * "how many clicks", and one enthusiastic reader could out-vote a department.
  *
  * `owner_id` is set EXPLICITLY: an action body runs `isSystem`, so nothing
- * stamps the ownership anchor for it (#548, the same note
- * `clone_opportunity` carries). It is the voter's identity that keys the
- * dedupe, so getting it from `ctx.user` is load-bearing rather than tidy — a
- * null owner would collapse every anonymous-looking vote onto one row.
+ * stamps the ownership anchor for it (the same note `clone_opportunity`
+ * carries). It is the voter's identity that keys the dedupe, so getting it from
+ * `ctx.user` is load-bearing rather than tidy — a null owner would collapse
+ * every anonymous-looking vote onto one row.
  */
 const feedbackBody = (verdict: 'helpful' | 'not_helpful'): string => `
       const id = ctx.recordId;

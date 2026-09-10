@@ -73,37 +73,29 @@ export const CloneOpportunityAction: Action = {
 /**
  * Mass Update Opportunity Stage.
  *
- * Both invocation halves work as of #508 (17.0.0-rc.2):
+ * Both invocation halves work:
  *
  *   - SINGLE record (row selection / toolbar with one row): the console POSTs
- *     `{ recordId, params: { stage } }` and the body reads `ctx.recordId`. The
- *     write itself was fixed in #777 — this body used to call
- *     `update(id, { stage })`, but `ctx.api` is the engine repo facade whose
- *     update takes `(data, options)`, so the id landed in the `data` slot and
- *     every invocation 400'd with `update('crm_opportunity') does not
- *     recognise option 'stage'`.
+ *     `{ recordId, params: { stage } }` and the body reads `ctx.recordId`.
  *   - MULTI record: the selection arrives in the BUILT-IN `_selectedIds`
  *     param — leading underscore — injected by the grid renderer for the
  *     view's `bulkActionDefs` entry with `execution: 'aggregate'`, which
  *     dispatches this action ONCE for the whole selection (no `recordId`).
  *
- * That underscore is the whole story of why #508 read as "bulk is impossible".
- * A script body's `input` IS the action's params bag
- * (`@objectstack/runtime` `sandbox/body-runner.ts:338`), and `_selectedIds` is
- * one of the params gate's builtin keys
- * (`@objectstack/spec` `ui/action-params.zod.ts:70`, alongside `recordId` /
- * `objectName`). The three rc.2 failure reports all probed UNDECLARED shapes —
- * a top-level `selectedIds` (never merged into the bag), and a
- * `params.selectedIds` without the underscore (correctly refused by the strict
- * params gate, ADR-0104) — while the console's own "select exactly one row"
- * toast fires precisely when `_selectedIds` was NOT injected, which is what
- * happens to a view carrying no bulk declaration at all (#588 had removed it).
- * Platform verified the declared channel end to end and closed
- * objectstack-ai/objectstack#5568 as works-as-declared.
+ * That underscore is the whole of the contract. A script body's `input` IS the
+ * action's params bag (`@objectstack/runtime` `sandbox/body-runner.ts:338`), and
+ * `_selectedIds` is one of the params gate's builtin keys (`@objectstack/spec`
+ * `ui/action-params.zod.ts:70`, alongside `recordId` / `objectName`). Every
+ * other shape is undeclared and cannot arrive: a top-level `selectedIds` is
+ * never merged into the bag, and a `params.selectedIds` without the underscore
+ * is refused by the strict params gate (ADR-0104). The console's own "select
+ * exactly one row" toast fires precisely when `_selectedIds` was NOT injected,
+ * which is what happens to a view carrying no bulk declaration at all — read
+ * that toast as a missing declaration on the view, never as a platform limit.
  *
- * Do NOT declare `_selectedIds` in `params` below: builtin keys are injected by
- * the renderer, and the gate admits them without a declaration (declaring one
- * is not a supported authoring move). Do NOT re-add a no-underscore
+ * ⛔ Do NOT declare `_selectedIds` in `params` below: builtin keys are injected
+ * by the renderer, and the gate admits them without a declaration (declaring one
+ * is not a supported authoring move). ⛔ Do NOT re-add a no-underscore
  * `input.selectedIds` read either — nothing can deliver that key, so it would
  * be a limb that only ever reads `undefined`.
  */
@@ -146,14 +138,18 @@ export const MassUpdateStageAction: Action = {
         // failure #588 pulled this button for, because it is unrecoverable
         // from the UI. Collect the miss, keep going, reject once at the end.
         //
-        // The catch is deliberately cause-AGNOSTIC. A host rejection crosses
-        // the QuickJS boundary as \`{ name, message }\` only — \`code\`, \`status\`
-        // and \`details\` are dropped by the bridge (runtime \`vm.newError\`) — so
-        // a body physically cannot test for RECORD_NOT_FOUND, and sniffing the
-        // message text would pin engine wording that is not contract. Every
-        // per-row failure is therefore reported as what the aggregate error
-        // already claims — this id was not updated — with the first cause
-        // carried along so the reason is not lost.
+        // The catch is deliberately cause-AGNOSTIC — but NOT because the cause
+        // is invisible. On the pinned runtime (17.4.0, \`hostErrorToVm\`) a host
+        // rejection reaches a body as \`name\` and \`message\` plus, when the host
+        // error carries them, \`code\`, \`status\`, \`fields\` and \`userMessage\` —
+        // nothing else, so a stale id arrives branchable as
+        // \`code === 'RECORD_NOT_FOUND'\` while \`details\` really is dropped. The
+        // branch is not taken because every cause has the same outcome here —
+        // the row did not move, so collect it and keep going — and narrowing
+        // the catch to a roster of known codes would let an unlisted cause
+        // abort the loop, the failure the paragraph above forbids. Message text
+        // is engine wording and not contract, so \`firstCause\` is carried
+        // verbatim and never parsed.
         let row = null;
         try {
           row = await ctx.api.object('crm_opportunity').update(
@@ -195,7 +191,7 @@ export const MassUpdateStageAction: Action = {
       label: 'New Stage',
       type: 'select',
       required: true,
-      // Mirrors crm_opportunity.stage exactly (#490) — see _picklists.ts.
+      // Mirrors crm_opportunity.stage exactly — see _picklists.ts.
       options: plainOptions(OPPORTUNITY_STAGE_OPTIONS),
     }
   ],

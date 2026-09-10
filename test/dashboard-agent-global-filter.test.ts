@@ -80,7 +80,13 @@ const widget = (id: string): AnyRec => widgets().find((w) => w.id === id) as Any
  * never quietly test a filter the dashboard no longer offers.
  */
 const agentFilter = (): AnyRec =>
-  ((service?.globalFilters ?? []) as AnyRec[]).find((f) => f.label === 'Agent') as AnyRec;
+  ((service?.globalFilters ?? []) as AnyRec[]).find(
+    // `label` is `I18nLabelSchema` — a string OR an inline `{ en, 'zh-CN', … }`
+    // locale map (#1822). Read the default-language entry either way, so a
+    // relabel into four locales keeps pinning the control the docblock names
+    // rather than silently finding nothing and passing vacuously.
+    (f) => (typeof f.label === 'string' ? f.label : f.label?.en) === 'Agent',
+  ) as AnyRec;
 
 const AGENT_FIELD = 'owner_id';
 

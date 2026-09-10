@@ -1,37 +1,34 @@
 ---
 title: Campaign Members
-description: The leads and contacts enrolled in each campaign, and how their engagement is tracked.
+description: The leads and contacts enrolled in each campaign, and how their responses are tracked.
 ---
 
 # Campaign Members
 
-A **campaign member** is the link between a [campaign](/docs/marketing/campaigns) and a person (a [lead](/docs/sales/leads) or a [contact](/docs/sales/contacts)). It tracks whether that person was sent the campaign, opened it, clicked, responded, or converted.
+A **campaign member** is the link between a [campaign](/docs/marketing/campaigns) and a person (a [lead](/docs/sales/leads) or a [contact](/docs/sales/contacts)). It records that the campaign was sent to that person, and what came back: whether they responded, whether their lead went on to convert, or whether they asked to stop hearing from you.
 
 ## How members get enrolled
 
 Three ways:
 
-1. **Bulk enrollment via the campaign flow** — when a campaign moves to *In Progress*, the [Campaign Enrollment flow](/docs/marketing/campaigns#campaign-enrollment-flow) runs and adds everyone matching the audience criteria.
-2. **From a lead** — open a lead (or tick several in a lead list view) and run **Add to Campaign**, then choose the campaign. Leads already on that campaign are skipped, so re-running it never double-counts a touch. This is the only picker-driven path that ships: there is no *Add Members* button on the campaign that picks people from lead and contact list views.
+1. **Bulk enrollment, run from the campaign** — open a campaign and click **Enroll Members** in the record header; the action is offered while the campaign is *Planning* or *In Progress*. It opens the *Enrollment Criteria* screen of the [Campaign Enrollment flow](/docs/marketing/campaigns#campaign-enrollment-flow), where you pick the audience yourself — leads by status, or contacts by department — and it then creates a member per matching person with status *Sent*, skipping the already-enrolled and the opted-out. Nothing runs it for you: the criteria are answered on that screen, and a scheduled run would have nobody to answer them.
+2. **From a lead list or a contact list** — **Add to Campaign** ships on both. Tick the rows you want and run it from the selection toolbar, or run it on a single row from that row's ⋮ menu; either way you choose the campaign from a record picker. It is a list action on both objects, so opening a lead or a contact does not offer it. People already on that campaign are skipped, so re-running it never double-counts a touch — the skip-check is per relationship, so a person enrolled once as a lead and once as a contact is deliberately two memberships rather than a duplicate. There is still no *Add Members* picker on the campaign that reaches lead and contact list views.
 3. **One at a time on the campaign** — open a campaign, find the **Campaign Members** panel on the *Related* tab, and use its **New** button to fill in a single membership by hand.
 
 A person can be in many campaigns over time, but only once per campaign (one membership per person per campaign).
 
-## The 7 member statuses
+## The 4 member statuses
 
-The member status tracks engagement and progresses naturally as the campaign runs:
+The member status is the response lifecycle, and every value on it has something in the app that writes it:
 
-| Status | What it means | Updated by |
+| Status | What it means | Written by |
 | --- | --- | --- |
-| ⚪ **Sent** | The campaign reached them *(default for new members)* | Initial enrollment |
-| 🔵 **Opened** | Email opened, webinar joined, etc. | Email tracking / event check-in |
-| 🟢 **Clicked** | Clicked a tracked link | Email tracking |
-| 🟢 **Responded** | Replied, registered, downloaded | Form submission |
-| 🟣 **Converted** | Became a lead-to-opportunity or contact-to-deal | Sales conversion |
-| 🟠 **Bounced** | Email bounced or undeliverable | Email gateway |
-| 🔴 **Unsubscribed** | Opted out of future contact | Customer action |
+| ⚪ **Sent** | The campaign reached them *(the default for a new member, however it was created)* | Enrollment |
+| 🟢 **Responded** | They answered — replied, registered, downloaded | **Mark Responded** on the member |
+| 🟣 **Converted** | Their lead went on to become a customer | Automatic, when that lead is converted |
+| 🔴 **Unsubscribed** | They asked to stop hearing from you | A rep on the member record, or an opt-out request |
 
-The status is *monotonic* — a member who has *Clicked* won't be downgraded to *Opened* if you process events out of order.
+These four are not a ladder that only climbs. Most members stay at *Sent*; one who answers moves to *Responded*, and a member still at *Sent* or *Responded* whose lead is later converted is promoted to *Converted* for you. Moving a member back — a mis-click corrected, or a reset to *Sent* for a re-send — clears the response stamp with it. An *Unsubscribed* member is never promoted by that conversion sweep: an opt-out is not overwritten by a marketing outcome.
 
 ## Why both lead and contact?
 
@@ -48,39 +45,39 @@ If a lead is later converted to a contact, the existing campaign memberships sta
 
 | Field | Purpose |
 | --- | --- |
-| Campaign | The campaign |
-| Lead | The lead (if a prospect) |
-| Contact | The contact (if an existing person) |
-| Status | Engagement status (see above) |
-| Added Date | When the person was enrolled |
-| First Opened | First time the email was opened |
-| First Clicked | First time a tracked link was clicked |
-| Response Date | When they responded / registered |
-| Has Responded | Boolean shortcut |
+| Member Number | The membership's own reference (CM-00001), generated on save |
+| Campaign | The campaign — required |
+| Lead | The lead, if the person was a prospect when they were enrolled |
+| Contact | The contact, if the person is an existing contact |
+| Added Date | When the person was enrolled — written by whatever enrolled them, and read-only afterwards |
+| Status | Where the person got to (the four above) |
+| Response Date | When they responded, stamped the first time they reach a responded status |
+| Has Responded | The yes/no shortcut, kept in step with *Status* for you — *Converted* counts as responded |
 
-## Engagement tracking
+## What is tracked, and what is not
 
-Email-tracking integrations write back to the member record automatically:
+> **This app does not track opens, clicks or bounces.** The platform's email service sends mail and records what became of the message — *Queued → Sent*, or *Failed* — but it ships no tracking pixel, no click webhook and no bounce feed. A member status that depended on one would sit at its default forever, so none exists. What the app can observe is a person answering and a lead converting, and that is what the four statuses say.
 
-- **Email service** → updates *First Opened*, *First Clicked*, status.
-- **Form submissions** → updates *Response Date*, status = *Responded*.
-- **Conversion events** (lead → opportunity) → status = *Converted*.
+Each status has a real writer:
 
-These updates happen near-real-time via the email/form integration.
+- **Sent** — written when the membership is created, by every enrollment path above.
+- **Responded** — the **Mark Responded** button on the member record. It is offered only while the member is still at *Sent*: an already-responded, converted or unsubscribed member has nothing to record, and an unsubscribed one must not be pulled back into the funnel by a mis-click. It stamps *Response Date* and *Has Responded* along with the status.
+- **Converted** — automatic. When a member's lead is converted, every campaign that lead is enrolled in promotes its member row and recomputes its numbers. Conversion is the one campaign outcome the app observes by itself.
+- **Unsubscribed** — set by a rep on the member record, or on an opt-out request. Setting it also ticks **Email Opt Out** on that person's lead or contact, which is what keeps them out of future campaigns: the enrollment flow skips opted-out people. It runs one way only — opting a person out does not rewrite the memberships they already have, because those record what happened at the time.
 
 ## How the metrics roll up
 
 The campaign detail page rolls up its members:
 
 ```
-Sent      = count of members
-Open rate = members where status >= Opened ÷ Sent
-Click rate = members where status >= Clicked ÷ Sent
-Response rate = members where status >= Responded ÷ Sent
-Conversion rate = members where status == Converted ÷ Sent
+Sent          = every member of the campaign
+Responses     = members at Responded or Converted
+Response rate = Responses ÷ Sent, as a percentage
 ```
 
-This means the campaign-level metrics are always live. As soon as a person opens an email, the campaign's *Open Rate* ticks up.
+Conversions reach the campaign as its converted-lead count, and — once the opportunity carries the campaign — as the pipeline and ROI figures on the same page. Unsubscribes are not a campaign counter: you read them on the member rows, and on the person's *Email Opt Out*.
+
+The numbers are recomputed on every membership change — someone enrolled, someone marked responded, someone removed — so a campaign that is still running reports real figures instead of waiting for a nightly job. Mark a member *Responded* and the campaign's response rate moves with it.
 
 ## Where members appear
 
@@ -89,20 +86,20 @@ On the campaign detail page, under the **Related** tab, in a panel titled **Camp
 Two things readers arrive expecting, and where they really are:
 
 - There is no *Members* tab. Campaign membership is one panel among the campaign's other related records on the shared *Related* tab.
-- There are no saved member list views — not *All Members*, *Responded*, *Bounced / Unsubscribed* or *Converted to Opportunity*. Campaign Member ships no list views at all, and a related-list panel would not read them if it did: the panel's columns are curated on the campaign link itself, never from a view. Nothing ships that narrows the panel to one status, and no report ships over Campaign Member either, so a subset — every bounce, every conversion — is a number on the campaign rather than a list: see [How the metrics roll up](#how-the-metrics-roll-up), where every rate is computed live from member status.
+- There are no saved member list views — not *All Members*, *Responded*, *Unsubscribed* or *Converted to Opportunity*. Campaign Member ships no list views at all, and a related-list panel would not read them if it did: the panel's columns are curated on the campaign link itself, never from a view. Nothing ships that narrows the panel to one status, and no report ships over Campaign Member either, so "everyone who responded" is a number on the campaign rather than a list you can open: see [How the metrics roll up](#how-the-metrics-roll-up), where the response rate is computed live from member status.
 
 ## Tips for marketers
 
-- ✅ **Clean bounces and unsubscribes** weekly — they pollute your engagement rates if left in active campaigns.
-- ✅ **Use Converted status** to measure true campaign impact — *Opened* and *Clicked* are vanity metrics.
+- ✅ **Watch the unsubscribes** — each one also opts that person out of email, so they drop out of every future enrollment automatically. A rising count is a signal to change the content, not the list.
+- ✅ **Judge a campaign on *Responded* and *Converted*** — they are the two outcomes this app can actually observe.
 - ✅ **Tag campaign source on opportunities** — without it the conversion won't roll up.
 
 ## Tips for sales reps
 
-- ✅ When you open a lead, check **Campaign Memberships** in the sidebar — it tells you what content they've already engaged with.
+- ✅ When you open a lead, check **Campaign Memberships** in the sidebar — it tells you which campaigns they were sent and how they answered.
 - ✅ Use the campaign as a conversation starter — *"I saw you joined our recent webinar on..."*
 
 ## Tips for admins
 
-- Email tracking and form integration require connectors. See [Customization › Building Connectors](/docs/customization/extending-objects).
+- There is no open/click tracking to switch on, and no connector that adds it. If a campaign's response numbers look low, check that reps are using **Mark Responded** — that button, and a lead converting, are the only things that move a member off *Sent*.
 - The rule that exactly one of *Lead* or *Contact* must be set lives in the campaign_member object's validation rules.

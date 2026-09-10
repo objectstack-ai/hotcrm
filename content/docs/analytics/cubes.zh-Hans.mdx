@@ -56,7 +56,7 @@ description: HotCRM 分析底下的语义层——它是什么、回答哪些业
 - **客服（及团队）** —— 这个 dataset **没有负责人维度**，所以分析侧无法按客服分组、排名或筛选。`owner_id` 是工单上的字段，没有任何维度把它暴露出来。这也是服务侧各页都没有客服排行榜的原因，而「按客服看重开工单」更是两头都不成立 —— 也没有任何东西在记录「重开」。
 - **客户（及层级）** —— 它只读 `crm_case`，从不跨到 `crm_account`。
 - **产品** —— 工单上没有分析侧读得到的产品关联，所以「按类别按产品看工单」没有路径。最接近「类别」的真实切法是工单的 **Type**（*Question / Problem / Feature Request / Bug*）。
-- **CSAT 评分** —— 没有满意度数据可聚合。工单对象上曾经声明过一个**客户满意度**评分，但产品里从来没有任何环节采集它 —— 没有界面可填，也没有自动化会写 —— 因此它被退役，而不是留着当一个报表可以指过来的空列。
+- **CSAT 评分** —— 没有满意度数据可聚合。工单对象上曾经声明过一个*客户满意度*评分，但产品里从来没有任何环节采集它 —— 没有界面可填，也没有自动化会写 —— 因此它被退役，而不是留着当一个报表可以指过来的空列。
 - **把未结 / 新建 / 已解决当作各自独立的数字** —— 这个 dataset 声明的预筛计数都在已关闭那一侧。状态是维度，所以按状态*拆开*的计数能给出同样的分解。
 - **除天以外的任何周期粒度** —— 创建日期维度只按天分桶。
 
@@ -69,16 +69,16 @@ description: HotCRM 分析底下的语义层——它是什么、回答哪些业
 
 **没有营销 dataset，也就没有任何东西可切。** `crm_campaign` 不在 `src/datasets/` 读取的那些对象之列 —— 这让本节成为全页唯一一处：缺的不是某个度量，而是数据源本身。本页曾经给出的每一个营销数字都够不着，而且没有一个能从报表或 cube 界面上补出来。
 
-记录本身是带着这些数字的。`crm_campaign` 上有 **Budgeted Cost**、**Actual Cost**、**Expected Revenue**、**Actual Revenue**，有 **Num Sent / Responses / Leads / Converted Leads / Opportunities / Won Opportunities** 这一组计数器，还有两个公式字段 —— **Response Rate %** 与 **ROI %** —— 它们都摆在营销活动记录的 **Performance** 分区里。`crm_campaign_member` 则逐个成员盖上 **First Opened**、**First Clicked**、**Response Date** 与 **Responded**。以上每一项都是记录级的数字，而没有任何东西在聚合它们。
+记录本身是带着这些数字的。`crm_campaign` 上有 **Number Sent / Number of Responses / Number of Leads / Converted Leads / Opportunities Created / Won Opportunities** 这一组计数器，还有 **Response Rate %** 公式字段，它们都摆在营销活动记录的 **Performance** 分区里；**Budgeted Cost**、**Actual Cost**、**Expected Revenue**、**Actual Revenue** 与 **ROI %** 公式则在隔壁的 **Budget & ROI** 分区。`crm_campaign_member` 每个成员只记一件事，就是响应：**Status**、**Response Date** 与 **Has Responded**，都在 **Response Tracking** 分区里。以上每一项都是记录级的数字，而没有任何东西在聚合它们。打开与点击是另一回事：它们不是没被聚合，而是根本没有被记录 —— 本应用不跟踪打开、点击或退信，成员上也没有 *First Opened* 或 *First Clicked* 这样的时间戳可供 cube 汇总。
 
 逐条来看：
 
-- **入组成员数 / 响应成员数**、**转化数量** —— 都是记录上的单活动计数器；没有度量，也就没有跨活动的合计与排名。
-- **来源收入与影响收入** —— 从交易这一侧同样够不着：`crm_opportunity.crm_campaign` 是真实的 lookup，但 `opportunity_metrics` 没有声明营销活动维度，所以分析侧任何地方都无法把收入归因到某个营销活动。
-- **营销活动支出**、**每线索成本**、**每商机成本**、**ROI %** —— ROI 百分比作为公式在每条记录上是有的；但没有任何东西在汇总支出、也没有任何东西在比较活动之间的高低。
-- **营销活动（及类型）**、**渠道**、**周期** —— 都是 `crm_campaign` 上真实的字段，而在任何地方都不是维度。
+- *入组成员数 / 响应成员数*、*转化数量* —— 都是记录上的单活动计数器；没有度量，也就没有跨活动的合计与排名。
+- *来源收入与影响收入* —— 从交易这一侧同样够不着：`crm_opportunity.crm_campaign` 是真实的 lookup，但 `opportunity_metrics` 没有声明营销活动维度，所以分析侧任何地方都无法把收入归因到某个营销活动。
+- *营销活动支出*、*每线索成本*、*每商机成本*、**ROI %** —— ROI 百分比作为公式在每条记录上是有的；但没有任何东西在汇总支出、也没有任何东西在比较活动之间的高低。
+- **营销活动（及类型）**、**渠道** —— 都是 `crm_campaign` 上真实的字段，而在任何地方都不是维度。*周期* 则不在其列：营销活动记录上带的是 **Start Date** 与 **End Date**，而没有任何数据集读它们。
 - **线索来源** —— 它在线索侧和交易侧都是维度，所以「哪些来源带来了交易」答得出来；来源背后的那个*营销活动*则答不出来。
-- **人物画像（职位角色）** —— 完全没有路径：**Title** 在联系人和线索上都是自由文本，而联系人那个 dataset 一个维度都没有声明。
+- *人物画像（职位角色）* —— 完全没有路径：**Title** 在联系人和线索上都是自由文本，而联系人那个 dataset 一个维度都没有声明。
 
 所以本节给出的那三个问题 —— 「按营销活动类型的 ROI」「按渠道的每商机成本」「按人物画像的转化率」 —— 今天在这里一个都答不出来。要补上这个缺口，得新增 `src/datasets/campaign.dataset.ts`：那是改源码加重新部署，不是一个设置项。营销活动记录今天能看到什么，见 [营销活动](/zh-Hans/docs/marketing/campaigns)。
 
