@@ -30,7 +30,7 @@ export const Product = ObjectSchema.create({
   fieldGroups: [
     { key: 'basic',    label: 'Product Information', icon: 'info' },
     { key: 'pricing',  label: 'Pricing',             icon: 'dollar-sign' },
-    { key: 'metadata', label: 'Resources',           icon: 'link', defaultExpanded: false },
+    { key: 'metadata', label: 'Resources',           icon: 'link', collapse: 'collapsed' },
   ],
 
   fields: {

@@ -33,8 +33,8 @@ export const Quote = ObjectSchema.create({
     { key: 'basic',     label: 'Quote Information', icon: 'info' },
     { key: 'pricing',   label: 'Pricing',           icon: 'dollar-sign' },
     { key: 'terms',     label: 'Terms & Validity',  icon: 'calendar' },
-    { key: 'address',   label: 'Addresses',         icon: 'map-pin', defaultExpanded: false },
-    { key: 'system',    label: 'System',            icon: 'database', defaultExpanded: false },
+    { key: 'address',   label: 'Addresses',         icon: 'map-pin', collapse: 'collapsed' },
+    { key: 'system',    label: 'System',            icon: 'database', collapse: 'collapsed' },
   ],
 
   fields: {

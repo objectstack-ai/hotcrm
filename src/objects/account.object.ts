@@ -32,8 +32,8 @@ export const Account = ObjectSchema.create({
     { key: 'financials',   label: 'Financials',         icon: 'dollar-sign' },
     { key: 'contact_info', label: 'Contact Information', icon: 'phone' },
     { key: 'ownership',    label: 'Ownership & Status', icon: 'users' },
-    { key: 'branding',     label: 'Branding',           icon: 'palette', defaultExpanded: false },
-    { key: 'system',       label: 'System',             icon: 'settings', defaultExpanded: false },
+    { key: 'branding',     label: 'Branding',           icon: 'palette', collapse: 'collapsed' },
+    { key: 'system',       label: 'System',             icon: 'settings', collapse: 'collapsed' },
   ],
 
   fields: {

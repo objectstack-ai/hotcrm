@@ -58,7 +58,7 @@ export const Event = ObjectSchema.create({
     { key: 'basic',    label: 'Event Information', icon: 'info' },
     { key: 'schedule', label: 'Schedule',          icon: 'calendar' },
     { key: 'related',  label: 'Related Records',   icon: 'link' },
-    { key: 'outcome',  label: 'Outcome',           icon: 'clipboard-check', defaultExpanded: false },
+    { key: 'outcome',  label: 'Outcome',           icon: 'clipboard-check', collapse: 'collapsed' },
   ],
 
   fields: {

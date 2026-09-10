@@ -18,8 +18,8 @@ export const Case = ObjectSchema.create({
     { key: 'origin',      label: 'Origin & Routing', icon: 'route' },
     { key: 'sla',         label: 'SLA & Priority',   icon: 'clock' },
     { key: 'resolution',  label: 'Resolution',       icon: 'check-circle' },
-    { key: 'escalation',  label: 'Escalation',       icon: 'alert-triangle', defaultExpanded: false },
-    { key: 'system',      label: 'System',           icon: 'database',       defaultExpanded: false },
+    { key: 'escalation',  label: 'Escalation',       icon: 'alert-triangle', collapse: 'collapsed' },
+    { key: 'system',      label: 'System',           icon: 'database',       collapse: 'collapsed' },
   ],
 
   fields: {

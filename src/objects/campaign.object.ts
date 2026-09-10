@@ -40,7 +40,7 @@ export const Campaign = ObjectSchema.create({
     { key: 'budget',     label: 'Budget & ROI',         icon: 'dollar-sign' },
     { key: 'metrics',    label: 'Performance',          icon: 'bar-chart' },
     { key: 'assignment', label: 'Ownership',            icon: 'user' },
-    { key: 'assets',     label: 'Campaign Assets',      icon: 'link', defaultExpanded: false },
+    { key: 'assets',     label: 'Campaign Assets',      icon: 'link', collapse: 'collapsed' },
   ],
 
   fields: {

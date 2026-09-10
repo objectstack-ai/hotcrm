@@ -29,9 +29,9 @@ export const Task = ObjectSchema.create({
     // (`field-group-shadowed`). It lives in `basic` alongside
     // subject/status/priority instead.
     { key: 'related',    label: 'Related Records',  icon: 'link' },
-    { key: 'recurrence', label: 'Recurrence',       icon: 'refresh-ccw', defaultExpanded: false },
-    { key: 'effort',     label: 'Progress & Effort', icon: 'activity',   defaultExpanded: false },
-    { key: 'system',     label: 'System',           icon: 'database',    defaultExpanded: false },
+    { key: 'recurrence', label: 'Recurrence',       icon: 'refresh-ccw', collapse: 'collapsed' },
+    { key: 'effort',     label: 'Progress & Effort', icon: 'activity',   collapse: 'collapsed' },
+    { key: 'system',     label: 'System',           icon: 'database',    collapse: 'collapsed' },
   ],
 
   fields: {

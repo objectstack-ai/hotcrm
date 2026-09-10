@@ -18,9 +18,9 @@ export const Contact = ObjectSchema.create({
     { key: 'identity',        label: 'Identity',             icon: 'user' },
     { key: 'account_info',    label: 'Account & Role',       icon: 'briefcase' },
     { key: 'contact_info',    label: 'Contact Information',  icon: 'phone' },
-    { key: 'mailing_address', label: 'Mailing Address',      icon: 'map-pin', defaultExpanded: false },
-    { key: 'additional',      label: 'Additional Info',      icon: 'info', defaultExpanded: false },
-    { key: 'preferences',     label: 'Communication Preferences', icon: 'bell-off', defaultExpanded: false },
+    { key: 'mailing_address', label: 'Mailing Address',      icon: 'map-pin', collapse: 'collapsed' },
+    { key: 'additional',      label: 'Additional Info',      icon: 'info', collapse: 'collapsed' },
+    { key: 'preferences',     label: 'Communication Preferences', icon: 'bell-off', collapse: 'collapsed' },
   ],
 
   fields: {

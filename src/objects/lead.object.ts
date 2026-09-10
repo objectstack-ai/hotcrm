@@ -25,11 +25,11 @@ export const Lead = ObjectSchema.create({
     { key: 'contact_info', label: 'Contact Information', icon: 'phone' },
     { key: 'qualification', label: 'Qualification',     icon: 'star' },
     { key: 'assignment',   label: 'Assignment',         icon: 'user' },
-    { key: 'address',      label: 'Address',            icon: 'map-pin', defaultExpanded: false },
-    { key: 'additional',   label: 'Additional Info',    icon: 'info', defaultExpanded: false },
-    { key: 'preferences',  label: 'Communication Preferences', icon: 'bell-off', defaultExpanded: false },
-    { key: 'conversion',   label: 'Conversion',         icon: 'check-circle', defaultExpanded: false },
-    { key: 'duplicates',   label: 'Duplicate Management', icon: 'copy', defaultExpanded: false },
+    { key: 'address',      label: 'Address',            icon: 'map-pin', collapse: 'collapsed' },
+    { key: 'additional',   label: 'Additional Info',    icon: 'info', collapse: 'collapsed' },
+    { key: 'preferences',  label: 'Communication Preferences', icon: 'bell-off', collapse: 'collapsed' },
+    { key: 'conversion',   label: 'Conversion',         icon: 'check-circle', collapse: 'collapsed' },
+    { key: 'duplicates',   label: 'Duplicate Management', icon: 'copy', collapse: 'collapsed' },
   ],
 
   fields: {

@@ -54,7 +54,7 @@ export const Forecast = ObjectSchema.create({
   fieldGroups: [
     { key: 'basic',   label: 'Snapshot',    icon: 'info' },
     { key: 'amounts', label: 'Amounts',     icon: 'dollar-sign' },
-    { key: 'meta',    label: 'Source',      icon: 'database', defaultExpanded: false },
+    { key: 'meta',    label: 'Source',      icon: 'database', collapse: 'collapsed' },
   ],
 
   fields: {
