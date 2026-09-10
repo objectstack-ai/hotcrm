@@ -45,21 +45,21 @@ export const SalesDashboard: Dashboard = {
   globalFilters: [
     {
       field: 'owner_id',
-      label: 'Sales Rep',
+      label: { en: 'Sales Rep', 'zh-CN': '销售代表', 'es-ES': 'Representante de Ventas', 'ja-JP': '営業担当者' },
       type: 'lookup',
       scope: 'dashboard',
       optionsFrom: { object: 'sys_user', valueField: 'id', labelField: 'name' },
     },
     {
       field: 'type',
-      label: 'Deal Type',
+      label: { en: 'Deal Type', 'zh-CN': '商机类型', 'es-ES': 'Tipo de Oportunidad', 'ja-JP': '商談タイプ' },
       type: 'select',
       scope: 'dashboard',
       options: [
-        { value: 'new_business',       label: 'New Business' },
-        { value: 'existing_upgrade',   label: 'Existing Customer - Upgrade' },
-        { value: 'existing_renewal',   label: 'Existing Customer - Renewal' },
-        { value: 'existing_expansion', label: 'Existing Customer - Expansion' },
+        { value: 'new_business',       label: { en: 'New Business', 'zh-CN': '新业务', 'es-ES': 'Nuevo Negocio', 'ja-JP': '新規ビジネス' } },
+        { value: 'existing_upgrade',   label: { en: 'Existing Customer - Upgrade', 'zh-CN': '老客户升级', 'es-ES': 'Cliente Existente - Mejora', 'ja-JP': '既存顧客 - アップグレード' } },
+        { value: 'existing_renewal',   label: { en: 'Existing Customer - Renewal', 'zh-CN': '老客户续约', 'es-ES': 'Cliente Existente - Renovación', 'ja-JP': '既存顧客 - 更新' } },
+        { value: 'existing_expansion', label: { en: 'Existing Customer - Expansion', 'zh-CN': '老客户拓展', 'es-ES': 'Cliente Existente - Expansión', 'ja-JP': '既存顧客 - 拡大' } },
       ],
     },
   ],
@@ -192,6 +192,9 @@ export const SalesDashboard: Dashboard = {
         showLegend: false,
         showDataLabels: false,
         colors: ['#10B981'],
+        // Axis titles stay plain English: `ChartAxisSchema.title` accepts an inline
+        // locale map but the Console flattens it to the map's FIRST value regardless
+        // of locale — measured, see `src/dashboards/index.ts` (#1822).
         xAxis: { field: 'close_date', title: 'Month', showGridLines: false, logarithmic: false },
         // No quota annotation line: ChartAnnotationSchema only takes a STATIC
         // value, and the real quotas live per-owner/per-period in

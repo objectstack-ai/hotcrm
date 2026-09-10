@@ -49,7 +49,7 @@ export const CrmOverviewDashboard: Dashboard = {
   globalFilters: [
     {
       field: 'owner_id',
-      label: 'Owner',
+      label: { en: 'Owner', 'zh-CN': '负责人', 'es-ES': 'Responsable', 'ja-JP': '担当者' },
       type: 'lookup',
       scope: 'dashboard',
       optionsFrom: { object: 'sys_user', valueField: 'id', labelField: 'name' },
@@ -117,6 +117,9 @@ export const CrmOverviewDashboard: Dashboard = {
         showLegend: false,
         showDataLabels: false,
         colors: ['#10B981'],
+        // Axis titles stay plain English: `ChartAxisSchema.title` accepts an inline
+        // locale map but the Console flattens it to the map's FIRST value regardless
+        // of locale — measured, see `src/dashboards/index.ts` (#1822).
         xAxis: { field: 'close_date', title: 'Month', showGridLines: false, logarithmic: false },
         yAxis: [{ field: 'total_amount', title: 'Revenue', format: '0,0', showGridLines: true, logarithmic: false }],
         interaction: { tooltips: true, brush: true },
