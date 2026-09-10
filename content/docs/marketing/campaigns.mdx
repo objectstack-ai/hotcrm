@@ -59,19 +59,22 @@ The **Campaign Code** is auto-generated (e.g., CAMP-000123) so every campaign ha
 
 - **Auto-complete** — at 2 AM daily, any *In Progress* campaign past its end date is marked *Completed*. The sweep flips the status and only the status — the numbers were already current before it ran.
 - **Live metrics** — the metric block (sent, responded, converted, ROI) is recomputed as members are enrolled, as members respond, as their leads convert, and as opportunities are attributed to the campaign. A campaign you are running right now reports real numbers; you do not wait for it to finish to read them.
-- **Member enrollment** — when a campaign goes *In Progress*, the [Campaign Enrollment flow](#campaign-enrollment-flow) runs every Monday at 9 AM and adds new matching audience members.
 - **ROI calculation** — the campaign's actual revenue is the rolled-up sum of related closed-won opportunity amounts. ROI = (actual revenue − actual cost) ÷ actual cost.
+
+Member enrollment is deliberately not on that list: nothing enrolls members when a campaign goes *In Progress*, and no schedule enrolls them later. It is a button someone presses — see [Campaign enrollment flow](#campaign-enrollment-flow) below.
 
 ## Campaign enrollment flow
 
-When you launch a campaign (status → *In Progress*), the system bulk-enrolls your target audience as [campaign members](/docs/marketing/campaign-members).
+Bulk enrollment is a step you run, not one that happens to you. Open the campaign and click **Enroll Members** in the record header — the action is offered while the campaign is *Planning* or *In Progress* — and the flow opens its *Enrollment Criteria* screen on that campaign.
 
-The flow runs on a schedule (default Monday 9 AM) and:
+You choose the audience on that screen:
 
-1. Reads the campaign's target audience criteria (e.g., "all leads in Technology industry with rating ≥ 3").
-2. Finds matching leads and contacts.
-3. Creates a campaign member record per person with status = *Sent*.
-4. Optionally triggers the campaign's send action (email send, mailer dispatch, etc.).
+1. **Enroll** — *Leads* or *Contacts*. One run enrolls one side, not both.
+2. The segment on that side — leads by **status**, contacts by **department**. Both fields carry a default, so you change the one that matches the side you picked.
+
+The flow then takes everyone eligible in that segment — they have an email address, they are not opted out of email, and a lead must not already be converted — and creates a [campaign member](/docs/marketing/campaign-members) per person with status *Sent*. Anyone already on the campaign is skipped, so running it again tops the campaign up instead of counting a touch twice.
+
+There is no schedule behind this, and the criteria are the reason. They are answered on the screen, and a scheduled run would arrive with nobody to answer them — no campaign, no segment — so enrolling is deliberately something a person does.
 
 For real-time campaigns (e.g., a webinar with a registration form), you can also add members **manually** from the campaign detail page or via the **Add to Campaign** action on any lead/contact.
 
@@ -127,6 +130,6 @@ Campaigns are **public read-only** for the whole organisation. Anyone in sales c
 
 ## Tips for admins
 
-- The auto-complete cron (2 AM daily) and the enrollment cron (Monday 9 AM) are configurable. See [Administration › Automation](/docs/administration/automation).
+- The auto-complete cron (2 AM daily) is configurable. There is no enrollment cron to configure — enrollment is the **Enroll Members** screen flow, which someone runs from a campaign. See [Administration › Automation](/docs/administration/automation).
 - To add a new campaign type or channel, edit the campaign object's picklists. See [Customization › Extending Objects](/docs/customization/extending-objects).
 - For multi-touch attribution, see the customisation guide.
