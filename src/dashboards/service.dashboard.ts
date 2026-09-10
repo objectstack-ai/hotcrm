@@ -51,21 +51,24 @@ export const ServiceDashboard: Dashboard = {
   globalFilters: [
     {
       field: 'owner_id',
-      label: 'Agent',
+      label: { en: 'Agent', 'zh-CN': '负责人', 'es-ES': 'Propietario del Caso', 'ja-JP': 'ケース担当者' },
       type: 'lookup',
       scope: 'dashboard',
       optionsFrom: { object: 'sys_user', valueField: 'id', labelField: 'name' },
     },
     {
       field: 'priority',
-      label: 'Priority',
+      label: { en: 'Priority', 'zh-CN': '优先级', 'es-ES': 'Prioridad', 'ja-JP': '優先度' },
       type: 'select',
       scope: 'dashboard',
       options: [
-        { value: 'critical', label: 'Critical' },
-        { value: 'high',     label: 'High' },
-        { value: 'medium',   label: 'Medium' },
-        { value: 'low',      label: 'Low' },
+        // zh-CN `critical` is 严重, never 紧急 — 紧急 belongs to crm_task.priority.urgent
+        // and the two vocabularies are distinct sets (ruling #1342). Same wording as
+        // `objects.crm_case.fields.priority.options` in every locale pack.
+        { value: 'critical', label: { en: 'Critical', 'zh-CN': '严重', 'es-ES': 'Crítica', 'ja-JP': '重大' } },
+        { value: 'high',     label: { en: 'High', 'zh-CN': '高', 'es-ES': 'Alta', 'ja-JP': '高' } },
+        { value: 'medium',   label: { en: 'Medium', 'zh-CN': '中', 'es-ES': 'Media', 'ja-JP': '中' } },
+        { value: 'low',      label: { en: 'Low', 'zh-CN': '低', 'es-ES': 'Baja', 'ja-JP': '低' } },
       ],
     },
   ],
@@ -177,6 +180,9 @@ export const ServiceDashboard: Dashboard = {
         showLegend: false,
         showDataLabels: true,
         colors: ['#8B5CF6'],
+        // Axis titles stay plain English: `ChartAxisSchema.title` accepts an inline
+        // locale map but the Console flattens it to the map's FIRST value regardless
+        // of locale — measured, see `src/dashboards/index.ts` (#1822).
         xAxis: { field: 'origin', title: 'Channel', showGridLines: false, logarithmic: false },
         yAxis: [{ field: 'case_count', title: 'Cases', showGridLines: true, logarithmic: false }],
       },

@@ -70,7 +70,7 @@ export const ActivityDashboard: Dashboard = {
   globalFilters: [
     {
       field: 'owner_id',
-      label: 'Rep',
+      label: { en: 'Rep', 'zh-CN': '销售代表', 'es-ES': 'Representante', 'ja-JP': '担当者' },
       type: 'lookup',
       scope: 'dashboard',
       optionsFrom: { object: 'sys_user', valueField: 'id', labelField: 'name' },
@@ -142,6 +142,9 @@ export const ActivityDashboard: Dashboard = {
         showLegend: false,
         showDataLabels: true,
         colors: ['#10B981'],
+        // Axis titles stay plain English: `ChartAxisSchema.title` accepts an inline
+        // locale map but the Console flattens it to the map's FIRST value regardless
+        // of locale — measured, see `src/dashboards/index.ts` (#1822).
         xAxis: { field: 'owner', title: 'Rep', showGridLines: false, logarithmic: false },
         yAxis: [{ field: 'event_count', title: 'Interactions', showGridLines: true, logarithmic: false }],
       },

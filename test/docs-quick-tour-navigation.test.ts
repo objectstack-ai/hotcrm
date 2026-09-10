@@ -416,7 +416,10 @@ const EXEC_TILES = tileTitles(ExecutiveDashboard as AnyRec);
 
 /** Dashboard-level filter labels the section names as controls. */
 const EXEC_FILTER_LABELS = (((ExecutiveDashboard as AnyRec).globalFilters ?? []) as AnyRec[])
-  .map((f) => f.label as string)
+  // `label` is `I18nLabelSchema` — a string OR an inline `{ en, 'zh-CN', … }`
+  // locale map (#1822). Every rendered spelling counts as a real name here:
+  // the Chinese pages bold what the Chinese UI shows.
+  .flatMap((f) => (typeof f.label === 'string' ? [f.label] : Object.values(f.label ?? {})) as string[])
   .filter(Boolean);
 
 const ALLOWED_BOLD_SECTION1 = new Set<string>([
