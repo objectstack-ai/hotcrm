@@ -69,7 +69,7 @@ description: HotCRM 分析底下的语义层——它是什么、回答哪些业
 
 **没有营销 dataset，也就没有任何东西可切。** `crm_campaign` 不在 `src/datasets/` 读取的那些对象之列 —— 这让本节成为全页唯一一处：缺的不是某个度量，而是数据源本身。本页曾经给出的每一个营销数字都够不着，而且没有一个能从报表或 cube 界面上补出来。
 
-记录本身是带着这些数字的。`crm_campaign` 上有 **Budgeted Cost**、**Actual Cost**、**Expected Revenue**、**Actual Revenue**，有 **Num Sent / Responses / Leads / Converted Leads / Opportunities / Won Opportunities** 这一组计数器，还有两个公式字段 —— **Response Rate %** 与 **ROI %** —— 它们都摆在营销活动记录的 **Performance** 分区里。`crm_campaign_member` 则逐个成员盖上 **First Opened**、**First Clicked**、**Response Date** 与 **Responded**。以上每一项都是记录级的数字，而没有任何东西在聚合它们。
+记录本身是带着这些数字的。`crm_campaign` 上有 **Number Sent / Number of Responses / Number of Leads / Converted Leads / Opportunities Created / Won Opportunities** 这一组计数器，还有 **Response Rate %** 公式字段，它们都摆在营销活动记录的 **Performance** 分区里；**Budgeted Cost**、**Actual Cost**、**Expected Revenue**、**Actual Revenue** 与 **ROI %** 公式则在隔壁的 **Budget & ROI** 分区。`crm_campaign_member` 每个成员只记一件事，就是响应：**Status**、**Response Date** 与 **Has Responded**，都在 **Response Tracking** 分区里。以上每一项都是记录级的数字，而没有任何东西在聚合它们。打开与点击是另一回事：它们不是没被聚合，而是根本没有被记录 —— 本应用不跟踪打开、点击或退信，成员上也没有 *First Opened* 或 *First Clicked* 这样的时间戳可供 cube 汇总。
 
 逐条来看：
 
