@@ -39,20 +39,19 @@ export const MarkPrimaryContactAction: Action = {
 /**
  * Add selected contacts to a Campaign.
  *
- * The contact-side mirror of `create_campaign` on `crm_lead` (#597). Before
- * this, `crm_campaign_member.crm_contact` was a lookup no writer populated:
- * campaigns could only ever reach LEADS, so the one audience a CRM knows most
- * about — its existing customers — was unreachable by marketing. Every design
- * decision below is copied deliberately from the lead action rather than
- * re-derived, so the two paths cannot drift:
+ * The contact-side mirror of `create_campaign` on `crm_lead`, and the only
+ * writer of `crm_campaign_member.crm_contact` — the lookup that lets a campaign
+ * reach existing customers and not only leads. Every design decision below is
+ * copied deliberately from the lead action rather than re-derived, so the two
+ * paths cannot drift:
  *
  *   - PER-RECORD dispatch. `src/views/contact.view.ts` wires this as the
  *     BARE-STRING form (`bulkActions: ['add_contact_to_campaign']`), which the
  *     renderer fans out once per selected row with that row's `recordId` and NO
- *     selection array. The body reads `ctx.recordId` and nothing else. There is
- *     no `input.selectedIds` read: only the aggregate contract injects the
+ *     selection array. The body reads `ctx.recordId` and nothing else. ⛔ Never
+ *     add an `input.selectedIds` read: only the aggregate contract injects the
  *     underscore-prefixed builtin, and the strict params gate (ADR-0104)
- *     refuses an undeclared `selectedIds` param outright (#813).
+ *     refuses an undeclared `selectedIds` param outright.
  *   - `type: 'script'` + `params`, never `type: 'modal'` — a modal action has
  *     no server dispatch, so its body never runs.
  *   - The campaign param is FIELD-BACKED (`field` + `objectOverride`) so the

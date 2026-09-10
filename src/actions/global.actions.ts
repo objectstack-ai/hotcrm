@@ -10,24 +10,21 @@ import * as objects from '../objects';
  * here is a *global* action any more, and nothing can be — see the dispatcher
  * note on `objectName` below.)
  *
- * # What changed in #592
+ * # The two rules this family exists to hold
  *
- * Two defects, one shape:
- *
- *  1. **Scope.** Both twins were pinned to `crm_case` as a workaround for the
- *     upstream key mismatch (#509), so a sales rep could not log a call on a
- *     lead, a contact, an account or an opportunity — i.e. on anything they
- *     sell to. They are now GENERATED per object: one registered action per
- *     (kind × object), which sidesteps #509 without waiting for the platform,
- *     because the runtime keys the registry on `<objectName>:<action.name>` and
- *     the dispatcher probes `<objectName>` first.
- *  2. **Shape.** The write was a `sys_activity` row whose `metadata` carried a
- *     JSON blob — `{"kind":"meeting","attendees":"Bob, Alice"}`. That is not
- *     data: no view filters it, no dataset groups by it, no report counts it.
- *     Every one of these actions now inserts a real `crm_event`, real
+ *  1. **Scope.** The actions are GENERATED per object: one registered action
+ *     per (kind × object). ⛔ Never pin an activity action to a single object,
+ *     and never author one without an `objectName` — the runtime keys the
+ *     registry on `<objectName>:<action.name>` and the dispatcher probes
+ *     `<objectName>` first, so a single-object action is unreachable from every
+ *     other object a rep sells to, and an object-less one is unreachable
+ *     everywhere.
+ *  2. **Shape.** Each of these actions inserts a real `crm_event`, real
  *     `crm_event_attendee` rows, and keeps the `sys_activity` row purely as the
- *     unified-timeline pointer (ADR-0052 `source_object`/`source_id`), the same
- *     way `send_email` points at its `sys_email`.
+ *     unified-timeline pointer (ADR-0052 `source_object` / `source_id`), the
+ *     same way `send_email` points at its `sys_email`. ⛔ Never move that
+ *     structure back into a `metadata` JSON blob: a blob is not data — no view
+ *     filters it, no dataset groups by it, no report counts it.
  *
  * # Live platform workaround
  *
@@ -48,16 +45,15 @@ import * as objects from '../objects';
  * `objectName` → the object's DECLARED `nameField`, derived from the object
  * definitions rather than hand-listed.
  *
- * Issue #514 item 2: the activity writers stamped `record_label: ctx.record?.name`,
- * but `name` is not the display field on almost anything here — most objects
- * declare a different `nameField` (`display_title`, `full_name`, `subject`,
- * `contract_number`, …) and have no `name` column at all, so the label landed
- * `null`.
+ * ⛔ Never stamp `record_label` from `ctx.record?.name`: `name` is not the
+ * display field on almost anything here — most objects declare a different
+ * `nameField` (`display_title`, `full_name`, `subject`, `contract_number`, …)
+ * and have no `name` column at all, so the label lands `null`.
  *
  * Deriving the map keeps it correct when an object retargets its `nameField`.
- * Since #592 the lookup happens at AUTHORING time (each action knows its own
- * object), so the body carries the resolved field name rather than a table —
- * one less thing for a body to get wrong at runtime.
+ * The lookup happens at AUTHORING time (each action knows its own object), so
+ * the body carries the resolved field name rather than a table it could miss
+ * on.
  */
 const NAME_FIELD_BY_OBJECT: Record<string, string> = Object.fromEntries(
   Object.values(objects as Record<string, { name?: unknown; nameField?: unknown }>)
@@ -94,8 +90,7 @@ const lit = (value: string): string => JSON.stringify(value);
  * The acting user's display name, as action-body SOURCE TEXT.
  *
  * Shared verbatim by every body that writes `sys_activity.actor_name`: the
- * activity family below (#673) and `send_email` in `contact.actions.ts` (#678,
- * the byte-identical defect on the same column).
+ * activity family below and `send_email` in `contact.actions.ts`.
  *
  * # Why a string and not a function
  *
@@ -160,11 +155,12 @@ export const ACTOR_NAME_RESOLUTION_SOURCE = `// The acting user's DISPLAY name, 
 /**
  * The authored difference between one activity action and the next.
  *
- * Issue #514 item 15: `log_call` and `log_meeting` were near-verbatim copies —
- * identical bodies apart from a summary prefix and a metadata key — which is
- * how they drifted into disagreeing about whether `duration` is required.
- * Everything they share lives in {@link activityAction}; this type is the
- * complete list of what a variant is still allowed to differ on.
+ * Everything the variants share lives in {@link activityAction}; this type is
+ * the complete list of what a variant is still allowed to differ on. ⛔ Never
+ * hand-copy one variant into another: `log_call` and `log_meeting` were
+ * near-verbatim copies once — identical bodies apart from a summary prefix and
+ * a metadata key — and drifted into disagreeing about whether `duration` is
+ * required.
  */
 type ActivitySpec = {
   name: string;
@@ -210,12 +206,11 @@ function activityAction(spec: ActivitySpec, objectName: string): Action {
   return {
     name: spec.name,
     label: spec.label,
-    // Object-scoped, one registration per object (#509 / #592). The runtime
-    // registers a body action under `<objectName>:<name>` and the dispatcher
-    // probes `<objectName>` then `*`; a body action with no objectName lands
-    // under a 'global' key nothing ever probes ("Action 'log_call' on object
-    // '*' not found", verified 2026-07-28). Generating the family is what makes
-    // the action reachable from every sales object without the platform fix.
+    // Object-scoped, one registration per object. The runtime registers a body
+    // action under `<objectName>:<name>` and the dispatcher probes
+    // `<objectName>` then `*`; a body action with no objectName lands under a
+    // 'global' key nothing ever probes ("Action 'log_call' on object '*' not
+    // found", verified 2026-07-28). ⛔ Never author an object-less body action.
     objectName,
     icon: spec.icon,
     // script, not modal: modal submits die on GET /api/v1/meta/object/<target>
@@ -397,7 +392,7 @@ function activityAction(spec: ActivitySpec, objectName: string): Action {
       // 400 (`expected an ISO-8601 instant with explicit zone`). The renderer's
       // output shape and the validator's accepted shape do not intersect, so
       // NO user input can submit the action — reproduced from both the list-row
-      // menu and the record header (dogfood record on hotcrm#670).
+      // menu and the record header.
       //
       // `date` and `time` are the two param types where they DO intersect: the
       // Console renders native `<input type="date">` / `<input type="time">`
@@ -428,10 +423,9 @@ function activityAction(spec: ActivitySpec, objectName: string): Action {
         type: 'number',
         required: false,
       },
-      // The queryable replacement for the old free-text `attendees` string.
-      // Two params, not one, because the platform has no polymorphic picker —
-      // and two typed lookups produce typed rows, where one text box produced
-      // a comma-separated sentence.
+      // Two typed lookups, not one free-text box: the platform has no
+      // polymorphic picker, and typed lookups produce queryable rows where a
+      // text box produces a comma-separated sentence nothing can filter on.
       {
         name: 'attendee_contacts',
         label: 'Contact Attendees',
@@ -566,7 +560,7 @@ export const LogCallAction: Action = activityActionFor('crm_case', 'log_call');
 export const LogMeetingAction: Action = activityActionFor('crm_case', 'log_meeting');
 export const CaseScheduleMeetingAction: Action = activityActionFor('crm_case', 'schedule_meeting');
 
-// ExportToCsvAction was removed: as a global body action it registered under
-// the 'global' key the dispatcher never probes (same defect as #509 above),
-// and the list grids' built-in `exportOptions: ['csv', 'xlsx']` already cover
-// CSV export without any action.
+// ⛔ Never add a global (object-less) body action here: it registers under the
+// 'global' key the dispatcher never probes — see the note on `objectName`
+// above. CSV export in particular needs no action at all; the list grids'
+// built-in `exportOptions: ['csv', 'xlsx']` already cover it.
