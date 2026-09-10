@@ -138,14 +138,18 @@ export const MassUpdateStageAction: Action = {
         // failure #588 pulled this button for, because it is unrecoverable
         // from the UI. Collect the miss, keep going, reject once at the end.
         //
-        // The catch is deliberately cause-AGNOSTIC. A host rejection crosses
-        // the QuickJS boundary as \`{ name, message }\` only — \`code\`, \`status\`
-        // and \`details\` are dropped by the bridge (runtime \`vm.newError\`) — so
-        // a body physically cannot test for RECORD_NOT_FOUND, and sniffing the
-        // message text would pin engine wording that is not contract. Every
-        // per-row failure is therefore reported as what the aggregate error
-        // already claims — this id was not updated — with the first cause
-        // carried along so the reason is not lost.
+        // The catch is deliberately cause-AGNOSTIC — but NOT because the cause
+        // is invisible. On the pinned runtime (17.4.0, \`hostErrorToVm\`) a host
+        // rejection reaches a body as \`name\` and \`message\` plus, when the host
+        // error carries them, \`code\`, \`status\`, \`fields\` and \`userMessage\` —
+        // nothing else, so a stale id arrives branchable as
+        // \`code === 'RECORD_NOT_FOUND'\` while \`details\` really is dropped. The
+        // branch is not taken because every cause has the same outcome here —
+        // the row did not move, so collect it and keep going — and narrowing
+        // the catch to a roster of known codes would let an unlisted cause
+        // abort the loop, the failure the paragraph above forbids. Message text
+        // is engine wording and not contract, so \`firstCause\` is carried
+        // verbatim and never parsed.
         let row = null;
         try {
           row = await ctx.api.object('crm_opportunity').update(
