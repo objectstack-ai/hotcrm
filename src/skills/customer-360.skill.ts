@@ -11,21 +11,19 @@ import { defineSkill } from '@objectstack/spec';
  * could not fetch a single record.
  *
  * `search_knowledge` is NOT fictional; #557 dropped it on that premise and
- * the premise was wrong. It is a real platform tool, listed in
- * `PLATFORM_PROVIDED_TOOL_NAMES` (`@objectstack/spec@17`) and documented
- * back in 16.1.0 at `spec/src/ai/knowledge-source.zod.ts:114`.
+ * the premise was wrong. It is a real platform tool — re-measured
+ * 2026-09-10 on the 17.4.0 pin, `PLATFORM_PROVIDED_TOOL_NAMES` lists it
+ * (from `@objectstack/spec/system`; the `/ai` subpath does not carry that
+ * export) and `spec/src/ai/knowledge-source.zod.ts:143` documents it.
+ * Added to `tools` it resolves and lints clean.
  *
- * It is left out for a narrower reason: it has nothing here to search.
- * `search_knowledge` retrieves over a declared knowledge source, and
- * `AIKnowledgeSchema` mounts only on `AgentSchema.knowledge` — the
- * `indexes: [...]` block that #512 deleted along with the agents. A
- * skills-only app has nowhere to declare a source, so the tool would
- * resolve and return nothing. That is the same lie one layer down.
- *
- * The knowledge base is `crm_knowledge_article`, a normal CRM object, so
- * `query_records` reaches it exactly like every other object this skill
- * reads. Revisit if a stack-level knowledge source ever becomes
- * declarable.
+ * It is left out because there is nothing else to retrieve from. A
+ * knowledge source is not app metadata on 17.4.0 — sources belong to the
+ * knowledge service, and no app of any shape declares one. The knowledge
+ * base here is `crm_knowledge_article`, a normal CRM object, so
+ * `query_records` reaches it like every other object this skill reads;
+ * `content/docs/ai-copilot/knowledge-bases.mdx` is that promise. Revisit
+ * if a source becomes declarable — objectstack#17464 is the trigger.
  */
 export const Customer360Skill = defineSkill({
   name: 'customer_360',
