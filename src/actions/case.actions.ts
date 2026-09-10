@@ -39,19 +39,17 @@ export const CloseCaseAction: Action = {
 };
 
 /**
- * Claim Case — the affordance for a gesture that already worked (#1144).
+ * Claim Case — the affordance for the unassigned-triage gesture.
  *
- * ⚠️ `visible` is DERIVED FROM THE GRANT, not from this card's original text.
- * `case_unassigned_triage_sharing` (`src/sharing/case.sharing.ts`) reads
- * `record.owner_id == null && record.status != "resolved" && record.status !=
- * "closed"` since #1145, and it is the grant that decides whether the agent
- * looking at this button may write the row at all. The card was drafted against
- * the pre-#1145 predicate and asked for `record.is_closed == false`; that flag
- * is derived as `status === 'closed'` and never flips on `resolved`, so copying
- * it would offer a Claim button on resolved ownerless cases the agent is not
- * shared and cannot claim — a button that answers FORBIDDEN. The button and the
- * grant are one sentence, stated twice, and `test/claim-case-one-owner-writer.test.ts`
- * holds them to that.
+ * ⚠️ `visible` MUST mirror the sharing grant, never a convenience flag.
+ * `case_unassigned_triage_sharing` (`src/sharing/case.sharing.ts`) is what
+ * decides whether the agent looking at this button may write the row at all, so
+ * the predicate here is copied from it verbatim. ⛔ Never restate it as
+ * `record.is_closed == false`: that flag is derived as `status === 'closed'` and
+ * never flips on `resolved`, so it would offer a Claim button on resolved
+ * ownerless cases the agent is not shared and cannot claim — a button that
+ * answers FORBIDDEN. The button and the grant are one sentence stated twice, and
+ * `test/claim-case-one-owner-writer.test.ts` holds them to that.
  *
  * No `confirmText`: the flow opens a screen that asks which working status the
  * agent is claiming into, and that screen IS the confirmation. A modal in front

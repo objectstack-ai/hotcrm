@@ -7,17 +7,13 @@ import { P } from '@objectstack/spec';
  * Enroll leads or contacts into this campaign.
  *
  * Flow-typed action: launches the `campaign_enrollment` screen flow (pick the
- * member side and its segment, enroll everyone eligible). The flow used to be a
- * Monday cron with input variables that a cron firing never seeds — this action
- * is its entry point now, following the proven `convert_lead` /
- * `generate_quote` pattern (the console's flow-action trigger sends
- * `{ recordId, objectName }`).
+ * member side and its segment, enroll everyone eligible). This action is the
+ * flow's entry point, following the proven `convert_lead` / `generate_quote`
+ * pattern — the console's flow-action trigger sends `{ recordId, objectName }`.
  *
- * The action NAME stays `enroll_leads` while the label became "Enroll Members"
- * (#597, when contacts became enrollable). An action name is a dispatch
- * identifier that views, docs and the audit trail reference by string; renaming
- * it would rewrite history that says `enroll_leads` for the sake of a word the
- * label already carries correctly.
+ * ⛔ Never rename `enroll_leads` to match the "Enroll Members" label. An action
+ * name is a dispatch identifier that views, docs and the audit trail reference
+ * by string; the label already carries the word correctly.
  */
 export const EnrollLeadsAction: Action = {
   name: 'enroll_leads',
@@ -37,14 +33,10 @@ export const EnrollLeadsAction: Action = {
 /**
  * Mark a campaign member as having responded.
  *
- * The `responded` status had no writer at all before #597 — the enrollment
- * flow stamps `sent` and stopped there, so a marketing team could see who was
- * enrolled and never record that anybody answered. `num_responses` and
- * `response_rate` are computed off that status, which made both of them
- * structurally zero on every campaign the app has ever run.
- *
- * This is that writer, on the member row rather than on the campaign: a rep
- * hears back from one person, and one membership changes.
+ * The writer for the `responded` status, on the member row rather than on the
+ * campaign: a rep hears back from one person, and one membership changes.
+ * `num_responses` and `response_rate` are computed off that status, so an app
+ * with no writer for it reports a structural zero on every campaign.
  *
  * The body stamps all three response fields together, rather than relying on
  * `campaign_member_lifecycle` to back-fill two of them. Both paths are

@@ -14,11 +14,11 @@
 export { EnrollLeadsAction, MarkRespondedAction } from './campaign.actions';
 export { EscalateCaseAction, CloseCaseAction, ClaimCaseAction } from './case.actions';
 export { AddContactToCampaignAction, MarkPrimaryContactAction, SendEmailAction } from './contact.actions';
-// Activity logging, one registration per (kind × object) — #592. Every export
-// forwarded from here must be ONE Action: the stack is built from
-// `Object.values(actions)`, so an exported array would arrive as a nested list
-// and fail the schema parse. `ActivityActions` (the flat list the factory
-// produces) is therefore deliberately NOT re-exported.
+// Activity logging: one registration per (kind × object). Every export
+// forwarded from here must be ONE Action — the stack is built from
+// `Object.values(actions)`, so an exported array arrives as a nested list and
+// fails the schema parse. ⛔ Never re-export `ActivityActions` (the flat list
+// the factory produces) from here.
 export {
   LogCallAction, LogMeetingAction, CaseScheduleMeetingAction,
   LeadLogCallAction, LeadLogMeetingAction, LeadScheduleMeetingAction,

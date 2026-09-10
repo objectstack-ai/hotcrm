@@ -73,37 +73,29 @@ export const CloneOpportunityAction: Action = {
 /**
  * Mass Update Opportunity Stage.
  *
- * Both invocation halves work as of #508 (17.0.0-rc.2):
+ * Both invocation halves work:
  *
  *   - SINGLE record (row selection / toolbar with one row): the console POSTs
- *     `{ recordId, params: { stage } }` and the body reads `ctx.recordId`. The
- *     write itself was fixed in #777 — this body used to call
- *     `update(id, { stage })`, but `ctx.api` is the engine repo facade whose
- *     update takes `(data, options)`, so the id landed in the `data` slot and
- *     every invocation 400'd with `update('crm_opportunity') does not
- *     recognise option 'stage'`.
+ *     `{ recordId, params: { stage } }` and the body reads `ctx.recordId`.
  *   - MULTI record: the selection arrives in the BUILT-IN `_selectedIds`
  *     param — leading underscore — injected by the grid renderer for the
  *     view's `bulkActionDefs` entry with `execution: 'aggregate'`, which
  *     dispatches this action ONCE for the whole selection (no `recordId`).
  *
- * That underscore is the whole story of why #508 read as "bulk is impossible".
- * A script body's `input` IS the action's params bag
- * (`@objectstack/runtime` `sandbox/body-runner.ts:338`), and `_selectedIds` is
- * one of the params gate's builtin keys
- * (`@objectstack/spec` `ui/action-params.zod.ts:70`, alongside `recordId` /
- * `objectName`). The three rc.2 failure reports all probed UNDECLARED shapes —
- * a top-level `selectedIds` (never merged into the bag), and a
- * `params.selectedIds` without the underscore (correctly refused by the strict
- * params gate, ADR-0104) — while the console's own "select exactly one row"
- * toast fires precisely when `_selectedIds` was NOT injected, which is what
- * happens to a view carrying no bulk declaration at all (#588 had removed it).
- * Platform verified the declared channel end to end and closed
- * objectstack-ai/objectstack#5568 as works-as-declared.
+ * That underscore is the whole of the contract. A script body's `input` IS the
+ * action's params bag (`@objectstack/runtime` `sandbox/body-runner.ts:338`), and
+ * `_selectedIds` is one of the params gate's builtin keys (`@objectstack/spec`
+ * `ui/action-params.zod.ts:70`, alongside `recordId` / `objectName`). Every
+ * other shape is undeclared and cannot arrive: a top-level `selectedIds` is
+ * never merged into the bag, and a `params.selectedIds` without the underscore
+ * is refused by the strict params gate (ADR-0104). The console's own "select
+ * exactly one row" toast fires precisely when `_selectedIds` was NOT injected,
+ * which is what happens to a view carrying no bulk declaration at all — read
+ * that toast as a missing declaration on the view, never as a platform limit.
  *
- * Do NOT declare `_selectedIds` in `params` below: builtin keys are injected by
- * the renderer, and the gate admits them without a declaration (declaring one
- * is not a supported authoring move). Do NOT re-add a no-underscore
+ * ⛔ Do NOT declare `_selectedIds` in `params` below: builtin keys are injected
+ * by the renderer, and the gate admits them without a declaration (declaring one
+ * is not a supported authoring move). ⛔ Do NOT re-add a no-underscore
  * `input.selectedIds` read either — nothing can deliver that key, so it would
  * be a limb that only ever reads `undefined`.
  */
@@ -195,7 +187,7 @@ export const MassUpdateStageAction: Action = {
       label: 'New Stage',
       type: 'select',
       required: true,
-      // Mirrors crm_opportunity.stage exactly (#490) — see _picklists.ts.
+      // Mirrors crm_opportunity.stage exactly — see _picklists.ts.
       options: plainOptions(OPPORTUNITY_STAGE_OPTIONS),
     }
   ],
