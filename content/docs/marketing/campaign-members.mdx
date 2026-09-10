@@ -12,7 +12,7 @@ A **campaign member** is the link between a [campaign](/docs/marketing/campaigns
 Three ways:
 
 1. **Bulk enrollment via the campaign flow** — when a campaign moves to *In Progress*, the [Campaign Enrollment flow](/docs/marketing/campaigns#campaign-enrollment-flow) runs and adds everyone matching the audience criteria.
-2. **From a lead** — open a lead (or tick several in a lead list view) and run **Add to Campaign**, then choose the campaign. Leads already on that campaign are skipped, so re-running it never double-counts a touch. This is the only picker-driven path that ships: there is no *Add Members* button on the campaign that picks people from lead and contact list views.
+2. **From a lead list or a contact list** — **Add to Campaign** ships on both. Tick the rows you want and run it from the selection toolbar, or run it on a single row from that row's ⋮ menu; either way you choose the campaign from a record picker. It is a list action on both objects, so opening a lead or a contact does not offer it. People already on that campaign are skipped, so re-running it never double-counts a touch — the skip-check is per relationship, so a person enrolled once as a lead and once as a contact is deliberately two memberships rather than a duplicate. There is still no *Add Members* picker on the campaign that reaches lead and contact list views.
 3. **One at a time on the campaign** — open a campaign, find the **Campaign Members** panel on the *Related* tab, and use its **New** button to fill in a single membership by hand.
 
 A person can be in many campaigns over time, but only once per campaign (one membership per person per campaign).
