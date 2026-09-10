@@ -182,6 +182,7 @@ export const ROOT_TEXT_FILES = [
   '.nvmrc',
   'AGENTS.md',
   'CHANGELOG.md',
+  'CLAUDE.md',
   'CONTRIBUTING.md',
   'LICENSE',
   'README.legacy.md',
