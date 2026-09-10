@@ -70,7 +70,29 @@ const taskValidation: Hook = {
     }
 
     if (input.status === 'completed' && previous?.status !== 'completed') {
-      if (!input.completed_date) input.completed_date = new Date().toISOString();
+      // ⚠️ `!input.completed_date` ALONE was the defect, and `|| !ctx.session?.isSystem`
+      // is the fix — ⛔ do not tidy the second half away. `completed_date` is
+      // `readonly: true`, and since `@objectstack/objectql@17.4.0` the engine strips a
+      // static readonly field from a NON-SYSTEM caller's INSERT too, not just their
+      // UPDATE (the retired-pin note in `test/readonly-write-semantics.test.ts` carries
+      // that migration). Measured against a running server on the 17.4.0 pin: this
+      // handler still SEES the caller's value — the strip runs after `beforeInsert`
+      // returns — and the value THIS line writes survives it, because a hook-written
+      // key is not caller-supplied.
+      //
+      // So deferring to a supplied value inverted the rule below it: a caller who sent
+      // `completed_date` suppressed the only stamp there was, the engine then deleted
+      // what they sent, and `completed_date_required` rejected the one call that had
+      // actually supplied the field — while omitting it succeeded. The error named the
+      // field whose PRESENCE caused it, so an agent retried by sending it again.
+      //
+      // The `isSystem` half is not decoration: nothing strips a system write, and
+      // `src/data/service.seed.ts` back-dates completions with `daysAgo(3)` /
+      // `daysAgo(2)`. Stamping over those would replay the demo book with every
+      // completion dated today.
+      if (!input.completed_date || !ctx.session?.isSystem) {
+        input.completed_date = new Date().toISOString();
+      }
       if (typeof input.progress_percent !== 'number') input.progress_percent = 100;
     }
 
