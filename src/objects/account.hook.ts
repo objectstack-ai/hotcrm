@@ -182,7 +182,11 @@ const accountHook: Hook = {
     // opportunity/quote hooks): the demo_bootstrap flow claims ownerless seeded
     // accounts as a system write every 10 minutes, and stamping those flattened
     // every seeded activity date to "today", emptying the churn report buckets.
-    if (event === 'beforeUpdate' && ctx.user?.id) {
+    // D3 stand-down on the predicate path (`forecast.hook.ts`): `ownerChanged`
+    // / `typeChanged` are decided against THIS row's `previous`, so the stamp
+    // would spread to every matched row. The `billing_country` / `territory` /
+    // `name_normalized` normalisation above reads only the payload and stays.
+    if (event === 'beforeUpdate' && ctx.user?.id && ctx.dispatch?.mode !== 'per-row') {
       const prev = ctx.previous ?? {};
       const ownerChanged = typeof input.owner_id !== 'undefined' && input.owner_id !== prev.owner_id;
       const typeChanged = typeof input.type !== 'undefined' && input.type !== prev.type;

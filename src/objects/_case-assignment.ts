@@ -308,6 +308,12 @@ export function createCaseEscalationReassign(hookName = 'case_escalation_reassig
     priority: 250,
     description: 'Hand a case being escalated to the least-loaded service manager.',
     handler: async (ctx: HookContext) => {
+      // D3 stand-down: the escalation TRANSITION is read off this row's
+      // `previous`, so on a predicate update the new owner would be written to
+      // every matched case. `events` is `beforeUpdate` only, so the event half
+      // of the idiom in `forecast.hook.ts` would be a constant here.
+      if (ctx.dispatch?.mode === 'per-row') return;
+
       const { input } = ctx;
       const previous = ctx.previous;
       if (!previous) return;
@@ -442,6 +448,11 @@ export function createCaseSelfClaim(hookName = 'case_self_claim'): Hook {
     priority: 260,
     description: 'Let a user claim an unowned open case by picking it up; the owner written is always the caller.',
     handler: async (ctx: HookContext) => {
+      // D3 stand-down: every guard below is decided against this row's
+      // `previous`, so a predicate update would claim rows the caller never
+      // picked up. `beforeUpdate`-only, as above.
+      if (ctx.dispatch?.mode === 'per-row') return;
+
       const { input } = ctx;
       const previous = ctx.previous;
       if (!previous) return;

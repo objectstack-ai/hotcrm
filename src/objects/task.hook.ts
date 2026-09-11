@@ -21,6 +21,12 @@ const taskValidation: Hook = {
   priority: 200,
   description: 'Stamp completed/overdue flags + dates on completion and validate reminder timing.',
   handler: async (ctx: HookContext) => {
+    // D3 stand-down: a predicate update has ONE payload for every matched row,
+    // so the `ctx.previous`-conditioned writes below would land on rows that
+    // did not earn them — refused as a diverging key set, or stored silently
+    // from the last row. Full account and the measurement: `forecast.hook.ts`.
+    if (ctx.event === 'beforeUpdate' && ctx.dispatch?.mode === 'per-row') return;
+
     // The refusal envelope (#1075). Mirrored from `./_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
     // import; `test/refusal-envelope.test.ts` pins every copy against it.

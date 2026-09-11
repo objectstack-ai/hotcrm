@@ -203,6 +203,15 @@ const opportunityValidationHook: Hook = {
       }
     }
 
+    // D3 stand-down: a predicate update has ONE payload for every matched row,
+    // so the `ctx.previous`-conditioned recomputes below would land on rows that
+    // did not earn them — refused as a diverging key set, or stored silently
+    // from the last row. Full account and the measurement: `forecast.hook.ts`.
+    // The closed-record REFUSAL above deliberately sits before this line:
+    // reading `previous` to throw is what D3 supplies it for, and a batch that
+    // touches a closed deal must still be refused.
+    if (ctx.event === 'beforeUpdate' && ctx.dispatch?.mode === 'per-row') return;
+
     // Recompute expected_revenue
     const amount =
       typeof input.amount === 'number'
