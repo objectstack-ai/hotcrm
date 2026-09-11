@@ -53,46 +53,49 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
  * `previous`, nothing stamped (#779, closed) — is HISTORY. Do not reason from
  * it; it is recorded here only because this file's own argument once did.
  *
- * ⚠️ The payload is BATCH-scoped (D3): all N dispatches share ONE payload
- * object, so a rewrite CONDITIONED on the row widens to every matched row. The
- * `published_at` existence criterion is exactly such a rewrite — on a predicate
- * update, whichever row stamps it sets that value for the whole batch.
- * Re-measured on current `main` against a real `ObjectQL` + `InMemoryDriver`
- * with a distinct marker per dispatch: two rows carrying their own 2024 dates
- * each correctly DECLINED to stamp and were overwritten anyway with the value
- * computed by the one row that took the branch. Filed as #1265; NOT fixed here,
- * and the reason it is not fixed is itself a measured fact — read on before
- * "fixing" it.
+ * ⚠️ A PREDICATE UPDATE DERIVES NOTHING HERE — ADR-0058 Addendum II D3, and
+ * the stand-down at the top of the handler is the idiom every row-conditioned
+ * hook in this app carries. The full account and its measurements live in
+ * `forecast.hook.ts`; the short version is that `update(obj, payload,
+ * { multi: true, where })` sends ONE `SET` clause for all N matched rows and
+ * hands every row's `beforeUpdate` THAT payload rather than a per-row copy, so
+ * a write whose if-guard reads `ctx.previous` does not scope itself to the row
+ * it was decided on.
  *
- * `last_reviewed_at` is safe only under the narrower claim than the one #1265
- * makes for it. It is unconditional *after* the `nextStatus !== 'published'`
- * early return, and that return reads the ROW. So it is row-invariant only when
- * every matched row is published — which is true of `where: { status:
- * 'published' }` and false in general. Measured on a mixed batch
- * (`where: { category }` over one published and two draft articles): both
- * DRAFTS were stamped `last_reviewed_at` by the published row's dispatch. A
- * review timestamp on a never-published draft is the same widening in a quieter
- * key.
+ * Both writes below are gated on the row, so both diverge — and this hook is
+ * key-presence divergence (the loud kind) in BOTH limbs. There is no silent
+ * limb, because neither write takes its VALUE from the row: both store
+ * `nowIso`, a clock read. The row only ever decides WHETHER a key is written.
  *
- * ⛔ Do NOT "fix" this by branching on the dispatch path. D3 names three routes
- * for row-specific work — throw, write per row through `ctx.api`, or have the
- * caller paginate — and ALL THREE require the handler to know it is on the
- * per-row predicate path. This handler cannot know that. Hooks ship body-only
- * through QuickJS (`test/action-sandbox.test.ts` holds every hook to it), and
- * the sandbox context the runtime builds for a body carries exactly `input`,
- * `previous`, `user`, `session`, `event`, `object`, `api`, `log`, `crypto`.
- * Measured on 17.1.0: `ctx.dispatch` is `undefined` there, and `input.id` /
- * `input.options` are dropped with it — the engine hands the body a flattened
- * payload snapshot whose `id`/`options`/`data` are non-enumerable, so
- * `unwrapProxyToPlain`'s `Object.entries` never copies them. A `ctx.dispatch
- * ?.mode === 'per-row'` guard therefore lowers cleanly, passes every in-process
- * test in this repo, and is INERT in production — the widening continues and
- * the guard reads as if it were preventing it. That failure mode is why this
- * paragraph is longer than the fix would have been.
+ *   - `last_reviewed_at` sits behind the `nextStatus !== 'published'` early
+ *     return, and that return reads the ROW. Measured on the pinned 17.4.0 on a
+ *     fresh `pnpm dev`: the platform's own seed-ownership claim (one payload of
+ *     `{ owner_id }`, `where: { owner_id: null }`) matched all 4 seeded
+ *     articles; the 3 published ones stamped `last_reviewed_at`, the 1 draft
+ *     returned early and stamped nothing, and the engine refused the batch —
+ *     `Refusing a multi-record update on 'crm_knowledge_article': its
+ *     'beforeUpdate' handlers wrote 'last_reviewed_at' for some of the 4
+ *     matched records and not for others`. Nothing was written, all 4 articles
+ *     stayed ownerless, and `my_drafts` (filtered `owner_id =
+ *     {current_user_id}`) was EMPTY until the `demo_bootstrap` sweep repaired
+ *     them by id ten minutes later.
+ *   - `published_at`'s existence criterion is the same shape one key over:
+ *     #1888 measured it refused over 3 rows with
+ *     `MULTI_UPDATE_HOOK_KEY_DIVERGENCE`. That limb is what #1265 was filed
+ *     for, back when the engine widened in silence instead of refusing.
  *
- * The app half is blocked on the platform exposing a per-row signal to the
- * body-only surface (declared ≠ observable); `test/hooks-runtime-service.test.ts`
- * carries the tripwire that goes red when it lands.
+ * ⚠️ The `ctx.event` half of the guard is load-bearing, not ceremony: a batch
+ * INSERT also reports `dispatch.mode === 'per-row'`, and there each row carries
+ * its OWN payload. This hook is `beforeInsert` too, so dropping that half would
+ * stop the seed load stamping `published_at` / `last_reviewed_at` at all.
+ *
+ * ⚠️ HISTORY — do not reason from it. Until 17.3.0 the sandbox context carried
+ * no per-row signal, so a `ctx.dispatch` guard lowered cleanly, passed every
+ * in-process test and was INERT in production; PR #1274 recorded that as the
+ * reason this could not be fixed here. That is FALSE on the pinned 17.4.0:
+ * `buildSandboxContext` marshals `dispatch` and an `inputOptions` projection
+ * (objectstack#11552), and `test/hooks-runtime-service.test.ts` pins that they
+ * cross. `ctx.input.id` is still absent — read `ctx.previous.id`.
  */
 const knowledgeArticlePublish: Hook = {
   name: 'knowledge_article_publish_timestamps',
@@ -101,6 +104,11 @@ const knowledgeArticlePublish: Hook = {
   priority: 300,
   description: 'Stamp published_at on the first publish; refresh last_reviewed_at while published.',
   handler: async (ctx: HookContext) => {
+    // D3 stand-down (see the header). Every write below is decided against this
+    // row's `previous`, and this handler makes no refusal, so the whole body
+    // stands down on the predicate path; deriving still happens per record.
+    if (ctx.event === 'beforeUpdate' && ctx.dispatch?.mode === 'per-row') return;
+
     const { input } = ctx;
     const previous = ctx.previous;
     const nextStatus = (typeof input.status === 'string' && input.status) || previous?.status;
