@@ -582,7 +582,10 @@ const leadDuplicateCheckHook: Hook = {
     //     and `duplicate_of_type` / `duplicate_status` are neither — so at a
     //     lower priority this block would make the converted-lead lock refuse
     //     the very cleanup that yield exists to allow.
-    if (event === 'beforeUpdate') {
+    // D3 stand-down on the predicate path — the `email` / `company_normalized`
+    // normalisation above reads only the payload, so it is batch-scoped by
+    // construction and keeps running. This block is not: see `forecast.hook.ts`.
+    if (event === 'beforeUpdate' && ctx.dispatch?.mode !== 'per-row') {
       const previous = ctx.previous;
       const LINK_OF_TYPE: Record<string, string> = {
         crm_lead: 'duplicate_of_lead',

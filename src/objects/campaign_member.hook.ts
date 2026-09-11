@@ -51,6 +51,12 @@ const campaignMemberLifecycle: Hook = {
   priority: 200,
   description: 'Keep has_responded / response_date in lockstep with the member status.',
   handler: async (ctx: HookContext) => {
+    // D3 stand-down: a predicate update has ONE payload for every matched row,
+    // so the `ctx.previous`-conditioned writes below would land on rows that
+    // did not earn them — refused as a diverging key set, or stored silently
+    // from the last row. Full account and the measurement: `forecast.hook.ts`.
+    if (ctx.event === 'beforeUpdate' && ctx.dispatch?.mode === 'per-row') return;
+
     const { input } = ctx;
     const previous = ctx.previous;
     const status =
