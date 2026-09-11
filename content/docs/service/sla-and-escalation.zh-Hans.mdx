@@ -113,7 +113,7 @@ SLA（服务级别协议）系统为**每一张工单**打上一个**截止时�
 
 | 自动化 | 触发时机 | 作用 |
 | --- | --- | --- |
-| **紧急时通知** | 优先级设为 Critical | 站内消息 + 邮件发给**工单负责人**——这就是工单升级流程的 notify 节点，其收件人列表只有 `{caseRecord.owner_id}` 一项。本应用中不存在 `support_manager@example.com` 这个收件人 |
+| **严重时通知** | 优先级设为 Critical | 站内消息 + 邮件发给**工单负责人**——这就是工单升级流程的 notify 节点，其收件人列表只有 `{caseRecord.owner_id}` 一项。本应用中不存在 `support_manager@example.com` 这个收件人 |
 | **升级时通知** | 状态变更为 *Escalated* | 不会给任何升级团队发邮件——`escalation_team@example.com` 在本应用中根本不存在。状态转为已升级真正触发的，是*升级会做什么*一节写的那条给账户负责人的紧急跟进任务 |
 | **计算解决时间** | 工单关闭 | 计算从创建 → 关闭的小时数 |
 | **设置关闭标记** | 状态变更 | `is_closed = (status == "closed")` |
@@ -165,4 +165,4 @@ SLA（服务级别协议）系统为**每一张工单**打上一个**截止时�
 - **驱动它的是 `crm_account.tier`。** 在账户记录上设置客户的**客户层级**，才是把他们的工单挪到更紧一列的操作；没有分类的账户按 SMB 对待。这是本应用中第一个真正读取该字段的地方。
 - **不存在"营业时间 vs. 日历时间"这个开关**，它背后也不存在什么租户级的营业时间设置——本应用根本没有工作日日历，也没有节假日清单。矩阵里的每一个格子都是在 `src/objects/case.hook.ts` 里往当前时钟上加出来的，所以夜间、周末与节假日一律照算；要让截止时间跳过非工作时段，就得先把一套日历教给这个钩子。
 - 升级触发条件——只有 Critical 优先级这一项，不存在 High+Customer 这个条件——写在 [工单升级流程定义](/zh-Hans/docs/administration/automation)里，即 `src/flows/case-escalation.flow.ts`。承载它的是两个流程：`case_escalation`（更新时）与 `case_escalation_on_create`（新建时）。要改就**两个一起改**，否则以新条件新建的工单仍会漏掉。
-- 这两处的收件人列表都不是 Setup 界面上的配置项。*紧急时通知* 就是工单升级流程的 `notify` 节点，其列表只有 `{caseRecord.owner_id}` 一项——要改就改 `src/flows/case-escalation.flow.ts`。*升级时通知* 根本没有收件人列表，因为它不发出任何消息：状态转为已升级触发的是 `src/objects/case.hook.ts` 里的 `case_status_side_effects` 钩子，它触达的是账户负责人，靠的是那条跟进任务。
+- 这两处的收件人列表都不是 Setup 界面上的配置项。*严重时通知* 就是工单升级流程的 `notify` 节点，其列表只有 `{caseRecord.owner_id}` 一项——要改就改 `src/flows/case-escalation.flow.ts`。*升级时通知* 根本没有收件人列表，因为它不发出任何消息：状态转为已升级触发的是 `src/objects/case.hook.ts` 里的 `case_status_side_effects` 钩子，它触达的是账户负责人，靠的是那条跟进任务。
