@@ -75,7 +75,7 @@ const feedbackBody = (verdict: 'helpful' | 'not_helpful'): string => `
  * version no reader outside the authoring team ever saw, and the review queue
  * reads these numbers as a signal about live content.
  */
-const publishedOnly = P`record.status == "published"`;
+const publishedOnly = P`has(record.status) && record.status == "published"`;
 
 export const MarkArticleHelpfulAction: Action = {
   name: 'mark_article_helpful',

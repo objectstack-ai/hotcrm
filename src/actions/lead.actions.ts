@@ -22,7 +22,26 @@ export const ConvertLeadAction: Action = {
   // (new / contacted / qualified), not just qualified. Gating to qualified-only
   // hid the button on most seeded leads, so it read as "conversion is missing".
   // Only already-converted or disqualified leads hide it.
-  visible: P`record.is_converted == false && record.status != "unqualified" && record.status != "converted"`,
+  //
+  // TOTALITY (AGENTS.md → "Validation predicates must be TOTAL", #630): every
+  // `record.x` read carries a `has(record.x)`, and the guards are arranged to
+  // fail CLOSED — an unknown record hides the button. That arrangement is a
+  // MEASUREMENT, not a preference. Measured in the browser on console 17.4.0 by
+  // instrumenting the shipped predicate evaluator: the record page evaluates this
+  // predicate twice against an EMPTY record (`record` is `{}`, zero keys) before
+  // the row lands, then re-evaluates it against the full row. So an absent
+  // `status` here means "no record yet", never "a lead with no status" — a lead
+  // with no status cannot exist, since `status` is `required` with
+  // `storage: { notNull: true }` and `defaultValue: 'new'` (src/objects/lead.object.ts),
+  // and the REST payload this surface reads carries every declared column.
+  // Fail-open (`!has(record.status) || …`) would therefore buy nothing and cost
+  // something real: Convert would flash on a disqualified lead for the
+  // pre-hydration beat, on an IRREVERSIBLE action.
+  // Unguarded, strict CEL aborted the whole predicate on those two renders
+  // (`[runtime] No such key: status`) and object-ui fell back to its own
+  // `fallback: false`, so this spelling states the policy the error path was
+  // already applying — minus the console warning on every lead page load. (#1890)
+  visible: P`has(record.is_converted) && record.is_converted == false && has(record.status) && record.status != "unqualified" && record.status != "converted"`,
   // NO `confirmText`. A screen flow IS the confirmation, and this one opens
   // `Conversion Details` — a screen carrying the decision (`Create
   // Opportunity?`, and the deal's name and amount), a Cancel button, and the
@@ -87,7 +106,7 @@ export const ScheduleFollowUpAction: Action = {
   target: 'schedule_followup',
   locations: ['record_header', 'list_item'],
   // A converted or disqualified lead has no next touch to schedule.
-  visible: P`record.is_converted == false && record.status != "unqualified" && record.status != "converted"`,
+  visible: P`has(record.is_converted) && record.is_converted == false && has(record.status) && record.status != "unqualified" && record.status != "converted"`,
   successMessage: 'Follow-up scheduled.',
   refreshAfter: true,
   // ADR-0011 — materialises `action_schedule_followup` for the

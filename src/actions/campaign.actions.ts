@@ -25,7 +25,7 @@ export const EnrollLeadsAction: Action = {
   locations: ['record_header', 'record_more'],
   // Enrollment only makes sense while the campaign is open — the flow
   // double-checks this server-side.
-  visible: P`record.status == "planning" || record.status == "in_progress"`,
+  visible: P`has(record.status) && (record.status == "planning" || record.status == "in_progress")`,
   successMessage: 'Eligible members enrolled in campaign.',
   refreshAfter: true,
 };
@@ -79,7 +79,7 @@ export const MarkRespondedAction: Action = {
   // mis-click (`campaign_member_optout_sync` has already opted that person out
   // of email, and this action would not undo that — leaving the two records
   // disagreeing about the same person).
-  visible: P`record.status == "sent"`,
+  visible: P`has(record.status) && record.status == "sent"`,
   successMessage: 'Response recorded on this campaign member.',
   refreshAfter: true,
 };
