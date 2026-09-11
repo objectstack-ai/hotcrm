@@ -29,6 +29,38 @@ const forecastDerive: Hook = {
   priority: 200,
   description: 'Derive period_start, period_end and period_label from period (+ snapshot_date).',
   handler: async (ctx: HookContext) => {
+    // ⛔ A PREDICATE UPDATE DERIVES NOTHING HERE — ADR-0058 Addendum II D3.
+    //
+    // `update(obj, payload, { multi: true, where })` sends ONE `SET` clause for
+    // all N matched rows, and the engine hands every row's `beforeUpdate` THAT
+    // payload rather than a per-row copy. A payload write whose value — or
+    // whose if-guard — reads `ctx.previous` therefore does not scope itself to
+    // the row it was decided on. Both outcomes are measured on the pinned
+    // 17.4.0, in this app, on a fresh `pnpm dev`:
+    //
+    //  - keys written for SOME rows only ⇒ the engine refuses the whole batch
+    //    (`MULTI_UPDATE_HOOK_KEY_DIVERGENCE`) and writes nothing. This hook's
+    //    own `if (!input.period_end)` did exactly that under the platform's
+    //    seed-ownership claim: row 0 stamped `period_end` / `period_label`
+    //    into the shared payload, rows 1-6 then saw them already set and
+    //    stamped nothing, so all 7 seeded forecasts stayed ownerless (#1804).
+    //  - the SAME key on EVERY row ⇒ nothing diverges, the batch resolves, and
+    //    the LAST row's value is stored for all of them, in silence. That is
+    //    what left `probability: 80` on closed-lost opportunities (#1275).
+    //
+    // `ctx.previous` on this path is supplied so a guard can REFUSE a write,
+    // never so a rewrite can be aimed. Deriving is per-record work, so it
+    // stands down here and still happens on the per-record path — which is
+    // every writer this app has: all 19 `update_record` flow nodes, every
+    // action and hook write through `ctx.api`, and the `demo_bootstrap` claim,
+    // all of them by id.
+    //
+    // ⚠️ The `ctx.event` half is load-bearing, not ceremony: a BATCH INSERT
+    // also reports `dispatch.mode === 'per-row'`, and there each row carries
+    // its OWN payload — dropping that half would stop the seeds deriving their
+    // periods at all.
+    if (ctx.event === 'beforeUpdate' && ctx.dispatch?.mode === 'per-row') return;
+
     const pad = (n: number) => String(n).padStart(2, '0');
     const isoDate = (d: Date) =>
       `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
