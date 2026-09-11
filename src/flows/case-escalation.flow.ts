@@ -180,13 +180,15 @@ export const CaseEscalationFlow: Flow = {
         channels: ['inbox', 'email'],
         severity: 'critical',
         topic: 'case_escalated',
-        title: 'Case escalated: {caseRecord.case_number}',
-        // ⚠️ The body must stay true on BOTH outcomes. "It remains assigned to
-        // you" is false whenever the hand-off finds a manager; the opposite
-        // claim ("it has been reassigned") is false whenever the
-        // `service_manager` pool is unstaffed, which is the first-install norm.
-        // So it states the rule and points at the record for the answer.
-        message: 'Case {caseRecord.case_number} ({caseRecord.priority}) has been auto-escalated on critical priority. Ownership passes to the service manager with the lightest load; while nobody holds that position the case stays with you. Open the case to see who owns it now.',
+        // #1185: the text lives in the `crm_case_escalated` bundle
+        // (`src/email-templates/`), one row per locale, so the owner reads it in
+        // their own language. ⚠️ The body must stay true on BOTH outcomes —
+        // see the note on that bundle's row before rewording any locale of it.
+        // ⛔ `template` and inline `title`/`message` are mutually exclusive on
+        // one node (`NotifyConfigSchema` superRefine): re-adding either here is
+        // a parse error, not a fallback.
+        template: 'crm_case_escalated',
+        templateData: { case_number: '{caseRecord.case_number}', priority: '{caseRecord.priority}' },
         actionUrl: '/crm_case/{record.id}',
       },
     },
