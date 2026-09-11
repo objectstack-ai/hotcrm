@@ -18,7 +18,7 @@ export const EscalateCaseAction: Action = {
   type: 'flow',
   target: 'escalate_case',
   locations: ['record_header', 'list_item'],
-  visible: P`record.is_escalated == false && record.is_closed == false`,
+  visible: P`has(record.is_escalated) && record.is_escalated == false && has(record.is_closed) && record.is_closed == false`,
   confirmText: 'This will escalate the case to the escalation team. Continue?',
   successMessage: 'Case escalated successfully!',
   refreshAfter: true,
@@ -32,7 +32,7 @@ export const CloseCaseAction: Action = {
   type: 'flow',
   target: 'close_case',
   locations: ['record_header'],
-  visible: P`record.is_closed == false`,
+  visible: P`has(record.is_closed) && record.is_closed == false`,
   confirmText: 'Are you sure you want to close this case?',
   successMessage: 'Case closed successfully!',
   refreshAfter: true,
@@ -63,6 +63,20 @@ export const ClaimCaseAction: Action = {
   type: 'flow',
   target: 'claim_case',
   locations: ['record_header', 'list_item'],
+  // ⛔ Deliberately NOT `has()`-guarded — the one site the #1890 totality sweep
+  // left alone after making every other `visible` in `src/actions/` total. This
+  // predicate is the sharing grant's own text, verbatim, and
+  // `test/claim-case-one-owner-writer.test.ts` compares the two strings; the
+  // grant itself cannot carry `has()`, because `plugin-sharing` compiles a
+  // criteria condition with `compileCelToFilter`, which rejects the whole
+  // function-call class, and an untranslatable rule is DROPPED by the seeder
+  // (#621). `src/sharing/case.sharing.ts` writes that out in full, including why
+  // `record.owner_id == null` is total one layer down (`{ owner_id: { $null: true } }`).
+  // ⚠️ What that reasoning does NOT cover is THIS surface: an action `visible` is
+  // interpreted by CEL in the browser against whatever the page holds, which is
+  // `{}` for the first renders, so this predicate does abort there. Making it
+  // total needs the grant and the parity pin moved together — a maintainer call,
+  // not this card's. (#1890)
   visible: P`record.owner_id == null && record.status != "resolved" && record.status != "closed"`,
   successMessage: 'Case claimed — it is yours now.',
   refreshAfter: true,

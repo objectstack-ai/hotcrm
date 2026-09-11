@@ -30,7 +30,7 @@ export const MarkPrimaryContactAction: Action = {
     timeoutMs: 2000,
   },
   locations: ['record_header', 'list_item'],
-  visible: P`record.is_primary == false`,
+  visible: P`has(record.is_primary) && record.is_primary == false`,
   confirmText: 'Mark this contact as the primary contact for the account?',
   successMessage: 'Contact marked as primary!',
   refreshAfter: true,
@@ -117,7 +117,7 @@ export const AddContactToCampaignAction: Action = {
   // enrollment flow already filters them out, and a manual add-to-campaign is
   // the obvious way around a filter nobody remembers is there. Same predicate
   // the `send_email` action uses.
-  visible: P`record.email_opt_out == false`,
+  visible: P`has(record.email_opt_out) && record.email_opt_out == false`,
   successMessage: 'Contacts added to campaign!',
   refreshAfter: true,
 };
@@ -207,7 +207,7 @@ export const SendEmailAction: Action = {
     timeoutMs: 5000,
   },
   locations: ['record_header', 'list_item'],
-  visible: P`record.email_opt_out == false`,
+  visible: P`has(record.email_opt_out) && record.email_opt_out == false`,
   params: [
     { name: 'subject', label: 'Subject', type: 'text', required: true },
     { name: 'body', label: 'Body', type: 'textarea', required: true },

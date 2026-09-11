@@ -218,7 +218,7 @@ export const GenerateQuoteAction: Action = {
   // is reachable both as a primary button and from the "…" menu on narrow
   // viewports where the header collapses.
   locations: ['record_header', 'record_more', 'list_item'],
-  visible: P`record.stage != "closed_won" && record.stage != "closed_lost"`,
+  visible: P`has(record.stage) && record.stage != "closed_won" && record.stage != "closed_lost"`,
   successMessage: 'Quote created from opportunity!',
   refreshAfter: true,
 };
