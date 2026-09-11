@@ -17,6 +17,7 @@ import * as apps from './src/apps/index.js';
 import * as views from './src/views/index.js';
 import * as pages from './src/pages/index.js';
 import * as translations from './src/translations/index.js';
+import { CrmNotificationTemplates } from './src/email-templates/index.js';
 import { resolveComposition, seedDataFor } from './src/data/index.js';
 
 import {
@@ -185,6 +186,10 @@ export default defineStack({
   // `assets/import-templates/`.
   mappings: Object.values(mappings),
   flows: compositionFlows,
+  // The `sys_email_template` rows every `notify` node resolves at delivery
+  // time, four locales per notification (#1185). Composition-independent:
+  // the saas shape drops `demo_bootstrap`, which carries no notify node.
+  emailTemplates: CrmNotificationTemplates,
   skills: allSkills,
   permissions: compositionPermissions,
   apps: Object.values(apps),
