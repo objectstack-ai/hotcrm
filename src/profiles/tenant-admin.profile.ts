@@ -94,17 +94,38 @@ import { SystemAdminProfile } from './system-admin.profile';
  * ### What is deliberately DROPPED, and why it is not an oversight
  *
  * `customize_application`, `manage_profiles` and `manage_roles` are not
- * granted. All three describe METADATA authoring, and under a walled posture
- * the only metadata-authoring capability the platform has is `manage_metadata`
- * — `scope: 'platform'`, which unlocks env-wide tier-B authoring (objects,
- * flows) with cross-tenant reach. There is currently no key that lets a tenant
- * admin author even their own org's overlays without also handing them that
- * reach, so granting these three would describe an authority the deployment
- * cannot safely give.
+ * granted. All three describe broad METADATA authoring, and the platform's
+ * general key for that is `manage_metadata` — `scope: 'platform'`, which
+ * unlocks env-wide tier-B authoring (objects, flows) with cross-tenant reach,
+ * so granting these three would describe an authority the deployment cannot
+ * safely give. (`customize_application` is not a `PLATFORM_CAPABILITIES` entry
+ * at all on the 17.4.0 line — like `view_setup` below it is this app's own
+ * vocabulary, not a platform key.)
  *
- * Blocked-by: objectstack-ai/objectstack#12702 — org-scoped presentation
- * customization authority. When that capability ships, the tenant admin gains
- * it here and this paragraph shrinks to a grant.
+ * ### `manage_org_presentation` IS granted — the narrow key those three wanted
+ *
+ * objectstack#12702 shipped the org-scoped SUBSET of metadata authoring and
+ * this app's pin carries it. Measured on the installed `@objectstack/spec`
+ * 17.4.0: `{ name: 'manage_org_presentation', scope: 'org' }`, 9 entries total
+ * — control `manage_metadata` resolves at `scope: 'platform'`, control
+ * `manage_org_presentation_zzz_nonsense` resolves to nothing. Chartered by the
+ * maintainer, 2026-08-27: 「发版后把 tenant_admin 那格补上创建卡片」.
+ *
+ * Unlike `manage_org_users` above, this one is ENFORCED on this line rather
+ * than only declared. `metaWriteCapabilityVerdict` in
+ * `@objectstack/metadata-core` reads `systemPermissions` on every `/meta`
+ * save · reset · publish · rollback and admits the write only when the type's
+ * registry entry declares `allowOrgOverride` AND the session carries an active
+ * organization to scope it to. Measured against that function on the pinned
+ * build, the grant flips view / dashboard / report writes from denied to
+ * allowed and moves nothing else: `object` and `flow` stay denied, and an
+ * org-overridable type written with no active organization stays denied.
+ *
+ * Because it is `scope: 'org'`, the "grants NO platform-scoped capability" pin
+ * in `test/saas-composition.test.ts` keeps passing untouched — that guard
+ * reads the registry live rather than a hand-listed denylist. The matching
+ * POSITIVE assertion belongs in that same file and is deferred, not dropped:
+ * `test/**` is fenced under maintainer question objectstack-ai/hotcrm#1874.
  *
  * `manage_sharing` IS granted: the platform declares it `scope: 'org'`
  * ("Administer record sharing … beyond one's own records"), which is precisely
@@ -126,6 +147,8 @@ export const TenantAdminProfile = {
     // The one substitution this profile exists for: org-scoped member
     // management instead of platform-wide user management.
     'manage_org_users',
+    // Org-scoped metadata authoring, enforced — see the section above.
+    'manage_org_presentation',
     // Org-bounded by the driver's tenant predicate — see the audit above.
     'view_all_data', 'modify_all_data',
     'manage_sharing',
