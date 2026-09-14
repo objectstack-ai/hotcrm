@@ -410,6 +410,41 @@ readable.
    composition of grants — a module contributing its own objects' grants into an app-owned
    role — is filed as objectstack#14488 for the phase in which a module ships on its own.
 
+## Decisions recorded (2026-09-14)
+
+Two further rulings, given on the first draft of
+[`psa-module-plan.md`](./psa-module-plan.md) — the design of a fourth module whose size
+did not fit the whole-tree token gate. Verbatim and untranslated:
+
+> 「所以应该先分拆基础的crm, 比如 sales 和 support， token 门禁： 放到 sales」
+
+4. **Sequencing — the base CRM splits first; `sales` and `service` lead.** The *First cut*
+   section above ranked `cpq` first on coupling alone, and that measurement stands as
+   written; the ruling orders the work by product value instead: the sales module and the
+   service module (the ruling's "support" — Service Cloud in the product docs, `group_service`
+   in the app, `app.objectstack.hotcrm.service` in the table above) are extracted first, the
+   remaining modules follow, and PSA lands **after** as a new module on the composed
+   artifact. The three upstream blockers under *上游缺口* are no longer the reason to wait:
+   the compile path and per-package registration are carried by the 17.4.0 pin, and the
+   Studio writable verdict does not gate a module booted from an artifact — the version
+   table in `psa-module-plan.md`, *Where PSA sits*, cites the changelog entries. The first
+   split PR is still the measurement that proves it here.
+5. **The token gate measures the sales module.** `scripts/check-source-token-ratchet.mjs`
+   stops walking the whole `src/` tree and measures the files `app.objectstack.hotcrm.sales`
+   exports through its barrels, in the same two layers. That is the claim the gate has
+   always existed for, now stated in ADR-0130 §1.3(b)'s words — *a CRM sales module fits
+   whole in an AI context window*. The ceilings are re-anchored from the sales reading with
+   the script's own `anchor()` rule unless the maintainer rules a number; the retired
+   whole-tree ceilings leave with a worked row. Every other module is outside the gate, its
+   reading recorded per PR as the seed of a per-module budget (ADR-0130 §4). ⚠️ Item 2 of
+   *What must change in this repository* is thereby widened: the `LAYERS` list is not only
+   re-pointed, the gate's notion of scope changes from directories to a module's barrel
+   graph, and `test/source-token-ratchet.test.ts` learns that scope in the same PR.
+
+   Under the flat-tree decision (item 2 above), a module's membership *is* its barrel set,
+   so the gate and the artifact read the same source of truth and cannot disagree about
+   which file belongs to `sales`.
+
 ## References
 
 - ADR-0130 — the release artifact is the co-ownership boundary (one artifact, N packages)

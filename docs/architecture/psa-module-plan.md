@@ -4,8 +4,8 @@
 > phase below lands through its own PR, `pnpm verify` and changeset.
 > **Measured against**: `origin/main` at `c716a2c`, `@objectstack/*` **17.4.0** (the pin).
 > **Companions**: [`module-split-plan.md`](./module-split-plan.md) — the inventory, the
-> four measured edge rules (R1–R4) and the maintainer decisions of 2026-09-02 that this
-> design applies without re-deciding; [`../requirements/0002-it-services-project-delivery-and-cost.md`](../requirements/0002-it-services-project-delivery-and-cost.md)
+> four measured edge rules (R1–R4) and the maintainer decisions of 2026-09-02 and
+> 2026-09-14 that this design applies without re-deciding; [`../requirements/0002-it-services-project-delivery-and-cost.md`](../requirements/0002-it-services-project-delivery-and-cost.md)
 > — the customer intake that triggered it.
 > **Upstream**: ADR-0130 (*the release artifact is the co-ownership boundary — one artifact,
 > N packages*), [objectstack#14122](https://github.com/objectstack-ai/objectstack/issues/14122) (epic).
@@ -39,17 +39,35 @@ Three standing rulings bound the scope before anything is designed:
 | HotCRM is a **pure metadata application**; platform capability is built in objectstack (AGENTS.md, Scope) | Approvals are `approval` flow nodes, the org dimension is `sys_business_unit`, attachments are `enable.files`, people are `sys_user`. PSA declares no infrastructure. |
 | Permission sets stay **whole in the `type: app` package** (ADR-0130 addendum, 2026-09-02, objectstack#14487) | PSA ships no permission set of its own. Its object grants are rows added to the app package's sets; new roles are new sets there. |
 
-## Why PSA is the first module cut
+## Where PSA sits — after the base CRM splits
 
-[`module-split-plan.md`](./module-split-plan.md) nominated `cpq` as the first *extraction*
-because it is a leaf. PSA is better than a leaf: it is **new**. It moves no file, converts no
-navigation node, relocates no hook and touches none of the six unmeasured item classes on
-day one. Landing it as `app.objectstack.hotcrm.psa` proves the composition, compile, load
-and registration path in this repository end to end — exactly what every later extraction
-needs proven — while shipping a product capability instead of a refactor.
+Maintainer ruling, 2026-09-14, verbatim and untranslated, given on reading the first draft
+of this document (the token-budget finding below):
 
-The split plan listed three upstream blockers. Two of them are now **in the pin**; the third
-does not gate a module booted from an artifact:
+> 「所以应该先分拆基础的crm, 比如 sales 和 support， token 门禁： 放到 sales」
+
+Two consequences, both recorded in [`module-split-plan.md`](./module-split-plan.md) under
+*Decisions recorded (2026-09-14)* and applied here:
+
+1. **The base CRM splits first.** The first ADR-0130 cuts are the sales and service
+   (“support”) modules of the accepted split plan, not PSA. PSA is a **later** module added
+   to an artifact that is already composed — it inherits the composition, the barrels, the
+   navigation-contribution channel and the gate shape the base split establishes, and proves
+   none of them.
+2. **The token gate measures the sales module.** The headline claim the gate protects is
+   ADR-0130 §1.3(b)'s own wording — *a CRM sales module fits whole in an AI context window* —
+   so the ratchet binds to `app.objectstack.hotcrm.sales`. PSA is outside it, and this
+   document's decision 1 (partition or raise) is closed.
+
+The first draft argued PSA should be the first cut because it is new — no file moves, no
+navigation conversion, no hook relocation. That argument is kept for the record and is
+**superseded**: a new module proves the pipeline cheaply, but the product needs the base
+modules to exist before a fourth one is worth having, and the gate question only resolves
+cleanly once `sales` is a package the gate can point at.
+
+What the pin carries is still the fact the sequence rests on. The split plan listed three
+upstream blockers on 2026-09-02; two are now **in the pin** and the third does not gate a
+module booted from an artifact:
 
 | Blocker as listed on 2026-09-02 | Where it landed | In 17.4.0? |
 | --- | --- | --- |
@@ -57,9 +75,9 @@ does not gate a module booted from an artifact:
 | Per-package registration at load — every object has one owner across every door ([objectstack#14599](https://github.com/objectstack-ai/objectstack/issues/14599)) | `@objectstack/core` 17.3.0 (`655b106`); `@objectstack/runtime` 17.4.0 (`f1a1028`, collections read from `packages[]`) | ✅ |
 | Studio's writable verdict ([objectstack#14430](https://github.com/objectstack-ai/objectstack/issues/14430)) | Studio surface | Not needed: a module booted from an artifact is served `writable: false` like the app package is today (ADR-0070 D2). |
 
-Phase 0 below is the measurement that turns this table from a changelog reading into a
-fact about this repository. Merged upstream is not the same as proven in the pin
-(AGENTS.md, *Platform Upgrades*), and no later phase opens until Phase 0 is green.
+The base split's first PR is the measurement that turns this table from a changelog reading
+into a fact about this repository. Merged upstream is not the same as proven in the pin
+(AGENTS.md, *Platform Upgrades*).
 
 ## Package shape
 
@@ -358,9 +376,10 @@ The 14 CRM-side steps (1–14) are triaged in REQ-0002 itself and are **not** th
 scope; they are enhancements to objects the sales module already owns and follow their own
 records.
 
-## The token budget — the one number that decides whether this ships
+## The token budget — resolved by scoping the gate to `sales`
 
-`scripts/check-source-token-ratchet.mjs` at `c716a2c` reads:
+The finding that triggered the 2026-09-14 ruling, kept as measured.
+`scripts/check-source-token-ratchet.mjs` at `c716a2c` reads the **whole tree**:
 
 | Layer | Reading | Ceiling | Kind | Headroom |
 | --- | ---: | ---: | --- | ---: |
@@ -369,36 +388,40 @@ records.
 
 A conservative estimate for PSA v1 — eight objects with hooks, four approval flows, one
 alert flow, a handful of actions — is **15–20k business-semantics tokens**, and its views,
-two record pages and one dashboard **5–7k interaction tokens**. Neither fits, and the
-interaction layer does not fit by an order of magnitude.
+two record pages and one dashboard **5–7k interaction tokens**. Against a whole-tree gate
+neither fits, and the interaction layer does not fit by an order of magnitude.
 
-Manifests are free (the gate walks `src/` only; `objectstack.config.ts` and the module
-manifest sit at the root), and translations and seed data are outside the gate by ruling.
-The metadata itself is not free, and there are exactly two honest answers:
+The ruling dissolves the conflict instead of arbitrating it: **the gate measures the sales
+module**, because that is the claim it exists to protect (ADR-0130 §1.3(b): *a CRM sales
+module fits whole in an AI context window*). Consequences:
 
-1. **Partition the ratchet by package** — the per-module budget ADR-0130 §4 promises.
-   The gate learns which barrel a file belongs to (the same file → module mapping
-   `module-split-inventory.json` already records), keeps the app package's two ceilings
-   **exactly where they are**, and gives `app.objectstack.hotcrm.psa` its own ruled
-   ceilings. The headline claim — *the CRM fits in one context window* — stays measured on
-   the CRM. **Recommended.**
-2. **Raise the two ceilings** to admit PSA into the same budget. Honest, but it retires the
-   CRM claim the gate exists to protect, and it means the next module competes with sales
-   for headroom again.
-
-Either is a maintainer ruling quoted in the PR that changes the gate (the script's own
-rule); neither is an agent's call. **Phase 0 cannot open without it** — this is decision 1.
+- The gate learns module membership the same way the artifact does — from the module's
+  barrels — and measures the files `app.objectstack.hotcrm.sales` exports, in the same two
+  layers. The base split's first PR makes that change and re-anchors both ceilings from
+  the sales reading with the script's own `anchor()` rule, or carries a ruled number if the
+  maintainer names one; the current whole-tree ceilings are retired with a worked row, not
+  silently. The split plan's inventory already carries the starting figure (`sales`:
+  41,743 authored tokens at 17.2.0).
+- PSA, like every module other than `sales`, is **outside the gate**. Its size is still a
+  product fact worth knowing — a per-module budget is what ADR-0130 §4 promises — so each
+  PSA phase records its module's reading in the PR body as the starting measurement for a
+  budget the maintainer may rule on later. Nothing in this design competes with the sales
+  claim for headroom.
+- Manifests are free either way (the gate walks `src/` only; `objectstack.config.ts` and the
+  module manifests sit at the root), and translations and seed data stay outside the gate by
+  the 2026-08-17 ruling.
 
 ## Phasing
 
 Each phase is one PR family: `pnpm verify` green, a changeset, product docs in three
 languages for anything a user sees, and a browser pass on `pnpm dev` for anything a user
 clicks (the internal dogfood process). A phase does not open until the previous one is on
-`main`.
+`main` — and Phase 0 does not open until the base CRM split (`sales` and `service` at
+least, per the 2026-09-14 ruling) is on `main` with the gate re-scoped.
 
 | Phase | Ships | Acceptance |
 | --- | --- | --- |
-| **0 — pipeline proof** | The composition: `objectstack.config.ts` as two `defineStack` calls under `composeStacks(…, { manifest: 'preserve' })`; the empty `psa` module with its manifest, `dependencies` and one `navigationContributions` entry; the `group_projects` node in the app; the ratchet change decision 1 rules; the second barrel per type (empty) | `pnpm build` emits `dist/objectstack.json` with `packages[]` of exactly two entries, `app.objectstack.hotcrm` first in topological order; `pnpm dev` boots and `GET /api/v1/packages` lists both rows with `writable: false`; the boot log carries no `nav_contribution_group_missing`; the artifact registers bit-identically to today's for every existing object (ADR-0130 D7 — same FQNs, same owners); `pnpm verify` green; a measurement of the related-list class (a throw-away page binding `crm_project` from the app package) recorded in the PR body, then reverted |
+| **0 — join the artifact** | The `psa` module added to the composition the base split already established: its manifest with `dependencies` and one `navigationContributions` entry, the `group_projects` node in the app, the module's (empty) barrel per type | `pnpm build` emits `dist/objectstack.json` whose `packages[]` gains exactly one entry, ordered after `app.objectstack.hotcrm` and the base modules it depends on; `pnpm dev` boots and `GET /api/v1/packages` lists the new row with `writable: false`; the boot log carries no `nav_contribution_group_missing`; every existing object registers bit-identically (ADR-0130 D7 — same FQNs, same owners); the sales gate reading is unchanged; `pnpm verify` green; a measurement of the related-list class (a throw-away page binding `crm_project` from the app package) recorded in the PR body, then reverted |
 | **1 — project core** | `crm_project`, `crm_project_member`, `crm_rate_card`; the project approval flow; list views, a project record page; positions and permission-set rows; seed rows; locales; `content/docs/projects/` index + `projects` + `staffing-and-rates` | A project moves `draft → in_approval → approved → active` through the Console with the approval inbox; the presales/delivery provenance gates refuse an unapproved source; every object has its docs page and four labels (existing guards go green, none added) |
 | **2 — budget** | `crm_project_budget`, `crm_project_budget_line`; baseline and revision approval; `baseline_cost` and margin formulas on the project; `budgets` doc | Version 1 approved sets `is_baseline`; version 2 approved moves it and supersedes version 1; `gross_margin` recomputes; a `labor` line without a rate card is refused at submit, not at draft |
 | **3 — time and expense** | `crm_timesheet`, `crm_time_entry`, `crm_expense`; their approvals; the cost-copy hook; the actual-cost summaries; `budget_status` + alert flow; `time_entry_locked` guard; `time-and-expenses` and `cost-control` docs | Approved hours appear in `actual_labor_cost` at the rate in force when entered; a later rate-card change leaves them unchanged; crossing 80 % notifies once; a submit on a locked project is refused with a message naming the lock; drafts are never refused |
@@ -410,16 +433,19 @@ milestones for `fixed_fee` projects, and a project template to seed members and 
 
 ## Decisions needed from the maintainer before Phase 0
 
-1. **The token gate**: partition per package (recommended) or raise the ceilings. Quoted in
-   the Phase 0 PR either way.
-2. **The second barrel's file name** per `src/{type}/` — `index.psa.ts` (reads as "the PSA
+The first draft's decision 1 — partition the token gate per package or raise its ceilings —
+is **closed** by the 2026-09-14 ruling (the gate measures `sales`; PSA is outside it). Four
+remain:
+
+1. **The second barrel's file name** per `src/{type}/` — `index.psa.ts` (reads as "the PSA
    index", sorts beside `index.ts`) is proposed; the alternative is a `psa.ts` re-export
-   file. Whatever is chosen becomes the convention every later module follows.
-3. **The navigation group**: a new top-level *Projects* group (proposed) versus placing the
+   file. The base split settles this convention first, for `sales` and `service`; PSA
+   follows whatever it chose.
+2. **The navigation group**: a new top-level *Projects* group (proposed) versus placing the
    items under the existing *Sales* group.
-4. **v1 scope**: confirm that work breakdown, resource requests and billing milestones are
+3. **v1 scope**: confirm that work breakdown, resource requests and billing milestones are
    v2 — the "margin is computable without it" rule above.
-5. **One `crm_project` with a `kind`** (proposed) versus separate presales-estimate and
+4. **One `crm_project` with a `kind`** (proposed) versus separate presales-estimate and
    delivery-project objects. The single object keeps one timesheet target, one member
    object and one budget object; two objects would triple those.
 

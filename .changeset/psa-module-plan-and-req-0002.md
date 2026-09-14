@@ -19,8 +19,10 @@ Two records land:
   HotCRM artifact. It records that the compile and load path the module split was blocked
   on is carried by the 17.4.0 pin, applies the four measured edge rules and the 2026-09-02
   decisions of `module-split-plan.md` without re-deciding them, designs the eight v1
-  objects and their approvals, and names the maintainer decisions Phase 0 waits on — the
-  token-gate partition first among them.
+  objects and their approvals, and names the maintainer decisions Phase 0 waits on. The
+  2026-09-14 rulings that followed its first draft are recorded in both plans: the base CRM
+  splits first (`sales` and `service` lead, PSA follows), and the token gate measures the
+  sales module rather than the whole tree.
 
 Both indexes (`docs/README.md`, `docs/requirements/README.md`) gain their row in the same
 change, as `docs/README.md` requires.
