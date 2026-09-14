@@ -1,15 +1,23 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 /**
- * The four packages, collected into the arrays `defineStack()` takes.
+ * The collection step the two package stacks consume.
  *
  * A directory under `src/` IS a package (ADR-0130, `module-split-plan.md`
- * items 6–9): `src/sales/` is the `type: 'app'` package this artifact takes
- * its identity from, and `src/service/`, `src/revenue/` and `src/marketing/`
- * are its modules, each with its own per-type barrels. There is still exactly
- * ONE `defineStack` — manifests, `composeStacks` and per-package `index.ts`
- * are the packaging PR, not this one — and it is next door in
- * `objectstack.config.ts`. This file is the collection step it consumes.
+ * items 4–9). Two of them are packages of the ARTIFACT as well:
+ * `src/sales/` — `app.objectstack.hotcrm`, the `type: 'app'` package this
+ * artifact takes its identity from, whose `defineStack` is
+ * `src/sales/index.ts` — and `src/service/` —
+ * `app.objectstack.hotcrm.service`, a `type: 'module'`, whose `defineStack`
+ * is `src/service/index.ts` and which assembles its own collections there.
+ * `src/revenue/` and `src/marketing/` are directories of the app package
+ * until they get packaging cards of their own.
+ *
+ * This file is therefore the one place that sees every package. It assembles
+ * the APP PACKAGE's collections (sales plus the two not-yet-packaged
+ * directories) and the app-wide sweeps the suites read; the service package
+ * assembles its own and hands back `serviceHooks` / `serviceFlows` so the
+ * sweeps can stay app-wide without a second enumeration.
  *
  * ## Why this is not simply the top of `objectstack.config.ts`
  *
@@ -27,43 +35,37 @@
  * distinguishable at all (see the note in `test/saas-composition.test.ts`) —
  * so they live in a module that is allowed to export them.
  *
- * ⚠️ ORDER IS PART OF THE OUTPUT. The builder writes each collection into
- * `dist/objectstack.json` in the order it is handed (measured: reversing an
- * input array reverses the artifact array), so the assembly below reproduces
- * the exact order the single-tree barrels produced. That is what makes the
- * move PR's artifact byte-identical to the pre-move one. Two mechanisms:
+ * ## Order
  *
- *   - `byExportName()` for the collections that used to be one
- *     `Object.values(<barrel namespace>)` — a module namespace enumerates its
- *     exports in ascending code-unit order of the export NAME, so merging the
- *     four namespaces and sorting by that name gives back the one app-wide
- *     order. Four concatenated `Object.values()` calls would not.
- *   - an explicit ordered list for `hooks`, `flows`, `skills`, `sharingRules`
- *     and `data`, which were explicit ordered lists before too (in
- *     `src/hooks/index.ts`, `src/flows/index.ts`, `src/skills/index.ts`,
- *     `objectstack.config.ts` and `src/data/index.ts`). Their order
- *     interleaves the packages, so no per-package list can carry it — it
- *     belongs to whoever composes them.
+ * Registration order within a collection is no longer load-bearing for the
+ * ARTIFACT: with two packages the artifact's flattened arrays are the
+ * composition's concatenation (module first, app last), and the packaging PR
+ * that introduced that is the one place it is measured. Two orders still are
+ * load-bearing, and both are stated explicitly below:
+ *
+ *   - `CrmSeedData`, because a seed row resolves its lookups against rows
+ *     seeded EARLIER;
+ *   - `CrmSharingRules`, which this app has always registered in one order.
+ *
+ * Everything else uses {@link byExportName} — a module namespace enumerates
+ * its exports in ascending code-unit order of the export NAME, so merging
+ * several barrels and sorting by that name is the same rule one barrel
+ * already applied, rather than a new one.
  */
 
 import * as salesObjects from './src/sales/objects/index.js';
-import * as serviceObjects from './src/service/objects/index.js';
 import * as revenueObjects from './src/revenue/objects/index.js';
 import * as marketingObjects from './src/marketing/objects/index.js';
 
 import * as salesActions from './src/sales/actions/index.js';
-import * as serviceActions from './src/service/actions/index.js';
 import * as marketingActions from './src/marketing/actions/index.js';
 
 import * as salesDashboards from './src/sales/dashboards/index.js';
-import * as serviceDashboards from './src/service/dashboards/index.js';
 
 import * as salesDatasets from './src/sales/datasets/index.js';
-import * as serviceDatasets from './src/service/datasets/index.js';
 import * as revenueDatasets from './src/revenue/datasets/index.js';
 
 import * as salesReports from './src/sales/reports/index.js';
-import * as serviceReports from './src/service/reports/index.js';
 
 import * as mappings from './src/sales/mappings/index.js';
 import * as apps from './src/sales/apps/index.js';
@@ -71,38 +73,31 @@ import * as profiles from './src/sales/profiles/index.js';
 import * as translations from './src/sales/translations/index.js';
 
 import * as salesViews from './src/sales/views/index.js';
-import * as serviceViews from './src/service/views/index.js';
 import * as revenueViews from './src/revenue/views/index.js';
 import * as marketingViews from './src/marketing/views/index.js';
 
 import * as salesPages from './src/sales/pages/index.js';
-import * as servicePages from './src/service/pages/index.js';
 
 import { SystemAdminProfile } from './src/sales/profiles/index.js';
 import { TenantAdminProfile } from './src/sales/profiles/tenant-admin.profile.js';
 
-// Hooks — one barrel per package, assembled below in source-file-name order.
+// Hooks — one barrel per directory, assembled below in source-file-name order.
 import {
   accountHook, contactHook, eventHook, forecastHook, leadHook,
   leadCampaignMetricsHook, opportunityHook, opportunityCampaignMetricsHook, taskHook,
 } from './src/sales/objects/hooks.js';
-import { articleFeedbackHook, caseHook, knowledgeArticleHook } from './src/service/objects/hooks.js';
 import {
   contractHook, opportunityLineItemHook, productHook, quoteHook, quoteLineItemHook,
 } from './src/revenue/objects/hooks.js';
 import { campaignHook, campaignMemberHook } from './src/marketing/objects/hooks.js';
 
-// Flows — the registration order the single `allFlows` array used to hold.
+// Flows.
 import {
   ContactWelcomeFlow, DemoBootstrapFlow, ForecastSnapshotFlow, LeadAssignmentFlow,
   LeadConversionFlow, OpportunityApprovalFlow, OpportunityApprovalOnCreateFlow,
   OpportunityStagnationFlow, OpportunityWonAlertFlow, ScheduleFollowUpFlow,
   TaskDueReminderFlow, TaskUrgentAlertFlow, BillingHandoffClosedWonFlow,
 } from './src/sales/flows/index.js';
-import {
-  CaseEscalationFlow, CaseEscalationOnCreateFlow, EscalateCaseFlow, CloseCaseFlow,
-  ClaimCaseFlow, CaseEscalationStampFlow, CaseSlaMonitorFlow,
-} from './src/service/flows/index.js';
 import {
   QuoteGenerationFlow, ContractRenewalFlow, QuoteExpirationFlow, ContractExpirationFlow,
   BillingHandoffContractActivatedFlow,
@@ -112,27 +107,26 @@ import {
   CampaignCompletionFlow,
 } from './src/marketing/flows/index.js';
 
-// Skills — likewise.
+// Skills.
 import {
   LeadQualificationSkill, EmailDraftingSkill, RevenueForecastingSkill,
   Customer360Skill, LiveDataSkill,
 } from './src/sales/skills/index.js';
-import { CaseTriageSkill } from './src/service/skills/index.js';
 
 import {
   AccountTeamSharingRule, TerritorySharingRules,
   OpportunitySalesSharingRule, OpportunityExecutiveSharingRule,
   CrmPositions,
 } from './src/sales/sharing/index.js';
-import {
-  CaseEscalationSharingRule, CaseDirectorSharingRule, CaseUnassignedTriageSharingRule,
-} from './src/service/sharing/index.js';
 import { CampaignLeadershipSharingRules } from './src/marketing/sharing/index.js';
+
+// The service package assembles its own collections; these two are re-exported
+// by it so the app-wide sweeps below need no second enumeration of them.
+import { serviceFlows, serviceHooks } from './src/service/index.js';
 
 // Seed rows — the replay order lives in `CrmSeedData` below.
 import type { HotCrmComposition } from './src/sales/data/index.js';
 import {
-  resolveComposition,
   accounts, contacts, leads, opportunities,
   tasks, events, eventAttendeesFromContacts, eventAttendeesFromLeads, forecasts,
 } from './src/sales/data/index.js';
@@ -141,54 +135,50 @@ import { cases, knowledgeArticles } from './src/service/data/index.js';
 import { campaigns, campaignMembersFromLeads, campaignMembersFromContacts } from './src/marketing/data/index.js';
 
 /**
- * One registration array out of the merged per-package barrels of a metadata
+ * One registration array out of merged per-directory barrels of a metadata
  * type, ordered by EXPORT NAME.
  *
- * `Object.values(<module namespace>)` — what this file did for each of these
- * collections while there was one barrel per type — enumerates in ascending
- * code-unit order of the export name, not in the barrel's declaration order.
- * (Measured on the pre-move artifact: `src/pages/index.ts` declared
- * `LeadDetailPage` first and the artifact's `pages[]` still began with
- * `account_detail_page`.) So sorting the merged entries by export name is not
- * a new ordering rule — it is the same one, applied across four namespaces
- * instead of one.
+ * `Object.values(<module namespace>)` — what a single barrel gives — enumerates
+ * in ascending code-unit order of the export name, not in the barrel's
+ * declaration order. (Measured: `src/pages/index.ts` declared `LeadDetailPage`
+ * first and the artifact's `pages[]` still began with `account_detail_page`.)
+ * So sorting the merged entries by export name is not a new ordering rule — it
+ * is the same one, applied across several namespaces instead of one.
  *
  * The namespaces are spread into one object at the call site, which is also
  * what keeps the entries TYPED: each barrel is its own module namespace with
  * its own element union, so passing them as separate arguments makes
  * TypeScript infer `T` from the first one alone and reject the rest. A
- * duplicate export name across two packages would collide in that spread — it
- * could not happen while the exports shared one namespace either, and it is a
- * compile error the day two packages export the same name.
+ * duplicate export name across two directories would collide in that spread —
+ * it could not happen while the exports shared one namespace either, and it is
+ * a compile error the day two of them export the same name.
  */
 const byExportName = <T>(merged: Record<string, T>): T[] =>
   Object.entries(merged)
     .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
     .map(([, value]) => value);
 
+/* ─── The app package's collections ──────────────────────────────────────── */
+
 /**
- * Every CRM lifecycle hook, in the order `src/hooks/index.ts` registered them
- * (by hook source file name) — see the ORDER note at the top of this file.
+ * Every CRM lifecycle hook the APP PACKAGE registers, by hook source file name.
  *
- * `*.hook.ts` files now sit beside the `*.object.ts` they name, one package
- * each, which is what enforces ADR-0130 R4. Two entries therefore come from a
- * different package than the campaign metadata they maintain:
+ * `*.hook.ts` files sit beside the `*.object.ts` they name, one directory each,
+ * which is what enforces ADR-0130 R4. Two entries therefore come from a
+ * different directory than the campaign metadata they maintain:
  * `opportunityCampaignMetricsHook` and `leadCampaignMetricsHook` are attached
  * to `crm_opportunity` and `crm_lead`, so they live in sales.
  */
-export const allHooks = [
+export const appHooks = [
   accountHook,
-  articleFeedbackHook,
   campaignHook,
   opportunityCampaignMetricsHook,
   leadCampaignMetricsHook,
   campaignMemberHook,
-  caseHook,
   contactHook,
   contractHook,
   eventHook,
   forecastHook,
-  knowledgeArticleHook,
   leadHook,
   opportunityHook,
   opportunityLineItemHook,
@@ -198,17 +188,11 @@ export const allHooks = [
   taskHook,
 ].flatMap((entry) => (Array.isArray(entry) ? entry : [entry]));
 
-/** Every flow, in the order the single `allFlows` array registered them. */
-export const allFlows = [
+/** Every flow the app package registers. */
+export const appFlows = [
   CampaignEnrollmentFlow,
   CampaignLeadMemberEnrollFlow,
   CampaignContactMemberEnrollFlow,
-  CaseEscalationFlow,
-  CaseEscalationOnCreateFlow,
-  EscalateCaseFlow,
-  CloseCaseFlow,
-  ClaimCaseFlow,
-  CaseEscalationStampFlow,
   LeadConversionFlow,
   ScheduleFollowUpFlow,
   DemoBootstrapFlow,
@@ -216,7 +200,6 @@ export const allFlows = [
   OpportunityApprovalOnCreateFlow,
   QuoteGenerationFlow,
   ContractRenewalFlow,
-  CaseSlaMonitorFlow,
   OpportunityStagnationFlow,
   ForecastSnapshotFlow,
   LeadAssignmentFlow,
@@ -231,83 +214,94 @@ export const allFlows = [
   BillingHandoffContractActivatedFlow,
 ];
 
-/** Every skill, in the order the single `allSkills` array registered them. */
-export const allSkills = [
+/** Every skill the app package registers — the cross-domain ones are all here. */
+export const appSkills = [
   LeadQualificationSkill,
   EmailDraftingSkill,
   RevenueForecastingSkill,
-  CaseTriageSkill,
   Customer360Skill,
   LiveDataSkill,
 ];
 
-/* ─── The registration arrays, in the order `defineStack()` receives them ─── */
-
-/** Every object definition the app registers. */
-export const allObjects = byExportName({
-  ...salesObjects, ...serviceObjects, ...revenueObjects, ...marketingObjects,
+/** Every object definition the app package registers. */
+export const appObjects = byExportName({
+  ...salesObjects, ...revenueObjects, ...marketingObjects,
 });
 
-/** Every UI / AI-callable action. */
-export const allActions = byExportName({ ...salesActions, ...serviceActions, ...marketingActions });
+/** Every UI / AI-callable action it registers. */
+export const appActions = byExportName({ ...salesActions, ...marketingActions });
 
-/** Every dashboard. */
-export const allDashboards = byExportName({ ...salesDashboards, ...serviceDashboards });
+/** Its dashboards — the two cross-domain ones included (plan item 4). */
+export const appDashboards = byExportName({ ...salesDashboards });
 
-/** Every analytics dataset (ADR-0021). */
-export const allDatasets = byExportName({
-  ...salesDatasets, ...serviceDatasets, ...revenueDatasets,
+/** Its analytics datasets (ADR-0021). */
+export const appDatasets = byExportName({ ...salesDatasets, ...revenueDatasets });
+
+/** Its reports. */
+export const appReports = byExportName({ ...salesReports });
+
+/** Its list-view groups. */
+export const appViews = byExportName({
+  ...salesViews, ...revenueViews, ...marketingViews,
 });
 
-/** Every report. */
-export const allReports = byExportName({ ...salesReports, ...serviceReports });
-
-/** Every list-view group. */
-export const allViews = byExportName({
-  ...salesViews, ...serviceViews, ...revenueViews, ...marketingViews,
-});
-
-/** Every page layout. */
-export const allPages = byExportName({ ...salesPages, ...servicePages });
+/** Its page layouts. */
+export const appPages = byExportName({ ...salesPages });
 
 /** Every import mapping — sales only; nothing else authors one. */
-export const allMappings = byExportName({ ...mappings });
+export const appMappings = byExportName({ ...mappings });
 
-/** The app itself. */
-export const allApps = byExportName({ ...apps });
+/** The app itself, and its navigation GROUPS (the containers modules aim at). */
+export const appApps = byExportName({ ...apps });
 
-/** The locale packs. */
-export const allTranslations = byExportName({ ...translations });
+/** The locale packs — whole in the app package (plan item 4). */
+export const appTranslations = byExportName({ ...translations });
 
 /**
  * The permission sets, as the NAMESPACE rather than an array: the SaaS
  * composition filters them by identity in `objectstack.config.ts`, which needs
  * `Object.values()` over the same object the named exports come from.
+ *
+ * They stay WHOLE in the app package (ADR-0130 addendum, 2026-09-02), service
+ * grants included: a permission set is a role a person holds across the whole
+ * product, not a property of one module.
  */
-export const allProfiles = profiles;
+export const appProfiles = profiles;
 
 export { SystemAdminProfile, TenantAdminProfile };
 
 /**
- * The sharing rules, in the order this app has always registered them.
+ * The sharing rules the app package registers, in the order this app has
+ * always registered them.
  *
- * Cross-package by nature — account and opportunity rules are sales', the case
- * rules service's, the campaign rules marketing's — and the order is the one
- * `objectstack.config.ts` spelled out before the split.
+ * The three CASE rules are no longer here — they are authored against
+ * `crm_case` and register with the service package.
  */
 export const CrmSharingRules = [
   AccountTeamSharingRule,
   OpportunitySalesSharingRule,
   OpportunityExecutiveSharingRule,
-  CaseEscalationSharingRule,
-  CaseDirectorSharingRule,
-  CaseUnassignedTriageSharingRule,
   ...TerritorySharingRules,
   ...CampaignLeadershipSharingRules,
 ];
 
 export { CrmPositions };
 
+/* ─── App-wide sweeps — what the suites read ─────────────────────────────── */
+
+/**
+ * Every hook in the ARTIFACT, both packages.
+ *
+ * The suites that sweep hooks (`test/refusal-envelope.test.ts`,
+ * `test/runtime-coverage.test.ts`, `test/hook-write-shape.test.ts`,
+ * `test/action-sandbox.test.ts`, `test/territory-single-source.test.ts`) are
+ * about the app a customer installs, which is the whole artifact — so they keep
+ * reading one list, and it is assembled here from each package's own.
+ */
+export const allHooks = [...appHooks, ...serviceHooks];
+
+/** Every flow in the artifact, both packages — same reason as {@link allHooks}. */
+export const allFlows = [...appFlows, ...serviceFlows];
 
 /**
  * Ownership and CRM positions are NOT seeded here — they can't be.
@@ -337,16 +331,24 @@ export { CrmPositions };
  */
 
 /**
- * All CRM seed datasets, in REPLAY ORDER.
+ * All CRM seed datasets, in REPLAY ORDER — the ARTIFACT's whole seed union.
  *
- * This list assembles here rather than in a package barrel for two reasons,
- * and the second is the binding one. It names rows from all four packages, and
- * no `src/` file may reach sideways into another package (plan item 7). And
- * the order is load-bearing — rows resolve their lookups against rows seeded
- * earlier, and the order interleaves the packages (products between
- * opportunities and tasks, contracts after campaign members), so it is not
- * recoverable by concatenating four per-package lists in any package order.
- * It is exactly the order `CrmSeedData` has always had.
+ * It assembles here because it names rows from every package and no `src/`
+ * file may reach sideways into another one (plan item 7), and because the
+ * order interleaves the packages (products between opportunities and tasks,
+ * cases before the events that point at them, contracts after campaign
+ * members) so no per-package list can carry it. About ten suites read this
+ * union; {@link seedDataFor} is what the two stacks actually register.
+ *
+ * ⚠️ A seed family is REGISTERED BY THE PACKAGE THAT OWNS ITS OBJECT, and that
+ * is not a style choice: `defineStack` refuses `data` naming an object the
+ * stack does not define (*"Seed data references object 'crm_case' which is not
+ * defined in objects"*), so `cases` and `knowledgeArticles` cannot stay with
+ * the app package once `crm_case` leaves it. The composed stack concatenates
+ * `data` in composition order — module first, app last — so the replayed order
+ * is no longer the order of this list. What that costs is measured, at boot,
+ * in the PR that split the packages; ⛔ do not change either list on the
+ * assumption that it is free.
  */
 export const CrmSeedData = [
   accounts,
@@ -410,6 +412,28 @@ export const CrmSeedData = [
  */
 export const SaasTenantSeedData = [products];
 
-/** The seed datasets a composition registers. */
-export const seedDataFor = (composition: HotCrmComposition): typeof CrmSeedData =>
-  composition === 'saas' ? SaasTenantSeedData : CrmSeedData;
+/**
+ * The seed families of the SERVICE package — the rows whose object it owns.
+ *
+ * Named here, beside the replay order they came out of, rather than in
+ * `src/service/`: the split is a property of {@link CrmSeedData}, and stating
+ * it next to that list is what keeps the two from drifting apart.
+ */
+export const ServiceSeedData = [cases, knowledgeArticles];
+
+/** Everything else — the app package's own families, in {@link CrmSeedData} order. */
+export const AppSeedData = CrmSeedData.filter((family) => !ServiceSeedData.includes(family));
+
+/**
+ * The seed datasets each package registers under a composition.
+ *
+ * The SaaS selection is still made once, here: a tenant gets the product
+ * catalogue and nothing else, so the service package registers no rows at all
+ * in that shape. See {@link SaasTenantSeedData} for why.
+ */
+export const seedDataFor = (
+  composition: HotCrmComposition,
+): { app: typeof CrmSeedData; service: typeof CrmSeedData } =>
+  composition === 'saas'
+    ? { app: SaasTenantSeedData, service: [] }
+    : { app: AppSeedData, service: ServiceSeedData };

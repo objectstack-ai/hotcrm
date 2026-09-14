@@ -1,15 +1,22 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { defineStack } from '@objectstack/spec';
+import { composeStacks } from '@objectstack/spec';
 
-// The four packages' metadata, collected and ORDERED — see
+// The app package — its manifest, its capability slate and the artifact's
+// locale configuration. It takes the collections it registers as an argument;
+// `src/sales/index.ts` says why.
+import { createHotCrmAppStack } from './src/sales/index.js';
+// The support module — a package of its own, assembling its own collections.
+import { createHotCrmServiceStack } from './src/service/index.js';
+
+// The app package's metadata, collected and ORDERED — see
 // `objectstack.composition.ts`, which also records why that collection cannot
 // live in this file (⛔ this module may carry no named export: the build parses
 // it against a `.strict` stack schema and fails on any key but the default).
 import {
-  allObjects, allActions, allDashboards, allDatasets, allReports,
-  allMappings, allApps, allViews, allPages, allTranslations, allProfiles,
-  allHooks, allFlows, allSkills,
+  appObjects, appActions, appDashboards, appDatasets, appReports,
+  appMappings, appApps, appViews, appPages, appTranslations, appProfiles,
+  appHooks, appFlows, appSkills,
   CrmSharingRules, CrmPositions,
   seedDataFor,
 } from './objectstack.composition.js';
@@ -27,7 +34,9 @@ import { DemoBootstrapFlow } from './src/sales/flows/index.js';
 // throws here rather than quietly assembling the wrong app (see
 // `resolveComposition`).
 //
-// The knob is deliberately COMPOSITION-time and uniform. The platform's
+// The knob is resolved ONCE, here at the root, and handed to the package stack
+// it affects already applied — every field it touches belongs to the app
+// package. It is deliberately COMPOSITION-time and uniform. The platform's
 // `seed-replayer` gives every newly founded organization its own private copy
 // of the registered dataset union (maintainer ruling 2026-08-27,
 // objectstack#12701: 「种子也不应该是全局的呀 …只是参考呀，租户要自己删除呀」),
@@ -61,145 +70,95 @@ const composition = resolveComposition();
 const isSaas = composition === 'saas';
 
 /**
- * Flows this composition registers.
+ * The seed families each package registers under this composition.
+ *
+ * A family is registered by the package that OWNS its object — `defineStack`
+ * refuses `data` naming an object the stack does not define — so this is a
+ * split, not a choice. `objectstack.composition.ts` holds the replay order it
+ * came out of.
+ */
+const seedData = seedDataFor(composition);
+
+/**
+ * Flows the app package registers under this composition.
  *
  * Filtered by IDENTITY, not by name string: renaming `demo_bootstrap` must not
  * silently turn the exclusion into a no-op that ships the sweep to every
  * tenant. `test/saas-composition.test.ts` additionally asserts the filter
  * removed exactly one flow, so a refactor that makes it match nothing is red.
+ * The support module's flows are its own and no composition touches them.
  */
-const compositionFlows = isSaas ? allFlows.filter((flow) => flow !== DemoBootstrapFlow) : allFlows;
+const compositionFlows = isSaas ? appFlows.filter((flow) => flow !== DemoBootstrapFlow) : appFlows;
 
 /** Permission sets this composition registers — same identity discipline. */
 const compositionPermissions = isSaas
-  ? [...Object.values(allProfiles).filter((set) => set !== SystemAdminProfile), TenantAdminProfile]
-  : Object.values(allProfiles);
+  ? [...Object.values(appProfiles).filter((set) => set !== SystemAdminProfile), TenantAdminProfile]
+  : Object.values(appProfiles);
 
-export default defineStack({
-  manifest: {
-    id: 'app.objectstack.hotcrm',
-    namespace: 'crm',
-    version: '3.1.0',
-    type: 'app',
-    name: 'HotCRM',
-    description: 'AI-Native CRM for the ObjectStack marketplace — Accounts, Contacts, Leads, Opportunities, Cases, Knowledge, Forecasts, Campaigns, Contracts.',
-    // ADR-0087 protocol handshake (ADR-0025 §3.2): the metadata/runtime
-    // protocol major this app's metadata is authored against. Only the major
-    // participates in the check — a runtime on a different major refuses the
-    // load with a structured OS_PROTOCOL_INCOMPATIBLE diagnostic (naming the
-    // `objectstack migrate meta` replay) instead of failing deep in a schema
-    // parse. Bump together with `specVersion` on every platform upgrade
-    // (docs/MAINTENANCE.md §3) — `test/docs-declared-versions.test.ts` now
-    // enforces that pairing against `objectstack.manifest.json` instead of
-    // trusting this comment, because two platform upgrades in a row (rc.2, then
-    // rc.3) moved the manifest and left this line behind (#728).
-    engines: { protocol: '^17.4.0' },
-  },
-
-  // ─── Platform capabilities this app needs ─────────────────────────
-  // The runtime resolves each capability name to a built-in service plugin
-  // and auto-loads it (with extras like Automation's node packs). No need
-  // to hand-instantiate plugins or pass `--preset` flags. See
-  // packages/cli/src/commands/serve.ts CAPABILITY_PROVIDERS for the
-  // complete map; explicit `plugins: [...]` always shadows the resolver.
-  // `auth` enables the auth/login surface (login/register) via @objectstack/plugin-auth.
-  // `ui`   serves the unified Console shell and CRM apps under /_console/
-  //        (login at /_console/login). ObjectStack 7.x replaced the legacy
-  //        /_studio/ and /_account/ mounts with this single /_console/ surface.
-  // Both are required for a clickable login flow when running `objectstack start`
-  // off the compiled artifact.
-  // Note: the foundational slate (queue, job, cache, settings, email,
-  // storage) is auto-injected by the CLI for every non-`minimal`
-  // preset — see `ALWAYS_CAPS` in packages/cli/src/commands/serve.ts.
-  // Listed below only the *opt-in* capabilities this stack actually
-  // wants on top of that slate.
-  // `triggers` installs the record-change + schedule trigger providers that
-  // actually fire autolaunched flows (record_change & schedule types). Without
-  // it the `automation` engine registers flows but nothing ever launches them.
-  // Schedule triggers run via the job service (in the always-on slate).
-  //
-  // `ai` is deliberately NOT listed. ObjectStack 11.3.0 (ADR-0025 S2) removed
-  // `@objectstack/service-ai` from the open edition — the AI runtime now ships
-  // only in the closed cloud package, and the framework CLI does not depend on
-  // it. Under ObjectStack 16, `requires: ['ai']` is a *fail-fast* capability:
-  // the serve command hard-aborts boot when the package is absent, so keeping it
-  // here would break `objectstack start`/`dev` for this open-edition app (the AI
-  // block runs before every other capability resolves). The AI metadata is
-  // unaffected — the skills still validate, build into the artifact, and run
-  // wherever a runtime provides the `ai` tier (cloud's objectos-runtime). There
-  // are no app-authored agents: they were retired in #512 and the surface is
-  // skills-only (ADR-0063 §2); skills attach to a platform agent by `surface`.
-  // A local open-edition boot simply omits the AI service and hides its console
-  // surface. To run AI locally, declare `@objectstack/service-ai` (cloud) in
-  // package.json — its mere presence best-effort auto-loads it.
-  // `hierarchy-security` is the ONE enterprise-edition capability this app
-  // declares (#880). `sales_manager` authors `writeScope: 'own_and_reports'` on
-  // `crm_contract`, an ADR-0057 HIERARCHY scope resolved by the
-  // `hierarchy-scope-resolver` service that ships only in
-  // `@objectstack/security-enterprise`. Declaring the capability is REQUIRED to
-  // author that scope at all — `defineStack` refuses the grant outright without
-  // it — and the pair is one declaration: move them together or not at all.
-  //
-  // Maintainer ruling, 2026-08-11, verbatim: 「本项目是元数据app，在企业版运行就
-  // 具备企业版相关的能力，不重复开发。」 The app states what it MEANS and the
-  // edition supplies the capability, rather than approximating it with a broader
-  // open-edition value.
-  //
-  // UNLIKE `ai` above, this is SAFE to declare on an open-edition boot and does
-  // NOT fail fast. Verified against `@objectstack/cli`'s serve command: the
-  // capability resolver looks the token up in `CAPABILITY_PROVIDERS`, finds no
-  // entry, and because `hierarchy-security` IS in the known
-  // `PLATFORM_CAPABILITY_TOKENS` vocabulary it takes the deliberate "stay quiet"
-  // branch — no warning, no abort — since the capability arrives via an explicit
-  // enterprise plugin in `plugins[]`. Only tier-gated tokens (ai / ai-studio /
-  // i18n / ui / auth) have the dedicated hard-abort blocks the note above
-  // describes. `objectstack validate` does print one informational line naming
-  // the package to install; that is expected output, asserted by
-  // `test/contract-write-depth.test.ts`, not a defect to silence.
-  //
-  // What an OPEN-edition boot gets: the resolver is absent, so the scope fails
-  // CLOSED to owner-only and a Sales Manager still cannot edit a rep's contract.
-  // That is an edition boundary, and the docs say so per edition.
-  requires: ['automation', 'triggers', 'analytics', 'auth', 'ui', 'approvals', 'sharing', 'hierarchy-security'],
-
-  objects: allObjects,
-  actions: allActions,
-  dashboards: allDashboards,
-  datasets: allDatasets,
-  reports: allReports,
-  // Reusable import projections (#603). Referenced by name from the import
-  // endpoint — `mappingName: 'crm_account_import'` — so a customer's own
-  // spreadsheet loads without per-column mapping by hand. Templates:
-  // `assets/import-templates/`.
-  mappings: allMappings,
-  flows: compositionFlows,
-  skills: allSkills,
-  permissions: compositionPermissions,
-  apps: allApps,
-  views: allViews,
-  pages: allPages,
-  // Approvals are modeled as `record_change` flows with `approval` nodes
-  // (ADR-0019); see src/sales/flows/opportunity-approval.flow.ts. The
-  // standalone `approvals` stack field was removed in ObjectStack 7.4.
-  // No `analyticsCubes`: datasets (ADR-0021) are the semantic layer — the
-  // analytics service compiles each dataset into its cube internally, and a
-  // second hand-written cube layer only duplicates and drifts.
-
-  hooks: allHooks,
-
-  data: seedDataFor(composition),
-
-  i18n: {
-    defaultLocale: 'en',
-    supportedLocales: ['en', 'zh-CN', 'ja-JP', 'es-ES'],
-    fallbackLocale: 'en',
-  },
-
-  translations: allTranslations,
-
-  sharingRules: CrmSharingRules,
-  // ADR-0090 D3: positions are flat capability-distribution groups — the v1
-  // role hierarchy's parent links are gone (hierarchy belongs to the
-  // business-unit tree, which this app does not model).
-  positions: CrmPositions,
-});
+/**
+ * ONE release artifact, TWO packages (ADR-0130 D4).
+ *
+ * `manifest: 'preserve'` is the only option that separates "one artifact
+ * carrying N packages" from the pick-one composition every other strategy
+ * performs. It is ADDITIVE: the composed stack is the flattened one the
+ * platform has always produced — every collection concatenated to the top
+ * level, which is what the metadata service reads — PLUS `packages[]`, one
+ * entry per input stack carrying that package ASSEMBLED. `packages[]` is what
+ * `ObjectQL.registerApp` registers package by package, and it is where
+ * per-package OWNERSHIP comes from; without it a two-package artifact installs
+ * two package records owning nothing at all.
+ *
+ * The App package is LAST deliberately, and that is not the load-bearing half:
+ *
+ *  - `preserve` is additive, so the singular `manifest` is still picked by the
+ *    default `'last'` rule — the artifact identifies as the App a consumer
+ *    installs (ADR-0019 D1), `app.objectstack.hotcrm`, not as one of its
+ *    modules.
+ *  - REGISTRATION order is decided by `dependencies` — the service module
+ *    declares `app.objectstack.hotcrm`, and `packages[]` is sorted through the
+ *    platform's one topological sorter (ADR-0130 D5, ADR-0116) — so the app
+ *    registers first whatever slot it occupies here. An artifact that only
+ *    worked because someone listed the packages in the right order is the
+ *    failure ADR-0116 exists about, and it fails SILENTLY.
+ *
+ * `objectstack build` compiles this file into one `dist/objectstack.json`;
+ * `objectstack dev` boots the same shape straight from source.
+ */
+export default composeStacks(
+  [
+    createHotCrmServiceStack({ data: seedData.service }),
+    createHotCrmAppStack({
+      objects: appObjects,
+      actions: appActions,
+      dashboards: appDashboards,
+      datasets: appDatasets,
+      reports: appReports,
+      // Reusable import projections (#603). Referenced by name from the import
+      // endpoint — `mappingName: 'crm_account_import'` — so a customer's own
+      // spreadsheet loads without per-column mapping by hand. Templates:
+      // `assets/import-templates/`.
+      mappings: appMappings,
+      flows: compositionFlows,
+      skills: appSkills,
+      permissions: compositionPermissions,
+      apps: appApps,
+      views: appViews,
+      pages: appPages,
+      // Approvals are modeled as `record_change` flows with `approval` nodes
+      // (ADR-0019); see src/sales/flows/opportunity-approval.flow.ts. The
+      // standalone `approvals` stack field was removed in ObjectStack 7.4.
+      // No `analyticsCubes`: datasets (ADR-0021) are the semantic layer — the
+      // analytics service compiles each dataset into its cube internally, and a
+      // second hand-written cube layer only duplicates and drifts.
+      hooks: appHooks,
+      data: seedData.app,
+      translations: appTranslations,
+      sharingRules: CrmSharingRules,
+      // ADR-0090 D3: positions are flat capability-distribution groups — the v1
+      // role hierarchy's parent links are gone (hierarchy belongs to the
+      // business-unit tree, which this app does not model).
+      positions: CrmPositions,
+    }),
+  ],
+  { manifest: 'preserve' },
+);
