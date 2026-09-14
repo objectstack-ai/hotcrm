@@ -10,7 +10,7 @@
 
 ## Summary
 
-HotCRM is a single ObjectStack marketplace app at version `3.0.0`. The app manifest is defined in [`objectstack.config.ts`](../objectstack.config.ts) with id `app.objectstack.hotcrm` and namespace `crm`.
+HotCRM is a single ObjectStack marketplace app at version `3.1.0`. The app manifest is defined in [`objectstack.config.ts`](../objectstack.config.ts) with id `app.objectstack.hotcrm` and namespace `crm`.
 
 ## ObjectStack Validation
 
@@ -18,7 +18,7 @@ The summary `pnpm validate` prints — every figure read straight off the stack 
 loader registers:
 
 ```text
-HotCRM v3.0.0
+HotCRM v3.1.0
 Data: 18 Objects  331 Fields
 UI: 1 Apps  14 Views  8 Pages  5 Dashboards  10 Reports  31 Actions
 Logic: 29 Flows
