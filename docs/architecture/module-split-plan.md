@@ -410,6 +410,140 @@ readable.
    composition of grants — a module contributing its own objects' grants into an app-owned
    role — is filed as objectstack#14488 for the phase in which a module ships on its own.
 
+## Decisions recorded (2026-09-14) — the shape that supersedes the table above
+
+Ruled in one maintainer session on the first draft of
+[`psa-module-plan.md`](./psa-module-plan.md), whose size did not fit the whole-tree token
+gate. The rulings, verbatim and untranslated, in the order they were given:
+
+> 「所以应该先分拆基础的crm, 比如 sales 和 support， token 门禁： 放到 sales」
+> 「是不是拆的太细。是否可以去掉 packages 这一层」
+> 「shared 有必要吗？是否后期会导致ai的混乱」
+> 「为什么需要app ，我觉得是另外一种混乱」
+> 「好，按这个方案把拆分计划写回文档，创建专题issue，然后开始用 项目经理技能派发」
+
+The sections above are left as written: their measurements (the four rules, the 73 edges,
+the R4 hooks, the token figures) all still hold and the shape below is judged by them. What
+changes is the **package plan** — one `type: app` package and six modules becomes one
+`type: app` package and three modules — and the **layout**, which item 2 of the 2026-09-02
+decisions left to the compile path and this ruling settles.
+
+4. **Sales is the app.** ADR-0019 requires exactly one `type: app` package per artifact and
+   the artifact takes its identity from it; nothing requires that package to be an empty
+   shell, and the platform's own fixture (`examples/app-multi-package`: `core` is the app and
+   owns `crm_account` and the navigation, `orders` is the module) says the opposite. So
+   `app.objectstack.hotcrm` stays the id, keeps `type: 'app'`, and **is the sales module**:
+   it owns `crm_account`, `crm_contact`, `crm_lead`, `crm_opportunity`, `crm_forecast`,
+   `crm_task`, `crm_event`, `crm_event_attendee` — the customer core and the activity objects
+   fold into it, because a sales module without customers is not a sales CRM and activities
+   are a cross-cutting capability no customer buys separately — together with the app and
+   its navigation groups, the pages that are not record pages, the two cross-domain
+   dashboards, the cross-domain skills, the permission sets, the positions, the four locale
+   packs, the package docs, and every source file more than one package needs (item 7).
+   The `core` and `activity` modules of the table above do not exist; `cpq` is renamed
+   `revenue` after the product's own doc section.
+
+5. **Three modules, all `type: module`, all `namespace: 'crm'`, all depending on the app:**
+   `app.objectstack.hotcrm.service` (the ruling's "support": `crm_case`,
+   `crm_knowledge_article`, `crm_article_feedback`), `app.objectstack.hotcrm.revenue`
+   (`crm_product`, `crm_opportunity_line_item`, `crm_quote`, `crm_quote_line_item`,
+   `crm_contract` — the unit ADR-0130 §1.3(c) says must be sellable on its own) and
+   `app.objectstack.hotcrm.marketing` (`crm_campaign`, `crm_campaign_member`). The dependency
+   graph is a star — every module → sales — with no edge between modules. The assignment rule
+   is unchanged: an item lives with the object it is authored against. R4 is unchanged: the
+   two campaign hooks attached to `crm_lead` and `crm_opportunity` live in sales
+   (decision 1 above), beside the objects they hook.
+
+6. **A directory is a package; there is no `packages/` level and no `shared/`.** The layout
+   replaces item 2 of the 2026-09-02 decisions (flat tree, second barrel per type), which was
+   chosen to avoid touching `AGENTS.md` and the gate, and is superseded because it hides the
+   module boundary inside barrels — the thing ADR-0130's per-module context budget needs
+   visible. Top-level directories under `src/` are exactly the packages:
+
+   | Directory | Package | Type |
+   | --- | --- | --- |
+   | `src/sales/` | `app.objectstack.hotcrm` | `app` |
+   | `src/service/` | `app.objectstack.hotcrm.service` | `module` |
+   | `src/revenue/` | `app.objectstack.hotcrm.revenue` | `module` |
+   | `src/marketing/` | `app.objectstack.hotcrm.marketing` | `module` |
+
+   Inside each: one `index.ts` that calls `defineStack` with that package's manifest, and the
+   metadata-type subdirectories the package actually uses (`objects/`, `views/`, `pages/`,
+   `flows/`, `actions/`, `datasets/`, `reports/`, `dashboards/`, `mappings/`, `skills/`,
+   `sharing/`, `data/`), each with its explicit barrel — registration stays file-by-file. A
+   `*.hook.ts` sits beside its `*.object.ts`, so R4 is enforced by co-location rather than by
+   reading. **One exception, measured by the layout PR (#1910):** `src/docs/` stays at the
+   top of `src/`. `objectstack build` compiles the in-product package docs (ADR-0046) from
+   `<config dir>/src/docs` and no other path, and moving the directory is silent — the build
+   stays exit 0 and the artifact loses its `docs[]`. The gap is filed upstream; the app does
+   not compensate for it. Root `objectstack.config.ts` does one thing:
+   `composeStacks([...modules, salesStack], { manifest: 'preserve' })`, plus the existing
+   `HOTCRM_COMPOSITION` knob. `AGENTS.md`'s prohibition targets `packages/<x>/src/` — the
+   retired per-package-`package.json` monorepo — which this is not: one `package.json`, one
+   `tsconfig.json`, one build. Its *Project Architecture* section is rewritten in the layout
+   PR, which is therefore a governed PR (draft, the maintainer's own merge). A later module
+   (PSA) is one more directory.
+
+7. **Source imports follow the dependency edges; nothing else.** A file may import from its
+   own directory or from `src/sales/`; never sideways between modules, never upward. Every
+   cross-package source therefore has one deterministic home — the lowest package all its
+   consumers depend on — which is the property a `shared/` directory lacks:
+
+   | File today | ≈ tokens | Consumers after the split | Home |
+   | --- | ---: | --- | --- |
+   | `src/objects/_hook-api.ts` | 2,358 | every hook in every package | `sales/` — a platform gap: `@objectstack/spec` 17.4.0 exports no type for a hook's `ctx.api`; filed upstream, deleted when the platform exports it |
+   | `src/objects/_picklists.ts` | 3,001 | sales objects, views, flows; revenue's contract and quote; sales' executive dashboard and locale packs | `sales/` — product vocabulary; a second platform gap (no global picklist metadata kind), filed upstream |
+   | `src/dashboards/shared-widgets.ts` | 702 | the two cross-domain dashboards and the sales dashboard | `sales/` |
+   | `src/data/_shared.ts` | 1,171 | every package's seed rows | `sales/` |
+   | `src/objects/_thresholds.ts` | 1,290 | sales flows and sharing; revenue's quote | `sales/`; revenue imports it along its edge |
+   | `src/actions/global.actions.ts` (the activity-action factory) | 6,681 | hosts: four objects in sales, `crm_case` in service | factory in `sales/actions/`; each package's actions barrel instantiates its own hosts; service imports the factory along its edge |
+   | `src/mappings/_shared.ts` | 612 | the three import mappings, all sales | `sales/` — no longer shared at all |
+
+8. **The token gate measures `src/sales/`.** `scripts/check-source-token-ratchet.mjs` walks
+   that directory instead of the whole tree, in the same two layers by subdirectory name
+   (`objects`, `flows`, `actions` = business semantics; `views`, `pages`, `dashboards`,
+   `apps` = interaction), and prints a reading for every package directory so a per-module
+   budget (ADR-0130 §4) has its starting figures; only sales carries ceilings. That is the
+   claim the gate exists for, in ADR-0130 §1.3(b)'s words — *a CRM sales module fits whole
+   in an AI context window* — measured on the package a customer actually installs. By the
+   figures above the reading is roughly 68k (core + sales + activity) plus 21.6k (the shell
+   items) ≈ 90k authored tokens against a 134k tree. Both ceilings are re-derived from that
+   reading with the script's own `anchor()` rule unless the maintainer rules numbers;
+   lowering the ruled business ceiling is what this ruling authorises, and the layout PR
+   quotes it. `test/source-token-ratchet.test.ts` learns the new scope in the same PR.
+
+9. **Sequence — a move PR, then packaging PRs with no moves.**
+   - **PR 0 — layout.** Every file moves to its final directory (`git mv`, history kept);
+     `objectstack.config.ts` still registers one stack from the new paths. The artifact is
+     bit-identical (ADR-0130 D7: same FQNs, same owners, same navigation). Re-pointed in the
+     same PR: the gate (item 8), `test/**` path globs through one roster helper,
+     `.github/labeler.yml` (its guard fails on a glob that matches nothing), every doc that
+     names or draws `src/<dir>/` (`test/docs-src-tree-paths.test.ts` is the guard),
+     `.github/tasks/*.md`, and `AGENTS.md` *Project Architecture* plus the import rule of
+     item 7. No manifest, no `composeStacks`, no navigation change.
+   - **PR 1 — sales is the app, service is a module.** `src/sales/index.ts` becomes the
+     app-package `defineStack`; `src/service/index.ts` the module's, with `dependencies` and
+     the `navigationContributions` that carry `nav_case`, `nav_knowledge`,
+     `nav_service_dashboard`, `nav_my_cases` and `nav_report_sla` into the groups the app
+     keeps; `revenue/` and `marketing/` stay registered by the sales stack until their turn;
+     the root config composes with `manifest: 'preserve'`. Acceptance: `packages[]` carries
+     exactly two entries, the app first; `GET /api/v1/packages` lists both `writable: false`;
+     the boot log has no `nav_contribution_group_missing`; the sidebar is unchanged; every
+     object keeps its FQN and owner. Two classes the four rules never measured are measured
+     here and recorded in the PR: the sales-owned executive dashboard binding a service
+     dataset, and a sales-owned page component listing a service object.
+   - **Revenue and marketing** are packaged the same way when there is a reason to — the
+     ruling asked for sales and support first; their directories are final from PR 0, so
+     packaging either is a manifest, an `index.ts` and a navigation contribution, with no
+     move.
+   - **PSA** follows as `src/psa/` (`psa-module-plan.md`).
+
+The three upstream blockers under *上游缺口* are no longer the reason to wait: the compile
+path and per-package registration are carried by the 17.4.0 pin, and the Studio writable
+verdict does not gate a module booted from an artifact — the version table in
+`psa-module-plan.md`, *Where PSA sits*, cites the changelog entries. PR 1 is still the
+measurement that proves it here.
+
 ## References
 
 - ADR-0130 — the release artifact is the co-ownership boundary (one artifact, N packages)

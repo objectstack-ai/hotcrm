@@ -95,3 +95,4 @@ metadata goes (core `src/` for B, an overlay package for C) before writing any
 | ID | Title | Source | Disposition | Status |
 | --- | --- | --- | --- | --- |
 | [0001](0001-agency-tier-lead-tagging.md) | Auto-tag leads by agency-tier hierarchy | Example customer | C customer-overlay | Triaged |
+| [0002](0002-it-services-project-delivery-and-cost.md) | CRM-to-delivery process: customers, leads, opportunities, project initiation, cost planning, time and cost tracking, reporting | IT-services / software-outsourcing customer | B standard-enhancement (two tracks; C/D items noted) | Triaged |

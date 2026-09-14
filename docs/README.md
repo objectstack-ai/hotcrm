@@ -21,6 +21,7 @@ HotCRM also has product-facing documentation under [`content/docs/`](../content/
 | Local, artifact, and marketplace deployment | [DEPLOYMENT.md](DEPLOYMENT.md) |
 | Versioning and distribution | [RELEASE_STRATEGY.md](RELEASE_STRATEGY.md) |
 | Module boundaries and the ADR-0130 multi-package split plan | [architecture/module-split-plan.md](architecture/module-split-plan.md) |
+| The PSA (project delivery and cost) module — standard-product design and the first ADR-0130 module cut | [architecture/psa-module-plan.md](architecture/psa-module-plan.md) |
 | Upgrade, seeding, and version alignment | [MAINTENANCE.md](MAINTENANCE.md) |
 | Customer requirements and product disposition | [requirements/README.md](requirements/README.md) |
 | Where object and field metadata is declared | [developers/api_reference.md](developers/api_reference.md) |
