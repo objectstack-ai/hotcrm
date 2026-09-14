@@ -63,9 +63,9 @@ http://localhost:4001 and create the first admin account.
 
 ---
 
-## v3.0.0 — Latest release
+## v3.1.0 — Latest release
 
-**HotCRM 3.0.0**, running on **ObjectStack 17.4.0** across every
+**HotCRM 3.1.0**, running on **ObjectStack 17.4.0** across every
 `@objectstack/*` package. The app manifest declares the matching
 `^17.4.0` protocol range, so a runtime on a different protocol major
 refuses the load up front with a structured diagnostic instead of failing deep
@@ -73,10 +73,43 @@ in a schema parse.
 
 > **This page does not keep a second release table.** The release-by-release
 > history is `CHANGELOG.md` in the repository, compiled from the `.changeset/`
-> entry every pull request adds. The versions between v1.0 and 3.0.0 are
+> entry every pull request adds. The versions between v1.0 and 3.1.0 are
 > recorded there and are deliberately not re-listed here — a hand-maintained
 > copy of that history is exactly how this section came to advertise a "v5.0"
 > that was never an app version, on a platform major that never shipped it.
+
+### What 3.1.0 adds
+
+A minor release: nothing is renamed, no stored record is rewritten, and an
+upgrade from 3.0.0 needs no migration step.
+
+- **A *Claim Case* button.** Taking an unowned case out of **Unassigned —
+  triage** already worked — an agent moves it to a working status and the claim
+  seam stamps them as the owner — and nothing on screen said so. The gesture now
+  has an action on the case record header and in the triage row menu: it asks
+  which working status you are claiming into, defaulted to *In Progress*, and
+  moves the case there. It deliberately does **not** write ownership; the claim
+  seam remains the only writer of that column.
+- **The platform line moved from 17.1.0 to 17.4.0**, in three steps, every
+  `@objectstack/*` package together with the protocol range the manifest
+  declares. Nothing an author writes in `src/` changes shape.
+- **A SaaS / multi-organization composition**, for an operator running one
+  HotCRM deployment on behalf of several organizations.
+- **The knowledge base's *Review Queue* tab is gone.** It returned every
+  published article sorted least-recently-reviewed first, which degrades into
+  "all articles, different sort" as a knowledge base grows. `last_reviewed_at`
+  is untouched — only the tab that ranked by it is removed.
+- **The product catalog's *Default Tax Rate %* is gone.** `crm_product.tax_rate`
+  could be set only through the REST API and no total anywhere read it. Tax is
+  unchanged where it is actually computed: the quote line item's own rate, and
+  the Tax amount on the quote.
+
+Plus a long tail of fixes, each with its own entry in `CHANGELOG.md`.
+
+**The one thing to check before upgrading:** an integration that writes
+`crm_product.tax_rate` over the REST API. That field no longer exists, so the
+write is refused rather than ignored. Nothing else in this release removes or
+renames anything a client can address.
 
 ### Upgrading from 2.x — Owner is now one field
 
