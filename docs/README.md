@@ -42,18 +42,13 @@ HotCRM is a single ObjectStack marketplace app. The source of truth is [`objects
 ```text
 hotcrm/
 ├── objectstack.config.ts
+├── objectstack.composition.ts
 ├── src/
-│   ├── objects/        # ObjectSchema.create metadata, object lifecycle hooks
-│   ├── actions/        # UI actions and AI-callable action bodies
-│   ├── flows/          # ObjectStack automation flows
-│   ├── skills/         # AI skill definitions (skills-only surface)
-│   ├── dashboards/     # Dashboard metadata
-│   ├── reports/        # Report metadata
-│   ├── views/, pages/  # App UI metadata
-│   ├── profiles/       # Permission sets
-│   ├── sharing/        # Sharing rules and positions
-│   ├── translations/   # Locale bundles
-│   └── data/           # Seed data
+│   ├── sales/          # the `type: app` package (ADR-0130) — a directory under src/ IS a package
+│   ├── service/        # module — case, knowledge_article, article_feedback
+│   ├── revenue/        # module — product, opportunity_line_item, quote, quote_line_item, contract
+│   ├── marketing/      # module — campaign, campaign_member
+│   └── docs/           # package docs (ADR-0046), read from this fixed path by the builder
 ├── content/docs/       # Product documentation site content
 └── docs/               # Internal documentation
 ```
@@ -67,7 +62,7 @@ When changing metadata or runtime behavior:
 1. Update the closest product docs in `content/docs/` if the user-facing behavior changed.
 2. Update `docs/STATUS.md` when counts or verification commands change.
 3. Leave `docs/developers/api_reference.md` alone when object fields change — the `fields:`
-   block of `src/objects/*.object.ts` is the reference, and that page points at it rather
+   block of `src/*/objects/*.object.ts` is the reference, and that page points at it rather
    than restating it. *Supersedes the instruction to hand-update that page, which asked for
    the field transcript since removed from it — 2026-08-31 ruling, item 5.*
 4. Update `docs/developers/code_examples.md` when ObjectStack conventions change.

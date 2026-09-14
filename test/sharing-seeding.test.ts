@@ -5,7 +5,7 @@ import { compileCelToFilter } from '@objectstack/formula';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import stack from '../objectstack.config';
-import { COUNTRY_TERRITORY, TERRITORY_OPTIONS, territoryFor } from '../src/objects/_territory';
+import { COUNTRY_TERRITORY, TERRITORY_OPTIONS, territoryFor } from '../src/sales/objects/_territory';
 
 /**
  * Every declared sharing rule must actually be SEEDED (#621).

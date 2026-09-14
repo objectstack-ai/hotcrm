@@ -145,7 +145,7 @@ describe('.github/labeler.yml', () => {
       expect(files.some((f) => re.test(f)), `${dead} unexpectedly matches`).toBe(false);
     }
     // …and that a live pattern does match, so the matcher isn't simply broken.
-    expect(files.some((f) => globToRegExp('src/objects/*.hook.ts').test(f))).toBe(true);
+    expect(files.some((f) => globToRegExp('src/*/objects/*.hook.ts').test(f))).toBe(true);
     expect(files.some((f) => globToRegExp('docs/**').test(f))).toBe(true);
     expect(files.some((f) => globToRegExp('*.md').test(f))).toBe(true);
   });

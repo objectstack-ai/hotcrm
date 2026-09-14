@@ -5,7 +5,7 @@ import { ObjectQL, applySystemFields } from '@objectstack/objectql';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { AnalyticsService } from '@objectstack/service-analytics';
 import stack from '../objectstack.config';
-import { CaseDataset } from '../src/datasets/case.dataset';
+import { CaseDataset } from '../src/service/datasets/case.dataset';
 
 /**
  * ═══ The Service dashboard's Agent filter must SELECT ROWS, not just render ═══

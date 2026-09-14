@@ -9,8 +9,8 @@ import {
   SETUP_NAV_CONTRIBUTIONS,
   SetupAppTranslations,
 } from '@objectstack/platform-objects/apps';
-import { CrmApp } from '../src/apps';
-import { CrmTranslations } from '../src/translations';
+import { CrmApp } from '../src/sales/apps';
+import { CrmTranslations } from '../src/sales/translations';
 import { REPO_ROOT } from './helpers/repo-root';
 
 /**

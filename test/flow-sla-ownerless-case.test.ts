@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import { CaseSlaMonitorFlow } from '../src/flows/case-sla-monitor.flow';
+import { CaseSlaMonitorFlow } from '../src/service/flows/case-sla-monitor.flow';
 import { makeFlowHarness, type Rec } from './helpers/flow-harness';
 
 /**

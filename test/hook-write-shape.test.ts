@@ -5,9 +5,11 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
-import { allHooks } from '../src/hooks';
+import { allHooks } from '../objectstack.composition';
 import { makeHarness } from './helpers/hook-harness';
 import { makeSandboxEngine, runHookBody, type Rec } from './helpers/action-sandbox';
+import { metadataFiles } from './helpers/src-roster';
+import { REPO_ROOT } from './helpers/repo-root';
 
 /**
  * `ctx.api.object(x).update(...)` takes a DOCUMENT, not an id. This file is the
@@ -47,8 +49,7 @@ const hook = (name: string): AnyRec => {
 /** Today, the way every hook here stamps it. */
 const today = new Date().toISOString().slice(0, 10);
 
-const HOOK_DIR = join(process.cwd(), 'src', 'objects');
-const hookFiles = (): string[] => readdirSync(HOOK_DIR).filter((f) => f.endsWith('.ts'));
+const hookFiles = (): string[] => metadataFiles('objects', '.ts');
 
 /**
  * A file's source with comment lines blanked out.
@@ -58,7 +59,7 @@ const hookFiles = (): string[] => readdirSync(HOOK_DIR).filter((f) => f.endsWith
  * the API is not a call into it.
  */
 const codeOf = (file: string): string =>
-  readFileSync(join(HOOK_DIR, file), 'utf8')
+  readFileSync(join(REPO_ROOT, file), 'utf8')
     .split('\n')
     .map((line) => (/^\s*(\/\/|\*|\/\*)/.test(line) ? '' : line))
     .join('\n');
@@ -118,7 +119,7 @@ describe('the kernel’s update contract, first-hand', () => {
 // ───────────────────────── every hook-side derived write, shape-asserted ──
 
 /**
- * One row per `update(...)` call site under `src/objects/` — the table from
+ * One row per `update(...)` call site under every package's `objects/` — the table from
  * #616, executed.
  *
  * `runHookBody` runs the hook's LOWERED body (the `body.source` the build
@@ -432,14 +433,14 @@ describe('every hook-side derived write reaches the engine in the engine’s own
     }
   });
 
-  it('covers every `update(` call site under src/objects/', () => {
+  it('covers every `update(` call site under src/*/objects/', () => {
     const sites = hookFiles().flatMap((f) =>
       [...codeOf(f).matchAll(/\.update\(/g)].map(() => f),
     );
     const covered = Object.values(CASES).flatMap((c) => c.writes).length;
     expect(
       covered,
-      `src/objects/ has ${sites.length} update() call sites (${[...new Set(sites)].join(', ')}) ` +
+      `src/*/objects/ has ${sites.length} update() call sites (${[...new Set(sites)].join(', ')}) ` +
         `but this file exercises ${covered}. A derived write nothing runs is a derived write ` +
         'nobody notices is dead — add the case.',
     ).toBe(sites.length);

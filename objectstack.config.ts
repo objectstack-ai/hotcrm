@@ -2,32 +2,20 @@
 
 import { defineStack } from '@objectstack/spec';
 
-import * as objects from './src/objects/index.js';
-import * as actions from './src/actions/index.js';
-import * as dashboards from './src/dashboards/index.js';
-import * as datasets from './src/datasets/index.js';
-import * as reports from './src/reports/index.js';
-import * as mappings from './src/mappings/index.js';
-import { allFlows, DemoBootstrapFlow } from './src/flows/index.js';
-import { allSkills } from './src/skills/index.js';
-import * as profiles from './src/profiles/index.js';
-import { SystemAdminProfile } from './src/profiles/index.js';
-import { TenantAdminProfile } from './src/profiles/tenant-admin.profile.js';
-import * as apps from './src/apps/index.js';
-import * as views from './src/views/index.js';
-import * as pages from './src/pages/index.js';
-import * as translations from './src/translations/index.js';
-import { resolveComposition, seedDataFor } from './src/data/index.js';
-
+// The four packages' metadata, collected and ORDERED — see
+// `objectstack.composition.ts`, which also records why that collection cannot
+// live in this file (⛔ this module may carry no named export: the build parses
+// it against a `.strict` stack schema and fails on any key but the default).
 import {
-  AccountTeamSharingRule, TerritorySharingRules,
-  OpportunitySalesSharingRule, OpportunityExecutiveSharingRule,
-  CaseEscalationSharingRule, CaseDirectorSharingRule, CaseUnassignedTriageSharingRule,
-  CampaignLeadershipSharingRules,
-  CrmPositions,
-} from './src/sharing/index.js';
-
-import { allHooks } from './src/hooks/index.js';
+  allObjects, allActions, allDashboards, allDatasets, allReports,
+  allMappings, allApps, allViews, allPages, allTranslations, allProfiles,
+  allHooks, allFlows, allSkills,
+  CrmSharingRules, CrmPositions,
+  seedDataFor,
+} from './objectstack.composition.js';
+import { SystemAdminProfile, TenantAdminProfile } from './objectstack.composition.js';
+import { resolveComposition } from './src/sales/data/index.js';
+import { DemoBootstrapFlow } from './src/sales/flows/index.js';
 
 // ─── Which SHAPE of HotCRM this build assembles (#1361) ───────────────────
 //
@@ -62,12 +50,12 @@ import { allHooks } from './src/hooks/index.js';
 //     rather than asserting it in prose. (It is also redundant in this shape:
 //     the catalogue's `crm_product` declares no `owner_id`, so a catalog-only
 //     tenant has nothing ownerless for the sweep to claim.)
-//     `demo-staffing` needs no exclusion — `src/sharing/demo-staffing.ts` is
-//     deliberately not exported from `src/sharing/index.js` and not registered
+//     `demo-staffing` needs no exclusion — `src/sales/sharing/demo-staffing.ts` is
+//     deliberately not exported from `src/sales/sharing/index.js` and not registered
 //     in any composition (#640, pinned by `test/demo-staffing.test.ts`).
 //  3. `permissions` — `system_admin` is replaced by `tenant_admin`, which holds
 //     org-scoped `manage_org_users` instead of platform-scope `manage_users`.
-//     Read `src/profiles/tenant-admin.profile.ts` for the full audit, including
+//     Read `src/sales/profiles/tenant-admin.profile.ts` for the full audit, including
 //     what `view_all_data` / `modify_all_data` mean under the wall.
 const composition = resolveComposition();
 const isSaas = composition === 'saas';
@@ -84,8 +72,8 @@ const compositionFlows = isSaas ? allFlows.filter((flow) => flow !== DemoBootstr
 
 /** Permission sets this composition registers — same identity discipline. */
 const compositionPermissions = isSaas
-  ? [...Object.values(profiles).filter((set) => set !== SystemAdminProfile), TenantAdminProfile]
-  : Object.values(profiles);
+  ? [...Object.values(allProfiles).filter((set) => set !== SystemAdminProfile), TenantAdminProfile]
+  : Object.values(allProfiles);
 
 export default defineStack({
   manifest: {
@@ -174,24 +162,24 @@ export default defineStack({
   // That is an edition boundary, and the docs say so per edition.
   requires: ['automation', 'triggers', 'analytics', 'auth', 'ui', 'approvals', 'sharing', 'hierarchy-security'],
 
-  objects: Object.values(objects),
-  actions: Object.values(actions),
-  dashboards: Object.values(dashboards),
-  datasets: Object.values(datasets),
-  reports: Object.values(reports),
+  objects: allObjects,
+  actions: allActions,
+  dashboards: allDashboards,
+  datasets: allDatasets,
+  reports: allReports,
   // Reusable import projections (#603). Referenced by name from the import
   // endpoint — `mappingName: 'crm_account_import'` — so a customer's own
   // spreadsheet loads without per-column mapping by hand. Templates:
   // `assets/import-templates/`.
-  mappings: Object.values(mappings),
+  mappings: allMappings,
   flows: compositionFlows,
   skills: allSkills,
   permissions: compositionPermissions,
-  apps: Object.values(apps),
-  views: Object.values(views),
-  pages: Object.values(pages),
+  apps: allApps,
+  views: allViews,
+  pages: allPages,
   // Approvals are modeled as `record_change` flows with `approval` nodes
-  // (ADR-0019); see src/flows/opportunity-approval.flow.ts. The
+  // (ADR-0019); see src/sales/flows/opportunity-approval.flow.ts. The
   // standalone `approvals` stack field was removed in ObjectStack 7.4.
   // No `analyticsCubes`: datasets (ADR-0021) are the semantic layer — the
   // analytics service compiles each dataset into its cube internally, and a
@@ -207,18 +195,9 @@ export default defineStack({
     fallbackLocale: 'en',
   },
 
-  translations: Object.values(translations),
+  translations: allTranslations,
 
-  sharingRules: [
-    AccountTeamSharingRule,
-    OpportunitySalesSharingRule,
-    OpportunityExecutiveSharingRule,
-    CaseEscalationSharingRule,
-    CaseDirectorSharingRule,
-    CaseUnassignedTriageSharingRule,
-    ...TerritorySharingRules,
-    ...CampaignLeadershipSharingRules,
-  ],
+  sharingRules: CrmSharingRules,
   // ADR-0090 D3: positions are flat capability-distribution groups — the v1
   // role hierarchy's parent links are gone (hierarchy belongs to the
   // business-unit tree, which this app does not model).

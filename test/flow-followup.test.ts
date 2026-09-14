@@ -2,7 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { makeFlowHarness, type FlowHarness, type Rec } from './helpers/flow-harness';
-import { ScheduleFollowUpFlow } from '../src/flows/schedule-followup.flow';
+import { ScheduleFollowUpFlow } from '../src/sales/flows/schedule-followup.flow';
 
 /**
  * schedule_followup flow runtime harness — the real automation engine over the

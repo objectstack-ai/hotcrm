@@ -3,8 +3,8 @@
 import { describe, it, expect } from 'vitest';
 import { validateActionParams } from '@objectstack/spec/ui';
 import stack from '../objectstack.config';
-import { ACTIVITY_TARGETS } from '../src/actions/global.actions';
-import eventHooks from '../src/objects/event.hook';
+import { ACTIVITY_TARGETS } from '../src/sales/actions/activity-actions';
+import eventHooks from '../src/sales/objects/event.hook';
 import { runActionBody, makeSandboxEngine, type ActionRunOpts } from './helpers/action-sandbox';
 import { makeHarness, makeCtx, hookNamed } from './helpers/hook-harness';
 

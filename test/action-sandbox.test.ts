@@ -4,11 +4,11 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import stack from '../objectstack.config';
-import { ACTOR_NAME_RESOLUTION_SOURCE } from '../src/actions/global.actions';
-import { allHooks } from '../src/hooks';
-import { createLineItemPriceFill } from '../src/objects/_line-item-price-fill';
-import oppLineItemHooks from '../src/objects/opportunity_line_item.hook';
-import quoteLineItemHooks from '../src/objects/quote_line_item.hook';
+import { ACTOR_NAME_RESOLUTION_SOURCE } from '../src/sales/actions/activity-actions';
+import { allHooks } from '../objectstack.composition';
+import { createLineItemPriceFill } from '../src/revenue/objects/_line-item-price-fill';
+import oppLineItemHooks from '../src/revenue/objects/opportunity_line_item.hook';
+import quoteLineItemHooks from '../src/revenue/objects/quote_line_item.hook';
 import { hookNamed } from './helpers/hook-harness';
 import {
   extractSandboxBody,

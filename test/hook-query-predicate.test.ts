@@ -6,6 +6,8 @@ import { join } from 'node:path';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import { makeHarness } from './helpers/hook-harness';
+import { metadataFiles } from './helpers/src-roster';
+import { REPO_ROOT } from './helpers/repo-root';
 
 /**
  * The predicate key on `ctx.api` reads is `where`. This file is the proof.
@@ -299,7 +301,7 @@ describe('write paths — `filter` folds there too', () => {
 });
 
 /**
- * Scans EVERY `.ts` under `src/objects/`, not just `*.hook.ts`.
+ * Scans EVERY `.ts` under every package's `objects/`, not just `*.hook.ts`.
  *
  * The narrower scan would have missed the real thing. Hook bodies get factored
  * into shared modules — `_line-item-price-fill.ts` is the price fill both
@@ -309,8 +311,9 @@ describe('write paths — `filter` folds there too', () => {
  * the code is free to outgrow.
  */
 describe('no hook-side code may query by `filter`', () => {
-  const hookDir = join(process.cwd(), 'src', 'objects');
-  const hookFiles = readdirSync(hookDir).filter((f) => f.endsWith('.ts'));
+  // Repo-relative paths across every package's `objects/`: since the ADR-0130
+  // layout a hook lives beside the object it names, one directory per package.
+  const hookFiles = metadataFiles('objects', '.ts');
 
   /**
    * A predicate key written as an OBJECT KEY — `.filter(` the array method is
@@ -321,14 +324,14 @@ describe('no hook-side code may query by `filter`', () => {
   const predicateKey = (key: 'where' | 'filter'): RegExp =>
     new RegExp(`(^|[{,\\s])${key}\\s*:`);
 
-  const codeOf = (file: string): string => readFileSync(join(hookDir, file), 'utf8');
+  const codeOf = (file: string): string => readFileSync(join(REPO_ROOT, file), 'utf8');
 
   it('finds files to check (guards against a silently empty scan)', () => {
     expect(hookFiles.length).toBeGreaterThan(10);
     // The shared modules are the ones a `*.hook.ts` glob would have skipped.
-    expect(hookFiles).toContain('_line-item-price-fill.ts');
+    expect(hookFiles).toContain('src/revenue/objects/_line-item-price-fill.ts');
     // …but that is a FILENAME, and this rule judges QUERIES. `readdirSync` does
-    // not recurse, so hook bodies relocated under `src/objects/<sub>/` would
+    // not recurse, so hook bodies relocated under `src/<pkg>/objects/<sub>/` would
     // leave a real, non-empty surface of schema files here — 44 files stay
     // dozens of files — carrying not one predicate for the rule to read, and
     // the name above can survive that as an empty shim. Equality against a

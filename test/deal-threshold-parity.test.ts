@@ -5,7 +5,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import stack from '../objectstack.config';
 import { REPO_ROOT } from './helpers/repo-root';
-import { HIGH_VALUE_DEAL_AMOUNT, LARGE_DEAL_AMOUNT } from '../src/objects/_thresholds';
+import { HIGH_VALUE_DEAL_AMOUNT, LARGE_DEAL_AMOUNT } from '../src/sales/objects/_thresholds';
 
 /**
  * ═══ HOUSE RULE: there is exactly ONE definition of a "large deal" ═════════
@@ -17,7 +17,7 @@ import { HIGH_VALUE_DEAL_AMOUNT, LARGE_DEAL_AMOUNT } from '../src/objects/_thres
  * deployment that raised the bar in one place shipped a product where a deal is
  * large enough for the director to SEE and not large enough to APPROVE.
  *
- * `src/objects/_thresholds.ts` is now the only place the numbers are written,
+ * `src/sales/objects/_thresholds.ts` is now the only place the numbers are written,
  * and every consumer interpolates it. That is a claim about the repo, not about
  * a function, and it is exactly the kind of claim that decays quietly: each
  * consumer keeps working when it falls out of step, it just stops answering the
@@ -182,9 +182,9 @@ describe('one definition of "large deal"', () => {
     // interpolation both spellings compile to the same CEL, so the compiled
     // form cannot tell a constant from a literal.
     const files = [
-      'src/flows/opportunity-approval.flow.ts',
-      'src/flows/opportunity-won-alert.flow.ts',
-      'src/sharing/opportunity.sharing.ts',
+      'src/sales/flows/opportunity-approval.flow.ts',
+      'src/sales/flows/opportunity-won-alert.flow.ts',
+      'src/sales/sharing/opportunity.sharing.ts',
     ];
     const offenders: string[] = [];
     for (const rel of files) {
@@ -354,11 +354,13 @@ describe('nothing else in the app re-states a large-deal amount', () => {
    */
   const ALLOWED = new Set([
     // The one authoring site.
-    'src/objects/_thresholds.ts',
+    'src/sales/objects/_thresholds.ts',
     // Seeded forecast quotas and closed-period actuals: money, not thresholds.
     // A rep's $500,000 quarterly quota has nothing to do with when a deal needs
     // a director's signature; converging them would be a false merge.
-    'src/data/revenue.seed.ts',
+    // `crm_forecast` is a sales object, so these rows moved with it out of the
+    // old `src/data/revenue.seed.ts` under the ADR-0130 layout.
+    'src/sales/data/forecast.seed.ts',
   ]);
 
   const walk = (dir: string): string[] =>
@@ -383,7 +385,7 @@ describe('nothing else in the app re-states a large-deal amount', () => {
     }
     expect(
       hits,
-      'these files restate a threshold that `src/objects/_thresholds.ts` owns. Import the ' +
+      'these files restate a threshold that `src/sales/objects/_thresholds.ts` owns. Import the ' +
         'constant, or — if the number genuinely means something else here — add the file to ' +
         'ALLOWED with the reason:\n  ' +
         hits.join('\n  '),
@@ -391,7 +393,7 @@ describe('nothing else in the app re-states a large-deal amount', () => {
   });
 
   it('the sweep can actually see the constants module — anti-vacuity', () => {
-    const text = readFileSync(join(REPO_ROOT, 'src/objects/_thresholds.ts'), 'utf8');
+    const text = readFileSync(join(REPO_ROOT, 'src/sales/objects/_thresholds.ts'), 'utf8');
     expect(text).toMatch(/LARGE_DEAL_AMOUNT = 100_000/);
     expect(text).toMatch(/HIGH_VALUE_DEAL_AMOUNT = 500_000/);
   });

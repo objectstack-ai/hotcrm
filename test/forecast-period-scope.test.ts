@@ -5,8 +5,8 @@ import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import { AnalyticsService } from '@objectstack/service-analytics';
 import stack from '../objectstack.config';
-import { ForecastDataset } from '../src/datasets/forecast.dataset';
-import { CrmSeedData } from '../src/data/index';
+import { ForecastDataset } from '../src/sales/datasets/forecast.dataset';
+import { CrmSeedData } from '../objectstack.composition';
 
 /**
  * `forecast_metrics` is per-period; aggregating it without pinning a period is

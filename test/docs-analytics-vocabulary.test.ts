@@ -4,12 +4,12 @@ import { describe, it, expect } from 'vitest';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
-import { CrmApp } from '../src/apps/crm.app';
-import * as dashboards from '../src/dashboards/index';
-import * as datasets from '../src/datasets/index';
-import * as reports from '../src/reports/index';
-import { OpportunitiesByStageReport } from '../src/reports/opportunity.report';
-import { pipelineByStageFunnelWidget } from '../src/dashboards/shared-widgets';
+import { CrmApp } from '../src/sales/apps/crm.app';
+import { CrmDashboards as dashboards } from './helpers/src-roster';
+import { CrmDatasets as datasets } from './helpers/src-roster';
+import { CrmReports as reports } from './helpers/src-roster';
+import { OpportunitiesByStageReport } from '../src/sales/reports/opportunity.report';
+import { pipelineByStageFunnelWidget } from '../src/sales/dashboards/shared-widgets';
 
 /**
  * The analytics landing page, and the cube vocabulary around it, pinned to

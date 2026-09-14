@@ -5,20 +5,25 @@
 # HotCRM
 
 > **The reference app for AI-written enterprise software.** A complete CRM —
-> 18 objects, 29 flows, 5 dashboards, 6 AI skills, 4 languages — carries its
-> whole business semantics (objects, flows, actions, hooks) in **~85k tokens**
+> 18 objects, 29 flows, 5 dashboards, 6 AI skills, 4 languages — built as four
+> packages (sales, service, revenue, marketing) that compile to one artifact.
+> The **sales package**, the one a customer installs, carries its whole
+> business semantics (objects, flows, actions, hooks) in **~50k tokens**
 > of typed [ObjectStack](https://github.com/objectstack-ai/objectstack) metadata,
 > and its whole interaction layer (views, pages, dashboards, app shell) in
-> another **~37k**. An agent holds every business rule of a real enterprise CRM
-> in a fraction of one context window — and the entire authored app still fits
-> comfortably — so it can reason about the system whole and refactor it safely.
+> another **~29k**. An agent holds every business rule of a real enterprise CRM
+> module in a fraction of one context window — and the entire authored app
+> still fits comfortably — so it can reason about the system whole and refactor
+> it safely.
 > **Install it online in one click, or fork it and build & ask with Claude
 > Code** — it's the reference implementation every marketplace app forks from.
 >
 > <sub>Measured, not estimated: `node scripts/check-source-token-ratchet.mjs`
 > prints both figures and CI fails when either grows past its committed ceiling.
-> Comments and blank lines are stripped; translations and seed data are outside
-> the count — a fifth locale is not business logic.</sub>
+> It also prints a reading for each of the four packages, so a per-module budget
+> has real starting figures. Comments and blank lines are stripped; translations
+> and seed data are outside the count — a fifth locale is not business
+> logic.</sub>
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Manifest](https://img.shields.io/badge/manifest-app.objectstack.hotcrm-blueviolet)](objectstack.config.ts)
@@ -129,18 +134,13 @@ See [docs: Publishing your first marketplace app](content/docs/marketplace/publi
 ```
 hotcrm/
 ├── objectstack.config.ts         # manifest + defineStack() — single source of truth
+├── objectstack.composition.ts    # the four packages collected into the arrays defineStack() takes
 ├── src/
-│   ├── objects/                  # *.object.ts — data model (18 objects)
-│   ├── actions/                  # *.actions.ts — server actions + AI tools (31)
-│   ├── flows/                    # *.flow.ts — visual flows (29): screen, record-change, scheduled & subflow
-│   ├── hooks/                    # hook registry barrel
-│   ├── skills/                   # *.skill.ts — AI skills (6) — skills-only surface, no agents
-│   ├── datasets/                 # *.dataset.ts — analytics semantic layer (9)
-│   ├── dashboards/, reports/     # analytics UI
-│   ├── pages/, views/, apps/     # UI definitions
-│   ├── profiles/, sharing/       # security
-│   ├── translations/             # en / zh-CN / es-ES / ja-JP
-│   └── data/                     # seed data
+│   ├── sales/                    # the `type: app` package — customers, pipeline, activities
+│   ├── service/                  # module — cases and the knowledge base
+│   ├── revenue/                  # module — products, quotes, line items, contracts
+│   ├── marketing/                # module — campaigns and campaign members
+│   └── docs/                     # package docs, shipped inside the built artifact
 ├── apps/docs/                    # Fumadocs site — standalone, own lockfile (not a pnpm workspace member)
 └── content/docs/                 # Documentation content
 ```

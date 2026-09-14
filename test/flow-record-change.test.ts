@@ -1,14 +1,14 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import { CaseEscalationFlow, CaseEscalationOnCreateFlow } from '../src/flows/case-escalation.flow';
-import { ContactWelcomeFlow } from '../src/flows/contact-welcome.flow';
-import { LeadAssignmentFlow } from '../src/flows/lead-assignment.flow';
+import { CaseEscalationFlow, CaseEscalationOnCreateFlow } from '../src/service/flows/case-escalation.flow';
+import { ContactWelcomeFlow } from '../src/sales/flows/contact-welcome.flow';
+import { LeadAssignmentFlow } from '../src/sales/flows/lead-assignment.flow';
 import {
   OpportunityApprovalFlow, OpportunityApprovalOnCreateFlow,
-} from '../src/flows/opportunity-approval.flow';
-import { OpportunityWonAlertFlow } from '../src/flows/opportunity-won-alert.flow';
-import { TaskUrgentAlertFlow } from '../src/flows/task-urgent-alert.flow';
+} from '../src/sales/flows/opportunity-approval.flow';
+import { OpportunityWonAlertFlow } from '../src/sales/flows/opportunity-won-alert.flow';
+import { TaskUrgentAlertFlow } from '../src/sales/flows/task-urgent-alert.flow';
 import { makeFlowHarness, type Rec } from './helpers/flow-harness';
 
 /**

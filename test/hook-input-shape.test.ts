@@ -4,7 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { wrapDeclarativeHook } from '@objectstack/objectql';
-import caseHooks from '../src/objects/case.hook';
+import caseHooks from '../src/service/objects/case.hook';
 import { makeCtx, makeHarness, engineFlatInput, hookNamed, type Rec } from './helpers/hook-harness';
 
 /**

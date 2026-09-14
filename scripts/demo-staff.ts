@@ -55,8 +55,8 @@ import {
   TERRITORY_OWNER,
   type DemoOwnershipRoute,
   type DemoStaffMember,
-} from '../src/sharing/demo-staffing.js';
-import { TERRITORY, type Territory } from '../src/objects/_territory.js';
+} from '../src/sales/sharing/demo-staffing.js';
+import { TERRITORY, type Territory } from '../src/sales/objects/_territory.js';
 
 type Json = Record<string, any>;
 

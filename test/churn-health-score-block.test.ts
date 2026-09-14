@@ -6,7 +6,7 @@ import { InMemoryDriver } from '@objectstack/driver-memory';
 import { AnalyticsService } from '@objectstack/service-analytics';
 import { resolveSeedRecord } from '@objectstack/formula';
 import stack from '../objectstack.config';
-import { CrmSeedData } from '../src/data/index';
+import { CrmSeedData } from '../objectstack.composition';
 
 /**
  * `customer_churn_signals` reads `crm_account.health_score` (#1186).

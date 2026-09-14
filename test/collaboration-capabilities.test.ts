@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
+import { objectFiles } from './helpers/src-roster';
 import stack from '../objectstack.config';
 
 /**
@@ -41,7 +42,6 @@ import stack from '../objectstack.config';
 
 type AnyRec = Record<string, any>;
 
-const OBJECT_DIR = join(REPO_ROOT, 'src/objects');
 
 const objects: AnyRec[] = (stack as any).objects ?? [];
 const permissionSets: AnyRec[] = (stack as any).permissions ?? [];
@@ -159,22 +159,22 @@ describe('enable.feeds is left at its default', () => {
     // object whether or not anyone authored it. Only the authored text can tell
     // an inert restatement from the default, which is the thing worth banning —
     // a key that changes nothing reads as a decision to the next author.
-    const schemaFiles = readdirSync(OBJECT_DIR).filter((f) => f.endsWith('.object.ts'));
+    const schemaFiles = objectFiles();
     // Vacuity guard, and here a COUNT really is the content proof: the class
     // this rule discriminates is *any* `.object.ts`, so every member of the
     // surface is a file that could restate the default. `readdirSync` does not
     // recurse and throws on a missing dir, but a schema tree relocated under
-    // `src/objects/<sub>/` would leave this reading an existing directory of
+    // `src/<pkg>/objects/<sub>/` would leave this reading an existing directory of
     // hooks and shared modules and reporting clean over zero schemas.
     expect(
       schemaFiles.length,
-      'no *.object.ts under src/objects/ — this sweep has gone vacuous; re-derive the ' +
+      'no *.object.ts under any package objects/ — this sweep has gone vacuous; re-derive the ' +
         'surface against wherever the schemas went, do not delete the rule',
     ).toBeGreaterThan(10);
 
     const offenders: string[] = [];
     for (const file of schemaFiles) {
-      const source = readFileSync(join(OBJECT_DIR, file), 'utf8');
+      const source = readFileSync(join(REPO_ROOT, file), 'utf8');
       // Strip line comments so the prose explaining this rule cannot trip it.
       const code = source.replace(/^\s*\/\/.*$/gm, '');
       if (/\bfeeds\s*:\s*true\b/.test(code)) offenders.push(file);

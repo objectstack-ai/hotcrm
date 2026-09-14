@@ -20,12 +20,22 @@ description: 用 ObjectStack 中繼資料、動作、流程、AI skills 和 UI �
 
 ## 目前原始碼結構
 
-HotCRM 是一個單體 ObjectStack 應用。請在 `src/` 下新增或修改中繼資料，然後從對應的 barrel 檔案匯出。
+HotCRM 由四個套件建置出一個 ObjectStack 產物（ADR-0130）：`src/` 下的一個目錄**就是**一個套件。請在擁有該物件的套件裡新增或修改中繼資料，然後從那個套件對應的 barrel 檔案匯出。一個檔案只能從自己的目錄或 `src/sales/` 匯入，模組之間不得橫向匯入。
 
 ```text
 src/
-├── objects/        # *.object.ts 模型和 *.hook.ts 生命週期邏輯
-├── hooks/          # 把物件 hooks 彙總交給 stack 的 barrel
+├── sales/          # `type: app` 套件 —— 客戶、銷售管道、活動紀錄，以及所有應用層級條目
+├── service/        # 模組 —— 工單與知識庫
+├── revenue/        # 模組 —— 產品、報價、行項目、合約
+├── marketing/      # 模組 —— 行銷活動與活動成員
+└── docs/           # 陳述流程所實作業務規則的應用文件
+```
+
+套件內是它用到的中繼資料類型子目錄：
+
+```text
+src/sales/
+├── objects/        # *.object.ts 模型，以及緊挨著各自模型的 *.hook.ts
 ├── actions/        # UI 動作和可執行動作體
 ├── flows/          # 自動化
 ├── skills/         # AI skills
@@ -40,11 +50,10 @@ src/
 ├── sharing/
 ├── translations/
 ├── data/           # 種子資料
-├── docs/           # 陳述流程所實作業務規則的應用文件
 └── interfaces/     # 共享型別（目前是空 barrel）
 ```
 
-HotCRM 只定義 skills，不定義 agent：應用自帶的兩個 copilot 及其所在目錄已被移除，AI 能力來自每個 ObjectStack 環境都提供的平台助手。把 skill 從 `src/skills/index.ts` 匯出就是全部的接線工作。參見 [AI Skills](/zh-Hant/docs/customization/ai-skills)。
+HotCRM 只定義 skills，不定義 agent：應用自帶的兩個 copilot 及其所在目錄已被移除，AI 能力來自每個 ObjectStack 環境都提供的平台助手。把 skill 從 `src/*/skills/index.ts` 匯出就是全部的接線工作。參見 [AI Skills](/zh-Hant/docs/customization/ai-skills)。
 
 ## 檔案後綴協議
 

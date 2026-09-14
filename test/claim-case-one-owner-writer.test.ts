@@ -2,7 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import stack from '../objectstack.config';
-import { CLAIMABLE_TARGET_STATUSES } from '../src/objects/_case-assignment';
+import { CLAIMABLE_TARGET_STATUSES } from '../src/service/objects/_case-assignment';
 
 /**
  * ═══ Ownership has exactly ONE writer, and the Claim button is not it ═══════

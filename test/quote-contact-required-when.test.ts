@@ -5,7 +5,7 @@ import { ObjectQL, applySystemFields } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import stack from '../objectstack.config';
-import { quotes } from '../src/data/revenue.seed';
+import { quotes } from '../src/revenue/data/revenue.seed';
 
 /**
  * A quote may not be PRESENTED without a recipient (#1017, from #714 / PR #1013).

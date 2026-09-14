@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
+import { resolveMetadataFile } from './helpers/src-roster';
 import stack from '../objectstack.config';
 
 /*
@@ -74,7 +75,7 @@ import stack from '../objectstack.config';
 // anything.
 type AnyRec = Record<string, any>;
 
-const FLOWS = (f: string) => readFileSync(join(REPO_ROOT, 'src/flows', f), 'utf8');
+const FLOWS = (f: string) => readFileSync(join(REPO_ROOT, resolveMetadataFile('flows', f)), 'utf8');
 const DOC = (f: string) => readFileSync(join(REPO_ROOT, 'src/docs', f), 'utf8');
 
 /** cron → the human label the docs use. Unknown cron ⇒ deliberate failure. */

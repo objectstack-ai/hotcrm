@@ -26,27 +26,38 @@ Open http://localhost:4001. The app boots with seed data on first start.
 
 ## Repository shape
 
-HotCRM is a single ObjectStack app. `objectstack.config.ts` is the source of truth that registers metadata from `src/`.
+HotCRM builds **one** ObjectStack artifact from **four packages** (ADR-0130): a directory under `src/` is a package. `objectstack.config.ts` is the single `defineStack()`; `objectstack.composition.ts` collects the four packages' barrels for it. A file may import from its own directory or from `src/sales/` — never sideways between modules.
 
 ```text
 hotcrm/
 ├── objectstack.config.ts
+├── objectstack.composition.ts
 ├── src/
-│   ├── objects/        # *.object.ts schemas and *.hook.ts lifecycle logic
-│   ├── hooks/          # barrel that hands the object hooks to the stack
-│   ├── actions/        # UI actions and executable action bodies
-│   ├── flows/          # automation flows
-│   ├── skills/         # AI skills
-│   ├── apps/, views/, pages/
-│   ├── dashboards/, reports/, datasets/
-│   ├── mappings/       # import column-to-field projections
-│   ├── profiles/, sharing/
-│   ├── translations/
-│   ├── data/           # seed data
-│   ├── docs/           # package docs, shipped inside the built artifact
-│   └── interfaces/     # shared types (an empty barrel today)
+│   ├── sales/          # the `type: app` package — account, contact, lead, opportunity, forecast, task, event
+│   ├── service/        # module — case, knowledge_article, article_feedback
+│   ├── revenue/        # module — product, opportunity_line_item, quote, quote_line_item, contract
+│   ├── marketing/      # module — campaign, campaign_member
+│   └── docs/           # package docs, shipped inside the built artifact
 ├── apps/docs/          # Fumadocs app
 └── content/docs/       # documentation content
+```
+
+Each package holds the metadata-type subdirectories it uses, and the same
+suffix protocol applies inside every one of them:
+
+```text
+src/sales/
+├── objects/            # *.object.ts schemas, and the *.hook.ts beside each one
+├── actions/            # UI actions and executable action bodies
+├── flows/              # automation flows
+├── skills/             # AI skills
+├── apps/, views/, pages/
+├── dashboards/, reports/, datasets/
+├── mappings/           # import column-to-field projections
+├── profiles/, sharing/
+├── translations/
+├── data/               # seed data
+└── interfaces/         # shared types (an empty barrel today)
 ```
 
 HotCRM authors skills, not agents: the two app-owned copilots and the directory that held them were retired, and AI capability now comes from the platform assistant every ObjectStack environment provides. See [AI Skills](/docs/customization/ai-skills).
@@ -71,7 +82,7 @@ HotCRM authors skills, not agents: the two app-owned copilots and the directory 
 
 ### Add or change an object
 
-Edit or add a file under `src/objects/`, then export it from `src/objects/index.ts`.
+Edit or add a file under `src/*/objects/`, then export it from `src/*/objects/index.ts`.
 
 ```ts
 import { ObjectSchema, Field } from '@objectstack/spec/data';
@@ -88,11 +99,11 @@ export const Warranty = ObjectSchema.create({
 
 ### Add an AI skill
 
-Create `src/skills/<name>.skill.ts` and export it from `src/skills/index.ts`. Exporting it from that barrel is the whole wiring step — the skill attaches to the platform assistant (`ask`), and this app defines no agent of its own.
+Create `src/*/skills/<name>.skill.ts` and export it from `src/*/skills/index.ts`. Exporting it from that barrel is the whole wiring step — the skill attaches to the platform assistant (`ask`), and this app defines no agent of its own.
 
 ### Add UI metadata
 
-Use `src/views/` for list and kanban views, `src/pages/` for record pages, and `src/actions/` for buttons and modal actions.
+Use `src/*/views/` for list and kanban views, `src/*/pages/` for record pages, and `src/*/actions/` for buttons and modal actions.
 
 ## Verify changes
 

@@ -4,6 +4,9 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
 import stack from '../objectstack.config';
 import { nodesUnder, flowNodesDeep } from './helpers/flow-regions';
+import { join } from 'node:path';
+import { REPO_ROOT } from './helpers/repo-root';
+import { metadataFiles } from './helpers/src-roster';
 
 /**
  * Action & flow contract guards — the CI net for the class of defect that
@@ -112,7 +115,7 @@ describe('lead_conversion flow contracts', () => {
     // creates. When the two objects declared their own picklists, half the
     // Lead industries (`media`, `logistics`, …) were illegal enum values on
     // crm_account and conversion died in create_account (#490/#531). The
-    // vocabularies are unified in src/objects/_picklists.ts; this pins the
+    // vocabularies are unified in src/sales/objects/_picklists.ts; this pins the
     // superset relation itself so drift in either object re-fails CI.
     const leadFields = objects.find((o) => o.name === 'crm_lead')?.fields ?? {};
     const bad: string[] = [];
@@ -264,7 +267,7 @@ describe('demo data is demo-ready', () => {
     expect(loops.length).toBeGreaterThanOrEqual(5);
     for (const loop of loops) {
       // Regions included: the body is one `try_catch` guard since
-      // `src/flows/_guarded-iteration.ts`, and the stamp is inside its `try`.
+      // `src/sales/flows/_guarded-iteration.ts`, and the stamp is inside its `try`.
       const body = nodesUnder(loop);
       const update = body.find((n: AnyRec) => n.type === 'update_record');
       expect(update, `loop ${loop.id} has no update_record`).toBeTruthy();
@@ -399,7 +402,7 @@ describe('case escalation trigger does not fight the close action', () => {
  * knowable at run time. So the app owns the invariant, and this is it.
  *
  * Enumerated from the COMPILED STACK, not from a hand-maintained import list:
- * a new record-change flow registered in `src/flows/index.ts` is covered the
+ * a new record-change flow registered in a package's `flows/index.ts` is covered the
  * moment it is registered, which is the only way this guard cannot go stale.
  */
 describe('record-change flows declare their execution identity (#684)', () => {
@@ -446,9 +449,10 @@ describe('record-change flows declare their execution identity (#684)', () => {
     // by copy-paste: it applies to the USER-driven runs too, which today
     // execute scoped to the triggering user.
     const missing: string[] = [];
-    for (const file of readdirSync(new URL('../src/flows/', import.meta.url))) {
+    for (const rel of metadataFiles('flows', '.ts')) {
+      const file = rel.split('/').pop()!;
       if (!file.endsWith('.flow.ts')) continue;
-      const lines = readFileSync(new URL(`../src/flows/${file}`, import.meta.url), 'utf8').split('\n');
+      const lines = readFileSync(join(REPO_ROOT, rel), 'utf8').split('\n');
       if (!lines.some((l) => /^\s*type:\s*'record_change'\s*,?\s*$/.test(l))) continue;
       // The DECLARATION line, not a mention of `runAs: 'system'` in prose —
       // these rationales cite each other and every scheduled precedent, so a

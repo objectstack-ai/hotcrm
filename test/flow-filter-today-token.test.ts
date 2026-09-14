@@ -5,8 +5,8 @@ import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-automation';
 import type * as Automation from '@objectstack/spec/automation';
-import * as allFlows from '../src/flows';
-import { ContractExpirationFlow } from '../src/flows/contract-expiration.flow';
+import { allFlows } from '../objectstack.composition';
+import { ContractExpirationFlow } from '../src/revenue/flows/contract-expiration.flow';
 import { flowNodesDeep, regionsOf } from './helpers/flow-regions';
 
 type Flow = Automation.Flow;
@@ -95,7 +95,7 @@ const filterTokens = (value: unknown, path: string[] = []): { path: string; temp
 /**
  * Walk a flow's nodes, including every control-flow region, collecting filter
  * tokens. `regionsOf` rather than a bare `config.body` read: a loop body is one
- * `try_catch` guard since `src/flows/_guarded-iteration.ts`, and the reads this
+ * `try_catch` guard since `src/sales/flows/_guarded-iteration.ts`, and the reads this
  * censuses sit inside its `try` region.
  */
 const censusOf = (flowName: string, nodes: AnyRec[]): TokenSite[] =>
@@ -107,11 +107,12 @@ const censusOf = (flowName: string, nodes: AnyRec[]): TokenSite[] =>
     return [...here, ...nested];
   });
 
-// `src/flows/index.ts` exports every flow twice — once by name and once inside
-// the `allFlows` array `defineStack()` consumes. The ARRAY is the registered
-// set, so it is the one censused; taking `Object.values()` of the module would
-// count each flow twice and quietly weaken the per-site assertions below.
-const flows: Flow[] = ((allFlows as AnyRec).allFlows ?? []) as Flow[];
+// Each package's `flows/index.ts` exports its flows by name;
+// `objectstack.composition.ts` assembles them into the `allFlows` array
+// `defineStack()` consumes. The ARRAY is the registered set, so it is the one
+// censused — taking `Object.values()` of a barrel module would count each flow
+// once per package and quietly weaken the per-site assertions below.
+const flows: Flow[] = allFlows as unknown as Flow[];
 
 const CENSUS: TokenSite[] = flows.flatMap((f) => censusOf(f.name, (f as AnyRec).nodes ?? []));
 

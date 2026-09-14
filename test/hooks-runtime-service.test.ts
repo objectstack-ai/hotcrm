@@ -1,13 +1,17 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import campaignHooks, { CAMPAIGN_METRIC_WRITE_KEYS } from '../src/objects/campaign.hook';
-import caseHooks from '../src/objects/case.hook';
-import contractHooks from '../src/objects/contract.hook';
-import forecastHooks from '../src/objects/forecast.hook';
-import knowledgeHooks from '../src/objects/knowledge_article.hook';
-import leadHooks from '../src/objects/lead.hook';
-import taskHooks from '../src/objects/task.hook';
+import campaignHooks, { CAMPAIGN_METRIC_WRITE_KEYS } from '../src/marketing/objects/campaign.hook';
+import caseHooks from '../src/service/objects/case.hook';
+import contractHooks from '../src/revenue/objects/contract.hook';
+import forecastHooks from '../src/sales/objects/forecast.hook';
+import knowledgeHooks from '../src/service/objects/knowledge_article.hook';
+import leadHooks from '../src/sales/objects/lead.hook';
+import taskHooks from '../src/sales/objects/task.hook';
+// Attached to `crm_opportunity` and `crm_lead`, so they sit beside those
+// objects in the sales package since the ADR-0130 layout.
+import opportunityCampaignMetricsHooks from '../src/sales/objects/opportunity.campaign-metrics.hook';
+import leadCampaignMetricsHooks from '../src/sales/objects/lead.campaign-metrics.hook';
 import {
   makeHarness, makeDeniedApi, makeCtx, hookNamed, today, daysFromNow, type Rec,
 } from './helpers/hook-harness';
@@ -470,7 +474,7 @@ describe('campaign_metrics_refresh', () => {
 });
 
 describe('campaign_attribution_refresh', () => {
-  const hook = hookNamed(campaignHooks, 'campaign_attribution_refresh');
+  const hook = hookNamed(opportunityCampaignMetricsHooks, 'campaign_attribution_refresh');
 
   /**
    * `num_opportunities` / `num_won_opportunities` / `actual_revenue` derive from
@@ -519,7 +523,7 @@ describe('campaign_attribution_refresh', () => {
 });
 
 describe('campaign_lead_conversion_refresh', () => {
-  const hook = hookNamed(campaignHooks, 'campaign_lead_conversion_refresh');
+  const hook = hookNamed(leadCampaignMetricsHooks, 'campaign_lead_conversion_refresh');
 
   const convert = (h: ReturnType<typeof makeHarness>) =>
     hook.handler(makeCtx({
@@ -785,7 +789,7 @@ describe('knowledge_article_publish_timestamps', () => {
     // stores exactly what it supplied (the read-only strip runs on the update
     // path only, and hooks run ahead of it regardless). So an import or
     // migration publishing records with their historical dates — the shape the
-    // `src/data/service.seed.ts` records use — reaches this handler with
+    // `src/service/data/service.seed.ts` records use — reaches this handler with
     // `published_at` on `input` and no `previous`. Stamping over it rewrites
     // imported history exactly as the archived case rewrites a re-shelved
     // article's.

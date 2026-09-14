@@ -2,7 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { makeFlowHarness, type FlowHarness, type Rec } from './helpers/flow-harness';
-import { LeadConversionFlow } from '../src/flows/lead-conversion.flow';
+import { LeadConversionFlow } from '../src/sales/flows/lead-conversion.flow';
 
 /**
  * Flow runtime harness — executes the REAL lead_conversion flow through the

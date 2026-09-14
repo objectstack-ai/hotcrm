@@ -85,15 +85,15 @@ fact, so it is held to one.
 
 | Area | Source |
 | --- | --- |
-| Objects | `src/objects/*.object.ts` |
-| Object hooks | `src/objects/*.hook.ts`, collected by `src/hooks/index.ts` |
-| Actions | `src/actions/*.actions.ts` |
-| Flows | `src/flows/*.flow.ts` |
-| Skills | `src/skills/*.skill.ts` (skills-only AI surface since #512 — the agent directory is gone) |
-| Views and pages | `src/views/`, `src/pages/` |
-| Dashboards and reports | `src/dashboards/`, `src/reports/` |
-| Security | `src/profiles/`, `src/sharing/` |
-| i18n | `src/translations/` |
+| Objects | `src/*/objects/*.object.ts` |
+| Object hooks | `src/*/objects/*.hook.ts`, collected by each package's `objects/hooks.ts` |
+| Actions | `src/*/actions/*.actions.ts` |
+| Flows | `src/*/flows/*.flow.ts` |
+| Skills | `src/*/skills/*.skill.ts` (skills-only AI surface since #512 — the agent directory is gone) |
+| Views and pages | `src/*/views/`, `src/*/pages/` |
+| Dashboards and reports | `src/*/dashboards/`, `src/*/reports/` |
+| Security | `src/sales/profiles/`, `src/*/sharing/` |
+| i18n | `src/sales/translations/` |
 
 ## Notes
 

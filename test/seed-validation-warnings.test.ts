@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { evaluateValidationRules } from '@objectstack/objectql';
 import stack from '../objectstack.config';
-import { CrmSeedData } from '../src/data/index';
+import { CrmSeedData } from '../objectstack.composition';
 import { REPO_ROOT } from './helpers/repo-root';
 
 /**
@@ -23,7 +23,7 @@ import { REPO_ROOT } from './helpers/repo-root';
  * exactly ONE seeded row, `crm_task` / 'Update CRM pipeline report', which is
  * unparented **on purpose**: it is the internal-housekeeping task, it models a
  * to-do that hangs off no customer record, and the comment beside it in
- * `src/data/service.seed.ts` has said so since it was written. The rule is
+ * `src/service/data/service.seed.ts` has said so since it was written. The rule is
  * declared `severity: 'warning'` on both `crm_task` and `crm_event` precisely
  * so a row like that is allowed to exist and still be remarked on.
  *
@@ -176,7 +176,7 @@ function sweep(): Sweep {
 const EXPECTED_WARNING_ROWS = [
   // Internal housekeeping task, deliberately unparented — the rule is a
   // warning, not an error, exactly so this row can exist. See
-  // `src/data/service.seed.ts`.
+  // `src/service/data/service.seed.ts`.
   'crm_task.related_to_required :: Update CRM pipeline report',
 ];
 
@@ -208,7 +208,10 @@ describe('seed rows that trip a warning-severity validation', () => {
     // Pins the ROW to its REASON: parenting the row, or deleting the comment
     // that explains why it is unparented, both fail here. Without this the
     // pin above would happily outlive the rationale it depends on.
-    const src = readFileSync(join(REPO_ROOT, 'src/data/service.seed.ts'), 'utf8');
+    // `crm_task` is a sales object, so the task rows moved to the sales
+    // package's activity seeds under the ADR-0130 layout; the row and its
+    // rationale travelled together.
+    const src = readFileSync(join(REPO_ROOT, 'src/sales/data/activity.seed.ts'), 'utf8');
     const idx = src.indexOf("subject: 'Update CRM pipeline report'");
     expect(idx, 'the pinned deliberate row is gone from the seeds').toBeGreaterThan(-1);
     const preamble = src.slice(Math.max(0, idx - 400), idx);

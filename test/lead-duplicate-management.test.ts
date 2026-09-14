@@ -6,13 +6,13 @@ import { join } from 'node:path';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import stack from '../objectstack.config';
-import { CrmTranslations } from '../src/translations';
-import leadHooks from '../src/objects/lead.hook';
+import { CrmTranslations } from '../src/sales/translations';
+import leadHooks from '../src/sales/objects/lead.hook';
 import {
   DUPLICATE_OF_TYPE_AUTHORABLE_OPTIONS,
   DUPLICATE_OF_TYPE_ERASED,
   DUPLICATE_OF_TYPE_OPTIONS,
-} from '../src/objects/_picklists';
+} from '../src/sales/objects/_picklists';
 import { REPO_ROOT } from './helpers/repo-root';
 
 /**
@@ -324,7 +324,7 @@ describe('the duplicate link is declarative metadata', () => {
     // The lesson of `cannot_edit_converted` (#575 B1) and `revenue_positive`
     // (#571): two implementations of one rule, one of them dead and free to
     // drift. The hook may WRITE a suspicion; it may not adjudicate one.
-    const hookSource = readFileSync(join(REPO_ROOT, 'src/objects/lead.hook.ts'), 'utf8')
+    const hookSource = readFileSync(join(REPO_ROOT, 'src/sales/objects/lead.hook.ts'), 'utf8')
       .split('\n')
       .map((line) => (/^\s*(\/\/|\*|\/\*)/.test(line) ? '' : line))
       .join('\n');
@@ -512,12 +512,12 @@ describe('the erased tombstone is unauthorable, and has exactly one writer', () 
     // silent route this pin exists to refuse.
     expect(hits, `expected 2 occurrences, got:\n${hits.join('\n')}`).toHaveLength(2);
     expect(hits.map((h) => h.split(':')[0]).sort()).toEqual([
-      'src/objects/_picklists.ts',
-      'src/objects/lead.hook.ts',
+      'src/sales/objects/_picklists.ts',
+      'src/sales/objects/lead.hook.ts',
     ]);
     // The hook's one occurrence STAMPS the value; it is not a comparison that
     // happens to mention it.
-    const stamp = hits.find((h) => h.startsWith('src/objects/lead.hook.ts'))!;
+    const stamp = hits.find((h) => h.startsWith('src/sales/objects/lead.hook.ts'))!;
     expect(stamp).toContain(`duplicate_of_type = '${DUPLICATE_OF_TYPE_ERASED}'`);
   });
 
@@ -527,7 +527,7 @@ describe('the erased tombstone is unauthorable, and has exactly one writer', () 
     // at authoring time and arrives as `undefined` (see the SLA matrix note in
     // `case.hook.ts`). Two spellings is the platform's constraint, not a
     // shortcut — so they are pinned together instead.
-    const hookSource = readFileSync(join(REPO_ROOT, 'src/objects/lead.hook.ts'), 'utf8');
+    const hookSource = readFileSync(join(REPO_ROOT, 'src/sales/objects/lead.hook.ts'), 'utf8');
     expect(hookSource).toContain(`input.duplicate_of_type = '${DUPLICATE_OF_TYPE_ERASED}';`);
     expect(DUPLICATE_OF_TYPE_OPTIONS.map((o) => o.value)).toContain(DUPLICATE_OF_TYPE_ERASED);
   });

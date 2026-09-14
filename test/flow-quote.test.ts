@@ -2,7 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { makeFlowHarness, type FlowHarness, type Rec } from './helpers/flow-harness';
-import { QuoteGenerationFlow } from '../src/flows/quote-generation.flow';
+import { QuoteGenerationFlow } from '../src/revenue/flows/quote-generation.flow';
 
 /**
  * quote_generation flow runtime harness — runs the REAL automation engine
