@@ -6,8 +6,8 @@ import { DefaultDatasourcePlugin, AppPlugin } from '@objectstack/runtime';
 import { ObjectQLPlugin } from '@objectstack/objectql';
 import { MetadataPlugin } from '@objectstack/metadata';
 import stack from '../objectstack.config';
-import { OpportunityLineItem } from '../src/objects/opportunity_line_item.object';
-import { QuoteLineItem } from '../src/objects/quote_line_item.object';
+import { OpportunityLineItem } from '../src/revenue/objects/opportunity_line_item.object';
+import { QuoteLineItem } from '../src/revenue/objects/quote_line_item.object';
 
 /**
  * What a typo costs — measured, per driver (#1200).

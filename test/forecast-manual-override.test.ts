@@ -2,9 +2,9 @@
 
 import { describe, it, expect } from 'vitest';
 import { declaredRow, makeFlowHarness, type Rec } from './helpers/flow-harness';
-import { ForecastSnapshotFlow } from '../src/flows/forecast-snapshot.flow';
+import { ForecastSnapshotFlow } from '../src/sales/flows/forecast-snapshot.flow';
 import { nodesUnder, edgesUnder } from './helpers/flow-regions';
-import forecastDerive from '../src/objects/forecast.hook';
+import forecastDerive from '../src/sales/objects/forecast.hook';
 
 /**
  * ═══ A manual forecast SUPPRESSES the nightly sweep for that period ════════

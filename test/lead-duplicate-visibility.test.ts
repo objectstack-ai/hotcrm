@@ -3,7 +3,7 @@
 import { describe, it, expect } from 'vitest';
 import { AutomationEngine } from '@objectstack/service-automation';
 import { ExpressionEngine } from '@objectstack/formula';
-import { LeadConversionFlow } from '../src/flows/lead-conversion.flow';
+import { LeadConversionFlow } from '../src/sales/flows/lead-conversion.flow';
 import { makeFlowHarness, type FlowHarness, type Rec } from './helpers/flow-harness';
 import { type AnyRec, localePacks, objects, pages } from './helpers/metadata-fixtures';
 import stack from '../objectstack.config';

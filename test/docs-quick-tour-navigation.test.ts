@@ -4,13 +4,13 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
-import { CrmApp } from '../src/apps/crm.app';
-import { ExecutiveDashboard } from '../src/dashboards/executive.dashboard';
-import { CrmOverviewDashboard } from '../src/dashboards/crm.dashboard';
-import { ServiceDashboard } from '../src/dashboards/service.dashboard';
-import { ActivityDashboard } from '../src/dashboards/activity.dashboard';
-import { SalesManagerProfile } from '../src/profiles/sales-manager.profile';
-import { CrmPositions } from '../src/sharing/positions';
+import { CrmApp } from '../src/sales/apps/crm.app';
+import { ExecutiveDashboard } from '../src/sales/dashboards/executive.dashboard';
+import { CrmOverviewDashboard } from '../src/sales/dashboards/crm.dashboard';
+import { ServiceDashboard } from '../src/service/dashboards/service.dashboard';
+import { ActivityDashboard } from '../src/sales/dashboards/activity.dashboard';
+import { SalesManagerProfile } from '../src/sales/profiles/sales-manager.profile';
+import { CrmPositions } from '../src/sales/sharing/positions';
 
 /**
  * The quick-tour page's left-nav table, pinned to `src/apps/crm.app.ts` (#960).

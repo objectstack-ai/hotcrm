@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { evaluateValidationRules } from '@objectstack/objectql';
 import stack from '../objectstack.config';
-import { CrmSeedData } from '../src/data/index';
+import { CrmSeedData } from '../objectstack.composition';
 import { REPO_ROOT } from './helpers/repo-root';
 
 /**

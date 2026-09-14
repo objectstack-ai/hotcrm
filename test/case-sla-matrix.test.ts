@@ -1,10 +1,10 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import caseHooks from '../src/objects/case.hook';
+import caseHooks from '../src/service/objects/case.hook';
 import {
   CASE_SLA_HOURS, CASE_SLA_DEFAULT_TIER, CASE_SLA_PRIORITIES, CASE_SLA_TIERS, caseSlaHours,
-} from '../src/objects/_case-sla';
+} from '../src/service/objects/_case-sla';
 import { makeHarness, makeDeniedApi, makeCtx, hookNamed, type Rec } from './helpers/hook-harness';
 
 /**

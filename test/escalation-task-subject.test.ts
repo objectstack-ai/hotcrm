@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
-import caseHooks from '../src/objects/case.hook';
+import caseHooks from '../src/service/objects/case.hook';
 import { objects } from './helpers/metadata-fixtures';
 import { makeSandboxEngine, runHookBody, type Rec } from './helpers/action-sandbox';
 

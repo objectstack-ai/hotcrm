@@ -2,8 +2,8 @@
 
 import { describe, it, expect } from 'vitest';
 import { P } from '@objectstack/spec';
-import { OpportunityStagnationFlow } from '../src/flows/opportunity-stagnation.flow';
-import { allFlows } from '../src/flows/index';
+import { OpportunityStagnationFlow } from '../src/sales/flows/opportunity-stagnation.flow';
+import { allFlows } from '../objectstack.composition';
 import { makeFlowHarness } from './helpers/flow-harness';
 import { flowGraphDeep } from './helpers/flow-regions';
 

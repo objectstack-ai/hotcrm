@@ -5,8 +5,8 @@ import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-automation';
 import type * as Automation from '@objectstack/spec/automation';
-import * as allFlows from '../src/flows';
-import { ContractExpirationFlow } from '../src/flows/contract-expiration.flow';
+import { CrmFlows as allFlows } from './helpers/src-roster';
+import { ContractExpirationFlow } from '../src/revenue/flows/contract-expiration.flow';
 import { flowNodesDeep, regionsOf } from './helpers/flow-regions';
 
 type Flow = Automation.Flow;

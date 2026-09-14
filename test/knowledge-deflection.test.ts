@@ -6,9 +6,9 @@ import { InMemoryDriver } from '@objectstack/driver-memory';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { AnalyticsService } from '@objectstack/service-analytics';
 import stack from '../objectstack.config';
-import caseHooks from '../src/objects/case.hook';
-import { CaseDataset } from '../src/datasets/case.dataset';
-import { CloseCaseFlow } from '../src/flows/case-actions.flow';
+import caseHooks from '../src/service/objects/case.hook';
+import { CaseDataset } from '../src/service/datasets/case.dataset';
+import { CloseCaseFlow } from '../src/service/flows/case-actions.flow';
 import { makeFlowHarness } from './helpers/flow-harness';
 import { makeCtx, hookNamed, type Rec } from './helpers/hook-harness';
 

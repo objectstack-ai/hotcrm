@@ -3,15 +3,15 @@
 import { describe, it, expect } from 'vitest';
 import { compileCelToFilter } from '@objectstack/formula';
 import stack from '../objectstack.config';
-import accountHook from '../src/objects/account.hook';
-import { TERRITORY_OPTIONS, territoryFor } from '../src/objects/_territory';
-import { CrmSeedData } from '../src/data/index';
-import * as sharedSeed from '../src/data/_shared';
-import * as catalogSeed from '../src/data/catalog.seed';
-import * as salesSeed from '../src/data/sales.seed';
-import * as serviceSeed from '../src/data/service.seed';
-import * as marketingSeed from '../src/data/marketing.seed';
-import * as revenueSeed from '../src/data/revenue.seed';
+import accountHook from '../src/sales/objects/account.hook';
+import { TERRITORY_OPTIONS, territoryFor } from '../src/sales/objects/_territory';
+import { CrmSeedData } from '../objectstack.composition';
+import * as sharedSeed from '../src/sales/data/_shared';
+import * as catalogSeed from '../src/revenue/data/catalog.seed';
+import * as salesSeed from '../src/sales/data/sales.seed';
+import * as serviceSeed from '../src/service/data/service.seed';
+import * as marketingSeed from '../src/marketing/data/marketing.seed';
+import * as revenueSeed from '../src/revenue/data/revenue.seed';
 import { makeCtx } from './helpers/hook-harness';
 
 /**

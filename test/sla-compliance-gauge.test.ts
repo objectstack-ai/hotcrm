@@ -6,8 +6,8 @@ import { InMemoryDriver } from '@objectstack/driver-memory';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { AnalyticsService } from '@objectstack/service-analytics';
 import stack from '../objectstack.config';
-import { CrmSeedData } from '../src/data/index';
-import { CaseDataset } from '../src/datasets/case.dataset';
+import { CrmSeedData } from '../objectstack.composition';
+import { CaseDataset } from '../src/service/datasets/case.dataset';
 
 /**
  * The SLA gauge plots COMPLIANCE (#1213).

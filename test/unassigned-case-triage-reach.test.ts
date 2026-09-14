@@ -14,8 +14,8 @@ import { SharingServicePlugin } from '@objectstack/plugin-sharing';
 import { tenancyProbe } from './helpers/tenancy-probe';
 import { SysUser, SysMember, SysOrganization } from '@objectstack/platform-objects/identity';
 import stack from '../objectstack.config';
-import caseHooks from '../src/objects/case.hook';
-import { CLAIMABLE_TARGET_STATUSES } from '../src/objects/_case-assignment';
+import caseHooks from '../src/service/objects/case.hook';
+import { CLAIMABLE_TARGET_STATUSES } from '../src/service/objects/_case-assignment';
 
 /**
  * Who really sees the `Unassigned — triage` tab's rows (#1096) — measured

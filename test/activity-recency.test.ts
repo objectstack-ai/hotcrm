@@ -4,8 +4,8 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import stack from '../objectstack.config';
-import eventHooks from '../src/objects/event.hook';
-import taskHooks from '../src/objects/task.hook';
+import eventHooks from '../src/sales/objects/event.hook';
+import taskHooks from '../src/sales/objects/task.hook';
 import { makeHarness, makeDeniedApi, makeCtx, hookNamed, today, type Rec } from './helpers/hook-harness';
 
 /**

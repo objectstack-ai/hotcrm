@@ -4,8 +4,8 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
-import { Contact } from '../src/objects/contact.object';
-import contactHooks from '../src/objects/contact.hook';
+import { Contact } from '../src/sales/objects/contact.object';
+import contactHooks from '../src/sales/objects/contact.hook';
 import { makeHarness, makeCtx, hookNamed, type Rec } from './helpers/hook-harness';
 
 /**

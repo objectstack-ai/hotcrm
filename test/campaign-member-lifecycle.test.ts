@@ -1,11 +1,11 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import campaignMemberHooks from '../src/objects/campaign_member.hook';
-import { CampaignMember } from '../src/objects/campaign_member.object';
-import { Campaign } from '../src/objects/campaign.object';
+import campaignMemberHooks from '../src/marketing/objects/campaign_member.hook';
+import { CampaignMember } from '../src/marketing/objects/campaign_member.object';
+import { Campaign } from '../src/marketing/objects/campaign.object';
 import stack from '../objectstack.config';
-import campaignHooks, { CAMPAIGN_METRIC_FIELDS } from '../src/objects/campaign.hook';
+import campaignHooks, { CAMPAIGN_METRIC_FIELDS } from '../src/marketing/objects/campaign.hook';
 import { extractSandboxBody } from './helpers/action-sandbox';
 import { localePacks } from './helpers/metadata-fixtures';
 import { makeHarness, makeCtx, hookNamed, type Rec } from './helpers/hook-harness';

@@ -5,7 +5,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import stack from '../objectstack.config';
 import { REPO_ROOT } from './helpers/repo-root';
-import { HIGH_VALUE_DEAL_AMOUNT, LARGE_DEAL_AMOUNT } from '../src/objects/_thresholds';
+import { HIGH_VALUE_DEAL_AMOUNT, LARGE_DEAL_AMOUNT } from '../src/sales/objects/_thresholds';
 
 /**
  * ═══ HOUSE RULE: there is exactly ONE definition of a "large deal" ═════════

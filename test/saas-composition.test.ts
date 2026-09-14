@@ -6,16 +6,12 @@ import { applySystemFields } from '@objectstack/objectql';
 import { ObjectQL } from '@objectstack/objectql';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import defaultStack from '../objectstack.config';
-import {
-  CrmSeedData,
-  SaasTenantSeedData,
-  COMPOSITION_ENV_VAR,
-  resolveComposition,
-} from '../src/data/index';
-import { DemoBootstrapFlow } from '../src/flows/demo-bootstrap.flow';
-import { SystemAdminProfile } from '../src/profiles/system-admin.profile';
-import { TenantAdminProfile } from '../src/profiles/tenant-admin.profile';
-import { DemoOrgStaffing } from '../src/sharing/demo-staffing';
+import { CrmSeedData, SaasTenantSeedData } from '../objectstack.composition';
+import { COMPOSITION_ENV_VAR, resolveComposition } from '../src/sales/data/index';
+import { DemoBootstrapFlow } from '../src/sales/flows/demo-bootstrap.flow';
+import { SystemAdminProfile } from '../src/sales/profiles/system-admin.profile';
+import { TenantAdminProfile } from '../src/sales/profiles/tenant-admin.profile';
+import { DemoOrgStaffing } from '../src/sales/sharing/demo-staffing';
 
 /**
  * The SaaS / multi-org composition (#1361).
@@ -53,7 +49,7 @@ async function loadStack(value: string): Promise<AnyRec> {
   process.env[COMPOSITION_ENV_VAR] = value;
   vi.resetModules();
   try {
-    return ((await import('../objectstack.config')) as AnyRec).default as AnyRec;
+    return ((await import('../objectstack.composition')) as AnyRec).default as AnyRec;
   } finally {
     if (previous === undefined) delete process.env[COMPOSITION_ENV_VAR];
     else process.env[COMPOSITION_ENV_VAR] = previous;

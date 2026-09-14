@@ -2,7 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import stack from '../objectstack.config';
-import { CrmSeedData } from '../src/data/index';
+import { CrmSeedData } from '../objectstack.composition';
 
 /**
  * `crm_lead.disqualification_reason` — promise vs enforcement (#575 A2).

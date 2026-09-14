@@ -1,13 +1,13 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import campaignHooks, { CAMPAIGN_METRIC_WRITE_KEYS } from '../src/objects/campaign.hook';
-import caseHooks from '../src/objects/case.hook';
-import contractHooks from '../src/objects/contract.hook';
-import forecastHooks from '../src/objects/forecast.hook';
-import knowledgeHooks from '../src/objects/knowledge_article.hook';
-import leadHooks from '../src/objects/lead.hook';
-import taskHooks from '../src/objects/task.hook';
+import campaignHooks, { CAMPAIGN_METRIC_WRITE_KEYS } from '../src/marketing/objects/campaign.hook';
+import caseHooks from '../src/service/objects/case.hook';
+import contractHooks from '../src/revenue/objects/contract.hook';
+import forecastHooks from '../src/sales/objects/forecast.hook';
+import knowledgeHooks from '../src/service/objects/knowledge_article.hook';
+import leadHooks from '../src/sales/objects/lead.hook';
+import taskHooks from '../src/sales/objects/task.hook';
 import {
   makeHarness, makeDeniedApi, makeCtx, hookNamed, today, daysFromNow, type Rec,
 } from './helpers/hook-harness';

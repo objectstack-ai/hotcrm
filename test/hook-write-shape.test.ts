@@ -5,7 +5,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
-import { allHooks } from '../src/hooks';
+import { allHooks } from '../objectstack.composition';
 import { makeHarness } from './helpers/hook-harness';
 import { makeSandboxEngine, runHookBody, type Rec } from './helpers/action-sandbox';
 

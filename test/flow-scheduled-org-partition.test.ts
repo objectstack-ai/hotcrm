@@ -2,13 +2,13 @@
 
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { FLOW_REGION_SLOTS_BY_TYPE } from '@objectstack/spec/automation';
-import * as allFlows from '../src/flows';
-import { ContractRenewalFlow } from '../src/flows/contract-renewal.flow';
-import { OpportunityStagnationFlow } from '../src/flows/opportunity-stagnation.flow';
-import { ForecastSnapshotFlow } from '../src/flows/forecast-snapshot.flow';
-import forecastDerive from '../src/objects/forecast.hook';
+import { CrmFlows as allFlows } from './helpers/src-roster';
+import { ContractRenewalFlow } from '../src/revenue/flows/contract-renewal.flow';
+import { OpportunityStagnationFlow } from '../src/sales/flows/opportunity-stagnation.flow';
+import { ForecastSnapshotFlow } from '../src/sales/flows/forecast-snapshot.flow';
+import forecastDerive from '../src/sales/objects/forecast.hook';
 import { makeFlowHarness, type Rec } from './helpers/flow-harness';
-import { COMPOSITION_ENV_VAR } from '../src/data/index';
+import { COMPOSITION_ENV_VAR } from '../src/sales/data/index';
 
 /**
  * Scheduled sweeps must declare `organization_id` on every `create_record` (#700).

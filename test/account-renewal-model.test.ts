@@ -1,10 +1,10 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import { Account } from '../src/objects/account.object';
-import { AccountViews } from '../src/views/account.view';
-import { ContractRenewalFlow } from '../src/flows/contract-renewal.flow';
-import { accounts } from '../src/data/sales.seed';
+import { Account } from '../src/sales/objects/account.object';
+import { AccountViews } from '../src/sales/views/account.view';
+import { ContractRenewalFlow } from '../src/revenue/flows/contract-renewal.flow';
+import { accounts } from '../src/sales/data/sales.seed';
 import { localePacks, type AnyRec } from './helpers/metadata-fixtures';
 import { flowNodesDeep } from './helpers/flow-regions';
 

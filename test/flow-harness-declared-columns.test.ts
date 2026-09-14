@@ -6,9 +6,9 @@ import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import stack from '../objectstack.config';
 import { declaredRow, makeDataEngine, makeFlowHarness, type Rec } from './helpers/flow-harness';
-import { ForecastSnapshotFlow } from '../src/flows/forecast-snapshot.flow';
-import { QuoteGenerationFlow } from '../src/flows/quote-generation.flow';
-import forecastDerive from '../src/objects/forecast.hook';
+import { ForecastSnapshotFlow } from '../src/sales/flows/forecast-snapshot.flow';
+import { QuoteGenerationFlow } from '../src/revenue/flows/quote-generation.flow';
+import forecastDerive from '../src/sales/objects/forecast.hook';
 
 type AnyRec = Record<string, any>;
 

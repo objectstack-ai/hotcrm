@@ -2,16 +2,16 @@
 
 import { describe, it, expect } from 'vitest';
 import { ErrorCode } from '@objectstack/spec/api';
-import { allHooks } from '../src/hooks';
-import { REFUSAL_CODES, REFUSE_HELPER } from '../src/objects/_refusal';
+import { allHooks } from '../objectstack.composition';
+import { REFUSAL_CODES, REFUSE_HELPER } from '../src/sales/objects/_refusal';
 import { hookNamed, makeCtx, makeHarness } from './helpers/hook-harness';
 import { extractSandboxBody, makeSandboxEngine, runHookBody } from './helpers/action-sandbox';
-import accountHooks from '../src/objects/account.hook';
-import contactHooks from '../src/objects/contact.hook';
-import opportunityHooks from '../src/objects/opportunity.hook';
-import productHooks from '../src/objects/product.hook';
-import taskHooks from '../src/objects/task.hook';
-import eventHooks from '../src/objects/event.hook';
+import accountHooks from '../src/sales/objects/account.hook';
+import contactHooks from '../src/sales/objects/contact.hook';
+import opportunityHooks from '../src/sales/objects/opportunity.hook';
+import productHooks from '../src/revenue/objects/product.hook';
+import taskHooks from '../src/sales/objects/task.hook';
+import eventHooks from '../src/sales/objects/event.hook';
 
 /**
  * The refusal envelope, pinned where it actually ships (#1075 + #1167).

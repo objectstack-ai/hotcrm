@@ -4,10 +4,10 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
-import oppLineItemHooks from '../src/objects/opportunity_line_item.hook';
-import quoteLineItemHooks from '../src/objects/quote_line_item.hook';
-import { OpportunityLineItem } from '../src/objects/opportunity_line_item.object';
-import { QuoteLineItem } from '../src/objects/quote_line_item.object';
+import oppLineItemHooks from '../src/revenue/objects/opportunity_line_item.hook';
+import quoteLineItemHooks from '../src/revenue/objects/quote_line_item.hook';
+import { OpportunityLineItem } from '../src/revenue/objects/opportunity_line_item.object';
+import { QuoteLineItem } from '../src/revenue/objects/quote_line_item.object';
 import { hookNamed, makeCtx, makeHarness, type Rec } from './helpers/hook-harness';
 import { REPO_ROOT } from './helpers/repo-root';
 

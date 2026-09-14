@@ -6,13 +6,13 @@ import { join } from 'node:path';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import stack from '../objectstack.config';
-import { CrmTranslations } from '../src/translations';
-import leadHooks from '../src/objects/lead.hook';
+import { CrmTranslations } from '../src/sales/translations';
+import leadHooks from '../src/sales/objects/lead.hook';
 import {
   DUPLICATE_OF_TYPE_AUTHORABLE_OPTIONS,
   DUPLICATE_OF_TYPE_ERASED,
   DUPLICATE_OF_TYPE_OPTIONS,
-} from '../src/objects/_picklists';
+} from '../src/sales/objects/_picklists';
 import { REPO_ROOT } from './helpers/repo-root';
 
 /**

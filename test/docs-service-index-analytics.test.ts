@@ -4,14 +4,14 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
-import { CrmApp } from '../src/apps/crm.app';
-import { ServiceDashboard } from '../src/dashboards/service.dashboard';
-import { CaseDataset } from '../src/datasets/case.dataset';
+import { CrmApp } from '../src/sales/apps/crm.app';
+import { ServiceDashboard } from '../src/service/dashboards/service.dashboard';
+import { CaseDataset } from '../src/service/datasets/case.dataset';
 import {
   CasesByStatusPriorityReport,
   CasesOpenedByDayPriorityReport,
   SlaPerformanceReport,
-} from '../src/reports/case.report';
+} from '../src/service/reports/case.report';
 
 /**
  * The service index page's "Standard dashboards & reports" section, pinned to

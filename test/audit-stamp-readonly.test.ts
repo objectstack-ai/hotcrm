@@ -6,12 +6,12 @@ import { InMemoryDriver } from '@objectstack/driver-memory';
 import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-automation';
 import type * as Automation from '@objectstack/spec/automation';
 import stack from '../objectstack.config';
-import { OpportunityApprovalFlow, OpportunityApprovalOnCreateFlow } from '../src/flows/opportunity-approval.flow';
-import { CampaignEnrollmentFlow } from '../src/flows/campaign-enrollment.flow';
+import { OpportunityApprovalFlow, OpportunityApprovalOnCreateFlow } from '../src/sales/flows/opportunity-approval.flow';
+import { CampaignEnrollmentFlow } from '../src/marketing/flows/campaign-enrollment.flow';
 import {
   CampaignLeadMemberEnrollFlow,
   CampaignContactMemberEnrollFlow,
-} from '../src/flows/campaign-member-enroll.flow';
+} from '../src/marketing/flows/campaign-member-enroll.flow';
 import { silentLogger } from './helpers/flow-harness';
 
 /**

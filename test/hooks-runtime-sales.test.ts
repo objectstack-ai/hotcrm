@@ -1,12 +1,12 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import accountHooks from '../src/objects/account.hook';
-import contactHooks from '../src/objects/contact.hook';
-import opportunityHooks from '../src/objects/opportunity.hook';
-import productHooks from '../src/objects/product.hook';
-import quoteHooks from '../src/objects/quote.hook';
-import quoteLineItemHooks from '../src/objects/quote_line_item.hook';
+import accountHooks from '../src/sales/objects/account.hook';
+import contactHooks from '../src/sales/objects/contact.hook';
+import opportunityHooks from '../src/sales/objects/opportunity.hook';
+import productHooks from '../src/revenue/objects/product.hook';
+import quoteHooks from '../src/revenue/objects/quote.hook';
+import quoteLineItemHooks from '../src/revenue/objects/quote_line_item.hook';
 import {
   makeHarness, makeCtx, hookNamed, today, daysFromNow, type Rec,
 } from './helpers/hook-harness';
