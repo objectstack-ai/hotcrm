@@ -1,25 +1,25 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect, beforeAll, vi } from 'vitest';
-import { CrmSeedData } from '../src/data/index';
-import caseHooks from '../src/objects/case.hook';
+import { CrmSeedData } from '../objectstack.composition';
+import caseHooks from '../src/service/objects/case.hook';
 import {
   makeHarness as makeHookHarness, makeCtx as makeHookCtx, hookNamed,
 } from './helpers/hook-harness';
-import { CampaignCompletionFlow } from '../src/flows/campaign-completion.flow';
-import { CaseSlaMonitorFlow } from '../src/flows/case-sla-monitor.flow';
-import { ContractExpirationFlow } from '../src/flows/contract-expiration.flow';
-import { ContractRenewalFlow } from '../src/flows/contract-renewal.flow';
-import { DemoBootstrapFlow } from '../src/flows/demo-bootstrap.flow';
-import { ForecastSnapshotFlow } from '../src/flows/forecast-snapshot.flow';
-import * as CrmObjects from '../src/objects';
-import { MarketingUserProfile } from '../src/profiles/marketing-user.profile';
-import { ServiceAgentProfile } from '../src/profiles/service-agent.profile';
-import { OpportunityStagnationFlow } from '../src/flows/opportunity-stagnation.flow';
-import { QuoteExpirationFlow } from '../src/flows/quote-expiration.flow';
-import forecastDerive from '../src/objects/forecast.hook';
-import { TaskDueReminderFlow } from '../src/flows/task-due-reminder.flow';
-import * as allFlows from '../src/flows';
+import { CampaignCompletionFlow } from '../src/marketing/flows/campaign-completion.flow';
+import { CaseSlaMonitorFlow } from '../src/service/flows/case-sla-monitor.flow';
+import { ContractExpirationFlow } from '../src/revenue/flows/contract-expiration.flow';
+import { ContractRenewalFlow } from '../src/revenue/flows/contract-renewal.flow';
+import { DemoBootstrapFlow } from '../src/sales/flows/demo-bootstrap.flow';
+import { ForecastSnapshotFlow } from '../src/sales/flows/forecast-snapshot.flow';
+import { CrmObjects } from './helpers/src-roster';
+import { MarketingUserProfile } from '../src/sales/profiles/marketing-user.profile';
+import { ServiceAgentProfile } from '../src/sales/profiles/service-agent.profile';
+import { OpportunityStagnationFlow } from '../src/sales/flows/opportunity-stagnation.flow';
+import { QuoteExpirationFlow } from '../src/revenue/flows/quote-expiration.flow';
+import forecastDerive from '../src/sales/objects/forecast.hook';
+import { TaskDueReminderFlow } from '../src/sales/flows/task-due-reminder.flow';
+import { CrmFlows as allFlows } from './helpers/src-roster';
 import { makeFlowHarness, type Rec } from './helpers/flow-harness';
 import { regionsOf } from './helpers/flow-regions';
 

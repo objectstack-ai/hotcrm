@@ -4,8 +4,8 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
-import { allHooks } from '../src/hooks';
-import * as flows from '../src/flows';
+import { allHooks } from '../objectstack.composition';
+import { CrmFlows as flows } from './helpers/src-roster';
 
 /**
  * Runtime-coverage guard.

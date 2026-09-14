@@ -2,8 +2,8 @@
 
 import { describe, it, expect } from 'vitest';
 import stack from '../objectstack.config';
-import caseHooks from '../src/objects/case.hook';
-import taskHooks from '../src/objects/task.hook';
+import caseHooks from '../src/service/objects/case.hook';
+import taskHooks from '../src/sales/objects/task.hook';
 import { makeCtx } from './helpers/hook-harness';
 
 /**

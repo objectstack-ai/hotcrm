@@ -5,7 +5,7 @@ import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import stack from '../objectstack.config';
 import { hookNamed, makeCtx } from './helpers/hook-harness';
-import leadHooks from '../src/objects/lead.hook';
+import leadHooks from '../src/sales/objects/lead.hook';
 
 /**
  * ═══ HotCRM has ONE owner, and it is the platform's (#548) ════════════════

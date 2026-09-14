@@ -10,7 +10,7 @@
 
 ## Summary
 
-HotCRM is a single ObjectStack marketplace app at version `3.0.0`. The app manifest is defined in [`objectstack.config.ts`](../objectstack.config.ts) with id `app.objectstack.hotcrm` and namespace `crm`.
+HotCRM is a single ObjectStack marketplace app at version `3.1.0`. The app manifest is defined in [`objectstack.config.ts`](../objectstack.config.ts) with id `app.objectstack.hotcrm` and namespace `crm`.
 
 ## ObjectStack Validation
 
@@ -18,7 +18,7 @@ The summary `pnpm validate` prints — every figure read straight off the stack 
 loader registers:
 
 ```text
-HotCRM v3.0.0
+HotCRM v3.1.0
 Data: 18 Objects  331 Fields
 UI: 1 Apps  14 Views  8 Pages  5 Dashboards  10 Reports  31 Actions
 Logic: 29 Flows
@@ -85,15 +85,15 @@ fact, so it is held to one.
 
 | Area | Source |
 | --- | --- |
-| Objects | `src/objects/*.object.ts` |
-| Object hooks | `src/objects/*.hook.ts`, collected by `src/hooks/index.ts` |
-| Actions | `src/actions/*.actions.ts` |
-| Flows | `src/flows/*.flow.ts` |
-| Skills | `src/skills/*.skill.ts` (skills-only AI surface since #512 — the agent directory is gone) |
-| Views and pages | `src/views/`, `src/pages/` |
-| Dashboards and reports | `src/dashboards/`, `src/reports/` |
-| Security | `src/profiles/`, `src/sharing/` |
-| i18n | `src/translations/` |
+| Objects | `src/*/objects/*.object.ts` |
+| Object hooks | `src/*/objects/*.hook.ts`, collected by each package's `objects/hooks.ts` |
+| Actions | `src/*/actions/*.actions.ts` |
+| Flows | `src/*/flows/*.flow.ts` |
+| Skills | `src/*/skills/*.skill.ts` (skills-only AI surface since #512 — the agent directory is gone) |
+| Views and pages | `src/*/views/`, `src/*/pages/` |
+| Dashboards and reports | `src/*/dashboards/`, `src/*/reports/` |
+| Security | `src/sales/profiles/`, `src/*/sharing/` |
+| i18n | `src/sales/translations/` |
 
 ## Notes
 

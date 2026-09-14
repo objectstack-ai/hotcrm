@@ -34,7 +34,7 @@ The stack manifest defines:
 | --- | --- |
 | id | `app.objectstack.hotcrm` |
 | namespace | `crm` |
-| version | `3.0.0` |
+| version | `3.1.0` |
 | type | `app` |
 | name | `HotCRM` |
 
@@ -88,17 +88,17 @@ table.** Adding a `src/` area is not finished until it is one or the other.
 
 | Area | Files | Registered as |
 | --- | --- | --- |
-| Data model | `src/objects/*.object.ts` | `objects` |
-| Lifecycle hooks | `src/objects/*.hook.ts` via `src/hooks/index.ts` | `hooks` |
-| UI actions | `src/actions/*.actions.ts` | `actions` |
-| Automation | `src/flows/*.flow.ts` | `flows` |
-| AI skills | `src/skills/*.skill.ts` | `skills` |
-| Apps, views, pages | `src/apps/`, `src/views/`, `src/pages/` | `apps`, `views`, `pages` |
-| Analytics | `src/datasets/`, `src/dashboards/`, `src/reports/` | `datasets`, `dashboards`, `reports` |
-| Import mappings | `src/mappings/*.mapping.ts` | `mappings` |
-| Security | `src/profiles/`, `src/sharing/` | `permissions`, `sharingRules`, `positions` |
-| i18n | `src/translations/` | `translations`, `i18n` |
-| Demo data | `src/data/` | `data` |
+| Data model | `src/*/objects/*.object.ts` | `objects` |
+| Lifecycle hooks | `src/*/objects/*.hook.ts` via each package's `objects/hooks.ts` | `hooks` |
+| UI actions | `src/*/actions/*.actions.ts` | `actions` |
+| Automation | `src/*/flows/*.flow.ts` | `flows` |
+| AI skills | `src/*/skills/*.skill.ts` | `skills` |
+| Apps, views, pages | `src/sales/apps/`, `src/*/views/`, `src/*/pages/` | `apps`, `views`, `pages` |
+| Analytics | `src/*/datasets/`, `src/*/dashboards/`, `src/*/reports/` | `datasets`, `dashboards`, `reports` |
+| Import mappings | `src/sales/mappings/*.mapping.ts` | `mappings` |
+| Security | `src/sales/profiles/`, `src/*/sharing/` | `permissions`, `sharingRules`, `positions` |
+| i18n | `src/sales/translations/` | `translations`, `i18n` |
+| Demo data | `src/*/data/` | `data` |
 
 Import mappings are reusable projections referenced by name from the import endpoint
 (`mappingName: 'crm_account_import'`), so a customer's own spreadsheet loads without
@@ -110,7 +110,7 @@ anything:
 - `src/docs/` — the `crm_*.md` package documentation pages. They are prose about the app,
   not metadata the stack loads; `test/docs-drift.test.ts` pins their business-rule claims
   to the same compiled conditions the objects declare.
-- `src/interfaces/` — a barrel that currently exports nothing at all; its `index.ts` is
+- `src/sales/interfaces/` — a barrel that currently exports nothing at all; its `index.ts` is
   the licence header and no more.
 
 *Supersedes the table that omitted `mappings` while presenting itself as the map of the
@@ -135,7 +135,7 @@ export const Account = ObjectSchema.create({
 });
 ```
 
-The object roster is deliberately **not** restated here — `src/objects/*.object.ts` is
+The object roster is deliberately **not** restated here — `src/*/objects/*.object.ts` is
 its source of truth, one file per object, each registering its `crm_`-prefixed `name`.
 The model spans four business domains: Sales, Service, Marketing, and Revenue.
 *Supersedes the hand-maintained fifteen-name domain table that stood here, which had
@@ -143,7 +143,7 @@ already drifted three objects behind the tree — 2026-08-31 ruling, item 5.*
 
 ## Hooks
 
-Object lifecycle hooks live beside object definitions in `src/objects/*.hook.ts`. They are collected in `src/hooks/index.ts` and passed to `defineStack({ hooks: allHooks })`.
+Object lifecycle hooks live beside the object definitions they name, in `src/*/objects/*.hook.ts` — a hook may not attach to another package's object (ADR-0130 R4), and that co-location is what enforces it. Each package re-exports its own in `objects/hooks.ts`; `objectstack.composition.ts` assembles them into the ordered `allHooks` list `objectstack.config.ts` passes to `defineStack({ hooks: allHooks })`.
 
 Use hooks for record-level invariants and cross-object maintenance that must run with data changes, such as:
 
@@ -155,7 +155,7 @@ Use hooks for record-level invariants and cross-object maintenance that must run
 
 ## Actions
 
-Actions live in `src/actions/*.actions.ts`. They define record-header, list-item, list-toolbar, modal, and flow-triggering behaviors. Some action bodies are executable metadata and can use constrained capabilities such as `api.write`.
+Actions live in `src/*/actions/*.actions.ts`. They define record-header, list-item, list-toolbar, modal, and flow-triggering behaviors. Some action bodies are executable metadata and can use constrained capabilities such as `api.write`.
 
 Example shape:
 
@@ -172,7 +172,7 @@ export const ConvertLeadAction = {
 
 ## Flows
 
-Flows live in `src/flows/*.flow.ts` and are registered through `allFlows`. HotCRM uses record-change, scheduled, and screen-style automation for lead conversion, routing, alerts, SLA monitoring, contract renewal, quote expiration, campaign enrollment, and approval paths.
+Flows live in `src/*/flows/*.flow.ts` and are registered through `allFlows`. HotCRM uses record-change, scheduled, and screen-style automation for lead conversion, routing, alerts, SLA monitoring, contract renewal, quote expiration, campaign enrollment, and approval paths.
 
 Record-change flows rely on the `triggers` capability declared in the stack manifest.
 
@@ -197,8 +197,8 @@ the platform assistant by surface affinity.
 
 | Layer | Files | Examples |
 | --- | --- | --- |
-| Skills | `src/skills/*.skill.ts` | `live_data`, `lead_qualification`, `revenue_forecasting` |
-| Actions and flows | `src/actions/`, `src/flows/` | lead conversion, case triage, alerts |
+| Skills | `src/*/skills/*.skill.ts` | `live_data`, `lead_qualification`, `revenue_forecasting` |
+| Actions and flows | `src/*/actions/`, `src/*/flows/` | lead conversion, case triage, alerts |
 
 Skills declare no bespoke tools (ADR-0109). They compose the platform's data
 tools with the `action_<name>` tools the runtime materialises from Actions that
@@ -213,15 +213,15 @@ answering record questions, because admins can change metadata over time.
 Security is assembled from three kinds of metadata. Each entry below names where that
 metadata lives and what registers it; the counts are deliberately **not** restated here:
 
-- **Permission profiles** — `src/profiles/*.profile.ts`, registered as `permissions`.
+- **Permission profiles** — `src/sales/profiles/*.profile.ts`, registered as `permissions`.
   That directory holds every profile any composition can author; which of them a given
   build registers is decided by `compositionPermissions` in
   [`objectstack.config.ts`](../objectstack.config.ts). The default build registers
   `system_admin`; `HOTCRM_COMPOSITION=saas` registers `tenant_admin` in its place.
-- **Sharing rules** — `src/sharing/*.sharing.ts`, spread into the `sharingRules` array
+- **Sharing rules** — `src/*/sharing/*.sharing.ts`, spread into the `sharingRules` array
   in `objectstack.config.ts`. One file may declare several rules, so that glob counts
   files, not rules.
-- **Positions** — `src/sharing/positions.ts`, exported as `CrmPositions` and passed to
+- **Positions** — `src/sales/sharing/positions.ts`, exported as `CrmPositions` and passed to
   `defineStack({ positions })`.
 
 The stack registers sharing rules for accounts, opportunities, cases, campaigns, and
@@ -232,7 +232,7 @@ which this app does not model.
 
 *Supersedes the hand-copied `6` / `9` / `12` counts that stood in that list. `9 sharing
 rules` had drifted one behind the ten the stack registers, and `6 permission profiles in
-src/profiles/` counted registered profiles while pointing at a directory that holds
+src/sales/profiles/` counted registered profiles while pointing at a directory that holds
 seven files — 2026-08-31 ruling, item 5.*
 
 ## Verification

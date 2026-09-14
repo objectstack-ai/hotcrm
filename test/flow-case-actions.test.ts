@@ -1,8 +1,8 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import { ClaimCaseFlow, CloseCaseFlow, EscalateCaseFlow } from '../src/flows/case-actions.flow';
-import { CaseEscalationStampFlow } from '../src/flows/case-escalation-stamp.flow';
+import { ClaimCaseFlow, CloseCaseFlow, EscalateCaseFlow } from '../src/service/flows/case-actions.flow';
+import { CaseEscalationStampFlow } from '../src/service/flows/case-escalation-stamp.flow';
 import { makeFlowHarness, type Rec } from './helpers/flow-harness';
 
 /**

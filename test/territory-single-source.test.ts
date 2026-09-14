@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import stack from '../objectstack.config';
 import { REPO_ROOT } from './helpers/repo-root';
-import { allHooks } from '../src/hooks';
+import { allHooks } from '../objectstack.composition';
 import { hookNamed } from './helpers/hook-harness';
 import { extractSandboxBody, runHookBody } from './helpers/action-sandbox';
 import {
@@ -18,7 +18,7 @@ import {
   normalizeCountry,
   territoryFor,
   type Territory,
-} from '../src/objects/_territory';
+} from '../src/sales/objects/_territory';
 
 /**
  * Territory is authored ONCE (#639).

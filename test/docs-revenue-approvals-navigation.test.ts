@@ -5,7 +5,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { SysApprovalAction, SysApprovalRequest } from '@objectstack/plugin-approvals';
 import { REPO_ROOT } from './helpers/repo-root';
-import { CrmApp } from '../src/apps/crm.app';
+import { CrmApp } from '../src/sales/apps/crm.app';
 import { type AnyRec, packFor } from './helpers/metadata-fixtures';
 
 /**

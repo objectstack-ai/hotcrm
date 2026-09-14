@@ -6,8 +6,8 @@ import { InMemoryDriver } from '@objectstack/driver-memory';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { parseFilterAST } from '@objectstack/spec/data';
 import stack from '../objectstack.config';
-import caseHooks from '../src/objects/case.hook';
-import { CLOSED_CASE_STATUSES } from '../src/objects/_case-assignment';
+import caseHooks from '../src/service/objects/case.hook';
+import { CLOSED_CASE_STATUSES } from '../src/service/objects/_case-assignment';
 import { makeCtx } from './helpers/hook-harness';
 
 /**

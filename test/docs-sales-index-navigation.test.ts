@@ -4,9 +4,9 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
-import { CrmApp } from '../src/apps/crm.app';
-import { CrmTranslations } from '../src/translations';
-import { AccountWorkbenchPage } from '../src/pages/account_workbench.page';
+import { CrmApp } from '../src/sales/apps/crm.app';
+import { CrmTranslations } from '../src/sales/translations';
+import { AccountWorkbenchPage } from '../src/sales/pages/account_workbench.page';
 
 /**
  * The sales index page's "Where to find things" section, pinned to the Sales

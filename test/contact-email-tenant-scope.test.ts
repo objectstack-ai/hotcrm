@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import contactHooks from '../src/objects/contact.hook';
+import contactHooks from '../src/sales/objects/contact.hook';
 import { makeHarness, makeCtx, hookNamed, type Rec } from './helpers/hook-harness';
 
 /**

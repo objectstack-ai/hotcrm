@@ -18,12 +18,22 @@ This section is for developers and technical implementers extending HotCRM with 
 
 ## Current source layout
 
-HotCRM is a single ObjectStack app. Add or modify metadata under `src/`, then export it from the matching barrel file.
+HotCRM builds one ObjectStack artifact from four packages (ADR-0130): a directory under `src/` **is** a package. Add or modify metadata under the package that owns the object, then export it from that package's matching barrel file. A file may import from its own directory or from `src/sales/` — never sideways between modules.
 
 ```text
 src/
-├── objects/        # *.object.ts schemas and *.hook.ts lifecycle logic
-├── hooks/          # barrel that hands the object hooks to the stack
+├── sales/          # the `type: app` package — customers, pipeline, activities, and everything app-level
+├── service/        # module — cases and the knowledge base
+├── revenue/        # module — products, quotes, line items, contracts
+├── marketing/      # module — campaigns and campaign members
+└── docs/           # package docs stating the business rules the flows implement
+```
+
+Inside a package, the metadata-type subdirectories it uses:
+
+```text
+src/sales/
+├── objects/        # *.object.ts schemas, and the *.hook.ts beside each one
 ├── actions/        # UI actions and executable action bodies
 ├── flows/          # automation
 ├── skills/         # AI skills
@@ -38,11 +48,10 @@ src/
 ├── sharing/
 ├── translations/
 ├── data/           # seed data
-├── docs/           # package docs stating the business rules the flows implement
 └── interfaces/     # shared types (an empty barrel today)
 ```
 
-HotCRM authors skills, not agents: the two app-owned copilots and the directory that held them were retired, and AI capability now comes from the platform assistant every ObjectStack environment provides. Exporting a skill from `src/skills/index.ts` is the whole wiring step. See [AI Skills](/docs/customization/ai-skills).
+HotCRM authors skills, not agents: the two app-owned copilots and the directory that held them were retired, and AI capability now comes from the platform assistant every ObjectStack environment provides. Exporting a skill from `src/*/skills/index.ts` is the whole wiring step. See [AI Skills](/docs/customization/ai-skills).
 
 ## File suffix protocol
 

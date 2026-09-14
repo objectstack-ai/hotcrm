@@ -93,7 +93,7 @@ truth for how a release authenticates.
 | App version | `package.json` and `objectstack.config.ts` |
 | Capabilities | `requires` in `objectstack.config.ts` |
 | Local dev port | `package.json` scripts |
-| Seed data | `src/data/index.ts` |
+| Seed data | `src/*/data/index.ts` |
 
 ## Verification Before Release
 

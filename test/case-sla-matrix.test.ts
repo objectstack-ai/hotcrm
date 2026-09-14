@@ -1,10 +1,10 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import caseHooks from '../src/objects/case.hook';
+import caseHooks from '../src/service/objects/case.hook';
 import {
   CASE_SLA_HOURS, CASE_SLA_DEFAULT_TIER, CASE_SLA_PRIORITIES, CASE_SLA_TIERS, caseSlaHours,
-} from '../src/objects/_case-sla';
+} from '../src/service/objects/_case-sla';
 import { makeHarness, makeDeniedApi, makeCtx, hookNamed, type Rec } from './helpers/hook-harness';
 
 /**
@@ -277,7 +277,7 @@ describe('the clock is calendar hours, stated out loud', () => {
     const { readFileSync } = await import('node:fs');
     const { join } = await import('node:path');
     const { REPO_ROOT } = await import('./helpers/repo-root');
-    for (const file of ['src/objects/_case-sla.ts', 'src/objects/case.hook.ts']) {
+    for (const file of ['src/service/objects/_case-sla.ts', 'src/service/objects/case.hook.ts']) {
       const source = readFileSync(join(REPO_ROOT, file), 'utf8');
       expect(source, `${file} must state the calendar-hours assumption`).toMatch(
         /CALENDAR HOURS|CALENDAR hours/,

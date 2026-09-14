@@ -1,10 +1,10 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import oppLineItemHooks from '../src/objects/opportunity_line_item.hook';
-import quoteLineItemHooks from '../src/objects/quote_line_item.hook';
-import leadHooks from '../src/objects/lead.hook';
-import opportunityHooks from '../src/objects/opportunity.hook';
+import oppLineItemHooks from '../src/revenue/objects/opportunity_line_item.hook';
+import quoteLineItemHooks from '../src/revenue/objects/quote_line_item.hook';
+import leadHooks from '../src/sales/objects/lead.hook';
+import opportunityHooks from '../src/sales/objects/opportunity.hook';
 import { makeCtx, makeHarness } from './helpers/hook-harness';
 
 /**

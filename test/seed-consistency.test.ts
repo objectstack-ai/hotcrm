@@ -2,8 +2,8 @@
 
 import { describe, it, expect } from 'vitest';
 import stack from '../objectstack.config';
-import { CrmSeedData } from '../src/data/index';
-import { CASE_SLA_DEFAULT_TIER, caseSlaHours } from '../src/objects/_case-sla';
+import { CrmSeedData } from '../objectstack.composition';
+import { CASE_SLA_DEFAULT_TIER, caseSlaHours } from '../src/service/objects/_case-sla';
 
 /**
  * Seed ↔ hook consistency guards (#591).

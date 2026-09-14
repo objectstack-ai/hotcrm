@@ -2,14 +2,14 @@
 
 import { REFERENCE_VALUE_TYPES, isMultiValueField, AUDIT_PROVENANCE_FIELDS } from '@objectstack/spec/data';
 import { wrapDeclarativeHook } from '@objectstack/objectql';
-import * as appObjects from '../../src/objects/index';
+import { CrmObjects as appObjects } from '../helpers/src-roster';
 import type {
   HookApi,
   HookDeleteOptions,
   HookQuery,
   HookUpdateDoc,
   HookUpdateOptions,
-} from '../../src/objects/_hook-api';
+} from '../../src/sales/objects/_hook-api';
 
 /**
  * In-memory harness for running REAL hook handlers.

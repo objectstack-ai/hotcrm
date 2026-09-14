@@ -1,10 +1,10 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import quoteHooks from '../src/objects/quote.hook';
-import { Contract } from '../src/objects/contract.object';
-import { Quote } from '../src/objects/quote.object';
-import type { HookApi } from '../src/objects/_hook-api';
+import quoteHooks from '../src/revenue/objects/quote.hook';
+import { Contract } from '../src/revenue/objects/contract.object';
+import { Quote } from '../src/revenue/objects/quote.object';
+import type { HookApi } from '../src/sales/objects/_hook-api';
 import { makeHarness, makeCtx, hookNamed, today, type Rec } from './helpers/hook-harness';
 import { makeSandboxEngine, runHookBody } from './helpers/action-sandbox';
 

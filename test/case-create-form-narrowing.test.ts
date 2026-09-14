@@ -1,9 +1,9 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import { CaseViews } from '../src/views/case.view';
-import { Case } from '../src/objects/case.object';
-import { CaseDetailPage } from '../src/pages/case_detail.page';
+import { CaseViews } from '../src/service/views/case.view';
+import { Case } from '../src/service/objects/case.object';
+import { CaseDetailPage } from '../src/service/pages/case_detail.page';
 
 /**
  * The case CREATE form offers only what a creator legitimately authors (#1214

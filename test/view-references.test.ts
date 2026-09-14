@@ -3,7 +3,7 @@
 import { describe, it, expect } from 'vitest';
 import { isDateMacroToken } from '@objectstack/spec/data';
 import stack from '../objectstack.config';
-import { OPPORTUNITY_STAGE_OPTIONS } from '../src/objects/_picklists';
+import { OPPORTUNITY_STAGE_OPTIONS } from '../src/sales/objects/_picklists';
 import {
   type AnyRec,
   objects,

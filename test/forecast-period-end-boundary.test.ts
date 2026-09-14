@@ -6,8 +6,8 @@ import { InMemoryDriver } from '@objectstack/driver-memory';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { P } from '@objectstack/spec';
 import stack from '../objectstack.config';
-import forecastHook from '../src/objects/forecast.hook';
-import { forecasts } from '../src/data/revenue.seed';
+import forecastHook from '../src/sales/objects/forecast.hook';
+import { forecasts } from '../src/sales/data/forecast.seed';
 import { makeCtx, hookNamed } from './helpers/hook-harness';
 
 /**

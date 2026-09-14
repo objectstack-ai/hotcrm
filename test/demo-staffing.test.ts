@@ -3,11 +3,11 @@
 import { describe, it, expect } from 'vitest';
 import { compileCelToFilter } from '@objectstack/formula';
 import stack from '../objectstack.config';
-import accountHook from '../src/objects/account.hook';
-import caseHooks from '../src/objects/case.hook';
-import { CrmSeedData } from '../src/data/index';
-import { DemoOrgStaffing } from '../src/sharing/demo-staffing';
-import * as sharingBarrel from '../src/sharing/index';
+import accountHook from '../src/sales/objects/account.hook';
+import caseHooks from '../src/service/objects/case.hook';
+import { CrmSeedData } from '../objectstack.composition';
+import { DemoOrgStaffing } from '../src/sales/sharing/demo-staffing';
+import { CrmSharing as sharingBarrel } from './helpers/src-roster';
 import { makeCtx, makeHarness, hookNamed } from './helpers/hook-harness';
 import { regionsOf } from './helpers/flow-regions';
 

@@ -4,7 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { compileCelToFilter } from '@objectstack/formula';
 import { parseFilterAST } from '@objectstack/spec/data';
 import stack from '../objectstack.config';
-import { CLOSED_CASE_STATUSES } from '../src/objects/_case-assignment';
+import { CLOSED_CASE_STATUSES } from '../src/service/objects/_case-assignment';
 
 /**
  * ═══ ONE predicate for "no longer live work" on `crm_case` (#1145) ══════════

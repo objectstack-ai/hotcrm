@@ -373,7 +373,7 @@ describe('how the shipped escalate path splits privilege (#1434)', () => {
    * stay unelevated.
    */
   it('escalate_case stays runAs:"user" — the acting agent keeps their identity', async () => {
-    const { EscalateCaseFlow } = await import('../src/flows/case-actions.flow');
+    const { EscalateCaseFlow } = await import('../src/service/flows/case-actions.flow');
     expect(
       (EscalateCaseFlow as AnyRec).runAs ?? 'user',
       'escalate_case is invoked by a person from the UI and must run as that person. ' +
@@ -383,7 +383,7 @@ describe('how the shipped escalate path splits privilege (#1434)', () => {
   });
 
   it('escalate_case writes only user-writable columns — the stamps are not in it', async () => {
-    const { EscalateCaseFlow } = await import('../src/flows/case-actions.flow');
+    const { EscalateCaseFlow } = await import('../src/service/flows/case-actions.flow');
     const nodes = (EscalateCaseFlow as AnyRec).nodes as AnyRec[];
     const escalate = nodes.find((n) => n.id === 'escalate');
     const written = Object.keys(escalate?.config?.fields ?? {});
@@ -395,7 +395,7 @@ describe('how the shipped escalate path splits privilege (#1434)', () => {
   });
 
   it('the stamping subflow is system, minimal, and writes exactly the two readonly stamps', async () => {
-    const { CaseEscalationStampFlow } = await import('../src/flows/case-escalation-stamp.flow');
+    const { CaseEscalationStampFlow } = await import('../src/service/flows/case-escalation-stamp.flow');
     const flow = CaseEscalationStampFlow as AnyRec;
     expect(flow.runAs, 'this flow exists to be the ONE elevated step').toBe('system');
     const writes = (flow.nodes as AnyRec[]).filter((n) => n.type === 'update_record');
@@ -409,8 +409,8 @@ describe('how the shipped escalate path splits privilege (#1434)', () => {
   });
 
   it('escalate_case reaches it through a subflow node, AFTER the reason is written', async () => {
-    const { EscalateCaseFlow } = await import('../src/flows/case-actions.flow');
-    const { CaseEscalationStampFlow } = await import('../src/flows/case-escalation-stamp.flow');
+    const { EscalateCaseFlow } = await import('../src/service/flows/case-actions.flow');
+    const { CaseEscalationStampFlow } = await import('../src/service/flows/case-escalation-stamp.flow');
     const nodes = (EscalateCaseFlow as AnyRec).nodes as AnyRec[];
     const sub = nodes.find((n) => n.type === 'subflow');
     expect(sub, 'the elevated write must be reached by a subflow node').toBeTruthy();
@@ -444,7 +444,7 @@ describe('how the shipped escalate path splits privilege (#1434)', () => {
   });
 
   it('the stamped fields are declared readonly, and the user-typed one is not', async () => {
-    const { Case } = await import('../src/objects/case.object');
+    const { Case } = await import('../src/service/objects/case.object');
     const fields = (Case as AnyRec).fields;
     for (const name of ['is_escalated', 'escalated_date']) {
       expect(fields[name].readonly, `${name} is stamped by a system flow and nobody types it`).toBe(true);
@@ -461,8 +461,8 @@ describe('how the shipped escalate path splits privilege (#1434)', () => {
     // The in-repo proof that `runAs: 'system'` on a whole flow predates the
     // rule — kept as a pin because #1434 item 3 requires the file to SAY it is
     // not a policy, so nobody cites it to elevate the next screen flow.
-    const { CloseCaseFlow } = await import('../src/flows/case-actions.flow');
-    const { Case } = await import('../src/objects/case.object');
+    const { CloseCaseFlow } = await import('../src/service/flows/case-actions.flow');
+    const { Case } = await import('../src/service/objects/case.object');
     expect((CloseCaseFlow as AnyRec).runAs).toBe('system');
     expect((Case as AnyRec).fields.is_closed.readonly).toBe(true);
   });

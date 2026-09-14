@@ -37,10 +37,10 @@ export const Contract = ObjectSchema.create({
 - **Prefix**: Every HotCRM business object name MUST carry the `crm_` prefix, written out
   (`crm_contract`, `crm_project_task`). The runtime injects nothing: the name in source is the
   name at runtime, in the DB and in the REST URL. The FILE stays unprefixed
-  (`src/objects/contract.object.ts` declares `name: 'crm_contract'`).
+  (`src/revenue/objects/contract.object.ts` declares `name: 'crm_contract'`).
 - **Label**: User-friendly Title Case.
 - **Export**: a NAMED `const` built by the `ObjectSchema.create(...)` factory, which PARSES the
-  definition. `src/objects/index.ts` re-exports that name for auto-registration, so a default
+  definition. The package's `objects/index.ts` re-exports that name for registration, so a default
   export is never picked up. An `as ObjectSchema` cast is not a substitute: a cast is a type
   position for a value and checks nothing at all.
 

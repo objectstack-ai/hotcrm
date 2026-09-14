@@ -1,9 +1,9 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import { CrmSeedData } from '../src/data/index';
-import { Forecast } from '../src/objects/forecast.object';
-import { ForecastSnapshotFlow } from '../src/flows/forecast-snapshot.flow';
+import { CrmSeedData } from '../objectstack.composition';
+import { Forecast } from '../src/sales/objects/forecast.object';
+import { ForecastSnapshotFlow } from '../src/sales/flows/forecast-snapshot.flow';
 import { flowNodesDeep, regionsOf } from './helpers/flow-regions';
 import { ExpressionEngine } from '@objectstack/formula';
 

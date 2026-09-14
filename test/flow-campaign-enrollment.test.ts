@@ -1,11 +1,11 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import { CampaignEnrollmentFlow } from '../src/flows/campaign-enrollment.flow';
+import { CampaignEnrollmentFlow } from '../src/marketing/flows/campaign-enrollment.flow';
 import {
   CampaignLeadMemberEnrollFlow,
   CampaignContactMemberEnrollFlow,
-} from '../src/flows/campaign-member-enroll.flow';
+} from '../src/marketing/flows/campaign-member-enroll.flow';
 import { makeFlowHarness, type Rec } from './helpers/flow-harness';
 
 /**

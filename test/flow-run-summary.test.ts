@@ -1,9 +1,9 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import { CampaignEnrollmentFlow } from '../src/flows/campaign-enrollment.flow';
-import { ContractRenewalFlow } from '../src/flows/contract-renewal.flow';
-import { OpportunityStagnationFlow } from '../src/flows/opportunity-stagnation.flow';
+import { CampaignEnrollmentFlow } from '../src/marketing/flows/campaign-enrollment.flow';
+import { ContractRenewalFlow } from '../src/revenue/flows/contract-renewal.flow';
+import { OpportunityStagnationFlow } from '../src/sales/flows/opportunity-stagnation.flow';
 import { makeFlowHarness, type Rec } from './helpers/flow-harness';
 import { edgesUnder } from './helpers/flow-regions';
 

@@ -26,27 +26,37 @@ pnpm dev
 
 ## 仓库结构
 
-HotCRM 是一个单体 ObjectStack 应用。`objectstack.config.ts` 是注册 `src/` 中全部元数据的唯一事实来源。
+HotCRM 由**四个包**构建出**一个** ObjectStack 制品（ADR-0130）：`src/` 下的一个目录就是一个包。`objectstack.config.ts` 是唯一的 `defineStack()`，`objectstack.composition.ts` 负责把四个包的 barrel 汇总给它。一个文件只能从自己的目录或 `src/sales/` 导入，模块之间不得横向导入。
 
 ```text
 hotcrm/
 ├── objectstack.config.ts
+├── objectstack.composition.ts
 ├── src/
-│   ├── objects/        # *.object.ts 模型和 *.hook.ts 生命周期逻辑
-│   ├── hooks/          # 把对象 hooks 汇总交给 stack 的 barrel
-│   ├── actions/        # UI 动作和可执行动作体
-│   ├── flows/          # 自动化流程
-│   ├── skills/         # AI skills
-│   ├── apps/, views/, pages/
-│   ├── dashboards/, reports/, datasets/
-│   ├── mappings/       # 数据导入的列到字段映射
-│   ├── profiles/, sharing/
-│   ├── translations/
-│   ├── data/           # 种子数据
-│   ├── docs/           # 随构建产物一起分发的应用文档
-│   └── interfaces/     # 共享类型（目前是空 barrel）
+│   ├── sales/          # `type: app` 包 —— account、contact、lead、opportunity、forecast、task、event
+│   ├── service/        # 模块 —— case、knowledge_article、article_feedback
+│   ├── revenue/        # 模块 —— product、opportunity_line_item、quote、quote_line_item、contract
+│   ├── marketing/      # 模块 —— campaign、campaign_member
+│   └── docs/           # 随构建产物一起分发的应用文档
 ├── apps/docs/          # Fumadocs 应用
 └── content/docs/       # 文档内容
+```
+
+每个包内是它用到的元数据类型子目录，后缀协议在每个包内都一样：
+
+```text
+src/sales/
+├── objects/            # *.object.ts 模型，以及紧挨着各自模型的 *.hook.ts
+├── actions/            # UI 动作和可执行动作体
+├── flows/              # 自动化流程
+├── skills/             # AI skills
+├── apps/, views/, pages/
+├── dashboards/, reports/, datasets/
+├── mappings/           # 数据导入的列到字段映射
+├── profiles/, sharing/
+├── translations/
+├── data/               # 种子数据
+└── interfaces/         # 共享类型（目前是空 barrel）
 ```
 
 HotCRM 只定义 skills，不定义 agent：应用自带的两个 copilot 及其所在目录已被移除，AI 能力来自每个 ObjectStack 环境都提供的平台助手。参见 [AI Skills](/zh-Hans/docs/customization/ai-skills)。
@@ -71,7 +81,7 @@ HotCRM 只定义 skills，不定义 agent：应用自带的两个 copilot 及其
 
 ### 新增或修改对象
 
-在 `src/objects/` 下编辑或新增文件，然后从 `src/objects/index.ts` 导出。
+在 `src/*/objects/` 下编辑或新增文件，然后从 `src/*/objects/index.ts` 导出。
 
 ```ts
 import { ObjectSchema, Field } from '@objectstack/spec/data';
@@ -88,11 +98,11 @@ export const Warranty = ObjectSchema.create({
 
 ### 新增 AI skill
 
-创建 `src/skills/<name>.skill.ts`，并从 `src/skills/index.ts` 导出。从这个 barrel 导出就是全部的接线工作——skill 会附着到平台助手（`ask`）上，本应用不定义任何自己的 agent。
+创建 `src/*/skills/<name>.skill.ts`，并从 `src/*/skills/index.ts` 导出。从这个 barrel 导出就是全部的接线工作——skill 会附着到平台助手（`ask`）上，本应用不定义任何自己的 agent。
 
 ### 新增 UI 元数据
 
-使用 `src/views/` 定义列表和看板视图，使用 `src/pages/` 定义记录页面，使用 `src/actions/` 定义按钮和弹窗动作。
+使用 `src/*/views/` 定义列表和看板视图，使用 `src/*/pages/` 定义记录页面，使用 `src/*/actions/` 定义按钮和弹窗动作。
 
 ## 验证改动
 

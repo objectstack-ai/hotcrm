@@ -3,9 +3,9 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
-import quoteHooks from '../src/objects/quote.hook';
-import { Contract } from '../src/objects/contract.object';
-import type { HookApi } from '../src/objects/_hook-api';
+import quoteHooks from '../src/revenue/objects/quote.hook';
+import { Contract } from '../src/revenue/objects/contract.object';
+import type { HookApi } from '../src/sales/objects/_hook-api';
 import { makeHarness, makeCtx, hookNamed, type Rec } from './helpers/hook-harness';
 import { makeSandboxEngine, runHookBody } from './helpers/action-sandbox';
 

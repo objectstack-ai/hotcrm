@@ -1,10 +1,10 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import contactHooks from '../src/objects/contact.hook';
-import leadHooks from '../src/objects/lead.hook';
-import opportunityHooks from '../src/objects/opportunity.hook';
-import quoteHooks from '../src/objects/quote.hook';
+import contactHooks from '../src/sales/objects/contact.hook';
+import leadHooks from '../src/sales/objects/lead.hook';
+import opportunityHooks from '../src/sales/objects/opportunity.hook';
+import quoteHooks from '../src/revenue/objects/quote.hook';
 import { hookNamed } from './helpers/hook-harness';
 import { makeSandboxEngine, runHookBody, type Rec } from './helpers/action-sandbox';
 

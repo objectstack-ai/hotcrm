@@ -205,7 +205,7 @@ const GUARDED: Guarded[] = [
     script: 'scripts/check-source-token-ratchet.mjs',
     runner: process.execPath,
     green: { args: ['--json'], status: 0, says: '"label"' },
-    red: { args: [], status: 1, says: 'missing: src/objects' },
+    red: { args: [], status: 1, says: 'missing: src/sales/objects' },
   },
   {
     script: 'scripts/check-lint-i18n-gate.mjs',

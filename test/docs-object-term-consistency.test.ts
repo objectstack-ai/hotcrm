@@ -269,8 +269,8 @@ const TEST_ROOT = join(REPO_ROOT, 'test');
  * module added under `zh-CN/` is picked up with no edit here, which is exactly
  * the property the literal lacked.
  */
-const PACK_BARREL = 'src/translations/zh-CN.ts';
-const PACK_ROOT = join(REPO_ROOT, 'src/translations/zh-CN');
+const PACK_BARREL = 'src/sales/translations/zh-CN.ts';
+const PACK_ROOT = join(REPO_ROOT, 'src/sales/translations/zh-CN');
 
 const walk = (dir: string): string[] =>
   readdirSync(dir, { withFileTypes: true }).flatMap((e) => {

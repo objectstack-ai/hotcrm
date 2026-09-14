@@ -45,8 +45,8 @@ import stack from '../objectstack.config';
 
 type AnyRec = Record<string, any>;
 
-const VIEWS_DIR = join(REPO_ROOT, 'src', 'views');
-const HOOK_SOURCE = readFileSync(join(REPO_ROOT, 'src', 'objects', 'lead.hook.ts'), 'utf8');
+const VIEWS_DIR = join(REPO_ROOT, 'src', 'sales', 'views');
+const HOOK_SOURCE = readFileSync(join(REPO_ROOT, 'src', 'sales', 'objects', 'lead.hook.ts'), 'utf8');
 
 // ── The view side ──────────────────────────────────────────────────────────
 
