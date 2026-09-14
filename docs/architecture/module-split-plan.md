@@ -472,7 +472,11 @@ decisions left to the compile path and this ruling settles.
    `flows/`, `actions/`, `datasets/`, `reports/`, `dashboards/`, `mappings/`, `skills/`,
    `sharing/`, `data/`), each with its explicit barrel — registration stays file-by-file. A
    `*.hook.ts` sits beside its `*.object.ts`, so R4 is enforced by co-location rather than by
-   reading. Root `objectstack.config.ts` does one thing:
+   reading. **One exception, measured by the layout PR (#1910):** `src/docs/` stays at the
+   top of `src/`. `objectstack build` compiles the in-product package docs (ADR-0046) from
+   `<config dir>/src/docs` and no other path, and moving the directory is silent — the build
+   stays exit 0 and the artifact loses its `docs[]`. The gap is filed upstream; the app does
+   not compensate for it. Root `objectstack.config.ts` does one thing:
    `composeStacks([...modules, salesStack], { manifest: 'preserve' })`, plus the existing
    `HOTCRM_COMPOSITION` knob. `AGENTS.md`'s prohibition targets `packages/<x>/src/` — the
    retired per-package-`package.json` monorepo — which this is not: one `package.json`, one
