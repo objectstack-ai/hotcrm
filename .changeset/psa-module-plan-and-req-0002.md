@@ -20,9 +20,11 @@ Two records land:
   on is carried by the 17.4.0 pin, applies the four measured edge rules and the 2026-09-02
   decisions of `module-split-plan.md` without re-deciding them, designs the eight v1
   objects and their approvals, and names the maintainer decisions Phase 0 waits on. The
-  2026-09-14 rulings that followed its first draft are recorded in both plans: the base CRM
-  splits first (`sales` and `service` lead, PSA follows), and the token gate measures the
-  sales module rather than the whole tree.
+  2026-09-14 rulings that followed its first draft are recorded in both plans: sales is the
+  `type: app` package and owns the customer core and the activity objects, service /
+  revenue / marketing are the modules, a directory under `src/` is a package (no `packages/`
+  level, no `shared/`, imports only along the dependency edges), the token gate measures
+  `src/sales/`, and the sequence is a layout PR followed by packaging PRs with no moves.
 
 Both indexes (`docs/README.md`, `docs/requirements/README.md`) gain their row in the same
 change, as `docs/README.md` requires.
