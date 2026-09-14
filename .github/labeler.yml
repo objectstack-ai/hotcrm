@@ -33,17 +33,23 @@ ci/cd:
 
 # Server-side behaviour: hook handlers, automation flows, and invocable
 # actions. This is the code that actually executes at request time.
+#
+# `src/*/…` since the ADR-0130 layout: a directory under `src/` is a package
+# (`sales`, `service`, `revenue`, `marketing`) and each carries its own
+# metadata-type subdirectories. `src/hooks/**` is gone rather than re-pointed —
+# a `*.hook.ts` now sits beside the `*.object.ts` it names, which the last glob
+# below already matches.
 backend:
   - changed-files:
-    - any-glob-to-any-file: ['src/actions/**', 'src/flows/**', 'src/hooks/**', 'src/objects/*.hook.ts']
+    - any-glob-to-any-file: ['src/*/actions/**', 'src/*/flows/**', 'src/*/objects/*.hook.ts']
 
 # Declarative metadata: schema, the security posture layered on it, and the
 # UI surfaces (apps, pages, views, dashboards, reports, datasets) that are
 # themselves just metadata in ObjectStack.
 metadata:
   - changed-files:
-    - any-glob-to-any-file: ['src/objects/**', 'src/profiles/**', 'src/sharing/**', 'src/skills/**', 'src/data/**', 'src/apps/**', 'src/pages/**', 'src/views/**', 'src/interfaces/**', 'src/dashboards/**', 'src/reports/**', 'src/datasets/**', 'src/translations/**', 'objectstack.manifest.json']
+    - any-glob-to-any-file: ['src/*/objects/**', 'src/*/profiles/**', 'src/*/sharing/**', 'src/*/skills/**', 'src/*/data/**', 'src/*/apps/**', 'src/*/pages/**', 'src/*/views/**', 'src/*/interfaces/**', 'src/*/dashboards/**', 'src/*/reports/**', 'src/*/datasets/**', 'src/*/translations/**', 'objectstack.manifest.json']
 
 configuration:
   - changed-files:
-    - any-glob-to-any-file: ['*.config.ts', 'objectstack.config.ts', 'tsconfig.json', '.gitignore', '.changeset/config.json']
+    - any-glob-to-any-file: ['*.config.ts', 'objectstack.config.ts', 'objectstack.composition.ts', 'tsconfig.json', '.gitignore', '.changeset/config.json']

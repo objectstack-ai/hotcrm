@@ -49,7 +49,7 @@ async function loadStack(value: string): Promise<AnyRec> {
   process.env[COMPOSITION_ENV_VAR] = value;
   vi.resetModules();
   try {
-    return ((await import('../objectstack.composition')) as AnyRec).default as AnyRec;
+    return ((await import('../objectstack.config')) as AnyRec).default as AnyRec;
   } finally {
     if (previous === undefined) delete process.env[COMPOSITION_ENV_VAR];
     else process.env[COMPOSITION_ENV_VAR] = previous;

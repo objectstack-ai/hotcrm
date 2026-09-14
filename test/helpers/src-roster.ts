@@ -75,6 +75,28 @@ export const metadataFiles = (kind: string, suffix = '.ts'): string[] =>
     )
     .sort();
 
+/**
+ * One metadata file by its BASENAME, whichever package now carries it.
+ *
+ * The replacement for `join(REPO_ROOT, 'src/<kind>', file)` in a suite that
+ * knows a file by name but not by package. A basename that matches no file, or
+ * more than one, throws rather than returning something plausible: a drift
+ * guard that silently reads the wrong file is the failure mode these suites
+ * exist to prevent.
+ */
+export const resolveMetadataFile = (kind: string, basename: string): string => {
+  const hits = metadataDirs(kind)
+    .map((dir) => `${dir}/${basename}`)
+    .filter((rel) => existsSync(join(REPO_ROOT, rel)));
+  if (hits.length !== 1) {
+    throw new Error(
+      `src-roster: '${basename}' resolves to ${hits.length} file(s) under src/*/${kind}/` +
+        `${hits.length ? ` (${hits.join(', ')})` : ''} — expected exactly one.`,
+    );
+  }
+  return hits[0]!;
+};
+
 /** `*.object.ts` across every package. */
 export const objectFiles = (): string[] => metadataFiles('objects', '.object.ts');
 

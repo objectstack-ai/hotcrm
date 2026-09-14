@@ -28,27 +28,37 @@ pnpm dev
 
 ## 倉庫結構
 
-HotCRM 是一個單體 ObjectStack 應用。`objectstack.config.ts` 是註冊 `src/` 中全部中繼資料的唯一事實來源。
+HotCRM 由**四個套件**建置出**一個** ObjectStack 產物（ADR-0130）：`src/` 下的一個目錄就是一個套件。`objectstack.config.ts` 是唯一的 `defineStack()`，`objectstack.composition.ts` 負責把四個套件的 barrel 彙總給它。一個檔案只能從自己的目錄或 `src/sales/` 匯入，模組之間不得橫向匯入。
 
 ```text
 hotcrm/
 ├── objectstack.config.ts
+├── objectstack.composition.ts
 ├── src/
-│   ├── objects/        # *.object.ts 模型和 *.hook.ts 生命週期邏輯
-│   ├── hooks/          # 把物件 hooks 彙總交給 stack 的 barrel
-│   ├── actions/        # UI 動作和可執行動作體
-│   ├── flows/          # 自動化流程
-│   ├── skills/         # AI skills
-│   ├── apps/, views/, pages/
-│   ├── dashboards/, reports/, datasets/
-│   ├── mappings/       # 資料匯入的欄位對應
-│   ├── profiles/, sharing/
-│   ├── translations/
-│   ├── data/           # 種子資料
-│   ├── docs/           # 隨建置產物一起發布的應用文件
-│   └── interfaces/     # 共享型別（目前是空 barrel）
+│   ├── sales/          # `type: app` 套件 —— account、contact、lead、opportunity、forecast、task、event
+│   ├── service/        # 模組 —— case、knowledge_article、article_feedback
+│   ├── revenue/        # 模組 —— product、opportunity_line_item、quote、quote_line_item、contract
+│   ├── marketing/      # 模組 —— campaign、campaign_member
+│   └── docs/           # 隨建置產物一起發布的應用文件
 ├── apps/docs/          # Fumadocs 應用
 └── content/docs/       # 文件內容
+```
+
+每個套件內是它用到的中繼資料類型子目錄，後綴協議在每個套件內都一樣：
+
+```text
+src/sales/
+├── objects/            # *.object.ts 模型，以及緊挨著各自模型的 *.hook.ts
+├── actions/            # UI 動作和可執行動作體
+├── flows/              # 自動化流程
+├── skills/             # AI skills
+├── apps/, views/, pages/
+├── dashboards/, reports/, datasets/
+├── mappings/           # 資料匯入的欄位對應
+├── profiles/, sharing/
+├── translations/
+├── data/               # 種子資料
+└── interfaces/         # 共享型別（目前是空 barrel）
 ```
 
 HotCRM 只定義 skills，不定義 agent：應用自帶的兩個 copilot 及其所在目錄已被移除，AI 能力來自每個 ObjectStack 環境都提供的平台助手。參見 [AI Skills](/zh-Hant/docs/customization/ai-skills)。
@@ -73,7 +83,7 @@ HotCRM 只定義 skills，不定義 agent：應用自帶的兩個 copilot 及其
 
 ### 新增或修改物件
 
-在 `src/objects/` 下編輯或新增檔案，然後從 `src/objects/index.ts` 匯出。
+在 `src/*/objects/` 下編輯或新增檔案，然後從 `src/*/objects/index.ts` 匯出。
 
 ```ts
 import { ObjectSchema, Field } from '@objectstack/spec/data';
@@ -90,11 +100,11 @@ export const Warranty = ObjectSchema.create({
 
 ### 新增 AI skill
 
-建立 `src/skills/<name>.skill.ts`，並從 `src/skills/index.ts` 匯出。從這個 barrel 匯出就是全部的接線工作——skill 會附著到平台助手（`ask`）上，本應用不定義任何自己的 agent。
+建立 `src/*/skills/<name>.skill.ts`，並從 `src/*/skills/index.ts` 匯出。從這個 barrel 匯出就是全部的接線工作——skill 會附著到平台助手（`ask`）上，本應用不定義任何自己的 agent。
 
 ### 新增 UI 中繼資料
 
-使用 `src/views/` 定義清單和看板視圖，使用 `src/pages/` 定義記錄頁面，使用 `src/actions/` 定義按鈕和彈窗動作。
+使用 `src/*/views/` 定義清單和看板視圖，使用 `src/*/pages/` 定義記錄頁面，使用 `src/*/actions/` 定義按鈕和彈窗動作。
 
 ## 驗證改動
 

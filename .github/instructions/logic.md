@@ -4,8 +4,8 @@ You are the **Backend Engineer** for HotCRM. You implement business rules using 
 
 ## Capabilities
 
-1.  **Hooks (`src/objects/<object>.hook.ts`)**: Run code *before* or *after* database operations.
-2.  **Actions (`src/actions/<object>.actions.ts`)**: Custom API endpoints or AI Tools.
+1.  **Hooks (`src/*/objects/<object>.hook.ts`)**: Run code *before* or *after* database operations.
+2.  **Actions (`src/*/actions/<object>.actions.ts`)**: Custom API endpoints or AI Tools.
 
 ## 0. The data surface, before anything else
 
@@ -23,7 +23,7 @@ either, so `'opportunity'` names an object that does not exist; the object is `c
 This brief taught `broker.find('opportunity', { filters })` for months — the same example #855 had
 already retired from `AGENTS.md`, surviving here because these briefs sat outside every gate until
 #1233. Everything below is measured against the pinned `@objectstack` **17.3.0** packages and the
-shapes in `src/objects/_hook-api.ts`. Write from it, not from memory of another stack.
+shapes in `src/sales/objects/_hook-api.ts`. Write from it, not from memory of another stack.
 
 ## 1. ObjectQL Query Protocol
 
@@ -33,7 +33,7 @@ NEVER write SQL.
 `HookContext.api` as `unknown`:
 
 ```typescript
-import type { HookApi } from './_hook-api';   // src/objects/_hook-api.ts — the shared shape
+import type { HookApi } from './_hook-api';   // src/sales/objects/_hook-api.ts — the shared shape
 // inside the handler:
 const api = ctx.api as HookApi | undefined;
 if (!api) return;
@@ -69,7 +69,7 @@ Three of these are asymmetries you cannot guess, so they are declared rather tha
 -   ✅ `where` is canonical and the only spelling this repo writes.
 -   ⛔ `filter` (singular) is a live *alias* of `where` on this engine — the predicate is applied,
     nothing is dropped — but do not write it. `HookQuery` omits it so it is a **compile** error,
-    and `test/hook-query-predicate.test.ts` scans every `.ts` under `src/objects/` for it. One
+    and `test/hook-query-predicate.test.ts` scans every `.ts` under `src/*/objects/` for it. One
     idiom is the point: a query assembled in two places that ends up carrying **both** keys with
     different values throws `Conflicting options … spellings of the same parameter`, and an empty
     `where: {}` counts as a different value rather than as "no opinion".
@@ -118,7 +118,7 @@ const openDeals = await api.object('crm_opportunity').count({
 
 ## 2. Hook Implementation Standard
 
-A hook lives at `src/objects/<object>.hook.ts` and **default-exports** one `Hook` or an array of
+A hook lives at `src/*/objects/<object>.hook.ts` and **default-exports** one `Hook` or an array of
 them; the runtime associates the file with its object by naming convention — there is no barrel
 entry and no imperative registration to add.
 
@@ -140,7 +140,7 @@ are not this stack's events; the enum rejects them.
 | `id` | the target record id, where the event carries one |
 
 ```typescript
-// src/objects/opportunity.hook.ts
+// src/sales/objects/opportunity.hook.ts
 import type { Hook, HookContext } from '@objectstack/spec/data';
 import type { HookApi } from './_hook-api';
 
@@ -188,15 +188,15 @@ lowering pass over every registered hook. Type-only imports are erased and are f
 
 ## 3. Action Implementation Standard
 
-An action lives at `src/actions/<object>.actions.ts` as a **named** `const`, re-exported from
-`src/actions/index.ts`. One `Action` per export: the stack is built from `Object.values(...)` over
+An action lives at `src/*/actions/<object>.actions.ts` as a **named** `const`, re-exported from
+`src/*/actions/index.ts`. One `Action` per export: the stack is built from `Object.values(...)` over
 that barrel, so an exported *array* arrives as a nested list and fails the schema parse.
 
 `type` is one of `script`, `url`, `modal`, `flow`, `api`, `form`. A `script` action carries its
 implementation inline, which is what makes it callable by REST and by AI agents alike:
 
 ```typescript
-// src/actions/account.actions.ts
+// src/*/actions/account.actions.ts
 import type { Action } from '@objectstack/spec/ui';
 
 export const GenerateBriefingAction: Action = {

@@ -28,7 +28,7 @@ management surface. Know which file owns which fact:
 ## 2. Everyday change loop (per PR)
 
 1. Author metadata under the correct `src/{type}/` folder (see `AGENTS.md`).
-2. Keep the locale bundles in sync — `src/translations/` is the source of truth for
+2. Keep the locale bundles in sync — `src/sales/translations/` is the source of truth for
    which locales ship. *Supersedes the hand-copied count and locale enumeration that
    stood here — 2026-08-31 ruling, item 5.*
 3. Add the matching user doc under `content/docs/` if behaviour changed.
@@ -119,7 +119,7 @@ and this app declares none — every line-item and member object reaches its
 parent through a `lookup`. The four aggregates HotCRM does show
 (`crm_opportunity.amount`, `crm_quote` totals, the campaign metrics, the case
 activity stamp) are ordinary number fields written by the hooks in
-`src/objects/*.hook.ts`, so no platform code has ever seeded or recomputed
+`src/*/objects/*.hook.ts`, so no platform code has ever seeded or recomputed
 them. Re-check this if a future change converts a line-item lookup to
 `master_detail` — the lint rule `relationship/line-item-should-be-master-detail`
 suggests exactly that on four fields today.
@@ -232,7 +232,7 @@ worth knowing apart when triaging:
 > **This section is a contingency, not a step in any current upgrade.** HotCRM's
 > deployment shape today is **fresh installs only**, which is the whole reason
 > the procedure below is documented rather than automated, and the reason
-> `name_normalized` carries no unique index (see `src/objects/account.object.ts`).
+> `name_normalized` carries no unique index (see `src/sales/objects/account.object.ts`).
 > Both conclusions are conditional on that premise. If HotCRM ever acquires
 > long-lived installs that upgrade in place, re-read this section and the index
 > decision together — neither is a universal judgement.
@@ -271,7 +271,7 @@ Stale seed data is the most common cause of "Studio shows a red
 'metadata is invalid' banner" or "the home page lists pending issues." It is
 **almost always the seed, not a designer bug**: a platform contract changed
 (a validation rule was retired, a dashboard now requires a `dataset` + values),
-and the fixtures in `src/data/` were never updated to match.
+and the fixtures in `src/*/data/` were never updated to match.
 
 After any platform upgrade, or whenever Studio shows validation banners:
 
@@ -280,7 +280,7 @@ After any platform upgrade, or whenever Studio shows validation banners:
 3. Open the Console and visually verify the seeded records, dashboards, and
    views render. For dashboards, **wait for the lazy-loaded chart bundle** before
    judging an empty card (see `AGENTS.md` → "Verifying UI in the browser").
-4. If a banner persists, fix the offending fixture in `src/data/`, not the
+4. If a banner persists, fix the offending fixture in `src/*/data/`, not the
    designer or the platform.
 
 ### 4.1 Staffing the demo org (`pnpm demo:staff`)
@@ -316,7 +316,7 @@ eu.rep@objectos.ai sees 2 account(s) · countries: [DE, UK]
 ```
 
 Who exists and which positions they hold is a table —
-[`src/sharing/demo-staffing.ts`](../src/sharing/demo-staffing.ts). Adding a
+[`src/sales/sharing/demo-staffing.ts`](../src/sales/sharing/demo-staffing.ts). Adding a
 person is adding a row.
 
 Three things worth knowing before changing any of it:
@@ -341,7 +341,7 @@ Three things worth knowing before changing any of it:
   sees only what its user owns or holds a share on (the ceiling in
   [objectstack#16549], which `viewAllRecords` deliberately does not lift). So a
   demo salesperson asking their agent about the pipeline got **0** opportunities
-  and **0** tasks. The routes in `src/sharing/demo-staffing.ts` fix that by
+  and **0** tasks. The routes in `src/sales/sharing/demo-staffing.ts` fix that by
   ownership alone — no profile, permission set or sharing rule is touched — and
   they hand each identity a SUBSET (NA rows to the NA rep, EMEA to the EU rep,
   everything with no resolvable territory to the manager), because putting the

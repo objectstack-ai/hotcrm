@@ -11,7 +11,10 @@ import { REPO_ROOT } from './helpers/repo-root';
  * The README headline figures are the gate's, within the ruled buffer (#1187).
  *
  * The README banner states HotCRM's positioning claim as two measured numbers:
- * business semantics ~81k tokens, interaction layer ~39k. That claim is the
+ * business semantics ~50k tokens, interaction layer ~29k — of the SALES
+ * package, which is the surface the gate measures since #1905 put it there
+ * (「token 门禁： 放到 sales」) and the unit ADR-0130 §1.3(b) makes the claim
+ * about: *a CRM sales module fits whole in an AI context window*. That claim is the
  * first thing a reader sees and the reason a developer keeps reading, and for
  * months nothing checked it — the banner said "~170k tokens (~18,000 lines)", a
  * hand measurement of a tree that had since moved, and no test, gate or reviewer
@@ -58,8 +61,8 @@ import { REPO_ROOT } from './helpers/repo-root';
  * a size the app does not have — the ratchet owns the growth budget, alone, and
  * a raise there sits on the maintainer floor where it always did.
  *
- *   business semantics  banner ~85k -> band 80,750–89,250 · ceiling 100,000
- *   interaction layer   banner ~37k -> band 35,150–38,850 · ceiling 40,000
+ *   business semantics  banner ~50k -> band 47,500–52,500 · ceiling 53,000
+ *   interaction layer   banner ~29k -> band 27,550–30,450 · ceiling 31,000
  *
  * ⚠️ The ceiling column is still worked out per row, and still pinned to
  * `CEILINGS` below — that is what stops the README quoting a ceiling the gate no

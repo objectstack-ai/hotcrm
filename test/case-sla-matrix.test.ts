@@ -277,7 +277,7 @@ describe('the clock is calendar hours, stated out loud', () => {
     const { readFileSync } = await import('node:fs');
     const { join } = await import('node:path');
     const { REPO_ROOT } = await import('./helpers/repo-root');
-    for (const file of ['src/objects/_case-sla.ts', 'src/objects/case.hook.ts']) {
+    for (const file of ['src/service/objects/_case-sla.ts', 'src/service/objects/case.hook.ts']) {
       const source = readFileSync(join(REPO_ROOT, file), 'utf8');
       expect(source, `${file} must state the calendar-hours assumption`).toMatch(
         /CALENDAR HOURS|CALENDAR hours/,

@@ -6,6 +6,12 @@ import { CampaignMember } from '../src/marketing/objects/campaign_member.object'
 import { Campaign } from '../src/marketing/objects/campaign.object';
 import stack from '../objectstack.config';
 import campaignHooks, { CAMPAIGN_METRIC_FIELDS } from '../src/marketing/objects/campaign.hook';
+// The two hooks of this family that fire on a SALES object live beside that
+// object since the ADR-0130 layout (co-location is what enforces R4) — the
+// four bodies are still one definition copied, and this suite still reads all
+// four, now from three files.
+import opportunityCampaignMetricsHooks from '../src/sales/objects/opportunity.campaign-metrics.hook';
+import leadCampaignMetricsHooks from '../src/sales/objects/lead.campaign-metrics.hook';
 import { extractSandboxBody } from './helpers/action-sandbox';
 import { localePacks } from './helpers/metadata-fixtures';
 import { makeHarness, makeCtx, hookNamed, type Rec } from './helpers/hook-harness';
@@ -436,6 +442,8 @@ describe('every surviving member field and campaign metric has a writer', () => 
 describe('the inlined metric recompute is one definition, copied (#597)', () => {
   const REFRESH_HOOKS = [
     ...(campaignHooks as Rec[]),
+    ...(opportunityCampaignMetricsHooks as Rec[]),
+    ...(leadCampaignMetricsHooks as Rec[]),
     ...(campaignMemberHooks as Rec[]),
   ].filter((h) => /recompute/.test(String(h.description)) || /refresh/.test(String(h.name)));
 

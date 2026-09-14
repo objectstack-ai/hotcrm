@@ -11,6 +11,10 @@ import {
   BUFFER,
   CEILINGS,
   CEILING_KINDS,
+  LAYERS,
+  EXCLUDED,
+  PACKAGE_DIRS,
+  SCOPE,
 } from '../scripts/check-source-token-ratchet.mjs';
 import { REPO_ROOT } from './helpers/repo-root';
 
@@ -82,20 +86,30 @@ const GATE = 'scripts/check-source-token-ratchet.mjs';
 /** First-party modules the gate imports — the sandbox copy needs them too. */
 const GATE_DEPENDENCIES = ['scripts/lib/main-module.mjs'];
 
-/** Every directory the gate insists on finding, so a fixture run is not a missing-dir run. */
-const LAYER_DIRS = [
-  'src/objects',
-  'src/flows',
-  'src/actions',
-  'src/hooks',
-  'src/views',
-  'src/pages',
-  'src/dashboards',
-  'src/apps',
-];
+/**
+ * Every directory the gate insists on finding, so a fixture run is not a
+ * missing-dir run — read from the GATE rather than restated here.
+ *
+ * Hand-listed until the ADR-0130 layout moved all of them (`src/objects` ->
+ * `src/sales/objects`, `src/hooks` gone because a hook now sits beside its
+ * object). A second copy of a directory list is the failure this repo already
+ * paid for once next door, in `scripts/lib/source-hygiene-surface.mjs`: three
+ * suites each kept their own copy of the hygiene gate's surface and a fourth
+ * entry left all three green while exercising nothing. So these come from the
+ * producer, and the fixture paths below are built from them.
+ */
+const LAYER_DIRS: string[] = LAYERS.flatMap((l: { dirs: string[] }) => l.dirs);
 
 /** Outside the ratchet by maintainer ruling — never measured. */
-const EXCLUDED_DIRS = ['src/translations', 'src/data'];
+const EXCLUDED_DIRS: string[] = [...EXCLUDED];
+
+/** A path in the scoped package's business layer / interaction layer / residual. */
+const biz = (file: string) => `${LAYERS[0].dirs[0]}/${file}`;
+const flow = (file: string) => `${LAYERS[0].dirs[1]}/${file}`;
+const action = (file: string) => `${LAYERS[0].dirs[2]}/${file}`;
+const ux = (file: string) => `${LAYERS[1].dirs[0]}/${file}`;
+const residual = (file: string) => `${SCOPE}/reports/${file}`;
+const excluded = (i: number, file: string) => `${EXCLUDED_DIRS[i]}/${file}`;
 
 interface Scope {
   label: string;
@@ -129,7 +143,7 @@ let root: string;
 
 beforeEach(() => {
   root = mkdtempSync(join(tmpdir(), 'token-ratchet-'));
-  for (const dir of [...LAYER_DIRS, ...EXCLUDED_DIRS, 'scripts']) {
+  for (const dir of [...LAYER_DIRS, ...EXCLUDED_DIRS, ...PACKAGE_DIRS, 'scripts']) {
     mkdirSync(join(root, dir), { recursive: true });
   }
   copyFileSync(join(REPO_ROOT, GATE), join(root, GATE));
@@ -179,10 +193,10 @@ function measure(at: string = root): Record<string, Scope> {
 
 describe('source token ratchet — measurement basis', () => {
   it('routes a file to the layer that owns its directory, and sums to the total', () => {
-    write('src/objects/crm_thing.object.ts', 'export const a = 1;\n'); // 19 chars retained
-    write('src/flows/thing.flow.ts', 'export const b = 22;\n'); //        20
-    write('src/views/thing.view.ts', 'export const c = 333;\n'); //       21
-    write('src/reports/thing.report.ts', 'export const d = 4444;\n'); //  22
+    write(biz('crm_thing.object.ts'), 'export const a = 1;\n'); // 19 chars retained
+    write(flow('thing.flow.ts'), 'export const b = 22;\n'); //        20
+    write(ux('thing.view.ts'), 'export const c = 333;\n'); //       21
+    write(residual('thing.report.ts'), 'export const d = 4444;\n'); //  22
 
     const scopes = measure();
     expect(scopes['business semantics']).toMatchObject({ files: 2, lines: 2, chars: 19 + 20 });
@@ -195,7 +209,7 @@ describe('source token ratchet — measurement basis', () => {
 
   it('strips line, trailing and block comments, and blank lines with them', () => {
     write(
-      'src/objects/commented.object.ts',
+      biz('commented.object.ts'),
       [
         '// a leading comment',
         'export const a = 1; // a trailing comment',
@@ -222,7 +236,7 @@ describe('source token ratchet — measurement basis', () => {
     // surface that an agent reads, so it counts; a line-oriented measurement
     // silently discards it (measured: ~2.8k tokens across five files).
     const body = 'export const BODY = `// not a comment\n  * nor this\n  /* nor this */`;';
-    write('src/actions/thing.actions.ts', `${body}\n`);
+    write(action('thing.actions.ts'), `${body}\n`);
 
     const scopes = measure();
     expect(scopes['business semantics']).toMatchObject({ lines: 3, chars: body.length });
@@ -230,17 +244,17 @@ describe('source token ratchet — measurement basis', () => {
 
   it('keeps a regex literal that contains quote and comment characters', () => {
     const line = String.raw`export const re = /['"]\/\/[/*]/g;`;
-    write('src/objects/re.object.ts', `${line} // stripped\n`);
+    write(biz('re.object.ts'), `${line} // stripped\n`);
 
     expect(measure()['business semantics']).toMatchObject({ lines: 1, chars: line.length });
   });
 
   it('never measures translations/ or seed data, however large they grow', () => {
     const bulk = `export const t = "${'x'.repeat(400 * 1024)}";\n`;
-    write('src/translations/fr-FR.ts', bulk);
-    write('src/data/sales.seed.ts', bulk);
-    write('src/objects/crm_thing.object.ts', 'export const a = 1;\n');
-    write('src/views/thing.view.ts', 'export const c = 2;\n');
+    write(excluded(0, 'fr-FR.ts'), bulk);
+    write(excluded(1, 'sales.seed.ts'), bulk);
+    write(biz('crm_thing.object.ts'), 'export const a = 1;\n');
+    write(ux('thing.view.ts'), 'export const c = 2;\n');
 
     const scopes = measure();
     expect(scopes['authored total'].chars).toBe(19 + 19);
@@ -253,8 +267,8 @@ describe('source token ratchet — measurement basis', () => {
   });
 
   it('prints the headline layers in the form a doc can cite', () => {
-    write('src/objects/crm_thing.object.ts', `export const a = "${'x'.repeat(8000)}";\n`);
-    write('src/views/thing.view.ts', `export const c = "${'x'.repeat(4000)}";\n`);
+    write(biz('crm_thing.object.ts'), `export const a = "${'x'.repeat(8000)}";\n`);
+    write(ux('thing.view.ts'), `export const c = "${'x'.repeat(4000)}";\n`);
 
     const { output } = run(root);
     expect(output).toContain('Headline: business semantics ~2k · interaction layer ~1k');
@@ -267,7 +281,7 @@ describe('source token ratchet — the ratchet itself', () => {
     // Sized from the committed ceiling, never from a copy of it, and the two
     // figures the message quotes are read back off the gate's own measurement.
     const ceiling = ceilingOf('business semantics');
-    write('src/objects/crm_bloat.object.ts', `export const a = "${'x'.repeat((ceiling + 1000) * 4)}";\n`);
+    write(biz('crm_bloat.object.ts'), `export const a = "${'x'.repeat((ceiling + 1000) * 4)}";\n`);
 
     const { status, output } = run(root);
     expect(status).toBe(1);
@@ -292,8 +306,8 @@ describe('source token ratchet — the ratchet itself', () => {
     // headroom by design. An advisory that fired on that would instruct every
     // author to undo the ruling, so it triggers on relative drift instead — and
     // when it does, it names the ceiling `anchor()` would commit today.
-    write('src/objects/crm_thing.object.ts', 'export const a = 1;\n');
-    write('src/views/thing.view.ts', 'export const c = 2;\n');
+    write(biz('crm_thing.object.ts'), 'export const a = 1;\n');
+    write(ux('thing.view.ts'), 'export const c = 2;\n');
 
     const tiny = run(root);
     expect(tiny.status).toBe(0);
@@ -324,7 +338,7 @@ describe('source token ratchet — the ratchet itself', () => {
     // re-derives itself the next time the ceiling is tightened.
     const view = (filler: string) => `export const v = "${filler}";\n`;
     const held = measure()['interaction layer'].chars;
-    write('src/views/bulk.view.ts', view('y'.repeat(target * 4 - held - view('').trimEnd().length)));
+    write(ux('bulk.view.ts'), view('y'.repeat(target * 4 - held - view('').trimEnd().length)));
 
     const inBuffer = run(root);
     expect(inBuffer.status).toBe(0);
@@ -352,66 +366,99 @@ describe('source token ratchet — the ratchet itself', () => {
     // that is an instruction, printed as this gate's own recommendation, to
     // hand back the headroom a maintainer had just granted.
     //
-    // Which rows are expected to nag is DERIVED from the kinds the gate
-    // declares, never listed here. That is the property the card turns on: the
-    // exemption keys on the ruled/anchored distinction rather than on a label,
-    // so a case naming 'business semantics' would pass for the wrong reason and
-    // would need rewriting by the next ruling instead of following it.
-    write('src/objects/crm_thing.object.ts', 'export const a = 1;\n');
-    write('src/views/thing.view.ts', 'export const c = 2;\n');
+    // ⚠️ No committed ceiling is RULED today. #1905 moved the gate's scope to
+    // `src/sales/` and re-anchored all three from the reading that move
+    // produced, which retired the #1601 grant along with the surface it was
+    // about. The kind is still the one the next grant declares, so the branch
+    // is still exercised — against a sandbox gate that declares it, rather than
+    // against whatever the committed table happens to hold. That is strictly
+    // stronger than the version this replaces: it no longer passes by accident
+    // the day the real table has one, and no longer goes vacuous the day it
+    // does not.
+    //
+    // Which rows nag is still DERIVED from the kinds the gate under test
+    // declares, never listed here: the exemption keys on the ruled/anchored
+    // distinction rather than on a label, so a case naming a layer would pass
+    // for the wrong reason.
+    write(biz('crm_thing.object.ts'), 'export const a = 1;\n');
+    write(ux('thing.view.ts'), 'export const c = 2;\n');
 
+    // The ANCHORED control, against the real gate: every row nags.
     const { status, output } = run(root);
     expect(status).toBe(0);
-    const lines = output.split('\n');
     const scopes = measure();
 
-    // Non-vacuity, and the half that keeps this from measuring a quiet run:
-    // every committed ceiling here really is past the trigger, so each row
-    // below WOULD nag if the kind were not consulted.
     for (const label of CEILINGS.keys()) {
+      // Non-vacuity: every committed ceiling here really is past the trigger,
+      // so each row below WOULD nag if the kind were not consulted.
       const headroom = ceilingOf(label) - scopes[label].tokens;
       expect(headroom, label).toBeGreaterThan(scopes[label].tokens * 2 * BUFFER);
     }
-
     for (const [label, kind] of CEILING_KINDS) {
+      expect(kind, `${label} — this control assumes every committed ceiling is anchored`).toBe(
+        'anchored',
+      );
+      const lines = output.split('\n');
       const at = lines.findIndex((l) => l.includes(`✓ ${label} ~`));
       expect(at, `no ✓ row for '${label}'`).toBeGreaterThan(-1);
       const under = lines[at + 1] ?? '';
-
-      if (kind === 'anchored') {
-        // ⛔ Unchanged for the anchored kind. This is the control: a change that
-        // silenced the advisory generally would be a weakened ratchet, and it
-        // would pass every other assertion in this case.
-        expect(under, label).toContain('over twice the 5% buffer');
-        expect(under, label).toContain(`re-anchor this ceiling to ~${fmt(anchor(scopes[label].tokens))}`);
-      } else {
-        // Never the instruction — and never merely blank either. The row says
-        // which kind of ceiling it is and who may lower it, because an
-        // exemption a reader cannot see reads like a ceiling nobody weighed.
-        // The INSTRUCTION is what must be gone, not the word: the ruled row
-        // says the gate does not offer to re-anchor it, so a bare 're-anchor'
-        // substring is present on purpose and asserting its absence would pin
-        // the sentence's wording instead of its content.
-        expect(under, label).not.toContain('re-anchor this ceiling to');
-        expect(under, label).not.toContain('over twice the 5% buffer');
-        expect(under, label).toContain('ruled ceiling');
-        expect(under, label).toContain('Lowering it needs a ruling');
-      }
-
-      // The ✓ row itself is untouched by the kind: the ceiling and the headroom
-      // are still reported, so exempting a row is not hiding it.
+      // ⛔ Unchanged for the anchored kind. This is the control: a change that
+      // silenced the advisory generally would be a weakened ratchet, and it
+      // would pass every other assertion in this case.
+      expect(under, label).toContain('over twice the 5% buffer');
+      expect(under, label).toContain(`re-anchor this ceiling to ~${fmt(anchor(scopes[label].tokens))}`);
       expect(lines[at], label).toContain(`ceiling ~${fmt(ceilingOf(label))}`);
       expect(lines[at], label).toContain(`headroom ~${fmt(ceilingOf(label) - scopes[label].tokens)}`);
     }
 
-    // Both branches above are actually exercised, so neither is vacuous.
-    const kinds = [...CEILING_KINDS.values()];
-    expect(kinds).toContain('anchored');
-    expect(kinds).toContain('ruled');
+    // The RULED branch, against a sandbox gate that declares one. Patched by
+    // the KIND alone — the label, the constant and every other line are the
+    // gate's own — so the only difference between the two runs is the kind.
+    const RULED_LABEL = 'interaction layer';
+    const gatePath = join(root, GATE);
+    const patched = readFileSync(gatePath, 'utf8').replace(
+      `{ label: '${RULED_LABEL}', ceiling: ${ceilingOf(RULED_LABEL)}, kind: CEILING_KIND.ANCHORED }`,
+      `{ label: '${RULED_LABEL}', ceiling: ${ceilingOf(RULED_LABEL)}, kind: CEILING_KIND.RULED }`,
+    );
+    expect(
+      patched,
+      'the COMMITTED table no longer carries a row in the shape this case patches — ' +
+        'teach it the new shape rather than dropping the ruled branch from the suite',
+    ).toContain('kind: CEILING_KIND.RULED');
+    writeFileSync(gatePath, patched);
+
+    const ruled = run(root);
+    expect(ruled.status).toBe(0);
+    const ruledLines = ruled.output.split('\n');
+    const at = ruledLines.findIndex((l) => l.includes(`✓ ${RULED_LABEL} ~`));
+    expect(at, `no ✓ row for '${RULED_LABEL}'`).toBeGreaterThan(-1);
+    const under = ruledLines[at + 1] ?? '';
+    // Never the instruction — and never merely blank either. The row says which
+    // kind of ceiling it is and who may lower it, because an exemption a reader
+    // cannot see reads like a ceiling nobody weighed. The INSTRUCTION is what
+    // must be gone, not the word: the ruled row says the gate does not offer to
+    // re-anchor it, so a bare 're-anchor' substring is present on purpose and
+    // asserting its absence would pin the sentence's wording, not its content.
+    expect(under).not.toContain('re-anchor this ceiling to');
+    expect(under).not.toContain('over twice the 5% buffer');
+    expect(under).toContain('ruled ceiling');
+    expect(under).toContain('Lowering it needs a ruling');
+    // The ✓ row itself is untouched by the kind: the ceiling and the headroom
+    // are still reported, so exempting a row is not hiding it.
+    expect(ruledLines[at]).toContain(`ceiling ~${fmt(ceilingOf(RULED_LABEL))}`);
+    expect(ruledLines[at]).toContain(
+      `headroom ~${fmt(ceilingOf(RULED_LABEL) - scopes[RULED_LABEL].tokens)}`,
+    );
+
+    // And the anchored rows of that SAME run still nag — the exemption is the
+    // kind's, not the run's.
+    const other = [...CEILING_KINDS.keys()].find((l) => l !== RULED_LABEL)!;
+    const otherAt = ruledLines.findIndex((l) => l.includes(`✓ ${other} ~`));
+    expect(ruledLines[otherAt + 1] ?? '', other).toContain('over twice the 5% buffer');
   });
 
   it('is red — not silently green — when a measured scope reads as empty', () => {
-    write('src/reports/thing.report.ts', 'export const d = 1;\n');
+    write(residual('thing.report.ts'), 'export const d = 1;\n');
 
     const { status, output } = run(root);
     expect(status).toBe(1);
@@ -549,8 +596,17 @@ describe('source token ratchet — the header table is derived from the ceilings
    * A recorded anchoring run: the command, the date it was run, and the reading
    * it produced per layer. Since #1320 each table row is dated with the run its
    * reading came from, so these are what makes that column mean something.
+   *
+   * The ref the run was taken on is captured, not required to be `main`. An
+   * anchoring that RE-SCOPES the gate cannot be measured on `main` at all — the
+   * reading it commits does not exist there, because the directories it
+   * measures do not (#1905 moved the scope to `src/sales/`). Naming the branch
+   * and its sha keeps the row reproducible, which is the property the stamp is
+   * for; insisting on `main` would have forced either a false stamp or a
+   * ceiling with no recorded reading behind it.
    */
-  const RUN = / \* +node scripts\/check-source-token-ratchet\.mjs +# (?<date>\d{4}-\d{2}-\d{2}) [\d:]+ UTC, `main` at (?<sha>[0-9a-f]{7,40})\s*$/;
+  const RUN =
+    / \* +node scripts\/check-source-token-ratchet\.mjs +# (?<date>\d{4}-\d{2}-\d{2}) [\d:]+ UTC, `(?<ref>[^`]+)` at (?<sha>[0-9a-f]{7,40})\s*$/;
   const RUN_READINGS = / \* +(?<readings>\S[^~]*~[\d,]+.*)$/;
 
   function runs(): { date: string; readings: Map<string, number> }[] {
@@ -699,10 +755,28 @@ describe('source token ratchet — the header table is derived from the ceilings
     expect(ruledRows().map((row) => row.label).sort()).toEqual(declared('ruled'));
     expect(rows().map((row) => row.label).sort()).toEqual(declared('anchored'));
 
-    // Non-vacuity: both kinds are present, so neither comparison is an
-    // empty-to-empty pass — the failure mode this whole block exists to avoid.
-    expect(declared('ruled').length).toBeGreaterThan(0);
+    // Non-vacuity — one half measured, one half constructed.
+    //
+    // The anchored half is measured: at least one committed ceiling is
+    // anchored, so that comparison is never empty-to-empty.
+    //
+    // The ruled half cannot be, any more. #1905 re-anchored all three ceilings
+    // onto the `src/sales/` reading, which retired the #1601 grant along with
+    // the whole-tree surface it was about, so `declared('ruled')` is empty and
+    // will stay empty until the next ruling. That is the finished state of the
+    // table, not a disabled mechanism. What an empty-to-empty pass WOULD hide
+    // is a `RULED_ROW` that has quietly stopped parsing, so that is asserted
+    // directly instead: the parser is proven live against a row in the shape
+    // the header carried one, even while the header carries none.
     expect(declared('anchored').length).toBeGreaterThan(0);
+    expect(
+      RULED_ROW.exec(
+        ' *   business semantics   ruled 100,000 — a maintainer grant, no reading derives it   2026-09-05',
+      )?.groups,
+      'RULED_ROW no longer parses a ruled row in the shape the header carries one. Teach it the ' +
+        'new shape — leaving the ruled comparison above to pass on two empty sets is exactly the ' +
+        'vacuity this block exists to prevent.',
+    ).toMatchObject({ label: 'business semantics', ceiling: '100,000', date: '2026-09-05' });
   });
 
   it('states a ruled ceiling as ruled, and proves no recorded reading anchored it', () => {

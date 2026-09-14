@@ -23,23 +23,42 @@
  *   「translations + seed 肯定是不需要算 token 的」
  *   「我觉得只需要写 业务语义 ~78k 交互层 ~40k ，这样客户更好理解，也更吸引开发者」
  *
- * So the measured surface is `src/**\/*.ts` (excluding `.d.ts`), **minus**
- * `src/translations/` and `src/data/`, comment-stripped and blank-stripped,
- * reported as two headline layers plus the authored total:
+ * and 2026-09-14, which moved the SCOPE of all of it (verbatim, untranslated):
  *
- *   - **business semantics** — `src/objects/` `src/flows/` `src/actions/` `src/hooks/`
- *   - **interaction layer**  — `src/views/` `src/pages/` `src/dashboards/` `src/apps/`
+ *   「所以应该先分拆基础的crm, 比如 sales 和 support， token 门禁： 放到 sales」
+ *
+ * ## The scope is `src/sales/`, not the whole tree (ADR-0130, plan item 8)
+ *
+ * Since the module split a directory under `src/` IS a package: `src/sales/`
+ * is the `type: 'app'` package a customer installs, and `src/service/`,
+ * `src/revenue/` and `src/marketing/` are modules. The claim this gate exists
+ * to hold — ADR-0130 §1.3(b), *a CRM sales module fits whole in an AI context
+ * window* — is a claim about the package a customer actually installs, so that
+ * is what carries the ceilings. The other three are MEASURED and printed, with
+ * no ceiling, so a per-module budget (ADR-0130 §4) has its starting figures.
+ *
+ * So the ratcheted surface is `src/sales/**\/*.ts` (excluding `.d.ts`),
+ * **minus** `src/sales/translations/` and `src/sales/data/`, comment-stripped
+ * and blank-stripped, reported as two headline layers plus the authored total:
+ *
+ *   - **business semantics** — `src/sales/objects/` `src/sales/flows/` `src/sales/actions/`
+ *   - **interaction layer**  — `src/sales/views/` `src/sales/pages/` `src/sales/dashboards/` `src/sales/apps/`
+ *
+ * `src/hooks/` is gone from the business layer and nothing was dropped with
+ * it: a `*.hook.ts` now sits beside the `*.object.ts` it names (that
+ * co-location is what enforces ADR-0130 R4), so hooks are counted inside
+ * `objects/` exactly as `src/objects/*.hook.ts` was counted before the move.
  *
  * Translations and seed data are outside the ratchet **entirely**, by ruling: a
  * fifth locale or a richer demo dataset is healthy growth and must never
  * compete with business logic for the budget. They are not measured, not
  * ratcheted, and not reported as debt.
  *
- * The remaining authored directories (datasets, reports, profiles, sharing,
- * skills, mappings, interfaces, …) are not a headline layer — they are printed
- * as a residual and carried in the authored total, which has its own ceiling.
- * Nothing under `src/` can therefore grow unwatched by hiding in a directory
- * that predates or postdates the two headline layers.
+ * The remaining authored directories of the sales package (datasets, reports,
+ * profiles, sharing, skills, mappings, interfaces, …) are not a headline layer
+ * — they are printed as a residual and carried in the authored total, which
+ * has its own ceiling. Nothing under `src/sales/` can therefore grow unwatched
+ * by hiding in a directory that predates or postdates the two headline layers.
  *
  * Because the measure is **comment-stripped**, comment-slimming work (#1184)
  * does not move these numbers. That is deliberate: comments are for the humans
@@ -141,22 +160,48 @@ const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const SKIP_DIRS = new Set(['node_modules', 'dist', '.next', '.source', '.objectstack', '.git']);
 
 /**
+ * The package directories under `src/` — the app package first.
+ *
+ * Exported because `test/source-token-ratchet.test.ts` materialises this
+ * gate's surface in a sandbox and has to know it: one producer, as with
+ * `scripts/lib/source-hygiene-surface.mjs` next door. A directory added here
+ * is measured and printed; only {@link SCOPE} carries ceilings.
+ */
+export const PACKAGE_DIRS = ['src/sales', 'src/service', 'src/revenue', 'src/marketing'];
+
+/** The package the ceilings are about: 「token 门禁： 放到 sales」. */
+export const SCOPE = PACKAGE_DIRS[0];
+
+/**
  * Outside the ratchet by maintainer ruling — not measured at all.
  * 「translations + seed 肯定是不需要算 token 的」
+ *
+ * Named per package, not by a trailing-segment match on `data`: an exclusion
+ * that matched that segment anywhere would quietly grow to cover a directory a
+ * future package happens to name the same, and this list is the ruling's whole
+ * content.
  */
-const EXCLUDED = ['src/translations', 'src/data'];
+export const EXCLUDED = [
+  'src/sales/translations',
+  'src/sales/data',
+  'src/service/data',
+  'src/revenue/data',
+  'src/marketing/data',
+];
 
 /** The two headline layers, in the order the README card (#1187) cites them. */
-const LAYERS = [
+export const LAYERS = [
   {
     key: 'business',
     label: 'business semantics',
-    dirs: ['src/objects', 'src/flows', 'src/actions', 'src/hooks'],
+    // `src/hooks` is not missing — a `*.hook.ts` sits beside its `*.object.ts`
+    // since the ADR-0130 layout, so hooks are counted inside `objects/`.
+    dirs: [`${SCOPE}/objects`, `${SCOPE}/flows`, `${SCOPE}/actions`],
   },
   {
     key: 'interaction',
     label: 'interaction layer',
-    dirs: ['src/views', 'src/pages', 'src/dashboards', 'src/apps'],
+    dirs: [`${SCOPE}/views`, `${SCOPE}/pages`, `${SCOPE}/dashboards`, `${SCOPE}/apps`],
   },
 ];
 
@@ -187,79 +232,63 @@ export const anchor = (tokens) => Math.ceil((tokens * (1 + BUFFER)) / 1000) * 10
  *
  * A RULED ceiling is a maintainer grant. It is NOT derived from any reading,
  * so there is no `anchor()` arithmetic to show for it and no worked row that
- * could honestly be written: the only record it can carry is the ruling. Do
- * not reverse-engineer a reading that would produce it — on this layer no real
- * reading can (a reading between 94,286 and 95,238 would be needed to anchor
- * to 100,000, and the tree measures 84,579), so any such row would be a
- * fabricated measurement dressed as arithmetic.
+ * could honestly be written: the only record it can carry is the ruling.
  *
- * `business semantics` became a ruled ceiling on 2026-09-05 (#1601). The
- * ruling, verbatim and untranslated:
+ * ## 2026-09-14 — the scope moved to `src/sales/`, and all three re-anchored
  *
- *   「business-semantics 棘轮 提升到 100000」
+ * The ruling that authorises this, verbatim and untranslated:
  *
- * and the shape it was given, from the same exchange, 选项 A:
+ *   「所以应该先分拆基础的crm, 比如 sales 和 support， token 门禁： 放到 sales」
  *
- *   「解耦:banner 钉实测,ceiling 独立」
+ * The three committed ceilings measured the WHOLE tree. Scoping the gate to
+ * the sales package retires all three: a ceiling is a number about a surface,
+ * and this is a different surface, so the old numbers are not tightened or
+ * loosened — they stop applying. Each leaves with a worked row below.
  *
- * ⚠️ A ruled ceiling is EXEMPT from this gate's opportunistic-tightening
- * advisory, and since #1607 that exemption is mechanism rather than prose. The
- * advisory offers to re-derive a ceiling from the current reading, which only
- * means something for a ceiling that was derived from a reading in the first
- * place. On this one it was not, and the arithmetic bit: at 84,579 against
- * 100,000 the headroom is over twice the buffer, so every run used to suggest
- * re-anchoring down to ~89,000 — handing back, as the gate's own
- * recommendation, the 15,421 tokens the ruling had just been made to create.
- * So the advisory is now a property of the ANCHORED kind, asked as
- * `isAnchored(label)` at the one place it fires, and the ruled row prints what
- * it is instead of a nag. ⛔ A ruled ceiling is still not tightened on the
- * strength of any advisory line: it moves on another ruling, or on a PR that
- * genuinely shrinks the layer and says so.
+ * `business semantics` needs that ruling for a second reason. It was a RULED
+ * ceiling (#1601, 「business-semantics 棘轮 提升到 100000」) and a ruled
+ * ceiling is symmetric: LOWERING one requires a maintainer ruling quoted in
+ * the lowering PR's body, exactly as raising it does. The ruling above is that
+ * ruling — it is what puts the gate on sales — and the layout PR quotes it.
+ * With the scope moved there is no reading the 100,000 grant could still be
+ * about, so the layer returns to the ANCHORED kind, derived like its two
+ * siblings from the reading the move produced.
  *
- * The anchoring runs the two anchored ceilings below come from:
+ * The anchoring run all three ceilings below come from:
  *
- *   node scripts/check-source-token-ratchet.mjs   # 2026-08-17 03:20 UTC, `main` at d038b957
- *     #1189 — removed the account renewal fields, their view and their seed values
- *     business semantics ~80,356 · interaction layer ~39,084 · authored total ~133,302
+ *   node scripts/check-source-token-ratchet.mjs   # 2026-09-14 09:40 UTC, `claude/issue-1905-package-directory-layout` at ffeab37
+ *     #1905 — the ADR-0130 layout move: every authored file into its package directory
+ *     business semantics ~49,978 · interaction layer ~29,344 · authored total ~91,910
  *
- *   node scripts/check-source-token-ratchet.mjs   # 2026-08-26 06:47 UTC, `main` at d863d547
- *     #1316 — removed the inert `list.tabs[]` block from every view file
- *     business semantics ~82,489 · interaction layer ~37,424 · authored total ~133,840
+ *   business semantics   49,978 × 1.05 =  52,477 -> ceil 1k ->  53,000  (headroom 3,022, 6.0%)  2026-09-14
+ *   interaction layer    29,344 × 1.05 =  30,811 -> ceil 1k ->  31,000  (headroom 1,656, 5.6%)  2026-09-14
+ *   authored total       91,910 × 1.05 =  96,506 -> ceil 1k ->  97,000  (headroom 5,090, 5.5%)  2026-09-14
  *
  * `headroom` is the headroom **at anchor time** (`ceiling - reading`, on that
  * row's own run): it is a derivation of the constant beside it, not a live
  * figure, so it deliberately does not track what the gate prints today — the
  * tree keeps moving between re-anchorings.
  *
- *   business semantics   ruled 100,000 — a maintainer grant, no reading derives it   2026-09-05
- *   interaction layer    37,424 × 1.05 =  39,295 -> ceil 1k ->  40,000  (headroom 2,576, 6.9%)  2026-08-26
- *   authored total      133,302 × 1.05 = 139,967 -> ceil 1k -> 140,000  (headroom 6,698, 5.0%)  2026-08-17
+ * The whole-tree ceilings this replaces, with the last reading each was true
+ * of, kept as history and as the arithmetic anyone re-deriving the move can
+ * check. ⛔ Do not restore one: they measure a surface that no longer exists
+ * as a unit.
+ *
+ *   business semantics   ruled 100,000 — a maintainer grant (#1601); last whole-tree reading ~84,579
+ *   interaction layer    37,424 × 1.05 =  39,295 -> ceil 1k ->  40,000   2026-08-26 (#1316)
+ *   authored total      133,302 × 1.05 = 139,967 -> ceil 1k -> 140,000   2026-08-17 (#1189)
  *
  * The rounding step is what carries the anchored rows a little past 5%; it is
  * kept because a ceiling a reader can hold in their head is worth more than the
  * last few hundred tokens of precision on a number estimated as `chars / 4`.
  *
- * The ruled row is deliberately NOT in the worked-row shape, and that is a
- * measurement in itself: `test/source-token-ratchet.test.ts` pins one worked
- * row per committed ceiling and reads every ceiling as `anchor()` of the
- * reading beside it. That model has no ruled ceiling in it, so it goes red on
- * this row — correctly, and with the message that says teach the shape. ⛔ The
- * fix there is to teach that suite the ruled kind, never to relax the pin and
- * never to fabricate a reading for this row.
- *
- * Of the ceilings left alone by the latest ANCHORING run (2026-08-26), one
- * worked line each — reading, its `anchor()`, and the committed ceiling it
- * would have raised:
- *
- *   authored total      anchor(133,840) = 141,000  > ceiling 140,000  2026-08-26
- *
- * Re-anchoring it would therefore be a RAISE, and a raise sits on the
- * maintainer floor. So a shrink-only ratchet re-anchors a layer only when
- * `anchor(reading) < ceiling`; when it is greater the committed ceiling is
- * already the tighter of the two and stands. `business semantics` has no such
- * line any more: it left the anchored kind entirely, and on the reading current
- * at #1601 (~84,579, `main` at a4e5ea3e) `anchor()` lands at 89,000 — BELOW its
- * ruled ceiling, so the declined-raise reasoning no longer describes it at all.
+ * ⚠️ The RULED kind is still a kind this gate knows, and `isAnchored()` is
+ * still what the opportunistic-tightening advisory asks (#1607). No committed
+ * ceiling declares it today. That is the finished state of this table, not a
+ * disabled mechanism: the next grant declares `CEILING_KIND.RULED` and the
+ * advisory drops for it without another change here. ⛔ Do not delete the kind
+ * because nothing currently uses it — #1607 is the card that explains what
+ * breaks when a grant is silently read as anchored.
  *
  * Lower them whenever the tree shrinks — that is free and encouraged. Raising
  * one requires a maintainer ruling quoted in the raising PR's body. Both of
@@ -279,9 +308,9 @@ const CEILING_KIND = { ANCHORED: 'anchored', RULED: 'ruled' };
  * another that disagrees.
  */
 const COMMITTED = [
-  { label: 'business semantics', ceiling: 100000, kind: CEILING_KIND.RULED },
-  { label: 'interaction layer', ceiling: 40000, kind: CEILING_KIND.ANCHORED },
-  { label: 'authored total', ceiling: 140000, kind: CEILING_KIND.ANCHORED },
+  { label: 'business semantics', ceiling: 53000, kind: CEILING_KIND.ANCHORED },
+  { label: 'interaction layer', ceiling: 31000, kind: CEILING_KIND.ANCHORED },
+  { label: 'authored total', ceiling: 97000, kind: CEILING_KIND.ANCHORED },
 ];
 
 // Every committed ceiling declares a kind this module recognises. A ceiling
@@ -500,13 +529,46 @@ export const fmt = (n) => n.toLocaleString('en-US');
 /** `78,123` -> `~78k`, the form the README card and CI summary quote. */
 const headline = (tokens) => `~${Math.round(tokens / 1000)}k`;
 
-const srcDirs = () =>
-  readdirSync(join(ROOT, 'src'), { withFileTypes: true })
+/** The metadata-type directories of the RATCHETED package. */
+const scopeDirs = () =>
+  readdirSync(join(ROOT, SCOPE), { withFileTypes: true })
     .filter((e) => e.isDirectory() && !SKIP_DIRS.has(e.name))
-    .map((e) => `src/${e.name}`);
+    .map((e) => `${SCOPE}/${e.name}`);
+
+/** Authored (= ratchet-visible) files under one directory. */
+const authoredUnder = (dir) =>
+  walk(dir)
+    .filter(isTs)
+    .filter((f) => !EXCLUDED.some((d) => f.startsWith(`${d}/`)));
+
+/**
+ * One informational reading per package directory (ADR-0130 §4).
+ *
+ * No ceiling on any of them — only {@link SCOPE} carries those. The point is
+ * that a per-module budget has real starting figures the day someone wants to
+ * set one, measured by the same estimator on the same stripped surface rather
+ * than by a fresh afternoon with `wc`. The two headline layers are printed per
+ * package too, because "how much of this module is business logic" is the
+ * question a module budget is actually about.
+ */
+function perPackage() {
+  return PACKAGE_DIRS.map((dir) => {
+    const authored = authoredUnder(dir);
+    const layers = LAYERS.map((layer) => {
+      // Layer membership is keyed by SUBDIRECTORY NAME, so the same two
+      // headline layers read on every package, not just on the scoped one.
+      const names = layer.dirs.map((d) => d.slice(SCOPE.length + 1));
+      return {
+        ...layer,
+        ...measure(authored.filter((f) => names.some((n) => f.startsWith(`${dir}/${n}/`)))),
+      };
+    });
+    return { dir, layers, total: measure(authored) };
+  });
+}
 
 function collect() {
-  const missing = [...LAYERS.flatMap((l) => l.dirs), ...EXCLUDED].filter((d) => {
+  const missing = [...LAYERS.flatMap((l) => l.dirs), ...EXCLUDED, ...PACKAGE_DIRS].filter((d) => {
     try {
       return !statSync(join(ROOT, d)).isDirectory();
     } catch {
@@ -515,12 +577,12 @@ function collect() {
   });
   if (missing.length) {
     console.error(`✗ source token ratchet: measured director(y|ies) missing: ${missing.join(', ')}`);
-    console.error('  Update LAYERS / EXCLUDED in scripts/check-source-token-ratchet.mjs —');
+    console.error('  Update LAYERS / EXCLUDED / PACKAGE_DIRS in scripts/check-source-token-ratchet.mjs —');
     console.error('  a ratchet that measures a tree nobody writes to is worse than no ratchet.');
     process.exit(1);
   }
 
-  const all = walk('src').filter(isTs);
+  const all = walk(SCOPE).filter(isTs);
   const authored = all.filter((f) => !EXCLUDED.some((d) => f.startsWith(`${d}/`)));
   const layered = new Set();
   const scopes = LAYERS.map((layer) => {
@@ -530,7 +592,13 @@ function collect() {
   });
   const residual = measure(authored.filter((f) => !layered.has(f)));
   const total = measure(authored);
-  return { scopes, residual, total, excluded: measure(all.filter((f) => !authored.includes(f))) };
+  return {
+    scopes,
+    residual,
+    total,
+    excluded: measure(all.filter((f) => !authored.includes(f))),
+    packages: perPackage(),
+  };
 }
 
 function main() {
@@ -545,8 +613,16 @@ function main() {
     console.log(
       JSON.stringify(
         {
-          surface: 'src/**/*.ts, comment-stripped and blank-stripped, minus ' + EXCLUDED.join(' + '),
+          surface: `${SCOPE}/**/*.ts, comment-stripped and blank-stripped, minus ` + EXCLUDED.join(' + '),
           estimator: 'chars / 4',
+          packages: report.packages.map((pkg) => ({
+            dir: pkg.dir,
+            ratcheted: pkg.dir === SCOPE,
+            layers: pkg.layers.map(({ label, files, lines, chars, tokens }) => ({
+              label, files, lines, chars, tokens,
+            })),
+            total: { ...pkg.total },
+          })),
           scopes: rows.map(({ label, files, lines, chars, tokens, ceiling }) => ({
             label,
             files,
@@ -566,7 +642,8 @@ function main() {
   }
 
   console.log(
-    `Source token ratchet — authored surface: src/**/*.ts minus ${EXCLUDED.join(', ')}\n` +
+    `Source token ratchet — ratcheted surface: ${SCOPE}/**/*.ts minus ` +
+      `${EXCLUDED.filter((d) => d.startsWith(`${SCOPE}/`)).join(', ')}\n` +
       '  (comments and blank lines stripped; ~tokens = stripped chars / 4)\n',
   );
 
@@ -590,12 +667,28 @@ function main() {
       .join(' · ')} · authored total ${headline(report.total.tokens)}\n`,
   );
 
-  // A directory under src/ that is in neither headline layer nor the exclusion
-  // list still lands in the total, so it cannot grow unwatched — but a *new*
-  // metadata type usually belongs in one of the two layers, and saying so here
-  // is cheaper than noticing it a quarter later in a drifted headline number.
+  // Informational, no ceiling: the starting figures a per-module budget
+  // (ADR-0130 §4) needs. Only SCOPE is ratcheted — 「token 门禁： 放到 sales」.
+  console.log('  Per package — informational, no ceiling:\n');
+  console.log(
+    `  ${'package'.padEnd(16)}${LAYERS.map((l) => pad(l.label, 22)).join('')}${pad('authored total', 16)}`,
+  );
+  for (const pkg of report.packages) {
+    console.log(
+      `  ${pkg.dir.padEnd(16)}${pkg.layers
+        .map((l) => pad(`${fmt(l.tokens)}`, 22))
+        .join('')}${pad(fmt(pkg.total.tokens), 16)}${pkg.dir === SCOPE ? '   <- ratcheted' : ''}`,
+    );
+  }
+  console.log('');
+
+  // A directory under the scoped package that is in neither headline layer nor
+  // the exclusion list still lands in the total, so it cannot grow unwatched —
+  // but a *new* metadata type usually belongs in one of the two layers, and
+  // saying so here is cheaper than noticing it a quarter later in a drifted
+  // headline number.
   const known = new Set([...LAYERS.flatMap((l) => l.dirs), ...EXCLUDED]);
-  const unlayered = srcDirs().filter((d) => !known.has(d));
+  const unlayered = scopeDirs().filter((d) => !known.has(d));
   if (unlayered.length) {
     console.log(`  ℹ️  not in a headline layer (counted in the total only): ${unlayered.join(', ')}\n`);
   }

@@ -578,7 +578,7 @@ describe('the source facts the quick-tour landing section now rests on (#971)', 
     // it is the ninth tile, and it is the reason the "opportunities in your
     // pipeline" bullet was half-right rather than simply wrong.
     const inlineTitles = (readFileSync(
-      join(REPO_ROOT, 'src/dashboards/executive.dashboard.ts'),
+      join(REPO_ROOT, 'src/sales/dashboards/executive.dashboard.ts'),
       'utf8',
     ).match(/title: '/g) ?? []).length;
     expect(inlineTitles).toBe(EXEC_TILES.length - 1);
