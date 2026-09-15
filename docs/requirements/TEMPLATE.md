@@ -30,7 +30,8 @@ Which bucket (A / B / C / D) and **why**.
 The concrete answer:
 
 - **A** — configuration steps the customer/admin follows (+ link to the user doc).
-- **B** — the standard metadata to add/change under `src/{type}/` (+ changeset id).
+- **B** — the standard metadata to add/change under `src/{package}/{type}/`
+  (e.g. `src/sales/objects/`), and the barrel/array that registers it (+ changeset id).
 - **C** — the overlay/extension to author on top of HotCRM (package, files).
 - **D** — rationale + the trigger that would make us revisit.
 
