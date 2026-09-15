@@ -38,7 +38,7 @@
  * Testing seam: `--fixture <path>` reads a pre-built `objectstack lint --json`
  * report from a file instead of spawning the real CLI. Used only by
  * `test/lint-i18n-gate.test.ts`, which cannot spawn a real translation gap
- * without either editing real `src/translations/**` files from a test
+ * without either editing real `src/sales/translations/**` files from a test
  * (forbidden for this card — #597 was concurrently editing them) or carrying
  * a full disposable copy of the project inside the test suite.
  */

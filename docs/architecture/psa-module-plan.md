@@ -35,7 +35,7 @@ Three standing rulings bound the scope before anything is designed:
 
 | Ruling | Consequence for PSA |
 | --- | --- |
-| HotCRM owns lead → contract and models **no orders, invoices or payments** (2026-08-02, recorded in `src/flows/billing-handoff.flow.ts`) | PSA tracks **cost and billable effort**, never invoicing or collection. What billing needs — approved billable hours and expenses per project — leaves through the same durable-outbox hand-off pattern the contract flow already uses. |
+| HotCRM owns lead → contract and models **no orders, invoices or payments** (2026-08-02, recorded in `src/sales/flows/billing-handoff-closed-won.flow.ts`) | PSA tracks **cost and billable effort**, never invoicing or collection. What billing needs — approved billable hours and expenses per project — leaves through the same durable-outbox hand-off pattern the contract flow already uses. |
 | HotCRM is a **pure metadata application**; platform capability is built in objectstack (AGENTS.md, Scope) | Approvals are `approval` flow nodes, the org dimension is `sys_business_unit`, attachments are `enable.files`, people are `sys_user`. PSA declares no infrastructure. |
 | Permission sets stay **whole in the `type: app` package** (ADR-0130 addendum, 2026-09-02, objectstack#14487) | PSA ships no permission set of its own. Its object grants are rows added to the app package's sets; new roles are new sets there. |
 
@@ -262,7 +262,7 @@ module-owned. It is scheduled in Phase 4 behind a measurement in Phase 0, not as
 ## Approvals
 
 Four approval points, all authored as `approval` nodes in `record_change` flows on the
-pattern `src/flows/opportunity-approval.flow.ts` already sets — `lockRecord: true`,
+pattern `src/sales/flows/opportunity-approval.flow.ts` already sets — `lockRecord: true`,
 `approvalStatusField`, `onEmptyApprovers: 'admin_rescue'`, a `not_required` guard so the
 flow's own stamps never re-trigger it, and a stage guard so a settled record never re-enters.
 
@@ -305,10 +305,10 @@ lock stops is the *submission* that would turn them into cost.
 
 ## Permissions, positions, sharing
 
-- **Positions** (app package, `src/sharing/positions.ts`): `project_manager`,
+- **Positions** (app package, `src/sales/sharing/positions.ts`): `project_manager`,
   `project_director`, `pmo`, `finance_controller`. Approvals route to positions or stamped
   fields, never to named users.
-- **Permission sets** (app package, `src/profiles/`): three new sets — `project_manager`
+- **Permission sets** (app package, `src/sales/profiles/`): three new sets — `project_manager`
   (full on the eight objects, read on `crm_account` / `crm_opportunity` / `crm_contract`),
   `project_member` (create/read own timesheets and expenses; read projects they are staffed
   on; read rate cards' `role_level` and `unit` but **not** `cost_rate` — field-level), and
@@ -328,7 +328,7 @@ lock stops is the *submission* that would turn them into cost.
 ## i18n, docs, analytics
 
 - **Locales**: every object, field, option, view and navigation label lands in all four
-  packs under `src/translations/` in the same PR as the metadata (AGENTS.md, Constraint
+  packs under `src/sales/translations/` in the same PR as the metadata (AGENTS.md, Constraint
   Checklist). The packs stay in the app package.
 - **Product docs**: a new `content/docs/projects/` section — `index`, `projects`,
   `staffing-and-rates`, `budgets`, `time-and-expenses`, `cost-control` — English first,
@@ -464,5 +464,7 @@ lands.
 - [`module-split-plan.md`](./module-split-plan.md) — rules R1–R4, the assignment rule, the
   2026-09-02 decisions, the upstream asks
 - [`../requirements/0002-it-services-project-delivery-and-cost.md`](../requirements/0002-it-services-project-delivery-and-cost.md) — the intake this design validates against
-- `src/flows/opportunity-approval.flow.ts` — the approval pattern every PSA approval copies
-- `src/flows/billing-handoff.flow.ts` — the 2026-08-02 revenue-scope ruling and the outbox pattern
+- `src/sales/flows/opportunity-approval.flow.ts` — the approval pattern every PSA approval copies
+- `src/sales/flows/billing-handoff-closed-won.flow.ts` and
+  `src/revenue/flows/billing-handoff-contract-activated.flow.ts` — the two halves of the hand-off;
+  the first carries the 2026-08-02 revenue-scope ruling and the outbox pattern in its header
