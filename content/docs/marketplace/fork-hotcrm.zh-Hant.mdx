@@ -79,23 +79,25 @@ mv src/sales/translations/crm.translation.ts src/sales/translations/acme.transla
 HotCRM 在銷售 / 服務 / 行銷 / 營收領域提供了 18 個物件。大多數應用程式需要更少：
 
 ```bash
-# Example: keep only Sales-related objects
-rm src/objects/{case,knowledge_article,campaign,campaign_member,contract,quote,quote_line_item,forecast}.object.ts
+# Example: keep only Sales. Service, Revenue and Marketing are whole
+# packages now (ADR-0130), so they go as directories.
+rm -r src/service src/revenue src/marketing
+rm src/sales/objects/forecast.object.ts
 ```
 
-然後修剪參照了已刪除物件的相應鉤子、動作、流程、儀表板、翻譯和文件。`pnpm typecheck` 會標記出斷裂的參照。
+然後從 `objectstack.composition.ts` 裡刪掉這三個套件的 import，再修剪 sales 側那些參照了已刪除物件的鉤子、動作、流程、儀表板、翻譯和文件。`pnpm typecheck` 會標記出斷裂的參照。
 
 ### 5. 新增你確實需要的部分
 
-遵循檔案後綴協定：
+遵循檔案後綴協定。`<package>` 是 `sales` / `service` / `revenue` / `marketing` 中擁有該實體的那一個——`src/` 下的一個目錄**就是**一個套件（ADR-0130），而一個沒有到達所屬套件 barrel 的檔案不會被任何東西註冊：
 
 | 新實體 | 檔案 |
 |---|---|
-| 資料模型 | `src/objects/<entity>.object.ts` |
-| 伺服器端觸發器 | `src/hooks/<entity>.hook.ts` |
-| API + AI 工具 | `src/actions/<entity>.actions.ts` |
-| UI 版面配置 | `src/pages/<entity>.page.ts` |
-| 清單檢視 | `src/views/<entity>.view.ts` |
+| 資料模型 | `src/<package>/objects/<entity>.object.ts` |
+| 伺服器端觸發器 | `src/<package>/objects/<entity>.hook.ts` —— 與它的物件並排放置，在 `src/<package>/objects/hooks.ts` 註冊 |
+| API + AI 工具 | `src/<package>/actions/<entity>.actions.ts` |
+| UI 版面配置 | `src/<package>/pages/<entity>.page.ts` |
+| 清單檢視 | `src/<package>/views/<entity>.view.ts` |
 | i18n | 附加至 `src/sales/translations/{en,zh-CN,es-ES,ja-JP}.ts` |
 
 每個檔案在建置時都要經過 `@objectstack/spec` 結構描述驗證。出錯會明顯報錯。
@@ -129,7 +131,7 @@ git fetch upstream
 git merge upstream/main          # or rebase, your call
 ```
 
-合併衝突大多發生在 `src/sales/translations/*`（附加式）和 `src/objects/*.object.ts`（如果你重新命名了它們）。檔案後綴協定使衝突面保持很小。
+合併衝突大多發生在 `src/sales/translations/*`（附加式）和 `src/*/objects/*.object.ts`（如果你重新命名了它們）。檔案後綴協定使衝突面保持很小。
 
 ## 你可以放心變更的內容
 

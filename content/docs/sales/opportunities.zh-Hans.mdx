@@ -49,7 +49,7 @@ description: 活跃的销售交易——销售管道的核心，包含 7 个阶�
 
 ### 对象自己的字段分组
 
-下面这七个名字都是真的，但没有一个是界面：它们是 `crm_opportunity` 的**字段分组**（`src/objects/opportunity.object.ts` 里的 `fieldGroups`），是对象给自己字段定的归档方案。详情界面和表单都不渲染它们——两者各自声明了自己的分区，见下文。不过，这确实是唯一一份把对象全部字段都交代到的清单：
+下面这七个名字都是真的，但没有一个是界面：它们是 `crm_opportunity` 的**字段分组**（`src/sales/objects/opportunity.object.ts` 里的 `fieldGroups`），是对象给自己字段定的归档方案。详情界面和表单都不渲染它们——两者各自声明了自己的分区，见下文。不过，这确实是唯一一份把对象全部字段都交代到的清单：
 
 | 字段分组 | 字段 |
 | --- | --- |
@@ -65,7 +65,7 @@ description: 活跃的销售交易——销售管道的核心，包含 7 个阶�
 
 ### 详情界面
 
-商机详情页（`src/pages/opportunity_detail.page.ts`）的 *Details* 标签页声明了**三个**分区，装着**七个**字段：
+商机详情页（`src/sales/pages/opportunity_detail.page.ts`）的 *Details* 标签页声明了**三个**分区，装着**七个**字段：
 
 | 分区 | 字段 |
 | --- | --- |
@@ -79,7 +79,7 @@ description: 活跃的销售交易——销售管道的核心，包含 7 个阶�
 
 ### 表单
 
-商机表单（`src/views/opportunity.view.ts`）是分标签页的，它的**四个**分区就是它的标签页：
+商机表单（`src/sales/views/opportunity.view.ts`）是分标签页的，它的**四个**分区就是它的标签页：
 
 | 分区 | 字段 |
 | --- | --- |
@@ -183,7 +183,7 @@ description: 活跃的销售交易——销售管道的核心，包含 7 个阶�
   - **Details**——打开一笔交易时停在的那一个。**三个**分区、**七个**字段，清单见上文《商机记录存储的内容》；已经在**关键信息**摘要栏里的那些字段，这里刻意不重复。
   - **Related**——一个手风琴里的三块面板，进来时只有第一块是展开的。**Quotes**——这笔交易的报价单；运行 [报价生成流程](/zh-Hans/docs/sales/quotes) 的那个**生成报价单**按钮并不在这个列表上，它是上面头部的按钮之一。**Products**——这笔交易的行项目；这个面板把它们列出来、给一个跳转到完整列表的链接，并带一个 **Add** 按钮。那个按钮是一个 `add` 选取器，不是一个动作：这个应用里没有**添加产品**这个动作（见上文《行项目——实际在销售什么》）。**Open Tasks**——本商机经**关联商机**字段挂上来的 `crm_task` 记录，过滤掉状态为 *Completed* 的，一次十条。
   - **Activity**——统一汇集评论、已记录通话（`sys_activity`）、外发邮件（`sys_email`）、任务完成以及字段历史审计条目。商机上每个被跟踪的更改（阶段、金额、预计成交日期、负责人）都会自动出现在这里；没有单独的"历史"标签页。
-- **竞争对手与备注**——不存在这样一个面板。这一页（`src/pages/opportunity_detail.page.ts`）声明了三个区域：一个头部、一个装着那组标签页的主列，以及一条窄侧栏（`aside`），而侧栏里唯一的组件就是下一条讲的参考栏。页面上没有任何组件渲染「谈话要点」，也没有竞争对手字段可渲染了：商机上那个**竞争对手**多选字段只有三个占位选项（*Competitor A*、*Competitor B*、*Competitor C*），应用里没有任何界面把它读回来，#1061 已将其退役。应用里仅存的竞争对手信号，是「输给竞争对手」这条丢单原因，以及它旁边的自由文本 **赢/丢单详情**。这一页上最接近「备注」的，是 *Details* 标签页里那个可折叠的 **描述** 分区，里面放着 **描述** 与 **下一步**。
+- **竞争对手与备注**——不存在这样一个面板。这一页（`src/sales/pages/opportunity_detail.page.ts`）声明了三个区域：一个头部、一个装着那组标签页的主列，以及一条窄侧栏（`aside`），而侧栏里唯一的组件就是下一条讲的参考栏。页面上没有任何组件渲染「谈话要点」，也没有竞争对手字段可渲染了：商机上那个**竞争对手**多选字段只有三个占位选项（*Competitor A*、*Competitor B*、*Competitor C*），应用里没有任何界面把它读回来，#1061 已将其退役。应用里仅存的竞争对手信号，是「输给竞争对手」这条丢单原因，以及它旁边的自由文本 **赢/丢单详情**。这一页上最接近「备注」的，是 *Details* 标签页里那个可折叠的 **描述** 分区，里面放着 **描述** 与 **下一步**。
 - **AI 参考栏**——参考栏确实存在，但里面没有任何一条建议，这一页上也没有任何一个组件是 AI 驱动的。它是那条侧栏里的一个 `record:reference_rail`，三张卡片每一张都只是已经关联到本商机的记录快照：报价单 `crm_quote`（经其 **商机** 查找字段）、本商机的 `crm_opportunity_line_item` 明细行、任务 `crm_task`（经 **关联商机** 字段）。每张卡片给出关联记录总数的徽章、最多三条记录，以及一个跳转到完整列表的 *View all* 链接；查出来是空的卡片会折叠成一个 *+ N empty* 小按钮。卡片的标题按你当前阅读界面的语言取自对象标签——中文界面下是**报价单**、**商机产品明细**、**任务**——因为参考栏的条目自己不声明标题，标题是到译文包里查的，与全站其他地方取对象名的来源是同一处。两点提醒。参考栏的条目无法过滤，这三条也都没有声明过滤条件：查询只按关联字段走，所以任务那张卡片统计和列出的是本商机的全部任务，不分状态。这也正是它的标题是**任务**而不是「待办任务」的原因——真正过滤掉 *Completed*、一次十条的，是 *Related* 标签页上的 **Open Tasks** 列表。另外，参考栏里没有 Customer 360、没有营收预测，也没有任何「相关信号」，整页都没有：那些技能是靠提问去用的——见下文《AI Copilot 如何提供帮助》。
 
 ## AI Copilot 如何提供帮助
@@ -204,6 +204,6 @@ description: 活跃的销售交易——销售管道的核心，包含 7 个阶�
 
 ## 给管理员的提示
 
-- 阶段列表、默认概率和合法的状态转换分散在源码的三处，而不是某个 Setup 界面：共享选择列表 `OPPORTUNITY_STAGE_OPTIONS`（`src/objects/_picklists.ts`），由 `stage` 字段渲染；`opportunity_lifecycle` 钩子里的 `STAGE_PROBABILITY` 映射（`src/objects/opportunity.hook.ts`），每次保存都据此重新同步*成交概率*；以及商机对象上名为 `opportunity_stage_progression` 的状态机校验规则（`src/objects/opportunity.object.ts`）。三处需同步修改。参见 [Customization › Extending Objects](/zh-Hans/docs/customization/extending-objects)。
+- 阶段列表、默认概率和合法的状态转换分散在源码的三处，而不是某个 Setup 界面：共享选择列表 `OPPORTUNITY_STAGE_OPTIONS`（`src/sales/objects/_picklists.ts`），由 `stage` 字段渲染；`opportunity_lifecycle` 钩子里的 `STAGE_PROBABILITY` 映射（`src/sales/objects/opportunity.hook.ts`），每次保存都据此重新同步*成交概率*；以及商机对象上名为 `opportunity_stage_progression` 的状态机校验规则（`src/sales/objects/opportunity.object.ts`）。三处需同步修改。参见 [Customization › Extending Objects](/zh-Hans/docs/customization/extending-objects)。
 - $500K 折扣审批阈值可以在 [审批流程配置](/zh-Hans/docs/revenue/approvals) 中更改。
 - $100K 大单通知阈值同样不是 Setup 界面上的字段：它是 `opportunity_won_alert` 流程的 CEL 起始条件——`src/sales/flows/opportunity-won-alert.flow.ts` 里的 `record.amount >= 100000`。收件人则由该流程 `notify` 节点的 `recipients` 决定，列表里只有 `{record.owner_id}` 一项，即商机负责人本人。

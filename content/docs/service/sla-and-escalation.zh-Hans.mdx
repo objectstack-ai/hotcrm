@@ -9,7 +9,7 @@ SLA（服务级别协议）系统为**每一张工单**打上一个**截止时�
 
 ## SLA 目标如何计算
 
-**每一张工单都会自动获得 SLA 截止日期**，来自一张**优先级 × 客户层级矩阵**。`case_sla_defaults` 钩子（`src/objects/case.hook.ts`）读取工单的**优先级**与其账户的**客户层级**，在下表中查到这一对的取值，把 `sla_due_date` 填成*当前时间 + 相应小时数*——建单时，或者第一次给工单填上优先级的那次编辑时，只要该字段仍为空。
+**每一张工单都会自动获得 SLA 截止日期**，来自一张**优先级 × 客户层级矩阵**。`case_sla_defaults` 钩子（`src/service/objects/case.hook.ts`）读取工单的**优先级**与其账户的**客户层级**，在下表中查到这一对的取值，把 `sla_due_date` 填成*当前时间 + 相应小时数*——建单时，或者第一次给工单填上优先级的那次编辑时，只要该字段仍为空。
 
 在这张矩阵落地之前，只有 Critical 会被打戳。这一点值得记住，因为它解释了下游的一切：`case_sla_monitor` 捞的是 `sla_due_date` 已经过去的工单，而空日期永远不会"过去"，所以 High、Medium、Low 工单根本无法违约——不是因为扫描把它们排除在外，而是因为它们压根没有可错过的期限。
 
@@ -52,9 +52,9 @@ SLA（服务级别协议）系统为**每一张工单**打上一个**截止时�
 
 ## SLA 表现报表
 
-**SLA 表现**报表只按**一个**维度细分：**优先级**。它的 `rows` 就是 `['priority']`，没有别的（`src/reports/case.report.ts`）。而且它报的也不是"在目标内解决的百分比"，而是 **SLA 违约率**——**SLA 已违约**标记的平均值——与工单数、平均解决时长并列，并且只统计**已关闭的工单**（`runtimeFilter: { is_closed: true }`）。（准时率本身是有声明的：**SLA Compliance Rate**，服务概览上的 **SLA Compliance** 仪表盘图画的就是它。只是这份报表没有带上它。）所以本页过去许诺的四个问题，它只回答其中一个：*哪个优先级桶在漏单？*
+**SLA 表现**报表只按**一个**维度细分：**优先级**。它的 `rows` 就是 `['priority']`，没有别的（`src/service/reports/case.report.ts`）。而且它报的也不是"在目标内解决的百分比"，而是 **SLA 违约率**——**SLA 已违约**标记的平均值——与工单数、平均解决时长并列，并且只统计**已关闭的工单**（`runtimeFilter: { is_closed: true }`）。（准时率本身是有声明的：**SLA Compliance Rate**，服务概览上的 **SLA Compliance** 仪表盘图画的就是它。只是这份报表没有带上它。）所以本页过去许诺的四个问题，它只回答其中一个：*哪个优先级桶在漏单？*
 
-另外三个不只是"报表里没放"，而是在它底下的语义层里根本够不着。`case_metrics` 数据集（`src/datasets/case.dataset.ts`）总共声明了六个维度——**状态**、**优先级**、**来源**、**类型**、**创建时间**、**解决所用文章**——因此：
+另外三个不只是"报表里没放"，而是在它底下的语义层里根本够不着。`case_metrics` 数据集（`src/service/datasets/case.dataset.ts`）总共声明了六个维度——**状态**、**优先级**、**来源**、**类型**、**创建时间**、**解决所用文章**——因此：
 
 - **客服**——不存在负责人或客服维度。`owner_id` 是工单上的字段，但数据集没有把它暴露成维度，所以没有任何报表、也没有任何仪表盘部件能按它分组。
 - **账户等级**——`crm_account.tier` 确实存在于账户对象上，但 `case_metrics` 只读 `crm_case`，从不跨到账户上去取它，所以分析侧任何地方都选不到账户等级。
@@ -96,7 +96,7 @@ SLA（服务级别协议）系统为**每一张工单**打上一个**截止时�
 
 移交采用的是**负载最轻**，而不是按轮次的轮询：谁持有该岗位且未结（既非 *Resolved* 也非 *Closed*）工单最少，工单就归谁，因此连续多次升级会自然分摊到整个团队，不需要维护任何计数器。它在三种情况下刻意让开：**无人持有该岗位**（全新安装即是此状态），工单保留原负责人，升级一如既往地完成；工单**已经归池内成员所有**，则留在正在处理它的那位经理手里；或者同一次写入**自己指定了负责人**，那个指定优先。
 
-机制上留个底：这次重新分配**不是第二次写入**。它搭在升级那一次更新上完成（一个 `beforeUpdate` 钩子，`src/objects/_case-assignment.ts` 里的 `case_escalation_reassign`）——所以它不会触发额外的自动化，也不可能形成回路，流程自己的 `update_record` 节点依旧不写任何负责人。这件事流程做不到：`{caseRecord.owner_id.manager}` 要穿透一个 lookup，会插值成字面量 `undefined`。
+机制上留个底：这次重新分配**不是第二次写入**。它搭在升级那一次更新上完成（一个 `beforeUpdate` 钩子，`src/service/objects/_case-assignment.ts` 里的 `case_escalation_reassign`）——所以它不会触发额外的自动化，也不可能形成回路，流程自己的 `update_record` 节点依旧不写任何负责人。这件事流程做不到：`{caseRecord.owner_id.manager}` 要穿透一个 lookup，会插值成字面量 `undefined`。
 
 以下两件事这份清单刻意不写，因为升级并不做：
 
@@ -143,9 +143,9 @@ SLA（服务级别协议）系统为**每一张工单**打上一个**截止时�
 | **服务总监** | SLA 表现报表 | 每周 |
 | **高管** | 服务概览 | 每周 |
 
-这张表过去写的两个名字根本不是视图。**Breached SLA** 与 **Critical Cases** 都不存在于列表视图里：`crm_case` 随产品提供的视图一共八个——*全部工单*、*服务流转*、*SLA 日历*、*工单时间线*、*我的待处理工单*、*未分派 — 待分诊*、*已升级工单* 与 *⏰ SLA 风险预警*（`src/views/case.view.ts`）——其中没有任何一个以 **SLA 已违约**为过滤条件。真正按违约过滤的只有[服务概览](/zh-Hans/docs/analytics/dashboards)上的两个指标磁贴：**SLA Violations**（`is_sla_violated: true`）与 **Critical Cases**（未结 + Critical）。如果你要的是一份能逐条处理的列表，**已升级工单** 是最接近的那个：`case_sla_monitor` 会把它标记为违约的每一个工单都升级掉，所以每一次违约都会落进这个视图——只是会和那些仅因优先级而升级的工单混在一起。
+这张表过去写的两个名字根本不是视图。**Breached SLA** 与 **Critical Cases** 都不存在于列表视图里：`crm_case` 随产品提供的视图一共八个——*全部工单*、*服务流转*、*SLA 日历*、*工单时间线*、*我的待处理工单*、*未分派 — 待分诊*、*已升级工单* 与 *⏰ SLA 风险预警*（`src/service/views/case.view.ts`）——其中没有任何一个以 **SLA 已违约**为过滤条件。真正按违约过滤的只有[服务概览](/zh-Hans/docs/analytics/dashboards)上的两个指标磁贴：**SLA Violations**（`is_sla_violated: true`）与 **Critical Cases**（未结 + Critical）。如果你要的是一份能逐条处理的列表，**已升级工单** 是最接近的那个：`case_sla_monitor` 会把它标记为违约的每一个工单都升级掉，所以每一次违约都会落进这个视图——只是会和那些仅因优先级而升级的工单混在一起。
 
-**我的待处理工单是按优先级排序的，不是按 SLA 截止日期。** 它的排序键是 `priority_rank` 降序在先、`sla_due_date` 升序仅作次级键（`src/views/case.view.ts`）——所以一个一小时后就到期的 Low 工单，仍然排在每一个 Critical 工单下面。不过次级键现在在每一档里都有值可排了，同一档内最早到期的排在最前面。如果你是按截止时间在干活，请在它旁边同时开着 **SLA 风险预警** 或 **SLA 日历**。
+**我的待处理工单是按优先级排序的，不是按 SLA 截止日期。** 它的排序键是 `priority_rank` 降序在先、`sla_due_date` 升序仅作次级键（`src/service/views/case.view.ts`）——所以一个一小时后就到期的 Low 工单，仍然排在每一个 Critical 工单下面。不过次级键现在在每一档里都有值可排了，同一档内最早到期的排在最前面。如果你是按截止时间在干活，请在它旁边同时开着 **SLA 风险预警** 或 **SLA 日历**。
 
 ## 给服务客服的提示
 
@@ -161,8 +161,8 @@ SLA（服务级别协议）系统为**每一张工单**打上一个**截止时�
 
 ## 给管理员的提示
 
-- SLA 矩阵通过工单对象的自动化（一个 SLA 计算钩子）设置，不在任何设置页面上。这十六个数字住在两个必须同步修改的地方：`src/objects/_case-sla.ts`（演示种子数据据以推导的常量），以及 `src/objects/case.hook.ts` 里 `case_sla_defaults` 处理器内部那份手抄镜像——钩子体在沙箱中运行，无法 import 模块常量，所以这张表被写了两遍。只要两份不一致，或者任何一个格子改了而测试没跟着改，`test/case-sla-matrix.test.ts` 就会失败。
+- SLA 矩阵通过工单对象的自动化（一个 SLA 计算钩子）设置，不在任何设置页面上。这十六个数字住在两个必须同步修改的地方：`src/service/objects/_case-sla.ts`（演示种子数据据以推导的常量），以及 `src/service/objects/case.hook.ts` 里 `case_sla_defaults` 处理器内部那份手抄镜像——钩子体在沙箱中运行，无法 import 模块常量，所以这张表被写了两遍。只要两份不一致，或者任何一个格子改了而测试没跟着改，`test/case-sla-matrix.test.ts` 就会失败。
 - **驱动它的是 `crm_account.tier`。** 在账户记录上设置客户的**客户层级**，才是把他们的工单挪到更紧一列的操作；没有分类的账户按 SMB 对待。这是本应用中第一个真正读取该字段的地方。
-- **不存在"营业时间 vs. 日历时间"这个开关**，它背后也不存在什么租户级的营业时间设置——本应用根本没有工作日日历，也没有节假日清单。矩阵里的每一个格子都是在 `src/objects/case.hook.ts` 里往当前时钟上加出来的，所以夜间、周末与节假日一律照算；要让截止时间跳过非工作时段，就得先把一套日历教给这个钩子。
+- **不存在"营业时间 vs. 日历时间"这个开关**，它背后也不存在什么租户级的营业时间设置——本应用根本没有工作日日历，也没有节假日清单。矩阵里的每一个格子都是在 `src/service/objects/case.hook.ts` 里往当前时钟上加出来的，所以夜间、周末与节假日一律照算；要让截止时间跳过非工作时段，就得先把一套日历教给这个钩子。
 - 升级触发条件——只有 Critical 优先级这一项，不存在 High+Customer 这个条件——写在 [工单升级流程定义](/zh-Hans/docs/administration/automation)里，即 `src/service/flows/case-escalation.flow.ts`。承载它的是两个流程：`case_escalation`（更新时）与 `case_escalation_on_create`（新建时）。要改就**两个一起改**，否则以新条件新建的工单仍会漏掉。
-- 这两处的收件人列表都不是 Setup 界面上的配置项。*严重时通知* 就是工单升级流程的 `notify` 节点，其列表只有 `{caseRecord.owner_id}` 一项——要改就改 `src/service/flows/case-escalation.flow.ts`。*升级时通知* 根本没有收件人列表，因为它不发出任何消息：状态转为已升级触发的是 `src/objects/case.hook.ts` 里的 `case_status_side_effects` 钩子，它触达的是账户负责人，靠的是那条跟进任务。
+- 这两处的收件人列表都不是 Setup 界面上的配置项。*严重时通知* 就是工单升级流程的 `notify` 节点，其列表只有 `{caseRecord.owner_id}` 一项——要改就改 `src/service/flows/case-escalation.flow.ts`。*升级时通知* 根本没有收件人列表，因为它不发出任何消息：状态转为已升级触发的是 `src/service/objects/case.hook.ts` 里的 `case_status_side_effects` 钩子，它触达的是账户负责人，靠的是那条跟进任务。

@@ -94,7 +94,7 @@ The full layered model is in [Sharing & Security](/docs/administration/sharing-a
 | **Record shares** | Per-record sharing — `sys_record_share`, at **Setup → Record Shares** |
 | **Field-level security** | Per-field read/edit — see [Encryption](#field-level-controls) below |
 
-That sixth row used to read *Account teams*. **There is no account-team object and no per-record team feature** — the Salesforce name was describing the platform's per-record grant table, `sys_record_share`. HotCRM does ship a sharing rule *named* `account_team_sharing` (`src/sharing/account.sharing.ts`), and that is a rule granting a position access to a set of accounts, not a team you add people to on one record.
+That sixth row used to read *Account teams*. **There is no account-team object and no per-record team feature** — the Salesforce name was describing the platform's per-record grant table, `sys_record_share`. HotCRM does ship a sharing rule *named* `account_team_sharing` (`src/sales/sharing/account.sharing.ts`), and that is a rule granting a position access to a set of accounts, not a team you add people to on one record.
 
 ## Network & login controls
 

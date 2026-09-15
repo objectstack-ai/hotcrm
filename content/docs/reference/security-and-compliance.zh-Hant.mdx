@@ -91,7 +91,7 @@ description: SSO、MFA、稽核日誌、secret 欄位通道、GDPR —— HotCRM
 | **記錄共享** | 按記錄共享 —— `sys_record_share`，位於 **Setup → Record Shares** |
 | **欄位級安全** | 逐欄位讀/寫 —— 見下方加密一節 |
 
-第六行原先寫的是 *客戶團隊*。**不存在客戶團隊物件，也不存在按記錄的團隊功能** —— 這個 Salesforce 味的名字描述的其實是平台的按記錄授權表 `sys_record_share`。HotCRM 確實帶了一條**名叫** `account_team_sharing` 的共享規則（`src/sharing/account.sharing.ts`），但那是一條把一組客戶授權給某個崗位的規則，不是你能在某條記錄上往裡加人的團隊。
+第六行原先寫的是 *客戶團隊*。**不存在客戶團隊物件，也不存在按記錄的團隊功能** —— 這個 Salesforce 味的名字描述的其實是平台的按記錄授權表 `sys_record_share`。HotCRM 確實帶了一條**名叫** `account_team_sharing` 的共享規則（`src/sales/sharing/account.sharing.ts`），但那是一條把一組客戶授權給某個崗位的規則，不是你能在某條記錄上往裡加人的團隊。
 
 ## 網路與登入控制
 

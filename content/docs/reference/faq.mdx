@@ -41,7 +41,7 @@ The Copilot respects your sharing — if you can't see it, neither can it. Verif
 
 ### I created a lead but it's assigned to someone else — why?
 
-Auto-assignment ran. **There is no Setup → Lead Settings screen and there are no assignment rules to check** — a lead that arrives without an owner is handed on insert to whichever holder of the `sales_rep` position has the fewest open leads (`src/objects/lead.hook.ts`). It load-balances; it does not match region or territory. So the owner you see is the least-loaded rep, not the nearest one.
+Auto-assignment ran. **There is no Setup → Lead Settings screen and there are no assignment rules to check** — a lead that arrives without an owner is handed on insert to whichever holder of the `sales_rep` position has the fewest open leads (`src/sales/objects/lead.hook.ts`). It load-balances; it does not match region or territory. So the owner you see is the least-loaded rep, not the nearest one.
 
 ### My opportunity won't move to Closed Won.
 
@@ -89,7 +89,7 @@ Check in order:
 Nothing counts down in this app — there is no live SLA timer to watch. What exists is a due date stamped on every case and an hourly sweep that reports a breach after the fact. Check:
 
 - The case is in an **open status** (not Resolved / Closed) — the hourly `case_sla_monitor` sweep filters `status: { $nin: ['resolved', 'closed'] }`, so a resolved case is never picked up.
-- The case has an **SLA Due Date** at all. Every priority gets one now, from a priority × account-tier matrix in `src/objects/case.hook.ts` — but a case whose priority the matrix has no row for is still left blank, and a case with a blank due date is never a candidate for the sweep, so **SLA Violated** stays `false` however long it stays open. (Typing a due date in by hand works — the sweep then treats that case like any other.)
+- The case has an **SLA Due Date** at all. Every priority gets one now, from a priority × account-tier matrix in `src/service/objects/case.hook.ts` — but a case whose priority the matrix has no row for is still left blank, and a case with a blank due date is never a candidate for the sweep, so **SLA Violated** stays `false` however long it stays open. (Typing a due date in by hand works — the sweep then treats that case like any other.)
 - That due date is already **in the past**, and a sweep has run since. The sweep is hourly and only flags cases that are already over, so a case resolved late but before the next sweep is never flagged at all.
 
 **There is no business-hours setting to check** — no working-day calendar, no holiday list, no *Setup → Business Hours* screen anywhere in this app. Every number in the matrix is wall-clock hours, and nights, weekends and holidays count against them. **There is no SLA definition screen either**: the matrix is written into the hook rather than configured, and the only part of it you set from the UI is the account's **Customer Tier**, which chooses the column. See [SLA & Escalation](/docs/service/sla-and-escalation).
@@ -135,7 +135,7 @@ Check:
 
 ### I changed a field on a record — when will the dashboard update?
 
-Each dashboard re-queries on the interval it declares: every **60 s** on Customer Service, every **180 s** on Sales Performance, every **300 s** on CRM Overview, Sales Activity and Executive Overview (`src/dashboards/`). How soon the analytics service re-compiles the cube underneath is a deployment question — this app configures no refresh schedule of its own. HotCRM's dashboard metadata declares no manual refresh control either, so any refresh button your console shows comes from the platform rather than from this app.
+Each dashboard re-queries on the interval it declares: every **60 s** on Customer Service, every **180 s** on Sales Performance, every **300 s** on CRM Overview, Sales Activity and Executive Overview (`src/*/dashboards/`). How soon the analytics service re-compiles the cube underneath is a deployment question — this app configures no refresh schedule of its own. HotCRM's dashboard metadata declares no manual refresh control either, so any refresh button your console shows comes from the platform rather than from this app.
 
 ### Why can't I add a custom field to a report?
 

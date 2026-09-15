@@ -77,23 +77,25 @@ mv src/sales/translations/crm.translation.ts src/sales/translations/acme.transla
 HotCRM 在销售 / 服务 / 营销 / 营收领域提供了 18 个对象。大多数应用需要更少：
 
 ```bash
-# Example: keep only Sales-related objects
-rm src/objects/{case,knowledge_article,campaign,campaign_member,contract,quote,quote_line_item,forecast}.object.ts
+# Example: keep only Sales. Service, Revenue and Marketing are whole
+# packages now (ADR-0130), so they go as directories.
+rm -r src/service src/revenue src/marketing
+rm src/sales/objects/forecast.object.ts
 ```
 
-然后修剪引用了已删除对象的相应钩子、动作、流程、仪表盘、翻译和文档。`pnpm typecheck` 会标记出断裂的引用。
+然后从 `objectstack.composition.ts` 里删掉这三个包的 import，再修剪 sales 侧那些引用了已删除对象的钩子、动作、流程、仪表盘、翻译和文档。`pnpm typecheck` 会标记出断裂的引用。
 
 ### 5. 添加你确实需要的部分
 
-遵循文件后缀协议：
+遵循文件后缀协议。`<package>` 是 `sales` / `service` / `revenue` / `marketing` 中拥有该实体的那一个——`src/` 下的一个目录**就是**一个包（ADR-0130），而一个没有到达所属包 barrel 的文件不会被任何东西注册：
 
 | 新实体 | 文件 |
 |---|---|
-| 数据模型 | `src/objects/<entity>.object.ts` |
-| 服务端触发器 | `src/hooks/<entity>.hook.ts` |
-| API + AI 工具 | `src/actions/<entity>.actions.ts` |
-| UI 布局 | `src/pages/<entity>.page.ts` |
-| 列表视图 | `src/views/<entity>.view.ts` |
+| 数据模型 | `src/<package>/objects/<entity>.object.ts` |
+| 服务端触发器 | `src/<package>/objects/<entity>.hook.ts` —— 与它的对象并排放置，在 `src/<package>/objects/hooks.ts` 注册 |
+| API + AI 工具 | `src/<package>/actions/<entity>.actions.ts` |
+| UI 布局 | `src/<package>/pages/<entity>.page.ts` |
+| 列表视图 | `src/<package>/views/<entity>.view.ts` |
 | i18n | 追加到 `src/sales/translations/{en,zh-CN,es-ES,ja-JP}.ts` |
 
 每个文件在构建时都要经过 `@objectstack/spec` 模式校验。出错会显著报错。
@@ -127,7 +129,7 @@ git fetch upstream
 git merge upstream/main          # or rebase, your call
 ```
 
-合并冲突大多发生在 `src/sales/translations/*`（追加式）和 `src/objects/*.object.ts`（如果你重命名了它们）。文件后缀协议使冲突面保持很小。
+合并冲突大多发生在 `src/sales/translations/*`（追加式）和 `src/*/objects/*.object.ts`（如果你重命名了它们）。文件后缀协议使冲突面保持很小。
 
 ## 你可以放心更改的内容
 

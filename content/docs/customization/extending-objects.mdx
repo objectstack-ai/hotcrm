@@ -5,12 +5,12 @@ description: Add or change HotCRM objects, fields, hooks, flows, and sharing met
 
 # Extending Objects
 
-HotCRM objects live in `src/objects/` and are registered from `src/objects/index.ts`.
+HotCRM objects live in the `objects/` directory of the package that owns them — `src/sales/`, `src/service/`, `src/revenue/` or `src/marketing/` — and each package registers its own from that directory's `index.ts`. `src/` has no top-level `objects/` directory: a directory under `src/` **is** a package (ADR-0130). The warranty below goes in the revenue package, beside `crm_product` and `crm_contract`, the objects a warranty sits next to; put yours wherever its own domain lives.
 
 ## Add an object
 
 ```ts
-// src/objects/warranty.object.ts
+// src/revenue/objects/warranty.object.ts
 import { ObjectSchema, Field } from '@objectstack/spec/data';
 
 export const Warranty = ObjectSchema.create({
@@ -42,16 +42,16 @@ export const Warranty = ObjectSchema.create({
 Then export it:
 
 ```ts
-// src/objects/index.ts
+// src/revenue/objects/index.ts
 export { Warranty } from './warranty.object.js';
 ```
 
 ## Add lifecycle logic
 
-Hooks live beside objects and are collected by `src/hooks/index.ts`.
+A `*.hook.ts` sits beside the `*.object.ts` it names, in the same package, and is registered from that package's own `objects/hooks.ts` — `src/revenue/objects/hooks.ts` here — which `objectstack.composition.ts` assembles into `allHooks`. A hook that reaches neither is silently ignored: the build stays green and the handler never runs.
 
 ```ts
-// src/objects/warranty.hook.ts
+// src/revenue/objects/warranty.hook.ts
 import type { Hook } from '@objectstack/spec/data';
 
 const warrantyHook: Hook = {
