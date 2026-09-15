@@ -17,9 +17,9 @@ HotCRM 分析将你的 CRM 活动转化为**决策**。三个层次协同工作�
 | --- | --- |
 | [**仪表盘**](/zh-Hans/docs/analytics/dashboards) | **五个**开箱即用的仪表盘 —— CRM Overview、Sales Performance、Sales Activity、Customer Service、Executive Overview |
 | [**报表**](/zh-Hans/docs/analytics/reports) | **十份**标准报表 —— 交易 4 份、工单 3 份，线索、客户、流失各 1 份 |
-| [**多维数据集**](/zh-Hans/docs/analytics/cubes) | `src/datasets/` 下的**九个** dataset，也就是上面两层按名字绑定的那一层 |
+| [**多维数据集**](/zh-Hans/docs/analytics/cubes) | `src/*/datasets/` 下的**九个** dataset，也就是上面两层按名字绑定的那一层 |
 
-上表有两个数字过去写的是别的样子，去找东西之前值得先知道。**这里没有合同报表** —— 也建不出来：`src/datasets/` 只读九个对象，`crm_contract` 不在其中，所以分析里没有任何东西能对合同做计数、求和或分组。另外，**没有任何 cube 叫这四个名字** —— *Sales*、*Pipeline*、*Service*、*Marketing* 在应用里零命中。前三个由哪些 dataset 回答、第四个为什么连数据源都没有，见 [多维数据集](/zh-Hans/docs/analytics/cubes)。
+上表有两个数字过去写的是别的样子，去找东西之前值得先知道。**这里没有合同报表** —— 也建不出来：`src/*/datasets/` 只读九个对象，`crm_contract` 不在其中，所以分析里没有任何东西能对合同做计数、求和或分组。另外，**没有任何 cube 叫这四个名字** —— *Sales*、*Pipeline*、*Service*、*Marketing* 在应用里零命中。前三个由哪些 dataset 回答、第四个为什么连数据源都没有，见 [多维数据集](/zh-Hans/docs/analytics/cubes)。
 
 ## 开箱即用的能力
 
@@ -41,7 +41,7 @@ HotCRM 分析将你的 CRM 活动转化为**决策**。三个层次协同工作�
 
 这意味着**一个仪表盘**适用于整个组织——每个人看到的内容取决于他们的身份。
 
-*Pipeline by Stage* 不是一张可以运行的报表，但这个名字有两个真身：它是 CRM Overview、Sales Performance 与 Executive Overview 共用的那块未结管道漏斗**磁贴**（`src/dashboards/shared-widgets.ts`），也是 **Opportunities by Stage** 报表上那张柱状图的标题。在报表库里按这个名字搜索，什么也搜不到 —— 见 [报表](/zh-Hans/docs/analytics/reports)。
+*Pipeline by Stage* 不是一张可以运行的报表，但这个名字有两个真身：它是 CRM Overview、Sales Performance 与 Executive Overview 共用的那块未结管道漏斗**磁贴**（`src/sales/dashboards/shared-widgets.ts`），也是 **Opportunities by Stage** 报表上那张柱状图的标题。在报表库里按这个名字搜索，什么也搜不到 —— 见 [报表](/zh-Hans/docs/analytics/reports)。
 
 ## 在哪里可以找到
 
@@ -55,7 +55,7 @@ HotCRM 分析将你的 CRM 活动转化为**决策**。三个层次协同工作�
 
 ## AI 驱动的洞察
 
-**在本应用这一侧，没有任何东西把 Copilot 连到某个 dataset 上。** `src/skills/` 下的六个技能，没有一个点名任何 dataset、cube 或度量。其中负责回答数据问题的那个 —— **Live Data Access** —— 接的是平台的对象工具，而它的指令要求先重新读一遍对象的 schema，再在记录上做聚合。所以 Copilot 的回答是从对象上算出来的，而不是从编译好的 cube 上读出来的。
+**在本应用这一侧，没有任何东西把 Copilot 连到某个 dataset 上。** `src/*/skills/` 下的六个技能，没有一个点名任何 dataset、cube 或度量。其中负责回答数据问题的那个 —— **Live Data Access** —— 接的是平台的对象工具，而它的指令要求先重新读一遍对象的 schema，再在记录上做聚合。所以 Copilot 的回答是从对象上算出来的，而不是从编译好的 cube 上读出来的。
 
 这也决定了能问它什么。*"是什么造成了承诺额与预测额之间的差距？"* 背后是有数据的：预测记录上真实带着 **Commit**、**Quota**、**Closed Won**、**Pipeline** 四个数字，在 **Forecast Metrics** dataset 上发布为 **Commit**、**Quota**、**Closed**、**Pipeline** 四个度量。*"为什么上季度东区比西区少成交了 3 笔交易？"* 与 *"告诉我哪些产品与更长的销售周期相关。"* 则没有 —— 交易上不存区域，没有任何 dataset 读行项目，而商机唯一带着的那个时长（**Days in Current Stage**）是查询之后才算的公式，什么都聚合不了。这些限制是从哪儿来的，见 [多维数据集](/zh-Hans/docs/analytics/cubes)。
 

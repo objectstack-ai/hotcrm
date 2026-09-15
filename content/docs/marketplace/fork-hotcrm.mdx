@@ -77,23 +77,25 @@ Then update `src/sales/translations/index.ts` to reference the new filename.
 HotCRM ships 18 objects across Sales / Service / Marketing / Revenue. Most apps need fewer:
 
 ```bash
-# Example: keep only Sales-related objects
-rm src/objects/{case,knowledge_article,campaign,campaign_member,contract,quote,quote_line_item,forecast}.object.ts
+# Example: keep only Sales. Service, Revenue and Marketing are whole
+# packages now (ADR-0130), so they go as directories.
+rm -r src/service src/revenue src/marketing
+rm src/sales/objects/forecast.object.ts
 ```
 
-Then prune the corresponding hooks, actions, flows, dashboards, translations, and docs that reference removed objects. `pnpm typecheck` will flag the broken references.
+Then drop those three packages' imports from `objectstack.composition.ts`, and prune the sales-side hooks, actions, flows, dashboards, translations and docs that reference removed objects. `pnpm typecheck` will flag the broken references.
 
 ### 5. Add what you do need
 
-Follow the file-suffix protocol:
+Follow the file-suffix protocol. `<package>` is the one of `sales` / `service` / `revenue` / `marketing` that owns the entity — a directory under `src/` **is** a package (ADR-0130), and a file that never reaches its package's barrel is registered by nothing:
 
 | New entity | File |
 |---|---|
-| Data model | `src/objects/<entity>.object.ts` |
-| Server-side trigger | `src/hooks/<entity>.hook.ts` |
-| API + AI tool | `src/actions/<entity>.actions.ts` |
-| UI layout | `src/pages/<entity>.page.ts` |
-| List view | `src/views/<entity>.view.ts` |
+| Data model | `src/<package>/objects/<entity>.object.ts` |
+| Server-side trigger | `src/<package>/objects/<entity>.hook.ts` — beside its object, registered in `src/<package>/objects/hooks.ts` |
+| API + AI tool | `src/<package>/actions/<entity>.actions.ts` |
+| UI layout | `src/<package>/pages/<entity>.page.ts` |
+| List view | `src/<package>/views/<entity>.view.ts` |
 | i18n | append to `src/sales/translations/{en,zh-CN,es-ES,ja-JP}.ts` |
 
 Every file goes through `@objectstack/spec` schema validation at build time. Mistakes fail loudly.
@@ -127,7 +129,7 @@ git fetch upstream
 git merge upstream/main          # or rebase, your call
 ```
 
-Merge conflicts mostly happen in `src/sales/translations/*` (additive) and `src/objects/*.object.ts` (if you renamed them). The file-suffix protocol keeps conflict surface small.
+Merge conflicts mostly happen in `src/sales/translations/*` (additive) and `src/*/objects/*.object.ts` (if you renamed them). The file-suffix protocol keeps conflict surface small.
 
 ## What you can safely change
 

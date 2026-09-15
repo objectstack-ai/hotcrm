@@ -45,8 +45,8 @@ description: 记录、API 速率限制、AI 配额、文件大小 —— HotCRM 
 | 文档预览格式 | pdf、docx、xlsx、pptx |
 
 *部分有出处。* HotCRM 真正在执行的文件限制是**按字段**的，不是按租户的：`Field.file()` 和 `Field.image()`
-接受一个由服务端执行的 `maxSize`，本应用设了三处 —— 客户 logo 2 MB（`src/objects/account.object.ts:358`）、
-产品素材 5 MB 与 20 MB（`src/objects/product.object.ts:157` 与 `:164`）。应用和已安装的包里都没有声明 2 GB
+接受一个由服务端执行的 `maxSize`，本应用设了三处 —— 客户 logo 2 MB（`src/sales/objects/account.object.ts:358`）、
+产品素材 5 MB 与 20 MB（`src/revenue/objects/product.object.ts:157` 与 `:164`）。应用和已安装的包里都没有声明 2 GB
 的平台上限、没有分段上传阈值、也没有预览格式清单；上面的预览格式说的是你部署里跑的那个查看器。
 
 ## API 限制
@@ -87,7 +87,7 @@ description: 记录、API 速率限制、AI 配额、文件大小 —— HotCRM 
 | 搜索延迟（p95） | 无出处 —— 取决于你的数据库和数据量 |
 
 *部分有出处。* 搜索读哪些字段**是**真的，而且是按对象声明的：对象上的 `searchableFields`，今天有八个对象
-设了它（`src/objects/account.object.ts:25`、`lead.object.ts:435`、`case.object.ts:387`、
+设了它（`src/sales/objects/account.object.ts:25`、`lead.object.ts:435`、`case.object.ts:387`、
 `opportunity.object.ts:28`、`product.object.ts:27`、`quote.object.ts:29`、`knowledge_article.object.ts:82`、
 `event.object.ts:224`）。**既没有前 30 个的默认值，也没有可配置的上限** —— `@objectstack/spec/data` 里的
 `resolveSearchFields` 原样返回声明的那份清单，所以本页原先写的"默认前 30 个（可配置）"什么也没有描述。
@@ -105,7 +105,7 @@ description: 记录、API 速率限制、AI 配额、文件大小 —— HotCRM 
 | 最大同时技能执行数 | 每用户 **10**（无出处） |
 | 嵌入存储 | 按套餐（通常为每个租户 GB 级） |
 
-*没有执行。* 对于 `src/skills/` 里的六个技能，以及已安装的任何包，都不存在调用配额、token 预算、并发上限
+*没有执行。* 对于 `src/*/skills/` 里的六个技能，以及已安装的任何包，都不存在调用配额、token 预算、并发上限
 或重新索引计划。你能拿到的计量来自你的模型供应商和你的部署，不来自这个应用。
 
 ## 报表与分析
@@ -116,7 +116,7 @@ description: 记录、API 速率限制、AI 配额、文件大小 —— HotCRM 
 | 导出的报表行数 | **1,000,000**（无出处） |
 | 每用户的仪表盘 | 无限制 |
 | 每个仪表盘的小部件 | **50**（无出处） |
-| 仪表盘刷新间隔 | Customer Service **60 秒**、Sales Performance **180 秒**、其余三个 **300 秒** —— 由 `src/dashboards/` 逐个仪表盘声明 |
+| 仪表盘刷新间隔 | Customer Service **60 秒**、Sales Performance **180 秒**、其余三个 **300 秒** —— 由 `src/*/dashboards/` 逐个仪表盘声明 |
 | cube 刷新频率 | 归分析服务管。HotCRM 在 `src/` 里没有声明任何刷新计划，也没有增量与全量刷新策略，因此应用侧给不出这个数字 —— 请对着你自己的部署去核 |
 | 并发报表运行（每用户） | **5**（无出处） |
 
@@ -253,7 +253,7 @@ async function callApi(fn, retries = 5) {
 
 ### AI 调用批处理
 
-*未提供。* 不存在批量技能调用这个面：`src/skills/` 里的六个技能是一次一调的，应用和已安装的包里都不存在
+*未提供。* 不存在批量技能调用这个面：`src/*/skills/` 里的六个技能是一次一调的，应用和已安装的包里都不存在
 批处理、连接池或"约 10× 加速"这条路径。要分流很多记录，就意味着很多次调用。列表视图上的批量**操作**是另一
 回事，它是真的 —— 参见[自动化](/zh-Hans/docs/administration/automation)。
 
@@ -265,7 +265,7 @@ async function callApi(fn, retries = 5) {
 indexes: [{ name: 'idx_account_name', fields: ['name'] }],
 ```
 
-HotCRM 今天已经在十五个对象上声明了十六个这样的块（例如 `src/objects/account.object.ts:442`）；SQL 驱动通过
+HotCRM 今天已经在十五个对象上声明了十六个这样的块（例如 `src/sales/objects/account.object.ts:442`）；SQL 驱动通过
 `syncDeclaredIndexes` 把它们物化出来。**不存在按字段的 `indexed` 开关** —— `FieldSchema` 会按名拒绝这个键，
 并附上理由：*"从来不是 FieldSchema 的键；字段级的索引标志没有建出过任何索引（#2377）。请在对象的
 `indexes[]` 里声明索引。"* 所以本页原先给的建议 ——"把字段标记为索引"—— 点的是一个从未建出索引的标志。

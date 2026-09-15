@@ -5,12 +5,12 @@ description: Add HotCRM views, pages, dashboards, and actions.
 
 # UI Extensions
 
-HotCRM UI metadata lives under `src/views/`, `src/pages/`, `src/dashboards/`, `src/reports/`, and `src/actions/`.
+HotCRM UI metadata lives under the owning package's own directories — `src/*/views/`, `src/*/pages/`, `src/*/dashboards/`, `src/*/reports/` and `src/*/actions/`, where `*` is one of the four packages (`sales`, `service`, `revenue`, `marketing`). An item lives with the object it is authored against.
 
 ## Add an action
 
 ```ts
-// src/actions/opportunity.actions.ts
+// src/sales/actions/opportunity.actions.ts
 import type { Action } from '@objectstack/spec/ui';
 
 export const MarkOpportunityReviewedAction: Action = {
@@ -37,8 +37,8 @@ export const MarkOpportunityReviewedAction: Action = {
 
 ## Add views and pages
 
-- Put list and kanban definitions in `src/views/`.
-- Put record pages and utility pages in `src/pages/`.
+- Put list and kanban definitions in the owning package's `views/` — `src/sales/views/`, `src/service/views/`, `src/revenue/views/` or `src/marketing/views/`.
+- Put record pages and utility pages in that package's `pages/` — `src/sales/pages/` or `src/service/pages/` today.
 - Export new metadata from the matching `index.ts` file.
 - Add user-visible labels to `src/sales/translations/{locale}.ts`.
 

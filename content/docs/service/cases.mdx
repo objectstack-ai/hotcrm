@@ -52,7 +52,7 @@ This drives reporting (which channels generate the most volume) and is auto-fill
 
 ## What a case record stores
 
-`crm_case` declares **25 fields** (`src/objects/case.object.ts`), and three different things organise them: the object's own field groups, the case detail screen, and the case form. Only the first of the three has six sections, and no two of them agree — so it is worth knowing which one you are being shown.
+`crm_case` declares **25 fields** (`src/service/objects/case.object.ts`), and three different things organise them: the object's own field groups, the case detail screen, and the case form. Only the first of the three has six sections, and no two of them agree — so it is worth knowing which one you are being shown.
 
 ### The object's field groups
 
@@ -71,7 +71,7 @@ Five of those six rows used to be written differently on this page, and the diff
 
 ### The detail screen
 
-The **Details** tab of the case detail page (`src/pages/case_detail.page.ts`) declares **three** sections, holding **10** of the 25 fields:
+The **Details** tab of the case detail page (`src/service/pages/case_detail.page.ts`) declares **three** sections, holding **10** of the 25 fields:
 
 | Section | Fields |
 | --- | --- |
@@ -85,7 +85,7 @@ The tab is shorter than its section names suggest, and that is deliberate: a sec
 
 ### The form
 
-The case form (`src/views/case.view.ts`) is **not** tabbed. It is a single section, holding **9** of the 25 fields:
+The case form (`src/service/views/case.view.ts`) is **not** tabbed. It is a single section, holding **9** of the 25 fields:
 
 | Section | Fields |
 | --- | --- |
@@ -98,7 +98,7 @@ The two are not one screen wearing different chrome — they overlap in only fou
 ## What happens automatically
 
 - **Owner, when a case is claimed** — a case with **no owner** gets one the moment somebody moves it to *In Progress*, *Waiting on Customer* or *Waiting on Support*: whoever makes that change is stamped as the case's Owner in the same save. A case that already has an owner is never touched, and an automated or seeded write never claims — those leave the case ownerless, for the **Unassigned — triage** tab to keep showing. See *Claiming a case out of triage* below.
-- **First response date** (`first_response_date`) — stamped the first time an interaction that **already took place** is recorded against the case. Its single writer is the `event_activity_bubble` hook (`src/objects/event.hook.ts`), which fires on any `crm_event` reaching **Held** status with the case as its related record — so **Log a Call** and **Log a Meeting** stamp it, and so does an interaction entered any other way, including straight onto the case's activity list. It reads the stored value back before writing, so a second interaction never overwrites the first. Two things are deliberately *not* a first response: a **status change** (an agent can move a case to *In Progress* and investigate for an hour while the customer hears nothing) and a meeting merely *scheduled*, which is `planned` rather than held. On a case worked entirely through comments the field stays empty.
+- **First response date** (`first_response_date`) — stamped the first time an interaction that **already took place** is recorded against the case. Its single writer is the `event_activity_bubble` hook (`src/sales/objects/event.hook.ts`), which fires on any `crm_event` reaching **Held** status with the case as its related record — so **Log a Call** and **Log a Meeting** stamp it, and so does an interaction entered any other way, including straight onto the case's activity list. It reads the stored value back before writing, so a second interaction never overwrites the first. Two things are deliberately *not* a first response: a **status change** (an agent can move a case to *In Progress* and investigate for an hour while the customer hears nothing) and a meeting merely *scheduled*, which is `planned` rather than held. On a case worked entirely through comments the field stays empty.
 - **Closed flag** — set automatically when status changes to *Closed*.
 - **Closed date** — stamped to NOW when status changes to *Closed*.
 - **Resolution time (hours)** — calculated as the difference between *Created date* and *Closed date*.
@@ -169,7 +169,7 @@ Nothing else claims a case, and each exclusion is deliberate:
 
 ## Standard list views
 
-`crm_case` ships **eight** views (`src/views/case.view.ts`), and the case list surfaces them as tabs, each labelled with the view's own name:
+`crm_case` ships **eight** views (`src/service/views/case.view.ts`), and the case list surfaces them as tabs, each labelled with the view's own name:
 
 | View | What it shows |
 | --- | --- |
@@ -195,7 +195,7 @@ When you open a case, you'll see:
 - **Header** — the case number and subject as the title (`{case_number} · {subject}`), the **account** as the subtitle, plus a breadcrumb and the action buttons. That is the whole header: there is **no status badge, no priority badge and no SLA countdown** on it. Nothing in this app computes time remaining or time over — not here, not anywhere else on the case — so there is no countdown to render. See [SLA & Escalation](/docs/service/sla-and-escalation) for what the two SLA fields do instead.
 - **Key Information** — the highlights strip directly under the header, and where **Status** and **Priority** actually live: ordinary fields rather than badges, side by side with **SLA Due Date**, **SLA Violated**, **Owner** and **Account**.
 - **Status path** — a Salesforce-style horizontal flow showing New → In Progress → Waiting on Customer → Escalated → Resolved → Closed, so an agent can see at a glance where the case stands and what the next stop is.
-- **Customer panel** — there is no such panel. The page (`src/pages/case_detail.page.ts`) declares two regions and nothing else: a header holding the three components above, and a main region holding the tab strip below. What customer context there is sits in those: the **account** appears twice over — the header subtitle and the Key Information strip — and the **primary contact** is a field in the *Details* tab's *Case Information* section. **Contract tier** and **open cases this month** are on no case surface at all. A case links to no contract, and `crm_contract` carries no tier field either; the nearest real field is **Customer Tier** on the account record, which this page does not show. Nothing in this app counts a customer's cases by month.
+- **Customer panel** — there is no such panel. The page (`src/service/pages/case_detail.page.ts`) declares two regions and nothing else: a header holding the three components above, and a main region holding the tab strip below. What customer context there is sits in those: the **account** appears twice over — the header subtitle and the Key Information strip — and the **primary contact** is a field in the *Details* tab's *Case Information* section. **Contract tier** and **open cases this month** are on no case surface at all. A case links to no contract, and `crm_contract` carries no tier field either; the nearest real field is **Customer Tier** on the account record, which this page does not show. Nothing in this app counts a customer's cases by month.
 - **Three tabs:**
   - **Details** — the case description, resolution and internal notes in full, but not "all metadata fields": **10** of the object's **25**, in the three sections listed under *What a case record stores* above. Of the fifteen that are not on the tab, seven are elsewhere on this same screen: **Status**, **Priority**, **SLA Due Date**, **SLA Violated**, **Case Owner** and **Account** are on the **Key Information** strip above the tabs, and **Subject** is half the page title. The remaining eight are on no case screen at all — **Created Date**, **Closed Date**, **Escalated Date**, **First Response Date**, **Is Closed**, **Priority Rank**, **Display Title** and **Resolved by Article**. **Created Date**, **Closed Date** and **Is Closed** are stamped as the case opens and closes and are read by the *Case Timeline* and *Service Workflow* views rather than by this screen, **Escalated Date** is written by the escalation flows and displayed nowhere, **Priority Rank** is the sort key behind *My Open Cases*, **Display Title** is the object's `nameField`, the title formula that names a case wherever one is referenced rather than a field you read here, and **Resolved by Article** is read by the deflection measures rather than by a screen. **First Response Date** is the omission worth knowing about: *What happens automatically* above explains at length how it gets stamped, and this is not the tab you can read it on.
   - **Related** — one list, not four: **Open Tasks** — the `crm_task` records pointing at this case through **Related Case** (`related_to_case`), filtered to those whose status is not *Completed*, ten at a time. That is the whole tab. There is no attachments list: files can be attached to a case (the object enables them), but no component on this page lists them. There is no linked-opportunity list, because `crm_case` has no opportunity relationship in either direction. And there is no milestone list — the case's three milestones, *escalated*, *resolved* and *closed*, are emitted as entries in the **Activity** timeline, not as records here.
@@ -243,6 +243,6 @@ If the Copilot decides the priority is *Critical*, it will also recommend immedi
 
 ## Tips for admins
 
-- The SLA targets per priority and account tier are stored in the case object's automation. To change them, edit `src/objects/_case-sla.ts` and the matching table inside `case_sla_defaults` in `src/objects/case.hook.ts` — both, because a sandboxed hook body cannot import a constant — see [SLA & Escalation](/docs/service/sla-and-escalation) and [Administration › Automation](/docs/administration/automation).
+- The SLA targets per priority and account tier are stored in the case object's automation. To change them, edit `src/service/objects/_case-sla.ts` and the matching table inside `case_sla_defaults` in `src/service/objects/case.hook.ts` — both, because a sandboxed hook body cannot import a constant — see [SLA & Escalation](/docs/service/sla-and-escalation) and [Administration › Automation](/docs/administration/automation).
 - Neither `escalation_team@example.com` nor `support_manager@example.com` is configured anywhere — both addresses exist nowhere in this app. The one recipient list that does exist is the `notify` node of the Case Escalation flow, `recipients: ['{caseRecord.owner_id}']` — the case owner alone — and it is edited in `src/service/flows/case-escalation.flow.ts`, not on a Setup screen.
 - Email-to-case ingestion (auto-create case from an inbound email) requires the email plugin — see [Customization › Extending Objects](/docs/customization/extending-objects).
