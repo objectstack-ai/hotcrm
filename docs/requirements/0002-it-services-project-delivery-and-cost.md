@@ -70,7 +70,7 @@ capture, cost-versus-budget control and project financial reporting — which Ho
 objects for at all. The customer is a project-based IT-services business, and that half of
 the process is the generic shape of the whole category, not one company's quirk.
 
-**Sales half (steps 1–14), against `src/objects/`.**
+**Sales half (steps 1–14), against `src/sales/objects/`.**
 
 - `crm_account` has name, type, industry, revenue, headcount, structured address, parent
   account and tiering; it has no registration / tax identifier, no category that *restricts
@@ -82,7 +82,7 @@ the process is the generic shape of the whole category, not one company's quirk.
 - `crm_lead` has source, status, rating, conversion and duplicate handling; it has no
   need-type, no estimated amount, and no approval gate on conversion.
 - `crm_opportunity` has stage, amount, probability, forecast category, a **tiered amount
-  approval** (`src/flows/opportunity-approval.flow.ts`) and win/loss reasons; it has no bid
+  approval** (`src/sales/flows/opportunity-approval.flow.ts`) and win/loss reasons; it has no bid
   flag, controllability, priority, level, customer-side milestone dates, subcontracting
   fields, background / risk / payment-terms narrative, and no approval on *status change*
   (won, abandoned) — only on amount.
@@ -91,7 +91,8 @@ the process is the generic shape of the whole category, not one company's quirk.
 
 **Delivery half (steps 15–40).** No project, staffing, rate, budget, timesheet or expense
 object exists. Two standing rulings shape what can be built: HotCRM models no orders,
-invoices or payments (2026-08-02, `src/flows/billing-handoff.flow.ts`), and HotCRM is a pure
+invoices or payments (2026-08-02, `src/sales/flows/billing-handoff-closed-won.flow.ts` and
+`src/revenue/flows/billing-handoff-contract-activated.flow.ts`), and HotCRM is a pure
 metadata application, so every mechanism must be a platform construct — `approval` flow
 nodes, `sys_business_unit` for cost centres and departments, `sys_user` for people,
 `enable.files` for attachments.
