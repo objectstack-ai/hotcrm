@@ -4,25 +4,34 @@
 
 ## Overview
 
-HotCRM is an ObjectStack marketplace app. It is not currently organized as multiple scoped npm packages; the app is assembled from the local `src/` tree and registered through [`objectstack.config.ts`](../objectstack.config.ts).
+HotCRM is an ObjectStack marketplace app. It is not organized as multiple scoped npm
+packages — one `package.json`, one build — and the four packages it is assembled from are
+the directories under the local `src/` tree (ADR-0130), collected by
+[`objectstack.composition.ts`](../objectstack.composition.ts) and registered through
+[`objectstack.config.ts`](../objectstack.config.ts).
 
 ```mermaid
 flowchart TD
-  Config["objectstack.config.ts"] --> Stack["defineStack()"]
-  Stack --> Objects["src/objects"]
-  Stack --> Actions["src/actions"]
-  Stack --> Flows["src/flows"]
-  Stack --> Skills["src/skills"]
-  Stack --> UI["src/apps, src/views, src/pages"]
-  Stack --> Analytics["src/datasets, src/dashboards, src/reports"]
-  Stack --> Security["src/profiles, src/sharing"]
-  Stack --> Data["src/data"]
+  Sales["src/sales/ — the type: app package"] --> Composition["objectstack.composition.ts"]
+  Service["src/service/"] --> Composition
+  Revenue["src/revenue/"] --> Composition
+  Marketing["src/marketing/"] --> Composition
+  Composition --> Config["objectstack.config.ts"]
+  Config --> Stack["defineStack()"]
   Stack --> Runtime["@objectstack/runtime"]
 ```
 
-The diagram sketches the assembly path and draws only the largest metadata areas; it is
-deliberately not a roster. [Metadata Areas](#metadata-areas) below is the complete
-directory-to-key map.
+The diagram sketches the assembly path — the four packages, merged into the arrays the
+single `defineStack()` takes. It is deliberately not a roster of metadata:
+[Metadata Areas](#metadata-areas) below is the complete directory-to-key map, and each
+package's own subdirectories are the per-type barrels that table's left column names.
+
+*Supersedes the flowchart that hung app-wide metadata directories straight off
+`defineStack()` — a top-level `objects/`, `actions/`, `flows/` and the rest. ADR-0130 made
+a directory under `src/` a package, and all thirteen directory names that picture drew had
+stopped existing. The guard that reads this page had it enrolled the whole time and could
+not see them: its extractor required a trailing slash, and a Mermaid node label does not
+write one (#1923).*
 
 The compiled marketplace artifact is produced by `pnpm build`. The generated artifact is the package that gets published, not the TypeScript source layout itself.
 
