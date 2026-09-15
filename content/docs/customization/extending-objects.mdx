@@ -71,9 +71,10 @@ export default warrantyHook;
 
 ## Add automation
 
-Multi-step automation goes in the `flows/` directory of the package that owns its trigger object — `src/sales/flows/`, `src/service/flows/`, `src/revenue/flows/` or `src/marketing/flows/` — and each package has its own barrel: export the new flow from that directory’s `index.ts`.
+Multi-step automation goes in the `flows/` directory of the package that owns its trigger object — `src/sales/flows/`, `src/service/flows/`, `src/revenue/flows/` or `src/marketing/flows/`. A warranty alert fires on `crm_warranty`, so it belongs to revenue, beside the object above.
 
 ```ts
+// src/revenue/flows/warranty-alert.flow.ts
 import type * as Automation from '@objectstack/spec/automation';
 
 type Flow = Automation.Flow;
@@ -91,6 +92,31 @@ export const WarrantyAlertFlow: Flow = {
   edges: [{ id: 'e1', source: 'start', target: 'end', type: 'default' }],
 };
 ```
+
+Registration is two steps, and skipping the second one loses the flow in silence. Re-export it
+from that package's barrel, then add it to `allFlows` in `objectstack.composition.ts` — that
+array, not the barrel, is what `objectstack.config.ts` hands to `defineStack({ flows })`:
+
+```ts
+// src/revenue/flows/index.ts — the package barrel: a re-export, nothing else
+export { WarrantyAlertFlow } from './warranty-alert.flow.js';
+```
+
+```ts
+// objectstack.composition.ts — the app-wide list, in the order flows are registered
+import { WarrantyAlertFlow } from './src/revenue/flows/index.js';
+
+export const allFlows = [
+  // …existing flows
+  WarrantyAlertFlow,
+];
+```
+
+The barrel on its own is not enough. `allFlows` is an explicit ordered list because the
+registration order interleaves the four packages, so no per-package barrel can carry it. A flow
+that reaches the barrel but never that array is registered by nothing, and `pnpm validate` still
+exits 0 and names it nowhere — `pnpm test` is what fails, naming any flow a package exports that
+`allFlows` does not carry.
 
 ## Verify
 
