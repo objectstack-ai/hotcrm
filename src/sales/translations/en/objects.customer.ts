@@ -128,6 +128,30 @@ export const customer: Record<string, ObjectTranslationData> = {
           hr: 'Human Resources', operations: 'Operations',
         },
       },
+      // Buying centre (REQ-0004) — the decision map. English is the source
+      // wording for the option VALUES; every other pack translates these.
+      buying_function: {
+        label: 'Buying Function',
+        options: {
+          decision_maker: 'Decision Maker', economic_buyer: 'Economic Buyer',
+          technical_evaluator: 'Technical Evaluator', user: 'User',
+          influencer: 'Influencer', gatekeeper: 'Gatekeeper',
+        },
+      },
+      attitude: {
+        label: 'Attitude to Us',
+        options: {
+          champion: 'Champion', supportive: 'Supportive', neutral: 'Neutral',
+          skeptical: 'Skeptical', blocker: 'Blocker',
+        },
+      },
+      relationship_strength: {
+        label: 'Relationship Strength',
+        options: {
+          distant: 'Distant', acquaintance: 'Acquaintance', working: 'Working Relationship',
+          strong: 'Strong', trusted_advisor: 'Trusted Advisor',
+        },
+      },
       owner_id: { label: 'Contact Owner' },
       description: { label: 'Description' },
       is_primary: { label: 'Primary Contact', help: 'Is this the main contact for the account?' },
@@ -158,6 +182,7 @@ export const customer: Record<string, ObjectTranslationData> = {
     _sections: {
       identity: { label: 'Identity' },
       account_info: { label: 'Account & Role' },
+      buying_centre: { label: 'Buying Centre' },
       contact_info: { label: 'Contact Information' },
       mailing_address: { label: 'Mailing Address' },
       additional: { label: 'Additional Info' },

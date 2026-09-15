@@ -21,6 +21,14 @@ export const ContactViews = defineView({
       { field: 'crm_account', width: 200 },
       { field: 'title', width: 180 },
       { field: 'department', width: 140 },
+      // REQ-0004 acceptance 2: the three buying-centre attributes are columns
+      // on the landing roster, which is already grouped by account with the
+      // groups collapsed — so expanding one account reads as a MAP (who
+      // decides, who is on our side) instead of a directory. Columns are also
+      // what the list's own filter and grouping controls offer.
+      { field: 'buying_function', width: 160 },
+      { field: 'attitude', width: 140 },
+      { field: 'relationship_strength', width: 180 },
       { field: 'email', width: 220 },
       { field: 'phone', width: 150 },
       { field: 'owner_id', width: 150 },
@@ -86,6 +94,28 @@ export const ContactViews = defineView({
           'department',
           'owner_id',
         ],
+      },
+      {
+        // REQ-0004 acceptance 1: the buying-centre group is rendered FROM
+        // `fieldGroups`, with no per-field enumeration authored anywhere.
+        //
+        // This form authors `sections`, and an authored `sections` array wins
+        // outright over the renderer's `fieldGroups` auto-derivation (the
+        // mechanism is written up at length in `case.view.ts`), so a group
+        // declared on the object alone would reach the SYNTHESIZED detail
+        // page and never this form — which is also the create dialog. The
+        // group-reference form is rung 2 of the AGENTS.md ladder, for exactly
+        // this "partial arrangement is genuinely needed" case: `group:`
+        // inherits the object's `buying_centre` members (every field pointing
+        // at it, in declaration order) and its presentation, so adding a
+        // fourth attribute to the group later reaches this form by itself.
+        //
+        // ⛔ `group:` is mutually exclusive with `fields:` and with every key
+        // the group itself declares (`name`, `label`, `description`,
+        // `visibleWhen`, `collapsible`/`collapsed: true`) — `columns` is not
+        // one of those, because the group declares nothing about layout.
+        group: 'buying_centre',
+        columns: 2,
       },
       {
         // Named `contact_details`, not `contact_info` — `contact_info` is

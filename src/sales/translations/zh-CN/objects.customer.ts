@@ -154,6 +154,31 @@ export const customer: Record<string, ObjectTranslationData> = {
           hr: '人力资源', operations: '运营部',
         },
       },
+      // 采购决策圈 (REQ-0004)。英文标签是 'Buying Function' 而非 'Buying Role'：
+      // 平台的 security-role-word 规则在对象声明上保留了英文 role 一词（ADR-0090 D3）。
+      // 该规则只匹配英文，不读语言包，所以中文这里用本地读者真正在说的词。
+      buying_function: {
+        label: '采购角色',
+        options: {
+          decision_maker: '决策者', economic_buyer: '预算决策人',
+          technical_evaluator: '技术评估人', user: '使用者',
+          influencer: '影响者', gatekeeper: '守门人',
+        },
+      },
+      attitude: {
+        label: '对我司态度',
+        options: {
+          champion: '拥护者', supportive: '支持', neutral: '中立',
+          skeptical: '存疑', blocker: '反对者',
+        },
+      },
+      relationship_strength: {
+        label: '与销售关系强度',
+        options: {
+          distant: '疏远', acquaintance: '一般认识', working: '工作往来',
+          strong: '关系紧密', trusted_advisor: '可信顾问',
+        },
+      },
       owner_id: { label: '联系人负责人' },
       description: { label: '描述' },
       is_primary: { label: '主要联系人', help: '是否为该客户的主要联系人？' },
@@ -206,6 +231,7 @@ export const customer: Record<string, ObjectTranslationData> = {
     _sections: {
       identity: { label: '身份信息' },
       account_info: { label: '客户与职务' },
+      buying_centre: { label: '采购决策圈' },
       contact_info: { label: '联系方式' },
       mailing_address: { label: '邮寄地址' },
       additional: { label: '附加信息' },

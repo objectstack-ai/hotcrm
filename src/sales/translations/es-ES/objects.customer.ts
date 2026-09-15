@@ -171,6 +171,33 @@ export const customer: Record<string, ObjectTranslationData> = {
           hr: 'Recursos Humanos', operations: 'Operaciones',
         },
       },
+      // Centro de compra (REQ-0004) — el mapa de la decisión. La etiqueta
+      // inglesa es 'Buying Function' y no 'Buying Role': la regla
+      // security-role-word reserva la palabra inglesa `role` en las
+      // declaraciones (ADR-0090 D3). Esa regla sólo lee inglés y no alcanza
+      // los paquetes de idioma, así que aquí va el término natural.
+      buying_function: {
+        label: 'Rol de Compra',
+        options: {
+          decision_maker: 'Decisor', economic_buyer: 'Comprador Económico',
+          technical_evaluator: 'Evaluador Técnico', user: 'Usuario',
+          influencer: 'Influenciador', gatekeeper: 'Guardián',
+        },
+      },
+      attitude: {
+        label: 'Actitud hacia Nosotros',
+        options: {
+          champion: 'Defensor', supportive: 'Favorable', neutral: 'Neutral',
+          skeptical: 'Escéptico', blocker: 'Bloqueador',
+        },
+      },
+      relationship_strength: {
+        label: 'Fuerza de la Relación',
+        options: {
+          distant: 'Distante', acquaintance: 'Conocido', working: 'Relación de Trabajo',
+          strong: 'Fuerte', trusted_advisor: 'Asesor de Confianza',
+        },
+      },
       owner_id: { label: 'Propietario de Contacto' },
       description: { label: 'Descripción' },
       is_primary: { label: 'Contacto Principal', help: '¿Es este el contacto principal de la cuenta?' },
@@ -203,6 +230,7 @@ export const customer: Record<string, ObjectTranslationData> = {
     _sections: {
       identity: { label: 'Identidad' },
       account_info: { label: 'Cuenta y Cargo' },
+      buying_centre: { label: 'Centro de Compra' },
       contact_info: { label: 'Información de Contacto' },
       // Los campos de esta sección se traducen «… de Correo»
       // (`mailing_street`, `mailing_city`…): el encabezado los acompaña.
