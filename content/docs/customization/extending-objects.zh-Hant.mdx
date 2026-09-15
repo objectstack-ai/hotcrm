@@ -73,9 +73,10 @@ export default warrantyHook;
 
 ## 新增自動化
 
-多步驟自動化寫在其觸發物件所屬套件的 `flows/` 目錄下——`src/sales/flows/`、`src/service/flows/`、`src/revenue/flows/` 或 `src/marketing/flows/`——每個套件各有自己的 barrel：把新流程從該目錄的 `index.ts` 匯出。
+多步驟自動化寫在其觸發物件所屬套件的 `flows/` 目錄下——`src/sales/flows/`、`src/service/flows/`、`src/revenue/flows/` 或 `src/marketing/flows/`。warranty 提醒由 `crm_warranty` 觸發，所以它和上面那個物件一樣歸 revenue 套件。
 
 ```ts
+// src/revenue/flows/warranty-alert.flow.ts
 import type * as Automation from '@objectstack/spec/automation';
 
 type Flow = Automation.Flow;
@@ -93,6 +94,30 @@ export const WarrantyAlertFlow: Flow = {
   edges: [{ id: 'e1', source: 'start', target: 'end', type: 'default' }],
 };
 ```
+
+註冊分兩步，漏掉第二步會讓這條流程被靜默丟棄。先從該套件的 barrel 重新匯出，再把它加入
+`objectstack.composition.ts` 裡的 `allFlows` —— 正是這個陣列、而不是那個 barrel，被
+`objectstack.config.ts` 交給 `defineStack({ flows })`：
+
+```ts
+// src/revenue/flows/index.ts —— 套件自己的 barrel：只做重新匯出，別無其它
+export { WarrantyAlertFlow } from './warranty-alert.flow.js';
+```
+
+```ts
+// objectstack.composition.ts —— 全應用的那份清單，按流程註冊順序排列
+import { WarrantyAlertFlow } from './src/revenue/flows/index.js';
+
+export const allFlows = [
+  // …既有的流程
+  WarrantyAlertFlow,
+];
+```
+
+只進 barrel 是不夠的。`allFlows` 之所以是一份顯式有序清單，是因為註冊順序在四個套件之間交錯，
+任何按套件切分的 barrel 都承載不了它。一條到了 barrel 卻沒進這個陣列的流程，註冊它的是零：
+`pnpm validate` 照樣退出 0，而且哪裡都不會提到它——能發現它的是 `pnpm test`，套件會點名任何
+被套件匯出、卻不在 `allFlows` 裡的流程。
 
 ## 驗證
 

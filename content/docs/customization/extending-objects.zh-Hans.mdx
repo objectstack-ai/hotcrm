@@ -71,9 +71,10 @@ export default warrantyHook;
 
 ## 新增自动化
 
-多步骤自动化写在其触发对象所属包的 `flows/` 目录下——`src/sales/flows/`、`src/service/flows/`、`src/revenue/flows/` 或 `src/marketing/flows/`——每个包各有自己的 barrel：把新流程从该目录的 `index.ts` 导出。
+多步骤自动化写在其触发对象所属包的 `flows/` 目录下——`src/sales/flows/`、`src/service/flows/`、`src/revenue/flows/` 或 `src/marketing/flows/`。warranty 提醒由 `crm_warranty` 触发，所以它和上面那个对象一样归 revenue 包。
 
 ```ts
+// src/revenue/flows/warranty-alert.flow.ts
 import type * as Automation from '@objectstack/spec/automation';
 
 type Flow = Automation.Flow;
@@ -91,6 +92,30 @@ export const WarrantyAlertFlow: Flow = {
   edges: [{ id: 'e1', source: 'start', target: 'end', type: 'default' }],
 };
 ```
+
+注册分两步，漏掉第二步会让这条流程被静默丢弃。先从该包的 barrel 重新导出，再把它加入
+`objectstack.composition.ts` 里的 `allFlows` —— 正是这个数组、而不是那个 barrel，被
+`objectstack.config.ts` 交给 `defineStack({ flows })`：
+
+```ts
+// src/revenue/flows/index.ts —— 包自己的 barrel：只做重新导出，别无其它
+export { WarrantyAlertFlow } from './warranty-alert.flow.js';
+```
+
+```ts
+// objectstack.composition.ts —— 全应用的那份清单，按流程注册顺序排列
+import { WarrantyAlertFlow } from './src/revenue/flows/index.js';
+
+export const allFlows = [
+  // …已有的流程
+  WarrantyAlertFlow,
+];
+```
+
+只进 barrel 是不够的。`allFlows` 之所以是一份显式有序清单，是因为注册顺序在四个包之间交错，
+任何按包切分的 barrel 都承载不了它。一条到了 barrel 却没进这个数组的流程，注册它的是零：
+`pnpm validate` 照样退出 0，而且哪里都不会提到它——能发现它的是 `pnpm test`，套件会点名任何
+被包导出、却不在 `allFlows` 里的流程。
 
 ## 验证
 
