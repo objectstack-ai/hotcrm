@@ -22,14 +22,14 @@ export default defineConfig({
        * pure noise, and including it diluted the signal enough to hide the
        * fact that 20 of 24 hooks had no runtime test at all.
        *
-       * `src/flows/*.flow.ts` is deliberately NOT here for the same reason,
+       * `src/*/flows/*.flow.ts` is deliberately NOT here for the same reason,
        * and for a sharper one: a flow file is an object literal, so importing
        * it scores 100% whether or not any test ever executes the flow. Flow
        * coverage is asserted structurally instead — see
        * `test/runtime-coverage.test.ts`, which fails when a registered flow or
        * hook has no runtime test naming it.
        */
-      include: ['src/objects/*.hook.ts'],
+      include: ['src/*/objects/*.hook.ts'],
       /**
        * Floors sit just under the measured numbers, so they lock in the
        * runtime-test work rather than aspiring to it. Raise them as coverage

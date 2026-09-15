@@ -10,7 +10,7 @@
 // surfaces. Nothing here ships in the artifact: `objectstack.config.ts` never
 // imports this file or the table it reads, which is what makes "a real
 // deployment installs none of these people" structural rather than hopeful
-// (see the header of `src/sharing/demo-staffing.ts`).
+// (see the header of `src/sales/sharing/demo-staffing.ts`).
 //
 // Four steps, all idempotent — rerun it any time, including against a
 // half-staffed org:
@@ -29,7 +29,7 @@
 //      ceiling admits only what the caller OWNS or holds a share on
 //      (objectstack-ai/objectstack#16549). So a demo salesperson asking their
 //      agent about the pipeline got 0 opportunities and 0 tasks. This step
-//      re-stamps `owner_id` per the routes in `src/sharing/demo-staffing.ts`;
+//      re-stamps `owner_id` per the routes in `src/sales/sharing/demo-staffing.ts`;
 //      `crm_account` is deliberately NOT among them (see step 5);
 //   4. RE-EVALUATE every active sharing rule. This step is not optional and is
 //      the reason staffing alone was never enough: `plugin-sharing` materialises
@@ -300,7 +300,7 @@ async function handBookToRoster(
   adminId: string,
 ): Promise<OwnershipOutcome[]> {
   // The account hook stores a declared `territory` (never a country string —
-  // `src/objects/_territory.ts`), so this reads the same value the sharing
+  // `src/sales/objects/_territory.ts`), so this reads the same value the sharing
   // rules match on rather than re-deriving one.
   const accountRows = await api.query('crm_account', [], ['id', 'territory']);
   const territoryOf = new Map(accountRows.map((a) => [String(a.id), String(a.territory ?? '')]));
@@ -592,7 +592,7 @@ async function main(): Promise<number> {
     return 1;
   }
   // The banner names the accounts but never their passwords. Nothing is hidden
-  // by that — the passwords are declared in `src/sharing/demo-staffing.ts`, one
+  // by that — the passwords are declared in `src/sales/sharing/demo-staffing.ts`, one
   // file away — but a run's stdout ends up in terminals, CI logs and pasted
   // snippets, and "echo the credential you just used" is the one shape this
   // reference app should not be teaching. (CodeQL says the same thing:
@@ -600,7 +600,7 @@ async function main(): Promise<number> {
   console.log(
     `\n🎉 demo org staffed. Sign in as any of: ` +
     `${DemoOrgStaffing.map((m) => m.email).join(' · ')}\n` +
-    `   Passwords are declared in src/sharing/demo-staffing.ts.\n` +
+    `   Passwords are declared in src/sales/sharing/demo-staffing.ts.\n` +
     `   Submit an opportunity of $100K or more to see manager_review route to ` +
     `${DemoOrgStaffing.find((m) => m.positions.includes('sales_manager'))?.email}.\n`,
   );
