@@ -28,6 +28,11 @@ Please scaffold it using the Architect Guidelines:
 4. Register the new barrels in `objectstack.composition.ts`, which collects the packages
    into the arrays `objectstack.config.ts` hands to the single `defineStack()`.
 5. Add the package directory to `PACKAGE_DIRS` in
-   `scripts/check-source-token-ratchet.mjs` so the gate prints a reading for it, and to
-   `PACKAGES` in `test/helpers/src-roster.ts` so the app-wide test sweeps see it.
+   `scripts/check-source-token-ratchet.mjs` so the gate prints a reading for it.
+6. Add the new package's barrels to `BARRELS` in `test/helpers/src-roster.ts`, with an
+   `import * as` for each. The app-wide test sweeps take the package ROSTER off disk — an
+   `objects/` directory is what makes a directory a package there, so nothing needs
+   listing for those — but the merged views (`CrmObjects`, `CrmFlows`, …) are static
+   imports and cannot widen themselves. The helper throws at load, in every suite, until
+   the barrels are listed; it does not go quietly four-package (#1940).
 ```
