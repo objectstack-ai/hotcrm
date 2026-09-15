@@ -8,7 +8,10 @@
 #     `src/ui/**` and `tailwind.config.cjs`; `metadata` pointed at
 #     `src/metadata/**`. None of those paths have ever existed in this repo.
 #     `test/labeler-config.test.ts` now fails the suite on a glob that matches
-#     no file.
+#     no file. The same invariant runs repo-wide in
+#     `test/config-glob-liveness.test.ts` (#1934), over vitest.config.ts, every
+#     tsconfig and every workflow path filter — this file is the one it leaves
+#     to the guard above, so a typo here produces one red, not two.
 #
 #  2. Every label key must already exist in the repository — `actions/labeler`
 #     does not create them. The old `ui:` key had no matching repo label, so
