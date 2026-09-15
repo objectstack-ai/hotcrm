@@ -1,9 +1,10 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import { readdirSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
+import { globToRegExp, walkRepo } from './helpers/config-globs';
 
 /**
  * `.github/labeler.yml` drift guard.
@@ -19,49 +20,16 @@ import { REPO_ROOT } from './helpers/repo-root';
  * the file is a flat `label: → changed-files: → any-glob-to-any-file: [...]`
  * shape, and keeping the guard dependency-free means it can never be the reason
  * the suite is skipped.
+ *
+ * The tree walk and the glob matcher moved to `test/helpers/config-globs.ts`
+ * when #1934 took this file's first invariant — every glob must match something
+ * in the tree — repo-wide: `test/config-glob-liveness.test.ts` now asks the same
+ * question of `vitest.config.ts`, every `tsconfig*.json` and every workflow path
+ * filter, and both guards have to answer it the same way. This file keeps
+ * labeler.yml, and keeps it alone, so one typo there produces one red.
  */
 
 const CONFIG = join(REPO_ROOT, '.github/labeler.yml');
-
-/** Directories that hold no first-party, PR-diffable files. */
-const SKIP_DIRS = new Set([
-  'node_modules', 'dist', '.next', '.source', '.objectstack', '.git',
-  'test-results', 'playwright-report',
-]);
-
-/** Every repo-relative file path, POSIX-separated. */
-function walk(dir = ''): string[] {
-  const out: string[] = [];
-  for (const entry of readdirSync(join(REPO_ROOT, dir), { withFileTypes: true })) {
-    if (SKIP_DIRS.has(entry.name)) continue;
-    const rel = dir ? `${dir}/${entry.name}` : entry.name;
-    if (entry.isDirectory()) out.push(...walk(rel));
-    else if (entry.isFile()) out.push(rel);
-  }
-  return out;
-}
-
-/**
- * Minimal minimatch subset covering the syntax this config uses:
- * `**` spans separators, `*` and `?` do not.
- */
-function globToRegExp(glob: string): RegExp {
-  let re = '';
-  for (let i = 0; i < glob.length; i++) {
-    const c = glob[i];
-    if (c === '*') {
-      if (glob[i + 1] === '*') {
-        re += '.*';
-        i++;
-        if (glob[i + 1] === '/') i++; // `docs/**/x` → `docs/` already consumed
-      } else {
-        re += '[^/]*';
-      }
-    } else if (c === '?') re += '[^/]';
-    else re += c.replace(/[.+^${}()|[\]\\]/g, '\\$&');
-  }
-  return new RegExp(`^${re}$`);
-}
 
 /** label → globs, straight out of the YAML. */
 function parseLabelerConfig(): Map<string, string[]> {
@@ -94,7 +62,7 @@ function parseLabelerConfig(): Map<string, string[]> {
 }
 
 const rules = parseLabelerConfig();
-const files = walk();
+const files = walkRepo().files;
 
 /**
  * The labels that exist in the repository. `actions/labeler` does not create
