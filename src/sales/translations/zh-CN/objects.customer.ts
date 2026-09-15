@@ -25,6 +25,26 @@ export const customer: Record<string, ObjectTranslationData> = {
     description: '与我们有业务往来的公司和组织',
     fields: {
       account_number: { label: '客户编号' },
+      registration_number: {
+        label: '登记证件号',
+        help: '对方在其所属政府登记机关取得的登记标识。不同于由我方发放的客户编号。',
+      },
+      commercial_capability: {
+        label: '商务能力',
+        help: '该客户是否可以承接新业务。仅结算类客户依然可用于开票与收付款，但不能关联新的商机。',
+        options: { full: '完整', settlement_only: '仅结算' },
+      },
+      incumbent_vendor: { label: '现有供应商', help: '当前承接该客户这部分支出的供应商。' },
+      annual_purchasing_budget: { label: '年度采购预算', help: '该客户本年度预计向供应商支出的金额，而非其自身营收。' },
+      payment_cycle: {
+        label: '付款周期',
+        options: { prepaid: '预付', net_30: '30 天', net_60: '60 天', net_90: '90 天' },
+      },
+      approval_status: {
+        label: '审批状态',
+        help: '该客户的审批进展。新建客户初始为待审批，并在审批收件箱中裁定。',
+        options: { pending: '待审批', approved: '已通过', rejected: '已驳回' },
+      },
       name: { label: '客户名称', help: '公司或组织的法定名称' },
       type: {
         label: '类型',
@@ -117,6 +137,7 @@ export const customer: Record<string, ObjectTranslationData> = {
     _sections: {
       basic: { label: '基本信息' },
       financials: { label: '财务信息' },
+      business_profile: { label: '业务信息' },
       contact_info: { label: '联系信息' },
       ownership: { label: '归属与状态' },
       branding: { label: '品牌' },

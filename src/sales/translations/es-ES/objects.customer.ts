@@ -25,6 +25,26 @@ export const customer: Record<string, ObjectTranslationData> = {
     description: 'Empresas y organizaciones con las que mantenemos relación comercial',
     fields: {
       account_number: { label: 'Número de Cuenta' },
+      registration_number: {
+        label: 'Número de Registro',
+        help: 'La identidad registrada de la contraparte, emitida por su propio registro gubernamental. No es el Número de Cuenta, que emitimos nosotros.',
+      },
+      commercial_capability: {
+        label: 'Capacidad Comercial',
+        help: 'Si se puede abrir nuevo negocio con esta cuenta. Las cuentas de Solo Liquidación siguen siendo utilizables para facturación y pagos, pero no se les puede vincular ninguna oportunidad nueva.',
+        options: { full: 'Completa', settlement_only: 'Solo Liquidación' },
+      },
+      incumbent_vendor: { label: 'Proveedor Actual', help: 'El proveedor que actualmente atiende el gasto que perseguimos en esta cuenta.' },
+      annual_purchasing_budget: { label: 'Presupuesto Anual de Compras', help: 'Lo que esta cuenta espera gastar con proveedores este año, no sus propios ingresos.' },
+      payment_cycle: {
+        label: 'Ciclo de Pago',
+        options: { prepaid: 'Prepago', net_30: '30 días', net_60: '60 días', net_90: '90 días' },
+      },
+      approval_status: {
+        label: 'Estado de Aprobación',
+        help: 'En qué punto de su aprobación está esta cuenta. Una cuenta nueva comienza Pendiente y se decide en la bandeja de aprobaciones.',
+        options: { pending: 'Pendiente', approved: 'Aprobada', rejected: 'Rechazada' },
+      },
       name: { label: 'Nombre de Cuenta', help: 'Nombre legal de la empresa u organización' },
       name_normalized: {
         label: 'Nombre de Cuenta (Normalizado)',
@@ -133,6 +153,7 @@ export const customer: Record<string, ObjectTranslationData> = {
     _sections: {
       basic: { label: 'Información Básica' },
       financials: { label: 'Datos Financieros' },
+      business_profile: { label: 'Perfil de Negocio' },
       contact_info: { label: 'Información de Contacto' },
       ownership: { label: 'Propiedad y Estado' },
       branding: { label: 'Identidad de Marca' },
