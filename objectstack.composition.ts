@@ -95,7 +95,8 @@ import { campaignHook, campaignMemberHook } from './src/marketing/objects/hooks.
 // Flows — the registration order the single `allFlows` array used to hold.
 import {
   ContactWelcomeFlow, DemoBootstrapFlow, ForecastSnapshotFlow, LeadAssignmentFlow,
-  LeadConversionFlow, OpportunityApprovalFlow, OpportunityApprovalOnCreateFlow,
+  LeadConversionFlow, LeadConversionApprovalFlow,
+  OpportunityApprovalFlow, OpportunityApprovalOnCreateFlow,
   OpportunityStagnationFlow, OpportunityWonAlertFlow, ScheduleFollowUpFlow,
   TaskDueReminderFlow, TaskUrgentAlertFlow, BillingHandoffClosedWonFlow,
 } from './src/sales/flows/index.js';
@@ -210,6 +211,7 @@ export const allFlows = [
   ClaimCaseFlow,
   CaseEscalationStampFlow,
   LeadConversionFlow,
+  LeadConversionApprovalFlow,
   ScheduleFollowUpFlow,
   DemoBootstrapFlow,
   OpportunityApprovalFlow,

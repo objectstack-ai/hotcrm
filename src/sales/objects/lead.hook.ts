@@ -228,6 +228,64 @@ const leadHook: Hook = {
       }
     }
 
+    // ── The conversion approval gate (REQ-0005 step 7) ─────────────────
+    //
+    // 「线索对应审批流程，审批通过后方可转化为正式商机」. This is the WRITE-PATH
+    // half of the gate; `convert_lead`'s `visible` predicate is the other, and
+    // it only hides a button. Hiding a button is not a control: the conversion
+    // screen flow is reachable over REST (`POST /automation/lead_conversion/
+    // trigger`), and so is a bare `PATCH` that sets `is_converted` itself. Both
+    // land HERE, because both are an update to `crm_lead`.
+    //
+    // ⚠️ A TRANSITION GATE, not an invariant (AGENTS.md metadata semantics rule
+    // 7), and the difference is the `!wasConverted` term rather than a comment
+    // claiming it. The refusal is conditioned on the record CROSSING into
+    // converted on THIS write; a lead that was already converted before the
+    // gate existed is untouched by it forever, whatever its approval column
+    // says (REQ-0005 acceptance 4). ⛔ Never restate this as a `validations[]`
+    // script: a validation is evaluated against `{...previous, ...data}`, where
+    // "already converted" and "converting now" are the same state, so it would
+    // brick every later write to every historical converted lead.
+    //
+    // ⚠️ The verdict is read off `previous`, never off `input`. The approval
+    // column is `readonly: true`, so a caller-supplied value is stripped before
+    // storage on the non-system path — but `stripReadonlyFields` is not a thing
+    // this guard may lean on (it does not run on inserts, nor for a system
+    // write), and reading the STORED verdict is the correct semantics anyway:
+    // what may convert a lead is what an approver decided, not what the writer
+    // attached to the request.
+    //
+    // ⚠️ Fail OPEN on an absent or unrecognised verdict, and that is the gate's
+    // off switch, not an oversight. With the gate off — the shipped default —
+    // every lead carries `not_required`, and a lead that predates the column
+    // carries nothing at all; both must convert exactly as they did before this
+    // field existed. So only the two verdicts a live approval actually writes
+    // refuse. (`convert_lead`'s predicate carries the same polarity and the
+    // same reason, against its own fail-CLOSED neighbours.)
+    if (event === 'beforeUpdate') {
+      const previous = ctx.previous;
+      const wasConverted = previous?.is_converted === true || previous?.status === 'converted';
+      const isConverting =
+        !wasConverted && (input.is_converted === true || input.status === 'converted');
+      const verdict = previous?.conversion_approval_status;
+      if (isConverting && (verdict === 'pending' || verdict === 'rejected')) {
+        // Name the lead the way `display_title` does — see the converted-lead
+        // lock below for why an id never appears in a sentence a user reads.
+        const person = [previous?.first_name, previous?.last_name]
+          .filter((part) => typeof part === 'string' && part.trim() !== '')
+          .join(' ');
+        const company =
+          typeof previous?.company === 'string' ? previous.company.trim() : '';
+        const label = [person, company].filter(Boolean).join(' - ');
+        const state = verdict === 'rejected' ? 'was rejected' : 'is still awaiting approval';
+        throw refuse(
+          `Cannot convert ${label ? `lead ${label}` : 'this lead'}: its conversion ${state}. Conversion opens once an approver signs it off — the Conversion Approval field on the lead shows where it stands.`,
+          'RECORD_LOCKED',
+          409,
+        );
+      }
+    }
+
     // Converted-lead lock — USER edits only (`ctx.user?.id` is this repo's
     // system-write signal, cf. opportunity/quote/account hooks): a blanket
     // throw also rejected system writes (demo-bootstrap owner claims, flow

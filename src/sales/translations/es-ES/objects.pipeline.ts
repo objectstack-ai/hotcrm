@@ -91,6 +91,27 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       rating: { label: 'Puntuación de Prospecto', help: 'Puntuación de calidad del prospecto (1-5 estrellas)' },
       next_followup_date: { label: 'Próxima Fecha de Seguimiento' },
       last_contacted_date: { label: 'Último Contacto' },
+      need_type: {
+        label: 'Tipo de Necesidad',
+        help: 'Qué está pidiendo este prospecto. La asignación, la priorización y los informes de demanda leen este campo.',
+        options: {
+          new_implementation: 'Nueva Implantación', expansion: 'Ampliación',
+          replacement: 'Sustitución', renewal: 'Renovación', consulting: 'Consultoría',
+          support: 'Soporte y Mantenimiento', other: 'Otro',
+        },
+      },
+      estimated_amount: {
+        label: 'Importe Estimado',
+        help: 'Valor estimado de esta necesidad, antes de la cualificación. Precarga el importe de la oportunidad al convertir.',
+      },
+      conversion_approval_status: {
+        label: 'Aprobación de Conversión',
+        help: 'Si este prospecto tiene el visto bueno para convertirse. «No Requerida» significa que no se pide aprobación: es el valor predeterminado de fábrica.',
+        options: {
+          not_required: 'No Requerida', pending: 'Pendiente',
+          approved: 'Aprobada', rejected: 'Rechazada',
+        },
+      },
       converted_account: { label: 'Cuenta Convertida' },
       converted_contact: { label: 'Contacto Convertido' },
       converted_opportunity: { label: 'Oportunidad Convertida' },

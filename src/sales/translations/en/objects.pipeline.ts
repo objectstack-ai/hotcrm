@@ -109,6 +109,27 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
       next_followup_date: { label: 'Next Follow-up Date' },
       last_contacted_date: { label: 'Last Contacted' },
+      need_type: {
+        label: 'Need Type',
+        help: 'What this prospect is asking for. Routing, prioritisation and demand reporting read this.',
+        options: {
+          new_implementation: 'New Implementation', expansion: 'Expansion',
+          replacement: 'Replacement', renewal: 'Renewal', consulting: 'Consulting',
+          support: 'Support & Maintenance', other: 'Other',
+        },
+      },
+      estimated_amount: {
+        label: 'Estimated Amount',
+        help: 'Estimated value of this demand, before qualification. Prefills the deal amount at conversion.',
+      },
+      conversion_approval_status: {
+        label: 'Conversion Approval',
+        help: 'Whether this lead has been signed off for conversion. Not Required means no approval is asked for — the shipped default.',
+        options: {
+          not_required: 'Not Required', pending: 'Pending',
+          approved: 'Approved', rejected: 'Rejected',
+        },
+      },
     },
     _views: {
       all_leads: {

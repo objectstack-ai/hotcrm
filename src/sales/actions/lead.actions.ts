@@ -41,7 +41,26 @@ export const ConvertLeadAction: Action = {
   // (`[runtime] No such key: status`) and object-ui fell back to its own
   // `fallback: false`, so this spelling states the policy the error path was
   // already applying — minus the console warning on every lead page load. (#1890)
-  visible: P`has(record.is_converted) && record.is_converted == false && has(record.status) && record.status != "unqualified" && record.status != "converted"`,
+  //
+  // ⚠️ The approval term is the ONE fail-OPEN read in this predicate, and the
+  // asymmetry is deliberate rather than an oversight in an otherwise
+  // fail-closed arrangement (REQ-0005 step 7). The two terms above fail closed
+  // because an absent `status` means "no record yet" — a lead with no status
+  // cannot exist, since `status` is `required` with a `defaultValue`. An absent
+  // `conversion_approval_status` means something else entirely: a lead written
+  // before the column existed, which must convert the way it always did. And
+  // the shipped `not_required` default is the gate's OFF position, so treating
+  // "not one of the two refusing verdicts" as convertible is what makes the
+  // default install behave exactly as it did before this field. `lead.hook.ts`
+  // and `lead-conversion.flow.ts`'s `decision_approval` carry the same polarity
+  // — the three surfaces have to agree about what "off" means, or the button
+  // disappears on leads the write path would happily convert.
+  //
+  // ⛔ Hiding this button is NOT the gate. It is the courtesy half; the control
+  // is the `beforeUpdate` refusal in `lead.hook.ts`, which a REST caller cannot
+  // route around.
+  visible: P`has(record.is_converted) && record.is_converted == false && has(record.status) && record.status != "unqualified" && record.status != "converted"
+    && (!has(record.conversion_approval_status) || (record.conversion_approval_status != "pending" && record.conversion_approval_status != "rejected"))`,
   // NO `confirmText`. A screen flow IS the confirmation, and this one opens
   // `Conversion Details` — a screen carrying the decision (`Create
   // Opportunity?`, and the deal's name and amount), a Cancel button, and the

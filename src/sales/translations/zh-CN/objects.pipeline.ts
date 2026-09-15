@@ -125,6 +125,27 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       company_normalized: { label: '公司名称（规范化）', help: '线索转化的匹配键：公司名称转小写、去除首尾空格、内部连续空白合并为一个空格。由 lead_duplicate_check 钩子维护——请勿直接编辑。' },
       next_followup_date: { label: '下次跟进日期' },
       last_contacted_date: { label: '最近联系时间' },
+      need_type: {
+        label: '需求类型',
+        help: '客户想要什么。线索分派、优先级排序和需求分析都读这个字段。',
+        options: {
+          new_implementation: '新建实施', expansion: '扩容增购',
+          replacement: '替换迁移', renewal: '续约', consulting: '咨询服务',
+          support: '运维支持', other: '其他',
+        },
+      },
+      estimated_amount: {
+        label: '预计金额',
+        help: '资格判定之前对该需求金额的估算。转化时用于预填商机金额。',
+      },
+      conversion_approval_status: {
+        label: '转化审批',
+        help: '该线索是否已获准转化。「无需审批」表示不走审批流程——这是产品的出厂默认值。',
+        options: {
+          not_required: '无需审批', pending: '待审批',
+          approved: '审批通过', rejected: '审批驳回',
+        },
+      },
     },
     _views: {
       all_leads: {

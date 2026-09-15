@@ -6,6 +6,7 @@ import {
   SALUTATION_OPTIONS,
   INDUSTRY_OPTIONS,
   LEAD_SOURCE_OPTIONS,
+  LEAD_NEED_TYPE_OPTIONS,
   DUPLICATE_OF_TYPE_OPTIONS,
 } from './_picklists';
 
@@ -208,6 +209,96 @@ export const Lead = ObjectSchema.create({
       // Canonical set shared with Contact + Opportunity (#490): lead_conversion
       // copies this value onto the created Opportunity, so all three MUST agree.
       options: [...LEAD_SOURCE_OPTIONS],
+    }),
+
+    // ── Demand: what this prospect wants, and what it is worth ─────────
+    //
+    // REQ-0005 steps 6-7. Both fields are in `qualification` because they ARE
+    // qualification data — what the buyer is asking for and how big it is are
+    // the two facts a rep weighs before working a lead — and neither is
+    // required: a lead captured off the public form has neither, and saves
+    // exactly as it did before.
+
+    need_type: Field.select({
+      label: 'Need Type',
+      group: 'qualification',
+      description: 'What this prospect is asking for. Routing, prioritisation and demand reporting read this.',
+      // Generic starter vocabulary, declared once in `_picklists.ts` — see the
+      // note there for why it is NOT shared with `crm_opportunity.type`.
+      options: [...LEAD_NEED_TYPE_OPTIONS],
+    }),
+
+    // ⛔ NEVER conflated with `annual_revenue`, which sits two groups below in
+    // `additional` and answers a different question: that is the prospect
+    // COMPANY's own turnover, a size signal, and it is the value
+    // `lead_conversion` copies onto the account it creates. This is the value
+    // of the DEMAND — the number that becomes `crm_opportunity.amount` when the
+    // lead converts, and the only figure the pipeline has before then.
+    //
+    // ⛔ Nor is it a second copy of `crm_opportunity.amount`. The opportunity's
+    // amount is a committed deal figure a rep defends in a forecast; this is an
+    // estimate taken before qualification, and the conversion screen is where a
+    // human turns one into the other (it PREFILLS from here — see the
+    // `opportunityAmount` screen field in `lead-conversion.flow.ts` — rather
+    // than copying silently, so the rep confirms the number that enters the
+    // forecast).
+    estimated_amount: Field.currency({
+      label: 'Estimated Amount',
+      scale: 2,
+      group: 'qualification',
+      description: 'Estimated value of this demand, before qualification. Prefills the deal amount at conversion.',
+    }),
+
+    // ── The conversion approval gate (REQ-0005 step 7) ─────────────────
+    //
+    // ⚠️ `defaultValue: 'not_required'` IS THE GATE'S OFF SWITCH, and it is the
+    // one line an install changes to arm it. REQ-0005: "The gate must be
+    // configurable — off by default. A single-seller install must not be forced
+    // through an approval to convert a lead."
+    //
+    //   OFF (shipped)  every lead is born `not_required`; nothing ever writes
+    //                  `pending`, so `lead_conversion_approval` never enters,
+    //                  the Convert button never hides and the write-path gate in
+    //                  `lead.hook.ts` never fires. Conversion behaves EXACTLY as
+    //                  it did before this field existed.
+    //   ON             change this one value to `'pending'`. Every lead is then
+    //                  born pending, `lead_conversion_approval` opens its
+    //                  request, and conversion is refused until an approver
+    //                  decides.
+    //
+    // Leads that predate the switch keep whatever they were born with, which is
+    // the point: arming the gate does not invalidate or re-open a single
+    // existing record (REQ-0005 acceptance 4). This is a TRANSITION GATE, not an
+    // invariant (AGENTS.md metadata semantics rule 7) — what is refused is the
+    // ACT of converting, evaluated against `previous` in `lead.hook.ts`, never
+    // the state of a record that is already converted.
+    //
+    // Shape copied from `crm_opportunity.approval_status`: `readonly: true`
+    // plus a REAL field-level `defaultValue`, ⛔ not only an option-level
+    // `default: true` — the same lesson `status` above records, and the reason
+    // that field's own comment gives: an option default only preselects in UI
+    // forms after first paint, so a quick-create dialog or an API insert would
+    // land a null and a null matches no flow entry condition.
+    //
+    // ⛔ Do NOT add an "approved" value to `status` instead. That select is the
+    // qualification lifecycle; a sixth value there would break the
+    // `convert_lead` predicate, the `lead_status_progression` transitions and
+    // the seeded rows, and would conflate "this lead is worth working" with
+    // "someone signed off on converting it".
+    conversion_approval_status: Field.select({
+      label: 'Conversion Approval',
+      group: 'qualification',
+      readonly: true,
+      trackHistory: true,
+      description:
+        'Whether this lead has been signed off for conversion. Not Required means no approval is asked for — the shipped default.',
+      defaultValue: 'not_required',
+      options: [
+        { label: 'Not Required', value: 'not_required', default: true },
+        { label: 'Pending', value: 'pending', color: '#FFA500' },
+        { label: 'Approved', value: 'approved', color: '#00AA00' },
+        { label: 'Rejected', value: 'rejected', color: '#FF0000' },
+      ],
     }),
 
     // Assignment

@@ -250,3 +250,37 @@ export const DUPLICATE_OF_TYPE_OPTIONS: SelectOption[] = [
  * screens and action params, which don't understand color/default keys. */
 export const plainOptions = (options: SelectOption[]): { label: string; value: string }[] =>
   options.map(({ label, value }) => ({ label, value }));
+
+/**
+ * Need Type — `crm_lead.need_type`, the answer to "what is this prospect
+ * asking for" (REQ-0005 step 6, 需求类型).
+ *
+ * A GENERIC STARTER SET, and that is the disposition rather than an apology
+ * for a short list: REQ-0005 rules the *slot* standard and the *values*
+ * configuration — "a customer's own demand taxonomy is overlay configuration
+ * the same way `industry` values are". So these seven are the vocabulary a
+ * fresh install routes and reports on until an overlay replaces them, and
+ * replacing them is a one-site edit because the set is declared here.
+ *
+ * ⚠️ NOT the same axis as `crm_opportunity.type`, and ⛔ never folded into it.
+ * That field answers "is this new business, an upgrade, a renewal or an
+ * expansion" — the customer RELATIONSHIP the deal changes. This one answers
+ * what the buyer wants delivered, which is orthogonal: a renewal of a support
+ * contract and a renewal of a consulting engagement differ here and not there.
+ * They are deliberately not shared, so ⛔ do not spread this set onto
+ * `crm_opportunity` to make a conversion mapping possible.
+ *
+ * SINGLE-valued, for the reason `crm_contact.buying_function` records: a
+ * grouped list view answers with one server-side aggregate per raw stored
+ * value, so a `multiple: true` column groups by the COMBINATION and loses the
+ * groupability REQ-0005 acceptance 1 asks for.
+ */
+export const LEAD_NEED_TYPE_OPTIONS: SelectOption[] = [
+  { label: 'New Implementation',   value: 'new_implementation' },
+  { label: 'Expansion',            value: 'expansion' },
+  { label: 'Replacement',          value: 'replacement' },
+  { label: 'Renewal',              value: 'renewal' },
+  { label: 'Consulting',           value: 'consulting' },
+  { label: 'Support & Maintenance', value: 'support' },
+  { label: 'Other',                value: 'other' },
+];
