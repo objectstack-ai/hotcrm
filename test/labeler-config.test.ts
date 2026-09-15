@@ -2,7 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, posix } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
 
 /**
@@ -148,5 +148,65 @@ describe('.github/labeler.yml', () => {
     expect(files.some((f) => globToRegExp('src/*/objects/*.hook.ts').test(f))).toBe(true);
     expect(files.some((f) => globToRegExp('docs/**').test(f))).toBe(true);
     expect(files.some((f) => globToRegExp('*.md').test(f))).toBe(true);
+  });
+});
+
+/**
+ * Reverse assertion: coverage, not just liveness.
+ *
+ * The suite above asks "does every glob match something?". That direction alone
+ * cannot see a documentation surface no glob points at, which is how the whole
+ * published doc site went unlabelled: `content/docs/**` appeared nowhere in
+ * `.github/labeler.yml`, every glob that *was* there matched fine, and a 48-file
+ * docs-only PR (#1921) came out of the labeler with no label at all.
+ *
+ * The roster is derived, not hand-written: `apps/docs/source.config.ts` declares
+ * each content root the site publishes (`dir:` on a fumadocs collection), so a
+ * new root added there is covered by this guard the day it appears. A hand-kept
+ * list here would have exactly the drift the guard exists to catch.
+ */
+
+const DOCS_SOURCE_CONFIG = join(REPO_ROOT, 'apps/docs/source.config.ts');
+
+/** Repo-relative content roots the published documentation site sources. */
+function publishedDocRoots(): string[] {
+  const text = readFileSync(DOCS_SOURCE_CONFIG, 'utf8');
+  const roots = new Set<string>();
+  for (const [, dir] of text.matchAll(/\bdir:\s*['"]([^'"]+)['"]/g)) {
+    // `dir` is resolved by fumadocs relative to the config file's own directory.
+    roots.add(posix.normalize(posix.join('apps/docs', dir)).replace(/\/$/, ''));
+  }
+  return [...roots];
+}
+
+describe('.github/labeler.yml — documentation coverage', () => {
+  const roots = publishedDocRoots();
+  const docGlobs = rules.get('documentation') ?? [];
+
+  it('derives the doc site content roots from apps/docs/source.config.ts', () => {
+    // Without this, a config the regex can no longer read would make the
+    // coverage assertion below pass over an empty roster — green, and blind.
+    expect(roots.length, `no 'dir:' collection root parsed from ${DOCS_SOURCE_CONFIG}`).toBeGreaterThan(0);
+    for (const root of roots) {
+      expect(
+        files.some((f) => f.startsWith(`${root}/`)),
+        `derived content root '${root}' holds no files — the config moved or the parser did`,
+      ).toBe(true);
+    }
+    expect(docGlobs.length, "no globs parsed for the 'documentation' label").toBeGreaterThan(0);
+  });
+
+  it("every published doc root is covered by the 'documentation' rule", () => {
+    const res = docGlobs.map(globToRegExp);
+    const gaps: string[] = [];
+    for (const root of roots) {
+      const missed = files.filter((f) => f.startsWith(`${root}/`) && !res.some((re) => re.test(f)));
+      if (missed.length) gaps.push(`${root} → ${missed.length} file(s) match no glob, e.g. ${missed[0]}`);
+    }
+    expect(
+      gaps,
+      'published documentation content matched by no `documentation` glob — a docs-only PR there gets no label:\n  ' +
+        `${gaps.join('\n  ')}\n  Add the root to the documentation rule in .github/labeler.yml.`,
+    ).toEqual([]);
   });
 });

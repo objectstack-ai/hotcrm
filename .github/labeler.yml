@@ -1,7 +1,7 @@
 # Configuration for PR labeler
 # Labels PRs based on changed files.
 #
-# Two invariants, both of which the previous revision broke:
+# Three invariants, each of which a revision of this file has broken:
 #
 #  1. Every glob must match something in the tree. `backend` pointed at
 #     `src/server.ts`, `src/engine/**` and `src/triggers/**`; `ui` pointed at
@@ -16,10 +16,23 @@
 #     exactly the six labels that exist today: documentation, dependencies,
 #     ci/cd, backend, metadata, configuration. Adding a key here means creating
 #     the label in repo settings first.
+#
+#  3. Every published documentation surface must be covered by a glob. The two
+#     invariants above only ask whether each rule *does* something; neither can
+#     see a whole documentation tree no rule points at. `content/docs/**` — the
+#     published Fumadocs site, the largest doc surface in the repo — was in
+#     exactly that state: a 48-file docs-only PR (#1921) came out of the labeler
+#     with no label at all. `test/labeler-config.test.ts` now also checks the
+#     reverse direction, against the content roots read out of
+#     `apps/docs/source.config.ts`, so a new collection there fails the suite
+#     until a glob below covers it.
 
+# `content/{docs,blog}` are the doc site's two content roots (the `dir:` values
+# in `apps/docs/source.config.ts`); they are listed one by one rather than as
+# `content/**` so that a future content root has to be labelled deliberately.
 documentation:
   - changed-files:
-    - any-glob-to-any-file: ['docs/**', 'apps/docs/**', 'src/docs/**', '*.md', 'README*', 'CONTRIBUTING*']
+    - any-glob-to-any-file: ['content/docs/**', 'content/blog/**', 'docs/**', 'apps/docs/**', 'src/docs/**', '*.md', 'README*', 'CONTRIBUTING*']
 
 dependencies:
   - changed-files:
