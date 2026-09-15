@@ -171,6 +171,27 @@ export const LeadViews = defineView({
         label: 'Source',
         width: 120,
       },
+      // REQ-0005 acceptance 1: what the prospect wants and what it is worth,
+      // on the roster a rep opens every morning. Columns are also what the
+      // list's own filter and grouping controls offer, which is what makes the
+      // two FILTERABLE and GROUPABLE here rather than only readable — the same
+      // reading `contact.view.ts` records for the buying-centre columns.
+      // `need_type` is single-valued for exactly that reason (see
+      // `_picklists.ts`): a grouped list answers with one aggregate per raw
+      // stored value, so a multi-valued column would group by the combination.
+      {
+        field: 'need_type',
+        label: 'Need Type',
+        width: 160,
+        sortable: true,
+      },
+      {
+        field: 'estimated_amount',
+        label: 'Est. Amount',
+        width: 130,
+        align: 'right',
+        sortable: true,
+      },
       {
         field: 'owner_id',
         label: 'Owner',
@@ -282,6 +303,33 @@ export const LeadViews = defineView({
             required: true,
             visibleOn: P`has(record.status) && record.status == "unqualified"`,
           },
+          // REQ-0005 step 6: 「填写…需求类型…预计金额」. A rep types these at
+          // intake, so they need an authoring surface — and this form IS the
+          // create dialog (`RecordFormPage` and `useActionModal` both resolve
+          // `view.form ?? view.formViews?.default`, see `case.view.ts`).
+          //
+          // ⚠️ Named rather than reached through a group reference, and the
+          // AGENTS.md ladder's rung 3 asks for the reason in writing. Both
+          // fields declare `group: 'qualification'` on the object, so every
+          // DERIVED surface — the page synthesizer, an auto-derived form —
+          // already carries them from `fieldGroups` alone with nothing authored.
+          // This form is not one of those: it authors `sections`, and an
+          // authored `sections` array wins outright over the auto-derived path.
+          // The rung-2 fix, a `{ group: 'qualification' }` section, cannot be
+          // used HERE specifically: this section is a CURATED cross-group set,
+          // not a mirror of that group. It already names four of the group's
+          // members with per-field overrides a group reference cannot carry
+          // (`status` required, `rating`'s star widget, and
+          // `disqualification_reason`'s `required` + `visibleOn` directly
+          // above), and it borrows `industry` and `owner_id` from two other
+          // groups. Adding a group reference beside it would render those four
+          // a second time and pull in `next_followup_date` /
+          // `last_contacted_date`, which are machine-written and deliberately
+          // absent from every form. ⇒ The customer need is real, the group
+          // reference genuinely cannot express it, and the two lines below are
+          // what that leaves.
+          'need_type',
+          'estimated_amount',
           ...DUPLICATE_LINK_FIELDS,
         ],
       },

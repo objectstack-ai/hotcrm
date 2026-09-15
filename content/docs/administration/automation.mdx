@@ -50,7 +50,7 @@ A flow fires one of three ways, set by its start node:
 
 > **Auto-launch needs the `triggers` capability.** Record-change and scheduled flows only fire when the stack's `requires` list includes `triggers` — it installs the record-change + schedule trigger providers (schedule triggers also use the job service). Screen flows are always launched manually.
 
-**Built-in flows in HotCRM** (29). Each row carries the flow's own label — the name listed in **Studio → Automation → Flows**, and the name you pick from in **Studio → Developer → Flow Runs**, so a run you are chasing can be looked up here verbatim:
+**Built-in flows in HotCRM** (30). Each row carries the flow's own label — the name listed in **Studio → Automation → Flows**, and the name you pick from in **Studio → Developer → Flow Runs**, so a run you are chasing can be looked up here verbatim:
 
 | Flow | Trigger | What it does |
 | --- | --- | --- |
@@ -69,6 +69,7 @@ A flow fires one of three ways, set by its start node:
 | **Urgent Task Alert** | Record change (insert) | Notify the owner when a task is created at *Urgent* |
 | **Large Deal Approval** | Record change (update) | Tiered sign-off via approval nodes — Sales Manager ≥ $100K, Sales Director > $500K |
 | **Large Deal Approval (on create)** | Record change (insert) | The same intake for opportunities *created* at or above the threshold |
+| **Lead Conversion Approval** | Record change (insert) | Sign-off a lead needs before it can be converted. Ships switched OFF — it opens nothing until an install arms the gate on the lead's **Conversion Approval** field |
 | **Large Deal Won Alert** | Record change (update) | When an opportunity of $100K or more turns *Closed Won*, notify the owner — the owner alone, not their manager |
 | **Billing Hand-off: Closed Won** | Record change (update) | On the transition into *Closed Won*, enqueue one durable POST of the deal + account + line items to the billing endpoint |
 | **Billing Hand-off: Contract Activated** | Record change (update) | On the transition into *Activated*, enqueue one durable POST of the contract + account + the originating deal's line items |

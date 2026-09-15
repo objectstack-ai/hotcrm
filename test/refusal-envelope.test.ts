@@ -135,7 +135,7 @@ describe('every refusal names a code the platform will echo (#1075)', () => {
   );
 
   it('found every swept call site', () => {
-    expect(sites).toHaveLength(17);
+    expect(sites).toHaveLength(18);
   });
 
   it('uses only members of the platform ErrorCode enum', () => {

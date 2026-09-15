@@ -87,6 +87,27 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       email_opt_out: { label: 'メール配信停止' },
       next_followup_date: { label: '次回フォローアップ日' },
       last_contacted_date: { label: '最終接触日時' },
+      need_type: {
+        label: 'ニーズ種別',
+        help: 'この見込客が何を求めているか。割り当て・優先順位付け・需要分析がこの項目を参照します。',
+        options: {
+          new_implementation: '新規導入', expansion: '拡張・追加',
+          replacement: '入れ替え・移行', renewal: '更新', consulting: 'コンサルティング',
+          support: '保守・サポート', other: 'その他',
+        },
+      },
+      estimated_amount: {
+        label: '予想金額',
+        help: 'クオリフィケーション前の需要金額の見積り。コンバージョン時に商談金額へ初期値として入ります。',
+      },
+      conversion_approval_status: {
+        label: 'コンバージョン承認',
+        help: 'この見込客がコンバージョンの承認を得ているか。「承認不要」は承認を求めない状態で、出荷時の既定値です。',
+        options: {
+          not_required: '承認不要', pending: '承認待ち',
+          approved: '承認済み', rejected: '却下',
+        },
+      },
       disqualification_reason: {
         label: '不適格理由',
         help: 'ステータスが「不適格」の場合は必須',

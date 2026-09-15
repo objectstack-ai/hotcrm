@@ -110,8 +110,27 @@ export const LeadConversionFlow: Flow = {
           // sent. (`visibleWhen` below is the opposite case: forwarded raw,
           // never interpolated. Same node, two different dialects.)
           { name: 'createOpportunity', label: 'Create Opportunity?', type: 'boolean', defaultValue: '{createOpportunity}' },
-          { name: 'opportunityName', label: 'Opportunity Name', type: 'text', required: true, visibleWhen: 'createOpportunity == true' },
-          { name: 'opportunityAmount', label: 'Opportunity Amount', type: 'currency', visibleWhen: 'createOpportunity == true' },
+          // PREFILLED FROM THE LEAD (REQ-0005 acceptance 2). Both defaults are
+          // whole-string sole tokens over `leadRecord`, which `get_lead` bound
+          // before this screen was reached — the fetch sits AHEAD of the screen
+          // for the duplicate warning, and these two ride the same ordering.
+          //
+          // ⚠️ A screen field's `defaultValue` is server-interpolated before the
+          // descriptor goes on the wire and a whole-string sole token returns
+          // the RAW value, so `estimated_amount` arrives as a NUMBER and
+          // `interp` maps a null to `undefined` — a lead with no estimate
+          // renders the empty box it always did, not the string "null". That is
+          // the same mechanism the `duplicateWarning` description depends on.
+          //
+          // ⛔ The amount is prefilled, never copied silently. `estimated_amount`
+          // is a pre-qualification guess and `crm_opportunity.amount` is a
+          // number a rep defends in a forecast; conversion is the moment a human
+          // turns one into the other, so the figure is shown in an editable box
+          // and the rep confirms it. Writing it straight into
+          // `create_opportunity` would put an unreviewed estimate into the
+          // forecast and leave the two fields looking like copies of each other.
+          { name: 'opportunityName', label: 'Opportunity Name', type: 'text', required: true, defaultValue: '{leadRecord.company}', visibleWhen: 'createOpportunity == true' },
+          { name: 'opportunityAmount', label: 'Opportunity Amount', type: 'currency', defaultValue: '{leadRecord.estimated_amount}', visibleWhen: 'createOpportunity == true' },
           // The close date, DEFAULTED AND VISIBLE. `close_date` is what files
           // an opportunity into a forecast PERIOD, so ⛔ never stamp it silently
           // inside `create_opportunity`: a hidden +90 days files every converted
@@ -268,6 +287,32 @@ export const LeadConversionFlow: Flow = {
         // pass-through into the dialog the rep reads (the executor's
         // `shouldPause`), and without it this node would fall through to `end`
         // in silence — a refusal nobody is told about.
+        waitForInput: true,
+      },
+    },
+    {
+      // Branching is on edges `e28` / `e29` — see `decision_account`.
+      id: 'decision_approval', type: 'decision', label: 'Approved for Conversion?',
+    },
+    {
+      // The approval gate, on the surface a REST caller reaches (REQ-0005
+      // acceptance 3). `convert_lead`'s `visible` predicate hides the button and
+      // `lead.hook.ts` refuses the write, but this flow has its own door —
+      // `POST /automation/lead_conversion/trigger` — and without this branch a
+      // caller through that door would run the whole conversion and only be
+      // refused at `mark_converted`, by which point the account, the contact and
+      // the opportunity have already been written and the lead is left
+      // half-converted. Refusing HERE, ahead of `screen_1`, is what makes the
+      // gate whole: every create and update in this flow sits behind that
+      // screen, and this path never reaches it.
+      id: 'refuse_unapproved', type: 'screen', label: 'Conversion Refused',
+      config: {
+        title: 'Conversion refused',
+        description:
+          "This lead has not been approved for conversion. An approver has to sign it off before it can become an account, contact and opportunity; the Conversion Approval field on the lead shows whether the decision is still pending or was refused. Keep working the lead in the meantime — nothing about it is frozen.",
+        // Field-less screen: `waitForInput` is what turns it from a server-side
+        // pass-through into the dialog the rep reads. See
+        // `refuse_confirmed_duplicate` for the mechanism.
         waitForInput: true,
       },
     },
@@ -465,7 +510,28 @@ export const LeadConversionFlow: Flow = {
     // by `id`), so nothing fails and the collision survives to trap the next
     // editor picking out of the sequence. `e1` and `e3` are vacant retired ids
     // and stay that way; `e27` is above the highest live id, not a gap-fill.
-    { id: 'e27', source: 'get_lead', target: 'decision_duplicate', type: 'default' },
+    { id: 'e27', source: 'get_lead', target: 'decision_approval', type: 'default' },
+    // ── The approval gate (REQ-0005 step 7) ────────────────────────────
+    //
+    // The same TOTAL, PARTITIONING pair the duplicate verdict below is written
+    // as, and for the same measured reason: a decision node declaring no
+    // `config.conditions` takes EVERY out-edge whose condition holds, in
+    // parallel, so two overlapping guards would refuse the conversion and
+    // continue it in one run. `e29` is `e28` negated by De Morgan.
+    //
+    // ⚠️ The polarity is fail-OPEN, unlike the duplicate branch, and that is the
+    // gate's off switch rather than a slip. Only the two verdicts a live
+    // approval writes refuse; `not_required` — the shipped default — and an
+    // absent column (a lead from before the field existed) both continue, so
+    // with the gate off this pair is invisible and conversion behaves exactly as
+    // it did before. `lead.hook.ts` and `convert_lead.visible` carry the same
+    // polarity, because the three have to agree about what "off" means.
+    { id: 'e28', source: 'decision_approval', target: 'refuse_unapproved', type: 'default', condition: P`has(vars.leadRecord) && has(vars.leadRecord.conversion_approval_status)
+      && (vars.leadRecord.conversion_approval_status == "pending" || vars.leadRecord.conversion_approval_status == "rejected")`, label: 'Not approved' },
+    { id: 'e29', source: 'decision_approval', target: 'decision_duplicate', type: 'default', condition: P`!has(vars.leadRecord) || !has(vars.leadRecord.conversion_approval_status)
+      || (vars.leadRecord.conversion_approval_status != "pending" && vars.leadRecord.conversion_approval_status != "rejected")`, label: 'Clear' },
+    // Rejoins nothing, exactly like `e26`: the refusal IS not reaching a writer.
+    { id: 'e30', source: 'refuse_unapproved', target: 'end', type: 'default' },
     // ⚠️ Both conditions are TOTAL, and on this surface that is not a style
     // preference: a flow condition is interpreted strict CEL on every run, and
     // an unguarded field read against a driver that omits absent columns
