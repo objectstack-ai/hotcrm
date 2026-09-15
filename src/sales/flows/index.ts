@@ -18,6 +18,7 @@
  */
 export { LeadConversionFlow } from './lead-conversion.flow';
 export { LeadConversionApprovalFlow } from './lead-conversion-approval.flow';
+export { AccountApprovalFlow } from './account-approval.flow';
 export { ScheduleFollowUpFlow } from './schedule-followup.flow';
 export { DemoBootstrapFlow } from './demo-bootstrap.flow';
 export { OpportunityApprovalFlow, OpportunityApprovalOnCreateFlow } from './opportunity-approval.flow';

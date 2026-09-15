@@ -25,6 +25,26 @@ export const customer: Record<string, ObjectTranslationData> = {
     description: '当社と取引のある企業・組織',
     fields: {
       account_number: { label: '取引先番号' },
+      registration_number: {
+        label: '登記番号',
+        help: '取引先が自国の登記機関から交付された登記上の識別番号。当社が採番する取引先番号とは異なります。',
+      },
+      commercial_capability: {
+        label: '商談可否区分',
+        help: 'この取引先に対して新規の商談を開始できるかどうか。決済のみの取引先は請求・入金には引き続き利用できますが、新規商談を関連付けることはできません。',
+        options: { full: '制限なし', settlement_only: '決済のみ' },
+      },
+      incumbent_vendor: { label: '現行ベンダー', help: '当社が狙っている支出を現在受注しているベンダー。' },
+      annual_purchasing_budget: { label: '年間調達予算', help: 'この取引先が今年度ベンダーに支出する見込み額であり、自社の売上高ではありません。' },
+      payment_cycle: {
+        label: '支払サイクル',
+        options: { prepaid: '前払い', net_30: '30日', net_60: '60日', net_90: '90日' },
+      },
+      approval_status: {
+        label: '承認ステータス',
+        help: 'この取引先の承認状況。新規取引先は承認待ちで作成され、承認トレイで判断されます。',
+        options: { pending: '承認待ち', approved: '承認済み', rejected: '却下' },
+      },
       name: { label: '取引先名', help: '会社または組織の正式名称' },
       name_normalized: {
         label: '取引先名（正規化）',
@@ -117,6 +137,7 @@ export const customer: Record<string, ObjectTranslationData> = {
     _sections: {
       basic: { label: '基本情報' },
       financials: { label: '財務情報' },
+      business_profile: { label: 'ビジネス情報' },
       contact_info: { label: '連絡先情報' },
       ownership: { label: '所有者・ステータス' },
       branding: { label: 'ブランディング' },
