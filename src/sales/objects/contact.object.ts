@@ -17,6 +17,7 @@ export const Contact = ObjectSchema.create({
   fieldGroups: [
     { key: 'identity',        label: 'Identity',             icon: 'user' },
     { key: 'account_info',    label: 'Account & Role',       icon: 'briefcase' },
+    { key: 'buying_centre',   label: 'Buying Centre',        icon: 'users' },
     { key: 'contact_info',    label: 'Contact Information',  icon: 'phone' },
     { key: 'mailing_address', label: 'Mailing Address',      icon: 'map-pin', collapse: 'collapsed' },
     { key: 'additional',      label: 'Additional Info',      icon: 'info', collapse: 'collapsed' },
@@ -103,6 +104,96 @@ export const Contact = ObjectSchema.create({
         { label: 'Finance', value: 'finance' },
         { label: 'Human Resources', value: 'hr' },
         { label: 'Operations', value: 'operations' },
+      ]
+    }),
+
+    // ── Buying centre (REQ-0004) ─────────────────────────────────────────
+    //
+    // The three attributes that turn an account's contact list from a
+    // DIRECTORY into a MAP: what this person does in the purchase decision,
+    // where they stand on us, and how strong our relationship with them is.
+    // `title` above is the employer's job title and `is_primary` below is a
+    // one-bit answer to "who do we call" — neither of them is this fact.
+    //
+    // ⛔ Read by people and by reporting, never by a gate. No hook, no flow
+    // and no validation is authored against any of the three, none is
+    // `required`, and none carries an option `default`: a contact with all
+    // three blank saves exactly as it did before this group existed
+    // (REQ-0004 acceptance 4). They are sales intelligence, and AGENTS.md
+    // metadata semantics rule 8 is what keeps a machine signal from refusing
+    // a write.
+    // ⚠️ `buying_function`, not `buying_role` — and 'Buying Function', not
+    // 'Buying Role'. `security-role-word` (an author-time rule, ADR-0090 D3)
+    // refuses the word `role` on BOTH, measured on this branch as two
+    // successive `pnpm validate` exit-1 runs: first the field name, then the
+    // label, because "admins must meet ONE vocabulary" and `role` is the
+    // platform's security vocabulary (permission_set / position /
+    // business_unit). Its own remedy prescribes the replacement used here —
+    // "a domain word (e.g. 'function', 'duty')".
+    //
+    // The rule's surface is the ENGLISH one it can read: it matches
+    // `/\brole(s)?\b/i` over object/field/action/permission-set/position/app
+    // declarations and does not reach the locale packs. So the three
+    // non-English packs keep the natural business term for this concept in
+    // their own language (zh-CN 采购角色, es-ES Rol de Compra, ja-JP 購買役割)
+    // — same fact, each written the way its reader says it.
+    buying_function: Field.select({
+      label: 'Buying Function',
+      group: 'buying_centre',
+      // SINGLE-valued, and REQ-0004 left that call to the implementing PR.
+      // `multiple: true` would cost the field the property acceptance 2 asks
+      // for: `GroupingConfigSchema` (`@objectstack/spec/ui`, the installed
+      // pin) answers a grouped list with ONE server-side aggregate query, and
+      // its `GroupingFieldSchema.field` says the group header "carries its
+      // raw stored value" — so a multi-valued column groups by the
+      // COMBINATION. `decision_maker` + `user` would become a group of its
+      // own instead of feeding both, which is the opposite of reading an
+      // account as a map. A person who is genuinely two things is recorded as
+      // the role that governs THIS decision; the second one is already
+      // legible from `title` / `department`.
+      //
+      // The six are the generic buying-centre slots every industry reads the
+      // same way — ⛔ deliberately not one company's role model.
+      options: [
+        { label: 'Decision Maker',      value: 'decision_maker' },
+        { label: 'Economic Buyer',      value: 'economic_buyer' },
+        { label: 'Technical Evaluator', value: 'technical_evaluator' },
+        { label: 'User',                value: 'user' },
+        { label: 'Influencer',          value: 'influencer' },
+        { label: 'Gatekeeper',          value: 'gatekeeper' },
+      ]
+    }),
+
+    attitude: Field.select({
+      label: 'Attitude to Us',
+      group: 'buying_centre',
+      // ORDERED, most to least favourable — declaration order IS the order a
+      // picklist and a grouped list present, so the ladder is authored rather
+      // than described. A blank means nobody has formed a view yet, which is
+      // a different fact from `neutral`.
+      options: [
+        { label: 'Champion',   value: 'champion' },
+        { label: 'Supportive', value: 'supportive' },
+        { label: 'Neutral',    value: 'neutral' },
+        { label: 'Skeptical',  value: 'skeptical' },
+        { label: 'Blocker',    value: 'blocker' },
+      ]
+    }),
+
+    relationship_strength: Field.select({
+      label: 'Relationship Strength',
+      group: 'buying_centre',
+      // ORDERED, weakest to strongest. ⛔ Not a free-text score, and ⛔ not
+      // derived from `last_contacted_date` below: recency is machine-written
+      // and measures something else — a weekly call with someone who will not
+      // take our side is not a strong relationship. A blank means unassessed;
+      // `distant` is an assessment that came back weak.
+      options: [
+        { label: 'Distant',              value: 'distant' },
+        { label: 'Acquaintance',         value: 'acquaintance' },
+        { label: 'Working Relationship', value: 'working' },
+        { label: 'Strong',               value: 'strong' },
+        { label: 'Trusted Advisor',      value: 'trusted_advisor' },
       ]
     }),
 

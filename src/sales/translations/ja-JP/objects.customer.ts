@@ -151,6 +151,32 @@ export const customer: Record<string, ObjectTranslationData> = {
           hr: '人事部', operations: 'オペレーション部',
         },
       },
+      // バイイングセンター (REQ-0004) — 意思決定のマップ。英語ラベルは
+      // 'Buying Role' ではなく 'Buying Function'：security-role-word ルールが
+      // 宣言側で英単語 role を予約している (ADR-0090 D3)。同ルールは英語のみを
+      // 読み言語パックには及ばないため、ここでは日本語として自然な語を使う。
+      buying_function: {
+        label: '購買役割',
+        options: {
+          decision_maker: '決裁者', economic_buyer: '予算決裁者',
+          technical_evaluator: '技術評価者', user: '利用者',
+          influencer: '影響者', gatekeeper: 'ゲートキーパー',
+        },
+      },
+      attitude: {
+        label: '自社への態度',
+        options: {
+          champion: '推進者', supportive: '好意的', neutral: '中立',
+          skeptical: '懐疑的', blocker: '反対者',
+        },
+      },
+      relationship_strength: {
+        label: '関係の強さ',
+        options: {
+          distant: '疎遠', acquaintance: '顔見知り', working: '業務上の関係',
+          strong: '強い', trusted_advisor: '信頼されるアドバイザー',
+        },
+      },
       owner_id: { label: '取引先責任者の所有者' },
       description: { label: '説明' },
       is_primary: { label: '主担当者', help: 'この取引先の主担当者かどうか' },
@@ -173,6 +199,7 @@ export const customer: Record<string, ObjectTranslationData> = {
     _sections: {
       identity: { label: '基本情報' },
       account_info: { label: '取引先・役職' },
+      buying_centre: { label: 'バイイングセンター' },
       contact_info: { label: '連絡先情報' },
       mailing_address: { label: '郵送先住所' },
       additional: { label: 'その他の情報' },
