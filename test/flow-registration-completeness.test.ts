@@ -2,7 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { allFlows } from '../objectstack.composition';
-import { metadataDirs, srcPath, type PackageDir } from './helpers/src-roster';
+import { metadataDirs, srcPath } from './helpers/src-roster';
 
 import * as salesFlows from '../src/sales/flows';
 import * as serviceFlows from '../src/service/flows';
@@ -71,16 +71,27 @@ const barrelExports = (): Array<[string, string, unknown]> =>
     Object.entries(ns).map(([name, value]) => [pkg, name, value] as [string, string, unknown]),
   );
 
-const barrelIndex = (pkg: string): string => `${srcPath(pkg as PackageDir, 'flows')}/index.ts`;
+const barrelIndex = (pkg: string): string => `${srcPath(pkg, 'flows')}/index.ts`;
 
 describe('flow registration completeness', () => {
   /**
    * Anti-phantom. Every assertion below is "this set has no gaps", which an
    * empty set satisfies: a barrel that stopped resolving, or a fifth package
-   * whose `flows/` directory nobody added here, would leave the rule passing
-   * over nothing. The roster is therefore checked against the real tree via
-   * the same helper the rest of the suite uses, so `src/psa/flows/` landing
-   * fails HERE rather than going quietly unguarded.
+   * whose flows directory nobody added to `BARRELS`, would leave the rule
+   * passing over nothing.
+   *
+   * `metadataDirs('flows')` is therefore the other side of the comparison, and
+   * since #1940 it is read off disk: the roster it filters is derived from the
+   * directories under `src/`, not hand-kept. So a fifth package landing with a
+   * flows directory of its own fails HERE.
+   *
+   * ⚠️ That sentence was false when this guard landed, and the correction is
+   * worth keeping visible. `metadataDirs()` then filtered a hand-written
+   * four-element `PACKAGES` list, so this assertion compared one hand-written
+   * roster against another and could only ever catch "a package `PACKAGES`
+   * already names holds flows but is missing from `BARRELS`". Seeding a fifth
+   * package left it green (#1940, reproduced). Only the derivation makes the
+   * claim true; ⛔ do not restore a hand-kept roster on either side.
    */
   it('reads every package that holds a flows/ directory, and each holds flows', () => {
     const onDisk = metadataDirs('flows').map((dir) => dir.split('/')[1]!);
