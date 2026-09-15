@@ -134,8 +134,12 @@ project invoicing reopens the billing-scope ruling rather than this record.
 - **B (Track B)** — the metadata, phasing and acceptance are the design document's; nothing
   is restated here. Phase 0 (the ADR-0130 composition proof) needs the maintainer decisions
   listed at the end of that document before it opens.
-- **B (Track A)** — to be filed as REQ-0003 onward, one record per object, each carrying its
-  own standard-versus-overlay split.
+- **B (Track A)** — filed as REQ-0003 onward, one record per object, each carrying its
+  own standard-versus-overlay split:
+  - [REQ-0003](0003-account-registration-category-and-approval.md) — `crm_account`, steps 1 · 3 · 4 · 5.
+  - [REQ-0004](0004-contact-buying-centre-map.md) — `crm_contact`, step 2.
+  - [REQ-0005](0005-lead-need-type-value-and-approval.md) — `crm_lead`, steps 6 · 7.
+  - [REQ-0006](0006-opportunity-qualification-and-status-approval.md) — `crm_opportunity`, steps 8 … 14.
 - **C** — an overlay package on top of HotCRM, owned by the customer engagement, carrying
   the named approval chain, the role-title picklist values and the opportunity coupling.
 - **D** — recorded above with the ruling each rests on and the trigger that reopens it.
