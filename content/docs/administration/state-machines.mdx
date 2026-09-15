@@ -38,7 +38,7 @@ The main route, with the two side edges that leave it:
                                └─────────────┘
 ```
 
-**Allowed transitions** — this is the whole table, copied from the `lead_status_progression` rule in `src/objects/lead.object.ts`, and it carries a few shortcuts the picture above leaves out:
+**Allowed transitions** — this is the whole table, copied from the `lead_status_progression` rule in `src/sales/objects/lead.object.ts`, and it carries a few shortcuts the picture above leaves out:
 
 | From | May move to | Notes |
 | --- | --- | --- |
@@ -68,7 +68,7 @@ Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ 
 
 There are **two** closed stages, not three: *Closed Won* and *Closed Lost*. There is no *Closed Without Decision* — a deal that goes quiet is a *Closed Lost*.
 
-**Allowed transitions**, copied from the `opportunity_stage_progression` rule in `src/objects/opportunity.object.ts`:
+**Allowed transitions**, copied from the `opportunity_stage_progression` rule in `src/sales/objects/opportunity.object.ts`:
 
 | From | May move to | Notes |
 | --- | --- | --- |
@@ -105,7 +105,7 @@ What the table does buy you is the route itself, **written down in one machine-r
 - **Illegal moves are reported rather than silent.** The move is saved, but the engine names it in the log — *"Invalid opportunity stage transition"*, with the rule's own name — so a bad import or a misbehaving integration can be found afterwards. A move inside the table logs nothing, which is what makes the warnings worth reading.
 - **Something for automation and reporting to point at.** A flow condition, a report or a skill can be written against the declared route instead of a list of statuses copied out by hand.
 
-If you need a status change to be genuinely impossible, the state machine is the wrong tool: an `error`-severity validation rule is the one that blocks a save. Keeping these five advisory is deliberate — the reasoning is written into the rules themselves (`src/objects/quote.object.ts`): a support-driven correction must not require a data fix.
+If you need a status change to be genuinely impossible, the state machine is the wrong tool: an `error`-severity validation rule is the one that blocks a save. Keeping these five advisory is deliberate — the reasoning is written into the rules themselves (`src/revenue/objects/quote.object.ts`): a support-driven correction must not require a data fix.
 
 ## Customising state machines
 
@@ -117,7 +117,7 @@ Admins can:
 - **Add exit conditions** (e.g., *Cannot leave Negotiation without an updated Close Date*).
 - **Trigger automation** on each transition (object hook, flow, notification).
 
-All of that is a source edit, not a Setup screen: **there is no Setup → Object → Status → State Machine page**. Each table is a `validations[]` entry of type `state_machine` on its object (`src/objects/*.object.ts`), and that entry carries a transition map and nothing else — so the first two changes above are edits to the map, entry and exit conditions are separate `validations[]` rules or `requiredWhen` predicates on the fields concerned, and per-transition automation is a `record_change` flow or an object hook. Each of them is a code change plus a redeploy.
+All of that is a source edit, not a Setup screen: **there is no Setup → Object → Status → State Machine page**. Each table is a `validations[]` entry of type `state_machine` on its object (`src/*/objects/*.object.ts`), and that entry carries a transition map and nothing else — so the first two changes above are edits to the map, entry and exit conditions are separate `validations[]` rules or `requiredWhen` predicates on the fields concerned, and per-transition automation is a `record_change` flow or an object hook. Each of them is a code change plus a redeploy.
 
 ## What users see
 
@@ -127,7 +127,7 @@ All of that is a source edit, not a Setup screen: **there is no Setup → Object
 
 ## State machines and the AI Copilot
 
-**Nothing in this app connects the two.** The six skills under `src/skills/` and every action under `src/actions/` name no transition table, no state machine and no legal-next-state lookup, and no skill's instructions carry a list of which statuses may follow which. This page previously described the Copilot withholding a *"Qualify this lead"* or *"Convert this lead"* suggestion until the record's status allowed the move; HotCRM declares nothing that would produce that behaviour.
+**Nothing in this app connects the two.** The six skills under `src/*/skills/` and every action under `src/*/actions/` name no transition table, no state machine and no legal-next-state lookup, and no skill's instructions carry a list of which statuses may follow which. This page previously described the Copilot withholding a *"Qualify this lead"* or *"Convert this lead"* suggestion until the record's status allowed the move; HotCRM declares nothing that would produce that behaviour.
 
 Whether the platform's own agent reads a `state_machine` validation when it loads an object's metadata, and narrows its suggestions accordingly, is a question about the runtime rather than about this app — so this page makes no claim about it in either direction. If you are relying on the Copilot to stay inside a lifecycle, verify it against your deployment rather than against this page.
 

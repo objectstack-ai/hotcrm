@@ -47,8 +47,8 @@ description: 記錄、API 速率限制、AI 配額、檔案大小 —— HotCRM 
 | 文件預覽格式 | pdf、docx、xlsx、pptx |
 
 *部分有出處。* HotCRM 真正在執行的檔案限制是**按欄位**的，不是按租戶的：`Field.file()` 和 `Field.image()`
-接受一個由伺服端執行的 `maxSize`，本應用設了三處 —— 客戶 logo 2 MB（`src/objects/account.object.ts:358`）、
-產品素材 5 MB 與 20 MB（`src/objects/product.object.ts:157` 與 `:164`）。應用和已安裝的套件裡都沒有宣告
+接受一個由伺服端執行的 `maxSize`，本應用設了三處 —— 客戶 logo 2 MB（`src/sales/objects/account.object.ts:358`）、
+產品素材 5 MB 與 20 MB（`src/revenue/objects/product.object.ts:157` 與 `:164`）。應用和已安裝的套件裡都沒有宣告
 2 GB 的平台上限、沒有分段上傳門檻、也沒有預覽格式清單；上面的預覽格式說的是你部署裡跑的那個檢視器。
 
 ## API 限制
@@ -89,7 +89,7 @@ description: 記錄、API 速率限制、AI 配額、檔案大小 —— HotCRM 
 | 搜尋延遲（p95） | 無出處 —— 取決於你的資料庫和資料量 |
 
 *部分有出處。* 搜尋讀哪些欄位**是**真的，而且是按物件宣告的：物件上的 `searchableFields`，今天有八個物件
-設了它（`src/objects/account.object.ts:25`、`lead.object.ts:435`、`case.object.ts:387`、
+設了它（`src/sales/objects/account.object.ts:25`、`lead.object.ts:435`、`case.object.ts:387`、
 `opportunity.object.ts:28`、`product.object.ts:27`、`quote.object.ts:29`、`knowledge_article.object.ts:82`、
 `event.object.ts:224`）。**既沒有前 30 個的預設值，也沒有可設定的上限** —— `@objectstack/spec/data` 裡的
 `resolveSearchFields` 原樣回傳宣告的那份清單，所以本頁原先寫的「預設前 30 個（可設定）」什麼也沒有描述。
@@ -107,7 +107,7 @@ description: 記錄、API 速率限制、AI 配額、檔案大小 —— HotCRM 
 | 最大同時技能執行數 | 每使用者 **10**（無出處） |
 | 嵌入儲存 | 按方案（通常為每個租戶 GB 級） |
 
-*沒有執行。* 對於 `src/skills/` 裡的六個技能，以及已安裝的任何套件，都不存在呼叫配額、token 預算、並行上限
+*沒有執行。* 對於 `src/*/skills/` 裡的六個技能，以及已安裝的任何套件，都不存在呼叫配額、token 預算、並行上限
 或重新索引計畫。你能拿到的計量來自你的模型供應商和你的部署，不來自這個應用。
 
 ## 報表與分析
@@ -118,7 +118,7 @@ description: 記錄、API 速率限制、AI 配額、檔案大小 —— HotCRM 
 | 匯出的報表列數 | **1,000,000**（無出處） |
 | 每使用者的儀表板 | 無限制 |
 | 每個儀表板的小工具 | **50**（無出處） |
-| 儀表板重新整理間隔 | Customer Service **60 秒**、Sales Performance **180 秒**、其餘三個 **300 秒** —— 由 `src/dashboards/` 逐個儀表板宣告 |
+| 儀表板重新整理間隔 | Customer Service **60 秒**、Sales Performance **180 秒**、其餘三個 **300 秒** —— 由 `src/*/dashboards/` 逐個儀表板宣告 |
 | cube 重新整理頻率 | 歸分析服務管。HotCRM 在 `src/` 裡沒有宣告任何重新整理計畫，也沒有增量與全量重新整理策略，因此應用側給不出這個數字 —— 請對著你自己的部署去核 |
 | 並行報表執行（每使用者） | **5**（無出處） |
 
@@ -255,7 +255,7 @@ async function callApi(fn, retries = 5) {
 
 ### AI 呼叫批次處理
 
-*未提供。* 不存在批量技能呼叫這個面：`src/skills/` 裡的六個技能是一次一呼的，應用和已安裝的套件裡都不存在
+*未提供。* 不存在批量技能呼叫這個面：`src/*/skills/` 裡的六個技能是一次一呼的，應用和已安裝的套件裡都不存在
 批次處理、連線池或「約 10× 加速」這條路徑。要分流很多記錄，就意味著很多次呼叫。清單檢視上的批量**操作**是
 另一回事，它是真的 —— 參見[自動化](/zh-Hant/docs/administration/automation)。
 
@@ -267,7 +267,7 @@ async function callApi(fn, retries = 5) {
 indexes: [{ name: 'idx_account_name', fields: ['name'] }],
 ```
 
-HotCRM 今天已經在十五個物件上宣告了十六個這樣的區塊（例如 `src/objects/account.object.ts:442`）；SQL 驅動
+HotCRM 今天已經在十五個物件上宣告了十六個這樣的區塊（例如 `src/sales/objects/account.object.ts:442`）；SQL 驅動
 透過 `syncDeclaredIndexes` 把它們物化出來。**不存在按欄位的 `indexed` 開關** —— `FieldSchema` 會按名拒絕這個
 鍵，並附上理由：*「從來不是 FieldSchema 的鍵；欄位級的索引旗標沒有建出過任何索引（#2377）。請在物件的
 `indexes[]` 裡宣告索引。」* 所以本頁原先給的建議 ——「把欄位標記為索引」—— 點的是一個從未建出索引的旗標。

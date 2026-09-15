@@ -11,7 +11,7 @@ SLA（服務級別協議）系統為**每一張工單**打上一個**截止時�
 
 ## SLA 目標如何計算
 
-**每一張工單都會自動獲得 SLA 截止日期**，來自一張**優先順序 × 客戶層級矩陣**。`case_sla_defaults` 鉤子（`src/objects/case.hook.ts`）讀取工單的**優先順序**與其帳戶的**客戶層級**，在下表中查到這一對的取值，把 `sla_due_date` 填成*目前時間 + 相應小時數*——建單時，或者第一次給工單填上優先順序的那次編輯時，只要該欄位仍為空。
+**每一張工單都會自動獲得 SLA 截止日期**，來自一張**優先順序 × 客戶層級矩陣**。`case_sla_defaults` 鉤子（`src/service/objects/case.hook.ts`）讀取工單的**優先順序**與其帳戶的**客戶層級**，在下表中查到這一對的取值，把 `sla_due_date` 填成*目前時間 + 相應小時數*——建單時，或者第一次給工單填上優先順序的那次編輯時，只要該欄位仍為空。
 
 在這張矩陣落地之前，只有 Critical 會被打戳。這一點值得記住，因為它解釋了下游的一切：`case_sla_monitor` 撈的是 `sla_due_date` 已經過去的工單，而空日期永遠不會"過去"，所以 High、Medium、Low 工單根本無法違約——不是因為掃描把它們排除在外，而是因為它們壓根沒有可錯過的期限。
 
@@ -54,9 +54,9 @@ SLA（服務級別協議）系統為**每一張工單**打上一個**截止時�
 
 ## SLA 表現報表
 
-**SLA 表現**報表只按**一個**維度細分：**優先順序**。它的 `rows` 就是 `['priority']`，沒有別的（`src/reports/case.report.ts`）。而且它報的也不是"在目標內解決的百分比"，而是 **SLA 違約率**——**SLA 已違約**標記的平均值——與工單數、平均解決時長並列，並且只統計**已關閉的工單**（`runtimeFilter: { is_closed: true }`）。（準時率本身是有宣告的：**SLA Compliance Rate**，服務概覽上的 **SLA Compliance** 儀表圖畫的就是它。只是這份報表沒有帶上它。）所以本頁過去許諾的四個問題，它只回答其中一個：*哪個優先順序桶在漏單？*
+**SLA 表現**報表只按**一個**維度細分：**優先順序**。它的 `rows` 就是 `['priority']`，沒有別的（`src/service/reports/case.report.ts`）。而且它報的也不是"在目標內解決的百分比"，而是 **SLA 違約率**——**SLA 已違約**標記的平均值——與工單數、平均解決時長並列，並且只統計**已關閉的工單**（`runtimeFilter: { is_closed: true }`）。（準時率本身是有宣告的：**SLA Compliance Rate**，服務概覽上的 **SLA Compliance** 儀表圖畫的就是它。只是這份報表沒有帶上它。）所以本頁過去許諾的四個問題，它只回答其中一個：*哪個優先順序桶在漏單？*
 
-另外三個不只是"報表裡沒放"，而是在它底下的語意層裡根本搆不著。`case_metrics` 資料集（`src/datasets/case.dataset.ts`）總共宣告了六個維度——**狀態**、**優先順序**、**來源**、**類型**、**建立時間**、**解決所用文章**——因此：
+另外三個不只是"報表裡沒放"，而是在它底下的語意層裡根本搆不著。`case_metrics` 資料集（`src/service/datasets/case.dataset.ts`）總共宣告了六個維度——**狀態**、**優先順序**、**來源**、**類型**、**建立時間**、**解決所用文章**——因此：
 
 - **客服**——不存在負責人或客服維度。`owner_id` 是工單上的欄位，但資料集沒有把它暴露成維度，所以沒有任何報表、也沒有任何儀表板部件能按它分組。
 - **帳戶等級**——`crm_account.tier` 確實存在於帳戶物件上，但 `case_metrics` 只讀 `crm_case`，從不跨到帳戶上去取它，所以分析側任何地方都選不到帳戶等級。
@@ -98,7 +98,7 @@ SLA（服務級別協議）系統為**每一張工單**打上一個**截止時�
 
 移交採用的是**負載最輕**，而不是按輪次的輪詢：誰持有該職位且未結（既非 *Resolved* 也非 *Closed*）工單最少，工單就歸誰，因此連續多次升級會自然分攤到整個團隊，不需要維護任何計數器。它在三種情況下刻意讓開：**無人持有該職位**（全新安裝即是此狀態），工單保留原負責人，升級一如既往地完成；工單**已經歸池內成員所有**，則留在正在處理它的那位經理手裡；或者同一次寫入**自己指定了負責人**，那個指定優先。
 
-機制上留個底：這次重新指派**不是第二次寫入**。它搭在升級那一次更新上完成（一個 `beforeUpdate` 鉤子，`src/objects/_case-assignment.ts` 裡的 `case_escalation_reassign`）——所以它不會觸發額外的自動化，也不可能形成迴路，流程自己的 `update_record` 節點依舊不寫任何負責人。這件事流程做不到：`{caseRecord.owner_id.manager}` 要穿透一個 lookup，會插值成字面量 `undefined`。
+機制上留個底：這次重新指派**不是第二次寫入**。它搭在升級那一次更新上完成（一個 `beforeUpdate` 鉤子，`src/service/objects/_case-assignment.ts` 裡的 `case_escalation_reassign`）——所以它不會觸發額外的自動化，也不可能形成迴路，流程自己的 `update_record` 節點依舊不寫任何負責人。這件事流程做不到：`{caseRecord.owner_id.manager}` 要穿透一個 lookup，會插值成字面量 `undefined`。
 
 以下兩件事這份清單刻意不寫，因為升級並不做：
 
@@ -145,9 +145,9 @@ SLA（服務級別協議）系統為**每一張工單**打上一個**截止時�
 | **服務總監** | SLA 表現報表 | 每週 |
 | **高管** | 服務概覽 | 每週 |
 
-這張表過去寫的兩個名字根本不是檢視。**Breached SLA** 與 **Critical Cases** 都不存在於列表檢視裡：`crm_case` 隨產品提供的檢視一共八個——*All Cases*、*Service Workflow*、*SLA Calendar*、*Case Timeline*、*My Open Cases*、*Unassigned — triage*、*Escalated Cases* 與 *⏰ SLA at Risk*（`src/views/case.view.ts`）——其中沒有任何一個以 **SLA 已違約**為過濾條件。真正按違約過濾的只有[服務概覽](/zh-Hant/docs/analytics/dashboards)上的兩個指標磁貼：**SLA Violations**（`is_sla_violated: true`）與 **Critical Cases**（未結 + Critical）。如果你要的是一份能逐條處理的列表，**Escalated Cases** 是最接近的那個：`case_sla_monitor` 會把它標記為違約的每一個工單都升級掉，所以每一次違約都會落進這個檢視——只是會和那些僅因優先順序而升級的工單混在一起。
+這張表過去寫的兩個名字根本不是檢視。**Breached SLA** 與 **Critical Cases** 都不存在於列表檢視裡：`crm_case` 隨產品提供的檢視一共八個——*All Cases*、*Service Workflow*、*SLA Calendar*、*Case Timeline*、*My Open Cases*、*Unassigned — triage*、*Escalated Cases* 與 *⏰ SLA at Risk*（`src/service/views/case.view.ts`）——其中沒有任何一個以 **SLA 已違約**為過濾條件。真正按違約過濾的只有[服務概覽](/zh-Hant/docs/analytics/dashboards)上的兩個指標磁貼：**SLA Violations**（`is_sla_violated: true`）與 **Critical Cases**（未結 + Critical）。如果你要的是一份能逐條處理的列表，**Escalated Cases** 是最接近的那個：`case_sla_monitor` 會把它標記為違約的每一個工單都升級掉，所以每一次違約都會落進這個檢視——只是會和那些僅因優先順序而升級的工單混在一起。
 
-**My Open Cases 是按優先順序排序的，不是按 SLA 截止日期。** 它的排序鍵是 `priority_rank` 降序在先、`sla_due_date` 升序僅作次級鍵（`src/views/case.view.ts`）——所以一個一小時後就到期的 Low 工單，仍然排在每一個 Critical 工單下面。不過次級鍵現在在每一檔裡都有值可排了，同一檔內最早到期的排在最前面。如果你是按截止時間在幹活，請在它旁邊同時開著 **SLA at Risk** 或 **SLA Calendar**。
+**My Open Cases 是按優先順序排序的，不是按 SLA 截止日期。** 它的排序鍵是 `priority_rank` 降序在先、`sla_due_date` 升序僅作次級鍵（`src/service/views/case.view.ts`）——所以一個一小時後就到期的 Low 工單，仍然排在每一個 Critical 工單下面。不過次級鍵現在在每一檔裡都有值可排了，同一檔內最早到期的排在最前面。如果你是按截止時間在幹活，請在它旁邊同時開著 **SLA at Risk** 或 **SLA Calendar**。
 
 ## 給服務客服的提示
 
@@ -163,8 +163,8 @@ SLA（服務級別協議）系統為**每一張工單**打上一個**截止時�
 
 ## 給管理員的提示
 
-- SLA 矩陣透過工單物件的自動化（一個 SLA 計算鉤子）設定，不在任何 Setup 頁面上。這十六個數字住在兩個必須同步修改的地方：`src/objects/_case-sla.ts`（示範種子資料據以推導的常數），以及 `src/objects/case.hook.ts` 裡 `case_sla_defaults` 處理器內部那份手抄鏡像——鉤子體在沙箱中執行，無法 import 模組常數，所以這張表被寫了兩遍。只要兩份不一致，或者任何一個格子改了而測試沒跟著改，`test/case-sla-matrix.test.ts` 就會失敗。
+- SLA 矩陣透過工單物件的自動化（一個 SLA 計算鉤子）設定，不在任何 Setup 頁面上。這十六個數字住在兩個必須同步修改的地方：`src/service/objects/_case-sla.ts`（示範種子資料據以推導的常數），以及 `src/service/objects/case.hook.ts` 裡 `case_sla_defaults` 處理器內部那份手抄鏡像——鉤子體在沙箱中執行，無法 import 模組常數，所以這張表被寫了兩遍。只要兩份不一致，或者任何一個格子改了而測試沒跟著改，`test/case-sla-matrix.test.ts` 就會失敗。
 - **驅動它的是 `crm_account.tier`。** 在帳戶記錄上設定客戶的**客戶層級**，才是把他們的工單挪到更緊一欄的操作；沒有分類的帳戶按 SMB 對待。這是本應用中第一個真正讀取該欄位的地方。
-- **不存在"營業時間 vs. 日曆時間"這個開關**，它背後也不存在什麼租戶級的營業時間設定——本應用根本沒有工作日日曆，也沒有假日清單。矩陣裡的每一個格子都是在 `src/objects/case.hook.ts` 裡往當前時鐘上加出來的，所以夜間、週末與假日一律照算；要讓截止時間跳過非工作時段，就得先把一套日曆教給這個鉤子。
+- **不存在"營業時間 vs. 日曆時間"這個開關**，它背後也不存在什麼租戶級的營業時間設定——本應用根本沒有工作日日曆，也沒有假日清單。矩陣裡的每一個格子都是在 `src/service/objects/case.hook.ts` 裡往當前時鐘上加出來的，所以夜間、週末與假日一律照算；要讓截止時間跳過非工作時段，就得先把一套日曆教給這個鉤子。
 - 升級觸發條件——只有 Critical 優先順序這一項，不存在 High+Customer 這個條件——寫在 [工單升級流程定義](/zh-Hant/docs/administration/automation)裡，即 `src/service/flows/case-escalation.flow.ts`。承載它的是兩個流程：`case_escalation`（更新時）與 `case_escalation_on_create`（新建時）。要改就**兩個一起改**，否則以新條件新建的工單仍會漏掉。
-- 這兩處的收件人列表都不是 Setup 介面上的設定項。*嚴重時通知* 就是工單升級流程的 `notify` 節點，其列表只有 `{caseRecord.owner_id}` 一項——要改就改 `src/service/flows/case-escalation.flow.ts`。*升級時通知* 根本沒有收件人列表，因為它不發出任何訊息：狀態轉為已升級觸發的是 `src/objects/case.hook.ts` 裡的 `case_status_side_effects` 鉤子，它觸達的是帳戶負責人，靠的是那條跟進任務。
+- 這兩處的收件人列表都不是 Setup 介面上的設定項。*嚴重時通知* 就是工單升級流程的 `notify` 節點，其列表只有 `{caseRecord.owner_id}` 一項——要改就改 `src/service/flows/case-escalation.flow.ts`。*升級時通知* 根本沒有收件人列表，因為它不發出任何訊息：狀態轉為已升級觸發的是 `src/service/objects/case.hook.ts` 裡的 `case_status_side_effects` 鉤子，它觸達的是帳戶負責人，靠的是那條跟進任務。

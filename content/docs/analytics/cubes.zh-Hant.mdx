@@ -9,7 +9,7 @@ description: HotCRM 分析底下的語義層——它是什麼、回答哪些業
 
 **多維資料集**（cube）是預先建好模的多維資料集：一組具名的**度量**（數字）架在一組具名的**維度**（切法）之上。它是 [儀表板](/zh-Hant/docs/analytics/dashboards) 與 [報表](/zh-Hant/docs/analytics/reports) 底下的那一層——正是它讓同一個數字在兩個地方含義相同。
 
-**在 HotCRM 裡，這一層是一組 dataset。** 本應用自己不宣告任何 cube：它發布的每一個語義定義都是 `src/datasets/` 下的一個 `defineDataset(...)`，經 `objectstack.config.ts` 註冊，再由分析服務在內部把每個 dataset 編譯成它的 cube（ADR-0021）。這裡曾經確實有過第二層手寫 cube，後來被移除了——它把每個度量都複製了一份，並與報表和磁貼真正繫結的那些 dataset 各走各的。所以本頁凡是說 *dataset*，指的就是報表或儀表板磁貼**按名字**繫結的那個東西，也是平台拿去編譯成 cube 的那個東西。
+**在 HotCRM 裡，這一層是一組 dataset。** 本應用自己不宣告任何 cube：它發布的每一個語義定義都是 `src/*/datasets/` 下的一個 `defineDataset(...)`，經 `objectstack.config.ts` 註冊，再由分析服務在內部把每個 dataset 編譯成它的 cube（ADR-0021）。這裡曾經確實有過第二層手寫 cube，後來被移除了——它把每個度量都複製了一份，並與報表和磁貼真正繫結的那些 dataset 各走各的。所以本頁凡是說 *dataset*，指的就是報表或儀表板磁貼**按名字**繫結的那個東西，也是平台拿去編譯成 cube 的那個東西。
 
 ## 為什麼要有語義層（而非查詢原始資料表）
 
@@ -19,9 +19,9 @@ description: HotCRM 分析底下的語義層——它是什麼、回答哪些業
 
 ## 語義層住在哪裡
 
-`src/datasets/index.ts` **就是**語義層，也是唯一一個把自己描述完整的地方：每個 dataset 的維度與度量、以及報表和磁貼按之選取的那些標籤，全都寫在原始碼裡。
+三個 dataset barrel —— `src/sales/datasets/index.ts`、`src/service/datasets/index.ts` 和 `src/revenue/datasets/index.ts` —— 合起來**就是**語義層，也是唯一一個把自己描述完整的地方：每個 dataset 的維度與度量、以及報表和磁貼按之選取的那些標籤，全都寫在原始碼裡。
 
-**本頁有意不再複製那份清單。** 手抄進散文的清單沒有生產者：它在寫下來的那天是對的，而在有人添一個度量的那天就悄悄變成假的——這筆帳這一帶已經付過四次。所以當你需要某個確切的名字去填進報表或磁貼時，請讀 `src/datasets/`：那是唯一真相來源，任何一份副本都不可能比它更新。本頁要講的是這一層的*含義*：它是什麼、今天能回答哪些業務問題、又到哪裡為止。
+**本頁有意不再複製那份清單。** 手抄進散文的清單沒有生產者：它在寫下來的那天是對的，而在有人添一個度量的那天就悄悄變成假的——這筆帳這一帶已經付過四次。所以當你需要某個確切的名字去填進報表或磁貼時，請讀 `src/*/datasets/`：那是唯一真相來源，任何一份副本都不可能比它更新。本頁要講的是這一層的*含義*：它是什麼、今天能回答哪些業務問題、又到哪裡為止。
 
 值得帶走的事實是它的涵蓋範圍。語義層涵蓋的是 CRM 日常運轉所依賴的記錄——客戶與客戶那邊的聯絡人、潛在客戶、交易與預測、支援工單、活動與任務，以及產品目錄。而它**夠不到**的部分更要緊，因為下面大多數限制都由此而來：**沒有任何 dataset 讀行銷活動、合約、報價，也不讀交易底下的行項目。**
 
@@ -31,15 +31,15 @@ description: HotCRM 分析底下的語義層——它是什麼、回答哪些業
 
 本頁描述的這兩個 cube，答案都在同一個地方：**Opportunity Metrics** —— 每個管道小工具和全部四份商機報表繫結的那個 dataset。正是這一層繫結，讓 *pipeline* 在全應用裡是同一個數字，而不是一個畫面一個數字。
 
-**它回答什麼。** 銷售管理者真正會問的那些交易問題：有多少金額在盤子裡、分別停在哪個階段、歸誰、從哪兒來、贏單或丟單的原因是什麼、客戶屬於哪個產業 —— 按這個月看，或者按這個季度看。它還把贏單率宣告成一個比值，並把已贏、已丟與已結的交易數一併發布在旁邊，讓這個百分比可以被核對而不是被相信。帶著 *bookings*、*管道金額*、*平均交易額*、*機率分檔* 這些詞過來的讀者，都能在這裡找到對應的東西，用的是這個 dataset 自己宣告的名字；那些名字寫在 `src/datasets/opportunity.dataset.ts` 裡。
+**它回答什麼。** 銷售管理者真正會問的那些交易問題：有多少金額在盤子裡、分別停在哪個階段、歸誰、從哪兒來、贏單或丟單的原因是什麼、客戶屬於哪個產業 —— 按這個月看，或者按這個季度看。它還把贏單率宣告成一個比值，並把已贏、已丟與已結的交易數一併發布在旁邊，讓這個百分比可以被核對而不是被相信。帶著 *bookings*、*管道金額*、*平均交易額*、*機率分檔* 這些詞過來的讀者，都能在這裡找到對應的東西，用的是這個 dataset 自己宣告的名字；那些名字寫在 `src/sales/datasets/opportunity.dataset.ts` 裡。
 
 **它到哪裡為止，以及為什麼：**
 
-- **週期時長** —— *sales cycle days*、*days in pipeline*、*days in stage*。沒有任何地方存著時長。商機上有 **Stage Entry Date** 與 **Close Date**，但沒有「已過天數」這樣的欄；而它唯一帶的時長 **Days in Current Stage** 是查詢*之後*才求值的公式（`src/objects/opportunity.object.ts`），因此無法被彙總、篩選或排序，也沒有任何 dataset 把它暴露出來。
-- **Weighted pipeline（金額 × 機率）** —— 這個數字在記錄上是有的：**Expected Revenue** 就是金額乘以階段機率，由 `src/objects/opportunity.hook.ts` 在每次儲存時重算，商機清單檢視也會對這一欄求和。但沒有任何度量為它而宣告，所以沒有磁貼、也沒有報表能給出它。
+- **週期時長** —— *sales cycle days*、*days in pipeline*、*days in stage*。沒有任何地方存著時長。商機上有 **Stage Entry Date** 與 **Close Date**，但沒有「已過天數」這樣的欄；而它唯一帶的時長 **Days in Current Stage** 是查詢*之後*才求值的公式（`src/sales/objects/opportunity.object.ts`），因此無法被彙總、篩選或排序，也沒有任何 dataset 把它暴露出來。
+- **Weighted pipeline（金額 × 機率）** —— 這個數字在記錄上是有的：**Expected Revenue** 就是金額乘以階段機率，由 `src/sales/objects/opportunity.hook.ts` 在每次儲存時重算，商機清單檢視也會對這一欄求和。但沒有任何度量為它而宣告，所以沒有磁貼、也沒有報表能給出它。
 - **一切住在行項目上的東西** —— *平均折扣 %*、*product*、*category*、*family*。折扣是 `crm_opportunity_line_item` 上的百分比，而沒有任何 dataset 讀行項目。產品目錄確實有自己的 dataset，但它從不聯結到交易，所以「按產品系列看平均交易額」根本沒有路徑 —— 儘管 **Family** 是產品上真實存在的欄位。
 - **Account tier 與 account size** —— `crm_account.tier` 與 **Number of Employees** 都是真實欄位，但從一筆交易這一側夠得著的客戶切法只有它的產業。
-- **Team、region** —— 這兩者都不是交易上的欄位，也沒有任何 dataset 宣告它們。團隊與地區在本應用裡是以**職位**（`src/sharing/positions.ts` 裡的 *NA Sales Team*、*EU Sales Team*）和客戶上的 **Billing Country**（territory 共享規則比對的那個扁平投影）形式存在的 —— 兩者都是存取控制的機件，沒有任何 dataset 讀它們。「按地區按季度看簽單」問不出來；最接近的、答得出來的切法是按負責人。
+- **Team、region** —— 這兩者都不是交易上的欄位，也沒有任何 dataset 宣告它們。團隊與地區在本應用裡是以**職位**（`src/sales/sharing/positions.ts` 裡的 *NA Sales Team*、*EU Sales Team*）和客戶上的 **Billing Country**（territory 共享規則比對的那個扁平投影）形式存在的 —— 兩者都是存取控制的機件，沒有任何 dataset 讀它們。「按地區按季度看簽單」問不出來；最接近的、答得出來的切法是按負責人。
 - **按天 / 週 / 年的週期粒度** —— 交易只按月和季度分桶。換一個粒度就意味著再加一個維度。
 - **管道歷史** —— 沒有任何東西給管道打快照，所以「今天的按階段管道 vs 30 天前」沒有歷史可比。最接近的真實存在物是 **Forecast Metrics**：一位負責人一個週期一列的結算快照 —— 配額、已成交、管道與 commit —— 它回答的是另一個問題：「按代表看覆蓋率（管道 ÷ 配額）」，前提是把週期釘死。
 
@@ -51,7 +51,7 @@ description: HotCRM 分析底下的語義層——它是什麼、回答哪些業
 
 ⚠️ SLA 是兩個數字，不是一個：一個**違約率**，一個**達標率**，互為補數。服務儀表板的儀表圖畫的是達標率。一份只說「那個 SLA 數字」而不說是哪一個的報表，等於什麼都沒說。
 
-**這裡沒有首次回應度量。** `case_metrics`（`src/datasets/case.dataset.ts`）沒有宣告任何一個，所以分析側根本無法對首次回應做彙總、比較或出圖。工單上的 **First Response Date** 時間戳是真的 —— 它何時被寫入見 [工單](/zh-Hant/docs/service/cases) —— 但也就到此為止：沒有任何東西度量它，也沒有任何東西為它告警。
+**這裡沒有首次回應度量。** `case_metrics`（`src/service/datasets/case.dataset.ts`）沒有宣告任何一個，所以分析側根本無法對首次回應做彙總、比較或出圖。工單上的 **First Response Date** 時間戳是真的 —— 它何時被寫入見 [工單](/zh-Hant/docs/service/cases) —— 但也就到此為止：沒有任何東西度量它，也沒有任何東西為它告警。
 
 **它還到哪裡為止：**
 
@@ -69,7 +69,7 @@ description: HotCRM 分析底下的語義層——它是什麼、回答哪些業
 
 ## 📣 行銷 —— 沒有 dataset，也就沒有 cube
 
-**沒有行銷 dataset，也就沒有任何東西可切。** `crm_campaign` 不在 `src/datasets/` 讀取的那些物件之列 —— 這讓本節成為全頁唯一一處：缺的不是某個度量，而是資料來源本身。本頁曾經給出的每一個行銷數字都夠不著，而且沒有一個能從報表或 cube 介面上補出來。
+**沒有行銷 dataset，也就沒有任何東西可切。** `crm_campaign` 不在 `src/*/datasets/` 讀取的那些物件之列 —— 這讓本節成為全頁唯一一處：缺的不是某個度量，而是資料來源本身。本頁曾經給出的每一個行銷數字都夠不著，而且沒有一個能從報表或 cube 介面上補出來。
 
 記錄本身是帶著這些數字的。`crm_campaign` 上有 **Number Sent / Number of Responses / Number of Leads / Converted Leads / Opportunities Created / Won Opportunities** 這一組計數器，還有 **Response Rate %** 公式欄位，它們都擺在行銷活動記錄的 **Performance** 分區裡；**Budgeted Cost**、**Actual Cost**、**Expected Revenue**、**Actual Revenue** 與 **ROI %** 公式則在隔壁的 **Budget & ROI** 分區。`crm_campaign_member` 每個成員只記一件事，就是回應：**Status**、**Response Date** 與 **Has Responded**，都在 **Response Tracking** 分區裡。以上每一項都是記錄級的數字，而沒有任何東西在彙總它們。開啟與點擊是另一回事：它們不是沒被彙總，而是根本沒有被記錄 —— 本應用不追蹤開啟、點擊或退信，成員上也沒有 *First Opened* 或 *First Clicked* 這樣的時間戳可供 cube 彙總。
 
@@ -82,11 +82,11 @@ description: HotCRM 分析底下的語義層——它是什麼、回答哪些業
 - **潛在客戶來源** —— 它在潛在客戶側和交易側都是維度，所以「哪些來源帶來了交易」答得出來；來源背後的那個*行銷活動*則答不出來。
 - *人物誌（職位角色）* —— 完全沒有路徑：**Title** 在聯絡人和潛在客戶上都是自由文字，而聯絡人那個 dataset 一個維度都沒有宣告。
 
-所以本節給出的那三個問題 —— 「按行銷活動類型的 ROI」「按通路的每商機成本」「按人物誌的轉化率」 —— 今天在這裡一個都答不出來。要補上這個缺口，得新增 `src/datasets/campaign.dataset.ts`：那是改原始碼加重新部署，不是一個設定項。行銷活動記錄今天能看到什麼，見 [行銷活動](/zh-Hant/docs/marketing/campaigns)。
+所以本節給出的那三個問題 —— 「按行銷活動類型的 ROI」「按通路的每商機成本」「按人物誌的轉化率」 —— 今天在這裡一個都答不出來。要補上這個缺口，得新增 `src/marketing/datasets/campaign.dataset.ts`：那是改原始碼加重新部署，不是一個設定項。行銷活動記錄今天能看到什麼，見 [行銷活動](/zh-Hant/docs/marketing/campaigns)。
 
 ## 使用者如何與 dataset 打交道
 
-應用能保證的是這層繫結：報表或儀表板磁貼按名字點出一個 dataset，並按名字選它的度量與維度，而 `test/analytics-integrity.test.ts` 會在其中任何一個名字解析不到時讓建構失敗。正是這一點讓兩個磁貼顯示同一個數字 —— 這同時也是為什麼 `src/datasets/` 裡的那些名字值得直接去讀，而不是隔著一份副本讀。
+應用能保證的是這層繫結：報表或儀表板磁貼按名字點出一個 dataset，並按名字選它的度量與維度，而 `test/analytics-integrity.test.ts` 會在其中任何一個名字解析不到時讓建構失敗。正是這一點讓兩個磁貼顯示同一個數字 —— 這同時也是為什麼 `src/*/datasets/` 裡的那些名字值得直接去讀，而不是隔著一份副本讀。
 
 本節曾經描述的那套拖放樞紐體驗 —— 選一個 cube、把維度拖到列和欄、篩選、樞紐、出圖、把檢視存成報表、釘到儀表板 —— 是**平台**側的介面，而不是 HotCRM 宣告出來的東西。本應用的中繼資料裡沒有任何東西組態這樣一塊螢幕，本倉也沒有任何測試涵蓋它，所以本頁對它不做任何方向上的斷言。如果你的工作流依賴自助樞紐分析，請對著你自己的部署去驗證，而不是對著本頁。
 
@@ -98,13 +98,13 @@ description: HotCRM 分析底下的語義層——它是什麼、回答哪些業
 
 ## AI Copilot 與多維資料集
 
-**在本應用這一側，沒有任何東西把 Copilot 連到某個 dataset 上。** `src/skills/` 下的六個技能，沒有一個點名任何 dataset、cube 或度量。其中負責回答資料問題的那個 —— **Live Data Access** —— 接的是平台的物件工具：`describe_object`、`list_objects`、`query_records`、`get_record`、`aggregate_data`，而它的指令要求 agent 先重新讀一遍物件的 schema，再在記錄上做彙總。所以關於贏單率的 Copilot 回答是從物件上算出來的，而不是從編譯好的 cube 上讀出來的；本應用也沒有宣告任何能讓兩者天然一致的東西。
+**在本應用這一側，沒有任何東西把 Copilot 連到某個 dataset 上。** `src/*/skills/` 下的六個技能，沒有一個點名任何 dataset、cube 或度量。其中負責回答資料問題的那個 —— **Live Data Access** —— 接的是平台的物件工具：`describe_object`、`list_objects`、`query_records`、`get_record`、`aggregate_data`，而它的指令要求 agent 先重新讀一遍物件的 schema，再在記錄上做彙總。所以關於贏單率的 Copilot 回答是從物件上算出來的，而不是從編譯好的 cube 上讀出來的；本應用也沒有宣告任何能讓兩者天然一致的東西。
 
 平台自帶的 agent 是否另外也讀編譯後的 cube、cube 存取是否為管理員留下稽核，都是關於執行時而不是關於本應用的問題 —— 所以本頁對它們不做任何方向上的斷言。如果你要求 Copilot 的回答與儀表板小數點後都對得上，請對著你自己的部署去核。
 
 ## 自訂多維資料集
 
-在 HotCRM 裡，一個新 cube 的起點是**原始碼裡的一個新 dataset**：在 `src/datasets/<object>.dataset.ts` 寫一個 `defineDataset(...)`，從 `src/datasets/index.ts` 匯出，由 `objectstack.config.ts` 註冊，然後部署。應用裡的每一個 dataset 走的都是這條路，這也正是行銷側的缺口是一次程式碼改動、而不是一次組態改動的原因。
+在 HotCRM 裡，一個新 cube 的起點是**原始碼裡的一個新 dataset**：在擁有該物件的那個套件的 `datasets/<object>.dataset.ts` 裡寫一個 `defineDataset(...)`，從該目錄的 `index.ts` 匯出，由 `objectstack.composition.ts` 彙入 `allDatasets`，再由 `objectstack.config.ts` 交給 `defineStack()`，然後部署。應用裡的每一個 dataset 走的都是這條路，這也正是行銷側的缺口是一次程式碼改動、而不是一次組態改動的原因。
 
 本節曾經給出的三個例子 —— *Subscriptions Cube*、*Renewal Cube*、*Partner Cube* —— 以任何形式都不存在；本應用裡既沒有訂閱物件，也沒有合作夥伴物件可以拿來建。至於主控台是否另外提供面向管理員的 cube 建構器，同樣是本頁不作答的平台問題。
 
@@ -118,4 +118,4 @@ description: HotCRM 分析底下的語義層——它是什麼、回答哪些業
 
 - ✅ 當同一個度量在不同報表裡演算法不一致時，**把它提升進 dataset** —— 宣告一次，各處按名字取用。
 - ✅ 補一個維度，是用來關掉上面那些「夠不著」的缺口的；補一個 dataset，則是用來關掉「連資料來源都沒有」的缺口。兩者都是原始碼改動，因此和其他中繼資料一樣要走評審。
-- ✅ 要寫就寫業務問題，別寫清單。每個 dataset *能答什麼、不能答什麼* 值得寫下來 —— 本頁裡的這些缺口，恰恰就是使用者一直在問的那些問題。維度和度量本身則不值得：它們已經在 `src/datasets/` 裡描述了自己，散文裡的第二份副本只能告訴你它被敲下來的那天是什麼樣。
+- ✅ 要寫就寫業務問題，別寫清單。每個 dataset *能答什麼、不能答什麼* 值得寫下來 —— 本頁裡的這些缺口，恰恰就是使用者一直在問的那些問題。維度和度量本身則不值得：它們已經在 `src/*/datasets/` 裡描述了自己，散文裡的第二份副本只能告訴你它被敲下來的那天是什麼樣。

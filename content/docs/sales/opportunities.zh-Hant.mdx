@@ -51,7 +51,7 @@ description: 活躍的銷售交易——銷售管道的核心，包含 7 個階�
 
 ### 物件自己的欄位分組
 
-下面這七個名字都是真的，但沒有一個是介面：它們是 `crm_opportunity` 的**欄位分組**（`src/objects/opportunity.object.ts` 裡的 `fieldGroups`），是物件給自己欄位定的歸檔方案。詳情介面和表單都不渲染它們——兩者各自宣告了自己的分區，見下文。不過，這確實是唯一一份把物件全部欄位都交代到的清單：
+下面這七個名字都是真的，但沒有一個是介面：它們是 `crm_opportunity` 的**欄位分組**（`src/sales/objects/opportunity.object.ts` 裡的 `fieldGroups`），是物件給自己欄位定的歸檔方案。詳情介面和表單都不渲染它們——兩者各自宣告了自己的分區，見下文。不過，這確實是唯一一份把物件全部欄位都交代到的清單：
 
 | 欄位分組 | 欄位 |
 | --- | --- |
@@ -67,7 +67,7 @@ description: 活躍的銷售交易——銷售管道的核心，包含 7 個階�
 
 ### 詳情介面
 
-商機詳情頁（`src/pages/opportunity_detail.page.ts`）的 *Details* 標籤頁宣告了**三個**分區，裝著**七個**欄位：
+商機詳情頁（`src/sales/pages/opportunity_detail.page.ts`）的 *Details* 標籤頁宣告了**三個**分區，裝著**七個**欄位：
 
 | 分區 | 欄位 |
 | --- | --- |
@@ -81,7 +81,7 @@ description: 活躍的銷售交易——銷售管道的核心，包含 7 個階�
 
 ### 表單
 
-商機表單（`src/views/opportunity.view.ts`）是分標籤頁的，它的**四個**分區就是它的標籤頁：
+商機表單（`src/sales/views/opportunity.view.ts`）是分標籤頁的，它的**四個**分區就是它的標籤頁：
 
 | 分區 | 欄位 |
 | --- | --- |
@@ -185,7 +185,7 @@ description: 活躍的銷售交易——銷售管道的核心，包含 7 個階�
   - **Details**——打開一筆交易時停在的那一個。**三個**分區、**七個**欄位，清單見上文《商機記錄儲存的內容》；已經在**關鍵資訊**摘要欄裡的那些欄位，這裡刻意不重複。
   - **Related**——一個手風琴裡的三塊面板，進來時只有第一塊是展開的。**Quotes**——這筆交易的報價單；執行 [報價生成流程](/zh-Hant/docs/sales/quotes) 的那個**生成報價單**按鈕並不在這個列表上，它是上面頭部的按鈕之一。**Products**——這筆交易的行項目；這個面板把它們列出來、給一個跳轉到完整列表的連結，並帶一個 **Add** 按鈕。那個按鈕是一個 `add` 選取器，不是一個動作：這個應用裡沒有**新增產品**這個動作（見上文《行項目——實際在銷售什麼》）。**Open Tasks**——本商機經**關聯商機**欄位掛上來的 `crm_task` 記錄，過濾掉狀態為 *Completed* 的，一次十筆。
   - **Activity**——統一彙集評論、已記錄通話（`sys_activity`）、外發郵件（`sys_email`）、任務完成以及欄位歷史稽核條目。商機上每個被追蹤的更改（階段、金額、預計成交日期、負責人）都會自動出現在這裡；沒有單獨的「歷史」標籤頁。
-- **競爭對手與備註**——不存在這樣一個面板。這一頁（`src/pages/opportunity_detail.page.ts`）宣告了三個區域：一個頭部、一個裝著那組標籤頁的主欄，以及一條窄側欄（`aside`），而側欄裡唯一的元件就是下一條講的參考欄。頁面上沒有任何元件渲染「談話要點」，也沒有競爭對手欄位可渲染了：商機上那個**競爭對手**多選欄位只有三個佔位選項（*Competitor A*、*Competitor B*、*Competitor C*），應用裡沒有任何介面把它讀回來，#1061 已將其退役。應用裡僅存的競爭對手訊號，是「輸給競爭對手」這條丟單原因，以及它旁邊的自由文字 **贏/丟單詳情**。這一頁上最接近「備註」的，是 *Details* 標籤頁裡那個可摺疊的 **描述** 分區，裡面放著 **描述** 與 **下一步**。
+- **競爭對手與備註**——不存在這樣一個面板。這一頁（`src/sales/pages/opportunity_detail.page.ts`）宣告了三個區域：一個頭部、一個裝著那組標籤頁的主欄，以及一條窄側欄（`aside`），而側欄裡唯一的元件就是下一條講的參考欄。頁面上沒有任何元件渲染「談話要點」，也沒有競爭對手欄位可渲染了：商機上那個**競爭對手**多選欄位只有三個佔位選項（*Competitor A*、*Competitor B*、*Competitor C*），應用裡沒有任何介面把它讀回來，#1061 已將其退役。應用裡僅存的競爭對手訊號，是「輸給競爭對手」這條丟單原因，以及它旁邊的自由文字 **贏/丟單詳情**。這一頁上最接近「備註」的，是 *Details* 標籤頁裡那個可摺疊的 **描述** 分區，裡面放著 **描述** 與 **下一步**。
 - **AI 參考欄**——參考欄確實存在，但裡面沒有任何一條建議，這一頁上也沒有任何一個元件是 AI 驅動的。它是那條側欄裡的一個 `record:reference_rail`，三張卡片每一張都只是已經關聯到本商機的記錄快照：報價單 `crm_quote`（經其 **商機** 查找欄位）、本商機的 `crm_opportunity_line_item` 明細行、任務 `crm_task`（經 **關聯商機** 欄位）。每張卡片給出關聯記錄總數的徽章、最多三筆記錄，以及一個跳轉到完整列表的 *View all* 連結；查出來是空的卡片會摺疊成一個 *+ N empty* 小按鈕。卡片的標題取自對象標籤，隨你當前介面語言而變——英文介面下是 **Quote**、**Opportunity Line Item**、**Task**，簡體中文介面下是「报价单」「商机产品明细」「任务」——因為參考欄的條目自己不宣告標題，標題是到譯文包裡查的，與全站其他地方取對象名的來源是同一處。兩點提醒。參考欄的條目無法過濾，這三條也都沒有宣告過濾條件：查詢只按關聯欄位走，所以任務那張卡片統計和列出的是本商機的全部任務，不分狀態。這也正是它的標題是「任務」而不是「待辦任務」的原因——真正過濾掉 *Completed*、一次十筆的，是 *Related* 標籤頁上的 **Open Tasks** 列表。另外，參考欄裡沒有 Customer 360、沒有營收預測，也沒有任何「相關訊號」，整頁都沒有：那些技能是靠提問去用的——見下文《AI Copilot 如何提供協助》。
 
 ## AI Copilot 如何提供協助
@@ -206,6 +206,6 @@ description: 活躍的銷售交易——銷售管道的核心，包含 7 個階�
 
 ## 給管理員的提示
 
-- 階段列表、預設機率和合法的狀態轉換分散在原始碼的三處，而不是某個 Setup 介面：共享選擇列表 `OPPORTUNITY_STAGE_OPTIONS`（`src/objects/_picklists.ts`），由 `stage` 欄位算繪；`opportunity_lifecycle` 鉤子裡的 `STAGE_PROBABILITY` 對映（`src/objects/opportunity.hook.ts`），每次儲存都據此重新同步*成交機率*；以及商機物件上名為 `opportunity_stage_progression` 的狀態機驗證規則（`src/objects/opportunity.object.ts`）。三處需同步修改。參見 [Customization › Extending Objects](/zh-Hant/docs/customization/extending-objects)。
+- 階段列表、預設機率和合法的狀態轉換分散在原始碼的三處，而不是某個 Setup 介面：共享選擇列表 `OPPORTUNITY_STAGE_OPTIONS`（`src/sales/objects/_picklists.ts`），由 `stage` 欄位算繪；`opportunity_lifecycle` 鉤子裡的 `STAGE_PROBABILITY` 對映（`src/sales/objects/opportunity.hook.ts`），每次儲存都據此重新同步*成交機率*；以及商機物件上名為 `opportunity_stage_progression` 的狀態機驗證規則（`src/sales/objects/opportunity.object.ts`）。三處需同步修改。參見 [Customization › Extending Objects](/zh-Hant/docs/customization/extending-objects)。
 - $500K 折扣審批閾值可以在 [審批流程設定](/zh-Hant/docs/revenue/approvals) 中更改。
 - $100K 大單通知閾值同樣不是 Setup 介面上的欄位：它是 `opportunity_won_alert` 流程的 CEL 起始條件——`src/sales/flows/opportunity-won-alert.flow.ts` 裡的 `record.amount >= 100000`。收件人則由該流程 `notify` 節點的 `recipients` 決定，列表裡只有 `{record.owner_id}` 一項，即商機負責人本人。

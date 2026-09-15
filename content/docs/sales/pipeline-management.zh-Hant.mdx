@@ -33,13 +33,13 @@ description: 銷售管道的日常運作方式——推進交易、自動機率�
 
 這個數字是加權預測的核心。每當金額或機率變化時（包括來自階段變化的自動更新），它都會自動重新計算。
 
-加權預測是**清單檢視上的合計，不是儀表板上的數字**。商機的**進行中商機**與**全部商機**兩個檢視各帶一欄*預期營收*並對該欄求和（`src/views/opportunity.view.ts`），這個在開放管道上的合計就是加權預測。
+加權預測是**清單檢視上的合計，不是儀表板上的數字**。商機的**進行中商機**與**全部商機**兩個檢視各帶一欄*預期營收*並對該欄求和（`src/sales/views/opportunity.view.ts`），這個在開放管道上的合計就是加權預測。
 
 儀表板給不出同一個數。**Sales Performance** 儀表板（`sales_dashboard`）讀的是 `opportunity_metrics` dataset，而該 dataset **沒有任何度量讀 `expected_revenue`** —— 它暴露的金額類度量（*Total Amount*、*Avg Deal Size*、*Won Revenue*、*Lost Revenue*）一律讀原始的 `amount` 欄位。所以它的 *Total Pipeline* 磁貼是**未加權**的在飛管道；兩個數字之間差的正是上面這層機率加權。
 
 ## 銷售管道看板視圖
 
-這塊看板是商機上的**銷售流水線**視圖（`pipeline_kanban`），側邊欄上打開它的那個條目寫作**銷售管道**。它把銷售管道按**每個階段一列**鋪開，且**只放在飛交易**：這塊板自帶過濾器——`src/views/opportunity.view.ts` 裡的 `stage not_in [closed_won, closed_lost]`——所以只有五個活躍階段（*尋找客戶*、*資格審查*、*需求分析*、*提案*、*談判*）裡才可能有卡片。已結束的生意不是被藏了，而是在別處：**全部商機**檢視與 **Sales Performance** 儀表板都算上它們。至於那兩個已結束階段是被畫成永遠空著的欄、還是乾脆不出現在板上，那是 console 的算繪選擇，本應用的元資料並沒有宣告——無論哪種，這塊板上都沒有已結束的交易可找。
+這塊看板是商機上的**銷售流水線**視圖（`pipeline_kanban`），側邊欄上打開它的那個條目寫作**銷售管道**。它把銷售管道按**每個階段一列**鋪開，且**只放在飛交易**：這塊板自帶過濾器——`src/sales/views/opportunity.view.ts` 裡的 `stage not_in [closed_won, closed_lost]`——所以只有五個活躍階段（*尋找客戶*、*資格審查*、*需求分析*、*提案*、*談判*）裡才可能有卡片。已結束的生意不是被藏了，而是在別處：**全部商機**檢視與 **Sales Performance** 儀表板都算上它們。至於那兩個已結束階段是被畫成永遠空著的欄、還是乾脆不出現在板上，那是 console 的算繪選擇，本應用的元資料並沒有宣告——無論哪種，這塊板上都沒有已結束的交易可找。
 
 每張卡片帶的是這塊板綁定的四個欄位（`kanban.columns`）：
 
@@ -50,9 +50,9 @@ description: 銷售管道的日常運作方式——推進交易、自動機率�
 
 **卡片上沒有負責人。** `owner_id` 在這個檢視頂層的 `columns` 清單裡，那是給網格類算繪讀的；卡面綁定只點了上面四個欄位，到此為止。要在交易旁邊看到負責人，請用帶 *Owner* 欄的**全部商機**檢視，或者卡面確實帶負責人的 **Deal Cards** 圖庫檢視。
 
-要推進一筆交易，只需**拖動卡片**到下一列。階段規則是**建議，不是閘門**。`opportunity_stage_progression`（`src/objects/opportunity.object.ts`）宣告了哪些躍遷合法——*尋找客戶*直接到*成交*並不在其中——但這條規則是**警告**級，所以走出轉換表的移動只會往伺服器日誌寫一行 *「Invalid opportunity stage transition」*，而**儲存照樣通過**。看板上沒有任何東西會攔住你。日誌給你的價值是：一次糟糕的匯入、一個行為異常的整合，事後還能被找出來。這張表能做什麼、不能做什麼，詳見 [Administration › State Machines](/zh-Hant/docs/administration/state-machines)。
+要推進一筆交易，只需**拖動卡片**到下一列。階段規則是**建議，不是閘門**。`opportunity_stage_progression`（`src/sales/objects/opportunity.object.ts`）宣告了哪些躍遷合法——*尋找客戶*直接到*成交*並不在其中——但這條規則是**警告**級，所以走出轉換表的移動只會往伺服器日誌寫一行 *「Invalid opportunity stage transition」*，而**儲存照樣通過**。看板上沒有任何東西會攔住你。日誌給你的價值是：一次糟糕的匯入、一個行為異常的整合，事後還能被找出來。這張表能做什麼、不能做什麼，詳見 [Administration › State Machines](/zh-Hant/docs/administration/state-machines)。
 
-在每列頂部你會看到**一個**數字：該列所有交易的*金額*之和，也就是這個階段的未加權合計。看板每列只能有這一個數，這是設計使然：一塊看板只宣告一個 `summarizeField`（`src/views/opportunity.view.ts`），而這塊板把它綁到了 `amount`。
+在每列頂部你會看到**一個**數字：該列所有交易的*金額*之和，也就是這個階段的未加權合計。看板每列只能有這一個數，這是設計使然：一塊看板只宣告一個 `summarizeField`（`src/sales/views/opportunity.view.ts`），而這塊板把它綁到了 `amount`。
 
 看板上沒有加權合計。如上面《預期營收是如何計算的》一節所述，加權預測是清單檢視上的合計：**進行中商機**與**全部商機**兩個檢視的*預期營收*欄合計。
 
@@ -71,7 +71,7 @@ description: 銷售管道的日常運作方式——推進交易、自動機率�
 
 ## 值得收藏的銷售管道報告
 
-這五張裡只有第一張在側邊欄上。側邊欄沒有*報告*分組：報表所在的分組叫 **Insights**（`src/apps/crm.app.ts`），它釘了三張報表 —— **Pipeline Coverage**、**Lead Inflow**、**SLA Performance** —— 外加 **CRM Overview** 儀表板與 **Forecasts**。下面其餘四張要從報表介面進。這裡用的是報表庫列出的 label，它未必等於導航項上那個更短的名字。
+這五張裡只有第一張在側邊欄上。側邊欄沒有*報告*分組：報表所在的分組叫 **Insights**（`src/sales/apps/crm.app.ts`），它釘了三張報表 —— **Pipeline Coverage**、**Lead Inflow**、**SLA Performance** —— 外加 **CRM Overview** 儀表板與 **Forecasts**。下面其餘四張要從報表介面進。這裡用的是報表庫列出的 label，它未必等於導航項上那個更短的名字。
 
 | 報告 | 它顯示什麼 |
 | --- | --- |
@@ -102,7 +102,7 @@ description: 銷售管道的日常運作方式——推進交易、自動機率�
 
 它們共同回答：*"我們是否有足夠的銷售管道來完成本季度，以及風險在哪裡？"*
 
-這塊儀表板給不了的是*頂級交易*那種逐筆排行，改個名字也解決不了：儀表板的 table 綁定的是分析 dataset，只能做聚合，列不出原始記錄（ADR-0021）。原先占著這個位置的 **Top Open Opportunities** 表正是因此被換成了按負責人聚合的 **Open Pipeline by Owner** —— `src/dashboards/sales.dashboard.ts` 裡 Row 5 的註釋記下了這次替換。要逐筆的交易排行，請改用商機清單檢視。
+這塊儀表板給不了的是*頂級交易*那種逐筆排行，改個名字也解決不了：儀表板的 table 綁定的是分析 dataset，只能做聚合，列不出原始記錄（ADR-0021）。原先占著這個位置的 **Top Open Opportunities** 表正是因此被換成了按負責人聚合的 **Open Pipeline by Owner** —— `src/sales/dashboards/sales.dashboard.ts` 裡 Row 5 的註釋記下了這次替換。要逐筆的交易排行，請改用商機清單檢視。
 
 ## 給銷售代表的提示
 
@@ -118,5 +118,5 @@ description: 銷售管道的日常運作方式——推進交易、自動機率�
 
 ## 給管理員的提示
 
-- 新增或移除階段？你需要更新原始碼裡的三處，沒有一處是 Setup 介面：`stage` 欄位所算繪的 `OPPORTUNITY_STAGE_OPTIONS` 選擇列表（`src/objects/_picklists.ts`）、`opportunity_lifecycle` 鉤子裡設定機率的 `STAGE_PROBABILITY` 對映（`src/objects/opportunity.hook.ts`），以及控制狀態轉換的 `opportunity_stage_progression` 狀態機驗證規則（`src/objects/opportunity.object.ts`）。參見 [Customization › Extending Objects](/zh-Hant/docs/customization/extending-objects)。
+- 新增或移除階段？你需要更新原始碼裡的三處，沒有一處是 Setup 介面：`stage` 欄位所算繪的 `OPPORTUNITY_STAGE_OPTIONS` 選擇列表（`src/sales/objects/_picklists.ts`）、`opportunity_lifecycle` 鉤子裡設定機率的 `STAGE_PROBABILITY` 對映（`src/sales/objects/opportunity.hook.ts`），以及控制狀態轉換的 `opportunity_stage_progression` 狀態機驗證規則（`src/sales/objects/opportunity.object.ts`）。參見 [Customization › Extending Objects](/zh-Hant/docs/customization/extending-objects)。
 - $100K *大單*通知閾值同樣不是 Setup 介面上的欄位：它是 `opportunity_won_alert` 流程的 CEL 起始條件——`src/sales/flows/opportunity-won-alert.flow.ts` 裡的 `record.amount >= 100000`。收件人則由該流程 `notify` 節點的 `recipients` 決定，列表裡只有 `{record.owner_id}` 一項，即商機負責人本人。

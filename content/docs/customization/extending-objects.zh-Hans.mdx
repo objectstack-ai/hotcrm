@@ -5,12 +5,12 @@ description: 添加或修改 HotCRM 对象、字段、hooks、流程和共享元
 
 # 扩展对象
 
-HotCRM 对象位于 `src/objects/`，并从 `src/objects/index.ts` 注册。
+HotCRM 对象位于拥有它的那个包的 `objects/` 目录下——`src/sales/`、`src/service/`、`src/revenue/` 或 `src/marketing/`——每个包各自从该目录的 `index.ts` 注册自己的对象。`src/` 下没有顶层的 `objects/` 目录：`src/` 下的一个目录**就是**一个包（ADR-0130）。下面这个 warranty 放进 revenue 包，与 `crm_product`、`crm_contract` 这些它紧挨着的对象为邻；你自己的对象放在它所属领域的那个包里。
 
 ## 新增对象
 
 ```ts
-// src/objects/warranty.object.ts
+// src/revenue/objects/warranty.object.ts
 import { ObjectSchema, Field } from '@objectstack/spec/data';
 
 export const Warranty = ObjectSchema.create({
@@ -42,16 +42,16 @@ export const Warranty = ObjectSchema.create({
 然后导出：
 
 ```ts
-// src/objects/index.ts
+// src/revenue/objects/index.ts
 export { Warranty } from './warranty.object.js';
 ```
 
 ## 新增生命周期逻辑
 
-Hooks 与对象放在一起，并由 `src/hooks/index.ts` 汇总。
+`*.hook.ts` 与它命名的那个 `*.object.ts` 并排放在同一个包里，并从该包自己的 `objects/hooks.ts` 注册——这里是 `src/revenue/objects/hooks.ts`——再由 `objectstack.composition.ts` 汇入 `allHooks`。两处都没到达的 hook 会被静默忽略：构建照样是绿的，而处理函数永远不会运行。
 
 ```ts
-// src/objects/warranty.hook.ts
+// src/revenue/objects/warranty.hook.ts
 import type { Hook } from '@objectstack/spec/data';
 
 const warrantyHook: Hook = {
