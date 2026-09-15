@@ -144,6 +144,23 @@ const PHANTOMS = ['Analytics', 'Dashboards', 'Reports', 'Cubes'] as const;
 const RETIRED_CUBES = ['Sales', 'Pipeline', 'Service', 'Marketing'] as const;
 
 /**
+ * The directories the nine datasets really live in — READ FROM `src/`, like
+ * every other product fact in this file.
+ *
+ * This assertion used to be `toContain('src/datasets/')`, a literal. ADR-0130
+ * made a directory under `src/` a package, so there has been no top-level
+ * `src/datasets/` since — and a guard that requires a page to state a path
+ * which does not exist is holding the page to the wrong fact, not to source
+ * (#1922). Deriving it keeps the check pointed at the thing it was written to
+ * check: give a package a `datasets/` directory and the page has to name it;
+ * take one away and the page has to stop.
+ */
+const DATASET_DIRS = readdirSync(join(REPO_ROOT, 'src'), { withFileTypes: true })
+  .filter((e) => e.isDirectory() && existsSync(join(REPO_ROOT, 'src', e.name, 'datasets')))
+  .map((e) => `src/${e.name}/datasets/`)
+  .sort();
+
+/**
  * The CJK range as escapes rather than literal characters, so this file stays
  * greppable in a repo whose tooling scans it as text — the same reason
  * `docs-quick-tour-navigation.test.ts` writes it this way.
@@ -194,7 +211,17 @@ describe('analytics/index states the counts and names the app really ships (#976
     it('says nine datasets and points at the directory they live in', () => {
       const text = read(file);
       expect(text, `${file}: the dataset count is not stated as "${nine}"`).toContain(nine);
-      expect(text, `${file}: the page does not name src/datasets/`).toContain('src/datasets/');
+      expect(
+        DATASET_DIRS.length,
+        'no package under src/ has a datasets/ directory — this check has gone vacuous. ' +
+          'Either the datasets moved (teach DATASET_DIRS the new shape) or they are gone.',
+      ).toBeGreaterThan(0);
+      const missing = DATASET_DIRS.filter((dir) => !text.includes(dir));
+      expect(
+        missing,
+        `${file}: the page does not name the directories the datasets live in: ${missing.join(', ')}. ` +
+          'A reader sent to find a dataset needs the path that exists, not the one that used to.',
+      ).toEqual([]);
     });
 
     it('names the Insights group and every child the app pins to it', () => {
