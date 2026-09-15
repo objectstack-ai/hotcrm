@@ -67,10 +67,10 @@ find src content -type f \( -name "*.ts" -o -name "*.mdx" -o -name "*.json" \) \
   -exec sed -i 's/crm_/acme_/g' {} +
 
 # Rename the translation file that's literally called crm.translation.ts
-mv src/translations/crm.translation.ts src/translations/acme.translation.ts
+mv src/sales/translations/crm.translation.ts src/sales/translations/acme.translation.ts
 ```
 
-Then update `src/translations/index.ts` to reference the new filename.
+Then update `src/sales/translations/index.ts` to reference the new filename.
 
 ### 4. Cut what you don't need
 
@@ -94,7 +94,7 @@ Follow the file-suffix protocol:
 | API + AI tool | `src/actions/<entity>.actions.ts` |
 | UI layout | `src/pages/<entity>.page.ts` |
 | List view | `src/views/<entity>.view.ts` |
-| i18n | append to `src/translations/{en,zh-CN,es-ES,ja-JP}.ts` |
+| i18n | append to `src/sales/translations/{en,zh-CN,es-ES,ja-JP}.ts` |
 
 Every file goes through `@objectstack/spec` schema validation at build time. Mistakes fail loudly.
 
@@ -127,7 +127,7 @@ git fetch upstream
 git merge upstream/main          # or rebase, your call
 ```
 
-Merge conflicts mostly happen in `src/translations/*` (additive) and `src/objects/*.object.ts` (if you renamed them). The file-suffix protocol keeps conflict surface small.
+Merge conflicts mostly happen in `src/sales/translations/*` (additive) and `src/objects/*.object.ts` (if you renamed them). The file-suffix protocol keeps conflict surface small.
 
 ## What you can safely change
 

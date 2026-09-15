@@ -220,7 +220,7 @@ For marketing:
 
 - **Consent fields** on contact/lead — *(partly shipped.)* `crm_contact` and `crm_lead` each carry `do_not_call` and `email_opt_out` booleans. **Neither object has a lawful-basis field or a consent-date field**, so the record tells you *that* someone opted out and never *why* or *when*. If your DPO needs lawful basis recorded, it is a field you would have to add.
 - **Unsubscribe** — ✅ verified, in a specific shape. The `campaign_member_optout_sync` hook writes a member's move to `status: 'unsubscribed'` back to the person's `email_opt_out`. It is deliberately one-directional. ⚠️ Nothing flips the member for you from an inbound mail click — there is no inbox connector; see [Email & Calendar](/docs/guides/email-and-calendar).
-- **Suppression list** — ✅ verified. Both enrollment gates in `src/flows/campaign-enrollment.flow.ts` filter on `email_opt_out: false`, so an opted-out person is excluded from future campaign enrollment. The flag lives on the person, which is what makes the exclusion global rather than per campaign.
+- **Suppression list** — ✅ verified. Both enrollment gates in `src/marketing/flows/campaign-enrollment.flow.ts` filter on `email_opt_out: false`, so an opted-out person is excluded from future campaign enrollment. The flag lives on the person, which is what makes the exclusion global rather than per campaign.
 
 ### Data Processing Agreements
 

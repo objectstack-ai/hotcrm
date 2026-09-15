@@ -38,7 +38,7 @@ HotCRM 開箱即用地發布 **十份** 報表 —— `src/reports/index.ts` 這
 - *Win/Loss Analysis* —— 建得出來：**Win Reason** 與 **Loss Reason** 都是 `opportunity_metrics` 上的維度，而一筆交易贏與丟的那一面在那裡已經宣告成了度量 —— **Win Rate** 就在其中，並與構成它分子分母的那幾個交易數一併發布。
 - *Big Deals Won* —— 建得出來：贏單金額就是 **Won Revenue**，而按金額卡一個閾值是普通的報表篩選條件。
 - *Sales Cycle Length* —— 建不出來。沒有任何地方存著銷售週期時長：商機上有 **Stage Entry Date** 和 **Close Date**，但沒有「已過天數」這樣的欄，而它唯一帶的時長 **Days in Current Stage** 就是上面那個查詢後公式。*按產品* 也沒有落點 —— 沒有任何資料集讀 `crm_opportunity_line_item`。
-- *Discount Approval Activity* —— 建不出來。審批本身是真的（`src/flows/opportunity-approval.flow.ts`，以及商機上的 **Approval Status**），但沒有任何維度把那個欄位暴露出來；折扣則是行項目上的百分比（`crm_opportunity_line_item.discount`），而沒有任何資料集讀行項目。
+- *Discount Approval Activity* —— 建不出來。審批本身是真的（`src/sales/flows/opportunity-approval.flow.ts`，以及商機上的 **Approval Status**），但沒有任何維度把那個欄位暴露出來；折扣則是行項目上的百分比（`crm_opportunity_line_item.discount`），而沒有任何資料集讀行項目。
 
 ### 🎯 潛在客戶報表
 

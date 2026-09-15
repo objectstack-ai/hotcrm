@@ -90,7 +90,7 @@ The drag-and-drop pivot experience this section used to describe — pick a cube
 
 ## How cubes stay fresh
 
-Refresh belongs to the analytics service, not to this app. HotCRM declares no refresh schedule, no incremental-versus-full-refresh policy and no snapshot job anywhere in `src/` — the only scheduled work it declares is its own flows (`src/flows/`). The figures this section used to quote — incremental refresh every few minutes, a nightly full refresh, daily snapshots, a refresh status screen in the admin console — are not configured here and are not measured here; treat them as questions for your deployment.
+Refresh belongs to the analytics service, not to this app. HotCRM declares no refresh schedule, no incremental-versus-full-refresh policy and no snapshot job anywhere in `src/` — the only scheduled work it declares is its own flows (the four packages' `flows/` directories). The figures this section used to quote — incremental refresh every few minutes, a nightly full refresh, daily snapshots, a refresh status screen in the admin console — are not configured here and are not measured here; treat them as questions for your deployment.
 
 One half of it *is* in the app's hands, and it is the half that fails today: a trend chart needs a snapshot dimension to compare against, and no dataset declares one. Time-series questions are answerable only along a date a dataset already carries — a close date, a created date, an activity week, a last-contacted month — each at the grain its own dataset declares.
 

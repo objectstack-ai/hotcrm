@@ -73,7 +73,7 @@ export default warrantyHook;
 
 ## 新增自動化
 
-在 `src/flows/` 中定義多步驟自動化，並從 `src/flows/index.ts` 匯出。
+多步驟自動化寫在其觸發物件所屬套件的 `flows/` 目錄下——`src/sales/flows/`、`src/service/flows/`、`src/revenue/flows/` 或 `src/marketing/flows/`——每個套件各有自己的 barrel：把新流程從該目錄的 `index.ts` 匯出。
 
 ```ts
 import type * as Automation from '@objectstack/spec/automation';

@@ -71,7 +71,7 @@ export default warrantyHook;
 
 ## 新增自动化
 
-在 `src/flows/` 中定义多步骤自动化，并从 `src/flows/index.ts` 导出。
+多步骤自动化写在其触发对象所属包的 `flows/` 目录下——`src/sales/flows/`、`src/service/flows/`、`src/revenue/flows/` 或 `src/marketing/flows/`——每个包各有自己的 barrel：把新流程从该目录的 `index.ts` 导出。
 
 ```ts
 import type * as Automation from '@objectstack/spec/automation';

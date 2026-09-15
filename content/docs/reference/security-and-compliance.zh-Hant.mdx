@@ -217,7 +217,7 @@ Unrecognized key(s) on this field: `encrypted`.
 
 - **同意欄位**位於聯絡人/潛在客戶上 —— *(部分成立。)* `crm_contact` 與 `crm_lead` 各自帶有 `do_not_call` 與 `email_opt_out` 兩個布林欄位。**兩個物件都沒有合法性基礎欄位，也沒有同意日期欄位**，所以記錄只告訴你某人*退訂了*，從不告訴你*為什麼*或*在什麼時候*。如果你的 DPO 需要記錄合法性基礎，那是一個你得自己加的欄位。
 - **退訂** —— ✅ 已核實，形態具體。`campaign_member_optout_sync` 鉤子會把一個成員轉為 `status: 'unsubscribed'` 這件事回寫到此人的 `email_opt_out` 上。它刻意是單向的。⚠️ 沒有任何東西會因為一次入站郵件點擊替你翻轉成員狀態 —— 這裡沒有收件匣連接器；參見[郵件與日曆](/zh-Hant/docs/guides/email-and-calendar)。
-- **抑制清單** —— ✅ 已核實。`src/flows/campaign-enrollment.flow.ts` 的兩個加入關口都按 `email_opt_out: false` 過濾，所以已退訂的人會被排除在後續行銷活動加入之外。這個標記位掛在人身上，這正是這條排除是全域而非按行銷活動的原因。
+- **抑制清單** —— ✅ 已核實。`src/marketing/flows/campaign-enrollment.flow.ts` 的兩個加入關口都按 `email_opt_out: false` 過濾，所以已退訂的人會被排除在後續行銷活動加入之外。這個標記位掛在人身上，這正是這條排除是全域而非按行銷活動的原因。
 
 ### 資料處理協議
 

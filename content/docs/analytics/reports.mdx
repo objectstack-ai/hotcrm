@@ -36,7 +36,7 @@ Of the five that are simply absent, three are a custom report away and two are n
 - *Win/Loss Analysis* — buildable: **Win Reason** and **Loss Reason** are both dimensions on `opportunity_metrics`, and the won/lost side of a deal is already declared there as measures — **Win Rate** among them, published together with the deal counts that make up its two halves.
 - *Big Deals Won* — buildable: closed-won amount is **Won Revenue**, and a threshold on the deal amount is an ordinary report filter.
 - *Sales Cycle Length* — not buildable. Nothing stores a cycle duration: the opportunity carries **Stage Entry Date** and **Close Date** but no elapsed-days column, and the one duration it does carry, **Days in Current Stage**, is the post-query formula above. *By product* has no landing place either — no dataset reads `crm_opportunity_line_item`.
-- *Discount Approval Activity* — not buildable. The approvals themselves are real (`src/flows/opportunity-approval.flow.ts`, and **Approval Status** on the opportunity), but no dimension exposes that field, and the discount is a percent on the line item (`crm_opportunity_line_item.discount`) that no dataset reads.
+- *Discount Approval Activity* — not buildable. The approvals themselves are real (`src/sales/flows/opportunity-approval.flow.ts`, and **Approval Status** on the opportunity), but no dimension exposes that field, and the discount is a percent on the line item (`crm_opportunity_line_item.discount`) that no dataset reads.
 
 ### 🎯 Lead reports
 
