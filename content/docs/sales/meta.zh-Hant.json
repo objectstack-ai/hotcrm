@@ -4,6 +4,7 @@
   "pages": [
     "index",
     "leads",
+    "lead-approval",
     "accounts",
     "contacts",
     "buying-centre",

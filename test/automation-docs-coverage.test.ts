@@ -208,6 +208,7 @@ const ROW_LABEL: Record<string, Record<'zh-Hans' | 'zh-Hant', string>> = {
   // The flow itself carries no locale-pack entry, so this ledger is where the
   // page's spelling is pinned — it moves with the three pages, not after them.
   lead_conversion: { 'zh-Hans': '线索转化流程', 'zh-Hant': '線索轉化流程' },
+  lead_conversion_approval: { 'zh-Hans': '线索转化审批', 'zh-Hant': '線索轉化審批' },
   quote_generation: { 'zh-Hans': '由商机生成报价', 'zh-Hant': '由商機產生報價' },
   schedule_followup: { 'zh-Hans': '安排跟进', 'zh-Hant': '安排跟進' },
   // 营销活动, not 活动: 「活动」 is the locale pack's label for `crm_event`, and this

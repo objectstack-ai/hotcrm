@@ -83,6 +83,14 @@ const RUNTIME_TEST_FILES = [
   // hooks run their SHIPPED lowered bodies through the real QuickJS runner
   // there, not their handlers.
   'do-not-call-enforcement.test.ts',
+  // REQ-0005 — the lead conversion approval gate. Same precedent as the feature
+  // files above, and the same reason: the gate is authored on four surfaces
+  // (the field default, `convert_lead.visible`, `lead_conversion`'s
+  // `decision_approval` edges and the `beforeUpdate` refusal) that have to
+  // agree about what OFF means, and the evidence is only legible with all four
+  // side by side. `lead_conversion_approval`'s own runtime evidence is its
+  // start condition driven through the real engine there.
+  'lead-conversion-approval-gate.test.ts',
 ];
 
 /**
