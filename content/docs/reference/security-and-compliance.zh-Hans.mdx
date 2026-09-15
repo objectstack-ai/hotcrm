@@ -215,7 +215,7 @@ Unrecognized key(s) on this field: `encrypted`.
 
 - **同意字段**位于联系人/潜在客户上 —— *(部分成立。)* `crm_contact` 与 `crm_lead` 各自带有 `do_not_call` 与 `email_opt_out` 两个布尔字段。**两个对象都没有合法性基础字段，也没有同意日期字段**，所以记录只告诉你某人*退订了*，从不告诉你*为什么*或*在什么时候*。如果你的 DPO 需要记录合法性基础，那是一个你得自己加的字段。
 - **退订** —— ✅ 已核实，形态具体。`campaign_member_optout_sync` 钩子会把一个成员转为 `status: 'unsubscribed'` 这件事回写到此人的 `email_opt_out` 上。它刻意是单向的。⚠️ 没有任何东西会因为一次入站邮件点击替你翻转成员状态 —— 这里没有收件箱连接器；参见[邮件与日历](/zh-Hans/docs/guides/email-and-calendar)。
-- **抑制列表** —— ✅ 已核实。`src/flows/campaign-enrollment.flow.ts` 的两个入组关口都按 `email_opt_out: false` 过滤，所以已退订的人会被排除在后续活动入组之外。这个标记位挂在人身上，这正是这条排除是全局而非按活动的原因。
+- **抑制列表** —— ✅ 已核实。`src/marketing/flows/campaign-enrollment.flow.ts` 的两个入组关口都按 `email_opt_out: false` 过滤，所以已退订的人会被排除在后续活动入组之外。这个标记位挂在人身上，这正是这条排除是全局而非按活动的原因。
 
 ### 数据处理协议
 

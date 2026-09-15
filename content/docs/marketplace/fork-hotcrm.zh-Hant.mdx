@@ -69,10 +69,10 @@ find src content -type f \( -name "*.ts" -o -name "*.mdx" -o -name "*.json" \) \
   -exec sed -i 's/crm_/acme_/g' {} +
 
 # Rename the translation file that's literally called crm.translation.ts
-mv src/translations/crm.translation.ts src/translations/acme.translation.ts
+mv src/sales/translations/crm.translation.ts src/sales/translations/acme.translation.ts
 ```
 
-然後更新 `src/translations/index.ts` 以參照新的檔案名稱。
+然後更新 `src/sales/translations/index.ts` 以參照新的檔案名稱。
 
 ### 4. 刪除你不需要的部分
 
@@ -96,7 +96,7 @@ rm src/objects/{case,knowledge_article,campaign,campaign_member,contract,quote,q
 | API + AI 工具 | `src/actions/<entity>.actions.ts` |
 | UI 版面配置 | `src/pages/<entity>.page.ts` |
 | 清單檢視 | `src/views/<entity>.view.ts` |
-| i18n | 附加至 `src/translations/{en,zh-CN,es-ES,ja-JP}.ts` |
+| i18n | 附加至 `src/sales/translations/{en,zh-CN,es-ES,ja-JP}.ts` |
 
 每個檔案在建置時都要經過 `@objectstack/spec` 結構描述驗證。出錯會明顯報錯。
 
@@ -129,7 +129,7 @@ git fetch upstream
 git merge upstream/main          # or rebase, your call
 ```
 
-合併衝突大多發生在 `src/translations/*`（附加式）和 `src/objects/*.object.ts`（如果你重新命名了它們）。檔案後綴協定使衝突面保持很小。
+合併衝突大多發生在 `src/sales/translations/*`（附加式）和 `src/objects/*.object.ts`（如果你重新命名了它們）。檔案後綴協定使衝突面保持很小。
 
 ## 你可以放心變更的內容
 

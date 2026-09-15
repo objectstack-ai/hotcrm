@@ -36,7 +36,7 @@ HotCRM 开箱即用地发布 **十份** 报表 —— `src/reports/index.ts` 这
 - *Win/Loss Analysis* —— 建得出来：**Win Reason** 与 **Loss Reason** 都是 `opportunity_metrics` 上的维度，而一笔交易赢与丢的那一面在那里已经声明成了度量 —— **Win Rate** 就在其中，并与构成它分子分母的那几个交易数一并发布。
 - *Big Deals Won* —— 建得出来：赢单金额就是 **Won Revenue**，而按金额卡一个阈值是普通的报表筛选条件。
 - *Sales Cycle Length* —— 建不出来。没有任何地方存着销售周期时长：商机上有 **Stage Entry Date** 和 **Close Date**，但没有「已过天数」这样的列，而它唯一带的时长 **Days in Current Stage** 就是上面那个查询后公式。*按产品* 也没有落点 —— 没有任何数据集读 `crm_opportunity_line_item`。
-- *Discount Approval Activity* —— 建不出来。审批本身是真的（`src/flows/opportunity-approval.flow.ts`，以及商机上的 **Approval Status**），但没有任何维度把那个字段暴露出来；折扣则是行项目上的百分比（`crm_opportunity_line_item.discount`），而没有任何数据集读行项目。
+- *Discount Approval Activity* —— 建不出来。审批本身是真的（`src/sales/flows/opportunity-approval.flow.ts`，以及商机上的 **Approval Status**），但没有任何维度把那个字段暴露出来；折扣则是行项目上的百分比（`crm_opportunity_line_item.discount`），而没有任何数据集读行项目。
 
 ### 🎯 线索报表
 

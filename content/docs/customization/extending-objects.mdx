@@ -71,7 +71,7 @@ export default warrantyHook;
 
 ## Add automation
 
-Use `src/flows/` for multi-step automation and export new flows from `src/flows/index.ts`.
+Multi-step automation goes in the `flows/` directory of the package that owns its trigger object — `src/sales/flows/`, `src/service/flows/`, `src/revenue/flows/` or `src/marketing/flows/` — and each package has its own barrel: export the new flow from that directory’s `index.ts`.
 
 ```ts
 import type * as Automation from '@objectstack/spec/automation';

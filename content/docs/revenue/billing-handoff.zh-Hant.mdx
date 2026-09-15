@@ -135,7 +135,7 @@ HotCRM 負責營收的**商務**一側：找到客戶、談定價格、簽下合
 
 **這是一次程式碼改動，不是在管理端編輯。** 去找介面之前請先讀這句話：端點與簽章密鑰位於應用自身的元資料裡，改它們意味著改應用並重新部署。
 
-兩個值都讀自同一個模組 `src/flows/_billing-endpoint.ts`，且都支援在**建置**時用環境變數覆寫：
+兩個值都讀自同一個模組 `src/sales/flows/_billing-endpoint.ts`，且都支援在**建置**時用環境變數覆寫：
 
 ```bash
 HOTCRM_BILLING_ENDPOINT=https://billing.acme.internal/hotcrm/events \
