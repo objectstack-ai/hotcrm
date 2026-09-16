@@ -25,18 +25,51 @@ Every account has a **type** that drives how the rest of the system treats it:
 
 When a contract is activated for a prospect, the system automatically promotes the account to **Customer**. You don't have to remember to update it.
 
+## Commercial capability — who you may open deals with
+
+**Type** says where an account stands in its relationship with you. **Commercial Capability** answers a different question: *may we book new business against it at all?*
+
+| Commercial Capability | What it means |
+| --- | --- |
+| 🟢 **Full** | Business as usual. *(Default for new accounts.)* |
+| 🟠 **Settlement Only** | Keep the record, refuse the deal. The account stays fully usable for invoicing, payments and collections, but **no new opportunity may be opened against it**. |
+
+Tender agencies, resellers-of-record, intra-group billing entities and dormant accounts are the usual *Settlement Only* cases: you still pay them and get paid through them, you just do not sell to them.
+
+This is a **gate, not a label**. Pick an account marked *Settlement Only* on a new opportunity and the save is refused, with a message naming the account and telling you what to do instead. Two things it deliberately does **not** do:
+
+- **It never breaks history.** Opportunities that already point at the account keep working and stay editable, including after someone reclassifies the account. Only the *new* link is refused.
+- **It is not a compliance lock.** It is a classification a person writes down, and the same person can set it back to *Full* when the relationship changes.
+
+The two axes are independent: a *Settlement Only* account can be a prospect, a customer or a former customer, and winning a deal never quietly un-restricts one.
+
+## Account approval
+
+A newly created account starts at **Pending**. It shows up in the approval inbox, and a Sales Manager approves or rejects it. **Approval Status** is read-only on the form, so it only ever moves through a decision on that request — nobody can type their way to *Approved*. A rejected account stays on file, so its details can be corrected and sent back for another look.
+
+**Approval Status** answers *"has this record been signed off?"*. **Active** answers *"is this account live at all?"*. They are deliberately separate: an approved account can later be deactivated, and a pending account is not the same thing as an inactive one.
+
+If your organisation does not want to sign accounts off, an admin changes the default on **Approval Status** to *Approved* and no new account enters the queue again — see [Administration › Automation](/docs/administration/automation).
+
 ## What each account record stores
 
-The account detail screen is organised into 6 sections:
+The account detail screen is organised into 7 sections:
 
 | Section | Fields |
 | --- | --- |
-| **Basic Information** | Account number, name, type, industry, description |
+| **Basic Information** | Account number, registration number, name, type, commercial capability, industry, description |
 | **Financials** | Annual revenue, number of employees, child account revenue |
+| **Business Profile** | Incumbent vendor, annual purchasing budget, payment cycle |
 | **Contact Information** | Phone, website, billing address, office location (with map) |
-| **Ownership & Status** | Owner, parent account, active flag |
+| **Ownership & Status** | Owner, parent account, active flag, approval status |
 | **Branding** | Brand color (used as the avatar accent), company logo (uploaded image — PNG, JPEG, SVG or WebP, up to 2 MB) |
 | **System** | Timestamps, audit trail |
+
+Two of those need a word of explanation.
+
+**Registration Number** is the counterparty's registered identity as issued by *its own* government registry — whichever registry that is. It is deliberately not named after any one country's scheme, because the right answer differs by where the company is registered, and the field has to hold all of them. It is what invoicing, credit checks and matching duplicate companies key on, and it is searchable, so you can find an account by it from global search and from any account picker. It is **not** the **Account Number**, which is the sequence *we* issue and which already appears in the record title.
+
+**Business Profile** is sales intelligence about how this account buys: who currently holds it (**Incumbent Vendor**), how much it plans to spend with suppliers this year (**Annual Purchasing Budget**), and how it pays (**Payment Cycle**). None of that is the same as **Annual Revenue**, which is what the account *earns* — the budget is what it will *spend*.
 
 ## Account hierarchy
 
@@ -63,6 +96,7 @@ Two things the hierarchy deliberately does **not** do. It does **not** cascade s
 - The account **name must be unique within your organization**. You'll get an error if you try to create a second account with a name you already use. Another organization on the same platform is free to have its own "Acme Corp" — the rule is scoped to your data, not the whole platform. The uniqueness check compares names exactly as typed, so `Acme Corp` and `ACME  Corp` can both exist as separate accounts. Lead conversion is more forgiving: it ignores capitalisation and extra spaces when looking for an account to reuse (see [Leads](./leads)), so converting a lead for `ACME  Corp` attaches it to your existing `Acme Corp` rather than creating a near-duplicate.
 - **Annual revenue must be zero or positive** — no negative numbers allowed.
 - You **cannot delete** an account that has open opportunities or active contracts. Set it to *Inactive* instead (`is_active = false`).
+- You **cannot open a new opportunity** against an account whose **Commercial Capability** is *Settlement Only*. The opportunities it already has are untouched and stay editable.
 
 ## Automatic updates
 

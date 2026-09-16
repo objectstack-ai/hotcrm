@@ -61,7 +61,7 @@ import { REPO_ROOT } from './helpers/repo-root';
  * a size the app does not have — the ratchet owns the growth budget, alone, and
  * a raise there sits on the maintainer floor where it always did.
  *
- *   business semantics  banner ~50k -> band 47,500–52,500 · ceiling 55,000
+ *   business semantics  banner ~54k -> band 51,300–56,700 · ceiling 55,000
  *   interaction layer   banner ~29k -> band 27,550–30,450 · ceiling 31,000
  *
  * ⚠️ The ceiling column is still worked out per row, and still pinned to

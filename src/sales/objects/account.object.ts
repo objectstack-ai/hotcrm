@@ -22,7 +22,7 @@ export const Account = ObjectSchema.create({
   // FORMULA (display_title/full_name): without this, $search auto-defaults to
   // the formula field, which isn't a real column, so the lookup picker + global
   // search silently return zero. These are real, indexed columns.
-  searchableFields: ['name', 'account_number'],
+  searchableFields: ['name', 'account_number', 'registration_number'],
   highlightFields: ['account_number', 'name', 'type', 'owner_id'],
 
   // Field groups organize the form layout. Array order == display order.
@@ -30,6 +30,10 @@ export const Account = ObjectSchema.create({
   fieldGroups: [
     { key: 'basic',        label: 'Basic Information',  icon: 'building' },
     { key: 'financials',   label: 'Financials',         icon: 'dollar-sign' },
+    // REQ-0003 acceptance 3: the business-profile fields render as their own
+    // group with NO `record:details` section authored anywhere — the derived
+    // layout ladder's rung 1 (AGENTS.md: escape hatches are for extreme cases).
+    { key: 'business_profile', label: 'Business Profile', icon: 'briefcase' },
     { key: 'contact_info', label: 'Contact Information', icon: 'phone' },
     { key: 'ownership',    label: 'Ownership & Status', icon: 'users' },
     { key: 'branding',     label: 'Branding',           icon: 'palette', collapse: 'collapsed' },
@@ -166,6 +170,125 @@ export const Account = ObjectSchema.create({
       group: 'basic',
     }),
 
+    /**
+     * The counterparty's registered identity in a government registry.
+     *
+     * ⛔ NOT named after one country's registry, and that is the whole design
+     * constraint (REQ-0003 *Disposition & rationale*). The requirement arrived
+     * as 社会信用代码 because the customer registers in China; a Japanese install
+     * writes 法人番号 here, a German one a Handelsregisternummer, a US one an
+     * EIN. A `unified_social_credit_code` field would carry one country's
+     * registry in its NAME, where no install can rename it — so the core field
+     * is generic and the registry it came from is the install's own knowledge.
+     *
+     * ⚠️ Distinct from `account_number` above, which is OUR sequence
+     * (`Field.autonumber`, `ACC-{000000}`) and already spent as half the record
+     * title. That is an identifier we issue; this is one we were given, and
+     * invoicing, credit checks and entity resolution key on the latter.
+     *
+     * `searchable` + the `searchableFields` entry above is REQ-0003 acceptance
+     * 1 — the value is findable from global search and the lookup picker. It is
+     * indexed below for that read path.
+     *
+     * ⛔ NOT `unique: true`. Refusing a save because two rows carry the same
+     * registered identity is a data-quality POLICY, and this repo has already
+     * chosen the soft shape for that question once — the hard unique on
+     * `crm_lead.email` was removed because refusing a repeat is worse than
+     * recording it. The same reasoning `name_normalized` records: a match key,
+     * not a policy. Deduplication is a review affordance this app does not have.
+     */
+    registration_number: Field.text({
+      label: 'Registration Number',
+      description:
+        "The counterparty's registered identity as issued by its own government registry — whichever registry that is. Not the Account Number, which we issue.",
+      searchable: true,
+      maxLength: 64,
+      group: 'basic',
+    }),
+
+    /**
+     * What this account may be used for commercially — the category that GATES
+     * capability rather than merely classifying (REQ-0003, the record's most
+     * valuable primitive: *some counterparties are payable but not sellable*).
+     *
+     * ## Why a field BESIDE `type`, and not four more options on it
+     *
+     * REQ-0003 leaves this open ("either new options on `type` or a field
+     * beside it, decided when built"). It is a separate field because `type`
+     * is a RELATIONSHIP-STAGE axis — prospect → customer → former, plus
+     * partner — and it already has two readers that would be broken by a value
+     * meaning "may not be sold to": `account.hook.ts` promotes on it, and
+     * `opportunity.hook.ts` flips a won deal's account to `customer`. An
+     * `agency` option on `type` would therefore be overwritten into `customer`
+     * by the first won deal booked against it, silently un-restricting the
+     * account. The two axes are independent — an agency can be a prospect, a
+     * customer or a former customer — so they are two fields.
+     *
+     * ## Generic values only
+     *
+     * REQ-0003 rules the customer's own vocabulary (招标代理公司 …) **C**:
+     * overlay configuration, ⛔ never committed into core. Core ships the
+     * capability distinction itself; an install maps its market's categories
+     * onto these two values.
+     *
+     * ## What reads it: `opportunity.hook.ts` `beforeInsert`
+     *
+     * REQ-0003 is explicit that "a category no rule reads is prose, and the
+     * rule is the point", so this field ships WITH its reader. The reader is a
+     * hook, and which construct carries the gate is a maintainer ruling
+     * (2026-09-16), quoted verbatim and kept untranslated:
+     *
+     *   「闸门走 `opportunity.hook.ts` 的 `beforeInsert`，用 hook 的 `ctx.api` 读客户类别。
+     *    REQ-0003 第 128 行的 `validations[]` 与该记录自己的验收第 2 条冲突，以验收为准。」
+     *
+     * ⛔ Do NOT restate the gate as the `validations[]` entry REQ-0003 line
+     * 128 names. TWO independent measurements say it cannot be that, and both
+     * are recorded here because each alone would be talked past:
+     *
+     *   1. **It would brick history.** A validation is evaluated against
+     *      `{...previous, ...data}` on EVERY write, so "already linked to a
+     *      restricted account" and "linking now" are the same state and every
+     *      later edit to every historical opportunity would be refused — the
+     *      exact thing REQ-0003 acceptance 2 forbids ("opportunities that
+     *      already point at it keep working and keep being editable").
+     *      `lead.hook.ts` carries the same finding for its own gate.
+     *   2. **It cannot read the account at all.** A predicate is evaluated by
+     *      `checkPredicate(rule, merged, previous)` over plain data objects —
+     *      the opportunity's OWN stored columns. `record.crm_account.type`
+     *      does not traverse the lookup (measured: `runtime: No such key:
+     *      type`), and `os.lookup(...)` has no overload because `buildScope()`
+     *      in `@objectstack/formula` composes `os` from only `ctx.user` /
+     *      `ctx.org` / `ctx.env` and never binds `ctx.api` (measured:
+     *      `runtime: found no matching overload for 'dyn.lookup(string,
+     *      dyn)'`; filed upstream as objectstack#18318). An unevaluable
+     *      predicate REJECTS THE WRITE, so authoring it literally refuses
+     *      every opportunity write, insert and update alike.
+     *
+     * ⚠️ The hook's `ctx.api` is a DIFFERENT surface from the formula
+     * `EvalContext.api` that measurement 2 is about, and the two are routinely
+     * confused. The hook one is live and used ~20 times across
+     * `src/sales/objects/*.hook.ts`; its shape is `./_hook-api.ts`, pinned
+     * against a real engine by `test/hook-query-predicate.test.ts` and
+     * `test/hook-write-shape.test.ts`. objectstack#18318 does not block this
+     * field.
+     *
+     * ⛔ Do NOT "fix" anything here by denormalising this value onto
+     * `crm_opportunity`: a copy needs a writer and goes stale the moment an
+     * account is reclassified, and anything able to write the copy is able to
+     * simply refuse.
+     */
+    commercial_capability: Field.select({
+      label: 'Commercial Capability',
+      group: 'basic',
+      description:
+        'Whether new business may be opened against this account. Settlement Only accounts stay fully usable for billing and payment, but no new opportunity may be linked to them.',
+      defaultValue: 'full',
+      options: [
+        { label: 'Full', value: 'full', color: '#00AA00', default: true },
+        { label: 'Settlement Only', value: 'settlement_only', color: '#FFA500' },
+      ],
+    }),
+
     // Select fields with custom options
     type: Field.select({
       label: 'Account Type',
@@ -232,6 +355,60 @@ export const Account = ObjectSchema.create({
       label: 'Employees',
       min: 0,
       group: 'financials',
+    }),
+
+    // ─── Business profile (REQ-0003 step 3) ────────────────────────────
+    //
+    // Generic B2B sales intelligence, not IT-services vocabulary: who holds the
+    // account today, how much there is to win this year, and how they pay.
+    //
+    // ⚠️ `annual_revenue` above answers none of these — it is the account's OWN
+    // turnover, what the counterparty earns, whereas the budget below is what
+    // it will SPEND with vendors. Reusing one for the other is the mistake this
+    // group exists to prevent.
+    //
+    // ⚠️ `pnpm validate` reports all three as "carrier-only — declared but
+    // nothing in this stack reads or displays it", and that reading is EXPECTED
+    // here rather than a defect to tidy away. The liveness diagnostic counts
+    // view columns, form sections, page bindings, flow nodes, formulas, hooks
+    // and actions as sites; it does NOT count `fieldGroups` membership, which
+    // is precisely the DERIVED layout REQ-0003 acceptance 3 asks for ("render
+    // as their own group … without any `record:details` section being
+    // authored"). These are data-entry fields a person fills in and a person
+    // reads off the derived form. ⛔ Do NOT answer the warning by authoring a
+    // `record:details` section — that is the escape hatch AGENTS.md reserves
+    // for a named customer demand, and it would trade acceptance 3 for a
+    // quieter log. `crm_article_feedback.comment` carries the same verdict on
+    // `main` for the same reason. No guard reads this warning.
+
+    incumbent_vendor: Field.text({
+      label: 'Incumbent Vendor',
+      description: 'The supplier currently holding this account for the spend we are chasing.',
+      maxLength: 255,
+      group: 'business_profile',
+    }),
+
+    annual_purchasing_budget: Field.currency({
+      label: 'Annual Purchasing Budget',
+      description: "What this account expects to SPEND with vendors this year — not its own revenue.",
+      scale: 2,
+      min: 0,
+      group: 'business_profile',
+    }),
+
+    // Payment terms as a select, not free text: it is read by a person sizing
+    // cash-flow risk, and a picklist keeps that domain knowable. The values are
+    // the net-terms ladder every B2B install shares; a customer whose contracts
+    // use a different ladder overlays its own.
+    payment_cycle: Field.select({
+      label: 'Payment Cycle',
+      group: 'business_profile',
+      options: [
+        { label: 'Prepaid', value: 'prepaid' },
+        { label: 'Net 30', value: 'net_30' },
+        { label: 'Net 60', value: 'net_60' },
+        { label: 'Net 90', value: 'net_90' },
+      ],
     }),
 
     // Contact Information
@@ -359,6 +536,46 @@ export const Account = ObjectSchema.create({
       defaultValue: true,
       group: 'ownership',
       trackHistory: true,
+    }),
+
+    /**
+     * Where this account stands in its sign-off (REQ-0003 step 5 / acceptance 4).
+     *
+     * The shape `crm_opportunity.approval_status` already uses: `readonly` so
+     * only the platform's own approval write reaches it, and a FIELD-level
+     * `defaultValue` — option-level `default: true` only preselects in a UI
+     * form, so an API or flow insert would land `null` and never match the
+     * flow's entry condition.
+     *
+     * ⛔ NOT a second boolean beside `is_active`, which REQ-0003 rules out by
+     * name. `is_active` answers "is this account live at all"; this answers
+     * "has the record been signed off", and collapsing them would make
+     * deactivating an account indistinguishable from rejecting one.
+     *
+     * ⚠️ Ships `pending`, so a NEW account enters the approval inbox on
+     * creation — REQ-0003 acceptance 4 in as many words ("A newly created
+     * account sits in a pending state"). An install that wants no account
+     * sign-off changes this one default to `approved`; from then on the flow's
+     * start condition is false for every record and the gate is off, switchable
+     * and inert. That is the same off-switch `crm_lead.conversion_approval_
+     * status` records, and ⛔ NOT the flow's `status`, for the reasons measured
+     * in `lead-conversion-approval.flow.ts`.
+     *
+     * ⛔ There is deliberately no `not_required` value. On the lead the gate
+     * ships OFF and needs a fourth value to say so; here acceptance 4 ships it
+     * ON, and `approved` already spells "nothing to decide".
+     */
+    approval_status: Field.select({
+      label: 'Approval Status',
+      group: 'ownership',
+      readonly: true,
+      trackHistory: true,
+      defaultValue: 'pending',
+      options: [
+        { label: 'Pending', value: 'pending', color: '#FFA500', default: true },
+        { label: 'Approved', value: 'approved', color: '#00AA00' },
+        { label: 'Rejected', value: 'rejected', color: '#FF0000' },
+      ],
     }),
 
     // Brand color (new field type)
@@ -495,6 +712,9 @@ export const Account = ObjectSchema.create({
     // `get_record` has no `sort` option, so the conversion would reuse an
     // arbitrary one. Reusing one of N is still better than creating the N+1th.
     { fields: ['name_normalized'] },
+    // `searchableFields` carries `registration_number`, and the note at the top
+    // of this file records why those must be real, indexed columns.
+    { fields: ['registration_number'] },
   ],
   
   // API surface + capabilities. `files` and `feeds` are live and enforced (see

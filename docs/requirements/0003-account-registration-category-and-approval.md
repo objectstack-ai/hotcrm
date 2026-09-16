@@ -125,9 +125,29 @@ lands with its own changeset and `pnpm verify`.
     (`readonly: true`, a real `defaultValue`), ⛔ not a second boolean beside `is_active`.
 - The gate itself is a **transition gate, not an invariant** (AGENTS.md metadata semantics rule
   7): existing opportunities on a now-restricted account are not bricked; what is refused is the
-  *new* link. Authored as a `validations[]` entry on `crm_opportunity` reading its account's
-  category, with every `record.x` read carrying `has(record.x)` (AGENTS.md — validation
-  predicates must be TOTAL).
+  *new* link. Authored as a **`beforeInsert` hook in `src/sales/objects/opportunity.hook.ts`**,
+  reading the account's category through the hook's `ctx.api`.
+
+  > **Maintainer ruling, 2026-09-16** (verbatim, kept untranslated):
+  >
+  > 「闸门走 `opportunity.hook.ts` 的 `beforeInsert`，用 hook 的 `ctx.api` 读客户类别。
+  > REQ-0003 第 128 行的 `validations[]` 与该记录自己的验收第 2 条冲突，以验收为准。」
+
+  ⛔ **Not** the `validations[]` entry this line named until that ruling, for two independently
+  measured reasons. **It conflicts with this record's own acceptance 2.** A validation is
+  evaluated against `{...previous, ...data}` on *every* write, so "already linked to a restricted
+  account" and "linking now" are the same state — it would refuse every later edit to every
+  historical opportunity, which is exactly the bricking acceptance 2 forbids ("opportunities that
+  already point at it keep working and keep being editable"). A `beforeInsert` hook fires only on
+  creation, so the transition gate is the construct rather than a claim about it. **And a
+  validation predicate cannot read the account at all**: it is evaluated over the opportunity's
+  own stored columns, `record.crm_account.<field>` does not traverse the lookup (`No such key`),
+  and `os.lookup(...)` has no overload because `@objectstack/formula`'s `buildScope()` never binds
+  `ctx.api` (objectstack#18318) — while an unevaluable predicate *rejects the write*.
+
+  ⚠️ The **hook's** `ctx.api` is a different surface from that formula `EvalContext.api`, is live
+  on the pinned platform, and is pinned by `test/hook-query-predicate.test.ts` — objectstack#18318
+  does not block this gate.
 - The approval is an `approval` node inside a `record_change` flow under `src/sales/flows/`,
   the construct `opportunity-approval.flow.ts` already uses. ⛔ There is no `workflow`
   metadata type and no standalone `ApprovalProcess`.

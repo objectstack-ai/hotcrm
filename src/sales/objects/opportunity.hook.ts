@@ -339,4 +339,119 @@ const opportunityWonHook: Hook = {
 };
 
 
-export default [opportunityValidationHook, opportunityWonHook];
+/**
+ * The capability gate — an account whose `commercial_capability` is
+ * `settlement_only` may not have a NEW opportunity opened against it.
+ *
+ * REQ-0003's most valuable primitive: *some counterparties are payable but not
+ * sellable* — 「招标代理及其他类客户仅可用于付款回款，无法发起商机」. The category lives on
+ * `crm_account`; this is the rule that reads it, and without a reader the
+ * category would be prose (REQ-0003 *Disposition & rationale*).
+ *
+ * ## ⚠️ `beforeInsert` ONLY — a transition gate, not an invariant
+ *
+ * Maintainer ruling, 2026-09-16 (verbatim, kept untranslated):
+ *
+ *   「闸门走 `opportunity.hook.ts` 的 `beforeInsert`，用 hook 的 `ctx.api` 读客户类别。
+ *    REQ-0003 第 128 行的 `validations[]` 与该记录自己的验收第 2 条冲突，以验收为准。」
+ *
+ * The event list IS the transition gate (AGENTS.md metadata semantics rule 7),
+ * and it is the construct rather than a comment claiming the property. An
+ * opportunity that already points at an account restricted later is never
+ * re-evaluated: it keeps working and keeps being editable, which REQ-0003
+ * acceptance 2 demands in as many words. ⛔ Never restate this as a
+ * `validations[]` script — a validation is evaluated against
+ * `{...previous, ...data}` on every write, where "already linked" and "linking
+ * now" are the same state, so it would refuse every later edit to every
+ * historical opportunity. The whole measurement, including why a predicate
+ * cannot read the account at all, is on `crm_account.commercial_capability`.
+ *
+ * ⚠️ BOUNDARY, recorded rather than hidden: an UPDATE that re-points an
+ * EXISTING opportunity onto a restricted account is not refused. That is the
+ * ruling's construct and it is also what acceptance 2 asks for — the refusal is
+ * scoped to "linked to a NEW opportunity". Widening to `beforeUpdate` is not a
+ * free win either: the update payload would have to be judged against
+ * `previous` to tell a re-point from an ordinary edit, which is the state
+ * confusion this event list exists to avoid. A gate on re-pointing is a
+ * separate decision, not a tidy-up.
+ *
+ * ## Fails OPEN, on purpose
+ *
+ * Only the one verdict a person wrote down refuses (AGENTS.md metadata
+ * semantics rule 8). An account that predates the column, an account that
+ * cannot be found, an absent `ctx.api` and an unrecognised value all let the
+ * write through: the shipped default is `full`, and an account created before
+ * this field existed carries nothing at all — both must open deals exactly as
+ * they did before the gate existed.
+ *
+ * ⚠️ A read that THROWS is not in that list and is deliberately not caught. A
+ * denied or broken read is not evidence that the account is sellable, and the
+ * one shape that can produce it here — a caller who cannot see the account at
+ * all — could not have picked it in the lookup either. Swallowing it would
+ * make the gate silently absent exactly when the platform cannot answer.
+ *
+ * ⛔ No system-write exemption, deliberately, and it is the same reading the
+ * two approval flows record: a control that engages only for writers carrying a
+ * session is not a control, since a `runAs: 'system'` importer would simply
+ * bypass it.
+ *
+ * Priority 150 runs it AHEAD of `opportunity_lifecycle` (200): a refused write
+ * should not first pay for the derived-field recompute.
+ */
+const opportunityAccountCapabilityHook: Hook = {
+  name: 'opportunity_account_capability',
+  object: 'crm_opportunity',
+  events: ['beforeInsert'],
+  priority: 150,
+  description:
+    'Refuse a NEW opportunity linked to an account whose commercial capability is settlement only.',
+  handler: async (ctx: HookContext) => {
+    // The refusal envelope (#1075). Mirrored from `./_refusal.ts` because a
+    // lowered body has no module scope and `extractHookBody` THROWS on an
+    // import; `test/refusal-envelope.test.ts` pins every copy against it.
+    function refuse(
+      message: string,
+      code: string,
+      status: number,
+      userMessage: string = message,
+    ): Error {
+      const err = new Error(message) as Error & {
+        code: string;
+        status: number;
+        userMessage: string;
+      };
+      err.code = code;
+      err.status = status;
+      err.userMessage = userMessage;
+      return err;
+    }
+    const api = ctx.api as HookApi | undefined;
+    if (!api) return;
+    const accountId = ctx.input.crm_account;
+    if (typeof accountId !== 'string' || accountId === '') return;
+
+    const account = await api.object('crm_account').findOne({
+      where: { id: accountId },
+      fields: ['name', 'account_number', 'commercial_capability'],
+    });
+    if (!account || account.commercial_capability !== 'settlement_only') return;
+
+    // Name the account the way every screen names it — `crm_account.nameField`
+    // is the `display_title` formula over `account_number` and `name`. ⛔ Never
+    // the record id: it matches no surface a user has ever seen (#1243).
+    const number = typeof account.account_number === 'string' ? account.account_number.trim() : '';
+    const name = typeof account.name === 'string' ? account.name.trim() : '';
+    const label = [number, name].filter(Boolean).join(' - ');
+    throw refuse(
+      `Cannot open an opportunity against ${label ? `account ${label}` : 'this account'}: its Commercial Capability is Settlement Only, so it is available for billing and payment but no new business may be booked against it. Pick a different account, or have the account reclassified to Full first.`,
+      'VALIDATION_FAILED',
+      400,
+    );
+  },
+};
+
+export default [
+  opportunityAccountCapabilityHook,
+  opportunityValidationHook,
+  opportunityWonHook,
+];
