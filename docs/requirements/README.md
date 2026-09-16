@@ -76,6 +76,74 @@ docs/requirements/
 - The raw requirement keeps the customer's **original language**; the analysis,
   disposition, and response are written in **English** (repo doc rule).
 
+## What freezing protects (2026-09-16 maintainer ruling)
+
+The maintainer's ruling of 2026-09-16, **as adopted rather than as typed**. The PM put
+this wording to the maintainer, who adopted it with 「其他同意」 — "agreed to the rest".
+The sentence below is therefore the PM's drafting carrying the maintainer's decision; it
+is quoted exactly and kept untranslated, because the adopted words are the ruling.
+
+> 写时为真的陈述冻结；写下时就已失效的路径按错误改正。这条写进 `docs/requirements/README`，以后不再逐卡吵。
+
+The append-only rule above freezes a **decision**. It does not freeze a path that
+named nothing on the day it was typed. Which of the two you are holding is settled
+by **two timestamps**, and by nothing else:
+
+| The record's commit, against the change it cites | What the sentence is | Verdict |
+| --- | --- | --- |
+| Committed **before** the structure it names moved, was renamed, or was deleted | **true when written** — a record of the tree as it then stood | **Freeze.** Editing it rewrites the history the record exists to hold. |
+| Committed **after** that change | **already false when written** — it never named anything | **Correct it.** That is a typo, not a record. |
+
+Scope: the requirement records in this directory. What a document that describes a
+superseded tree **on purpose** owes is a different question, and is not decided here.
+
+### Deciding it, for any record
+
+1. Find the commit that wrote the sentence — ⛔ not the record's `Raised:` date,
+   which is the customer's date and can be weeks earlier:
+   `git log --format='%H %cI' -- docs/requirements/NNNN-slug.md`.
+2. Ask whether the cited path was in **that commit's own tree**:
+   `git ls-tree <that commit> -- <the path the record cites>`. Empty output means
+   the path was already gone when the sentence was written ⇒ **correct it**; a hit
+   means it still resolved then ⇒ **freeze it**.
+
+A lookup in one commit's tree answers this without walking ancestry, so it is cheap
+and it stays correct on the shallow checkout CI hands you. ⛔ Do not reach for
+`git log --diff-filter=A -- <path>` there: the parents that would disprove it are
+absent, so it names the graft root as the adding commit and reads exactly like a
+real answer.
+
+When the verdict is **correct it**: repoint per path, reading each successor off the
+tree rather than prefixing mechanically; keep the edit to the stale path and leave
+the rest of the record alone; and where one file was split in two with no
+same-named successor, name every successor the sentence's point depends on.
+
+### Why an error is not what freezing protects
+
+This file opens by saying what these records are — "the human-or-customer **input**
+an AI agent reads before authoring metadata". Freezing keeps the record of what was
+true at triage time. A path that resolved to nothing on the day it was written has
+no such fact underneath it, so freezing it protects nothing, and it costs something
+real: the next agent reads the record as the spec it starts from and is sent to a
+directory that does not exist.
+
+### The two worked examples, both in this directory
+
+The ADR-0130 package move (`36b27dd`, 2026-09-14T14:07:19Z) put every authored file
+under `src/{package}/{type}/`.
+
+- **[REQ-0001](0001-agency-tier-lead-tagging.md) — frozen.** Every commit that
+  touched it predates the move (the latest is `3b72afa`, 2026-08-27), and
+  `git ls-tree` at that commit finds the routing-flow directory the record names.
+  True when written ⇒ its pre-move path stays exactly as written.
+- **[REQ-0002](0002-it-services-project-delivery-and-cost.md) — corrected.** Its
+  authoring commit (`9f13c77`, 2026-09-14T14:36:11Z) lands **29 minutes after** the
+  move, and `git ls-tree` at that commit finds none of the three paths it cited.
+  They were typos the day they were typed, so PR #1942 repointed them.
+
+Same directory, opposite verdicts, and only the timestamps separate them. ⛔ Do not
+re-argue this card by card: measure the two, and apply the ruling above.
+
 ## How AI agents consume this
 
 A requirement record is the **spec an agent starts from**. The
