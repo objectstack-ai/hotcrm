@@ -8,7 +8,7 @@ import { defineStack } from '@objectstack/spec';
 // it against a `.strict` stack schema and fails on any key but the default).
 import {
   allObjects, allActions, allDashboards, allDatasets, allReports,
-  allMappings, allApps, allViews, allPages, allTranslations, allProfiles,
+  allMappings, allApps, allViews, allPages, allTranslations, allEmailTemplates, allProfiles,
   allHooks, allFlows, allSkills,
   CrmSharingRules, CrmPositions,
   seedDataFor,
@@ -196,6 +196,13 @@ export default defineStack({
   },
 
   translations: allTranslations,
+
+  // The localizable content path for `notify` (#9205). A node names a template
+  // and supplies its `templateData`; the delivery path resolves
+  // `(name, locale)` against these rows PER RECIPIENT, after fan-out — the
+  // recipient's own `sys_user.locale` when set, else `i18n.defaultLocale`
+  // above — so two people on one notification can read it in two languages.
+  emailTemplates: allEmailTemplates,
 
   sharingRules: CrmSharingRules,
   // ADR-0090 D3: positions are flat capability-distribution groups — the v1

@@ -115,8 +115,10 @@ export const ContractRenewalFlow: Flow = {
                 recipients: ['{currentContract.owner_id}'],
                 channels: ['inbox', 'email'],
                 topic: 'contract_renewal',
-                title: 'Contract renewal due: {currentContract.contract_number}',
-                message: 'Contract {currentContract.contract_number} ends on {currentContract.end_date}. Start the renewal conversation now.',
+                template: 'crm.contract_renewal',
+                templateData: {
+                  contract_number: '{currentContract.contract_number}', end_date: '{currentContract.end_date}',
+                },
                 actionUrl: '/crm_contract/{currentContract.id}',
               },
             },
