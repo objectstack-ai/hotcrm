@@ -288,6 +288,41 @@ export const OpportunityViews = defineView({
       sort: [{ field: 'stage_entry_date', order: 'asc' }, { field: 'close_date', order: 'asc' }],
     },
 
+    /**
+     * Tender expected this quarter — REQ-0006 acceptance 2 in one view.
+     *
+     * The point of the view is the predicate: it windows
+     * `expected_tender_date`, the CUSTOMER's procurement calendar, and touches
+     * `close_date` nowhere — which is what "reportable independently of
+     * `close_date`" means and what a single forecast date could never express.
+     *
+     * Same inclusive `{current_quarter_*}` bounds as `closing_this_quarter`
+     * below, exact for the same measured reason: both bounds are date macros
+     * resolved server-side, and `expected_tender_date` is a `Field.date()`
+     * stored as `YYYY-MM-DD` TEXT, so the inclusive upper bound drops no rows.
+     */
+    tender_this_quarter: {
+      name: 'tender_this_quarter',
+      type: 'grid',
+      label: 'Tender This Quarter',
+      data: { provider: 'object', object: 'crm_opportunity' },
+      columns: ['name', 'crm_account', 'expected_tender_date', 'expected_tender_amount', 'expected_signing_date', 'stage', 'owner_id'],
+      filter: [
+        { field: 'stage', operator: 'not_in', value: ['closed_won', 'closed_lost'] },
+        { field: 'expected_tender_date', operator: 'greater_than_or_equal', value: '{current_quarter_start}' },
+        { field: 'expected_tender_date', operator: 'less_than_or_equal', value: '{current_quarter_end}' },
+      ],
+      sort: [{ field: 'expected_tender_date', order: 'asc' }],
+      // Empty is the legitimate state on a fresh install: no seed row carries
+      // a customer-side tender date, so this tab opens on nothing until a rep
+      // records one. Unexplained, that reads as broken.
+      emptyState: {
+        title: 'No Tenders Expected This Quarter',
+        message: 'This tab lists open deals whose customer-side tender date falls inside the current quarter. Record Expected Tender Date on a deal to see it here.',
+        icon: 'calendar-clock',
+      },
+    },
+
     /** Closing this quarter (commit + best_case) — sales-manager forecast */
     closing_this_quarter: {
       name: 'closing_this_quarter',

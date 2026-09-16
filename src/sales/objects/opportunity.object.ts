@@ -30,6 +30,8 @@ export const Opportunity = ObjectSchema.create({
     { key: 'basic',       label: 'Basic Information',   icon: 'dollar-sign' },
     { key: 'financials',  label: 'Financials',          icon: 'trending-up' },
     { key: 'sales_process', label: 'Sales Process',     icon: 'target' },
+    { key: 'qualification', label: 'Qualification',     icon: 'filter' },
+    { key: 'narrative',   label: 'Deal Narrative',      icon: 'book-open' },
     { key: 'classification', label: 'Classification',   icon: 'tag' },
     { key: 'campaign', label: 'Campaigns', icon: 'flag', collapse: 'collapsed' },
     { key: 'notes',       label: 'Notes & Next Steps',  icon: 'file-text' },
@@ -94,6 +96,75 @@ export const Opportunity = ObjectSchema.create({
       group: 'financials',
     }),
 
+    // ─── Qualification (REQ-0006 step 8) ───────────────────────────────
+    //
+    // The standard triage vocabulary of a seller that cannot pursue every
+    // deal. `forecast_category` answers a different question — it is the
+    // forecast roll-up bucket, derived from `stage` — so none of this is
+    // folded into it. GENERIC values only: a customer's own grading scale is
+    // overlay configuration (REQ-0006 acceptance 5).
+    //
+    // ⚠️ `pnpm validate` reports the fields in this block, in the narrative
+    // block below, and the customer-side dates as "carrier-only — declared
+    // but nothing in this stack reads or displays it", and that reading is
+    // EXPECTED here rather than a defect to tidy away. The liveness
+    // diagnostic counts view columns, form sections, page bindings, flow
+    // nodes, formulas, hooks and actions as sites; it does NOT count
+    // `fieldGroups` membership, which is precisely the DERIVED layout
+    // REQ-0006 acceptance 1 asks for. ⛔ Do NOT answer the warning by
+    // authoring a `record:details` section — that is the escape hatch
+    // AGENTS.md reserves for a named customer demand, and it would trade
+    // acceptance 1 for a quieter log. `crm_account`'s business-profile block
+    // carries the same verdict on `main` for the same reason (#1948).
+    will_bid: Field.boolean({
+      label: 'Will Bid',
+      description: 'Whether we intend to bid. Unset means the decision is open.',
+      group: 'qualification',
+    }),
+
+    controllability: Field.select({
+      label: 'Controllability',
+      group: 'qualification',
+      options: [
+        { label: 'High', value: 'high' },
+        { label: 'Medium', value: 'medium' },
+        { label: 'Low', value: 'low' },
+      ],
+    }),
+
+    priority: Field.select({
+      label: 'Priority',
+      group: 'qualification',
+      options: [
+        { label: 'High', value: 'high' },
+        { label: 'Medium', value: 'medium' },
+        { label: 'Low', value: 'low' },
+      ],
+    }),
+
+    deal_level: Field.select({
+      label: 'Deal Level',
+      group: 'qualification',
+      options: [
+        { label: 'Strategic', value: 'strategic' },
+        { label: 'Key', value: 'key' },
+        { label: 'Standard', value: 'standard' },
+      ],
+    }),
+
+    // The FACT of subcontracting is generic and belongs in core; the
+    // customer's supplier list is not and is not proposed here.
+    is_subcontracted: Field.boolean({
+      label: 'Involves Subcontracting',
+      defaultValue: false,
+      group: 'qualification',
+    }),
+
+    subcontracting_note: Field.textarea({
+      label: 'Subcontracting Note',
+      group: 'qualification',
+    }),
+
     // Sales Process
     stage: Field.select({
       label: 'Stage',
@@ -145,6 +216,42 @@ export const Opportunity = ObjectSchema.create({
       group: 'sales_process',
     }),
 
+    // ─── The customer's own procurement calendar (REQ-0006 step 8) ─────
+    //
+    // ⛔ Never folded into `close_date`: that is a single date and it is OUR
+    // expected close. These are three distinct BUYER-side events, and
+    // REQ-0006 acceptance 2 requires them to be reportable independently of
+    // the forecast close date — see the `tender_this_quarter` list view,
+    // which predicates on `expected_tender_date` alone.
+    customer_initiation_date: Field.date({
+      label: 'Customer Initiation Date',
+      group: 'sales_process',
+    }),
+
+    expected_tender_date: Field.date({
+      label: 'Expected Tender Date',
+      group: 'sales_process',
+    }),
+
+    expected_signing_date: Field.date({
+      label: 'Expected Signing Date',
+      group: 'sales_process',
+    }),
+
+    expected_tender_amount: Field.currency({
+      label: 'Expected Tender Amount',
+      scale: 2,
+      min: 0,
+      group: 'sales_process',
+    }),
+
+    expected_signing_amount: Field.currency({
+      label: 'Expected Signing Amount',
+      scale: 2,
+      min: 0,
+      group: 'sales_process',
+    }),
+
     // Additional Classification
     type: Field.select({
       label: 'Opportunity Type',
@@ -155,6 +262,22 @@ export const Opportunity = ObjectSchema.create({
         { label: 'Existing Customer - Renewal', value: 'existing_renewal' },
         { label: 'Existing Customer - Expansion', value: 'existing_expansion' },
       ]
+    }),
+
+    // ⛔ BESIDE `type`, never replacing or overloading it: `type`'s four
+    // values are a RELATIONSHIP taxonomy that `opportunity.hook.ts` and
+    // reporting read. Generic delivery-model values only — the customer's own
+    // line-of-business list is overlay (REQ-0006 acceptance 5).
+    business_line: Field.select({
+      label: 'Business Line',
+      group: 'classification',
+      options: [
+        { label: 'Product', value: 'product' },
+        { label: 'Professional Services', value: 'services' },
+        { label: 'Consulting', value: 'consulting' },
+        { label: 'Support & Maintenance', value: 'support' },
+        { label: 'Other', value: 'other' },
+      ],
     }),
 
     lead_source: Field.select({
@@ -208,6 +331,37 @@ export const Opportunity = ObjectSchema.create({
     next_step: Field.textarea({
       label: 'Next Steps',
       group: 'notes',
+    }),
+
+    // ─── Deal narrative (REQ-0006 step 10) ─────────────────────────────
+    //
+    // The standard deal-review narrative, split out of `description` so each
+    // part is reviewable, templatable and (later) reportable on its own —
+    // ⛔ not more prose crammed into one markdown field.
+    //
+    // ⚠️ `payment_terms` is PROSE here and a select on `crm_quote` /
+    // `crm_contract`: what a rep records mid-pursuit is the shape of a term
+    // still being negotiated, not the net-terms ladder a signed document
+    // carries. ⛔ Do not "unify" it onto PAYMENT_TERMS_OPTIONS — that would
+    // force a half-agreed term into a closed vocabulary.
+    customer_background: Field.markdown({
+      label: 'Customer Background',
+      group: 'narrative',
+    }),
+
+    project_background: Field.markdown({
+      label: 'Project Background',
+      group: 'narrative',
+    }),
+
+    risk_analysis: Field.markdown({
+      label: 'Risk Analysis',
+      group: 'narrative',
+    }),
+
+    payment_terms: Field.textarea({
+      label: 'Payment Terms',
+      group: 'narrative',
     }),
 
     // Flags
@@ -269,6 +423,64 @@ export const Opportunity = ObjectSchema.create({
       label: 'Approved Date',
       group: 'sales_process',
       readonly: true,
+    }),
+
+    // ─── The status-change gate's switch AND its verdict column ────────
+    //
+    // ⚠️ This `defaultValue` IS the switch, and shipped it is `not_required`,
+    // so the gate is OFF by default — REQ-0006 acceptance 3: "with it off
+    // (the default), the existing amount-tiered behaviour of
+    // `opportunity-approval.flow.ts` is bit-for-bit what it is today". No
+    // record is ever born `pending`, `opportunity_status_change_approval`'s
+    // start condition is false for every row that has ever existed, and
+    // nothing about the amount-tiered flow changes. An install ARMS the gate
+    // by changing this one value to `'pending'`.
+    //
+    // ⛔ Not the flow's `status`, for the reason
+    // `lead-conversion-approval.flow.ts` records and measured: `draft` still
+    // fires its triggers, and `obsolete` composes with the installation's
+    // activation ledger into a gate no install can ever turn ON.
+    //
+    // ⚠️ Deliberately NOT `approval_status`. That column is the amount-tiered
+    // flow's, and sharing it would make either gate's verdict erase the
+    // other's — and re-trigger the amount flow, whose entry condition keys on
+    // `approval_status == "not_required"`.
+    //
+    // `readonly: true` on the same audited grounds as `approval_status`
+    // (#1666): the only writers are the gate's own `runAs: 'system'` flow and
+    // the insert default, and both survive the readonly strip.
+    // What the rep is ASKING for, ⛔ never the stage itself: REQ-0006
+    // acceptance 3 requires the stage not to move until the request is
+    // decided, and a `record_change` flow binds an AFTER hook — by the time it
+    // runs, a stage the rep wrote has already moved. So the rep writes the
+    // request here (with the win/loss reason), and the approved decision
+    // writes `stage` — the customer's own step 14, 「通过后商机状态正式生效」.
+    //
+    // Values ARE the two stage values, so the flow's approve branch can apply
+    // it with `stage: '{oppRecord.requested_status}'` and no mapping table can
+    // drift. Not readonly: this is the one half of the gate a person writes.
+    // Inert while the gate is off — nothing reads it unless the install arms
+    // `status_change_approval_status`.
+    requested_status: Field.select({
+      label: 'Requested Status',
+      group: 'sales_process',
+      options: [
+        { label: 'Won', value: 'closed_won' },
+        { label: 'Lost', value: 'closed_lost' },
+      ],
+    }),
+
+    status_change_approval_status: Field.select({
+      label: 'Status Change Approval',
+      group: 'sales_process',
+      readonly: true,
+      defaultValue: 'not_required',
+      options: [
+        { label: 'Not Required', value: 'not_required', default: true },
+        { label: 'Pending', value: 'pending', color: '#FFA500' },
+        { label: 'Approved', value: 'approved', color: '#00AA00' },
+        { label: 'Rejected', value: 'rejected', color: '#FF0000' },
+      ],
     }),
 
     // ─── Win / Loss analysis ───────────────────────────────────────────

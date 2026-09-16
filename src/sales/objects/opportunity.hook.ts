@@ -89,7 +89,16 @@ const opportunityValidationHook: Hook = {
     // readonly declaration is what keeps a hand-edit out. Measured in
     // `test/readonly-write-semantics.test.ts` and pinned for these two columns
     // in `test/audit-stamp-readonly.test.ts`.
-    const APPROVAL_FIELDS = new Set(['approval_status', 'approved_date']);
+    // `status_change_approval_status` and `requested_status` join the
+    // allow-list for the same reason and by the same mechanism: the REQ-0006
+    // gate's flow stamps its verdict and clears the request AFTER the deal has
+    // reached a closed stage, and elevation is not anonymity — the freeze
+    // guard below would judge those writes as user edits on a closed record
+    // and re-lock an in-flight approval.
+    const APPROVAL_FIELDS = new Set([
+      'approval_status', 'approved_date',
+      'status_change_approval_status', 'requested_status',
+    ]);
     // Stage → forecast category.
     const STAGE_FORECAST: Record<string, string> = {
       prospecting: 'pipeline',
@@ -103,6 +112,34 @@ const opportunityValidationHook: Hook = {
 
     const { event, input } = ctx;
     const previous = ctx.previous;
+
+    // ─── Status-change gate (REQ-0006 steps 13-14) ──────────────────────
+    //
+    // A TRANSITION GATE, not an invariant (AGENTS.md metadata semantics rule
+    // 7): it refuses the next move, and every deal already sitting in a closed
+    // stage keeps it. Inert unless the install arms the gate — shipped,
+    // `status_change_approval_status` defaults to `not_required` and this
+    // condition is false for every record that has ever existed, which is what
+    // keeps REQ-0006 acceptance 3's "bit-for-bit what it is today" true.
+    //
+    // ⚠️ The gate value is read INPUT-FIRST, and that is load-bearing. The
+    // approving flow writes `stage` and `status_change_approval_status:
+    // 'approved'` in ONE payload; reading `previous` first would see `pending`
+    // and refuse the flow's own write. `runAs: 'system'` does not help —
+    // elevation is not anonymity, so `ctx.user?.id` is present in that run
+    // exactly as the APPROVAL_FIELDS note above records.
+    if (event === 'beforeUpdate' && previous && ctx.user?.id) {
+      const gate = (input.status_change_approval_status ?? previous.status_change_approval_status) as string | undefined;
+      const next = input.stage as string | undefined;
+      const closing = (next === 'closed_won' || next === 'closed_lost') && next !== previous.stage;
+      if (closing && gate === 'pending') {
+        throw refuse(
+          'This deal\'s status change needs approval: set Requested Status (and the win/loss reason) instead. The stage takes effect when the request is approved.',
+          'APPROVAL_REQUIRED',
+          409,
+        );
+      }
+    }
 
     // Freeze closed opportunities — but guard ONLY genuine USER edits. A write
     // with no authenticated user (`ctx.user?.id` absent) is a system / seed /
