@@ -90,6 +90,8 @@ const RUNTIME_TEST_FILES = [
   // agree about what OFF means, and the evidence is only legible with all four
   // side by side. `lead_conversion_approval`'s own runtime evidence is its
   // start condition driven through the real engine there.
+  'account-approval-gate.test.ts',
+  'opportunity-account-capability-gate.test.ts',
   'lead-conversion-approval-gate.test.ts',
 ];
 

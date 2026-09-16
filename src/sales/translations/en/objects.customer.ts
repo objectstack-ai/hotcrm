@@ -24,6 +24,26 @@ export const customer: Record<string, ObjectTranslationData> = {
     pluralLabel: 'Accounts',
     fields: {
       account_number: { label: 'Account Number' },
+      registration_number: {
+        label: 'Registration Number',
+        help: "The counterparty's registered identity as issued by its own government registry. Not the Account Number, which we issue.",
+      },
+      commercial_capability: {
+        label: 'Commercial Capability',
+        help: 'Whether new business may be opened against this account. Settlement Only accounts stay usable for billing and payment, but no new opportunity may be linked to them.',
+        options: { full: 'Full', settlement_only: 'Settlement Only' },
+      },
+      incumbent_vendor: { label: 'Incumbent Vendor', help: 'The supplier currently holding this account for the spend we are chasing.' },
+      annual_purchasing_budget: { label: 'Annual Purchasing Budget', help: 'What this account expects to spend with vendors this year — not its own revenue.' },
+      payment_cycle: {
+        label: 'Payment Cycle',
+        options: { prepaid: 'Prepaid', net_30: 'Net 30', net_60: 'Net 60', net_90: 'Net 90' },
+      },
+      approval_status: {
+        label: 'Approval Status',
+        help: 'Where this account stands in its sign-off. A new account starts Pending and is decided in the approval inbox.',
+        options: { pending: 'Pending', approved: 'Approved', rejected: 'Rejected' },
+      },
       name: { label: 'Account Name', help: 'Legal name of the company or organization' },
       type: {
         label: 'Type',
@@ -92,6 +112,7 @@ export const customer: Record<string, ObjectTranslationData> = {
     _sections: {
       basic: { label: 'Basic Information' },
       financials: { label: 'Financials' },
+      business_profile: { label: 'Business Profile' },
       contact_info: { label: 'Contact Information' },
       ownership: { label: 'Ownership & Status' },
       branding: { label: 'Branding' },
