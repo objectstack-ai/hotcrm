@@ -20,8 +20,9 @@
 >
 > <sub>Measured, not estimated: `node scripts/check-source-token-ratchet.mjs`
 > prints both figures and CI fails when either grows past its committed ceiling.
-> It also prints a reading for each of the four packages, so a per-module budget
-> has real starting figures. Comments and blank lines are stripped; translations
+> Every package carries its own three ceilings — business semantics, interaction
+> layer and authored total — so a module cannot spend headroom another one is not
+> using. Comments and blank lines are stripped; translations
 > and seed data are outside the count — a fifth locale is not business
 > logic.</sub>
 

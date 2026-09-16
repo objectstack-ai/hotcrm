@@ -27,22 +27,63 @@
  *
  *   「所以应该先分拆基础的crm, 比如 sales 和 support， token 门禁： 放到 sales」
  *
- * ## The scope is `src/sales/`, not the whole tree (ADR-0130, plan item 8)
+ * and 2026-09-16, which turned the one ceilinged package into four (#1928):
+ *
+ *   「1928 门禁 改为 多 sales 模块的门禁」
+ *
+ * ## Every package under `src/` carries its own ceilings (ADR-0130 §4)
  *
  * Since the module split a directory under `src/` IS a package: `src/sales/`
  * is the `type: 'app'` package a customer installs, and `src/service/`,
- * `src/revenue/` and `src/marketing/` are modules. The claim this gate exists
- * to hold — ADR-0130 §1.3(b), *a CRM sales module fits whole in an AI context
- * window* — is a claim about the package a customer actually installs, so that
- * is what carries the ceilings. The other three are MEASURED and printed, with
- * no ceiling, so a per-module budget (ADR-0130 §4) has its starting figures.
+ * `src/revenue/` and `src/marketing/` are modules. Until #1928 only `src/sales/`
+ * carried ceilings and the other three were MEASURED and printed with none,
+ * explicitly so that the per-module budget ADR-0130 §4 promises would have its
+ * starting figures. Those figures are what #1928 spends: each package now
+ * carries its own `business semantics`, `interaction layer` and `authored
+ * total` ceiling, anchored from its own reading by the same `anchor()` rule.
  *
- * So the ratcheted surface is `src/sales/**\/*.ts` (excluding `.d.ts`),
- * **minus** `src/sales/translations/` and `src/sales/data/`, comment-stripped
- * and blank-stripped, reported as two headline layers plus the authored total:
+ * ⚠️ That is FOUR independent gates, not one gate with a wider surface. A
+ * module growing past its own ceiling reddens THAT module and leaves the other
+ * three green, which is the whole point of a per-module budget: `src/marketing/`
+ * cannot spend headroom that `src/sales/` is not using, and a sales feature
+ * cannot be paid for by a quiet module. A single summed ceiling would have let
+ * either happen while staying green, which is the state this card ended.
  *
- *   - **business semantics** — `src/sales/objects/` `src/sales/flows/` `src/sales/actions/`
- *   - **interaction layer**  — `src/sales/views/` `src/sales/pages/` `src/sales/dashboards/` `src/sales/apps/`
+ * `src/sales/` keeps one thing the modules do not: it is the package the README
+ * banner is about, so its three ceilings are the ones {@link CEILINGS} exposes
+ * under a bare label for `test/docs-readme-token-figures.test.ts` to read. The
+ * claim — ADR-0130 §1.3(b), *a CRM sales module fits whole in an AI context
+ * window* — is a claim about the package a customer actually installs, and
+ * nothing here widens it to the other three.
+ *
+ * ## The package roster is READ OFF DISK, never listed here
+ *
+ * A directory under `src/` is a package when it carries an `objects/`
+ * directory — the same predicate, in the same words, that
+ * `test/helpers/src-roster.ts` and `test/docs-src-tree-paths.test.ts` use. That
+ * is deliberate and it is the lesson of #1940: the roster there was a
+ * hand-kept four-element list, a fifth package landing on disk was invisible to
+ * it, and every sweep built on it went blind in silence. A ratchet is worse
+ * again — a package missing from a hand-written array is a package with no
+ * ceiling at all, which reads exactly like a package under its ceiling.
+ *
+ * `src/docs/` falls out of the predicate rather than out of an exception list:
+ * it is the platform's ADR-0046 in-product documentation path, four `.md` files
+ * and no `objects/`, so it is not a package here and owes no ceiling. It is not
+ * named anywhere below, which is the point — a hand-kept exception list is the
+ * thing that just failed.
+ *
+ * So the ratcheted surface is `src/<package>/**\/*.ts` (excluding `.d.ts`),
+ * **minus** that package's `translations/` and `data/`, comment-stripped and
+ * blank-stripped, reported as two headline layers plus the authored total:
+ *
+ *   - **business semantics** — `objects/` `flows/` `actions/`
+ *   - **interaction layer**  — `views/` `pages/` `dashboards/` `apps/`
+ *
+ * The layers are keyed by SUBDIRECTORY NAME, so the same two layers read on
+ * every package. A package that holds none of a layer's directories owes no
+ * ceiling for that layer and is not measured for it; a package that holds one
+ * and measures zero is RED, exactly as before.
  *
  * `src/hooks/` is gone from the business layer and nothing was dropped with
  * it: a `*.hook.ts` now sits beside the `*.object.ts` it names (that
@@ -54,11 +95,12 @@
  * compete with business logic for the budget. They are not measured, not
  * ratcheted, and not reported as debt.
  *
- * The remaining authored directories of the sales package (datasets, reports,
+ * The remaining authored directories of a package (datasets, reports,
  * profiles, sharing, skills, mappings, interfaces, …) are not a headline layer
- * — they are printed as a residual and carried in the authored total, which
- * has its own ceiling. Nothing under `src/sales/` can therefore grow unwatched
- * by hiding in a directory that predates or postdates the two headline layers.
+ * — they are printed as that package's residual and carried in its authored
+ * total, which has its own ceiling. Nothing under a package can therefore grow
+ * unwatched by hiding in a directory that predates or postdates the two
+ * headline layers.
  *
  * Because the measure is **comment-stripped**, comment-slimming work (#1184)
  * does not move these numbers. That is deliberate: comments are for the humans
@@ -159,50 +201,156 @@ const ROOT = fileURLToPath(new URL('..', import.meta.url));
 /** Directories that never contain first-party source. */
 const SKIP_DIRS = new Set(['node_modules', 'dist', '.next', '.source', '.objectstack', '.git']);
 
-/**
- * The package directories under `src/` — the app package first.
- *
- * Exported because `test/source-token-ratchet.test.ts` materialises this
- * gate's surface in a sandbox and has to know it: one producer, as with
- * `scripts/lib/source-hygiene-surface.mjs` next door. A directory added here
- * is measured and printed; only {@link SCOPE} carries ceilings.
- */
-export const PACKAGE_DIRS = ['src/sales', 'src/service', 'src/revenue', 'src/marketing'];
+/** Where the packages live. One segment, so the roster below can be derived. */
+const SRC = 'src';
 
-/** The package the ceilings are about: 「token 门禁： 放到 sales」. */
-export const SCOPE = PACKAGE_DIRS[0];
+/**
+ * The app package — the one the README banner and ADR-0130 §1.3(b) are about.
+ *
+ * The ONE package this file names, and it is named because a ruling names it:
+ * 「token 门禁： 放到 sales」. It is not a roster and it is not an
+ * exception — `src/sales/` carries ceilings exactly like every other package
+ * does. What it carries additionally is the README's headline claim, which is
+ * why {@link CEILINGS} exposes its three ceilings under a bare label.
+ *
+ * {@link collect} refuses to run if this is not one of the derived packages,
+ * rather than quietly measuring a headline surface that moved.
+ */
+export const SCOPE = `${SRC}/sales`;
+
+/** True when `<dir>/objects` is a directory. The package predicate, once. */
+const holdsObjects = (dir) => {
+  try {
+    return statSync(join(ROOT, dir, 'objects')).isDirectory();
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * The package directories under `src/`, READ OFF DISK — the app package first,
+ * then the rest alphabetically so the printed order is deterministic.
+ *
+ * A directory under `src/` is a package when it carries an `objects/`
+ * directory. Same predicate, same words, as `test/helpers/src-roster.ts` and
+ * `test/docs-src-tree-paths.test.ts`, and derived for the reason #1940 gives:
+ * the roster there WAS a hand-kept four-element list, a fifth package landing
+ * on disk was invisible to it, and every app-wide sweep built on it went blind
+ * in silence. Here the same list would be worse — a package missing from a
+ * hand-written array is a package with NO CEILING, and an unratcheted package
+ * reads exactly like a package under its ceiling.
+ *
+ * `src/docs/` is out by the predicate, not by an exception: ADR-0046's
+ * in-product documentation path holds four `.md` files and no `objects/`. It is
+ * named nowhere in this file, because a hand-kept exception list is the thing
+ * that just failed.
+ *
+ * Exported because `test/source-token-ratchet.test.ts` materialises this gate's
+ * surface in a sandbox and has to know it: one producer, as with
+ * `scripts/lib/source-hygiene-surface.mjs` next door.
+ */
+export const PACKAGE_DIRS = (() => {
+  let entries = [];
+  try {
+    entries = readdirSync(join(ROOT, SRC), { withFileTypes: true });
+  } catch {
+    entries = []; // no src/ at all — collect() turns that into a loud failure
+  }
+  const found = entries
+    .filter((entry) => entry.isDirectory() && !SKIP_DIRS.has(entry.name))
+    .map((entry) => `${SRC}/${entry.name}`)
+    .filter(holdsObjects)
+    .sort();
+  return [...found.filter((dir) => dir === SCOPE), ...found.filter((dir) => dir !== SCOPE)];
+})();
 
 /**
  * Outside the ratchet by maintainer ruling — not measured at all.
  * 「translations + seed 肯定是不需要算 token 的」
  *
- * Named per package, not by a trailing-segment match on `data`: an exclusion
- * that matched that segment anywhere would quietly grow to cover a directory a
- * future package happens to name the same, and this list is the ruling's whole
- * content.
+ * The ruling's whole content is these two directory names. They are resolved
+ * against each package ROOT — `<package>/translations`, `<package>/data` — and
+ * never by a trailing-segment match: an exclusion that matched `data` anywhere
+ * would quietly grow to cover `objects/data/` the day someone writes one, which
+ * is a different rule from the one that was ruled.
  */
-export const EXCLUDED = [
-  'src/sales/translations',
-  'src/sales/data',
-  'src/service/data',
-  'src/revenue/data',
-  'src/marketing/data',
-];
+export const EXCLUDED_DIR_NAMES = ['translations', 'data'];
 
-/** The two headline layers, in the order the README card (#1187) cites them. */
+/**
+ * Those two names, resolved against every package that actually has one.
+ *
+ * Derived rather than listed for the roster's own reason, and filtered to what
+ * exists so the printed line names real directories: a package with no locale
+ * pack excludes nothing, which is the correct reading of the ruling rather
+ * than a gap in it.
+ */
+export const EXCLUDED = PACKAGE_DIRS.flatMap((dir) =>
+  EXCLUDED_DIR_NAMES.map((name) => `${dir}/${name}`).filter((sub) => {
+    try {
+      return statSync(join(ROOT, sub)).isDirectory();
+    } catch {
+      return false;
+    }
+  }),
+);
+
+/**
+ * The two headline layers, in the order the README card (#1187) cites them.
+ *
+ * `dirs` holds SUBDIRECTORY NAMES, not paths. That is what makes the same two
+ * layers read on every package rather than on one — before #1928 the names
+ * were reconstructed by slicing {@link SCOPE} off a path list, which only
+ * worked because there was exactly one ceilinged package to slice against.
+ */
 export const LAYERS = [
   {
     key: 'business',
     label: 'business semantics',
     // `src/hooks` is not missing — a `*.hook.ts` sits beside its `*.object.ts`
     // since the ADR-0130 layout, so hooks are counted inside `objects/`.
-    dirs: [`${SCOPE}/objects`, `${SCOPE}/flows`, `${SCOPE}/actions`],
+    dirs: ['objects', 'flows', 'actions'],
   },
   {
     key: 'interaction',
     label: 'interaction layer',
-    dirs: [`${SCOPE}/views`, `${SCOPE}/pages`, `${SCOPE}/dashboards`, `${SCOPE}/apps`],
+    dirs: ['views', 'pages', 'dashboards', 'apps'],
   },
+];
+
+/** The label of the per-package total — a ceilinged row, like the two layers. */
+export const TOTAL_LABEL = 'authored total';
+
+/** The residual row: printed, carried by the total, deliberately un-ceilinged. */
+const RESIDUAL_LABEL = 'other authored metadata';
+
+/** A layer's directories under one package, as repo-relative paths. */
+export const layerDirs = (dir, layer) => layer.dirs.map((name) => `${dir}/${name}`);
+
+/** True when the package holds at least one of the layer's directories. */
+const layerPresent = (dir, layer) =>
+  layerDirs(dir, layer).some((sub) => {
+    try {
+      return statSync(join(ROOT, sub)).isDirectory();
+    } catch {
+      return false;
+    }
+  });
+
+/**
+ * The ceilings a package OWES, derived from what it holds on disk.
+ *
+ * A package with no `views/ pages/ dashboards/ apps/` at all authors no
+ * interaction metadata, so an interaction ceiling for it would be a ceiling of
+ * zero over a reading of zero — a row that can only ever be red or vacuous.
+ * It owes none. A package that holds one of those directories and measures
+ * zero is a different thing entirely, and {@link verdict} still calls it red.
+ *
+ * The authored total is owed by every package, because the roster predicate is
+ * `objects/`: a package always authors something.
+ */
+export const requiredCeilings = (dir) => [
+  ...LAYERS.filter((layer) => layerPresent(dir, layer)).map((layer) => layer.label),
+  TOTAL_LABEL,
 ];
 
 /**
@@ -234,53 +382,78 @@ export const anchor = (tokens) => Math.ceil((tokens * (1 + BUFFER)) / 1000) * 10
  * so there is no `anchor()` arithmetic to show for it and no worked row that
  * could honestly be written: the only record it can carry is the ruling.
  *
- * ## 2026-09-14 — the scope moved to `src/sales/`, and all three re-anchored
+ * ## 2026-09-16 — one ceilinged package became four, and all twelve anchored
  *
  * The ruling that authorises this, verbatim and untranslated:
  *
- *   「所以应该先分拆基础的crm, 比如 sales 和 support， token 门禁： 放到 sales」
+ *   「1928 门禁 改为 多 sales 模块的门禁」
  *
- * The three committed ceilings measured the WHOLE tree. Scoping the gate to
- * the sales package retires all three: a ceiling is a number about a surface,
- * and this is a different surface, so the old numbers are not tightened or
- * loosened — they stop applying. Each leaves with a worked row below.
+ * Before #1928 three ceilings measured `src/sales/` and the other three
+ * packages were printed with none. This card spends the starting figures that
+ * printing existed to produce: twelve ceilings, three per package, each
+ * `anchor()` of that package's own reading.
  *
- * `business semantics` needs that ruling for a second reason. It was a RULED
- * ceiling (#1601, 「business-semantics 棘轮 提升到 100000」) and a ruled
- * ceiling is symmetric: LOWERING one requires a maintainer ruling quoted in
- * the lowering PR's body, exactly as raising it does. The ruling above is that
- * ruling — it is what puts the gate on sales — and the layout PR quotes it.
- * With the scope moved there is no reading the 100,000 grant could still be
- * about, so the layer returns to the ANCHORED kind, derived like its two
- * siblings from the reading the move produced.
+ * Nine of the twelve are a package's FIRST ceiling, which is an anchoring and
+ * not a raise — there was no committed number to move. The three that already
+ * existed are `src/sales/`'s, and two of them move UP as the re-anchoring
+ * carries them onto today's reading (53,000 -> 55,000 and 97,000 -> 100,000),
+ * which is why the ruling above is quoted: a raise needs one, and it is the
+ * same ruling that makes the gate per-module. `src/sales/`'s interaction
+ * ceiling re-anchors onto exactly the 31,000 it already carried —
+ * `anchor(29,477) = 31,000` — which is the proof, on this repository's own
+ * numbers, that the rule applied to the other eleven rows is the rule that set
+ * the committed one, not a new one invented for this card.
  *
- * The anchoring run all three ceilings below come from:
+ * The anchoring run all twelve ceilings below come from:
  *
- *   node scripts/check-source-token-ratchet.mjs   # 2026-09-14 09:40 UTC, `claude/issue-1905-package-directory-layout` at ffeab37
- *     #1905 — the ADR-0130 layout move: every authored file into its package directory
- *     business semantics ~49,978 · interaction layer ~29,344 · authored total ~91,910
+ *   node scripts/check-source-token-ratchet.mjs   # 2026-09-16 00:00 UTC, `origin/main` at 4d7ae9f
+ *     #1928 — the per-module budget: the readings the pre-#1928 gate printed per package
+ *     src/sales      business semantics ~52,379 · interaction layer ~29,477 · authored total ~94,445
+ *     src/service    business semantics ~12,646 · interaction layer ~6,228 · authored total ~20,423
+ *     src/revenue    business semantics ~15,196 · interaction layer ~2,136 · authored total ~17,485
+ *     src/marketing  business semantics ~8,001 · interaction layer ~876 · authored total ~9,096
  *
- *   business semantics   49,978 × 1.05 =  52,477 -> ceil 1k ->  53,000  (headroom 3,022, 6.0%)  2026-09-14
- *   interaction layer    29,344 × 1.05 =  30,811 -> ceil 1k ->  31,000  (headroom 1,656, 5.6%)  2026-09-14
- *   authored total       91,910 × 1.05 =  96,506 -> ceil 1k ->  97,000  (headroom 5,090, 5.5%)  2026-09-14
+ *   src/sales      business semantics   52,379 × 1.05 =  54,998 -> ceil 1k ->  55,000  (headroom 2,621, 5.0%)  2026-09-16
+ *   src/sales      interaction layer    29,477 × 1.05 =  30,951 -> ceil 1k ->  31,000  (headroom 1,523, 5.2%)  2026-09-16
+ *   src/sales      authored total       94,445 × 1.05 =  99,167 -> ceil 1k -> 100,000  (headroom 5,555, 5.9%)  2026-09-16
+ *   src/service    business semantics   12,646 × 1.05 =  13,278 -> ceil 1k ->  14,000  (headroom 1,354, 10.7%)  2026-09-16
+ *   src/service    interaction layer     6,228 × 1.05 =   6,539 -> ceil 1k ->   7,000  (headroom 772, 12.4%)  2026-09-16
+ *   src/service    authored total       20,423 × 1.05 =  21,444 -> ceil 1k ->  22,000  (headroom 1,577, 7.7%)  2026-09-16
+ *   src/revenue    business semantics   15,196 × 1.05 =  15,956 -> ceil 1k ->  16,000  (headroom 804, 5.3%)  2026-09-16
+ *   src/revenue    interaction layer     2,136 × 1.05 =   2,243 -> ceil 1k ->   3,000  (headroom 864, 40.4%)  2026-09-16
+ *   src/revenue    authored total       17,485 × 1.05 =  18,359 -> ceil 1k ->  19,000  (headroom 1,515, 8.7%)  2026-09-16
+ *   src/marketing  business semantics    8,001 × 1.05 =   8,401 -> ceil 1k ->   9,000  (headroom 999, 12.5%)  2026-09-16
+ *   src/marketing  interaction layer       876 × 1.05 =     920 -> ceil 1k ->   1,000  (headroom 124, 14.2%)  2026-09-16
+ *   src/marketing  authored total        9,096 × 1.05 =   9,551 -> ceil 1k ->  10,000  (headroom 904, 9.9%)  2026-09-16
  *
  * `headroom` is the headroom **at anchor time** (`ceiling - reading`, on that
  * row's own run): it is a derivation of the constant beside it, not a live
  * figure, so it deliberately does not track what the gate prints today — the
  * tree keeps moving between re-anchorings.
  *
- * The whole-tree ceilings this replaces, with the last reading each was true
- * of, kept as history and as the arithmetic anyone re-deriving the move can
- * check. ⛔ Do not restore one: they measure a surface that no longer exists
- * as a unit.
+ * ⚠️ The small modules carry headroom well past 5% and there is no way around
+ * it: `anchor()` rounds up to the next 1,000, and on a reading of 876 that step
+ * alone is 14%. The rounding is kept anyway — a ceiling a reader can hold in
+ * their head is worth more than the last few hundred tokens of precision on a
+ * number estimated as `chars / 4` — but it is why the re-anchoring advisory
+ * below now asks whether `anchor()` would commit a LOWER number, not merely
+ * whether the headroom is large. On a freshly anchored small module the answer
+ * is no, and an advisory that fired there would print, on a clean run, an
+ * instruction to re-commit the number the file already carries.
  *
- *   business semantics   ruled 100,000 — a maintainer grant (#1601); last whole-tree reading ~84,579
- *   interaction layer    37,424 × 1.05 =  39,295 -> ceil 1k ->  40,000   2026-08-26 (#1316)
- *   authored total      133,302 × 1.05 = 139,967 -> ceil 1k -> 140,000   2026-08-17 (#1189)
+ * The `src/sales/` ceilings this replaces, kept as history and as the
+ * arithmetic anyone re-deriving the move can check. ⛔ Do not restore one: they
+ * were the whole of this table when one package carried it.
  *
- * The rounding step is what carries the anchored rows a little past 5%; it is
- * kept because a ceiling a reader can hold in their head is worth more than the
- * last few hundred tokens of precision on a number estimated as `chars / 4`.
+ *   src/sales      business semantics   49,978 × 1.05 =  52,477 -> ceil 1k ->  53,000   2026-09-14 (#1905)
+ *   src/sales      interaction layer    29,344 × 1.05 =  30,811 -> ceil 1k ->  31,000   2026-09-14 (#1905)
+ *   src/sales      authored total       91,910 × 1.05 =  96,506 -> ceil 1k ->  97,000   2026-09-14 (#1905)
+ *
+ * and, one surface further back, the whole-tree ceilings #1905 retired:
+ *
+ *   whole tree     business semantics   ruled 100,000 — a maintainer grant (#1601); last reading ~84,579
+ *   whole tree     interaction layer    37,424 × 1.05 =  39,295 -> ceil 1k ->  40,000   2026-08-26 (#1316)
+ *   whole tree     authored total      133,302 × 1.05 = 139,967 -> ceil 1k -> 140,000   2026-08-17 (#1189)
  *
  * ⚠️ The RULED kind is still a kind this gate knows, and `isAnchored()` is
  * still what the opportunistic-tightening advisory asks (#1607). No committed
@@ -298,19 +471,37 @@ export const anchor = (tokens) => Math.ceil((tokens * (1 + BUFFER)) / 1000) * 10
  * one requires a ruling quoted in the lowering PR's body, exactly as raising it
  * does. That is the half no automated suggestion can supply, and the reason
  * this gate stopped offering one.
+ *
+ * COMMITTING A PACKAGE'S FIRST CEILING IS NOT A RAISE. A package that lands on
+ * disk with no row here reddens the gate by name (see {@link collect}); the fix
+ * is to run `--json`, apply `anchor()` to each reading and add its rows, with
+ * no ruling needed, because no committed number moves. ⛔ Do not instead delete
+ * the package from a roster — there is none to delete it from, deliberately.
  */
 const CEILING_KIND = { ANCHORED: 'anchored', RULED: 'ruled' };
 
 /**
- * The committed ceilings: each number, and the kind that says where it came
- * from. One declaration — `CEILINGS` and `CEILING_KINDS` below are both derived
+ * The committed ceilings: the package, the label, the number, and the kind that
+ * says where the number came from. One declaration — every map below is derived
  * from it, so a ceiling cannot carry its number in one table and its kind in
  * another that disagrees.
+ *
+ * Keyed by (package, label) since #1928: `business semantics` is no longer one
+ * ceiling, it is four, and a table keyed by label alone could not hold them.
  */
 const COMMITTED = [
-  { label: 'business semantics', ceiling: 53000, kind: CEILING_KIND.ANCHORED },
-  { label: 'interaction layer', ceiling: 31000, kind: CEILING_KIND.ANCHORED },
-  { label: 'authored total', ceiling: 97000, kind: CEILING_KIND.ANCHORED },
+  { module: 'src/sales', label: 'business semantics', ceiling: 55000, kind: CEILING_KIND.ANCHORED },
+  { module: 'src/sales', label: 'interaction layer', ceiling: 31000, kind: CEILING_KIND.ANCHORED },
+  { module: 'src/sales', label: 'authored total', ceiling: 100000, kind: CEILING_KIND.ANCHORED },
+  { module: 'src/service', label: 'business semantics', ceiling: 14000, kind: CEILING_KIND.ANCHORED },
+  { module: 'src/service', label: 'interaction layer', ceiling: 7000, kind: CEILING_KIND.ANCHORED },
+  { module: 'src/service', label: 'authored total', ceiling: 22000, kind: CEILING_KIND.ANCHORED },
+  { module: 'src/revenue', label: 'business semantics', ceiling: 16000, kind: CEILING_KIND.ANCHORED },
+  { module: 'src/revenue', label: 'interaction layer', ceiling: 3000, kind: CEILING_KIND.ANCHORED },
+  { module: 'src/revenue', label: 'authored total', ceiling: 19000, kind: CEILING_KIND.ANCHORED },
+  { module: 'src/marketing', label: 'business semantics', ceiling: 9000, kind: CEILING_KIND.ANCHORED },
+  { module: 'src/marketing', label: 'interaction layer', ceiling: 1000, kind: CEILING_KIND.ANCHORED },
+  { module: 'src/marketing', label: 'authored total', ceiling: 10000, kind: CEILING_KIND.ANCHORED },
 ];
 
 // Every committed ceiling declares a kind this module recognises. A ceiling
@@ -323,31 +514,59 @@ const COMMITTED = [
 for (const row of COMMITTED) {
   if (!Object.values(CEILING_KIND).includes(row.kind)) {
     throw new Error(
-      `ceiling '${row.label}' declares kind '${row.kind}' — expected one of ` +
+      `ceiling '${row.module} ${row.label}' declares kind '${row.kind}' — expected one of ` +
         `${Object.values(CEILING_KIND).join(', ')}. See the ANCHORED/RULED paragraphs above.`,
     );
   }
 }
 
-/** The committed ceiling per scope label, in the header table's order. */
-export const CEILINGS = new Map(COMMITTED.map((row) => [row.label, row.ceiling]));
+/**
+ * The whole table, in the committed order — the producer every per-package
+ * figure is read from. Exported so `test/source-token-ratchet.test.ts` pins the
+ * header rows against it rather than against a second copy of the numbers.
+ */
+export const COMMITTED_CEILINGS = COMMITTED.map((row) => ({ ...row }));
+
+/** One package's ceiling for one label, or `undefined` if none is committed. */
+export const ceilingFor = (module, label) =>
+  COMMITTED.find((row) => row.module === module && row.label === label)?.ceiling;
+
+/** One package's ceiling KIND for one label, or `undefined` if none. */
+export const kindFor = (module, label) =>
+  COMMITTED.find((row) => row.module === module && row.label === label)?.kind;
 
 /**
- * The kind per scope label — `'anchored'` or `'ruled'`, the distinction #1601
- * introduced and #1607 lifted out of this header's prose into the code, so a
- * reader and a run answer the question the same way.
+ * The APP PACKAGE's committed ceilings, per label, in the header table's order.
+ *
+ * Bare-labelled and {@link SCOPE}-only on purpose: this is what
+ * `test/docs-readme-token-figures.test.ts` reads, and the README banner is a
+ * claim about the package a customer installs — ADR-0130 §1.3(b) — not about
+ * the four summed. ⛔ Do not widen it to the other packages: a doc pin that
+ * silently started reading `src/marketing`'s ceiling would check the banner
+ * against a surface the banner never described.
  */
-export const CEILING_KINDS = new Map(COMMITTED.map((row) => [row.label, row.kind]));
+export const CEILINGS = new Map(
+  COMMITTED.filter((row) => row.module === SCOPE).map((row) => [row.label, row.ceiling]),
+);
+
+/**
+ * The kind per label for the app package — `'anchored'` or `'ruled'`, the
+ * distinction #1601 introduced and #1607 lifted out of this header's prose into
+ * the code, so a reader and a run answer the question the same way.
+ */
+export const CEILING_KINDS = new Map(
+  COMMITTED.filter((row) => row.module === SCOPE).map((row) => [row.label, row.kind]),
+);
 
 /**
  * Is this ceiling derived from a reading this gate printed?
  *
  * The one question the opportunistic-tightening advisory needs to ask before
  * it offers to re-derive a ceiling. False for a maintainer grant, and false
- * for a label that is not a committed ceiling at all — nothing can be
- * re-anchored from a reading it never had.
+ * for a (package, label) that is not a committed ceiling at all — nothing can
+ * be re-anchored from a reading it never had.
  */
-export const isAnchored = (label) => CEILING_KINDS.get(label) === CEILING_KIND.ANCHORED;
+export const isAnchored = (module, label) => kindFor(module, label) === CEILING_KIND.ANCHORED;
 
 /** Recursively collect files under `dir` (repo-relative paths). */
 function walk(dir) {
@@ -529,11 +748,11 @@ export const fmt = (n) => n.toLocaleString('en-US');
 /** `78,123` -> `~78k`, the form the README card and CI summary quote. */
 const headline = (tokens) => `~${Math.round(tokens / 1000)}k`;
 
-/** The metadata-type directories of the RATCHETED package. */
-const scopeDirs = () =>
-  readdirSync(join(ROOT, SCOPE), { withFileTypes: true })
+/** The metadata-type directories a package actually holds, repo-relative. */
+const packageDirs = (dir) =>
+  readdirSync(join(ROOT, dir), { withFileTypes: true })
     .filter((e) => e.isDirectory() && !SKIP_DIRS.has(e.name))
-    .map((e) => `${SCOPE}/${e.name}`);
+    .map((e) => `${dir}/${e.name}`);
 
 /** Authored (= ratchet-visible) files under one directory. */
 const authoredUnder = (dir) =>
@@ -542,96 +761,169 @@ const authoredUnder = (dir) =>
     .filter((f) => !EXCLUDED.some((d) => f.startsWith(`${d}/`)));
 
 /**
- * One informational reading per package directory (ADR-0130 §4).
+ * One package's reading: the two headline layers, the residual, and the total.
  *
- * No ceiling on any of them — only {@link SCOPE} carries those. The point is
- * that a per-module budget has real starting figures the day someone wants to
- * set one, measured by the same estimator on the same stripped surface rather
- * than by a fresh afternoon with `wc`. The two headline layers are printed per
- * package too, because "how much of this module is business logic" is the
- * question a module budget is actually about.
+ * Every row a package owes a ceiling for is produced here, so nothing can be
+ * ceilinged in one place and measured in another. Layer membership is keyed by
+ * SUBDIRECTORY NAME, which is what makes the same two layers read on every
+ * package rather than on the one the paths happened to name.
  */
-function perPackage() {
-  return PACKAGE_DIRS.map((dir) => {
-    const authored = authoredUnder(dir);
-    const layers = LAYERS.map((layer) => {
-      // Layer membership is keyed by SUBDIRECTORY NAME, so the same two
-      // headline layers read on every package, not just on the scoped one.
-      const names = layer.dirs.map((d) => d.slice(SCOPE.length + 1));
-      return {
-        ...layer,
-        ...measure(authored.filter((f) => names.some((n) => f.startsWith(`${dir}/${n}/`)))),
-      };
-    });
-    return { dir, layers, total: measure(authored) };
-  });
-}
-
-function collect() {
-  const missing = [...LAYERS.flatMap((l) => l.dirs), ...EXCLUDED, ...PACKAGE_DIRS].filter((d) => {
-    try {
-      return !statSync(join(ROOT, d)).isDirectory();
-    } catch {
-      return true;
-    }
-  });
-  if (missing.length) {
-    console.error(`✗ source token ratchet: measured director(y|ies) missing: ${missing.join(', ')}`);
-    console.error('  Update LAYERS / EXCLUDED / PACKAGE_DIRS in scripts/check-source-token-ratchet.mjs —');
-    console.error('  a ratchet that measures a tree nobody writes to is worse than no ratchet.');
-    process.exit(1);
-  }
-
-  const all = walk(SCOPE).filter(isTs);
-  const authored = all.filter((f) => !EXCLUDED.some((d) => f.startsWith(`${d}/`)));
+function measurePackage(dir) {
+  const authored = authoredUnder(dir);
   const layered = new Set();
-  const scopes = LAYERS.map((layer) => {
-    const files = authored.filter((f) => layer.dirs.some((d) => f.startsWith(`${d}/`)));
+  const layers = LAYERS.map((layer) => {
+    const prefixes = layerDirs(dir, layer).map((d) => `${d}/`);
+    const files = authored.filter((f) => prefixes.some((prefix) => f.startsWith(prefix)));
     for (const f of files) layered.add(f);
-    return { ...layer, ...measure(files) };
+    return { key: layer.key, label: layer.label, ...measure(files) };
   });
   const residual = measure(authored.filter((f) => !layered.has(f)));
   const total = measure(authored);
-  return {
-    scopes,
-    residual,
-    total,
-    excluded: measure(all.filter((f) => !authored.includes(f))),
-    packages: perPackage(),
-  };
+  const owed = new Set(requiredCeilings(dir));
+  const rows = [
+    ...layers.map((row) => ({ ...row, ceiling: owed.has(row.label) ? ceilingFor(dir, row.label) : undefined })),
+    { key: 'residual', label: RESIDUAL_LABEL, ...residual, ceiling: undefined },
+    { key: 'total', label: TOTAL_LABEL, ...total, ceiling: ceilingFor(dir, TOTAL_LABEL) },
+  ];
+  return { dir, layers, residual, total, rows, owed: [...owed] };
+}
+
+/**
+ * The reasons this gate refuses to run rather than print a number.
+ *
+ * Every one of them is a state in which a reading would be produced and would
+ * be WRONG in the quiet direction — a package with no ceiling reads exactly
+ * like a package under its ceiling, and a layer whose directory names no longer
+ * exist reads exactly like a layer nobody writes to. The empty-scope rule at
+ * the top of this file is the same reflex; these are the shapes #1928 added
+ * with the roster it stopped hand-writing.
+ */
+function refusals() {
+  const problems = [];
+
+  if (PACKAGE_DIRS.length === 0) {
+    problems.push(
+      `no directory under ${SRC}/ carries an objects/ directory, so this ratchet has nothing ` +
+        'to measure and would pass by measuring nothing. Teach the package predicate the new ' +
+        'layout rather than leaving it green over an empty tree.',
+    );
+    return problems; // every check below would be vacuous against an empty roster
+  }
+
+  if (!PACKAGE_DIRS.includes(SCOPE)) {
+    problems.push(
+      `${SCOPE} is not one of the packages on disk (${PACKAGE_DIRS.join(', ')}), and it is the ` +
+        'package the README banner and ADR-0130 §1.3(b) make their claim about. Re-point SCOPE ' +
+        'in the same PR that moves it — a headline claim whose surface moved is not a claim.',
+    );
+  }
+
+  // A layer whose directory names have vanished from EVERY package is a layer
+  // that was renamed under the gate. Each package would then read 0 for it and
+  // owe no ceiling, so nothing else here would notice: the gate would go green
+  // having stopped measuring half the surface.
+  for (const layer of LAYERS) {
+    if (!PACKAGE_DIRS.some((dir) => layerPresent(dir, layer))) {
+      problems.push(
+        `no package holds any '${layer.label}' directory (${layer.dirs.join(', ')}). Either the ` +
+          'metadata-type directories were renamed — re-point LAYERS in the same PR — or this ' +
+          'layer stopped existing, which is a decision to make deliberately rather than by rename.',
+      );
+    }
+  }
+
+  // A package with no ceilings, and a ceiling with no package. Both are silent
+  // on their own: the first is an unratcheted package, the second is a number
+  // guarding a surface that is gone.
+  for (const dir of PACKAGE_DIRS) {
+    const owed = requiredCeilings(dir);
+    const missing = owed.filter((label) => ceilingFor(dir, label) === undefined);
+    if (missing.length) {
+      problems.push(
+        `${dir} carries no committed ceiling for: ${missing.join(', ')}. A package on disk with ` +
+          'no ceiling reads exactly like a package under its ceiling. Run this gate with --json, ' +
+          'apply anchor() to each reading and add the rows to COMMITTED — a package\'s FIRST ' +
+          'ceiling is an anchoring, not a raise, so it needs no ruling.',
+      );
+    }
+  }
+  const onDisk = new Set(PACKAGE_DIRS);
+  for (const row of COMMITTED) {
+    if (!onDisk.has(row.module)) {
+      problems.push(
+        `a ceiling is committed for ${row.module} ('${row.label}'), which is not a package on ` +
+          `disk (${PACKAGE_DIRS.join(', ')}). Drop the row in the PR that removed the package.`,
+      );
+      continue;
+    }
+    if (!requiredCeilings(row.module).includes(row.label)) {
+      problems.push(
+        `a ceiling is committed for ${row.module} '${row.label}', but that package holds none of ` +
+          'the directories that layer measures, so the row can only ever be red or vacuous. ' +
+          'Drop it, or give the package the directories.',
+      );
+    }
+  }
+
+  return problems;
+}
+
+function collect() {
+  const problems = refusals();
+  if (problems.length) {
+    console.error('\u2717 source token ratchet: refusing to run.');
+    for (const problem of problems) console.error(`  • ${problem}`);
+    process.exit(1);
+  }
+
+  const packages = PACKAGE_DIRS.map(measurePackage);
+  const scoped = packages.find((pkg) => pkg.dir === SCOPE);
+  const excludedFiles = PACKAGE_DIRS.flatMap((dir) =>
+    walk(dir)
+      .filter(isTs)
+      .filter((f) => EXCLUDED.some((d) => f.startsWith(`${d}/`))),
+  );
+  return { packages, scoped, excluded: measure(excludedFiles) };
 }
 
 function main() {
   const report = collect();
-  const rows = [
-    ...report.scopes.map((s) => ({ label: s.label, ...s, ceiling: CEILINGS.get(s.label) })),
-    { label: 'other authored metadata', ...report.residual, ceiling: undefined },
-    { label: 'authored total', ...report.total, ceiling: CEILINGS.get('authored total') },
-  ];
 
   if (process.argv.includes('--json')) {
     console.log(
       JSON.stringify(
         {
-          surface: `${SCOPE}/**/*.ts, comment-stripped and blank-stripped, minus ` + EXCLUDED.join(' + '),
+          surface:
+            `${SRC}/<package>/**/*.ts per package, comment-stripped and blank-stripped, minus ` +
+            EXCLUDED.join(' + '),
           estimator: 'chars / 4',
+          headlinePackage: SCOPE,
           packages: report.packages.map((pkg) => ({
             dir: pkg.dir,
-            ratcheted: pkg.dir === SCOPE,
-            layers: pkg.layers.map(({ label, files, lines, chars, tokens }) => ({
-              label, files, lines, chars, tokens,
+            ratcheted: true,
+            headline: pkg.dir === SCOPE,
+            scopes: pkg.rows.map(({ label, files, lines, chars, tokens, ceiling }) => ({
+              label,
+              files,
+              lines,
+              chars,
+              tokens,
+              ceiling: ceiling ?? null,
+              kind: kindFor(pkg.dir, label) ?? null,
             })),
             total: { ...pkg.total },
           })),
-          scopes: rows.map(({ label, files, lines, chars, tokens, ceiling }) => ({
+          // The app package's rows under their bare labels, unchanged since
+          // before #1928: `test/docs-readme-token-figures.test.ts` reads this
+          // key, and the README banner is a claim about this package alone.
+          scopes: report.scoped.rows.map(({ label, files, lines, chars, tokens, ceiling }) => ({
             label,
             files,
             lines,
             chars,
             tokens,
             ceiling: ceiling ?? null,
-            // `null` where there is no committed ceiling to have a kind.
-            kind: CEILING_KINDS.get(label) ?? null,
+            kind: kindFor(SCOPE, label) ?? null,
           })),
         },
         null,
@@ -642,100 +934,100 @@ function main() {
   }
 
   console.log(
-    `Source token ratchet — ratcheted surface: ${SCOPE}/**/*.ts minus ` +
-      `${EXCLUDED.filter((d) => d.startsWith(`${SCOPE}/`)).join(', ')}\n` +
+    `Source token ratchet — every package under ${SRC}/ carries its own ceilings\n` +
       '  (comments and blank lines stripped; ~tokens = stripped chars / 4)\n',
   );
 
   const pad = (s, w) => String(s).padStart(w);
-  console.log(
-    `  ${'scope'.padEnd(24)}${pad('files', 6)}${pad('lines', 8)}${pad('chars', 10)}${pad('~tokens', 10)}`,
-  );
-  for (const row of rows) {
-    if (row.label === 'authored total') console.log(`  ${'─'.repeat(58)}`);
+  const cell = (row) => (row.ceiling === undefined ? '—' : fmt(row.ceiling));
+  for (const pkg of report.packages) {
+    console.log(`  ${pkg.dir}${pkg.dir === SCOPE ? '   ← the README headline claim (ADR-0130 §1.3(b))' : ''}`);
     console.log(
-      `  ${row.label.padEnd(24)}${pad(row.files, 6)}${pad(fmt(row.lines), 8)}${pad(fmt(row.chars), 10)}${pad(fmt(row.tokens), 10)}`,
+      `  ${'  scope'.padEnd(26)}${pad('files', 6)}${pad('lines', 8)}${pad('chars', 10)}${pad('~tokens', 10)}${pad('ceiling', 10)}`,
     );
+    for (const row of pkg.rows) {
+      if (row.label === TOTAL_LABEL) console.log(`    ${'─'.repeat(66)}`);
+      console.log(
+        `  ${`  ${row.label}`.padEnd(26)}${pad(row.files, 6)}${pad(fmt(row.lines), 8)}${pad(fmt(row.chars), 10)}${pad(fmt(row.tokens), 10)}${pad(cell(row), 10)}`,
+      );
+    }
+
+    // A directory in neither headline layer nor the exclusion list still lands
+    // in the package total, so it cannot grow unwatched — but a *new* metadata
+    // type usually belongs in one of the two layers, and saying so here is
+    // cheaper than noticing it a quarter later in a drifted headline number.
+    const known = new Set([...LAYERS.flatMap((l) => layerDirs(pkg.dir, l)), ...EXCLUDED]);
+    const unlayered = packageDirs(pkg.dir).filter((d) => !known.has(d));
+    if (unlayered.length) {
+      console.log(`    ℹ️  not in a headline layer (counted in the total only): ${unlayered.join(', ')}`);
+    }
+    console.log('');
   }
+
   console.log(
-    `\n  outside the ratchet by ruling (${EXCLUDED.join(', ')}): ` +
+    `  outside the ratchet by ruling (${EXCLUDED.join(', ')}): ` +
       `${report.excluded.files} files, ~${fmt(report.excluded.tokens)} tokens — healthy growth, never measured here.\n`,
   );
   console.log(
-    `  Headline: ${report.scopes
+    `  Headline (${SCOPE}): ${report.scoped.layers
       .map((s) => `${s.label} ${headline(s.tokens)}`)
-      .join(' · ')} · authored total ${headline(report.total.tokens)}\n`,
+      .join(' · ')} · authored total ${headline(report.scoped.total.tokens)}\n`,
   );
-
-  // Informational, no ceiling: the starting figures a per-module budget
-  // (ADR-0130 §4) needs. Only SCOPE is ratcheted — 「token 门禁： 放到 sales」.
-  console.log('  Per package — informational, no ceiling:\n');
-  console.log(
-    `  ${'package'.padEnd(16)}${LAYERS.map((l) => pad(l.label, 22)).join('')}${pad('authored total', 16)}`,
-  );
-  for (const pkg of report.packages) {
-    console.log(
-      `  ${pkg.dir.padEnd(16)}${pkg.layers
-        .map((l) => pad(`${fmt(l.tokens)}`, 22))
-        .join('')}${pad(fmt(pkg.total.tokens), 16)}${pkg.dir === SCOPE ? '   <- ratcheted' : ''}`,
-    );
-  }
-  console.log('');
-
-  // A directory under the scoped package that is in neither headline layer nor
-  // the exclusion list still lands in the total, so it cannot grow unwatched —
-  // but a *new* metadata type usually belongs in one of the two layers, and
-  // saying so here is cheaper than noticing it a quarter later in a drifted
-  // headline number.
-  const known = new Set([...LAYERS.flatMap((l) => l.dirs), ...EXCLUDED]);
-  const unlayered = scopeDirs().filter((d) => !known.has(d));
-  if (unlayered.length) {
-    console.log(`  ℹ️  not in a headline layer (counted in the total only): ${unlayered.join(', ')}\n`);
-  }
 
   let failed = 0;
-  for (const row of rows) {
-    if (row.ceiling === undefined) continue;
-    const v = verdict(row.label, row.tokens, row.ceiling);
-    if (!v.ok) {
-      failed++;
-      console.error(`  ✗ ${v.msg}`);
-      continue;
-    }
-    console.log(`  ✓ ${v.msg}`);
+  for (const pkg of report.packages) {
+    for (const row of pkg.rows) {
+      if (row.ceiling === undefined) continue;
+      const label = `${pkg.dir} ${row.label}`;
+      const v = verdict(label, row.tokens, row.ceiling);
+      if (!v.ok) {
+        failed++;
+        console.error(`  ✗ ${v.msg}`);
+        continue;
+      }
+      console.log(`  ✓ ${v.msg}`);
 
-    // A RULED ceiling is never offered for opportunistic tightening (#1607).
-    // The advisory below says "your reading anchors lower than the committed
-    // ceiling, so re-derive it" — a sentence that presumes the ceiling was
-    // derived from a reading. A maintainer grant was not: its headroom IS the
-    // grant, so an automated offer to reclaim the headroom is an automated
-    // offer to undo the ruling, printed fresh on every run and reading as this
-    // gate's own recommendation. It says what the row is instead, because the
-    // exemption is worth stating where a reader meets it — silence would look
-    // like a ceiling nobody had thought about.
-    if (!isAnchored(row.label)) {
-      console.log(
-        '      ℹ️  ruled ceiling — a maintainer grant, not `anchor()` of a reading, so this gate does ' +
-          `not offer to re-anchor it; the ~${fmt(row.ceiling - row.tokens)} tokens of headroom are the ` +
-          "ruling's. Lowering it needs a ruling quoted in the lowering PR, exactly as raising it does.",
-      );
-      continue;
-    }
+      // A RULED ceiling is never offered for opportunistic tightening (#1607).
+      // The advisory below says "your reading anchors lower than the committed
+      // ceiling, so re-derive it" — a sentence that presumes the ceiling was
+      // derived from a reading. A maintainer grant was not: its headroom IS the
+      // grant, so an automated offer to reclaim the headroom is an automated
+      // offer to undo the ruling, printed fresh on every run and reading as this
+      // gate's own recommendation. It says what the row is instead, because the
+      // exemption is worth stating where a reader meets it — silence would look
+      // like a ceiling nobody had thought about.
+      if (!isAnchored(pkg.dir, row.label)) {
+        console.log(
+          '      ℹ️  ruled ceiling — a maintainer grant, not `anchor()` of a reading, so this gate does ' +
+            `not offer to re-anchor it; the ~${fmt(row.ceiling - row.tokens)} tokens of headroom are the ` +
+            "ruling's. Lowering it needs a ruling quoted in the lowering PR, exactly as raising it does.",
+        );
+        continue;
+      }
 
-    // Nag only when the ceiling has drifted well past the ruled buffer — i.e.
-    // the tree has shrunk enough that `anchor()` would now commit a lower
-    // number. A flat "headroom is over Nk" threshold cannot be used any more:
-    // under 「给 5% 缓冲」 a healthy scope carries thousands of tokens of
-    // headroom by design, so a flat threshold would fire on every clean run and
-    // tell the author to undo the ruling. The trigger is therefore relative and
-    // one whole buffer clear of it (10% vs the ruled 5%), so ordinary shrinkage
-    // inside the buffer stays quiet.
-    const suggested = anchor(row.tokens);
-    if (row.ceiling - row.tokens > row.tokens * 2 * BUFFER) {
-      console.log(
-        `      ℹ️  headroom is ${fmt(row.ceiling - row.tokens)} tokens, over twice the 5% buffer — ` +
-          `re-anchor this ceiling to ~${fmt(suggested)} in your PR; shrink-only ratchets tighten opportunistically.`,
-      );
+      // Nag only when the ceiling has drifted well past the ruled buffer — i.e.
+      // the tree has shrunk enough that `anchor()` would now commit a lower
+      // number. A flat "headroom is over Nk" threshold cannot be used any more:
+      // under 「给 5% 缓冲」 a healthy scope carries thousands of tokens of
+      // headroom by design, so a flat threshold would fire on every clean run and
+      // tell the author to undo the ruling. The trigger is therefore relative and
+      // one whole buffer clear of it (10% vs the ruled 5%), so ordinary shrinkage
+      // inside the buffer stays quiet.
+      //
+      // ⚠️ AND it must actually re-anchor LOWER. `anchor()` rounds up to the next
+      // 1,000, and on the small modules #1928 ceilinged that rounding step alone
+      // is 10–40% of the reading: `anchor(876) = 1,000` on a committed 1,000.
+      // Without this half the advisory printed, on a clean run and on a ceiling
+      // committed that same day, an instruction to re-anchor a ceiling to the
+      // number it already is — noise that teaches a reader to skip the line the
+      // day it means something.
+      const suggested = anchor(row.tokens);
+      if (row.ceiling - row.tokens > row.tokens * 2 * BUFFER && suggested < row.ceiling) {
+        console.log(
+          `      ℹ️  headroom is ${fmt(row.ceiling - row.tokens)} tokens, over twice the 5% buffer — ` +
+            `re-anchor this ceiling to ~${fmt(suggested)} in your PR; shrink-only ratchets tighten opportunistically.`,
+        );
+      }
     }
   }
 
@@ -752,14 +1044,19 @@ function main() {
 //
 // GROUP 1 — the ceiling figures. Every number derived from a ceiling is
 // DERIVED by the test quoting it rather than transcribed beside it:
-// `test/source-token-ratchet.test.ts` imports `anchor`, `fmt`, `BUFFER`,
-// `CEILINGS` and `CEILING_KINDS` (it sizes its fixtures from
-// `CEILINGS`/`BUFFER`, pins the worked table in the header above against
-// `anchor()`, and holds that table's ruled/anchored rows to the kinds
-// `CEILING_KINDS` declares), and
+// `test/source-token-ratchet.test.ts` imports `anchor`, `fmt`, `BUFFER` and
+// `COMMITTED_CEILINGS` (it sizes its fixtures per package from that table,
+// pins the twelve worked rows in the header above against `anchor()`, and
+// holds those rows' ruled/anchored kinds to the ones the table declares), and
 // `test/docs-readme-token-figures.test.ts` imports `BUFFER` and `CEILINGS` to
 // check the README banner. So a re-anchoring moves the constant and the copies
 // follow.
+//
+// ⚠️ The two ceiling exports are NOT interchangeable and #1928 is why.
+// `COMMITTED_CEILINGS` is the whole twelve-row table; `CEILINGS` is the app
+// package's three rows under bare labels, which is what the README pin wants
+// and all it should ever see. A doc guard that started reading the full table
+// would check the banner against packages the banner never described.
 //
 // GROUP 2 — the stripper. `test/docs-object-term-consistency.test.ts` imports
 // `stripComments` and runs every `.ts` file through it to decide what the #802

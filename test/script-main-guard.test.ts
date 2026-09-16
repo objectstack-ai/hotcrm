@@ -205,7 +205,13 @@ const GUARDED: Guarded[] = [
     script: 'scripts/check-source-token-ratchet.mjs',
     runner: process.execPath,
     green: { args: ['--json'], status: 0, says: '"label"' },
-    red: { args: [], status: 1, says: 'missing: src/sales/objects' },
+    // The red leg runs against an EMPTY root, so what it must say is that the
+    // tree holds no package at all. It said `missing: src/sales/objects` until
+    // #1928 made the package roster derived: there is no hand-written directory
+    // list left to be missing from, and the refusal the empty root now hits is
+    // the louder one — a roster that reads as empty is how a ratchet passes by
+    // measuring nothing.
+    red: { args: [], status: 1, says: 'carries an objects/ directory' },
   },
   {
     script: 'scripts/check-lint-i18n-gate.mjs',

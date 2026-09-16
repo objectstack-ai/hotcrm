@@ -512,6 +512,22 @@ decisions left to the compile path and this ruling settles.
    lowering the ruled business ceiling is what this ruling authorises, and the layout PR
    quotes it. `test/source-token-ratchet.test.ts` learns the new scope in the same PR.
 
+   **✅ Landed, and superseded in its last clause (2026-09-16, #1928).** The gate walks
+   `src/sales/` and the two layers exactly as described, but "only sales carries ceilings" is
+   no longer true and was never meant to last: it was the state that produced the starting
+   figures §4 asked for. Maintainer ruling, verbatim and untranslated:
+
+   > 「1928 门禁 改为 多 sales 模块的门禁」
+
+   Every package now carries its own `business semantics`, `interaction layer` and
+   `authored total` ceiling — twelve in all — each `anchor()` of that package's own
+   reading, which is the per-module budget §4 promises. They are four INDEPENDENT gates:
+   a module over its own ceiling reddens that module alone, so headroom cannot be borrowed
+   across a package boundary. The package roster is read off disk (a directory under `src/`
+   with an `objects/` directory), so a fifth package is seen the day it lands and the gate
+   refuses to run until it has ceilings — committing a package's FIRST ceiling is an
+   anchoring, not a raise. The numbers are in that script's header, with a worked row each.
+
 9. **Sequence — a move PR, then packaging PRs with no moves.**
    - **PR 0 — layout.** Every file moves to its final directory (`git mv`, history kept);
      `objectstack.config.ts` still registers one stack from the new paths. The artifact is
