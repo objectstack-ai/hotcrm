@@ -135,7 +135,11 @@ describe('every refusal names a code the platform will echo (#1075)', () => {
   );
 
   it('found every swept call site', () => {
-    expect(sites).toHaveLength(18);
+    // 18 until REQ-0003 added the account capability gate in
+    // `opportunity.hook.ts`. The number is hand-maintained on purpose: a new
+    // refusal has to be a deliberate edit here, so a guard that quietly stopped
+    // being swept cannot hide behind a count that follows it.
+    expect(sites).toHaveLength(19);
   });
 
   it('uses only members of the platform ErrorCode enum', () => {

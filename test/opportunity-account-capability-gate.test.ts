@@ -58,6 +58,22 @@ function accounts(): Record<string, Rec[]> {
   };
 }
 
+/**
+ * Every hook this module registers for `beforeUpdate`, in the order the engine
+ * would run them (ascending priority).
+ *
+ * Vacuity guard included: an empty chain makes every "the write was not
+ * refused" assertion trivially true, which is precisely the state a mis-spelled
+ * event name produces.
+ */
+function updateChain(): Rec[] {
+  const chain = (opportunityHooks as Rec[])
+    .filter((h) => (h.events as string[]).includes('beforeUpdate'))
+    .sort((a, b) => (a.priority as number) - (b.priority as number));
+  expect(chain.length, 'no beforeUpdate hook is registered on crm_opportunity').toBeGreaterThan(0);
+  return chain;
+}
+
 /** Run one hook's beforeInsert and return what it threw, or `null`. */
 async function insertRefusal(input: Rec, api = makeHarness(accounts()).api): Promise<Error | null> {
   try {
@@ -119,15 +135,8 @@ describe('the gate never bricks history (REQ-0003 acceptance 2, second half)', (
     };
     harness.rows('crm_opportunity').push({ ...existing });
 
-    const chain = (opportunityHooks as Rec[])
-      .filter((h) => (h.events as string[]).includes('beforeUpdate'))
-      .sort((a, b) => (a.priority as number) - (b.priority as number));
-    // Vacuity guard: an empty chain would make the assertion below trivially
-    // true, which is precisely the state a mis-spelled event name produces.
-    expect(chain.length).toBeGreaterThan(0);
-
     const input: Rec = { id: 'opp_1', amount: 30_000 };
-    for (const hook of chain) {
+    for (const hook of updateChain()) {
       await hook.handler(
         makeCtx({
           event: 'beforeUpdate',
@@ -149,14 +158,23 @@ describe('the gate never bricks history (REQ-0003 acceptance 2, second half)', (
     // as a pin rather than left to be discovered: acceptance 2 scopes the
     // refusal to "linked to a NEW opportunity", and widening it is a separate
     // decision, not a tidy-up.
+    //
+    // ⚠️ Driven through the registered `beforeUpdate` chain, NOT by calling
+    // the gate's handler with a `beforeUpdate` ctx. The handler body does not
+    // branch on `ctx.event` — it does not need to, because the ENGINE selects
+    // hooks by their `events` — so calling it directly with an update would
+    // refuse, and a test written that way would be describing a dispatch the
+    // engine never performs. What is asserted here is the write.
     const harness = makeHarness(accounts());
     const previous: Rec = { id: 'opp_2', name: 'Moved deal', stage: 'proposal', crm_account: OPEN };
+    harness.rows('crm_opportunity').push({ ...previous });
     const input: Rec = { id: 'opp_2', crm_account: RESTRICTED };
-    await expect(
-      gate.handler(
+    for (const hook of updateChain()) {
+      await hook.handler(
         makeCtx({ event: 'beforeUpdate', input, previous, user: { id: 'user_1' }, api: harness.api }),
-      ),
-    ).resolves.toBeUndefined();
+      );
+    }
+    expect(input.crm_account).toBe(RESTRICTED);
   });
 });
 
@@ -174,7 +192,14 @@ describe('the gate fails OPEN on everything except the one written-down verdict'
   });
 
   it('allows the write when `ctx.api` is absent', async () => {
-    expect(await insertRefusal({ name: 'Deal', crm_account: RESTRICTED }, undefined as never)).toBeNull();
+    // ⛔ Not `insertRefusal(…, undefined)`: a default parameter fires on an
+    // explicit `undefined`, so that spelling hands the gate the real harness
+    // and asserts the opposite of what it reads like. The ctx is built here.
+    await expect(
+      gate.handler(
+        makeCtx({ event: 'beforeInsert', input: { name: 'Deal', crm_account: RESTRICTED } }),
+      ),
+    ).resolves.toBeUndefined();
   });
 
   it('does NOT swallow a denied read — that is the one non-open case', async () => {
