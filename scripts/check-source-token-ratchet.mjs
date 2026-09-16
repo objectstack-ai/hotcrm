@@ -728,10 +728,11 @@ export function verdict(label, tokens, ceiling) {
       msg:
         `${label} is ~${fmt(tokens)} tokens; the ratchet ceiling is ~${fmt(ceiling)} ` +
         `(over by ~${fmt(tokens - ceiling)}). That ceiling already carries the ruled 5% working ` +
-        'buffer, so this is growth past the buffer, not routine drift. This surface is the ' +
-        "app's headline claim — shrink it back (compress metadata, drop duplication, move prose " +
-        'to content/docs), or raise the ceiling in a PR that quotes a maintainer ruling approving ' +
-        'the new number. Comments are already stripped, so deleting comments will not help.',
+        'buffer, so this is growth past the buffer, not routine drift. This is that package\'s ' +
+        'own budget and no other package\'s headroom can pay for it — shrink it back (compress ' +
+        'metadata, drop duplication, move prose to content/docs), or raise THIS ceiling in a PR ' +
+        'that quotes a maintainer ruling approving the new number. Comments are already ' +
+        'stripped, so deleting comments will not help.',
     };
   }
   return {

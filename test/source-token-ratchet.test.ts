@@ -583,6 +583,12 @@ describe('source token ratchet — the ratchet itself', () => {
     expect(output).toContain(`the ratchet ceiling is ~${fmt(ceiling)}`);
     expect(output).toContain(`over by ~${fmt(over - ceiling)}`);
     expect(output).toContain('quotes a maintainer ruling');
+    // And it says WHOSE budget was spent. Before #1928 the remedy read "this
+    // surface is the app's headline claim", which was true of the one ceilinged
+    // package and is false on the eleven rows that are not it: a `src/marketing`
+    // failure telling an author they had breached the app's headline claim
+    // sends them to argue about the wrong number.
+    expect(output).toContain("no other package's headroom can pay for it");
     // The buffer is spent before the gate ever goes red, and the message says
     // so — otherwise a red run reads as "the ratchet is too tight" when it
     // actually means the surface grew past a deliberate 5% allowance.
