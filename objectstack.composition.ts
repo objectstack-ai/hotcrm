@@ -78,6 +78,10 @@ import * as marketingViews from './src/marketing/views/index.js';
 import * as salesPages from './src/sales/pages/index.js';
 import * as servicePages from './src/service/pages/index.js';
 
+import * as salesEmailTemplates from './src/sales/email-templates/index.js';
+import * as serviceEmailTemplates from './src/service/email-templates/index.js';
+import * as revenueEmailTemplates from './src/revenue/email-templates/index.js';
+
 import { SystemAdminProfile } from './src/sales/profiles/index.js';
 import { TenantAdminProfile } from './src/sales/profiles/tenant-admin.profile.js';
 
@@ -130,6 +134,8 @@ import {
   CaseEscalationSharingRule, CaseDirectorSharingRule, CaseUnassignedTriageSharingRule,
 } from './src/service/sharing/index.js';
 import { CampaignLeadershipSharingRules } from './src/marketing/sharing/index.js';
+
+import type { EmailTemplateDefinition } from '@objectstack/spec/system';
 
 // Seed rows — the replay order lives in `CrmSeedData` below.
 import type { HotCrmComposition } from './src/sales/data/index.js';
@@ -282,6 +288,21 @@ export const allApps = byExportName({ ...apps });
 
 /** The locale packs. */
 export const allTranslations = byExportName({ ...translations });
+
+/**
+ * Every `sys_email_template` row the app registers — the localizable content
+ * path for `notify` (#9205).
+ *
+ * A package barrel exports ONE symbol carrying that package's rows, so
+ * `byExportName()` orders the three by export name and `.flat()` produces the
+ * single array `defineStack({ emailTemplates })` takes. Reaching the package
+ * barrel IS reaching the registration here: no hand-kept ordered list, because
+ * nothing about the order is load-bearing — a row is resolved by
+ * `(name, locale)` at delivery time, never by position.
+ */
+export const allEmailTemplates = byExportName<EmailTemplateDefinition[]>({
+  ...salesEmailTemplates, ...serviceEmailTemplates, ...revenueEmailTemplates,
+}).flat();
 
 /**
  * The permission sets, as the NAMESPACE rather than an array: the SaaS

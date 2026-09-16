@@ -180,13 +180,15 @@ export const CaseEscalationFlow: Flow = {
         channels: ['inbox', 'email'],
         severity: 'critical',
         topic: 'case_escalated',
-        title: 'Case escalated: {caseRecord.case_number}',
-        // ⚠️ The body must stay true on BOTH outcomes. "It remains assigned to
-        // you" is false whenever the hand-off finds a manager; the opposite
-        // claim ("it has been reassigned") is false whenever the
+        // ⚠️ The body — now `crm.case_escalated` in `../email-templates/`, one
+        // row per locale — must stay true on BOTH outcomes. "It remains
+        // assigned to you" is false whenever the hand-off finds a manager; the
+        // opposite claim ("it has been reassigned") is false whenever the
         // `service_manager` pool is unstaffed, which is the first-install norm.
-        // So it states the rule and points at the record for the answer.
-        message: 'Case {caseRecord.case_number} ({caseRecord.priority}) has been auto-escalated on critical priority. Ownership passes to the service manager with the lightest load; while nobody holds that position the case stays with you. Open the case to see who owns it now.',
+        // So it states the rule and points at the record for the answer, in
+        // every language.
+        template: 'crm.case_escalated',
+        templateData: { case_number: '{caseRecord.case_number}', priority: '{caseRecord.priority}' },
         actionUrl: '/crm_case/{record.id}',
       },
     },

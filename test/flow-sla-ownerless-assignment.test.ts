@@ -168,7 +168,14 @@ const runSweep = async (positions: Rec[]) => {
   const audiences = h.notifications.flatMap((n) => n.to);
   /**
    * Who the alert for one case was addressed to, matched by the case NUMBER the
-   * notify node puts in its own title.
+   * notify node puts in its `templateData`.
+   *
+   * It read `n.title` until the four-locale conversion: the content now travels
+   * as a `sys_email_template` reference resolved per recipient at delivery, so
+   * `payload.title` is not set at all and a title filter matches nothing. The
+   * case number is still on the payload — it is the render input the template's
+   * `{{case_number}}` hole reads — so the correspondence below is the same fact,
+   * read where it now lives.
    *
    * This is what makes "the assigned owner is the one notified" checkable as a
    * per-case correspondence rather than as two set memberships that happen to
@@ -177,7 +184,7 @@ const runSweep = async (positions: Rec[]) => {
    */
   const alertFor = (caseNumber: string): string[] =>
     h.notifications
-      .filter((n) => String(n.title ?? '').includes(caseNumber))
+      .filter((n) => String((n.templateData as Rec)?.case_number ?? '').includes(caseNumber))
       .flatMap((n) => n.to);
   return { h, result, byId, nodeOf, gateOf, audiences, alertFor };
 };

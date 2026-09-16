@@ -93,7 +93,7 @@ describe('opportunity_won_alert — start condition', () => {
     // `{record.owner_id.manager}` interpolates to the literal "undefined" and the
     // message goes to a phantom user.
     expect(JSON.stringify(alert), 'a template dot-walked a lookup').not.toContain('undefined');
-    expect(String(alert.title)).toContain('Big Deal');
+    expect(String((alert.templateData as Rec).name)).toContain('Big Deal');
   });
 });
 
@@ -192,8 +192,8 @@ describe('contact_welcome — start condition', () => {
     expect(h.notifications).toHaveLength(1);
     const [alert] = h.notifications;
     expect(alert.to).toContain('rep1');
-    expect(String(alert.title)).toContain('Ada');
-    expect(String(alert.title)).toContain('Lovelace');
+    expect(String((alert.templateData as Rec).first_name)).toContain('Ada');
+    expect(String((alert.templateData as Rec).last_name)).toContain('Lovelace');
   });
 });
 
@@ -227,7 +227,7 @@ describe('task_urgent_alert — start condition', () => {
     expect(h.notifications).toHaveLength(1);
     expect(h.notifications[0].to).toContain('rep1');
     expect(h.notifications[0].severity).toBe('warning');
-    expect(String(h.notifications[0].title)).toContain('Fix outage');
+    expect(String((h.notifications[0].templateData as Rec).subject)).toContain('Fix outage');
   });
 });
 

@@ -135,7 +135,7 @@ describe('case_sla_monitor — hourly breach sweep', () => {
     // notification. Guard against that shape reappearing anywhere in the payload.
     expect(JSON.stringify(alert), 'a template dot-walked a lookup').not.toContain('undefined');
     expect(alert.severity).toBe('critical');
-    expect(String(alert.title)).toContain('CASE-1');
+    expect(String((alert.templateData as Rec).case_number)).toContain('CASE-1');
   });
 
   it('is a clean no-op when nothing has breached', async () => {
@@ -305,7 +305,7 @@ describe('contract_expiration — daily auto-expiry', () => {
     expect(h.notifications).toHaveLength(1);
     const [alert] = h.notifications;
     expect(alert.to).toContain('rep1');
-    expect(String(alert.title)).toContain('CTR-1');
+    expect(String((alert.templateData as Rec).contract_number)).toContain('CTR-1');
     expect(JSON.stringify(alert), 'a template failed to interpolate').not.toContain('undefined');
   });
 });
@@ -350,7 +350,7 @@ describe('task_due_reminder — hourly reminder sweep', () => {
     expect(h.notifications).toHaveLength(1);
     const [alert] = h.notifications;
     expect(alert.to).toContain('rep1');
-    expect(String(alert.title)).toContain('Call Acme');
+    expect(String((alert.templateData as Rec).subject)).toContain('Call Acme');
     expect(alert.severity).toBe('warning');
   });
 
@@ -420,7 +420,7 @@ describe('opportunity_stagnation — daily stalled-deal nudge', () => {
 
     expect(h.notifications).toHaveLength(1);
     expect(h.notifications[0].to).toContain('rep1');
-    expect(String(h.notifications[0].title)).toContain('Stalled Deal');
+    expect(String((h.notifications[0].templateData as Rec).name)).toContain('Stalled Deal');
     expect(
       JSON.stringify(h.notifications[0]),
       'a template dot-walked a lookup',
@@ -519,7 +519,7 @@ describe('contract_renewal — daily notice-window sweep', () => {
 
     expect(h.notifications).toHaveLength(1);
     expect(h.notifications[0].to).toContain('rep1');
-    expect(String(h.notifications[0].title)).toContain('CTR-1');
+    expect(String((h.notifications[0].templateData as Rec).contract_number)).toContain('CTR-1');
   });
 
   it('honours each contract’s own renewal_notice_days, not a shared constant', async () => {
