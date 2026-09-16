@@ -310,6 +310,16 @@ ceiling** at this commit — 5,826 of headroom. Three things about the split and
    raise: the ceilings must not move, because the same files are being measured in a new
    place. Raising a ceiling needs a maintainer ruling quoted in the raising PR.
 
+   **Dated, and superseded twice.** That paragraph was true when this section was measured;
+   both halves have since moved. #1905 re-pointed `LAYERS` onto `src/sales/…` (and `src/hooks`
+   stopped existing, a hook now sitting beside its object), and #1928 replaced the path list
+   with metadata-type NAMES — `objects`, `flows`, `actions` / `views`, `pages`, `dashboards`,
+   `apps` — resolved against every package, which is what lets the same two layers read on all
+   four. The rule the paragraph states survives both moves and is the part to carry forward:
+   a re-layout re-points the gate in the same PR, a re-point is not a raise, and raising a
+   ceiling needs a maintainer ruling quoted in the raising PR. Read the script's own header
+   for what it names today; ⛔ do not re-derive the directory list from this line.
+
 The per-module figures in the table above are `round(module chars / 4)` — the gate's own
 estimator, partitioned. They exist so the per-module budget ADR-0130 promises has a starting
 measurement, and at this commit they reconcile exactly with the gate's whole-tree reading.
@@ -511,6 +521,22 @@ decisions left to the compile path and this ruling settles.
    reading with the script's own `anchor()` rule unless the maintainer rules numbers;
    lowering the ruled business ceiling is what this ruling authorises, and the layout PR
    quotes it. `test/source-token-ratchet.test.ts` learns the new scope in the same PR.
+
+   **✅ Landed, and superseded in its last clause (2026-09-16, #1928).** The gate walks
+   `src/sales/` and the two layers exactly as described, but "only sales carries ceilings" is
+   no longer true and was never meant to last: it was the state that produced the starting
+   figures §4 asked for. Maintainer ruling, verbatim and untranslated:
+
+   > 「1928 门禁 改为 多 sales 模块的门禁」
+
+   Every package now carries its own `business semantics`, `interaction layer` and
+   `authored total` ceiling — twelve in all — each `anchor()` of that package's own
+   reading, which is the per-module budget §4 promises. They are four INDEPENDENT gates:
+   a module over its own ceiling reddens that module alone, so headroom cannot be borrowed
+   across a package boundary. The package roster is read off disk (a directory under `src/`
+   with an `objects/` directory), so a fifth package is seen the day it lands and the gate
+   refuses to run until it has ceilings — committing a package's FIRST ceiling is an
+   anchoring, not a raise. The numbers are in that script's header, with a worked row each.
 
 9. **Sequence — a move PR, then packaging PRs with no moves.**
    - **PR 0 — layout.** Every file moves to its final directory (`git mv`, history kept);

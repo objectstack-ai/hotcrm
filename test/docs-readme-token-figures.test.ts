@@ -12,7 +12,7 @@ import { REPO_ROOT } from './helpers/repo-root';
  *
  * The README banner states HotCRM's positioning claim as two measured numbers:
  * business semantics ~50k tokens, interaction layer ~29k — of the SALES
- * package, which is the surface the gate measures since #1905 put it there
+ * package, which is the surface #1905 put the gate on
  * (「token 门禁： 放到 sales」) and the unit ADR-0130 §1.3(b) makes the claim
  * about: *a CRM sales module fits whole in an AI context window*. That claim is the
  * first thing a reader sees and the reason a developer keeps reading, and for
@@ -61,7 +61,7 @@ import { REPO_ROOT } from './helpers/repo-root';
  * a size the app does not have — the ratchet owns the growth budget, alone, and
  * a raise there sits on the maintainer floor where it always did.
  *
- *   business semantics  banner ~50k -> band 47,500–52,500 · ceiling 53,000
+ *   business semantics  banner ~50k -> band 47,500–52,500 · ceiling 55,000
  *   interaction layer   banner ~29k -> band 27,550–30,450 · ceiling 31,000
  *
  * ⚠️ The ceiling column is still worked out per row, and still pinned to
@@ -88,6 +88,26 @@ import { REPO_ROOT } from './helpers/repo-root';
  * both rows read back off the README banner, the imported `BUFFER` and the
  * committed `CEILINGS`, so the next re-anchoring reddens this file instead of
  * quietly falsifying it (#1335).
+ *
+ * ## ⚠️ The gate ceilings four packages now; this rule reads ONE of them
+ *
+ * #1928 gave `src/service/`, `src/revenue/` and `src/marketing/` their own
+ * three ceilings each (「1928 门禁 改为 多 sales 模块的门禁」). None of that
+ * is this rule's business. The banner is a claim about the package a customer
+ * installs — ADR-0130 §1.3(b) — so `CEILINGS` deliberately still exposes the
+ * APP package's three rows under bare labels, and the gate's `--json` still
+ * carries them under a top-level `scopes` key, which is what the `measured`
+ * block below reads. ⛔ Do not re-point either at the full twelve-row table:
+ * this rule would then check a README sentence about sales against, say,
+ * `src/marketing`'s ceiling, and the two would pass or fail for reasons that
+ * have nothing to do with each other. `test/source-token-ratchet.test.ts` pins
+ * both halves of that split from the producer side.
+ *
+ * The only figure #1928 moved here is the ceiling column of the table above:
+ * the re-anchoring carried `business semantics` from 53,000 to 55,000, under
+ * the ruling quoted in the gate's own header. The band edges did not move,
+ * because the banner did not — 「解耦:banner 钉实测,ceiling 独立」 is exactly
+ * the decoupling that let one move without the other.
  *
  * ## The measurement is the gate's, not a copy of it
  *

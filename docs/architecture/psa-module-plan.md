@@ -406,6 +406,18 @@ module fits whole in an AI context window*). Consequences:
   prints `src/psa/`'s reading on every run and each PSA phase records it in the PR body as
   the starting measurement for a budget the maintainer may rule on later. Nothing in this
   design competes with the sales claim for headroom.
+
+  **⚠️ Superseded, 2026-09-16 (#1928), and in PSA's favour.** 「1928 门禁 改为 多 sales
+  模块的门禁」: the budget §4 promises is now committed, so no package is outside the
+  gate. `src/psa/` will carry its own `business semantics`, `interaction layer` and
+  `authored total` ceiling like every other package, anchored from its own first reading
+  with the script's own `anchor()` rule — a package's FIRST ceiling is an anchoring, not a
+  raise, so it needs no ruling. The conclusion this bullet was drawing is unchanged and now
+  structural rather than promised: PSA's ceilings are its own, so **nothing in this design
+  competes with the sales claim for headroom**, and the 15–20k / 5–7k estimate above is
+  weighed against PSA's own budget rather than against sales'. The gate refuses to run on a
+  package with no committed ceiling, so phase 1 commits PSA's three rows in the PR that
+  lands `src/psa/objects/`.
 - Translations and seed data stay outside the gate by the 2026-08-17 ruling.
 
 ## Phasing

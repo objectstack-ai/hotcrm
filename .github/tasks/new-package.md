@@ -27,8 +27,14 @@ Please scaffold it using the Architect Guidelines:
    `src/sales/`, in one copy.
 4. Register the new barrels in `objectstack.composition.ts`, which collects the packages
    into the arrays `objectstack.config.ts` hands to the single `defineStack()`.
-5. Add the package directory to `PACKAGE_DIRS` in
-   `scripts/check-source-token-ratchet.mjs` so the gate prints a reading for it.
+5. Commit the new package's ceilings in `COMMITTED` in
+   `scripts/check-source-token-ratchet.mjs`. The package ROSTER is read off disk
+   there (an `objects/` directory is what makes a directory a package), so nothing
+   needs listing for the gate to SEE the package — but it refuses to run until the
+   package has a ceiling for every scope it owes, because a package with no ceiling
+   reads exactly like a package under its ceiling. Run the gate with `--json`, apply
+   its `anchor()` to each reading, add the rows and a worked line to the header
+   table. A package's FIRST ceiling is an anchoring, not a raise: no ruling needed.
 6. Add the new package's barrels to `BARRELS` in `test/helpers/src-roster.ts`, with an
    `import * as` for each. The app-wide test sweeps take the package ROSTER off disk — an
    `objects/` directory is what makes a directory a package there, so nothing needs
