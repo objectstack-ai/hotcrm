@@ -26,7 +26,8 @@ import { makeHarness, makeCtx, makeDeniedApi, hookNamed, type Rec } from './help
  * `crm_opportunity`, not just the gate — asserting that the gate is absent
  * from that chain would be a statement about this file's own filter, whereas
  * running the chain is a statement about the write. The hook that would have
- * refused is in the same module and is deliberately given every chance to fire.
+ * refused is in the same module and is deliberately given every chance to fire,
+ * on a payload that re-sends the restricted link the way a detail form does.
  *
  * Bodies here are the authored handlers. That they still work once LOWERED to
  * metadata-only (no module scope, QuickJS) is swept for every registered hook
@@ -135,7 +136,16 @@ describe('the gate never bricks history (REQ-0003 acceptance 2, second half)', (
     };
     harness.rows('crm_opportunity').push({ ...existing });
 
-    const input: Rec = { id: 'opp_1', amount: 30_000 };
+    // ⚠️ The payload RE-SENDS the unchanged `crm_account`, and that is the
+    // load-bearing half of this fixture. A detail form posts every field it
+    // rendered, so the ordinary edit a user makes on a record that happens to
+    // sit on a restricted account carries the restricted link in its own body.
+    // A sparse `{ amount }` payload would let a gate widened to `beforeUpdate`
+    // through untouched — it never sees the account — so a suite that only
+    // tested the sparse shape would be green against the very construct the
+    // 2026-09-16 ruling rejected. Measured: with `events` widened to
+    // `['beforeInsert', 'beforeUpdate']`, this case is the one that reddens.
+    const input: Rec = { id: 'opp_1', amount: 30_000, crm_account: RESTRICTED, stage: 'proposal' };
     for (const hook of updateChain()) {
       await hook.handler(
         makeCtx({
