@@ -660,7 +660,7 @@ describe('source token ratchet — the ratchet itself', () => {
   /**
    * The second half of that advisory, and #1928 is what made it necessary.
    *
-   * `anchor()` rounds up to the next 1,000. On `src/sales`'s 55,000 that step is
+   * `anchor()` rounds up to the next 1,000. On `src/sales`'s 59,000 that step is
    * noise; on `src/marketing`'s interaction ceiling of 1,000 it IS the ceiling —
    * every reading from 1 to 952 anchors to exactly 1,000. So a freshly anchored
    * small module sits permanently past the relative trigger (headroom is 14% of
