@@ -73,7 +73,7 @@ export function createLineItemPriceFill(objectName: string, hookName: string): H
  * each once): same stamp. An existing ordinal is never renumbered. The engine
  * keeps a payload key a hook wrote through its readonly strip, so a user write
  * lands the stamp and a user-supplied value is overwritten; only a no-user
- * system insert that supplies one (the seed) keeps its own. `runAs: 'system'`
+ * system write that supplies one (the seed, and its replay) keeps its own. `runAs: 'system'`
  * elevates the sibling read and nothing else. Body-only rule as above: the
  * parent key comes from `ctx.object`, never a factory parameter.
  */
@@ -90,12 +90,9 @@ export function createLineItemNumbering(objectName: string, hookName: string): H
       const prev = ctx.previous;
       const api = ctx.api as HookApi | undefined;
       if (!api) return;
-      if (event === 'beforeUpdate') {
-        // D3: a predicate update has ONE payload for every row (forecast.hook.ts).
-        if (ctx.dispatch?.mode === 'per-row' || typeof prev?.line_number === 'number') return;
-      } else if (!ctx.user?.id && typeof input.line_number === 'number') {
-        return;
-      }
+      if (!ctx.user?.id && typeof input.line_number === 'number') return;
+      // D3: a predicate update has ONE payload for every row (forecast.hook.ts).
+      if (event === 'beforeUpdate' && (ctx.dispatch?.mode === 'per-row' || typeof prev?.line_number === 'number')) return;
       const parentKey = ctx.object === 'crm_quote_line_item' ? 'crm_quote' : 'crm_opportunity';
       const parentId = input[parentKey] ?? prev?.[parentKey];
       if (typeof parentId !== 'string' || !parentId) return;

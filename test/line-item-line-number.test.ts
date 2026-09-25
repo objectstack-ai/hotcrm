@@ -124,7 +124,13 @@ describe.each(PAIRS)('$object — the assigner', ({ object, parentKey, hook }) =
     expect(await ordinals(object, parentKey, 'p1')).toEqual([7]);
   });
 
-  it('never renumbers an existing ordinal on update, whatever the payload says', async () => {
+  it('keeps the ordinal a no-user system update supplies (the seed replay re-asserting its fixture)', async () => {
+    const row = await ql.insert(object, line(parentKey, 'p1'), { context: rep });
+    await ql.update(object, { id: row.id, line_number: 5 }, { where: { id: row.id }, context: seed });
+    expect(await ordinals(object, parentKey, 'p1')).toEqual([5]);
+  });
+
+  it('never renumbers an existing ordinal on a rep\'s update, whatever the payload says', async () => {
     const row = await ql.insert(object, line(parentKey, 'p1'), { context: rep });
     await ql.update(object, { id: row.id, line_number: 42, quantity: 2 }, { where: { id: row.id }, context: rep });
     const stored = await ql.findOne(object, { where: { id: row.id }, context: seed });
