@@ -326,22 +326,18 @@ export const ServiceDashboard: Dashboard = {
       },
     },
 
-    // ─── Row 5: Open Cases by Priority ────────────────────────────────
+    // ─── Row 5: My Open Cases by Priority ─────────────────────────────
     // A dashboard `table` binds to an analytics cube and aggregates; it cannot
-    // list individual cases (ADR-0021). This is deliberately TEAM-WIDE, not
-    // "my cases": the analytics query path resolves no user token at all —
-    // `{current_user}` (and even `{current_user_id}`) reach the query as
-    // literal strings and match no owner, so a personal filter renders 0 for
-    // everyone (see the proven note in crm.app.ts's My Work group). For a
-    // per-agent queue, use the my_open_cases ListView ("My Cases" in the
-    // My Work nav group). Restoring a personal widget here is tracked in
-    // issue #510.
+    // list individual cases (ADR-0021) — for the case-by-case queue, use the
+    // my_open_cases ListView ("My Cases" in the My Work nav group).
+    // `{current_user_id}` scopes what this widget SHOWS; it is presentation
+    // scope, not an access boundary — row-level security owns that (#510).
     {
-      id: 'open_cases_by_priority',
-      title: 'Open Cases by Priority',
-      description: 'Open cases and their SLA-violation rate, broken down by priority',
+      id: 'my_open_cases_by_priority',
+      title: 'My Open Cases by Priority',
+      description: 'Your open cases and their SLA-violation rate, broken down by priority',
       type: 'table',
-      filter: { is_closed: false },
+      filter: { is_closed: false, owner_id: '{current_user_id}' },
       colorVariant: 'default',
       dataset: 'case_metrics', dimensions: ['priority'], values: ['case_count', 'avg_sla_violated'],
       layout: { x: 0, y: 16, w: 12, h: 4 },

@@ -117,15 +117,11 @@ export const CrmApp = App.create({
       label: 'My Work',
       icon: 'list-checks',
       expanded: true,
-      // These are ListViews, not a dashboard, and that is deliberate. A
-      // "My Day" dashboard was built and removed: dashboard widget filters do
-      // NOT interpolate `{current_user}` / `{current_user_id}` — the literal
-      // string reaches the query and matches no owner, so every widget renders
-      // 0. Proven side by side on one dashboard: `{current_user}` → 0,
-      // `{current_user_id}` → 0, no owner filter → 10,100,081. The token is
-      // implemented in platform-objects (the ListView data path) and has no
-      // counterpart in service-analytics. Filed upstream; until it lands, a
-      // ListView is the only surface where "mine" actually means mine.
+      // These are ListViews: they list the records themselves, which a
+      // dashboard widget (an aggregate over a dataset, ADR-0021) cannot. Both
+      // surfaces resolve `{current_user_id}` since objectstack#12230 — the
+      // Service dashboard's "My Open Cases by Priority" is the aggregate
+      // counterpart of "My Cases" (#510).
       //
       // Every item here is object + `viewName`, which makes this group the
       // app's view-entry exemplar since #1259 retired the "Pipeline" row.
@@ -136,10 +132,8 @@ export const CrmApp = App.create({
         { id: 'nav_my_deals', type: 'object', objectName: 'crm_opportunity', viewName: 'my_open_deals', label: 'My Deals', icon: 'target' },
         { id: 'nav_my_leads', type: 'object', objectName: 'crm_lead', viewName: 'my_leads', label: 'My Leads', icon: 'user-plus' },
         { id: 'nav_my_cases', type: 'object', objectName: 'crm_case', viewName: 'my_open_cases', label: 'My Cases', icon: 'life-buoy' },
-        // #592 — the rep's own calendar. Same reasoning as `nav_my_tasks`: a
-        // ListView is the only surface where "mine" actually means mine
-        // (`{current_user_id}` interpolates on the list-view data path and
-        // nowhere else), so the personal calendar is a view, not a dashboard.
+        // #592 — the rep's own calendar: a list of events, so a view, not a
+        // dashboard.
         { id: 'nav_my_calendar', type: 'object', objectName: 'crm_event', viewName: 'my_events', label: 'My Calendar', icon: 'calendar-days' },
         // No "All Tasks" entry: "My Tasks" opens the `crm_task` list page,
         // whose tab strip leads with *All Tasks* — `TaskViews.list`, name

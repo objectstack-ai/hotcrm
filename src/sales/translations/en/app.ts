@@ -144,7 +144,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         kb_resolved_cases: { title: 'Resolved by KB', description: 'Closed cases pointing at the article that resolved them' },
         closed_cases_total: { title: 'Closed Cases', description: 'The denominator behind the deflection rate' },
         top_resolving_articles: { title: 'Top Resolving Articles', description: 'Knowledge articles ranked by the closed cases they resolved' },
-        open_cases_by_priority: { title: 'Open Cases by Priority', description: 'Open cases and their SLA-violation rate, broken down by priority' },
+        my_open_cases_by_priority: { title: 'My Open Cases by Priority', description: 'Your open cases and their SLA-violation rate, broken down by priority' },
       },
     },
   },
