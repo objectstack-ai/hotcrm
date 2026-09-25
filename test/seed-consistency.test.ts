@@ -3,6 +3,7 @@
 import { describe, it, expect } from 'vitest';
 import { CrmSeedData } from '../objectstack.composition';
 import { CASE_SLA_DEFAULT_TIER, caseSlaHours } from '../src/service/objects/_case-sla';
+import { HIGH_VALUE_DEAL_AMOUNT, LARGE_DEAL_AMOUNT } from '../src/sales/objects/_thresholds';
 
 /**
  * Seed ↔ hook consistency guards (#591).
@@ -204,6 +205,36 @@ describe('opportunity_amount_rollup would be a no-op over the seeds', () => {
       }
     }
     expect(drift, drift.join('\n')).toEqual([]);
+  });
+});
+
+/**
+ * The open board stays draggable (#1902). A deal born at or above
+ * `LARGE_DEAL_AMOUNT` enters `opportunity_approval_on_create`, whose approval
+ * nodes lock the record — its kanban card refuses every drag. When nine of the
+ * ten open seeded deals sat over the line, a fresh demo's board was frozen.
+ * The ruling: exactly one deal per approval tier exhibits the flow, and every
+ * other open deal is priced under the line. Pinned by NAME, so a re-priced
+ * deal crossing the line is named back rather than counted.
+ */
+describe('the seeded open pipeline keeps the kanban draggable (#1902)', () => {
+  const settled = new Set(['closed_won', 'closed_lost']);
+  const open = opportunities.filter((o) => !settled.has(String(o.stage)));
+  const overLine = open.filter((o) => Number(o.amount) >= LARGE_DEAL_AMOUNT);
+
+  it('exactly two open deals sit at or above LARGE_DEAL_AMOUNT, one per approval tier', () => {
+    const tier = (o: Rec) => (Number(o.amount) > HIGH_VALUE_DEAL_AMOUNT ? 'director' : 'manager');
+    expect(
+      overLine.map((o) => `${String(o.name)} (${tier(o)})`).sort(),
+    ).toEqual(['Acme Platform Upgrade (manager)', 'Wayne Enterprise License (director)']);
+  });
+
+  it('every active stage keeps a card under the line', () => {
+    const stages = ['prospecting', 'qualification', 'needs_analysis', 'proposal', 'negotiation'];
+    const lockedOnly = stages.filter(
+      (stage) => !open.some((o) => o.stage === stage && Number(o.amount) < LARGE_DEAL_AMOUNT),
+    );
+    expect(lockedOnly).toEqual([]);
   });
 });
 
