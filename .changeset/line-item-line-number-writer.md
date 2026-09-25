@@ -5,7 +5,7 @@
 **Line items now carry their line number.** `line_number` on opportunity and quote line
 items is read-only and platform-assigned, but nothing assigned it: every line a rep added
 stored an empty `Line #`, and the billing hand-off sent `"line_number": null` for each of
-them on every won deal and every activated contract. A new `beforeInsert` hook on both
+them on every won deal and every activated contract. A new hook on both
 line-item objects now stamps `(highest line number under the parent) + 1` — a line added
 from the Products or Line Items panel, through the API, or in a batch gets the next number
 under its opportunity or quote, a number supplied by the caller is ignored, and an existing

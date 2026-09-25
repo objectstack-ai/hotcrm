@@ -169,3 +169,6 @@ main().catch((err) => {
   console.error(`\nBackfill failed: ${(err as Error).message}`);
   process.exitCode = 1;
 });
+
+// A module, not a global script: `backfill-owner-id.ts` declares the same names.
+export {};
