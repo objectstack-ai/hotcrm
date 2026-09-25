@@ -80,6 +80,20 @@ export const QuoteLineItem = ObjectSchema.create({
       required: true,
       storage: { notNull: true },
       deleteBehavior: 'cascade',
+
+      // Curates the line-items panel on a quote's detail page (#1199) — the
+      // mechanism that panel reads first (#944; the long note is on
+      // `crm_campaign_member.crm_campaign`). A SUPERSET of the fallback it
+      // replaces (`highlightFields` minus this lookup: Product / Quantity /
+      // Sales Price / Total) plus `subtotal`, the line's price after its own
+      // discount and before tax — the formula was evaluated on every read and
+      // shown in no list. It sits before `total_price` because Total is
+      // Subtotal with the tax multiplier applied on top.
+      //
+      // ⛔ Not added to `highlightFields`: the detail page hoists the first
+      // four of that strip, so a fifth entry never reaches the strip, and
+      // reordering it would evict `total_price` from the record's header.
+      relatedListColumns: ['crm_product', 'quantity', 'unit_price', 'subtotal', 'total_price'],
     }),
 
     // Left on the restricting default on purpose — see the twin object: a

@@ -378,8 +378,7 @@ export const Account = ObjectSchema.create({
     // reads off the derived form. ⛔ Do NOT answer the warning by authoring a
     // `record:details` section — that is the escape hatch AGENTS.md reserves
     // for a named customer demand, and it would trade acceptance 3 for a
-    // quieter log. `crm_article_feedback.comment` carries the same verdict on
-    // `main` for the same reason. No guard reads this warning.
+    // quieter log. No guard reads this warning.
 
     incumbent_vendor: Field.text({
       label: 'Incumbent Vendor',
