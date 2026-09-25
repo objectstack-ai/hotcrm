@@ -24,7 +24,7 @@
  *   - `src/marketing/data/` campaigns, campaign members
  */
 export { accounts, contacts, leads, opportunities, OPPORTUNITY_LINES } from './sales.seed';
-export { tasks, events, eventAttendeesFromContacts, eventAttendeesFromLeads } from './activity.seed';
+export { tasks, events, eventAttendeesFromContacts, eventAttendeesFromLeads, leadInteractionPointers } from './activity.seed';
 export { forecasts } from './forecast.seed';
 export { celDaysAgo, celDaysFromNow, lineTotal, linesTotal, type LineSpec } from './_shared';
 
