@@ -338,6 +338,9 @@ export const ServiceDashboard: Dashboard = {
       description: 'Your open cases and their SLA-violation rate, broken down by priority',
       type: 'table',
       filter: { is_closed: false, owner_id: '{current_user_id}' },
+      // Opts out of the Agent global filter (keyed by its field, `owner_id`):
+      // ANDing an agent pick into "mine" empties the widget for anyone else.
+      filterBindings: { owner_id: false },
       colorVariant: 'default',
       dataset: 'case_metrics', dimensions: ['priority'], values: ['case_count', 'avg_sla_violated'],
       layout: { x: 0, y: 16, w: 12, h: 4 },
