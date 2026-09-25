@@ -185,10 +185,25 @@ const CASE_ROWS: CaseRow[] = [
   mk(200, 'closed', 'high', 'phone', 'problem', true, false, 20, null),
 ];
 
+/**
+ * Who owns each row (#510). The Service dashboard carries a PERSONAL widget —
+ * `owner_id: '{current_user_id}'` — so every widget runs as a signed-in
+ * VIEWER, and two of the open rows belong to someone else. Those two sit
+ * inside every preset, so a personal widget that ignored its owner predicate
+ * would count them and disagree with the truth below; the viewer still owns
+ * an open row at offset 0, so the personal widget is not blank at
+ * `last_7_days` either.
+ */
+const VIEWER = 'usr_fixture_viewer';
+const OTHER_OWNER = 'usr_fixture_other';
+const OTHER_OWNED_OFFSETS = new Set([2, 29]);
+const ownerOf = (row: CaseRow): string => (OTHER_OWNED_OFFSETS.has(row.offset) ? OTHER_OWNER : VIEWER);
+
 const CASE_OBJECT = {
   name: 'crm_case',
   fields: {
     id: { type: 'text' },
+    owner_id: { type: 'text' },
     subject: { type: 'text' },
     status: { type: 'text' },
     priority: { type: 'text' },
@@ -237,7 +252,7 @@ beforeAll(async () => {
 
   for (const row of CASE_ROWS) {
     const { offset, ...rest } = row;
-    await api.object('crm_case').insert({ ...rest, created_date: utcNoonDaysAgo(offset).toISOString() });
+    await api.object('crm_case').insert({ ...rest, owner_id: ownerOf(row), created_date: utcNoonDaysAgo(offset).toISOString() });
   }
 
   analytics = new AnalyticsService({
@@ -389,7 +404,9 @@ describe('every datetime-windowed dashboard answers under its own picker', () =>
         measures: widget.values,
         ...(filter ? { runtimeFilter: filter as never } : {}),
       },
-      { isSystem: true } as never,
+      // A signed-in viewer: `{current_user_id}` has no answer for a bare system
+      // caller, and the platform refuses the query rather than guess (#510).
+      { isSystem: true, userId: VIEWER } as never,
     );
     return result.rows as AnyRec[];
   };
@@ -443,7 +460,7 @@ describe('every datetime-windowed dashboard answers under its own picker', () =>
           const window = w.filterBindings?.dateRange === false ? null : days;
           const rows = await runWidget(w, widgetFilter(d, w, window ? presetWindow(days) : null));
           const expected = CASE_ROWS.filter((r) => truthMatches(r, w.filter, window)).length;
-          // `case_count` only: a widget like `open_cases_by_priority` also
+          // `case_count` only: a widget like `my_open_cases_by_priority` also
           // carries `avg_sla_violated`, and summing a rate into a row count
           // compares two different quantities.
           const actual = sumOf(rows, 'case_count');
@@ -492,6 +509,15 @@ function truthMatches(row: CaseRow, filter: AnyRec | undefined, windowDays: numb
       const m = typeof gte === 'string' ? gte.match(/^\{(\d+)_days_ago\}$/) : null;
       if (!m) throw new Error(`truthMatches: unsupported created_date filter ${JSON.stringify(cond)}`);
       if (row.offset > Number(m[1])) return false;
+      continue;
+    }
+    if (field === 'owner_id') {
+      // The one placeholder a widget filter here authors; the runner signs in
+      // as VIEWER. Any other owner spelling throws rather than mis-model.
+      if (cond !== '{current_user_id}') {
+        throw new Error(`truthMatches: unsupported owner_id filter ${JSON.stringify(cond)}`);
+      }
+      if (ownerOf(row) !== VIEWER) return false;
       continue;
     }
     if (cond !== null && typeof cond === 'object') {
