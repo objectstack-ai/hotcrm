@@ -15,8 +15,10 @@ export const Contract = ObjectSchema.create({
   icon: 'file-pen-line',
   description: 'Legal contracts and agreements',
 
-  // ADR-0090 D1/D7: OWD is an authored decision. Legal documents — owner only.
-  sharingModel: 'private',
+  // ADR-0090 D1/D7: OWD is an authored decision. Master-detail child of
+  // crm_account — a contract IS account data: reachable by whoever can reach
+  // the account, editable by whoever can edit it (#549, ruling 2026-08-31).
+  sharingModel: 'controlled_by_parent',
   // ADR-0079: render-only `titleFormat` retired in favor of `nameField`.
   // Original template was '{contract_number} - {crm_account.name}'. The
   // `crm_account.name` segment is a lookup DOT-WALK, which a formula field
@@ -52,12 +54,15 @@ export const Contract = ObjectSchema.create({
       format: 'CTR-{0000}',
     }),
     
-    // Relationships
-    crm_account: Field.lookup('crm_account', {
+    // Relationships — the master the OWD derives from. Authored as
+    // master-detail so the master is not decided by declaration order against
+    // the required `crm_contact` lookup below (objectstack#14747).
+    crm_account: Field.masterDetail('crm_account', {
       label: 'Account',
       group: 'parties',
       required: true,
       storage: { notNull: true },
+      deleteBehavior: 'cascade',
     }),
     
     crm_contact: Field.lookup('crm_contact', {
