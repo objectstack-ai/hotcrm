@@ -193,6 +193,11 @@ const utcNoonDaysAgo = (offset: number): string => {
 const truthMatches = (row: FixtureCase, filter: AnyRec | undefined): boolean => {
   for (const [field, cond] of Object.entries(filter ?? {})) {
     if (field === AGENT_FIELD) {
+      // `{current_user_id}` is resolved by the caller (see `truthFor`), so an
+      // unresolved placeholder here is a mis-modelled filter: throw.
+      if (typeof cond === 'string' && cond.startsWith('{')) {
+        throw new Error(`truthMatches: unresolved owner placeholder ${cond}`);
+      }
       if (row.owner !== cond) return false;
       continue;
     }
@@ -338,7 +343,7 @@ const widgetFilter = (w: AnyRec, opts: { agent?: string; window?: AnyRec } = {})
 };
 
 /** One widget, run through the real dataset executor exactly as declared. */
-const run = async (w: AnyRec, opts: { agent?: string; window?: AnyRec } = {}): Promise<AnyRec[]> => {
+const run = async (w: AnyRec, opts: { agent?: string; window?: AnyRec; viewer?: string } = {}): Promise<AnyRec[]> => {
   const filter = widgetFilter(w, opts);
   const result = await analytics.queryDataset(
     CaseDataset as never,
@@ -347,7 +352,9 @@ const run = async (w: AnyRec, opts: { agent?: string; window?: AnyRec } = {}): P
       measures: w.values,
       ...(filter ? { runtimeFilter: filter as never } : {}),
     } as never,
-    { isSystem: true } as never,
+    // `viewer` signs the query in, so a `{current_user_id}` widget filter has
+    // someone to resolve to (#510); without one the platform refuses it.
+    { isSystem: true, ...(opts.viewer ? { userId: opts.viewer } : {}) } as never,
   );
   return (result.rows ?? []) as AnyRec[];
 };
@@ -615,5 +622,45 @@ describe('the Agent filter composes with the dashboard date window', () => {
       if (alpha <= 0 || beta <= 0) wrong.push(`${id}: a shard is empty under the window (${alpha} / ${beta})`);
     }
     expect(wrong, `the two dashboard filters do not compose:\n  ${wrong.join('\n  ')}`).toEqual([]);
+  }, 30_000);
+});
+
+// ═══════════════════ 7 · the personal widget answers for its viewer (#510) ══
+
+describe('My Open Cases by Priority ignores the Agent pick and answers for its viewer', () => {
+  const MY_WIDGET = 'my_open_cases_by_priority';
+
+  /** The widget's own filter with `{current_user_id}` resolved to `viewer`. */
+  const truthFor = (w: AnyRec, viewer: string): number => {
+    const filter = { ...(w.filter as AnyRec) };
+    expect(filter[AGENT_FIELD], `${MY_WIDGET} is not scoped to its viewer`).toBe('{current_user_id}');
+    filter[AGENT_FIELD] = viewer;
+    return COUNT_MEASURES.case_count(CASE_ROWS.filter((r) => truthMatches(r, filter)));
+  };
+
+  it('opts out of the Agent filter by its field name', () => {
+    // Measured in the console (#510): with the opt-out, picking another agent
+    // leaves this widget on the viewer's own cases; without it, the pick is
+    // ANDed in and "mine AND theirs" is empty.
+    const w = widget(MY_WIDGET);
+    expect(w, `service_dashboard has no ${MY_WIDGET} widget`).toBeTruthy();
+    expect(w.filterBindings?.[AGENT_FIELD]).toBe(false);
+  });
+
+  it('shows each viewer their own open cases, whatever agent is picked', async () => {
+    const w = widget(MY_WIDGET);
+    const alpha = total(await run(w, { viewer: ALPHA, agent: BETA }), 'case_count');
+    const beta = total(await run(w, { viewer: BETA, agent: ALPHA }), 'case_count');
+    const all = COUNT_MEASURES.case_count(CASE_ROWS.filter((r) => !r.is_closed));
+
+    expect(alpha).toBe(truthFor(w, ALPHA));
+    expect(beta).toBe(truthFor(w, BETA));
+    // Two viewers, two different answers that together are every open case.
+    expect(alpha).toBeGreaterThan(0);
+    expect(beta).toBeGreaterThan(0);
+    expect(alpha).not.toBe(beta);
+    expect(alpha + beta).toBe(all);
+    // A viewer who owns nothing sees nothing — not the team's numbers.
+    expect(total(await run(w, { viewer: GHOST }), 'case_count')).toBe(0);
   }, 30_000);
 });

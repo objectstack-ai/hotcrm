@@ -180,7 +180,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         kb_resolved_cases: { title: 'Resueltos por KB', description: 'Casos cerrados que señalan el artículo que los resolvió' },
         closed_cases_total: { title: 'Casos Cerrados', description: 'El denominador de la tasa de desvío' },
         top_resolving_articles: { title: 'Artículos que Más Resuelven', description: 'Artículos de la base de conocimiento ordenados por los casos cerrados que resolvieron' },
-        open_cases_by_priority: { title: 'Casos abiertos por prioridad', description: 'Casos abiertos y su tasa de incumplimiento de SLA, desglosados por prioridad' },
+        my_open_cases_by_priority: { title: 'Mis casos abiertos por prioridad', description: 'Tus casos abiertos y su tasa de incumplimiento de SLA, desglosados por prioridad' },
       },
     },
   },

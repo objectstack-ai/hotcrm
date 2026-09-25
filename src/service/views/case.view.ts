@@ -117,11 +117,9 @@ export const CaseViews = defineView({
     },
 
     /**
-     * The agent's personal queue. This is a LIST view on purpose: the list
-     * data path resolves `{current_user_id}` (proven by my_leads /
-     * my_open_tasks), while the dashboard/analytics path resolves no user
-     * token at all — which is why service_dashboard has no "my" widget
-     * (see the note there and the proven record in crm.app.ts).
+     * The agent's personal queue: the cases themselves, one row each. Its
+     * aggregate counterpart is service_dashboard's "My Open Cases by
+     * Priority" (#510) — a dashboard widget counts, it cannot list.
      */
     my_open_cases: {
       name: 'my_open_cases',

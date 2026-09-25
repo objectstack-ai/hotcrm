@@ -146,10 +146,10 @@ describe('filter template tokens are resolvable', () => {
    * - ANALYTICS path (dashboard widgets / dataset reports,
    *   `/api/v1/analytics/...`): resolves the DATE_MACRO_TOKENS vocabulary (the
    *   YTD revenue widget returns a non-zero sum, impossible with a literal
-   *   token), but still NO user token — `{current_user}` and even
-   *   `{current_user_id}` match no owner (see crm.app.ts's My Work note). That
-   *   half is unchanged and tracked at #510, so the two rules below remain
-   *   asymmetric — just not in the direction they were written for.
+   *   token) and, since objectstack#12230 (in the 17.4.0 pin), the user tokens
+   *   too — both the direct query door and the dataset-scope channel. Measured
+   *   by #510 with two reps on one widget: each saw only their own cases. So
+   *   both paths now accept the same two classes.
    */
   const dashboards: AnyRec[] = (stack as any).dashboards ?? [];
   const reports: AnyRec[] = (stack as any).reports ?? [];
@@ -203,8 +203,8 @@ describe('filter template tokens are resolvable', () => {
     expect(good).toEqual([]);
   });
 
-  it('dashboard widget and report filters only use date macros', () => {
-    const allowed = (t: string) => isDateMacroToken(t);
+  it('dashboard widget and report filters only use resolvable tokens', () => {
+    const allowed = (t: string) => USER_TOKENS.has(t) || isDateMacroToken(t);
     const bad: string[] = [];
     for (const d of dashboards) {
       for (const w of d.widgets ?? []) badTokensIn(`${d.name}/${w.id}`, w.filter, allowed, bad);

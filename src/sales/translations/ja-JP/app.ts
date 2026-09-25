@@ -180,7 +180,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         kb_resolved_cases: { title: 'ナレッジで解決', description: '解決した記事が紐づくクローズ済みケース' },
         closed_cases_total: { title: 'クローズ済みケース', description: 'ナレッジ解決率の分母' },
         top_resolving_articles: { title: '解決件数の多い記事', description: '解決したクローズ済みケース数で並べたナレッジ記事' },
-        open_cases_by_priority: { title: '優先度別オープンケース', description: 'オープンケースとそのSLA違反率を優先度別に集計' },
+        my_open_cases_by_priority: { title: '優先度別の私のオープンケース', description: 'あなたのオープンケースとそのSLA違反率を優先度別に集計' },
       },
     },
   },
