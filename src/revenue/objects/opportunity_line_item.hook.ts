@@ -2,7 +2,7 @@
 
 import type { Hook, HookContext } from '@objectstack/spec/data';
 import type { HookApi } from '../../sales/objects/_hook-api';
-import { createLineItemPriceFill } from './_line-item-price-fill';
+import { createLineItemNumbering, createLineItemPriceFill } from './_line-item-price-fill';
 
 /**
  * Opportunity amount rollup.
@@ -37,6 +37,12 @@ import { createLineItemPriceFill } from './_line-item-price-fill';
 const opportunityLineItemPriceFill: Hook = createLineItemPriceFill(
   'crm_opportunity_line_item',
   'opportunity_line_item_price_fill',
+);
+
+/** `line_number` assigner — see `_line-item-price-fill.ts` (#1828). */
+const opportunityLineItemNumbering: Hook = createLineItemNumbering(
+  'crm_opportunity_line_item',
+  'opportunity_line_item_line_number',
 );
 
 const opportunityAmountRollup: Hook = {
@@ -98,4 +104,4 @@ const opportunityAmountRollup: Hook = {
   },
 };
 
-export default [opportunityLineItemPriceFill, opportunityAmountRollup];
+export default [opportunityLineItemPriceFill, opportunityLineItemNumbering, opportunityAmountRollup];
