@@ -142,7 +142,7 @@ import type { HotCrmComposition } from './src/sales/data/index.js';
 import {
   resolveComposition,
   accounts, contacts, leads, opportunities,
-  tasks, events, eventAttendeesFromContacts, eventAttendeesFromLeads, forecasts,
+  tasks, events, eventAttendeesFromContacts, eventAttendeesFromLeads, leadInteractionPointers, forecasts,
 } from './src/sales/data/index.js';
 import { products, opportunityLineItems, contracts, quotes, quoteLineItems } from './src/revenue/data/index.js';
 import { cases, knowledgeArticles } from './src/service/data/index.js';
@@ -388,6 +388,7 @@ export const CrmSeedData = [
   events,
   eventAttendeesFromContacts,
   eventAttendeesFromLeads,
+  leadInteractionPointers,
   campaigns,
   campaignMembersFromLeads,
   campaignMembersFromContacts,
