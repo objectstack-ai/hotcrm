@@ -65,3 +65,47 @@ export function createLineItemPriceFill(objectName: string, hookName: string): H
     },
   };
 }
+
+/**
+ * Shared line-number assigner (#1828) — `line_number` is `readonly`, so this is
+ * its one writer. Insert: `max under the parent + 1`. Update of a row that still
+ * has none (created before this hook — `scripts/backfill-line-number.ts` touches
+ * each once): same stamp. An existing ordinal is never renumbered. The engine
+ * keeps a payload key a hook wrote through its readonly strip, so a user write
+ * lands the stamp and a user-supplied value is overwritten; only a no-user
+ * system write that supplies one (the seed, and its replay) keeps its own. `runAs: 'system'`
+ * elevates the sibling read and nothing else. Body-only rule as above: the
+ * parent key comes from `ctx.object`, never a factory parameter.
+ */
+export function createLineItemNumbering(objectName: string, hookName: string): Hook {
+  return {
+    name: hookName,
+    object: objectName,
+    events: ['beforeInsert', 'beforeUpdate'],
+    priority: 110,
+    runAs: 'system',
+    description: 'Assign line_number = (max under the parent) + 1.',
+    handler: async (ctx: HookContext) => {
+      const { event, input } = ctx;
+      const prev = ctx.previous;
+      const api = ctx.api as HookApi | undefined;
+      if (!api) return;
+      if (!ctx.user?.id && typeof input.line_number === 'number') return;
+      // D3: a predicate update has ONE payload for every row (forecast.hook.ts).
+      if (event === 'beforeUpdate' && (ctx.dispatch?.mode === 'per-row' || typeof prev?.line_number === 'number')) return;
+      const parentKey = ctx.object === 'crm_quote_line_item' ? 'crm_quote' : 'crm_opportunity';
+      const parentId = input[parentKey] ?? prev?.[parentKey];
+      if (typeof parentId !== 'string' || !parentId) return;
+      const siblings = await api.object(ctx.object).find({
+        where: { [parentKey]: parentId }, fields: ['line_number'], top: 5000,
+      });
+      let max = 0;
+      for (const s of siblings) {
+        if (typeof s.line_number === 'number' && s.line_number > max) max = s.line_number;
+      }
+      // A batch insert runs every row's beforeInsert before storing any row.
+      const offset = event === 'beforeInsert' && ctx.dispatch?.mode === 'per-row' ? ctx.dispatch.index : 0;
+      input.line_number = max + 1 + offset;
+    },
+  };
+}

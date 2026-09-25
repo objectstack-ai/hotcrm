@@ -93,6 +93,11 @@ const RUNTIME_TEST_FILES = [
   'account-approval-gate.test.ts',
   'opportunity-account-capability-gate.test.ts',
   'lead-conversion-approval-gate.test.ts',
+  // #1828 — the `line_number` assigner on both line items. Same precedent: its
+  // evidence is an ENGINE fact (a hook-written readonly key survives the
+  // non-system strip, a caller-supplied one does not) measured on a real
+  // ObjectQL with the strip's own control beside it, plus the lowered body.
+  'line-item-line-number.test.ts',
 ];
 
 /**
