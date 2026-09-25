@@ -662,9 +662,10 @@ export const OPPORTUNITY_LINES: Record<string, readonly LineSpec[]> = {
     { product: 'AI Agent Seat (Annual)', quantity: 35, unit_price: 1000, description: 'Agent seats for the Ops organization.' },
   ],
   'Globex Manufacturing Suite': [
-    { product: 'ObjectStack Platform', quantity: 6, unit_price: 50000, description: 'Enterprise edition across six manufacturing sites.' },
-    { product: 'Implementation Services', quantity: 2, unit_price: 75000, description: 'Two-phase implementation: plant operations, then commercial.' },
-    { product: 'Premium Support', quantity: 2, unit_price: 25000, description: 'Premium support for both production regions.' },
+    { product: 'ObjectStack Platform', quantity: 1, unit_price: 50000, description: 'Enterprise edition — one shared tenant serving all six manufacturing sites.' },
+    { product: 'Admin Training Workshop', quantity: 4, unit_price: 6000, description: 'Four workshop days, one per regional plant cluster.' },
+    { product: 'Standard Support', quantity: 1, unit_price: 9000, description: 'Business-hours support for the first year.' },
+    { product: 'AI Agent Seat (Annual)', quantity: 12, unit_price: 1000, description: 'Agent seats for the plant operations leads.' },
   ],
   'Wayne Enterprise License': [
     { product: 'ObjectStack Platform', quantity: 20, unit_price: 50000, discount: 15, description: 'Enterprise-wide license, volume discount at 20 tenants.' },
@@ -727,38 +728,36 @@ export const OPPORTUNITY_LINES: Record<string, readonly LineSpec[]> = {
     { product: 'AI Agent Seat (Annual)', quantity: 6, unit_price: 1000, description: 'Agent seats for the compliance analysts.' },
   ],
   'Northwind Grid Modernization': [
-    { product: 'ObjectStack Platform', quantity: 3, unit_price: 50000, description: 'Enterprise edition for grid, field and customer operations.' },
-    { product: 'Implementation Services', quantity: 1, unit_price: 75000, description: 'Operational-data assessment and implementation.' },
+    { product: 'ObjectStack Platform', quantity: 1, unit_price: 50000, description: 'Enterprise edition for grid, field and customer operations.' },
+    { product: 'Field Service Mobile', quantity: 1, unit_price: 14000, description: 'Field-service mobile for the grid maintenance crews.' },
+    { product: 'Sandbox Environment (Annual)', quantity: 1, unit_price: 7500, description: 'Sandbox for the operational-data assessment.' },
     { product: 'AI Agent Seat (Annual)', quantity: 15, unit_price: 1000, description: 'Agent seats for the control-room pilot.' },
   ],
   'Lattice Student Success Platform': [
-    { product: 'ObjectStack Platform (SMB Edition)', quantity: 5, unit_price: 18000, description: 'Student-success tenants for five colleges.' },
-    { product: 'Admin Training Workshop', quantity: 5, unit_price: 6000, description: 'Five workshop days for the student-success advisers.' },
+    { product: 'ObjectStack Platform (SMB Edition)', quantity: 2, unit_price: 18000, description: 'Student-success tenants for the two pilot colleges.' },
+    { product: 'Admin Training Workshop', quantity: 2, unit_price: 6000, description: 'Two workshop days for the student-success advisers.' },
     { product: 'AI Agent Seat (Annual)', quantity: 5, unit_price: 1000, description: 'Agent seats for the advising team.' },
   ],
   'Vertex Analytics Expansion': [
-    { product: 'ObjectStack Platform', quantity: 2, unit_price: 50000, description: 'Two tenants for the revenue organization.' },
-    { product: 'Analytics Add-on', quantity: 5, unit_price: 22000, description: 'Analytics for sales, marketing, service, finance and ops.' },
-    { product: 'Premium Support', quantity: 2, unit_price: 25000, description: 'Premium support for the expanded footprint.' },
-    { product: 'AI Agent Seat (Annual)', quantity: 60, unit_price: 1000, description: 'Agent seats for the full revenue organization.' },
+    { product: 'Analytics Add-on', quantity: 2, unit_price: 22000, description: 'Analytics for the sales and marketing teams.' },
+    { product: 'Premium Support', quantity: 1, unit_price: 25000, description: 'Premium support for the expanded footprint.' },
+    { product: 'AI Agent Seat (Annual)', quantity: 10, unit_price: 1000, description: 'Agent seats for the revenue operations team.' },
   ],
   'Apex Logistics Data Hub': [
-    { product: 'ObjectStack Platform', quantity: 3, unit_price: 50000, description: 'Data-hub tenants for commercial, operations and finance.' },
+    { product: 'ObjectStack Platform', quantity: 1, unit_price: 50000, description: 'Data-hub tenant shared by commercial, operations and finance.' },
     { product: 'Data Migration Services', quantity: 1, unit_price: 35000, description: 'Consolidation of four fragmented commercial systems.' },
-    { product: 'Implementation Services', quantity: 1, unit_price: 75000, description: 'Architecture workshop through go-live.' },
-    { product: 'AI Agent Seat (Annual)', quantity: 15, unit_price: 1000, description: 'Agent seats for the commercial operations team.' },
+    { product: 'AI Agent Seat (Annual)', quantity: 8, unit_price: 1000, description: 'Agent seats for the commercial operations team.' },
   ],
   'Lattice Education Renewal': [
-    { product: 'ObjectStack Platform', quantity: 3, unit_price: 50000, description: 'Renewal of the three institution tenants.' },
+    { product: 'ObjectStack Platform', quantity: 1, unit_price: 50000, description: 'Renewal of the institution-wide tenant.' },
     { product: 'Analytics Add-on', quantity: 1, unit_price: 22000, description: 'Expanded analytics package for the renewal term.' },
-    { product: 'Admin Training Workshop', quantity: 3, unit_price: 6000, description: 'Three workshop days for the new admissions admins.' },
-    { product: 'AI Agent Seat (Annual)', quantity: 20, unit_price: 1000, description: 'Student-success automation seats.' },
+    { product: 'AI Agent Seat (Annual)', quantity: 15, unit_price: 1000, description: 'Student-success automation seats.' },
   ],
   'Vertex Enterprise Rollout': [
-    { product: 'ObjectStack Platform', quantity: 10, unit_price: 50000, discount: 20, description: 'Phased enterprise rollout, ten tenants (volume discount).' },
-    { product: 'Implementation Services', quantity: 1, unit_price: 75000, description: 'Phased deployment with data-residency controls.' },
-    { product: 'Premium Support', quantity: 4, unit_price: 25000, description: 'Premium support across four regions.' },
-    { product: 'AI Agent Seat (Annual)', quantity: 100, unit_price: 1000, description: 'Agent seats for the first rollout wave.' },
+    { product: 'ObjectStack Platform', quantity: 1, unit_price: 50000, discount: 20, description: 'Phase-one tenant for the first region, with data-residency controls (multi-phase commitment discount).' },
+    { product: 'Data Migration Services', quantity: 1, unit_price: 35000, description: 'Phase-one migration of the regional revenue data.' },
+    { product: 'Standard Support', quantity: 1, unit_price: 9000, description: 'Business-hours support for phase one.' },
+    { product: 'AI Agent Seat (Annual)', quantity: 10, unit_price: 1000, description: 'Agent seats for the first rollout wave.' },
   ],
   // Campaign-attributed wins — see the campaign metrics note below.
   'Lattice Analytics Expansion': [
@@ -1099,6 +1098,19 @@ analytics seats for the Ops org, (3) priority support SLA.`,
     // Two cards in each active stage make the kanban immediately legible in
     // a customer demo. They also tell a coherent sales story instead of
     // overwhelming the board with anonymous generated rows.
+    //
+    // PRICED TO STAY DRAGGABLE (#1902). A deal at or above
+    // `LARGE_DEAL_AMOUNT` is born into `opportunity_approval_on_create`, whose
+    // approval nodes hold the record with `lockRecord: true` — on the board
+    // that card refuses every drag with `RECORD_LOCKED`. When nine of the ten
+    // open deals sat over the line, the one board a demo opens first was
+    // frozen. So exactly TWO open deals exhibit the approval flow, one per
+    // tier, and both are in the block above: `Acme Platform Upgrade`
+    // (manager review only, $100K–$500K) and `Wayne Enterprise License`
+    // (manager, then director sign-off, over `HIGH_VALUE_DEAL_AMOUNT`). Every
+    // deal in this block is priced under the line, so each active stage keeps
+    // at least one card that moves. `test/seed-consistency.test.ts` pins the
+    // two by name — re-pricing a deal here over $100K goes red there.
     {
       name: 'Northwind Grid Modernization',
       crm_account: 'Northwind Energy',
@@ -1188,7 +1200,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       forecast_category: 'commit',
       lead_source: 'referral',
       stage_entry_date: celDaysAgo(3),
-      description: 'An enterprise rollout negotiated around phased deployment and data-residency requirements.',
+      description: 'Phase one of an enterprise rollout, negotiated around phased deployment and data-residency requirements.',
       next_step: 'Resolve the final security addendum and confirm the procurement signature date.',
     },
   ]
