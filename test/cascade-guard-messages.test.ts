@@ -312,3 +312,58 @@ describe('deleting a customer account with open opportunities', () => {
     expect(await rowsOf('crm_account', account.id)).toHaveLength(1);
   });
 });
+
+/**
+ * The same guard, for ACTIVATED contracts (#549).
+ *
+ * `crm_contract` is master-detail under the account since #549, so a
+ * `DELETE crm_account` now cascades its contracts. The guard refuses while an
+ * activated one exists and lets a draft go — measured end-to-end, because only
+ * the engine's own referential pass can show that the refusal reaches the
+ * caller BEFORE the cascade touches the contract.
+ */
+describe('deleting a customer account with activated contracts (#549)', () => {
+  const accountWithContract = async (status: string) => {
+    const n = uniq();
+    const account = await insert('crm_account', {
+      name: `Signed Corp ${n}`, type: 'customer', industry: 'technology',
+    });
+    const contact = await insert('crm_contact', {
+      first_name: 'Sig', last_name: `Nature ${n}`, email: `sig${n}@signed.test`,
+      crm_account: account.id,
+    });
+    const contract = await insert('crm_contract', {
+      crm_account: account.id, crm_contact: contact.id, status,
+      contract_term_months: 12, start_date: '2026-01-01', end_date: '2026-12-31',
+      contract_value: 1000,
+    });
+    return { account, contract };
+  };
+
+  it('refuses while an activated contract exists, naming it, and keeps both rows', async () => {
+    const { account, contract } = await accountWithContract('activated');
+    const message = await deleteAndCatch('crm_account', account.id);
+    expect(message).toContain(
+      'Cannot delete customer account: 1 activated contract still references it. Terminate or reassign it first.',
+    );
+    expect(await rowsOf('crm_account', account.id)).toHaveLength(1);
+    expect(await rowsOf('crm_contract', contract.id)).toHaveLength(1);
+  });
+
+  it('a draft contract is NOT what the guard refuses — the platform referential pass is', async () => {
+    // MEASURED, and the reason the docs say "an account carrying any contract
+    // cannot be deleted" rather than "drafts cascade": the guard stands down
+    // (no activated contract), then the engine's cascade reaches the CONTACTS
+    // first and stops on `crm_contract.crm_contact`, a required lookup that
+    // cannot be cleared. So the delete is still refused, by the platform and
+    // in its words, and every row stays. If this case starts passing with
+    // `null`, the engine reordered its cascade (contracts before contacts) and
+    // the docs' delete paragraph must be re-taken.
+    const { account, contract } = await accountWithContract('draft');
+    const message = await deleteAndCatch('crm_account', account.id);
+    expect(message).not.toContain('activated contract');
+    expect(message).toMatch(/still referenced by 1 Contract record/);
+    expect(await rowsOf('crm_account', account.id)).toHaveLength(1);
+    expect(await rowsOf('crm_contract', contract.id)).toHaveLength(1);
+  });
+});

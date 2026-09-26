@@ -16,8 +16,10 @@ export const Quote = ObjectSchema.create({
   icon: 'file-text',
   description: 'Price quotes for customers',
 
-  // ADR-0090 D1/D7: OWD is an authored decision. Owner only.
-  sharingModel: 'private',
+  // ADR-0090 D1/D7: OWD is an authored decision. Master-detail child of
+  // crm_account — a quote is reachable by whoever can reach its account, and
+  // its line items derive one level further (#549, ruling 2026-08-31).
+  sharingModel: 'controlled_by_parent',
   // ADR-0079: render-only `titleFormat` retired in favor of `nameField`,
   // which names a real field. The former template composed two local fields, so
   // a `display_title` formula field reproduces it for the record title.
@@ -71,12 +73,13 @@ export const Quote = ObjectSchema.create({
       expression: F`record.quote_number + " - " + record.name`,
     }),
 
-    // Relationships
-    crm_account: Field.lookup('crm_account', {
+    // Relationships — the master the OWD derives from (authored, not positional).
+    crm_account: Field.masterDetail('crm_account', {
       label: 'Account',
       group: 'basic',
       required: true,
       storage: { notNull: true },
+      deleteBehavior: 'cascade',
     }),
     
     crm_contact: Field.lookup('crm_contact', {
