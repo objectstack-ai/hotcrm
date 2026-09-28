@@ -141,7 +141,6 @@ export const Forecast = ObjectSchema.create({
 
     quota: Field.currency({
       label: 'Quota',
-      scale: 2,
       min: 0,
       group: 'amounts',
       trackHistory: true,
@@ -150,7 +149,6 @@ export const Forecast = ObjectSchema.create({
     pipeline_amount: Field.currency({
       label: 'Pipeline',
       description: 'Sum of all open opportunities closing in this period (any stage).',
-      scale: 2,
       min: 0,
       group: 'amounts',
     }),
@@ -158,7 +156,6 @@ export const Forecast = ObjectSchema.create({
     best_case_amount: Field.currency({
       label: 'Best Case',
       description: 'Open opportunities in the Best Case or Commit forecast category.',
-      scale: 2,
       min: 0,
       group: 'amounts',
     }),
@@ -166,7 +163,6 @@ export const Forecast = ObjectSchema.create({
     commit_amount: Field.currency({
       label: 'Commit',
       description: 'Open opportunities in the Commit forecast category (owner-committed).',
-      scale: 2,
       min: 0,
       group: 'amounts',
     }),
@@ -174,7 +170,6 @@ export const Forecast = ObjectSchema.create({
     closed_amount: Field.currency({
       label: 'Closed Won',
       description: 'Already-closed-won amount in this period.',
-      scale: 2,
       min: 0,
       group: 'amounts',
     }),

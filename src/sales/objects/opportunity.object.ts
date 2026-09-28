@@ -81,7 +81,6 @@ export const Opportunity = ObjectSchema.create({
       label: 'Amount',
       required: true,
       storage: { notNull: true },
-      scale: 2,
       min: 0,
       group: 'financials',
       trackHistory: true,
@@ -89,7 +88,6 @@ export const Opportunity = ObjectSchema.create({
 
     expected_revenue: Field.currency({
       label: 'Expected Revenue',
-      scale: 2,
       readonly: true,  // Calculated field
       group: 'financials',
     }),
