@@ -75,22 +75,21 @@ export const QuoteGenerationFlow: Flow = {
           crm_account: '{oppRecord.crm_account}', crm_contact: '{oppRecord.primary_contact}',
           owner_id: '{$User.Id}', status: 'draft',
           quote_date: '{TODAY()}', expiration_date: '{TODAY() + expirationDays}',
-          // `subtotal` is a bare path pass-through and needs no rounding:
-          // `crm_opportunity.amount` is itself `Field.currency({ scale: 2 })`,
-          // so it cannot arrive here unrounded.
+          // `subtotal` is a bare path pass-through and needs no rounding: it
+          // copies `crm_opportunity.amount` as stored and does no arithmetic,
+          // so it adds no floating-point tail of its own.
           subtotal: '{oppRecord.amount}', discount: '{discount}',
-          // ⛔ A currency × percentage MUST be rounded to the field's declared
-          // scale inside the expression — the quote's own money fields are the
-          // contract, and the flow meets it rather than handing the engine an
-          // unrounded double. `discount_amount` / `total_price` are both
-          // `Field.currency({ scale: 2 })`, while `discount / 100` is inexact
-          // for every percentage whose hundredth is not a dyadic rational, so a
-          // BARE product carries a tail the field refuses: 180,000 at 30% is
-          // 125999.99999999999 and the insert is rejected with `Total Price must
-          // have at most 2 decimal places (got 11)`. A bare product therefore
-          // makes quote generation depend on an arithmetic accident of
-          // amount × discount — 20% of 180K works, 30% of the same 180K does
-          // not — and the 400 never reaches the seller.
+          // ⛔ A currency × percentage MUST be rounded to whole cents inside the
+          // expression — the flow hands the engine a money amount, never an
+          // unrounded double. `discount / 100` is inexact for every percentage
+          // whose hundredth is not a dyadic rational, so a BARE product carries
+          // a tail: 180,000 at 30% is 125999.99999999999. While these fields
+          // declared `scale: 2` the insert was rejected for it (`Total Price
+          // must have at most 2 decimal places (got 11)`, #1206). Currency
+          // fields no longer declare `scale` — the platform refuses it, a
+          // currency's decimals are its ISO 4217 minor unit (#1965) — so the
+          // write is now ACCEPTED and the tail would be stored silently. The
+          // rounding keeps `discount_amount` / `total_price` whole-cent amounts.
           //
           // `round()` is the CEL stdlib's, mirrored 1:1 into flow value
           // expressions from service-automation 17.3.0. It is INTEGER-ONLY and

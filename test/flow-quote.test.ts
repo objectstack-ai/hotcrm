@@ -55,16 +55,18 @@ describe('quote_generation flow — runtime', () => {
   });
 
   /**
-   * Regression pin for #1206 — the money fields carry the FIELD'S SCALE, not a
-   * raw IEEE-754 product.
+   * Regression pin for #1206 — the money fields carry whole cents, not a raw
+   * IEEE-754 product.
    *
    * ⛔ This pin asserts the VALUE, and it has to. The harness's in-memory data
-   * engine does not enforce field scale, so a pin that merely asserted "the run
+   * engine enforces no decimal places, so a pin that merely asserted "the run
    * did not fail" would be green both before and after the fix and would pin
-   * nothing at all. Against the real driver the pre-fix value is what the
-   * insert was REJECTED for — `Total Price must have at most 2 decimal places
-   * (got 11)` — and the rejection never reached the seller, so the value here
-   * is the only evidence the fix works.
+   * nothing at all. When #1206 was filed the real driver REJECTED the pre-fix
+   * value — `Total Price must have at most 2 decimal places (got 11)`, from the
+   * fields' since-retired `scale: 2` — and the rejection never reached the
+   * seller. Currency fields declare no `scale` now (#1965), so the real driver
+   * accepts that value and stores its tail; either way the value here is the
+   * only evidence the rounding works.
    *
    * Both discounts are the issue's own measurements on a 180,000 opportunity,
    * and between them they cover both edited expressions: at 30% only
@@ -74,7 +76,7 @@ describe('quote_generation flow — runtime', () => {
    * 10% and 0% the two cases above use — is exact either way and cannot catch
    * this.
    */
-  it('rounds discount_amount and total_price to the fields\' 2-decimal scale (#1206)', async () => {
+  it('rounds discount_amount and total_price to whole cents (#1206)', async () => {
     const at = async (discount: number) => {
       const h = makeQuote({
         crm_opportunity: [{
