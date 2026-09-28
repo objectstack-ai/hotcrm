@@ -139,15 +139,9 @@ export const ActivityDashboard: Dashboard = {
       dataset: 'event_metrics', dimensions: ['owner'], values: ['event_count'],
       layout: { x: 0, y: 2, w: 6, h: 4 },
       chartConfig: {
-        type: 'bar',
         showLegend: false,
         showDataLabels: true,
         colors: ['#10B981'],
-        // Axis titles stay plain English: `ChartAxisSchema.title` accepts an inline
-        // locale map but the Console flattens it to the map's FIRST value regardless
-        // of locale — measured, see `src/dashboards/index.ts` (#1822).
-        xAxis: { field: 'owner', title: 'Rep', showGridLines: false, logarithmic: false },
-        yAxis: [{ field: 'event_count', title: 'Interactions', showGridLines: true, logarithmic: false }],
       },
     },
     {
@@ -164,12 +158,9 @@ export const ActivityDashboard: Dashboard = {
       dataset: 'event_metrics', dimensions: ['start_datetime'], values: ['event_count'],
       layout: { x: 6, y: 2, w: 6, h: 4 },
       chartConfig: {
-        type: 'area',
         showLegend: false,
         showDataLabels: false,
         colors: ['#0EA5E9'],
-        xAxis: { field: 'start_datetime', title: 'Week', showGridLines: false, logarithmic: false },
-        yAxis: [{ field: 'event_count', title: 'Interactions', showGridLines: true, logarithmic: false }],
         interaction: { tooltips: true, brush: true },
       },
     },
@@ -185,7 +176,6 @@ export const ActivityDashboard: Dashboard = {
       dataset: 'event_metrics', dimensions: ['type'], values: ['event_count'],
       layout: { x: 0, y: 6, w: 4, h: 4 },
       chartConfig: {
-        type: 'donut',
         showLegend: true,
         showDataLabels: true,
         colors: ['#4169E1', '#10B981', '#8B5CF6', '#F59E0B', '#0EA5E9', '#94A3B8'],
@@ -201,12 +191,9 @@ export const ActivityDashboard: Dashboard = {
       dataset: 'event_metrics', dimensions: ['related_to_type'], values: ['event_count'],
       layout: { x: 4, y: 6, w: 4, h: 4 },
       chartConfig: {
-        type: 'bar',
         showLegend: false,
         showDataLabels: true,
         colors: ['#4169E1'],
-        xAxis: { field: 'related_to_type', title: 'Related To', showGridLines: false, logarithmic: false },
-        yAxis: [{ field: 'event_count', title: 'Interactions', showGridLines: true, logarithmic: false }],
       },
     },
     {
