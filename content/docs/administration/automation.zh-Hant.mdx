@@ -94,7 +94,7 @@ description: 驗證規則、流程、排程作業與審批 —— 無需你動�
 
 流程內的通知由 **`notify` 節點** 投遞（透過訊息服務傳送站內信 + 郵件）—— 而非舊的 `script`/郵件步驟（在 7.4 中已是空操作）。
 
-如果你需要建構新的流程，請參見 [自訂 › 擴充物件](/zh-Hant/docs/customization/extending-objects)。
+如果你需要建構新的流程，請參見 [客製化 › 擴展物件](/zh-Hant/docs/customization/extending-objects)。
 
 ## 排程類自動化
 
@@ -108,7 +108,7 @@ description: 驗證規則、流程、排程作業與審批 —— 無需你動�
 
 自 ObjectStack 7.4 起，審批被建模為 **流程中的 `approval` 節點**（ADR-0019），而非獨立的審批流程類型。進入節點時會建立審批請求、在該步驟待批期間 **鎖定記錄**、將即時狀態鏡像到 `approval_status` 欄位，並沿 *approve* / *reject* 分支繼續。
 
-HotCRM 內建的 **商機審批** 流程串聯兩個 approval 節點實作分級簽核（經理 → 總監）。關於閾值、審批人所見以及稽核軌跡，參見 [收入 › 審批](/zh-Hant/docs/revenue/approvals)。
+HotCRM 內建的 **商機審批** 流程串聯兩個 approval 節點實作分級簽核（經理 → 總監）。關於閾值、審批人所見以及稽核軌跡，參見 [營收雲 › 審批](/zh-Hant/docs/revenue/approvals)。
 
 ## 操作順序
 

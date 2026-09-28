@@ -23,7 +23,7 @@ description: 销售管道的日常运作方式——推进交易、自动概率�
 
 如果你有特殊情况，可以在单笔交易上手动覆盖概率，但下次阶段变化时该覆盖会被重置。这能防止销售代表手动抬高其预测。
 
-> 管理员可以按阶段调整百分比——参见 [Administration › Automation](/zh-Hans/docs/administration/automation)。
+> 管理员可以按阶段调整百分比——参见 [系统管理 › 自动化](/zh-Hans/docs/administration/automation)。
 
 ## 预期营收是如何计算的
 
@@ -48,7 +48,7 @@ description: 销售管道的日常运作方式——推进交易、自动概率�
 
 **卡片上没有负责人。** `owner_id` 在这个视图顶层的 `columns` 清单里，那是给网格类算绘读的；卡面绑定只点了上面四个字段，到此为止。要在交易旁边看到负责人，请用带 *Owner* 列的**全部商机**视图，或者卡面确实带负责人的 **Deal Cards** 图库视图。
 
-要推进一笔交易，只需**拖动卡片**到下一列。阶段规则是**建议，不是闸门**。`opportunity_stage_progression`（`src/sales/objects/opportunity.object.ts`）声明了哪些跃迁合法——*寻找客户*直接到*成交*并不在其中——但这条规则是**警告**级，所以走出转换表的移动只会往服务端日志写一行 *"Invalid opportunity stage transition"*，而**保存照样通过**。看板上没有任何东西会拦住你。日志给你的价值是：一次糟糕的导入、一个行为异常的集成，事后还能被找出来。这张表能做什么、不能做什么，详见 [Administration › State Machines](/zh-Hans/docs/administration/state-machines)。
+要推进一笔交易，只需**拖动卡片**到下一列。阶段规则是**建议，不是闸门**。`opportunity_stage_progression`（`src/sales/objects/opportunity.object.ts`）声明了哪些跃迁合法——*寻找客户*直接到*成交*并不在其中——但这条规则是**警告**级，所以走出转换表的移动只会往服务端日志写一行 *"Invalid opportunity stage transition"*，而**保存照样通过**。看板上没有任何东西会拦住你。日志给你的价值是：一次糟糕的导入、一个行为异常的集成，事后还能被找出来。这张表能做什么、不能做什么，详见 [系统管理 › 状态机](/zh-Hans/docs/administration/state-machines)。
 
 在每列顶部你会看到**一个**数字：该列所有交易的*金额*之和，也就是这个阶段的未加权合计。看板每列只能有这一个数，这是设计使然：一块看板只声明一个 `summarizeField`（`src/sales/views/opportunity.view.ts`），而这块板把它绑到了 `amount`。
 
@@ -79,7 +79,7 @@ description: 销售管道的日常运作方式——推进交易、自动概率�
 | **Won Opportunities by Owner** | 用于季末表彰的排行榜。 |
 | **Customer Churn Signals** | 现有客户的开放工单 + 低 NPS = 流失风险。 |
 
-详情参见 [Analytics › Reports](/zh-Hans/docs/analytics/reports)。
+详情参见 [分析 › 报表](/zh-Hans/docs/analytics/reports)。
 
 ## 推荐的销售管道节奏
 
@@ -116,5 +116,5 @@ description: 销售管道的日常运作方式——推进交易、自动概率�
 
 ## 给管理员的提示
 
-- 添加或移除阶段？你需要更新源码里的三处，没有一处是 Setup 界面：`stage` 字段所渲染的 `OPPORTUNITY_STAGE_OPTIONS` 选择列表（`src/sales/objects/_picklists.ts`）、`opportunity_lifecycle` 钩子里设定概率的 `STAGE_PROBABILITY` 映射（`src/sales/objects/opportunity.hook.ts`），以及控制状态转换的 `opportunity_stage_progression` 状态机校验规则（`src/sales/objects/opportunity.object.ts`）。参见 [Customization › Extending Objects](/zh-Hans/docs/customization/extending-objects)。
+- 添加或移除阶段？你需要更新源码里的三处，没有一处是 Setup 界面：`stage` 字段所渲染的 `OPPORTUNITY_STAGE_OPTIONS` 选择列表（`src/sales/objects/_picklists.ts`）、`opportunity_lifecycle` 钩子里设定概率的 `STAGE_PROBABILITY` 映射（`src/sales/objects/opportunity.hook.ts`），以及控制状态转换的 `opportunity_stage_progression` 状态机校验规则（`src/sales/objects/opportunity.object.ts`）。参见 [定制化 › 扩展对象](/zh-Hans/docs/customization/extending-objects)。
 - $100K *大单*通知阈值同样不是 Setup 界面上的字段：它是 `opportunity_won_alert` 流程的 CEL 起始条件——`src/sales/flows/opportunity-won-alert.flow.ts` 里的 `record.amount >= 100000`。收件人则由该流程 `notify` 节点的 `recipients` 决定，列表里只有 `{record.owner_id}` 一项，即商机负责人本人。

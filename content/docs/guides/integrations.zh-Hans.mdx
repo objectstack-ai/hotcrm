@@ -17,7 +17,7 @@ HotCRM 的设计目标是**融入你的技术栈**，而非取代它。今天它
 - 📥 **电子表格导入**，带可复用的列映射，并可先试运行。参见[导入你自己的数据](/zh-Hans/docs/guides/importing-your-data)。
 - ✉️ **对外邮件**——联系人上的**发送邮件**，把邮件排入平台邮件服务。只有出站方向，而且只有在部署配置了传输方式时才真的发得出去。参见[邮件与日历](/zh-Hans/docs/guides/email-and-calendar)。
 - 🔔 **应用内通知**——`notify` 流程节点经平台消息服务送达 Console 铃铛。是在 HotCRM 内部，而不是送进 Slack 或某个收件箱。
-- 🧩 **你自己的代码**——钩子、流程与操作体在进程内针对同一批对象、同一套权限校验运行。参见[自定义 › 扩展对象](/zh-Hans/docs/customization/extending-objects)。
+- 🧩 **你自己的代码**——钩子、流程与操作体在进程内针对同一批对象、同一套权限校验运行。参见[定制化 › 扩展对象](/zh-Hans/docs/customization/extending-objects)。
 
 ### 设置 → 集成 下面今天真正有什么
 
@@ -123,7 +123,7 @@ HotCRM 的设计目标是**融入你的技术栈**，而非取代它。今天它
 
 ### 2. 进程内扩展代码（真实）
 
-钩子、流程与操作体在 HotCRM 内部运行，针对同一批对象、同一套权限校验。参见[自定义 › 扩展对象](/zh-Hans/docs/customization/extending-objects)。
+钩子、流程与操作体在 HotCRM 内部运行，针对同一批对象、同一套权限校验。参见[定制化 › 扩展对象](/zh-Hans/docs/customization/extending-objects)。
 
 最适合：无论是谁发起的写入都必须执行的逻辑。
 

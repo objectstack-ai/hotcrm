@@ -92,7 +92,7 @@ description: 验证规则、流程、计划作业与审批 —— 无需你动�
 
 流程内的通知由 **`notify` 节点** 投递（通过消息服务发送站内信 + 邮件）—— 而非旧的 `script`/邮件步骤（在 7.4 中已是空操作）。
 
-如果你需要构建新的流程，请参见 [自定义 › 扩展对象](/zh-Hans/docs/customization/extending-objects)。
+如果你需要构建新的流程，请参见 [定制化 › 扩展对象](/zh-Hans/docs/customization/extending-objects)。
 
 ## 计划类自动化
 
@@ -106,7 +106,7 @@ description: 验证规则、流程、计划作业与审批 —— 无需你动�
 
 自 ObjectStack 7.4 起，审批被建模为 **流程中的 `approval` 节点**（ADR-0019），而非独立的审批流程类型。进入节点时会创建审批请求、在该步骤待批期间 **锁定记录**、将实时状态镜像到 `approval_status` 字段，并沿 *approve* / *reject* 分支继续。
 
-HotCRM 内置的 **商机审批** 流程串联两个 approval 节点实现分级签核（经理 → 总监）。关于阈值、审批人所见以及审计轨迹，参见 [收入 › 审批](/zh-Hans/docs/revenue/approvals)。
+HotCRM 内置的 **商机审批** 流程串联两个 approval 节点实现分级签核（经理 → 总监）。关于阈值、审批人所见以及审计轨迹，参见 [营收云 › 审批](/zh-Hans/docs/revenue/approvals)。
 
 ## 操作顺序
 
