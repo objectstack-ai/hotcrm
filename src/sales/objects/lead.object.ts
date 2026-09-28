@@ -244,7 +244,6 @@ export const Lead = ObjectSchema.create({
     // forecast).
     estimated_amount: Field.currency({
       label: 'Estimated Amount',
-      scale: 2,
       group: 'qualification',
       description: 'Estimated value of this demand, before qualification. Prefills the deal amount at conversion.',
     }),
@@ -358,7 +357,6 @@ export const Lead = ObjectSchema.create({
     // Additional Info
     annual_revenue: Field.currency({
       label: 'Annual Revenue',
-      scale: 2,
       group: 'additional',
     }),
 
