@@ -85,8 +85,13 @@ The platform changes that reached this app:
   - the Lead Detail related, activity and field-history panels;
   - the three "My …" lists on Sales Home.
 
-  Before this change those components showed English in every locale.
-  `os i18n extract` does not scaffold page keys, so the keys were added by hand.
+  These labels name the components. In a zh-CN browser check of Lead Detail on
+  17.5.0 none of them is drawn as visible text: the visible headings come from
+  the tab items and the object's field groups, which were already translated.
+  So readers should see no change. The keys exist to satisfy the new lint rule.
+  `os i18n extract` scaffolds page keys only with `--no-objects-only`, since its
+  default covers objects alone. The i18n gate's failure hint now gives that
+  command instead of the bare one.
 - **One driver test reads the withheld filter diagnostic.** 17.5.0's SQL
   drivers no longer put caller-supplied operator and field names in the thrown
   message of a refused filter. The full text rides on the error, and
