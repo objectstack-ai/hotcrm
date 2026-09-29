@@ -188,20 +188,14 @@ export const SalesDashboard: Dashboard = {
       dataset: 'opportunity_metrics', dimensions: ['close_date'], values: ['total_amount'],
       layout: { x: 6, y: 4, w: 6, h: 4 },
       chartConfig: {
-        type: 'area',
         showLegend: false,
         showDataLabels: false,
         colors: ['#10B981'],
-        // Axis titles stay plain English: `ChartAxisSchema.title` accepts an inline
-        // locale map but the Console flattens it to the map's FIRST value regardless
-        // of locale — measured, see `src/dashboards/index.ts` (#1822).
-        xAxis: { field: 'close_date', title: 'Month', showGridLines: false, logarithmic: false },
         // No quota annotation line: ChartAnnotationSchema only takes a STATIC
         // value, and the real quotas live per-owner/per-period in
         // crm_forecast.quota (seeded 500k–1.5M — the old hardcoded 100000 was
         // fiction). Quota vs. actual is the quota_attainment_by_rep table
         // below, bound to the forecast_metrics dataset.
-        yAxis: [{ field: 'total_amount', title: 'Revenue', format: '0,0', showGridLines: true, logarithmic: false }],
         interaction: { tooltips: true, brush: true },
       },
       options: { dateGranularity: 'month' },
@@ -218,12 +212,9 @@ export const SalesDashboard: Dashboard = {
       dataset: 'opportunity_metrics', dimensions: ['forecast_category'], values: ['total_amount'],
       layout: { x: 0, y: 8, w: 6, h: 4 },
       chartConfig: {
-        type: 'horizontal-bar',
         showLegend: false,
         showDataLabels: true,
         colors: ['#4F46E5'],
-        xAxis: { field: 'forecast_category', title: 'Forecast', showGridLines: false, logarithmic: false },
-        yAxis: [{ field: 'total_amount', title: 'Pipeline value', format: '0,0', showGridLines: true, logarithmic: false }],
       },
     },
     {
@@ -236,7 +227,6 @@ export const SalesDashboard: Dashboard = {
       dataset: 'opportunity_metrics', dimensions: ['lead_source'], values: ['total_amount'],
       layout: { x: 6, y: 8, w: 6, h: 4 },
       chartConfig: {
-        type: 'donut',
         showLegend: true,
         showDataLabels: true,
         colors: ['#4F46E5', '#06B6D4', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'],
@@ -323,10 +313,9 @@ export const SalesDashboard: Dashboard = {
       // through a real engine and pins a three-way outcome (current quarter
       // only: not zero rows, not every quarter). First taken on 17.0.0-rc.2;
       // RE-RUN 2026-09-03 on 17.2.0 (#1467), RE-RUN on 17.3.0 (#1676, the PR
-      // #1577 pin) and RE-RUN again on 17.4.0 — the version `package.json`
-      // pins and `node_modules` installs since PR #1814 (#1807) — green all
-      // four times, so the outcome holds on the
-      // CURRENT pin and not only on the one it was first taken on.
+      // #1577 pin) and RE-RUN again on 17.4.0 (PR #1814, #1807) — green all
+      // four times, so the outcome held on every pin it was taken on, not
+      // only the first. Not yet re-run on 17.5.0.
       //
       // What stood here before described the two paths as asymmetric and told
       // the next author not to generalise between them. That was true on
@@ -449,7 +438,6 @@ export const SalesDashboard: Dashboard = {
       dataset: 'opportunity_metrics', dimensions: ['loss_reason'], values: ['opp_count'],
       layout: { x: 0, y: 24, w: 12, h: 4 },
       chartConfig: {
-        type: 'donut',
         showLegend: true,
         showDataLabels: true,
         colors: ['#EF4444', '#F59E0B', '#8B5CF6', '#06B6D4', '#4F46E5', '#10B981', '#64748B'],

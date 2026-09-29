@@ -205,8 +205,8 @@ export const OpportunityDetailPage: Page = {
                           // — so an item that simply omits the key is
                           // `undefined`, not `false`, and stays shut. Measured
                           // on the @objectstack/console 17.3.0 bundle — the pin
-                          // at that taking, ⛔ NOT re-taken on the current
-                          // 17.4.0 pin (#1814, #1807) —
+                          // at that taking, ⛔ NOT re-taken on 17.4.0
+                          // (#1814, #1807) or 17.5.0 —
                           // and the component's own designer text says the same
                           // ("collapsed: false opens a panel by default").
                           //

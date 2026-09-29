@@ -400,13 +400,14 @@ export const LeadDetailPage: Page = {
                       // branch. An authored page opts out of the synthesizer,
                       // so it opts out of the derivation with it.
                       //
-                      // ⚠️ Version caveat: those browser numbers are 17.2.0 and
-                      // this repo now pins 17.4.0 (PR #1814, #1807). #1521 did
+                      // ⚠️ Version caveat: those browser numbers are 17.2.0,
+                      // two and more pins ago (17.4.0 came with PR #1814, then
+                      // 17.5.0). #1521 did
                       // NOT re-run the
                       // browser measurement. What it did do is read the
                       // 17.3.0 console bundle (static, not run) — a pin that is
                       // itself now behind, and nobody has re-read the 17.4.0
-                      // bundle — and
+                      // or 17.5.0 bundle — and
                       // the mechanism is unchanged there: both guards are still
                       // `sections.length > 0` and `fields.length > 0` with no
                       // else, the renderer still reads neither of the two

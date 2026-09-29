@@ -49,12 +49,12 @@ type Doc = Record<string, unknown>;
  *
  * MEASURED per method against the object the kernel actually injects as
  * `ctx.api`. First taken on 17.2.0; RE-TAKEN on 17.3.0 during #1528; RE-TAKEN
- * AGAIN on the current pin 17.4.0 during #1883, by handing each key to a real
+ * AGAIN on 17.4.0 during #1883, by handing each key to a real
  * engine — the legal key sets and the `filter` fold came back UNCHANGED at
- * every taking, so the readings below are current, not merely inherited. Every line is
+ * every taking. Not re-taken on 17.5.0. Every line is
  * pinned by an assertion in `test/hook-query-predicate.test.ts`, against a
- * real engine rather than the test harness, and that file runs green on the
- * current pin:
+ * real engine rather than the test harness, so that file is what re-measures
+ * it on each new pin:
  *
  *   - `find`    — `filter` is ALIASED to `where`; the predicate is applied.
  *   - `findOne` — `filter` is ALIASED to `where`; the predicate is applied.
@@ -98,7 +98,7 @@ export interface HookQuery {
  * compile error again.
  *
  * MEASURED against `@objectstack` 17.3.0, and RE-MEASURED word for word on
- * the current pin 17.4.0 (#1883), on the object the kernel injects as
+ * 17.4.0 (#1883; not on 17.5.0), on the object the kernel injects as
  * `ctx.api`, by handing each key to the engine and
  * reading its unknown-option guard — which prints the legal set verbatim, and
  * is the cheapest authoritative reading of it:
