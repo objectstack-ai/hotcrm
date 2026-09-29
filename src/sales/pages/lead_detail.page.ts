@@ -640,11 +640,6 @@ export const LeadDetailPage: Page = {
   // Make this the default page for leads
   isDefault: true,
 
-  // Assign to specific profiles. These must match the profile `name`s declared
-  // in src/profiles — `sales_user` / `system_administrator` never existed, so
-  // the assignment silently matched nobody.
-  assignedProfiles: ['sales_rep', 'sales_manager', 'system_admin'],
-
   // ARIA accessibility
   aria: {
     ariaLabel: 'Lead Detail Page',

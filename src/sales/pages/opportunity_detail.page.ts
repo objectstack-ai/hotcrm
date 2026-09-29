@@ -486,7 +486,6 @@ export const OpportunityDetailPage: Page = {
   ],
 
   isDefault: true,
-  assignedProfiles: ['sales_rep', 'sales_manager', 'system_admin'],
 
   aria: {
     ariaLabel: 'Opportunity Detail Page',

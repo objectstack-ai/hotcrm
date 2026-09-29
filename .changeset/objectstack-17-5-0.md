@@ -60,6 +60,39 @@ The platform changes that reached this app:
   sets nothing runs none of them.** The admin *Automation* page now says so in
   all three locales. Under the `isolated` posture a scheduled flow must also name
   its organization, and these do not.
+- **Six pages drop `assignedProfiles`. Who can open them does not change.**
+  `@objectstack/spec@17.5.0` removes `page.assignedProfiles` and refuses it. No
+  renderer, route or metadata read on 17.4.0 ever read the key, so the six pages
+  that set it were already open to every caller who could reach them. The pages
+  are *App Launcher*, *Sales Home*, *Utility Bar*, *Lead Detail*, *Opportunity
+  Detail* and *Case Detail*. Deleting the key keeps that behaviour. The platform
+  gates what a page shows through the object permission sets, which HotCRM
+  already declares. `test/metadata-references.test.ts` and
+  `test/authorization-coverage.test.ts` still check any `assignedProfiles` a
+  page declares, and no page declares one now.
+- **The contact form section *Account & Role* is now *Account & Title*.**
+  17.5.0 adds the author-time rule `security-role-word`: "role" is a reserved
+  word in labels, because the platform no longer has a Role concept. The section
+  holds the contact's owner, account, job title and department, so the English
+  label now says *Title*. The Chinese, Japanese and Spanish labels already said
+  "job title" and are unchanged.
+- **Detail pages and Sales Home carry translated copy for nested components.**
+  From 17.5.0, `os lint` checks the translation of every component in a page's
+  tree, not only the top-level ones. There are 14 new keys in each of zh-CN,
+  ja-JP and es-ES:
+  - the Account Detail title and subtitle, and its discussion panel;
+  - the details sections of Case, Lead and Opportunity;
+  - the Lead Detail related, activity and field-history panels;
+  - the three "My …" lists on Sales Home.
+
+  Before this change those components showed English in every locale.
+  `os i18n extract` does not scaffold page keys, so the keys were added by hand.
+- **One driver test reads the withheld filter diagnostic.** 17.5.0's SQL
+  drivers no longer put caller-supplied operator and field names in the thrown
+  message of a refused filter. The full text rides on the error, and
+  `withheldFilterDiagnosticOf` reads it. The retired-`$regex` premise test now
+  checks two things. The public message says RETIRED and does not name the
+  operator. The withheld diagnostic still names `$regex`.
 - **Claims that named 17.4.0 as the current pin are re-scoped**, not renumbered,
   across source comments, tests and maintainer docs. Each now dates itself to the
   pin it was measured on. None was re-measured on 17.5.0 in this change. Four
