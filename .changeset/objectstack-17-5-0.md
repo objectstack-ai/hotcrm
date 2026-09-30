@@ -67,9 +67,12 @@ The platform changes that reached this app:
   are *App Launcher*, *Sales Home*, *Utility Bar*, *Lead Detail*, *Opportunity
   Detail* and *Case Detail*. Deleting the key keeps that behaviour. The platform
   gates what a page shows through the object permission sets, which HotCRM
-  already declares. `test/metadata-references.test.ts` and
-  `test/authorization-coverage.test.ts` still check any `assignedProfiles` a
-  page declares, and no page declares one now.
+  already declares. Two tests checked the retired key and are deleted with it.
+  One was "assignedProfiles name real profiles" in
+  `test/metadata-references.test.ts`. The other was "every related list is
+  readable by every profile its page is assigned to" in
+  `test/authorization-coverage.test.ts`. With no page able to declare the key,
+  both ran over zero pages and could no longer fail.
 - **The contact form section *Account & Role* is now *Account & Title*.**
   17.5.0 adds the author-time rule `security-role-word`: "role" is a reserved
   word in labels, because the platform no longer has a Role concept. The section
@@ -103,3 +106,14 @@ The platform changes that reached this app:
   pin it was measured on. None was re-measured on 17.5.0 in this change. Four
   stale "current pin 17.3.0" claims that the 17.4.0 sweep missed are re-scoped
   the same way.
+
+**Known issue on 17.5.0, fixed upstream but not yet released.** The *Products*,
+*Knowledge Articles* and *Forecasts* default lists show
+`Unknown field '[object Object]'` (`INVALID_FIELD`) in every group instead of
+rows. On 17.5.0 the
+console fetches grouped rows from the server, and the query it builds for a
+view whose `columns` are objects sends the objects instead of field names. The
+same views work on 17.4.0. HotCRM's views are valid and are left unchanged. The
+fix is objectui#11105 (PR objectui#11119, merged). It reaches HotCRM with the
+first platform release whose `@objectstack/console` carries it, and HotCRM then
+needs only a pin bump.

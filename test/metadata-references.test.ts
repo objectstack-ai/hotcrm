@@ -10,7 +10,6 @@ import {
   pages,
   views,
   objectNames,
-  profileNames,
   PLATFORM_OBJECTS,
   fieldsOf,
   walk,
@@ -21,13 +20,13 @@ import {
  *
  * `os validate` / `build` check metadata SHAPE — that a page declares a
  * `relationshipField`, that a view section lists `fields` — but never that the
- * named field, object, or profile actually exists. Every reference below was a
- * real defect found by clicking through the app, and each failed silently: the
- * related list rendered "0", the form section rendered blank, the profile
- * assignment matched nobody. Nothing errored, so nothing was noticed.
+ * named field or object actually exists. Every reference below was a real
+ * defect found by clicking through the app, and each failed silently: the
+ * related list rendered "0", the form section rendered blank. Nothing errored,
+ * so nothing was noticed.
  *
- * These tests resolve every UI reference against the objects/profiles the app
- * really defines, so the next bad name fails in CI instead of in a demo.
+ * These tests resolve every UI reference against the objects the app really
+ * defines, so the next bad name fails in CI instead of in a demo.
  *
  * ---
  *
@@ -582,16 +581,6 @@ describe('page component references resolve', () => {
       }
     }
     expect(bad, `dangling path stages:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-
-  it('assignedProfiles name real profiles', () => {
-    const bad: string[] = [];
-    for (const page of pages) {
-      for (const p of page.assignedProfiles ?? []) {
-        if (!profileNames.has(p)) bad.push(`${page.name}: profile "${p}" is not defined`);
-      }
-    }
-    expect(bad, `dangling profile assignments:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
   /**
