@@ -35,7 +35,7 @@ const forecastDerive: Hook = {
     // all N matched rows, and the engine hands every row's `beforeUpdate` THAT
     // payload rather than a per-row copy. A payload write whose value — or
     // whose if-guard — reads `ctx.previous` therefore does not scope itself to
-    // the row it was decided on. Both outcomes are measured on the pinned
+    // the row it was decided on. Both outcomes are measured on
     // 17.4.0, in this app, on a fresh `pnpm dev`:
     //
     //  - keys written for SOME rows only ⇒ the engine refuses the whole batch

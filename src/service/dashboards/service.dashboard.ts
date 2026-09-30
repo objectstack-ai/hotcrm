@@ -144,7 +144,6 @@ export const ServiceDashboard: Dashboard = {
       dataset: 'case_metrics', dimensions: ['status'], values: ['case_count'],
       layout: { x: 0, y: 2, w: 4, h: 4 },
       chartConfig: {
-        type: 'donut',
         showLegend: true,
         showDataLabels: true,
         colors: ['#0EA5E9', '#06B6D4', '#14B8A6', '#10B981', '#F59E0B'],
@@ -160,7 +159,6 @@ export const ServiceDashboard: Dashboard = {
       dataset: 'case_metrics', dimensions: ['priority'], values: ['case_count'],
       layout: { x: 4, y: 2, w: 4, h: 4 },
       chartConfig: {
-        type: 'pie',
         showLegend: true,
         showDataLabels: true,
         // critical → high → medium → low
@@ -176,15 +174,9 @@ export const ServiceDashboard: Dashboard = {
       dataset: 'case_metrics', dimensions: ['origin'], values: ['case_count'],
       layout: { x: 8, y: 2, w: 4, h: 4 },
       chartConfig: {
-        type: 'bar',
         showLegend: false,
         showDataLabels: true,
         colors: ['#8B5CF6'],
-        // Axis titles stay plain English: `ChartAxisSchema.title` accepts an inline
-        // locale map but the Console flattens it to the map's FIRST value regardless
-        // of locale — measured, see `src/dashboards/index.ts` (#1822).
-        xAxis: { field: 'origin', title: 'Channel', showGridLines: false, logarithmic: false },
-        yAxis: [{ field: 'case_count', title: 'Cases', showGridLines: true, logarithmic: false }],
       },
     },
 
@@ -214,12 +206,9 @@ export const ServiceDashboard: Dashboard = {
       dataset: 'case_metrics', dimensions: ['created_date'], values: ['case_count'],
       layout: { x: 0, y: 6, w: 8, h: 4 },
       chartConfig: {
-        type: 'area',
         showLegend: false,
         showDataLabels: false,
         colors: ['#0EA5E9'],
-        xAxis: { field: 'created_date', title: 'Day', showGridLines: false, logarithmic: false },
-        yAxis: [{ field: 'case_count', title: 'Cases opened', showGridLines: true, logarithmic: false }],
         interaction: { tooltips: true, brush: true },
       },
       options: { dateGranularity: 'day' },
@@ -243,7 +232,6 @@ export const ServiceDashboard: Dashboard = {
       dataset: 'case_metrics', values: ['sla_compliance_rate'],
       layout: { x: 8, y: 6, w: 4, h: 4 },
       chartConfig: {
-        type: 'gauge',
         showLegend: false,
         showDataLabels: true,
         colors: ['#10B981', '#F59E0B', '#EF4444'],

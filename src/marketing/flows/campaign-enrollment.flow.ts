@@ -54,9 +54,8 @@ export const CampaignEnrollmentFlow: Flow = {
      * `context.params.memberSource` still WINS over it.
      *
      * ⚠️ Measured on the 17.1.0 spec, with the schema key re-checked on 17.2.0.
-     * Neither that key nor the seeding behaviour has been re-checked against the
-     * current pin, 17.4.0 since PR #1814 (#1807) — nor was either re-checked on
-     * the 17.3.0 pin that preceded it.
+     * Neither that key nor the seeding behaviour was re-checked on 17.3.0 or
+     * 17.4.0 (PR #1814, #1807), nor on 17.5.0, the pin since the 17.5.0 bump.
      *
      * ⛔ Never seed this with an assignment node instead. An assignment is
      * unconditional, so it CLOBBERS a supplied param — measured: launching with

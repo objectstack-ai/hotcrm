@@ -135,10 +135,9 @@ const opportunityValidationHook: Hook = {
           // erasure that cannot be carried out).
           //
           // Measured on 17.1.0 — the version this repo pinned AT THE TIME of
-          // the measurement, not the current pin (this repo has pinned 17.4.0
-          // since PR #1814, #1807, and the cascade shape below has NOT been
-          // re-measured on it; it was not re-measured on the 17.3.0 pin either,
-          // #1676) — with a probe hook at priority 199 immediately
+          // the measurement, not the current pin (the cascade shape below has
+          // NOT been re-measured on any later pin — not 17.3.0, #1676, not
+          // 17.4.0, PR #1814, and not 17.5.0) — with a probe hook at priority 199 immediately
           // ahead of each guard, not assumed.
           // The engine builds its cleanup write on the CALLER's own context
           // plus two engine keys, so on the path a REST `DELETE` takes, the

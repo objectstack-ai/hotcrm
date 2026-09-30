@@ -57,9 +57,9 @@ export const ForecastViews = defineView({
       // real engine and pins the three-way outcome (one quarter selected, not
       // zero and not all of them). First taken on 17.0.0-rc.2, RE-RUN
       // 2026-09-03 on 17.2.0 (#1467), RE-RUN on 17.3.0 (#1676, after the PR
-      // #1577 bump) and RE-RUN again on the current pin 17.4.0 (#1883, after
-      // the PR #1814 bump), green all four times — so
-      // this is a reading on the CURRENT pin.
+      // #1577 bump) and RE-RUN again on 17.4.0 (#1883, after the PR #1814
+      // bump), green all four times. Not yet re-run on 17.5.0; the test is
+      // what re-takes the reading on each new pin.
       //
       // Both halves of the key are load-bearing, same as the quota-attainment
       // widget in `src/dashboards/sales.dashboard.ts`: `period: 'quarter'`
