@@ -539,6 +539,63 @@ describe('account_protection', () => {
     ).resolves.toBeUndefined();
   });
 
+  // ─── Activated contracts (#549) ──────────────────────────────────────
+  //
+  // `crm_contract` is master-detail under the account since #549, so deleting
+  // an account cascades its contracts. The guard refuses while an ACTIVATED
+  // contract exists — the same "live" definition `contact_integrity` uses —
+  // and lets drafts, expired and terminated contracts go with the account.
+  const refuseDeleteForContracts = (statuses: string[]) => {
+    const h = makeHarness({
+      crm_opportunity: [{ id: 'closed', crm_account: 'acc1', stage: 'closed_won' }],
+      crm_contract: [
+        ...statuses.map((status, i) => ({ id: `c${i + 1}`, crm_account: 'acc1', status })),
+        { id: 'elsewhere', crm_account: 'other', status: 'activated' }, // other account
+      ],
+    });
+    return hook.handler(makeCtx({
+      event: 'beforeDelete', previous: { id: 'acc1', type: 'customer' }, user: USER, api: h.api,
+    }));
+  };
+
+  it('refuses to delete a customer account with ONE activated contract (singular agreement)', async () => {
+    await expect(refuseDeleteForContracts(['activated', 'draft'])).rejects.toThrow(
+      'Cannot delete customer account: 1 activated contract still references it. Terminate or reassign it first.',
+    );
+  });
+
+  it('refuses to delete a customer account with SEVERAL activated contracts (plural agreement)', async () => {
+    await expect(refuseDeleteForContracts(['activated', 'activated'])).rejects.toThrow(
+      'Cannot delete customer account: 2 activated contracts still reference it. Terminate or reassign them first.',
+    );
+  });
+
+  it('the contract refusal carries the same envelope as the opportunity one', async () => {
+    const err = await refuseDeleteForContracts(['activated']).catch((e: Error) => e) as Error & Rec;
+    expect(err.code).toBe('DELETE_RESTRICTED');
+    expect(err.status).toBe(409);
+  });
+
+  it('lets drafts, expired and terminated contracts cascade with the account', async () => {
+    await expect(
+      refuseDeleteForContracts(['draft', 'in_approval', 'expired', 'terminated']),
+    ).resolves.toBeUndefined();
+  });
+
+  it('open opportunities are reported before activated contracts', async () => {
+    // One refusal at a time, opportunities first — the sentence a user reads
+    // must not change depending on which count the harness answers first.
+    const h = makeHarness({
+      crm_opportunity: [{ id: 'o1', crm_account: 'acc1', stage: 'proposal' }],
+      crm_contract: [{ id: 'c1', crm_account: 'acc1', status: 'activated' }],
+    });
+    await expect(
+      hook.handler(makeCtx({
+        event: 'beforeDelete', previous: { id: 'acc1', type: 'customer' }, user: USER, api: h.api,
+      })),
+    ).rejects.toThrow(/1 open opportunity still references it/);
+  });
+
   // ─── billing_country / territory derivation (#621, #639) ─────────────
   //
   // The territory sharing rules filter on `territory`, and this hook is the

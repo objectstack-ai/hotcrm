@@ -12,7 +12,8 @@ import type { HookApi } from './_hook-api';
  *   rules filter on (#639).
  * - Folds `name` into the `name_normalized` column lead conversion matches
  *   accounts on (#626).
- * - Refuses to delete a `customer` account that still has open opportunities.
+ * - Refuses to delete a `customer` account that still has open opportunities
+ *   or activated contracts — contracts cascade with the account since #549.
  */
 const accountHook: Hook = {
   name: 'account_protection',
@@ -20,7 +21,7 @@ const accountHook: Hook = {
   events: ['beforeInsert', 'beforeUpdate', 'beforeDelete'],
   priority: 200,
   description:
-    'Validate account fields and protect customer accounts with open opportunities from deletion.',
+    'Validate account fields and protect customer accounts with open opportunities or activated contracts from deletion.',
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `./_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
@@ -218,6 +219,21 @@ const accountHook: Hook = {
           openOpps === 1
             ? 'Cannot delete customer account: 1 open opportunity still references it. Close or reassign it first.'
             : `Cannot delete customer account: ${openOpps} open opportunities still reference it. Close or reassign them first.`,
+          'DELETE_RESTRICTED',
+          409,
+        );
+      }
+      // `crm_contract` is master-detail under the account (#549), so a delete
+      // would cascade the signed agreements away. Activated = live (the same
+      // definition `contact_integrity` uses); drafts and ended contracts go.
+      const activeContracts = await api.object('crm_contract').count({
+        where: { crm_account: previous.id, status: 'activated' },
+      });
+      if (activeContracts > 0) {
+        throw refuse(
+          activeContracts === 1
+            ? 'Cannot delete customer account: 1 activated contract still references it. Terminate or reassign it first.'
+            : `Cannot delete customer account: ${activeContracts} activated contracts still reference it. Terminate or reassign them first.`,
           'DELETE_RESTRICTED',
           409,
         );

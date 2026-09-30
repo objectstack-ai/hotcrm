@@ -133,13 +133,16 @@ export default defineStack({
   // surface. To run AI locally, declare `@objectstack/service-ai` (cloud) in
   // package.json — its mere presence best-effort auto-loads it.
   // `hierarchy-security` is the ONE enterprise-edition capability this app
-  // declares (#880). `sales_manager` authors `writeScope: 'own_and_reports'` on
-  // `crm_contract`, an ADR-0057 HIERARCHY scope resolved by the
-  // `hierarchy-scope-resolver` service that ships only in
-  // `@objectstack/security-enterprise`. Declaring the capability is REQUIRED to
-  // author that scope at all — `defineStack` refuses the grant outright without
-  // it — and the pair is one declaration: move them together or not at all.
+  // declares. It was introduced for #880 — `sales_manager` authored
+  // `writeScope: 'own_and_reports'` on `crm_contract`, an ADR-0057 HIERARCHY
+  // scope resolved by the `hierarchy-scope-resolver` service that ships only
+  // in `@objectstack/security-enterprise`, and `defineStack` refuses such a
+  // grant unless the capability is declared. Since #549 `crm_contract` is
+  // `controlled_by_parent` under the account, that scope is inert and is no
+  // longer authored; the app currently authors NO hierarchy scope at all.
   //
+  // The declaration STAYS. Maintainer ruling 2026-08-31 (#1378, pinned by
+  // `test/hierarchy-read-depth.test.ts`): nothing is removed from `requires[]`.
   // Maintainer ruling, 2026-08-11, verbatim: 「本项目是元数据app，在企业版运行就
   // 具备企业版相关的能力，不重复开发。」 The app states what it MEANS and the
   // edition supplies the capability, rather than approximating it with a broader
@@ -154,12 +157,7 @@ export default defineStack({
   // enterprise plugin in `plugins[]`. Only tier-gated tokens (ai / ai-studio /
   // i18n / ui / auth) have the dedicated hard-abort blocks the note above
   // describes. `objectstack validate` does print one informational line naming
-  // the package to install; that is expected output, asserted by
-  // `test/contract-write-depth.test.ts`, not a defect to silence.
-  //
-  // What an OPEN-edition boot gets: the resolver is absent, so the scope fails
-  // CLOSED to owner-only and a Sales Manager still cannot edit a rep's contract.
-  // That is an edition boundary, and the docs say so per edition.
+  // the package to install; that is expected output, not a defect to silence.
   requires: ['automation', 'triggers', 'analytics', 'auth', 'ui', 'approvals', 'sharing', 'hierarchy-security'],
 
   objects: allObjects,

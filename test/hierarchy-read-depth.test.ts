@@ -175,10 +175,11 @@ describe('the hierarchy READ capability in the platform vocabulary (#1378)', () 
       }
     }
     expect(authoredReads, 'no profile may declare a hierarchy readScope (#1378 ruling)').toEqual([]);
-    // The write half is declared, and `contract-write-depth.test.ts` pins it.
-    // Named here so that dropping it does not quietly leave this file as the
-    // app's only statement about hierarchy scopes.
-    expect(authoredWrites).toEqual(['sales_manager.crm_contract']);
+    // The write half was `sales_manager.crm_contract` (#880) until #549 made
+    // `crm_contract` controlled_by_parent, where a scope is inert; the app now
+    // authors NO hierarchy scope and `contract-write-depth.test.ts` pins that.
+    // `requires` keeps the token regardless (the #1378 refusal above).
+    expect(authoredWrites).toEqual([]);
   });
 
   it('a hierarchy readScope beside viewAllRecords: true would never be consulted', () => {
