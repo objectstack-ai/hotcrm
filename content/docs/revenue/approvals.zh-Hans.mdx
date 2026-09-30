@@ -7,7 +7,7 @@ description: 针对大额商机的分级审批——什么触发它、各层级�
 
 HotCRM 自带一个内置审批：**商机审批** 流程。它对大额交易强制执行*分级*的"多重把关"规则，因此任何销售代表都不能在没有相应层级签批的情况下提交大额商机。
 
-> **自 ObjectStack 7.4 起**，这被建模为 **带 `approval` 节点的流程**（ADR-0019），而非独立的审批流程对象。流程串联各审批步骤，在步骤待批期间锁定记录，并将实时决策镜像到商机的 `approval_status` 字段。自动触发需要 `triggers` 能力（参见 [管理 › 自动化](/zh-Hans/docs/administration/automation)）。
+> **自 ObjectStack 7.4 起**，这被建模为 **带 `approval` 节点的流程**（ADR-0019），而非独立的审批流程对象。流程串联各审批步骤，在步骤待批期间锁定记录，并将实时决策镜像到商机的 `approval_status` 字段。自动触发需要 `triggers` 能力（参见 [系统管理 › 自动化](/zh-Hans/docs/administration/automation)）。
 
 ## 什么触发审批
 
@@ -136,6 +136,6 @@ HotCRM 应用里审批只有一个入口，它挂在 **My Work**（我的工作�
 ## 给管理员的提示
 
 - 阈值（$100K / $500K）、层级（经理 → 总监）以及 `lockRecord` 都在 **商机审批流程** 中定义——编辑 approval 节点和决策门即可更改。
-- 通过把 `approval` 节点放进任何流程，即可添加**更多审批**（合同审批、费用审批等）——参见 [管理 › 自动化](/zh-Hans/docs/administration/automation)。
+- 通过把 `approval` 节点放进任何流程，即可添加**更多审批**（合同审批、费用审批等）——参见 [系统管理 › 自动化](/zh-Hans/docs/administration/automation)。
 - 该流程与代码库中的其他自动化放在一起（`src/sales/flows/opportunity-approval.flow.ts`）。
-- 委派审批人在用户个人资料偏好设置中设置。参见 [管理 › 个人资料](/zh-Hans/docs/administration/profiles)。
+- 委派审批人在用户个人资料偏好设置中设置。参见 [系统管理 › 权限档案](/zh-Hans/docs/administration/profiles)。

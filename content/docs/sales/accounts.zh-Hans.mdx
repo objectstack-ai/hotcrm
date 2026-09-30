@@ -49,7 +49,7 @@ description: 你与之开展业务的公司——你的潜在客户、客户和�
 
 **审批状态**回答的是*「这条记录被签核了吗？」*，而**活跃**回答的是*「这个客户还在用吗？」*。两者刻意分开：已通过的客户之后仍可被停用，而待审批也不等于非活跃。
 
-如果你所在的组织不需要对客户做签核，管理员把**审批状态**的默认值改成*已通过*即可，此后新建客户不会再进入审批队列——见[管理 › 自动化](/zh-Hans/docs/administration/automation)。
+如果你所在的组织不需要对客户做签核，管理员把**审批状态**的默认值改成*已通过*即可，此后新建客户不会再进入审批队列——见[系统管理 › 自动化](/zh-Hans/docs/administration/automation)。
 
 ## 每条客户记录存储的内容
 
@@ -89,7 +89,7 @@ Acme Corp Global
 - **汇总营收**——*财务*区块上的**子公司年营收合计**，是本客户**直属**子公司**年营收**之和。它由平台维护：子公司营收被修改、子公司被改挂到另一个父级、或子公司被删除时，这个数字都会随之变动。它只汇总一层，因此祖父级看到的是它自己直属子级的合计，而不是整棵树的合计。
 - **更便捷的导航**——从子级你可以跳转到全球父级。
 
-该层级刻意**不**做两件事。它**不**级联共享：客户是私有的，把父级授权给某人并不会带来任何子级的权限——需要这种效果请使用 [管理 › 共享](/zh-Hans/docs/administration/sharing-and-security) 上的共享规则。它也**不**汇总其它任何东西：商机、工单和联系人属于它们各自指向的那个客户，没有任何报表会沿着这棵树向上求和。
+该层级刻意**不**做两件事。它**不**级联共享：客户是私有的，把父级授权给某人并不会带来任何子级的权限——需要这种效果请使用 [系统管理 › 共享与安全](/zh-Hans/docs/administration/sharing-and-security) 上的共享规则。它也**不**汇总其它任何东西：商机、工单和联系人属于它们各自指向的那个客户，没有任何报表会沿着这棵树向上求和。
 
 ## 内置规则
 
@@ -139,7 +139,7 @@ Acme Corp Global
 
 大小写和首尾空格都不影响——`de`、`DE`、` de ` 是同一个国家。凡是这张表里没有的，都归入**其他**：这是一个明确的值，不是空白，所以“没有任何区域覆盖的客户”是看得见的，而不是从每张列表里悄悄消失。**销售区域**和**账单国家**（按录入原样保存的国家）都在客户的 *Locations* 分区里；区域团队说某个客户没出现在他们列表里时，先看这两个字段。
 
-管理员可以更改这些规则——参见 [Administration › Sharing](/zh-Hans/docs/administration/sharing-and-security)。
+管理员可以更改这些规则——参见 [系统管理 › 共享与安全](/zh-Hans/docs/administration/sharing-and-security)。
 
 ## 谁能编辑什么
 
@@ -178,5 +178,5 @@ Acme Corp Global
 
 ## 给管理员的提示
 
-- 要添加新的行业或国家辖区？参见 [Administration › Sharing](/zh-Hans/docs/administration/sharing-and-security) 和 [Customization › Extending Objects](/zh-Hans/docs/customization/extending-objects)。
+- 要添加新的行业或国家辖区？参见 [系统管理 › 共享与安全](/zh-Hans/docs/administration/sharing-and-security) 和 [定制化 › 扩展对象](/zh-Hans/docs/customization/extending-objects)。
 - 详情界面上的 6 个默认区块可以按配置文件重新排序或隐藏。
