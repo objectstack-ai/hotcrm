@@ -31,8 +31,8 @@
  *
  * ## Verified against the pinned `@objectstack/*` this repo installs
  *
- * First taken on 17.3.0; RE-TAKEN on the current pin 17.4.0 (#1883, after the
- * PR #1814 bump), same verdict: a 5-item sweep whose body fails on every item
+ * First taken on 17.3.0; RE-TAKEN on 17.4.0 (#1883, after the PR #1814 bump;
+ * not re-taken on 17.5.0), same verdict: a 5-item sweep whose body fails on every item
  * ran to completion — all 5 items touched, run `success: true` — where the
  * same sweep with the body UNWRAPPED stopped at the first failure with 1 item
  * touched and the run `failed`. That contrast IS the measurement; a guarded

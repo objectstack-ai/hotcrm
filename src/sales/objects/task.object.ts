@@ -227,8 +227,8 @@ export const Task = ObjectSchema.create({
     // NOT readonly — but the old reason here ("16.x drops flow writes to
     // readonly fields") does not survive measurement. Taken on 17.1.0,
     // RE-TAKEN on 17.2.0 (#1460) and RE-CONFIRMED on 17.3.0 (#1676) — the pin
-    // at each of those takings, none of them the current one (17.4.0 since PR
-    // #1814, #1807) — same verdict all three times: `task_due_reminder`
+    // at each of those takings; not re-taken on 17.4.0 (PR #1814, #1807) or
+    // 17.5.0 — same verdict all three times: `task_due_reminder`
     // declares `runAs: 'system'`, so its write WOULD survive a
     // `readonly: true`.
     //

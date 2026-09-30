@@ -68,7 +68,7 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
  * `nowIso`, a clock read. The row only ever decides WHETHER a key is written.
  *
  *   - `last_reviewed_at` sits behind the `nextStatus !== 'published'` early
- *     return, and that return reads the ROW. Measured on the pinned 17.4.0 on a
+ *     return, and that return reads the ROW. Measured on 17.4.0 on a
  *     fresh `pnpm dev`: the platform's own seed-ownership claim (one payload of
  *     `{ owner_id }`, `where: { owner_id: null }`) matched all 4 seeded
  *     articles; the 3 published ones stamped `last_reviewed_at`, the 1 draft
@@ -92,7 +92,7 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
  * ⚠️ HISTORY — do not reason from it. Until 17.3.0 the sandbox context carried
  * no per-row signal, so a `ctx.dispatch` guard lowered cleanly, passed every
  * in-process test and was INERT in production; PR #1274 recorded that as the
- * reason this could not be fixed here. That is FALSE on the pinned 17.4.0:
+ * reason this could not be fixed here. That is FALSE from 17.3.0 on:
  * `buildSandboxContext` marshals `dispatch` and an `inputOptions` projection
  * (objectstack#11552), and `test/hooks-runtime-service.test.ts` pins that they
  * cross. `ctx.input.id` is still absent — read `ctx.previous.id`.

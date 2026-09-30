@@ -485,6 +485,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     account_detail_page: {
       label: 'Detalle de Cuenta',
       description: 'Página de registro de cuenta por slots: cabecera personalizada + feed de discusión permanente.',
+      title: '{name}',
+      subtitle: '{industry} · {type}',
+      components: {
+        account_chatter: { label: 'Discusión' },
+      },
     },
     account_workbench: {
       label: 'Mesa de Trabajo de Cuentas',
@@ -507,6 +512,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       components: {
         case_highlights: { label: 'Información Clave' },
         case_status_path: { label: 'Progreso del Estado del Caso' },
+        case_details: { label: 'Detalles del Caso' },
       },
     },
     lead_detail_page: {
@@ -520,6 +526,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         lead_highlights: { label: 'Información Clave' },
         lead_path: { label: 'Progreso del Estado del Prospecto' },
         main_tabs: { label: 'Pestañas de Información del Prospecto' },
+        lead_details: { label: 'Detalles del Prospecto' },
+        related_accordion: { label: 'Registros Relacionados' },
+        related_tasks: { title: 'Tareas Abiertas', label: 'Tareas' },
+        lead_activity: { label: 'Cronología de Actividad' },
+        lead_history: { label: 'Historial de Campos' },
       },
     },
     opportunity_detail_page: {
@@ -530,6 +541,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       components: {
         opp_highlights: { label: 'Información Clave' },
         opp_stage_path: { label: 'Progreso de Etapa de la Oportunidad' },
+        opp_details: { label: 'Detalles de la Oportunidad' },
       },
     },
     sales_home_page: {
@@ -556,6 +568,9 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         quick_create: { title: 'Creación Rápida', label: 'Creación Rápida' },
         key_metrics: { title: 'Indicadores Clave de Rendimiento', label: 'Métricas Clave' },
         home_tabs: { label: 'Pestañas de Inicio' },
+        home_my_leads: { label: 'Mis Prospectos' },
+        home_my_deals: { label: 'Mis Negocios Abiertos' },
+        home_my_tasks: { label: 'Mis Tareas Abiertas' },
         ai_briefing: {
           title: 'Pregúntale al Asistente de IA',
           description:

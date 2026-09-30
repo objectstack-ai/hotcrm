@@ -185,7 +185,7 @@ export const SalesHomePage: Page = {
                   label: 'Revenue (Won)',
                   icon: 'dollar-sign',
                   aggregate: { field: 'amount', function: 'sum' },
-                  filter: { stage: 'closed_won' },
+                  filter: [{ field: 'stage', operator: 'equals', value: 'closed_won' }],
                 },
               },
               {
@@ -196,7 +196,7 @@ export const SalesHomePage: Page = {
                   label: 'Deals Won',
                   icon: 'trophy',
                   aggregate: { field: 'id', function: 'count' },
-                  filter: { stage: 'closed_won' },
+                  filter: [{ field: 'stage', operator: 'equals', value: 'closed_won' }],
                 },
               },
               {
@@ -207,7 +207,7 @@ export const SalesHomePage: Page = {
                   label: 'Pipeline Value',
                   icon: 'briefcase',
                   aggregate: { field: 'amount', function: 'sum' },
-                  filter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
+                  filter: [{ field: 'stage', operator: 'not_in', value: ['closed_won', 'closed_lost'] }],
                 },
               },
               {
@@ -218,7 +218,7 @@ export const SalesHomePage: Page = {
                   label: 'Open Leads',
                   icon: 'user-plus',
                   aggregate: { field: 'id', function: 'count' },
-                  filter: { is_converted: false },
+                  filter: [{ field: 'is_converted', operator: 'equals', value: false }],
                 },
               },
             ],
@@ -339,7 +339,6 @@ export const SalesHomePage: Page = {
   ],
   
   isDefault: true,
-  assignedProfiles: ['sales_rep', 'sales_manager'],
   
   aria: {
     ariaLabel: 'Sales Home Page',

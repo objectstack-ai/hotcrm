@@ -26,14 +26,13 @@ import stack from '../objectstack.config';
  * `crm_campaign_member` rows that action inserts.
  *
  * These tests resolve the whole authorization surface (grants ↔ objects ↔
- * navigation ↔ pages ↔ sharing rules ↔ positions) so the next uncovered object
+ * navigation ↔ sharing rules ↔ positions) so the next uncovered object
  * fails in CI instead of at a customer's first click.
  */
 
 type AnyRec = Record<string, any>;
 
 const objects: AnyRec[] = (stack as any).objects ?? [];
-const pages: AnyRec[] = (stack as any).pages ?? [];
 const apps: AnyRec[] = (stack as any).apps ?? [];
 const permissionSets: AnyRec[] = (stack as any).permissions ?? [];
 const sharingRules: AnyRec[] = (stack as any).sharingRules ?? [];
@@ -149,27 +148,6 @@ describe('reachable UI is reachable for someone', () => {
       }
     }
     expect(bad, `dead navigation (permission-denied for every user):\n  ${bad.join('\n  ')}`)
-      .toEqual([]);
-  });
-
-  it('every related list is readable by every profile its page is assigned to', () => {
-    const bad: string[] = [];
-    for (const page of pages) {
-      const assigned: string[] = page.assignedProfiles ?? [];
-      if (assigned.length === 0) continue;
-      for (const c of [...walk(page.regions), ...walk(page.slots)]) {
-        if (c.type !== 'record:related_list') continue;
-        const objectName = c.properties?.objectName as string;
-        if (!objectName || objectName.startsWith('sys_')) continue;
-        const readers = new Set(setsGranting(objectName, 'read'));
-        for (const profile of assigned) {
-          if (!readers.has(profile)) {
-            bad.push(`${page.name} / ${c.id}: "${objectName}" is not readable by "${profile}"`);
-          }
-        }
-      }
-    }
-    expect(bad, `related lists denied to their own page audience:\n  ${bad.join('\n  ')}`)
       .toEqual([]);
   });
 });

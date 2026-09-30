@@ -122,7 +122,6 @@ export const Contract = ObjectSchema.create({
     contract_value: Field.currency({ 
       label: 'Contract Value',
       group: 'value',
-      scale: 2,
       min: 0,
       required: true,
       storage: { notNull: true },

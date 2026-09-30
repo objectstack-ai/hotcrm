@@ -305,7 +305,6 @@ export const CaseDetailPage: Page = {
   ],
 
   isDefault: true,
-  assignedProfiles: ['service_agent', 'system_admin'],
 
   aria: {
     ariaLabel: 'Case Detail Page',

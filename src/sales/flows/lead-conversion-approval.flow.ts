@@ -26,7 +26,7 @@ type Flow = Automation.Flow;
  * `lead.hook.ts` refuses its conversion until this flow writes a verdict.
  *
  * ⛔ Do NOT reach for `status: 'draft'` as the off switch instead. Measured on
- * the pinned `@objectstack/service-automation` 17.4.0, whose own registration
+ * `@objectstack/service-automation` 17.4.0, whose own registration
  * diagnostic says it in as many words — "draft flows still fire their triggers;
  * set status: 'active' to make intent explicit, or 'obsolete' to disable". And
  * ⛔ not `'obsolete'` either: `isFlowEnabled` composes the authoring status with

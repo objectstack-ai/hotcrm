@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-automation';
-import { fieldHasColumn, expectedIndexes } from '@objectstack/driver-sql';
+import { fieldHasColumn, expectedIndexes, withheldFilterDiagnosticOf } from '@objectstack/driver-sql';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { applySystemFields } from '@objectstack/objectql';
 import stack from '../objectstack.config';
@@ -260,9 +260,17 @@ describe('premise: no filter operator expresses normalize-then-exact on SQL', ()
   };
 
   it('`$regex` is retired — the driver refuses it instead of guessing', async () => {
-    await expect(names({ name: { $regex: 'Acme Corp' } })).rejects.toThrow(
-      /\$regex.*RETIRED|RETIRED.*\$regex/is,
+    // Since 17.5 the thrown message withholds the operator and field (they are
+    // caller-controlled text); the full diagnostic rides on the error and is
+    // read back with `withheldFilterDiagnosticOf`. Pin both halves.
+    const err = await names({ name: { $regex: 'Acme Corp' } }).then(
+      () => null,
+      (e: unknown) => e,
     );
+    expect(err).toBeInstanceOf(Error);
+    expect((err as Error).message).toMatch(/RETIRED/);
+    expect((err as Error).message).not.toMatch(/\$regex/);
+    expect(withheldFilterDiagnosticOf(err)).toMatch(/\$regex.*RETIRED|RETIRED.*\$regex/is);
   });
 
   it('`$icontains`, the declared replacement, matches a SUPERSTRING — not an exact match', async () => {

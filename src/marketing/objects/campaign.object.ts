@@ -144,21 +144,18 @@ export const Campaign = ObjectSchema.create({
     budgeted_cost: Field.currency({ 
       group: 'budget',
       label: 'Budgeted Cost',
-      scale: 2,
       min: 0,
     }),
     
     actual_cost: Field.currency({ 
       group: 'budget',
       label: 'Actual Cost',
-      scale: 2,
       min: 0,
     }),
     
     expected_revenue: Field.currency({ 
       group: 'budget',
       label: 'Expected Revenue',
-      scale: 2,
       min: 0,
     }),
     
@@ -181,7 +178,6 @@ export const Campaign = ObjectSchema.create({
     actual_revenue: Field.currency({ 
       group: 'budget',
       label: 'Actual Revenue',
-      scale: 2,
       min: 0,
     }),
     

@@ -191,7 +191,6 @@ export const Quote = ObjectSchema.create({
     subtotal: Field.currency({ 
       label: 'Subtotal',
       group: 'pricing',
-      scale: 2,
     }),
     
     discount: Field.percent({
@@ -205,25 +204,21 @@ export const Quote = ObjectSchema.create({
     discount_amount: Field.currency({ 
       label: 'Discount Amount',
       group: 'pricing',
-      scale: 2,
     }),
     
     tax: Field.currency({ 
       label: 'Tax',
       group: 'pricing',
-      scale: 2,
     }),
     
     shipping_handling: Field.currency({ 
       label: 'Shipping & Handling',
       group: 'pricing',
-      scale: 2,
     }),
     
     total_price: Field.currency({ 
       label: 'Total Price',
       group: 'pricing',
-      scale: 2,
     }),
     
     // Terms

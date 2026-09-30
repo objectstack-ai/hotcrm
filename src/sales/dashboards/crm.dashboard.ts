@@ -113,15 +113,9 @@ export const CrmOverviewDashboard: Dashboard = {
       dataset: 'opportunity_metrics', dimensions: ['close_date'], values: ['total_amount'],
       layout: { x: 0, y: 2, w: 9, h: 4 },
       chartConfig: {
-        type: 'area',
         showLegend: false,
         showDataLabels: false,
         colors: ['#10B981'],
-        // Axis titles stay plain English: `ChartAxisSchema.title` accepts an inline
-        // locale map but the Console flattens it to the map's FIRST value regardless
-        // of locale — measured, see `src/dashboards/index.ts` (#1822).
-        xAxis: { field: 'close_date', title: 'Month', showGridLines: false, logarithmic: false },
-        yAxis: [{ field: 'total_amount', title: 'Revenue', format: '0,0', showGridLines: true, logarithmic: false }],
         interaction: { tooltips: true, brush: true },
       },
       options: { dateGranularity: 'month' },
@@ -135,7 +129,6 @@ export const CrmOverviewDashboard: Dashboard = {
       dataset: 'opportunity_metrics', dimensions: ['lead_source'], values: ['total_amount'],
       layout: { x: 9, y: 2, w: 3, h: 4 },
       chartConfig: {
-        type: 'donut',
         showLegend: true,
         showDataLabels: true,
         colors: ['#4F46E5', '#06B6D4', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'],
@@ -161,12 +154,9 @@ export const CrmOverviewDashboard: Dashboard = {
       dataset: 'product_metrics', dimensions: ['category'], values: ['list_price_sum'],
       layout: { x: 6, y: 6, w: 6, h: 4 },
       chartConfig: {
-        type: 'bar',
         showLegend: false,
         showDataLabels: true,
         colors: ['#4F46E5'],
-        xAxis: { field: 'category', title: 'Category', showGridLines: false, logarithmic: false },
-        yAxis: [{ field: 'list_price_sum', title: 'Revenue', format: '0,0', showGridLines: true, logarithmic: false }],
       },
     },
 

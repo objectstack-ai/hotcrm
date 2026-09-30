@@ -71,8 +71,8 @@ export const ConvertLeadAction: Action = {
   // are the shape that still earns one.
   //
   // Mechanism, measured on the console this app pinned at that taking
-  // (@objectstack/console 17.3.0, `dist/assets/`; the app pins 17.4.0 since PR
-  // #1814, #1807, and this bundle read was ⛔ NOT re-taken there) rather than
+  // (@objectstack/console 17.3.0, `dist/assets/`; this bundle read was ⛔ NOT
+  // re-taken on any later pin — 17.4.0, PR #1814, or 17.5.0) rather than
   // assumed: the runner gates the dialog on
   // the key's presence alone —
   //     if (action.confirmText && !await confirmHandler(evaluate(action.confirmText)))
