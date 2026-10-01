@@ -284,7 +284,7 @@ FROM → TO for a breaking change); it ships as `CHANGELOG.md`. The lone excepti
 A seat may take a PR out of draft and arm auto-merge once every check on it has finished and none has failed. Arming **enqueues**:
 `main`'s ruleset carries a merge queue that performs the squash merge within seconds — ⛔ never merge by hand, and do not re-derive a
 wait from `min_entries_to_merge_wait_minutes`. A check that concluded `skipped` under a label, or never ran because a path filter
-excluded it, is not a failure. **Governed paths — `AGENTS.md`, `CLAUDE.md`, `.claude/**`, `.github/instructions/**` — govern the whole
+excluded it, is not a failure. **Governed paths — `AGENTS.md`, `CLAUDE.md`, `.claude/**` — govern the whole
 diff**, however small that part of it is: the PR stays a **draft** and is the maintainer's own merge; ⛔ a seat never flips it ready and never arms auto-merge on it. (#1742)
 
 ### Verifying UI in the browser
