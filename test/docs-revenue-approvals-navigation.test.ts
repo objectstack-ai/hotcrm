@@ -3,6 +3,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { createRequire } from 'node:module';
 import { SysApprovalAction, SysApprovalRequest } from '@objectstack/plugin-approvals';
 import { REPO_ROOT } from './helpers/repo-root';
 import { CrmApp } from '../src/sales/apps/crm.app';
@@ -121,6 +122,44 @@ const REQUEST_VIEWS = viewLabels(SysApprovalRequest as unknown as AnyRec);
 const ACTION_VIEWS = viewLabels(SysApprovalAction as unknown as AnyRec);
 
 /**
+ * The zh-CN labels of the request views, from the plugin's own pack — a Chinese
+ * page spells a view name as the zh-CN value of the pack that owns the object
+ * (#1552). The package exports its schemas but not its locale packs, so the
+ * labels are read off the built bundle with its `\uXXXX` escapes decoded, the
+ * same read `docs-search-navigation-views.test.ts` makes, and only from the
+ * zh-CN block so a ja-JP or es-ES label can never satisfy it.
+ */
+const ZH_CN_PLUGIN_OBJECTS: string = (() => {
+  const entry = createRequire(import.meta.url).resolve('@objectstack/plugin-approvals');
+  const raw = readFileSync(entry, 'utf8').replace(/\\u([0-9a-fA-F]{4})/g, (_m, hex) =>
+    String.fromCharCode(parseInt(hex, 16)),
+  );
+  const start = raw.indexOf('zhCNObjects =');
+  if (start < 0) {
+    throw new Error('the approvals plugin bundle has no zhCNObjects block — this pin is out of date');
+  }
+  const end = raw.slice(start + 1).search(/\b[a-z]{2}[A-Z]{2}Objects =/);
+  return end < 0 ? raw.slice(start) : raw.slice(start, start + 1 + end);
+})();
+
+const ZH_HANS_REQUEST_VIEWS: string[] = Object.keys(
+  ((SysApprovalRequest as unknown as AnyRec).listViews ?? {}) as Record<string, AnyRec>,
+).map((key) => {
+  const m = ZH_CN_PLUGIN_OBJECTS.match(new RegExp(`\\b${key}:\\s*\\{\\s*label:\\s*"([^"]+)"`));
+  if (!m) throw new Error(`the approvals plugin ships no zh-CN label for view '${key}'`);
+  return m[1];
+});
+
+/**
+ * No pack ships Traditional script, so the zh-Hant page spells the same labels
+ * by character conversion only (no word swap) — the convention AGENTS.md sets
+ * for zh-Hant view names. Only the characters these labels use are mapped.
+ */
+const ZH_HANT_REQUEST_VIEWS = ZH_HANS_REQUEST_VIEWS.map((l) =>
+  l.replace(/审/g, '審').replace(/发/g, '發'),
+);
+
+/**
  * Which destination the Inbox entry actually carries, reduced to the
  * discriminant the doc pins key on. Anything unrecognised stays distinct, so a
  * third shape fails loudly rather than silently matching one of the two the
@@ -194,6 +233,8 @@ const PAGES = [
     file: 'content/docs/revenue/approvals.mdx',
     lang: 'en',
     heading: '## Where to find pending approvals',
+    /** The request views' labels, in this page's language. */
+    requestViews: REQUEST_VIEWS,
     /** The denials the section must actually make, not merely imply. */
     denials: [
       /\*Approval Requests\* is not a navigation entry anywhere in this app/,
@@ -226,6 +267,7 @@ const PAGES = [
     file: 'content/docs/revenue/approvals.zh-Hans.mdx',
     lang: 'zh-Hans',
     heading: '## 在哪里找到待处理的审批',
+    requestViews: ZH_HANS_REQUEST_VIEWS,
     denials: [
       /应用里没有任何导航条目叫 \*Approval Requests\*/,
       /哪里都不存在/,
@@ -240,7 +282,6 @@ const PAGES = [
     // actually renders, so those are pinned too — 全部 is left out on purpose,
     // a bare "all" matches any bundle and would pin nothing.
     quotedFromConsole: [
-      'My Pending',
       'Submitted by me',
       '待我审批',
       '我发起的',
@@ -262,6 +303,7 @@ const PAGES = [
     file: 'content/docs/revenue/approvals.zh-Hant.mdx',
     lang: 'zh-Hant',
     heading: '## 在哪裡找到待處理的審批',
+    requestViews: ZH_HANT_REQUEST_VIEWS,
     denials: [
       /應用裡沒有任何導覽條目叫 \*Approval Requests\*/,
       /哪裡都不存在/,
@@ -272,14 +314,13 @@ const PAGES = [
       'approval-centre': '進入平台的**審批中心**',
       'request-object-list': '所以點開後落在物件的列表頁上',
     },
-    // Neither the app nor the console ships a Hant pack, so this page quotes the
-    // simplified strings verbatim inside 「」 — the same convention the rest of
-    // the file uses, and the reason these are the simplified spellings.
+    // Neither the app nor the console ships a Hant pack. Strings quoted inside
+    // 「」 stay in the simplified spelling the console renders; the tab and view
+    // names themselves are spelled in Traditional script (#1552), so the views
+    // are pinned by `requestViews` rather than against the console bundle.
     quotedFromConsole: [
-      'My Pending',
       'Submitted by me',
       '待我审批',
-      '我发起的',
       '全部状态',
       '待审批',
       '已通过',
@@ -483,7 +524,17 @@ describe('the source facts the approvals navigation section rests on (#963)', ()
 describe('revenue/approvals names the navigation that exists (#963, #1162)', () => {
   describe.each(PAGES)(
     '$file',
-    ({ file, heading, denials, attribution, destinationClaims, quotedFromConsole, collision, retired }) => {
+    ({
+      file,
+      heading,
+      requestViews,
+      denials,
+      attribution,
+      destinationClaims,
+      quotedFromConsole,
+      collision,
+      retired,
+    }) => {
       const section = () => sectionOf(file, heading);
 
       it('names the real sidebar item', () => {
@@ -550,9 +601,9 @@ describe('revenue/approvals names the navigation that exists (#963, #1162)', () 
         expect(section(), `${file}: no collision warning between the two lists`).toMatch(collision);
       });
 
-      it('still lists every built-in view of the approval request, by its source label', () => {
+      it('still lists every built-in view of the approval request, in its own language', () => {
         const text = section();
-        const missing = REQUEST_VIEWS.filter((l) => !text.includes(l));
+        const missing = requestViews.filter((l) => !text.includes(l));
         expect(
           missing,
           `${file}: the section omits list view(s) the approvals plugin still ships — they are no ` +
