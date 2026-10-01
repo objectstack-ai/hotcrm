@@ -117,6 +117,13 @@ are recorded in `docs/architecture/module-split-plan.md`; ⛔ do not restate tha
    - **The predicate key is `where`.** `filter` is a live alias the engine folds to `where`, so the hazard is not silent loss but
      **mixing**: a query carrying both keys throws `Conflicting options … 'where', 'filter'`, and an empty `where: {}` is a different
      value. `HookQuery` omits `filter` so the mix is a compile error; `test/hook-query-predicate.test.ts` pins the engine per method.
+   - **The method contract is the `_hook-api.ts` types**, ⛔ not memory of another stack: `count` takes `where` only, a read is capped
+     with `top`, and `update` is `(doc carrying its id, { where })` — each wrong spelling is a compile error there.
+   - **A hook handler and a `script` action body run body-only in a QuickJS sandbox, with no module scope.** Every constant, table and
+     helper a body reads is declared **inside** it (type-only imports are erased and fine) — a module-scope reference type-checks and
+     then fails the lowering, which `test/action-sandbox.test.ts` runs over every registered hook. An action body reaches data only under
+     the `capabilities` it declares (`api.read`, `api.write`). `ctx.user` is **absent** on system and seed writes — that absence is this
+     repo's system-write signal.
    - **Other surfaces spell their own key, and their own schema decides.** A `*.flow.ts` node `config` takes `filter:`; a page component's
      `filter` is its `ComponentPropsMap` entry (`@objectstack/spec/ui`) — `record:related_list` takes rule **objects** `[{ field, operator, value }]`; the AST array and `op:` are rejected by `objectstack build` and the list renders unfiltered (#1248).
 4. **AI-native.** AI-callable tools are `*.actions.ts`. The AI surface is skills-only — `src/*/skills/*.skill.ts` via `defineSkill()`,
