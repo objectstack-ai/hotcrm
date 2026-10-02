@@ -2,7 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { CrmSeedData } from '../objectstack.composition';
-import { CASE_SLA_DEFAULT_TIER, caseSlaHours } from '../src/service/objects/_case-sla';
+import { CASE_SLA_DEFAULT_TIER, caseSlaCalendarHours } from '../src/service/objects/_case-sla';
 import { HIGH_VALUE_DEAL_AMOUNT, LARGE_DEAL_AMOUNT } from '../src/sales/objects/_thresholds';
 
 /**
@@ -510,7 +510,7 @@ describe('seeded case SLA due dates match the policy matrix (#595)', () => {
         problems.push(`${label}: created_date is not a daysAgo() expression — ${created}`);
         continue;
       }
-      const hours = caseSlaHours(String(c.priority), tierOf.get(String(c.crm_account)));
+      const hours = caseSlaCalendarHours(String(c.priority), tierOf.get(String(c.crm_account)));
       if (hours === undefined) {
         problems.push(`${label}: no SLA matrix row for priority "${String(c.priority)}"`);
         continue;
@@ -531,7 +531,7 @@ describe('seeded case SLA due dates match the policy matrix (#595)', () => {
     const problems: string[] = [];
     for (const c of cases.filter((r) => r.is_sla_violated === true)) {
       const age = /^daysAgo\((\d+)\)$/.exec(celSource(c.created_date) ?? '');
-      const hours = caseSlaHours(String(c.priority), tierOf.get(String(c.crm_account)));
+      const hours = caseSlaCalendarHours(String(c.priority), tierOf.get(String(c.crm_account)));
       const label = `${String(c.subject)} (${String(c.priority)})`;
       if (!age || hours === undefined) {
         problems.push(`${label}: cannot check a breach without a daysAgo() creation and a matrix row`);

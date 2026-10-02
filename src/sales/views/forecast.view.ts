@@ -25,7 +25,8 @@ export const ForecastViews = defineView({
       { field: 'commit_amount',    width: 140, align: 'right', summary: 'sum' },
       { field: 'best_case_amount', width: 140, align: 'right', summary: 'sum' },
       { field: 'pipeline_amount',  width: 140, align: 'right', summary: 'sum' },
-      { field: 'expected_amount',  width: 140, align: 'right', summary: 'sum' },
+      // No total here: a formula has no stored column to aggregate, so the spec refuses `sum` on a `formula` field (#1980).
+      { field: 'expected_amount',  width: 140, align: 'right' },
       { field: 'attainment_pct',   width: 130, align: 'right' },
       { field: 'coverage_ratio',   width: 130, align: 'right' },
       { field: 'source',           width: 130 },
