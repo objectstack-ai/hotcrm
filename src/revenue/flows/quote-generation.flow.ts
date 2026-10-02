@@ -1,9 +1,16 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { P } from '@objectstack/spec';
+import { P, expression } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 import { QUOTE_DISCOUNT_CEILING } from '../../sales/objects/_thresholds';
 type Flow = Automation.Flow;
+
+/**
+ * The screen's discount as a CEL double, 0 when the rep cleared the box. A
+ * source FRAGMENT, spliced into both pricing envelopes with `expression()`:
+ * the `P` tag JSON-quotes an interpolated string, so it cannot splice one.
+ */
+const DISCOUNT = '(!has(vars.discount) || isBlank(vars.discount) ? 0.0 : double(vars.discount))';
 
 /** Quote Generation — screen flow to create a quote from an opportunity */
 export const QuoteGenerationFlow: Flow = {
@@ -91,20 +98,20 @@ export const QuoteGenerationFlow: Flow = {
           // write is now ACCEPTED and the tail would be stored silently. The
           // rounding keeps `discount_amount` / `total_price` whole-cent amounts.
           //
-          // `round()` is the CEL stdlib's, mirrored 1:1 into flow value
-          // expressions from service-automation 17.3.0. It is INTEGER-ONLY and
-          // single-argument, so N-decimal rounding is spelled `round(x * 100) /
-          // 100` — the platform's own arity diagnostic names this exact pattern.
-          // ⛔ Not `round(x, 2)`: there is no precision form, and it now fails
-          // loudly. ⛔ Never an operator trick like `(x * 100 + 0.5 | 0) / 100`
-          // either — `|0` is an int32 coercion that SILENTLY overflows above
-          // ~21.5M, which on a money field is worse than the defect it dodges;
-          // `round()` refuses loudly past `Number.MAX_SAFE_INTEGER` instead.
+          // Both are CEL value envelopes. CEL's `round()` is INTEGER-ONLY and
+          // single-argument, and it returns an INT — so the divisor MUST be
+          // the decimal `100.0`. ⛔ Never `/ 100`: in CEL int / int is integer
+          // division, which silently drops the cents (1,234.56 at 10% would
+          // store 123, not 123.46; `test/flow-quote.test.ts` pins it). ⛔ Not
+          // `round(x, 2)` either: there is no precision form, and it fails
+          // loudly. `double()` types the amount, which some drivers return as
+          // a string. A cleared discount (null / absent / "") prices as 0%, as
+          // it did before; the `has()` guard is what keeps that TOTAL.
           //
           // ⭐ This shape applies ANYWHERE a flow multiplies a currency by a
           // percentage. Write the rounding, not the bare product.
-          discount_amount: '{round(oppRecord.amount * (discount / 100) * 100) / 100}',
-          total_price: '{round(oppRecord.amount * (1 - discount / 100) * 100) / 100}',
+          discount_amount: expression(`round(double(oppRecord.amount) * (${DISCOUNT} / 100.0) * 100.0) / 100.0`, 'cel'),
+          total_price: expression(`round(double(oppRecord.amount) * (1.0 - ${DISCOUNT} / 100.0) * 100.0) / 100.0`, 'cel'),
           payment_terms: 'net_30',
         },
         outputVariable: 'quoteId',

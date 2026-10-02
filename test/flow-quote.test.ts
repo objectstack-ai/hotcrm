@@ -120,3 +120,41 @@ describe('quote_generation flow — runtime', () => {
     expect(q.crm_contact == null, 'contact left empty').toBe(true);
   });
 });
+
+/**
+ * The two pricing expressions are CEL value envelopes (#1984), and CEL divides
+ * an int by an int as INTEGERS. `round()` returns an int, so `round(x * 100) /
+ * 100` silently drops the cents there; only the decimal divisor `/ 100.0`
+ * keeps them. The pins above cannot see that: every amount they use prices to
+ * whole units. 1,234.56 at 10% is 123.456 → 123.46 with the decimal divisor
+ * and 123 with an integer one, and the total 1,111.104 → 1,111.10 vs 1,111 —
+ * so these go red if either divisor loses its `.0`.
+ */
+describe('quote_generation flow — CEL pricing (#1984)', () => {
+  const quoteAt = async (amount: unknown, screen: Rec) => {
+    const h = makeQuote({
+      crm_opportunity: [{
+        id: 'opp_4', name: 'Cents Deal', amount,
+        crm_account: 'acc_4', primary_contact: null, stage: 'qualification',
+      }],
+    });
+    await runQuote(h, 'opp_4', { quoteName: 'Q-4', expirationDays: 30, ...screen });
+    expect(h.store.crm_quote?.length, 'quote created').toBe(1);
+    return h.store.crm_quote[0];
+  };
+
+  it('keeps the cents: both divisors are decimal, not integer division', async () => {
+    const q = await quoteAt(1234.56, { discount: 10 });
+    expect(q.discount_amount).toBe(123.46);
+    expect(q.total_price).toBe(1111.1);
+  });
+
+  // The template dialect read a cleared discount as 0. A bare `double(discount)`
+  // ERRORS on null, which would fail the quote instead — the guard keeps the
+  // old pricing: no discount, full price.
+  it.each([null, ''])('prices a cleared discount (%j) as 0%%', async (discount) => {
+    const q = await quoteAt(180000, { discount });
+    expect(q.discount_amount).toBe(0);
+    expect(q.total_price).toBe(180000);
+  });
+});
