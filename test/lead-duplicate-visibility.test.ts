@@ -273,9 +273,9 @@ describe('lead record page — the duplicate banners, one per verdict', () => {
     // `record:alert` resolves `title` / `body` through `pickLocalized(…,
     // language)`, so an inline `{ en, 'zh-CN', … }` map is a delivered
     // capability — and for `body` it is the ONLY channel: the i18n extractor's
-    // per-component copy keys are title/description/label/placeholder/
-    // emptyText/submitLabel, so a plain-string body would ship English to
-    // every locale with nothing reporting it.
+    // per-component copy keys (`PAGE_COMPONENT_COPY_KEYS`, read on 17.6.0) are
+    // title/description/label/placeholder/emptyText, so a plain-string body
+    // would ship English to every locale with nothing reporting it.
     const declared = (stack as AnyRec).i18n?.supportedLocales ?? [];
     expect([...declared].sort(), 'the app no longer ships these four locales')
       .toEqual([...LOCALES].sort());
