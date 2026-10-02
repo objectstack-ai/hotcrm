@@ -222,16 +222,11 @@ export const ServiceDashboard: Dashboard = {
           { type: 'line', axis: 'y', value: 0.95, label: 'Target', style: 'dashed', color: '#10B981' },
         ],
       },
-      // The ladder and the target line were written for COMPLIANCE and are
-      // unchanged: 95%+ is green, 85–95% amber, below that red. They were
-      // always right — it was the plotted value that disagreed with them.
-      options: {
-        thresholds: [
-          { value: 0.95, color: 'success' },
-          { value: 0.85, color: 'warning' },
-          { value: 0,    color: 'danger' },
-        ],
-      },
+      // The target line was written for COMPLIANCE and is unchanged: it was
+      // always right — it was the plotted value that disagreed with it. (The
+      // green/amber/red `options.thresholds` ladder beside it was deleted in
+      // 17.6.0's strict cleanup: no dashboard renderer reads widget
+      // `thresholds`, so it never coloured anything.)
     },
 
     // ─── Row 4: Knowledge deflection (#601) ───────────────────────────

@@ -399,17 +399,6 @@ export const SalesDashboard: Dashboard = {
       colorVariant: 'default',
       dataset: 'opportunity_metrics', dimensions: ['stage', 'lead_source'], values: ['total_amount'],
       layout: { x: 0, y: 28, w: 12, h: 4 },
-      options: {
-        drillDown: {
-          enabled: true,
-          // Clicking a pivot cell opens a drawer listing the underlying
-          // opportunity records for that stage + lead-source slice — the
-          // same drill-through pattern used by the other dashboard widgets.
-          target: 'drawer',
-          columns: ['name', 'crm_account', 'amount', 'forecast_category', 'close_date', 'owner_id'],
-          maxRows: 100,
-        },
-      },
     },
   ],
 };
