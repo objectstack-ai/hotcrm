@@ -369,7 +369,7 @@ describe('every owner-facing surface points at the one column', () => {
 
   it('no flow writes or addresses a bare `owner`', () => {
     // A `notify` addressed to `{record.owner}` resolves to nothing and reaches
-    // nobody — the exact silent failure `demo_bootstrap` exists to prevent.
+    // nobody — the exact silent failure an ownerless record causes.
     const bad: string[] = [];
     for (const f of flows) {
       for (const node of walk(f)) {

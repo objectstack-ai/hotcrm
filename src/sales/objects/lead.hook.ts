@@ -169,7 +169,7 @@ const leadHook: Hook = {
       // INSERT-only on `crm_lead`.)
       //
       // ⚠️ `!ctx.session?.isSystem` is required, not decoration: a SYSTEM write
-      // (seed load, backfill, demo bootstrap) also arrives with no user id, and
+      // (seed load, backfill, seed-ownership claim) also arrives with no user id, and
       // the strip below would otherwise blank the owner and conversion state of
       // every system-written lead. The converted-lead lock further down reads
       // that same absence as the system-write signal, so the two readings have
@@ -287,7 +287,7 @@ const leadHook: Hook = {
 
     // Converted-lead lock — USER edits only (`ctx.user?.id` is this repo's
     // system-write signal, cf. opportunity/quote/account hooks): a blanket
-    // throw also rejected system writes (demo-bootstrap owner claims, flow
+    // throw also rejected system writes (seed-ownership claims, flow
     // backfills). Narrative notes and framework-managed columns stay editable;
     // identity and conversion fields stay locked.
     //

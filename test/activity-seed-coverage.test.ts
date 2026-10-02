@@ -152,7 +152,7 @@ describe('the activity seeds resolve against real records (#671)', () => {
     const authored = [...eventRows, ...attendeeRows].filter((r) => 'owner_id' in r);
     expect(
       authored.map((r) => String(r.subject ?? r.crm_event)),
-      'ownership is demo_bootstrap\'s job (src/data/index.ts); an authored owner_id would ' +
+      'ownership is the platform seed-ownership claim\'s job; an authored owner_id would ' +
         'store a literal string, not an id',
     ).toEqual([]);
   });
@@ -390,12 +390,13 @@ const datasetByName = new Map(datasetDefs.map((d) => [String(d.name), d]));
 const objectByName = new Map(objects.map((o) => [String(o.name), o]));
 
 /**
- * The claim `demo_bootstrap` performs on first boot, modelled as the one thing
- * this file needs from it: a seeded event reaches the database ownerless, and
- * the sweep stamps the first user onto it (#671 added `crm_event` to
- * CLAIMED_OBJECTS — `test/flow-scheduled.test.ts` owns the sweep's behaviour).
- * Without it the "Activity by Rep" bar groups every interaction under a null
- * owner, which is the defect that claim exists to prevent.
+ * The ownership claim the platform performs once the seed settles
+ * (`claimSeedOwnership` on `app:seeded`, `@objectstack/plugin-security`),
+ * modelled as the one thing this file needs from it: a seeded event reaches
+ * the database ownerless, and the claim stamps the first administrator onto it.
+ * Until #1892 the app's own `demo_bootstrap` sweep did this (#671 added
+ * `crm_event` to it). Without it the "Activity by Rep" bar groups every
+ * interaction under a null owner, which is the defect that claim prevents.
  */
 const OWNER = 'usr_first';
 
@@ -483,7 +484,7 @@ describe('every Sales Activity widget returns a number over the shipped seeds (#
     }
     for (const e of eventRows) {
       await api.object('crm_event').insert({
-        // The sweep's stamp — see OWNER above.
+        // The claim's stamp — see OWNER above.
         owner_id: OWNER,
         subject: e.subject,
         type: e.type,
@@ -588,15 +589,15 @@ describe('every Sales Activity widget returns a number over the shipped seeds (#
     }
   });
 
-  it('lands every interaction under a real owner — the demo_bootstrap claim', async () => {
+  it('lands every interaction under a real owner — the seed-ownership claim', async () => {
     const rows = await runWidget(
       (activityDashboard.widgets as AnyRec[]).find((w) => w.id === 'activity_by_rep')!,
     );
     const ownerless = rows.filter((r) => r.owner == null || r.owner === '');
     expect(
       ownerless,
-      'the "Activity by Rep" bar has a null-owner column: a seeded event that demo_bootstrap ' +
-        'never claimed (#671 added crm_event to CLAIMED_OBJECTS)',
+      'the "Activity by Rep" bar has a null-owner column: a seeded event the ' +
+        'seed-ownership claim never reached (#671, #1892)',
     ).toEqual([]);
   });
 

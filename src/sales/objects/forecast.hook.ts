@@ -51,9 +51,10 @@ const forecastDerive: Hook = {
     // `ctx.previous` on this path is supplied so a guard can REFUSE a write,
     // never so a rewrite can be aimed. Deriving is per-record work, so it
     // stands down here and still happens on the per-record path — which is
-    // every writer this app has: all 19 `update_record` flow nodes, every
-    // action and hook write through `ctx.api`, and the `demo_bootstrap` claim,
-    // all of them by id.
+    // every writer this app has: all 19 `update_record` flow nodes and every
+    // action and hook write through `ctx.api`, all of them by id. The platform's
+    // seed-ownership claim is a predicate write, and it writes only `owner_id`,
+    // which derives nothing.
     //
     // ⚠️ The `ctx.event` half is load-bearing, not ceremony: a BATCH INSERT
     // also reports `dispatch.mode === 'per-row'`, and there each row carries
