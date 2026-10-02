@@ -73,7 +73,7 @@ pnpm verify
 | --- | --- |
 | Node.js | `^22.11 \|\| ^24 \|\| >=26` |
 | pnpm | `>=10.0.0` |
-| ObjectStack packages | `17.5.0` |
+| ObjectStack packages | `17.6.0` |
 | Local dev port | `4001` |
 
 Each row above is asserted against `package.json` (`engines`, the `@objectstack/*`

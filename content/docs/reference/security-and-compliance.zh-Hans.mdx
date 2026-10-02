@@ -111,6 +111,8 @@ description: SSO、MFA、审计日志、secret 字段通道、GDPR —— HotCRM
 
 `sys_audit_log` 是真的，而且确实不可变：该对象是 `managedBy: 'append-only'`，其上每个字段都是 `readonly: true`。它随 `@objectstack/plugin-audit` 一起发布，而**本应用拿得到它** —— 在 `requires` 中声明 `auth` 会让 CLI 把 auth、security、audit 三个插件作为一组注册。在 **系统设置 → 审计日志**（位于 *诊断* 分组下）读取，它带了六个列表视图：*Recent*、*Writes*、*Auth*、*Record Views*、*Config* 与 *All*。
 
+⚠️ **ObjectStack 17.6.0 改变了系统设置 → 审计日志显示的内容。** 审计日志现在只向每个读者（管理员也不例外）展示其仍能打开的记录的相关行。这些行仍然存储着，但以下几类不再出现在控制台中：每一条 `delete` 行（记录已不存在）、`logout` 行以及会话已结束的 `login` 行，还有读者无法打开的记录的相关行。`config_change` 行仍会显示。需要查看全部行的审查，必须由以系统权限运行的服务端任务来做；控制台不提供这样的视图。
+
 分类表是没测过的那部分。对照真正存在的写入方重新判定：
 
 | 分类 | 状态 | 真正被记录的内容 |
