@@ -41,7 +41,7 @@ export const EventViews = defineView({
     rowColor: {
       // Mirrors the option colors on crm_event.status.
       field: 'status',
-      colors: { planned: '#4169E1', held: '#16a34a', cancelled: '#94a3b8', no_show: '#f97316' },
+      colors: { planned: 'blue', held: 'green', cancelled: 'slate', no_show: 'orange' },
     },
     selection: { type: 'multiple' },
     pagination: { pageSize: 50 },

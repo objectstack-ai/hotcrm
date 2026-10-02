@@ -75,10 +75,6 @@ export const SalesDashboard: Dashboard = {
       colorVariant: 'blue',
       dataset: 'opportunity_metrics', values: ['total_amount'],
       layout: { x: 0, y: 0, w: 3, h: 2 },
-      options: {
-        icon: 'DollarSign',
-        format: '0,0',
-      },
     },
     {
       id: 'closed_won_qtd',
@@ -90,10 +86,6 @@ export const SalesDashboard: Dashboard = {
       colorVariant: 'success',
       dataset: 'opportunity_metrics', values: ['total_amount'],
       layout: { x: 3, y: 0, w: 3, h: 2 },
-      options: {
-        icon: 'Trophy',
-        format: '0,0',
-      },
     },
     {
       id: 'open_opportunities',
@@ -104,20 +96,12 @@ export const SalesDashboard: Dashboard = {
       colorVariant: 'orange',
       dataset: 'opportunity_metrics', values: ['opp_count'],
       layout: { x: 6, y: 0, w: 3, h: 2 },
-      options: {
-        icon: 'Briefcase',
-        format: '0,0',
-      },
     },
     avgDealSizeMetricWidget({ x: 9, y: 0, w: 3, h: 2 }, {
       description: 'Average value of closed-won deals this quarter',
       filter: { stage: 'closed_won', close_date: { $gte: '{current_quarter_start}' } },
       filterBindings: { dateRange: false }, // self-scoped to QTD — the date picker must not re-window it
       colorVariant: 'purple',
-      options: {
-        icon: 'bar-chart',
-        format: '0,0',
-      },
     }),
 
     // ─── Row 2: Win / Loss KPIs ───────────────────────────────────────
@@ -148,7 +132,6 @@ export const SalesDashboard: Dashboard = {
       colorVariant: 'success',
       dataset: 'opportunity_metrics', values: ['win_rate'],
       layout: { x: 0, y: 2, w: 4, h: 2 },
-      options: { icon: 'Percent', format: '0%' },
     },
     {
       id: 'won_deals_12m',
@@ -160,7 +143,6 @@ export const SalesDashboard: Dashboard = {
       colorVariant: 'blue',
       dataset: 'opportunity_metrics', values: ['won_count'],
       layout: { x: 4, y: 2, w: 4, h: 2 },
-      options: { icon: 'Trophy', format: '0,0' },
     },
     {
       id: 'lost_deals_12m',
@@ -172,7 +154,6 @@ export const SalesDashboard: Dashboard = {
       colorVariant: 'orange',
       dataset: 'opportunity_metrics', values: ['lost_count'],
       layout: { x: 8, y: 2, w: 4, h: 2 },
-      options: { icon: 'TrendingDown', format: '0,0' },
     },
 
     // ─── Row 3: Pipeline & Trends ─────────────────────────────────────
@@ -250,17 +231,9 @@ export const SalesDashboard: Dashboard = {
       dataset: 'opportunity_metrics', dimensions: ['owner'], values: ['total_amount', 'opp_count', 'avg_probability'],
       layout: { x: 0, y: 12, w: 12, h: 4 },
       options: {
-        columns: [
-          { header: 'Owner',         accessorKey: 'owner' },
-          { header: 'Open Pipeline', accessorKey: 'total_amount', format: '0,0' },
-          { header: 'Open Deals',    accessorKey: 'opp_count' },
-          { header: 'Avg Win Prob.', accessorKey: 'avg_probability', format: '0%' },
-        ],
         sortBy: 'total_amount',
         sortOrder: 'desc',
         limit: 10,
-        striped: true,
-        density: 'comfortable',
       },
     },
 
@@ -330,17 +303,9 @@ export const SalesDashboard: Dashboard = {
       dataset: 'forecast_metrics', dimensions: ['owner'], values: ['quota_sum', 'closed_sum', 'attainment'],
       layout: { x: 0, y: 16, w: 12, h: 4 },
       options: {
-        columns: [
-          { header: 'Owner',      accessorKey: 'owner' },
-          { header: 'Quota',      accessorKey: 'quota_sum', format: '0,0' },
-          { header: 'Closed',     accessorKey: 'closed_sum', format: '0,0' },
-          { header: 'Attainment', accessorKey: 'attainment', format: '0%' },
-        ],
         sortBy: 'attainment',
         sortOrder: 'desc',
         limit: 10,
-        striped: true,
-        density: 'comfortable',
       },
     },
 
@@ -373,19 +338,9 @@ export const SalesDashboard: Dashboard = {
       values: ['won_count', 'lost_count', 'decided_count', 'win_rate', 'won_amount'],
       layout: { x: 0, y: 20, w: 6, h: 4 },
       options: {
-        columns: [
-          { header: 'Owner',       accessorKey: 'owner' },
-          { header: 'Won',         accessorKey: 'won_count' },
-          { header: 'Lost',        accessorKey: 'lost_count' },
-          { header: 'Settled',     accessorKey: 'decided_count' },
-          { header: 'Win Rate',    accessorKey: 'win_rate', format: '0%' },
-          { header: 'Won Revenue', accessorKey: 'won_amount', format: '0,0' },
-        ],
         sortBy: 'decided_count',
         sortOrder: 'desc',
         limit: 10,
-        striped: true,
-        density: 'comfortable',
       },
     },
     {
@@ -401,19 +356,9 @@ export const SalesDashboard: Dashboard = {
       values: ['won_count', 'lost_count', 'decided_count', 'win_rate', 'won_amount'],
       layout: { x: 6, y: 20, w: 6, h: 4 },
       options: {
-        columns: [
-          { header: 'Lead Source', accessorKey: 'lead_source' },
-          { header: 'Won',         accessorKey: 'won_count' },
-          { header: 'Lost',        accessorKey: 'lost_count' },
-          { header: 'Settled',     accessorKey: 'decided_count' },
-          { header: 'Win Rate',    accessorKey: 'win_rate', format: '0%' },
-          { header: 'Won Revenue', accessorKey: 'won_amount', format: '0,0' },
-        ],
         sortBy: 'decided_count',
         sortOrder: 'desc',
         limit: 12,
-        striped: true,
-        density: 'comfortable',
       },
     },
     {
@@ -454,24 +399,6 @@ export const SalesDashboard: Dashboard = {
       colorVariant: 'default',
       dataset: 'opportunity_metrics', dimensions: ['stage', 'lead_source'], values: ['total_amount'],
       layout: { x: 0, y: 28, w: 12, h: 4 },
-      options: {
-        rowField: 'stage',
-        columnField: 'lead_source',
-        valueField: 'amount',
-        aggregation: 'sum',
-        showRowTotals: true,
-        showColumnTotals: true,
-        format: '0,0',
-        drillDown: {
-          enabled: true,
-          // Clicking a pivot cell opens a drawer listing the underlying
-          // opportunity records for that stage + lead-source slice — the
-          // same drill-through pattern used by the other dashboard widgets.
-          target: 'drawer',
-          columns: ['name', 'crm_account', 'amount', 'forecast_category', 'close_date', 'owner_id'],
-          maxRows: 100,
-        },
-      },
     },
   ],
 };

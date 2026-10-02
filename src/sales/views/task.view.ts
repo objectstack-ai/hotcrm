@@ -70,7 +70,7 @@ export const TaskViews = defineView({
       // keys were Case values, so urgent and normal rows got no color at all.
       // Colors mirror the option colors on crm_task.priority.
       field: 'priority',
-      colors: { urgent: '#dc2626', high: '#f97316', normal: '#16a34a', low: '#94a3b8' },
+      colors: { urgent: 'red', high: 'orange', normal: 'green', low: 'slate' },
     },
     selection: { type: 'multiple' },
     pagination: { pageSize: 50 },

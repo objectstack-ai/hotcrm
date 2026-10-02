@@ -69,7 +69,7 @@ export const EventAttendeeViews = defineView({
     rowColor: {
       // Mirrors the option colors on crm_event_attendee.response.
       field: 'response',
-      colors: { accepted: '#16a34a', declined: '#dc2626', tentative: '#f97316', no_response: '#94a3b8' },
+      colors: { accepted: 'green', declined: 'red', tentative: 'orange', no_response: 'slate' },
     },
     pagination: { pageSize: 25 },
   },
