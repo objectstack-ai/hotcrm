@@ -116,6 +116,8 @@ That sixth row used to read *Account teams*. **There is no account-team object a
 
 `sys_audit_log` is real and it is genuinely immutable: the object is `managedBy: 'append-only'` and every field on it is `readonly: true`. It ships with `@objectstack/plugin-audit`, and **this app gets it** — declaring `auth` in `requires` makes the CLI register the auth, security and audit plugins as a set. Read it at **Setup → Audit Logs**, under *Diagnostics*, which ships six list views: *Recent*, *Writes*, *Auth*, *Record Views*, *Config* and *All*.
 
+⚠️ **What Setup → Audit Logs shows changed in ObjectStack 17.6.0.** The log now shows every reader — administrators included — only rows about records that reader can still open. Rows stay stored, but these no longer appear in the console: every `delete` row (the record is gone), `logout` rows and `login` rows whose session has ended, and rows about records the reader cannot open. `config_change` rows are still shown. A review that must see every row needs a server-side job running with system access; the console offers no such view.
+
 The category table was the unmeasured part. Re-judged against the writers that actually exist:
 
 | Category | State | What is really recorded |

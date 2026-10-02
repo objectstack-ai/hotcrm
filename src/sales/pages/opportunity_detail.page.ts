@@ -42,7 +42,9 @@ export const OpportunityDetailPage: Page = {
             // `icon` removed from `page:header` in @objectstack/spec 17.0.0
             // (#6946, ADR-0087 D2) — deleted, not renamed. See the full note on
             // `account_detail.page.ts`; nothing ever drew it.
-            breadcrumb: true,
+            // `breadcrumb` retired from `page:header` in @objectstack/spec 17.6.0
+            // (#20785, `page-header-breadcrumb-removed`) — deleted: no renderer
+            // ever drew a trail for it; the app shell's own trail is unchanged.
             // generate_quote is the CPQ entry point (opportunity → quote); a
             // custom record page replaces the default header, so the action
             // must be listed here explicitly or it is unreachable. The same

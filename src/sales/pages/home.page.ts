@@ -117,7 +117,9 @@ export const SalesHomePage: Page = {
             // `icon` removed from `page:header` in @objectstack/spec 17.0.0
             // (#6946, ADR-0087 D2) — deleted, not renamed. See the full note on
             // `account_detail.page.ts`; nothing ever drew it.
-            breadcrumb: false,
+            // `breadcrumb` retired from `page:header` in @objectstack/spec 17.6.0
+            // (#20785, `page-header-breadcrumb-removed`) — deleted: no renderer
+            // ever drew a trail for it; the app shell's own trail is unchanged.
           },
         },
       ],

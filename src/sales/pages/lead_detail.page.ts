@@ -62,7 +62,9 @@ export const LeadDetailPage: Page = {
             // `icon` removed from `page:header` in @objectstack/spec 17.0.0
             // (#6946, ADR-0087 D2) — deleted, not renamed. See the full note on
             // `account_detail.page.ts`; nothing ever drew it.
-            breadcrumb: true,
+            // `breadcrumb` retired from `page:header` in @objectstack/spec 17.6.0
+            // (#20785, `page-header-breadcrumb-removed`) — deleted: no renderer
+            // ever drew a trail for it; the app shell's own trail is unchanged.
             // Convert is the outcome; scheduling the next touch is the daily
             // act. Both belong in the header — the follow-up used to be four
             // clicks deep in the Related tab.
@@ -402,12 +404,12 @@ export const LeadDetailPage: Page = {
                       //
                       // ⚠️ Version caveat: those browser numbers are 17.2.0,
                       // two and more pins ago (17.4.0 came with PR #1814, then
-                      // 17.5.0). #1521 did
+                      // 17.5.0, then 17.6.0). #1521 did
                       // NOT re-run the
                       // browser measurement. What it did do is read the
                       // 17.3.0 console bundle (static, not run) — a pin that is
-                      // itself now behind, and nobody has re-read the 17.4.0
-                      // or 17.5.0 bundle — and
+                      // itself now behind, and nobody has re-read the 17.4.0,
+                      // 17.5.0 or 17.6.0 bundle — and
                       // the mechanism is unchanged there: both guards are still
                       // `sections.length > 0` and `fields.length > 0` with no
                       // else, the renderer still reads neither of the two
