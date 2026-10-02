@@ -41,18 +41,23 @@ export const OpportunityViews = defineView({
     rowColor: {
       field: 'stage',
       colors: {
-        prospecting: '#94a3b8',
-        qualification: '#60a5fa',
+        prospecting: 'slate',
+        qualification: 'sky',
         // Teal sits between the cool qualification blue and the warm proposal
-        // amber, keeping the cool→warm funnel ramp readable. NOT the
-        // `#FFD700` this option carries in `_picklists.ts`: this map is a
-        // Tailwind palette, and gold is one hue step from proposal's
-        // `#f59e0b` — the two adjacent stages would tint rows the same.
-        needs_analysis: '#14b8a6',
-        proposal: '#f59e0b',
-        negotiation: '#a855f7',
-        closed_won: '#16a34a',
-        closed_lost: '#dc2626',
+        // amber, keeping the cool→warm funnel ramp readable. NOT the gold
+        // `#FFD700` this option carries in `_picklists.ts`: gold is one hue
+        // step from proposal's amber, so the two adjacent stages would tint
+        // rows the same.
+        //
+        // Values are colour NAMES, not hex: objectui's `useRowColor` resolves
+        // only a name from its own vocabulary (or a full `bg-*` class) and
+        // turns a hex into no colour at all — so until 17.6.0's lint said so,
+        // this map tinted nothing.
+        needs_analysis: 'teal',
+        proposal: 'amber',
+        negotiation: 'purple',
+        closed_won: 'green',
+        closed_lost: 'red',
       },
     },
     pagination: { pageSize: 25, pageSizeOptions: [25, 50, 100] },

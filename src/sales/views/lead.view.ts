@@ -483,8 +483,8 @@ export const LeadViews = defineView({
       rowColor: {
         field: 'rating',
         colors: {
-          '5': '#00AA00',
-          '4': '#FFA500',
+          '5': 'green',
+          '4': 'orange',
         },
       },
     },

@@ -43,7 +43,7 @@ export const KnowledgeArticleViews = defineView({
     pagination: { pageSize: 50 },
     rowColor: {
       field: 'status',
-      colors: { draft: '#94A3B8', in_review: '#F59E0B', published: '#10B981', archived: '#475569' },
+      colors: { draft: 'slate', in_review: 'amber', published: 'emerald', archived: 'gray' },
     },
     appearance: {
       showDescription: true,

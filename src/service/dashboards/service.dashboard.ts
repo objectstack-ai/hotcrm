@@ -84,10 +84,6 @@ export const ServiceDashboard: Dashboard = {
       colorVariant: 'orange',
       dataset: 'case_metrics', values: ['case_count'],
       layout: { x: 0, y: 0, w: 3, h: 2 },
-      options: {
-        icon: 'Inbox',
-        format: '0,0',
-      },
     },
     {
       id: 'critical_cases',
@@ -98,10 +94,6 @@ export const ServiceDashboard: Dashboard = {
       colorVariant: 'danger',
       dataset: 'case_metrics', values: ['case_count'],
       layout: { x: 3, y: 0, w: 3, h: 2 },
-      options: {
-        icon: 'AlertTriangle',
-        format: '0,0',
-      },
     },
     {
       id: 'avg_resolution_time',
@@ -112,11 +104,6 @@ export const ServiceDashboard: Dashboard = {
       colorVariant: 'blue',
       dataset: 'case_metrics', values: ['avg_resolution'],
       layout: { x: 6, y: 0, w: 3, h: 2 },
-      options: {
-        icon: 'Clock',
-        format: '0.0',
-        suffix: 'h',
-      },
     },
     {
       id: 'sla_violations',
@@ -127,10 +114,6 @@ export const ServiceDashboard: Dashboard = {
       colorVariant: 'warning',
       dataset: 'case_metrics', values: ['case_count'],
       layout: { x: 9, y: 0, w: 3, h: 2 },
-      options: {
-        icon: 'ShieldAlert',
-        format: '0,0',
-      },
     },
 
     // ─── Row 2: Distribution ──────────────────────────────────────────
@@ -243,7 +226,6 @@ export const ServiceDashboard: Dashboard = {
       // unchanged: 95%+ is green, 85–95% amber, below that red. They were
       // always right — it was the plotted value that disagreed with them.
       options: {
-        format: '0%',
         thresholds: [
           { value: 0.95, color: 'success' },
           { value: 0.85, color: 'warning' },
@@ -270,7 +252,6 @@ export const ServiceDashboard: Dashboard = {
       colorVariant: 'success',
       dataset: 'case_metrics', values: ['kb_deflection_rate'],
       layout: { x: 0, y: 10, w: 4, h: 2 },
-      options: { icon: 'BookOpenCheck', format: '0%' },
     },
     {
       id: 'kb_resolved_cases',
@@ -280,7 +261,6 @@ export const ServiceDashboard: Dashboard = {
       colorVariant: 'blue',
       dataset: 'case_metrics', values: ['kb_resolved_count'],
       layout: { x: 4, y: 10, w: 4, h: 2 },
-      options: { icon: 'BookOpen', format: '0,0' },
     },
     {
       id: 'closed_cases_total',
@@ -290,7 +270,6 @@ export const ServiceDashboard: Dashboard = {
       colorVariant: 'default',
       dataset: 'case_metrics', values: ['closed_count'],
       layout: { x: 8, y: 10, w: 4, h: 2 },
-      options: { icon: 'CheckCheck', format: '0,0' },
     },
     {
       id: 'top_resolving_articles',
@@ -302,15 +281,9 @@ export const ServiceDashboard: Dashboard = {
       dataset: 'case_metrics', dimensions: ['resolved_article'], values: ['kb_resolved_count'],
       layout: { x: 0, y: 12, w: 12, h: 4 },
       options: {
-        columns: [
-          { header: 'Article', accessorKey: 'resolved_article' },
-          { header: 'Cases Resolved', accessorKey: 'kb_resolved_count' },
-        ],
         sortBy: 'kb_resolved_count',
         sortOrder: 'desc',
         limit: 10,
-        striped: true,
-        density: 'comfortable',
       },
     },
 
@@ -333,16 +306,9 @@ export const ServiceDashboard: Dashboard = {
       dataset: 'case_metrics', dimensions: ['priority'], values: ['case_count', 'avg_sla_violated'],
       layout: { x: 0, y: 16, w: 12, h: 4 },
       options: {
-        columns: [
-          { header: 'Priority',            accessorKey: 'priority' },
-          { header: 'Open Cases',          accessorKey: 'case_count' },
-          { header: 'SLA Violation Rate',  accessorKey: 'avg_sla_violated', format: '0.0%' },
-        ],
         sortBy: 'case_count',
         sortOrder: 'desc',
         limit: 10,
-        striped: true,
-        density: 'comfortable',
       },
     },
   ],

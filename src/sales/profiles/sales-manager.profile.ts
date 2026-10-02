@@ -108,9 +108,10 @@ export const SalesManagerProfile = {
   rowLevelSecurity: [
     {
       name: 'opportunity_private_owner_only',
-      label: 'Private opportunities stay with their owner',
-      description:
-        'A deal flagged Private is visible only to its owner, even to holders of org-wide opportunity read.',
+      // A deal flagged Private is visible only to its owner, even to holders of
+      // org-wide opportunity read. (`rowLevelSecurity[].label` / `description`
+      // have no runtime effect — liveness: dead in 17.6.0 — so the intent lives
+      // in this comment.)
       object: 'crm_opportunity',
       operation: 'select' as const,
       using: 'is_private == false || owner_id == current_user.id',

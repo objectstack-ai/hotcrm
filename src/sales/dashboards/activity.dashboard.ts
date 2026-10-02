@@ -89,7 +89,6 @@ export const ActivityDashboard: Dashboard = {
       colorVariant: 'success',
       dataset: 'event_metrics', values: ['event_count'],
       layout: { x: 0, y: 0, w: 3, h: 2 },
-      options: { icon: 'PhoneCall', format: '0,0' },
     },
     {
       id: 'meetings_booked',
@@ -100,7 +99,6 @@ export const ActivityDashboard: Dashboard = {
       colorVariant: 'blue',
       dataset: 'event_metrics', values: ['event_count'],
       layout: { x: 3, y: 0, w: 3, h: 2 },
-      options: { icon: 'CalendarPlus', format: '0,0' },
     },
     {
       id: 'customer_minutes',
@@ -111,7 +109,6 @@ export const ActivityDashboard: Dashboard = {
       colorVariant: 'purple',
       dataset: 'event_metrics', values: ['total_minutes'],
       layout: { x: 6, y: 0, w: 3, h: 2 },
-      options: { icon: 'Clock', format: '0,0' },
     },
     {
       // First widget in the app to use `task_metrics`. The dataset shipped with
@@ -125,7 +122,6 @@ export const ActivityDashboard: Dashboard = {
       colorVariant: 'orange',
       dataset: 'task_metrics', values: ['task_count'],
       layout: { x: 9, y: 0, w: 3, h: 2 },
-      options: { icon: 'CheckCheck', format: '0,0' },
     },
 
     // ─── Row 2: who, and when ─────────────────────────────────────────
@@ -211,7 +207,6 @@ export const ActivityDashboard: Dashboard = {
       colorVariant: 'success',
       dataset: 'event_metrics', values: ['event_count'],
       layout: { x: 8, y: 6, w: 2, h: 4 },
-      options: { icon: 'Target', format: '0,0' },
     },
     {
       id: 'open_deals_for_activity',
@@ -222,7 +217,6 @@ export const ActivityDashboard: Dashboard = {
       colorVariant: 'blue',
       dataset: 'opportunity_metrics', values: ['opp_count'],
       layout: { x: 10, y: 6, w: 2, h: 4 },
-      options: { icon: 'Briefcase', format: '0,0' },
     },
 
     // ─── Row 4: the churn story, now backed by a real signal ──────────
@@ -241,7 +235,6 @@ export const ActivityDashboard: Dashboard = {
       colorVariant: 'warning',
       dataset: 'account_metrics', values: ['account_count'],
       layout: { x: 0, y: 10, w: 4, h: 2 },
-      options: { icon: 'BellOff', format: '0,0' },
     },
     {
       id: 'quiet_accounts_60',
@@ -252,7 +245,6 @@ export const ActivityDashboard: Dashboard = {
       colorVariant: 'orange',
       dataset: 'account_metrics', values: ['account_count'],
       layout: { x: 4, y: 10, w: 4, h: 2 },
-      options: { icon: 'AlertTriangle', format: '0,0' },
     },
     {
       id: 'quiet_accounts_90',
@@ -263,7 +255,6 @@ export const ActivityDashboard: Dashboard = {
       colorVariant: 'danger',
       dataset: 'account_metrics', values: ['account_count'],
       layout: { x: 8, y: 10, w: 4, h: 2 },
-      options: { icon: 'AlertOctagon', format: '0,0' },
     },
   ],
 };

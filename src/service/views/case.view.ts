@@ -38,7 +38,7 @@ export const CaseViews = defineView({
     ],
     rowColor: {
       field: 'priority',
-      colors: { critical: '#dc2626', high: '#f97316', medium: '#eab308', low: '#94a3b8' },
+      colors: { critical: 'red', high: 'orange', medium: 'yellow', low: 'slate' },
     },
     selection: { type: 'multiple' },
     pagination: { pageSize: 50 },
@@ -226,7 +226,7 @@ export const CaseViews = defineView({
       ],
       rowColor: {
         field: 'priority',
-        colors: { critical: '#dc2626', high: '#f97316', medium: '#eab308', low: '#94a3b8' },
+        colors: { critical: 'red', high: 'orange', medium: 'yellow', low: 'slate' },
       },
       // The empty state carries the operational instruction, because "no rows"
       // here is ambiguous on its own: it means either "the round-robin placed
