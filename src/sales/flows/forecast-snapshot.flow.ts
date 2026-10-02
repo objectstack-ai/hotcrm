@@ -1,6 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { P } from '@objectstack/spec';
+import { P, expression } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 import { guarded } from './_guarded-iteration';
 type Flow = Automation.Flow;
@@ -51,9 +51,8 @@ type Flow = Automation.Flow;
  *    current period", owned by the object.
  * 2. Sums come from four separate `get_record` + `loop` pairs rather than one
  *    query with in-loop branching. A filter is plain metadata, so the bucket
- *    definitions stay declarative and greppable; the accumulator templates
- *    stay pure arithmetic (`* 1` coerces a currency that arrives as a string
- *    and maps null to 0).
+ *    definitions stay declarative and greppable; the accumulators stay pure
+ *    CEL arithmetic (see `sumBucket`).
  *
  * Idempotency: the row is keyed by (owner, period, containing window), so a
  * re-run finds it and OVERWRITES the amounts instead of inserting a second
@@ -182,12 +181,16 @@ const inPeriod = (extra: Record<string, unknown>) => ({
 /**
  * One `get_record` + `loop` pair that sums `amount` into `total`.
  *
- * `amount * 1` rather than a bare `amount`: the accumulator runs through the
- * template evaluator, which stringifies non-numeric values — a currency that
- * comes back from the driver as `"90000"` would CONCATENATE instead of add.
- * `* 1` coerces it, and maps a null/absent amount to 0.
+ * The accumulator is a CEL value envelope, so its operands are TYPED:
+ * `double()` turns a currency some drivers return as a string (`"90000"`) into
+ * a number, and a decimal amount keeps its cents. ⛔ Never a bare
+ * `double(amount)`: it ERRORS on null — `found no matching overload for
+ * 'double(null)'` — and one opportunity without an amount would fail the
+ * owner's whole sweep. The `has()` / `isBlank()` guard sums a null or absent
+ * amount as 0. `expression()` rather than `P`: the source splices the node's
+ * variable names, which the tag would JSON-quote.
  */
-const sumBucket = (key: string, label: string, filter: Record<string, unknown>, total: string) => ({
+const sumBucket = (key: string, label: string, filter: Record<string, unknown>, total: string, item = `current_${key}`) => ({
   find: {
     id: `find_${key}`,
     type: 'get_record' as const,
@@ -205,14 +208,18 @@ const sumBucket = (key: string, label: string, filter: Record<string, unknown>, 
     label: `Sum ${label}`,
     config: {
       collection: `{${key}Opps}`,
-      iteratorVariable: `current_${key}`,
+      iteratorVariable: item,
       body: {
         nodes: [
           {
             id: `add_${key}`,
             type: 'assignment' as const,
             label: `Add to ${label}`,
-            config: { assignments: { [total]: `{${total} + current_${key}.amount * 1}` } },
+            config: {
+              assignments: {
+                [total]: expression(`${total} + (!has(${item}.amount) || isBlank(${item}.amount) ? 0.0 : double(${item}.amount))`, 'cel'),
+              },
+            },
           },
         ],
         edges: [],
