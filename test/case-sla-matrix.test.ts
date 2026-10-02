@@ -284,11 +284,11 @@ describe('the clock is calendar hours, carried by the code', () => {
     });
 
     it.each([
-      // A business-hours clock would push every one of these into next week.
+      // A business-hours clock would push every one of these past the weekend.
       ['critical', '2026-10-02T21:00:00.000Z'], // 4 h — the same Friday night
       ['medium', '2026-10-04T17:00:00.000Z'], // 48 h — due on the Sunday
       ['low', '2026-10-09T17:00:00.000Z'], // 168 h — the weekend counted in full
-    ])('%s on an smb account is due at %s', async (priority, due) => {
+    ])('%s, no account (the smb column), is due at %s', async (priority, due) => {
       const { input } = await runHookBody(hook, {
         event: 'beforeInsert',
         input: { subject: 'Something broke', priority },
