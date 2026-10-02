@@ -152,7 +152,7 @@ describe('quote_generation flow — CEL pricing (#1984)', () => {
   // The template dialect read a cleared discount as 0. A bare `double(discount)`
   // ERRORS on null, which would fail the quote instead — the guard keeps the
   // old pricing: no discount, full price.
-  it.each([null, ''])('prices a cleared discount (%j) as 0%%', async (discount) => {
+  it.each([null, ''])('prices a cleared discount (%j) as no discount', async (discount) => {
     const q = await quoteAt(180000, { discount });
     expect(q.discount_amount).toBe(0);
     expect(q.total_price).toBe(180000);
