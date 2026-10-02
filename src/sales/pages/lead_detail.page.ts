@@ -138,9 +138,12 @@ export const LeadDetailPage: Page = {
         // predicate: `record-alert.tsx` evaluates `properties.visible` through
         // `toPredicateInput` + `useCondition` against the row
         // (`usePredicateRecordContext`), the same pipeline as an action button.
-        // A node-level `visibleWhen` would be a different gate one tier up,
-        // evaluated by `SchemaRenderer` on `data` = the data-source ADAPTER,
-        // not the row — it cannot see `duplicate_status` at all.
+        // A node-level `visibleWhen` is a different gate one tier up,
+        // evaluated by `SchemaRenderer`, and the two compose as AND. Measured
+        // on the 17.6.0 pin (#1887), that tier binds the page's row as
+        // `record` too (objectui#5454): this same predicate, moved there,
+        // gated correctly in both directions. `visible` stays because it is
+        // the gate `record:alert` declares in its own props.
         //
         // ⚠️ `has()` is load-bearing, and this surface is the WORST of the four
         // this repo measures (cf. `test/view-predicate-dialect.test.ts`): the
@@ -185,9 +188,9 @@ export const LeadDetailPage: Page = {
         // this renderer resolves both through `pickLocalized(…, language)`
         // (the same capability `opportunity_detail.page.ts` records under
         // #972), and `body` has no other channel — the i18n extractor's
-        // per-component copy keys are title/description/label/placeholder/
-        // emptyText/submitLabel, so a plain-string `body` would ship English to
-        // all four locales. Keeping both halves of one banner's copy in one
+        // per-component copy keys (`PAGE_COMPONENT_COPY_KEYS`, read on 17.6.0)
+        // are title/description/label/placeholder/emptyText, so a plain-string
+        // `body` would ship English to all four locales. Keeping both halves of one banner's copy in one
         // place beats splitting `title` into the locale packs.
         //
         // ⭐ Each banner's copy NAMES ITS OWN VERDICT, in the vocabulary the
