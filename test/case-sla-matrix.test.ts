@@ -1,11 +1,12 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import caseHooks from '../src/service/objects/case.hook';
 import {
-  CASE_SLA_HOURS, CASE_SLA_DEFAULT_TIER, CASE_SLA_PRIORITIES, CASE_SLA_TIERS, caseSlaHours,
+  CASE_SLA_CALENDAR_HOURS, CASE_SLA_DEFAULT_TIER, CASE_SLA_PRIORITIES, CASE_SLA_TIERS, caseSlaCalendarHours,
 } from '../src/service/objects/_case-sla';
 import { makeHarness, makeDeniedApi, makeCtx, hookNamed, type Rec } from './helpers/hook-harness';
+import { extractSandboxBody, runHookBody } from './helpers/action-sandbox';
 
 /**
  * The SLA policy matrix, pinned cell by cell (#595).
@@ -37,7 +38,7 @@ const HOUR = 3_600_000;
 /**
  * The matrix, written out longhand.
  *
- * Deliberately NOT derived from `CASE_SLA_HOURS` — a test that recomputes its
+ * Deliberately NOT derived from `CASE_SLA_CALENDAR_HOURS` — a test that recomputes its
  * expectation from the thing under test proves only that the code is
  * self-consistent. These sixteen numbers are the policy, spelled out where a
  * reviewer reads them.
@@ -96,9 +97,9 @@ describe('the matrix covers every declared priority and tier', () => {
   it('has a row per case priority and a cell per account tier', () => {
     // A new tier option on `crm_account` or a new case priority must be given a
     // policy, not silently inherit one.
-    expect(Object.keys(CASE_SLA_HOURS).sort()).toEqual([...CASE_SLA_PRIORITIES].sort());
+    expect(Object.keys(CASE_SLA_CALENDAR_HOURS).sort()).toEqual([...CASE_SLA_PRIORITIES].sort());
     for (const priority of CASE_SLA_PRIORITIES) {
-      expect(Object.keys(CASE_SLA_HOURS[priority]).sort(), `row ${priority}`).toEqual(
+      expect(Object.keys(CASE_SLA_CALENDAR_HOURS[priority]).sort(), `row ${priority}`).toEqual(
         [...CASE_SLA_TIERS].sort(),
       );
     }
@@ -122,7 +123,7 @@ describe.each(Object.keys(EXPECTED))('%s priority', (priority) => {
     async (tier) => {
       const hours = EXPECTED[priority][tier];
       // Both copies of the table, and then the behaviour itself.
-      expect(CASE_SLA_HOURS[priority as never][tier as never], `constant cell ${priority}×${tier}`).toBe(hours);
+      expect(CASE_SLA_CALENDAR_HOURS[priority as never][tier as never], `constant cell ${priority}×${tier}`).toBe(hours);
       expectHours(await stampFor(priority, tier), hours, `${priority}×${tier}`);
     },
   );
@@ -192,7 +193,7 @@ describe('the rules the matrix does not change', () => {
     // wrote a policy for gets no deadline rather than a guessed one.
     const { input } = await stampFor('blocker', 'strategic');
     expect(input.sla_due_date).toBeUndefined();
-    expect(caseSlaHours('blocker', 'strategic')).toBeUndefined();
+    expect(caseSlaCalendarHours('blocker', 'strategic')).toBeUndefined();
   });
 
   it('stamps nothing when the write already carries a due date', async () => {
@@ -259,7 +260,7 @@ describe('the rules the matrix does not change', () => {
   });
 });
 
-describe('the clock is calendar hours, stated out loud', () => {
+describe('the clock is calendar hours, carried by the code', () => {
   it('adds elapsed milliseconds, so a DST transition cannot shorten an SLA', async () => {
     // `setHours(getHours() + n)` does LOCAL calendar arithmetic: across a
     // transition "+4 hours" becomes 3 or 5 real hours, and the 168h Low clock
@@ -269,22 +270,38 @@ describe('the clock is calendar hours, stated out loud', () => {
     expect(res.dueMs! - res.atMs).toBeLessThan(168 * HOUR + 60_000);
   });
 
-  it('says so in the source, where the numbers are', async () => {
-    // The one thing a reader of this table must not have to infer. There is no
-    // business-hours calendar on the platform, so a Friday-5pm P1 is due at
-    // 9pm the same Friday — documenting that is part of the deliverable, not
-    // decoration around it.
-    const { readFileSync } = await import('node:fs');
-    const { join } = await import('node:path');
-    const { REPO_ROOT } = await import('./helpers/repo-root');
-    for (const file of ['src/service/objects/_case-sla.ts', 'src/service/objects/case.hook.ts']) {
-      const source = readFileSync(join(REPO_ROOT, file), 'utf8');
-      expect(source, `${file} must state the calendar-hours assumption`).toMatch(
-        /CALENDAR HOURS|CALENDAR hours/,
-      );
-      expect(source, `${file} must say the app has no business-hours calendar`).toMatch(
-        /business-hours calendar/,
-      );
-    }
+  describe('on a fixed Friday 17:00 clock, in the shipped body', () => {
+    // The deadline is computed where production computes it: the lowered
+    // `body.source`, run in QuickJS. Only `Date` is faked — the bare
+    // `vi.useFakeTimers()` deadlocks this runner (`helpers/action-sandbox.ts`).
+    // UTC on purpose: the stamp is elapsed time, so the host zone cannot move it.
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date('2026-10-02T17:00:00.000Z')); // a Friday
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it.each([
+      // A business-hours clock would push every one of these into next week.
+      ['critical', '2026-10-02T21:00:00.000Z'], // 4 h — the same Friday night
+      ['medium', '2026-10-04T17:00:00.000Z'], // 48 h — due on the Sunday
+      ['low', '2026-10-09T17:00:00.000Z'], // 168 h — the weekend counted in full
+    ])('%s on an smb account is due at %s', async (priority, due) => {
+      const { input } = await runHookBody(hook, {
+        event: 'beforeInsert',
+        input: { subject: 'Something broke', priority },
+        user: { id: 'user_1' },
+      });
+      expect(input.sla_due_date).toBe(due);
+    });
+  });
+
+  it('names the unit in the identifier the shipped body carries', () => {
+    // The body cannot import `CASE_SLA_CALENDAR_HOURS` (imported above), so it
+    // carries its own name for the unit — in the source `objectstack build` ships.
+    const { source } = extractSandboxBody(hook.handler, `hook '${String(hook.name)}'`);
+    expect(source).toMatch(/\bconst slaCalendarHours\b/);
   });
 });

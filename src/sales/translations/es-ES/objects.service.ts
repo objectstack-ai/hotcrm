@@ -72,7 +72,7 @@ export const service: Record<string, ObjectTranslationData> = {
       closed_date: { label: 'Fecha de Cierre' },
       first_response_date: { label: 'Fecha de Primera Respuesta' },
       resolution_time_hours: { label: 'Tiempo de Resolución (Horas)' },
-      sla_due_date: { label: 'Fecha Límite SLA' },
+      sla_due_date: { label: 'Fecha Límite SLA', help: 'Se fija según la prioridad del caso y el Nivel de Cliente de la cuenta, en horas naturales: las noches, los fines de semana y los festivos cuentan.' },
       is_sla_violated: { label: 'SLA Incumplido' },
       is_escalated: { label: 'Escalado' },
       escalated_date: { label: 'Fecha de Escalación' },

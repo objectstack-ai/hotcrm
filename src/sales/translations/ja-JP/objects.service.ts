@@ -70,7 +70,7 @@ export const service: Record<string, ObjectTranslationData> = {
       closed_date: { label: 'クローズ日' },
       first_response_date: { label: '初回応答日' },
       resolution_time_hours: { label: '解決時間（時間）' },
-      sla_due_date: { label: 'SLA期限' },
+      sla_due_date: { label: 'SLA期限', help: 'ケースの優先度と取引先の顧客ランクから設定され、暦時間で数えます。夜間・週末・祝日もすべて含まれます。' },
       is_sla_violated: { label: 'SLA違反' },
       is_escalated: { label: 'エスカレーション済' },
       escalated_date: { label: 'エスカレーション日' },

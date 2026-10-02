@@ -56,7 +56,7 @@ export const service: Record<string, ObjectTranslationData> = {
       closed_date: { label: 'Closed Date' },
       first_response_date: { label: 'First Response Date' },
       resolution_time_hours: { label: 'Resolution Time (Hours)' },
-      sla_due_date: { label: 'SLA Due Date' },
+      sla_due_date: { label: 'SLA Due Date', help: 'Set from the case priority and the account’s Customer Tier, in calendar hours: nights, weekends and holidays count.' },
       is_sla_violated: { label: 'SLA Violated' },
       is_escalated: { label: 'Escalated' },
       escalation_reason: { label: 'Escalation Reason' },
