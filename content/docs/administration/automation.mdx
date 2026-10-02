@@ -50,7 +50,7 @@ A flow fires one of three ways, set by its start node:
 
 > **Auto-launch needs the `triggers` capability.** Record-change and scheduled flows only fire when the stack's `requires` list includes `triggers` — it installs the record-change + schedule trigger providers (schedule triggers also use the job service). Screen flows are always launched manually.
 
-**Built-in flows in HotCRM** (31). Each row carries the flow's own label — the name listed in **Studio → Automation → Flows**, and the name you pick from in **Studio → Developer → Flow Runs**, so a run you are chasing can be looked up here verbatim:
+**Built-in flows in HotCRM** (30). Each row carries the flow's own label — the name listed in **Studio → Automation → Flows**, and the name you pick from in **Studio → Developer → Flow Runs**, so a run you are chasing can be looked up here verbatim:
 
 | Flow | Trigger | What it does |
 | --- | --- | --- |
@@ -84,11 +84,10 @@ A flow fires one of three ways, set by its start node:
 | **Contract Renewal Reminder** | Schedule (daily 8 AM) | Open renewal tasks/opportunities for contracts nearing their `end_date` |
 | **Case SLA Monitor** | Schedule (hourly) | Flag and escalate open cases past their SLA due date |
 | **Task Due Reminder** | Schedule (hourly) | Notify owners of tasks whose reminder time has arrived |
-| **Demo Bootstrap** | Schedule (every 10 min) | Claim ownerless seeded records for the first user by stamping `owner_id` |
 
 Two entries carry an **(on create)** twin. Record-change flows subscribe to one trigger type each — `record-after-create` *or* `record-after-update` — so automation that has to catch both a newly created record and a later edit is authored as a pair of flows with the same condition. They are separate rows here because they are separate runs in **Flow Runs**.
 
-**Demo Bootstrap** is scaffolding, not business automation. Seed writes bypass the security middleware, so seeded rows arrive with no owner — which empties every *My …* view and sends owner-addressed notifications to nobody. This sweep stamps them onto the first user. On an org whose records already have owners it selects nothing and does nothing, every ten minutes.
+Seeded demo records get their owner from the platform, not from a flow: when the seed data finishes loading, the platform hands every seeded record that has no owner to the first administrator. HotCRM's former **Demo Bootstrap** flow, which re-checked for ownerless records every ten minutes, has been retired.
 
 Notifications inside flows are delivered by the **`notify` node** (inbox + email via the messaging service) — not the legacy `script`/email step, which is a no-op in 7.4.
 
@@ -96,9 +95,9 @@ See [Customization › Extending Objects](/docs/customization/extending-objects)
 
 ## Scheduled automation
 
-Time-based automation is implemented as **scheduled flows** — flows whose start node carries a cron schedule. The nine `Schedule` rows above are the complete set; there is no separate scheduled-job metadata to look for. They run via the job service, so the `triggers` capability is paired with `job` (both ship in the default slate).
+Time-based automation is implemented as **scheduled flows** — flows whose start node carries a cron schedule. The eight `Schedule` rows above are the complete set; there is no separate scheduled-job metadata to look for. They run via the job service, so the `triggers` capability is paired with `job` (both ship in the default slate).
 
-> **From ObjectStack 17.5.0, scheduled flows are off until the deployment turns them on.** The platform runs package-authored scheduled work only when the deployment sets `OS_AUTOMATION_SCHEDULED_WORK_ENABLED=true` (`1`, `on` and `yes` also count). Without it, none of the nine flows above runs — no contract or quote expiry, no SLA monitor, no reminders, no forecast snapshots — and `os doctor` prints the effective value. Under the `isolated` tenancy posture a scheduled flow must also name the organization it acts as; these nine do not, so they are not armed there.
+> **From ObjectStack 17.5.0, scheduled flows are off until the deployment turns them on.** The platform runs package-authored scheduled work only when the deployment sets `OS_AUTOMATION_SCHEDULED_WORK_ENABLED=true` (`1`, `on` and `yes` also count). Without it, none of the eight flows above runs — no contract or quote expiry, no SLA monitor, no reminders, no forecast snapshots — and `os doctor` prints the effective value. Under the `isolated` tenancy posture a scheduled flow must also name the organization it acts as; these eight do not, so they are not armed there.
 
 Date-driven field logic that needs no orchestration — defaulting a quote's expiration date, freezing an expired/accepted quote, deriving a forecast period — lives in lightweight **object hooks** (`beforeInsert` / `beforeUpdate`) rather than a scheduled sweep.
 

@@ -1,14 +1,10 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { PLATFORM_CAPABILITIES } from '@objectstack/spec/security';
-import { applySystemFields } from '@objectstack/objectql';
-import { ObjectQL } from '@objectstack/objectql';
-import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import defaultStack from '../objectstack.config';
 import { CrmSeedData, SaasTenantSeedData } from '../objectstack.composition';
 import { COMPOSITION_ENV_VAR, resolveComposition } from '../src/sales/data/index';
-import { DemoBootstrapFlow } from '../src/sales/flows/demo-bootstrap.flow';
 import { SystemAdminProfile } from '../src/sales/profiles/system-admin.profile';
 import { TenantAdminProfile } from '../src/sales/profiles/tenant-admin.profile';
 import { DemoOrgStaffing } from '../src/sales/sharing/demo-staffing';
@@ -17,20 +13,19 @@ import { DemoOrgStaffing } from '../src/sales/sharing/demo-staffing';
  * The SaaS / multi-org composition (#1361).
  *
  * `HOTCRM_COMPOSITION=saas` assembles the shape a multi-org operator deploys on
- * the enterprise runtime under a walled tenancy posture. Three registrations
+ * the enterprise runtime under a walled tenancy posture. Two registrations
  * differ from the community app and nothing else does; these tests pin BOTH
  * directions, because the two failure modes are opposite and equally bad:
  *
  *  - the SaaS shape quietly keeping something (a tenant receives another
- *    company's pipeline, or a demo sweep that crosses the wall), and
+ *    company's pipeline), and
  *  - the community shape quietly losing something (this card's one hard
  *    boundary is that the default composition is behaviourally unchanged).
  *
- * The last block is not an assertion about the app at all — it MEASURES, on a
- * real engine under a walled posture, why `demo_bootstrap` is excluded. A
- * comment claiming "this would cross the wall" is a story; a failing engine is
- * evidence, and if the platform ever stops behaving that way this block goes
- * red and the exclusion can be revisited on measurement rather than on memory.
+ * The flows used to be a third difference: the SaaS shape dropped the
+ * `demo_bootstrap` ownership sweep, which crossed the organization wall. The
+ * sweep is retired from the app (#1892), so both shapes register the same
+ * flows, and that is pinned below too.
  */
 
 type AnyRec = Record<string, any>;
@@ -111,10 +106,6 @@ describe('the default composition is the community app, untouched', () => {
     }
   });
 
-  it('still ships demo_bootstrap', () => {
-    expect(nameOf((defaultStack as AnyRec).flows as AnyRec[])).toContain(DemoBootstrapFlow.name);
-  });
-
   it('still ships system_admin, and does NOT ship tenant_admin', () => {
     const setNames = nameOf((defaultStack as AnyRec).permissions as AnyRec[]);
     expect(setNames).toContain(SystemAdminProfile.name);
@@ -165,16 +156,12 @@ describe('HOTCRM_COMPOSITION=saas', () => {
     expect(referenceValues).toEqual([]);
   });
 
-  it('drops demo_bootstrap — and drops exactly it', () => {
+  it('registers exactly the flows the community app does', () => {
+    // Flows are no longer a difference between the shapes (#1892), so any
+    // divergence here is a registration nobody decided on.
     const flowNames = nameOf(saas.flows as AnyRec[]);
-    expect(flowNames).not.toContain('demo_bootstrap');
-    // The other direction, which is the one a broken filter fails: every OTHER
-    // flow the community app ships is still registered. A filter that matched
-    // nothing would pass the line above only if the flow were already gone.
-    const communityNames = nameOf((defaultStack as AnyRec).flows as AnyRec[]);
-    expect(flowNames).toEqual(communityNames.filter((n) => n !== 'demo_bootstrap'));
-    expect(communityNames).toContain('demo_bootstrap');
-    expect(flowNames.length).toBe(communityNames.length - 1);
+    expect(flowNames, 'the SaaS composition registered no flows at all').not.toEqual([]);
+    expect(flowNames).toEqual(nameOf((defaultStack as AnyRec).flows as AnyRec[]));
   });
 
   it('replaces system_admin with tenant_admin, leaving the other personas alone', () => {
@@ -264,130 +251,5 @@ describe('tenant_admin is an ORG admin, judged by the platform capability regist
     // would put one mutable map in two published permission sets.
     expect(TenantAdminProfile.objects).not.toBe(SystemAdminProfile.objects);
     expect(TenantAdminProfile.objects).toEqual(SystemAdminProfile.objects);
-  });
-});
-
-// ──────────────────────── WHY demo_bootstrap is excluded — measured, not ──
-// ──────────────────────── asserted: a system context has no organization ──
-
-describe("the demo_bootstrap sweep crosses the wall — the engine's own answer", () => {
-  /**
-   * The flow's two moves, taken from the SHIPPED flow definition rather than
-   * transcribed, so this cannot drift into measuring something the flow no
-   * longer does:
-   *
-   *   1. select rows whose ownership column is null   (`get_record` + filter)
-   *   2. stamp the first user's id onto each one      (`update_record` + fields)
-   *
-   * …performed through the engine surface `runAs: 'system'` gives the flow: a
-   * system execution context. That context is the one the driver's organization
-   * predicate does not constrain, which is the whole finding — the sweep is not
-   * "unnecessary" under the wall, it is an identity crossing it.
-   *
-   * `OS_TENANCY_POSTURE=isolated` is set because a walled deployment sets it,
-   * not because the result depends on it: the predicate is the DRIVER's,
-   * compiled from the execution context's tenant id, and a system context
-   * carries none. The knob makes the engine's registry organization-scoped; it
-   * is not what makes the sweep unwalled. Saying so keeps this block a
-   * measurement of the real mechanism rather than of an environment variable.
-   */
-  const claimed = (() => {
-    const out: Array<{ objectName: string; column: string }> = [];
-    for (const node of (DemoBootstrapFlow.nodes ?? []) as AnyRec[]) {
-      if (node.type !== 'get_record') continue;
-      const config = (node.config ?? {}) as AnyRec;
-      const filter = (config.filter ?? {}) as AnyRec;
-      const [column, value] = Object.entries(filter)[0] ?? [];
-      if (typeof config.objectName !== 'string' || !column || value !== null) continue;
-      out.push({ objectName: config.objectName, column });
-    }
-    return out;
-  })();
-
-  const probe = claimed.find((c) => c.objectName === 'crm_account');
-
-  let driver: SqliteWasmDriver;
-  let ql: AnyRec;
-  let previousPosture: string | undefined;
-
-  beforeAll(async () => {
-    previousPosture = process.env.OS_TENANCY_POSTURE;
-    process.env.OS_TENANCY_POSTURE = 'isolated';
-
-    const objects: AnyRec[] = (defaultStack as AnyRec).objects ?? [];
-    const account = objects.find((o) => o.name === 'crm_account')!;
-    const objectMap: Record<string, AnyRec> = { crm_account: account };
-
-    driver = new SqliteWasmDriver({ filename: ':memory:' });
-    ql = (await ObjectQL.create({
-      datasources: { default: driver as never },
-      objects: objectMap as never,
-    } as never)) as AnyRec;
-
-    const scoped = applySystemFields(account as never, { multiTenant: true } as never) as AnyRec;
-    await driver.initObjects([
-      { name: 'crm_account', fields: scoped.fields, indexes: scoped.indexes } as never,
-    ]);
-  }, 60_000);
-
-  afterAll(async () => {
-    await ql?.close?.();
-    if (previousPosture === undefined) delete process.env.OS_TENANCY_POSTURE;
-    else process.env.OS_TENANCY_POSTURE = previousPosture;
-  });
-
-  it('reads the sweep out of the shipped flow rather than assuming it', () => {
-    // If the flow stops selecting ownerless rows, this file must stop claiming
-    // to have measured what it does.
-    expect(claimed.length).toBeGreaterThan(0);
-    expect(probe, 'demo_bootstrap no longer sweeps crm_account by a null ownership column').toBeTruthy();
-    expect(probe!.column).toBe('owner_id');
-  });
-
-  it('SENTINEL — an ordinary tenant session cannot see the other tenant at all', () => {
-    // The wall must be ON before the next test's silence means anything.
-    return (async () => {
-      const a = ql.createContext({ userId: 'usr_a', tenantId: 'org_a' });
-      const b = ql.createContext({ userId: 'usr_b', tenantId: 'org_b' });
-      await a.object('crm_account').insert({ name: 'Tenant A Co', type: 'customer', owner_id: 'usr_a' });
-      await b.object('crm_account').insert({ name: 'Tenant B Co', type: 'customer', owner_id: 'usr_b' });
-      const seenByA = (await a.object('crm_account').find({})) as AnyRec[];
-      expect(seenByA.map((r) => String(r.name))).toEqual(['Tenant A Co']);
-      expect(seenByA.every((r) => r.organization_id === 'org_a')).toBe(true);
-    })();
-  });
-
-  it("a runAs:'system' sweep selects rows in EVERY organization", async () => {
-    const sys = ql.createContext({ isSystem: true });
-    await driver
-      .getKnex()
-      .raw(
-        `insert into crm_account (id, name, type, organization_id, owner_id) values ` +
-          `('sweep_a','Ownerless A','customer','org_a',null), ` +
-          `('sweep_b','Ownerless B','customer','org_b',null)`,
-      );
-    const selected = (await sys
-      .object(probe!.objectName)
-      .find({ where: { [probe!.column]: null } })) as AnyRec[];
-    const orgs = new Set(selected.map((r) => String(r.organization_id)));
-    expect(
-      orgs.has('org_a') && orgs.has('org_b'),
-      `the sweep saw only ${[...orgs].join(', ')} — a system context is expected to be unwalled`,
-    ).toBe(true);
-  });
-
-  it('and stamps ONE organization’s user onto ANOTHER organization’s row', async () => {
-    // The defect in one line: `{firstUser.id}` is whoever `sys_user`'s first row
-    // happens to be — one identity, written across every partition.
-    const sys = ql.createContext({ isSystem: true });
-    await sys.object('crm_account').update({ id: 'sweep_b', owner_id: 'usr_a' });
-    const [row] = (await driver
-      .getKnex()
-      .raw(`select organization_id, owner_id from crm_account where id = 'sweep_b'`)) as AnyRec[];
-    expect(row.organization_id).toBe('org_b');
-    expect(
-      row.owner_id,
-      'the wall refused the cross-organization owner — re-evaluate whether demo_bootstrap still needs excluding',
-    ).toBe('usr_a');
   });
 });

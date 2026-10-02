@@ -73,9 +73,10 @@ import type { Territory } from '../objects/_territory';
  *   - the two reps make TERRITORY SHARING observable for the first time. They
  *     must be users who do NOT own the accounts: `crm_account` is `private`, so
  *     the OWD baseline already admits a record's owner and a share to the owner
- *     proves nothing. `demo_bootstrap` claims every seeded record for the first
- *     user (the dev admin, #622) and staffing deliberately does not touch that —
- *     the reps stay non-owners, which is the whole point.
+ *     proves nothing. The platform's seed-ownership claim hands every seeded
+ *     record to the first administrator (the dev admin, #622, #1892) and
+ *     staffing deliberately does not touch that — the reps stay non-owners,
+ *     which is the whole point.
  *   - the sales manager makes `opportunity_approval`'s `manager_review` resolve
  *     to a non-empty slate for the first time.
  *   - the service AGENT is the case INTAKE POOL. `case_auto_assign`
@@ -137,8 +138,8 @@ import type { Territory } from '../objects/_territory';
  *   - the ROW SET is decided one layer down and is still the whole ballgame:
  *     `crm_account` is `sharingModel: 'private'`, so the OWD baseline admits
  *     only rows the caller OWNS, and `sys_record_share` can only widen it. The
- *     reps own nothing (`demo_bootstrap` claimed every seeded record for the
- *     dev admin), so their row set is exactly the grants their territory rule
+ *     reps own nothing (the seed-ownership claim gave every seeded record to
+ *     the dev admin), so their row set is exactly the grants their territory rule
  *     materialised — 6 for NA, 2 for EU, and the SG account for nobody.
  *
  * So `sales_rep` is what makes a rep a READER at all, and the territory rule is
@@ -255,10 +256,11 @@ export const DemoOrgStaffing: readonly DemoStaffMember[] = [
  *
  * ### The defect
  *
- * `demo_bootstrap` claims every ownerless seeded row for the FIRST user, the
- * dev admin (`src/flows/demo-bootstrap.flow.ts`). That flow has to do it and
- * has to do it that way: a seed cannot name a user, and the flow SHIPS IN THE
- * ARTIFACT, so it must not know these people — `test/demo-staffing.test.ts`
+ * The platform's seed-ownership claim (`@objectstack/plugin-security`, re-run
+ * on `app:seeded`) hands every ownerless seeded row to the FIRST administrator,
+ * the dev admin; until #1892 the app's own `demo_bootstrap` sweep did the same.
+ * Nothing in the ARTIFACT may do it any other way: a seed cannot name a user,
+ * and the artifact must not know these people — `test/demo-staffing.test.ts`
  * fails the build if any staffing email reaches the manifest. Correct as far
  * as it goes (an ownerless row under a `private` OWD is editable by nobody at
  * all), and it leaves the entire demo book on one identity.

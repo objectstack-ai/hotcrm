@@ -11,16 +11,13 @@
  * independently ordered lists cannot reproduce one interleaved order, so the
  * assembled list lives in `objectstack.config.ts` where all four are visible.
  *
- * `demo-bootstrap.flow.ts` is here because it has no single object: it is the
- * demo ownership sweep across twelve of them, and app-level items are the app
- * package's. `_billing-endpoint.ts` and `_guarded-iteration.ts` are the shared
- * flow sources every package reads along its edge into sales.
+ * `_billing-endpoint.ts` and `_guarded-iteration.ts` are the shared flow
+ * sources every package reads along its edge into sales.
  */
 export { LeadConversionFlow } from './lead-conversion.flow';
 export { LeadConversionApprovalFlow } from './lead-conversion-approval.flow';
 export { AccountApprovalFlow } from './account-approval.flow';
 export { ScheduleFollowUpFlow } from './schedule-followup.flow';
-export { DemoBootstrapFlow } from './demo-bootstrap.flow';
 export { OpportunityApprovalFlow, OpportunityApprovalOnCreateFlow } from './opportunity-approval.flow';
 export { OpportunityStagnationFlow } from './opportunity-stagnation.flow';
 export { ForecastSnapshotFlow } from './forecast-snapshot.flow';

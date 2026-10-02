@@ -452,9 +452,10 @@ describe('account_protection', () => {
   });
 
   it('does NOT stamp last_activity_date on a system write', async () => {
-    // demo_bootstrap claims ownerless seeded accounts as a system write every
-    // 10 minutes; stamping those flattened every seeded activity date to today
-    // and emptied the churn report buckets.
+    // The platform's seed-ownership claim re-owns ownerless seeded accounts as
+    // a system write (the retired demo_bootstrap sweep did, every 10 minutes);
+    // stamping those flattened every seeded activity date to today and emptied
+    // the churn report buckets.
     const input: Rec = { owner_id: 'rep2' };
     await hook.handler(makeCtx({
       event: 'beforeUpdate', input, previous: { owner_id: null }, user: SYSTEM,

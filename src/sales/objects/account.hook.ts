@@ -180,9 +180,10 @@ const accountHook: Hook = {
 
     // Stamp last_activity_date when ownership or type changes.
     // USER writes only (`ctx.user?.id` — this repo's system-write signal, cf.
-    // opportunity/quote hooks): the demo_bootstrap flow claims ownerless seeded
-    // accounts as a system write every 10 minutes, and stamping those flattened
-    // every seeded activity date to "today", emptying the churn report buckets.
+    // opportunity/quote hooks): the platform's seed-ownership claim re-owns
+    // ownerless seeded accounts as a system write (the retired `demo_bootstrap`
+    // sweep did the same every 10 minutes), and stamping those flattened every
+    // seeded activity date to "today", emptying the churn report buckets.
     // D3 stand-down on the predicate path (`forecast.hook.ts`): `ownerChanged`
     // / `typeChanged` are decided against THIS row's `previous`, so the stamp
     // would spread to every matched row. The `billing_country` / `territory` /

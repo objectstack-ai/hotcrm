@@ -167,8 +167,8 @@ export const tasks = defineSeed(Task, {
 // two activity-shaped objects that came before already accept the same trade.
 // No collision exists with the runtime writer's own rows: `log_call` /
 // `log_meeting` / `schedule_meeting` insert with an explicit `owner_id`
-// (`src/actions/global.actions.ts`), so they are never ownerless and
-// `demo_bootstrap`'s claim sweep never sees them — the "one producer per
+// (`src/actions/global.actions.ts`), so they are never ownerless and the
+// platform's seed-ownership claim never touches them — the "one producer per
 // window" question #702 raised, answered for this object.
 
 /** Which `related_to_*` lookup carries each `related_to_type`. */
@@ -527,8 +527,8 @@ export const events = defineSeed(Event, {
       ...(spec.description ? { description: spec.description } : {}),
       ...(spec.outcome ? { outcome_notes: spec.outcome } : {}),
       // No `owner_id`: a seed cannot name a user (see `src/data/index.ts`), so
-      // these rows land ownerless and `demo_bootstrap` claims them — which is
-      // why `crm_event` is in that flow's CLAIMED_OBJECTS (#671).
+      // these rows land ownerless and the platform's seed-ownership claim hands
+      // them to the first administrator when the seed settles (#671, #1892).
     };
   }),
 });

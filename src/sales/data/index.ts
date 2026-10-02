@@ -34,15 +34,16 @@ export { celDaysAgo, celDaysFromNow, lineTotal, linesTotal, type LineSpec } from
  * Which SHAPE of this app a build assembles (#1361).
  *
  * `default` is the community/single-org app and is what every build produces
- * unless something asks otherwise — the demo org, its storytelling data, and
- * the `demo_bootstrap` sweep that binds that data to the first user.
+ * unless something asks otherwise — the demo org and its storytelling data,
+ * which the platform's seed-settle ownership claim binds to the first platform
+ * administrator.
  *
  * `saas` is the shape a multi-org operator deploys on the enterprise runtime
  * under a walled tenancy posture (`OS_TENANCY_POSTURE=isolated`). The two
  * differ ONLY by what the composition registers; no code branches at runtime,
  * nothing is decided per tenant, and no enterprise package is imported. See
  * {@link SaasTenantSeedData} for why the seed set shrinks and
- * `objectstack.config.ts` for the flow/permission halves.
+ * `objectstack.config.ts` for the permission half.
  */
 export type HotCrmComposition = 'default' | 'saas';
 

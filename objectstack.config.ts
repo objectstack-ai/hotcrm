@@ -15,7 +15,6 @@ import {
 } from './objectstack.composition.js';
 import { SystemAdminProfile, TenantAdminProfile } from './objectstack.composition.js';
 import { resolveComposition } from './src/sales/data/index.js';
-import { DemoBootstrapFlow } from './src/sales/flows/index.js';
 
 // ─── Which SHAPE of HotCRM this build assembles (#1361) ───────────────────
 //
@@ -34,26 +33,17 @@ import { DemoBootstrapFlow } from './src/sales/flows/index.js';
 // but it has no per-family or per-tenant selection and none is chartered — so
 // WHAT gets replayed is decided once, here, for every tenant alike.
 //
-// Three things change, and nothing else. There is no runtime branch anywhere in
+// Two things change, and nothing else. There is no runtime branch anywhere in
 // `src/`, and no enterprise package is imported: an artifact built either way
-// runs on the community runtime.
+// runs on the community runtime. Both shapes register the same flows: the one
+// flow the SaaS shape used to drop, the `demo_bootstrap` ownership sweep, is
+// retired from the app (#1892) — the platform claims seeded rows itself.
 //
 //  1. `data` — the catalogue family only. See `SaasTenantSeedData`.
-//  2. `flows` — `demo_bootstrap` is dropped. It is a DEMO sweep (its own header
-//     says so) and under the wall it is actively wrong, not merely useless: it
-//     runs `runAs: 'system'`, and a system context is the one context the
-//     organization predicate does not apply to. Measured on a real engine under
-//     `OS_TENANCY_POSTURE=isolated` — the sweep's own shape, a system-context
-//     select of ownerless rows followed by an owner stamp, sees rows in EVERY
-//     organization and writes org A's first user onto org B's row. That is an
-//     identity crossing the wall. `test/saas-composition.test.ts` reproduces it
-//     rather than asserting it in prose. (It is also redundant in this shape:
-//     the catalogue's `crm_product` declares no `owner_id`, so a catalog-only
-//     tenant has nothing ownerless for the sweep to claim.)
 //     `demo-staffing` needs no exclusion — `src/sales/sharing/demo-staffing.ts` is
 //     deliberately not exported from `src/sales/sharing/index.js` and not registered
 //     in any composition (#640, pinned by `test/demo-staffing.test.ts`).
-//  3. `permissions` — `system_admin` is replaced by `tenant_admin`, which holds
+//  2. `permissions` — `system_admin` is replaced by `tenant_admin`, which holds
 //     org-scoped `manage_org_users` instead of platform-scope `manage_users`.
 //     Read `src/sales/profiles/tenant-admin.profile.ts` for the full audit, including
 //     what `view_all_data` / `modify_all_data` mean under the wall.
@@ -61,16 +51,9 @@ const composition = resolveComposition();
 const isSaas = composition === 'saas';
 
 /**
- * Flows this composition registers.
- *
- * Filtered by IDENTITY, not by name string: renaming `demo_bootstrap` must not
- * silently turn the exclusion into a no-op that ships the sweep to every
- * tenant. `test/saas-composition.test.ts` additionally asserts the filter
- * removed exactly one flow, so a refactor that makes it match nothing is red.
+ * Permission sets this composition registers. Filtered by IDENTITY, not by name
+ * string, so a rename cannot silently turn the substitution into a no-op.
  */
-const compositionFlows = isSaas ? allFlows.filter((flow) => flow !== DemoBootstrapFlow) : allFlows;
-
-/** Permission sets this composition registers — same identity discipline. */
 const compositionPermissions = isSaas
   ? [...Object.values(allProfiles).filter((set) => set !== SystemAdminProfile), TenantAdminProfile]
   : Object.values(allProfiles);
@@ -170,7 +153,7 @@ export default defineStack({
   // spreadsheet loads without per-column mapping by hand. Templates:
   // `assets/import-templates/`.
   mappings: allMappings,
-  flows: compositionFlows,
+  flows: allFlows,
   skills: allSkills,
   permissions: compositionPermissions,
   apps: allApps,
