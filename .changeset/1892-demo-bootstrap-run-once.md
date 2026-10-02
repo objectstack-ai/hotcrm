@@ -10,10 +10,11 @@ and gave them to the first user. A seed cannot name a user, so seeded demo recor
 with no owner, and the flow existed to fix that after the fact. On a production tenant it ran
 1,776 times in 13 days, took up to 26 minutes, and changed nothing after its first pass.
 
-From ObjectStack 17.6.0 the platform does this itself, once: when the seed data finishes
-loading, it hands every seeded record that has no owner to the first administrator. A fresh
-`pnpm dev` boot on this release, with the flow kept from running, leaves no ownerless record
-on any of the twelve objects the flow used to cover. So the flow is removed.
+From ObjectStack 17.6.0 the platform does this itself, on a new install's first boot: when the
+seed data finishes loading, it hands every seeded record that has no owner to the first
+administrator. A fresh `pnpm dev` boot on this release, with the flow kept from running,
+leaves no ownerless record on any of the twelve objects the flow used to cover. So the flow is
+removed.
 
 **What changes for you:**
 
@@ -21,8 +22,9 @@ on any of the twelve objects the flow used to cover. So the flow is removed.
   `sys_job`, and **Flow Runs** no longer shows a Demo Bootstrap run every ten minutes.
 - HotCRM now ships 30 flows, eight of them scheduled. The admin *Automation* page says so in
   all three locales.
-- Seeded demo records are still owned by the first administrator, as before. `pnpm demo:staff`
-  works unchanged.
+- Seeded demo records are still owned by the first administrator, as before. Known limit: seed
+  records that a later upgrade adds to an existing install do not get an owner from the
+  platform yet (tracked in objectstack-ai/objectstack#21486). `pnpm demo:staff` works unchanged.
 - The `saas` composition no longer differs from the community app in its flows. It already
   left this flow out.
 
