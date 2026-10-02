@@ -76,7 +76,7 @@ export const service: Record<string, ObjectTranslationData> = {
       closed_date: { label: '关闭日期' },
       first_response_date: { label: '首次响应日期' },
       resolution_time_hours: { label: '解决耗时（小时）' },
-      sla_due_date: { label: 'SLA 到期' },
+      sla_due_date: { label: 'SLA 到期', help: '按工单优先级与所属客户的客户分层设定，以日历小时计：夜间、周末与节假日都计入。' },
       is_sla_violated: { label: 'SLA 违反' },
       is_escalated: { label: '已升级' },
       escalation_reason: { label: '升级原因' },
