@@ -128,14 +128,25 @@ const opportunityValidationHook: Hook = {
     // and refuse the flow's own write. `runAs: 'system'` does not help —
     // elevation is not anonymity, so `ctx.user?.id` is present in that run
     // exactly as the APPROVAL_FIELDS note above records.
+    //
+    // ⚠️ `rejected` refuses too, exactly as `lead_automation` refuses a
+    // conversion in both `pending` and `rejected`. An approver's "no" is not a
+    // release: if only `pending` refused, a single rejection would disarm the
+    // gate on that deal for good, and the rep could then close it directly with
+    // no approval at all. From `rejected` the way forward is a NEW request — the
+    // flow's start condition re-opens on it — never a direct stage write.
+    //
+    // RECORD_LOCKED / 409 (`REFUSAL_CODES.locked`): while the gate holds, the
+    // deal's own state freezes `stage` against a move into a closed stage — the
+    // same class the lead sibling answers with.
     if (event === 'beforeUpdate' && previous && ctx.user?.id) {
       const gate = (input.status_change_approval_status ?? previous.status_change_approval_status) as string | undefined;
       const next = input.stage as string | undefined;
       const closing = (next === 'closed_won' || next === 'closed_lost') && next !== previous.stage;
-      if (closing && gate === 'pending') {
+      if (closing && (gate === 'pending' || gate === 'rejected')) {
         throw refuse(
           'This deal\'s status change needs approval: set Requested Status (and the win/loss reason) instead. The stage takes effect when the request is approved.',
-          'APPROVAL_REQUIRED',
+          'RECORD_LOCKED',
           409,
         );
       }

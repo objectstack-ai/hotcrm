@@ -88,13 +88,28 @@ export const OpportunityStatusChangeApprovalFlow: Flow = {
         // absent case must read as "not gated": a deal with no gate column at
         // all predates the field and closes the way it always did.
         //
-        // The `pending` half is the arming switch; the `requested_status` half
-        // is what makes this an UPDATE trigger without re-entering on every
-        // subsequent edit — once the approval node stamps a verdict the status
-        // is no longer `pending`, and `apply_status` / `clear_request` below
-        // leave the pair unable to satisfy this condition again.
-        condition: P`has(record.status_change_approval_status) && record.status_change_approval_status == "pending"
-          && has(record.requested_status) && record.requested_status != null && record.requested_status != ""`,
+        // Three halves:
+        //
+        // - the gate is ARMED: `pending` (born armed, no request decided yet)
+        //   or `rejected` (the last request was refused). `rejected` re-opens
+        //   on a new request because `opportunity.hook.ts` refuses a direct
+        //   close in both states — if only `pending` entered here, a rejected
+        //   deal could be neither requested nor closed, ever.
+        // - a request is present;
+        // - the request is NEW on this write. TRANSITION, not current value —
+        //   the idiom `billing_handoff_closed_won` records for this object.
+        //   Without it the approval node's own `pending` stamp (an update of
+        //   this record, through `approvalStatusField`) re-fires this flow
+        //   while the request is still open, and the second run dies on the
+        //   plugin's DUPLICATE_REQUEST guard. `previous.*` is guarded
+        //   FAIL-CLOSED: no visible prior value, no visible new request.
+        //
+        // `apply_status` leaves the gate `approved` (out of reach) and
+        // `clear_request` empties the request, so neither re-enters.
+        condition: P`has(record.status_change_approval_status)
+          && (record.status_change_approval_status == "pending" || record.status_change_approval_status == "rejected")
+          && has(record.requested_status) && record.requested_status != null && record.requested_status != ""
+          && has(previous.requested_status) && previous.requested_status != record.requested_status`,
       },
     },
     {
@@ -155,9 +170,9 @@ export const OpportunityStatusChangeApprovalFlow: Flow = {
       },
     },
     {
-      // A rejected request is cleared, not left standing: the rep may capture a
-      // different one, and leaving `requested_status` set would re-open this
-      // request the moment an install re-armed the record.
+      // A rejected request is cleared, not left standing, and the verdict stays
+      // `rejected` so the hook keeps refusing a direct close: the way on is a
+      // new request, which the start condition opens as a fresh approval.
       id: 'clear_request',
       type: 'update_record',
       label: 'Clear Rejected Request',
