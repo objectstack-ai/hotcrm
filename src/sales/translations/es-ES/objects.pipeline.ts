@@ -168,15 +168,10 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
     },
     _sections: {
-      // Nombres de sección de `record:details` en la página de detalle
-      // (lead_detail.page.ts).
-      info: { label: 'Información del Prospecto' },
-      crm_contact: { label: 'Contacto' },
-      detail: { label: 'Detalle del Prospecto' },
-      address: { label: 'Dirección' },
-      description: { label: 'Descripción' },
       // Claves de sección del objeto (lead.object.ts) que usan los
-      // formularios de registro.
+      // formularios de registro y la página de detalle, cuyas secciones
+      // hacen referencia a estos grupos (#806).
+      address: { label: 'Dirección' },
       identity: { label: 'Identidad' },
       company_info: { label: 'Información de la Empresa' },
       contact_info: { label: 'Información de Contacto' },

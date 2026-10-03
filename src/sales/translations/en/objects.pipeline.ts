@@ -161,11 +161,8 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       preferences: { label: 'Communication Preferences' },
       conversion: { label: 'Conversion' },
       duplicates: { label: 'Duplicate Management' },
-      // Detail-page sections (src/pages/lead_detail.page.ts)
-      info: { label: 'Lead Information' },
-      crm_contact: { label: 'Contact' },
-      detail: { label: 'Lead Detail' },
-      description: { label: 'Description' },
+      // The detail page's sections reference the groups above (#806), so it
+      // has no section names of its own.
       // Form section names on lead.view.ts (#1100). The sections of the
       // default form and of every named formView live here — add a form
       // there, add its section names here. `address` / `qualification` above

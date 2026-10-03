@@ -351,28 +351,36 @@ describe('lead record page — the duplicate banners, one per verdict', () => {
     // (`test/detail-section-dedup.test.ts` carries that measurement).
     const details = leadPageComponents.filter((c) => c.type === 'record:details');
     const sections: AnyRec[] = details.flatMap((d) => (d.properties?.sections ?? []) as AnyRec[]);
-    const duplicates = sections.find((s) => s.name === 'duplicates');
-    expect(duplicates, 'the Details tab has no `duplicates` section').toBeDefined();
+    const duplicates = sections.find((s) => s.group === 'duplicates');
+    expect(duplicates, 'the Details tab has no `{ group: \'duplicates\' }` section').toBeDefined();
+    // The section is a group reference (#806 ruling C): it names the group and
+    // the renderer derives the members from crm_lead's `fieldGroups`, so the
+    // members asserted below are the fields whose `group` is `duplicates`.
+    expect(duplicates!.fields, 'the duplicates section enumerates `fields` again').toBeUndefined();
+    const members = Object.entries(
+      (objects.find((o) => o.name === 'crm_lead')?.fields ?? {}) as Record<string, AnyRec>,
+    )
+      .filter(([, f]) => f?.group === 'duplicates' && f?.hidden !== true)
+      .map(([name]) => name);
 
     // BOTH survivor lookups, not just `duplicate_of_lead`: the intake hook
     // matches CONTACTS first and only then open leads, so a suspected lead's
     // survivor is a `crm_contact` at least as often as a `crm_lead`.
-    expect(duplicates!.fields).toEqual(
+    expect(members).toEqual(
       expect.arrayContaining([
         'duplicate_status', 'duplicate_of_type', 'duplicate_of_lead', 'duplicate_of_contact',
       ]),
     );
-    for (const field of duplicates!.fields as string[]) {
+    for (const field of members) {
       expect(leadFields, `crm_lead has no field \`${field}\``).toContain(field);
     }
 
     // The renderer drops any field the highlights strip already registered, so
-    // a field listed in both places renders in neither reliably. Keep them
-    // disjoint (the standing rule of `test/detail-section-dedup.test.ts`, which
-    // exempts this page only for the duplicates it already had).
+    // a field in both places renders only in the strip — and a duplicates
+    // group emptied that way would drop the link entirely. Keep them disjoint.
     const highlights = leadPageComponents.find((c) => c.type === 'record:highlights');
     const strip: string[] = highlights?.properties?.fields ?? [];
-    expect(strip.filter((f) => (duplicates!.fields as string[]).includes(f))).toEqual([]);
+    expect(strip.filter((f) => members.includes(f))).toEqual([]);
   });
 });
 
