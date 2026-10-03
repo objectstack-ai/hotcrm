@@ -38,7 +38,7 @@ A job takes up to **50,000 rows**; split a bigger file. Undo has a tighter ceili
 - **Picklists** — matched against the field's option labels *and* values, case-insensitively, so *Technology* and *technology* both land. The shipped mappings additionally translate the vocabulary other systems export — *SaaS*, *Trade Show*, *Client*. Anything still unrecognised fails its row with `invalid_option` rather than being dropped quietly.
 - **Dates** — `YYYY-MM-DD` is safest.
 - **Numbers** — plain digits (`1500000`, not `1.5M`).
-- **Addresses** — contacts have real mailing-address columns; accounts and leads store an address as one structured field that cannot be assembled out of separate spreadsheet columns. The known limits are listed in [Import your own data](/docs/guides/importing-your-data).
+- **Addresses** — the contact template's five mailing columns fill the parts of the contact's one structured mailing address; the account and lead templates carry no address columns. The known limits are listed in [Import your own data](/docs/guides/importing-your-data).
 
 ### Matching keys — not external IDs
 
