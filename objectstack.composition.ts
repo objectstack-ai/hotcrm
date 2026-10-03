@@ -102,7 +102,7 @@ import {
   AccountApprovalFlow,
   LeadConversionFlow, LeadConversionApprovalFlow,
   OpportunityApprovalFlow, OpportunityApprovalOnCreateFlow,
-  OpportunityStatusChangeApprovalFlow,
+  OpportunityStatusChangeApprovalFlow, OpportunityQualificationApprovalFlow,
   OpportunityStagnationFlow, OpportunityWonAlertFlow, ScheduleFollowUpFlow,
   TaskDueReminderFlow, TaskUrgentAlertFlow, BillingHandoffClosedWonFlow,
 } from './src/sales/flows/index.js';
@@ -225,6 +225,7 @@ export const allFlows = [
   OpportunityApprovalFlow,
   OpportunityApprovalOnCreateFlow,
   OpportunityStatusChangeApprovalFlow,
+  OpportunityQualificationApprovalFlow,
   QuoteGenerationFlow,
   ContractRenewalFlow,
   CaseSlaMonitorFlow,

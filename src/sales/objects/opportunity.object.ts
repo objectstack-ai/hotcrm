@@ -163,6 +163,64 @@ export const Opportunity = ObjectSchema.create({
       group: 'qualification',
     }),
 
+    // ─── The 立项 (qualification) gate: the rep's request ─────────────
+    //
+    // REQ-0006 step 11: 「销售立项需走审批流程；新增商机可跟进，立项通过后方可更新阶段、
+    // 投标、赢丢单操作。」 The rep ASKS for 立项 by ticking this box, and
+    // `opportunity_qualification_approval` opens one approval when it turns on
+    // (the TRANSITION, not the current value). A rejection clears it, so
+    // ticking it again is a fresh request — the role `requested_status` plays
+    // for the status-change gate, as a boolean because 立项 asks for one thing.
+    //
+    // `defaultValue: false` is load-bearing for the start condition: every deal
+    // born after this column then STORES the key, so `has(previous.…)` holds
+    // on every driver and the off→on transition is visible. Not readonly: this
+    // is the one half of the gate a person writes. Inert while the gate is
+    // off — nothing reads it unless an install arms the verdict below.
+    qualification_requested: Field.boolean({
+      label: 'Request Qualification Approval',
+      description: 'Tick to send this deal for qualification approval. A rejection clears it; tick it again to ask again.',
+      defaultValue: false,
+      group: 'qualification',
+    }),
+
+    // ─── The 立项 gate's switch AND its verdict column ─────────────────
+    //
+    // ⚠️ This `defaultValue` IS the switch, exactly as on
+    // `status_change_approval_status` below, and shipped it is `not_required`:
+    // the gate is OFF by default (REQ-0006 *Disposition*: "Both gates must be
+    // configurable — off by default"). No deal is born `pending`, the flow's
+    // start condition and the `opportunity_lifecycle` refusal are false for
+    // every record that has ever existed, and a stage move, Will Bid and a
+    // direct close work exactly as they do without it. An install ARMS the gate
+    // by changing this one value to `'pending'`; deals that already exist keep
+    // `not_required`, so arming it invalidates no record. ⛔ Not the flow's
+    // `status` — `lead-conversion-approval.flow.ts` records why.
+    //
+    // ⚠️ Its OWN column — ⛔ never `approval_status` (the amount-tiered
+    // flow's; its entry keys on `not_required`, so sharing would re-arm it) and
+    // ⛔ never `status_change_approval_status` (one gate's verdict would erase
+    // the other's, and the step-14 hook reads that column input-first).
+    //
+    // `readonly: true` on the #1666 grounds: the only writers are the gate's
+    // own `runAs: 'system'` flow and the insert default, and both survive the
+    // readonly strip. A user-supplied verdict is stripped BEFORE the
+    // `beforeUpdate` hooks run (measured on 17.6.0 for the step-14 column, the
+    // same strip), so the input-first read in `opportunity_lifecycle` cannot
+    // be fed an `approved` by hand.
+    qualification_approval_status: Field.select({
+      label: 'Qualification Approval',
+      group: 'qualification',
+      readonly: true,
+      defaultValue: 'not_required',
+      options: [
+        { label: 'Not Required', value: 'not_required', default: true },
+        { label: 'Pending', value: 'pending', color: '#FFA500' },
+        { label: 'Approved', value: 'approved', color: '#00AA00' },
+        { label: 'Rejected', value: 'rejected', color: '#FF0000' },
+      ],
+    }),
+
     // Sales Process
     stage: Field.select({
       label: 'Stage',

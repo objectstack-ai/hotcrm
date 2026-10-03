@@ -95,9 +95,17 @@ const opportunityValidationHook: Hook = {
     // reached a closed stage, and elevation is not anonymity — the freeze
     // guard below would judge those writes as user edits on a closed record
     // and re-lock an in-flight approval.
+    // `qualification_approval_status` and `qualification_requested` (the
+    // REQ-0006 step-11 立项 gate) join for the same reason and by the same
+    // mechanism. Their flow stamps the verdict, and on a rejection clears the
+    // request, under the triggering user; a deal a write this hook does not
+    // judge (a system write, no user) closed while the 立项 request was open
+    // would otherwise refuse that stamp and leave the approval decided but
+    // never recorded.
     const APPROVAL_FIELDS = new Set([
       'approval_status', 'approved_date',
       'status_change_approval_status', 'requested_status',
+      'qualification_approval_status', 'qualification_requested',
     ]);
     // Stage → forecast category.
     const STAGE_FORECAST: Record<string, string> = {
@@ -112,6 +120,56 @@ const opportunityValidationHook: Hook = {
 
     const { event, input } = ctx;
     const previous = ctx.previous;
+
+    // ─── 立项 (qualification) gate (REQ-0006 step 11) ───────────────────
+    //
+    // 「新增商机可跟进，立项通过后方可更新阶段、投标、赢丢单操作。」 Until 立项 is
+    // approved, three acts are refused and every other edit stays open:
+    //   • any change of `stage` — 更新阶段, which includes a direct close
+    //     (赢丢单);
+    //   • recording `will_bid` — 投标, the bid decision;
+    //   • a NEW `requested_status` — the won/lost request (赢丢单) the step-14
+    //     gate opens. So with both gates armed 立项 comes FIRST: an unqualified
+    //     deal cannot even ask for a status change.
+    // Built on the step-14 gate below and deliberately the same in every
+    // load-bearing term:
+    //   • a TRANSITION GATE, not an invariant (AGENTS.md metadata semantics
+    //     rule 7) — inert unless the install arms it, since
+    //     `qualification_approval_status` ships `not_required`;
+    //   • the verdict is read INPUT-FIRST, so a write that carries the
+    //     approved verdict is judged as approved. This gate's own flow writes
+    //     only the verdict (and on a rejection the request), so it never needs
+    //     that; it keeps the sibling's reading, and a hand-supplied verdict is
+    //     stripped before this hook runs (see the field);
+    //   • `rejected` refuses as `pending` does — an approver's "no" is not a
+    //     release; the way on is a new request;
+    //   • USER writes only (`ctx.user?.id`), the boundary both other guards in
+    //     this hook draw;
+    //   • RECORD_LOCKED / 409 (`REFUSAL_CODES.locked`).
+    // It sits ABOVE the step-14 block so an unqualified deal's direct close
+    // names the gate that comes first.
+    //
+    // ⚠️ BOUNDARY, recorded rather than hidden: `beforeInsert` is not judged.
+    // Creating a deal is 新增商机, which step 11 leaves open (step 8 has the rep
+    // fill 是否投标 on the new-deal form) — the line the step-14 gate draws too.
+    if (event === 'beforeUpdate' && previous && ctx.user?.id) {
+      const qualification = (input.qualification_approval_status ?? previous.qualification_approval_status) as string | undefined;
+      if (qualification === 'pending' || qualification === 'rejected') {
+        const held: string[] = [];
+        if (typeof input.stage === 'string' && input.stage !== previous.stage) held.push('Stage');
+        if (typeof input.will_bid === 'boolean' && input.will_bid !== previous.will_bid) held.push('Will Bid');
+        if (typeof input.requested_status === 'string' && input.requested_status !== '' && input.requested_status !== previous.requested_status) {
+          held.push('Requested Status');
+        }
+        if (held.length > 0) {
+          throw refuse(
+            `This deal needs qualification approval first: tick Request Qualification Approval. ${held.join(', ')} can change once it is approved.`,
+            'RECORD_LOCKED',
+            409,
+          );
+        }
+      }
+    }
 
     // ─── Status-change gate (REQ-0006 steps 13-14) ──────────────────────
     //
