@@ -50,7 +50,7 @@ A flow fires one of three ways, set by its start node:
 
 > **Auto-launch needs the `triggers` capability.** Record-change and scheduled flows only fire when the stack's `requires` list includes `triggers` — it installs the record-change + schedule trigger providers (schedule triggers also use the job service). Screen flows are always launched manually.
 
-**Built-in flows in HotCRM** (30). Each row carries the flow's own label — the name listed in **Studio → Automation → Flows**, and the name you pick from in **Studio → Developer → Flow Runs**, so a run you are chasing can be looked up here verbatim:
+**Built-in flows in HotCRM** (31). Each row carries the flow's own label — the name listed in **Studio → Automation → Flows**, and the name you pick from in **Studio → Developer → Flow Runs**, so a run you are chasing can be looked up here verbatim:
 
 | Flow | Trigger | What it does |
 | --- | --- | --- |
@@ -69,6 +69,7 @@ A flow fires one of three ways, set by its start node:
 | **Urgent Task Alert** | Record change (insert) | Notify the owner when a task is created at *Urgent* |
 | **Large Deal Approval** | Record change (update) | Tiered sign-off via approval nodes — Sales Manager ≥ $100K, Sales Director > $500K |
 | **Large Deal Approval (on create)** | Record change (insert) | The same intake for opportunities *created* at or above the threshold |
+| **Opportunity Status Change Approval** | Record change (update) | Sign-off a deal needs before it is declared won or lost. Ships switched OFF — it opens nothing until an install arms the gate on the opportunity's **Status Change Approval** field; armed, the rep sets **Requested Status** and the stage moves only when the request is approved |
 | **Lead Conversion Approval** | Record change (insert) | Sign-off a lead needs before it can be converted. Ships switched OFF — it opens nothing until an install arms the gate on the lead's **Conversion Approval** field |
 | **Account Approval** | Record change (insert) | Sign-off a newly created account needs before it counts as established data. Ships switched **ON** — a new account starts *Pending* and is decided in the approval inbox; an install that wants no account sign-off changes the default on the account's **Approval Status** field |
 | **Large Deal Won Alert** | Record change (update) | When an opportunity of $100K or more turns *Closed Won*, notify the owner — the owner alone, not their manager |
@@ -108,6 +109,8 @@ The division of labour on forecasts is worth calling out, because it is the patt
 Since ObjectStack 7.4, approvals are modeled as **`approval` nodes inside a flow** (ADR-0019) rather than a standalone approval-process type. On entry the node opens an approval request, **locks the record** while the step is pending, mirrors the live status onto an `approval_status` field, and resumes down the *approve* / *reject* branch.
 
 HotCRM's built-in **Opportunity Approval** flow chains two approval nodes for tiered sign-off (manager → director). See [Revenue › Approvals](/docs/revenue/approvals) for thresholds, what approvers see, and the audit trail.
+
+A second, independent gate — **Opportunity Status Change Approval** — asks for sign-off before a deal is declared won or lost. It ships switched off and keeps its verdict in its own field, so arming it never changes the amount-based sign-off; see [Sales › Opportunity Qualification](/docs/sales/opportunity-qualification).
 
 ## Order of operations
 
