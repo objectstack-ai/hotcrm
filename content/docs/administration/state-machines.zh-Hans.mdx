@@ -117,7 +117,7 @@ Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ 
 - **添加退出条件**（例如 *没有更新关闭日期就不能离开 Negotiation*）。
 - 在每次转换时 **触发自动化**（对象钩子、流程、通知）。
 
-上面这些都是改源码，不是在设置里点几下：**并不存在「设置 → 对象 → 状态 → 状态机」这个配置面**。每张转换表都是对象上的一条 `validations[]` 条目（类型 `state_machine`，见 `src/*/objects/*.object.ts`），而这条条目只带一张转换映射表，别的什么都没有 —— 所以上面前两项是改这张映射表，进入/退出条件是另外的 `validations[]` 规则或相关字段上的 `requiredWhen` 谓词，按转换触发自动化则是 `record_change` 流程或对象钩子。每一项都是代码改动加一次重新部署。
+上面这些都是改源码，不是在系统设置里点几下：**并不存在「系统设置 → 对象 → 状态 → 状态机」这个配置面**。每张转换表都是对象上的一条 `validations[]` 条目（类型 `state_machine`，见 `src/*/objects/*.object.ts`），而这条条目只带一张转换映射表，别的什么都没有 —— 所以上面前两项是改这张映射表，进入/退出条件是另外的 `validations[]` 规则或相关字段上的 `requiredWhen` 谓词，按转换触发自动化则是 `record_change` 流程或对象钩子。每一项都是代码改动加一次重新部署。
 
 ## 用户看到什么
 
@@ -147,6 +147,6 @@ Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ 
 
 ## 相关
 
-- [销售 › 潜在客户](/zh-Hans/docs/sales/leads) —— 面向用户的潜在客户生命周期。
-- [销售 › 商机](/zh-Hans/docs/sales/opportunities) —— 面向用户的商机生命周期。
+- [销售云 › 线索](/zh-Hans/docs/sales/leads) —— 面向用户的潜在客户生命周期。
+- [销售云 › 商机](/zh-Hans/docs/sales/opportunities) —— 面向用户的商机生命周期。
 - [自动化](/zh-Hans/docs/administration/automation) —— 转换可以触发的流程与对象钩子。

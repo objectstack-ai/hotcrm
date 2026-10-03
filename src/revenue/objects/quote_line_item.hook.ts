@@ -2,7 +2,7 @@
 
 import type { Hook, HookContext } from '@objectstack/spec/data';
 import type { HookApi } from '../../sales/objects/_hook-api';
-import { createLineItemPriceFill } from './_line-item-price-fill';
+import { createLineItemNumbering, createLineItemPriceFill } from './_line-item-price-fill';
 
 /**
  * Quote total rollup.
@@ -40,6 +40,12 @@ import { createLineItemPriceFill } from './_line-item-price-fill';
 const quoteLineItemPriceFill: Hook = createLineItemPriceFill(
   'crm_quote_line_item',
   'quote_line_item_price_fill',
+);
+
+/** `line_number` assigner — see `_line-item-price-fill.ts` (#1828). */
+const quoteLineItemNumbering: Hook = createLineItemNumbering(
+  'crm_quote_line_item',
+  'quote_line_item_line_number',
 );
 
 const quoteTotalRollup: Hook = {
@@ -107,4 +113,4 @@ const quoteTotalRollup: Hook = {
   },
 };
 
-export default [quoteLineItemPriceFill, quoteTotalRollup];
+export default [quoteLineItemPriceFill, quoteLineItemNumbering, quoteTotalRollup];

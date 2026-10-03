@@ -31,6 +31,13 @@
  * time means teaching this module a calendar — it is not a matter of changing
  * a cell.
  *
+ * This header is the ONE place the app says it in prose (#1974). Everywhere
+ * else the unit rides in a name — `CASE_SLA_CALENDAR_HOURS` and
+ * `caseSlaCalendarHours` below, `slaCalendarHours` in the hook body — and in
+ * `test/case-sla-matrix.test.ts`, which drives the hook on a fixed Friday
+ * 17:00 clock and pins the deadlines that land on the weekend. The operator
+ * reads it in the `sla_due_date` field description.
+ *
  * # Why the `critical` row is flat
  *
  * Every cell in the `critical` row is 4 — deliberately, and it is the one
@@ -85,8 +92,8 @@ export type CaseSlaPriority = (typeof CASE_SLA_PRIORITIES)[number];
  */
 export const CASE_SLA_DEFAULT_TIER: CaseSlaTier = 'smb';
 
-/** Hours from case creation to `sla_due_date`, by priority and account tier. */
-export const CASE_SLA_HOURS: Record<CaseSlaPriority, Record<CaseSlaTier, number>> = {
+/** Calendar hours from case creation to `sla_due_date`, by priority and account tier. */
+export const CASE_SLA_CALENDAR_HOURS: Record<CaseSlaPriority, Record<CaseSlaTier, number>> = {
   //           strategic  enterprise  mid_market  smb
   critical: { strategic: 4, enterprise: 4, mid_market: 4, smb: 4 },
   high: { strategic: 6, enterprise: 8, mid_market: 8, smb: 8 },
@@ -95,8 +102,8 @@ export const CASE_SLA_HOURS: Record<CaseSlaPriority, Record<CaseSlaTier, number>
 };
 
 /** Look a cell up with the documented fallbacks. Unknown priority ⇒ no clock. */
-export function caseSlaHours(priority: string, tier?: string | null): number | undefined {
-  const row = CASE_SLA_HOURS[priority as CaseSlaPriority];
+export function caseSlaCalendarHours(priority: string, tier?: string | null): number | undefined {
+  const row = CASE_SLA_CALENDAR_HOURS[priority as CaseSlaPriority];
   if (!row) return undefined;
   return row[tier as CaseSlaTier] ?? row[CASE_SLA_DEFAULT_TIER];
 }

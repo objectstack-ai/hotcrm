@@ -167,8 +167,8 @@ export const tasks = defineSeed(Task, {
 // two activity-shaped objects that came before already accept the same trade.
 // No collision exists with the runtime writer's own rows: `log_call` /
 // `log_meeting` / `schedule_meeting` insert with an explicit `owner_id`
-// (`src/actions/global.actions.ts`), so they are never ownerless and
-// `demo_bootstrap`'s claim sweep never sees them — the "one producer per
+// (`src/actions/global.actions.ts`), so they are never ownerless and the
+// platform's seed-ownership claim never touches them — the "one producer per
 // window" question #702 raised, answered for this object.
 
 /** Which `related_to_*` lookup carries each `related_to_type`. */
@@ -377,6 +377,24 @@ const EVENT_SPECS: readonly EventSpec[] = [
     outcome: 'Replacing spreadsheets across admissions. Referral source confirmed.',
     attendees: [{ lead: 'dkim@edutechlabs.example.com', response: 'accepted' }],
   },
+  // The earlier touch on each of the two leads above, so each lead's Activity
+  // tab reads as a short history rather than a single row. Both leads already
+  // carry `last_contacted_date: today()` for their later call, so a second held
+  // row moves no recency clock (`event_activity_bubble` stamps the seed moment).
+  {
+    subject: 'CloudFirst — follow-up meeting after the Cloud Summit booth',
+    type: 'meeting', status: 'held', daysAgo: 8, at: [15, 0], minutes: 45,
+    relatedType: 'crm_lead', relatedKey: 'lisa.t@cloudfirst.example.com',
+    outcome: 'Walked through pipeline and forecasting. Asked for a qualification call with finance.',
+    attendees: [{ lead: 'lisa.t@cloudfirst.example.com', response: 'accepted' }],
+  },
+  {
+    subject: 'EduTech Labs — referral intro call with David Kim',
+    type: 'call', status: 'held', daysAgo: 9, at: [10, 0], minutes: 15,
+    relatedType: 'crm_lead', relatedKey: 'dkim@edutechlabs.example.com',
+    outcome: 'Warm intro from the referring partner. Booked a proper discovery call.',
+    attendees: [{ lead: 'dkim@edutechlabs.example.com', response: 'accepted' }],
+  },
 
   // ─── Booked, not held: the calendar ahead ───────────────────────────────
   // These are what `status` exists for. Not one of them moves a recency clock,
@@ -509,8 +527,8 @@ export const events = defineSeed(Event, {
       ...(spec.description ? { description: spec.description } : {}),
       ...(spec.outcome ? { outcome_notes: spec.outcome } : {}),
       // No `owner_id`: a seed cannot name a user (see `src/data/index.ts`), so
-      // these rows land ownerless and `demo_bootstrap` claims them — which is
-      // why `crm_event` is in that flow's CLAIMED_OBJECTS (#671).
+      // these rows land ownerless and the platform's seed-ownership claim hands
+      // them to the first administrator when the seed settles (#671, #1892).
     };
   }),
 });
@@ -578,3 +596,81 @@ export const eventAttendeesFromLeads = defineSeed(EventAttendee, {
   externalId: ['crm_event', 'crm_lead'],
   records: attendeeRecords('lead'),
 });
+
+/**
+ * The lead timeline pointers — what `log_call` would have written (#1258).
+ *
+ * A held interaction logged through `log_call` / `log_meeting`
+ * (`src/sales/actions/activity-actions.ts`) writes three things: the
+ * `crm_event`, its attendees, and one `sys_activity` row — the ADR-0052
+ * ActivityPointer the lead's **Activity** tab reads
+ * (`record:activity` → `sys_activity` by `{ object_name, record_id }`, filtered
+ * to the `task` kind, which is `type: 'completed'`). The seeds above author the
+ * first two for every held lead interaction; this dataset authors the third,
+ * derived from the SAME specs so the two cannot drift apart.
+ *
+ * `record_id` and `source_id` carry NATURAL KEYS — the lead's email and the
+ * event's subject. Both are `referenceVia` pointer pairs on the platform object
+ * (`record_id` ↔ `object_name`, `source_id` ↔ `source_object`), so the seed
+ * loader resolves each against the object its sibling column names and
+ * refuses an unresolvable one loudly rather than storing the literal.
+ *
+ * Two platform facts bound what is authored here:
+ *
+ *   - `sys_activity` is `lifecycle.class: 'telemetry'` with
+ *     `retention: { maxAge: '14d' }`, so only interactions younger than a
+ *     fortnight are seeded — an older row would be reaped before anyone demos
+ *     it. The filter below enforces that rather than trusting the spec list.
+ *   - A seed cannot name a user, so `actor_id` / `actor_name` are not authored
+ *     (see `objectstack.composition.ts`, "A seed can't name a user"). The
+ *     action stamps the rep at runtime, where the id exists.
+ */
+const SYS_ACTIVITY_RETENTION_DAYS = 14;
+
+/**
+ * The summary prefix of the action that logs each held event type — the two
+ * writers that exist (`LOG_CALL_SPEC` / `LOG_MEETING_SPEC`). A held event of
+ * any other type has no action that would have written a pointer for it, so it
+ * gets none here either: this dataset mirrors a writer, it is not a fourth one.
+ */
+const LOGGED_SUMMARY_PREFIX: Partial<Record<EventSpec['type'], string>> = {
+  call: '',
+  meeting: 'Meeting: ',
+};
+
+export const leadInteractionPointers = {
+  object: 'sys_activity',
+  mode: 'upsert' as const,
+  // One timeline pointer per rich source record, exactly as the action writes
+  // it. Matched on the RESOLVED ids, so replay boots dedupe.
+  externalId: ['source_object', 'source_id'],
+  records: EVENT_SPECS.filter(
+    (spec) =>
+      spec.relatedType === 'crm_lead' &&
+      spec.status === 'held' &&
+      LOGGED_SUMMARY_PREFIX[spec.type] !== undefined &&
+      spec.daysAgo >= 0 &&
+      spec.daysAgo < SYS_ACTIVITY_RETENTION_DAYS,
+  ).map((spec) => {
+    const [endHour, endMinute] = endClock(spec);
+    return {
+      // `held` is what both actions write as `completed` — the `task` feed
+      // kind, the one the lead Activity tab renders.
+      type: 'completed',
+      // The action's own summary: prefix, subject, duration in brackets.
+      summary: `${LOGGED_SUMMARY_PREFIX[spec.type]}${spec.subject} (${spec.minutes} min)`,
+      // Logged when the slot ended.
+      timestamp: celClock(spec.daysAgo, endHour, endMinute),
+      object_name: 'crm_lead',
+      record_id: spec.relatedKey,
+      source_object: 'crm_event',
+      source_id: spec.subject,
+      metadata: JSON.stringify({
+        kind: spec.type,
+        duration_minutes: spec.minutes,
+        notes: spec.outcome ?? '',
+        attendee_count: spec.attendees.length,
+      }),
+    };
+  }),
+};

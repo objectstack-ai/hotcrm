@@ -286,8 +286,8 @@ After any platform upgrade, or whenever Studio shows validation banners:
 ### 4.1 Staffing the demo org (`pnpm demo:staff`)
 
 A reseeded org has records but no PEOPLE. On a fresh install exactly one user
-exists (the dev admin), `demo_bootstrap` claims every seeded record for them,
-and `sys_user_position` is empty — so every position-based sharing rule this app
+exists (the dev admin), the platform hands every seeded record to them when
+the seed settles (its seed-ownership claim; no HotCRM flow is involved), and `sys_user_position` is empty — so every position-based sharing rule this app
 ships grants nobody anything, and `opportunity_approval`'s `manager_review` node
 opens with an empty approver slate while `lockRecord` holds the record ([#640]).
 
@@ -333,10 +333,10 @@ Three things worth knowing before changing any of it:
 - **The reps must not own the ACCOUNTS — but they must own their pipeline.**
   `crm_account` is `private`, so the OWD baseline already admits a record's
   owner: a share to the owner demonstrates nothing, and account ownership
-  therefore stays with `demo_bootstrap`'s first user. The script still exits
+  therefore stays with the dev admin the platform's claim gave it to. The script still exits
   non-zero if a demo user turns out to own a seeded account.
-  Every OTHER routed object is the opposite case ([#1759]). `demo_bootstrap`
-  claims them all for the dev admin, which an API key never notices — it runs as
+  Every OTHER routed object is the opposite case ([#1759]). The platform's
+  seed-ownership claim gives them all to the dev admin, which an API key never notices — it runs as
   the human, so `viewAllRecords` applies — while an agent connecting over OAuth
   sees only what its user owns or holds a share on (the ceiling in
   [objectstack#16549], which `viewAllRecords` deliberately does not lift). So a

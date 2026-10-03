@@ -49,7 +49,7 @@ export const OpportunityWonAlertFlow: Flow = {
         objectName: 'crm_opportunity',
         triggerType: 'record-after-update',
         // `previous.stage` guard: fire on the TRANSITION into closed_won only.
-        // Without it every later edit of a won deal (demo-bootstrap owner
+        // Without it every later edit of a won deal (seed-ownership
         // claims, approval-status stamps, description tweaks) re-sent the
         // congratulations blast. The trigger forwards `previous` into the
         // condition scope (cf. the engine's record-change context).

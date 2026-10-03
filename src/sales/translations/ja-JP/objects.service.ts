@@ -70,7 +70,7 @@ export const service: Record<string, ObjectTranslationData> = {
       closed_date: { label: 'クローズ日' },
       first_response_date: { label: '初回応答日' },
       resolution_time_hours: { label: '解決時間（時間）' },
-      sla_due_date: { label: 'SLA期限' },
+      sla_due_date: { label: 'SLA期限', help: 'ケースの優先度と取引先の顧客ランクから設定され、暦時間で数えます。夜間・週末・祝日もすべて含まれます。' },
       is_sla_violated: { label: 'SLA違反' },
       is_escalated: { label: 'エスカレーション済' },
       escalated_date: { label: 'エスカレーション日' },
@@ -97,14 +97,11 @@ export const service: Record<string, ObjectTranslationData> = {
       sla_at_risk: { label: '⏰ SLA リスクあり' },
     },
     _sections: {
-      // 詳細ページの `record:details` セクション名（case_detail.page.ts）
-      info: { label: 'ケース情報' },
-      status: { label: 'ステータス・SLA' },
-      description: { label: '説明' },
       // case.view.ts のフォームセクション名 (#1100)。
       case: { label: 'ケース' },
       how_can_we_help: { label: 'どのようなご用件でしょうか？' },
-      // オブジェクト定義のセクションキー（case.object.ts）— 入力フォームで使用
+      // オブジェクト定義のセクションキー（case.object.ts）— 入力フォームと、
+      // これらのグループを参照する詳細ページのセクション（#970）で使用
       basic: { label: 'ケース情報' },
       origin: { label: '発生元・振り分け' },
       sla: { label: 'SLA・優先度' },

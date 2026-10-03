@@ -62,7 +62,9 @@ export const LeadDetailPage: Page = {
             // `icon` removed from `page:header` in @objectstack/spec 17.0.0
             // (#6946, ADR-0087 D2) — deleted, not renamed. See the full note on
             // `account_detail.page.ts`; nothing ever drew it.
-            breadcrumb: true,
+            // `breadcrumb` retired from `page:header` in @objectstack/spec 17.6.0
+            // (#20785, `page-header-breadcrumb-removed`) — deleted: no renderer
+            // ever drew a trail for it; the app shell's own trail is unchanged.
             // Convert is the outcome; scheduling the next touch is the daily
             // act. Both belong in the header — the follow-up used to be four
             // clicks deep in the Related tab.
@@ -136,9 +138,12 @@ export const LeadDetailPage: Page = {
         // predicate: `record-alert.tsx` evaluates `properties.visible` through
         // `toPredicateInput` + `useCondition` against the row
         // (`usePredicateRecordContext`), the same pipeline as an action button.
-        // A node-level `visibleWhen` would be a different gate one tier up,
-        // evaluated by `SchemaRenderer` on `data` = the data-source ADAPTER,
-        // not the row — it cannot see `duplicate_status` at all.
+        // A node-level `visibleWhen` is a different gate one tier up,
+        // evaluated by `SchemaRenderer`, and the two compose as AND. Measured
+        // on the 17.6.0 pin (#1887), that tier binds the page's row as
+        // `record` too (objectui#5454): this same predicate, moved there,
+        // gated correctly in both directions. `visible` stays because it is
+        // the gate `record:alert` declares in its own props.
         //
         // ⚠️ `has()` is load-bearing, and this surface is the WORST of the four
         // this repo measures (cf. `test/view-predicate-dialect.test.ts`): the
@@ -183,9 +188,9 @@ export const LeadDetailPage: Page = {
         // this renderer resolves both through `pickLocalized(…, language)`
         // (the same capability `opportunity_detail.page.ts` records under
         // #972), and `body` has no other channel — the i18n extractor's
-        // per-component copy keys are title/description/label/placeholder/
-        // emptyText/submitLabel, so a plain-string `body` would ship English to
-        // all four locales. Keeping both halves of one banner's copy in one
+        // per-component copy keys (`PAGE_COMPONENT_COPY_KEYS`, read on 17.6.0)
+        // are title/description/label/placeholder/emptyText, so a plain-string
+        // `body` would ship English to all four locales. Keeping both halves of one banner's copy in one
         // place beats splitting `title` into the locale packs.
         //
         // ⭐ Each banner's copy NAMES ITS OWN VERDICT, in the vocabulary the
@@ -345,164 +350,62 @@ export const LeadDetailPage: Page = {
                       columns: '2',
                       // `layout` was REMOVED from `record:details` in
                       // @objectstack/spec 17.0.0 (#6946, ADR-0087 D2) and is
-                      // deleted with no successor: its declared `auto` |
-                      // `custom` semantics were never implemented. objectui's
-                      // `RecordDetailsRenderer` tests `layout` only against
-                      // `inline` | `compact` — two values the enum never
-                      // permitted — so both legal values took the same branch
-                      // and the key selected nothing. The body is chosen by what
-                      // is authored — and on an authored `record:details` the
-                      // `sections` below ARE the body, not a preference over
-                      // some default one.
+                      // deleted with no successor: its `auto` | `custom`
+                      // semantics were never implemented.
                       //
-                      // ⛔ There is NO fallback. Omitting `sections` here does
-                      // not fall back to the object's `highlightFields`, nor to
-                      // its `fieldGroups`, nor to a bare auto-detected header
-                      // chip. It renders an EMPTY body.
+                      // Every section is a GROUP REFERENCE (#806, maintainer
+                      // ruling C, decision batch #21, 2026-09-03). `{ group }`
+                      // names one of crm_lead's `fieldGroups`, and the renderer
+                      // derives that section's members, label, icon and collapse
+                      // state from the object (`deriveFieldGroupLayout`,
+                      // ADR-0085 §5). Membership has ONE declaration site — the
+                      // `group:` on each field in lead.object.ts — and this page
+                      // curates only the ORDER, so a field added to a group shows
+                      // up here with no edit to this file. ⛔ Do not enumerate
+                      // `fields:` again, and do not restate a key the group owns
+                      // (`name` / `label` / `icon` / `collapsible` /
+                      // `defaultCollapsed`) beside `group`: the spec refuses both.
                       //
-                      // ⚠️ Read that twice before editing, because both of the
-                      // wrong answers were once written down as fact. THIS
-                      // comment used to assert the `highlightFields` fallback;
-                      // a `crm_forecast` reading recorded on #1452 asserted the
-                      // `fieldGroups` one. Both read as authoritative, they
-                      // contradicted each other, and neither had ever been run
-                      // against the pinned version — so #806's ruling was
-                      // written on a mechanism that does not exist, and that
-                      // cost a full round before anybody measured it. #1521 is
-                      // the card that replaced both guesses with the numbers
-                      // below. ⛔ Do not restore a fallback claim here without
-                      // re-measuring it first.
+                      // ⛔ `sections` stays load-bearing. Omitting it renders an
+                      // EMPTY Details tab, not a `fieldGroups` fallback (#806 R28
+                      // on 17.2.0, #1521); derivation is per section, through
+                      // `group:`, never page-level.
                       //
-                      // How it was measured (#806's R28 os-dev report) —
-                      // measured, not inferred: headless Chromium driving a
-                      // real `objectstack start` against a wiped DB,
-                      // `@objectstack/console` 17.2.0, two full runs over the
-                      // same records. Run A, unmutated: 6 sections, 20 field
-                      // rows. Run B, `properties.sections` deleted: 0 and 0 —
-                      // the entire body between the tab strip and the
-                      // "Created by" footer simply absent. Negative control in
-                      // both runs: `crm_contact`, which authors no record page,
-                      // kept rendering its five `fieldGroups`-derived headings
-                      // in A and in B alike, so run B's nothing is this page's
-                      // nothing and not a dead instrument.
-                      //
-                      // Why the two wrong answers looked right: `fieldGroups`
-                      // derivation is real, but it lives in the console's page
-                      // SYNTHESIZER — the path that fabricates a record page
-                      // for an object that has none authored (which is exactly
-                      // why the `crm_contact` control shows it). The synthesizer
-                      // takes authored sections when they are non-empty and
-                      // derives from `fieldGroups` otherwise. The
-                      // `record:details` RENDERER, which is what draws THIS
-                      // page, reads neither `fieldGroups` nor `highlightFields`
-                      // at all: it forwards `sections`/`fields`, and the detail
-                      // view guards each one with `.length > 0` and no else
-                      // branch. An authored page opts out of the synthesizer,
-                      // so it opts out of the derivation with it.
-                      //
-                      // ⚠️ Version caveat: those browser numbers are 17.2.0 and
-                      // this repo now pins 17.4.0 (PR #1814, #1807). #1521 did
-                      // NOT re-run the
-                      // browser measurement. What it did do is read the
-                      // 17.3.0 console bundle (static, not run) — a pin that is
-                      // itself now behind, and nobody has re-read the 17.4.0
-                      // bundle — and
-                      // the mechanism is unchanged there: both guards are still
-                      // `sections.length > 0` and `fields.length > 0` with no
-                      // else, the renderer still reads neither of the two
-                      // fallback sources, and the synthesizer still hands the
-                      // derived `highlightFields` to the details node as
-                      // `hideFields` — highlight fields are SUBTRACTED from
-                      // this body, never substituted into it, which is the
-                      // opposite of what the old sentence claimed. Treat the
-                      // 0/0 as a 17.2.0 reading corroborated statically at
-                      // 17.3.0; re-measure in a browser before quoting it for
-                      // any later version. (`fieldGroups` does reach a section
-                      // one way, per the installed spec: a section may name
-                      // `group:` to inherit one group's members and
-                      // presentation. That is a per-section opt-in, not a
-                      // page-level fallback, and this page does not use it.)
-                      //
-                      // So the sections below are load-bearing, not decorative:
-                      // they are the Salesforce-style structured field grid the
-                      // Details tab presents, and with them gone the tab draws
-                      // nothing at all. ⛔ Whether this page should keep
-                      // authoring them is #806's subject and a maintainer
-                      // decision — not a drive-by edit from here. Field names
-                      // map to lead.object.ts.
+                      // Measured on @objectstack/console 17.6.0 (#806 R70,
+                      // headless Chromium, with a control leg; on 17.4.0 R61
+                      // measured this form crashing the component). What a
+                      // group section does there is the renderer's, not ours:
+                      //   - it lays out its own column count (the page-level
+                      //     `columns` above does not reach it);
+                      //   - a group whose members are all empty renders nothing
+                      //     (`address` on a lead with no address);
+                      //   - members the highlights strip registered are dropped,
+                      //     so `assignment` (only `owner_id`) renders nothing on
+                      //     this page — the owner is in the strip;
+                      //   - a group declared `collapse: 'collapsed'` starts
+                      //     collapsed; changing that is a `fieldGroups` decision
+                      //     in lead.object.ts, not a key on this page.
                       sections: [
-                        {
-                          name: 'info',
-                          label: 'Lead Information',
-                          fields: ['salutation', 'first_name', 'last_name', 'title', 'company', 'industry'],
-                        },
-                        {
-                          name: 'crm_contact',
-                          label: 'Contact',
-                          fields: ['email', 'phone', 'mobile', 'website'],
-                        },
-                        {
-                          name: 'detail',
-                          label: 'Lead Detail',
-                          // `disqualification_reason` is mandatory on an
-                          // Unqualified lead (see the validation on
-                          // crm_lead) — the detail page has to show the
-                          // recorded reason, not just the red status chip.
-                          fields: ['status', 'disqualification_reason', 'rating', 'lead_source', 'owner_id', 'annual_revenue', 'number_of_employees'],
-                        },
-                        {
-                          name: 'address',
-                          label: 'Address',
-                          fields: ['address'],
-                        },
-                        // The LINK half of the duplicate banner (#1207) —
-                        // the banner says a record is repeated, this names it
-                        // and lets the rep open it to compare.
-                        //
-                        // ⚠️ NOT the highlights strip, which is where this
-                        // card's dispatch suggested it: `record:highlights`
-                        // caps `fields` at 7 and the strip already carries 6,
-                        // so the three duplicate fields would not fit without
-                        // evicting a chip every lead needs to serve a state
-                        // most leads are not in (measured: `objectstack
-                        // validate` reports `fields: Too big: expected array
-                        // to have <=7 items`, and
-                        // `test/metadata-references.test.ts` parses the same
-                        // props strictly, so it is a hard cap, not advice).
-                        //
-                        // A section costs nothing on a clean lead either, for
-                        // a better reason than the strip's: `record:details`
-                        // hides empty fields (`hideEmpty` defaults true in the
-                        // renderer) and a section whose fields are ALL empty
-                        // renders nothing — no heading, no empty shell (the
-                        // measurement is in `test/detail-section-dedup.test.ts`).
-                        // So this block appears exactly on the leads that carry
-                        // a duplicate claim.
-                        //
-                        // All four fields, not just `duplicate_of_lead`:
-                        // `lead_duplicate_check` matches CONTACTS first and
-                        // only then open leads, so a suspected lead's survivor
-                        // is a `crm_contact` at least as often as a `crm_lead`
-                        // — naming only the lead link would leave the commoner
-                        // half of the flagged population with a banner and
-                        // nothing to click. `duplicate_status` also covers the
-                        // state the banner deliberately does not: a `confirmed`
-                        // verdict, and the `erased` tombstone that outlives the
-                        // record it named.
-                        {
-                          name: 'duplicates',
-                          label: 'Duplicate Management',
-                          fields: [
-                            'duplicate_status', 'duplicate_of_type',
-                            'duplicate_of_lead', 'duplicate_of_contact',
-                          ],
-                        },
-                        {
-                          name: 'description',
-                          label: 'Description',
-                          fields: ['description'],
-                          columns: 1,
-                        },
+                        { group: 'identity' },
+                        { group: 'company_info' },
+                        { group: 'contact_info' },
+                        // Do Not Call / Email Opt Out, right under the numbers
+                        // a rep is about to dial (#806).
+                        { group: 'preferences' },
+                        { group: 'qualification' },
+                        { group: 'assignment' },
+                        { group: 'address' },
+                        { group: 'conversion' },
+                        // The LINK half of the duplicate banners (#1207): the
+                        // group carries both survivor lookups, because
+                        // `lead_duplicate_check` matches contacts before leads.
+                        // On a clean lead every member is empty, so the section
+                        // renders nothing. ⚠️ Not the highlights strip:
+                        // `record:highlights` caps `fields` at 7 and holds 6.
+                        { group: 'duplicates' },
+                        // Description and Notes — kept last, where the page's
+                        // Description section always sat.
+                        { group: 'additional' },
                       ],
                     },
                   },
@@ -638,11 +541,6 @@ export const LeadDetailPage: Page = {
 
   // Make this the default page for leads
   isDefault: true,
-
-  // Assign to specific profiles. These must match the profile `name`s declared
-  // in src/profiles — `sales_user` / `system_administrator` never existed, so
-  // the assignment silently matched nobody.
-  assignedProfiles: ['sales_rep', 'sales_manager', 'system_admin'],
 
   // ARIA accessibility
   aria: {

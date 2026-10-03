@@ -38,7 +38,7 @@ export const CaseViews = defineView({
     ],
     rowColor: {
       field: 'priority',
-      colors: { critical: '#dc2626', high: '#f97316', medium: '#eab308', low: '#94a3b8' },
+      colors: { critical: 'red', high: 'orange', medium: 'yellow', low: 'slate' },
     },
     selection: { type: 'multiple' },
     pagination: { pageSize: 50 },
@@ -117,11 +117,9 @@ export const CaseViews = defineView({
     },
 
     /**
-     * The agent's personal queue. This is a LIST view on purpose: the list
-     * data path resolves `{current_user_id}` (proven by my_leads /
-     * my_open_tasks), while the dashboard/analytics path resolves no user
-     * token at all — which is why service_dashboard has no "my" widget
-     * (see the note there and the proven record in crm.app.ts).
+     * The agent's personal queue: the cases themselves, one row each. Its
+     * aggregate counterpart is service_dashboard's "My Open Cases by
+     * Priority" (#510) — a dashboard widget counts, it cannot list.
      */
     my_open_cases: {
       name: 'my_open_cases',
@@ -228,7 +226,7 @@ export const CaseViews = defineView({
       ],
       rowColor: {
         field: 'priority',
-        colors: { critical: '#dc2626', high: '#f97316', medium: '#eab308', low: '#94a3b8' },
+        colors: { critical: 'red', high: 'orange', medium: 'yellow', low: 'slate' },
       },
       // The empty state carries the operational instruction, because "no rows"
       // here is ambiguous on its own: it means either "the round-robin placed
@@ -294,8 +292,8 @@ export const CaseViews = defineView({
    * ## ⚠️ This object's `form` IS the create dialog (#1214 item 3)
    *
    * Measured against the console this app shipped at that taking
-   * (`@objectstack/console` 17.1.0, `dist/assets/`; the app ships 17.4.0 since
-   * PR #1814, #1807, and this bundle read was ⛔ NOT re-taken there), BOTH
+   * (`@objectstack/console` 17.1.0, `dist/assets/`; this bundle read was ⛔ NOT
+   * re-taken on any later pin), BOTH
    * entry points that open a case form resolve
    * it the same way and neither takes a create/edit argument:
    *

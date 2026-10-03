@@ -227,9 +227,9 @@ export const quotes = defineSeed(Quote, {
       status: 'presented',
       quote_date: cel`daysAgo(7)`,
       expiration_date: cel`daysFromNow(23)`,
-      ...quoteTotals('Globex Manufacturing Suite Proposal', { discount: 5, tax: 38000, shipping_handling: 2500 }),
+      ...quoteTotals('Globex Manufacturing Suite Proposal', { discount: 5, tax: 7220, shipping_handling: 2500 }),
       payment_terms: 'net_60',
-      description: 'Manufacturing suite licensing with implementation services.',
+      description: 'Manufacturing suite licensing with plant-admin training.',
     },
     {
       name: 'Wayne Enterprise License Quote',

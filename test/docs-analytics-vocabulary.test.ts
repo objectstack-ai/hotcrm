@@ -46,8 +46,14 @@ import { pipelineByStageFunnelWidget } from '../src/sales/dashboards/shared-widg
  * typography convention #927 / PR #932 established carries the distinction, and
  * the quick-tour guard leans on the same one: **bold** is reserved for names the
  * app really has, *italic* for a name a reader arrives with that the product
- * does not carry. A phantom must still be NAMED — say where the thing really
- * lives, do not delete it silently — and must never be bolded.
+ * does not carry. The rule is total (#1862): a real name — a report or chart
+ * title, a widget title, a view or tab label, a position name, a field label, a
+ * picklist value — is bold at EVERY occurrence, a later mention or a title
+ * quoted in running prose included, and italic means only "the product does
+ * not have this". A phantom must still be NAMED — say where the thing really
+ * lives, do not delete it silently — and must never be bolded. Stating the
+ * rule as total does not widen what this file checks: no guard reads the
+ * italic half for real names (epic #1579's fence).
  *
  * ## Why the nav rules are scoped to one section
  *

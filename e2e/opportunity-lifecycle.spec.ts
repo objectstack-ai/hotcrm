@@ -24,7 +24,8 @@ import type { APIRequestContext } from '@playwright/test';
  * The parent account comes from the `account` fixture, which creates one owned
  * by this caller. It used to be the first SEEDED account, which made every test
  * here depend on the demo book still being owned by nobody (#665, #669) — a
- * condition `demo_bootstrap` removes within a minute of a `pnpm dev` boot. The
+ * condition the platform's seed-ownership claim removes within a minute of a
+ * `pnpm dev` boot (the retired `demo_bootstrap` sweep did before #1892). The
  * hook under test does not care whose account the deal hangs off, so nothing
  * about what these assertions prove changed.
  */

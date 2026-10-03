@@ -29,7 +29,7 @@ type Flow = Automation.Flow;
  * that wants no account sign-off sets it to `approved`, the start condition
  * below is then false for every record that will ever exist, and the gate is
  * off AND still switchable. ⛔ Do NOT reach for `status: 'draft'` or
- * `'obsolete'` instead — both were measured on the pinned
+ * `'obsolete'` instead — both were measured on
  * `@objectstack/service-automation` 17.4.0 and neither is an off switch: draft
  * flows still fire their triggers, and `isFlowEnabled` composes authoring
  * status with the installation's activation ledger so that `obsolete` is a gate

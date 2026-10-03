@@ -92,7 +92,9 @@ export const ArticleFeedback = ObjectSchema.create({
   //    heading on forms and silently vanishes from detail pages
   //    (`field-group-shadowed`, the same trap `crm_campaign_member`'s `basic`
   //    group and `crm_task`'s `assignment` group each had to be rescued from).
-  //    So the comment is the group's own content, one click into the row.
+  //    So the comment is the group's own content on the row's detail page,
+  //    and reaches the panel through `relatedListColumns` on the article
+  //    lookup below instead (#1199).
   highlightFields: ['crm_knowledge_article', 'verdict', 'owner_id'],
 
   fieldGroups: [
@@ -135,6 +137,19 @@ export const ArticleFeedback = ObjectSchema.create({
       group: 'basic',
       deleteBehavior: 'cascade',
       description: 'Knowledge article this feedback is about.',
+
+      // Curates the feedback panel on the article's detail page — the surface
+      // the article's AUTHOR reads (#1199). A related list reads
+      // `relatedListColumns` on the child's lookup before it falls back to
+      // `highlightFields` minus that lookup (#944), so this is a SUPERSET of
+      // the fallback (Verdict / Reader) plus `comment`: the note a reader
+      // types to explain a verdict was stored and shown on no list, and the
+      // author the field's own description names could not see it without
+      // opening each row. Last, because it is the one long value.
+      //
+      // ⛔ Deliberately NOT solved by adding `comment` to `highlightFields` —
+      // see the note above that list (`field-group-shadowed`).
+      relatedListColumns: ['verdict', 'owner_id', 'comment'],
     }),
 
     verdict: Field.select({

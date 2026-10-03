@@ -169,7 +169,7 @@ const leadHook: Hook = {
       // INSERT-only on `crm_lead`.)
       //
       // ⚠️ `!ctx.session?.isSystem` is required, not decoration: a SYSTEM write
-      // (seed load, backfill, demo bootstrap) also arrives with no user id, and
+      // (seed load, backfill, seed-ownership claim) also arrives with no user id, and
       // the strip below would otherwise blank the owner and conversion state of
       // every system-written lead. The converted-lead lock further down reads
       // that same absence as the system-write signal, so the two readings have
@@ -190,9 +190,8 @@ const leadHook: Hook = {
         // a guest insert storing `is_converted: true` and an `owner_id` it
         // supplied itself. Assignment is what this block uses.
         //
-        // Upstream objectstack#12277 shipped in **17.3.0**; this repo pins
-        // 17.4.0 (PR #1814, #1807), so it carries the fix and `delete` is
-        // effective on both execution paths.
+        // Upstream objectstack#12277 shipped in **17.3.0**, so every later
+        // pin carries the fix and `delete` is effective on both execution paths.
         // ⛔ That is still not a licence to spell this block with `delete`: the
         // assignments are load-bearing as WRITES — `lead_duplicate_check` stands
         // down only on a NON-BLANK verdict, so these columns must arrive `null`
@@ -288,7 +287,7 @@ const leadHook: Hook = {
 
     // Converted-lead lock — USER edits only (`ctx.user?.id` is this repo's
     // system-write signal, cf. opportunity/quote/account hooks): a blanket
-    // throw also rejected system writes (demo-bootstrap owner claims, flow
+    // throw also rejected system writes (seed-ownership claims, flow
     // backfills). Narrative notes and framework-managed columns stay editable;
     // identity and conversion fields stay locked.
     //
@@ -326,10 +325,9 @@ const leadHook: Hook = {
           // forever (a GDPR erasure that cannot be carried out).
           //
           // Measured on 17.1.0 — the version this repo pinned AT THE TIME of
-          // the measurement, not the current pin (this repo has pinned 17.4.0
-          // since PR #1814, #1807, and the cascade shape below has NOT been
-          // re-measured on it; it was not re-measured on the 17.3.0 pin either,
-          // #1676) — with a probe hook at priority 199 immediately
+          // the measurement, not the current pin (the cascade shape below has
+          // NOT been re-measured on any later pin — not 17.3.0, #1676, not
+          // 17.4.0, PR #1814, and not 17.5.0) — with a probe hook at priority 199 immediately
           // ahead of each guard, not assumed.
           // The engine builds its cleanup write on the CALLER's own context
           // plus two engine keys, so on the path a REST `DELETE` takes, the

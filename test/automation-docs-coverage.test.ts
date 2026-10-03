@@ -79,14 +79,6 @@ import stack from '../objectstack.config';
  * to make that decision, and better than a filter written now on a guess about
  * which answer a future reader wants.
  *
- * `demo_bootstrap` IS in the table for the same reason, and it is not a close
- * call: that flow ships in the artifact and runs in a customer's org every ten
- * minutes, writing `owner_id` (its own header says so, and
- * `test/demo-staffing.test.ts` polices what it may write). An admin who sees
- * ownership change on a ten-minute beat needs a row to find. The page labels it
- * scaffolding rather than business automation in the prose under the table,
- * which is the honest way to say both things at once.
- *
  * ## Reverse verification (four directions, each predicted before it was run)
  *
  * | direction | predicted | measured |
@@ -257,7 +249,6 @@ const ROW_LABEL: Record<string, Record<'zh-Hans' | 'zh-Hant', string>> = {
   contract_renewal: { 'zh-Hans': '合同续约提醒', 'zh-Hant': '合約續約提醒' },
   case_sla_monitor: { 'zh-Hans': '工单 SLA 监控', 'zh-Hant': '工單 SLA 監控' },
   task_due_reminder: { 'zh-Hans': '任务到期提醒', 'zh-Hant': '任務到期提醒' },
-  demo_bootstrap: { 'zh-Hans': '演示数据引导', 'zh-Hant': '展示資料啟動' },
   // 计费/計費, not 账单/帳單: the pages call the outbound target 「计费端点」 and the
   // boundary page is 「计费交接」, so the flow labels follow that one word (#600).
   billing_handoff_closed_won: { 'zh-Hans': '计费交接：赢单', 'zh-Hant': '計費交接：贏單' },

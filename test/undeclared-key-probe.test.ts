@@ -23,7 +23,7 @@ import { QuoteLineItem } from '../src/revenue/objects/quote_line_item.object';
  * and field-level security by construction.
  *
  * This file is the re-measurement taken on 17.1.0 — the version this repo
- * pinned AT THE TIME, not the current pin (#1676: 17.3.0 since PR #1577) —
+ * pinned AT THE TIME, not the current pin —
  * and it says two different things about two different write paths.
  *
  * ⚠️ The two halves are at DIFFERENT takings, so read the label on each. Half

@@ -98,7 +98,7 @@ import { campaignHook, campaignMemberHook } from './src/marketing/objects/hooks.
 
 // Flows — the registration order the single `allFlows` array used to hold.
 import {
-  ContactWelcomeFlow, DemoBootstrapFlow, ForecastSnapshotFlow, LeadAssignmentFlow,
+  ContactWelcomeFlow, ForecastSnapshotFlow, LeadAssignmentFlow,
   AccountApprovalFlow,
   LeadConversionFlow, LeadConversionApprovalFlow,
   OpportunityApprovalFlow, OpportunityApprovalOnCreateFlow,
@@ -143,7 +143,7 @@ import type { HotCrmComposition } from './src/sales/data/index.js';
 import {
   resolveComposition,
   accounts, contacts, leads, opportunities,
-  tasks, events, eventAttendeesFromContacts, eventAttendeesFromLeads, forecasts,
+  tasks, events, eventAttendeesFromContacts, eventAttendeesFromLeads, leadInteractionPointers, forecasts,
 } from './src/sales/data/index.js';
 import { products, opportunityLineItems, contracts, quotes, quoteLineItems } from './src/revenue/data/index.js';
 import { cases, knowledgeArticles } from './src/service/data/index.js';
@@ -222,7 +222,6 @@ export const allFlows = [
   LeadConversionFlow,
   LeadConversionApprovalFlow,
   ScheduleFollowUpFlow,
-  DemoBootstrapFlow,
   OpportunityApprovalFlow,
   OpportunityApprovalOnCreateFlow,
   OpportunityStatusChangeApprovalFlow,
@@ -346,21 +345,24 @@ export { CrmPositions };
  * id), and `cel\`os.user.id\`` inside a seed evaluates to nothing. The id does
  * not exist until first boot.
  *
- * The `demo_bootstrap` scheduled flow (`src/sales/flows/demo-bootstrap.flow.ts`)
- * does it at the only moment it can: once the first real user exists, its
- * periodic sweep claims every ownerless seeded record for that user.
+ * The PLATFORM does it, at the only moment it can: when the seed settles,
+ * `@objectstack/plugin-security` re-runs its seed-ownership claim on
+ * `app:seeded` and hands every ownerless row of every object carrying
+ * `owner_id` to the first platform administrator (objectstack#17872, in the
+ * 17.6.0 pin). No HotCRM flow is involved. The `demo_bootstrap` sweep that used
+ * to do this every ten minutes was retired once a fresh boot measured that
+ * claim leaving all twelve seeded owner-scoped objects at zero ownerless rows
+ * with the sweep disabled (#1892).
  *
- * That sweep owns the app's ONE ownership column, `owner_id` (#548 retired the
- * app-authored `owner` lookup that used to sit beside it — the #622 split).
- * Seed writes run under `{ isSystem: true }`, which short-circuits the security
- * middleware, so its insert-time auto-stamp of `owner_id` never fires — "seeds
- * either declare those fields explicitly per record" — and per the paragraph
- * above these seeds cannot declare it. So a seeded row reaches the database
- * owned by nobody at the PLATFORM level (`owner_id` null), and under
- * `sharingModel: 'private'` such a row is editable by no one at all, admin
- * included. Nothing here should grow an `owner_id` seed value to paper over
- * that: the sweep is the mechanism, and `test/flow-scheduled.test.ts` holds it
- * to leaving no claimed object ownerless.
+ * `owner_id` is the app's ONE ownership column (#548 retired the app-authored
+ * `owner` lookup that used to sit beside it — the #622 split). Seed writes run
+ * under `{ isSystem: true }`, which short-circuits the security middleware, so
+ * its insert-time auto-stamp of `owner_id` never fires — "seeds either declare
+ * those fields explicitly per record" — and per the paragraph above these seeds
+ * cannot declare it. So a seeded row reaches the database owned by nobody
+ * (`owner_id` null) until that claim runs. Nothing here should grow an
+ * `owner_id` seed value to paper over that: the platform claim is the
+ * mechanism.
  */
 
 /**
@@ -390,6 +392,7 @@ export const CrmSeedData = [
   events,
   eventAttendeesFromContacts,
   eventAttendeesFromLeads,
+  leadInteractionPointers,
   campaigns,
   campaignMembersFromLeads,
   campaignMembersFromContacts,

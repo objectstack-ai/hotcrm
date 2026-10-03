@@ -37,17 +37,18 @@ import { type AnyRec, objects, pages, walk } from './helpers/metadata-fixtures';
  *
  * The check reads the resolved metadata, so it also covers a section that
  * inherits a duplicate through a future page refactor.
+ *
+ * ## Group-reference sections (#806 ruling C)
+ *
+ * A section written `{ group: '<key>' }` enumerates nothing: the renderer
+ * derives its members from the object's `fieldGroups`, so there is no authored
+ * field list to promise a field the tab never shows. Dropping the strip's
+ * fields from a derived list is the renderer doing its job — measured on
+ * 17.6.0 (#806 R70), the lead page's `assignment` group (`owner_id` only)
+ * renders nothing because the owner is in the strip. Such a section is held
+ * to the one thing it does author: its `group` must name a group the page's
+ * object declares, with at least one visible member.
  */
-
-/**
- * Pages knowingly left out, with the card that owns them. `lead_detail_page`
- * has the same duplicates (`email` / `phone` in its Contact section, `status` /
- * `rating` / `lead_source` / `owner_id` in its Lead Detail section) but
- * `src/pages/lead_detail.page.ts` is claimed by #1209 and #1207, so #1211 does
- * not touch it. The entry asserts nothing about the page — it only skips it —
- * so it stays green when those cards land and remove the duplicates.
- */
-const EXEMPT_PAGES = new Set(['lead_detail_page']);
 
 /** The renderer's title-field resolution, in its order. */
 const TITLE_CANDIDATES = ['name', 'full_name', 'title', 'subject', 'display_name', 'label'];
@@ -66,7 +67,7 @@ type DetailPage = {
   page: string;
   object: string;
   highlights: string[];
-  sections: { name: string; fields: string[] }[];
+  sections: { name: string; group?: string; fields: string[] }[];
 };
 
 const fieldNames = (list: unknown): string[] =>
@@ -88,7 +89,8 @@ const detailPages: DetailPage[] = pages.flatMap((page) => {
       highlights: highlights.flatMap((c) => fieldNames(c.properties?.fields)),
       sections: details.flatMap((c) =>
         (c.properties?.sections ?? []).map((s: AnyRec) => ({
-          name: (s.name ?? s.label ?? '(unnamed)') as string,
+          name: (s.name ?? s.group ?? s.label ?? '(unnamed)') as string,
+          group: typeof s.group === 'string' ? s.group : undefined,
           fields: fieldNames(s.fields),
         })),
       ),
@@ -105,16 +107,9 @@ describe('record:details sections list only fields the tab renders', () => {
     );
   });
 
-  it('every exempt page still exists', () => {
-    for (const name of EXEMPT_PAGES) {
-      expect(detailPages.map((p) => p.page)).toContain(name);
-    }
-  });
-
   it('no section repeats a field the page highlights', () => {
     const offenders: string[] = [];
     for (const { page, highlights, sections } of detailPages) {
-      if (EXEMPT_PAGES.has(page)) continue;
       const strip = new Set(highlights);
       for (const section of sections) {
         for (const field of section.fields) {
@@ -128,7 +123,6 @@ describe('record:details sections list only fields the tab renders', () => {
   it('no section names the record title field the page header already shows', () => {
     const offenders: string[] = [];
     for (const { page, object, sections } of detailPages) {
-      if (EXEMPT_PAGES.has(page)) continue;
       const title = titleFieldOf(object);
       if (!title) continue;
       for (const section of sections) {
@@ -140,10 +134,18 @@ describe('record:details sections list only fields the tab renders', () => {
 
   it('every section still carries at least one field', () => {
     // A section trimmed down to nothing should be deleted, not left as a
-    // heading the renderer will drop anyway.
-    for (const { page, sections } of detailPages) {
+    // heading the renderer will drop anyway. A group reference carries its
+    // members on the object, so it is counted there: the renderer drops a
+    // `group` that names no declared group, silently.
+    for (const { page, object, sections } of detailPages) {
+      const obj = objects.find((o) => o.name === object);
       for (const section of sections) {
-        expect(`${page}.${section.name}:${section.fields.length}`).not.toMatch(/:0$/);
+        const count = section.group
+          ? Object.values((obj?.fields ?? {}) as Record<string, AnyRec>).filter(
+              (f) => f?.group === section.group && f?.hidden !== true,
+            ).length
+          : section.fields.length;
+        expect(`${page}.${section.name}:${count}`).not.toMatch(/:0$/);
       }
     }
   });

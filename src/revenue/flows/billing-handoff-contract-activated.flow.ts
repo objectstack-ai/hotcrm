@@ -61,7 +61,7 @@ import {
  * ⛔ Both start conditions must test the TRANSITION
  * (`record.x == v && previous.x != v`), never the current value. This is the
  * idiom `opportunity_won_alert` uses on this very object: without the
- * `previous.*` term, every later edit of a won deal — a demo-bootstrap owner
+ * `previous.*` term, every later edit of a won deal — a seed-ownership
  * claim, an approval stamp, a description tweak — re-fires the flow. For a
  * congratulations notification that is noise; for a billing hand-off it is a
  * duplicate order. `previous.*` is guarded FAIL-CLOSED (`has(previous.x) &&`)

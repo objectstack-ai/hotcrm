@@ -22,6 +22,13 @@
    "change": "Re-pointed every files[].path to the ADR-0130 package layout: each authored file moved from src/<kind>/ into src/<pkg>/<kind>/, where <pkg> is this row's own module folded onto the four directories the 2026-09-14 rulings settled on (app + core + sales + activity -> sales, cpq -> revenue, service -> service, marketing -> marketing). Six rows name files that were SPLIT rather than moved and now point at the half that kept the row's module: campaign.hook.ts (the two hooks on crm_lead and crm_opportunity left for src/sales/objects/), global.actions.ts (renamed src/sales/actions/activity-actions.ts; the crm_case triple left for src/service/actions/case-activity.actions.ts), billing-handoff.flow.ts (the contract_activated flow left for src/revenue/flows/), and the three *.seed.ts family files (split by object ownership). src/hooks/index.ts was retired outright — its row carries retired_by_1905 rather than a path that no longer resolves. src/docs/*.md did NOT move: `objectstack build` reads package docs from <config dir>/src/docs and no other path (ADR-0046), so moving them silently drops the artifact's docs[] on an exit-0 build.",
    "figures_left_as_measured": "Untouched, per do_not_hand_patch: totals, ratchet, edges, modules[] and every files[].authored_tokens are still the one measurement taken at measured_at.commit. The modules[] roster still names the seven-module plan the 2026-09-14 rulings superseded; that is history and is read as history — the current shape is module-split-plan.md 'Decisions recorded (2026-09-14)', items 4-9. Only the path strings moved, because a path is a pointer at a live file and the files moved.",
    "roster_drift_measured_at_this_date": "files[] held 170 rows before this edit and holds 170 after. Against the tree at this date it is short by 35 files that postdate measured_at.commit and were never added: src/sales/flows/_guarded-iteration.ts, src/marketing/flows/campaign-member-enroll.flow.ts, src/service/flows/case-escalation-stamp.flow.ts, and the 32 per-locale translation modules under src/sales/translations/{en,es-ES,ja-JP,zh-CN}/. They are left out for the same reason the figures are left alone: this file is evidence for one measurement, not an index of the tree."
+  },
+  {
+   "date": "2026-10-02",
+   "issue": 1892,
+   "change": "Removed the files[] row for src/sales/flows/demo-bootstrap.flow.ts (kind 'flow', module app.objectstack.hotcrm, 860 authored tokens). The file existed at measured_at.commit and was deleted by #1892, which retired the demo_bootstrap ownership sweep once the platform's seed-settle ownership claim (objectstack#17872, in the 17.6.0 pin) was measured leaving no seeded owner-scoped row ownerless.",
+   "figures_left_as_measured": "Untouched, per do_not_hand_patch: totals, ratchet, edges (the demo_bootstrap entries included), modules[] and every other files[].authored_tokens are still the one measurement taken at measured_at.commit. Only the row that pointed at a deleted file was removed, as #1698 did for case-csat-followup.flow.ts.",
+   "roster_drift_measured_at_this_date": "files[] held 170 rows before this edit and holds 169 after. The 35 files the 2026-09-14 entry lists as postdating measured_at.commit are still left out, for the reason it gives."
   }
  ],
  "measured_at": {
@@ -2291,15 +2298,6 @@
    "reason": "authored against crm_contract",
    "ratcheted": true,
    "authored_tokens": 1637
-  },
-  {
-   "path": "src/sales/flows/demo-bootstrap.flow.ts",
-   "kind": "flow",
-   "module": "app.objectstack.hotcrm",
-   "anchor_object": null,
-   "reason": "demo sweep spanning twelve objects in every module",
-   "ratcheted": true,
-   "authored_tokens": 860
   },
   {
    "path": "src/sales/flows/forecast-snapshot.flow.ts",

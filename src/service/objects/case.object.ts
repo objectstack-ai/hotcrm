@@ -226,13 +226,12 @@ export const Case = ObjectSchema.create({
     }),
     
     // Stamped once, on the first write that gives the case a priority, from the
-    // priority × account-tier matrix in `src/objects/_case-sla.ts`
-    // (`case_sla_defaults`). The clock runs on CALENDAR hours — this app has no
-    // business-hours calendar, so nights, weekends and holidays count. Not
-    // `readonly`: a service manager may legitimately renegotiate a deadline,
+    // priority × account-tier matrix in `./_case-sla.ts` (`case_sla_defaults`).
+    // Not `readonly`: a service manager may legitimately renegotiate a deadline,
     // and the hook never overwrites a value that is already there.
     sla_due_date: Field.datetime({
       label: 'SLA Due Date',
+      description: 'Set from the case priority and the account’s Customer Tier, in calendar hours: nights, weekends and holidays count.',
       group: 'sla',
     }),
     

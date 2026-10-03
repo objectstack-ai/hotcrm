@@ -84,10 +84,6 @@ export const ServiceDashboard: Dashboard = {
       colorVariant: 'orange',
       dataset: 'case_metrics', values: ['case_count'],
       layout: { x: 0, y: 0, w: 3, h: 2 },
-      options: {
-        icon: 'Inbox',
-        format: '0,0',
-      },
     },
     {
       id: 'critical_cases',
@@ -98,10 +94,6 @@ export const ServiceDashboard: Dashboard = {
       colorVariant: 'danger',
       dataset: 'case_metrics', values: ['case_count'],
       layout: { x: 3, y: 0, w: 3, h: 2 },
-      options: {
-        icon: 'AlertTriangle',
-        format: '0,0',
-      },
     },
     {
       id: 'avg_resolution_time',
@@ -112,11 +104,6 @@ export const ServiceDashboard: Dashboard = {
       colorVariant: 'blue',
       dataset: 'case_metrics', values: ['avg_resolution'],
       layout: { x: 6, y: 0, w: 3, h: 2 },
-      options: {
-        icon: 'Clock',
-        format: '0.0',
-        suffix: 'h',
-      },
     },
     {
       id: 'sla_violations',
@@ -127,10 +114,6 @@ export const ServiceDashboard: Dashboard = {
       colorVariant: 'warning',
       dataset: 'case_metrics', values: ['case_count'],
       layout: { x: 9, y: 0, w: 3, h: 2 },
-      options: {
-        icon: 'ShieldAlert',
-        format: '0,0',
-      },
     },
 
     // ─── Row 2: Distribution ──────────────────────────────────────────
@@ -144,7 +127,6 @@ export const ServiceDashboard: Dashboard = {
       dataset: 'case_metrics', dimensions: ['status'], values: ['case_count'],
       layout: { x: 0, y: 2, w: 4, h: 4 },
       chartConfig: {
-        type: 'donut',
         showLegend: true,
         showDataLabels: true,
         colors: ['#0EA5E9', '#06B6D4', '#14B8A6', '#10B981', '#F59E0B'],
@@ -160,7 +142,6 @@ export const ServiceDashboard: Dashboard = {
       dataset: 'case_metrics', dimensions: ['priority'], values: ['case_count'],
       layout: { x: 4, y: 2, w: 4, h: 4 },
       chartConfig: {
-        type: 'pie',
         showLegend: true,
         showDataLabels: true,
         // critical → high → medium → low
@@ -176,15 +157,9 @@ export const ServiceDashboard: Dashboard = {
       dataset: 'case_metrics', dimensions: ['origin'], values: ['case_count'],
       layout: { x: 8, y: 2, w: 4, h: 4 },
       chartConfig: {
-        type: 'bar',
         showLegend: false,
         showDataLabels: true,
         colors: ['#8B5CF6'],
-        // Axis titles stay plain English: `ChartAxisSchema.title` accepts an inline
-        // locale map but the Console flattens it to the map's FIRST value regardless
-        // of locale — measured, see `src/dashboards/index.ts` (#1822).
-        xAxis: { field: 'origin', title: 'Channel', showGridLines: false, logarithmic: false },
-        yAxis: [{ field: 'case_count', title: 'Cases', showGridLines: true, logarithmic: false }],
       },
     },
 
@@ -214,12 +189,9 @@ export const ServiceDashboard: Dashboard = {
       dataset: 'case_metrics', dimensions: ['created_date'], values: ['case_count'],
       layout: { x: 0, y: 6, w: 8, h: 4 },
       chartConfig: {
-        type: 'area',
         showLegend: false,
         showDataLabels: false,
         colors: ['#0EA5E9'],
-        xAxis: { field: 'created_date', title: 'Day', showGridLines: false, logarithmic: false },
-        yAxis: [{ field: 'case_count', title: 'Cases opened', showGridLines: true, logarithmic: false }],
         interaction: { tooltips: true, brush: true },
       },
       options: { dateGranularity: 'day' },
@@ -243,7 +215,6 @@ export const ServiceDashboard: Dashboard = {
       dataset: 'case_metrics', values: ['sla_compliance_rate'],
       layout: { x: 8, y: 6, w: 4, h: 4 },
       chartConfig: {
-        type: 'gauge',
         showLegend: false,
         showDataLabels: true,
         colors: ['#10B981', '#F59E0B', '#EF4444'],
@@ -251,17 +222,11 @@ export const ServiceDashboard: Dashboard = {
           { type: 'line', axis: 'y', value: 0.95, label: 'Target', style: 'dashed', color: '#10B981' },
         ],
       },
-      // The ladder and the target line were written for COMPLIANCE and are
-      // unchanged: 95%+ is green, 85–95% amber, below that red. They were
-      // always right — it was the plotted value that disagreed with them.
-      options: {
-        format: '0%',
-        thresholds: [
-          { value: 0.95, color: 'success' },
-          { value: 0.85, color: 'warning' },
-          { value: 0,    color: 'danger' },
-        ],
-      },
+      // The target line was written for COMPLIANCE and is unchanged: it was
+      // always right — it was the plotted value that disagreed with it. (The
+      // green/amber/red `options.thresholds` ladder beside it was deleted in
+      // 17.6.0's strict cleanup: no dashboard renderer reads widget
+      // `thresholds`, so it never coloured anything.)
     },
 
     // ─── Row 4: Knowledge deflection (#601) ───────────────────────────
@@ -282,7 +247,6 @@ export const ServiceDashboard: Dashboard = {
       colorVariant: 'success',
       dataset: 'case_metrics', values: ['kb_deflection_rate'],
       layout: { x: 0, y: 10, w: 4, h: 2 },
-      options: { icon: 'BookOpenCheck', format: '0%' },
     },
     {
       id: 'kb_resolved_cases',
@@ -292,7 +256,6 @@ export const ServiceDashboard: Dashboard = {
       colorVariant: 'blue',
       dataset: 'case_metrics', values: ['kb_resolved_count'],
       layout: { x: 4, y: 10, w: 4, h: 2 },
-      options: { icon: 'BookOpen', format: '0,0' },
     },
     {
       id: 'closed_cases_total',
@@ -302,7 +265,6 @@ export const ServiceDashboard: Dashboard = {
       colorVariant: 'default',
       dataset: 'case_metrics', values: ['closed_count'],
       layout: { x: 8, y: 10, w: 4, h: 2 },
-      options: { icon: 'CheckCheck', format: '0,0' },
     },
     {
       id: 'top_resolving_articles',
@@ -314,48 +276,34 @@ export const ServiceDashboard: Dashboard = {
       dataset: 'case_metrics', dimensions: ['resolved_article'], values: ['kb_resolved_count'],
       layout: { x: 0, y: 12, w: 12, h: 4 },
       options: {
-        columns: [
-          { header: 'Article', accessorKey: 'resolved_article' },
-          { header: 'Cases Resolved', accessorKey: 'kb_resolved_count' },
-        ],
         sortBy: 'kb_resolved_count',
         sortOrder: 'desc',
         limit: 10,
-        striped: true,
-        density: 'comfortable',
       },
     },
 
-    // ─── Row 5: Open Cases by Priority ────────────────────────────────
+    // ─── Row 5: My Open Cases by Priority ─────────────────────────────
     // A dashboard `table` binds to an analytics cube and aggregates; it cannot
-    // list individual cases (ADR-0021). This is deliberately TEAM-WIDE, not
-    // "my cases": the analytics query path resolves no user token at all —
-    // `{current_user}` (and even `{current_user_id}`) reach the query as
-    // literal strings and match no owner, so a personal filter renders 0 for
-    // everyone (see the proven note in crm.app.ts's My Work group). For a
-    // per-agent queue, use the my_open_cases ListView ("My Cases" in the
-    // My Work nav group). Restoring a personal widget here is tracked in
-    // issue #510.
+    // list individual cases (ADR-0021) — for the case-by-case queue, use the
+    // my_open_cases ListView ("My Cases" in the My Work nav group).
+    // `{current_user_id}` scopes what this widget SHOWS; it is presentation
+    // scope, not an access boundary — row-level security owns that (#510).
     {
-      id: 'open_cases_by_priority',
-      title: 'Open Cases by Priority',
-      description: 'Open cases and their SLA-violation rate, broken down by priority',
+      id: 'my_open_cases_by_priority',
+      title: 'My Open Cases by Priority',
+      description: 'Your open cases and their SLA-violation rate, broken down by priority',
       type: 'table',
-      filter: { is_closed: false },
+      filter: { is_closed: false, owner_id: '{current_user_id}' },
+      // Opts out of the Agent global filter (keyed by its field, `owner_id`):
+      // ANDing an agent pick into "mine" empties the widget for anyone else.
+      filterBindings: { owner_id: false },
       colorVariant: 'default',
       dataset: 'case_metrics', dimensions: ['priority'], values: ['case_count', 'avg_sla_violated'],
       layout: { x: 0, y: 16, w: 12, h: 4 },
       options: {
-        columns: [
-          { header: 'Priority',            accessorKey: 'priority' },
-          { header: 'Open Cases',          accessorKey: 'case_count' },
-          { header: 'SLA Violation Rate',  accessorKey: 'avg_sla_violated', format: '0.0%' },
-        ],
         sortBy: 'case_count',
         sortOrder: 'desc',
         limit: 10,
-        striped: true,
-        density: 'comfortable',
       },
     },
   ],

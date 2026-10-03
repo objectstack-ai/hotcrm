@@ -202,7 +202,7 @@ export const customer: Record<string, ObjectTranslationData> = {
     },
     _sections: {
       identity: { label: 'Identity' },
-      account_info: { label: 'Account & Role' },
+      account_info: { label: 'Account & Title' },
       buying_centre: { label: 'Buying Centre' },
       contact_info: { label: 'Contact Information' },
       mailing_address: { label: 'Mailing Address' },

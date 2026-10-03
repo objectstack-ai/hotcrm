@@ -35,7 +35,7 @@ const forecastDerive: Hook = {
     // all N matched rows, and the engine hands every row's `beforeUpdate` THAT
     // payload rather than a per-row copy. A payload write whose value — or
     // whose if-guard — reads `ctx.previous` therefore does not scope itself to
-    // the row it was decided on. Both outcomes are measured on the pinned
+    // the row it was decided on. Both outcomes are measured on
     // 17.4.0, in this app, on a fresh `pnpm dev`:
     //
     //  - keys written for SOME rows only ⇒ the engine refuses the whole batch
@@ -51,9 +51,10 @@ const forecastDerive: Hook = {
     // `ctx.previous` on this path is supplied so a guard can REFUSE a write,
     // never so a rewrite can be aimed. Deriving is per-record work, so it
     // stands down here and still happens on the per-record path — which is
-    // every writer this app has: all 19 `update_record` flow nodes, every
-    // action and hook write through `ctx.api`, and the `demo_bootstrap` claim,
-    // all of them by id.
+    // every writer this app has: all 19 `update_record` flow nodes and every
+    // action and hook write through `ctx.api`, all of them by id. The platform's
+    // seed-ownership claim is a predicate write, and it writes only `owner_id`,
+    // which derives nothing.
     //
     // ⚠️ The `ctx.event` half is load-bearing, not ceremony: a BATCH INSERT
     // also reports `dispatch.mode === 'per-row'`, and there each row carries

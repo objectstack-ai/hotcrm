@@ -19,7 +19,7 @@ import { defineSeed } from '@objectstack/spec/data';
 import { cel } from '@objectstack/spec';
 import { Case } from '../objects/case.object';
 import { KnowledgeArticle } from '../objects/knowledge_article.object';
-import { CASE_SLA_DEFAULT_TIER, caseSlaHours } from '../objects/_case-sla';
+import { CASE_SLA_DEFAULT_TIER, caseSlaCalendarHours } from '../objects/_case-sla';
 import { celDaysAgo } from '../../sales/data/_shared';
 import { accounts } from '../../sales/data/sales.seed';
 
@@ -46,10 +46,7 @@ const TIER_BY_ACCOUNT = new Map<string, string>(
  * `created_date + matrix(priority, tier)`, as a CEL expression.
  *
  * `daysAgo(n)` is a UTC midnight, so the hour offset has to be added on top of
- * it — hence `+ duration('Nh')` rather than a second day-granular helper. The
- * matrix is stated in CALENDAR hours (see `src/objects/_case-sla.ts`), which is
- * exactly what this arithmetic does: no working-day skipping, because the app
- * has no working-day calendar to skip by.
+ * it — hence `+ duration('Nh')` rather than a second day-granular helper.
  *
  * A due date that lands in the past is expected and correct on an old open case
  * — that is what a breach IS, and `case_sla_monitor` is the thing that notices
@@ -58,7 +55,7 @@ const TIER_BY_ACCOUNT = new Map<string, string>(
  * where the demo wants a breach visible before the first sweep runs.
  */
 const celCaseSlaDue = (createdDaysAgo: number, priority: string, accountName?: string) => {
-  const hours = caseSlaHours(priority, accountName ? TIER_BY_ACCOUNT.get(accountName) : undefined);
+  const hours = caseSlaCalendarHours(priority, accountName ? TIER_BY_ACCOUNT.get(accountName) : undefined);
   if (hours === undefined) throw new Error(`seed: no SLA matrix row for priority "${priority}"`);
   return cel`daysAgo(${createdDaysAgo}) + duration('${hours}h')`;
 };

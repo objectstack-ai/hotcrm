@@ -24,7 +24,8 @@ import { cel } from '@objectstack/spec';
  *
  *   - `isSystem`   bypasses RBAC and DISABLES the security plugin's injection
  *                  of `organization_id` / `owner_id` — which is why seeded rows
- *                  land ownerless and `demo_bootstrap` has to claim them.
+ *                  land ownerless until the platform's seed-ownership claim
+ *                  hands them to the first administrator when the seed settles.
  *   - `skipTriggers` suppresses record-change AUTOMATION (autolaunched flows),
  *                  not lifecycle hooks. Seed data is pre-existing end state,
  *                  not a stream of user events.
