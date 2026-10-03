@@ -128,51 +128,32 @@ export const OpportunityDetailPage: Page = {
                     label: 'Opportunity Details',
                     properties: {
                       // `columns` is a STRING enum ('1'|'2'|'3'|'4') in
-                      // @objectstack/spec 17; the number form was rejected by the
-                      // props schema and only survived because `properties` is an
-                      // open bag. `layout` is gone entirely (removed in spec
-                      // 17.0.0, #6946 / ADR-0087 D2) — the body is chosen by what
-                      // you author, so the key selected nothing.
+                      // @objectstack/spec 17. `layout` is gone (removed in spec
+                      // 17.0.0, #6946 / ADR-0087 D2).
                       columns: '2',
-                      // A section lists only the fields it is ACTUALLY responsible
-                      // for — never one the highlights strip above already shows,
-                      // and never the record's title field (#1211).
+                      // Every section references one of crm_opportunity's
+                      // `fieldGroups` (#1452, the #806 class ruling C): the
+                      // renderer derives members, label, icon and collapse state
+                      // from the object, so this page curates only the order.
+                      // The full note — what a group section does on 17.6.0 and
+                      // what may not sit beside `group` — is on
+                      // `lead_detail.page.ts`.
                       //
-                      // Measured in the shipped console (17.1.0,
-                      // plugins-views bundle → objectui `RecordDetailsRenderer`):
-                      // a mounted `record:highlights` registers its field names in
-                      // HighlightFieldsContext, and `record:details` drops every
-                      // registered name from its sections; it then drops the first
-                      // non-empty title candidate (primaryField → name → full_name
-                      // → title → subject → …) because the page H1 already shows
-                      // it. `DetailSection` renders NOTHING at all when every field
-                      // it is left with is empty, so a section built only from
-                      // duplicates disappears silently — which is how this tab came
-                      // to author fourteen fields and render two.
-                      //
-                      // So `name` / `crm_account` / `owner_id` (header + strip) and
-                      // `amount` / `close_date` / `probability` / `expected_revenue`
-                      // (strip) are NOT repeated here. Object-level
-                      // `highlightFields` is a different list and is not consulted
-                      // by this component — `stage` sits in it and still renders.
+                      // The highlights strip still wins (#1211): the renderer
+                      // drops every field `record:highlights` registered, and the
+                      // record title, from the derived members. So `basic` shows
+                      // `primary_contact` only, and `financials` (`amount`,
+                      // `expected_revenue`, both in the strip) renders nothing
+                      // here — it stays referenced so that a field added to the
+                      // group reaches this tab without an edit to this file.
                       sections: [
-                        {
-                          name: 'info',
-                          label: 'Opportunity Information',
-                          fields: ['type', 'lead_source', 'crm_campaign'],
-                        },
-                        {
-                          name: 'crm_forecast',
-                          label: 'Stage & Forecast',
-                          fields: ['stage', 'forecast_category'],
-                        },
-                        {
-                          name: 'description',
-                          label: 'Description',
-                          columns: 1,
-                          collapsible: true,
-                          fields: ['description', 'next_step'],
-                        },
+                        { group: 'basic' },
+                        { group: 'financials' },
+                        { group: 'classification' },
+                        { group: 'campaign' },
+                        { group: 'sales_process' },
+                        { group: 'crm_forecast' },
+                        { group: 'notes' },
                       ],
                     },
                   },

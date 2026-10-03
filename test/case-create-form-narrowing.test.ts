@@ -77,8 +77,10 @@ const CREATOR_AUTHORABLE = new Set([
  *
  * An empty `keeps` is a claim in its own right — the field is reachable from
  * NO surface in the roster below — and since #1428 it is asserted in that
- * direction too, not just documented. One field carries it today:
- * `first_response_date`, which no human ever authors, so it is not a debt.
+ * direction too, not just documented. No field carries it today:
+ * `first_response_date` did until #970 rewrote the record page's sections as
+ * `fieldGroups` references, which put the `sla` group — and with it this
+ * field — on the Details tab (maintainer ruling C: group membership decides).
  *
  * The other thing that used to produce an empty `keeps` was a field whose
  * surface was an OPEN PRODUCT QUESTION — `customer_rating` and
@@ -94,8 +96,8 @@ const LIFECYCLE_MAINTAINED: Record<string, { why: string; keeps: string[] }> = {
     keeps: ['case_timeline.startDateField'],
   },
   first_response_date: {
-    why: '`event.hook.ts` is its single writer — no human surface by design',
-    keeps: [],
+    why: '`event.hook.ts` is its single writer; shown on the record page through the `sla` group (#970)',
+    keeps: ['detail.details'],
   },
   sla_due_date: {
     why: '`case.hook.ts` stamps it from the priority x account-tier matrix',
@@ -164,6 +166,14 @@ const surfaces = (): Record<string, Set<string>> => {
       for (const f of node.fields) {
         const name = typeof f === 'string' ? f : f?.field;
         if (name) (next === 'highlights' ? highlightFields : detailFields).add(name);
+      }
+    }
+    // A `{ group }` section (#970, ruling C) enumerates nothing: the renderer
+    // derives its members from crm_case's `fieldGroups` — every visible field
+    // whose `group` is that key — so those members are this surface's fields.
+    if (next === 'details' && typeof node.group === 'string') {
+      for (const [name, f] of Object.entries(objectFields)) {
+        if (f?.group === node.group && f?.hidden !== true) detailFields.add(name);
       }
     }
     for (const value of Object.values(node)) walk(value, next);

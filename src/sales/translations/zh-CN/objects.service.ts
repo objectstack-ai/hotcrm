@@ -122,14 +122,11 @@ export const service: Record<string, ObjectTranslationData> = {
       },
     },
     _sections: {
-      // Detail-page `record:details` section names (case_detail.page.ts)
-      info: { label: '工单信息' },
-      status: { label: '状态与 SLA' },
-      description: { label: '描述' },
       // case.view.ts 表单区块名称 (#1100)。
       case: { label: '工单' },
       how_can_we_help: { label: '我们能帮您什么？' },
-      // Object-level section keys (case.object.ts) used by record forms
+      // Object-level section keys (case.object.ts), used by record forms and
+      // by the detail page, whose sections reference these groups (#970)
       basic: { label: '工单信息' },
       origin: { label: '来源与路由' },
       sla: { label: 'SLA 与优先级' },
