@@ -1,6 +1,5 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { P } from '@objectstack/spec';
 import { defineView } from '@objectstack/spec/ui';
 
 /**
@@ -414,11 +413,6 @@ export const OpportunityViews = defineView({
           'expected_revenue',
           'forecast_category',
           'type',
-          // REQ-0006 step 9 — named beside `type` (rung 3): this section is a
-          // curated cross-group set, and a `{ group: 'classification' }`
-          // reference would render `type` and `lead_source` twice and pull the
-          // win/loss reasons out of their own tab below.
-          'business_line',
           'lead_source',
           'crm_campaign',
           'stage_entry_date',
@@ -444,17 +438,22 @@ export const OpportunityViews = defineView({
           'expected_signing_amount',
         ],
       },
-      // REQ-0006 acceptance 1, rendered FROM `fieldGroups` (AGENTS.md ladder
-      // rung 2), the same way `contact.view.ts` renders REQ-0004's buying
-      // centre: this form authors `sections`, and an authored `sections` array
-      // wins outright over the renderer's `fieldGroups` derivation — so a group
-      // declared on the object alone reaches the record page's Details tab and
-      // NEVER this form, which is also the Edit and New dialog. Measured on the
-      // 17.6.0 console: the Details tab draws these groups read-only (no inline
-      // edit), so before these two lines the qualification and narrative
-      // fields had no editing surface anywhere in the app. A group reference
-      // enumerates nothing: members, label and icon come from the object, so a
-      // field added to either group reaches this form by itself.
+      // REQ-0006 acceptance 1, FROM `fieldGroups` (AGENTS.md ladder rung 2),
+      // the way `contact.view.ts` references REQ-0004's buying centre: this
+      // form authors `sections`, which win outright over the renderer's
+      // `fieldGroups` derivation, so a group declared on the object alone
+      // never reaches this form — the Edit and New dialog. A group reference
+      // enumerates nothing; members, label and icon come from the object.
+      //
+      // ⚠️ Measured on the 17.6.0 console: the tabbed dialog renders NO tab
+      // for a `{ group }` section — this one, and the contact form's buying
+      // centre on `main` alike. That is the platform's to fix, and these two
+      // lines are the contract-correct form waiting for it (AGENTS.md: a
+      // platform defect is waited for, never routed around). Until then the
+      // qualification fields, Business Line and Requested Status are edited
+      // through the Details tab's edit mode; the three MARKDOWN narrative
+      // fields are not — that edit mode offers no markdown editor (the
+      // object's own `description` is in the same position).
       { group: 'qualification', columns: 2 },
       { group: 'narrative', columns: 1 },
       {
@@ -474,19 +473,7 @@ export const OpportunityViews = defineView({
         collapsible: true,
         collapsed: true,
         columns: 2,
-        fields: [
-          // REQ-0006 steps 13-14 — the request half of the status-change gate,
-          // beside the reasons a request needs (rung 3: it is one field of the
-          // 13-member `sales_process` group, whose others are curated above or
-          // machine-written). Shown only while the gate holds the deal, so an
-          // install that never arms it never sees a field that does nothing.
-          {
-            field: 'requested_status',
-            visibleOn: P`has(record.status_change_approval_status)
-              && (record.status_change_approval_status == "pending" || record.status_change_approval_status == "rejected")`,
-          },
-          'win_reason', 'loss_reason', { field: 'loss_details', span: 'full' },
-        ],
+        fields: ['win_reason', 'loss_reason', { field: 'loss_details', span: 'full' }],
       },
     ],
   },
