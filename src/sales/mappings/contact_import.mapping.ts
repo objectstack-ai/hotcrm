@@ -17,8 +17,10 @@ import { LEAD_SOURCE_SYNONYMS } from './_shared';
  *   and `crm_contact`'s hook lowercases it and rejects a second contact with
  *   the same address — so `upsertKey: ['email']` matches how the object
  *   already behaves rather than inventing a second notion of identity.
- * - Address lands in the flat `mailing_*` text fields, which is why contacts
- *   (unlike accounts and leads) carry address columns in their template.
+ * - Address: the template's five `Mailing …` columns stay as they are, and
+ *   each one targets a part of the structured `mailing_address` field
+ *   (`mailing_address.street`, …) — the customer's file did not change when
+ *   the five flat `mailing_*` fields became one `Field.address()` (#1836).
  */
 export const ContactImportMapping = defineMapping({
   name: 'crm_contact_import',
@@ -42,11 +44,14 @@ export const ContactImportMapping = defineMapping({
     { source: 'Phone', target: 'phone' },
     { source: 'Mobile', target: 'mobile' },
 
-    { source: 'Mailing Street', target: 'mailing_street' },
-    { source: 'Mailing City', target: 'mailing_city' },
-    { source: 'Mailing State', target: 'mailing_state' },
-    { source: 'Mailing Postal Code', target: 'mailing_postal_code' },
-    { source: 'Mailing Country', target: 'mailing_country' },
+    // Five template columns, one structured field: each column names a part
+    // of `mailing_address`, and the import assembles the parts one row maps
+    // into that field's single value.
+    { source: 'Mailing Street', target: 'mailing_address.street' },
+    { source: 'Mailing City', target: 'mailing_address.city' },
+    { source: 'Mailing State', target: 'mailing_address.state' },
+    { source: 'Mailing Postal Code', target: 'mailing_address.postalCode' },
+    { source: 'Mailing Country', target: 'mailing_address.country' },
 
     {
       source: 'Lead Source',

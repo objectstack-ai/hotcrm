@@ -143,23 +143,18 @@ export const ContactViews = defineView({
         // Why the section exists at all: an authored `sections` array wins
         // outright over the renderer's `fieldGroups` auto-derivation (the
         // mechanism is written up at length in `case.view.ts`), and this form
-        // is also the CREATE dialog. The five `mailing_*` fields were
-        // therefore readable on the SYNTHESIZED detail page — which does
-        // derive from `fieldGroups` — while no form in the app could enter or
-        // edit them, even though `contact_import.mapping.ts` writes all five
-        // from the shipped CSV template. Address entry only existed on the
-        // import path; this tab is the authoring half of it.
+        // is also the CREATE dialog. Without this section the address was
+        // readable on the SYNTHESIZED detail page — which does derive from
+        // `fieldGroups` — while no form in the app could enter or edit it,
+        // even though `contact_import.mapping.ts` writes it from the shipped
+        // CSV template. This tab is the authoring half of the import path.
         name: 'mailing_address',
         label: 'Mailing Address',
         columns: 2,
         fields: [
-          // `mailing_street` is a textarea — full width, like `last_name`
-          // above, so the two-column grid holds the four short fields.
-          { field: 'mailing_street', span: 'full' },
-          'mailing_city',
-          'mailing_state',
-          'mailing_postal_code',
-          'mailing_country',
+          // One structured `address` field; full width, so its parts lay out
+          // as a unit rather than in half a grid column.
+          { field: 'mailing_address', span: 'full' },
         ],
       },
       {

@@ -177,11 +177,7 @@ export const customer: Record<string, ObjectTranslationData> = {
       description: { label: 'Description' },
       is_primary: { label: 'Primary Contact', help: 'Is this the main contact for the account?' },
       avatar: { label: 'Profile Picture' },
-      mailing_street: { label: 'Mailing Street' },
-      mailing_city: { label: 'Mailing City' },
-      mailing_state: { label: 'Mailing State/Province' },
-      mailing_postal_code: { label: 'Mailing Postal Code' },
-      mailing_country: { label: 'Mailing Country' },
+      mailing_address: { label: 'Mailing Address' },
       lead_source: {
         label: 'Lead Source',
         options: {

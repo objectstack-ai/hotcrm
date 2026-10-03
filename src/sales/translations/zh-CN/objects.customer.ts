@@ -203,11 +203,7 @@ export const customer: Record<string, ObjectTranslationData> = {
       owner_id: { label: '联系人负责人' },
       description: { label: '描述' },
       is_primary: { label: '主要联系人', help: '是否为该客户的主要联系人？' },
-      mailing_street: { label: '邮寄地址' },
-      mailing_city: { label: '邮寄城市' },
-      mailing_state: { label: '邮寄省份' },
-      mailing_postal_code: { label: '邮政编码' },
-      mailing_country: { label: '邮寄国家' },
+      mailing_address: { label: '邮寄地址' },
       lead_source: {
         label: '线索来源',
         options: {

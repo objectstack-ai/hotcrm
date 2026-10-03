@@ -223,12 +223,15 @@ export const Contact = ObjectSchema.create({
       group: 'contact_info',
     }),
 
-    // Mailing Address
-    mailing_street: Field.textarea({ label: 'Mailing Street', group: 'mailing_address' }),
-    mailing_city: Field.text({ label: 'Mailing City', group: 'mailing_address' }),
-    mailing_state: Field.text({ label: 'Mailing State/Province', group: 'mailing_address' }),
-    mailing_postal_code: Field.text({ label: 'Mailing Postal Code', group: 'mailing_address' }),
-    mailing_country: Field.text({ label: 'Mailing Country', group: 'mailing_address' }),
+    // Mailing Address — one structured `address` value, the same shape as
+    // `crm_account.billing_address` and `crm_lead.address`, because a postal
+    // address is one fact and AGENTS.md's field-type guidance names
+    // `Field.address()` for it (ruling on #1836; it replaced five flat
+    // `mailing_*` text fields, converted by `scripts/backfill-contact-mailing-address.ts`).
+    mailing_address: Field.address({
+      label: 'Mailing Address',
+      group: 'mailing_address',
+    }),
 
     // Additional Information
     //

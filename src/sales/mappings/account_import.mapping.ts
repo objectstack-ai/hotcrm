@@ -93,16 +93,14 @@ export const AccountImportMapping = defineMapping({
     { source: 'Parent Account', target: 'parent_account', transform: 'lookup' },
 
     // NOT MAPPED — `billing_address` / `office_location` are structured
-    // (json-backed `address` / `location`) fields, and neither the mapping spec
-    // nor the import coercion can compose an object out of separate
-    // street/city/postcode columns. A joined string is not a workaround: the
-    // engine rejects it per row — measured, `Billing Address has an invalid
-    // address value: Invalid input: expected object, received string` — so an
-    // address column here would simply fail every row of a customer's file.
+    // (json-backed `address` / `location`) fields. A joined string is not a
+    // way in: the engine rejects it per row — measured, `Billing Address has an
+    // invalid address value: Invalid input: expected object, received string`.
     // (The dry run does NOT predict that rejection; it reports the row ok.
     // Framework-side, filed as objectstack-ai/objectstack#4633.)
-    // Address columns are therefore left out of the account template on
-    // purpose; flat address text does land for contacts, which have real
-    // `mailing_*` text fields.
+    // Address columns are therefore left out of the account template. A target
+    // may now name a declared PART of a compound field — `contact_import.mapping.ts`
+    // maps five columns into `mailing_address.street` … `.country` (#1836) — so
+    // adding address columns here would be a template change, not a platform gap.
   ],
 });

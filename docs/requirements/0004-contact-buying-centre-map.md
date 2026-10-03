@@ -30,7 +30,7 @@ Read the step's noun list against the object and it splits cleanly in two.
 
 **Already there.** 姓名 — `salutation` + `first_name` + `last_name`, with the `full_name`
 formula as the record title. 部门 — `department`, a select. 职务 — `title`. 联系方式 — `email`,
-`phone`, `mobile` and the structured `mailing_*` block. The record also already carries
+`phone`, `mobile` and the mailing address (one `mailing_address` field since #1836). The record also already carries
 `crm_account` as a master-detail parent, so every contact is anchored to the account whose
 buying centre it belongs to, plus `is_primary`, `do_not_call` / `email_opt_out` and
 `last_contacted_date`.

@@ -3,6 +3,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { unknownImportMappingTargets } from '@objectstack/spec/data';
 import { REPO_ROOT } from './helpers/repo-root';
 import stack from '../objectstack.config';
 
@@ -109,10 +110,15 @@ describe('import mappings — registration', () => {
 describe('import mappings — every target is a real field', () => {
   it.each(EXPECTED)('$name maps only fields that exist on $object', ({ name, object }) => {
     const m = mappingByName(name);
-    const fields = objectByName.get(object)!.fields as Record<string, AnyRec>;
-    const unknown = m.fieldMapping
-      .flatMap((e: AnyRec) => all(e.target))
-      .filter((t: string) => !(t in fields));
+    const def = objectByName.get(object)!;
+    // The platform's own verdict, the one the import endpoint asks before any
+    // row: a target is a field, or `field.part` naming a declared part of a
+    // compound field (`mailing_address.street`, #1836). It answers "no
+    // opinion" (empty) for an object with no readable field map, so the
+    // field map is asserted non-empty first.
+    expect(Object.keys((def.fields ?? {}) as AnyRec).length).toBeGreaterThan(0);
+    const unknown = unknownImportMappingTargets(m.fieldMapping, def)
+      .map((miss) => `${miss.path} "${miss.target}" (${miss.reason})`);
     expect(unknown, `unknown target field(s) on ${object}`).toEqual([]);
   });
 
