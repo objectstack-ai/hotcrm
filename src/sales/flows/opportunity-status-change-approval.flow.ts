@@ -98,11 +98,14 @@ export const OpportunityStatusChangeApprovalFlow: Flow = {
         // - a request is present;
         // - the request is NEW on this write. TRANSITION, not current value —
         //   the idiom `billing_handoff_closed_won` records for this object.
-        //   Without it the approval node's own `pending` stamp (an update of
-        //   this record, through `approvalStatusField`) re-fires this flow
-        //   while the request is still open, and the second run dies on the
-        //   plugin's DUPLICATE_REQUEST guard. `previous.*` is guarded
-        //   FAIL-CLOSED: no visible prior value, no visible new request.
+        //   Without it the flow re-fires on its own write-back while the
+        //   request is still open (the approval node's `pending` stamp through
+        //   `approvalStatusField` is an update of this record). Measured on
+        //   17.6.0 with this term deleted: one re-entry per request, each
+        //   caught only by the engine's self-trigger guard ("the guard as
+        //   authored does not exclude the flow's own write-back"); with it,
+        //   none. `previous.*` is guarded FAIL-CLOSED: no visible prior
+        //   value, no visible new request.
         //
         // `apply_status` leaves the gate `approved` (out of reach) and
         // `clear_request` empties the request, so neither re-enters.

@@ -125,7 +125,8 @@ describe('opportunity_status_change_approval — start condition', () => {
     // `approvalStatusField` stamps `pending` through an update of this record
     // while the request is still open. The request is unchanged on that write,
     // so it is not a new request — testing the current value alone re-fired
-    // this flow there, and the second run died on DUPLICATE_REQUEST.
+    // this flow on its own write-back (measured on 17.6.0: one re-entry per
+    // request, stopped only by the engine's self-trigger guard).
     const gate = { status_change_approval_status: 'pending', requested_status: 'closed_won' };
     expect(conditionHolds(startCondition, {
       record: { id: 'o1', stage: 'negotiation', ...gate },
