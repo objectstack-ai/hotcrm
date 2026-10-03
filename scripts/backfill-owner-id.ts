@@ -102,12 +102,20 @@ class Api {
     return json.user as Json;
   }
 
-  /** One page of rows. Returns `null` when the object has no `owner` column. */
+  /**
+   * One page of rows. Returns `null` when the object has no `owner` column.
+   *
+   * Both query bodies here use `sort` as `[{ field, order }]` and send no
+   * `filters` key at all. The 17.6.0 query door refuses an empty `filters: []`
+   * and a string `sort: 'id asc'` (#1999); the shapes used instead are
+   * accepted by 17.6.0 and by 17.0.0-rc.2, the pin of the release that removed
+   * `owner`. `test/backfill-query-bodies.test.ts` keeps both bodies inside the
+   * installed query schema.
+   */
   async page(object: string, skip: number, top: number): Promise<Json[] | null> {
     const { status, json } = await this.call('POST', `/api/v1/data/${object}/query`, {
-      filters: [],
       fields: ['id', 'owner', 'owner_id'],
-      sort: 'id asc',
+      sort: [{ field: 'id', order: 'asc' }],
       skip,
       top,
     });
@@ -130,7 +138,7 @@ class Api {
 
   async userIds(): Promise<Set<string>> {
     const { status, json } = await this.call('POST', '/api/v1/data/sys_user/query', {
-      filters: [], fields: ['id'], top: 2000,
+      fields: ['id'], top: 2000,
     });
     if (status < 200 || status >= 300) throw new Error(`cannot read sys_user (${status})`);
     return new Set(((json.records ?? []) as Json[]).map((r) => String(r.id)));
