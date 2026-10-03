@@ -223,11 +223,7 @@ export const customer: Record<string, ObjectTranslationData> = {
       description: { label: 'Descripción' },
       is_primary: { label: 'Contacto Principal', help: '¿Es este el contacto principal de la cuenta?' },
       avatar: { label: 'Foto de Perfil' },
-      mailing_street: { label: 'Calle de Correo' },
-      mailing_city: { label: 'Ciudad de Correo' },
-      mailing_state: { label: 'Estado/Provincia de Correo' },
-      mailing_postal_code: { label: 'Código Postal' },
-      mailing_country: { label: 'País de Correo' },
+      mailing_address: { label: 'Dirección de Correo' },
       // Juego compartido con `crm_lead.lead_source` y
       // `crm_opportunity.lead_source` — los tres deben coincidir literalmente.
       lead_source: {
@@ -253,8 +249,6 @@ export const customer: Record<string, ObjectTranslationData> = {
       account_info: { label: 'Cuenta y Cargo' },
       buying_centre: { label: 'Centro de Compra' },
       contact_info: { label: 'Información de Contacto' },
-      // Los campos de esta sección se traducen «… de Correo»
-      // (`mailing_street`, `mailing_city`…): el encabezado los acompaña.
       mailing_address: { label: 'Dirección de Correo' },
       additional: { label: 'Información Adicional' },
       preferences: { label: 'Preferencias de Comunicación' },
