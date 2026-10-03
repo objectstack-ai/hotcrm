@@ -323,8 +323,50 @@ export const pipeline: Record<string, ObjectTranslationData> = {
         label: 'Detalles de Ganancia/Pérdida',
         help: 'Contexto en texto libre detrás del motivo de ganancia o pérdida.',
       },
+      // REQ-0006 — calificación, calendario de compra del cliente, narrativa
+      // del negocio, línea de negocio y aprobación del cambio de estado.
+      will_bid: {
+        label: 'Presentaremos Oferta',
+        help: 'Si tenemos intención de presentar oferta. Sin valor significa que la decisión sigue abierta.',
+      },
+      controllability: { label: 'Controlabilidad', options: { high: 'Alta', medium: 'Media', low: 'Baja' } },
+      priority: { label: 'Prioridad', options: { high: 'Alta', medium: 'Media', low: 'Baja' } },
+      deal_level: { label: 'Nivel del Negocio', options: { strategic: 'Estratégico', key: 'Clave', standard: 'Estándar' } },
+      is_subcontracted: { label: 'Incluye Subcontratación' },
+      subcontracting_note: { label: 'Nota de Subcontratación' },
+      customer_initiation_date: { label: 'Fecha de Inicio del Proyecto (Cliente)' },
+      expected_tender_date: { label: 'Fecha Prevista de Licitación' },
+      expected_signing_date: { label: 'Fecha Prevista de Firma' },
+      expected_tender_amount: { label: 'Importe Previsto de Licitación' },
+      expected_signing_amount: { label: 'Importe Previsto de Firma' },
+      business_line: {
+        label: 'Línea de Negocio',
+        options: {
+          product: 'Producto', services: 'Servicios Profesionales', consulting: 'Consultoría',
+          support: 'Soporte y Mantenimiento', other: 'Otro',
+        },
+      },
+      customer_background: { label: 'Antecedentes del Cliente' },
+      project_background: { label: 'Antecedentes del Proyecto' },
+      risk_analysis: { label: 'Análisis de Riesgos' },
+      payment_terms: { label: 'Condiciones de Pago' },
+      requested_status: { label: 'Estado Solicitado', options: { closed_won: 'Ganada', closed_lost: 'Perdida' } },
+      status_change_approval_status: {
+        label: 'Aprobación del Cambio de Estado',
+        options: {
+          not_required: 'No Requerida', pending: 'Pendiente',
+          approved: 'Aprobada', rejected: 'Rechazada',
+        },
+      },
     },
     _views: {
+      tender_this_quarter: {
+        label: 'Licitaciones de Este Trimestre',
+        emptyState: {
+          title: 'No hay licitaciones previstas este trimestre',
+          message: 'Esta pestaña muestra los negocios abiertos cuya fecha de licitación del cliente cae dentro del trimestre actual. Registra la Fecha Prevista de Licitación en un negocio para verlo aquí.',
+        },
+      },
       open_opportunities: { label: 'Oportunidades Abiertas' },
       all_opportunities: { label: 'Todas las Oportunidades' },
       pipeline_kanban: { label: 'Pipeline de Ventas' },
@@ -357,6 +399,8 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       classification: { label: 'Clasificación' },
       campaign: { label: 'Campañas' },
       notes: { label: 'Notas y Próximos Pasos' },
+      qualification: { label: 'Calificación' },
+      narrative: { label: 'Narrativa del Negocio' },
       // Nombres de sección del formulario en opportunity.view.ts (#1100)
       overview: { label: 'Resumen' },
       forecast: { label: 'Previsión' },

@@ -288,8 +288,47 @@ export const pipeline: Record<string, ObjectTranslationData> = {
         label: 'Loss/Win Details',
         help: 'Free-text context behind the win or loss reason.',
       },
+      // REQ-0006 — qualification, the customer's procurement calendar, the
+      // deal narrative, the business line and the status-change gate.
+      will_bid: {
+        label: 'Will Bid',
+        help: 'Whether we intend to bid. Unset means the decision is open.',
+      },
+      controllability: { label: 'Controllability', options: { high: 'High', medium: 'Medium', low: 'Low' } },
+      priority: { label: 'Priority', options: { high: 'High', medium: 'Medium', low: 'Low' } },
+      deal_level: { label: 'Deal Level', options: { strategic: 'Strategic', key: 'Key', standard: 'Standard' } },
+      is_subcontracted: { label: 'Involves Subcontracting' },
+      subcontracting_note: { label: 'Subcontracting Note' },
+      customer_initiation_date: { label: 'Customer Initiation Date' },
+      expected_tender_date: { label: 'Expected Tender Date' },
+      expected_signing_date: { label: 'Expected Signing Date' },
+      expected_tender_amount: { label: 'Expected Tender Amount' },
+      expected_signing_amount: { label: 'Expected Signing Amount' },
+      business_line: {
+        label: 'Business Line',
+        options: {
+          product: 'Product', services: 'Professional Services', consulting: 'Consulting',
+          support: 'Support & Maintenance', other: 'Other',
+        },
+      },
+      customer_background: { label: 'Customer Background' },
+      project_background: { label: 'Project Background' },
+      risk_analysis: { label: 'Risk Analysis' },
+      payment_terms: { label: 'Payment Terms' },
+      requested_status: { label: 'Requested Status', options: { closed_won: 'Won', closed_lost: 'Lost' } },
+      status_change_approval_status: {
+        label: 'Status Change Approval',
+        options: { not_required: 'Not Required', pending: 'Pending', approved: 'Approved', rejected: 'Rejected' },
+      },
     },
     _views: {
+      tender_this_quarter: {
+        label: 'Tender This Quarter',
+        emptyState: {
+          title: 'No Tenders Expected This Quarter',
+          message: 'This tab lists open deals whose customer-side tender date falls inside the current quarter. Record Expected Tender Date on a deal to see it here.',
+        },
+      },
       open_opportunities: { label: 'Open Deals' },
       all_opportunities: { label: 'All Opportunities' },
       pipeline_kanban: { label: 'Sales Pipeline' },
@@ -313,6 +352,8 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       classification: { label: 'Classification' },
       campaign: { label: 'Campaigns' },
       notes: { label: 'Notes & Next Steps' },
+      qualification: { label: 'Qualification' },
+      narrative: { label: 'Deal Narrative' },
       crm_forecast: { label: 'Forecast & Metrics' },
       // The detail page's sections reference the groups above (#1452), so it
       // has no section names of its own.
