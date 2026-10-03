@@ -449,11 +449,10 @@ export const OpportunityViews = defineView({
       // for a `{ group }` section — this one, and the contact form's buying
       // centre on `main` alike. That is the platform's to fix, and these two
       // lines are the contract-correct form waiting for it (AGENTS.md: a
-      // platform defect is waited for, never routed around). Until then the
-      // qualification fields, Business Line and Requested Status are edited
-      // through the Details tab's edit mode; the three MARKDOWN narrative
-      // fields are not — that edit mode offers no markdown editor (the
-      // object's own `description` is in the same position).
+      // platform defect is waited for, never routed around). Until then every
+      // REQ-0006 field is edited through the Details tab's edit mode — which
+      // offers no markdown editor, the reason the narrative fields are
+      // textareas (see the note above `customer_background`).
       { group: 'qualification', columns: 2 },
       { group: 'narrative', columns: 1 },
       {

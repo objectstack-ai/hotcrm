@@ -340,17 +340,24 @@ export const Opportunity = ObjectSchema.create({
     // still being negotiated, not the net-terms ladder a signed document
     // carries. ⛔ Do not "unify" it onto PAYMENT_TERMS_OPTIONS — that would
     // force a half-agreed term into a closed vocabulary.
-    customer_background: Field.markdown({
+    //
+    // All four are `Field.textarea` (REQ-0006 names markdown OR textarea per
+    // field). Measured on the 17.6.0 console, the Details tab's edit mode —
+    // the surface these fields render on — has no markdown editor, so a
+    // markdown field here could be read but never written. The maintainer
+    // ruled textarea for the three that were markdown (2026-10-03, on #1950:
+    // 「改成 textarea(推荐)」).
+    customer_background: Field.textarea({
       label: 'Customer Background',
       group: 'narrative',
     }),
 
-    project_background: Field.markdown({
+    project_background: Field.textarea({
       label: 'Project Background',
       group: 'narrative',
     }),
 
-    risk_analysis: Field.markdown({
+    risk_analysis: Field.textarea({
       label: 'Risk Analysis',
       group: 'narrative',
     }),
