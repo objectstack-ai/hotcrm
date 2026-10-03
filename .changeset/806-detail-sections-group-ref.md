@@ -27,8 +27,7 @@ Classification, Campaigns, Sales Process, Forecast & Metrics and Notes & Next
 Steps. Newly visible: **Primary Contact**, **Stage Entry Date**, **Approval
 Status**, **Approved Date**, **Win Reason**, **Loss Reason**, **Loss/Win
 Details**, **Days in Current Stage** and **Private**. Campaigns and Forecast &
-Metrics start collapsed. The Campaigns group appears once the opportunity has a
-campaign; set it from **Edit**.
+Metrics start collapsed.
 
 **Cases.** The Details tab now shows Case Information, Origin & Routing, SLA &
 Priority, Escalation, Resolution and System. **Escalated Date** is shown for
