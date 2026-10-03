@@ -6,7 +6,8 @@ type Flow = Automation.Flow;
 
 /**
  * Opportunity Qualification Approval — the 立项 sign-off a new deal needs
- * before its stage, its bid decision or its won/lost call may change.
+ * before its stage or its won/lost call may change. Will Bid (是否投标) is
+ * not held: step 8 makes it input to 立项, for the approver to read (#2004).
  *
  * REQ-0006 step 11: 「销售立项需走审批流程；新增商机可跟进，立项通过后方可更新阶段、投标、
  * 赢丢单操作。」 Expressed as an **approval node** (`type: 'approval'`, ADR-0019),
@@ -18,7 +19,7 @@ type Flow = Automation.Flow;
  * field's `defaultValue`, the rep writes a REQUEST and the flow opens one
  * approval when the request is NEW, `rejected` re-opens on a new request,
  * `runAs: 'system'`, `onEmptyApprovers: 'admin_rescue'`. The refusal of the
- * three gated acts lives beside the step-14 refusal in `opportunity.hook.ts`'s
+ * two gated acts lives beside the step-14 refusal in `opportunity.hook.ts`'s
  * `opportunity_lifecycle`. Where it differs, the reason is written beside it
  * (`lockRecord`).
  *
@@ -60,7 +61,7 @@ export const OpportunityQualificationApprovalFlow: Flow = {
   name: 'opportunity_qualification_approval',
   label: 'Opportunity Qualification Approval',
   description:
-    'The 立项 sign-off a deal needs before its stage, bid decision or won/lost call may change. Inert unless the install arms the gate on crm_opportunity.qualification_approval_status.',
+    'The 立项 sign-off a deal needs before its stage or won/lost call may change. Inert unless the install arms the gate on crm_opportunity.qualification_approval_status.',
   type: 'record_change',
   status: 'active',
   // The reading both sibling gates record from `opportunity_approval`'s
@@ -131,9 +132,9 @@ export const OpportunityQualificationApprovalFlow: Flow = {
         // ⚠️ `false`, NOT the status-change gate's `true` — the one term this
         // node deliberately takes from the LEAD gate instead. Step 11 says it
         // in as many words: 「新增商机可跟进」. A deal awaiting 立项 is still being
-        // worked — the narrative, the customer calendar and the amount are
-        // what the approver reads — and locking it would stop that work for as
-        // long as the approver takes. The three acts the gate exists to hold
+        // worked — the narrative, the customer calendar, the amount and Will
+        // Bid are what the approver reads — and locking it would stop that work
+        // for as long as the approver takes. The two acts the gate exists to hold
         // are refused by `opportunity_lifecycle` whether or not a request is
         // open, so the lock would add nothing but the freeze.
         lockRecord: false,
