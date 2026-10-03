@@ -94,12 +94,17 @@ class Api {
     return json.user as Json;
   }
 
-  /** Every row of `object`, paged. */
+  /**
+   * Every row of `object`, paged. The body is the shape the installed query
+   * schema accepts: `sort` as `[{ field, order }]` and no `filters` key at all
+   * (an empty `filters: []` and a string `sort: 'id asc'` are both refused by
+   * the 17.6.0 query door, #1999). `test/backfill-query-bodies.test.ts` keeps it there.
+   */
   async all(object: string, fields: string[]): Promise<Json[]> {
     const out: Json[] = [];
     for (let skip = 0; ; ) {
       const { status, json } = await this.call('POST', `/api/v1/data/${object}/query`, {
-        filters: [], fields, sort: 'id asc', skip, top: 200,
+        fields, sort: [{ field: 'id', order: 'asc' }], skip, top: 200,
       });
       if (status < 200 || status >= 300) throw new Error(`query ${object} → ${status}: ${Api.message(json)}`);
       const rows = (json.records ?? []) as Json[];
