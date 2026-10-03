@@ -91,10 +91,8 @@ export const service: Record<string, ObjectTranslationData> = {
       resolution: { label: 'Resolution' },
       escalation: { label: 'Escalation' },
       system: { label: 'System' },
-      // Detail-page sections (src/pages/case_detail.page.ts)
-      info: { label: 'Case Information' },
-      status: { label: 'Status & SLA' },
-      description: { label: 'Description' },
+      // The detail page's sections reference the groups above (#970), so it
+      // has no section names of its own.
       // Form section names on case.view.ts (#1100).
       case: { label: 'Case' },
       how_can_we_help: { label: 'How can we help?' },

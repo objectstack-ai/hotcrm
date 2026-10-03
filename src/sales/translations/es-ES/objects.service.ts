@@ -99,17 +99,12 @@ export const service: Record<string, ObjectTranslationData> = {
       sla_at_risk: { label: '⏰ SLA en Riesgo' },
     },
     _sections: {
-      // Nombres de sección de `record:details` en la página de detalle
-      // (case_detail.page.ts).
-      info: { label: 'Información del Caso' },
-      status: { label: 'Estado y SLA' },
-      description: { label: 'Descripción' },
       // Nombres de sección del formulario en case.view.ts (#1100).
       case: { label: 'Caso' },
       how_can_we_help: { label: '¿Cómo podemos ayudarte?' },
       // Claves de sección del objeto (case.object.ts) que usan los
-      // formularios de registro. `basic` repite el inglés de `info`
-      // («Case Information»), así que comparte traducción.
+      // formularios de registro y la página de detalle, cuyas secciones
+      // hacen referencia a estos grupos (#970).
       basic: { label: 'Información del Caso' },
       origin: { label: 'Origen y Asignación' },
       sla: { label: 'SLA y Prioridad' },
