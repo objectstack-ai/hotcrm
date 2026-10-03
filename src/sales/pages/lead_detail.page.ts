@@ -378,23 +378,36 @@ export const LeadDetailPage: Page = {
                       //   - it lays out its own column count (the page-level
                       //     `columns` above does not reach it);
                       //   - a group whose members are all empty renders nothing
-                      //     (`address` on a lead with no address);
+                      //     (`duplicates` on a clean lead), unless the section
+                      //     says `hideEmpty: false`;
                       //   - members the highlights strip registered are dropped,
                       //     so `assignment` (only `owner_id`) renders nothing on
                       //     this page — the owner is in the strip;
                       //   - a group declared `collapse: 'collapsed'` starts
                       //     collapsed; changing that is a `fieldGroups` decision
                       //     in lead.object.ts, not a key on this page.
+                      //
+                      // `hideEmpty: false` (#2003, the #1211 reasoning) sits on
+                      // the groups whose every member a rep types and the
+                      // create form asks for: `contact_info` (`mobile` and
+                      // `website` once the strip takes `email` and `phone`),
+                      // `address`, and `additional` (revenue, headcount,
+                      // description, notes). Without it all three vanish on a
+                      // fresh lead, so a rep cannot see what is left to fill.
+                      // Not on `assignment`: its derived list is empty, and the
+                      // renderer draws nothing for an empty list whatever
+                      // `hideEmpty` says. Not on `duplicates`: the
+                      // `lead_duplicate_check` hook writes it.
                       sections: [
                         { group: 'identity' },
                         { group: 'company_info' },
-                        { group: 'contact_info' },
+                        { group: 'contact_info', hideEmpty: false },
                         // Do Not Call / Email Opt Out, right under the numbers
                         // a rep is about to dial (#806).
                         { group: 'preferences' },
                         { group: 'qualification' },
                         { group: 'assignment' },
-                        { group: 'address' },
+                        { group: 'address', hideEmpty: false },
                         { group: 'conversion' },
                         // The LINK half of the duplicate banners (#1207): the
                         // group carries both survivor lookups, because
@@ -405,7 +418,7 @@ export const LeadDetailPage: Page = {
                         { group: 'duplicates' },
                         // Description and Notes — kept last, where the page's
                         // Description section always sat.
-                        { group: 'additional' },
+                        { group: 'additional', hideEmpty: false },
                       ],
                     },
                   },
