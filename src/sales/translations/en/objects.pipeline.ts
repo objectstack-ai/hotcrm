@@ -320,6 +320,15 @@ export const pipeline: Record<string, ObjectTranslationData> = {
         label: 'Status Change Approval',
         options: { not_required: 'Not Required', pending: 'Pending', approved: 'Approved', rejected: 'Rejected' },
       },
+      // REQ-0006 step 11 — the 立项 (qualification) approval gate.
+      qualification_requested: {
+        label: 'Request Qualification Approval',
+        help: 'Tick to send this deal for qualification approval. A rejection clears it; tick it again to ask again.',
+      },
+      qualification_approval_status: {
+        label: 'Qualification Approval',
+        options: { not_required: 'Not Required', pending: 'Pending', approved: 'Approved', rejected: 'Rejected' },
+      },
     },
     _views: {
       tender_this_quarter: {

@@ -96,6 +96,10 @@ const RUNTIME_TEST_FILES = [
   // REQ-0006 — the status-change gate: its start condition, both approval
   // branches, the `opportunity_lifecycle` refusal and the user-less run.
   'opportunity-status-change-approval-gate.test.ts',
+  // REQ-0006 step 11 — the 立项 gate: its start condition, both approval
+  // branches, the `opportunity_lifecycle` refusal, the two-gate interaction
+  // matrix and the user-less run.
+  'opportunity-qualification-approval-gate.test.ts',
   // #1828 — the `line_number` assigner on both line items. Same precedent: its
   // evidence is an ENGINE fact (a hook-written readonly key survives the
   // non-system strip, a caller-supplied one does not) measured on a real

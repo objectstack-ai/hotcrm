@@ -1,15 +1,16 @@
 ---
 title: Opportunity Qualification
-description: Whether a deal is worth pursuing, the customer's own procurement calendar, the written case for the deal, and the optional sign-off before a deal is declared won or lost.
+description: Whether a deal is worth pursuing, the customer's own procurement calendar, the written case for the deal, and the two optional sign-offs — qualification approval before a new deal moves, and approval before a deal is declared won or lost.
 ---
 
 # Qualification, the customer's calendar, and sign-off on the outcome
 
-An opportunity already says what the deal is worth and where it stands in *your* pipeline. Four more things on the record answer questions those numbers cannot:
+An opportunity already says what the deal is worth and where it stands in *your* pipeline. Five more things on the record answer questions those numbers cannot:
 
 - **Qualification** — should we pursue this deal at all, and how hard?
 - **The customer's calendar** — when the buyer plans to start, tender and sign, and for how much.
 - **Deal Narrative** — the written case for the deal, in parts a reviewer can read one at a time.
+- **Qualification Approval** — whether a new deal has to be approved (立项) before its stage, its bid decision or its won/lost call may change. **Off unless your admin turns it on.**
 - **Status Change Approval** — whether somebody has to sign off before a deal is declared won or lost. **Off unless your admin turns it on.**
 
 All of it sits on the opportunity's **Details** tab, in the **Qualification**, **Sales Process** and **Deal Narrative** sections.
@@ -50,6 +51,29 @@ Attachments still go on the record's files, as they always have.
 
 **Opportunity Type** says how the deal relates to the customer — new business, an upgrade, a renewal, an expansion. **Business Line** is a separate question: *what kind of business* the deal is — **Product**, **Professional Services**, **Consulting**, **Support & Maintenance** or **Other**. The starter list is generic; your admin can replace it with your own lines of business.
 
+## Qualification approval
+
+Some organisations approve a deal as a project — 立项 — before anyone commits to it. Until that approval, a new deal can be **worked**: log calls and meetings, write the narrative, record the customer's calendar and the amount. What waits is **committing** it: moving its stage, recording **Will Bid**, and the won/lost call — whether that is closing it directly or asking for it with **Requested Status**. The **Qualification Approval** field records where that stands:
+
+| Qualification Approval | What it means |
+| --- | --- |
+| **Not Required** | No qualification approval is asked for. This is how HotCRM ships, and it is what every deal shows unless your admin has turned the gate on. |
+| **Pending** | The gate is on for this deal and it has not been approved yet. |
+| **Approved** | The deal is qualified. Its stage, Will Bid and won/lost call are open from now on. |
+| **Rejected** | The approver said no to the last request. The deal stays held. |
+
+You never set this field yourself — it is filled in by the approval, and it is read-only.
+
+**While a deal is Pending or Rejected, its stage, Will Bid and Requested Status cannot change.** To have it approved:
+
+1. Tick **Request Qualification Approval** in the deal's **Qualification** section.
+2. An approval request opens in the approval inbox. The deal is **not** locked while it waits: everything other than those three stays editable, so keep working it.
+3. If it is approved, the deal is qualified for good. If it is rejected, the box is unticked and the deal stays held — tick it again when something changes to ask again.
+
+> **Nothing changes for you unless your admin arms the gate.** Out of the box every deal reads *Not Required*, and moving the stage, Will Bid and closing work exactly as they always have. Deals created before the gate was turned on are never held by it.
+
+**When both approvals are on, qualification comes first.** A deal that is not yet qualified cannot ask for a status change either; once it is approved, closing works as the next section describes.
+
 ## When closing a deal needs approval
 
 Declaring a deal won or lost moves the forecast, commission and planning, and it cannot be taken back. Some organisations want sign-off on that moment, whatever the deal's size. The **Status Change Approval** field records where that stands:
@@ -76,6 +100,8 @@ You never set this field yourself — it is filled in by the approval, and it is
 - ✅ Fill in **Will Bid** as soon as you have decided, and leave it empty until then. A pipeline review reads the empty ones as the decisions still to make.
 - ✅ Record the customer's tender date the day you hear it. It is the date your bid team plans against, and **Tender This Quarter** can only list the deals that carry one.
 - ✅ If closing is refused, look at **Status Change Approval** before asking anyone: *Pending* means set **Requested Status** instead, *Rejected* is a decision to talk about.
+- ✅ Fill in the narrative and the customer's calendar before you request qualification approval. They are what the approver reads.
+- ✅ If a stage move or **Will Bid** is refused, look at **Qualification Approval**: *Pending* means tick **Request Qualification Approval** (or wait for the request already open), *Rejected* is a decision to talk about.
 - ⛔ Don't move **Close Date** to match the tender date. The two are different events, and the forecast depends on the close date being yours.
 
 ## Tips for admins
@@ -85,3 +111,6 @@ You never set this field yourself — it is filled in by the approval, and it is
 - The gate is **off by default** and is armed by changing the default value of the opportunity's **Status Change Approval** field from *Not Required* to *Pending*. From then on each new deal is born *Pending*; deals that already exist keep *Not Required*. Requests are routed to the holders of the `sales_manager` position, and the flow behind them is **Opportunity Status Change Approval**, listed in [Administration › Automation](/docs/administration/automation).
 - Staff that position before you arm the gate. An approval routed to an empty bench has nobody to decide it, and a deal waiting on it stays locked.
 - A request written by an integration, with nobody signed in, still opens an approval. The refusal of a direct close, though, applies to edits made by signed-in users: a system write that sets the stage itself is not stopped.
+- Qualification approval is armed the same way, on its own field: change the default value of the opportunity's **Qualification Approval** field from *Not Required* to *Pending*. Each new deal is then born *Pending*; deals that already exist keep *Not Required*. Requests go to the same `sales_manager` position, through the flow **Opportunity Qualification Approval**. The same signed-in-users boundary applies to what it holds.
+- The two gates can be armed independently, and with both armed qualification comes first. Each keeps its own verdict field, and neither changes the amount-based **Large Deal Approval**.
+- A deal carries one open approval at a time. If a deal grows past the large-deal threshold while its qualification request is waiting, the amount sign-off is not opened then; it opens on the deal's next save, and the qualification decision itself is one.

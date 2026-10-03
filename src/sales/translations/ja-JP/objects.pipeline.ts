@@ -315,6 +315,15 @@ export const pipeline: Record<string, ObjectTranslationData> = {
         label: 'ステータス変更承認',
         options: { not_required: '承認不要', pending: '承認待ち', approved: '承認済み', rejected: '却下' },
       },
+      // REQ-0006 ステップ 11 — 案件化（立项）承認。
+      qualification_requested: {
+        label: '案件化承認を申請',
+        help: 'チェックするとこの商談を案件化承認に回します。却下されるとチェックが外れます。再度チェックすると改めて申請できます。',
+      },
+      qualification_approval_status: {
+        label: '案件化承認',
+        options: { not_required: '承認不要', pending: '承認待ち', approved: '承認済み', rejected: '却下' },
+      },
     },
     _views: {
       tender_this_quarter: {
