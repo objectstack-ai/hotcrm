@@ -165,9 +165,18 @@ export const CaseDetailPage: Page = {
                       // `resolution` / `resolved_by_article` render once the case
                       // carries one; `close_case` is the flow that collects the
                       // resolution.
+                      //
+                      // `hideEmpty: false` (#2003, the #1211 reasoning) only on
+                      // `origin`: with `owner_id` in the strip, its one member is
+                      // the channel an agent picks, and without the key the
+                      // section vanishes on a new case. Not on `sla`: outside
+                      // the strip its members are stamps no one types
+                      // (`closed_date` and `resolution_time_hours` at close,
+                      // `first_response_date` by `event.hook.ts`), so the key
+                      // would draw empty rows to look at, not to fill.
                       sections: [
                         { group: 'basic' },
-                        { group: 'origin' },
+                        { group: 'origin', hideEmpty: false },
                         { group: 'sla' },
                         { group: 'escalation' },
                         { group: 'resolution' },
