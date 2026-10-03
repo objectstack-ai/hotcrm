@@ -21,10 +21,10 @@
 //      insert, which ADR-0092's write guard refuses and which would produce an
 //      un-loginable row anyway);
 //   2. assign the positions they hold (`sys_user_position`);
-//   3. HAND THE DEMO BOOK TO THEM (#1759). `demo_bootstrap` claims every
-//      ownerless seeded row for the FIRST user — it has to; a seed cannot name
-//      a user and that flow ships in the artifact — which leaves the whole
-//      book on the dev admin. Invisible over an API key (it runs as the human,
+//   3. HAND THE DEMO BOOK TO THEM (#1759). The platform's seed-ownership claim
+//      hands every ownerless seeded row to the FIRST administrator — nothing
+//      else can; a seed cannot name a user and the artifact must not know these
+//      people — which leaves the whole book on the dev admin. Invisible over an API key (it runs as the human,
 //      so `viewAllRecords` applies) and fatal over OAuth, where the agent
 //      ceiling admits only what the caller OWNS or holds a share on
 //      (objectstack-ai/objectstack#16549). So a demo salesperson asking their
@@ -283,15 +283,16 @@ type OwnershipOutcome = {
  * ### What it claims, and what it deliberately does not
  *
  * Only rows sitting on the DEV ADMIN or on nobody. Those two states are the
- * seed book: `demo_bootstrap` stamps the first user onto everything it finds
- * ownerless, and anything it has not reached yet is still null. A row some LIVE
+ * seed book: the platform's seed-ownership claim stamps the first administrator
+ * onto everything it finds ownerless once the seed settles, and anything it has
+ * not reached yet is still null. A row some LIVE
  * WORKFLOW has already assigned is left exactly where it is — measured on a
  * staffed box, the SLA sweep escalates cases and the escalation hook hands the
  * resulting tasks to the service manager, and re-routing those by territory
  * would overwrite the app demonstrating itself.
  *
  * That also makes the run idempotent and order-independent: correct whether
- * `demo_bootstrap` has already claimed the rows or has not run yet, and a
+ * that claim has already run or has not run yet, and a
  * second pass over a converged org writes nothing.
  */
 async function handBookToRoster(
@@ -487,7 +488,7 @@ async function verify(base: URL, outcomes: StaffOutcome[], adminAccounts: Json[]
       failures.push(
         `${member.email} OWNS ${owned.join(', ')} — a share to a record's owner demonstrates ` +
         `nothing, because the private OWD baseline already admits the owner. Ownership belongs ` +
-        `to demo_bootstrap's first user; staffing must not move it.`,
+        `to the seed-ownership claim's first administrator; staffing must not move it.`,
       );
     }
     if (member.positions.includes('na_sales_team') || member.positions.includes('eu_sales_team')) {

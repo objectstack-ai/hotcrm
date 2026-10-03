@@ -57,8 +57,8 @@ import { SystemAdminProfile } from './system-admin.profile';
  * They are KEPT, and they are bounded by the organization, not by them.
  *
  * Two measurements, both against the 17.1.0 line — the version
- * installed AT THE TIME they were taken, not the current pin (#1676: this
- * repo has installed 17.3.0 since PR #1577).
+ * installed AT THE TIME they were taken, not the current pin (neither was
+ * re-taken on 17.3.0, 17.4.0 or 17.5.0).
  *
  * ⚠️ The zero-occurrence result in 1 — the load-bearing half — reproduced on
  * 17.2.0 and has not been re-run since (#1676). The three CONTROL counts in

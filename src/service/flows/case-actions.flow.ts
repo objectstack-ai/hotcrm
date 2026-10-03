@@ -157,20 +157,18 @@ export const CloseCaseFlow: Flow = {
       // left honest — which is worse than an absent link for a measure whose
       // whole job is to say how OFTEN the KB resolves a case.
       //
-      // ⚠️ MEASURED LIMITATION, stated so nobody re-discovers it: a flow screen
-      // field cannot name a target object. `ScreenFieldConfigSchema`
-      // (`@objectstack/spec/automation`) has `name` / `label` / `type` /
-      // `options` / `defaultValue` / `placeholder` / `visibleWhen` and NO
-      // object or reference key, so `type: 'lookup'` has nothing to resolve a
-      // record picker from — the same degradation `add_contact_to_campaign`
-      // documents for a bare `{ type: 'lookup' }` action param, which it avoids
-      // by being FIELD-BACKED, an escape a screen field does not have.
+      // `reference` names the object the picker offers. Up to
+      // `@objectstack/spec@17.4.0` a screen field had no such key, so this
+      // `type: 'lookup'` field had nothing to resolve a record picker from;
+      // 17.5.0 added `reference` to `ScreenFieldConfigSchema` and made it
+      // REQUIRED on a lookup screen field (#17913) — the stack does not load
+      // without it. It is the same target the case's own `resolved_by_article`
+      // lookup declares (`crm_knowledge_article`).
       //
-      // So the real picker for this link is the `Resolved by Article` lookup in
-      // the case's Resolution group, on the record form, and this screen field
-      // is the CLOSE-PATH capture beside it. Both write the same column; the
-      // action is `refreshAfter: true`, so the record form is what the agent
-      // lands on immediately after closing.
+      // The `Resolved by Article` lookup in the case's Resolution group, on the
+      // record form, writes the same column; the action is
+      // `refreshAfter: true`, so the record form is what the agent lands on
+      // immediately after closing.
       id: 'screen_1', type: 'screen', label: 'Close Case',
       config: {
         fields: [
@@ -179,8 +177,8 @@ export const CloseCaseFlow: Flow = {
             name: 'resolved_by_article',
             label: 'Resolved by Article (optional)',
             type: 'lookup',
+            reference: 'crm_knowledge_article',
             required: false,
-            placeholder: 'Knowledge article id, if the KB resolved this case',
           },
         ],
       },

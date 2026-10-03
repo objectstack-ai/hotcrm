@@ -75,10 +75,6 @@ export const SalesDashboard: Dashboard = {
       colorVariant: 'blue',
       dataset: 'opportunity_metrics', values: ['total_amount'],
       layout: { x: 0, y: 0, w: 3, h: 2 },
-      options: {
-        icon: 'DollarSign',
-        format: '0,0',
-      },
     },
     {
       id: 'closed_won_qtd',
@@ -90,10 +86,6 @@ export const SalesDashboard: Dashboard = {
       colorVariant: 'success',
       dataset: 'opportunity_metrics', values: ['total_amount'],
       layout: { x: 3, y: 0, w: 3, h: 2 },
-      options: {
-        icon: 'Trophy',
-        format: '0,0',
-      },
     },
     {
       id: 'open_opportunities',
@@ -104,20 +96,12 @@ export const SalesDashboard: Dashboard = {
       colorVariant: 'orange',
       dataset: 'opportunity_metrics', values: ['opp_count'],
       layout: { x: 6, y: 0, w: 3, h: 2 },
-      options: {
-        icon: 'Briefcase',
-        format: '0,0',
-      },
     },
     avgDealSizeMetricWidget({ x: 9, y: 0, w: 3, h: 2 }, {
       description: 'Average value of closed-won deals this quarter',
       filter: { stage: 'closed_won', close_date: { $gte: '{current_quarter_start}' } },
       filterBindings: { dateRange: false }, // self-scoped to QTD — the date picker must not re-window it
       colorVariant: 'purple',
-      options: {
-        icon: 'bar-chart',
-        format: '0,0',
-      },
     }),
 
     // ─── Row 2: Win / Loss KPIs ───────────────────────────────────────
@@ -148,7 +132,6 @@ export const SalesDashboard: Dashboard = {
       colorVariant: 'success',
       dataset: 'opportunity_metrics', values: ['win_rate'],
       layout: { x: 0, y: 2, w: 4, h: 2 },
-      options: { icon: 'Percent', format: '0%' },
     },
     {
       id: 'won_deals_12m',
@@ -160,7 +143,6 @@ export const SalesDashboard: Dashboard = {
       colorVariant: 'blue',
       dataset: 'opportunity_metrics', values: ['won_count'],
       layout: { x: 4, y: 2, w: 4, h: 2 },
-      options: { icon: 'Trophy', format: '0,0' },
     },
     {
       id: 'lost_deals_12m',
@@ -172,7 +154,6 @@ export const SalesDashboard: Dashboard = {
       colorVariant: 'orange',
       dataset: 'opportunity_metrics', values: ['lost_count'],
       layout: { x: 8, y: 2, w: 4, h: 2 },
-      options: { icon: 'TrendingDown', format: '0,0' },
     },
 
     // ─── Row 3: Pipeline & Trends ─────────────────────────────────────
@@ -188,20 +169,14 @@ export const SalesDashboard: Dashboard = {
       dataset: 'opportunity_metrics', dimensions: ['close_date'], values: ['total_amount'],
       layout: { x: 6, y: 4, w: 6, h: 4 },
       chartConfig: {
-        type: 'area',
         showLegend: false,
         showDataLabels: false,
         colors: ['#10B981'],
-        // Axis titles stay plain English: `ChartAxisSchema.title` accepts an inline
-        // locale map but the Console flattens it to the map's FIRST value regardless
-        // of locale — measured, see `src/dashboards/index.ts` (#1822).
-        xAxis: { field: 'close_date', title: 'Month', showGridLines: false, logarithmic: false },
         // No quota annotation line: ChartAnnotationSchema only takes a STATIC
         // value, and the real quotas live per-owner/per-period in
         // crm_forecast.quota (seeded 500k–1.5M — the old hardcoded 100000 was
         // fiction). Quota vs. actual is the quota_attainment_by_rep table
         // below, bound to the forecast_metrics dataset.
-        yAxis: [{ field: 'total_amount', title: 'Revenue', format: '0,0', showGridLines: true, logarithmic: false }],
         interaction: { tooltips: true, brush: true },
       },
       options: { dateGranularity: 'month' },
@@ -218,12 +193,9 @@ export const SalesDashboard: Dashboard = {
       dataset: 'opportunity_metrics', dimensions: ['forecast_category'], values: ['total_amount'],
       layout: { x: 0, y: 8, w: 6, h: 4 },
       chartConfig: {
-        type: 'horizontal-bar',
         showLegend: false,
         showDataLabels: true,
         colors: ['#4F46E5'],
-        xAxis: { field: 'forecast_category', title: 'Forecast', showGridLines: false, logarithmic: false },
-        yAxis: [{ field: 'total_amount', title: 'Pipeline value', format: '0,0', showGridLines: true, logarithmic: false }],
       },
     },
     {
@@ -236,7 +208,6 @@ export const SalesDashboard: Dashboard = {
       dataset: 'opportunity_metrics', dimensions: ['lead_source'], values: ['total_amount'],
       layout: { x: 6, y: 8, w: 6, h: 4 },
       chartConfig: {
-        type: 'donut',
         showLegend: true,
         showDataLabels: true,
         colors: ['#4F46E5', '#06B6D4', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'],
@@ -260,17 +231,9 @@ export const SalesDashboard: Dashboard = {
       dataset: 'opportunity_metrics', dimensions: ['owner'], values: ['total_amount', 'opp_count', 'avg_probability'],
       layout: { x: 0, y: 12, w: 12, h: 4 },
       options: {
-        columns: [
-          { header: 'Owner',         accessorKey: 'owner' },
-          { header: 'Open Pipeline', accessorKey: 'total_amount', format: '0,0' },
-          { header: 'Open Deals',    accessorKey: 'opp_count' },
-          { header: 'Avg Win Prob.', accessorKey: 'avg_probability', format: '0%' },
-        ],
         sortBy: 'total_amount',
         sortOrder: 'desc',
         limit: 10,
-        striped: true,
-        density: 'comfortable',
       },
     },
 
@@ -323,10 +286,9 @@ export const SalesDashboard: Dashboard = {
       // through a real engine and pins a three-way outcome (current quarter
       // only: not zero rows, not every quarter). First taken on 17.0.0-rc.2;
       // RE-RUN 2026-09-03 on 17.2.0 (#1467), RE-RUN on 17.3.0 (#1676, the PR
-      // #1577 pin) and RE-RUN again on 17.4.0 — the version `package.json`
-      // pins and `node_modules` installs since PR #1814 (#1807) — green all
-      // four times, so the outcome holds on the
-      // CURRENT pin and not only on the one it was first taken on.
+      // #1577 pin) and RE-RUN again on 17.4.0 (PR #1814, #1807) — green all
+      // four times, so the outcome held on every pin it was taken on, not
+      // only the first. Not yet re-run on 17.5.0.
       //
       // What stood here before described the two paths as asymmetric and told
       // the next author not to generalise between them. That was true on
@@ -341,17 +303,9 @@ export const SalesDashboard: Dashboard = {
       dataset: 'forecast_metrics', dimensions: ['owner'], values: ['quota_sum', 'closed_sum', 'attainment'],
       layout: { x: 0, y: 16, w: 12, h: 4 },
       options: {
-        columns: [
-          { header: 'Owner',      accessorKey: 'owner' },
-          { header: 'Quota',      accessorKey: 'quota_sum', format: '0,0' },
-          { header: 'Closed',     accessorKey: 'closed_sum', format: '0,0' },
-          { header: 'Attainment', accessorKey: 'attainment', format: '0%' },
-        ],
         sortBy: 'attainment',
         sortOrder: 'desc',
         limit: 10,
-        striped: true,
-        density: 'comfortable',
       },
     },
 
@@ -384,19 +338,9 @@ export const SalesDashboard: Dashboard = {
       values: ['won_count', 'lost_count', 'decided_count', 'win_rate', 'won_amount'],
       layout: { x: 0, y: 20, w: 6, h: 4 },
       options: {
-        columns: [
-          { header: 'Owner',       accessorKey: 'owner' },
-          { header: 'Won',         accessorKey: 'won_count' },
-          { header: 'Lost',        accessorKey: 'lost_count' },
-          { header: 'Settled',     accessorKey: 'decided_count' },
-          { header: 'Win Rate',    accessorKey: 'win_rate', format: '0%' },
-          { header: 'Won Revenue', accessorKey: 'won_amount', format: '0,0' },
-        ],
         sortBy: 'decided_count',
         sortOrder: 'desc',
         limit: 10,
-        striped: true,
-        density: 'comfortable',
       },
     },
     {
@@ -412,19 +356,9 @@ export const SalesDashboard: Dashboard = {
       values: ['won_count', 'lost_count', 'decided_count', 'win_rate', 'won_amount'],
       layout: { x: 6, y: 20, w: 6, h: 4 },
       options: {
-        columns: [
-          { header: 'Lead Source', accessorKey: 'lead_source' },
-          { header: 'Won',         accessorKey: 'won_count' },
-          { header: 'Lost',        accessorKey: 'lost_count' },
-          { header: 'Settled',     accessorKey: 'decided_count' },
-          { header: 'Win Rate',    accessorKey: 'win_rate', format: '0%' },
-          { header: 'Won Revenue', accessorKey: 'won_amount', format: '0,0' },
-        ],
         sortBy: 'decided_count',
         sortOrder: 'desc',
         limit: 12,
-        striped: true,
-        density: 'comfortable',
       },
     },
     {
@@ -449,7 +383,6 @@ export const SalesDashboard: Dashboard = {
       dataset: 'opportunity_metrics', dimensions: ['loss_reason'], values: ['opp_count'],
       layout: { x: 0, y: 24, w: 12, h: 4 },
       chartConfig: {
-        type: 'donut',
         showLegend: true,
         showDataLabels: true,
         colors: ['#EF4444', '#F59E0B', '#8B5CF6', '#06B6D4', '#4F46E5', '#10B981', '#64748B'],
@@ -466,24 +399,6 @@ export const SalesDashboard: Dashboard = {
       colorVariant: 'default',
       dataset: 'opportunity_metrics', dimensions: ['stage', 'lead_source'], values: ['total_amount'],
       layout: { x: 0, y: 28, w: 12, h: 4 },
-      options: {
-        rowField: 'stage',
-        columnField: 'lead_source',
-        valueField: 'amount',
-        aggregation: 'sum',
-        showRowTotals: true,
-        showColumnTotals: true,
-        format: '0,0',
-        drillDown: {
-          enabled: true,
-          // Clicking a pivot cell opens a drawer listing the underlying
-          // opportunity records for that stage + lead-source slice — the
-          // same drill-through pattern used by the other dashboard widgets.
-          target: 'drawer',
-          columns: ['name', 'crm_account', 'amount', 'forecast_category', 'close_date', 'owner_id'],
-          maxRows: 100,
-        },
-      },
     },
   ],
 };

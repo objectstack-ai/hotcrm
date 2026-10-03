@@ -10,10 +10,10 @@ import type { Page } from '@objectstack/spec/ui';
  * Details/Related/Activity/History, reference rail). We override
  * two slots:
  *
- *   header   · Custom `page:header` with title, subtitle and a breadcrumb
- *              back to the list. It used to claim an ACCOUNT eyebrow and a
- *              building icon; neither key exists on `page:header`, so neither
- *              ever drew anything (#1269 — the props note below).
+ *   header   · Custom `page:header` with title and subtitle. It used to
+ *              claim an ACCOUNT eyebrow, a building icon and a breadcrumb
+ *              back to the list; none of them ever drew anything (#1269 and
+ *              the props notes below — `breadcrumb` retired in 17.6.0).
  *
  *   discussion · `record:chatter` is already auto-emitted, but we
  *              re-state it so it ALWAYS appears — even on accounts
@@ -70,7 +70,9 @@ export const AccountDetailPage = {
         // `z.record(z.string(), z.unknown())`, so the key was carried into the
         // artifact and dropped at render. Deleting it changes nothing a user
         // sees; it only stops the source claiming a kicker exists.
-        breadcrumb: true,
+        // `breadcrumb` retired from `page:header` in @objectstack/spec 17.6.0
+        // (#20785, `page-header-breadcrumb-removed`) — deleted: no renderer
+        // ever drew a trail for it; the app shell's own trail is unchanged.
         // Overriding the `header` slot REPLACES the synthesized header, actions
         // and all — so this slot has to re-state every action it wants to keep.
         // Before #592 it named none, which is why an account record showed no

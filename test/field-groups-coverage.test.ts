@@ -17,10 +17,9 @@ import stack from '../objectstack.config';
  *
  * ⛔ Two sentences stood here before and both were wrong. "`fieldGroups` is
  * what turns a detail page into the sectioned layout" holds only on the
- * synthesized path — `crm_lead` is the standing counter-example, with
- * `src/pages/lead_detail.page.ts` authoring six sections while
- * `src/objects/lead.object.ts` declares ten groups the detail renderer never
- * consults. And "an object with no groups renders, it just renders badly"
+ * synthesized path — `crm_lead` was the standing counter-example, its
+ * record page authoring six enumerated sections while the object declared ten
+ * groups the detail renderer never consulted (#806). And "an object with no groups renders, it just renders badly"
  * understated the failure in the one direction that mattered: an authored
  * `record:details` that omits `sections` renders 0 sections and 0 field rows
  * — an empty body, not an ugly one. ⭐ Understating a failure until it reads
@@ -34,8 +33,7 @@ import stack from '../objectstack.config';
  * statically on the installed 17.3.0 bundle. ⛔ Neither #1521 nor this card
  * re-ran the browser, so treat it as a 17.2.0 reading corroborated at 17.3.0
  * rather than a standing fact, and re-measure before quoting it for a later
- * pin. `src/pages/lead_detail.page.ts` carries the long form and
- * `src/views/case.view.ts` states the same split for forms. ⛔ Do not write a
+ * pin. `src/views/case.view.ts` states the same split for forms. ⛔ Do not write a
  * fourth account of this mechanism without measuring it first.
  *
  * ⚠️ ⛔ Do not over-read the correction. `fieldGroups` DOES reach an authored
@@ -43,7 +41,9 @@ import stack from '../objectstack.config';
  * `fields:` and inherit that group's members and presentation
  * (`deriveFieldGroupLayout`, ADR-0085 §5 — verified on the installed 17.3.0
  * spec, which makes the two keys mutually exclusive). That is a per-section
- * opt-in, not a page-level fallback.
+ * opt-in, not a page-level fallback — and since #806 it is the form all three
+ * authored record pages (lead, opportunity, case) use, rendered on 17.6.0
+ * (#806 R70, browser, with a control leg).
  *
  * ⇒ So these assertions still stand: `fieldGroups` is load-bearing for every
  * FORM and every SYNTHESIZED detail page, where a field pointing at a group

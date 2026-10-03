@@ -42,7 +42,9 @@ export const OpportunityDetailPage: Page = {
             // `icon` removed from `page:header` in @objectstack/spec 17.0.0
             // (#6946, ADR-0087 D2) — deleted, not renamed. See the full note on
             // `account_detail.page.ts`; nothing ever drew it.
-            breadcrumb: true,
+            // `breadcrumb` retired from `page:header` in @objectstack/spec 17.6.0
+            // (#20785, `page-header-breadcrumb-removed`) — deleted: no renderer
+            // ever drew a trail for it; the app shell's own trail is unchanged.
             // generate_quote is the CPQ entry point (opportunity → quote); a
             // custom record page replaces the default header, so the action
             // must be listed here explicitly or it is unreachable. The same
@@ -126,51 +128,47 @@ export const OpportunityDetailPage: Page = {
                     label: 'Opportunity Details',
                     properties: {
                       // `columns` is a STRING enum ('1'|'2'|'3'|'4') in
-                      // @objectstack/spec 17; the number form was rejected by the
-                      // props schema and only survived because `properties` is an
-                      // open bag. `layout` is gone entirely (removed in spec
-                      // 17.0.0, #6946 / ADR-0087 D2) — the body is chosen by what
-                      // you author, so the key selected nothing.
+                      // @objectstack/spec 17. `layout` is gone (removed in spec
+                      // 17.0.0, #6946 / ADR-0087 D2).
                       columns: '2',
-                      // A section lists only the fields it is ACTUALLY responsible
-                      // for — never one the highlights strip above already shows,
-                      // and never the record's title field (#1211).
+                      // Every section references one of crm_opportunity's
+                      // `fieldGroups` (#1452, the #806 class ruling C): the
+                      // renderer derives members, label, icon and collapse state
+                      // from the object, so this page curates only the order.
+                      // The full note — what a group section does on 17.6.0 and
+                      // what may not sit beside `group` — is on
+                      // `lead_detail.page.ts`.
                       //
-                      // Measured in the shipped console (17.1.0,
-                      // plugins-views bundle → objectui `RecordDetailsRenderer`):
-                      // a mounted `record:highlights` registers its field names in
-                      // HighlightFieldsContext, and `record:details` drops every
-                      // registered name from its sections; it then drops the first
-                      // non-empty title candidate (primaryField → name → full_name
-                      // → title → subject → …) because the page H1 already shows
-                      // it. `DetailSection` renders NOTHING at all when every field
-                      // it is left with is empty, so a section built only from
-                      // duplicates disappears silently — which is how this tab came
-                      // to author fourteen fields and render two.
+                      // The highlights strip still wins (#1211): the renderer
+                      // drops every field `record:highlights` registered, and the
+                      // record title, from the derived members. So `basic` shows
+                      // `primary_contact` only, and `financials` (`amount`,
+                      // `expected_revenue`, both in the strip) renders nothing
+                      // here — it stays referenced so that a field added to the
+                      // group reaches this tab without an edit to this file.
                       //
-                      // So `name` / `crm_account` / `owner_id` (header + strip) and
-                      // `amount` / `close_date` / `probability` / `expected_revenue`
-                      // (strip) are NOT repeated here. Object-level
-                      // `highlightFields` is a different list and is not consulted
-                      // by this component — `stage` sits in it and still renders.
+                      // `hideEmpty: false` keeps an ALL-empty section on screen
+                      // (#1211). The platform default (objectui#8603 ruling A)
+                      // renders such a section as nothing at all, so on a deal
+                      // with only its required fields the deal's type and
+                      // source (`classification`), its campaign (`campaign`)
+                      // and its description and next step (`notes`) vanished —
+                      // the very fields a seller fills in later. Kept, they
+                      // show as labelled empty rows to fill. Measured on
+                      // 17.6.0 on such a deal: 2 sections render without it, 5
+                      // with it. Not on `basic` (its only member outside the
+                      // title and the strip is `primary_contact`), nor on
+                      // `financials`: both members sit in the strip, the
+                      // derived list is empty, and the renderer draws nothing
+                      // for an empty list whatever `hideEmpty` says.
                       sections: [
-                        {
-                          name: 'info',
-                          label: 'Opportunity Information',
-                          fields: ['type', 'lead_source', 'crm_campaign'],
-                        },
-                        {
-                          name: 'crm_forecast',
-                          label: 'Stage & Forecast',
-                          fields: ['stage', 'forecast_category'],
-                        },
-                        {
-                          name: 'description',
-                          label: 'Description',
-                          columns: 1,
-                          collapsible: true,
-                          fields: ['description', 'next_step'],
-                        },
+                        { group: 'basic' },
+                        { group: 'financials' },
+                        { group: 'classification', hideEmpty: false },
+                        { group: 'campaign', hideEmpty: false },
+                        { group: 'sales_process' },
+                        { group: 'crm_forecast' },
+                        { group: 'notes', hideEmpty: false },
                       ],
                     },
                   },
@@ -205,8 +203,8 @@ export const OpportunityDetailPage: Page = {
                           // — so an item that simply omits the key is
                           // `undefined`, not `false`, and stays shut. Measured
                           // on the @objectstack/console 17.3.0 bundle — the pin
-                          // at that taking, ⛔ NOT re-taken on the current
-                          // 17.4.0 pin (#1814, #1807) —
+                          // at that taking, ⛔ NOT re-taken on 17.4.0
+                          // (#1814, #1807) or 17.5.0 —
                           // and the component's own designer text says the same
                           // ("collapsed: false opens a panel by default").
                           //
@@ -486,7 +484,6 @@ export const OpportunityDetailPage: Page = {
   ],
 
   isDefault: true,
-  assignedProfiles: ['sales_rep', 'sales_manager', 'system_admin'],
 
   aria: {
     ariaLabel: 'Opportunity Detail Page',

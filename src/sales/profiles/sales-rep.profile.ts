@@ -14,10 +14,10 @@ export const SalesRepProfile = {
   // account-team rules are authored on `crm_account` ONLY, and a sharing rule
   // widens the object it names — not the records hanging off it. So a rep who
   // receives an account through a territory rule reads that account, while the
-  // quotes, contracts and tasks on it stay own-only, and opportunities widen
-  // only through the >= $100k leadership rules. Whether those children should
-  // follow the account is an open business decision (#549), not a bug in these
-  // grants — do not widen them here to paper over it.
+  // tasks on it stay own-only and opportunities widen only through the
+  // >= $100k leadership rules. Quotes and contracts are the exception since
+  // #549 (ruling 2026-08-31): both are `controlled_by_parent` under the
+  // account, so they arrive with it — the same derivation as contacts.
   //
   // The `controlled_by_parent` grants below read as narrow, and as of
   // 17.0.0-rc.4 they ARE. MEASURED and pinned by
@@ -50,8 +50,13 @@ export const SalesRepProfile = {
     // top of this file, #694).
     crm_contact:     { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, allowExport: true },
     crm_opportunity: { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const, allowExport: true },
-    crm_quote:       { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
-    crm_contract:    { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
+    // NO readScope on quote/contract either: both are `controlled_by_parent`
+    // under `crm_account` (#549), so a scope here would be inert. A rep reads
+    // the quotes and contracts of every account they can reach, edits the
+    // quotes of accounts they can edit, and never edits a contract (object
+    // gate). `test/parent-derived-reach.test.ts` measures both levels.
+    crm_quote:       { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+    crm_contract:    { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     crm_product:     { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
     crm_campaign:    { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
     crm_case:        { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const, allowExport: true },

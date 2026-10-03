@@ -9,7 +9,7 @@ import { avgDealSizeMetricWidget, pipelineByStageFunnelWidget } from './shared-w
  * Single-page snapshot of revenue, pipeline, and customer activity. Designed
  * to mirror the polished CRM dashboard reference at
  * https://github.com/objectstack-ai/objectui/tree/main/examples/crm/src/dashboards
- * — KPI tiles with icons, an area-chart revenue trend, a lead-source donut, a
+ * — KPI tiles, an area-chart revenue trend, a lead-source donut, a
  * pipeline funnel, and a recent-deals table.
  *
  * This dashboard intentionally uses the framework's first-class metadata fields
@@ -67,7 +67,6 @@ export const CrmOverviewDashboard: Dashboard = {
       colorVariant: 'success',
       dataset: 'opportunity_metrics', values: ['total_amount'],
       layout: { x: 0, y: 0, w: 3, h: 2 },
-      options: { icon: 'DollarSign' },
     },
     {
       id: 'active_deals',
@@ -78,10 +77,6 @@ export const CrmOverviewDashboard: Dashboard = {
       colorVariant: 'blue',
       dataset: 'opportunity_metrics', values: ['opp_count'],
       layout: { x: 3, y: 0, w: 3, h: 2 },
-      options: {
-        icon: 'Briefcase',
-        format: '0,0',
-      },
     },
     {
       id: 'won_deals',
@@ -92,13 +87,8 @@ export const CrmOverviewDashboard: Dashboard = {
       colorVariant: 'purple',
       dataset: 'opportunity_metrics', values: ['opp_count'],
       layout: { x: 6, y: 0, w: 3, h: 2 },
-      options: {
-        icon: 'Trophy',
-        format: '0,0',
-      },
     },
-    // No overrides left once the fabricated trend is gone: the factory already
-    // declares `options: { icon: 'bar-chart' }`, so re-passing it said nothing.
+    // No overrides left once the fabricated trend is gone.
     avgDealSizeMetricWidget({ x: 9, y: 0, w: 3, h: 2 }),
 
     // ─── Charts Row 1 ─────────────────────────────────────────────────
@@ -113,15 +103,9 @@ export const CrmOverviewDashboard: Dashboard = {
       dataset: 'opportunity_metrics', dimensions: ['close_date'], values: ['total_amount'],
       layout: { x: 0, y: 2, w: 9, h: 4 },
       chartConfig: {
-        type: 'area',
         showLegend: false,
         showDataLabels: false,
         colors: ['#10B981'],
-        // Axis titles stay plain English: `ChartAxisSchema.title` accepts an inline
-        // locale map but the Console flattens it to the map's FIRST value regardless
-        // of locale — measured, see `src/dashboards/index.ts` (#1822).
-        xAxis: { field: 'close_date', title: 'Month', showGridLines: false, logarithmic: false },
-        yAxis: [{ field: 'total_amount', title: 'Revenue', format: '0,0', showGridLines: true, logarithmic: false }],
         interaction: { tooltips: true, brush: true },
       },
       options: { dateGranularity: 'month' },
@@ -135,7 +119,6 @@ export const CrmOverviewDashboard: Dashboard = {
       dataset: 'opportunity_metrics', dimensions: ['lead_source'], values: ['total_amount'],
       layout: { x: 9, y: 2, w: 3, h: 4 },
       chartConfig: {
-        type: 'donut',
         showLegend: true,
         showDataLabels: true,
         colors: ['#4F46E5', '#06B6D4', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'],
@@ -161,12 +144,9 @@ export const CrmOverviewDashboard: Dashboard = {
       dataset: 'product_metrics', dimensions: ['category'], values: ['list_price_sum'],
       layout: { x: 6, y: 6, w: 6, h: 4 },
       chartConfig: {
-        type: 'bar',
         showLegend: false,
         showDataLabels: true,
         colors: ['#4F46E5'],
-        xAxis: { field: 'category', title: 'Category', showGridLines: false, logarithmic: false },
-        yAxis: [{ field: 'list_price_sum', title: 'Revenue', format: '0,0', showGridLines: true, logarithmic: false }],
       },
     },
 
@@ -188,17 +168,9 @@ export const CrmOverviewDashboard: Dashboard = {
       dataset: 'opportunity_metrics', dimensions: ['owner'], values: ['total_amount', 'opp_count', 'avg_amount'],
       layout: { x: 0, y: 10, w: 12, h: 4 },
       options: {
-        columns: [
-          { header: 'Owner',         accessorKey: 'owner' },
-          { header: 'Pipeline',      accessorKey: 'total_amount', format: '0,0' },
-          { header: 'Opportunities', accessorKey: 'opp_count' },
-          { header: 'Avg Deal Size', accessorKey: 'avg_amount', format: '0,0' },
-        ],
         sortBy: 'total_amount',
         sortOrder: 'desc',
         limit: 10,
-        striped: true,
-        density: 'comfortable',
       },
     },
   ],

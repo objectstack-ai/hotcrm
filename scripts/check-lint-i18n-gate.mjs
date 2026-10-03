@@ -141,7 +141,12 @@ export function main(argv = process.argv.slice(2), { log = console.log, error = 
       '(non-default-locale misses are warnings, not errors) — see #1018. Run:'
   );
   error('  pnpm exec objectstack lint --json');
-  error('to see the full report, or `pnpm exec objectstack i18n extract` to scaffold the missing keys.');
+  error('to see the full report, or scaffold the missing keys with');
+  error('  pnpm exec objectstack i18n extract --no-objects-only --no-metadata-forms --locales=<locale>');
+  error(
+    '(the default `--objects-only` covers objects only — page, app and dashboard keys ' +
+      'need `--no-objects-only`).'
+  );
   return 1;
 }
 
