@@ -161,12 +161,25 @@ export const OpportunityDetailPage: Page = {
                       // `financials`: both members sit in the strip, the
                       // derived list is empty, and the renderer draws nothing
                       // for an empty list whatever `hideEmpty` says.
+                      //
+                      // `qualification` and `narrative` (REQ-0006) sit right
+                      // after `sales_process`, the order the object declares
+                      // them in, and both keep `hideEmpty: false` on the same
+                      // reasoning: every member is a judgement or a piece of
+                      // prose the seller is expected to write (bid / no-bid,
+                      // controllability, priority, deal level, subcontracting;
+                      // the four narrative fields), none sits in the strip, and
+                      // no deal that predates REQ-0006 carries any of them — so
+                      // without the key both sections vanish on every existing
+                      // deal, which is exactly where a seller would fill them.
                       sections: [
                         { group: 'basic' },
                         { group: 'financials' },
                         { group: 'classification', hideEmpty: false },
                         { group: 'campaign', hideEmpty: false },
                         { group: 'sales_process' },
+                        { group: 'qualification', hideEmpty: false },
+                        { group: 'narrative', hideEmpty: false },
                         { group: 'crm_forecast' },
                         { group: 'notes', hideEmpty: false },
                       ],
