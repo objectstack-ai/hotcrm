@@ -18,5 +18,5 @@ implementing requirement `REQ-[NNNN]`.
 2. **Logic**: Create `src/*/objects/[OBJECT_NAME].hook.ts` to implement: [DESCRIBE_LOGIC].
 3. **UI**: Create `src/*/views/[OBJECT_NAME].view.ts` and `src/*/pages/[OBJECT_NAME].page.ts` for a standard record layout.
 
-Please follow the strictly typed metadata standards in `.github/instructions/metadata.md`.
+Please follow the metadata standards in `AGENTS.md`.
 ```

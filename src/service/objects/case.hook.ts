@@ -12,9 +12,7 @@ import {
  * Case SLA & escalation hook.
  *
  * - Stamps `sla_due_date` on a case that has none, from the priority × account
- *   tier matrix in `_case-sla.ts` (⚠️ CALENDAR hours — this app has no
- *   business-hours calendar and the deadline does not skip nights, weekends or
- *   holidays).
+ *   tier matrix in `_case-sla.ts`.
  * - On escalation: creates a follow-up task OWNED BY the account owner (the
  *   single owner of escalation tasks — flows must not create their own).
  *   Owning it, not merely labelling it: `owner_id` is the one ownership column,
@@ -69,9 +67,8 @@ const caseValidation: Hook = {
     // while their tests passed (#1133). This block was rewritten to ASSIGN.
     //
     // The block above predicted its own trigger — "a platform release that
-    // POSTDATES 2026-08-26" — and that release is **17.3.0** (`package.json`
-    // has pinned 17.4.0 since PR #1814, #1807, so the fix is in the installed
-    // tree either way). objectstack#12277 shipped: the in-process Proxy
+    // POSTDATES 2026-08-26" — and that release is **17.3.0**, so every later
+    // pin carries the fix. objectstack#12277 shipped: the in-process Proxy
     // traps `deleteProperty`, and the sandbox path diffs deletions against the
     // entry snapshot rather than writing mutations home with `Object.assign`,
     // which cannot represent a removal. Re-measured through the engine's own
@@ -214,14 +211,10 @@ const caseValidation: Hook = {
       input.priority_rank = rank[priority] ?? 0;
     }
 
-    // ── SLA policy matrix: priority × account tier, in CALENDAR HOURS ──
+    // ── SLA policy matrix: priority × account tier ──
     //
-    // ⚠️ CALENDAR hours, not business hours. Every number below is added to the
-    // wall clock: this app ships no business-hours calendar, no working-day
-    // definition and no holiday list, so a P1 raised at 5pm on a Friday is due
-    // at 9pm that same Friday. Stated here rather than hidden because it is the
-    // one way these numbers get misread. The canonical write-up — including why
-    // the `critical` row is flat at 4 — lives in `_case-sla.ts`.
+    // The canonical write-up — the unit, and why the `critical` row is flat at
+    // 4 — lives in `_case-sla.ts`.
     //
     // ⚠️ The table is declared INLINE and duplicated in `_case-sla.ts` on
     // purpose, for the same reason as the `rank` map above: L2 hook bodies run
@@ -230,7 +223,7 @@ const caseValidation: Hook = {
     // real constant; this body cannot. `test/case-sla-matrix.test.ts` pins all
     // sixteen cells by driving THIS handler, so the copies cannot drift.
     if (priority && !input.sla_due_date && !ctx.previous?.sla_due_date) {
-      const slaHours: Record<string, Record<string, number>> = {
+      const slaCalendarHours: Record<string, Record<string, number>> = {
         critical: { strategic: 4, enterprise: 4, mid_market: 4, smb: 4 },
         high: { strategic: 6, enterprise: 8, mid_market: 8, smb: 8 },
         medium: { strategic: 24, enterprise: 36, mid_market: 48, smb: 48 },
@@ -241,7 +234,7 @@ const caseValidation: Hook = {
       // Erring loose is the safe direction: a tighter deadline invented out of
       // a permission error would manufacture breaches.
       const DEFAULT_TIER = 'smb';
-      const row = slaHours[priority];
+      const row = slaCalendarHours[priority];
       // An unrecognised priority gets no clock at all rather than a guessed
       // one — the same refusal-to-invent as the `0` unranked sentinel above.
       if (row) {

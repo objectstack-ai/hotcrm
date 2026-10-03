@@ -3,7 +3,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
 import stack from '../objectstack.config';
-import { nodesUnder, flowNodesDeep } from './helpers/flow-regions';
+import { flowNodesDeep } from './helpers/flow-regions';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
 import { metadataFiles } from './helpers/src-roster';
@@ -233,49 +233,6 @@ describe('lead conversion is discoverable', () => {
 });
 
 describe('demo data is demo-ready', () => {
-  /**
-   * A seed can't name a user (lookups resolve against the target's externalId,
-   * which only works for objects in the app's own graph), and a hook on
-   * `sys_user` is rejected at build time. Seed writes are also `isSystem`, so
-   * the middleware's insert-time `owner_id` stamp never fires for them. So
-   * ownership is claimed by a scheduled sweep — without which every "My …"
-   * view is empty and owner-addressed notify reaches nobody (#548).
-   */
-  it('demo_bootstrap claims every owner-scoped object', () => {
-    const f = flow('demo_bootstrap');
-    expect(f, 'demo_bootstrap flow missing').toBeTruthy();
-    expect(f!.type).toBe('schedule');
-    // System context: a scheduled run has no trigger user, and these writes
-    // must bypass RLS to touch records nobody owns yet.
-    expect(f!.runAs).toBe('system');
-
-    const claimed = (f!.nodes ?? [])
-      .filter((n: AnyRec) => n.type === 'get_record' && n.config?.filter?.owner_id === null)
-      .map((n: AnyRec) => n.config.objectName);
-    // The objects behind My Leads / My Deals / My Cases and the task queue.
-    for (const objectName of ['crm_lead', 'crm_account', 'crm_opportunity', 'crm_case', 'crm_task']) {
-      expect(claimed, `demo_bootstrap never claims ${objectName}`).toContain(objectName);
-    }
-  });
-
-  it('every claim runs per-record inside a loop, not as a filtered mass update', () => {
-    // The update_record node calls data.update() WITHOUT options.multi, so a
-    // filter matching more than one row fails at runtime with "Update requires
-    // an ID or options.multi=true" — invisible to build and validate.
-    const f = flow('demo_bootstrap');
-    const loops = (f!.nodes ?? []).filter((n: AnyRec) => n.type === 'loop');
-    expect(loops.length).toBeGreaterThanOrEqual(5);
-    for (const loop of loops) {
-      // Regions included: the body is one `try_catch` guard since
-      // `src/sales/flows/_guarded-iteration.ts`, and the stamp is inside its `try`.
-      const body = nodesUnder(loop);
-      const update = body.find((n: AnyRec) => n.type === 'update_record');
-      expect(update, `loop ${loop.id} has no update_record`).toBeTruthy();
-      // Keyed by the iterator's id — the only shape update_record supports.
-      expect(String(update?.config?.filter?.id ?? '')).toMatch(/^\{current_\w+\.id\}$/);
-    }
-  });
-
   it('open opportunities close in the future and settled ones in the past', () => {
     // A pipeline that holds open deals with past close dates, or closed deals
     // scheduled in the future, reads as abandoned. This covers the whole

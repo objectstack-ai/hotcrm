@@ -2,7 +2,7 @@ Here is a prompt you can copy-paste to GitHub Copilot to trigger the **Autonomou
 
 ---
 
-**Assign Role**: @workspace /load .github/instructions/architect.md
+**Read first**: @workspace /load AGENTS.md
 
 **Goal**: I need you to implement a new feature: **[INSERT FEATUE NAME HERE]**
 
@@ -11,7 +11,7 @@ Here is a prompt you can copy-paste to GitHub Copilot to trigger the **Autonomou
 - [INSERT BUSINESS REQUIREMENT 2]
 
 **Instructions**:
-1.  **Architecture Phase**: strictly follow the **"Feature-to-File" Mapping Strategy** in basic `architect.md`. Output a table of all files to be created.
+1.  **Architecture Phase**: place every file by the layout rules in `AGENTS.md` §Project Architecture (an item lives with the object it is authored against; a `*.hook.ts` sits beside its `*.object.ts`). Output a table of all files to be created.
 2.  **Metadata Phase**: Create the `*.object.ts` files first. These are the foundation.
 3.  **Review Phase**: Stop and ask me if the schema looks correct before proceeding to Logic and UI.
 4.  **Implementation Phase**: Once approved, generate the Logic (`.hook.ts`), Automation (`.flow.ts` — there is no `workflow` metadata type, see `AGENTS.md` §Schema Validation Requirements), and UI (`.page.ts`) files.

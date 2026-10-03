@@ -56,7 +56,7 @@ export const service: Record<string, ObjectTranslationData> = {
       closed_date: { label: 'Closed Date' },
       first_response_date: { label: 'First Response Date' },
       resolution_time_hours: { label: 'Resolution Time (Hours)' },
-      sla_due_date: { label: 'SLA Due Date' },
+      sla_due_date: { label: 'SLA Due Date', help: 'Set from the case priority and the account’s Customer Tier, in calendar hours: nights, weekends and holidays count.' },
       is_sla_violated: { label: 'SLA Violated' },
       is_escalated: { label: 'Escalated' },
       escalation_reason: { label: 'Escalation Reason' },
@@ -91,10 +91,8 @@ export const service: Record<string, ObjectTranslationData> = {
       resolution: { label: 'Resolution' },
       escalation: { label: 'Escalation' },
       system: { label: 'System' },
-      // Detail-page sections (src/pages/case_detail.page.ts)
-      info: { label: 'Case Information' },
-      status: { label: 'Status & SLA' },
-      description: { label: 'Description' },
+      // The detail page's sections reference the groups above (#970), so it
+      // has no section names of its own.
       // Form section names on case.view.ts (#1100).
       case: { label: 'Case' },
       how_can_we_help: { label: 'How can we help?' },

@@ -173,8 +173,8 @@ navigationContributions: [
 ```
 
 The shape was first read off `ManifestSchema` in `@objectstack/spec` 17.2.0 — the
-version this repo pinned when this plan was measured — and RE-READ on the current pin,
-17.4.0 since PR #1814 (#1807), during #1883:
+version this repo pinned when this plan was measured — and RE-READ on 17.4.0 (PR #1814,
+#1807), the pin during #1883:
 `{ app, group?, priority, items }`, unchanged, with `priority` optional (it defaults to
 `200`). ⚠️ One thing the 17.2.0 reading did not record: `app` is validated as a bare
 snake_case identifier (`/^[a-z][a-z0-9_]*$/`), so the dotted manifest id used in the
@@ -358,9 +358,10 @@ would otherwise slug the heading to `#上游缺口--upstream-gaps` — the exact
   [objectstack#14439](https://github.com/objectstack-ai/objectstack/issues/14439), in flight.
 - Studio's writable verdict —
   [objectstack#14430](https://github.com/objectstack-ai/objectstack/issues/14430).
-- An objectstack release carrying both, and the version bump in this repository. HotCRM is
-  pinned to `@objectstack/*` 17.4.0 today (PR #1814, #1807; this plan's own measurements
-  were taken at the 17.2.0 pin and are labelled as such). Merged upstream is not the same as available
+- An objectstack release carrying both, and the version bump in this repository. HotCRM was
+  pinned to `@objectstack/*` 17.4.0 when this was written (PR #1814, #1807) and moved to 17.5.0,
+  then 17.6.0, after it (this plan's own measurements were taken at the 17.2.0 pin and are labelled as such).
+  Merged upstream is not the same as available
   in the pin (AGENTS.md, *Platform Upgrades*).
 
 **New, found by this analysis — for the PM to file upstream.** None of these is worked around
@@ -565,7 +566,7 @@ decisions left to the compile path and this ruling settles.
    - **PSA** follows as `src/psa/` (`psa-module-plan.md`).
 
 The three upstream blockers under *上游缺口* are no longer the reason to wait: the compile
-path and per-package registration are carried by the 17.4.0 pin, and the Studio writable
+path and per-package registration are carried from the 17.4.0 pin on, and the Studio writable
 verdict does not gate a module booted from an artifact — the version table in
 `psa-module-plan.md`, *Where PSA sits*, cites the changelog entries. PR 1 is still the
 measurement that proves it here.

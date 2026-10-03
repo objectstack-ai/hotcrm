@@ -179,7 +179,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         kb_resolved_cases: { title: '知识库解决数', description: '已关联解决文章的已关闭工单' },
         closed_cases_total: { title: '已关闭工单', description: '转移率的分母' },
         top_resolving_articles: { title: '解决工单最多的文章', description: '按解决的已关闭工单数排名的知识文章' },
-        open_cases_by_priority: { title: '按优先级统计未关闭工单', description: '未关闭工单及其 SLA 违约率，按优先级细分' },
+        my_open_cases_by_priority: { title: '我的未关闭工单（按优先级）', description: '你的未关闭工单及其 SLA 违约率，按优先级细分' },
       },
     },
   },
@@ -486,6 +486,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     account_detail_page: {
       label: '客户详情',
       description: '插槽式客户记录页——自定义页头 + 常驻讨论区。',
+      title: '{name}',
+      subtitle: '{industry} · {type}',
+      components: {
+        account_chatter: { label: '讨论' },
+      },
     },
     account_workbench: {
       label: '客户工作台',
@@ -508,6 +513,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       components: {
         case_highlights: { label: '关键信息' },
         case_status_path: { label: '工单状态进度' },
+        case_details: { label: '工单明细' },
       },
     },
     lead_detail_page: {
@@ -521,6 +527,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         lead_highlights: { label: '关键信息' },
         lead_path: { label: '线索状态进度' },
         main_tabs: { label: '线索信息标签页' },
+        lead_details: { label: '线索明细' },
+        related_accordion: { label: '相关记录' },
+        related_tasks: { title: '待办任务', label: '任务' },
+        lead_activity: { label: '活动时间线' },
+        lead_history: { label: '字段历史' },
       },
     },
     opportunity_detail_page: {
@@ -531,6 +542,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       components: {
         opp_highlights: { label: '关键信息' },
         opp_stage_path: { label: '商机阶段进度' },
+        opp_details: { label: '商机明细' },
       },
     },
     sales_home_page: {
@@ -557,6 +569,9 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         quick_create: { title: '快速创建', label: '快速创建' },
         key_metrics: { title: '关键绩效指标', label: '关键指标' },
         home_tabs: { label: '主页标签页' },
+        home_my_leads: { label: '我的线索' },
+        home_my_deals: { label: '我的进行中商机' },
+        home_my_tasks: { label: '我的待办任务' },
         ai_briefing: {
           title: '询问 AI 助手',
           description:

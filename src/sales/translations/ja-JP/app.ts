@@ -180,7 +180,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         kb_resolved_cases: { title: 'ナレッジで解決', description: '解決した記事が紐づくクローズ済みケース' },
         closed_cases_total: { title: 'クローズ済みケース', description: 'ナレッジ解決率の分母' },
         top_resolving_articles: { title: '解決件数の多い記事', description: '解決したクローズ済みケース数で並べたナレッジ記事' },
-        open_cases_by_priority: { title: '優先度別オープンケース', description: 'オープンケースとそのSLA違反率を優先度別に集計' },
+        my_open_cases_by_priority: { title: '優先度別の私のオープンケース', description: 'あなたのオープンケースとそのSLA違反率を優先度別に集計' },
       },
     },
   },
@@ -487,6 +487,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     account_detail_page: {
       label: '取引先詳細',
       description: 'スロット構成の取引先レコードページ — カスタムヘッダーと常設のディスカッションフィード。',
+      title: '{name}',
+      subtitle: '{industry} · {type}',
+      components: {
+        account_chatter: { label: 'ディスカッション' },
+      },
     },
     account_workbench: {
       label: '取引先ワークベンチ',
@@ -509,6 +514,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       components: {
         case_highlights: { label: '重要情報' },
         case_status_path: { label: 'ケースステータスの進捗' },
+        case_details: { label: 'ケース詳細情報' },
       },
     },
     lead_detail_page: {
@@ -522,6 +528,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         lead_highlights: { label: '重要情報' },
         lead_path: { label: 'リードステータスの進捗' },
         main_tabs: { label: 'リード情報タブ' },
+        lead_details: { label: 'リード詳細情報' },
+        related_accordion: { label: '関連レコード' },
+        related_tasks: { title: '未完了のタスク', label: 'タスク' },
+        lead_activity: { label: '活動タイムライン' },
+        lead_history: { label: '項目履歴' },
       },
     },
     opportunity_detail_page: {
@@ -532,6 +543,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       components: {
         opp_highlights: { label: '重要情報' },
         opp_stage_path: { label: '商談ステージの進捗' },
+        opp_details: { label: '商談詳細情報' },
       },
     },
     sales_home_page: {
@@ -558,6 +570,9 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         quick_create: { title: 'クイック作成', label: 'クイック作成' },
         key_metrics: { title: '主要業績評価指標', label: '主要指標' },
         home_tabs: { label: 'ホームタブ' },
+        home_my_leads: { label: '私のリード' },
+        home_my_deals: { label: '私のオープン商談' },
+        home_my_tasks: { label: '私のオープンタスク' },
         ai_briefing: {
           title: 'AI アシスタントに質問',
           description:

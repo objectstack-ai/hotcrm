@@ -16,7 +16,7 @@ export const Contact = ObjectSchema.create({
   
   fieldGroups: [
     { key: 'identity',        label: 'Identity',             icon: 'user' },
-    { key: 'account_info',    label: 'Account & Role',       icon: 'briefcase' },
+    { key: 'account_info',    label: 'Account & Title',      icon: 'briefcase' },
     { key: 'buying_centre',   label: 'Buying Centre',        icon: 'users' },
     { key: 'contact_info',    label: 'Contact Information',  icon: 'phone' },
     { key: 'mailing_address', label: 'Mailing Address',      icon: 'map-pin', collapse: 'collapsed' },

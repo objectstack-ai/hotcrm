@@ -24,7 +24,7 @@ export const AccountViews = defineView({
       { field: 'health_score', width: 140 },
     ],
     sort: [{ field: 'annual_revenue', order: 'desc' }],
-    rowColor: { field: 'is_active', colors: { true: '#16a34a', false: '#94a3b8' } },
+    rowColor: { field: 'is_active', colors: { true: 'green', false: 'slate' } },
     selection: { type: 'multiple' },
     pagination: { pageSize: 50, pageSizeOptions: [25, 50, 100] },
     exportOptions: { formats: ['csv', 'xlsx'] },

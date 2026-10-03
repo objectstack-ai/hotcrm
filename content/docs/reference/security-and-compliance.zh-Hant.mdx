@@ -89,7 +89,7 @@ description: SSO、MFA、稽核日誌、secret 欄位通道、GDPR —— HotCRM
 | **崗位** | 共享規則可以點名的扁平存取群體——崗位之間什麼都不會上卷 |
 | **共享規則** | OWD 的例外 |
 | **記錄共享** | 按記錄共享 —— `sys_record_share`，位於 **Setup → Record Shares** |
-| **欄位級安全** | 逐欄位讀/寫 —— 見下方加密一節 |
+| **欄位級安全** | 逐欄位讀/寫 —— 見下方[加密](#field-level-controls)一節 |
 
 第六行原先寫的是 *客戶團隊*。**不存在客戶團隊物件，也不存在按記錄的團隊功能** —— 這個 Salesforce 味的名字描述的其實是平台的按記錄授權表 `sys_record_share`。HotCRM 確實帶了一條**名叫** `account_team_sharing` 的共享規則（`src/sales/sharing/account.sharing.ts`），但那是一條把一組客戶授權給某個崗位的規則，不是你能在某條記錄上往裡加人的團隊。
 
@@ -112,6 +112,8 @@ description: SSO、MFA、稽核日誌、secret 欄位通道、GDPR —— HotCRM
 ## 稽核日誌
 
 `sys_audit_log` 是真的，而且確實不可變：該物件是 `managedBy: 'append-only'`，其上每個欄位都是 `readonly: true`。它隨 `@objectstack/plugin-audit` 一起發布，而**本應用拿得到它** —— 在 `requires` 中宣告 `auth` 會讓 CLI 把 auth、security、audit 三個外掛作為一組註冊。在 **Setup → Audit Logs**（位於 *Diagnostics* 群組下）讀取，它帶了六個列表檢視：*Recent*、*Writes*、*Auth*、*Record Views*、*Config* 與 *All*。
+
+⚠️ **ObjectStack 17.6.0 改變了 Setup → Audit Logs 顯示的內容。** 稽核日誌現在只向每個讀者（管理員也不例外）顯示其仍能開啟的記錄的相關列。這些列仍然儲存著，但以下幾類不再出現在主控台中：每一筆 `delete` 列（記錄已不存在）、`logout` 列以及工作階段已結束的 `login` 列，還有讀者無法開啟的記錄的相關列。`config_change` 列仍會顯示。需要查看全部列的審查，必須由以系統權限執行的伺服器端工作來做；主控台不提供這樣的檢視。
 
 分類表是沒測過的那部分。對照真正存在的寫入方重新判定：
 
@@ -149,7 +151,7 @@ description: SSO、MFA、稽核日誌、secret 欄位通道、GDPR —— HotCRM
 
 ## 加密
 
-### 靜態加密
+### 靜態加密 [#at-rest]
 
 **AES-256 是真的，而且不是本頁所描述的那個東西。** *(已更正。)*
 
@@ -177,7 +179,7 @@ Unrecognized key(s) on this field: `encrypted`.
 
 **Webhook 以 HMAC-SHA256 簽名** —— 作為平台能力是真的（`@objectstack/plugin-webhooks`），但 **HotCRM 沒有宣告 `webhooks` 能力**，所以本應用既不發送也不簽名。
 
-### 欄位級控制
+### 欄位級控制 [#field-level-controls]
 
 舊的*欄位級加密*一節告訴管理員「在欄位定義中把敏感欄位標記為 **encrypted**」。那個鍵會被拒絕（見上），而它點名的 *View Encrypted Data* 權限在已安裝依賴樹中是**零命中**。取而代之的是三條真實通道，它們各司其職：
 
@@ -239,7 +241,7 @@ HotCRM 能告訴你的是它給了你什麼可用之物：上文的 `type: 'secr
 
 ## 災難恢復
 
-*(your deployment。)* RPO、RTO、快照頻率與跨區複製，是你的實例所運行的基礎設施的屬性。**本應用不排程任何備份、不度量任何恢復目標，已安裝依賴樹裡也沒有任何東西做這兩件事** —— 靜態加密一節提到的那個 `backup` schema 塊描述的是一個沒有消費者的形狀。本頁原先陳述的那些數字（1 小時 / 4 小時，30 天日快照與 1 年週快照）屬於 *(unsourced)*，不會被當作實測結果再重複一次。
+*(your deployment。)* RPO、RTO、快照頻率與跨區複製，是你的實例所運行的基礎設施的屬性。**本應用不排程任何備份、不度量任何恢復目標，已安裝依賴樹裡也沒有任何東西做這兩件事** —— [靜態加密](#at-rest)一節提到的那個 `backup` schema 塊描述的是一個沒有消費者的形狀。本頁原先陳述的那些數字（1 小時 / 4 小時，30 天日快照與 1 年週快照）屬於 *(unsourced)*，不會被當作實測結果再重複一次。
 
 自託管 —— 請參見[設定清單](/zh-Hant/docs/administration/setup)了解推薦的備份頻率，並把這個頻率當成需要你自己去落實的事。
 

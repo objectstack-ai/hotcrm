@@ -41,18 +41,23 @@ export const OpportunityViews = defineView({
     rowColor: {
       field: 'stage',
       colors: {
-        prospecting: '#94a3b8',
-        qualification: '#60a5fa',
+        prospecting: 'slate',
+        qualification: 'sky',
         // Teal sits between the cool qualification blue and the warm proposal
-        // amber, keeping the cool→warm funnel ramp readable. NOT the
-        // `#FFD700` this option carries in `_picklists.ts`: this map is a
-        // Tailwind palette, and gold is one hue step from proposal's
-        // `#f59e0b` — the two adjacent stages would tint rows the same.
-        needs_analysis: '#14b8a6',
-        proposal: '#f59e0b',
-        negotiation: '#a855f7',
-        closed_won: '#16a34a',
-        closed_lost: '#dc2626',
+        // amber, keeping the cool→warm funnel ramp readable. NOT the gold
+        // `#FFD700` this option carries in `_picklists.ts`: gold is one hue
+        // step from proposal's amber, so the two adjacent stages would tint
+        // rows the same.
+        //
+        // Values are colour NAMES, not hex: objectui's `useRowColor` resolves
+        // only a name from its own vocabulary (or a full `bg-*` class) and
+        // turns a hex into no colour at all — so until 17.6.0's lint said so,
+        // this map tinted nothing.
+        needs_analysis: 'teal',
+        proposal: 'amber',
+        negotiation: 'purple',
+        closed_won: 'green',
+        closed_lost: 'red',
       },
     },
     pagination: { pageSize: 25, pageSizeOptions: [25, 50, 100] },
@@ -250,9 +255,8 @@ export const OpportunityViews = defineView({
       // years)_(ago|from_now)}` — and it reaches the driver already substituted
       // for an ISO date. Measured on 17.0.0-rc.2, RE-MEASURED 2026-09-03 on
       // 17.2.0 (#1467), RE-RUN on 17.3.0 (#1676, after the PR #1577 bump) and
-      // RE-RUN again on the current pin 17.4.0 (#1883, after the PR #1814
-      // bump), so it is a reading on the CURRENT pin, and unchanged
-      // at every taking: over four rows parked
+      // RE-RUN again on 17.4.0 (#1883, after the PR #1814 bump; not yet on
+      // 17.5.0), unchanged at every taking: over four rows parked
       // 30d / 15d / 13d / 1d, `stage_entry_date < {14_days_ago}` returned the
       // 30d and 15d rows — the same two the equivalent day-start literal
       // returns, and not all four, which is what an unsubstituted token would
@@ -307,10 +311,10 @@ export const OpportunityViews = defineView({
       // so a saved-view filter value reaches the driver already substituted.
       // Measured on 17.0.0-rc.2, RE-MEASURED 2026-09-03 on 17.2.0 (#1467),
       // RE-RUN on 17.3.0 (#1676, after the PR #1577 bump) and RE-RUN again on
-      // the current pin 17.4.0 (#1883, after the PR #1814 bump), unchanged at
+      // 17.4.0 (#1883, after the PR #1814 bump), unchanged at
       // every taking — see the runtime block in
       // `test/forecast-current-quarter-view.test.ts`, which is that
-      // re-measurement and runs green on the current pin.
+      // re-measurement (not yet re-run on 17.5.0).
       //
       // The upper bound is INCLUSIVE against `{current_quarter_end}` rather
       // than half-open against `{next_quarter_start}`, and that choice is

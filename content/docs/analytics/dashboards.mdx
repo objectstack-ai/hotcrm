@@ -110,7 +110,7 @@ The service team's daily ops view.
 - **Cases by Origin** — Email / Phone / Web / Chat / Portal (bar).
 - **Daily Case Volume** — new cases created over the last 30 days.
 - **SLA Compliance** — share of cases resolved within SLA, against a 95% target line (gauge).
-- **Open Cases by Priority** — open cases and their SLA-violation rate per priority (table).
+- **My Open Cases by Priority** — the signed-in user's own open cases and their SLA-violation rate per priority (table). It ignores the Agent filter: it always shows your own cases.
 
 **Controls**: a date-range picker over the date a case was created (defaults to the last 90 days), Agent and Priority filters, and a one-minute refresh — service desks need fresh numbers. It is the only picker that windows a case date rather than the opportunity close date, and the only one that does not default to this quarter, so every number on this page is bounded by the last 90 days until you widen it. Daily Case Volume opts out of the picker and keeps its own 30-day window, so the chart under that title always covers the 30 days it names.
 
