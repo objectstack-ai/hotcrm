@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { defineMapping } from '@objectstack/spec/data';
-import { LEAD_SOURCE_SYNONYMS } from './_shared';
+import { DEPARTMENT_SYNONYMS, LEAD_SOURCE_SYNONYMS } from './_shared';
 
 /**
  * Contact import mapping — see `account_import.mapping.ts` for the shared
@@ -39,7 +39,12 @@ export const ContactImportMapping = defineMapping({
     { source: 'Account Name', target: 'crm_account', transform: 'lookup' },
 
     { source: 'Title', target: 'title' },
-    { source: 'Department', target: 'department' },
+    {
+      source: 'Department',
+      target: 'department',
+      transform: 'map',
+      params: { valueMap: DEPARTMENT_SYNONYMS },
+    },
     { source: 'Email', target: 'email' },
     { source: 'Phone', target: 'phone' },
     { source: 'Mobile', target: 'mobile' },
