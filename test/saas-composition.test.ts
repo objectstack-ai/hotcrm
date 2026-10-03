@@ -200,6 +200,17 @@ describe('tenant_admin is an ORG admin, judged by the platform capability regist
     ).toBe('org');
   });
 
+  it('holds the org-scoped presentation-authoring capability (#1369)', () => {
+    // The org-bounded subset of metadata authoring. Its scope is read off the
+    // installed registry, never copied here: if the platform ever widened it,
+    // this and the platform-scoped pin below would both go red.
+    expect(TenantAdminProfile.systemPermissions).toContain('manage_org_presentation');
+    expect(
+      scopeOf.get('manage_org_presentation'),
+      'manage_org_presentation is not org-scoped on the installed platform line — a tenant profile must not hold it',
+    ).toBe('org');
+  });
+
   it('grants NO platform-scoped capability', () => {
     // Read off the platform's own registry rather than a hand-listed denylist,
     // so a capability that becomes platform-scoped upstream — or a new one
