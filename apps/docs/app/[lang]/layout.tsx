@@ -1,41 +1,45 @@
 import { RootProvider } from 'fumadocs-ui/provider/next';
-import { defineI18nUI } from 'fumadocs-ui/i18n';
+import { defineI18nUI, type Translations } from 'fumadocs-ui/i18n';
 import { i18n } from '@/lib/i18n';
 
+// fumadocs-ui keys each UI string by its English text plus the component it
+// sits in (`'Search(search dialog)'`), and silently ignores a key it does not
+// know — so a misspelt key ships an English label on a Chinese page with every
+// check green. `satisfies Partial<Translations>` turns that into a type error.
 const { provider } = defineI18nUI(i18n, {
-  translations: {
-    en: { displayName: 'English' },
-    'zh-Hans': {
-      displayName: '简体中文',
-      search: '搜索文档',
-      searchNoResult: '没有找到结果',
-      toc: '本页目录',
-      tocNoHeadings: '本页无标题',
-      lastUpdate: '最后更新于',
-      chooseLanguage: '选择语言',
-      nextPage: '下一页',
-      previousPage: '上一页',
-      chooseTheme: '选择主题',
-      editOnGithub: '在 GitHub 上编辑',
-      pageActionsCopyMarkdown: '复制 Markdown',
-      pageActionsOpen: '打开',
-    },
-    'zh-Hant': {
-      displayName: '繁體中文',
-      search: '搜尋文檔',
-      searchNoResult: '沒有找到結果',
-      toc: '本頁目錄',
-      tocNoHeadings: '本頁無標題',
-      lastUpdate: '最後更新於',
-      chooseLanguage: '選擇語言',
-      nextPage: '下一頁',
-      previousPage: '上一頁',
-      chooseTheme: '選擇佈景主題',
-      editOnGithub: '在 GitHub 上編輯',
-      pageActionsCopyMarkdown: '複製 Markdown',
-      pageActionsOpen: '開啟',
-    },
-  },
+  en: { displayName: 'English' },
+  'zh-Hans': {
+    displayName: '简体中文',
+    'Search(search trigger)': '搜索文档',
+    'Search(search dialog)': '搜索文档',
+    'No results found(search dialog)': '没有找到结果',
+    'On this page(table of contents)': '本页目录',
+    'No Headings(table of contents)': '本页无标题',
+    'Last updated on(page footer)': '最后更新于',
+    'Choose a language(language switcher)': '选择语言',
+    'Choose a language(language switcher)(aria-label)': '选择语言',
+    'Next Page(pagination)': '下一页',
+    'Previous Page(pagination)': '上一页',
+    'Edit on GitHub(edit page)': '在 GitHub 上编辑',
+    'Copy Markdown(page actions)': '复制 Markdown',
+    'Open(page actions)': '打开',
+  } satisfies Partial<Translations>,
+  'zh-Hant': {
+    displayName: '繁體中文',
+    'Search(search trigger)': '搜尋文檔',
+    'Search(search dialog)': '搜尋文檔',
+    'No results found(search dialog)': '沒有找到結果',
+    'On this page(table of contents)': '本頁目錄',
+    'No Headings(table of contents)': '本頁無標題',
+    'Last updated on(page footer)': '最後更新於',
+    'Choose a language(language switcher)': '選擇語言',
+    'Choose a language(language switcher)(aria-label)': '選擇語言',
+    'Next Page(pagination)': '下一頁',
+    'Previous Page(pagination)': '上一頁',
+    'Edit on GitHub(edit page)': '在 GitHub 上編輯',
+    'Copy Markdown(page actions)': '複製 Markdown',
+    'Open(page actions)': '開啟',
+  } satisfies Partial<Translations>,
 });
 
 export function generateStaticParams() {

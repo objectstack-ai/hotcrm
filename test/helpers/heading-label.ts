@@ -4,6 +4,7 @@
  * A fumadocs **explicit heading id** — `## 📈 Sales Performance [#sales-performance]`.
  *
  * This is fumadocs' OWN regex, copied verbatim from `fumadocs-core@16.9.3`
+ * and re-measured byte-identical in `16.15.14`
  * (`dist/mdx-plugins/remark-heading.js` — the version `apps/docs/package.json`
  * pins, rendering the same `content/docs` tree the drift guards read):
  *
