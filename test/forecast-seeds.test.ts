@@ -151,16 +151,16 @@ describe('forecast seed periods are calendar-true (#530)', () => {
  *
  * `forecast_snapshot` upserts the row whose window contains today, keyed by
  * OWNER. A seeded row in that same window cannot satisfy that lookup at the
- * moment the sweep reads it — a seed writes no owner, and `demo_bootstrap`'s
- * claim is a separate, later sweep — so the flow reports the period missing and
- * opens a SECOND row beside it. Both span the quarter; one is ownerless. Every
- * owner-grouped consumer then shows a phantom duplicate for the current
- * quarter, on every re-seeded dev boot.
+ * moment the sweep reads it — a seed writes no owner, and the platform's
+ * seed-ownership claim is a separate, later write — so the flow reports the
+ * period missing and opens a SECOND row beside it. Both span the quarter; one
+ * is ownerless. Every owner-grouped consumer then shows a phantom duplicate
+ * for the current quarter, on every re-seeded dev boot.
  *
- * Claiming `crm_forecast` (which `demo_bootstrap` now does, for the settled
- * rows) does NOT make that safe: it only decides which of the two scheduled
- * sweeps reaches the window first, and a duplicate opened by losing that race
- * never heals. The invariant has to hold whatever the order, so it is enforced
+ * Claiming `crm_forecast` (which the platform's claim does, for the settled
+ * rows) does NOT make that safe: it only decides which of the claim and the
+ * scheduled sweep reaches the window first, and a duplicate opened by losing
+ * that race never heals. The invariant has to hold whatever the order, so it is enforced
  * where order cannot reach it — in the seed data.
  *
  * The forbidden window is derived from the flow's own lookup filter rather than

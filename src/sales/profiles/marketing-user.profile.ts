@@ -53,9 +53,10 @@ export const MarketingUserProfile = {
   rowLevelSecurity: [
     {
       name: 'opportunity_private_owner_only_marketing',
-      label: 'Private opportunities stay with their owner',
-      description:
-        'A deal flagged Private is visible only to its owner, even to holders of org-wide opportunity read.',
+      // A deal flagged Private is visible only to its owner, even to holders of
+      // org-wide opportunity read. (`rowLevelSecurity[].label` / `description`
+      // have no runtime effect — liveness: dead in 17.6.0 — so the intent lives
+      // in this comment.)
       object: 'crm_opportunity',
       operation: 'select' as const,
       using: 'is_private == false || owner_id == current_user.id',
@@ -77,9 +78,8 @@ export const MarketingUserProfile = {
     // `{id: {$null: false}}`).
     {
       name: 'marketing_campaign_updates',
-      label: 'Marketing works any campaign',
-      description:
-        'Marketing users edit any campaign (and thereby enrol members into it), not only campaigns they created.',
+      // Marketing users edit any campaign (and thereby enrol members into it),
+      // not only campaigns they created.
       object: 'crm_campaign',
       operation: 'update' as const,
       using: 'id != null',
@@ -89,9 +89,8 @@ export const MarketingUserProfile = {
     // default owner-only-writes policy would otherwise deny.
     {
       name: 'marketing_campaign_member_updates',
-      label: 'Marketing updates any campaign member',
-      description:
-        'Marketing users update member response state on rows they did not personally create.',
+      // Marketing users update member response state on rows they did not
+      // personally create.
       object: 'crm_campaign_member',
       operation: 'update' as const,
       using: 'id != null',

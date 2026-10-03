@@ -62,6 +62,5 @@ export const avgDealSizeMetricWidget = (
   colorVariant: 'orange',
   dataset: 'opportunity_metrics', values: ['avg_amount'],
   layout,
-  options: { icon: 'bar-chart' },
   ...overrides,
 });

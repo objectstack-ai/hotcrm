@@ -135,11 +135,9 @@ import { flowGraphDeep, regionsOf } from './helpers/flow-regions';
  *
  * ### What measured CLEAN, and why that is not the same as safe
  *
- *   - `demo_bootstrap` (`vars.firstUser`) — `get_user` dominates every read and
- *     binds `null` when the org has no users yet; the whole flow completes on a
- *     zero-user org (reproduced below). Nothing to fix.
- *   - `lead_conversion`'s `vars.matchedAccount` / `vars.matchedContact` — same
- *     shape, same reason: a `get_record` dominates each read. Nothing to fix,
+ *   - `lead_conversion`'s `vars.matchedAccount` / `vars.matchedContact` — a
+ *     `get_record` dominates each read and binds `null` when it matches nothing,
+ *     so every read sees a bound variable. Nothing to fix,
  *     and deliberately NOT guarded — a guard here would be the papering-over
  *     the class table warns about.
  *   - `quote_generation` (`oppRecord.stage`) and `opportunity_approval`
@@ -1230,20 +1228,6 @@ describe('the two defects, reproduced end-to-end', () => {
       // The resume signal wins over the declared default, same as it won over
       // the assignment node it replaced (#1155) — a default that could not be
       // answered would make the checkbox decorative.
-    } finally {
-      await b.close();
-    }
-  }, 60_000);
-
-  it('demo_bootstrap: a zero-user org completes instead of aborting', async () => {
-    // The `vars.firstUser` reads measured CLEAN — `get_user` dominates them and
-    // binds `null`. This pins that, so a future edit that moves the read above
-    // the `get_record` is caught here rather than on a demo org.
-    const b = await boot(['demo_bootstrap']);
-    try {
-      const done = await b.engine.execute('demo_bootstrap', {});
-      expect(done.error ?? null).toBeNull();
-      expect(done.success).not.toBe(false);
     } finally {
       await b.close();
     }

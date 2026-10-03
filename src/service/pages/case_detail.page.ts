@@ -46,7 +46,9 @@ export const CaseDetailPage: Page = {
             // `icon` removed from `page:header` in @objectstack/spec 17.0.0
             // (#6946, ADR-0087 D2) — deleted, not renamed. See the full note on
             // `account_detail.page.ts`; nothing ever drew it.
-            breadcrumb: true,
+            // `breadcrumb` retired from `page:header` in @objectstack/spec 17.6.0
+            // (#20785, `page-header-breadcrumb-removed`) — deleted: no renderer
+            // ever drew a trail for it; the app shell's own trail is unchanged.
             // Action IDs, not `ActionDef` objects: `PageHeaderProps.actions` is
             // `z.array(z.string())` ("Action IDs to show in header") in
             // @objectstack/spec 17.3.0, and this repo authors against the
@@ -131,98 +133,45 @@ export const CaseDetailPage: Page = {
                     properties: {
                       // `columns` is a STRING enum ('1'|'2'|'3'|'4') in
                       // @objectstack/spec 17, and `layout` was removed there
-                      // (#6946 / ADR-0087 D2) — see the same note on
-                      // opportunity_detail.page.ts.
+                      // (#6946 / ADR-0087 D2).
                       columns: '2',
-                      // Same rule as the opportunity page (#1211): a section lists
-                      // only what it is responsible for. `record:details` drops
-                      // every field the mounted `record:highlights` registered
-                      // (`status`, `priority`, `sla_due_date`, `is_sla_violated`,
-                      // `owner_id`, `crm_account`) plus the title candidate
-                      // `subject` (the page H1 is `{case_number} · {subject}`), and
-                      // a section left holding only empty fields renders nothing.
-                      // Listing those names here therefore promised fields the tab
-                      // never showed.
+                      // Every section references one of crm_case's `fieldGroups`
+                      // (#970, the #806 class ruling C): the renderer derives
+                      // members, label, icon and collapse state from the object,
+                      // so this page curates only the order. The full note —
+                      // what a group section does on 17.6.0 and what may not sit
+                      // beside `group` — is on `lead_detail.page.ts`.
+                      //
+                      // The highlights strip still wins (#1211): the renderer
+                      // drops what `record:highlights` registered (`status`,
+                      // `priority`, `sla_due_date`, `is_sla_violated`,
+                      // `owner_id`, `crm_account`) and the title candidate
+                      // `subject` from the derived members.
+                      //
+                      // `escalated_date` — written by three flows and shown
+                      // nowhere until now (#970) — arrives with the `escalation`
+                      // group, beside `is_escalated` and `escalation_reason`.
+                      //
+                      // `internal_notes` (#1428) is in the `system` group with
+                      // `is_closed`. A group whose members are ALL empty renders
+                      // nothing, but a boolean always holds a value, so `system`
+                      // renders on every case and an unwritten `internal_notes`
+                      // stays reachable the way every empty field here is: the
+                      // section's "Show N empty fields" toggle, then inline edit.
+                      // ⛔ Not the create form — `/new` and edit both resolve
+                      // `view.form`, and `case.hook.ts` nulls the column for
+                      // anonymous web-to-case submissions.
+                      //
+                      // `resolution` / `resolved_by_article` render once the case
+                      // carries one; `close_case` is the flow that collects the
+                      // resolution.
                       sections: [
-                        {
-                          name: 'info',
-                          label: 'Case Information',
-                          fields: [
-                            'case_number',
-                            'crm_contact',
-                            'type',
-                            'origin',
-                          ],
-                        },
-                        {
-                          name: 'status',
-                          label: 'Status & SLA',
-                          fields: [
-                            'is_escalated',
-                            'escalation_reason',
-                            'resolution_time_hours',
-                          ],
-                        },
-                        {
-                          // `internal_notes` lives HERE, in the prose section
-                          // that always renders, and NOT in an "Internal
-                          // Notes" section of its own (#1428). A section is not
-                          // a container an author can rely on: measured in the
-                          // shipped console (`@objectstack/console` 17.2.0,
-                          // `dist/assets/plugins-views-*.js` -> `DetailSection`),
-                          // a section whose fields are ALL empty returns
-                          // `null` — no heading, no shell, no toggle. A section
-                          // holding only `internal_notes` would therefore
-                          // render nothing until the field is non-empty, and
-                          // the only way to make it non-empty is to author it
-                          // in that section. That circle is the whole reason
-                          // this field had no surface to begin with, and a
-                          // dedicated section would have re-created it while
-                          // looking like a fix.
-                          //
-                          // This section escapes it because `description` is
-                          // REQUIRED on the object, so it is never empty and
-                          // the section always renders. An unwritten
-                          // `internal_notes` is then reachable the same way
-                          // every other empty field on this page is: the
-                          // section's own "Show N empty fields" toggle
-                          // (rendered whenever `hideEmpty` — default true —
-                          // hid at least one field), and inline edit
-                          // (`inlineEdit` defaults true where the profile
-                          // grants update) authors it in place.
-                          //
-                          // ⛔ Inline edit is the surface on purpose; the
-                          // header's Edit button is not an alternative. Both
-                          // `/new` and edit resolve `view.form`, so the record
-                          // form IS the create form (`src/views/case.view.ts`),
-                          // and #1427 narrowed it to what a creator legitimately
-                          // authors at intake. Putting `internal_notes` back on
-                          // that form would hand it to the intake path, where
-                          // `case.hook.ts` nulls the column for anonymous
-                          // web-to-case submissions anyway.
-                          //
-                          // ⛔ `customer_rating` / `customer_feedback` are not
-                          // here because they no longer exist: #1428 retired
-                          // both under ADR-0049 enforce-or-remove (maintainer
-                          // ruling, decision batch #21, 2026-09-03), together
-                          // with the `case_csat_followup` flow whose only job
-                          // was to prompt for them. Do not "complete the set"
-                          // here: a satisfaction score the customer did not
-                          // give is a different fact from one they did, and
-                          // neither field was named in any profile, so an input
-                          // would have been open to every profile that can edit
-                          // a case.
-                          //
-                          // Field-level security is untouched by any of this —
-                          // `crm_case.internal_notes` stays editable for
-                          // `service_agent`, read-only for `sales_manager` and
-                          // unreadable for `sales_rep` (`src/profiles/`).
-                          name: 'description',
-                          label: 'Description',
-                          columns: 1,
-                          collapsible: true,
-                          fields: ['description', 'resolution', 'internal_notes'],
-                        },
+                        { group: 'basic' },
+                        { group: 'origin' },
+                        { group: 'sla' },
+                        { group: 'escalation' },
+                        { group: 'resolution' },
+                        { group: 'system' },
                       ],
                     },
                   },
@@ -305,7 +254,6 @@ export const CaseDetailPage: Page = {
   ],
 
   isDefault: true,
-  assignedProfiles: ['service_agent', 'system_admin'],
 
   aria: {
     ariaLabel: 'Case Detail Page',

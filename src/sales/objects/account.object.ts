@@ -318,7 +318,6 @@ export const Account = ObjectSchema.create({
     // Number fields
     annual_revenue: Field.currency({
       label: 'Annual Revenue',
-      scale: 2,
       min: 0,
       group: 'financials',
       trackHistory: true,
@@ -390,7 +389,6 @@ export const Account = ObjectSchema.create({
     annual_purchasing_budget: Field.currency({
       label: 'Annual Purchasing Budget',
       description: "What this account expects to SPEND with vendors this year — not its own revenue.",
-      scale: 2,
       min: 0,
       group: 'business_profile',
     }),

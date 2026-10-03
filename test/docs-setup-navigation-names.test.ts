@@ -623,19 +623,7 @@ const KNOWN_UNRESOLVED_APP_WORDS: {
   word: string;
   app: 'setup' | 'studio' | null;
   why: string;
-}[] = [
-  {
-    word: '设置',
-    app: 'setup',
-    why:
-      '#1403 — 19 bold citations open with 设置 while the Setup app ships 系统设置 as ' +
-      'its zh-CN label. Whether 设置 is acceptable prose for an app labelled 系统设置 ' +
-      'is a docs-REGISTER question, not a mechanical one, and #1403 was ruled to do ' +
-      'the mechanical half only: the word is quarantined here rather than answered ' +
-      'in passing, and every one of those leaves is still resolved live against ' +
-      'Setup. Rewriting the citations, or deciding they are fine, is its own card.',
-  },
-];
+}[] = [];
 
 /** The quarantine entry for `word`, if it has one. */
 const quarantinedAppWord = (word: string): (typeof KNOWN_UNRESOLVED_APP_WORDS)[number] | undefined =>
@@ -936,7 +924,7 @@ describe('docs cite navigation names the platform actually ships (#853)', () => 
       const runs = boldRuns();
       expect(runs.length).toBeGreaterThan(250);
       expect(runs.some((r) => r.first === 'Studio' && r.leaf === 'Developer')).toBe(true);
-      expect(runs.some((r) => r.first === '设置' && r.leaf === '用户')).toBe(true);
+      expect(runs.some((r) => r.first === '系统设置' && r.leaf === '用户')).toBe(true);
     });
 
     it('names an app the platform ships, or is quarantined', () => {

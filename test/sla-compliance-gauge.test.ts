@@ -64,18 +64,15 @@ describe('the SLA gauge is bound to a compliance measure (#1213)', () => {
   });
 
   /**
-   * PM assumption 3, checked rather than assumed: the ladder and the target
-   * line were authored for compliance. They needed no inversion — it was the
-   * plotted value that disagreed with them.
+   * PM assumption 3, checked rather than assumed: the target line was
+   * authored for compliance. It needed no inversion — it was the plotted value
+   * that disagreed with it. (The green/amber/red `options.thresholds` ladder
+   * this test also pinned was deleted in 17.6.0's strict cleanup: no dashboard
+   * renderer reads widget `thresholds`, so it never coloured anything.)
    */
-  it('keeps the compliance-shaped ladder and target line unchanged', () => {
+  it('keeps the compliance-shaped target line unchanged', () => {
     const w = gauge();
     expect(w.colorVariant).toBe('success');
-    expect(w.options.thresholds).toEqual([
-      { value: 0.95, color: 'success' },
-      { value: 0.85, color: 'warning' },
-      { value: 0, color: 'danger' },
-    ]);
     const target = (w.chartConfig?.annotations ?? []).find((a: AnyRec) => a.label === 'Target');
     expect(target, 'the 0.95 target line is gone').toBeTruthy();
     expect(target.value).toBe(0.95);
@@ -348,20 +345,5 @@ describe('the gauge reads 100% on the seeded demo org', () => {
     } finally {
       await (ql as AnyRec)?.close();
     }
-  });
-
-  /**
-   * What the reader sees, at that value. 1.0 clears the 0.95 target and lands
-   * in the success band — while the number the widget used to plot (a 0.0
-   * violation rate) would have landed in `danger` under the very same ladder.
-   * That mismatch, not the ladder, was the defect.
-   */
-  it('lands in the success band at 100%, where the old value landed in danger', () => {
-    const bandFor = (v: number): string =>
-      (gauge().options.thresholds as AnyRec[])
-        .filter((t) => v >= (t.value as number))
-        .sort((a, b) => (b.value as number) - (a.value as number))[0].color as string;
-    expect(bandFor(1)).toBe('success');
-    expect(bandFor(0)).toBe('danger');
   });
 });

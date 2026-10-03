@@ -139,7 +139,7 @@ export const MassUpdateStageAction: Action = {
         // from the UI. Collect the miss, keep going, reject once at the end.
         //
         // The catch is deliberately cause-AGNOSTIC — but NOT because the cause
-        // is invisible. On the pinned runtime (17.4.0, \`hostErrorToVm\`) a host
+        // is invisible. Read on 17.4.0 (\`hostErrorToVm\`; not re-read on 17.5.0), a host
         // rejection reaches a body as \`name\` and \`message\` plus, when the host
         // error carries them, \`code\`, \`status\`, \`fields\` and \`userMessage\` —
         // nothing else, so a stale id arrives branchable as

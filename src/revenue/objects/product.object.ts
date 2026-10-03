@@ -91,7 +91,6 @@ export const Product = ObjectSchema.create({
     list_price: Field.currency({ 
       label: 'List Price',
       group: 'pricing',
-      scale: 2,
       min: 0,
       required: true,
       storage: { notNull: true },
@@ -100,7 +99,6 @@ export const Product = ObjectSchema.create({
     cost: Field.currency({ 
       label: 'Cost',
       group: 'pricing',
-      scale: 2,
       min: 0,
     }),
     

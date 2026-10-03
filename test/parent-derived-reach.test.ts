@@ -20,17 +20,18 @@ import stack from '../objectstack.config';
  *
  * ### Why this file exists
  *
- * #549 asks whether `crm_quote` / `crm_contract` should become
+ * #549 asked whether `crm_quote` / `crm_contract` should become
  * `controlled_by_parent` under `crm_account`, so that a rep who receives an
- * account through a territory rule also sees its quotes and contracts. Every
- * other test in this repo reads METADATA; none of them can answer what the
- * engine does with it. So this one boots the shipped stack — ObjectQL +
- * `plugin-security` + `plugin-sharing`, the same plugins `objectstack serve`
- * mounts — over the app's own `objectstack.config.ts`, materialises the
- * territory sharing rule, and asks the engine, as a real `sales_rep`, what it
- * returns.
+ * account through a territory rule also sees its quotes and contracts. The
+ * 2026-08-31 ruling converted both. Every other test in this repo reads
+ * METADATA; none of them can answer what the engine does with it. So this one
+ * boots the shipped stack — ObjectQL + `plugin-security` + `plugin-sharing`,
+ * the same plugins `objectstack serve` mounts — over the app's own
+ * `objectstack.config.ts`, materialises the territory sharing rule, and asks
+ * the engine, as a real `sales_rep`, what it returns.
  *
- * ### The measurement (17.0.0-rc.4): the derivation follows the parent's SHARING
+ * ### The measurement (17.4.0): the derivation follows the parent's SHARING —
+ * ### and composes across a two-level chain
  *
  * A rep who holds ONE account (acct_US, via `north_america_territory`), owns one
  * quote of their own (quote_own) and owns nothing else sees:
@@ -38,18 +39,20 @@ import stack from '../objectstack.config';
  *   | object                     | OWD                  | rep sees              |
  *   | -------------------------- | -------------------- | --------------------- |
  *   | `crm_account`              | private              | acct_US only          |
- *   | `crm_quote`                | private + own        | quote_own only — NOT the territory account's quote (the #549 keyhole) |
- *   | `crm_contract`             | private + own        | nothing               |
  *   | `crm_contact`              | controlled_by_parent | contact_US only — the readable account's |
- *   | `crm_quote_line_item`      | controlled_by_parent | line_own only — the readable quote's |
+ *   | `crm_quote`                | controlled_by_parent | quote_US + quote_own — the readable account's, and the owned one |
+ *   | `crm_contract`             | controlled_by_parent | contract_US only — the readable account's |
+ *   | `crm_quote_line_item`      | controlled_by_parent | line_US + line_own — the readable quotes' (two levels: line → quote → account) |
+ *   | `crm_opportunity_line_item`| controlled_by_parent | oli_own only — its master `crm_opportunity` is still private + own (the live control) |
  *
- * The last two rows are the point: a parent-derived child IS filtered to parents
- * the caller can read, and "can read" includes the paths a direct read of the
- * master would take — owner scope (quote_own, owned outright) AND
- * `sys_record_share` grants (acct_US, held only through the territory rule).
- * Folding the share path in is precisely what objectstack#5386 fixed; a
- * derivation that consulted RLS policies alone would show contact_US as
- * unreachable, because HotCRM authors no RLS policy on any master.
+ * "Can read" includes every path a direct read of the master would take —
+ * owner scope (quote_own, owned outright) AND `sys_record_share` grants
+ * (acct_US, held only through the territory rule). Folding the share path in is
+ * what objectstack#5386 fixed; composing the master's OWN derivation in as a
+ * third half — so a line item under a quote under an unreadable account stays
+ * unreadable and unwritable — is what objectstack#11082 fixed (PR #11183, first
+ * published in 17.4.0). On 17.1.0–17.2.0 the second level was org-wide, which
+ * is why the conversion waited for the pin to carry that fix (AGENTS.md §2).
  *
  * The write side derives the same way: `crm_contact` under the territory-shared
  * account is editable (the share carries `edit`), while a child of a master the
@@ -71,21 +74,15 @@ import stack from '../objectstack.config';
  * not see. That harness was written to go red the day the engine narrowed, which
  * it did on rc.4 — the assertions below are the flip, not a deletion.
  *
- * Consequence for #549: the premise its 2026-08-02 Option 2 decision was
- * rejected on has expired. Converting `crm_quote` / `crm_contract` to
- * `controlled_by_parent` no longer leaks them org-wide; it now means what the
- * decision assumed — "reachable by whoever can read the account". #549 is
- * flagged for re-evaluation on this measurement; the conversion itself is the
- * maintainer's call and is NOT made here.
- *
  * ### How to read a failure here
  *
  * These assertions pin measured behaviour. If a case starts failing because the
- * derivation widened again, that is a REGRESSION of objectstack#5386 and the
- * exposure #694 described is back — per-line pricing and contact PII readable by
- * every holder of object-level read. Report it upstream rather than relaxing the
- * assertion. Every narrowed case below carries a positive control (a row that
- * MUST still be visible), so none of them can pass by returning nothing.
+ * derivation widened again, that is a REGRESSION of objectstack#5386 (level one)
+ * or objectstack#11082 (level two) and the exposure #694 described is back —
+ * per-line pricing and contact PII readable by every holder of object-level
+ * read. Report it upstream rather than relaxing the assertion. Every narrowed
+ * case below carries a positive control (a row that MUST still be visible), so
+ * none of them can pass by returning nothing.
  */
 
 type AnyRec = Record<string, any>;
@@ -222,6 +219,23 @@ beforeAll(async () => {
   id.contract_US = await insert('crm_contract', contractOn(id.acct_US, id.contact_US));
   id.contract_JP = await insert('crm_contract', contractOn(id.acct_JP, id.contact_JP));
 
+  // The live control: `crm_opportunity` stays private + own, and its line
+  // items derive from it. oli_own is the positive half (the rep owns opp_own),
+  // oli_JP the negative half (opp_JP is owned by someone else, on the
+  // unreachable account).
+  const oppOn = (account: string, owner: string, name: string) => ({
+    name, crm_account: account, owner_id: owner, stage: 'prospecting', amount: 100,
+    close_date: '2026-06-01',
+  });
+  id.opp_JP = await insert('crm_opportunity', oppOn(id.acct_JP, id.owner, 'JP Opp'));
+  id.opp_own = await insert('crm_opportunity', oppOn(id.acct_US, id.rep, 'Own Opp'));
+  id.oli_JP = await insert('crm_opportunity_line_item', {
+    crm_opportunity: id.opp_JP, crm_product: product, quantity: 1, unit_price: 10,
+  });
+  id.oli_own = await insert('crm_opportunity_line_item', {
+    crm_opportunity: id.opp_own, crm_product: product, quantity: 1, unit_price: 10,
+  });
+
   // Materialise the declared rules against the population just inserted (the
   // boot backfill ran on an empty database).
   const rules: AnyRec = kernel.getService('sharingRules');
@@ -268,21 +282,30 @@ describe('the harness enforces (negative controls)', () => {
   });
 });
 
+/** Rows of `object` with this id visible to the rep — 0 or 1. */
+const repReadsById = async (object: string, rowId: string): Promise<number> => {
+  const rows = await ql.find(object, { where: { id: rowId } }, { context: repCtx });
+  return Array.isArray(rows) ? rows.length : 0;
+};
+
 describe('#549: what a territory-shared account carries into its related lists', () => {
-  it('quotes and contracts stay own-only — the keyhole this issue reports', async () => {
-    // The rep owns quote_own and nothing else. quote_US hangs off the account
-    // the territory rule shared to them, and still does not come back: a
-    // sharing rule widens the object it NAMES, not the records hanging off it.
-    // That is the #549 keyhole, unchanged by the rc.4 derivation fix — the fix
-    // narrowed `controlled_by_parent`, and `crm_quote` is `private`.
+  it('quotes and contracts follow the account — the keyhole this issue reported is closed', async () => {
+    // quote_US and contract_US hang off the account the territory rule shared
+    // to the rep, and both come back; quote_JP / contract_JP hang off the
+    // account they cannot reach, and neither does. `crm_quote` is no longer
+    // own-scoped: quote_own comes back because it hangs off acct_US too, not
+    // because the rep owns it. The negative half is asserted by id so the list
+    // assertion cannot pass by accident.
     expect(
       await repSees('crm_quote'),
-      'crm_quote is private + readScope own with no rule of its own',
-    ).toEqual(['quote_own']);
+      'crm_quote is controlled_by_parent under crm_account',
+    ).toEqual(['quote_US', 'quote_own']);
     expect(
       await repSees('crm_contract'),
-      'crm_contract is private + readScope own with no rule of its own',
-    ).toEqual([]);
+      'crm_contract is controlled_by_parent under crm_account',
+    ).toEqual(['contract_US']);
+    expect(await repReadsById('crm_quote', id.quote_JP)).toBe(0);
+    expect(await repReadsById('crm_contract', id.contract_JP)).toBe(0);
   });
 
   it('a controlled_by_parent child IS filtered to parents the caller can read', async () => {
@@ -299,16 +322,31 @@ describe('#549: what a territory-shared account carries into its related lists',
     ).toEqual(['contact_US']);
   });
 
-  it('the second level of the chain narrows the same way (quote_line_item → quote)', async () => {
-    // The two-level chain #549 asks about is `quote_line_item → quote →
-    // account`. Level one restricts on the quote's own reachability: the rep
-    // reads quote_own and neither of the other two, so exactly its line comes
-    // back. line_own is the positive control — without it this case would read
-    // `[]` and pass even if line items were denied outright.
+  it('the second level of the chain narrows the same way (quote_line_item → quote → account)', async () => {
+    // The two-level chain: `crm_quote_line_item` derives from `crm_quote`,
+    // which itself derives from `crm_account`. The rep reads quote_US and
+    // quote_own (both under acct_US) and not quote_JP, so exactly those two
+    // quotes' lines come back. This is the objectstack#11082 pass condition in
+    // the ruling: quote_JP unreadable ⇒ line_JP unreadable (and unwritable,
+    // asserted in the write block below). line_US is the positive control for
+    // the chain — a derivation that denied instead of narrowed would drop it.
     expect(
       await repSees('crm_quote_line_item'),
-      'line items no longer track the readable quote — objectstack#5386 regressed',
-    ).toEqual(['line_own']);
+      'line items no longer track the readable quotes — objectstack#5386 / #11082 regressed',
+    ).toEqual(['line_US', 'line_own']);
+    expect(
+      await repReadsById('crm_quote_line_item', id.line_JP),
+      'a line under a quote under an unreadable account is readable — objectstack#11082 regressed',
+    ).toBe(0);
+  });
+
+  it('live control: a child of a master that is still private does not widen', async () => {
+    // `crm_opportunity` stays private + own; its line items derive from it. If
+    // the conversion (or a platform change) had widened derivation itself
+    // rather than followed the account, oli_JP would appear here.
+    expect(await repSees('crm_opportunity')).toEqual(['opp_own']);
+    expect(await repSees('crm_opportunity_line_item')).toEqual(['oli_own']);
+    expect(await repReadsById('crm_opportunity_line_item', id.oli_JP)).toBe(0);
   });
 });
 
@@ -333,20 +371,44 @@ describe('#694: the parent-write gate derives from the master the same way', () 
       'the write gate stopped honouring the edit share on the master — objectstack#5386 regressed',
     ).toBe('allowed');
     expect(await repWrites('crm_quote_line_item', id.line_own, { quantity: 2 })).toBe('allowed');
+    // The territory share carries `edit` on acct_US, so the rep edits its quote
+    // (sales_rep holds allowEdit on crm_quote — the cost the 2026-08-02 ruling
+    // accepted) and, two levels down, its lines.
+    expect(await repWrites('crm_quote', id.quote_US, { name: 'US Quote v2' })).toBe('allowed');
+    expect(await repWrites('crm_quote_line_item', id.line_US, { quantity: 2 })).toBe('allowed');
   });
 
-  it('a child of an unreachable master is refused', async () => {
-    // Before rc.4 all three of these succeeded: the gate checked the master
-    // against the same empty RLS filter, so `allowEdit` on the child was enough
-    // to write children of masters the caller cannot even see (#694).
+  it('a child of an unreachable master is refused, at both levels', async () => {
+    // Before rc.4 all of these succeeded: the gate checked the master against
+    // the same empty RLS filter, so `allowEdit` on the child was enough to
+    // write children of masters the caller cannot even see (#694). Before
+    // 17.4.0 the line_JP write succeeded too: the master's own derivation was
+    // not composed in, so a master that was itself controlled_by_parent
+    // resolved to "no restriction" (objectstack#11082).
     expect(
       await repWrites('crm_contact', id.contact_JP, { title: 'Head of Ops' }),
       'a contact under an unreadable account became writable again — objectstack#5386 regressed',
     ).toBe('denied: PermissionDeniedError');
-    expect(await repWrites('crm_quote_line_item', id.line_US, { quantity: 2 })).toBe(
+    expect(await repWrites('crm_quote', id.quote_JP, { name: 'x' })).toBe(
       'denied: PermissionDeniedError',
     );
-    expect(await repWrites('crm_quote_line_item', id.line_JP, { quantity: 2 })).toBe(
+    expect(
+      await repWrites('crm_quote_line_item', id.line_JP, { quantity: 2 }),
+      'a line under a quote under an unreadable account became writable — objectstack#11082 regressed',
+    ).toBe('denied: PermissionDeniedError');
+    expect(await repWrites('crm_opportunity_line_item', id.oli_JP, { quantity: 2 })).toBe(
+      'denied: PermissionDeniedError',
+    );
+  });
+
+  it('a contract is never writable by a rep — the object gate, not the derivation', async () => {
+    // sales_rep holds allowEdit: false on crm_contract, so even the contract
+    // under the account they can EDIT (acct_US, `edit` share) is refused. The
+    // object gate refuses before the parent-write gate is consulted.
+    expect(await repWrites('crm_contract', id.contract_US, { contract_value: 2 })).toBe(
+      'denied: PermissionDeniedError',
+    );
+    expect(await repWrites('crm_contract', id.contract_JP, { contract_value: 2 })).toBe(
       'denied: PermissionDeniedError',
     );
   });

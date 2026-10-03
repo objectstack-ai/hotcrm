@@ -15,9 +15,10 @@ import { Forecast } from '../objects/forecast.object';
 
 // ─── Forecasts ────────────────────────────────────────────────────────
 // `owner_id` is left unset: a seed cannot name a user and seed writes run
-// `isSystem`, so nothing stamps it — ownership is backfilled by
-// `demo_bootstrap`, which claims `crm_forecast` alongside the other
-// owner-scoped objects (#702). See the note at the foot of `src/data/index.ts`.
+// `isSystem`, so nothing stamps it — ownership is backfilled by the platform's
+// seed-ownership claim when the seed settles, which covers `crm_forecast`
+// alongside every other owner-scoped object (#702, #1892). See the note on
+// ownership in `objectstack.composition.ts`.
 //
 // ─── ONE PRODUCER PER WINDOW (#702) ───────────────────────────────────
 //

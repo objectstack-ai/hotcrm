@@ -15,7 +15,6 @@ import {
 } from './objectstack.composition.js';
 import { SystemAdminProfile, TenantAdminProfile } from './objectstack.composition.js';
 import { resolveComposition } from './src/sales/data/index.js';
-import { DemoBootstrapFlow } from './src/sales/flows/index.js';
 
 // ─── Which SHAPE of HotCRM this build assembles (#1361) ───────────────────
 //
@@ -34,26 +33,17 @@ import { DemoBootstrapFlow } from './src/sales/flows/index.js';
 // but it has no per-family or per-tenant selection and none is chartered — so
 // WHAT gets replayed is decided once, here, for every tenant alike.
 //
-// Three things change, and nothing else. There is no runtime branch anywhere in
+// Two things change, and nothing else. There is no runtime branch anywhere in
 // `src/`, and no enterprise package is imported: an artifact built either way
-// runs on the community runtime.
+// runs on the community runtime. Both shapes register the same flows: the one
+// flow the SaaS shape used to drop, the `demo_bootstrap` ownership sweep, is
+// retired from the app (#1892) — the platform claims seeded rows itself.
 //
 //  1. `data` — the catalogue family only. See `SaasTenantSeedData`.
-//  2. `flows` — `demo_bootstrap` is dropped. It is a DEMO sweep (its own header
-//     says so) and under the wall it is actively wrong, not merely useless: it
-//     runs `runAs: 'system'`, and a system context is the one context the
-//     organization predicate does not apply to. Measured on a real engine under
-//     `OS_TENANCY_POSTURE=isolated` — the sweep's own shape, a system-context
-//     select of ownerless rows followed by an owner stamp, sees rows in EVERY
-//     organization and writes org A's first user onto org B's row. That is an
-//     identity crossing the wall. `test/saas-composition.test.ts` reproduces it
-//     rather than asserting it in prose. (It is also redundant in this shape:
-//     the catalogue's `crm_product` declares no `owner_id`, so a catalog-only
-//     tenant has nothing ownerless for the sweep to claim.)
 //     `demo-staffing` needs no exclusion — `src/sales/sharing/demo-staffing.ts` is
 //     deliberately not exported from `src/sales/sharing/index.js` and not registered
 //     in any composition (#640, pinned by `test/demo-staffing.test.ts`).
-//  3. `permissions` — `system_admin` is replaced by `tenant_admin`, which holds
+//  2. `permissions` — `system_admin` is replaced by `tenant_admin`, which holds
 //     org-scoped `manage_org_users` instead of platform-scope `manage_users`.
 //     Read `src/sales/profiles/tenant-admin.profile.ts` for the full audit, including
 //     what `view_all_data` / `modify_all_data` mean under the wall.
@@ -61,16 +51,9 @@ const composition = resolveComposition();
 const isSaas = composition === 'saas';
 
 /**
- * Flows this composition registers.
- *
- * Filtered by IDENTITY, not by name string: renaming `demo_bootstrap` must not
- * silently turn the exclusion into a no-op that ships the sweep to every
- * tenant. `test/saas-composition.test.ts` additionally asserts the filter
- * removed exactly one flow, so a refactor that makes it match nothing is red.
+ * Permission sets this composition registers. Filtered by IDENTITY, not by name
+ * string, so a rename cannot silently turn the substitution into a no-op.
  */
-const compositionFlows = isSaas ? allFlows.filter((flow) => flow !== DemoBootstrapFlow) : allFlows;
-
-/** Permission sets this composition registers — same identity discipline. */
 const compositionPermissions = isSaas
   ? [...Object.values(allProfiles).filter((set) => set !== SystemAdminProfile), TenantAdminProfile]
   : Object.values(allProfiles);
@@ -93,7 +76,7 @@ export default defineStack({
     // enforces that pairing against `objectstack.manifest.json` instead of
     // trusting this comment, because two platform upgrades in a row (rc.2, then
     // rc.3) moved the manifest and left this line behind (#728).
-    engines: { protocol: '^17.4.0' },
+    engines: { protocol: '^17.6.0' },
   },
 
   // ─── Platform capabilities this app needs ─────────────────────────
@@ -133,13 +116,16 @@ export default defineStack({
   // surface. To run AI locally, declare `@objectstack/service-ai` (cloud) in
   // package.json — its mere presence best-effort auto-loads it.
   // `hierarchy-security` is the ONE enterprise-edition capability this app
-  // declares (#880). `sales_manager` authors `writeScope: 'own_and_reports'` on
-  // `crm_contract`, an ADR-0057 HIERARCHY scope resolved by the
-  // `hierarchy-scope-resolver` service that ships only in
-  // `@objectstack/security-enterprise`. Declaring the capability is REQUIRED to
-  // author that scope at all — `defineStack` refuses the grant outright without
-  // it — and the pair is one declaration: move them together or not at all.
+  // declares. It was introduced for #880 — `sales_manager` authored
+  // `writeScope: 'own_and_reports'` on `crm_contract`, an ADR-0057 HIERARCHY
+  // scope resolved by the `hierarchy-scope-resolver` service that ships only
+  // in `@objectstack/security-enterprise`, and `defineStack` refuses such a
+  // grant unless the capability is declared. Since #549 `crm_contract` is
+  // `controlled_by_parent` under the account, that scope is inert and is no
+  // longer authored; the app currently authors NO hierarchy scope at all.
   //
+  // The declaration STAYS. Maintainer ruling 2026-08-31 (#1378, pinned by
+  // `test/hierarchy-read-depth.test.ts`): nothing is removed from `requires[]`.
   // Maintainer ruling, 2026-08-11, verbatim: 「本项目是元数据app，在企业版运行就
   // 具备企业版相关的能力，不重复开发。」 The app states what it MEANS and the
   // edition supplies the capability, rather than approximating it with a broader
@@ -154,12 +140,7 @@ export default defineStack({
   // enterprise plugin in `plugins[]`. Only tier-gated tokens (ai / ai-studio /
   // i18n / ui / auth) have the dedicated hard-abort blocks the note above
   // describes. `objectstack validate` does print one informational line naming
-  // the package to install; that is expected output, asserted by
-  // `test/contract-write-depth.test.ts`, not a defect to silence.
-  //
-  // What an OPEN-edition boot gets: the resolver is absent, so the scope fails
-  // CLOSED to owner-only and a Sales Manager still cannot edit a rep's contract.
-  // That is an edition boundary, and the docs say so per edition.
+  // the package to install; that is expected output, not a defect to silence.
   requires: ['automation', 'triggers', 'analytics', 'auth', 'ui', 'approvals', 'sharing', 'hierarchy-security'],
 
   objects: allObjects,
@@ -172,7 +153,7 @@ export default defineStack({
   // spreadsheet loads without per-column mapping by hand. Templates:
   // `assets/import-templates/`.
   mappings: allMappings,
-  flows: compositionFlows,
+  flows: allFlows,
   skills: allSkills,
   permissions: compositionPermissions,
   apps: allApps,

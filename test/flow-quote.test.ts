@@ -55,16 +55,18 @@ describe('quote_generation flow — runtime', () => {
   });
 
   /**
-   * Regression pin for #1206 — the money fields carry the FIELD'S SCALE, not a
-   * raw IEEE-754 product.
+   * Regression pin for #1206 — the money fields carry whole cents, not a raw
+   * IEEE-754 product.
    *
    * ⛔ This pin asserts the VALUE, and it has to. The harness's in-memory data
-   * engine does not enforce field scale, so a pin that merely asserted "the run
+   * engine enforces no decimal places, so a pin that merely asserted "the run
    * did not fail" would be green both before and after the fix and would pin
-   * nothing at all. Against the real driver the pre-fix value is what the
-   * insert was REJECTED for — `Total Price must have at most 2 decimal places
-   * (got 11)` — and the rejection never reached the seller, so the value here
-   * is the only evidence the fix works.
+   * nothing at all. When #1206 was filed the real driver REJECTED the pre-fix
+   * value — `Total Price must have at most 2 decimal places (got 11)`, from the
+   * fields' since-retired `scale: 2` — and the rejection never reached the
+   * seller. Currency fields declare no `scale` now (#1965), so the real driver
+   * accepts that value and stores its tail; either way the value here is the
+   * only evidence the rounding works.
    *
    * Both discounts are the issue's own measurements on a 180,000 opportunity,
    * and between them they cover both edited expressions: at 30% only
@@ -74,7 +76,7 @@ describe('quote_generation flow — runtime', () => {
    * 10% and 0% the two cases above use — is exact either way and cannot catch
    * this.
    */
-  it('rounds discount_amount and total_price to the fields\' 2-decimal scale (#1206)', async () => {
+  it('rounds discount_amount and total_price to whole cents (#1206)', async () => {
     const at = async (discount: number) => {
       const h = makeQuote({
         crm_opportunity: [{
@@ -116,5 +118,43 @@ describe('quote_generation flow — runtime', () => {
     expect(q.subtotal).toBe(50000);
     expect(q.total_price).toBe(50000); // 0% discount
     expect(q.crm_contact == null, 'contact left empty').toBe(true);
+  });
+});
+
+/**
+ * The two pricing expressions are CEL value envelopes (#1984), and CEL divides
+ * an int by an int as INTEGERS. `round()` returns an int, so `round(x * 100) /
+ * 100` silently drops the cents there; only the decimal divisor `/ 100.0`
+ * keeps them. The pins above cannot see that: every amount they use prices to
+ * whole units. 1,234.56 at 10% is 123.456 → 123.46 with the decimal divisor
+ * and 123 with an integer one, and the total 1,111.104 → 1,111.10 vs 1,111 —
+ * so these go red if either divisor loses its `.0`.
+ */
+describe('quote_generation flow — CEL pricing (#1984)', () => {
+  const quoteAt = async (amount: unknown, screen: Rec) => {
+    const h = makeQuote({
+      crm_opportunity: [{
+        id: 'opp_4', name: 'Cents Deal', amount,
+        crm_account: 'acc_4', primary_contact: null, stage: 'qualification',
+      }],
+    });
+    await runQuote(h, 'opp_4', { quoteName: 'Q-4', expirationDays: 30, ...screen });
+    expect(h.store.crm_quote?.length, 'quote created').toBe(1);
+    return h.store.crm_quote[0];
+  };
+
+  it('keeps the cents: both divisors are decimal, not integer division', async () => {
+    const q = await quoteAt(1234.56, { discount: 10 });
+    expect(q.discount_amount).toBe(123.46);
+    expect(q.total_price).toBe(1111.1);
+  });
+
+  // The template dialect read a cleared discount as 0. A bare `double(discount)`
+  // ERRORS on null, which would fail the quote instead — the guard keeps the
+  // old pricing: no discount, full price.
+  it.each([null, ''])('prices a cleared discount (%j) as no discount', async (discount) => {
+    const q = await quoteAt(180000, { discount });
+    expect(q.discount_amount).toBe(0);
+    expect(q.total_price).toBe(180000);
   });
 });
