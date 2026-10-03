@@ -191,16 +191,26 @@ const write = (input: AnyRec, previous: AnyRec, user: { id: string } | null = { 
 
 const refusal = (input: AnyRec, previous: AnyRec) => write(input, previous).then(() => null, (e: AnyRec) => e);
 
-/** The three acts step 11 holds until 立项 — 更新阶段、投标、赢丢单. */
+/** The two acts step 11 holds until 立项 — 更新阶段 and 赢丢单 (a direct close is a stage change). */
 const HELD_ACTS: [string, AnyRec, string][] = [
   ['a stage move', { stage: 'needs_analysis' }, 'Stage'],
   ['a direct close', { stage: 'closed_won', win_reason: 'best_fit' }, 'Stage'],
-  ['recording the bid decision (yes)', { will_bid: true }, 'Will Bid'],
-  ['recording the bid decision (no)', { will_bid: false }, 'Will Bid'],
   ['a won/lost request', { requested_status: 'closed_lost', loss_reason: 'price' }, 'Requested Status'],
 ];
 
-describe('the write path — opportunity_lifecycle holds three acts until 立项 is approved', () => {
+/**
+ * Will Bid is RELEASED (#2004, the maintainer's ruling, option B). REQ-0006
+ * step 8 has the rep fill 是否投标 as INPUT to 立项, for the approver to read;
+ * holding it until approval would have the approver decide without it. Step
+ * 11's 投标 is the act of bidding, which HotCRM does not model.
+ */
+const RELEASED_ACTS: [string, AnyRec, AnyRec][] = [
+  ['recording the bid decision (yes)', { will_bid: true }, {}],
+  ['recording the bid decision (no)', { will_bid: false }, {}],
+  ['changing the bid decision', { will_bid: false }, { will_bid: true }],
+];
+
+describe('the write path — opportunity_lifecycle holds two acts until 立项 is approved', () => {
   for (const [shapeLabel, shape] of ARMED_SHAPES) {
     it.each(HELD_ACTS)(`refuses ${shapeLabel}: %s`, async (_l, input, named) => {
       const err = await refusal(input, shape);
@@ -214,11 +224,25 @@ describe('the write path — opportunity_lifecycle holds three acts until 立项
     });
   }
 
+  for (const [shapeLabel, shape] of ARMED_SHAPES) {
+    it.each(RELEASED_ACTS)(`lets through, for a deal ${shapeLabel}: %s — input to 立项 (step 8)`, async (_l, input, prior) => {
+      await expect(write(input, { ...shape, ...prior })).resolves.toBeUndefined();
+    });
+  }
+
+  it('names only what is still held when a write carries a held act beside Will Bid', async () => {
+    const err = await refusal({ stage: 'needs_analysis', will_bid: true }, { qualification_approval_status: 'pending' });
+    expect(err?.code).toBe('RECORD_LOCKED');
+    expect(err?.status).toBe(409);
+    expect(String(err?.message)).toContain('Stage');
+    expect(String(err?.message)).not.toContain('Will Bid');
+  });
+
   it.each(OFF_SHAPES)('lets every held act through for %s — today\'s behaviour, unchanged', async (_l, shape) => {
     for (const [, input] of HELD_ACTS) await expect(write(input, shape)).resolves.toBeUndefined();
   });
 
-  it('「新增商机可跟进」: an unqualified deal stays workable short of the three acts', async () => {
+  it('「新增商机可跟进」: an unqualified deal stays workable short of the two acts', async () => {
     const pending = { qualification_approval_status: 'pending', will_bid: true, requested_status: null };
     await expect(write({
       amount: 250, next_step: 'site visit', description: 'kick-off notes',
@@ -263,7 +287,8 @@ describe('the write path — opportunity_lifecycle holds three acts until 立项
  * `ok` = the write goes through; `立项` = refused by this gate; `status` =
  * refused by the step-14 gate. With only one gate armed the other is inert;
  * with both, 立项 answers first; once 立项 is approved the status-change
- * gate behaves exactly as it does alone.
+ * gate behaves exactly as it does alone. The bid decision is held by neither
+ * (#2004): it is input to 立项, so it reads `ok` in every row.
  */
 type Verdict = 'ok' | '立项' | 'status';
 const ACTS: [string, AnyRec][] = [
@@ -276,15 +301,15 @@ const MATRIX: [string, AnyRec, Verdict[]][] = [
   ['off/off', { qualification_approval_status: 'not_required', status_change_approval_status: 'not_required' },
     ['ok', 'ok', 'ok', 'ok']],
   ['立项 on (pending) / status off', { qualification_approval_status: 'pending', status_change_approval_status: 'not_required' },
-    ['立项', '立项', '立项', '立项']],
+    ['立项', 'ok', '立项', '立项']],
   ['立项 on (rejected) / status off', { qualification_approval_status: 'rejected', status_change_approval_status: 'not_required' },
-    ['立项', '立项', '立项', '立项']],
+    ['立项', 'ok', '立项', '立项']],
   ['立项 approved / status off', { qualification_approval_status: 'approved', status_change_approval_status: 'not_required' },
     ['ok', 'ok', 'ok', 'ok']],
   ['立项 off / status on', { qualification_approval_status: 'not_required', status_change_approval_status: 'pending' },
     ['ok', 'ok', 'ok', 'status']],
   ['both on, before 立项', { qualification_approval_status: 'pending', status_change_approval_status: 'pending' },
-    ['立项', '立项', '立项', '立项']],
+    ['立项', 'ok', '立项', '立项']],
   ['both on, 立项 approved', { qualification_approval_status: 'approved', status_change_approval_status: 'pending' },
     ['ok', 'ok', 'ok', 'status']],
 ];

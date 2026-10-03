@@ -124,13 +124,16 @@ const opportunityValidationHook: Hook = {
     // ─── 立项 (qualification) gate (REQ-0006 step 11) ───────────────────
     //
     // 「新增商机可跟进，立项通过后方可更新阶段、投标、赢丢单操作。」 Until 立项 is
-    // approved, three acts are refused and every other edit stays open:
+    // approved, two acts are refused and every other edit stays open:
     //   • any change of `stage` — 更新阶段, which includes a direct close
     //     (赢丢单);
-    //   • recording `will_bid` — 投标, the bid decision;
     //   • a NEW `requested_status` — the won/lost request (赢丢单) the step-14
     //     gate opens. So with both gates armed 立项 comes FIRST: an unqualified
     //     deal cannot even ask for a status change.
+    // `will_bid` (是否投标) is deliberately NOT held (#2004, ruled): step 8 has
+    // the rep fill it as INPUT to 立项, for the approver to read, so holding it
+    // until approval would have the approver decide without it. Step 11's 投标
+    // is the act of bidding, which HotCRM does not model.
     // Built on the step-14 gate below and deliberately the same in every
     // load-bearing term:
     //   • a TRANSITION GATE, not an invariant (AGENTS.md metadata semantics
@@ -157,13 +160,12 @@ const opportunityValidationHook: Hook = {
       if (qualification === 'pending' || qualification === 'rejected') {
         const held: string[] = [];
         if (typeof input.stage === 'string' && input.stage !== previous.stage) held.push('Stage');
-        if (typeof input.will_bid === 'boolean' && input.will_bid !== previous.will_bid) held.push('Will Bid');
         if (typeof input.requested_status === 'string' && input.requested_status !== '' && input.requested_status !== previous.requested_status) {
           held.push('Requested Status');
         }
         if (held.length > 0) {
           throw refuse(
-            `This deal needs qualification approval first: tick Request Qualification Approval. ${held.join(', ')} can change once it is approved.`,
+            `This deal needs qualification approval first: tick Request Qualification Approval. ${held.join(' and ')} can change once it is approved.`,
             'RECORD_LOCKED',
             409,
           );
