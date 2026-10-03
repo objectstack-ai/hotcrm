@@ -1,10 +1,11 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import { CampaignEnrollmentFlow } from '../src/flows/campaign-enrollment.flow';
-import { ContractRenewalFlow } from '../src/flows/contract-renewal.flow';
-import { OpportunityStagnationFlow } from '../src/flows/opportunity-stagnation.flow';
+import { CampaignEnrollmentFlow } from '../src/marketing/flows/campaign-enrollment.flow';
+import { ContractRenewalFlow } from '../src/revenue/flows/contract-renewal.flow';
+import { OpportunityStagnationFlow } from '../src/sales/flows/opportunity-stagnation.flow';
 import { makeFlowHarness, type Rec } from './helpers/flow-harness';
+import { edgesUnder } from './helpers/flow-regions';
 
 /**
  * Adoption pin for the platform's per-run summary (objectstack#4354).
@@ -33,9 +34,15 @@ import { makeFlowHarness, type Rec } from './helpers/flow-harness';
  * is permanent now that the platform ships the measurement for every flow.
  */
 
+/**
+ * UTC calendar throughout — `setUTCDate`, not `setDate`. Mixing local-calendar
+ * arithmetic with UTC rendering lands one UTC day late across a DST
+ * spring-forward, and no `TZ=UTC` run can tell the two spellings apart.
+ * `test/helpers/hook-harness.ts`'s `daysFromNow` carries the full reasoning.
+ */
 const day = (d: number): string => {
   const x = new Date();
-  x.setDate(x.getDate() + d);
+  x.setUTCDate(x.getUTCDate() + d);
   return x.toISOString().slice(0, 10);
 };
 
@@ -150,10 +157,16 @@ describe('flow run summary — healthy idempotent skipping vs a dead gate', () =
   /** The #4347 shape: the loop-body gate never opens, whatever the data says. */
   const withDeadGate = () => {
     const f = structuredClone(OpportunityStagnationFlow) as never as {
-      nodes: Array<{ id: string; config?: { body?: { edges: Array<{ id: string; condition?: unknown }> } } }>;
+      nodes: Array<Record<string, any>>;
     };
     const loop = f.nodes.find((n) => n.id === 'loop_opps')!;
-    const edge = loop.config!.body!.edges.find((e) => e.id === 'b2')!;
+    // `b2` is one region deeper than it used to be: the loop body is now a
+    // single `try_catch` guard (`src/flows/_guarded-iteration.ts`) and the
+    // gate's out-edge lives in its `try` region. `edgesUnder` takes the same
+    // descent the engine's own `runRegion` does. This fixture is EXECUTED
+    // below, so it exercises the guarded shape rather than only inspecting it.
+    const edge = edgesUnder(loop).find((e) => e.id === 'b2')!;
+    expect(edge, 'edge b2 not found under loop_opps — the flow was restructured').toBeDefined();
     edge.condition = { dialect: 'cel', source: 'false' };
     return f;
   };

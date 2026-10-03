@@ -1,15 +1,15 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import articleFeedbackHooks from '../src/objects/article_feedback.hook';
-import { ArticleFeedback } from '../src/objects/article_feedback.object';
-import { KnowledgeArticle } from '../src/objects/knowledge_article.object';
+import articleFeedbackHooks from '../src/service/objects/article_feedback.hook';
+import { ArticleFeedback } from '../src/service/objects/article_feedback.object';
+import { KnowledgeArticle } from '../src/service/objects/knowledge_article.object';
 import {
   MarkArticleHelpfulAction,
   MarkArticleNotHelpfulAction,
-} from '../src/actions/knowledge_article.actions';
+} from '../src/service/actions/knowledge_article.actions';
 import { makeSandboxEngine, runActionBody } from './helpers/action-sandbox';
-import { KnowledgeArticleViews } from '../src/views/knowledge_article.view';
+import { KnowledgeArticleViews } from '../src/service/views/knowledge_article.view';
 import { makeHarness, makeCtx, hookNamed, type Rec } from './helpers/hook-harness';
 import { localePacks } from './helpers/metadata-fixtures';
 

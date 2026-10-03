@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { ExpressionEngine, buildScope, collectCelRootIdentifiers } from '@objectstack/formula';
 import stack from '../objectstack.config';
 import { REPO_ROOT } from './helpers/repo-root';
+import { metadataFiles } from './helpers/src-roster';
 
 /**
  * ═══ HOUSE RULE: view predicates are `record.`-bound AND TOTAL ═════════════
@@ -189,11 +190,11 @@ function evaluatePredicate(source: string, record: AnyRec) {
 
 describe('view predicates — the sweep itself', () => {
   it('finds a predicate for every one authored in src/views', () => {
-    const viewsDir = join(REPO_ROOT, 'src', 'views');
-    const authored = readdirSync(viewsDir)
-      .filter((f) => f.endsWith('.view.ts'))
+    // Every package's views, not one directory: since the ADR-0130 layout a
+    // directory under `src/` is a package and each carries its own `views/`.
+    const authored = metadataFiles('views', '.view.ts')
       .reduce((total, file) => {
-        const src = readFileSync(join(viewsDir, file), 'utf8');
+        const src = readFileSync(join(REPO_ROOT, file), 'utf8');
         // Assignments only — the word also appears in prose comments.
         return total + (src.match(/^\s*(visibleOn|visibleWhen):/gm) ?? []).length;
       }, 0);

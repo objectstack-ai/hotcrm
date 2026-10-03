@@ -6,10 +6,10 @@ import { DefaultDatasourcePlugin, AppPlugin } from '@objectstack/runtime';
 import { ObjectQLPlugin } from '@objectstack/objectql';
 import { MetadataPlugin } from '@objectstack/metadata';
 import stack from '../objectstack.config';
-import leadHooks from '../src/objects/lead.hook';
-import { REFUSAL_CODES } from '../src/objects/_refusal';
-import oppHooks from '../src/objects/opportunity.hook';
-import quoteHooks from '../src/objects/quote.hook';
+import leadHooks from '../src/sales/objects/lead.hook';
+import { REFUSAL_CODES } from '../src/sales/objects/_refusal';
+import oppHooks from '../src/sales/objects/opportunity.hook';
+import quoteHooks from '../src/revenue/objects/quote.hook';
 import { hookNamed, makeCtx, makeHarness, type Rec } from './helpers/hook-harness';
 import { extractSandboxBody } from './helpers/action-sandbox';
 
@@ -38,8 +38,8 @@ import { extractSandboxBody } from './helpers/action-sandbox';
  * ### The measurement the yield rests on
  *
  * Re-taken on `@objectstack/*` 17.1.0 — the version this repo pinned AT THE
- * TIME of the measurement, not the current pin (#1460: this repo has pinned
- * 17.2.0 since PR #1442, and the CONTEXT table below has not been re-taken on
+ * TIME of the measurement, not the current pin (#1676: this repo has pinned
+ * 17.3.0 since PR #1577, and the CONTEXT table below has not been re-taken on
  * it, though this file's own behavioural assertions do run green there) — by
  * registering a probe hook at priority 199 (immediately ahead of each guard) on
  * `crm_opportunity`, `crm_quote` and `crm_lead`, and varying the one thing an
@@ -769,7 +769,7 @@ describe('the reference-cleanup predicate is one block in three places', () => {
   });
 
   it('is the only spelling anywhere in the app’s hooks', async () => {
-    const { allHooks } = (await import('../src/hooks')) as AnyRec;
+    const { allHooks } = (await import('../objectstack.composition')) as AnyRec;
     const divergent = (allHooks as AnyRec[])
       .filter((h) => {
         const body = bodyOf(h);

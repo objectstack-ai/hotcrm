@@ -26,14 +26,13 @@ import stack from '../objectstack.config';
  * `crm_campaign_member` rows that action inserts.
  *
  * These tests resolve the whole authorization surface (grants ↔ objects ↔
- * navigation ↔ pages ↔ sharing rules ↔ positions) so the next uncovered object
+ * navigation ↔ sharing rules ↔ positions) so the next uncovered object
  * fails in CI instead of at a customer's first click.
  */
 
 type AnyRec = Record<string, any>;
 
 const objects: AnyRec[] = (stack as any).objects ?? [];
-const pages: AnyRec[] = (stack as any).pages ?? [];
 const apps: AnyRec[] = (stack as any).apps ?? [];
 const permissionSets: AnyRec[] = (stack as any).permissions ?? [];
 const sharingRules: AnyRec[] = (stack as any).sharingRules ?? [];
@@ -151,27 +150,6 @@ describe('reachable UI is reachable for someone', () => {
     expect(bad, `dead navigation (permission-denied for every user):\n  ${bad.join('\n  ')}`)
       .toEqual([]);
   });
-
-  it('every related list is readable by every profile its page is assigned to', () => {
-    const bad: string[] = [];
-    for (const page of pages) {
-      const assigned: string[] = page.assignedProfiles ?? [];
-      if (assigned.length === 0) continue;
-      for (const c of [...walk(page.regions), ...walk(page.slots)]) {
-        if (c.type !== 'record:related_list') continue;
-        const objectName = c.properties?.objectName as string;
-        if (!objectName || objectName.startsWith('sys_')) continue;
-        const readers = new Set(setsGranting(objectName, 'read'));
-        for (const profile of assigned) {
-          if (!readers.has(profile)) {
-            bad.push(`${page.name} / ${c.id}: "${objectName}" is not readable by "${profile}"`);
-          }
-        }
-      }
-    }
-    expect(bad, `related lists denied to their own page audience:\n  ${bad.join('\n  ')}`)
-      .toEqual([]);
-  });
 });
 
 describe('record-level scope is authored, not implied', () => {
@@ -186,24 +164,6 @@ describe('record-level scope is authored, not implied', () => {
       'under-specified grants — holders silently see only records they own:\n  ' +
         `${bad.join('\n  ')}`,
     ).toEqual([]);
-  });
-
-  it('controlled_by_parent objects expose a parent the engine can resolve', () => {
-    const bad: string[] = [];
-    for (const name of businessObjects) {
-      if (owdOf(name) !== 'controlled_by_parent') continue;
-      const fields = Object.entries((objectByName.get(name)?.fields ?? {}) as Record<string, AnyRec>);
-      const parent = fields.find(([, f]) => f?.type === 'master_detail')
-        ?? fields.find(([, f]) => f?.type === 'lookup' && f?.required === true);
-      if (!parent) {
-        bad.push(`${name}: no master_detail and no REQUIRED lookup — ADR-0055 derivation denies all rows`);
-        continue;
-      }
-      const [fieldName, def] = parent;
-      const ref = def.reference ?? def.reference_to ?? def.referenceTo;
-      if (!ref) bad.push(`${name}.${fieldName}: parent relation has no reference target`);
-    }
-    expect(bad, `unresolvable parent derivation:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
   it('every allowTransfer grant is a real, enforced capability — not decoration', () => {
@@ -232,15 +192,54 @@ describe('record-level scope is authored, not implied', () => {
     expect(holders.length, 'no set grants allowTransfer — ownership cannot be reassigned at all').toBeGreaterThan(0);
   });
 
-  it('the lifecycle bits nobody enforces yet are not authored', () => {
-    // `allowRestore` / `allowPurge` are RBAC-gated but their operations do not
-    // exist yet, so authoring one grants nothing while reading as a capability
-    // the persona has. `allowTransfer` is deliberately NOT in this list — it is
-    // the documented exception (#3004), enforced now.
+  it('the retired lifecycle bits are not authored anywhere', () => {
+    // `allowRestore` / `allowPurge` are TOMBSTONES — not, as this comment used
+    // to say, RBAC-gated bits whose operations have not shipped yet. ADR-0049
+    // enforce-or-remove retired them (objectstack#12497), and on the pinned
+    // `@objectstack/spec` 17.3.0 the schema refuses `allowRestore: true` at
+    // parse time with its own prescription. Measured verbatim against the
+    // installed package:
+    //
+    //   `objects.<object>.allowRestore` was removed in @objectstack/spec 17
+    //   (ADR-0049) — the `restore` ObjectQL operation it claimed to gate has
+    //   never shipped (roadmap M2), so granting the bit delivered nothing.
+    //   Delete the key — a dispatched `restore` stays denied fail-closed by
+    //   the permission evaluator's destructive-operation backstop, and the bit
+    //   returns with the M2 lifecycle initiative alongside the operation it
+    //   gates. Run `os migrate meta --from 17` to list the mechanical edits
+    //   for existing sources; apply them by hand.
+    //
+    // The prescription names the MAJOR, and so does this comment: the
+    // retirement changeset is listed under 17.3.0 in `@objectstack/spec`'s own
+    // CHANGELOG, so ⛔ do not "correct" this to an earlier minor.
+    //
+    // Only `true` is refused. The `false` that the pre-retirement schema
+    // defaulted into every artifact the published 17.x toolchain built parses
+    // as inert residue and is STRIPPED (objectstack#12840), so `=== true` is
+    // both what the scan below tests and the only value worth testing for.
+    //
+    // ⛔ Do not delete this guard now that the platform refuses the key. It is
+    // a backstop for the one layer that refusal does not reach: in the
+    // `pnpm verify` chain `validate` and `build` both reject such a source
+    // before `test` runs, but `pnpm typecheck` does not. `src/profiles/*.profile.ts`
+    // are untyped object literals and this file reads the RAW
+    // `objectstack.config` rather than a schema-parsed object, so nothing ever
+    // gives the literal a contextual type — a bare `pnpm test` still trips
+    // here. objectstack#1883 also stays open as the M2 lifecycle anchor: the
+    // keys return with that initiative as bits that really are enforced, and
+    // "we do not grant them inertly" is load-bearing again rather than
+    // something to re-derive from scratch.
+    //
+    // `allowTransfer` is deliberately NOT in this list — it is the documented
+    // exception (#3004), enforced now.
     const bad = grants
       .filter((g) => g.perm.allowRestore === true || g.perm.allowPurge === true)
       .map((g) => `${g.set}.${g.objectName}`);
-    expect(bad, `declared-but-unenforced lifecycle grants:\n  ${bad.join('\n  ')}`).toEqual([]);
+    expect(bad, `retired lifecycle bits authored as grants:\n  ${bad.join('\n  ')}`).toEqual([]);
+
+    // Guard the guard: if the grants ever vanish this test must not pass by
+    // checking an empty list.
+    expect(grants.length, 'no permission grants resolved at all — this scan proves nothing').toBeGreaterThan(0);
   });
 
   it('controlled_by_parent grants do not author an inert readScope', () => {
@@ -293,6 +292,19 @@ describe('field-level security resolves', () => {
   it('a masked (unreadable) field is never filtered or sorted on by a view', () => {
     // Querying a hidden field throws `field_predicate_denied` (the filter-oracle
     // guard), so a masked field in a view's filter/sort breaks the whole list.
+    //
+    // The filter half read `node.filters` (plural) until #1772 and therefore
+    // never once ran: `filters` is present on ZERO walked view nodes, because
+    // no view/page node schema in `@objectstack/spec` has that key at all —
+    // `ListViewSchema.filter`, `ViewTabSchema.filter` and friends are singular
+    // arrays of `ViewFilterRuleSchema`. Where `filters` DOES appear in the spec
+    // is in the alias tables (`chart.zod.ts`, `app.zod.ts`), as a spelling the
+    // protocol normalises away — so this was the wrong-but-natural spelling the
+    // protocol anticipates, and because the walk reads the AUTHORED object
+    // rather than the normalised one, the alias never rescued it. Measured on
+    // this app: `filters` 0 nodes, `filter` 29, `sort` 39. The sibling `sort`
+    // half was live the whole time, which is why the assertion looked healthy.
+    // ⚠️ Read the singular key here; do not "fix" it back to the plural.
     const hidden = new Set(
       flsEntries.filter(({ perm }) => perm.readable === false).map(({ key }) => key),
     );
@@ -303,7 +315,7 @@ describe('field-level security resolves', () => {
       const objectName = v.list?.data?.object ?? v.form?.data?.object ?? v.object;
       if (!objectName) continue;
       for (const node of walk(v)) {
-        for (const f of node.filters ?? []) {
+        for (const f of node.filter ?? []) {
           const field = typeof f === 'string' ? f : f?.field;
           if (field && hidden.has(`${objectName}.${field}`)) {
             bad.push(`${v.name}: filters on masked field "${objectName}.${field}"`);

@@ -32,9 +32,20 @@ import {
 import { resolveDateMacros } from './macros.js';
 
 import HotCrmApp from '../../objectstack.config.js';
-import * as datasetMod from '../../src/datasets/index.js';
-import * as dashboardMod from '../../src/dashboards/index.js';
-import * as reportMod from '../../src/reports/index.js';
+// Per-package barrels since the ADR-0130 layout: a directory under `src/` is a
+// package, so a whole-app view of one metadata type is the merge of the package
+// directories that carry it.
+import * as salesDatasets from '../../src/sales/datasets/index.js';
+import * as serviceDatasets from '../../src/service/datasets/index.js';
+import * as revenueDatasets from '../../src/revenue/datasets/index.js';
+import * as salesDashboards from '../../src/sales/dashboards/index.js';
+import * as serviceDashboards from '../../src/service/dashboards/index.js';
+import * as salesReports from '../../src/sales/reports/index.js';
+import * as serviceReports from '../../src/service/reports/index.js';
+
+const datasetMod = { ...salesDatasets, ...serviceDatasets, ...revenueDatasets };
+const dashboardMod = { ...salesDashboards, ...serviceDashboards };
+const reportMod = { ...salesReports, ...serviceReports };
 
 interface DataEngineLike {
   aggregate(object: string, options: {

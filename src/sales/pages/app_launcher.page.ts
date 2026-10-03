@@ -1,0 +1,73 @@
+// Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
+
+import { Page } from '@objectstack/spec/ui';
+
+/**
+ * App Launcher Page
+ * 
+ * Demonstrates an application launcher page similar to Salesforce App Launcher.
+ * 
+ * Features:
+ * - Grid-based app icon layout
+ * - Global search
+ * - Quick access to all apps
+ */
+export const AppLauncherPage: Page = {
+  name: 'app_launcher_page',
+  label: 'App Launcher',
+  description: 'Central hub for accessing all applications',
+  
+  type: 'app',
+  
+  template: 'centered',
+  kind: 'full',  
+  regions: [
+    {
+      name: 'header',
+      width: 'full',
+      components: [
+        {
+          type: 'global:search',
+          id: 'app_search',
+          label: 'Search Apps',
+          properties: {},
+        },
+      ],
+    },
+    
+    {
+      name: 'main',
+      width: 'large',
+      components: [
+        {
+          type: 'page:header',
+          id: 'launcher_header',
+          label: 'App Launcher Header',
+          properties: {
+            title: 'App Launcher',
+            subtitle: 'Select an app to get started',
+            // `icon` removed from `page:header` in @objectstack/spec 17.0.0
+            // (#6946, ADR-0087 D2) — deleted, not renamed. See the full note on
+            // `account_detail.page.ts`; nothing ever drew it.
+            // `breadcrumb` retired from `page:header` in @objectstack/spec 17.6.0
+            // (#20785, `page-header-breadcrumb-removed`) — deleted: no renderer
+            // ever drew a trail for it; the app shell's own trail is unchanged.
+          },
+        },
+        {
+          type: 'app:launcher',
+          id: 'app_grid',
+          label: 'Application Grid',
+          properties: {},
+        },
+      ],
+    },
+  ],
+  
+  isDefault: false,
+  
+  aria: {
+    ariaLabel: 'App Launcher Page',
+    ariaDescribedBy: 'Central application launcher for accessing all apps',
+  },
+};

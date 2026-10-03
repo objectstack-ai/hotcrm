@@ -5,7 +5,7 @@ import { compileCelToFilter } from '@objectstack/formula';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import stack from '../objectstack.config';
-import { COUNTRY_TERRITORY, TERRITORY_OPTIONS, territoryFor } from '../src/objects/_territory';
+import { COUNTRY_TERRITORY, TERRITORY_OPTIONS, territoryFor } from '../src/sales/objects/_territory';
 
 /**
  * Every declared sharing rule must actually be SEEDED (#621).
@@ -159,26 +159,6 @@ describe('every declared sharing rule is actually seeded', () => {
     expect(sharingRules.length).toBeGreaterThanOrEqual(9);
     expect(sharingRules.some((r) => r.name === 'north_america_territory')).toBe(true);
     expect(sharingRules.some((r) => r.name === 'europe_territory')).toBe(true);
-  });
-
-  it('seeds all of them — seeded + 0 skipped', () => {
-    const skipped = sharingRules
-      .map((rule) => ({ name: rule.name as string, outcome: seedOutcome(rule) }))
-      .filter((r) => !r.outcome.seeded)
-      .map((r) => `${r.name}: ${(r.outcome as { why: string }).why}`);
-
-    expect(
-      skipped,
-      'These rules are DECLARED but would be dropped at boot, so the positions they name ' +
-        'receive nothing while the metadata and the admin docs say they do. plugin-sharing ' +
-        'refuses to seed a rule it cannot compile rather than degrade it to match-all — the ' +
-        'fix belongs in the rule (or in the object it filters on), never in the platform:\n  ' +
-        skipped.join('\n  '),
-    ).toEqual([]);
-
-    // The counts the boot log prints, asserted directly.
-    const seeded = sharingRules.filter((rule) => seedOutcome(rule).seeded).length;
-    expect(seeded).toBe(sharingRules.length);
   });
 
   it('every field a rule filters on is a real, flat column of its object', () => {

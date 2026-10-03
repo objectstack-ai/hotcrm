@@ -1,14 +1,13 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect, beforeAll, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { FLOW_REGION_SLOTS_BY_TYPE } from '@objectstack/spec/automation';
-import * as allFlows from '../src/flows';
-import { ContractRenewalFlow } from '../src/flows/contract-renewal.flow';
-import { OpportunityStagnationFlow } from '../src/flows/opportunity-stagnation.flow';
-import { ForecastSnapshotFlow } from '../src/flows/forecast-snapshot.flow';
-import forecastDerive from '../src/objects/forecast.hook';
+import { CrmFlows as allFlows } from './helpers/src-roster';
+import { ContractRenewalFlow } from '../src/revenue/flows/contract-renewal.flow';
+import { OpportunityStagnationFlow } from '../src/sales/flows/opportunity-stagnation.flow';
+import { ForecastSnapshotFlow } from '../src/sales/flows/forecast-snapshot.flow';
+import forecastDerive from '../src/sales/objects/forecast.hook';
 import { makeFlowHarness, type Rec } from './helpers/flow-harness';
-import { COMPOSITION_ENV_VAR } from '../src/data/index';
 
 /**
  * Scheduled sweeps must declare `organization_id` on every `create_record` (#700).
@@ -198,9 +197,15 @@ describe('scheduled create_record declares organization_id (#700)', () => {
 describe('the declared organization_id actually resolves (#700)', () => {
   const ORG = 'org_alpha';
 
+  /**
+   * UTC calendar throughout — `setUTCDate`, not `setDate`. Mixing
+   * local-calendar arithmetic with UTC rendering lands one UTC day late across
+   * a DST spring-forward, and no `TZ=UTC` run can tell the two spellings apart.
+   * `test/helpers/hook-harness.ts`'s `daysFromNow` carries the full reasoning.
+   */
   const day = (offset: number): string => {
     const d = new Date();
-    d.setDate(d.getDate() + offset);
+    d.setUTCDate(d.getUTCDate() + offset);
     return d.toISOString().slice(0, 10);
   };
 
@@ -400,8 +405,9 @@ describe('forecast_snapshot sums only the target row\u2019s organization (#1372)
  * organization-neutral however many organizations the read spanned: a literal
  * carries no tenant, a template function reads no row, and a value taken off
  * the swept row is by construction already in that row's organization.
- * `{firstUser.id}` is none of those — it is one specific foreign row's id,
- * stamped across every partition.
+ * `{firstUser.id}` — the shape of the retired `demo_bootstrap` sweep (#1892),
+ * kept below as {@link CROSS_ROW_SWEEP_FIXTURE} — is none of those: it is one
+ * specific foreign row's id, stamped across every partition.
  *
  * So the rule is: every interpolation token in an `update_record`'s
  * `config.fields` must resolve to the swept row — the row the node's own
@@ -425,9 +431,9 @@ describe('forecast_snapshot sums only the target row\u2019s organization (#1372)
  * held from both sides: an unexplained violation fails, and so does an
  * exemption that has stopped matching anything, so it cannot rot into a list
  * of claims about flows that have since changed. Where the argument is
- * mechanical it is also MEASURED — `demo_bootstrap`'s exemption rests on its
- * absence from the multi-organization composition, and the test below reads
- * that absence out of the composition rather than believing this comment.
+ * mechanical it should also be MEASURED, by a test that reads the fact the
+ * argument rests on rather than believing the entry's prose. The register is
+ * empty today: its one entry, `demo_bootstrap`, left with the flow (#1892).
  */
 
 /** How a variable came to hold what it holds. */
@@ -669,22 +675,7 @@ interface OrganizationNeutralityExemption {
   reason: string;
 }
 
-const ORGANIZATION_NEUTRALITY_EXEMPTIONS: OrganizationNeutralityExemption[] = [
-  {
-    flow: 'demo_bootstrap',
-    nodeId: '*',
-    fields: ['owner_id'],
-    reason:
-      'This sweep stamps `{firstUser.id}` — one identity — onto every row it claims, '
-      + 'under a system context that spans organizations. That is a real crossing, and '
-      + 'it is precisely why the flow is NOT registered in the multi-organization '
-      + 'composition (#1361/#1362). The shape it does ship in is the community/demo '
-      + 'one, which has a single organization, where "the first user" is the only user '
-      + 'there is. The claim is not taken on trust: the test below reads the flow\'s '
-      + 'absence out of the SaaS composition, so re-registering it revokes this '
-      + 'exemption automatically.',
-  },
-];
+const ORGANIZATION_NEUTRALITY_EXEMPTIONS: OrganizationNeutralityExemption[] = [];
 
 const exemptionCovers = (
   e: OrganizationNeutralityExemption,
@@ -765,59 +756,6 @@ describe('scheduled update_record writes only organization-neutral values (#1363
       expect(e.fields, `${e.flow} · ${e.nodeId} exempts no named column`).not.toEqual([]);
       expect(e.fields, `${e.flow} · ${e.nodeId} may not exempt a whole node`).not.toContain('*');
     }
-  });
-});
-
-/**
- * The half that keeps `demo_bootstrap`'s exemption honest.
- *
- * Its argument is not "this write is safe" — the write is a real crossing.
- * The argument is "this flow does not run where there is more than one
- * organization", and that is a fact about the COMPOSITION, which is readable.
- * So it is read, rather than asserted in a comment that nothing rechecks.
- */
-describe('the demo_bootstrap exemption is backed by the composition (#1363)', () => {
-  let communityFlowNames: string[] = [];
-  let saasFlowNames: string[] = [];
-
-  const loadFlowNames = async (composition: string): Promise<string[]> => {
-    const previous = process.env[COMPOSITION_ENV_VAR];
-    process.env[COMPOSITION_ENV_VAR] = composition;
-    vi.resetModules();
-    try {
-      const stack = ((await import('../objectstack.config')) as Rec).default as Rec;
-      return (Array.isArray(stack.flows) ? (stack.flows as Rec[]) : []).map((f) => String(f.name));
-    } finally {
-      if (previous === undefined) delete process.env[COMPOSITION_ENV_VAR];
-      else process.env[COMPOSITION_ENV_VAR] = previous;
-      vi.resetModules();
-    }
-  };
-
-  beforeAll(async () => {
-    communityFlowNames = await loadFlowNames('default');
-    saasFlowNames = await loadFlowNames('saas');
-  }, 60_000);
-
-  it('keeps demo_bootstrap out of the multi-organization shape', () => {
-    // A sentinel first: `not.toContain` on an empty list passes for the wrong
-    // reason, and an empty list is exactly what a broken load returns.
-    expect(saasFlowNames, 'the SaaS composition registered no flows at all').not.toEqual([]);
-    expect(
-      saasFlowNames,
-      'demo_bootstrap is now registered in the multi-organization composition, so the\n'
-        + 'exemption in ORGANIZATION_NEUTRALITY_EXEMPTIONS has stopped being true:\n'
-        + "`{firstUser.id}` would stamp one tenant's user across every other tenant's\n"
-        + 'rows. Either drop it from that composition again, or fix the flow and delete\n'
-        + 'the exemption.',
-    ).not.toContain('demo_bootstrap');
-  });
-
-  it('and still ships it in the single-organization shape it is exempted for', () => {
-    // The other direction. An exemption argued from "it only runs where there is
-    // one organization" says nothing once the flow runs nowhere — and then the
-    // honest move is to delete the entry, which the staleness test forces.
-    expect(communityFlowNames).toContain('demo_bootstrap');
   });
 });
 

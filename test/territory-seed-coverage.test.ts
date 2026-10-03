@@ -3,15 +3,22 @@
 import { describe, it, expect } from 'vitest';
 import { compileCelToFilter } from '@objectstack/formula';
 import stack from '../objectstack.config';
-import accountHook from '../src/objects/account.hook';
-import { TERRITORY_OPTIONS, territoryFor } from '../src/objects/_territory';
-import { CrmSeedData } from '../src/data/index';
-import * as sharedSeed from '../src/data/_shared';
-import * as catalogSeed from '../src/data/catalog.seed';
-import * as salesSeed from '../src/data/sales.seed';
-import * as serviceSeed from '../src/data/service.seed';
-import * as marketingSeed from '../src/data/marketing.seed';
-import * as revenueSeed from '../src/data/revenue.seed';
+import accountHook from '../src/sales/objects/account.hook';
+import { TERRITORY_OPTIONS, territoryFor } from '../src/sales/objects/_territory';
+import { CrmSeedData } from '../objectstack.composition';
+import * as sharedSeed from '../src/sales/data/_shared';
+import * as catalogSeed from '../src/revenue/data/catalog.seed';
+import * as salesSeed from '../src/sales/data/sales.seed';
+import * as serviceSeed from '../src/service/data/service.seed';
+import * as marketingSeed from '../src/marketing/data/marketing.seed';
+import * as revenueSeed from '../src/revenue/data/revenue.seed';
+// The two families the ADR-0130 layout split out by object ownership: the
+// opportunity line items are `crm_opportunity_line_item` (revenue), the
+// activity rows and the forecast snapshots are sales'. Enrolled here so this
+// guard still sees every authored dataset, not the six modules it used to.
+import * as lineItemSeed from '../src/revenue/data/opportunity-line-item.seed';
+import * as activitySeed from '../src/sales/data/activity.seed';
+import * as forecastSeed from '../src/sales/data/forecast.seed';
 import { makeCtx } from './helpers/hook-harness';
 
 /**
@@ -55,7 +62,7 @@ import { makeCtx } from './helpers/hook-harness';
  * `SeedLoaderService.SEED_OPTIONS` says the same thing in words: its
  * `skipTriggers` suppresses record-change AUTOMATION (autolaunched flows) for
  * seed writes, while "Lifecycle HOOKS (derived/default fields, validation)
- * still run". `src/data/_shared.ts` now states the corrected premise.
+ * still run". `src/sales/data/_shared.ts` now states the corrected premise.
  *
  * ### What is NOT covered here
  *
@@ -63,7 +70,7 @@ import { makeCtx } from './helpers/hook-harness';
  * fresh install `sys_user_position` is empty — nobody holds `na_sales_team` or
  * `eu_sales_team` (measured: 0 rows, 0 shares). That is a separate gap, filed
  * separately; it is not something the seed data can fix, since a seed cannot
- * name a user (see the note at the foot of `src/data/index.ts`).
+ * name a user (see the note beside `CrmSeedData` in `objectstack.composition.ts`).
  */
 
 type AnyRec = Record<string, any>;
@@ -154,7 +161,7 @@ describe('the demo dataset can actually exercise the territory rules (#638)', ()
       bad,
       'Seed addresses keep to ISO 3166-1 alpha-2 codes. Since #639 this is a DATA-QUALITY ' +
         'convention rather than a matching requirement — the spelling table in ' +
-        'src/objects/_territory.ts is there for what users type, and a name like "Germany" now ' +
+        'src/sales/objects/_territory.ts is there for what users type, and a name like "Germany" now ' +
         'classifies correctly — but a seed is authored, not typed, so it states the canonical ' +
         'code:\n  ' +
         bad.join('\n  '),
@@ -197,7 +204,7 @@ describe('the demo dataset can actually exercise the territory rules (#638)', ()
     const divergent = projectedAccounts
       .filter((r) => r.territory !== territoryFor((r.billing_address as AnyRec | undefined)?.country))
       .map((r) => `${nameOf(r)}: hook says ${r.territory}`);
-    expect(divergent, `the hook and src/objects/_territory.ts disagree:\n  ${divergent.join('\n  ')}`).toEqual([]);
+    expect(divergent, `the hook and src/sales/objects/_territory.ts disagree:\n  ${divergent.join('\n  ')}`).toEqual([]);
   });
 
   it('partitions the seeded accounts across NA, EU and neither', () => {
@@ -261,6 +268,9 @@ describe('every family module dataset is wired into CrmSeedData (#635 split)', (
     'service.seed': serviceSeed,
     'marketing.seed': marketingSeed,
     'revenue.seed': revenueSeed,
+    'opportunity-line-item.seed': lineItemSeed,
+    'activity.seed': activitySeed,
+    'forecast.seed': forecastSeed,
   };
 
   const isDataset = (value: unknown): value is Dataset =>
@@ -276,7 +286,7 @@ describe('every family module dataset is wired into CrmSeedData (#635 split)', (
   );
 
   it('exports datasets from the family modules at all', () => {
-    expect(declared.length, 'no seed datasets found in src/data/*.seed.ts').toBeGreaterThanOrEqual(16);
+    expect(declared.length, 'no seed datasets found in src/*/data/*.seed.ts').toBeGreaterThanOrEqual(16);
   });
 
   it('aggregates all of them, and nothing else', () => {
@@ -284,7 +294,7 @@ describe('every family module dataset is wired into CrmSeedData (#635 split)', (
     const missing = declared.filter((d) => !aggregated.includes(d.value)).map((d) => d.id);
     expect(
       missing,
-      `these datasets are authored but never seeded — add them to src/data/index.ts:\n  ${missing.join('\n  ')}`,
+      `these datasets are authored but never seeded — add them to CrmSeedData in objectstack.composition.ts:\n  ${missing.join('\n  ')}`,
     ).toEqual([]);
     expect(aggregated.length, 'CrmSeedData holds an entry no family module exports').toBe(declared.length);
   });

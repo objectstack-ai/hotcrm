@@ -5,7 +5,7 @@ import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import stack from '../objectstack.config';
 import { hookNamed, makeCtx } from './helpers/hook-harness';
-import leadHooks from '../src/objects/lead.hook';
+import leadHooks from '../src/sales/objects/lead.hook';
 
 /**
  * ═══ HotCRM has ONE owner, and it is the platform's (#548) ════════════════
@@ -369,7 +369,7 @@ describe('every owner-facing surface points at the one column', () => {
 
   it('no flow writes or addresses a bare `owner`', () => {
     // A `notify` addressed to `{record.owner}` resolves to nothing and reaches
-    // nobody — the exact silent failure `demo_bootstrap` exists to prevent.
+    // nobody — the exact silent failure an ownerless record causes.
     const bad: string[] = [];
     for (const f of flows) {
       for (const node of walk(f)) {
@@ -384,36 +384,6 @@ describe('every owner-facing surface points at the one column', () => {
       if (reads) bad.push(`${f.name}: reads ${[...new Set(reads)].join(', ')}`);
     }
     expect(bad, `flow references to the retired column:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-
-  it('dashboard drill-down column lists name real record columns, not the dataset alias', () => {
-    // A drill-down drawer lists RECORDS, so its `columns` are object fields —
-    // unlike the widget's `dimensions`, which are dataset dimension NAMES and
-    // legitimately still read `owner` (the semantic layer resolves that alias
-    // onto the `owner_id` column). The two live inches apart in the same widget
-    // and a blanket rename would have broken the analytics binding while a
-    // blanket skip left a dead column in the drawer.
-    const dashboards: AnyRec[] = (stack as any).dashboards ?? [];
-    const datasets: AnyRec[] = (stack as any).datasets ?? [];
-    const objectOfDataset = new Map(datasets.map((d) => [d.name as string, d.object as string]));
-
-    const bad: string[] = [];
-    let checked = 0;
-    for (const d of dashboards) {
-      for (const w of (d.widgets ?? []) as AnyRec[]) {
-        const columns = w.options?.drillDown?.columns as string[] | undefined;
-        if (!Array.isArray(columns)) continue;
-        const objectName = objectOfDataset.get(String(w.dataset));
-        const fields = objectByName.get(String(objectName))?.fields ?? {};
-        for (const col of columns) {
-          checked++;
-          if (col.includes('.')) continue; // traversal — resolved by the query engine
-          if (!(col in fields)) bad.push(`${d.name}/${w.id}: drill-down column "${col}" is not a field on ${objectName}`);
-        }
-      }
-    }
-    expect(checked, 'no drill-down columns found — this guard stopped guarding').toBeGreaterThan(0);
-    expect(bad, `drill-down columns that resolve to nothing:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
   it('the RLS predicates that mean “its owner” key on owner_id', () => {

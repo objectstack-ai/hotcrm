@@ -5,7 +5,7 @@ description: Add AI skills and register them with the HotCRM stack.
 
 # AI Skills
 
-AI skills live in `src/skills/` and are registered from `src/skills/index.ts`.
+AI skills live in the `skills/` directory of the package that owns them — `src/sales/skills/` and `src/service/skills/` today — and each package re-exports its own from that directory's `index.ts`.
 
 HotCRM defines **no agents of its own** — there is no `src/agents/` directory. Skills
 attach to the platform assistant (`ask`), which every ObjectStack environment already
@@ -14,7 +14,7 @@ provides. Registering a skill in `allSkills` is the whole wiring step.
 ## Add a skill
 
 ```ts
-// src/skills/renewal_pitch.skill.ts
+// src/sales/skills/renewal_pitch.skill.ts
 import { defineSkill } from '@objectstack/spec';
 
 export const RenewalPitchSkill = defineSkill({
@@ -30,16 +30,20 @@ account and contract records, summarize risk, and draft a concise
 
 ## Register it
 
-Export the skill and add it to `allSkills` — that array is what
-`objectstack.config.ts` passes to `defineStack({ skills })`:
+Registration is two steps, and skipping the second one loses the skill in silence. Re-export it
+from its own package barrel, then add it to `allSkills` in `objectstack.composition.ts` — that
+array, not the barrel, is what `objectstack.config.ts` passes to `defineStack({ skills })`:
 
 ```ts
-// src/skills/index.ts
+// src/sales/skills/index.ts — the package barrel: a re-export, nothing else
 export { RenewalPitchSkill } from './renewal_pitch.skill.js';
+```
 
-import { RenewalPitchSkill } from './renewal_pitch.skill.js';
+```ts
+// objectstack.composition.ts — the app-wide list, assembled from the four packages
+import { RenewalPitchSkill } from './src/sales/skills/index.js';
 
-export const allSkills: Skill[] = [
+export const allSkills = [
   // …existing skills
   RenewalPitchSkill,
 ];

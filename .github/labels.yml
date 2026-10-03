@@ -13,66 +13,186 @@
 # Taxonomy:
 #   type        bug / enhancement / documentation / dependencies
 #   area        metadata / backend / ci/cd / configuration
-#   priority    prio:p0 — blocking the current release goal
-#               prio:p1 — next in line once P0s clear
-#               prio:p2 — triaged backlog, no near-term schedule
+#   priority    priority:p0 — critical blocker; also the dispatch loop queue-jump
+#               priority:p1 — required for production / M2
+#               priority:p2 — important, M3
+#               priority:p3 — lowest tier (no fleet description authored)
 #   provenance  upstream:objectstack — blocked on / caused by the platform
 #   workflow    needs-user-decision / skip-changeset
+#   pm state    pm:queue / pm:dispatched / pm:blocked / pm:on-hold /
+#               pm:awaiting-maintainer / pm:blocking / pm:epic / pm:retriage / pm:seat
+#   triage      duplicate / invalid / question / wontfix /
+#               good first issue / help wanted
+#   routing     docs / i18n / testing / ui / upstream
+#   lifecycle   finding / stale / post-preview / preview-1
 
 # --- type ---
 - name: bug
-  color: d73a4a
+  color: "d73a4a"
   description: Something isn't working
 - name: enhancement
-  color: a2eeef
+  color: "a2eeef"
   description: New feature or request
 - name: documentation
-  color: 0075ca
+  color: "0075ca"
   description: Improvements or additions to documentation
 - name: dependencies
-  color: 0366d6
+  color: "0366d6"
   description: Dependency bumps and lockfile changes
 
 # --- area (mirrors .github/labeler.yml path rules) ---
 - name: metadata
-  color: c5def5
+  color: "c5def5"
   description: Declarative metadata — schema, security posture, UI surfaces
 - name: backend
-  color: c2e0c6
+  color: "c2e0c6"
   description: Server-side behaviour — hooks, flows, actions
 - name: ci/cd
-  color: 6e5494
+  color: "6e5494"
   description: CI plumbing and the verification pipeline
 - name: configuration
-  color: bfd4f2
+  color: "bfd4f2"
   description: Build and app configuration files
 
-# --- priority ---
-- name: "prio:p0"
-  color: b60205
-  description: Blocking the current release goal — do first
-- name: "prio:p1"
-  color: d93f0b
-  description: Next in line once P0s clear
-- name: "prio:p2"
-  color: fef2c0
-  description: Triaged backlog — no near-term schedule
+# --- priority (the fleet axis; #1792 / decision batch #97 migrated prio:* onto it) ---
+# ⚠️ #1792 ruled this description verbatim, appending the queue-jump sentence to
+# the fleet wording. GitHub caps a label description at 100 characters and the
+# ruled string is 133, so it CANNOT be stored — the API rejects it with 422
+# "description is too long (maximum is 100 characters)", and `label-sync` would
+# fail on it. Declared here is the ruling main clause (the fleet description,
+# verbatim, 39 chars). The full ruled string, for the record and unabridged:
+#   "Critical: blocker, must ship before MVP. Queue-jump: outranks batch and
+#    breaks the round — never exempts claiming or same-file serial"
+# ⇒ which storable form the seat wants is the open question on #1792; the
+#   queue-jump semantics is protocol behaviour and lives in the PM protocol.
+- name: "priority:p0"
+  color: "b60205"
+  description: "Critical: blocker, must ship before MVP"
+- name: "priority:p1"
+  color: "d93f0b"
+  description: "High: required for production / M2"
+- name: "priority:p2"
+  color: "fbca04"
+  description: "Medium: important, M3"
+- name: "priority:p3"
+  color: "ededed"
+  description: ""
 
 # --- provenance ---
 - name: "upstream:objectstack"
-  color: 5319e7
+  color: "5319e7"
   description: Blocked on / caused by the ObjectStack platform — tracked upstream
 
 # --- workflow ---
 - name: needs-user-decision
-  color: fbca04
+  color: "fbca04"
   description: Needs the maintainer's call before work proceeds
 - name: "pm:queue"
-  color: 0e8a16
+  color: "0e8a16"
   description: Ready for the PM dispatch loop
 - name: "pm:dispatched"
-  color: 1d76db
+  color: "1d76db"
   description: Dispatched to a dev agent by /pm-dispatch
 - name: skip-changeset
-  color: cccccc
+  color: "cccccc"
   description: PR ships nothing to users (pure CI/docs chore) — changeset gate waived
+
+# ---------------------------------------------------------------------------
+# Inventory catch-up (#1501). The 22 entries below already existed as live
+# label objects but were undeclared, so `skip-delete: true` was the only thing
+# keeping them alive. Colors and descriptions are transcribed from the live
+# objects via `get_label` — NOT invented — so applying this manifest is a
+# no-op on every label's appearance; it only makes the manifest agree with
+# reality. 13 of them carry GitHub's default grey (ededed) and an empty
+# description because nothing ever styled them; declaring them here is what
+# makes styling them a reviewable one-line change later, and that pass is
+# deliberately NOT bundled into this inventory PR.
+#
+# `priority:p0` was the one label that pass left undeclared, pending #1792. It is
+# declared now, in the priority section above: decision batch #97 — recorded on
+# #1792 and confirmed by the maintainer — ruled that its queue-jump wording IS the
+# fleet p0 the dispatch loop reads, not a third concept, so hotcrm adopts the
+# fleet axis `priority:p0..p3` and the `prio:*` spelling of that same axis was
+# migrated card-by-card onto it and retired.
+#
+# ⛔ The three `prio:*` labels were DELETED, not merely undeclared — the one
+# deliberate exception to `skip-delete` above, taken only after a read-back
+# showed zero cards still carrying them. `priority:p1`, `priority:p2` and
+# `priority:p3` are transcribed from the objectstack fleet labels; p3 carries the
+# fleet default grey and an empty description because the fleet never authored
+# one, and inventing one here was out of scope for the ruling.
+# ---------------------------------------------------------------------------
+
+# --- pm state machine (the dispatch protocol; pm:queue / pm:dispatched above) ---
+- name: "pm:blocked"
+  color: "ededed"
+  description: ""
+- name: "pm:on-hold"
+  color: "ededed"
+  description: ""
+- name: "pm:awaiting-maintainer"
+  color: "ededed"
+  description: ""
+- name: "pm:blocking"
+  color: "8250df"
+  description: "Derived cache from the Blocked-by reverse index: open card with open dependents — never hand-set"
+- name: "pm:epic"
+  color: "5319e7"
+  description: Parent delegated to a dedicated epic PM — other PMs never dispatch into its subtree
+- name: "pm:retriage"
+  color: "d4c5f9"
+  description: Awaiting triage re-judgement — coexists with the standing pm:* label; queued cards skip dispatch
+- name: "pm:seat"
+  color: "ededed"
+  description: ""
+
+# --- triage (GitHub's default set, in use since repo creation) ---
+- name: duplicate
+  color: "cfd3d7"
+  description: This issue or pull request already exists
+- name: invalid
+  color: "e4e669"
+  description: This doesn't seem right
+- name: question
+  color: "d876e3"
+  description: Further information is requested
+- name: wontfix
+  color: "ffffff"
+  description: This will not be worked on
+- name: good first issue
+  color: "7057ff"
+  description: Good for newcomers
+- name: help wanted
+  color: "008672"
+  description: Extra attention is needed
+
+# --- routing ---
+- name: docs
+  color: "ededed"
+  description: ""
+- name: i18n
+  color: "ededed"
+  description: ""
+- name: testing
+  color: "ededed"
+  description: ""
+- name: ui
+  color: "ededed"
+  description: ""
+- name: upstream
+  color: "ededed"
+  description: ""
+
+# --- lifecycle ---
+- name: finding
+  color: "ededed"
+  description: ""
+- name: stale
+  color: "ededed"
+  description: ""
+- name: post-preview
+  color: "ededed"
+  description: ""
+- name: preview-1
+  color: "ededed"
+  description: ""

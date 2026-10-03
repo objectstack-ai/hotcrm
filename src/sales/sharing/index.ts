@@ -1,0 +1,9 @@
+// Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
+
+/**
+ * Sharing & Security Definitions Barrel
+ */
+
+export { AccountTeamSharingRule, TerritorySharingRules } from './account.sharing';
+export { OpportunityExecutiveSharingRule, OpportunitySalesSharingRule } from './opportunity.sharing';
+export { CrmPositions } from './positions';

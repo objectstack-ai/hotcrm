@@ -76,7 +76,16 @@ describe('the line-item objects declare cascade on their parent lookup', () => {
     ['crm_quote_line_item', () => QUOTE_LINE_ITEM, 'crm_quote'],
   ])('%s.%s cascades from its parent', (_object, schema, field) => {
     const f = schema().fields[field as string];
-    expect(f.type).toBe('lookup');
+    // `master_detail`, not `lookup`, since the 17.3.0 upgrade. Both objects
+    // declare `sharingModel: 'controlled_by_parent'`, and 17.3.0's new
+    // `security-controlled-by-parent-ambiguous-relation` author-time rule
+    // refuses an object whose master is decided by FIELD DECLARATION ORDER —
+    // which is what two REQUIRED lookups (the parent and `crm_product`) were.
+    // The parent was promoted into the required-master_detail tier so the
+    // master is authored rather than positional; `crm_product` stays a
+    // required lookup and is no longer a candidate. The cascade contract
+    // asserted below is unchanged.
+    expect(f.type).toBe('master_detail');
     expect(f.required).toBe(true);
     expect(f.deleteBehavior).toBe('cascade');
   });

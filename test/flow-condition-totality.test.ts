@@ -608,7 +608,7 @@ describe('conditions answer on a driver whose stored record omits the key', () =
 
   it('the remaining record-change flows evaluate across an insert and an update', async () => {
     const b = await boot([
-      'case_escalation', 'case_csat_followup',
+      'case_escalation',
       'opportunity_approval', 'opportunity_approval_on_create', 'opportunity_won_alert',
       'task_urgent_alert',
     ]);

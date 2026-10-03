@@ -13,6 +13,7 @@ const screenshots = [
   { id: 'quote-pipeline' },
   { id: 'campaign-detail' },
   { id: 'sales-dashboard', extension: 'jpg' },
+  { id: 'executive-dashboard' },
   { id: 'large-deal-approval' },
   { id: 'sales-representative-permissions' },
 ];

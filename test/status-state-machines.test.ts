@@ -177,16 +177,20 @@ describe('the new tables agree with the automation that drives them', () => {
 describe('the admin docs roster matches the ledger', () => {
   /**
    * How each object is named in the roster, per locale. Hand-written on purpose
-   * and NOT taken from `src/translations/` — the docs and the locale pack are
-   * separate surfaces with their own drift (#837 tracks `crm_case` alone being
-   * 服务案例 / 工单 / 案例 in three places), and pinning the page against the
-   * pack here would make this guard fail for a reason that has nothing to do
-   * with the roster being complete.
+   * and NOT taken from `src/translations/`: this guard answers "is the roster
+   * complete", and reading the pack here would make it fail for a reason that
+   * has nothing to do with completeness.
+   *
+   * That the spellings AGREE with the pack is a separate fact, and it now has
+   * its own guard — `docs-object-term-consistency.test.ts` (#837). Until that
+   * landed, `crm_case` was 服务案例 in the pack, 工单 in this row's sibling
+   * ledger (`sharing-coverage.test.ts`) and 案例 here: three guarded tables,
+   * three spellings, all green.
    */
   const DOC_LABEL: Record<string, { en: string; hans: string; hant: string }> = {
     crm_lead: { en: 'Leads', hans: '潜在客户', hant: '潛在客戶' },
     crm_opportunity: { en: 'Opportunities', hans: '商机', hant: '商機' },
-    crm_case: { en: 'Cases', hans: '案例', hant: '案例' },
+    crm_case: { en: 'Cases', hans: '工单', hant: '工單' },
     crm_contract: { en: 'Contracts', hans: '合同', hant: '合約' },
     crm_quote: { en: 'Quotes', hans: '报价', hant: '報價' },
     crm_campaign: { en: 'Campaigns', hans: '营销活动', hant: '行銷活動' },

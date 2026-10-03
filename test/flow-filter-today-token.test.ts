@@ -5,8 +5,9 @@ import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-automation';
 import type * as Automation from '@objectstack/spec/automation';
-import * as allFlows from '../src/flows';
-import { ContractExpirationFlow } from '../src/flows/contract-expiration.flow';
+import { allFlows } from '../objectstack.composition';
+import { ContractExpirationFlow } from '../src/revenue/flows/contract-expiration.flow';
+import { flowNodesDeep, regionsOf } from './helpers/flow-regions';
 
 type Flow = Automation.Flow;
 type AnyRec = Record<string, any>;
@@ -91,21 +92,27 @@ const filterTokens = (value: unknown, path: string[] = []): { path: string; temp
   return [];
 };
 
-/** Walk a flow's nodes, including `loop` bodies, collecting filter tokens. */
+/**
+ * Walk a flow's nodes, including every control-flow region, collecting filter
+ * tokens. `regionsOf` rather than a bare `config.body` read: a loop body is one
+ * `try_catch` guard since `src/sales/flows/_guarded-iteration.ts`, and the reads this
+ * censuses sit inside its `try` region.
+ */
 const censusOf = (flowName: string, nodes: AnyRec[]): TokenSite[] =>
   nodes.flatMap((node) => {
     const here = filterTokens(node?.config?.filter).map((t) => ({
       flow: flowName, node: String(node.id), ...t,
     }));
-    const body = node?.config?.body?.nodes;
-    return Array.isArray(body) ? [...here, ...censusOf(flowName, body)] : here;
+    const nested = regionsOf(node).flatMap((r) => censusOf(flowName, r.nodes as AnyRec[]));
+    return [...here, ...nested];
   });
 
-// `src/flows/index.ts` exports every flow twice — once by name and once inside
-// the `allFlows` array `defineStack()` consumes. The ARRAY is the registered
-// set, so it is the one censused; taking `Object.values()` of the module would
-// count each flow twice and quietly weaken the per-site assertions below.
-const flows: Flow[] = ((allFlows as AnyRec).allFlows ?? []) as Flow[];
+// Each package's `flows/index.ts` exports its flows by name;
+// `objectstack.composition.ts` assembles them into the `allFlows` array
+// `defineStack()` consumes. The ARRAY is the registered set, so it is the one
+// censused — taking `Object.values()` of a barrel module would count each flow
+// once per package and quietly weaken the per-site assertions below.
+const flows: Flow[] = allFlows as unknown as Flow[];
 
 const CENSUS: TokenSite[] = flows.flatMap((f) => censusOf(f.name, (f as AnyRec).nodes ?? []));
 
@@ -162,9 +169,60 @@ const OBJECTS = {
   },
 } as never;
 
+/**
+ * A fixture date `daysFromToday` away, spelled on the **UTC** calendar —
+ * arithmetic and rendering both, on purpose.
+ *
+ * ### Why UTC, and not the local calendar (#1462)
+ *
+ * This is not a free choice: the helper's calendar has to be the one the
+ * engine resolves `{TODAY()}` in, because the assertions below compare the two
+ * directly. Both layers were measured on 17.2.0 rather than assumed:
+ *
+ *   - `service-automation`'s `resolveToken()` renders a bare `{TODAY()}` as
+ *     `new Date().toISOString().slice(0, 10)` — the **UTC** calendar day, with
+ *     no reference to the ambient zone.
+ *   - `@objectstack/core`'s `{today}` filter macro resolves through
+ *     `proxyDay(now, ctx.timezone)`, and a context with no `timezone` (which is
+ *     what a bare `ql.find()` here carries) falls back to the **UTC** parts.
+ *
+ * So both tokens this file asserts against mean "the UTC day", and the fixtures
+ * must be spelled the same way for `$lt` to land where the assertions say.
+ *
+ * ### What the previous spelling did
+ *
+ * It did the arithmetic on the LOCAL calendar and rendered on the UTC one:
+ *
+ *     const d = new Date();
+ *     d.setDate(d.getDate() + daysFromToday);   // local
+ *     return d.toISOString().slice(0, 10);      // UTC
+ *
+ * Those two agree whenever a local day is exactly 24h long, which is why the
+ * file passed everywhere it had ever been run. They disagree across a DST
+ * transition: `setDate` keeps the wall-clock time, so a "spring forward" day is
+ * 23h long and the shifted instant lands one UTC day later than intended. In
+ * the hour after a transition that collapses `ymd(-1)` onto `ymd(0)`, which
+ * puts `k_yesterday` exactly ON the `$lt` boundary instead of below it — the
+ * sweep then leaves it `activated` and only one owner is notified.
+ *
+ * Measured before the fix (`TZ` × faked clock, this file):
+ *
+ *     America/New_York    2026-03-08T23:00:00Z   2 failed | 6 passed
+ *     America/Los_Angeles 2026-03-08T23:00:00Z   2 failed | 6 passed
+ *     Europe/Berlin       2026-03-29T23:00:00Z   2 failed | 6 passed
+ *     America/Santiago    2026-09-06T23:00:00Z   2 failed | 6 passed
+ *     Pacific/Auckland    2026-09-26T23:00:00Z   2 failed | 6 passed
+ *     Australia/Sydney    2026-10-03T23:00:00Z   2 failed | 6 passed
+ *
+ * ⚠️ Note for anyone re-checking this: no run at `TZ=UTC` can have teeth here.
+ * Local and UTC coincide there, so the broken spelling and this one are
+ * indistinguishable — which is exactly why a suite that is only ever run on a
+ * UTC CI runner reported a clean bill of health. Reproducing it needs a
+ * DST-observing zone AND an instant inside that zone's transition hour.
+ */
 const ymd = (daysFromToday: number): string => {
   const d = new Date();
-  d.setDate(d.getDate() + daysFromToday);
+  d.setUTCDate(d.getUTCDate() + daysFromToday);
   return d.toISOString().slice(0, 10);
 };
 
@@ -181,7 +239,15 @@ describe('{TODAY()} through a real ObjectQL + real AutomationEngine', () => {
   let data: AnyRec;
 
   const seedContracts = async () => {
-    const api: AnyRec = ql.createContext({ isSystem: true, userId: 'u1', tenantId: 'org_1' } as never);
+    // ⛔ No `tenantId` here. From @objectstack/driver-memory 17.4.0 the in-memory
+    // driver REFUSES any call the engine hands a tenant scope
+    // (`MemoryMultiTenantUnsupportedError`, objectstack#16589): it has no
+    // row-level tenant isolation, so answering would read across organizations.
+    // This fixture holds one implicit tenant and measures nothing about tenancy,
+    // so the honest shape is not to ask an unisolating driver to isolate. ⛔ Do
+    // NOT reach for `tenancy: { enabled: false }` instead — the refusal names that
+    // as the wrong answer for data that really is per-organization.
+    const api: AnyRec = ql.createContext({ isSystem: true, userId: 'u1' } as never);
     await api.object('crm_contract').insert({
       id: 'k_past', contract_number: 'C-1', status: 'activated', end_date: ymd(-3), owner_id: 'rep1',
     });
@@ -351,7 +417,15 @@ describe('{TODAY()} through a real ObjectQL + real AutomationEngine', () => {
     // 2. The rows really moved — the query selected, and only the right ones.
     //    `k_today` is the boundary row and `k_future` the control; either one
     //    flipping means the resolved value was not today.
-    const api: AnyRec = ql.createContext({ isSystem: true, userId: 'u1', tenantId: 'org_1' } as never);
+    // ⛔ No `tenantId` here. From @objectstack/driver-memory 17.4.0 the in-memory
+    // driver REFUSES any call the engine hands a tenant scope
+    // (`MemoryMultiTenantUnsupportedError`, objectstack#16589): it has no
+    // row-level tenant isolation, so answering would read across organizations.
+    // This fixture holds one implicit tenant and measures nothing about tenancy,
+    // so the honest shape is not to ask an unisolating driver to isolate. ⛔ Do
+    // NOT reach for `tenancy: { enabled: false }` instead — the refusal names that
+    // as the wrong answer for data that really is per-organization.
+    const api: AnyRec = ql.createContext({ isSystem: true, userId: 'u1' } as never);
     const rows: AnyRec[] = await api.object('crm_contract').find({ where: {} });
     const byId = Object.fromEntries(rows.map((r) => [r.id, r.status]));
     expect(byId).toEqual({
@@ -385,18 +459,10 @@ describe('{TODAY()} through a real ObjectQL + real AutomationEngine', () => {
       const [field] = site.path.split('.');
       const authored = (() => {
         const flow = flows.find((f) => f.name === site.flow)!;
-        const findNode = (nodes: AnyRec[]): AnyRec | undefined => {
-          for (const n of nodes) {
-            if (String(n.id) === site.node) return n;
-            const body = n?.config?.body?.nodes;
-            if (Array.isArray(body)) {
-              const hit = findNode(body);
-              if (hit) return hit;
-            }
-          }
-          return undefined;
-        };
-        return findNode(((flow as AnyRec).nodes ?? []) as AnyRec[])?.config?.filter?.[field];
+        // Regions included, for the same reason `censusOf` above descends them.
+        const findNode = (f: AnyRec): AnyRec | undefined =>
+          flowNodesDeep(f).find((n) => String(n.id) === site.node);
+        return findNode(flow as AnyRec)?.config?.filter?.[field];
       })();
       expect(authored, `${site.flow}/${site.node}: no condition at '${field}'`).toBeDefined();
 
@@ -454,9 +520,17 @@ describe('{TODAY()} through a real ObjectQL + real AutomationEngine', () => {
     // silently dropping the condition and widening the sweep. The `success:
     // false` assertion in the census case above is what would catch that — here
     // it is, catching it.
+    // ⚠️ The refusal MESSAGE changed on the 17.2.0 -> 17.3.0 upgrade; the
+    // refusal itself did not. Through 17.2.0 the node was refused for being
+    // unresolved ("resolved to nothing and were dropped"). Platform 17.3.0
+    // (objectstack#11060) refuses one step earlier and more precisely: the
+    // value-expression evaluator now knows its own closed vocabulary, so an
+    // unknown NAME is named as such instead of being reported as an empty
+    // resolution. What this case guards — `success: false`, and nothing
+    // reaching the query layer — is asserted on both sides of that wording.
     const { run, issued } = await runProbe({ $lt: '{TOMORROW()}' });
     expect(run?.success).toBe(false);
-    expect(String(run?.error)).toMatch(/resolved to nothing and were dropped/);
+    expect(String(run?.error)).toMatch(/unknown function 'TOMORROW'|resolved to nothing and were dropped/);
     expect(issued, 'a refused node must not reach the query layer at all').toBeUndefined();
   });
 });

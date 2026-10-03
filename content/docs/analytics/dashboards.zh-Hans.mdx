@@ -69,7 +69,7 @@ HotCRM 内置五个仪表盘。每个都为特定角色而构建，回答该角�
 - **Why We Lose** — 按丢单原因统计的丢单数。每条丢单商机都必须填写原因（[关单时强制](/zh-Hans/docs/sales/opportunities)），因此图中不存在"未归因"切片——图为空表示该时间窗内没有丢单，而不是没人填字段。
 - **Pipeline by Stage × Lead Source** — 进行中商机金额按阶段与来源的交叉统计（透视表）。
 
-**控件**：一个基于成交日期的日期范围选择器（默认本季度），外加 Sales Rep 和 Deal Type 筛选器。Quota Attainment by Rep 固定在当前季度，两者都不作用于它——配额是为某个周期定义的，用任意范围去重新切分它，等于拿完整的目标对比不完整的收入。
+**控件**：一个基于预计成交日期的日期范围选择器（默认本季度），外加 Sales Rep 和 Deal Type 筛选器。Quota Attainment by Rep 固定在当前季度，两者都不作用于它——配额是为某个周期定义的，用任意范围去重新切分它，等于拿完整的目标对比不完整的收入。
 
 角色感知：销售代表看到自己的记录，经理看到团队的，遵循共享规则。
 
@@ -93,7 +93,7 @@ HotCRM 内置五个仪表盘。每个都为特定角色而构建，回答该角�
 - **Quiet 60+ Days** — 沉默两个月，风险阈值。
 - **Quiet 90+ Days** — 整整一个季度没有联系：要么介入，要么放弃。
 
-**控件**：一个 Rep 筛选器。这里**故意没有**日期范围选择器——互动日期是 datetime 列，而平台的 datetime 筛选器转换目前会在这类列上套用范围时把每个小部件都清零。时间改由坐标轴承载：Activity Volume by Week 按周分桶，三个沉默客户磁贴各自框住自己的 30 / 60 / 90 天阈值。
+**控件**：一个 Rep 筛选器。这里**故意没有**日期范围选择器：时间改由坐标轴承载——Activity Volume by Week 按周分桶，三个沉默客户磁贴各自框住自己的 30 / 60 / 90 天阈值。
 
 ## 🎧 Customer Service
 
@@ -110,9 +110,9 @@ HotCRM 内置五个仪表盘。每个都为特定角色而构建，回答该角�
 - **Cases by Origin** — Email / Phone / Web / Chat / Portal（柱状图）。
 - **Daily Case Volume** — 近 30 天每天新建的工单数。
 - **SLA Compliance** — 在 SLA 内解决的工单占比，对比 95% 的目标线（仪表图）。
-- **Open Cases by Priority** — 每个优先级的未结工单数及其 SLA 违约率（表格）。
+- **My Open Cases by Priority** — 当前登录用户自己名下、每个优先级的未结工单数及其 SLA 违约率（表格）。它不受 Agent 筛选影响，始终显示你自己的工单。
 
-**控件**：Agent 和 Priority 筛选器，外加每分钟一次的刷新——服务台需要新鲜的数字。和 Sales Activity 一样，这里同样故意没有日期范围选择器，原因是同一个 datetime 筛选器问题；Daily Case Volume 自带 30 天的时间窗。
+**控件**：一个基于工单创建日期的日期范围选择器（默认最近 90 天），外加 Agent 和 Priority 筛选器，以及每分钟一次的刷新——服务台需要新鲜的数字。它是唯一一个按工单日期、而不是按商机预计成交日期取窗的选择器，也是唯一一个不默认本季度的，所以在你把窗口放宽之前，这一页上的每一个数字都被最近 90 天限定着。Daily Case Volume 退出了这个选择器，保留自带的 30 天时间窗，因此那张图始终覆盖它标题上写的 30 天。
 
 ## 👔 Executive Overview
 
@@ -130,15 +130,17 @@ HotCRM 内置五个仪表盘。每个都为特定角色而构建，回答该角�
 - **New Accounts** — 近 6 个月的客户新建节奏。
 - **Accounts by Industry** — 每个行业的年收入合计与客户数（表格）。
 
-**控件**：一个基于成交日期的日期范围选择器（默认本季度），外加 Owner 和 Lead Source 筛选器。四个 KPI 磁贴各自声明了自己的周期（年初至今、"活跃"、"未转化"），不会被这个选择器收窄。
+**控件**：一个基于预计成交日期的日期范围选择器（默认本季度），外加 Owner 和 Lead Source 筛选器。四个 KPI 磁贴各自声明了自己的周期（年初至今、"活跃"、"未转化"），不会被这个选择器收窄。
 
 此仪表盘是每周领导层评审的基础。
 
 ## 你可以改什么
 
-- **日期范围** — CRM Overview、Sales Performance 和 Executive Overview 各带一个基于商机预计成交日期的选择器，默认本季度。Sales Activity 和 Customer Service 没有，原因见上面各自的章节。
+- **日期范围** — 五个仪表盘里有四个带选择器，且四个都支持自定义区间。CRM Overview、Sales Performance 和 Executive Overview 基于商机预计成交日期取窗，默认本季度；Customer Service 基于工单创建日期取窗，默认最近 90 天。Sales Activity 是唯一没有选择器的，原因见上面它自己的章节。每一个时间窗都由服务端解析，按 UTC 日历日算："最近 7 天"指的是以今天的 UTC 日期结尾的那七个 UTC 日历日，两端都含。你自己的时钟不参与其中——一位在 UTC+8 的读者在当地时间凌晨 3 点打开仪表盘，看到的窗口是在上一个 UTC 午夜结束的，而不是在他自己的午夜。
 - **筛选器** — 每个仪表盘声明自己的一套：Owner 各处都有，另外 Sales Performance 有 Deal Type、Customer Service 有 Priority、Executive Overview 有 Lead Source。
 - **刷新** — Customer Service 每分钟刷新一次，Sales Performance 每三分钟，其余三个每五分钟。
+
+仪表盘的筛选器匹配的是每个部件所绑数据集背后的那个**对象**，而不是该数据集声明的维度，并且它会被 AND 进每个受它约束的部件的查询里。所以 Customer Service 能提供 Agent 筛选器，哪怕 `case_metrics` 没有声明任何负责人维度：`owner_id` 是工单上的字段，筛选器要的就只是这个。但它买到的只有筛选这一件事——部件依然不能按数据集没有声明的字段**分组**，所以 [SLA 与升级](/zh-Hans/docs/service/sla-and-escalation) 说"没有任何报表、也没有任何仪表盘部件能按它分组"是对的，它和同一个应用里按 Agent 筛选的服务台仪表盘并不矛盾。反过来同样成立：筛选器若点名了某个部件自己的对象没有的字段，那个部件的查询就会去要一个并不存在的列，所以答不了某个筛选器的部件会按名字显式退出它（`filterBindings`），而不是默默忽略它。
 
 有些磁贴刻意不接受所在仪表盘的筛选器。12 个月的收入趋势、Top Products 和 Quota Attainment by Rep 都保持自己标题上写明的那个时间窗，这样更窄的日期选择器就无法在标题不变的情况下悄悄改掉数字的定义。
 

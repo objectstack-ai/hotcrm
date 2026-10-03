@@ -1,0 +1,310 @@
+// Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
+
+import type { Dashboard } from '@objectstack/spec/ui';
+
+/**
+ * Customer Service Dashboard
+ *
+ * Case load, SLA health, and resolution performance for the support team.
+ * Uses semantic colorVariant tokens (warning/danger/success) and chartConfig
+ * palettes instead of raw hex values, mirroring the polished CRM dashboard
+ * reference at https://github.com/objectstack-ai/objectui/tree/main/examples/crm.
+ *
+ * No KPI tile declares a `trend`. A period-over-period delta is a measurement,
+ * so it has to come from a real comparison query (widget `compareTo`) once the
+ * renderer supports it for dataset metrics — the percentages this file used to
+ * carry were typed by hand and recomputed by nothing, so they kept asserting
+ * the same "-6.2% vs last week" on any data, including an empty database.
+ * Same rule as the executive dashboard (#500, #587).
+ */
+export const ServiceDashboard: Dashboard = {
+  name: 'service_dashboard',
+  label: 'Customer Service',
+  description: 'Case load, SLA health, and resolution performance',
+
+  columns: 12,
+  gap: 4,
+  refreshIntervalSeconds: 60, // 1 minute — service desks need fresh numbers
+
+  header: {
+    showTitle: true,
+    showDescription: true,
+    // Header action buttons removed: `create_case` is not a defined action and
+    // `/objects/case?owner=current_user` / `/reports/sla` are not in-app view
+    // routes — all three were dead. Re-add real, wired-up actions here when available.
+  },
+
+  // Historical note (#460 → #1157): this dashboard shipped without a date
+  // picker from PR #546 until the 17.0.0 GA upgrade, because windowing a
+  // `Field.datetime()` could not be compared — `driver-sql` 16.1.0 coerced
+  // datetime bounds to epoch-ms INTEGER while every datetime in the database is
+  // ISO TEXT, so `$gte` matched everything and `$lte` matched nothing and the
+  // whole dashboard read zeros. Both named preconditions are fixed and
+  // released: objectstack#3912 (the coercion) and objectstack#3777 (a bare-date
+  // `$lte` dropping same-day rows). The window below is not restored on the
+  // strength of those closures alone — `test/dashboard-date-range-window.test.ts`
+  // executes it against a real SQLite database and compares every widget to a
+  // ground truth computed in the same run, so a re-regression fails CI here
+  // rather than being discovered as an all-zero dashboard again.
+  dateRange: { field: 'created_date', defaultRange: 'last_90_days', allowCustomRange: true },
+
+  globalFilters: [
+    {
+      field: 'owner_id',
+      label: { en: 'Agent', 'zh-CN': '负责人', 'es-ES': 'Propietario del Caso', 'ja-JP': 'ケース担当者' },
+      type: 'lookup',
+      scope: 'dashboard',
+      optionsFrom: { object: 'sys_user', valueField: 'id', labelField: 'name' },
+    },
+    {
+      field: 'priority',
+      label: { en: 'Priority', 'zh-CN': '优先级', 'es-ES': 'Prioridad', 'ja-JP': '優先度' },
+      type: 'select',
+      scope: 'dashboard',
+      options: [
+        // zh-CN `critical` is 严重, never 紧急 — 紧急 belongs to crm_task.priority.urgent
+        // and the two vocabularies are distinct sets (ruling #1342). Same wording as
+        // `objects.crm_case.fields.priority.options` in every locale pack.
+        { value: 'critical', label: { en: 'Critical', 'zh-CN': '严重', 'es-ES': 'Crítica', 'ja-JP': '重大' } },
+        { value: 'high',     label: { en: 'High', 'zh-CN': '高', 'es-ES': 'Alta', 'ja-JP': '高' } },
+        { value: 'medium',   label: { en: 'Medium', 'zh-CN': '中', 'es-ES': 'Media', 'ja-JP': '中' } },
+        { value: 'low',      label: { en: 'Low', 'zh-CN': '低', 'es-ES': 'Baja', 'ja-JP': '低' } },
+      ],
+    },
+  ],
+
+  widgets: [
+    // ─── Row 1: Case-Load KPIs ────────────────────────────────────────
+    {
+      id: 'open_cases',
+      title: 'Open Cases',
+      description: 'Cases that are not yet closed',
+      type: 'metric',
+      filter: { is_closed: false },
+      colorVariant: 'orange',
+      dataset: 'case_metrics', values: ['case_count'],
+      layout: { x: 0, y: 0, w: 3, h: 2 },
+    },
+    {
+      id: 'critical_cases',
+      title: 'Critical Cases',
+      description: 'Open cases marked as critical priority',
+      type: 'metric',
+      filter: { priority: 'critical', is_closed: false },
+      colorVariant: 'danger',
+      dataset: 'case_metrics', values: ['case_count'],
+      layout: { x: 3, y: 0, w: 3, h: 2 },
+    },
+    {
+      id: 'avg_resolution_time',
+      title: 'Avg Resolution Time',
+      description: 'Mean time to close, in hours',
+      type: 'metric',
+      filter: { is_closed: true },
+      colorVariant: 'blue',
+      dataset: 'case_metrics', values: ['avg_resolution'],
+      layout: { x: 6, y: 0, w: 3, h: 2 },
+    },
+    {
+      id: 'sla_violations',
+      title: 'SLA Violations',
+      description: 'Cases that breached their SLA',
+      type: 'metric',
+      filter: { is_sla_violated: true },
+      colorVariant: 'warning',
+      dataset: 'case_metrics', values: ['case_count'],
+      layout: { x: 9, y: 0, w: 3, h: 2 },
+    },
+
+    // ─── Row 2: Distribution ──────────────────────────────────────────
+    {
+      id: 'cases_by_status',
+      title: 'Cases by Status',
+      description: 'Workload distribution across the pipeline',
+      type: 'donut',
+      filter: { is_closed: false },
+      colorVariant: 'blue',
+      dataset: 'case_metrics', dimensions: ['status'], values: ['case_count'],
+      layout: { x: 0, y: 2, w: 4, h: 4 },
+      chartConfig: {
+        showLegend: true,
+        showDataLabels: true,
+        colors: ['#0EA5E9', '#06B6D4', '#14B8A6', '#10B981', '#F59E0B'],
+      },
+    },
+    {
+      id: 'cases_by_priority',
+      title: 'Cases by Priority',
+      description: 'Open case mix by urgency',
+      type: 'pie',
+      filter: { is_closed: false },
+      colorVariant: 'warning',
+      dataset: 'case_metrics', dimensions: ['priority'], values: ['case_count'],
+      layout: { x: 4, y: 2, w: 4, h: 4 },
+      chartConfig: {
+        showLegend: true,
+        showDataLabels: true,
+        // critical → high → medium → low
+        colors: ['#DC2626', '#F97316', '#F59E0B', '#10B981'],
+      },
+    },
+    {
+      id: 'cases_by_origin',
+      title: 'Cases by Origin',
+      description: 'Where our cases are coming from',
+      type: 'bar',
+      colorVariant: 'purple',
+      dataset: 'case_metrics', dimensions: ['origin'], values: ['case_count'],
+      layout: { x: 8, y: 2, w: 4, h: 4 },
+      chartConfig: {
+        showLegend: false,
+        showDataLabels: true,
+        colors: ['#8B5CF6'],
+      },
+    },
+
+    // ─── Row 3: Volume & SLA Trends ───────────────────────────────────
+    {
+      id: 'daily_case_volume',
+      title: 'Daily Case Volume',
+      description: 'New cases created over the last 30 days',
+      type: 'area',
+      filter: { created_date: { $gte: '{30_days_ago}' } },
+      // Opted out ON PURPOSE, re-decided in #1157 rather than inherited.
+      //
+      // The floor above is no longer inert: on 17.0.0 `{30_days_ago}` resolves
+      // to a start-of-day bound the driver compares correctly (measured, with a
+      // ground truth, in `test/dashboard-date-range-window.test.ts`), so this
+      // chart really does plot the last 30 days and its title is true again.
+      // That is exactly why it must not follow the picker: the dashboard range
+      // is ANDed into every bound widget, so a reader who selects "last 7 days"
+      // would get a 7-day chart still labelled "last 30 days". Self-described
+      // windows opt out — the same rule the Executive dashboard's YTD tile
+      // follows, pinned by `test/action-references.test.ts`. Binding it instead
+      // would mean dropping this filter and retitling the widget in all four
+      // locale bundles; the fixed 30-day volume trend beside a 90-day case load
+      // is the intended reading.
+      filterBindings: { dateRange: false },
+      colorVariant: 'blue',
+      dataset: 'case_metrics', dimensions: ['created_date'], values: ['case_count'],
+      layout: { x: 0, y: 6, w: 8, h: 4 },
+      chartConfig: {
+        showLegend: false,
+        showDataLabels: false,
+        colors: ['#0EA5E9'],
+        interaction: { tooltips: true, brush: true },
+      },
+      options: { dateGranularity: 'day' },
+    },
+    {
+      id: 'sla_compliance_gauge',
+      title: 'SLA Compliance',
+      description: 'Percent of cases resolved within SLA this period',
+      type: 'gauge',
+      filter: { is_closed: true },
+      colorVariant: 'success',
+      // Plots COMPLIANCE, the quantity the title, the description, the
+      // success colouring and the 0.95 target line all name (#1213). It used
+      // to plot `avg_sla_violated` — the complement — with `options.invert`
+      // asking the renderer to flip it. `invert` is not a declared key on
+      // `DashboardWidgetOptionsSchema`; it rode the `.passthrough()`, nothing
+      // could report it inert, and the gauge read 0.0% on an org with 100%
+      // compliance. The key is gone rather than left pretending: a measure
+      // that means what the widget says is the fix, and the measure's own
+      // label prints under the number, so the two cannot drift apart again.
+      dataset: 'case_metrics', values: ['sla_compliance_rate'],
+      layout: { x: 8, y: 6, w: 4, h: 4 },
+      chartConfig: {
+        showLegend: false,
+        showDataLabels: true,
+        colors: ['#10B981', '#F59E0B', '#EF4444'],
+        annotations: [
+          { type: 'line', axis: 'y', value: 0.95, label: 'Target', style: 'dashed', color: '#10B981' },
+        ],
+      },
+      // The target line was written for COMPLIANCE and is unchanged: it was
+      // always right — it was the plotted value that disagreed with it. (The
+      // green/amber/red `options.thresholds` ladder beside it was deleted in
+      // 17.6.0's strict cleanup: no dashboard renderer reads widget
+      // `thresholds`, so it never coloured anything.)
+    },
+
+    // ─── Row 4: Knowledge deflection (#601) ───────────────────────────
+    //
+    // The deflection metric the card asks the service dashboard to show, and
+    // the reason it is THREE tiles rather than one: a ratio widget on its own
+    // is unreadable — 100% could be "40 of 40" or "1 of 1", and a blank rate
+    // could be "no closed cases" or "no KB resolutions" (measured: a filtered
+    // measure contributes NO row for a group it selects nothing in, so the
+    // rate comes back absent, not 0). Numerator and denominator therefore ship
+    // beside the percentage, the same rule the sales dashboard's win rate
+    // follows after #614.
+    {
+      id: 'kb_deflection_rate',
+      title: 'KB Deflection Rate',
+      description: 'Share of closed cases resolved with a knowledge article',
+      type: 'metric',
+      colorVariant: 'success',
+      dataset: 'case_metrics', values: ['kb_deflection_rate'],
+      layout: { x: 0, y: 10, w: 4, h: 2 },
+    },
+    {
+      id: 'kb_resolved_cases',
+      title: 'Resolved by KB',
+      description: 'Closed cases pointing at the article that resolved them',
+      type: 'metric',
+      colorVariant: 'blue',
+      dataset: 'case_metrics', values: ['kb_resolved_count'],
+      layout: { x: 4, y: 10, w: 4, h: 2 },
+    },
+    {
+      id: 'closed_cases_total',
+      title: 'Closed Cases',
+      description: 'The denominator behind the deflection rate',
+      type: 'metric',
+      colorVariant: 'default',
+      dataset: 'case_metrics', values: ['closed_count'],
+      layout: { x: 8, y: 10, w: 4, h: 2 },
+    },
+    {
+      id: 'top_resolving_articles',
+      title: 'Top Resolving Articles',
+      description: 'Knowledge articles ranked by the closed cases they resolved',
+      type: 'table',
+      filter: { is_closed: true },
+      colorVariant: 'default',
+      dataset: 'case_metrics', dimensions: ['resolved_article'], values: ['kb_resolved_count'],
+      layout: { x: 0, y: 12, w: 12, h: 4 },
+      options: {
+        sortBy: 'kb_resolved_count',
+        sortOrder: 'desc',
+        limit: 10,
+      },
+    },
+
+    // ─── Row 5: My Open Cases by Priority ─────────────────────────────
+    // A dashboard `table` binds to an analytics cube and aggregates; it cannot
+    // list individual cases (ADR-0021) — for the case-by-case queue, use the
+    // my_open_cases ListView ("My Cases" in the My Work nav group).
+    // `{current_user_id}` scopes what this widget SHOWS; it is presentation
+    // scope, not an access boundary — row-level security owns that (#510).
+    {
+      id: 'my_open_cases_by_priority',
+      title: 'My Open Cases by Priority',
+      description: 'Your open cases and their SLA-violation rate, broken down by priority',
+      type: 'table',
+      filter: { is_closed: false, owner_id: '{current_user_id}' },
+      // Opts out of the Agent global filter (keyed by its field, `owner_id`):
+      // ANDing an agent pick into "mine" empties the widget for anyone else.
+      filterBindings: { owner_id: false },
+      colorVariant: 'default',
+      dataset: 'case_metrics', dimensions: ['priority'], values: ['case_count', 'avg_sla_violated'],
+      layout: { x: 0, y: 16, w: 12, h: 4 },
+      options: {
+        sortBy: 'case_count',
+        sortOrder: 'desc',
+        limit: 10,
+      },
+    },
+  ],
+};

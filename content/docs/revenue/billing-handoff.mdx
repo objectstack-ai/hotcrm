@@ -133,7 +133,7 @@ Requests also carry `X-Objectstack-Event: flow:send_closed_won_handoff` / `flow:
 
 **This is a code change, not a Setup edit.** Read that sentence before you go looking for a screen: the endpoint and the signing secret live in the app's own metadata, so changing them means changing the app and redeploying it.
 
-Both values are read from one module, `src/flows/_billing-endpoint.ts`, and both accept an environment override at **build** time:
+Both values are read from one module, `src/sales/flows/_billing-endpoint.ts`, and both accept an environment override at **build** time:
 
 ```bash
 HOTCRM_BILLING_ENDPOINT=https://billing.acme.internal/hotcrm/events \

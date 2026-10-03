@@ -14,8 +14,8 @@ import { SharingServicePlugin } from '@objectstack/plugin-sharing';
 import { tenancyProbe } from './helpers/tenancy-probe';
 import { SysUser, SysMember, SysOrganization } from '@objectstack/platform-objects/identity';
 import stack from '../objectstack.config';
-import caseHooks from '../src/objects/case.hook';
-import { CLAIMABLE_TARGET_STATUSES } from '../src/objects/_case-assignment';
+import caseHooks from '../src/service/objects/case.hook';
+import { CLAIMABLE_TARGET_STATUSES } from '../src/service/objects/_case-assignment';
 
 /**
  * Who really sees the `Unassigned — triage` tab's rows (#1096) — measured
@@ -280,6 +280,17 @@ async function boot(driver: string, config: AnyRec): Promise<Fixture> {
     // "table sys_user_permission_set has no column named permission_set".
     await insert('sys_user_permission_set', { user_id: user, permission_set_id: agentSet?.id });
   }
+
+  // The reach actor's standing is AUTHORED, not inherited from the first-user
+  // promotion this file used to lean on. Through 17.2.0 `buildContextForUser`
+  // recomputed `hasPlatformAdminGrant` from the grant rows, so the boot's
+  // org-less promotion of the first `sys_user` was enough. 17.3.0 reads it off
+  // the resolver's own posture verdict instead (`grants.posture ===
+  // 'PLATFORM_ADMIN'`), and the walled bootstrap no longer mints that row at
+  // all — so an implicit promotion is no longer a thing a harness may assume.
+  // Granting the set outright says what this actor is FOR.
+  const adminSet = (sets as AnyRec[]).find((s) => s.name === 'admin_full_access');
+  await insert('sys_user_permission_set', { user_id: id.admin, permission_set_id: adminSet?.id });
 
   // ── the owned population ──────────────────────────────────────────────
   // `case_auto_assign` returns early when `owner_id` is already set, so these

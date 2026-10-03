@@ -1,0 +1,62 @@
+---
+title: Lead Approval
+description: What a lead needs, what it is worth, and the sign-off some organisations want before a lead becomes a real deal.
+---
+
+# Need, value, and the sign-off before conversion
+
+Converting a lead is the point where a prospect becomes real: one click turns it into an account, a contact and an opportunity, and there is no undo. Two fields on the lead prepare that moment, and one optional gate controls it.
+
+- **Need Type** — what this prospect is asking for.
+- **Estimated Amount** — roughly what that demand is worth.
+- **Conversion Approval** — whether somebody has to sign the lead off before it can be converted. **Off unless your admin turns it on.**
+
+## What they want, not who they are
+
+A lead already says a great deal about the *company*: **Industry**, **Annual Revenue**, **Number of Employees**. It says where the lead came from, in **Lead Source**. None of that says what the prospect actually wants from you, and that is usually the first thing you need in order to route the lead to the right person.
+
+**Need Type** is that field. It ships with a generic starter list — New Implementation, Expansion, Replacement, Renewal, Consulting, Support & Maintenance, Other — because every business names its own demand differently. Your admin can replace the list with the words your team actually uses.
+
+Pick the **one** that governs the enquiry. A prospect asking to replace an ageing system and also wanting help running it afterwards is a *Replacement*; the support conversation is the next deal.
+
+## What it is worth, before you know for sure
+
+**Estimated Amount** is the value of the demand, as best you can tell today. It is the first money figure in the pipeline — before it, nothing about a lead says whether it is worth a call this week or next month.
+
+Two things it is **not**:
+
+- It is **not Annual Revenue**. That field is the *prospect company's own turnover*, which tells you how big they are, not how big the deal is. A £2bn manufacturer can be a £15k enquiry.
+- It is **not the opportunity amount**. The opportunity's amount is a number you defend in a forecast. This one is a guess taken before qualification, and nobody is held to it.
+
+The two meet at conversion: the **Opportunity Amount** box on the conversion screen opens **prefilled from this estimate** instead of blank. Change it if you know better — whatever is in that box is what enters the forecast, and that moment is exactly where an estimate is supposed to become a commitment.
+
+## When a lead needs approval
+
+Some organisations want a second pair of eyes before anything enters the pipeline as a real deal. The **Conversion Approval** field on the lead records where that stands:
+
+| Conversion Approval | What it means |
+| --- | --- |
+| **Not Required** | No sign-off is asked for. This is how HotCRM ships, and it is what every lead shows unless your admin has turned the gate on. |
+| **Pending** | The lead has gone to an approver and is waiting on a decision. |
+| **Approved** | Signed off. Convert it whenever you are ready. |
+| **Rejected** | The approver said no. Keep working the lead, or disqualify it with a reason. |
+
+You never set this field yourself — it is filled in by the approval, and it is read-only on the form.
+
+**While a lead is Pending or Rejected, it cannot be converted.** The **Convert Lead** button is not offered, and the conversion is refused even if it is started some other way. Everything else about the lead stays open: you can call, log activity, take notes, change the status, schedule the next follow-up. The gate stops one act, not the work.
+
+> **Nothing changes for you unless your admin arms the gate.** Out of the box every lead reads *Not Required* and conversion behaves exactly as it always has. Leads created before the gate was turned on keep converting freely too — arming it affects new leads, and it never invalidates a lead you already converted.
+
+## Tips for sales reps
+
+- ✅ Fill both fields at intake, while you still remember the call. They are the two facts that decide whether this lead gets worked this week.
+- ✅ Use the estimate honestly, including when it is small. A £5k number is more useful than an empty box, and nobody is measured on it.
+- ✅ If conversion is refused, read the **Conversion Approval** value before asking anyone: *Rejected* is a decision to talk about, *Pending* is just a wait.
+- ⛔ Don't put the prospect's company turnover in **Estimated Amount** — that is **Annual Revenue**, further down the form.
+
+## Tips for admins
+
+- Both fields sit in the lead's **Qualification** group, and both are columns on **All Leads**, so the list can be filtered and grouped by either one.
+- The **Need Type** list is ordinary picklist configuration — see [Customization › Extending Objects](/docs/customization/extending-objects) to replace the starter values with your own demand taxonomy.
+- The gate is **off by default** and is armed by changing the default value of the lead's **Conversion Approval** field from *Not Required* to *Pending*. From then on each new lead opens an approval request, routed to the holders of the `sales_manager` position; the flow behind it is **Lead Conversion Approval**, listed in [Administration › Automation](/docs/administration/automation).
+- Staff that position before you arm the gate. An approval routed to an empty bench has nobody to decide it.

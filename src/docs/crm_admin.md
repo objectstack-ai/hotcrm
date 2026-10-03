@@ -12,7 +12,6 @@ sources:
   - flow:quote_expiration
   - flow:case_sla_monitor
   - flow:case_escalation
-  - flow:case_csat_followup
   - flow:contract_renewal
   - flow:contract_expiration
   - sharing_rule:account_team_sharing
@@ -120,7 +119,6 @@ revisits:
 | Quote auto-expiration sweep | daily **01:00** | `quote-expiration.flow.ts` |
 | Case SLA breach sweep | **hourly** | `case-sla-monitor.flow.ts` |
 | Critical-case auto-escalation | priority = **Critical** | `case-escalation.flow.ts` |
-| CSAT request delay after close | **1 day** | `case-csat-followup.flow.ts` |
 | Contract renewal reminder | each contract's **Renewal Notice Days**, swept daily **08:00** | `contract-renewal.flow.ts` |
 | Contract auto-expiration | past **end date**, swept daily **00:00** | `contract-expiration.flow.ts` |
 

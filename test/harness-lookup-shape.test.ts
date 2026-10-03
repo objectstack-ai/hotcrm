@@ -4,7 +4,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import { REFERENCE_VALUE_TYPES } from '@objectstack/spec/data';
-import * as appObjects from '../src/objects/index';
+import { CrmObjects as appObjects } from './helpers/src-roster';
 import { makeHarness, referenceValueShapeError, type Rec } from './helpers/hook-harness';
 import { makeSandboxEngine, runActionBody } from './helpers/action-sandbox';
 

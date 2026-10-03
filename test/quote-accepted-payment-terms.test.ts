@@ -3,11 +3,11 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
-import quoteHooks from '../src/objects/quote.hook';
-import { Contract } from '../src/objects/contract.object';
-import { Quote } from '../src/objects/quote.object';
-import { PAYMENT_TERMS_OPTIONS } from '../src/objects/_picklists';
-import type { HookApi } from '../src/objects/_hook-api';
+import quoteHooks from '../src/revenue/objects/quote.hook';
+import { Contract } from '../src/revenue/objects/contract.object';
+import { Quote } from '../src/revenue/objects/quote.object';
+import { PAYMENT_TERMS_OPTIONS } from '../src/sales/objects/_picklists';
+import type { HookApi } from '../src/sales/objects/_hook-api';
 import { makeHarness, makeCtx, hookNamed, type Rec } from './helpers/hook-harness';
 import { makeSandboxEngine, runHookBody } from './helpers/action-sandbox';
 
@@ -31,7 +31,7 @@ import { makeSandboxEngine, runHookBody } from './helpers/action-sandbox';
  * net_90) produced a contract silently saying 30 days, with nothing marking the
  * value as defaulted. The rep who closed the deal cannot fix it either —
  * `sales-rep.profile.ts` gives them `allowEdit: false` on `crm_contract` — and
- * the value does not stay put: `src/flows/billing-handoff.flow.ts` POSTs the
+ * the value does not stay put: `src/revenue/flows/billing-handoff-contract-activated.flow.ts` POSTs the
  * contract's `payment_terms` to the billing system when the contract activates,
  * so the defaulted term becomes an invoicing term.
  *
@@ -253,10 +253,15 @@ describe('the rationale the shared vocabulary is justified by', () => {
   it('names the hook that performs the carry-over, in both places that claim it', async () => {
     const { readFileSync } = await import('node:fs');
     const { join } = await import('node:path');
-    const dir = join(process.cwd(), 'src', 'objects');
-    for (const file of ['_picklists.ts', 'contract.object.ts']) {
+    // The two files sit in different packages since the ADR-0130 layout: the
+    // picklist vocabulary is a shared source and lives in the app package,
+    // `crm_contract` is revenue's. Both still make the claim, so both are read.
+    for (const file of [
+      'src/sales/objects/_picklists.ts',
+      'src/revenue/objects/contract.object.ts',
+    ]) {
       expect(
-        readFileSync(join(dir, file), 'utf8'),
+        readFileSync(join(process.cwd(), file), 'utf8'),
         `${file} claims an accepted quote's terms carry over but does not say what performs it`,
       ).toContain('quote_on_accepted');
     }

@@ -1,6 +1,12 @@
 # HotCRM Docs
 
-> Last reviewed: June 4, 2026
+> **Maintained per change, not on a review cadence.** A pull request that adds, moves,
+> retires or renames a document under `docs/` updates the tables below in the same PR;
+> that is the whole mechanism, and no periodic review stands behind it. For when any page
+> here last changed, read its `git log` — the one freshness record that cannot go stale.
+> *Supersedes the "Last reviewed: June 4, 2026" stamp that stood here: a review date
+> nothing produced and nothing checked, written once when this tree was reorganised and
+> left untouched by every commit that maintained the file after it — #1570.*
 > Scope: internal engineering, release, and operational documentation for this repository.
 
 HotCRM also has product-facing documentation under [`content/docs/`](../content/docs/). Use that tree for user, admin, and marketplace docs. Use this `docs/` tree for implementation notes, current technical status, deployment, release, and developer reference.
@@ -15,9 +21,10 @@ HotCRM also has product-facing documentation under [`content/docs/`](../content/
 | Local, artifact, and marketplace deployment | [DEPLOYMENT.md](DEPLOYMENT.md) |
 | Versioning and distribution | [RELEASE_STRATEGY.md](RELEASE_STRATEGY.md) |
 | Module boundaries and the ADR-0130 multi-package split plan | [architecture/module-split-plan.md](architecture/module-split-plan.md) |
+| The PSA (project delivery and cost) module — standard-product design and the first ADR-0130 module cut | [architecture/psa-module-plan.md](architecture/psa-module-plan.md) |
 | Upgrade, seeding, and version alignment | [MAINTENANCE.md](MAINTENANCE.md) |
 | Customer requirements and product disposition | [requirements/README.md](requirements/README.md) |
-| Object field reference | [developers/api_reference.md](developers/api_reference.md) |
+| Where object and field metadata is declared | [developers/api_reference.md](developers/api_reference.md) |
 | ObjectStack code examples | [developers/code_examples.md](developers/code_examples.md) |
 
 ## Documentation Boundaries
@@ -36,18 +43,13 @@ HotCRM is a single ObjectStack marketplace app. The source of truth is [`objects
 ```text
 hotcrm/
 ├── objectstack.config.ts
+├── objectstack.composition.ts
 ├── src/
-│   ├── objects/        # ObjectSchema.create metadata, object lifecycle hooks
-│   ├── actions/        # UI actions and AI-callable action bodies
-│   ├── flows/          # ObjectStack automation flows
-│   ├── skills/         # AI skill definitions (skills-only surface)
-│   ├── dashboards/     # Dashboard metadata
-│   ├── reports/        # Report metadata
-│   ├── views/, pages/  # App UI metadata
-│   ├── profiles/       # Permission sets
-│   ├── sharing/        # Sharing rules and positions
-│   ├── translations/   # Locale bundles
-│   └── data/           # Seed data
+│   ├── sales/          # the `type: app` package (ADR-0130) — a directory under src/ IS a package
+│   ├── service/        # module — case, knowledge_article, article_feedback
+│   ├── revenue/        # module — product, opportunity_line_item, quote, quote_line_item, contract
+│   ├── marketing/      # module — campaign, campaign_member
+│   └── docs/           # package docs (ADR-0046), read from this fixed path by the builder
 ├── content/docs/       # Product documentation site content
 └── docs/               # Internal documentation
 ```
@@ -60,7 +62,10 @@ When changing metadata or runtime behavior:
 
 1. Update the closest product docs in `content/docs/` if the user-facing behavior changed.
 2. Update `docs/STATUS.md` when counts or verification commands change.
-3. Update `docs/developers/api_reference.md` when object fields change.
+3. Leave `docs/developers/api_reference.md` alone when object fields change — the `fields:`
+   block of `src/*/objects/*.object.ts` is the reference, and that page points at it rather
+   than restating it. *Supersedes the instruction to hand-update that page, which asked for
+   the field transcript since removed from it — 2026-08-31 ruling, item 5.*
 4. Update `docs/developers/code_examples.md` when ObjectStack conventions change.
 5. Run the checks listed in `docs/STATUS.md`.
 

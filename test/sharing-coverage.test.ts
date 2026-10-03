@@ -121,8 +121,11 @@ const ACCOUNT_CHILD_COVERAGE: Record<string, 'derived' | 'own_only' | 'partial'>
   crm_contact: 'derived',
   crm_opportunity: 'partial',
   crm_case: 'partial',
-  crm_quote: 'own_only',
-  crm_contract: 'own_only',
+  // #549 (ruling 2026-08-31): both derive from the account, the same way
+  // `crm_contact` does — measured two levels deep (quote_line_item → quote →
+  // account) in `test/parent-derived-reach.test.ts`.
+  crm_quote: 'derived',
+  crm_contract: 'derived',
   crm_task: 'own_only',
   // #592. `crm_event` is `private` with no sharing rule of its own, exactly
   // like `crm_task` — the two are the same kind of record (a rep's personal
@@ -571,7 +574,11 @@ const ROW_LABEL: Record<string, Record<Locale, string>> = {
   crm_quote: { en: 'Quote', 'zh-Hans': '报价', 'zh-Hant': '報價' },
   crm_quote_line_item: { en: 'Quote Line Item', 'zh-Hans': '报价行项', 'zh-Hant': '報價明細' },
   crm_contract: { en: 'Contract', 'zh-Hans': '合同', 'zh-Hant': '合約' },
-  crm_case: { en: 'Case', 'zh-Hans': '工单', 'zh-Hant': '案件' },
+  // Both Chinese labels are 工单/工單, the pack's `crm_case.label` and its
+  // Traditional form. The zh-Hant cell read 「案件」 until #837 — a fourth
+  // spelling of this one object, green here while the automation page spelled
+  // it a fifth way. `docs-object-term-consistency.test.ts` now fails on that.
+  crm_case: { en: 'Case', 'zh-Hans': '工单', 'zh-Hant': '工單' },
   crm_task: { en: 'Task', 'zh-Hans': '任务', 'zh-Hant': '任務' },
   crm_event: { en: 'Event', 'zh-Hans': '活动', 'zh-Hant': '活動' },
   crm_event_attendee: { en: 'Event Attendee', 'zh-Hans': '活动参与者', 'zh-Hant': '活動參與者' },
@@ -628,7 +635,7 @@ describe('the OWD table lists every registered object, in every locale', () => {
   };
 
   it('the row ledger answers exactly the objects this app registers', () => {
-    // Anti-vacuum, both halves. 17 objects ship today, 5 of them parent-derived;
+    // Anti-vacuum, both halves. 19 objects ship today, 8 of them parent-derived;
     // a ledger compared against an empty derived set would pass by checking
     // nothing at all, and so would every rule below.
     expect(

@@ -1,11 +1,17 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import campaignMemberHooks from '../src/objects/campaign_member.hook';
-import { CampaignMember } from '../src/objects/campaign_member.object';
-import { Campaign } from '../src/objects/campaign.object';
+import campaignMemberHooks from '../src/marketing/objects/campaign_member.hook';
+import { CampaignMember } from '../src/marketing/objects/campaign_member.object';
+import { Campaign } from '../src/marketing/objects/campaign.object';
 import stack from '../objectstack.config';
-import campaignHooks, { CAMPAIGN_METRIC_FIELDS } from '../src/objects/campaign.hook';
+import campaignHooks, { CAMPAIGN_METRIC_FIELDS } from '../src/marketing/objects/campaign.hook';
+// The two hooks of this family that fire on a SALES object live beside that
+// object since the ADR-0130 layout (co-location is what enforces R4) — the
+// four bodies are still one definition copied, and this suite still reads all
+// four, now from three files.
+import opportunityCampaignMetricsHooks from '../src/sales/objects/opportunity.campaign-metrics.hook';
+import leadCampaignMetricsHooks from '../src/sales/objects/lead.campaign-metrics.hook';
 import { extractSandboxBody } from './helpers/action-sandbox';
 import { localePacks } from './helpers/metadata-fixtures';
 import { makeHarness, makeCtx, hookNamed, type Rec } from './helpers/hook-harness';
@@ -232,11 +238,13 @@ describe('campaign_member_metrics_refresh — LIVE, not at completion', () => {
    * ⚠️ THE ACCEPTANCE CRITERION, and the one assertion the removed behaviour
    * would also have passed if it were written any other way.
    *
-   * `campaign_snapshot_metrics` fired on the `→ completed` transition ONLY, so
-   * "the numbers are right once the campaign is completed" was true before this
-   * change and proves nothing about it. What has to be shown is that the
-   * numbers move while the campaign is still `in_progress` — the state it
-   * spends its entire useful life in, and during which every metric read 0.
+   * The RETIRED `campaign_snapshot_metrics` — gone since #597, replaced by the
+   * four refresh hooks this file exercises — fired on the `→ completed`
+   * transition ONLY, so "the numbers are right once the campaign is completed"
+   * was true before this change and proves nothing about it. What has to be
+   * shown is that the numbers move while the campaign is still `in_progress` —
+   * the state it spends its entire useful life in, and during which every
+   * metric read 0.
    *
    * So: enrol a third member, do NOT touch the campaign's status, and read the
    * campaign back.
@@ -434,6 +442,8 @@ describe('every surviving member field and campaign metric has a writer', () => 
 describe('the inlined metric recompute is one definition, copied (#597)', () => {
   const REFRESH_HOOKS = [
     ...(campaignHooks as Rec[]),
+    ...(opportunityCampaignMetricsHooks as Rec[]),
+    ...(leadCampaignMetricsHooks as Rec[]),
     ...(campaignMemberHooks as Rec[]),
   ].filter((h) => /recompute/.test(String(h.description)) || /refresh/.test(String(h.name)));
 

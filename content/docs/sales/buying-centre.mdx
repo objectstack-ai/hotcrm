@@ -1,0 +1,78 @@
+---
+title: The Buying Centre
+description: Who decides, who pays, who uses — and where each of them stands on you. Reading an account's contacts as a map instead of a directory.
+---
+
+# The buying centre
+
+Any purchase bigger than one person's signature is decided by **several people at once**, each of them wanting something different. The group is called the **buying centre**, and it is the oldest idea in B2B selling: you do not sell to a company, you sell to five or six named individuals who have to end up agreeing.
+
+HotCRM records that group on the contact, with three attributes that answer three different questions:
+
+- **Buying Function** — what this person *does* in the decision.
+- **Attitude to Us** — where they *stand* on us.
+- **Relationship Strength** — how well *we* actually know them.
+
+Fill all three in and an account stops being a phone list. It becomes a map you can read before the meeting.
+
+## Why a job title is not enough
+
+A contact already carries a **Job Title** and a **Department**. Those are facts about the person's employer, and they are stable: a "Regional IT Manager" is a Regional IT Manager on every deal you ever run at that company.
+
+The buying centre is not stable, and that is the point. The same manager may be the one who signs off your infrastructure deal and the one quietly blocking your analytics deal. What you need recorded is their part in **this** purchase, and a job title cannot carry it.
+
+Nor can the **Primary Contact** flag. That flag answers one question — who do we call by default — and every other person at the account is left undescribed. One bit is not a map.
+
+## What each person does in the decision
+
+Pick the part the person plays in the purchase you are working. The options are the generic ones, because they hold in every industry:
+
+| Buying function | Who this is, in practice |
+| --- | --- |
+| **Decision Maker** | The person whose "yes" ends the argument. Often not the most senior name in the room. |
+| **Economic Buyer** | The person whose budget it comes out of. Sometimes the same person as above, very often not — and never assume so. |
+| **Technical Evaluator** | Judges whether the thing actually works: security review, integration, a proof of concept. Rarely says yes, very easily says no. |
+| **User** | Will live with what you sell, day after day. The one who tells everyone else whether it was a good idea. |
+| **Influencer** | No formal part in the decision and real weight in it — a trusted architect, an outside consultant, a respected colleague. |
+| **Gatekeeper** | Controls access rather than outcome: the executive assistant, the procurement officer, the head of security who has to be satisfied before you get a meeting. |
+
+A person can genuinely be two of these. Record **the one that governs this decision** — the part that decides whether you win — and let the job title carry the rest.
+
+## Where they stand on you
+
+**Attitude to Us** is a five-step ladder, best to worst: **Champion** · **Supportive** · **Neutral** · **Skeptical** · **Blocker**.
+
+A champion is not simply somebody who likes you. A champion is somebody who will argue your case when you are not in the room — that is the whole test, and it is why the step matters more than any other on the ladder. A blocker is the mirror image, and knowing who yours is early is worth more than another demo.
+
+Leave the field **blank** while you genuinely do not know. Blank and *Neutral* are different facts: one says nobody has formed a view, the other says you met them and they were unmoved.
+
+## How well you actually know them
+
+**Relationship Strength** runs **Distant** · **Acquaintance** · **Working Relationship** · **Strong** · **Trusted Advisor**.
+
+This is about the relationship, never about activity. The **Last Contacted** date on the contact is written for you automatically when a call or meeting is logged — it measures *recency*, which is not the same thing at all. A weekly call with somebody who will never take your side is not a strong relationship, and a quarterly lunch with somebody who phones you before the tender goes out is.
+
+## Reading an account as a map
+
+Open **Contacts**. The landing view, **All Contacts**, is grouped by account with the groups collapsed — expand the account you are working and the three columns sit beside job title and department, so one screen answers:
+
+- Is there a **Decision Maker** on this account at all, or have we only ever met users?
+- Who is our **Champion** — and is anybody a **Blocker**?
+- Are our strongest relationships with the people who actually decide, or with the pleasant ones?
+
+The gap is usually the story. An account with four contacts, all of them users, all of them neutral, is not a covered account no matter how much activity it shows.
+
+> **Nothing here refuses a save.** All three attributes are ordinary optional fields — no rule checks them, no automation fills them in, and a contact with all three blank saves exactly as it always has. That is deliberate: a buying centre is a judgement your team writes down, not a state a machine can work out, and a product that blocked the save would simply teach everyone to put something in the box.
+
+## Tips for sales reps
+
+- ✅ Fill the three in **after the meeting**, while the impression is fresh. They take seconds each.
+- ✅ Look for the missing person rather than the recorded ones — a deal with no economic buyer named is a deal nobody has asked about money.
+- ✅ Re-read the attitude column when a deal stalls. Stalls are usually a blocker nobody wrote down.
+- ⛔ Don't mark somebody a champion because they were friendly. Ask whether they would argue your case in a meeting you are not in.
+
+## Tips for admins
+
+- The three fields sit in their own **Buying Centre** section on the contact form and detail page. The section is derived from the object's field groups, so nothing has to be laid out by hand.
+- All three are plain picklists in all four shipped languages. To change the wording or add a value, see [Customization › Extending Objects](/docs/customization/extending-objects).
+- There is no automation behind them and none is intended. If you want a "no champion identified" warning on an account, that is a report or a dashboard reading these values — not a rule on the contact.

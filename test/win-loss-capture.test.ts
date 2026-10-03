@@ -6,7 +6,7 @@ import { InMemoryDriver } from '@objectstack/driver-memory';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { AnalyticsService } from '@objectstack/service-analytics';
 import stack from '../objectstack.config';
-import { OpportunityDataset } from '../src/datasets/opportunity.dataset';
+import { OpportunityDataset } from '../src/sales/datasets/opportunity.dataset';
 
 /**
  * Win/loss reasons are CAPTURED, and win rate is MEASURED (#593).

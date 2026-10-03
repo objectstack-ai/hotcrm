@@ -3,6 +3,8 @@ title: 複刻 HotCRM
 description: 以 HotCRM 作為你自己應用市集應用程式的起點。
 ---
 
+本應用未隨附繁體中文語言包，因此本頁出現的介面名詞依固定順序取用：zh-CN 語言包已收錄者，採其用詞的繁體寫法；未收錄者，保留產品內的英文原名，不另造譯名。
+
 HotCRM 是 ObjectStack 應用市集應用程式的**參考實作**。複刻它可以讓你獲得一套久經考驗的骨架（物件、鉤子、AI 智慧代理、儀表板、i18n、安全），你可以重新命名並為任何垂直領域客製化它 —— HR、專案管理、服務台、計費，應有盡有。
 
 ## 為什麼要複刻？
@@ -67,34 +69,36 @@ find src content -type f \( -name "*.ts" -o -name "*.mdx" -o -name "*.json" \) \
   -exec sed -i 's/crm_/acme_/g' {} +
 
 # Rename the translation file that's literally called crm.translation.ts
-mv src/translations/crm.translation.ts src/translations/acme.translation.ts
+mv src/sales/translations/crm.translation.ts src/sales/translations/acme.translation.ts
 ```
 
-然後更新 `src/translations/index.ts` 以參照新的檔案名稱。
+然後更新 `src/sales/translations/index.ts` 以參照新的檔案名稱。
 
 ### 4. 刪除你不需要的部分
 
 HotCRM 在銷售 / 服務 / 行銷 / 營收領域提供了 18 個物件。大多數應用程式需要更少：
 
 ```bash
-# Example: keep only Sales-related objects
-rm src/objects/{case,knowledge_article,campaign,campaign_member,contract,quote,quote_line_item,forecast}.object.ts
+# Example: keep only Sales. Service, Revenue and Marketing are whole
+# packages now (ADR-0130), so they go as directories.
+rm -r src/service src/revenue src/marketing
+rm src/sales/objects/forecast.object.ts
 ```
 
-然後修剪參照了已刪除物件的相應鉤子、動作、流程、儀表板、翻譯和文件。`pnpm typecheck` 會標記出斷裂的參照。
+然後從 `objectstack.composition.ts` 裡刪掉這三個套件的 import，再修剪 sales 側那些參照了已刪除物件的鉤子、動作、流程、儀表板、翻譯和文件。`pnpm typecheck` 會標記出斷裂的參照。
 
 ### 5. 新增你確實需要的部分
 
-遵循檔案後綴協定：
+遵循檔案後綴協定。`<package>` 是 `sales` / `service` / `revenue` / `marketing` 中擁有該實體的那一個——`src/` 下的一個目錄**就是**一個套件（ADR-0130），而一個沒有到達所屬套件 barrel 的檔案不會被任何東西註冊：
 
 | 新實體 | 檔案 |
 |---|---|
-| 資料模型 | `src/objects/<entity>.object.ts` |
-| 伺服器端觸發器 | `src/hooks/<entity>.hook.ts` |
-| API + AI 工具 | `src/actions/<entity>.actions.ts` |
-| UI 版面配置 | `src/pages/<entity>.page.ts` |
-| 清單檢視 | `src/views/<entity>.view.ts` |
-| i18n | 附加至 `src/translations/{en,zh-CN,es-ES,ja-JP}.ts` |
+| 資料模型 | `src/<package>/objects/<entity>.object.ts` |
+| 伺服器端觸發器 | `src/<package>/objects/<entity>.hook.ts` —— 與它的物件並排放置，在 `src/<package>/objects/hooks.ts` 註冊 |
+| API + AI 工具 | `src/<package>/actions/<entity>.actions.ts` |
+| UI 版面配置 | `src/<package>/pages/<entity>.page.ts` |
+| 清單檢視 | `src/<package>/views/<entity>.view.ts` |
+| i18n | 附加至 `src/sales/translations/{en,zh-CN,es-ES,ja-JP}.ts` |
 
 每個檔案在建置時都要經過 `@objectstack/spec` 結構描述驗證。出錯會明顯報錯。
 
@@ -127,7 +131,7 @@ git fetch upstream
 git merge upstream/main          # or rebase, your call
 ```
 
-合併衝突大多發生在 `src/translations/*`（附加式）和 `src/objects/*.object.ts`（如果你重新命名了它們）。檔案後綴協定使衝突面保持很小。
+合併衝突大多發生在 `src/sales/translations/*`（附加式）和 `src/*/objects/*.object.ts`（如果你重新命名了它們）。檔案後綴協定使衝突面保持很小。
 
 ## 你可以放心變更的內容
 

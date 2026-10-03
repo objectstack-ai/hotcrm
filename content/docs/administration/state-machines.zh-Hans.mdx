@@ -13,11 +13,11 @@ HotCRM 在 **五个** 对象上使用状态机：
 
 - **潜在客户** —— *New → Contacted → Qualified → Converted*；*Unqualified* 从任何开放状态都能进入，而它唯一的出路是重新打开回 *New*
 - **商机** —— 经过 7 个阶段 *Prospecting → Qualification → Needs Analysis → Proposal → Negotiation → Closed Won / Closed Lost*
-- **案例** —— *New → In Progress → Resolved → Closed*；*Waiting on Customer* 与 *Waiting on Support* 用来把未结案的案例挂起，*Escalated* 从任何未解决的状态都能进入，*Resolved* 与 *Closed* 都可以重新打开回 *In Progress*
+- **工单** —— *New → In Progress → Resolved → Closed*；*Waiting on Customer* 与 *Waiting on Support* 用来把未结案的工单挂起，*Escalated* 从任何未解决的状态都能进入，*Resolved* 与 *Closed* 都可以重新打开回 *In Progress*
 - **合同** —— *Draft → In Approval → Activated → Expired*；*In Approval* 可以把文件退回 *Draft*，三种在途状态都能直接走到 *Terminated*，*Expired* 与 *Terminated* 都是终点
 - **报价** —— *Draft → In Review → Presented → Accepted*；*In Review* 可以退回 *Draft*，*Rejected* 会回到 *Draft* 重来，*Expired* 可从 *Draft*、*In Review*、*Presented* 进入，*Accepted* 与 *Expired* 都是终点
 
-五者的声明方式完全相同 —— 都是对象上一条具名的 `state_machine` 验证规则，作用于该对象的生命周期字段（`status`，商机上是 `stage`）。案例、合同、报价用的不是比潜在客户和商机更轻的机制，就是同一套机制。顶层 `stateMachines` 键在平台 7.7 被移除后，所有状态机都迁到了各自的对象上。
+五者的声明方式完全相同 —— 都是对象上一条具名的 `state_machine` 验证规则，作用于该对象的生命周期字段（`status`，商机上是 `stage`）。工单、合同、报价用的不是比潜在客户和商机更轻的机制，就是同一套机制。顶层 `stateMachines` 键在平台 7.7 被移除后，所有状态机都迁到了各自的对象上。
 
 **声明出来的路线是建议，不是闸门。** 五条规则都是 **警告** 级：走出转换表的状态变更只会写进服务端日志——比如 *“Invalid contract status transition”*——而 **保存照样通过**。记录在 **新建** 时也根本不受检查：规则拿新值与前一个值比对，因此只在更新时运行，直接导入到后期状态的记录不会被碰。转换表给你的是一条声明出来、机器可读的路线，供自动化、报表和 Copilot 依赖——而不是给字段上锁。
 
@@ -38,7 +38,7 @@ HotCRM 在 **五个** 对象上使用状态机：
                                └─────────────┘
 ```
 
-**允许的转换** —— 下面就是整张表，照抄自 `src/objects/lead.object.ts` 里的 `lead_status_progression` 规则；它比上面那张图多带几条捷径：
+**允许的转换** —— 下面就是整张表，照抄自 `src/sales/objects/lead.object.ts` 里的 `lead_status_progression` 规则；它比上面那张图多带几条捷径：
 
 | 从 | 可以移动到 | 说明 |
 | --- | --- | --- |
@@ -68,7 +68,7 @@ Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ 
 
 已关闭阶段只有 **两个**，不是三个：*Closed Won* 与 *Closed Lost*。不存在 *Closed Without Decision* —— 一笔无声无息拖没了的交易就是 *Closed Lost*。
 
-**允许的转换**，照抄自 `src/objects/opportunity.object.ts` 里的 `opportunity_stage_progression` 规则：
+**允许的转换**，照抄自 `src/sales/objects/opportunity.object.ts` 里的 `opportunity_stage_progression` 规则：
 
 | 从 | 可以移动到 | 说明 |
 | --- | --- | --- |
@@ -105,7 +105,7 @@ Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ 
 - **非法的移动会被报出来，而不是无声无息。** 移动照样落库，但引擎会在日志里点名 —— *「Invalid opportunity stage transition」*，并带上规则自己的名字 —— 所以一次糟糕的导入或一个行为异常的集成，事后是能被找出来的。走在表内的移动一条日志都不记，这正是那些警告值得一读的原因。
 - **给自动化与报表一个可以指向的基准。** 流程条件、报表或技能可以按声明出来的路线来写，而不是把一串状态手工抄过去。
 
-如果你需要某个状态变更真正不可能发生，状态机不是那个工具：能挡下保存的是 `error` 级的验证规则。这五条保持建议级是有意的 —— 理由就写在规则自己身边（`src/objects/quote.object.ts`）：售后的更正不该还要靠一次数据修复才能做到。
+如果你需要某个状态变更真正不可能发生，状态机不是那个工具：能挡下保存的是 `error` 级的验证规则。这五条保持建议级是有意的 —— 理由就写在规则自己身边（`src/revenue/objects/quote.object.ts`）：售后的更正不该还要靠一次数据修复才能做到。
 
 ## 自定义状态机
 
@@ -117,7 +117,7 @@ Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ 
 - **添加退出条件**（例如 *没有更新关闭日期就不能离开 Negotiation*）。
 - 在每次转换时 **触发自动化**（对象钩子、流程、通知）。
 
-上面这些都是改源码，不是在设置里点几下：**并不存在「设置 → 对象 → 状态 → 状态机」这个配置面**。每张转换表都是对象上的一条 `validations[]` 条目（类型 `state_machine`，见 `src/objects/*.object.ts`），而这条条目只带一张转换映射表，别的什么都没有 —— 所以上面前两项是改这张映射表，进入/退出条件是另外的 `validations[]` 规则或相关字段上的 `requiredWhen` 谓词，按转换触发自动化则是 `record_change` 流程或对象钩子。每一项都是代码改动加一次重新部署。
+上面这些都是改源码，不是在系统设置里点几下：**并不存在「系统设置 → 对象 → 状态 → 状态机」这个配置面**。每张转换表都是对象上的一条 `validations[]` 条目（类型 `state_machine`，见 `src/*/objects/*.object.ts`），而这条条目只带一张转换映射表，别的什么都没有 —— 所以上面前两项是改这张映射表，进入/退出条件是另外的 `validations[]` 规则或相关字段上的 `requiredWhen` 谓词，按转换触发自动化则是 `record_change` 流程或对象钩子。每一项都是代码改动加一次重新部署。
 
 ## 用户看到什么
 
@@ -127,7 +127,7 @@ Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ 
 
 ## 状态机与 AI Copilot
 
-**本应用没有把这两者接起来。** `src/skills/` 下的六个技能、`src/actions/` 下的每一个操作，都没有提到转换表、状态机或「合法的下一批状态」这类查询，也没有任何一个技能的提示词里写着哪个状态之后可以接哪个状态。本页原先描述过 Copilot 会压住 *“确认这个潜在客户的资格”*、*“转化这个潜在客户”* 这类建议，直到记录的状态允许这次移动为止；HotCRM 并没有声明任何能产生这种行为的东西。
+**本应用没有把这两者接起来。** `src/*/skills/` 下的六个技能、`src/*/actions/` 下的每一个操作，都没有提到转换表、状态机或「合法的下一批状态」这类查询，也没有任何一个技能的提示词里写着哪个状态之后可以接哪个状态。本页原先描述过 Copilot 会压住 *“确认这个潜在客户的资格”*、*“转化这个潜在客户”* 这类建议，直到记录的状态允许这次移动为止；HotCRM 并没有声明任何能产生这种行为的东西。
 
 平台自己的 agent 在装载对象元数据时会不会把 `state_machine` 验证一并读进去、并据此收窄建议，这是运行时的问题，不是本应用的问题 —— 所以本页对它不作任何方向的断言。如果你正指望 Copilot 待在某条生命周期里，请在你自己的部署上验证，而不是照着本页相信。
 
@@ -137,7 +137,7 @@ Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ 
 
 - ✅ **不要过度约束** —— 太多转换规则会成为团队的摩擦税。
 - ✅ 添加新状态时，**先决定进入和退出条件** —— 其余的自然就有了。
-- ✅ **不要把自动化挂在转换上** —— 根本没有可挂的东西。转换表是一条验证规则，在做出这次移动的那一次保存里被求值；它写下一行日志，不产生任何可供自动化订阅的事件。只应在某一次移动上跑的自动化，是一条 `record_change` 流程：它在那次保存上触发，并在自己的起始条件里把 `record.stage` 与 `previous.stage` 比对来收窄 **自己** —— `opportunity_won_alert`（`src/flows/opportunity-won-alert.flow.ts`）正是这么写的，所以那条祝贺通知只在移入 *Closed Won* 的那一次发出，而不是在这笔已赢商机之后的每一次编辑上都发。
+- ✅ **不要把自动化挂在转换上** —— 根本没有可挂的东西。转换表是一条验证规则，在做出这次移动的那一次保存里被求值；它写下一行日志，不产生任何可供自动化订阅的事件。只应在某一次移动上跑的自动化，是一条 `record_change` 流程：它在那次保存上触发，并在自己的起始条件里把 `record.stage` 与 `previous.stage` 比对来收窄 **自己** —— `opportunity_won_alert`（`src/sales/flows/opportunity-won-alert.flow.ts`）正是这么写的，所以那条祝贺通知只在移入 *Closed Won* 的那一次发出，而不是在这笔已赢商机之后的每一次编辑上都发。
 - ✅ 每次变更后 **测试向导流程**（转化潜在客户、关闭商机）。
 
 ## 给用户的提示
@@ -147,6 +147,6 @@ Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ 
 
 ## 相关
 
-- [销售 › 潜在客户](/zh-Hans/docs/sales/leads) —— 面向用户的潜在客户生命周期。
-- [销售 › 商机](/zh-Hans/docs/sales/opportunities) —— 面向用户的商机生命周期。
+- [销售云 › 线索](/zh-Hans/docs/sales/leads) —— 面向用户的潜在客户生命周期。
+- [销售云 › 商机](/zh-Hans/docs/sales/opportunities) —— 面向用户的商机生命周期。
 - [自动化](/zh-Hans/docs/administration/automation) —— 转换可以触发的流程与对象钩子。

@@ -43,7 +43,7 @@ describe('hotcrm metadata bundle', () => {
   it('registers all flows incl. the workflows[]-migrated ones', () => {
     const names = flows.map((f) => f.name);
     // record-change flows
-    for (const n of ['lead_assignment', 'opportunity_approval', 'case_escalation', 'case_csat_followup']) {
+    for (const n of ['lead_assignment', 'opportunity_approval', 'case_escalation']) {
       expect(names, `missing flow ${n}`).toContain(n);
     }
     // 7.7 migration: scheduled status-flips + notification flows from object workflows[]

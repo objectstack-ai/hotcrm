@@ -3,6 +3,10 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
 import stack from '../objectstack.config';
+import { flowNodesDeep } from './helpers/flow-regions';
+import { join } from 'node:path';
+import { REPO_ROOT } from './helpers/repo-root';
+import { metadataFiles } from './helpers/src-roster';
 
 /**
  * Action & flow contract guards — the CI net for the class of defect that
@@ -111,7 +115,7 @@ describe('lead_conversion flow contracts', () => {
     // creates. When the two objects declared their own picklists, half the
     // Lead industries (`media`, `logistics`, …) were illegal enum values on
     // crm_account and conversion died in create_account (#490/#531). The
-    // vocabularies are unified in src/objects/_picklists.ts; this pins the
+    // vocabularies are unified in src/sales/objects/_picklists.ts; this pins the
     // superset relation itself so drift in either object re-fails CI.
     const leadFields = objects.find((o) => o.name === 'crm_lead')?.fields ?? {};
     const bad: string[] = [];
@@ -229,47 +233,6 @@ describe('lead conversion is discoverable', () => {
 });
 
 describe('demo data is demo-ready', () => {
-  /**
-   * A seed can't name a user (lookups resolve against the target's externalId,
-   * which only works for objects in the app's own graph), and a hook on
-   * `sys_user` is rejected at build time. Seed writes are also `isSystem`, so
-   * the middleware's insert-time `owner_id` stamp never fires for them. So
-   * ownership is claimed by a scheduled sweep — without which every "My …"
-   * view is empty and owner-addressed notify reaches nobody (#548).
-   */
-  it('demo_bootstrap claims every owner-scoped object', () => {
-    const f = flow('demo_bootstrap');
-    expect(f, 'demo_bootstrap flow missing').toBeTruthy();
-    expect(f!.type).toBe('schedule');
-    // System context: a scheduled run has no trigger user, and these writes
-    // must bypass RLS to touch records nobody owns yet.
-    expect(f!.runAs).toBe('system');
-
-    const claimed = (f!.nodes ?? [])
-      .filter((n: AnyRec) => n.type === 'get_record' && n.config?.filter?.owner_id === null)
-      .map((n: AnyRec) => n.config.objectName);
-    // The objects behind My Leads / My Deals / My Cases and the task queue.
-    for (const objectName of ['crm_lead', 'crm_account', 'crm_opportunity', 'crm_case', 'crm_task']) {
-      expect(claimed, `demo_bootstrap never claims ${objectName}`).toContain(objectName);
-    }
-  });
-
-  it('every claim runs per-record inside a loop, not as a filtered mass update', () => {
-    // The update_record node calls data.update() WITHOUT options.multi, so a
-    // filter matching more than one row fails at runtime with "Update requires
-    // an ID or options.multi=true" — invisible to build and validate.
-    const f = flow('demo_bootstrap');
-    const loops = (f!.nodes ?? []).filter((n: AnyRec) => n.type === 'loop');
-    expect(loops.length).toBeGreaterThanOrEqual(5);
-    for (const loop of loops) {
-      const body = loop.config?.body?.nodes ?? [];
-      const update = body.find((n: AnyRec) => n.type === 'update_record');
-      expect(update, `loop ${loop.id} has no update_record`).toBeTruthy();
-      // Keyed by the iterator's id — the only shape update_record supports.
-      expect(String(update.config?.filter?.id ?? '')).toMatch(/^\{current_\w+\.id\}$/);
-    }
-  });
-
   it('open opportunities close in the future and settled ones in the past', () => {
     // A pipeline that holds open deals with past close dates, or closed deals
     // scheduled in the future, reads as abandoned. This covers the whole
@@ -298,11 +261,8 @@ describe('flow notification templates stay within what the engine interpolates',
    */
   const DOT_WALK = /\{(?!\$)([A-Za-z_$][\w$]*)\.([\w$]+)\.([\w$]+)\}/;
 
-  /** All nodes of a flow, including nodes nested inside loop bodies. */
-  const allNodes = (f: AnyRec): AnyRec[] =>
-    (f.nodes ?? []).flatMap(function expand(n: AnyRec): AnyRec[] {
-      return [n, ...((n.config?.body?.nodes ?? []) as AnyRec[]).flatMap(expand)];
-    });
+  /** All nodes of a flow, including every node nested inside a control-flow region. */
+  const allNodes = (f: AnyRec): AnyRec[] => flowNodesDeep(f);
 
   it('no notify node dot-walks a lookup in recipients, title, or body', () => {
     const bad: string[] = [];
@@ -399,7 +359,7 @@ describe('case escalation trigger does not fight the close action', () => {
  * knowable at run time. So the app owns the invariant, and this is it.
  *
  * Enumerated from the COMPILED STACK, not from a hand-maintained import list:
- * a new record-change flow registered in `src/flows/index.ts` is covered the
+ * a new record-change flow registered in a package's `flows/index.ts` is covered the
  * moment it is registered, which is the only way this guard cannot go stale.
  */
 describe('record-change flows declare their execution identity (#684)', () => {
@@ -446,9 +406,10 @@ describe('record-change flows declare their execution identity (#684)', () => {
     // by copy-paste: it applies to the USER-driven runs too, which today
     // execute scoped to the triggering user.
     const missing: string[] = [];
-    for (const file of readdirSync(new URL('../src/flows/', import.meta.url))) {
+    for (const rel of metadataFiles('flows', '.ts')) {
+      const file = rel.split('/').pop()!;
       if (!file.endsWith('.flow.ts')) continue;
-      const lines = readFileSync(new URL(`../src/flows/${file}`, import.meta.url), 'utf8').split('\n');
+      const lines = readFileSync(join(REPO_ROOT, rel), 'utf8').split('\n');
       if (!lines.some((l) => /^\s*type:\s*'record_change'\s*,?\s*$/.test(l))) continue;
       // The DECLARATION line, not a mention of `runAs: 'system'` in prose —
       // these rationales cite each other and every scheduled precedent, so a

@@ -5,8 +5,8 @@ import { ObjectQL, applySystemFields } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import stack from '../objectstack.config';
-import { QUOTE_DISCOUNT_CEILING } from '../src/objects/_thresholds';
-import { quotes, quoteLineItems } from '../src/data/revenue.seed';
+import { QUOTE_DISCOUNT_CEILING } from '../src/sales/objects/_thresholds';
+import { quotes, quoteLineItems } from '../src/revenue/data/revenue.seed';
 
 /**
  * A quote's discount may never exceed the ceiling (#599) — and neither may any

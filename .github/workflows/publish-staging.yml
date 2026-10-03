@@ -10,8 +10,25 @@ on:
         description: 'Dry-run (print payloads, no HTTP)'
         type: boolean
         default: false
-  release:
-    types: [published]
+  # The TAG push, not the release object — and that distinction is the whole
+  # point of #1908. This workflow declared `release: [published]` from the
+  # start, and it never fired for a release `release.yml` produced: that job
+  # creates the release with `softprops/action-gh-release` as `GITHUB_TOKEN`,
+  # and GitHub raises no workflow-triggering event for anything `GITHUB_TOKEN`
+  # does — the rule that stops workflows recursing. Of eleven runs in this
+  # workflow's history exactly three carried `event=release`, and those three
+  # are exactly the three releases a human created by hand in the web UI.
+  # v2.1.0 was the cost: bot-created, no dispatch, never published at all,
+  # because the dead declaration was what everyone read.
+  #
+  # A tag push comes from a maintainer's `git push`, so it is outside that rule
+  # and cannot be silently swallowed. It is also the event `release.yml` itself
+  # runs on, so the release and its staging publish now start together off one
+  # push. ⛔ Do not "restore" the release trigger — `test/workflow-triggers.test.ts`
+  # fails if any workflow declares one.
+  push:
+    tags:
+      - 'v*.*.*'
 
 concurrency:
   group: publish-marketplace-staging

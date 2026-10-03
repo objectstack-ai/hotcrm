@@ -622,7 +622,7 @@ check(
 check(
   'no record id interpolated into user-visible prose in src/',
   scanIdsInProse(srcTs),
-  'name the record the way its nameField does (compose it from the stored columns the hook already holds) and leave the id in the relationship field — see src/objects/case.hook.ts and test/record-id-not-in-prose.test.ts; an id meant for a server log belongs in a diagnostic sink, not in a sentence',
+  'name the record the way its nameField does (compose it from the stored columns the hook already holds) and leave the id in the relationship field — see src/service/objects/case.hook.ts and test/record-id-not-in-prose.test.ts; an id meant for a server log belongs in a diagnostic sink, not in a sentence',
 );
 
 check(

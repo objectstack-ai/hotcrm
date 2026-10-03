@@ -1,0 +1,150 @@
+// Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
+
+import { defineView } from '@objectstack/spec/ui';
+
+/**
+ * Contract Views
+ *
+ *   • grid     — contract register with renewal info
+ *   • calendar — start/end dates
+ *   • gantt    — contract terms timeline
+ *   • timeline — chronological contract stream
+ */
+export const ContractViews = defineView({
+  list: {
+    type: 'grid',
+    name: 'all_contracts',
+    label: 'All Contracts',
+    data: { provider: 'object', object: 'crm_contract' },
+    columns: [
+      { field: 'contract_number', width: 150, link: true, pinned: 'left' },
+      { field: 'crm_account', width: 200 },
+      { field: 'crm_opportunity', width: 200 },
+      { field: 'status', width: 130, sortable: true },
+      { field: 'contract_value', width: 140, align: 'right', summary: 'sum' },
+      { field: 'contract_term_months', width: 130, align: 'right' },
+      { field: 'start_date', width: 130, sortable: true },
+      { field: 'end_date', width: 130, sortable: true },
+      { field: 'auto_renewal', width: 110, align: 'center' },
+      { field: 'owner_id', width: 150 },
+    ],
+    sort: [{ field: 'end_date', order: 'asc' }],
+    pagination: { pageSize: 25 },
+    selection: { type: 'multiple' },
+    appearance: {
+      allowedVisualizations: ['grid', 'calendar', 'gantt', 'timeline'],
+    },
+    // Binds the 'calendar' entry above: renewal dates, same as the dedicated
+    // `renewal_calendar` view and the field this list sorts by. A contract
+    // calendar answers "what renews when" — the start -> end term SPAN is
+    // already carried by `contract_gantt` and `contract_timeline`, which is
+    // why `end_date` is the start of the event here rather than an end.
+    calendar: {
+      startDateField: 'end_date',
+      titleField: 'contract_number',
+      colorField: 'status',
+    },
+  },
+
+  listViews: {
+    /** Renewal calendar (highlights upcoming end dates) */
+    renewal_calendar: {
+      name: 'renewal_calendar',
+      type: 'calendar',
+      label: 'Renewal Calendar',
+      data: { provider: 'object', object: 'crm_contract' },
+      columns: ['contract_number', 'crm_account', 'status'],
+      calendar: {
+        startDateField: 'end_date',
+        titleField: 'contract_number',
+        colorField: 'status',
+      },
+    },
+
+    /** Contract terms gantt */
+    contract_gantt: {
+      name: 'contract_gantt',
+      type: 'gantt',
+      label: 'Contract Terms',
+      data: { provider: 'object', object: 'crm_contract' },
+      columns: ['contract_number', 'crm_account', 'contract_value'],
+      gantt: {
+        startDateField: 'start_date',
+        endDateField: 'end_date',
+        titleField: 'contract_number',
+      },
+    },
+
+    /** Chronological timeline */
+    contract_timeline: {
+      name: 'contract_timeline',
+      type: 'timeline',
+      label: 'Contract Timeline',
+      data: { provider: 'object', object: 'crm_contract' },
+      columns: ['contract_number', 'crm_account'],
+      timeline: {
+        startDateField: 'start_date',
+        endDateField: 'end_date',
+        titleField: 'contract_number',
+        groupByField: 'crm_account',
+        colorField: 'status',
+        scale: 'quarter',
+      },
+    },
+  },
+
+  form: {
+    type: 'tabbed',
+    sections: [
+      {
+        name: 'parties',
+        label: 'Parties',
+        columns: 2,
+        fields: ['contract_number', 'crm_account', 'crm_contact', 'crm_opportunity', 'owner_id', 'status'],
+      },
+      {
+        // Named `contract_terms`, not `terms` — `terms` is already a distinct
+        // fieldGroup key on `crm_contract` ("Terms & Dates"), and reusing it
+        // here would make this section's translated heading follow that
+        // group's wording instead of its own "Terms".
+        name: 'contract_terms',
+        label: 'Terms',
+        columns: 2,
+        fields: [
+          'contract_term_months',
+          'start_date',
+          'end_date',
+          'contract_value',
+          'billing_frequency',
+          'payment_terms',
+          'auto_renewal',
+          'renewal_notice_days',
+        ],
+      },
+      {
+        name: 'signing_and_documents',
+        label: 'Signing & Documents',
+        columns: 2,
+        fields: ['signed_date', 'signed_by', 'document_url'],
+      },
+      {
+        // The contract's two markdown bodies, together and in the order a
+        // reader needs them — the question #1826 asked this form to answer.
+        // They are not redundant, and `content/docs/revenue/contracts.mdx`
+        // already rules which is which: **Description** is the plain summary
+        // of what this contract is (declared on the `basic` group, listed
+        // there under "Contract Information"), while **Special Terms** is
+        // where every free-text TERM goes — the doc sends renewal
+        // instructions, an unlisted billing cadence and an unlisted payment
+        // arrangement to Special Terms by name, three separate times.
+        // Description was the one field in that inventory no form offered, so
+        // the summary a reader was told the record carries could not be
+        // written. One column, because both are long-form.
+        name: 'notes',
+        label: 'Notes',
+        columns: 1,
+        fields: ['description', 'special_terms', 'billing_address'],
+      },
+    ],
+  },
+});

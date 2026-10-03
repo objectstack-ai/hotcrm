@@ -17,7 +17,7 @@
 #
 # The agent is the platform's `ask` (ADR-0063 §1/§2: the kernel ships `ask` and
 # `build`; apps author skills, not agents). HotCRM's `live_data` skill is what
-# makes the agent inspect the schema first — see src/skills/live-data.skill.ts.
+# makes the agent inspect the schema first — see src/sales/skills/live-data.skill.ts.
 #
 # Requires hotcrm running on PORT (default 4001) with a bearer token in
 # HOTCRM_TOKEN, AND a runtime that provides the `ai` capability.

@@ -133,7 +133,7 @@ HotCRM 负责营收的**商务**一侧：找到客户、谈定价格、签下合
 
 **这是一次代码改动，不是在管理端编辑。** 去找界面之前请先读这句话：端点与签名密钥位于应用自身的元数据里，改它们意味着改应用并重新部署。
 
-两个值都读自同一个模块 `src/flows/_billing-endpoint.ts`，且都支持在**构建**时用环境变量覆盖：
+两个值都读自同一个模块 `src/sales/flows/_billing-endpoint.ts`，且都支持在**构建**时用环境变量覆盖：
 
 ```bash
 HOTCRM_BILLING_ENDPOINT=https://billing.acme.internal/hotcrm/events \
@@ -160,4 +160,4 @@ pnpm build
 
 - [合同](/zh-Hans/docs/revenue/contracts)——状态清单，以及激活在 HotCRM 内部触发了什么。
 - [商机](/zh-Hans/docs/sales/opportunities)——阶段，以及 *Closed Won* 的含义。
-- [自动化](/zh-Hans/docs/administration/automation)——两个交接都在内置流程表里，它们的运行出现在 **Studio → Developer → Flow Runs** 里。
+- [自动化](/zh-Hans/docs/administration/automation)——两个交接都在内置流程表里，它们的运行出现在 **Studio → 开发者 → 流程运行记录** 里。

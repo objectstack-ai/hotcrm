@@ -70,8 +70,9 @@ import { TOKEN_ENV, USER_ID_ENV } from './global-setup';
  * minutes.
  *
  * Creating the records under test removes the question. A row this account
- * inserts carries its `owner_id` from the platform's own stamp, no sweep ever
- * selects it (`demo_bootstrap` looks for `owner_id: null`), and `demo:staff`
+ * inserts carries its `owner_id` from the platform's own stamp, no ownership
+ * claim ever selects it (the platform's seed-ownership claim looks for
+ * `owner_id: null`, as the retired `demo_bootstrap` sweep did), and `demo:staff`
  * re-evaluating every sharing rule cannot take it away. The seeds are backdrop
  * now: the suite runs against a long-lived dev server, a staffed org, or a cold
  * CI database identically.

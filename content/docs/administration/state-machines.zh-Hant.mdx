@@ -5,6 +5,8 @@ description: HotCRM 如何在潛在客戶和商機上宣告有效的狀態轉換
 
 # 狀態機
 
+本應用未隨附繁體中文語言包，因此本頁出現的介面名詞依固定順序取用：zh-CN 語言包已收錄者，採其用詞的繁體寫法；未收錄者，保留產品內的英文原名，不另造譯名。
+
 某些物件有嚴格的 **生命週期** —— 潛在客戶從 *New* 推進到 *Contacted*、*Qualified*，最後到 *Converted*。狀態機把這條路線 **宣告** 出來，但並不強制執行：本應用的五條狀態機全是 **警告** 級，使用者把記錄挪出這條路線，**儲存照樣通過** —— 詳見下文《宣告出來的路線是建議，不是閘門》。
 
 ## 狀態機在哪裡適用
@@ -13,11 +15,11 @@ HotCRM 在 **五個** 物件上使用狀態機：
 
 - **潛在客戶** —— *New → Contacted → Qualified → Converted*；*Unqualified* 從任何開放狀態都能進入，而它唯一的出路是重新開啟回 *New*
 - **商機** —— 經過 7 個階段 *Prospecting → Qualification → Needs Analysis → Proposal → Negotiation → Closed Won / Closed Lost*
-- **案例** —— *New → In Progress → Resolved → Closed*；*Waiting on Customer* 與 *Waiting on Support* 用來把未結案的案例掛起，*Escalated* 從任何未解決的狀態都能進入，*Resolved* 與 *Closed* 都可以重新開啟回 *In Progress*
+- **工單** —— *New → In Progress → Resolved → Closed*；*Waiting on Customer* 與 *Waiting on Support* 用來把未結案的工單掛起，*Escalated* 從任何未解決的狀態都能進入，*Resolved* 與 *Closed* 都可以重新開啟回 *In Progress*
 - **合約** —— *Draft → In Approval → Activated → Expired*；*In Approval* 可以把文件退回 *Draft*，三種在途狀態都能直接走到 *Terminated*，*Expired* 與 *Terminated* 都是終點
 - **報價** —— *Draft → In Review → Presented → Accepted*；*In Review* 可以退回 *Draft*，*Rejected* 會回到 *Draft* 重來，*Expired* 可從 *Draft*、*In Review*、*Presented* 進入，*Accepted* 與 *Expired* 都是終點
 
-五者的宣告方式完全相同 —— 都是物件上一條具名的 `state_machine` 驗證規則，作用於該物件的生命週期欄位（`status`，商機上是 `stage`）。案例、合約、報價用的不是比潛在客戶和商機更輕的機制，就是同一套機制。頂層 `stateMachines` 鍵在平台 7.7 被移除後，所有狀態機都遷到了各自的物件上。
+五者的宣告方式完全相同 —— 都是物件上一條具名的 `state_machine` 驗證規則，作用於該物件的生命週期欄位（`status`，商機上是 `stage`）。工單、合約、報價用的不是比潛在客戶和商機更輕的機制，就是同一套機制。頂層 `stateMachines` 鍵在平台 7.7 被移除後，所有狀態機都遷到了各自的物件上。
 
 **宣告出來的路線是建議，不是閘門。** 五條規則都是 **警告** 級：走出轉換表的狀態變更只會寫進伺服器日誌——比如 *「Invalid contract status transition」*——而 **儲存照樣通過**。記錄在 **新建** 時也根本不受檢查：規則拿新值與前一個值比對，因此只在更新時執行，直接匯入到後期狀態的記錄不會被碰。轉換表給你的是一條宣告出來、機器可讀的路線，供自動化、報表和 Copilot 依賴——而不是給欄位上鎖。
 
@@ -38,7 +40,7 @@ HotCRM 在 **五個** 物件上使用狀態機：
                                └─────────────┘
 ```
 
-**允許的轉換** —— 下面就是整張表，照抄自 `src/objects/lead.object.ts` 裡的 `lead_status_progression` 規則；它比上面那張圖多帶幾條捷徑：
+**允許的轉換** —— 下面就是整張表，照抄自 `src/sales/objects/lead.object.ts` 裡的 `lead_status_progression` 規則；它比上面那張圖多帶幾條捷徑：
 
 | 從 | 可以移動到 | 說明 |
 | --- | --- | --- |
@@ -68,7 +70,7 @@ Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ 
 
 已關閉階段只有 **兩個**，不是三個：*Closed Won* 與 *Closed Lost*。不存在 *Closed Without Decision* —— 一筆無聲無息拖沒了的交易就是 *Closed Lost*。
 
-**允許的轉換**，照抄自 `src/objects/opportunity.object.ts` 裡的 `opportunity_stage_progression` 規則：
+**允許的轉換**，照抄自 `src/sales/objects/opportunity.object.ts` 裡的 `opportunity_stage_progression` 規則：
 
 | 從 | 可以移動到 | 說明 |
 | --- | --- | --- |
@@ -105,7 +107,7 @@ Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ 
 - **非法的移動會被報出來，而不是無聲無息。** 移動照樣落庫，但引擎會在日誌裡點名 —— *「Invalid opportunity stage transition」*，並帶上規則自己的名字 —— 所以一次糟糕的匯入或一個行為異常的整合，事後是能被找出來的。走在表內的移動一條日誌都不記，這正是那些警告值得一讀的原因。
 - **給自動化與報表一個可以指向的基準。** 流程條件、報表或技能可以按宣告出來的路線來寫，而不是把一串狀態手工抄過去。
 
-如果你需要某個狀態變更真正不可能發生，狀態機不是那個工具：能擋下儲存的是 `error` 級的驗證規則。這五條保持建議級是有意的 —— 理由就寫在規則自己身邊（`src/objects/quote.object.ts`）：售後的更正不該還要靠一次資料修復才能做到。
+如果你需要某個狀態變更真正不可能發生，狀態機不是那個工具：能擋下儲存的是 `error` 級的驗證規則。這五條保持建議級是有意的 —— 理由就寫在規則自己身邊（`src/revenue/objects/quote.object.ts`）：售後的更正不該還要靠一次資料修復才能做到。
 
 ## 自訂狀態機
 
@@ -117,7 +119,7 @@ Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ 
 - **新增退出條件**（例如 *沒有更新關閉日期就不能離開 Negotiation*）。
 - 在每次轉換時 **觸發自動化**（物件鉤子、流程、通知）。
 
-上面這些都是改原始碼，不是在設定裡點幾下：**並不存在「設定 → 物件 → 狀態 → 狀態機」這個設定面**。每張轉換表都是物件上的一條 `validations[]` 條目（型別 `state_machine`，見 `src/objects/*.object.ts`），而這條條目只帶一張轉換對應表，別的什麼都沒有 —— 所以上面前兩項是改這張對應表，進入/退出條件是另外的 `validations[]` 規則或相關欄位上的 `requiredWhen` 述詞，按轉換觸發自動化則是 `record_change` 流程或物件鉤子。每一項都是程式碼改動加一次重新部署。
+上面這些都是改原始碼，不是在 Setup 裡點幾下：**並不存在「Setup → Object → Status → State Machine」這個頁面**。每張轉換表都是物件上的一條 `validations[]` 條目（型別 `state_machine`，見 `src/*/objects/*.object.ts`），而這條條目只帶一張轉換對應表，別的什麼都沒有 —— 所以上面前兩項是改這張對應表，進入/退出條件是另外的 `validations[]` 規則或相關欄位上的 `requiredWhen` 述詞，按轉換觸發自動化則是 `record_change` 流程或物件鉤子。每一項都是程式碼改動加一次重新部署。
 
 ## 使用者看到什麼
 
@@ -127,7 +129,7 @@ Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ 
 
 ## 狀態機與 AI Copilot
 
-**本應用沒有把這兩者接起來。** `src/skills/` 下的六個技能、`src/actions/` 下的每一個操作，都沒有提到轉換表、狀態機或「合法的下一批狀態」這類查詢，也沒有任何一個技能的提示詞裡寫著哪個狀態之後可以接哪個狀態。本頁原先描述過 Copilot 會壓住 *「確認這個潛在客戶的資格」*、*「轉化這個潛在客戶」* 這類建議，直到記錄的狀態允許這次移動為止；HotCRM 並沒有宣告任何能產生這種行為的東西。
+**本應用沒有把這兩者接起來。** `src/*/skills/` 下的六個技能、`src/*/actions/` 下的每一個操作，都沒有提到轉換表、狀態機或「合法的下一批狀態」這類查詢，也沒有任何一個技能的提示詞裡寫著哪個狀態之後可以接哪個狀態。本頁原先描述過 Copilot 會壓住 *「確認這個潛在客戶的資格」*、*「轉化這個潛在客戶」* 這類建議，直到記錄的狀態允許這次移動為止；HotCRM 並沒有宣告任何能產生這種行為的東西。
 
 平台自己的 agent 在裝載物件中繼資料時會不會把 `state_machine` 驗證一併讀進去、並據此收窄建議，這是執行階段的問題，不是本應用的問題 —— 所以本頁對它不作任何方向的斷言。如果你正指望 Copilot 待在某條生命週期裡，請在你自己的部署上驗證，而不是照著本頁相信。
 
@@ -137,7 +139,7 @@ Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ 
 
 - ✅ **不要過度約束** —— 太多轉換規則會成為團隊的摩擦稅。
 - ✅ 新增狀態時，**先決定進入和退出條件** —— 其餘的自然就有了。
-- ✅ **不要把自動化掛在轉換上** —— 根本沒有可掛的東西。轉換表是一條驗證規則，在做出這次移動的那一次儲存裡被求值；它寫下一行日誌，不產生任何可供自動化訂閱的事件。只應在某一次移動上跑的自動化，是一條 `record_change` 流程：它在那次儲存上觸發，並在自己的起始條件裡把 `record.stage` 與 `previous.stage` 比對來收窄 **自己** —— `opportunity_won_alert`（`src/flows/opportunity-won-alert.flow.ts`）正是這麼寫的，所以那條祝賀通知只在移入 *Closed Won* 的那一次發出，而不是在這筆已贏商機之後的每一次編輯上都發。
+- ✅ **不要把自動化掛在轉換上** —— 根本沒有可掛的東西。轉換表是一條驗證規則，在做出這次移動的那一次儲存裡被求值；它寫下一行日誌，不產生任何可供自動化訂閱的事件。只應在某一次移動上跑的自動化，是一條 `record_change` 流程：它在那次儲存上觸發，並在自己的起始條件裡把 `record.stage` 與 `previous.stage` 比對來收窄 **自己** —— `opportunity_won_alert`（`src/sales/flows/opportunity-won-alert.flow.ts`）正是這麼寫的，所以那條祝賀通知只在移入 *Closed Won* 的那一次發出，而不是在這筆已贏商機之後的每一次編輯上都發。
 - ✅ 每次變更後 **測試精靈流程**（轉化潛在客戶、關閉商機）。
 
 ## 給使用者的提示
@@ -147,6 +149,6 @@ Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ 
 
 ## 相關
 
-- [銷售 › 潛在客戶](/zh-Hant/docs/sales/leads) —— 面向使用者的潛在客戶生命週期。
-- [銷售 › 商機](/zh-Hant/docs/sales/opportunities) —— 面向使用者的商機生命週期。
+- [銷售雲 › 潛在客戶](/zh-Hant/docs/sales/leads) —— 面向使用者的潛在客戶生命週期。
+- [銷售雲 › 商機](/zh-Hant/docs/sales/opportunities) —— 面向使用者的商機生命週期。
 - [自動化](/zh-Hant/docs/administration/automation) —— 轉換可以觸發的流程與物件鉤子。

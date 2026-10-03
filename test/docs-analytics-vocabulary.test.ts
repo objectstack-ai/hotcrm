@@ -4,12 +4,12 @@ import { describe, it, expect } from 'vitest';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
-import { CrmApp } from '../src/apps/crm.app';
-import * as dashboards from '../src/dashboards/index';
-import * as datasets from '../src/datasets/index';
-import * as reports from '../src/reports/index';
-import { OpportunitiesByStageReport } from '../src/reports/opportunity.report';
-import { pipelineByStageFunnelWidget } from '../src/dashboards/shared-widgets';
+import { CrmApp } from '../src/sales/apps/crm.app';
+import { CrmDashboards as dashboards } from './helpers/src-roster';
+import { CrmDatasets as datasets } from './helpers/src-roster';
+import { CrmReports as reports } from './helpers/src-roster';
+import { OpportunitiesByStageReport } from '../src/sales/reports/opportunity.report';
+import { pipelineByStageFunnelWidget } from '../src/sales/dashboards/shared-widgets';
 
 /**
  * The analytics landing page, and the cube vocabulary around it, pinned to
@@ -37,7 +37,7 @@ import { pipelineByStageFunnelWidget } from '../src/dashboards/shared-widgets';
  * the dashboard barrel, report labels off the report barrel, the dataset count
  * off the dataset barrel, the navigation group and its children off
  * `CrmApp.navigation`, the refresh cadence off each dashboard's
- * `refreshInterval`. Change the app and this file goes red at PR time, in all
+ * `refreshIntervalSeconds`. Change the app and this file goes red at PR time, in all
  * three locales — the failure mode the landing page had for months.
  *
  * The authored parts are the count WORDS (the pages spell them, and each is
@@ -46,8 +46,14 @@ import { pipelineByStageFunnelWidget } from '../src/dashboards/shared-widgets';
  * typography convention #927 / PR #932 established carries the distinction, and
  * the quick-tour guard leans on the same one: **bold** is reserved for names the
  * app really has, *italic* for a name a reader arrives with that the product
- * does not carry. A phantom must still be NAMED — say where the thing really
- * lives, do not delete it silently — and must never be bolded.
+ * does not carry. The rule is total (#1862): a real name — a report or chart
+ * title, a widget title, a view or tab label, a position name, a field label, a
+ * picklist value — is bold at EVERY occurrence, a later mention or a title
+ * quoted in running prose included, and italic means only "the product does
+ * not have this". A phantom must still be NAMED — say where the thing really
+ * lives, do not delete it silently — and must never be bolded. Stating the
+ * rule as total does not widen what this file checks: no guard reads the
+ * italic half for real names (epic #1579's fence).
  *
  * ## Why the nav rules are scoped to one section
  *
@@ -99,11 +105,11 @@ const ALL_NAV_LABELS: string[] = (() => {
   return walk(NAV).map((n) => n.label as string);
 })();
 
-/** Distinct `refreshInterval` values declared across the dashboards, in seconds. */
+/** Distinct `refreshIntervalSeconds` values declared across the dashboards, in seconds. */
 const REFRESH_INTERVALS: number[] = [
   ...new Set(
     Object.values(dashboards as Record<string, AnyRec>)
-      .map((d) => d.refreshInterval as number | undefined)
+      .map((d) => d.refreshIntervalSeconds as number | undefined)
       .filter((n): n is number => typeof n === 'number'),
   ),
 ].sort((a, b) => a - b);
@@ -142,6 +148,23 @@ const PHANTOMS = ['Analytics', 'Dashboards', 'Reports', 'Cubes'] as const;
 
 /** The four cube names the page advertised. None exists anywhere in the app. */
 const RETIRED_CUBES = ['Sales', 'Pipeline', 'Service', 'Marketing'] as const;
+
+/**
+ * The directories the nine datasets really live in — READ FROM `src/`, like
+ * every other product fact in this file.
+ *
+ * This assertion used to be `toContain('src/datasets/')`, a literal. ADR-0130
+ * made a directory under `src/` a package, so there has been no top-level
+ * `src/datasets/` since — and a guard that requires a page to state a path
+ * which does not exist is holding the page to the wrong fact, not to source
+ * (#1922). Deriving it keeps the check pointed at the thing it was written to
+ * check: give a package a `datasets/` directory and the page has to name it;
+ * take one away and the page has to stop.
+ */
+const DATASET_DIRS = readdirSync(join(REPO_ROOT, 'src'), { withFileTypes: true })
+  .filter((e) => e.isDirectory() && existsSync(join(REPO_ROOT, 'src', e.name, 'datasets')))
+  .map((e) => `src/${e.name}/datasets/`)
+  .sort();
 
 /**
  * The CJK range as escapes rather than literal characters, so this file stays
@@ -194,7 +217,17 @@ describe('analytics/index states the counts and names the app really ships (#976
     it('says nine datasets and points at the directory they live in', () => {
       const text = read(file);
       expect(text, `${file}: the dataset count is not stated as "${nine}"`).toContain(nine);
-      expect(text, `${file}: the page does not name src/datasets/`).toContain('src/datasets/');
+      expect(
+        DATASET_DIRS.length,
+        'no package under src/ has a datasets/ directory — this check has gone vacuous. ' +
+          'Either the datasets moved (teach DATASET_DIRS the new shape) or they are gone.',
+      ).toBeGreaterThan(0);
+      const missing = DATASET_DIRS.filter((dir) => !text.includes(dir));
+      expect(
+        missing,
+        `${file}: the page does not name the directories the datasets live in: ${missing.join(', ')}. ` +
+          'A reader sent to find a dataset needs the path that exists, not the one that used to.',
+      ).toEqual([]);
     });
 
     it('names the Insights group and every child the app pins to it', () => {
@@ -319,11 +352,11 @@ describe('the cube vocabulary retired with src/cubes/ is gone from the docs (#97
   it('the pages that quote a refresh cadence quote the declared one', () => {
     // The retired claim was "incremental refresh every 5 min / every few
     // minutes", a figure nothing in `src/` configures. What IS declared is each
-    // dashboard's own `refreshInterval` — derived here rather than transcribed,
+    // dashboard's own `refreshIntervalSeconds` — derived here rather than transcribed,
     // so a change in source lands on the docs at PR time.
     expect(
       REFRESH_INTERVALS.length,
-      'no dashboard declares a refreshInterval — this rule has gone vacuous',
+      'no dashboard declares a refreshIntervalSeconds — this rule has gone vacuous',
     ).toBeGreaterThan(1);
     const carriers = [
       'content/docs/reference/faq.mdx',
@@ -354,7 +387,7 @@ describe('the cube vocabulary retired with src/cubes/ is gone from the docs (#97
       expect(
         REFRESH_GLYPH.test(read(f)),
         `${f}: names a refresh button by its glyph. No dashboard in src/dashboards/ declares a ` +
-          'manual refresh control — state what the app declares (refreshInterval) and leave the ' +
+          'manual refresh control — state what the app declares (refreshIntervalSeconds) and leave the ' +
           "console's own chrome to the platform.",
       ).toBe(false);
     }

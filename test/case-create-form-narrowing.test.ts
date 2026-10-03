@@ -1,9 +1,9 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import { CaseViews } from '../src/views/case.view';
-import { Case } from '../src/objects/case.object';
-import { CaseDetailPage } from '../src/pages/case_detail.page';
+import { CaseViews } from '../src/service/views/case.view';
+import { Case } from '../src/service/objects/case.object';
+import { CaseDetailPage } from '../src/service/pages/case_detail.page';
 
 /**
  * The case CREATE form offers only what a creator legitimately authors (#1214
@@ -73,9 +73,22 @@ const CREATOR_AUTHORABLE = new Set([
 
 /**
  * Every field the create form used to carry that the LIFECYCLE owns, with the
- * writer that owns it and the surface it must keep. An empty `keeps` is a
- * claim in its own right: the field has no human surface BY DESIGN, and `why`
- * says which code writes it.
+ * writer that owns it and the surface it must keep.
+ *
+ * An empty `keeps` is a claim in its own right — the field is reachable from
+ * NO surface in the roster below — and since #1428 it is asserted in that
+ * direction too, not just documented. No field carries it today:
+ * `first_response_date` did until #970 rewrote the record page's sections as
+ * `fieldGroups` references, which put the `sla` group — and with it this
+ * field — on the Details tab (maintainer ruling C: group membership decides).
+ *
+ * The other thing that used to produce an empty `keeps` was a field whose
+ * surface was an OPEN PRODUCT QUESTION — `customer_rating` and
+ * `customer_feedback` sat here on exactly that footing. The question was
+ * answered rather than left open: #1428 retired both under ADR-0049
+ * enforce-or-remove instead of giving them a surface, so their entries left
+ * with the fields. ⛔ An empty `keeps` is therefore a statement about a field
+ * that exists; a field with no surface AND no answer does not belong here.
  */
 const LIFECYCLE_MAINTAINED: Record<string, { why: string; keeps: string[] }> = {
   created_date: {
@@ -83,8 +96,8 @@ const LIFECYCLE_MAINTAINED: Record<string, { why: string; keeps: string[] }> = {
     keeps: ['case_timeline.startDateField'],
   },
   first_response_date: {
-    why: '`event.hook.ts` is its single writer — no human surface by design',
-    keeps: [],
+    why: '`event.hook.ts` is its single writer; shown on the record page through the `sla` group (#970)',
+    keeps: ['detail.details'],
   },
   sla_due_date: {
     why: '`case.hook.ts` stamps it from the priority x account-tier matrix',
@@ -104,7 +117,9 @@ const LIFECYCLE_MAINTAINED: Record<string, { why: string; keeps: string[] }> = {
     keeps: ['list.columns', 'detail.highlights'],
   },
   is_escalated: {
-    why: 'written by `case_escalation` / `escalate_case`',
+    // readonly since #1434 — stamped by `case_escalation`, `case_sla_monitor`
+    // and the `case_escalation_stamp` sub-flow, all `runAs: 'system'`.
+    why: 'readonly on the object; stamped by the escalation flows, never typed',
     keeps: ['list.columns', 'escalated_cases.filter', 'detail.details'],
   },
   escalation_reason: {
@@ -115,12 +130,16 @@ const LIFECYCLE_MAINTAINED: Record<string, { why: string; keeps: string[] }> = {
     why: 'authored when CLOSING a case, not when raising one',
     keeps: ['detail.details'],
   },
-  customer_rating: { why: 'post-resolution survey data', keeps: [] },
-  customer_feedback: { why: 'post-resolution survey data', keeps: [] },
   closed_date: { why: 'readonly on the object; stamped at close', keeps: ['case_timeline.endDateField'] },
   is_closed: {
     why: 'readonly on the object; derived from `status` on every write',
-    keeps: ['case_workflow.filter', 'my_open_cases.filter'],
+    // `my_open_cases.filter` was on this line until #1328 moved that view onto
+    // `status not_in ['resolved', 'closed']`: the flag is derived as
+    // `status === 'closed'` and never flips on `resolved`, so it could not
+    // express the tab's own label. `case_workflow` keeps the flag — that kanban
+    // is the lifecycle itself and `resolved` is a real swimlane on it. Both
+    // facts are pinned in `test/live-work-predicate-parity.test.ts`.
+    keeps: ['case_workflow.filter'],
   },
 };
 
@@ -147,6 +166,14 @@ const surfaces = (): Record<string, Set<string>> => {
       for (const f of node.fields) {
         const name = typeof f === 'string' ? f : f?.field;
         if (name) (next === 'highlights' ? highlightFields : detailFields).add(name);
+      }
+    }
+    // A `{ group }` section (#970, ruling C) enumerates nothing: the renderer
+    // derives its members from crm_case's `fieldGroups` — every visible field
+    // whose `group` is that key — so those members are this surface's fields.
+    if (next === 'details' && typeof node.group === 'string') {
+      for (const [name, f] of Object.entries(objectFields)) {
+        if (f?.group === node.group && f?.hidden !== true) detailFields.add(name);
       }
     }
     for (const value of Object.values(node)) walk(value, next);
@@ -203,7 +230,7 @@ describe('crm_case create form — retention direction', () => {
   const s = surfaces();
 
   for (const [field, { why, keeps }] of Object.entries(LIFECYCLE_MAINTAINED)) {
-    it(`${field} keeps ${keeps.length ? keeps.join(' + ') : 'no human surface (by design)'}`, () => {
+    it(`${field} keeps ${keeps.length ? keeps.join(' + ') : 'no human surface'}`, () => {
       for (const surface of keeps) {
         expect(s[surface], `unknown surface "${surface}" in the roster`).toBeDefined();
         expect(
@@ -211,45 +238,92 @@ describe('crm_case create form — retention direction', () => {
           `${field} left ${surface} — narrowing the create form must not strip the views (${why})`,
         ).toContain(field);
       }
+      if (keeps.length === 0) {
+        const found = Object.entries(s)
+          .filter(([, names]) => names.has(field))
+          .map(([surface]) => surface);
+        expect(
+          found,
+          `${field} gained a surface (${found.join(', ')}) while its roster entry still claims none. ` +
+            `That is a decision, not a detail — update the entry with the reason (${why})`,
+        ).toEqual([]);
+      }
     });
   }
 
   /**
    * ⛔ The tempting "fix" for the guard this change tripped
    * (`test/metadata-references.test.ts` → "fields the list views filter on are
-   * editable in some form") is to mark the escalation flags `readonly` so the
-   * guard skips them. This assertion is what stops someone doing that from the
-   * other end.
+   * editable in some form") is to mark a stamped flag `readonly` so the guard
+   * skips it. This assertion is what stops someone doing that from the other
+   * end.
    *
    * The reason is NOT the blanket this comment used to carry ("the platform
    * DROPS writes to readonly fields"). Measured in
-   * `test/readonly-write-semantics.test.ts` on 17.1.0 and re-measured there on
-   * the current pin 17.2.0 (#1460), same result: the strip is one branch of the
+   * `test/readonly-write-semantics.test.ts` on 17.1.0, re-measured there on
+   * 17.2.0 (#1460) and re-measured again on 17.3.0 (#1676, the pin at the time),
+   * same result every time: the strip is one branch of the
    * UPDATE path, `if (!opCtx.context?.isSystem)`, over CALLER-supplied keys —
    * so a `beforeUpdate` hook's own stamp survives it, an insert is exempt from
    * it entirely, and a FLOW write survives it exactly when the flow's
    * effective `runAs` is `'system'` (the engine defaults it to `'user'`).
    *
-   * Per field, on today's flows:
-   *   - `is_escalated` / `escalated_date` — HARD-blocked. Both are written by
-   *     the `escalate_case` screen flow, which declares no `runAs` and so runs
-   *     as the USER; `readonly` would silently drop the escalation an agent
-   *     just confirmed, while the flow still reported success.
-   *   - `is_sla_violated` — NOT hard-blocked: its only writer,
-   *     `case_sla_monitor`, is `runAs: 'system'` and would survive. It stays
-   *     pinned here anyway, because flipping it is a real decision about the
-   *     seed/profile/form surfaces — not a shortcut for silencing a guard,
-   *     which is the move this pin exists to block.
+   * ⭐ NARROWED BY #1434, and the two fields that left did so for the RIGHT
+   * reason. `is_escalated` / `escalated_date` used to be pinned here as
+   * HARD-blocked, because the `escalate_case` screen flow wrote them while
+   * running as the USER. The maintainer-approved ruling (decision batch #21 ②)
+   * removed that cause instead of documenting it: the stamp moved into the
+   * dedicated `runAs: 'system'` `case_escalation_stamp` sub-flow, reached by a
+   * `subflow` node, so `escalate_case` still runs as the acting agent and both
+   * columns are now honestly `readonly: true`. They are consequently NOT
+   * pinned as writable any more — pinning them so would now be the false
+   * statement. The forward direction is pinned instead, in
+   * `test/readonly-write-semantics.test.ts`.
+   *
+   * `is_sla_violated` remains, and its rationale never depended on the
+   * platform: its only writer, `case_sla_monitor`, is `runAs: 'system'` and
+   * would survive a `readonly` declaration. It stays pinned because flipping
+   * it is a real decision about the seed/profile/form surfaces — not a
+   * shortcut for silencing a guard, which is the move this pin exists to
+   * block.
+   *
+   * ⛔ Do not re-add an escalation field to this list to make a user-context
+   * write land. That is #1434 re-opened; the answer was a `subflow` node.
    */
-  it('the flow-stamped escalation flags stay declarable — i.e. NOT readonly', () => {
-    for (const name of ['is_escalated', 'is_sla_violated', 'escalated_date']) {
+  it('the flow-stamped SLA flag stays declarable — i.e. NOT readonly', () => {
+    for (const name of ['is_sla_violated']) {
       expect(
         objectFields[name]?.readonly,
-        `${name} must stay writable — see the note above: escalate_case runs runAs:"user", ` +
-          'so a readonly is_escalated/escalated_date silently drops its write ' +
-          '(measured, test/readonly-write-semantics.test.ts). Do not flip these to skip a guard.',
+        `${name} must stay writable — see the note above: flipping it is a decision ` +
+          'about its authoring surfaces, not a way to skip a guard. Its writer is ' +
+          'runAs:"system" and would survive readonly, so the platform is not the ' +
+          'obstacle (measured, test/readonly-write-semantics.test.ts).',
       ).not.toBe(true);
     }
+  });
+
+  /**
+   * #1428 — `internal_notes` was the third field that left with the Resolution
+   * section, and unlike the ten above it kept NO surface: not a list column,
+   * not a filter, not a section on the record page. It is staff prose somebody
+   * has to type, so "no human surface" was never a design, and this is the pin
+   * that keeps its replacement surface from being refactored away silently.
+   *
+   * BOTH directions, and the second is the load-bearing one: it belongs on the
+   * record page (inline edit on the Details tab) and it must stay OFF the
+   * create form. That form is also the edit form, so the one thing that cannot
+   * be done to fix a missing edit surface is to put the field back at intake —
+   * where `case.hook.ts`'s guest branch nulls the column anyway.
+   */
+  it('internal_notes is authorable on the record page and nowhere at intake (#1428)', () => {
+    expect(
+      Array.from(s['detail.details']),
+      'internal_notes lost its only authoring surface — see #1428; do not solve it on the create form',
+    ).toContain('internal_notes');
+    expect(
+      formFields(),
+      'internal_notes is not an intake field: the guest branch of case.hook.ts nulls it',
+    ).not.toContain('internal_notes');
   });
 
   it('the queue still sorts on the SLA deadline', () => {

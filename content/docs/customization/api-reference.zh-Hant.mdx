@@ -5,9 +5,9 @@ description: HotCRM 物件、ObjectQL 查詢和本機開發的 ObjectStack API �
 
 # API 參考
 
-HotCRM 執行在 ObjectStack 上。Web UI、自動化、動作和 AI skills 都使用 `objectstack.config.ts` 註冊的同一套物件中繼資料。
+本應用未隨附繁體中文語言包，因此本頁出現的介面名詞依固定順序取用：zh-CN 語言包已收錄者，採其用詞的繁體寫法；未收錄者，保留產品內的英文原名，不另造譯名。
 
-目前物件和欄位清單見內部參考：[`docs/developers/api_reference.md`](../../../docs/developers/api_reference.md)。
+HotCRM 執行在 ObjectStack 上。Web UI、自動化、動作和 AI skills 都使用 `objectstack.config.ts` 註冊的同一套物件中繼資料。
 
 ## 本機地址
 
@@ -27,12 +27,8 @@ http://localhost:4001
 
 ## 目前物件
 
-| 領域 | 物件 |
-| --- | --- |
-| 銷售 | `crm_lead`, `crm_account`, `crm_contact`, `crm_opportunity`, `crm_opportunity_line_item`, `crm_forecast` |
-| 服務 | `crm_case`, `crm_knowledge_article`, `crm_task` |
-| 市場 | `crm_campaign`, `crm_campaign_member` |
-| 營收 | `crm_product`, `crm_quote`, `crm_quote_line_item`, `crm_contract` |
+物件清單在此**不再**轉抄 —— `src/*/objects/*.object.ts` 是它的事實來源，一個物件一個檔案，
+各自註冊以 `crm_` 為前綴的 `name`。資料模型涵蓋四個業務領域：銷售、服務、市場和營收。
 
 ## ObjectQL 形態
 

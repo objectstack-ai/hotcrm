@@ -59,18 +59,31 @@ This removes `.objectstack/data`, rebuilds the app, and lets seed data load on f
 The normal distribution path is the ObjectStack marketplace:
 
 ```bash
-objectstack cloud login
+export OS_CLOUD_URL=https://cloud.objectos.app
+export OS_CLOUD_API_KEY=…   # the service token, not a personal login
 pnpm build
 pnpm publish:marketplace
 ```
 
-For a dry run:
+For a dry run, which needs no credentials:
 
 ```bash
 pnpm publish:marketplace:dry-run
 ```
 
 The publish script lives at [`scripts/publish-marketplace.mjs`](../scripts/publish-marketplace.mjs).
+It authenticates in **service mode**: it reads `OS_CLOUD_URL` and `OS_CLOUD_API_KEY` from the
+process environment and from nowhere else, and it exits before doing any work if either is
+missing.
+
+⛔ `objectstack cloud login` does not satisfy this. That command authenticates the CLI and
+stores its own session at `~/.objectstack/cloud.json`, which this script never reads — so it
+reports success and the publish still dies with `OS_CLOUD_URL is required`. It is the right
+first step for the *CLI* publish path (`objectstack package publish`, which does read that
+file), but not for `pnpm publish:marketplace`.
+
+[`RELEASE_STRATEGY.md`](RELEASE_STRATEGY.md) §Marketplace Publish is the single source of
+truth for how a release authenticates.
 
 ## Runtime Configuration
 
@@ -80,7 +93,7 @@ The publish script lives at [`scripts/publish-marketplace.mjs`](../scripts/publi
 | App version | `package.json` and `objectstack.config.ts` |
 | Capabilities | `requires` in `objectstack.config.ts` |
 | Local dev port | `package.json` scripts |
-| Seed data | `src/data/index.ts` |
+| Seed data | `src/*/data/index.ts` |
 
 ## Verification Before Release
 
@@ -90,11 +103,9 @@ Run:
 pnpm verify
 ```
 
-The script currently chains:
-
-```text
-pnpm validate && pnpm typecheck && pnpm build && pnpm test
-```
+`package.json` is the single source of truth for what that chain runs. *Supersedes the
+hand-copied `pnpm validate && pnpm typecheck && pnpm build && pnpm test` line that stood
+here and named half of it — 2026-08-31 ruling, item 5.*
 
 If `pnpm verify` fails, fix the first failing stage before publishing.
 

@@ -1,7 +1,8 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { QuickJSScriptRunner, actionBodyRunnerFactory, hookBodyRunnerFactory } from '@objectstack/runtime';
-import { extractHookBody } from '@objectstack/cli/dist/utils/extract-hook-body.js';
+import { createRequire } from 'node:module';
+import { pathToFileURL } from 'node:url';
 import { assertReferenceValueShapes, engineFlatInput } from './hook-harness';
 
 /**
@@ -31,12 +32,84 @@ import { assertReferenceValueShapes, engineFlatInput } from './hook-harness';
  * recorder whose contract is pinned against the real kernel in
  * `test/action-sandbox.test.ts`.
  *
- * `extractHookBody` is reached by a deep import because the CLI publishes no
- * export map for it. Both packages are pinned to an exact version in
- * `package.json`, and if a platform upgrade moves the file the import fails at
- * load — loudly, on every test in this harness — rather than degrading to a
- * lookalike check.
+ * PINNING A CLOCK AROUND A BODY (#1665). Fake ONLY `Date`:
+ *
+ *     vi.useFakeTimers({ toFake: ['Date'] });
+ *     vi.setSystemTime(new Date('2026-03-08T06:30:00.000Z'));
+ *
+ * The bare `vi.useFakeTimers()` DEADLOCKS this harness: `runActionBody` and
+ * `runHookBody` never resolve, and the only symptom is `Error: Test timed out
+ * in 5000ms.` — which names nothing about the clock and reads exactly like a
+ * body that hangs. `setImmediate` is the one member of vitest's default fake
+ * set that does it; faking `Date`, `setTimeout`, `clearTimeout`, `setInterval`
+ * and `clearInterval` together is harmless. Nor is it a cold-start effect: it
+ * hangs on every call, including after a real-timer run has warmed the runner.
+ *
+ * The `Date`-only pin does reach inside the VM, which makes two things true of
+ * a body: it sees the process `TZ`, with zone rules resolved for the PINNED
+ * instant — under `TZ=America/New_York` the instant above answers
+ * `getTimezoneOffset() === 300`, because 06:30Z is 01:30 EST, half an hour
+ * before that day's spring-forward, where a summer instant answers `240` — and
+ * `getUTCDate` / `setUTCDate` exist, so a body may rely on them.
+ *
+ * `extractHookBody` is reached by a deep path because the CLI publishes no
+ * public entry for it. Both packages are pinned to an exact version in
+ * `package.json`, and if a platform upgrade moves the file the load fails —
+ * loudly, on every test in this harness — rather than degrading to a lookalike
+ * check. That is the contract, and it held: the 17.2.0 -> 17.3.0 upgrade broke
+ * this import and the harness said so on the first typecheck.
+ *
+ * WHY THE LOAD IS WRITTEN THIS WAY (objectstack#15325). Through 17.2.0
+ * `@objectstack/cli` published NO `exports` field, so
+ * `@objectstack/cli/dist/utils/extract-hook-body.js` resolved like any path.
+ * 17.3.0 introduces an `exports` map admitting exactly `.` and `./console`, so
+ * that specifier is now dead in BOTH directions — `error TS2307` from `tsc`,
+ * and `ERR_PACKAGE_PATH_NOT_EXPORTED` from Node at run time. (`./package.json`
+ * is sealed too.) The file is still shipped; only the door is gone.
+ *
+ * So the root entry — which the map DOES admit — is resolved, and the extractor
+ * is loaded by file URL relative to it. This keeps the platform's OWN
+ * implementation as the thing under test. Writing a local copy of the extractor
+ * is the one answer this harness must not take: its refusal rules are what 15+
+ * comments across `src/objects/*.hook.ts` are written against, and a lookalike
+ * would keep passing while diverging from the rule `os build` actually applies.
+ *
+ * ⛔ This is a STOPGAP, not the intended shape. `@objectstack/cli`'s own 17.3.0
+ * changelog (entry `8c82289`) names the remedy for an out-of-repo consumer —
+ * "ratify the subpath as public surface rather than read `dist/` paths" — and
+ * applied it for `./console` only. objectstack#15325 asks for the same
+ * ratification here. When it lands, delete this loader and import the subpath.
  */
+
+type ExtractedBody = {
+  /** Pure function-body source (without the surrounding `(ctx) => {...}`). */
+  source: string;
+  capabilities: Array<'api.read' | 'api.write' | 'crypto.uuid' | 'log'>;
+  isExpression: boolean;
+};
+
+/**
+ * The CLI's own `extractHookBody`, loaded past the sealed subpath.
+ *
+ * Top-level await: the harness must hold the real function before any test
+ * calls {@link extractSandboxBody}, and every failure mode here throws at module
+ * load — which is the loud failure the header promises, not a silent fallback.
+ */
+const extractHookBody: (fn: (...a: unknown[]) => unknown, originLabel: string) => ExtractedBody =
+  await (async () => {
+    const cliEntry = createRequire(import.meta.url).resolve('@objectstack/cli');
+    const extractorUrl = new URL('./utils/extract-hook-body.js', pathToFileURL(cliEntry));
+    const mod = (await import(extractorUrl.href)) as {
+      extractHookBody?: (fn: (...a: unknown[]) => unknown, originLabel: string) => ExtractedBody;
+    };
+    if (typeof mod.extractHookBody !== 'function') {
+      throw new Error(
+        `@objectstack/cli no longer exposes extractHookBody at ${extractorUrl.href}. ` +
+          'See objectstack#15325 — this harness must run the platform extractor, never a copy.',
+      );
+    }
+    return mod.extractHookBody;
+  })();
 
 export type Rec = Record<string, any>;
 
@@ -341,8 +414,8 @@ export async function runHookBody(hook: Rec, opts: HookRunOpts): Promise<HookRun
     // `wrapDeclarativeHook`: `bindHooksToEngine` resolves a body hook via
     // `bodyRunner(hook)` and wraps the result, so the engine ctx a shipped body
     // sees is always the Proxy. Measured on 17.1.0 — the version this repo
-    // pinned AT THE TIME of the measurement, not the current pin (#1460:
-    // 17.2.0 since PR #1442; both symbols are still present there, but this
+    // pinned AT THE TIME of the measurement, not the current pin (#1676:
+    // 17.3.0 since PR #1577; both symbols are still present there, but this
     // wiring was not re-measured end to end) — see `resolveHandler` /
     // `installFlatInput` in @objectstack/objectql.
     input: engineFlatInput(input),

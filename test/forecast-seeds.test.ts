@@ -1,9 +1,10 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import { CrmSeedData } from '../src/data/index';
-import { Forecast } from '../src/objects/forecast.object';
-import { ForecastSnapshotFlow } from '../src/flows/forecast-snapshot.flow';
+import { CrmSeedData } from '../objectstack.composition';
+import { Forecast } from '../src/sales/objects/forecast.object';
+import { ForecastSnapshotFlow } from '../src/sales/flows/forecast-snapshot.flow';
+import { flowNodesDeep, regionsOf } from './helpers/flow-regions';
 import { ExpressionEngine } from '@objectstack/formula';
 
 /**
@@ -150,34 +151,30 @@ describe('forecast seed periods are calendar-true (#530)', () => {
  *
  * `forecast_snapshot` upserts the row whose window contains today, keyed by
  * OWNER. A seeded row in that same window cannot satisfy that lookup at the
- * moment the sweep reads it — a seed writes no owner, and `demo_bootstrap`'s
- * claim is a separate, later sweep — so the flow reports the period missing and
- * opens a SECOND row beside it. Both span the quarter; one is ownerless. Every
- * owner-grouped consumer then shows a phantom duplicate for the current
- * quarter, on every re-seeded dev boot.
+ * moment the sweep reads it — a seed writes no owner, and the platform's
+ * seed-ownership claim is a separate, later write — so the flow reports the
+ * period missing and opens a SECOND row beside it. Both span the quarter; one
+ * is ownerless. Every owner-grouped consumer then shows a phantom duplicate
+ * for the current quarter, on every re-seeded dev boot.
  *
- * Claiming `crm_forecast` (which `demo_bootstrap` now does, for the settled
- * rows) does NOT make that safe: it only decides which of the two scheduled
- * sweeps reaches the window first, and a duplicate opened by losing that race
- * never heals. The invariant has to hold whatever the order, so it is enforced
+ * Claiming `crm_forecast` (which the platform's claim does, for the settled
+ * rows) does NOT make that safe: it only decides which of the claim and the
+ * scheduled sweep reaches the window first, and a duplicate opened by losing
+ * that race never heals. The invariant has to hold whatever the order, so it is enforced
  * where order cannot reach it — in the seed data.
  *
  * The forbidden window is derived from the flow's own lookup filter rather than
  * restated here: change `SNAPSHOT_PERIOD` and this guard follows.
  */
 describe('the seeds stay out of the window forecast_snapshot owns (#702)', () => {
-  /** Any node in the flow, loop bodies included. */
-  const findNode = (id: string): Record<string, any> | undefined => {
-    const walk = (nodes: any[]): any => {
-      for (const node of nodes ?? []) {
-        if (node?.id === id) return node;
-        const hit = walk(node?.config?.body?.nodes ?? []);
-        if (hit) return hit;
-      }
-      return undefined;
-    };
-    return walk(((ForecastSnapshotFlow as any).nodes ?? []) as any[]);
-  };
+  /**
+   * Any node in the flow, every control-flow region included. `find_forecast`
+   * sits inside `loop_owners`, which since `src/flows/_guarded-iteration.ts`
+   * opens with a `try_catch` guard — so a walk over `config.body.nodes` alone
+   * would reach the guard and stop one region short of it.
+   */
+  const findNode = (id: string): Record<string, any> | undefined =>
+    flowNodesDeep(ForecastSnapshotFlow as any).find((node) => node?.id === id);
 
   const sweepLookup = (findNode('find_forecast')?.config?.filter ?? {}) as Record<string, any>;
   const sweptPeriod = String(sweepLookup.period ?? '');
@@ -320,7 +317,11 @@ describe('the forecast seed keys on a seeder-only identity (#613)', () => {
           bad.push(`${ForecastSnapshotFlow.name}.${node.id} writes seed_key`);
         }
       }
-      for (const child of node?.config?.body?.nodes ?? []) walk(child);
+      // Every region, not just `config.body`: the writers this counts are
+      // inside the loop's `try_catch` guard (`_guarded-iteration.ts`), and the
+      // "found no record-writing node" guard below is what would catch a walk
+      // that stopped above them.
+      for (const region of regionsOf(node)) for (const child of region.nodes as any[]) walk(child);
     };
     for (const node of (ForecastSnapshotFlow as any).nodes ?? []) walk(node);
     // Guard the guard: the sweep creates a row and updates it, so a walker

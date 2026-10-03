@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import { CrmApp } from '../src/apps/crm.app';
+import { CrmApp } from '../src/sales/apps/crm.app';
 
 /**
  * The two standing constraints on `src/apps/crm.app.ts`'s shape (#1259).

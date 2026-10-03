@@ -19,7 +19,7 @@ import { join, relative } from 'node:path';
  * | 29 | `test/source-hygiene-scan-surface.test.ts` |
  * | 16 | `test/source-token-ratchet.test.ts` |
  * |  7 | `test/source-hygiene-header-position.test.ts` |
- * |  6 | `test/field-consumer-scan.test.ts` |
+ * |  6 | `test/field-consumer-scan.test.ts` — retired in #1543 |
  * |  3 | `test/lint-i18n-gate.test.ts` |
  * |  3 | `test/script-main-guard.test.ts` — fixtures are copies of the real gates |
  * |  0 | `test/docs-readme-token-figures.test.ts` — spawns a gate, but only its green leg |
@@ -83,7 +83,6 @@ const DECOY_LINES_BEFORE = 64;
 /** Files known to spawn a gate. The scanner must keep finding all of them. */
 const KNOWN_SPAWNING_FILES = [
   'test/docs-readme-token-figures.test.ts',
-  'test/field-consumer-scan.test.ts',
   'test/lint-i18n-gate.test.ts',
   'test/script-main-guard.test.ts',
   'test/source-hygiene-header-position.test.ts',

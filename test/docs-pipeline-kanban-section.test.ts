@@ -4,8 +4,8 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
-import { OpportunityViews } from '../src/views/opportunity.view';
-import { Opportunity } from '../src/objects/opportunity.object';
+import { OpportunityViews } from '../src/sales/views/opportunity.view';
+import { Opportunity } from '../src/sales/objects/opportunity.object';
 
 /**
  * The pipeline page's kanban section, pinned to the board it describes (#996).

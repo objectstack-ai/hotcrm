@@ -87,6 +87,14 @@ const GUEST = {} as AnyRec;
 /** The trusted write / read-back channel. */
 const SYS = { isSystem: true } as AnyRec;
 
+/**
+ * `crm_case`'s declared field map, read off the compiled stack rather than
+ * imported from the object file — this is the shape the app ships, which is
+ * what a retirement claim has to be made against (#1428).
+ */
+const caseFields: AnyRec =
+  ((stack as AnyRec).objects as AnyRec[]).find((o) => o.name === 'crm_case')?.fields ?? {};
+
 let kernel: AnyRec;
 let ql: AnyRec;
 const id: Record<string, string> = {};
@@ -155,6 +163,10 @@ describe('crm_case — guest submission sanitisation', () => {
       is_escalated: true,
       escalation_reason: 'PLANTED-REASON',
       is_closed: true,
+      // ⚠️ `customer_rating: 5` / `customer_feedback: 'PLANTED-FEEDBACK'` used
+      // to be planted here too (#1505). They are NOT any more, and their
+      // absence is a measurement rather than a tidy-up — see the block below
+      // this insert.
     });
     const stored = await rowById('crm_case', caseId);
 
@@ -166,6 +178,53 @@ describe('crm_case — guest submission sanitisation', () => {
     expect(stored.internal_notes).toBeNull();
     expect(stored.resolution).toBeNull();
     expect(stored.is_escalated).toBe(false);
+
+    // #1505, reconciled with #1428. The plant path is closed BY CONSTRUCTION
+    // rather than by a hook assignment: the maintainer ruled the satisfaction
+    // survey out under ADR-0049 enforce-or-remove, `crm_case` declares neither
+    // column, and the guest branch no longer names them.
+    //
+    // ⚠️ MEASURED while making that change, and it is why the two keys are gone
+    // from the payload above rather than left in as a stronger plant: this
+    // engine REFUSES an undeclared write outright. Re-running this case with
+    // them still in the doc failed the whole insert with
+    //
+    //   Error: Unknown field 'customer_rating' on object 'crm_case'
+    //     ❯ undeclaredWriteFieldErrors @objectstack/objectql
+    //
+    // — before the hooks, before sharing, before security. So a submitter
+    // naming a retired column no longer gets a case with the value dropped;
+    // they get no case at all. Keeping the plant would have made this case
+    // assert the refusal instead of the sanitisation it exists for, and it
+    // would have taken the four assertions above down with it.
+    //
+    // ⚠️ The assertion is ABSENCE, not `toBeNull()`, and the difference is the
+    // whole point of reconciling the two cards. A nulled field and a field that
+    // does not exist are different facts, and `toBeNull()` reads as green
+    // against both — so it would keep passing on the day someone re-declares
+    // `customer_rating` and forgets to strip it, which is exactly the hole
+    // #1505 was filed for. Both halves are checked: the SCHEMA, so this cannot
+    // pass merely because a driver dropped an unknown key on the way in, and
+    // the STORED ROW, so a re-declared column cannot arrive carrying a value.
+
+    // Anti-vacuum for the schema half: an empty or mis-read field map would let
+    // every `not.toHaveProperty` below pass by describing nothing at all.
+    expect(Object.keys(caseFields).length).toBeGreaterThan(20);
+    expect(caseFields, 'caseFields is not crm_case').toHaveProperty('resolution');
+
+    for (const retired of ['customer_rating', 'customer_feedback']) {
+      expect(
+        caseFields,
+        `crm_case re-declares ${retired}. #1428 retired it under ADR-0049 — if it is ` +
+          'coming back, it needs a writer, a profile entry and a surface decided first ' +
+          '(#1428 carries the ruling). ⛔ Do not relax this into a null check.',
+      ).not.toHaveProperty(retired);
+      expect(
+        stored,
+        `${retired} reached the stored row. The column is retired, so this is a ` +
+          're-declaration that skipped the guest branch — ⛔ do not relax the assertion.',
+      ).not.toHaveProperty(retired);
+    }
 
     // The planted owner is gone, and `case_auto_assign` — which runs after this
     // strip, and only on a case the strip left ownerless — placed the case on
@@ -195,19 +254,31 @@ describe('crm_case — guest submission sanitisation', () => {
     // instead of a guest: nothing is blanked. Without this, every assertion
     // above would still pass if the sanitisation lost its `isGuestSubmission`
     // guard and started blanking staff edits too.
+    // ⚰️ `is_escalated: true` was planted here too, and asserted back, until the
+    // @objectstack/* 17.4.0 migration. It is `readonly: true` on `crm_case`, and
+    // objectql 17.4.0 strips a static readonly field from a NON-SYSTEM caller's
+    // INSERT payload as well as from an update. Asserting it came back would now
+    // be pinning a platform write rule locally, which AGENTS.md scope rule 3
+    // forbids — so the planted value is gone rather than re-aimed at the new
+    // contract. The control is unchanged in what it CONTROLS FOR: three distinct
+    // planted values became two, both on user-writable columns, and either one
+    // failing still means the guest strip stopped being guest-scoped.
     const caseId = await insertAs(agentCtx, 'crm_case', {
       subject: 'Escalated by an agent',
       description: 'Raised internally.',
       internal_notes: 'STAFF-NOTES',
       resolution: 'STAFF-RESOLUTION',
-      is_escalated: true,
       escalation_reason: 'Customer is a strategic account',
     });
     const stored = await rowById('crm_case', caseId);
 
     expect(stored.internal_notes).toBe('STAFF-NOTES');
     expect(stored.resolution).toBe('STAFF-RESOLUTION');
-    expect(stored.is_escalated).toBe(true);
+    // #1505's half of this control was `customer_rating` / `customer_feedback`:
+    // an authenticated agent logging a rating had to keep it, or the strip had
+    // stopped being guest-scoped. #1428 retired both columns, so there is no
+    // staff-authored value left to control for — the three fields above carry
+    // the same guarantee, each with a distinct planted value.
   }, 60_000);
 });
 

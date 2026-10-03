@@ -5,6 +5,8 @@ description: HotCRM 客製化的單元、整合與端對端測試 —— 以及 
 
 # 測試與 CI
 
+本應用未隨附繁體中文語言包，因此本頁出現的介面名詞依固定順序取用：zh-CN 語言包已收錄者，採其用詞的繁體寫法；未收錄者，保留產品內的英文原名，不另造譯名。
+
 如何在發佈之前自信地測試你的 HotCRM 客製化。
 
 ## 測試什麼
@@ -30,8 +32,8 @@ import { describe, it, expect } from 'vitest';
 import { ObjectSchema } from '@objectstack/spec/data';
 import { PageSchema, ViewSchema, DashboardSchema } from '@objectstack/spec/ui';
 import { StateMachineSchema } from '@objectstack/spec/automation';
-import opportunityObj from '../src/objects/opportunity.object';
-import opportunityPage from '../src/pages/opportunity_detail.page';
+import opportunityObj from '../src/sales/objects/opportunity.object';
+import opportunityPage from '../src/sales/pages/opportunity_detail.page';
 
 describe('metadata schemas', () => {
   it('opportunity object', () => {
@@ -53,7 +55,7 @@ describe('metadata schemas', () => {
 ```ts
 // test/opportunity_territory.hook.test.ts
 import { it, expect, vi } from 'vitest';
-import territoryHook from '../src/objects/opportunity_territory.hook';
+import territoryHook from '../src/sales/objects/opportunity_territory.hook';
 
 it('assigns territory from account region', async () => {
   const broker = {
@@ -105,12 +107,12 @@ it('creates a renewal task when contract enters renewal window', async () => {
 
 ## 4. AI 技能測試
 
-當你對 LLM 進行 mock 時，技能是確定性的。範例測試的是一個假想的 `renewal-pitch` 技能（內建技能位於 `src/skills/`）：
+當你對 LLM 進行 mock 時，技能是確定性的。範例測試的是一個假想的 `renewal-pitch` 技能（內建技能位於 `src/sales/skills/` 與 `src/service/skills/`）：
 
 ```ts
 // test/renewal-pitch.skill.test.ts
 import { runSkill } from '@objectstack/runtime/ai/testing';
-import renewalPitch from '../src/skills/renewal-pitch.skill';
+import renewalPitch from '../src/sales/skills/renewal-pitch.skill';
 
 it('produces a pitch with citations', async () => {
   const result = await runSkill(renewalPitch, {
@@ -263,5 +265,5 @@ const accounts = await rt.seed.accountFactory(50, { tier: 'platinum' });
 - ✅ **對 AI 提示拍快照** —— 微小的提示變更會明顯改變輸出。
 - ✅ **雙向測試共用** —— 使用者能看到什麼 + 不能看到什麼。
 - ✅ 在 CI 中使用 **確定性的 LLM mock**；真實 LLM 測試在獨立的工作流程中每晚執行。
-- ✅ 讓 E2E 測試少而 **關鍵** —— 涵蓋登入、線索轉化、成交、案例解決。
+- ✅ 讓 E2E 測試少而 **關鍵** —— 涵蓋登入、線索轉化、成交、工單解決。
 - ✅ **在每次推廣到 UAT 之前** 執行完整套件 —— 絕不部署一個失敗的建構。

@@ -5,7 +5,7 @@ description: 新增 AI skills，并注册到 HotCRM stack。
 
 # AI Skills
 
-AI skills 位于 `src/skills/`，并从 `src/skills/index.ts` 注册。
+AI skills 位于拥有它的那个包的 `skills/` 目录下——今天是 `src/sales/skills/` 与 `src/service/skills/`——每个包各自从该目录的 `index.ts` 重新导出自己的 skill。
 
 HotCRM **不定义任何自己的 agent** —— 不存在 `src/agents/` 目录。Skills 附着在每个
 ObjectStack 环境已自带的平台助手（`ask`）之上。把 skill 注册进 `allSkills` 就是全部
@@ -14,7 +14,7 @@ ObjectStack 环境已自带的平台助手（`ask`）之上。把 skill 注册�
 ## 新增 skill
 
 ```ts
-// src/skills/renewal_pitch.skill.ts
+// src/sales/skills/renewal_pitch.skill.ts
 import { defineSkill } from '@objectstack/spec';
 
 export const RenewalPitchSkill = defineSkill({
@@ -30,16 +30,20 @@ account and contract records, summarize risk, and draft a concise
 
 ## 注册
 
-导出该 skill 并把它加入 `allSkills` —— 这个数组正是 `objectstack.config.ts` 传给
-`defineStack({ skills })` 的内容：
+注册分两步，漏掉第二步会让这个 skill 被静默丢弃。先从它自己所在包的 barrel 重新导出，再把它加入
+`objectstack.composition.ts` 里的 `allSkills` —— 正是这个数组、而不是那个 barrel，被
+`objectstack.config.ts` 传给 `defineStack({ skills })`：
 
 ```ts
-// src/skills/index.ts
+// src/sales/skills/index.ts —— 包自己的 barrel：只做重新导出，别无其它
 export { RenewalPitchSkill } from './renewal_pitch.skill.js';
+```
 
-import { RenewalPitchSkill } from './renewal_pitch.skill.js';
+```ts
+// objectstack.composition.ts —— 全应用的那份清单，由四个包汇集而成
+import { RenewalPitchSkill } from './src/sales/skills/index.js';
 
-export const allSkills: Skill[] = [
+export const allSkills = [
   // …已有的 skills
   RenewalPitchSkill,
 ];

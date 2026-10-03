@@ -10,7 +10,7 @@
 
 ## Summary
 
-HotCRM is a single ObjectStack marketplace app at version `3.0.0`. The app manifest is defined in [`objectstack.config.ts`](../objectstack.config.ts) with id `app.objectstack.hotcrm` and namespace `crm`.
+HotCRM is a single ObjectStack marketplace app at version `3.1.0`. The app manifest is defined in [`objectstack.config.ts`](../objectstack.config.ts) with id `app.objectstack.hotcrm` and namespace `crm`.
 
 ## ObjectStack Validation
 
@@ -18,11 +18,11 @@ The summary `pnpm validate` prints — every figure read straight off the stack 
 loader registers:
 
 ```text
-HotCRM v3.0.0
-Data: 18 Objects  334 Fields
-UI: 1 Apps  14 Views  8 Pages  5 Dashboards  10 Reports  30 Actions
-Logic: 26 Flows
-Security: 12 Positions  6 Permissions
+HotCRM v3.1.0
+Data: 18 Objects  343 Fields
+UI: 1 Apps  14 Views  8 Pages  5 Dashboards  10 Reports  31 Actions
+Logic: 30 Flows
+Security: 12 Positions  7 Permissions
 ```
 
 Validation command:
@@ -31,14 +31,14 @@ Validation command:
 pnpm validate
 ```
 
-> **`30 Actions` is the REGISTRATION count, not a count of distinct action
+> **`31 Actions` is the REGISTRATION count, not a count of distinct action
 > definitions.** One action bound to five objects registers five times, so the
 > source tree's 6 `*.actions.ts` files and this figure answer different
 > questions. The registration count is the calibre this repo states to readers
 > ([#1012](https://github.com/objectstack-ai/hotcrm/issues/1012)): it is the one
 > every other number in the README's inventory sentence already uses, and the
 > only one a guard can re-derive from the stack instead of trusting a
-> hand-maintained figure. The README states the same 26, pinned by
+> hand-maintained figure. The README states the same 27, pinned by
 > `test/docs-metadata-counts.test.ts`.
 >
 > The two figures moved together in #597: `crm_campaign_member` gave up the
@@ -71,9 +71,9 @@ pnpm verify
 
 | Requirement | Value |
 | --- | --- |
-| Node.js | `>=22` |
+| Node.js | `^22.11 \|\| ^24 \|\| >=26` |
 | pnpm | `>=10.0.0` |
-| ObjectStack packages | `17.2.0` |
+| ObjectStack packages | `17.6.0` |
 | Local dev port | `4001` |
 
 Each row above is asserted against `package.json` (`engines`, the `@objectstack/*`
@@ -85,15 +85,15 @@ fact, so it is held to one.
 
 | Area | Source |
 | --- | --- |
-| Objects | `src/objects/*.object.ts` |
-| Object hooks | `src/objects/*.hook.ts`, collected by `src/hooks/index.ts` |
-| Actions | `src/actions/*.actions.ts` |
-| Flows | `src/flows/*.flow.ts` |
-| Skills | `src/skills/*.skill.ts` (skills-only AI surface since #512 — the agent directory is gone) |
-| Views and pages | `src/views/`, `src/pages/` |
-| Dashboards and reports | `src/dashboards/`, `src/reports/` |
-| Security | `src/profiles/`, `src/sharing/` |
-| i18n | `src/translations/` |
+| Objects | `src/*/objects/*.object.ts` |
+| Object hooks | `src/*/objects/*.hook.ts`, collected by each package's `objects/hooks.ts` |
+| Actions | `src/*/actions/*.actions.ts` |
+| Flows | `src/*/flows/*.flow.ts` |
+| Skills | `src/*/skills/*.skill.ts` (skills-only AI surface since #512 — the agent directory is gone) |
+| Views and pages | `src/*/views/`, `src/*/pages/` |
+| Dashboards and reports | `src/*/dashboards/`, `src/*/reports/` |
+| Security | `src/sales/profiles/`, `src/*/sharing/` |
+| i18n | `src/sales/translations/` |
 
 ## Notes
 

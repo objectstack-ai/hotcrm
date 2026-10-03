@@ -2,16 +2,16 @@
 
 import { describe, it, expect } from 'vitest';
 import { ErrorCode } from '@objectstack/spec/api';
-import { allHooks } from '../src/hooks';
-import { REFUSAL_CODES, REFUSE_HELPER } from '../src/objects/_refusal';
+import { allHooks } from '../objectstack.composition';
+import { REFUSAL_CODES, REFUSE_HELPER } from '../src/sales/objects/_refusal';
 import { hookNamed, makeCtx, makeHarness } from './helpers/hook-harness';
 import { extractSandboxBody, makeSandboxEngine, runHookBody } from './helpers/action-sandbox';
-import accountHooks from '../src/objects/account.hook';
-import contactHooks from '../src/objects/contact.hook';
-import opportunityHooks from '../src/objects/opportunity.hook';
-import productHooks from '../src/objects/product.hook';
-import taskHooks from '../src/objects/task.hook';
-import eventHooks from '../src/objects/event.hook';
+import accountHooks from '../src/sales/objects/account.hook';
+import contactHooks from '../src/sales/objects/contact.hook';
+import opportunityHooks from '../src/sales/objects/opportunity.hook';
+import productHooks from '../src/revenue/objects/product.hook';
+import taskHooks from '../src/sales/objects/task.hook';
+import eventHooks from '../src/sales/objects/event.hook';
 
 /**
  * The refusal envelope, pinned where it actually ships (#1075 + #1167).
@@ -41,12 +41,20 @@ import eventHooks from '../src/objects/event.hook';
  * #1167: the in-process path is what this repo tests, and the body-only path is
  * what it ships. They differ — the shipped path re-throws as `SandboxError` and
  * rewrites the message to `hook 'NAME' threw: Error: ORIGINAL`, preserving the
- * original on `innerMessage`. More sharply, the sandbox marshals an allowlist of
- * exactly three properties (`code` as a non-empty string, `status` as a finite
- * number, `fields` as an array) and drops everything else, so an envelope riding
- * a fourth key or on `instanceof` would pass a handler-level test and be
- * silently dead in production. Re-measured on 17.1.0 for this change. Every
- * behavioural assertion below therefore runs the lowered body.
+ * original on `innerMessage`. More sharply, the sandbox marshals an allowlist
+ * and drops everything else, so an envelope riding a key OUTSIDE it — `hint`,
+ * `detail`, or a branch on `instanceof` — would pass a handler-level test and
+ * be silently dead in production. Re-measured on 17.4.0 (#1863 / #1867): the
+ * allowlist is FOUR properties — `code` as a non-empty string, `status` as a
+ * finite number, `fields` as an array, `userMessage` as a string with
+ * non-whitespace in it. This file said three, anchored to 17.1.0, and reached
+ * for "a fourth key" as its example of something silently dead: `userMessage`
+ * IS the fourth key, and it crosses. #1869 adopted it, so `refuse()` now writes
+ * THREE of the four and the clean sentence reaches a consumer on a channel the
+ * `hook 'NAME' threw:` rewrite cannot touch — `src/objects/_refusal.ts` carries
+ * the reading and why the fourth argument defaults to the author's message.
+ * `fields` stays declined. Every behavioural assertion below runs the lowered
+ * body.
  *
  * The wording pins live alongside the envelope, never instead of it — the
  * phrasing is a real contract (#693 / #719).
@@ -81,7 +89,9 @@ describe('the refusal vocabulary is declared once (#1075)', () => {
 
   it('inlines a helper identical in every copy, and identical to the declaration', () => {
     const copies = carriers.map((h) => {
-      const m = /function refuse\(message, code, status\) \{[\s\S]*?\n\s*\}/.exec(h.source);
+      const m = /function refuse\(message, code, status, userMessage = message\) \{[\s\S]*?\n\s*\}/.exec(
+        h.source,
+      );
       expect(m, `hook '${h.name}' carries no extractable refuse() helper`).toBeTruthy();
       return { name: h.name, text: flat(m![0]) };
     });
@@ -90,14 +100,32 @@ describe('the refusal vocabulary is declared once (#1075)', () => {
     expect(unique[0]).toBe(flat(REFUSE_HELPER));
   });
 
-  it('sets exactly the two properties that cross the sandbox boundary', () => {
-    // `hint`, `detail`, `err.name` and `instanceof` are all dropped at the
-    // boundary. The helper's own body is the only place this app writes onto a
-    // refusal, so pinning it here covers every guard at once.
+  it('writes exactly three properties onto the error — what refuse() sets, not what crosses', () => {
+    // Counts WRITES, deliberately, and says so: measured on 17.4.0 four
+    // properties cross and this helper writes three of them, so one assertion
+    // must not claim both lists. The header above pins what crosses.
+    //
+    // Two, until #1869 adopted `userMessage`. The expected value moved with the
+    // helper and not on its own — which is the whole point of counting the
+    // written set here: adding the key had to be a deliberate edit to this
+    // line, and dropping it again turns this red.
+    //
+    // The character class covers BOTH cases on purpose. It was `[a-z]+` until
+    // #1868 — lower-case only, so a write named `err.userMessage` was
+    // undetectable while `err.hint` was caught, i.e. the guard was blind to
+    // precisely the key 17.4.0 added to the allowlist, and precisely the key
+    // this helper now writes. Its exact reach, so the next reader does not
+    // over-read it: dot-notation writes only, in any case; `err['userMessage']
+    // = …` would still be invisible.
     const body = flat(REFUSE_HELPER);
     expect(body).toContain('err.code = code');
     expect(body).toContain('err.status = status');
-    expect(body.match(/err\.[a-z]+ =/g)).toEqual(['err.code =', 'err.status =']);
+    expect(body).toContain('err.userMessage = userMessage');
+    expect(body.match(/err\.[A-Za-z_$][A-Za-z0-9_$]* =/g)).toEqual([
+      'err.code =',
+      'err.status =',
+      'err.userMessage =',
+    ]);
   });
 });
 
@@ -107,7 +135,12 @@ describe('every refusal names a code the platform will echo (#1075)', () => {
   );
 
   it('found every swept call site', () => {
-    expect(sites).toHaveLength(17);
+    // 18 until REQ-0003 added the account capability gate in
+    // `opportunity.hook.ts`; 19 until #549 added the activated-contract
+    // refusal to `account_protection`. The number is hand-maintained on
+    // purpose: a new refusal has to be a deliberate edit here, so a guard that
+    // quietly stopped being swept cannot hide behind a count that follows it.
+    expect(sites).toHaveLength(20);
   });
 
   it('uses only members of the platform ErrorCode enum', () => {
@@ -157,13 +190,20 @@ const refusalFrom = async (hook: AnyRec, opts: AnyRec): Promise<AnyRec | null> =
 /**
  * The envelope AND the wording, on the body that ships.
  *
- * `code`/`status` are read as a pair on purpose: `resolveThrownHttpError` reads
- * `status` first, so a code without a status still falls through to
- * 500 / INTERNAL_ERROR. Asserting them separately would let half an envelope
- * pass. The wording is asserted against `innerMessage` — the shipped path
- * rewrites `message` to `hook 'NAME' threw: Error: ORIGINAL` and keeps the
- * original there — and the rewrite itself is pinned, since it is what a REST
- * consumer reading `message` would see.
+ * `code`/`status` are read as a pair on purpose: measured on 17.4.0,
+ * `resolveThrownHttpError` still reads `status` FIRST, so a code with no status
+ * is filed as a 500 — carrying the code itself, not `INTERNAL_ERROR`
+ * (`code only` maps to 500 / `DELETE_RESTRICTED`). `VALIDATION_FAILED` is the
+ * single exception: the mapper supplies 400 for that code itself, so that one
+ * class survives a dropped status entirely. For the other four, asserting the
+ * pair separately would let half an envelope pass. The wording is asserted
+ * against `innerMessage` — the shipped path rewrites `message` to
+ * `hook 'NAME' threw: Error: ORIGINAL` and keeps the original there — and the
+ * rewrite itself is pinned, since it is what a REST consumer reading `message`
+ * would see. `userMessage` is pinned EQUAL to `innerMessage`: since #1869
+ * `refuse()` marks the sentence, and that mark is the half a consumer can read
+ * without the wrapper. `innerMessage` is not a wire field, so asserting only it
+ * would leave the user-facing outcome unpinned.
  */
 const expectEnvelope = (
   err: AnyRec | null,
@@ -176,6 +216,9 @@ const expectEnvelope = (
   expect([err!.code, err!.status]).toEqual([REFUSAL_CODES[cls].code, REFUSAL_CODES[cls].status]);
   expect(String(err!.innerMessage)).toMatch(wording);
   expect(String(err!.message)).toBe(`hook '${hookName}' threw: Error: ${err!.innerMessage}`);
+  expect(err!.userMessage, 'the marked channel carries the sentence, unwrapped').toBe(
+    String(err!.innerMessage),
+  );
 };
 
 describe('every refusal class survives the QuickJS boundary (#1167)', () => {
@@ -262,6 +305,9 @@ const expectInProcess = (
   expect(e.message).toMatch(wording);
   expect(e.innerMessage, 'only the sandbox adds innerMessage').toBeUndefined();
   expect([e.code, e.status]).toEqual([REFUSAL_CODES[cls].code, REFUSAL_CODES[cls].status]);
+  // The mark is written by `refuse()`, so it is identical on both paths — here
+  // `message` is unrewritten, so the two are the same string.
+  expect(e.userMessage, 'refuse() marks the sentence on both paths').toBe(e.message);
 };
 
 const inProcess = async (hook: AnyRec, opts: AnyRec): Promise<unknown> =>

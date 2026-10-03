@@ -4,13 +4,13 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import stack from '../objectstack.config';
-import caseHooks from '../src/objects/case.hook';
+import caseHooks from '../src/service/objects/case.hook';
 import {
   SERVICE_AGENT_POSITION,
   SERVICE_MANAGER_POSITION,
   CLOSED_CASE_STATUSES,
   POOL_QUERY_LIMIT,
-} from '../src/objects/_case-assignment';
+} from '../src/service/objects/_case-assignment';
 import { makeHarness, makeDeniedApi, makeCtx, hookNamed, type Rec } from './helpers/hook-harness';
 import { localePacks } from './helpers/metadata-fixtures';
 

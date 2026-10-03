@@ -5,6 +5,7 @@ import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-automation';
 import stack from '../objectstack.config';
+import { flowGraphDeep, regionsOf } from './helpers/flow-regions';
 
 /**
  * ═══ HOUSE RULE: flow conditions over FLOW VARIABLES ═══════════════════════
@@ -134,11 +135,9 @@ import stack from '../objectstack.config';
  *
  * ### What measured CLEAN, and why that is not the same as safe
  *
- *   - `demo_bootstrap` (`vars.firstUser`) — `get_user` dominates every read and
- *     binds `null` when the org has no users yet; the whole flow completes on a
- *     zero-user org (reproduced below). Nothing to fix.
- *   - `lead_conversion`'s `vars.matchedAccount` / `vars.matchedContact` — same
- *     shape, same reason: a `get_record` dominates each read. Nothing to fix,
+ *   - `lead_conversion`'s `vars.matchedAccount` / `vars.matchedContact` — a
+ *     `get_record` dominates each read and binds `null` when it matches nothing,
+ *     so every read sees a bound variable. Nothing to fix,
  *     and deliberately NOT guarded — a guard here would be the papering-over
  *     the class table warns about.
  *   - `quote_generation` (`oppRecord.stage`) and `opportunity_approval`
@@ -223,20 +222,19 @@ interface Site {
   kind: 'start' | 'node:condition' | 'node:conditions' | 'edge';
 }
 
-/** A flow's nodes and edges, with every `loop` body region flattened in. */
+/**
+ * A flow's nodes and edges, with EVERY control-flow region flattened in.
+ *
+ * Not just `loop`'s body: since `src/flows/_guarded-iteration.ts` a loop body
+ * is one `try_catch` guard whose `try` region holds the work, and this census
+ * is of the "every site that reads a variable satisfies X" shape — so a walk
+ * that reached the guard and stopped would keep passing over an emptied set
+ * rather than failing. `flowGraphDeep` reads the platform's own region slot
+ * map, so a region type added later is descended into without this walk having
+ * to be remembered.
+ */
 function graphOf(flow: AnyRec): { nodes: AnyRec[]; edges: AnyRec[] } {
-  const nodes: AnyRec[] = [];
-  const edges: AnyRec[] = [];
-  const walk = (ns: AnyRec[], es: AnyRec[]) => {
-    for (const n of ns ?? []) {
-      nodes.push(n);
-      const body = n.config?.body;
-      if (body) walk(body.nodes ?? [], body.edges ?? []);
-    }
-    edges.push(...(es ?? []));
-  };
-  walk(flow.nodes ?? [], flow.edges ?? []);
-  return { nodes, edges };
+  return flowGraphDeep(flow);
 }
 
 /** Every condition site in every flow that reads at least one flow variable. */
@@ -422,12 +420,15 @@ function boundOnEntry(flow: AnyRec): Map<string, Set<string>> {
   /** Region entries: the container's exit set flows into the region's entry node. */
   const seeds = new Map<string, () => Set<string>>();
   for (const n of nodes) {
-    const body = n.config?.body;
-    if (!body) continue;
-    const bodyIds = new Set<string>((body.nodes ?? []).map((b: AnyRec) => b.id as string));
-    const bodyTargets = new Set<string>((body.edges ?? []).map((b: AnyRec) => b.target as string));
-    for (const id of bodyIds) {
-      if (!bodyTargets.has(id)) seeds.set(id, () => new Set([...(entry.get(n.id) ?? []), ...binds(n)]));
+    // Every region a node declares, not just a loop's body — the `try_catch`
+    // guard each loop body now opens with is itself a container whose `try`
+    // region has an entry node needing the same seed.
+    for (const region of regionsOf(n)) {
+      const bodyIds = new Set<string>((region.nodes ?? []).map((b: AnyRec) => b.id as string));
+      const bodyTargets = new Set<string>((region.edges ?? []).map((b: AnyRec) => b.target as string));
+      for (const id of bodyIds) {
+        if (!bodyTargets.has(id)) seeds.set(id, () => new Set([...(entry.get(n.id) ?? []), ...binds(n)]));
+      }
     }
   }
 
@@ -998,7 +999,7 @@ describe('the two defects, reproduced end-to-end', () => {
   }, 60_000);
 
   it('campaign_enrollment: a campaign that vanished still reaches a verdict', async () => {
-    const b = await boot(['campaign_enrollment']);
+    const b = await boot(['campaign_enrollment', 'campaign_lead_member_enroll', 'campaign_contact_member_enroll']);
     try {
       const api = b.ql.createContext({ isSystem: true });
       const camp = await api.object('crm_campaign').insert({
@@ -1025,7 +1026,7 @@ describe('the two defects, reproduced end-to-end', () => {
   }, 60_000);
 
   it('campaign_enrollment: an OPEN campaign still enrols, so the guard did not close the door', async () => {
-    const b = await boot(['campaign_enrollment']);
+    const b = await boot(['campaign_enrollment', 'campaign_lead_member_enroll', 'campaign_contact_member_enroll']);
     try {
       const api = b.ql.createContext({ isSystem: true });
       const camp = await api.object('crm_campaign').insert({
@@ -1062,7 +1063,7 @@ describe('the two defects, reproduced end-to-end', () => {
     // engine refuses to produce. If a platform upgrade drops that enforcement,
     // this goes red and the declared default becomes the only thing standing
     // between edge e4/e7 and a `No such key` abort.
-    const b = await boot(['campaign_enrollment']);
+    const b = await boot(['campaign_enrollment', 'campaign_lead_member_enroll', 'campaign_contact_member_enroll']);
     try {
       const api = b.ql.createContext({ isSystem: true });
       const camp = await api.object('crm_campaign').insert({
@@ -1098,7 +1099,7 @@ describe('the two defects, reproduced end-to-end', () => {
     // dialog pre-set to `leads` and the LEAD branch. The declared default
     // defers to the param, and the screen field derives its prefill from the
     // variable — so what the caller asked for is what the user sees.
-    const b = await boot(['campaign_enrollment']);
+    const b = await boot(['campaign_enrollment', 'campaign_lead_member_enroll', 'campaign_contact_member_enroll']);
     try {
       const api = b.ql.createContext({ isSystem: true });
       const camp = await api.object('crm_campaign').insert({
@@ -1187,29 +1188,46 @@ describe('the two defects, reproduced end-to-end', () => {
         status: 'qualified', email: 'jo@acme.com',
       });
       const started = await b.engine.execute('lead_conversion', asUser({ recordId: lead.id }));
+      // `closeDate` joined the screen's contract in #1708, so the bag carries
+      // it — and it carries a date the REP CHOSE, which is the half that can
+      // be measured. The prefill is what the console would post untouched, but
+      // posting it back cannot tell "the node wrote what the screen collected"
+      // apart from "the node stamped its own +90 that happens to equal the
+      // prefill": measured by ablation, restoring `close_date: '{TODAY() +
+      // 90}'` inside `create_opportunity` left every case in this file and its
+      // two siblings green while the resume posted the prefill. So this one
+      // edits it, the way a rep does.
+      //
+      // Derived from the prefill and stepped on ONE calendar (`setUTCDate`),
+      // for two reasons: a hand-written date would rot past the object's
+      // `close_date_future` rule, and it must not restate the +90-day literal,
+      // which the screen field authors in exactly one place. The two sibling
+      // conversion suites post the prefill untouched, so the default path is
+      // covered there.
+      const screen = started.screen ?? started.output?.screen ?? null;
+      const prefill = ((screen?.fields ?? []) as AnyRec[]).find((f) => f.name === 'closeDate')?.defaultValue;
+      expect(typeof prefill, 'the conversion screen no longer prefills a close date').toBe('string');
+      const chosen = new Date(`${String(prefill)}T00:00:00Z`);
+      chosen.setUTCDate(chosen.getUTCDate() + 7);
+      const closeDate = chosen.toISOString().slice(0, 10);
+      expect(closeDate, 'the chosen date collapsed onto the prefill — this pin would prove nothing')
+        .not.toBe(prefill);
       const done = await b.engine.resume(started.runId, {
-        variables: { createOpportunity: true, opportunityName: 'Acme Deal', opportunityAmount: 50_000 },
+        variables: { createOpportunity: true, opportunityName: 'Acme Deal', opportunityAmount: 50_000, closeDate },
       });
       expect(done.error ?? null).toBeNull();
       const opp = await api.object('crm_opportunity').findOne({ where: { name: 'Acme Deal' } });
       expect(opp, 'the seeded default overrode the user answer').toBeTruthy();
+      // The date the rep ANSWERED is the date the opportunity carries (#1708).
+      // The field list pins that the screen asks; this pins that the answer is
+      // what gets written, which is the whole card: `close_date` is what files
+      // a deal into a forecast period, so a date nobody chose is a forecast
+      // nobody chose.
+      expect(opp?.close_date, 'the opportunity was filed on a date the rep never chose')
+        .toBe(closeDate);
       // The resume signal wins over the declared default, same as it won over
       // the assignment node it replaced (#1155) — a default that could not be
       // answered would make the checkbox decorative.
-    } finally {
-      await b.close();
-    }
-  }, 60_000);
-
-  it('demo_bootstrap: a zero-user org completes instead of aborting', async () => {
-    // The `vars.firstUser` reads measured CLEAN — `get_user` dominates them and
-    // binds `null`. This pins that, so a future edit that moves the read above
-    // the `get_record` is caught here rather than on a demo org.
-    const b = await boot(['demo_bootstrap']);
-    try {
-      const done = await b.engine.execute('demo_bootstrap', {});
-      expect(done.error ?? null).toBeNull();
-      expect(done.success).not.toBe(false);
     } finally {
       await b.close();
     }

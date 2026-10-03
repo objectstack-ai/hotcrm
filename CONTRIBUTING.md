@@ -149,21 +149,37 @@ Maintainers will run this command to consume all changesets and update package v
 pnpm changeset:version
 ```
 
+It runs `changeset version` through `scripts/changeset-version.mjs`. Two things
+about this repo make that wrapper necessary rather than decorative:
+
+- `hotcrm` is `private: true` and versions **itself** — `.changeset/config.json`
+  sets `privatePackages: { version: true }`, without which `@changesets/cli` 3.x
+  stops bumping the version and stops writing `CHANGELOG.md` **while exiting 0
+  with a success message**.
+- Running it with nothing pending is an ordinary answer, not a broken release.
+  `@changesets/cli` 3.x exits 1 there (2.x exited 0); the wrapper reports it as
+  "nothing to release" and exits 0. Every other failure still exits non-zero.
+
 ### Publishing
 
-After versions are updated, maintainers can publish all packages:
+Nothing in this repo is published to an npm registry. `hotcrm` is the only package
+Changesets sees and it is `private: true`, so `changeset publish` has an empty set
+to work on — Changesets' job here ends with the version bump and the `CHANGELOG.md`
+entry it writes.
+
+The app ships to the ObjectStack marketplace instead. Maintainers publish the bundle
+`pnpm build` compiles:
 
 ```bash
-pnpm release
+pnpm publish:marketplace:dry-run   # print the payloads without sending them
+pnpm publish:marketplace           # publish
 ```
 
-This command runs `pnpm build && changeset publish`, which:
-1. Compiles all TypeScript source into `dist/` (JavaScript + type declarations)
-2. Publishes each non-private package to the configured npm registry
-
-Only the compiled `dist/` folder is included in published packages (controlled by the `files` field in each `package.json`). Source code (`.ts` files) is **never** published to the registry.
-
-> **Note**: Packages are published to a private GitHub Packages registry (`https://npm.pkg.github.com`) with `restricted` access. The root `hotcrm` package is `private: true` — Changesets versions it and writes its `CHANGELOG.md`, but never publishes it to a registry; the app ships through the marketplace instead (`pnpm publish:marketplace`). See `docs/RELEASE_STRATEGY.md` for the full distribution strategy.
+> **Note**: publishing is one step of a longer release sequence, and
+> [`docs/RELEASE_STRATEGY.md`](docs/RELEASE_STRATEGY.md) is that runbook — version
+> sources, the `objectstack.config.ts` manifest version `changeset version` does not
+> touch, and the artifacts to confirm before announcing. It is the single source of
+> truth for the release process, so this section links to it rather than restating it.
 
 ## 🔄 Pull Request Process
 
@@ -188,7 +204,10 @@ Only the compiled `dist/` folder is included in published packages (controlled b
    - Ensure CI checks pass
 
 4. **Getting Merged**
-   - At least one approval required
+   - Who may land a PR, and when, is defined in [`AGENTS.md`](AGENTS.md)
+     §How a green PR lands — a PR whose checks have all finished with none
+     failed lands via auto-merge; a diff touching a governed path stays a
+     draft for the maintainer
    - All CI checks must pass
    - No merge conflicts
    - Branch will be squash-merged

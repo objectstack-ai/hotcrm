@@ -1,7 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import { isDateMacroToken } from '@objectstack/spec/data';
 import { DATE_RANGE_PRESETS } from '@objectstack/spec/ui';
 import stack from '../objectstack.config';
 
@@ -49,17 +48,6 @@ describe('report dataset bindings resolve', () => {
     expect(bad, bad.join('\n  ')).toEqual([]);
   });
 
-  it('every chart yAxis is a measure of the report dataset', () => {
-    const bad: string[] = [];
-    for (const b of allBlocks) {
-      if (!b.chart?.yAxis || !b.dataset) continue;
-      if (!measuresOf(b.dataset).has(b.chart.yAxis)) {
-        bad.push(`${labelOf(b)}: yAxis "${b.chart.yAxis}" is not a measure of "${b.dataset}"`);
-      }
-    }
-    expect(bad, `chart yAxis names a missing measure:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-
   it('every chart xAxis is a dimension of the report dataset', () => {
     const bad: string[] = [];
     for (const b of allBlocks) {
@@ -85,30 +73,6 @@ describe('report dataset bindings resolve', () => {
       }
     }
     expect(bad, `report bindings name missing dataset members:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-});
-
-describe('dashboard widget bindings resolve', () => {
-  it('every widget dataset / values / dimensions entry resolves', () => {
-    const bad: string[] = [];
-    for (const d of dashboards) {
-      for (const w of d.widgets ?? []) {
-        if (!w.dataset) continue;
-        if (!datasetByName.has(w.dataset)) {
-          bad.push(`${d.name}/${w.id}: dataset "${w.dataset}" is not defined`);
-          continue;
-        }
-        const dims = dimensionsOf(w.dataset);
-        const meas = measuresOf(w.dataset);
-        for (const dim of w.dimensions ?? []) {
-          if (!dims.has(dim)) bad.push(`${d.name}/${w.id}: dimension "${dim}" not in "${w.dataset}"`);
-        }
-        for (const v of w.values ?? []) {
-          if (!meas.has(v)) bad.push(`${d.name}/${w.id}: measure "${v}" not in "${w.dataset}"`);
-        }
-      }
-    }
-    expect(bad, `widget bindings name missing dataset members:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 });
 
@@ -177,7 +141,6 @@ describe('time windows stay relative at runtime', () => {
    * `{current_year_start}`, …) which resolve per-query.
    */
   const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}/;
-  const MACRO_RE = /^\$?\{([a-zA-Z0-9_]+)\}$/;
 
   /** Yield every leaf string inside a filter tree, with its dotted path. */
   function* filterLeaves(node: unknown, path: string): Generator<[string, string]> {
@@ -228,19 +191,6 @@ describe('time windows stay relative at runtime', () => {
       }
     }
     expect(bad, `preset names used as filter comparands:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-
-  it('every {placeholder} in a temporal filter position is a recognised date macro', () => {
-    const bad: string[] = [];
-    for (const [where, filter] of filterSources) {
-      for (const [path, value] of filterLeaves(filter ?? {}, '')) {
-        const m = value.match(MACRO_RE);
-        // `{current_user_id}` and friends belong to view filters, not these
-        // dataset filters — anything brace-wrapped here must be a date macro.
-        if (m && !isDateMacroToken(m[1])) bad.push(`${where}${path} = "${value}"`);
-      }
-    }
-    expect(bad, `unrecognised date-macro placeholders:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 });
 

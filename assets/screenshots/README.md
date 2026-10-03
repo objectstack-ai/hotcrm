@@ -32,7 +32,11 @@ Use public paths such as `/screenshots/hotcrm/lead-detail/en.png` from MDX.
 
 ## Adding or refreshing a screen
 
-1. Capture the same reviewed product state in `en` and `zh-Hans`.
+1. Capture the same reviewed product state in `en` and `zh-Hans`. Those two
+   locale keys are the whole set on purpose, and the reason — not just the
+   rule — is written out in
+   `hotcrm/executive-dashboard/meta.yaml`, including how to re-test it. Read it
+   before adding a third locale.
 2. Replace both locale files and update their colocated `meta.yaml` in one
    change. Keep the real file extension (`.jpg` for JPEG, `.png` for PNG).
 3. Run the sync command and verify both documentation locales in a browser.

@@ -2,7 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import stack from '../objectstack.config';
-import eventHooks from '../src/objects/event.hook';
+import eventHooks from '../src/sales/objects/event.hook';
 import { makeHarness, makeDeniedApi, makeCtx, hookNamed, type Rec } from './helpers/hook-harness';
 
 /**

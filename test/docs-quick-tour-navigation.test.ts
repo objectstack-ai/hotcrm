@@ -4,13 +4,13 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
-import { CrmApp } from '../src/apps/crm.app';
-import { ExecutiveDashboard } from '../src/dashboards/executive.dashboard';
-import { CrmOverviewDashboard } from '../src/dashboards/crm.dashboard';
-import { ServiceDashboard } from '../src/dashboards/service.dashboard';
-import { ActivityDashboard } from '../src/dashboards/activity.dashboard';
-import { SalesManagerProfile } from '../src/profiles/sales-manager.profile';
-import { CrmPositions } from '../src/sharing/positions';
+import { CrmApp } from '../src/sales/apps/crm.app';
+import { ExecutiveDashboard } from '../src/sales/dashboards/executive.dashboard';
+import { CrmOverviewDashboard } from '../src/sales/dashboards/crm.dashboard';
+import { ServiceDashboard } from '../src/service/dashboards/service.dashboard';
+import { ActivityDashboard } from '../src/sales/dashboards/activity.dashboard';
+import { SalesManagerProfile } from '../src/sales/profiles/sales-manager.profile';
+import { CrmPositions } from '../src/sales/sharing/positions';
 
 /**
  * The quick-tour page's left-nav table, pinned to `src/apps/crm.app.ts` (#960).
@@ -416,7 +416,10 @@ const EXEC_TILES = tileTitles(ExecutiveDashboard as AnyRec);
 
 /** Dashboard-level filter labels the section names as controls. */
 const EXEC_FILTER_LABELS = (((ExecutiveDashboard as AnyRec).globalFilters ?? []) as AnyRec[])
-  .map((f) => f.label as string)
+  // `label` is `I18nLabelSchema` — a string OR an inline `{ en, 'zh-CN', … }`
+  // locale map (#1822). Every rendered spelling counts as a real name here:
+  // the Chinese pages bold what the Chinese UI shows.
+  .flatMap((f) => (typeof f.label === 'string' ? [f.label] : Object.values(f.label ?? {})) as string[])
   .filter(Boolean);
 
 const ALLOWED_BOLD_SECTION1 = new Set<string>([
@@ -457,7 +460,7 @@ const SECTION1 = [
     heading: '## 1. 主页仪表盘',
     count: /9 个磁贴/,
     retired: [
-      '等待你响应的案例',
+      '等待你响应的工单',
       '按管道价值排名的顶级客户',
       '近期活动（最近的通话、会议、邮件）',
       '给经理看的团队级汇总',
@@ -470,7 +473,7 @@ const SECTION1 = [
     heading: '## 1. 主頁儀表板',
     count: /9 個磁貼/,
     retired: [
-      '等待你回應的案例',
+      '等待你回應的工單',
       '按管道價值排名的頂級客戶',
       '近期活動（最近的通話、會議、郵件）',
       '給經理看的團隊級彙總',
@@ -575,7 +578,7 @@ describe('the source facts the quick-tour landing section now rests on (#971)', 
     // it is the ninth tile, and it is the reason the "opportunities in your
     // pipeline" bullet was half-right rather than simply wrong.
     const inlineTitles = (readFileSync(
-      join(REPO_ROOT, 'src/dashboards/executive.dashboard.ts'),
+      join(REPO_ROOT, 'src/sales/dashboards/executive.dashboard.ts'),
       'utf8',
     ).match(/title: '/g) ?? []).length;
     expect(inlineTitles).toBe(EXEC_TILES.length - 1);

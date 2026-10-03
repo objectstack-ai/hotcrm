@@ -10,7 +10,6 @@ import {
   pages,
   views,
   objectNames,
-  profileNames,
   PLATFORM_OBJECTS,
   fieldsOf,
   walk,
@@ -21,13 +20,13 @@ import {
  *
  * `os validate` / `build` check metadata SHAPE — that a page declares a
  * `relationshipField`, that a view section lists `fields` — but never that the
- * named field, object, or profile actually exists. Every reference below was a
- * real defect found by clicking through the app, and each failed silently: the
- * related list rendered "0", the form section rendered blank, the profile
- * assignment matched nobody. Nothing errored, so nothing was noticed.
+ * named field or object actually exists. Every reference below was a real
+ * defect found by clicking through the app, and each failed silently: the
+ * related list rendered "0", the form section rendered blank. Nothing errored,
+ * so nothing was noticed.
  *
- * These tests resolve every UI reference against the objects/profiles the app
- * really defines, so the next bad name fails in CI instead of in a demo.
+ * These tests resolve every UI reference against the objects the app really
+ * defines, so the next bad name fails in CI instead of in a demo.
  *
  * ---
  *
@@ -414,32 +413,31 @@ describe('page component references resolve', () => {
    * reordered, and the five rejected entries of one `actions` array are one
    * line rather than five).
    *
-   *   …/*_header :: actions[] — the spec and the renderer disagree about this
-   *   key, and the source can only satisfy one of them. `PageHeaderProps.actions`
-   *   is `z.array(z.string())` ("Action IDs"), but objectui's canonical
-   *   `page:header` renderer consumes ActionDef OBJECTS: it filters the array
-   *   through `actionRendersAt(a, 'record_header')`, reads `a.requiredPermissions`
-   *   / `a.visible` / `a.name` / `a.order`, and every test it ships authors
-   *   objects. A string has no `.locations`, so rewriting these four arrays as
-   *   ids would turn this guard green and delete every header button from four
-   *   record pages — Convert Lead, Generate Quote, Escalate Case, and the
-   *   activity trio #592 put there. Deciding which side moves is a product
-   *   call, not a conformance edit. Filed as #1279, which carries the
-   *   renderer evidence and the three ways out.
+   *   …/*_header :: actions[] — RESOLVED, exemption removed (#1653). The entry
+   *   rested on a renderer argument: `PageHeaderProps.actions` is
+   *   `z.array(z.string())` ("Action IDs"), objectui's `page:header` renderer
+   *   was measured consuming ActionDef OBJECTS, and the exemption held the
+   *   source on the renderer's side. Maintainer ruling of 2026-09-06, verbatim
+   *   and untranslated — 「元数据项目不应该依赖 @object-ui/components」 — settles
+   *   which side moves: this repo declares zero `@object-ui/*` dependencies, so
+   *   a renderer's current behaviour was never its authority, and cannot even
+   *   be measured from here. The four headers now author action ids per
+   *   `@objectstack/spec` 17.3.0 and conform. Renderer-side id resolution is
+   *   objectui#6252 / #7182 (ruled 2026-09-02, option C, "ids are the
+   *   contract"), not this repo's.
    *
-   *   …/*_details :: sections[].collapsible — the same disagreement pointing
-   *   the other way. `RecordDetailsProps`' section shape is strict
-   *   `{ name?, label?, columns?, fields }`, but objectui's record-details
-   *   renderer spreads the authored section through (`...s`) into
-   *   `DetailSection`, which reads `section.collapsible` and renders a
-   *   `<Collapsible>` card with a chevron. So this key WORKS today: deleting it
-   *   to satisfy the schema would remove a working affordance from both
-   *   Description sections. The spec's own rule (#5611/#6276 — the delivered
-   *   shape is the contract, which is how `alwaysShowStrip`, `maxVisible`,
-   *   `inlineEdit` and `hideFields` came to be declared) says the declaration
-   *   is what should move — and that is already filed upstream, with the same
-   *   measurement plus its `hideEmpty` sibling, as
-   *   objectstack-ai/objectstack#11289 (via #1249).
+   *   …/*_details :: sections[].collapsible — RESOLVED UPSTREAM, exemption
+   *   removed. The disagreement pointed the other way: the key WORKED (objectui
+   *   spreads the authored section into `DetailSection`, which renders a
+   *   `<Collapsible>` card) while `RecordDetailsProps` refused to declare it, so
+   *   the spec's own rule — the delivered shape is the contract, which is how
+   *   `alwaysShowStrip`, `maxVisible`, `inlineEdit` and `hideFields` came to be
+   *   declared — said the DECLARATION should move. Filed as
+   *   objectstack-ai/objectstack#11289 (via #1249); it landed in the platform
+   *   17.3.0 line, and the 17.2.0 -> 17.3.0 upgrade is what surfaced it here:
+   *   `os validate` stopped raising the two `collapsible` advisories and this
+   *   guard's own stale-exemption arm went red naming both lines. Nothing in
+   *   this repo changed shape — the schema caught up with the renderer.
    *
    *   sales_home_page/ai_briefing :: description — `page:card` does not declare
    *   `description`, so the paragraph renders nowhere; the fix is to move the
@@ -449,12 +447,6 @@ describe('page component references resolve', () => {
    *   it means rewriting a ruling-backed guard. Filed as #1216.
    */
   const KNOWN_UNCONFORMING = new Set([
-    'account_detail_page/account_header_slotted :: actions[]',
-    'case_detail_page/case_header :: actions[]',
-    'lead_detail_page/lead_header :: actions[]',
-    'opportunity_detail_page/opp_header :: actions[]',
-    'case_detail_page/case_details :: sections[].collapsible',
-    'opportunity_detail_page/opp_details :: sections[].collapsible',
     'sales_home_page/ai_briefing :: description',
   ]);
 
@@ -589,16 +581,6 @@ describe('page component references resolve', () => {
       }
     }
     expect(bad, `dangling path stages:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-
-  it('assignedProfiles name real profiles', () => {
-    const bad: string[] = [];
-    for (const page of pages) {
-      for (const p of page.assignedProfiles ?? []) {
-        if (!profileNames.has(p)) bad.push(`${page.name}: profile "${p}" is not defined`);
-      }
-    }
-    expect(bad, `dangling profile assignments:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
   /**
@@ -989,42 +971,23 @@ describe('forms can actually author the data the views depend on', () => {
   });
 
   /**
-   * Fields this guard's `isAuthorable` proxy calls authorable and the app
-   * knows are STAMPED — written only by a hook, a flow or an action, never
-   * typed by a person.
+   * ⭐ The `STAMPED_NOT_TYPED` exemption that stood here is DELETED (#1434,
+   * maintainer-approved decision batch #21 ②), together with its reverse pins.
    *
-   * The proxy reads `readonly` to mean "stamped", and on `crm_case.is_escalated`
-   * that read is unavailable — though NOT for the blanket reason this block
-   * used to give ("the platform drops writes to readonly fields"). Measured in
-   * `test/readonly-write-semantics.test.ts` (#1429) on 17.1.0 and RE-MEASURED
-   * there on the current pin 17.2.0 (#1460), same result both times: the
-   * strip is one branch of the UPDATE path — `if (!opCtx.context?.isSystem)` —
-   * applied to CALLER-supplied keys only. So a `beforeUpdate` hook's own stamp
-   * survives it, an insert is exempt from it, and a flow write survives it
-   * exactly when the flow's effective `runAs` is `'system'`.
+   * It existed for exactly one field, `crm_case.is_escalated`, and only because
+   * one of that field's writers — the `escalate_case` screen flow — ran
+   * `runAs: 'user'`, so a `readonly: true` declaration would have silently
+   * dropped its write. The ruling removed the cause rather than documenting it:
+   * the stamp moved into the dedicated `runAs: 'system'` `case_escalation_stamp`
+   * sub-flow, `escalate_case` kept the acting user's context, and
+   * `is_escalated` / `escalated_date` are now honestly `readonly: true`.
    *
-   * `is_escalated` still cannot be declared readonly, because the LEAST
-   * privileged of its three writers decides: `case_escalation` and
-   * `case_sla_monitor` declare `runAs: 'system'`, but the `escalate_case`
-   * screen flow declares no `runAs` and the engine defaults it to `'user'`.
-   * Declaring the field readonly would silently drop that flow's write while
-   * it still reported success. The declaration cannot be made honest, so the
-   * exception is recorded here instead of hidden by putting the field back on
-   * a form.
-   *
-   * ⛔ An entry needs the writers that own the field and the reason a person
-   * never types it. "It fails the guard" is not a reason.
+   * With that, `isAuthorable()` below skips both fields for the RIGHT reason —
+   * they are declared readonly — and no exemption list is needed to hide them
+   * from this guard. If you are about to re-add one here for an escalation
+   * field, re-read #1434 first: the answer was a `subflow` node, not an
+   * exemption.
    */
-  const STAMPED_NOT_TYPED: Record<string, string> = {
-    // #1214 item 3: the case create form is the intake form, and escalation is
-    // not an intake fact. `is_escalated` is written by `case_escalation`,
-    // `case_sla_monitor` and the `escalate_case` screen flow, plus the
-    // guest-submission branch of `case.hook.ts` that forces it false — and by
-    // nothing a user types. `escalated_cases` filtering on it is correct:
-    // the rows come from those flows.
-    'crm_case.is_escalated':
-      'stamped by case_escalation / case_sla_monitor / escalate_case; cannot be declared readonly because escalate_case runs runAs:"user" and a user-context flow write to a readonly field IS stripped (measured on 17.1.0 — test/readonly-write-semantics.test.ts). Note this is NOT the blanket "the platform drops flow writes to readonly fields": the other two writers declare runAs:"system" and would survive. The least-privileged writer decides.',
-  };
 
   it('fields the list views filter on are editable in some form', () => {
     // account views filter on type/health_score, but the account form never
@@ -1045,7 +1008,6 @@ describe('forms can actually author the data the views depend on', () => {
       for (const name of filtered) {
         const field = objDef.fields?.[name];
         if (!isAuthorable(field)) continue; // readonly/derived fields are hook-stamped, not typed in
-        if (`${objectName}.${name}` in STAMPED_NOT_TYPED) continue; // stamped, but undeclarable as such
         if (!editable.has(name)) {
           bad.push(`${objectName}: views filter on "${name}" but no form lets a user set it`);
         }
@@ -1133,8 +1095,8 @@ describe('page templates and record components stay inside their record context'
  * (`first_name: "Mira"`, `company: "Atlas Construction"`, `status: "contacted"`,
  * …), no console errors.
  *
- * Scope note: named forms under `formViews` (`quick_create`,
- * `lead_conversion_wizard`, …) still carry `data` blocks. The liveness rule does
+ * Scope note: named forms under `formViews` (`lead_conversion_wizard`,
+ * `split_edit`, …) still carry `data` blocks. The liveness rule does
  * NOT flag those and they have not been measured — a create form has no record
  * in the route context, so the same reasoning may not hold. They are left alone
  * deliberately; measure first if you plan to remove them.

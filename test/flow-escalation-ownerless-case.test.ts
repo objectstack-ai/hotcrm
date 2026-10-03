@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import { CaseEscalationFlow, CaseEscalationOnCreateFlow } from '../src/flows/case-escalation.flow';
+import { CaseEscalationFlow, CaseEscalationOnCreateFlow } from '../src/service/flows/case-escalation.flow';
 import { makeFlowHarness, type Rec } from './helpers/flow-harness';
 
 /**

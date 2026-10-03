@@ -1,7 +1,11 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import { CampaignEnrollmentFlow } from '../src/flows/campaign-enrollment.flow';
+import { CampaignEnrollmentFlow } from '../src/marketing/flows/campaign-enrollment.flow';
+import {
+  CampaignLeadMemberEnrollFlow,
+  CampaignContactMemberEnrollFlow,
+} from '../src/marketing/flows/campaign-member-enroll.flow';
 import { makeFlowHarness, type Rec } from './helpers/flow-harness';
 
 /**
@@ -53,7 +57,17 @@ const contacts = (): Rec[] => [
 const SCREEN = { memberSource: 'leads', leadStatus: 'new', contactDepartment: 'engineering' };
 
 async function enrol(seed: Rec = {}, screen: Rec = SCREEN) {
-  const h = makeFlowHarness({ campaign_enrollment: CampaignEnrollmentFlow }, {
+  // The two callees are registered because the enrollment INSERT lives in them
+  // now, not in the screen flow: `added_date` is readonly and objectql 17.4.0
+  // strips a readonly column from a non-system INSERT, so the write is handed to
+  // a dedicated `runAs: 'system'` sub-flow (AGENTS.md house rule 9). A `subflow`
+  // node resolves its callee BY NAME off the engine's registry — leave them out
+  // and every enrolment assertion below reads back an empty member table.
+  const h = makeFlowHarness({
+    campaign_enrollment: CampaignEnrollmentFlow,
+    campaign_lead_member_enroll: CampaignLeadMemberEnrollFlow,
+    campaign_contact_member_enroll: CampaignContactMemberEnrollFlow,
+  }, {
     crm_campaign: [campaign()],
     crm_lead: leads(),
     crm_contact: contacts(),
@@ -138,7 +152,7 @@ describe('campaign_enrollment — contacts (#597)', () => {
     expect(members.map((m) => m.crm_contact).sort()).toEqual(['c_eng', 'c_eng2']);
     for (const m of members) {
       expect(m.crm_campaign).toBe('cmp1');
-      expect(m.crm_lead, 'a contact member must not also claim a lead').toBeUndefined();
+      expect(m.crm_lead, 'a contact member must not also claim a lead').toBeNull();
       expect(m.status).toBe('sent');
       expect(m.added_date, 'added_date should be stamped').toBeTruthy();
     }

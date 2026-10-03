@@ -11,18 +11,24 @@ HotCRM releases as one ObjectStack app package:
 | npm package name | `hotcrm` |
 | ObjectStack manifest id | `app.objectstack.hotcrm` |
 | Namespace | `crm` |
-| Current version | `3.0.0` |
+| Current version | `3.1.0` |
 | Publish artifact | output from `pnpm build` |
 
 The active repository is not released as separate scoped npm packages.
 
 ## Version Sources
 
-Keep these aligned for each release:
+`changeset version` writes the first two from the changesets a release has
+accumulated — ⛔ do not hand-edit either:
 
 - `package.json` `version`
-- `objectstack.config.ts` manifest `version`
-- `CHANGELOG.md`
+- `CHANGELOG.md` — the new release section is spliced in under the `# Changelog`
+  title, and everything already below it is kept byte-for-byte
+
+The remaining two are matched by hand to the version it just wrote:
+
+- `objectstack.config.ts` manifest `version` — `pnpm verify` fails if this drifts
+  from `package.json`
 - marketplace publish note
 
 ## Release Checklist
@@ -34,36 +40,62 @@ Keep these aligned for each release:
    pnpm verify
    ```
 
-3. Update `CHANGELOG.md`.
-4. Confirm `package.json` and `objectstack.config.ts` carry the same version.
-5. Build the artifact:
+3. Cut the version. This one command writes `CHANGELOG.md` and bumps
+   `package.json` — ⛔ do not hand-write either:
+
+   ```bash
+   pnpm changeset:version   # changeset version
+   ```
+
+   Then set the `objectstack.config.ts` manifest `version` to the version it just
+   wrote — `changeset version` does not touch that file, and `pnpm verify` is
+   what catches the drift.
+
+4. Build the artifact:
 
    ```bash
    pnpm build
    ```
 
-6. Publish or dry-run publish:
+5. Publish or dry-run publish:
 
    ```bash
    pnpm publish:marketplace:dry-run
    pnpm publish:marketplace
    ```
 
+   The dry-run needs no credentials. The real publish reads `OS_CLOUD_URL` and
+   `OS_CLOUD_API_KEY` from the environment and exits before doing any work if
+   either is missing — see §Marketplace Publish below.
+
 ## Marketplace Publish
 
 The publish script is [`scripts/publish-marketplace.mjs`](../scripts/publish-marketplace.mjs). It is the preferred release path because it keeps marketplace package metadata in one place.
 
-Authenticate once:
+It authenticates in **service mode**: it takes both credentials from the process
+environment and from nowhere else — it reads no credential file and no stored
+session — and it exits before doing any work if either is missing.
+
+| Variable | Value |
+| --- | --- |
+| `OS_CLOUD_URL` | Control plane for the target environment — `https://cloud.objectos.app` (staging), `https://cloud.objectos.ai` (production) |
+| `OS_CLOUD_API_KEY` | Service token: a per-env, org-level secret |
+
+⛔ `objectstack cloud login` does not satisfy this. That command authenticates the
+CLI and stores its own session, which this script never reads — so it reports
+success and the publish still dies with `OS_CLOUD_URL is required`.
+
+Publish:
 
 ```bash
-objectstack cloud login
-```
-
-Then publish:
-
-```bash
+export OS_CLOUD_URL=https://cloud.objectos.app
+export OS_CLOUD_API_KEY=…   # the service token, not a personal login
 pnpm publish:marketplace
 ```
+
+The same two variables are what CI sets, from the secret for the environment it
+publishes to: [`publish-staging.yml`](../.github/workflows/publish-staging.yml) and
+[`publish-production.yml`](../.github/workflows/publish-production.yml).
 
 ## Source Availability
 

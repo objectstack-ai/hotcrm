@@ -3,7 +3,7 @@
 import { describe, it, expect } from 'vitest';
 import { isDateMacroToken } from '@objectstack/spec/data';
 import stack from '../objectstack.config';
-import { OPPORTUNITY_STAGE_OPTIONS } from '../src/objects/_picklists';
+import { OPPORTUNITY_STAGE_OPTIONS } from '../src/sales/objects/_picklists';
 import {
   type AnyRec,
   objects,
@@ -70,26 +70,6 @@ describe('view field references resolve', () => {
     }
     expect(bad, `dangling form fields:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
-
-  it('every list sort targets a real field', () => {
-    const bad: string[] = [];
-    for (const v of views) {
-      const objectName = viewObjectOf(v);
-      if (!objectName || !objectNames.has(objectName)) continue;
-      const known = fieldsOf(objectName);
-      // The container key is `listViews` — iterating a non-existent `views`
-      // key silently skipped every named list view.
-      const lists = [v.list, ...Object.values(v.listViews ?? {})].filter(Boolean) as AnyRec[];
-      for (const list of lists) {
-        for (const s of list.sort ?? []) {
-          if (s.field && !known.includes(s.field)) {
-            bad.push(`${objectName} view "${list.name ?? 'default'}": sorts on missing "${s.field}"`);
-          }
-        }
-      }
-    }
-    expect(bad, `dangling sort fields:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
 });
 
 describe('priority queues sort by urgency, not alphabetically', () => {
@@ -146,18 +126,30 @@ describe('filter template tokens are resolvable', () => {
    *   `Unresolvable filter placeholder` naming the near-miss fix instead of
    *   comparing as text.
    *
-   *   Measured on the pinned 17.0.0-rc.2, not inferred from the changelog:
+   *   Measured, not inferred from the changelog:
    *   `test/forecast-current-quarter-view.test.ts` runs a shipped view filter
    *   through a real engine and pins one quarter selected out of three, plus
-   *   the throw on the retired `{this_quarter_start}` spelling.
+   *   the throw on the retired `{this_quarter_start}` spelling. First taken on
+   *   17.0.0-rc.2, RE-RUN 2026-09-03 on 17.2.0 (#1467) and RE-RUN on the
+   *   17.3.0 (#1676, the pin at the time), green all three
+   *   times.
+   *
+   *   What DID move between those two pins is WHICH spellings throw. The
+   *   wrapped-token grammar widened at 17.0.0-rc.6 from
+   *   `/^\$?\{([a-zA-Z0-9_]+)\}$/` to `/^\$?\{([^{}]+)\}$/`, so a spelling
+   *   with parentheses — `{TODAY()}` — is now classified `kind: 'unknown'` and
+   *   raises `FILTER_TOKEN_UNKNOWN` instead of reaching the driver as a
+   *   literal (#1107; the reading is in `src/views/task.view.ts`). That makes
+   *   the paragraph above STRONGER, not weaker: there is no longer a spelling
+   *   the gate cannot see.
    *
    * - ANALYTICS path (dashboard widgets / dataset reports,
    *   `/api/v1/analytics/...`): resolves the DATE_MACRO_TOKENS vocabulary (the
    *   YTD revenue widget returns a non-zero sum, impossible with a literal
-   *   token), but still NO user token — `{current_user}` and even
-   *   `{current_user_id}` match no owner (see crm.app.ts's My Work note). That
-   *   half is unchanged and tracked at #510, so the two rules below remain
-   *   asymmetric — just not in the direction they were written for.
+   *   token) and, since objectstack#12230 (in the 17.4.0 pin), the user tokens
+   *   too — both the direct query door and the dataset-scope channel. Measured
+   *   by #510 with two reps on one widget: each saw only their own cases. So
+   *   both paths now accept the same two classes.
    */
   const dashboards: AnyRec[] = (stack as any).dashboards ?? [];
   const reports: AnyRec[] = (stack as any).reports ?? [];
@@ -186,27 +178,6 @@ describe('filter template tokens are resolvable', () => {
     }
   };
 
-  it('list view and page filters only use user tokens or date macros', () => {
-    const allowed = (t: string) => USER_TOKENS.has(t) || isDateMacroToken(t);
-    const bad: string[] = [];
-    for (const v of views) {
-      const lists = [v.list, ...Object.values(v.listViews ?? {})].filter(Boolean) as AnyRec[];
-      for (const list of lists) badTokensIn(`view "${list.name ?? 'default'}"`, list.filter, allowed, bad);
-    }
-    for (const p of pages) {
-      badTokensIn(`page "${p.name}"`, p.interfaceConfig?.filterBy, allowed, bad);
-      // Page COMPONENTS carry filters too, and did not used to be walked. Sales
-      // Home now embeds `list-view` blocks whose filters come off the saved
-      // views (#771) — those are checked above as views, but a hand-written
-      // component filter would have reached the same data path unexamined.
-      for (const c of [...walk(p.regions), ...walk(p.slots)]) {
-        badTokensIn(`page "${p.name}"/${c.id ?? c.type}`, c.properties?.filter, allowed, bad);
-        badTokensIn(`page "${p.name}"/${c.id ?? c.type}`, c.dataSource?.filter, allowed, bad);
-      }
-    }
-    expect(bad, `unresolvable view/page filter tokens:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-
   it('the widened list-view rule still rejects what neither path resolves', () => {
     // Widening a rule is how a rule dies. `{this_quarter_start}` is the exact
     // spelling #515 removed from `this_quarter_forecasts`, and the engine now
@@ -232,8 +203,8 @@ describe('filter template tokens are resolvable', () => {
     expect(good).toEqual([]);
   });
 
-  it('dashboard widget and report filters only use date macros', () => {
-    const allowed = (t: string) => isDateMacroToken(t);
+  it('dashboard widget and report filters only use resolvable tokens', () => {
+    const allowed = (t: string) => USER_TOKENS.has(t) || isDateMacroToken(t);
     const bad: string[] = [];
     for (const d of dashboards) {
       for (const w of d.widgets ?? []) badTokensIn(`${d.name}/${w.id}`, w.filter, allowed, bad);

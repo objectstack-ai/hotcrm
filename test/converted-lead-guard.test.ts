@@ -2,7 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import stack from '../objectstack.config';
-import leadHooks from '../src/objects/lead.hook';
+import leadHooks from '../src/sales/objects/lead.hook';
 import { hookNamed, makeCtx, makeHarness } from './helpers/hook-harness';
 
 /**

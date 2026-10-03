@@ -347,7 +347,7 @@ describe('annual_revenue has a single enforcement point', () => {
   });
 
   it('still enforces it in the account hook', () => {
-    const hook = readFileSync(join(REPO_ROOT, 'src/objects/account.hook.ts'), 'utf8');
+    const hook = readFileSync(join(REPO_ROOT, 'src/sales/objects/account.hook.ts'), 'utf8');
     expect(hook).toMatch(/input\.annual_revenue\s*<\s*0/);
     expect(hook).toMatch(/greater than or equal to 0/);
   });

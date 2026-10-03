@@ -2,10 +2,10 @@
 
 import { describe, it, expect } from 'vitest';
 import stack from '../objectstack.config';
-import taskHooks from '../src/objects/task.hook';
-import { REFUSAL_CODES } from '../src/objects/_refusal';
-import eventHooks from '../src/objects/event.hook';
-import { ScheduleFollowUpFlow } from '../src/flows/schedule-followup.flow';
+import taskHooks from '../src/sales/objects/task.hook';
+import { REFUSAL_CODES } from '../src/sales/objects/_refusal';
+import eventHooks from '../src/sales/objects/event.hook';
+import { ScheduleFollowUpFlow } from '../src/sales/flows/schedule-followup.flow';
 import { makeSandboxEngine, runHookBody, type Rec } from './helpers/action-sandbox';
 import { hookNamed } from './helpers/hook-harness';
 

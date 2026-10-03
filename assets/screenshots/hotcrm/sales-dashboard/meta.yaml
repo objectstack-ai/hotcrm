@@ -3,11 +3,44 @@ kind: screenshot
 scope: hotcrm
 category: analytics
 status: published
-captured: '2026-08-01'
+captured: '2026-09-09'
 capture:
   application: HotCRM
   theme: light
   viewport: 1408x964
+  dashboard: sales_dashboard
+  navigation: nav_sales_dashboard
+# Browser locale per file, recorded because getting it wrong is exactly how the
+# previous pair went bad: en.jpg was captured with a Chinese browser locale and
+# published carrying a Simplified y-axis (38万 / 28.5万 / 19万 / 9.5万) under an
+# otherwise fully English UI (#1800).
+#
+#   en.jpg       navigator.language = en-US
+#   zh-Hans.jpg  navigator.language = zh-CN
+#
+# Both files are captured from a booted app on seeded demo data at the id route
+# /_console/apps/app.objectstack.hotcrm/dashboard/sales_dashboard, in two fresh
+# browser contexts that differ in nothing but that locale.
+#
+# ⚠️ The two files carry IDENTICAL y-axis labels on Monthly Revenue Trend
+# (0 / 100,000 / 200,000 / 300,000 / 400,000) and that is CORRECT here — do not
+# "fix" it back. Measured on the pinned platform (17.3.0) rather than assumed:
+#
+#   this widget declares an explicit numeral format,
+#     src/dashboards/sales.dashboard.ts -> monthly_revenue_trend.chartConfig
+#     .yAxis[0].format: '0,0'
+#     => the axis renders grouped digits in every UI language
+#
+#   the executive dashboard's revenue_trend declares NO chartConfig (default
+#   rendering is intentional there)
+#     => it takes the locale-aware compact formatter, and the same probe run
+#        against it renders 0/100K/200K/300K/400K under en-US and
+#        0/10万/20万/30万/40万 under zh-CN.
+#
+# That second chart is the control that proves the probe can see 万 at all, so
+# the absence of 万 here is a property of this widget's format, not of the
+# capture. If `format: '0,0'` is ever removed from that widget, this pair stops
+# being identical and both files must be re-captured together.
 locales:
   en: en.jpg
   zh-Hans: zh-Hans.jpg

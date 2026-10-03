@@ -3,7 +3,7 @@
 import { describe, it, expect } from 'vitest';
 import { AutomationEngine } from '@objectstack/service-automation';
 import { METADATA_READ_DECORATIONS, stripReadDecorations } from '@objectstack/spec/kernel';
-import { allFlows } from '../src/flows';
+import { allFlows } from '../objectstack.composition';
 
 /**
  * ═══ The cold-boot flow re-bind must register EVERY flow (#653) ════════════

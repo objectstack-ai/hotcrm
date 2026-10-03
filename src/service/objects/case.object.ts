@@ -1,0 +1,468 @@
+// Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
+
+import { ObjectSchema, Field } from '@objectstack/spec/data';
+import { F, P } from '@objectstack/spec';
+
+export const Case = ObjectSchema.create({
+  name: 'crm_case',
+  label: 'Case',
+  pluralLabel: 'Cases',
+  icon: 'life-buoy',
+  description: 'Customer support cases and service requests',
+
+  // ADR-0090 D1/D7: OWD is an authored decision. Owner + escalation sharing rule.
+  sharingModel: 'private',
+
+  fieldGroups: [
+    { key: 'basic',       label: 'Case Information', icon: 'info' },
+    { key: 'origin',      label: 'Origin & Routing', icon: 'route' },
+    { key: 'sla',         label: 'SLA & Priority',   icon: 'clock' },
+    { key: 'resolution',  label: 'Resolution',       icon: 'check-circle' },
+    { key: 'escalation',  label: 'Escalation',       icon: 'alert-triangle', collapse: 'collapsed' },
+    { key: 'system',      label: 'System',           icon: 'database',       collapse: 'collapsed' },
+  ],
+
+  fields: {
+    // Platform ownership anchor — canonical note in `account.object.ts` (#548).
+    owner_id: Field.lookup('sys_user', {
+      label: 'Case Owner',
+      group: 'origin',
+      system: true,
+      readonly: false,
+      trackHistory: true,
+    }),
+
+    // Case Information
+    //
+    // `unique: true` is declared HERE, on the field, and deliberately NOT as a
+    // `{ fields: ['organization_id', 'case_number'], unique: true }` entry in
+    // `indexes[]` below (#1023) — same spelling `crm_account.name`,
+    // `crm_contact.email` and `crm_product.sku` already use, for the same
+    // reason. Since framework #3696 the field-level form is per-organization:
+    // it materializes as the composite `(organization key part, case_number)`,
+    // unique WITHIN an organization. Since platform 17.0.0-rc.4 (ADR-0120 D3,
+    // #5030) that key part is NULL-safe — `COALESCE(organization_id,
+    // '__global__')` — so rows with no organization form ONE bucket instead of
+    // each escaping the constraint under SQL's NULL-distinct semantics.
+    //
+    // The hand-written table composite this replaced could not get that: a
+    // declared index is taken verbatim, so it materialized as plain
+    // `UNIQUE (organization_id, case_number)` and enforced NOTHING on any row
+    // whose `organization_id` was NULL — i.e. every row of a single-organization
+    // or untenanted install. It also read as "unique per organization" while
+    // materializing as an unscoped composite, which is the bare-`unique: true`
+    // spelling ADR-0120 warns on in 17.x and protocol 18 rejects (#5082).
+    //
+    // Scope spelling: bare `true` at FIELD level already means "per
+    // organization" and carries no deprecation (`'organization'` is its
+    // explicit synonym with byte-identical materialization — measured). It is
+    // written as `true` to match the four sibling objects above; switching the
+    // repo to the explicit word is a uniform decision for all of them, not
+    // something `crm_case` forks on alone.
+    case_number: Field.autonumber({
+      label: 'Case Number',
+      group: 'basic',
+      format: 'CASE-{00000}',
+      unique: true,
+    }),
+    
+    subject: Field.text({
+      label: 'Subject',
+      group: 'basic',
+      required: true,
+      storage: { notNull: true },
+      searchable: true,
+      maxLength: 255,
+    }),
+
+    // ADR-0079 record title (was titleFormat '{case_number} - {subject}').
+    display_title: Field.formula({
+      label: 'Display Title',
+      group: 'basic',
+      expression: F`record.case_number + " - " + record.subject`,
+    }),
+
+    description: Field.markdown({
+      label: 'Description',
+      group: 'basic',
+      required: true,
+      storage: { notNull: true },
+    }),
+    
+    // Relationships
+    crm_account: Field.lookup('crm_account', {
+      label: 'Account',
+      group: 'basic',
+    }),
+    
+    crm_contact: Field.lookup('crm_contact', {
+      label: 'Contact',
+      group: 'basic',
+      // Optional so Web-to-Case (anonymous) submissions can land without
+      // an existing CRM contact. Back-office staff or a triage flow links
+      // the case to a contact after the fact. This matches the Salesforce
+      // Web-to-Case convention.
+      // @objectstack 12: string[] `referenceFilters` is dead (not read by the
+      // picker). `dependsOn` is the live cascading-lookup form — it scopes the
+      // contact candidates to those sharing the case's `crm_account` (ADR-0049).
+      dependsOn: ['crm_account'],
+    }),
+    
+    // Case Management
+    status: Field.select({
+      label: 'Status',
+      group: 'basic',
+      required: true,
+      storage: { notNull: true },
+      // ADR-0052 §5b.1 — platform auto-renders status changes on the timeline
+      // ("Status: New → Escalated"). Delivers the case timeline declaratively
+      // (the hand-coded version was deferred in #396 due to a hook-crash bug).
+      trackHistory: true,
+      options: [
+        { label: 'New', value: 'new', color: '#808080', default: true },
+        { label: 'In Progress', value: 'in_progress', color: '#FFA500' },
+        { label: 'Waiting on Customer', value: 'waiting_customer', color: '#FFD700' },
+        { label: 'Waiting on Support', value: 'waiting_support', color: '#4169E1' },
+        { label: 'Escalated', value: 'escalated', color: '#FF0000' },
+        { label: 'Resolved', value: 'resolved', color: '#00AA00' },
+        { label: 'Closed', value: 'closed', color: '#006400' },
+      ]
+    }),
+    
+    priority: Field.select({
+      label: 'Priority',
+      group: 'sla',
+      required: true,
+      storage: { notNull: true },
+      trackHistory: true,
+      options: [
+        { label: 'Low', value: 'low', color: '#4169E1', default: true },
+        { label: 'Medium', value: 'medium', color: '#FFA500' },
+        { label: 'High', value: 'high', color: '#FF4500' },
+        { label: 'Critical', value: 'critical', color: '#FF0000' },
+      ]
+    }),
+
+    // Sortable ordinal for `priority`. Ordering a queue by the select field
+    // itself sorts the raw strings, so `priority desc` yields
+    // medium > low > high > critical — the exact inversion of urgency, which
+    // buried every critical case at the bottom of the agent's queue. Select
+    // options carry no ordinal in the spec, so the rank is materialised here
+    // and stamped by `case_sla_defaults`; queue views sort on it instead.
+    // `0` is the UNRANKED sentinel, shared with crm_task.priority_rank: it is
+    // what a record carries when no recognised priority has been stamped, and
+    // it sorts below every real rank (1–4) on the `priority_rank desc` queues.
+    // ⛔ It must not be `1` here (or `2` on crm_task): a non-zero sentinel
+    // orders the same unknown priority differently on the two objects, and on
+    // this one it is indistinguishable from a genuine `low`.
+    priority_rank: Field.number({
+      label: 'Priority Rank',
+      readonly: true,
+      defaultValue: 0,
+    }),
+
+    type: Field.select({
+      label: 'Case Type',
+      group: 'basic',
+      options: [
+        { label: 'Question', value: 'question' },
+        { label: 'Problem', value: 'problem' },
+        { label: 'Feature Request', value: 'feature_request' },
+        { label: 'Bug', value: 'bug' },
+      ]
+    }),
+    
+    origin: Field.select({
+      label: 'Case Origin',
+      group: 'origin',
+      options: [
+        { label: 'Email', value: 'email' },
+        { label: 'Phone', value: 'phone' },
+        { label: 'Web', value: 'web' },
+        { label: 'Chat', value: 'chat' },
+        { label: 'Social Media', value: 'social_media' },
+      ]
+    }),
+    
+    // Assignment
+    
+    // SLA and Metrics
+    created_date: Field.datetime({
+      label: 'Created Date',
+      group: 'sla',
+      readonly: true,
+    }),
+    
+    closed_date: Field.datetime({
+      label: 'Closed Date',
+      group: 'sla',
+      readonly: true,
+    }),
+    
+    // ⛔ NOT `readonly`: stamped by `event_activity_bubble`
+    // (`src/objects/event.hook.ts`) on the first HELD `crm_event` related to the
+    // case, whoever wrote that event. ⚠️ That hook reaches this case through
+    // `ctx.api`, a `ScopedContext` over the ACTING USER's execution context —
+    // so its write is a CALLER-supplied write from a non-`isSystem` context,
+    // which `stripReadonlyFields` deletes. `readonly` here silently disables
+    // the stamp. (A hook writing its OWN record's `ctx.input.data` is a
+    // different case and SURVIVES `readonly` — hook-written keys are not
+    // caller-supplied. Measured in `test/readonly-write-semantics.test.ts`.)
+    //
+    // Definition: the moment the customer first heard back from us, matching
+    // Salesforce `FirstResponseDateTime` / Zendesk first reply time — NOT an
+    // internal status change, which would report "responded" while the customer
+    // is still waiting.
+    first_response_date: Field.datetime({
+      label: 'First Response Date',
+      group: 'sla',
+    }),
+    
+    resolution_time_hours: Field.number({
+      label: 'Resolution Time (Hours)',
+      group: 'sla',
+      readonly: true,
+      scale: 2,
+    }),
+    
+    // Stamped once, on the first write that gives the case a priority, from the
+    // priority × account-tier matrix in `./_case-sla.ts` (`case_sla_defaults`).
+    // Not `readonly`: a service manager may legitimately renegotiate a deadline,
+    // and the hook never overwrites a value that is already there.
+    sla_due_date: Field.datetime({
+      label: 'SLA Due Date',
+      description: 'Set from the case priority and the account’s Customer Tier, in calendar hours: nights, weekends and holidays count.',
+      group: 'sla',
+    }),
+    
+    // Stamped by the `case_sla_monitor` schedule flow.
+    //
+    // NOT `readonly` — but NOT for the reason this comment used to give, and
+    // the difference is measured in `test/readonly-write-semantics.test.ts`
+    // (#1429). `case_sla_monitor` declares `runAs: 'system'`, so its writes
+    // would SURVIVE a `readonly: true` here. It stays writable pending a
+    // decision that has to weigh the other surfaces (seed data,
+    // `service-agent.profile.ts`, the create form), not because the platform
+    // would drop the sweep's write.
+    //
+    // ⚠️ This is now the ONLY escalation-group flag still declared writable:
+    // `is_escalated` and `escalated_date` became `readonly: true` when #1434
+    // moved their user-context writer into a system sub-flow. So the open
+    // question here is narrower than it was — it is purely about this field's
+    // authoring surfaces, with no platform obstacle left to blame.
+    is_sla_violated: Field.boolean({
+      label: 'SLA Violated',
+      group: 'sla',
+      defaultValue: false,
+    }),
+    
+    // Escalation
+    //
+    // `readonly: true` — the honest declaration, because nobody types this.
+    // Its three writers are now unanimously elevated (#1434, maintainer-
+    // approved decision batch #21 ②):
+    //
+    //   case_escalation        runAs: 'system'  (record-change)
+    //   case_sla_monitor       runAs: 'system'  (schedule)
+    //   case_escalation_stamp  runAs: 'system'  (called by the escalate_case
+    //                                            screen flow via a subflow node)
+    //
+    // ⭐ What changed, and why the readonly declaration is now safe: the
+    // `escalate_case` screen flow used to write this field itself, and it
+    // stays `runAs: 'user'` because a person clicks it. The platform's
+    // readonly strip is one branch of the UPDATE path
+    // (`if (!opCtx.context?.isSystem)`, over CALLER-supplied keys), so that
+    // user-context write WOULD have been silently dropped. Rather than
+    // elevating the whole screen flow, the stamp moved into the dedicated
+    // `case_escalation_stamp` sub-flow. The agent's own writes
+    // (`escalation_reason`, `priority`, `status`) still carry their identity;
+    // only these two stamps are elevated.
+    //
+    // The guest-submission branch of `case.hook.ts` also forces this false, and
+    // is unaffected: it is a `beforeInsert` hook, so its key is not
+    // caller-supplied AND the INSERT path is exempt from the strip entirely.
+    // Seed data (`service.seed.ts`) is exempt for the same reason.
+    //
+    // ⛔ If you find yourself reverting this to writable so a user-context flow
+    // write lands, you are re-opening #1434 — add a `subflow` step instead.
+    // Semantics measured in `test/readonly-write-semantics.test.ts`.
+    is_escalated: Field.boolean({
+      label: 'Escalated',
+      group: 'escalation',
+      readonly: true,
+      defaultValue: false,
+    }),
+    
+    // `readonly: true`, same reasoning as `is_escalated` above and stamped by
+    // the same writers — `case_escalation` and the `case_escalation_stamp`
+    // sub-flow, both `runAs: 'system'`. Never typed by a person.
+    escalated_date: Field.datetime({
+      label: 'Escalated Date',
+      group: 'escalation',
+      readonly: true,
+    }),
+    
+    // ⛔ DELIBERATELY NOT `readonly`, and this is load-bearing (#1434). This is
+    // the agent's own screen input — `escalate_case`'s screen collects it and
+    // writes it with the USER's context. Declaring it readonly would make the
+    // platform silently strip the reason the agent just typed, which is the
+    // harm #1434 was filed about, inverted onto user input. It is also
+    // required whenever `is_escalated` flips true (the
+    // `escalation_reason_required` validation below), so dropping it would
+    // reject the escalation outright.
+    escalation_reason: Field.textarea({
+      label: 'Escalation Reason',
+      group: 'escalation',
+    }),
+    
+    // No `parent_case`. A case hierarchy was declared here and never
+    // traversed: nothing rolled child cases up, nothing closed or notified them
+    // with the parent, and no service flow read the link. Related cases that
+    // matter in this app are linked through the knowledge article that resolved
+    // them (`resolved_by_article`), which the deflection measures do read.
+    
+    // Resolution
+    resolution: Field.markdown({
+      label: 'Resolution',
+      group: 'resolution',
+    }),
+
+    /**
+     * The knowledge article that RESOLVED this case (#601).
+     *
+     * The second half of a two-way link, and deliberately not a replacement for
+     * the first. `crm_knowledge_article.related_to_case` points the other way —
+     * "the case this article was WRITTEN FROM" — and the two answer different
+     * questions: provenance (where did this article come from) versus
+     * deflection (what did this article save us). Merging them would make both
+     * unanswerable, so both stay.
+     *
+     * This is the column the deflection measures on `case_metrics` read
+     * (`kb_resolved_count` / `kb_deflection_rate`), which is why blank is
+     * normalised to NULL by `case_resolution_article_normalize` in
+     * `case.hook.ts`: the close-case screen sends `''` for a field the agent
+     * left empty, an empty string is NOT null, and `count(resolved_by_article)`
+     * counts it — a silently inflated numerator on a ratio widget, the exact
+     * shape of #614.
+     */
+    resolved_by_article: Field.lookup('crm_knowledge_article', {
+      label: 'Resolved by Article',
+      group: 'resolution',
+      description: 'Knowledge article that resolved this case — the deflection signal.',
+    }),
+
+
+    // Internal notes
+    internal_notes: Field.markdown({
+      label: 'Internal Notes',
+      group: 'system',
+      description: 'Internal notes; not visible to the customer.',
+    }),
+    
+    // Flags
+    is_closed: Field.boolean({
+      label: 'Is Closed',
+      group: 'system',
+      defaultValue: false,
+      readonly: true,
+    }),
+  },
+  
+  // Database indexes for performance
+  //
+  // `case_number` is an autonumber (`CASE-{00000}`), and the platform's
+  // autonumber sequence is PER TENANT — every organization counts from 1. A
+  // platform-wide unique index on it therefore rejects the second
+  // organization's `CASE-00001` on insert: the exact collision framework #3696
+  // exists to prevent. The constraint has to match the sequence that feeds it.
+  //
+  // No `{ fields: ['organization_id', 'case_number'], unique: true }` here
+  // (#1023). Case-number uniqueness is declared on the `case_number` field
+  // itself — see the note there for why the hand-written table composite could
+  // not express it. Do NOT add it back alongside the field-level declaration
+  // either: declaring both makes the verbatim index win and leaves the
+  // per-organization one unreachable (framework#3991
+  // `unique/double-declaration`), which would silently undo the fix.
+  indexes: [
+    { fields: ['crm_account'] },
+    { fields: ['owner_id'] },
+    { fields: ['status'] },
+    { fields: ['priority'] },
+  ],
+  
+  // API surface. History → Field.trackHistory (ADR-0052).
+  enable: {
+    apiEnabled: true,
+    // #602 — screenshots and logs are how a support case gets diagnosed.
+    // See the canonical capability note in `src/objects/index.ts`.
+    files: true,
+  },
+
+  // ADR-0052 §5b.2 — declarative milestone activity for the service narrative.
+  // The caseSideEffects hook still owns its real side-effects (escalation task,
+  // closed-date stamping); these are timeline entries only, emitted by the platform.
+  activityMilestones: [
+    { field: 'status', value: 'escalated', summary: 'Case escalated — {subject}', type: 'updated' },
+    { field: 'status', value: 'resolved', summary: 'Case resolved — {subject}', type: 'completed' },
+    { field: 'status', value: 'closed', summary: 'Case closed — {subject}', type: 'completed' },
+  ],
+
+  // ADR-0079: render-only `titleFormat` retired in favor of `nameField`,
+  // which names a real field. The former template composed two local fields, so
+  // the `display_title` formula field (see fields) reproduces it.
+  nameField: 'display_title',
+  // Explicit search targets (ADR-0061). REQUIRED because nameField is a
+  // FORMULA (display_title/full_name): without this, $search auto-defaults to
+  // the formula field, which isn't a real column, so the lookup picker + global
+  // search silently return zero. These are real, indexed columns.
+  searchableFields: ['subject', 'case_number'],
+  highlightFields: ['case_number', 'subject', 'crm_account', 'status', 'priority'],
+  
+  // Removed: list_views and form_views belong in UI configuration, not object definition
+  
+  // Predicates below are TOTAL: every `record.x` read is `has()`-guarded, so the
+  // rule returns a verdict even when the merged record has no such key. See
+  // AGENTS.md "Validation predicates must be TOTAL" and
+  // test/object-validation-predicates.test.ts, which fails the build otherwise.
+  validations: [
+    {
+      name: 'resolution_required_for_closed',
+      type: 'script',
+      severity: 'error',
+      message: 'Resolution is required when closing a case',
+      condition: P`has(record.status) && record.status == "closed" && (!has(record.resolution) || isBlank(record.resolution))`,
+    },
+    {
+      name: 'escalation_reason_required',
+      type: 'script',
+      severity: 'error',
+      message: 'Escalation reason is required when escalating a case',
+      condition: P`has(record.is_escalated) && record.is_escalated == true && (!has(record.escalation_reason) || isBlank(record.escalation_reason))`,
+    },
+    {
+      name: 'case_status_progression',
+      type: 'state_machine',
+      severity: 'warning',
+      message: 'Invalid status transition',
+      field: 'status',
+      // Escalate + Close actions are available from ANY open status (see
+      // escalate_case / close_case visibility). The transition map must permit
+      // →escalated and →closed from every open state, else those actions emit a
+      // spurious "Invalid status transition" warning (e.g. escalating a brand-new
+      // case, which is a legitimate support move).
+      transitions: {
+        'new': ['in_progress', 'waiting_customer', 'escalated', 'closed'],
+        'in_progress': ['waiting_customer', 'waiting_support', 'escalated', 'resolved', 'closed'],
+        'waiting_customer': ['in_progress', 'waiting_support', 'escalated', 'closed'],
+        'waiting_support': ['in_progress', 'waiting_customer', 'escalated', 'closed'],
+        'escalated': ['in_progress', 'resolved', 'closed'],
+        'resolved': ['closed', 'in_progress'],  // Can reopen
+        'closed': ['in_progress'],  // Can reopen
+      }
+    },
+  ],
+  
+  // ⚠️ No `workflows[]` here, and none is possible: object `workflows[]` were
+  // removed from the platform. Field updates live in this object's `*.hook.ts`;
+  // scheduled status flips and notifications live in `src/flows/*.flow.ts`.
+});

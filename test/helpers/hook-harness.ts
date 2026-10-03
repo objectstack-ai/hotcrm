@@ -2,14 +2,14 @@
 
 import { REFERENCE_VALUE_TYPES, isMultiValueField, AUDIT_PROVENANCE_FIELDS } from '@objectstack/spec/data';
 import { wrapDeclarativeHook } from '@objectstack/objectql';
-import * as appObjects from '../../src/objects/index';
+import { CrmObjects as appObjects } from '../helpers/src-roster';
 import type {
   HookApi,
   HookDeleteOptions,
   HookQuery,
   HookUpdateDoc,
   HookUpdateOptions,
-} from '../../src/objects/_hook-api';
+} from '../../src/sales/objects/_hook-api';
 
 /**
  * In-memory harness for running REAL hook handlers.
@@ -89,11 +89,12 @@ function project(row: Rec, fields?: string[]): Rec {
  * exactly how #714 shipped a boolean into `crm_contract.crm_contact` and was
  * only caught in a release-candidate acceptance run.
  *
- * ### What the engine actually does (measured on the pinned 17.2.0, not guessed)
+ * ### What the engine actually does (measured on the pinned 17.3.0, not guessed)
  *
- * First taken on 17.1.0; RE-TAKEN 2026-09-03 on 17.2.0 — the version
- * `package.json` now pins and `node_modules` installs (#1460, after the
- * #1442 bump) — and every row below still holds, in BOTH postures.
+ * First taken on 17.1.0; RE-TAKEN 2026-09-03 on 17.2.0 (#1460, after the
+ * #1442 bump) and RE-TAKEN AGAIN on 17.3.0 — the version `package.json` now
+ * pins and `node_modules` installs (#1676, after the #1577 bump) — and every
+ * row below still holds, in BOTH postures.
  * `test/harness-lookup-shape.test.ts` is that re-measurement: it drives each
  * probe value against a real `ObjectQL` and requires the harness verdict to
  * match the engine's, field by field.
@@ -500,12 +501,19 @@ const installFlatInputProbe = wrapDeclarativeHook(
  *
  * ### Why this calls the real wrapper instead of reimplementing it
  *
- * `installFlatInput` is **not exported** — first measured on 17.1.0 and
- * RE-MEASURED 2026-09-03 on the pinned 17.2.0 (#1460), unchanged: it appears
- * in `dist/index.mjs` and `dist/core.mjs` as an internal function and in
- * **neither** `.d.ts` nor `.d.mts`, and the runtime export list (103 names)
- * does not carry it. `wrapDeclarativeHook` — the route this harness takes
- * instead, below — IS still exported there.
+ * `installFlatInput` is **not exported** — first measured on 17.1.0,
+ * RE-MEASURED 2026-09-03 on 17.2.0 (#1460) and RE-MEASURED on the pinned
+ * 17.3.0 (#1676): it still appears in `dist/index.mjs` and `dist/core.mjs` as
+ * an internal function and in **neither** `.d.ts` nor `.d.mts`, and the
+ * runtime export list does not carry it. `wrapDeclarativeHook` — the route
+ * this harness takes instead, below — IS still exported there.
+ *
+ * ⚠️ One number in that reading MOVED and is therefore re-stated rather than
+ * carried over: the runtime export list is **147 names on 17.3.0**, where the
+ * 17.2.0 taking counted 103. It is a CONTROL for "the list does not carry
+ * `installFlatInput`", not a fact this file depends on, and the load-bearing
+ * half — absent from the export list and from both `.d.*` files — is
+ * unchanged.
  *
  * The two obvious routes from there are both bad. A faithful local
  * reimplementation buys speed and then rots: the moment upstream adds a trap,
@@ -610,9 +618,24 @@ export function makeCtx(opts: CtxOptions): Rec {
 /** Today as `YYYY-MM-DD`, matching what the hooks stamp. */
 export const today = (): string => new Date().toISOString().slice(0, 10);
 
-/** `YYYY-MM-DD` `days` from now (negative for the past). */
+/**
+ * `YYYY-MM-DD` `days` from now (negative for the past), on the **UTC calendar
+ * throughout** — the same calendar `today()` above renders on, and the one the
+ * platform resolves a bare `{TODAY()}` token to. That second half was
+ * re-measured here rather than inherited: driving a real `AutomationEngine`
+ * (`@objectstack/service-automation` 17.3.0) at a pinned instant returns the
+ * same `$lt` day in `UTC`, `America/New_York`, `Europe/Berlin` and
+ * `Australia/Sydney`, so bare `{TODAY()}` is UTC everywhere.
+ *
+ * ⚠️ The arithmetic must NOT go through `setDate`/`getDate`. Those read and
+ * write the **local** calendar, and rendering the result with `toISOString()`
+ * then mixes two calendars inside one expression. Across a DST spring-forward
+ * the local day is 23 h long, so a `setDate` shift preserves wall-clock time and
+ * the instant lands one UTC day late. No run at `TZ=UTC` can catch that — there
+ * the two calendars coincide and both spellings are behaviourally identical.
+ */
 export const daysFromNow = (days: number): string => {
   const d = new Date();
-  d.setDate(d.getDate() + days);
+  d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString().slice(0, 10);
 };

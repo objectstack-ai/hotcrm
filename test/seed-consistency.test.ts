@@ -1,9 +1,9 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import stack from '../objectstack.config';
-import { CrmSeedData } from '../src/data/index';
-import { CASE_SLA_DEFAULT_TIER, caseSlaHours } from '../src/objects/_case-sla';
+import { CrmSeedData } from '../objectstack.composition';
+import { CASE_SLA_DEFAULT_TIER, caseSlaCalendarHours } from '../src/service/objects/_case-sla';
+import { HIGH_VALUE_DEAL_AMOUNT, LARGE_DEAL_AMOUNT } from '../src/sales/objects/_thresholds';
 
 /**
  * Seed ↔ hook consistency guards (#591).
@@ -21,7 +21,7 @@ import { CASE_SLA_DEFAULT_TIER, caseSlaHours } from '../src/objects/_case-sla';
  *
  *   - `opportunity_amount_rollup`  → opportunity.amount
  *   - `quote_total_rollup`         → quote subtotal / discount_amount / total_price
- *   - `campaign_snapshot_metrics`  → the campaign num_* / actual_revenue block
+ *   - the four #597 refresh hooks  → the campaign num_* / actual_revenue block
  *   - `_line-item-price-fill`      → line list_price
  *   - `lead.hook` whole-star rounding, and the product cost/price rule
  *
@@ -208,6 +208,36 @@ describe('opportunity_amount_rollup would be a no-op over the seeds', () => {
   });
 });
 
+/**
+ * The open board stays draggable (#1902). A deal born at or above
+ * `LARGE_DEAL_AMOUNT` enters `opportunity_approval_on_create`, whose approval
+ * nodes lock the record — its kanban card refuses every drag. When nine of the
+ * ten open seeded deals sat over the line, a fresh demo's board was frozen.
+ * The ruling: exactly one deal per approval tier exhibits the flow, and every
+ * other open deal is priced under the line. Pinned by NAME, so a re-priced
+ * deal crossing the line is named back rather than counted.
+ */
+describe('the seeded open pipeline keeps the kanban draggable (#1902)', () => {
+  const settled = new Set(['closed_won', 'closed_lost']);
+  const open = opportunities.filter((o) => !settled.has(String(o.stage)));
+  const overLine = open.filter((o) => Number(o.amount) >= LARGE_DEAL_AMOUNT);
+
+  it('exactly two open deals sit at or above LARGE_DEAL_AMOUNT, one per approval tier', () => {
+    const tier = (o: Rec) => (Number(o.amount) > HIGH_VALUE_DEAL_AMOUNT ? 'director' : 'manager');
+    expect(
+      overLine.map((o) => `${String(o.name)} (${tier(o)})`).sort(),
+    ).toEqual(['Acme Platform Upgrade (manager)', 'Wayne Enterprise License (director)']);
+  });
+
+  it('every active stage keeps a card under the line', () => {
+    const stages = ['prospecting', 'qualification', 'needs_analysis', 'proposal', 'negotiation'];
+    const lockedOnly = stages.filter(
+      (stage) => !open.some((o) => o.stage === stage && Number(o.amount) < LARGE_DEAL_AMOUNT),
+    );
+    expect(lockedOnly).toEqual([]);
+  });
+});
+
 describe('quote_total_rollup would be a no-op over the seeds', () => {
   it('subtotal, discount_amount and total_price follow the rollup model', () => {
     const drift: string[] = [];
@@ -271,7 +301,13 @@ describe('line items carry what the price-fill hook would have stamped', () => {
   });
 });
 
-describe('campaign_snapshot_metrics would be a no-op over the seeds', () => {
+// Since #597 the campaign metric block is owned by FOUR refresh hooks, not by
+// one completion-time snapshot: `campaign_metrics_refresh`,
+// `campaign_attribution_refresh` and `campaign_lead_conversion_refresh` in
+// `campaign.hook.ts`, plus `campaign_member_metrics_refresh` in
+// `campaign_member.hook.ts`. All four reach the same inlined recompute, and it
+// is that one arithmetic the block below re-derives from the seed rows.
+describe('the campaign metric refresh would be a no-op over the seeds', () => {
   it('every campaign metric equals what the hook recomputes from members and attributed deals', () => {
     const drift: string[] = [];
     for (const campaign of campaigns) {
@@ -314,9 +350,10 @@ describe('campaign_snapshot_metrics would be a no-op over the seeds', () => {
     expect(withResponses.length, 'no campaign would render a response rate').toBeGreaterThan(0);
   });
 
-  it('completed campaigns are the ones whose snapshot has actually happened', () => {
-    // The hook only fires on the transition INTO `completed`; a completed
-    // campaign with no membership would mean the snapshot ran against nothing.
+  it('completed campaigns are the ones whose metrics have something to count', () => {
+    // Not a completion-time snapshot any more — the refresh runs on every
+    // input change. A completed campaign with no membership would mean its
+    // metric block had nothing to count on any of those runs.
     const completed = campaigns.filter((c) => String(c.status) === 'completed');
     expect(completed.length, 'no completed campaign to carry the ROI narrative').toBeGreaterThan(0);
     for (const c of completed) {
@@ -473,7 +510,7 @@ describe('seeded case SLA due dates match the policy matrix (#595)', () => {
         problems.push(`${label}: created_date is not a daysAgo() expression — ${created}`);
         continue;
       }
-      const hours = caseSlaHours(String(c.priority), tierOf.get(String(c.crm_account)));
+      const hours = caseSlaCalendarHours(String(c.priority), tierOf.get(String(c.crm_account)));
       if (hours === undefined) {
         problems.push(`${label}: no SLA matrix row for priority "${String(c.priority)}"`);
         continue;
@@ -494,7 +531,7 @@ describe('seeded case SLA due dates match the policy matrix (#595)', () => {
     const problems: string[] = [];
     for (const c of cases.filter((r) => r.is_sla_violated === true)) {
       const age = /^daysAgo\((\d+)\)$/.exec(celSource(c.created_date) ?? '');
-      const hours = caseSlaHours(String(c.priority), tierOf.get(String(c.crm_account)));
+      const hours = caseSlaCalendarHours(String(c.priority), tierOf.get(String(c.crm_account)));
       const label = `${String(c.subject)} (${String(c.priority)})`;
       if (!age || hours === undefined) {
         problems.push(`${label}: cannot check a breach without a daysAgo() creation and a matrix row`);
@@ -512,78 +549,81 @@ describe('seeded case SLA due dates match the policy matrix (#595)', () => {
 });
 
 /**
- * A seed can only target an object THIS app declares (#1258).
+ * The lead Activity tab has something to show out of the box (#1258).
  *
- * `CrmSeedData` is an array of raw `Seed` values, and `Seed.object` is a plain
- * `z.string()` — so naming a platform `sys_*` table there type-checks, builds,
- * validates, and loads. It just cannot produce a usable row, and every part of
- * the boot reports success while it happens.
+ * Until 17.4.0 this block was the opposite guard — "every seed dataset targets
+ * an object this app declares" — because `sys_activity.record_id` was plain
+ * text: a seeded timeline row stored the lead's natural key verbatim and
+ * attached to nothing, while every part of the boot reported success. Its own
+ * comment asked to be deleted deliberately once the platform made an
+ * ActivityPointer seedable, and objectstack#11339 — carried by the 17.4.0 pin — did:
+ * `record_id` / `source_id` declare `referenceVia`, so the loader resolves the
+ * natural key through the sibling `object_name` / `source_object` column and
+ * refuses an unresolvable one loudly. Re-measured on 17.4.0 by booting the app
+ * with these rows (fresh DB): every readonly column lands, `record_id` holds
+ * the lead's runtime id and `source_id` the event's, and the lead's Activity
+ * tab lists them while a lead with no held interaction still reads empty.
  *
- * Measured against 17.1.0 by seeding three `sys_activity` rows for a demo lead
- * — the shape #1258 asked for — and reading the result back out of the running
- * server:
- *
- *   - the rows LAND. `pnpm build` is silent, the boot banner counts them
- *     (`Seeds: … 345 rows`, up from 342), and every column arrives, readonly
- *     ones included: seeds write under `{ isSystem: true }`, which exempts the
- *     static readonly strip, and `sys_activity` declares EVERY field readonly.
- *     `type: 'completed'` is accepted, `cel\`daysAgo(n)\`` resolves, and
- *     `mode: 'upsert'` is accepted even though the object is
- *     `managedBy: 'append-only'`.
- *   - the rows attach to NOTHING. `sys_activity.record_id` is `Field.text()`,
- *     not a lookup, and the loader resolves a natural key only for
- *     `lookup` / `master_detail` fields — every other field is stored verbatim.
- *     So `record_id: 'Lisa Thompson'` is stored as the literal string, while
- *     the seeded lead's id is a runtime nanoid (`tgIjpNhjlfmWU8YF`) that does
- *     not exist until first boot.
- *
- * The consequence, read off the shipped console bundle rather than inferred —
- * `record:activity` queries
- * `sys_activity, { $filter: { object_name, record_id }, $orderby: { timestamp: 'desc' } }`:
- *
- *   filter { object_name: 'crm_lead', record_id: 'tgIjpNhjlfmWU8YF' } → 0 rows
- *   filter { object_name: 'crm_lead', record_id: 'Lisa Thompson'    } → 3 rows
- *
- * The tab stays empty and the seed book looks populated. This is the same
- * failure the ownership note in `src/data/index.ts` records for
- * `owner_id: 'Dev Admin'`, one column over — "a seed cannot name an id that
- * does not exist yet" is the general rule, and reference resolution is the only
- * exemption from it.
- *
- * Two further facts make the route worse, not better, if the id problem were
- * ever solved locally: `sys_activity` is a `lifecycle.class: 'telemetry'`
- * object with `retention: { maxAge: '14d' }` and day-shard rotation (rows live
- * in `sys_activity__r<YYYYMMDD>` behind a view), so a demo narrative older than
- * a fortnight is reaped by design; and the only writers of interaction rows are
- * the `log_call` / `log_meeting` / `send_email` action bodies, so a second
- * producer would be the `crm_forecast` two-producer conflict #702 ruled against.
- *
- * Hence the guard: seeds stay inside the app's own object graph, where natural
- * keys resolve. If a future platform release makes an ActivityPointer target
- * seedable, delete this test deliberately — do not widen it.
+ * What stays true, and is pinned here, is the shape: each seeded pointer is
+ * exactly the row `log_call` / `log_meeting` would have written for a seeded
+ * held lead event — no pointer without an event behind it, no held logged
+ * event without its pointer — and every one is younger than the 14-day
+ * telemetry retention `sys_activity` declares.
  */
-describe('every seed dataset targets an object this app declares (#1258)', () => {
-  const declared = new Set(
-    ((stack as unknown as { objects?: { name?: string }[] }).objects ?? []).map((o) => String(o.name)),
-  );
+describe('the lead interaction pointers mirror the held lead events (#1258)', () => {
+  const pointers = recordsOf('sys_activity');
+  const events = recordsOf('crm_event');
+  const leadEmails = new Set(leads.map((l) => String(l.email)));
+  const eventBySubject = byName(events, 'subject');
+  const ageInDays = (expr: unknown): number | undefined => {
+    const source = expr !== null && typeof expr === 'object' && (expr as Rec).dialect === 'cel'
+      ? String((expr as Rec).source)
+      : '';
+    const m = /^daysAgo\((\d+)\)/.exec(source);
+    return m ? Number(m[1]) : undefined;
+  };
 
-  it('registers the app objects this guard measures against', () => {
-    // Guard the guard: an empty set would make the assertion below vacuously
-    // green and hide exactly the class it exists to catch.
-    expect(declared.size, 'objectstack.config.ts registers no objects').toBeGreaterThan(10);
+  it('seeds a handful of interactions across more than one lead', () => {
+    // Guard the guard: the cases below iterate these rows.
+    expect(pointers.length).toBeGreaterThanOrEqual(3);
+    expect(new Set(pointers.map((p) => p.record_id)).size).toBeGreaterThanOrEqual(2);
   });
 
-  it('never seeds an object outside the app graph — those rows load but resolve to nothing', () => {
-    const foreign = datasets
-      .map((d) => String(d.object))
-      .filter((name) => !declared.has(name));
-    expect(
-      [...new Set(foreign)],
-      'these seed datasets name objects the app does not declare. Their rows will load and be\n' +
-        'counted at boot, but any field pointing at another record is stored as the literal\n' +
-        'natural key instead of an id — the loader resolves natural keys only for lookup /\n' +
-        'master_detail fields. See this block\'s comment for the measurement:\n  ' +
-        [...new Set(foreign)].join('\n  '),
-    ).toEqual([]);
+  it('every pointer names a seeded lead and a held event on that same lead', () => {
+    const problems: string[] = [];
+    for (const p of pointers) {
+      const label = String(p.summary);
+      if (p.type !== 'completed') problems.push(`${label}: type ${String(p.type)} is not the logged-interaction kind`);
+      if (p.object_name !== 'crm_lead' || !leadEmails.has(String(p.record_id))) {
+        problems.push(`${label}: ${String(p.object_name)} / ${String(p.record_id)} is not a seeded lead`);
+      }
+      const event = p.source_object === 'crm_event' ? eventBySubject.get(String(p.source_id)) : undefined;
+      if (!event) {
+        problems.push(`${label}: source ${String(p.source_object)} / ${String(p.source_id)} is not a seeded event`);
+        continue;
+      }
+      if (event.status !== 'held') problems.push(`${label}: its event is ${String(event.status)}, not held`);
+      if (event.related_to_lead !== p.record_id) problems.push(`${label}: its event hangs off another record`);
+      const age = ageInDays(p.timestamp);
+      if (age === undefined || age >= 14) {
+        problems.push(`${label}: timestamp ${String(p.timestamp)} is not inside the 14d sys_activity retention`);
+      }
+    }
+    expect(problems, problems.join('\n')).toEqual([]);
+  });
+
+  it('every held call or meeting on a lead inside the retention window has its pointer', () => {
+    const pointed = new Set(pointers.map((p) => String(p.source_id)));
+    const missing = events
+      .filter(
+        (e) =>
+          e.related_to_type === 'crm_lead' &&
+          e.status === 'held' &&
+          (e.type === 'call' || e.type === 'meeting') &&
+          (ageInDays(e.start_datetime) ?? Infinity) < 14,
+      )
+      .map((e) => String(e.subject))
+      .filter((subject) => !pointed.has(subject));
+    expect(missing).toEqual([]);
   });
 });

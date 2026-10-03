@@ -5,9 +5,13 @@
  *
  * The implementation is `.mjs` because `scripts/*.mjs` gates run under bare
  * `node` with no build step — CI invokes them as `node scripts/<gate>.mjs`.
- * `scripts/scan-field-consumers.ts` runs under `tsx` and imports the same
- * helper, and `tsconfig.json` typechecks `scripts/**\/*.ts`, so the helper needs
- * a declaration. One shared guard beats two spellings of the same comparison.
+ * A declaration is still needed because first-party TypeScript reaches this
+ * helper THROUGH those gates: `test/source-token-ratchet.test.ts` imports
+ * `scripts/check-source-token-ratchet.mjs` under `allowJs`, and tsc resolves
+ * that gate's own `./lib/main-module.mjs` import to this file — measured with
+ * `tsc --noEmit --listFiles`, which lists it. The last `.ts` script to import
+ * the helper directly was `scripts/scan-field-consumers.ts`, retired in #1543.
+ * One shared guard beats two spellings of the same comparison.
  */
 
 /**

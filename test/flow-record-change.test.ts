@@ -1,15 +1,14 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import { CaseCsatFollowupFlow } from '../src/flows/case-csat-followup.flow';
-import { CaseEscalationFlow, CaseEscalationOnCreateFlow } from '../src/flows/case-escalation.flow';
-import { ContactWelcomeFlow } from '../src/flows/contact-welcome.flow';
-import { LeadAssignmentFlow } from '../src/flows/lead-assignment.flow';
+import { CaseEscalationFlow, CaseEscalationOnCreateFlow } from '../src/service/flows/case-escalation.flow';
+import { ContactWelcomeFlow } from '../src/sales/flows/contact-welcome.flow';
+import { LeadAssignmentFlow } from '../src/sales/flows/lead-assignment.flow';
 import {
   OpportunityApprovalFlow, OpportunityApprovalOnCreateFlow,
-} from '../src/flows/opportunity-approval.flow';
-import { OpportunityWonAlertFlow } from '../src/flows/opportunity-won-alert.flow';
-import { TaskUrgentAlertFlow } from '../src/flows/task-urgent-alert.flow';
+} from '../src/sales/flows/opportunity-approval.flow';
+import { OpportunityWonAlertFlow } from '../src/sales/flows/opportunity-won-alert.flow';
+import { TaskUrgentAlertFlow } from '../src/sales/flows/task-urgent-alert.flow';
 import { makeFlowHarness, type Rec } from './helpers/flow-harness';
 
 /**
@@ -94,7 +93,7 @@ describe('opportunity_won_alert — start condition', () => {
     // `{record.owner_id.manager}` interpolates to the literal "undefined" and the
     // message goes to a phantom user.
     expect(JSON.stringify(alert), 'a template dot-walked a lookup').not.toContain('undefined');
-    expect(String(alert.title)).toContain('Big Deal');
+    expect(String((alert.templateData as Rec).name)).toContain('Big Deal');
   });
 });
 
@@ -193,8 +192,8 @@ describe('contact_welcome — start condition', () => {
     expect(h.notifications).toHaveLength(1);
     const [alert] = h.notifications;
     expect(alert.to).toContain('rep1');
-    expect(String(alert.title)).toContain('Ada');
-    expect(String(alert.title)).toContain('Lovelace');
+    expect(String((alert.templateData as Rec).first_name)).toContain('Ada');
+    expect(String((alert.templateData as Rec).last_name)).toContain('Lovelace');
   });
 });
 
@@ -228,7 +227,7 @@ describe('task_urgent_alert — start condition', () => {
     expect(h.notifications).toHaveLength(1);
     expect(h.notifications[0].to).toContain('rep1');
     expect(h.notifications[0].severity).toBe('warning');
-    expect(String(h.notifications[0].title)).toContain('Fix outage');
+    expect(String((h.notifications[0].templateData as Rec).subject)).toContain('Fix outage');
   });
 });
 
@@ -237,28 +236,45 @@ describe('lead_assignment — hot-lead SLA routing', () => {
     id: 'l1', company: 'Acme', rating: 5, owner_id: 'rep1', ...over,
   });
 
+  /**
+   * Both branch guards assert the population this flow actually writes.
+   *
+   * They read `h.notifications.length + h.store.crm_task.length` until #1772 —
+   * a sum over two populations, which proves NEITHER is non-empty. That shape
+   * is worth naming, because it is what an author reaches for when they are
+   * already thinking about vacuity: it looks like it covers both walks below
+   * and covers neither.
+   *
+   * Here the disjunct that can never contribute is the task half:
+   * `lead_assignment` authors `update_record` (the SLA date stamp on the lead)
+   * and `notify`, and NO `create_record` node at all, so `h.store.crm_task`
+   * cannot receive a row from this flow on any input. Its "SLA" is a
+   * `next_followup_date` value, never a task row.
+   *
+   * Measured, both legs in the same file and command: with edge `e4`
+   * retargeted from `notify_hot` to `end` (the hot lead loses its alert) and
+   * one pre-existing `crm_task` row seeded into the store, the sum form stayed
+   * GREEN — the seeded row alone satisfied it while the alert was gone.
+   */
   it('routes a hot lead (rating ≥ 4) down the accelerated SLA branch', async () => {
     const h = makeFlowHarness({ lead_assignment: LeadAssignmentFlow }, { crm_task: [] });
     await h.trigger('lead_assignment', lead({ rating: 5 }));
-    expect(h.notifications.length + h.store.crm_task.length, 'hot lead produced no follow-up').toBeGreaterThan(0);
+    expect(h.notifications.length, 'hot lead produced no follow-up alert').toBeGreaterThan(0);
   });
 
   it('routes a cold lead down the standard branch', async () => {
     const h = makeFlowHarness({ lead_assignment: LeadAssignmentFlow }, { crm_task: [] });
     await h.trigger('lead_assignment', lead({ rating: 1 }));
-    expect(h.notifications.length + h.store.crm_task.length, 'cold lead produced no follow-up').toBeGreaterThan(0);
+    expect(h.notifications.length, 'cold lead produced no follow-up alert').toBeGreaterThan(0);
   });
 
-  it('sends every SLA task to the lead owner, never a dot-walked manager', async () => {
+  it('renders both SLA branch alerts with no field left as the literal "undefined"', async () => {
     for (const rating of [5, 1]) {
       const h = makeFlowHarness({ lead_assignment: LeadAssignmentFlow }, { crm_task: [] });
       await h.trigger('lead_assignment', lead({ rating }));
       for (const n of h.notifications) {
         expect(JSON.stringify(n), `rating ${rating} notification dot-walked a lookup`)
           .not.toContain('undefined');
-      }
-      for (const t of h.store.crm_task) {
-        expect(String(t.owner_id), `rating ${rating} task has a phantom owner`).not.toBe('undefined');
       }
     }
   });
@@ -535,18 +551,24 @@ describe('record-change flows under a user-less trigger (#684)', () => {
       lead, {}, { crm_lead: [{ ...lead }] },
     );
     expect(String(result.error)).toContain('[runAs] refusing a data operation');
-    expect(h.store.crm_lead[0].next_followup_date).toBeUndefined();
+    expect(h.store.crm_lead[0].next_followup_date, 'no SLA date was stamped').toBeNull();
     expect(h.notifications).toHaveLength(0);
   });
 
   /**
    * MEASURED, and deliberately recorded because the issue that prompted #684
-   * over-stated it: the four notify-only record-change flows
-   * (`contact_welcome`, `task_urgent_alert`, `opportunity_won_alert`,
-   * `case_csat_followup`) were NOT refused on 17.0.0-rc.2. The guard fires at
-   * `get_record` / `create_record` / `update_record` / `delete_record`, and
-   * `notify` dispatches through the messaging service without a run data
-   * context, so a user-less run of these completes and delivers.
+   * over-stated it: the notify-only record-change flows (`contact_welcome`,
+   * `task_urgent_alert`, `opportunity_won_alert`) were NOT refused on
+   * 17.0.0-rc.2. The guard fires at `get_record` / `create_record` /
+   * `update_record` / `delete_record`, and `notify` dispatches through the
+   * messaging service without a run data context, so a user-less run of these
+   * completes and delivers.
+   *
+   * `case_csat_followup` was the fourth flow this case covered, and it was the
+   * one that carried the measurement through a `wait` node — the run suspended
+   * at its P1D timer with the notify on the far side. #1428 retired that flow
+   * with the two fields it existed to collect, so the leg went with it; the
+   * three above still pin the same measurement.
    *
    * They carry `runAs: 'system'` anyway — the declaration records that
    * record-change automation runs as the platform, so a data node added later
@@ -555,16 +577,6 @@ describe('record-change flows under a user-less trigger (#684)', () => {
    * so the day it DOES start being refused, we hear about it here.
    */
   it('the notify-only siblings deliver either way (they were never the broken ones)', async () => {
-    const closed = { id: 'c2', case_number: 'CASE-2', status: 'closed', owner_id: 'agent1' };
-    for (const flow of [CaseCsatFollowupFlow, withoutRunAs(CaseCsatFollowupFlow as unknown as Rec)]) {
-      const { h, result } = await fire(
-        'case_csat_followup', flow as unknown as Rec, closed, { status: 'open' },
-      );
-      expect(String(result.error ?? '')).not.toContain('[runAs]');
-      // The run suspends at the P1D timer; the notify is on the other side.
-      expect(h.notifications).toHaveLength(0);
-    }
-
     const contact = {
       id: 'ct1', first_name: 'Ada', last_name: 'Lovelace',
       owner_id: 'rep1', email_opt_out: false,

@@ -28,14 +28,20 @@ management surface. Know which file owns which fact:
 ## 2. Everyday change loop (per PR)
 
 1. Author metadata under the correct `src/{type}/` folder (see `AGENTS.md`).
-2. Keep all 4 locale bundles in sync (`src/translations/{en,zh-CN,es-ES,ja-JP}.ts`).
+2. Keep the locale bundles in sync — `src/sales/translations/` is the source of truth for
+   which locales ship. *Supersedes the hand-copied count and locale enumeration that
+   stood here — 2026-08-31 ruling, item 5.*
 3. Add the matching user doc under `content/docs/` if behaviour changed.
 4. Add a changeset describing the change.
 5. Run the full gate and make sure it is green:
 
    ```bash
-   pnpm verify   # = validate && typecheck && build && test
+   pnpm verify
    ```
+
+   `package.json` is the single source of truth for what that chain runs.
+   *Supersedes the hand-copied `validate && typecheck && build && test` comment that
+   stood here and named half of it — 2026-08-31 ruling, item 5.*
 
 6. Open the PR. **Merge only after remote CI is fully green** — never `--auto`
    ahead of CI, and never edit on a shared `main` checkout (use a worktree).
@@ -67,7 +73,12 @@ can silently invalidate existing metadata or **seed data** (see §4). Treat ever
 6. If `better-sqlite3` floods `NODE_MODULE_VERSION ... requires ...` on boot, the
    native binary was built for a different Node ABI — `pnpm rebuild better-sqlite3`
    and restart. This is an environment issue, not an app change.
-7. Note the new platform version in `CHANGELOG.md`.
+7. Record the upgrade in the PR's **changeset**, not in `CHANGELOG.md`. The
+   changeset *is* the upgrade's release-notes entry — what changed on the
+   platform, what metadata was migrated and why — and it is the same entry §2
+   step 4 already requires of every PR; the upgrade does not get a second one.
+   ⛔ `CHANGELOG.md` is not hand-edited: `changeset version` owns it. Full rule
+   in [`AGENTS.md`](../AGENTS.md), §⬆️ Platform Upgrades step 4.
 8. **Check the release notes for `os migrate` steps that run against DATA, not
    metadata** — see §3.2. `pnpm verify` cannot catch these: they gate runtime
    behaviour on a deployment flag, so a fresh install is clean and an in-place
@@ -108,7 +119,7 @@ and this app declares none — every line-item and member object reaches its
 parent through a `lookup`. The four aggregates HotCRM does show
 (`crm_opportunity.amount`, `crm_quote` totals, the campaign metrics, the case
 activity stamp) are ordinary number fields written by the hooks in
-`src/objects/*.hook.ts`, so no platform code has ever seeded or recomputed
+`src/*/objects/*.hook.ts`, so no platform code has ever seeded or recomputed
 them. Re-check this if a future change converts a line-item lookup to
 `master_detail` — the lint rule `relationship/line-item-should-be-master-detail`
 suggests exactly that on four fields today.
@@ -221,7 +232,7 @@ worth knowing apart when triaging:
 > **This section is a contingency, not a step in any current upgrade.** HotCRM's
 > deployment shape today is **fresh installs only**, which is the whole reason
 > the procedure below is documented rather than automated, and the reason
-> `name_normalized` carries no unique index (see `src/objects/account.object.ts`).
+> `name_normalized` carries no unique index (see `src/sales/objects/account.object.ts`).
 > Both conclusions are conditional on that premise. If HotCRM ever acquires
 > long-lived installs that upgrade in place, re-read this section and the index
 > decision together — neither is a universal judgement.
@@ -260,7 +271,7 @@ Stale seed data is the most common cause of "Studio shows a red
 'metadata is invalid' banner" or "the home page lists pending issues." It is
 **almost always the seed, not a designer bug**: a platform contract changed
 (a validation rule was retired, a dashboard now requires a `dataset` + values),
-and the fixtures in `src/data/` were never updated to match.
+and the fixtures in `src/*/data/` were never updated to match.
 
 After any platform upgrade, or whenever Studio shows validation banners:
 
@@ -269,14 +280,14 @@ After any platform upgrade, or whenever Studio shows validation banners:
 3. Open the Console and visually verify the seeded records, dashboards, and
    views render. For dashboards, **wait for the lazy-loaded chart bundle** before
    judging an empty card (see `AGENTS.md` → "Verifying UI in the browser").
-4. If a banner persists, fix the offending fixture in `src/data/`, not the
+4. If a banner persists, fix the offending fixture in `src/*/data/`, not the
    designer or the platform.
 
 ### 4.1 Staffing the demo org (`pnpm demo:staff`)
 
 A reseeded org has records but no PEOPLE. On a fresh install exactly one user
-exists (the dev admin), `demo_bootstrap` claims every seeded record for them,
-and `sys_user_position` is empty — so every position-based sharing rule this app
+exists (the dev admin), the platform hands every seeded record to them when
+the seed settles (its seed-ownership claim; no HotCRM flow is involved), and `sys_user_position` is empty — so every position-based sharing rule this app
 ships grants nobody anything, and `opportunity_approval`'s `manager_review` node
 opens with an empty approver slate while `lockRecord` holds the record ([#640]).
 
@@ -285,21 +296,27 @@ pnpm dev          # terminal 1 — leave running
 pnpm demo:staff   # terminal 2 — once, after the server is up
 ```
 
-That creates three non-admin demo users (`na.rep@` / `eu.rep@` /
-`sales.manager@objectos.ai`, all `demo1234`), assigns their positions, and
-re-evaluates every sharing rule so the already-seeded accounts materialise
-grants. It is idempotent, self-verifying (non-zero exit if the layers do not
-connect) and prints what each user can see:
+That creates the non-admin demo users the table declares (`na.rep@` /
+`eu.rep@` / `sales.manager@` / `service.agent@` / `service.manager@objectos.ai`,
+all `demo1234`), assigns their positions, hands them the demo book by
+re-stamping `owner_id` on the routed objects, and re-evaluates every sharing
+rule so the already-seeded accounts materialise grants. It is idempotent,
+self-verifying (non-zero exit if the layers do not connect) and prints both what
+each user can see and what each user owns:
 
 ```
 north_america_territory  matched=  6  holders=1  granted=6
 europe_territory         matched=  2  holders=1  granted=2
 na.rep@objectos.ai sees 6 account(s) · countries: [CA, US]
 eu.rep@objectos.ai sees 2 account(s) · countries: [DE, UK]
+
+── Ownership census (rows each identity owns = the agent-visible floor) ──
+   object               total          na.rep          eu.rep   sales.manager
+   crm_opportunity         23              16               5               2
 ```
 
 Who exists and which positions they hold is a table —
-[`src/sharing/demo-staffing.ts`](../src/sharing/demo-staffing.ts). Adding a
+[`src/sales/sharing/demo-staffing.ts`](../src/sales/sharing/demo-staffing.ts). Adding a
 person is adding a row.
 
 Three things worth knowing before changing any of it:
@@ -313,25 +330,41 @@ Three things worth knowing before changing any of it:
   every seeded row is written with `isSystem: true`. Staffing alone therefore
   leaves `sys_record_share` empty until a rule is re-evaluated (a server restart
   does it too, via the boot backfill).
-- **The reps must not own the accounts.** `crm_account` is `private`, so the OWD
-  baseline already admits a record's owner — a share to the owner demonstrates
-  nothing. Ownership stays with `demo_bootstrap`'s first user; the script exits
+- **The reps must not own the ACCOUNTS — but they must own their pipeline.**
+  `crm_account` is `private`, so the OWD baseline already admits a record's
+  owner: a share to the owner demonstrates nothing, and account ownership
+  therefore stays with the dev admin the platform's claim gave it to. The script still exits
   non-zero if a demo user turns out to own a seeded account.
+  Every OTHER routed object is the opposite case ([#1759]). The platform's
+  seed-ownership claim gives them all to the dev admin, which an API key never notices — it runs as
+  the human, so `viewAllRecords` applies — while an agent connecting over OAuth
+  sees only what its user owns or holds a share on (the ceiling in
+  [objectstack#16549], which `viewAllRecords` deliberately does not lift). So a
+  demo salesperson asking their agent about the pipeline got **0** opportunities
+  and **0** tasks. The routes in `src/sales/sharing/demo-staffing.ts` fix that by
+  ownership alone — no profile, permission set or sharing rule is touched — and
+  they hand each identity a SUBSET (NA rows to the NA rep, EMEA to the EU rep,
+  everything with no resolvable territory to the manager), because putting the
+  whole book on one demo user would replace "sees 0" with "sees all" and lose
+  the demonstration that row-level security is on at all.
 
 [#640]: https://github.com/objectstack-ai/hotcrm/issues/640
+[#1759]: https://github.com/objectstack-ai/hotcrm/issues/1759
+[objectstack#16549]: https://github.com/objectstack-ai/objectstack/issues/16549
 
 ## 5. Releasing
 
-HotCRM ships as **one** app package (`hotcrm` / `app.objectstack.hotcrm`). Before
-publishing, keep the version aligned across all four places:
+HotCRM ships as **one** app package (`hotcrm` / `app.objectstack.hotcrm`).
+`changeset version` writes `package.json` and `CHANGELOG.md`; the
+`objectstack.config.ts` manifest `version` and the marketplace publish note are
+matched to it by hand, and `pnpm verify` fails if the config drifts from
+`package.json`.
 
-- `package.json` `version`
-- `objectstack.config.ts` manifest `version`
-- `CHANGELOG.md`
-- the marketplace publish note
-
-Full procedure (build artifact, dry-run, publish) lives in
-[`RELEASE_STRATEGY.md`](RELEASE_STRATEGY.md). Do not duplicate it here.
+Which file each of those is, and the full procedure (cut the version, build the
+artifact, dry-run, publish), live in [`RELEASE_STRATEGY.md`](RELEASE_STRATEGY.md)
+§Version Sources and §Release Checklist. Do not duplicate them here — this list
+was a fourth copy of that one, and it is what let `CHANGELOG.md` go on reading as
+a file a releaser aligns by hand.
 
 > **Keep `STATUS.md` honest.** It is a snapshot, not live — regenerate its counts
 > and version from `pnpm validate` whenever they drift from `package.json`.

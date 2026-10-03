@@ -18,12 +18,22 @@ description: 用 ObjectStack 元数据、动作、流程、AI skills 和 UI 定�
 
 ## 当前源码结构
 
-HotCRM 是一个单体 ObjectStack 应用。请在 `src/` 下新增或修改元数据，然后从对应的 barrel 文件导出。
+HotCRM 由四个包构建出一个 ObjectStack 制品（ADR-0130）：`src/` 下的一个目录**就是**一个包。请在拥有该对象的包里新增或修改元数据，然后从那个包对应的 barrel 文件导出。一个文件只能从自己的目录或 `src/sales/` 导入，模块之间不得横向导入。
 
 ```text
 src/
-├── objects/        # *.object.ts 模型和 *.hook.ts 生命周期逻辑
-├── hooks/          # 把对象 hooks 汇总交给 stack 的 barrel
+├── sales/          # `type: app` 包 —— 客户、销售管道、活动记录，以及所有应用级条目
+├── service/        # 模块 —— 工单与知识库
+├── revenue/        # 模块 —— 产品、报价、行项目、合同
+├── marketing/      # 模块 —— 市场活动与活动成员
+└── docs/           # 陈述流程所实现业务规则的应用文档
+```
+
+包内是它用到的元数据类型子目录：
+
+```text
+src/sales/
+├── objects/        # *.object.ts 模型，以及紧挨着各自模型的 *.hook.ts
 ├── actions/        # UI 动作和可执行动作体
 ├── flows/          # 自动化
 ├── skills/         # AI skills
@@ -38,11 +48,10 @@ src/
 ├── sharing/
 ├── translations/
 ├── data/           # 种子数据
-├── docs/           # 陈述流程所实现业务规则的应用文档
 └── interfaces/     # 共享类型（目前是空 barrel）
 ```
 
-HotCRM 只定义 skills，不定义 agent：应用自带的两个 copilot 及其所在目录已被移除，AI 能力来自每个 ObjectStack 环境都提供的平台助手。把 skill 从 `src/skills/index.ts` 导出就是全部的接线工作。参见 [AI Skills](/zh-Hans/docs/customization/ai-skills)。
+HotCRM 只定义 skills，不定义 agent：应用自带的两个 copilot 及其所在目录已被移除，AI 能力来自每个 ObjectStack 环境都提供的平台助手。把 skill 从 `src/*/skills/index.ts` 导出就是全部的接线工作。参见 [AI Skills](/zh-Hans/docs/customization/ai-skills)。
 
 ## 文件后缀协议
 

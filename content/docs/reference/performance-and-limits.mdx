@@ -52,8 +52,8 @@ The two unmarked rows are properties of the metadata model and are stated above.
 
 *Partly sourced.* The file limit HotCRM really enforces is **per field**, not per tenant:
 `Field.file()` and `Field.image()` take a server-enforced `maxSize`, and this app sets
-three — 2 MB on the account logo (`src/objects/account.object.ts:358`), 5 MB and 20 MB on
-product media (`src/objects/product.object.ts:157` and `:164`). No 2 GB platform cap, no
+three — 2 MB on the account logo (`src/sales/objects/account.object.ts:358`), 5 MB and 20 MB on
+product media (`src/revenue/objects/product.object.ts:157` and `:164`). No 2 GB platform cap, no
 multi-part chunking threshold and no preview-format list is declared in the app or in the
 installed packages; the preview formats above describe the viewer your deployment runs.
 
@@ -102,9 +102,10 @@ anyway.
 
 *Partly sourced.* Which fields a search reads **is** real and is declared per object:
 `searchableFields` on the object, set on eight of them today
-(`src/objects/account.object.ts:25`, `lead.object.ts:435`, `case.object.ts:387`,
-`opportunity.object.ts:28`, `product.object.ts:27`, `quote.object.ts:29`,
-`knowledge_article.object.ts:82`, `event.object.ts:224`). There is **no top-30 default and
+(`src/sales/objects/account.object.ts:25`, `lead.object.ts:435`,
+`opportunity.object.ts:28`, `event.object.ts:224`; `src/service/objects/case.object.ts:387`,
+`knowledge_article.object.ts:82`; `src/revenue/objects/product.object.ts:27`,
+`quote.object.ts:29`). There is **no top-30 default and
 no configurable cap** — `resolveSearchFields` in `@objectstack/spec/data` returns exactly
 the declared list, so the "Top 30 by default (configurable)" this page used to quote
 described nothing. The result-count, query-length and latency figures have no source.
@@ -122,7 +123,7 @@ described nothing. The result-count, query-length and latency figures have no so
 | Embedding storage | Per plan (typically GB per tenant) |
 
 *Not enforced.* No invocation quota, token budget, concurrency cap or re-index schedule
-exists for the six skills in `src/skills/` or anywhere in the installed packages. Whatever
+exists for the six skills in `src/*/skills/` or anywhere in the installed packages. Whatever
 metering you get is your model provider's and your deployment's, not the app's.
 
 ## Reporting & analytics
@@ -133,7 +134,7 @@ metering you get is your model provider's and your deployment's, not the app's.
 | Report rows exported | **1,000,000** (unsourced) |
 | Dashboards per user | Unlimited |
 | Widgets per dashboard | **50** (unsourced) |
-| Dashboard refresh interval | **60 s** on Customer Service, **180 s** on Sales Performance, **300 s** on the other three — declared per dashboard in `src/dashboards/` |
+| Dashboard refresh interval | **60 s** on Customer Service, **180 s** on Sales Performance, **300 s** on the other three — declared per dashboard in `src/*/dashboards/` |
 | Cube refresh frequency | Owned by the analytics service. HotCRM declares no refresh schedule and no incremental-versus-full policy anywhere in `src/`, so there is no app-side figure to quote — check your deployment |
 | Concurrent report runs (per user) | **5** (unsourced) |
 
@@ -285,7 +286,7 @@ plus the cross-object `POST /api/v1/batch`. Mind the 10,000-row per-row-hook cei
 
 ### AI invocation batching
 
-*Not shipped.* There is no bulk-skill invocation surface: the six skills in `src/skills/`
+*Not shipped.* There is no bulk-skill invocation surface: the six skills in `src/*/skills/`
 are invoked one call at a time, and no batching, connection pooling or "~10× speedup" path
 exists in the app or the installed packages. Triaging many records means many invocations.
 Bulk **actions** on a list view are a different thing and are real — see
@@ -301,7 +302,7 @@ indexes: [{ name: 'idx_account_name', fields: ['name'] }],
 ```
 
 HotCRM already declares sixteen such blocks across fifteen objects (for example
-`src/objects/account.object.ts:442`); the SQL driver materialises them through
+`src/sales/objects/account.object.ts:442`); the SQL driver materialises them through
 `syncDeclaredIndexes`. There is **no per-field `indexed` toggle** — `FieldSchema` rejects
 the key by name, with the reason attached: *"never a FieldSchema key; a field-level index
 flag built no index (#2377). Declare the index in the object's `indexes[]`."* So the advice

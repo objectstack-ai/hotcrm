@@ -2,15 +2,13 @@
 
 import { describe, it, expect } from 'vitest';
 import { makeFlowHarness } from './helpers/flow-harness';
-import {
-  BillingHandoffClosedWonFlow,
-  BillingHandoffContractActivatedFlow,
-} from '../src/flows/billing-handoff.flow';
+import { BillingHandoffClosedWonFlow } from '../src/sales/flows/billing-handoff-closed-won.flow';
+import { BillingHandoffContractActivatedFlow } from '../src/revenue/flows/billing-handoff-contract-activated.flow';
 import {
   BILLING_HANDOFF_ENDPOINT,
   BILLING_HANDOFF_EVENT,
   BILLING_HANDOFF_PAYLOAD_VERSION,
-} from '../src/flows/_billing-endpoint';
+} from '../src/sales/flows/_billing-endpoint';
 
 /**
  * ═══ Billing hand-off: one delivery per transition, never per edit (#600) ══

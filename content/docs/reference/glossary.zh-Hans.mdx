@@ -7,7 +7,7 @@ description: CRM 与平台术语 —— 按字母排序，让你在会议中不�
 
 ## A
 
-**Account（客户）** —— 你与之开展业务的公司或组织。联系人、商机、合同、案例的父记录。
+**Account（客户）** —— 你与之开展业务的公司或组织。联系人、商机、合同、工单的父记录。
 
 **Account team（客户团队）** —— 附加到客户上的用户列表（及其访问级别）。当一个小组共同处理该客户时使用。
 
@@ -31,13 +31,13 @@ description: CRM 与平台术语 —— 按字母排序，让你在会议中不�
 
 **Bookings（签约额）** —— 某一期间内的赢单合同价值。包括新增 + 扩展 + 续约。
 
-**Business hours（营业时间）** —— 在提供这项设置的 CRM 里，指截止时间所对照的工作日与工作时段。**HotCRM 没有这个概念**：没有工作日日历，没有节假日清单，没有“设置 → 营业时间”这个屏幕，元数据里也不存在任何可供截止时间去对照的东西。它算得出来的那些截止时间 —— 工单 SLA 矩阵里的每一个格子，从 Critical 的 4 小时到 SMB Low 的 7 天 —— 都是加在挂钟上的，夜间、周末与节假日一律照算。参见 [SLA 与升级](/zh-Hans/docs/service/sla-and-escalation)。
+**Business hours（营业时间）** —— 在提供这项设置的 CRM 里，指截止时间所对照的工作日与工作时段。**HotCRM 没有这个概念**：没有工作日日历，没有节假日清单，没有“系统设置 → 营业时间”这个屏幕，元数据里也不存在任何可供截止时间去对照的东西。它算得出来的那些截止时间 —— 工单 SLA 矩阵里的每一个格子，从 Critical 的 4 小时到 SMB Low 的 7 天 —— 都是加在挂钟上的，夜间、周末与节假日一律照算。参见 [SLA 与升级](/zh-Hans/docs/service/sla-and-escalation)。
 
 ## C
 
 **Campaign（营销活动）** —— 包含受众、预算和成果（注册 / 转化的成员）的市场营销计划。
 
-**Case（案例）** —— 客户服务问题。具有 SLA、优先级和状态。
+**Case（工单）** —— 客户服务问题。具有 SLA、优先级和状态。
 
 **Churn（流失）** —— 客户流失。Logo 流失（客户数量）vs 收入流失（金额）。
 
@@ -155,9 +155,9 @@ description: CRM 与平台术语 —— 按字母排序，让你在会议中不�
 
 **Sharing rule（共享规则）** —— 在 OWD 基线之上放开记录访问的例外，放开给它点名的那些岗位。
 
-**Skill (AI)（AI 技能）** —— 一项小型 AI 能力（审定线索、起草邮件、分流案例）。
+**Skill (AI)（AI 技能）** —— 一项小型 AI 能力（审定线索、起草邮件、分流工单）。
 
-**SLA** *(Service Level Agreement，服务级别协议)* —— 在 X 时间内首次响应 / 解决某个案例的承诺。
+**SLA** *(Service Level Agreement，服务级别协议)* —— 在 X 时间内首次响应 / 解决某个工单的承诺。
 
 **SOC2** —— 面向服务提供商的安全/审计标准。
 
@@ -173,7 +173,7 @@ description: CRM 与平台术语 —— 按字母排序，让你在会议中不�
 
 **`sys_audit_log`** —— 平台字段历史存储。对象上任何声明为 `trackHistory: true` 的字段（每个 CRM 对象的默认设置）在更改时都会生成一条 `sys_audit_log` 记录。可在 Activity 选项卡和面向管理员的审计报表中查看。
 
-**`sys_comment`** —— 平台提供的线程式讨论 / 动态存储。发布在任何记录（案例、商机、客户……）上的评论都存放于此。Activity 选项卡会将它们与 `sys_activity`、`sys_email` 和审计历史一起拉取。
+**`sys_comment`** —— 平台提供的线程式讨论 / 动态存储。发布在任何记录（工单、商机、客户……）上的评论都存放于此。Activity 选项卡会将它们与 `sys_activity`、`sys_email` 和审计历史一起拉取。
 
 **`sys_email`** —— 平台提供的出站邮件队列。"Send Email" 操作在此处入队；邮件服务工作进程负责投递、重试和状态（queued / sent / bounced / failed）。
 
@@ -197,7 +197,7 @@ description: CRM 与平台术语 —— 按字母排序，让你在会议中不�
 
 **Webhook** —— 在 CRM 事件发生时触发的 HTTP 回调。
 
-**Workflow rule（工作流规则）** —— 并非 ObjectStack 的概念。平台已退休独立的工作流规则类型（ADR-0019 / ADR-0020）：不存在 `workflow` 元数据类型，stack 上没有 `workflows` 集合，**Studio → Automation** 下也没有 *工作流规则* 入口，只有 *流程*。一条简单的保存后规则（条件 → 字段更新 / 邮件 / 任务）应写成 **记录变更类流程**；参见 [Administration › Automation](/zh-Hans/docs/administration/automation)。
+**Workflow rule（工作流规则）** —— 并非 ObjectStack 的概念。平台已退休独立的工作流规则类型（ADR-0019 / ADR-0020）：不存在 `workflow` 元数据类型，stack 上没有 `workflows` 集合，**Studio → 自动化** 下也没有 *工作流规则* 入口，只有 *流程*。一条简单的保存后规则（条件 → 字段更新 / 邮件 / 任务）应写成 **记录变更类流程**；参见 [系统管理 › 自动化](/zh-Hans/docs/administration/automation)。
 
 **Win rate（赢单率）** —— 赢单 ÷（赢单 + 丢单）。不含"未决策即关闭"。
 

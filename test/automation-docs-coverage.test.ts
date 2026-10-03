@@ -79,14 +79,6 @@ import stack from '../objectstack.config';
  * to make that decision, and better than a filter written now on a guess about
  * which answer a future reader wants.
  *
- * `demo_bootstrap` IS in the table for the same reason, and it is not a close
- * call: that flow ships in the artifact and runs in a customer's org every ten
- * minutes, writing `owner_id` (its own header says so, and
- * `test/demo-staffing.test.ts` polices what it may write). An admin who sees
- * ownership change on a ten-minute beat needs a row to find. The page labels it
- * scaffolding rather than business automation in the prose under the table,
- * which is the honest way to say both things at once.
- *
  * ## Reverse verification (four directions, each predicted before it was run)
  *
  * | direction | predicted | measured |
@@ -176,10 +168,17 @@ const CRON_LABEL: Record<string, Record<Locale, string>> = {
 };
 
 /** The trigger vocabulary each page uses, per kind. */
-const TRIGGER_WORD: Record<Locale, { screen: string; record_change: string; schedule: string }> = {
-  en: { screen: 'Screen', record_change: 'Record change', schedule: 'Schedule' },
-  'zh-Hans': { screen: '屏幕', record_change: '记录变更', schedule: '计划' },
-  'zh-Hant': { screen: '螢幕', record_change: '記錄變更', schedule: '排程' },
+const TRIGGER_WORD: Record<
+  Locale,
+  { screen: string; record_change: string; schedule: string; autolaunched: string }
+> = {
+  // `autolaunched` arrived with #1434: a flow with no trigger of its own, run
+  // only because another flow calls it through a `subflow` node. The admin
+  // reading this table needs to know it fires as part of another action rather
+  // than on a schedule nobody can find.
+  en: { screen: 'Screen', record_change: 'Record change', schedule: 'Schedule', autolaunched: 'Subflow' },
+  'zh-Hans': { screen: '屏幕', record_change: '记录变更', schedule: '计划', autolaunched: '子流程' },
+  'zh-Hant': { screen: '螢幕', record_change: '記錄變更', schedule: '排程', autolaunched: '子流程' },
 };
 
 /** …and the insert/update half of a record-change trigger. */
@@ -201,6 +200,8 @@ const ROW_LABEL: Record<string, Record<'zh-Hans' | 'zh-Hant', string>> = {
   // The flow itself carries no locale-pack entry, so this ledger is where the
   // page's spelling is pinned — it moves with the three pages, not after them.
   lead_conversion: { 'zh-Hans': '线索转化流程', 'zh-Hant': '線索轉化流程' },
+  account_approval: { 'zh-Hans': '客户审批', 'zh-Hant': '客戶審批' },
+  lead_conversion_approval: { 'zh-Hans': '线索转化审批', 'zh-Hant': '線索轉化審批' },
   quote_generation: { 'zh-Hans': '由商机生成报价', 'zh-Hant': '由商機產生報價' },
   schedule_followup: { 'zh-Hans': '安排跟进', 'zh-Hant': '安排跟進' },
   // 营销活动, not 活动: 「活动」 is the locale pack's label for `crm_event`, and this
@@ -210,8 +211,22 @@ const ROW_LABEL: Record<string, Record<'zh-Hans' | 'zh-Hant', string>> = {
   // English label moved to "Enroll Members in Campaign" with it. 「成员」 follows
   // the locale packs, where `crm_campaign_member` is 营销活动成员.
   campaign_enrollment: { 'zh-Hans': '将成员登记进营销活动', 'zh-Hant': '將成員登記進行銷活動' },
-  escalate_case: { 'zh-Hans': '升级案例', 'zh-Hant': '升級案例' },
-  close_case: { 'zh-Hans': '关闭案例', 'zh-Hant': '關閉案例' },
+  // The two elevated callees behind Enroll Members (AGENTS.md house rule 9),
+  // labelled off the same 营销活动/行銷活動 + 登记/登記 vocabulary as their caller
+  // one line up, and 子流程 in the type column like `case_escalation_stamp`.
+  campaign_lead_member_enroll: { 'zh-Hans': '将线索登记进营销活动', 'zh-Hant': '將線索登記進行銷活動' },
+  campaign_contact_member_enroll: { 'zh-Hans': '将联系人登记进营销活动', 'zh-Hant': '將聯絡人登記進行銷活動' },
+  // 工单/工單, not 案例: the locale pack labels these two screen actions
+  // 升级工单 / 关闭工单 (`crm_case._actions`), and the pack's own object label
+  // is 工单 since #837. These rows spelled it 案例 until then — the page and
+  // the pack contradicting each other, both green.
+  // 认领/認領, not 领取/接手: the locale packs label the action 认领工单
+  // (`crm_case._actions.claim_case`), and this page's row follows the pack the
+  // same way the two rows below it do (#837).
+  claim_case: { 'zh-Hans': '认领工单', 'zh-Hant': '認領工單' },
+  escalate_case: { 'zh-Hans': '升级工单', 'zh-Hant': '升級工單' },
+  case_escalation_stamp: { 'zh-Hans': '标记工单升级', 'zh-Hant': '標記工單升級' },
+  close_case: { 'zh-Hans': '关闭工单', 'zh-Hant': '關閉工單' },
   lead_assignment: { 'zh-Hans': '新线索路由与 SLA', 'zh-Hant': '新線索路由與 SLA' },
   contact_welcome: { 'zh-Hans': '联系人欢迎', 'zh-Hant': '聯絡人歡迎' },
   task_urgent_alert: { 'zh-Hans': '紧急任务提醒', 'zh-Hant': '緊急任務提醒' },
@@ -221,21 +236,19 @@ const ROW_LABEL: Record<string, Record<'zh-Hans' | 'zh-Hant', string>> = {
     'zh-Hant': '大額商機審批（新建時）',
   },
   opportunity_won_alert: { 'zh-Hans': '大额商机赢单提醒', 'zh-Hant': '大額商機贏單提醒' },
-  case_escalation: { 'zh-Hans': '案例升级流程', 'zh-Hant': '案例升級流程' },
+  case_escalation: { 'zh-Hans': '工单升级流程', 'zh-Hant': '工單升級流程' },
   case_escalation_on_create: {
-    'zh-Hans': '案例升级流程（新建时）',
-    'zh-Hant': '案例升級流程（新建時）',
+    'zh-Hans': '工单升级流程（新建时）',
+    'zh-Hant': '工單升級流程（新建時）',
   },
-  case_csat_followup: { 'zh-Hans': '案例满意度回访', 'zh-Hant': '案例滿意度回訪' },
   contract_expiration: { 'zh-Hans': '合同自动到期', 'zh-Hant': '合約自動到期' },
   quote_expiration: { 'zh-Hans': '报价自动过期', 'zh-Hant': '報價自動過期' },
   campaign_completion: { 'zh-Hans': '营销活动自动完成', 'zh-Hant': '行銷活動自動完成' },
   forecast_snapshot: { 'zh-Hans': '预测快照', 'zh-Hant': '預測快照' },
   opportunity_stagnation: { 'zh-Hans': '停滞商机提醒', 'zh-Hant': '停滯商機提醒' },
   contract_renewal: { 'zh-Hans': '合同续约提醒', 'zh-Hant': '合約續約提醒' },
-  case_sla_monitor: { 'zh-Hans': '案例 SLA 监控', 'zh-Hant': '案例 SLA 監控' },
+  case_sla_monitor: { 'zh-Hans': '工单 SLA 监控', 'zh-Hant': '工單 SLA 監控' },
   task_due_reminder: { 'zh-Hans': '任务到期提醒', 'zh-Hant': '任務到期提醒' },
-  demo_bootstrap: { 'zh-Hans': '演示数据引导', 'zh-Hant': '展示資料啟動' },
   // 计费/計費, not 账单/帳單: the pages call the outbound target 「计费端点」 and the
   // boundary page is 「计费交接」, so the flow labels follow that one word (#600).
   billing_handoff_closed_won: { 'zh-Hans': '计费交接：赢单', 'zh-Hant': '計費交接：贏單' },
@@ -306,6 +319,11 @@ const triggerParts = (flow: AnyRec, locale: Locale): string[] => {
       );
     }
     return [words.record_change, word];
+  }
+  if (kind === 'autolaunched') {
+    // No trigger to spell — it has none. The cell names the caller instead, so
+    // the row answers "what makes this run?" rather than leaving it blank.
+    return [words.autolaunched];
   }
   if (kind === 'schedule') {
     const cron = cronOf(flow);

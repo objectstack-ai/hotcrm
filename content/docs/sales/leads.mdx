@@ -100,7 +100,7 @@ When a lead arrives with an email address already in the system, it is saved wit
 - **Duplicate Status = Suspected** — a machine's guess, nothing has been decided.
 - **Duplicate Of** — the record it appears to repeat: an existing **Contact** if the person already became one, otherwise the **oldest open Lead** with that address. Every re-submission points at the same original, so a cluster is one list, not a chain.
 
-Work them from the **Suspected Duplicates** view on the Leads tab. Open the pair, compare them, and then either:
+Work them from the **Suspected Duplicates** view in the Leads list's view switcher. Open the pair, compare them, and then either:
 
 - **It's a new enquiry from a known person** — clear Duplicate Status and work the lead normally. A returning prospect with a fresh budget is a real opportunity.
 - **It's the same enquiry twice** — set the lead to *Unqualified* with the reason **Duplicate**. The form then requires you to name the surviving record and set Duplicate Status to **Confirmed**; the lead cannot be closed as a duplicate without saying what survives it, so the disqualification report always links to something you can open.
@@ -117,6 +117,15 @@ Deleting a Contact, or the Account above it, is never blocked by a lead that poi
 **Erased Record** is not something you can choose. It is only ever written when the record a lead named is actually deleted, which is why seeing it on a lead is reliable evidence that the deletion happened rather than that someone typed it. This is what lets an erasure request be carried out in full without quietly deleting a reviewer's finding along with it.
 
 ## Converting a qualified lead
+
+A lead whose **Duplicate Status** is **Confirmed** cannot be converted. **Convert**
+opens a refusal instead of the conversion form: a reviewer has already compared this
+lead against an existing record and recorded that it repeats one, so converting it
+would create a second account, contact and opportunity for the same buyer. The
+**Duplicate Management** section on the lead names the surviving record — close a
+confirmed duplicate as one instead. A lead flagged only *Suspected* still converts;
+that flag is a machine's guess, and the conversion screen warns about it rather than
+stopping you.
 
 When a lead is qualified, click **Convert**. A small form pops up asking:
 
@@ -167,6 +176,6 @@ The Leads list curates no tab row, so the switcher offers every saved view there
 
 ## Tips for admins
 
-- The score formula lives in the lead's automation. To re-weight it, edit `src/objects/lead.hook.ts` (binds to `crm_lead`). See [Customization](/docs/customization/extending-objects).
+- The score formula lives in the lead's automation. To re-weight it, edit `src/sales/objects/lead.hook.ts` (binds to `crm_lead`). See [Customization](/docs/customization/extending-objects).
 - Web-to-Lead can be enabled by granting the Guest Portal profile *insert-only* on the lead object — see [Administration › Profiles](/docs/administration/profiles).
 - To add a new industry or lead source, edit the lead object's picklists — see [Customization](/docs/customization/extending-objects).

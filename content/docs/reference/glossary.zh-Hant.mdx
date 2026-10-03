@@ -5,9 +5,11 @@ description: CRM 與平台術語 —— 按字母排序，讓你在會議中不�
 
 # 術語表
 
+本應用未隨附繁體中文語言包，因此本頁出現的介面名詞依固定順序取用：zh-CN 語言包已收錄者，採其用詞的繁體寫法；未收錄者，保留產品內的英文原名，不另造譯名。
+
 ## A
 
-**Account（客戶）** —— 你與之開展業務的公司或組織。聯絡人、商機、合約、案例的父記錄。
+**Account（客戶）** —— 你與之開展業務的公司或組織。聯絡人、商機、合約、工單的父記錄。
 
 **Account team（客戶團隊）** —— 附加到客戶上的使用者清單（及其存取級別）。當一個小組共同處理該客戶時使用。
 
@@ -37,7 +39,7 @@ description: CRM 與平台術語 —— 按字母排序，讓你在會議中不�
 
 **Campaign（行銷活動）** —— 包含受眾、預算和成果（註冊 / 轉化的成員）的市場行銷計畫。
 
-**Case（案例）** —— 客戶服務問題。具有 SLA、優先順序和狀態。
+**Case（工單）** —— 客戶服務問題。具有 SLA、優先順序和狀態。
 
 **Churn（流失）** —— 客戶流失。Logo 流失（客戶數量）vs 收入流失（金額）。
 
@@ -155,9 +157,9 @@ description: CRM 與平台術語 —— 按字母排序，讓你在會議中不�
 
 **Sharing rule（共享規則）** —— 在 OWD 基線之上放開記錄存取的例外，放開給它點名的那些職位。
 
-**Skill (AI)（AI 技能）** —— 一項小型 AI 能力（審定線索、起草郵件、分流案例）。
+**Skill (AI)（AI 技能）** —— 一項小型 AI 能力（審定線索、起草郵件、分流工單）。
 
-**SLA** *(Service Level Agreement，服務級別協議)* —— 在 X 時間內首次回應 / 解決某個案例的承諾。
+**SLA** *(Service Level Agreement，服務級別協議)* —— 在 X 時間內首次回應 / 解決某個工單的承諾。
 
 **SOC2** —— 面向服務提供商的安全/稽核標準。
 
@@ -173,7 +175,7 @@ description: CRM 與平台術語 —— 按字母排序，讓你在會議中不�
 
 **`sys_audit_log`** —— 平台欄位歷史儲存。物件上任何宣告為 `trackHistory: true` 的欄位（每個 CRM 物件的預設設定）在變更時都會生成一筆 `sys_audit_log` 記錄。可在 Activity 選項卡和面向管理員的稽核報表中查看。
 
-**`sys_comment`** —— 平台提供的執行緒式討論 / 動態儲存。發布在任何記錄（案例、商機、客戶……）上的評論都存放於此。Activity 選項卡會將它們與 `sys_activity`、`sys_email` 和稽核歷史一起拉取。
+**`sys_comment`** —— 平台提供的執行緒式討論 / 動態儲存。發布在任何記錄（工單、商機、客戶……）上的評論都存放於此。Activity 選項卡會將它們與 `sys_activity`、`sys_email` 和稽核歷史一起拉取。
 
 **`sys_email`** —— 平台提供的出站郵件佇列。「Send Email」操作在此處排入佇列；郵件服務工作處理程序負責投遞、重試和狀態（queued / sent / bounced / failed）。
 
@@ -197,7 +199,7 @@ description: CRM 與平台術語 —— 按字母排序，讓你在會議中不�
 
 **Webhook** —— 在 CRM 事件發生時觸發的 HTTP 回呼。
 
-**Workflow rule（工作流規則）** —— 並非 ObjectStack 的概念。平台已退休獨立的工作流規則類型（ADR-0019 / ADR-0020）：不存在 `workflow` 中繼資料類型，stack 上沒有 `workflows` 集合，**Studio → Automation** 下也沒有 *Workflow Rules* 入口，只有 *Flows*（平台未附繁體中文語言包，主控台介面顯示英文）。一條簡單的儲存後規則（條件 → 欄位更新 / 郵件 / 任務）應寫成 **記錄變更類流程**；參見 [Administration › Automation](/zh-Hant/docs/administration/automation)。
+**Workflow rule（工作流規則）** —— 並非 ObjectStack 的概念。平台已退休獨立的工作流規則類型（ADR-0019 / ADR-0020）：不存在 `workflow` 中繼資料類型，stack 上沒有 `workflows` 集合，**Studio → Automation** 下也沒有 *Workflow Rules* 入口，只有 *Flows*（平台未附繁體中文語言包，主控台介面會回退為簡體中文，此處改以英文標示）。一條簡單的儲存後規則（條件 → 欄位更新 / 郵件 / 任務）應寫成 **記錄變更類流程**；參見 [系統管理 › 自動化](/zh-Hant/docs/administration/automation)。
 
 **Win rate（贏單率）** —— 贏單 ÷（贏單 + 丟單）。不含「未決策即關閉」。
 

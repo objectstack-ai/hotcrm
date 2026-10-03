@@ -4,8 +4,8 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
-import { allHooks } from '../src/hooks';
-import * as flows from '../src/flows';
+import { allHooks } from '../objectstack.composition';
+import { CrmFlows as flows } from './helpers/src-roster';
 
 /**
  * Runtime-coverage guard.
@@ -83,6 +83,21 @@ const RUNTIME_TEST_FILES = [
   // hooks run their SHIPPED lowered bodies through the real QuickJS runner
   // there, not their handlers.
   'do-not-call-enforcement.test.ts',
+  // REQ-0005 — the lead conversion approval gate. Same precedent as the feature
+  // files above, and the same reason: the gate is authored on four surfaces
+  // (the field default, `convert_lead.visible`, `lead_conversion`'s
+  // `decision_approval` edges and the `beforeUpdate` refusal) that have to
+  // agree about what OFF means, and the evidence is only legible with all four
+  // side by side. `lead_conversion_approval`'s own runtime evidence is its
+  // start condition driven through the real engine there.
+  'account-approval-gate.test.ts',
+  'opportunity-account-capability-gate.test.ts',
+  'lead-conversion-approval-gate.test.ts',
+  // #1828 — the `line_number` assigner on both line items. Same precedent: its
+  // evidence is an ENGINE fact (a hook-written readonly key survives the
+  // non-system strip, a caller-supplied one does not) measured on a real
+  // ObjectQL with the strip's own control beside it, plus the lowered body.
+  'line-item-line-number.test.ts',
 ];
 
 /**
@@ -93,12 +108,11 @@ const RUNTIME_TEST_FILES = [
  * the suite too, so it cannot rot.
  */
 const PENDING_FLOWS = new Set<string>([
-  // Empty, and the "no stale entries" case below is what emptied it.
-  // `case_csat_followup` was pending because it spans a 24h `wait` node — but
-  // the part of it that needed proving turned out to be reachable without
-  // timer-resume support: #684's user-less run drives it through the real
-  // engine as far as the suspension, which is where its execution identity is
-  // decided. See test/flow-record-change.test.ts.
+  // Empty, and the "no stale entries" case below is what emptied it. The last
+  // entry was `case_csat_followup`, pending because it spanned a 24h `wait`
+  // node — #684 showed the part that needed proving was reachable without
+  // timer-resume support, and #1428 then retired the flow outright along with
+  // the two fields it existed to collect.
 ]);
 
 const testSource = (() => {

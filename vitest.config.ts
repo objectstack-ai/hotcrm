@@ -22,14 +22,20 @@ export default defineConfig({
        * pure noise, and including it diluted the signal enough to hide the
        * fact that 20 of 24 hooks had no runtime test at all.
        *
-       * `src/flows/*.flow.ts` is deliberately NOT here for the same reason,
-       * and for a sharper one: a flow file is an object literal, so importing
-       * it scores 100% whether or not any test ever executes the flow. Flow
-       * coverage is asserted structurally instead — see
+       * Each package's `flows/*.flow.ts` is deliberately NOT here for the
+       * same reason, and for a sharper one: a flow file is an object literal,
+       * so importing it scores 100% whether or not any test ever executes the
+       * flow. Flow coverage is asserted structurally instead — see
        * `test/runtime-coverage.test.ts`, which fails when a registered flow or
        * hook has no runtime test naming it.
+       *
+       * That path is written WITHOUT its `src/` prefix on purpose. The real
+       * glob is `src/` + `*` + `/flows/*.flow.ts`, and spelling it out here
+       * would put `*` immediately before `/`, which ENDS this block comment —
+       * the rest of the paragraph becomes code and `tsc` fails at the line
+       * below. Same trap for every `src/` + `*` + `/` path in a block comment.
        */
-      include: ['src/objects/*.hook.ts'],
+      include: ['src/*/objects/*.hook.ts'],
       /**
        * Floors sit just under the measured numbers, so they lock in the
        * runtime-test work rather than aspiring to it. Raise them as coverage

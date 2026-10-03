@@ -116,6 +116,19 @@ describe('conversion rate reads 转化率 on every Chinese docs page (#905)', ()
   it.each(CARRIERS)('$page still states the metric in both scripts', (carrier) => {
     for (const locale of ['zh-Hans', 'zh-Hant'] as const) {
       const file = join(DOCS_ROOT, `${carrier.page}.${locale}.mdx`);
+      // Cross the literal against the walk. This block reads the carrier by
+      // absolute path and the sweep above reads whatever `chineseDocs()`
+      // returns, and nothing tied the two together: narrow the walk — a skipped
+      // directory, a changed suffix test — and it still returns 50+ real pages
+      // while `readFileSync` still opens this one, so the negative sweep quietly
+      // stops covering the two pages that carry the metric it polices. The
+      // carrier's CONTENT is pinned on the next line, which is what makes a path
+      // in the walk's output a content pin here rather than a name.
+      expect(
+        pages,
+        `${relative(REPO_ROOT, file)} carries the metric but the walk no longer reaches it, ` +
+          'so the 转换率 sweep is not covering it. Re-derive the surface against the tree.',
+      ).toContain(file);
       expect(readFileSync(file, 'utf8')).toContain(carrier[locale]);
     }
   });

@@ -4,12 +4,13 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
-import oppLineItemHooks from '../src/objects/opportunity_line_item.hook';
-import quoteLineItemHooks from '../src/objects/quote_line_item.hook';
-import { OpportunityLineItem } from '../src/objects/opportunity_line_item.object';
-import { QuoteLineItem } from '../src/objects/quote_line_item.object';
+import oppLineItemHooks from '../src/revenue/objects/opportunity_line_item.hook';
+import quoteLineItemHooks from '../src/revenue/objects/quote_line_item.hook';
+import { OpportunityLineItem } from '../src/revenue/objects/opportunity_line_item.object';
+import { QuoteLineItem } from '../src/revenue/objects/quote_line_item.object';
 import { hookNamed, makeCtx, makeHarness, type Rec } from './helpers/hook-harness';
 import { REPO_ROOT } from './helpers/repo-root';
+import { objectFiles } from './helpers/src-roster';
 
 /**
  * Authoring-convention guards for the two line-item objects (#514 items 8, 3, 15).
@@ -32,13 +33,15 @@ import { REPO_ROOT } from './helpers/repo-root';
  *   two assert against the compiled metadata rather than the source text.
  */
 
-const OBJECTS_DIR = join(REPO_ROOT, 'src/objects');
 
 type AnyRec = Record<string, any>;
 
-const objectSources = readdirSync(OBJECTS_DIR)
-  .filter((f) => f.endsWith('.object.ts'))
-  .map((file) => ({ file, source: readFileSync(join(OBJECTS_DIR, file), 'utf8') }));
+// Every package's `*.object.ts`, not one directory: since the ADR-0130 layout
+// a directory under `src/` is a package and each carries its own `objects/`.
+const objectSources = objectFiles().map((rel) => ({
+  file: rel.split('/').pop()!,
+  source: readFileSync(join(REPO_ROOT, rel), 'utf8'),
+}));
 
 /** Guard against the glob silently matching nothing (a vacuous test passes). */
 it('the object-source scan actually reads files', () => {
