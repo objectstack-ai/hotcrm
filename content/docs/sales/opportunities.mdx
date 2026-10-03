@@ -45,37 +45,31 @@ Those two fields are what the Sales dashboard's **win rate** and **Why We Lose**
 
 ## What an opportunity record stores
 
-Three different things organise `crm_opportunity`'s fields — the object's own field groups, the opportunity detail screen, and the opportunity form — and no two of them agree, so it is worth knowing which one you are being shown.
+Three things organise `crm_opportunity`'s fields — the object's own field groups, the opportunity detail screen, and the opportunity form. The detail screen follows the field groups; the form does not, so it is worth knowing which one you are being shown.
 
 ### The object's field groups
 
-The seven names below are real, but not one of them is a screen: they are `crm_opportunity`'s **field groups** (`fieldGroups` in `src/sales/objects/opportunity.object.ts`), the object's own filing scheme for its fields. Neither the detail screen nor the form renders them — each declares sections of its own, listed below. This is, though, the one list that accounts for every field the object has:
+The nine names below are `crm_opportunity`'s **field groups** (`fieldGroups` in `src/sales/objects/opportunity.object.ts`), the object's own filing scheme for its fields. The detail screen's **Details** tab is built from them; the form declares tabs of its own, listed below. This is the one list that accounts for every field the object has:
 
 | Field group | Fields |
 | --- | --- |
 | **Basic Information** | Opportunity Owner, Opportunity Name, Account, Primary Contact |
 | **Financials** | Amount, Expected Revenue |
-| **Sales Process** | Stage, Probability (%), Close Date, Stage Entry Date, Approval Status, Approved Date |
-| **Classification** | Opportunity Type, Lead Source, Win Reason, Loss Reason, Loss/Win Details |
+| **Sales Process** | Stage, Probability (%), Close Date, Stage Entry Date, Customer Initiation Date, Expected Tender Date, Expected Signing Date, Expected Tender Amount, Expected Signing Amount, Approval Status, Approved Date, Requested Status, Status Change Approval |
+| **Qualification** | Will Bid, Controllability, Priority, Deal Level, Involves Subcontracting, Subcontracting Note |
+| **Deal Narrative** | Customer Background, Project Background, Risk Analysis, Payment Terms |
+| **Classification** | Opportunity Type, Business Line, Lead Source, Win Reason, Loss Reason, Loss/Win Details |
 | **Campaigns** *(collapsed by default)* | Campaign |
 | **Notes & Next Steps** | Description, Next Steps |
 | **Forecast & Metrics** *(collapsed by default)* | Days in Current Stage, Private, Forecast Category |
 
-Four of those seven rows used to be written differently on this page, and the differences were not cosmetic: **Probability (%)** is in *Sales Process*, not *Financials*; *Sales Process* also holds **Approval Status** and **Approved Date**, and an opportunity has no *created date* field at all; the campaign field's label is **Campaign**, not *Source campaign*; and *Forecast & Metrics* holds **Days in Current Stage**, **Private** and **Forecast Category** — not *line item totals*, which is not a field on this object, and not **Approval Status**, which is one row further up.
+Four of the original seven rows used to be written differently on this page, and the differences were not cosmetic: **Probability (%)** is in *Sales Process*, not *Financials*; *Sales Process* also holds **Approval Status** and **Approved Date**, and an opportunity has no *created date* field at all; the campaign field's label is **Campaign**, not *Source campaign*; and *Forecast & Metrics* holds **Days in Current Stage**, **Private** and **Forecast Category** — not *line item totals*, which is not a field on this object, and not **Approval Status**, which is one row further up.
 
 ### The detail screen
 
-The **Details** tab of the opportunity detail page (`src/sales/pages/opportunity_detail.page.ts`) declares **three** sections, holding **seven** fields:
+The **Details** tab of the opportunity detail page (`src/sales/pages/opportunity_detail.page.ts`) declares no sections of its own: each of its sections is one of the field groups above, with that group's name, fields and collapsed state, in this order — **Basic Information**, **Financials**, **Classification**, **Campaigns**, **Sales Process**, **Qualification**, **Deal Narrative**, **Forecast & Metrics**, **Notes & Next Steps**. A field added to a group therefore reaches the tab by itself.
 
-| Section | Fields |
-| --- | --- |
-| **Opportunity Information** | Opportunity Type, Lead Source, Campaign |
-| **Stage & Forecast** | Stage, Forecast Category |
-| **Description** *(collapsible)* | Description, Next Steps |
-
-*Description* is the only one of the three that can be collapsed, and nothing marks it collapsed to begin with, so it opens along with the rest.
-
-The tab is shorter than its section names suggest, and that is deliberate: a section here lists only the fields it is responsible for. **Amount**, **Close Date**, **Probability (%)**, **Expected Revenue**, **Opportunity Owner** and **Account** are already on the **Key Information** strip above the tabs, and **Opportunity Name** is the page title — so the tab repeats none of them.
+The tab is shorter than that list suggests, and that is deliberate. **Amount**, **Close Date**, **Probability (%)**, **Expected Revenue**, **Opportunity Owner** and **Account** are already on the **Key Information** strip above the tabs, and **Opportunity Name** is the page title — so the tab repeats none of them, and *Financials*, left with nothing to show, does not appear. **Classification**, **Campaigns**, **Qualification**, **Deal Narrative** and **Notes & Next Steps** stay on screen even when every field in them is empty, as labelled rows waiting to be filled in; the other sections appear once one of their fields has a value.
 
 ### The form
 
@@ -84,7 +78,7 @@ The opportunity form (`src/sales/views/opportunity.view.ts`) is tabbed, and its 
 | Section | Fields |
 | --- | --- |
 | **Overview** | Opportunity Name, Account, Primary Contact, Stage, Amount, Probability (%), Close Date, Opportunity Owner |
-| **Forecast** | Expected Revenue, Forecast Category, Opportunity Type, Lead Source, Campaign, Stage Entry Date, Days in Current Stage, Private |
+| **Forecast** | Expected Revenue, Forecast Category, Opportunity Type, Lead Source, Campaign, Stage Entry Date, Days in Current Stage, Private, Customer Initiation Date, Expected Tender Date, Expected Tender Amount, Expected Signing Date, Expected Signing Amount |
 | **Sales Strategy** | Next Steps |
 | **Win / Loss** *(collapsed by default)* | Win Reason, Loss Reason, Loss/Win Details |
 
@@ -146,7 +140,7 @@ On top of that:
 
 ## Standard list views
 
-Opportunities opens on **Open Deals**, and the switcher along the top of the list carries nine saved views — these, and nothing else:
+Opportunities opens on **Open Deals**, and the switcher along the top of the list carries ten saved views — these, and nothing else:
 
 | View | What it shows |
 | --- | --- |
@@ -159,6 +153,7 @@ Opportunities opens on **Open Deals**, and the switcher along the top of the lis
 | **Deal Cards** | Gallery cards — account, amount, stage, probability, close date, owner — for pipeline and executive reviews. |
 | **⚠️ Stale Opportunities · Longest in Stage First** | Open deals ordered by how long they have sat in their current stage, longest first. Nothing is cut off by age — **Days in Current Stage** is a column, so you read the wait off the row. The daily [Stalled Deal Alert](/docs/administration/automation) is what acts on it, nudging the owner once a deal passes 14 days in one stage. |
 | **Closing This Quarter** | Open **Commit** and **Best Case** deals whose close date falls inside the current quarter — see below. |
+| **Tender This Quarter** | Open deals whose **Expected Tender Date** — the customer's own tender date, not our close date — falls inside the current quarter, soonest tender first — see below. |
 
 ### Closing This Quarter
 
@@ -172,6 +167,12 @@ That third filter is what makes the name true: summing the **Amount** column giv
 
 **An empty list here is an answer, not a broken view.** When nothing matches, the view says so in place of the grid — *No Deals Closing This Quarter*, with a pointer back to **Open Deals** — because a quarter whose commit has slipped out entirely is exactly the state a manager needs to see. A freshly seeded demo org meets the same screen in the closing days of a quarter, when every sample deal lands in the next one.
 
+### Tender This Quarter
+
+Where **Closing This Quarter** reads *our* forecast, this view reads the *customer's* calendar. It lists open deals whose **Expected Tender Date** falls inside the current quarter, with the tender amount and the expected signing date beside it, and it never looks at the close date — a deal we expect to sign next year can still have a tender this quarter, and this is where it shows up. Both ends of the quarter are computed each time the list runs.
+
+**It is empty until somebody records a tender date.** No sample deal carries one, so a fresh install opens this view on *No Tenders Expected This Quarter*. See [Opportunity Qualification](/docs/sales/opportunity-qualification) for the customer-side dates and how they differ from the close date.
+
 ## The opportunity detail layout
 
 When you open an opportunity, you'll see:
@@ -180,7 +181,7 @@ When you open an opportunity, you'll see:
 - **Key Information** — the highlights strip immediately under the header, and where this deal's numbers really are: **Amount**, **Close Date**, **Probability (%)**, **Expected Revenue**, **Opportunity Owner** and **Account**, side by side. The account therefore appears twice on the screen — once as the header subtitle, once here.
 - **Sales Path** — the stage strip below the highlights: all seven stages in funnel order, the current one marked and the ones already passed ticked. It is a **read-only indicator, not a control** — the stages are not clickable, so there is no one-click progression, and clicking a stage does not move the deal to it. You move a deal by editing its **Stage** field, on the *Details* tab or in the edit form, and the transition rules in *The 7 sales stages* above are what decide whether the move is allowed.
 - **Three tabs:**
-  - **Details** — the tab a deal opens on. **Three** sections holding **seven** fields, listed under *What an opportunity record stores* above; the fields already on the **Key Information** strip are deliberately not repeated here.
+  - **Details** — the tab a deal opens on. Its sections are the object's field groups, described under *What an opportunity record stores* above; the fields already on the **Key Information** strip are deliberately not repeated here.
   - **Related** — three panels in an accordion, and only the first is open when you arrive. **Quotes** — this deal's quotes; the **Generate Quote** button that runs the [Quote Generation flow](/docs/sales/quotes#generating-a-quote) is not on this list, it is one of the header buttons above. **Products** — the deal's line items; the panel lists them, links to the full list, and carries an **Add** button. That button is an `add` picker over the product catalog, not an action: there is no **Add Product** action in this app (see *Line items — what's actually being sold* above). **Open Tasks** — this deal's `crm_task` records through **Related Opportunity**, filtered to those whose status is not *Completed*, ten at a time.
   - **Activity** — a unified feed of comments, logged calls (`sys_activity`), outbound emails (`sys_email`), task completions, and field-history audit entries. Every tracked change on the opportunity (stage, amount, close-date, owner) shows up here automatically; there is no separate "history" tab.
 - **Competitors & Notes** — there is no such panel. The page (`src/sales/pages/opportunity_detail.page.ts`) declares three regions: a header, the main column carrying the tab strip, and one narrow side column (`aside`) whose only occupant is the reference rail described below. Nothing on the page renders talking points, and there is no competitors field left to render either: the opportunity's **Competitors** multi-select offered three placeholder options (*Competitor A*, *Competitor B*, *Competitor C*), no screen in the app ever read the value back, and #1061 retired it. The only competitor signal the app records is the *Lost to Competitor* closed-lost reason, with the free-text **Loss/Win Details** beside it. The closest thing to notes on the page itself is the *Details* tab's collapsible **Description** section, which carries **Description** and **Next Steps**.

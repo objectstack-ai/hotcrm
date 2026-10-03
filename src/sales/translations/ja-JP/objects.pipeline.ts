@@ -287,8 +287,43 @@ export const pipeline: Record<string, ObjectTranslationData> = {
         },
       },
       loss_details: { label: '受注・失注の詳細', help: '受注・失注理由の補足説明（自由記述）。' },
+      // REQ-0006 — 適格判定、顧客側の調達スケジュール、商談の経緯、事業区分、ステータス変更承認。
+      will_bid: { label: '入札予定', help: '入札する意向があるかどうか。未設定は判断が保留中であることを示します。' },
+      controllability: { label: 'コントロール度', options: { high: '高', medium: '中', low: '低' } },
+      priority: { label: '優先度', options: { high: '高', medium: '中', low: '低' } },
+      deal_level: { label: '商談ランク', options: { strategic: '戦略', key: '重点', standard: '標準' } },
+      is_subcontracted: { label: '外注あり' },
+      subcontracting_note: { label: '外注メモ' },
+      customer_initiation_date: { label: '顧客の案件化日' },
+      expected_tender_date: { label: '入札予定日' },
+      expected_signing_date: { label: '契約締結予定日' },
+      expected_tender_amount: { label: '入札予定金額' },
+      expected_signing_amount: { label: '契約予定金額' },
+      business_line: {
+        label: '事業区分',
+        options: {
+          product: '製品', services: 'プロフェッショナルサービス', consulting: 'コンサルティング',
+          support: '保守・サポート', other: 'その他',
+        },
+      },
+      customer_background: { label: '顧客概要' },
+      project_background: { label: 'プロジェクト背景' },
+      risk_analysis: { label: 'リスク分析' },
+      payment_terms: { label: '支払条件' },
+      requested_status: { label: '申請ステータス', options: { closed_won: '受注', closed_lost: '失注' } },
+      status_change_approval_status: {
+        label: 'ステータス変更承認',
+        options: { not_required: '承認不要', pending: '承認待ち', approved: '承認済み', rejected: '却下' },
+      },
     },
     _views: {
+      tender_this_quarter: {
+        label: '今四半期に入札予定',
+        emptyState: {
+          title: '今四半期に入札予定の商談はありません',
+          message: 'このタブには、顧客側の入札予定日が今四半期内にあるオープン商談が表示されます。商談に「入札予定日」を入力すると、ここに表示されます。',
+        },
+      },
       open_opportunities: { label: '進行中の商談' },
       all_opportunities: { label: '全商談' },
       pipeline_kanban: { label: 'セールスパイプライン' },
@@ -315,6 +350,8 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       classification: { label: '分類' },
       campaign: { label: 'キャンペーン' },
       notes: { label: 'メモ・次のステップ' },
+      qualification: { label: '適格判定' },
+      narrative: { label: '商談の経緯' },
       // opportunity.view.ts のフォームセクション名 (#1100)
       overview: { label: '概要' },
       forecast: { label: '予測' },

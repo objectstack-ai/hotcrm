@@ -292,6 +292,41 @@ export const OpportunityViews = defineView({
       sort: [{ field: 'stage_entry_date', order: 'asc' }, { field: 'close_date', order: 'asc' }],
     },
 
+    /**
+     * Tender expected this quarter — REQ-0006 acceptance 2 in one view.
+     *
+     * The point of the view is the predicate: it windows
+     * `expected_tender_date`, the CUSTOMER's procurement calendar, and touches
+     * `close_date` nowhere — which is what "reportable independently of
+     * `close_date`" means and what a single forecast date could never express.
+     *
+     * Same inclusive `{current_quarter_*}` bounds as `closing_this_quarter`
+     * below, exact for the same measured reason: both bounds are date macros
+     * resolved server-side, and `expected_tender_date` is a `Field.date()`
+     * stored as `YYYY-MM-DD` TEXT, so the inclusive upper bound drops no rows.
+     */
+    tender_this_quarter: {
+      name: 'tender_this_quarter',
+      type: 'grid',
+      label: 'Tender This Quarter',
+      data: { provider: 'object', object: 'crm_opportunity' },
+      columns: ['name', 'crm_account', 'expected_tender_date', 'expected_tender_amount', 'expected_signing_date', 'stage', 'owner_id'],
+      filter: [
+        { field: 'stage', operator: 'not_in', value: ['closed_won', 'closed_lost'] },
+        { field: 'expected_tender_date', operator: 'greater_than_or_equal', value: '{current_quarter_start}' },
+        { field: 'expected_tender_date', operator: 'less_than_or_equal', value: '{current_quarter_end}' },
+      ],
+      sort: [{ field: 'expected_tender_date', order: 'asc' }],
+      // Empty is the legitimate state on a fresh install: no seed row carries
+      // a customer-side tender date, so this tab opens on nothing until a rep
+      // records one. Unexplained, that reads as broken.
+      emptyState: {
+        title: 'No Tenders Expected This Quarter',
+        message: 'This tab lists open deals whose customer-side tender date falls inside the current quarter. Record Expected Tender Date on a deal to see it here.',
+        icon: 'calendar-clock',
+      },
+    },
+
     /** Closing this quarter (commit + best_case) — sales-manager forecast */
     closing_this_quarter: {
       name: 'closing_this_quarter',
@@ -383,8 +418,43 @@ export const OpportunityViews = defineView({
           'stage_entry_date',
           'days_in_stage',
           'is_private',
+          // REQ-0006 step 8 — the customer's own procurement calendar. Named
+          // here (AGENTS.md ladder rung 3), and the reason in writing:
+          // `tender_this_quarter` filters on `expected_tender_date`, and a
+          // filtered field no form offers is a view that can never match a
+          // deal a rep created through the UI (`test/metadata-references
+          // .test.ts`). The fields declare `group: 'sales_process'`, so every
+          // DERIVED surface — the record page's Details tab — already carries
+          // them; this form authors `sections`, which win outright over
+          // derivation. A `{ group: 'sales_process' }` reference cannot stand
+          // in: it would render `stage`, `probability` and `close_date`
+          // (curated in Overview, `stage` `required`) and `stage_entry_date`
+          // (above) a second time, and pull the approval verdict columns and
+          // the inert-by-default `requested_status` into the create dialog.
+          'customer_initiation_date',
+          'expected_tender_date',
+          'expected_tender_amount',
+          'expected_signing_date',
+          'expected_signing_amount',
         ],
       },
+      // REQ-0006 acceptance 1, FROM `fieldGroups` (AGENTS.md ladder rung 2),
+      // the way `contact.view.ts` references REQ-0004's buying centre: this
+      // form authors `sections`, which win outright over the renderer's
+      // `fieldGroups` derivation, so a group declared on the object alone
+      // never reaches this form — the Edit and New dialog. A group reference
+      // enumerates nothing; members, label and icon come from the object.
+      //
+      // ⚠️ Measured on the 17.6.0 console: the tabbed dialog renders NO tab
+      // for a `{ group }` section — this one, and the contact form's buying
+      // centre on `main` alike. That is the platform's to fix, and these two
+      // lines are the contract-correct form waiting for it (AGENTS.md: a
+      // platform defect is waited for, never routed around). Until then every
+      // REQ-0006 field is edited through the Details tab's edit mode — which
+      // offers no markdown editor, the reason the narrative fields are
+      // textareas (see the note above `customer_background`).
+      { group: 'qualification', columns: 2 },
+      { group: 'narrative', columns: 1 },
       {
         name: 'sales_strategy',
         label: 'Sales Strategy',

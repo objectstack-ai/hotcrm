@@ -19,6 +19,7 @@ export { LeadConversionApprovalFlow } from './lead-conversion-approval.flow';
 export { AccountApprovalFlow } from './account-approval.flow';
 export { ScheduleFollowUpFlow } from './schedule-followup.flow';
 export { OpportunityApprovalFlow, OpportunityApprovalOnCreateFlow } from './opportunity-approval.flow';
+export { OpportunityStatusChangeApprovalFlow } from './opportunity-status-change-approval.flow';
 export { OpportunityStagnationFlow } from './opportunity-stagnation.flow';
 export { ForecastSnapshotFlow } from './forecast-snapshot.flow';
 export { LeadAssignmentFlow } from './lead-assignment.flow';

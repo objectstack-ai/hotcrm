@@ -235,6 +235,9 @@ const ROW_LABEL: Record<string, Record<'zh-Hans' | 'zh-Hant', string>> = {
     'zh-Hans': '大额商机审批（新建时）',
     'zh-Hant': '大額商機審批（新建時）',
   },
+  // REQ-0006: 状态变更, the wording of the field that arms it
+  // (`status_change_approval_status`, 状态变更审批 in the zh-CN pack).
+  opportunity_status_change_approval: { 'zh-Hans': '商机状态变更审批', 'zh-Hant': '商機狀態變更審批' },
   opportunity_won_alert: { 'zh-Hans': '大额商机赢单提醒', 'zh-Hant': '大額商機贏單提醒' },
   case_escalation: { 'zh-Hans': '工单升级流程', 'zh-Hant': '工單升級流程' },
   case_escalation_on_create: {

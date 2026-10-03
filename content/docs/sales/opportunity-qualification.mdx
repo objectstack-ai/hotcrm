@@ -1,0 +1,87 @@
+---
+title: Opportunity Qualification
+description: Whether a deal is worth pursuing, the customer's own procurement calendar, the written case for the deal, and the optional sign-off before a deal is declared won or lost.
+---
+
+# Qualification, the customer's calendar, and sign-off on the outcome
+
+An opportunity already says what the deal is worth and where it stands in *your* pipeline. Four more things on the record answer questions those numbers cannot:
+
+- **Qualification** — should we pursue this deal at all, and how hard?
+- **The customer's calendar** — when the buyer plans to start, tender and sign, and for how much.
+- **Deal Narrative** — the written case for the deal, in parts a reviewer can read one at a time.
+- **Status Change Approval** — whether somebody has to sign off before a deal is declared won or lost. **Off unless your admin turns it on.**
+
+All of it sits on the opportunity's **Details** tab, in the **Qualification**, **Sales Process** and **Deal Narrative** sections.
+
+## Should we pursue it?
+
+A seller who cannot chase every deal triages. The **Qualification** section records that judgement:
+
+- **Will Bid** — whether you intend to bid. Leave it empty while the decision is still open; an empty box and a *no* are different answers.
+- **Controllability** — how much of the outcome you can influence: a deal you shaped from the start is *High*, an open tender you found last week is *Low*.
+- **Priority** and **Deal Level** — how much attention the deal gets, and how much it matters to the business (*Strategic*, *Key* or *Standard*).
+- **Involves Subcontracting**, with a **Subcontracting Note** — whether part of the work will be delivered by someone else. The margin often depends on it, so say so early.
+
+None of this is **Forecast Category**. That field is worked out from the stage and feeds the forecast roll-up; these are judgements a person makes, and they do not change when the deal moves.
+
+## The customer's calendar, not your close date
+
+**Close Date** is *your* forecast: one date, the day you expect to win. A considered purchase runs on the buyer's own calendar, which has more than one date in it, and that calendar is what you actually plan against:
+
+- **Customer Initiation Date** — when the customer formally starts the project on their side.
+- **Expected Tender Date** and **Expected Tender Amount** — when the tender is expected, and roughly how big it is.
+- **Expected Signing Date** and **Expected Signing Amount** — when signature is expected, and for how much.
+
+They sit in the **Sales Process** section and on the form's **Forecast** tab. Because they are separate from **Close Date**, a list can be built on them alone: the **Tender This Quarter** view lists open deals whose tender falls in the current quarter, whatever their close date says — see [Opportunities › Standard list views](/docs/sales/opportunities).
+
+## The written case for the deal
+
+**Description** is one box, and a deal review needs more than one thing written down. The **Deal Narrative** section splits it:
+
+- **Customer Background** — who the customer is and what matters to them.
+- **Project Background** — what the project is and why it exists now.
+- **Risk Analysis** — what could lose the deal or make it unprofitable.
+- **Payment Terms** — the terms as they stand in the conversation. This is free text on purpose: a term still being negotiated rarely fits the fixed list a signed quote or contract uses.
+
+Attachments still go on the record's files, as they always have.
+
+## Business line
+
+**Opportunity Type** says how the deal relates to the customer — new business, an upgrade, a renewal, an expansion. **Business Line** is a separate question: *what kind of business* the deal is — **Product**, **Professional Services**, **Consulting**, **Support & Maintenance** or **Other**. The starter list is generic; your admin can replace it with your own lines of business.
+
+## When closing a deal needs approval
+
+Declaring a deal won or lost moves the forecast, commission and planning, and it cannot be taken back. Some organisations want sign-off on that moment, whatever the deal's size. The **Status Change Approval** field records where that stands:
+
+| Status Change Approval | What it means |
+| --- | --- |
+| **Not Required** | No sign-off is asked for. This is how HotCRM ships, and it is what every deal shows unless your admin has turned the gate on. |
+| **Pending** | The gate is on for this deal and no status change has been approved yet. |
+| **Approved** | The requested status was approved, and the deal's stage has moved to it. |
+| **Rejected** | The approver said no to the last request. The deal stays where it was. |
+
+You never set this field yourself — it is filled in by the approval, and it is read-only.
+
+**While a deal is Pending or Rejected, you cannot move its stage to Closed Won or Closed Lost directly.** Instead:
+
+1. Set **Requested Status** to *Won* or *Lost*, and fill in the **Win Reason** or **Loss Reason** as you would when closing.
+2. An approval request opens in the approval inbox, and the deal is locked while it waits.
+3. If it is approved, the stage moves to what you asked for. If it is rejected, your request is cleared and the deal stays open — you can request again when something changes.
+
+> **Nothing changes for you unless your admin arms the gate.** Out of the box every deal reads *Not Required* and closing works exactly as it always has. The amount-based **Large Deal Approval** is a separate gate and is not affected either way. Deals created before the gate was turned on keep closing freely — arming it affects new deals, and it never reopens a deal you already closed.
+
+## Tips for sales reps
+
+- ✅ Fill in **Will Bid** as soon as you have decided, and leave it empty until then. A pipeline review reads the empty ones as the decisions still to make.
+- ✅ Record the customer's tender date the day you hear it. It is the date your bid team plans against, and **Tender This Quarter** can only list the deals that carry one.
+- ✅ If closing is refused, look at **Status Change Approval** before asking anyone: *Pending* means set **Requested Status** instead, *Rejected* is a decision to talk about.
+- ⛔ Don't move **Close Date** to match the tender date. The two are different events, and the forecast depends on the close date being yours.
+
+## Tips for admins
+
+- The **Qualification** and **Deal Narrative** sections stay visible on the **Details** tab even when every field in them is empty, so a seller sees what is still to be filled in.
+- **Controllability**, **Priority**, **Deal Level** and **Business Line** are ordinary picklists — see [Customization › Extending Objects](/docs/customization/extending-objects) to replace the starter values with your own grading scale and lines of business.
+- The gate is **off by default** and is armed by changing the default value of the opportunity's **Status Change Approval** field from *Not Required* to *Pending*. From then on each new deal is born *Pending*; deals that already exist keep *Not Required*. Requests are routed to the holders of the `sales_manager` position, and the flow behind them is **Opportunity Status Change Approval**, listed in [Administration › Automation](/docs/administration/automation).
+- Staff that position before you arm the gate. An approval routed to an empty bench has nobody to decide it, and a deal waiting on it stays locked.
+- A request written by an integration, with nobody signed in, still opens an approval. The refusal of a direct close, though, applies to edits made by signed-in users: a system write that sets the stage itself is not stopped.

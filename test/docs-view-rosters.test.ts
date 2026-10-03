@@ -574,6 +574,7 @@ describe('a docs list-view roster names the views the app ships (#1194)', () => 
       my_open_deals: '我的進行中商機',
       stale_opportunities: '⚠️ 停滯商機 · 按階段停留時間排序',
       closing_this_quarter: '本季度待成交商機',
+      tender_this_quarter: '本季度預計招標',
     },
     crm_task: {
       all_tasks: '全部任務',
