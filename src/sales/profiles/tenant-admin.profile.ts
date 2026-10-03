@@ -91,20 +91,24 @@ import { SystemAdminProfile } from './system-admin.profile';
  * and no session produces. Keeping the two grants therefore says the true
  * thing about a tenant admin: inside their org, they see and edit everything.
  *
- * ### What is deliberately DROPPED, and why it is not an oversight
+ * ### What a tenant admin may AUTHOR: their own org's presentation, no more
  *
- * `customize_application`, `manage_profiles` and `manage_roles` are not
- * granted. All three describe METADATA authoring, and under a walled posture
- * the only metadata-authoring capability the platform has is `manage_metadata`
- * — `scope: 'platform'`, which unlocks env-wide tier-B authoring (objects,
- * flows) with cross-tenant reach. There is currently no key that lets a tenant
- * admin author even their own org's overlays without also handing them that
- * reach, so granting these three would describe an authority the deployment
- * cannot safely give.
+ * `manage_org_presentation` IS granted. The platform declares it `scope: 'org'`
+ * (objectstack-ai/objectstack#12702): it admits `/meta` item writes only for
+ * the types whose registry entry declares `allowOrgOverride: true` — on the
+ * installed 17.6.0 that is view, dashboard, report, translation and
+ * email_template — and only as overlays in the caller's own active
+ * organization. Measured on 17.6.0 against the platform's own write verdict
+ * (`metaWriteCapabilityVerdict`): with this grant those saves are allowed when
+ * the session carries an active organization, and refused when it does not.
  *
- * Blocked-by: objectstack-ai/objectstack#12702 — org-scoped presentation
- * customization authority. When that capability ships, the tenant admin gains
- * it here and this paragraph shrinks to a grant.
+ * `customize_application`, `manage_profiles` and `manage_roles` stay
+ * ungranted. They describe authoring the app's structure and security model —
+ * objects, apps, pages, permission sets, positions — and the registry declares
+ * every one of those types `allowOrgOverride: false`, so the only key that
+ * admits those writes is still `manage_metadata`: `scope: 'platform'`, reach
+ * across every organization in the deployment. Granting the three would
+ * describe an authority the deployment cannot safely give.
  *
  * `manage_sharing` IS granted: the platform declares it `scope: 'org'`
  * ("Administer record sharing … beyond one's own records"), which is precisely
@@ -129,5 +133,8 @@ export const TenantAdminProfile = {
     // Org-bounded by the driver's tenant predicate — see the audit above.
     'view_all_data', 'modify_all_data',
     'manage_sharing',
+    // Org-scoped `/meta` writes, only for `allowOrgOverride: true` types and
+    // only in the caller's own active org — see the AUTHOR note above.
+    'manage_org_presentation',
   ],
 };

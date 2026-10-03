@@ -61,7 +61,7 @@ import { REPO_ROOT } from './helpers/repo-root';
  * a size the app does not have — the ratchet owns the growth budget, alone, and
  * a raise there sits on the maintainer floor where it always did.
  *
- *   business semantics  banner ~54k -> band 51,300–56,700 · ceiling 55,000
+ *   business semantics  banner ~54k -> band 51,300–56,700 · ceiling 59,000
  *   interaction layer   banner ~29k -> band 27,550–30,450 · ceiling 31,000
  *
  * ⚠️ The ceiling column is still worked out per row, and still pinned to
@@ -103,11 +103,15 @@ import { REPO_ROOT } from './helpers/repo-root';
  * have nothing to do with each other. `test/source-token-ratchet.test.ts` pins
  * both halves of that split from the producer side.
  *
- * The only figure #1928 moved here is the ceiling column of the table above:
- * the re-anchoring carried `business semantics` from 53,000 to 55,000, under
- * the ruling quoted in the gate's own header. The band edges did not move,
- * because the banner did not — 「解耦:banner 钉实测,ceiling 独立」 is exactly
- * the decoupling that let one move without the other.
+ * The only figure a ceiling move touches here is the ceiling column of the
+ * table above: #1928's re-anchoring carried `business semantics` from 53,000
+ * to 55,000, and #1951's ruled raise carried it from 55,000 to 59,000 — both
+ * under a ruling quoted in the gate's own header. Neither moved a band edge,
+ * because neither moved the banner — 「解耦:banner 钉实测,ceiling 独立」 is
+ * exactly the decoupling that lets one move without the other, and #1951 is
+ * that decoupling paying off: the ceiling rose 4,000 tokens and this rule had
+ * nothing to restate, because the reading the banner is pinned to did not
+ * move at all.
  *
  * ## The measurement is the gate's, not a copy of it
  *
