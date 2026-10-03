@@ -205,9 +205,11 @@ export const Opportunity = ObjectSchema.create({
     // `readonly: true` on the #1666 grounds: the only writers are the gate's
     // own `runAs: 'system'` flow and the insert default, and both survive the
     // readonly strip. A user-supplied verdict is stripped BEFORE the
-    // `beforeUpdate` hooks run (measured on 17.6.0 for the step-14 column, the
-    // same strip), so the input-first read in `opportunity_lifecycle` cannot
-    // be fed an `approved` by hand.
+    // `beforeUpdate` hooks run — measured on 17.6.0 with a real ObjectQL: a
+    // user update of `{ stage, qualification_approval_status: 'approved' }`
+    // reached the hooks as `{ id, stage }` and was refused 409 — so the
+    // input-first read in `opportunity_lifecycle` cannot be fed an `approved`
+    // by hand.
     qualification_approval_status: Field.select({
       label: 'Qualification Approval',
       group: 'qualification',

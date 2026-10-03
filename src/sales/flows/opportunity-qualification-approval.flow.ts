@@ -50,6 +50,11 @@ type Flow = Automation.Flow;
  * throws `DUPLICATE_REQUEST` otherwise, `@objectstack/plugin-approvals`
  * 17.6.0), so the opportunity gates never stack on one deal: a request a
  * second gate would open while another is pending is refused, not queued.
+ * Measured on a 17.6.0 boot with this gate armed: a deal raised past
+ * `LARGE_DEAL_AMOUNT` while its 立项 request waited failed
+ * `opportunity_approval`'s run with that error (logged, nothing opened); the
+ * amount approval opened on the next write, which was this flow's own verdict
+ * stamp, because the amount flow's entry tests the current value.
  */
 export const OpportunityQualificationApprovalFlow: Flow = {
   name: 'opportunity_qualification_approval',
@@ -88,9 +93,11 @@ export const OpportunityQualificationApprovalFlow: Flow = {
         // - the request is NEW on this write. TRANSITION, not current value:
         //   the approval node's `pending` stamp through `approvalStatusField` is
         //   an update of this record while the request is still ticked, and a
-        //   current-value test re-fires on it (measured for the sibling on
-        //   17.6.0: one re-entry per request). `previous.*` is guarded
-        //   FAIL-CLOSED: no visible prior value, no visible new request.
+        //   current-value test re-fires on it. Measured on a 17.6.0 boot with
+        //   this term deleted: one re-entry per request, caught only by the
+        //   engine's self-trigger guard ("the guard as authored does not
+        //   exclude the flow's own write-back"); with it, none. `previous.*` is
+        //   guarded FAIL-CLOSED: no visible prior value, no visible new request.
         //
         // `mark_qualified` leaves the gate `approved` (out of reach) and
         // `clear_request` unticks the request, so neither re-enters.
