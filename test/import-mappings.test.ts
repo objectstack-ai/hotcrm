@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { unknownImportMappingTargets } from '@objectstack/spec/data';
+import { applyMappingToRows, buildFieldMetaMap, coerceRow, type MappingArtifactLike } from '@objectstack/core';
 import { REPO_ROOT } from './helpers/repo-root';
 import stack from '../objectstack.config';
 
@@ -60,10 +61,15 @@ const mappingByName = (name: string): AnyRec => {
 const first = (v: string | string[]): string => (Array.isArray(v) ? v[0] : v);
 const all = (v: string | string[]): string[] => (Array.isArray(v) ? v : [v]);
 
-/** Header row of a template CSV, honouring quoted cells. */
-const templateHeaders = (file: string): string[] => {
-  const text = readFileSync(join(REPO_ROOT, 'assets/import-templates', file), 'utf8');
-  const line = text.split('\n')[0].replace(/\r$/, '');
+/** The non-blank lines of a template CSV (the templates carry no multi-line cell). */
+const templateLines = (file: string): string[] =>
+  readFileSync(join(REPO_ROOT, 'assets/import-templates', file), 'utf8')
+    .split('\n')
+    .map((l) => l.replace(/\r$/, ''))
+    .filter((l) => l.trim() !== '');
+
+/** One CSV line → its cells, honouring quoted cells. */
+const csvCells = (line: string): string[] => {
   const out: string[] = [];
   let cur = '';
   let quoted = false;
@@ -79,6 +85,19 @@ const templateHeaders = (file: string): string[] => {
   }
   out.push(cur);
   return out;
+};
+
+/** Header row of a template CSV. */
+const templateHeaders = (file: string): string[] => csvCells(templateLines(file)[0]);
+
+/** Data rows of a template CSV, keyed by header — the shape the import door parses a file into. */
+const templateRows = (file: string): Array<Record<string, string>> => {
+  const [head, ...body] = templateLines(file);
+  const headers = csvCells(head);
+  return body.map((line) => {
+    const cells = csvCells(line);
+    return Object.fromEntries(headers.map((h, i) => [h, cells[i] ?? '']));
+  });
 };
 
 const templateDataRowCount = (file: string): number =>
@@ -215,6 +234,35 @@ describe('import mappings — a template CSV imports without hand-mapping', () =
 
   it.each(EXPECTED)('$template ships at least 50 example rows', ({ template }) => {
     expect(templateDataRowCount(template)).toBeGreaterThanOrEqual(50);
+  });
+
+  it.each(EXPECTED)('every cell of $template coerces through $name with no error', async ({ name, object, template }) => {
+    // The template is the first file a new customer imports, so every one of
+    // its rows must land (#1998: six `Department: "HR"` rows failed with
+    // `invalid_option`, because the import matches an option VALUE exactly and
+    // only its LABEL case-insensitively). The two steps below are the import
+    // door's own, from `@objectstack/core`: the mapping pipeline (value maps,
+    // compound-part assembly) and the per-cell coercion that produces
+    // `invalid_option`. Reference cells (Account Name, owner email) are
+    // resolved against the database at the door and are out of reach here —
+    // with no resolver, coercion passes them through untouched.
+    const m = mappingByName(name);
+    const def = objectByName.get(object)!;
+    const rows = templateRows(template);
+    expect(rows.length).toBe(templateDataRowCount(template));
+
+    const mapped = applyMappingToRows(rows, m as MappingArtifactLike, { objectSchema: def });
+    if (!mapped.ok) throw new Error(`${name} refused before any row: ${mapped.code}`);
+    expect(mapped.rows.length).toBe(rows.length);
+
+    const metaMap = buildFieldMetaMap(def);
+    const failures: string[] = [];
+    for (const [i, row] of mapped.rows.entries()) {
+      const { errors } = await coerceRow(row, metaMap, {});
+      // `row` counts data rows from 1, as the import report does.
+      for (const e of errors) failures.push(`row ${i + 1} ${e.field} ${e.code}: ${e.message}`);
+    }
+    expect(failures, `${template} rows that fail cell coercion`).toEqual([]);
   });
 
   it.each(EXPECTED)('$name covers every field $object requires on create', ({ name, object }) => {
