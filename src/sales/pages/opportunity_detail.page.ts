@@ -146,14 +146,29 @@ export const OpportunityDetailPage: Page = {
                       // `expected_revenue`, both in the strip) renders nothing
                       // here — it stays referenced so that a field added to the
                       // group reaches this tab without an edit to this file.
+                      //
+                      // `hideEmpty: false` keeps an ALL-empty section on screen
+                      // (#1211). The platform default (objectui#8603 ruling A)
+                      // renders such a section as nothing at all, so on a deal
+                      // with only its required fields the deal's type and
+                      // source (`classification`), its campaign (`campaign`)
+                      // and its description and next step (`notes`) vanished —
+                      // the very fields a seller fills in later. Kept, they
+                      // show as labelled empty rows to fill. Measured on
+                      // 17.6.0 on such a deal: 2 sections render without it, 5
+                      // with it. Not on `basic` (its only member outside the
+                      // title and the strip is `primary_contact`), nor on
+                      // `financials`: both members sit in the strip, the
+                      // derived list is empty, and the renderer draws nothing
+                      // for an empty list whatever `hideEmpty` says.
                       sections: [
                         { group: 'basic' },
                         { group: 'financials' },
-                        { group: 'classification' },
-                        { group: 'campaign' },
+                        { group: 'classification', hideEmpty: false },
+                        { group: 'campaign', hideEmpty: false },
                         { group: 'sales_process' },
                         { group: 'crm_forecast' },
-                        { group: 'notes' },
+                        { group: 'notes', hideEmpty: false },
                       ],
                     },
                   },
