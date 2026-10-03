@@ -330,6 +330,15 @@ export const pipeline: Record<string, ObjectTranslationData> = {
         label: '状态变更审批',
         options: { not_required: '无需审批', pending: '审批中', approved: '已批准', rejected: '已驳回' },
       },
+      // REQ-0006 第 11 步 — 立项审批。
+      qualification_requested: {
+        label: '申请立项审批',
+        help: '勾选后提交立项审批。审批被驳回时会自动取消勾选；再次勾选即可重新申请。',
+      },
+      qualification_approval_status: {
+        label: '立项审批',
+        options: { not_required: '无需审批', pending: '审批中', approved: '已批准', rejected: '已驳回' },
+      },
     },
     _views: {
       tender_this_quarter: {

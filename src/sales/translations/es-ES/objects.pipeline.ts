@@ -358,6 +358,18 @@ export const pipeline: Record<string, ObjectTranslationData> = {
           approved: 'Aprobada', rejected: 'Rechazada',
         },
       },
+      // REQ-0006 paso 11 — la aprobación de calificación (立项).
+      qualification_requested: {
+        label: 'Solicitar Aprobación de Calificación',
+        help: 'Márquelo para enviar este negocio a aprobación de calificación. Un rechazo lo desmarca; vuelva a marcarlo para solicitarla de nuevo.',
+      },
+      qualification_approval_status: {
+        label: 'Aprobación de Calificación',
+        options: {
+          not_required: 'No Requerida', pending: 'Pendiente',
+          approved: 'Aprobada', rejected: 'Rechazada',
+        },
+      },
     },
     _views: {
       tender_this_quarter: {
