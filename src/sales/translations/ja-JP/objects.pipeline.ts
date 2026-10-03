@@ -306,11 +306,9 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
     },
     _sections: {
-      // 詳細ページの `record:details` セクション名（opportunity_detail.page.ts）
-      info: { label: '商談情報' },
+      // オブジェクト定義のセクションキー（opportunity.object.ts）— 入力フォームと、
+      // これらのグループを参照する詳細ページのセクション（#1452）で使用
       crm_forecast: { label: 'ステージ・売上予測' },
-      description: { label: '説明' },
-      // オブジェクト定義のセクションキー（opportunity.object.ts）— 入力フォームで使用
       basic: { label: '基本情報' },
       financials: { label: '財務情報' },
       sales_process: { label: '営業プロセス' },

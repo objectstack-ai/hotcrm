@@ -342,17 +342,15 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       stale_opportunities: { label: '⚠️ Oportunidades Estancadas · Más Tiempo en Etapa Primero' },
     },
     _sections: {
-      // Nombres de sección de `record:details` en la página de detalle
-      // (opportunity_detail.page.ts).
-      info: { label: 'Información de la Oportunidad' },
-      // La clave `crm_forecast` la comparten la sección de la página de
-      // detalle («Stage & Forecast») y el grupo de campos del objeto
-      // («Forecast & Metrics»). Ambas cubren etapa, probabilidad y
-      // categoría de pronóstico, así que se traduce una sola vez.
-      crm_forecast: { label: 'Etapa y Previsión' },
-      description: { label: 'Descripción' },
       // Claves de sección del objeto (opportunity.object.ts) que usan los
-      // formularios de registro.
+      // formularios de registro y la página de detalle, cuyas secciones
+      // hacen referencia a estos grupos (#1452).
+      //
+      // `crm_forecast` es la clave del grupo de campos («Forecast & Metrics»
+      // en inglés). Esta traducción es anterior a #1452, cuando una sección
+      // de la página de detalle con el mismo nombre se titulaba «Stage &
+      // Forecast»; desde entonces solo la lee el grupo.
+      crm_forecast: { label: 'Etapa y Previsión' },
       basic: { label: 'Información Básica' },
       financials: { label: 'Datos Financieros' },
       sales_process: { label: 'Proceso de Venta' },

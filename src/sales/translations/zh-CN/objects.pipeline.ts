@@ -324,11 +324,9 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
     },
     _sections: {
-      // Detail-page `record:details` section names (opportunity_detail.page.ts)
-      info: { label: '商机信息' },
+      // Object-level section keys (opportunity.object.ts), used by record forms
+      // and by the detail page, whose sections reference these groups (#1452)
       crm_forecast: { label: '阶段与预测' },
-      description: { label: '描述' },
-      // Object-level section keys (opportunity.object.ts) used by record forms
       basic: { label: '基本信息' },
       financials: { label: '财务信息' },
       sales_process: { label: '销售流程' },

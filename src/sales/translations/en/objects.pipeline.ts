@@ -314,9 +314,8 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       campaign: { label: 'Campaigns' },
       notes: { label: 'Notes & Next Steps' },
       crm_forecast: { label: 'Forecast & Metrics' },
-      // Detail-page sections (src/pages/opportunity_detail.page.ts)
-      info: { label: 'Opportunity Information' },
-      description: { label: 'Description' },
+      // The detail page's sections reference the groups above (#1452), so it
+      // has no section names of its own.
       // Form section names on opportunity.view.ts (#1100)
       overview: { label: 'Overview' },
       forecast: { label: 'Forecast' },
