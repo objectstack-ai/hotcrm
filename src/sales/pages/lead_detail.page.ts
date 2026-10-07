@@ -460,7 +460,6 @@ export const LeadDetailPage: Page = {
                                 title: 'Open Tasks',
                                 filter: [{ field: 'status', operator: 'not_equals', value: 'completed' }],
                                 showViewAll: true,
-                                actions: ['new_task', 'edit', 'complete'],
                               },
                             },
                           ],

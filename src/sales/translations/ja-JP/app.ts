@@ -2,9 +2,11 @@
 
 import type { TranslationData } from '@objectstack/spec/system';
 
+import { QUOTE_DISCOUNT_CEILING } from '../../objects/_thresholds';
+
 /**
  * 日本語 (ja-JP) — every translation namespace EXCEPT `objects`:
- * `apps`, `messages`, `dashboards`, `datasets`, `pages`.
+ * `apps`, `messages`, `dashboards`, `datasets`, `pages`, `flows`.
  *
  * SPLIT AXIS (#1311): translation NAMESPACE first, then CRM DOMAIN FAMILY.
  * Everything that is not `objects` lives in `./app.ts`; `objects` — 69-78% of
@@ -589,6 +591,95 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         notifications_panel: { label: '通知' },
         quick_notes: { title: 'クイックメモ', label: 'クイックメモ' },
         quick_search: { label: 'クイック検索' },
+      },
+    },
+  },
+  // Screen-flow copy (#1210, #1975). Keyed `flows.<flow>.label`,
+  // `screens.<node>.title` and `screens.<node>.fields.<field>.{label,placeholder}`
+  // — the keys `os lint`'s `i18n/missing-flow` names, read by the console's
+  // flow runner since @objectstack 17.7.0 (the spec's `flows` liveness row is
+  // `live` there). A screen with no authored `title` shows its flow's label in
+  // every locale, so each `screen_1.title` repeats the flow label. Select
+  // option labels and screen descriptions are not translatable keys on a
+  // screen (`FLOW_SCREEN_FIELD_NO_OPTIONS`), so they stay as authored.
+  // The discount ceiling is interpolated from `QUOTE_DISCOUNT_CEILING`, never
+  // retyped: the number lives in `_thresholds.ts` alone (#1711).
+  flows: {
+    campaign_enrollment: {
+      label: 'キャンペーンにメンバーを登録',
+      screens: {
+        screen_1: {
+          title: 'キャンペーンにメンバーを登録',
+          fields: {
+            memberSource: { label: '登録するメンバーの種類' },
+            leadStatus: { label: '登録するリードのステータス' },
+            contactDepartment: { label: '登録する取引先責任者の部門' },
+          },
+        },
+      },
+    },
+    escalate_case: {
+      label: 'ケースをエスカレート',
+      screens: { screen_1: { title: 'ケースをエスカレート', fields: { reason: { label: 'エスカレーション理由' } } } },
+    },
+    close_case: {
+      label: 'ケースをクローズ',
+      screens: {
+        screen_1: {
+          title: 'ケースをクローズ',
+          fields: {
+            resolution: { label: '解決内容' },
+            resolved_by_article: { label: '解決に使ったナレッジ記事（任意）' },
+          },
+        },
+      },
+    },
+    claim_case: {
+      label: 'ケースを引き受ける',
+      screens: { screen_1: { title: 'ケースを引き受ける', fields: { claimStatus: { label: '対応状況' } } } },
+    },
+    lead_conversion: {
+      label: 'リード変換プロセス',
+      screens: {
+        screen_1: {
+          title: 'リード変換プロセス',
+          fields: {
+            createOpportunity: { label: '商談を作成しますか？' },
+            opportunityName: { label: '商談名' },
+            opportunityAmount: { label: '商談金額' },
+            closeDate: { label: '完了予定日' },
+          },
+        },
+        refuse_confirmed_duplicate: { title: '変換は拒否されました' },
+        refuse_unapproved: { title: '変換は拒否されました' },
+      },
+    },
+    schedule_followup: {
+      label: 'フォローアップを設定',
+      screens: {
+        screen_1: {
+          title: 'フォローアップを設定',
+          fields: {
+            subject: { label: '次のステップは？' },
+            dueDate: { label: '期限' },
+            activityType: { label: '活動種別' },
+            priority: { label: '優先度' },
+            notes: { label: 'メモ' },
+          },
+        },
+      },
+    },
+    quote_generation: {
+      label: '商談から見積を作成',
+      screens: {
+        screen_1: {
+          title: '商談から見積を作成',
+          fields: {
+            quoteName: { label: '見積名' },
+            expirationDays: { label: '有効期間（日）' },
+            discount: { label: `割引率 % (≤ ${QUOTE_DISCOUNT_CEILING})`, placeholder: `0-${QUOTE_DISCOUNT_CEILING}` },
+          },
+        },
       },
     },
   },

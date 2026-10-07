@@ -137,18 +137,22 @@ class TestRouter {
     method: string,
     pattern: string,
     req: { params?: AnyRec; query?: AnyRec; body?: AnyRec; headers?: AnyRec } = {},
-  ): Promise<{ status: number; body: AnyRec }> {
+  ): Promise<{ status: number; body: AnyRec; headers: AnyRec }> {
     const handler = this.routes.get(`${method} ${pattern}`);
     if (!handler) throw new Error(`no route registered for ${method} ${pattern}`);
     let status = 200;
     let body: AnyRec = {};
+    const headers: AnyRec = {};
     const res = {
       status(code: number) { status = code; return res; },
       json(payload: AnyRec) { body = payload; return res; },
       send(payload: AnyRec) { body = payload; return res; },
+      // `IHttpResponse.header` — since 17.7.0 the public resolve route sets
+      // `Cache-Control: no-store` and `Vary: X-Share-Password` on its answer.
+      header(name: string, value: string | string[]) { headers[name] = value; return res; },
     };
     await handler({ params: {}, query: {}, headers: {}, ...req }, res);
-    return { status, body };
+    return { status, body, headers };
   }
 }
 

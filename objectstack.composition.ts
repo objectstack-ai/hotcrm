@@ -349,8 +349,8 @@ export { CrmPositions };
  * The PLATFORM does it, at the only moment it can: when the seed settles,
  * `@objectstack/plugin-security` re-runs its seed-ownership claim on
  * `app:seeded` and hands every ownerless row of every object carrying
- * `owner_id` to the first platform administrator (objectstack#17872, in the
- * 17.6.0 pin). No HotCRM flow is involved. The `demo_bootstrap` sweep that used
+ * `owner_id` to the first platform administrator (objectstack#17872, shipped in
+ * 17.6.0). No HotCRM flow is involved. The `demo_bootstrap` sweep that used
  * to do this every ten minutes was retired once a fresh boot measured that
  * claim leaving all twelve seeded owner-scoped objects at zero ownerless rows
  * with the sweep disabled (#1892).

@@ -13,6 +13,8 @@ import {
 import { SharingServicePlugin } from '@objectstack/plugin-sharing';
 import { tenancyProbe } from './helpers/tenancy-probe';
 import stack from '../objectstack.config';
+import { SysUser, SysMember, SysOrganization } from '@objectstack/platform-objects/identity';
+import { identityObjects } from './helpers/identity-objects';
 
 /**
  * What a `controlled_by_parent` child is ACTUALLY reachable by — measured
@@ -121,6 +123,9 @@ beforeAll(async () => {
   await kernel.use(new DefaultDatasourcePlugin({ driver: 'memory', config: {} } as never));
   await kernel.use(new MetadataPlugin({ watch: false, artifactWatch: false, environmentId: 'proj_test' } as never));
   await kernel.use(new ObjectQLPlugin({ environmentId: 'proj_test' } as never));
+  // 17.7.0 refuses an object name the registry does not hold (objectstack#21545):
+  // register the identity objects `plugin-auth` would (`test/helpers/identity-objects.ts`).
+  await kernel.use(identityObjects(SysUser, SysMember, SysOrganization) as never);
   // The app's own metadata is the subject: objects, profiles, positions and
   // sharing rules exactly as `objectstack.config.ts` declares them. Seed data
   // is skipped — the fixture below is the whole population.
@@ -357,7 +362,11 @@ describe('#694: the parent-write gate derives from the master the same way', () 
       await ql.update(object, { id: rowId, ...patch }, { context: repCtx });
       return 'allowed';
     } catch (error: unknown) {
-      return `denied: ${(error as AnyRec)?.name}`;
+      // A refusal with no class of its own is named by its code: since 17.7.0 a
+      // by-id write to a row the caller cannot READ answers `RECORD_NOT_FOUND`
+      // (404) — hidden and gone are one answer on the write doors (objectstack#21812).
+      const e = error as AnyRec;
+      return `denied: ${e?.name === 'Error' && e?.code ? e.code : e?.name}`;
     }
   };
 
@@ -385,19 +394,23 @@ describe('#694: the parent-write gate derives from the master the same way', () 
     // 17.4.0 the line_JP write succeeded too: the master's own derivation was
     // not composed in, so a master that was itself controlled_by_parent
     // resolved to "no restriction" (objectstack#11082).
+    // The rep cannot read any of these rows (each master chain ends at an
+    // unreadable account), so since 17.7.0 the write door answers each one as
+    // absent (`RECORD_NOT_FOUND`, objectstack#21812) rather than 403. Still
+    // refused at both levels, nothing written.
     expect(
       await repWrites('crm_contact', id.contact_JP, { title: 'Head of Ops' }),
       'a contact under an unreadable account became writable again — objectstack#5386 regressed',
-    ).toBe('denied: PermissionDeniedError');
+    ).toBe('denied: RECORD_NOT_FOUND');
     expect(await repWrites('crm_quote', id.quote_JP, { name: 'x' })).toBe(
-      'denied: PermissionDeniedError',
+      'denied: RECORD_NOT_FOUND',
     );
     expect(
       await repWrites('crm_quote_line_item', id.line_JP, { quantity: 2 }),
       'a line under a quote under an unreadable account became writable — objectstack#11082 regressed',
-    ).toBe('denied: PermissionDeniedError');
+    ).toBe('denied: RECORD_NOT_FOUND');
     expect(await repWrites('crm_opportunity_line_item', id.oli_JP, { quantity: 2 })).toBe(
-      'denied: PermissionDeniedError',
+      'denied: RECORD_NOT_FOUND',
     );
   });
 

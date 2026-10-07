@@ -6,6 +6,8 @@ import { DefaultDatasourcePlugin, AppPlugin } from '@objectstack/runtime';
 import { ObjectQLPlugin } from '@objectstack/objectql';
 import { MetadataPlugin } from '@objectstack/metadata';
 import stack from '../objectstack.config';
+import { SysUser, SysMember, SysOrganization } from '@objectstack/platform-objects/identity';
+import { identityObjects } from './helpers/identity-objects';
 
 /**
  * A lead flagged as a duplicate must not make the record it duplicates
@@ -178,6 +180,9 @@ beforeAll(async () => {
   await kernel.use(new DefaultDatasourcePlugin({ driver: 'memory', config: {} } as never));
   await kernel.use(new MetadataPlugin({ watch: false, artifactWatch: false, environmentId: 'proj_1072' } as never));
   await kernel.use(new ObjectQLPlugin({ environmentId: 'proj_1072' } as never));
+  // 17.7.0 refuses an object name the registry does not hold (objectstack#21545):
+  // register the identity objects `plugin-auth` would (`test/helpers/identity-objects.ts`).
+  await kernel.use(identityObjects(SysUser, SysMember, SysOrganization) as never);
   // The app's own metadata is the subject — objects and hooks exactly as
   // `objectstack.config.ts` declares them. A unit test of the handler cannot
   // show any of this: only the engine decides that `set_null` reaches the lead

@@ -360,7 +360,7 @@ would otherwise slug the heading to `#上游缺口--upstream-gaps` — the exact
   [objectstack#14430](https://github.com/objectstack-ai/objectstack/issues/14430).
 - An objectstack release carrying both, and the version bump in this repository. HotCRM was
   pinned to `@objectstack/*` 17.4.0 when this was written (PR #1814, #1807) and moved to 17.5.0,
-  then 17.6.0, after it (this plan's own measurements were taken at the 17.2.0 pin and are labelled as such).
+  then 17.6.0 and 17.7.0, after it (this plan's own measurements were taken at the 17.2.0 pin and are labelled as such).
   Merged upstream is not the same as available
   in the pin (AGENTS.md, *Platform Upgrades*).
 
