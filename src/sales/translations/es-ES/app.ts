@@ -2,9 +2,11 @@
 
 import type { TranslationData } from '@objectstack/spec/system';
 
+import { QUOTE_DISCOUNT_CEILING } from '../../objects/_thresholds';
+
 /**
  * Español (es-ES) — every translation namespace EXCEPT `objects`:
- * `apps`, `messages`, `dashboards`, `datasets`, `pages`.
+ * `apps`, `messages`, `dashboards`, `datasets`, `pages`, `flows`.
  *
  * SPLIT AXIS (#1311): translation NAMESPACE first, then CRM DOMAIN FAMILY.
  * Everything that is not `objects` lives in `./app.ts`; `objects` — 69-78% of
@@ -587,6 +589,95 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         notifications_panel: { label: 'Notificaciones' },
         quick_notes: { title: 'Notas Rápidas', label: 'Notas Rápidas' },
         quick_search: { label: 'Búsqueda Rápida' },
+      },
+    },
+  },
+  // Screen-flow copy (#1210, #1975). Keyed `flows.<flow>.label`,
+  // `screens.<node>.title` and `screens.<node>.fields.<field>.{label,placeholder}`
+  // — the keys `os lint`'s `i18n/missing-flow` names, read by the console's
+  // flow runner since @objectstack 17.7.0 (the spec's `flows` liveness row is
+  // `live` there). A screen with no authored `title` shows its flow's label in
+  // every locale, so each `screen_1.title` repeats the flow label. Select
+  // option labels and screen descriptions are not translatable keys on a
+  // screen (`FLOW_SCREEN_FIELD_NO_OPTIONS`), so they stay as authored.
+  // The discount ceiling is interpolated from `QUOTE_DISCOUNT_CEILING`, never
+  // retyped: the number lives in `_thresholds.ts` alone (#1711).
+  flows: {
+    campaign_enrollment: {
+      label: 'Inscribir miembros en la campaña',
+      screens: {
+        screen_1: {
+          title: 'Inscribir miembros en la campaña',
+          fields: {
+            memberSource: { label: 'Tipo de miembro a inscribir' },
+            leadStatus: { label: 'Inscribir prospectos con estado' },
+            contactDepartment: { label: 'Inscribir contactos del departamento' },
+          },
+        },
+      },
+    },
+    escalate_case: {
+      label: 'Escalar Caso',
+      screens: { screen_1: { title: 'Escalar Caso', fields: { reason: { label: 'Motivo de Escalación' } } } },
+    },
+    close_case: {
+      label: 'Cerrar Caso',
+      screens: {
+        screen_1: {
+          title: 'Cerrar Caso',
+          fields: {
+            resolution: { label: 'Resolución' },
+            resolved_by_article: { label: 'Resuelto con artículo (opcional)' },
+          },
+        },
+      },
+    },
+    claim_case: {
+      label: 'Tomar Caso',
+      screens: { screen_1: { title: 'Tomar Caso', fields: { claimStatus: { label: 'Estado de trabajo' } } } },
+    },
+    lead_conversion: {
+      label: 'Proceso de conversión de prospecto',
+      screens: {
+        screen_1: {
+          title: 'Proceso de conversión de prospecto',
+          fields: {
+            createOpportunity: { label: '¿Crear oportunidad?' },
+            opportunityName: { label: 'Nombre de Oportunidad' },
+            opportunityAmount: { label: 'Monto de la Oportunidad' },
+            closeDate: { label: 'Fecha de Cierre' },
+          },
+        },
+        refuse_confirmed_duplicate: { title: 'Conversión rechazada' },
+        refuse_unapproved: { title: 'Conversión rechazada' },
+      },
+    },
+    schedule_followup: {
+      label: 'Programar Seguimiento',
+      screens: {
+        screen_1: {
+          title: 'Programar Seguimiento',
+          fields: {
+            subject: { label: '¿Cuál es el siguiente paso?' },
+            dueDate: { label: 'Fecha Límite' },
+            activityType: { label: 'Tipo de Actividad' },
+            priority: { label: 'Prioridad' },
+            notes: { label: 'Notas' },
+          },
+        },
+      },
+    },
+    quote_generation: {
+      label: 'Generar cotización desde la oportunidad',
+      screens: {
+        screen_1: {
+          title: 'Generar cotización desde la oportunidad',
+          fields: {
+            quoteName: { label: 'Nombre de Cotización' },
+            expirationDays: { label: 'Válida por (días)' },
+            discount: { label: `Descuento % (≤ ${QUOTE_DISCOUNT_CEILING})`, placeholder: `0-${QUOTE_DISCOUNT_CEILING}` },
+          },
+        },
       },
     },
   },

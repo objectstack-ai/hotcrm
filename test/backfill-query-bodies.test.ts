@@ -30,8 +30,9 @@ import { REPO_ROOT } from './helpers/repo-root';
  * real request code and every query body it sends is captured. Nothing is
  * exported from the scripts for this, so what gets checked is what the script
  * actually sends; a body built inline somewhere new is caught too. The stub
- * answers sign-in, and judges each query body the way the 17.6.0 REST door
- * does (`@objectstack/rest`, the `POST .../:object/query` route): it adds
+ * answers sign-in, and judges each query body the way the REST door does
+ * (`@objectstack/rest`, the `POST .../:object/query` route; read on 17.6.0 and
+ * again on 17.7.0): it adds
  * `object` to the body, then `FindDataRequestSchema.safeParse({ object, query })`.
  * An accepted body gets `{ records: [] }`, so the script goes through each of
  * its objects once and finishes. A refused one gets the door's 400.
@@ -44,7 +45,7 @@ const BACKFILL_SCRIPTS = readdirSync(join(REPO_ROOT, 'scripts'))
   .filter((f) => /^backfill-.+\.ts$/.test(f))
   .sort();
 
-/** The 17.6.0 query door's own check: `object` merged into the body, then the spec schema. */
+/** The query door's own check (read on 17.6.0 and 17.7.0): `object` merged into the body, then the spec schema. */
 function door(object: string, body: unknown) {
   const query = body && typeof body === 'object' && !Array.isArray(body) ? { ...body, object } : body;
   return FindDataRequestSchema.safeParse({ object, query });

@@ -12,6 +12,8 @@ import oppHooks from '../src/sales/objects/opportunity.hook';
 import quoteHooks from '../src/revenue/objects/quote.hook';
 import { hookNamed, makeCtx, makeHarness, type Rec } from './helpers/hook-harness';
 import { extractSandboxBody } from './helpers/action-sandbox';
+import { SysUser, SysMember, SysOrganization } from '@objectstack/platform-objects/identity';
+import { identityObjects } from './helpers/identity-objects';
 
 /**
  * A frozen record must not make the people it references undeletable (#720).
@@ -263,6 +265,9 @@ beforeAll(async () => {
   await kernel.use(new DefaultDatasourcePlugin({ driver: 'memory', config: {} } as never));
   await kernel.use(new MetadataPlugin({ watch: false, artifactWatch: false, environmentId: 'proj_720' } as never));
   await kernel.use(new ObjectQLPlugin({ environmentId: 'proj_720' } as never));
+  // 17.7.0 refuses an object name the registry does not hold (objectstack#21545):
+  // register the identity objects `plugin-auth` would (`test/helpers/identity-objects.ts`).
+  await kernel.use(identityObjects(SysUser, SysMember, SysOrganization) as never);
   // The app's own metadata is the subject — objects and hooks exactly as
   // `objectstack.config.ts` declares them (the rig `cascade-guard-messages`
   // uses, which is the rig #720 was measured with).

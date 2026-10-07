@@ -2,9 +2,11 @@
 
 import type { TranslationData } from '@objectstack/spec/system';
 
+import { QUOTE_DISCOUNT_CEILING } from '../../objects/_thresholds';
+
 /**
  * 简体中文 (zh-CN) — every translation namespace EXCEPT `objects`:
- * `apps`, `messages`, `dashboards`, `datasets`, `pages`.
+ * `apps`, `messages`, `dashboards`, `datasets`, `pages`, `flows`.
  *
  * SPLIT AXIS (#1311): translation NAMESPACE first, then CRM DOMAIN FAMILY.
  * Everything that is not `objects` lives in `./app.ts`; `objects` — 69-78% of
@@ -588,6 +590,95 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         notifications_panel: { label: '通知' },
         quick_notes: { title: '快速笔记', label: '快速笔记' },
         quick_search: { label: '快速搜索' },
+      },
+    },
+  },
+  // Screen-flow copy (#1210, #1975). Keyed `flows.<flow>.label`,
+  // `screens.<node>.title` and `screens.<node>.fields.<field>.{label,placeholder}`
+  // — the keys `os lint`'s `i18n/missing-flow` names, read by the console's
+  // flow runner since @objectstack 17.7.0 (the spec's `flows` liveness row is
+  // `live` there). A screen with no authored `title` shows its flow's label in
+  // every locale, so each `screen_1.title` repeats the flow label. Select
+  // option labels and screen descriptions are not translatable keys on a
+  // screen (`FLOW_SCREEN_FIELD_NO_OPTIONS`), so they stay as authored.
+  // The discount ceiling is interpolated from `QUOTE_DISCOUNT_CEILING`, never
+  // retyped: the number lives in `_thresholds.ts` alone (#1711).
+  flows: {
+    campaign_enrollment: {
+      label: '将成员加入营销活动',
+      screens: {
+        screen_1: {
+          title: '将成员加入营销活动',
+          fields: {
+            memberSource: { label: '加入的成员类型' },
+            leadStatus: { label: '加入以下状态的线索' },
+            contactDepartment: { label: '加入以下部门的联系人' },
+          },
+        },
+      },
+    },
+    escalate_case: {
+      label: '升级工单',
+      screens: { screen_1: { title: '升级工单', fields: { reason: { label: '升级原因' } } } },
+    },
+    close_case: {
+      label: '关闭工单',
+      screens: {
+        screen_1: {
+          title: '关闭工单',
+          fields: {
+            resolution: { label: '解决方案' },
+            resolved_by_article: { label: '通过知识文章解决（可选）' },
+          },
+        },
+      },
+    },
+    claim_case: {
+      label: '认领工单',
+      screens: { screen_1: { title: '认领工单', fields: { claimStatus: { label: '处理状态' } } } },
+    },
+    lead_conversion: {
+      label: '线索转化流程',
+      screens: {
+        screen_1: {
+          title: '线索转化流程',
+          fields: {
+            createOpportunity: { label: '是否创建商机？' },
+            opportunityName: { label: '商机名称' },
+            opportunityAmount: { label: '商机金额' },
+            closeDate: { label: '预计成交日期' },
+          },
+        },
+        refuse_confirmed_duplicate: { title: '转化被拒绝' },
+        refuse_unapproved: { title: '转化被拒绝' },
+      },
+    },
+    schedule_followup: {
+      label: '安排跟进',
+      screens: {
+        screen_1: {
+          title: '安排跟进',
+          fields: {
+            subject: { label: '下一步做什么？' },
+            dueDate: { label: '截止日期' },
+            activityType: { label: '活动类型' },
+            priority: { label: '优先级' },
+            notes: { label: '备注' },
+          },
+        },
+      },
+    },
+    quote_generation: {
+      label: '从商机生成报价单',
+      screens: {
+        screen_1: {
+          title: '从商机生成报价单',
+          fields: {
+            quoteName: { label: '报价名称' },
+            expirationDays: { label: '有效期（天）' },
+            discount: { label: `折扣 % (≤ ${QUOTE_DISCOUNT_CEILING})`, placeholder: `0-${QUOTE_DISCOUNT_CEILING}` },
+          },
+        },
       },
     },
   },

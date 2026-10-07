@@ -16,6 +16,7 @@ import { SysUser, SysMember, SysOrganization } from '@objectstack/platform-objec
 import stack from '../objectstack.config';
 import caseHooks from '../src/service/objects/case.hook';
 import { CLAIMABLE_TARGET_STATUSES } from '../src/service/objects/_case-assignment';
+import { identityObjects } from './helpers/identity-objects';
 
 /**
  * Who really sees the `Unassigned — triage` tab's rows (#1096) — measured
@@ -153,6 +154,9 @@ async function boot(driver: string, config: AnyRec): Promise<Fixture> {
     new MetadataPlugin({ watch: false, artifactWatch: false, environmentId: 'proj_test' } as never),
   );
   await kernel.use(new ObjectQLPlugin({ environmentId: 'proj_test' } as never));
+  // 17.7.0 refuses an object name the registry does not hold (objectstack#21545):
+  // register the identity objects `plugin-auth` would (`test/helpers/identity-objects.ts`).
+  await kernel.use(identityObjects(SysUser, SysMember, SysOrganization) as never);
   await kernel.use(new AppPlugin(stack as never, undefined as never, { skipSeedData: true } as never));
   await kernel.use(
     new SecurityPlugin({
@@ -330,7 +334,11 @@ async function boot(driver: string, config: AnyRec): Promise<Fixture> {
       await ql.update(object, { id: rowId, ...patch }, { context });
       return 'allowed';
     } catch (error: unknown) {
-      return `denied: ${(error as AnyRec)?.name}`;
+      // A refusal with no class of its own is named by its code: since 17.7.0 a
+      // by-id write to a row the caller cannot READ answers `RECORD_NOT_FOUND`
+      // (404) — hidden and gone are one answer on the write doors (objectstack#21812).
+      const e = error as AnyRec;
+      return `denied: ${e?.name === 'Error' && e?.code ? e.code : e?.name}`;
     }
   };
 
@@ -580,10 +588,13 @@ for (const { label, driver } of DRIVERS) {
         'an agent assigned an unowned case to SOMEBODY ELSE — the claim seam is supposed to make ' +
           'that unspellable, and the gate is supposed to refuse it',
       ).toBe('denied: PermissionDeniedError');
+      // The agent cannot read a case another agent owns, so since 17.7.0 the
+      // write door answers it as absent (`RECORD_NOT_FOUND`, objectstack#21812)
+      // before the transfer gate is reached. Still refused, nothing written.
       expect(
         await writes('crm_case', id.other_case, { owner_id: id.agent }),
         'an agent grabbed a case owned by somebody else — the transfer gate is not holding',
-      ).toBe('denied: PermissionDeniedError');
+      ).toBe('denied: RECORD_NOT_FOUND');
       // Nor can the value ride along with the gesture that IS allowed.
       expect(
         await writes('crm_case', id.unowned_open, { status: 'in_progress', owner_id: id.agent }),

@@ -6,6 +6,12 @@
 //   pnpm exec tsx scripts/backfill-contact-mailing-address.ts --url https://<your-org> --email <admin> --password <pw>
 //   pnpm exec tsx scripts/backfill-contact-mailing-address.ts ... --apply   # without this it only reports
 //
+// On @objectstack 17.7.0 and later, read the old columns with the platform's
+// own command first, from the project root, and hand its output to this script:
+//
+//   pnpm exec objectstack migrate unmapped-columns --object crm_contact --json > contact-unmapped.json
+//   pnpm exec tsx scripts/backfill-contact-mailing-address.ts ... --unmapped contact-unmapped.json [--apply]
+//
 // ─── RUN THIS AFTER UPGRADING, AND BEFORE `os migrate apply --allow-destructive` ───
 //
 // HotCRM used to store a contact's address as five text fields —
@@ -16,13 +22,19 @@
 //
 // Upgrading does not move the old values, and it does not delete them either:
 // the five columns stay in the database as ORPHANED columns (`os migrate plan`
-// lists them as `unmapped_column`). An unprojected REST read still returns
-// them — measured on @objectstack 17.6.0 with SQLite — and that is where this
-// script reads from. `os migrate apply --allow-destructive` drops orphaned
-// columns, and with them the only copy of the old addresses, so run this first.
+// lists them as `unmapped_column`). `os migrate apply --allow-destructive` drops
+// orphaned columns, and with them the only copy of the old addresses, so run
+// this first. Where the old values are read from depends on the runtime:
+//   • @objectstack 17.7.0 and later serve declared fields only, so no REST read
+//     returns an orphaned column (measured: the unprojected read of a contact
+//     whose `mailing_street` column held a value carried no `mailing_*` key).
+//     The operator-only `os migrate unmapped-columns` reads them straight from
+//     the database instead; pass its JSON with `--unmapped FILE`.
+//   • Without `--unmapped`, the script reads the unprojected REST rows, which
+//     still carried the orphaned columns on 17.6.0 (measured with SQLite).
 //
-// It talks to the REST API and nothing else — no imports from `src/`, no raw
-// SQL — so the old column names are written out literally below.
+// It writes through the REST API and nothing else — no imports from `src/`, no
+// raw SQL — so the old column names are written out literally below.
 //
 // What it writes, per contact:
 //   • the non-blank old columns become the matching parts of `mailing_address`
@@ -38,6 +50,8 @@
 //   • it never writes or deletes the old columns (it cannot: they are no longer
 //     fields), so a value it cannot map stays where it is, and is listed;
 //   • rerunnable: a second pass over a converted org reports zero rows to write.
+
+import { readFileSync } from 'node:fs';
 
 type Json = Record<string, any>;
 
@@ -65,6 +79,19 @@ function arg(name: string, envName: string, fallback: string): string {
 }
 
 const APPLY = process.argv.slice(2).includes('--apply');
+
+/**
+ * The old values, keyed by contact id, from the JSON `os migrate
+ * unmapped-columns --object crm_contact --json` prints — `{ object, records:
+ * [{ id, values: { <column>: <value> } }] }`. Read from the file, never guessed.
+ */
+function readUnmapped(file: string): Map<string, Json> {
+  const doc = JSON.parse(readFileSync(file, 'utf8')) as Json;
+  if (doc?.object !== OBJECT || !Array.isArray(doc?.records)) {
+    throw new Error(`${file} is not \`os migrate unmapped-columns --object ${OBJECT} --json\` output`);
+  }
+  return new Map((doc.records as Json[]).map((r) => [String(r.id), (r.values ?? {}) as Json]));
+}
 
 class Api {
   private cookie = '';
@@ -171,7 +198,20 @@ async function main(): Promise<void> {
   console.log(`Signed in as ${me.email ?? me.id} at ${url}`);
   console.log(APPLY ? 'Mode: APPLY (records will be written)' : 'Mode: REPORT ONLY (pass --apply to write)');
 
-  const rows = await api.allContacts();
+  const unmappedFile = arg('unmapped', 'HOTCRM_UNMAPPED_FILE', '');
+  const legacy = unmappedFile ? readUnmapped(unmappedFile) : undefined;
+  if (unmappedFile) console.log(`Old columns: ${legacy!.size} row(s) from ${unmappedFile}`);
+
+  // With `--unmapped`, the old columns come from the file and everything else
+  // (the current `mailing_address`) from the REST row; a file row whose contact
+  // the API does not return is listed, never written.
+  const rest = await api.allContacts();
+  const rows = legacy ? rest.map((r) => ({ ...r, ...(legacy.get(String(r.id)) ?? {}) })) : rest;
+  if (legacy) {
+    const seen = new Set(rest.map((r) => String(r.id)));
+    const missing = [...legacy.keys()].filter((id) => !seen.has(id));
+    if (missing.length) console.log(`  ${missing.length} id(s) in the file that the API does not return (skipped): ${missing.slice(0, 20).join(', ')}`);
+  }
   const legacyVisible = rows.some((r) => LEGACY_TO_PART.some(([column]) => column in r));
 
   const todo: Todo[] = [];
@@ -200,6 +240,10 @@ async function main(): Promise<void> {
     console.log('read here. Either this org never had them (installed on this release or later), or');
     console.log('they are gone — dropped by `os migrate apply --allow-destructive`, or not returned by');
     console.log('this runtime. In the last two cases the old addresses cannot be recovered from the API.');
+    if (!legacy) {
+      console.log('On @objectstack 17.7.0 or later no REST read returns an orphaned column: read them with');
+      console.log(`\`objectstack migrate unmapped-columns --object ${OBJECT} --json > FILE\` and pass --unmapped FILE.`);
+    }
     return;
   }
   console.log(`  ${noAddress} with no old address (left empty)`);

@@ -868,7 +868,7 @@ describe('re-seed × snapshot leaves one row per (owner, period, window) (#702)'
   /**
    * The ownership claim, run for REAL: `claimSeedOwnership` from
    * `@objectstack/plugin-security`, the function the platform re-runs on
-   * `app:seeded` once the seed settles (objectstack#17872, in the 17.6.0 pin).
+   * `app:seeded` once the seed settles (objectstack#17872, shipped in 17.6.0).
    * It replaced the app's own `demo_bootstrap` sweep (#1892) and hands every
    * ownerless row of every object declaring `owner_id` to one administrator.
    * The adapter only maps the harness's `{ modified }` onto the affected-row
