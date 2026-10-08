@@ -222,12 +222,11 @@ worth knowing apart when triaging:
   nothing and creates a *second* account for a company that already has one —
   silently. This is the failure that makes the backfill non-optional: it is
   more duplicates than the behaviour the change replaced.
-- **A lead with no key stops the conversion.** The filter value resolves to
-  nothing, and `get_record` refuses to run rather than widen the query:
-  *"refusing to run — 1 filter condition(s) resolved to nothing and were dropped
-  from the query: `{leadRecord.company_normalized}` (at name_normalized)"*. The
-  run is recorded failed and the lead stays unconverted. Loud, and the message
-  names the missing key — re-save that lead and convert again.
+- **A lead with no key is refused at conversion.** **Convert** opens a
+  "Conversion refused" dialog before the conversion form, and nothing is
+  written. (Before hotcrm#2017 a `NULL` key silently matched an unrelated
+  key-less account, and an absent key failed the run in `get_record`.) Re-save
+  that lead's `company` and convert again.
 
 > [!NOTE]
 > **This section is a contingency, not a step in any current upgrade.** HotCRM's
