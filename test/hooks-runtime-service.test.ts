@@ -221,18 +221,17 @@ describe('case_status_side_effects', () => {
   });
 
   /**
-   * `case_resolution_account_activity`. Writing closed_date as a proxy for
+   * The bump is its own hook since #2014. Writing closed_date as a proxy for
    * "resolved" corrupted resolution metrics: a resolved-then-closed case kept
    * its resolve time as its close time. closed_date belongs exclusively to the
    * `closed` transition.
    *
-   * An agent's own resolve reaches the account (#2014). An agent holds no edit
-   * right on accounts, so the bump is its own hook declaring
-   * `runAs: 'system'`: before, it rode on this hook as the caller, the account
-   * write was refused, `onError: 'log'` swallowed it, and the activity clock
-   * never moved.
+   * An agent's own resolve reaches the account. An agent holds no edit right
+   * on accounts, so the bump declares `runAs: 'system'`: before, it rode on
+   * this hook as the caller, the account write was refused, `onError: 'log'`
+   * swallowed it, and the activity clock never moved.
    */
-  it('an agent’s resolve bumps the account’s activity clock WITHOUT stamping a date on the case', async () => {
+  it('case_resolution_account_activity: an agent’s resolve bumps the account’s activity clock WITHOUT stamping a date on the case', async () => {
     const { account, kase } = await caseOnAccount();
     await verify.hooks.run('crm_case', 'update', { id: kase.id, status: 'resolved', resolution: 'Fixed.' }, as(agent));
     await settles('crm_account', account.id, (a) => expect(a.last_activity_date).toBe(today()));
