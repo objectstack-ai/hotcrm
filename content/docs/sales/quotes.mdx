@@ -87,21 +87,22 @@ The contact half of that is now enforced rather than advised — you cannot pres
 
 ## Generating a quote
 
-You don't manually create quotes — instead, open any opportunity and click **Generate Quote**. A short form pops up:
+You don't manually create quotes — instead, open an opportunity that is still open and click **Generate Quote**. The button is not offered on a *Closed Won* or *Closed Lost* deal. A short form pops up:
 
 - Quote name
 - Valid for (days) — default 30
-- Discount %
+- Discount % — default 0; the label shows the 60% ceiling
 
-Then the system, in a single step:
+When you submit it, the system:
 
-1. Creates the quote in **Draft** status with the opportunity's amount as the subtotal.
-2. Applies the discount and recalculates the total.
-3. Advances the opportunity to **Proposal** stage.
-4. Stamps the opportunity's last activity to today.
-5. Sends you a confirmation email.
+1. Creates the quote in **Draft** status with the opportunity's amount as the subtotal. The quote takes the opportunity's account and primary contact, makes you its owner, is dated today, expires the number of days you entered from today, and has payment terms of Net 30. The opportunity's products are not copied: the quote starts with no line items.
+2. Applies the discount and calculates the discount amount and the total, to the cent.
+3. Moves the opportunity to **Proposal**, but only from **Prospecting**, **Qualification** or **Needs Analysis**. A deal already at **Proposal** or **Negotiation** keeps its stage. So does a deal waiting on an approval decision, whose **Approval Status** is *Pending* (see [Revenue › Approvals](/docs/revenue/approvals)). In both cases you still get the quote.
+4. Notifies you that the quote was created: a message in your in-app inbox that links to the new quote, and an email. The email reaches a mailbox only if your deployment has outgoing mail set up. Out of the box it has none, and the email is not sent (see [Email & Calendar](/docs/guides/email-and-calendar)).
 
-The rep then reviews the draft, attaches a PDF (or uses the built-in templating), and changes the status to *Presented* to send it to the customer.
+Generating a quote stamps no activity date. The opportunity has no last-activity field, and the account's **Last Activity Date** stays as it was.
+
+The rep then reviews the draft, attaches the quote document (a PDF) to the quote, and changes the status to *Presented* when it goes to the customer.
 
 ## Sending a quote to the customer
 
