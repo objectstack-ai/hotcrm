@@ -5,7 +5,7 @@ import { ObjectQL, applySystemFields, evaluateValidationRules } from '@objectsta
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { P } from '@objectstack/spec';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import forecastHook from '../src/sales/objects/forecast.hook';
 import { forecasts } from '../src/sales/data/forecast.seed';
 import { makeCtx, hookNamed } from './helpers/hook-harness';

@@ -14,7 +14,8 @@ import {
 import { SharingServicePlugin } from '@objectstack/plugin-sharing';
 import { tenancyProbe } from './helpers/tenancy-probe';
 import { defineStack, PLATFORM_CAPABILITY_PROVIDERS } from '@objectstack/spec';
-import stack from '../objectstack.config';
+import artifact from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { SysUser, SysMember, SysOrganization } from '@objectstack/platform-objects/identity';
 import { identityObjects } from './helpers/identity-objects';
 
@@ -284,7 +285,7 @@ beforeAll(async () => {
   // 17.7.0 refuses an object name the registry does not hold (objectstack#21545):
   // register the identity objects `plugin-auth` would (`test/helpers/identity-objects.ts`).
   await kernel.use(identityObjects(SysUser, SysMember, SysOrganization) as never);
-  await kernel.use(new AppPlugin(stack as never, undefined as never, { skipSeedData: true } as never));
+  await kernel.use(new AppPlugin(artifact as never, undefined as never, { skipSeedData: true } as never));
   await kernel.use(
     new SecurityPlugin({
       fallbackPermissionSet: appDefaultPermissionSetName((stack as AnyRec).permissions),

@@ -5,7 +5,7 @@ import { applySystemFields } from '@objectstack/objectql';
 import * as PlatformObjects from '@objectstack/platform-objects';
 import type * as Automation from '@objectstack/spec/automation';
 import type { Hook } from '@objectstack/spec/data';
-import stack from '../../objectstack.config';
+import stack from './composed-stack';
 
 type Flow = Automation.Flow;
 

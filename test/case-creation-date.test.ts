@@ -8,7 +8,8 @@ import { MetadataPlugin } from '@objectstack/metadata';
 import { AnalyticsService } from '@objectstack/service-analytics';
 import { SEED_WRITE_EXECUTION_CONTEXT } from '@objectstack/spec/kernel';
 import { SysUser, SysMember, SysOrganization } from '@objectstack/platform-objects/identity';
-import stack from '../objectstack.config';
+import artifact from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { CaseDataset } from '../src/service/datasets/case.dataset';
 import { CasesOpenedByDayPriorityReport } from '../src/service/reports/case.report';
 import { ServiceDashboard } from '../src/service/dashboards/service.dashboard';
@@ -125,7 +126,7 @@ describe('a case created without any date is counted', () => {
     await kernel.use(new ObjectQLPlugin({ environmentId: 'proj_test' } as never));
     // 17.7.0 refuses an object name the registry does not hold (objectstack#21545).
     await kernel.use(identityObjects(SysUser, SysMember, SysOrganization) as never);
-    await kernel.use(new AppPlugin(stack as never, undefined as never, { skipSeedData: true } as never));
+    await kernel.use(new AppPlugin(artifact as never, undefined as never, { skipSeedData: true } as never));
     await kernel.bootstrap();
     ql = kernel.getService('objectql');
 

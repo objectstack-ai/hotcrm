@@ -5,24 +5,31 @@
 ## Overview
 
 HotCRM is an ObjectStack marketplace app. It is not organized as multiple scoped npm
-packages — one `package.json`, one build — and the four packages it is assembled from are
-the directories under the local `src/` tree (ADR-0130), collected by
-[`objectstack.composition.ts`](../objectstack.composition.ts) and registered through
-[`objectstack.config.ts`](../objectstack.config.ts).
+packages — one `package.json`, one build — and it ships as ONE release artifact carrying
+TWO packages (ADR-0130 D4): `app.objectstack.hotcrm`, the `type: app` package
+(`src/sales/index.ts`), and `app.objectstack.hotcrm.service`, a `type: module`
+(`src/service/index.ts`). The four directories under the local `src/` tree are the four
+packages of the layout; `src/revenue/` and `src/marketing/` are still registered by the app
+package until each is packaged on its own.
+[`objectstack.composition.ts`](../objectstack.composition.ts) builds the two package stacks
+and [`objectstack.config.ts`](../objectstack.config.ts) composes them with
+`composeStacks(…, { manifest: 'preserve' })`.
 
 ```mermaid
 flowchart TD
   Sales["src/sales/ — the type: app package"] --> Composition["objectstack.composition.ts"]
-  Service["src/service/"] --> Composition
   Revenue["src/revenue/"] --> Composition
   Marketing["src/marketing/"] --> Composition
-  Composition --> Config["objectstack.config.ts"]
-  Config --> Stack["defineStack()"]
-  Stack --> Runtime["@objectstack/runtime"]
+  Composition --> AppStack["app.objectstack.hotcrm — defineStack()"]
+  Service["src/service/ — the service module"] --> ServiceStack["app.objectstack.hotcrm.service — defineStack()"]
+  AppStack --> Config["objectstack.config.ts — composeStacks(preserve)"]
+  ServiceStack --> Config
+  Config --> Runtime["@objectstack/runtime"]
 ```
 
-The diagram sketches the assembly path — the four packages, merged into the arrays the
-single `defineStack()` takes. It is deliberately not a roster of metadata:
+The diagram sketches the assembly path — four directories, two package stacks, one
+artifact whose `packages[]` carries each package's metadata once, in that package's body.
+It is deliberately not a roster of metadata:
 [Metadata Areas](#metadata-areas) below is the complete directory-to-key map, and each
 package's own subdirectories are the per-type barrels that table's left column names.
 
@@ -37,31 +44,37 @@ The compiled marketplace artifact is produced by `pnpm build`. The generated art
 
 ## Stack Manifest
 
-The stack manifest defines:
+Each package of the artifact declares its own manifest. The app package's
+(`src/sales/index.ts`) is also the artifact's own identity — the one a customer
+installs (ADR-0019 D1):
 
-| Field | Current value |
-| --- | --- |
-| id | `app.objectstack.hotcrm` |
-| namespace | `crm` |
-| version | `3.1.0` |
-| type | `app` |
-| name | `HotCRM` |
+| Field | Current value | Service module |
+| --- | --- | --- |
+| id | `app.objectstack.hotcrm` | `app.objectstack.hotcrm.service` |
+| namespace | `crm` | `crm` |
+| version | `3.1.0` | `3.1.0` |
+| type | `app` | `module` |
+| name | `HotCRM` | `HotCRM Service` |
 
-`engines.protocol` is deliberately **not** transcribed into that table. The
-protocol major this app's metadata is authored against is declared in
-[`objectstack.config.ts`](../objectstack.config.ts) (`manifest.engines.protocol`)
-and restated by `objectstack.manifest.json` (`engines.protocol` and `specVersion`)
-and by the `@objectstack/spec` range `package.json` installs.
-`test/docs-declared-versions.test.ts` pins those three files to each other, so the
-fact is already gated where it lives — a copy here would be the one copy nothing
-compares against.
+One artifact, one version (ADR-0130 D6): the service module states the app's version and
+depends on the app package. `engines.protocol` is deliberately **not** transcribed into
+that table. The protocol major this app's metadata is authored against is declared in
+each package manifest (`src/sales/index.ts`, `src/service/index.ts`,
+`manifest.engines.protocol`) and restated by `objectstack.manifest.json`
+(`engines.protocol` and `specVersion`) and by the `@objectstack/spec` range
+`package.json` installs. `test/docs-declared-versions.test.ts` pins every package of the
+built artifact and those files to each other, so the fact is already gated where it lives
+— a copy here would be the one copy nothing compares against.
 *Supersedes the transcribed `^17.0.0-rc.1` row that stood here while all three
 sources declared `^17.2.0` — 2026-08-31 ruling, item 5.*
 
-The runtime capabilities this app needs are declared in `requires` in
-[`objectstack.config.ts`](../objectstack.config.ts), and that roster is deliberately
-**not** transcribed here — it is not a fact this page can keep true, and a copy here
-would be the one copy nothing compares against.
+The runtime capabilities this app needs are declared in `requires`, per package:
+`defineStack` validates capabilities per stack, so the app package
+([`src/sales/index.ts`](../src/sales/index.ts)) declares its slate and the service module
+([`src/service/index.ts`](../src/service/index.ts)) the capabilities its own metadata
+needs, and the artifact's slate is their union. That roster is deliberately **not**
+transcribed here — it is not a fact this page can keep true, and a copy here would be the
+one copy nothing compares against.
 
 What the roster cannot tell a reader is why two capabilities are where they are. Those
 two decisions are the architecture, so this section states them instead:
@@ -80,7 +93,7 @@ two decisions are the architecture, so this section states them instead:
   aborts, the resolver is simply absent, and the scope fails *closed* to owner-only — a
   Sales Manager still cannot edit a rep's contract there.
 
-The config comments carry the full rationale for both.
+The comments in `src/sales/index.ts` carry the full rationale for both.
 *Supersedes the seven-name roster transcribed here, which named seven of the eight
 capabilities declared and closed with "and". The member it dropped was
 `hierarchy-security` — half of the very contrast the paragraph beneath it was drawing —
@@ -152,7 +165,7 @@ already drifted three objects behind the tree — 2026-08-31 ruling, item 5.*
 
 ## Hooks
 
-Object lifecycle hooks live beside the object definitions they name, in `src/*/objects/*.hook.ts` — a hook may not attach to another package's object (ADR-0130 R4), and that co-location is what enforces it. Each package re-exports its own in `objects/hooks.ts`; `objectstack.composition.ts` assembles them into the ordered `allHooks` list `objectstack.config.ts` passes to `defineStack({ hooks: allHooks })`.
+Object lifecycle hooks live beside the object definitions they name, in `src/*/objects/*.hook.ts` — a hook may not attach to another package's object (ADR-0130 R4), and that co-location is what enforces it. Each package re-exports its own in `objects/hooks.ts` and registers them with its own stack: the service module in `src/service/index.ts`, the app package (sales, revenue and marketing) through the ordered `appHooks` list in `objectstack.composition.ts`. `allHooks` there is the artifact-wide union the suites sweep.
 
 Use hooks for record-level invariants and cross-object maintenance that must run with data changes, such as:
 
@@ -181,9 +194,9 @@ export const ConvertLeadAction = {
 
 ## Flows
 
-Flows live in `src/*/flows/*.flow.ts` and are registered through `allFlows`. HotCRM uses record-change, scheduled, and screen-style automation for lead conversion, routing, alerts, SLA monitoring, contract renewal, quote expiration, campaign enrollment, and approval paths.
+Flows live in `src/*/flows/*.flow.ts` and are registered by the package that owns their trigger object — `serviceFlows` in `src/service/index.ts`, `appFlows` in `objectstack.composition.ts`; `allFlows` is the union. HotCRM uses record-change, scheduled, and screen-style automation for lead conversion, routing, alerts, SLA monitoring, contract renewal, quote expiration, campaign enrollment, and approval paths.
 
-Record-change flows rely on the `triggers` capability declared in the stack manifest.
+Record-change flows rely on the `triggers` capability, which each package carrying such flows declares in its own `requires`.
 
 ## UI
 
@@ -222,14 +235,16 @@ answering record questions, because admins can change metadata over time.
 Security is assembled from three kinds of metadata. Each entry below names where that
 metadata lives and what registers it; the counts are deliberately **not** restated here:
 
-- **Permission profiles** — `src/sales/profiles/*.profile.ts`, registered as `permissions`.
+- **Permission profiles** — `src/sales/profiles/*.profile.ts`, registered as `permissions`,
+  whole in the app package (ADR-0130, 2026-09-02 addendum) — service grants included.
   That directory holds every profile any composition can author; which of them a given
   build registers is decided by `compositionPermissions` in
-  [`objectstack.config.ts`](../objectstack.config.ts). The default build registers
+  [`objectstack.composition.ts`](../objectstack.composition.ts). The default build registers
   `system_admin`; `HOTCRM_COMPOSITION=saas` registers `tenant_admin` in its place.
-- **Sharing rules** — `src/*/sharing/*.sharing.ts`, spread into the `sharingRules` array
-  in `objectstack.config.ts`. One file may declare several rules, so that glob counts
-  files, not rules.
+- **Sharing rules** — `src/*/sharing/*.sharing.ts`, registered by the package that owns
+  the rule's object: the case rules in `src/service/index.ts`, the rest through
+  `appSharingRules` in `objectstack.composition.ts`. One file may declare several rules,
+  so that glob counts files, not rules.
 - **Positions** — `src/sales/sharing/positions.ts`, exported as `CrmPositions` and passed to
   `defineStack({ positions })`.
 

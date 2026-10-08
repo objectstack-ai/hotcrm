@@ -5,7 +5,7 @@ import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import { AnalyticsService } from '@objectstack/service-analytics';
 import { resolveSeedRecord } from '@objectstack/formula';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { CrmSeedData } from '../objectstack.composition';
 
 /**

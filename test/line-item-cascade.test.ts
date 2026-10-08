@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 
 /**
  * Deleting an itemised opportunity or quote must work (#727).

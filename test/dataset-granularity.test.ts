@@ -2,7 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 
 /**
  * Date-bucket guard for the analytics semantic layer (#523).

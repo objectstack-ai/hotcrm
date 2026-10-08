@@ -8,7 +8,7 @@ import {
   CrmSeedData,
   CrmPositions,
 } from '../objectstack.composition';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import {
   barrelPath,
   barrelExports,

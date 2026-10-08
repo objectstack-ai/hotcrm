@@ -5,7 +5,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
 import { headingLabel } from './helpers/heading-label';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 
 /*
  * The dashboards docs page, checked against the dashboards the app registers.

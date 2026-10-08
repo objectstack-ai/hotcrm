@@ -4,7 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { existsSync, readFileSync } from 'node:fs';
 import { join, dirname, basename } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 
 /**
  * Every business object this app ships has a user-facing docs page (#672).

@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { AccountApprovalFlow } from '../src/sales/flows/account-approval.flow';
 import { makeFlowHarness, type Rec } from './helpers/flow-harness';
 

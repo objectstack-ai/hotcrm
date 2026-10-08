@@ -4,7 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-automation';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { flowGraphDeep, regionsOf } from './helpers/flow-regions';
 
 /**

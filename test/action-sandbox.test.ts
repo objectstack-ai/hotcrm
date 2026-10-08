@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { ACTOR_NAME_RESOLUTION_SOURCE } from '../src/sales/actions/activity-actions';
 import { allHooks } from '../objectstack.composition';
 import { createLineItemPriceFill } from '../src/revenue/objects/_line-item-price-fill';

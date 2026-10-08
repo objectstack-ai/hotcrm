@@ -131,7 +131,6 @@ export const CrmApp = App.create({
         { id: 'nav_my_tasks', type: 'object', objectName: 'crm_task', viewName: 'my_open_tasks', label: 'My Tasks', icon: 'circle-check' },
         { id: 'nav_my_deals', type: 'object', objectName: 'crm_opportunity', viewName: 'my_open_deals', label: 'My Deals', icon: 'target' },
         { id: 'nav_my_leads', type: 'object', objectName: 'crm_lead', viewName: 'my_leads', label: 'My Leads', icon: 'user-plus' },
-        { id: 'nav_my_cases', type: 'object', objectName: 'crm_case', viewName: 'my_open_cases', label: 'My Cases', icon: 'life-buoy' },
         // #592 — the rep's own calendar: a list of events, so a view, not a
         // dashboard.
         { id: 'nav_my_calendar', type: 'object', objectName: 'crm_event', viewName: 'my_events', label: 'My Calendar', icon: 'calendar-days' },
@@ -242,11 +241,23 @@ export const CrmApp = App.create({
       label: 'Service',
       icon: 'headset',
       expanded: true,
-      children: [
-        { id: 'nav_case',      type: 'object', objectName: 'crm_case',              label: 'Cases',     icon: 'life-buoy' },
-        { id: 'nav_knowledge', type: 'object', objectName: 'crm_knowledge_article', label: 'Knowledge', icon: 'book-open' },
-        { id: 'nav_service_dashboard', type: 'dashboard', dashboardName: 'service_dashboard', label: 'Service Overview', icon: 'gauge' },
-      ],
+      // EMPTY ON PURPOSE — this group is a CONTAINER, not a menu.
+      //
+      // `crm_case`, `crm_knowledge_article`, `service_dashboard` and
+      // `sla_performance` belong to `app.objectstack.hotcrm.service`, and an
+      // app's own `navigation` may not name another package's object (ADR-0130
+      // §1.5): the entry fails at author time with "references object
+      // `crm_case` which is not defined in objects". The module puts all three
+      // back through `navigationContributions` (ADR-0029 D7), and it can only
+      // aim at a group the app DECLARES — a module cannot create one inside an
+      // app it does not own. So the app publishes the anchor and the module
+      // fills it; `src/service/index.ts` holds the other half, and the two
+      // service items of *My Work* and *Insights* come back the same way.
+      //
+      // ⛔ Do not "tidy" the group away: deleting it relocates all three
+      // contributed items to the app's top level with a
+      // `nav_contribution_group_missing` warning.
+      children: [],
     },
 
     {
@@ -261,7 +272,6 @@ export const CrmApp = App.create({
         { id: 'nav_forecast',                 type: 'object', objectName: 'crm_forecast',                 label: 'Forecasts',         icon: 'trending-up' },
         { id: 'nav_report_pipeline_coverage', type: 'report', reportName: 'pipeline_coverage_by_quarter', label: 'Pipeline Coverage', icon: 'columns-3' },
         { id: 'nav_report_lead_inflow',       type: 'report', reportName: 'lead_inflow_by_month_source',  label: 'Lead Inflow',       icon: 'trending-up' },
-        { id: 'nav_report_sla',               type: 'report', reportName: 'sla_performance',              label: 'SLA Performance',   icon: 'timer' },
       ],
     },
 

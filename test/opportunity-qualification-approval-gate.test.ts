@@ -1,7 +1,7 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import opportunityHooks from '../src/sales/objects/opportunity.hook';
 import { OpportunityApprovalFlow } from '../src/sales/flows/opportunity-approval.flow';
 import { OpportunityStatusChangeApprovalFlow } from '../src/sales/flows/opportunity-status-change-approval.flow';

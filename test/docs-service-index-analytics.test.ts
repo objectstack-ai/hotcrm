@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
+import { servedApp } from './helpers/composed-stack';
 import { CrmApp } from '../src/sales/apps/crm.app';
 import { ServiceDashboard } from '../src/service/dashboards/service.dashboard';
 import { CaseDataset } from '../src/service/datasets/case.dataset';
@@ -65,7 +66,9 @@ type AnyRec = Record<string, any>;
 const NAV_LABEL: string = (() => {
   const walk = (nodes: AnyRec[]): AnyRec[] =>
     nodes.flatMap((n) => [n, ...walk((n.children ?? []) as AnyRec[])]);
-  const item = walk(((CrmApp as AnyRec).navigation ?? []) as AnyRec[]).find(
+  // The SERVED navigation: `nav_service_dashboard` reaches the app through the
+  // service module's `navigationContributions`, folded in as the console does.
+  const item = walk((servedApp((CrmApp as AnyRec).name).navigation ?? []) as AnyRec[]).find(
     (n) => n.dashboardName === ServiceDashboard.name,
   );
   if (!item?.label) throw new Error('no navigation item binds service_dashboard — pin out of date');

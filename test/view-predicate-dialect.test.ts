@@ -4,7 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { ExpressionEngine, buildScope, collectCelRootIdentifiers } from '@objectstack/formula';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { REPO_ROOT } from './helpers/repo-root';
 import { metadataFiles } from './helpers/src-roster';
 

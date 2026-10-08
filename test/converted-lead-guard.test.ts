@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import leadHooks from '../src/sales/objects/lead.hook';
 import { hookNamed, makeCtx, makeHarness } from './helpers/hook-harness';
 

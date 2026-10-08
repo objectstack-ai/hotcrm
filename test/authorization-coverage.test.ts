@@ -6,7 +6,7 @@ import {
   isApiOperationAllowed,
   resolveEffectiveApiMethods,
 } from '@objectstack/spec/data';
-import stack from '../objectstack.config';
+import stack, { servedApps } from './helpers/composed-stack';
 
 /**
  * Authorization-coverage guards (#488).
@@ -33,7 +33,10 @@ import stack from '../objectstack.config';
 type AnyRec = Record<string, any>;
 
 const objects: AnyRec[] = (stack as any).objects ?? [];
-const apps: AnyRec[] = (stack as any).apps ?? [];
+// The SERVED apps — a module's `navigationContributions` folded in — so an
+// object a module puts into the menu is held to the same bar as one the app
+// lists itself.
+const apps: AnyRec[] = servedApps();
 const permissionSets: AnyRec[] = (stack as any).permissions ?? [];
 const sharingRules: AnyRec[] = (stack as any).sharingRules ?? [];
 const positions: AnyRec[] = (stack as any).positions ?? [];

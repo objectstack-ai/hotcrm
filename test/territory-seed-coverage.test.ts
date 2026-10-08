@@ -2,7 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { compileCelToFilter } from '@objectstack/formula';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import accountHook from '../src/sales/objects/account.hook';
 import { TERRITORY_OPTIONS, territoryFor } from '../src/sales/objects/_territory';
 import { CrmSeedData } from '../objectstack.composition';

@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import caseHooks from '../src/service/objects/case.hook';
 import {
   SERVICE_AGENT_POSITION,

@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
+import { servedApp } from './helpers/composed-stack';
 import { CrmApp } from '../src/sales/apps/crm.app';
 import { CrmDashboards as dashboards } from './helpers/src-roster';
 import { CrmDatasets as datasets } from './helpers/src-roster';
@@ -91,7 +92,10 @@ const REPORT_LABELS: string[] = Object.values(reports as Record<string, AnyRec>)
 );
 const DATASET_LIST = Object.values(datasets as Record<string, AnyRec>);
 
-const NAV = ((CrmApp as AnyRec).navigation ?? []) as AnyRec[];
+// The SERVED navigation: the service module contributes *Service Overview* and
+// *SLA Performance* into the app's groups (`servedApp()` folds them in the
+// way the console does), so they are navigation labels like any other.
+const NAV = (servedApp((CrmApp as AnyRec).name).navigation ?? []) as AnyRec[];
 const GROUPS = NAV.filter((n) => n.type === 'group');
 const INSIGHTS = GROUPS.find((g) => g.label === 'Insights') as AnyRec | undefined;
 const INSIGHTS_CHILDREN: string[] = ((INSIGHTS?.children ?? []) as AnyRec[]).map(

@@ -4,7 +4,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL, applySystemFields } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { QUOTE_DISCOUNT_CEILING } from '../src/sales/objects/_thresholds';
 import { quotes, quoteLineItems } from '../src/revenue/data/revenue.seed';
 

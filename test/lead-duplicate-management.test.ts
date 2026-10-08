@@ -5,7 +5,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { CrmTranslations } from '../src/sales/translations';
 import leadHooks from '../src/sales/objects/lead.hook';
 import {

@@ -12,7 +12,7 @@ import {
   registerShareLinkRoutes,
   objectCanCarryShareLinks,
 } from '@objectstack/plugin-sharing';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 
 /**
  * Share-link publishing for public knowledge articles (#1104, from #601 item 3).

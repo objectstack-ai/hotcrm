@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { unknownImportMappingTargets } from '@objectstack/spec/data';
 import { applyMappingToRows, buildFieldMetaMap, coerceRow, type MappingArtifactLike } from '@objectstack/core';
 import { REPO_ROOT } from './helpers/repo-root';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 
 /**
  * Import-mapping integrity guards (#603).

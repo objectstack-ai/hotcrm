@@ -6,11 +6,12 @@ import * as PluginSharing from '@objectstack/plugin-sharing';
 import * as ServiceAutomation from '@objectstack/service-automation';
 import * as ServiceMessaging from '@objectstack/service-messaging';
 import * as ServiceStorage from '@objectstack/service-storage';
-import stack from '../../objectstack.config';
+import stack from './composed-stack';
 
 /**
- * Derived views of `objectstack.config` shared by the dangling-reference guard
- * suites.
+ * Derived views of the app's composed stack (`./composed-stack`: both packages
+ * of the `objectstack.config` artifact, flattened) shared by the
+ * dangling-reference guard suites.
  *
  * `test/metadata-references.test.ts` had grown to 99,872 bytes against the
  * 100KB ceiling in `scripts/check-source-hygiene.mjs`, so #814 split it by

@@ -2,7 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { validateActionParams } from '@objectstack/spec/ui';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { ACTIVITY_TARGETS } from '../src/sales/actions/activity-actions';
 import eventHooks from '../src/sales/objects/event.hook';
 import { runActionBody, makeSandboxEngine, type ActionRunOpts } from './helpers/action-sandbox';

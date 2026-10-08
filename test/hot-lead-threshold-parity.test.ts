@@ -5,7 +5,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { AutomationEngine } from '@objectstack/service-automation';
 import { REPO_ROOT } from './helpers/repo-root';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 
 /**
  * ═══ HOUSE RULE: there is exactly ONE definition of a "hot" lead ═══════════

@@ -41,21 +41,25 @@ Writing an `emptyState` on every tile, or hand-tuning tile placement to dodge a 
 
 ## 🏗️ Project Architecture
 
-HotCRM is **one ObjectStack artifact assembled from four packages** (ADR-0130): one `package.json`, one `tsconfig.json`, one build, one
-`defineStack` — on the `@objectstack/runtime` dependency, ⛔ never built, patched or worked around here.
+HotCRM is **one ObjectStack release artifact carrying two packages** (ADR-0130 D4): `app.objectstack.hotcrm`, the `type: app` package
+(`src/sales/index.ts`), and `app.objectstack.hotcrm.service`, a `type: module` (`src/service/index.ts`), one `defineStack` each, composed
+by `objectstack.config.ts` with `composeStacks(…, { manifest: 'preserve' })`. `src/revenue/` and `src/marketing/` are package
+DIRECTORIES that are not packages of the artifact yet: the app package registers their metadata until each is packaged in its own
+card. One `package.json`, one `tsconfig.json`, one build — on the `@objectstack/runtime` dependency, ⛔ never built, patched or
+worked around here.
 
 **A directory under `src/` IS a package.** There is no `packages/` level and no `shared/`; the top-level directories under `src/` are
 exactly the packages, plus `docs/` (see the note below the tree).
 
 ```
 hotcrm/
-├── objectstack.config.ts      # The single defineStack() — app manifest, capabilities, composition knob
-├── objectstack.composition.ts # The four packages collected into the arrays defineStack() takes
+├── objectstack.config.ts      # composeStacks() over the two package stacks — the artifact, nothing else
+├── objectstack.composition.ts # The directories' barrels collected into the two package stacks; the composition knob
 ├── src/
 │   ├── sales/              # The `type: app` package — account, contact, lead, opportunity, forecast, task, event, event_attendee
-│   ├── service/            # Module — case, knowledge_article, article_feedback
-│   ├── revenue/            # Module — product, opportunity_line_item, quote, quote_line_item, contract
-│   ├── marketing/          # Module — campaign, campaign_member
+│   ├── service/            # The service module — case, knowledge_article, article_feedback
+│   ├── revenue/            # Registered by the app package until packaged — product, opportunity_line_item, quote, quote_line_item, contract
+│   ├── marketing/          # Registered by the app package until packaged — campaign, campaign_member
 │   └── docs/               # In-product package docs (ADR-0046) — see the note below
 ├── content/docs/           # Product documentation site (Fumadocs): en, zh-Hans, zh-Hant
 └── docs/                   # Internal maintainer documentation (docs/README.md is the full map)
@@ -80,6 +84,12 @@ src/sales/
 
 `src/` itself is the roster of what this app authors — open it rather than trust a list. The four packages, and which objects each owns,
 are recorded in `docs/architecture/module-split-plan.md`; ⛔ do not restate that table in prose.
+
+A package of the artifact has one `index.ts` that calls `defineStack` with its manifest. Two seams cross between packages, both
+platform rules rather than conventions: a module's navigation reaches the app ONLY through its manifest's `navigationContributions`,
+aimed at a group the app declares (an app's own `navigation` may not name another package's object, and a contributed item lands
+after the group's own children); and the app package's permission sets, whole by the ADR-0130 2026-09-02 addendum, grant on module
+objects because the app stack is told the artifact's other objects (`artifactObjects`), which `composeStacks` verifies.
 
 **Three rules the layout exists to hold.**
 
@@ -147,12 +157,13 @@ one you are creating and copy its shape — the directory is the template. ⛔ D
 3. **A plain object literal with no schema import.** `src/sales/profiles/*.profile.ts` — this app's **permission sets**; ⛔ not
    `*.permission.ts`, authored nowhere — and `src/*/sharing/*.sharing.ts`.
 
-**Where the validation actually happens.** `objectstack.config.ts` hands every collection to `defineStack()`, which validates each against
-its `@objectstack/spec` schema; `pnpm validate` and `pnpm build` run it, and the platform parses again on boot. An unknown key on a page or a permission set fails `pnpm validate` with exit 1 though the file imports nothing.
+**Where the validation actually happens.** Each package's `defineStack()` (`src/sales/index.ts`, `src/service/index.ts`) validates every
+collection it registers against its `@objectstack/spec` schema, and `composeStacks` in `objectstack.config.ts` re-checks the references that
+cross packages; `pnpm validate` and `pnpm build` run it, and the platform parses again on boot. An unknown key on a page or a permission set fails `pnpm validate` with exit 1 though the file imports nothing.
 
 **⚠️ A file missing from its barrel is validated by nothing.** Registration is explicit, file by file: each `src/<pkg>/<type>/index.ts`
-re-exports its files by name, `objectstack.composition.ts` merges the four packages' barrels and `objectstack.config.ts` feeds the
-result to `defineStack()` — no glob discovery. A valid file that
+re-exports its files by name; `src/service/index.ts` registers the service module's items by name, `objectstack.composition.ts` merges
+the app package's barrels (sales, revenue, marketing) into its stack, and `objectstack.config.ts` composes the two — no glob discovery. A valid file that
 never reaches the barrel is **silently ignored**: `pnpm validate` stays at exit 0 and names it nowhere. Exporting it is part of authoring it.
 
 **`XSchema.parse()` is a real API — for tests, not for `src/`.** `ObjectSchema`, `PageSchema`, `ViewSchema`, `FlowSchema`,
@@ -244,7 +255,7 @@ navigation fact may be documented and guarded; a machine semantic layer may not.
 - A Chinese heading carries an **explicit English anchor id**, and one anchor word is used across every language, so a link survives translation (#1359).
 - zh-Hant conventions are stated by their **real** reason, not a style preference: the app
   ships **no Traditional locale** — `src/sales/translations/` and the `supportedLocales` in
-  `objectstack.config.ts` carry none, so open them rather than trust a list — the console
+  `src/sales/index.ts` carry none, so open them rather than trust a list — the console
   therefore falls back to Simplified, and a Traditional page labels platform navigation in
   English rather than ship mixed Simplified/Traditional script (#1368). ⇒ With no Traditional
   pack to source from, a UI noun on a zh-Hant page takes, in order: (1) the zh-CN pack wording

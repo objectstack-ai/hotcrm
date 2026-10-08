@@ -1,7 +1,7 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { type AnyRec, localePacks, packFor } from './helpers/metadata-fixtures';
 import * as sharedWidgets from '../src/sales/dashboards/shared-widgets';
 

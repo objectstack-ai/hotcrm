@@ -5,7 +5,8 @@ import { ObjectKernel } from '@objectstack/core';
 import { DefaultDatasourcePlugin, AppPlugin } from '@objectstack/runtime';
 import { ObjectQLPlugin } from '@objectstack/objectql';
 import { MetadataPlugin } from '@objectstack/metadata';
-import stack from '../objectstack.config';
+import artifact from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import leadHooks from '../src/sales/objects/lead.hook';
 import { REFUSAL_CODES } from '../src/sales/objects/_refusal';
 import oppHooks from '../src/sales/objects/opportunity.hook';
@@ -271,7 +272,7 @@ beforeAll(async () => {
   // The app's own metadata is the subject — objects and hooks exactly as
   // `objectstack.config.ts` declares them (the rig `cascade-guard-messages`
   // uses, which is the rig #720 was measured with).
-  await kernel.use(new AppPlugin(stack as never, undefined as never, { skipSeedData: true } as never));
+  await kernel.use(new AppPlugin(artifact as never, undefined as never, { skipSeedData: true } as never));
   await kernel.bootstrap();
   ql = kernel.getService('objectql');
 

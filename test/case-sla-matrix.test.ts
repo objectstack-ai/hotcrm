@@ -106,7 +106,7 @@ describe('the matrix covers every declared priority and tier', () => {
   });
 
   it('names the same options the account object declares', async () => {
-    const stack = (await import('../objectstack.config')).default as AnyRec;
+    const stack = (await import('./helpers/composed-stack')).default as AnyRec;
     const account = (stack.objects ?? []).find((o: AnyRec) => o.name === 'crm_account');
     const options = (account?.fields?.tier?.options ?? []).map((o: AnyRec) => o.value);
     expect(options.sort()).toEqual([...CASE_SLA_TIERS].sort());

@@ -5,7 +5,7 @@ import { ObjectKernel } from '@objectstack/core';
 import { DefaultDatasourcePlugin, AppPlugin } from '@objectstack/runtime';
 import { ObjectQLPlugin } from '@objectstack/objectql';
 import { MetadataPlugin } from '@objectstack/metadata';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { OpportunityLineItem } from '../src/revenue/objects/opportunity_line_item.object';
 import { QuoteLineItem } from '../src/revenue/objects/quote_line_item.object';
 

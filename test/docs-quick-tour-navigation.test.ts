@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
+import { servedApp } from './helpers/composed-stack';
 import { CrmApp } from '../src/sales/apps/crm.app';
 import { ExecutiveDashboard } from '../src/sales/dashboards/executive.dashboard';
 import { CrmOverviewDashboard } from '../src/sales/dashboards/crm.dashboard';
@@ -42,7 +43,8 @@ import { CrmPositions } from '../src/sales/sharing/positions';
  *    #927 / PR #932 established. Every retired name must still be named in
  *    italics — the convention is to say where a reader's name really lives, not
  *    to delete it silently — and no phantom may ever appear in bold.
- *  - exists ⇒ listed: the table's rows are compared against `CrmApp.navigation`
+ *  - exists ⇒ listed: the table's rows are compared against the served
+ *    navigation (`CrmApp.navigation` plus the module contributions, see `NAV`)
  *    group-for-group, child-for-child, in source order. Add a nav item without
  *    touching the tour and this file goes red at PR time, in all three locales.
  *
@@ -75,7 +77,15 @@ import { CrmPositions } from '../src/sales/sharing/positions';
 
 type AnyRec = Record<string, any>;
 
-const NAV = ((CrmApp as AnyRec).navigation ?? []) as AnyRec[];
+/**
+ * The sidebar AS SERVED — `CrmApp.navigation` with every package's
+ * `navigationContributions` folded in by the platform (`servedApp()`), because
+ * that is what "here is what the sidebar holds" means. The service module
+ * contributes five entries into three of the app's groups; a contributed item
+ * lands after the group's own children, which is why *My Cases* is the last
+ * row of *My Work*.
+ */
+const NAV = (servedApp((CrmApp as AnyRec).name).navigation ?? []) as AnyRec[];
 const GROUPS = NAV.filter((n) => n.type === 'group');
 const PINNED = NAV.filter((n) => n.type !== 'group');
 
