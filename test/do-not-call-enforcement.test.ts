@@ -1,13 +1,11 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect } from 'vitest';
-import stack from './helpers/composed-stack';
-import taskHooks from '../src/sales/objects/task.hook';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
+import stack, { hookNamed } from './helpers/composed-stack';
 import { REFUSAL_CODES } from '../src/sales/objects/_refusal';
-import eventHooks from '../src/sales/objects/event.hook';
 import { ScheduleFollowUpFlow } from '../src/sales/flows/schedule-followup.flow';
-import { makeSandboxEngine, runHookBody, type Rec } from './helpers/action-sandbox';
-import { hookNamed } from './helpers/hook-harness';
+import type { VerifyStack } from '@objectstack/verify';
+import { hotcrmMemoryStack, signUpPerson, type Person } from './helpers/verify-stack';
 
 /**
  * `do_not_call` is enforced (#1180).
@@ -41,52 +39,91 @@ import { hookNamed } from './helpers/hook-harness';
  *
  * # Which code path these assertions drive
  *
- * These run the hooks' SHIPPED bodies — the lowered `body.source` the build
- * emits — through the same QuickJS runner + `hookBodyRunnerFactory` the runtime
- * binds at boot (`runHookBody`, `test/helpers/action-sandbox.ts`). Repo issue
- * #1167 records that guard assertions here drive the in-process handler instead;
- * that is true of the `hook-harness.ts` tests, and NOT of this file. Running the
- * lowered body matters for these two guards specifically: both are body-only
- * closures over nothing, and a body that reached for an import or a module
- * constant would be a `ReferenceError` at runtime while a handler-level test
- * stayed green.
+ * Real writes through the real engine: the shipped app booted through
+ * `@objectstack/verify`'s handle, a sales rep scheduling against the people
+ * they own. The guards run where every other hook runs — inside the engine's
+ * write, before validation, with `ctx.api` reading as the caller — and a
+ * refusal is the engine's own rejection of the write. That both guards are
+ * body-only closures over nothing (a body reaching for an import would be a
+ * `ReferenceError` once lowered) is the build's to refuse: `objectstack build`
+ * lowers every registered hook through the platform's `extractHookBody`.
+ *
+ * On the SPARSE datasource (`driver-memory`) on purpose: `contact_ok` is
+ * written without a `do_not_call` key, and only a sparse driver hands that back
+ * ABSENT rather than NULL — the shape a guard reading the flag must survive.
  */
 
 type AnyRec = Record<string, any>;
 
-const taskGuard = hookNamed(taskHooks, 'task_do_not_call_guard');
-const eventGuard = hookNamed(eventHooks, 'event_do_not_call_guard');
+// Both guards are registered (throws at load otherwise).
+hookNamed('task_do_not_call_guard');
+hookNamed('event_do_not_call_guard');
+
+type Rec = Record<string, any>;
+
+let verify: VerifyStack;
+let rep: Person;
+/** Person ids by fixture label. */
+const person: Record<string, string> = {};
+
+beforeAll(async () => {
+  verify = await hotcrmMemoryStack();
+  rep = await signUpPerson(verify, 'rep@do-not-call.test', {
+    name: 'DNC Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+  });
+  const create = async (object: string, doc: Rec) =>
+    String((await verify.hooks.run(object, 'insert', doc, { as: rep.token })).id);
+
+  /**
+   * People, as the driver hands them back — owned by the rep, who is the one
+   * scheduling against them.
+   *
+   * `lead_ok` carries `do_not_call: false` and `contact_ok` OMITS the key
+   * entirely — the two shapes a real driver produces for "not flagged"
+   * (`driver-memory` and `driver-mongodb` return a column that was never written
+   * as ABSENT, not null; see AGENTS.md on predicate totality). Both must pass, or
+   * the guard blocks every ordinary call in the app.
+   */
+  person.account = await create('crm_account', { name: 'DNC Holdings' });
+  person.lead_dnc = await create('crm_lead', {
+    first_name: 'Dee', last_name: 'Flagged', company: 'DNC Holdings', email: 'dee@dnc.test', do_not_call: true,
+  });
+  person.lead_ok = await create('crm_lead', {
+    first_name: 'Olly', last_name: 'Open', company: 'DNC Holdings', email: 'olly@dnc.test', do_not_call: false,
+  });
+  person.contact_dnc = await create('crm_contact', {
+    first_name: 'Cass', last_name: 'Flagged', email: 'cass@dnc.test', crm_account: person.account, do_not_call: true,
+  });
+  person.contact_ok = await create('crm_contact', {
+    first_name: 'Cole', last_name: 'Open', email: 'cole@dnc.test', crm_account: person.account,
+  });
+}, 120_000);
+
+/**
+ * Write a task / event as the rep. `previous` is the row an UPDATE edits: it is
+ * written first (as the rep), so the guard sees it as the stored row.
+ */
+const write = async (object: string, input: Rec, previous?: Rec, event = 'beforeInsert') => {
+  const resolve = (doc: Rec) => Object.fromEntries(
+    Object.entries(doc).map(([k, v]) => [k, typeof v === 'string' && v in person ? person[v] : v]),
+  );
+  const base = { subject: 'Touch base', ...(object === 'crm_event' ? { start_datetime: '2030-03-01T09:00:00.000Z' } : {}) };
+  if (event === 'beforeUpdate') {
+    const { id: _ignored, ...prev } = previous ?? {};
+    const stored = await verify.hooks.run(object, 'insert', { ...base, ...resolve(prev) }, { as: rep.token });
+    const { id: _id, ...patch } = input;
+    return verify.hooks.run(object, 'update', { id: stored.id, ...resolve(patch) }, { as: rep.token });
+  }
+  return verify.hooks.run(object, 'insert', { ...base, ...resolve(input) }, { as: rep.token });
+};
+
+const runTask = (input: Rec, previous?: Rec, event = 'beforeInsert') => write('crm_task', input, previous, event);
+const runEvent = (input: Rec, previous?: Rec, event = 'beforeInsert') => write('crm_event', input, previous, event);
 
 const FLAGGED_LEAD = 'lead_dnc';
 const OK_LEAD = 'lead_ok';
 const FLAGGED_CONTACT = 'contact_dnc';
 const OK_CONTACT = 'contact_ok';
-
-/**
- * People, as the driver hands them back.
- *
- * `lead_ok` carries `do_not_call: false` and `contact_ok` OMITS the key
- * entirely — the two shapes a real driver produces for "not flagged"
- * (`driver-memory` and `driver-mongodb` return a column that was never written
- * as ABSENT, not null; see AGENTS.md on predicate totality). Both must pass, or
- * the guard blocks every ordinary call in the app.
- */
-const seed = (): Rec => ({
-  crm_lead: [
-    { id: FLAGGED_LEAD, do_not_call: true },
-    { id: OK_LEAD, do_not_call: false },
-  ],
-  crm_contact: [
-    { id: FLAGGED_CONTACT, do_not_call: true },
-    { id: OK_CONTACT },
-  ],
-});
-
-const runTask = (input: Rec, previous?: Rec, event = 'beforeInsert') =>
-  runHookBody(taskGuard, { event, input, previous, engine: makeSandboxEngine(seed()) });
-
-const runEvent = (input: Rec, previous?: Rec, event = 'beforeInsert') =>
-  runHookBody(eventGuard, { event, input, previous, engine: makeSandboxEngine(seed()) });
 
 // ───────────────────────────────────────── the refusals, on both objects ──
 
@@ -277,16 +314,20 @@ describe('an unflagged person is unaffected', () => {
   });
 
   it('allows a Call task parented to a non-person (an account), reading nothing', async () => {
-    const engine = makeSandboxEngine(seed());
-    await expect(
-      runHookBody(taskGuard, {
-        event: 'beforeInsert',
-        input: { type: 'call', status: 'not_started', related_to_account: 'acc_1' },
-        engine,
-      }),
-    ).resolves.toBeTruthy();
-    // `do_not_call` lives on people only; an account parent must not cost a read.
-    expect(engine.calls.filter((c) => c.op === 'find')).toHaveLength(0);
+    // `do_not_call` lives on people only; an account parent must not cost a
+    // read of either person object. Observed on the real engine's own `find`.
+    const ql = verify.kernel.getService<Rec>('objectql');
+    const finds = vi.spyOn(ql, 'find');
+    try {
+      await expect(
+        runTask({ type: 'call', status: 'not_started', related_to_account: 'account' }),
+      ).resolves.toBeTruthy();
+      const personReads = finds.mock.calls.filter(([object]) => object === 'crm_lead' || object === 'crm_contact');
+      expect(personReads, 'the guard read a person for a task that names none').toHaveLength(0);
+      expect(finds, 'the spy saw no engine read at all — it is not watching the engine').toHaveBeenCalled();
+    } finally {
+      finds.mockRestore();
+    }
   });
 });
 

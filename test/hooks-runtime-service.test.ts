@@ -903,11 +903,13 @@ describe('#1265 — the shipped hook body CAN now tell it is on a per-row predic
     'sees the dispatch mode and input.options — D3’s routes are reachable; input.id still is not',
     async () => {
       const { QuickJSScriptRunner, hookBodyRunnerFactory } = await import('@objectstack/runtime');
-      const { makeSandboxEngine } = await import('./helpers/action-sandbox');
+      const { hotcrmStack } = await import('./helpers/verify-stack');
 
-      const engine = makeSandboxEngine();
+      // The platform's own runner, over the booted app's real engine (the probe
+      // body declares no capability and never reaches it).
+      const verify = await hotcrmStack();
       const bind = hookBodyRunnerFactory(new QuickJSScriptRunner(), {
-        ql: engine.engine,
+        ql: verify.kernel.getService('objectql'),
         appId: 'hotcrm',
       } as never);
       const run = bind({

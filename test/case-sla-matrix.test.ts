@@ -1,12 +1,14 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from 'vitest';
 import caseHooks from '../src/service/objects/case.hook';
 import {
   CASE_SLA_CALENDAR_HOURS, CASE_SLA_DEFAULT_TIER, CASE_SLA_PRIORITIES, CASE_SLA_TIERS, caseSlaCalendarHours,
 } from '../src/service/objects/_case-sla';
 import { makeHarness, makeDeniedApi, makeCtx, hookNamed, type Rec } from './helpers/hook-harness';
-import { extractSandboxBody, runHookBody } from './helpers/action-sandbox';
+import { extractHookBody } from '@objectstack/cli/hook-body';
+import type { VerifyStack } from '@objectstack/verify';
+import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
 
 /**
  * The SLA policy matrix, pinned cell by cell (#595).
@@ -270,11 +272,20 @@ describe('the clock is calendar hours, carried by the code', () => {
     expect(res.dueMs! - res.atMs).toBeLessThan(168 * HOUR + 60_000);
   });
 
-  describe('on a fixed Friday 17:00 clock, in the shipped body', () => {
-    // The deadline is computed where production computes it: the lowered
-    // `body.source`, run in QuickJS. Only `Date` is faked — the bare
-    // `vi.useFakeTimers()` deadlocks this runner (`helpers/action-sandbox.ts`).
-    // UTC on purpose: the stamp is elapsed time, so the host zone cannot move it.
+  describe('on a fixed Friday 17:00 clock, on a real write', () => {
+    // The deadline is computed by the hook on a real insert — the shipped app
+    // booted through `@objectstack/verify`'s handle, a service agent logging
+    // the case. Only `Date` is faked (the bare `vi.useFakeTimers()` would stall
+    // the engine's own timers). UTC on purpose: the stamp is elapsed time, so
+    // the host zone cannot move it.
+    let verify: VerifyStack;
+    let agent: Person;
+    beforeAll(async () => {
+      verify = await hotcrmStack();
+      agent = await signUpPerson(verify, 'agent@case-sla-matrix.test', {
+        name: 'SLA Agent', positions: ['service_agent'], permissionSets: ['service_agent'],
+      });
+    }, 120_000);
     beforeEach(() => {
       vi.useFakeTimers({ toFake: ['Date'] });
       vi.setSystemTime(new Date('2026-10-02T17:00:00.000Z')); // a Friday
@@ -289,19 +300,19 @@ describe('the clock is calendar hours, carried by the code', () => {
       ['medium', '2026-10-04T17:00:00.000Z'], // 48 h — due on the Sunday
       ['low', '2026-10-09T17:00:00.000Z'], // 168 h — the weekend counted in full
     ])('%s, no account (the smb column), is due at %s', async (priority, due) => {
-      const { input } = await runHookBody(hook, {
-        event: 'beforeInsert',
-        input: { subject: 'Something broke', priority },
-        user: { id: 'user_1' },
-      });
-      expect(input.sla_due_date).toBe(due);
+      const stored = await verify.hooks.run(
+        'crm_case', 'insert',
+        { subject: 'Something broke', description: 'Logged on a Friday evening.', priority },
+        { as: agent.token },
+      );
+      expect(stored.sla_due_date).toBe(due);
     });
   });
 
   it('names the unit in the identifier the shipped body carries', () => {
     // The body cannot import `CASE_SLA_CALENDAR_HOURS` (imported above), so it
     // carries its own name for the unit — in the source `objectstack build` ships.
-    const { source } = extractSandboxBody(hook.handler, `hook '${String(hook.name)}'`);
+    const { source } = extractHookBody(hook.handler, `hook '${String(hook.name)}'`);
     expect(source).toMatch(/\bconst slaCalendarHours\b/);
   });
 });

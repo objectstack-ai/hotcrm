@@ -65,6 +65,17 @@ export const localePacks: [string, AnyRec][] = ((composedStack as AnyRec).transl
 export const packFor = (locale: string): AnyRec | undefined =>
   localePacks.find(([name]) => name === locale)?.[1];
 
+/**
+ * A registered hook, by name, out of the composed view's `hooks` — every hook
+ * either package registers. Throws rather than answering `undefined`: a suite
+ * holding no hook asserts nothing about it.
+ */
+export const hookNamed = (name: string): AnyRec => {
+  const hook = (((composedStack as AnyRec).hooks ?? []) as AnyRec[]).find((h) => h?.name === name);
+  if (!hook) throw new Error(`no hook named "${name}" is registered by either package`);
+  return hook;
+};
+
 /** Walk an arbitrary metadata tree, yielding every node that has a `type`. */
 export function* walk(node: unknown): Generator<AnyRec> {
   if (Array.isArray(node)) {

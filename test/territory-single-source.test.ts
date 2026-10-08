@@ -1,13 +1,13 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import stack from './helpers/composed-stack';
+import stack, { hookNamed } from './helpers/composed-stack';
 import { REPO_ROOT } from './helpers/repo-root';
-import { allHooks } from '../objectstack.composition';
-import { hookNamed } from './helpers/hook-harness';
-import { extractSandboxBody, runHookBody } from './helpers/action-sandbox';
+import { extractHookBody } from '@objectstack/cli/hook-body';
+import type { VerifyStack } from '@objectstack/verify';
+import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
 import {
   COUNTRY_ALIASES,
   COUNTRY_TERRITORY,
@@ -49,8 +49,8 @@ import {
  * lowered to a metadata-only `body.source` and evaluated inside QuickJS with no
  * module scope, so an import is a `ReferenceError` at runtime rather than a
  * closure — `extractHookBody` rejects such a handler outright and
- * `test/action-sandbox.test.ts` runs that lowering pass over every registered
- * hook. The table therefore has to be inline in the handler. What this file
+ * `os lint --strict` (`pnpm lint`, rule `hook-body/not-lowerable`) runs that
+ * lowering pass over every registered hook. The table therefore has to be inline in the handler. What this file
  * removes is the TRUST: the copy is read back out of the lowered body and
  * compared with the module, so the two cannot diverge silently even though the
  * value is stored twice.
@@ -58,13 +58,10 @@ import {
 
 type AnyRec = Record<string, any>;
 
-const accountHook = hookNamed(
-  allHooks.find((h) => h.name === 'account_protection'),
-  'account_protection',
-);
+const accountHook = hookNamed('account_protection');
 
 /** The body the RUNTIME evaluates — not the closure, and not the source file. */
-const loweredBody = extractSandboxBody(accountHook.handler, "hook 'account_protection'").source;
+const loweredBody = extractHookBody(accountHook.handler, "hook 'account_protection'").source;
 
 const DOC = (relative: string) => readFileSync(join(REPO_ROOT, relative), 'utf8');
 
@@ -220,68 +217,70 @@ describe('the hook body carries the module mapping and no other', () => {
     // The constraint that justifies the duplication, asserted rather than
     // asserted-in-a-comment: if this ever stops throwing for an imported
     // mapping, the copy should be deleted and the import used instead.
-    expect(() => extractSandboxBody(accountHook.handler, 'hook')).not.toThrow();
+    expect(() => extractHookBody(accountHook.handler, 'hook')).not.toThrow();
     expect(loweredBody).not.toMatch(/\bterritoryFor\b|\bCOUNTRY_TERRITORY\b/);
   });
 
+  // ── behavioural, through the real engine ──
+  //
+  // The structural comparison above proves the TABLE matches; these prove the
+  // hook actually reads it, with the same normalisation, on a real write: the
+  // shipped app booted through `@objectstack/verify`'s handle, a sales rep
+  // creating and editing accounts, and the derived columns read back off the
+  // stored row.
+  let verify: VerifyStack;
+  let rep: Person;
+  beforeAll(async () => {
+    verify = await hotcrmStack();
+    rep = await signUpPerson(verify, 'rep@territory-single-source.test', {
+      name: 'Territory Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    });
+  }, 120_000);
+  const create = (doc: AnyRec) => verify.hooks.run('crm_account', 'insert', doc, { as: rep.token });
+  const edit = async (id: string, patch: AnyRec) => {
+    await verify.hooks.run('crm_account', 'update', { id, ...patch }, { as: rep.token });
+    return (await verify.rows('crm_account', { id }))[0] ?? {};
+  };
+
   it.each(Object.keys(COUNTRY_TERRITORY))(
-    'derives %s the same way in the real sandbox as the module does',
+    'derives %s the same way on a real write as the module does',
     async (country) => {
-      // Behavioural, through QuickJS — the structural comparison above proves
-      // the TABLE matches; this proves the body actually reads it, and reads it
-      // with the same normalisation.
-      const { input } = await runHookBody(accountHook, {
-        event: 'beforeInsert',
-        input: { name: 'Acme', billing_address: { country } },
-      });
-      expect(input.territory).toBe(COUNTRY_TERRITORY[country]);
+      const stored = await create({ name: `Acme ${country}`, billing_address: { country } });
+      expect(stored.territory).toBe(COUNTRY_TERRITORY[country]);
     },
   );
 
-  it('states `other` in the sandbox for an unmapped country and for no address', async () => {
-    const unmapped = await runHookBody(accountHook, {
-      event: 'beforeInsert',
-      input: { name: 'Apex', billing_address: { country: 'SG' } },
-    });
-    expect(unmapped.input.territory).toBe('other');
+  it('states `other` on a real write for an unmapped country and for no address', async () => {
+    const unmapped = await create({ name: 'Apex', billing_address: { country: 'SG' } });
+    expect(unmapped.territory).toBe('other');
 
     // An insert carrying no address at all still states the classification —
     // #639 chose an explicit `other` over a blank precisely so "no territory"
     // and "nobody filled it in" cannot look alike.
-    const noAddress = await runHookBody(accountHook, {
-      event: 'beforeInsert',
-      input: { name: 'Acme' },
-    });
-    expect(noAddress.input.territory).toBe('other');
+    const noAddress = await create({ name: 'Acme (no address)' });
+    expect(noAddress.territory).toBe('other');
   });
 
   it('leaves territory alone on an update that does not carry the address', async () => {
     // The mirror of the `billing_country` rule: an unrelated edit must not
     // re-derive it, or a partial update would silently reclassify the account.
-    const { input } = await runHookBody(accountHook, {
-      event: 'beforeUpdate',
-      input: { phone: '+1-512-555-0100' },
-      previous: { billing_country: 'US', territory: 'na' },
-    });
-    expect('territory' in input).toBe(false);
+    // Re-deriving from an edit with no address in it would state `other`.
+    const account = await create({ name: 'Acme (phone edit)', billing_address: { country: 'US' } });
+    expect(account.territory).toBe('na');
+    const stored = await edit(account.id, { phone: '+1-512-555-0100' });
+    expect(stored.territory).toBe('na');
+    expect(stored.billing_country).toBe('US');
   });
 
   it('reclassifies when the address country changes, and on an address clear', async () => {
-    const moved = await runHookBody(accountHook, {
-      event: 'beforeUpdate',
-      input: { billing_address: { country: 'Germany' } },
-      previous: { billing_country: 'US', territory: 'na' },
-    });
-    expect(moved.input.billing_country).toBe('GERMANY');
-    expect(moved.input.territory).toBe('emea');
+    const account = await create({ name: 'Acme (moving)', billing_address: { country: 'US' } });
+    const moved = await edit(account.id, { billing_address: { country: 'Germany' } });
+    expect(moved.billing_country).toBe('GERMANY');
+    expect(moved.territory).toBe('emea');
 
-    const cleared = await runHookBody(accountHook, {
-      event: 'beforeUpdate',
-      input: { billing_address: null },
-      previous: { billing_country: 'US', territory: 'na' },
-    });
-    expect(cleared.input.billing_country).toBeNull();
-    expect(cleared.input.territory).toBe('other');
+    const cleared = await edit(account.id, { billing_address: null });
+    expect(cleared.billing_country).toBeNull();
+    expect(cleared.territory).toBe('other');
   });
 });
 

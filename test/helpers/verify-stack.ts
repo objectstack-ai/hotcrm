@@ -1,10 +1,14 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { vi } from 'vitest';
+import { QuickJSScriptRunner, hookBodyRunnerFactory } from '@objectstack/runtime';
+import { extractHookBody } from '@objectstack/cli/hook-body';
 import { bootStackOnce, type BootOptions, type VerifyStack } from '@objectstack/verify';
 import { RecordChangeTriggerPlugin } from '@objectstack/trigger-record-change';
 import { MessagingServicePlugin } from '@objectstack/service-messaging';
 import { ApprovalsServicePlugin } from '@objectstack/plugin-approvals';
 import { AuditPlugin } from '@objectstack/plugin-audit';
+import { EmailServicePlugin } from '@objectstack/plugin-email';
 import artifact from '../../objectstack.config';
 
 /**
@@ -31,10 +35,10 @@ import artifact from '../../objectstack.config';
  * `bootStack` mounts objectql, the datasource, auth, security, sharing,
  * settings, analytics and — with `automation: true` — the automation service.
  * `objectstack serve` additionally mounts what this app's `requires[]`
- * (`src/sales/index.ts`) and the platform's always-on slate resolve to. Four of
+ * (`src/sales/index.ts`) and the platform's always-on slate resolve to. Five of
  * those decide behaviour the suites pin, and the boot without them was
  * MEASURED to lack them (no `sys_inbox_message`, no `sys_approval_request`, no
- * `sys_activity`, and no record-change flow fired on a write):
+ * `sys_activity`, no `sys_email`, and no record-change flow fired on a write):
  *
  *  - `triggers`   → `RecordChangeTriggerPlugin` — a write fires the
  *                   `record_change` flows bound to it, as on a real install;
@@ -43,11 +47,13 @@ import artifact from '../../objectstack.config';
  *                   to the inbox instead of degrading to a logged no-op;
  *  - audit        → `AuditPlugin` — `sys_activity` / `sys_comment`, which the
  *                   activity action bodies write (paired with auth+security by
- *                   `objectstack serve`).
+ *                   `objectstack serve`);
+ *  - email        → `EmailServicePlugin` — `sys_email`, which `send_email`
+ *                   writes (always-on in the platform's capability slate).
  *
  * `extraPlugins` is the slot the handle documents for exactly this. The
  * capability → plugin mapping itself is the CLI's `CAPABILITY_PROVIDERS`,
- * which is not exported, so the four are named here: that list is the one
+ * which is not exported, so the five are named here: that list is the one
  * local path this boot keeps, reported upstream as a platform gap rather than
  * grown.
  *
@@ -61,18 +67,37 @@ import artifact from '../../objectstack.config';
  */
 process.env.OS_REGISTRY_LOG ??= 'silent';
 
-export const HOTCRM_BOOT: BootOptions = {
+/**
+ * The app's boot options, with fresh plugin instances — a plugin instance
+ * belongs to the one kernel it is registered on. `overrides` is for a suite
+ * whose subject IS another boot dimension (the datasource, say), and that
+ * suite says why beside its call.
+ */
+export const bootOptions = (overrides: Partial<BootOptions> = {}): BootOptions => ({
   automation: true,
   extraPlugins: [
     new MessagingServicePlugin(),
     new ApprovalsServicePlugin(),
     new AuditPlugin(),
+    new EmailServicePlugin(),
     new RecordChangeTriggerPlugin(),
   ],
-};
+  ...overrides,
+});
+
+export const HOTCRM_BOOT: BootOptions = bootOptions();
 
 /** The app's stack — one boot per module registry (see above). */
 export const hotcrmStack = (): Promise<VerifyStack> => bootStackOnce(artifact, HOTCRM_BOOT);
+
+/**
+ * The app on the SPARSE datasource (`driver-memory`): a column a row was never
+ * written with comes back ABSENT rather than NULL — the shape `driver-mongodb`
+ * also produces, and the one AGENTS.md's predicate-totality rule is about. Only
+ * for a suite whose claim is about that shape.
+ */
+export const HOTCRM_MEMORY_BOOT: BootOptions = bootOptions({ databaseDriver: 'memory' });
+export const hotcrmMemoryStack = (): Promise<VerifyStack> => bootStackOnce(artifact, HOTCRM_MEMORY_BOOT);
 
 /**
  * The names of every object the booted runtime registers that this app does
@@ -125,10 +150,10 @@ export async function signUpPerson(
 
 // ─────────────────────── the doors the handle does not have (platform gaps) ────
 //
-// Two writes this app's business facts turn on have no door on the 17.7.0
-// handle, so each keeps ONE local path here — the engine's own `objectql`
-// service on the verify-booted kernel, nothing re-implemented — until the
-// handle grows one. Both are reported upstream; ⛔ do not add a third here.
+// What this app's business facts turn on and the 17.7.0 handle has no door
+// for keeps ONE local path each here — the engine's own `objectql` service on
+// the verify-booted kernel, nothing re-implemented — until the handle grows
+// one. Each is reported upstream; ⛔ do not add another here.
 
 /** The system context the platform's own automation and seed loader write under. */
 const SYSTEM = { isSystem: true } as const;
@@ -149,3 +174,116 @@ export const systemUpdate = (stack: VerifyStack, object: string, doc: Row): Prom
  */
 export const guestInsert = (stack: VerifyStack, object: string, doc: Row): Promise<Row> =>
   stack.kernel.getService<Row>('objectql').insert(object, doc, { context: {} });
+
+/** One write the engine received while a recorder was attached. */
+export interface EngineWrite {
+  op: 'insert' | 'update' | 'delete';
+  object: string;
+  /**
+   * The argument list as the caller handed it over — each plain-object argument
+   * copied at call time, because the engine's own `before*` hooks write into
+   * the document in place afterwards.
+   */
+  args: unknown[];
+  /** How the engine answered it — awaited by a suite that must see an `async` hook finish. */
+  settled: Promise<{ ok: true; value: unknown } | { ok: false; error: unknown }>;
+}
+
+/**
+ * Watch the writes the engine receives — and, for a suite whose fact is about
+ * what happens when one is REFUSED, refuse it.
+ *
+ * Two things the handle cannot show: what a hook HANDED the engine (a refused
+ * write leaves no row to read back), and when an `async: true` hook has
+ * finished (the write that fired it has already returned). Both are read off
+ * the real engine's own `insert` / `update` / `delete`, through a spy that
+ * calls straight through; `fault` swaps one call's answer for a rejection,
+ * which is how "the engine refused this write" is staged without a stand-in
+ * engine. `restore()` detaches it — call it in a `finally`.
+ */
+export function recordEngineWrites(
+  stack: VerifyStack,
+  fault?: (op: EngineWrite['op'], object: string, args: unknown[]) => Error | undefined,
+) {
+  const ql = stack.kernel.getService<Row>('objectql');
+  const writes: EngineWrite[] = [];
+  const spies = (['insert', 'update', 'delete'] as const).map((op) => {
+    const real = ql[op].bind(ql) as (...args: unknown[]) => Promise<unknown>;
+    return vi.spyOn(ql, op).mockImplementation(((...args: unknown[]) => {
+      const object = String(args[0]);
+      const handedOver = args.map((a) => (a && typeof a === 'object' && !Array.isArray(a) ? { ...(a as Row) } : a));
+      const injected = fault?.(op, object, args);
+      const answer = injected ? Promise.reject(injected) : real(...args);
+      writes.push({
+        op, object, args: handedOver,
+        settled: answer.then((value) => ({ ok: true as const, value }), (error) => ({ ok: false as const, error })),
+      });
+      return answer;
+    }) as never);
+  });
+  return {
+    writes,
+    /** The writes one object received, optionally of one kind. */
+    of: (object: string, op?: EngineWrite['op']) =>
+      writes.filter((w) => w.object === object && (op === undefined || w.op === op)),
+    restore: () => { for (const spy of spies) spy.mockRestore(); },
+  };
+}
+
+/** Today as `YYYY-MM-DD`, on the UTC calendar — matching what the hooks stamp. */
+export const today = (): string => new Date().toISOString().slice(0, 10);
+
+/**
+ * `YYYY-MM-DD` `days` from now (negative for the past), on the **UTC calendar
+ * throughout** — the same calendar `today()` renders on, and the one the
+ * platform resolves a bare `{TODAY()}` token to.
+ *
+ * ⚠️ The arithmetic must NOT go through `setDate`/`getDate`. Those read and
+ * write the **local** calendar, and rendering the result with `toISOString()`
+ * then mixes two calendars inside one expression. Across a DST spring-forward
+ * the local day is 23 h long, so a `setDate` shift preserves wall-clock time and
+ * the instant lands one UTC day late. No run at `TZ=UTC` can catch that.
+ */
+export const daysFromNow = (days: number): string => {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+};
+
+/**
+ * Run a hook the way the SHIPPED artifact runs it: the body `objectstack build`
+ * lowers it to (the platform's own `extractHookBody`), in the runtime's QuickJS
+ * sandbox (`hookBodyRunnerFactory`), against the real engine of the booted
+ * stack. Resolves with the write's input after the sandbox wrote its mutations
+ * back; rejects with what the shipped path throws (`SandboxError`).
+ *
+ * The handle boots the source config, so every write through it runs a hook's
+ * handler in-process — the one form production never runs. A fact that is
+ * about the SHIPPED path itself (what a REST caller receives when a lowered
+ * body refuses) has no door on the 17.7.0 handle; this is its one path,
+ * reported upstream. Every other suite drives hooks through `hooks.run`.
+ */
+let shippedRunner: QuickJSScriptRunner | undefined;
+export async function runShippedHook(
+  stack: VerifyStack,
+  hook: Row,
+  ctx: { event: string; input?: Row; previous?: Row; as?: string },
+): Promise<Row> {
+  const { source, capabilities } = extractHookBody(hook.handler, `hook '${String(hook.name)}'`);
+  const bind = hookBodyRunnerFactory((shippedRunner ??= new QuickJSScriptRunner()), {
+    ql: stack.kernel.getService('objectql') as never,
+    appId: 'hotcrm',
+  });
+  const handler = bind({
+    name: hook.name, object: hook.object, events: hook.events,
+    body: { language: 'js', source, capabilities, timeoutMs: 5000 },
+  } as never);
+  if (!handler) throw new Error(`hook ${String(hook.name)}: the platform refused its lowered body`);
+  // The caller, as the platform resolves them — the execution context the
+  // engine hands every hook, which is what the sandbox's `ctx.api` reads under.
+  const executionContext = ctx.as ? await stack.contextFor(ctx.as) : undefined;
+  const user = executionContext?.userId ? { id: executionContext.userId } : undefined;
+  const input: Row = { ...(ctx.input ?? {}) };
+  await handler({ event: ctx.event, input, previous: ctx.previous, user, executionContext, object: hook.object });
+  return input;
+}

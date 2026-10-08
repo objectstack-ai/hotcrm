@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
+import type { VerifyStack } from '@objectstack/verify';
 import articleFeedbackHooks from '../src/service/objects/article_feedback.hook';
 import { ArticleFeedback } from '../src/service/objects/article_feedback.object';
 import { KnowledgeArticle } from '../src/service/objects/knowledge_article.object';
@@ -8,7 +9,7 @@ import {
   MarkArticleHelpfulAction,
   MarkArticleNotHelpfulAction,
 } from '../src/service/actions/knowledge_article.actions';
-import { makeSandboxEngine, runActionBody } from './helpers/action-sandbox';
+import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
 import { KnowledgeArticleViews } from '../src/service/views/knowledge_article.view';
 import { makeHarness, makeCtx, hookNamed, type Rec } from './helpers/hook-harness';
 import { localePacks } from './helpers/composed-stack';
@@ -36,12 +37,12 @@ import { localePacks } from './helpers/composed-stack';
  * store the shipped code actually wrote to.
  */
 
-const USER = { id: 'user_1' };
-
 const article = (over: Rec = {}): Rec => ({
   id: 'ka1', title: 'Reset your password', status: 'published', audience: 'public',
   helpful_count: 0, not_helpful_count: 0, owner_id: 'author_1', ...over,
 });
+
+const USER = { id: 'user_1' };
 
 // ─────────────────────────────────────── 1. the field with no writer is gone ──
 
@@ -85,77 +86,105 @@ describe('the feedback actions record a row (they cannot bump a counter)', () =>
   /**
    * Why the actions insert instead of incrementing is argued on
    * `article_feedback.object.ts`; what this asserts is that they DO insert,
-   * through the same QuickJS runner the runtime uses — so a body that reached
-   * for module scope, or used the `(id, doc)` update spelling, fails here.
+   * through the real action door (`@objectstack/verify`'s `actions.run`: the
+   * dispatcher, then the body in the runtime's QuickJS sandbox, writing through
+   * the real engine) — so a body that reached for module scope, or used the
+   * `(id, doc)` update spelling, fails here. A reader is a real sign-up; each
+   * case votes on an article of its own, published and public.
    */
-  it('inserts the reader’s verdict, owned by the reader', async () => {
-    const engine = makeSandboxEngine();
-    engine.rows('crm_knowledge_article').push(article());
-
-    await runActionBody(MarkArticleHelpfulAction as never, {
-      engine,
-      recordId: 'ka1', user: USER,
+  let verify: VerifyStack;
+  let reader: Person;
+  beforeAll(async () => {
+    verify = await hotcrmStack();
+    reader = await signUpPerson(verify, 'reader@knowledge-feedback.test', {
+      name: 'Rita Reader', positions: ['service_agent'], permissionSets: ['service_agent'],
     });
+  }, 120_000);
 
-    const rows = engine.inserted('crm_article_feedback');
+  let n = 0;
+  const publishedArticle = async (): Promise<string> => {
+    // A real article needs what `published_requires_body` asks of every
+    // published article; the summary is the warning-severity sibling.
+    const { id: _ignored, owner_id: _author, ...doc } = article({
+      title: `Reset your password #${++n}`,
+      body: 'Open Settings › Security and choose Reset password.',
+      summary: 'How to reset a forgotten password.',
+    });
+    const [row] = await verify.seed('crm_knowledge_article', [doc]);
+    return String(row.id);
+  };
+  const vote = (action: 'mark_article_helpful' | 'mark_article_not_helpful', recordId: string) =>
+    verify.actions.run('crm_knowledge_article', action, { as: reader.token, recordId });
+  const feedbackOn = (articleId: string) =>
+    verify.rows('crm_article_feedback', { crm_knowledge_article: articleId });
+
+  it('inserts the reader’s verdict, owned by the reader', async () => {
+    const ka = await publishedArticle();
+    await vote('mark_article_helpful', ka);
+
+    const rows = await feedbackOn(ka);
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({
-      crm_knowledge_article: 'ka1',
+      crm_knowledge_article: ka,
       verdict: 'helpful',
       // An action body runs `isSystem`, so NOTHING stamps the ownership anchor
       // for it (#548). A null owner here would collapse every vote onto one
       // row through the unique index — the dedupe depends on this.
-      owner_id: 'user_1',
+      owner_id: reader.id,
     });
   });
 
   it('UPDATES the reader’s existing row when they change their mind', async () => {
-    const engine = makeSandboxEngine();
-    engine.rows('crm_knowledge_article').push(article());
-    engine.rows('crm_article_feedback').push({
-      id: 'af1', crm_knowledge_article: 'ka1', verdict: 'helpful', owner_id: 'user_1',
-    });
+    const ka = await publishedArticle();
+    await vote('mark_article_helpful', ka);
+    const [first] = await feedbackOn(ka);
 
-    await runActionBody(MarkArticleNotHelpfulAction as never, {
-      engine,
-      recordId: 'ka1', user: USER,
-    });
+    await vote('mark_article_not_helpful', ka);
 
     // The row moved; a second row would make the counters answer "how many
     // clicks", which is not a number anyone wants beside "Not Helpful".
-    expect(engine.inserted('crm_article_feedback')).toHaveLength(0);
-    expect(engine.rows('crm_article_feedback')).toHaveLength(1);
-    expect(engine.rows('crm_article_feedback')[0].verdict).toBe('not_helpful');
+    const rows = await feedbackOn(ka);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.id).toBe(first!.id);
+    expect(rows[0]!.verdict).toBe('not_helpful');
   });
 
   it('is a no-op when the reader re-votes the same way', async () => {
-    const engine = makeSandboxEngine();
-    engine.rows('crm_knowledge_article').push(article());
-    engine.rows('crm_article_feedback').push({
-      id: 'af1', crm_knowledge_article: 'ka1', verdict: 'helpful', owner_id: 'user_1',
-    });
+    const ka = await publishedArticle();
+    await vote('mark_article_helpful', ka);
 
-    await runActionBody(MarkArticleHelpfulAction as never, {
-      engine,
-      recordId: 'ka1', user: USER,
-    });
-
-    expect(engine.callsFor('crm_article_feedback', 'update')).toHaveLength(0);
-    expect(engine.inserted('crm_article_feedback')).toHaveLength(0);
+    // Watched on the real engine's own write methods, for this object only.
+    const ql = verify.kernel.getService<Record<string, any>>('objectql');
+    const finds = vi.spyOn(ql, 'findOne');
+    const updates = vi.spyOn(ql, 'update');
+    const inserts = vi.spyOn(ql, 'insert');
+    try {
+      await vote('mark_article_helpful', ka);
+      // Anti-vacuity: the body did look the reader's vote up through this engine.
+      expect(finds.mock.calls.filter(([o]) => o === 'crm_article_feedback').length).toBeGreaterThan(0);
+      expect(updates.mock.calls.filter(([o]) => o === 'crm_article_feedback')).toHaveLength(0);
+      expect(inserts.mock.calls.filter(([o]) => o === 'crm_article_feedback')).toHaveLength(0);
+    } finally {
+      finds.mockRestore();
+      updates.mockRestore();
+      inserts.mockRestore();
+    }
+    expect(await feedbackOn(ka)).toHaveLength(1);
   });
 
   it('refuses an unauthenticated vote rather than writing an ownerless row', async () => {
-    const engine = makeSandboxEngine();
-    engine.rows('crm_knowledge_article').push(article());
-
-    await expect(
-      runActionBody(MarkArticleHelpfulAction as never, {
-        engine,
-        recordId: 'ka1', user: {},
-      }),
-    ).rejects.toThrow(/Sign in to rate an article/);
-
-    expect(engine.inserted('crm_article_feedback')).toHaveLength(0);
+    // The body refuses a caller with no user ("Sign in to rate an article").
+    // Through the real door an anonymous vote is refused one step earlier — the
+    // dispatcher answers 401 before any body runs — and the property is the
+    // same: no ownerless row.
+    const ka = await publishedArticle();
+    const res = await verify.api(`/actions/crm_knowledge_article/mark_article_helpful`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ recordId: ka, params: {} }),
+    });
+    expect(res.status).toBe(401);
+    expect(await feedbackOn(ka)).toHaveLength(0);
   });
 
   /**

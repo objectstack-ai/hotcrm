@@ -12,7 +12,7 @@ import campaignHooks, { CAMPAIGN_METRIC_FIELDS } from '../src/marketing/objects/
 // four, now from three files.
 import opportunityCampaignMetricsHooks from '../src/sales/objects/opportunity.campaign-metrics.hook';
 import leadCampaignMetricsHooks from '../src/sales/objects/lead.campaign-metrics.hook';
-import { extractSandboxBody } from './helpers/action-sandbox';
+import { extractHookBody } from '@objectstack/cli/hook-body';
 import { makeHarness, makeCtx, hookNamed, type Rec } from './helpers/hook-harness';
 
 /**
@@ -427,7 +427,8 @@ describe('every surviving member field and campaign metric has a writer', () => 
  * It is duplicated for a hard platform reason, not for convenience: L2 hook
  * bodies lower to metadata and run BODY-ONLY in the QuickJS sandbox, so a
  * handler cannot reach module scope. The first draft of #597 shared a
- * `refreshCampaignMetrics()` import; `test/action-sandbox.test.ts` failed it,
+ * `refreshCampaignMetrics()` import; the lowering sweep failed it (today
+ * `os lint --strict`'s `hook-body/not-lowerable`),
  * because a body with a free identifier silently stops lowering — the CLI keeps
  * the handler in a bundled runtime file and the hook is no longer deployable as
  * pure metadata. `account_protection` inlines the territory table for the same
@@ -448,7 +449,7 @@ describe('the inlined metric recompute is one definition, copied (#597)', () => 
 
   /** The block between the `recompute` fences, comments stripped, whitespace flat. */
   const recomputeBlockOf = (hook: Rec): string | null => {
-    const { source } = extractSandboxBody(hook.handler, `hook '${String(hook.name)}'`);
+    const { source } = extractHookBody(hook.handler, `hook '${String(hook.name)}'`);
     const stripped = source
       .split('\n')
       .filter((line) => !line.trim().startsWith('//'))

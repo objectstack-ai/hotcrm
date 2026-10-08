@@ -1,12 +1,14 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
+import { extractHookBody } from '@objectstack/cli/hook-body';
+import type { VerifyStack } from '@objectstack/verify';
 import quoteHooks from '../src/revenue/objects/quote.hook';
 import { Contract } from '../src/revenue/objects/contract.object';
 import { Quote } from '../src/revenue/objects/quote.object';
-import type { HookApi } from '../src/sales/objects/_hook-api';
-import { makeHarness, makeCtx, hookNamed, today, type Rec } from './helpers/hook-harness';
-import { makeSandboxEngine, runHookBody } from './helpers/action-sandbox';
+import {
+  hotcrmStack, signUpPerson, recordEngineWrites, today, type Person,
+} from './helpers/verify-stack';
 
 /**
  * The auto-drafted contract's defaults are DECLARED defaults (#1129).
@@ -37,11 +39,16 @@ import { makeSandboxEngine, runHookBody } from './helpers/action-sandbox';
  *    facts the comment states about them (two have no counterpart column at
  *    all; `billing_address` has one; the contract's `description` is occupied
  *    by the draft's provenance sentence);
- * 4. the same defaults through the REAL QuickJS body runner. This is the one
- *    leg that can fail for a reason the refactor introduced: an L2 body ships
- *    body-only with no module scope, so `DRAFT_CONTRACT_DEFAULTS` has to be
- *    handler-local. A module-scope block would pass every assertion above and
- *    `ReferenceError` in production.
+ * 4. that `DRAFT_CONTRACT_DEFAULTS` stays handler-local: an L2 body ships
+ *    body-only with no module scope, so a module-scope block would pass every
+ *    assertion above and `ReferenceError` in production. `os lint --strict`
+ *    (`pnpm lint`) refuses that shape as `hook-body/not-lowerable`.
+ *
+ * Every draft below is a real one: the shipped app booted through
+ * `@objectstack/verify`'s handle, a sales rep presenting and then accepting a
+ * quote, and `quote_on_accepted` (an `async` afterUpdate hook) drafting the
+ * contract through the engine. The document read is the one the hook handed
+ * `crm_contract.insert`, as the engine received it.
  *
  * ⚠️ Not this file's subject: the negotiated `payment_terms` carry-over
  * (#873, `quote-accepted-payment-terms.test.ts`) and the `false`-into-a-lookup
@@ -51,8 +58,7 @@ import { makeSandboxEngine, runHookBody } from './helpers/action-sandbox';
 
 type AnyRec = Record<string, any>;
 
-const hook = hookNamed(quoteHooks, 'quote_on_accepted');
-const USER = { id: 'user_1' };
+type Rec = Record<string, any>;
 
 /** The values the ruling kept, spelled out here rather than imported. */
 const RULED_TERM_MONTHS = 12;
@@ -74,19 +80,64 @@ const twelveMonthsOn = (iso: string): string => {
   return dt.toISOString().slice(0, 10);
 };
 
-/** Accept a quote and return the contract document the hook handed the engine. */
+let verify: VerifyStack;
+let rep: Person;
+beforeAll(async () => {
+  verify = await hotcrmStack();
+  // The acceptor is a sales MANAGER. On 17.7.0 a sales rep may mark a quote
+  // Accepted (`crm_quote.allowEdit`) but holds `crm_contract.allowCreate:
+  // false`, and `quote_on_accepted` writes as the caller — so a rep's
+  // acceptance closes the deal and the engine refuses the draft, which the
+  // hook's `onError: 'log'` keeps silent. Reported as a finding; this file's
+  // subject is what the draft CARRIES, so it runs as the persona whose
+  // acceptance drafts one.
+  rep = await signUpPerson(verify, 'manager@quote-accepted-draft-defaults.test', {
+    name: 'Quote Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+  });
+}, 120_000);
+
+let deal = 0;
+/** The last quote `draftFor` accepted, as stored just before acceptance. */
+let lastQuote: Rec = {};
+/**
+ * A rep presents a quote carrying `stored`, then accepts it in a write carrying
+ * `quote`; returns the contract document `quote_on_accepted` handed the engine.
+ * The account, contact and opportunity are the rep's own, fresh per draft.
+ */
 const draftFor = async (quote: Rec = {}, stored: Rec = {}): Promise<Rec> => {
-  const h = makeHarness({ crm_contract: [], crm_opportunity: [] });
-  await hook.handler(makeCtx({
-    event: 'afterUpdate',
-    input: { id: 'q1', status: 'accepted', total_price: 1_000, crm_account: 'acc1', crm_contact: 'con1', ...quote },
-    previous: { id: 'q1', status: 'presented', ...stored },
-    user: USER,
-    api: h.api as HookApi,
-  }));
-  const [call] = h.callsFor('crm_contract', 'insert');
-  expect(call, 'the hook drafted no contract at all').toBeTruthy();
-  return call!.args[0] as Rec;
+  const n = ++deal;
+  const create = async (object: string, doc: Rec) =>
+    String((await verify.hooks.run(object, 'insert', doc, { as: rep.token })).id);
+  const account = await create('crm_account', { name: `Draft Defaults Co ${n}` });
+  const contact = await create('crm_contact', {
+    first_name: 'Dee', last_name: `Faults ${n}`, email: `dee${n}@draft-defaults.test`, crm_account: account,
+  });
+  const opportunity = await create('crm_opportunity', {
+    name: `Draft deal ${n}`, crm_account: account, stage: 'proposal', amount: 1_000, close_date: '2030-06-30',
+  });
+  const id = await create('crm_quote', {
+    name: `Draft quote ${n}`, crm_account: account, crm_contact: contact, crm_opportunity: opportunity,
+    quote_date: today(), expiration_date: '2030-12-31', ...stored,
+  });
+  for (const status of ['in_review', 'presented']) {
+    await verify.hooks.run('crm_quote', 'update', { id, status }, { as: rep.token });
+  }
+  lastQuote = (await verify.rows('crm_quote', { id }))[0]!;
+  const engine = recordEngineWrites(verify);
+  try {
+    await verify.hooks.run('crm_quote', 'update', { id, status: 'accepted', ...quote }, { as: rep.token });
+    // `quote_on_accepted` is `async: true` — it runs after the accepting write returned.
+    const insert = await vi.waitFor(() => {
+      const [call] = engine.of('crm_contract', 'insert');
+      expect(call, 'the hook drafted no contract at all').toBeTruthy();
+      return call!;
+    }, { timeout: 10_000, interval: 25 });
+    const outcome = await insert.settled;
+    expect(outcome.ok, `the engine refused the drafted contract: ${String((outcome as Rec).error)}`).toBe(true);
+    return insert.args[1] as Rec;
+  } finally {
+    engine.restore();
+  }
 };
 
 describe('the drafted contract carries the placeholder defaults the ruling kept', () => {
@@ -168,8 +219,11 @@ describe('what the draft deliberately does NOT carry (the ruling’s other half)
   );
 
   it('keeps the provenance sentence in `description` rather than the quote’s prose', async () => {
-    const doc = await draftFor({}, { ...QUOTE_ONLY, quote_number: 'QTE-0006', name: 'Acme pilot' });
-    expect(doc.description).toBe('Auto-drafted from accepted quote QTE-0006 - Acme pilot');
+    // `quote_number` is an engine-issued autonumber, so the sentence names the
+    // number this quote was issued.
+    const doc = await draftFor({}, { ...QUOTE_ONLY, name: 'Acme pilot' });
+    expect(lastQuote.quote_number, 'the engine issued no quote number').toMatch(/^QTE-\d+$/);
+    expect(doc.description).toBe(`Auto-drafted from accepted quote ${lastQuote.quote_number} - Acme pilot`);
     expect(doc.description as string).not.toContain('Two-year pilot');
   });
 
@@ -189,28 +243,19 @@ describe('what the draft deliberately does NOT carry (the ruling’s other half)
   });
 });
 
-describe('the SHIPPED body produces the same defaults inside QuickJS', () => {
+describe('the SHIPPED body carries the declared defaults body-only', () => {
   /**
-   * `hook.handler(ctx)` keeps its closure; the runtime ships a lowered,
-   * body-only source with no module scope. A `DRAFT_CONTRACT_DEFAULTS` hoisted
-   * out of the handler would be a `ReferenceError` here and nowhere else.
+   * The runtime ships a lowered, body-only source with no module scope. A
+   * `DRAFT_CONTRACT_DEFAULTS` hoisted out of the handler would be a
+   * `ReferenceError` there (and `os lint --strict` refuses it as
+   * `hook-body/not-lowerable`); this reads the body the build ships, through the
+   * platform's own extractor, and finds the defaults declared inside it.
    */
-  it('reads the declared defaults body-only, with no module scope', async () => {
-    const sandbox = makeSandboxEngine({ crm_contract: [], crm_opportunity: [] });
-    const before = today();
-    await runHookBody(hook, {
-      event: 'afterUpdate',
-      input: { id: 'q_1', status: 'accepted', crm_account: 'acc_1', crm_contact: 'con_1', total_price: 1_000 },
-      previous: { id: 'q_1', status: 'presented' },
-      user: USER,
-      engine: sandbox,
-    });
-    const after = today();
-    const [doc] = sandbox.inserted('crm_contract');
-    expect(doc, 'the body never reached the contract insert').toBeTruthy();
-    expect(doc!.contract_term_months).toBe(RULED_TERM_MONTHS);
-    expect(doc!.contract_type).toBe(RULED_CONTRACT_TYPE);
-    expect([before, after]).toContain(doc!.start_date as string);
-    expect(doc!.end_date).toBe(twelveMonthsOn(doc!.start_date as string));
+  it('reads the declared defaults body-only, with no module scope', () => {
+    const hook = (quoteHooks as Rec[]).find((h) => h.name === 'quote_on_accepted')!;
+    const { source } = extractHookBody(hook.handler, "hook 'quote_on_accepted'");
+    expect(source).toMatch(/\bconst DRAFT_CONTRACT_DEFAULTS\b/);
+    expect(source).toMatch(new RegExp(`contract_term_months:\\s*${RULED_TERM_MONTHS}\\b`));
+    expect(source).toMatch(new RegExp(`contract_type:\\s*['"]${RULED_CONTRACT_TYPE}['"]`));
   });
 });

@@ -1,17 +1,13 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
+import { extractHookBody } from '@objectstack/cli/hook-body';
+import type { VerifyStack } from '@objectstack/verify';
 import { ErrorCode } from '@objectstack/spec/api';
 import { allHooks } from '../objectstack.composition';
 import { REFUSAL_CODES, REFUSE_HELPER } from '../src/sales/objects/_refusal';
-import { hookNamed, makeCtx, makeHarness } from './helpers/hook-harness';
-import { extractSandboxBody, makeSandboxEngine, runHookBody } from './helpers/action-sandbox';
-import accountHooks from '../src/sales/objects/account.hook';
-import contactHooks from '../src/sales/objects/contact.hook';
-import opportunityHooks from '../src/sales/objects/opportunity.hook';
-import productHooks from '../src/revenue/objects/product.hook';
-import taskHooks from '../src/sales/objects/task.hook';
-import eventHooks from '../src/sales/objects/event.hook';
+import { hookNamed } from './helpers/composed-stack';
+import { hotcrmStack, signUpPerson, runShippedHook, today, type Person } from './helpers/verify-stack';
 
 /**
  * The refusal envelope, pinned where it actually ships (#1075 + #1167).
@@ -68,7 +64,7 @@ const flat = (s: string): string => s.replace(/\s+/g, ' ').trim();
 /** The lowered body of every registered hook, by name. */
 const LOWERED: Array<{ name: string; source: string }> = (allHooks as AnyRec[]).map((h) => ({
   name: h.name as string,
-  source: extractSandboxBody(h.handler, `hook '${h.name}'`).source,
+  source: extractHookBody(h.handler, `hook '${h.name}'`).source,
 }));
 
 /** `refuse(…, "CODE", NNN)` — the shape the printer emits, single- and multi-line alike. */
@@ -177,15 +173,50 @@ describe('every refusal names a code the platform will echo (#1075)', () => {
 
 // ───────────────────────────── the shipped path, one case per class (#1167) ──
 
-const accountGuard = hookNamed(accountHooks, 'account_protection');
-const contactGuard = hookNamed(contactHooks, 'contact_integrity');
-const oppGuard = hookNamed(opportunityHooks, 'opportunity_lifecycle');
-const productGuard = hookNamed(productHooks, 'product_catalog');
-const taskGuard = hookNamed(taskHooks, 'task_do_not_call_guard');
+const accountGuard = hookNamed('account_protection');
+const contactGuard = hookNamed('contact_integrity');
+const oppGuard = hookNamed('opportunity_lifecycle');
+const productGuard = hookNamed('product_catalog');
+const taskGuard = hookNamed('task_do_not_call_guard');
 
-/** Run a lowered body and return the error it threw, or null if it did not. */
+/**
+ * The real app — booted through `@objectstack/verify`'s handle — and the rows
+ * both paths below refuse against: a contact holding an email, a product a
+ * deal's line already references, a lead flagged Do Not Call.
+ */
+let verify: VerifyStack;
+let rep: Person;
+let admin: string;
+const row: Record<string, string> = {};
+let k = 0;
+beforeAll(async () => {
+  verify = await hotcrmStack();
+  admin = await verify.signIn();
+  rep = await signUpPerson(verify, 'rep@refusal-envelope.test', {
+    name: 'Envelope Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+  });
+  const create = async (object: string, doc: AnyRec) =>
+    String((await verify.hooks.run(object, 'insert', doc, { as: rep.token })).id);
+  row.account = await create('crm_account', { name: 'Envelope Co' });
+  row.contact = await create('crm_contact', {
+    first_name: 'Ena', last_name: 'Velope', email: 'dup@acme.example.com', crm_account: row.account,
+  });
+  row.opportunity = await create('crm_opportunity', {
+    name: 'Big Deal', crm_account: row.account, stage: 'proposal', amount: 100, close_date: today(),
+  });
+  const [product] = await verify.seed('crm_product', [{ name: 'Widget', list_price: 10, is_active: true }]);
+  row.product = String(product.id);
+  await create('crm_opportunity_line_item', {
+    crm_opportunity: row.opportunity, crm_product: row.product, quantity: 1, unit_price: 10,
+  });
+  row.lead = await create('crm_lead', {
+    first_name: 'Dee', last_name: 'Nc', company: 'Envelope Co', email: 'dee@acme.example.com', do_not_call: true,
+  });
+}, 180_000);
+
+/** Run a hook's SHIPPED body and return the error it threw, or null if it did not. */
 const refusalFrom = async (hook: AnyRec, opts: AnyRec): Promise<AnyRec | null> =>
-  runHookBody(hook, opts as never).then(
+  runShippedHook(verify, hook, opts as never).then(
     () => null,
     (e: AnyRec) => e,
   );
@@ -225,6 +256,9 @@ const expectEnvelope = (
 };
 
 describe('every refusal class survives the QuickJS boundary (#1167)', () => {
+  // The shipped path: each guard's lowered body, in the runtime's QuickJS
+  // sandbox, reading the real engine of the booted app (`runShippedHook` —
+  // the handle runs hooks in-process and has no door for this one).
   it('invalid_value — account_protection rejects a malformed website', async () => {
     const err = await refusalFrom(accountGuard, {
       event: 'beforeInsert',
@@ -236,11 +270,8 @@ describe('every refusal class survives the QuickJS boundary (#1167)', () => {
   it('duplicate — contact_integrity rejects a repeated email in one organization', async () => {
     const err = await refusalFrom(contactGuard, {
       event: 'beforeInsert',
-      input: { email: 'dup@acme.example.com', organization_id: 'org_1' },
-      user: { id: 'usr_1', organizationId: 'org_1' },
-      engine: makeSandboxEngine({
-        crm_contact: [{ id: 'con_existing', organization_id: 'org_1', email: 'dup@acme.example.com' }],
-      }),
+      input: { email: 'dup@acme.example.com' },
+      as: rep.token,
     });
     expectEnvelope(err, 'duplicate', 'contact_integrity', /already exists/);
   });
@@ -248,9 +279,9 @@ describe('every refusal class survives the QuickJS boundary (#1167)', () => {
   it('locked — opportunity_lifecycle freezes a closed deal', async () => {
     const err = await refusalFrom(oppGuard, {
       event: 'beforeUpdate',
-      input: { id: 'opp_1', amount: 999 },
-      previous: { id: 'opp_1', name: 'Big Deal', stage: 'closed_won', amount: 100 },
-      user: { id: 'usr_1' },
+      input: { id: row.opportunity, amount: 999 },
+      previous: { id: row.opportunity, name: 'Big Deal', stage: 'closed_won', amount: 100 },
+      as: rep.token,
     });
     expectEnvelope(err, 'locked', 'opportunity_lifecycle', /is closed \(closed_won\)/);
   });
@@ -259,10 +290,9 @@ describe('every refusal class survives the QuickJS boundary (#1167)', () => {
     const err = await refusalFrom(productGuard, {
       event: 'beforeDelete',
       input: {},
-      previous: { id: 'prod_1', name: 'Widget' },
-      engine: makeSandboxEngine({
-        crm_opportunity_line_item: [{ id: 'oli_1', crm_product: 'prod_1' }],
-      }),
+      previous: { id: row.product, name: 'Widget' },
+      // The catalog is an administrator's to curate.
+      as: admin,
     });
     expectEnvelope(err, 'delete_restricted', 'product_catalog', /Cannot delete product/);
   });
@@ -270,10 +300,9 @@ describe('every refusal class survives the QuickJS boundary (#1167)', () => {
   it('prohibited — task_do_not_call_guard refuses a call on a flagged lead', async () => {
     const err = await refusalFrom(taskGuard, {
       event: 'beforeInsert',
-      input: { type: 'call', status: 'not_started', related_to_lead: 'lead_dnc' },
-      engine: makeSandboxEngine({
-        crm_lead: [{ id: 'lead_dnc', do_not_call: true }],
-      }),
+      input: { type: 'call', status: 'not_started', related_to_lead: row.lead },
+      // The rep scheduling the call: the body reads the lead as its caller.
+      as: rep.token,
     });
     expectEnvelope(err, 'prohibited', 'task_do_not_call_guard', /flagged Do Not Call/);
   });
@@ -282,14 +311,17 @@ describe('every refusal class survives the QuickJS boundary (#1167)', () => {
 // ─────────────────────────────────────── the in-process path, same envelope ──
 
 /**
- * The SAME five classes through the handler closure rather than the sandbox.
+ * The SAME classes on the in-process path — a real write through the engine's
+ * write door, as the person making it.
  *
  * Not redundant with the block above, for two reasons that pull in opposite
  * directions. The shipped path is what users get, so it is where the envelope
  * has to be true — but it runs inside QuickJS, where the source is a string and
  * v8 coverage cannot see it, so a guard tested only there reads as dead code.
  * The in-process path is the one #1075's original observation was taken on, and
- * it is the path every other runtime test in this repo drives.
+ * it is the path every other runtime test in this repo drives — through
+ * `@objectstack/verify`'s `hooks.run`, which rethrows the engine's error
+ * unchanged.
  *
  * The two differ in ways worth pinning side by side: in-process the error is a
  * plain `Error` with the message unrewritten, so `innerMessage` does not exist
@@ -313,8 +345,11 @@ const expectInProcess = (
   expect(e.userMessage, 'refuse() marks the sentence on both paths').toBe(e.message);
 };
 
-const inProcess = async (hook: AnyRec, opts: AnyRec): Promise<unknown> =>
-  hook.handler(makeCtx(opts as never)).then(
+/** A real write as `as`; returns what the engine refused it with, or null. */
+const inProcess = async (
+  object: string, op: 'insert' | 'update' | 'delete', doc: AnyRec, as: string = rep.token,
+): Promise<unknown> =>
+  verify.hooks.run(object, op, doc, { as }).then(
     () => null,
     (e: unknown) => e,
   );
@@ -322,10 +357,7 @@ const inProcess = async (hook: AnyRec, opts: AnyRec): Promise<unknown> =>
 describe('the same envelope on the in-process path (#1075)', () => {
   it('invalid_value — account_protection', async () => {
     expectInProcess(
-      await inProcess(accountGuard, {
-        event: 'beforeInsert',
-        input: { name: 'Acme', website: 'ftp://nope.example.com' },
-      }),
+      await inProcess('crm_account', 'insert', { name: 'Acme', website: 'ftp://nope.example.com' }),
       'invalid_value',
       /must start with http/,
     );
@@ -333,13 +365,8 @@ describe('the same envelope on the in-process path (#1075)', () => {
 
   it('duplicate — contact_integrity', async () => {
     expectInProcess(
-      await inProcess(contactGuard, {
-        event: 'beforeInsert',
-        input: { email: 'dup@acme.example.com', organization_id: 'org_1' },
-        user: { id: 'usr_1', organizationId: 'org_1' },
-        api: makeHarness({
-          crm_contact: [{ id: 'con_existing', organization_id: 'org_1', email: 'dup@acme.example.com' }],
-        }).api,
+      await inProcess('crm_contact', 'insert', {
+        first_name: 'Dup', last_name: 'Licate', email: 'dup@acme.example.com', crm_account: row.account,
       }),
       'duplicate',
       /already exists/,
@@ -347,27 +374,21 @@ describe('the same envelope on the in-process path (#1075)', () => {
   });
 
   it('locked — opportunity_lifecycle', async () => {
+    const opp = await verify.hooks.run('crm_opportunity', 'insert', {
+      name: `Closed Deal ${++k}`, crm_account: row.account, stage: 'proposal', amount: 100, close_date: today(),
+    }, { as: rep.token });
+    await verify.hooks.run('crm_opportunity', 'update', { id: opp.id, stage: 'closed_won', win_reason: 'better_price' }, { as: rep.token });
     expectInProcess(
-      await inProcess(oppGuard, {
-        event: 'beforeUpdate',
-        input: { id: 'opp_1', amount: 999 },
-        previous: { id: 'opp_1', name: 'Big Deal', stage: 'closed_won', amount: 100 },
-        user: { id: 'usr_1' },
-      }),
+      await inProcess('crm_opportunity', 'update', { id: opp.id, amount: 999 }),
       'locked',
       /is closed \(closed_won\)/,
     );
   });
 
   it('delete_restricted — product_catalog', async () => {
+    // The catalog is an administrator's to curate.
     expectInProcess(
-      await inProcess(productGuard, {
-        event: 'beforeDelete',
-        previous: { id: 'prod_1', name: 'Widget' },
-        api: makeHarness({
-          crm_opportunity_line_item: [{ id: 'oli_1', crm_product: 'prod_1' }],
-        }).api,
-      }),
+      await inProcess('crm_product', 'delete', { id: row.product }, admin),
       'delete_restricted',
       /Cannot delete product/,
     );
@@ -375,10 +396,8 @@ describe('the same envelope on the in-process path (#1075)', () => {
 
   it('prohibited — task_do_not_call_guard', async () => {
     expectInProcess(
-      await inProcess(taskGuard, {
-        event: 'beforeInsert',
-        input: { type: 'call', status: 'not_started', related_to_lead: 'lead_dnc' },
-        api: makeHarness({ crm_lead: [{ id: 'lead_dnc', do_not_call: true }] }).api,
+      await inProcess('crm_task', 'insert', {
+        subject: 'Call Dee', type: 'call', status: 'not_started', related_to_lead: row.lead,
       }),
       'prohibited',
       /flagged Do Not Call/,
@@ -387,10 +406,9 @@ describe('the same envelope on the in-process path (#1075)', () => {
 
   it('prohibited — event_do_not_call_guard, the twin guard on the other object', async () => {
     expectInProcess(
-      await inProcess(hookNamed(eventHooks, 'event_do_not_call_guard'), {
-        event: 'beforeInsert',
-        input: { type: 'call', status: 'planned', related_to_lead: 'lead_dnc' },
-        api: makeHarness({ crm_lead: [{ id: 'lead_dnc', do_not_call: true }] }).api,
+      await inProcess('crm_event', 'insert', {
+        subject: 'Call Dee', type: 'call', status: 'planned', related_to_lead: row.lead,
+        start_datetime: '2030-03-01T09:00:00.000Z',
       }),
       'prohibited',
       /flagged Do Not Call/,

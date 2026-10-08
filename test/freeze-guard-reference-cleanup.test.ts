@@ -12,7 +12,7 @@ import { REFUSAL_CODES } from '../src/sales/objects/_refusal';
 import oppHooks from '../src/sales/objects/opportunity.hook';
 import quoteHooks from '../src/revenue/objects/quote.hook';
 import { hookNamed, makeCtx, makeHarness, type Rec } from './helpers/hook-harness';
-import { extractSandboxBody } from './helpers/action-sandbox';
+import { extractHookBody } from '@objectstack/cli/hook-body';
 import { SysUser, SysMember, SysOrganization } from '@objectstack/platform-objects/identity';
 import { identityObjects } from './helpers/identity-objects';
 
@@ -145,7 +145,8 @@ import { identityObjects } from './helpers/identity-objects';
  *      taken in this kernel rig, where handlers run natively and `ctx.api` is
  *      the engine's own `ScopedContext` (keys measured as
  *      `[engine, executionContext, joinedHandles]`). In production a hook body
- *      runs body-only inside QuickJS (see `test/action-sandbox.test.ts`), and
+ *      runs body-only inside QuickJS (`os lint --strict` refuses one that
+ *      cannot be lowered, as `hook-body/not-lowerable`), and
  *      `ctx.api` there is whatever `buildSandboxApi` hands it: `engineCtx.api`
  *      when that exposes `object()`, and OTHERWISE a shim of `{ object }`
  *      carrying no `executionContext` at all. A predicate reading the marker
@@ -741,8 +742,8 @@ describe.each(GUARDS)('$label yields to the cleanup shape and nothing else', (gu
 
 /**
  * The three guards carry the SAME predicate, verbatim, and it has to be that
- * way: a hook body runs body-only inside QuickJS (see
- * `test/action-sandbox.test.ts`), so it cannot call an imported helper — a
+ * way: a hook body runs body-only inside QuickJS (`os lint --strict` refuses
+ * one that cannot be lowered), so it cannot call an imported helper — a
  * shared module-scope predicate would be `undefined` at runtime in the shipped
  * artifact. Sharing by copy is only as good as a guard against drift, so this
  * pins the copies against each other, the same way the actions' shared
@@ -763,7 +764,7 @@ describe('the reference-cleanup predicate is one block in three places', () => {
       .replace(/\s+/g, ' ');
 
   const bodyOf = (hook: AnyRec): string =>
-    normalise(extractSandboxBody(hook.handler, `hook '${hook.name}'`).source);
+    normalise(extractHookBody(hook.handler, `hook '${hook.name}'`).source);
 
   it.each(GUARDS.map((g) => g.label))('%s carries the canonical predicate', (label) => {
     const guard = GUARDS.find((g) => g.label === label)!;
@@ -797,7 +798,7 @@ describe('the reference-cleanup predicate is one block in three places', () => {
     ['crm_lead', 'lead_automation'],
   ])('%s: REFERENCE_FIELDS lists every declared lookup', (objectName, hookName) => {
     const guard = GUARDS.find((g) => g.label === hookName)!;
-    const source = extractSandboxBody(guard.hook.handler, hookName).source;
+    const source = extractHookBody(guard.hook.handler, hookName).source;
     const literal = /const REFERENCE_FIELDS = new Set\(\[([\s\S]*?)\]\)/.exec(source);
     expect(literal, `${hookName} declares no REFERENCE_FIELDS`).toBeTruthy();
     const listed = [...literal![1].matchAll(/["']([^"']+)["']/g)].map((m) => m[1]).sort();

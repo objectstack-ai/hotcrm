@@ -11,7 +11,8 @@ import leadHooks from '../src/sales/objects/lead.hook';
 import { LeadConversionFlow } from '../src/sales/flows/lead-conversion.flow';
 import { makeCtx, hookNamed, type Rec } from './helpers/hook-harness';
 import { makeFlowHarness, silentLogger } from './helpers/flow-harness';
-import { runHookBody } from './helpers/action-sandbox';
+import type { VerifyStack } from '@objectstack/verify';
+import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
 
 /**
  * Case-insensitive account matching in lead conversion (#626).
@@ -448,32 +449,38 @@ describe('lead_duplicate_check folds company into company_normalized', () => {
   });
 });
 
-// ═══════════════════════════════ the producers, inside the real sandbox ══
+// ═══════════════════════════════════ the producers, on a real write ══
 
 /**
  * Both folds are written INLINE, with no module-scope helper, so the handlers
- * still lower to a metadata-only body — which is what the runtime evaluates.
- * `action-sandbox.test.ts` proves they lower; only running them in QuickJS
- * proves the inlined code uses nothing the sandbox lacks (a `replace` with a
- * regex literal, here).
+ * still lower to a metadata-only body (`objectstack build` lowers every
+ * registered hook through the platform's `extractHookBody`, and `os lint`
+ * applies the same function). These two drive the folds through the real
+ * engine — the shipped app booted through `@objectstack/verify`'s handle, a
+ * sales rep creating the records — and read the stamped key off the stored row.
  */
-describe('both folds run inside the QuickJS sandbox', () => {
-  it('account_protection folds name in the VM', async () => {
-    const hook = hookNamed(accountHooks, 'account_protection');
-    const { input } = await runHookBody(hook, {
-      event: 'beforeInsert',
-      input: { name: '  ACME   Corp ' },
+describe('both folds land on a real write', () => {
+  let verify: VerifyStack;
+  let rep: Person;
+  beforeAll(async () => {
+    verify = await hotcrmStack();
+    rep = await signUpPerson(verify, 'rep@account-name-normalized-match.test', {
+      name: 'Fold Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
     });
-    expect(input.name_normalized).toBe('acme corp');
+  }, 120_000);
+
+  it('account_protection folds name', async () => {
+    const stored = await verify.hooks.run('crm_account', 'insert', { name: '  ACME   Corp ' }, { as: rep.token });
+    expect(stored.name_normalized).toBe('acme corp');
   });
 
-  it('lead_duplicate_check folds company in the VM', async () => {
-    const hook = hookNamed(leadHooks, 'lead_duplicate_check');
-    const { input } = await runHookBody(hook, {
-      event: 'beforeInsert',
-      input: { company: '  ACME   Corp ', email: 'joe@example.com' },
-    });
-    expect(input.company_normalized).toBe('acme corp');
+  it('lead_duplicate_check folds company', async () => {
+    const stored = await verify.hooks.run(
+      'crm_lead', 'insert',
+      { first_name: 'Joe', last_name: 'Fold', company: '  ACME   Corp ', email: 'joe.fold@example.com' },
+      { as: rep.token },
+    );
+    expect(stored.company_normalized).toBe('acme corp');
   });
 });
 

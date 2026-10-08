@@ -1,12 +1,10 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect } from 'vitest';
-import contactHooks from '../src/sales/objects/contact.hook';
-import leadHooks from '../src/sales/objects/lead.hook';
-import opportunityHooks from '../src/sales/objects/opportunity.hook';
-import quoteHooks from '../src/revenue/objects/quote.hook';
-import { hookNamed } from './helpers/hook-harness';
-import { makeSandboxEngine, runHookBody, type Rec } from './helpers/action-sandbox';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
+import type { VerifyStack } from '@objectstack/verify';
+import {
+  hotcrmStack, signUpPerson, recordEngineWrites, systemUpdate, today, type Person,
+} from './helpers/verify-stack';
 
 /**
  * No record id reaches a human in prose (#1243).
@@ -30,15 +28,14 @@ import { makeSandboxEngine, runHookBody, type Rec } from './helpers/action-sandb
  *  1. **It asserts the ABSENCE, which the per-hook suites structurally cannot.**
  *     A regex like `/Quote Q-1001 is accepted/` matches the defective string
  *     `Quote Q-1001 (q1) is accepted` just as happily. Every case below feeds a
- *     sentinel id that appears nowhere else in the fixture and asserts the
- *     emitted prose does not contain it — the one assertion that fails on the
- *     old code.
- *  2. **It runs the LOWERED bodies.** Hook bodies ship body-only through
- *     QuickJS, so a title composed in a shared helper would be a `ReferenceError`
- *     in the shipped artifact while every closure-based test stayed green (the
- *     reasoning is written out in `escalation-task-subject.test.ts`). Composing
- *     a display title inline is exactly the temptation to factor out, so the
- *     pin runs what the artifact carries.
+ *     record id the ENGINE issued and asserts the emitted prose does not
+ *     contain it — the one assertion that fails on the old code.
+ *  2. **It runs the real writes.** The shipped app booted through
+ *     `@objectstack/verify`'s handle; a sales rep (and, where the act is a
+ *     manager's, a sales manager) does the thing the product does; the task,
+ *     the contract or the refusal is read back off the engine. A title composed
+ *     in a shared helper would be a `ReferenceError` in the shipped body — that
+ *     is `os lint --strict`'s to refuse (`hook-body/not-lowerable`).
  *  3. **It states the boundary.** An id in a log line, an internal audit row or
  *     a machine-read field is the RIGHT thing there. `quote.hook.ts` keeps two
  *     such ids deliberately, and the source sweep at the bottom of this file
@@ -46,102 +43,83 @@ import { makeSandboxEngine, runHookBody, type Rec } from './helpers/action-sandb
  *     class is a red build rather than another walkthrough.
  */
 
-const contactIntegrity = hookNamed(contactHooks, 'contact_integrity');
-const leadAutomation = hookNamed(leadHooks, 'lead_automation');
-const oppLifecycle = hookNamed(opportunityHooks, 'opportunity_lifecycle');
-const oppPromote = hookNamed(opportunityHooks, 'opportunity_promote_account');
-const quoteWorkflow = hookNamed(quoteHooks, 'quote_workflow');
-const quoteAccepted = hookNamed(quoteHooks, 'quote_on_accepted');
+type Rec = Record<string, any>;
 
-/**
- * Sentinel ids, in the shape the engine actually issues.
- *
- * Deliberately NOT `o1` / `q1` / `lead_1`: a two-character fixture id is a
- * substring of half the English language ("c1" hides inside nothing, but "o1"
- * and "q1" would make `not.toContain` a coin flip on a longer sentence). These
- * are real-looking keys taken from the walkthrough in #1243, so a hit is a hit.
- */
-const OPP_ID = 'VLEnmZCSf7BkT1xA';
-const QUOTE_ID = 'MvNopWgEDZwm2T5L';
-const LEAD_ID = 'EMtmaScoa3I-uYFG';
-const CONTACT_ID = '5B0nItHGRr768EfD';
+let verify: VerifyStack;
+let rep: Person;
+let manager: Person;
+beforeAll(async () => {
+  verify = await hotcrmStack();
+  rep = await signUpPerson(verify, 'rep@record-id-not-in-prose.test', {
+    name: 'Prose Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+  });
+  // Accepting a quote drafts a contract only for a caller who may create one
+  // (on 17.7.0 a rep may not — see `quote-accepted-draft-defaults`), and
+  // deleting a contact is a manager's grant; both acts run as a manager.
+  manager = await signUpPerson(verify, 'manager@record-id-not-in-prose.test', {
+    name: 'Prose Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+  });
+}, 120_000);
 
-/** Run a lowered hook body and return whatever it threw, or `null`. */
-async function refusalFrom(hook: Rec, opts: Parameters<typeof runHookBody>[1]): Promise<Error> {
-  const err = await runHookBody(hook, opts).then(() => null, (e: Error) => e);
-  expect(err, `${hook.name} did not refuse`).toBeInstanceOf(Error);
+let n = 0;
+const create = async (object: string, doc: Rec, who: Person = rep): Promise<Rec> =>
+  verify.hooks.run(object, 'insert', doc, { as: who.token });
+const update = (object: string, doc: Rec, who: Person = rep) =>
+  verify.hooks.run(object, 'update', doc, { as: who.token });
+
+/** A rep's working lead, carrying `over`. */
+const workingLead = async (over: Rec = {}) => create('crm_lead', {
+  first_name: 'Mira', last_name: 'Costa', company: 'Atlas Construction',
+  email: `mira${++n}@atlas.example.com`, status: 'contacted', ...over,
+});
+
+/** The follow-up task `lead_automation` opened for `leadId`, once it lands. */
+const followUpFor = (leadId: string) => vi.waitFor(async () => {
+  const [task] = await verify.rows('crm_task', { related_to_lead: leadId });
+  expect(task, 'no follow-up task was inserted').toBeTruthy();
+  return task!;
+}, { timeout: 10_000, interval: 25 });
+
+/** Run a write and return what the engine refused it with, or fail. */
+async function refusalFrom(write: () => Promise<unknown>, label: string): Promise<Error> {
+  const err = await write().then(() => null, (e: Error) => e);
+  expect(err, `${label} did not refuse`).toBeInstanceOf(Error);
   return err as Error;
 }
 
 describe('task subjects name the record, not its primary key', () => {
   it('the qualified-lead follow-up is titled by the lead (lead_automation)', async () => {
-    const engine = makeSandboxEngine({ crm_task: [] });
-    await runHookBody(leadAutomation, {
-      event: 'afterUpdate',
-      input: { status: 'qualified' },
-      previous: {
-        id: LEAD_ID,
-        status: 'working',
-        first_name: 'Mira',
-        last_name: 'Costa',
-        company: 'Atlas Construction',
-        owner_id: 'rep_1',
-      },
-      user: { id: 'rep_1' },
-      engine,
-    });
+    const lead = await workingLead();
+    await update('crm_lead', { id: lead.id, status: 'qualified' });
 
-    const [task] = engine.inserted('crm_task');
-    expect(task, 'no follow-up task was inserted').toBeTruthy();
+    const task = await followUpFor(lead.id);
     expect(task.subject).toBe('Follow up with qualified lead: Mira Costa - Atlas Construction');
-    expect(task.subject).not.toContain(LEAD_ID);
+    expect(task.subject).not.toContain(lead.id);
     // Not lost — moved to the column whose job it is.
-    expect(task.related_to_lead).toBe(LEAD_ID);
+    expect(task.related_to_lead).toBe(lead.id);
     expect(task.related_to_type).toBe('crm_lead');
   });
 
   it('prefers the name this very write is setting', async () => {
-    const engine = makeSandboxEngine({ crm_task: [] });
-    await runHookBody(leadAutomation, {
-      event: 'afterUpdate',
-      input: { status: 'qualified', company: 'Atlas Construction Group' },
-      previous: {
-        id: LEAD_ID, status: 'working', first_name: 'Mira', last_name: 'Costa',
-        company: 'Atlas Construction', owner_id: 'rep_1',
-      },
-      user: { id: 'rep_1' },
-      engine,
-    });
-    const [task] = engine.inserted('crm_task');
-    expect(task.subject).toBe('Follow up with qualified lead: Mira Costa - Atlas Construction Group');
+    const lead = await workingLead();
+    await update('crm_lead', { id: lead.id, status: 'qualified', company: 'Atlas Construction Group' });
+    expect((await followUpFor(lead.id)).subject).toBe('Follow up with qualified lead: Mira Costa - Atlas Construction Group');
   });
 
   it('drops the half the lead does not carry rather than dangling a separator', async () => {
-    const companyOnly = makeSandboxEngine({ crm_task: [] });
-    await runHookBody(leadAutomation, {
-      event: 'afterUpdate',
-      input: { status: 'qualified' },
-      previous: { id: LEAD_ID, status: 'working', company: 'Atlas Construction', owner_id: 'rep_1' },
-      user: { id: 'rep_1' },
-      engine: companyOnly,
-    });
-    expect(companyOnly.inserted('crm_task')[0].subject)
-      .toBe('Follow up with qualified lead: Atlas Construction');
-
-    // Neither half: a generic title, NOT a fallback to the id. A key the reader
-    // cannot look up is not a better answer than no name at all.
-    const nameless = makeSandboxEngine({ crm_task: [] });
-    await runHookBody(leadAutomation, {
-      event: 'afterUpdate',
-      input: { status: 'qualified' },
-      previous: { id: LEAD_ID, status: 'working', owner_id: 'rep_1' },
-      user: { id: 'rep_1' },
-      engine: nameless,
-    });
-    const task = nameless.inserted('crm_task')[0];
-    expect(task.subject).toBe('Follow up with qualified lead');
-    expect(task.subject).not.toContain(LEAD_ID);
-    expect(task.related_to_lead).toBe(LEAD_ID);
+    // Neither half can be missing from a real lead: `first_name`, `last_name`
+    // and `company` are all required on `crm_lead`, so the title's
+    // company-only and nameless branches (`…: Atlas Construction`, and the
+    // generic `Follow up with qualified lead`) defend a pre-image no write can
+    // produce. Pinned as the refusal that makes them unreachable — the day one
+    // of those columns stops being required, this goes red and the branches
+    // are back in play.
+    for (const missing of ['first_name', 'last_name', 'company']) {
+      await expect(create('crm_lead', {
+        first_name: 'Mira', last_name: 'Costa', company: 'Atlas Construction',
+        email: `blank${++n}@atlas.example.com`, [missing]: '',
+      }), `a lead without ${missing} was stored`).rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
+    }
   });
 
   it('stays inside crm_task.subject at maximum length', async () => {
@@ -149,161 +127,147 @@ describe('task subjects name the record, not its primary key', () => {
     // this insert sits behind a `catch` that swallows failures, so an uncapped
     // title would mean no task and no trace. `crm_lead.company` alone allows
     // 255, so the composition can exceed the cap on legal data.
-    const engine = makeSandboxEngine({ crm_task: [] });
-    await runHookBody(leadAutomation, {
-      event: 'afterUpdate',
-      input: { status: 'qualified' },
-      previous: {
-        id: LEAD_ID, status: 'working', first_name: 'Mira', last_name: 'Costa',
-        company: 'C'.repeat(255), owner_id: 'rep_1',
-      },
-      user: { id: 'rep_1' },
-      engine,
-    });
-    const subject = engine.inserted('crm_task')[0].subject as string;
+    const lead = await workingLead({ company: 'C'.repeat(255) });
+    await update('crm_lead', { id: lead.id, status: 'qualified' });
+    const subject = (await followUpFor(lead.id)).subject as string;
     expect(subject.length).toBe(255);
     expect(subject.startsWith('Follow up with qualified lead: Mira Costa - ')).toBe(true);
     expect(subject.endsWith('…')).toBe(true);
   });
 
   it('the activation task is titled by the opportunity (opportunity_promote_account)', async () => {
-    const engine = makeSandboxEngine({
-      crm_account: [{ id: 'acc_1', name: 'Skyline Media', type: 'prospect' }],
-      crm_task: [],
+    const account = await create('crm_account', { name: `Skyline Media ${++n}`, type: 'prospect' });
+    const opp = await create('crm_opportunity', {
+      name: 'Skyline Media - Platform Renewal', crm_account: account.id, stage: 'proposal',
+      amount: 48_000, close_date: today(),
     });
-    await runHookBody(oppPromote, {
-      event: 'afterUpdate',
-      input: { id: OPP_ID, stage: 'closed_won', crm_account: 'acc_1' },
-      previous: { id: OPP_ID, stage: 'proposal', name: 'Skyline Media - Platform Renewal', crm_account: 'acc_1', owner_id: 'rep_1' },
-      user: { id: 'rep_1' },
-      engine,
-    });
+    await update('crm_opportunity', { id: opp.id, stage: 'closed_won', win_reason: 'better_price' });
 
-    const [task] = engine.inserted('crm_task');
-    expect(task, 'no activation task was inserted').toBeTruthy();
+    const task = await vi.waitFor(async () => {
+      const [row] = await verify.rows('crm_task', { related_to_opportunity: opp.id });
+      expect(row, 'no activation task was inserted').toBeTruthy();
+      return row!;
+    }, { timeout: 10_000, interval: 25 });
     expect(task.subject).toBe('Activate new customer for opportunity Skyline Media - Platform Renewal');
-    expect(task.subject).not.toContain(OPP_ID);
-    expect(task.related_to_opportunity).toBe(OPP_ID);
-    expect(task.related_to_account).toBe('acc_1');
+    expect(task.subject).not.toContain(opp.id);
+    expect(task.related_to_opportunity).toBe(opp.id);
+    expect(task.related_to_account).toBe(account.id);
   });
 
   it('says what it can when the opportunity pre-image carried no name', async () => {
-    const engine = makeSandboxEngine({
-      crm_account: [{ id: 'acc_1', name: 'Skyline Media', type: 'customer' }],
-      crm_task: [],
-    });
-    await runHookBody(oppPromote, {
-      event: 'afterUpdate',
-      input: { id: OPP_ID, stage: 'closed_won', crm_account: 'acc_1' },
-      previous: { id: OPP_ID, stage: 'proposal', crm_account: 'acc_1', owner_id: 'rep_1' },
-      user: { id: 'rep_1' },
-      engine,
-    });
-    const task = engine.inserted('crm_task')[0];
-    expect(task.subject).toBe('Activate new customer');
-    expect(task.subject).not.toContain(OPP_ID);
+    // A real opportunity always carries one: `crm_opportunity.name` is
+    // required, so the bare `Activate new customer` branch defends a pre-image
+    // no write can produce. Pinned as that refusal, for the reason above.
+    const account = await create('crm_account', { name: `Nameless Deal Co ${++n}`, type: 'prospect' });
+    await expect(create('crm_opportunity', {
+      name: '', crm_account: account.id, stage: 'proposal', amount: 1_000, close_date: today(),
+    })).rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
   });
 });
 
+/**
+ * A manager presents and accepts a quote; returns the contract document
+ * `quote_on_accepted` handed the engine, plus the quote as stored just
+ * before acceptance. `stored` is applied as the SYSTEM before acceptance — it
+ * is how a quote whose stored number is blank reaches the hook.
+ */
+const acceptQuote = async (stored: Rec = {}) => {
+  const k = ++n;
+  const account = await create('crm_account', { name: `Skyline Media ${k}` }, manager);
+  const contact = await create('crm_contact', {
+    first_name: 'Theo', last_name: 'Park', email: `theo${k}@skylinemedia.example.com`, crm_account: account.id,
+  }, manager);
+  const opp = await create('crm_opportunity', {
+    name: 'Skyline Media - Platform Renewal', crm_account: account.id, stage: 'proposal',
+    amount: 48_000, close_date: '2030-06-30',
+  }, manager);
+  const quote = await create('crm_quote', {
+    name: 'Skyline Media Renewal', crm_account: account.id, crm_contact: contact.id,
+    crm_opportunity: opp.id, quote_date: today(), expiration_date: '2030-12-31',
+  }, manager);
+  for (const status of ['in_review', 'presented']) await update('crm_quote', { id: quote.id, status }, manager);
+  if (Object.keys(stored).length > 0) await systemUpdate(verify, 'crm_quote', { id: quote.id, ...stored });
+  const [before] = await verify.rows('crm_quote', { id: quote.id });
+  const engine = recordEngineWrites(verify);
+  try {
+    await update('crm_quote', { id: quote.id, status: 'accepted' }, manager);
+    const insert = await vi.waitFor(() => {
+      const [call] = engine.of('crm_contract', 'insert');
+      expect(call, 'no contract was drafted').toBeTruthy();
+      return call!;
+    }, { timeout: 10_000, interval: 25 });
+    expect((await insert.settled).ok, 'the engine refused the drafted contract').toBe(true);
+    return { contract: insert.args[1] as Rec, quote: before!, opportunity: String(opp.id) };
+  } finally {
+    engine.restore();
+  }
+};
+
 describe('the drafted contract explains itself with the quote number', () => {
-  const acceptQuote = async (previous: Rec, input: Rec = {}) => {
-    const engine = makeSandboxEngine({
-      crm_contract: [],
-      crm_opportunity: [{ id: 'opp_1', stage: 'proposal' }],
-    });
-    await runHookBody(quoteAccepted, {
-      event: 'afterUpdate',
-      input: { status: 'accepted', ...input },
-      previous,
-      user: { id: 'rep_1' },
-      engine,
-    });
-    const [contract] = engine.inserted('crm_contract');
-    expect(contract, 'no contract was drafted').toBeTruthy();
-    return contract;
-  };
-
-  const acceptedQuote = (over: Rec = {}): Rec => ({
-    id: QUOTE_ID,
-    quote_number: 'QTE-0006',
-    name: 'Skyline Media Renewal',
-    status: 'sent',
-    crm_account: 'acc_1',
-    crm_contact: 'con_1',
-    crm_opportunity: 'opp_1',
-    total_price: 48000,
-    owner_id: 'rep_1',
-    ...over,
-  });
-
   it('names the quote the way `display_title` does', async () => {
-    const contract = await acceptQuote(acceptedQuote());
-    expect(contract.description).toBe(
-      'Auto-drafted from accepted quote QTE-0006 - Skyline Media Renewal',
-    );
-    expect(contract.description).not.toContain(QUOTE_ID);
+    const { contract, quote } = await acceptQuote();
+    expect(quote.quote_number, 'the engine issued no quote number').toMatch(/^QTE-\d+$/);
+    expect(contract.description).toBe(`Auto-drafted from accepted quote ${quote.quote_number} - Skyline Media Renewal`);
+    expect(contract.description).not.toContain(quote.id);
   });
 
-  it('is the whole provenance record, because crm_contract has no quote link', () => {
+  it('is the whole provenance record, because crm_contract has no quote link', async () => {
     // Stated as an assertion rather than a comment: unlike the task sites, there
     // is no relationship field to move the id into, so this sentence is all the
     // reader gets and its legibility is the entire contract.
-    return acceptQuote(acceptedQuote()).then((contract) => {
-      expect(Object.keys(contract)).not.toContain('crm_quote');
-      expect(contract.crm_opportunity).toBe('opp_1');
-    });
+    const { contract, opportunity } = await acceptQuote();
+    expect(Object.keys(contract)).not.toContain('crm_quote');
+    expect(contract.crm_opportunity).toBe(opportunity);
   });
 
   it('drops the separator rather than dangling it when a half is missing', async () => {
-    expect((await acceptQuote(acceptedQuote({ name: '  ' }))).description)
-      .toBe('Auto-drafted from accepted quote QTE-0006');
-    expect((await acceptQuote(acceptedQuote({ quote_number: undefined }))).description)
-      .toBe('Auto-drafted from accepted quote Skyline Media Renewal');
+    // The number half: a quote whose stored number was cleared.
+    const noNumber = await acceptQuote({ quote_number: null });
+    expect(noNumber.contract.description).toBe('Auto-drafted from accepted quote Skyline Media Renewal');
+    expect(noNumber.contract.description).not.toContain(noNumber.quote.id);
 
-    const neither = await acceptQuote(acceptedQuote({ quote_number: undefined, name: '' }));
-    expect(neither.description).toBe('Auto-drafted from an accepted quote');
-    expect(neither.description).not.toContain(QUOTE_ID);
+    // The name half cannot reach the hook: `crm_quote.name` is required, so the
+    // `QTE-… ` alone and `an accepted quote` branches defend a pre-image no
+    // write can produce. Pinned as that refusal, for the reason given above.
+    const [account] = await verify.seed('crm_account', [{ name: `Unnamed Quote Co ${++n}` }]);
+    await expect(create('crm_quote', {
+      name: '  ', crm_account: account.id, quote_date: today(), expiration_date: '2030-12-31',
+    }, manager)).rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
   });
 });
 
 describe('refusals a user reads name the record they are about', () => {
   it('the closed-opportunity freeze (opportunity_lifecycle)', async () => {
-    const err = await refusalFrom(oppLifecycle, {
-      event: 'beforeUpdate',
-      input: { id: OPP_ID, amount: 1 },
-      previous: { id: OPP_ID, name: 'Skyline Media - Platform Renewal', stage: 'closed_won', amount: 10 },
-      user: { id: 'rep_1' },
+    const account = await create('crm_account', { name: `Frozen Deal Co ${++n}` });
+    const opp = await create('crm_opportunity', {
+      name: 'Skyline Media - Platform Renewal', crm_account: account.id, stage: 'proposal',
+      amount: 10, close_date: today(),
     });
+    await update('crm_opportunity', { id: opp.id, stage: 'closed_won', win_reason: 'better_price' });
+    const err = await refusalFrom(() => update('crm_opportunity', { id: opp.id, amount: 1 }), 'opportunity_lifecycle');
     expect(err.message).toContain('Opportunity Skyline Media - Platform Renewal is closed');
-    expect(err.message).not.toContain(OPP_ID);
+    expect(err.message).not.toContain(opp.id);
   });
 
   it('the accepted-quote freeze (quote_workflow)', async () => {
-    const err = await refusalFrom(quoteWorkflow, {
-      event: 'beforeUpdate',
-      input: { id: QUOTE_ID, total_price: 1 },
-      previous: {
-        id: QUOTE_ID, quote_number: 'QTE-0006', name: 'Skyline Media Renewal',
-        status: 'accepted', total_price: 48000,
-      },
-      user: { id: 'rep_1' },
-    });
-    expect(err.message).toContain('Quote QTE-0006 - Skyline Media Renewal is accepted');
-    expect(err.message).not.toContain(QUOTE_ID);
+    const { quote } = await acceptQuote();
+    const err = await refusalFrom(
+      () => update('crm_quote', { id: quote.id, expiration_date: '2031-01-31' }, manager), 'quote_workflow',
+    );
+    expect(err.message).toContain(`Quote ${quote.quote_number} - Skyline Media Renewal is accepted`);
+    expect(err.message).not.toContain(quote.id);
   });
 
   it('the converted-lead lock (lead_automation)', async () => {
-    const err = await refusalFrom(leadAutomation, {
-      event: 'beforeUpdate',
-      input: { id: LEAD_ID, company: 'Atlas Construction Group' },
-      previous: {
-        id: LEAD_ID, is_converted: true, status: 'converted',
-        first_name: 'Mira', last_name: 'Costa', company: 'Atlas Construction',
-      },
-      user: { id: 'rep_1' },
-    });
+    // A converted lead, as the conversion leaves it — written as the system,
+    // owned by the rep who now tries to edit it.
+    const [lead] = await verify.seed('crm_lead', [{
+      first_name: 'Mira', last_name: 'Costa', company: 'Atlas Construction', email: `conv${++n}@atlas.example.com`,
+      status: 'converted', is_converted: true, owner_id: rep.id,
+    }]);
+    const err = await refusalFrom(() => update('crm_lead', { id: lead.id, company: 'Atlas Construction Group' }), 'lead_automation');
     expect(err.message).toContain('Cannot edit converted lead Mira Costa - Atlas Construction');
-    expect(err.message).not.toContain(LEAD_ID);
+    expect(err.message).not.toContain(lead.id);
   });
 
   it('the duplicate-email refusal (contact_integrity)', async () => {
@@ -312,76 +276,43 @@ describe('refusals a user reads name the record they are about', () => {
     // exists."}` — the key is on no screen in the app and cannot be pasted into
     // search, so the only actionable answer, WHOSE record holds the address,
     // was the one thing the sentence withheld.
-    const engine = makeSandboxEngine({
-      crm_contact: [{
-        id: CONTACT_ID,
-        organization_id: 'org_1',
-        first_name: 'Wei',
-        last_name: 'Zhang',
-        email: 'theo.park@skylinemedia.example.com',
-        crm_account: 'acc_1',
-      }],
-    });
-    const err = await refusalFrom(contactIntegrity, {
-      event: 'beforeInsert',
-      input: {
-        first_name: 'Dup', last_name: 'Probe', organization_id: 'org_1',
-        email: 'theo.park@skylinemedia.example.com',
-      },
-      user: { id: 'rep_1', organizationId: 'org_1' },
-      engine,
-    });
-    // `toContain`, not `toBe`: the sandbox prefixes what a body throws with
-    // `hook '<name>' threw: Error: `, so the sentence is the tail of it.
-    expect(err.message).toContain(
-      'Another contact (Wei Zhang) with email theo.park@skylinemedia.example.com already exists.',
+    const account = await create('crm_account', { name: `Duplicate Co ${++n}` });
+    const email = `theo.park${n}@skylinemedia.example.com`;
+    const existing = await create('crm_contact', { first_name: 'Wei', last_name: 'Zhang', email, crm_account: account.id });
+    const err = await refusalFrom(
+      () => create('crm_contact', { first_name: 'Dup', last_name: 'Probe', email, crm_account: account.id }),
+      'contact_integrity',
     );
-    expect(err.message).not.toContain(CONTACT_ID);
+    expect(err.message).toContain(`Another contact (Wei Zhang) with email ${email} already exists.`);
+    expect(err.message).not.toContain(existing.id);
   });
 
   it('refers to an unnamed duplicate rather than keying it', async () => {
-    const engine = makeSandboxEngine({
-      crm_contact: [{
-        id: CONTACT_ID, organization_id: 'org_1',
-        email: 'theo.park@skylinemedia.example.com',
-      }],
-    });
-    const err = await refusalFrom(contactIntegrity, {
-      event: 'beforeInsert',
-      input: {
-        first_name: 'Dup', last_name: 'Probe', organization_id: 'org_1',
-        email: 'theo.park@skylinemedia.example.com',
-      },
-      user: { id: 'rep_1', organizationId: 'org_1' },
-      engine,
-    });
-    expect(err.message).toContain(
-      'Another contact with email theo.park@skylinemedia.example.com already exists.',
-    );
-    expect(err.message).not.toContain(CONTACT_ID);
+    // A real contact always has a name: `first_name` and `last_name` are
+    // required on `crm_contact`, so the unnamed wording defends a pre-image no
+    // write can produce. Pinned as that refusal, for the reason given above.
+    const account = await create('crm_account', { name: `Unnamed Contact Co ${++n}` });
+    await expect(create('crm_contact', {
+      first_name: '', last_name: '', email: `nameless${n}@skylinemedia.example.com`, crm_account: account.id,
+    })).rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
   });
 
   it('the referenced-contact delete guard (contact_integrity)', async () => {
-    // The blocking reference is the CONTRACT one on purpose: the sandbox
-    // engine's predicate is equality-only (by design — it mirrors what the
-    // kernel does with an unrecognised key), and only the `crm_contract` count
-    // in this hook is a plain equality. The other two carry `$nin`, which that
-    // engine cannot evaluate, so seeding them would silently count zero and the
-    // guard would never fire. `hooks-runtime-sales.test.ts` drives all three
-    // against the operator-aware harness; what this case adds is the LOWERED
-    // body.
-    const engine = makeSandboxEngine({
-      crm_opportunity: [],
-      crm_quote: [],
-      crm_contract: [{ id: 'ctr_1', crm_contact: CONTACT_ID, status: 'activated' }],
-    });
-    const err = await refusalFrom(contactIntegrity, {
-      event: 'beforeDelete',
-      previous: { id: CONTACT_ID, first_name: 'Wei', last_name: 'Zhang' },
-      user: { id: 'rep_1' },
-      engine,
-    });
+    // Referenced by an ACTIVATED contract — written as the system, the state the
+    // contract lifecycle leaves it in. Deleting a contact is a manager's grant.
+    const account = await create('crm_account', { name: `Referenced Co ${++n}` }, manager);
+    const contact = await create('crm_contact', {
+      first_name: 'Wei', last_name: 'Zhang', email: `wei${n}@skylinemedia.example.com`, crm_account: account.id,
+    }, manager);
+    await verify.seed('crm_contract', [{
+      crm_account: account.id, crm_contact: contact.id, status: 'activated', contract_type: 'subscription',
+      contract_term_months: 12, start_date: '2026-01-01', end_date: '2026-12-31', contract_value: 1_000,
+    }]);
+    const err = await refusalFrom(
+      () => verify.hooks.run('crm_contact', 'delete', { id: contact.id }, { as: manager.token }), 'contact_integrity',
+    );
     expect(err.message).toContain('Contact Wei Zhang is still referenced by');
-    expect(err.message).not.toContain(CONTACT_ID);
+    expect(err.message).not.toContain(contact.id);
   });
 });
+
