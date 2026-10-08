@@ -40,7 +40,7 @@ import {
  * family so a reader lands on the guard in one hop:
  *
  *   `test/view-references.test.ts`
- *     view field references resolve · priority queues sort by urgency, not
+ *     priority queues sort by urgency, not
  *     alphabetically · filter template tokens are resolvable · row colors and
  *     kanban groups key off real option values · every canonical opportunity
  *     stage reaches the UI that enumerates stages · every named list view is
@@ -538,29 +538,9 @@ describe('page component references resolve', () => {
     ).toEqual([]);
   });
 
-  it('record:details / record:highlights / record:path only name real fields on the page object', () => {
-    const bad: string[] = [];
-    for (const page of pages) {
-      if (!page.object || !objectNames.has(page.object)) continue;
-      const known = fieldsOf(page.object);
-      for (const c of [...walk(page.regions), ...walk(page.slots)]) {
-        const named: string[] = [];
-        if (c.type === 'record:highlights') named.push(...(c.properties?.fields ?? []));
-        if (c.type === 'record:details') {
-          for (const s of c.properties?.sections ?? []) named.push(...(s.fields ?? []));
-        }
-        if (c.type === 'record:path' && c.properties?.statusField) {
-          named.push(c.properties.statusField);
-        }
-        for (const f of named) {
-          if (typeof f === 'string' && !known.includes(f)) {
-            bad.push(`${page.name} / ${c.id}: "${page.object}" has no field "${f}"`);
-          }
-        }
-      }
-    }
-    expect(bad, `dangling record-component fields:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
+  // ⚰️ RETIRED (#1583): "record:details / record:highlights / record:path only
+  // name real fields on the page object". `objectstack lint --strict` reports
+  // each as `page-field-unknown`, and `pnpm lint` fails on it.
 
   it('record:path stages are real options of the status field', () => {
     const bad: string[] = [];

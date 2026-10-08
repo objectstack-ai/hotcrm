@@ -298,8 +298,7 @@ sources resolve, and only two:
   guess at. The ones a CRM skill wants are `describe_object`, `list_objects`,
   `query_records`, `query_data`, `get_record`, `aggregate_data`,
   `search_knowledge` and `visualize_data`. From 17.0 the authoritative set is
-  exported as `PLATFORM_PROVIDED_TOOL_NAMES` from `@objectstack/spec/system`;
-  before 17.0 it is transcribed into `test/skills-integrity.test.ts`. Note
+  exported as `PLATFORM_PROVIDED_TOOL_NAMES` from `@objectstack/spec/system`. Note
   `search_knowledge` retrieves over a *declared knowledge source*, and there is
   currently nowhere in a skills-only app to declare one.
 - **`action_<name>`** — materialised from an Action that opts in with
@@ -309,8 +308,10 @@ sources resolve, and only two:
 Authoring a `defineTool` record does **not** create a third source: `ToolSchema`
 is a read-only projection for Studio discovery with no `implementation` field
 and no executor. Reasoning — scoring, drafting, forecasting — belongs in
-`instructions`, not in a tool (ADR-0109). `test/skills-integrity.test.ts`
-enforces all of this at PR time.
+`instructions`, not in a tool (ADR-0109). At PR time `pnpm lint` resolves every
+tool name (`ai-skill-tool-unresolved`), and `test/skills-integrity.test.ts`
+refuses `stack.tools` records and checks that a referenced Action is AI-exposed
+with a headless path.
 
 Note there is no `permissions` key on a skill — `SkillSchema` has no such field,
 so one is silently stripped ([#511](https://github.com/objectstack-ai/hotcrm/pull/511)).

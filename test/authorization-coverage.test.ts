@@ -264,21 +264,21 @@ describe('field-level security resolves', () => {
     ),
   );
 
-  it('every FLS key is object-qualified and names a real field', () => {
+  // ⚰️ RETIRED (#1586, #1805), two of this assertion's three branches: "every
+  // FLS key is object-qualified" and "names a real field". `objectstack lint
+  // --strict` reports a bare key as `security-fls-unqualified-key` and an
+  // unknown or empty field part as `security-fls-unknown-field`, and `pnpm lint`
+  // fails on both. The unknown-OBJECT branch stays below: lint judges an
+  // undeclared object at bind/install time by design (objectstack PR #16998),
+  // so it is silent on it.
+  it('every object-qualified FLS key names a real object', () => {
     const bad: string[] = [];
     for (const { set, key } of flsEntries) {
-      // A bare key is silently ignored at runtime (the mask never enforces).
-      if (!key.includes('.')) {
-        bad.push(`${set}: "${key}" is not object-qualified`);
-        continue;
-      }
-      const [objectName, fieldName] = key.split('.');
+      // A bare key is `security-fls-unqualified-key`'s (see above).
+      if (!key.includes('.')) continue;
+      const [objectName] = key.split('.');
       if (!objectByName.has(objectName)) {
         bad.push(`${set}: "${key}" names unknown object "${objectName}"`);
-        continue;
-      }
-      if (!fieldsOf(objectName).has(fieldName)) {
-        bad.push(`${set}: "${key}" names unknown field "${fieldName}"`);
       }
     }
     expect(bad, `dangling field permissions:\n  ${bad.join('\n  ')}`).toEqual([]);
@@ -341,15 +341,6 @@ describe('row-level security policies are enforceable', () => {
     ((ps.rowLevelSecurity ?? []) as AnyRec[]).map((policy) => ({ set: ps.name as string, policy })),
   );
 
-  /**
-   * The RLS compiler pre-resolves exactly these `current_user.*` variables; an
-   * unknown one compiles to nothing and the policy fails CLOSED — every holder
-   * of the set loses the object entirely.
-   */
-  const USER_VARS = new Set(['id', 'organization_id', 'positions', 'org_user_ids', 'email']);
-  /** Operators the CEL → FilterCondition pushdown supports. */
-  const CLAUSE = /^\s*([a-z_][a-z0-9_]*)\s*(==|!=|>=|<=|>|<|in)\s+(.+?)\s*$/;
-
   it('every policy targets an object the same set grants', () => {
     const bad = policies
       .filter(({ set, policy }) => !setsGranting(policy.object as string).includes(set))
@@ -357,51 +348,14 @@ describe('row-level security policies are enforceable', () => {
     expect(bad, `orphan RLS policies:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
-  it('every predicate is pushdownable and names real fields', () => {
-    const bad: string[] = [];
-    for (const { set, policy } of policies) {
-      const objectName = policy.object as string;
-      if (!objectByName.has(objectName)) {
-        bad.push(`${set}/${policy.name}: unknown object "${objectName}"`);
-        continue;
-      }
-      const known = fieldsOf(objectName);
-      for (const raw of [policy.using, policy.check]) {
-        if (!raw) continue;
-        for (const clause of String(raw).split(/&&|\|\|/)) {
-          const m = clause.trim().replace(/^\(+|\)+$/g, '').match(CLAUSE);
-          if (!m) {
-            bad.push(`${set}/${policy.name}: clause "${clause.trim()}" is not a pushdownable comparison`);
-            continue;
-          }
-          const [, field, , rhs] = m;
-          if (!known.has(field)) {
-            bad.push(`${set}/${policy.name}: "${objectName}" has no field "${field}"`);
-          }
-          const userRef = rhs.match(/current_user\.([a-z_]+)/);
-          if (userRef && !USER_VARS.has(userRef[1])) {
-            bad.push(`${set}/${policy.name}: current_user.${userRef[1]} is not pre-resolved — fails closed`);
-          }
-        }
-      }
-    }
-    expect(bad, `uncompilable RLS predicates (these DENY, they do not warn):\n  ${bad.join('\n  ')}`)
-      .toEqual([]);
-  });
-
-  it('the first field of a `using` predicate exists (the engine drops the policy otherwise)', () => {
-    // `extractTargetField` reads the leading `field ==|in` token; a field it
-    // cannot find on the object drops the policy and the layer denies all rows.
-    const bad: string[] = [];
-    for (const { set, policy } of policies) {
-      const target = String(policy.using ?? '').match(/^\s*([a-z_][a-z0-9_]*)\s*(?:==|=|IN|in)(?=\s|\()/);
-      if (!target) continue;
-      if (!fieldsOf(policy.object as string).has(target[1])) {
-        bad.push(`${set}/${policy.name}: leading field "${target[1]}" is not on "${policy.object}"`);
-      }
-    }
-    expect(bad, `policies the engine would drop (→ deny-all):\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
+  // ⚰️ RETIRED (#1586): "every predicate is pushdownable and names real fields"
+  // and "the first field of a `using` predicate exists". `objectstack lint
+  // --strict` reports, in `using` and in `check` alike, a non-pushdownable
+  // clause as `rls-predicate-unenforceable`, an unknown field (leading or not)
+  // as `rls-predicate-unknown-field` and an unknown `current_user.*` as
+  // `rls-predicate-unknown-user-variable`; `pnpm lint` fails on each. Lint is
+  // silent on a policy whose `object` is unknown — the assertion above, which
+  // stays, is what goes red on that.
 });
 
 describe('sharing rules and positions line up', () => {

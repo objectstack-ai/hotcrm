@@ -59,33 +59,12 @@ describe('picklist values never reach the UI unresolved', () => {
       : undefined;
   };
 
-  it('option translations are keyed by option VALUE, not by English label', () => {
-    // Opportunity `type` was keyed by label ('Existing Customer - Upgrade':
-    // '老客户升级'). The resolver matches by value, so deal type rendered in
-    // English on every non-en locale while `stage`/`status` — keyed by value —
-    // translated fine, which is exactly what made it hard to spot.
-    const bad: string[] = [];
-    for (const [locale, pack] of localePacks) {
-      for (const [objName, objT] of Object.entries<AnyRec>(pack?.objects ?? {})) {
-        const objDef = objects.find((o) => o.name === objName);
-        if (!objDef) continue; // covered by the key-resolution test below
-        for (const [fieldName, fieldT] of Object.entries<AnyRec>(objT?.fields ?? {})) {
-          if (!fieldT?.options) continue;
-          const values = selectOptionsOf(objDef, fieldName);
-          if (!values) {
-            bad.push(`${locale}: ${objName}.${fieldName} translates options but the field has none`);
-            continue;
-          }
-          for (const key of Object.keys(fieldT.options)) {
-            if (!values.includes(key)) {
-              bad.push(`${locale}: ${objName}.${fieldName} option key "${key}" is not an option value`);
-            }
-          }
-        }
-      }
-    }
-    expect(bad, `option translations that resolve to nothing:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
+  // ⚰️ RETIRED (#1585): "option translations are keyed by option VALUE, not by
+  // English label". `objectstack lint --strict` reports an option key that is
+  // not an option value (an English label included, in any locale, and options
+  // translated on a field that has none) as `translation-option-key-unknown`,
+  // and an unknown field as `translation-target-unknown`; `pnpm lint` fails on
+  // both.
 
   it('translated object and field keys name real objects and fields', () => {
     // A translation keyed to a renamed/removed field is dead weight that reads
@@ -310,11 +289,17 @@ describe('select fields are translated in every locale', () => {
  * breadcrumb in English in three of four locales, and the Sales-dashboard
  * win/loss widgets did the same.
  *
- * Nothing in CI could have caught that. `pnpm lint` runs with `--skip-i18n`,
- * and `objectstack lint` exits 0 on warnings regardless — so the i18n rules
- * that DO find these gaps are switched off in the one place that would fail a
- * PR. This suite is the only gate, which is why the assertions live here rather
- * than in a lint config.
+ * Nothing in CI caught that at the time: `pnpm lint` then ran with
+ * `--skip-i18n`, and `objectstack lint` exited 0 on warnings. Neither holds
+ * now — `pnpm lint` is `objectstack lint --strict` (#1581) and runs the
+ * `i18n/missing-*` rules — but on this artifact they report nothing: since
+ * the two-package composition (#1907) the CLI's coverage pass reads the
+ * composed top level, which carries no `translations` and no metadata
+ * (measured on 17.7.0 in #1582: a deleted `zh-CN` label is exit 0). Where the
+ * rules do run, they still do not report a missing `en` entry when the
+ * metadata carries an inline label (that label IS the `en` text), while this
+ * repo requires the explicit `en` entry (#679). This suite is the gate, which
+ * is why the assertions live here rather than in a lint config.
  *
  * This started as a zh-CN-only guard, because zh-CN was completed first ahead
  * of a customer trial while `en` / `ja-JP` / `es-ES` still carried the debt in
@@ -332,8 +317,8 @@ describe('select fields are translated in every locale', () => {
  * guard, and its absence is the lesson the rest of the file should be read
  * against. The surfaces were chosen by reading off `objectstack lint`'s warning
  * categories — missing-option / -field / -navigation / -page / -action / -view
- * / -widget / -object. There is no `_sections` category, so sections were never
- * considered, and the guard inherited the linter's blind spot while reporting
+ * / -widget / -object. There was no `_sections` category then (17.7.0 has
+ * `i18n/missing-section`), so sections were never considered, and the guard inherited the linter's blind spot while reporting
  * that every locale was complete.
  *
  * What that cost: 83 of 85 section headings were untranslated in `ja-JP` and
@@ -606,11 +591,13 @@ describe('every locale is complete on every authored surface', () => {
    *
    * Nothing mechanical could have found them:
    *
-   *  - `pnpm lint` hard-codes `--skip-i18n`. Dropping the flag does not report
-   *    these either — the run emits one line, `platform built-ins: 2298 i18n
-   *    issue(s) hidden`, because app-authored `_views` completeness is not in
-   *    the set the linter checks at all. So this is NOT the #494 family (real
-   *    warnings suppressed by a flag); it is a surface nobody was checking.
+   *  - `pnpm lint` hard-coded `--skip-i18n` then. Dropping the flag did not
+   *    report these either — the run emitted one line, `platform built-ins:
+   *    2298 i18n issue(s) hidden`, because app-authored `_views` completeness
+   *    was not in the set the linter checked at all. So this was NOT the #494
+   *    family (real warnings suppressed by a flag); it was a surface nobody was
+   *    checking. (`pnpm lint` is `--strict` today, but its `i18n/missing-*`
+   *    coverage reports nothing on this artifact — see this describe's header.)
    *  - Every gap was in `en`, and in the source locale a missing key is
    *    invisible: the resolver falls back to the metadata `label`, which is
    *    already correct English. #679 wrote this down for select options, page
@@ -750,42 +737,15 @@ describe('every locale is complete on every authored surface', () => {
    * Every other assertion in this describe walks the metadata and asks whether
    * each locale has a translation for it. That direction structurally cannot
    * see a key whose target is gone: deleting a navigation entry leaves its
-   * `apps.*.navigation` rows behind in all four bundles, and a forward check
-   * has nothing left to iterate that would ever reach them.
+   * `apps.*.navigation` rows behind in all four bundles (#1259 / PR #1261
+   * removed 15 such keys by hand).
    *
-   * The near miss this is written from: #1259 cut four navigation entries, and
-   * PR #1261 removed their `nav_pipeline` / `nav_all_tasks` /
-   * `nav_event_calendar` / `nav_event_history` keys — plus `group_approvals` —
-   * from `zh-CN`, `es-ES` and `ja-JP` BY HAND. Had that author not remembered,
-   * `pnpm verify` would have stayed fully green carrying 15 dead keys. An
-   * orphan is worse than a gap: grepping `nav_pipeline` afterwards returns
-   * three confident-looking hits in three locales, which reads as "this entry
-   * exists and is translated" — the exact wrong conclusion, and the evidence
-   * shape an agent is most likely to believe.
-   *
-   * ⚠️ What is NOT true, though the card that asked for this said it was, and
-   * it changes what this assertion is for. Measured on this tree by planting a
-   * `nav_ablation_orphan` key in all four bundles and running the real
-   * `objectstack lint --json`: the platform's `translation-target-unknown` rule
-   * DOES report a navigation orphan — one finding per locale, naming the id and
-   * printing the remedy. Orphans are not invisible. What is true is that
-   * nothing FAILS on them: the finding is a `warning`, `objectstack lint` exits
-   * 0 on warnings (13 issues / 1 warning at baseline, 21 / 9 with the orphans
-   * planted, `passed: true` both times), and `scripts/check-lint-i18n-gate.mjs`
-   * gates the `i18n/missing-*` family, which is the forward direction. The
-   * platform rule id carries no `i18n/` namespace at all, so it is outside that
-   * gate's world rather than merely unlisted in it.
-   *
-   * ⇒ This assertion is the thing that turns one orphan key red. It is also
-   * deliberately not a re-implementation of the linter: per this file's own
-   * header, every guard here walks the metadata and asks what it declares, and
-   * none of them asks a linter what it noticed.
-   *
-   * Scope is `apps.*.navigation` and stops there, per the 2026-08-25 ruling:
-   * the keyspace is flat and the nav tree is right beside it. `objects.*`,
-   * `actions.*` and the rest generalise from this shape once it is agreed —
-   * and the forward direction for navigation already gates, as
-   * `i18n/missing-navigation`, so it is not restated here.
+   * ⚰️ RETIRED (#1585): "no locale carries an apps.*.navigation entry the app
+   * does not declare". `objectstack lint --strict` reports an orphan id, and a
+   * key under an app the stack does not serve, as `translation-target-unknown`
+   * (error), and `pnpm lint` fails on it. The forward direction is lint's
+   * `i18n/missing-navigation`, which reports nothing on this artifact today
+   * (see this describe's header).
    */
 
   /**
@@ -824,11 +784,10 @@ describe('every locale is complete on every authored surface', () => {
   };
 
   it('sees a real navigation tree and an apps.*.navigation table in every locale', () => {
-    // Guards the guard. The orphan assertion below iterates two derived
-    // collections and would pass by checking nothing if `stack.apps` came back
-    // empty, if the walk stopped yielding ids (a renamed `children`), or if the
-    // bundles stopped exposing `apps` at all — which is exactly how the
-    // navigation guard in `test/action-references.test.ts` spent its life green.
+    // Written to guard the orphan sweep retired above, and not itself a retired
+    // row, so it stays: the served app tree is real (`stack.apps` non-empty, the
+    // walk still yields ids through `children`), and every locale bundle still
+    // exposes a non-empty `apps.*.navigation` table.
     const declared = declaredNavIds();
     expect(declared.size, 'no apps found in stack.apps').toBeGreaterThan(0);
     for (const [app, ids] of declared) {
@@ -847,33 +806,6 @@ describe('every locale is complete on every authored surface', () => {
         ).toBeGreaterThan(0);
       }
     }
-  });
-
-  it('no locale carries an apps.*.navigation entry the app does not declare', () => {
-    const declared = declaredNavIds();
-    const bad: string[] = [];
-    for (const [locale, pack] of packs()) {
-      for (const [app, entry] of Object.entries<AnyRec>(pack.apps ?? {})) {
-        const ids = declared.get(app);
-        for (const navId of Object.keys(entry?.navigation ?? {})) {
-          // An unknown app name is reported, never skipped: no key under it can
-          // resolve, and quietly skipping the case is the very shape — a check
-          // that is always green in the orphan direction — this card records.
-          if (ids === undefined) {
-            bad.push(`${locale}: apps.${app}.navigation.${navId} (no app "${app}" in stack.apps)`);
-          } else if (!ids.has(navId)) {
-            bad.push(`${locale}: apps.${app}.navigation.${navId}`);
-          }
-        }
-      }
-    }
-    expect(
-      bad,
-      `navigation translations naming no declared nav item:\n  ${bad.join('\n  ')}\n` +
-        'Delete the key from src/translations/<locale>/app.ts — the entry it was ' +
-        'written for is gone. Leaving it there makes a grep for the id return a ' +
-        'hit in every locale, which reads as "shipped and translated".',
-    ).toEqual([]);
   });
 
   it('every action parameter label is translated', () => {
@@ -965,48 +897,10 @@ describe('every locale is complete on every authored surface', () => {
     expect(bad, `section headings with no translation:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
-  /**
-   * The blind spot itself (#1100), asserted directly.
-   *
-   * `sectionsByObject`'s `add()` above requires a `name` before it records
-   * anything, so a `sections[]` entry that declares only a `label` is not an
-   * "untranslated section" to either test above it — it is a section neither
-   * of them can see at all. 67 of exactly that shape sat on `main` reporting
-   * zero i18n failures, because nothing walked the tree asking the question
-   * this test asks: does every section that HAS a heading also have a KEY a
-   * translation bundle could address it by?
-   *
-   * This walks the page/view tree itself (independently of `sectionsByObject`,
-   * which cannot see the failure mode being guarded against here) and fails on
-   * any `sections[]` entry carrying a `label` with no `name` alongside it —
-   * structural, not translation-completeness, so it needs no locale loop.
-   */
-  it('every section with a label carries a name — otherwise it is invisible to the i18n gate (#1100)', () => {
-    const bad: string[] = [];
-    const walk = (node: AnyRec | AnyRec[] | undefined, path: string): void => {
-      if (!node || typeof node !== 'object') return;
-      if (Array.isArray(node)) {
-        node.forEach((x, i) => walk(x, `${path}[${i}]`));
-        return;
-      }
-      for (const key of ['sections', 'properties'] as const) {
-        const arr = key === 'sections' ? node.sections : node.properties?.sections;
-        if (Array.isArray(arr)) {
-          arr.forEach((s: AnyRec, i: number) => {
-            if (s && typeof s === 'object' && s.label && !s.name) {
-              bad.push(`${path}.sections[${i}] label=${JSON.stringify(s.label)}`);
-            }
-          });
-        }
-      }
-      // `fields` is skipped for the same reason `sectionsByObject` skips it:
-      // it is a map of field definitions, not layout.
-      for (const [key, value] of Object.entries(node)) {
-        if (key !== 'fields' && value && typeof value === 'object') walk(value as AnyRec, `${path}.${key}`);
-      }
-    };
-    for (const page of pages) walk(page, `page:${page.name}`);
-    for (const view of views) walk(view, `view:${view.list?.data?.object ?? view.object ?? '?'}`);
-    expect(bad, `sections with a label but no name — invisible to every i18n gate:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
+  // ⚰️ RETIRED (#1585): "every section with a label carries a name" (#1100).
+  // `sectionsByObject` above records a section only by its `name`, so a
+  // label-only section is invisible to it; `objectstack lint --strict` reports
+  // that shape — on a view `form`, a `formViews` entry and a page
+  // `record:details` nested in tabs — as `translation-section-name-missing`,
+  // and `pnpm lint` fails on it.
 });
