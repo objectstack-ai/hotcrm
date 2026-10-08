@@ -576,8 +576,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         home_my_tasks: { label: '我的待办任务' },
         ai_briefing: {
           title: '询问 AI 助手',
-          description:
-            '从页面右侧打开助手面板，询问"我今天应该关注什么？"——它可以实时查看您的销售管道、架构与客户信息。',
           label: 'AI 助手今日速览',
         },
         upcoming_events: { title: '即将开始的活动', label: '即将开始的活动' },
