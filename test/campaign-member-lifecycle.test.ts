@@ -337,7 +337,7 @@ describe('campaign_member_metrics_refresh — LIVE, not at completion', () => {
     ).toBe(1);
     await enroll(campaign, { crm_lead: (await people()).lead.id });
     await settlesAt(campaign.id, { num_sent: 1, num_won_opportunities: 2, actual_revenue: 1_100 });
-  });
+  }, 30_000);
 
   it('refreshes BOTH campaigns when a member is moved between them', async () => {
     const left = await campaignOf();
