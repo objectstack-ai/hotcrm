@@ -91,10 +91,9 @@ const CREATOR_AUTHORABLE = new Set([
  * that exists; a field with no surface AND no answer does not belong here.
  */
 const LIFECYCLE_MAINTAINED: Record<string, { why: string; keeps: string[] }> = {
-  created_date: {
-    why: 'readonly on the object; stamped at insert',
-    keeps: ['case_timeline.startDateField'],
-  },
+  // `created_date` left this roster with the field (#1992): it had no writer,
+  // and the creation instant is the platform's `created_at`, which no form
+  // ever offered. `case_timeline` starts on it — `test/case-creation-date.test.ts`.
   first_response_date: {
     why: '`event.hook.ts` is its single writer; shown on the record page through the `sla` group (#970)',
     keeps: ['detail.details'],
@@ -304,7 +303,7 @@ describe('crm_case create form — retention direction', () => {
 
   /**
    * #1428 — `internal_notes` was the third field that left with the Resolution
-   * section, and unlike the ten above it kept NO surface: not a list column,
+   * section, and unlike the nine above it kept NO surface: not a list column,
    * not a filter, not a section on the record page. It is staff prose somebody
    * has to type, so "no human surface" was never a design, and this is the pin
    * that keeps its replacement surface from being refactored away silently.

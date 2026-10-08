@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
+import { applySystemFields } from '@objectstack/objectql';
 import stack from '../objectstack.config';
 import {
   type AnyRec,
@@ -402,8 +403,16 @@ describe('dashboard date ranges window a field the query layer can actually comp
     return [...names];
   };
 
-  const fieldType = (objectName: string, field: string): string | undefined =>
-    objects.find((o) => o.name === objectName)?.fields?.[field]?.type;
+  /**
+   * A field's type on the object AS THE PLATFORM MATERIALISES IT: `created_at`
+   * and the rest of the audit family are injected by `applySystemFields`, never
+   * listed in `fields`, and the Service dashboard windows `created_at` since
+   * #1992 retired the app's own `crm_case.created_date`.
+   */
+  const fieldType = (objectName: string, field: string): string | undefined => {
+    const obj = objects.find((o) => o.name === objectName);
+    return obj ? (applySystemFields(obj as never, { multiTenant: false }) as AnyRec).fields?.[field]?.type : undefined;
+  };
 
   it('every dashboard dateRange field exists on the objects its widgets aggregate', () => {
     // A range field that no underlying object defines is silently dropped or

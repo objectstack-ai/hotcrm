@@ -89,8 +89,17 @@ const datasets: AnyRec[] = (stack as any).datasets ?? [];
 const objects: AnyRec[] = (stack as any).objects ?? [];
 
 const datasetByName = new Map(datasets.map((d) => [d.name, d]));
-const fieldType = (objectName: string, field: string): string | undefined =>
-  objects.find((o) => o.name === objectName)?.fields?.[field]?.type;
+/**
+ * A field's type on the object AS THE PLATFORM MATERIALISES IT. The Service
+ * dashboard windows `created_at` since #1992 retired `crm_case.created_date`,
+ * and `created_at` is injected by `applySystemFields`, never listed in `fields`
+ * — reading `fields` alone would drop the dashboard out of `datetimeWindowed`
+ * and leave every test below with nothing to run.
+ */
+const fieldType = (objectName: string, field: string): string | undefined => {
+  const obj = objects.find((o) => o.name === objectName);
+  return obj ? (applySystemFields(obj as never, { multiTenant: false }) as AnyRec).fields?.[field]?.type : undefined;
+};
 
 /** Objects a dashboard's widgets aggregate over, via their datasets. */
 const objectsBehind = (d: AnyRec): string[] => {
@@ -213,7 +222,8 @@ const CASE_OBJECT = {
     is_sla_violated: { type: 'boolean' },
     resolution_time_hours: { type: 'number' },
     resolved_by_article: { type: 'text' },
-    created_date: { type: 'datetime' },
+    // No creation column here: `created_at` is the platform's, added by
+    // `applySystemFields` below exactly as it is on the real object (#1992).
   },
 } as const;
 
@@ -252,7 +262,7 @@ beforeAll(async () => {
 
   for (const row of CASE_ROWS) {
     const { offset, ...rest } = row;
-    await api.object('crm_case').insert({ ...rest, owner_id: ownerOf(row), created_date: utcNoonDaysAgo(offset).toISOString() });
+    await api.object('crm_case').insert({ ...rest, owner_id: ownerOf(row), created_at: utcNoonDaysAgo(offset).toISOString() });
   }
 
   analytics = new AnalyticsService({
@@ -297,20 +307,20 @@ describe('a datetime window compares correctly on the real SQL path', () => {
   });
 
   it('honours the $gte floor — objectstack#3912 made it match everything', async () => {
-    expect(await count({ created_date: { $gte: '{90_days_ago}' } })).toBe(within(90));
-    expect(await count({ created_date: { $gte: '{30_days_ago}' } })).toBe(within(30));
-    expect(await count({ created_date: { $gte: '{7_days_ago}' } })).toBe(within(7));
+    expect(await count({ created_at: { $gte: '{90_days_ago}' } })).toBe(within(90));
+    expect(await count({ created_at: { $gte: '{30_days_ago}' } })).toBe(within(30));
+    expect(await count({ created_at: { $gte: '{7_days_ago}' } })).toBe(within(7));
   });
 
   it('honours the $lte ceiling — objectstack#3912 made it match nothing', async () => {
     // Everything in the fixture is in the past, so `<= today` keeps all of it.
-    expect(await count({ created_date: { $lte: '{today}' } })).toBe(CASE_ROWS.length);
+    expect(await count({ created_at: { $lte: '{today}' } })).toBe(CASE_ROWS.length);
   });
 
   it('honours both bounds together — the shape that zeroed the dashboard', async () => {
-    expect(await count({ created_date: presetWindow(90) })).toBe(within(90));
-    expect(await count({ created_date: presetWindow(30) })).toBe(within(30));
-    expect(await count({ created_date: presetWindow(7) })).toBe(within(7));
+    expect(await count({ created_at: presetWindow(90) })).toBe(within(90));
+    expect(await count({ created_at: presetWindow(30) })).toBe(within(30));
+    expect(await count({ created_at: presetWindow(7) })).toBe(within(7));
   });
 
   it('keeps same-day rows under a bare-date upper bound — objectstack#3777', async () => {
@@ -325,7 +335,7 @@ describe('a datetime window compares correctly on the real SQL path', () => {
     // to do with #3777.
     const today = new Date();
     const bareDate = `${today.getUTCFullYear()}-${String(today.getUTCMonth() + 1).padStart(2, '0')}-${String(today.getUTCDate()).padStart(2, '0')}`;
-    expect(await count({ created_date: { $lte: bareDate } })).toBe(CASE_ROWS.length);
+    expect(await count({ created_at: { $lte: bareDate } })).toBe(CASE_ROWS.length);
   });
 
   it('reads `{today}` as the END of the UTC day, and `{yesterday}` as the one before', async () => {
@@ -334,8 +344,8 @@ describe('a datetime window compares correctly on the real SQL path', () => {
     // could have: end-of-UTC-day (13 and 12 — the measured behaviour),
     // midnight-UTC (12 and 12 — objectstack#3777's symptom), and a ceiling
     // resolved on some other calendar (12 and 11, the #1450 failure).
-    expect(await count({ created_date: { $lte: '{today}' } })).toBe(CASE_ROWS.length);
-    expect(await count({ created_date: { $lte: '{yesterday}' } })).toBe(CASE_ROWS.length - 1);
+    expect(await count({ created_at: { $lte: '{today}' } })).toBe(CASE_ROWS.length);
+    expect(await count({ created_at: { $lte: '{yesterday}' } })).toBe(CASE_ROWS.length - 1);
   });
 
   it('stamps the fixture on the window\'s calendar in EVERY host zone', () => {
@@ -504,10 +514,10 @@ describe('every datetime-windowed dashboard answers under its own picker', () =>
 function truthMatches(row: CaseRow, filter: AnyRec | undefined, windowDays: number | null): boolean {
   if (windowDays !== null && row.offset > windowDays) return false;
   for (const [field, cond] of Object.entries(filter ?? {})) {
-    if (field === 'created_date') {
+    if (field === 'created_at') {
       const gte = (cond as AnyRec)?.$gte;
       const m = typeof gte === 'string' ? gte.match(/^\{(\d+)_days_ago\}$/) : null;
-      if (!m) throw new Error(`truthMatches: unsupported created_date filter ${JSON.stringify(cond)}`);
+      if (!m) throw new Error(`truthMatches: unsupported created_at filter ${JSON.stringify(cond)}`);
       if (row.offset > Number(m[1])) return false;
       continue;
     }

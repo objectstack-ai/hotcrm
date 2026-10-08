@@ -201,7 +201,7 @@ const truthMatches = (row: FixtureCase, filter: AnyRec | undefined): boolean => 
       if (row.owner !== cond) return false;
       continue;
     }
-    if (field === 'created_date') {
+    if (field === 'created_at') {
       const spec = cond as AnyRec;
       for (const [op, comparand] of Object.entries(spec)) {
         const m = typeof comparand === 'string' ? comparand.match(/^\{(\d+)_days_ago\}$/) : null;
@@ -211,7 +211,7 @@ const truthMatches = (row: FixtureCase, filter: AnyRec | undefined): boolean => 
           // Every fixture row is in the past; a "<= today" ceiling keeps them all.
           continue;
         } else {
-          throw new Error(`truthMatches: unsupported created_date bound ${op}: ${JSON.stringify(comparand)}`);
+          throw new Error(`truthMatches: unsupported created_at bound ${op}: ${JSON.stringify(comparand)}`);
         }
       }
       continue;
@@ -256,7 +256,7 @@ const keyOf = (v: unknown): string => (v === null || v === undefined || v === ''
 const CASE_COLUMNS = [
   'owner_id', 'subject', 'description', 'status', 'priority', 'origin', 'type',
   'is_closed', 'is_sla_violated', 'resolution', 'resolution_time_hours',
-  'resolved_by_article', 'created_date',
+  'resolved_by_article', 'created_at',
 ];
 
 let ql: AnyRec;
@@ -294,7 +294,8 @@ beforeAll(async () => {
       is_sla_violated: row.is_sla_violated,
       resolution_time_hours: row.resolution_time_hours,
       resolved_by_article: row.resolved_by_article,
-      created_date: utcNoonDaysAgo(row.offset),
+      // The platform's creation stamp, which the dashboard range windows (#1992).
+      created_at: utcNoonDaysAgo(row.offset),
       // The app's own `resolution_required_for_closed` rule fires on these
       // inserts — a welcome sign the REAL object is under test.
       ...(row.is_closed ? { resolution: 'Resolved by the fixture.' } : {}),
@@ -577,7 +578,7 @@ describe('every filter-bound widget on the dashboard partitions the same way', (
         // widgets are compared on their totals rather than on a key format
         // this file would be pinning by accident.
         const dims = (w.dimensions ?? []) as string[];
-        if (dims.length === 1 && dimensionField(dims[0]) !== 'created_date') {
+        if (dims.length === 1 && dimensionField(dims[0]) !== 'created_at') {
           const dim = dims[0];
           const gAll = byGroup(rows.all, dim, measure);
           const gAlpha = byGroup(rows.alpha, dim, measure);
