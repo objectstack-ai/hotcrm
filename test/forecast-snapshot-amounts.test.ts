@@ -74,7 +74,7 @@ const sweep = async (who: Person) => {
 };
 
 describe('forecast_snapshot — CEL accumulators (#1984)', () => {
-  it('sums a null amount as 0 instead of failing the owner\'s sweep', async () => {
+  it('refuses a null amount at the write, so the owner\'s sweep never sums one', async () => {
     const { who, accountId } = await owner();
     // No deal carries a null amount: the engine refuses the write.
     for (const over of [

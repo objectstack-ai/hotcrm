@@ -160,7 +160,7 @@ describe('campaign_enrollment — screen action', () => {
     }
   });
 
-  it('never enrols an opted-out, converted, email-less or off-status lead', async () => {
+  it('never enrols an opted-out, converted or off-status lead, and an email-less one cannot be stored', async () => {
     const w = await world();
     await expect(emailLess('crm_lead', w), 'an email-less lead cannot exist').rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
     const enrolled = enrolledKeys(w, await enrol(w), 'crm_lead');
@@ -217,7 +217,7 @@ describe('campaign_enrollment — contacts (#597)', () => {
     }
   });
 
-  it('never enrols an opted-out, email-less or off-segment contact', async () => {
+  it('never enrols an opted-out or off-segment contact, and an email-less one cannot be stored', async () => {
     const w = await world();
     await expect(emailLess('crm_contact', w), 'an email-less contact cannot exist').rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
     const enrolled = enrolledKeys(w, await enrol(w, asContacts()), 'crm_contact');

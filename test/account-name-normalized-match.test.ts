@@ -343,19 +343,21 @@ const leadWith = async (doc: Rec): Promise<Rec> => verify.hooks.run('crm_lead', 
  * measured, both columns, so the `null` branch is reachable through a write.
  */
 const UNWRITABLE = new Set(['a whitespace-only value']);
+const WRITABLE_FOLDS = FOLDING_CASES.filter(([label]) => !UNWRITABLE.has(label));
+const UNWRITABLE_FOLDS = FOLDING_CASES.filter(([label]) => UNWRITABLE.has(label));
 
 describe('account_protection folds name into name_normalized', () => {
-  it.each(FOLDING_CASES)('folds %s', async (label, name, expected) => {
-    if (UNWRITABLE.has(label)) {
-      await expect(accountWith({ name })).rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
-      return;
-    }
+  it.each(WRITABLE_FOLDS)('folds %s', async (_label, name, expected) => {
     const stored = await accountWith({ name });
     try {
       expect(stored.name_normalized).toBe(expected);
     } finally {
       await removeAccount(stored.id);
     }
+  });
+
+  it.each(UNWRITABLE_FOLDS)('refuses %s before any fold — the name is required', async (_label, name) => {
+    await expect(accountWith({ name })).rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
   });
 
   it('re-folds on an update that rewrites the name', async () => {
@@ -394,12 +396,12 @@ describe('account_protection folds name into name_normalized', () => {
 });
 
 describe('lead_duplicate_check folds company into company_normalized', () => {
-  it.each(FOLDING_CASES)('folds %s', async (label, company, expected) => {
-    if (UNWRITABLE.has(label)) {
-      await expect(leadWith({ company })).rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
-      return;
-    }
+  it.each(WRITABLE_FOLDS)('folds %s', async (_label, company, expected) => {
     expect((await leadWith({ company })).company_normalized).toBe(expected);
+  });
+
+  it.each(UNWRITABLE_FOLDS)('refuses %s before any fold — the company is required', async (_label, company) => {
+    await expect(leadWith({ company })).rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
   });
 
   it('folds on update too, before the insert-only dedupe returns', async () => {

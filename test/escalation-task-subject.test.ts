@@ -124,7 +124,7 @@ describe('escalation task subject — on a real escalation', () => {
     expect(task.subject).toBe(`Escalated: ${kase.case_number} · Renamed in this very write`);
   });
 
-  it('drops the separator rather than dangling it when a half is missing', async () => {
+  it('drops the separator when the case number is missing, and a blank subject is refused before the hook', async () => {
     // The number half: a stored case whose number was cleared.
     const noNumber = await escalate('Login SSO failure after password reset', {}, { case_number: null });
     expect(noNumber.task.subject).toBe('Escalated: Login SSO failure after password reset');

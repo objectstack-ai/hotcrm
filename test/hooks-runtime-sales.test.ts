@@ -208,7 +208,7 @@ describe('opportunity_lifecycle', () => {
     expect((await stored('crm_opportunity', opp.id)).amount).toBe(30_000);
   });
 
-  it('leaves an unknown stage entirely alone rather than guessing', async () => {
+  it('refuses an unknown stage before the derivation could guess at it', async () => {
     // The engine refuses a stage `crm_opportunity` does not declare before any
     // hook could see it — so no unknown stage ever reaches the derivation.
     await expect(repInserts({ amount: 1_000, stage: 'not_a_stage' })).rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
@@ -472,7 +472,7 @@ describe('quote_line_item_price_fill', () => {
     expect(updated.unit_price).toBe(199);
   });
 
-  it('is a no-op when no product is chosen or the product has no price', async () => {
+  it('refuses a line with no product, and a product with no price, before the fill runs', async () => {
     // Neither shape can reach the hook: a line without a product cannot be
     // written (`crm_product` is required), and neither can a product without a
     // price (`list_price` is required) — both are the engine's refusal.
@@ -607,13 +607,29 @@ describe('account_protection', () => {
     expect(err).toMatchObject({ code: 'DELETE_RESTRICTED', dependentObject });
   };
 
-  it('allows deleting a customer account whose opportunities are all closed', async () => {
+  /**
+   * ⚠️ MEASURED DEFECT — reported as a finding on this card, pinned here so the
+   * fix is noticed. The guard counts OPEN deals only, so it lets a customer
+   * account whose deals are all closed through — and its own refusal for an
+   * open deal tells the user to "Close or reassign it first". Closing is not
+   * enough: `crm_opportunity.crm_account` is required and does not cascade, so
+   * the engine refuses the delete all the same, while any deal, closed or
+   * not, is still on the account. Measured on 17.7.0 through
+   * `DELETE /api/v1/data/crm_account/:id` as the admin: 409 with the guard's
+   * sentence for one open deal; the deal closed (`PATCH` → `closed_lost`, 200);
+   * the same DELETE → 409 `DELETE_RESTRICTED`, dependentObject
+   * `crm_opportunity`.
+   */
+  it('⚠️ a customer account whose deals are all closed still cannot be deleted (measured defect)', async () => {
     const err = await refuseDelete([]).then(() => null, (e: Error & Rec) => e);
-    expect(err, 'the delete went through despite the deals still on the account').toBeTruthy();
+    expect(
+      err,
+      'the account with only closed deals was deleted — the defect is fixed: rewrite this case to pin the delete',
+    ).toBeTruthy();
     await refusedByTheEngineNotTheGuard('crm_opportunity')(err!);
   });
 
-  it('only protects customer accounts, not prospects', async () => {
+  it('the guard only protects customer accounts — a prospect’s deal is the engine’s refusal, and a bare prospect goes', async () => {
     const acct = await accountOf({ type: 'prospect' });
     await verify.seed('crm_opportunity', [{ name: `Open ${++k}`, crm_account: acct.id, stage: 'proposal', amount: 10, close_date: '2030-06-30', owner_id: rep.id }]);
     const err = await verify.hooks.run('crm_account', 'delete', { id: acct.id }, as(admin)).then(() => null, (e: Error & Rec) => e);
@@ -650,14 +666,23 @@ describe('account_protection', () => {
     expect(err.status).toBe(409);
   });
 
-  it('lets drafts, expired and terminated contracts cascade with the account', async () => {
-    // The guard lets them through. ⚠️ Measured on 17.7.0, the delete is then
-    // refused all the same — by the engine, on the account's CONTACTS: the
-    // cascade reaches a contact while the contracts naming it as their
-    // required primary contact still exist. Reported as a finding.
+  /**
+   * ⚠️ MEASURED DEFECT — reported as a finding on this card, pinned here so the
+   * fix is noticed. The guard lets drafts, expired and terminated contracts
+   * through, and the comment above says they go with the account. Measured on
+   * 17.7.0, the delete is refused all the same — by the engine, on the
+   * account's CONTACTS: the cascade reaches a contact while the contracts
+   * naming it as their required primary contact still exist. (The fixture
+   * also carries one closed deal, so the account stays undeletable until the
+   * closed-deals case above is fixed too.)
+   */
+  it('⚠️ an account whose contracts are all draft, expired or terminated still cannot be deleted (measured defect)', async () => {
     const err = await refuseDeleteForContracts(['draft', 'in_approval', 'expired', 'terminated'])
       .then(() => null, (e: Error & Rec) => e);
-    expect(err, 'the delete went through — the cascade-order refusal is gone: pin the cascade instead').toBeTruthy();
+    expect(
+      err,
+      'the account was deleted with its settled contracts — the defect is fixed: rewrite this case to pin the cascade',
+    ).toBeTruthy();
     await refusedByTheEngineNotTheGuard('crm_contract')(err!);
   });
 
@@ -856,7 +881,7 @@ describe('contact_integrity', () => {
     expect(err!.message).not.toContain(contact.id);
   });
 
-  it('refers to an unnamed contact rather than keying it (#1243)', async () => {
+  it('cannot store an unnamed contact, so the refusal names the contact and never keys it (#1243)', async () => {
     // This used to read `Contact c1 is still referenced by …`; the guard now
     // falls back to "This contact" when the record carries no usable name. On
     // the real engine that fallback has no producer: both name fields are
@@ -872,18 +897,33 @@ describe('contact_integrity', () => {
     expect(err!.message).not.toContain(contact.id);
   });
 
-  it('allows deleting a contact whose references are all settled', async () => {
+  it('allows deleting a contact whose deals and quotes are all settled', async () => {
     // Settled deals and quotes do not hold the contact: the guard lets the
     // delete through and it lands.
     const contact = await referenced({ quote: 'rejected' });
     await expect(deleteContact(contact)).resolves.toBeDefined();
-    // A settled CONTRACT is not counted by the guard either — but the
-    // contract's primary contact is required and does not cascade, so the
-    // ENGINE refuses the delete (its envelope names the dependent object),
-    // never the guard's sentence.
+  });
+
+  /**
+   * ⚠️ MEASURED DEFECT — reported as a finding on this card, pinned here so the
+   * fix is noticed. A settled CONTRACT is not counted by the guard either, and
+   * the guard's own refusal for an active one tells the user to "Close or
+   * reassign those records first". Closing is not enough: the contract's
+   * primary contact is required and does not cascade, so the ENGINE refuses
+   * the delete (its envelope names the dependent object), never the guard's
+   * sentence. Measured on 17.7.0 through `DELETE /api/v1/data/crm_contact/:id`
+   * as the admin: 409 with the guard's sentence while the contract is
+   * activated; the contract terminated (`PATCH`, 200), then expired; the same
+   * DELETE → 409 `DELETE_RESTRICTED`, dependentObject `crm_contract`, both
+   * times.
+   */
+  it('⚠️ a contact whose only contract is expired still cannot be deleted (measured defect)', async () => {
     const underContract = await referenced({ contract: 'expired' });
     const err = await deleteContact(underContract).then(() => null, (e: Error & Rec) => e);
-    expect(err, 'a contact under a contract was deleted').toBeTruthy();
+    expect(
+      err,
+      'the contact under an expired contract was deleted — the defect is fixed: rewrite this case to pin the delete',
+    ).toBeTruthy();
     expect(err!.message).not.toMatch(/open opportunity\(ies\)|active contract\(s\)/);
     expect(err).toMatchObject({ code: 'DELETE_RESTRICTED', dependentObject: 'crm_contract' });
   });

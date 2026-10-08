@@ -243,11 +243,14 @@ describe('the shipped hook behaves the same on a real acceptance', () => {
    * These ran the lowered body in QuickJS, where `undefined` must DROP the key
    * on the way to the engine and a rejection from the engine facade must be
    * catchable inside the VM. The handle runs hooks in-process (it has no door
-   * that runs a hook's LOWERED body — reported upstream); what is asserted is
-   * the same pair on a real acceptance: the absent lookup absent from what the
-   * engine received, and a refused contract caught so the deal is still won.
+   * that runs a hook's LOWERED body — reported upstream). On a real acceptance
+   * the quote carries its contact (a contact-less quote can no longer be
+   * accepted, see the first describe), so no lookup is absent here; what is
+   * asserted is that every lookup the engine received is a record id, and a
+   * refused contract caught so the deal is still won. The omission itself is
+   * pinned above, on a quote with no opportunity.
    */
-  it('omits the absent lookup and still wins the deal when the contract refuses', async () => {
+  it('still wins the deal when the contract refuses, every lookup it wrote a record id', async () => {
     const q = await presentedQuote();
     const { doc, contract } = await accept(q, (op, object) =>
       (op === 'insert' && object === 'crm_contract' ? new Error('Primary Contact is required') : undefined));

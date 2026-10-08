@@ -290,7 +290,7 @@ describe('the write path — opportunity_lifecycle holds two acts until 立项 i
     await expect(write({ qualification_requested: true }, pending)).resolves.toBeUndefined();
   });
 
-  it('reads the verdict INPUT-FIRST, as the step-14 gate does', async () => {
+  it('judges a rep’s write carrying the readonly verdict by the stored one and refuses it; the approval’s own stamp lets the act through', async () => {
     // No real user write can carry the verdict: it is `readonly`, and the
     // engine strips it from a user payload BEFORE beforeUpdate hooks run — so
     // a rep's write that tries is judged by the STORED verdict, and refused.

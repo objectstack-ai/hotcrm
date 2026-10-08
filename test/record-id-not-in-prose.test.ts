@@ -106,7 +106,7 @@ describe('task subjects name the record, not its primary key', () => {
     expect((await followUpFor(lead.id)).subject).toBe('Follow up with qualified lead: Mira Costa - Atlas Construction Group');
   });
 
-  it('drops the half the lead does not carry rather than dangling a separator', async () => {
+  it('refuses a lead without first_name, last_name or company, so the title never has a half to drop', async () => {
     // Neither half can be missing from a real lead: `first_name`, `last_name`
     // and `company` are all required on `crm_lead`, so the title's
     // company-only and nameless branches (`…: Atlas Construction`, and the
@@ -154,7 +154,7 @@ describe('task subjects name the record, not its primary key', () => {
     expect(task.related_to_account).toBe(account.id);
   });
 
-  it('says what it can when the opportunity pre-image carried no name', async () => {
+  it('refuses an opportunity without a name, so the activation title always has one', async () => {
     // A real opportunity always carries one: `crm_opportunity.name` is
     // required, so the bare `Activate new customer` branch defends a pre-image
     // no write can produce. Pinned as that refusal, for the reason above.
@@ -220,7 +220,7 @@ describe('the drafted contract explains itself with the quote number', () => {
     expect(contract.crm_opportunity).toBe(opportunity);
   });
 
-  it('drops the separator rather than dangling it when a half is missing', async () => {
+  it('drops the separator when the quote number is missing, and a quote without a name is refused', async () => {
     // The number half: a quote whose stored number was cleared.
     const noNumber = await acceptQuote({ quote_number: null });
     expect(noNumber.contract.description).toBe('Auto-drafted from accepted quote Skyline Media Renewal');
@@ -287,7 +287,7 @@ describe('refusals a user reads name the record they are about', () => {
     expect(err.message).not.toContain(existing.id);
   });
 
-  it('refers to an unnamed duplicate rather than keying it', async () => {
+  it('refuses a contact without a name, so a duplicate is never unnamed', async () => {
     // A real contact always has a name: `first_name` and `last_name` are
     // required on `crm_contact`, so the unnamed wording defends a pre-image no
     // write can produce. Pinned as that refusal, for the reason given above.
