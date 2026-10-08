@@ -706,9 +706,11 @@ describe('campaign_lead_conversion_refresh', () => {
   it('on SQL, a converted lead’s memberships are promoted', async () => {
     const s = await store('sent', verify);
     await verify.hooks.run('crm_lead', 'update', { id: s.l1.id, is_converted: true }, as(admin));
-    await settles('crm_campaign_member', s.m1.id, (m) => expect(m.status, 'a responded member converts').toBe('converted'));
-    await settles('crm_campaign_member', s.m2.id, (m) => expect(m.status, 'a sent member converts too').toBe('converted'));
+    // The handler promotes the members before it refreshes their campaigns, so
+    // once the campaign has counted the conversion the members are settled.
     await settles('crm_campaign', s.cmp1.id, (c) => expect(c.num_converted_leads).toBe(1));
+    expect((await stored('crm_campaign_member', s.m1.id)).status, 'a responded member converts').toBe('converted');
+    expect((await stored('crm_campaign_member', s.m2.id)).status, 'a sent member converts too').toBe('converted');
     expect((await stored('crm_campaign_member', s.m3.id)).status, "another lead's membership is untouched").toBe('sent');
   });
 });
