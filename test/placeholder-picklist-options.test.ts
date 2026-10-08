@@ -1,7 +1,9 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import { type AnyRec, objects, localePacks } from './helpers/metadata-fixtures';
+import stack, { type AnyRec, localePacks } from './helpers/composed-stack';
+
+const objects: AnyRec[] = (stack as AnyRec).objects ?? [];
 
 /**
  * Placeholder picklists never ship as production metadata (#1061).

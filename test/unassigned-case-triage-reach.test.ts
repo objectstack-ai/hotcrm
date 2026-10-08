@@ -1,23 +1,11 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { ObjectKernel } from '@objectstack/core';
-import { DefaultDatasourcePlugin, AppPlugin } from '@objectstack/runtime';
-import { ObjectQLPlugin } from '@objectstack/objectql';
-import { MetadataPlugin } from '@objectstack/metadata';
-import {
-  SecurityPlugin,
-  appDefaultPermissionSetName,
-  buildContextForUser,
-} from '@objectstack/plugin-security';
-import { SharingServicePlugin } from '@objectstack/plugin-sharing';
-import { tenancyProbe } from './helpers/tenancy-probe';
-import { SysUser, SysMember, SysOrganization } from '@objectstack/platform-objects/identity';
+import { bootStack, type VerifyStack } from '@objectstack/verify';
+import { systemUpdate as systemUpdateDoor } from './helpers/verify-stack';
 import artifact from '../objectstack.config';
-import stack from './helpers/composed-stack';
 import caseHooks from '../src/service/objects/case.hook';
 import { CLAIMABLE_TARGET_STATUSES } from '../src/service/objects/_case-assignment';
-import { identityObjects } from './helpers/identity-objects';
 
 /**
  * Who really sees the `Unassigned — triage` tab's rows (#1096) — measured
@@ -111,20 +99,26 @@ const SYS = { isSystem: true } as AnyRec;
 const RULE = 'case_unassigned_triage_sharing';
 
 interface Fixture {
-  kernel: AnyRec;
-  ql: AnyRec;
+  /** The booted stack — `@objectstack/verify`'s handle on it. */
+  verify: VerifyStack;
   /** ids by fixture label. */
   id: Record<string, string>;
-  /** The `service_agent` execution context under test. */
+  /** Bearer tokens by person: `admin` (the platform admin), `agent`, `other`. */
+  token: Record<string, string>;
+  /** The `service_agent` execution context under test, as the platform resolves it. */
   agentCtx: AnyRec;
   /** The platform-admin context — the actor that can reach what the rule hides. */
   adminCtx: AnyRec;
-  /** What `agent` can see of `object`, as sorted fixture labels. */
+  /** A system-context update — no user, no session (automation's write shape). */
+  systemUpdate: (object: string, doc: AnyRec) => Promise<unknown>;
+  /** What `agent` can see of `object`, as sorted labels of THIS fixture's rows. */
   sees: (object: string) => Promise<string[]>;
-  /** Attempt an agent-context update; returns a stable outcome label. */
+  /** `sys_record_share` rows matching `where`, read as the system. */
+  shares: (where: AnyRec) => Promise<AnyRec[]>;
+  /** Attempt an agent update; returns a stable outcome label. */
   writes: (object: string, rowId: string, patch: AnyRec) => Promise<string>;
-  /** The same, under any context — the admin, or the system. */
-  writesAs: (context: AnyRec, object: string, rowId: string, patch: AnyRec) => Promise<string>;
+  /** The same, as any signed-in person — by their token. */
+  writesAs: (as: string, object: string, rowId: string, patch: AnyRec) => Promise<string>;
   /** The stored row as the driver hands it back, under a system context. */
   raw: (object: string, rowId: string) => Promise<AnyRec>;
   /**
@@ -142,67 +136,53 @@ interface Fixture {
 /**
  * Boot the shipped stack on `driver` and populate the triage fixture.
  *
- * ⚠️ ORDER IS LOad-BEARING: the ownerless cases are inserted BEFORE anyone holds
+ * The boot is the platform's: `@objectstack/verify`'s `bootStack` over the
+ * shipped artifact, with the datasource under test — the same plugins
+ * `objectstack serve` mounts for objectql, auth (whose `tenancy` service states
+ * the `single` posture the declared sharing rules are seeded under), security
+ * with the app's own default profile, and sharing. People are real sign-ups;
+ * every write and read below goes through the handle's engine doors as the
+ * person named, or as the system.
+ *
+ * The boot replays the app's seed rows, as `objectstack dev` does. Several
+ * seeded cases are ownerless and open, so the triage rule reaches them too;
+ * every reading below is therefore taken over THIS fixture's rows (`byId`),
+ * which is the population whose answer is pinned.
+ *
+ * ⚠️ ORDER IS LOAD-BEARING: the ownerless cases are inserted BEFORE anyone holds
  * the `service_agent` position, because `case_auto_assign` would otherwise
  * round-robin them onto an agent and there would be nothing ownerless left to
  * measure. That is not a trick — it is the exact first-install state #596
  * describes, where an empty pool is the norm rather than an edge case.
  */
-async function boot(driver: string, config: AnyRec): Promise<Fixture> {
-  const kernel: AnyRec = new ObjectKernel({ logger: { level: 'silent' } } as never);
-  await kernel.use(new DefaultDatasourcePlugin({ driver, config } as never));
-  await kernel.use(
-    new MetadataPlugin({ watch: false, artifactWatch: false, environmentId: 'proj_test' } as never),
-  );
-  await kernel.use(new ObjectQLPlugin({ environmentId: 'proj_test' } as never));
-  // 17.7.0 refuses an object name the registry does not hold (objectstack#21545):
-  // register the identity objects `plugin-auth` would (`test/helpers/identity-objects.ts`).
-  await kernel.use(identityObjects(SysUser, SysMember, SysOrganization) as never);
-  await kernel.use(new AppPlugin(artifact as never, undefined as never, { skipSeedData: true } as never));
-  await kernel.use(
-    new SecurityPlugin({
-      fallbackPermissionSet: appDefaultPermissionSetName((stack as AnyRec).permissions),
-    } as never),
-  );
-  // 17.2.0: declared sharing rules are only seeded once this stack states its
-  // tenancy posture — see `test/helpers/tenancy-probe.ts` for the measurement.
-  // Mounted BEFORE SharingServicePlugin, which reads the posture during its own
-  // boot.
-  await kernel.use(tenancyProbe('single') as never);
-  await kernel.use(new SharingServicePlugin());
-  await kernel.bootstrap();
-  const ql: AnyRec = kernel.getService('objectql');
-
-  // The identity objects are the platform's, not this app's, so nothing in this
-  // boot declares them and a SQL driver has no DDL to create their tables from
-  // (the in-memory driver creates one lazily on first write, which is exactly
-  // why this gap is invisible until a SQL host runs the same code). Their real
-  // schemas are imported rather than hand-mirrored — guessing the column set
-  // would pin this repo's reading of the platform instead of the platform.
-  const engine: AnyRec = kernel.getService('data');
-  const driverName: string | undefined = engine?.getDefaultDriverName?.();
-  const dataDriver: AnyRec | undefined = driverName ? engine?.getDriverByName?.(driverName) : undefined;
-  await dataDriver?.initObjects?.([SysUser, SysMember, SysOrganization] as never);
+async function boot(driver: 'memory' | 'sqlite-wasm'): Promise<Fixture> {
+  const verify = await bootStack(artifact, { databaseDriver: driver });
 
   const id: Record<string, string> = {};
+  // A system write — no user, no session: the shape the seed loader and the
+  // platform's own automation write with. `seed` is the handle's door for it.
   const insert = async (object: string, doc: AnyRec): Promise<string> => {
-    const row = await ql.insert(object, doc, { context: SYS });
-    return String(row?.id ?? row?.record?.id);
+    const [row] = await verify.seed(object, [doc]);
+    return String(row?.id);
   };
+  // The handle has no system-context UPDATE door (`seed` inserts only) — see
+  // `test/helpers/verify-stack.ts`.
+  const systemUpdate = (object: string, doc: AnyRec) => systemUpdateDoor(verify, object, doc);
 
   // ── principals ────────────────────────────────────────────────────────
-  // The FIRST human user is auto-promoted to platform admin at boot, and a
-  // platform admin bypasses every filter this file measures. Burn that
-  // promotion on a throwaway so the agent under test is an ordinary user.
-  //
-  // #1096 then gives that throwaway a second job: it is the actor that can
+  // The reach actor is the stack's own platform admin — the actor that can
   // REACH a case the sharing rule hides, which is the only way to ask
   // `case_self_claim`'s own guards a question the record-level denial has not
   // already answered. See `the closed guard is the SEAM's, not just the
-  // sharing rule's` below.
-  id.admin = await insert('sys_user', { name: 'Platform Admin', email: 'admin@triage-reach.test' });
-  id.agent = await insert('sys_user', { name: 'Triage Agent', email: 'agent@triage-reach.test' });
-  id.other = await insert('sys_user', { name: 'Other Agent', email: 'other@triage-reach.test' });
+  // sharing rule's` below. The two agents are fresh sign-ups: plain members,
+  // no roles, no grants until the pool is staffed below.
+  const token: Record<string, string> = {};
+  token.admin = await verify.signIn();
+  token.agent = await verify.signUp('agent@triage-reach.test', undefined, 'Triage Agent');
+  token.other = await verify.signUp('other@triage-reach.test', undefined, 'Other Agent');
+  for (const who of ['admin', 'agent', 'other']) {
+    id[who] = String((await verify.contextFor(token[who])).userId);
+  }
 
   // ── the ownerless population, inserted while the pool is EMPTY ─────────
   const caseDoc = (subject: string, extra: AnyRec = {}) => ({
@@ -228,11 +208,7 @@ async function boot(driver: string, config: AnyRec): Promise<Fixture> {
   // triage set for a reason that has nothing to do with the rule under test.
   // On the update there IS a previous row, so the derivation runs.
   id.unowned_closed = await insert('crm_case', caseDoc('Unowned, closed'));
-  await ql.update(
-    'crm_case',
-    { id: id.unowned_closed, status: 'closed', resolution: 'Duplicate of an earlier report.' },
-    { context: SYS },
-  );
+  await systemUpdate('crm_case', { id: id.unowned_closed, status: 'closed', resolution: 'Duplicate of an earlier report.' });
 
   // The #1145 exclusion, and the reason it needed its own row: a RESOLVED
   // ownerless case used to satisfy `is_closed == false` — the flag is derived
@@ -242,11 +218,7 @@ async function boot(driver: string, config: AnyRec): Promise<Fixture> {
   // transition, then moved on a second call so the derivation runs against a
   // previous row (same reason as `unowned_closed` above).
   id.unowned_resolved = await insert('crm_case', caseDoc('Unowned, resolved', { status: 'in_progress' }));
-  await ql.update(
-    'crm_case',
-    { id: id.unowned_resolved, status: 'resolved', resolution: 'Answered on the public thread.' },
-    { context: SYS },
-  );
+  await systemUpdate('crm_case', { id: id.unowned_resolved, status: 'resolved', resolution: 'Answered on the public thread.' });
 
   // ── the claim population (#1096's write half) ─────────────────────────
   // One row per boundary, because every claim case CONSUMES its row: a
@@ -276,8 +248,7 @@ async function boot(driver: string, config: AnyRec): Promise<Fixture> {
   for (const user of [id.agent, id.other]) {
     await insert('sys_user_position', { user_id: user, position: 'service_agent' });
   }
-  const sets = await ql.find('sys_permission_set', { where: {} }, { context: SYS });
-  const agentSet = (sets as AnyRec[]).find((s) => s.name === 'service_agent');
+  const [agentSet] = await verify.rows('sys_permission_set', { name: 'service_agent' });
   for (const user of [id.agent, id.other]) {
     // `permission_set_id` ONLY. `sys_user_permission_set` declares no bare
     // `permission_set` column, and writing both keys — which a schemaless
@@ -285,17 +256,6 @@ async function boot(driver: string, config: AnyRec): Promise<Fixture> {
     // "table sys_user_permission_set has no column named permission_set".
     await insert('sys_user_permission_set', { user_id: user, permission_set_id: agentSet?.id });
   }
-
-  // The reach actor's standing is AUTHORED, not inherited from the first-user
-  // promotion this file used to lean on. Through 17.2.0 `buildContextForUser`
-  // recomputed `hasPlatformAdminGrant` from the grant rows, so the boot's
-  // org-less promotion of the first `sys_user` was enough. 17.3.0 reads it off
-  // the resolver's own posture verdict instead (`grants.posture ===
-  // 'PLATFORM_ADMIN'`), and the walled bootstrap no longer mints that row at
-  // all — so an implicit promotion is no longer a thing a harness may assume.
-  // Granting the set outright says what this actor is FOR.
-  const adminSet = (sets as AnyRec[]).find((s) => s.name === 'admin_full_access');
-  await insert('sys_user_permission_set', { user_id: id.admin, permission_set_id: adminSet?.id });
 
   // ── the owned population ──────────────────────────────────────────────
   // `case_auto_assign` returns early when `owner_id` is already set, so these
@@ -308,8 +268,9 @@ async function boot(driver: string, config: AnyRec): Promise<Fixture> {
   );
 
   // Materialise the declared rules against the population just inserted (the
-  // boot backfill ran on an empty database).
-  const rules: AnyRec = kernel.getService('sharingRules');
+  // boot backfill ran before any of it existed). The sharing service is a
+  // kernel service the handle does not front, so it is driven directly.
+  const rules: AnyRec = verify.kernel.getService('sharingRules');
   for (const rule of [RULE, 'case_escalation_sharing', 'case_director_sharing']) {
     // Reconciling a rule the stack does not declare is tolerated HERE and
     // nowhere else, so that deleting the rule under test produces the
@@ -322,17 +283,15 @@ async function boot(driver: string, config: AnyRec): Promise<Fixture> {
     await rules.evaluateRule(rule, SYS).catch(() => undefined);
   }
 
-  const agentCtx = await buildContextForUser(ql, id.agent);
-  const adminCtx = await buildContextForUser(ql, id.admin);
+  const agentCtx = await verify.contextFor(token.agent) as AnyRec;
+  const adminCtx = await verify.contextFor(token.admin) as AnyRec;
   const byId = new Map(Object.entries(id).map(([label, value]) => [value, label]));
 
-  const rawRow = async (object: string, rowId: string): Promise<AnyRec> => {
-    const rows = await ql.find(object, { where: { id: rowId } }, { context: SYS });
-    return (Array.isArray(rows) ? rows : [])[0] ?? {};
-  };
-  const writesAs = async (context: AnyRec, object: string, rowId: string, patch: AnyRec): Promise<string> => {
+  const rawRow = async (object: string, rowId: string): Promise<AnyRec> =>
+    (await verify.rows(object, { id: rowId }))[0] ?? {};
+  const writesAs = async (as: string, object: string, rowId: string, patch: AnyRec): Promise<string> => {
     try {
-      await ql.update(object, { id: rowId, ...patch }, { context });
+      await verify.hooks.run(object, 'update', { id: rowId, ...patch }, { as });
       return 'allowed';
     } catch (error: unknown) {
       // A refusal with no class of its own is named by its code: since 17.7.0 a
@@ -344,18 +303,21 @@ async function boot(driver: string, config: AnyRec): Promise<Fixture> {
   };
 
   return {
-    kernel,
-    ql,
+    verify,
     id,
+    token,
     agentCtx,
     adminCtx,
+    systemUpdate,
     sees: async (object: string) => {
-      const rows = await ql.find(object, { where: {} }, { context: agentCtx });
-      return (Array.isArray(rows) ? rows : [])
-        .map((r: AnyRec) => byId.get(String(r.id)) ?? String(r.id))
+      const rows = await verify.rows(object, {}, { as: token.agent });
+      return rows
+        .map((r: AnyRec) => byId.get(String(r.id)))
+        .filter((label): label is string => label !== undefined)
         .sort();
     },
-    writes: (object: string, rowId: string, patch: AnyRec) => writesAs(agentCtx, object, rowId, patch),
+    shares: async (where: AnyRec) => verify.rows('sys_record_share', where),
+    writes: (object: string, rowId: string, patch: AnyRec) => writesAs(token.agent, object, rowId, patch),
     writesAs,
     raw: rawRow,
     ownerOf: async (rowId: string) => {
@@ -374,25 +336,21 @@ async function boot(driver: string, config: AnyRec): Promise<Fixture> {
  * `@objectstack/driver-sql`'s knex path, so the filter is lowered to real SQL
  * rather than evaluated in JS.
  */
-const DRIVERS: Array<{ label: string; driver: string; config: AnyRec }> = [
-  { label: 'driver-memory (sparse rows — the key is ABSENT)', driver: 'memory', config: {} },
-  {
-    label: 'sqlite-wasm (column-complete rows — the column is NULL)',
-    driver: 'sqlite-wasm',
-    config: { filename: ':memory:' },
-  },
+const DRIVERS: Array<{ label: string; driver: 'memory' | 'sqlite-wasm' }> = [
+  { label: 'driver-memory (sparse rows — the key is ABSENT)', driver: 'memory' },
+  { label: 'sqlite-wasm (column-complete rows — the column is NULL)', driver: 'sqlite-wasm' },
 ];
 
 const fixtures = new Map<string, Fixture>();
 
 beforeAll(async () => {
-  for (const { driver, config } of DRIVERS) {
-    fixtures.set(driver, await boot(driver, config));
+  for (const { driver } of DRIVERS) {
+    fixtures.set(driver, await boot(driver));
   }
 }, 240_000);
 
 afterAll(async () => {
-  for (const fixture of fixtures.values()) await fixture.kernel?.shutdown?.();
+  for (const fixture of fixtures.values()) await fixture.verify.stop();
 });
 
 describe('the two drivers really do store different shapes', () => {
@@ -429,20 +387,21 @@ for (const { label, driver } of DRIVERS) {
       const ctx = F().agentCtx;
       expect(ctx.permissions, 'the agent must carry its app profile').toContain('service_agent');
       expect(ctx.permissions).not.toContain('admin_full_access');
-      expect(ctx.hasPlatformAdminGrant).toBe(false);
+      // The platform's request-identity resolver states admin standing as the
+      // context's `posture` verdict (`PLATFORM_ADMIN` / `MEMBER`).
+      expect(ctx.posture).toBe('MEMBER');
       expect(ctx.positions).toContain('service_agent');
     });
 
     it('the rule materialised share rows, and ONLY for the unowned open cases', async () => {
-      const { ql, id } = F();
-      const shares = await ql.find(
-        'sys_record_share',
-        { where: { object_name: 'crm_case', recipient_id: id.agent } },
-        { context: SYS },
-      );
+      const { shares, id } = F();
       const byId = new Map(Object.entries(id).map(([k, v]) => [v, k]));
-      const got = (shares as AnyRec[])
-        .map((s) => `${byId.get(String(s.record_id)) ?? s.record_id}:${s.access_level}`)
+      // Over THIS fixture's cases: the boot's seed rows include ownerless open
+      // cases, which the rule reaches for the same reason and which are not
+      // the population this pin is about.
+      const got = (await shares({ object_name: 'crm_case', recipient_id: id.agent }))
+        .filter((s) => byId.has(String(s.record_id)))
+        .map((s) => `${byId.get(String(s.record_id))}:${s.access_level}`)
         .sort();
       expect(
         got,
@@ -517,7 +476,7 @@ for (const { label, driver } of DRIVERS) {
       // 🔴 If this goes green-to-red, agents have regained sight of finished
       // work — the tab's row count has stopped meaning "work waiting for a
       // human" again, which is the whole of #1145.
-      const { ql, id, sees } = F();
+      const { shares, id, sees } = F();
       // The row really is in the state under test, and really is ownerless:
       // a fixture that failed to reach `resolved` would make this pass for the
       // wrong reason.
@@ -527,13 +486,8 @@ for (const { label, driver } of DRIVERS) {
 
       expect(await sees('crm_case')).not.toContain('unowned_resolved');
 
-      const shares = await ql.find(
-        'sys_record_share',
-        { where: { object_name: 'crm_case', record_id: id.unowned_resolved } },
-        { context: SYS },
-      );
       expect(
-        (shares as AnyRec[]).length,
+        (await shares({ object_name: 'crm_case', record_id: id.unowned_resolved })).length,
         'the triage rule still grants edit on a RESOLVED ownerless case — the tightening #1145 ' +
           'ruled did not reach the seeded shares',
       ).toBe(0);
@@ -613,18 +567,13 @@ for (const { label, driver } of DRIVERS) {
       // because the agent cannot yet perform it (see the pin above) — what is
       // under test is the rule's reaction to a case acquiring an owner, not who
       // performed the write.
-      const { id, ql, kernel, sees, raw } = F();
-      await ql.update('crm_case', { id: id.unowned_critical, owner_id: id.agent }, { context: SYS });
+      const { id, verify, systemUpdate, shares, sees, raw } = F();
+      await systemUpdate('crm_case', { id: id.unowned_critical, owner_id: id.agent });
       expect(String((await raw('crm_case', id.unowned_critical)).owner_id)).toBe(id.agent);
 
-      await kernel.getService('sharingRules').evaluateRule(RULE, SYS);
-      const shares = await ql.find(
-        'sys_record_share',
-        { where: { object_name: 'crm_case', record_id: id.unowned_critical, recipient_id: id.agent } },
-        { context: SYS },
-      );
+      await verify.kernel.getService<AnyRec>('sharingRules').evaluateRule(RULE, SYS);
       expect(
-        (shares as AnyRec[]).length,
+        (await shares({ object_name: 'crm_case', record_id: id.unowned_critical, recipient_id: id.agent })).length,
         'the share survived the case acquiring an owner — the grant is no longer self-limiting, ' +
           'and a case that passed through triage stays reachable through the rule forever',
       ).toBe(0);
@@ -632,12 +581,7 @@ for (const { label, driver } of DRIVERS) {
       // …and the OTHER agent, who never owned it, loses sight of it entirely —
       // the same reconcile, from the side that proves the revocation is real
       // rather than the row merely being re-reached by its new owner.
-      const otherShares = await ql.find(
-        'sys_record_share',
-        { where: { object_name: 'crm_case', record_id: id.unowned_critical, recipient_id: id.other } },
-        { context: SYS },
-      );
-      expect((otherShares as AnyRec[]).length).toBe(0);
+      expect((await shares({ object_name: 'crm_case', record_id: id.unowned_critical, recipient_id: id.other })).length).toBe(0);
       expect(await sees('crm_case')).toContain('unowned_critical'); // now theirs, by own-scope
     });
 
@@ -729,7 +673,7 @@ for (const { label, driver } of DRIVERS) {
         // write — the agent reaches it, resolves it, and #1143's "finishing a
         // case is not picking it up" is untouched. What #1145 changes is what
         // happens NEXT: the row leaves the grant instead of staying in it.
-        const { id, ql, kernel, writes, ownerOf } = F();
+        const { id, verify, shares, writes, ownerOf } = F();
         expect(
           await writes('crm_case', id.claim_resolve, { status: 'resolved' }),
           'an agent can no longer resolve an unowned case out of triage — #1145 was supposed to ' +
@@ -744,14 +688,9 @@ for (const { label, driver } of DRIVERS) {
         // …and now the row is no longer live work, so the grant lets go of it.
         // Before #1145 it stayed shared forever, because the derived flag it
         // keyed on never flips on `resolved`.
-        await kernel.getService('sharingRules').evaluateRule(RULE, SYS);
-        const shares = await ql.find(
-          'sys_record_share',
-          { where: { object_name: 'crm_case', record_id: id.claim_resolve } },
-          { context: SYS },
-        );
+        await verify.kernel.getService<AnyRec>('sharingRules').evaluateRule(RULE, SYS);
         expect(
-          (shares as AnyRec[]).length,
+          (await shares({ object_name: 'crm_case', record_id: id.claim_resolve })).length,
           'a case an agent resolved out of triage stayed shared with every agent — the resolved ' +
             'ownerless row is back to reading as backlog',
         ).toBe(0);
@@ -778,10 +717,10 @@ for (const { label, driver } of DRIVERS) {
         // `case_self_claim` had no closed guard at all. So the same question is
         // asked by an actor that CAN reach it, with a control that differs in
         // one property only — whether the case is closed.
-        const { id, adminCtx, writesAs, ownerOf } = F();
-        expect(adminCtx.hasPlatformAdminGrant, 'the admin cannot reach the row either — this case proves nothing').toBe(true);
+        const { id, token, adminCtx, writesAs, ownerOf } = F();
+        expect(adminCtx.posture, 'the admin cannot reach the row either — this case proves nothing').toBe('PLATFORM_ADMIN');
 
-        expect(await writesAs(adminCtx, 'crm_case', id.unowned_closed, { status: 'in_progress' })).toBe('allowed');
+        expect(await writesAs(token.admin, 'crm_case', id.unowned_closed, { status: 'in_progress' })).toBe('allowed');
         expect(
           await ownerOf(id.unowned_closed),
           'the seam claimed a CLOSED case for whoever touched it — history is not backlog, and ' +
@@ -790,7 +729,7 @@ for (const { label, driver } of DRIVERS) {
 
         // The control: same actor, same payload, an OPEN case. It claims — so
         // the refusal above is about closedness and not about the caller.
-        expect(await writesAs(adminCtx, 'crm_case', id.claim_admin, { status: 'in_progress' })).toBe('allowed');
+        expect(await writesAs(token.admin, 'crm_case', id.claim_admin, { status: 'in_progress' })).toBe('allowed');
         expect(
           await ownerOf(id.claim_admin),
           'the control did not claim either, so the closed case proves nothing about the guard',
@@ -802,8 +741,8 @@ for (const { label, driver } of DRIVERS) {
         // and stay in the tab when nothing human has picked it up. A seam that
         // claimed on any write would hand the whole backlog to whichever
         // scheduled sweep touched it first.
-        const { id, ql, ownerOf } = F();
-        await ql.update('crm_case', { id: id.claim_system, status: 'in_progress' }, { context: SYS });
+        const { id, systemUpdate, ownerOf } = F();
+        await systemUpdate('crm_case', { id: id.claim_system, status: 'in_progress' });
         expect(
           await ownerOf(id.claim_system),
           'a system write claimed the case — automation is now taking ownership of the triage backlog',
@@ -819,7 +758,7 @@ for (const { label, driver } of DRIVERS) {
         //     neighbourhood has been bitten on twice.
         // (2) The claim closes the loop with the read half: the grant that let
         //     the agent see the case destroys itself the moment they take it.
-        const { id, ql, kernel, writes, ownerOf } = F();
+        const { id, verify, shares, writes, ownerOf } = F();
         expect(await ownerOf(id.claim_pickup), 'the earlier claim did not stick').toBe(id.agent);
 
         expect(await writes('crm_case', id.claim_pickup, { status: 'waiting_customer' })).toBe('allowed');
@@ -828,14 +767,9 @@ for (const { label, driver } of DRIVERS) {
           'a second worked-status move re-ran the claim — on a case with an owner, the seam must be inert',
         ).toBe(id.agent);
 
-        await kernel.getService('sharingRules').evaluateRule(RULE, SYS);
-        const shares = await ql.find(
-          'sys_record_share',
-          { where: { object_name: 'crm_case', record_id: id.claim_pickup } },
-          { context: SYS },
-        );
+        await verify.kernel.getService<AnyRec>('sharingRules').evaluateRule(RULE, SYS);
         expect(
-          (shares as AnyRec[]).length,
+          (await shares({ object_name: 'crm_case', record_id: id.claim_pickup })).length,
           'the triage share outlived the claim — a claimed case stays reachable by every other ' +
             'agent through the rule',
         ).toBe(0);

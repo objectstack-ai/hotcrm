@@ -1,9 +1,12 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
+import type { VerifyStack } from '@objectstack/verify';
 import stack from './helpers/composed-stack';
 import { AccountApprovalFlow } from '../src/sales/flows/account-approval.flow';
-import { makeFlowHarness, type Rec } from './helpers/flow-harness';
+import { hotcrmStack, conditionHolds as holdsOn } from './helpers/verify-stack';
+
+type Rec = Record<string, any>;
 
 /**
  * The account approval gate, and the thing that actually has to hold about it:
@@ -28,15 +31,14 @@ type AnyRec = Record<string, any>;
 const objects: AnyRec[] = (stack as any).objects ?? [];
 const account = objects.find((o) => o.name === 'crm_account') as AnyRec | undefined;
 
-/** Evaluate a flow condition exactly as the engine does (cf. flow-record-change). */
-function conditionHolds(condition: unknown, vars: Record<string, unknown>): boolean {
-  const h = makeFlowHarness({}, {});
-  const engine = h.engine as unknown as {
-    evaluateCondition(c: unknown, v: Map<string, unknown>): boolean;
-  };
-  const expr = typeof condition === 'string' ? { dialect: 'cel', source: condition } : condition;
-  return engine.evaluateCondition(expr, new Map(Object.entries(vars)));
-}
+/** The shipped app booted by `@objectstack/verify` — its automation service is the evaluator. */
+let verify: VerifyStack;
+beforeAll(async () => {
+  verify = await hotcrmStack();
+}, 120_000);
+
+/** Evaluate a flow condition exactly as the engine does. */
+const conditionHolds = (condition: unknown, vars: Record<string, unknown>): boolean => holdsOn(verify, condition, vars);
 
 const startCondition = (AccountApprovalFlow.nodes as Rec[])
   .find((n) => n.id === 'start')?.config?.condition;

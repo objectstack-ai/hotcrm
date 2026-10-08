@@ -1,15 +1,13 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { ObjectQL } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
-import quoteHooks from '../src/revenue/objects/quote.hook';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
+import type { VerifyStack } from '@objectstack/verify';
 import { Contract } from '../src/revenue/objects/contract.object';
 import { Quote } from '../src/revenue/objects/quote.object';
 import { PAYMENT_TERMS_OPTIONS } from '../src/sales/objects/_picklists';
-import type { HookApi } from '../src/sales/objects/_hook-api';
-import { makeHarness, makeCtx, hookNamed, type Rec } from './helpers/hook-harness';
-import { makeSandboxEngine, runHookBody } from './helpers/action-sandbox';
+import {
+  hotcrmStack, signUpPerson, recordEngineWrites, today, type Person,
+} from './helpers/verify-stack';
 
 /**
  * An accepted quote's payment terms reach the contract it drafts (#873).
@@ -42,16 +40,23 @@ import { makeSandboxEngine, runHookBody } from './helpers/action-sandbox';
  *    the change is strictly additive (the maintainer's Q2 ruling: pass through,
  *    do not invent a way to distinguish "chose net_30" from "chose nothing");
  * 3. the vocabulary really is a superset — every quote value is accepted by
- *    `crm_contract`, measured against a real ObjectQL rather than read off the
- *    two `options:` arrays;
- * 4. the shipped body does the same inside QuickJS, where `undefined` does not
- *    survive the JSON hop.
+ *    `crm_contract`, measured on the real engine rather than read off the two
+ *    `options:` arrays;
+ * 4. the same two legs again, read as the STORED contract row.
  *
- * Cases 1 and 2 are asserted twice: once on the document the hook hands the
- * engine (a harness cannot tell an omitted key from a defaulted one) and once
- * on the row a real `crm_contract` insert produces (a document cannot tell you
- * what the engine's default actually is). Neither layer alone can state the
- * claim.
+ * Every draft is a real one: the shipped app booted through
+ * `@objectstack/verify`'s handle, a sales rep presenting and accepting a quote,
+ * and the `async` hook drafting the contract through the engine. Cases 1 and 2
+ * are asserted twice: once on the document the hook handed the engine (an
+ * omitted key and a defaulted one look alike on a stored row) and once on the
+ * row the engine stored (a document cannot tell you what the engine's default
+ * actually is). Neither layer alone can state the claim.
+ *
+ * ⚠️ What a real quote can hold decides which "no terms" shapes exist: a quote
+ * inserted with no terms takes `crm_quote.payment_terms`'s own default
+ * (`net_30`), so "the quote chose nothing" is a quote whose terms were CLEARED
+ * after it was created (to `null`, or to an empty string); a non-string value
+ * is refused by the select and never reaches a quote at all.
  *
  * ⚠️ Not this file's subject: #714 — the same hook once passed boolean `false`
  * into a lookup and the whole chain died. That is the chain not running; this
@@ -62,8 +67,7 @@ import { makeSandboxEngine, runHookBody } from './helpers/action-sandbox';
 
 type AnyRec = Record<string, any>;
 
-const hook = hookNamed(quoteHooks, 'quote_on_accepted');
-const USER = { id: 'user_1' };
+type Rec = Record<string, any>;
 
 /** Every value a quote can hold, straight from the shared vocabulary. */
 const QUOTE_TERMS = PAYMENT_TERMS_OPTIONS.map((o) => o.value);
@@ -79,19 +83,70 @@ const CONTRACT_DEFAULT = 'net_30';
  * real acceptance is usually a `{ status }` patch over a quote whose terms were
  * set long before, so both sides have to be exercised.
  */
-const draftFor = async (quote: Rec, stored: Rec = {}): Promise<Rec> => {
-  const h = makeHarness({ crm_contract: [], crm_opportunity: [] });
-  await hook.handler(makeCtx({
-    event: 'afterUpdate',
-    input: { id: 'q1', status: 'accepted', total_price: 1_000, crm_account: 'acc1', crm_contact: 'con1', ...quote },
-    previous: { id: 'q1', status: 'presented', ...stored },
-    user: USER,
-    api: h.api as HookApi,
-  }));
-  const [call] = h.callsFor('crm_contract', 'insert');
-  expect(call, 'the hook drafted no contract at all').toBeTruthy();
-  return call!.args[0] as Rec;
+let verify: VerifyStack;
+let rep: Person;
+beforeAll(async () => {
+  verify = await hotcrmStack();
+  // The acceptor is a sales MANAGER. On 17.7.0 a sales rep may mark a quote
+  // Accepted (`crm_quote.allowEdit`) but holds `crm_contract.allowCreate:
+  // false`, and `quote_on_accepted` writes as the caller — so a rep's
+  // acceptance closes the deal and the engine refuses the draft, which the
+  // hook's `onError: 'log'` keeps silent. Reported as a finding; this file's
+  // subject is what the draft CARRIES, so it runs as the persona whose
+  // acceptance drafts one.
+  rep = await signUpPerson(verify, 'manager@quote-accepted-payment-terms.test', {
+    name: 'Quote Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+  });
+}, 120_000);
+
+let deal = 0;
+/**
+ * A rep presents a quote whose stored terms are `stored.payment_terms`, then
+ * accepts it in a write carrying `quote`. Returns the contract document
+ * `quote_on_accepted` handed the engine and the row the engine stored.
+ *
+ * A stored `null` / `''` is written by the rep CLEARING the terms after the
+ * quote exists — the only way a real quote holds no terms (see the header).
+ */
+const accepted = async (quote: Rec, stored: Rec = {}): Promise<{ doc: Rec; row: Rec }> => {
+  const n = ++deal;
+  const create = async (object: string, doc: Rec) =>
+    String((await verify.hooks.run(object, 'insert', doc, { as: rep.token })).id);
+  const account = await create('crm_account', { name: `Terms Co ${n}` });
+  const contact = await create('crm_contact', {
+    first_name: 'Tess', last_name: `Terms ${n}`, email: `tess${n}@payment-terms.test`, crm_account: account,
+  });
+  const { payment_terms: storedTerms, ...storedRest } = stored;
+  const cleared = 'payment_terms' in stored && (storedTerms === null || storedTerms === '');
+  const id = await create('crm_quote', {
+    name: `Terms quote ${n}`, crm_account: account, crm_contact: contact,
+    quote_date: today(), expiration_date: '2030-12-31',
+    ...storedRest, ...(cleared || storedTerms === undefined ? {} : { payment_terms: storedTerms }),
+  });
+  if (cleared) await verify.hooks.run('crm_quote', 'update', { id, payment_terms: storedTerms }, { as: rep.token });
+  for (const status of ['in_review', 'presented']) {
+    await verify.hooks.run('crm_quote', 'update', { id, status }, { as: rep.token });
+  }
+  const engine = recordEngineWrites(verify);
+  try {
+    await verify.hooks.run('crm_quote', 'update', { id, status: 'accepted', ...quote }, { as: rep.token });
+    // `quote_on_accepted` is `async: true` — it runs after the accepting write returned.
+    const insert = await vi.waitFor(() => {
+      const [call] = engine.of('crm_contract', 'insert');
+      expect(call, 'the hook drafted no contract at all').toBeTruthy();
+      return call!;
+    }, { timeout: 10_000, interval: 25 });
+    const outcome = await insert.settled;
+    expect(outcome.ok, `the engine refused the drafted contract: ${String((outcome as Rec).error)}`).toBe(true);
+    const stored_ = (await verify.rows('crm_contract', { id: ((outcome as Rec).value as Rec).id }))[0]!;
+    return { doc: insert.args[1] as Rec, row: stored_ };
+  } finally {
+    engine.restore();
+  }
 };
+
+/** The contract document the hook handed the engine. */
+const draftFor = async (quote: Rec, stored: Rec = {}): Promise<Rec> => (await accepted(quote, stored)).doc;
 
 describe('the negotiated payment terms reach the drafted contract', () => {
   it('carries `due_on_receipt` — the case the shared vocabulary was created for', async () => {
@@ -116,7 +171,7 @@ describe('the negotiated payment terms reach the drafted contract', () => {
 
 describe('a quote that chose no terms is left exactly as it is today', () => {
   it('writes NO payment_terms key at all', async () => {
-    const doc = await draftFor({}, {});
+    const doc = await draftFor({}, { payment_terms: null });
     expect(
       Object.prototype.hasOwnProperty.call(doc, 'payment_terms'),
       'payment_terms must be OMITTED so the contract’s own default applies',
@@ -126,10 +181,20 @@ describe('a quote that chose no terms is left exactly as it is today', () => {
   it.each([
     ['an empty string', ''],
     ['null', null],
-    ['a non-string', 42],
   ])('writes no key for %s either — never a junk value', async (_label, value) => {
     const doc = await draftFor({}, { payment_terms: value });
     expect(Object.prototype.hasOwnProperty.call(doc, 'payment_terms')).toBe(false);
+  });
+
+  it('a non-string never reaches a quote to be carried — the select refuses it', async () => {
+    // The third junk shape the hook guards against cannot be stored on a real
+    // quote: `crm_quote.payment_terms` is a select, and the engine refuses a
+    // number on every write, so the contract can never be handed one.
+    const [account] = await verify.seed('crm_account', [{ name: 'Junk Terms Co' }]);
+    await expect(verify.hooks.run('crm_quote', 'insert', {
+      name: 'Junk terms quote', crm_account: account.id, quote_date: today(), expiration_date: '2030-12-31',
+      payment_terms: 42,
+    }, { as: rep.token })).rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
   });
 });
 
@@ -137,100 +202,53 @@ describe('a quote that chose no terms is left exactly as it is today', () => {
 
 describe('what a real crm_contract does with those documents', () => {
   /**
-   * The harness stores whatever it is handed, so it can say the key is absent
-   * but never what absence RESOLVES to — and the claim under test is about a
-   * default. These four verdicts are measured against a real ObjectQL carrying
-   * the app's real `crm_contract` metadata, the same way #714's are.
+   * The row the engine STORED for each draft — the contract's own default
+   * applied (or not) by the engine itself, read back off the database.
    */
-  const stub = (name: string) => ({
-    name,
-    fields: { id: { type: 'text' }, name: { type: 'text' }, stage: { type: 'text' } },
-  });
-
-  let ql: AnyRec;
-  let api: AnyRec;
-
-  beforeAll(async () => {
-    ql = await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
-      objects: {
-        crm_contract: Contract as never,
-        crm_account: stub('crm_account'),
-        crm_contact: stub('crm_contact'),
-        crm_opportunity: stub('crm_opportunity'),
-        sys_user: stub('sys_user'),
-      } as never,
-    });
-    api = ql.createContext({ isSystem: true });
-  }, 60_000);
-
-  afterAll(async () => { await ql?.close(); });
-
-  const insertDraftFor = async (stored: Rec): Promise<Rec> =>
-    api.object('crm_contract').insert(await draftFor({}, stored));
-
   it('stores the negotiated term instead of the default', async () => {
-    const row = await insertDraftFor({ payment_terms: 'due_on_receipt' });
+    const { row } = await accepted({}, { payment_terms: 'due_on_receipt' });
     expect(row.payment_terms).toBe('due_on_receipt');
-    // Read back rather than trusting the insert's echo — a default applied on
-    // read would look identical on the returned row alone.
-    const read = await api.object('crm_contract').findOne({ where: { id: row.id } });
-    expect(read?.payment_terms).toBe('due_on_receipt');
   });
 
   it('falls to net_30 when the quote carried nothing — the unchanged case', async () => {
     // This is what EVERY accepted quote used to produce, and it is still what a
     // term-less one produces. Pinned so the "strictly additive" claim is a
     // measurement rather than an argument.
-    const row = await insertDraftFor({});
+    const { row } = await accepted({}, { payment_terms: null });
     expect(row.payment_terms).toBe(CONTRACT_DEFAULT);
   });
 
   it.each(QUOTE_TERMS)('accepts `%s` — the superset claim, measured', async (term) => {
-    const row = await insertDraftFor({ payment_terms: term });
+    const { row } = await accepted({}, { payment_terms: term });
     expect(row.payment_terms).toBe(term);
   });
 
   it('rejects a value outside the vocabulary, so the case above is not vacuous', async () => {
     // If the select were unenforced, "the contract accepts every quote value"
     // would be true of any string and would prove nothing about the superset.
-    const doc = { ...(await draftFor({}, {})), payment_terms: 'net_45' };
-    await expect(api.object('crm_contract').insert(doc)).rejects.toThrow(
+    const { doc } = await accepted({}, { payment_terms: null });
+    await expect(verify.seed('crm_contract', [{ ...doc, payment_terms: 'net_45' }])).rejects.toThrow(
       /Payment Terms must be one of: net_15, net_30, net_60, net_90, due_on_receipt/,
     );
   });
 });
 
-// ───────────────────────────────── the same body, inside the real sandbox ──
+// ─────────────────────────────── the same legs, read as the engine received them ──
 
-describe('the SHIPPED body behaves the same inside QuickJS', () => {
+describe('the shipped hook hands the engine the same document on a real acceptance', () => {
   /**
-   * `hook.handler(ctx)` above keeps its closure; the runtime ships a lowered,
-   * body-only source across a JSON boundary — where `undefined` does not
-   * survive at all. Both halves of this change depend on that boundary: the
-   * carried value must cross it, and the absent one must drop the key.
+   * These ran the lowered body in QuickJS, where `undefined` does not survive
+   * the JSON hop. The handle runs hooks in-process (it has no door that runs a
+   * hook's LOWERED body — reported upstream), so what is read here is the
+   * document the engine actually received on a real acceptance: the carried
+   * term present, an absent one absent.
    */
-  const acceptInSandbox = async (previous: Rec): Promise<Rec> => {
-    const sandbox = makeSandboxEngine({ crm_contract: [], crm_opportunity: [] });
-    await runHookBody(hook, {
-      event: 'afterUpdate',
-      input: { id: 'q_1', status: 'accepted', crm_account: 'acc_1', crm_contact: 'con_1', total_price: 1_000 },
-      previous: { id: 'q_1', status: 'presented', ...previous },
-      user: USER,
-      engine: sandbox,
-    });
-    const [doc] = sandbox.inserted('crm_contract');
-    expect(doc, 'the body never reached the contract insert').toBeTruthy();
-    return doc!;
-  };
-
-  it('carries due_on_receipt across the VM boundary', async () => {
-    expect((await acceptInSandbox({ payment_terms: 'due_on_receipt' })).payment_terms)
-      .toBe('due_on_receipt');
+  it('carries due_on_receipt across to the engine', async () => {
+    expect((await draftFor({}, { payment_terms: 'due_on_receipt' })).payment_terms).toBe('due_on_receipt');
   });
 
   it('sends no payment_terms key when the quote has none', async () => {
-    const doc = await acceptInSandbox({});
+    const doc = await draftFor({}, { payment_terms: null });
     expect(Object.prototype.hasOwnProperty.call(doc, 'payment_terms')).toBe(false);
   });
 });

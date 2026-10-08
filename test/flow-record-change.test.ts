@@ -1,15 +1,19 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
+import type { VerifyStack } from '@objectstack/verify';
 import { CaseEscalationFlow, CaseEscalationOnCreateFlow } from '../src/service/flows/case-escalation.flow';
 import { ContactWelcomeFlow } from '../src/sales/flows/contact-welcome.flow';
 import { LeadAssignmentFlow } from '../src/sales/flows/lead-assignment.flow';
 import {
   OpportunityApprovalFlow, OpportunityApprovalOnCreateFlow,
 } from '../src/sales/flows/opportunity-approval.flow';
-import { OpportunityWonAlertFlow } from '../src/sales/flows/opportunity-won-alert.flow';
-import { TaskUrgentAlertFlow } from '../src/sales/flows/task-urgent-alert.flow';
-import { makeFlowHarness, type Rec } from './helpers/flow-harness';
+import {
+  hotcrmStack, signUpPerson, guestInsert, systemUpdate, flowRuns, notificationsTo, runRecordFlow,
+  type Person,
+} from './helpers/verify-stack';
+
+type Rec = Record<string, any>;
 
 /**
  * Runtime tests for the RECORD-CHANGE flows.
@@ -21,220 +25,287 @@ import { makeFlowHarness, type Rec } from './helpers/flow-harness';
  * `os validate` and to the metadata-contract tests, which can only see that a
  * condition string exists.
  *
- * These execute the real engine and assert on the notification payloads and
- * record writes that come out the other side.
+ * These run on the shipped app booted by `@objectstack/verify`: a person's (or
+ * the system's) real write fires the bound flow, and what comes out the other
+ * side is read where the platform puts it — the record, the notification
+ * outbox (`notificationsTo`, one row per addressed recipient), and the run
+ * history (`flowRuns`; a flow whose start condition does not hold records no
+ * run at all). Where no write can produce the record shape a case is about,
+ * the flow is handed that record directly (`runRecordFlow`) and the case says
+ * why.
  */
 
-/** Evaluate a flow's start condition exactly as the engine does. */
-function startConditionHolds(flow: Rec, vars: Record<string, unknown>): boolean {
-  const h = makeFlowHarness({}, {});
-  const engine = h.engine as unknown as {
-    evaluateCondition(c: unknown, v: Map<string, unknown>): boolean;
-  };
-  const condition = (flow.nodes as Rec[]).find((n) => n.id === 'start')?.config?.condition;
-  // The engine wraps a string start condition into a CEL envelope before
-  // evaluating it (unlike loop-nested edge conditions — see
-  // flow-scheduled.test.ts). Mirror that here so this is the real code path.
-  const expr = typeof condition === 'string' ? { dialect: 'cel', source: condition } : condition;
-  return engine.evaluateCondition(expr, new Map(Object.entries(vars)));
-}
+let verify: VerifyStack;
+let admin: string;
+let rep: Person;
+let agent: Person;
+let accountId: string;
+let k = 0;
+beforeAll(async () => {
+  verify = await hotcrmStack();
+  admin = await verify.signIn();
+  rep = await signUpPerson(verify, 'rep@flow-record-change.test', {
+    name: 'Record Change Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+  });
+  // Service grants, but NOT on the `service_agent` rota: a case the agent
+  // opens stays the agent's (`case_auto_assign` round-robins the rota).
+  agent = await signUpPerson(verify, 'agent@flow-record-change.test', {
+    name: 'Record Change Agent', permissionSets: ['service_agent'],
+  });
+  const [account] = await verify.seed('crm_account', [{ name: 'Record Change Co', owner_id: rep.id }]);
+  accountId = String(account!.id);
+}, 120_000);
+
+const as = (who: Person) => ({ as: who.token });
+
+/** The notifications of `topic` addressed to `userId` about the record at `url`. */
+const notified = async (userId: string, topic: string, url: string) =>
+  (await notificationsTo(verify, userId, topic)).filter((n) => n.payload?.actionUrl === url);
 
 describe('opportunity_won_alert — start condition', () => {
-  const opp = (over: Rec = {}): Rec => ({
-    id: 'o1', name: 'Big Deal', stage: 'closed_won', amount: 250_000, owner_id: 'rep1', ...over,
+  /**
+   * The rep's open deal. A deal of $100K or more is seeded with its large-deal
+   * approval already landed (`approval_status: 'approved'`): a save on one
+   * still awaiting approval would open a request and lock it.
+   */
+  const deal = async (amount = 250_000): Promise<Rec> => {
+    const [opp] = await verify.seed('crm_opportunity', [{
+      name: `Big Deal ${++k}`, amount, stage: 'negotiation', close_date: '2030-06-30',
+      approval_status: amount >= 100_000 ? 'approved' : 'not_required', crm_account: accountId, owner_id: rep.id,
+    }]);
+    return opp!;
+  };
+  const close = (opp: Rec, stage: 'closed_won' | 'closed_lost') =>
+    verify.hooks.run('crm_opportunity', 'update', stage === 'closed_won'
+      ? { id: opp.id, stage, win_reason: 'better_price' }
+      : { id: opp.id, stage, loss_reason: 'competitor' }, as(rep));
+  const alerts = (opp: Rec) => notified(rep.id, 'large_deal_won', `/crm_opportunity/${opp.id}`);
+
+  it('fires on the TRANSITION into closed_won at or above $100K', async () => {
+    const opp = await deal();
+    await close(opp, 'closed_won');
+    expect(await alerts(opp)).toHaveLength(1);
   });
 
-  it('fires on the TRANSITION into closed_won at or above $100K', () => {
-    expect(startConditionHolds(OpportunityWonAlertFlow, {
-      record: opp(), previous: { stage: 'negotiation' },
-    })).toBe(true);
-  });
-
-  it('does NOT re-fire on a later edit of an already-won deal', () => {
+  it('does NOT re-fire on a later edit of an already-won deal', async () => {
     // Without the `previous.stage` guard every subsequent edit of a won deal
     // (owner claims, approval stamps, description tweaks) re-sent the blast.
-    expect(startConditionHolds(OpportunityWonAlertFlow, {
-      record: opp(), previous: { stage: 'closed_won' },
-    })).toBe(false);
+    const opp = await deal();
+    await close(opp, 'closed_won');
+    await verify.hooks.run('crm_opportunity', 'update', { id: opp.id, description: 'PO received' }, as(rep));
+    expect(await alerts(opp), 'only the close itself').toHaveLength(1);
   });
 
-  it('fires at EXACTLY the $100K threshold (#1087)', () => {
+  it('fires at EXACTLY the $100K threshold (#1087)', async () => {
     // The boundary case this flow used to miss. It cut at `>` while both
     // sharing rules cut at `>=`, so a deal at exactly $100,000 was shared with
     // leadership as a large deal and then closed without the large-deal alert.
     // Asserted against the engine, not against the condition string, because
     // the string is what the parity test reads — this is the behaviour.
-    expect(startConditionHolds(OpportunityWonAlertFlow, {
-      record: opp({ amount: 100_000 }), previous: { stage: 'negotiation' },
-    }), 'a deal at exactly $100,000 must alert on win').toBe(true);
+    const opp = await deal(100_000);
+    await close(opp, 'closed_won');
+    expect(await alerts(opp), 'a deal at exactly $100,000 must alert on win').toHaveLength(1);
   });
 
-  it('ignores deals below the $100K threshold', () => {
+  it('ignores deals below the $100K threshold', async () => {
     for (const amount of [99_999, 50_000]) {
-      expect(startConditionHolds(OpportunityWonAlertFlow, {
-        record: opp({ amount }), previous: { stage: 'negotiation' },
-      }), `amount ${amount} should not alert`).toBe(false);
+      const opp = await deal(amount);
+      await close(opp, 'closed_won');
+      expect(await alerts(opp), `amount ${amount} should not alert`).toHaveLength(0);
     }
   });
 
-  it('ignores deals that did not close won', () => {
-    expect(startConditionHolds(OpportunityWonAlertFlow, {
-      record: opp({ stage: 'closed_lost' }), previous: { stage: 'negotiation' },
-    })).toBe(false);
+  it('ignores deals that did not close won', async () => {
+    const opp = await deal();
+    await close(opp, 'closed_lost');
+    expect(await alerts(opp)).toHaveLength(0);
   });
 
   it('notifies the owner without dot-walking the manager lookup', async () => {
-    const h = makeFlowHarness({ opportunity_won_alert: OpportunityWonAlertFlow }, {});
-    await h.trigger('opportunity_won_alert', opp(), { stage: 'negotiation' });
+    const opp = await deal();
+    await close(opp, 'closed_won');
 
-    expect(h.notifications).toHaveLength(1);
-    const [alert] = h.notifications;
-    expect(alert.to).toContain('rep1');
+    const [alert, ...more] = await alerts(opp);
+    expect(more).toHaveLength(0);
+    expect(alert, 'the owner was not alerted').toBeDefined();
     // `{record.owner_id.manager}` interpolates to the literal "undefined" and the
     // message goes to a phantom user.
     expect(JSON.stringify(alert), 'a template dot-walked a lookup').not.toContain('undefined');
-    expect(String((alert.templateData as Rec).name)).toContain('Big Deal');
+    expect(String(alert!.payload.templateData.name)).toContain(opp.name);
   });
 });
 
 describe('case_escalation — start condition', () => {
-  const critical = (over: Rec = {}): Rec => ({
-    id: 'c1', case_number: 'CASE-1', priority: 'critical', status: 'new',
-    escalated_date: null, owner_id: 'agent1', ...over,
+  /** A case the agent opened and works, at `priority`. */
+  const openCase = (priority = 'medium', over: Rec = {}): Promise<Rec> =>
+    verify.hooks.run('crm_case', 'insert', {
+      subject: `Server down ${++k}`, description: 'It is down.', crm_account: accountId,
+      status: 'new', priority, ...over,
+    }, as(agent));
+  const raise = (kase: Rec) =>
+    verify.hooks.run('crm_case', 'update', { id: kase.id, priority: 'critical' }, as(agent));
+  const runs = (kase: Rec) => flowRuns(verify, 'case_escalation', kase.id);
+
+  it('fires for a fresh critical case', async () => {
+    const kase = await openCase();
+    await raise(kase);
+    expect(await runs(kase)).toHaveLength(1);
   });
 
-  it('fires for a fresh critical case', () => {
-    expect(startConditionHolds(CaseEscalationFlow, { record: critical(), previous: {} })).toBe(true);
-  });
-
-  it('does not re-fire once escalated_date is stamped', () => {
+  it('does not re-fire once escalated_date is stamped', async () => {
     // The flow's own escalation write re-triggers record-after-update. The
     // guard must NOT be the `is_escalated` boolean: on SQLite/libsql a boolean
     // persists as integer 1, so `is_escalated != true` is `1 != true` = true
     // and the flow loops forever (it wedged a first-boot seed).
-    expect(startConditionHolds(CaseEscalationFlow, {
-      record: critical({ escalated_date: '2026-01-01T00:00:00.000Z', status: 'escalated' }),
-      previous: {},
-    })).toBe(false);
+    const kase = await openCase();
+    await raise(kase);
+    const [escalated] = await verify.rows('crm_case', { id: kase.id });
+    expect(escalated!.escalated_date, 'the escalation stamped nothing').toBeTruthy();
+    await verify.hooks.run('crm_case', 'update', { id: kase.id, description: 'Still down.' }, as(agent));
+    expect(await runs(kase), 'the flow re-fired on its own write or a later edit').toHaveLength(1);
   });
 
-  it('does not re-escalate a case that is being resolved or closed', () => {
+  it('does not re-escalate a case that is being resolved or closed', async () => {
     // Observed live: close_case wrote status "closed" and this flow immediately
     // rewrote it back to "escalated".
     for (const status of ['resolved', 'closed', 'escalated']) {
-      expect(startConditionHolds(CaseEscalationFlow, {
-        record: critical({ status }), previous: {},
-      }), `status ${status} must not escalate`).toBe(false);
+      const kase = await openCase();
+      await systemUpdate(verify, 'crm_case', {
+        id: kase.id, status, ...(status === 'escalated' ? {} : { resolution: 'Fixed the cable.' }),
+      });
+      await systemUpdate(verify, 'crm_case', { id: kase.id, priority: 'critical' });
+      expect(await runs(kase), `status ${status} must not escalate`).toHaveLength(0);
     }
   });
 
-  it('ignores non-critical cases', () => {
+  it('ignores non-critical cases', async () => {
     for (const priority of ['low', 'medium', 'high']) {
-      expect(startConditionHolds(CaseEscalationFlow, {
-        record: critical({ priority }), previous: {},
-      })).toBe(false);
+      const kase = await openCase(priority);
+      await verify.hooks.run('crm_case', 'update', { id: kase.id, description: 'An edit.' }, as(agent));
+      expect(await runs(kase), `priority ${priority} must not escalate`).toHaveLength(0);
     }
   });
 
   it('flags the case with the reason its validation rule requires', async () => {
-    const h = makeFlowHarness({ case_escalation: CaseEscalationFlow }, {
-      crm_case: [critical()],
-    });
-    await h.trigger('case_escalation', critical(), {});
+    const kase = await openCase();
+    await raise(kase);
 
-    const updated = h.store.crm_case[0];
-    expect(updated.is_escalated).toBe(true);
-    expect(updated.status).toBe('escalated');
+    const [updated] = await verify.rows('crm_case', { id: kase.id });
+    expect(Boolean(updated!.is_escalated)).toBe(true);
+    expect(updated!.status).toBe('escalated');
     // `escalation_reason` must accompany `is_escalated` — the object's
     // `escalation_reason_required` validation rejects the write otherwise,
     // which silently aborted this flow until it was supplied.
-    expect(updated.escalation_reason, 'missing reason ⇒ the write is rejected').toBeTruthy();
-    expect(updated.escalated_date).toBeTruthy();
+    expect(updated!.escalation_reason, 'missing reason ⇒ the write is rejected').toBeTruthy();
+    expect(updated!.escalated_date).toBeTruthy();
   });
 
   it('creates no task of its own — the status hook owns escalation tasks', async () => {
     // A task node here produced duplicate, disagreeing tasks (case owner/high
-    // vs account owner/urgent) per escalation.
-    const h = makeFlowHarness({ case_escalation: CaseEscalationFlow }, {
-      crm_case: [critical()], crm_task: [],
-    });
-    await h.trigger('case_escalation', critical(), {});
-    expect(h.store.crm_task).toHaveLength(0);
+    // vs account owner/urgent) per escalation. On the real engine the status
+    // hook (`case_status_side_effects`) does write the escalation task, so the
+    // case ends with exactly ONE — and the flow's own run wrote none.
+    const kase = await openCase();
+    await raise(kase);
+    const [run] = await runs(kase);
+    expect(
+      (run!.summary?.nodes ?? []).filter((n: Rec) => n.nodeType === 'create_record'),
+      'case_escalation ran a create node',
+    ).toHaveLength(0);
+    const tasks = await vi.waitFor(async () => {
+      const rows = await verify.rows('crm_task', { related_to_case: kase.id });
+      expect(rows.length, 'the status hook wrote no escalation task').toBeGreaterThan(0);
+      return rows;
+    }, { timeout: 10_000, interval: 50 });
+    expect(tasks, 'more than one escalation task').toHaveLength(1);
   });
 });
 
 describe('contact_welcome — start condition', () => {
-  const contact = (over: Rec = {}): Rec => ({
-    id: 'c1', first_name: 'Ada', last_name: 'Lovelace', owner_id: 'rep1',
-    email_opt_out: false, ...over,
+  const create = (over: Rec = {}): Promise<Rec> =>
+    verify.hooks.run('crm_contact', 'insert', {
+      first_name: 'Ada', last_name: `Lovelace ${++k}`, email: `ada${k}@flow-record-change.test`,
+      crm_account: accountId, email_opt_out: false, ...over,
+    }, as(rep));
+  const prompts = (contact: Rec) => notified(rep.id, 'contact_welcome', `/crm_contact/${contact.id}`);
+
+  it('fires for an owned contact who has not opted out', async () => {
+    const contact = await create();
+    expect(await prompts(contact)).toHaveLength(1);
   });
 
-  it('fires for an owned contact who has not opted out', () => {
-    expect(startConditionHolds(ContactWelcomeFlow, { record: contact() })).toBe(true);
+  it('respects email_opt_out', async () => {
+    const contact = await create({ email_opt_out: true });
+    expect(await prompts(contact)).toHaveLength(0);
   });
 
-  it('respects email_opt_out', () => {
-    expect(startConditionHolds(ContactWelcomeFlow, {
-      record: contact({ email_opt_out: true }),
-    })).toBe(false);
-  });
-
-  it('skips ownerless contacts (nobody to prompt)', () => {
-    expect(startConditionHolds(ContactWelcomeFlow, {
-      record: contact({ owner_id: null }),
-    })).toBe(false);
+  it('skips ownerless contacts (nobody to prompt)', async () => {
+    // No write produces one: a person's insert that leaves `owner_id` empty is
+    // stamped with its creator. So the flow is handed the ownerless record
+    // itself, and the engine answers with its own verdict on the start
+    // condition.
+    const stamped = await create({ owner_id: null });
+    expect(stamped.owner_id, 'a person’s ownerless contact was left ownerless').toBe(rep.id);
+    const result = await runRecordFlow(verify, 'contact_welcome', 'crm_contact', {
+      id: `ownerless_${++k}`, first_name: 'Ada', last_name: 'Lovelace', owner_id: null, email_opt_out: false,
+    });
+    expect(result.output).toEqual({ skipped: true, reason: 'condition_not_met' });
   });
 
   it('addresses the prompt to the owner with a resolved name', async () => {
-    const h = makeFlowHarness({ contact_welcome: ContactWelcomeFlow }, {});
-    await h.trigger('contact_welcome', contact());
-
-    expect(h.notifications).toHaveLength(1);
-    const [alert] = h.notifications;
-    expect(alert.to).toContain('rep1');
-    expect(String((alert.templateData as Rec).first_name)).toContain('Ada');
-    expect(String((alert.templateData as Rec).last_name)).toContain('Lovelace');
+    const contact = await create({ last_name: 'Lovelace' });
+    const [prompt, ...more] = await prompts(contact);
+    expect(more).toHaveLength(0);
+    expect(prompt, 'the owner was not prompted').toBeDefined();
+    expect(String(prompt!.payload.templateData.first_name)).toContain('Ada');
+    expect(String(prompt!.payload.templateData.last_name)).toContain('Lovelace');
   });
 });
 
 describe('task_urgent_alert — start condition', () => {
-  const task = (over: Rec = {}): Rec => ({
-    id: 't1', subject: 'Fix outage', priority: 'urgent', status: 'not_started',
-    owner_id: 'rep1', ...over,
+  const create = (over: Rec = {}): Promise<Rec> =>
+    verify.hooks.run('crm_task', 'insert', {
+      subject: `Fix outage ${++k}`, priority: 'urgent', status: 'not_started', ...over,
+    }, as(rep));
+  const alerts = (task: Rec) => notified(rep.id, 'urgent_task', `/crm_task/${task.id}`);
+
+  it('fires for a new urgent, incomplete task', async () => {
+    const task = await create();
+    expect(await alerts(task)).toHaveLength(1);
   });
 
-  it('fires for a new urgent, incomplete task', () => {
-    expect(startConditionHolds(TaskUrgentAlertFlow, { record: task() })).toBe(true);
-  });
-
-  it('gates on the status enum, not the is_completed boolean', () => {
+  it('gates on the status enum, not the is_completed boolean', async () => {
     // On SQLite/libsql booleans persist as integer 1, so `is_completed != true`
     // is `1 != true` = always true and the guard never trips.
-    expect(startConditionHolds(TaskUrgentAlertFlow, {
-      record: task({ status: 'completed', is_completed: 1 }),
-    })).toBe(false);
+    const task = await create({ status: 'completed' });
+    expect(Boolean(task.is_completed), 'the completed task is not flagged completed').toBe(true);
+    expect(await alerts(task)).toHaveLength(0);
   });
 
-  it('ignores non-urgent tasks', () => {
+  it('ignores non-urgent tasks', async () => {
     for (const priority of ['low', 'normal', 'high']) {
-      expect(startConditionHolds(TaskUrgentAlertFlow, { record: task({ priority }) })).toBe(false);
+      const task = await create({ priority });
+      expect(await alerts(task), `priority ${priority} must not alert`).toHaveLength(0);
     }
   });
 
   it('alerts the owner at warning severity', async () => {
-    const h = makeFlowHarness({ task_urgent_alert: TaskUrgentAlertFlow }, {});
-    await h.trigger('task_urgent_alert', task());
-    expect(h.notifications).toHaveLength(1);
-    expect(h.notifications[0].to).toContain('rep1');
-    expect(h.notifications[0].severity).toBe('warning');
-    expect(String((h.notifications[0].templateData as Rec).subject)).toContain('Fix outage');
+    const task = await create({ subject: 'Fix outage' });
+    const [alert, ...more] = await alerts(task);
+    expect(more).toHaveLength(0);
+    expect(alert, 'the owner was not alerted').toBeDefined();
+    expect(alert!.payload.severity).toBe('warning');
+    expect(String(alert!.payload.templateData.subject)).toContain('Fix outage');
   });
 });
 
 describe('lead_assignment — hot-lead SLA routing', () => {
-  const lead = (over: Rec = {}): Rec => ({
-    id: 'l1', company: 'Acme', rating: 5, owner_id: 'rep1', ...over,
-  });
+  const create = (rating: number): Promise<Rec> =>
+    verify.hooks.run('crm_lead', 'insert', {
+      first_name: 'Ada', last_name: `Lead ${++k}`, company: `Acme ${k}`,
+      email: `lead${k}@flow-record-change.test`, rating,
+    }, as(rep));
+  const alerts = (lead: Rec) => notified(rep.id, 'lead_routing', `/crm_lead/${lead.id}`);
 
   /**
    * Both branch guards assert the population this flow actually writes.
@@ -257,22 +328,21 @@ describe('lead_assignment — hot-lead SLA routing', () => {
    * GREEN — the seeded row alone satisfied it while the alert was gone.
    */
   it('routes a hot lead (rating ≥ 4) down the accelerated SLA branch', async () => {
-    const h = makeFlowHarness({ lead_assignment: LeadAssignmentFlow }, { crm_task: [] });
-    await h.trigger('lead_assignment', lead({ rating: 5 }));
-    expect(h.notifications.length, 'hot lead produced no follow-up alert').toBeGreaterThan(0);
+    const lead = await create(5);
+    expect((await alerts(lead)).length, 'hot lead produced no follow-up alert').toBeGreaterThan(0);
   });
 
   it('routes a cold lead down the standard branch', async () => {
-    const h = makeFlowHarness({ lead_assignment: LeadAssignmentFlow }, { crm_task: [] });
-    await h.trigger('lead_assignment', lead({ rating: 1 }));
-    expect(h.notifications.length, 'cold lead produced no follow-up alert').toBeGreaterThan(0);
+    const lead = await create(1);
+    expect((await alerts(lead)).length, 'cold lead produced no follow-up alert').toBeGreaterThan(0);
   });
 
   it('renders both SLA branch alerts with no field left as the literal "undefined"', async () => {
     for (const rating of [5, 1]) {
-      const h = makeFlowHarness({ lead_assignment: LeadAssignmentFlow }, { crm_task: [] });
-      await h.trigger('lead_assignment', lead({ rating }));
-      for (const n of h.notifications) {
+      const lead = await create(rating);
+      const sent = await alerts(lead);
+      expect(sent.length, `rating ${rating} sent nothing`).toBeGreaterThan(0);
+      for (const n of sent) {
         expect(JSON.stringify(n), `rating ${rating} notification dot-walked a lookup`)
           .not.toContain('undefined');
       }
@@ -301,15 +371,20 @@ describe('opportunity_approval — start condition', () => {
     ).toBe(true);
   });
 
-  it('does not re-enter for an opportunity already pending approval', () => {
+  it('does not re-enter for an opportunity already pending approval', async () => {
     // The flow writes `approval_status`, which re-triggers record-after-update;
     // without a guard it re-enters for the same record (the engine logs
-    // "flow re-entered for the same record while still running").
-    const pending = {
-      record: { id: 'o1', amount: 750_000, approval_status: 'pending', stage: 'negotiation' },
-      previous: { id: 'o1', amount: 750_000, approval_status: 'pending', stage: 'negotiation' },
-    };
-    expect(startConditionHolds(OpportunityApprovalFlow, pending)).toBe(false);
+    // "flow re-entered for the same record while still running"). A large
+    // deal the rep creates enters approval on insert, and the pending stamp
+    // that write lands must not open a second request through the update gate.
+    const opp = await verify.hooks.run('crm_opportunity', 'insert', {
+      name: `Pending Deal ${++k}`, amount: 750_000, stage: 'negotiation', close_date: '2030-06-30',
+      crm_account: accountId,
+    }, as(rep));
+    const [stored] = await verify.rows('crm_opportunity', { id: opp.id });
+    expect(stored!.approval_status).toBe('pending');
+    expect(await flowRuns(verify, 'opportunity_approval_on_create', opp.id)).toHaveLength(1);
+    expect(await flowRuns(verify, 'opportunity_approval', opp.id), 'the update gate re-entered').toHaveLength(0);
   });
 
   describe('the large-deal line is inclusive (#1087)', () => {
@@ -318,25 +393,36 @@ describe('opportunity_approval — start condition', () => {
     // string; this asserts what that operator DOES, on both the update gate and
     // its insert twin — a deal born at exactly $100,000 has to enter approval
     // for the same reason one edited up to it does.
-    const openDeal = (amount: number): Record<string, unknown> => ({
-      record: { id: 'o1', amount, approval_status: 'not_required', stage: 'negotiation' },
-      previous: { id: 'o1', amount, approval_status: 'not_required', stage: 'negotiation' },
-    });
-
+    /** A rep's open deal at `amount`: edited up to it (update gate) or born at it (insert twin). */
     const GATES = [
-      ['afterUpdate gate', OpportunityApprovalFlow],
-      ['afterInsert twin', OpportunityApprovalOnCreateFlow],
+      ['afterUpdate gate', 'opportunity_approval', async (amount: number) => {
+        const [opp] = await verify.seed('crm_opportunity', [{
+          name: `Edited Deal ${++k}`, amount: 50_000, stage: 'negotiation', close_date: '2030-06-30',
+          crm_account: accountId, owner_id: rep.id,
+        }]);
+        await verify.hooks.run('crm_opportunity', 'update', { id: opp!.id, amount }, as(rep));
+        return String(opp!.id);
+      }],
+      ['afterInsert twin', 'opportunity_approval_on_create', async (amount: number) => String((
+        await verify.hooks.run('crm_opportunity', 'insert', {
+          name: `Born Deal ${++k}`, amount, stage: 'negotiation', close_date: '2030-06-30', crm_account: accountId,
+        }, as(rep))
+      ).id)],
     ] as const;
 
     // No `$` in these titles: vitest reads `$name` in an `it.each` template as
     // an object-property interpolation, so `$100,000` renders as
     // "undefined,000" and the failure names an amount nobody wrote.
-    it.each(GATES)('%s routes a deal at EXACTLY 100,000 for approval', (_label, flow) => {
-      expect(startConditionHolds(flow as unknown as Rec, openDeal(100_000))).toBe(true);
+    it.each(GATES)('%s routes a deal at EXACTLY 100,000 for approval', async (_label, flow, write) => {
+      const id = await write(100_000);
+      expect(await flowRuns(verify, flow, id)).toHaveLength(1);
+      const [stored] = await verify.rows('crm_opportunity', { id });
+      expect(stored!.approval_status).toBe('pending');
     });
 
-    it.each(GATES)('%s leaves 99,999 alone', (_label, flow) => {
-      expect(startConditionHolds(flow as unknown as Rec, openDeal(99_999))).toBe(false);
+    it.each(GATES)('%s leaves 99,999 alone', async (_label, flow, write) => {
+      const id = await write(99_999);
+      expect(await flowRuns(verify, flow, id)).toHaveLength(0);
     });
   });
 });
@@ -392,28 +478,29 @@ describe('insert-time twin flows', () => {
   });
 
   it('case_escalation_on_create escalates a case born critical', async () => {
-    const born = {
-      id: 'c9', case_number: 'CASE-9', priority: 'critical', status: 'new',
-      escalated_date: null, owner_id: 'agent1',
-    };
-    const h = makeFlowHarness({ case_escalation_on_create: CaseEscalationOnCreateFlow }, {
-      crm_case: [{ ...born }],
-    });
-    await h.trigger('case_escalation_on_create', born);
+    const born = await verify.hooks.run('crm_case', 'insert', {
+      subject: `Born critical ${++k}`, description: 'Phoned in as a P1.', crm_account: accountId,
+      status: 'new', priority: 'critical',
+    }, as(agent));
 
-    const updated = h.store.crm_case[0];
-    expect(updated.is_escalated, 'a case born critical was never escalated').toBe(true);
-    expect(updated.status).toBe('escalated');
-    expect(updated.escalation_reason).toBeTruthy();
+    const [updated] = await verify.rows('crm_case', { id: born.id });
+    expect(Boolean(updated!.is_escalated), 'a case born critical was never escalated').toBe(true);
+    expect(updated!.status).toBe('escalated');
+    expect(updated!.escalation_reason).toBeTruthy();
   });
 
-  it('opportunity_approval_on_create declares the same gate as its parent', () => {
+  it('opportunity_approval_on_create declares the same gate as its parent', async () => {
+    // A deal cannot be BORN pending — an insert's `approval_status` is
+    // stamped by the platform, not taken from the caller — so both flows are
+    // handed the pending record itself, and the engine's verdict on the start
+    // condition must be the same for the twin as for its parent.
     const pending = {
-      record: { id: 'o1', amount: 750_000, approval_status: 'pending', stage: 'negotiation' },
-      previous: { id: 'o1', amount: 750_000, approval_status: 'pending', stage: 'negotiation' },
+      id: `pending_${++k}`, amount: 750_000, approval_status: 'pending', stage: 'negotiation', owner_id: rep.id,
     };
-    expect(startConditionHolds(OpportunityApprovalOnCreateFlow as unknown as Rec, pending))
-      .toBe(startConditionHolds(OpportunityApprovalFlow as unknown as Rec, pending));
+    const parent = await runRecordFlow(verify, 'opportunity_approval', 'crm_opportunity', pending);
+    const twin = await runRecordFlow(verify, 'opportunity_approval_on_create', 'crm_opportunity', pending);
+    expect(parent.output).toEqual({ skipped: true, reason: 'condition_not_met' });
+    expect(twin.output).toEqual(parent.output);
   });
 });
 
@@ -423,71 +510,70 @@ describe('insert-time twin flows', () => {
  * The metadata side of this invariant — every record-change flow declares
  * `runAs: 'system'` — lives in `actions-flows-integrity.test.ts`, enumerated
  * from the compiled stack so a new flow cannot slip past it. What that guard
- * cannot show is WHY, so these run the real engine on the real flows with no
- * trigger user and assert on what comes out.
- *
- * `makeFlowHarness().trigger()` always supplies `userId: 'user_1'`, which is
- * exactly the healthy path the 17.0 acceptance sweep found working. The broken
- * path is the other one, so these call `engine.execute` directly and omit
- * `userId` — the shape of a write made by seed loading, an integration, or
- * another `runAs:'system'` flow.
+ * cannot show is WHY, so these run the real flows off a write that carries
+ * NO trigger user — a system write (the seed loader, an integration, another
+ * `runAs:'system'` flow) or a guest web-to-lead submission — and assert on
+ * what comes out.
  *
  * Direction of the counter-proof, decided before running it: with `runAs`
  * stripped back to the schema default the run must FAIL at its first data node
- * with the engine's `[runAs]` refusal, and the record must be untouched. That
- * is the pre-fix behaviour reproduced on demand — not a hypothetical — so the
- * assertions below cannot pass vacuously by producing nothing.
+ * with the engine's `[runAs]` refusal, and the record must be untouched. On
+ * 17.7.0 two of the three flows do not even get that far: the platform's
+ * flow-authoring door refuses the `runAs`-less variant outright, because its
+ * update node writes `readonly` fields that a `runAs: 'user'` run would have
+ * silently stripped (`flow-update-readonly-field`). The third registers, and
+ * is run user-less on a stored record (`runRecordFlow` — the trigger hands it
+ * no user), and refuses as predicted.
  */
 describe('record-change flows under a user-less trigger (#684)', () => {
-  type Run = { success: boolean; error?: string; summary?: { nodes?: Rec[] } };
-
-  /** Fire `flow` with NO trigger user, the way a system write does. */
-  async function fire(name: string, flow: Rec, record: Rec, previous: Rec, seed: Record<string, Rec[]> = {}) {
-    const h = makeFlowHarness({ [name]: flow as never }, seed);
-    const result = (await (h.engine as unknown as {
-      execute(n: string, c: Rec): Promise<Run>;
-    }).execute(name, { params: {}, event: 'record_change', record, previous })) as Run;
-    return { h, result };
-  }
-
-  const nodeStatus = (r: Run, id: string) =>
-    (r.summary?.nodes ?? []).find((n) => n.nodeId === id)?.status;
-
   /** The flow as it was authored before #684: `runAs` back at its default. */
   const withoutRunAs = (flow: Rec): Rec => {
     const { runAs: _dropped, ...rest } = flow;
     return rest;
   };
 
-  const critical = (over: Rec = {}): Rec => ({
-    id: 'c1', case_number: 'CASE-1', priority: 'critical', status: 'new',
-    escalated_date: null, owner_id: 'agent1', ...over,
-  });
+  /** Register `flow` under `name` through the authoring door; the response. */
+  const register = (name: string, flow: Rec) => verify.apiAs(admin, 'POST', '/automation', { ...flow, name });
+
+  /** Register `flow` under `name` for the duration of `body` (it must register). */
+  const withFlow = async <T>(name: string, flow: Rec, body: () => Promise<T>): Promise<T> => {
+    const registered = await register(name, flow);
+    expect(registered.status, await registered.clone().text()).toBe(200);
+    try {
+      return await body();
+    } finally {
+      expect((await verify.apiAs(admin, 'DELETE', `/automation/${name}`)).status).toBe(200);
+    }
+  };
+
+  const nodeStatus = (summary: Rec | undefined, id: string) =>
+    (summary?.nodes ?? []).find((n: Rec) => n.nodeId === id)?.status;
 
   it('case_escalation escalates a case written with no session', async () => {
-    const { h, result } = await fire(
-      'case_escalation', CaseEscalationFlow as unknown as Rec,
-      critical(), {}, { crm_case: [critical()] },
-    );
-    expect(String(result.error ?? ''), 'the runAs refusal is back').not.toContain('[runAs]');
-    expect(result.success).toBe(true);
-    expect(h.store.crm_case[0].status).toBe('escalated');
-    expect(h.store.crm_case[0].is_escalated).toBe(true);
-    expect(h.notifications).toHaveLength(1);
+    // A queued case the agent owns, raised to critical by a system write.
+    const kase = await verify.hooks.run('crm_case', 'insert', {
+      subject: `Integration P1 ${++k}`, description: 'Raised by the monitoring integration.',
+      crm_account: accountId, status: 'new', priority: 'medium',
+    }, as(agent));
+    await systemUpdate(verify, 'crm_case', { id: kase.id, priority: 'critical' });
+
+    const [run] = await flowRuns(verify, 'case_escalation', kase.id);
+    expect(String(run?.error ?? ''), 'the runAs refusal is back').not.toContain('[runAs]');
+    expect(run?.status).toBe('completed');
+    const [stored] = await verify.rows('crm_case', { id: kase.id });
+    expect(stored!.status).toBe('escalated');
+    expect(Boolean(stored!.is_escalated)).toBe(true);
+    expect(await notified(agent.id, 'case_escalated', `/crm_case/${kase.id}`)).toHaveLength(1);
   });
 
-  it('…and REFUSES the same write once runAs is dropped (the shape #684 fixed)', async () => {
-    const { h, result } = await fire(
-      'case_escalation', withoutRunAs(CaseEscalationFlow as unknown as Rec),
-      critical(), {}, { crm_case: [critical()] },
-    );
-    expect(result.success).toBe(false);
-    expect(String(result.error)).toContain('[runAs] refusing a data operation');
-    // It dies at the FIRST data node, before anything is written — which is
-    // why a freshly seeded org had never once run this automation.
-    expect(nodeStatus(result, 'get_case')).toBe('failure');
-    expect(h.store.crm_case[0].status, 'the case was escalated despite the refusal').toBe('new');
-    expect(h.notifications).toHaveLength(0);
+  it('…and REFUSES the same flow once runAs is dropped (the shape #684 fixed)', async () => {
+    // Refused before it can run at all: the authoring door names the two
+    // readonly stamps a user-scoped run would silently drop.
+    const res = await register('case_escalation_without_runas', withoutRunAs(CaseEscalationFlow as unknown as Rec));
+    expect(res.status).toBe(422);
+    const body = await res.json() as Rec;
+    expect(body.error.code).toBe('INVALID_METADATA');
+    expect(JSON.stringify(body.error.details)).toContain('flow-update-readonly-field');
   });
 
   it('opportunity_approval reaches its approval node for a system-created deal', async () => {
@@ -495,64 +581,75 @@ describe('record-change flows under a user-less trigger (#684)', () => {
     // created by the runAs:'system' contract_renewal sweep fired this flow
     // user-less and died at `get_opportunity`, leaving the deal unlocked at
     // approval_status 'not_required' with no request ever opened.
-    const deal = {
-      id: 'o1', name: 'Acme Renewal', amount: 150_000, stage: 'negotiation',
-      approval_status: 'not_required', owner_id: 'rep1',
-    };
-    const { result } = await fire(
-      'opportunity_approval', OpportunityApprovalFlow as unknown as Rec,
-      deal, { ...deal, amount: 50_000 }, { crm_opportunity: [{ ...deal }] },
-    );
-    expect(String(result.error ?? ''), 'the deal is bypassing approval again').not.toContain('[runAs]');
-    expect(nodeStatus(result, 'get_opportunity')).toBe('success');
-    // The run then stops at `manager_review` for a harness-only reason: the
-    // approval node ships in @objectstack/plugin-approvals, which this
-    // in-memory harness does not install. That is NOT a runAs failure, and it
-    // is asserted here so a future reader does not read it as one.
-    expect(nodeStatus(result, 'manager_review')).toBe('failure');
-    expect(String(result.error)).toContain("No executor registered for node type 'approval'");
+    const [deal] = await verify.seed('crm_opportunity', [{
+      name: `Acme Renewal ${++k}`, amount: 50_000, stage: 'negotiation', close_date: '2030-06-30',
+      approval_status: 'not_required', crm_account: accountId, owner_id: rep.id,
+    }]);
+    await systemUpdate(verify, 'crm_opportunity', { id: deal!.id, amount: 150_000 });
+
+    const [run] = await flowRuns(verify, 'opportunity_approval', deal!.id);
+    expect(String(run?.error ?? ''), 'the deal is bypassing approval again').not.toContain('[runAs]');
+    // The run parks at `manager_review` with a request open — the deal is in
+    // approval, as a person-created one would be.
+    expect(run?.status).toBe('paused');
+    expect(await verify.rows('sys_approval_request', { record_id: deal!.id })).toHaveLength(1);
+    const [stored] = await verify.rows('crm_opportunity', { id: deal!.id });
+    expect(stored!.approval_status).toBe('pending');
   });
 
   it('…and never gets that far once runAs is dropped', async () => {
-    const deal = {
-      id: 'o1', name: 'Acme Renewal', amount: 150_000, stage: 'negotiation',
-      approval_status: 'not_required', owner_id: 'rep1',
-    };
-    const { result } = await fire(
-      'opportunity_approval', withoutRunAs(OpportunityApprovalFlow as unknown as Rec),
-      deal, { ...deal, amount: 50_000 }, { crm_opportunity: [{ ...deal }] },
-    );
-    expect(String(result.error)).toContain('[runAs] refusing a data operation');
-    expect(nodeStatus(result, 'get_opportunity')).toBe('failure');
-    expect(nodeStatus(result, 'manager_review'), 'approval was never requested').toBeUndefined();
+    const res = await register('opportunity_approval_without_runas', withoutRunAs(OpportunityApprovalFlow as unknown as Rec));
+    expect(res.status).toBe(422);
+    const body = await res.json() as Rec;
+    expect(body.error.code).toBe('INVALID_METADATA');
+    expect(JSON.stringify(body.error.details)).toContain('flow-update-readonly-field');
   });
 
-  it('lead_assignment stamps the SLA on an integration-written lead', async () => {
-    const lead = {
-      id: 'l1', company: 'Acme', rating: 5, owner_id: 'rep1',
-      first_name: 'Ada', last_name: 'Lovelace',
-    };
-    const { h, result } = await fire(
-      'lead_assignment', LeadAssignmentFlow as unknown as Rec,
-      lead, {}, { crm_lead: [{ ...lead }] },
-    );
+  it('lead_assignment stamps the SLA on a web-to-lead submission', async () => {
+    // A guest submission: no trigger user at all.
+    const lead = await guestInsert(verify, 'crm_lead', {
+      first_name: 'Ada', last_name: `Web ${++k}`, company: `Web Co ${k}`,
+      email: `web${k}@flow-record-change.test`, rating: 5,
+    });
+    const [run] = await flowRuns(verify, 'lead_assignment', lead.id);
+    expect(String(run?.error ?? '')).not.toContain('[runAs]');
+    const [stored] = await verify.rows('crm_lead', { id: lead.id });
+    expect(stored!.next_followup_date, 'hot lead got no SLA date').toBeTruthy();
+    // The anonymous form grant cannot read the rep pool, so `lead_auto_assign`
+    // leaves a web lead unowned (its documented stand-down).
+    expect(stored!.owner_id).toBeNull();
+  });
+
+  it('lead_assignment alerts the owner of an integration-written lead', async () => {
+    // The integration shape: a lead that arrives OWNED, with no trigger user.
+    // The system's seed door writes it without firing record-change flows, so
+    // the flow is handed the stored row the way the trigger hands it a write —
+    // user-less.
+    const [lead] = await verify.seed('crm_lead', [{
+      first_name: 'Ada', last_name: `Integration ${++k}`, company: `Integration Co ${k}`,
+      email: `integration${k}@flow-record-change.test`, rating: 5, owner_id: rep.id,
+    }]);
+    const [held] = await verify.rows('crm_lead', { id: lead!.id });
+    const result = await runRecordFlow(verify, 'lead_assignment', 'crm_lead', held!);
     expect(String(result.error ?? '')).not.toContain('[runAs]');
-    expect(h.store.crm_lead[0].next_followup_date, 'hot lead got no SLA date').toBeTruthy();
-    expect(h.notifications).toHaveLength(1);
+    const [stored] = await verify.rows('crm_lead', { id: lead!.id });
+    expect(stored!.next_followup_date, 'hot lead got no SLA date').toBeTruthy();
+    expect(await notified(rep.id, 'lead_routing', `/crm_lead/${lead!.id}`)).toHaveLength(1);
   });
 
   it('…and gets neither SLA nor alert once runAs is dropped', async () => {
-    const lead = {
-      id: 'l1', company: 'Acme', rating: 5, owner_id: 'rep1',
-      first_name: 'Ada', last_name: 'Lovelace',
-    };
-    const { h, result } = await fire(
-      'lead_assignment', withoutRunAs(LeadAssignmentFlow as unknown as Rec),
-      lead, {}, { crm_lead: [{ ...lead }] },
-    );
+    const [lead] = await verify.seed('crm_lead', [{
+      first_name: 'Ada', last_name: `Integration ${++k}`, company: `Integration Co ${k}`,
+      email: `integration${k}@flow-record-change.test`, rating: 5, owner_id: rep.id,
+    }]);
+    const [stored] = await verify.rows('crm_lead', { id: lead!.id });
+    const result = await withFlow('lead_assignment_without_runas', withoutRunAs(LeadAssignmentFlow as unknown as Rec), () =>
+      runRecordFlow(verify, 'lead_assignment_without_runas', 'crm_lead', stored!));
+    expect(result.success).toBe(false);
     expect(String(result.error)).toContain('[runAs] refusing a data operation');
-    expect(h.store.crm_lead[0].next_followup_date, 'no SLA date was stamped').toBeNull();
-    expect(h.notifications).toHaveLength(0);
+    const [after] = await verify.rows('crm_lead', { id: lead!.id });
+    expect(after!.next_followup_date, 'no SLA date was stamped').toBeNull();
+    expect(await notified(rep.id, 'lead_routing', `/crm_lead/${lead!.id}`)).toHaveLength(0);
   });
 
   /**
@@ -577,14 +674,20 @@ describe('record-change flows under a user-less trigger (#684)', () => {
    * so the day it DOES start being refused, we hear about it here.
    */
   it('the notify-only siblings deliver either way (they were never the broken ones)', async () => {
-    const contact = {
-      id: 'ct1', first_name: 'Ada', last_name: 'Lovelace',
-      owner_id: 'rep1', email_opt_out: false,
-    };
-    for (const flow of [ContactWelcomeFlow, withoutRunAs(ContactWelcomeFlow as unknown as Rec)]) {
-      const { h, result } = await fire('contact_welcome', flow as unknown as Rec, contact, {});
-      expect(String(result.error ?? '')).not.toContain('[runAs]');
-      expect(h.notifications, 'a notify-only flow was refused — the guard widened').toHaveLength(1);
-    }
+    const [contact] = await verify.seed('crm_contact', [{
+      first_name: 'Ada', last_name: `Integration ${++k}`, email: `contact${k}@flow-record-change.test`,
+      crm_account: accountId, owner_id: rep.id, email_opt_out: false,
+    }]);
+    const [stored] = await verify.rows('crm_contact', { id: contact!.id });
+    const url = `/crm_contact/${contact!.id}`;
+
+    const shipped = await runRecordFlow(verify, 'contact_welcome', 'crm_contact', stored!);
+    expect(String(shipped.error ?? '')).not.toContain('[runAs]');
+    expect(await notified(rep.id, 'contact_welcome', url), 'a notify-only flow was refused — the guard widened').toHaveLength(1);
+
+    const variant = await withFlow('contact_welcome_without_runas', withoutRunAs(ContactWelcomeFlow as unknown as Rec), () =>
+      runRecordFlow(verify, 'contact_welcome_without_runas', 'crm_contact', stored!));
+    expect(String(variant.error ?? '')).not.toContain('[runAs]');
+    expect(await notified(rep.id, 'contact_welcome', url), 'a notify-only flow was refused — the guard widened').toHaveLength(2);
   });
 });

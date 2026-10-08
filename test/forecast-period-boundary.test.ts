@@ -1,13 +1,11 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { ObjectQL, applySystemFields } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
-import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
+import { describe, it, expect, beforeAll } from 'vitest';
+import type { VerifyStack } from '@objectstack/verify';
 import stack from './helpers/composed-stack';
 import forecastHook from '../src/sales/objects/forecast.hook';
 import { forecasts } from '../src/sales/data/forecast.seed';
-import { makeCtx, hookNamed } from './helpers/hook-harness';
+import { hotcrmStack, hotcrmMemoryStack, signUpPerson, type Person } from './helpers/verify-stack';
 
 /**
  * A forecast may only start on a calendar-period boundary (#1008).
@@ -56,6 +54,15 @@ import { makeCtx, hookNamed } from './helpers/hook-harness';
  * throw-only assertion is green on any error at all, including the
  * "predicate could not be evaluated" abort that a non-total predicate raises
  * (#4649) — which is a rule that is broken, not a rule that is working.
+ *
+ * ### Measured on the shipped app
+ *
+ * Every write here is a sales manager's — the persona who keys a forecast in —
+ * through the engine's write door (`hooks.run`) on the app booted by
+ * `@objectstack/verify`, on the sparse datasource and on SQL. So
+ * `forecast_derive_period` runs where production runs it (before the engine's
+ * required-field check and `validations[]`), and what is asserted is the row
+ * the engine stored or the refusal it raised.
  */
 
 type AnyRec = Record<string, any>;
@@ -68,36 +75,47 @@ const BASE = {
   snapshot_date: '2026-08-15',
 };
 
-const derivePeriodHook = hookNamed(forecastHook, 'forecast_derive_period') as AnyRec;
+const hookNamed = (hooks: unknown, name: string): AnyRec => {
+  const hook = ([] as AnyRec[]).concat(hooks as AnyRec).find((h) => h.name === name);
+  if (!hook) throw new Error(`hook "${name}" not found`);
+  return hook;
+};
+
+/** One booted app and the sales manager who writes its forecasts. */
+interface Desk {
+  verify: VerifyStack;
+  manager: Person;
+}
+
+/** Boot `boot` and sign up the manager — once per datasource. */
+const deskOn = (boot: () => Promise<VerifyStack>, label: string) => {
+  const desk = {} as Desk;
+  beforeAll(async () => {
+    desk.verify = await boot();
+    desk.manager = await signUpPerson(desk.verify, `manager.${label}@forecast-period-boundary.test`, {
+      name: 'Forecast Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+    });
+  }, 120_000);
+  return desk;
+};
 
 /**
- * A write as PRODUCTION performs it: `forecast_derive_period` first, engine
- * second.
+ * A write as PRODUCTION performs it: the manager's, through the engine — so
+ * `forecast_derive_period` runs first and the engine's checks second.
  *
  * This is not decoration. `period_end` is `required` + `notNull`, and the
- * required-field check runs BEFORE the `validations[]` rules — so a bare
- * `insert({ period, period_start })` is refused with "Period End is required"
- * and never reaches the boundary rule at all. Running the real handler over the
- * input first is what puts the drifting `period_end` (2026-08-15 → 2026-10-31)
- * on the record, which is the exact row the rule has to refuse.
+ * required-field check runs BEFORE the `validations[]` rules — so a write the
+ * hook did not see would be refused with "Period End is required" and never
+ * reach the boundary rule at all. The hook is what puts the drifting
+ * `period_end` (2026-08-15 → 2026-10-31) on the record, which is the exact row
+ * the rule has to refuse.
  */
-const viaHook = async (
-  api: AnyRec,
-  op: 'insert' | 'update',
-  input: AnyRec,
-  where?: AnyRec,
-  previous?: AnyRec,
-) => {
-  const ctx = makeCtx({
-    event: op === 'insert' ? 'beforeInsert' : 'beforeUpdate',
-    input: { ...input },
-    previous,
-  });
-  await derivePeriodHook.handler(ctx);
-  return op === 'insert'
-    ? api.object('crm_forecast').insert(ctx.input)
-    : api.object('crm_forecast').update(ctx.input, { where });
-};
+const viaHook = (desk: Desk, op: 'insert' | 'update', input: AnyRec): Promise<AnyRec> =>
+  desk.verify.hooks.run('crm_forecast', op, { ...input }, { as: desk.manager.token });
+
+/** The stored forecast, read fresh. */
+const storedForecast = async (desk: Desk, id: string): Promise<AnyRec | undefined> =>
+  (await desk.verify.rows('crm_forecast', { id }))[0];
 
 const envelope = (err: unknown) => {
   const e = err as AnyRec;
@@ -162,7 +180,7 @@ describe('the boundary rule is declared where the platform can act on it', () =>
     // The ruling excluded re-deriving `period_end` from `period_label`. With
     // the start pinned to a boundary, "start + one period" already IS the
     // calendar period, so the rolling helpers stay as they were.
-    const hook = hookNamed(forecastHook, 'forecast_derive_period') as AnyRec;
+    const hook = hookNamed(forecastHook, 'forecast_derive_period');
     expect(hook.events).toContain('beforeInsert');
     expect(hook.events).toContain('beforeUpdate');
   });
@@ -171,19 +189,7 @@ describe('the boundary rule is declared where the platform can act on it', () =>
 // ──────────────────────────────────── the refusal, on the real engine ──
 
 describe('the write is REFUSED, not warned about (in-memory driver)', () => {
-  let ql: AnyRec;
-
-  beforeAll(async () => {
-    ql = (await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
-      objects: { crm_forecast: forecast } as never,
-    })) as never;
-  });
-  afterAll(async () => {
-    await ql?.close();
-  });
-
-  const api = () => ql.createContext({ isSystem: true });
+  const desk = deskOn(hotcrmMemoryStack, 'memory');
 
   // The three rows from the issue body, and their month twin.
   const REJECTED = [
@@ -195,7 +201,7 @@ describe('the write is REFUSED, not warned about (in-memory driver)', () => {
   ] as const;
 
   it.each(REJECTED)('refuses $period starting $period_start ($why)', async ({ period, period_start }) => {
-    const env = await refusal(() => viaHook(api(), 'insert', { ...BASE, period, period_start }));
+    const env = await refusal(() => viaHook(desk, 'insert', { ...BASE, period, period_start }));
     expect(env.name).toBe('ValidationError');
     expect(env.code).toBe('VALIDATION_FAILED');
     // Measured, not presumed: this app's ValidationError carries NO `status`.
@@ -209,22 +215,21 @@ describe('the write is REFUSED, not warned about (in-memory driver)', () => {
     // 2026-08-01 clears "first day of the period" and must still be refused —
     // otherwise a quarterly row could open in the middle of its own quarter.
     const env = await refusal(() =>
-      viaHook(api(), 'insert', { ...BASE, period: 'quarter', period_start: '2026-08-01' }),
+      viaHook(desk, 'insert', { ...BASE, period: 'quarter', period_start: '2026-08-01' }),
     );
     expect(env.message).toMatch(/January 1, April 1, July 1 or October 1/);
   });
 
   it('nothing landed — a rule that complains while the row saves is not enforcement', async () => {
-    const scoped = api();
     await refusal(() =>
-      viaHook(scoped, 'insert', {
+      viaHook(desk, 'insert', {
         ...BASE,
         period: 'quarter',
         period_start: '2026-08-15',
         notes: 'drifter',
       }),
     );
-    const rows = await scoped.object('crm_forecast').find({ where: { notes: 'drifter' } });
+    const rows = await desk.verify.rows('crm_forecast', { notes: 'drifter' });
     expect(rows).toEqual([]);
   });
 
@@ -240,7 +245,7 @@ describe('the write is REFUSED, not warned about (in-memory driver)', () => {
   ] as const;
 
   it.each(ACCEPTED)('admits $period starting $period_start', async ({ period, period_start }) => {
-    const row = await viaHook(api(), 'insert', { ...BASE, period, period_start });
+    const row = await viaHook(desk, 'insert', { ...BASE, period, period_start });
     expect(row?.period_start).toBe(period_start);
   });
 
@@ -249,8 +254,7 @@ describe('the write is REFUSED, not warned about (in-memory driver)', () => {
     // the record form (`src/views/forecast.view.ts`), and `source: 'manual'` is
     // a documented origin. Manual entry on a boundary must still work, with the
     // amounts a manager types.
-    const scoped = api();
-    const row = await viaHook(scoped, 'insert', {
+    const row = await viaHook(desk, 'insert', {
       period: 'quarter',
       period_start: '2026-07-01',
       period_end: '2026-09-30',
@@ -262,7 +266,7 @@ describe('the write is REFUSED, not warned about (in-memory driver)', () => {
       closed_amount: 250000,
       notes: 'typed by the RVP',
     });
-    const stored = await scoped.object('crm_forecast').findOne({ where: { id: row.id } });
+    const stored = await storedForecast(desk, row.id);
     expect(stored?.source).toBe('manual');
     expect(stored?.period_start).toBe('2026-07-01');
   });
@@ -270,37 +274,30 @@ describe('the write is REFUSED, not warned about (in-memory driver)', () => {
   it('leaves an edit that never touches the period alone', async () => {
     // A rule that re-demands its condition on every later write is a rule
     // someone disables.
-    const scoped = api();
-    const row = await viaHook(scoped, 'insert', { ...BASE, period: 'quarter', period_start: '2026-07-01' });
-    await scoped.object('crm_forecast').update({ id: row.id, quota: 900000 }, { where: { id: row.id } });
-    const after = await scoped.object('crm_forecast').findOne({ where: { id: row.id } });
+    const row = await viaHook(desk, 'insert', { ...BASE, period: 'quarter', period_start: '2026-07-01' });
+    await viaHook(desk, 'update', { id: row.id, quota: 900000 });
+    const after = await storedForecast(desk, row.id);
     expect(after?.quota).toBe(900000);
   });
 
   it('refuses to WALK a valid row off its boundary', async () => {
     // Otherwise the contract would hold for exactly one write: insert on a
     // boundary, then edit the start to mid-quarter.
-    const scoped = api();
-    const row = await viaHook(scoped, 'insert', { ...BASE, period: 'quarter', period_start: '2026-07-01' });
-    const env = await refusal(() =>
-      viaHook(scoped, 'update', { id: row.id, period_start: '2026-08-15' }, { id: row.id }, row),
-    );
+    const row = await viaHook(desk, 'insert', { ...BASE, period: 'quarter', period_start: '2026-07-01' });
+    const env = await refusal(() => viaHook(desk, 'update', { id: row.id, period_start: '2026-08-15' }));
     expect(env.code).toBe('VALIDATION_FAILED');
-    const after = await scoped.object('crm_forecast').findOne({ where: { id: row.id } });
+    const after = await storedForecast(desk, row.id);
     expect(after?.period_start).toBe('2026-07-01');
   });
 
   it('refuses to RE-LABEL a monthly row as quarterly when its start is mid-quarter', async () => {
     // The merged-record case: the update names only `period`, and the rule has
     // to read `period_start` off `previous` to reach its verdict.
-    const scoped = api();
-    const row = await viaHook(scoped, 'insert', { ...BASE, period: 'month', period_start: '2026-08-01' });
-    const env = await refusal(() =>
-      viaHook(scoped, 'update', { id: row.id, period: 'quarter' }, { id: row.id }, row),
-    );
+    const row = await viaHook(desk, 'insert', { ...BASE, period: 'month', period_start: '2026-08-01' });
+    const env = await refusal(() => viaHook(desk, 'update', { id: row.id, period: 'quarter' }));
     expect(env.code).toBe('VALIDATION_FAILED');
     expect(env.message).toMatch(/quarter boundary/i);
-    const after = await scoped.object('crm_forecast').findOne({ where: { id: row.id } });
+    const after = await storedForecast(desk, row.id);
     expect(after?.period).toBe('month');
   });
 });
@@ -313,50 +310,26 @@ describe('the write is REFUSED on a real SQLite database too', () => {
   // a marketplace app does not choose the datasource its host runs on. Both
   // drivers were measured to hand `period_start` back as a `YYYY-MM-DD` string,
   // which is the shape `string()` renders for the regex.
-  let ql: AnyRec;
-
-  beforeAll(async () => {
-    const driver = new SqliteWasmDriver({ filename: ':memory:' });
-    await driver.connect();
-    const materialized = applySystemFields(forecast as never, { multiTenant: false }) as AnyRec;
-    await driver.initObjects([
-      {
-        name: 'crm_forecast',
-        fields: materialized.fields as Record<string, unknown>,
-        indexes: materialized.indexes,
-      } as never,
-    ]);
-    ql = (await ObjectQL.create({
-      datasources: { default: driver },
-      objects: { crm_forecast: forecast } as never,
-    })) as never;
-  }, 60_000);
-  afterAll(async () => {
-    await ql?.close();
-  });
+  const desk = deskOn(hotcrmStack, 'sqlite');
 
   it('refuses the mid-quarter start and admits the boundary one', async () => {
-    const api = ql.createContext({ isSystem: true });
     const env = await refusal(() =>
-      viaHook(api, 'insert', { ...BASE, period: 'quarter', period_start: '2026-08-15' }),
+      viaHook(desk, 'insert', { ...BASE, period: 'quarter', period_start: '2026-08-15' }),
     );
     expect(env.code).toBe('VALIDATION_FAILED');
     expect(env.message).toMatch(/first day of the period/i);
 
-    const row = await viaHook(api, 'insert', { ...BASE, period: 'quarter', period_start: '2026-07-01' });
-    const stored = await api.object('crm_forecast').findOne({ where: { id: row.id } });
+    const row = await viaHook(desk, 'insert', { ...BASE, period: 'quarter', period_start: '2026-07-01' });
+    const stored = await storedForecast(desk, row.id);
     expect(String(stored?.period_start)).toBe('2026-07-01');
   });
 
   it('reads a column-complete row back — the precondition for the update path', async () => {
-    const api = ql.createContext({ isSystem: true });
-    const row = await viaHook(api, 'insert', { ...BASE, period: 'month', period_start: '2026-05-01' });
-    const stored = await api.object('crm_forecast').findOne({ where: { id: row.id } });
+    const row = await viaHook(desk, 'insert', { ...BASE, period: 'month', period_start: '2026-05-01' });
+    const stored = await storedForecast(desk, row.id);
     // Opposite precondition to the in-memory suite: the key IS present here.
     expect('period_label' in (stored ?? {})).toBe(true);
-    const env = await refusal(() =>
-      viaHook(api, 'update', { id: row.id, period_start: '2026-05-15' }, { id: row.id }, stored),
-    );
+    const env = await refusal(() => viaHook(desk, 'update', { id: row.id, period_start: '2026-05-15' }));
     expect(env.code).toBe('VALIDATION_FAILED');
   });
 });
@@ -364,12 +337,12 @@ describe('the write is REFUSED on a real SQLite database too', () => {
 // ───────────────────────────── the derivation the rule leaves in place ──
 
 describe('the hook still derives a calendar-true family from a boundary start', () => {
-  const hook = derivePeriodHook;
+  const desk = deskOn(hotcrmStack, 'derive');
 
-  const derive = async (input: AnyRec) => {
-    const ctx = makeCtx({ event: 'beforeInsert', input });
-    await hook.handler(ctx);
-    return ctx.input as AnyRec;
+  /** The family the engine stored for a manager's insert of `input`. */
+  const derive = async (input: AnyRec): Promise<AnyRec> => {
+    const row = await viaHook(desk, 'insert', input);
+    return (await storedForecast(desk, row.id))!;
   };
 
   it.each([

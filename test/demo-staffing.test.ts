@@ -1,14 +1,12 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect } from 'vitest';
-import { compileCelToFilter } from '@objectstack/formula';
+import { describe, it, expect, beforeAll } from 'vitest';
+import type { VerifyStack } from '@objectstack/verify';
 import stack from './helpers/composed-stack';
-import accountHook from '../src/sales/objects/account.hook';
-import caseHooks from '../src/service/objects/case.hook';
 import { CrmSeedData } from '../objectstack.composition';
 import { DemoOrgStaffing } from '../src/sales/sharing/demo-staffing';
 import { CrmSharing as sharingBarrel } from './helpers/src-roster';
-import { makeCtx, makeHarness, hookNamed } from './helpers/hook-harness';
+import { hotcrmStack, signUpPerson, systemUpdate, type Person } from './helpers/verify-stack';
 import { regionsOf } from './helpers/flow-regions';
 
 /**
@@ -37,17 +35,37 @@ import { regionsOf } from './helpers/flow-regions';
  *
  * ### What this file can and cannot check
  *
- * It is a static suite: it cannot run the script. What it CAN pin is every
+ * It cannot run the script against a dev server. What it CAN pin is every
  * authoring-time premise the script depends on — that each staffed position is
  * declared, that the positions chosen are the ones the sharing rules and the
- * approval nodes actually name, that the territory arithmetic still comes out
- * 6/2/1 against the real seeds, and — the load-bearing one — that **the
+ * approval nodes actually name, and — the load-bearing one — that **the
  * published artifact contains no mechanism that could create these people**.
  * That last group is what keeps "a real deployment installs none of them" a
- * structural fact rather than a promise.
+ * structural fact rather than a promise. And it can do what the script does,
+ * on the shipped app booted by `@objectstack/verify`: sign the table's people
+ * up with the positions the table gives them, re-evaluate the rules through
+ * the platform's own door, and read what each person then receives — the
+ * territory arithmetic (6/2/1 against the real seeds) and the two case pools.
  */
 
 type AnyRec = Record<string, any>;
+
+/**
+ * The demo org on the shipped app: each table row a real sign-up holding the
+ * positions the table gives it (a position binds the same-named permission
+ * set, which is how the table grants anything), as `pnpm demo:staff` step 2
+ * leaves it.
+ */
+let verify: VerifyStack;
+let admin: string;
+const staffed: Record<string, Person> = {};
+beforeAll(async () => {
+  verify = await hotcrmStack();
+  admin = await verify.signIn();
+  for (const m of DemoOrgStaffing) {
+    staffed[m.key] = await signUpPerson(verify, m.email, { name: m.name, positions: [...m.positions] });
+  }
+}, 120_000);
 
 const positions: AnyRec[] = (stack as any).positions ?? [];
 const sharingRules: AnyRec[] = (stack as any).sharingRules ?? [];
@@ -319,45 +337,35 @@ describe('staffing lines up with the rules that grant, and the nodes that route'
  */
 describe('what each staffed person actually receives', () => {
   type Dataset = { object: string; records: AnyRec[] };
-  const accountRecords = (CrmSeedData as unknown as Dataset[])
+  const seededNames = (CrmSeedData as unknown as Dataset[])
     .filter((d) => d.object === 'crm_account')
-    .flatMap((d) => d.records);
+    .flatMap((d) => d.records)
+    .map((r) => String(r.name));
 
-  const project = async (record: AnyRec): Promise<AnyRec> => {
-    const input: AnyRec = { ...record };
-    await (accountHook as AnyRec).handler(makeCtx({ event: 'beforeInsert', input }));
-    return input;
-  };
-
-  const matches = (filter: AnyRec, row: AnyRec): boolean => {
-    const entries = Object.entries(filter);
-    if (entries.length !== 1) throw new Error(`expected a single-field filter, got ${JSON.stringify(filter)}`);
-    const [field, condition] = entries[0];
-    if (condition && typeof condition === 'object' && !Array.isArray(condition)) {
-      const ops = Object.entries(condition as AnyRec);
-      if (ops.length === 1 && ops[0][0] === '$in' && Array.isArray(ops[0][1])) {
-        return (ops[0][1] as unknown[]).includes(row[field]);
-      }
-      throw new Error(`unsupported compiled operator: ${JSON.stringify(condition)}`);
+  /**
+   * `pnpm demo:staff` step 4: re-evaluate the territory rules through the
+   * platform's own door (`POST /sharing/rules/:id/evaluate`, as the admin) —
+   * the seeded accounts were written as the system, which materialises no
+   * grant, and the people above did not exist yet when they were.
+   */
+  beforeAll(async () => {
+    for (const name of ['north_america_territory', 'europe_territory']) {
+      const [rule] = await verify.rows('sys_sharing_rule', { name });
+      expect(rule, `sharing rule ${name} is not installed`).toBeTruthy();
+      const res = await verify.apiAs(admin, 'POST', `/sharing/rules/${rule!.id}/evaluate`);
+      expect(res.status, await res.clone().text()).toBe(200);
     }
-    return row[field] === condition;
-  };
+  }, 120_000);
 
-  /** Account names one staffed member receives through a named territory rule. */
-  const receives = async (ruleName: string): Promise<string[]> => {
-    const rule = sharingRules.find((r) => r.name === ruleName);
-    if (!rule) throw new Error(`no sharing rule named ${ruleName}`);
-    const compiled = compileCelToFilter(rule.condition ?? '', { variables: {} });
-    if (!compiled.ok) throw new Error(`${ruleName}: condition does not compile (${compiled.reason})`);
-    const rows = await Promise.all(accountRecords.map(project));
-    return rows.filter((row) => matches(compiled.filter as AnyRec, row)).map((r) => String(r.name));
-  };
+  /** The seeded accounts `key`'s person can read. */
+  const receives = async (key: string): Promise<string[]> =>
+    (await verify.rows('crm_account', { name: { $in: seededNames } }, { as: staffed[key]!.token })).map((r) => String(r.name));
 
   it('hands the NA rep six accounts and the EU rep two', async () => {
-    const na = await receives('north_america_territory');
-    const eu = await receives('europe_territory');
-    expect(na.length, `north_america_territory covers [${na.join(', ')}]`).toBe(6);
-    expect(eu.length, `europe_territory covers [${eu.join(', ')}]`).toBe(2);
+    const na = await receives('na_rep');
+    const eu = await receives('eu_rep');
+    expect(na.length, `the NA rep reads [${na.join(', ')}]`).toBe(6);
+    expect(eu.length, `the EU rep reads [${eu.join(', ')}]`).toBe(2);
     expect(na.filter((n) => eu.includes(n)), 'an account in BOTH territories hides which rule granted it').toEqual([]);
   });
 
@@ -365,10 +373,9 @@ describe('what each staffed person actually receives', () => {
     // #638 seeded one account (SG) that matches NEITHER rule, deliberately: a
     // set with nothing outside the territories cannot tell a working filter
     // apart from a match-all one. It is a probe — do not remove or retune it.
-    const na = await receives('north_america_territory');
-    const eu = await receives('europe_territory');
-    const rows = await Promise.all(accountRecords.map(project));
-    const outside = rows.map((r) => String(r.name)).filter((n) => !na.includes(n) && !eu.includes(n));
+    const na = await receives('na_rep');
+    const eu = await receives('eu_rep');
+    const outside = seededNames.filter((n) => !na.includes(n) && !eu.includes(n));
     expect(
       outside.length,
       `every seeded account falls in a territory, so a match-all regression would be invisible`,
@@ -393,64 +400,90 @@ describe('what each staffed person actually receives', () => {
  * value, so it stands in exactly.
  */
 describe('the case-routing pools actually route (what this staffing lights)', () => {
-  const assign = hookNamed(caseHooks, 'case_auto_assign');
-  const escalationReassign = hookNamed(caseHooks, 'case_escalation_reassign');
-
-  /** `sys_user_position` as the demo box would hold it after `pnpm demo:staff`. */
-  const demoPositionRows = DemoOrgStaffing.flatMap((m) =>
-    m.positions.map((position) => ({ user_id: m.email, position })),
-  );
   /**
    * The demo person this pool routes to — pinned as a STRING before it is
    * compared to anything.
    *
-   * Measured while writing this block: comparing `input.owner_id` straight to
-   * `holdersOf(p)[0]?.email` passes VACUOUSLY on an unstaffed pool, because a
-   * hook that no-ops leaves `owner_id` undefined and the lookup returns
-   * undefined too — the two demonstrations below stayed green with both
-   * staffing rows deleted, i.e. exactly when the feature was dark again. So
-   * the empty pool fails here, on its own line, before any comparison.
+   * Measured while writing this block: comparing `owner_id` straight to the
+   * holder's id passes VACUOUSLY on an unstaffed pool, because a hook that
+   * no-ops leaves `owner_id` unset and the lookup returns undefined too — the
+   * two demonstrations below stayed green with both staffing rows deleted,
+   * i.e. exactly when the feature was dark again. So the empty pool fails
+   * here, on its own line, before any comparison.
    */
   const holderOf = (position: string): string => {
-    const email = holdersOf(position)[0]?.email;
+    const key = holdersOf(position)[0]?.key;
+    const id = key ? staffed[key]?.id : undefined;
     expect(
-      email,
+      id,
       `nobody in the demo org holds "${position}" — the pool the hook reads is empty, so the ` +
       `assertion below would be comparing undefined to undefined and would pass while the ` +
       `mechanism is dark`,
     ).toBeTypeOf('string');
-    return String(email);
+    return String(id);
   };
 
   it('round-robins an ownerless case onto the demo service agent (#596)', async () => {
-    const harness = makeHarness({ sys_user_position: demoPositionRows, crm_case: [] });
-    const input: AnyRec = { subject: 'Web-to-case: cannot sign in', status: 'new', origin: 'web' };
-
-    await assign.handler(makeCtx({ event: 'beforeInsert', input, api: harness.api }));
-
+    // Ownerless intake that reaches the pool: a case the system writes (an
+    // email-to-case integration, an import). An anonymous web form's grant
+    // cannot read the pool, so its cases wait in the triage queue instead.
+    const [kase] = await verify.seed('crm_case', [{
+      subject: 'Email-to-case: cannot sign in', description: 'Forwarded from support@.', status: 'new',
+    }]);
+    const [stored] = await verify.rows('crm_case', { id: kase!.id });
     expect(
-      input.owner_id,
+      stored!.owner_id,
       `case_auto_assign left the case OWNERLESS against the demo org's own position rows — the ` +
       `service_agent pool is empty again, so intake round-robin is back to the no-op path on every ` +
       `demo box and the unassigned_triage tab is the whole story.`,
     ).toBe(holderOf('service_agent'));
   });
 
-  it('hands an escalating case to the demo service manager (#1070)', async () => {
-    const harness = makeHarness({ sys_user_position: demoPositionRows, crm_case: [] });
-    const previous: AnyRec = { id: 'case_1', status: 'in_progress', owner_id: 'someone_else' };
-    const input: AnyRec = { status: 'escalated' };
+  /** A case the demo agent opened and works. */
+  const agentsCase = async (): Promise<{ agent: Person; id: string }> => {
+    const agent = staffed[holdersOf('service_agent')[0]!.key]!;
+    const kase = await verify.hooks.run('crm_case', 'insert', {
+      subject: 'Escalate me', description: 'Customer is waiting.', status: 'in_progress',
+    }, { as: agent.token });
+    return { agent, id: String(kase.id) };
+  };
 
-    await escalationReassign.handler(
-      makeCtx({ event: 'beforeUpdate', input, previous, api: harness.api }),
-    );
+  it('hands an escalating case to the demo service manager (#1070)', async () => {
+    // The escalation the SLA sweep writes — `case_sla_monitor`'s `flag_breach`
+    // node sets `status: 'escalated'` as the system (`runAs: 'system'`).
+    const { id } = await agentsCase();
+    await systemUpdate(verify, 'crm_case', { id, status: 'escalated' });
+    const [stored] = await verify.rows('crm_case', { id });
 
     expect(
-      input.owner_id,
+      stored!.owner_id,
       `case_escalation_reassign moved NOTHING against the demo org's own position rows — the ` +
       `service_manager pool is empty again, so escalation is only a flag and a status and the ` +
       `agent who could not get to the case in time stays the only person who can work it.`,
     ).toBe(holderOf('service_manager'));
+  });
+
+  /**
+   * ⚠️ MEASURED DEFECT — reported as a finding on this card, pinned here so the
+   * fix is noticed.
+   *
+   * The hand-off reads the pool (`sys_user_position`) through `ctx.api`, as the
+   * caller. An agent escalating their own case — the record form, or the
+   * `escalate_case` screen action, whose `escalate` node deliberately keeps the
+   * status write in the acting user's context so the hand-off "fires from the
+   * ACTING USER's write" — is refused that read (`PERMISSION_DENIED`); the hook
+   * is best-effort and swallows it. Measured on 17.7.0: the case is escalated
+   * and stays with the agent.
+   */
+  it('⚠️ an agent’s own escalation keeps the case on the agent (measured defect)', async () => {
+    const { agent, id } = await agentsCase();
+    await verify.hooks.run('crm_case', 'update', { id, status: 'escalated' }, { as: agent.token });
+    const [stored] = await verify.rows('crm_case', { id });
+    expect(stored!.status).toBe('escalated');
+    expect(
+      stored!.owner_id,
+      'the agent’s escalation now reaches the service_manager pool — the defect is fixed: rewrite this case to pin the hand-off',
+    ).toBe(agent.id);
   });
 
   it('lands intake and escalation on DIFFERENT desks', async () => {

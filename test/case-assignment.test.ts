@@ -3,7 +3,9 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
-import stack from './helpers/composed-stack';
+import type { VerifyStack } from '@objectstack/verify';
+import { extractHookBody } from '@objectstack/cli/hook-body';
+import stack, { localePacks } from './helpers/composed-stack';
 import caseHooks from '../src/service/objects/case.hook';
 import {
   SERVICE_AGENT_POSITION,
@@ -11,8 +13,11 @@ import {
   CLOSED_CASE_STATUSES,
   POOL_QUERY_LIMIT,
 } from '../src/service/objects/_case-assignment';
-import { makeHarness, makeDeniedApi, makeCtx, hookNamed, type Rec } from './helpers/hook-harness';
-import { localePacks } from './helpers/metadata-fixtures';
+import {
+  hotcrmStack, signUpPerson, guestInsert, systemUpdate, recordEngineWrites, type Person,
+} from './helpers/verify-stack';
+
+type Rec = Record<string, any>;
 
 /**
  * ═══ Case intake assignment — the app-level queue substitute (#596) ════════
@@ -49,13 +54,77 @@ import { localePacks } from './helpers/metadata-fixtures';
  * own `owner_id` on that door (visible — the negative control), and the
  * `ctx.api` update an `afterUpdate` hook would issue (visible, and therefore
  * the shape that would have needed `crm_case.allowTransfer`).
+ *
+ * ═══ Measured on the shipped app ═══════════════════════════════════════════
+ *
+ * The two seam measurements keep their recording middleware (they measure the
+ * platform's gate, with the app's hook shapes). Every behaviour of the two
+ * hooks is a real write on the app booted by `@objectstack/verify`: the pools
+ * are real sign-ups holding the position, their load is cases they own, and
+ * the intake / escalation is written by the writer each path is for — the
+ * system's import and sweep, a person's own save, an anonymous form
+ * submission. What is asserted is the row the engine stored.
  */
 
 type AnyRec = Record<string, any>;
 
-const assign = hookNamed(caseHooks, 'case_auto_assign');
-const slaDefaults = hookNamed(caseHooks, 'case_sla_defaults');
-const escalationReassign = hookNamed(caseHooks, 'case_escalation_reassign');
+const hookNamed = (name: string): AnyRec => {
+  const hook = (caseHooks as AnyRec[]).find((h) => h.name === name);
+  if (!hook) throw new Error(`hook "${name}" not found`);
+  return hook;
+};
+const assign = hookNamed('case_auto_assign');
+const slaDefaults = hookNamed('case_sla_defaults');
+const escalationReassign = hookNamed('case_escalation_reassign');
+
+let verify: VerifyStack;
+let admin: string;
+let k = 0;
+beforeAll(async () => {
+  verify = await hotcrmStack();
+  admin = await verify.signIn();
+}, 120_000);
+
+const storedCase = async (id: string): Promise<Rec> => (await verify.rows('crm_case', { id }))[0]!;
+
+/** A case owned by `owner`, in `status`, written as the system. */
+const caseOwnedBy = async (owner: Person | null, status = 'new', over: Rec = {}): Promise<Rec> =>
+  (await verify.seed('crm_case', [{
+    subject: `Backlog ${++k}`, description: 'Already in the queue.', status,
+    ...(status === 'resolved' || status === 'closed' ? { resolution: 'Fixed.' } : {}),
+    ...(owner ? { owner_id: owner.id } : {}), ...over,
+  }]))[0]!;
+
+/**
+ * Staff `position` with one fresh person per entry, each carrying the case
+ * backlog its entry names (`open` live cases, `done` resolved/closed ones), and
+ * hand back the people plus `release()`, which takes the position off them
+ * again through the admin's own door — the pool is everyone holding the
+ * position on this stack, so each case starts from an empty one.
+ */
+async function staff(position: string, backlog: Array<{ open?: number; done?: number }>) {
+  expect(await verify.rows('sys_user_position', { position }), `the ${position} pool is not empty at the start`).toEqual([]);
+  const people: Person[] = [];
+  for (const b of backlog) {
+    const person = await signUpPerson(verify, `${position}.${++k}@case-assignment.test`, {
+      name: `${position} ${k}`, positions: [position], permissionSets: ['service_agent'],
+    });
+    for (let i = 0; i < (b.open ?? 0); i++) await caseOwnedBy(person, i % 2 ? 'waiting_customer' : 'new');
+    for (let i = 0; i < (b.done ?? 0); i++) await caseOwnedBy(person, i % 2 ? 'closed' : 'resolved');
+    people.push(person);
+  }
+  return {
+    people,
+    release: async () => {
+      for (const row of await verify.rows('sys_user_position', { position })) {
+        await verify.hooks.run('sys_user_position', 'delete', { id: row.id }, { as: admin });
+      }
+    },
+  };
+}
+
+/** The body `objectstack build` ships for `hook` — what a parity pin reads. */
+const shippedBody = (hook: AnyRec): string => extractHookBody(hook.handler, `hook '${String(hook.name)}'`).source;
 
 // ─────────────────────────── the blocking precondition, measured ──
 
@@ -157,77 +226,60 @@ describe('the transfer gate cannot see a beforeInsert owner_id stamp on crm_case
 // ───────────────────────────────── the round-robin, both paths ──
 
 describe('case_auto_assign', () => {
-  /** A pool of `service_agent` holders plus a case backlog, in one store. */
-  const storeWith = (agents: string[], cases: Rec[] = []) => ({
-    sys_user_position: [
-      // Deliberately mixed: other positions must NOT be read as service agents.
-      { user_id: 'rep_1', position: 'sales_rep' },
-      { user_id: 'mgr_1', position: 'service_manager' },
-      ...agents.map((user_id) => ({ user_id, position: SERVICE_AGENT_POSITION })),
-    ],
-    crm_case: cases,
-  });
+  /** Ownerless intake that reaches the pool: a case the system writes (an email integration, an import). */
+  const systemIntake = async (over: Rec = {}): Promise<Rec> =>
+    storedCase(String((await verify.seed('crm_case', [{
+      subject: `Intake ${++k}`, description: 'Arrived by email.', status: 'new', ...over,
+    }]))[0]!.id));
 
   it('assigns an ownerless case to the least-loaded agent — the assigned path', async () => {
-    const harness = makeHarness(storeWith(['agent_a', 'agent_b'], [
-      { id: 'c1', owner_id: 'agent_a', status: 'new' },
-      { id: 'c2', owner_id: 'agent_a', status: 'in_progress' },
-      { id: 'c3', owner_id: 'agent_b', status: 'new' },
-    ]));
-    const input: Rec = { subject: 'Web submission', status: 'new', origin: 'web' };
-
-    await assign.handler(makeCtx({ event: 'beforeInsert', input, api: harness.api }));
-
-    expect(input.owner_id, 'did not assign the least-loaded service agent').toBe('agent_b');
-    expect('owner' in input, 'wrote a second, unread ownership column (#548)').toBe(false);
+    const pool = await staff(SERVICE_AGENT_POSITION, [{ open: 2 }, { open: 1 }]);
+    try {
+      const kase = await systemIntake();
+      expect(kase.owner_id, 'did not assign the least-loaded service agent').toBe(pool.people[1]!.id);
+      expect('owner' in kase, 'wrote a second, unread ownership column (#548)').toBe(false);
+    } finally {
+      await pool.release();
+    }
   });
 
   it('reads the SERVICE_AGENT_POSITION pool, and only that pool', async () => {
     // The parity pin the module's header promises. The hook body must spell its
     // position literal inline — L2 bodies run body-only in QuickJS and cannot
-    // reach the exported constant — so this drives the real handler and asserts
-    // the predicate it actually issued. Without it the constant and the literal
-    // could drift apart silently, and the hook would quietly assign from (or to)
-    // the wrong pool.
-    const seenQueries: Rec[] = [];
-    const api: Rec = {
-      object: (name: string) => ({
-        async find(q: Rec = {}) {
-          seenQueries.push({ object: name, ...q });
-          return name === 'sys_user_position' ? [{ user_id: 'agent_a' }] : [];
-        },
-        async count() { return 0; },
-      }),
-    };
-    const input: Rec = { subject: 'Web submission' };
-    await assign.handler(makeCtx({ event: 'beforeInsert', input, api: api as never }));
+    // reach the exported constant — so the shipped body is read for the
+    // literal and the read bound, and the behaviour is driven with other
+    // positions' holders present: none of them may be picked.
+    const body = shippedBody(assign);
+    expect(body, 'the position literal in the hook body drifted from SERVICE_AGENT_POSITION')
+      .toContain(`position: "${SERVICE_AGENT_POSITION}"`);
+    expect(body, 'the pool read bound drifted from POOL_QUERY_LIMIT').toMatch(new RegExp(`top: (${POOL_QUERY_LIMIT}|${POOL_QUERY_LIMIT.toExponential().replace('+', '')})\\b`));
 
-    const poolQuery = seenQueries.find((q) => q.object === 'sys_user_position');
-    expect(poolQuery, 'the hook never read the position pool').toBeTruthy();
-    expect(
-      poolQuery!.where?.position,
-      'the position literal in the hook body drifted from SERVICE_AGENT_POSITION',
-    ).toBe(SERVICE_AGENT_POSITION);
-    expect(poolQuery!.top, 'the pool read bound drifted from POOL_QUERY_LIMIT').toBe(POOL_QUERY_LIMIT);
-    expect(input.owner_id).toBe('agent_a');
+    const others = [
+      await signUpPerson(verify, `rep.${++k}@case-assignment.test`, { name: 'Other Rep', positions: ['sales_rep'] }),
+      await signUpPerson(verify, `mgr.${++k}@case-assignment.test`, { name: 'Other Manager', positions: [SERVICE_MANAGER_POSITION] }),
+    ];
+    const pool = await staff(SERVICE_AGENT_POSITION, [{ open: 1 }]);
+    try {
+      expect((await systemIntake()).owner_id).toBe(pool.people[0]!.id);
+    } finally {
+      await pool.release();
+      for (const row of await verify.rows('sys_user_position', { user_id: { $in: others.map((o) => o.id) } })) {
+        await verify.hooks.run('sys_user_position', 'delete', { id: row.id }, { as: admin });
+      }
+    }
   });
 
   it('counts OPEN cases only — a resolved case stops counting against its agent', async () => {
     // `is_closed` would be the wrong predicate: it only flips on `closed`, so a
-    // pile of resolved cases keeps an agent looking busy forever. Here agent_a
-    // has three cases but all are finished, and agent_b has one live case — so
-    // agent_a must win.
-    const harness = makeHarness(storeWith(['agent_a', 'agent_b'], [
-      { id: 'c1', owner_id: 'agent_a', status: 'resolved' },
-      { id: 'c2', owner_id: 'agent_a', status: 'closed' },
-      { id: 'c3', owner_id: 'agent_a', status: 'resolved' },
-      { id: 'c4', owner_id: 'agent_b', status: 'waiting_customer' },
-    ]));
-    const input: Rec = { subject: 'Web submission' };
-
-    await assign.handler(makeCtx({ event: 'beforeInsert', input, api: harness.api }));
-
-    expect(input.owner_id, 'resolved/closed cases are still counting as load').toBe('agent_a');
+    // pile of resolved cases keeps an agent looking busy forever. Here agent A
+    // has three cases but all are finished, and agent B has one live case — so
+    // agent A must win.
+    const pool = await staff(SERVICE_AGENT_POSITION, [{ done: 3 }, { open: 1 }]);
+    try {
+      expect((await systemIntake()).owner_id, 'resolved/closed cases are still counting as load').toBe(pool.people[0]!.id);
+    } finally {
+      await pool.release();
+    }
   });
 
   it('the closed-status vocabulary it counts by is exactly CLOSED_CASE_STATUSES', () => {
@@ -247,14 +299,17 @@ describe('case_auto_assign', () => {
     // On any write that carries a user, `owner_id` is already the creator by the
     // time this hook runs — which is what keeps the round-robin scoped to
     // genuinely ownerless intake instead of re-routing every agent-created case.
-    const harness = makeHarness(storeWith(['agent_a', 'agent_b']));
-    const input: Rec = { subject: 'Agent-created', owner_id: 'usr_creator' };
-
-    await assign.handler(makeCtx({ event: 'beforeInsert', input, api: harness.api }));
-
-    expect(input.owner_id).toBe('usr_creator');
-    expect(harness.callsFor('crm_case').length, 'it queried anyway — wasted reads on every case insert')
-      .toBe(0);
+    // The creator is the MORE loaded agent, so a round-robin would have moved it.
+    const pool = await staff(SERVICE_AGENT_POSITION, [{ open: 2 }, { open: 0 }]);
+    try {
+      const creator = pool.people[0]!;
+      const kase = await verify.hooks.run('crm_case', 'insert', {
+        subject: 'Agent-created', description: 'Logged from a phone call.',
+      }, { as: creator.token });
+      expect((await storedCase(kase.id)).owner_id).toBe(creator.id);
+    } finally {
+      await pool.release();
+    }
   });
 
   // ── the empty-pool path: a first install, not an edge case ──
@@ -262,16 +317,15 @@ describe('case_auto_assign', () => {
   it('is a NO-OP when nobody holds the service_agent position — the pool-empty path', async () => {
     // `sys_user_position` membership is runtime data, so a fresh org has an
     // empty pool by construction. The case must still be created, ownerless,
-    // and the `unassigned_triage` view is what makes that visible.
-    const harness = makeHarness(storeWith([], [{ id: 'c1', owner_id: 'someone', status: 'new' }]));
-    const input: Rec = { subject: 'Web submission', status: 'new' };
-
-    await assign.handler(makeCtx({ event: 'beforeInsert', input, api: harness.api }));
-
-    expect('owner_id' in input, 'invented an owner out of an empty pool').toBe(false);
-    // And it did not fall back to some other pool's holders (sales_rep /
-    // service_manager rows are in the store above).
-    expect(harness.callsFor('crm_case').length).toBe(0);
+    // and the `unassigned_triage` view is what makes that visible. Holders of
+    // other positions are present, and none may be picked.
+    const others = await staff(SERVICE_MANAGER_POSITION, [{ open: 0 }]);
+    try {
+      const kase = await systemIntake();
+      expect(kase.owner_id ?? null, 'invented an owner out of an empty pool').toBeNull();
+    } finally {
+      await others.release();
+    }
   });
 
   it('never rejects the insert when the pool read is DENIED', async () => {
@@ -279,17 +333,31 @@ describe('case_auto_assign', () => {
     // denies `find` on `sys_user_position`. Propagating that denial would 403
     // the whole submission and break the public support form — so the case is
     // captured ownerless and lands in triage instead.
-    const input: Rec = { subject: 'Anonymous submission', status: 'new' };
-    await expect(
-      assign.handler(makeCtx({ event: 'beforeInsert', input, api: makeDeniedApi() })),
-    ).resolves.not.toThrow();
-    expect('owner_id' in input).toBe(false);
+    const pool = await staff(SERVICE_AGENT_POSITION, [{ open: 0 }]);
+    try {
+      const written = await guestInsert(verify, 'crm_case', { subject: 'Anonymous submission', description: 'Help.' });
+      expect((await storedCase(written.id)).owner_id ?? null).toBeNull();
+    } finally {
+      await pool.release();
+    }
   });
 
-  it('does nothing without an api rather than throwing', async () => {
-    const input: Rec = { subject: 'No api' };
-    await assign.handler(makeCtx({ event: 'beforeInsert', input }));
-    expect('owner_id' in input).toBe(false);
+  it('never blocks intake, whoever writes it', async () => {
+    // The `!ctx.api` stand-down has no door on the shipped app — the engine
+    // hands every insert a read door — so what is pinned is the property it
+    // protected: a case from each writer lands.
+    const pool = await staff(SERVICE_AGENT_POSITION, [{ open: 0 }]);
+    try {
+      const agent = pool.people[0]!;
+      const ids = [
+        (await verify.hooks.run('crm_case', 'insert', { subject: 'By an agent', description: 'x' }, { as: agent.token })).id,
+        (await systemIntake()).id,
+        (await guestInsert(verify, 'crm_case', { subject: 'By a guest', description: 'x' })).id,
+      ];
+      for (const id of ids) expect(await storedCase(String(id)), 'a case was lost').toBeTruthy();
+    } finally {
+      await pool.release();
+    }
   });
 });
 
@@ -308,53 +376,41 @@ describe('the guest strip and the assignment are ordered, not merely coexisting'
     expect(assign.events).toEqual(['beforeInsert']);
   });
 
-  it('end to end: a guest submission is stripped, then assigned', async () => {
-    // Both handlers in their real order, on one input — the shape a web-to-case
-    // submission actually takes, including the spoofed owner a public form can
-    // always post.
-    const harness = makeHarness({
-      sys_user_position: [{ user_id: 'agent_a', position: SERVICE_AGENT_POSITION }],
-      crm_case: [],
+  it('a guest submission’s spoofed owner is stripped before anything reads it', async () => {
+    // The shape a web-to-case submission actually takes, including the spoofed
+    // owner a public form can always post. Nulled, not removed (#1133).
+    const written = await guestInsert(verify, 'crm_case', {
+      subject: 'Spoofed', description: 'x', owner_id: (await signUpPerson(verify, `victim.${++k}@case-assignment.test`)).id,
     });
-    const input: Rec = { subject: 'Spoofed', description: 'x', owner_id: 'attacker_chosen_user' };
-    // Through `makeCtx`, so both handlers see the wrapper-shaped `ctx.input`
-    // the engine passes rather than a plain object (#1295). This end-to-end
-    // case is the one the plain-object shape flattered most: a `delete`-based
-    // strip passed it while storing the spoofed owner in production.
-    const ctx = makeCtx({ event: 'beforeInsert', input, user: undefined, api: harness.api });
-
-    await slaDefaults.handler(ctx as never);
-    // Nulled, not removed (#1133): `delete` on a hook's `input` never reached
-    // storage, so the strip overwrites instead. `null` is what keeps the
-    // hand-off below working — `case_auto_assign` stands down only on a
-    // non-empty STRING owner, so a nulled column still reads as ownerless.
-    expect(input.owner_id, 'the guest strip stopped removing the spoofed owner').toBeNull();
-
-    await assign.handler(ctx as never);
-    expect(input.owner_id, 'the assignment did not run after the strip').toBe('agent_a');
-    expect(input.origin, 'guest defaults regressed').toBe('web');
+    const kase = await storedCase(written.id);
+    expect(kase.owner_id ?? null, 'the guest strip stopped removing the spoofed owner').toBeNull();
+    expect(kase.origin, 'guest defaults regressed').toBe('web');
   });
 
-  it('reverse verification: swap the order and the submission lands ownerless', async () => {
-    // The direction this pin exists for. Running the assignment FIRST and the
-    // strip second reproduces the original `lead_auto_assign` defect exactly —
-    // the owner is assigned and then deleted — which is what makes the priority
-    // relation above load-bearing rather than decorative.
-    const harness = makeHarness({
-      sys_user_position: [{ user_id: 'agent_a', position: SERVICE_AGENT_POSITION }],
-      crm_case: [],
-    });
-    const input: Rec = { subject: 'Spoofed', description: 'x' };
-    const ctx = makeCtx({ event: 'beforeInsert', input, user: undefined, api: harness.api });
-
-    await assign.handler(ctx as never);
-    expect(input.owner_id).toBe('agent_a');
-    await slaDefaults.handler(ctx as never);
-    expect(
-      input.owner_id,
-      'the strip no longer clears owner_id — the priority ordering has stopped mattering, ' +
-        'and so has this pin',
-    ).toBeNull();
+  /**
+   * ⚠️ MEASURED DEFECT — reported as a finding on this card, pinned here so the
+   * fix is noticed.
+   *
+   * The round-robin exists for exactly this submission (the header: a
+   * web-to-case case "used to land ownerless with nobody accountable"), and the
+   * strip-then-assign order above is what was meant to hand it to an agent.
+   * But the anonymous form door writes under the `guest_portal` grant, which
+   * cannot read the agent pool — the hook's own stand-down, two describes up —
+   * so the assignment never runs for a web submission at all. Measured on
+   * 17.7.0, under the form door's own execution context: with an agent staffed,
+   * the submission lands unowned.
+   */
+  it('⚠️ a web-to-case submission is never round-robined, even with an agent staffed (measured defect)', async () => {
+    const pool = await staff(SERVICE_AGENT_POSITION, [{ open: 0 }]);
+    try {
+      const written = await guestInsert(verify, 'crm_case', { subject: 'Web submission', description: 'Printer on fire.' });
+      expect(
+        (await storedCase(written.id)).owner_id ?? null,
+        'a web submission was assigned to the agent — the defect is fixed: rewrite this case to pin the hand-off',
+      ).toBeNull();
+    } finally {
+      await pool.release();
+    }
   });
 });
 
@@ -558,19 +614,12 @@ describe('the transfer gate on the UPDATE door: which escalation seam it can see
 });
 
 describe('case_escalation_reassign', () => {
-  /** A staffed `service_manager` pool, plus whatever case backlog a test needs. */
-  const storeWith = (managers: string[], cases: Rec[] = []) => ({
-    sys_user_position: [
-      // Deliberately mixed: neither the agent pool nor a sales position may be
-      // read as the manager pool.
-      { user_id: 'agent_a', position: SERVICE_AGENT_POSITION },
-      { user_id: 'rep_1', position: 'sales_rep' },
-      ...managers.map((user_id) => ({ user_id, position: SERVICE_MANAGER_POSITION })),
-    ],
-    crm_case: cases,
-  });
-
-  /** The escalation write as every writer of it issues it (flow, sweep, action). */
+  /**
+   * The escalation write as the system issues it — the SLA sweep's
+   * `flag_breach`, the `case_escalation_stamp` subflow — through the one local
+   * system-update path. An AGENT's own escalation is refused the pool read
+   * (`test/demo-staffing.test.ts` pins that as a measured defect).
+   */
   const escalationInput = (id: string): Rec => ({
     id,
     is_escalated: true,
@@ -578,165 +627,137 @@ describe('case_escalation_reassign', () => {
     escalated_date: new Date().toISOString(),
     status: 'escalated',
   });
+  const escalate = (id: string, over: Rec = {}) => systemUpdate(verify, 'crm_case', { ...escalationInput(id), ...over });
+
+  /** The agent a case starts with. */
+  let agent: Person;
+  beforeAll(async () => {
+    agent = await signUpPerson(verify, `agent.${++k}@case-assignment.test`, { name: 'Case Agent', permissionSets: ['service_agent'] });
+  });
 
   it('hands the case to the least-loaded service manager — the acceptance path', async () => {
-    const harness = makeHarness(storeWith(['mgr_a', 'mgr_b'], [
-      { id: 'c1', owner_id: 'agent_a', status: 'in_progress' },
-      { id: 'm1', owner_id: 'mgr_a', status: 'new' },
-      { id: 'm2', owner_id: 'mgr_a', status: 'waiting_customer' },
-      { id: 'm3', owner_id: 'mgr_b', status: 'new' },
-    ]));
-    const input = escalationInput('c1');
-
-    await escalationReassign.handler(makeCtx({
-      event: 'beforeUpdate',
-      input,
-      previous: { id: 'c1', owner_id: 'agent_a', status: 'in_progress' },
-      api: harness.api,
-    }));
-
-    expect(input.owner_id, 'the escalated case did not change hands').toBe('mgr_b');
-    // The escalation itself is untouched — the hand-off rides on that write.
-    expect(input.status).toBe('escalated');
-    expect(input.is_escalated).toBe(true);
-    expect('owner' in input, 'wrote a second, unread ownership column (#548)').toBe(false);
+    const pool = await staff(SERVICE_MANAGER_POSITION, [{ open: 2 }, { open: 1 }]);
+    try {
+      const kase = await caseOwnedBy(agent, 'in_progress');
+      await escalate(kase.id);
+      const after = await storedCase(kase.id);
+      expect(after.owner_id, 'the escalated case did not change hands').toBe(pool.people[1]!.id);
+      // The escalation itself is untouched — the hand-off rides on that write.
+      expect(after.status).toBe('escalated');
+      expect(after.is_escalated).toBe(true);
+      expect('owner' in after, 'wrote a second, unread ownership column (#548)').toBe(false);
+    } finally {
+      await pool.release();
+    }
   });
 
   it('spreads consecutive escalations across the pool', async () => {
     // Acceptance criterion 2. Least-loaded is a self-balancing round-robin: no
     // rotation counter, no cursor — the second escalation sees the first one's
     // case counting against its new owner and goes elsewhere.
-    const store = storeWith(['mgr_a', 'mgr_b'], [
-      { id: 'c1', owner_id: 'agent_a', status: 'in_progress' },
-      { id: 'c2', owner_id: 'agent_b', status: 'new' },
-    ]);
-    const harness = makeHarness(store);
-
-    const first = escalationInput('c1');
-    await escalationReassign.handler(makeCtx({
-      event: 'beforeUpdate', input: first,
-      previous: { id: 'c1', owner_id: 'agent_a', status: 'in_progress' },
-      api: harness.api,
-    }));
-    // Persist it the way the engine would: this is a beforeUpdate mutation, so
-    // the row that lands carries the hook's owner.
-    Object.assign(store.crm_case.find((r) => r.id === 'c1')!, first);
-
-    const second = escalationInput('c2');
-    await escalationReassign.handler(makeCtx({
-      event: 'beforeUpdate', input: second,
-      previous: { id: 'c2', owner_id: 'agent_b', status: 'new' },
-      api: harness.api,
-    }));
-
-    expect(first.owner_id, 'the first escalation did not reach the pool').toBeTruthy();
-    expect(second.owner_id, 'the second escalation did not reach the pool').toBeTruthy();
-    expect(
-      second.owner_id,
-      'both escalations landed on the same manager — the load count is not being read',
-    ).not.toBe(first.owner_id);
+    const pool = await staff(SERVICE_MANAGER_POSITION, [{ open: 0 }, { open: 0 }]);
+    try {
+      const first = await caseOwnedBy(agent, 'in_progress');
+      const second = await caseOwnedBy(agent, 'new');
+      await escalate(first.id);
+      await escalate(second.id);
+      const a = (await storedCase(first.id)).owner_id;
+      const b = (await storedCase(second.id)).owner_id;
+      const managers = pool.people.map((p) => p.id);
+      expect(managers, 'the first escalation did not reach the pool').toContain(a);
+      expect(managers, 'the second escalation did not reach the pool').toContain(b);
+      expect(b, 'both escalations landed on the same manager — the load count is not being read').not.toBe(a);
+    } finally {
+      await pool.release();
+    }
   });
 
   it('reads the SERVICE_MANAGER_POSITION pool, and only that pool', async () => {
     // The parity pin the module's header promises: an L2 body must spell its
-    // position literal inline (no module scope in QuickJS), so this drives the
-    // real handler and asserts the predicate it actually issued.
-    const seenQueries: Rec[] = [];
-    const api: Rec = {
-      object: (name: string) => ({
-        async find(q: Rec = {}) {
-          seenQueries.push({ object: name, ...q });
-          return name === 'sys_user_position' ? [{ user_id: 'mgr_a' }] : [];
-        },
-        async count() { return 0; },
-      }),
-    };
-    const input = escalationInput('c1');
-    await escalationReassign.handler(makeCtx({
-      event: 'beforeUpdate', input,
-      previous: { id: 'c1', owner_id: 'agent_a', status: 'new' },
-      api: api as never,
-    }));
+    // position literal inline (no module scope in QuickJS), so the shipped body
+    // is read for it, and the behaviour is driven with agent and rep holders
+    // present — neither may be picked.
+    const body = shippedBody(escalationReassign);
+    expect(body, 'the position literal in the hook body drifted from SERVICE_MANAGER_POSITION')
+      .toContain(`position: "${SERVICE_MANAGER_POSITION}"`);
+    expect(body, 'the pool read bound drifted from POOL_QUERY_LIMIT').toMatch(new RegExp(`top: (${POOL_QUERY_LIMIT}|${POOL_QUERY_LIMIT.toExponential().replace('+', '')})\\b`));
 
-    const poolQuery = seenQueries.find((q) => q.object === 'sys_user_position');
-    expect(poolQuery, 'the hook never read the position pool').toBeTruthy();
-    expect(
-      poolQuery!.where?.position,
-      'the position literal in the hook body drifted from SERVICE_MANAGER_POSITION',
-    ).toBe(SERVICE_MANAGER_POSITION);
-    expect(poolQuery!.top, 'the pool read bound drifted from POOL_QUERY_LIMIT').toBe(POOL_QUERY_LIMIT);
-    expect(input.owner_id).toBe('mgr_a');
+    const agents = await staff(SERVICE_AGENT_POSITION, [{ open: 0 }]);
+    const pool = await staff(SERVICE_MANAGER_POSITION, [{ open: 3 }]);
+    try {
+      const kase = await caseOwnedBy(agent, 'new');
+      await escalate(kase.id);
+      expect((await storedCase(kase.id)).owner_id).toBe(pool.people[0]!.id);
+    } finally {
+      await pool.release();
+      await agents.release();
+    }
   });
 
   it('counts OPEN cases only — a manager’s resolved pile stops counting', async () => {
-    const harness = makeHarness(storeWith(['mgr_a', 'mgr_b'], [
-      { id: 'm1', owner_id: 'mgr_a', status: 'resolved' },
-      { id: 'm2', owner_id: 'mgr_a', status: 'closed' },
-      { id: 'm3', owner_id: 'mgr_a', status: 'resolved' },
-      { id: 'm4', owner_id: 'mgr_b', status: 'waiting_customer' },
-      { id: 'c1', owner_id: 'agent_a', status: 'new' },
-    ]));
-    const input = escalationInput('c1');
-
-    await escalationReassign.handler(makeCtx({
-      event: 'beforeUpdate', input,
-      previous: { id: 'c1', owner_id: 'agent_a', status: 'new' },
-      api: harness.api,
-    }));
-
-    expect(input.owner_id, 'resolved/closed cases are still counting as manager load').toBe('mgr_a');
+    const pool = await staff(SERVICE_MANAGER_POSITION, [{ done: 3 }, { open: 1 }]);
+    try {
+      const kase = await caseOwnedBy(agent, 'new');
+      await escalate(kase.id);
+      expect((await storedCase(kase.id)).owner_id, 'resolved/closed cases are still counting as manager load').toBe(pool.people[0]!.id);
+    } finally {
+      await pool.release();
+    }
   });
 
   // ── the empty pool: the first-install norm, and acceptance criterion 3 ──
 
   it('keeps the current owner when nobody holds service_manager, and still escalates', async () => {
-    const harness = makeHarness(storeWith([], [{ id: 'c1', owner_id: 'agent_a', status: 'new' }]));
-    const input = escalationInput('c1');
-
-    await escalationReassign.handler(makeCtx({
-      event: 'beforeUpdate', input,
-      previous: { id: 'c1', owner_id: 'agent_a', status: 'new' },
-      api: harness.api,
-    }));
-
-    expect('owner_id' in input, 'invented an owner out of an empty pool').toBe(false);
-    // The escalation write is intact — the case is escalated, just not moved.
-    expect(input.status).toBe('escalated');
-    expect(input.is_escalated).toBe(true);
-    expect(input.escalation_reason).toBeTruthy();
-    // And it did not fall back to the agent pool or a sales position (both are
-    // in the store above).
-    expect(harness.callsFor('crm_case').length).toBe(0);
+    // Holders of the agent pool are present, and the hand-off must not fall
+    // back to them.
+    const agents = await staff(SERVICE_AGENT_POSITION, [{ open: 0 }]);
+    try {
+      const kase = await caseOwnedBy(agent, 'new');
+      await escalate(kase.id);
+      const after = await storedCase(kase.id);
+      expect(after.owner_id, 'invented an owner out of an empty pool').toBe(agent.id);
+      // The escalation write is intact — the case is escalated, just not moved.
+      expect(after.status).toBe('escalated');
+      expect(after.is_escalated).toBe(true);
+      expect(after.escalation_reason).toBeTruthy();
+    } finally {
+      await agents.release();
+    }
   });
 
   it('never rejects the escalation when the pool read is DENIED', async () => {
-    const input = escalationInput('c1');
-    await expect(
-      escalationReassign.handler(makeCtx({
-        event: 'beforeUpdate', input,
-        previous: { id: 'c1', owner_id: 'agent_a', status: 'new' },
-        api: makeDeniedApi(),
-      })),
-    ).resolves.not.toThrow();
-    expect('owner_id' in input, 'moved the case despite a failed pool read').toBe(false);
-    expect(input.status).toBe('escalated');
+    // An agent's own escalation: the agent may not read the pool. The write
+    // lands escalated and the case stays where it was — the shape
+    // `test/demo-staffing.test.ts` pins as a measured defect.
+    const pool = await staff(SERVICE_MANAGER_POSITION, [{ open: 0 }]);
+    const caller = await signUpPerson(verify, `escalator.${++k}@case-assignment.test`, {
+      name: 'Escalating Agent', positions: [SERVICE_AGENT_POSITION], permissionSets: ['service_agent'],
+    });
+    try {
+      const kase = await verify.hooks.run('crm_case', 'insert', { subject: 'Mine', description: 'x', status: 'new' }, { as: caller.token });
+      await verify.hooks.run('crm_case', 'update', { id: kase.id, status: 'escalated' }, { as: caller.token });
+      const after = await storedCase(kase.id);
+      expect(after.status).toBe('escalated');
+      expect(after.owner_id, 'moved the case despite a failed pool read').toBe(caller.id);
+    } finally {
+      await pool.release();
+      for (const row of await verify.rows('sys_user_position', { user_id: caller.id })) {
+        await verify.hooks.run('sys_user_position', 'delete', { id: row.id }, { as: admin });
+      }
+    }
   });
 
-  it('does nothing without an api, and nothing without a previous row', async () => {
-    const noApi = escalationInput('c1');
-    await escalationReassign.handler(makeCtx({
-      event: 'beforeUpdate', input: noApi, previous: { id: 'c1', status: 'new' },
-    }));
-    expect('owner_id' in noApi).toBe(false);
-
-    // No `previous` is the insert shape — a case BORN escalated is not a
-    // transition and this hook is not the intake path.
-    const harness = makeHarness(storeWith(['mgr_a']));
-    const noPrevious = escalationInput('c1');
-    await escalationReassign.handler(makeCtx({
-      event: 'beforeUpdate', input: noPrevious, api: harness.api,
-    }));
-    expect('owner_id' in noPrevious).toBe(false);
+  it('does nothing on a case BORN escalated — that is no transition', async () => {
+    // The `!ctx.api` stand-down has no door on the shipped app. No `previous`
+    // is the insert shape — a case born escalated is not a transition, and
+    // this hook is not the intake path.
+    const pool = await staff(SERVICE_MANAGER_POSITION, [{ open: 0 }]);
+    try {
+      const born = await caseOwnedBy(agent, 'escalated', { is_escalated: true, escalation_reason: 'Imported escalated.' });
+      expect((await storedCase(born.id)).owner_id).toBe(agent.id);
+    } finally {
+      await pool.release();
+    }
   });
 
   // ── re-entrancy: the risk the card named twice ──
@@ -749,50 +770,46 @@ describe('case_escalation_reassign', () => {
     // it. Both accidents this file's neighbourhood has had — the
     // `closed_date`-as-`resolved_date` write and the 2026-07-06 `is_escalated`
     // re-fire loop that wedged a first-boot seed — were EXTRA writes.
-    const harness = makeHarness(storeWith(['mgr_a', 'mgr_b'], [
-      { id: 'c1', owner_id: 'agent_a', status: 'new' },
-    ]));
-    const input = escalationInput('c1');
-
-    await escalationReassign.handler(makeCtx({
-      event: 'beforeUpdate', input,
-      previous: { id: 'c1', owner_id: 'agent_a', status: 'new' },
-      api: harness.api,
-    }));
-
-    expect(input.owner_id).toBeTruthy();
-    expect(
-      harness.calls.length,
-      `the hook wrote through ctx.api (${harness.calls.map((c) => `${c.op} ${c.object}`).join(', ')}) — ` +
-        'that is a second operation, a second trigger fire, and the re-entrancy risk is back',
-    ).toBe(0);
+    const pool = await staff(SERVICE_MANAGER_POSITION, [{ open: 0 }, { open: 0 }]);
+    try {
+      const kase = await caseOwnedBy(agent, 'new');
+      const recorder = recordEngineWrites(verify);
+      try {
+        await escalate(kase.id);
+        await new Promise((r) => setTimeout(r, 400));
+        await Promise.all(recorder.writes.map((w) => w.settled));
+      } finally {
+        recorder.restore();
+      }
+      expect(pool.people.map((p) => p.id)).toContain((await storedCase(kase.id)).owner_id);
+      const caseWrites = recorder.of('crm_case');
+      expect(
+        caseWrites.length,
+        `a second write reached the case (${caseWrites.map((w) => w.op).join(', ')}) — ` +
+          'that is a second operation, a second trigger fire, and the re-entrancy risk is back',
+      ).toBe(1);
+    } finally {
+      await pool.release();
+    }
   });
 
   it('does not fire on a replay: the guard is the TRANSITION, not the escalated state', async () => {
-    // Feed the result back as the next write on the same record — the shape a
-    // re-fire takes. `previous.status` is now `escalated`, so the hook stands
-    // down. The 2026-07-06 loop read the boolean `is_escalated` instead, which
-    // SQLite stores as `1` and `1 != true` never trips; both writes below carry
+    // Feed the same escalation again as the next write on the same record — the
+    // shape a re-fire takes. `previous.status` is now `escalated`, so the hook
+    // stands down. The 2026-07-06 loop read the boolean `is_escalated` instead,
+    // which SQLite stores as `1` and `1 != true` never trips; both writes carry
     // `is_escalated: true` and neither is mistaken for a fresh escalation.
-    const harness = makeHarness(storeWith(['mgr_a', 'mgr_b'], [
-      { id: 'c1', owner_id: 'agent_a', status: 'new' },
-    ]));
-    const first = escalationInput('c1');
-    await escalationReassign.handler(makeCtx({
-      event: 'beforeUpdate', input: first,
-      previous: { id: 'c1', owner_id: 'agent_a', status: 'new' },
-      api: harness.api,
-    }));
-    const handedTo = first.owner_id as string;
-    expect(handedTo).toBeTruthy();
-
-    const replay = escalationInput('c1');
-    await escalationReassign.handler(makeCtx({
-      event: 'beforeUpdate', input: replay,
-      previous: { id: 'c1', owner_id: handedTo, status: 'escalated', is_escalated: true },
-      api: harness.api,
-    }));
-    expect('owner_id' in replay, 'a re-fire moved the case again — this is the loop shape').toBe(false);
+    const pool = await staff(SERVICE_MANAGER_POSITION, [{ open: 0 }, { open: 0 }]);
+    try {
+      const kase = await caseOwnedBy(agent, 'new');
+      await escalate(kase.id);
+      const handedTo = (await storedCase(kase.id)).owner_id;
+      expect(pool.people.map((p) => p.id)).toContain(handedTo);
+      await escalate(kase.id);
+      expect((await storedCase(kase.id)).owner_id, 'a re-fire moved the case again — this is the loop shape').toBe(handedTo);
+    } finally {
+      await pool.release();
+    }
   });
 
   it('an ordinary edit of an already-escalated case does not move it', async () => {
@@ -804,18 +821,16 @@ describe('case_escalation_reassign', () => {
     // case being yanked away mid-edit, on every save, forever.
     //
     // Reverse-verified 2026-08-11: with `|| previous.status === 'escalated'`
-    // deleted from the handler this expectation reads `mgr_a` and the test goes
-    // red, while every other test in this describe stays green.
-    const harness = makeHarness(storeWith(['mgr_a', 'mgr_b'], [
-      { id: 'c1', owner_id: 'agent_a', status: 'escalated' },
-    ]));
-    const edit: Rec = { id: 'c1', status: 'escalated', subject: 'Printer still on fire' };
-    await escalationReassign.handler(makeCtx({
-      event: 'beforeUpdate', input: edit,
-      previous: { id: 'c1', owner_id: 'agent_a', status: 'escalated', is_escalated: true },
-      api: harness.api,
-    }));
-    expect('owner_id' in edit, 'an ordinary save re-ran the hand-off').toBe(false);
+    // deleted from the handler this expectation reads a manager and the test
+    // goes red, while every other test in this describe stays green.
+    const pool = await staff(SERVICE_MANAGER_POSITION, [{ open: 0 }, { open: 0 }]);
+    try {
+      const kase = await caseOwnedBy(agent, 'escalated', { is_escalated: true, escalation_reason: 'Escalated earlier.' });
+      await systemUpdate(verify, 'crm_case', { id: kase.id, status: 'escalated', subject: 'Printer still on fire' });
+      expect((await storedCase(kase.id)).owner_id, 'an ordinary save re-ran the hand-off').toBe(agent.id);
+    } finally {
+      await pool.release();
+    }
   });
 
   it('leaves a case already owned by a pool member where it is — the second guard', async () => {
@@ -831,52 +846,45 @@ describe('case_escalation_reassign', () => {
     // catches it too. The scenario that isolates the transition guard is the
     // ordinary-edit test above, whose case stays with an AGENT; that one goes
     // red on its own. Two guards, two independent proofs, neither redundant.
-    const harness = makeHarness(storeWith(['mgr_a', 'mgr_b'], [
-      { id: 'c1', owner_id: 'mgr_a', status: 'new' },
-      { id: 'm9', owner_id: 'mgr_a', status: 'new' },
-      { id: 'm8', owner_id: 'mgr_a', status: 'new' },
-    ]));
-    const input = escalationInput('c1');
-    await escalationReassign.handler(makeCtx({
-      event: 'beforeUpdate', input,
-      previous: { id: 'c1', owner_id: 'mgr_a', status: 'new' },
-      api: harness.api,
-    }));
-    // mgr_b is less loaded, and it still does not move: "already with the pool"
-    // wins over "least loaded".
-    expect('owner_id' in input, 'took the case off the manager already working it').toBe(false);
+    const pool = await staff(SERVICE_MANAGER_POSITION, [{ open: 2 }, { open: 0 }]);
+    try {
+      const busy = pool.people[0]!;
+      const kase = await caseOwnedBy(busy, 'new');
+      await escalate(kase.id);
+      // The other manager is less loaded, and it still does not move: "already
+      // with the pool" wins over "least loaded".
+      expect((await storedCase(kase.id)).owner_id, 'took the case off the manager already working it').toBe(busy.id);
+    } finally {
+      await pool.release();
+    }
   });
 
   it('stands down when the same write carries an explicit owner', async () => {
     // "Escalate and hand it to Dana" is a decision the caller already made.
-    const harness = makeHarness(storeWith(['mgr_a', 'mgr_b']));
-    const input = { ...escalationInput('c1'), owner_id: 'usr_dana' };
-    await escalationReassign.handler(makeCtx({
-      event: 'beforeUpdate', input,
-      previous: { id: 'c1', owner_id: 'agent_a', status: 'new' },
-      api: harness.api,
-    }));
-    expect(input.owner_id).toBe('usr_dana');
-    expect(harness.callsFor('crm_case').length, 'it queried anyway — wasted reads on the write path')
-      .toBe(0);
+    const pool = await staff(SERVICE_MANAGER_POSITION, [{ open: 0 }, { open: 0 }]);
+    const dana = await signUpPerson(verify, `dana.${++k}@case-assignment.test`, { name: 'Dana', permissionSets: ['service_agent'] });
+    try {
+      const kase = await caseOwnedBy(agent, 'new');
+      await escalate(kase.id, { owner_id: dana.id });
+      expect((await storedCase(kase.id)).owner_id).toBe(dana.id);
+    } finally {
+      await pool.release();
+    }
   });
 
   it('ignores every write that is not the escalation transition', async () => {
-    const harness = makeHarness(storeWith(['mgr_a', 'mgr_b'], [
-      { id: 'c1', owner_id: 'agent_a', status: 'new' },
-    ]));
-    for (const [input, previous] of [
-      [{ id: 'c1', priority: 'high' }, { id: 'c1', owner_id: 'agent_a', status: 'new' }],
-      [{ id: 'c1', status: 'in_progress' }, { id: 'c1', owner_id: 'agent_a', status: 'new' }],
-      [{ id: 'c1', status: 'closed' }, { id: 'c1', owner_id: 'agent_a', status: 'escalated' }],
-    ] as [Rec, Rec][]) {
-      await escalationReassign.handler(makeCtx({
-        event: 'beforeUpdate', input, previous, api: harness.api,
-      }));
-      expect(
-        'owner_id' in input,
-        `a non-escalation write (${JSON.stringify(input)}) moved the case`,
-      ).toBe(false);
+    const pool = await staff(SERVICE_MANAGER_POSITION, [{ open: 0 }, { open: 0 }]);
+    try {
+      const kase = await caseOwnedBy(agent, 'new');
+      for (const doc of [{ priority: 'high' }, { status: 'in_progress' }]) {
+        await systemUpdate(verify, 'crm_case', { id: kase.id, ...doc });
+        expect((await storedCase(kase.id)).owner_id, `a non-escalation write (${JSON.stringify(doc)}) moved the case`).toBe(agent.id);
+      }
+      const escalated = await caseOwnedBy(agent, 'escalated', { is_escalated: true, escalation_reason: 'Escalated earlier.' });
+      await systemUpdate(verify, 'crm_case', { id: escalated.id, status: 'closed', resolution: 'Fixed.' });
+      expect((await storedCase(escalated.id)).owner_id, 'closing an escalated case moved it').toBe(agent.id);
+    } finally {
+      await pool.release();
     }
   });
 

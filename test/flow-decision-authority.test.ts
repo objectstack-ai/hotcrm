@@ -1,11 +1,12 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
+import type { VerifyStack } from '@objectstack/verify';
 import { P } from '@objectstack/spec';
 import { OpportunityStagnationFlow } from '../src/sales/flows/opportunity-stagnation.flow';
 import { allFlows } from '../objectstack.composition';
-import { makeFlowHarness } from './helpers/flow-harness';
 import { flowGraphDeep } from './helpers/flow-regions';
+import { hotcrmStack, signUpPerson, daysFromNow, notificationsTo } from './helpers/verify-stack';
 
 /**
  * ═══ HOUSE RULE: a `decision` node's OUT-EDGES are the only branch site ═════
@@ -196,6 +197,30 @@ describe('decision nodes state no predicate of their own', () => {
 });
 
 describe('the mechanism, on the real engine', () => {
+  // The shipped app booted through `@objectstack/verify`. A flow variant is
+  // registered beside the shipped ones through the platform's own
+  // flow-authoring door (`POST /automation`, as the admin), run through the
+  // trigger door (`flows.run`), and removed again (`DELETE /automation/:name`).
+  let verify: VerifyStack;
+  let admin: string;
+  let n = 0;
+  beforeAll(async () => {
+    verify = await hotcrmStack();
+    admin = await verify.signIn();
+  }, 120_000);
+
+  /** Register `flow` under `name` for the duration of `body`. */
+  const withFlow = async <T>(name: string, flow: AnyRec, body: () => Promise<T>): Promise<T> => {
+    const registered = await verify.apiAs(admin, 'POST', '/automation', { ...flow, name });
+    expect(registered.status, await registered.clone().text()).toBe(200);
+    try {
+      return await body();
+    } finally {
+      const removed = await verify.apiAs(admin, 'DELETE', `/automation/${name}`);
+      expect(removed.status).toBe(200);
+    }
+  };
+
   /**
    * The issue's core claim, reproduced end to end on a REAL repo flow: edit
    * the node condition alone and the flow keeps its old routing, silently.
@@ -204,38 +229,48 @@ describe('the mechanism, on the real engine', () => {
    * idempotency shape — a second sweep must not re-nudge. We inject the
    * INVERSE of the live edge predicate onto the node. Were the node copy read
    * at all, the gate would flip and the second sweep would duplicate. It does
-   * not: the run is byte-identical to the control.
+   * not: the run is identical to the control.
+   *
+   * Each arm gets a stalled deal of its own, owned by a rep of its own, and is
+   * read over that deal's tasks and that rep's inbox: a sweep nudges EVERY
+   * stalled deal (the boot's seed deals included), so the control's two sweeps
+   * have already nudged anything that existed before the tampered arm's deal.
    */
-  const seedOpps = () => {
-    const day = (n: number) =>
-      new Date(Date.now() + n * 86_400_000).toISOString().slice(0, 10);
-    return [
-      { id: 'o_stalled', name: 'Stalled Deal', stage: 'proposal', stage_entry_date: day(-30), owner_id: 'rep1' },
-    ];
+  const stalledDeal = async () => {
+    const i = ++n;
+    const rep = await signUpPerson(verify, `rep${i}@flow-decision-authority.test`, {
+      name: `Stalled Rep ${i}`, positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    });
+    const [account] = await verify.seed('crm_account', [{ name: `Stalled Co ${i}`, owner_id: rep.id }]);
+    const [opp] = await verify.seed('crm_opportunity', [{
+      name: `Stalled Deal ${i}`, stage: 'proposal', stage_entry_date: daysFromNow(-30), amount: 50000,
+      close_date: '2030-06-30', crm_account: account!.id, owner_id: rep.id,
+    }]);
+    return { rep, opp: opp! };
   };
 
-  const sweepTwice = async (flow: AnyRec) => {
-    const h = makeFlowHarness(
-      { opportunity_stagnation: flow as never },
-      { crm_opportunity: seedOpps(), crm_task: [] },
-    );
-    await h.run('opportunity_stagnation', {}, { event: 'schedule' });
-    await h.run('opportunity_stagnation', {}, { event: 'schedule' });
-    return { tasks: h.store.crm_task.length, notifications: h.notifications.length };
+  const sweepTwice = async (flowName: string, deal: Awaited<ReturnType<typeof stalledDeal>>) => {
+    await verify.flows.run(flowName, {}, { as: admin });
+    await verify.flows.run(flowName, {}, { as: admin });
+    const tasks = await verify.rows('crm_task', { related_to_opportunity: deal.opp.id });
+    const notifications = await notificationsTo(verify, deal.rep.id, 'deal_stalled');
+    return { tasks: tasks.length, notifications: notifications.length };
   };
 
   it('a decision node`s singular `config.condition` changes NOTHING', async () => {
-    const control = await sweepTwice(OpportunityStagnationFlow as AnyRec);
+    const control = await sweepTwice('opportunity_stagnation', await stalledDeal());
 
     // Same flow, with the inverse of the live edge predicate planted on the
     // gate node. `existingStallTask != null` is exactly "nudge only when a
     // nudge already exists" — the opposite of what the flow does.
     const tampered = structuredClone(OpportunityStagnationFlow) as AnyRec;
-    const gate = graphOf(tampered).nodes.find((n) => n.id === 'check_not_nudged');
+    const gate = graphOf(tampered).nodes.find((node) => node.id === 'check_not_nudged');
     expect(gate, 'check_not_nudged not found — the flow was restructured').toBeDefined();
     gate!.config = { ...(gate!.config ?? {}), condition: P`existingStallTask != null` };
 
-    const injected = await sweepTwice(tampered);
+    const deal = await stalledDeal();
+    const injected = await withFlow('opportunity_stagnation_tampered', tampered, () =>
+      sweepTwice('opportunity_stagnation_tampered', deal));
 
     expect(control, 'the control sweep did not nudge exactly once').toEqual({
       tasks: 1,
@@ -257,8 +292,7 @@ describe('the mechanism, on the real engine', () => {
    * edge predicate should make the CLOSED gate run its action anyway. It does.
    */
   it('a node-authoritative decision with no default sink FAILS OPEN', async () => {
-    const gateFlow = (nodeAuthoritative: boolean): AnyRec => ({
-      name: 'probe',
+    const gateFlow = (stall: string, nudge: string, nodeAuthoritative: boolean): AnyRec => ({
       label: 'Probe',
       type: 'autolaunched',
       status: 'active',
@@ -268,7 +302,7 @@ describe('the mechanism, on the real engine', () => {
         { id: 'start', type: 'start', label: 'Start' },
         {
           id: 'find', type: 'get_record', label: 'Already nudged?',
-          config: { objectName: 'crm_task', filter: { subject: 'stall' }, outputVariable: 'existingStallTask' },
+          config: { objectName: 'crm_task', filter: { subject: stall }, outputVariable: 'existingStallTask' },
         },
         {
           id: 'gate', type: 'decision', label: 'First Nudge?',
@@ -278,7 +312,10 @@ describe('the mechanism, on the real engine', () => {
         },
         {
           id: 'act', type: 'create_record', label: 'Nudge',
-          config: { objectName: 'crm_audit', fields: { note: 'NUDGED' } },
+          config: {
+            objectName: 'crm_task',
+            fields: { subject: nudge, type: 'follow_up', priority: 'high', status: 'not_started' },
+          },
         },
       ],
       edges: [
@@ -295,12 +332,13 @@ describe('the mechanism, on the real engine', () => {
 
     // Gate CLOSED: a stall task already exists, so the action must NOT run.
     const runClosed = async (nodeAuthoritative: boolean) => {
-      const h = makeFlowHarness(
-        { probe: gateFlow(nodeAuthoritative) as never },
-        { crm_task: [{ id: 't1', subject: 'stall' }], crm_audit: [] },
-      );
-      await h.run('probe', {}, { event: 'schedule' });
-      return (h.store.crm_audit ?? []).map((r: AnyRec) => r.note);
+      const i = ++n;
+      const stall = `stall ${i}`;
+      const nudge = `NUDGED ${i}`;
+      await verify.seed('crm_task', [{ subject: stall, type: 'follow_up', priority: 'high', status: 'not_started' }]);
+      const name = `decision_probe_${i}`;
+      await withFlow(name, gateFlow(stall, nudge, nodeAuthoritative), () => verify.flows.run(name, {}, { as: admin }));
+      return (await verify.rows('crm_task', { subject: nudge })).map(() => 'NUDGED');
     };
 
     expect(

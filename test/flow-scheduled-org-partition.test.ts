@@ -1,13 +1,12 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
+import type { VerifyStack } from '@objectstack/verify';
 import { FLOW_REGION_SLOTS_BY_TYPE } from '@objectstack/spec/automation';
 import { CrmFlows as allFlows } from './helpers/src-roster';
-import { ContractRenewalFlow } from '../src/revenue/flows/contract-renewal.flow';
-import { OpportunityStagnationFlow } from '../src/sales/flows/opportunity-stagnation.flow';
-import { ForecastSnapshotFlow } from '../src/sales/flows/forecast-snapshot.flow';
-import forecastDerive from '../src/sales/objects/forecast.hook';
-import { makeFlowHarness, type Rec } from './helpers/flow-harness';
+import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
+
+type Rec = Record<string, any>;
 
 /**
  * Scheduled sweeps must declare `organization_id` on every `create_record` (#700).
@@ -194,85 +193,115 @@ describe('scheduled create_record declares organization_id (#700)', () => {
  * The half a spelling check cannot do: run the real `AutomationEngine` and read
  * the column off the row it actually wrote.
  */
+/**
+ * The runtime half, on the shipped app booted by `@objectstack/verify`: each
+ * sweep is started through the trigger door as the admin (`flows.run`) — a
+ * schedule run carries no organization of its own — over rows written by the
+ * system into organizations created for the purpose, and what the sweep wrote
+ * is read back off the engine.
+ */
+let verify: VerifyStack;
+let admin: string;
+let k = 0;
+beforeAll(async () => {
+  verify = await hotcrmStack();
+  admin = await verify.signIn();
+}, 120_000);
+
+/** A fresh organization row, written as the system. */
+const organization = async (label: string): Promise<string> =>
+  String((await verify.seed('sys_organization', [{ name: `${label} ${++k}`, slug: `${label}-${k}` }]))[0]!.id);
+
+/** A person — the owner of the rows below. */
+const owner = (): Promise<Person> =>
+  signUpPerson(verify, `owner${++k}@flow-scheduled-org-partition.test`, { name: `Owner ${k}` });
+
+/**
+ * UTC calendar throughout — `setUTCDate`, not `setDate`. Mixing
+ * local-calendar arithmetic with UTC rendering lands one UTC day late across
+ * a DST spring-forward, and no `TZ=UTC` run can tell the two spellings apart.
+ * `test/helpers/verify-stack.ts`'s `daysFromNow` carries the full reasoning.
+ */
+const day = (offset: number): string => {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() + offset);
+  return d.toISOString().slice(0, 10);
+};
+
+/** Today's calendar-quarter start, the window `forecast.hook.ts` derives. */
+const quarterStart = (): string => {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const now = new Date();
+  const d = new Date(Date.UTC(now.getUTCFullYear(), Math.floor(now.getUTCMonth() / 3) * 3, 1));
+  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+};
+
+/** An account of `who`'s inside `org`. */
+const accountIn = async (org: string, who: Person): Promise<Rec> =>
+  (await verify.seed('crm_account', [{ name: `Partitioned Co ${++k}`, organization_id: org, owner_id: who.id }]))[0]!;
+
 describe('the declared organization_id actually resolves (#700)', () => {
-  const ORG = 'org_alpha';
-
-  /**
-   * UTC calendar throughout — `setUTCDate`, not `setDate`. Mixing
-   * local-calendar arithmetic with UTC rendering lands one UTC day late across
-   * a DST spring-forward, and no `TZ=UTC` run can tell the two spellings apart.
-   * `test/helpers/hook-harness.ts`'s `daysFromNow` carries the full reasoning.
-   */
-  const day = (offset: number): string => {
-    const d = new Date();
-    d.setUTCDate(d.getUTCDate() + offset);
-    return d.toISOString().slice(0, 10);
-  };
-
   it('contract_renewal stamps the contract’s org on the task and the renewal deal', async () => {
-    const h = makeFlowHarness({ contract_renewal: ContractRenewalFlow }, {
-      crm_contract: [{
-        id: 'k1', contract_number: 'CTR-1', status: 'activated', crm_account: 'acc1',
-        owner_id: 'rep1', contract_value: 90_000, auto_renewal: true,
-        renewal_notice_days: 30, end_date: day(+20), organization_id: ORG,
-      }],
-      crm_task: [],
-      crm_opportunity: [],
-    });
-    await h.run('contract_renewal', {}, { event: 'schedule' });
+    const org = await organization('alpha');
+    const who = await owner();
+    const acct = await accountIn(org, who);
+    const [contact] = await verify.seed('crm_contact', [{
+      first_name: 'Cara', last_name: `Signer ${k}`, email: `cara${k}@flow-scheduled-org-partition.test`,
+      crm_account: acct.id, organization_id: org, owner_id: who.id,
+    }]);
+    const [contract] = await verify.seed('crm_contract', [{
+      status: 'activated', crm_account: acct.id, crm_contact: contact!.id, owner_id: who.id, organization_id: org,
+      contract_type: 'subscription', contract_value: 90_000, auto_renewal: true, renewal_notice_days: 30,
+      contract_term_months: 12, start_date: day(-345), end_date: day(+20), billing_frequency: 'monthly', payment_terms: 'net_30',
+    }]);
+    await verify.flows.run('contract_renewal', {}, { as: admin });
 
-    expect(h.store.crm_task, 'the sweep created no task').toHaveLength(1);
-    expect(h.store.crm_opportunity, 'the sweep opened no renewal deal').toHaveLength(1);
-    expect(h.store.crm_task[0].organization_id).toBe(ORG);
-    expect(h.store.crm_opportunity[0].organization_id).toBe(ORG);
+    const tasks = await verify.rows('crm_task', {
+      related_to_account: acct.id, subject: `Renewal due: contract ${contract!.contract_number}`,
+    });
+    const deals = await verify.rows('crm_opportunity', { crm_account: acct.id, type: 'existing_renewal' });
+    expect(tasks, 'the sweep created no task').toHaveLength(1);
+    expect(deals, 'the sweep opened no renewal deal').toHaveLength(1);
+    expect(tasks[0]!.organization_id).toBe(org);
+    expect(deals[0]!.organization_id).toBe(org);
   });
 
   it('opportunity_stagnation stamps the deal’s org on the nudge task', async () => {
-    const h = makeFlowHarness({ opportunity_stagnation: OpportunityStagnationFlow }, {
-      crm_opportunity: [{
-        id: 'o_stalled', name: 'Stalled Deal', stage: 'proposal',
-        stage_entry_date: day(-30), owner_id: 'rep1', organization_id: ORG,
-      }],
-      crm_task: [],
-    });
-    await h.run('opportunity_stagnation', {}, { event: 'schedule' });
+    const org = await organization('alpha');
+    const who = await owner();
+    const acct = await accountIn(org, who);
+    const [deal] = await verify.seed('crm_opportunity', [{
+      name: `Stalled Deal ${++k}`, stage: 'proposal', stage_entry_date: day(-30), amount: 50_000,
+      close_date: '2030-06-30', crm_account: acct.id, owner_id: who.id, organization_id: org,
+    }]);
+    await verify.flows.run('opportunity_stagnation', {}, { as: admin });
 
-    expect(h.store.crm_task, 'the sweep created no nudge task').toHaveLength(1);
-    expect(h.store.crm_task[0].organization_id).toBe(ORG);
+    const tasks = await verify.rows('crm_task', { related_to_opportunity: deal!.id });
+    expect(tasks, 'the sweep created no nudge task').toHaveLength(1);
+    expect(tasks[0]!.organization_id).toBe(org);
   });
 
   it('forecast_snapshot resolves the org from the pipeline, not from sys_user', async () => {
-    const pad = (n: number) => String(n).padStart(2, '0');
-    const isoUtc = (d: Date) => `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
-    const now = new Date();
-    const qStart = new Date(Date.UTC(now.getUTCFullYear(), Math.floor(now.getUTCMonth() / 3) * 3, 1));
+    // The real platform object: `sys_user` declares NO `organization_id`.
+    // Binding the node to `{currentOwner.organization_id}` interpolates to
+    // `undefined` and the assertion below goes red.
+    const org = await organization('alpha');
+    const who = await owner();
+    const acct = await accountIn(org, who);
+    await verify.seed('crm_opportunity', [{
+      name: `Forecast Deal ${++k}`, owner_id: who.id, stage: 'negotiation', amount: 200_000, approval_status: 'approved',
+      close_date: quarterStart(), crm_account: acct.id, organization_id: org,
+    }]);
+    await verify.flows.run('forecast_snapshot', {}, { as: admin });
 
-    const h = makeFlowHarness(
-      { forecast_snapshot: ForecastSnapshotFlow },
-      {
-        // Faithful to the real platform object: `sys_user` declares NO
-        // `organization_id`. Binding the node to `{currentOwner.organization_id}`
-        // interpolates to `undefined` here and the assertion below goes red —
-        // which is the whole reason this seed omits the key rather than
-        // setting it to null.
-        sys_user: [{ id: 'rep1', name: 'Rep One' }],
-        crm_opportunity: [{
-          id: 'o1', owner_id: 'rep1', stage: 'negotiation', forecast_category: 'commit',
-          amount: 200_000, close_date: isoUtc(qStart), organization_id: ORG,
-        }],
-        crm_forecast: [],
-      },
-      { hooks: [forecastDerive] },
-    );
-    await h.run('forecast_snapshot', {}, { event: 'schedule' });
-
-    expect(h.store.crm_forecast, 'the sweep opened no snapshot row').toHaveLength(1);
+    const rows = await verify.rows('crm_forecast', { owner_id: who.id });
+    expect(rows, 'the sweep opened no snapshot row').toHaveLength(1);
     expect(
-      h.store.crm_forecast[0].organization_id,
+      rows[0]!.organization_id,
       'the snapshot row carries no org — the declared token named a source that\n'
         + 'does not carry the column (sys_user has none), so it interpolated to\n'
         + 'undefined and the row is born outside every partition.',
-    ).toBe(ORG);
+    ).toBe(org);
   });
 });
 
@@ -288,47 +317,39 @@ describe('the declared organization_id actually resolves (#700)', () => {
  * asserted below rather than trusted.
  */
 describe('forecast_snapshot sums only the target row\u2019s organization (#1372)', () => {
-  const ORG_A = 'org_alpha';
-  const ORG_B = 'org_beta';
-
-  /** The four buckets inside `org_alpha` alone — what the pin should produce. */
+  /** The four buckets inside the first organization alone — what the pin should produce. */
   const OWN_ORG_TOTALS = { pipeline: 250_000, best_case: 200_000, commit: 200_000, closed: 90_000 };
   /** …and summed across both organizations — what the defect produced. */
   const CROSS_ORG_TOTALS = { pipeline: 950_000, best_case: 900_000, commit: 900_000, closed: 390_000 };
 
-  /** Today's calendar-quarter start, the window `forecast.hook.ts` derives. */
-  const quarterStart = (): string => {
-    const pad = (n: number) => String(n).padStart(2, '0');
-    const now = new Date();
-    const d = new Date(Date.UTC(now.getUTCFullYear(), Math.floor(now.getUTCMonth() / 3) * 3, 1));
-    return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
-  };
-
   /**
    * One human owning deals in two tenants — the shape `sys_user` makes
    * reachable, since identity is global and the per-owner loop item therefore
-   * narrows nothing. `org_alpha` is seeded FIRST so `find_any_deal` binds
-   * `ownerAnyDeal` there and the row is born in that partition.
+   * narrows nothing. The first organization's deals are written FIRST so
+   * `find_any_deal` binds `ownerAnyDeal` there and the row is born in that
+   * partition. Returns the owner and the two organizations.
    */
-  const seedCrossOrganizationOwner = () => {
+  const crossOrganizationOwner = async () => {
+    const orgA = await organization('alpha');
+    const orgB = await organization('beta');
+    const who = await owner();
     const close = quarterStart();
-    const deal = (id: string, org: string, stage: string, category: string, amount: number): Rec =>
-      ({ id, owner_id: 'rep1', stage, forecast_category: category, amount, close_date: close, organization_id: org });
-    return makeFlowHarness(
-      { forecast_snapshot: ForecastSnapshotFlow },
-      {
-        sys_user: [{ id: 'rep1', name: 'Rep One' }],
-        crm_opportunity: [
-          deal('a_commit', ORG_A, 'negotiation', 'commit', 200_000),
-          deal('a_pipe', ORG_A, 'qualification', 'pipeline', 50_000),
-          deal('a_won', ORG_A, 'closed_won', 'closed', 90_000),
-          deal('b_commit', ORG_B, 'negotiation', 'commit', 700_000),
-          deal('b_won', ORG_B, 'closed_won', 'closed', 300_000),
-        ],
-        crm_forecast: [],
-      },
-      { hooks: [forecastDerive] },
-    );
+    const acctA = await accountIn(orgA, who);
+    const acctB = await accountIn(orgB, who);
+    const deal = (acct: Rec, org: string, stage: string, amount: number, extra: Rec = {}): Rec => ({
+      name: `Cross-org ${stage} ${++k}`, owner_id: who.id, stage, amount, close_date: close,
+      crm_account: acct.id, organization_id: org, ...extra,
+    });
+    await verify.seed('crm_opportunity', [
+      deal(acctA, orgA, 'negotiation', 200_000, { approval_status: 'approved' }),
+      deal(acctA, orgA, 'qualification', 50_000),
+      deal(acctA, orgA, 'closed_won', 90_000, { win_reason: 'better_price' }),
+    ]);
+    await verify.seed('crm_opportunity', [
+      deal(acctB, orgB, 'negotiation', 700_000, { approval_status: 'approved' }),
+      deal(acctB, orgB, 'closed_won', 300_000, { win_reason: 'better_price' }),
+    ]);
+    return { who, orgA, orgB };
   };
 
   it('is a seed the fix and the defect disagree on', () => {
@@ -338,12 +359,13 @@ describe('forecast_snapshot sums only the target row\u2019s organization (#1372)
   });
 
   it('writes its own organization\u2019s totals, not the sum across both', async () => {
-    const h = seedCrossOrganizationOwner();
-    await h.run('forecast_snapshot', {}, { event: 'schedule' });
+    const { who, orgA } = await crossOrganizationOwner();
+    await verify.flows.run('forecast_snapshot', {}, { as: admin });
 
-    expect(h.store.crm_forecast, 'the sweep opened no snapshot row').toHaveLength(1);
-    const row = h.store.crm_forecast[0];
-    expect(row.organization_id, 'the snapshot row is outside every partition').toBe(ORG_A);
+    const rows = await verify.rows('crm_forecast', { owner_id: who.id });
+    expect(rows, 'the sweep opened no snapshot row').toHaveLength(1);
+    const row = rows[0]!;
+    expect(row.organization_id, 'the snapshot row is outside every partition').toBe(orgA);
 
     expect(
       {
@@ -353,8 +375,8 @@ describe('forecast_snapshot sums only the target row\u2019s organization (#1372)
         closed: row.closed_amount,
       },
       'The four bucket fetches are not pinned to the snapshot row\u2019s organization, so\n'
-        + 'this row reports the owner\u2019s deals in EVERY organization — org_beta\u2019s\n'
-        + 'pipeline inside org_alpha\u2019s forecast. Nothing is NULL-partitioned and no\n'
+        + 'this row reports the owner\u2019s deals in EVERY organization — the second org\u2019s\n'
+        + 'pipeline inside the first org\u2019s forecast. Nothing is NULL-partitioned and no\n'
         + 'index is violated; the numbers are simply another tenant\u2019s. Pin the fetches\n'
         + 'to `{currentForecast.organization_id}` (#1372).',
     ).toEqual(OWN_ORG_TOTALS);
@@ -366,10 +388,10 @@ describe('forecast_snapshot sums only the target row\u2019s organization (#1372)
     // row reporting one organization — true but INCOMPLETE, and strictly better
     // than the cross-tenant total above. Pinned here so a later change to that
     // key has to edit this expectation deliberately rather than drift past it.
-    const h = seedCrossOrganizationOwner();
-    await h.run('forecast_snapshot', {}, { event: 'schedule' });
+    const { who, orgA } = await crossOrganizationOwner();
+    await verify.flows.run('forecast_snapshot', {}, { as: admin });
 
-    expect(h.store.crm_forecast.map((r: Rec) => r.organization_id)).toEqual([ORG_A]);
+    expect((await verify.rows('crm_forecast', { owner_id: who.id })).map((r) => r.organization_id)).toEqual([orgA]);
   });
 });
 

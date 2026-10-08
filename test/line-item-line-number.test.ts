@@ -1,10 +1,12 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 import { ObjectQL, bindHooksToEngine } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import stack from './helpers/composed-stack';
-import { extractSandboxBody, makeSandboxEngine, runHookBody } from './helpers/action-sandbox';
+import { extractHookBody } from '@objectstack/cli/hook-body';
+import type { VerifyStack } from '@objectstack/verify';
+import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
 
 /**
  * `line_number` HAS A WRITER (#1828 — ruling: batch #163 item 2, letter 1).
@@ -182,16 +184,49 @@ describe.each(PAIRS)('$object — the assigner ships body-only', ({ object, pare
   const shipped = () => hooks.find((x) => x.name === hook) as AnyRec;
 
   it('lowers with no free identifiers — the parent key is read from ctx.object', () => {
-    expect(() => extractSandboxBody(shipped().handler, `hook '${hook}'`)).not.toThrow();
+    expect(() => extractHookBody(shipped().handler, `hook '${hook}'`)).not.toThrow();
   });
 
-  it('stamps max + 1 in the VM', async () => {
-    const engine = makeSandboxEngine({
-      [object]: [{ id: 'a', [parentKey]: 'p1', line_number: 1 }, { id: 'b', [parentKey]: 'p1', line_number: 4 }],
+  /**
+   * The same stamp on the real app — booted through `@objectstack/verify`'s
+   * handle, every hook bound in the engine's own order, a sales rep adding the
+   * line under a parent that already carries ordinals 1 and 4 (written as the
+   * seed loader writes, which keeps a supplied ordinal — measured above).
+   */
+  let verify: VerifyStack;
+  let rep: Person;
+  const parents: Record<string, string> = {};
+  let product: string;
+  beforeAll(async () => {
+    verify = await hotcrmStack();
+    rep = await signUpPerson(verify, `rep-${object}@line-item-line-number.test`, {
+      name: 'Line Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
     });
-    const { input } = await runHookBody(shipped(), {
-      event: 'beforeInsert', input: { [parentKey]: 'p1' }, user: { id: 'rep_1' } as never, engine,
+    const create = async (o: string, doc: AnyRec) => String((await verify.hooks.run(o, 'insert', doc, { as: rep.token })).id);
+    const account = await create('crm_account', { name: `Line Co (${object})` });
+    const contact = await create('crm_contact', {
+      first_name: 'Lina', last_name: 'Lines', email: `lina-${object}@line-item-line-number.test`, crm_account: account,
     });
-    expect(input.line_number).toBe(5);
+    parents.crm_opportunity = await create('crm_opportunity', {
+      name: 'Line deal', crm_account: account, stage: 'prospecting', amount: 1000, close_date: '2030-06-30',
+    });
+    parents.crm_quote = await create('crm_quote', {
+      name: 'Line quote', crm_account: account, crm_contact: contact, crm_opportunity: parents.crm_opportunity,
+      quote_date: '2030-01-01', expiration_date: '2030-02-01',
+    });
+    const [seeded] = await verify.seed('crm_product', [{ name: `Line widget (${object})`, list_price: 100, is_active: true }]);
+    product = String(seeded!.id);
+  }, 180_000);
+
+  it('stamps max + 1 on a real write', async () => {
+    const parent = parents[parentKey]!;
+    await verify.seed(object, [
+      { [parentKey]: parent, crm_product: product, quantity: 1, unit_price: 100, line_number: 1 },
+      { [parentKey]: parent, crm_product: product, quantity: 1, unit_price: 100, line_number: 4 },
+    ]);
+    const stored = await verify.hooks.run(
+      object, 'insert', { [parentKey]: parent, crm_product: product, quantity: 1, unit_price: 100 }, { as: rep.token },
+    );
+    expect(stored.line_number).toBe(5);
   });
 });

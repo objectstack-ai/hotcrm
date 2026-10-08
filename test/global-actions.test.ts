@@ -1,21 +1,24 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { validateActionParams } from '@objectstack/spec/ui';
+import type { VerifyStack } from '@objectstack/verify';
 import stack from './helpers/composed-stack';
 import { ACTIVITY_TARGETS } from '../src/sales/actions/activity-actions';
-import eventHooks from '../src/sales/objects/event.hook';
-import { runActionBody, makeSandboxEngine, type ActionRunOpts } from './helpers/action-sandbox';
-import { makeHarness, makeCtx, hookNamed } from './helpers/hook-harness';
+import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
 
 /**
  * Behavioral guards for the activity actions in `src/actions/global.actions.ts`.
  *
  * These EXECUTE the action bodies instead of regex-matching them, through the
- * same `actionBodyRunnerFactory` + QuickJS the runtime binds at boot
- * (`test/helpers/action-sandbox.ts`). Everything pinned here is invisible to
- * `os validate`, to `build`, and to a structural assertion over the compiled
- * metadata — it lives inside a sandboxed body.
+ * one door that carries the whole action contract: `@objectstack/verify`'s
+ * `actions.run` over the shipped app — the dispatcher's permission gate, its
+ * param validation, the subject-record load under the caller's scope, and the
+ * body in the runtime's QuickJS sandbox, writing through the real engine. Real
+ * people run them (a sales rep on the sales objects, a service agent on the
+ * case), and everything asserted is read back off the rows the body wrote.
+ * None of it is visible to `os validate`, to `build`, or to a structural
+ * assertion over the compiled metadata — it lives inside a sandboxed body.
  *
  * # What this file is about now (#592)
  *
@@ -51,22 +54,118 @@ const KINDS = ['log_call', 'log_meeting', 'schedule_meeting'] as const;
 const LOGGING_KINDS = ['log_call', 'log_meeting'] as const;
 const TARGETS = Object.keys(ACTIVITY_TARGETS);
 
-/** A record of each object, carrying that object's declared nameField. */
-const recordFor = (objectName: string): AnyRec => {
-  const nameField = objectByName.get(objectName)?.nameField ?? 'name';
-  return { id: `${objectName}_1`, [nameField]: `label of ${objectName}` };
-};
+// ───────────────────────────────────────────── the cast and the records ──
 
-async function run(objectName: string, kind: string, opts: ActionRunOpts = {}) {
-  const engine = opts.engine ?? makeSandboxEngine();
-  const { result } = await runActionBody(action(objectName, kind), {
-    objectName,
-    record: recordFor(objectName),
-    ...opts,
-    input: { subject: 'Quarterly sync', ...(opts.input ?? {}) },
-    engine,
+let verify: VerifyStack;
+/** The sales rep every sales-object action runs as. */
+let rep: Person;
+/** The service agent who works the case. */
+let agent: Person;
+/** A colleague named in the attendee picker. */
+let colleague: Person;
+/** One real record per activity target, as stored (formula fields included). */
+const records: Record<string, AnyRec> = {};
+/** Two contacts on the rep's account, for the attendee picker. */
+const pickContacts: string[] = [];
+/** Display names by user id, as the people signed up. */
+const displayName: Record<string, string> = {};
+
+beforeAll(async () => {
+  verify = await hotcrmStack();
+  rep = await signUpPerson(verify, 'ada@global-actions.test', {
+    name: 'Ada Lovelace', positions: ['sales_rep'], permissionSets: ['sales_rep'],
   });
-  return { engine, result };
+  agent = await signUpPerson(verify, 'sam@global-actions.test', {
+    name: 'Sam Agent', positions: ['service_agent'], permissionSets: ['service_agent'],
+  });
+  colleague = await signUpPerson(verify, 'grace@global-actions.test', { name: 'Grace Hopper' });
+  Object.assign(displayName, { [rep.id]: 'Ada Lovelace', [agent.id]: 'Sam Agent' });
+
+  const create = async (object: string, doc: AnyRec, who: Person = rep) =>
+    verify.hooks.run(object, 'insert', doc, { as: who.token });
+  const account = await create('crm_account', { name: 'Activity Co' });
+  const contact = await create('crm_contact', {
+    first_name: 'Cora', last_name: 'Contact', email: 'cora@activity.test', crm_account: account.id,
+  });
+  for (const [first, email] of [['Con', 'con1@activity.test'], ['Cole', 'con2@activity.test']]) {
+    pickContacts.push(String((await create('crm_contact', {
+      first_name: first, last_name: 'Picked', email, crm_account: account.id,
+    })).id));
+  }
+  const lead = await create('crm_lead', {
+    first_name: 'Lena', last_name: 'Lead', company: 'Activity Co', email: 'lena@activity.test',
+  });
+  const opp = await create('crm_opportunity', {
+    name: 'Activity Expansion', crm_account: account.id, stage: 'prospecting', amount: 50000, close_date: '2030-06-30',
+  });
+  const kase = await create('crm_case', {
+    subject: 'Activity follow-up', description: 'The customer asked for a call.', crm_account: account.id,
+  }, agent);
+  for (const [object, row] of Object.entries({
+    crm_account: account, crm_contact: contact, crm_lead: lead, crm_opportunity: opp, crm_case: kase,
+  })) {
+    records[object] = (await verify.rows(object, { id: row.id }))[0]!;
+  }
+}, 180_000);
+
+/** Who runs an activity action on `objectName`: the agent on the case, the rep elsewhere. */
+const actorFor = (objectName: string): Person => (objectName === 'crm_case' ? agent : rep);
+
+/**
+ * Run one activity action through the real action door and read back what the
+ * body wrote: the event, its attendee rows, and the timeline row.
+ */
+async function run(objectName: string, kind: string, opts: { input?: AnyRec; as?: Person } = {}) {
+  const who = opts.as ?? actorFor(objectName);
+  const result = await verify.actions.run(objectName, kind, {
+    as: who.token,
+    recordId: records[objectName]!.id,
+    params: { subject: 'Quarterly sync', ...(opts.input ?? {}) },
+  }) as AnyRec;
+  const [event] = await verify.rows('crm_event', { id: result.eventId });
+  const attendees = await verify.rows('crm_event_attendee', { crm_event: result.eventId });
+  const [activity] = await verify.rows('sys_activity', { id: result.activityId });
+  return { result, event: event!, attendees, activity: activity!, who };
+}
+
+/**
+ * Watch — and optionally fault — the reads the action BODY makes, on the real
+ * engine. Everything the route does before the body (resolving the caller,
+ * loading the subject record under their scope) happens before that subject
+ * load returns, so only engine reads issued after it are the body's. Measured
+ * on 17.7.0: a `log_call` makes exactly one such `sys_user` read, at system
+ * context, before its first write.
+ */
+async function watchBodyReads(
+  objectName: string,
+  body: () => Promise<unknown>,
+  fault?: (object: string) => (() => Promise<unknown>) | undefined,
+) {
+  const ql = verify.kernel.getService<AnyRec>('objectql');
+  const realFind = ql.find.bind(ql);
+  const realFindOne = ql.findOne.bind(ql);
+  let subjectLoaded = false;
+  const bodyReads: string[] = [];
+  const findOne = vi.spyOn(ql, 'findOne').mockImplementation((async (object: string, ...rest: unknown[]) => {
+    const row = await realFindOne(object, ...rest);
+    if (object === objectName) subjectLoaded = true;
+    return row;
+  }) as never);
+  const find = vi.spyOn(ql, 'find').mockImplementation((async (object: string, ...rest: unknown[]) => {
+    if (subjectLoaded) {
+      bodyReads.push(object);
+      const injected = fault?.(object);
+      if (injected) return injected();
+    }
+    return realFind(object, ...rest);
+  }) as never);
+  try {
+    const out = await body();
+    return { out, bodyReads };
+  } finally {
+    find.mockRestore();
+    findOne.mockRestore();
+  }
 }
 
 // ────────────────────────────────────── the family exists, per object ──
@@ -140,14 +239,13 @@ describe('attendees are queryable records (#592 acceptance)', () => {
   });
 
   it('writes one crm_event_attendee row per person, linked to the event', async () => {
-    const { engine, result } = await run('crm_opportunity', 'log_meeting', {
+    const { attendees, result } = await run('crm_opportunity', 'log_meeting', {
       input: {
         subject: 'Kickoff',
-        attendee_contacts: ['con_1', 'con_2'],
-        attendee_users: ['usr_7'],
+        attendee_contacts: pickContacts,
+        attendee_users: [colleague.id],
       },
     });
-    const attendees = engine.inserted('crm_event_attendee');
 
     // organiser + two contacts + one colleague
     expect(attendees).toHaveLength(4);
@@ -155,20 +253,29 @@ describe('attendees are queryable records (#592 acceptance)', () => {
 
     const organiser = attendees.find((a) => a.is_organizer === true);
     expect(organiser, 'the acting user is always the organiser').toMatchObject({
-      attendee_type: 'user', sys_user: 'usr_1', response: 'accepted',
+      attendee_type: 'user', sys_user: rep.id, response: 'accepted',
     });
     expect(attendees.filter((a) => a.attendee_type === 'contact').map((a) => a.crm_contact).sort())
-      .toEqual(['con_1', 'con_2']);
-    expect(attendees.find((a) => a.sys_user === 'usr_7')).toMatchObject({ attendee_type: 'user' });
+      .toEqual([...pickContacts].sort());
+    expect(attendees.find((a) => a.sys_user === colleague.id)).toMatchObject({ attendee_type: 'user' });
     // Every row is stamped, so "who was invited when" is answerable.
     expect(attendees.every((a) => typeof a.invited_date === 'string')).toBe(true);
   });
 
-  it('accepts a single value where the console renders the lookup unmultiplied', async () => {
-    const { engine } = await run('crm_account', 'log_meeting', {
-      input: { subject: 'Review', attendee_contacts: 'con_9' },
+  it('a single picked contact lands as an attendee — and the dispatcher wants it as a list', async () => {
+    // The body tolerates a bare value where it expects a list, for a Console
+    // that renders the lookup unmultiplied. Through the real door that shape
+    // never reaches it: the dispatcher's ADR-0104 param contract refuses a
+    // string for a `multiple: true` lookup before any body runs. The one-person
+    // pick that does reach the body is a one-element list.
+    await expect(run('crm_account', 'log_meeting', {
+      input: { subject: 'Review', attendee_contacts: pickContacts[1] },
+    })).rejects.toMatchObject({ code: 'VALIDATION_ERROR', status: 400 });
+
+    const { attendees } = await run('crm_account', 'log_meeting', {
+      input: { subject: 'Review', attendee_contacts: [pickContacts[1]] },
     });
-    expect(engine.inserted('crm_event_attendee').some((a) => a.crm_contact === 'con_9')).toBe(true);
+    expect(attendees.some((a) => a.crm_contact === pickContacts[1])).toBe(true);
   });
 
   it('adds the record itself when it IS a person', async () => {
@@ -176,10 +283,10 @@ describe('attendees are queryable records (#592 acceptance)', () => {
       ['crm_contact', 'contact', 'crm_contact'],
       ['crm_lead', 'lead', 'crm_lead'],
     ] as const) {
-      const { engine } = await run(objectName, 'log_call');
-      const self = engine.inserted('crm_event_attendee').find((a) => a.attendee_type === type);
+      const { attendees } = await run(objectName, 'log_call');
+      const self = attendees.find((a) => a.attendee_type === type);
       expect(self, `${objectName} did not attend its own call`).toBeTruthy();
-      expect(self![field]).toBe(`${objectName}_1`);
+      expect(self![field]).toBe(records[objectName]!.id);
     }
   });
 
@@ -188,20 +295,19 @@ describe('attendees are queryable records (#592 acceptance)', () => {
     // records what the call was about; a fabricated attendee row would be a
     // record asserting somebody was in the room.
     for (const objectName of ['crm_account', 'crm_opportunity', 'crm_case']) {
-      const { engine } = await run(objectName, 'log_call');
-      const attendees = engine.inserted('crm_event_attendee');
+      const { attendees } = await run(objectName, 'log_call');
       expect(attendees, `${objectName} invented attendees`).toHaveLength(1);
       expect(attendees[0]!.is_organizer).toBe(true);
     }
   });
 
   it('does not write the same person twice', async () => {
-    const { engine } = await run('crm_contact', 'log_meeting', {
+    const { attendees } = await run('crm_contact', 'log_meeting', {
       // The contact the action fired from, named AGAIN in the picker, plus the
       // acting user naming themselves.
-      input: { subject: 'Sync', attendee_contacts: ['crm_contact_1'], attendee_users: ['usr_1'] },
+      input: { subject: 'Sync', attendee_contacts: [records.crm_contact!.id], attendee_users: [rep.id] },
     });
-    expect(engine.inserted('crm_event_attendee')).toHaveLength(2);
+    expect(attendees).toHaveLength(2);
   });
 });
 
@@ -209,24 +315,23 @@ describe('attendees are queryable records (#592 acceptance)', () => {
 
 describe('every activity action writes a real crm_event', () => {
   it.each(TARGETS)('%s links the event back to the record it fired from', async (objectName) => {
-    const { engine } = await run(objectName, 'log_call', { input: { subject: 'Intro', duration: 15 } });
-    const [event] = engine.inserted('crm_event') as AnyRec[];
+    const { event, who } = await run(objectName, 'log_call', { input: { subject: 'Intro', duration: 15 } });
     expect(event, `${objectName} wrote no crm_event`).toBeTruthy();
     expect(event.related_to_type).toBe(objectName);
-    expect(event[ACTIVITY_TARGETS[objectName]!]).toBe(`${objectName}_1`);
-    expect(event.owner_id).toBe('usr_1');
+    expect(event[ACTIVITY_TARGETS[objectName]!]).toBe(records[objectName]!.id);
+    expect(event.owner_id).toBe(who.id);
     expect(event.duration_minutes).toBe(15);
     expect(event.start_datetime).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
 
   it('a logged call is `held`; a scheduled meeting is `planned`', async () => {
-    const logged = (await run('crm_opportunity', 'log_call')).engine.inserted('crm_event')[0]!;
+    const logged = (await run('crm_opportunity', 'log_call')).event;
     expect(logged.status).toBe('held');
     expect(logged.type).toBe('call');
 
     const booked = (await run('crm_opportunity', 'schedule_meeting', {
       input: { subject: 'Deep dive', start_date: '2026-09-01', start_time: '09:00', location: 'Zoom' },
-    })).engine.inserted('crm_event')[0]!;
+    })).event;
     // The distinction the whole churn signal rests on: a booking must not reset
     // the customer's recency clock (`event.hook.ts` gates its bubble on `held`).
     expect(booked.status).toBe('planned');
@@ -235,20 +340,23 @@ describe('every activity action writes a real crm_event', () => {
     expect(booked.location).toBe('Zoom');
   });
 
-  it('falls back to now for an unparseable start rather than writing NaN', async () => {
-    const { engine } = await run('crm_lead', 'schedule_meeting', {
-      input: { subject: 'Deep dive', start_date: 'next tuesday-ish' },
-    });
-    const [event] = engine.inserted('crm_event') as AnyRec[];
-    expect(event.start_datetime).toMatch(/^\d{4}-\d{2}-\d{2}T/);
-    expect(new Date(event.start_datetime).getTime()).not.toBeNaN();
+  it('never writes a NaN start for an unparseable date — the dispatcher refuses it first', async () => {
+    // The body carries a fall-back-to-now branch for a start it cannot parse.
+    // Through the real door that input never reaches it: `start_date` is a
+    // declared `date` param, and the dispatcher's ADR-0104 param contract
+    // refuses a non-date with the route's own envelope before any body runs —
+    // so no event, NaN or otherwise, is written.
+    const before = (await verify.rows('crm_event', { related_to_lead: records.crm_lead!.id })).length;
+    await expect(run('crm_lead', 'schedule_meeting', {
+      input: { subject: 'Deep dive', start_date: 'next tuesday-ish', start_time: '09:00' },
+    })).rejects.toMatchObject({ code: 'VALIDATION_ERROR', status: 400 });
+    expect((await verify.rows('crm_event', { related_to_lead: records.crm_lead!.id })).length).toBe(before);
   });
 
   it('the timeline row points at the event (ADR-0052), not at a blob', async () => {
-    const { engine, result } = await run('crm_account', 'log_meeting', {
+    const { activity, attendees, result } = await run('crm_account', 'log_meeting', {
       input: { subject: 'QBR', duration: 45, notes: 'Renewal discussed' },
     });
-    const [activity] = engine.inserted('sys_activity') as AnyRec[];
     expect(activity.source_object).toBe('crm_event');
     expect(activity.source_id).toBe(result.eventId);
     const meta = JSON.parse(activity.metadata);
@@ -256,7 +364,7 @@ describe('every activity action writes a real crm_event', () => {
     expect(meta.duration_minutes).toBe(45);
     expect(meta.notes).toBe('Renewal discussed');
     // A COUNT is a display hint; the attendees themselves are rows.
-    expect(meta.attendee_count).toBe(engine.inserted('crm_event_attendee').length);
+    expect(meta.attendee_count).toBe(attendees.length);
     expect(meta.attendees).toBeUndefined();
   });
 });
@@ -277,41 +385,53 @@ describe('activity actions stamp a real record_label (#514 item 2)', () => {
     const nameField = objectByName.get(objectName)?.nameField;
     expect(nameField, `${objectName} declares no nameField`).toBeTruthy();
     for (const kind of KINDS) {
-      const { engine } = await run(objectName, kind, {
-        input: { subject: 'Quarterly sync', start_date: '2026-09-01', start_time: '09:00' },
+      const { activity } = await run(objectName, kind, {
+        input: inputFor(kind),
       });
-      const [activity] = engine.inserted('sys_activity') as AnyRec[];
-      expect(activity.record_label, `${objectName}:${kind}`).toBe(`label of ${objectName}`);
+      const label = records[objectName]![nameField!];
+      expect(label, `${objectName}.${nameField} is empty on the stored record — this case proves nothing`).toBeTruthy();
+      expect(activity.record_label, `${objectName}:${kind}`).toBe(label);
       expect(activity.object_name).toBe(objectName);
-      expect(activity.record_id).toBe(`${objectName}_1`);
+      expect(activity.record_id).toBe(records[objectName]!.id);
     }
   });
 
   it('writes null rather than throwing when the label field is absent', async () => {
-    const engine = makeSandboxEngine();
-    const { result } = await runActionBody(action('crm_case', 'log_call'), {
-      objectName: 'crm_case',
-      record: { id: 'case_1' },
-      input: { subject: 'Follow-up with customer' },
-      engine,
-    });
-    expect(result.activityId).toBeTruthy();
-    expect((engine.inserted('sys_activity')[0] as AnyRec).record_label).toBeNull();
+    // Every target's nameField is populated on a stored row (the case's is a
+    // formula over its number and subject), so the absent-label input is made
+    // the one way the route can hand it over: the subject record arriving
+    // without that field. Injected into the real engine's subject load, and
+    // nowhere else.
+    const ql = verify.kernel.getService<AnyRec>('objectql');
+    const realFindOne = ql.findOne.bind(ql);
+    const nameField = objectByName.get('crm_case')!.nameField as string;
+    const load = vi.spyOn(ql, 'findOne').mockImplementation((async (object: string, ...rest: unknown[]) => {
+      const row = await realFindOne(object, ...rest);
+      if (object !== 'crm_case' || !row) return row;
+      const { [nameField]: _dropped, ...withoutLabel } = row as AnyRec;
+      return withoutLabel;
+    }) as never);
+    try {
+      const { result, activity } = await run('crm_case', 'log_call', { input: { subject: 'Follow-up with customer' } });
+      expect(result.activityId).toBeTruthy();
+      expect(activity.record_label).toBeNull();
+    } finally {
+      load.mockRestore();
+    }
   });
 
   it('carries the acting user onto the activity', async () => {
-    const { engine } = await run('crm_lead', 'log_call');
-    const [activity] = engine.inserted('sys_activity') as AnyRec[];
-    expect(activity.actor_id).toBe('usr_1');
+    const { activity } = await run('crm_lead', 'log_call');
+    expect(activity.actor_id).toBe(rep.id);
     expect(activity.actor_name).toBe('Ada Lovelace');
     expect(activity.type).toBe('completed');
   });
 
   it('marks a booking as scheduled, not completed', async () => {
-    const { engine } = await run('crm_lead', 'schedule_meeting', {
+    const { activity } = await run('crm_lead', 'schedule_meeting', {
       input: { subject: 'Deep dive', start_date: '2026-09-01', start_time: '09:00' },
     });
-    expect((engine.inserted('sys_activity')[0] as AnyRec).type).toBe('scheduled');
+    expect(activity.type).toBe('scheduled');
   });
 });
 
@@ -329,92 +449,77 @@ describe('activity actions stamp a real record_label (#514 item 2)', () => {
  * `dist/index.js:1776` prefers `ec.userName ?? ec.userDisplayName`, but nothing
  * in the platform populates either, so it lands on the id as well.)
  *
- * Which is exactly why the pre-existing "carries the acting user" guard above
- * stayed green through the whole bug: the harness's default user is
- * `{ id: 'usr_1', name: 'Ada Lovelace' }` — a shape the REST dispatcher never
- * produces. So these run with the REAL dispatcher shape (`name === id`) and
- * assert on the resolved value.
+ * Which is exactly why a guard written against a hand-built user
+ * (`{ id, name: 'Ada Lovelace' }`) stayed green through the whole bug: that is
+ * a shape the REST dispatcher never produces. These run through the REAL
+ * dispatcher (`actions.run`), which on 17.7.0 still hands the body the id as
+ * the name — measured: the body issues its `sys_user` read on every action —
+ * and assert on the resolved value.
  */
-const REST_USER_ID = 'grDEyLoIgnunJ2M7Y2muLgcuQbDUT0s2';
 
-/** The user object the REST action dispatcher hands a body, verbatim. */
-const restUser = (id: string = REST_USER_ID): AnyRec => ({
-  id,
-  name: id,
-  email: 'admin@objectos.ai',
-  roles: [],
-  positions: [],
-  permissions: [],
-});
-
-const withUserRow = (name = 'Dev Admin') =>
-  makeSandboxEngine({ sys_user: [{ id: REST_USER_ID, name, email: 'admin@objectos.ai' }] });
-
-/** Schedule params, so `schedule_meeting` runs on the same call as the loggers. */
-const ANY_KIND_INPUT = { subject: 'Quarterly sync', start_date: '2026-09-01', start_time: '09:00' };
+/**
+ * The params each kind takes. The real dispatcher refuses a param the action
+ * does not declare, so the schedule-only start pair goes to `schedule_meeting`
+ * alone.
+ */
+const inputFor = (kind: string): AnyRec =>
+  kind === 'schedule_meeting' ? { subject: 'Quarterly sync', start_date: '2026-09-01', start_time: '09:00' } : {};
 
 describe('sys_activity.actor_name is a human-readable name (#673)', () => {
   it('resolves the display name for every activity action on every target', async () => {
     for (const objectName of TARGETS) {
       for (const kind of KINDS) {
-        const { engine } = await run(objectName, kind, {
-          user: restUser(),
-          engine: withUserRow(),
-          input: ANY_KIND_INPUT,
-        });
-        const [activity] = engine.inserted('sys_activity') as AnyRec[];
+        const { activity, who } = await run(objectName, kind, { input: inputFor(kind) });
         const where = `${objectName}:${kind}`;
-        expect(activity.actor_id, where).toBe(REST_USER_ID);
-        expect(activity.actor_name, where).toBe('Dev Admin');
+        expect(activity.actor_id, where).toBe(who.id);
+        expect(activity.actor_name, where).toBe(displayName[who.id]);
         // The regression itself, stated as its own assertion: whatever else
         // changes, the timeline must never render the opaque id again.
-        expect(activity.actor_name, where).not.toBe(REST_USER_ID);
+        expect(activity.actor_name, where).not.toBe(who.id);
       }
     }
   });
 
   it('reads sys_user once — and only because the dispatcher delivered no name', async () => {
-    const { engine } = await run('crm_account', 'log_call', {
-      user: restUser(),
-      engine: withUserRow(),
-    });
-    expect(engine.callsFor('sys_user', 'find').length).toBe(1);
-
-    // A dispatcher that DOES deliver a display name is believed as-is: the
-    // lookup is a workaround, and it has to disappear on its own the day the
-    // platform starts honouring `ctx.user.name`.
-    const delivered = await run('crm_account', 'log_call', {
-      user: { id: 'usr_1', name: 'Ada Lovelace' },
-    });
-    expect(delivered.engine.callsFor('sys_user', 'find').length).toBe(0);
-    expect((delivered.engine.inserted('sys_activity')[0] as AnyRec).actor_name).toBe('Ada Lovelace');
+    // The lookup is a workaround, and it has to disappear on its own the day
+    // the platform starts honouring `ctx.user.name`: the body believes a
+    // delivered display name as-is. On 17.7.0 the real dispatcher still
+    // delivers the id, so the body reads `sys_user` exactly once per action —
+    // the day this reads 0 with the name still right, the dispatcher has been
+    // fixed upstream and the workaround can go.
+    const { out, bodyReads } = await watchBodyReads('crm_account', () => run('crm_account', 'log_call'));
+    expect(bodyReads.filter((o) => o === 'sys_user'), 'the body did not read sys_user once').toHaveLength(1);
+    expect((out as Awaited<ReturnType<typeof run>>).activity.actor_name).toBe('Ada Lovelace');
   });
 
   it('falls back to the id rather than writing a blank actor', async () => {
     // No `sys_user` row for the caller — a deleted user, or a read the caller's
     // context is not allowed to satisfy. An opaque id is bad; an activity whose
-    // actor is `null` is worse, because it is not attributable at all.
-    const { engine } = await run('crm_case', 'log_meeting', { user: restUser(), input: ANY_KIND_INPUT });
-    const [activity] = engine.inserted('sys_activity') as AnyRec[];
-    expect(activity.actor_name).toBe(REST_USER_ID);
+    // actor is `null` is worse, because it is not attributable at all. The empty
+    // read is injected into the real engine, for the body's read only.
+    const { out } = await watchBodyReads(
+      'crm_case',
+      () => run('crm_case', 'log_meeting'),
+      (object) => (object === 'sys_user' ? async () => [] : undefined),
+    );
+    const { activity } = out as Awaited<ReturnType<typeof run>>;
+    expect(activity.actor_name).toBe(agent.id);
     expect(activity.actor_name).not.toBeNull();
   });
 
   it('never fails the log when the sys_user read throws', async () => {
-    const sandbox = makeSandboxEngine();
-    const passThrough = sandbox.engine.find;
-    sandbox.engine.find = async (object: string, options: AnyRec = {}) => {
-      if (object === 'sys_user') throw new Error('FORBIDDEN: no read access to sys_user');
-      return passThrough(object, options);
-    };
-    const { engine, result } = await run('crm_contact', 'log_call', {
-      user: restUser(),
-      engine: sandbox,
-    });
+    const { out } = await watchBodyReads(
+      'crm_contact',
+      () => run('crm_contact', 'log_call'),
+      (object) => (object === 'sys_user'
+        ? async () => { throw new Error('FORBIDDEN: no read access to sys_user'); }
+        : undefined),
+    );
+    const { result, activity } = out as Awaited<ReturnType<typeof run>>;
     // The interaction the rep just recorded outranks the label on it.
     expect(result.eventId).toBeTruthy();
     expect(result.activityId).toBeTruthy();
-    expect((engine.inserted('sys_activity')[0] as AnyRec).actor_name).toBe(REST_USER_ID);
+    expect(activity.actor_name).toBe(rep.id);
   });
 });
 
@@ -486,28 +591,29 @@ describe('the activity actions stay twins (#514 item 15)', () => {
     const call = await run('crm_case', 'log_call', { input });
     const meeting = await run('crm_case', 'log_meeting', { input });
 
-    const shape = (engine: ReturnType<typeof makeSandboxEngine>) => {
-      const row = engine.inserted('sys_activity')[0] as AnyRec;
-      const { summary, metadata, source_id, ...rest } = row;
+    // A stored row also carries its own identity and clock (`id`, the audit
+    // stamps, `timestamp`); those differ between any two rows and say nothing
+    // about the twins.
+    const shape = (row: AnyRec) => {
+      const { summary, metadata, source_id, id, created_at, updated_at, timestamp, ...rest } = row;
       return rest;
     };
-    expect(shape(meeting.engine)).toEqual(shape(call.engine));
+    expect(shape(meeting.activity)).toEqual(shape(call.activity));
 
-    expect((call.engine.inserted('sys_activity')[0] as AnyRec).summary).toBe('Quarterly sync (30 min)');
-    expect((meeting.engine.inserted('sys_activity')[0] as AnyRec).summary).toBe('Meeting: Quarterly sync (30 min)');
-    expect((call.engine.inserted('crm_event')[0] as AnyRec).type).toBe('call');
-    expect((meeting.engine.inserted('crm_event')[0] as AnyRec).type).toBe('meeting');
+    expect(call.activity.summary).toBe('Quarterly sync (30 min)');
+    expect(meeting.activity.summary).toBe('Meeting: Quarterly sync (30 min)');
+    expect(call.event.type).toBe('call');
+    expect(meeting.event.type).toBe('meeting');
   });
 
   it('drops the duration suffix when duration is omitted', async () => {
     for (const kind of LOGGING_KINDS) {
-      const { engine } = await run('crm_case', kind);
-      const activity = engine.inserted('sys_activity')[0] as AnyRec;
+      const { activity, event } = await run('crm_case', kind);
       expect(activity.summary).not.toMatch(/min\)/);
       expect(activity.summary.endsWith('Quarterly sync')).toBe(true);
       expect(JSON.parse(activity.metadata).duration_minutes).toBe(0);
       // …and no zero-length event is written either.
-      expect((engine.inserted('crm_event')[0] as AnyRec).duration_minutes).toBeUndefined();
+      expect(event.duration_minutes ?? null).toBeNull();
     }
   });
 });
@@ -527,8 +633,9 @@ describe('schedule_meeting is submittable from the Console (objectstack#5061)', 
    *
    * These run the EXACT bag the Console produces through the SAME
    * `validateActionParams` the dispatcher rejects with, and then through the
-   * real QuickJS body — because a shape that passes one and not the other is
-   * precisely the defect being worked around.
+   * real action door — dispatcher validation and body together — because a
+   * shape that passes one and not the other is precisely the defect being
+   * worked around.
    */
 
   /** The bag the Console POSTs, verbatim: zone-less strings from native pickers. */
@@ -596,16 +703,12 @@ describe('schedule_meeting is submittable from the Console (objectstack#5061)', 
     )).not.toEqual([]);
   });
 
-  it('the console bag writes a planned event at the joined UTC instant, with attendees', async () => {
-    const engine = makeSandboxEngine();
-    const { result } = await runActionBody(action('crm_opportunity', 'schedule_meeting'), {
-      objectName: 'crm_opportunity',
-      record: recordFor('crm_opportunity'),
-      input: CONSOLE_BAG,
-      engine,
-    });
+  /** The Console bag, its picker ids pointing at real people. */
+  const consoleBag = () => ({ ...CONSOLE_BAG, attendee_contacts: pickContacts, attendee_users: [colleague.id] });
 
-    const [event] = engine.inserted('crm_event') as AnyRec[];
+  it('the console bag writes a planned event at the joined UTC instant, with attendees', async () => {
+    const { result, event, attendees } = await run('crm_opportunity', 'schedule_meeting', { input: consoleBag() });
+
     expect(event.status).toBe('planned');
     expect(event.type).toBe('meeting');
     // 15:00 is read as UTC — the only zone this body can apply deterministically
@@ -614,48 +717,53 @@ describe('schedule_meeting is submittable from the Console (objectstack#5061)', 
     expect(event.start_datetime).toBe('2026-08-10T15:00:00.000Z');
     expect(event.duration_minutes).toBe(45);
     expect(event.location).toBe('Zoom');
-    expect(event.related_to_opportunity).toBe('crm_opportunity_1');
+    expect(event.related_to_opportunity).toBe(records.crm_opportunity!.id);
 
     // organiser + two contacts + one colleague, as rows (#592 acceptance)
-    const attendees = engine.inserted('crm_event_attendee');
     expect(attendees).toHaveLength(4);
     expect(attendees.every((a) => a.crm_event === result.eventId)).toBe(true);
     expect(attendees.filter((a) => a.attendee_type === 'contact').map((a) => a.crm_contact).sort())
-      .toEqual(['con_1', 'con_2']);
+      .toEqual([...pickContacts].sort());
   });
 
   it('accepts a seconds-bearing wall clock, which the validator also allows', async () => {
-    const { engine } = await run('crm_lead', 'schedule_meeting', {
+    const { event } = await run('crm_lead', 'schedule_meeting', {
       input: { subject: 'Deep dive', start_date: '2026-08-10', start_time: '15:00:30' },
     });
-    expect((engine.inserted('crm_event')[0] as AnyRec).start_datetime).toBe('2026-08-10T15:00:30.000Z');
+    expect(event.start_datetime).toBe('2026-08-10T15:00:30.000Z');
   });
 
   it('booking through the console still does NOT bump recency', async () => {
-    // The event the console bag produces, handed to the REAL recency hook. A
-    // booking that refreshed the customer's clock is how `at_risk_accounts`
-    // learns to lie, and the fixed param shape must not have changed that.
-    const engine = makeSandboxEngine();
-    await runActionBody(action('crm_opportunity', 'schedule_meeting'), {
-      objectName: 'crm_opportunity',
-      record: recordFor('crm_opportunity'),
-      input: CONSOLE_BAG,
-      engine,
-    });
-    const [event] = engine.inserted('crm_event') as AnyRec[];
+    // The event the console bag produces, through the REAL recency hook
+    // (`event_activity_bubble`, which runs on the event write). A booking that
+    // refreshed the customer's clock is how `at_risk_accounts` learns to lie,
+    // and the fixed param shape must not have changed that.
+    //
+    // Two fresh accounts, so neither carries a clock from an earlier case: the
+    // booking lands on one, and a LOGGED call — which must bump — on the other.
+    // The bubble is `async`, so the logged call is the control that the hook
+    // has had its chance to run: once its account moves, the booked one is read.
+    const deal = async (name: string) => {
+      const account = await verify.hooks.run('crm_account', 'insert', { name }, { as: rep.token });
+      const opp = await verify.hooks.run('crm_opportunity', 'insert', {
+        name: `${name} deal`, crm_account: account.id, stage: 'prospecting', amount: 1000, close_date: '2030-06-30',
+      }, { as: rep.token });
+      return { account: String(account.id), opp: String(opp.id) };
+    };
+    const booked = await deal('Booked Recency Co');
+    const logged = await deal('Logged Recency Co');
+    const lastActivity = async (account: string) =>
+      (await verify.rows('crm_account', { id: account }))[0]?.last_activity_date ?? null;
+    expect(await lastActivity(booked.account), 'the fresh account already carries a clock').toBeNull();
 
-    const bubble = hookNamed(eventHooks, 'event_activity_bubble');
-    const h = makeHarness({
-      crm_account: [{ id: 'acc1' }],
-      crm_opportunity: [{ id: 'crm_opportunity_1', crm_account: 'acc1' }],
+    await verify.actions.run('crm_opportunity', 'schedule_meeting', { as: rep.token, recordId: booked.opp, params: consoleBag() });
+    await verify.actions.run('crm_opportunity', 'log_call', {
+      as: rep.token, recordId: logged.opp, params: { subject: 'Real call' },
     });
-    await bubble.handler(makeCtx({
-      event: 'afterInsert',
-      input: { id: 'evt_1', ...event },
-      user: { id: 'usr_1' },
-      api: h.api,
-    }));
-    expect(h.calls, 'a booking bumped interaction recency').toHaveLength(0);
-    expect(h.rows('crm_account')[0]!.last_activity_date).toBeUndefined();
+    await vi.waitFor(async () => {
+      expect(await lastActivity(logged.account), 'a logged call did not bump recency — the control is dead').not.toBeNull();
+    }, { timeout: 10_000, interval: 50 });
+
+    expect(await lastActivity(booked.account), 'a booking bumped interaction recency').toBeNull();
   });
 });

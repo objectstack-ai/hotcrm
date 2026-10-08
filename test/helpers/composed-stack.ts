@@ -43,7 +43,50 @@ const composedStack = composeStacks([serviceStack, appStack]);
 
 export default composedStack;
 
-type AnyRec = Record<string, any>;
+export type AnyRec = Record<string, any>;
+
+/**
+ * Locale packs, flattened to `[locale, pack]` pairs.
+ *
+ * `translations` holds ONE `TranslationBundle` keyed by locale
+ * (`{ en: {...}, 'zh-CN': {...} }`) — NOT a list of per-locale records. A
+ * `translations.find(t => t.locale === 'zh-CN')` therefore matches nothing and
+ * silently turns its test into a no-op, which is how the navigation guard in
+ * `test/action-references.test.ts` spent its life passing without asserting
+ * anything.
+ *
+ * Read off the composed view rather than the booted registry on purpose: the
+ * handle's `metadata` carries no translation type (`metadata.types()` lists
+ * none), and the locale packs are authored app metadata, not a runtime fact.
+ */
+export const localePacks: [string, AnyRec][] = ((composedStack as AnyRec).translations ?? []).flatMap(
+  (bundle: AnyRec) => Object.entries(bundle) as [string, AnyRec][],
+);
+export const packFor = (locale: string): AnyRec | undefined =>
+  localePacks.find(([name]) => name === locale)?.[1];
+
+/**
+ * A registered hook, by name, out of the composed view's `hooks` — every hook
+ * either package registers. Throws rather than answering `undefined`: a suite
+ * holding no hook asserts nothing about it.
+ */
+export const hookNamed = (name: string): AnyRec => {
+  const hook = (((composedStack as AnyRec).hooks ?? []) as AnyRec[]).find((h) => h?.name === name);
+  if (!hook) throw new Error(`no hook named "${name}" is registered by either package`);
+  return hook;
+};
+
+/** Walk an arbitrary metadata tree, yielding every node that has a `type`. */
+export function* walk(node: unknown): Generator<AnyRec> {
+  if (Array.isArray(node)) {
+    for (const item of node) yield* walk(item);
+    return;
+  }
+  if (!node || typeof node !== 'object') return;
+  const rec = node as AnyRec;
+  if (typeof rec.type === 'string') yield rec;
+  for (const value of Object.values(rec)) yield* walk(value);
+}
 
 /**
  * Every app of the artifact AS SERVED — each package's `navigationContributions`

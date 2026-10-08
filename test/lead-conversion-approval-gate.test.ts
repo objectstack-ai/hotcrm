@@ -1,14 +1,17 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
+import type { VerifyStack } from '@objectstack/verify';
 import { ExpressionEngine } from '@objectstack/formula';
 import stack from './helpers/composed-stack';
-import leadHooks from '../src/sales/objects/lead.hook';
 import { ConvertLeadAction } from '../src/sales/actions/lead.actions';
 import { LeadConversionFlow } from '../src/sales/flows/lead-conversion.flow';
 import { LeadConversionApprovalFlow } from '../src/sales/flows/lead-conversion-approval.flow';
-import { hookNamed, makeCtx, makeHarness } from './helpers/hook-harness';
-import { makeFlowHarness, type Rec } from './helpers/flow-harness';
+import {
+  hotcrmStack, signUpPerson, systemUpdate, conditionHolds as holdsOn, type Person,
+} from './helpers/verify-stack';
+
+type Rec = Record<string, any>;
 
 /**
  * The conversion approval gate, and the thing that actually has to hold about
@@ -35,15 +38,24 @@ type AnyRec = Record<string, any>;
 const objects: AnyRec[] = (stack as any).objects ?? [];
 const lead = objects.find((o) => o.name === 'crm_lead') as AnyRec | undefined;
 
-/** Evaluate a flow condition exactly as the engine does (cf. flow-record-change). */
-function conditionHolds(condition: unknown, vars: Record<string, unknown>): boolean {
-  const h = makeFlowHarness({}, {});
-  const engine = h.engine as unknown as {
-    evaluateCondition(c: unknown, v: Map<string, unknown>): boolean;
-  };
-  const expr = typeof condition === 'string' ? { dialect: 'cel', source: condition } : condition;
-  return engine.evaluateCondition(expr, new Map(Object.entries(vars)));
-}
+/*
+ * On the shipped app booted by `@objectstack/verify`: conditions are evaluated
+ * by the booted automation service (`conditionHolds`), and the write path is a
+ * sales rep's real update of their own lead — the app's `lead_automation` hook
+ * judging it inside the engine's write.
+ */
+let verify: VerifyStack;
+let rep: Person;
+let k = 0;
+beforeAll(async () => {
+  verify = await hotcrmStack();
+  rep = await signUpPerson(verify, 'rep@lead-conversion-approval-gate.test', {
+    name: 'Gate Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+  });
+}, 120_000);
+
+/** Evaluate a flow condition exactly as the engine does. */
+const conditionHolds = (condition: unknown, vars: Record<string, unknown>): boolean => holdsOn(verify, condition, vars);
 
 const startCondition = (LeadConversionApprovalFlow.nodes as Rec[])
   .find((n) => n.id === 'start')?.config?.condition;
@@ -51,24 +63,30 @@ const startCondition = (LeadConversionApprovalFlow.nodes as Rec[])
 const edgeCondition = (id: string) =>
   (LeadConversionFlow.edges as Rec[]).find((e) => e.id === id)?.condition;
 
-const guard = hookNamed(leadHooks, 'lead_automation');
+/**
+ * One write by the rep against their own lead, standing in `previous`: the
+ * lead is written as the system (its verdict column is `readonly`, so only a
+ * system write can put it in a state), then the rep's update runs the app's
+ * `lead_automation` hook for real. Resolves on success, rejects with the
+ * engine's error.
+ */
+const write = async (input: AnyRec, previous: AnyRec): Promise<void> => {
+  const n = ++k;
+  const [lead] = await verify.seed('crm_lead', [{
+    first_name: 'Ada', last_name: 'Lovelace', company: `Acme ${n}`, email: `ada${n}@lead-conversion-approval-gate.test`,
+    status: 'qualified', owner_id: rep.id,
+  }]);
+  if (Object.keys(previous).length > 0) await systemUpdate(verify, 'crm_lead', { id: lead!.id, ...previous });
+  await verify.hooks.run('crm_lead', 'update', { id: lead!.id, ...input }, { as: rep.token });
+};
 
-/** One write against a lead the hook sees as `previous`. */
-const write = (input: AnyRec, previous: AnyRec) =>
-  guard.handler(
-    makeCtx({
-      event: 'beforeUpdate',
-      input: { id: 'lead_1', ...input },
-      previous: {
-        id: 'lead_1', first_name: 'Ada', last_name: 'Lovelace', company: 'Acme',
-        is_converted: false, status: 'qualified', ...previous,
-      },
-      user: { id: 'usr_1' },
-      api: makeHarness().api,
-    }),
-  );
-
-/** The verdict column in every shape a real record can present it in. */
+/**
+ * The verdict column in every shape a record can present it in. "A lead older
+ * than the column" is the ABSENT key a sparse datasource hands a predicate; no
+ * write produces it (an insert stamps the field default, and a SQL row reads
+ * NULL — the explicit-null shape), so on the write path it is the record as an
+ * insert leaves it.
+ */
 const OFF_SHAPES: [string, AnyRec][] = [
   ['the shipped default', { conversion_approval_status: 'not_required' }],
   ['a signed-off lead', { conversion_approval_status: 'approved' }],
@@ -180,8 +198,8 @@ describe('convert_lead — the button', () => {
 
 describe('the write path — the half a REST caller cannot route around', () => {
   it.each(REFUSING_SHAPES)('refuses a lead %s crossing into converted', async (_l, shape) => {
-    const err = await write({ is_converted: true, status: 'converted' }, shape)
-      .then(() => null, (e: AnyRec) => e);
+    const err: AnyRec = await write({ is_converted: true, status: 'converted' }, shape)
+      .then(() => null, (e: AnyRec) => e) as AnyRec;
     expect(err, 'the gate let an unapproved conversion through').toBeTruthy();
     // ADR-0112 envelope: the CODE and the STATUS are the contract, not the
     // prose. A bare `toThrow()` would pass on an unenveloped Error.

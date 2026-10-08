@@ -1,11 +1,12 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect } from 'vitest';
-import { CampaignEnrollmentFlow } from '../src/marketing/flows/campaign-enrollment.flow';
-import { ContractRenewalFlow } from '../src/revenue/flows/contract-renewal.flow';
+import { describe, it, expect, beforeAll } from 'vitest';
+import type { VerifyStack } from '@objectstack/verify';
 import { OpportunityStagnationFlow } from '../src/sales/flows/opportunity-stagnation.flow';
-import { makeFlowHarness, type Rec } from './helpers/flow-harness';
 import { edgesUnder } from './helpers/flow-regions';
+import { hotcrmStack, signUpPerson, daysFromNow, type Person } from './helpers/verify-stack';
+
+type Rec = Record<string, any>;
 
 /**
  * Adoption pin for the platform's per-run summary (objectstack#4354).
@@ -35,17 +36,17 @@ import { edgesUnder } from './helpers/flow-regions';
  */
 
 /**
- * UTC calendar throughout — `setUTCDate`, not `setDate`. Mixing local-calendar
- * arithmetic with UTC rendering lands one UTC day late across a DST
- * spring-forward, and no `TZ=UTC` run can tell the two spellings apart.
- * `test/helpers/hook-harness.ts`'s `daysFromNow` carries the full reasoning.
+ * On the shipped app booted by `@objectstack/verify`, each sweep is started
+ * through the trigger door (`flows.run`, as the admin) and its terminal result
+ * — the summary — read off what the door returns.
+ *
+ * A sweep selects EVERY matching record in the database, and the boot replays
+ * the app's seed deals and contracts. So the counts here are read as what THIS
+ * file's records added: each case first runs the sweep once to SETTLE the
+ * database (every pre-existing match is nudged or reminded, so a second pass
+ * skips it), then adds its own records and reads the next run's counts against
+ * the settled one.
  */
-const day = (d: number): string => {
-  const x = new Date();
-  x.setUTCDate(x.getUTCDate() + d);
-  return x.toISOString().slice(0, 10);
-};
-
 interface RunSummary {
   selected: number;
   acted: number;
@@ -55,53 +56,91 @@ interface RunSummary {
   gates: Array<{ nodeId: string; targetNodeId: string; skipped: number; label?: string }>;
 }
 
-/** The run summary is on the TERMINAL result, which the harness's `run()` drops. */
+/** The run summary is on the TERMINAL result. */
 const summaryOf = (result: unknown): RunSummary => {
   const s = (result as { summary?: RunSummary })?.summary;
   expect(s, 'the run reported no summary at all — the platform signal is gone').toBeDefined();
   return s!;
 };
 
-const stalledDeals = (): Rec[] => [
-  { id: 'o1', name: 'Stalled One', stage: 'proposal', stage_entry_date: day(-30), owner_id: 'rep1', organization_id: 'org1' },
-  { id: 'o2', name: 'Stalled Two', stage: 'negotiation', stage_entry_date: day(-40), owner_id: 'rep2', organization_id: 'org1' },
-];
+const nodeSelected = (s: RunSummary, nodeId: string) => s.nodes.find((n) => n.nodeId === nodeId)?.selected ?? 0;
 
-const nudgeTasks = (): Rec[] => [
-  { id: 't1', related_to_opportunity: 'o1', subject: 'Advance stalled deal: Stalled One', status: 'not_started' },
-  { id: 't2', related_to_opportunity: 'o2', subject: 'Advance stalled deal: Stalled Two', status: 'not_started' },
-];
+let verify: VerifyStack;
+let admin: string;
+let rep: Person;
+let accountId: string;
+let k = 0;
+beforeAll(async () => {
+  verify = await hotcrmStack();
+  admin = await verify.signIn();
+  rep = await signUpPerson(verify, 'rep@flow-run-summary.test', {
+    name: 'Summary Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+  });
+  const [account] = await verify.seed('crm_account', [{ name: 'Run Summary Co', owner_id: rep.id }]);
+  accountId = String(account!.id);
+}, 120_000);
+
+/** Run a sweep as the admin and return its summary. */
+const sweep = async (flowName: string): Promise<RunSummary> => summaryOf(await verify.flows.run(flowName, {}, { as: admin }));
+
+/** Two stalled deals of the rep's — 30 and 40 days in stage. */
+const stalledDeals = async (): Promise<Rec[]> => verify.seed('crm_opportunity', [
+  { name: `Stalled One ${++k}`, stage: 'proposal', stage_entry_date: daysFromNow(-30), amount: 50_000, close_date: '2030-06-30', crm_account: accountId, owner_id: rep.id },
+  { name: `Stalled Two ${k}`, stage: 'negotiation', stage_entry_date: daysFromNow(-40), amount: 60_000, close_date: '2030-06-30', crm_account: accountId, owner_id: rep.id },
+]);
+
+/** The open nudge task the stagnation sweep would have written for `deal`. */
+const nudgeTaskFor = (deal: Rec) => ({
+  subject: `Advance stalled deal: ${deal.name}`, type: 'follow_up', priority: 'high', status: 'not_started',
+  owner_id: rep.id, related_to_type: 'crm_opportunity', related_to_opportunity: deal.id,
+});
+
+/** Every nudge task / inbox notification a stagnation sweep has written so far, database-wide. */
+const nudgesSoFar = async () => ({
+  tasks: (await verify.rows('crm_task', { related_to_type: 'crm_opportunity', type: 'follow_up', priority: 'high' }))
+    .filter((t) => String(t.subject).startsWith('Advance stalled deal: ')).length,
+  notifications: (await verify.rows('sys_notification_delivery', { topic: 'deal_stalled', channel: 'inbox' })).length,
+});
 
 describe('flow run summary — the three flows the silent-no-op incident covered', () => {
   it('opportunity_stagnation reports what it selected and what it wrote', async () => {
-    const h = makeFlowHarness({ opportunity_stagnation: OpportunityStagnationFlow }, {
-      crm_opportunity: stalledDeals(), crm_task: [],
-    });
-    const s = summaryOf(await h.engine.execute('opportunity_stagnation', { params: {}, userId: 'u', event: 'schedule' } as never));
+    const settled = await sweep('opportunity_stagnation');
+    await stalledDeals();
+    const before = await nudgesSoFar();
+    const s = await sweep('opportunity_stagnation');
+    const after = await nudgesSoFar();
 
     expect(s.selected, 'the sweep selected no stalled deals').toBeGreaterThan(0);
     expect(s.acted, 'the sweep selected deals but wrote nothing — the silent no-op').toBeGreaterThan(0);
-    // The counters are the run's, not a node's: `acted` covers the notification
-    // AND the follow-up task, so it outruns the two deals that were selected.
-    expect(s.acted).toBe(h.store.crm_task.length + h.notifications.length);
-    expect(s.nodes.find((n) => n.nodeId === 'query_stalled')?.selected).toBe(2);
+    // The counters are the run's, not a node's, and they account for every
+    // effect the run had: the follow-up tasks it WROTE are `acted`; the
+    // notifications it handed to the messaging outbox are `unmeasured` — the
+    // platform cannot confirm a delivery at run time, and says so rather than
+    // counting it as done.
+    expect(after.tasks - before.tasks, 'the two stalled deals got no follow-up task').toBe(2);
+    expect(after.notifications - before.notifications, 'the two owners were not nudged').toBe(2);
+    expect(s.acted).toBe(after.tasks - before.tasks);
+    expect(s.unmeasured).toBe(after.notifications - before.notifications);
+    expect(nodeSelected(s, 'query_stalled') - nodeSelected(settled, 'query_stalled'), 'the two stalled deals were not selected').toBe(2);
   });
 
   it('contract_renewal reports what it selected and what it wrote', async () => {
+    const settled = await sweep('contract_renewal');
+    const [contact] = await verify.seed('crm_contact', [{
+      first_name: 'Rene', last_name: `Wal ${++k}`, email: `renewal${k}@flow-run-summary.test`, crm_account: accountId, owner_id: rep.id,
+    }]);
     const contract = (over: Rec): Rec => ({
-      id: 'k1', contract_number: 'CTR-1', status: 'activated', crm_account: 'acc1',
-      owner_id: 'rep1', contract_value: 90_000, auto_renewal: false, renewal_notice_days: 30,
-      end_date: day(+20), organization_id: 'org1', ...over,
+      status: 'activated', crm_account: accountId, crm_contact: contact!.id, owner_id: rep.id,
+      contract_type: 'subscription', contract_value: 90_000, auto_renewal: false, renewal_notice_days: 30,
+      contract_term_months: 12, start_date: daysFromNow(-345), end_date: daysFromNow(+20),
+      billing_frequency: 'monthly', payment_terms: 'net_30', ...over,
     });
-    const h = makeFlowHarness({ contract_renewal: ContractRenewalFlow }, {
-      crm_contract: [contract({}), contract({ id: 'k2', contract_number: 'CTR-2', end_date: day(+10), auto_renewal: true })],
-      crm_task: [], crm_opportunity: [],
-    });
-    const s = summaryOf(await h.engine.execute('contract_renewal', { params: {}, userId: 'u', event: 'schedule' } as never));
+    await verify.seed('crm_contract', [contract({}), contract({ end_date: daysFromNow(+10), start_date: daysFromNow(-355), auto_renewal: true })]);
+    const s = await sweep('contract_renewal');
 
     expect(s.selected).toBeGreaterThan(0);
     expect(s.acted, 'the sweep selected contracts but wrote nothing').toBeGreaterThan(0);
-    expect(s.nodes.find((n) => n.nodeId === 'query_contracts')?.selected).toBe(2);
+    expect(nodeSelected(s, 'query_contracts') - nodeSelected(settled, 'query_contracts')).toBe(2);
     expect(s.nodes.find((n) => n.nodeId === 'create_renewal_task')?.acted).toBe(2);
   });
 
@@ -110,24 +149,26 @@ describe('flow run summary — the three flows the silent-no-op incident covered
     // schedule when the incident was recorded and was rewritten since. The run
     // therefore pauses at the screen, and a paused run has not finished doing
     // its work yet, so it carries no summary. The summary arrives on resume.
-    const h = makeFlowHarness({ campaign_enrollment: CampaignEnrollmentFlow }, {
-      crm_campaign: [{ id: 'cmp1', name: 'Spring Push', status: 'in_progress' }],
-      crm_lead: [
-        { id: 'l_new', status: 'new', is_converted: false, email: 'a@acme.io', email_opt_out: false },
-        { id: 'l_new2', status: 'new', is_converted: false, email: 'b@acme.io', email_opt_out: false },
-      ],
-      crm_contact: [], crm_campaign_member: [],
-    });
+    const [campaign] = await verify.seed('crm_campaign', [{
+      name: `Spring Push ${++k}`, status: 'in_progress', start_date: daysFromNow(-7), end_date: daysFromNow(30), owner_id: rep.id,
+    }]);
+    await verify.seed('crm_lead', [
+      { first_name: 'Lee', last_name: `New ${k}`, company: `Acme ${k}`, email: `a${k}@flow-run-summary.test`, status: 'new', is_converted: false, email_opt_out: false, owner_id: rep.id },
+      { first_name: 'Lee', last_name: `New Two ${k}`, company: `Acme Two ${k}`, email: `b${k}@flow-run-summary.test`, status: 'new', is_converted: false, email_opt_out: false, owner_id: rep.id },
+    ]);
 
-    const paused = await h.engine.execute('campaign_enrollment', { params: { recordId: 'cmp1' }, userId: 'u', event: 'manual' } as never) as { status?: string; runId?: string; summary?: unknown };
+    const paused = await verify.flows.run('campaign_enrollment', { recordId: campaign!.id }, { as: admin });
     expect(paused.status, 'the screen flow did not pause at its screen').toBe('paused');
-    expect(paused.summary, 'a paused run must not claim a summary — it has not finished').toBeUndefined();
+    expect((paused as Rec).summary, 'a paused run must not claim a summary — it has not finished').toBeUndefined();
 
-    const s = summaryOf(await h.engine.resume(paused.runId!, {
-      variables: { memberSource: 'leads', leadStatus: 'new', contactDepartment: 'engineering' },
-    } as never));
-    expect(s.acted, 'the enrolment wrote no members').toBe(h.store.crm_campaign_member.length);
-    expect(s.nodes.find((n) => n.nodeId === 'query_leads')?.selected).toBe(2);
+    const s = summaryOf(await verify.flows.resume(paused, {
+      memberSource: 'leads', leadStatus: 'new', contactDepartment: 'engineering',
+    }, { as: admin }));
+    const members = await verify.rows('crm_campaign_member', { crm_campaign: campaign!.id });
+    expect(members.length, 'the enrolment wrote no members').toBeGreaterThanOrEqual(2);
+    expect(s.acted, 'the summary does not count the members the enrolment wrote').toBe(members.length);
+    // A fresh campaign: every eligible lead the query selected was enrolled.
+    expect(nodeSelected(s, 'query_leads')).toBe(members.length);
   });
 });
 
@@ -147,13 +188,6 @@ describe('flow run summary — the three flows the silent-no-op incident covered
  * ACCOUNTS for the gate skips.
  */
 describe('flow run summary — healthy idempotent skipping vs a dead gate', () => {
-  const runStagnation = async (flow: unknown, tasks: Rec[]) => {
-    const h = makeFlowHarness({ opportunity_stagnation: flow as never }, {
-      crm_opportunity: stalledDeals(), crm_task: tasks,
-    });
-    return summaryOf(await h.engine.execute('opportunity_stagnation', { params: {}, userId: 'u', event: 'schedule' } as never));
-  };
-
   /** The #4347 shape: the loop-body gate never opens, whatever the data says. */
   const withDeadGate = () => {
     const f = structuredClone(OpportunityStagnationFlow) as never as {
@@ -171,29 +205,53 @@ describe('flow run summary — healthy idempotent skipping vs a dead gate', () =
     return f;
   };
 
-  it('both shapes trip the run-level predicate, so it cannot be alerted on alone', async () => {
-    const healthy = await runStagnation(OpportunityStagnationFlow, nudgeTasks());
-    const broken = await runStagnation(withDeadGate(), []);
+  /**
+   * HEALTHY: on a settled database, plus two stalled deals that were already
+   * nudged (their open tasks exist) — every skip has a reason. BROKEN: the
+   * dead-gate variant, registered beside the shipped flow through the
+   * authoring door (`POST /automation`) and removed after, over the same
+   * database plus two stalled deals nothing has handled.
+   */
+  let healthy: RunSummary;
+  let broken: RunSummary;
+  beforeAll(async () => {
+    await sweep('opportunity_stagnation');
+    const handled = await stalledDeals();
+    await verify.seed('crm_task', handled.map(nudgeTaskFor));
+    healthy = await sweep('opportunity_stagnation');
 
+    await stalledDeals();
+    const name = 'opportunity_stagnation_dead_gate';
+    const registered = await verify.apiAs(admin, 'POST', '/automation', { ...withDeadGate(), name });
+    expect(registered.status, await registered.clone().text()).toBe(200);
+    try {
+      broken = await sweep(name);
+    } finally {
+      expect((await verify.apiAs(admin, 'DELETE', `/automation/${name}`)).status).toBe(200);
+    }
+  }, 120_000);
+
+  it('both shapes trip the run-level predicate, so it cannot be alerted on alone', () => {
     const trips = (s: RunSummary) => s.selected > 0 && s.acted === 0 && (s.unmeasured ?? 0) === 0;
     expect(trips(healthy), 'a correctly idempotent run no longer trips the predicate — re-check the qualifier in the admin docs').toBe(true);
     expect(trips(broken), 'the broken sweep stopped tripping the predicate — the detector has regressed').toBe(true);
   });
 
-  it('the per-node fold tells them apart: are the gate skips accounted for?', async () => {
-    const healthy = await runStagnation(OpportunityStagnationFlow, nudgeTasks());
-    const broken = await runStagnation(withDeadGate(), []);
-
-    const probe = (s: RunSummary) => s.nodes.find((n) => n.nodeId === 'find_existing_task')?.selected ?? 0;
+  it('the per-node fold tells them apart: are the gate skips accounted for?', () => {
+    const probe = (s: RunSummary) => nodeSelected(s, 'find_existing_task');
     const gateSkips = (s: RunSummary) => s.gates.reduce((n, g) => n + g.skipped, 0);
 
     // Healthy: the idempotency lookup found an open task for every deal it
     // skipped, so every skip has a reason.
-    expect(gateSkips(healthy)).toBe(2);
-    expect(probe(healthy), 'the skips are explained by work already done').toBe(2);
+    expect(gateSkips(healthy), 'the healthy sweep skipped nothing').toBeGreaterThanOrEqual(2);
+    expect(probe(healthy), 'the skips are explained by work already done').toBe(gateSkips(healthy));
 
-    // Broken: the same skips, with nothing found to justify any of them.
-    expect(gateSkips(broken)).toBe(2);
-    expect(probe(broken), 'the gate closed on records nothing had handled — the dead-gate signature').toBe(0);
+    // Broken: the same skips — and two more, on the two deals nothing had
+    // handled, with nothing found to justify them.
+    expect(gateSkips(broken) - gateSkips(healthy)).toBe(2);
+    expect(
+      gateSkips(broken) - probe(broken),
+      'the gate closed on records nothing had handled — the dead-gate signature',
+    ).toBe(2);
   });
 });

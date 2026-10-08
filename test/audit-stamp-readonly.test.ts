@@ -12,7 +12,12 @@ import {
   CampaignLeadMemberEnrollFlow,
   CampaignContactMemberEnrollFlow,
 } from '../src/marketing/flows/campaign-member-enroll.flow';
-import { silentLogger } from './helpers/flow-harness';
+
+/** The engine's logger, silenced: these suites read results, not log lines. */
+const silentLogger: any = {
+  info() {}, warn() {}, error() {}, debug() {}, trace() {},
+  child() { return silentLogger; },
+};
 
 /**
  * THE AUDIT STAMPS ARE DECLARED `readonly`, AND BOTH HALVES ARE MEASURED

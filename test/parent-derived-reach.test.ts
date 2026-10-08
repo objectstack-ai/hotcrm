@@ -1,21 +1,9 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { ObjectKernel } from '@objectstack/core';
-import { DefaultDatasourcePlugin, AppPlugin } from '@objectstack/runtime';
-import { ObjectQLPlugin } from '@objectstack/objectql';
-import { MetadataPlugin } from '@objectstack/metadata';
-import {
-  SecurityPlugin,
-  appDefaultPermissionSetName,
-  buildContextForUser,
-} from '@objectstack/plugin-security';
-import { SharingServicePlugin } from '@objectstack/plugin-sharing';
-import { tenancyProbe } from './helpers/tenancy-probe';
+import { bootStack, type VerifyStack } from '@objectstack/verify';
+import { signUpPerson, type Person } from './helpers/verify-stack';
 import artifact from '../objectstack.config';
-import stack from './helpers/composed-stack';
-import { SysUser, SysMember, SysOrganization } from '@objectstack/platform-objects/identity';
-import { identityObjects } from './helpers/identity-objects';
 
 /**
  * What a `controlled_by_parent` child is ACTUALLY reachable by — measured
@@ -97,73 +85,52 @@ process.env.OS_REGISTRY_LOG ??= 'silent';
 
 const SYS = { isSystem: true } as AnyRec;
 
-let kernel: AnyRec;
-let ql: AnyRec;
+let verify: VerifyStack;
 /** ids, by role in the fixture. */
 const id: Record<string, string> = {};
-/** The `sales_rep` execution context under test. */
+/** The `sales_rep` under test. */
+let rep: Person;
+/** The `sales_rep` execution context, as the platform resolves it for them. */
 let repCtx: AnyRec;
 
-/** Insert as the system, returning the new row's id. */
+/** Insert as the system (the handle's `seed` door), returning the new row's id. */
 const insert = async (object: string, doc: AnyRec): Promise<string> => {
-  const row = await ql.insert(object, doc, { context: SYS });
-  return String(row?.id ?? row?.record?.id);
+  const [row] = await verify.seed(object, [doc]);
+  return String(row?.id);
 };
 
-/** Ids of `object` visible to the rep, as fixture labels. */
+/**
+ * Ids of `object` visible to the rep, as labels of THIS fixture's rows. The
+ * boot replays the app's seed data, and the territory rule reaches seeded US
+ * accounts (and what hangs off them) for the same reason it reaches `acct_US`;
+ * those rows are not the population this file pins.
+ */
 const repSees = async (object: string): Promise<string[]> => {
-  const rows = await ql.find(object, { where: {} }, { context: repCtx });
+  const rows = await verify.rows(object, {}, { as: rep.token });
   const byId = new Map(Object.entries(id).map(([label, value]) => [value, label]));
-  return (Array.isArray(rows) ? rows : [])
-    .map((r: AnyRec) => byId.get(String(r.id)) ?? String(r.id))
+  return rows
+    .map((r: AnyRec) => byId.get(String(r.id)))
+    .filter((label): label is string => label !== undefined)
     .sort();
 };
 
 beforeAll(async () => {
-  kernel = new ObjectKernel({ logger: { level: 'silent' } } as never);
-  await kernel.use(new DefaultDatasourcePlugin({ driver: 'memory', config: {} } as never));
-  await kernel.use(new MetadataPlugin({ watch: false, artifactWatch: false, environmentId: 'proj_test' } as never));
-  await kernel.use(new ObjectQLPlugin({ environmentId: 'proj_test' } as never));
-  // 17.7.0 refuses an object name the registry does not hold (objectstack#21545):
-  // register the identity objects `plugin-auth` would (`test/helpers/identity-objects.ts`).
-  await kernel.use(identityObjects(SysUser, SysMember, SysOrganization) as never);
-  // The app's own metadata is the subject: objects, profiles, positions and
-  // sharing rules exactly as `objectstack.config.ts` declares them. Seed data
-  // is skipped — the fixture below is the whole population.
-  await kernel.use(new AppPlugin(artifact as never, undefined as never, { skipSeedData: true } as never));
-  await kernel.use(
-    new SecurityPlugin({
-      fallbackPermissionSet: appDefaultPermissionSetName((stack as AnyRec).permissions),
-    } as never),
-  );
-  // 17.2.0: declared sharing rules are only seeded once this stack states its
-  // tenancy posture — see `test/helpers/tenancy-probe.ts` for the measurement.
-  // Mounted BEFORE SharingServicePlugin, which reads the posture during its own
-  // boot.
-  await kernel.use(tenancyProbe('single') as never);
-  await kernel.use(new SharingServicePlugin());
-  await kernel.bootstrap();
-  ql = kernel.getService('objectql');
+  // The platform's boot — `@objectstack/verify`'s `bootStack` over the shipped
+  // artifact: the app's objects, profiles, positions and sharing rules exactly
+  // as `objectstack.config.ts` declares them, with objectql, auth (and its
+  // `tenancy` service), security with the app's own default profile, and
+  // sharing — on the in-memory datasource this file has always measured on.
+  verify = await bootStack(artifact, { databaseDriver: 'memory' });
 
   // ── principals ────────────────────────────────────────────────────────
-  // The FIRST human user is auto-promoted to platform admin at boot, and a
-  // platform admin bypasses every filter this file measures. Burn that
-  // promotion on a throwaway so the rep under test is an ordinary user.
-  await insert('sys_user', { name: 'Platform Admin', email: 'admin@parent-reach.test' });
-  id.rep = await insert('sys_user', { name: 'Territory Rep', email: 'rep@parent-reach.test' });
-  id.owner = await insert('sys_user', { name: 'Another Owner', email: 'owner@parent-reach.test' });
-
-  // `sys_user_position.position` holds the position NAME (that is what
-  // `expandPositionUsers` filters on) — an id here expands to nobody.
-  for (const position of ['sales_rep', 'na_sales_team']) {
-    await insert('sys_user_position', { user_id: id.rep, position });
-  }
-  const sets = await ql.find('sys_permission_set', { where: {} }, { context: SYS });
-  const salesRepSet = (sets as AnyRec[]).find((s) => s.name === 'sales_rep');
-  await insert('sys_user_permission_set', {
-    user_id: id.rep,
-    permission_set_id: salesRepSet?.id,
+  // Fresh sign-ups are ordinary members (the stack's first user is its own
+  // platform admin). `sys_user_position.position` holds the position NAME —
+  // see `signUpPerson`.
+  rep = await signUpPerson(verify, 'rep@parent-reach.test', {
+    name: 'Territory Rep', positions: ['sales_rep', 'na_sales_team'], permissionSets: ['sales_rep'],
   });
+  id.rep = rep.id;
+  id.owner = await insert('sys_user', { name: 'Another Owner', email: 'owner@parent-reach.test' });
 
   // ── population: two accounts the rep owns NEITHER of ──────────────────
   // `territory` is the declared column the territory rules filter on (#639),
@@ -243,17 +210,18 @@ beforeAll(async () => {
   });
 
   // Materialise the declared rules against the population just inserted (the
-  // boot backfill ran on an empty database).
-  const rules: AnyRec = kernel.getService('sharingRules');
+  // boot backfill ran before any of it existed). The sharing service is a
+  // kernel service the handle does not front, so it is driven directly.
+  const rules: AnyRec = verify.kernel.getService('sharingRules');
   for (const rule of ['north_america_territory', 'europe_territory', 'account_team_sharing']) {
     await rules.evaluateRule(rule, SYS);
   }
 
-  repCtx = await buildContextForUser(ql, id.rep);
+  repCtx = await verify.contextFor(rep.token) as AnyRec;
 }, 120_000);
 
 afterAll(async () => {
-  await kernel?.shutdown?.();
+  await verify?.stop();
 });
 
 describe('the harness enforces (negative controls)', () => {
@@ -268,18 +236,18 @@ describe('the harness enforces (negative controls)', () => {
     expect(repCtx.permissions, 'the rep must not carry admin_full_access').not.toContain(
       'admin_full_access',
     );
-    expect(repCtx.hasPlatformAdminGrant).toBe(false);
+    // The resolver's admin verdict is the context's `posture`.
+    expect(repCtx.posture).toBe('MEMBER');
     expect(repCtx.positions).toContain('na_sales_team');
   });
 
   it('a private account reaches the rep only through the territory rule', async () => {
-    const shares = await ql.find(
-      'sys_record_share',
-      { where: { object_name: 'crm_account', recipient_id: id.rep } },
-      { context: SYS },
-    );
+    // Over this fixture's two accounts — the rule shares seeded US accounts too.
+    const fixtureAccounts = new Set([id.acct_US, id.acct_JP]);
+    const shares = (await verify.rows('sys_record_share', { object_name: 'crm_account', recipient_id: id.rep }))
+      .filter((s) => fixtureAccounts.has(String(s.record_id)));
     expect(
-      (shares as AnyRec[]).map((s) => `${s.record_id}:${s.access_level}:${s.source}`),
+      shares.map((s) => `${s.record_id}:${s.access_level}:${s.source}`),
       'north_america_territory materialised no share row — the fixture is not exercising sharing',
     ).toEqual([`${id.acct_US}:edit:rule`]);
 
@@ -289,10 +257,8 @@ describe('the harness enforces (negative controls)', () => {
 });
 
 /** Rows of `object` with this id visible to the rep — 0 or 1. */
-const repReadsById = async (object: string, rowId: string): Promise<number> => {
-  const rows = await ql.find(object, { where: { id: rowId } }, { context: repCtx });
-  return Array.isArray(rows) ? rows.length : 0;
-};
+const repReadsById = async (object: string, rowId: string): Promise<number> =>
+  (await verify.rows(object, { id: rowId }, { as: rep.token })).length;
 
 describe('#549: what a territory-shared account carries into its related lists', () => {
   it('quotes and contracts follow the account — the keyhole this issue reported is closed', async () => {
@@ -360,7 +326,7 @@ describe('#694: the parent-write gate derives from the master the same way', () 
   /** Attempt a rep-context update; report the outcome as a stable label. */
   const repWrites = async (object: string, rowId: string, patch: AnyRec): Promise<string> => {
     try {
-      await ql.update(object, { id: rowId, ...patch }, { context: repCtx });
+      await verify.hooks.run(object, 'update', { id: rowId, ...patch }, { as: rep.token });
       return 'allowed';
     } catch (error: unknown) {
       // A refusal with no class of its own is named by its code: since 17.7.0 a

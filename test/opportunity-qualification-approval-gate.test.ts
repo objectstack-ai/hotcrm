@@ -1,13 +1,16 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
+import type { VerifyStack } from '@objectstack/verify';
 import stack from './helpers/composed-stack';
-import opportunityHooks from '../src/sales/objects/opportunity.hook';
 import { OpportunityApprovalFlow } from '../src/sales/flows/opportunity-approval.flow';
 import { OpportunityStatusChangeApprovalFlow } from '../src/sales/flows/opportunity-status-change-approval.flow';
 import { OpportunityQualificationApprovalFlow } from '../src/sales/flows/opportunity-qualification-approval.flow';
-import { hookNamed, makeCtx, makeHarness } from './helpers/hook-harness';
-import { makeFlowHarness, type Rec } from './helpers/flow-harness';
+import {
+  hotcrmStack, signUpPerson, systemUpdate, flowRuns, conditionHolds as holdsOn, type Person,
+} from './helpers/verify-stack';
+
+type Rec = Record<string, any>;
 
 /**
  * The 立项 (qualification) gate, REQ-0006 step 11:
@@ -33,15 +36,54 @@ type AnyRec = Record<string, any>;
 const objects: AnyRec[] = (stack as any).objects ?? [];
 const opportunity = objects.find((o) => o.name === 'crm_opportunity') as AnyRec | undefined;
 
-/** Evaluate a flow condition exactly as the engine does (cf. flow-record-change). */
-function conditionHolds(condition: unknown, vars: Record<string, unknown>): boolean {
-  const h = makeFlowHarness({}, {});
-  const engine = h.engine as unknown as {
-    evaluateCondition(c: unknown, v: Map<string, unknown>): boolean;
-  };
-  const expr = typeof condition === 'string' ? { dialect: 'cel', source: condition } : condition;
-  return engine.evaluateCondition(expr, new Map(Object.entries(vars)));
-}
+/*
+ * On the shipped app booted by `@objectstack/verify`: conditions are evaluated
+ * by the booted automation service (`conditionHolds`); the write path is a
+ * sales rep's real update of their own deal (or a system write), the app's
+ * `opportunity_lifecycle` hook judging it inside the engine's write; and each
+ * flow is reached through real writes and a real approval decision.
+ */
+let verify: VerifyStack;
+let admin: string;
+let rep: Person;
+let accountId: string;
+let k = 0;
+beforeAll(async () => {
+  verify = await hotcrmStack();
+  admin = await verify.signIn();
+  rep = await signUpPerson(verify, 'rep@opportunity-qualification-approval-gate.test', {
+    name: 'Gate Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+  });
+  const [account] = await verify.seed('crm_account', [{ name: 'Qualification Gate Co', owner_id: rep.id }]);
+  accountId = String(account!.id);
+}, 120_000);
+
+/** Evaluate a flow condition exactly as the engine does. */
+const conditionHolds = (condition: unknown, vars: Record<string, unknown>): boolean => holdsOn(verify, condition, vars);
+
+/**
+ * The rep's deal, standing in `previous`: written as the system — both gates'
+ * verdict columns are `readonly`, so only a system write can put them in a
+ * state.
+ */
+const dealIn = async (previous: AnyRec): Promise<string> => {
+  const [deal] = await verify.seed('crm_opportunity', [{
+    name: `Big Deal ${++k}`, stage: 'qualification', amount: 100, close_date: '2030-06-30',
+    crm_account: accountId, owner_id: rep.id,
+  }]);
+  if (Object.keys(previous).length > 0) await systemUpdate(verify, 'crm_opportunity', { id: deal!.id, ...previous });
+  return String(deal!.id);
+};
+
+/** Decide the deal's one open approval request as the admin (nobody holds `sales_manager`). */
+const decide = async (dealId: string, decision: 'approve' | 'reject'): Promise<void> => {
+  const open = (await verify.rows('sys_approval_request', { record_id: dealId })).filter((r) => r.status === 'pending');
+  expect(open, 'the deal has no single open approval request').toHaveLength(1);
+  const res = await verify.apiAs(admin, 'POST', `/approvals/requests/${open[0]!.id}/${decision}`, { comment: `${decision}d.` });
+  expect(res.status, await res.clone().text()).toBe(200);
+};
+
+const stored = async (id: string): Promise<Rec> => (await verify.rows('crm_opportunity', { id }))[0]!;
 
 const FLOW = OpportunityQualificationApprovalFlow;
 const startNode = (FLOW.nodes as Rec[]).find((n) => n.id === 'start');
@@ -175,21 +217,15 @@ describe('the approval branches leave the gate unable to re-enter, and trip no o
 
 // ─── the write path ────────────────────────────────────────────────────────
 
-const guard = hookNamed(opportunityHooks, 'opportunity_lifecycle');
+/** One write against the rep's deal standing in `previous`; `null` = a system write. */
+const write = async (input: AnyRec, previous: AnyRec, user: Person | null = rep): Promise<void> => {
+  const id = await dealIn(previous);
+  if (user) await verify.hooks.run('crm_opportunity', 'update', { id, ...input }, { as: user.token });
+  else await systemUpdate(verify, 'crm_opportunity', { id, ...input });
+};
 
-/** `null` = a system write. Not `undefined`: that would select the default. */
-const write = (input: AnyRec, previous: AnyRec, user: { id: string } | null = { id: 'usr_1' }) =>
-  guard.handler(
-    makeCtx({
-      event: 'beforeUpdate',
-      input: { id: 'opp_1', ...input },
-      previous: { id: 'opp_1', name: 'Big Deal', stage: 'qualification', amount: 100, ...previous },
-      user: user ?? undefined,
-      api: makeHarness().api,
-    }),
-  );
-
-const refusal = (input: AnyRec, previous: AnyRec) => write(input, previous).then(() => null, (e: AnyRec) => e);
+const refusal = (input: AnyRec, previous: AnyRec): Promise<AnyRec> =>
+  write(input, previous).then(() => null, (e: AnyRec) => e) as Promise<AnyRec>;
 
 /** The two acts step 11 holds until 立项 — 更新阶段 and 赢丢单 (a direct close is a stage change). */
 const HELD_ACTS: [string, AnyRec, string][] = [
@@ -254,12 +290,21 @@ describe('the write path — opportunity_lifecycle holds two acts until 立项 i
     await expect(write({ qualification_requested: true }, pending)).resolves.toBeUndefined();
   });
 
-  it('reads the verdict INPUT-FIRST, as the step-14 gate does', async () => {
-    // No real user write can carry this: the readonly verdict is stripped from
-    // a user payload BEFORE beforeUpdate hooks run. The pin is that a write
-    // which does carry `approved` is judged as approved.
-    await expect(write({ stage: 'needs_analysis', qualification_approval_status: 'approved' },
-      { qualification_approval_status: 'pending' })).resolves.toBeUndefined();
+  it('judges a rep’s write carrying the readonly verdict by the stored one and refuses it; the approval’s own stamp lets the act through', async () => {
+    // No real user write can carry the verdict: it is `readonly`, and the
+    // engine strips it from a user payload BEFORE beforeUpdate hooks run — so
+    // a rep's write that tries is judged by the STORED verdict, and refused.
+    const err = await refusal({ stage: 'needs_analysis', qualification_approval_status: 'approved' },
+      { qualification_approval_status: 'pending' });
+    expect(err?.code, 'a rep wrote their own 立项 verdict').toBe('RECORD_LOCKED');
+    // What reaches the verdict is the approval: decided, the flow's own write
+    // stamps `approved`, and the same act then goes through.
+    const id = await dealIn({ qualification_approval_status: 'pending' });
+    await verify.hooks.run('crm_opportunity', 'update', { id, qualification_requested: true }, { as: rep.token });
+    await decide(id, 'approve');
+    expect((await stored(id)).qualification_approval_status).toBe('approved');
+    await expect(verify.hooks.run('crm_opportunity', 'update', { id, stage: 'needs_analysis' }, { as: rep.token }))
+      .resolves.toBeTruthy();
   });
 
   it('judges only USER writes — a system write (no user) carries no session to refuse', async () => {
@@ -271,11 +316,20 @@ describe('the write path — opportunity_lifecycle holds two acts until 立项 i
     // A deal can only close before 立项 through a write this hook does not
     // judge (no user). The flow stamps the verdict under the triggering user,
     // so the closed-deal freeze would judge it as a user edit and refuse it.
+    // End to end: the rep asks for 立项, a system write closes the deal while
+    // the request is open, and the approver decides.
     for (const stage of ['closed_won', 'closed_lost']) {
-      const closed = { stage, qualification_approval_status: 'pending', qualification_requested: true };
-      await expect(write({ qualification_approval_status: 'approved' }, closed)).resolves.toBeUndefined();
-      await expect(write({ qualification_approval_status: 'rejected', qualification_requested: false }, closed))
-        .resolves.toBeUndefined();
+      for (const decision of ['approve', 'reject'] as const) {
+        const id = await dealIn({ qualification_approval_status: 'pending' });
+        await verify.hooks.run('crm_opportunity', 'update', { id, qualification_requested: true }, { as: rep.token });
+        await systemUpdate(verify, 'crm_opportunity', stage === 'closed_won'
+          ? { id, stage, win_reason: 'best_fit' } : { id, stage, loss_reason: 'price' });
+        await decide(id, decision);
+        const after = await stored(id);
+        expect(after.qualification_approval_status, `the ${decision} stamp did not land on a ${stage} deal`)
+          .toBe(decision === 'approve' ? 'approved' : 'rejected');
+        if (decision === 'reject') expect(Boolean(after.qualification_requested)).toBe(false);
+      }
     }
   });
 });
@@ -333,17 +387,25 @@ describe('two gates, one deal — the interaction matrix', () => {
   });
 
   it('the step-14 approval\'s own close still lands once 立项 is approved', async () => {
-    await expect(write(
-      { stage: 'closed_won', status_change_approval_status: 'approved' },
-      { qualification_approval_status: 'approved', status_change_approval_status: 'pending', requested_status: 'closed_won', win_reason: 'best_fit' },
-    )).resolves.toBeUndefined();
+    // End to end: the rep asks for the close, the step-14 approval opens, and
+    // its approve branch writes the stage and its verdict in one payload.
+    const id = await dealIn({ qualification_approval_status: 'approved', status_change_approval_status: 'pending' });
+    await verify.hooks.run('crm_opportunity', 'update', { id, requested_status: 'closed_won', win_reason: 'best_fit' }, { as: rep.token });
+    await decide(id, 'approve');
+    const after = await stored(id);
+    expect(after.stage, 'the step-14 approval\'s own close was refused').toBe('closed_won');
+    expect(after.status_change_approval_status).toBe('approved');
   });
 
   it('the 立项 approval\'s own stamps trip neither the step-14 gate nor the freeze', async () => {
-    const armed = { qualification_approval_status: 'pending', qualification_requested: true, status_change_approval_status: 'pending' };
-    await expect(write({ qualification_approval_status: 'approved' }, armed)).resolves.toBeUndefined();
-    await expect(write({ qualification_approval_status: 'rejected', qualification_requested: false }, armed))
-      .resolves.toBeUndefined();
+    for (const decision of ['approve', 'reject'] as const) {
+      const id = await dealIn({ qualification_approval_status: 'pending', status_change_approval_status: 'pending' });
+      await verify.hooks.run('crm_opportunity', 'update', { id, qualification_requested: true }, { as: rep.token });
+      await decide(id, decision);
+      const after = await stored(id);
+      expect(after.qualification_approval_status).toBe(decision === 'approve' ? 'approved' : 'rejected');
+      if (decision === 'reject') expect(Boolean(after.qualification_requested)).toBe(false);
+    }
   });
 
   it('neither flow opens on the other gate\'s request', () => {
@@ -368,36 +430,27 @@ describe('two gates, one deal — the interaction matrix', () => {
  * must fail at `get_opportunity` with the engine's `[runAs]` refusal.
  */
 describe('a request written with no session still reaches the approval', () => {
-  type Run = { success: boolean; error?: string; summary?: { nodes?: Rec[] } };
-  const NAME = 'opportunity_qualification_approval';
-
-  const deal = {
-    id: 'o1', name: 'Acme Tender', amount: 50_000, stage: 'prospecting', owner_id: 'rep1',
-    qualification_approval_status: 'pending', qualification_requested: true,
-  };
-
-  async function fire(flow: Rec) {
-    const h = makeFlowHarness({ [NAME]: flow as never }, { crm_opportunity: [{ ...deal }] });
-    return (await (h.engine as unknown as { execute(n: string, c: Rec): Promise<Run> })
-      .execute(NAME, { params: {}, event: 'record_change', record: deal, previous: { ...deal, qualification_requested: false } })) as Run;
-  }
-  const nodeStatus = (r: Run, id: string) => (r.summary?.nodes ?? []).find((n) => n.nodeId === id)?.status;
-
   it('passes `get_opportunity` and stops only at the approval node', async () => {
-    const result = await fire(FLOW as unknown as Rec);
-    expect(String(result.error ?? ''), 'the request is bypassing approval').not.toContain('[runAs]');
-    expect(nodeStatus(result, 'get_opportunity')).toBe('success');
-    // Harness-only stop: the approval executor ships in
-    // @objectstack/plugin-approvals, which this in-memory harness does not install.
-    expect(nodeStatus(result, 'qualification_review')).toBe('failure');
-    expect(String(result.error)).toContain("No executor registered for node type 'approval'");
+    // The request arrives on a SYSTEM write — no session, no trigger user.
+    const id = await dealIn({ qualification_approval_status: 'pending' });
+    await systemUpdate(verify, 'crm_opportunity', { id, qualification_requested: true });
+
+    const [run] = await flowRuns(verify, 'opportunity_qualification_approval', id);
+    expect(String(run?.error ?? ''), 'the request is bypassing approval').not.toContain('[runAs]');
+    // The run parks at the approval node with a request open.
+    expect(run?.status).toBe('paused');
+    expect(await verify.rows('sys_approval_request', { record_id: id })).toHaveLength(1);
   });
 
   it('…and never gets that far once `runAs` is dropped', async () => {
+    // On 17.7.0 the runAs-less variant is refused before it can run at all:
+    // the platform's flow-authoring door names the `readonly` verdict column a
+    // user-scoped run would silently drop.
     const { runAs: _dropped, ...withoutRunAs } = FLOW as unknown as Rec;
-    const result = await fire(withoutRunAs);
-    expect(String(result.error)).toContain('[runAs] refusing a data operation');
-    expect(nodeStatus(result, 'get_opportunity')).toBe('failure');
-    expect(nodeStatus(result, 'qualification_review'), 'approval was never requested').toBeUndefined();
+    const res = await verify.apiAs(admin, 'POST', '/automation', { ...withoutRunAs, name: 'opportunity_qualification_approval_without_runas' });
+    expect(res.status).toBe(422);
+    const body = await res.json() as Rec;
+    expect(body.error.code).toBe('INVALID_METADATA');
+    expect(JSON.stringify(body.error.details)).toContain('flow-update-readonly-field');
   });
 });

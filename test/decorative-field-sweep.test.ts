@@ -21,7 +21,7 @@ import { AccountViews } from '../src/sales/views/account.view';
 import { products } from '../src/revenue/data/catalog.seed';
 import { ContactImportMapping } from '../src/sales/mappings/contact_import.mapping';
 import { AccountImportMapping } from '../src/sales/mappings/account_import.mapping';
-import { localePacks, type AnyRec } from './helpers/metadata-fixtures';
+import { localePacks, type AnyRec } from './helpers/composed-stack';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';

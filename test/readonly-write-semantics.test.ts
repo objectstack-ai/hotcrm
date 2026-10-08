@@ -6,7 +6,12 @@ import { InMemoryDriver } from '@objectstack/driver-memory';
 import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-automation';
 import type * as Automation from '@objectstack/spec/automation';
 import { P } from '@objectstack/spec';
-import { silentLogger } from './helpers/flow-harness';
+
+/** The engine's logger, silenced: these suites read results, not log lines. */
+const silentLogger: any = {
+  info() {}, warn() {}, error() {}, debug() {}, trace() {},
+  child() { return silentLogger; },
+};
 
 type AnyRec = Record<string, any>;
 type Flow = Automation.Flow;
@@ -57,9 +62,8 @@ type Flow = Automation.Flow;
  *
  * ## Why a real engine and a purpose-built probe object
  *
- * `test/helpers/flow-harness.ts` runs flows over a stand-in data engine with no
- * readonly semantics at all, so it cannot see this. Here the AutomationEngine's
- * `data` service IS a real `ObjectQL` — its flat `update(object, data, options)`
+ * The rule under test is the engine's own, so the AutomationEngine's
+ * `data` service here IS a real `ObjectQL` — its flat `update(object, data, options)`
  * surface is exactly what the `update_record` executor calls — over a real
  * `InMemoryDriver`. The probe object is purpose-built so the measurement never
  * depends on, or perturbs, the shipped `crm_case` declaration.
@@ -200,9 +204,8 @@ const screenFlow = (name: string, runAs: 'system' | 'user'): Flow =>
 
 /** Boot an AutomationEngine whose `data` service is the REAL ObjectQL. */
 function automation(flows: Record<string, Flow>) {
-  // `any`, matching `test/helpers/flow-harness.ts`: `installBuiltinNodes` wants a
-  // full `PluginContext` and this stands in for the two members the node
-  // executors actually reach for.
+  // `any`: `installBuiltinNodes` wants a full `PluginContext`, and this is the
+  // two members the node executors actually reach for.
   const ctx: any = {
     logger: silentLogger,
     getService: (n: string) => (n === 'data' || n === 'objectql' ? ql : undefined),

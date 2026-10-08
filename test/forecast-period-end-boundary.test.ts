@@ -1,14 +1,17 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { ObjectQL, applySystemFields, evaluateValidationRules } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
-import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { evaluateValidationRules } from '@objectstack/objectql';
 import { P } from '@objectstack/spec';
+import { bootStack, type VerifyStack } from '@objectstack/verify';
+import artifact from '../objectstack.config';
 import stack from './helpers/composed-stack';
 import forecastHook from '../src/sales/objects/forecast.hook';
 import { forecasts } from '../src/sales/data/forecast.seed';
-import { makeCtx, hookNamed } from './helpers/hook-harness';
+import { bootOptions, hotcrmStack, hotcrmMemoryStack, signUpPerson, type Person } from './helpers/verify-stack';
 
 /**
  * A forecast's window must be the calendar period it is labelled with — at the
@@ -53,7 +56,13 @@ import { makeCtx, hookNamed } from './helpers/hook-harness';
  * (#4649) is filtered out explicitly, because a predicate that *could not
  * answer* also arrives as a `VALIDATION_FAILED` and is the opposite of
  * enforcement. The gate is also shown to be capable of FAILING: the same bad row
- * is admitted by a schema clone with the rule removed (see "the gate can fail").
+ * is admitted by the app booted with the rule removed (see "the gate can fail").
+ *
+ * Every write is a sales manager's — the persona who keys a forecast in —
+ * through the engine's write door (`hooks.run`) on the app booted by
+ * `@objectstack/verify`, so `forecast_derive_period` runs where production runs
+ * it, and what is asserted is the row the engine stored or the refusal it
+ * raised.
  */
 
 type AnyRec = Record<string, any>;
@@ -70,7 +79,8 @@ const celSource = (v: unknown): string =>
 const ruleNamed = (name: string): AnyRec | undefined =>
   ((forecast.validations ?? []) as AnyRec[]).find((r) => r?.name === name);
 
-const derivePeriodHook = hookNamed(forecastHook, 'forecast_derive_period') as AnyRec;
+const derivePeriodHook = ([] as AnyRec[]).concat(forecastHook as AnyRec)
+  .find((h) => h.name === 'forecast_derive_period') as AnyRec;
 
 const BASE = { snapshot_date: '2026-08-15' };
 
@@ -82,29 +92,40 @@ const TEN_MONTH_WINDOW = {
   period_label: 'Q3 2026',
 } as const;
 
-/**
- * A write as PRODUCTION performs it: `forecast_derive_period` first, engine
- * second. The hook fills `period_end`/`period_label` only when the write leaves
- * them unset, so passing them through it is what reproduces the hand-entry path
- * rather than the derived one.
- */
-const viaHook = async (
-  api: AnyRec,
-  op: 'insert' | 'update',
-  input: AnyRec,
-  where?: AnyRec,
-  previous?: AnyRec,
-) => {
-  const ctx = makeCtx({
-    event: op === 'insert' ? 'beforeInsert' : 'beforeUpdate',
-    input: { ...input },
-    previous,
+/** One booted app and the sales manager who writes its forecasts. */
+interface Desk {
+  verify: VerifyStack;
+  manager: Person;
+}
+
+/** Sign up the sales manager on `verify`. */
+const managerOn = (verify: VerifyStack, label: string): Promise<Person> =>
+  signUpPerson(verify, `manager.${label}@forecast-period-end-boundary.test`, {
+    name: 'Forecast Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
   });
-  await derivePeriodHook.handler(ctx);
-  return op === 'insert'
-    ? api.object('crm_forecast').insert(ctx.input)
-    : api.object('crm_forecast').update(ctx.input, { where });
+
+/** Boot `boot` and sign up the manager, once for the enclosing block. */
+const deskOn = (boot: () => Promise<VerifyStack>, label: string): Desk => {
+  const desk = {} as Desk;
+  beforeAll(async () => {
+    desk.verify = await boot();
+    desk.manager = await managerOn(desk.verify, label);
+  }, 120_000);
+  return desk;
 };
+
+/**
+ * A write as PRODUCTION performs it: the manager's, through the engine —
+ * `forecast_derive_period` first, the engine's checks second. The hook fills
+ * `period_end`/`period_label` only when the write leaves them unset, so passing
+ * them is what reproduces the hand-entry path rather than the derived one.
+ */
+const viaHook = (desk: Desk, op: 'insert' | 'update', input: AnyRec): Promise<AnyRec> =>
+  desk.verify.hooks.run('crm_forecast', op, { ...input }, { as: desk.manager.token });
+
+/** The stored forecast, read fresh. */
+const storedForecast = async (desk: Desk, id: string): Promise<AnyRec | undefined> =>
+  (await desk.verify.rows('crm_forecast', { id }))[0];
 
 /** Run `fn`, require it to be REFUSED, and hand back the envelope. */
 const refusal = async (fn: () => Promise<unknown>) => {
@@ -143,13 +164,34 @@ const expectCalendarRefusal = (env: Awaited<ReturnType<typeof refusal>>) => {
   expect(env.status).toBeUndefined();
 };
 
-/** A clone of the shipped schema with some rules removed. */
-const without = (...names: string[]) => {
-  const clone = JSON.parse(JSON.stringify(forecast)) as AnyRec;
-  clone.validations = ((clone.validations ?? []) as AnyRec[]).filter(
-    (r) => !names.includes(r?.name),
-  );
-  return clone;
+/**
+ * The SHIPPED app with some `crm_forecast` rules removed — every other object,
+ * hook and flow by reference — for the blocks whose claim is what the app does
+ * WITHOUT a rule. Booted through the platform's own `bootStack`, like the app.
+ */
+const artifactWithout = (...names: string[]) => {
+  const a = artifact as unknown as AnyRec;
+  return {
+    ...a,
+    packages: (a.packages as AnyRec[]).map((p) => ({
+      ...p,
+      manifest: {
+        ...p.manifest,
+        objects: (p.manifest.objects as AnyRec[] | undefined)?.map((o) =>
+          o.name === 'crm_forecast'
+            ? { ...o, validations: ((o.validations ?? []) as AnyRec[]).filter((r) => !names.includes(r?.name)) }
+            : o),
+      },
+    })),
+  } as typeof artifact;
+};
+
+/** The app booted with `names` removed from `crm_forecast`, and its manager. */
+const deskWithout = async (label: string, names: string[], over: Parameters<typeof bootOptions>[0] = {}): Promise<Desk> => {
+  const verify = await bootStack(artifactWithout(...names), bootOptions(over));
+  const carried = ((verify.metadata.object('crm_forecast') as AnyRec).validations as AnyRec[]).map((r) => r.name);
+  for (const name of names) expect(carried, `the variant boot still carries ${name}`).not.toContain(name);
+  return { verify, manager: await managerOn(verify, label) };
 };
 
 // ───────────────────────────────────── the rule, as declared metadata ──
@@ -217,22 +259,10 @@ describe('the window rule is declared where the platform can act on it', () => {
 // ────────────────────────────── the refusal, on the real engine (memory) ──
 
 describe('the hand-typed window is REFUSED, not warned about (in-memory driver)', () => {
-  let ql: AnyRec;
-
-  beforeAll(async () => {
-    ql = (await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
-      objects: { crm_forecast: forecast } as never,
-    })) as never;
-  });
-  afterAll(async () => {
-    await ql?.close();
-  });
-
-  const api = () => ql.createContext({ isSystem: true });
+  const desk = deskOn(hotcrmMemoryStack, 'memory');
 
   it("refuses the card's own row — Q3 2026 spanning ten months", async () => {
-    const env = await refusal(() => viaHook(api(), 'insert', { ...BASE, ...TEN_MONTH_WINDOW }));
+    const env = await refusal(() => viaHook(desk, 'insert', { ...BASE, ...TEN_MONTH_WINDOW }));
     expectCalendarRefusal(env);
   });
 
@@ -249,18 +279,17 @@ describe('the hand-typed window is REFUSED, not warned about (in-memory driver)'
     'refuses $period $period_start .. $period_end ($why)',
     async ({ period, period_start, period_end }) => {
       const env = await refusal(() =>
-        viaHook(api(), 'insert', { ...BASE, period, period_start, period_end }),
+        viaHook(desk, 'insert', { ...BASE, period, period_start, period_end }),
       );
       expectCalendarRefusal(env);
     },
   );
 
   it('nothing landed — a rule that complains while the row saves is not enforcement', async () => {
-    const scoped = api();
     await refusal(() =>
-      viaHook(scoped, 'insert', { ...BASE, ...TEN_MONTH_WINDOW, notes: 'stretcher' }),
+      viaHook(desk, 'insert', { ...BASE, ...TEN_MONTH_WINDOW, notes: 'stretcher' }),
     );
-    const rows = await scoped.object('crm_forecast').find({ where: { notes: 'stretcher' } });
+    const rows = await desk.verify.rows('crm_forecast', { notes: 'stretcher' });
     expect(rows).toEqual([]);
   });
 
@@ -283,7 +312,7 @@ describe('the hand-typed window is REFUSED, not warned about (in-memory driver)'
       // Short months and the leap February are here because the arithmetic is
       // `addMonths` + `addDays(-1)`, not a fixed day count — a "start + 92 days"
       // approximation would be red on half of these.
-      const row = await viaHook(api(), 'insert', { ...BASE, period, period_start, period_end });
+      const row = await viaHook(desk, 'insert', { ...BASE, period, period_start, period_end });
       expect(row?.period_end).toBe(period_end);
     },
   );
@@ -292,16 +321,14 @@ describe('the hand-typed window is REFUSED, not warned about (in-memory driver)'
     // `forecast_snapshot`'s `create_forecast` sends `period` and nothing else,
     // and the hook derives the whole family. This is the control from the #1106
     // probe: the same start with `period_end` unset lands on 2026-09-30.
-    const scoped = api();
-    const row = await viaHook(scoped, 'insert', { ...BASE, period: 'quarter' });
+    const row = await viaHook(desk, 'insert', { ...BASE, period: 'quarter' });
     expect(row?.period_start).toBe('2026-07-01');
     expect(row?.period_end).toBe('2026-09-30');
     expect(row?.period_label).toBe('Q3 2026');
   });
 
   it('admits the manager form path with a correctly typed window', async () => {
-    const scoped = api();
-    const row = await viaHook(scoped, 'insert', {
+    const row = await viaHook(desk, 'insert', {
       period: 'quarter',
       period_start: '2026-07-01',
       period_end: '2026-09-30',
@@ -312,7 +339,7 @@ describe('the hand-typed window is REFUSED, not warned about (in-memory driver)'
       closed_amount: 250000,
       notes: 'typed by the RVP',
     });
-    const stored = await scoped.object('crm_forecast').findOne({ where: { id: row.id } });
+    const stored = await storedForecast(desk, row.id);
     expect(stored?.source).toBe('manual');
     expect(stored?.period_end).toBe('2026-09-30');
   });
@@ -320,27 +347,25 @@ describe('the hand-typed window is REFUSED, not warned about (in-memory driver)'
   it('leaves an edit that never touches the period alone', async () => {
     // A rule that re-demands its condition on every later write is a rule
     // someone disables.
-    const scoped = api();
-    const row = await viaHook(scoped, 'insert', {
+    const row = await viaHook(desk, 'insert', {
       ...BASE, period: 'quarter', period_start: '2026-07-01', period_end: '2026-09-30',
     });
-    await scoped.object('crm_forecast').update({ id: row.id, quota: 900000 }, { where: { id: row.id } });
-    const after = await scoped.object('crm_forecast').findOne({ where: { id: row.id } });
+    await viaHook(desk, 'update', { id: row.id, quota: 900000 });
+    const after = await storedForecast(desk, row.id);
     expect(after?.quota).toBe(900000);
   });
 
   it('refuses to WALK a valid row off its boundary', async () => {
     // Otherwise the contract holds for exactly one write: insert correctly,
     // then stretch the end afterwards — which is the manager's actual path.
-    const scoped = api();
-    const row = await viaHook(scoped, 'insert', {
+    const row = await viaHook(desk, 'insert', {
       ...BASE, period: 'quarter', period_start: '2026-07-01', period_end: '2026-09-30',
     });
     const env = await refusal(() =>
-      viaHook(scoped, 'update', { id: row.id, period_end: '2027-05-15' }, { id: row.id }, row),
+      viaHook(desk, 'update', { id: row.id, period_end: '2027-05-15' }),
     );
     expectCalendarRefusal(env);
-    const after = await scoped.object('crm_forecast').findOne({ where: { id: row.id } });
+    const after = await storedForecast(desk, row.id);
     expect(after?.period_end).toBe('2026-09-30');
   });
 
@@ -364,12 +389,11 @@ describe('the hand-typed window is REFUSED, not warned about (in-memory driver)'
    * the record form submits, because the form posts the field it is showing.
    */
   it('admits a re-label that leaves period_end unset — the hook re-derives it', async () => {
-    const scoped = api();
-    const row = await viaHook(scoped, 'insert', {
+    const row = await viaHook(desk, 'insert', {
       ...BASE, period: 'month', period_start: '2026-07-01', period_end: '2026-07-31',
     });
-    await viaHook(scoped, 'update', { id: row.id, period: 'quarter' }, { id: row.id }, row);
-    const after = await scoped.object('crm_forecast').findOne({ where: { id: row.id } });
+    await viaHook(desk, 'update', { id: row.id, period: 'quarter' });
+    const after = await storedForecast(desk, row.id);
     expect(after?.period).toBe('quarter');
     // Re-derived to the quarter's own end, not left on the July window.
     expect(after?.period_end).toBe('2026-09-30');
@@ -379,39 +403,25 @@ describe('the hand-typed window is REFUSED, not warned about (in-memory driver)'
     // The merged-record case, and the form's actual payload: the rule has to
     // read `period_start` off `previous` while `period`/`period_end` come from
     // the update.
-    const scoped = api();
-    const row = await viaHook(scoped, 'insert', {
+    const row = await viaHook(desk, 'insert', {
       ...BASE, period: 'month', period_start: '2026-07-01', period_end: '2026-07-31',
     });
     const env = await refusal(() =>
-      viaHook(
-        scoped,
-        'update',
-        { id: row.id, period: 'quarter', period_end: '2026-07-31' },
-        { id: row.id },
-        row,
-      ),
+      viaHook(desk, 'update', { id: row.id, period: 'quarter', period_end: '2026-07-31' }),
     );
     expectCalendarRefusal(env);
-    const after = await scoped.object('crm_forecast').findOne({ where: { id: row.id } });
+    const after = await storedForecast(desk, row.id);
     expect(after?.period).toBe('month');
   });
 
   it('admits it once the window is widened to match', async () => {
     // The way out is always open — the cost of an invariant is acceptable only
     // because a correct edit is never blocked.
-    const scoped = api();
-    const row = await viaHook(scoped, 'insert', {
+    const row = await viaHook(desk, 'insert', {
       ...BASE, period: 'month', period_start: '2026-07-01', period_end: '2026-07-31',
     });
-    await viaHook(
-      scoped,
-      'update',
-      { id: row.id, period: 'quarter', period_end: '2026-09-30' },
-      { id: row.id },
-      row,
-    );
-    const after = await scoped.object('crm_forecast').findOne({ where: { id: row.id } });
+    await viaHook(desk, 'update', { id: row.id, period: 'quarter', period_end: '2026-09-30' });
+    const after = await storedForecast(desk, row.id);
     expect(after?.period).toBe('quarter');
     expect(after?.period_end).toBe('2026-09-30');
   });
@@ -421,7 +431,7 @@ describe('the hand-typed window is REFUSED, not warned about (in-memory driver)'
     // it never judges a value the schema itself rejects. Measured: the refusal
     // that comes back names the option list, not this rule.
     const env = await refusal(() =>
-      viaHook(api(), 'insert', {
+      viaHook(desk, 'insert', {
         ...BASE, period: 'year', period_start: '2026-01-01', period_end: '2026-12-31',
       }),
     );
@@ -438,38 +448,28 @@ describe('the gate can fail — the same row is admitted without the rule', () =
    * Everything above asserts a refusal; this asserts that the refusal is coming
    * from THIS rule and not from something else on the object that would have
    * refused the row anyway (`period_end_after_start`, the required checks, the
-   * picklist). Remove only this rule, and the ten-month window lands.
+   * picklist). Boot the app with only this rule removed, and the ten-month
+   * window lands.
    */
   it('admits the ten-month window when the rule is removed, and stores it as given', async () => {
-    const ql: AnyRec = (await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
-      objects: { crm_forecast: without(RULE) } as never,
-    })) as never;
-    const api = ql.createContext({ isSystem: true });
-
-    const row = await viaHook(api, 'insert', { ...BASE, ...TEN_MONTH_WINDOW });
-    const stored = await api.object('crm_forecast').findOne({ where: { id: row.id } });
+    const desk = await deskWithout('no-rule', [RULE]);
+    const row = await viaHook(desk, 'insert', { ...BASE, ...TEN_MONTH_WINDOW });
+    const stored = await storedForecast(desk, row.id);
     // The pre-#1093 behaviour, reproduced exactly: label says one quarter, the
     // window runs ten months, and nothing objects.
     expect(stored?.period_label).toBe('Q3 2026');
     expect(stored?.period_end).toBe('2027-05-15');
-    await ql.close();
-  });
+    await desk.verify.stop();
+  }, 120_000);
 
   it('the two start rules do NOT cover it — they admit the row on their own', async () => {
     // Why #1081's pair was not enough, asserted rather than argued: the start is
     // a valid quarter boundary, so both of them pass on this row.
-    const ql: AnyRec = (await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
-      objects: {
-        crm_forecast: without(RULE, 'period_end_after_start', 'snapshot_amounts_non_negative'),
-      } as never,
-    })) as never;
-    const api = ql.createContext({ isSystem: true });
-    const row = await viaHook(api, 'insert', { ...BASE, ...TEN_MONTH_WINDOW });
-    expect(row?.period_end).toBe('2027-05-15');
-    await ql.close();
-  });
+    const desk = await deskWithout('start-rules-only', [RULE, 'period_end_after_start', 'snapshot_amounts_non_negative']);
+    const row = await viaHook(desk, 'insert', { ...BASE, ...TEN_MONTH_WINDOW });
+    expect((await storedForecast(desk, row.id))?.period_end).toBe('2027-05-15');
+    await desk.verify.stop();
+  }, 120_000);
 });
 
 // ────────────────────── a missing null guard breaks the rule (measured) ─────
@@ -536,53 +536,29 @@ describe('the write is REFUSED on a real SQLite database too', () => {
   // The in-memory driver hands back sparse rows; a SQL driver hands back
   // column-complete ones with NULLs. Those are different inputs to the same
   // predicate, and a marketplace app does not choose its host's datasource.
-  let ql: AnyRec;
-
-  beforeAll(async () => {
-    const driver = new SqliteWasmDriver({ filename: ':memory:' });
-    await driver.connect();
-    const materialized = applySystemFields(forecast as never, { multiTenant: false }) as AnyRec;
-    await driver.initObjects([
-      {
-        name: 'crm_forecast',
-        fields: materialized.fields as Record<string, unknown>,
-        indexes: materialized.indexes,
-      } as never,
-    ]);
-    ql = (await ObjectQL.create({
-      datasources: { default: driver },
-      objects: { crm_forecast: forecast } as never,
-    })) as never;
-  }, 60_000);
-  afterAll(async () => {
-    await ql?.close();
-  });
+  const desk = deskOn(hotcrmStack, 'sqlite');
 
   it('refuses the stretched window and admits the calendar-true one', async () => {
-    const api = ql.createContext({ isSystem: true });
-    const env = await refusal(() => viaHook(api, 'insert', { ...BASE, ...TEN_MONTH_WINDOW }));
+    const env = await refusal(() => viaHook(desk, 'insert', { ...BASE, ...TEN_MONTH_WINDOW }));
     expectCalendarRefusal(env);
 
-    const row = await viaHook(api, 'insert', {
+    const row = await viaHook(desk, 'insert', {
       ...BASE, period: 'quarter', period_start: '2026-07-01', period_end: '2026-09-30',
     });
-    const stored = await api.object('crm_forecast').findOne({ where: { id: row.id } });
+    const stored = await storedForecast(desk, row.id);
     expect(String(stored?.period_end)).toBe('2026-09-30');
   });
 
   it('refuses the stretch on the update path, off a column-complete row', async () => {
-    const api = ql.createContext({ isSystem: true });
-    const row = await viaHook(api, 'insert', {
+    const row = await viaHook(desk, 'insert', {
       ...BASE, period: 'month', period_start: '2026-05-01', period_end: '2026-05-31',
     });
-    const stored = await api.object('crm_forecast').findOne({ where: { id: row.id } });
+    const stored = await storedForecast(desk, row.id);
     // Opposite precondition to the in-memory suite: the key IS present here.
     expect('period_label' in (stored ?? {})).toBe(true);
-    const env = await refusal(() =>
-      viaHook(api, 'update', { id: row.id, period_end: '2026-12-31' }, { id: row.id }, stored),
-    );
+    const env = await refusal(() => viaHook(desk, 'update', { id: row.id, period_end: '2026-12-31' }));
     expectCalendarRefusal(env);
-    const after = await api.object('crm_forecast').findOne({ where: { id: row.id } });
+    const after = await storedForecast(desk, row.id);
     expect(String(after?.period_end)).toBe('2026-05-31');
   });
 });
@@ -595,55 +571,72 @@ describe('the window rule is an INVARIANT — it reaches a row already stored wr
    * validates the value being WRITTEN, so a row stored wrong before the rule
    * existed keeps accepting edits forever; a script validation is evaluated
    * against the MERGED record on every write, so it does not. This is why the
-   * card specified `type: 'script'`, and it is measured here on the same shape
-   * `quote-discount-ceiling.test.ts` uses: insert through an engine whose schema
-   * has no rule, then re-open the SAME store with the shipped schema.
+   * card specified `type: 'script'`, and it is measured here as the upgrade an
+   * install actually goes through: the app WITHOUT the rule boots over a
+   * database file and stores the rows, stops, and the SHIPPED app cold-boots
+   * over the same file (`databaseFile`, the handle's restart seam).
    */
-  const legacyRow = async () => {
-    const driver = new InMemoryDriver({ persistence: false });
-    const before: AnyRec = (await ObjectQL.create({
-      datasources: { default: driver },
-      objects: { crm_forecast: without(RULE) } as never,
-    })) as never;
-    const row = await viaHook(before.createContext({ isSystem: true }), 'insert', {
-      ...BASE, ...TEN_MONTH_WINDOW, notes: 'stored before the rule existed',
-    });
+  let dir: string;
+  let desk: Desk;
+  /** Two rows stored wrong before the rule existed — one per path below. */
+  let frozen: string;
+  let rederived: string;
+  beforeAll(async () => {
+    dir = mkdtempSync(join(tmpdir(), 'forecast-legacy-'));
+    const databaseFile = join(dir, 'crm.db');
+    const before = await deskWithout('before-upgrade', [RULE], { databaseFile });
+    const legacy = async (notes: string) =>
+      String((await viaHook(before, 'insert', { ...BASE, ...TEN_MONTH_WINDOW, notes })).id);
+    frozen = await legacy('stored before the rule existed');
+    rederived = await legacy('stored before the rule existed, edited without its window');
+    await before.verify.stop();
 
-    const after: AnyRec = (await ObjectQL.create({
-      datasources: { default: driver },
-      objects: { crm_forecast: forecast } as never,
-    })) as never;
-    return { ql: after, api: after.createContext({ isSystem: true }), row };
-  };
+    const verify = await bootStack(artifact, bootOptions({ databaseFile }));
+    desk = { verify, manager: await managerOn(verify, 'after-upgrade') };
+    for (const id of [frozen, rederived]) {
+      expect((await storedForecast(desk, id))?.period_end, 'the legacy row did not survive the restart').toBe('2027-05-15');
+    }
+  }, 240_000);
+  afterAll(async () => {
+    await desk?.verify.stop();
+    if (dir) rmSync(dir, { recursive: true, force: true });
+  });
 
-  it('refuses an UNRELATED edit to a row whose window is already wrong', async () => {
+  it('refuses an UNRELATED edit that carries the stored window — the record form’s payload', async () => {
     // The case a transition gate cannot see, and the whole reason the instrument
-    // is a validation rule rather than a field constraint.
-    const { ql, api, row } = await legacyRow();
+    // is a validation rule rather than a field constraint. The form posts the
+    // fields it is showing, so the stale `period_end` rides along with the edit.
     const env = await refusal(() =>
-      api.object('crm_forecast').update({ id: row.id, quota: 2000000 }, { where: { id: row.id } }),
+      viaHook(desk, 'update', { id: frozen, quota: 2000000, period_end: '2027-05-15' }),
     );
     expectCalendarRefusal(env);
-    const after = await api.object('crm_forecast').findOne({ where: { id: row.id } });
+    const after = await storedForecast(desk, frozen);
     expect(after?.quota ?? null).toBeNull();
-    await ql.close();
+  });
+
+  it('an edit that leaves the window unset is re-derived onto the calendar period', async () => {
+    // `forecast_derive_period` runs on every update and fills `period_end` /
+    // `period_label` whenever the write leaves them unset — so an edit that
+    // names neither repairs the stored window on its way through, and the rule
+    // then sees a calendar-true record.
+    await viaHook(desk, 'update', { id: rederived, quota: 2000000 });
+    const after = await storedForecast(desk, rederived);
+    expect(after?.quota).toBe(2000000);
+    expect(after?.period_end).toBe('2026-09-30');
+    expect(after?.period_label).toBe('Q3 2026');
   });
 
   it('admits the REPAIR — pulling the window back to the boundary is an ordinary edit', async () => {
     // The cost of an invariant is that an offending row is frozen, and that is
     // acceptable only because the way out is always open. If this goes red, the
     // rule has become a trap.
-    const { ql, api, row } = await legacyRow();
-    await api
-      .object('crm_forecast')
-      .update({ id: row.id, period_end: '2026-09-30' }, { where: { id: row.id } });
-    const repaired = await api.object('crm_forecast').findOne({ where: { id: row.id } });
+    await viaHook(desk, 'update', { id: frozen, period_end: '2026-09-30' });
+    const repaired = await storedForecast(desk, frozen);
     expect(repaired?.period_end).toBe('2026-09-30');
-    // …and the row is editable again afterwards.
-    await api.object('crm_forecast').update({ id: row.id, quota: 2000000 }, { where: { id: row.id } });
-    const after = await api.object('crm_forecast').findOne({ where: { id: row.id } });
+    // …and the row is editable again afterwards, with the form's full payload.
+    await viaHook(desk, 'update', { id: frozen, quota: 2000000, period_end: '2026-09-30' });
+    const after = await storedForecast(desk, frozen);
     expect(after?.quota).toBe(2000000);
-    await ql.close();
   });
 });
 

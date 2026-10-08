@@ -29,7 +29,7 @@ import stack from './helpers/composed-stack';
  *
  * These are METADATA pins: they assert the shape the renderer needs. The
  * execution half — that the shape actually moves rows — is
- * `test/action-sandbox.test.ts`, which runs the shipped body against a real
+ * `test/script-bodies.test.ts`, which runs the shipped body against a real
  * ObjectQL kernel with `_selectedIds` in the params bag.
  */
 

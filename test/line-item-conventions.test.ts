@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
+import type { VerifyStack } from '@objectstack/verify';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -8,7 +9,7 @@ import oppLineItemHooks from '../src/revenue/objects/opportunity_line_item.hook'
 import quoteLineItemHooks from '../src/revenue/objects/quote_line_item.hook';
 import { OpportunityLineItem } from '../src/revenue/objects/opportunity_line_item.object';
 import { QuoteLineItem } from '../src/revenue/objects/quote_line_item.object';
-import { hookNamed, makeCtx, makeHarness, type Rec } from './helpers/hook-harness';
+import { hotcrmStack, signUpPerson, systemUpdate, type Person } from './helpers/verify-stack';
 import { REPO_ROOT } from './helpers/repo-root';
 import { objectFiles } from './helpers/src-roster';
 
@@ -35,6 +36,13 @@ import { objectFiles } from './helpers/src-roster';
 
 
 type AnyRec = Record<string, any>;
+type Rec = Record<string, any>;
+
+const hookNamed = (hooks: unknown, name: string): AnyRec => {
+  const hook = (hooks as AnyRec[]).find((h) => h.name === name);
+  if (!hook) throw new Error(`hook "${name}" not found`);
+  return hook;
+};
 
 // Every package's `*.object.ts`, not one directory: since the ADR-0130 layout
 // a directory under `src/` is a package and each carries its own `objects/`.
@@ -188,72 +196,94 @@ describe('the two line-item price-fill hooks share one implementation', () => {
     }
   });
 
-  /** Behavioural parity, asserted on both hooks from one scenario table. */
-  const scenarios: Array<{
-    title: string;
-    event: string;
-    input: Rec;
-    products: Rec[];
-    expected: Rec;
-  }> = [
-    {
-      title: 'stamps list_price and defaults a blank unit_price on insert',
-      event: 'beforeInsert',
-      input: { crm_product: 'p1' },
-      products: [{ id: 'p1', list_price: 250 }],
-      expected: { list_price: 250, unit_price: 250 },
-    },
-    {
-      title: 'keeps an explicitly entered unit_price on insert',
-      event: 'beforeInsert',
-      input: { crm_product: 'p1', unit_price: 199 },
-      products: [{ id: 'p1', list_price: 250 }],
-      expected: { list_price: 250, unit_price: 199 },
-    },
-    {
-      title: 're-syncs list_price on update without touching the negotiated price',
-      event: 'beforeUpdate',
-      input: { crm_product: 'p1', unit_price: 199 },
-      products: [{ id: 'p1', list_price: 250 }],
-      expected: { list_price: 250, unit_price: 199 },
-    },
-    {
-      title: 'is a no-op when the write carries no product',
-      event: 'beforeInsert',
-      input: { quantity: 2 },
-      products: [{ id: 'p1', list_price: 250 }],
-      expected: { list_price: undefined, unit_price: undefined },
-    },
-    {
-      title: 'is a no-op when the product has no catalog price',
-      event: 'beforeInsert',
-      input: { crm_product: 'p1' },
-      products: [{ id: 'p1' }],
-      expected: { list_price: undefined, unit_price: undefined },
-    },
-  ];
-
-  for (const s of scenarios) {
-    it.each([
-      ['opportunity', oppFill],
-      ['quote', quoteFill],
-    ])(`%s line item ${s.title}`, async (_label, hook) => {
-      const h = makeHarness({ crm_product: s.products.map((p) => ({ ...p })) });
-      const input: Rec = { ...s.input };
-      await hook.handler(makeCtx({ event: s.event, input, user: { id: 'u1' }, api: h.api }));
-      for (const [field, value] of Object.entries(s.expected)) {
-        expect(input[field], `${field} after ${s.event}`).toBe(value);
-      }
+  /**
+   * Behavioural parity, asserted on both objects from one scenario table — each
+   * a sales rep's real write through the engine's write door (`hooks.run`) on
+   * the shipped app booted by `@objectstack/verify`, the catalogue written as
+   * the system, the stored line read back.
+   */
+  let verify: VerifyStack;
+  let rep: Person;
+  let k = 0;
+  beforeAll(async () => {
+    verify = await hotcrmStack();
+    rep = await signUpPerson(verify, 'rep@line-item-conventions.test', {
+      name: 'Sales Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
     });
-  }
+  }, 120_000);
 
-  it('is a no-op on both objects when ctx.api is absent (never blocks the write)', async () => {
-    for (const hook of [oppFill, quoteFill]) {
-      const input: Rec = { crm_product: 'p1' };
-      await expect(
-        hook.handler(makeCtx({ event: 'beforeInsert', input, user: { id: 'u1' } })),
-      ).resolves.toBeUndefined();
-      expect(input.list_price).toBeUndefined();
-    }
+  /** A catalogue product at `list_price`, written as the system. */
+  const productAt = async (list_price: number): Promise<Rec> =>
+    (await verify.seed('crm_product', [{ name: `Line Product ${++k}`, product_code: `LI-${k}`, is_active: true, list_price }]))[0]!;
+
+  /** The parent a line of `kind` hangs off — a deal, or a quote on one — written as the system. */
+  const parentOf = async (kind: 'opportunity' | 'quote'): Promise<Rec> => {
+    const [account] = await verify.seed('crm_account', [{ name: `Line Co ${++k}`, owner_id: rep.id }]);
+    const [deal] = await verify.seed('crm_opportunity', [{
+      name: `Line Deal ${k}`, amount: 10_000, stage: 'proposal', close_date: '2030-06-30', crm_account: account!.id, owner_id: rep.id,
+    }]);
+    if (kind === 'opportunity') return { crm_opportunity: deal!.id };
+    const [contact] = await verify.seed('crm_contact', [{
+      first_name: 'Quinn', last_name: `Line ${k}`, email: `line${k}@line-item-conventions.test`, crm_account: account!.id, owner_id: rep.id,
+    }]);
+    const [quote] = await verify.seed('crm_quote', [{
+      name: `Q-LI-${k}`, status: 'draft', crm_account: account!.id, crm_contact: contact!.id, crm_opportunity: deal!.id,
+      quote_date: '2026-01-01', expiration_date: '2030-12-31', owner_id: rep.id,
+    }]);
+    return { crm_quote: quote!.id };
+  };
+
+  const OBJECT = { opportunity: 'crm_opportunity_line_item', quote: 'crm_quote_line_item' } as const;
+  const KINDS = [['opportunity'], ['quote']] as const;
+
+  /** The rep's line of `kind` — resolves with the stored row. */
+  const repLine = async (kind: 'opportunity' | 'quote', doc: Rec, op: 'insert' | 'update' = 'insert'): Promise<Rec> => {
+    const written = await verify.hooks.run(OBJECT[kind], op, doc, { as: rep.token });
+    return (await verify.rows(OBJECT[kind], { id: written.id ?? doc.id }))[0]!;
+  };
+
+  it.each(KINDS)('%s line item stamps list_price and defaults a blank unit_price on insert', async (kind) => {
+    const line = await repLine(kind, { ...(await parentOf(kind)), crm_product: (await productAt(250)).id, quantity: 1 });
+    expect(line.list_price).toBe(250);
+    expect(line.unit_price).toBe(250);
+  });
+
+  it.each(KINDS)('%s line item keeps an explicitly entered unit_price on insert', async (kind) => {
+    const line = await repLine(kind, { ...(await parentOf(kind)), crm_product: (await productAt(250)).id, quantity: 1, unit_price: 199 });
+    expect(line.list_price).toBe(250);
+    expect(line.unit_price).toBe(199);
+  });
+
+  it.each(KINDS)('%s line item re-syncs list_price on update without touching the negotiated price', async (kind) => {
+    const product = await productAt(200);
+    const line = await repLine(kind, { ...(await parentOf(kind)), crm_product: product.id, quantity: 1, unit_price: 199 });
+    await systemUpdate(verify, 'crm_product', { id: product.id, list_price: 250 });
+    const updated = await repLine(kind, { id: line.id, crm_product: product.id, unit_price: 199 }, 'update');
+    expect(updated.list_price).toBe(250);
+    expect(updated.unit_price).toBe(199);
+  });
+
+  it.each(KINDS)('%s line item cannot be written without a product — the no-product branch has no row', async (kind) => {
+    // The product is REQUIRED on both line items, so the engine refuses a line
+    // that carries none; the hook's stand-down on it never sees a stored row.
+    await expect(repLine(kind, { ...(await parentOf(kind)), quantity: 2 })).rejects.toMatchObject({
+      code: 'VALIDATION_FAILED',
+      fields: expect.arrayContaining([expect.objectContaining({ field: 'crm_product' })]),
+    });
+  });
+
+  it('a product with no catalog price cannot exist — the no-price branch has no row either', async () => {
+    // `crm_product.list_price` is required, for the system's writes too.
+    await expect(verify.seed('crm_product', [{ name: `Unpriced ${++k}`, product_code: `UP-${k}`, is_active: true }]))
+      .rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
+  });
+
+  it.each(KINDS)('%s line item imported by the system gets the same fill (every writer reaches it)', async (kind) => {
+    // The `!ctx.api` stand-down is unreachable on the shipped app — the engine
+    // hands every write a read door — so the other writer is the system's.
+    const [line] = await verify.seed(OBJECT[kind], [{ ...(await parentOf(kind)), crm_product: (await productAt(250)).id, quantity: 1 }]);
+    const stored = (await verify.rows(OBJECT[kind], { id: line!.id }))[0]!;
+    expect(stored.list_price).toBe(250);
+    expect(stored.unit_price).toBe(250);
   });
 });

@@ -5,7 +5,7 @@ import { Account } from '../src/sales/objects/account.object';
 import { AccountViews } from '../src/sales/views/account.view';
 import { ContractRenewalFlow } from '../src/revenue/flows/contract-renewal.flow';
 import { accounts } from '../src/sales/data/sales.seed';
-import { localePacks, type AnyRec } from './helpers/metadata-fixtures';
+import { localePacks, type AnyRec } from './helpers/composed-stack';
 import { flowNodesDeep } from './helpers/flow-regions';
 
 /**

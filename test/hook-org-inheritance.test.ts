@@ -36,12 +36,12 @@ import stack from './helpers/composed-stack';
  *
  * ### Why a real engine on a real driver
  *
- * `test/helpers/hook-harness.ts` implements `ctx.api` over plain arrays. It can
- * prove what a hook WRITES; it cannot prove what the engine STAMPS, because it
- * has no tenant column and no driver — a hook could be leaking rows across the
- * wall and every harness-based test in this repo would stay green. So this file
- * stands up ObjectQL on `SqliteWasmDriver` and reads `organization_id` back out
- * of SQL.
+ * A stand-in `ctx.api` over plain arrays — which is what this repo's hook tests
+ * once ran on — can prove what a hook WRITES; it cannot prove what the engine
+ * STAMPS, because it has no tenant column and no driver: a hook could be
+ * leaking rows across the wall and every such test would stay green. So this
+ * file stands up ObjectQL on `SqliteWasmDriver` and reads `organization_id`
+ * back out of SQL.
  *
  * `driver-memory` is not an option and the refusal is the platform's, not a
  * preference: it "has NO row-level tenant isolation" and fails at construction

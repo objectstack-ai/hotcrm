@@ -1,9 +1,9 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
+import type { VerifyStack } from '@objectstack/verify';
 import { compileCelToFilter } from '@objectstack/formula';
 import stack from './helpers/composed-stack';
-import accountHook from '../src/sales/objects/account.hook';
 import { TERRITORY_OPTIONS, territoryFor } from '../src/sales/objects/_territory';
 import { CrmSeedData } from '../objectstack.composition';
 import * as sharedSeed from '../src/sales/data/_shared';
@@ -19,7 +19,7 @@ import * as revenueSeed from '../src/revenue/data/revenue.seed';
 import * as lineItemSeed from '../src/revenue/data/opportunity-line-item.seed';
 import * as activitySeed from '../src/sales/data/activity.seed';
 import * as forecastSeed from '../src/sales/data/forecast.seed';
-import { makeCtx } from './helpers/hook-harness';
+import { hotcrmStack } from './helpers/verify-stack';
 
 /**
  * The territory rules must match REAL seeded accounts (#638).
@@ -84,60 +84,34 @@ const ruleByName = (name: string) => sharingRules.find((r) => r.name === name);
 const TERRITORY_RULES = ['north_america_territory', 'europe_territory'] as const;
 
 /**
- * The projection exactly as a seed insert produces it: the REAL
- * `account_protection` body, invoked with the event the seed loader raises.
- * Re-implementing `country → billing_country` here would let the two drift and
- * still pass, which is the failure mode this whole file is about.
+ * The projection exactly as a seed insert produces it: the seeded accounts as
+ * the booted app STORED them after its own seed replay ran
+ * `account_protection` over them. Re-implementing `country → billing_country`
+ * here would let the two drift and still pass, which is the failure mode this
+ * whole file is about.
  */
-async function project(record: AnyRec): Promise<AnyRec> {
-  const input: AnyRec = { ...record };
-  await (accountHook as AnyRec).handler(makeCtx({ event: 'beforeInsert', input }));
-  return input;
-}
-
-const projectedAccounts = await Promise.all(accountRecords.map(project));
+let verify: VerifyStack;
+let projectedAccounts: AnyRec[] = [];
+const seededNames = accountRecords.map((r) => String(r.name));
+beforeAll(async () => {
+  verify = await hotcrmStack();
+  projectedAccounts = await verify.rows('crm_account', { name: { $in: seededNames } });
+}, 120_000);
 const nameOf = (r: AnyRec) => String(r.name);
 
 /**
- * Evaluate a compiled `FilterCondition` against one projected record.
- *
- * Deliberately narrow: it understands only the shapes these rules compile to
- * today (`{field: {$in: [...]}}` and `{field: value}`) and THROWS on anything
- * else. Returning `false` for an unrecognised shape would report "the
- * territories are empty" — indistinguishable from the bug — the next time the
- * compiler's output changes.
+ * The seeded accounts one declared rule covers: the seeder's own compiler, and
+ * the engine's own query over what it compiled to.
  */
-function matches(filter: unknown, row: AnyRec): boolean {
-  if (!filter || typeof filter !== 'object' || Array.isArray(filter)) {
-    throw new Error(`unsupported compiled filter: ${JSON.stringify(filter)}`);
-  }
-  const entries = Object.entries(filter as AnyRec);
-  if (entries.length !== 1) {
-    throw new Error(`expected a single-field filter, got ${JSON.stringify(filter)}`);
-  }
-  const [field, condition] = entries[0];
-  if (field.startsWith('$')) {
-    throw new Error(`expected a field-keyed filter, got operator "${field}"`);
-  }
-  if (condition && typeof condition === 'object' && !Array.isArray(condition)) {
-    const ops = Object.entries(condition as AnyRec);
-    if (ops.length === 1 && ops[0][0] === '$in' && Array.isArray(ops[0][1])) {
-      return (ops[0][1] as unknown[]).includes(row[field]);
-    }
-    throw new Error(`unsupported compiled operator: ${JSON.stringify(condition)}`);
-  }
-  return row[field] === condition;
-}
-
-/** The accounts one declared rule covers, via the seeder's own compiler. */
-function covered(ruleName: string): string[] {
+async function covered(ruleName: string): Promise<string[]> {
   const rule = ruleByName(ruleName);
   if (!rule) throw new Error(`no sharing rule named ${ruleName}`);
   const compiled = compileCelToFilter(rule.condition ?? '', { variables: {} });
   if (!compiled.ok) {
     throw new Error(`${ruleName}: condition does not compile (${compiled.reason}: ${compiled.detail})`);
   }
-  return projectedAccounts.filter((row) => matches(compiled.filter, row)).map(nameOf);
+  const rows = await verify.rows('crm_account', { $and: [compiled.filter, { name: { $in: seededNames } }] });
+  return rows.map(nameOf);
 }
 
 describe('the demo dataset can actually exercise the territory rules (#638)', () => {
@@ -145,6 +119,7 @@ describe('the demo dataset can actually exercise the territory rules (#638)', ()
     // Guard the guard: a seed or config refactor that stopped exposing either
     // side would make every assertion below vacuously true.
     expect(accountRecords.length, 'no crm_account seed records').toBeGreaterThanOrEqual(9);
+    expect(projectedAccounts.map(nameOf).sort(), 'a seeded account did not land on the booted app').toEqual([...seededNames].sort());
     for (const name of TERRITORY_RULES) {
       expect(ruleByName(name), `sharing rule ${name} is not declared`).toBeTruthy();
     }
@@ -181,7 +156,7 @@ describe('the demo dataset can actually exercise the territory rules (#638)', ()
     },
   );
 
-  it('projects a country onto every seeded account when the hook runs', async () => {
+  it('projects a country onto every seeded account when the hook runs', () => {
     const missing = projectedAccounts.filter((r) => typeof r.billing_country !== 'string' || !r.billing_country);
     expect(missing.map(nameOf), 'account_protection produced no billing_country for these seeds').toEqual([]);
   });
@@ -207,9 +182,9 @@ describe('the demo dataset can actually exercise the territory rules (#638)', ()
     expect(divergent, `the hook and src/sales/objects/_territory.ts disagree:\n  ${divergent.join('\n  ')}`).toEqual([]);
   });
 
-  it('partitions the seeded accounts across NA, EU and neither', () => {
-    const na = covered('north_america_territory');
-    const eu = covered('europe_territory');
+  it('partitions the seeded accounts across NA, EU and neither', async () => {
+    const na = await covered('north_america_territory');
+    const eu = await covered('europe_territory');
     const outside = projectedAccounts
       .map(nameOf)
       .filter((name) => !na.includes(name) && !eu.includes(name));
@@ -240,12 +215,13 @@ describe('the demo dataset can actually exercise the territory rules (#638)', ()
     expect(both, `accounts covered by BOTH territories: ${both.join(', ')}`).toEqual([]);
   });
 
-  it('covers more than one country per territory where the mapping claims several', () => {
+  it('covers more than one country per territory where the mapping claims several', async () => {
     // A territory reachable from only ONE country in practice would still pass
     // every assertion above while leaving most of the mapping untested.
+    const na = await covered('north_america_territory');
     const countries = new Set(
       projectedAccounts
-        .filter((r) => covered('north_america_territory').includes(nameOf(r)))
+        .filter((r) => na.includes(nameOf(r)))
         .map((r) => String(r.billing_country)),
     );
     expect(

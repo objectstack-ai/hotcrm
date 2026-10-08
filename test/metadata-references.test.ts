@@ -3,17 +3,19 @@
 import { describe, it, expect } from 'vitest';
 import { AgentSchema } from '@objectstack/spec/ai';
 import { ComponentPropsMap, RecordActivityProps, RecordRelatedListProps } from '@objectstack/spec/ui';
-import stack from './helpers/composed-stack';
-import {
-  type AnyRec,
-  objects,
-  pages,
-  views,
-  objectNames,
-  PLATFORM_OBJECTS,
-  fieldsOf,
-  walk,
-} from './helpers/metadata-fixtures';
+import stack, { type AnyRec, walk } from './helpers/composed-stack';
+import { hotcrmStack, platformObjectNames, registeredFields } from './helpers/verify-stack';
+
+const objects: AnyRec[] = (stack as AnyRec).objects ?? [];
+const pages: AnyRec[] = (stack as AnyRec).pages ?? [];
+const views: AnyRec[] = (stack as AnyRec).views ?? [];
+const objectNames = new Set(objects.map((o) => o.name as string));
+
+// The runtime half of a reference check — which objects and columns the booted
+// app actually registers — is read from the platform's registry, not a roster.
+const runtime = await hotcrmStack();
+const PLATFORM_OBJECTS = platformObjectNames(runtime, objectNames);
+const fieldsOf = (object: string): string[] => registeredFields(runtime, object);
 
 /**
  * Dangling-reference guards for UI metadata.
@@ -59,7 +61,9 @@ import {
  *   `test/bulk-action-dispatch.test.ts` (split earlier, by #815)
  *     the `bulkActionDefs` / `execution: 'aggregate'` dispatch contract
  *
- * The derivations all four share live in `test/helpers/metadata-fixtures.ts`.
+ * The derivations all four share live in `test/helpers/composed-stack.ts` (the
+ * authored collections) and the platform's registry, read through
+ * `@objectstack/verify`'s handle (`test/helpers/verify-stack.ts`).
  * The split moved text only: no assertion, helper or fixture changed, and the
  * suite runs the same 70 tests it ran before.
  */

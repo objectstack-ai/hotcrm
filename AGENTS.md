@@ -130,12 +130,12 @@ it reports is the app package, and ⛔ it is not an instruction to move them —
    (`const api = ctx.api as HookApi | undefined`, from `src/sales/objects/_hook-api.ts` — every package's hooks import it along their edge into sales), an action body calls it directly.
    - **The predicate key is `where`.** `filter` is a live alias the engine folds to `where`, so the hazard is not silent loss but
      **mixing**: a query carrying both keys throws `Conflicting options … 'where', 'filter'`, and an empty `where: {}` is a different
-     value. `HookQuery` omits `filter` so the mix is a compile error; `test/hook-query-predicate.test.ts` pins the engine per method.
+     value. `HookQuery` omits `filter` so the mix is a compile error; the engine's behaviour per method is recorded in `_hook-api.ts`.
    - **The method contract is the `_hook-api.ts` types**, ⛔ not memory of another stack: `count` takes `where` only, a read is capped
      with `top`, and `update` is `(doc carrying its id, { where })` — each wrong spelling is a compile error there.
    - **A hook handler and a `script` action body run body-only in a QuickJS sandbox, with no module scope.** Every constant, table and
      helper a body reads is declared **inside** it (type-only imports are erased and fine) — a module-scope reference type-checks and
-     then fails the lowering, which `test/action-sandbox.test.ts` runs over every registered hook. An action body reaches data only under
+     then fails the lowering, which `pnpm lint` (`os lint --strict`) refuses as `hook-body/not-lowerable`. An action body reaches data only under
      the `capabilities` it declares (`api.read`, `api.write`). `ctx.user` is **absent** on system and seed writes — that absence is this
      repo's system-write signal.
    - **Other surfaces spell their own key, and their own schema decides.** A `*.flow.ts` node `config` takes `filter:`; a page component's

@@ -209,7 +209,7 @@ Two more rules the shipped code depends on:
 The live reference implementation is `mass_update_stage` —
 `src/sales/actions/opportunity.actions.ts` (the body) plus the `bulkActionDefs` entry
 in `src/sales/views/opportunity.view.ts` (the declaration), pinned end to end in
-`test/bulk-action-dispatch.test.ts` and `test/action-sandbox.test.ts`. Read
+`test/bulk-action-dispatch.test.ts` and `test/script-bodies.test.ts`. Read
 those two files together: a body reading `_selectedIds` with no aggregate def in
 the view is just as dead as the misspelling, because nothing injects the key.
 

@@ -7,7 +7,7 @@ import { createRequire } from 'node:module';
 import { SysApprovalAction, SysApprovalRequest } from '@objectstack/plugin-approvals';
 import { REPO_ROOT } from './helpers/repo-root';
 import { CrmApp } from '../src/sales/apps/crm.app';
-import { type AnyRec, packFor } from './helpers/metadata-fixtures';
+import { type AnyRec, packFor } from './helpers/composed-stack';
 
 /**
  * `revenue/approvals` › *Where to find pending approvals*, pinned to source

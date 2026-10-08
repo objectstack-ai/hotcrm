@@ -1,9 +1,11 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
+import type { VerifyStack } from '@objectstack/verify';
 import stack from './helpers/composed-stack';
-import eventHooks from '../src/sales/objects/event.hook';
-import { makeHarness, makeDeniedApi, makeCtx, hookNamed, type Rec } from './helpers/hook-harness';
+import { hotcrmStack, signUpPerson, systemUpdate, recordEngineWrites, type Person } from './helpers/verify-stack';
+
+type Rec = Record<string, any>;
 
 /**
  * `crm_case.first_response_date` — one writer, every path (#575 B2, #595).
@@ -35,6 +37,13 @@ import { makeHarness, makeDeniedApi, makeCtx, hookNamed, type Rec } from './help
  *   - **A meeting merely BOOKED is not a response either.** `schedule_meeting`
  *     writes a `planned` event, and the `held` gate is what keeps next
  *     quarter's placeholder from starting the clock.
+ *
+ * Every case is a real write on the shipped app booted by
+ * `@objectstack/verify`: a service agent recording an interaction on a case
+ * they work, through the engine's write door (`hooks.run`). The hook is
+ * `async: true` — the engine runs it after the event write has returned — so a
+ * stamp is waited for, and a claim that it wrote NOTHING is read off the
+ * writes the engine received (`recordEngineWrites`) once it has had time to.
  */
 
 type AnyRec = Record<string, any>;
@@ -43,32 +52,61 @@ const objects: AnyRec[] = (stack as any).objects ?? [];
 const crmCase = objects.find((o) => o.name === 'crm_case') as AnyRec | undefined;
 const stackActions: AnyRec[] = (stack as any).actions ?? [];
 
-const hook = hookNamed(eventHooks as AnyRec[], 'event_activity_bubble') as AnyRec;
+let verify: VerifyStack;
+let agent: Person;
+let accountId: string;
+let k = 0;
+beforeAll(async () => {
+  verify = await hotcrmStack();
+  agent = await signUpPerson(verify, 'agent@case-first-response.test', {
+    name: 'Service Agent', positions: ['service_agent'], permissionSets: ['service_agent'],
+  });
+  const [account] = await verify.seed('crm_account', [{ name: 'Acme Corporation (first response)' }]);
+  accountId = String(account!.id);
+}, 120_000);
 
-/** A store holding one case (optionally already stamped) and its account. */
-const seeded = (first_response_date: string | null = null): Record<string, Rec[]> => ({
-  crm_case: [{ id: 'case_1', subject: 'Login issues', status: 'new', crm_account: 'acct_1', first_response_date }],
-  crm_account: [{ id: 'acct_1', name: 'Acme Corporation' }],
-});
+/** A case the agent opened (optionally already stamped by the system). */
+const openCase = async (first_response_date: string | null = null): Promise<Rec> => {
+  const kase = await verify.hooks.run('crm_case', 'insert', {
+    subject: `Login issues ${++k}`, description: 'Cannot sign in.', crm_account: accountId,
+  }, { as: agent.token });
+  if (first_response_date) await systemUpdate(verify, 'crm_case', { id: kase.id, first_response_date });
+  return kase;
+};
 
-/** Fire the hook for an event landing on `case_1`. */
-const heldEventOnCase = async (
-  harness: ReturnType<typeof makeHarness>,
-  overrides: Rec = {},
-  previous?: Rec,
-) =>
-  hook.handler(
-    makeCtx({
-      event: previous ? 'afterUpdate' : 'afterInsert',
-      input: {
-        id: 'event_1', subject: 'Called the customer back', type: 'call',
-        status: 'held', related_to_case: 'case_1', ...overrides,
-      },
-      previous,
-      user: { id: 'user_1' },
-      api: harness.api,
-    }),
-  );
+/** The agent recording an interaction on `caseId`. */
+const eventOnCase = (caseId: string, overrides: Rec = {}): Promise<Rec> =>
+  verify.hooks.run('crm_event', 'insert', {
+    subject: `Called the customer back ${++k}`, type: 'call', status: 'held',
+    start_datetime: new Date().toISOString(), related_to_type: 'crm_case', related_to_case: caseId, ...overrides,
+  }, { as: agent.token });
+
+const stampOf = async (caseId: string): Promise<string | null> =>
+  ((await verify.rows('crm_case', { id: caseId }))[0]!.first_response_date as string | null) ?? null;
+
+/** Wait for the case's stamp to land. */
+const stamped = (caseId: string): Promise<string> =>
+  vi.waitFor(async () => {
+    const stamp = await stampOf(caseId);
+    expect(stamp, 'no first response was stamped').toBeTruthy();
+    return stamp!;
+  }, { timeout: 10_000, interval: 50 });
+
+/**
+ * Run `write` with a recorder attached, give the hook time to run, and return
+ * the `crm_case` updates it handed the engine that carry a first response.
+ */
+const firstResponseWrites = async (write: () => Promise<unknown>) => {
+  const recorder = recordEngineWrites(verify);
+  try {
+    await write();
+    await new Promise((r) => setTimeout(r, 400));
+    await Promise.all(recorder.writes.map((w) => w.settled));
+    return recorder.of('crm_case', 'update').filter((w) => 'first_response_date' in (w.args[1] as Rec));
+  } finally {
+    recorder.restore();
+  }
+};
 
 describe('the field is writable at all', () => {
   it('crm_case.first_response_date is not readonly', () => {
@@ -93,55 +131,72 @@ describe('the field is writable at all', () => {
 describe('a held event on a case stamps the first response', () => {
   it('writes the current time onto a case that has none', async () => {
     const before = Date.now();
-    const harness = makeHarness(seeded());
-    await heldEventOnCase(harness);
+    const kase = await openCase();
+    await eventOnCase(kase.id);
 
-    const stamped = harness.rows('crm_case')[0]!.first_response_date as string;
-    expect(stamped).toMatch(/^\d{4}-\d{2}-\d{2}T/);
-    expect(new Date(stamped).getTime()).toBeGreaterThanOrEqual(before);
-    expect(new Date(stamped).getTime()).toBeLessThanOrEqual(Date.now());
+    const stamp = await stamped(kase.id);
+    expect(stamp).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    expect(new Date(stamp).getTime()).toBeGreaterThanOrEqual(before);
+    expect(new Date(stamp).getTime()).toBeLessThanOrEqual(Date.now());
   });
 
   it('uses the (data, options) update shape the engine facade requires', async () => {
-    // `update(id, doc)` compiles and no-ops against the real kernel (#616); the
-    // harness throws on it, which is the only reason this assertion can exist.
-    const harness = makeHarness(seeded());
-    await heldEventOnCase(harness);
-    const call = harness
-      .callsFor('crm_case', 'update')
-      .find((c) => (c.args[0] as Rec).first_response_date);
-    expect(call!.args[0]).toMatchObject({ id: 'case_1' });
-    expect(call!.args[1]).toEqual({ where: { id: 'case_1' } });
+    // `update(id, doc)` compiles and no-ops against the real kernel (#616): the
+    // stamp landing at all is the proof, and the write the engine received is
+    // the shape.
+    const kase = await openCase();
+    const writes = await firstResponseWrites(async () => {
+      await eventOnCase(kase.id);
+      await stamped(kase.id);
+    });
+    expect(writes).toHaveLength(1);
+    expect(writes[0]!.args[1]).toMatchObject({ id: kase.id });
+    expect((writes[0]!.args[2] as Rec).where).toEqual({ id: kase.id });
   });
 
   it('never moves a stamp that is already there', async () => {
-    const harness = makeHarness(seeded('2026-01-01T09:00:00.000Z'));
-    await heldEventOnCase(harness);
-    expect(harness.rows('crm_case')[0]!.first_response_date).toBe('2026-01-01T09:00:00.000Z');
-    expect(
-      harness.callsFor('crm_case', 'update'),
-      'a second write would make it "last response"',
-    ).toHaveLength(0);
+    const kase = await openCase('2026-01-01T09:00:00.000Z');
+    const writes = await firstResponseWrites(() => eventOnCase(kase.id));
+    expect(await stampOf(kase.id)).toBe('2026-01-01T09:00:00.000Z');
+    expect(writes, 'a second write would make it "last response"').toHaveLength(0);
   });
 
   it('is written once across a call and then a meeting on the same case', async () => {
     // "First response" is a property of the case, not of either action, so the
     // second interaction must find the first one's stamp.
-    const harness = makeHarness(seeded());
-    await heldEventOnCase(harness, { id: 'event_1', type: 'call' });
-    const first = harness.rows('crm_case')[0]!.first_response_date;
-    await heldEventOnCase(harness, { id: 'event_2', type: 'meeting' });
-    expect(harness.rows('crm_case')[0]!.first_response_date).toBe(first);
-    expect(harness.callsFor('crm_case', 'update')).toHaveLength(1);
+    const kase = await openCase();
+    const writes = await firstResponseWrites(async () => {
+      await eventOnCase(kase.id, { type: 'call' });
+      const first = await stamped(kase.id);
+      await eventOnCase(kase.id, { type: 'meeting' });
+      await new Promise((r) => setTimeout(r, 400));
+      expect(await stampOf(kase.id)).toBe(first);
+    });
+    expect(writes).toHaveLength(1);
   });
 
   it('reads the stored row rather than trusting the event payload', async () => {
     // The event carries no first-response field of its own; a body that
     // inferred "unstamped" from its own input would re-stamp on every log and
-    // turn "first response" into "last".
-    const harness = makeHarness(seeded('2026-01-01T09:00:00.000Z'));
-    await heldEventOnCase(harness, { first_response_date: undefined });
-    expect(harness.rows('crm_case')[0]!.first_response_date).toBe('2026-01-01T09:00:00.000Z');
+    // turn "first response" into "last". The stamp here arrived on the CASE
+    // after it was opened, by another writer.
+    const kase = await openCase();
+    await systemUpdate(verify, 'crm_case', { id: kase.id, first_response_date: '2026-02-01T09:00:00.000Z' });
+    const writes = await firstResponseWrites(() => eventOnCase(kase.id));
+    expect(writes).toHaveLength(0);
+    expect(await stampOf(kase.id)).toBe('2026-02-01T09:00:00.000Z');
+  });
+
+  it('an imported held event stamps the case too — every writer reaches it', async () => {
+    // #595's point: the stamp lives on the event's transition, not in one
+    // button. A held event written by the system (an import, an integration)
+    // reaches the case as surely as the agent's own.
+    const kase = await openCase();
+    await verify.seed('crm_event', [{
+      subject: `Imported call ${++k}`, type: 'call', status: 'held', start_datetime: new Date().toISOString(),
+      related_to_type: 'crm_case', related_to_case: kase.id,
+    }]);
+    expect(await stamped(kase.id)).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
 });
 
@@ -150,72 +205,73 @@ describe('what does NOT count as a first response', () => {
     // `schedule_meeting` writes `planned`. A meeting on next week's calendar is
     // not a response the customer has received — the same `held` gate the
     // recency bubble uses.
-    const harness = makeHarness(seeded());
-    await heldEventOnCase(harness, { status: 'planned' });
-    expect(harness.rows('crm_case')[0]!.first_response_date).toBeNull();
-    expect(harness.callsFor('crm_case', 'update')).toHaveLength(0);
+    const kase = await openCase();
+    const writes = await firstResponseWrites(() => eventOnCase(kase.id, { type: 'meeting', status: 'planned' }));
+    expect(await stampOf(kase.id)).toBeNull();
+    expect(writes).toHaveLength(0);
   });
 
   it('a cancelled or no-show interaction does not either', async () => {
-    const harness = makeHarness(seeded());
-    for (const status of ['cancelled', 'no_show']) {
-      await heldEventOnCase(harness, { status });
-    }
-    expect(harness.rows('crm_case')[0]!.first_response_date).toBeNull();
+    const kase = await openCase();
+    const writes = await firstResponseWrites(async () => {
+      for (const status of ['cancelled', 'no_show']) await eventOnCase(kase.id, { status });
+    });
+    expect(writes).toHaveLength(0);
+    expect(await stampOf(kase.id)).toBeNull();
   });
 
   it('an event already held before this write does not re-stamp', async () => {
     // The hook fires once, on the transition INTO held — an unrelated edit to
-    // an already-held event must not look like a fresh response.
-    const harness = makeHarness(seeded());
-    await heldEventOnCase(harness, { subject: 'Corrected the notes' }, { status: 'held' });
-    expect(harness.rows('crm_case')[0]!.first_response_date).toBeNull();
+    // an already-held event must not look like a fresh response. The case's
+    // stamp from that first transition is cleared first, so a re-stamp would
+    // show.
+    const kase = await openCase();
+    const held = await eventOnCase(kase.id);
+    await stamped(kase.id);
+    await systemUpdate(verify, 'crm_case', { id: kase.id, first_response_date: null });
+    const writes = await firstResponseWrites(() =>
+      verify.hooks.run('crm_event', 'update', { id: held.id, subject: 'Corrected the notes' }, { as: agent.token }));
+    expect(writes).toHaveLength(0);
+    expect(await stampOf(kase.id)).toBeNull();
   });
 
   it('an event on some other object leaves cases alone', async () => {
     // The same activity model spans five parents (#592). A call logged on a
     // lead must not reach for a field that only exists on `crm_case`.
-    const harness = makeHarness({ ...seeded(), crm_lead: [{ id: 'lead_1' }] });
-    await hook.handler(
-      makeCtx({
-        event: 'afterInsert',
-        input: { id: 'event_9', status: 'held', type: 'call', related_to_lead: 'lead_1' },
-        user: { id: 'user_1' },
-        api: harness.api,
-      }),
-    );
-    expect(harness.callsFor('crm_case')).toEqual([]);
-    expect(harness.rows('crm_case')[0]!.first_response_date).toBeNull();
+    const [lead] = await verify.seed('crm_lead', [{
+      first_name: 'Lee', last_name: `Caller ${++k}`, company: 'Lead Co', email: `lead${k}@case-first-response.test`, owner_id: agent.id,
+    }]);
+    const recorder = recordEngineWrites(verify);
+    try {
+      await verify.hooks.run('crm_event', 'insert', {
+        subject: 'Called the lead', type: 'call', status: 'held', start_datetime: new Date().toISOString(),
+        related_to_type: 'crm_lead', related_to_lead: lead!.id,
+      }, { as: agent.token });
+      await new Promise((r) => setTimeout(r, 400));
+      expect(recorder.of('crm_case')).toEqual([]);
+    } finally {
+      recorder.restore();
+    }
   });
 });
 
 describe('the stamp is best-effort, like the rest of the bubble', () => {
-  it('a denied case read does not break the event write', async () => {
+  it('a case the writer cannot read does not break the event write', async () => {
     // An agent who cannot see the case still gets to record their call; the
-    // metric simply does not move. The hook is `onError: 'log'`, but a throw
-    // here would still abort the recency writes that share the handler.
-    await expect(
-      hook.handler(
-        makeCtx({
-          event: 'afterInsert',
-          input: { id: 'event_1', status: 'held', type: 'call', related_to_case: 'case_1' },
-          user: { id: 'user_1' },
-          api: makeDeniedApi(),
-        }),
-      ),
-    ).resolves.toBeUndefined();
-  });
-
-  it('runs at all only when the hook has an api', async () => {
-    await expect(
-      hook.handler(
-        makeCtx({
-          event: 'afterInsert',
-          input: { id: 'event_1', status: 'held', related_to_case: 'case_1' },
-          user: { id: 'user_1' },
-        }),
-      ),
-    ).resolves.toBeUndefined();
+    // metric simply does not move. On the real engine an unreadable case is not
+    // a THROWN read but a filtered one — the hook finds nothing to stamp.
+    const outsider = await signUpPerson(verify, `outsider${++k}@case-first-response.test`, {
+      name: 'Other Agent', permissionSets: ['service_agent'],
+    });
+    const kase = await openCase();
+    expect(await verify.rows('crm_case', { id: kase.id }, { as: outsider.token }), 'the outsider can read the case').toEqual([]);
+    const event = await verify.hooks.run('crm_event', 'insert', {
+      subject: 'Called about a case I cannot see', type: 'call', status: 'held', start_datetime: new Date().toISOString(),
+      related_to_type: 'crm_case', related_to_case: kase.id,
+    }, { as: outsider.token });
+    expect((await verify.rows('crm_event', { id: event.id }))[0], 'the event write was lost').toBeTruthy();
+    await new Promise((r) => setTimeout(r, 400));
+    expect(await stampOf(kase.id)).toBeNull();
   });
 });
 
