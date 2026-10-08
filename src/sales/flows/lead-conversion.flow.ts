@@ -349,7 +349,7 @@ export const LeadConversionFlow: Flow = {
       config: {
         title: 'Conversion refused',
         description:
-          "This lead's company has no match key, so the conversion cannot tell which of your accounts it belongs to, and it will not guess: a guess could put this lead's contact and opportunity under another customer's account. The key is rebuilt from the Company field whenever the lead's Company is saved, so save this lead's Company again and then convert it. Nothing has been created and the lead is unchanged.",
+          "This lead's company has no match key, so conversion cannot tell which account it belongs to, and it will not guess: a guess could file the contact and opportunity under another customer. Saving the lead's Company rebuilds the key, so save it again, then convert. Nothing has been created.",
         waitForInput: true,
       },
     },
