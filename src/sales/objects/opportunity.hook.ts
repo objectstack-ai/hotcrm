@@ -371,6 +371,20 @@ const opportunityValidationHook: Hook = {
   },
 };
 
+/**
+ * On close-won: promote the account to `customer` and schedule the activation
+ * task for the deal's owner.
+ *
+ * `runAs: 'system'` (#2014, AGENTS.md rule 9). The trigger is a rep winning
+ * their own deal, and the account need not be theirs: as the caller, a read of
+ * an account the rep cannot see came back empty and the promotion was skipped
+ * without a word (measured: a rep's win on an account another user owns left
+ * it a `prospect`). That an account has a won deal is the account's fact, not
+ * the rep's edit, so the hook elevates; the deal write stays the caller's.
+ * Elevation is not anonymity: `ctx.user` and the audit stamps still name the
+ * rep. Organization (rule 10): it reads and writes only the account the
+ * triggering deal names, and the elevated `ctx.api` keeps the trigger's tenant.
+ */
 const opportunityWonHook: Hook = {
   name: 'opportunity_promote_account',
   object: 'crm_opportunity',
@@ -378,6 +392,7 @@ const opportunityWonHook: Hook = {
   priority: 800,
   async: true,
   onError: 'log',
+  runAs: 'system',
   description:
     'On closed_won: promote linked account to customer and create activation task.',
   handler: async (ctx: HookContext) => {

@@ -148,7 +148,7 @@
 | SVC-006 | 关闭指标 | 关闭时打 `closed_date` 并计算 `resolution_time_hours`;`is_closed` 由状态派生 | `src/service/objects/case.hook.ts` |
 | SVC-007 | Critical 即时升级 | record 流(update+create 孪生):critical 工单自动标升级、置 escalated、通知 owner(critical 级);只标记不改派 | `src/service/flows/case-escalation.flow.ts` |
 | SVC-008 | SLA 每小时违约扫描 | 过期未结工单标 `is_sla_violated`、升级并通知 owner(topic `case_sla_breach`) | `src/service/flows/case-sla-monitor.flow.ts` |
-| SVC-009 | 升级派发跟进任务 | 升级时的唯一任务产出点:给客户负责人创建次日到期的 urgent 跟进任务;解决时更新客户活动时钟 | `src/service/objects/case.hook.ts`(`case_status_side_effects`) |
+| SVC-009 | 升级派发跟进任务 | 升级时的唯一任务产出点:给客户负责人创建次日到期的 urgent 跟进任务;解决时更新客户活动时钟(独立 hook,以 system 身份写入) | `src/service/objects/case.hook.ts`(`case_status_side_effects`、`case_resolution_account_activity`) |
 | SVC-010 | 手动升级/关闭工单 | 两个屏幕流动作:升级必填原因并置 critical;关闭必填解决方案(系统身份写只读生命周期字段) | `src/service/flows/case-actions.flow.ts` + `src/service/actions/case.actions.ts` |
 | SVC-011 | CSAT 关单回访 | **已移除 (#1428)**:曾在工单关闭 1 天后通知 owner 联系客户记录满意度评分。它唯一喂养的 `crm_case.customer_rating` / `customer_feedback` 从来没有任何输入面,两个字段与本流程一并按 ADR-0049 enforce-or-remove 退役 | 已删除 |
 | SVC-012 | 首次响应打戳 | 工单上出现任何一条 held 互动事件时,自动补 `first_response_date`(SLA 首次响应指标) | `src/sales/objects/event.hook.ts`(`event_activity_bubble`) |

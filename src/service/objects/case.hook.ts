@@ -17,7 +17,9 @@ import {
  *   single owner of escalation tasks — flows must not create their own).
  *   Owning it, not merely labelling it: `owner_id` is the one ownership column,
  *   so the person the task names is the person who can work it.
- * - On `resolved`: bumps account `last_activity_date`.
+ * - On `resolved`: bumps account `last_activity_date` — its own hook,
+ *   `case_resolution_account_activity`, because it is the one write here that
+ *   needs elevation (#2014).
  *
  * ⚠️ Ownership assignment is NOT here: all three answers to "who should own
  * this case" live in `_case-assignment.ts` — the ownerless-intake round-robin,
@@ -325,7 +327,7 @@ const caseSideEffects: Hook = {
   priority: 800,
   async: true,
   onError: 'log',
-  description: 'Escalation tasks, resolved-date stamping, and account activity rollup.',
+  description: 'Open the escalation follow-up task for the account owner.',
   handler: async (ctx: HookContext) => {
     const { input } = ctx;
     const previous = ctx.previous;
@@ -417,20 +419,59 @@ const caseSideEffects: Hook = {
         related_to_account: accountId,
       });
     }
+  },
+};
 
-    // Resolution rollup. ⛔ No date is stamped here — `closed_date` belongs
-    // exclusively to the `closed` transition (stamped by `case_sla_defaults`).
-    // Writing it as a proxy for a resolved-date both corrupts resolution
-    // metrics (a resolved-then-closed case keeps its resolve time as its close
-    // time) and re-enters the record-change trigger surface.
-    if (input.status === 'resolved' && previous.status !== 'resolved') {
-      if (accountId) {
-        await api.object('crm_account').update(
-          { id: accountId, last_activity_date: new Date().toISOString().slice(0, 10) },
-          { where: { id: accountId } },
-        );
-      }
-    }
+/**
+ * Resolution rollup: a case reaching `resolved` bumps its account's
+ * `last_activity_date`.
+ *
+ * ⛔ No date is stamped on the CASE — `closed_date` belongs exclusively to the
+ * `closed` transition (stamped by `case_sla_defaults`). Writing it as a proxy
+ * for a resolved-date both corrupts resolution metrics (a resolved-then-closed
+ * case keeps its resolve time as its close time) and re-enters the
+ * record-change trigger surface.
+ *
+ * ## `runAs: 'system'`, and why this is its own hook (#2014)
+ *
+ * Cases are resolved by service agents, and an agent holds no edit right on
+ * accounts — so as the caller the bump was refused, `onError: 'log'` swallowed
+ * it, and an agent's resolve never reached the account's activity clock. The
+ * clock is the account's derived fact, not the agent's edit, so the write is
+ * elevated. It is split out of `case_status_side_effects` because `runAs` is
+ * per hook and that hook's other write — the escalation task — needs no
+ * elevation: the agent's narrow `crm_task.allowTransfer` grant exists for it
+ * (`service-agent.profile.ts`). Elevating as little as possible (AGENTS.md rule
+ * 9) means this one write. Elevation is not anonymity: the account's
+ * `updated_by` still names the agent. Organization (rule 10): it writes only
+ * the account the triggering case names, and the elevated `ctx.api` keeps the
+ * trigger's tenant.
+ */
+const caseResolutionAccountActivity: Hook = {
+  name: 'case_resolution_account_activity',
+  object: 'crm_case',
+  events: ['afterUpdate'],
+  priority: 800,
+  async: true,
+  onError: 'log',
+  runAs: 'system',
+  description: 'Bump the account’s last activity date when a case is resolved.',
+  handler: async (ctx: HookContext) => {
+    const { input } = ctx;
+    const previous = ctx.previous;
+    if (!previous) return;
+    if (input.status !== 'resolved' || previous.status === 'resolved') return;
+    const api = ctx.api as HookApi | undefined;
+    if (!api) return;
+    const accountId =
+      (typeof input.crm_account === 'string' && input.crm_account) ||
+      (typeof previous.crm_account === 'string' && previous.crm_account) ||
+      undefined;
+    if (!accountId) return;
+    await api.object('crm_account').update(
+      { id: accountId, last_activity_date: new Date().toISOString().slice(0, 10) },
+      { where: { id: accountId } },
+    );
   },
 };
 
@@ -532,4 +573,5 @@ export default [
   caseSelfClaim,
   caseResolutionArticleNormalize,
   caseSideEffects,
+  caseResolutionAccountActivity,
 ];

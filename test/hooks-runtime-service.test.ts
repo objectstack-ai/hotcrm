@@ -220,34 +220,24 @@ describe('case_status_side_effects', () => {
     expect(task.due_date).toBe(daysFromNow(1));
   });
 
-  it('bumps account activity on resolve WITHOUT stamping a date on the case', async () => {
-    // Writing closed_date here as a proxy for "resolved" corrupted resolution
-    // metrics: a resolved-then-closed case kept its resolve time as its close
-    // time. closed_date belongs exclusively to the `closed` transition. Shown
-    // through a writer who may edit the account (the admin); the agent's own
-    // resolve is the defect pinned next.
-    const { account, kase } = await caseOnAccount();
-    await verify.hooks.run('crm_case', 'update', { id: kase.id, status: 'resolved', resolution: 'Fixed.' }, as(admin));
-    await settles('crm_account', account.id, (a) => expect(a.last_activity_date).toBe(today()));
-    expect((await stored('crm_case', kase.id)).closed_date ?? null).toBeNull();
-  });
-
   /**
-   * ⚠️ MEASURED DEFECT — reported as a finding on this card, pinned here so the
-   * fix is noticed. The bump is a `ctx.api` write to `crm_account` as the
-   * person who resolved the case, and a service agent holds no edit right on
-   * accounts: the engine refuses it, `onError: 'log'` swallows it. Measured on
-   * 17.7.0: an agent resolves a case and the account's activity clock does not
-   * move.
+   * `case_resolution_account_activity`. Writing closed_date as a proxy for
+   * "resolved" corrupted resolution metrics: a resolved-then-closed case kept
+   * its resolve time as its close time. closed_date belongs exclusively to the
+   * `closed` transition.
+   *
+   * An agent's own resolve reaches the account (#2014). An agent holds no edit
+   * right on accounts, so the bump is its own hook declaring
+   * `runAs: 'system'`: before, it rode on this hook as the caller, the account
+   * write was refused, `onError: 'log'` swallowed it, and the activity clock
+   * never moved.
    */
-  it('⚠️ an agent’s resolve never reaches the account’s activity clock (measured defect)', async () => {
+  it('an agent’s resolve bumps the account’s activity clock WITHOUT stamping a date on the case', async () => {
     const { account, kase } = await caseOnAccount();
     await verify.hooks.run('crm_case', 'update', { id: kase.id, status: 'resolved', resolution: 'Fixed.' }, as(agent));
-    await new Promise((r) => setTimeout(r, 600));
-    expect(
-      (await stored('crm_account', account.id)).last_activity_date ?? null,
-      'the agent’s resolve now bumps the account — the defect is fixed: rewrite this case to pin the bump',
-    ).toBeNull();
+    await settles('crm_account', account.id, (a) => expect(a.last_activity_date).toBe(today()));
+    expect((await stored('crm_case', kase.id)).closed_date ?? null).toBeNull();
+    expect((await stored('crm_account', account.id)).updated_by, 'the bump was recorded as nobody’s write').toBe(agent.id);
   });
 
   it('does not re-fire when the status did not change', async () => {
@@ -523,10 +513,9 @@ describe('campaign_attribution_refresh', () => {
   /**
    * `num_opportunities` / `num_won_opportunities` / `actual_revenue` derive from
    * opportunities, so the membership trigger alone would leave exactly the
-   * three metrics `roi` is built on stale. The refresh writes the campaign as
-   * the person who moved the deal, so it is shown through the admin; a sales
-   * rep's own win is the defect pinned below (a sales manager is refused the
-   * same way on a campaign marketing owns).
+   * three metrics `roi` is built on stale. Shown through the admin, and then
+   * through a sales rep's own win, which reaches the campaign because the
+   * refresh runs elevated (#2014).
    */
   const attributedDeal = async (campaignId: string, over: Rec = {}) => {
     const account = await accountOf();
@@ -559,22 +548,21 @@ describe('campaign_attribution_refresh', () => {
   });
 
   /**
-   * ⚠️ MEASURED DEFECT — reported as a finding on this card, pinned here so the
-   * fix is noticed. A sales rep winning their own attributed deal fires the
-   * refresh as the rep, who holds no edit right on campaigns: the engine
-   * refuses the campaign write, `onError: 'log'` swallows it. Measured on
-   * 17.7.0: the deal is won and the campaign's revenue stays 0.
+   * A sales rep winning their own attributed deal reaches the campaign (#2014).
+   * A rep holds no edit right on campaigns, so the refresh declares
+   * `runAs: 'system'`: before it did, the campaign write was refused as the
+   * rep, `onError: 'log'` swallowed it, and the deal was won while the
+   * campaign's revenue stayed 0.
    */
-  it('⚠️ a rep’s win never reaches the campaign it is attributed to (measured defect)', async () => {
+  it('a rep’s win reaches the campaign it is attributed to', async () => {
     const campaign = await campaignOf({ actual_revenue: 0 });
     const deal = await attributedDeal(campaign.id);
     await verify.hooks.run('crm_opportunity', 'update', { id: deal.id, stage: 'closed_won', win_reason: 'better_price' }, as(rep));
     expect((await stored('crm_opportunity', deal.id)).stage).toBe('closed_won');
-    await new Promise((r) => setTimeout(r, 600));
-    expect(
-      (await stored('crm_campaign', campaign.id)).actual_revenue,
-      'the rep’s win now reaches the campaign — the defect is fixed: rewrite this case to pin the recompute',
-    ).toBe(0);
+    await settles('crm_campaign', campaign.id, (c) => {
+      expect(c.actual_revenue).toBe(900);
+      expect(c.num_won_opportunities).toBe(1);
+    });
   });
 });
 
@@ -692,21 +680,20 @@ describe('campaign_lead_conversion_refresh', () => {
   });
 
   /**
-   * ⚠️ MEASURED DEFECT — reported as a finding on this card, pinned here so the
-   * fix is noticed. A sales rep's conversion fires the refresh as the rep, who
-   * holds no edit right on campaign members or campaigns: the engine refuses
-   * the promotion, `onError: 'log'` swallows it. Measured on 17.7.0: the lead
-   * converts and its memberships stay where they were.
+   * A sales rep's conversion promotes the lead's memberships (#2014). A rep
+   * holds no edit right on campaign members or campaigns, so the refresh
+   * declares `runAs: 'system'`: before it did, the promotion was refused as the
+   * rep, `onError: 'log'` swallowed it, and the lead converted while its
+   * memberships stayed where they were.
    */
-  it('⚠️ a rep’s conversion never promotes the lead’s memberships (measured defect)', async () => {
+  it('a rep’s conversion promotes the lead’s memberships and refreshes their campaigns', async () => {
     const s = await store();
     await convert(s.l1.id, desk.rep);
     expect((await storedOn('crm_lead', s.l1.id)).is_converted).toBe(true);
-    await new Promise((r) => setTimeout(r, 600));
-    expect(
-      (await storedOn('crm_campaign_member', s.m1.id)).status,
-      'the rep’s conversion now promotes the membership — the defect is fixed: rewrite this case to pin it',
-    ).toBe('responded');
+    await settlesOn('crm_campaign_member', s.m1.id, (m) => expect(m.status).toBe('converted'));
+    await settlesOn('crm_campaign_member', s.m2.id, (m) => expect(m.status).toBe('converted'));
+    await settlesOn('crm_campaign', s.cmp1.id, (c) => expect(c.num_converted_leads).toBe(1));
+    expect((await storedOn('crm_campaign_member', s.m1.id)).updated_by, 'the promotion was recorded as nobody’s write').toBe(desk.rep.id);
   });
 
   /**

@@ -464,26 +464,24 @@ describe('the case-routing pools actually route (what this staffing lights)', ()
   });
 
   /**
-   * ⚠️ MEASURED DEFECT — reported as a finding on this card, pinned here so the
-   * fix is noticed.
-   *
-   * The hand-off reads the pool (`sys_user_position`) through `ctx.api`, as the
-   * caller. An agent escalating their own case — the record form, or the
+   * An agent escalating their own case — the record form, or the
    * `escalate_case` screen action, whose `escalate` node deliberately keeps the
    * status write in the acting user's context so the hand-off "fires from the
-   * ACTING USER's write" — is refused that read (`PERMISSION_DENIED`); the hook
-   * is best-effort and swallows it. Measured on 17.7.0: the case is escalated
-   * and stays with the agent.
+   * ACTING USER's write" — hands it to the demo service manager too (#2014).
+   * The agent may not read the pool (`sys_user_position`), so the hand-off
+   * reads it elevated (`runAs: 'system'`); before it did, the read was refused,
+   * the hook stood down, and the case stayed with the agent.
    */
-  it('⚠️ an agent’s own escalation keeps the case on the agent (measured defect)', async () => {
+  it('hands an agent’s own escalation to the demo service manager', async () => {
     const { agent, id } = await agentsCase();
     await verify.hooks.run('crm_case', 'update', { id, status: 'escalated' }, { as: agent.token });
     const [stored] = await verify.rows('crm_case', { id });
     expect(stored!.status).toBe('escalated');
     expect(
       stored!.owner_id,
-      'the agent’s escalation now reaches the service_manager pool — the defect is fixed: rewrite this case to pin the hand-off',
-    ).toBe(agent.id);
+      `case_escalation_reassign left the agent's own escalation on the agent — the hand-off no longer ` +
+      `reaches the service_manager pool from a person's write, only from the SLA sweep's.`,
+    ).toBe(holderOf('service_manager'));
   });
 
   it('lands intake and escalation on DIFFERENT desks', async () => {

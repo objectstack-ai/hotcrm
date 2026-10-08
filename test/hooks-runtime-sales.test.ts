@@ -255,6 +255,21 @@ describe('opportunity_promote_account', () => {
     }
   });
 
+  /**
+   * A rep's win promotes an account that is not the rep's (#2014). As the
+   * caller, the read of an account the rep cannot see came back empty and the
+   * promotion was skipped without a word; the hook declares `runAs: 'system'`.
+   */
+  it('promotes an account the rep does not own when the rep wins a deal on it', async () => {
+    const [acct] = await verify.seed('crm_account', [{ name: `Not Mine Co ${++k}`, owner_id: manager.id }]);
+    expect(await verify.rows('crm_account', { id: acct!.id }, as(rep)), 'the rep can see the account, so this proves nothing').toEqual([]);
+    const opp = await dealOf({ stage: 'negotiation', crm_account: acct!.id });
+    const task = await closeWon(opp);
+    expect((await stored('crm_account', acct!.id)).type).toBe('customer');
+    expect(task.owner_id).toBe(rep.id);
+    expect((await stored('crm_account', acct!.id)).updated_by, 'the promotion was recorded as nobody’s write').toBe(rep.id);
+  });
+
   it('is a no-op when the deal did not just become won', async () => {
     const moving = await dealOf({ stage: 'qualification' });
     await repUpdates('crm_opportunity', moving.id, { stage: 'proposal' });
