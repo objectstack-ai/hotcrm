@@ -17,9 +17,11 @@ import stack from '../objectstack.config';
  * exists and is the platform's. `crm_lead`'s activity calendar had already
  * settled the spelling: `startDateField: 'created_at'`.
  *
- * `crm_case.created_date` is a different field with the same name and is NOT
- * affected — the case seeds write it deliberately (see the seed note in
- * `src/data/index.ts`) and the Service dashboard windows on it.
+ * `crm_case.created_date` was a different field with the same name and was
+ * left alone here, because the case seeds wrote it and the Service dashboard
+ * windowed on it. It had the same defect on every case a user created, and
+ * #1992 retired it the same way once the platform kept a seed row's authored
+ * `created_at` (objectstack#21646) — pinned in `test/case-creation-date.test.ts`.
  */
 
 type AnyRec = Record<string, any>;
@@ -53,11 +55,6 @@ describe('the duplicate creation field is gone', () => {
 
   it('crm_opportunity declares no created_date', () => {
     expect(Object.keys(opportunity?.fields ?? {})).not.toContain('created_date');
-  });
-
-  it('crm_case keeps its own created_date — this was not a global rename', () => {
-    const crmCase = objects.find((o) => o.name === 'crm_case') as AnyRec | undefined;
-    expect(crmCase?.fields?.created_date, 'crm_case.created_date was collateral damage').toBeTruthy();
   });
 
   it('no locale pack still translates it', () => {

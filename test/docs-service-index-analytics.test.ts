@@ -255,7 +255,7 @@ describe('the source facts those four bullets now rest on (#948)', () => {
 
   it('the daily-inflow report puts priority in the rows and the day in the columns', () => {
     expect(CasesOpenedByDayPriorityReport.rows).toEqual(['priority']);
-    expect(CasesOpenedByDayPriorityReport.columns).toEqual(['created_date']);
+    expect(CasesOpenedByDayPriorityReport.columns).toEqual(['created_at']);
     expect(CasesOpenedByDayPriorityReport.label).toBe('Cases Opened by Priority × Day');
   });
 });

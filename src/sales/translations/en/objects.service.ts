@@ -52,7 +52,6 @@ export const service: Record<string, ObjectTranslationData> = {
         options: { email: 'Email', phone: 'Phone', web: 'Web', chat: 'Chat', social_media: 'Social Media' },
       },
       owner_id: { label: 'Case Owner' },
-      created_date: { label: 'Created Date' },
       closed_date: { label: 'Closed Date' },
       first_response_date: { label: 'First Response Date' },
       resolution_time_hours: { label: 'Resolution Time (Hours)' },

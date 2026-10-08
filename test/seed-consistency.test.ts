@@ -464,7 +464,8 @@ describe('seeded case SLA due dates match the policy matrix (#595)', () => {
   /**
    * `sla_due_date` is a hook-owned field, and hooks do not run over seeds — so
    * the seeded value has to already BE what `case_sla_defaults` would have
-   * computed at the case's creation moment: `created_date` plus the
+   * computed at the case's creation moment: `created_at` (the platform's
+   * creation stamp, which the seeds author since #1992) plus the
    * priority × account-tier cell, in calendar hours.
    *
    * The seed generator derives these by construction (`celCaseSlaDue` in
@@ -495,19 +496,19 @@ describe('seeded case SLA due dates match the policy matrix (#595)', () => {
     expect(blank, blank.join('\n')).toEqual([]);
   });
 
-  it('derives every due date from created_date + the matrix cell', () => {
+  it('derives every due date from created_at + the matrix cell', () => {
     const problems: string[] = [];
     for (const c of cases) {
-      const created = celSource(c.created_date);
+      const created = celSource(c.created_at);
       const due = celSource(c.sla_due_date);
       const label = `${String(c.subject)} (${String(c.priority)} / ${String(c.crm_account)})`;
       if (!created || !due) {
-        problems.push(`${label}: created_date and sla_due_date must both be CEL expressions`);
+        problems.push(`${label}: created_at and sla_due_date must both be CEL expressions`);
         continue;
       }
       const age = /^daysAgo\((\d+)\)$/.exec(created);
       if (!age) {
-        problems.push(`${label}: created_date is not a daysAgo() expression — ${created}`);
+        problems.push(`${label}: created_at is not a daysAgo() expression — ${created}`);
         continue;
       }
       const hours = caseSlaCalendarHours(String(c.priority), tierOf.get(String(c.crm_account)));
@@ -530,7 +531,7 @@ describe('seeded case SLA due dates match the policy matrix (#595)', () => {
     // no longer than its age.
     const problems: string[] = [];
     for (const c of cases.filter((r) => r.is_sla_violated === true)) {
-      const age = /^daysAgo\((\d+)\)$/.exec(celSource(c.created_date) ?? '');
+      const age = /^daysAgo\((\d+)\)$/.exec(celSource(c.created_at) ?? '');
       const hours = caseSlaCalendarHours(String(c.priority), tierOf.get(String(c.crm_account)));
       const label = `${String(c.subject)} (${String(c.priority)})`;
       if (!age || hours === undefined) {

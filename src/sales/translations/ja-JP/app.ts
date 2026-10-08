@@ -219,7 +219,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: 'ケース指標',
       description: 'ケース数・解決時間・SLA を集計するセマンティックレイヤー',
       dimensions: {
-        created_date: {
+        created_at: {
           label: '作成日',
         },
         origin: {
