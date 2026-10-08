@@ -108,8 +108,10 @@ objects because the app stack is told the artifact's other objects (`artifactObj
 `docs/archive/`. This is not that — one `package.json`, one build — and the prohibition is about the retired shape, not about packages.
 
 **`src/docs/` is the platform's path, not a package's.** `objectstack build` compiles `<config dir>/src/docs/*.md` into the artifact's
-`docs[]` (ADR-0046) and reads that path and no other, so these four files stay at the top of `src/` rather than moving under
-`src/sales/`. Moving them is silent — the build stays exit 0 and the artifact simply loses its `docs`.
+top-level `docs[]` (ADR-0046), registered under the artifact's own id. A per-package `src/<dir>/docs/` reaches a package's body only
+when `<dir>` is that package's id or the id's last dot-separated segment: `src/sales/` answers to neither (`app.objectstack.hotcrm`
+ends in `hotcrm`), so these four files stay at the top of `src/` rather than moving under `src/sales/`. Moving them there keeps the
+build at exit 0 behind one `docs/uncollected-directory` warning, and the artifact simply loses its `docs`.
 
 ## 💻 Tech Stack & Protocol
 
