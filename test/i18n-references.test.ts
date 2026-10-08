@@ -462,10 +462,12 @@ describe('every locale is complete on every authored surface', () => {
    * them would recreate the other half of the drift pair: offering keys the
    * resolver ignores.
    *
-   * `description` is included even though `page:card` does not currently draw it
-   * (#1216 moves that copy to a component that does): the platform accepts and
-   * serves the key, all four bundles now agree on it, and excluding it would
-   * need an exemption that goes wrong the moment #1216 lands.
+   * `description` is on the bundle's component face, so it stays in the walk,
+   * though no component here authors it now. The one that did, `ai_briefing`,
+   * wrote it on a `page:card`, which does not declare or draw it. #1581 moved
+   * that copy into an `element:text` child, and `content` is not on the face:
+   * it carries its four languages as an inline locale map in the page source,
+   * so the bundles no longer translate it.
    */
   it('every top-level page component has translated copy', () => {
     // The authored key on the left, the translation key it is addressed by on

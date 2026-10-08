@@ -439,16 +439,16 @@ describe('page component references resolve', () => {
    *   guard's own stale-exemption arm went red naming both lines. Nothing in
    *   this repo changed shape — the schema caught up with the renderer.
    *
-   *   sales_home_page/ai_briefing :: description — `page:card` does not declare
-   *   `description`, so the paragraph renders nowhere; the fix is to move the
-   *   copy into an `element:text` child. It is pinned where it is by the #1002
-   *   persona guard at the bottom of this file, which reads
-   *   `properties.description` and encodes a maintainer ruling, so relocating
-   *   it means rewriting a ruling-backed guard. Filed as #1216.
+   *   sales_home_page/ai_briefing :: description — RESOLVED, exemption
+   *   removed (#1581). `page:card` does not declare `description`, so the
+   *   paragraph rendered nowhere. The copy moved into an `element:text` child,
+   *   and the #1002 persona guard at the bottom of this file moved with it.
+   *   This rule's stale-exemption arm went red naming the line once the key
+   *   was gone.
+   *
+   * The set is empty and stays declared: a new line needs an issue and a reason.
    */
-  const KNOWN_UNCONFORMING = new Set([
-    'sales_home_page/ai_briefing :: description',
-  ]);
+  const KNOWN_UNCONFORMING = new Set<string>();
 
   it("every page component's properties parse against its own ComponentPropsMap entry", () => {
     const map = ComponentPropsMap as Record<string, { safeParse: (v: unknown) => any }>;
@@ -669,7 +669,8 @@ describe('page component references resolve', () => {
    * "Today's Schedule" with nothing under them. A third, `ai_briefing`, looked
    * bound but was not — its paragraph was authored as `properties.description`,
    * a key `page:card` does not declare, so the props schema stripped it and
-   * the card rendered as a title too.
+   * the card rendered as a title too (#1581 moved it into an `element:text`
+   * child).
    *
    * That last one is why this rule reads DECLARED content keys rather than
    * "does the props bag have something in it": `PageComponent.properties` is
@@ -696,15 +697,12 @@ describe('page component references resolve', () => {
      *   upstream renderer gap for `global:*` component types, and editing it
      *   would destroy the evidence). Filed as #1215.
      *
-     *   sales_home_page/ai_briefing — carries its copy under
-     *   `properties.description`, which `page:card` does not declare, so it
-     *   renders as a title too. The fix is to move that copy into an
-     *   `element:text` child — but the copy is pinned where it is by the
-     *   #1002 persona guard below, which reads `properties.description` and
-     *   encodes a maintainer ruling, so moving it is its own card rather than
-     *   a rider on this one. Filed as #1216.
+     *   sales_home_page/ai_briefing — RESOLVED, exemption removed (#1581). Its
+     *   copy sat under `properties.description`, which `page:card` does not
+     *   declare. It is now an `element:text` child, so the card holds a
+     *   component, and the stale arm below went red naming this line.
      */
-    const KNOWN_EMPTY = new Set(['utility_bar_page/quick_notes', 'sales_home_page/ai_briefing']);
+    const KNOWN_EMPTY = new Set(['utility_bar_page/quick_notes']);
 
     const bad: string[] = [];
     const emptyFound = new Set<string>();
@@ -1230,6 +1228,11 @@ describe('app AI bindings resolve to a platform agent', () => {
  * string. Measured by restoring the old three lines: 2 of 3 assertions fail
  * ("Ask the Sales Copilot" on `title`, "Today with Copilot" on `label`, and the
  * floating/bottom-right entry point), then green once rewritten.
+ *
+ * The paragraph moved, and this guard moved with it (#1581). It was
+ * `properties.description`, which `page:card` does not declare, so it never
+ * reached the screen. It is now the card's `element:text` child, whose
+ * `content` is an inline locale map, so the rule reads every language of it.
  */
 describe('live UI copy does not name a retired copilot persona (#1002)', () => {
   const homePage = pages.find((p) => p.name === 'sales_home_page');
@@ -1239,17 +1242,34 @@ describe('live UI copy does not name a retired copilot persona (#1002)', () => {
     (c: AnyRec) => c.id === 'ai_briefing',
   );
 
+  /** The card's paragraph: its `element:text` child. */
+  const text = ((card?.properties?.children ?? []) as AnyRec[]).find(
+    (c) => c?.type === 'element:text',
+  );
+  const content: unknown = text?.properties?.content;
+  /** Every language of the paragraph; a plain string is one language. */
+  const paragraphs: string[] =
+    typeof content === 'string'
+      ? [content]
+      : content && typeof content === 'object'
+        ? Object.values(content).filter((s): s is string => typeof s === 'string')
+        : [];
+  const english: string =
+    typeof content === 'string' ? content : ((content as AnyRec | undefined)?.en ?? '');
+
   it('the card this rule reads is still on the home page', () => {
     // Guard the guard: renamed away, every assertion below would pass by
     // reading `undefined` — the empty-pass failure mode a copy rule dies of.
     expect(homePage, 'sales_home_page is no longer registered in the stack').toBeDefined();
     expect(card, 'no component with id "ai_briefing" on sales_home_page').toBeDefined();
     expect(typeof card?.properties?.title).toBe('string');
-    expect(typeof card?.properties?.description).toBe('string');
+    expect(text, 'the ai_briefing card has no element:text child — its paragraph is gone').toBeDefined();
+    expect(typeof english, 'the paragraph has no English copy').toBe('string');
+    expect(english.length, 'the paragraph has no English copy').toBeGreaterThan(0);
   });
 
   it('no retired persona name in the card copy', () => {
-    const copy = [card?.label, card?.properties?.title, card?.properties?.description]
+    const copy = [card?.label, card?.properties?.title, ...paragraphs]
       .filter((s): s is string => typeof s === 'string')
       .join('\n');
     // The bare word is included on purpose: "Copilot" alone reads as an
@@ -1262,12 +1282,12 @@ describe('live UI copy does not name a retired copilot persona (#1002)', () => {
   });
 
   it('the card points at the documented assistant entry point', () => {
-    const description: string = card?.properties?.description ?? '';
     // The stale spelling, not a paraphrase of the new one: pinning the exact
     // sentence would fail on any harmless rewording, while "floating" /
     // "bottom-right" is precisely the claim that contradicts the docs.
-    expect(description.toLowerCase()).not.toContain('floating');
-    expect(description.toLowerCase()).not.toContain('bottom-right');
-    expect(description).toContain('right edge');
+    const all = paragraphs.join('\n').toLowerCase();
+    expect(all).not.toContain('floating');
+    expect(all).not.toContain('bottom-right');
+    expect(english).toContain('right edge');
   });
 });
