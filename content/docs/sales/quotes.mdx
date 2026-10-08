@@ -106,14 +106,18 @@ The rep then reviews the draft, attaches the quote document (a PDF) to the quote
 
 ## Sending a quote to the customer
 
-From the quote detail page, click **Send to Customer**. This sets the status to *Presented* and emails the PDF using a quote-cover-email template. The AI assistant can draft the cover email for you — *"Draft a cover note for this quote"*.
+HotCRM does not send the quote for you. The quote record has no send button, and the app neither produces a quote PDF nor ships an email template for one. You send the document to the customer yourself, then record that it went out: on the quote, click **Edit**, set **Status** to *Presented* and click **Update**. That save is refused unless **Contact** is filled in (see [Built-in rules](#built-in-rules)), and it emails no one.
 
-## Mark as Accepted / Rejected
+To write the covering email inside HotCRM, use **Send Email** on the customer's contact record. You type the subject and body yourself, nothing is attached, and the message leaves only if your deployment has outgoing mail set up (see [Email & Calendar](/docs/guides/email-and-calendar)). The AI assistant can draft that text for you — *"Draft a cover note for this quote"* — and hands it back for you to paste; it does not send anything.
 
-Two buttons on the detail screen close the loop:
+## Recording the customer's answer
 
-- **Mark Accepted** → status = Accepted; triggers the contract chain described above.
-- **Mark Rejected** → status = Rejected; the opportunity stays open (you can re-quote at a lower price).
+There are no accept or reject buttons either. The customer's decision is recorded the same way: **Edit** the quote, set **Status**, click **Update**.
+
+- **Accepted** — the save that makes a quote *Accepted* is what drafts the contract and close-wins the deal, as described in [What happens automatically](#what-happens-automatically). From then on the quote is frozen: a change to any field except **Internal Notes** is refused, Status included.
+- **Rejected** — nothing else happens. No contract is drafted and the opportunity keeps its stage, so you can quote again: set the rejected quote back to *Draft*, revise it and present it again, or click **Generate Quote** on the opportunity for a fresh one.
+
+The row of statuses across the top of the quote shows where it stands. It is a display, not a set of buttons.
 
 ## Discount ceiling
 
@@ -149,14 +153,14 @@ A brand-new org has no quotes at all — they are generated from opportunities, 
 ## Tips for sales reps
 
 - ✅ Always include a discount reason in *Internal Notes* if you're discounting heavily.
-- ✅ Use the **Generate Quote** button from an opportunity rather than creating quotes from scratch — it auto-fills everything.
+- ✅ Use the **Generate Quote** button from an opportunity rather than creating quotes from scratch — it fills in the account, primary contact, dates, payment terms and opening price for you. The line items are yours to add.
 - ✅ Check the validity (expiration date) matches your business cycle. Quarterly buyers need quotes valid till quarter-end.
 - ❌ Don't change pricing on a Presented quote — it confuses the customer. Create a new revision instead.
 
 ## Tips for admins
 
 - The daily expiration sweep runs at 1 AM. That time lives in source, not in Setup: it is the `schedule: '0 1 * * *'` on the start node of the `quote_expiration` flow (`src/revenue/flows/quote-expiration.flow.ts`). Changing it is a code change plus a redeploy — there is no setting to adjust on the quote object.
-- The quote PDF template (cover and line item layout) is stored in your email-template settings.
+- There is no quote PDF template to configure. HotCRM does not produce the quote document (the PDF a rep sends is made outside the app), and the one quote email template it ships is *Quote Created*, the notification a rep receives after **Generate Quote**.
 - The Contact requirement is checked **when a quote moves into Presented or Accepted**, not on every save. A quote that was already sitting in *Presented* without a contact before this rule shipped keeps working normally — you can read and edit it, and filling the Contact in is an ordinary edit. It is the only case that can still reach *Accepted* without a recipient, and there it behaves as it always did: the contract cannot be drafted, and the reason lands in the server log. HotCRM's own demo data contains no such quote.
 - The Discount ceiling is checked on **every save**, not only on a status change — the opposite boundary to the Contact requirement above, and deliberately so. "The discount may never exceed 60%" is an invariant; "a quote must have a recipient by the time it is presented" is a condition on a transition. The consequence worth knowing: a quote stored above the ceiling before this rule shipped would be frozen to every edit except lowering its discount, which is always allowed. HotCRM's own demo data contains no such quote — the deepest discount it seeds is 20%.
 - The line-item ceiling behaves the same way and reaches the same legacy case: a line stored above 60 before the rule shipped is refused on its next edit until its discount comes down. One boundary is worth knowing: a validation is evaluated against the record being saved, so an over-ceiling *line* freezes that line, not its parent quote — the quote can still change status. Nothing HotCRM ships is in that state (the deepest line discount it seeds is 20%), and after this rule a line above the ceiling cannot be written at all.
