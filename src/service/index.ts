@@ -101,7 +101,11 @@ export type HotCrmServiceCollections = Pick<ObjectStackDefinitionInput, 'data'>;
  * reach this parse:
  *
  *     ✗ flow 'case_escalation' declares a 'record_change' trigger but
- *       `requires` does not include 'triggers' …
+ *       `requires` does not include 'automation' or 'triggers' — no
+ *       'record_change' trigger would be registered …
+ *
+ * (measured on 17.7.0 by deleting the line below: three such refusals, one
+ * per triggered case flow).
  *
  * So this list is exactly what THIS package's metadata needs: `automation` and
  * `triggers` for the seven case flows, `analytics` for `case_metrics` and the

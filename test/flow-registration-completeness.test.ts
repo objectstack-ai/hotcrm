@@ -135,7 +135,9 @@ describe('flow registration completeness', () => {
       'exported from a package barrel but missing from `allFlows` — registered by NOTHING, and ' +
         '`pnpm validate` stays at exit 0 while the flow never binds its trigger:\n  ' +
         `${unregistered.join('\n  ')}\n` +
-        'Import each one in objectstack.composition.ts and add it to the allFlows array.',
+        "Add each one to its package's list: the service module's `serviceFlows` in " +
+          "src/service/index.ts, the app package's `appFlows` in objectstack.composition.ts " +
+          '(allFlows is their union).',
     ).toEqual([]);
   });
 

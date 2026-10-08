@@ -63,8 +63,8 @@ each package manifest (`src/sales/index.ts`, `src/service/index.ts`,
 `manifest.engines.protocol`) and restated by `objectstack.manifest.json`
 (`engines.protocol` and `specVersion`) and by the `@objectstack/spec` range
 `package.json` installs. `test/docs-declared-versions.test.ts` pins every package of the
-built artifact and those files to each other, so the fact is already gated where it lives
-— a copy here would be the one copy nothing compares against.
+artifact `objectstack.config.ts` composes and those files to each other, so the fact is
+already gated where it lives — a copy here would be the one copy nothing compares against.
 *Supersedes the transcribed `^17.0.0-rc.1` row that stood here while all three
 sources declared `^17.2.0` — 2026-08-31 ruling, item 5.*
 

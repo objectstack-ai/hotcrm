@@ -49,10 +49,14 @@ export type HotCrmAppCollections = Omit<
  * `artifactObjects` is the platform's answer to exactly that (objectstack#18202):
  * the names the OTHER packages of this artifact own, against which this
  * package's `permissions[].objects` and `data[].object` — and those two
- * reference classes only — are resolved. The claim is verified, not trusted:
- * `composeStacks` refuses a name no package of the artifact defines. A hook or
- * an app navigation entry on another package's object stays refused; navigation
- * crosses only through the module's `navigationContributions`.
+ * reference classes only — are resolved. Measured on 17.7.0: without it, the
+ * seven sets' 18 grants on `crm_case`, `crm_knowledge_article` and
+ * `crm_article_feedback` are refused ("defineStack cross-reference validation
+ * failed (18 issues)"); with it, none. The claim is verified, not trusted: a
+ * grant naming an object no package of the artifact defines is still refused,
+ * by `composeStacks`' artifact pass, even when the name is listed here. A hook
+ * or an app navigation entry on another package's object stays refused;
+ * navigation crosses only through the module's `navigationContributions`.
  *
  * ## What is deliberately NOT here
  *

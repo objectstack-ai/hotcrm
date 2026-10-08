@@ -91,6 +91,10 @@ describe('every object has exactly one owner', () => {
       check('sharing rule', b.sharingRules, (r) => r.object);
       check('seed family', b.data, (d) => d.object);
       check('dataset', b.datasets, (d) => d.object);
+      check('view', b.views, (v) => v.list?.data?.object);
+      check('action', b.actions, (a) => a.objectName);
+      check('page', b.pages, (p) => p.object);
+      check('flow', b.flows, (f) => f.objectName);
     }
     expect(strays, `items shipped in a package that does not own their object:\n  ${strays.join('\n  ')}`).toEqual([]);
   });
