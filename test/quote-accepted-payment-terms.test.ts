@@ -202,7 +202,8 @@ describe('what a real crm_contract does with those documents', () => {
     // would be true of any string and would prove nothing about the superset.
     const doc = { ...(await draftFor({}, {})), payment_terms: 'net_45' };
     await expect(api.object('crm_contract').insert(doc)).rejects.toThrow(
-      /Payment Terms must be one of: net_15, net_30, net_60, net_90, due_on_receipt/,
+      // Since #2000 the refusal names the picklist the field takes its values from.
+      /Payment Terms must be one of the values of picklist "payment_terms": net_15, net_30, net_60, net_90, due_on_receipt/,
     );
   });
 });

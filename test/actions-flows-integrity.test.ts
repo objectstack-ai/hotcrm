@@ -7,6 +7,7 @@ import { flowNodesDeep } from './helpers/flow-regions';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
 import { metadataFiles } from './helpers/src-roster';
+import { offeredOptions } from './helpers/stack-picklists';
 
 /**
  * Action & flow contract guards — the CI net for the class of defect that
@@ -115,10 +116,13 @@ describe('lead_conversion flow contracts', () => {
     // creates. When the two objects declared their own picklists, half the
     // Lead industries (`media`, `logistics`, …) were illegal enum values on
     // crm_account and conversion died in create_account (#490/#531). The
-    // vocabularies are unified in src/sales/objects/_picklists.ts; this pins the
-    // superset relation itself so drift in either object re-fails CI.
+    // vocabularies are shared picklists since #2000 (`industry`, `lead_source`),
+    // so the two sides offer one list; this pins the superset relation itself,
+    // read through each field's offered options, so drift in either object —
+    // a field moved back to an inline copy — re-fails CI.
     const leadFields = objects.find((o) => o.name === 'crm_lead')?.fields ?? {};
     const bad: string[] = [];
+    const checked: string[] = [];
     for (const node of f?.nodes ?? []) {
       if (node.type !== 'create_record') continue;
       const targetObject: string = node.config?.objectName ?? '';
@@ -126,10 +130,11 @@ describe('lead_conversion flow contracts', () => {
       for (const [target, template] of Object.entries(node.config?.fields ?? {})) {
         const src = typeof template === 'string' && /^\{leadRecord\.(\w+)\}$/.exec(template)?.[1];
         if (!src) continue;
-        const srcOptions = leadFields[src]?.options;
-        const dstOptions = targetFields[target]?.options;
+        const srcOptions = offeredOptions(leadFields[src]);
+        const dstOptions = offeredOptions(targetFields[target]);
         // Only select→select copies carry enum constraints on both sides.
         if (!Array.isArray(srcOptions) || !Array.isArray(dstOptions)) continue;
+        checked.push(`${targetObject}.${target}`);
         const legal = new Set(dstOptions.map((o: AnyRec) => o.value));
         for (const o of srcOptions) {
           if (!legal.has(o.value)) {
@@ -138,6 +143,11 @@ describe('lead_conversion flow contracts', () => {
         }
       }
     }
+    // Guard the guard: a resolution that stopped reading the shared lists would
+    // skip every copy and pass over nothing.
+    expect(checked, 'no select→select copy was checked').toEqual(
+      expect.arrayContaining(['crm_account.industry', 'crm_opportunity.lead_source']),
+    );
     expect(bad, bad.join('\n')).toEqual([]);
   });
 });

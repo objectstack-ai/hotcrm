@@ -7,6 +7,7 @@ import { ACTIVITY_TARGETS } from '../src/sales/actions/activity-actions';
 import eventHooks from '../src/sales/objects/event.hook';
 import { runActionBody, makeSandboxEngine, type ActionRunOpts } from './helpers/action-sandbox';
 import { makeHarness, makeCtx, hookNamed } from './helpers/hook-harness';
+import { offeredOptions } from './helpers/stack-picklists';
 
 /**
  * Behavioral guards for the activity actions in `src/actions/global.actions.ts`.
@@ -109,9 +110,12 @@ describe('a rep can log an interaction on everything they sell to (#509 / #592)'
     // The map in `global.actions.ts` decides which `crm_event` column records
     // the link. A stale entry writes an event linked to nothing at all.
     const eventFields = objectByName.get('crm_event')?.fields ?? {};
+    // `related_to_type` references the shared `related_to_type` picklist (#2000),
+    // so its options are the list's, not a copy on the field.
     const typeOptions = new Set(
-      (eventFields.related_to_type?.options ?? []).map((o: AnyRec) => o.value),
+      (offeredOptions(eventFields.related_to_type) ?? []).map((o: AnyRec) => o.value),
     );
+    expect(typeOptions.size, 'crm_event.related_to_type offers no options').toBeGreaterThan(0);
     const bad: string[] = [];
     for (const [objectName, field] of Object.entries(ACTIVITY_TARGETS)) {
       if (!eventFields[field]) bad.push(`crm_event has no field "${field}" (for ${objectName})`);

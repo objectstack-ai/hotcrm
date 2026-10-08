@@ -7,6 +7,7 @@ import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { AnalyticsService } from '@objectstack/service-analytics';
 import stack from '../objectstack.config';
 import { OpportunityDataset } from '../src/sales/datasets/opportunity.dataset';
+import { registerStackPicklists } from './helpers/stack-picklists';
 
 /**
  * Win/loss reasons are CAPTURED, and win rate is MEASURED (#593).
@@ -131,6 +132,7 @@ describe('the write is REJECTED, not warned about (in-memory driver)', () => {
       datasources: { default: new InMemoryDriver({ persistence: false }) },
       objects: { crm_opportunity: opportunity } as never,
     })) as never;
+    registerStackPicklists(ql);
   });
   afterAll(async () => {
     await ql?.close();
@@ -256,6 +258,7 @@ describe('the write is REJECTED on a real SQLite database too', () => {
       datasources: { default: driver },
       objects: { crm_opportunity: opportunity } as never,
     })) as never;
+    registerStackPicklists(ql);
   }, 60_000);
   afterAll(async () => {
     await ql?.close();
@@ -305,6 +308,7 @@ describe('crm_case.resolution_required_for_closed is still live', () => {
       datasources: { default: new InMemoryDriver({ persistence: false }) },
       objects: { crm_case: kase } as never,
     })) as never;
+    registerStackPicklists(ql);
   });
   afterAll(async () => {
     await ql?.close();
@@ -385,6 +389,7 @@ describe('every settled seed carries its reason', () => {
       datasources: { default: new InMemoryDriver({ persistence: false }) },
       objects: { crm_opportunity: opportunity } as never,
     })) as AnyRec;
+    registerStackPicklists(ql);
     try {
       const api = ql.createContext({ isSystem: true });
       const isCel = (v: unknown) => !!v && typeof v === 'object' && 'source' in (v as AnyRec);
@@ -455,6 +460,7 @@ describe('win rate is measured, and both halves are load-bearing', () => {
         },
       } as never,
     })) as never;
+    registerStackPicklists(ql);
 
     analytics = new AnalyticsService({
       // The same bridge `AnalyticsServicePlugin` wires at boot.
@@ -742,6 +748,7 @@ describe('the shipped seeds produce a real win rate and a real loss breakdown', 
         },
       } as never,
     })) as never;
+    registerStackPicklists(ql);
 
     const api = ql.createContext({ isSystem: true });
     for (const rec of seedRecords) {

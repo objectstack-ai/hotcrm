@@ -7,6 +7,7 @@ import { unknownImportMappingTargets } from '@objectstack/spec/data';
 import { applyMappingToRows, buildFieldMetaMap, coerceRow, type MappingArtifactLike } from '@objectstack/core';
 import { REPO_ROOT } from './helpers/repo-root';
 import stack from '../objectstack.config';
+import { offeredOptions } from './helpers/stack-picklists';
 
 /**
  * Import-mapping integrity guards (#603).
@@ -178,7 +179,8 @@ describe('import mappings — transforms the import path can execute', () => {
     for (const entry of m.fieldMapping as AnyRec[]) {
       if (entry.transform !== 'map') continue;
       const target = first(entry.target);
-      const options: AnyRec[] = fields[target]?.options ?? [];
+      // A shared-list field (`industry`, `lead_source`, #2000) offers its picklist's options.
+      const options: AnyRec[] = offeredOptions(fields[target]) ?? [];
       expect(options.length, `${target} is mapped with 'map' but declares no options`).toBeGreaterThan(0);
       const legal = new Set(options.map((o) => o.value));
       for (const [source, mapped] of Object.entries(entry.params?.valueMap ?? {})) {

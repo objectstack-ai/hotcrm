@@ -6,6 +6,7 @@ import { InMemoryDriver } from '@objectstack/driver-memory';
 import stack from '../objectstack.config';
 import { products } from '../src/revenue/data/catalog.seed';
 import { type AnyRec, objects, pages, walk } from './helpers/metadata-fixtures';
+import { registerStackPicklists } from './helpers/stack-picklists';
 
 /**
  * The opportunity Products panel offers a route to add a line item (#1731).
@@ -152,6 +153,7 @@ describe('the row a picker-shaped insert actually produces', () => {
         crm_product: PRODUCT,
       } as never,
     })) as never;
+    registerStackPicklists(ql);
     if (withHooks) {
       const hooks: AnyRec[] = (stack as never as AnyRec).hooks ?? [];
       bindHooksToEngine(

@@ -7,6 +7,7 @@ import { SysUser } from '@objectstack/platform-objects';
 import stack from '../objectstack.config';
 import { ATTENDEE_RESOLUTIONS } from '../src/sales/objects/event_attendee.object';
 import { eventAttendeesFromContacts, eventAttendeesFromLeads } from '../src/sales/data/activity.seed';
+import { registerStackPicklists } from './helpers/stack-picklists';
 
 /**
  * `attendee_type` and the column it names must agree (#740).
@@ -160,6 +161,7 @@ describe('the acceptance surface, on a real engine', () => {
         sys_user: SysUser,
       } as never,
     })) as never;
+    registerStackPicklists(ql);
     api = ql.createContext({ isSystem: true });
 
     const event = await api.object('crm_event').insert({

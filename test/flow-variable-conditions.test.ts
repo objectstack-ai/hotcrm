@@ -6,6 +6,7 @@ import { InMemoryDriver } from '@objectstack/driver-memory';
 import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-automation';
 import stack from '../objectstack.config';
 import { flowGraphDeep, regionsOf } from './helpers/flow-regions';
+import { registerStackPicklists } from './helpers/stack-picklists';
 
 /**
  * ═══ HOUSE RULE: flow conditions over FLOW VARIABLES ═══════════════════════
@@ -945,6 +946,7 @@ describe('the two defects, reproduced end-to-end', () => {
       // type — without it this suite prints every engine INFO line.
       ...({ logger: silent } as object),
     })) as never;
+    registerStackPicklists(ql);
 
     const engine = new AutomationEngine(silent);
     installBuiltinNodes(engine, {

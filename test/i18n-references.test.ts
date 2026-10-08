@@ -13,6 +13,7 @@ import {
   packFor,
   fieldsOf,
 } from './helpers/metadata-fixtures';
+import { stackPicklists } from './helpers/stack-picklists';
 
 /**
  * Translation-completeness guards: every authored surface is translated in
@@ -85,6 +86,32 @@ describe('picklist values never reach the UI unresolved', () => {
       }
     }
     expect(bad, `option translations that resolve to nothing:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('shared picklist translations are keyed by the list\'s option VALUES (#2000)', () => {
+    // A field that references a picklist inherits `picklists.<name>.options`,
+    // matched by value exactly as a field's own options are — so the same two
+    // misses resolve to nothing: a key that is not one of the list's values,
+    // and a list name the stack does not declare.
+    expect(
+      localePacks.every(([, pack]) => Object.keys(pack?.picklists ?? {}).length > 0),
+      'a locale pack carries no picklist translations',
+    ).toBe(true);
+    const bad: string[] = [];
+    for (const [locale, pack] of localePacks) {
+      for (const [name, entry] of Object.entries<AnyRec>(pack?.picklists ?? {})) {
+        const list = stackPicklists.find((p) => p.name === name);
+        if (!list) {
+          bad.push(`${locale}: translates picklist "${name}", which the stack does not declare`);
+          continue;
+        }
+        const values = (list.options as AnyRec[]).map((o) => String(o.value));
+        for (const key of Object.keys(entry?.options ?? {})) {
+          if (!values.includes(key)) bad.push(`${locale}: picklists.${name} option key "${key}" is not an option value`);
+        }
+      }
+    }
+    expect(bad, `picklist translations that resolve to nothing:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
   it('translated object and field keys name real objects and fields', () => {

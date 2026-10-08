@@ -4,6 +4,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import stack from '../objectstack.config';
+import { registerStackPicklists } from './helpers/stack-picklists';
 
 /**
  * Deleting an enrolled person must work (#696).
@@ -129,6 +130,7 @@ describe('deleting an enrolled person', () => {
         crm_account: byName('crm_account'),
       } as never,
     })) as never;
+    registerStackPicklists(ql);
     api = ql.createContext({ isSystem: true });
   });
   afterEach(async () => {

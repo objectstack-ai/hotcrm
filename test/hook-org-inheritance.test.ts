@@ -4,6 +4,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL, bindHooksToEngine, applySystemFields } from '@objectstack/objectql';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import stack from '../objectstack.config';
+import { registerStackPicklists } from './helpers/stack-picklists';
 
 /**
  * Records this app's HOOKS create inherit the triggering caller's organization
@@ -127,6 +128,7 @@ beforeAll(async () => {
     datasources: { default: driver as never },
     objects: objectMap as never,
   } as never)) as AnyRec;
+  registerStackPicklists(ql);
 
   await driver.initObjects(
     objects.map((o) => {

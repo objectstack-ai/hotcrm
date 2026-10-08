@@ -5,6 +5,7 @@ import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import { SysUser } from '@objectstack/platform-objects';
 import stack from '../objectstack.config';
+import { registerStackPicklists } from './helpers/stack-picklists';
 
 /**
  * Deleting a person who attended a meeting must work (#711).
@@ -199,6 +200,7 @@ describe('deleting a person who attended a meeting', () => {
         sys_user: SysUser,
       } as never,
     })) as never;
+    registerStackPicklists(ql);
     api = ql.createContext({ isSystem: true });
   });
   afterEach(async () => {
