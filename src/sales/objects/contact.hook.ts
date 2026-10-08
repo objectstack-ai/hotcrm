@@ -166,8 +166,29 @@ const contactHook: Hook = {
         // with no name at all is referred to, not identified: a bare id told
         // the reader nothing they could look up either.
         const subject = name ? `Contact ${name}` : 'This contact';
+        // What frees the contact is not the same for the three (#2019). An
+        // opportunity's `primary_contact` and a quote's `crm_contact` are
+        // optional, so once the deal or quote is settled the engine clears the
+        // link and the delete lands. A contract's `crm_contact` is REQUIRED: a
+        // contract keeps its primary contact for its whole life, ended or not
+        // — it is the account's signed record and is kept, so the engine
+        // refuses the delete while ANY contract names the contact. The old
+        // closing "Close or reassign those records first" sent the user to
+        // terminate the contract, after which the engine refused all the same.
+        // So the sentence says what frees the contact from a contract: another
+        // primary contact on it.
+        //
+        // ⛔ The COUNT stays `activated`, and that is deliberate. This guard also
+        // runs inside an account delete (the cascade above) and cannot tell the
+        // two apart, and an account delete takes its draft and ended contracts
+        // with it (#549, `account_protection`). Counting those here would make
+        // this guard refuse that account delete itself — today the engine
+        // already refuses it on the cascade's order (objectstack#22305, pinned
+        // in `test/hooks-runtime-sales.test.ts`), and that is the platform's to
+        // fix. An ended contract on a DIRECT contact delete is refused by the
+        // engine, in its own words naming the contract.
         throw refuse(
-          `${subject} is still referenced by ${openOpps} open opportunity(ies), ${openQuotes} active quote(s), ${activeContracts} active contract(s), so it cannot be deleted — and neither can its account, because deleting an account deletes its contacts. Close or reassign those records first.`,
+          `${subject} is still referenced by ${openOpps} open opportunity(ies), ${openQuotes} active quote(s), ${activeContracts} active contract(s), so it cannot be deleted — and neither can its account, because deleting an account deletes its contacts. Close or reassign the opportunities and quotes first, and give each contract another primary contact: a contract keeps its primary contact even after it ends.`,
           'DELETE_RESTRICTED',
           409,
         );

@@ -553,15 +553,15 @@ describe('account_protection', () => {
    * full strings below, one per branch, ending at the final period.
    *
    * Each refusal is the admin deleting a customer account the system wrote,
-   * with the deals and contracts named, plus one closed deal (ignored) and a
-   * deal on another account (not counted).
+   * with the deals (at the stages named — a closed one counts like an open one,
+   * #2019) and contracts named, plus a deal on another account (not counted).
    */
-  const customerWith = async (openStages: string[], contractStatuses: string[] = []): Promise<Rec> => {
+  const customerWith = async (stages: string[], contractStatuses: string[] = []): Promise<Rec> => {
     const acct = await accountOf({ type: 'customer' });
     const other = await accountOf();
+    const settled: Record<string, Rec> = { closed_won: { win_reason: 'better_price' }, closed_lost: { loss_reason: 'competitor' } };
     await verify.seed('crm_opportunity', [
-      ...openStages.map((stage) => ({ name: `Open ${++k}`, crm_account: acct.id, stage, amount: 10, close_date: '2030-06-30', owner_id: rep.id })),
-      { name: `Closed ${++k}`, crm_account: acct.id, stage: 'closed_won', win_reason: 'better_price', amount: 10, close_date: '2030-06-30', owner_id: rep.id },
+      ...stages.map((stage) => ({ name: `Deal ${++k}`, crm_account: acct.id, stage, ...settled[stage], amount: 10, close_date: '2030-06-30', owner_id: rep.id })),
       { name: `Elsewhere ${++k}`, crm_account: other.id, stage: 'proposal', amount: 10, close_date: '2030-06-30', owner_id: rep.id },
     ]);
     if (contractStatuses.length > 0) {
@@ -582,18 +582,18 @@ describe('account_protection', () => {
     }
     return acct;
   };
-  const refuseDelete = async (openStages: string[], contractStatuses: string[] = []) =>
-    verify.hooks.run('crm_account', 'delete', { id: (await customerWith(openStages, contractStatuses)).id }, as(admin));
+  const refuseDelete = async (stages: string[], contractStatuses: string[] = []) =>
+    verify.hooks.run('crm_account', 'delete', { id: (await customerWith(stages, contractStatuses)).id }, as(admin));
 
-  it('refuses to delete a customer account with ONE open opportunity (singular agreement)', async () => {
+  it('refuses to delete a customer account with ONE opportunity (singular agreement)', async () => {
     await expect(refuseDelete(['proposal'])).rejects.toThrow(
-      'Cannot delete customer account: 1 open opportunity still references it. Close or reassign it first.',
+      'Cannot delete customer account: 1 opportunity, open or closed, still references it. Delete the opportunity first, or mark the account inactive to retire it instead.',
     );
   });
 
-  it('refuses to delete a customer account with SEVERAL open opportunities (plural agreement)', async () => {
+  it('refuses to delete a customer account with SEVERAL opportunities (plural agreement)', async () => {
     await expect(refuseDelete(['proposal', 'negotiation'])).rejects.toThrow(
-      'Cannot delete customer account: 2 open opportunities still reference it. Close or reassign them first.',
+      'Cannot delete customer account: 2 opportunities, open or closed, still reference it. Delete the opportunities first, or mark the account inactive to retire it instead.',
     );
   });
 
@@ -601,12 +601,12 @@ describe('account_protection', () => {
     // The defect was a stitched sentence, so guard the halves that were wrong
     // rather than only the halves that were right.
     const one = await refuseDelete(['proposal']).catch((e: Error) => e.message);
-    expect(one).not.toMatch(/opportunity still reference /);   // plural verb on a singular noun
-    expect(one).not.toMatch(/reassign them/);                  // plural pronoun on one record
+    expect(one).not.toMatch(/closed, still reference /);       // plural verb on a singular noun
+    expect(one).not.toMatch(/Delete the opportunities/);       // plural object on one record
 
     const two = await refuseDelete(['proposal', 'negotiation']).catch((e: Error) => e.message);
-    expect(two).not.toMatch(/opportunities still references/); // singular verb on a plural noun
-    expect(two).not.toMatch(/reassign it first/);              // singular pronoun on two records
+    expect(two).not.toMatch(/closed, still references/);       // singular verb on a plural noun
+    expect(two).not.toMatch(/Delete the opportunity first/);   // singular object on two records
   });
 
   /**
@@ -623,25 +623,33 @@ describe('account_protection', () => {
   };
 
   /**
-   * ⚠️ MEASURED DEFECT — reported as a finding on this card, pinned here so the
-   * fix is noticed. The guard counts OPEN deals only, so it lets a customer
-   * account whose deals are all closed through — and its own refusal for an
-   * open deal tells the user to "Close or reassign it first". Closing is not
-   * enough: `crm_opportunity.crm_account` is required and does not cascade, so
-   * the engine refuses the delete all the same, while any deal, closed or
-   * not, is still on the account. Measured on 17.7.0 through
-   * `DELETE /api/v1/data/crm_account/:id` as the admin: 409 with the guard's
-   * sentence for one open deal; the deal closed (`PATCH` → `closed_lost`, 200);
-   * the same DELETE → 409 `DELETE_RESTRICTED`, dependentObject
-   * `crm_opportunity`.
+   * A closed deal is the account's sales history, and it keeps the account
+   * (#2019). `crm_opportunity.crm_account` is required and does not cascade, so
+   * the engine refuses the delete while ANY deal names the account, and a
+   * closed deal cannot be moved off it (the closed-deal freeze). The guard used
+   * to count open deals only and tell the user to "Close or reassign it
+   * first" — measured on 17.7.0 as the admin: the deal closed (200), the same
+   * delete answered 409 `DELETE_RESTRICTED` by the engine on
+   * `crm_opportunity`. Now the guard counts what the engine counts, so closing
+   * the deal changes nothing in the answer, and what its sentence says to do —
+   * delete the deal — is what lets the account go.
    */
-  it('⚠️ a customer account whose deals are all closed still cannot be deleted (measured defect)', async () => {
-    const err = await refuseDelete([]).then(() => null, (e: Error & Rec) => e);
-    expect(
-      err,
-      'the account with only closed deals was deleted — the defect is fixed: rewrite this case to pin the delete',
-    ).toBeTruthy();
-    await refusedByTheEngineNotTheGuard('crm_opportunity')(err!);
+  it('a closed deal keeps its customer account: closing it changes nothing, deleting it frees the account', async () => {
+    const acct = await customerWith(['proposal']);
+    const [deal] = await verify.rows('crm_opportunity', { crm_account: acct.id });
+    const refusal = 'Cannot delete customer account: 1 opportunity, open or closed, still references it. Delete the opportunity first, or mark the account inactive to retire it instead.';
+    const deleteAccount = () => verify.hooks.run('crm_account', 'delete', { id: acct.id }, as(admin));
+
+    await expect(deleteAccount()).rejects.toThrow(refusal);
+    await verify.hooks.run('crm_opportunity', 'update', { id: deal!.id, stage: 'closed_lost', loss_reason: 'competitor' }, as(admin));
+    const err = await deleteAccount().then(() => null, (e: Error & Rec) => e);
+    expect(err, 'the account was deleted with its closed deal still on it').toBeTruthy();
+    expect(err!.message).toBe(refusal);
+    expect(err).toMatchObject({ code: 'DELETE_RESTRICTED', status: 409 });
+
+    await verify.hooks.run('crm_opportunity', 'delete', { id: deal!.id }, as(admin));
+    await expect(deleteAccount()).resolves.toBeDefined();
+    expect(await verify.rows('crm_account', { id: acct.id })).toEqual([]);
   });
 
   it('the guard only protects customer accounts — a prospect’s deal is the engine’s refusal, and a bare prospect goes', async () => {
@@ -688,8 +696,8 @@ describe('account_protection', () => {
    * 17.7.0, the delete is refused all the same — by the engine, on the
    * account's CONTACTS: the cascade reaches a contact while the contracts
    * naming it as their required primary contact still exist. (The fixture
-   * also carries one closed deal, so the account stays undeletable until the
-   * closed-deals case above is fixed too.)
+   * carries no deal on the account: a closed one keeps the account by design
+   * since #2019, and would answer before the cascade this case measures.)
    */
   it('⚠️ an account whose contracts are all draft, expired or terminated still cannot be deleted (measured defect)', async () => {
     const err = await refuseDeleteForContracts(['draft', 'in_approval', 'expired', 'terminated'])
@@ -701,10 +709,10 @@ describe('account_protection', () => {
     await refusedByTheEngineNotTheGuard('crm_contract')(err!);
   });
 
-  it('open opportunities are reported before activated contracts', async () => {
+  it('opportunities are reported before activated contracts', async () => {
     // One refusal at a time, opportunities first — the sentence a user reads
     // must not change depending on which count the engine answers first.
-    await expect(refuseDelete(['proposal'], ['activated'])).rejects.toThrow(/1 open opportunity still references it/);
+    await expect(refuseDelete(['proposal'], ['activated'])).rejects.toThrow(/1 opportunity, open or closed, still references it/);
   });
 
   // ─── billing_country / territory derivation (#621, #639) ─────────────
@@ -920,27 +928,49 @@ describe('contact_integrity', () => {
   });
 
   /**
-   * ⚠️ MEASURED DEFECT — reported as a finding on this card, pinned here so the
-   * fix is noticed. A settled CONTRACT is not counted by the guard either, and
-   * the guard's own refusal for an active one tells the user to "Close or
-   * reassign those records first". Closing is not enough: the contract's
-   * primary contact is required and does not cascade, so the ENGINE refuses
-   * the delete (its envelope names the dependent object), never the guard's
-   * sentence. Measured on 17.7.0 through `DELETE /api/v1/data/crm_contact/:id`
-   * as the admin: 409 with the guard's sentence while the contract is
-   * activated; the contract terminated (`PATCH`, 200), then expired; the same
-   * DELETE → 409 `DELETE_RESTRICTED`, dependentObject `crm_contract`, both
-   * times.
+   * A contract keeps its primary contact after it ends (#2019). The contract is
+   * the account's signed record and is kept; its `crm_contact` is required, so
+   * the engine refuses to delete the person while ANY contract names them,
+   * activated or ended. The guard's sentence for an activated contract used to
+   * end "Close or reassign those records first" — measured on 17.7.0 as the
+   * admin: the contract terminated (200), then expired; the same delete
+   * answered 409 `DELETE_RESTRICTED` by the engine on `crm_contract`, both
+   * times. Ending the contract still changes nothing; what the sentence now
+   * says to do — give the contract another primary contact — lets the person
+   * go, and the contract stays.
+   *
+   * The ended contract is the ENGINE's refusal, not the guard's, on purpose:
+   * the guard counts activated contracts only, because it also runs inside an
+   * account delete, which takes ended contracts with it (see `contact.hook.ts`).
    */
-  it('⚠️ a contact whose only contract is expired still cannot be deleted (measured defect)', async () => {
-    const underContract = await referenced({ contract: 'expired' });
-    const err = await deleteContact(underContract).then(() => null, (e: Error & Rec) => e);
-    expect(
-      err,
-      'the contact under an expired contract was deleted — the defect is fixed: rewrite this case to pin the delete',
-    ).toBeTruthy();
-    expect(err!.message).not.toMatch(/open opportunity\(ies\)|active contract\(s\)/);
-    expect(err).toMatchObject({ code: 'DELETE_RESTRICTED', dependentObject: 'crm_contract' });
+  it('an ended contract keeps its primary contact: ending it changes nothing, another primary contact frees the person', async () => {
+    for (const ending of ['terminated', 'expired']) {
+      const contact = await referenced({ contract: 'activated' });
+      const [contract] = await verify.rows('crm_contract', { crm_contact: contact.id });
+
+      const guarded = await deleteContact(contact).then(() => null, (e: Error & Rec) => e);
+      expect(guarded, `the contact under an activated contract was deleted (${ending} leg)`).toBeTruthy();
+      expect(guarded).toMatchObject({ code: 'DELETE_RESTRICTED', status: 409 });
+      expect(guarded!.message, ending).toContain('1 active contract(s)');
+      expect(guarded!.message, ending).toContain('give each contract another primary contact: a contract keeps its primary contact even after it ends.');
+      expect(guarded!.message, ending).not.toContain('Close or reassign those records');
+
+      // An admin terminates; only the contract_expiration flow ages one out.
+      await (ending === 'terminated'
+        ? verify.hooks.run('crm_contract', 'update', { id: contract!.id, status: ending }, as(admin))
+        : systemUpdate(verify, 'crm_contract', { id: contract!.id, status: ending }));
+      const err = await deleteContact(contact).then(() => null, (e: Error & Rec) => e);
+      expect(err, `the contact was deleted while its ${ending} contract still named it`).toBeTruthy();
+      expect(err).toMatchObject({ code: 'DELETE_RESTRICTED', status: 409, dependentObject: 'crm_contract' });
+
+      const [colleague] = await verify.seed('crm_contact', [{
+        first_name: 'Grace', last_name: `Hopper ${++k}`, email: `colleague${k}@hooks-runtime-sales.test`,
+        crm_account: contract!.crm_account, owner_id: rep.id,
+      }]);
+      await verify.hooks.run('crm_contract', 'update', { id: contract!.id, crm_contact: colleague!.id }, as(admin));
+      await expect(deleteContact(contact), ending).resolves.toBeDefined();
+      expect(await verify.rows('crm_contract', { id: contract!.id, status: ending }), 'the contract went with the person').toHaveLength(1);
+    }
   });
 });
 
