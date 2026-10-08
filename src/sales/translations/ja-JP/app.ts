@@ -577,8 +577,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         home_my_tasks: { label: '私のオープンタスク' },
         ai_briefing: {
           title: 'AI アシスタントに質問',
-          description:
-            'ページ右端からアシスタントパネルを開き、「今日は何に集中すべきか？」と尋ねてください — リアルタイムのパイプライン、スキーマ、取引先情報を把握しています。',
           label: '今日の AI アシスタント',
         },
         upcoming_events: { title: '今後の予定', label: '今後の予定' },

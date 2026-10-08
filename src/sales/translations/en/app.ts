@@ -211,8 +211,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         home_tabs: { label: 'Home Tabs' },
         ai_briefing: {
           title: 'Ask the AI Assistant',
-          description:
-            'Open the assistant panel from the right edge of the page and ask "what should I focus on today?" — it sees your live pipeline, schema, and accounts.',
           label: 'Today with the AI Assistant',
         },
         upcoming_events: { title: 'Upcoming Events', label: 'Upcoming Events' },

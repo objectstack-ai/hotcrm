@@ -45,4 +45,5 @@ Still reported, on purpose:
   Snapshot*. The lint says the template form keeps working. Moving the arithmetic
   to CEL changes how it divides, so that is its own change with its own tests.
 - The *Ask the AI Assistant* card's `description` on Sales Home. A
-  ruling-backed guard pins it (#1216).
+  ruling-backed guard pinned it. A later change in this release (#1581) moves
+  the paragraph into the card's body, which clears this finding too.

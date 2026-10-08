@@ -16,7 +16,7 @@
     "build": "objectstack build",
     "typecheck": "tsc --noEmit",
     "validate": "objectstack validate",
-    "lint": "objectstack lint",
+    "lint": "objectstack lint --strict",
     "lint:i18n-gate": "node scripts/check-lint-i18n-gate.mjs",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",

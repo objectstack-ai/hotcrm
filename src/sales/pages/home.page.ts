@@ -294,22 +294,31 @@ export const SalesHomePage: Page = {
           label: 'Today with the AI Assistant',
           properties: {
             title: 'Ask the AI Assistant',
-            // ⚠️ This paragraph does not reach the screen, and moving it is NOT
-            // this card's to do. `description` is not a prop `page:card`
-            // declares (`ComponentPropsMap`, @objectstack/spec/ui): the props
-            // schema strips it, and objectui's card renderer builds its
-            // `<Card>` from `title` / `bordered` / `children` / `footer` only.
-            // So this is a third title-only box beside the two #734 fixed —
-            // but the copy is pinned in place by the #1002 persona guard in
-            // `test/metadata-references.test.ts`, which reads
-            // `properties.description` and asserts it is a string, and that
-            // guard encodes a maintainer ruling. Relocating the copy to an
-            // `element:text` child means rewriting a ruling-backed guard, which
-            // is a different card than "fill the two empty containers". Filed
-            // as #1216; exempted by name in the rule below until then.
-            description:
-              'Open the assistant panel from the right edge of the page and ask "what should I focus on today?" — it sees your live pipeline, schema, and accounts.',
             bordered: true,
+            // The paragraph is an `element:text` child (#1581). It used to be
+            // `properties.description`, which `page:card` does not declare, so
+            // the card rendered as a title over nothing. `content` is not on
+            // the locale pack's page-component face, so the four languages
+            // live here as an inline locale map, the spec's route for page
+            // prose. The #1002 persona guard in
+            // `test/metadata-references.test.ts` reads this child.
+            children: [
+              {
+                type: 'element:text',
+                id: 'ai_briefing_text',
+                properties: {
+                  content: {
+                    en: 'Open the assistant panel from the right edge of the page and ask "what should I focus on today?" — it sees your live pipeline, schema, and accounts.',
+                    'zh-CN':
+                      '从页面右侧打开助手面板，询问"我今天应该关注什么？"——它可以实时查看您的销售管道、架构与客户信息。',
+                    'es-ES':
+                      'Abra el panel del asistente desde el borde derecho de la página y pregunte "¿en qué debería concentrarme hoy?" — ve su flujo de ventas, esquema y cuentas en tiempo real.',
+                    'ja-JP':
+                      'ページ右端からアシスタントパネルを開き、「今日は何に集中すべきか？」と尋ねてください — リアルタイムのパイプライン、スキーマ、取引先情報を把握しています。',
+                  },
+                },
+              },
+            ],
           },
         },
         {

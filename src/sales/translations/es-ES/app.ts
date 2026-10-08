@@ -575,8 +575,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         home_my_tasks: { label: 'Mis Tareas Abiertas' },
         ai_briefing: {
           title: 'Pregúntale al Asistente de IA',
-          description:
-            'Abra el panel del asistente desde el borde derecho de la página y pregunte "¿en qué debería concentrarme hoy?" — ve su flujo de ventas, esquema y cuentas en tiempo real.',
           label: 'Hoy con el Asistente de IA',
         },
         upcoming_events: { title: 'Próximos Eventos', label: 'Próximos Eventos' },
