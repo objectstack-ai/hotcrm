@@ -74,6 +74,8 @@ process.env.OS_REGISTRY_LOG ??= 'silent';
  * caller there is, and treating it as one blanks the owner of every seeded row.
  * The engine's context builder is what separates them: a system context reaches
  * a hook as `session: { isSystem: true }`, an anonymous one carries no session.
+ * `guestInsert` writes under the execution context the platform's anonymous
+ * form door (`POST /forms/:slug/submit`) writes under.
  */
 const GUEST = {} as AnyRec;
 
@@ -200,11 +202,15 @@ describe('crm_case — guest submission sanitisation', () => {
       ).not.toHaveProperty(retired);
     }
 
-    // The planted owner is gone, and `case_auto_assign` — which runs after this
-    // strip, and only on a case the strip left ownerless — placed the case on
-    // the real service agent instead.
+    // The planted owner is gone. `case_auto_assign` runs after this strip, and
+    // only on a case the strip left ownerless — but a public-form submission
+    // writes under the `guest_portal` grant, which cannot read the agent pool,
+    // so the assignment stands down and the case lands unowned, for the triage
+    // queue (`case_unassigned_triage_sharing`). Measured under the anonymous
+    // door's own execution context; an empty context (which no door produces)
+    // read the pool and placed the case on the agent.
     expect(stored.owner_id).not.toBe('planted_user');
-    expect(stored.owner_id).toBe(id.agent);
+    expect(stored.owner_id).toBeNull();
   }, 60_000);
 
   it('derives is_closed from status rather than letting a guest state it', async () => {

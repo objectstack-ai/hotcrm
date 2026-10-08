@@ -615,8 +615,26 @@ describe('record-change flows under a user-less trigger (#684)', () => {
     expect(String(run?.error ?? '')).not.toContain('[runAs]');
     const [stored] = await verify.rows('crm_lead', { id: lead.id });
     expect(stored!.next_followup_date, 'hot lead got no SLA date').toBeTruthy();
-    expect(stored!.owner_id, 'the web lead was routed to nobody').toBe(rep.id);
-    expect(await notified(rep.id, 'lead_routing', `/crm_lead/${lead.id}`)).toHaveLength(1);
+    // The anonymous form grant cannot read the rep pool, so `lead_auto_assign`
+    // leaves a web lead unowned (its documented stand-down).
+    expect(stored!.owner_id).toBeNull();
+  });
+
+  it('lead_assignment alerts the owner of an integration-written lead', async () => {
+    // The integration shape: a lead that arrives OWNED, with no trigger user.
+    // The system's seed door writes it without firing record-change flows, so
+    // the flow is handed the stored row the way the trigger hands it a write —
+    // user-less.
+    const [lead] = await verify.seed('crm_lead', [{
+      first_name: 'Ada', last_name: `Integration ${++k}`, company: `Integration Co ${k}`,
+      email: `integration${k}@flow-record-change.test`, rating: 5, owner_id: rep.id,
+    }]);
+    const [held] = await verify.rows('crm_lead', { id: lead!.id });
+    const result = await runRecordFlow(verify, 'lead_assignment', 'crm_lead', held!);
+    expect(String(result.error ?? '')).not.toContain('[runAs]');
+    const [stored] = await verify.rows('crm_lead', { id: lead!.id });
+    expect(stored!.next_followup_date, 'hot lead got no SLA date').toBeTruthy();
+    expect(await notified(rep.id, 'lead_routing', `/crm_lead/${lead!.id}`)).toHaveLength(1);
   });
 
   it('…and gets neither SLA nor alert once runAs is dropped', async () => {

@@ -223,22 +223,34 @@ export const predicateUpdate = async (
   stack.kernel.getService<Row>('objectql').update(object, doc, { where, multi: true, context: await stack.contextFor(as) });
 
 /**
- * A GUEST write: no user AND no `isSystem` — the context the app's guest
- * (web-to-case / web-to-lead) branches key on. `hooks.run` needs a signed-in
- * person, `seed` is the most trusted caller there is, and an unauthenticated
- * `POST /api/v1/data/<object>` on the stack answers 401 `UNAUTHENTICATED`, so
- * the handle offers no way to reach that branch at all.
+ * A GUEST write: an anonymous public-form submission (web-to-case /
+ * web-to-lead) — no user AND no `isSystem`, the context the app's guest
+ * branches key on. The platform's anonymous door is `POST /forms/:slug/submit`
+ * (`@objectstack/rest` `registerFormEndpoints`), which writes under exactly
+ * this execution context: the form's one-object grant, the `guest_portal`
+ * permission set, `anonymous`. The handle's dispatcher does not serve that
+ * route (measured on 17.7.0: `ENDPOINT_NOT_FOUND`), `hooks.run` needs a
+ * signed-in person, `seed` is the most trusted caller there is, and an
+ * unauthenticated `POST /api/v1/data/<object>` answers 401, so the handle
+ * offers no way to reach that branch at all. The door also drops every key the
+ * form does not collect; a fixture that passes another key is modelling a form
+ * that collects it.
  */
 export const guestInsert = (stack: VerifyStack, object: string, doc: Row): Promise<Row> =>
-  stack.kernel.getService<Row>('objectql').insert(object, doc, { context: {} });
+  stack.kernel.getService<Row>('objectql').insert(object, doc, {
+    context: { publicFormGrant: { object }, permissions: ['guest_portal'], anonymous: true },
+  });
 
 /**
  * Run a record-triggered flow on `record` through the booted automation
- * service, the way the record-change trigger hands it a write — for a record
- * the engine does NOT hold. Every write door fires a record flow on a row the
- * engine just wrote; the case where that row is gone by the time the flow
- * reads it back (deleted between the trigger and the flow's `get_record`) has
- * no door at all. Resolves with the engine's own result.
+ * service, the way the record-change trigger hands it a write, with no trigger
+ * user — for the two triggers no handle door produces. Every write door fires a
+ * record flow on a row the engine just wrote, as a person (`hooks.run`) or not
+ * at all (`seed` skips record-change flows, as the platform's seed replay
+ * does). So neither a USER-LESS trigger (an integration's or a system job's
+ * write) nor a record the engine no longer holds (deleted between the trigger
+ * and the flow's `get_record`) has a door. Resolves with the engine's own
+ * result.
  */
 export const runRecordFlow = (stack: VerifyStack, flowName: string, object: string, record: Row): Promise<Row> =>
   stack.kernel.getService<Row>('automation').execute(flowName, {

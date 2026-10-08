@@ -1,14 +1,11 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { ObjectQL, applySystemFields } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
-import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
+import { describe, it, expect, beforeAll } from 'vitest';
+import type { VerifyStack } from '@objectstack/verify';
 import { parseFilterAST } from '@objectstack/spec/data';
 import stack from './helpers/composed-stack';
-import caseHooks from '../src/service/objects/case.hook';
 import { CLOSED_CASE_STATUSES } from '../src/service/objects/_case-assignment';
-import { makeCtx } from './helpers/hook-harness';
+import { hotcrmStack, hotcrmMemoryStack, signUpPerson } from './helpers/verify-stack';
 
 /**
  * A RESOLVED case is not at risk — the ⏰ SLA at Risk tab and the SLA sweep
@@ -39,72 +36,29 @@ import { makeCtx } from './helpers/hook-harness';
  * `not_in` ever stopped excluding, and this file would stay green if a sixth
  * spelling grew somewhere the view does not reach.
  *
- * ### Both drivers, and the fixture is derived rather than declared
+ * ### Both datasources, and the fixture is written rather than declared
  *
- * `driver-memory` stores only the columns a row was written with; the SQL
- * driver materialises every declared column. `is_closed` is exactly the kind of
+ * The shipped app is booted through `@objectstack/verify`'s handle twice: on
+ * the SQL datasource (every declared column materialised) and on the sparse one
+ * (`driver-memory`, which stores only the columns a row was written with — the
+ * shape `driver-mongodb` also produces). `is_closed` is exactly the kind of
  * boolean an absent-vs-NULL difference gets wrong, so the matrix runs twice.
  *
- * ⚠️ The fixture does not ASSERT `is_closed: false` on the resolved case — it
- * runs the shipped `case_sla_defaults` handler and stores what the app itself
- * derives. A hand-written flag would make the "would otherwise qualify" claim
- * a fiction of this test; derived, it is a measurement of the product. The
- * `otherwise qualifies` block below then proves the claim rather than asserting
- * it, by running the OLD spelling over the same rows and showing the resolved
- * case coming back.
+ * ⚠️ The fixture does not ASSERT `is_closed: false` on the resolved case — a
+ * service agent writes each case through the engine's write door
+ * (`hooks.run`), so the shipped `case_sla_defaults` hook derives the flag and
+ * the engine stores what the app itself derives. A hand-written flag would
+ * make the "would otherwise qualify" claim a fiction of this test; derived, it
+ * is a measurement of the product. The `otherwise qualifies` block below then
+ * proves the claim rather than asserting it, by running the OLD spelling over
+ * the same rows and showing the resolved case coming back.
  */
 
 type AnyRec = Record<string, any>;
 
-const objects: AnyRec[] = ((stack as AnyRec).objects ?? []) as AnyRec[];
 const views: AnyRec[] = ((stack as AnyRec).views ?? []) as AnyRec[];
-const kase = objects.find((o) => o.name === 'crm_case') as AnyRec;
 const caseViews = views.find((v) => v.list?.data?.object === 'crm_case') as AnyRec;
 const slaAtRisk = caseViews?.listViews?.sla_at_risk as AnyRec;
-
-/** The columns these fixtures write, plus the ones `crm_case` REQUIRES. */
-const CASE_COLUMNS = ['subject', 'description', 'status', 'priority', 'resolution', 'is_closed'];
-
-/** The shipped derivation hook, reached by NAME off the registered set. */
-const slaDefaults = (caseHooks as AnyRec[]).find((h) => h.name === 'case_sla_defaults') as AnyRec;
-
-/**
- * One fixture row, with `is_closed` DERIVED by the shipped hook.
- *
- * `ctx.api` is deliberately absent: the handler's only read
- * (`crm_account` tier lookup) is guarded by `&& api`, and none of these rows
- * carries an account, so the derivation runs exactly as it does in production.
- *
- * ⚠️ `session: { isSystem: true }` is load-bearing, and it mirrors the context
- * these rows are actually inserted through. The hook's guest-sanitisation
- * branch is `!ctx.previous && !ctx.user?.id && !ctx.session?.isSystem` (#1133),
- * so a synthetic ctx that omits the session is read as an anonymous
- * web-to-case submitter — which nulls `resolution` and makes the closed
- * fixture fail the app's own `resolution_required_for_closed` rule. Measured,
- * not guessed: that is what this file did on its first run.
- *
- * ⚠️ The ctx comes from `makeCtx` (#1298), so `ctx.input` is the engine's
- * flat-input Proxy rather than a plain object. A hand-built ctx would be the
- * shape production never uses, and `test/hook-input-shape.test.ts` is the pin
- * that says so — it caught this file on its first full run.
- */
-const derivedRow = async (over: AnyRec): Promise<AnyRec> => {
-  const ctx = makeCtx({
-    event: 'beforeInsert',
-    input: {
-      description: 'Seeded by sla-at-risk-live-work.test.ts',
-      status: 'new',
-      priority: 'low',
-      ...(over.status === 'closed' ? { resolution: 'Resolved and closed.' } : {}),
-      ...over,
-    },
-    session: { isSystem: true },
-  });
-  await slaDefaults.handler(ctx as never);
-  const row: AnyRec = {};
-  for (const c of CASE_COLUMNS) if (ctx.input[c] !== undefined) row[c] = ctx.input[c];
-  return row;
-};
 
 /** The SHIPPED view filter, lowered by the platform's own `parseFilterAST`. */
 const loweredViewWhere = (rules: AnyRec[]): AnyRec => ({
@@ -135,70 +89,57 @@ describe('the ⏰ SLA at Risk view still selects on the live-work predicate', ()
 
 /**
  * Both row shapes. `memory` is the sparse one (`driver-mongodb` produces it
- * too); `sqlite-wasm` lowers the filter to real SQL over materialised columns.
+ * too); `sqlite` lowers the filter to real SQL over materialised columns.
  */
-for (const driverName of ['memory', 'sqlite'] as const) {
+for (const [driverName, boot] of [['memory', hotcrmMemoryStack], ['sqlite', hotcrmStack]] as const) {
   describe(`a resolved case is not at risk — over ${driverName}`, () => {
-    let ql: AnyRec;
+    let verify: VerifyStack;
+    /** The subjects THIS block wrote — the boot replays the app's seed cases too. */
+    const subject = (s: string) => `${s} (${driverName})`;
+    const OURS = ['live-critical', 'resolved-high', 'closed-high', 'live-low'].map(subject);
 
     beforeAll(async () => {
-      if (driverName === 'sqlite') {
-        const driver = new SqliteWasmDriver({ filename: ':memory:' });
-        await driver.connect();
-        const materialized = applySystemFields(kase as never, { multiTenant: false }) as AnyRec;
-        await driver.initObjects([{
-          name: kase.name,
-          fields: materialized.fields as Record<string, unknown>,
-          indexes: materialized.indexes,
-        } as never]);
-        ql = (await ObjectQL.create({
-          datasources: { default: driver },
-          objects: { crm_case: kase } as never,
-        })) as never;
-      } else {
-        ql = (await ObjectQL.create({
-          datasources: { default: new InMemoryDriver({ persistence: false }) },
-          objects: { crm_case: kase } as never,
-        })) as never;
-      }
-
-      const api = ql.createContext({ isSystem: true });
+      verify = await boot();
+      // The person who opens and works cases.
+      const agent = await signUpPerson(verify, `agent-${driverName}@sla-at-risk-live-work.test`, {
+        name: 'At-Risk Agent', positions: ['service_agent'], permissionSets: ['service_agent'],
+      });
       for (const over of [
         // The row the tab exists for.
-        { subject: 'live-critical', status: 'in_progress', priority: 'critical' },
+        { subject: subject('live-critical'), status: 'in_progress', priority: 'critical' },
         // The row #1325 is about: resolved, and high priority, so it satisfies
         // every OTHER clause of the view's filter.
-        { subject: 'resolved-high', status: 'resolved', priority: 'high' },
+        { subject: subject('resolved-high'), status: 'resolved', priority: 'high' },
         // Closed was already excluded by the flag — it must stay excluded.
-        { subject: 'closed-high', status: 'closed', priority: 'high' },
+        { subject: subject('closed-high'), status: 'closed', priority: 'high' },
         // The priority half of the filter must survive the change untouched.
-        { subject: 'live-low', status: 'new', priority: 'low' },
+        { subject: subject('live-low'), status: 'new', priority: 'low' },
       ]) {
-        await api.object('crm_case').insert(await derivedRow(over));
+        await verify.hooks.run('crm_case', 'insert', {
+          description: 'Seeded by sla-at-risk-live-work.test.ts',
+          ...(over.status === 'resolved' || over.status === 'closed' ? { resolution: 'Resolved and closed.' } : {}),
+          ...over,
+        }, { as: agent.token });
       }
-    }, 60_000);
-
-    afterAll(async () => {
-      await ql?.close();
-    });
+    }, 120_000);
 
     const subjectsFor = async (rules: AnyRec[]): Promise<string[]> => {
-      const api = ql.createContext({ isSystem: true });
-      const rows: AnyRec[] = await api.object('crm_case').find({ where: loweredViewWhere(rules) });
-      return rows.map((r) => String(r.subject)).sort();
+      const rows = await verify.rows('crm_case', {
+        $and: [loweredViewWhere(rules), { subject: { $in: OURS } }],
+      });
+      return rows.map((r) => String(r.subject).replace(` (${driverName})`, '')).sort();
     };
 
     it('the app itself stores is_closed:false on a resolved case — the root cause', async () => {
-      const api = ql.createContext({ isSystem: true });
-      const rows: AnyRec[] = await api.object('crm_case').find({ where: { subject: 'resolved-high' } });
+      const rows = await verify.rows('crm_case', { subject: subject('resolved-high') });
       expect(rows, 'the resolved fixture never landed').toHaveLength(1);
       expect(
-        rows[0].is_closed,
+        rows[0]!.is_closed,
         'the derivation changed: `is_closed` now flips on `resolved` too. If that is ' +
           'deliberate, this whole file and the #1145 predicate need rereading — the flag ' +
           'and the status set would no longer disagree.',
       ).toBeFalsy();
-      expect(rows[0].status).toBe('resolved');
+      expect(rows[0]!.status).toBe('resolved');
     });
 
     it('the resolved case would OTHERWISE qualify — the old spelling still returns it', async () => {

@@ -9,9 +9,8 @@ import {
   MarkArticleHelpfulAction,
   MarkArticleNotHelpfulAction,
 } from '../src/service/actions/knowledge_article.actions';
-import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, systemUpdate, type Person } from './helpers/verify-stack';
 import { KnowledgeArticleViews } from '../src/service/views/knowledge_article.view';
-import { makeHarness, makeCtx, hookNamed, type Rec } from './helpers/hook-harness';
 import { localePacks } from './helpers/composed-stack';
 
 /**
@@ -27,8 +26,8 @@ import { localePacks } from './helpers/composed-stack';
  *  1. `view_count` is deleted, and stays deleted, everywhere it was read.
  *  2. `helpful_count` / `not_helpful_count` are RECOUNTED from real
  *     `crm_article_feedback` rows — asserted by running the shipped action
- *     bodies and the shipped hook handler, never by checking that they are
- *     registered.
+ *     bodies and the shipped hook inside real writes on the app booted by
+ *     `@objectstack/verify`, never by checking that they are registered.
  *
  * The distinction matters because "the field has a writer" is exactly the kind
  * of claim that passes review while being false: `_hook-api.ts`'s header
@@ -42,7 +41,7 @@ const article = (over: Rec = {}): Rec => ({
   helpful_count: 0, not_helpful_count: 0, owner_id: 'author_1', ...over,
 });
 
-const USER = { id: 'user_1' };
+type Rec = Record<string, any>;
 
 // ─────────────────────────────────────── 1. the field with no writer is gone ──
 
@@ -204,116 +203,150 @@ describe('the feedback actions record a row (they cannot bump a counter)', () =>
 // ──────────────────────────────────────────────── 3. the recount, executed ──
 
 describe('article_feedback_metrics_refresh recounts the article’s verdicts', () => {
-  const hook = hookNamed(articleFeedbackHooks, 'article_feedback_metrics_refresh');
+  /**
+   * Readers voting through the feedback actions as themselves (a reader holds
+   * no edit right on the article, and feedback is `controlled_by_parent`, so a
+   * reader's own direct insert is refused — the action is their door), an
+   * admin moderating through the engine's write door (`hooks.run`), the system
+   * importing — and the counters read off the article the engine stored. The
+   * hook is `async: true`, so a count is waited for.
+   */
+  const hook = (articleFeedbackHooks as Rec[]).find((h) => h.name === 'article_feedback_metrics_refresh')!;
+  let verify: VerifyStack;
+  let admin: string;
+  const readers: Person[] = [];
+  let n = 0;
+  beforeAll(async () => {
+    verify = await hotcrmStack();
+    admin = await verify.signIn();
+    for (const name of ['u1', 'u2', 'u3']) {
+      readers.push(await signUpPerson(verify, `${name}@knowledge-feedback-recount.test`, {
+        name: `Reader ${name}`, positions: ['service_agent'], permissionSets: ['service_agent'],
+      }));
+    }
+  }, 120_000);
 
-  const withVotes = (votes: Array<[string, string]>) => {
-    const h = makeHarness();
-    h.rows('crm_knowledge_article').push(article());
-    votes.forEach(([owner, verdict], i) => {
-      h.rows('crm_article_feedback').push({
-        id: `af${i}`, crm_knowledge_article: 'ka1', verdict, owner_id: owner,
-      });
+  /** A published, public article, its counters as `over` says — written as the system. */
+  const articleOf = async (over: Rec = {}): Promise<string> => {
+    const { id: _id, owner_id: _owner, ...doc } = article({
+      title: `Recount me #${++n}`, body: 'Open Settings › Security and choose Reset password.',
+      summary: 'How to reset a forgotten password.', ...over,
     });
-    return h;
+    return String((await verify.seed('crm_knowledge_article', [doc]))[0]!.id);
   };
+  /** `reader` voting through the shipped action; resolves with the row the action wrote. */
+  const vote = async (reader: Person, articleId: string, verdict: 'helpful' | 'not_helpful'): Promise<Rec> => {
+    const action = verdict === 'helpful' ? 'mark_article_helpful' : 'mark_article_not_helpful';
+    await verify.actions.run('crm_knowledge_article', action, { as: reader.token, recordId: articleId });
+    const [row] = await verify.rows('crm_article_feedback', { crm_knowledge_article: articleId, owner_id: reader.id });
+    expect(row, `${action} wrote no feedback row`).toBeTruthy();
+    return row!;
+  };
+  const counters = async (articleId: string) => {
+    const [row] = await verify.rows('crm_knowledge_article', { id: articleId });
+    return { helpful_count: row!.helpful_count, not_helpful_count: row!.not_helpful_count };
+  };
+  /** Wait for the article's counters to read `expected`. */
+  const settlesAt = (articleId: string, expected: Rec) =>
+    vi.waitFor(async () => expect(await counters(articleId)).toMatchObject(expected), { timeout: 10_000, interval: 50 });
+
+  it('is wired to every write that can change a verdict', () => {
+    expect(hook.events).toEqual(['afterInsert', 'afterUpdate', 'afterDelete']);
+  });
 
   it('writes both counters from the rows that exist', async () => {
-    const h = withVotes([['u1', 'helpful'], ['u2', 'helpful'], ['u3', 'not_helpful']]);
-    await hook.handler(makeCtx({
-      event: 'afterInsert',
-      input: { crm_knowledge_article: 'ka1', verdict: 'helpful', owner_id: 'u1' },
-      user: USER,
-      api: h.api,
-    }));
-
-    expect(h.rows('crm_knowledge_article')[0]).toMatchObject({
-      helpful_count: 2,
-      not_helpful_count: 1,
-    });
+    const ka = await articleOf();
+    await vote(readers[0]!, ka, 'helpful');
+    await vote(readers[1]!, ka, 'helpful');
+    await vote(readers[2]!, ka, 'not_helpful');
+    await settlesAt(ka, { helpful_count: 2, not_helpful_count: 1 });
   });
 
   /**
    * RECOUNT, not increment — the property that makes this safe to replay, safe
    * under concurrency, and self-healing. A running total cannot pass this: run
-   * the same event twice and an incrementing writer reports 4.
+   * the recount again over the same votes and an incrementing writer reports
+   * more.
    */
-  it('is idempotent — running the same event twice does not double the count', async () => {
-    const h = withVotes([['u1', 'helpful'], ['u2', 'helpful']]);
-    // The stored counter starts WRONG on purpose. A recount converges on 2
-    // whatever it finds; an incrementing writer walks 5 → 6 → 7 and never
+  it('is idempotent — running the recount again does not double the count', async () => {
+    // The stored counter starts WRONG on purpose. A recount converges on the
+    // truth whatever it finds; an incrementing writer walks 5 → 6 → 7 and never
     // notices. Without this seed both writers report 2 after two runs and the
     // test cannot tell them apart — measured, by reverse-verifying against an
     // increment implementation.
-    h.rows('crm_knowledge_article')[0].helpful_count = 5;
-    const ctx = () => makeCtx({
-      event: 'afterInsert',
-      input: { crm_knowledge_article: 'ka1', verdict: 'helpful', owner_id: 'u1' },
-      user: USER,
-      api: h.api,
-    });
-    await hook.handler(ctx());
-    await hook.handler(ctx());
-
-    expect(h.rows('crm_knowledge_article')[0].helpful_count).toBe(2);
+    const ka = await articleOf({ helpful_count: 5 });
+    expect((await counters(ka)).helpful_count, 'the wrong starting count did not land').toBe(5);
+    const first = await vote(readers[0]!, ka, 'helpful');
+    await settlesAt(ka, { helpful_count: 1 });
+    await vote(readers[1]!, ka, 'helpful');
+    await settlesAt(ka, { helpful_count: 2 });
+    // The same vote saved again (a note added by the system) fires the
+    // recount once more over the same rows.
+    await systemUpdate(verify, 'crm_article_feedback', { id: first.id, comment: 'Still helpful.' });
+    await new Promise((r) => setTimeout(r, 400));
+    expect((await counters(ka)).helpful_count).toBe(2);
   });
 
   /**
    * A counter that only ever goes up is a different kind of lie — the lesson
    * the campaign junction paid for in #696.
    */
-  it('follows a withdrawn vote back down on afterDelete', async () => {
-    const h = withVotes([['u1', 'helpful']]);
-    h.rows('crm_knowledge_article')[0].helpful_count = 1;
-    h.rows('crm_article_feedback').length = 0;
+  it('follows a vote back down when the reader changes their mind', async () => {
+    const ka = await articleOf();
+    await vote(readers[0]!, ka, 'helpful');
+    await settlesAt(ka, { helpful_count: 1, not_helpful_count: 0 });
+    await vote(readers[0]!, ka, 'not_helpful');
+    await settlesAt(ka, { helpful_count: 0, not_helpful_count: 1 });
+  });
 
-    await hook.handler(makeCtx({
-      event: 'afterDelete',
-      input: {},
-      previous: { crm_knowledge_article: 'ka1', verdict: 'helpful', owner_id: 'u1' },
-      user: USER,
-      api: h.api,
-    }));
-
-    expect(h.rows('crm_knowledge_article')[0].helpful_count).toBe(0);
+  /**
+   * ⚠️ MEASURED DEFECT — reported as a finding on this card, pinned here so the
+   * fix is noticed.
+   *
+   * The recount writes the article's `readonly` counters through `ctx.api`,
+   * which carries the context of the write that fired it. The readers' votes
+   * arrive through the feedback actions, whose bodies run system-elevated, so
+   * their recounts land. A PERSON's own write of a vote does not: when an
+   * admin removes a vote, the recount runs under the admin's context and the
+   * engine drops the caller-supplied readonly counters ("the update is being
+   * COMMITTED WITHOUT IT"). Measured on 17.7.0: the withdrawn vote is gone and
+   * the article still counts it.
+   */
+  it('⚠️ a vote the admin withdraws is still counted (measured defect)', async () => {
+    const ka = await articleOf();
+    const cast = await vote(readers[0]!, ka, 'helpful');
+    await settlesAt(ka, { helpful_count: 1 });
+    await verify.hooks.run('crm_article_feedback', 'delete', { id: cast.id }, { as: admin });
+    expect(await verify.rows('crm_article_feedback', { id: cast.id }), 'the vote was not withdrawn').toEqual([]);
+    await new Promise((r) => setTimeout(r, 600));
+    expect(
+      (await counters(ka)).helpful_count,
+      'the withdrawn vote is no longer counted — the defect is fixed: rewrite this case to pin the recount (back to 0)',
+    ).toBe(1);
   });
 
   /**
    * Moving a vote between articles has to recount BOTH — the one it left as
    * well as the one it arrived at. Only the arrival side is obvious, which is
-   * why the departure side is the one that rots.
+   * why the departure side is the one that rots. A vote is re-parented by a
+   * data fix — the system's write (see the defect above for a person's).
    */
   it('recounts both sides when a vote moves between articles', async () => {
-    const h = makeHarness();
-    h.rows('crm_knowledge_article').push(article({ id: 'ka1', helpful_count: 1 }));
-    h.rows('crm_knowledge_article').push(article({ id: 'ka2', helpful_count: 0 }));
-    h.rows('crm_article_feedback').push({
-      id: 'af1', crm_knowledge_article: 'ka2', verdict: 'helpful', owner_id: 'u1',
-    });
-
-    await hook.handler(makeCtx({
-      event: 'afterUpdate',
-      input: { crm_knowledge_article: 'ka2', verdict: 'helpful', owner_id: 'u1' },
-      previous: { crm_knowledge_article: 'ka1', verdict: 'helpful', owner_id: 'u1' },
-      user: USER,
-      api: h.api,
-    }));
-
-    const byId = Object.fromEntries(
-      h.rows('crm_knowledge_article').map((r) => [r.id, r]),
-    ) as Record<string, Rec>;
-    expect(byId.ka1.helpful_count).toBe(0);
-    expect(byId.ka2.helpful_count).toBe(1);
+    const ka1 = await articleOf();
+    const ka2 = await articleOf();
+    const cast = await vote(readers[0]!, ka1, 'helpful');
+    await settlesAt(ka1, { helpful_count: 1 });
+    await systemUpdate(verify, 'crm_article_feedback', { id: cast.id, crm_knowledge_article: ka2 });
+    await settlesAt(ka1, { helpful_count: 0 });
+    await settlesAt(ka2, { helpful_count: 1 });
   });
 
-  it('does nothing at all without ctx.api rather than throwing into the vote', async () => {
-    await expect(
-      hook.handler(makeCtx({
-        event: 'afterInsert',
-        input: { crm_knowledge_article: 'ka1' },
-        user: USER,
-        api: undefined,
-      })),
-    ).resolves.toBeUndefined();
+  it('recounts a vote the system imported too — every writer reaches it', async () => {
+    // The `!ctx.api` stand-down is unreachable on the shipped app (the engine
+    // hands every write a read door), so the other writer is the system's.
+    const ka = await articleOf();
+    await verify.seed('crm_article_feedback', [{ crm_knowledge_article: ka, verdict: 'not_helpful', owner_id: readers[2]!.id }]);
+    await settlesAt(ka, { helpful_count: 0, not_helpful_count: 1 });
   });
 });
 

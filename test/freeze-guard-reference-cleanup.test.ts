@@ -11,7 +11,15 @@ import leadHooks from '../src/sales/objects/lead.hook';
 import { REFUSAL_CODES } from '../src/sales/objects/_refusal';
 import oppHooks from '../src/sales/objects/opportunity.hook';
 import quoteHooks from '../src/revenue/objects/quote.hook';
-import { hookNamed, makeCtx, makeHarness, type Rec } from './helpers/hook-harness';
+import type { VerifyStack } from '@objectstack/verify';
+import { hotcrmStack, hotcrmMemoryStack, signUpPerson, type Person } from './helpers/verify-stack';
+
+type Rec = Record<string, any>;
+const hookNamed = (hooks: unknown, name: string): AnyRec => {
+  const hook = (hooks as AnyRec[]).find((h) => h.name === name);
+  if (!hook) throw new Error(`hook "${name}" not found`);
+  return hook;
+};
 import { extractHookBody } from '@objectstack/cli/hook-body';
 import { SysUser, SysMember, SysOrganization } from '@objectstack/platform-objects/identity';
 import { identityObjects } from './helpers/identity-objects';
@@ -601,13 +609,17 @@ describe('an ordinary user edit to a settled record is still refused', () => {
 // ─────────────────────────────────── the predicate, both directions, by unit ──
 
 /**
- * The same narrowness at handler level, where every neighbouring shape can be
- * enumerated cheaply. `expectRefusal` carries the envelope floor: the message
- * wording (the contract PR #719 wrote) plus the `code`/`status` this app's hook
- * refusals measurably carry — see the note in the file header.
+ * The same narrowness, one write at a time, where every neighbouring shape can
+ * be enumerated cheaply: a sales rep's own edit of a settled record of theirs,
+ * through the engine's write door (`hooks.run`) on the shipped app booted by
+ * `@objectstack/verify` — so each guard runs in the engine's own dispatch, and
+ * what is asserted is the refusal or the stored row. `expectRefusal` carries
+ * the envelope floor: the message wording (the contract PR #719 wrote) plus the
+ * `code`/`status` this app's hook refusals measurably carry — see the note in
+ * the file header.
  */
 const expectRefusal = (err: unknown, wording: RegExp): void => {
-  expect(err, `expected a refusal matching ${wording}`).toBeInstanceOf(Error);
+  expect(err, `expected a refusal matching ${wording}`).toBeTruthy();
   const e = err as AnyRec;
   expect(e.message).toMatch(wording);
   // The envelope, asserted as a PAIR on purpose. A `code` without a `status` is
@@ -617,28 +629,54 @@ const expectRefusal = (err: unknown, wording: RegExp): void => {
   expect([e.code, e.status]).toEqual([REFUSAL_CODES.locked.code, REFUSAL_CODES.locked.status]);
 };
 
-const runGuard = (hook: AnyRec, input: Rec, previous: Rec): Promise<unknown> =>
-  hook.handler(
-    makeCtx({
-      event: 'beforeUpdate',
-      input,
-      previous,
-      user: { id: 'usr_1' },
-      api: makeHarness().api,
-    }),
-  );
+/** One booted app and its rep. */
+interface Desk { verify: VerifyStack; rep: Person }
+/** The SQL datasource (every declared column materialised) — where every case below runs. */
+const sql = {} as Desk;
+/** The sparse datasource (`driver-memory`; `driver-mongodb` stores the same shape) — see the last case. */
+const sparse = {} as Desk;
+let n = 0;
+beforeAll(async () => {
+  for (const [desk, boot] of [[sql, hotcrmStack], [sparse, hotcrmMemoryStack]] as const) {
+    desk.verify = await boot();
+    desk.rep = await signUpPerson(desk.verify, 'rep@freeze-guard-units.test', {
+      name: 'Freeze Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    });
+  }
+}, 180_000);
 
-const refusalOf = (hook: AnyRec, input: Rec, previous: Rec): Promise<unknown> =>
-  runGuard(hook, input, previous).then(() => null, (e: Error) => e);
+/** The records a settled one links to — an account, two contacts, two deals — written as the system. */
+const linkTargets = async ({ verify, rep }: Desk = sql) => {
+  const m = ++n;
+  const [account] = await verify.seed('crm_account', [{ name: `Freeze Co ${m}`, owner_id: rep.id }]);
+  const contacts = await verify.seed('crm_contact', [1, 2].map((i) => ({
+    first_name: 'Ada', last_name: `Freeze ${m}.${i}`, email: `freeze${m}.${i}@freeze-guard-units.test`, crm_account: account!.id, owner_id: rep.id,
+  })));
+  const deals = await verify.seed('crm_opportunity', [1, 2].map((i) => ({
+    name: `Freeze Deal ${m}.${i}`, amount: 10_000, stage: 'proposal', close_date: '2030-06-30', crm_account: account!.id, owner_id: rep.id,
+  })));
+  return { account: account!, contacts, deals };
+};
+
+/** The rep's edit — resolves with the stored row, or `null`; rejects with the refusal. */
+const repEdit = async (object: string, id: string, doc: Rec, { verify, rep }: Desk = sql): Promise<AnyRec> => {
+  await verify.hooks.run(object, 'update', { id, ...doc }, { as: rep.token });
+  return (await verify.rows(object, { id }))[0]!;
+};
+const refusalOf = (object: string, id: string, doc: Rec, desk: Desk = sql): Promise<unknown> =>
+  repEdit(object, id, doc, desk).then(() => null, (e: Error) => e);
 
 interface GuardCase {
   label: string;
+  object: string;
   hook: AnyRec;
-  /** A settled record of this object, as `previous`. */
-  previous: Rec;
-  /** A declared link on it, and a second value to repoint it to. */
+  /**
+   * A settled record of this object, written as the system, linked through
+   * `link` (or not, with `withLink: false`) — plus a second record `link` could
+   * be repointed to.
+   */
+  settled: (withLink?: boolean, desk?: Desk) => Promise<{ id: string; other: string }>;
   link: string;
-  other: string;
   /** A business field the freeze protects, and a value that changes it. */
   businessField: string;
   businessValue: unknown;
@@ -649,33 +687,56 @@ interface GuardCase {
 const GUARDS: GuardCase[] = [
   {
     label: 'opportunity_lifecycle',
+    object: 'crm_opportunity',
     hook: hookNamed(oppHooks, 'opportunity_lifecycle'),
-    previous: { id: 'o1', name: 'Acme Renewal', stage: 'closed_won', primary_contact: 'c1', amount: 10 },
+    settled: async (withLink = true, desk = sql) => {
+      const { verify, rep } = desk;
+      const t = await linkTargets(desk);
+      const [deal] = await verify.seed('crm_opportunity', [{
+        name: `Acme Renewal ${n}`, stage: 'closed_won', win_reason: 'better_price', amount: 10, close_date: '2026-01-01',
+        crm_account: t.account.id, owner_id: rep.id, ...(withLink ? { primary_contact: t.contacts[0]!.id } : {}),
+      }]);
+      return { id: String(deal!.id), other: String(t.contacts[1]!.id) };
+    },
     link: 'primary_contact',
-    other: 'c2',
     businessField: 'amount',
     businessValue: 1,
-    refusal: /Opportunity Acme Renewal is closed \(closed_won\); only .* may be edited/,
+    refusal: /Opportunity Acme Renewal \d+ is closed \(closed_won\); only .* may be edited/,
   },
   {
     label: 'quote_workflow',
+    object: 'crm_quote',
     hook: hookNamed(quoteHooks, 'quote_workflow'),
-    previous: { id: 'q1', name: 'Q-1001', status: 'accepted', crm_opportunity: 'o1', total_price: 100 },
+    settled: async (withLink = true, desk = sql) => {
+      const { verify, rep } = desk;
+      const t = await linkTargets(desk);
+      const [quote] = await verify.seed('crm_quote', [{
+        name: `Q-1001-${n}`, status: 'accepted', crm_account: t.account.id, crm_contact: t.contacts[0]!.id,
+        quote_date: '2026-01-01', expiration_date: '2030-12-31', total_price: 100, owner_id: rep.id,
+        ...(withLink ? { crm_opportunity: t.deals[0]!.id } : {}),
+      }]);
+      return { id: String(quote!.id), other: String(t.deals[1]!.id) };
+    },
     link: 'crm_opportunity',
-    other: 'o2',
     businessField: 'total_price',
     businessValue: 1,
-    refusal: /Quote Q-1001 is accepted; only internal_notes may be edited/,
+    refusal: /Quote QTE-\d+ - Q-1001-\d+ is accepted; only internal_notes may be edited/,
   },
   {
     label: 'lead_automation',
+    object: 'crm_lead',
     hook: hookNamed(leadHooks, 'lead_automation'),
-    previous: {
-      id: 'lead_1', is_converted: true, status: 'converted', company: 'Acme',
-      first_name: 'Ada', last_name: 'Lovelace', converted_opportunity: 'opp_1', rating: 1,
+    settled: async (withLink = true, desk = sql) => {
+      const { verify, rep } = desk;
+      const t = await linkTargets(desk);
+      const [lead] = await verify.seed('crm_lead', [{
+        is_converted: true, status: 'converted', converted_date: '2026-01-01', company: 'Acme',
+        first_name: 'Ada', last_name: 'Lovelace', email: `lead${n}@freeze-guard-units.test`, rating: 1, owner_id: rep.id,
+        ...(withLink ? { converted_opportunity: t.deals[0]!.id } : {}),
+      }]);
+      return { id: String(lead!.id), other: String(t.deals[1]!.id) };
     },
     link: 'converted_opportunity',
-    other: 'opp_2',
     businessField: 'company',
     businessValue: 'Globex',
     refusal: /Cannot edit converted lead Ada Lovelace - Acme/,
@@ -683,10 +744,11 @@ const GUARDS: GuardCase[] = [
 ];
 
 describe.each(GUARDS)('$label yields to the cleanup shape and nothing else', (guard) => {
-  const { hook, previous, link, other, businessField, businessValue, refusal } = guard;
+  const { object, settled, link, businessField, businessValue, refusal } = guard;
 
   it('lets a lone link clear through', async () => {
-    await expect(runGuard(hook, { id: previous.id, [link]: null }, previous)).resolves.toBeUndefined();
+    const { id } = await settled();
+    expect((await repEdit(object, id, { [link]: null }))[link] ?? null).toBeNull();
   });
 
   it('lets a clear carrying the engine’s audit columns through', async () => {
@@ -694,47 +756,50 @@ describe.each(GUARDS)('$label yields to the cleanup shape and nothing else', (gu
     // audit hook stamps these before the freeze runs, and they must not count
     // as an edit. It is also, field for field, the payload a user's hand-clear
     // arrives with; see the note at the top of this file.
-    await expect(
-      runGuard(
-        hook,
-        { id: previous.id, [link]: null, updated_at: '2026-08-11T00:00:00.000Z', updated_by: 'usr_1' },
-        previous,
-      ),
-    ).resolves.toBeUndefined();
+    const { id } = await settled();
+    const after = await repEdit(object, id, { [link]: null, updated_at: '2026-08-11T00:00:00.000Z', updated_by: sql.rep.id });
+    expect(after[link] ?? null).toBeNull();
   });
 
   it('still refuses the same clear when a business field rides along', async () => {
-    const err = await refusalOf(
-      hook,
-      { id: previous.id, [link]: null, [businessField]: businessValue },
-      previous,
-    );
+    const { id } = await settled();
+    const err = await refusalOf(object, id, { [link]: null, [businessField]: businessValue });
     expectRefusal(err, refusal);
     expect((err as Error).message).toContain(businessField);
   });
 
   it('still refuses a link repointed to another record', async () => {
-    expectRefusal(await refusalOf(hook, { id: previous.id, [link]: other }, previous), refusal);
+    const { id, other } = await settled();
+    expectRefusal(await refusalOf(object, id, { [link]: other }), refusal);
   });
 
   it('still refuses a plain business-field edit', async () => {
-    expectRefusal(await refusalOf(hook, { id: previous.id, [businessField]: businessValue }, previous), refusal);
+    const { id } = await settled();
+    expectRefusal(await refusalOf(object, id, { [businessField]: businessValue }), refusal);
   });
 
   it('does not yield for a null on a field that is not a declared link', async () => {
     // "Everything in this write is null" is NOT the shape — the shape is
     // "everything in this write is a declared LINK going value→null".
-    expectRefusal(
-      await refusalOf(hook, { id: previous.id, [businessField]: null }, previous),
-      refusal,
-    );
+    const { id } = await settled();
+    expectRefusal(await refusalOf(object, id, { [businessField]: null }), refusal);
   });
 
   it('does not yield when the link was already empty', async () => {
     // Nothing to clean up: the engine only clears links that point somewhere,
-    // so a null over an absent value is a hand edit that invented one.
-    const { [link]: _dropped, ...withoutLink } = previous;
-    expectRefusal(await refusalOf(hook, { id: previous.id, [link]: null }, withoutLink), refusal);
+    // so a null over an absent value is a hand edit that invented one. That is
+    // the SPARSE datasource's shape — a link the row was never written with is
+    // ABSENT there — and the guard refuses it.
+    const { id } = await settled(false, sparse);
+    expectRefusal(await refusalOf(object, id, { [link]: null }, sparse), refusal);
+  });
+
+  it('on SQL the same write is no change at all, and lands as one', async () => {
+    // Measured, and recorded because the two datasources part here: SQL
+    // materialises the empty link as NULL, so `null` over it changes nothing,
+    // the guard finds nothing violating, and the link stays empty.
+    const { id } = await settled(false);
+    expect((await repEdit(object, id, { [link]: null }))[link] ?? null).toBeNull();
   });
 });
 
