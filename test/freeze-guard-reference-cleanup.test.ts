@@ -467,8 +467,9 @@ describe('deleting a record a CONVERTED lead points at', () => {
   it('tears the whole conversion down, and the lead keeps saying it converted', async () => {
     const { lead, account, contact, opportunity } = await build();
 
-    // `account_protection` counts OPEN opportunities, so the deal goes first —
-    // its own guard, unrelated to this fix and deliberately left alone.
+    // Any opportunity on the account keeps it (`account_protection` counts
+    // closed ones too since #2019), so the deal goes first — its own guard,
+    // unrelated to this fix and deliberately left alone.
     expect(await deleteAndCatch('crm_opportunity', opportunity.id)).toBeNull();
     expect(await deleteAndCatch('crm_account', account.id)).toBeNull();
     expect(await rowsOf('crm_account', account.id)).toHaveLength(0);

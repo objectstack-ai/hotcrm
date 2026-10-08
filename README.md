@@ -8,7 +8,7 @@
 > 18 objects, 32 flows, 5 dashboards, 6 AI skills, 4 languages — built as four
 > packages (sales, service, revenue, marketing) that compile to one artifact.
 > The **sales package**, the one a customer installs, carries its whole
-> business semantics (objects, flows, actions, hooks) in **~54k tokens**
+> business semantics (objects, flows, actions, hooks) in **~57k tokens**
 > of typed [ObjectStack](https://github.com/objectstack-ai/objectstack) metadata,
 > and its whole interaction layer (views, pages, dashboards, app shell) in
 > another **~29k**. An agent holds every business rule of a real enterprise CRM

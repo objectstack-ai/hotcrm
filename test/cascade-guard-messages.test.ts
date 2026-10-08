@@ -253,7 +253,9 @@ describe('deleting an account whose contact is still referenced', () => {
 // ───────────────────── the account guard's own sentence, measured (#721) ──
 
 /**
- * `account_protection`'s open-opportunity refusal, taken from a real `DELETE`.
+ * `account_protection`'s opportunity refusal, taken from a real `DELETE`. (It
+ * counts every deal on the account since #2019, closed ones included; these
+ * fixtures carry open ones, which is what #721 was measured on.)
  *
  * Not a cascade case — nothing cascades INTO `crm_account`, so this guard only
  * ever answers a caller who addressed the account, and "Cannot delete customer
@@ -286,29 +288,29 @@ describe('deleting a customer account with open opportunities', () => {
     return account;
   };
 
-  it('agrees with a single blocker: "1 open opportunity still references it … reassign it"', async () => {
+  it('agrees with a single blocker: "1 opportunity … still references it … Delete the opportunity"', async () => {
     const account = await accountWithOpenDeals(1);
     const message = await deleteAndCatch('crm_account', account.id);
 
     expect(message, 'the delete must still be refused').toBeTruthy();
     expect(message).toContain(
-      'Cannot delete customer account: 1 open opportunity still references it. Close or reassign it first.',
+      'Cannot delete customer account: 1 opportunity, open or closed, still references it. Delete the opportunity first, or mark the account inactive to retire it instead.',
     );
     // The reported symptom, both halves of it.
-    expect(message).not.toContain('opportunity still reference it');
-    expect(message).not.toContain('reassign them');
+    expect(message).not.toContain('closed, still reference it');
+    expect(message).not.toContain('Delete the opportunities');
   });
 
-  it('agrees with several blockers: "2 open opportunities still reference it … reassign them"', async () => {
+  it('agrees with several blockers: "2 opportunities … still reference it … Delete the opportunities"', async () => {
     const account = await accountWithOpenDeals(2);
     const message = await deleteAndCatch('crm_account', account.id);
 
     expect(message, 'the delete must still be refused').toBeTruthy();
     expect(message).toContain(
-      'Cannot delete customer account: 2 open opportunities still reference it. Close or reassign them first.',
+      'Cannot delete customer account: 2 opportunities, open or closed, still reference it. Delete the opportunities first, or mark the account inactive to retire it instead.',
     );
-    expect(message).not.toContain('opportunities still references');
-    expect(message).not.toContain('reassign it first');
+    expect(message).not.toContain('closed, still references');
+    expect(message).not.toContain('Delete the opportunity first');
   });
 
   it('refuses, and leaves the account in place (semantics unchanged)', async () => {

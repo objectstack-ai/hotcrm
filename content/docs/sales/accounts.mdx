@@ -95,7 +95,7 @@ Two things the hierarchy deliberately does **not** do. It does **not** cascade s
 
 - The account **name must be unique within your organization**. You'll get an error if you try to create a second account with a name you already use. Another organization on the same platform is free to have its own "Acme Corp" — the rule is scoped to your data, not the whole platform. The uniqueness check compares names exactly as typed, so `Acme Corp` and `ACME  Corp` can both exist as separate accounts. Lead conversion is more forgiving: it ignores capitalisation and extra spaces when looking for an account to reuse (see [Leads](./leads)), so converting a lead for `ACME  Corp` attaches it to your existing `Acme Corp` rather than creating a near-duplicate.
 - **Annual revenue must be zero or positive** — no negative numbers allowed.
-- You **cannot delete** an account that has open opportunities or active contracts. Set it to *Inactive* instead (`is_active = false`).
+- You **cannot delete** an account that still has opportunities — **closed ones included** — or active contracts. A closed deal is part of the account's sales history, so closing a deal does not free the account: the delete goes through only once every deal is deleted or, while it is still open, moved to another account. To retire the account, set it to *Inactive* instead (`is_active = false`).
 - You **cannot open a new opportunity** against an account whose **Commercial Capability** is *Settlement Only*. The opportunities it already has are untouched and stay editable.
 
 ## Automatic updates
