@@ -62,9 +62,9 @@ export type HotCrmAppCollections = Omit<
  *
  * The `HOTCRM_COMPOSITION` knob (#1361). It selects permission sets and seed
  * families, and it is resolved once at the root and handed down already
- * applied — `objectstack.config.ts` carries the full audit of what the knob
- * changes and why, because the answer is about the ARTIFACT, not about this
- * package.
+ * applied — `objectstack.composition.ts` carries the full audit of what the
+ * knob changes and why, because the answer is about the ARTIFACT, not about
+ * this package.
  */
 export const createHotCrmAppStack = (
   collections: HotCrmAppCollections,

@@ -127,7 +127,9 @@ export const createHotCrmServiceStack = (
     namespace: 'crm',
     // The ARTIFACT's version: one `package.json`, one build, one release
     // (ADR-0130 D6), so a module of this artifact is never at a version of its
-    // own. `changeset version` moves it together with the app package's.
+    // own. Bump it with the app package's and `package.json` —
+    // `test/docs-declared-versions.test.ts` holds all three, and the range
+    // below, to one value.
     version: '3.1.0',
     type: 'module',
     description: 'HotCRM support module — cases, knowledge articles, and the SLA surface.',
