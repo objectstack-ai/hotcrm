@@ -25,8 +25,8 @@ offers it, with a message that names the list.
 
 **FROM → TO for integrations that read metadata.** A picklist-bound field is
 served with its resolved `options` as before, and now also carries
-`picklist: '<name>'`. The option labels of these five lists are translated once
-per locale, under `picklists.<name>` in the language packs, instead of under
+`picklist: 'NAME'`. The option labels of these five lists are translated once
+per locale, under `picklists.NAME` in the language packs, instead of under
 each field.
 
 Lists that only one field offers (Opportunity **Stage**, Task and Event **Type**,
