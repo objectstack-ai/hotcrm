@@ -221,7 +221,7 @@ describe('quote_total_rollup', () => {
   });
 });
 
-describe('line-item price fill', () => {
+describe('opportunity_line_item_price_fill', () => {
   it('defaults list_price + unit_price from the product on insert', async () => {
     const deal = await dealOf();
     const product = await productAt(250);

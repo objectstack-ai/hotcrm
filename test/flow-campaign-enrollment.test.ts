@@ -134,6 +134,16 @@ const existingMember = async (campaign: Rec, doc: Rec) =>
   verify.seed('crm_campaign_member', [{ crm_campaign: campaign.id, status: 'sent', ...doc }]);
 
 describe('campaign_enrollment — screen action', () => {
+  it('enrols each person through the two per-person subflows, as registered on the app', () => {
+    // The enrolment the cases below read back is written by these two flows,
+    // which the screen calls by name: a `subflow` node resolves its callee off
+    // the engine's registry, so both must be registered on the booted app.
+    const called = JSON.stringify(CampaignEnrollmentFlow).match(/"flowName":"([a-z_]+)"/g)?.map((m) => m.split('"')[3]);
+    expect(called).toEqual(['campaign_lead_member_enroll', 'campaign_contact_member_enroll']);
+    const registered = verify.metadata.items('flow').map((f) => String((f as Rec).name));
+    expect(registered).toEqual(expect.arrayContaining(['campaign_lead_member_enroll', 'campaign_contact_member_enroll']));
+  });
+
   it('seeds its input from the console’s `recordId` contract', () => {
     const names = (CampaignEnrollmentFlow.variables ?? []).map((v) => v.name);
     expect(names, 'the console only seeds `recordId`').toContain('recordId');

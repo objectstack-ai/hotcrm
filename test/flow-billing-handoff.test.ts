@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
-import { hotcrmStack, signUpPerson, predicateUpdate, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, predicateUpdate, flowRuns, type Person } from './helpers/verify-stack';
 import { BillingHandoffClosedWonFlow } from '../src/sales/flows/billing-handoff-closed-won.flow';
 import { BillingHandoffContractActivatedFlow } from '../src/revenue/flows/billing-handoff-contract-activated.flow';
 import {
@@ -308,6 +308,9 @@ describe('billing hand-off — contract activation (#600)', () => {
     expect(d.source).toBe('flow');
     expect(d.url).toBe(BILLING_HANDOFF_ENDPOINT);
     expect(d.label).toBe('flow:send_contract_activated_handoff');
+    // The flow that sent it, by its run history on the engine.
+    const [run] = await flowRuns(verify, 'billing_handoff_contract_activated', contract.id);
+    expect(run?.status, 'billing_handoff_contract_activated left no completed run for the contract').toBe('completed');
 
     const body = d.payload;
     expect(body.event).toBe(BILLING_HANDOFF_EVENT.contractActivated);
