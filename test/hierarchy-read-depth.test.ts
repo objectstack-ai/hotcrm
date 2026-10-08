@@ -1,23 +1,12 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { ObjectKernel } from '@objectstack/core';
-import { DefaultDatasourcePlugin, AppPlugin } from '@objectstack/runtime';
-import { ObjectQLPlugin } from '@objectstack/objectql';
-import { MetadataPlugin } from '@objectstack/metadata';
-import {
-  SecurityPlugin,
-  PermissionEvaluator,
-  appDefaultPermissionSetName,
-  buildContextForUser,
-} from '@objectstack/plugin-security';
-import { SharingServicePlugin } from '@objectstack/plugin-sharing';
-import { tenancyProbe } from './helpers/tenancy-probe';
+import { PermissionEvaluator } from '@objectstack/plugin-security';
+import { bootStack, type VerifyStack } from '@objectstack/verify';
+import { signUpPerson } from './helpers/verify-stack';
 import { defineStack, PLATFORM_CAPABILITY_PROVIDERS } from '@objectstack/spec';
 import artifact from '../objectstack.config';
 import stack from './helpers/composed-stack';
-import { SysUser, SysMember, SysOrganization } from '@objectstack/platform-objects/identity';
-import { identityObjects } from './helpers/identity-objects';
 
 /**
  * The READ half of the hierarchy-scope edition boundary (#1378) — the
@@ -92,7 +81,6 @@ type AnyRec = Record<string, any>;
 
 process.env.OS_REGISTRY_LOG ??= 'silent';
 
-const SYS = { isSystem: true } as AnyRec;
 
 /** ADR-0057 hierarchy scopes — the values that need the enterprise resolver. */
 const HIERARCHY_SCOPES = new Set(['unit', 'unit_and_below', 'own_and_reports']);
@@ -125,22 +113,28 @@ const PROBE_GRANTS = {
   },
 } as const;
 
-let kernel: AnyRec;
-let ql: AnyRec;
+let verify: VerifyStack;
 const id: Record<string, string> = {};
 const ctx: Record<string, AnyRec> = {};
+const token: Record<string, string> = {};
+/** The five deals this fixture writes — the population every arm reports on. */
+const deals = new Set<string>();
 
+/** A system write — the fixture's setup channel (the handle's `seed` door). */
 const insert = async (object: string, doc: AnyRec): Promise<string> => {
-  const row = await ql.insert(object, doc, { context: SYS });
-  return String(row?.id ?? row?.record?.id);
+  const [row] = await verify.seed(object, [doc]);
+  return String(row?.id);
 };
 
-/** Deal NAMES the given principal can read, sorted — the unit every arm reports in. */
-const dealsVisibleTo = async (principal: AnyRec): Promise<string[]> => {
-  const rows = (await ql.find(
-    'crm_opportunity', { where: {}, fields: ['id', 'name', 'owner_id'] }, { context: principal },
-  )) as AnyRec[];
-  return rows.map((r) => String(r.name)).sort();
+/**
+ * Deal NAMES the given principal can read, sorted — the unit every arm reports
+ * in. Read as that person through the handle, over THIS fixture's deals: the
+ * boot replays the app's seed opportunities too, and the org-wide control reads
+ * those as well, which says nothing about the arms.
+ */
+const dealsVisibleTo = async (as: string): Promise<string[]> => {
+  const rows = await verify.rows('crm_opportunity', {}, { as });
+  return rows.filter((r) => deals.has(String(r.id))).map((r) => String(r.name)).sort();
 };
 
 // ── the vocabulary, and why no profile declares this ────────────────────
@@ -276,40 +270,43 @@ describe('the spec gate accepts a hierarchy readScope only when the capability i
 // ── what a hierarchy readScope resolves to on THIS edition ──────────────
 
 beforeAll(async () => {
-  kernel = new ObjectKernel({ logger: { level: 'silent' } } as never);
-  await kernel.use(new DefaultDatasourcePlugin({ driver: 'memory', config: {} } as never));
-  await kernel.use(
-    new MetadataPlugin({ watch: false, artifactWatch: false, environmentId: 'proj_test' } as never),
-  );
-  await kernel.use(new ObjectQLPlugin({ environmentId: 'proj_test' } as never));
-  // 17.7.0 refuses an object name the registry does not hold (objectstack#21545):
-  // register the identity objects `plugin-auth` would (`test/helpers/identity-objects.ts`).
-  await kernel.use(identityObjects(SysUser, SysMember, SysOrganization) as never);
-  await kernel.use(new AppPlugin(artifact as never, undefined as never, { skipSeedData: true } as never));
-  await kernel.use(
-    new SecurityPlugin({
-      fallbackPermissionSet: appDefaultPermissionSetName((stack as AnyRec).permissions),
-    } as never),
-  );
+  // The platform's boot — `@objectstack/verify`'s `bootStack` over the shipped
+  // artifact (objectql, auth and its `tenancy` service, security with the app's
+  // own default profile, sharing) — on the in-memory datasource this file has
+  // always measured on.
+  //
   // NB: no `hierarchy-scope-resolver` is registered — that service ships in
   // `@objectstack/security-enterprise`, which this repo does not depend on.
   // That absence is the whole subject of this file.
-  // Mounted BEFORE SharingServicePlugin, which reads the posture during its own
-  // boot — see `test/helpers/tenancy-probe.ts`.
-  await kernel.use(tenancyProbe('single') as never);
-  await kernel.use(new SharingServicePlugin());
-  await kernel.bootstrap();
-  ql = kernel.getService('objectql');
+  verify = await bootStack(artifact, { databaseDriver: 'memory' });
 
-  // The FIRST human user is auto-promoted to platform admin at boot and would
-  // bypass every gate below — burn that promotion on a throwaway.
-  await insert('sys_user', { name: 'Platform Admin', email: 'admin@hierarchy-read.test' });
+  // The throwaway permission sets, created as DATA. ⛔ Nothing here is authored
+  // in `src/profiles/`; #1378 rules that no profile may gain a hierarchy
+  // readScope, and this file must not become the reason one does.
+  for (const [name, grant] of Object.entries(PROBE_GRANTS)) {
+    id[`set_${name}`] = await insert('sys_permission_set', {
+      name,
+      label: `#1378 probe — ${name}`,
+      description: 'Throwaway grant created by test/hierarchy-read-depth.test.ts. Not an app profile.',
+      object_permissions: JSON.stringify({ crm_opportunity: grant }),
+      active: true,
+    });
+  }
 
   // Three managers, one per throwaway grant, so the three arms differ ONLY in
-  // the grant and never in who is reading or in how the rows are owned.
-  id.mgrHier = await insert('sys_user', { name: 'Hierarchy Manager', email: 'hier@hierarchy-read.test' });
-  id.mgrOwn = await insert('sys_user', { name: 'Baseline Manager', email: 'own@hierarchy-read.test' });
-  id.mgrOrg = await insert('sys_user', { name: 'Org-wide Manager', email: 'org@hierarchy-read.test' });
+  // the grant and never in who is reading or in how the rows are owned. Fresh
+  // sign-ups are plain members — the stack's first user is its own platform
+  // admin, so nobody below inherits that bypass.
+  const managers = {
+    mgrHier: ['hier@hierarchy-read.test', 'Hierarchy Manager', 'probe_read_hierarchy', 'hier'],
+    mgrOwn: ['own@hierarchy-read.test', 'Baseline Manager', 'probe_read_owner_only', 'own'],
+    mgrOrg: ['org@hierarchy-read.test', 'Org-wide Manager', 'probe_read_org_wide', 'org'],
+  } as const;
+  for (const [key, [email, name, set, arm]] of Object.entries(managers)) {
+    const person = await signUpPerson(verify, email, { name, permissionSets: [set] });
+    id[key] = person.id;
+    token[arm] = person.token;
+  }
   // One direct report each. `manager_id` is the chain `own_and_reports` is
   // defined over (`@objectstack/spec`: "me + my sys_user.manager_id report
   // chain"), and it is wired for real so that owner-only below is a reading of
@@ -322,29 +319,6 @@ beforeAll(async () => {
   });
   id.outsider = await insert('sys_user', { name: 'Outsider', email: 'out@hierarchy-read.test' });
 
-  // The throwaway permission sets, created as DATA. ⛔ Nothing here is authored
-  // in `src/profiles/`; #1378 rules that no profile may gain a hierarchy
-  // readScope, and this file must not become the reason one does.
-  for (const [name, grant] of Object.entries(PROBE_GRANTS)) {
-    const setId = await insert('sys_permission_set', {
-      name,
-      label: `#1378 probe — ${name}`,
-      description: 'Throwaway grant created by test/hierarchy-read-depth.test.ts. Not an app profile.',
-      object_permissions: JSON.stringify({ crm_opportunity: grant }),
-      active: true,
-    });
-    id[`set_${name}`] = setId;
-  }
-  const bind = async (userId: string, setName: string) => {
-    await insert('sys_user_permission_set', {
-      user_id: userId,
-      permission_set_id: id[`set_${setName}`],
-    });
-  };
-  await bind(id.mgrHier, 'probe_read_hierarchy');
-  await bind(id.mgrOwn, 'probe_read_owner_only');
-  await bind(id.mgrOrg, 'probe_read_org_wide');
-
   const account = await insert('crm_account', {
     name: 'Depth Co', type: 'customer', is_active: true, owner_id: id.mgrHier,
     billing_address: { country: 'US' },
@@ -356,19 +330,21 @@ beforeAll(async () => {
   });
   // Five deals. Each manager owns one, two of them have a report who owns one,
   // and one belongs to nobody in any chain.
-  await insert('crm_opportunity', deal('Hierarchy manager deal', id.mgrHier));
-  await insert('crm_opportunity', deal('Hierarchy REPORT deal', id.repHier));
-  await insert('crm_opportunity', deal('Baseline manager deal', id.mgrOwn));
-  await insert('crm_opportunity', deal('Baseline REPORT deal', id.repOwn));
-  await insert('crm_opportunity', deal('Outsider deal', id.outsider));
+  for (const [name, owner] of [
+    ['Hierarchy manager deal', id.mgrHier],
+    ['Hierarchy REPORT deal', id.repHier],
+    ['Baseline manager deal', id.mgrOwn],
+    ['Baseline REPORT deal', id.repOwn],
+    ['Outsider deal', id.outsider],
+  ] as const) {
+    deals.add(await insert('crm_opportunity', deal(name, owner)));
+  }
 
-  ctx.hier = await buildContextForUser(ql, id.mgrHier);
-  ctx.own = await buildContextForUser(ql, id.mgrOwn);
-  ctx.org = await buildContextForUser(ql, id.mgrOrg);
+  for (const arm of ['hier', 'own', 'org']) ctx[arm] = await verify.contextFor(token[arm]) as AnyRec;
 }, 120_000);
 
 afterAll(async () => {
-  await kernel?.shutdown?.();
+  await verify?.stop();
 });
 
 describe('the harness enforces (negative controls)', () => {
@@ -378,7 +354,7 @@ describe('the harness enforces (negative controls)', () => {
     // count two cases later.
     let resolver: unknown = null;
     try {
-      resolver = kernel.getService('hierarchy-scope-resolver');
+      resolver = verify.kernel.getService('hierarchy-scope-resolver');
     } catch {
       resolver = null;
     }
@@ -399,7 +375,8 @@ describe('the harness enforces (negative controls)', () => {
         expect(c.permissions, `${arm} must not hold the app profile ${profile}`)
           .not.toContain(profile);
       }
-      expect(c.hasPlatformAdminGrant, `${arm} must not be a platform admin`).toBe(false);
+      // The resolver's admin verdict is the context's `posture`.
+      expect(c.posture, `${arm} must not be a platform admin`).toBe('MEMBER');
     }
   });
 
@@ -407,11 +384,7 @@ describe('the harness enforces (negative controls)', () => {
     // ⭐ The case that makes the pin a statement about the EDITION. If this ever
     // fails, the one row the hierarchy arm reads would be explained by an
     // unwired chain and the pin below would prove nothing.
-    const rows = (await ql.find(
-      'sys_user',
-      { where: { id: { $in: [id.repHier, id.repOwn] } }, fields: ['id', 'name', 'manager_id'] },
-      { context: SYS },
-    )) as AnyRec[];
+    const rows = await verify.rows('sys_user', { id: { $in: [id.repHier, id.repOwn] } });
     const managerOf = Object.fromEntries(rows.map((r) => [String(r.id), String(r.manager_id ?? '')]));
     expect(managerOf[id.repHier], "the hierarchy report's manager_id must be the hierarchy manager")
       .toBe(id.mgrHier);
@@ -419,9 +392,7 @@ describe('the harness enforces (negative controls)', () => {
   });
 
   it('all five deals exist and are owned as claimed', async () => {
-    const rows = (await ql.find(
-      'crm_opportunity', { where: {}, fields: ['id', 'name', 'owner_id'] }, { context: SYS },
-    )) as AnyRec[];
+    const rows = (await verify.rows('crm_opportunity')).filter((r) => deals.has(String(r.id)));
     expect(rows.map((r) => String(r.name)).sort()).toEqual([
       'Baseline REPORT deal', 'Baseline manager deal', 'Hierarchy REPORT deal',
       'Hierarchy manager deal', 'Outsider deal',
@@ -436,7 +407,7 @@ describe('the harness enforces (negative controls)', () => {
     // this principal reads all five. So a one-row result below is a real
     // narrowing measured by a working harness, ⛔ not a rig that returns
     // nothing for everyone.
-    expect(await dealsVisibleTo(ctx.org)).toEqual([
+    expect(await dealsVisibleTo(token.org)).toEqual([
       'Baseline REPORT deal', 'Baseline manager deal', 'Hierarchy REPORT deal',
       'Hierarchy manager deal', 'Outsider deal',
     ]);
@@ -470,7 +441,7 @@ describe('open edition: a hierarchy readScope resolves owner-only (#1378)', () =
     // `@objectstack/security-enterprise` and this arm reads TWO deals — its
     // own and the report's. That red is correct and expected; rewrite this file
     // for the enterprise reality then, ⛔ do not relax it.
-    expect(await dealsVisibleTo(ctx.hier)).toEqual(['Hierarchy manager deal']);
+    expect(await dealsVisibleTo(token.hier)).toEqual(['Hierarchy manager deal']);
   });
 
   it('so own_and_reports conveys nothing beyond the own baseline here', async () => {
@@ -482,8 +453,8 @@ describe('open edition: a hierarchy readScope resolves owner-only (#1378)', () =
     //
     // On the enterprise edition the two stop being interchangeable: the
     // hierarchy arm gains its report's deal and the baseline arm does not.
-    const hier = await dealsVisibleTo(ctx.hier);
-    const own = await dealsVisibleTo(ctx.own);
+    const hier = await dealsVisibleTo(token.hier);
+    const own = await dealsVisibleTo(token.own);
     expect(hier).toHaveLength(1);
     expect(own).toEqual(['Baseline manager deal']);
     expect(own).toHaveLength(hier.length);
@@ -494,7 +465,7 @@ describe('open edition: a hierarchy readScope resolves owner-only (#1378)', () =
     // broken sharing open would show up as the outsider's deal appearing in a
     // narrowed arm.
     for (const arm of ['hier', 'own'] as const) {
-      expect(await dealsVisibleTo(ctx[arm])).not.toContain('Outsider deal');
+      expect(await dealsVisibleTo(token[arm])).not.toContain('Outsider deal');
     }
   });
 });

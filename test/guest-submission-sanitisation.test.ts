@@ -1,21 +1,10 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect, beforeAll } from 'vitest';
-import { ObjectKernel } from '@objectstack/core';
-import { DefaultDatasourcePlugin, AppPlugin } from '@objectstack/runtime';
-import { ObjectQLPlugin } from '@objectstack/objectql';
-import { MetadataPlugin } from '@objectstack/metadata';
-import {
-  SecurityPlugin,
-  appDefaultPermissionSetName,
-  buildContextForUser,
-} from '@objectstack/plugin-security';
-import { SharingServicePlugin } from '@objectstack/plugin-sharing';
-import { tenancyProbe } from './helpers/tenancy-probe';
+import { bootStack, type VerifyStack } from '@objectstack/verify';
+import { signUpPerson, guestInsert, type Person } from './helpers/verify-stack';
 import artifact from '../objectstack.config';
 import stack from './helpers/composed-stack';
-import { SysUser, SysMember, SysOrganization } from '@objectstack/platform-objects/identity';
-import { identityObjects } from './helpers/identity-objects';
 
 /**
  * What a guest (web-to-case / web-to-lead) submission ACTUALLY stores — pinned
@@ -87,8 +76,6 @@ process.env.OS_REGISTRY_LOG ??= 'silent';
  * a hook as `session: { isSystem: true }`, an anonymous one carries no session.
  */
 const GUEST = {} as AnyRec;
-/** The trusted write / read-back channel. */
-const SYS = { isSystem: true } as AnyRec;
 
 /**
  * `crm_case`'s declared field map, read off the compiled stack rather than
@@ -98,63 +85,44 @@ const SYS = { isSystem: true } as AnyRec;
 const caseFields: AnyRec =
   ((stack as AnyRec).objects as AnyRec[]).find((o) => o.name === 'crm_case')?.fields ?? {};
 
-let kernel: AnyRec;
-let ql: AnyRec;
+let verify: VerifyStack;
 const id: Record<string, string> = {};
-let agentCtx: AnyRec;
+let agent: Person;
 
-const insertAs = async (context: AnyRec, object: string, doc: AnyRec): Promise<string> => {
-  const row = await ql.insert(object, doc, { context });
+/**
+ * Write as `who`: the GUEST context goes through the one local guest-write path
+ * (the handle has no door for a caller that is neither a person nor the
+ * system — see `test/helpers/verify-stack.ts`); a person writes through the
+ * handle's engine door as themselves.
+ */
+const insertAs = async (who: typeof GUEST | Person, object: string, doc: AnyRec): Promise<string> => {
+  const row = who === GUEST
+    ? await guestInsert(verify, object, doc)
+    : await verify.hooks.run(object, 'insert', doc, { as: (who as Person).token });
   return String(row?.id ?? row?.record?.id);
 };
-const rowById = async (object: string, rowId: string): Promise<AnyRec> => {
-  const found = await ql.findOne(object, { where: { id: rowId } }, { context: SYS });
-  return (found ?? {}) as AnyRec;
-};
+/** The stored row, read back as the system through the handle. */
+const rowById = async (object: string, rowId: string): Promise<AnyRec> =>
+  (await verify.rows(object, { id: rowId }))[0] ?? {};
 
 beforeAll(async () => {
-  kernel = new ObjectKernel({ logger: { level: 'silent' } } as never);
-  await kernel.use(new DefaultDatasourcePlugin({ driver: 'memory', config: {} } as never));
-  await kernel.use(
-    new MetadataPlugin({ watch: false, artifactWatch: false, environmentId: 'proj_test' } as never),
-  );
-  await kernel.use(new ObjectQLPlugin({ environmentId: 'proj_test' } as never));
-  // 17.7.0 refuses an object name the registry does not hold (objectstack#21545):
-  // register the identity objects `plugin-auth` would (`test/helpers/identity-objects.ts`).
-  await kernel.use(identityObjects(SysUser, SysMember, SysOrganization) as never);
-  await kernel.use(new AppPlugin(artifact as never, undefined as never, { skipSeedData: true } as never));
-  await kernel.use(
-    new SecurityPlugin({
-      fallbackPermissionSet: appDefaultPermissionSetName((stack as AnyRec).permissions),
-    } as never),
-  );
-  // 17.2.0: declared sharing rules are only seeded once this stack states its
-  // tenancy posture — see `test/helpers/tenancy-probe.ts` for the measurement.
-  // Mounted BEFORE SharingServicePlugin, which reads the posture during its own
-  // boot.
-  await kernel.use(tenancyProbe('single') as never);
-  await kernel.use(new SharingServicePlugin());
-  await kernel.bootstrap();
-  ql = kernel.getService('objectql');
+  // The platform's boot — `@objectstack/verify`'s `bootStack` over the shipped
+  // artifact (objectql, auth and its `tenancy` service, security with the app's
+  // own default profile, sharing) — on the in-memory datasource this file has
+  // always measured on.
+  verify = await bootStack(artifact, { databaseDriver: 'memory' });
 
-  // The FIRST human user is auto-promoted to platform admin at boot. Burn that
-  // promotion on a throwaway so the agent below is an ordinary user whose
-  // writes go through the same enforcement a real staff edit would.
-  await insertAs(SYS, 'sys_user', { name: 'Platform Admin', email: 'admin@guest-sanitisation.test' });
-  id.agent = await insertAs(SYS, 'sys_user', { name: 'Service Agent', email: 'agent@guest-sanitisation.test' });
-
+  // A fresh sign-up is an ordinary member (the stack's first user is its own
+  // platform admin), so the agent's writes go through the same enforcement a
+  // real staff edit would.
+  //
   // Pool membership for `case_auto_assign`: it is what makes "the guest's
   // planted owner did not survive" provable by a POSITIVE value (the case is
   // owned by the real agent) rather than by an absence.
-  await insertAs(SYS, 'sys_user_position', { user_id: id.agent, position: 'service_agent' });
-  const sets = await ql.find('sys_permission_set', { where: {} }, { context: SYS });
-  const agentSet = (sets as AnyRec[]).find((s) => s.name === 'service_agent');
-  await insertAs(SYS, 'sys_user_permission_set', {
-    user_id: id.agent,
-    permission_set_id: agentSet?.id,
+  agent = await signUpPerson(verify, 'agent@guest-sanitisation.test', {
+    name: 'Service Agent', positions: ['service_agent'], permissionSets: ['service_agent'],
   });
-
-  agentCtx = await buildContextForUser(ql, id.agent);
+  id.agent = agent.id;
 }, 120_000);
 
 describe('crm_case — guest submission sanitisation', () => {
@@ -269,7 +237,7 @@ describe('crm_case — guest submission sanitisation', () => {
     // contract. The control is unchanged in what it CONTROLS FOR: three distinct
     // planted values became two, both on user-writable columns, and either one
     // failing still means the guest strip stopped being guest-scoped.
-    const caseId = await insertAs(agentCtx, 'crm_case', {
+    const caseId = await insertAs(agent, 'crm_case', {
       subject: 'Escalated by an agent',
       description: 'Raised internally.',
       internal_notes: 'STAFF-NOTES',

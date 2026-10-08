@@ -85,3 +85,67 @@ export const platformObjectNames = (stack: VerifyStack, appObjectNames: Readonly
 /** Every field the runtime registers on `object` — authored and system-injected. */
 export const registeredFields = (stack: VerifyStack, object: string): string[] =>
   Object.keys(stack.metadata.object(object)?.fields ?? {});
+
+type Row = Record<string, any>;
+
+/** A signed-up person: their bearer token and their user id. */
+export interface Person {
+  token: string;
+  id: string;
+}
+
+/**
+ * Sign up a person and give them the standing a fixture names — position rows
+ * (`sys_user_position.position` holds the position NAME, which is what
+ * `expandPositionUsers` filters on) and permission-set grants
+ * (`sys_user_permission_set.permission_set_id`, the set's row id).
+ *
+ * Fixture SETUP, written as the system through `seed`, the way the platform's
+ * own bootstrap writes RBAC rows: the person is not the surface under test, and
+ * routing their provisioning through a caller's data door would make the proof
+ * depend on that caller's grants. A fresh sign-up is a plain member until then.
+ */
+export async function signUpPerson(
+  stack: VerifyStack,
+  email: string,
+  opts: { name?: string; positions?: string[]; permissionSets?: string[] } = {},
+): Promise<Person> {
+  const token = await stack.signUp(email, undefined, opts.name);
+  const id = String((await stack.contextFor(token)).userId);
+  for (const position of opts.positions ?? []) {
+    await stack.seed('sys_user_position', [{ user_id: id, position }]);
+  }
+  for (const name of opts.permissionSets ?? []) {
+    const [set] = await stack.rows('sys_permission_set', { name });
+    if (!set) throw new Error(`no permission set named "${name}" is registered on this stack`);
+    await stack.seed('sys_user_permission_set', [{ user_id: id, permission_set_id: set.id }]);
+  }
+  return { token, id };
+}
+
+// ─────────────────────── the doors the handle does not have (platform gaps) ────
+//
+// Two writes this app's business facts turn on have no door on the 17.7.0
+// handle, so each keeps ONE local path here — the engine's own `objectql`
+// service on the verify-booted kernel, nothing re-implemented — until the
+// handle grows one. Both are reported upstream; ⛔ do not add a third here.
+
+/** The system context the platform's own automation and seed loader write under. */
+const SYSTEM = { isSystem: true } as const;
+
+/**
+ * A system-context UPDATE (no user, no session). `seed` is the handle's system
+ * door and it only inserts; `hooks.run` always runs as a signed-in person.
+ */
+export const systemUpdate = (stack: VerifyStack, object: string, doc: Row): Promise<Row> =>
+  stack.kernel.getService<Row>('objectql').update(object, doc, { where: { id: doc.id }, context: SYSTEM });
+
+/**
+ * A GUEST write: no user AND no `isSystem` — the context the app's guest
+ * (web-to-case / web-to-lead) branches key on. `hooks.run` needs a signed-in
+ * person, `seed` is the most trusted caller there is, and an unauthenticated
+ * `POST /api/v1/data/<object>` on the stack answers 401 `UNAUTHENTICATED`, so
+ * the handle offers no way to reach that branch at all.
+ */
+export const guestInsert = (stack: VerifyStack, object: string, doc: Row): Promise<Row> =>
+  stack.kernel.getService<Row>('objectql').insert(object, doc, { context: {} });

@@ -1,22 +1,11 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { ObjectKernel } from '@objectstack/core';
-import { DefaultDatasourcePlugin, AppPlugin } from '@objectstack/runtime';
-import { ObjectQLPlugin } from '@objectstack/objectql';
-import { MetadataPlugin } from '@objectstack/metadata';
-import {
-  SecurityPlugin,
-  appDefaultPermissionSetName,
-  buildContextForUser,
-} from '@objectstack/plugin-security';
-import { SharingServicePlugin } from '@objectstack/plugin-sharing';
-import { tenancyProbe } from './helpers/tenancy-probe';
+import { bootStack, type VerifyStack } from '@objectstack/verify';
+import { signUpPerson, type Person } from './helpers/verify-stack';
 import { defineStack, PLATFORM_CAPABILITY_PROVIDERS } from '@objectstack/spec';
 import artifact from '../objectstack.config';
 import stack from './helpers/composed-stack';
-import { SysUser, SysMember, SysOrganization } from '@objectstack/platform-objects/identity';
-import { identityObjects } from './helpers/identity-objects';
 
 /**
  * A Sales Manager's WRITE reach on `crm_contract` — the declaration, and what it
@@ -68,26 +57,27 @@ type AnyRec = Record<string, any>;
 
 process.env.OS_REGISTRY_LOG ??= 'silent';
 
-const SYS = { isSystem: true } as AnyRec;
 
 /** ADR-0057 hierarchy scopes — the values that need the enterprise resolver. */
 const HIERARCHY_SCOPES = new Set(['unit', 'unit_and_below', 'own_and_reports']);
 
-let kernel: AnyRec;
-let ql: AnyRec;
+let verify: VerifyStack;
 const id: Record<string, string> = {};
+let mgr: Person;
+let rep: Person;
 let mgrCtx: AnyRec;
 let repCtx: AnyRec;
 
+/** A system write — the fixture's setup channel (the handle's `seed` door). */
 const insert = async (object: string, doc: AnyRec): Promise<string> => {
-  const row = await ql.insert(object, doc, { context: SYS });
-  return String(row?.id ?? row?.record?.id);
+  const [row] = await verify.seed(object, [doc]);
+  return String(row?.id);
 };
 
-/** Attempt a write as `ctx`; report the refusal verbatim rather than a boolean. */
-const attempt = async (object: string, doc: AnyRec, ctx: AnyRec) => {
+/** Attempt a write as `who`; report the refusal verbatim rather than a boolean. */
+const attempt = async (object: string, doc: AnyRec, who: Person) => {
   try {
-    await ql.update(object, doc, { context: ctx });
+    await verify.hooks.run(object, 'update', doc, { as: who.token });
     return { ok: true as const };
   } catch (err: unknown) {
     const e = err as AnyRec;
@@ -208,49 +198,26 @@ describe('the spec gate accepts the pair and refuses the half (#880)', () => {
 // ── what it resolves to on THIS edition ─────────────────────────────────
 
 beforeAll(async () => {
-  kernel = new ObjectKernel({ logger: { level: 'silent' } } as never);
-  await kernel.use(new DefaultDatasourcePlugin({ driver: 'memory', config: {} } as never));
-  await kernel.use(
-    new MetadataPlugin({ watch: false, artifactWatch: false, environmentId: 'proj_test' } as never),
-  );
-  await kernel.use(new ObjectQLPlugin({ environmentId: 'proj_test' } as never));
-  // 17.7.0 refuses an object name the registry does not hold (objectstack#21545):
-  // register the identity objects `plugin-auth` would (`test/helpers/identity-objects.ts`).
-  await kernel.use(identityObjects(SysUser, SysMember, SysOrganization) as never);
-  await kernel.use(new AppPlugin(artifact as never, undefined as never, { skipSeedData: true } as never));
-  await kernel.use(
-    new SecurityPlugin({
-      fallbackPermissionSet: appDefaultPermissionSetName((stack as AnyRec).permissions),
-    } as never),
-  );
+  // The platform's boot: `@objectstack/verify`'s `bootStack` over the shipped
+  // artifact — objectql, auth (and its `tenancy` service), security with the
+  // app's own default profile, sharing. On the in-memory datasource this file
+  // has always measured on.
+  //
   // NB: no `hierarchy-scope-resolver` is registered — that service ships in
   // `@objectstack/security-enterprise`, which this repo does not depend on.
   // The manager's edit below must succeed WITHOUT it.
-  await kernel.use(tenancyProbe('single') as never);
-  await kernel.use(new SharingServicePlugin());
-  await kernel.bootstrap();
-  ql = kernel.getService('objectql');
+  verify = await bootStack(artifact, { databaseDriver: 'memory' });
 
-  // The FIRST human user is auto-promoted to platform admin at boot and would
-  // bypass every gate below — burn that promotion on a throwaway.
-  await insert('sys_user', { name: 'Platform Admin', email: 'admin@contract-depth.test' });
-  id.mgr = await insert('sys_user', { name: 'Sales Manager', email: 'mgr@contract-depth.test' });
-  id.rep = await insert('sys_user', { name: 'Sales Rep', email: 'rep@contract-depth.test' });
-
-  // `sys_user_position.position` holds the position NAME, not an id.
-  await insert('sys_user_position', { user_id: id.mgr, position: 'sales_manager' });
-  await insert('sys_user_position', { user_id: id.rep, position: 'sales_rep' });
-
-  const sets = (await ql.find('sys_permission_set', { where: {} }, { context: SYS })) as AnyRec[];
-  const bind = async (userId: string, setName: string) => {
-    const set = sets.find((s) => s.name === setName);
-    await insert('sys_user_permission_set', {
-      user_id: userId,
-      permission_set_id: set?.id,
-    });
-  };
-  await bind(id.mgr, 'sales_manager');
-  await bind(id.rep, 'sales_rep');
+  // Fresh sign-ups are plain members (the stack's first user is its own
+  // platform admin), given exactly the standing the fixture names.
+  mgr = await signUpPerson(verify, 'mgr@contract-depth.test', {
+    name: 'Sales Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+  });
+  rep = await signUpPerson(verify, 'rep@contract-depth.test', {
+    name: 'Sales Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+  });
+  id.mgr = mgr.id;
+  id.rep = rep.id;
 
   // The account is owned by the REP and shared to nobody: a JP prospect, so
   // neither territory rule nor `account_team_sharing` (active CUSTOMER
@@ -282,12 +249,12 @@ beforeAll(async () => {
     owner_id: id.rep, status: 'new', priority: 'medium', origin: 'web',
   });
 
-  mgrCtx = await buildContextForUser(ql, id.mgr);
-  repCtx = await buildContextForUser(ql, id.rep);
+  mgrCtx = await verify.contextFor(mgr.token) as AnyRec;
+  repCtx = await verify.contextFor(rep.token) as AnyRec;
 }, 120_000);
 
 afterAll(async () => {
-  await kernel?.shutdown?.();
+  await verify?.stop();
 });
 
 describe('the harness enforces (negative controls)', () => {
@@ -296,14 +263,13 @@ describe('the harness enforces (negative controls)', () => {
     expect(repCtx.permissions).toContain('sales_rep');
     for (const ctx of [mgrCtx, repCtx]) {
       expect(ctx.permissions).not.toContain('admin_full_access');
-      expect(ctx.hasPlatformAdminGrant).toBe(false);
+      // The resolver's admin verdict is the context's `posture`.
+      expect(ctx.posture).toBe('MEMBER');
     }
   });
 
   it('the fixture contract really is owned by the rep, not the manager', async () => {
-    const rows = (await ql.find(
-      'crm_contract', { where: { id: id.repContract }, fields: ['id', 'owner_id'] }, { context: SYS },
-    )) as AnyRec[];
+    const rows = await verify.rows('crm_contract', { id: id.repContract });
     expect(String(rows[0]?.owner_id)).toBe(id.rep);
     expect(String(rows[0]?.owner_id)).not.toBe(id.mgr);
   });
@@ -313,7 +279,7 @@ describe('the harness enforces (negative controls)', () => {
     // the enterprise resolver.
     let resolver: unknown = null;
     try {
-      resolver = kernel.getService('hierarchy-scope-resolver');
+      resolver = verify.kernel.getService('hierarchy-scope-resolver');
     } catch {
       resolver = null;
     }
@@ -321,9 +287,7 @@ describe('the harness enforces (negative controls)', () => {
   });
 
   it('the account is shared to nobody — the manager reaches it by modifyAllRecords alone', async () => {
-    const shares = await ql.find(
-      'sys_record_share', { where: { object_name: 'crm_account', record_id: id.account } }, { context: SYS },
-    );
+    const shares = await verify.rows('sys_record_share', { object_name: 'crm_account', record_id: id.account });
     expect(shares).toEqual([]);
   });
 });
@@ -334,22 +298,20 @@ describe('open edition: a Sales Manager edits a REP-owned contract through the a
     // closed to owner-only). Now the parent-derived write gate asks whether
     // the manager can edit the ACCOUNT — `modifyAllRecords: true` — and the
     // owner of the contract row is irrelevant.
-    const r = await attempt('crm_contract', { id: id.repContract, contract_value: 2500 }, mgrCtx);
+    const r = await attempt('crm_contract', { id: id.repContract, contract_value: 2500 }, mgr);
     expect(r, `the manager was refused on a rep-owned contract: ${JSON.stringify(r)}`)
       .toEqual({ ok: true });
-    const rows = (await ql.find(
-      'crm_contract', { where: { id: id.repContract }, fields: ['id', 'contract_value'] }, { context: SYS },
-    )) as AnyRec[];
+    const rows = await verify.rows('crm_contract', { id: id.repContract });
     expect(Number(rows[0]?.contract_value)).toBe(2500);
   });
 
   it('and terminates it — the act contracts.mdx describes', async () => {
-    const r = await attempt('crm_contract', { id: id.repContract, status: 'terminated' }, mgrCtx);
+    const r = await attempt('crm_contract', { id: id.repContract, status: 'terminated' }, mgr);
     expect(r).toEqual({ ok: true });
   });
 
   it('and still edits their OWN contract (positive control)', async () => {
-    const r = await attempt('crm_contract', { id: id.mgrContract, contract_value: 1500 }, mgrCtx);
+    const r = await attempt('crm_contract', { id: id.mgrContract, contract_value: 1500 }, mgr);
     expect(r).toEqual({ ok: true });
   });
 
@@ -357,7 +319,7 @@ describe('open edition: a Sales Manager edits a REP-owned contract through the a
     // `allowEdit: false` on crm_contract for sales_rep. The rep can EDIT the
     // account (they own it), so this refusal is the object gate and nothing
     // else — the parent-derived write gate never gets a say.
-    const r = await attempt('crm_contract', { id: id.repContract, contract_value: 9999 }, repCtx);
+    const r = await attempt('crm_contract', { id: id.repContract, contract_value: 9999 }, rep);
     expect(r.ok, 'a rep edited a contract').toBe(false);
     // The ENVELOPE is the contract (ADR-0112): code + status, then the
     // structured facts naming WHICH verb was refused on WHICH object.
@@ -376,19 +338,17 @@ describe('what the grant deliberately does NOT convey', () => {
     // which ROWS the caller reaches, never which verbs they hold.
     let refused = false;
     try {
-      await ql.delete('crm_contract', id.mgrContract, { context: mgrCtx });
+      await verify.hooks.run('crm_contract', 'delete', { id: id.mgrContract }, { as: mgr.token });
     } catch {
       refused = true;
     }
     expect(refused, 'a Sales Manager must not be able to delete a contract').toBe(true);
-    const rows = (await ql.find(
-      'crm_contract', { where: { id: id.mgrContract }, fields: ['id'] }, { context: SYS },
-    )) as AnyRec[];
+    const rows = await verify.rows('crm_contract', { id: id.mgrContract });
     expect(rows.length, 'the contract must still exist').toBe(1);
   });
 
   it('does not leak to another object — crm_case is still read-only for the manager', async () => {
-    const r = await attempt('crm_case', { id: id.case, subject: 'Rewritten' }, mgrCtx);
+    const r = await attempt('crm_case', { id: id.case, subject: 'Rewritten' }, mgr);
     expect(r.ok, `the manager edited a case: ${JSON.stringify(r)}`).toBe(false);
   });
 });
