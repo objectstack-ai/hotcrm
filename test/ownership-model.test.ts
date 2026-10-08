@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { hookNamed, makeCtx } from './helpers/hook-harness';
 import leadHooks from '../src/sales/objects/lead.hook';
 

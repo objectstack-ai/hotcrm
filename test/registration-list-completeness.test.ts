@@ -8,7 +8,7 @@ import {
   CrmSeedData,
   CrmPositions,
 } from '../objectstack.composition';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import {
   barrelPath,
   barrelExports,
@@ -65,6 +65,15 @@ import * as marketingData from '../src/marketing/data';
  *    beside the seed families, so "every export owes a registration" is simply
  *    false for it. The rule below is "every export that IS a seed", with every
  *    non-seed export named and reasoned in `exemptions`.
+ *
+ * Since the packaging (#1907) `allHooks`, `allSkills` and `CrmSharingRules`
+ * are the ARTIFACT's lists: the app package's half is a hand-ordered list in
+ * `objectstack.composition.ts` (`appHooks`, `appSkills`, `appSharingRules`)
+ * and the service module's is the list `src/service/index.ts` registers
+ * (`serviceHooks`, `serviceSkills`, `serviceSharingRules`), concatenated. The
+ * seed union stays one list, `CrmSeedData`, and is partitioned by owning
+ * package there. So "the list" an entry owes is its package's list, and the
+ * union below is exactly what the two package stacks register.
  *
  * Both directions are asserted for each, because the two failure modes are
  * opposite: an entry the barrel exports and the list drops (registered by
@@ -154,7 +163,7 @@ const SEED_EXEMPTIONS: Record<string, string> = {
   COMPOSITION_ENV_VAR: 'the environment variable name resolveComposition() reads — a string.',
   HOTCRM_COMPOSITIONS: 'the accepted composition values, exported for diagnostics and tests.',
   resolveComposition:
-    'the resolver objectstack.config.ts calls to choose WHICH seed list is registered. It selects seeds; it is not one.',
+    'the resolver objectstack.composition.ts calls to choose WHICH seed families the package stacks register. It selects seeds; it is not one.',
   OPPORTUNITY_LINES:
     'the line table sales.seed.ts prices its deals from. The rows it feeds are crm_opportunity_line_item, seeded by the revenue package from this table along the revenue -> sales edge.',
   celDaysAgo: 'seed authoring helper — a CEL date expression builder shared by the family modules.',
@@ -213,7 +222,7 @@ const SPECS: Spec[] = [
     grouped: true,
     exemptions: {
       CrmPositions:
-        'positions metadata, not a sharing rule: the twelve CRM positions objectstack.config.ts registers under the stack key `positions`. The block at the bottom of this file measures that, so the exemption is not taken on trust.',
+        'positions metadata, not a sharing rule: the twelve CRM positions the app package (objectstack.composition.ts) registers under the stack key `positions`. The block at the bottom of this file measures that, so the exemption is not taken on trust.',
     },
     label: named,
     consequence:
@@ -312,7 +321,8 @@ for (const spec of SPECS) {
         `exported from a package barrel but missing from \`${spec.listName}\` — registered by ` +
           `NOTHING, and pnpm validate stays at exit 0 while ${spec.consequence}:\n  ` +
           `${missing.join('\n  ')}\n` +
-          `Import each one in objectstack.composition.ts and add it to the ${spec.listName} array.`,
+          `Add each one to its package's list: the service module's in src/service/index.ts, ` +
+          `the app package's in objectstack.composition.ts (which assembles ${spec.listName}).`,
       ).toEqual([]);
     });
 

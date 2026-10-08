@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ObjectQL, bindHooksToEngine } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { products } from '../src/revenue/data/catalog.seed';
 import { type AnyRec, objects, pages, walk } from './helpers/metadata-fixtures';
 

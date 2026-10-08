@@ -5,7 +5,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
 import { objectFiles } from './helpers/src-roster';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 
 /**
  * Collaboration-capability guards (#602) — `enable.files` and `enable.feeds`.

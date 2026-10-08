@@ -15,8 +15,8 @@ import { REPO_ROOT } from './helpers/repo-root';
  * does not roll up** — every rung that needs a record carries its own sharing
  * rule, which is why `opportunity_executive_sharing`, `case_director_sharing` and
  * `campaign_leadership_*` exist as companions to the manager-rung rules rather
- * than being inherited from them (#488). `objectstack.config.ts` repeats it at
- * the registration site, and `administration/sharing-and-security` says it to
+ * than being inherited from them (#488). `objectstack.composition.ts` repeats it
+ * at the registration site, and `administration/sharing-and-security` says it to
  * the reader: *"Positions are **flat by design** — there is no hierarchy and
  * **nothing rolls up**."*
  *

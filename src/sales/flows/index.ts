@@ -4,12 +4,15 @@
  * Sales flow barrel.
  *
  * A flow lives with the object its start node names (plan item 5: an item
- * lives with the object it is authored against), so the four packages each
+ * lives with the object it is authored against), so the four directories each
  * carry their own. The registration ORDER — which used to be the `allFlows`
  * array at the bottom of `src/flows/index.ts` — is not here: the order flows
- * reach `defineStack()` is written straight into the artifact, and four
- * independently ordered lists cannot reproduce one interleaved order, so the
- * assembled list lives in `objectstack.config.ts` where all four are visible.
+ * reach a package's `defineStack()` is written straight into the artifact, and
+ * the app package registers three directories' flows (sales, revenue,
+ * marketing) in one interleaved order no per-directory list can reproduce, so
+ * that list — `appFlows` — lives in `objectstack.composition.ts`, where all
+ * three are visible. The service module orders its own, in
+ * `src/service/index.ts`.
  *
  * `_billing-endpoint.ts` and `_guarded-iteration.ts` are the shared flow
  * sources every package reads along its edge into sales.

@@ -5,8 +5,10 @@
  * by.
  *
  * The rows themselves are authored per object family in the `*.seed.ts`
- * modules beside this file; `objectstack.config.ts` collects all four
- * packages' families into the single ordered `CrmSeedData` array it registers.
+ * modules beside this file; `objectstack.composition.ts` collects all four
+ * directories' families into the single ordered `CrmSeedData` union and cuts it
+ * by owning package — each package stack registers the families whose object
+ * it owns.
  * That assembly is NOT here, and cannot be: it names `crm_product`,
  * `crm_case`, `crm_campaign` and the rest, which are other packages' objects,
  * and a sales file may import from its own directory or from `src/sales/` only
@@ -43,7 +45,7 @@ export { celDaysAgo, celDaysFromNow, lineTotal, linesTotal, type LineSpec } from
  * differ ONLY by what the composition registers; no code branches at runtime,
  * nothing is decided per tenant, and no enterprise package is imported. See
  * {@link SaasTenantSeedData} for why the seed set shrinks and
- * `objectstack.config.ts` for the permission half.
+ * `objectstack.composition.ts` for the permission half.
  */
 export type HotCrmComposition = 'default' | 'saas';
 

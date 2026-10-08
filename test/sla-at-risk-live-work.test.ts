@@ -5,7 +5,7 @@ import { ObjectQL, applySystemFields } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { parseFilterAST } from '@objectstack/spec/data';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import caseHooks from '../src/service/objects/case.hook';
 import { CLOSED_CASE_STATUSES } from '../src/service/objects/_case-assignment';
 import { makeCtx } from './helpers/hook-harness';

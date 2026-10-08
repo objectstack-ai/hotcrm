@@ -38,7 +38,7 @@ git remote add origin git@github.com:<you>/<my-app>.git
 
 ### 2. 重新命名資訊清單
 
-編輯 `objectstack.config.ts`：
+HotCRM 發布的是一個裝著兩個套件的產物，每個套件宣告自己的資訊清單。編輯 app 套件的資訊清單，位於 `src/sales/index.ts`——它同時也是整個產物的身分：
 
 ```diff
  manifest: {
@@ -54,6 +54,8 @@ git remote add origin git@github.com:<you>/<my-app>.git
 +  description: 'Your app, your tagline.',
  },
 ```
+
+然後把 `src/service/index.ts` 裡服務模組的 `namespace` 改成同一個，`id` 改到你的名下（`app.acme.myapp.service`），並把它的 `dependencies` 指向你新的 app `id`。`objectstack.config.ts` 只負責組合這兩個套件，無需改動。
 
 ### 3. 在各處重新命名前綴
 
@@ -85,7 +87,7 @@ rm -r src/service src/revenue src/marketing
 rm src/sales/objects/forecast.object.ts
 ```
 
-然後從 `objectstack.composition.ts` 裡刪掉這三個套件的 import，再修剪 sales 側那些參照了已刪除物件的鉤子、動作、流程、儀表板、翻譯和文件。`pnpm typecheck` 會標記出斷裂的參照。
+然後從 `objectstack.composition.ts` 裡刪掉這三個目錄——它們的 import、服務模組的 stack 及其種子資料——在 `objectstack.config.ts` 裡只組合 app 套件，再修剪 sales 側那些參照了已刪除物件的鉤子、動作、流程、儀表板、翻譯和文件。`pnpm typecheck` 會標記出斷裂的參照。
 
 ### 5. 新增你確實需要的部分
 

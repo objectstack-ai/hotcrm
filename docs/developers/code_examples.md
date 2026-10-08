@@ -2,7 +2,7 @@
 
 > Examples that match the current single-app HotCRM repository.
 
-HotCRM metadata is registered from `src/` through [`objectstack.config.ts`](../../objectstack.config.ts). File names use the ObjectStack suffix convention: `.object.ts`, `.hook.ts`, `.actions.ts`, `.flow.ts`, `.skill.ts`, `.view.ts`, `.page.ts`, `.dashboard.ts`, and `.report.ts`.
+HotCRM metadata is registered from `src/` by two package stacks — the app package's, built in [`objectstack.composition.ts`](../../objectstack.composition.ts) from the sales, revenue and marketing barrels, and the service module's, [`src/service/index.ts`](../../src/service/index.ts) — which [`objectstack.config.ts`](../../objectstack.config.ts) composes into one artifact. File names use the ObjectStack suffix convention: `.object.ts`, `.hook.ts`, `.actions.ts`, `.flow.ts`, `.skill.ts`, `.view.ts`, `.page.ts`, `.dashboard.ts`, and `.report.ts`.
 
 ## Define An Object
 
@@ -86,7 +86,7 @@ const warrantyHook: Hook = {
 export default warrantyHook;
 ```
 
-Register it by re-exporting it from its package's `objects/hooks.ts` and adding it to the `allHooks` list in `objectstack.composition.ts`. `objectstack.config.ts` already passes `allHooks` into `defineStack()`.
+Register it by re-exporting it from its package's `objects/hooks.ts` and adding it to that package's hook list: `appHooks` in `objectstack.composition.ts` for sales, revenue and marketing, `serviceHooks` in `src/service/index.ts` for the service module. Each list is what its package's `defineStack({ hooks })` receives.
 
 ## Add An Action
 
@@ -153,7 +153,7 @@ export const AddLeadsToCampaignAction: Action = {
 };
 ```
 
-Export actions from `src/*/actions/index.ts` so `objectstack.config.ts` can register them.
+Export actions from `src/*/actions/index.ts` so the owning package's stack registers them — `objectstack.composition.ts` merges the app package's action barrels, and `src/service/index.ts` names the service module's.
 
 ### Bulk actions: how a multi-row selection reaches the body
 
@@ -264,7 +264,7 @@ export const WarrantyExpirationFlow: Flow = {
 };
 ```
 
-Export flows from `src/*/flows/index.ts`. Record-change flows require the `triggers` capability, which is already declared in `objectstack.config.ts`.
+Export flows from `src/*/flows/index.ts`. Record-change flows require the `triggers` capability, which every package carrying such flows declares in its own `requires` (`src/sales/index.ts`, `src/service/index.ts`) — `defineStack` checks it per package.
 
 ## Add An AI Skill
 

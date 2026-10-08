@@ -27,7 +27,7 @@
 > logic.</sub>
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![Manifest](https://img.shields.io/badge/manifest-app.objectstack.hotcrm-blueviolet)](objectstack.config.ts)
+[![Manifest](https://img.shields.io/badge/manifest-app.objectstack.hotcrm-blueviolet)](src/sales/index.ts)
 [![Version](https://img.shields.io/badge/version-3.1.0-brightgreen)](CHANGELOG.md)
 [![Marketplace](https://img.shields.io/badge/marketplace-cloud.objectos.app-orange)](https://cloud.objectos.app)
 
@@ -134,13 +134,13 @@ See [docs: Publishing your first marketplace app](content/docs/marketplace/publi
 
 ```
 hotcrm/
-├── objectstack.config.ts         # manifest + defineStack() — single source of truth
-├── objectstack.composition.ts    # the four packages collected into the arrays defineStack() takes
+├── objectstack.config.ts         # composeStacks() — one artifact carrying the two package stacks
+├── objectstack.composition.ts    # the directories' barrels collected into those two stacks
 ├── src/
 │   ├── sales/                    # the `type: app` package — customers, pipeline, activities
-│   ├── service/                  # module — cases and the knowledge base
-│   ├── revenue/                  # module — products, quotes, line items, contracts
-│   ├── marketing/                # module — campaigns and campaign members
+│   ├── service/                  # the service module — cases and the knowledge base
+│   ├── revenue/                  # registered by the app package for now — products, quotes, line items, contracts
+│   ├── marketing/                # registered by the app package for now — campaigns and campaign members
 │   └── docs/                     # package docs, shipped inside the built artifact
 ├── apps/docs/                    # Fumadocs site — standalone, own lockfile (not a pnpm workspace member)
 └── content/docs/                 # Documentation content

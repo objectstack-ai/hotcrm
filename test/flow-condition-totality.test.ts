@@ -5,7 +5,7 @@ import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-automation';
 import { RecordChangeTrigger } from '@objectstack/trigger-record-change';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 
 /**
  * ═══ HOUSE RULE: record-change flow conditions must be TOTAL ═══════════════

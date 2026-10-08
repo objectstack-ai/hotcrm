@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import stack from '../objectstack.config';
+import stack, { servedApps } from './helpers/composed-stack';
 import {
   type AnyRec,
   objects,
@@ -796,6 +796,10 @@ describe('every locale is complete on every authored surface', () => {
    * walk follows `children` to any depth and also covers each area's own id
    * and navigation, so an id counts as declared exactly when something can
    * render it — the same reachability the console builds the sidebar from.
+   * That is the SERVED tree (`servedApps()`): the service module's five
+   * entries reach the app through its `navigationContributions`, are labelled
+   * from the app's own locale packs, and are as declared as any child the app
+   * authors itself.
    */
   const declaredNavIds = (): Map<string, Set<string>> => {
     const byApp = new Map<string, Set<string>>();
@@ -806,7 +810,7 @@ describe('every locale is complete on every authored surface', () => {
         walk(node?.children, into);
       }
     };
-    for (const app of ((stack as AnyRec).apps ?? []) as AnyRec[]) {
+    for (const app of servedApps()) {
       if (!app?.name) continue;
       const ids = byApp.get(String(app.name)) ?? new Set<string>();
       walk(app.navigation, ids);

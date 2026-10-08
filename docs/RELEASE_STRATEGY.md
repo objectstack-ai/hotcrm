@@ -4,12 +4,14 @@
 
 ## Release Unit
 
-HotCRM releases as one ObjectStack app package:
+HotCRM releases as one ObjectStack release artifact, identified by its app package and
+carrying the service module beside it (ADR-0130 D4; one artifact, one version — D6):
 
 | Field | Value |
 | --- | --- |
 | npm package name | `hotcrm` |
 | ObjectStack manifest id | `app.objectstack.hotcrm` |
+| Packages in the artifact | `app.objectstack.hotcrm` (`type: app`), `app.objectstack.hotcrm.service` (`type: module`) |
 | Namespace | `crm` |
 | Current version | `3.1.0` |
 | Publish artifact | output from `pnpm build` |
@@ -25,10 +27,11 @@ accumulated — ⛔ do not hand-edit either:
 - `CHANGELOG.md` — the new release section is spliced in under the `# Changelog`
   title, and everything already below it is kept byte-for-byte
 
-The remaining two are matched by hand to the version it just wrote:
+The rest are matched by hand to the version it just wrote:
 
-- `objectstack.config.ts` manifest `version` — `pnpm verify` fails if this drifts
-  from `package.json`
+- the package manifests' `version` — the app package's in `src/sales/index.ts`, and
+  the service module's `version` and its `dependencies` range on the app in
+  `src/service/index.ts`; `pnpm verify` fails if any of them drifts from `package.json`
 - marketplace publish note
 
 ## Release Checklist
@@ -47,9 +50,10 @@ The remaining two are matched by hand to the version it just wrote:
    pnpm changeset:version   # changeset version
    ```
 
-   Then set the `objectstack.config.ts` manifest `version` to the version it just
-   wrote — `changeset version` does not touch that file, and `pnpm verify` is
-   what catches the drift.
+   Then set the package manifests' `version` to the version it just wrote — the
+   app package's in `src/sales/index.ts`, the service module's `version` and
+   `dependencies` range in `src/service/index.ts`. `changeset version` does not
+   touch those files, and `pnpm verify` is what catches the drift.
 
 4. Build the artifact:
 

@@ -5,7 +5,7 @@ import { ObjectQL, applySystemFields } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { AnalyticsService } from '@objectstack/service-analytics';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { CrmSeedData } from '../objectstack.composition';
 import { CaseDataset } from '../src/service/datasets/case.dataset';
 

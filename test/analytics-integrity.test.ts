@@ -2,7 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { DATE_RANGE_PRESETS } from '@objectstack/spec/ui';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 
 /**
  * Analytics metadata guards (#492).

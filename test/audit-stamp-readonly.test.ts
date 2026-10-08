@@ -5,7 +5,7 @@ import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-automation';
 import type * as Automation from '@objectstack/spec/automation';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { OpportunityApprovalFlow, OpportunityApprovalOnCreateFlow } from '../src/sales/flows/opportunity-approval.flow';
 import { CampaignEnrollmentFlow } from '../src/marketing/flows/campaign-enrollment.flow';
 import {

@@ -4,7 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 
 /*
  * Metadata counts in the product docs, read off the registered stack (#729).
@@ -28,7 +28,8 @@ import stack from '../objectstack.config';
  * is what a customer follows — being told the wrong inventory there is a product
  * defect, not a typo.
  *
- * The expected values are read from `objectstack.config.ts` at test time and are
+ * The expected values are read from the registered stacks at test time (the two
+ * package stacks `objectstack.config.ts` composes, `test/helpers/composed-stack.ts`) and are
  * deliberately NOT written down here. A hard-coded expectation is just the same
  * hand-maintained number moved into the test file: it would go stale on the very
  * next object and take the guard with it.

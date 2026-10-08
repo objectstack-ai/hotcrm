@@ -4,7 +4,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL, applySystemFields } from '@objectstack/objectql';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { InMemoryDriver } from '@objectstack/driver-memory';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { declaredRow, makeDataEngine, makeFlowHarness, type Rec } from './helpers/flow-harness';
 import { ForecastSnapshotFlow } from '../src/sales/flows/forecast-snapshot.flow';
 import { QuoteGenerationFlow } from '../src/revenue/flows/quote-generation.flow';

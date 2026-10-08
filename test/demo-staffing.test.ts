@@ -2,7 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { compileCelToFilter } from '@objectstack/formula';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import accountHook from '../src/sales/objects/account.hook';
 import caseHooks from '../src/service/objects/case.hook';
 import { CrmSeedData } from '../objectstack.composition';
@@ -524,7 +524,7 @@ describe('the published artifact cannot create these people (#640 hard constrain
     // only by `scripts/demo-staff.ts` and by this suite.
     expect(
       Object.keys(sharingBarrel),
-      'src/sharing/index.ts must not re-export DemoOrgStaffing — the barrel is what objectstack.config.ts reads',
+      'src/sales/sharing/index.ts must not re-export DemoOrgStaffing — the barrel is what objectstack.composition.ts registers from',
     ).not.toContain('DemoOrgStaffing');
 
     const serialized = JSON.stringify(stack, (_k, v) => (typeof v === 'function' ? undefined : v));

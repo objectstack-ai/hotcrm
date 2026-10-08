@@ -261,7 +261,7 @@
 | ADM-012 | AI Live Data 技能 | 每次先读取当前活 schema 再查询——管理员新加字段后 AI 立即可用(平台 `ask` 助手挂载,skills-only 架构) | `src/sales/skills/live-data.skill.ts` |
 | ADM-013 | 应用内规则手册 | 4 篇随包文档:总览/销售规则(路由、审批阈值、停滞窗口)/服务规则(SLA、升级)/管理手册(岗位、共享、12 个自动化旋钮) | `src/docs/` |
 | ADM-014 | 字段历史跟踪 | 各对象关键字段 `trackHistory`(owner、状态/阶段/优先级、金额/营收等)驱动记录页 History 审计流 | `src/*/objects/*.object.ts` |
-| ADM-015 | 平台能力声明 | `requires: automation/triggers/analytics/auth/ui/approvals/sharing`;`ai` 刻意不列(开源版无 AI service,技能仍编入产物在云端运行) | `objectstack.config.ts` |
+| ADM-015 | 平台能力声明 | `requires: automation/triggers/analytics/auth/ui/approvals/sharing`;`ai` 刻意不列(开源版无 AI service,技能仍编入产物在云端运行);每个包各自声明 | `src/sales/index.ts`、`src/service/index.ts` |
 
 ---
 

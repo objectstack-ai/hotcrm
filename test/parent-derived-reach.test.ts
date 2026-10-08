@@ -12,7 +12,8 @@ import {
 } from '@objectstack/plugin-security';
 import { SharingServicePlugin } from '@objectstack/plugin-sharing';
 import { tenancyProbe } from './helpers/tenancy-probe';
-import stack from '../objectstack.config';
+import artifact from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { SysUser, SysMember, SysOrganization } from '@objectstack/platform-objects/identity';
 import { identityObjects } from './helpers/identity-objects';
 
@@ -129,7 +130,7 @@ beforeAll(async () => {
   // The app's own metadata is the subject: objects, profiles, positions and
   // sharing rules exactly as `objectstack.config.ts` declares them. Seed data
   // is skipped — the fixture below is the whole population.
-  await kernel.use(new AppPlugin(stack as never, undefined as never, { skipSeedData: true } as never));
+  await kernel.use(new AppPlugin(artifact as never, undefined as never, { skipSeedData: true } as never));
   await kernel.use(
     new SecurityPlugin({
       fallbackPermissionSet: appDefaultPermissionSetName((stack as AnyRec).permissions),

@@ -2,7 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { isDateMacroToken } from '@objectstack/spec/data';
-import stack from '../objectstack.config';
+import stack, { servedApps } from './helpers/composed-stack';
 import { OPPORTUNITY_STAGE_OPTIONS } from '../src/sales/objects/_picklists';
 import {
   type AnyRec,
@@ -410,7 +410,10 @@ describe('every canonical opportunity stage reaches the UI that enumerates stage
  * `viewName`, never that the name resolves.
  */
 describe('every named list view is reachable', () => {
-  const apps: AnyRec[] = (stack as any).apps ?? [];
+  // The SERVED apps — `nav_my_cases` pins `my_open_cases` through the service
+  // module's `navigationContributions`, and a contributed entry dangles the
+  // same way an authored one does.
+  const apps: AnyRec[] = servedApps();
 
   /** Every `viewName` an app navigation entry pins, with its object and id. */
   const navViewTargets: { id: string; object: string; view: string }[] = apps.flatMap((app) =>
@@ -492,7 +495,9 @@ describe('every named list view is reachable', () => {
  * fixture.
  */
 describe('objects reached only through a parent curate that related list', () => {
-  const apps: AnyRec[] = (stack as any).apps ?? [];
+  // The SERVED apps — a contributed entry reaches its object as surely as an
+  // authored one.
+  const apps: AnyRec[] = servedApps();
   const navObjects = new Set(
     apps.flatMap((app) =>
       (app.navigation ?? []).flatMap(function walk(n: AnyRec): string[] {

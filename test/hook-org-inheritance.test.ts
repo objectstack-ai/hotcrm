@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL, bindHooksToEngine, applySystemFields } from '@objectstack/objectql';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 
 /**
  * Records this app's HOOKS create inherit the triggering caller's organization

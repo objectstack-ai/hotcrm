@@ -89,9 +89,9 @@ truth for how a release authenticates.
 
 | Setting | Current source |
 | --- | --- |
-| App id | `objectstack.config.ts` manifest id |
-| App version | `package.json` and `objectstack.config.ts` |
-| Capabilities | `requires` in `objectstack.config.ts` |
+| App id | the app package's manifest id (`src/sales/index.ts`) |
+| App version | `package.json` and every package manifest (`src/sales/index.ts`, `src/service/index.ts`) |
+| Capabilities | `requires` in each package's stack (`src/sales/index.ts`, `src/service/index.ts`) |
 | Local dev port | `package.json` scripts |
 | Seed data | `src/*/data/index.ts` |
 

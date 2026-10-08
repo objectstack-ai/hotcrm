@@ -5,7 +5,7 @@ import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-auto
 import { fieldHasColumn, expectedIndexes, withheldFilterDiagnosticOf } from '@objectstack/driver-sql';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { applySystemFields } from '@objectstack/objectql';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import accountHooks from '../src/sales/objects/account.hook';
 import leadHooks from '../src/sales/objects/lead.hook';
 import { LeadConversionFlow } from '../src/sales/flows/lead-conversion.flow';

@@ -4,7 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { compileCelToFilter } from '@objectstack/formula';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { COUNTRY_TERRITORY, TERRITORY_OPTIONS, territoryFor } from '../src/sales/objects/_territory';
 
 /**

@@ -3,7 +3,7 @@
 import { describe, it, expect } from 'vitest';
 import { AgentSchema } from '@objectstack/spec/ai';
 import { ComponentPropsMap, RecordActivityProps, RecordRelatedListProps } from '@objectstack/spec/ui';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import {
   type AnyRec,
   objects,

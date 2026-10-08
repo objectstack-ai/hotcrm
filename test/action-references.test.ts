@@ -2,7 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { applySystemFields } from '@objectstack/objectql';
-import stack from '../objectstack.config';
+import stack, { servedApps } from './helpers/composed-stack';
 import {
   type AnyRec,
   objects,
@@ -44,7 +44,10 @@ import {
  */
 
 describe('navigation reaches everything the app ships', () => {
-  const apps: AnyRec[] = (stack as any).apps ?? [];
+  // The SERVED apps: a module's `navigationContributions` are folded in, so an
+  // entry the service module contributes is reachable here exactly as it is in
+  // the sidebar — and one it stops contributing is stranded here too.
+  const apps: AnyRec[] = servedApps();
   const dashboards: AnyRec[] = (stack as any).dashboards ?? [];
   const reports: AnyRec[] = (stack as any).reports ?? [];
 

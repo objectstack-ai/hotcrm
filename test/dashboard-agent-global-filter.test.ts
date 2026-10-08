@@ -4,7 +4,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL, applySystemFields } from '@objectstack/objectql';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { AnalyticsService } from '@objectstack/service-analytics';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { CaseDataset } from '../src/service/datasets/case.dataset';
 
 /**

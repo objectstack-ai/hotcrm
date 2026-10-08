@@ -2,7 +2,7 @@
 
 import { readdirSync, readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { flowNodesDeep } from './helpers/flow-regions';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';

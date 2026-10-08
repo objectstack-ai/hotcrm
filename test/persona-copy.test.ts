@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { PERSONAS, normalise } from './helpers/persona-vocabulary';
 
 /**
@@ -22,8 +22,9 @@ import { PERSONAS, normalise } from './helpers/persona-vocabulary';
  *
  * ## What this reads, and why it reads all of it
  *
- * The scan walks the RESOLVED stack — `objectstack.config.ts` after every
- * `src/` module is imported and registered — not the source text. That choice
+ * The scan walks the RESOLVED stacks — the two package stacks
+ * `objectstack.config.ts` composes, after every `src/` module is imported and
+ * registered (`test/helpers/composed-stack.ts`) — not the source text. That choice
  * is load-bearing twice over:
  *
  * - **Comments are structurally excluded.** They are the one legitimate place

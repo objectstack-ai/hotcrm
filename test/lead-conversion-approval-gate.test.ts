@@ -2,7 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { ExpressionEngine } from '@objectstack/formula';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import leadHooks from '../src/sales/objects/lead.hook';
 import { ConvertLeadAction } from '../src/sales/actions/lead.actions';
 import { LeadConversionFlow } from '../src/sales/flows/lead-conversion.flow';

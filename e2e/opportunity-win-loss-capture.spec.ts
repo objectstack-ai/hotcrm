@@ -31,7 +31,7 @@ import type { APIRequestContext } from '@playwright/test';
  *
  *   - that every settled SEED supplies its reason is
  *     `test/win-loss-capture.test.ts` → "every settled seed carries its reason",
- *     which reads `objectstack.config`'s own seed buckets, so it sees every
+ *     which reads the seed families the app's package stacks register, so it sees every
  *     record rather than the first 200 rows some user can see;
  *   - that the seed's WRITE SHAPE — an insert landing directly in a settled
  *     stage — is subject to the rule at all is the pair of insert-path cases

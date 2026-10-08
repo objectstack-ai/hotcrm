@@ -4,7 +4,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import { SysUser } from '@objectstack/platform-objects';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { ATTENDEE_RESOLUTIONS } from '../src/sales/objects/event_attendee.object';
 import { eventAttendeesFromContacts, eventAttendeesFromLeads } from '../src/sales/data/activity.seed';
 
