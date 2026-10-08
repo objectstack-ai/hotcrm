@@ -317,6 +317,43 @@ export const LeadConversionFlow: Flow = {
       },
     },
     {
+      // Branching is on edges `e31` / `e32` — see `decision_account`. The
+      // match-key guard sits between the duplicate verdict and `screen_1`, so
+      // it dominates `find_account` and a key-less lead is refused before the
+      // rep fills in the form and before any write. It is the LAST of the
+      // three refusals on purpose: an unapproved lead or a confirmed duplicate
+      // is told that verdict first, and a missing key is a repairable data
+      // gap rather than a verdict.
+      id: 'decision_match_key', type: 'decision', label: 'Company Match Key?',
+    },
+    {
+      // The KEY-LESS refusal (#2017). Why `find_account` must not run without
+      // a key is recorded on that node; this is what the rep reads instead.
+      //
+      // A refusal, not a new account, and that is the flow's own stated intent
+      // rather than a fresh choice: a conversion that stops is far cheaper to
+      // diagnose than one that quietly attaches to the wrong account or
+      // creates a duplicate one, and `screen_1` offers the rep no account
+      // choice that could confirm a match by hand.
+      //
+      // The copy claims only what holds on every path into it: the key is
+      // derived from `company` on every write that carries it
+      // (`lead_duplicate_check`), and nothing has been written, because every
+      // create and update in this flow sits behind `screen_1`. Flow copy is
+      // English-only in this repo — see `warn_duplicate`.
+      //
+      // Field-less screen: `waitForInput` is what turns it from a server-side
+      // pass-through into the dialog the rep reads. See
+      // `refuse_confirmed_duplicate` for the mechanism.
+      id: 'refuse_no_match_key', type: 'screen', label: 'Conversion Refused',
+      config: {
+        title: 'Conversion refused',
+        description:
+          "This lead's company has no match key, so conversion cannot tell which account it belongs to, and it will not guess: a guess could file the contact and opportunity under another customer. Saving the lead's Company rebuilds the key, so save it again, then convert. Nothing has been created.",
+        waitForInput: true,
+      },
+    },
+    {
       // Account dedupe: match on the NORMALIZED company name, never on the raw
       // one — "Acme Corp" and "ACME  Corp" are the same account.
       //
@@ -337,23 +374,34 @@ export const LeadConversionFlow: Flow = {
       // Normalize-then-EXACT only: lower + trim + collapse internal
       // whitespace. Fuzzy matching stays out of scope.
       //
-      // If the lead carries NO `company_normalized`, this node does not fall
-      // back and does not match everything — `get_record` REFUSES TO RUN:
+      // A lead with NO `company_normalized` never reaches this node:
+      // `decision_match_key`, ahead of `screen_1`, refuses it first. The node
+      // cannot be left to refuse on its own, because "no key" arrives in two
+      // shapes that behave differently (both measured on 17.7.0):
       //
-      //   get_record: refusing to run — 1 filter condition(s) resolved to
-      //   nothing and were dropped from the query: `{leadRecord.company_
-      //   normalized}` (at name_normalized). An absent condition does not
-      //   narrow a query, it widens it …
+      //   · ABSENT — a sparse datasource (`driver-memory` / `driver-mongodb`)
+      //     on a row never written with the column. The token resolves to
+      //     nothing and `get_record` refuses to run, so the run FAILS
+      //     (`FLOW_FAILED`, "refusing to run — 1 filter condition(s) resolved
+      //     to nothing and were dropped from the query …").
+      //   · NULL — SQL, or any datasource once the column is written empty,
+      //     which `lead_duplicate_check` does on purpose for a company that
+      //     folds to nothing. The token resolves to `null`, and a bare `null`
+      //     in a filter is the platform's documented HAS-NO-VALUE predicate
+      //     (`$eq: null`, `@objectstack/spec` `data/filter.zod.ts`). This
+      //     lookup then MATCHES every account whose own key is null, and the
+      //     lead converts onto an unrelated customer's account (#2017).
       //
-      // (measured on 17.0.0-rc.1; pinned in the test file). That is the right
-      // failure: the only way to reach it is a lead row written before the
-      // producer existed, which is what the backfill in docs/MAINTENANCE.md
-      // §3.3 is for, and a conversion that stops with that message is far
-      // cheaper to diagnose than one that quietly creates a duplicate account.
+      // A key-less lead is not only a row written before the producer existed
+      // (the backfill in docs/MAINTENANCE.md §3.3): a non-string company
+      // written through the record API folds to `null` too. A conversion that
+      // stops is far cheaper to diagnose than one that quietly attaches to the
+      // wrong account or creates a duplicate one, so the answer is the
+      // refusal the rep reads in `refuse_no_match_key`.
       //
       // ⛔ Never paper this over with a second, case-sensitive lookup on the
-      // raw `name`: a missing key means the producer did not run, and a
-      // tolerant consumer path would hide that while restoring the exact bug
+      // raw `name`: a missing key means the producer could not derive one, and
+      // a tolerant consumer path would hide that while restoring the exact bug
       // this node exists to fix.
       id: 'find_account', type: 'get_record', label: 'Find Existing Account',
       config: { objectName: 'crm_account', filter: { name_normalized: '{leadRecord.company_normalized}' }, outputVariable: 'matchedAccount' },
@@ -563,8 +611,22 @@ export const LeadConversionFlow: Flow = {
     { id: 'e21', source: 'decision_duplicate', target: 'warn_duplicate', type: 'default', condition: P`has(vars.leadRecord) && has(vars.leadRecord.duplicate_status) && vars.leadRecord.duplicate_status == "suspected"`, label: 'Suspected' },
     { id: 'e25', source: 'decision_duplicate', target: 'refuse_confirmed_duplicate', type: 'default', condition: P`has(vars.leadRecord) && has(vars.leadRecord.duplicate_status) && vars.leadRecord.duplicate_status == "confirmed"`, label: 'Confirmed' },
     { id: 'e22', source: 'decision_duplicate', target: 'no_duplicate_warning', type: 'default', condition: P`!has(vars.leadRecord) || !has(vars.leadRecord.duplicate_status) || (vars.leadRecord.duplicate_status != "suspected" && vars.leadRecord.duplicate_status != "confirmed")`, label: 'Clean' },
-    { id: 'e23', source: 'warn_duplicate', target: 'screen_1', type: 'default' },
-    { id: 'e24', source: 'no_duplicate_warning', target: 'screen_1', type: 'default' },
+    // Both clear duplicate branches pass the match-key guard before the form.
+    { id: 'e23', source: 'warn_duplicate', target: 'decision_match_key', type: 'default' },
+    { id: 'e24', source: 'no_duplicate_warning', target: 'decision_match_key', type: 'default' },
+    // ── The match-key guard (#2017) ────────────────────────────────────
+    //
+    // TOTAL and PARTITIONING, for the reason recorded at `e28` / `e29`: `e32`
+    // is `e31` negated by De Morgan, so exactly one holds for every shape
+    // `get_lead` can bind — unbound, a null row, the column absent, null,
+    // empty, or keyed. `has()` alone is not the test: on a row that carries
+    // the column as null it answers true, so the value needs `isBlank` too.
+    // Fail-CLOSED, unlike the approval gate: without a key there is nothing to
+    // match on, and a guess is the defect.
+    { id: 'e31', source: 'decision_match_key', target: 'screen_1', type: 'default', condition: P`has(vars.leadRecord) && has(vars.leadRecord.company_normalized) && !isBlank(vars.leadRecord.company_normalized)`, label: 'Has match key' },
+    { id: 'e32', source: 'decision_match_key', target: 'refuse_no_match_key', type: 'default', condition: P`!has(vars.leadRecord) || !has(vars.leadRecord.company_normalized) || isBlank(vars.leadRecord.company_normalized)`, label: 'No match key' },
+    // Rejoins nothing, exactly like `e26` / `e30`.
+    { id: 'e33', source: 'refuse_no_match_key', target: 'end', type: 'default' },
     // The refusal branch rejoins nothing: it goes straight to `end`, so no
     // node that writes is downstream of it. That is the refusal — the flow's
     // every create/update sits behind `screen_1`, which this path never
@@ -573,6 +635,11 @@ export const LeadConversionFlow: Flow = {
     { id: 'e2', source: 'screen_1', target: 'find_account', type: 'default' },
     { id: 'e4', source: 'find_account', target: 'decision_account', type: 'default' },
     // Existing account → reuse; no account → create. Both converge on create_contact.
+    // `find_account` is reached only with a match key (`e31`), so a match
+    // here is an equality on a real key, never the has-no-value predicate.
+    // ⛔ No second copy of the key test on these two edges: it could never
+    // be false here, and an inert restatement of a live predicate is the
+    // shape #650 retired from this repo's decision nodes.
     { id: 'e5', source: 'decision_account', target: 'use_existing_account', type: 'default', condition: P`vars.matchedAccount != null`, label: 'Existing' },
     { id: 'e6', source: 'decision_account', target: 'create_account', type: 'default', condition: P`vars.matchedAccount == null`, label: 'New' },
     { id: 'e7', source: 'create_account', target: 'use_new_account', type: 'default' },

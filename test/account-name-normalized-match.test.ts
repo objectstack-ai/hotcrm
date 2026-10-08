@@ -6,7 +6,8 @@ import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { applySystemFields } from '@objectstack/objectql';
 import stack from './helpers/composed-stack';
 import type { VerifyStack } from '@objectstack/verify';
-import { hotcrmStack, signUpPerson, systemUpdate, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, systemUpdate, conditionHolds, type Person } from './helpers/verify-stack';
+import { LeadConversionFlow } from '../src/sales/flows/lead-conversion.flow';
 
 type Rec = Record<string, any>;
 
@@ -537,43 +538,66 @@ describe('acceptance: a case/whitespace variant reuses the same account', () => 
   });
 
   /**
-   * ⚠️ MEASURED DEFECT — reported as a finding on this card, pinned here so the
-   * fix is noticed.
+   * The un-backfilled LEAD case (docs/MAINTENANCE.md §3.3), and the business
+   * fact #2017 restores: a lead with no match key STOPS the conversion rather
+   * than widen the account lookup — "a silent match-all would attach the
+   * conversion to an arbitrary account, which is far worse than failing".
    *
-   * The un-backfilled LEAD case (docs/MAINTENANCE.md §3.3). The intent this
-   * file has always stated: a lead with no match key STOPS the conversion
-   * rather than widen the account lookup — "a silent match-all would attach
-   * the conversion to an arbitrary account, which is far worse than failing".
-   * The flow harness this suite used to run on proved it with the key ABSENT,
-   * where the filter token resolves to nothing and `get_record` refuses.
+   * On the real engine a key-less lead is usually a NULL key (SQL, and the
+   * sparse datasource once the column is written empty), and a bare `null` in
+   * the `find_account` filter is the platform's documented has-no-value
+   * predicate: it MATCHES every account whose key is also null. Measured on
+   * 17.7.0 before the fix, both datasources: the lead converted onto the
+   * UNRELATED key-less account written below. Such keys arise from ordinary
+   * writes too (a non-string name or company folds to `null`, above), not
+   * only from an un-backfilled install.
    *
-   * On the real engine a key-less lead is a NULL key (SQL, and the sparse
-   * datasource once the column is written empty), the token resolves to
-   * `null`, and the lookup becomes `name_normalized = NULL` — which MATCHES
-   * every account whose key is also NULL. Measured on 17.7.0, both
-   * datasources: the lead converts onto an UNRELATED key-less account. Such
-   * keys arise from ordinary writes too (a non-string name or company folds to
-   * `null`, above), not only from an un-backfilled install.
+   * So the flow refuses ahead of its form (`refuse_no_match_key`), and the
+   * pin reads the outcome off the engine after the rep submits that dialog:
+   * the lead is not converted, the unrelated account gained no contact, and
+   * no account was created for the lead's company.
    */
-  it('⚠️ a lead with no match key converts onto an UNRELATED key-less account (measured defect)', async () => {
+  it('a lead with no match key is refused, and attaches to no account (#2017)', async () => {
     const n = ++k;
     const unrelated = await verify.hooks.run('crm_account', 'insert', { name: company('Unrelated Legacy Co', n) }, { as: manager.token });
     await systemUpdate(verify, 'crm_account', { id: unrelated.id, name_normalized: null });
     const legacy = await leadFor(company('Acme Corp', n));
     await systemUpdate(verify, 'crm_lead', { id: legacy.id, company_normalized: null });
-    const done = await convert(legacy.id);
 
-    expect(done.success, 'the conversion of a key-less lead now stops — the defect is fixed: rewrite this case to pin the refusal').toBe(true);
+    const started = await verify.flows.run('lead_conversion', { recordId: legacy.id }, { as: manager.token });
+    const screen = (started.screen ?? null) as Rec | null;
+    expect(started.status, 'the conversion did not stop on a dialog').toBe('paused');
+    expect(screen?.nodeId, 'a key-less lead reached the conversion form').toBe('refuse_no_match_key');
+    // Submitting the refusal is the rep's next click, and the state after it
+    // is the claim: the branch reaches `end` without one create or update.
+    const done = await verify.flows.resume(started, { createOpportunity: false }, { as: manager.token });
+    expect(done.success, 'submitting the refusal failed the run').toBe(true);
+
     const [after] = await verify.rows('crm_lead', { id: legacy.id });
-    // Onto SOME key-less account that is not its own — which one is whichever
-    // the driver returns first (here, the one written above, unless another
-    // key-less account exists).
-    const [attached] = await verify.rows('crm_account', { id: after!.converted_account });
-    expect(attached, 'the key-less lead attached to no account').toBeTruthy();
-    expect(attached!.name_normalized, 'it attached to a keyed account').toBeNull();
-    expect(attached!.name, 'it attached to an account of its own company').not.toBe(company('Acme Corp', n));
-    expect(await verify.rows('crm_account', { name: company('Acme Corp', n) }), 'no account of its own').toHaveLength(0);
-    expect(unrelated.id).toBeTruthy();
+    expect(Boolean(after!.is_converted), 'the key-less lead was converted').toBe(false);
+    expect(after!.converted_account ?? null, 'the key-less lead was attached to an account').toBeNull();
+    expect(await verify.rows('crm_contact', { crm_account: unrelated.id }), 'the unrelated account gained a contact').toHaveLength(0);
+    expect(await verify.rows('crm_account', { name: company('Acme Corp', n) }), 'an account was created for the lead').toHaveLength(0);
+  });
+
+  /**
+   * The guard's two edges PARTITION every shape `get_lead` can bind, measured
+   * on the real evaluator — the pairing `e28`/`e29` and `e21`/`e22`/`e25` are
+   * pinned with, for the same reason: a decision that declares no
+   * `config.conditions` takes every out-edge whose condition holds, so an
+   * overlap would refuse the lead AND convert it in one run.
+   */
+  it.each<[string, Rec, string]>([
+    ['a lead the fetch never bound', {}, 'e32'],
+    ['a null row (the fetch missed)', { leadRecord: null }, 'e32'],
+    ['the column absent (sparse datasource)', { leadRecord: { id: 'l1' } }, 'e32'],
+    ['the column null (SQL)', { leadRecord: { id: 'l1', company_normalized: null } }, 'e32'],
+    ['the column empty', { leadRecord: { id: 'l1', company_normalized: '' } }, 'e32'],
+    ['a key', { leadRecord: { id: 'l1', company_normalized: 'acme corp' } }, 'e31'],
+  ])('the match-key guard takes exactly one edge for %s', (_label, vars, expected) => {
+    const out = (LeadConversionFlow.edges as Rec[]).filter((e) => e.source === 'decision_match_key');
+    expect(out.map((e) => e.id).sort()).toEqual(['e31', 'e32']);
+    expect(out.filter((e) => conditionHolds(verify, e.condition, vars)).map((e) => e.id)).toEqual([expected]);
   });
 
   it('an account with no match key is invisible — the reason the backfill is not optional', async () => {

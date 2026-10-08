@@ -80,8 +80,10 @@ const campaignLeadConversionRefresh: Hook = {
       (typeof input?.id === 'string' && input.id) ||
       (typeof previous?.id === 'string' ? (previous.id as string) : '');
     if (!leadId) return;
+    // `id` is projected because the promotion below updates each row by it:
+    // the SQL datasource returns exactly the columns a read names (#2018).
     const memberships = await api.object('crm_campaign_member').find({
-      where: { crm_lead: leadId }, fields: ['crm_campaign', 'status'], top: 500,
+      where: { crm_lead: leadId }, fields: ['id', 'crm_campaign', 'status'], top: 500,
     });
     for (const m of memberships) {
       const memberId = typeof m.id === 'string' ? m.id : '';

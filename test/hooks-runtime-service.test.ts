@@ -571,11 +571,12 @@ describe('campaign_lead_conversion_refresh', () => {
    * one, sent in the other), and another lead L2 is in the first. The flip of
    * `is_converted` is the admin's (who may write members and campaigns).
    *
-   * On the SPARSE datasource. The promotion reads the lead's memberships with a
-   * field projection that does not name `id`, then updates each by its `id`:
-   * `driver-memory` (like `driver-mongodb`) hands `id` back regardless, the SQL
-   * driver hands back exactly the projected columns — so on SQL every
-   * membership is skipped. That half is pinned as a measured defect at the end.
+   * On the SPARSE datasource, and the last case once more on SQL, the default.
+   * The promotion reads the lead's memberships with a field projection, then
+   * updates each by its `id`: `driver-memory` (like `driver-mongodb`) hands
+   * `id` back whether or not the projection names it, the SQL driver hands back
+   * exactly the projected columns — so the read names `id`, or on SQL every
+   * membership is skipped (#2018).
    */
   const desk = {} as { verify: VerifyStack; admin: string; rep: Person; marketer: Person };
   beforeAll(async () => {
@@ -696,21 +697,21 @@ describe('campaign_lead_conversion_refresh', () => {
   });
 
   /**
-   * ⚠️ MEASURED DEFECT — reported as a finding on this card, pinned here so the
-   * fix is noticed. On SQL — the datasource this app boots on by default — the
-   * memberships the hook reads come back without their `id` (the projection
-   * does not name it), so the promotion skips every one; the campaign refresh
-   * after it still runs. Measured on 17.7.0: the admin converts the lead, the
-   * campaign counts the conversion, and the membership is never `converted`.
+   * On SQL — the datasource this app boots on by default — a converted lead's
+   * memberships are promoted too. Until #2018 they never were: the hook's read
+   * did not name `id`, the SQL driver returned only `crm_campaign` and
+   * `status`, and the promotion skipped every row while the campaign refresh
+   * after it still counted the conversion.
    */
-  it('⚠️ on SQL no membership is ever promoted (measured defect)', async () => {
+  it('on SQL, a converted lead’s memberships are promoted', async () => {
     const s = await store('sent', verify);
     await verify.hooks.run('crm_lead', 'update', { id: s.l1.id, is_converted: true }, as(admin));
+    // The handler promotes the members before it refreshes their campaigns, so
+    // once the campaign has counted the conversion the members are settled.
     await settles('crm_campaign', s.cmp1.id, (c) => expect(c.num_converted_leads).toBe(1));
-    expect(
-      (await stored('crm_campaign_member', s.m1.id)).status,
-      'the membership is promoted on SQL now — the defect is fixed: drop this case',
-    ).toBe('responded');
+    expect((await stored('crm_campaign_member', s.m1.id)).status, 'a responded member converts').toBe('converted');
+    expect((await stored('crm_campaign_member', s.m2.id)).status, 'a sent member converts too').toBe('converted');
+    expect((await stored('crm_campaign_member', s.m3.id)).status, "another lead's membership is untouched").toBe('sent');
   });
 });
 
