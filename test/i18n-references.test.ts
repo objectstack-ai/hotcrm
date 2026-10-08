@@ -291,12 +291,15 @@ describe('select fields are translated in every locale', () => {
  *
  * Nothing in CI caught that at the time: `pnpm lint` then ran with
  * `--skip-i18n`, and `objectstack lint` exited 0 on warnings. Neither holds
- * now — `pnpm lint` is `objectstack lint --strict` (#1581), which runs the
- * `i18n/missing-*` rules and fails on a non-default-locale gap. What it does
- * not report is a missing `en` entry where the metadata carries an inline
- * label (that label IS the `en` text), while this repo requires the explicit
- * `en` entry (#679) — which, with the surface list below, is why these
- * assertions live here rather than in a lint config.
+ * now — `pnpm lint` is `objectstack lint --strict` (#1581) and runs the
+ * `i18n/missing-*` rules — but on this artifact they report nothing: since
+ * the two-package composition (#1907) the CLI's coverage pass reads the
+ * composed top level, which carries no `translations` and no metadata
+ * (measured on 17.7.0 in #1582: a deleted `zh-CN` label is exit 0). Where the
+ * rules do run, they still do not report a missing `en` entry when the
+ * metadata carries an inline label (that label IS the `en` text), while this
+ * repo requires the explicit `en` entry (#679). This suite is the gate, which
+ * is why the assertions live here rather than in a lint config.
  *
  * This started as a zh-CN-only guard, because zh-CN was completed first ahead
  * of a customer trial while `en` / `ja-JP` / `es-ES` still carried the debt in
@@ -593,8 +596,8 @@ describe('every locale is complete on every authored surface', () => {
    *    2298 i18n issue(s) hidden`, because app-authored `_views` completeness
    *    was not in the set the linter checked at all. So this was NOT the #494
    *    family (real warnings suppressed by a flag); it was a surface nobody was
-   *    checking. (Today `pnpm lint` is `--strict` and 17.7.0 reports a non-`en`
-   *    gap as `i18n/missing-view`; the `en` gap below is still silent.)
+   *    checking. (`pnpm lint` is `--strict` today, but its `i18n/missing-*`
+   *    coverage reports nothing on this artifact — see this describe's header.)
    *  - Every gap was in `en`, and in the source locale a missing key is
    *    invisible: the resolver falls back to the metadata `label`, which is
    *    already correct English. #679 wrote this down for select options, page
@@ -741,7 +744,8 @@ describe('every locale is complete on every authored surface', () => {
    * does not declare". `objectstack lint --strict` reports an orphan id, and a
    * key under an app the stack does not serve, as `translation-target-unknown`
    * (error), and `pnpm lint` fails on it. The forward direction is lint's
-   * `i18n/missing-navigation`.
+   * `i18n/missing-navigation`, which reports nothing on this artifact today
+   * (see this describe's header).
    */
 
   /**
