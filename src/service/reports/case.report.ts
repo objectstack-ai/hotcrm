@@ -29,21 +29,24 @@ export const SlaPerformanceReport: Report = {
 };
 
 /**
- * Daily case inflow by priority — matrix over `created_date`. Support managers
+ * Daily case inflow by priority — matrix over `created_at`. Support managers
  * use this to spot priority spikes (e.g. a P1 burst on Tuesday) and staff
  * accordingly.
  *
- * `case_metrics.created_date` declares the day bucket, so records created at
+ * `case_metrics.created_at` declares the day bucket, so records created at
  * different times on the same day aggregate into one column.
+ *
+ * No `runtimeFilter` (#1992). The column used to be `created_date`, which
+ * nothing wrote on a real case, so this report carried
+ * `{ created_date: { $ne: null } }` against a headerless '—' column and every
+ * case created through the UI or REST fell out of it. `created_at` is the
+ * platform's own creation stamp, written on every insert, so there is no
+ * empty bucket to exclude and every case opened is counted.
  */
 export const CasesOpenedByDayPriorityReport: Report = {
   name: 'cases_opened_by_day_priority',
   label: 'Cases Opened by Priority × Day',
   description: 'Daily case inflow split by priority',
-  dataset: 'case_metrics', rows: ['priority'], columns: ['created_date'], values: ['case_count'],
+  dataset: 'case_metrics', rows: ['priority'], columns: ['created_at'], values: ['case_count'],
   type: 'matrix',
-  // `created_date` is stamped by the platform, not required by the schema — a
-  // case that reaches the table without one would group into a headerless '—'
-  // column. "Cases opened" needs an open date; exclude the empty bucket.
-  runtimeFilter: { created_date: { $ne: null } },
 };

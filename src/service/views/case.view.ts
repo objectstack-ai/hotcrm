@@ -107,7 +107,11 @@ export const CaseViews = defineView({
       data: { provider: 'object', object: 'crm_case' },
       columns: ['case_number', 'subject'],
       timeline: {
-        startDateField: 'created_date',
+        // `created_at`, the platform's own creation stamp — the object's
+        // duplicate `created_date` was removed in #1992 because nothing wrote
+        // it on a real case, so every user-created case started its bar at
+        // null. Same spelling as `deal_timeline` on crm_opportunity (#575 B2).
+        startDateField: 'created_at',
         endDateField: 'closed_date',
         titleField: 'subject',
         groupByField: 'owner_id',
@@ -327,8 +331,9 @@ export const CaseViews = defineView({
    * `mode === 'create'` `Je` additionally drops formula / summary / autonumber
    * fields). An authored section renders its list VERBATIM. That is the whole
    * mechanism behind this defect: the platform would have hidden
-   * `created_date`, `closed_date`, `resolution_time_hours` and `is_closed`
-   * from a creator by itself, and naming them in a section put them back.
+   * `created_date` (retired in #1992), `closed_date`, `resolution_time_hours`
+   * and `is_closed` from a creator by itself, and naming them in a section put
+   * them back.
    *
    * ## ⛔ Why not gate the old sections on a predicate instead
    *
@@ -350,7 +355,10 @@ export const CaseViews = defineView({
    * still has the surface it belongs on (pinned in
    * `test/case-create-form-narrowing.test.ts`, both directions):
    *
-   *   created_date, closed_date        readonly; `case_timeline` start/end
+   *   closed_date                      readonly; `case_timeline` end
+   *                                    (its start is the platform's
+   *                                    `created_at`; `created_date` was
+   *                                    retired in #1992)
    *   sla_due_date                     `case.hook.ts` stamps it from the
    *                                    priority × tier matrix; list column,
    *                                    sort key, `sla_calendar.startDateField`,

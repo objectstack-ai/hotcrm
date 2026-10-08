@@ -46,7 +46,11 @@ export const ServiceDashboard: Dashboard = {
   // executes it against a real SQLite database and compares every widget to a
   // ground truth computed in the same run, so a re-regression fails CI here
   // rather than being discovered as an all-zero dashboard again.
-  dateRange: { field: 'created_date', defaultRange: 'last_90_days', allowCustomRange: true },
+  //
+  // The range windows `created_at`, the platform's creation stamp (#1992). It
+  // used to window `created_date`, which nothing wrote on a real case, so
+  // every case created through the UI or REST fell outside every range.
+  dateRange: { field: 'created_at', defaultRange: 'last_90_days', allowCustomRange: true },
 
   globalFilters: [
     {
@@ -169,7 +173,7 @@ export const ServiceDashboard: Dashboard = {
       title: 'Daily Case Volume',
       description: 'New cases created over the last 30 days',
       type: 'area',
-      filter: { created_date: { $gte: '{30_days_ago}' } },
+      filter: { created_at: { $gte: '{30_days_ago}' } },
       // Opted out ON PURPOSE, re-decided in #1157 rather than inherited.
       //
       // The floor above is no longer inert: on 17.0.0 `{30_days_ago}` resolves
@@ -186,7 +190,7 @@ export const ServiceDashboard: Dashboard = {
       // is the intended reading.
       filterBindings: { dateRange: false },
       colorVariant: 'blue',
-      dataset: 'case_metrics', dimensions: ['created_date'], values: ['case_count'],
+      dataset: 'case_metrics', dimensions: ['created_at'], values: ['case_count'],
       layout: { x: 0, y: 6, w: 8, h: 4 },
       chartConfig: {
         showLegend: false,

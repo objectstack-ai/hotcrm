@@ -302,9 +302,12 @@ const caseValidation: Hook = {
         (typeof input.closed_date === 'string' && input.closed_date) ||
         (typeof ctx.previous?.closed_date === 'string' && (ctx.previous.closed_date as string)) ||
         undefined;
+      // The creation instant is the platform's `created_at` (#1992): stamped
+      // by `sys_stamp_audit_insert` before this hook runs on an insert (a
+      // seed row keeps its authored value), and read back off the stored row
+      // on an update.
       const createdDate =
-        (typeof input.created_date === 'string' && input.created_date) ||
-        (typeof ctx.previous?.created_date === 'string' && (ctx.previous.created_date as string)) ||
+        (typeof input.created_at === 'string' && input.created_at) ||
         (typeof ctx.previous?.created_at === 'string' && (ctx.previous.created_at as string)) ||
         undefined;
       if (closedDate && createdDate) {

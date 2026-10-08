@@ -68,7 +68,6 @@ export const service: Record<string, ObjectTranslationData> = {
         options: { email: 'Email', phone: 'Teléfono', web: 'Web', chat: 'Chat', social_media: 'Redes Sociales' },
       },
       owner_id: { label: 'Propietario del Caso' },
-      created_date: { label: 'Fecha de Creación' },
       closed_date: { label: 'Fecha de Cierre' },
       first_response_date: { label: 'Fecha de Primera Respuesta' },
       resolution_time_hours: { label: 'Tiempo de Resolución (Horas)' },

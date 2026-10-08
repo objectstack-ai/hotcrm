@@ -72,7 +72,6 @@ export const service: Record<string, ObjectTranslationData> = {
         label: '工单来源',
         options: { email: '邮件', phone: '电话', web: '网站', chat: '在线客服', social_media: '社交媒体' },
       },
-      created_date: { label: '创建日期' },
       closed_date: { label: '关闭日期' },
       first_response_date: { label: '首次响应日期' },
       resolution_time_hours: { label: '解决耗时（小时）' },

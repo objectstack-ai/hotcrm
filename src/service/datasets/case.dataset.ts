@@ -17,7 +17,9 @@ export const CaseDataset = defineDataset({
     { name: 'priority', label: 'Priority', field: 'priority', type: 'string' },
     { name: 'origin', label: 'Origin', field: 'origin', type: 'string' },
     { name: 'type', label: 'Type', field: 'type', type: 'string' },
-    { name: 'created_date', label: 'Created', field: 'created_date', type: 'date', dateGranularity: 'day' },
+    // The platform's creation stamp (#1992) — the same dimension
+    // `account_metrics` and `lead_metrics` declare, bucketed by day here.
+    { name: 'created_at', label: 'Created', field: 'created_at', type: 'date', dateGranularity: 'day' },
     // Article ranking by resolutions (#601) — group closed cases by the
     // article that resolved them. `type: 'lookup'`, the same spelling the
     // `owner` dimension on `opportunity_metrics` uses for `owner_id`.

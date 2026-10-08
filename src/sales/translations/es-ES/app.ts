@@ -217,7 +217,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: 'Métricas de casos',
       description: 'Capa semántica para el recuento de casos, el tiempo de resolución y el SLA',
       dimensions: {
-        created_date: {
+        created_at: {
           label: 'Creado',
         },
         origin: {

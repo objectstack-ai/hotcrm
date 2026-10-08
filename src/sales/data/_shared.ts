@@ -42,10 +42,12 @@ import { cel } from '@objectstack/spec';
  *
  * The old conclusion survives the corrected premise, and is still the rule:
  *
- * 1. Seeding historical values into readonly fields (`created_date`,
- *    `stage_entry_date`, `last_contacted_date`, `actual_revenue`) is legitimate
+ * 1. Seeding historical values into readonly fields (`stage_entry_date`,
+ *    `last_contacted_date`, `actual_revenue`, and the platform's own
+ *    `created_at` — which the case seeds author since #1992) is legitimate
  *    and load-bearing — it is the only way demo reports get history — and the
- *    platform explicitly preserves explicit seed values.
+ *    platform explicitly preserves explicit seed values (`created_at` on the
+ *    first insert since @objectstack/objectql 17.7.0, objectstack#21646).
  * 2. Every seeded value of a hook-owned field MUST equal what the hook would
  *    compute (`is_closed` ⇔ status, `resolution_time_hours` ⇔ closed−created,
  *    opportunity `probability`/`forecast_category`/`expected_revenue` ⇔ stage,

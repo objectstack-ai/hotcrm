@@ -80,8 +80,8 @@ import { celDaysAgo, linesTotal, type LineSpec } from './_shared';
 // so hooks could write it, and no hook derives it from anything on the account.
 // It is a HISTORICAL fact — "when did anyone last speak to this customer" — and
 // authoring history into a field whose writers only ever stamp the current date
-// is doctrine rule 1, the same licence `stage_entry_date` and `created_date`
-// already use.
+// is doctrine rule 1, the same licence `stage_entry_date` and the case seeds'
+// `created_at` already use.
 //
 // What the writers DO impose is a constraint on the events seeded beside these
 // rows, and it decides the whole layout below. Lifecycle hooks run over seed

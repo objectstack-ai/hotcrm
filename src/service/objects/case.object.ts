@@ -187,12 +187,18 @@ export const Case = ObjectSchema.create({
     // Assignment
     
     // SLA and Metrics
-    created_date: Field.datetime({
-      label: 'Created Date',
-      group: 'sla',
-      readonly: true,
-    }),
-    
+    //
+    // NO `created_date` here (#1992, the #575 B2 precedent on
+    // `crm_opportunity`): the platform already injects `created_at` on every
+    // object and stamps it on every insert, while this duplicate had no writer
+    // at all — only the seed data set it, so every case created through the
+    // UI or REST stored null and fell out of "Cases Opened by Priority × Day"
+    // and the service dashboard's date range. Surfaces that need the creation
+    // instant read `created_at` (the `case_metrics` dataset, the dashboard
+    // range, the `case_timeline` view, `case_sla_defaults`' resolution time);
+    // the seeds author it directly, and the seed loader keeps an authored
+    // `created_at` on first insert since @objectstack/objectql 17.7.0
+    // (objectstack#21646).
     closed_date: Field.datetime({
       label: 'Closed Date',
       group: 'sla',

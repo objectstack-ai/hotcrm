@@ -218,7 +218,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: '工单指标',
       description: '统计工单数量、解决时长与 SLA 的语义层',
       dimensions: {
-        created_date: {
+        created_at: {
           label: '创建时间',
         },
         origin: {

@@ -43,7 +43,10 @@ const TIER_BY_ACCOUNT = new Map<string, string>(
 );
 
 /**
- * `created_date + matrix(priority, tier)`, as a CEL expression.
+ * `created_at + matrix(priority, tier)`, as a CEL expression — the case's
+ * authored creation instant (the platform's own `created_at`, which the seed
+ * loader keeps on first insert since @objectstack/objectql 17.7.0,
+ * objectstack#21646) plus the cell `case_sla_defaults` would have applied.
  *
  * `daysAgo(n)` is a UTC midnight, so the hour offset has to be added on top of
  * it — hence `+ duration('Nh')` rather than a second day-granular helper.
@@ -82,7 +85,7 @@ export const cases = defineSeed(Case, {
       is_closed: false,
       is_sla_violated: false,
       is_escalated: false,
-      created_date: cel`daysAgo(2)`,
+      created_at: cel`daysAgo(2)`,
       sla_due_date: celCaseSlaDue(2, 'high', 'Acme Corporation'),
     },
     {
@@ -99,7 +102,7 @@ export const cases = defineSeed(Case, {
       is_sla_violated: true,
       is_escalated: true,
       escalation_reason: 'Customer threatening churn',
-      created_date: cel`daysAgo(5)`,
+      created_at: cel`daysAgo(5)`,
       sla_due_date: celCaseSlaDue(5, 'critical', 'Globex Industries'),
     },
     {
@@ -120,7 +123,7 @@ export const cases = defineSeed(Case, {
       is_sla_violated: false,
       is_escalated: false,
       resolution_time_hours: 24.0,
-      created_date: cel`daysAgo(3)`,
+      created_at: cel`daysAgo(3)`,
       closed_date: cel`daysAgo(2)`,
       sla_due_date: celCaseSlaDue(3, 'medium', 'Initech Solutions'),
     },
@@ -147,7 +150,7 @@ export const cases = defineSeed(Case, {
       resolved_by_article: 'API Rate Limits',
       // closed−created delta, as case.hook computes it.
       resolution_time_hours: 24.0,
-      created_date: cel`daysAgo(7)`,
+      created_at: cel`daysAgo(7)`,
       closed_date: cel`daysAgo(6)`,
       sla_due_date: celCaseSlaDue(7, 'high', 'Wayne Enterprises'),
     },
@@ -164,7 +167,7 @@ export const cases = defineSeed(Case, {
       is_closed: false,
       is_sla_violated: false,
       is_escalated: false,
-      created_date: cel`daysAgo(1)`,
+      created_at: cel`daysAgo(1)`,
       sla_due_date: celCaseSlaDue(1, 'medium', 'Stark Medical'),
     },
     {
@@ -184,7 +187,7 @@ export const cases = defineSeed(Case, {
       is_closed: false,
       is_sla_violated: false,
       is_escalated: false,
-      created_date: cel`daysAgo(4)`,
+      created_at: cel`daysAgo(4)`,
       sla_due_date: celCaseSlaDue(4, 'low', 'Acme Corporation'),
     },
     {
@@ -201,7 +204,7 @@ export const cases = defineSeed(Case, {
       is_sla_violated: true,
       is_escalated: true,
       escalation_reason: 'Affects 30% of mobile users',
-      created_date: cel`daysAgo(3)`,
+      created_at: cel`daysAgo(3)`,
       sla_due_date: celCaseSlaDue(3, 'critical', 'Globex Industries'),
     },
     {
@@ -221,7 +224,7 @@ export const cases = defineSeed(Case, {
       resolution: 'Delivered CSV bulk-import in the 9.4 release; shared the docs link with the customer.',
       // closed−created delta, as case.hook computes it.
       resolution_time_hours: 48.0,
-      created_date: cel`daysAgo(10)`,
+      created_at: cel`daysAgo(10)`,
       closed_date: cel`daysAgo(8)`,
       sla_due_date: celCaseSlaDue(10, 'low', 'Wayne Enterprises'),
     },
@@ -325,7 +328,7 @@ export const cases = defineSeed(Case, {
           // / escalation_reason_required).
           ...(status === 'closed' ? { resolution: 'Resolved per standard runbook; root cause documented and customer confirmed.' } : {}),
           ...(status === 'escalated' ? { escalation_reason: 'Escalated to tier-2 engineering for SLA-risk review.' } : {}),
-          created_date: celDaysAgo(ageDays),
+          created_at: celDaysAgo(ageDays),
           // Resolved cases also carry closed_date: case.hook stamps it as the
           // resolved-date proxy while keeping is_closed=false.
           ...(settled ? { closed_date: celDaysAgo(ageDays - resolutionDays) } : {}),

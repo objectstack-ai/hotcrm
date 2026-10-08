@@ -66,7 +66,6 @@ export const service: Record<string, ObjectTranslationData> = {
         options: { email: 'メール', phone: '電話', web: 'ウェブ', chat: 'チャット', social_media: 'ソーシャルメディア' },
       },
       owner_id: { label: 'ケース担当者' },
-      created_date: { label: '作成日' },
       closed_date: { label: 'クローズ日' },
       first_response_date: { label: '初回応答日' },
       resolution_time_hours: { label: '解決時間（時間）' },
