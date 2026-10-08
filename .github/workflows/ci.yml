@@ -53,17 +53,10 @@ jobs:
       # warning fails this step, and suggestions stay advisory. Without the
       # flag only errors fail. `continue-on-error` was hiding exactly the
       # failures worth gating on.
+      # It fails on every `i18n/missing-*` finding too, which is why the separate
+      # i18n lint gate step was retired (#1585).
       - name: Lint metadata conventions
         run: pnpm run lint
-
-      # Added when the step above could not fail on `i18n/missing-*` warnings
-      # (only a default-locale miss is an error; a non-default-locale miss is a
-      # warning). Under `--strict` (#1581) it now fails on both, so this step
-      # overlaps it; retiring it is a separate change. PR #1080 merged 25
-      # enumerated `i18n/missing-page` warnings through a green run before
-      # #1084 zeroed that debt; this step asserts the count stays zero (#1018).
-      - name: i18n lint gate (zero `i18n/missing-*`)
-        run: pnpm run lint:i18n-gate
 
       - name: TypeScript type checking
         run: pnpm run typecheck

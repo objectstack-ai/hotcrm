@@ -7,7 +7,8 @@
  * ## The defect this replaces
  *
  * Both of this repo's guarded gate scripts hand-rolled the comparison, and both
- * were wrong in the same way:
+ * were wrong in the same way (the second was retired in #1585, once
+ * `objectstack lint --strict` failed on every `i18n/missing-*` finding itself):
  *
  *   check-source-token-ratchet.mjs  if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();
  *   check-lint-i18n-gate.mjs        if (import.meta.url === `file://${process.argv[1]}`) process.exit(main());

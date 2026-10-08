@@ -55,8 +55,9 @@ export const MarketingUserProfile = {
       name: 'opportunity_private_owner_only_marketing',
       // A deal flagged Private is visible only to its owner, even to holders of
       // org-wide opportunity read. (`rowLevelSecurity[].label` / `description`
-      // have no runtime effect — liveness: dead in 17.6.0 — so the intent lives
-      // in this comment.)
+      // are display copy — the 17.7.0 liveness ledger marks both live: the
+      // permission editor draws them on the policy card. This policy authors
+      // neither, so its intent lives in this comment.)
       object: 'crm_opportunity',
       operation: 'select' as const,
       using: 'is_private == false || owner_id == current_user.id',

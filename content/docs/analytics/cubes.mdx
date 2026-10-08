@@ -84,7 +84,7 @@ So the three questions this section offered — *"ROI by campaign type"*, *"cost
 
 ## How users interact with datasets
 
-What the app guarantees is the binding: a report or a dashboard tile names a dataset and selects its measures and dimensions by name, and `test/analytics-integrity.test.ts` fails the build if any of those names does not resolve. That is what keeps two tiles showing the same number — and it is also why the names in `src/*/datasets/` are worth reading directly rather than through a copy.
+What the app guarantees is the binding: a report or a dashboard tile names a dataset and selects its measures and dimensions by name, and the platform's own checks — `objectstack validate` and `objectstack lint --strict`, which `pnpm verify` and CI both run — fail the build if any of those names does not resolve. That is what keeps two tiles showing the same number — and it is also why the names in `src/*/datasets/` are worth reading directly rather than through a copy.
 
 The drag-and-drop pivot experience this section used to describe — pick a cube, drag dimensions to rows and columns, filter, pivot, chart, save the view as a report, pin it to a dashboard — is a **platform** surface rather than something HotCRM declares. Nothing in this app's metadata configures such a screen, and nothing here tests one, so this page makes no claim about it in either direction. If your workflow depends on self-service pivoting, verify it against your deployment rather than against this page.
 

@@ -1,19 +1,18 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import { DATE_RANGE_PRESETS } from '@objectstack/spec/ui';
 import stack from './helpers/composed-stack';
 
 /**
  * Analytics metadata guards (#492).
  *
- * `os validate` / `build` check that a report HAS a chart and a dataset name,
- * but never that the chart's axes resolve to measures/dimensions the dataset
- * actually defines, nor that filter time-windows stay relative at runtime.
- * Each rule below was a real defect:
+ * `os validate` / `build` check that a report HAS a chart and a dataset name.
+ * Whether the dataset and its dimensions and measures resolve is checked by
+ * `objectstack lint --strict` (`pnpm lint`; see the retired block below), which
+ * catches the defect this file was first written for: case/opportunity report
+ * charts named measures (`case_number`, `amount`) that exist in no dataset, so
+ * the yAxis rendered empty. What stays here, each rule a real defect:
  *
- *  - case/opportunity report charts named measures (`case_number`, `amount`)
- *    that exist in no dataset — the yAxis rendered empty;
  *  - churn/opportunity reports computed ISO dates at module load, freezing
  *    "last 30 days" into dist/objectstack.json at whatever day the artifact
  *    was built;
@@ -22,15 +21,8 @@ import stack from './helpers/composed-stack';
  */
 
 type AnyRec = Record<string, any>;
-const datasets: AnyRec[] = (stack as any).datasets ?? [];
 const reports: AnyRec[] = (stack as any).reports ?? [];
 const dashboards: AnyRec[] = (stack as any).dashboards ?? [];
-
-const datasetByName = new Map(datasets.map((d) => [d.name, d]));
-const measuresOf = (dataset: string): Set<string> =>
-  new Set((datasetByName.get(dataset)?.measures ?? []).map((m: AnyRec) => m.name));
-const dimensionsOf = (dataset: string): Set<string> =>
-  new Set((datasetByName.get(dataset)?.dimensions ?? []).map((d: AnyRec) => d.name));
 
 /** A report or a joined-report block — anything carrying a dataset binding. */
 const reportBlocks = (r: AnyRec): AnyRec[] =>
@@ -40,41 +32,12 @@ const reportBlocks = (r: AnyRec): AnyRec[] =>
 const allBlocks = reports.flatMap(reportBlocks);
 const labelOf = (b: AnyRec) => (b.__parent ? `${b.__parent}/${b.name}` : b.name);
 
-describe('report dataset bindings resolve', () => {
-  it('every report block names a defined dataset', () => {
-    const bad = allBlocks
-      .filter((b) => b.dataset && !datasetByName.has(b.dataset))
-      .map((b) => `${labelOf(b)}: dataset "${b.dataset}" is not defined`);
-    expect(bad, bad.join('\n  ')).toEqual([]);
-  });
-
-  it('every chart xAxis is a dimension of the report dataset', () => {
-    const bad: string[] = [];
-    for (const b of allBlocks) {
-      if (!b.chart?.xAxis || !b.dataset) continue;
-      if (!dimensionsOf(b.dataset).has(b.chart.xAxis)) {
-        bad.push(`${labelOf(b)}: xAxis "${b.chart.xAxis}" is not a dimension of "${b.dataset}"`);
-      }
-    }
-    expect(bad, `chart xAxis names a missing dimension:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-
-  it('every rows / columns / values entry resolves against the dataset', () => {
-    const bad: string[] = [];
-    for (const b of allBlocks) {
-      if (!b.dataset || !datasetByName.has(b.dataset)) continue;
-      const dims = dimensionsOf(b.dataset);
-      const meas = measuresOf(b.dataset);
-      for (const d of [...(b.rows ?? []), ...(b.columns ?? [])]) {
-        if (!dims.has(d)) bad.push(`${labelOf(b)}: dimension "${d}" not in "${b.dataset}"`);
-      }
-      for (const v of b.values ?? []) {
-        if (!meas.has(v)) bad.push(`${labelOf(b)}: measure "${v}" not in "${b.dataset}"`);
-      }
-    }
-    expect(bad, `report bindings name missing dataset members:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-});
+// ⚰️ RETIRED (#1584): "every report block names a defined dataset" (A1),
+// "every chart xAxis is a dimension of the report dataset" (A3) and "every
+// rows / columns / values entry resolves against the dataset" (A4).
+// `objectstack lint --strict` reports them as `chart-dataset-unknown`,
+// `chart-dimension-unknown` and `chart-measure-unknown` — on a charted, a
+// chartless and a joined-report block alike — and `pnpm lint` fails on each.
 
 describe('metric tiles carry no fabricated trend deltas', () => {
   /**
@@ -170,28 +133,10 @@ describe('time windows stay relative at runtime', () => {
     expect(bad, `absolute dates frozen into metadata:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
-  it('no filter comparand is a bare date-range PRESET name (objectstack#8690)', () => {
-    // A preset name is the picker's vocabulary, not the query layer's. The
-    // console lowers `last_30_days` into `{ from: '{30_days_ago}', to:
-    // '{today}' }` before any filter is sent; a preset name written straight
-    // into metadata never gets that lowering. It is not a `{macro}` either, so
-    // the resolver does not reject it — it reaches the driver as a literal
-    // string, compares false against every row, and the query answers HTTP 200
-    // with ZERO rows and no diagnostic. The symptom is an all-zero dashboard,
-    // indistinguishable at a glance from the #460 defect that cost this
-    // dashboard its date picker for a release. Filed upstream as
-    // objectstack#8690; guarded here because the repair is one grep away.
-    const presets = new Set<string>(DATE_RANGE_PRESETS as readonly string[]);
-    const bad: string[] = [];
-    for (const [where, filter] of filterSources) {
-      for (const [path, value] of filterLeaves(filter ?? {}, '')) {
-        if (presets.has(value)) {
-          bad.push(`${where}${path} = "${value}" — write the macro bounds, e.g. { $gte: '{30_days_ago}' }`);
-        }
-      }
-    }
-    expect(bad, `preset names used as filter comparands:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
+  // ⚰️ RETIRED (#1584): "no filter comparand is a bare date-range PRESET name"
+  // (A8). `objectstack lint --strict` reports a preset name used as a
+  // comparand — bare, under `$eq` or inside `$in`, on a widget or a report —
+  // as `filter-preset-comparand` (objectstack#8690), and `pnpm lint` fails on it.
 });
 
 describe('no duplicate metric layer', () => {

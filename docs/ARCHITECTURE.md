@@ -225,7 +225,8 @@ the platform assistant by surface affinity.
 Skills declare no bespoke tools (ADR-0109). They compose the platform's data
 tools with the `action_<name>` tools the runtime materialises from Actions that
 opt in via `ai.exposed` (ADR-0011) — every name a skill declares must resolve to
-one of those, which `test/skills-integrity.test.ts` enforces.
+one of those, which `pnpm lint` (`objectstack lint --strict`, rule
+`ai-skill-tool-unresolved`) enforces.
 
 The `live_data` skill explicitly requires live schema inspection before
 answering record questions, because admins can change metadata over time.

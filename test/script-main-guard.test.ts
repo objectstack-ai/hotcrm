@@ -10,7 +10,6 @@ import {
   readdirSync,
   rmSync,
   symlinkSync,
-  writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -51,8 +50,10 @@ import { REPO_ROOT } from './helpers/repo-root';
  *
  * That third file was retired outright in #1543 — "does a declared field have a
  * consumer" is a platform diagnostic, not a HotCRM business fact (objectstack#15922
- * is the successor) — so two of the three spellings still have a file. The record
- * stays: it is why the shared helper exists.
+ * is the successor) — and the second, `check-lint-i18n-gate.mjs`, in #1585, once
+ * `objectstack lint --strict` failed on every `i18n/missing-*` finding itself. So
+ * one of the three spellings still has a file. The record stays: it is why the
+ * shared helper exists.
  *
  * ## How this file closes it rather than fixing three files
  *
@@ -145,8 +146,6 @@ let sandbox: string;
 let linkedRepo: string;
 /** A repo-shaped tree with no `src/`, reached through its own symlink. */
 let linkedEmptyRoot: string;
-let greenFixture: string;
-let redFixture: string;
 
 beforeAll(() => {
   sandbox = mkdtempSync(join(tmpdir(), 'script-main-guard-'));
@@ -168,32 +167,6 @@ beforeAll(() => {
   copyFileSync(join(REPO_ROOT, HELPER), join(emptyRoot, HELPER));
   linkedEmptyRoot = join(sandbox, 'linked-empty-root');
   symlinkSync(emptyRoot, linkedEmptyRoot, 'dir');
-
-  // `objectstack lint --json`-shaped reports for the i18n gate's `--fixture` seam.
-  greenFixture = join(sandbox, 'lint-green.json');
-  writeFileSync(
-    greenFixture,
-    JSON.stringify({ passed: true, total: 0, errors: 0, warnings: 0, suggestions: 0, issues: [] }),
-  );
-  redFixture = join(sandbox, 'lint-red.json');
-  writeFileSync(
-    redFixture,
-    JSON.stringify({
-      passed: true,
-      total: 1,
-      errors: 0,
-      warnings: 1,
-      suggestions: 0,
-      issues: [
-        {
-          severity: 'warning',
-          rule: 'i18n/missing-view',
-          message: 'missing ja-JP label',
-          path: 'views/crm_account.list',
-        },
-      ],
-    }),
-  );
 });
 
 afterAll(() => {
@@ -212,12 +185,6 @@ const GUARDED: Guarded[] = [
     // the louder one — a roster that reads as empty is how a ratchet passes by
     // measuring nothing.
     red: { args: [], status: 1, says: 'carries an objects/ directory' },
-  },
-  {
-    script: 'scripts/check-lint-i18n-gate.mjs',
-    runner: process.execPath,
-    green: { args: [], status: 0, says: '0 `i18n/missing-*` issues' },
-    red: { args: [], status: 1, says: '✗ i18n lint gate' },
   },
 ];
 
@@ -303,14 +270,7 @@ describe('scripts/ entry-point guards — behavioural, through a symlinked path'
 
   for (const { script, runner, green, red } of GUARDED) {
     it(`${script} runs and speaks when invoked through a symlink`, () => {
-      const { status, output } = runThroughSymlink(
-        runner,
-        linkedRepo,
-        script,
-        script === 'scripts/check-lint-i18n-gate.mjs'
-          ? ['--fixture', greenFixture, ...green.args]
-          : green.args,
-      );
+      const { status, output } = runThroughSymlink(runner, linkedRepo, script, green.args);
       // Zero bytes was the whole defect: before #1252 this assertion, not the
       // status one, is what caught it.
       expect(output.length, `${script} printed nothing`).toBeGreaterThan(0);
@@ -321,12 +281,11 @@ describe('scripts/ entry-point guards — behavioural, through a symlinked path'
     it.skipIf(red === null)(`${script} goes RED through a symlink, and says why`, () => {
       const expected = red as Case;
       const isRatchet = script === 'scripts/check-source-token-ratchet.mjs';
-      const isI18n = script === 'scripts/check-lint-i18n-gate.mjs';
       const { status, output } = runThroughSymlink(
         runner,
         isRatchet ? linkedEmptyRoot : linkedRepo,
         script,
-        isI18n ? ['--fixture', redFixture, ...expected.args] : expected.args,
+        expected.args,
       );
       expect(status, `${script} should have failed`).toBe(expected.status);
       expect(output).toContain(expected.says);

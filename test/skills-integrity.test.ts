@@ -8,7 +8,7 @@ import stack from './helpers/composed-stack';
  *
  * The defect class: a skill's `tools: [...]` is a list of NAMES. `os
  * validate` and `build` check that each name is a well-formed snake_case
- * string and stop there — nothing resolves it against a tool that exists.
+ * string and stop there; `objectstack lint --strict` resolves it (see below).
  * At runtime an unresolved name is dropped silently, so the model is handed
  * instructions ("call `triage_case` first") describing a capability it does
  * not have, and improvises. Every instance of this bug shipped green: issue
@@ -19,9 +19,9 @@ import stack from './helpers/composed-stack';
  * metadata is a READ-ONLY PROJECTION for Studio discovery — it has no
  * `implementation` field and no framework executor loads it. A hand-authored
  * `defineTool` record would satisfy a naive existence check while remaining
- * exactly as unrunnable. So the resolvable universe below is deliberately
- * narrow: platform built-ins, and the `action_<name>` tools the runtime
- * materialises from Actions that opted in.
+ * exactly as unrunnable. So the resolvable universe is deliberately narrow:
+ * platform built-ins, and the `action_<name>` tools the runtime materialises
+ * from Actions that opted in.
  *
  * Kept in its own file rather than appended to metadata-references.test.ts,
  * which guards UI metadata and is a busy merge surface.
@@ -37,68 +37,6 @@ const skillNames = new Set(skills.map((s) => s.name));
 const flowNames = new Set(flows.map((f) => f.name));
 const action = (name: string) => actions.find((a) => a.name === name);
 
-/**
- * Tools the platform provides — the only names a skill may reference
- * without anything in this repo defining them.
- *
- * TRANSCRIBED VERBATIM from `PLATFORM_PROVIDED_TOOL_NAMES` in
- * `@objectstack/spec@17.0.0-rc.0` (`dist/system`), which the upstream
- * `ai-skill-tool-unresolved` rule resolves against. On the 17.0 upgrade,
- * DELETE this literal and import the real thing:
- *
- *     import { PLATFORM_PROVIDED_TOOL_NAMES } from '@objectstack/spec/system';
- *
- * The transcription is a stopgap for 16.1.0, which exposes no such
- * registry — and a hand-copied list is exactly the drift risk this file
- * exists to catch, one level up. Do not extend it from memory: an entry
- * that is merely aspirational reintroduces the bug.
- *
- * The first pass of this file guessed the list from what the
- * `@objectstack/mcp@16.1.0` bridge happens to register, and got it wrong
- * in both directions. It omitted `search_knowledge` — a real platform
- * tool, documented in 16.1.0's own
- * `spec/src/ai/knowledge-source.zod.ts:114` — and so would have failed a
- * legitimate reference. It also reasoned about `create_record` /
- * `update_record` / `delete_record` as tools to deliberately exclude;
- * they are MCP-bridge tools and are not in the platform registry at all,
- * so there was nothing to exclude.
- */
-const PLATFORM_TOOLS = new Set([
-  // Data / analytics — the 'ask' surface these skills bind to.
-  'aggregate_data',
-  'get_record',
-  'query_data',
-  'query_records',
-  'search_knowledge',
-  'visualize_data',
-  // Metadata authoring — the 'build' surface. In the registry, so a
-  // reference resolves; no HotCRM skill has business with them.
-  'add_field',
-  'apply_blueprint',
-  'apply_edit',
-  'create_metadata',
-  'create_object',
-  'create_package',
-  'create_seed',
-  'delete_field',
-  'describe_metadata',
-  'describe_object',
-  'get_active_package',
-  'get_metadata_schema',
-  'get_package',
-  'list_metadata',
-  'list_objects',
-  'list_packages',
-  'modify_field',
-  'propose_blueprint',
-  'set_active_package',
-  'suggest_builder',
-  'todo_write',
-  'update_metadata',
-  'validate_expression',
-  'verify_build',
-]);
-
 /** `action_<name>` — the tool the runtime materialises from an Action (ADR-0011). */
 const ACTION_TOOL_PREFIX = 'action_';
 
@@ -111,45 +49,12 @@ describe('skill tool references resolve', () => {
     }
   });
 
-  it('every tool name resolves to a platform built-in or a materialised Action tool', () => {
-    const dangling: string[] = [];
-
-    for (const skill of skills) {
-      for (const tool of skill.tools as string[]) {
-        // Trailing-wildcard subscriptions (`action_*`) match a family of
-        // dynamically registered tools; resolve the prefix, not the name.
-        if (tool.endsWith('*')) {
-          const prefix = tool.slice(0, -1);
-          const matches =
-            [...PLATFORM_TOOLS].some((t) => t.startsWith(prefix)) ||
-            (prefix === ACTION_TOOL_PREFIX && actions.length > 0) ||
-            actions.some((a) => `${ACTION_TOOL_PREFIX}${a.name}`.startsWith(prefix));
-          if (!matches) dangling.push(`${skill.name} → ${tool} (wildcard matches nothing)`);
-          continue;
-        }
-
-        if (PLATFORM_TOOLS.has(tool)) continue;
-
-        if (tool.startsWith(ACTION_TOOL_PREFIX)) {
-          const actionName = tool.slice(ACTION_TOOL_PREFIX.length);
-          if (!action(actionName)) {
-            dangling.push(`${skill.name} → ${tool} (no Action named "${actionName}")`);
-          }
-          continue;
-        }
-
-        dangling.push(`${skill.name} → ${tool}`);
-      }
-    }
-
-    expect(
-      dangling,
-      `Skills reference tools that nothing serves:\n  ${dangling.join('\n  ')}\n` +
-        'Either drop the reference, or route the step through an Action with ' +
-        '`ai: { exposed: true, description }`. Authoring `defineTool` metadata ' +
-        'does NOT make a tool runnable (ToolSchema is a read-only projection).',
-    ).toEqual([]);
-  });
+  // ⚰️ RETIRED (#1583): "every tool name resolves to a platform built-in or a
+  // materialised Action tool". `objectstack lint --strict` reports a plain
+  // name, an `action_<name>` and a wildcard that resolve to nothing as
+  // `ai-skill-tool-unresolved`, and `pnpm lint` fails on it. That rule counts
+  // a `stack.tools` record as resolving, which is why the tool-metadata pin
+  // below must stay: it is what goes red on a name only such a record serves.
 
   it('every referenced Action is AI-exposed and has a headless path', () => {
     const referenced = new Set(
