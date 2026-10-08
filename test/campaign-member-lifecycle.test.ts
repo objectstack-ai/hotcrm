@@ -4,7 +4,7 @@ import { describe, it, expect } from 'vitest';
 import campaignMemberHooks from '../src/marketing/objects/campaign_member.hook';
 import { CampaignMember } from '../src/marketing/objects/campaign_member.object';
 import { Campaign } from '../src/marketing/objects/campaign.object';
-import stack from './helpers/composed-stack';
+import stack, { localePacks } from './helpers/composed-stack';
 import campaignHooks, { CAMPAIGN_METRIC_FIELDS } from '../src/marketing/objects/campaign.hook';
 // The two hooks of this family that fire on a SALES object live beside that
 // object since the ADR-0130 layout (co-location is what enforces R4) — the
@@ -13,7 +13,6 @@ import campaignHooks, { CAMPAIGN_METRIC_FIELDS } from '../src/marketing/objects/
 import opportunityCampaignMetricsHooks from '../src/sales/objects/opportunity.campaign-metrics.hook';
 import leadCampaignMetricsHooks from '../src/sales/objects/lead.campaign-metrics.hook';
 import { extractSandboxBody } from './helpers/action-sandbox';
-import { localePacks } from './helpers/metadata-fixtures';
 import { makeHarness, makeCtx, hookNamed, type Rec } from './helpers/hook-harness';
 
 /**

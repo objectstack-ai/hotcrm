@@ -1,18 +1,19 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import stack, { servedApps } from './helpers/composed-stack';
-import {
-  type AnyRec,
-  objects,
-  pages,
-  views,
-  stackActions,
-  objectNames,
-  localePacks,
-  packFor,
-  fieldsOf,
-} from './helpers/metadata-fixtures';
+import stack, { servedApps, type AnyRec, localePacks, packFor } from './helpers/composed-stack';
+import { hotcrmStack, registeredFields } from './helpers/verify-stack';
+
+const objects: AnyRec[] = (stack as AnyRec).objects ?? [];
+const pages: AnyRec[] = (stack as AnyRec).pages ?? [];
+const views: AnyRec[] = (stack as AnyRec).views ?? [];
+const stackActions: AnyRec[] = (stack as AnyRec).actions ?? [];
+const objectNames = new Set(objects.map((o) => o.name as string));
+
+// The runtime half of a reference check — which objects and columns the booted
+// app actually registers — is read from the platform's registry, not a roster.
+const runtime = await hotcrmStack();
+const fieldsOf = (object: string): string[] => registeredFields(runtime, object);
 
 /**
  * Translation-completeness guards: every authored surface is translated in
@@ -36,10 +37,13 @@ import {
  * exactly that reason. The four files now split the guards by the metadata
  * surface they resolve against; this one owns the four locale bundles.
  *
- * The derivations every one of them shares (`objects`, `views`, `walk`, the
- * locale packs, the platform-object allowlist) live in
- * `test/helpers/metadata-fixtures.ts`. No assertion, helper or fixture changed
- * in the split — see the reconciliation table on the PR.
+ * The derivations every one of them shares come from two places: the app's
+ * authored collections, the locale packs and `walk` from
+ * `test/helpers/composed-stack.ts`, and the runtime half — which objects and
+ * columns the booted app registers — from the platform's registry through
+ * `@objectstack/verify`'s handle (`test/helpers/verify-stack.ts`). No
+ * assertion, helper or fixture changed in the split — see the reconciliation
+ * table on the PR.
  */
 
 describe('picklist values never reach the UI unresolved', () => {

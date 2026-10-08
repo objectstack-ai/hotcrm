@@ -2,17 +2,18 @@
 
 import { describe, it, expect } from 'vitest';
 import { applySystemFields } from '@objectstack/objectql';
-import stack, { servedApps } from './helpers/composed-stack';
-import {
-  type AnyRec,
-  objects,
-  pages,
-  views,
-  objectNames,
-  packFor,
-  walk,
-  PLATFORM_OBJECTS,
-} from './helpers/metadata-fixtures';
+import stack, { servedApps, type AnyRec, packFor, walk } from './helpers/composed-stack';
+import { hotcrmStack, platformObjectNames } from './helpers/verify-stack';
+
+const objects: AnyRec[] = (stack as AnyRec).objects ?? [];
+const pages: AnyRec[] = (stack as AnyRec).pages ?? [];
+const views: AnyRec[] = (stack as AnyRec).views ?? [];
+const objectNames = new Set(objects.map((o) => o.name as string));
+
+// The runtime half of a reference check — which objects and columns the booted
+// app actually registers — is read from the platform's registry, not a roster.
+const runtime = await hotcrmStack();
+const PLATFORM_OBJECTS = platformObjectNames(runtime, objectNames);
 
 /**
  * Dangling-reference guards for the surfaces that DISPATCH — navigation,
@@ -37,10 +38,13 @@ import {
  * surface they resolve against; this one owns navigation, actions and
  * dashboards.
  *
- * The derivations every one of them shares (`objects`, `views`, `walk`, the
- * locale packs, the platform-object allowlist) live in
- * `test/helpers/metadata-fixtures.ts`. No assertion, helper or fixture changed
- * in the split — see the reconciliation table on the PR.
+ * The derivations every one of them shares come from two places: the app's
+ * authored collections, the locale packs and `walk` from
+ * `test/helpers/composed-stack.ts`, and the runtime half — which objects and
+ * columns the booted app registers — from the platform's registry through
+ * `@objectstack/verify`'s handle (`test/helpers/verify-stack.ts`). No
+ * assertion, helper or fixture changed in the split — see the reconciliation
+ * table on the PR.
  */
 
 describe('navigation reaches everything the app ships', () => {

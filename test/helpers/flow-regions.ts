@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { FLOW_REGION_SLOTS_BY_TYPE } from '@objectstack/spec/automation';
-import type { AnyRec } from './metadata-fixtures';
+import type { AnyRec } from './composed-stack';
 
 /**
  * The region descent, once — resolved through the platform's own slot map.

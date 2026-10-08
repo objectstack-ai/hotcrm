@@ -11,7 +11,7 @@ import {
 import { makeSandboxEngine, runActionBody } from './helpers/action-sandbox';
 import { KnowledgeArticleViews } from '../src/service/views/knowledge_article.view';
 import { makeHarness, makeCtx, hookNamed, type Rec } from './helpers/hook-harness';
-import { localePacks } from './helpers/metadata-fixtures';
+import { localePacks } from './helpers/composed-stack';
 
 /**
  * The knowledge article's engagement counters have WRITERS (#601), and the one

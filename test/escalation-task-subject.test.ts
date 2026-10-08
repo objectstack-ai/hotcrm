@@ -4,8 +4,10 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import caseHooks from '../src/service/objects/case.hook';
-import { objects } from './helpers/metadata-fixtures';
+import stack, { type AnyRec } from './helpers/composed-stack';
 import { makeSandboxEngine, runHookBody, type Rec } from './helpers/action-sandbox';
+
+const objects: AnyRec[] = (stack as AnyRec).objects ?? [];
 
 /**
  * The escalation follow-up task is titled with the CASE NUMBER, not the record

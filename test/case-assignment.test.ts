@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
-import stack from './helpers/composed-stack';
+import stack, { localePacks } from './helpers/composed-stack';
 import caseHooks from '../src/service/objects/case.hook';
 import {
   SERVICE_AGENT_POSITION,
@@ -12,7 +12,6 @@ import {
   POOL_QUERY_LIMIT,
 } from '../src/service/objects/_case-assignment';
 import { makeHarness, makeDeniedApi, makeCtx, hookNamed, type Rec } from './helpers/hook-harness';
-import { localePacks } from './helpers/metadata-fixtures';
 
 /**
  * ═══ Case intake assignment — the app-level queue substitute (#596) ════════

@@ -4,7 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
-import { packFor } from './helpers/metadata-fixtures';
+import { packFor } from './helpers/composed-stack';
 import { stripComments } from '../scripts/check-source-token-ratchet.mjs';
 
 /**

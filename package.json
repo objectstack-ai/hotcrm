@@ -63,6 +63,7 @@
   "devDependencies": {
     "@changesets/cli": "^3.0.3",
     "@objectstack/formula": "17.7.0",
+    "@objectstack/plugin-audit": "17.7.0",
     "@objectstack/verify": "17.7.0",
     "@playwright/test": "^1.63.0",
     "@vitest/coverage-v8": "^4.1.10",
