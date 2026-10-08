@@ -123,6 +123,23 @@ export const QuoteGenerationFlow: Flow = {
       // deal already at proposal/negotiation: that is an illegal self/backward
       // transition. Those deals keep their stage; the quote is still created.
       //
+      // ⛔ Nor on a deal AWAITING APPROVAL (`approval_status == "pending"`). A
+      // deal of `LARGE_DEAL_AMOUNT` or more is held by `opportunity_approval`'s
+      // approval node (`lockRecord: true`) until a manager decides, and the
+      // lock refuses this run's stage write — the run is the rep's
+      // (`runAs: 'user'`), and the lock is the approval working as intended.
+      // `create_quote` has already landed by then and a flow carries no
+      // transaction (ADR-0077), so the refusal used to fail the run AFTER the
+      // quote existed: measured on 17.7.0, `FLOW_FAILED` 400 `RECORD_LOCKED`
+      // at `update_opportunity`, the rep told the quote failed, and the draft
+      // quote left standing (#2015). A deal under review keeps its stage
+      // exactly like a deal already at proposal; the quote is still created —
+      // the button is offered at every open stage, and a draft quote commits
+      // nothing the approval is there to hold. `approval_status` is the lock's
+      // own mirror (`approvalStatusField`): the approvals plugin stamps
+      // `pending` when it opens the locking request and a terminal verdict
+      // when it releases it.
+      //
       // The predicate itself lives on edges `e4a` / `e4b` — a `decision` node's
       // singular `config.condition` is never evaluated, so a copy here would be
       // inert (17.0.0-rc.2's `flow-inert-node-condition`). The totality
@@ -180,10 +197,16 @@ export const QuoteGenerationFlow: Flow = {
     // oppRecord` when the variable is unbound, while `has(vars.oppRecord)`
     // answers `false` — only the `vars.`-scoped form is total against both
     // hazards.
+    //
+    // The approval term (see `check_stage`) is guarded the same way and in the
+    // same opposite polarity: an absent or null `approval_status` is "not
+    // under approval" and advances, as it did before the term existed.
     { id: 'e4a', source: 'check_stage', target: 'update_opportunity', type: 'conditional', condition: P`has(vars.oppRecord) && has(vars.oppRecord.stage)
-      && (vars.oppRecord.stage == "prospecting" || vars.oppRecord.stage == "qualification" || vars.oppRecord.stage == "needs_analysis")`, label: 'Advance' },
+      && (vars.oppRecord.stage == "prospecting" || vars.oppRecord.stage == "qualification" || vars.oppRecord.stage == "needs_analysis")
+      && (!has(vars.oppRecord.approval_status) || vars.oppRecord.approval_status != "pending")`, label: 'Advance' },
     { id: 'e4b', source: 'check_stage', target: 'notify_owner', type: 'conditional', condition: P`!has(vars.oppRecord) || !has(vars.oppRecord.stage)
-      || (vars.oppRecord.stage != "prospecting" && vars.oppRecord.stage != "qualification" && vars.oppRecord.stage != "needs_analysis")`, label: 'Keep stage' },
+      || (vars.oppRecord.stage != "prospecting" && vars.oppRecord.stage != "qualification" && vars.oppRecord.stage != "needs_analysis")
+      || (has(vars.oppRecord.approval_status) && vars.oppRecord.approval_status == "pending")`, label: 'Keep stage' },
     { id: 'e5', source: 'update_opportunity', target: 'notify_owner', type: 'default' },
     { id: 'e6', source: 'notify_owner', target: 'end', type: 'default' },
   ],

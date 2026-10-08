@@ -14,9 +14,10 @@ type Rec = Record<string, any>;
  *
  * Guards the P0 CPQ fix: the flow's `recordId` input contract, the priced
  * create_quote (subtotal / discount_amount / total from the opportunity), the
- * account/contact carry-over, the stage → proposal advance, and that a
+ * account/contact carry-over, the stage → proposal advance, that a
  * contact-LESS opportunity can still draft a quote (crm_quote.crm_contact was
- * relaxed to optional).
+ * relaxed to optional), and that a deal awaiting approval gets its quote and
+ * keeps its stage (#2015).
  *
  */
 
@@ -36,11 +37,10 @@ beforeAll(async () => {
  *
  * The deal itself is written as the system, owned by the rep: a deal of
  * $100K or more is put under `opportunity_approval_on_create` when a rep
- * creates it, and LOCKED until a manager decides — and measured on 17.7.0, a
- * quote started on a locked deal is created and then the run fails on the
- * stage advance (reported as a finding). The pricing this file pins is the
- * same either side of an approval, so the deal is the one a quote is drafted
- * on: no approval pending.
+ * creates it, and LOCKED until a manager decides. The pricing this file pins is
+ * the same either side of an approval, so the deal is the one a quote is
+ * drafted on: no approval pending. A deal under approval has its own block
+ * below (#2015).
  */
 async function opportunity(opp: Rec): Promise<Rec> {
   const n = ++k;
@@ -141,6 +141,56 @@ describe('quote_generation flow — runtime', () => {
     expect(q.subtotal).toBe(50000);
     expect(q.total_price).toBe(50000); // 0% discount
     expect(q.crm_contact == null, 'contact left empty').toBe(true);
+  });
+});
+
+/**
+ * #2015 — a quote on a deal AWAITING APPROVAL. The rep creates a $200K deal
+ * themselves, so `opportunity_approval_on_create` opens the manager review and
+ * the approval node locks the deal (`lockRecord: true`) until it is decided.
+ *
+ * Measured before the fix on 17.7.0: the resume answered `FLOW_FAILED` 400
+ * (`RECORD_LOCKED` at `update_opportunity`) — the rep was told generating the
+ * quote failed — while `create_quote` had already landed, so the quote stayed
+ * behind. The flow now keeps the stage of a deal under review, as it does for a
+ * deal already at proposal: the rep gets the quote, the deal keeps its stage,
+ * and the approval still holds it.
+ */
+describe('quote_generation flow — a deal awaiting approval (#2015)', () => {
+  it('drafts the quote and keeps the stage of a deal locked by its approval', async () => {
+    const n = ++k;
+    const as = { as: rep.token };
+    const account = await verify.hooks.run('crm_account', 'insert', { name: `Locked Co ${n}` }, as);
+    const contact = await verify.hooks.run('crm_contact', 'insert', {
+      first_name: 'Lena', last_name: `Locked ${n}`, email: `lena${n}@flow-quote.test`, crm_account: account.id,
+    }, as);
+    const deal = await verify.hooks.run('crm_opportunity', 'insert', {
+      name: `Locked Deal ${n}`, amount: 200000, stage: 'qualification', close_date: '2030-06-30',
+      crm_account: account.id, primary_contact: contact.id,
+    }, as);
+    const [before] = await verify.rows('crm_opportunity', { id: deal.id });
+    expect(before!.approval_status, 'fixture: the rep-created deal is under approval').toBe('pending');
+
+    const run = await verify.flows.run('quote_generation', { recordId: deal.id }, as);
+    const done = await verify.flows.resume(run, { quoteName: 'Q-LOCKED', expirationDays: 30, discount: 10 }, as);
+    expect(done.success, 'the rep is told the quote was generated').toBe(true);
+
+    const quotes = await verify.rows('crm_quote', { crm_opportunity: deal.id });
+    expect(quotes.length, 'exactly one quote').toBe(1);
+    expect(quotes[0]!.total_price).toBe(180000);
+
+    const [after] = await verify.rows('crm_opportunity', { id: deal.id });
+    expect(after!.stage, 'a deal under review keeps its stage').toBe('qualification');
+    expect(after!.approval_status, 'the approval still holds the deal').toBe('pending');
+  });
+
+  it('still advances a deal whose approval has been decided', async () => {
+    const opp = await opportunity({ name: 'Approved Deal', amount: 200000, approval_status: 'approved' });
+    expect(opp.approval_status, 'fixture: the approval is decided').toBe('approved');
+    const quotes = await runQuote(opp.id, { quoteName: 'Q-APPROVED', expirationDays: 30, discount: 0 });
+
+    expect(quotes.length, 'one quote created').toBe(1);
+    expect((await verify.rows('crm_opportunity', { id: opp.id }))[0]!.stage).toBe('proposal');
   });
 });
 
