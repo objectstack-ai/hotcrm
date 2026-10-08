@@ -148,12 +148,53 @@ export async function signUpPerson(
   return { token, id };
 }
 
+/**
+ * The run history of `flowName` for the record `recordId` triggered — the
+ * engine's own `sys_automation_run` rows, `summary_json` parsed. A
+ * record-triggered flow's result never reaches the writer whose save fired it,
+ * so this is where its verdict is read: `status`, `error`, and the summary's
+ * per-node and per-gate accounting. No row at all means the start condition
+ * did not hold (the engine records no run for a trigger it declined).
+ */
+export async function flowRuns(stack: VerifyStack, flowName: string, recordId: string): Promise<Row[]> {
+  const rows = await stack.rows('sys_automation_run', { flow_name: flowName, trigger_record_id: recordId });
+  return rows.map((r) => ({ ...r, summary: r.summary_json ? JSON.parse(String(r.summary_json)) : undefined }));
+}
+
+/**
+ * The notifications addressed to `userId` (optionally of one `topic`) — the
+ * messaging outbox's `inbox`-channel rows, written inside the run that called
+ * `notify`. The inbox row itself lands later, when the dispatcher drains the
+ * outbox, so a count read off `sys_inbox_message` right after the write is a
+ * race; this one is not. `payload` carries the template, its data and the
+ * action URL.
+ */
+export const notificationsTo = (stack: VerifyStack, userId: string, topic?: string): Promise<Row[]> =>
+  stack.rows('sys_notification_delivery', { recipient_id: userId, channel: 'inbox', ...(topic ? { topic } : {}) });
+
+/**
+ * Evaluate a flow condition on the booted stack's own automation service —
+ * the evaluator every flow of this app runs its start conditions and edges
+ * through — exactly as the engine does: a bare string start condition is
+ * wrapped into its CEL envelope first. For a predicate whose fact is the
+ * truth table itself, over record shapes no write can produce (a key a sparse
+ * datasource omits, a prior row the engine did not read). The automation
+ * service is a kernel service the handle does not front.
+ */
+export const conditionHolds = (stack: VerifyStack, condition: unknown, vars: Record<string, unknown>): boolean => {
+  const automation = stack.kernel.getService<{ evaluateCondition(c: unknown, v: Map<string, unknown>): boolean }>('automation');
+  const expr = typeof condition === 'string' ? { dialect: 'cel', source: condition } : condition;
+  return automation.evaluateCondition(expr, new Map(Object.entries(vars)));
+};
+
 // ─────────────────────── the doors the handle does not have (platform gaps) ────
 //
 // What this app's business facts turn on and the 17.7.0 handle has no door
-// for keeps ONE local path each here — the engine's own `objectql` service on
-// the verify-booted kernel, nothing re-implemented — until the handle grows
-// one. Each is reported upstream; ⛔ do not add another here.
+// for keeps ONE local path each here — the engine's own `objectql` /
+// `automation` service on the verify-booted kernel, nothing re-implemented —
+// until the handle grows one. Each is reported upstream as a platform gap;
+// ⛔ a fact that needs another path is a new gap to report, not a helper to
+// grow here.
 
 /** The system context the platform's own automation and seed loader write under. */
 const SYSTEM = { isSystem: true } as const;
@@ -166,6 +207,22 @@ export const systemUpdate = (stack: VerifyStack, object: string, doc: Row): Prom
   stack.kernel.getService<Row>('objectql').update(object, doc, { where: { id: doc.id }, context: SYSTEM });
 
 /**
+ * A PREDICATE (bulk) UPDATE as `as`: one payload for every row `where`
+ * matches (`multi: true`) — the engine's `updateMany` dispatch. `hooks.run`
+ * addresses exactly one row by `input.id`, and the REST bulk ingress
+ * (`POST /data/:object/updateMany`) iterates by-id updates, so the handle has no
+ * door onto the predicate path at all.
+ */
+export const predicateUpdate = async (
+  stack: VerifyStack,
+  object: string,
+  doc: Row,
+  where: Row,
+  as: string,
+): Promise<unknown> =>
+  stack.kernel.getService<Row>('objectql').update(object, doc, { where, multi: true, context: await stack.contextFor(as) });
+
+/**
  * A GUEST write: no user AND no `isSystem` — the context the app's guest
  * (web-to-case / web-to-lead) branches key on. `hooks.run` needs a signed-in
  * person, `seed` is the most trusted caller there is, and an unauthenticated
@@ -174,6 +231,19 @@ export const systemUpdate = (stack: VerifyStack, object: string, doc: Row): Prom
  */
 export const guestInsert = (stack: VerifyStack, object: string, doc: Row): Promise<Row> =>
   stack.kernel.getService<Row>('objectql').insert(object, doc, { context: {} });
+
+/**
+ * Run a record-triggered flow on `record` through the booted automation
+ * service, the way the record-change trigger hands it a write — for a record
+ * the engine does NOT hold. Every write door fires a record flow on a row the
+ * engine just wrote; the case where that row is gone by the time the flow
+ * reads it back (deleted between the trigger and the flow's `get_record`) has
+ * no door at all. Resolves with the engine's own result.
+ */
+export const runRecordFlow = (stack: VerifyStack, flowName: string, object: string, record: Row): Promise<Row> =>
+  stack.kernel.getService<Row>('automation').execute(flowName, {
+    record, object, event: 'record_change', params: { ...record },
+  });
 
 /** One write the engine received while a recorder was attached. */
 export interface EngineWrite {

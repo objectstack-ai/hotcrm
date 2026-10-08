@@ -5,12 +5,12 @@ import { ObjectQL, applySystemFields } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { AnalyticsService } from '@objectstack/service-analytics';
+import type { VerifyStack } from '@objectstack/verify';
 import stack from './helpers/composed-stack';
-import caseHooks from '../src/service/objects/case.hook';
 import { CaseDataset } from '../src/service/datasets/case.dataset';
-import { CloseCaseFlow } from '../src/service/flows/case-actions.flow';
-import { makeFlowHarness } from './helpers/flow-harness';
-import { makeCtx, hookNamed, type Rec } from './helpers/hook-harness';
+import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
+
+type Rec = Record<string, any>;
 
 /**
  * Case → article resolution link, and the deflection metric it feeds (#601).
@@ -69,25 +69,54 @@ describe('the case↔knowledge link now answers both questions (#601)', () => {
 
 // ─────────────────────────── 2. the close-case flow captures it, executed ──
 
-describe('the close-case flow attaches the resolving article', () => {
-  const seed = (): Rec[] => ([{
-    id: 'c1', case_number: 'CASE-1', status: 'new', priority: 'medium',
-    is_escalated: false, is_closed: false, owner_id: 'agent1',
-  }]);
+/**
+ * The close-case flow and the normalising hook on the shipped app booted by
+ * `@objectstack/verify`: a service agent closes their own case through the
+ * screen flow (`flows.run`, then `flows.resume` with the screen), and every
+ * write runs the app's real `crm_case` hooks — the stored row is what is read.
+ */
+let verify: VerifyStack;
+let agent: Person;
+let accountId: string;
+let k = 0;
+beforeAll(async () => {
+  verify = await hotcrmStack();
+  agent = await signUpPerson(verify, 'agent@knowledge-deflection.test', {
+    name: 'Deflecting Agent', positions: ['service_agent'], permissionSets: ['service_agent'],
+  });
+  const [account] = await verify.seed('crm_account', [{ name: 'Deflection Co', owner_id: agent.id }]);
+  accountId = String(account!.id);
+}, 120_000);
 
-  const close = async (screen: Rec) => {
-    const h = makeFlowHarness({ close_case: CloseCaseFlow as never }, { crm_case: seed() });
-    const runId = await h.run('close_case', { recordId: 'c1' });
-    expect(runId, 'close_case did not start').toBeTruthy();
-    await h.resume(runId!, screen);
-    return h;
+/** A published article — what `published_requires_body` asks of every one. */
+const publishedArticle = async (): Promise<string> =>
+  String((await verify.seed('crm_knowledge_article', [{
+    title: `Reset your password #${++k}`, status: 'published',
+    body: 'Open Settings › Security and choose Reset password.',
+    summary: 'How to reset a forgotten password.',
+  }]))[0]!.id);
+
+/** A new, medium-priority case the agent opened and works. */
+const openCase = async (): Promise<string> => String((await verify.hooks.run('crm_case', 'insert', {
+  subject: `Cannot log in ${++k}`, description: 'Locked out.', crm_account: accountId, status: 'new', priority: 'medium',
+}, { as: agent.token })).id);
+
+const stored = async (id: string): Promise<Rec> => (await verify.rows('crm_case', { id }))[0]!;
+
+describe('the close-case flow attaches the resolving article', () => {
+  const close = async (screen: Rec): Promise<Rec> => {
+    const id = await openCase();
+    const run = await verify.flows.run('close_case', { recordId: id }, { as: agent.token });
+    expect(run.runId, 'close_case did not start').toBeTruthy();
+    await verify.flows.resume(run, screen, { as: agent.token });
+    return stored(id);
   };
 
   it('writes the article the agent chose, alongside the resolution', async () => {
-    const h = await close({ resolution: 'Pointed them at KA-0007.', resolved_by_article: 'ka7' });
-    expect(h.store.crm_case[0]).toMatchObject({
-      is_closed: true, status: 'closed', resolved_by_article: 'ka7',
-    });
+    const articleId = await publishedArticle();
+    const row = await close({ resolution: 'Pointed them at the reset article.', resolved_by_article: articleId });
+    expect(row).toMatchObject({ status: 'closed', resolved_by_article: articleId });
+    expect(Boolean(row.is_closed)).toBe(true);
   });
 
   /**
@@ -96,8 +125,9 @@ describe('the close-case flow attaches the resolving article', () => {
    * still close the case.
    */
   it('still closes a case that no article resolved', async () => {
-    const h = await close({ resolution: 'Refunded the customer.' });
-    expect(h.store.crm_case[0]).toMatchObject({ is_closed: true, status: 'closed' });
+    const row = await close({ resolution: 'Refunded the customer.' });
+    expect(row.status).toBe('closed');
+    expect(Boolean(row.is_closed)).toBe(true);
   });
 
   /**
@@ -110,28 +140,22 @@ describe('the close-case flow attaches the resolving article', () => {
    * would land in the deflection numerator and the rate would read 100% — with
    * no error anywhere, which is exactly the #614 failure mode.
    *
-   * `case_resolution_article_normalize` is what stops it, so this asserts the
-   * flow's output AFTER that hook rather than trusting either alone.
+   * `case_resolution_article_normalize` is what stops it, and on the real
+   * engine it runs inside the flow's own write — so this asserts the column
+   * the flow's write left behind.
    */
   it('normalises a blank article choice to null, not to an empty string', async () => {
-    const h = await close({ resolution: 'Refunded.', resolved_by_article: '' });
-    const stored = h.store.crm_case[0].resolved_by_article;
-
-    // The flow itself writes '' — that is the platform behaviour being guarded.
-    // Whatever the flow wrote, the hook is what the column must end up matching.
-    const hook = hookNamed(caseHooks, 'case_resolution_article_normalize');
-    const ctx = makeCtx({ event: 'beforeUpdate', input: { resolved_by_article: stored } });
-    await hook.handler(ctx);
-    expect(ctx.input.resolved_by_article).toBeNull();
+    const row = await close({ resolution: 'Refunded.', resolved_by_article: '' });
+    expect(row.resolved_by_article).toBeNull();
   });
 });
 
 describe('case_resolution_article_normalize, on its own', () => {
-  const hook = hookNamed(caseHooks, 'case_resolution_article_normalize');
-  const run = async (input: Rec) => {
-    const ctx = makeCtx({ event: 'beforeUpdate', input });
-    await hook.handler(ctx);
-    return ctx.input as Rec;
+  /** An update of the agent's own case carrying `input`; the stored row after it. */
+  const run = async (input: Rec, id?: string): Promise<Rec> => {
+    const caseId = id ?? await openCase();
+    await verify.hooks.run('crm_case', 'update', { id: caseId, ...input }, { as: agent.token });
+    return stored(caseId);
   };
 
   it('nulls an empty string', async () => {
@@ -143,7 +167,8 @@ describe('case_resolution_article_normalize, on its own', () => {
   });
 
   it('leaves a real article id alone', async () => {
-    expect((await run({ resolved_by_article: 'ka7' })).resolved_by_article).toBe('ka7');
+    const articleId = await publishedArticle();
+    expect((await run({ resolved_by_article: articleId })).resolved_by_article).toBe(articleId);
   });
 
   /**
@@ -152,8 +177,10 @@ describe('case_resolution_article_normalize, on its own', () => {
    * vandalising a record on every unrelated edit.
    */
   it('does not touch a write that never carries the key', async () => {
-    const out = await run({ status: 'closed' });
-    expect('resolved_by_article' in out).toBe(false);
+    const articleId = await publishedArticle();
+    const linked = await run({ resolved_by_article: articleId });
+    const after = await run({ priority: 'high' }, linked.id);
+    expect(after.resolved_by_article, 'an unrelated edit cleared the link').toBe(articleId);
   });
 });
 

@@ -1,13 +1,15 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect } from 'vitest';
-import { declaredRow, makeFlowHarness, type Rec } from './helpers/flow-harness';
-import { ForecastSnapshotFlow } from '../src/sales/flows/forecast-snapshot.flow';
-import forecastDerive from '../src/sales/objects/forecast.hook';
+import { describe, it, expect, beforeAll } from 'vitest';
+import type { VerifyStack } from '@objectstack/verify';
+import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
+
+type Rec = Record<string, any>;
 
 /**
  * `forecast_snapshot`'s four bucket accumulators are CEL value envelopes
- * (#1984), run here through the REAL `AutomationEngine`: each one is an
+ * (#1984), run here on the shipped app booted by `@objectstack/verify` (the
+ * sweep started through the trigger door as the admin): each one is an
  * `assignment` inside a `loop` body inside the owner loop's `try_catch`, so
  * this is also the proof that a value envelope in that position is evaluated
  * at all rather than written into the variable verbatim.
@@ -17,16 +19,16 @@ import forecastDerive from '../src/sales/objects/forecast.hook';
  *
  *  - a NULL amount. `double(null)` errors, so an unguarded accumulator would
  *    throw, the owner's `try_catch` would swallow the iteration, and the row
- *    would keep whatever it held before. That is why the row here starts with
- *    STALE amounts: a sweep that died on the null deal leaves them in place,
- *    one that summed it as 0 overwrites them. A freshly opened row could not
- *    tell the two apart — it is born with zeros either way.
+ *    would keep whatever it held before. On the real engine no deal can carry
+ *    one: `crm_opportunity.amount` is `required` with a NOT NULL column, and
+ *    the write is refused — pinned below as the reason. The guard stays
+ *    `has()`-first, which reads absent and null alike.
  *  - a DECIMAL amount. The cents must survive the sum. 1,000.25 and 0.5 are
  *    exact in binary, so the expected totals carry no floating-point tail.
  *
- * (An ABSENT key — the sparse-driver shape — is not reachable here: the harness
- * materialises every declared column as `null`. The guard is `has()`-first,
- * which reads absent and null alike.)
+ * The row starts with STALE amounts: a sweep that died on a deal leaves them
+ * in place, one that summed it overwrites them. A freshly opened row could not
+ * tell the two apart — it is born with zeros either way.
  */
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -38,41 +40,55 @@ const inPeriod = isoUtc(qStart);
 
 const STALE = 9_999_999;
 
-const opp = (id: string, over: Rec): Rec => ({
-  id, owner_id: 'rep1', close_date: inPeriod, ...over,
+let verify: VerifyStack;
+let admin: string;
+let k = 0;
+beforeAll(async () => {
+  verify = await hotcrmStack();
+  admin = await verify.signIn();
+}, 120_000);
+
+/** A fresh owner with a stale current-quarter snapshot row, and their account. */
+const owner = async (): Promise<{ who: Person; accountId: string }> => {
+  const who = await signUpPerson(verify, `rep${++k}@forecast-snapshot-amounts.test`, { name: `Rep ${k}` });
+  const [acct] = await verify.seed('crm_account', [{ name: `Amounts Co ${k}`, owner_id: who.id }]);
+  await verify.seed('crm_forecast', [{
+    owner_id: who.id, period: 'quarter',
+    period_start: inPeriod, period_end: isoUtc(qEnd),
+    snapshot_date: '2026-01-02', source: 'scheduled',
+    pipeline_amount: STALE, best_case_amount: STALE,
+    commit_amount: STALE, closed_amount: STALE,
+  }]);
+  return { who, accountId: String(acct!.id) };
+};
+
+const opp = (who: Person, accountId: string, over: Rec): Rec => ({
+  name: `Amounts ${String(over.stage)} ${++k}`, owner_id: who.id, close_date: inPeriod, crm_account: accountId, ...over,
 });
 
-const sweep = async (opps: Rec[]) => {
-  const h = makeFlowHarness(
-    { forecast_snapshot: ForecastSnapshotFlow },
-    {
-      sys_user: [{ id: 'rep1', name: 'Rep One' }],
-      crm_opportunity: opps,
-      crm_forecast: [declaredRow('crm_forecast', {
-        id: 'f_rep1', owner_id: 'rep1', period: 'quarter',
-        period_start: inPeriod, period_end: isoUtc(qEnd),
-        snapshot_date: '2026-01-02', source: 'scheduled',
-        pipeline_amount: STALE, best_case_amount: STALE,
-        commit_amount: STALE, closed_amount: STALE,
-      })],
-    },
-    { hooks: [forecastDerive] },
-  );
-  await h.run('forecast_snapshot', {}, { event: 'schedule' });
-  expect(h.store.crm_forecast, 'the sweep opened a second row').toHaveLength(1);
-  return h.store.crm_forecast[0];
+const sweep = async (who: Person) => {
+  await verify.flows.run('forecast_snapshot', {}, { as: admin });
+  const rows = await verify.rows('crm_forecast', { owner_id: who.id });
+  expect(rows, 'the sweep opened a second row').toHaveLength(1);
+  return rows[0]!;
 };
 
 describe('forecast_snapshot — CEL accumulators (#1984)', () => {
   it('sums a null amount as 0 instead of failing the owner\'s sweep', async () => {
-    const row = await sweep([
-      opp('o1', { stage: 'negotiation', forecast_category: 'commit', amount: null }),
-      opp('o2', { stage: 'negotiation', forecast_category: 'commit', amount: 30_000 }),
-      opp('o3', { stage: 'closed_won', forecast_category: 'closed', amount: null }),
-    ]);
+    const { who, accountId } = await owner();
+    // No deal carries a null amount: the engine refuses the write.
+    for (const over of [
+      { stage: 'negotiation', amount: null },
+      { stage: 'closed_won', win_reason: 'better_price', amount: null },
+    ]) {
+      await expect(verify.seed('crm_opportunity', [opp(who, accountId, over)]), 'a null amount was stored')
+        .rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
+    }
+    await verify.seed('crm_opportunity', [opp(who, accountId, { stage: 'negotiation', amount: 30_000 })]);
+    const row = await sweep(who);
 
-    // Every bucket was rewritten — including the two whose only or first deal
-    // has no amount — and the snapshot was restamped, so the write ran.
+    // Every bucket was rewritten — including the one no deal falls in — and
+    // the snapshot was restamped, so the write ran.
     expect(row.pipeline_amount).toBe(30_000);
     expect(row.best_case_amount).toBe(30_000);
     expect(row.commit_amount).toBe(30_000);
@@ -81,11 +97,13 @@ describe('forecast_snapshot — CEL accumulators (#1984)', () => {
   });
 
   it('keeps the decimals of a non-integer amount', async () => {
-    const row = await sweep([
-      opp('o1', { stage: 'qualification', forecast_category: 'pipeline', amount: 1_000.25 }),
-      opp('o2', { stage: 'negotiation', forecast_category: 'commit', amount: 0.5 }),
-      opp('o3', { stage: 'closed_won', forecast_category: 'closed', amount: 70_000.75 }),
+    const { who, accountId } = await owner();
+    await verify.seed('crm_opportunity', [
+      opp(who, accountId, { stage: 'qualification', amount: 1_000.25 }),
+      opp(who, accountId, { stage: 'negotiation', amount: 0.5 }),
+      opp(who, accountId, { stage: 'closed_won', win_reason: 'better_price', amount: 70_000.75 }),
     ]);
+    const row = await sweep(who);
 
     expect(row.pipeline_amount).toBe(1_000.75);
     expect(row.best_case_amount).toBe(0.5);

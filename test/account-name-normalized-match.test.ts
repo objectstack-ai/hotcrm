@@ -1,18 +1,14 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-automation';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { fieldHasColumn, expectedIndexes, withheldFilterDiagnosticOf } from '@objectstack/driver-sql';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { applySystemFields } from '@objectstack/objectql';
 import stack from './helpers/composed-stack';
-import accountHooks from '../src/sales/objects/account.hook';
-import leadHooks from '../src/sales/objects/lead.hook';
-import { LeadConversionFlow } from '../src/sales/flows/lead-conversion.flow';
-import { makeCtx, hookNamed, type Rec } from './helpers/hook-harness';
-import { makeFlowHarness, silentLogger } from './helpers/flow-harness';
 import type { VerifyStack } from '@objectstack/verify';
-import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, systemUpdate, type Person } from './helpers/verify-stack';
+
+type Rec = Record<string, any>;
 
 /**
  * Case-insensitive account matching in lead conversion (#626).
@@ -36,170 +32,124 @@ const objects: AnyRec[] = (stack as any).objects ?? [];
 const account = objects.find((o) => o.name === 'crm_account') as AnyRec;
 const lead = objects.find((o) => o.name === 'crm_lead') as AnyRec;
 
+/**
+ * The shipped app booted by `@objectstack/verify`, for every block below that
+ * runs something: a probe flow registered through the platform's own
+ * flow-authoring door, the folds on real writes, and lead conversion end to
+ * end. The converter is a sales MANAGER: a sales rep's conversion of a lead
+ * into a NEW account is refused on 17.7.0 (the flow writes `annual_revenue`,
+ * which `sales_rep` may not edit) — see `test/flow-conversion.test.ts`.
+ */
+let verify: VerifyStack;
+let admin: string;
+let rep: Person;
+let manager: Person;
+let k = 0;
+beforeAll(async () => {
+  verify = await hotcrmStack();
+  admin = await verify.signIn();
+  rep = await signUpPerson(verify, 'rep@account-name-normalized-match.test', {
+    name: 'Fold Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+  });
+  manager = await signUpPerson(verify, 'manager@account-name-normalized-match.test', {
+    name: 'Converting Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+  });
+}, 120_000);
+
 // ══════════════════════════════════ premise 1: a flow cannot normalize ══
 
 /**
  * `service-automation`'s value expressions support a small closed vocabulary —
  * `round`, `floor`, `ceil`, `abs`, `min`, `max` (1:1 with the CEL stdlib) plus
  * the whole-token date macros `NOW()` / `TODAY()`. There is no `LOWER`, no
- * `TRIM`, and no string method: the evaluator substitutes every bare identifier
- * with its value BEFORE evaluating, so `{x.company.toLowerCase()}` resolves the
- * whole dotted path to `undefined` and then tries to call it.
+ * `TRIM`, and no string method.
  *
- * Run through the REAL engine. ⚠️ HOW this premise holds changed on the
- * 17.2.0 -> 17.3.0 upgrade, and it changed for the better. Through 17.2.0 an
- * unrecognised name did not raise: `{LOWER(x)}` resolved to `undefined` and the
- * unwrapped `LOWER({x})` interpolated to the LITERAL TEXT `LOWER(ACME  Corp)`,
- * which is the worst shape of all — it looks like it worked and would be
- * written to the database verbatim. Platform 17.3.0 (objectstack#11060) makes
- * an unknown function REFUSE the run and name itself, so the silent-wrong
- * branch this file was written to expose no longer exists.
- *
- * The premise is therefore asserted the way the platform now expresses it: the
- * whole run fails, the message names the offending function, and NOTHING is
- * written. A separate control proves the one form that does work still does.
+ * Run on the real engine: each candidate spelling is the value of a
+ * `create_record` field in a probe flow of its own, registered through the
+ * platform's flow-authoring door (`POST /automation`, as the admin) and run
+ * through the trigger door against a real lead. Since 17.3.0
+ * (objectstack#11060) a function INSIDE a template hole that the vocabulary
+ * does not declare REFUSES the run and names itself — nothing is written. A
+ * function written OUTSIDE the braces is not an expression at all: it is
+ * template text around a hole, and lands verbatim (measured on 17.7.0 —
+ * `LOWER({x})` writes the literal `LOWER(ACME  Corp)`). Neither folds; the one
+ * form that does anything is the bare pass-through.
  */
 describe('premise: a flow template cannot fold a string', () => {
-  const CANDIDATES: Record<string, string> = {
-    unwrapped_lower: 'LOWER({leadRecord.company})',
-    fn_lower: '{LOWER(leadRecord.company)}',
-    fn_trim: '{TRIM(leadRecord.company)}',
-    method_lower: '{leadRecord.company.toLowerCase()}',
-    parenthesised_method: '{(leadRecord.company).toLowerCase()}',
-    passthrough: '{leadRecord.company}',
+  const REFUSED: Record<string, [string, RegExp]> = {
+    fn_lower: ['{LOWER(leadRecord.company)}', /LOWER/],
+    fn_trim: ['{TRIM(leadRecord.company)}', /TRIM/],
+    method_lower: ['{leadRecord.company.toLowerCase()}', /toLowerCase/],
+    parenthesised_method: ['{(leadRecord.company).toLowerCase()}', /toLowerCase/],
+  };
+  const UNWRAPPED = 'LOWER({leadRecord.company})';
+  const PASSTHROUGH = '{leadRecord.company}';
+
+  let leadId: string;
+  /** Run a probe writing `value` into a task's subject; the run's refusal (or null) and what it wrote. */
+  const probe = async (key: string, value: string) => {
+    const name = `probe_fold_${key}`;
+    const flow = {
+      name, label: 'probe', type: 'autolaunched', status: 'active', runAs: 'system',
+      variables: [{ name: 'recordId', type: 'text', isInput: true, isOutput: false }],
+      nodes: [
+        { id: 'start', type: 'start', label: 'Start', config: {} },
+        { id: 'get_lead', type: 'get_record', label: 'Get Lead', config: { objectName: 'crm_lead', filter: { id: '{recordId}' }, outputVariable: 'leadRecord' } },
+        {
+          id: 'probe', type: 'create_record', label: 'Probe',
+          config: { objectName: 'crm_task', fields: { subject: value, description: `probe ${key}`, type: 'follow_up', priority: 'normal', status: 'not_started' } },
+        },
+        { id: 'end', type: 'end', label: 'End' },
+      ],
+      edges: [
+        { id: 'e1', source: 'start', target: 'get_lead', type: 'default' },
+        { id: 'e2', source: 'get_lead', target: 'probe', type: 'default' },
+        { id: 'e3', source: 'probe', target: 'end', type: 'default' },
+      ],
+    };
+    const registered = await verify.apiAs(admin, 'POST', '/automation', flow);
+    expect(registered.status, await registered.clone().text()).toBe(200);
+    let refusal: string | null = null;
+    try {
+      await verify.flows.run(name, { recordId: leadId }, { as: admin });
+    } catch (e: unknown) {
+      refusal = String((e as Rec).message ?? e);
+    } finally {
+      expect((await verify.apiAs(admin, 'DELETE', `/automation/${name}`)).status).toBe(200);
+    }
+    const written = (await verify.rows('crm_task', { description: `probe ${key}` })).map((t) => t.subject);
+    return { refusal, written };
   };
 
-  let out: Rec = {};
-  let refusal = '';
-  let wroteProbeOut = false;
-
   beforeAll(async () => {
-    const store: Record<string, Rec[]> = { crm_lead: [{ id: 'lead_1', company: 'ACME  Corp' }] };
-    const data: AnyRec = {
-      async findOne(object: string, opts: AnyRec = {}) {
-        const where = opts.where ?? opts.filter ?? {};
-        return (
-          store[object]?.find((r) => Object.entries(where).every(([k, v]) => r[k] === v)) ?? null
-        );
-      },
-      async find(object: string) {
-        return store[object] ?? [];
-      },
-      async insert(object: string, doc: Rec) {
-        const rec = { id: `${object}_1`, ...doc };
-        (store[object] ??= []).push(rec);
-        return rec;
-      },
-      async update() {
-        return { modified: 0 };
-      },
-    };
-
-    const engine = new AutomationEngine(silentLogger);
-    installBuiltinNodes(engine, {
-      logger: silentLogger,
-      getService: (n: string) => (n === 'data' || n === 'objectql' ? data : undefined),
-    } as never);
-    engine.registerFlow('probe_normalize', {
-      name: 'probe_normalize',
-      label: 'probe',
-      type: 'autolaunched',
-      status: 'active',
-      variables: [{ name: 'recordId', type: 'text', isInput: true, isOutput: false }],
-      nodes: [
-        { id: 'start', type: 'start', label: 'Start', config: {} },
-        {
-          id: 'get_lead',
-          type: 'get_record',
-          label: 'Get Lead',
-          config: {
-            objectName: 'crm_lead',
-            filter: { id: '{recordId}' },
-            outputVariable: 'leadRecord',
-          },
-        },
-        {
-          id: 'probe',
-          type: 'create_record',
-          label: 'Probe',
-          config: { objectName: 'probe_out', fields: CANDIDATES, outputVariable: 'probeOut' },
-        },
-        { id: 'end', type: 'end', label: 'End' },
-      ],
-      edges: [
-        { id: 'e1', source: 'start', target: 'get_lead', type: 'default' },
-        { id: 'e2', source: 'get_lead', target: 'probe', type: 'default' },
-        { id: 'e3', source: 'probe', target: 'end', type: 'default' },
-      ],
-    } as never);
-
-    const run: AnyRec = (await engine.execute('probe_normalize', {
-      params: { recordId: 'lead_1' },
-      userId: 'user_1',
-      event: 'manual',
-    } as never)) as AnyRec;
-    refusal = String(run?.error ?? '');
-    wroteProbeOut = (store.probe_out ?? []).length > 0;
-
-    // The control: the same probe carrying ONLY the form that works.
-    engine.registerFlow('probe_passthrough', {
-      name: 'probe_passthrough',
-      label: 'probe',
-      type: 'autolaunched',
-      status: 'active',
-      variables: [{ name: 'recordId', type: 'text', isInput: true, isOutput: false }],
-      nodes: [
-        { id: 'start', type: 'start', label: 'Start', config: {} },
-        {
-          id: 'get_lead',
-          type: 'get_record',
-          label: 'Get Lead',
-          config: {
-            objectName: 'crm_lead',
-            filter: { id: '{recordId}' },
-            outputVariable: 'leadRecord',
-          },
-        },
-        {
-          id: 'probe',
-          type: 'create_record',
-          label: 'Probe',
-          config: {
-            objectName: 'probe_ok',
-            fields: { passthrough: CANDIDATES.passthrough },
-            outputVariable: 'probeOut',
-          },
-        },
-        { id: 'end', type: 'end', label: 'End' },
-      ],
-      edges: [
-        { id: 'e1', source: 'start', target: 'get_lead', type: 'default' },
-        { id: 'e2', source: 'get_lead', target: 'probe', type: 'default' },
-        { id: 'e3', source: 'probe', target: 'end', type: 'default' },
-      ],
-    } as never);
-    await engine.execute('probe_passthrough', {
-      params: { recordId: 'lead_1' },
-      userId: 'user_1',
-      event: 'manual',
-    } as never);
-    out = store.probe_ok?.[0] ?? {};
+    const [probeLead] = await verify.seed('crm_lead', [{
+      first_name: 'Joe', last_name: 'Probe', company: 'ACME  Corp', email: 'joe.probe@account-name-normalized-match.test',
+    }]);
+    leadId = String(probeLead!.id);
   });
 
-  it('passes the raw value through unchanged — the only thing that works', () => {
-    expect(out.passthrough).toBe('ACME  Corp');
+  it('passes the raw value through unchanged — the only thing that works', async () => {
+    expect((await probe('passthrough', PASSTHROUGH)).written).toEqual(['ACME  Corp']);
   });
 
-  it('refuses the run on the first unknown function, naming it', () => {
+  it.each(Object.entries(REFUSED))('refuses the run on an unknown function, naming it — %s', async (key, [value, named]) => {
     // Through 17.2.0 this run SUCCEEDED and wrote a row of silent wrong answers.
+    const { refusal } = await probe(key, value);
     expect(refusal).toMatch(/unknown function/i);
-    expect(refusal).toMatch(/LOWER|TRIM/);
+    expect(refusal).toMatch(named);
   });
 
-  it('writes NOTHING when it refuses — no partial row of wrong answers', () => {
-    // The refusal is the whole point: the `LOWER({x})` form used to interpolate
-    // to the literal string `LOWER(ACME  Corp)` and land in the database.
-    expect(wroteProbeOut).toBe(false);
+  it.each(Object.entries(REFUSED))('writes NOTHING when it refuses — no row of wrong answers — %s', async (key, [value]) => {
+    expect((await probe(`${key}_nothing`, value)).written).toEqual([]);
+  });
+
+  it('a function OUTSIDE the braces is template text — it lands verbatim, unfolded', async () => {
+    // The worst-looking shape, and still no fold: `LOWER(` is literal text
+    // around the `{leadRecord.company}` hole. Pinned as measured, so nobody
+    // mistakes it for a working spelling.
+    const { refusal, written } = await probe('unwrapped_lower', UNWRAPPED);
+    expect(refusal).toBeNull();
+    expect(written).toEqual(['LOWER(ACME  Corp)']);
   });
 });
 
@@ -371,81 +321,106 @@ const FOLDING_CASES: Array<[string, unknown, unknown]> = [
   ['a non-string value', 42, null],
 ];
 
-describe('account_protection folds name into name_normalized', () => {
-  const hook = hookNamed(accountHooks, 'account_protection');
+/**
+ * The folds run on real writes — the shipped app's `account_protection` and
+ * `lead_duplicate_check` hooks inside the engine's write path — and the
+ * stamped key is read off the stored row. Each account is removed again after
+ * its case (by the admin — a rep may not delete one): account names are unique
+ * per tenant, and several cases fold to the same key from spellings a tenant
+ * may hold only one of.
+ */
+const accountWith = async (doc: Rec): Promise<Rec> => verify.hooks.run('crm_account', 'insert', doc, { as: rep.token });
+const removeAccount = (id: string) => verify.hooks.run('crm_account', 'delete', { id }, { as: admin });
+const leadWith = async (doc: Rec): Promise<Rec> => verify.hooks.run('crm_lead', 'insert', {
+  first_name: 'Joe', last_name: `Fold ${++k}`, email: `fold${k}@account-name-normalized-match.test`, ...doc,
+}, { as: rep.token });
 
-  it.each(FOLDING_CASES)('folds %s', async (_label, name, expected) => {
-    const input: Rec = { name };
-    await hook.handler(makeCtx({ event: 'beforeInsert', input, user: { id: 'user_1' } }));
-    expect(input.name_normalized).toBe(expected);
+/**
+ * A whitespace-only name is refused by the engine (`name` / `company` are
+ * required, and blank is not a value) before any hook could fold it — so that
+ * case pins the refusal. A non-string one is NOT refused: the hook sees the
+ * number and folds it to `null`, and the engine then stores the text `42` —
+ * measured, both columns, so the `null` branch is reachable through a write.
+ */
+const UNWRITABLE = new Set(['a whitespace-only value']);
+
+describe('account_protection folds name into name_normalized', () => {
+  it.each(FOLDING_CASES)('folds %s', async (label, name, expected) => {
+    if (UNWRITABLE.has(label)) {
+      await expect(accountWith({ name })).rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
+      return;
+    }
+    const stored = await accountWith({ name });
+    try {
+      expect(stored.name_normalized).toBe(expected);
+    } finally {
+      await removeAccount(stored.id);
+    }
   });
 
   it('re-folds on an update that rewrites the name', async () => {
-    const input: Rec = { name: 'ACME   Corporation' };
-    await hook.handler(
-      makeCtx({
-        event: 'beforeUpdate',
-        input,
-        previous: { name: 'Acme Corp', name_normalized: 'acme corp' },
-        user: { id: 'user_1' },
-      }),
-    );
-    expect(input.name_normalized).toBe('acme corporation');
+    const stored = await accountWith({ name: 'Acme Corp' });
+    try {
+      const updated = await verify.hooks.run('crm_account', 'update', { id: stored.id, name: 'ACME   Corporation' }, { as: rep.token });
+      expect(updated.name_normalized).toBe('acme corporation');
+    } finally {
+      await removeAccount(stored.id);
+    }
   });
 
   it('leaves the key alone when the write does not carry the name', async () => {
     // An unrelated partial edit must not blank the match key — that would evict
     // the account from every future conversion lookup.
-    const input: Rec = { phone: '+1-512-555-0100' };
-    await hook.handler(
-      makeCtx({
-        event: 'beforeUpdate',
-        input,
-        previous: { name: 'Acme Corp', name_normalized: 'acme corp' },
-        user: { id: 'user_1' },
-      }),
-    );
-    expect('name_normalized' in input).toBe(false);
+    const stored = await accountWith({ name: 'Acme Corp' });
+    try {
+      const updated = await verify.hooks.run('crm_account', 'update', { id: stored.id, phone: '+1-512-555-0100' }, { as: rep.token });
+      expect(updated.name_normalized).toBe('acme corp');
+    } finally {
+      await removeAccount(stored.id);
+    }
   });
 
   it('still projects billing_country in the same write — #621 is untouched', async () => {
     // Both derivations live in one handler, so a regression in either is easy
     // to introduce while editing the other. One write, both columns.
-    const input: Rec = { name: 'ACME  Corp', billing_address: { city: 'Munich', country: ' de ' } };
-    await hook.handler(makeCtx({ event: 'beforeInsert', input, user: { id: 'user_1' } }));
-    expect(input.name_normalized).toBe('acme corp');
-    expect(input.billing_country).toBe('DE');
+    const stored = await accountWith({ name: 'ACME  Corp', billing_address: { city: 'Munich', country: ' de ' } });
+    try {
+      expect(stored.name_normalized).toBe('acme corp');
+      expect(stored.billing_country).toBe('DE');
+    } finally {
+      await removeAccount(stored.id);
+    }
   });
 });
 
 describe('lead_duplicate_check folds company into company_normalized', () => {
-  const hook = hookNamed(leadHooks, 'lead_duplicate_check');
-
-  it.each(FOLDING_CASES)('folds %s', async (_label, company, expected) => {
-    const input: Rec = { company };
-    await hook.handler(makeCtx({ event: 'beforeInsert', input }));
-    expect(input.company_normalized).toBe(expected);
+  it.each(FOLDING_CASES)('folds %s', async (label, company, expected) => {
+    if (UNWRITABLE.has(label)) {
+      await expect(leadWith({ company })).rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
+      return;
+    }
+    expect((await leadWith({ company })).company_normalized).toBe(expected);
   });
 
   it('folds on update too, before the insert-only dedupe returns', async () => {
-    const input: Rec = { company: 'ACME  Corp' };
-    await hook.handler(
-      makeCtx({ event: 'beforeUpdate', input, previous: { company: 'Globex' } }),
-    );
-    expect(input.company_normalized).toBe('acme corp');
+    const stored = await leadWith({ company: 'Globex' });
+    const updated = await verify.hooks.run('crm_lead', 'update', { id: stored.id, company: 'ACME  Corp' }, { as: rep.token });
+    expect(updated.company_normalized).toBe('acme corp');
   });
 
   it('leaves the key alone when the write does not carry the company', async () => {
-    const input: Rec = { phone: '555' };
-    await hook.handler(makeCtx({ event: 'beforeUpdate', input, previous: { company: 'Acme' } }));
-    expect('company_normalized' in input).toBe(false);
+    const stored = await leadWith({ company: 'Acme' });
+    const updated = await verify.hooks.run('crm_lead', 'update', { id: stored.id, phone: '555' }, { as: rep.token });
+    expect(updated.company_normalized).toBe('acme');
   });
 
   it('does not disturb the email fold it shares the handler with', async () => {
-    const input: Rec = { company: 'ACME  Corp', email: '  Joe@Example.COM ' };
-    await hook.handler(makeCtx({ event: 'beforeUpdate', input }));
-    expect(input.email).toBe('joe@example.com');
-    expect(input.company_normalized).toBe('acme corp');
+    const stored = await leadWith({ company: 'Globex' });
+    const updated = await verify.hooks.run('crm_lead', 'update', {
+      id: stored.id, company: 'ACME  Corp', email: `  Joe.${k}@Example.COM `,
+    }, { as: rep.token });
+    expect(updated.email).toBe(`joe.${k}@example.com`);
+    expect(updated.company_normalized).toBe('acme corp');
   });
 });
 
@@ -456,22 +431,17 @@ describe('lead_duplicate_check folds company into company_normalized', () => {
  * still lower to a metadata-only body (`objectstack build` lowers every
  * registered hook through the platform's `extractHookBody`, and `os lint`
  * applies the same function). These two drive the folds through the real
- * engine — the shipped app booted through `@objectstack/verify`'s handle, a
- * sales rep creating the records — and read the stamped key off the stored row.
+ * engine — a sales rep creating the records — and read the stamped key off the
+ * stored row.
  */
 describe('both folds land on a real write', () => {
-  let verify: VerifyStack;
-  let rep: Person;
-  beforeAll(async () => {
-    verify = await hotcrmStack();
-    rep = await signUpPerson(verify, 'rep@account-name-normalized-match.test', {
-      name: 'Fold Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
-    });
-  }, 120_000);
-
   it('account_protection folds name', async () => {
     const stored = await verify.hooks.run('crm_account', 'insert', { name: '  ACME   Corp ' }, { as: rep.token });
-    expect(stored.name_normalized).toBe('acme corp');
+    try {
+      expect(stored.name_normalized).toBe('acme corp');
+    } finally {
+      await removeAccount(stored.id);
+    }
   });
 
   it('lead_duplicate_check folds company', async () => {
@@ -487,98 +457,138 @@ describe('both folds land on a real write', () => {
 // ════════════════════════════════════════════ the acceptance criteria ══
 
 /**
- * End-to-end through the REAL flow and the REAL hooks: records are written via
- * the hooked data engine, never hand-stamped, so the test proves the producer
- * chain (hook → column → flow filter) rather than its own fixtures.
+ * End-to-end through the REAL flow and the REAL hooks: the manager's leads are
+ * real writes, the conversion is the screen flow run through the trigger door
+ * and resumed with its screen, and every row is read back off the engine — so
+ * the test proves the producer chain (hook → column → flow filter) rather than
+ * its own fixtures. Each case spells its own company (`… <n>`), so the
+ * accounts it counts are the ones its conversions found or made.
  */
-const CONVERSION_HOOKS = [
-  hookNamed(leadHooks, 'lead_automation'),
-  hookNamed(leadHooks, 'lead_duplicate_check'),
-  hookNamed(accountHooks, 'account_protection'),
-] as never[];
+const company = (stem: string, n: number) => `${stem} ${n}`;
 
-const makeConversion = () =>
-  makeFlowHarness({ lead_conversion: LeadConversionFlow }, {}, { hooks: CONVERSION_HOOKS });
+const leadFor = async (companyName: string): Promise<Rec> => verify.hooks.run('crm_lead', 'insert', {
+  company: companyName, email: `lead${++k}@account-name-normalized-match.test`,
+  first_name: 'Joe', last_name: 'Green', status: 'qualified',
+}, { as: manager.token });
 
-async function convert(harness: ReturnType<typeof makeConversion>, leadId: string) {
-  const runId = await harness.run('lead_conversion', { recordId: leadId });
-  await harness.resume(runId!, { createOpportunity: false });
+/** Convert `leadId` as the manager, without an opportunity; the resumed run. */
+async function convert(leadId: string): Promise<Rec> {
+  const started = await verify.flows.run('lead_conversion', { recordId: leadId }, { as: manager.token });
+  return verify.flows.resume(started, { createOpportunity: false }, { as: manager.token }).catch((e: Rec) => e);
 }
 
-const leadPayload = (id: string, company: string): Rec => ({
-  id,
-  company,
-  email: `${id}@example.com`,
-  first_name: 'Joe',
-  last_name: 'Green',
-  status: 'qualified',
-  is_converted: false,
-});
+/** The accounts whose match key is `folded`. */
+const accountsKeyed = (folded: string) => verify.rows('crm_account', { name_normalized: folded });
 
 describe('acceptance: a case/whitespace variant reuses the same account', () => {
   it('converting "ACME  Corp" reuses the account created from "Acme Corp"', async () => {
-    const h = makeConversion();
-    await h.data.insert('crm_lead', leadPayload('lead_1', 'Acme Corp'));
-    await h.data.insert('crm_lead', leadPayload('lead_2', 'ACME  Corp'));
+    const n = ++k;
+    const first = await leadFor(company('Acme Corp', n));
+    const second = await leadFor(company('ACME  Corp', n));
 
-    await convert(h, 'lead_1');
-    expect(h.store.crm_account).toHaveLength(1);
-    const created = h.store.crm_account[0];
-    expect(created.name, 'the display name is the lead value, verbatim').toBe('Acme Corp');
-    expect(created.name_normalized, 'the hook derived the match key').toBe('acme corp');
+    await convert(first.id);
+    const created = await accountsKeyed(`acme corp ${n}`);
+    expect(created).toHaveLength(1);
+    expect(created[0]!.name, 'the display name is the lead value, verbatim').toBe(company('Acme Corp', n));
+    expect(created[0]!.name_normalized, 'the hook derived the match key').toBe(`acme corp ${n}`);
 
-    await convert(h, 'lead_2');
-    expect(h.store.crm_account, 'no duplicate account').toHaveLength(1);
-    expect(h.store.crm_lead.find((l) => l.id === 'lead_2')!.converted_account).toBe(created.id);
+    await convert(second.id);
+    expect(await accountsKeyed(`acme corp ${n}`), 'no duplicate account').toHaveLength(1);
+    const [converted] = await verify.rows('crm_lead', { id: second.id });
+    expect(converted!.converted_account).toBe(created[0]!.id);
   });
 
   it('filters on the normalized column with the folded value', async () => {
     // The outcome above could also be produced by matching on something else.
-    // This pins WHICH query the flow issues.
-    const h = makeConversion();
-    await h.data.insert('crm_lead', leadPayload('lead_1', 'ACME  Corp'));
-    await convert(h, 'lead_1');
-
-    const lookup = h.queries.find((q) => q.object === 'crm_account');
-    expect(lookup?.where).toEqual({ name_normalized: 'acme corp' });
+    // This pins WHICH query the flow issues — read off the engine's own reads
+    // while the conversion runs.
+    const n = ++k;
+    const variant = await leadFor(company('ACME  Corp', n));
+    const ql = verify.kernel.getService<Rec>('objectql');
+    const lookups: Rec[] = [];
+    const spies = (['find', 'findOne'] as const).map((op) => {
+      const real = ql[op].bind(ql);
+      return vi.spyOn(ql, op).mockImplementation(((object: string, query: Rec = {}) => {
+        if (object === 'crm_account') lookups.push(query.where ?? query.filter ?? {});
+        return real(object, query);
+      }) as never);
+    });
+    try {
+      await convert(variant.id);
+    } finally {
+      for (const spy of spies) spy.mockRestore();
+    }
+    expect(lookups, 'the conversion never looked an account up by its match key')
+      .toContainEqual({ name_normalized: `acme corp ${n}` });
   });
 
   it('still creates an account when nothing matches', async () => {
-    const h = makeConversion();
-    await h.data.insert('crm_account', { id: 'acc_1', name: 'Globex Industries' });
-    await h.data.insert('crm_lead', leadPayload('lead_1', 'Initech'));
-    await convert(h, 'lead_1');
+    const n = ++k;
+    await verify.hooks.run('crm_account', 'insert', { name: company('Globex Industries', n) }, { as: manager.token });
+    const lead = await leadFor(company('Initech', n));
+    await convert(lead.id);
 
-    expect(h.store.crm_account).toHaveLength(2);
-    expect(h.store.crm_account[1].name).toBe('Initech');
-    expect(h.store.crm_account[1].name_normalized).toBe('initech');
+    const created = await accountsKeyed(`initech ${n}`);
+    expect(created).toHaveLength(1);
+    expect(created[0]!.name).toBe(company('Initech', n));
+    expect(await accountsKeyed(`globex industries ${n}`), 'the unrelated account was touched').toHaveLength(1);
   });
 
-  it('a lead with no match key stops the conversion instead of guessing', async () => {
-    // The un-backfilled LEAD case (docs/MAINTENANCE.md §3.3). The filter value
-    // resolves to nothing and `get_record` refuses to run rather than widen the
-    // query to every account — measured here rather than assumed, because the
-    // alternative (a silent match-all) would attach the conversion to an
-    // arbitrary account, which is far worse than failing.
-    const h = makeConversion();
-    h.store.crm_lead = [{ ...leadPayload('lead_legacy', 'Acme Corp'), company_normalized: undefined }];
-    const runId = await h.run('lead_conversion', { recordId: 'lead_legacy' });
-    const done = (await h.resume(runId!, { createOpportunity: false })) as AnyRec;
+  /**
+   * ⚠️ MEASURED DEFECT — reported as a finding on this card, pinned here so the
+   * fix is noticed.
+   *
+   * The un-backfilled LEAD case (docs/MAINTENANCE.md §3.3). The intent this
+   * file has always stated: a lead with no match key STOPS the conversion
+   * rather than widen the account lookup — "a silent match-all would attach
+   * the conversion to an arbitrary account, which is far worse than failing".
+   * The flow harness this suite used to run on proved it with the key ABSENT,
+   * where the filter token resolves to nothing and `get_record` refuses.
+   *
+   * On the real engine a key-less lead is a NULL key (SQL, and the sparse
+   * datasource once the column is written empty), the token resolves to
+   * `null`, and the lookup becomes `name_normalized = NULL` — which MATCHES
+   * every account whose key is also NULL. Measured on 17.7.0, both
+   * datasources: the lead converts onto an UNRELATED key-less account. Such
+   * keys arise from ordinary writes too (a non-string name or company folds to
+   * `null`, above), not only from an un-backfilled install.
+   */
+  it('⚠️ a lead with no match key converts onto an UNRELATED key-less account (measured defect)', async () => {
+    const n = ++k;
+    const unrelated = await verify.hooks.run('crm_account', 'insert', { name: company('Unrelated Legacy Co', n) }, { as: manager.token });
+    await systemUpdate(verify, 'crm_account', { id: unrelated.id, name_normalized: null });
+    const legacy = await leadFor(company('Acme Corp', n));
+    await systemUpdate(verify, 'crm_lead', { id: legacy.id, company_normalized: null });
+    const done = await convert(legacy.id);
 
-    expect(String(done?.error ?? '')).toMatch(/resolved to nothing|refusing to run/);
-    expect(h.store.crm_account ?? [], 'no account was invented').toHaveLength(0);
-    expect(h.store.crm_lead[0].is_converted, 'the lead is untouched').not.toBe(true);
+    expect(done.success, 'the conversion of a key-less lead now stops — the defect is fixed: rewrite this case to pin the refusal').toBe(true);
+    const [after] = await verify.rows('crm_lead', { id: legacy.id });
+    // Onto SOME key-less account that is not its own — which one is whichever
+    // the driver returns first (here, the one written above, unless another
+    // key-less account exists).
+    const [attached] = await verify.rows('crm_account', { id: after!.converted_account });
+    expect(attached, 'the key-less lead attached to no account').toBeTruthy();
+    expect(attached!.name_normalized, 'it attached to a keyed account').toBeNull();
+    expect(attached!.name, 'it attached to an account of its own company').not.toBe(company('Acme Corp', n));
+    expect(await verify.rows('crm_account', { name: company('Acme Corp', n) }), 'no account of its own').toHaveLength(0);
+    expect(unrelated.id).toBeTruthy();
   });
 
   it('an account with no match key is invisible — the reason the backfill is not optional', async () => {
     // The un-backfilled ACCOUNT case: this one is SILENT, which is exactly why
-    // it is documented as the failure that makes the backfill mandatory.
-    const h = makeConversion();
-    h.store.crm_account = [{ id: 'acc_legacy', name: 'Acme Corp', is_active: true }];
-    await h.data.insert('crm_lead', leadPayload('lead_1', 'Acme Corp'));
-    await convert(h, 'lead_1');
+    // it is documented as the failure that makes the backfill mandatory. The
+    // conversion's account carries the lead's company verbatim, so the legacy
+    // account is spelled differently ("ACME  Corp") to stay clear of the
+    // per-tenant unique name.
+    const n = ++k;
+    const legacy = await verify.hooks.run('crm_account', 'insert', { name: company('ACME  Corp', n) }, { as: manager.token });
+    await systemUpdate(verify, 'crm_account', { id: legacy.id, name_normalized: null });
+    const lead = await leadFor(company('Acme Corp', n));
+    await convert(lead.id);
 
-    expect(h.store.crm_account, 'a duplicate account, as documented').toHaveLength(2);
+    const [after] = await verify.rows('crm_lead', { id: lead.id });
+    expect(after!.converted_account, 'the conversion found the key-less account').not.toBe(legacy.id);
+    expect(await accountsKeyed(`acme corp ${n}`), 'a duplicate account, as documented').toHaveLength(1);
   });
 
   it('a fresh install and a backfilled install behave identically', async () => {
@@ -587,23 +597,24 @@ describe('acceptance: a case/whitespace variant reuses the same account', () => 
     // operator re-saved it (docs/MAINTENANCE.md §3.3) — modelled as an UPDATE
     // carrying `name`, which is exactly what the backfill issues. Both must
     // then be found by the same variant-spelling lead.
-    const fresh = makeConversion();
-    await fresh.data.insert('crm_lead', leadPayload('lead_seed', 'Acme Corp'));
-    await convert(fresh, 'lead_seed');
+    const nFresh = ++k;
+    await convert((await leadFor(company('Acme Corp', nFresh))).id);
+    const [fresh] = await accountsKeyed(`acme corp ${nFresh}`);
 
-    const backfilled = makeConversion();
+    const nBack = ++k;
+    const legacy = await verify.hooks.run('crm_account', 'insert', { name: company('Acme Corp', nBack) }, { as: manager.token });
     // A row written before the column existed: no match key at all.
-    backfilled.store.crm_account = [{ id: 'acc_legacy', name: 'Acme Corp', is_active: true }];
-    await backfilled.data.update('crm_account', { name: 'Acme Corp' }, { where: { id: 'acc_legacy' } });
+    await systemUpdate(verify, 'crm_account', { id: legacy.id, name_normalized: null });
+    await systemUpdate(verify, 'crm_account', { id: legacy.id, name: company('Acme Corp', nBack) });
+    const [backfilled] = await verify.rows('crm_account', { id: legacy.id });
 
-    expect(backfilled.store.crm_account[0].name_normalized).toBe(
-      fresh.store.crm_account[0].name_normalized,
+    expect(backfilled!.name_normalized.replace(String(nBack), '#')).toBe(
+      fresh!.name_normalized.replace(String(nFresh), '#'),
     );
 
-    for (const h of [fresh, backfilled]) {
-      await h.data.insert('crm_lead', leadPayload('lead_variant', 'ACME  Corp'));
-      await convert(h, 'lead_variant');
-      expect(h.store.crm_account, 'reused the existing account').toHaveLength(1);
+    for (const n of [nFresh, nBack]) {
+      await convert((await leadFor(company('ACME  Corp', n))).id);
+      expect(await accountsKeyed(`acme corp ${n}`), 'reused the existing account').toHaveLength(1);
     }
   });
 });

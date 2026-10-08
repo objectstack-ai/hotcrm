@@ -1,68 +1,72 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect } from 'vitest';
-import { makeFlowHarness, type FlowHarness, type Rec } from './helpers/flow-harness';
-import { LeadConversionFlow } from '../src/sales/flows/lead-conversion.flow';
+import { describe, it, expect, beforeAll } from 'vitest';
+import type { VerifyStack } from '@objectstack/verify';
+import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
+
+type Rec = Record<string, any>;
 
 /**
- * Flow runtime harness — executes the REAL lead_conversion flow through the
- * REAL AutomationEngine (node traversal, decision evaluation, {var}
- * interpolation, assignment convergence) against the SHARED in-memory data
- * engine in `test/helpers/flow-harness.ts`.
+ * The REAL lead_conversion flow, run through the shipped app booted by
+ * `@objectstack/verify` — the platform's automation engine (node traversal,
+ * decision evaluation, {var} interpolation, assignment convergence) over the
+ * real data engine, as a real persona, so every write the flow makes is held
+ * to the same permissions and validation the running app applies.
  *
  * This is the layer above the hook-runtime tests: it proves the FLOW GRAPH
  * behaves — specifically that the account + contact dedupe branches route and
- * converge correctly — not just that the nodes are wired. Runs in vitest/CI
- * (no server, no kernel), deterministically.
- *
- * This file used to carry its OWN copy of the data engine, matching rows with
- * `===` only and storing exactly the columns a row was written with (#1479).
- * Both halves of that copy were wrong in ways that pass silently: an operand
- * like `{ $gt: 0 }` is an object compared with `===` against a scalar, so every
- * range predicate selected nothing; and a column nobody wrote was ABSENT rather
- * than null, which is not the shape the shipped app's materialising driver
- * returns. The shared engine is measured against a real driver — see the header
- * of the harness for that measurement — so a filter that is wrong against real
- * rows now fails here instead of passing by accident.
+ * converge correctly — not just that the nodes are wired.
  */
 
 /**
- * Fold a name the way the producer hooks do (#626).
- *
- * This harness is built WITHOUT hooks (`makeFlowHarness`'s third argument is
- * left at its default) — it writes rows straight into the store — so the
- * fixtures have to carry the derived match keys that `lead_duplicate_check` and
- * `account_protection` stamp on every real write. Without them the flow's
- * account lookup has no value to filter on and `get_record` refuses to run.
- * The hook-owned columns themselves are exercised in
- * `test/account-name-normalized-match.test.ts`, which runs the real handlers
- * through this same harness's `hooks` option.
+ * Fold a name the way the producer hooks do (#626). The real writes below run
+ * the shipped `account_protection` hook, which stamps this key; the assertion
+ * that uses it checks the conversion matched on the stamped key, not on the
+ * raw name.
  */
 const fold = (value: string): string => value.trim().toLowerCase().replace(/\s+/g, ' ');
 
-const leadRow = (over: Rec = {}): Rec => {
-  const company = (over.company as string) ?? 'Globex Industries';
-  return {
-    id: 'lead_1', company, company_normalized: fold(company),
-    email: 'joe@globex.example.com',
-    first_name: 'Joe', last_name: 'Green', phone: '555', title: 'Buyer',
-    lead_source: 'web', is_converted: false, status: 'qualified', ...over,
-  };
+// The shipped app booted through `@objectstack/verify`'s handle; a sales rep
+// converts their own qualified lead through the screen flow (`flows.run`, then
+// `flows.resume` with the screen), and what the conversion wrote is read back
+// off the engine. Every case converts a company of its own, so the dedupe it
+// pins is about the rows the case put there and nothing the boot seeded.
+let verify: VerifyStack;
+let rep: Person;
+let k = 0;
+beforeAll(async () => {
+  verify = await hotcrmStack();
+  // The converter is a sales MANAGER. On 17.7.0 a sales rep's conversion of a
+  // lead into a NEW account is refused: the flow's `create_account` writes
+  // `annual_revenue`, which `sales_rep` may read but not edit
+  // (`'crm_account.annual_revenue': { editable: false }`), and the flow runs as
+  // its caller — reported as a finding. This file's subject is what the
+  // conversion creates and reuses, so it runs as a persona whose conversion
+  // completes.
+  rep = await signUpPerson(verify, 'manager@flow-conversion.test', {
+    name: 'Conversion Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+  });
+}, 120_000);
+
+const create = (object: string, doc: Rec) => verify.hooks.run(object, 'insert', doc, { as: rep.token });
+
+/** A company and an email no other case uses — the lead's identity for one case. */
+const identity = () => {
+  const n = ++k;
+  return { company: `Globex Industries ${n}`, email: `joe${n}@globex.example.com` };
 };
 
-/** A harness seeded with the standard lead, plus whatever else a case needs. */
-const makeConversion = (seed: Record<string, Rec[]> = {}): FlowHarness =>
-  makeFlowHarness({ lead_conversion: LeadConversionFlow }, { crm_lead: [leadRow()], ...seed });
+/** The rep's qualified lead for `who`. */
+const qualifiedLead = (who: { company: string; email: string }) => create('crm_lead', {
+  company: who.company, email: who.email, first_name: 'Joe', last_name: 'Green', phone: '555',
+  title: 'Buyer', lead_source: 'web', status: 'qualified',
+});
 
 async function runConversion(
-  h: FlowHarness,
   leadId: string,
   screen: Rec = { createOpportunity: true, opportunityName: 'Deal', opportunityAmount: 100000 },
 ) {
-  const started: Rec = (await h.engine.execute('lead_conversion', {
-    params: { recordId: leadId }, userId: 'user_1', event: 'manual',
-  } as never)) as Rec;
-  const runId: string = started.runId ?? started.run?.id;
+  const started = await verify.flows.run('lead_conversion', { recordId: leadId }, { as: rep.token });
   // Screen flow pauses at screen_1; resume with the collected inputs — ON TOP
   // OF WHAT THE SCREEN PREFILLED. The runner seeds its value state from every
   // field carrying a `defaultValue`, visible or not, and submits that bag
@@ -73,72 +77,83 @@ async function runConversion(
   // longer has a date of its own to fall back on. Read off the descriptor
   // rather than restated, because the default is authored in exactly one place.
   const prefilled: Rec = {};
-  for (const f of ((started.screen ?? started.output?.screen)?.fields ?? []) as Rec[]) {
+  const started_ = started as Rec;
+  for (const f of ((started_.screen ?? started_.output?.screen)?.fields ?? []) as Rec[]) {
     if (f.defaultValue !== undefined) prefilled[f.name] = f.defaultValue;
   }
-  return h.resume(runId, { ...prefilled, ...screen });
+  return verify.flows.resume(started, { ...prefilled, ...screen }, { as: rep.token });
 }
+
+/** What the conversion left for `who`: the account(s), contact(s), deal(s) and the lead. */
+const after = async (who: { company: string; email: string }, leadId: string) => {
+  const accounts = await verify.rows('crm_account', { name: who.company });
+  const ids = accounts.map((a) => a.id);
+  const contacts = ids.length ? await verify.rows('crm_contact', { crm_account: { $in: ids } }) : [];
+  const opportunities = ids.length ? await verify.rows('crm_opportunity', { crm_account: { $in: ids } }) : [];
+  const [lead] = await verify.rows('crm_lead', { id: leadId });
+  return { accounts, contacts, opportunities, lead: lead! };
+};
 
 describe('lead_conversion flow — runtime', () => {
   it('creates account + contact + opportunity for a brand-new lead', async () => {
-    const h = makeConversion();
-    await runConversion(h, 'lead_1');
+    const who = identity();
+    const lead = await qualifiedLead(who);
+    await runConversion(lead.id);
 
-    expect(h.store.crm_account?.length, 'one account created').toBe(1);
-    expect(h.store.crm_contact?.length, 'one contact created').toBe(1);
-    expect(h.store.crm_opportunity?.length, 'one opportunity created').toBe(1);
-    const acct = h.store.crm_account[0];
-    expect(acct.name).toBe('Globex Industries');
+    const out = await after(who, lead.id);
+    expect(out.accounts.length, 'one account created').toBe(1);
+    expect(out.contacts.length, 'one contact created').toBe(1);
+    expect(out.opportunities.length, 'one opportunity created').toBe(1);
+    const acct = out.accounts[0]!;
+    expect(acct.name).toBe(who.company);
     // Contact + opportunity link to that account id.
-    expect(h.store.crm_contact[0].crm_account).toBe(acct.id);
-    expect(h.store.crm_opportunity[0].crm_account).toBe(acct.id);
+    expect(out.contacts[0]!.crm_account).toBe(acct.id);
+    expect(out.opportunities[0]!.crm_account).toBe(acct.id);
     // Lead stamped converted.
-    expect(h.store.crm_lead[0].is_converted).toBe(true);
-    expect(h.store.crm_lead[0].status).toBe('converted');
+    expect(out.lead.is_converted).toBe(true);
+    expect(out.lead.status).toBe('converted');
   });
 
   it('REUSES an existing account with the same company (no duplicate)', async () => {
-    const h = makeConversion({
-      crm_account: [{
-        id: 'acc_existing', name: 'Globex Industries',
-        name_normalized: fold('Globex Industries'), is_active: true,
-      }],
-    });
-    await runConversion(h, 'lead_1');
+    const who = identity();
+    const existing = await create('crm_account', { name: who.company, is_active: true });
+    expect(existing.name_normalized, 'the fold key the conversion matches on').toBe(fold(who.company));
+    const lead = await qualifiedLead(who);
+    await runConversion(lead.id);
 
-    expect(h.store.crm_account.length, 'no duplicate account').toBe(1);
-    expect(h.store.crm_account[0].id).toBe('acc_existing');
+    const out = await after(who, lead.id);
+    expect(out.accounts.length, 'no duplicate account').toBe(1);
+    expect(out.accounts[0]!.id).toBe(existing.id);
     // The new contact + opportunity hang off the reused account.
-    expect(h.store.crm_contact[0].crm_account).toBe('acc_existing');
-    expect(h.store.crm_opportunity[0].crm_account).toBe('acc_existing');
+    expect(out.contacts[0]!.crm_account).toBe(existing.id);
+    expect(out.opportunities[0]!.crm_account).toBe(existing.id);
   });
 
   it('REUSES an existing contact (same email in the account) — no duplicate', async () => {
-    const h = makeConversion({
-      crm_account: [{
-        id: 'acc_existing', name: 'Globex Industries',
-        name_normalized: fold('Globex Industries'), is_active: true,
-      }],
-      crm_contact: [{
-        id: 'con_existing', email: 'joe@globex.example.com', crm_account: 'acc_existing',
-        first_name: 'Joe', last_name: 'Green',
-      }],
+    const who = identity();
+    const account = await create('crm_account', { name: who.company, is_active: true });
+    const existing = await create('crm_contact', {
+      email: who.email, crm_account: account.id, first_name: 'Joe', last_name: 'Green',
     });
-    await runConversion(h, 'lead_1');
+    const lead = await qualifiedLead(who);
+    await runConversion(lead.id);
 
-    expect(h.store.crm_account.length).toBe(1);
-    expect(h.store.crm_contact.length, 'no duplicate contact').toBe(1);
-    expect(h.store.crm_contact[0].id).toBe('con_existing');
-    expect(h.store.crm_opportunity[0].primary_contact).toBe('con_existing');
+    const out = await after(who, lead.id);
+    expect(out.accounts.length).toBe(1);
+    expect(out.contacts.length, 'no duplicate contact').toBe(1);
+    expect(out.contacts[0]!.id).toBe(existing.id);
+    expect(out.opportunities[0]!.primary_contact).toBe(existing.id);
   });
 
   it('skips opportunity creation when the screen says no', async () => {
-    const h = makeConversion();
-    await runConversion(h, 'lead_1', { createOpportunity: false });
+    const who = identity();
+    const lead = await qualifiedLead(who);
+    await runConversion(lead.id, { createOpportunity: false });
 
-    expect(h.store.crm_account.length).toBe(1);
-    expect(h.store.crm_contact.length).toBe(1);
-    expect(h.store.crm_opportunity?.length ?? 0, 'no opportunity').toBe(0);
-    expect(h.store.crm_lead[0].is_converted).toBe(true);
+    const out = await after(who, lead.id);
+    expect(out.accounts.length).toBe(1);
+    expect(out.contacts.length).toBe(1);
+    expect(out.opportunities.length, 'no opportunity').toBe(0);
+    expect(out.lead.is_converted).toBe(true);
   });
 });
