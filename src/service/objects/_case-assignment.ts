@@ -297,6 +297,30 @@ export function createCaseRoundRobinAssign(hookName = 'case_auto_assign'): Hook 
  * read denial, an empty pool or any other failure leaves the case with its
  * current owner and lets the escalation write through untouched.
  *
+ * ## `runAs: 'system'` (#2014), and the organization pin
+ *
+ * The pool is `sys_user_position`, which a service agent may not read — so an
+ * agent escalating their own case (the record form, or the `escalate_case`
+ * action, whose `escalate` node deliberately keeps the status write in the
+ * acting user's context) was refused the read, stood down, and the case stayed
+ * with the agent who could not get to it; only the SLA sweep's system write
+ * reached the pool. Choosing the escalation desk is the business's routing, not
+ * the agent's privilege, so the hook elevates. What elevation reaches is the
+ * two READS: the hook still issues no write of its own (door ① above), so it
+ * needs no transfer grant and moves nothing the escalation write is not
+ * already moving.
+ *
+ * AGENTS.md rule 10: the pool and the load counts are organization-NEUTRAL
+ * predicates (a position name, an owner id), so both are pinned to the
+ * escalating case's own `organization_id` when it carries one. A person's
+ * escalation is already confined by the driver — the elevated `ctx.api` keeps
+ * the trigger's tenant — but the SLA sweep writes as the system with no
+ * tenant at all, and without the pin its escalation would pick the
+ * least-loaded manager of ANY organization. A case with no organization (a
+ * single-organization install) has no wall to stay inside, and is not pinned.
+ * Pinned, a manager whose position assignment is global (no organization)
+ * does not receive a tenant's case.
+ *
  * @param hookName registry name for the hook (metadata only — never read by
  *   the body, which the sandbox would not let it be).
  */
@@ -306,6 +330,7 @@ export function createCaseEscalationReassign(hookName = 'case_escalation_reassig
     object: 'crm_case',
     events: ['beforeUpdate'],
     priority: 250,
+    runAs: 'system',
     description: 'Hand a case being escalated to the least-loaded service manager.',
     handler: async (ctx: HookContext) => {
       // D3 stand-down: the escalation TRANSITION is read off this row's
@@ -331,12 +356,21 @@ export function createCaseEscalationReassign(hookName = 'case_escalation_reassig
       const api = ctx.api as HookApi | undefined;
       if (!api) return;
 
+      // The escalating case's own organization — the rule-10 pin on both
+      // reads below. Read off the stored row: an update payload does not carry
+      // it, and the platform stamped it there.
+      const organizationId =
+        typeof previous.organization_id === 'string' && previous.organization_id !== ''
+          ? previous.organization_id
+          : undefined;
+      const inOrganization: Record<string, string> = organizationId ? { organization_id: organizationId } : {};
+
       try {
         // The pool = holders of the `service_manager` position. This literal is
         // the exported SERVICE_MANAGER_POSITION; the sandbox forbids reading the
         // constant here, and `test/case-assignment.test.ts` pins the parity.
         const holders = await api.object('sys_user_position').find({
-          where: { position: 'service_manager' }, fields: ['user_id'], top: 1000,
+          where: { position: 'service_manager', ...inOrganization }, fields: ['user_id'], top: 1000,
         });
         const managerIds = Array.from(
           new Set(
@@ -362,7 +396,7 @@ export function createCaseEscalationReassign(hookName = 'case_escalation_reassig
         let bestCount = Infinity;
         for (const managerId of managerIds) {
           const openCount = await api.object('crm_case').count({
-            where: { owner_id: managerId, status: { $nin: ['resolved', 'closed'] } },
+            where: { owner_id: managerId, status: { $nin: ['resolved', 'closed'] }, ...inOrganization },
           });
           if (openCount < bestCount) {
             bestCount = openCount;
@@ -371,8 +405,8 @@ export function createCaseEscalationReassign(hookName = 'case_escalation_reassig
         }
         if (best) input.owner_id = best;
       } catch {
-        // Swallow: the hand-off must never reject the escalation. A denied
-        // `sys_user_position` read leaves the case where it is, escalated.
+        // Swallow: the hand-off must never reject the escalation. A failed
+        // pool read leaves the case where it is, escalated.
         // (No `console` here — the L2 hook sandbox does not define one.)
       }
     },

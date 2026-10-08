@@ -300,36 +300,31 @@ describe('article_feedback_metrics_refresh recounts the article’s verdicts', (
   });
 
   /**
-   * ⚠️ MEASURED DEFECT — reported as a finding on this card, pinned here so the
-   * fix is noticed.
-   *
-   * The recount writes the article's `readonly` counters through `ctx.api`,
-   * which carries the context of the write that fired it. The readers' votes
-   * arrive through the feedback actions, whose bodies run system-elevated, so
-   * their recounts land. A PERSON's own write of a vote does not: when an
-   * admin removes a vote, the recount runs under the admin's context and the
-   * engine drops the caller-supplied readonly counters ("the update is being
-   * COMMITTED WITHOUT IT"). Measured on 17.7.0: the withdrawn vote is gone and
-   * the article still counts it.
+   * A PERSON's own write of a vote reaches the counters too (#2014). The
+   * readers' votes arrive through the feedback actions, whose bodies run
+   * system-elevated; an admin withdrawing a vote is an ordinary write as
+   * themselves. The counters are `readonly`, and the engine drops a readonly
+   * key a non-system caller writes, so the recount declares `runAs: 'system'` —
+   * before it did, the withdrawn vote was gone and the article still counted
+   * it. Elevation is not anonymity: the article names the admin as its last
+   * writer.
    */
-  it('⚠️ a vote the admin withdraws is still counted (measured defect)', async () => {
+  it('stops counting a vote the admin withdraws', async () => {
     const ka = await articleOf();
     const cast = await vote(readers[0]!, ka, 'helpful');
     await settlesAt(ka, { helpful_count: 1 });
     await verify.hooks.run('crm_article_feedback', 'delete', { id: cast.id }, { as: admin });
     expect(await verify.rows('crm_article_feedback', { id: cast.id }), 'the vote was not withdrawn').toEqual([]);
-    await new Promise((r) => setTimeout(r, 600));
-    expect(
-      (await counters(ka)).helpful_count,
-      'the withdrawn vote is no longer counted — the defect is fixed: rewrite this case to pin the recount (back to 0)',
-    ).toBe(1);
+    await settlesAt(ka, { helpful_count: 0, not_helpful_count: 0 });
+    const [stored] = await verify.rows('crm_knowledge_article', { id: ka });
+    expect(stored!.updated_by, 'the recount was recorded as nobody’s write').toBe(String((await verify.contextFor(admin)).userId));
   });
 
   /**
    * Moving a vote between articles has to recount BOTH — the one it left as
    * well as the one it arrived at. Only the arrival side is obvious, which is
    * why the departure side is the one that rots. A vote is re-parented by a
-   * data fix — the system's write (see the defect above for a person's).
+   * data fix — the system's write (a person's own write is the case above).
    */
   it('recounts both sides when a vote moves between articles', async () => {
     const ka1 = await articleOf();

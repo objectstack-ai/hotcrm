@@ -216,38 +216,22 @@ describe('campaign_member_optout_sync', () => {
     await optedOut('crm_lead', lead.id);
   });
 
-  it('round-trips an unsubscribed CONTACT member too', async () => {
-    // Written by the admin: the sync writes the contact as the caller, and a
-    // contact is a detail of its account (see the defect below).
-    const { contact } = await people();
-    const m = await enroll(await campaignOf(), { crm_contact: contact.id });
-    await verify.hooks.run('crm_campaign_member', 'update', { id: m.id, status: 'unsubscribed' }, { as: admin });
-    await optedOut('crm_contact', contact.id);
-  });
-
   /**
-   * ⚠️ MEASURED DEFECT — reported as a finding on this card, pinned here so the
-   * fix is noticed.
-   *
    * Campaign members are worked by marketing — the only non-admin persona this
-   * app lets edit them. The sync writes the person's `email_opt_out` through
-   * `ctx.api`, as the caller. A contact is a master-detail child of its
-   * account, and a marketing user holds no edit right on accounts, so the
-   * engine refuses the contact write ("requires edit access to its master
-   * record"); the hook is `onError: 'log'`, so the refusal is logged and
-   * swallowed. Measured on 17.7.0: a marketing user unsubscribes a CONTACT
-   * member and the contact stays opted in — enrollable by the next campaign.
+   * app lets edit them — and a contact is a master-detail child of its
+   * account, which a marketing user may not edit. The sync declares
+   * `runAs: 'system'` (#2014): before it did, the contact write was refused as
+   * the marketer ("requires edit access to its master record"), `onError:
+   * 'log'` swallowed it, and the contact stayed enrollable by the next
+   * campaign. An unsubscribe reaches the person whoever recorded it.
    */
-  it('⚠️ a marketing user’s contact unsubscribe never reaches the contact (measured defect)', async () => {
+  it('round-trips a marketing user’s unsubscribed CONTACT member too', async () => {
     const { contact } = await people();
     const m = await enroll(await campaignOf(), { crm_contact: contact.id });
     await editMember(m.id, { status: 'unsubscribed' });
     expect((await stored('crm_campaign_member', m.id)).status).toBe('unsubscribed');
-    await new Promise((r) => setTimeout(r, 600));
-    expect(
-      (await stored('crm_contact', contact.id)).email_opt_out,
-      'the contact is opted out now — the defect is fixed: rewrite this case to pin the round-trip',
-    ).toBe(false);
+    await optedOut('crm_contact', contact.id);
+    expect((await stored('crm_contact', contact.id)).updated_by, 'the opt-out was recorded as nobody’s write').toBe(marketer.id);
   });
 
   it('syncs on insert, not only on update — an import can land already unsubscribed', async () => {
@@ -329,6 +313,31 @@ describe('campaign_member_metrics_refresh — LIVE, not at completion', () => {
     await verify.hooks.run('crm_campaign_member', 'delete', { id: m2.id }, { as: admin });
     await settlesAt(campaign.id, { num_sent: 1, status: 'in_progress' });
   });
+
+  /**
+   * The recompute does not depend on who fired it (#2014). A Private deal is
+   * visible to its owner alone, so a recompute run AS a marketing user counted
+   * only the public half of the campaign's won pipeline and wrote that over
+   * the right numbers — measured: 2 won deals / 1,100 became 1 / 100 the moment
+   * a marketer enrolled a member. The hook declares `runAs: 'system'`.
+   */
+  it('a marketer’s enrollment keeps every won deal the campaign earned, Private ones included', async () => {
+    const campaign = await campaignOf();
+    const [account] = await verify.seed('crm_account', [{ name: `Attributed Co ${++k}`, owner_id: marketer.id }]);
+    const owner = await signUpPerson(verify, `owner${k}@campaign-member-lifecycle.test`, {
+      name: 'Deal Owner', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    });
+    await verify.seed('crm_opportunity', [100, 1_000].map((amount) => ({
+      name: `Attributed ${k}.${amount}`, amount, stage: 'closed_won', win_reason: 'better_price', close_date: daysFromNow(-1),
+      crm_account: account!.id, crm_campaign: campaign.id, owner_id: owner.id, is_private: amount === 1_000,
+    })));
+    expect(
+      (await verify.rows('crm_opportunity', { crm_campaign: campaign.id }, { as: marketer.token })).length,
+      'the Private deal is visible to the marketer, so this case cannot tell the two readings apart',
+    ).toBe(1);
+    await enroll(campaign, { crm_lead: (await people()).lead.id });
+    await settlesAt(campaign.id, { num_sent: 1, num_won_opportunities: 2, actual_revenue: 1_100 });
+  }, 30_000);
 
   it('refreshes BOTH campaigns when a member is moved between them', async () => {
     const left = await campaignOf();

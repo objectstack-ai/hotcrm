@@ -50,6 +50,15 @@ import type { HookApi } from './_hook-api';
  * `num_converted_leads` also counts `crm_lead.is_converted` across the
  * membership, so this same event is the metric's trigger — a lead can sit in
  * several campaigns and every one of them is refreshed.
+ *
+ * `runAs: 'system'` (#2014, AGENTS.md rule 9). Conversions are a rep's act,
+ * and a rep may edit neither campaign members nor campaigns, so the promotion
+ * was refused, logged and swallowed: the lead converted and its memberships
+ * stayed where they were. The promotion and the recompute are marketing's
+ * record of the outcome, not the rep's write, so the hook elevates; the lead
+ * write stays the caller's. Organization (rule 10): every read is keyed to the
+ * triggering lead's own memberships and their campaigns, and the elevated
+ * `ctx.api` keeps the trigger's tenant.
  */
 const campaignLeadConversionRefresh: Hook = {
   name: 'campaign_lead_conversion_refresh',
@@ -58,6 +67,7 @@ const campaignLeadConversionRefresh: Hook = {
   priority: 810,
   async: true,
   onError: 'log',
+  runAs: 'system',
   description: 'Promote campaign members of a converting lead and recompute campaign metrics.',
   handler: async (ctx: HookContext) => {
     const api = ctx.api as HookApi | undefined;

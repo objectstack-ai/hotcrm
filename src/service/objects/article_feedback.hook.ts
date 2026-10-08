@@ -38,6 +38,17 @@ import type { HookApi } from '../../sales/objects/_hook-api';
  * row is momentarily locked. A missed refresh is corrected by the next vote;
  * a rejected write loses the vote itself.
  *
+ * `runAs: 'system'` (#2014, AGENTS.md rule 9). The counters are `readonly`,
+ * and the engine drops a readonly key a non-system caller writes — so a recount
+ * fired by a PERSON's own write of a vote (an admin withdrawing one) committed
+ * without the counters and the article kept counting the withdrawn vote. The
+ * recount is the article's writer, not the voter's, so the hook elevates; the
+ * vote itself stays the caller's write. Elevation is not anonymity: the
+ * article's `updated_by` still names the person. Organization (rule 10): every
+ * read and write is keyed to the triggering vote's own article, and the
+ * elevated `ctx.api` keeps the trigger's tenant, so the driver's organization
+ * predicate still applies.
+ *
  * No loop: this writes `crm_knowledge_article`, whose own hook
  * (`knowledge_article_publish_timestamps`) fires on `before*` and returns
  * immediately unless the record is published — and either way it issues no
@@ -59,6 +70,7 @@ const articleFeedbackMetricsRefresh: Hook = {
   priority: 800,
   async: true,
   onError: 'log',
+  runAs: 'system',
   description: 'Recount an article’s helpful / not-helpful votes from crm_article_feedback.',
   handler: async (ctx: HookContext) => {
     const api = ctx.api as HookApi | undefined;

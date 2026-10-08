@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
-import type { VerifyStack } from '@objectstack/verify';
+import { bootStack, type VerifyStack } from '@objectstack/verify';
 import { extractHookBody } from '@objectstack/cli/hook-body';
 import stack, { localePacks } from './helpers/composed-stack';
 import caseHooks from '../src/service/objects/case.hook';
@@ -13,8 +13,9 @@ import {
   CLOSED_CASE_STATUSES,
   POOL_QUERY_LIMIT,
 } from '../src/service/objects/_case-assignment';
+import artifact from '../objectstack.config';
 import {
-  hotcrmStack, signUpPerson, guestInsert, systemUpdate, recordEngineWrites, type Person,
+  hotcrmStack, bootOptions, signUpPerson, guestInsert, systemUpdate, recordEngineWrites, type Person,
 } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
@@ -617,8 +618,9 @@ describe('case_escalation_reassign', () => {
   /**
    * The escalation write as the system issues it — the SLA sweep's
    * `flag_breach`, the `case_escalation_stamp` subflow — through the one local
-   * system-update path. An AGENT's own escalation is refused the pool read
-   * (`test/demo-staffing.test.ts` pins that as a measured defect).
+   * system-update path. An AGENT's own escalation reaches the same pool: the
+   * hook reads it elevated (#2014), pinned below and in
+   * `test/demo-staffing.test.ts`.
    */
   const escalationInput = (id: string): Rec => ({
     id,
@@ -725,20 +727,23 @@ describe('case_escalation_reassign', () => {
     }
   });
 
-  it('never rejects the escalation when the pool read is DENIED', async () => {
-    // An agent's own escalation: the agent may not read the pool. The write
-    // lands escalated and the case stays where it was — the shape
-    // `test/demo-staffing.test.ts` pins as a measured defect.
+  it('hands an agent’s OWN escalation to the pool too (#2014)', async () => {
+    // The agent may not read `sys_user_position`, so as the caller the read was
+    // refused and the case stayed with the agent who could not get to it. The
+    // hook declares `runAs: 'system'`; elevation reaches only its two reads —
+    // it still issues no write of its own.
     const pool = await staff(SERVICE_MANAGER_POSITION, [{ open: 0 }]);
     const caller = await signUpPerson(verify, `escalator.${++k}@case-assignment.test`, {
       name: 'Escalating Agent', positions: [SERVICE_AGENT_POSITION], permissionSets: ['service_agent'],
     });
     try {
+      await expect(verify.rows('sys_user_position', { position: SERVICE_MANAGER_POSITION }, { as: caller.token }), 'the agent can read the pool, so this case proves nothing')
+        .rejects.toMatchObject({ code: 'PERMISSION_DENIED' });
       const kase = await verify.hooks.run('crm_case', 'insert', { subject: 'Mine', description: 'x', status: 'new' }, { as: caller.token });
       await verify.hooks.run('crm_case', 'update', { id: kase.id, status: 'escalated' }, { as: caller.token });
       const after = await storedCase(kase.id);
       expect(after.status).toBe('escalated');
-      expect(after.owner_id, 'moved the case despite a failed pool read').toBe(caller.id);
+      expect(after.owner_id, 'the agent’s escalation did not reach the service_manager pool').toBe(pool.people[0]!.id);
     } finally {
       await pool.release();
       for (const row of await verify.rows('sys_user_position', { user_id: caller.id })) {
@@ -746,6 +751,38 @@ describe('case_escalation_reassign', () => {
       }
     }
   });
+
+  it('stays inside the escalating case’s organization (AGENTS.md rule 10)', async () => {
+    // The pool and the load counts are organization-neutral predicates, and the
+    // SLA sweep escalates as the system with NO tenant — so nothing but the
+    // hook's own pin keeps a breached case from going to the least-loaded
+    // manager of another organization. Two organizations, one manager each:
+    // the other organization's manager is the LESS loaded one, so an unpinned
+    // read picks them.
+    //
+    // On a boot of its own: once an install holds two organizations the engine
+    // refuses every system insert that names none (it cannot tell which one
+    // owns the row), which is every other fixture in this file.
+    const twoOrgs = await bootStack(artifact, bootOptions());
+    const orgs = await twoOrgs.seed('sys_organization', [
+      { name: 'Case Org', slug: 'case-org' }, { name: 'Other Org', slug: 'other-org' },
+    ]);
+    const [own, other] = [String(orgs[0]!.id), String(orgs[1]!.id)];
+    const ownManager = await signUpPerson(twoOrgs, 'own.manager@case-assignment.test', { name: 'Own Manager' });
+    const otherManager = await signUpPerson(twoOrgs, 'other.manager@case-assignment.test', { name: 'Other Manager' });
+    await twoOrgs.seed('sys_user_position', [
+      { user_id: ownManager.id, position: SERVICE_MANAGER_POSITION, organization_id: own },
+      { user_id: otherManager.id, position: SERVICE_MANAGER_POSITION, organization_id: other },
+    ]);
+    const caseIn = async (doc: Rec) =>
+      (await twoOrgs.seed('crm_case', [{ subject: `Org case ${++k}`, description: 'x', status: 'new', organization_id: own, ...doc }]))[0]!;
+    await caseIn({ owner_id: ownManager.id });
+    const kase = await caseIn({});
+    await systemUpdate(twoOrgs, 'crm_case', escalationInput(String(kase.id)));
+    const [after] = await twoOrgs.rows('crm_case', { id: kase.id });
+    expect(after!.status).toBe('escalated');
+    expect(after!.owner_id, 'the escalation crossed into another organization’s pool').toBe(ownManager.id);
+  }, 120_000);
 
   it('does nothing on a case BORN escalated — that is no transition', async () => {
     // The `!ctx.api` stand-down has no door on the shipped app. No `previous`
