@@ -48,7 +48,7 @@ export { Warranty } from './warranty.object.js';
 
 ## Add lifecycle logic
 
-A `*.hook.ts` sits beside the `*.object.ts` it names, in the same package, and is registered from that package's own `objects/hooks.ts` — `src/revenue/objects/hooks.ts` here — which `objectstack.composition.ts` assembles into `allHooks`. A hook that reaches neither is silently ignored: the build stays green and the handler never runs.
+A `*.hook.ts` sits beside the `*.object.ts` it names, in the same package, and is registered from that package's own `objects/hooks.ts` — `src/revenue/objects/hooks.ts` here — and from there into its package's hook list: `appHooks` in `objectstack.composition.ts` for the app package (sales, revenue and marketing), `serviceHooks` in `src/service/index.ts` for the service module. A hook that reaches neither is silently ignored: the build stays green and the handler never runs.
 
 ```ts
 // src/revenue/objects/warranty.hook.ts
@@ -94,8 +94,10 @@ export const WarrantyAlertFlow: Flow = {
 ```
 
 Registration is two steps, and skipping the second one loses the flow in silence. Re-export it
-from that package's barrel, then add it to `allFlows` in `objectstack.composition.ts` — that
-array, not the barrel, is what `objectstack.config.ts` hands to `defineStack({ flows })`:
+from that package's barrel, then add it to its package's flow list — `appFlows` in
+`objectstack.composition.ts` for sales, revenue and marketing (the app package), `serviceFlows` in
+`src/service/index.ts` for the service module. That list, not the barrel, is what the package's
+own `defineStack({ flows })` receives:
 
 ```ts
 // src/revenue/flows/index.ts — the package barrel: a re-export, nothing else
@@ -103,20 +105,20 @@ export { WarrantyAlertFlow } from './warranty-alert.flow.js';
 ```
 
 ```ts
-// objectstack.composition.ts — the app-wide list, in the order flows are registered
+// objectstack.composition.ts — the app package's list, in the order flows are registered
 import { WarrantyAlertFlow } from './src/revenue/flows/index.js';
 
-export const allFlows = [
+export const appFlows = [
   // …existing flows
   WarrantyAlertFlow,
 ];
 ```
 
-The barrel on its own is not enough. `allFlows` is an explicit ordered list because the
-registration order interleaves the four packages, so no per-package barrel can carry it. A flow
-that reaches the barrel but never that array is registered by nothing, and `pnpm validate` still
-exits 0 and names it nowhere — `pnpm test` is what fails, naming any flow a package exports that
-`allFlows` does not carry.
+The barrel on its own is not enough. `appFlows` is an explicit ordered list because the
+registration order interleaves three directories, so no per-directory barrel can carry it. A flow
+that reaches the barrel but never its package's list is registered by nothing, and `pnpm validate`
+still exits 0 and names it nowhere — `pnpm test` is what fails, naming any flow a package exports
+that neither list carries.
 
 ## Verify
 

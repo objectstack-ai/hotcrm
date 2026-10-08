@@ -48,7 +48,7 @@ export { Warranty } from './warranty.object.js';
 
 ## 新增生命周期逻辑
 
-`*.hook.ts` 与它命名的那个 `*.object.ts` 并排放在同一个包里，并从该包自己的 `objects/hooks.ts` 注册——这里是 `src/revenue/objects/hooks.ts`——再由 `objectstack.composition.ts` 汇入 `allHooks`。两处都没到达的 hook 会被静默忽略：构建照样是绿的，而处理函数永远不会运行。
+`*.hook.ts` 与它命名的那个 `*.object.ts` 并排放在同一个包里，并从该包自己的 `objects/hooks.ts` 注册——这里是 `src/revenue/objects/hooks.ts`——再进入它所属包的 hook 清单：app 包（sales、revenue、marketing）是 `objectstack.composition.ts` 里的 `appHooks`，服务模块是 `src/service/index.ts` 里的 `serviceHooks`。两处都没到达的 hook 会被静默忽略：构建照样是绿的，而处理函数永远不会运行。
 
 ```ts
 // src/revenue/objects/warranty.hook.ts
@@ -93,9 +93,10 @@ export const WarrantyAlertFlow: Flow = {
 };
 ```
 
-注册分两步，漏掉第二步会让这条流程被静默丢弃。先从该包的 barrel 重新导出，再把它加入
-`objectstack.composition.ts` 里的 `allFlows` —— 正是这个数组、而不是那个 barrel，被
-`objectstack.config.ts` 交给 `defineStack({ flows })`：
+注册分两步，漏掉第二步会让这条流程被静默丢弃。先从该包的 barrel 重新导出，再把它加入所属包的
+流程清单——sales、revenue、marketing（app 包）是 `objectstack.composition.ts` 里的 `appFlows`，
+服务模块是 `src/service/index.ts` 里的 `serviceFlows`。正是这份清单、而不是那个 barrel，被交给
+该包自己的 `defineStack({ flows })`：
 
 ```ts
 // src/revenue/flows/index.ts —— 包自己的 barrel：只做重新导出，别无其它
@@ -103,19 +104,19 @@ export { WarrantyAlertFlow } from './warranty-alert.flow.js';
 ```
 
 ```ts
-// objectstack.composition.ts —— 全应用的那份清单，按流程注册顺序排列
+// objectstack.composition.ts —— app 包的那份清单，按流程注册顺序排列
 import { WarrantyAlertFlow } from './src/revenue/flows/index.js';
 
-export const allFlows = [
+export const appFlows = [
   // …已有的流程
   WarrantyAlertFlow,
 ];
 ```
 
-只进 barrel 是不够的。`allFlows` 之所以是一份显式有序清单，是因为注册顺序在四个包之间交错，
-任何按包切分的 barrel 都承载不了它。一条到了 barrel 却没进这个数组的流程，注册它的是零：
+只进 barrel 是不够的。`appFlows` 之所以是一份显式有序清单，是因为注册顺序在三个目录之间交错，
+任何按目录切分的 barrel 都承载不了它。一条到了 barrel 却没进所属包清单的流程，注册它的是零：
 `pnpm validate` 照样退出 0，而且哪里都不会提到它——能发现它的是 `pnpm test`，套件会点名任何
-被包导出、却不在 `allFlows` 里的流程。
+被包导出、却不在这两份清单里的流程。
 
 ## 验证
 

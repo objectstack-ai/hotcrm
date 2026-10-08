@@ -9,8 +9,10 @@
  * SALES package's under the ADR-0130 layout (plan item 4 — the activity
  * objects fold into the app package), so their rows moved with them to
  * `src/sales/data/activity.seed.ts`. Nothing about the rows changed: they still
- * reference cases by natural key, and the root config still replays them in
- * the order the lookups resolve in.
+ * reference cases by natural key. These case rows are registered by the service
+ * package and the activity rows by the app package; measured on a fresh boot
+ * of the two-package artifact (#1907), the lookups resolve in both directions —
+ * every seeded case's account, and every seeded event's case.
  *
  * Split out of the former monolithic `src/data/index.ts` (#635). Seed doctrine
  * lives in `src/sales/data/_shared.ts`.

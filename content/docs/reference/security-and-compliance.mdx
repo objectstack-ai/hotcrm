@@ -139,7 +139,7 @@ Read carefully before relying on it, because the scope is deliberately narrow:
 
 - **Record-detail views only.** A read qualifies when it materialised one record and its predicate pinned the primary key — the shape `GET /data/:object/:id` produces. **List and search reads are not audited.**
 - **Per-object opt-in, and there is no global switch.** Nothing is recorded until a deployment names objects: `new AuditPlugin({ readAudit: { objects: ['crm_contact', 'crm_account'] } })` in the stack's `plugins` array. An empty opt-in registers no hook at all, so the default costs a read nothing.
-- **HotCRM opts nothing in today.** `objectstack.config.ts` declares no `plugins` array, so the audit plugin is registered with no options and **no view rows are written**. Turning it on is a deployment change, not a Setup toggle.
+- **HotCRM opts nothing in today.** Neither of the app's two packages declares a `plugins` array, so the audit plugin is registered with no options and **no view rows are written**. Turning it on is a deployment change, not a Setup toggle.
 - The row records who, what and when — **never field values**. The hook runs ahead of field masking on purpose: copying values in would mint a plaintext copy of exactly what field-level security withholds, inside the table compliance staff are granted broad access to.
 - A system-elevated read (`api.sudo()`, formula recomputes, roll-ups) writes no row, and neither does a read with no principal to name.
 
@@ -263,6 +263,6 @@ Establish, and write down where your users can find them: who to contact, where 
 - ✅ **Turn on SSO** as soon as you have >10 users. SCIM has no screen, so plan for it as a deployment change rather than an admin task.
 - ✅ **Restrict System Admin** to 2-3 people max.
 - ✅ **Review the audit log** monthly at **Setup → Audit Logs** — look for failed-login *lockouts* and unusual `config_change` volume. ⚠️ Do not plan a review around export events: none are recorded.
-- ✅ **Consider opting into record-view auditing** for `crm_contact` and `crm_account` if you are in a regulated industry. It is a `plugins` change in `objectstack.config.ts`, not a setting.
+- ✅ **Consider opting into record-view auditing** for `crm_contact` and `crm_account` if you are in a regulated industry. It is a `plugins` change in the app package's stack definition (`src/sales/index.ts`), not a setting.
 - ✅ **Run a tabletop exercise** annually — what happens if an admin account is compromised?
 - ⛔ Do not plan around per-profile IP allowlists, login hours, device trust, column-level field encryption, a *View Encrypted Data* permission, or audit-log streaming to a SIEM. Every one of them is marked *(not shipped)* above.

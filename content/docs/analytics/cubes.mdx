@@ -102,7 +102,7 @@ Whether the platform's own agent additionally reads the compiled cubes, and whet
 
 ## Custom cubes
 
-In HotCRM a new cube starts as a new **dataset in source**: a `defineDataset(...)` in the owning package's `datasets/<object>.dataset.ts`, exported from that directory's `index.ts`, merged into `allDatasets` by `objectstack.composition.ts`, handed to `defineStack()` by `objectstack.config.ts`, then deployed. That is the route every dataset in the app took, and the reason the marketing gap is a code change rather than a configuration one.
+In HotCRM a new cube starts as a new **dataset in source**: a `defineDataset(...)` in the owning package's `datasets/<object>.dataset.ts`, exported from that directory's `index.ts`, registered by the stack of the package that owns it — merged into `appDatasets` by `objectstack.composition.ts` for the app package (sales, revenue and marketing), named in `src/service/index.ts` for the service module — then deployed. That is the route every dataset in the app took, and the reason the marketing gap is a code change rather than a configuration one.
 
 The three examples this section used to offer — a *Subscriptions Cube*, a *Renewal Cube*, a *Partner Cube* — exist in no form; there is no subscription or partner object to build them on. Whether the console additionally offers an admin-facing cube builder is, again, a platform question this page does not answer.
 

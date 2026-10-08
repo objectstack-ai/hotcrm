@@ -91,7 +91,7 @@ HotCRM 的設計目標是**融入你的技術堆疊**，而非取代它。今天
 
 這一項不是空話。平台**確實**提供了出站 webhook 服務：`@objectstack/plugin-webhooks` 為每筆訂閱保存一列 `sys_webhook`——既可以透過該物件自己的管理介面撰寫，也可以用 `defineStack({ webhooks })` / `defineWebhook()` 在程式碼裡宣告——它把記錄事件與這些列做比對，並把每次命中交給共享的訊息 HTTP 出站佇列去投遞。
 
-**HotCRM 沒有啟用它。** `objectstack.config.ts` 宣告的是 `requires: ['automation', 'triggers', 'analytics', 'auth', 'ui', 'approvals', 'sharing']`。`webhooks` 不在這個清單裡，也不屬於平台對每個應用都會載入的那一批能力。本應用同樣沒有宣告任何 webhook。因此 HotCRM 今天沒有任何 webhook 介面：`@objectstack/plugin-webhooks` 沒有被載入，它貢獻的兩個 Setup 項目——**Webhooks** 與 **HTTP Deliveries**——也就不會出現在 `Setup → Integrations` 底下。這是*本應用沒啟用*，不是*平台沒做*：照下面那段提示把這項能力打開，外掛自己就會把它們掛上去。
+**HotCRM 沒有啟用它。** 它的兩個套件都沒有在 `requires` 裡列出 `webhooks`——app 套件的在 `src/sales/index.ts`，服務模組的在 `src/service/index.ts`——它也不屬於平台對每個應用都會載入的那一批能力。本應用同樣沒有宣告任何 webhook。因此 HotCRM 今天沒有任何 webhook 介面：`@objectstack/plugin-webhooks` 沒有被載入，它貢獻的兩個 Setup 項目——**Webhooks** 與 **HTTP Deliveries**——也就不會出現在 `Setup → Integrations` 底下。這是*本應用沒啟用*，不是*平台沒做*：照下面那段提示把這項能力打開，外掛自己就會把它們掛上去。
 
 > **這是一個部署側的決定，不是路線圖項目。** 把 `webhooks` 加進 `requires`，宣告你的訂閱，此後投遞就是平台的事了。本頁原先承諾的重試次數、酬載結構選項與投遞紀錄畫面，從來就不由 HotCRM 定義——請按你所執行的版本去讀平台自己的 webhook 文件，而不是這裡。
 

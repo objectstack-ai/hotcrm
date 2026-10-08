@@ -3,7 +3,7 @@
 /**
  * Revenue flow barrel — the flows whose start node names `crm_quote` or
  * `crm_contract`. See `src/sales/flows/index.ts` for why the registration
- * order is assembled in `objectstack.config.ts` rather than here.
+ * order is assembled in `objectstack.composition.ts` rather than here.
  */
 export { QuoteGenerationFlow } from './quote-generation.flow';
 export { ContractRenewalFlow } from './contract-renewal.flow';

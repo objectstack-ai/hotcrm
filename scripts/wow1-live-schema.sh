@@ -25,8 +25,8 @@
 # ⚠ THIS DOES NOT RUN AGAINST A PLAIN `pnpm dev` / `pnpm start`.
 #
 # ObjectStack 11.3.0 (ADR-0025 S2) removed `@objectstack/service-ai` from the
-# open edition, so `objectstack.config.ts` deliberately omits `ai` from
-# `requires` — see the comment there. Nothing mounts `/api/v1/ai/*` locally and
+# open edition, so the app package (`src/sales/index.ts`) deliberately omits
+# `ai` from `requires` — see the comment there — and no package declares it. Nothing mounts `/api/v1/ai/*` locally and
 # every call below returns 404. The preflight makes that failure immediate and
 # self-explanatory instead of a bare `curl: (22) 404` twenty lines in.
 #
@@ -53,7 +53,7 @@ if [ "${AI_STATUS}" = "404" ]; then
   die "$(cat <<'MSG'
 This runtime does not mount /api/v1/ai/* — the demo cannot run here.
 
-hotcrm drops `ai` from `requires` on purpose (objectstack.config.ts): under
+hotcrm drops `ai` from `requires` on purpose (src/sales/index.ts): under
 ObjectStack 16 an unmet `requires` entry is fail-fast, and the open edition no
 longer ships @objectstack/service-ai. The app is portable and runs anywhere;
 the AI surface only exists on a runtime that provides the `ai` tier.

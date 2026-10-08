@@ -163,7 +163,7 @@ const SEED_EXEMPTIONS: Record<string, string> = {
   COMPOSITION_ENV_VAR: 'the environment variable name resolveComposition() reads — a string.',
   HOTCRM_COMPOSITIONS: 'the accepted composition values, exported for diagnostics and tests.',
   resolveComposition:
-    'the resolver objectstack.config.ts calls to choose WHICH seed list is registered. It selects seeds; it is not one.',
+    'the resolver objectstack.composition.ts calls to choose WHICH seed families the package stacks register. It selects seeds; it is not one.',
   OPPORTUNITY_LINES:
     'the line table sales.seed.ts prices its deals from. The rows it feeds are crm_opportunity_line_item, seeded by the revenue package from this table along the revenue -> sales edge.',
   celDaysAgo: 'seed authoring helper — a CEL date expression builder shared by the family modules.',
@@ -222,7 +222,7 @@ const SPECS: Spec[] = [
     grouped: true,
     exemptions: {
       CrmPositions:
-        'positions metadata, not a sharing rule: the twelve CRM positions objectstack.config.ts registers under the stack key `positions`. The block at the bottom of this file measures that, so the exemption is not taken on trust.',
+        'positions metadata, not a sharing rule: the twelve CRM positions the app package (objectstack.composition.ts) registers under the stack key `positions`. The block at the bottom of this file measures that, so the exemption is not taken on trust.',
     },
     label: named,
     consequence:

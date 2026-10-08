@@ -104,7 +104,7 @@ description: HotCRM 分析底下的語義層——它是什麼、回答哪些業
 
 ## 自訂多維資料集
 
-在 HotCRM 裡，一個新 cube 的起點是**原始碼裡的一個新 dataset**：在擁有該物件的那個套件的 `datasets/<object>.dataset.ts` 裡寫一個 `defineDataset(...)`，從該目錄的 `index.ts` 匯出，由 `objectstack.composition.ts` 彙入 `allDatasets`，再由 `objectstack.config.ts` 交給 `defineStack()`，然後部署。應用裡的每一個 dataset 走的都是這條路，這也正是行銷側的缺口是一次程式碼改動、而不是一次組態改動的原因。
+在 HotCRM 裡，一個新 cube 的起點是**原始碼裡的一個新 dataset**：在擁有該物件的那個套件的 `datasets/<object>.dataset.ts` 裡寫一個 `defineDataset(...)`，從該目錄的 `index.ts` 匯出，再由擁有它的那個套件的 stack 註冊——app 套件（sales、revenue、marketing）由 `objectstack.composition.ts` 彙入 `appDatasets`，服務模組在 `src/service/index.ts` 裡逐一列出——然後部署。應用裡的每一個 dataset 走的都是這條路，這也正是行銷側的缺口是一次程式碼改動、而不是一次組態改動的原因。
 
 本節曾經給出的三個例子 —— *Subscriptions Cube*、*Renewal Cube*、*Partner Cube* —— 以任何形式都不存在；本應用裡既沒有訂閱物件，也沒有合作夥伴物件可以拿來建。至於主控台是否另外提供面向管理員的 cube 建構器，同樣是本頁不作答的平台問題。
 

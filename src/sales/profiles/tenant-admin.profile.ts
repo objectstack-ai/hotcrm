@@ -48,8 +48,8 @@ import { SystemAdminProfile } from './system-admin.profile';
  * 17.1.0 packages, `manage_users` appears in a single comment and nothing reads
  * either name — the member-management door is the enterprise organizations
  * runtime's, and it is the edition that supplies the gate. That is the shape the
- * maintainer's 2026-08-11 ruling asks for and `objectstack.config.ts` already
- * follows for `hierarchy-security`: 「本项目是元数据app，在企业版运行就具备企业版
+ * maintainer's 2026-08-11 ruling asks for and the app package's `requires`
+ * (`src/sales/index.ts`) already follows for `hierarchy-security`: 「本项目是元数据app，在企业版运行就具备企业版
  * 相关的能力，不重复开发。」 The app states what it MEANS; the edition enforces.
  *
  * ### What `view_all_data` / `modify_all_data` mean under the wall — the audit

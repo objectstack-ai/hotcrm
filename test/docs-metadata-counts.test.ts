@@ -28,7 +28,8 @@ import stack from './helpers/composed-stack';
  * is what a customer follows — being told the wrong inventory there is a product
  * defect, not a typo.
  *
- * The expected values are read from `objectstack.config.ts` at test time and are
+ * The expected values are read from the registered stacks at test time (the two
+ * package stacks `objectstack.config.ts` composes, `test/helpers/composed-stack.ts`) and are
  * deliberately NOT written down here. A hard-coded expectation is just the same
  * hand-maintained number moved into the test file: it would go stale on the very
  * next object and take the guard with it.

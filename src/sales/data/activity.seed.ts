@@ -10,7 +10,10 @@
  * buys separately". Their rows were authored in `src/data/service.seed.ts`,
  * beside the cases they most often hang off; those cases are now
  * `src/service/data/service.seed.ts` and are referenced from here by natural
- * key exactly as before, with the replay order held by the root config.
+ * key exactly as before. The cases are registered by the service package and
+ * these rows by the app package; measured on a fresh boot of the two-package
+ * artifact (#1907), every seeded event's `related_to_case` resolves to a real
+ * case.
  *
  * Seed doctrine lives in `./_shared.ts`.
  */

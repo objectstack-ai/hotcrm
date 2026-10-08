@@ -12,18 +12,23 @@ import * as marketingFlows from '../src/marketing/flows';
 /**
  * Flow registration completeness — the barrel is only HALF the path (#1930).
  *
- * `objectstack.composition.ts` assembles two kinds of collection, and they do
- * not take the same authoring step:
+ * The two package stacks register two kinds of collection, and they do not
+ * take the same authoring step:
  *
- *   - `byExportName({ ...four barrels })` for objects, views, pages, actions,
- *     datasets, reports, dashboards, mappings, apps and translations. Reaching
- *     the package barrel IS reaching the registration.
- *   - an explicit ordered list for `allHooks`, `allFlows`, `allSkills`,
- *     `CrmSharingRules` and `CrmSeedData`. The barrel is necessary and NOT
- *     sufficient: the entry must also be imported into that file and written
- *     into the array by hand. That list exists because the registration order
- *     interleaves the four packages (see the ORDER note at the top of
- *     `objectstack.composition.ts`), so no per-package barrel can carry it.
+ *   - `byExportName({ ...barrels })` in `objectstack.composition.ts` for the
+ *     app package's objects, views, pages, actions, datasets, reports,
+ *     dashboards, mappings, apps and translations. Reaching the barrel IS
+ *     reaching the registration. (The service module names its barrels' items
+ *     in `src/service/index.ts`.)
+ *   - an explicit ordered list per package for hooks, flows, skills and sharing
+ *     rules — `appFlows` and its siblings in `objectstack.composition.ts`,
+ *     `serviceFlows` and its siblings in `src/service/index.ts`, unioned there
+ *     as `allHooks`, `allFlows`, `allSkills` and `CrmSharingRules` — and
+ *     `CrmSeedData`, cut by owning package. The barrel is necessary and NOT
+ *     sufficient: the entry must also be written into its package's list by
+ *     hand. The app package's list exists because its order interleaves three
+ *     directories (see the ORDER note at the top of
+ *     `objectstack.composition.ts`), so no per-directory barrel can carry it.
  *
  * Nothing failed on the second kind. A flow exported from its package barrel
  * but absent from `allFlows` is handed to `defineStack()` by nobody: it is

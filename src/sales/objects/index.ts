@@ -3,8 +3,8 @@
 /**
  * Object Definitions Barrel
  * 
- * Re-exports this package's *.object.ts definitions for registration by
- * `objectstack.config.ts`. The `*.hook.ts` files sit beside them and are
+ * Re-exports this package's *.object.ts definitions for registration by the
+ * app package's stack (`objectstack.composition.ts` → `src/sales/index.ts`). The `*.hook.ts` files sit beside them and are
  * registered through `./hooks.ts` instead — a hook is attached to the object
  * it names, and since the ADR-0130 layout a directory is a package, so the two
  * travel together.

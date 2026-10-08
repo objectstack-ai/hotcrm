@@ -45,7 +45,7 @@ production | sandbox | development | test | staging | preview | trial
 
 並沒有這樣一個畫面。開出一個環境是 ObjectStack Cloud 控制面的事，不是本租戶 Setup 裡的某一頁；Setup 裡唯一與雲相關的入口是 **Setup → Cloud Connection**。
 
-有一件事值得知道，因為它是這個應用真正能表達的唯一一條環境軸：在 `objectstack.config.ts` 裡宣告的種子資料是**按環境區分**的。每個 `data[]` 條目接受一個 `env` 清單，而這套詞彙恰好只有三個取值：
+有一件事值得知道，因為它是這個應用真正能表達的唯一一條環境軸：應用各個套件註冊的種子資料是**按環境區分**的。每個 `data[]` 條目接受一個 `env` 清單，而這套詞彙恰好只有三個取值：
 
 ```
 data: [{ object: 'crm_account', env: ['prod', 'dev', 'test'], records: [...] }]
