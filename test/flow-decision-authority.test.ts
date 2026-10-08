@@ -12,7 +12,8 @@ import { flowGraphDeep } from './helpers/flow-regions';
  *
  * A `decision` node in this repo carries **no predicate of its own**. It is a
  * bare gateway; the branching lives entirely on its out-edges' `condition`.
- * This file enforces that, so you do not have to remember it.
+ * `pnpm lint` enforces that (`objectstack lint --strict`, rule
+ * `flow-inert-node-condition`), so you do not have to remember it.
  *
  * ### The defect this closes (#650)
  *
@@ -40,8 +41,8 @@ import { flowGraphDeep } from './helpers/flow-regions';
  *     decision node's contract at all.
  *   - `FlowNodeSchema.config` is an open `z.record`, and `decision` publishes
  *     no descriptor `configSchema`, so the engine's undeclared-config-key
- *     rejection (#4277) explicitly EXEMPTS it. Nothing at any layer rejects
- *     the key.
+ *     rejection (#4277) explicitly EXEMPTS it. Nothing in the schema or the
+ *     engine rejects the key; `objectstack lint` reports it (see above).
  *
  * So 8 `decision` nodes across 4 flows authored a predicate that read like the
  * decision and decided nothing. Behaviour was correct only because every one
@@ -83,7 +84,7 @@ import { flowGraphDeep } from './helpers/flow-regions';
  * invariant — totality/partition — and it is owned by
  * `test/flow-condition-totality.test.ts` and
  * `test/flow-variable-conditions.test.ts`, which already sweep edge
- * conditions. This file owns only "the node states no predicate".
+ * conditions. This file owns only the decision node's own side of it.
  */
 
 type AnyRec = Record<string, any>;
@@ -130,24 +131,10 @@ describe('decision nodes state no predicate of their own', () => {
     ).toBe(true);
   });
 
-  it('no decision node carries the inert singular `config.condition`', () => {
-    const offenders = decisions
-      .filter((d) => d.node.config?.condition !== undefined)
-      .map((d) => d.id);
-
-    expect(
-      offenders,
-      'These `decision` nodes declare `config.condition`, which NO reader in ' +
-        '@objectstack/service-automation ever evaluates — the decision executor reads ' +
-        'the PLURAL `config.conditions[]`, and nothing else. The key is not in ' +
-        "`DecisionConfigSchema` either, and `decision` publishes no descriptor " +
-        'configSchema, so the engine\'s undeclared-key rejection exempts it: nothing ' +
-        'at any layer will tell you. The branch is decided entirely by the out-edge ' +
-        "`condition`s, so a copy here is inert metadata that reads like the live " +
-        'predicate and is free to drift away from it. Delete it and author the ' +
-        'predicate on the out-edge (#650).',
-    ).toEqual([]);
-  });
+  // ⚰️ RETIRED (#1582): "no decision node carries the inert singular
+  // `config.condition`". `objectstack lint --strict` reports it as
+  // `flow-inert-node-condition` (a blank one as `expression-invalid`), at the
+  // top level and inside loop / try regions, and `pnpm lint` fails on it.
 
   it('every decision node actually decides something', () => {
     // A `decision` whose out-edges carry no conditions and which declares no

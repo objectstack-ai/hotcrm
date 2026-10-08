@@ -17,7 +17,7 @@ import {
 /**
  * Dangling-reference guards for the VIEW surface.
  *
- * Everything a list view or form view names — the fields it sections, sorts and
+ * Everything a list view or form view names — the fields it sorts and
  * filters on, the option values it tints rows and kanban columns by, the stage
  * enumerations it draws, the navigation entries that reach it. `os validate`
  * checks that a view has the SHAPE of a view; nothing checked that the names
@@ -42,35 +42,9 @@ import {
  * in the split — see the reconciliation table on the PR.
  */
 
-describe('view field references resolve', () => {
-  /** Views are keyed by object; `defineView` output carries the object on its data provider. */
-  const viewObjectOf = (v: AnyRec): string | undefined =>
-    v.list?.data?.object ?? v.form?.data?.object ?? v.object;
-
-  it('every form section field is a real field on the view object', () => {
-    const bad: string[] = [];
-    for (const v of views) {
-      const objectName = viewObjectOf(v);
-      if (!objectName || !objectNames.has(objectName)) continue;
-      const known = fieldsOf(objectName);
-      // The default `form` plus every named form under `formViews`. (The
-      // container key is `formViews` — iterating a non-existent `forms` key
-      // silently skipped every named form view.)
-      const forms = [v.form, ...Object.values(v.formViews ?? {})].filter(Boolean) as AnyRec[];
-      for (const form of forms) {
-        for (const section of form.sections ?? []) {
-          for (const f of section.fields ?? []) {
-            const name = typeof f === 'string' ? f : f?.field;
-            if (name && !known.includes(name)) {
-              bad.push(`${objectName} form "${form.name ?? 'default'}": no field "${name}"`);
-            }
-          }
-        }
-      }
-    }
-    expect(bad, `dangling form fields:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-});
+// ⚰️ RETIRED (#1583): "every form section field is a real field on the view
+// object". `objectstack lint --strict` reports it as `form-field-unknown`, on
+// the default `form` and on every `formViews` entry, and `pnpm lint` fails on it.
 
 describe('priority queues sort by urgency, not alphabetically', () => {
   /**
@@ -398,8 +372,8 @@ describe('every canonical opportunity stage reaches the UI that enumerates stage
  * iconed from a `viewTypeIcons` map the console hardcodes. So a `listViews`
  * entry was on the strip whether or not a tab named it: those seven queues
  * were reachable the whole time, and `tabs` curated nothing. The inert key is
- * gone from every view file; `test/view-tab-label-inert.test.ts` pins that it
- * stays gone.
+ * gone from every view file, and since @objectstack/spec 17.5.0 the view
+ * schema refuses it by name (`view.list.tabs` was removed), so it stays gone.
  *
  * What is left to guard here is the direction that CAN still dangle. A view is
  * on its own object's strip by existing, but a NAVIGATION entry names a view
