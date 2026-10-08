@@ -111,7 +111,9 @@ objects because the app stack is told the artifact's other objects (`artifactObj
 top-level `docs[]` (ADR-0046), registered under the artifact's own id. A per-package `src/<dir>/docs/` reaches a package's body only
 when `<dir>` is that package's id or the id's last dot-separated segment: `src/sales/` answers to neither (`app.objectstack.hotcrm`
 ends in `hotcrm`), so these four files stay at the top of `src/` rather than moving under `src/sales/`. Moving them there keeps the
-build at exit 0 behind one `docs/uncollected-directory` warning, and the artifact simply loses its `docs`.
+build at exit 0 behind one `docs/uncollected-directory` warning, and the artifact simply loses its `docs`. A boot logs a
+`[MetadataPlugin]` WARN that these four items are claimed by no package body: the platform's own builder put them there, the owner
+it reports is the app package, and ⛔ it is not an instruction to move them — it is reported upstream from #1907.
 
 ## 💻 Tech Stack & Protocol
 
