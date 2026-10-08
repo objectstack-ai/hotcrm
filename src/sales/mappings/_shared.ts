@@ -21,7 +21,7 @@
  * intended outcome for everything else.
  */
 
-/** Foreign spellings → `INDUSTRY_OPTIONS` values (`src/objects/_picklists.ts`). */
+/** Foreign spellings → `industry` picklist values (`src/sales/picklists/industry.picklist.ts`). */
 export const INDUSTRY_SYNONYMS: Record<string, string> = {
   'SaaS': 'software',
   'Saas': 'software',
@@ -46,7 +46,7 @@ export const INDUSTRY_SYNONYMS: Record<string, string> = {
   'Travel & Hospitality': 'hospitality',
 };
 
-/** Foreign spellings → `LEAD_SOURCE_OPTIONS` values. */
+/** Foreign spellings → `lead_source` picklist values (`src/sales/picklists/lead_source.picklist.ts`). */
 export const LEAD_SOURCE_SYNONYMS: Record<string, string> = {
   'Website': 'web',
   'Web Site': 'web',

@@ -1,14 +1,62 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
+import type { SelectOption } from '@objectstack/spec/data';
 import { F, P } from '@objectstack/spec';
-import {
-  SALUTATION_OPTIONS,
-  INDUSTRY_OPTIONS,
-  LEAD_SOURCE_OPTIONS,
-  LEAD_NEED_TYPE_OPTIONS,
-  DUPLICATE_OF_TYPE_OPTIONS,
-} from './_picklists';
+
+/**
+ * Duplicate Of — `crm_lead.duplicate_of_type`, the discriminator half of the
+ * `duplicate_of_lead` / `duplicate_of_contact` pair (#598).
+ *
+ * Two vocabularies, deliberately, and the split is the enforcement:
+ *
+ *   - {@link DUPLICATE_OF_TYPE_AUTHORABLE_OPTIONS} is what a human may pick.
+ *     Each value names an object, and the field below pairs it with that
+ *     object's lookup through `requiredWhen`, so choosing one demands a record.
+ *   - The field's own `options` are what the COLUMN may hold: the authorable
+ *     set plus {@link DUPLICATE_OF_TYPE_ERASED}, a tombstone no author writes.
+ *
+ * The form spreads the authorable set (`src/sales/views/lead.view.ts`) and the
+ * field spreads it too, then appends the tombstone, so the tombstone is
+ * unpickable BY CONSTRUCTION rather than by a hand-maintained exclusion list: a
+ * third authorable object type added here reaches the form automatically, and
+ * the tombstone never does.
+ *
+ * Not a shared `picklist`: one field holds the full list, and the subset the
+ * form offers is not a field's option set at all, so neither half has a second
+ * field to share with (#2000).
+ */
+export const DUPLICATE_OF_TYPE_AUTHORABLE_OPTIONS: SelectOption[] = [
+  { label: 'Lead',    value: 'crm_lead' },
+  { label: 'Contact', value: 'crm_contact' },
+];
+
+/**
+ * The tombstone (#1164): "this lead was confirmed a duplicate of a record that
+ * has since been erased."
+ *
+ * It exists because on the record — which is all a validation can see, being
+ * evaluated against `{...previous, ...data}` — "the pointer was erased" and
+ * "this claim never named anyone" were the SAME state. Every way of teaching a
+ * rule to tolerate the first also admitted the second, which is why the erasure
+ * path could not be cleared by relaxing anything (measured in full on #1164).
+ * Giving the two states different values makes them different facts, and then
+ * no rule has to be loosened at all: the `requiredWhen` pairing fires only on
+ * `crm_lead` / `crm_contact` so it never sees this value, and
+ * `duplicate_disqualification_requires_survivor` asks for a NON-BLANK type,
+ * which this is.
+ *
+ * Deliberately not an object name: it is the answer to "which object holds the
+ * survivor" when the answer is "none, any more".
+ *
+ * ⚠️ `lead_duplicate_check` (`lead.hook.ts`, job 1c) is the ONLY writer, and it
+ * spells the value as an inline literal — L2 hook bodies run body-only in the
+ * QuickJS sandbox, so a module constant resolves at authoring time and arrives
+ * as `undefined` (same constraint as the SLA matrix in `case.hook.ts`). The two
+ * spellings are pinned together, and the writer pinned to that one site, by
+ * `test/lead-duplicate-management.test.ts`.
+ */
+export const DUPLICATE_OF_TYPE_ERASED = 'erased';
 
 export const Lead = ObjectSchema.create({
   name: 'crm_lead',
@@ -47,8 +95,8 @@ export const Lead = ObjectSchema.create({
     salutation: Field.select({
       label: 'Salutation',
       group: 'identity',
-      // Canonical set shared with Contact (#490) — see _picklists.ts.
-      options: [...SALUTATION_OPTIONS],
+      // The list shared with Contact (#490) — `src/sales/picklists/salutation.picklist.ts`.
+      picklist: 'salutation',
     }),
 
     first_name: Field.text({
@@ -138,9 +186,10 @@ export const Lead = ObjectSchema.create({
     industry: Field.select({
       label: 'Industry',
       group: 'company_info',
-      // Canonical set shared with Account (#490): lead_conversion copies this
-      // value onto the created Account, so both objects MUST agree.
-      options: [...INDUSTRY_OPTIONS],
+      // The list shared with Account (#490): lead_conversion copies this value
+      // onto the created Account, so both objects MUST agree — one list,
+      // referenced by name, makes that true by construction.
+      picklist: 'industry',
     }),
 
     // ⚠️ NOT `unique`. A hard uniqueness constraint on a lead's email says a
@@ -206,9 +255,9 @@ export const Lead = ObjectSchema.create({
     lead_source: Field.select({
       label: 'Lead Source',
       group: 'qualification',
-      // Canonical set shared with Contact + Opportunity (#490): lead_conversion
+      // The list shared with Contact + Opportunity (#490): lead_conversion
       // copies this value onto the created Opportunity, so all three MUST agree.
-      options: [...LEAD_SOURCE_OPTIONS],
+      picklist: 'lead_source',
     }),
 
     // ── Demand: what this prospect wants, and what it is worth ─────────
@@ -219,13 +268,39 @@ export const Lead = ObjectSchema.create({
     // required: a lead captured off the public form has neither, and saves
     // exactly as it did before.
 
+    // A GENERIC STARTER SET, and that is the disposition rather than an apology
+    // for a short list: REQ-0005 rules the *slot* standard and the *values*
+    // configuration — "a customer's own demand taxonomy is overlay
+    // configuration the same way `industry` values are". So these seven are the
+    // vocabulary a fresh install routes and reports on until an overlay
+    // replaces them, and replacing them is a one-site edit: this field.
+    //
+    // ⚠️ NOT the same axis as `crm_opportunity.type`, and ⛔ never folded into
+    // it. That field answers "is this new business, an upgrade, a renewal or an
+    // expansion" — the customer RELATIONSHIP the deal changes. This one answers
+    // what the buyer wants delivered, which is orthogonal: a renewal of a
+    // support contract and a renewal of a consulting engagement differ here and
+    // not there. They are deliberately not shared, so ⛔ do not turn this list
+    // into a `picklist` and point `crm_opportunity` at it to make a conversion
+    // mapping possible.
+    //
+    // SINGLE-valued, for the reason `crm_contact.buying_function` records: a
+    // grouped list view answers with one server-side aggregate per raw stored
+    // value, so a `multiple: true` column groups by the COMBINATION and loses
+    // the groupability REQ-0005 acceptance 1 asks for.
     need_type: Field.select({
       label: 'Need Type',
       group: 'qualification',
       description: 'What this prospect is asking for. Routing, prioritisation and demand reporting read this.',
-      // Generic starter vocabulary, declared once in `_picklists.ts` — see the
-      // note there for why it is NOT shared with `crm_opportunity.type`.
-      options: [...LEAD_NEED_TYPE_OPTIONS],
+      options: [
+        { label: 'New Implementation',   value: 'new_implementation' },
+        { label: 'Expansion',            value: 'expansion' },
+        { label: 'Replacement',          value: 'replacement' },
+        { label: 'Renewal',              value: 'renewal' },
+        { label: 'Consulting',           value: 'consulting' },
+        { label: 'Support & Maintenance', value: 'support' },
+        { label: 'Other',                value: 'other' },
+      ],
     }),
 
     // ⛔ NEVER conflated with `annual_revenue`, which sits two groups below in
@@ -435,9 +510,9 @@ export const Lead = ObjectSchema.create({
     // one select naming the object, one lookup per object, and the pairing
     // enforced declaratively.
     //
-    // The vocabulary is TWO sets, declared and split in `_picklists.ts`: the two
-    // object names an author may pick, plus `erased` — a tombstone the form does
-    // not offer and only `lead_duplicate_check` ever writes.
+    // The vocabulary is TWO sets, declared and split at the top of this file: the
+    // two object names an author may pick, plus `erased` — a tombstone the form
+    // does not offer and only `lead_duplicate_check` ever writes.
     //
     // The tombstone is what lets an erasure COMPLETE against a lead a human
     // confirmed as a duplicate, without relaxing one rule, so read it as a
@@ -452,7 +527,10 @@ export const Lead = ObjectSchema.create({
       label: 'Duplicate Of',
       group: 'duplicates',
       description: 'Which object holds the surviving record this lead repeats.',
-      options: [...DUPLICATE_OF_TYPE_OPTIONS],
+      options: [
+        ...DUPLICATE_OF_TYPE_AUTHORABLE_OPTIONS,
+        { label: 'Erased Record', value: DUPLICATE_OF_TYPE_ERASED },
+      ],
     }),
 
     // ⚠️ The type↔lookup pairing is `requiredWhen`, not a script validation:

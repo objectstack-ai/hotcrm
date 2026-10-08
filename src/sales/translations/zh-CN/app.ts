@@ -6,7 +6,7 @@ import { QUOTE_DISCOUNT_CEILING } from '../../objects/_thresholds';
 
 /**
  * 简体中文 (zh-CN) — every translation namespace EXCEPT `objects`:
- * `apps`, `messages`, `dashboards`, `datasets`, `pages`, `flows`.
+ * `apps`, `messages`, `dashboards`, `datasets`, `pages`, `flows`, `picklists`.
  *
  * SPLIT AXIS (#1311): translation NAMESPACE first, then CRM DOMAIN FAMILY.
  * Everything that is not `objects` lives in `./app.ts`; `objects` — 69-78% of
@@ -679,6 +679,49 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
             discount: { label: `折扣 % (≤ ${QUOTE_DISCOUNT_CEILING})`, placeholder: `0-${QUOTE_DISCOUNT_CEILING}` },
           },
         },
+      },
+    },
+  },
+  // Shared option lists (`src/<pkg>/picklists/*.picklist.ts`), translated ONCE:
+  // every field that references a list (`Field.select({ picklist })`) inherits
+  // these option labels, so a field-level `options` entry exists only for a
+  // field with inline options of its own.
+  picklists: {
+    salutation: {
+      label: '称谓',
+      options: { mr: '先生', ms: '女士', mrs: '夫人', dr: '博士', prof: '教授' },
+    },
+    industry: {
+      label: '行业',
+      options: {
+        technology: '科技', software: '软件 / SaaS', finance: '金融',
+        healthcare: '医疗', retail: '零售', manufacturing: '制造',
+        education: '教育', real_estate: '房地产', media: '传媒娱乐',
+        logistics: '物流', hospitality: '酒店旅游', energy: '能源公用事业',
+        government: '政府', nonprofit: '非营利', other: '其他',
+      },
+    },
+    lead_source: {
+      label: '线索来源',
+      options: {
+        web: '网站', referral: '推荐', event: '活动 / 展会',
+        webinar: '线上研讨会', partner: '合作伙伴', advertisement: '广告',
+        paid_search: '付费搜索', social: '社交媒体', content: '内容 / 博客',
+        cold_call: '陌生拜访', email_campaign: '邮件营销', other: '其他',
+      },
+    },
+    payment_terms: {
+      label: '付款条款',
+      options: {
+        net_15: '15 天账期', net_30: '30 天账期', net_60: '60 天账期',
+        net_90: '90 天账期', due_on_receipt: '货到付款',
+      },
+    },
+    related_to_type: {
+      label: '关联对象类型',
+      options: {
+        crm_account: '客户', crm_contact: '联系人', crm_opportunity: '商机',
+        crm_lead: '线索', crm_case: '工单',
       },
     },
   },

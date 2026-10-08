@@ -4,7 +4,7 @@ import type { TranslationData } from '@objectstack/spec/system';
 
 /**
  * English (en) — every translation namespace EXCEPT `objects`:
- * `apps`, `messages`, `dashboards`, `pages`.
+ * `apps`, `messages`, `dashboards`, `pages`, `picklists`.
  *
  * SPLIT AXIS (#1311): translation NAMESPACE first, then CRM DOMAIN FAMILY.
  * Everything that is not `objects` lives in `./app.ts`; `objects` — 69-78% of
@@ -225,6 +225,49 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         notifications_panel: { label: 'Notifications' },
         quick_notes: { title: 'Quick Notes', label: 'Quick Notes' },
         quick_search: { label: 'Quick Search' },
+      },
+    },
+  },
+  // Shared option lists (`src/<pkg>/picklists/*.picklist.ts`), translated ONCE:
+  // every field that references a list (`Field.select({ picklist })`) inherits
+  // these option labels, so a field-level `options` entry exists only for a
+  // field with inline options of its own.
+  picklists: {
+    salutation: {
+      label: 'Salutation',
+      options: { mr: 'Mr.', ms: 'Ms.', mrs: 'Mrs.', dr: 'Dr.', prof: 'Prof.' },
+    },
+    industry: {
+      label: 'Industry',
+      options: {
+        technology: 'Technology', software: 'Software / SaaS', finance: 'Finance',
+        healthcare: 'Healthcare', retail: 'Retail', manufacturing: 'Manufacturing',
+        education: 'Education', real_estate: 'Real Estate', media: 'Media & Entertainment',
+        logistics: 'Logistics', hospitality: 'Hospitality', energy: 'Energy & Utilities',
+        government: 'Government', nonprofit: 'Non-profit', other: 'Other',
+      },
+    },
+    lead_source: {
+      label: 'Lead Source',
+      options: {
+        web: 'Web', referral: 'Referral', event: 'Event / Trade Show',
+        webinar: 'Webinar', partner: 'Partner', advertisement: 'Advertisement',
+        paid_search: 'Paid Search', social: 'Social Media', content: 'Content / Blog',
+        cold_call: 'Cold Call', email_campaign: 'Email Campaign', other: 'Other',
+      },
+    },
+    payment_terms: {
+      label: 'Payment Terms',
+      options: {
+        net_15: 'Net 15', net_30: 'Net 30', net_60: 'Net 60',
+        net_90: 'Net 90', due_on_receipt: 'Due on Receipt',
+      },
+    },
+    related_to_type: {
+      label: 'Related To Type',
+      options: {
+        crm_account: 'Account', crm_contact: 'Contact', crm_opportunity: 'Opportunity',
+        crm_lead: 'Lead', crm_case: 'Case',
       },
     },
   },

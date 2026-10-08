@@ -58,13 +58,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       discount_amount: { label: '折扣金额' },
       tax: { label: '税额' },
       shipping_handling: { label: '运费及手续费' },
-      payment_terms: {
-        label: '付款条款',
-        options: {
-          net_15: '15 天账期', net_30: '30 天账期', net_60: '60 天账期',
-          net_90: '90 天账期', due_on_receipt: '货到付款',
-        },
-      },
+      payment_terms: { label: '付款条款' },
       shipping_terms: { label: '运输条款' },
       billing_address: { label: '账单地址' },
       shipping_address: { label: '收货地址' },
@@ -153,13 +147,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
         label: '计费周期',
         options: { monthly: '按月', quarterly: '按季度', annually: '按年', one_time: '一次性' },
       },
-      payment_terms: {
-        label: '付款条款',
-        options: {
-          net_15: '15 天账期', net_30: '30 天账期', net_60: '60 天账期',
-          net_90: '90 天账期', due_on_receipt: '货到付款',
-        },
-      },
+      payment_terms: { label: '付款条款' },
       auto_renewal: { label: '自动续约' },
       renewal_notice_days: { label: '续约通知（天）' },
       contract_type: {

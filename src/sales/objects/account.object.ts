@@ -2,7 +2,6 @@
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
 import { F } from '@objectstack/spec';
-import { INDUSTRY_OPTIONS } from './_picklists';
 import { TERRITORY_OPTIONS } from './_territory';
 
 export const Account = ObjectSchema.create({
@@ -304,10 +303,10 @@ export const Account = ObjectSchema.create({
     industry: Field.select({
       label: 'Industry',
       group: 'basic',
-      // Canonical set shared with Lead (#490): lead_conversion copies
+      // The list shared with Lead (#490): lead_conversion copies
       // `leadRecord.industry` onto the account it creates, so this must
-      // accept every Lead value.
-      options: [...INDUSTRY_OPTIONS],
+      // accept every Lead value — one list, referenced by name.
+      picklist: 'industry',
     }),
 
     description: Field.markdown({

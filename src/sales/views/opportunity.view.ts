@@ -45,7 +45,7 @@ export const OpportunityViews = defineView({
         qualification: 'sky',
         // Teal sits between the cool qualification blue and the warm proposal
         // amber, keeping the cool→warm funnel ramp readable. NOT the gold
-        // `#FFD700` this option carries in `_picklists.ts`: gold is one hue
+        // `#FFD700` this option carries on the `stage` field: gold is one hue
         // step from proposal's amber, so the two adjacent stages would tint
         // rows the same.
         //

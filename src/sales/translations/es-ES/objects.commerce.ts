@@ -59,13 +59,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       shipping_handling: { label: 'Envío y Manipulación' },
       total_price: { label: 'Precio Total' },
       // Mismo juego de valores que `crm_contract.payment_terms` — tradúzcanse igual.
-      payment_terms: {
-        label: 'Términos de Pago',
-        options: {
-          net_15: 'Neto 15', net_30: 'Neto 30', net_60: 'Neto 60', net_90: 'Neto 90',
-          due_on_receipt: 'Pago a la Recepción',
-        },
-      },
+      payment_terms: { label: 'Términos de Pago' },
       shipping_terms: { label: 'Términos de Envío' },
       billing_address: { label: 'Dirección de Facturación' },
       shipping_address: { label: 'Dirección de Envío' },
@@ -154,13 +148,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
         options: { monthly: 'Mensual', quarterly: 'Trimestral', annually: 'Anual', one_time: 'Pago Único' },
       },
       // Mismo juego de valores que `crm_quote.payment_terms` — tradúzcanse igual.
-      payment_terms: {
-        label: 'Términos de Pago',
-        options: {
-          net_15: 'Neto 15', net_30: 'Neto 30', net_60: 'Neto 60', net_90: 'Neto 90',
-          due_on_receipt: 'Pago a la Recepción',
-        },
-      },
+      payment_terms: { label: 'Términos de Pago' },
       auto_renewal: { label: 'Renovación Automática' },
       renewal_notice_days: { label: 'Aviso de Renovación (Días)' },
       contract_type: {

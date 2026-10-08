@@ -16,11 +16,6 @@ import type { ObjectTranslationData } from '@objectstack/spec/system';
  * advisory band `pnpm hygiene` prints. Full rule and rationale:
  * `src/translations/ja-JP.ts`.
  */
-const paymentTermsOptions = {
-  net_15: '15 日以内払い', net_30: '30 日以内払い', net_60: '60 日以内払い',
-  net_90: '90 日以内払い', due_on_receipt: '請求書受領時払い',
-};
-
 export const commerce: Record<string, ObjectTranslationData> = {
   crm_quote: {
     _validations: {
@@ -63,7 +58,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       tax: { label: '税額' },
       shipping_handling: { label: '配送・手数料' },
       total_price: { label: '合計金額' },
-      payment_terms: { label: '支払条件', options: { ...paymentTermsOptions } },
+      payment_terms: { label: '支払条件' },
       shipping_terms: { label: '配送条件' },
       billing_address: { label: '請求先住所' },
       shipping_address: { label: '配送先住所' },
@@ -151,7 +146,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
         label: '請求頻度',
         options: { monthly: '月次', quarterly: '四半期', annually: '年次', one_time: '一括' },
       },
-      payment_terms: { label: '支払条件', options: { ...paymentTermsOptions } },
+      payment_terms: { label: '支払条件' },
       auto_renewal: { label: '自動更新' },
       renewal_notice_days: { label: '更新通知（日）' },
       contract_type: {

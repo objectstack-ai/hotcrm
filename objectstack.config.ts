@@ -7,7 +7,7 @@ import { defineStack } from '@objectstack/spec';
 // live in this file (⛔ this module may carry no named export: the build parses
 // it against a `.strict` stack schema and fails on any key but the default).
 import {
-  allObjects, allActions, allDashboards, allDatasets, allReports,
+  allObjects, allPicklists, allActions, allDashboards, allDatasets, allReports,
   allMappings, allApps, allViews, allPages, allTranslations, allEmailTemplates, allProfiles,
   allHooks, allFlows, allSkills,
   CrmSharingRules, CrmPositions,
@@ -144,6 +144,11 @@ export default defineStack({
   requires: ['automation', 'triggers', 'analytics', 'auth', 'ui', 'approvals', 'sharing', 'hierarchy-security'],
 
   objects: allObjects,
+  // Shared option lists (#2000, objectstack#18164). Each select field that
+  // offers one names it — `Field.select({ picklist: 'industry' })` — and the
+  // platform serves that field with the list's resolved options, refuses a
+  // write outside them, and relabels them from `picklists.<name>` per locale.
+  picklists: allPicklists,
   actions: allActions,
   dashboards: allDashboards,
   datasets: allDatasets,

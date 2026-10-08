@@ -36,33 +36,13 @@ export const pipeline: Record<string, ObjectTranslationData> = {
           unqualified: 'Unqualified', converted: 'Converted',
         },
       },
-      lead_source: {
-        label: 'Lead Source',
-        options: {
-          web: 'Web', referral: 'Referral', event: 'Event / Trade Show',
-          webinar: 'Webinar', partner: 'Partner', advertisement: 'Advertisement',
-          paid_search: 'Paid Search', social: 'Social Media', content: 'Content / Blog',
-          cold_call: 'Cold Call', email_campaign: 'Email Campaign', other: 'Other',
-        },
-      },
+      lead_source: { label: 'Lead Source' },
       owner_id: { label: 'Lead Owner' },
       is_converted: { label: 'Converted' },
       description: { label: 'Description' },
-      salutation: {
-        label: 'Salutation',
-        options: { mr: 'Mr.', ms: 'Ms.', mrs: 'Mrs.', dr: 'Dr.', prof: 'Prof.' },
-      },
+      salutation: { label: 'Salutation' },
       full_name: { label: 'Full Name' },
-      industry: {
-        label: 'Industry',
-        options: {
-          technology: 'Technology', software: 'Software / SaaS', finance: 'Finance',
-          healthcare: 'Healthcare', retail: 'Retail', manufacturing: 'Manufacturing',
-          education: 'Education', real_estate: 'Real Estate', media: 'Media & Entertainment',
-          logistics: 'Logistics', hospitality: 'Hospitality', energy: 'Energy & Utilities',
-          government: 'Government', nonprofit: 'Non-profit', other: 'Other',
-        },
-      },
+      industry: { label: 'Industry' },
       mobile: { label: 'Mobile' },
       website: { label: 'Website' },
       rating: { label: 'Lead Score', help: 'Lead quality score (1-5 stars)' },
@@ -246,15 +226,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
       description: { label: 'Description' },
       next_step: { label: 'Next Step' },
-      lead_source: {
-        label: 'Lead Source',
-        options: {
-          web: 'Web', referral: 'Referral', event: 'Event / Trade Show',
-          webinar: 'Webinar', partner: 'Partner', advertisement: 'Advertisement',
-          paid_search: 'Paid Search', social: 'Social Media', content: 'Content / Blog',
-          cold_call: 'Cold Call', email_campaign: 'Email Campaign', other: 'Other',
-        },
-      },
+      lead_source: { label: 'Lead Source' },
       crm_campaign: { label: 'Campaign', help: 'Marketing campaign that generated this opportunity' },
       days_in_stage: { label: 'Days in Current Stage' },
       stage_entry_date: {

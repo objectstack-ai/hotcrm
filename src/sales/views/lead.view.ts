@@ -2,7 +2,7 @@
 
 import { P } from '@objectstack/spec';
 import { defineView } from '@objectstack/spec/ui';
-import { DUPLICATE_OF_TYPE_AUTHORABLE_OPTIONS } from '../objects/_picklists';
+import { DUPLICATE_OF_TYPE_AUTHORABLE_OPTIONS } from '../objects/lead.object';
 
 /**
  * ═══ HOUSE RULE: form predicates are `record.`-bound AND TOTAL ═════════════
@@ -83,7 +83,7 @@ const DUPLICATE_LINK_FIELDS = [
     // locales, so a tombstoned lead reads as "Erased Record" on the detail page
     // instead of as a raw enum nobody can explain.
     //
-    // Spread from `_picklists.ts` rather than retyped: the authorable set is
+    // Spread from `lead.object.ts` rather than retyped: the authorable set is
     // the source both lists derive from, so a future object type added there
     // reaches this picker automatically and the tombstone never can.
     options: [...DUPLICATE_OF_TYPE_AUTHORABLE_OPTIONS],
@@ -176,8 +176,8 @@ export const LeadViews = defineView({
       // list's own filter and grouping controls offer, which is what makes the
       // two FILTERABLE and GROUPABLE here rather than only readable — the same
       // reading `contact.view.ts` records for the buying-centre columns.
-      // `need_type` is single-valued for exactly that reason (see
-      // `_picklists.ts`): a grouped list answers with one aggregate per raw
+      // `need_type` is single-valued for exactly that reason (see the field in
+      // `lead.object.ts`): a grouped list answers with one aggregate per raw
       // stored value, so a multi-valued column would group by the combination.
       {
         field: 'need_type',

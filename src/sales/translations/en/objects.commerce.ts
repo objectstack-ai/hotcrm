@@ -45,13 +45,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       tax: { label: 'Tax' },
       shipping_handling: { label: 'Shipping & Handling' },
       total_price: { label: 'Total Price' },
-      payment_terms: {
-        label: 'Payment Terms',
-        options: {
-          net_15: 'Net 15', net_30: 'Net 30', net_60: 'Net 60',
-          net_90: 'Net 90', due_on_receipt: 'Due on Receipt',
-        },
-      },
+      payment_terms: { label: 'Payment Terms' },
       shipping_terms: { label: 'Shipping Terms' },
       billing_address: { label: 'Billing Address' },
       shipping_address: { label: 'Shipping Address' },
@@ -127,13 +121,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
           annually: 'Annually', one_time: 'One-time',
         },
       },
-      payment_terms: {
-        label: 'Payment Terms',
-        options: {
-          net_15: 'Net 15', net_30: 'Net 30', net_60: 'Net 60',
-          net_90: 'Net 90', due_on_receipt: 'Due on Receipt',
-        },
-      },
+      payment_terms: { label: 'Payment Terms' },
       auto_renewal: { label: 'Auto Renewal' },
       renewal_notice_days: { label: 'Renewal Notice (Days)' },
       contract_type: {

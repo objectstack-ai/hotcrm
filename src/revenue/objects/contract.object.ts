@@ -2,7 +2,6 @@
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
 import { P } from '@objectstack/spec';
-import { PAYMENT_TERMS_OPTIONS } from '../../sales/objects/_picklists';
 
 /**
  * Contract Object
@@ -146,12 +145,12 @@ export const Contract = ObjectSchema.create({
     payment_terms: Field.select({
       label: 'Payment Terms',
       group: 'value',
-      // Canonical set shared with Quote: an accepted quote's terms (incl.
+      // The list shared with Quote: an accepted quote's terms (incl.
       // due_on_receipt) must survive the copy onto the contract. That copy is
-      // `quote_on_accepted` (src/objects/quote.hook.ts). This field's `net_30`
-      // option default applies only when the quote itself carried no term,
-      // which is the intended fall-through, not a gap.
-      options: [...PAYMENT_TERMS_OPTIONS],
+      // `quote_on_accepted` (src/revenue/objects/quote.hook.ts). The list's
+      // `net_30` option default applies only when the quote itself carried no
+      // term, which is the intended fall-through, not a gap.
+      picklist: 'payment_terms',
     }),
     
     // Renewal

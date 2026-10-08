@@ -38,10 +38,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
     pluralLabel: '线索',
     description: '尚未确认的潜在客户',
     fields: {
-      salutation: {
-        label: '称谓',
-        options: { mr: '先生', ms: '女士', mrs: '夫人', dr: '博士', prof: '教授' },
-      },
+      salutation: { label: '称谓' },
       first_name: { label: '名' },
       last_name: { label: '姓' },
       full_name: { label: '全名' },
@@ -49,16 +46,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       title: { label: '职位' },
       email: { label: '邮箱' },
       phone: { label: '电话' },
-      industry: {
-        label: '行业',
-        options: {
-          technology: '科技', software: '软件 / SaaS', finance: '金融',
-          healthcare: '医疗', retail: '零售', manufacturing: '制造',
-          education: '教育', real_estate: '房地产', media: '传媒娱乐',
-          logistics: '物流', hospitality: '酒店旅游', energy: '能源公用事业',
-          government: '政府', nonprofit: '非营利', other: '其他',
-        },
-      },
+      industry: { label: '行业' },
       status: {
         label: '状态',
         options: {
@@ -68,15 +56,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
           unqualified: '未通过', converted: '已转化',
         },
       },
-      lead_source: {
-        label: '线索来源',
-        options: {
-          web: '网站', referral: '推荐', event: '活动 / 展会',
-          webinar: '线上研讨会', partner: '合作伙伴', advertisement: '广告',
-          paid_search: '付费搜索', social: '社交媒体', content: '内容 / 博客',
-          cold_call: '陌生拜访', email_campaign: '邮件营销', other: '其他',
-        },
-      },
+      lead_source: { label: '线索来源' },
       owner_id: { label: '线索负责人' },
       is_converted: { label: '已转化' },
       description: { label: '描述' },
@@ -269,15 +249,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
       description: { label: '描述' },
       next_step: { label: '下一步' },
-      lead_source: {
-        label: '线索来源',
-        options: {
-          web: '网站', referral: '推荐', event: '活动 / 展会',
-          webinar: '线上研讨会', partner: '合作伙伴', advertisement: '广告',
-          paid_search: '付费搜索', social: '社交媒体', content: '内容 / 博客',
-          cold_call: '陌生拜访', email_campaign: '邮件营销', other: '其他',
-        },
-      },
+      lead_source: { label: '线索来源' },
       crm_campaign: { label: '营销活动', help: '带来此商机的营销活动' },
       days_in_stage: { label: '当前阶段天数' },
       stage_entry_date: { label: '进入当前阶段日期', help: '本商机进入当前阶段的日期。' },

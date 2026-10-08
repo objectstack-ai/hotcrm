@@ -6,7 +6,7 @@ import { InMemoryDriver } from '@objectstack/driver-memory';
 import quoteHooks from '../src/revenue/objects/quote.hook';
 import { Contract } from '../src/revenue/objects/contract.object';
 import { Quote } from '../src/revenue/objects/quote.object';
-import { PAYMENT_TERMS_OPTIONS } from '../src/sales/objects/_picklists';
+import { PaymentTermsPicklist } from '../src/revenue/picklists/payment_terms.picklist';
 import type { HookApi } from '../src/sales/objects/_hook-api';
 import { makeHarness, makeCtx, hookNamed, type Rec } from './helpers/hook-harness';
 import { makeSandboxEngine, runHookBody } from './helpers/action-sandbox';
@@ -16,8 +16,9 @@ import { makeSandboxEngine, runHookBody } from './helpers/action-sandbox';
  *
  * ### What was wrong
  *
- * `_picklists.ts` declares `PAYMENT_TERMS_OPTIONS` a set shared by Quote and
- * Contract, and justifies the sharing in so many words: *"an accepted quote's
+ * The `payment_terms` list was declared a set shared by Quote and Contract
+ * (then `PAYMENT_TERMS_OPTIONS` in `_picklists.ts`, since #2000 the
+ * `payment_terms` picklist), justified in so many words: *"an accepted quote's
  * terms carry over to the contract, so the contract vocabulary must cover every
  * quote value."* `crm_contract.payment_terms` repeats the same rationale. No
  * such carry-over existed. `quote_on_accepted` drafted the contract from
@@ -66,7 +67,7 @@ const hook = hookNamed(quoteHooks, 'quote_on_accepted');
 const USER = { id: 'user_1' };
 
 /** Every value a quote can hold, straight from the shared vocabulary. */
-const QUOTE_TERMS = PAYMENT_TERMS_OPTIONS.map((o) => o.value);
+const QUOTE_TERMS: string[] = PaymentTermsPicklist.options.map((o) => o.value);
 
 /** The value `crm_contract.payment_terms` falls to when nothing is written. */
 const CONTRACT_DEFAULT = 'net_30';
@@ -161,6 +162,11 @@ describe('what a real crm_contract does with those documents', () => {
         sys_user: stub('sys_user'),
       } as never,
     });
+    // `crm_contract.payment_terms` names the `payment_terms` picklist (#2000);
+    // the engine resolves it from the registry, so the list is registered the
+    // way the stack's `picklists` collection registers it on boot. Without it
+    // the field resolves to no options and refuses every value.
+    ql.registry.registerItem('picklist', PaymentTermsPicklist);
     api = ql.createContext({ isSystem: true });
   }, 60_000);
 
@@ -245,19 +251,20 @@ describe('the rationale the shared vocabulary is justified by', () => {
    * with nothing holding it up.
    */
   it('both objects really do declare the same vocabulary', () => {
-    const values = (o: AnyRec): string[] => o.fields.payment_terms.options.map((x: AnyRec) => x.value);
-    expect(values(Contract as AnyRec)).toEqual(QUOTE_TERMS);
-    expect(values(Quote as AnyRec)).toEqual(QUOTE_TERMS);
+    // Since #2000 this is structural: both fields REFERENCE one picklist and
+    // carry no options of their own, so there is no second copy to drift.
+    for (const o of [Contract, Quote] as AnyRec[]) {
+      expect(o.fields.payment_terms.picklist, `${o.name}.payment_terms`).toBe(PaymentTermsPicklist.name);
+      expect(o.fields.payment_terms.options, `${o.name}.payment_terms carries a copy`).toBeUndefined();
+    }
   });
 
   it('names the hook that performs the carry-over, in both places that claim it', async () => {
     const { readFileSync } = await import('node:fs');
     const { join } = await import('node:path');
-    // The two files sit in different packages since the ADR-0130 layout: the
-    // picklist vocabulary is a shared source and lives in the app package,
-    // `crm_contract` is revenue's. Both still make the claim, so both are read.
+    // The picklist and `crm_contract` both make the claim, so both are read.
     for (const file of [
-      'src/sales/objects/_picklists.ts',
+      'src/revenue/picklists/payment_terms.picklist.ts',
       'src/revenue/objects/contract.object.ts',
     ]) {
       expect(

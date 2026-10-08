@@ -51,6 +51,9 @@ import * as serviceObjects from './src/service/objects/index.js';
 import * as revenueObjects from './src/revenue/objects/index.js';
 import * as marketingObjects from './src/marketing/objects/index.js';
 
+import * as salesPicklists from './src/sales/picklists/index.js';
+import * as revenuePicklists from './src/revenue/picklists/index.js';
+
 import * as salesActions from './src/sales/actions/index.js';
 import * as serviceActions from './src/service/actions/index.js';
 import * as marketingActions from './src/marketing/actions/index.js';
@@ -259,6 +262,14 @@ export const allSkills = [
 export const allObjects = byExportName({
   ...salesObjects, ...serviceObjects, ...revenueObjects, ...marketingObjects,
 });
+
+/**
+ * Every shared option list (`*.picklist.ts`) — the lists a select field
+ * references by name with `Field.select({ picklist })` instead of copying
+ * options. A field naming a list registered here by nothing is refused by
+ * `pnpm validate` and fails the boot, so this line is load-bearing.
+ */
+export const allPicklists = byExportName({ ...salesPicklists, ...revenuePicklists });
 
 /** Every UI / AI-callable action. */
 export const allActions = byExportName({ ...salesActions, ...serviceActions, ...marketingActions });

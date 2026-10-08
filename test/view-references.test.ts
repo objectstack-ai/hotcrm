@@ -3,12 +3,13 @@
 import { describe, it, expect } from 'vitest';
 import { isDateMacroToken } from '@objectstack/spec/data';
 import stack from '../objectstack.config';
-import { OPPORTUNITY_STAGE_OPTIONS } from '../src/sales/objects/_picklists';
+import { Opportunity } from '../src/sales/objects/opportunity.object';
 import {
   type AnyRec,
   objects,
   pages,
   views,
+  stackActions,
   objectNames,
   fieldsOf,
   walk,
@@ -270,21 +271,22 @@ describe('row colors and kanban groups key off real option values', () => {
  * The two guards above answer "is every value written here a real option?" —
  * a subset check. Nothing asked the converse, "is every real option written
  * here?", and that is the half that broke (#759): `needs_analysis` is one of
- * the seven canonical `OPPORTUNITY_STAGE_OPTIONS` and was absent from BOTH the
+ * the seven canonical stages and was absent from BOTH the
  * detail page's stage path and the Open Deals `rowColor` map. Six of seven
  * stages worked, so both surfaces looked fine on every deal that happened not
  * to be in Needs Analysis — the deal that WAS lit up no step on the path and
  * got no row tint, which reads to a user as corrupted data rather than as
  * missing metadata.
  *
- * The expectation is derived from `OPPORTUNITY_STAGE_OPTIONS` itself — the
- * single source `crm_opportunity.stage` and the `mass_update_stage` action are
- * both built from — so an EIGHTH stage cannot ship half-covered. A hand-copied
- * list here would need the same edit as the metadata it guards, and would
- * therefore be forgotten in the same commit.
+ * The expectation is derived from `crm_opportunity.stage`'s own options — the
+ * single source the `mass_update_stage` action is built from too (#2000 moved
+ * the list inline onto the field, the one field that owns it; it used to be
+ * `OPPORTUNITY_STAGE_OPTIONS` in `_picklists.ts`) — so an EIGHTH stage cannot
+ * ship half-covered. A hand-copied list here would need the same edit as the
+ * metadata it guards, and would therefore be forgotten in the same commit.
  */
 describe('every canonical opportunity stage reaches the UI that enumerates stages', () => {
-  const canonical = OPPORTUNITY_STAGE_OPTIONS.map((o) => String(o.value));
+  const canonical = (Opportunity.fields.stage.options ?? []).map((o) => String(o.value));
 
   /** Every `record:path` bound to `crm_opportunity.stage`, as [pageName, values]. */
   const stagePaths = (): [string, string[]][] =>
@@ -313,15 +315,24 @@ describe('every canonical opportunity stage reaches the UI that enumerates stage
       );
 
   it('the canonical stage list is the set the object validates against', () => {
-    // Guards the guard twice over: an empty or renamed constant would make
-    // every assertion below pass by comparing against nothing, and a `stage`
-    // field that stopped being built from this constant would leave the two
-    // sites below chasing a list the runtime no longer enforces.
-    expect(canonical.length, 'OPPORTUNITY_STAGE_OPTIONS is empty').toBeGreaterThan(0);
+    // Guards the guard twice over: an empty list would make every assertion
+    // below pass by comparing against nothing, and a registered `stage` field
+    // that stopped matching the authored one would leave the two sites below
+    // chasing a list the runtime no longer enforces.
+    expect(canonical.length, 'crm_opportunity.stage declares no options').toBeGreaterThan(0);
     const objDef = objects.find((o) => o.name === 'crm_opportunity');
     const fieldValues = (objDef?.fields?.stage?.options ?? []).map((o: AnyRec) => String(o.value));
-    expect([...fieldValues].sort(), 'crm_opportunity.stage no longer mirrors OPPORTUNITY_STAGE_OPTIONS')
+    expect([...fieldValues].sort(), 'the registered crm_opportunity.stage no longer mirrors the authored one')
       .toEqual([...canonical].sort());
+  });
+
+  it('mass_update_stage offers exactly the canonical stages, in order', () => {
+    // The action param is projected from the field's own options (#2000); a
+    // hand-typed list there is the drift this suite exists to refuse.
+    const action = stackActions.find((a) => a.name === 'mass_update_stage');
+    const param = (action?.params ?? []).find((p: AnyRec) => p.name === 'stage');
+    expect(param, 'mass_update_stage has no stage param').toBeTruthy();
+    expect((param?.options ?? []).map((o: AnyRec) => String(o.value))).toEqual(canonical);
   });
 
   it('every stage has a step on the opportunity stage path', () => {
@@ -363,8 +374,8 @@ describe('every canonical opportunity stage reaches the UI that enumerates stage
   it('stage colours stay distinguishable from one another', () => {
     // The point of the map is that a rep can tell two stages apart at a
     // glance; two stages sharing a hex make the tint say nothing. (#759 was
-    // nearly fixed by copying `needs_analysis`'s `#FFD700` out of
-    // _picklists.ts, one hue step from proposal's `#f59e0b`.)
+    // nearly fixed by copying `needs_analysis`'s `#FFD700` off the stage
+    // field, one hue step from proposal's `#f59e0b`.)
     const bad: string[] = [];
     for (const [site, colors] of stageRowColors()) {
       const seen = new Map<string, string>();

@@ -2,7 +2,6 @@
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
 import { F, P } from '@objectstack/spec';
-import { LEAD_SOURCE_OPTIONS, OPPORTUNITY_STAGE_OPTIONS } from './_picklists';
 
 export const Opportunity = ObjectSchema.create({
   name: 'crm_opportunity',
@@ -232,9 +231,20 @@ export const Opportunity = ObjectSchema.create({
       // ADR-0052 §5b.1 — the platform auto-renders each stage change on the
       // activity timeline as "Stage: Proposal → Negotiation" (no hook code).
       trackHistory: true,
-      // Canonical set (#490) — the mass_update_stage action renders the same
-      // list; see _picklists.ts.
-      options: [...OPPORTUNITY_STAGE_OPTIONS],
+      // The one stage list. The mass_update_stage action
+      // (`src/sales/actions/opportunity.actions.ts`) renders this field's own
+      // options rather than a copy, projected to bare `{ label, value }` pairs
+      // — colors and the default mean something only here. A single field
+      // owns it, so it is inline rather than a shared `picklist` (#2000).
+      options: [
+        { label: 'Prospecting', value: 'prospecting', color: '#808080', default: true },
+        { label: 'Qualification', value: 'qualification', color: '#FFA500' },
+        { label: 'Needs Analysis', value: 'needs_analysis', color: '#FFD700' },
+        { label: 'Proposal', value: 'proposal', color: '#4169E1' },
+        { label: 'Negotiation', value: 'negotiation', color: '#9370DB' },
+        { label: 'Closed Won', value: 'closed_won', color: '#00AA00' },
+        { label: 'Closed Lost', value: 'closed_lost', color: '#FF0000' },
+      ],
     }),
 
     probability: Field.percent({
@@ -339,10 +349,10 @@ export const Opportunity = ObjectSchema.create({
     lead_source: Field.select({
       label: 'Lead Source',
       group: 'classification',
-      // Canonical set shared with Lead + Contact (#490): lead_conversion
-      // copies `leadRecord.lead_source` onto the opportunity it creates, so
-      // this must accept every Lead value.
-      options: [...LEAD_SOURCE_OPTIONS],
+      // The list shared with Lead + Contact (#490): lead_conversion copies
+      // `leadRecord.lead_source` onto the opportunity it creates, so this must
+      // accept every Lead value — one list, referenced by name.
+      picklist: 'lead_source',
     }),
 
 
@@ -398,8 +408,8 @@ export const Opportunity = ObjectSchema.create({
     // ⚠️ `payment_terms` is PROSE here and a select on `crm_quote` /
     // `crm_contract`: what a rep records mid-pursuit is the shape of a term
     // still being negotiated, not the net-terms ladder a signed document
-    // carries. ⛔ Do not "unify" it onto PAYMENT_TERMS_OPTIONS — that would
-    // force a half-agreed term into a closed vocabulary.
+    // carries. ⛔ Do not "unify" it onto the `payment_terms` picklist — that
+    // would force a half-agreed term into a closed vocabulary.
     //
     // All four are `Field.textarea` (REQ-0006 names markdown OR textarea per
     // field). Measured on the 17.6.0 console, the Details tab's edit mode —

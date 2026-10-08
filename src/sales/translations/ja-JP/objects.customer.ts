@@ -2,7 +2,7 @@
 
 import type { ObjectTranslationData } from '@objectstack/spec/system';
 
-import { activityActions, salutationOptions, industryOptions, leadSourceOptions } from './_shared';
+import { activityActions } from './_shared';
 
 /**
  * 日本語 (ja-JP) — `objects` translations for the CUSTOMER family:
@@ -55,10 +55,7 @@ export const customer: Record<string, ObjectTranslationData> = {
         label: 'タイプ',
         options: { prospect: '見込み客', customer: '顧客', partner: 'パートナー', former: '過去の取引先' },
       },
-      industry: {
-        label: '業種',
-        options: { ...industryOptions },
-      },
+      industry: { label: '業種' },
       annual_revenue: { label: '年間売上' },
       child_account_revenue: { label: '子会社年間売上合計', help: '直属の子取引先の年間売上の合計。' },
       number_of_employees: { label: '従業員数' },
@@ -155,7 +152,7 @@ export const customer: Record<string, ObjectTranslationData> = {
     pluralLabel: '取引先責任者',
     description: '取引先に所属する担当者',
     fields: {
-      salutation: { label: '敬称', options: { ...salutationOptions } },
+      salutation: { label: '敬称' },
       first_name: { label: '名' },
       last_name: { label: '姓' },
       full_name: { label: '氏名' },
@@ -203,7 +200,7 @@ export const customer: Record<string, ObjectTranslationData> = {
       is_primary: { label: '主担当者', help: 'この取引先の主担当者かどうか' },
       avatar: { label: 'プロフィール画像' },
       mailing_address: { label: '郵送先住所' },
-      lead_source: { label: 'リードソース', options: { ...leadSourceOptions } },
+      lead_source: { label: 'リードソース' },
       do_not_call: { label: '電話拒否' },
       email_opt_out: { label: 'メール配信停止' },
       last_contacted_date: { label: '最終接触日時' },

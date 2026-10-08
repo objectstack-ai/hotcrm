@@ -1,29 +1,28 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { Dashboard, InlineLocaleMap } from '@objectstack/spec/ui';
-import { LEAD_SOURCE_OPTIONS } from '../objects/_picklists';
+import { LeadSourcePicklist } from '../picklists/lead_source.picklist';
 import { pipelineByStageFunnelWidget } from './shared-widgets';
 
 /**
  * `lead_source` filter option labels, keyed by the CANONICAL stored value.
  *
  * Only the WORDING is written here. The ROSTER is derived below from
- * {@link LEAD_SOURCE_OPTIONS} — the one constant `crm_lead`, `crm_contact` and
- * `crm_opportunity` each spread into their own `lead_source` field — so this
+ * {@link LeadSourcePicklist} — the one `lead_source` picklist `crm_lead`,
+ * `crm_contact` and `crm_opportunity` each reference by name — so this
  * control can only ever offer values a record can actually hold. It used to
  * hand-copy six of the twelve, and one of those six was spelled `advertising`
  * against a canonical `advertisement`: picking it ANDed a term no row matches
  * into every bound widget and the whole dashboard read zero with no error and
  * no empty state (#1849).
  *
- * A value added to the constant with no row here renders `label: undefined`,
+ * A value added to the picklist with no row here renders `label: undefined`,
  * which `pnpm validate` rejects by name — the roster cannot drift back
  * silently, which is the property a second hand-copy could not have.
  *
  * The strings are the language packs' own, copied from
- * `src/translations/<locale>/objects.pipeline.ts`
- * (`crm_lead.fields.lead_source.options`; ja-JP resolves them through
- * `src/translations/ja-JP/_shared.ts`), so the filter bar does not coin a
+ * `src/sales/translations/<locale>/app.ts` (`picklists.lead_source.options`,
+ * which every `lead_source` field inherits), so the filter bar does not coin a
  * second vocabulary for a value the record page already labels. They are
  * spelled inline rather than reached through `GlobalFilterSchema.object`,
  * which is inert in this Console build — measured on #1822, see `./index.ts`.
@@ -102,8 +101,8 @@ export const ExecutiveDashboard: Dashboard = {
       type: 'select',
       scope: 'dashboard',
       // Roster derived, wording from the language packs — see
-      // LEAD_SOURCE_FILTER_LABELS above. Order follows the canonical constant.
-      options: LEAD_SOURCE_OPTIONS.map(({ value }) => ({
+      // LEAD_SOURCE_FILTER_LABELS above. Order follows the picklist.
+      options: LeadSourcePicklist.options.map(({ value }) => ({
         value,
         label: LEAD_SOURCE_FILTER_LABELS[String(value)],
       })),

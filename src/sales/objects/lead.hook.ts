@@ -668,8 +668,8 @@ const leadDuplicateCheckHook: Hook = {
         //
         // ⚠️ `'erased'` is spelled INLINE on purpose. L2 hook bodies run
         // body-only in the QuickJS sandbox, so `DUPLICATE_OF_TYPE_ERASED` from
-        // `_picklists.ts` would resolve at authoring time and arrive as
-        // `undefined`. The canonical constant is the one in `_picklists.ts`;
+        // `lead.object.ts` would resolve at authoring time and arrive as
+        // `undefined`. The canonical constant is the one in `lead.object.ts`;
         // `test/lead-duplicate-management.test.ts` pins this literal to it and
         // pins this block as its only writer, so the two cannot drift.
         //

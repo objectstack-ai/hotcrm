@@ -56,36 +56,16 @@ export const pipeline: Record<string, ObjectTranslationData> = {
           unqualified: 'No Calificado', converted: 'Convertido',
         },
       },
-      lead_source: {
-        label: 'Origen del Prospecto',
-        options: {
-          web: 'Web', referral: 'Referencia', event: 'Evento / Feria',
-          webinar: 'Seminario Web', partner: 'Socio', advertisement: 'Publicidad',
-          paid_search: 'Búsqueda de Pago', social: 'Redes Sociales', content: 'Contenido / Blog',
-          cold_call: 'Llamada en Frío', email_campaign: 'Campaña de Email', other: 'Otro',
-        },
-      },
+      lead_source: { label: 'Origen del Prospecto' },
       owner_id: { label: 'Propietario' },
       is_converted: { label: 'Convertido' },
       description: { label: 'Descripción' },
       // Mismo juego de valores que `crm_contact.salutation` — tradúzcanse igual.
-      salutation: {
-        label: 'Tratamiento',
-        options: { mr: 'Sr.', ms: 'Srta.', mrs: 'Sra.', dr: 'Dr.', prof: 'Prof.' },
-      },
+      salutation: { label: 'Tratamiento' },
       full_name: { label: 'Nombre Completo' },
       // Los 15 valores son los mismos que en `crm_account.industry` — deben
       // coincidir literalmente entre ambas pantallas.
-      industry: {
-        label: 'Industria',
-        options: {
-          technology: 'Tecnología', software: 'Software / SaaS', finance: 'Finanzas',
-          healthcare: 'Salud', retail: 'Comercio', manufacturing: 'Manufactura',
-          education: 'Educación', real_estate: 'Inmobiliaria', media: 'Medios y Entretenimiento',
-          logistics: 'Logística', hospitality: 'Hostelería', energy: 'Energía y Servicios Públicos',
-          government: 'Gobierno', nonprofit: 'Sin Ánimo de Lucro', other: 'Otro',
-        },
-      },
+      industry: { label: 'Industria' },
       mobile: { label: 'Móvil' },
       website: { label: 'Sitio Web' },
       rating: { label: 'Puntuación de Prospecto', help: 'Puntuación de calidad del prospecto (1-5 estrellas)' },
@@ -276,15 +256,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
       description: { label: 'Descripción' },
       next_step: { label: 'Próximo Paso' },
-      lead_source: {
-        label: 'Origen del Prospecto',
-        options: {
-          web: 'Web', referral: 'Referencia', event: 'Evento / Feria',
-          webinar: 'Seminario Web', partner: 'Socio', advertisement: 'Publicidad',
-          paid_search: 'Búsqueda de Pago', social: 'Redes Sociales', content: 'Contenido / Blog',
-          cold_call: 'Llamada en Frío', email_campaign: 'Campaña de Email', other: 'Otro',
-        },
-      },
+      lead_source: { label: 'Origen del Prospecto' },
       crm_campaign: { label: 'Campaña', help: 'Campaña de marketing que generó esta oportunidad' },
       days_in_stage: { label: 'Días en Etapa Actual' },
       stage_entry_date: { label: 'Fecha de Entrada a la Etapa', help: 'Fecha en la que esta oportunidad entró en su etapa actual.' },

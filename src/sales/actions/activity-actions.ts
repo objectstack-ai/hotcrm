@@ -87,8 +87,8 @@ const nameFieldMap = (objectDefs: Record<string, NameFieldSource>): Record<strin
  * The objects a rep can log an interaction against, and the `crm_event`
  * lookup that records the link.
  *
- * The keys are exactly `crm_event.related_to_type`'s options
- * (`RELATED_TO_TYPE_OPTIONS`), and the values exactly the `related_to_*`
+ * The keys are exactly `crm_event.related_to_type`'s options (the
+ * `related_to_type` picklist), and the values exactly the `related_to_*`
  * lookups that back them. `test/activity-actions.test.ts` pins that agreement
  * against the object definition, so adding a sixth `related_to_*` field
  * without extending this map fails in CI instead of producing an action that

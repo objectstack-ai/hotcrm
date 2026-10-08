@@ -45,13 +45,7 @@ export const activity: Record<string, ObjectTranslationData> = {
       reminder_date: { label: 'Reminder Date/Time' },
       completed_date: { label: 'Completed Date' },
       owner_id: { label: 'Assigned To' },
-      related_to_type: {
-        label: 'Related To Type',
-        options: {
-          crm_account: 'Account', crm_contact: 'Contact', crm_opportunity: 'Opportunity',
-          crm_lead: 'Lead', crm_case: 'Case',
-        },
-      },
+      related_to_type: { label: 'Related To Type' },
       related_to_account: { label: 'Related Account' },
       related_to_contact: { label: 'Related Contact' },
       related_to_opportunity: { label: 'Related Opportunity' },
@@ -119,13 +113,7 @@ export const activity: Record<string, ObjectTranslationData> = {
       all_day: { label: 'All Day Event' },
       duration_minutes: { label: 'Duration (minutes)' },
       location: { label: 'Location', help: 'Room, address, or meeting link' },
-      related_to_type: {
-        label: 'Related To Type',
-        options: {
-          crm_account: 'Account', crm_contact: 'Contact', crm_opportunity: 'Opportunity',
-          crm_lead: 'Lead', crm_case: 'Case',
-        },
-      },
+      related_to_type: { label: 'Related To Type' },
       related_to_account: { label: 'Related Account' },
       related_to_contact: { label: 'Related Contact' },
       related_to_opportunity: { label: 'Related Opportunity' },

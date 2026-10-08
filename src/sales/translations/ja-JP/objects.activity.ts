@@ -16,11 +16,6 @@ import type { ObjectTranslationData } from '@objectstack/spec/system';
  * advisory band `pnpm hygiene` prints. Full rule and rationale:
  * `src/translations/ja-JP.ts`.
  */
-const relatedToTypeOptions = {
-  crm_account: '取引先', crm_contact: '取引先責任者', crm_opportunity: '商談',
-  crm_lead: 'リード', crm_case: 'ケース',
-};
-
 export const activity: Record<string, ObjectTranslationData> = {
   crm_task: {
     _validations: {
@@ -64,10 +59,7 @@ export const activity: Record<string, ObjectTranslationData> = {
       reminder_sent: { label: 'リマインダー送信済み' },
       completed_date: { label: '完了日' },
       owner_id: { label: '担当者' },
-      related_to_type: {
-        label: '関連オブジェクト種別',
-        options: { ...relatedToTypeOptions },
-      },
+      related_to_type: { label: '関連オブジェクト種別' },
       related_to_account: { label: '関連取引先' },
       related_to_contact: { label: '関連取引先責任者' },
       related_to_opportunity: { label: '関連商談' },
@@ -141,10 +133,7 @@ export const activity: Record<string, ObjectTranslationData> = {
       all_day: { label: '終日イベント' },
       duration_minutes: { label: '所要時間（分）' },
       location: { label: '場所', help: '会議室・住所・会議リンク' },
-      related_to_type: {
-        label: '関連レコード種別',
-        options: { ...relatedToTypeOptions },
-      },
+      related_to_type: { label: '関連レコード種別' },
       related_to_account: { label: '関連取引先' },
       related_to_contact: { label: '関連取引先責任者' },
       related_to_opportunity: { label: '関連商談' },

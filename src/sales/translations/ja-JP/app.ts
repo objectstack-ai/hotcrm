@@ -6,7 +6,7 @@ import { QUOTE_DISCOUNT_CEILING } from '../../objects/_thresholds';
 
 /**
  * 日本語 (ja-JP) — every translation namespace EXCEPT `objects`:
- * `apps`, `messages`, `dashboards`, `datasets`, `pages`, `flows`.
+ * `apps`, `messages`, `dashboards`, `datasets`, `pages`, `flows`, `picklists`.
  *
  * SPLIT AXIS (#1311): translation NAMESPACE first, then CRM DOMAIN FAMILY.
  * Everything that is not `objects` lives in `./app.ts`; `objects` — 69-78% of
@@ -680,6 +680,49 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
             discount: { label: `割引率 % (≤ ${QUOTE_DISCOUNT_CEILING})`, placeholder: `0-${QUOTE_DISCOUNT_CEILING}` },
           },
         },
+      },
+    },
+  },
+  // 共有ピックリスト（`src/<pkg>/picklists/*.picklist.ts`）は一度だけ翻訳する。
+  // リストを参照するフィールド（`Field.select({ picklist })`）はすべてこの
+  // 選択肢ラベルを継承するため、フィールド単位の `options` は独自のインライン
+  // 選択肢を持つフィールドにだけ書く。キーは表示ラベルではなく **保存値**（#494）。
+  picklists: {
+    salutation: {
+      label: '敬称',
+      options: { mr: 'Mr.', ms: 'Ms.', mrs: 'Mrs.', dr: '博士', prof: '教授' },
+    },
+    industry: {
+      label: '業種',
+      options: {
+        technology: 'テクノロジー', software: 'ソフトウェア / SaaS', finance: '金融',
+        healthcare: 'ヘルスケア', retail: '小売', manufacturing: '製造',
+        education: '教育', real_estate: '不動産', media: 'メディア・エンタメ',
+        logistics: '物流', hospitality: 'ホスピタリティ', energy: 'エネルギー・公益',
+        government: '政府・行政', nonprofit: '非営利', other: 'その他',
+      },
+    },
+    lead_source: {
+      label: 'リードソース',
+      options: {
+        web: 'ウェブ', referral: '紹介', event: 'イベント・展示会',
+        webinar: 'ウェビナー', partner: 'パートナー', advertisement: '広告',
+        paid_search: '有料検索', social: 'ソーシャルメディア', content: 'コンテンツ・ブログ',
+        cold_call: 'コールドコール', email_campaign: 'メールキャンペーン', other: 'その他',
+      },
+    },
+    payment_terms: {
+      label: '支払条件',
+      options: {
+        net_15: '15 日以内払い', net_30: '30 日以内払い', net_60: '60 日以内払い',
+        net_90: '90 日以内払い', due_on_receipt: '請求書受領時払い',
+      },
+    },
+    related_to_type: {
+      label: '関連オブジェクト種別',
+      options: {
+        crm_account: '取引先', crm_contact: '取引先責任者', crm_opportunity: '商談',
+        crm_lead: 'リード', crm_case: 'ケース',
       },
     },
   },

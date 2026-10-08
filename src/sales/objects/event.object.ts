@@ -2,11 +2,6 @@
 
 import { P } from '@objectstack/spec';
 import { ObjectSchema, Field } from '@objectstack/spec/data';
-import {
-  EVENT_STATUS_OPTIONS,
-  EVENT_TYPE_OPTIONS,
-  RELATED_TO_TYPE_OPTIONS,
-} from './_picklists';
 
 /**
  * Event — a first-class interaction record (#592).
@@ -91,7 +86,21 @@ export const Event = ObjectSchema.create({
       // related list left this required field blank (same defect crm_task.status
       // carries a note about).
       defaultValue: 'meeting',
-      options: [...EVENT_TYPE_OPTIONS],
+      // Distinct from crm_task.type on purpose: a Task is something a rep still
+      // owes someone, an Event is an interaction that occupies a slot on the
+      // calendar. `email` is therefore absent here (an email is not a meeting
+      // slot; it stays a `sys_email` + `sys_activity` pair) and `webinar` /
+      // `onsite_visit` are present, because those are the meeting shapes a rep
+      // books. Also the `kind` discriminator the per-object activity actions
+      // stamp on the row they insert (#592).
+      options: [
+        { label: 'Meeting',      value: 'meeting',       color: '#4169E1', default: true },
+        { label: 'Call',         value: 'call',          color: '#00AA00' },
+        { label: 'Demo',         value: 'demo',          color: '#9370DB' },
+        { label: 'Webinar',      value: 'webinar',       color: '#FFA500' },
+        { label: 'Onsite Visit', value: 'onsite_visit',  color: '#0EA5E9' },
+        { label: 'Other',        value: 'other',         color: '#808080' },
+      ],
     }),
 
     status: Field.select({
@@ -101,7 +110,16 @@ export const Event = ObjectSchema.create({
       storage: { notNull: true },
       trackHistory: true,
       defaultValue: 'planned',
-      options: [...EVENT_STATUS_OPTIONS],
+      // The `planned` → `held` transition is what separates "a meeting is
+      // booked" from "an interaction happened", and only the second one bumps
+      // `crm_account.last_activity_date` (see `event.hook.ts`). Without that
+      // split a meeting booked for next quarter would reset the churn clock today.
+      options: [
+        { label: 'Planned',   value: 'planned',   color: '#4169E1', default: true },
+        { label: 'Held',      value: 'held',      color: '#00AA00' },
+        { label: 'Cancelled', value: 'cancelled', color: '#999999' },
+        { label: 'No Show',   value: 'no_show',   color: '#FF4500' },
+      ],
     }),
 
     description: Field.markdown({
@@ -154,7 +172,8 @@ export const Event = ObjectSchema.create({
     related_to_type: Field.select({
       group: 'related',
       label: 'Related To Type',
-      options: [...RELATED_TO_TYPE_OPTIONS],
+      // The list shared with crm_task — `src/sales/picklists/related_to_type.picklist.ts`.
+      picklist: 'related_to_type',
     }),
 
     related_to_account: Field.lookup('crm_account', {

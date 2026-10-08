@@ -2,7 +2,6 @@
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
 import { F, P, cel } from '@objectstack/spec';
-import { PAYMENT_TERMS_OPTIONS } from '../../sales/objects/_picklists';
 import { QUOTE_DISCOUNT_CEILING } from '../../sales/objects/_thresholds';
 
 /**
@@ -228,8 +227,9 @@ export const Quote = ObjectSchema.create({
     payment_terms: Field.select({
       label: 'Payment Terms',
       group: 'terms',
-      // Canonical set shared with Contract (#490) — see _picklists.ts.
-      options: [...PAYMENT_TERMS_OPTIONS],
+      // The list shared with Contract (#490) —
+      // `src/revenue/picklists/payment_terms.picklist.ts`.
+      picklist: 'payment_terms',
     }),
     
     shipping_terms: Field.text({

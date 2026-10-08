@@ -2,7 +2,6 @@
 
 import { expression } from '@objectstack/spec';
 import { ObjectSchema, Field } from '@objectstack/spec/data';
-import { ATTENDEE_RESPONSE_OPTIONS } from './_picklists';
 
 /**
  * The ways an attendee row can name a person — ONE declaration, not two lists
@@ -325,7 +324,15 @@ export const EventAttendee = ObjectSchema.create({
       storage: { notNull: true },
       trackHistory: true,
       defaultValue: 'no_response',
-      options: [...ATTENDEE_RESPONSE_OPTIONS],
+      // The reason attendees are RECORDS rather than a JSON string on the
+      // activity (#592 acceptance): a per-attendee response only exists if the
+      // attendee does.
+      options: [
+        { label: 'No Response', value: 'no_response', color: '#808080', default: true },
+        { label: 'Accepted',    value: 'accepted',    color: '#00AA00' },
+        { label: 'Declined',    value: 'declined',    color: '#FF0000' },
+        { label: 'Tentative',   value: 'tentative',   color: '#FFA500' },
+      ],
     }),
 
     is_organizer: Field.boolean({

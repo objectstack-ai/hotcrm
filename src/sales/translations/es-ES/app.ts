@@ -6,7 +6,7 @@ import { QUOTE_DISCOUNT_CEILING } from '../../objects/_thresholds';
 
 /**
  * Español (es-ES) — every translation namespace EXCEPT `objects`:
- * `apps`, `messages`, `dashboards`, `datasets`, `pages`, `flows`.
+ * `apps`, `messages`, `dashboards`, `datasets`, `pages`, `flows`, `picklists`.
  *
  * SPLIT AXIS (#1311): translation NAMESPACE first, then CRM DOMAIN FAMILY.
  * Everything that is not `objects` lives in `./app.ts`; `objects` — 69-78% of
@@ -678,6 +678,49 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
             discount: { label: `Descuento % (≤ ${QUOTE_DISCOUNT_CEILING})`, placeholder: `0-${QUOTE_DISCOUNT_CEILING}` },
           },
         },
+      },
+    },
+  },
+  // Shared option lists (`src/<pkg>/picklists/*.picklist.ts`), translated ONCE:
+  // every field that references a list (`Field.select({ picklist })`) inherits
+  // these option labels, so a field-level `options` entry exists only for a
+  // field with inline options of its own.
+  picklists: {
+    salutation: {
+      label: 'Tratamiento',
+      options: { mr: 'Sr.', ms: 'Srta.', mrs: 'Sra.', dr: 'Dr.', prof: 'Prof.' },
+    },
+    industry: {
+      label: 'Industria',
+      options: {
+        technology: 'Tecnología', software: 'Software / SaaS', finance: 'Finanzas',
+        healthcare: 'Salud', retail: 'Comercio', manufacturing: 'Manufactura',
+        education: 'Educación', real_estate: 'Inmobiliaria', media: 'Medios y Entretenimiento',
+        logistics: 'Logística', hospitality: 'Hostelería', energy: 'Energía y Servicios Públicos',
+        government: 'Gobierno', nonprofit: 'Sin Ánimo de Lucro', other: 'Otro',
+      },
+    },
+    lead_source: {
+      label: 'Origen del Prospecto',
+      options: {
+        web: 'Web', referral: 'Referencia', event: 'Evento / Feria',
+        webinar: 'Seminario Web', partner: 'Socio', advertisement: 'Publicidad',
+        paid_search: 'Búsqueda de Pago', social: 'Redes Sociales', content: 'Contenido / Blog',
+        cold_call: 'Llamada en Frío', email_campaign: 'Campaña de Email', other: 'Otro',
+      },
+    },
+    payment_terms: {
+      label: 'Términos de Pago',
+      options: {
+        net_15: 'Neto 15', net_30: 'Neto 30', net_60: 'Neto 60',
+        net_90: 'Neto 90', due_on_receipt: 'Pago a la Recepción',
+      },
+    },
+    related_to_type: {
+      label: 'Tipo de Objeto Relacionado',
+      options: {
+        crm_account: 'Cuenta', crm_contact: 'Contacto', crm_opportunity: 'Oportunidad',
+        crm_lead: 'Prospecto', crm_case: 'Caso',
       },
     },
   },

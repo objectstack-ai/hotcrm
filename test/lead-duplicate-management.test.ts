@@ -9,10 +9,10 @@ import stack from '../objectstack.config';
 import { CrmTranslations } from '../src/sales/translations';
 import leadHooks from '../src/sales/objects/lead.hook';
 import {
+  Lead,
   DUPLICATE_OF_TYPE_AUTHORABLE_OPTIONS,
   DUPLICATE_OF_TYPE_ERASED,
-  DUPLICATE_OF_TYPE_OPTIONS,
-} from '../src/sales/objects/_picklists';
+} from '../src/sales/objects/lead.object';
 import { REPO_ROOT } from './helpers/repo-root';
 
 /**
@@ -38,6 +38,13 @@ import { REPO_ROOT } from './helpers/repo-root';
  */
 
 type AnyRec = Record<string, any>;
+
+/**
+ * The full COLUMN vocabulary — the authorable set plus the tombstone — read off
+ * the field itself, which is where it is declared (#2000 retired the separate
+ * `DUPLICATE_OF_TYPE_OPTIONS` constant: one field owns the list).
+ */
+const DUPLICATE_OF_TYPE_OPTIONS = (Lead.fields.duplicate_of_type.options ?? []) as AnyRec[];
 
 const objects: AnyRec[] = (stack as any).objects ?? [];
 const lead = objects.find((o) => o.name === 'crm_lead') as AnyRec;
@@ -512,8 +519,8 @@ describe('the erased tombstone is unauthorable, and has exactly one writer', () 
     // silent route this pin exists to refuse.
     expect(hits, `expected 2 occurrences, got:\n${hits.join('\n')}`).toHaveLength(2);
     expect(hits.map((h) => h.split(':')[0]).sort()).toEqual([
-      'src/sales/objects/_picklists.ts',
       'src/sales/objects/lead.hook.ts',
+      'src/sales/objects/lead.object.ts',
     ]);
     // The hook's one occurrence STAMPS the value; it is not a comparison that
     // happens to mention it.

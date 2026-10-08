@@ -59,16 +59,7 @@ export const customer: Record<string, ObjectTranslationData> = {
         // labels that are all nouns.
         options: { prospect: 'Prospecto', customer: 'Cliente', partner: 'Socio', former: 'Cliente Anterior' },
       },
-      industry: {
-        label: 'Industria',
-        options: {
-          technology: 'Tecnología', software: 'Software / SaaS', finance: 'Finanzas',
-          healthcare: 'Salud', retail: 'Comercio', manufacturing: 'Manufactura',
-          education: 'Educación', real_estate: 'Inmobiliaria', media: 'Medios y Entretenimiento',
-          logistics: 'Logística', hospitality: 'Hostelería', energy: 'Energía y Servicios Públicos',
-          government: 'Gobierno', nonprofit: 'Sin Ánimo de Lucro', other: 'Otro',
-        },
-      },
+      industry: { label: 'Industria' },
       annual_revenue: { label: 'Ingresos Anuales' },
       child_account_revenue: { label: 'Ingresos de Cuentas Hijas', help: 'Suma de los ingresos anuales de las cuentas hijas directas.' },
       number_of_employees: { label: 'Número de Empleados' },
@@ -172,10 +163,7 @@ export const customer: Record<string, ObjectTranslationData> = {
     description: 'Personas asociadas a las cuentas',
     fields: {
       // Mismo juego de valores que `crm_lead.salutation` — tradúzcanse igual.
-      salutation: {
-        label: 'Título',
-        options: { mr: 'Sr.', ms: 'Srta.', mrs: 'Sra.', dr: 'Dr.', prof: 'Prof.' },
-      },
+      salutation: { label: 'Título' },
       first_name: { label: 'Nombre' },
       last_name: { label: 'Apellido' },
       full_name: { label: 'Nombre Completo' },
@@ -226,15 +214,7 @@ export const customer: Record<string, ObjectTranslationData> = {
       mailing_address: { label: 'Dirección de Correo' },
       // Juego compartido con `crm_lead.lead_source` y
       // `crm_opportunity.lead_source` — los tres deben coincidir literalmente.
-      lead_source: {
-        label: 'Origen del Prospecto',
-        options: {
-          web: 'Web', referral: 'Referencia', event: 'Evento / Feria',
-          webinar: 'Seminario Web', partner: 'Socio', advertisement: 'Publicidad',
-          paid_search: 'Búsqueda de Pago', social: 'Redes Sociales', content: 'Contenido / Blog',
-          cold_call: 'Llamada en Frío', email_campaign: 'Campaña de Email', other: 'Otro',
-        },
-      },
+      lead_source: { label: 'Origen del Prospecto' },
       do_not_call: { label: 'No Llamar' },
       email_opt_out: { label: 'Excluir de Correos' },
       last_contacted_date: { label: 'Último contacto' },

@@ -2,7 +2,6 @@
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
 import { P } from '@objectstack/spec';
-import { TASK_TYPE_OPTIONS } from './_picklists';
 
 export const Task = ObjectSchema.create({
   name: 'crm_task',
@@ -115,9 +114,19 @@ export const Task = ObjectSchema.create({
     type: Field.select({
       group: 'basic',
       label: 'Task Type',
-      // Canonical set (#490) — the schedule_followup screen renders the same
-      // list; see _picklists.ts.
-      options: [...TASK_TYPE_OPTIONS],
+      // The one task-type list. The schedule_followup screen
+      // (`src/sales/flows/schedule-followup.flow.ts`) renders this field's own
+      // options rather than a copy — it had drifted to a 5-value copy missing
+      // `other` (#490). A single field owns it, so it is inline rather than a
+      // shared `picklist` (#2000).
+      options: [
+        { label: 'Call', value: 'call' },
+        { label: 'Email', value: 'email' },
+        { label: 'Meeting', value: 'meeting' },
+        { label: 'Follow-up', value: 'follow_up' },
+        { label: 'Demo', value: 'demo' },
+        { label: 'Other', value: 'other' },
+      ],
     }),
     
     // Dates
@@ -141,13 +150,9 @@ export const Task = ObjectSchema.create({
     related_to_type: Field.select({
       group: 'related',
       label: 'Related To Type',
-      options: [
-        { label: 'Account', value: 'crm_account' },
-        { label: 'Contact', value: 'crm_contact' },
-        { label: 'Opportunity', value: 'crm_opportunity' },
-        { label: 'Lead', value: 'crm_lead' },
-        { label: 'Case', value: 'crm_case' },
-      ]
+      // The list shared with crm_event — `src/sales/picklists/related_to_type.picklist.ts`.
+      // This field used to carry a hand-copied five-value list of its own.
+      picklist: 'related_to_type',
     }),
     
     related_to_account: Field.lookup('crm_account', {
