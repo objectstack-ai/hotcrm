@@ -232,7 +232,7 @@ export const Contract = ObjectSchema.create({
     apiMethods: ['get', 'list', 'create', 'update', 'delete'],
     // #602 — the executed contract itself. `document_url` remains the pointer
     // to an external DMS copy; this is where the file actually lives.
-    // See the canonical capability note in `src/objects/index.ts`.
+    // See the canonical capability note in `src/sales/objects/index.ts`.
     files: true,
   },
   
@@ -284,5 +284,5 @@ export const Contract = ObjectSchema.create({
   // Workflow Rules
   // ⚠️ No `workflows[]` here, and none is possible: object `workflows[]` were
   // removed from the platform. Field updates live in this object's `*.hook.ts`;
-  // scheduled status flips and notifications live in `src/flows/*.flow.ts`.
+  // scheduled status flips and notifications live in `src/*/flows/*.flow.ts`.
 });

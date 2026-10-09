@@ -348,8 +348,9 @@ const quoteAcceptedContractDraft: Hook = {
      * `crm_contract.payment_terms`'s own option default `net_30` on every
      * accepted quote, including one negotiated at `due_on_receipt`; and the
      * contract's `payment_terms` is one of the fields
-     * `src/flows/billing-handoff.flow.ts` POSTs to billing when the contract
-     * activates, so a defaulted term becomes an invoicing term.
+     * `src/revenue/flows/billing-handoff-contract-activated.flow.ts` POSTs to
+     * billing when the contract activates, so a defaulted term becomes an
+     * invoicing term.
      *
      * Read like `totalPrice` above: the patch's value when the accepting write
      * carried one, else the value already on the quote — `pickId`'s rule
@@ -376,8 +377,9 @@ const quoteAcceptedContractDraft: Hook = {
      *     so this line is the only thing that ever picks one: every
      *     auto-drafted contract in the app is a subscription and the other
      *     five types are unreachable on this path. It does not stay here
-     *     either — `src/flows/billing-handoff.flow.ts` POSTs `contract_type`
-     *     to billing when the contract activates;
+     *     either —
+     *     `src/revenue/flows/billing-handoff-contract-activated.flow.ts`
+     *     POSTs `contract_type` to billing when the contract activates;
      *   - `start_date` — the one member that is not a literal: the date the
      *     quote happened to be ACCEPTED, which is not necessarily the date the
      *     customer's term begins. A placeholder RULE rather than a placeholder
