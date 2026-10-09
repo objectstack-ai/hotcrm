@@ -24,6 +24,10 @@ export const Account = ObjectSchema.create({
   // search silently return zero. These are real, indexed columns.
   searchableFields: ['name', 'account_number', 'registration_number'],
   highlightFields: ['account_number', 'name', 'type', 'owner_id'],
+  // The record's picture (#1199): the record chrome draws the logo beside the
+  // title in every account page header. No logo, no picture: the platform
+  // draws no placeholder or initials in its place.
+  imageField: 'logo',
 
   // Field groups organize the form layout. Array order == display order.
   // Each field below opts in via `group: '<key>'`.
