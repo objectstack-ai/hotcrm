@@ -507,10 +507,37 @@ const opportunityWonHook: Hook = {
  * they did before the gate existed.
  *
  * ⚠️ A read that THROWS is not in that list and is deliberately not caught. A
- * denied or broken read is not evidence that the account is sellable, and the
- * one shape that can produce it here — a caller who cannot see the account at
- * all — could not have picked it in the lookup either. Swallowing it would
- * make the gate silently absent exactly when the platform cannot answer.
+ * broken read is not evidence that the account is sellable; swallowing it
+ * would make the gate silently absent exactly when the platform cannot answer.
+ *
+ * ## `runAs: 'system'`, and a refusal that names no account (#2014)
+ *
+ * As the caller, the verdict was read under the caller's record access — and a
+ * rep who cannot read the account is not refused that read: record-level
+ * access FILTERS it, `findOne` answers `null`, the gate took that for "cannot
+ * be found" and stood down, and the engine's reference check accepted the link
+ * (measured on 17.7.0: an outsider opened a deal on a Settlement Only account
+ * they cannot read). Whether an account is sellable is the account's
+ * commercial fact, not a privilege of whoever names it, so the gate reads it
+ * elevated (AGENTS.md rule 9 — the read is the one thing elevated; the deal
+ * write stays the caller's).
+ *
+ * What elevation reads must not leak back through the refusal. Maintainer
+ * ruling on #2014 (option B): the refusal says "this account" and names none —
+ * no number, no name, no id — and states nothing it read beyond the one fact
+ * that blocks the deal, the Settlement Only verdict. It supersedes #1243's
+ * "name the account the way the UI does" on this one path: the caller chose
+ * the account on the very form the refusal answers, so the dialog stays clear
+ * without echoing an account the caller may not be allowed to read. So the read
+ * asks for `commercial_capability` and nothing else.
+ *
+ * Organization (AGENTS.md rule 10): the read is pinned to the new deal's own
+ * `organization_id` when it carries one, so an elevated verdict is never read
+ * from another organization's account; a deal with no organization (a
+ * single-organization install) has no wall to stay inside, and is not pinned.
+ * An account outside the deal's organization then reads as "cannot be found"
+ * and the gate stands down — the same answer a person's tenant-scoped read
+ * already gives.
  *
  * ⛔ No system-write exemption, deliberately, and it is the same reading the
  * two approval flows record: a control that engages only for writers carrying a
@@ -525,6 +552,7 @@ const opportunityAccountCapabilityHook: Hook = {
   object: 'crm_opportunity',
   events: ['beforeInsert'],
   priority: 150,
+  runAs: 'system',
   description:
     'Refuse a NEW opportunity linked to an account whose commercial capability is settlement only.',
   handler: async (ctx: HookContext) => {
@@ -552,20 +580,16 @@ const opportunityAccountCapabilityHook: Hook = {
     const accountId = ctx.input.crm_account;
     if (typeof accountId !== 'string' || accountId === '') return;
 
+    const org = ctx.input.organization_id;
     const account = await api.object('crm_account').findOne({
-      where: { id: accountId },
-      fields: ['name', 'account_number', 'commercial_capability'],
+      where: { id: accountId, ...(typeof org === 'string' && org ? { organization_id: org } : {}) },
+      fields: ['commercial_capability'],
     });
     if (!account || account.commercial_capability !== 'settlement_only') return;
 
-    // Name the account the way every screen names it — `crm_account.nameField`
-    // is the `display_title` formula over `account_number` and `name`. ⛔ Never
-    // the record id: it matches no surface a user has ever seen (#1243).
-    const number = typeof account.account_number === 'string' ? account.account_number.trim() : '';
-    const name = typeof account.name === 'string' ? account.name.trim() : '';
-    const label = [number, name].filter(Boolean).join(' - ');
+    // ⛔ "this account", never a number, a name or an id — see the note above.
     throw refuse(
-      `Cannot open an opportunity against ${label ? `account ${label}` : 'this account'}: its Commercial Capability is Settlement Only, so it is available for billing and payment but no new business may be booked against it. Pick a different account, or have the account reclassified to Full first.`,
+      'Cannot open an opportunity against this account: its Commercial Capability is Settlement Only, so it is available for billing and payment but no new business may be booked against it. Pick a different account, or have the account reclassified to Full first.',
       'VALIDATION_FAILED',
       400,
     );

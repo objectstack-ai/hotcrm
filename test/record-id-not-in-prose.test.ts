@@ -167,7 +167,7 @@ describe('task subjects name the record, not its primary key', () => {
 
 /**
  * A manager presents and accepts a quote; returns the contract document
- * `quote_on_accepted` handed the engine, plus the quote as stored just
+ * `quote_accepted_contract_draft` handed the engine, plus the quote as stored just
  * before acceptance. `stored` is applied as the SYSTEM before acceptance — it
  * is how a quote whose stored number is blank reaches the hook.
  */

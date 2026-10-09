@@ -26,12 +26,17 @@ type Rec = Record<string, any>;
  * Neither is visible to a metadata check, and neither is visible to a hook test
  * that watches a stand-in's row change: the stand-in has no readonly semantics.
  * So every case here is a real write on the shipped app booted by
- * `@objectstack/verify`: a sales rep logging an interaction or completing a
- * task through the engine's write door (`hooks.run`), under the rep's own —
- * non-system — context, which is the only place the strip actually happens;
- * the parents are written as the system and what is asserted is the stored
- * row. The bubbles are `async: true` hooks, so a stamp is waited for, and a
- * claim that one wrote NOTHING is read off the writes the engine received.
+ * `@objectstack/verify`: a sales rep (or a service agent) logging an
+ * interaction or completing a task through the engine's write door
+ * (`hooks.run`), under their own — non-system — context; the parents are
+ * written as the system and what is asserted is the stored row. The bubbles
+ * are `async: true` hooks, so a stamp is waited for, and a claim that one wrote
+ * NOTHING is read off the writes the engine received.
+ *
+ * A third defect, #2014: the bubbles wrote as the person who logged the
+ * interaction, so the person's own grants decided whether the clock moved — a
+ * service agent (no edit right on accounts) never moved it. They declare
+ * `runAs: 'system'` now; the agent cases below pin that.
  */
 
 type AnyRec = Record<string, any>;
@@ -41,11 +46,15 @@ const objectByName = new Map(objects.map((o) => [o.name as string, o]));
 
 let verify: VerifyStack;
 let rep: Person;
+let agent: Person;
 let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   rep = await signUpPerson(verify, 'rep@activity-recency.test', {
     name: 'Sales Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+  });
+  agent = await signUpPerson(verify, 'agent@activity-recency.test', {
+    name: 'Service Agent', positions: ['service_agent'], permissionSets: ['service_agent'],
   });
 }, 120_000);
 
@@ -214,17 +223,41 @@ describe('event_activity_bubble only fires for an interaction that happened', ()
   });
 
   it('never propagates a write failure — the bubble is best-effort', async () => {
-    // A rep logging a call against an account they cannot touch: the bubble's
-    // read finds nothing it may write, and the call is still recorded.
-    const outsider = await signUpPerson(verify, `outsider${++k}@activity-recency.test`, {
-      name: 'Other Rep', permissionSets: ['sales_rep'],
-    });
+    // The engine refuses the account stamp — staged on the real engine, since
+    // the elevated bubble (#2014) is no longer refused by the logger's own
+    // grants — and the call is still recorded.
     const { account } = await parents();
-    const event = await verify.hooks.run('crm_event', 'insert', {
-      subject: 'Called a stranger', type: 'call', status: 'held', start_datetime: '2026-08-04T09:00:00.000Z',
-      related_to_account: account.id,
-    }, { as: outsider.token });
+    const refused = recordEngineWrites(verify, (op, object) =>
+      (op === 'update' && object === 'crm_account' ? new Error('write rejected') : undefined));
+    let event: Rec;
+    try {
+      event = await logEvent({ subject: 'Called a stranger', related_to_account: account.id });
+      await vi.waitFor(() => expect(refused.of('crm_account', 'update').length, 'the bubble never reached the account').toBeGreaterThan(0),
+        { timeout: 10_000, interval: 25 });
+      await Promise.all(refused.writes.map((w) => w.settled));
+    } finally {
+      refused.restore();
+    }
     expect((await verify.rows('crm_event', { id: event.id }))[0], 'the event write was lost').toBeTruthy();
+  });
+
+  /**
+   * #2014. A service agent holds no edit right on accounts, and the bubble used
+   * to write as the person who logged the interaction — so an agent's held
+   * call on their own case never reached the account's activity clock (the
+   * refusal swallowed best-effort), while an admin's identical call stamped
+   * it. Measured on 17.7.0 before the bubble declared `runAs: 'system'`.
+   */
+  it('a service agent’s held call on their own case stamps the case account', async () => {
+    const [account] = await verify.seed('crm_account', [{ name: `Agent Recency Co ${++k}`, owner_id: rep.id }]);
+    const kase = await verify.hooks.run('crm_case', 'insert', {
+      subject: `Agent call ${k}`, description: 'Customer rang about an invoice.', crm_account: account!.id, status: 'in_progress',
+    }, { as: agent.token });
+    await verify.hooks.run('crm_event', 'insert', {
+      subject: `Called back ${k}`, type: 'call', status: 'held', start_datetime: '2026-08-04T09:00:00.000Z', related_to_case: kase.id,
+    }, { as: agent.token });
+    expect(await stamped('crm_account', account!.id, 'last_activity_date')).toBe(today());
+    expect((await stored('crm_account', account!.id)).updated_by, 'the stamp was recorded as nobody’s write').toBe(agent.id);
   });
 
   it('stamps a DATE on the account and an INSTANT on the people', async () => {
@@ -314,9 +347,10 @@ describe('the recency columns are writable by a non-system caller (#2948)', () =
    * `buildHookApi(execCtx)` → `new ScopedContext(execCtx, this)` over the ACTING
    * USER's context, so every bubble the app ever performed was thrown away here.
    *
-   * The bubble cases above are exactly that path; this one writes each column
-   * as the rep, directly, so a `readonly: true` creeping back onto any of the
-   * three fails here by name.
+   * Since #2014 the bubbles write elevated, so the strip no longer reaches
+   * them; the columns stay plain so that a person's own edit of them lands as
+   * well. This writes each column as the rep, directly, so a `readonly: true`
+   * creeping back onto any of the three fails here by name.
    */
   const RECENCY: Array<[string, string, string]> = [
     ['crm_account', 'last_activity_date', '2026-08-04'],

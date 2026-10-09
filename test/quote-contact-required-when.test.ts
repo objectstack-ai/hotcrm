@@ -17,7 +17,8 @@ import { quotes } from '../src/revenue/data/revenue.seed';
  * `crm_contract.crm_contact` is `required` + `notNull`, so a contact-less quote
  * that reached `accepted` could never draft its contract. Since #1013 that
  * failure is honest (`Primary Contact is required`, and it no longer swallows
- * the close-won leg) — but `quote_on_accepted` is `async: true` +
+ * the close-won leg) — but the draft (`quote_accepted_contract_draft` since
+ * #2014) is `async: true` +
  * `onError: 'log'`, so the accepting write still answers 200 and the refusal
  * lands in a server log with no human in front of it.
  *
@@ -367,7 +368,7 @@ describe('a row that was ALREADY presented when the rule landed', () => {
    * So a pre-existing `presented`-without-contact quote is NOT bricked — it
    * reads, and ordinary edits still land. The cost of that is the last case
    * here: such a row can still be walked on to `accepted`, where it meets the
-   * pre-#1017 behaviour (`quote_on_accepted` cannot draft the contract, and
+   * pre-#1017 behaviour (`quote_accepted_contract_draft` cannot draft the contract, and
    * says so in the log). This repo ships no such row — `the stock data clears
    * the new gate` below enumerates the seeds — so the residue is empty here;
    * it is pinned so that the boundary is a recorded measurement rather than
