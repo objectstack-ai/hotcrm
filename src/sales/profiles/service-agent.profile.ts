@@ -11,7 +11,7 @@ export const ServiceAgentProfile = {
     // private object with no scope had silently locked agents out of every
     // account they didn't personally own.
     // `allowExport` where an export surface exists — canonical note in
-    // `src/profiles/index.ts`. `crm_opportunity` carries no export bit: this
+    // `src/sales/profiles/index.ts`. `crm_opportunity` carries no export bit: this
     // set has no read on it at all, and the axis never widens read.
     crm_lead:        { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, allowExport: true },
     crm_account:     { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, allowExport: true },
@@ -24,7 +24,7 @@ export const ServiceAgentProfile = {
     // sees only their own tasks on it (#549).
     crm_case:        { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const, allowExport: true },
     // `allowTransfer` on `crm_task` ONLY — canonical note in
-    // `src/profiles/index.ts`. Narrow and load-bearing: escalating a case fires
+    // `src/sales/profiles/index.ts`. Narrow and load-bearing: escalating a case fires
     // `case_status_side_effects`, which opens the follow-up task OWNED BY the
     // account owner (`case.hook.ts`). That insert runs on `ctx.api` with the
     // agent's own context, so planting it under another user is a transfer and
@@ -83,7 +83,7 @@ export const ServiceAgentProfile = {
  *
  * ### What was ruled
  *
- * `service_manager` is a declared position (`src/sharing/positions.ts`) that
+ * `service_manager` is a declared position (`src/sales/sharing/positions.ts`) that
  * `case_escalation_sharing` names and that `case_escalation_reassign` routes
  * escalating cases to — measured, 35 of them on a demo box — and no permission
  * set reached it, so the persona was denied every CRM object (403). Director

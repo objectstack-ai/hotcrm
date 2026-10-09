@@ -119,7 +119,7 @@ const caseValidation: Hook = {
     // `escalation_reason` is pipeline, not a fact a submitter states about
     // themselves — the rule this branch declares — and every real writer is
     // staff-side (`case_escalation`, `case_sla_monitor`, the `escalate_case`
-    // screen flow). The public `web_to_case` form (`src/views/case.view.ts`)
+    // screen flow). The public `web_to_case` form (`src/service/views/case.view.ts`)
     // collects exactly `subject`, `description`, `type` and `priority`, so
     // nulling this drops nothing any guest surface asks for. `guest_portal`
     // grants `crm_case.allowCreate` at the OBJECT level with no field
@@ -350,8 +350,8 @@ const caseSideEffects: Hook = {
     // caller holds `allowTransfer`. This insert runs on `ctx.api`, which
     // carries the CALLER's context (not a system one), so the guard applies —
     // hence the `crm_task.allowTransfer` grant on `service_agent` (see
-    // `src/profiles/service-agent.profile.ts`, and the canonical note in
-    // `src/profiles/index.ts`). One ownership column means one answer, and the
+    // `src/sales/profiles/service-agent.profile.ts`, and the canonical note in
+    // `src/sales/profiles/index.ts`). One ownership column means one answer, and the
     // answer is the person who must act.
     //
     // The CASE itself has already changed hands by the time this runs, on the

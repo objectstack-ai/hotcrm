@@ -110,7 +110,7 @@ const monthEndAgo = (n: number) => new Date(Date.UTC(forecastYear, forecastMonth
 
 /**
  * The three open-pipeline buckets of a settled snapshot, in the shape the
- * forecast object defines them (`src/objects/forecast.object.ts`).
+ * forecast object defines them (`src/sales/objects/forecast.object.ts`).
  *
  * The buckets are CUMULATIVE subsets of one another, so every row satisfies
  * `pipeline >= bestCase >= commit`. Named rather than positional: three bare
@@ -170,7 +170,7 @@ const closedPeriod = (
 // loader matches against the whole table, so a re-seed could overwrite a real
 // rep's snapshot with the demo numbers. Why a synthetic key and not the true
 // (owner, period, period_start) identity or an insert-once mode: see the
-// `seed_key` declaration in `src/objects/forecast.object.ts`.
+// `seed_key` declaration in `src/sales/objects/forecast.object.ts`.
 //
 // The keys are POSITIONAL ('current month', 'two quarters back'), not calendar
 // values, because the records are positional — recomputed against `new Date()`

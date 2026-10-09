@@ -62,7 +62,7 @@ export const EscalateCaseFlow: Flow = {
       // The two stamps a person never types — `is_escalated` and
       // `escalated_date` — are `readonly: true` on `crm_case` and are written
       // by the `case_escalation_stamp` subflow that follows, with the system
-      // context. See `src/flows/case-escalation-stamp.flow.ts`.
+      // context. See `src/service/flows/case-escalation-stamp.flow.ts`.
       //
       // ⚠️ `status: 'escalated'` MUST stay in this node, and not only because
       // it is user-writable: it is the trigger both escalation hooks key off —
@@ -135,7 +135,7 @@ export const CloseCaseFlow: Flow = {
   // it). The standing rule is the opposite one: a screen flow stays
   // `runAs: 'user'` and a write that genuinely needs elevation is split into a
   // dedicated `system` sub-flow reached by a `subflow` node — see
-  // `escalate_case` above and `src/flows/case-escalation-stamp.flow.ts`.
+  // `escalate_case` above and `src/service/flows/case-escalation-stamp.flow.ts`.
   // "Readonly stripped my write, so I made the flow system" is the pattern
   // that ruling exists to stop being copied; `AGENTS.md` house rule 9 carries
   // it as house policy. This flow predates that rule and has not been
@@ -186,7 +186,7 @@ export const CloseCaseFlow: Flow = {
     {
       // `resolved_by_article` is written unconditionally, and a blank one is
       // normalised to NULL by `case_resolution_article_normalize`
-      // (`src/objects/case.hook.ts`) rather than branched around here: MEASURED
+      // (`src/service/objects/case.hook.ts`) rather than branched around here: MEASURED
       // on the real engine, a screen field left empty resumes as `''` and lands
       // as an empty string, which `count(resolved_by_article)` counts. A
       // `decision` node could not have branched it either — this repo has
@@ -221,7 +221,7 @@ export const CloseCaseFlow: Flow = {
  *
  * The claim already exists as behaviour: an agent moves an unowned case out of
  * **Unassigned — triage** by setting its status to one that means a person is
- * on it, and `case_self_claim` (`src/objects/_case-assignment.ts`, priority
+ * on it, and `case_self_claim` (`src/service/objects/_case-assignment.ts`, priority
  * 260) stamps `owner_id` with the caller. This flow is the screen that says so.
  *
  * It is **pure UI over the existing seam**. Its one write is the

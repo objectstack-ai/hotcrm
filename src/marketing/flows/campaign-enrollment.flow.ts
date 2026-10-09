@@ -207,7 +207,7 @@ export const CampaignEnrollmentFlow: Flow = {
               // fold this back by giving THIS flow `runAs: 'system'`: it would
               // also lift RLS off `query_leads` / `query_contacts`, and
               // `crm_lead` is `sharingModel: 'private'`.
-              // See `src/flows/campaign-member-enroll.flow.ts`.
+              // See `src/marketing/flows/campaign-member-enroll.flow.ts`.
               id: 'create_campaign_member', type: 'subflow', label: 'Add to Campaign',
               config: {
                 flowName: 'campaign_lead_member_enroll',

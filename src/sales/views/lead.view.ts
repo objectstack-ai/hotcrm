@@ -209,7 +209,7 @@ export const LeadViews = defineView({
     // hook reads it into the SECOND argument of `onNavigate` — the slot that
     // otherwise carries the literal mode string, `r(t, d ?? 'view')` — so it
     // named nothing and selected nothing. The record page here is rendered by
-    // `lead_detail_page` (`src/pages/lead_detail.page.ts`), not by a named
+    // `lead_detail_page` (`src/sales/pages/lead_detail.page.ts`), not by a named
     // form view, and clicking a row behaved identically with the key present,
     // with it absent, and on a list that never declared it. `detail_form`
     // below stays: it is this file's one TABBED layout example, and it was

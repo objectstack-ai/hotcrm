@@ -14,7 +14,7 @@ import { QUOTE_DISCOUNT_CEILING } from '../../objects/_thresholds';
  * follows its master. A new row goes in the file for ITS family, never in
  * whichever file is already open: that is how one file re-grows past the 70%
  * advisory band `pnpm hygiene` prints. Full rule and rationale:
- * `src/translations/zh-CN.ts`.
+ * `src/sales/translations/zh-CN.ts`.
  *
  * A namespace `TranslationData` gains later lands here too, and the room is
  * measured: this file is the smaller half of the bundle, and the schema bounds

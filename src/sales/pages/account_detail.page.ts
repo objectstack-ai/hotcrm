@@ -82,7 +82,7 @@ export const AccountDetailPage = {
         // `z.array(z.string())` ("Action IDs to show in header") in
         // @objectstack/spec 17.3.0, and this repo authors against the protocol
         // (#1653). Each id is the `name` of a crm_account-scoped action in
-        // `src/actions/global.actions.ts`.
+        // `src/sales/actions/activity-actions.ts`.
         actions: ['log_call', 'log_meeting', 'schedule_meeting'],
       },
     },

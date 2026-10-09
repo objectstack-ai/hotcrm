@@ -295,7 +295,7 @@ export const Contact = ObjectSchema.create({
   enable: {
     apiEnabled: true,
     // #602 — signed NDAs, business cards, meeting notes attach to the person.
-    // See the canonical capability note in `src/objects/index.ts`.
+    // See the canonical capability note in `src/sales/objects/index.ts`.
     files: true,
   },
   
@@ -331,5 +331,5 @@ export const Contact = ObjectSchema.create({
 
   // ⚠️ No `workflows[]` here, and none is possible: object `workflows[]` were
   // removed from the platform. Field updates live in this object's `*.hook.ts`;
-  // scheduled status flips and notifications live in `src/flows/*.flow.ts`.
+  // scheduled status flips and notifications live in `src/*/flows/*.flow.ts`.
 });

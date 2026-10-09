@@ -168,7 +168,7 @@ export const CaseSlaMonitorFlow: Flow = {
               // ⚠️ THE ASSIGNMENT IS NOT AUTHORED HERE, AND MUST NOT BE.
               // `flag_breach` writes `status: 'escalated'`, and that IS the
               // escalation transition `case_escalation_reassign`
-              // (`src/objects/_case-assignment.ts`, `beforeUpdate`, priority
+              // (`src/service/objects/_case-assignment.ts`, `beforeUpdate`, priority
               // 250) fires on: it stamps the least-loaded holder of the
               // `service_manager` position onto the payload of the update
               // already in flight. So the sweep does not need a seam to "call"

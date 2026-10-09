@@ -93,7 +93,7 @@ export const OpportunityViews = defineView({
     // Aggregate is the right shape here because the body already loops over the
     // selection itself, and because the run is all-or-nothing: a partial result
     // rejects instead of leaving the bar reporting per-row success it cannot
-    // honour (see the body in `src/actions/opportunity.actions.ts`).
+    // honour (see the body in `src/sales/actions/opportunity.actions.ts`).
     //
     // `execution: 'aggregate'` is REQUIRED on an `operation: 'custom'` def and
     // is not boilerplate: a custom def without it has no dispatcher, so the

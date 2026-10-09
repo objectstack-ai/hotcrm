@@ -103,7 +103,7 @@ export const CaseEscalationFlow: Flow = {
         // and would orphan the case under a phantom owner. The hand-off does not
         // need to happen here: this very update fires the
         // `case_escalation_reassign` beforeUpdate hook
-        // (`src/objects/_case-assignment.ts`), which puts the case with the
+        // (`src/service/objects/_case-assignment.ts`), which puts the case with the
         // least-loaded holder of the flat `service_manager` position — a pool,
         // which the app can resolve, rather than a manager chain, which it
         // cannot. With that pool unstaffed the case keeps its owner and this
@@ -120,8 +120,8 @@ export const CaseEscalationFlow: Flow = {
       // Gateway only — the live predicate is on the out-edge `e4`. The engine
       // never reads a `decision` node's singular `config.condition`, so a copy
       // here would restate the gate without BEING the gate
-      // (`flow-inert-node-condition`); `test/flow-decision-authority.test.ts`
-      // enforces that.
+      // (`flow-inert-node-condition`); `pnpm lint` — `os lint --strict` —
+      // fails on that.
       //
       // Why the gate exists: `crm_case.owner_id` is NULLABLE and an unowned case
       // is an ordinary state — this repo ships `scripts/backfill-owner-id.ts`

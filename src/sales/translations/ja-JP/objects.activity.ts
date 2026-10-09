@@ -14,7 +14,7 @@ import type { ObjectTranslationData } from '@objectstack/spec/system';
  * follows its master. A new row goes in the file for ITS family, never in
  * whichever file is already open: that is how one file re-grows past the 70%
  * advisory band `pnpm hygiene` prints. Full rule and rationale:
- * `src/translations/ja-JP.ts`.
+ * `src/sales/translations/ja-JP.ts`.
  */
 const relatedToTypeOptions = {
   crm_account: '取引先', crm_contact: '取引先責任者', crm_opportunity: '商談',

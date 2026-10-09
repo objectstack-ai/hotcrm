@@ -21,9 +21,9 @@ import { pipelineByStageFunnelWidget } from './shared-widgets';
  * silently, which is the property a second hand-copy could not have.
  *
  * The strings are the language packs' own, copied from
- * `src/translations/<locale>/objects.pipeline.ts`
+ * `src/sales/translations/<locale>/objects.pipeline.ts`
  * (`crm_lead.fields.lead_source.options`; ja-JP resolves them through
- * `src/translations/ja-JP/_shared.ts`), so the filter bar does not coin a
+ * `src/sales/translations/ja-JP/_shared.ts`), so the filter bar does not coin a
  * second vocabulary for a value the record page already labels. They are
  * spelled inline rather than reached through `GlobalFilterSchema.object`,
  * which is inert in this Console build — measured on #1822, see `./index.ts`.

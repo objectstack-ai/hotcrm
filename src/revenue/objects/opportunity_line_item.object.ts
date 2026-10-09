@@ -66,7 +66,7 @@ export const OpportunityLineItem = ObjectSchema.create({
   // ⚠️ Neither group may be a subset of the highlight strip: a synthesized
   // detail page hoists the title plus the first four `highlightFields` out of
   // the body, so an all-hoisted group renders on forms and nowhere else
-  // (`field-group-shadowed`; `test/field-groups-coverage.test.ts` pins it).
+  // (`field-group-shadowed`; `pnpm lint` — `os lint --strict` — fails on it).
   // `basic` keeps crm_opportunity/description/line_number and `pricing` keeps
   // list_price/discount outside that strip, so both survive the hoist.
   fieldGroups: [

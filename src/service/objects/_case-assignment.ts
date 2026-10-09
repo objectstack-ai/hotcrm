@@ -93,7 +93,7 @@ export const SERVICE_MANAGER_POSITION = 'service_manager';
  * Load balancing counts OPEN cases, and `is_closed` is the wrong predicate:
  * it only flips on `closed`, so a pile of `resolved` cases would keep counting
  * against an agent who has already finished them. `case_sla_monitor` settles it
- * the same way — see the `$nin` note in `src/flows/case-sla-monitor.flow.ts`,
+ * the same way — see the `$nin` note in `src/service/flows/case-sla-monitor.flow.ts`,
  * which also records that comparing the boolean `is_closed` walks into the
  * SQLite `1 != true` trap.
  */
@@ -156,7 +156,7 @@ export const CLAIMABLE_TARGET_STATUSES = [
  * `service_agent` position the pool is empty and this hook is a NO-OP: the case
  * is created and stays ownerless. Never blocking intake is correct, but silent
  * ownerlessness hides the problem, so the no-op path has a UI counterpart — the
- * `unassigned_triage` pinned tab on `crm_case` (`src/views/case.view.ts`) shows
+ * `unassigned_triage` pinned tab on `crm_case` (`src/service/views/case.view.ts`) shows
  * exactly the cases this hook could not place.
  *
  * ## Best-effort, always
@@ -243,7 +243,7 @@ export function createCaseRoundRobinAssign(hookName = 'case_auto_assign'): Hook 
  * the agent who could not get to the case in time stays the only person who can
  * work it.
  *
- * ⚠️ Positions are FLAT (`src/sharing/positions.ts`), so "the owner's manager"
+ * ⚠️ Positions are FLAT (`src/sales/sharing/positions.ts`), so "the owner's manager"
  * is not resolvable in this app — and a flow template referencing a lookup
  * traversal such as `{caseRecord.owner_id.manager}` interpolates to the literal
  * string `undefined` rather than failing. That is why the hand-off is a hook
@@ -281,7 +281,7 @@ export function createCaseRoundRobinAssign(hookName = 'case_auto_assign'): Hook 
  *
  * `sys_user_position` membership is runtime data, and `service_manager` is
  * unstaffed on a fresh install. ⚠️ The demo org is NO LONGER one of those: #1102
- * staffs Tomas Okafor into the position (`src/sharing/demo-staffing.ts`), so the
+ * staffs Tomas Okafor into the position (`src/sales/sharing/demo-staffing.ts`), so the
  * exemplar now demonstrates the hand-off rather than the stand-down — which is
  * also what makes the sweep's assignment visible on this repo's own seed.
  *
@@ -435,7 +435,7 @@ export function createCaseEscalationReassign(hookName = 'case_escalation_reassig
  * payload and is inert unless the STORED row is ownerless. The alternative,
  * granting `crm_case.allowTransfer`, cannot express "to yourself only": it
  * would let an agent reassign any case they can edit, to anyone.
- * `src/profiles/service-agent.profile.ts` needs no new grant for this hook.
+ * `src/sales/profiles/service-agent.profile.ts` needs no new grant for this hook.
  *
  * ## The four boundaries
  *
@@ -510,7 +510,7 @@ export function createCaseSelfClaim(hookName = 'case_self_claim'): Hook {
       // 4. …and only one that is not CLOSED. ⚠️ This guard and the triage
       //    sharing grant draw DIFFERENT lines on purpose, and ⛔ neither is to
       //    be "aligned" onto the other. `case_unassigned_triage_sharing`
-      //    (`src/sharing/case.sharing.ts`) excludes `resolved` as well as
+      //    (`src/service/sharing/case.sharing.ts`) excludes `resolved` as well as
       //    `closed`, because a resolved unowned case is history, not backlog,
       //    and the tab's row count has to keep meaning "work waiting for a
       //    human". This guard stops at `closed` alone, because REOPENING a

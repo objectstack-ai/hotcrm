@@ -36,7 +36,7 @@ export const SalesRepProfile = {
   // objectstack-ai/objectstack#5386 fixed that upstream and it shipped in rc.4.
   objects: {
     // `allowExport` where an export surface exists — canonical note in
-    // `src/profiles/index.ts`. Safe alongside `readScope: 'own'`: export is
+    // `src/sales/profiles/index.ts`. Safe alongside `readScope: 'own'`: export is
     // read-derived, so a rep's CSV carries their own book, not the org's.
     crm_lead:        { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const, allowExport: true },
     crm_account:     { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const, allowExport: true },

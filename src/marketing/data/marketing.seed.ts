@@ -7,7 +7,7 @@
  * block is DERIVED from them rather than typed in — see `campaignMetrics`.
  *
  * Split out of the former monolithic `src/data/index.ts` (#635). Seed doctrine
- * lives in `./_shared.ts`.
+ * lives in `src/sales/data/_shared.ts`.
  */
 import { defineSeed } from '@objectstack/spec/data';
 import { cel } from '@objectstack/spec';
@@ -136,10 +136,12 @@ const CAMPAIGN_MEMBERS: Record<string, readonly CampaignMemberSpec[]> = {
  * That first recompute now arrives much sooner than it used to. Before #597 the
  * only writer fired on the `→ completed` transition, so these seeded values
  * were the ONLY numbers a live campaign ever showed; today any membership,
- * attribution or conversion change refreshes them (see
- * `src/objects/_campaign-metrics.ts`). The derivation below is therefore a
- * mirror of that module and has to stay one — `test/seed-consistency.test.ts`
- * checks the seeds against it.
+ * attribution or conversion change refreshes them (see the four refresh hooks:
+ * `campaign_metrics_refresh` and `campaign_member_metrics_refresh` in
+ * `src/marketing/objects/`, `campaign_lead_conversion_refresh` and
+ * `campaign_attribution_refresh` in `src/sales/objects/`). The derivation below
+ * is therefore a mirror of their one inlined recompute and has to stay one —
+ * `test/seed-consistency.test.ts` checks the seeds against it.
  */
 const campaignMetrics = (campaignName: string) => {
   const members = CAMPAIGN_MEMBERS[campaignName] ?? [];

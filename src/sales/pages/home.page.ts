@@ -21,13 +21,13 @@ import { TaskViews } from '../views/task.view';
  * retyped. That is the same iron rule `account_workbench.page.ts` states for
  * interface pages: columns, base filter and sort are inherited, never restated.
  * Retyping them would have created a second definition of "my leads" that
- * drifts from `src/views/lead.view.ts` the first time either side is edited.
+ * drifts from `src/sales/views/lead.view.ts` the first time either side is edited.
  *
  * `{current_user_id}` in a saved view's filter resolves on this path (the
  * ObjectQL read path runs `resolveFilterTokens()` since 17.0.0-rc.0), so
  * "mine" really does mean mine here — measured tab by tab in the browser, see
  * the PR. The nav's My Work group reaches the SAME views by name
- * (`src/apps/crm.app.ts`); these tabs are the landing-page shortcut to them.
+ * (`src/sales/apps/crm.app.ts`); these tabs are the landing-page shortcut to them.
  */
 const embeddedListView = (id: string, objectName: string, views: View, viewKey: string): PageComponent => {
   const view = views.listViews?.[viewKey];

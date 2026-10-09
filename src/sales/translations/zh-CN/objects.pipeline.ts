@@ -16,7 +16,7 @@ import { activityActions } from './_shared';
  * follows its master. A new row goes in the file for ITS family, never in
  * whichever file is already open: that is how one file re-grows past the 70%
  * advisory band `pnpm hygiene` prints. Full rule and rationale:
- * `src/translations/zh-CN.ts`.
+ * `src/sales/translations/zh-CN.ts`.
  */
 export const pipeline: Record<string, ObjectTranslationData> = {
   crm_lead: {
@@ -108,7 +108,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
         help: '保留下来的那条记录所属的对象类型。',
         label: '重复于',
         // `erased` 是墓碑值，不是可选项：表单不提供它（见
-        // `src/views/lead.view.ts`），但幸存记录被删除后线索会带着它，
+        // `src/sales/views/lead.view.ts`），但幸存记录被删除后线索会带着它，
         // 所以凡是读取记录的地方都需要标签，否则会显示原始值 `erased`。
         options: { crm_lead: '线索', crm_contact: '联系人', erased: '记录已删除' },
       },

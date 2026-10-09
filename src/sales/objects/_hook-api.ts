@@ -154,7 +154,7 @@ export type HookUpdateDoc = Doc & { id: string };
  *
  * `where` is REQUIRED and duplicates `doc.id` on purpose: the row scope a write
  * runs under is the thing worth being explicit about, and it is the shape the
- * rest of the app already uses (`src/actions/contact.actions.ts`, pinned in
+ * rest of the app already uses (`src/sales/actions/contact.actions.ts`, pinned in
  * `test/action-sandbox.test.ts`). One idiom, not two.
  */
 export interface HookUpdateOptions {

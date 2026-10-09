@@ -279,7 +279,7 @@ export const SalesDashboard: Dashboard = {
       // `count` / `aggregate` — the one gate every server-side read passes
       // through, saved-view filters included. So this widget's filter and a
       // saved view's filter now read the same way, and the sibling
-      // `this_quarter_forecasts` in `src/views/forecast.view.ts` pins this same
+      // `this_quarter_forecasts` in `src/sales/views/forecast.view.ts` pins this same
       // quarter with this same macro. Measured, not inferred:
       // `test/forecast-current-quarter-view.test.ts` runs both filter shapes —
       // the `period_start` equality (#730) and the `close_date` range (#743) —

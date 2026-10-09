@@ -16,7 +16,7 @@ import { activityActions } from './_shared';
  * follows its master. A new row goes in the file for ITS family, never in
  * whichever file is already open: that is how one file re-grows past the 70%
  * advisory band `pnpm hygiene` prints. Full rule and rationale:
- * `src/translations/es-ES.ts`.
+ * `src/sales/translations/es-ES.ts`.
  */
 export const pipeline: Record<string, ObjectTranslationData> = {
   crm_lead: {
@@ -135,7 +135,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
         label: 'Duplicado De',
         help: 'Qué objeto contiene el registro superviviente que este prospecto repite.',
         // `erased` es una lápida, no una opción: el formulario no la ofrece
-        // (ver `src/views/lead.view.ts`), pero un prospecto cuyo superviviente
+        // (ver `src/sales/views/lead.view.ts`), pero un prospecto cuyo superviviente
         // fue eliminado la lleva, así que necesita etiqueta allí donde el
         // registro se LEE; sin traducir se mostraría el valor crudo `erased`.
         options: { crm_lead: 'Prospecto', crm_contact: 'Contacto', erased: 'Registro Eliminado' },
