@@ -19,7 +19,7 @@ import stack from './helpers/composed-stack';
  * 'private'` with an owner field, so `plugin-sharing`'s write gate then asked
  * whether the record's owner fell inside the caller's write DEPTH — `own` by
  * default — and the manager could edit only contracts they had created
- * themselves. That is precisely the wrong half: `quote_on_accepted`
+ * themselves. That is precisely the wrong half: `quote_accepted_contract_draft`
  * (`src/revenue/objects/quote.hook.ts`) copies the accepted quote's `owner_id`
  * onto the contract it drafts, so the most common contract in the app hangs
  * under the **rep** who closed the deal.
@@ -237,7 +237,7 @@ beforeAll(async () => {
     contract_term_months: 12, start_date: '2026-01-01', end_date: '2026-12-31',
     contract_value: 1000,
   });
-  // THE record #880 is about: the shape `quote_on_accepted` drafts — owned by
+  // THE record #880 is about: the shape `quote_accepted_contract_draft` drafts — owned by
   // the rep who closed the deal, not by the manager.
   id.repContract = await insert('crm_contract', contractOwnedBy(id.rep));
   id.mgrContract = await insert('crm_contract', contractOwnedBy(id.mgr));

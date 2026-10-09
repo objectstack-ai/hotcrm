@@ -114,8 +114,8 @@
 | QUO-002 | 报价状态机 | `draft → in_review → presented → accepted/rejected/expired`;accepted/expired 终态,rejected 可回 draft 重报 | `src/revenue/objects/quote.object.ts`(validations) |
 | QUO-003 | 报价默认与冻结 | 未给失效日时默认 `quote_date + 30 天`;accepted/expired 后除内部备注外禁改 | `src/revenue/objects/quote.hook.ts`(`quote_workflow`) |
 | QUO-004 | 从商机生成报价 | 屏幕流收集名称/有效期/折扣,按商机金额播种报价定价,并把早期阶段商机推进到 proposal | `src/revenue/flows/quote-generation.flow.ts` + `src/sales/actions/opportunity.actions.ts`(`generate_quote`) |
-| QUO-005 | 接受报价→起草合同 | status 变 accepted 时自动创建 draft 合同(12 个日历月,合同额=报价总价);无联系人时给出具名报错 | `src/revenue/objects/quote.hook.ts`(`quote_on_accepted`) |
-| QUO-006 | 接受报价→商机赢单 | 同一 hook 的独立第二条腿:关联商机置 closed_won、补关闭日与 `win_reason='quote_accepted'` | `src/revenue/objects/quote.hook.ts`(`quote_on_accepted`) |
+| QUO-005 | 接受报价→起草合同 | status 变 accepted 时自动创建 draft 合同(12 个日历月,合同额=报价总价);无联系人时给出具名报错;以系统身份起草,销售代表的接受也能拿到合同 | `src/revenue/objects/quote.hook.ts`(`quote_accepted_contract_draft`) |
+| QUO-006 | 接受报价→商机赢单 | 与起草合同相互独立的另一个 hook,以接受者本人身份:关联商机置 closed_won、补关闭日与 `win_reason='quote_accepted'`;商机被审批锁住时接受本身即被拒绝(`quote_workflow`) | `src/revenue/objects/quote.hook.ts`(`quote_on_accepted`) |
 | QUO-007 | 报价行项目与总额汇总 | 明细对象(`crm_quote_line_item`,受父控、删报价级联,行级税率公式):重算 subtotal/discount_amount/total_price 回写报价,已结报价跳过 | `src/revenue/objects/quote_line_item.object.ts` + `.hook.ts` |
 | QUO-008 | 报价自动过期 | 每日 01:00 把过了 `expiration_date` 的未结报价置 expired | `src/revenue/flows/quote-expiration.flow.ts` |
 | QUO-009 | 报价视图 | 状态看板(按 total_price 汇总)、报价日→失效日日历、总额汇总列表 | `src/revenue/views/quote.view.ts` |

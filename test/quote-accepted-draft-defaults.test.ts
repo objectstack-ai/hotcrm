@@ -15,7 +15,7 @@ import {
  *
  * ### What was decided
  *
- * `quote_on_accepted` supplies `contract_term_months`, `start_date` and
+ * `quote_accepted_contract_draft` supplies `contract_term_months`, `start_date` and
  * `contract_type` because `crm_contract` requires all three and a quote can
  * express none of them. The maintainer's 2026-08-31 ruling settled what those
  * values *are*: an auto-drafted contract is a STARTING DRAFT an admin
@@ -46,7 +46,7 @@ import {
  *
  * Every draft below is a real one: the shipped app booted through
  * `@objectstack/verify`'s handle, a sales rep presenting and then accepting a
- * quote, and `quote_on_accepted` (an `async` afterUpdate hook) drafting the
+ * quote, and `quote_accepted_contract_draft` (an `async` afterUpdate hook) drafting the
  * contract through the engine. The document read is the one the hook handed
  * `crm_contract.insert`, as the engine received it.
  *
@@ -84,15 +84,11 @@ let verify: VerifyStack;
 let rep: Person;
 beforeAll(async () => {
   verify = await hotcrmStack();
-  // The acceptor is a sales MANAGER. On 17.7.0 a sales rep may mark a quote
-  // Accepted (`crm_quote.allowEdit`) but holds `crm_contract.allowCreate:
-  // false`, and `quote_on_accepted` writes as the caller — so a rep's
-  // acceptance closes the deal and the engine refuses the draft, which the
-  // hook's `onError: 'log'` keeps silent. Reported as a finding; this file's
-  // subject is what the draft CARRIES, so it runs as the persona whose
-  // acceptance drafts one.
-  rep = await signUpPerson(verify, 'manager@quote-accepted-draft-defaults.test', {
-    name: 'Quote Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+  // The acceptor is a sales REP — the ordinary CPQ path. A rep holds
+  // `crm_contract.allowCreate: false`; the draft is the elevated hook's write
+  // (`runAs: 'system'`, #2014), not the rep's.
+  rep = await signUpPerson(verify, 'rep@quote-accepted-draft-defaults.test', {
+    name: 'Quote Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
   });
 }, 120_000);
 
@@ -101,7 +97,7 @@ let deal = 0;
 let lastQuote: Rec = {};
 /**
  * A rep presents a quote carrying `stored`, then accepts it in a write carrying
- * `quote`; returns the contract document `quote_on_accepted` handed the engine.
+ * `quote`; returns the contract document `quote_accepted_contract_draft` handed the engine.
  * The account, contact and opportunity are the rep's own, fresh per draft.
  */
 const draftFor = async (quote: Rec = {}, stored: Rec = {}): Promise<Rec> => {
@@ -126,7 +122,7 @@ const draftFor = async (quote: Rec = {}, stored: Rec = {}): Promise<Rec> => {
   const engine = recordEngineWrites(verify);
   try {
     await verify.hooks.run('crm_quote', 'update', { id, status: 'accepted', ...quote }, { as: rep.token });
-    // `quote_on_accepted` is `async: true` — it runs after the accepting write returned.
+    // `quote_accepted_contract_draft` is `async: true` — it runs after the accepting write returned.
     const insert = await vi.waitFor(() => {
       const [call] = engine.of('crm_contract', 'insert');
       expect(call, 'the hook drafted no contract at all').toBeTruthy();
@@ -252,8 +248,8 @@ describe('the SHIPPED body carries the declared defaults body-only', () => {
    * platform's own extractor, and finds the defaults declared inside it.
    */
   it('reads the declared defaults body-only, with no module scope', () => {
-    const hook = (quoteHooks as Rec[]).find((h) => h.name === 'quote_on_accepted')!;
-    const { source } = extractHookBody(hook.handler, "hook 'quote_on_accepted'");
+    const hook = (quoteHooks as Rec[]).find((h) => h.name === 'quote_accepted_contract_draft')!;
+    const { source } = extractHookBody(hook.handler, "hook 'quote_accepted_contract_draft'");
     expect(source).toMatch(/\bconst DRAFT_CONTRACT_DEFAULTS\b/);
     expect(source).toMatch(new RegExp(`contract_term_months:\\s*${RULED_TERM_MONTHS}\\b`));
     expect(source).toMatch(new RegExp(`contract_type:\\s*['"]${RULED_CONTRACT_TYPE}['"]`));

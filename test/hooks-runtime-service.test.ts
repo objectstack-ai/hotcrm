@@ -1491,6 +1491,28 @@ describe('task_activity_bubble', () => {
     expect((await stamped('crm_account', account.id, 'last_activity_date')).last_activity_date).toBe(today());
   });
 
+  /**
+   * #2014. A service agent holds no edit right on accounts, and the bubble
+   * used to write as the person completing the task — so an agent's completed
+   * task on their own case never reached the account's activity clock (the
+   * refusal swallowed best-effort), while an admin's identical completion
+   * stamped it. The bubble declares `runAs: 'system'` now.
+   */
+  it('a service agent completing a task on their own case stamps the case account', async () => {
+    const account = await accountOf();
+    const kase = await verify.hooks.run('crm_case', 'insert', {
+      subject: `Agent bubble ${++k}`, description: 'Customer called back.', crm_account: account.id, status: 'in_progress',
+    }, as(agent));
+    const task = await verify.hooks.run('crm_task', 'insert', {
+      subject: `Call back ${k}`, related_to_type: 'crm_case', related_to_case: kase.id, status: 'not_started',
+    }, as(agent));
+    await verify.hooks.run('crm_task', 'update', { id: task.id, status: 'completed' }, as(agent));
+    const row = await stamped('crm_account', account.id, 'last_activity_date');
+    expect(row.last_activity_date).toBe(today());
+    // Elevation is not anonymity: the stamp is recorded as the agent's.
+    expect(row.updated_by).toBe(agent.id);
+  });
+
   it('uses last_contacted_date for a lead, which has no last_activity_date', async () => {
     const { lead } = await parents();
     await complete({ related_to_lead: lead.id });
@@ -1550,13 +1572,22 @@ describe('task_activity_bubble', () => {
       verify.hooks.run('crm_task', 'update', { id: task.id, status: 'completed' }, as(rep)));
     expect(bubbleWrites(engine)).toHaveLength(0);
 
-    // A bubble the completer may not write must be swallowed — it is
-    // best-effort and must never break the task write: a rep completing a
-    // task on an account they cannot touch.
-    const outsider = await signUpPerson(verify, `outsider${++k}@hooks-runtime-service.test`, { name: 'Other Rep', permissionSets: ['sales_rep'] });
+    // A bubble write the engine refuses must be swallowed — it is best-effort
+    // and must never break the task write. Staged on the real engine: since
+    // #2014 the bubble writes elevated, so the completer's own grants no longer
+    // produce a refusal to swallow.
     const { account } = await parents();
-    const [theirs] = await verify.seed('crm_task', [{ subject: `Theirs ${k}`, status: 'in_progress', owner_id: outsider.id, related_to_account: account.id }]);
-    await verify.hooks.run('crm_task', 'update', { id: theirs!.id, status: 'completed' }, as(outsider));
-    expect((await stored('crm_task', theirs!.id)).status).toBe('completed');
+    const theirs = await taskOf({ status: 'in_progress', related_to_account: account.id });
+    const refused = recordEngineWrites(verify, (op, object) =>
+      (op === 'update' && object === 'crm_account' ? new Error('write rejected') : undefined));
+    try {
+      await verify.hooks.run('crm_task', 'update', { id: theirs.id, status: 'completed' }, as(rep));
+      await vi.waitFor(() => expect(refused.of('crm_account', 'update').length, 'the bubble never reached the account').toBeGreaterThan(0),
+        { timeout: 10_000, interval: 25 });
+      await Promise.all(refused.writes.map((w) => w.settled));
+    } finally {
+      refused.restore();
+    }
+    expect((await stored('crm_task', theirs.id)).status).toBe('completed');
   });
 });

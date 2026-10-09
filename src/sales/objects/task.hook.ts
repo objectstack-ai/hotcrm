@@ -273,6 +273,17 @@ const taskRecurrence: Hook = {
   },
 };
 
+/**
+ * The activity bubble's task twin.
+ *
+ * `runAs: 'system'` (#2014, AGENTS.md rule 9) and the organization pin (rule
+ * 10) for the reasons `event_activity_bubble` records — read that note. The
+ * measurement that put this copy on the card: a service agent completing a
+ * task on their own case left the case account's `last_activity_date` empty,
+ * while an admin's identical completion stamped it (17.7.0); a rep's
+ * completed task on their own deal reached neither the account nor the
+ * contact a manager owns.
+ */
 const taskBubble: Hook = {
   name: 'task_activity_bubble',
   object: 'crm_task',
@@ -280,6 +291,7 @@ const taskBubble: Hook = {
   priority: 800,
   async: true,
   onError: 'log',
+  runAs: 'system',
   description:
     'A completed task stamps interaction recency on the related account (walking up from contact/opportunity/case), lead and contact.',
   handler: async (ctx: HookContext) => {
@@ -322,6 +334,9 @@ const taskBubble: Hook = {
 
     const idOf = (key: string): string | undefined =>
       typeof r[key] === 'string' && r[key].length > 0 ? (r[key] as string) : undefined;
+    // The rule-10 pin — see `event_activity_bubble`'s note.
+    const org = idOf('organization_id');
+    const inOrg: Record<string, string> = org ? { organization_id: org } : {};
 
     const accountIds = new Set<string>();
     const contactIds = new Set<string>();
@@ -344,7 +359,7 @@ const taskBubble: Hook = {
       if (!id) continue;
       try {
         const raw: any = await api.object(object).find({
-          where: { id },
+          where: { id, ...inOrg },
           fields: ['crm_account'],
           top: 1,
         });
@@ -352,22 +367,32 @@ const taskBubble: Hook = {
         const parent = rows.length ? rows[0].crm_account : undefined;
         if (typeof parent === 'string' && parent.length > 0) accountIds.add(parent);
       } catch {
-        // Best-effort: a rep who cannot read the parent simply does not bubble
-        // through it. No `console` in the L2 hook sandbox (cf. #471).
+        // Best-effort: a parent that cannot be read is not bubbled through.
+        // No `console` in the L2 hook sandbox (cf. #471).
       }
     }
 
-    const writes: Array<{ object: string; id: string; doc: Record<string, any> }> = [
-      ...[...accountIds].map((id) => ({ object: 'crm_account', id, doc: { last_activity_date: today } })),
-      ...[...contactIds].map((id) => ({ object: 'crm_contact', id, doc: { last_contacted_date: nowIso } })),
-      ...[...leadIds].map((id) => ({ object: 'crm_lead', id, doc: { last_contacted_date: nowIso } })),
+    const targets: Array<[string, Set<string>, Record<string, any>]> = [
+      ['crm_account', accountIds, { last_activity_date: today }],
+      ['crm_contact', contactIds, { last_contacted_date: nowIso }],
+      ['crm_lead', leadIds, { last_contacted_date: nowIso }],
     ];
-
-    for (const w of writes) {
-      try {
-        await api.object(w.object).update({ ...w.doc, id: w.id }, { where: { id: w.id } });
-      } catch {
-        // Best-effort activity bubble; never break the parent write.
+    for (const [object, ids, doc] of targets) {
+      let inside = [...ids];
+      if (org && inside.length > 0) {
+        try {
+          const raw: any = await api.object(object).find({ where: { id: { $in: inside }, ...inOrg }, fields: ['id'], top: inside.length });
+          inside = (Array.isArray(raw) ? raw : (raw?.records ?? [])).map((row: any) => String(row.id));
+        } catch {
+          inside = [];
+        }
+      }
+      for (const id of inside) {
+        try {
+          await api.object(object).update({ ...doc, id }, { where: { id } });
+        } catch {
+          // Best-effort activity bubble; never break the parent write.
+        }
       }
     }
   },

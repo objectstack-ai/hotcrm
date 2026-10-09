@@ -111,14 +111,20 @@ describe('the capability gate refuses a NEW link (REQ-0003 acceptance 2, first h
     expect(refusal!.status).toBe(400);
   });
 
-  it("names the account the way the UI names it, and never by its id (#1243)", async () => {
+  /**
+   * #1243 named the account the way the UI does; the #2014 ruling (option B)
+   * supersedes that on this path. The gate reads the account ELEVATED, so its
+   * refusal must not echo what it read: it says "this account" and states the
+   * one fact that blocks the deal, nothing else — for every caller, the owner
+   * included, because there is one code path.
+   */
+  it('names no account — "this account", never its number, name or id (#2014)', async () => {
     const refusal = await insertRefusal(RESTRICTED.id);
     const message = String(refusal?.message);
-    // `crm_account.nameField` is the `display_title` formula over
-    // `account_number` and `name`, so that is the spelling every screen shows.
-    expect(message).toContain('ACC-000042 - Tender Agency Ltd');
-    expect(message).toContain(String(RESTRICTED.display_title));
-    expect(message).not.toContain(RESTRICTED.id);
+    expect(message).toContain('this account');
+    for (const read of ['ACC-000042', 'Tender Agency Ltd', String(RESTRICTED.display_title), RESTRICTED.id]) {
+      expect(message, `the refusal echoes "${read}"`).not.toContain(read);
+    }
     // The rule's own message, carrying the remedy — not a bare "invalid".
     expect(message).toContain('Settlement Only');
     expect(refusal!.userMessage).toBe(refusal?.message);
@@ -211,24 +217,25 @@ describe('the gate fails OPEN on everything except the one written-down verdict'
   });
 
   /**
-   * ⚠️ MEASURED DEFECT — reported as a finding on this card, pinned here so the
-   * fix is noticed.
-   *
-   * The intent stated beside the gate: a read the caller is DENIED must not be
-   * swallowed — "a denied or broken read is not evidence that the account is
-   * sellable", and swallowing it "would make the gate silently absent exactly
-   * when the platform cannot answer". The stand-in this suite used to run on
-   * modelled a denied read as one that THROWS. On the real engine a caller
-   * who cannot see the account is not refused the read: record-level access
-   * FILTERS it, the read comes back empty, the gate takes that for "account
-   * cannot be found" and stands down — and the engine's reference check
-   * accepts the link. Measured on 17.7.0: a rep who cannot read a Settlement
-   * Only account opens a NEW opportunity on it.
+   * #2014. As the caller, a rep who cannot read the account was not refused
+   * the read: record-level access FILTERED it, the read came back empty, the
+   * gate took that for "account cannot be found" and stood down — and the
+   * engine's reference check accepted the link (measured on 17.7.0: the
+   * outsider's deal on a Settlement Only account was STORED). The gate reads
+   * the verdict elevated now, and refuses without saying which account.
    */
-  it('⚠️ a caller who cannot read the account opens a deal on a Settlement Only one (measured defect)', async () => {
+  it('refuses a caller who cannot read the account, and tells them nothing about it', async () => {
     expect(await verify.rows('crm_account', { id: RESTRICTED.id }, { as: outsider.token }), 'the outsider can read the account').toEqual([]);
     const refusal = await insertRefusal(RESTRICTED.id, outsider);
-    expect(refusal, 'the unreadable restricted account now refuses the deal — the defect is fixed: rewrite this case to pin the refusal').toBeNull();
+    expect(refusal, 'an outsider opened a deal on a Settlement Only account').toBeTruthy();
+    expect(refusal!.code).toBe('VALIDATION_FAILED');
+    expect(refusal!.status).toBe(400);
+    const message = String(refusal!.message);
+    expect(message).toContain('this account');
+    for (const read of ['ACC-000042', 'Tender Agency Ltd', RESTRICTED.id]) {
+      expect(message, `the refusal echoes "${read}" to a caller who cannot read it`).not.toContain(read);
+    }
+    expect(await verify.rows('crm_opportunity', { crm_account: RESTRICTED.id, owner_id: outsider.id }), 'the refused deal was stored').toEqual([]);
   });
 
   it('refuses a SYSTEM write too — a gate only users trip is not a gate', async () => {
