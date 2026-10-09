@@ -53,7 +53,7 @@ export const CampaignMember = ObjectSchema.create({
   // `member_default` set carries an owner-only-writes RLS policy on updates,
   // and because the derivation folds master RLS in, that policy reaches through
   // to member writes — see the `marketing_campaign_updates` note in
-  // `src/profiles/marketing-user.profile.ts`.
+  // `src/sales/profiles/marketing-user.profile.ts`.
   //
   // ⛔ Not `private`: with no owner field on the junction row that resolves to
   // "whoever inserted it", which is nobody's idea of campaign membership and
@@ -200,7 +200,7 @@ export const CampaignMember = ObjectSchema.create({
     // Writers, one per surviving value (#597):
     //   sent         — campaign_enrollment flow, `create_campaign` (leads) and
     //                  `add_contact_to_campaign` (contacts) stamp it on insert.
-    //   responded    — the `mark_responded` action (src/actions/campaign.actions.ts).
+    //   responded    — the `mark_responded` action (src/marketing/actions/campaign.actions.ts).
     //   converted    — the member's lead converting; `campaign_lead_conversion_refresh`
     //                  (campaign.hook.ts) promotes the row when
     //                  `crm_lead.is_converted` flips.
