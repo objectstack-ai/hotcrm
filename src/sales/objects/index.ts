@@ -76,12 +76,35 @@
  *
  * Verified in a live console (#602): the Discussion panel renders on the
  * opportunity and account records, a posted comment round-trips
- * (`POST /api/v1/data/sys_comment` → 201) and survives a reload. Comments do
- * NOT, however, inherit record access the way attachments do — any authenticated
- * org member can read and post on any thread. That is a platform gap, filed as
- * objectstack-ai/objectstack#4630; it is not something this app can close by
- * authoring metadata, and it is the reason the docs describe comments as visible
- * to colleagues rather than scoped to the record's audience.
+ * (`POST /api/v1/data/sys_comment` → 201) and survives a reload.
+ *
+ * Like `enable.files`, the flag opens the surface and grants no access. The
+ * Discussion panel reads two platform objects, `sys_comment` (the comments)
+ * and `sys_activity` (the record's activity timeline), and the member baseline
+ * names neither, so through #2029 every persona but the platform admin got
+ * "You don't have permission to view comments on this record" and the same for
+ * its activity (403 `PERMISSION_DENIED`). So every set that grants
+ * `sys_attachment` also grants `sys_comment` read, create and edit and
+ * `sys_activity` read, and `guest_portal` grants neither.
+ *
+ * WHICH threads those grants reach is the platform's, and it follows the
+ * parent record (the platform's objectstack-ai/objectstack#4630 gates): a
+ * `plugin-audit` middleware narrows every `sys_comment` and `sys_activity` read
+ * to rows whose parent the caller can read, a post to a thread whose record the
+ * caller cannot read is refused with 403 `RECORD_NOT_ACCESSIBLE`, and only a
+ * comment's author may edit it. Measured as `na.rep` on a fresh `pnpm dev` box
+ * (#2029): the comments and activity of the accounts, quotes and contracts they
+ * can read are listed, those of records they cannot read are not (404 by id),
+ * and a post to one of those is refused. `test/record-comments-access.test.ts`
+ * pins it.
+ *
+ * **Deleting a comment is NOT granted, on purpose (#2029).** Its gate is
+ * author-or-`canEdit(parent)`, the same sharing-service call as the attachment
+ * gate above, with the same 17.7.0 answer of `true` for every
+ * `controlled_by_parent` parent. Measured with the delete bit granted: `na.rep`
+ * deleted the admin's comment on a contract whose own PATCH answers them 403.
+ * Reported upstream from #2029; the delete bit joins the grant when the fix is
+ * in the pinned version (AGENTS.md §2).
  */
 
 export { Account } from './account.object';
