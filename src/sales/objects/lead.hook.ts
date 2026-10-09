@@ -687,7 +687,7 @@ const leadDuplicateCheckHook: Hook = {
         } else {
           input.duplicate_of_type = null;
           // `duplicate_status` goes with it. Its readers in this app are the
-          // `suspected_duplicates` review queue (`src/views/lead.view.ts`),
+          // `suspected_duplicates` review queue (`src/sales/views/lead.view.ts`),
           // whose whole workflow is "open the two records and compare them";
           // the `duplicate_disqualification_requires_survivor` validation,
           // which demands a NAMED survivor; the duplicate form block; and this

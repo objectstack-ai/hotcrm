@@ -63,7 +63,7 @@ export const ForecastViews = defineView({
       // what re-takes the reading on each new pin.
       //
       // Both halves of the key are load-bearing, same as the quota-attainment
-      // widget in `src/dashboards/sales.dashboard.ts`: `period: 'quarter'`
+      // widget in `src/sales/dashboards/sales.dashboard.ts`: `period: 'quarter'`
       // alone returns every quarter ever snapshotted (the #730 defect), and
       // `period_start` alone merges the quarter row with the MONTH row that
       // opens the same quarter — Q3 and July both start on the 1st.

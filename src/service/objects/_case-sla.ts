@@ -62,7 +62,7 @@
  * and cannot import it: L2 hook bodies run body-only in the QuickJS sandbox,
  * so a module constant resolves at authoring time and arrives as `undefined`
  * at runtime (see `_line-item-price-fill.ts`, and the same forced duplication
- * behind `test/priority-rank-parity.test.ts`). `src/data/service.seed.ts`
+ * behind `test/priority-rank-parity.test.ts`). `src/service/data/service.seed.ts`
  * imports this module for real — seeds are authored-time data and hooks do not
  * run over them, so the seeded due dates have to be right on arrival.
  *

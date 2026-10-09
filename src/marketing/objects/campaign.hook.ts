@@ -51,7 +51,7 @@ const campaignValidation: Hook = {
   priority: 200,
   description: 'Validate campaign date range and required fields per status.',
   handler: async (ctx: HookContext) => {
-    // The refusal envelope (#1075). Mirrored from `./_refusal.ts` because a
+    // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
     // import; `test/refusal-envelope.test.ts` pins every copy against it.
     function refuse(

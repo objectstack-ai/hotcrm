@@ -12,7 +12,7 @@ import { F, P } from '@objectstack/spec';
  * without re-aggregating opportunity history.
  *
  * Written by:
- *   • `src/flows/forecast-snapshot.flow.ts` — the `forecast_snapshot`
+ *   • `src/sales/flows/forecast-snapshot.flow.ts` — the `forecast_snapshot`
  *     scheduled flow, nightly at 03:00, one current-quarter row per active
  *     opportunity owner (#590). It never touches `quota`.
  *   • `revenue_forecasting` AI skill on demand
@@ -93,7 +93,7 @@ export const Forecast = ObjectSchema.create({
     }),
 
     // Still not read-only: `forecast.hook.ts` fills it only when the write
-    // leaves it unset, and `src/data/revenue.seed.ts` hand-fills it on every
+    // leaves it unset, and `src/sales/data/forecast.seed.ts` hand-fills it on every
     // seeded row — so hand-entry is a capability this app uses. A hand-filled
     // value is pinned to the same calendar period `period_start` is
     // (`period_end_matches_calendar_period` below), and the description states
@@ -224,8 +224,9 @@ export const Forecast = ObjectSchema.create({
     // and overwrite, a real rep's snapshot.
     //
     // ⚠️ The true composite `externalId: ['owner_id', 'period', 'period_start']`
-    // is not available here: a seed cannot name a user (see the note at the foot
-    // of `src/data/index.ts`), so `owner_id` is null on every seeded row, and
+    // is not available here: a seed cannot name a user (see the note in
+    // `objectstack.composition.ts`, "A seed can't name a user"), so `owner_id`
+    // is null on every seeded row, and
     // the loader's `externalIdKey` returns "" as soon as any part is empty. An
     // empty key never matches, so upsert degrades to insert-on-every-replay.
     // Dropping `owner_id` does not rescue it: a runtime row for the current
@@ -340,7 +341,7 @@ export const Forecast = ObjectSchema.create({
     //
     // WHY A RULE AND NOT A READ-ONLY FIELD: deriving `period_end` always and
     // locking the form breaks the demo seed —
-    // `src/data/revenue.seed.ts:339,378,393` hand-fill it on every seeded row.
+    // `src/sales/data/forecast.seed.ts` hand-fills it on every seeded row.
     // Hand-entry stays; it is now bounded.
     //
     // ⚠️ WHY `type: 'script'` AND NOT A FIELD CONSTRAINT: a field bound judges

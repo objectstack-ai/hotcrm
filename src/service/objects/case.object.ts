@@ -206,7 +206,7 @@ export const Case = ObjectSchema.create({
     }),
     
     // ⛔ NOT `readonly`: stamped by `event_activity_bubble`
-    // (`src/objects/event.hook.ts`) on the first HELD `crm_event` related to the
+    // (`src/sales/objects/event.hook.ts`) on the first HELD `crm_event` related to the
     // case, whoever wrote that event. ⚠️ That hook reaches this case through
     // `ctx.api`, a `ScopedContext` over the ACTING USER's execution context —
     // so its write is a CALLER-supplied write from a non-`isSystem` context,
@@ -400,7 +400,7 @@ export const Case = ObjectSchema.create({
   enable: {
     apiEnabled: true,
     // #602 — screenshots and logs are how a support case gets diagnosed.
-    // See the canonical capability note in `src/objects/index.ts`.
+    // See the canonical capability note in `src/sales/objects/index.ts`.
     files: true,
   },
 
@@ -470,5 +470,5 @@ export const Case = ObjectSchema.create({
   
   // ⚠️ No `workflows[]` here, and none is possible: object `workflows[]` were
   // removed from the platform. Field updates live in this object's `*.hook.ts`;
-  // scheduled status flips and notifications live in `src/flows/*.flow.ts`.
+  // scheduled status flips and notifications live in `src/*/flows/*.flow.ts`.
 });

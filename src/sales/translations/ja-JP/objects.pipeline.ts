@@ -16,7 +16,7 @@ import { activityActions, salutationOptions, industryOptions, leadSourceOptions 
  * follows its master. A new row goes in the file for ITS family, never in
  * whichever file is already open: that is how one file re-grows past the 70%
  * advisory band `pnpm hygiene` prints. Full rule and rationale:
- * `src/translations/ja-JP.ts`.
+ * `src/sales/translations/ja-JP.ts`.
  */
 const opportunityStageOptions = {
   prospecting: '見込み調査', qualification: '選定',
@@ -121,7 +121,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
         label: '重複対象',
         help: '重複元として残るレコードが属するオブジェクトの種別。',
         // `erased` は墓碑値であり選択肢ではない。フォームには表示しない
-        // （`src/views/lead.view.ts` を参照）が、残存レコードが削除された
+        // （`src/sales/views/lead.view.ts` を参照）が、残存レコードが削除された
         // リードはこの値を保持するため、レコードを読む場所ではラベルが要る。
         options: { crm_lead: 'リード', crm_contact: '取引先責任者', erased: '削除済みレコード' },
       },

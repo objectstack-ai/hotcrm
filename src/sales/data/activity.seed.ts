@@ -170,7 +170,7 @@ export const tasks = defineSeed(Task, {
 // two activity-shaped objects that came before already accept the same trade.
 // No collision exists with the runtime writer's own rows: `log_call` /
 // `log_meeting` / `schedule_meeting` insert with an explicit `owner_id`
-// (`src/actions/global.actions.ts`), so they are never ownerless and the
+// (`src/sales/actions/activity-actions.ts`), so they are never ownerless and the
 // platform's seed-ownership claim never touches them — the "one producer per
 // window" question #702 raised, answered for this object.
 
@@ -529,9 +529,10 @@ export const events = defineSeed(Event, {
       ...(spec.location ? { location: spec.location } : {}),
       ...(spec.description ? { description: spec.description } : {}),
       ...(spec.outcome ? { outcome_notes: spec.outcome } : {}),
-      // No `owner_id`: a seed cannot name a user (see `src/data/index.ts`), so
-      // these rows land ownerless and the platform's seed-ownership claim hands
-      // them to the first administrator when the seed settles (#671, #1892).
+      // No `owner_id`: a seed cannot name a user (see `objectstack.composition.ts`,
+      // "A seed can't name a user"), so these rows land ownerless and the
+      // platform's seed-ownership claim hands them to the first administrator
+      // when the seed settles (#671, #1892).
     };
   }),
 });
@@ -547,7 +548,7 @@ export const events = defineSeed(Event, {
  * true` row anywhere below. The organiser of every one of these meetings is the
  * rep — a `sys_user` — and a seed cannot name a user: lookup values resolve
  * against the target's externalId, which only works inside the app's own
- * object graph. `global.actions.ts` adds the organiser row at runtime, where
+ * object graph. `activity-actions.ts` adds the organiser row at runtime, where
  * the id exists. Nothing is invented here to stand in for it.
  *
  * # The external guest, revisited (#740)

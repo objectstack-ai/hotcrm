@@ -18,7 +18,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
  *  - A `type: 'script'` action body runs in the QuickJS sandbox, whose
  *    execution context carries no caller identity. An UPDATE it issues against
  *    an object with sharing rules is refused by the sharing middleware even for
- *    the record's owner — the measurement `src/flows/case-actions.flow.ts`
+ *    the record's owner — the measurement `src/service/flows/case-actions.flow.ts`
  *    records, and the reason both case actions are screen flows. INSERTS are
  *    unaffected, which is the seam this object takes.
  *  - `crm_knowledge_article` is `public_read`: read-open, WRITE-OWNED. So the

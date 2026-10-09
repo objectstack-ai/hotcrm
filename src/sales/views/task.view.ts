@@ -219,7 +219,7 @@ export const TaskViews = defineView({
       // `UnknownFilterTokenError` (`FILTER_TOKEN_UNKNOWN`, HTTP 400) — the same
       // envelope `{TODAY}` gets. The change landed at 17.0.0-rc.6 and this repo
       // already pins it elsewhere: `test/flow-filter-today-token.test.ts`
-      // (#1107). That is also why the `src/flows` sweeps that still spell
+      // (#1107). That is also why the `src/*/flows` sweeps that still spell
       // `{TODAY()}` work — `interpolateFilter()` resolves it before ObjectQL
       // sees the filter at all.
       //

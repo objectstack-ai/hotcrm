@@ -268,7 +268,7 @@ const eventActivityBubble: Hook = {
  * `crm_task` carries the follow-up a rep OWES; `crm_event` carries the slot a
  * rep BOOKS. A `planned` event of type `call` is a booked outbound phone call,
  * so it is refused against a person flagged `do_not_call` for exactly the
- * reasons stated on `task_do_not_call_guard` in `src/objects/task.hook.ts`
+ * reasons stated on `task_do_not_call_guard` in `src/sales/objects/task.hook.ts`
  * (read that block first — it carries the full rationale for enforcing on the
  * write rather than on a button, and for scoping to the phone).
  *

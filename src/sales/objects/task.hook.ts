@@ -93,7 +93,7 @@ const taskValidation: Hook = {
       // field whose PRESENCE caused it, so an agent retried by sending it again.
       //
       // The `isSystem` half is not decoration: nothing strips a system write, and
-      // `src/data/service.seed.ts` back-dates completions with `daysAgo(3)` /
+      // `src/sales/data/activity.seed.ts` back-dates completions with `daysAgo(3)` /
       // `daysAgo(2)`. Stamping over those would replay the demo book with every
       // completion dated today.
       if (!input.completed_date || !ctx.session?.isSystem) {
@@ -296,7 +296,7 @@ const taskBubble: Hook = {
     'A completed task stamps interaction recency on the related account (walking up from contact/opportunity/case), lead and contact.',
   handler: async (ctx: HookContext) => {
     /*
-     * The activity bubble, second copy. `src/objects/event.hook.ts` carries the
+     * The activity bubble, second copy. `src/sales/objects/event.hook.ts` carries the
      * canonical one and the rationale; this is a deliberate verbatim duplicate,
      * not drift — an L2 hook body ships body-only into the QuickJS sandbox, so a
      * shared module helper resolves at authoring time and arrives `undefined` at
@@ -406,7 +406,7 @@ const taskBubble: Hook = {
  * The obvious mirror of the `email_opt_out` treatment is
  * `visible: P\`record.do_not_call == false\`` on a button, the way
  * `send_email` and `add_contact_to_campaign` are gated in
- * `src/actions/contact.actions.ts`. That is a RENDERING hint, and it is the
+ * `src/sales/actions/contact.actions.ts`. That is a RENDERING hint, and it is the
  * whole of what those two do: it hides a button in the Console and leaves the
  * action reachable over REST, from an AI tool call, from a flow, and from an
  * import. For email that is only half a promise too — but the email half is
@@ -418,7 +418,7 @@ const taskBubble: Hook = {
  * Enforcing on the WRITE instead covers every entry point at once — the
  * `schedule_followup` screen flow, a hand-created task, an import, an AI agent
  * calling the data API — which is the same "one writer, not one per entry
- * point" reasoning `src/actions/global.actions.ts` gives for keeping the
+ * point" reasoning `src/sales/actions/activity-actions.ts` gives for keeping the
  * recency bubble on `crm_event`'s hook rather than in each button's body.
  *
  * # Why `type: 'call'` and not "any forward-looking outreach"
@@ -495,7 +495,7 @@ const taskDoNotCallGuard: Hook = {
 
     for (const t of targets) {
       // `find(... top: 1)` rather than `findOne`, matching
-      // `event_activity_bubble` in `src/objects/event.hook.ts` and the shape
+      // `event_activity_bubble` in `src/sales/objects/event.hook.ts` and the shape
       // the rest of the app's hooks read with. The result is normalised for
       // both driver shapes (bare array / `{ records }`).
       const raw: any = await api.object(t.object).find({

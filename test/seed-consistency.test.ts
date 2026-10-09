@@ -302,11 +302,14 @@ describe('line items carry what the price-fill hook would have stamped', () => {
 });
 
 // Since #597 the campaign metric block is owned by FOUR refresh hooks, not by
-// one completion-time snapshot: `campaign_metrics_refresh`,
-// `campaign_attribution_refresh` and `campaign_lead_conversion_refresh` in
-// `campaign.hook.ts`, plus `campaign_member_metrics_refresh` in
-// `campaign_member.hook.ts`. All four reach the same inlined recompute, and it
-// is that one arithmetic the block below re-derives from the seed rows.
+// one completion-time snapshot: `campaign_metrics_refresh` in
+// `campaign.hook.ts` and `campaign_member_metrics_refresh` in
+// `campaign_member.hook.ts` (both `src/marketing/objects/`), plus
+// `campaign_lead_conversion_refresh` and `campaign_attribution_refresh` in
+// `src/sales/objects/lead.campaign-metrics.hook.ts` and
+// `src/sales/objects/opportunity.campaign-metrics.hook.ts`. All four reach the
+// same inlined recompute, and it is that one arithmetic the block below
+// re-derives from the seed rows.
 describe('the campaign metric refresh would be a no-op over the seeds', () => {
   it('every campaign metric equals what the hook recomputes from members and attributed deals', () => {
     const drift: string[] = [];

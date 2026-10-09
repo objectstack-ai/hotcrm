@@ -155,7 +155,7 @@ export const CaseViews = defineView({
     /**
      * Unassigned — triage (#596). The second half of the queue substitute.
      *
-     * `case_auto_assign` (`src/objects/_case-assignment.ts`) is a NO-OP whenever
+     * `case_auto_assign` (`src/service/objects/_case-assignment.ts`) is a NO-OP whenever
      * the `service_agent` pool is empty, and an empty pool is the FIRST-INSTALL
      * NORM rather than an edge case: `sys_user_position` membership is runtime
      * data, so on a fresh org — and any time every agent has been unassigned
@@ -200,7 +200,7 @@ export const CaseViews = defineView({
      *   - `sales_manager` — `viewAllRecords`, read-only.
      *   - a service manager / director — the critical, open slice only, via the
      *     existing `case_escalation_sharing` / `case_director_sharing` criteria
-     *     rules (`src/sharing/case.sharing.ts`).
+     *     rules (`src/service/sharing/case.sharing.ts`).
      *   - `service_agent` — `readScope: 'own'` on `crm_case`, and an unowned
      *     row is owned by nobody, so **an agent's triage tab is empty**.
      *
@@ -322,7 +322,7 @@ export const CaseViews = defineView({
    * dialog showed THREE tabs — these sections. The renderer only reaches for
    * `fieldGroups` on its AUTO-DERIVED path, taken when a form authors no
    * `sections` at all; an authored `sections` array wins outright. So
-   * `src/objects/case.object.ts` is not part of this surface.
+   * `src/service/objects/case.object.ts` is not part of this surface.
    *
    * ## ⚠️ Authoring `sections` OPTS OUT of the create-mode field strip
    *

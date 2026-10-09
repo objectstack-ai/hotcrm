@@ -12,9 +12,9 @@ export const SalesManagerProfile = {
   objects: {
     // `allowTransfer` on exactly the objects this set holds `modifyAllRecords`
     // on — the sales book a manager reassigns. Canonical note in
-    // `src/profiles/index.ts`.
+    // `src/sales/profiles/index.ts`.
     // `allowExport` where an export surface exists — canonical note in
-    // `src/profiles/index.ts`. A manager owns the number, so the pipeline and
+    // `src/sales/profiles/index.ts`. A manager owns the number, so the pipeline and
     // book exports that feed offline forecasting are part of the job.
     crm_lead:        { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true,  modifyAllRecords: true, allowTransfer: true, allowExport: true },
     crm_account:     { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true,  modifyAllRecords: true, allowTransfer: true, allowExport: true },

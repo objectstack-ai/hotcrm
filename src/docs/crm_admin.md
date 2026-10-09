@@ -103,9 +103,9 @@ Two record-level rules sit on top of the object grants:
 
 ## Automation knobs — where every threshold lives
 
-The business rules are defined in the **flows** under `src/flows/`. To change a
-threshold, edit the flow and redeploy. These are the values an admin most often
-revisits:
+The business rules are defined in the **flows**, and each package keeps its own
+flows in its `flows/` directory. To change a threshold, edit the flow and
+redeploy. These are the values an admin most often revisits:
 
 | Behavior | Current setting | Defined in |
 |---|---|---|
