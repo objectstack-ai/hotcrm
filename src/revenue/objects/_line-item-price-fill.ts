@@ -86,8 +86,7 @@ export function createLineItemNumbering(objectName: string, hookName: string): H
     runAs: 'system',
     description: 'Assign line_number = (max under the parent) + 1.',
     handler: async (ctx: HookContext) => {
-      const { event, input } = ctx;
-      const prev = ctx.previous;
+      const { event, input, previous: prev } = ctx;
       const api = ctx.api as HookApi | undefined;
       if (!api) return;
       if (!ctx.user?.id && typeof input.line_number === 'number') return;

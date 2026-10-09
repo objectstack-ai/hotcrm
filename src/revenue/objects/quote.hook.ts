@@ -49,8 +49,7 @@ const quoteValidation: Hook = {
       err.userMessage = userMessage;
       return err;
     }
-    const { event, input } = ctx;
-    const previous = ctx.previous;
+    const { event, input, previous } = ctx;
 
     // The quote as every quote surface titles it. `crm_quote.display_title` is
     // `quote_number - name`; compose the same pair from the two stored columns
