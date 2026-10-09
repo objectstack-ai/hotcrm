@@ -82,7 +82,7 @@ Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ 
 | Closed Won | — | 終態 |
 | Closed Lost | — | 終態 |
 
-其中兩條邊是為 CPQ 路徑存在的，不是給業務一個階段一個階段點出來的：*→ Proposal* 從每一個 Proposal 之前的階段都合法，因為 `quote_generation` 流程一旦產生報價就把交易快進到 *Proposal*，而產生報價在任何開放階段都可能發生；*Proposal → Closed Won* 合法，則是因為 `quote_on_accepted` 鉤子會從一份被接受的報價上直接贏下關聯交易，中間不再經過一次談判。
+其中兩條邊是為 CPQ 路徑存在的，不是給業務一個階段一個階段點出來的：*→ Proposal* 從每一個 Proposal 之前的階段都合法，因為 `quote_generation` 流程一旦產生報價就把交易快進到 *Proposal*，而產生報價在任何開放階段都可能發生——不過如果你們的組織要求立項，交易在立項通過之前不能產生報價（[商機資格評估](/zh-Hant/docs/sales/opportunity-qualification#qualification-approval)）；*Proposal → Closed Won* 合法，則是因為 `quote_on_accepted` 鉤子會從一份被接受的報價上直接贏下關聯交易，中間不再經過一次談判。
 
 **表裡沒有的**：**向後** 移動。沒有任何一個開放階段宣告了通往更早階段的邊，所以從 *Negotiation* 退回 *Proposal* —— 交易滑落 —— 是走出了這條路線，和其他任何一次出格一樣只記一條警告（照樣儲存，見上文）。兩個已關閉階段也都沒有出邊，所以既不存在「重新開啟」這條轉換，也不存在管理員繞回開放階段的通道。
 
