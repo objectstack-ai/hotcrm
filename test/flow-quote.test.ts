@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
-import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, systemUpdate, type Person } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
 
@@ -16,8 +16,9 @@ type Rec = Record<string, any>;
  * create_quote (subtotal / discount_amount / total from the opportunity), the
  * account/contact carry-over, the stage → proposal advance, that a
  * contact-LESS opportunity can still draft a quote (crm_quote.crm_contact was
- * relaxed to optional), and that a deal awaiting approval gets its quote and
- * keeps its stage (#2015).
+ * relaxed to optional), that a deal awaiting approval gets its quote and
+ * keeps its stage (#2015), and that a deal not yet 立项-approved is refused
+ * before anything is written (#2032).
  *
  */
 
@@ -192,6 +193,108 @@ describe('quote_generation flow — a deal awaiting approval (#2015)', () => {
     expect(quotes.length, 'one quote created').toBe(1);
     expect((await verify.rows('crm_opportunity', { id: opp.id }))[0]!.stage).toBe('proposal');
   });
+});
+
+/**
+ * #2032 — the 立项 (qualification) gate, REQ-0006 step 11. Ruled (hotcrm-R74b
+ * item 2, B): before 立项 is approved, Generate Quote refuses and creates
+ * nothing.
+ *
+ * The gate ships OFF: `crm_opportunity.qualification_approval_status` defaults
+ * to `not_required`, and an install arms it by changing that default to
+ * `pending`, so each new deal is born pending. The deals below carry the
+ * verdict from the moment they are written — as the system, because the
+ * column is `readonly` — which is the row an armed install produces.
+ *
+ * Measured before the fix on 17.7.0, with the default flipped to `pending` and
+ * the deal created by the rep: the resume answered `FLOW_FAILED` 400 at
+ * `update_opportunity` ("This deal needs qualification approval first …"),
+ * one draft quote was left behind, and the stage did not move.
+ */
+describe('quote_generation flow — the 立项 gate (#2032)', () => {
+  /**
+   * A deal owned by the rep, at `qualification`, holding `verdict`. `null` is
+   * a deal with no verdict at all (one older than the column): an insert fills
+   * the default in, so the verdict is cleared by a second system write.
+   */
+  const dealWith = async (name: string, verdict: string | null): Promise<Rec> => {
+    const deal = await opportunity({ name, amount: 50000, primary_contact: null, ...(verdict === null ? {} : { qualification_approval_status: verdict }) });
+    if (verdict === null) await systemUpdate(verify, 'crm_opportunity', { id: deal.id, qualification_approval_status: null });
+    const [stored] = await verify.rows('crm_opportunity', { id: deal.id });
+    expect(stored!.qualification_approval_status ?? null, 'fixture: the deal does not hold the verdict it was written with').toBe(verdict);
+    return stored!;
+  };
+
+  it.each(['pending', 'rejected'])(
+    'refuses a deal whose qualification approval is %s, before the form and before any write',
+    async (verdict) => {
+      const deal = await dealWith(`Unqualified ${verdict}`, verdict);
+      const run = await verify.flows.run('quote_generation', { recordId: deal.id }, { as: rep.token });
+
+      // A refusal is a successful evaluation that says no: `refused`, never
+      // `failed`, and never parked on a screen the rep would have to fill.
+      expect(run.status, 'the run was not refused').toBe('refused');
+      expect(run.success).toBe(true);
+      expect(run.refusalMessage, 'the rep is not told why').toMatch(/^Qualification approval comes first/);
+      expect(run.runId, 'a refused run is never resumed').toBeUndefined();
+      expect(run.screen, 'the rep was asked to fill in the quote form').toBeUndefined();
+      expect(run.summary?.acted ?? 0, 'a node wrote something').toBe(0);
+      expect(run.summary?.failed ?? 0, 'a node failed').toBe(0);
+
+      expect(await verify.rows('crm_quote', { crm_opportunity: deal.id }), 'a quote was created').toHaveLength(0);
+      const [after] = await verify.rows('crm_opportunity', { id: deal.id });
+      expect(after!.stage).toBe('qualification');
+      expect(after!.qualification_approval_status).toBe(verdict);
+    },
+  );
+
+  it('drafts the quote and advances the stage once 立项 is approved', async () => {
+    const deal = await dealWith('Qualified Deal', 'approved');
+    const quotes = await runQuote(deal.id, { quoteName: 'Q-QUALIFIED', expirationDays: 30, discount: 10 });
+
+    expect(quotes.length, 'one quote created').toBe(1);
+    expect(quotes[0]!.total_price).toBe(45000);
+    expect((await verify.rows('crm_opportunity', { id: deal.id }))[0]!.stage).toBe('proposal');
+  });
+
+  it.each([['the shipped default', 'not_required'], ['a deal with no verdict', null]] as const)(
+    'changes nothing with the gate off — %s: the quote is drafted and the stage advances',
+    async (_label, verdict) => {
+      const deal = await dealWith(`Ungated ${String(verdict)}`, verdict);
+      const quotes = await runQuote(deal.id, { quoteName: 'Q-UNGATED', expirationDays: 30, discount: 0 });
+
+      expect(quotes.length, 'one quote created').toBe(1);
+      expect((await verify.rows('crm_opportunity', { id: deal.id }))[0]!.stage).toBe('proposal');
+    },
+  );
+
+  /**
+   * ONE reading of the gate. The flow refuses a quote on exactly the deals
+   * `opportunity_lifecycle` refuses a stage move on — the same two verdicts,
+   * the same fail-open on every other value — so "armed" and "approved" have
+   * a single definition in this app. A drift on either side turns this red.
+   */
+  it.each(['pending', 'rejected', 'approved', 'not_required', null])(
+    'answers a deal holding %j exactly as opportunity_lifecycle answers its stage move',
+    async (verdict) => {
+      const quoteDeal = await dealWith(`Agree quote ${String(verdict)}`, verdict);
+      const moveDeal = await dealWith(`Agree move ${String(verdict)}`, verdict);
+
+      const run = await verify.flows.run('quote_generation', { recordId: quoteDeal.id }, { as: rep.token });
+      const quoteRefused = run.status === 'refused';
+
+      const err = await verify.hooks.run('crm_opportunity', 'update', { id: moveDeal.id, stage: 'needs_analysis' }, { as: rep.token })
+        .then(() => null, (e: Rec) => e);
+      if (err) {
+        // ADR-0112 envelope: the code and the status are the contract.
+        expect(err.code).toBe('RECORD_LOCKED');
+        expect(err.status).toBe(409);
+      }
+
+      expect(quoteRefused, 'the quote flow and the stage gate disagree about this verdict').toBe(err !== null);
+      expect(quoteRefused).toBe(verdict === 'pending' || verdict === 'rejected');
+    },
+  );
 });
 
 /**

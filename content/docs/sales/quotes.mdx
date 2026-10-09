@@ -93,6 +93,8 @@ You don't manually create quotes — instead, open an opportunity that is still 
 - Valid for (days) — default 30
 - Discount % — default 0; the label shows the 60% ceiling
 
+**If your organisation requires qualification approval (立项) for new deals, a deal is quoted only once it is approved.** While the deal's **Qualification Approval** is *Pending* or *Rejected*, **Generate Quote** opens no form: you are told that qualification approval comes first, and nothing is created. Tick **Request Qualification Approval** on the deal; once it is approved, the button works as described here. Out of the box this gate is off — every deal reads *Not Required* — and none of this applies (see [Opportunity Qualification](/docs/sales/opportunity-qualification#qualification-approval)).
+
 When you submit it, the system:
 
 1. Creates the quote in **Draft** status with the opportunity's amount as the subtotal. The quote takes the opportunity's account and primary contact, makes you its owner, is dated today, expires the number of days you entered from today, and has payment terms of Net 30. The opportunity's products are not copied: the quote starts with no line items.

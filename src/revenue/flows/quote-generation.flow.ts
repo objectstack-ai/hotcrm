@@ -32,6 +32,56 @@ export const QuoteGenerationFlow: Flow = {
 
   nodes: [
     { id: 'start', type: 'start', label: 'Start', config: { objectName: 'crm_opportunity' } },
+    // ─── The 立项 (qualification) gate, REQ-0006 step 11 (#2032) ─────────
+    //
+    // 「新增商机可跟进，立项通过后方可更新阶段、投标、赢丢单操作。」 Ruled (hotcrm-R74b
+    // item 2, B): before 立项 is approved, Generate Quote REFUSES and creates
+    // nothing. Steps 15 and 18 put quoting after the deal's approval too.
+    //
+    // Why the refusal is HERE, ahead of the form and of every writer: this
+    // flow writes the quote BEFORE the stage, and a flow carries no
+    // transaction (ADR-0077). With the gate armed, `opportunity_lifecycle`
+    // refuses the `update_opportunity` stage write — so the run used to fail
+    // AFTER `create_quote` had landed: measured on 17.7.0 as a sales_rep,
+    // `FLOW_FAILED` 400 at `update_opportunity` ("This deal needs
+    // qualification approval first …"), one draft quote left behind, the
+    // stage unchanged. ⛔ Not #2015's keep-stage-and-quote: that lock does
+    // not hold quoting, this gate does.
+    //
+    // The flow is the one choke point every door reaches — the record-header
+    // and list-row buttons and `POST /automation/quote_generation/trigger` —
+    // so the refusal lives here and `generate_quote` stays visible: hiding
+    // it would leave the rep a missing button with no reason, because an
+    // action's `visible` / `disabled` are bare predicates with nowhere to
+    // put a sentence.
+    //
+    // The FILTER is the gate's reading, the one `opportunity_lifecycle`
+    // applies: `pending` or `rejected` holds the deal (an approver's "no" is
+    // not a release), every other value — the shipped `not_required`,
+    // `approved`, none at all — does not. So `held` binds the deal only while
+    // it is held, and `null` otherwise; `test/flow-quote.test.ts` pins that
+    // the two answer alike, verdict by verdict.
+    //
+    // A read of its own, at click time. ⛔ Do not fold it into
+    // `get_opportunity`: that read stays AFTER the screen so the pricing and
+    // the #2015 approval branch (`e4a` / `e4b`) see the deal as it is at
+    // submit. The verdict cannot drift toward held while the form is open:
+    // `not_required` and `approved` are never written back to `pending`.
+    { id: 'get_held', type: 'get_record', label: 'Get Held Deal', config: { objectName: 'crm_opportunity', filter: { id: '{recordId}', qualification_approval_status: { $in: ['pending', 'rejected'] } }, outputVariable: 'held' } },
+    // A first-class refusal (`EndConfigSchema` `outcome: 'refused'`): the run
+    // ends `refused`, never `failed` and never parked, nothing is written,
+    // and the console shows the message with Close only — no Submit and no
+    // "completed" toast, which is what a message-only screen would give. It
+    // names the next step the `opportunity_lifecycle` refusal of this gate
+    // names.
+    //
+    // ⚠️ English only, and not by choice: at 17.7.0 the `flows` translation
+    // group carries a flow's `label` and its screens' `title` / field copy,
+    // and no key for an `end` node's `message` (a screen's `description` is
+    // refused by name). The console titles the dialog with the action's
+    // translated label. A platform gap, raised from #2032; ⛔ do not
+    // re-route the refusal through a screen to borrow a translatable title.
+    { id: 'refuse_held', type: 'end', label: 'Quote Refused', config: { outcome: 'refused', message: 'Qualification approval comes first: tick Request Qualification Approval. Nothing was created.' } },
     {
       id: 'screen_1', type: 'screen', label: 'Quote Details',
       config: {
@@ -172,7 +222,23 @@ export const QuoteGenerationFlow: Flow = {
   ],
 
   edges: [
-    { id: 'e1', source: 'start', target: 'screen_1', type: 'default' },
+    // ⛔ A retired edge's id stays VACANT: `e1` (start → screen_1) is one.
+    // Every surviving edge keeps its id, and a new one takes the next id after
+    // the highest in use — a duplicate id is inert, so nothing would flag it.
+    { id: 'e7', source: 'start', target: 'get_held', type: 'default' },
+    // ── The 立项 gate (#2032) ──────────────────────────────────────────
+    //
+    // COMPLEMENTARY CONDITIONALS off a plain data node, not a `decision` — the
+    // shape `billing-handoff-contract-activated.flow.ts` records: they are
+    // evaluated one by one, and `!= null` / `== null` partition exactly.
+    // `get_held` dominates both and binds `held` on every path — the row, or
+    // `null` on a miss — so neither read takes a `has()` guard: the
+    // get_record-dominated case `test/flow-variable-conditions.test.ts`
+    // records as needing none, written like `lead_conversion`'s `e5` / `e6`.
+    // Fail-OPEN like the hook: a deal the read cannot see goes on to the form
+    // and fails at `create_quote` exactly as it always did.
+    { id: 'e9', source: 'get_held', target: 'refuse_held', type: 'default', condition: P`vars.held != null`, label: 'Held' },
+    { id: 'e10', source: 'get_held', target: 'screen_1', type: 'default', condition: P`vars.held == null`, label: 'Not held' },
     { id: 'e2', source: 'screen_1', target: 'get_opportunity', type: 'default' },
     { id: 'e3', source: 'get_opportunity', target: 'create_quote', type: 'default' },
     { id: 'e4', source: 'create_quote', target: 'check_stage', type: 'default' },
