@@ -16,7 +16,7 @@ import { activityActions } from './_shared';
  * follows its master. A new row goes in the file for ITS family, never in
  * whichever file is already open: that is how one file re-grows past the 70%
  * advisory band `pnpm hygiene` prints. Full rule and rationale:
- * `src/translations/en.ts`.
+ * `src/sales/translations/en.ts`.
  */
 export const pipeline: Record<string, ObjectTranslationData> = {
   crm_lead: {
@@ -89,7 +89,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
         label: 'Duplicate Of',
         help: 'Which object holds the surviving record this lead repeats.',
         // `erased` is a tombstone, not a choice: the form does not offer it
-        // (see `src/views/lead.view.ts`), but a lead whose survivor was
+        // (see `src/sales/views/lead.view.ts`), but a lead whose survivor was
         // deleted carries it, so it needs a label wherever the record is
         // READ — detail page, list column, export. Untranslated it would
         // render as the raw `erased`.

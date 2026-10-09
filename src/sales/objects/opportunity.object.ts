@@ -639,7 +639,7 @@ export const Opportunity = ObjectSchema.create({
     apiEnabled: true,
     apiMethods: ['get', 'list', 'create', 'update', 'delete'], // Whitelist allowed API operations
     // #602 — proposals, redlines and signed orders belong on the deal.
-    // See the canonical capability note in `src/objects/index.ts`.
+    // See the canonical capability note in `src/sales/objects/index.ts`.
     files: true,
   },
 
@@ -714,5 +714,5 @@ export const Opportunity = ObjectSchema.create({
   //
   // ⚠️ No `workflows[]` here, and none is possible: object `workflows[]` were
   // removed from the platform. Field updates live in this object's `*.hook.ts`;
-  // scheduled status flips and notifications live in `src/flows/*.flow.ts`.
+  // scheduled status flips and notifications live in `src/*/flows/*.flow.ts`.
 });

@@ -109,7 +109,7 @@ const EXCLUSIVE_CONDITION = ATTENDEE_RESOLUTIONS
  * when its field goes invisible — no `clearOnHide`-shaped key exists on either
  * surface — so `visibleWhen` here cannot be paired into safety from this repo.
  * The half that would need to change is upstream; it is the same
- * fail-open/stale-state family as the note in `src/views/lead.view.ts`. ⛔ Do
+ * fail-open/stale-state family as the note in `src/sales/views/lead.view.ts`. ⛔ Do
  * not add `visibleWhen` to these four columns until a hidden field stops being
  * submitted; the rules above will keep refusing the row, but the person in
  * front of the form will have no way to fix it.
@@ -241,7 +241,7 @@ export const EventAttendee = ObjectSchema.create({
     // construction bites `crm_campaign_member`.
     //
     // `external_name` is the fourth resolution, but it is blank on every row the
-    // product actually writes (`src/actions/global.actions.ts` logs attendees
+    // product actually writes (`src/sales/actions/activity-actions.ts` logs attendees
     // with a party reference and never an external name), so it rescues nothing.
     //
     // Cascade rather than `restrict`: an attendee row is a JUNCTION whose whole
@@ -355,7 +355,7 @@ export const EventAttendee = ObjectSchema.create({
     //     profiles that name the object all grant `allowEdit`. A rep correcting
     //     Invited on a saved row is a non-`isSystem` UPDATE carrying a
     //     caller-supplied key: precisely what the strip deletes. The three
-    //     flipped columns appear in NO form section anywhere in `src/views/`,
+    //     flipped columns appear in NO form section anywhere in `src/*/views/`,
     //     `crm_opportunity`'s authored form included.
     // ⭐ It is also not the same KIND of column. `added_date` / `approved_date`
     // are stamped `{NOW()}` by the writer, so their value IS the write moment;

@@ -196,7 +196,7 @@ export const LeadConversionFlow: Flow = {
       // locales, and `lead_duplicate_check` is insert-only by design.
       //
       // Flow copy is English-only in this repo, deliberately and consistently:
-      // flows carry no entry in the locale packs (`src/translations/*.ts`
+      // flows carry no entry in the locale packs (`src/sales/translations/*.ts`
       // translate objects, fields, views and actions), which
       // `test/automation-docs-coverage.test.ts` records as the reason its
       // Chinese flow labels are authored in the test itself. The banner on the
@@ -276,7 +276,7 @@ export const LeadConversionFlow: Flow = {
       // the drift AGENTS.md documentation rule 5 forbids.
       //
       // Flow copy is English-only in this repo — see `warn_duplicate` above for
-      // the measurement; a flow has no entry in `src/translations/*.ts`.
+      // the measurement; a flow has no entry in `src/sales/translations/*.ts`.
       id: 'refuse_confirmed_duplicate', type: 'screen', label: 'Conversion Refused',
       config: {
         title: 'Conversion refused',

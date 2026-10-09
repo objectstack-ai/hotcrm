@@ -14,10 +14,10 @@ export const SystemAdminProfile = {
   name: 'system_admin',
   label: 'System Administrator',
   objects: {
-    // `allowTransfer` on every object — canonical note in `src/profiles/index.ts`.
+    // `allowTransfer` on every object — canonical note in `src/sales/profiles/index.ts`.
     // The admin is the persona that reassigns ownership when someone leaves.
     // `allowExport` on the five objects with an export surface — see the
-    // canonical note in `src/profiles/index.ts`. It is authored even here:
+    // canonical note in `src/sales/profiles/index.ts`. It is authored even here:
     // 17.0 gates export on the explicit bit, and `modifyAllRecords` does not
     // stand in for it, so without these an admin cannot export either.
     crm_lead:        { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: true, modifyAllRecords: true, allowTransfer: true, allowExport: true },

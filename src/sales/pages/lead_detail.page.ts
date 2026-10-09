@@ -81,8 +81,8 @@ export const LeadDetailPage: Page = {
             // @objectstack/spec 17.3.0, and this repo authors against the
             // protocol (#1653). Each id is the `name` of a crm_lead-scoped
             // action — `convert_lead` / `schedule_followup` in
-            // `src/actions/lead.actions.ts`, the activity trio in
-            // `src/actions/global.actions.ts`.
+            // `src/sales/actions/lead.actions.ts`, the activity trio in
+            // `src/sales/actions/activity-actions.ts`.
             actions: [
               'convert_lead',
               'schedule_followup',

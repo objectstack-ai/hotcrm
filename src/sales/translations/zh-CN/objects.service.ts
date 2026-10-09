@@ -16,7 +16,7 @@ import { activityActions } from './_shared';
  * follows its master. A new row goes in the file for ITS family, never in
  * whichever file is already open: that is how one file re-grows past the 70%
  * advisory band `pnpm hygiene` prints. Full rule and rationale:
- * `src/translations/zh-CN.ts`.
+ * `src/sales/translations/zh-CN.ts`.
  */
 export const service: Record<string, ObjectTranslationData> = {
   crm_case: {
@@ -54,7 +54,7 @@ export const service: Record<string, ObjectTranslationData> = {
         // sets (case: low/medium/high/critical · task: low/normal/high/urgent).
         // When both rendered 紧急 the screen showed one word for two values the
         // model treats as distinct, which is how a case value ends up in a task
-        // predicate (`src/views/task.view.ts` carries the tombstone of that
+        // predicate (`src/sales/views/task.view.ts` carries the tombstone of that
         // crossing). Maintainer ruling 2026-08-31, #1342: case `critical` is
         // 严重, task `urgent` keeps 紧急. en/es-ES/ja-JP already separate them
         // (Critical/Urgent · Crítica/Urgente · 重大/緊急); zh-CN was the outlier.

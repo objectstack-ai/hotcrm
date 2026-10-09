@@ -21,7 +21,7 @@
  * intended outcome for everything else.
  */
 
-/** Foreign spellings → `INDUSTRY_OPTIONS` values (`src/objects/_picklists.ts`). */
+/** Foreign spellings → `INDUSTRY_OPTIONS` values (`src/sales/objects/_picklists.ts`). */
 export const INDUSTRY_SYNONYMS: Record<string, string> = {
   'SaaS': 'software',
   'Saas': 'software',
