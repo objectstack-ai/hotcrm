@@ -19,4 +19,6 @@ The account page header shows the account's name, and the demo accounts can be e
 - **The accounts guide describes the tabs that are really there.** The
   *Account detail layout* section, in English and both Chinese versions, listed
   seven tabs the record page does not have. It now describes **Details**,
-  **Related** and **Attachments**, plus the **Discussion** feed below them.
+  **Related** and **Attachments**, the **Approvals** tab that an account
+  shows once it has been through approval, and the **Discussion** feed below
+  the tabs.
