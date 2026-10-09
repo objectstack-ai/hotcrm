@@ -39,7 +39,8 @@ Lead ──convert──▶ Account + Contact ──▶ Opportunity ──▶ Qu
 
 Most of what makes HotCRM useful is **automatic**: a new lead gets a follow-up
 deadline and lands in a queue without anyone configuring it; a deal over a
-threshold halts for sign-off; a case that misses its SLA escalates on its own.
+threshold halts for sign-off; a case that misses its SLA escalates on its own
+once the deployment switches scheduled work on.
 The guides above document each of those behaviors and the exact thresholds, so
 nothing the system does is a surprise.
 

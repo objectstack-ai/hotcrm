@@ -38,15 +38,20 @@ The automation below watches that clock and the priority for you.
 
 ## The clock is watched for you — SLA breach handling (automatic)
 
-An **hourly** sweep checks every open case. If a case passes its **SLA Due Date**
-without being resolved, the system automatically:
+On a deployment that has switched scheduled work on, an **hourly** sweep checks
+every open case. If a case passes its **SLA Due Date** without being resolved,
+the system automatically:
 
 - marks it **SLA Violated**,
 - **escalates** it (status → *Escalated*, with an escalation reason stamped), and
 - alerts the owner.
 
-You never have to manually catch a missed SLA — but you should work cases before
-the due date, because a breach is recorded permanently on the case.
+Where the sweep runs, you never have to manually catch a missed SLA — but you
+should work cases before the due date, because a breach is recorded permanently
+on the case. A default install boots the sweep unbound (scheduled work is off
+until the deployment turns it on; see **[Administration](crm_admin.md)**), so
+there no breach is flagged and nobody is alerted: watch the **SLA Due Date**
+yourself.
 
 ## Critical cases escalate instantly (automatic)
 

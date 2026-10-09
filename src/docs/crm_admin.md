@@ -113,14 +113,22 @@ revisits:
 | Large-deal approval (+ director) | amount **> $500,000** | `opportunity-approval.flow.ts` |
 | Hot-lead follow-up SLA | **1 day** (Lead Score ≥ 4★) | `lead-assignment.flow.ts` |
 | Standard-lead follow-up SLA | **3 days** | `lead-assignment.flow.ts` |
-| Stalled-deal nudge | **> 14 days** in stage, swept daily **07:30** | `opportunity-stagnation.flow.ts` |
+| Stalled-deal nudge | **> 14 days** in stage, swept daily **07:30** (scheduled work only) | `opportunity-stagnation.flow.ts` |
 | Won-deal alert | **Closed Won** at **$100,000** or more | `opportunity-won-alert.flow.ts` |
 | Quote default validity | **30 days** | `quote-generation.flow.ts` |
-| Quote auto-expiration sweep | daily **01:00** | `quote-expiration.flow.ts` |
-| Case SLA breach sweep | **hourly** | `case-sla-monitor.flow.ts` |
+| Quote auto-expiration sweep | daily **01:00** (scheduled work only) | `quote-expiration.flow.ts` |
+| Case SLA breach sweep | **hourly** (scheduled work only) | `case-sla-monitor.flow.ts` |
 | Critical-case auto-escalation | priority = **Critical** | `case-escalation.flow.ts` |
-| Contract renewal reminder | each contract's **Renewal Notice Days**, swept daily **08:00** | `contract-renewal.flow.ts` |
-| Contract auto-expiration | past **end date**, swept daily **00:00** | `contract-expiration.flow.ts` |
+| Contract renewal reminder | each contract's **Renewal Notice Days**, swept daily **08:00** (scheduled work only) | `contract-renewal.flow.ts` |
+| Contract auto-expiration | past **end date**, swept daily **00:00** (scheduled work only) | `contract-expiration.flow.ts` |
+
+The five rows marked *scheduled work only* are scheduled flows, and a deployment
+runs scheduled flows only once it sets `OS_AUTOMATION_SCHEDULED_WORK_ENABLED=true`
+(`1`, `on` and `yes` also count; `os doctor` prints the effective value). A
+default install leaves it unset and boots those flows unbound: each logs that it
+declares a `schedule` trigger but is NOT bound. So nothing sweeps there. No quote
+or contract expires on its own, no SLA breach is flagged, and no stalled-deal or
+renewal reminder goes out. The times above are what runs once the switch is on.
 
 > Object names, fields, and relationships are visible directly in **Studio** and
 > on each record's detail page — they are intentionally **not** duplicated here.
