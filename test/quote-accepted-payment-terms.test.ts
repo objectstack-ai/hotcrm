@@ -87,15 +87,11 @@ let verify: VerifyStack;
 let rep: Person;
 beforeAll(async () => {
   verify = await hotcrmStack();
-  // The acceptor is a sales MANAGER. On 17.7.0 a sales rep may mark a quote
-  // Accepted (`crm_quote.allowEdit`) but holds `crm_contract.allowCreate:
-  // false`, and `quote_on_accepted` writes as the caller — so a rep's
-  // acceptance closes the deal and the engine refuses the draft, which the
-  // hook's `onError: 'log'` keeps silent. Reported as a finding; this file's
-  // subject is what the draft CARRIES, so it runs as the persona whose
-  // acceptance drafts one.
-  rep = await signUpPerson(verify, 'manager@quote-accepted-payment-terms.test', {
-    name: 'Quote Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+  // The acceptor is a sales REP — the ordinary CPQ path. A rep holds
+  // `crm_contract.allowCreate: false`; the draft is the elevated hook's write
+  // (`runAs: 'system'`, #2014), not the rep's.
+  rep = await signUpPerson(verify, 'rep@quote-accepted-payment-terms.test', {
+    name: 'Quote Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
   });
 }, 120_000);
 
@@ -103,7 +99,7 @@ let deal = 0;
 /**
  * A rep presents a quote whose stored terms are `stored.payment_terms`, then
  * accepts it in a write carrying `quote`. Returns the contract document
- * `quote_on_accepted` handed the engine and the row the engine stored.
+ * `quote_accepted_contract_draft` handed the engine and the row the engine stored.
  *
  * A stored `null` / `''` is written by the rep CLEARING the terms after the
  * quote exists — the only way a real quote holds no terms (see the header).
@@ -130,7 +126,7 @@ const accepted = async (quote: Rec, stored: Rec = {}): Promise<{ doc: Rec; row: 
   const engine = recordEngineWrites(verify);
   try {
     await verify.hooks.run('crm_quote', 'update', { id, status: 'accepted', ...quote }, { as: rep.token });
-    // `quote_on_accepted` is `async: true` — it runs after the accepting write returned.
+    // `quote_accepted_contract_draft` is `async: true` — it runs after the accepting write returned.
     const insert = await vi.waitFor(() => {
       const [call] = engine.of('crm_contract', 'insert');
       expect(call, 'the hook drafted no contract at all').toBeTruthy();
@@ -190,7 +186,7 @@ describe('a quote that chose no terms is left exactly as it is today', () => {
     // The third junk shape the hook guards against cannot be stored on a real
     // quote: `crm_quote.payment_terms` is a select, and the engine refuses a
     // number on every write, so the contract can never be handed one.
-    const [account] = await verify.seed('crm_account', [{ name: 'Junk Terms Co' }]);
+    const [account] = await verify.seed('crm_account', [{ name: 'Junk Terms Co', owner_id: rep.id }]);
     await expect(verify.hooks.run('crm_quote', 'insert', {
       name: 'Junk terms quote', crm_account: account.id, quote_date: today(), expiration_date: '2030-12-31',
       payment_terms: 42,
@@ -281,7 +277,7 @@ describe('the rationale the shared vocabulary is justified by', () => {
       expect(
         readFileSync(join(process.cwd(), file), 'utf8'),
         `${file} claims an accepted quote's terms carry over but does not say what performs it`,
-      ).toContain('quote_on_accepted');
+      ).toContain('quote_accepted_contract_draft');
     }
   });
 });

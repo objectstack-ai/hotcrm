@@ -9,10 +9,14 @@ import type { HookApi } from '../../sales/objects/_hook-api';
  * - Defaults `expiration_date` to `quote_date + 30 days` when missing.
  * - Freezes quotes once `accepted` or `expired` — against USER edits only: a
  *   write that is purely the engine clearing a link is let through.
+ * - Refuses a user's acceptance while the linked opportunity is held by an
+ *   approval, because acceptance closes that deal as won (#2014).
  * - On `accepted`, drafts a contract — carrying the quote's negotiated
  *   `payment_terms` onto it, and filling what the quote cannot express from
  *   `DRAFT_CONTRACT_DEFAULTS`, declared placeholders rather than decisions
- *   (#1129) — and pushes the linked opportunity to `closed_won`.
+ *   (#1129) — and pushes the linked opportunity to `closed_won`. Two hooks,
+ *   `quote_accepted_contract_draft` and `quote_on_accepted`, because only the
+ *   draft is elevated (#2014; see its note).
  */
 
 // ⚠️ Helpers used by handlers are declared INSIDE each handler — L2 hook bodies
@@ -48,6 +52,17 @@ const quoteValidation: Hook = {
     const { event, input } = ctx;
     const previous = ctx.previous;
 
+    // The quote as every quote surface titles it. `crm_quote.display_title` is
+    // `quote_number - name`; compose the same pair from the two stored columns
+    // rather than appending the record id. A lowered hook body cannot read the
+    // formula field itself, and both of its sources are already on the
+    // pre-image — the number is an engine-issued autonumber, so it is read from
+    // `previous` only. Both refusals below name the quote with it.
+    function subject(): string {
+      const label = [previous?.quote_number, previous?.name].map((v) => (typeof v === 'string' ? v.trim() : '')).filter(Boolean).join(' - ');
+      return label ? `Quote ${label}` : 'Quote';
+    }
+
     /**
      * `iso` + `days`, on ONE calendar — UTC, end to end.
      *
@@ -74,10 +89,7 @@ const quoteValidation: Hook = {
     }
 
     if (event === 'beforeInsert' && !input.expiration_date) {
-      const base =
-        typeof input.quote_date === 'string'
-          ? input.quote_date
-          : new Date().toISOString().slice(0, 10);
+      const base = typeof input.quote_date === 'string' ? input.quote_date : new Date().toISOString().slice(0, 10);
       input.expiration_date = addDays(base, 30);
     }
 
@@ -94,8 +106,7 @@ const quoteValidation: Hook = {
         // by the 9.x runtime — never treat those system writes as edits to a
         // frozen quote, only user changes to business fields.
         const SYSTEM_FIELDS = new Set([
-          'id', 'owner_id', 'created_at', 'updated_at',
-          'created_by', 'updated_by', 'space_id', 'organization_id', 'org_id', 'version',
+          'id', 'owner_id', 'created_at', 'updated_at', 'created_by', 'updated_by', 'space_id', 'organization_id', 'org_id', 'version',
         ]);
         // ⚠️ `violating` rather than `changed`: the three freeze guards share
         // one reference-cleanup predicate verbatim, and a shared block can only
@@ -168,38 +179,113 @@ const quoteValidation: Hook = {
           );
           if (isReferenceCleanup) return;
 
-          // `crm_quote.display_title` is `quote_number - name`; compose the same
-          // pair from the two stored columns rather than appending the record
-          // id. A lowered hook body cannot read the formula field itself, and
-          // both of its sources are already on the pre-image — the number is an
-          // engine-issued autonumber, so it is read from `previous` only.
-          const quoteNumber =
-            typeof previous.quote_number === 'string' ? previous.quote_number.trim() : '';
-          const name = typeof previous.name === 'string' ? previous.name.trim() : '';
-          const label = [quoteNumber, name].filter(Boolean).join(' - ');
-          const subject = label ? `Quote ${label}` : 'Quote';
-          throw refuse(
-            `${subject} is ${previous.status as string}; only internal_notes may be edited. Attempted: ${violating.join(', ')}.`,
-            'RECORD_LOCKED',
-            409,
-          );
+          const what = `${subject()} is ${previous.status as string}`;
+          throw refuse(`${what}; only internal_notes may be edited. Attempted: ${violating.join(', ')}.`, 'RECORD_LOCKED', 409);
+        }
+      }
+
+      // ─── An acceptance the linked deal's approval holds (#2014) ─────────
+      //
+      // Accepting a quote closes its opportunity as won (`quote_on_accepted`,
+      // as the CALLER). While an approval holds that deal, that close is
+      // refused — and it used to be refused one write too late: the acceptance
+      // was admitted, the close-won met the refusal inside an `async` hook,
+      // `onError: 'log'` swallowed it, and an accepted (therefore frozen) quote
+      // sat on an open deal it could never close again (measured on 17.7.0: a
+      // sales rep, a deal pending its Large Deal Approval). Maintainer ruling
+      // on #2014 (option C): refuse the ACCEPTANCE, at the moment it is made,
+      // so an approval stays an approval and the rep learns why.
+      //
+      // "Held" is exactly what makes that close-won fail, measured per state
+      // on 17.7.0 with a rep's direct close — no wider:
+      //   • `approval_status` `pending`: the Large Deal Approval's request is
+      //     open, and its approval node locks the record (`lockRecord: true`)
+      //     → the platform's RECORD_LOCKED. The column is the node's own
+      //     mirror of the live request (`approvalStatusField`); a recalled or
+      //     decided request leaves it `rejected` / `approved`, and neither
+      //     holds the deal (the close goes through on both);
+      //   • `status_change_approval_status` `pending` or `rejected` (REQ-0006,
+      //     once an install arms it) → `opportunity_lifecycle`'s refusal of a
+      //     direct close; with a request open the platform lock holds too;
+      //   • `qualification_approval_status` `pending` or `rejected` (the 立项
+      //     gate, once armed) → `opportunity_lifecycle`'s refusal of any stage
+      //     move. Its approval node does NOT lock the record (`lockRecord:
+      //     false`); the refusal is the app's gate, and it is mirrored for that.
+      // A closed deal is never close-won again, so it holds nothing here.
+      //
+      // ⚠️ BOUNDARIES, recorded rather than hidden. Read as the CALLER: a deal
+      // the caller cannot read cannot be closed by them either, for a reason
+      // that is not an approval, and that is not this gate's to name — so an
+      // unreadable deal, or a read that fails, stands down. USER writes only,
+      // the boundary the freeze above draws: a system write's close-won is not
+      // held by the lock or by either app gate (both judge users), so refusing
+      // its acceptance would be wider than the condition it mirrors.
+      if (input.status === 'accepted' && previous.status !== 'accepted') {
+        const dealId = [input.crm_opportunity, previous.crm_opportunity].find((v) => typeof v === 'string' && v);
+        const deal = dealId
+          ? await (ctx.api as HookApi | undefined)?.object('crm_opportunity').findOne({
+            where: { id: dealId },
+            fields: ['stage', 'approval_status', 'status_change_approval_status', 'qualification_approval_status'],
+          }).catch(() => null)
+          : null;
+        // Each hold is named by the field label and value the rep sees on the
+        // deal itself, so the sentence points at where to look. A `rejected`
+        // Large Deal Approval holds nothing (measured: the close goes through).
+        const held = deal && !String(deal.stage).startsWith('closed_')
+          ? [['approval_status', 'Approval Status'], ['status_change_approval_status', 'Status Change Approval'], ['qualification_approval_status', 'Qualification Approval']]
+            .filter(([f]) => deal[f] === 'pending' || (deal[f] === 'rejected' && f !== 'approval_status'))
+            .map(([f, label]) => `${label} is ${deal[f] === 'pending' ? 'Pending' : 'Rejected'}`)
+          : [];
+        // The quote has exactly one opportunity, so "its opportunity" names the
+        // deal unambiguously — and ⛔ never by its record id.
+        if (held.length > 0) {
+          const what = `${subject()} cannot be accepted while its opportunity is held by an approval`;
+          throw refuse(`${what} (${held.join('; ')}): accepting it would close that deal as won. Accept it once the approval is granted.`, 'RECORD_LOCKED', 409);
         }
       }
     }
   },
 };
 
-const quoteAccepted: Hook = {
-  name: 'quote_on_accepted',
+/**
+ * On acceptance: draft the contract.
+ *
+ * ## `runAs: 'system'`, and why the close-won is a separate hook (#2014)
+ *
+ * A sales rep holds `crm_contract.allowCreate: false`, and a rep accepting the
+ * quote on their own deal is the ordinary CPQ path — so as the caller the
+ * draft was refused ("You do not have permission"), `onError: 'log'` swallowed
+ * it, and the deal went `closed_won` with no contract (measured on 17.7.0).
+ * The draft is the business's paperwork for a sale the rep is entitled to
+ * record, not the rep authoring a contract, so this hook elevates (AGENTS.md
+ * rule 9); the rep still cannot create a contract by hand. Elevation is not
+ * anonymity: the contract's `created_by` names the person who accepted.
+ *
+ * Elevating as little as possible is why the close-won is NOT here. `runAs` is
+ * per hook, and a system write is not held by an approval's record lock:
+ * elevated, an accepted quote would close a deal its manager has not approved.
+ * `quote_on_accepted` keeps that write the caller's. The two were already
+ * independent legs (#714) — a contract that will not draft must not decide
+ * whether the deal is won — and two hooks make that structural.
+ *
+ * Organization (AGENTS.md rule 10): it issues no read, so there is no scan to
+ * pin; its one write is an insert built from the triggering quote's own links,
+ * and the engine stamps its `organization_id` from the trigger's context, which
+ * elevation carries through unchanged (`withRunAs('system')` is the triggering
+ * context plus `isSystem`) — pinned on a walled deployment by
+ * `test/hook-org-inheritance.test.ts`.
+ */
+const quoteAcceptedContractDraft: Hook = {
+  name: 'quote_accepted_contract_draft',
   object: 'crm_quote',
   events: ['afterUpdate'],
   priority: 800,
   async: true,
   onError: 'log',
-  description: 'When quote is accepted: draft a contract and close-won the linked opportunity.',
+  runAs: 'system',
+  description: 'Draft the accepted quote’s contract.',
   handler: async (ctx: HookContext) => {
-    const { input } = ctx;
-    const previous = ctx.previous;
+    const { input, previous } = ctx;
     if (input.status !== 'accepted' || previous?.status === 'accepted') return;
     const api = ctx.api as HookApi | undefined;
     if (!api) return;
@@ -245,24 +331,14 @@ const quoteAccepted: Hook = {
      * the JSON hop into the engine, and the writes below drop the key outright,
      * so an absent optional link is an ABSENT COLUMN rather than a junk value.
      */
-    function pickId(...candidates: unknown[]): string | undefined {
-      for (const candidate of candidates) {
-        if (typeof candidate === 'string' && candidate) return candidate;
-      }
-      return undefined;
-    }
+    const pickId = (...candidates: unknown[]): string | undefined =>
+      candidates.find((c): c is string => typeof c === 'string' && c !== '');
 
-    const quoteId = pickId(input.id, previous?.id);
     const accountId = pickId(input.crm_account, previous?.crm_account);
     const contactId = pickId(input.crm_contact, previous?.crm_contact);
     const opportunityId = pickId(input.crm_opportunity, previous?.crm_opportunity);
     const ownerId = pickId(input.owner_id, previous?.owner_id, ctx.user?.id);
-    const totalPrice =
-      typeof input.total_price === 'number'
-        ? input.total_price
-        : typeof previous?.total_price === 'number'
-          ? (previous.total_price as number)
-          : 0;
+    const totalPrice = [input.total_price, previous?.total_price].find((v) => typeof v === 'number') ?? 0;
 
     /**
      * The payment terms the customer actually negotiated.
@@ -277,16 +353,12 @@ const quoteAccepted: Hook = {
      * activates, so a defaulted term becomes an invoicing term.
      *
      * Read like `totalPrice` above: the patch's value when the accepting write
-     * carried one, else the value already on the quote. A quote that never chose
-     * a term yields `undefined`, which drops the key (see `pickId`) and lets the
-     * contract's own default apply.
+     * carried one, else the value already on the quote — `pickId`'s rule
+     * exactly (the first non-empty string), so it is read with `pickId`. A
+     * quote that never chose a term yields `undefined`, which drops the key and
+     * lets the contract's own default apply.
      */
-    const paymentTerms =
-      typeof input.payment_terms === 'string' && input.payment_terms
-        ? input.payment_terms
-        : typeof previous?.payment_terms === 'string' && previous.payment_terms
-          ? (previous.payment_terms as string)
-          : undefined;
+    const paymentTerms = pickId(input.payment_terms, previous?.payment_terms);
 
     const today = new Date().toISOString().slice(0, 10);
 
@@ -343,31 +415,19 @@ const quoteAccepted: Hook = {
     // readable. `quote_number` is an engine-issued autonumber and never appears
     // on an update payload, so it is read from the pre-image alone; `name` can
     // be changing in this very write.
-    const quoteNumber =
-      typeof previous?.quote_number === 'string' ? previous.quote_number.trim() : '';
-    const quoteName =
-      (typeof input.name === 'string' && input.name.trim()) ||
-      (typeof previous?.name === 'string' && previous.name.trim()) ||
-      '';
-    const quoteLabel = [quoteNumber, quoteName].filter(Boolean).join(' - ');
+    const trimmed = (v: unknown): string => (typeof v === 'string' ? v.trim() : '');
+    const quoteLabel = [trimmed(previous?.quote_number), [input.name, previous?.name].map(trimmed).find(Boolean)].filter(Boolean).join(' - ');
 
     // Only lookups we actually HAVE are written. A missing optional link is an
     // absent key — never `false` (see `pickId`), and never `null` either: `null`
     // is a legal shape for the optional `crm_opportunity` but not for the
     // required `crm_contact`, and one idiom for both is what keeps this honest.
     const contract: Record<string, unknown> = {
+      ...DRAFT_CONTRACT_DEFAULTS,
       status: 'draft',
-      contract_term_months: DRAFT_CONTRACT_DEFAULTS.contract_term_months,
-      start_date: DRAFT_CONTRACT_DEFAULTS.start_date,
-      end_date: addMonths(
-        DRAFT_CONTRACT_DEFAULTS.start_date,
-        DRAFT_CONTRACT_DEFAULTS.contract_term_months,
-      ),
+      end_date: addMonths(DRAFT_CONTRACT_DEFAULTS.start_date, DRAFT_CONTRACT_DEFAULTS.contract_term_months),
       contract_value: totalPrice,
-      contract_type: DRAFT_CONTRACT_DEFAULTS.contract_type,
-      description: quoteLabel
-        ? `Auto-drafted from accepted quote ${quoteLabel}`
-        : 'Auto-drafted from an accepted quote',
+      description: quoteLabel ? `Auto-drafted from accepted quote ${quoteLabel}` : 'Auto-drafted from an accepted quote',
     };
     if (accountId) contract.crm_account = accountId;
     if (contactId) contract.crm_contact = contactId;
@@ -387,17 +447,6 @@ const quoteAccepted: Hook = {
     // only record of where it came from. Copying any of them is part of option
     // A (faithful transcription) and unfreezes with it, not before.
 
-    // ⚠️ The two legs are INDEPENDENT and must stay so. As one straight-line
-    // sequence, anything that made the contract insert throw also swallowed the
-    // close-won below it — an accepted quote on a live opportunity left the deal
-    // open, with the hook's `onError: 'log'` making the whole thing invisible to
-    // the user. Winning the deal is keyed on the quote being ACCEPTED, not on
-    // the contract being draftable, so a refusal from `crm_contract` must not
-    // decide the opportunity's stage. Failures are collected and re-thrown
-    // together at the end, so the log the runtime writes still names everything
-    // that went wrong.
-    const failures: string[] = [];
-
     try {
       await api.object('crm_contract').insert(contract);
     } catch (err) {
@@ -407,55 +456,71 @@ const quoteAccepted: Hook = {
       // required". That refusal is the documented behaviour, not a defect —
       // `content/docs/sales/quotes.mdx` already tells reps to put the contact on
       // the quote first, because "what the quote does not carry, acceptance
-      // cannot pass on". What this catch changes is that the refusal is now
-      // truthful (a named missing field, not "received boolean") and that it no
-      // longer takes the close-won leg with it.
-      failures.push(
-        `could not draft the contract for quote ${quoteId ?? '(unknown)'}: ${(err as Error).message}`,
-      );
-    }
-
-    if (opportunityId) {
-      try {
-        const opp = await api.object('crm_opportunity').findOne({ where: { id: opportunityId } });
-        if (opp && opp.stage !== 'closed_won' && opp.stage !== 'closed_lost') {
-          await api.object('crm_opportunity').update(
-            {
-              id: opportunityId,
-              stage: 'closed_won',
-              close_date: today,
-              // `crm_opportunity.win_reason` is `requiredWhen` stage is
-              // closed_won (#593), and this write is the ONE close path with no
-              // human in it to attribute the win — so without a value here the
-              // CPQ leg would be rejected by the engine on every accepted quote.
-              // `quote_accepted` names the automated path rather than guessing a
-              // rep's answer; keep the reason the rep already recorded if there
-              // is one.
-              ...(opp.win_reason ? {} : { win_reason: 'quote_accepted' }),
-            },
-            { where: { id: opportunityId } },
-          );
-        }
-      } catch (err) {
-        failures.push(
-          `could not close-won opportunity ${opportunityId}: ${(err as Error).message}`,
-        );
-      }
-    }
-
-    if (failures.length > 0) {
-      // DELIBERATELY BARE — the one throw in this file the #1075 sweep left
-      // alone. Every other throw here is a business refusal: the user asked for
-      // something the rules forbid, and an envelope tells their client which
-      // rule. This one is the opposite. It fires from an `afterUpdate` cascade
-      // when close-won bookkeeping FAILED for reasons the user did not cause
-      // and cannot act on, so it is a server fault and belongs in the 5xx band.
-      // A bare Error is already mapped to `500 / INTERNAL_ERROR` by
-      // `resolveThrownHttpError`, which is the correct answer — dressing it in
-      // a 4xx refusal code would file a broken cascade as user error.
-      throw new Error(`quote_on_accepted: ${failures.join('; ')}`);
+      // cannot pass on". The refusal is truthful (a named missing field, not
+      // "received boolean"), and since the close-won lives in its own hook it
+      // can no longer take that leg with it.
+      //
+      // DELIBERATELY BARE, like the close-won one in `quote_on_accepted`: a
+      // cascade fault the accepting user neither caused nor can act on, so a
+      // 500, never a 4xx refusal envelope (#1075).
+      throw new Error(`could not draft the contract for quote ${String(input.id ?? previous?.id)}: ${(err as Error).message}`);
     }
   },
 };
 
-export default [quoteValidation, quoteAccepted];
+/**
+ * On acceptance: push the linked opportunity to `closed_won`.
+ *
+ * Deliberately NOT elevated — the reason is on `quote_accepted_contract_draft`
+ * above: this write stays the accepting caller's, so the opportunity's own
+ * guards and an approval's record lock judge it as they always have. A deal an
+ * approval holds is refused at the acceptance itself (`quote_workflow`), so this
+ * write no longer meets that lock on a user's acceptance.
+ */
+const quoteAccepted: Hook = {
+  name: 'quote_on_accepted',
+  object: 'crm_quote',
+  events: ['afterUpdate'],
+  priority: 800,
+  async: true,
+  onError: 'log',
+  description: 'Close-win the accepted quote’s opportunity.',
+  handler: async (ctx: HookContext) => {
+    const { input, previous } = ctx;
+    if (input.status !== 'accepted' || previous?.status === 'accepted') return;
+    const api = ctx.api as HookApi | undefined;
+    // A record id or nothing — never boolean `false` (#714; the full note is on
+    // `pickId` in `quote_accepted_contract_draft`).
+    const id = [input.crm_opportunity, previous?.crm_opportunity].find((v): v is string => typeof v === 'string' && v !== '');
+    if (!api || !id) return;
+
+    try {
+      const opp = await api.object('crm_opportunity').findOne({ where: { id } });
+      // A deal already closed, won or lost, is left where it is.
+      if (opp && !String(opp.stage).startsWith('closed_')) {
+        // `crm_opportunity.win_reason` is `requiredWhen` stage is closed_won
+        // (#593), and this write is the ONE close path with no human in it to
+        // attribute the win — so without a value here the CPQ leg would be
+        // rejected by the engine on every accepted quote. `quote_accepted`
+        // names the automated path rather than guessing a rep's answer; keep
+        // the reason the rep already recorded if there is one.
+        const won = { id, stage: 'closed_won', close_date: new Date().toISOString().slice(0, 10) };
+        await api.object('crm_opportunity').update({ ...won, ...(opp.win_reason ? {} : { win_reason: 'quote_accepted' }) }, { where: { id } });
+      }
+    } catch (err) {
+      // DELIBERATELY BARE — one of the two throws in this file the #1075 sweep
+      // left alone (the other is the contract draft's, above). Every other
+      // throw here is a business refusal: the user asked for something the
+      // rules forbid, and an envelope tells their client which rule. This one
+      // is the opposite. It fires from an `afterUpdate` cascade when close-won
+      // bookkeeping FAILED for reasons the user did not cause and cannot act
+      // on, so it is a server fault and belongs in the 5xx band. A bare Error is
+      // already mapped to `500 / INTERNAL_ERROR` by `resolveThrownHttpError`,
+      // which is the correct answer — dressing it in a 4xx refusal code would
+      // file a broken cascade as user error.
+      throw new Error(`could not close-won opportunity ${id}: ${(err as Error).message}`);
+    }
+  },
+};
+
+export default [quoteValidation, quoteAcceptedContractDraft, quoteAccepted];

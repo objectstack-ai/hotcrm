@@ -82,6 +82,8 @@ There are **two** closed stages, not three: *Closed Won* and *Closed Lost*. Ther
 
 Two of those edges exist for the CPQ path rather than for a rep clicking through stages: *→ Proposal* is legal from every pre-proposal stage because the `quote_generation` flow fast-forwards the deal to *Proposal* the moment a quote is generated, which can happen at any open stage; and *Proposal → Closed Won* is legal because the `quote_on_accepted` hook wins the linked deal straight from an accepted quote, with no separate negotiation step.
 
+That close is never the way around an approval. While an approval holds the deal — its large-deal approval pending, or, where they are switched on, its status-change or qualification approval pending or rejected — accepting the quote is itself refused, so an accepted quote never sits on a deal it could not close. See [Quotes](/docs/sales/quotes#built-in-rules).
+
 **Not in the table**: moving **backwards**. No open stage declares an edge to an earlier one, so *Negotiation* back to *Proposal* — a deal slipping — is outside the route and logs a warning like any other departure (it still saves, per the note above). Neither closed stage declares an edge either, so there is no reopen transition and no admin path back to an open stage.
 
 A closed opportunity is separately **frozen**, and by more than the stage field: the `opportunity_lifecycle` hook refuses any user edit to a *Closed Won* or *Closed Lost* record except to `description`, `next_step` and `notes`, and that refusal is a thrown error naming the fields attempted — not a warning. Approval verdicts and platform-managed columns are exempted so an in-flight approval can still land, and a write with no authenticated user (a seed or a backfill) is not guarded at all.

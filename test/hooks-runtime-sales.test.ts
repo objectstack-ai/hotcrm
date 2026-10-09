@@ -46,9 +46,6 @@ beforeAll(async () => {
   rep2 = await signUpPerson(verify, 'rep2@hooks-runtime-sales.test', {
     name: 'Second Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
   });
-  // Contracts are drafted and quotes accepted by a sales MANAGER: a rep holds
-  // `crm_contract.allowCreate: false`, and `quote_on_accepted` writes as its
-  // caller (see `test/quote-accepted-draft-defaults.test.ts`).
   manager = await signUpPerson(verify, 'manager@hooks-runtime-sales.test', {
     name: 'Sales Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
   });
@@ -376,47 +373,162 @@ describe('quote_workflow', () => {
   });
 });
 
-describe('quote_on_accepted', () => {
-  /**
-   * The manager's presented quote on their own deal (in `stage`), priced at
-   * 120,000 by a line item, accepted by the manager; the contract the async
-   * hook drafts, read back once it lands.
-   */
-  const acceptQuote = async (stage = 'proposal') => {
-    const create = async (object: string, doc: Rec) => (await verify.hooks.run(object, 'insert', doc, as(manager))).id as string;
-    const acct = await create('crm_account', { name: `Accepted Co ${++k}` });
-    const contact = await create('crm_contact', {
-      first_name: 'Ada', last_name: `Signer ${k}`, email: `ada${k}@hooks-runtime-sales.test`, crm_account: acct,
-    });
-    const [opp] = await verify.seed('crm_opportunity', [{
-      name: `Accepted Deal ${k}`, amount: 25_000, stage, close_date: '2030-06-30', crm_account: acct, primary_contact: contact,
-      owner_id: manager.id, ...(stage === 'closed_lost' ? { loss_reason: 'competitor' } : {}),
+/**
+ * #2014, ruled option C: accepting a quote closes its deal as won, so while an
+ * approval holds that deal the ACCEPTANCE is refused — at the moment it is
+ * made, loudly — instead of being admitted and having its close-won refused
+ * one write later inside an async hook that swallowed it.
+ */
+describe('quote_workflow refuses an acceptance the deal’s approval holds (#2014)', () => {
+  /** A presented quote of the rep's on `deal`, written as the system. */
+  const presentedOn = async (deal: Rec): Promise<Rec> => {
+    const [contact] = await verify.seed('crm_contact', [{
+      first_name: 'Hal', last_name: `Held ${++k}`, email: `hal${k}@hooks-runtime-sales.test`, crm_account: deal.crm_account, owner_id: rep.id,
     }]);
-    const quote = await create('crm_quote', {
-      name: `Q-${k}`, crm_account: acct, crm_contact: contact, crm_opportunity: opp!.id,
-      quote_date: today(), expiration_date: '2030-12-31',
-    });
-    const [product] = await verify.seed('crm_product', [{ name: `Accepted Product ${k}`, product_code: `ACC-${k}`, list_price: 120_000, is_active: true }]);
-    await verify.hooks.run('crm_quote_line_item', 'insert', { crm_quote: quote, crm_product: product!.id, quantity: 1, unit_price: 120_000 }, as(manager));
-    await vi.waitFor(async () => expect((await stored('crm_quote', quote)).total_price).toBe(120_000), { timeout: 10_000, interval: 50 });
-    for (const status of ['in_review', 'presented']) {
-      await verify.hooks.run('crm_quote', 'update', { id: quote, status }, as(manager));
-    }
+    return (await verify.seed('crm_quote', [{
+      name: `Held Q-${k}`, status: 'presented', crm_account: deal.crm_account, crm_contact: contact!.id, crm_opportunity: deal.id,
+      quote_date: today(), expiration_date: '2030-12-31', owner_id: rep.id,
+    }]))[0]!;
+  };
+  /** A deal of the rep's at negotiation, put in `state` by a system write (the verdict columns are readonly). */
+  const dealIn = async (state: Rec): Promise<Rec> => {
+    const deal = await dealOf({ stage: 'negotiation' });
+    if (Object.keys(state).length > 0) await systemUpdate(verify, 'crm_opportunity', { id: deal.id, ...state });
+    return deal;
+  };
+  const refusalOf = (write: Promise<unknown>): Promise<Rec | null> => write.then(() => null, (e: Rec) => e);
+
+  it('refuses a sales rep’s acceptance while the deal waits on its Large Deal Approval — and nothing moves', async () => {
+    // The real approval: the rep opens a deal over the threshold, the
+    // `opportunity_approval_on_create` flow opens the request, and its approval
+    // node locks the deal.
+    const acct = await accountOf();
+    const deal = await verify.hooks.run('crm_opportunity', 'insert', {
+      name: `Large Deal ${++k}`, amount: 150_000, stage: 'proposal', close_date: '2030-06-30', crm_account: acct.id,
+    }, as(rep));
+    await vi.waitFor(async () => expect((await verify.rows('sys_approval_request', { record_id: deal.id, status: 'pending' })).length)
+      .toBeGreaterThan(0), { timeout: 15_000, interval: 100 });
+    const quote = await presentedOn(deal);
+
     const engine = recordEngineWrites(verify);
+    let refusal: Rec | null;
     try {
-      await verify.hooks.run('crm_quote', 'update', { id: quote, status: 'accepted' }, as(manager));
-      const contract = await vi.waitFor(async () => {
-        const [row] = await verify.rows('crm_contract', { crm_opportunity: opp!.id });
-        expect(row, 'no contract drafted').toBeTruthy();
-        return row!;
-      }, { timeout: 10_000, interval: 50 });
-      return { contract, acct, contact, opp: opp!, quote, oppUpdates: engine.of('crm_opportunity', 'update') };
+      refusal = await refusalOf(repUpdates('crm_quote', quote.id, { status: 'accepted' }));
+      await new Promise((r) => setTimeout(r, 400));
     } finally {
       engine.restore();
     }
-  };
+    expect(refusal, 'the acceptance of a quote on a deal under approval went through').toBeTruthy();
+    // The envelope a client branches on — code and status together.
+    expect(refusal!.code).toBe('RECORD_LOCKED');
+    expect(refusal!.status).toBe(409);
+    // It names the quote as every screen does and the hold by the field the
+    // rep sees on the deal — never a record id.
+    const message = String(refusal!.message);
+    expect(message).toContain(`Quote ${String((await stored('crm_quote', quote.id)).display_title)}`);
+    expect(message).toContain('Approval Status is Pending');
+    expect(message).not.toContain(deal.id);
 
-  it('drafts a 12-month contract carrying the quote total and links', async () => {
+    // Nothing moved: the quote is still presented, the deal still waits on its
+    // manager, and no contract was drafted.
+    expect((await stored('crm_quote', quote.id)).status).toBe('presented');
+    const after = await stored('crm_opportunity', deal.id);
+    expect(after.stage).toBe('proposal');
+    expect(after.approval_status).toBe('pending');
+    expect(await verify.rows('crm_contract', { crm_opportunity: deal.id })).toHaveLength(0);
+    expect(engine.of('crm_contract', 'insert'), 'a contract was drafted for a refused acceptance').toHaveLength(0);
+    expect(engine.of('crm_opportunity', 'update'), 'the deal was written for a refused acceptance').toHaveLength(0);
+  });
+
+  /**
+   * "Held" means exactly what makes the rep's own close-won fail — no wider.
+   * Each state is measured both ways on twin deals: the rep closing one by
+   * hand is the control, and the acceptance on the other must be refused in
+   * exactly the same states. A `rejected` Large Deal Approval is what a recall
+   * leaves too (measured), and it holds nothing.
+   */
+  it.each([
+    ['the shipped default', {}, false],
+    ['an approved Large Deal Approval', { approval_status: 'approved' }, false],
+    ['a rejected Large Deal Approval', { approval_status: 'rejected' }, false],
+    ['an armed status-change gate awaiting its request', { status_change_approval_status: 'pending' }, true],
+    ['a status change an approver rejected', { status_change_approval_status: 'rejected' }, true],
+    ['an approved status change', { status_change_approval_status: 'approved' }, false],
+    ['an armed qualification (立项) gate', { qualification_approval_status: 'pending' }, true],
+    ['a qualification an approver rejected', { qualification_approval_status: 'rejected' }, true],
+    ['an approved qualification', { qualification_approval_status: 'approved' }, false],
+  ] as const)('%s: the acceptance is refused exactly when the rep’s own close-won is', async (_label, state, held) => {
+    const twin = await dealIn(state);
+    const close = await refusalOf(repUpdates('crm_opportunity', twin.id, { stage: 'closed_won', win_reason: 'better_price' }));
+    expect(Boolean(close), `the control is off: the rep's own close-won ${held ? 'went through' : 'was refused'}`).toBe(held);
+
+    const deal = await dealIn(state);
+    const quote = await presentedOn(deal);
+    const refusal = await refusalOf(repUpdates('crm_quote', quote.id, { status: 'accepted' }));
+    if (held) {
+      expect(refusal).toMatchObject({ code: 'RECORD_LOCKED', status: 409 });
+      expect((await stored('crm_quote', quote.id)).status).toBe('presented');
+      expect((await stored('crm_opportunity', deal.id)).stage).toBe('negotiation');
+    } else {
+      expect(refusal, `an acceptance the deal does not hold was refused: ${String(refusal?.message)}`).toBeNull();
+      await vi.waitFor(async () => expect((await stored('crm_opportunity', deal.id)).stage).toBe('closed_won'),
+        { timeout: 10_000, interval: 50 });
+    }
+  });
+});
+
+/**
+ * The rep's presented quote on their own deal (in `stage`), priced at 120,000
+ * by a line item, accepted by the rep — the ordinary CPQ path; the contract the
+ * async draft hook writes, read back once it lands, and the opportunity writes
+ * the engine received while both acceptance hooks ran.
+ */
+const acceptQuote = async (stage = 'proposal') => {
+  const create = async (object: string, doc: Rec) => (await verify.hooks.run(object, 'insert', doc, as(rep))).id as string;
+  const acct = await create('crm_account', { name: `Accepted Co ${++k}` });
+  const contact = await create('crm_contact', {
+    first_name: 'Ada', last_name: `Signer ${k}`, email: `ada${k}@hooks-runtime-sales.test`, crm_account: acct,
+  });
+  const [opp] = await verify.seed('crm_opportunity', [{
+    name: `Accepted Deal ${k}`, amount: 25_000, stage, close_date: '2030-06-30', crm_account: acct, primary_contact: contact,
+    owner_id: rep.id, ...(stage === 'closed_lost' ? { loss_reason: 'competitor' } : {}),
+  }]);
+  const quote = await create('crm_quote', {
+    name: `Q-${k}`, crm_account: acct, crm_contact: contact, crm_opportunity: opp!.id,
+    quote_date: today(), expiration_date: '2030-12-31',
+  });
+  const [product] = await verify.seed('crm_product', [{ name: `Accepted Product ${k}`, product_code: `ACC-${k}`, list_price: 120_000, is_active: true }]);
+  await verify.hooks.run('crm_quote_line_item', 'insert', { crm_quote: quote, crm_product: product!.id, quantity: 1, unit_price: 120_000 }, as(rep));
+  await vi.waitFor(async () => expect((await stored('crm_quote', quote)).total_price).toBe(120_000), { timeout: 10_000, interval: 50 });
+  for (const status of ['in_review', 'presented']) {
+    await verify.hooks.run('crm_quote', 'update', { id: quote, status }, as(rep));
+  }
+  const engine = recordEngineWrites(verify);
+  try {
+    await verify.hooks.run('crm_quote', 'update', { id: quote, status: 'accepted' }, as(rep));
+    const contract = await vi.waitFor(async () => {
+      const [row] = await verify.rows('crm_contract', { crm_opportunity: opp!.id });
+      expect(row, 'no contract drafted').toBeTruthy();
+      return row!;
+    }, { timeout: 10_000, interval: 50 });
+    // The close-won is its own async hook: give it the time to run, then wait
+    // for whatever it wrote.
+    await new Promise((r) => setTimeout(r, 400));
+    await Promise.all(engine.writes.map((w) => w.settled));
+    return { contract, acct, contact, opp: opp!, quote, oppUpdates: engine.of('crm_opportunity', 'update') };
+  } finally {
+    engine.restore();
+  }
+};
+
+describe('quote_accepted_contract_draft', () => {
+  /**
+   * #2014: a sales rep holds `crm_contract.allowCreate: false`, and the draft
+   * used to be written as the accepting caller — so a rep's acceptance closed
+   * the deal and drafted no contract, the refusal swallowed by `onError: 'log'`.
+   * The draft is elevated now (`runAs: 'system'`); the rep's own grant is not.
+   */
+  it('drafts a sales rep’s contract — a 12-month draft carrying the quote total and links', async () => {
     const { contract, acct, contact, opp } = await acceptQuote();
     expect(contract.status).toBe('draft');
     expect(contract.crm_account).toBe(acct);
@@ -424,8 +536,18 @@ describe('quote_on_accepted', () => {
     expect(contract.crm_opportunity).toBe(opp.id);
     expect(contract.contract_value).toBe(120_000);
     expect(contract.contract_term_months).toBe(12);
-    expect(contract.owner_id).toBe(manager.id);
+    expect(contract.owner_id).toBe(rep.id);
     expect(contract.start_date).toBe(today());
+    // Elevation is not anonymity: the draft is recorded as the rep's act.
+    expect(contract.created_by).toBe(rep.id);
+  });
+
+  it('elevates the draft, not the rep — the rep still cannot write a contract by hand', async () => {
+    const { acct, contact } = await acceptQuote();
+    await expect(verify.hooks.run('crm_contract', 'insert', {
+      crm_account: acct, crm_contact: contact, status: 'draft', contract_type: 'subscription',
+      contract_term_months: 12, start_date: today(), end_date: daysFromNow(365), contract_value: 1,
+    }, as(rep))).rejects.toMatchObject({ code: 'PERMISSION_DENIED' });
   });
 
   it('uses real calendar months for end_date, not days × 30', async () => {
@@ -440,25 +562,29 @@ describe('quote_on_accepted', () => {
     expect(months, `${contract.start_date} → ${contract.end_date} is not 12 calendar months`).toBe(12);
   });
 
-  it('pushes the linked opportunity to closed_won', async () => {
+  it('is a no-op unless the quote just became accepted', async () => {
+    const { opp, quote } = await acceptQuote();
+    // An edit of the already-accepted quote must draft nothing more.
+    await verify.hooks.run('crm_quote', 'update', { id: quote, internal_notes: 'countersigned' }, as(rep));
+    await new Promise((r) => setTimeout(r, 300));
+    expect(await verify.rows('crm_contract', { crm_opportunity: opp.id }), 'a second contract was drafted').toHaveLength(1);
+  });
+});
+
+describe('quote_on_accepted', () => {
+  it('pushes the linked opportunity to closed_won, as the accepting rep', async () => {
     const { opp } = await acceptQuote('negotiation');
     const after = await stored('crm_opportunity', opp.id);
     expect(after.stage).toBe('closed_won');
     expect(after.close_date).toBe(today());
+    expect(after.win_reason).toBe('quote_accepted');
+    expect(after.updated_by).toBe(rep.id);
   });
 
   it('never reopens an already-closed opportunity', async () => {
     const { opp, oppUpdates } = await acceptQuote('closed_lost');
     expect((await stored('crm_opportunity', opp.id)).stage).toBe('closed_lost');
     expect(oppUpdates.filter((w) => 'stage' in (w.args[1] as Rec)), 'the hook wrote a stage on a closed deal').toHaveLength(0);
-  });
-
-  it('is a no-op unless the quote just became accepted', async () => {
-    const { opp, quote } = await acceptQuote();
-    // An edit of the already-accepted quote must draft nothing more.
-    await verify.hooks.run('crm_quote', 'update', { id: quote, internal_notes: 'countersigned' }, as(manager));
-    await new Promise((r) => setTimeout(r, 300));
-    expect(await verify.rows('crm_contract', { crm_opportunity: opp.id }), 'a second contract was drafted').toHaveLength(1);
   });
 });
 

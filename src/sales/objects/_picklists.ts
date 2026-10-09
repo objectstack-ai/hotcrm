@@ -80,7 +80,7 @@ export const LEAD_SOURCE_OPTIONS: SelectOption[] = [
  * formerly Quote-only): an accepted quote's terms carry over to the contract,
  * so the contract vocabulary must cover every quote value.
  *
- * The carry-over is `quote_on_accepted` in `src/objects/quote.hook.ts`, named
+ * The carry-over is `quote_accepted_contract_draft` in `src/revenue/objects/quote.hook.ts`, named
  * here because this rationale spent its first months unenforced (#873): the
  * hook drafted the contract without `payment_terms`, so every accepted quote
  * produced a contract on the `net_30` option default below regardless of what

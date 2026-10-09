@@ -256,10 +256,38 @@ describe('what does NOT count as a first response', () => {
 });
 
 describe('the stamp is best-effort, like the rest of the bubble', () => {
-  it('a case the writer cannot read does not break the event write', async () => {
-    // An agent who cannot see the case still gets to record their call; the
-    // metric simply does not move. On the real engine an unreadable case is not
-    // a THROWN read but a filtered one — the hook finds nothing to stamp.
+  it('a refused stamp does not break the event write', async () => {
+    // Staged on the real engine: the case write is refused, and the call is
+    // still recorded.
+    const kase = await openCase();
+    const recorder = recordEngineWrites(verify, (op, object) =>
+      (op === 'update' && object === 'crm_case' ? new Error('write rejected') : undefined));
+    let event: Rec;
+    try {
+      event = await verify.hooks.run('crm_event', 'insert', {
+        subject: 'Called back', type: 'call', status: 'held', start_datetime: new Date().toISOString(),
+        related_to_type: 'crm_case', related_to_case: kase.id,
+      }, { as: agent.token });
+      await vi.waitFor(() => expect(recorder.of('crm_case', 'update').length, 'the stamp never reached the case').toBeGreaterThan(0),
+        { timeout: 10_000, interval: 25 });
+      await Promise.all(recorder.writes.map((w) => w.settled));
+    } finally {
+      recorder.restore();
+    }
+    expect((await verify.rows('crm_event', { id: event.id }))[0], 'the event write was lost').toBeTruthy();
+    expect(await stampOf(kase.id)).toBeNull();
+  });
+});
+
+/**
+ * #2014. The bubble used to write as the person who logged the interaction,
+ * so a writer who cannot see the case recorded the call and the metric did
+ * not move — the read came back filtered and the hook found nothing to stamp.
+ * The interaction happened, and a first response is the case's fact, not the
+ * writer's privilege: the bubble declares `runAs: 'system'` now.
+ */
+describe('the stamp is the case’s fact, not the writer’s grant (#2014)', () => {
+  it('a held call by someone who cannot read the case still stamps its first response', async () => {
     const outsider = await signUpPerson(verify, `outsider${++k}@case-first-response.test`, {
       name: 'Other Agent', permissionSets: ['service_agent'],
     });
@@ -270,8 +298,8 @@ describe('the stamp is best-effort, like the rest of the bubble', () => {
       related_to_type: 'crm_case', related_to_case: kase.id,
     }, { as: outsider.token });
     expect((await verify.rows('crm_event', { id: event.id }))[0], 'the event write was lost').toBeTruthy();
-    await new Promise((r) => setTimeout(r, 400));
-    expect(await stampOf(kase.id)).toBeNull();
+    await vi.waitFor(async () => expect(await stampOf(kase.id), 'the first response was never stamped').toBeTruthy(),
+      { timeout: 10_000, interval: 50 });
   });
 });
 

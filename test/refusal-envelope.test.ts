@@ -135,11 +135,12 @@ describe('every refusal names a code the platform will echo (#1075)', () => {
     // `opportunity.hook.ts`; 19 until #549 added the activated-contract
     // refusal to `account_protection`; 20 until REQ-0006 added the
     // status-change gate to `opportunity_lifecycle`; 21 until REQ-0006 step 11
-    // added the 立项 (qualification) gate beside it. The number is
-    // hand-maintained on purpose: a new refusal has to be a deliberate edit
-    // here, so a guard that quietly stopped being swept cannot hide behind a
-    // count that follows it.
-    expect(sites).toHaveLength(22);
+    // added the 立项 (qualification) gate beside it; 22 until #2014 added the
+    // refusal of an acceptance the deal's approval holds to `quote_workflow`.
+    // The number is hand-maintained on purpose: a new refusal has to be a
+    // deliberate edit here, so a guard that quietly stopped being swept cannot
+    // hide behind a count that follows it.
+    expect(sites).toHaveLength(23);
   });
 
   it('uses only members of the platform ErrorCode enum', () => {
@@ -160,14 +161,15 @@ describe('every refusal names a code the platform will echo (#1075)', () => {
     }
   });
 
-  it('leaves exactly one throw bare — the cascade fault, which IS a 500', () => {
+  it('leaves exactly the two cascade faults bare — each IS a 500', () => {
     const bare = LOWERED.filter((h) => /throw new Error\(/.test(h.source)).map((h) => h.name);
-    // `quote_on_accepted` fires from an afterUpdate cascade when close-won
-    // bookkeeping failed for reasons the user neither caused nor can act on.
-    // `resolveThrownHttpError` maps a bare Error to 500 / INTERNAL_ERROR, which
-    // is the correct answer — an envelope would file a broken cascade as user
-    // error.
-    expect(bare).toEqual(['quote_on_accepted']);
+    // The two accepted-quote hooks (one hook until #2014 split the elevated
+    // contract draft out) fire from an afterUpdate cascade when the contract
+    // draft or the close-won failed for reasons the user neither caused nor
+    // can act on. `resolveThrownHttpError` maps a bare Error to 500 /
+    // INTERNAL_ERROR, which is the correct answer — an envelope would file a
+    // broken cascade as user error.
+    expect(bare).toEqual(['quote_accepted_contract_draft', 'quote_on_accepted']);
   });
 });
 

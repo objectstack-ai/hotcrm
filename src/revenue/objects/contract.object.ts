@@ -148,7 +148,7 @@ export const Contract = ObjectSchema.create({
       group: 'value',
       // Canonical set shared with Quote: an accepted quote's terms (incl.
       // due_on_receipt) must survive the copy onto the contract. That copy is
-      // `quote_on_accepted` (src/objects/quote.hook.ts). This field's `net_30`
+      // `quote_accepted_contract_draft` (src/revenue/objects/quote.hook.ts). This field's `net_30`
       // option default applies only when the quote itself carried no term,
       // which is the intended fall-through, not a gap.
       options: [...PAYMENT_TERMS_OPTIONS],

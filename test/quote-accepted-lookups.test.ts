@@ -7,7 +7,9 @@ import {
 } from './helpers/verify-stack';
 
 /**
- * `quote_on_accepted` and the links the quote does not have (#714).
+ * The accepted-quote hooks and the links the quote does not have (#714):
+ * `quote_accepted_contract_draft` (the contract) and `quote_on_accepted` (the
+ * close-won) — one hook until #2014 split the elevated draft out.
  *
  * ### What went wrong
  *
@@ -38,14 +40,14 @@ import {
  * 1. no lookup in the drafted contract ever carries a non-string — an absent
  *    link is an ABSENT KEY;
  * 2. the two legs are independent: a contract that refuses to draft no longer
- *    decides whether the opportunity is won;
- * 3. a leg that fails is still REPORTED (the handler throws), so `onError:
+ *    decides whether the opportunity is won — since #2014 they are two hooks;
+ * 3. a leg that fails is still REPORTED (its handler throws), so `onError:
  *    'log'` has something true to log instead of nothing at all.
  *
  * Assertion (1) is written against the document the hook actually hands the
  * engine, read off the real engine's own `insert` on a real acceptance — the
- * shipped app booted through `@objectstack/verify`'s handle, a sales manager
- * accepting a quote they own (see `beforeAll` for why not a rep). A stub that
+ * shipped app booted through `@objectstack/verify`'s handle, a sales rep
+ * accepting a quote they own. A stub that
  * stored what the kernel refuses is why the old coverage stayed green through
  * #714; there is no stub here. The engine's own verdicts on the old document
  * are pinned in the last describe.
@@ -66,14 +68,14 @@ type Rec = AnyRec;
 const LOOKUPS = ['crm_account', 'crm_contact', 'crm_opportunity', 'owner_id'] as const;
 
 let verify: VerifyStack;
-let manager: Person;
+let rep: Person;
 beforeAll(async () => {
   verify = await hotcrmStack();
-  // A sales MANAGER accepts: on 17.7.0 a sales rep's acceptance cannot draft a
-  // contract at all (`crm_contract.allowCreate: false`, and the hook writes as
-  // the caller) — reported as a finding, see `quote-accepted-draft-defaults`.
-  manager = await signUpPerson(verify, 'manager@quote-accepted-lookups.test', {
-    name: 'Lookup Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+  // A sales REP accepts — the ordinary CPQ path. A rep holds
+  // `crm_contract.allowCreate: false`; the draft is the elevated hook's write
+  // (`runAs: 'system'`, #2014), not the rep's.
+  rep = await signUpPerson(verify, 'rep@quote-accepted-lookups.test', {
+    name: 'Lookup Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
   });
 }, 120_000);
 
@@ -88,7 +90,7 @@ interface QuoteFixture {
 const presentedQuote = async (links: { contact?: boolean; opportunity?: boolean; owner?: boolean } = {}): Promise<QuoteFixture> => {
   const n = ++deal;
   const create = async (object: string, doc: Rec) =>
-    String((await verify.hooks.run(object, 'insert', doc, { as: manager.token })).id);
+    String((await verify.hooks.run(object, 'insert', doc, { as: rep.token })).id);
   const account = await create('crm_account', { name: `Lookup Co ${n}` });
   const contact = links.contact === false ? undefined : await create('crm_contact', {
     first_name: 'Lou', last_name: `Kup ${n}`, email: `lou${n}@quote-lookups.test`, crm_account: account,
@@ -103,25 +105,25 @@ const presentedQuote = async (links: { contact?: boolean; opportunity?: boolean;
   // A quote's total is the rollup of its lines: one line at 1,000.
   const [product] = await verify.seed('crm_product', [{ name: `Lookup widget ${n}`, list_price: 1_000, is_active: true }]);
   await create('crm_quote_line_item', { crm_quote: id, crm_product: product.id, quantity: 1, unit_price: 1_000 });
-  await verify.hooks.run('crm_quote', 'update', { id, status: 'in_review' }, { as: manager.token });
-  if (contact) await verify.hooks.run('crm_quote', 'update', { id, status: 'presented' }, { as: manager.token });
+  await verify.hooks.run('crm_quote', 'update', { id, status: 'in_review' }, { as: rep.token });
+  if (contact) await verify.hooks.run('crm_quote', 'update', { id, status: 'presented' }, { as: rep.token });
   if (links.owner === false) await systemUpdate(verify, 'crm_quote', { id, owner_id: null });
   return { id, account, contact, opportunity };
 };
 
 /**
- * Accept `q` as the manager, with `fault` staging an engine refusal, and wait
- * for the `async` hook to finish its legs. Returns what the engine received.
+ * Accept `q` as the rep, with `fault` staging an engine refusal, and wait
+ * for the two `async` hooks to finish their legs. Returns what the engine received.
  */
 const accept = async (q: QuoteFixture, fault?: Parameters<typeof recordEngineWrites>[1]) => {
   const engine = recordEngineWrites(verify, fault);
   const logger = (verify.kernel as AnyRec).logger as AnyRec;
   const reports = vi.spyOn(logger, 'error');
   try {
-    await verify.hooks.run('crm_quote', 'update', { id: q.id, status: 'accepted' }, { as: manager.token });
-    // `quote_on_accepted` is `async: true`: it finishes after the accepting
-    // write returned, and it is done once its contract leg has settled and —
-    // when the quote has an opportunity — its close-won leg has too.
+    await verify.hooks.run('crm_quote', 'update', { id: q.id, status: 'accepted' }, { as: rep.token });
+    // Both hooks are `async: true`: they finish after the accepting write
+    // returned, and they are done once the contract leg has settled and —
+    // when the quote has an opportunity — the close-won leg has too.
     const legs = await vi.waitFor(() => {
       const [contract] = engine.of('crm_contract', 'insert');
       expect(contract, 'the hook drafted no contract at all').toBeTruthy();
@@ -130,8 +132,8 @@ const accept = async (q: QuoteFixture, fault?: Parameters<typeof recordEngineWri
       return { contract: contract!, won };
     }, { timeout: 10_000, interval: 25 });
     const outcomes = await Promise.all([legs.contract, ...legs.won].map((w) => w.settled));
-    // The hook re-throws its collected failures, and `onError: 'log'` reports
-    // them on the engine's logger — read off it once the handler has thrown.
+    // A failed leg's hook throws, and `onError: 'log'` reports it on the
+    // engine's logger — read off it once the handler has thrown.
     const failures = () => reports.mock.calls
       .filter(([message]) => String(message).includes('[hook] handler failed'))
       .map(([, , meta]) => String((meta as AnyRec)?.error ?? ''));
@@ -157,7 +159,7 @@ describe('an absent link is an absent key, never a boolean', () => {
     const q = await presentedQuote({ contact: false });
     const engine = recordEngineWrites(verify);
     try {
-      await expect(verify.hooks.run('crm_quote', 'update', { id: q.id, status: 'accepted' }, { as: manager.token }))
+      await expect(verify.hooks.run('crm_quote', 'update', { id: q.id, status: 'accepted' }, { as: rep.token }))
         .rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
       expect(engine.of('crm_contract', 'insert'), 'a contract was drafted for a refused acceptance').toHaveLength(0);
     } finally {
