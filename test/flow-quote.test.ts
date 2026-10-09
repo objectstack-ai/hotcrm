@@ -235,7 +235,7 @@ describe('quote_generation flow — the 立项 gate (#2032)', () => {
       // `failed`, and never parked on a screen the rep would have to fill.
       expect(run.status, 'the run was not refused').toBe('refused');
       expect(run.success).toBe(true);
-      expect(run.refusalMessage, 'the rep is not told why').toMatch(/qualification approval first/);
+      expect(run.refusalMessage, 'the rep is not told why').toMatch(/^Qualification approval comes first/);
       expect(run.runId, 'a refused run is never resumed').toBeUndefined();
       expect(run.screen, 'the rep was asked to fill in the quote form').toBeUndefined();
       expect(run.summary?.acted ?? 0, 'a node wrote something').toBe(0);
