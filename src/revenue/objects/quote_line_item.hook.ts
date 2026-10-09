@@ -59,8 +59,8 @@ const quoteTotalRollup: Hook = {
   handler: async (ctx: HookContext) => {
     const api = ctx.api as HookApi | undefined;
     if (!api) return;
-    const { input } = ctx;
-    const previous = ctx.previous;
+    const { input, previous } = ctx;
+    const num = (v: unknown): number => (typeof v === 'number' ? v : 0);
 
     const quoteIds = new Set<string>();
     for (const v of [input?.crm_quote, previous?.crm_quote]) {
@@ -86,27 +86,14 @@ const quoteTotalRollup: Hook = {
       if (!lines || lines.length === 0) continue;
 
       let subtotal = 0;
-      for (const l of lines) {
-        const qty = typeof l.quantity === 'number' ? l.quantity : 0;
-        const price = typeof l.unit_price === 'number' ? l.unit_price : 0;
-        const disc = typeof l.discount === 'number' ? l.discount : 0;
-        subtotal += qty * price * (1 - disc / 100);
-      }
+      for (const l of lines) subtotal += num(l.quantity) * num(l.unit_price) * (1 - num(l.discount) / 100);
       subtotal = Math.round(subtotal * 100) / 100;
 
-      const quoteDiscountPct = typeof quote.discount === 'number' ? quote.discount : 0;
-      const tax = typeof quote.tax === 'number' ? quote.tax : 0;
-      const shipping = typeof quote.shipping_handling === 'number' ? quote.shipping_handling : 0;
-      const discountAmount = Math.round(subtotal * (quoteDiscountPct / 100) * 100) / 100;
-      const total = Math.round((subtotal - discountAmount + tax + shipping) * 100) / 100;
+      const discountAmount = Math.round(subtotal * (num(quote.discount) / 100) * 100) / 100;
+      const total = Math.round((subtotal - discountAmount + num(quote.tax) + num(quote.shipping_handling)) * 100) / 100;
 
       await api.object('crm_quote').update(
-        {
-          id: quoteId,
-          subtotal,
-          discount_amount: discountAmount,
-          total_price: total,
-        },
+        { id: quoteId, subtotal, discount_amount: discountAmount, total_price: total },
         { where: { id: quoteId } },
       );
     }

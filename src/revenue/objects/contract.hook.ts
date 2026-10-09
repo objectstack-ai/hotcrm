@@ -43,8 +43,7 @@ const contractValidation: Hook = {
       err.userMessage = userMessage;
       return err;
     }
-    const { event, input } = ctx;
-    const previous = ctx.previous;
+    const { event, input, previous } = ctx;
 
     // Both operands are stored `YYYY-MM-DD` values, which the date-only parse
     // anchors at UTC MIDNIGHT — so they are read here on the calendar they were
@@ -66,19 +65,11 @@ const contractValidation: Hook = {
       );
     }
 
-    const startDate =
-      (typeof input.start_date === 'string' && input.start_date) ||
-      (typeof previous?.start_date === 'string' && previous.start_date) ||
-      undefined;
-    const endDate =
-      (typeof input.end_date === 'string' && input.end_date) ||
-      (typeof previous?.end_date === 'string' && previous.end_date) ||
-      undefined;
-    const term =
-      (typeof input.contract_term_months === 'number' && input.contract_term_months) ||
-      (typeof previous?.contract_term_months === 'number' &&
-        (previous.contract_term_months as number)) ||
-      undefined;
+    // The patch's value, else the stored one; an empty string or a 0 / NaN
+    // term counts as absent, so the check below stands down.
+    const startDate = [input.start_date, previous?.start_date].find((v): v is string => typeof v === 'string' && v !== '');
+    const endDate = [input.end_date, previous?.end_date].find((v): v is string => typeof v === 'string' && v !== '');
+    const term = [input.contract_term_months, previous?.contract_term_months].find((v): v is number => typeof v === 'number' && !!v);
 
     if (startDate && endDate && term) {
       const calc = monthsBetween(startDate, endDate);
@@ -114,25 +105,15 @@ const contractActivation: Hook = {
   priority: 800,
   async: true,
   onError: 'log',
-  description: 'On activation: stamp signed_date, promote account, schedule renewal task.',
+  description: 'On activation: stamp signed_date, promote account.',
   handler: async (ctx: HookContext) => {
-    const { input } = ctx;
-    const previous = ctx.previous;
+    const { input, previous } = ctx;
     if (input.status !== 'activated' || previous?.status === 'activated') return;
     const api = ctx.api as HookApi | undefined;
     if (!api) return;
 
-    const id =
-      (typeof input.id === 'string' && input.id) ||
-      (typeof previous?.id === 'string' ? (previous.id as string) : undefined);
-    const accountId =
-      (typeof input.crm_account === 'string' && input.crm_account) ||
-      (typeof previous?.crm_account === 'string' && previous.crm_account) ||
-      undefined;
-    const endDate =
-      (typeof input.end_date === 'string' && input.end_date) ||
-      (typeof previous?.end_date === 'string' && (previous.end_date as string)) ||
-      undefined;
+    const id = [input.id, previous?.id].find((v): v is string => typeof v === 'string' && v !== '');
+    const accountId = [input.crm_account, previous?.crm_account].find((v): v is string => typeof v === 'string' && v !== '');
 
     if (id && !input.signed_date && !previous?.signed_date) {
       await api.object('crm_contract').update(
