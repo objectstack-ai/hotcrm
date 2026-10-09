@@ -17,7 +17,7 @@ import { App } from '@objectstack/spec/ui';
  * page already carries a view-switcher tab strip that reaches all of them.
  * Those redundant view entries are gone; each removed destination stays one
  * click away on its object's tab strip — which the console builds from the
- * VIEW DESCRIPTORS in `src/views/*.view.ts`: the primary `list` plus every
+ * VIEW DESCRIPTORS in `src/<pkg>/views/*.view.ts`: the primary `list` plus every
  * `listViews` entry, one tab each, carrying that view's own `label`. So
  * reachability needs nothing authored; a `listViews` entry is on the strip by
  * existing. What `test/view-references.test.ts` → "every named list view is
@@ -42,7 +42,7 @@ export const CrmApp = App.create({
   // ADR-0063 §1/§2 — `defaultAgent` is a surface binding, not a custom-agent
   // slot: the only resolvable values are the two PLATFORM agents, `ask` (data
   // surface) and `build` (authoring surface). HotCRM is a data surface, so it
-  // binds `ask`; the app's own AI capability ships as skills (`src/skills/`),
+  // binds `ask`; the app's own AI capability ships as skills (`src/*/skills/`),
   // which attach to the platform agents by `surface` affinity. The app-authored
   // agents this key used to name were retired in #512.
   defaultAgent: 'ask',

@@ -14,7 +14,7 @@ import type { ObjectTranslationData } from '@objectstack/spec/system';
  * follows its master. A new row goes in the file for ITS family, never in
  * whichever file is already open: that is how one file re-grows past the 70%
  * advisory band `pnpm hygiene` prints. Full rule and rationale:
- * `src/translations/ja-JP.ts`.
+ * `src/sales/translations/ja-JP.ts`.
  */
 const paymentTermsOptions = {
   net_15: '15 日以内払い', net_30: '30 日以内払い', net_60: '60 日以内払い',

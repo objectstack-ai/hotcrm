@@ -41,7 +41,7 @@ import { celDaysAgo, linesTotal, type LineSpec } from './_shared';
 // address country into (#639) — no rule compares a country string any more.
 // `country` still carries the 2-LETTER CODE here: seed addresses keep to ISO
 // 3166-1 alpha-2 as a data-quality convention, and the spelling table in
-// `src/objects/_territory.ts` exists for what USERS type, not for what this
+// `src/sales/objects/_territory.ts` exists for what USERS type, not for what this
 // file authors.
 //
 // `UK` on the London account is the one deliberate exception, and it is now
@@ -88,7 +88,7 @@ import { celDaysAgo, linesTotal, type LineSpec } from './_shared';
 // writes (#617), and two of them stamp TODAY on an account:
 //
 //   · `event_activity_bubble` — on any `held` event, walking up from its
-//     contact / opportunity / case (`src/objects/event.hook.ts`);
+//     contact / opportunity / case (`src/sales/objects/event.hook.ts`);
 //   · `task_activity_bubble`  — on any task seeded already completed.
 //
 // Neither reads the activity's own timestamp: a `held` meeting seeded 45 days
@@ -353,7 +353,7 @@ three regional teams (NA, EMEA, APAC).
       number_of_employees: 320,
       // europe_territory, half 2 — and the alias fixture. `UK` is not ISO
       // 3166-1 alpha-2 (`GB` is); it is an ACCEPTED SPELLING in
-      // `src/objects/_territory.ts`, so this row proves on stock data that a
+      // `src/sales/objects/_territory.ts`, so this row proves on stock data that a
       // legacy spelling still lands in `emea` (#639). No `state`: an address
       // without a subdivision is a normal shape, and only `country` is read.
       phone: '+44-20-7946-0800',

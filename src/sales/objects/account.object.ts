@@ -97,7 +97,7 @@ export const Account = ObjectSchema.create({
     // declared index is taken verbatim, i.e. platform-wide. The table form
     // means the SECOND organization to create an "Acme Corp" is rejected by the
     // database, and account name is also the seed data's external-id / upsert
-    // key (`src/data/sales.seed.ts`), so it bites the first multi-tenant
+    // key (`src/sales/data/sales.seed.ts`), so it bites the first multi-tenant
     // install. The composite also indexes the column, so no separate
     // `{ fields: ['name'] }` entry is needed for the `searchableFields` /
     // seed-upsert read paths.
@@ -663,7 +663,7 @@ export const Account = ObjectSchema.create({
 
     // ⛔ No account-level renewal model here, on purpose. Renewal is a
     // CONTRACT-level process with exactly one home — `crm_contract.end_date` +
-    // `renewal_notice_days`, swept daily by `src/flows/contract-renewal.flow.ts`,
+    // `renewal_notice_days`, swept daily by `src/revenue/flows/contract-renewal.flow.ts`,
     // which books the task and notifies the CONTRACT owner; the user-facing
     // queue is that object's `renewal_calendar` view. A `renewal_owner` /
     // `next_renewal_date` pair here would be declared and inert, telling an
@@ -719,7 +719,7 @@ export const Account = ObjectSchema.create({
   ],
   
   // API surface + capabilities. `files` and `feeds` are live and enforced (see
-  // the canonical note in `src/objects/index.ts`). Field history lives on
+  // the canonical note in `src/sales/objects/index.ts`). Field history lives on
   // individual `Field.trackHistory` (ADR-0052); global search uses
   // `searchableFields` / per-field `searchable`.
   enable: {
@@ -733,5 +733,5 @@ export const Account = ObjectSchema.create({
   
   // ⚠️ No `workflows[]` here, and none is possible: object `workflows[]` were
   // removed from the platform. Field updates live in this object's `*.hook.ts`;
-  // scheduled status flips and notifications live in `src/flows/*.flow.ts`.
+  // scheduled status flips and notifications live in `src/*/flows/*.flow.ts`.
 });

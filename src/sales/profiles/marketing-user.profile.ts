@@ -5,7 +5,7 @@ export const MarketingUserProfile = {
   label: 'Marketing User',
   objects: {
     // `allowExport` where an export surface exists — canonical note in
-    // `src/profiles/index.ts`. Lead and contact list exports are marketing's
+    // `src/sales/profiles/index.ts`. Lead and contact list exports are marketing's
     // core targeting workflow; account/opportunity back the campaign-ROI
     // reports. No `crm_case` grant here, so no export bit for it either.
     crm_lead:        { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, allowExport: true },
@@ -18,7 +18,7 @@ export const MarketingUserProfile = {
     // pipeline from marketing (and tripped security-private-no-readscope).
     crm_opportunity: { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, allowExport: true },
     // Campaign membership is THIS profile's core write surface: the
-    // "Add to Campaign" action (`src/actions/lead.actions.ts`) inserts
+    // "Add to Campaign" action (`src/sales/actions/lead.actions.ts`) inserts
     // `crm_campaign_member` rows, and before #488 no permission set granted the
     // object — the action failed for the only persona meant to run it. Rows
     // derive from the campaign (controlled_by_parent), so there is no record

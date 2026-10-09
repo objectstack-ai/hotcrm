@@ -4,7 +4,7 @@
  * Revenue seeds — contracts, quotes and their lines.
  *
  * Split out of the former monolithic `src/data/index.ts` (#635). Seed doctrine
- * lives in `./_shared.ts`.
+ * lives in `src/sales/data/_shared.ts`.
  */
 import { defineSeed } from '@objectstack/spec/data';
 import { cel } from '@objectstack/spec';

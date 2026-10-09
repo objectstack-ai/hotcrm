@@ -11,7 +11,7 @@ import { P } from '@objectstack/spec';
  * and `article_feedback_metrics_refresh` recounts the article from that table.
  * The full reasoning for the indirection — a sandboxed action body cannot
  * UPDATE a sharing-ruled object, the article is write-owned, and there is no
- * atomic increment — is on `src/objects/article_feedback.object.ts`.
+ * atomic increment — is on `src/service/objects/article_feedback.object.ts`.
  *
  * ### One body, generated twice
  *

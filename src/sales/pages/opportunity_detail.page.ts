@@ -57,8 +57,8 @@ export const OpportunityDetailPage: Page = {
             // @objectstack/spec 17.3.0, and this repo authors against the
             // protocol (#1653). Each id is the `name` of a
             // crm_opportunity-scoped action — `generate_quote` /
-            // `clone_opportunity` in `src/actions/opportunity.actions.ts`, the
-            // activity trio in `src/actions/global.actions.ts`.
+            // `clone_opportunity` in `src/sales/actions/opportunity.actions.ts`, the
+            // activity trio in `src/sales/actions/activity-actions.ts`.
             actions: [
               'generate_quote',
               'clone_opportunity',

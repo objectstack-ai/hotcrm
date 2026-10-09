@@ -16,7 +16,7 @@ import { activityActions, salutationOptions, industryOptions, leadSourceOptions 
  * follows its master. A new row goes in the file for ITS family, never in
  * whichever file is already open: that is how one file re-grows past the 70%
  * advisory band `pnpm hygiene` prints. Full rule and rationale:
- * `src/translations/ja-JP.ts`.
+ * `src/sales/translations/ja-JP.ts`.
  */
 export const customer: Record<string, ObjectTranslationData> = {
   crm_account: {

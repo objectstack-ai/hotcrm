@@ -203,7 +203,7 @@ export const RELATED_TO_TYPE_OPTIONS: SelectOption[] = [
  *     authorable set plus {@link DUPLICATE_OF_TYPE_ERASED}, a tombstone no
  *     author writes.
  *
- * The form spreads the authorable set (`src/views/lead.view.ts`) and the object
+ * The form spreads the authorable set (`src/sales/views/lead.view.ts`) and the object
  * spreads the full one, so the tombstone is unpickable BY CONSTRUCTION rather
  * than by a hand-maintained exclusion list: a fourth authorable object type
  * added below reaches the form automatically, and the tombstone never does.
