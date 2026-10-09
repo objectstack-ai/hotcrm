@@ -85,7 +85,7 @@ Two fields drive renewals:
 
 There is no *Renewal Terms* field. Instructions like "renew at 5% uplift unless the customer opts out" go in **Special Terms**, the free-text field on the contract itself.
 
-When a contract enters its renewal window, the system files a follow-up task and emails the contract owner — see *Daily — renewal reminder* below for everything it creates.
+When a contract enters its renewal window, the system files a follow-up task and emails the contract owner, on a deployment that runs scheduled work — see *Daily — renewal reminder* below for everything it creates.
 
 ## What the system does automatically
 
@@ -100,7 +100,9 @@ Nothing is sent and nobody is told. Activation raises no notification for the co
 Both writes run *after* the save, with failures logged rather than raised, so the contract stays activated even if promoting the account fails. They also hang off an **update** — a contract that arrives already *Activated* (a data import, seed data, an integration that writes the record in one shot) triggers neither, and its account stays a *Prospect*.
 
 ### Daily — expiration sweep
-Each night at midnight the system finds *Activated* contracts whose end date has passed, and does two things to each — only these two:
+This sweep and the renewal reminder below are scheduled flows, so they run only on a deployment that has switched scheduled work on (see [Administration › Automation](/docs/administration/automation#scheduled-automation)). A default install has scheduled work off: there, no contract expires on its own, and an *Activated* contract past its end date stays *Activated* until someone changes its status.
+
+Where it runs, each night at midnight the system finds *Activated* contracts whose end date has passed, and does two things to each — only these two:
 
 1. **Status → Expired**.
 2. **Notification to the contract owner** — inbox and email, linking to the contract.
@@ -108,7 +110,7 @@ Each night at midnight the system finds *Activated* contracts whose end date has
 Nobody else is told. There is no second notification: the account owner, the primary contact and the rest of the account team hear nothing when a contract lapses, so if anyone beyond the contract owner needs to know, an admin has to add that. The sweep also reads *Activated* contracts only — one still sitting in *Draft* or *In Approval* past its end date is left alone — and it takes at most 500 contracts per run.
 
 ### Daily — renewal reminder
-At 8 AM the system finds *Activated* contracts whose end date falls inside that contract's own *Renewal Notice (Days)* window, and for each one, in this order:
+Where scheduled work runs (see above), at 8 AM the system finds *Activated* contracts whose end date falls inside that contract's own *Renewal Notice (Days)* window, and for each one, in this order:
 
 1. **Files a renewal task** for the contract owner — *"Renewal due: contract CTR-0042"*, a high-priority follow-up due on the contract's end date, filed against the account.
 2. **Notifies the contract owner** — inbox and email. The notification links to the contract record, and that is all it does: there is no one-click action on it, and opening it creates nothing.
@@ -117,6 +119,8 @@ At 8 AM the system finds *Activated* contracts whose end date falls inside that 
 So the renewal deal is never something you click for. With *Auto Renewal* on it is already in the pipeline by the time you read the reminder; with it off, nobody opens one for you and the task is the whole of it.
 
 The task is also what keeps the sweep from repeating itself: the same contract matches every morning of its notice window, and an open *Renewal due* task for it means the day is already handled — no second task, no second notification, no second deal. Complete that task and the next morning's sweep files a fresh one, for as long as the contract is still inside its window.
+
+On a deployment without scheduled work none of this happens: no renewal task, no notification and no renewal deal. What still shows a renewal coming is the contract itself, through the **Renewal Calendar** tab and the **End Date** order of All Contracts (see *Standard list views* below).
 
 Two bounds worth knowing: the sweep looks 120 days ahead at most, so a notice window set longer than that only starts firing at 120 days out; and it takes at most 500 contracts per run.
 
@@ -174,7 +178,7 @@ Contracts saves **one** list — **All Contracts**, every contract you may see, 
 | **Contract Terms** | One gantt bar per contract, from start date to end date, so overlapping terms line up against one another. |
 | **Contract Timeline** | The same start-to-end spans on a quarter scale, grouped by account and coloured by status. |
 
-None of the four filters anything, so **every contract you can see appears in all four** and switching tabs only redraws them. There is no saved *My Active Contracts*, *Expiring in 60 Days*, *Up for Renewal*, *Expired This Month* or *Pending Activation* — to narrow the list to your own contracts or to one status, sort and filter the grid columns yourself. What watches renewal dates for you is the daily renewal reminder described above, not a list view.
+None of the four filters anything, so **every contract you can see appears in all four** and switching tabs only redraws them. There is no saved *My Active Contracts*, *Expiring in 60 Days*, *Up for Renewal*, *Expired This Month* or *Pending Activation* — to narrow the list to your own contracts or to one status, sort and filter the grid columns yourself. What watches renewal dates for you, where scheduled work runs, is the daily renewal reminder described above, not a list view.
 
 ## Tips for contract owners
 
@@ -190,5 +194,5 @@ None of the four filters anything, so **every contract you can see appears in al
 
 ## Tips for admins
 
-- Contract activation is an **object hook** (`src/revenue/objects/contract.hook.ts`), not a flow — that is where the signed-date stamp and the account promotion live, and it is not in the flow list. The expiration sweep and the renewal reminder *are* scheduled flows. See [Administration › Automation](/docs/administration/automation).
+- Contract activation is an **object hook** (`src/revenue/objects/contract.hook.ts`), not a flow — that is where the signed-date stamp and the account promotion live, and it is not in the flow list. The expiration sweep and the renewal reminder *are* scheduled flows, so they run only once the deployment switches scheduled work on. See [Administration › Automation](/docs/administration/automation#scheduled-automation).
 - Contract types and billing frequency picklists are extensible.
