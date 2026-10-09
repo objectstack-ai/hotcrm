@@ -54,8 +54,8 @@ export const CaseDetailPage: Page = {
             // @objectstack/spec 17.3.0, and this repo authors against the
             // protocol (#1653). Each id is the `name` of a crm_case-scoped
             // action — `escalate_case` / `close_case` in
-            // `src/actions/case.actions.ts`, `log_call` in
-            // `src/actions/global.actions.ts`.
+            // `src/service/actions/case.actions.ts`, `log_call` in
+            // `src/service/actions/case-activity.actions.ts`.
             actions: ['escalate_case', 'close_case', 'log_call'],
           },
         },

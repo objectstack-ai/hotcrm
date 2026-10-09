@@ -5,7 +5,7 @@ import { P } from '@objectstack/spec';
 
 /**
  * Case actions — all three delegate to screen flows in
- * `src/flows/case-actions.flow.ts` (see the note there for why: modal
+ * `src/service/flows/case-actions.flow.ts` (see the note there for why: modal
  * actions never execute their body in 16.1.0, and script bodies cannot
  * UPDATE a record on a sharing-ruled object; screen flows are the mechanism
  * that demonstrably works, same as `convert_lead` / `schedule_followup`).
@@ -42,7 +42,7 @@ export const CloseCaseAction: Action = {
  * Claim Case — the affordance for the unassigned-triage gesture.
  *
  * ⚠️ `visible` MUST mirror the sharing grant, never a convenience flag.
- * `case_unassigned_triage_sharing` (`src/sharing/case.sharing.ts`) is what
+ * `case_unassigned_triage_sharing` (`src/service/sharing/case.sharing.ts`) is what
  * decides whether the agent looking at this button may write the row at all, so
  * the predicate here is copied from it verbatim. ⛔ Never restate it as
  * `record.is_closed == false`: that flag is derived as `status === 'closed'` and
@@ -70,7 +70,7 @@ export const ClaimCaseAction: Action = {
   // grant itself cannot carry `has()`, because `plugin-sharing` compiles a
   // criteria condition with `compileCelToFilter`, which rejects the whole
   // function-call class, and an untranslatable rule is DROPPED by the seeder
-  // (#621). `src/sharing/case.sharing.ts` writes that out in full, including why
+  // (#621). `src/service/sharing/case.sharing.ts` writes that out in full, including why
   // `record.owner_id == null` is total one layer down (`{ owner_id: { $null: true } }`).
   // ⚠️ What that reasoning does NOT cover is THIS surface: an action `visible` is
   // interpreted by CEL in the browser against whatever the page holds, which is
