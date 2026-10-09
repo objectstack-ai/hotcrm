@@ -39,6 +39,10 @@ export const MarketingUserProfile = {
     // Reads the KB and may rate it; cannot author articles (#601).
     crm_article_feedback: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
     crm_knowledge_article: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
+    // The record Attachments panel, READ only: canonical note on `enable.files`
+    // in `src/sales/objects/index.ts` (#2029). Which attachments it lists
+    // derives from the parent record; upload and delete wait upstream.
+    sys_attachment: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
   },
   fields: {
     // Marketing reads pipeline for campaign ROI but never prices a deal, and

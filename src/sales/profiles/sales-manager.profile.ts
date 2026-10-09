@@ -83,6 +83,10 @@ export const SalesManagerProfile = {
     // objectstack-ai/objectstack#5386 (#694).
     crm_opportunity_line_item: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: false, modifyAllRecords: false },
     crm_quote_line_item:       { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: false, modifyAllRecords: false },
+    // The record Attachments panel, READ only: canonical note on `enable.files`
+    // in `src/sales/objects/index.ts` (#2029). Which attachments it lists
+    // derives from the parent record; upload and delete wait upstream.
+    sys_attachment: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
   },
   fields: {
     // Sensitive fields a manager must see in full. Authored explicitly rather

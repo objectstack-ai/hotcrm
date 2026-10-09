@@ -44,6 +44,10 @@ export const SystemAdminProfile = {
     crm_opportunity_line_item: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: true, modifyAllRecords: true, allowTransfer: true },
     crm_quote_line_item:       { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: true, modifyAllRecords: true, allowTransfer: true },
     crm_campaign_member:       { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: true, modifyAllRecords: true, allowTransfer: true },
+    // The record Attachments panel, READ only: canonical note on `enable.files`
+    // in `src/sales/objects/index.ts` (#2029). Which attachments it lists
+    // derives from the parent record; upload and delete wait upstream.
+    sys_attachment: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
   },
   systemPermissions: [
     'view_setup', 'manage_users', 'customize_application',
