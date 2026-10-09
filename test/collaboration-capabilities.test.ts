@@ -42,6 +42,13 @@ import stack from './helpers/composed-stack';
  * holds the read grant (and, until a platform gate is fixed, only that), and the
  * guest set reaches none of it.
  * `test/record-attachments-access.test.ts` measures the two halves together.
+ *
+ * Comments split the same way (#2029). The Discussion panel reads `sys_comment`
+ * and `sys_activity`, which no platform baseline grants either; which threads a
+ * grant reaches is the platform's parent-derived gate. So every such set also
+ * holds read, create and edit on `sys_comment` and read on `sys_activity`,
+ * none may delete a comment until a platform gate is fixed, and the guest set
+ * names neither. `test/record-comments-access.test.ts` measures those halves.
  */
 
 type AnyRec = Record<string, any>;
@@ -192,6 +199,45 @@ describe('enable.feeds is left at its default', () => {
       'objects with comments switched off — deliberate? then say why here:\n  ' +
         `${disabled.join('\n  ')}`,
     ).toEqual([]);
+  });
+
+  it('every set that opens a record opens its Discussion panel, and none may delete a comment yet', () => {
+    // `sys_comment` and `sys_activity` are granted by no platform baseline, so a
+    // set that reads a record but names them hands its holders a Discussion
+    // panel that refuses both its halves with 403 PERMISSION_DENIED (#2029).
+    // Which threads the grants reach is the platform's parent-derived gate, and
+    // only a comment's author may edit it.
+    //
+    // The delete bit stays off. On 17.7.0 the platform's comment delete gate
+    // asks `canEdit(parent)`, which answers true for every controlled_by_parent
+    // parent, so the bit would let a rep delete another person's comment on a
+    // contract they cannot edit (measured, #2029; reported upstream). When the
+    // platform fix is in the pinned version, the bit is granted and this flips.
+    const EXPECTED: Record<string, AnyRec> = {
+      sys_comment: { allowRead: true, allowCreate: true, allowEdit: true, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+      sys_activity: { allowRead: true, allowCreate: false, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+    };
+    const readsARecord = (ps: AnyRec) => businessObjects.some((name) => {
+      const perm = (ps.objects ?? {})[name];
+      return perm?.allowRead === true || perm?.viewAllRecords === true;
+    });
+    const wrong = permissionSets
+      .filter((ps) => ps.name !== 'guest_portal')
+      .filter(readsARecord)
+      .flatMap((ps) => Object.entries(EXPECTED)
+        .filter(([object, bits]) => Object.entries(bits)
+          .some(([bit, want]) => (((ps.objects ?? {})[object] ?? {})[bit] === true) !== want))
+        .map(([object]) => `${ps.name as string} → ${object}`));
+    expect(
+      wrong,
+      'sets whose Discussion grants are not exactly sys_comment read + create + edit and sys_activity read ' +
+        `(canonical note on enable.feeds in src/sales/objects/index.ts):\n  ${wrong.join('\n  ')}`,
+    ).toEqual([]);
+    const guest = (setByName.get('guest_portal')?.objects ?? {}) as AnyRec;
+    expect(
+      [guest.sys_comment, guest.sys_activity],
+      'guest_portal names sys_comment or sys_activity — an anonymous form submitter has no Discussion panel',
+    ).toEqual([undefined, undefined]);
   });
 
   it('no *.object.ts restates `feeds: true` in source', () => {
