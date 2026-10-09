@@ -80,7 +80,7 @@ There are **two** closed stages, not three: *Closed Won* and *Closed Lost*. Ther
 | Closed Won | — | Terminal |
 | Closed Lost | — | Terminal |
 
-Two of those edges exist for the CPQ path rather than for a rep clicking through stages: *→ Proposal* is legal from every pre-proposal stage because the `quote_generation` flow fast-forwards the deal to *Proposal* the moment a quote is generated, which can happen at any open stage; and *Proposal → Closed Won* is legal because the `quote_on_accepted` hook wins the linked deal straight from an accepted quote, with no separate negotiation step.
+Two of those edges exist for the CPQ path rather than for a rep clicking through stages: *→ Proposal* is legal from every pre-proposal stage because the `quote_generation` flow fast-forwards the deal to *Proposal* the moment a quote is generated, which can happen at any open stage — though where your organisation requires qualification approval (立项), not before the deal is approved ([Opportunity Qualification](/docs/sales/opportunity-qualification#qualification-approval)); and *Proposal → Closed Won* is legal because the `quote_on_accepted` hook wins the linked deal straight from an accepted quote, with no separate negotiation step.
 
 **Not in the table**: moving **backwards**. No open stage declares an edge to an earlier one, so *Negotiation* back to *Proposal* — a deal slipping — is outside the route and logs a warning like any other departure (it still saves, per the note above). Neither closed stage declares an edge either, so there is no reopen transition and no admin path back to an open stage.
 

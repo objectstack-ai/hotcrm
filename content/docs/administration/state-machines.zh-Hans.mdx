@@ -80,7 +80,7 @@ Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ 
 | Closed Won | — | 终态 |
 | Closed Lost | — | 终态 |
 
-其中两条边是为 CPQ 路径存在的，不是给销售一个阶段一个阶段点出来的：*→ Proposal* 从每一个 Proposal 之前的阶段都合法，因为 `quote_generation` 流程一旦生成报价就把交易快进到 *Proposal*，而生成报价在任何开放阶段都可能发生；*Proposal → Closed Won* 合法，则是因为 `quote_on_accepted` 钩子会从一份被接受的报价上直接赢下关联交易，中间不再经过一次谈判。
+其中两条边是为 CPQ 路径存在的，不是给销售一个阶段一个阶段点出来的：*→ Proposal* 从每一个 Proposal 之前的阶段都合法，因为 `quote_generation` 流程一旦生成报价就把交易快进到 *Proposal*，而生成报价在任何开放阶段都可能发生——不过如果你们的组织要求立项，交易在立项通过之前不能生成报价（[商机资格评估](/zh-Hans/docs/sales/opportunity-qualification#qualification-approval)）；*Proposal → Closed Won* 合法，则是因为 `quote_on_accepted` 钩子会从一份被接受的报价上直接赢下关联交易，中间不再经过一次谈判。
 
 **表里没有的**：**向后** 移动。没有任何一个开放阶段声明了通往更早阶段的边，所以从 *Negotiation* 退回 *Proposal* —— 交易滑落 —— 是走出了这条路线，和其他任何一次出格一样只记一条警告（照样保存，见上文）。两个已关闭阶段也都没有出边，所以既不存在「重新打开」这条转换，也不存在管理员绕回开放阶段的通道。
 

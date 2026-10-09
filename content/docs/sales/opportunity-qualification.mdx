@@ -53,13 +53,13 @@ Attachments still go on the record's files, as they always have.
 
 ## Qualification approval
 
-Some organisations approve a deal as a project — 立项 — before anyone commits to it. Until that approval, a new deal can be **worked**: log calls and meetings, write the narrative, record the customer's calendar, the amount and **Will Bid**. What waits is **committing** it: moving its stage and the won/lost call — whether that is closing it directly or asking for it with **Requested Status**. **Will Bid** stays open on purpose: whether you intend to bid is part of what the approver decides on, so record it before you ask. The **Qualification Approval** field records where that stands:
+Some organisations approve a deal as a project — 立项 — before anyone commits to it. Until that approval, a new deal can be **worked**: log calls and meetings, write the narrative, record the customer's calendar, the amount and **Will Bid**. What waits is **committing** it: moving its stage and the won/lost call — whether that is closing it directly or asking for it with **Requested Status**. Quoting waits too: while the deal is *Pending* or *Rejected*, **Generate Quote** creates nothing (see [Quotes](/docs/sales/quotes#generating-a-quote)). **Will Bid** stays open on purpose: whether you intend to bid is part of what the approver decides on, so record it before you ask. The **Qualification Approval** field records where that stands:
 
 | Qualification Approval | What it means |
 | --- | --- |
 | **Not Required** | No qualification approval is asked for. This is how HotCRM ships, and it is what every deal shows unless your admin has turned the gate on. |
 | **Pending** | The gate is on for this deal and it has not been approved yet. |
-| **Approved** | The deal is qualified. Its stage and won/lost call are open from now on. |
+| **Approved** | The deal is qualified. Its stage, its won/lost call and **Generate Quote** are open from now on. |
 | **Rejected** | The approver said no to the last request. The deal stays held. |
 
 You never set this field yourself — it is filled in by the approval, and it is read-only.
