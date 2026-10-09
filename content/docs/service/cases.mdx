@@ -213,7 +213,7 @@ The Activity tab is the single source of truth for what has happened on a case. 
 | **Outbound emails** | "Send Email" action — queued through `sys_email` | Subject, recipient, delivery status (queued / sent / bounced) |
 | **Field changes** | Every change to a tracked field on the case | What changed, who changed it, when, before → after |
 
-You don't have to configure any of this — every CRM object ships with `trackHistory: true` and the platform feeds engine wires comments, activities and audit log into the same timeline automatically.
+You don't have to configure any of this. The platform adds an entry of its own each time the case is created or saved: a change to a field the app tracks, such as **Status**, shows the old and new value (*Status: New → In Progress*), and an edit that touches only other fields shows as a plain *Updated Case* entry. Tracking is chosen field by field in the app, not switched on for a whole object. The platform's audit log, which keeps every field of every change, is a separate administrator's screen (**Setup → Diagnostics → Audit Logs**) and does not feed this tab.
 
 > Tip — if you only want to see the discussion, use the filter dropdown at the top of the Activity tab; you can also subscribe to the case from there so any future post pings you in the bell.
 
