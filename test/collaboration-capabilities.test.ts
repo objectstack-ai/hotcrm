@@ -30,14 +30,18 @@ import stack from './helpers/composed-stack';
  * inert metadata reads as load-bearing to the next author (and to the next
  * model), which is exactly how a "capability" nobody enforces gets shipped.
  *
- * The authorization half is the platform's, not this app's: attaching requires
- * `canEdit(parent)`, reads are intersected with the parents the caller can see,
- * and deletes require uploader-or-parent-editor (service-storage attachment
- * hooks + ADR-0104 governed download). No permission set here grants
- * `sys_attachment`, and none needs to — see the canonical note in
- * `src/objects/index.ts`. What this file pins is the app-side half: the flag is
- * only on where a real persona can actually use it, and never where the guest
- * set could reach it.
+ * The authorization half is split. WHICH attachments a person reaches is the
+ * platform's: attaching requires `canEdit(parent)`, reads are intersected with
+ * the parents the caller can see, and deletes require uploader-or-parent-editor
+ * (service-storage attachment hooks + ADR-0104 governed download). Whether a
+ * person may open the panel AT ALL is this app's: `sys_attachment` is granted by
+ * nothing but a permission set, and through #2029 none here granted it, so every
+ * persona but the platform admin was refused the panel — see the canonical note
+ * in `src/sales/objects/index.ts`. What this file pins is the app-side half: the
+ * flag is only on where a real persona can actually use it, every such persona
+ * holds the read grant (and, until a platform gate is fixed, only that), and the
+ * guest set reaches none of it.
+ * `test/record-attachments-access.test.ts` measures the two halves together.
  */
 
 type AnyRec = Record<string, any>;
@@ -121,6 +125,39 @@ describe('enable.files is authored exactly where attachments belong', () => {
     ).toEqual([]);
   });
 
+  it('every set that can read a files-enabled object can list its attachments, and none may write them yet', () => {
+    // `sys_attachment` is granted by no platform baseline, so a set that reads
+    // a files-enabled record but does not name the object hands its holders a
+    // panel that answers 403 PERMISSION_DENIED (#2029). Which rows the read
+    // reaches is the platform's parent-derived filter, not this grant.
+    //
+    // The write bits stay off. On 17.7.0 the platform's attach / delete gate
+    // asks `canEdit(parent)`, which answers true for every controlled_by_parent
+    // parent (crm_contact, crm_quote, crm_contract), so a write grant would let
+    // a rep attach to a quote they cannot read and delete files from a contract
+    // they cannot edit (measured, #2029; reported upstream). When the platform
+    // fix is in the pinned version, the write bits are granted and this flips.
+    const canRead = (ps: AnyRec, name: string) => {
+      const perm = (ps.objects ?? {})[name];
+      return perm?.allowRead === true || perm?.viewAllRecords === true;
+    };
+    const wrong = permissionSets
+      .filter((ps) => ps.name !== 'guest_portal')
+      .filter((ps) => FILES_ENABLED.some((name) => canRead(ps, name)))
+      .map((ps) => ({ name: ps.name as string, perm: (ps.objects ?? {}).sys_attachment ?? {} }))
+      .filter(({ perm }) =>
+        perm.allowRead !== true ||
+        perm.allowCreate === true || perm.allowEdit === true || perm.allowDelete === true ||
+        perm.viewAllRecords === true || perm.modifyAllRecords === true)
+      .map(({ name }) => name);
+    expect(
+      wrong,
+      'sets whose sys_attachment grant is not exactly read — every set that opens a files-enabled ' +
+        'record lists its attachments, and none writes them until the platform gate is fixed ' +
+        `(canonical note in src/sales/objects/index.ts):\n  ${wrong.join('\n  ')}`,
+    ).toEqual([]);
+  });
+
   it('the guest set can edit none of them, so it can attach to none', () => {
     // ADR-0090 D9 / the guest set's iron-clad rule. The platform gates the
     // attach on `canEdit(parent)`, so "guest gains nothing from enable.files"
@@ -135,6 +172,10 @@ describe('enable.files is authored exactly where attachments belong', () => {
       reachable,
       `guest_portal touches a files-enabled object:\n  ${reachable.join('\n  ')}`,
     ).toEqual([]);
+    expect(
+      (guest!.objects ?? {}).sys_attachment,
+      'guest_portal names sys_attachment — an anonymous form submitter has no Attachments panel to open',
+    ).toBeUndefined();
   });
 });
 

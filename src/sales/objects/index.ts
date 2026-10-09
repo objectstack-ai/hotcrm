@@ -25,15 +25,41 @@
  *   `enable?.files === true`, so an object without the flag has no upload
  *   surface at all.
  *
- * The flag opens the surface; it grants **no** access of its own. Record-level
- * authority stays with the parent record, enforced by `service-storage`'s
- * attachment hooks: attaching requires `canEdit(parent)`, deleting requires
- * being the uploader *or* `canEdit(parent)`, and reads are rewritten by a
- * middleware that intersects every `sys_attachment` query with the parents the
- * caller can actually see (failing closed to a deny-all filter on error). That
- * is why enabling files needs no new permission-set grant here, and why the
- * insert-only `guest_portal` set gains nothing: it can edit no record, so it
- * can attach to none and see none.
+ * The flag opens the surface; it grants **no** access of its own, and nothing
+ * else on the platform does either. `sys_attachment` is an object like any
+ * other: the platform's member baseline names it nowhere (it was narrowed to
+ * explicit-allow, objectstack-ai/objectstack#5491), so a person whose
+ * permission sets do not grant it is refused the whole panel with 403
+ * `PERMISSION_DENIED`, reads included. Measured on a fresh `pnpm dev` box
+ * (#2029): `na.rep`, opening a quote they can read, got "You don't have access
+ * to these attachments", and every other demo persona got the same answer.
+ * The platform's attachments-access page names the remedy: an ordinary,
+ * position-distributed permission set grants `sys_attachment`. So EVERY
+ * permission set whose holders can read a files-enabled object grants it
+ * `allowRead`, and `guest_portal` grants nothing.
+ *
+ * WHICH attachments that grant reaches stays with the parent record: a
+ * `service-storage` middleware intersects every `sys_attachment` read with the
+ * parents the caller can actually see (failing closed to a deny-all filter on
+ * error). So a rep lists the attachments of the quotes they can read and of no
+ * other (`test/record-attachments-access.test.ts` measures it).
+ *
+ * **Upload and delete are NOT granted, on purpose (#2029).** Their gate is
+ * `canEdit(parent)` (attach) and uploader-or-`canEdit(parent)` (delete), asked
+ * of the sharing service, and on 17.7.0 that service answers `true` for EVERY
+ * `controlled_by_parent` object: it reads that model as `public` and never asks
+ * the master. Three of the six files-enabled objects are such children
+ * (`crm_contact`, `crm_quote`, `crm_contract`). Measured on the same box with
+ * the write bits granted: `na.rep` attached a file to a quote they get 404 on
+ * (201), and on a contract whose own PATCH answers them 403 they attached a
+ * file (201) and deleted the admin's executed-contract file (200), while an
+ * attach to a private account they cannot read answered 403
+ * `ATTACHMENT_PARENT_ACCESS`. So the write bits would let every persona plant
+ * files on, and delete others' files from, quotes, contracts and contacts
+ * they cannot edit. That is a platform defect, reported upstream
+ * from #2029; until its fix is in the pinned version, only an administrator
+ * uploads, and the write bits join `allowRead` here when it lands (AGENTS.md
+ * §2: wait, do not route around it).
  *
  * Leads are deliberately excluded — attachments on unqualified leads invite
  * junk. Revisit on demand.

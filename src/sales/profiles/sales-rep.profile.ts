@@ -95,6 +95,10 @@ export const SalesRepProfile = {
     // Which campaign sourced a lead — read-only context, derived from the
     // campaign (controlled_by_parent). Enrollment belongs to marketing_user.
     crm_campaign_member:       { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+    // The record Attachments panel, READ only: canonical note on `enable.files`
+    // in `src/sales/objects/index.ts` (#2029). Which attachments it lists
+    // derives from the parent record; upload and delete wait upstream.
+    sys_attachment: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
   },
   fields: {
     'crm_account.annual_revenue':     { readable: true, editable: false },
