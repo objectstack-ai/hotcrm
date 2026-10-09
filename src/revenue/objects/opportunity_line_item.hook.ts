@@ -56,8 +56,8 @@ const opportunityAmountRollup: Hook = {
   handler: async (ctx: HookContext) => {
     const api = ctx.api as HookApi | undefined;
     if (!api) return;
-    const { input } = ctx;
-    const previous = ctx.previous;
+    const { input, previous } = ctx;
+    const num = (v: unknown): number => (typeof v === 'number' ? v : 0);
 
     // Every parent opportunity touched by this change (old + new handles the
     // re-parenting case on update).
@@ -87,12 +87,7 @@ const opportunityAmountRollup: Hook = {
       if (!lines || lines.length === 0) continue;
 
       let sum = 0;
-      for (const l of lines) {
-        const qty = typeof l.quantity === 'number' ? l.quantity : 0;
-        const price = typeof l.unit_price === 'number' ? l.unit_price : 0;
-        const disc = typeof l.discount === 'number' ? l.discount : 0;
-        sum += qty * price * (1 - disc / 100);
-      }
+      for (const l of lines) sum += num(l.quantity) * num(l.unit_price) * (1 - num(l.discount) / 100);
       sum = Math.round(sum * 100) / 100;
       if (sum > 0) {
         await api.object('crm_opportunity').update(

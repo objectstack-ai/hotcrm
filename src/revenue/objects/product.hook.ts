@@ -39,22 +39,12 @@ const productHook: Hook = {
       err.userMessage = userMessage;
       return err;
     }
-    const { event, input } = ctx;
-    const previous = ctx.previous;
+    const { event, input, previous } = ctx;
 
     if (event === 'beforeInsert' || event === 'beforeUpdate') {
-      const listPrice =
-        typeof input.list_price === 'number'
-          ? input.list_price
-          : typeof previous?.list_price === 'number'
-            ? (previous.list_price as number)
-            : undefined;
-      const cost =
-        typeof input.cost === 'number'
-          ? input.cost
-          : typeof previous?.cost === 'number'
-            ? (previous.cost as number)
-            : undefined;
+      // The patch's value, else the stored one — the first that is a number.
+      const listPrice = [input.list_price, previous?.list_price].find((v): v is number => typeof v === 'number');
+      const cost = [input.cost, previous?.cost].find((v): v is number => typeof v === 'number');
       if (typeof listPrice === 'number' && typeof cost === 'number' && listPrice < cost) {
         throw refuse(
           `List Price (${listPrice}) must be greater than or equal to Cost (${cost}).`,
@@ -75,8 +65,7 @@ const productHook: Hook = {
         api.object('crm_opportunity_line_item').count({ where: { crm_product: id } }).catch(() => 0),
         api.object('crm_quote_line_item').count({ where: { crm_product: id } }).catch(() => 0),
       ]);
-      const total = oppRefs + quoteRefs;
-      if (total > 0) {
+      if (oppRefs + quoteRefs > 0) {
         throw refuse(
           `Cannot delete product: referenced by ${oppRefs} opportunity(ies) and ${quoteRefs} quote(s). Set is_active=false to retire instead.`,
           'DELETE_RESTRICTED',

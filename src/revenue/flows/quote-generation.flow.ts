@@ -12,6 +12,16 @@ type Flow = Automation.Flow;
  */
 const DISCOUNT = '(!has(vars.discount) || isBlank(vars.discount) ? 0.0 : double(vars.discount))';
 
+/**
+ * Edge `e4a`'s predicate — advance the deal to `proposal`. A source FRAGMENT
+ * for the same reason as `DISCOUNT`: edge `e4b` is its exact negation,
+ * spliced as `!(…)`, so the two branches partition by construction rather
+ * than by a hand-kept De Morgan copy (the rationale is on the edges).
+ */
+const ADVANCE = `has(vars.oppRecord) && has(vars.oppRecord.stage)
+  && (vars.oppRecord.stage == "prospecting" || vars.oppRecord.stage == "qualification" || vars.oppRecord.stage == "needs_analysis")
+  && (!has(vars.oppRecord.approval_status) || vars.oppRecord.approval_status != "pending")`;
+
 /** Quote Generation — screen flow to create a quote from an opportunity */
 export const QuoteGenerationFlow: Flow = {
   name: 'quote_generation',
@@ -242,10 +252,10 @@ export const QuoteGenerationFlow: Flow = {
     { id: 'e2', source: 'screen_1', target: 'get_opportunity', type: 'default' },
     { id: 'e3', source: 'get_opportunity', target: 'create_quote', type: 'default' },
     { id: 'e4', source: 'create_quote', target: 'check_stage', type: 'default' },
-    // The two branches must PARTITION, so the guards are written in opposite
-    // polarity: `has(…) && …` on the advance side, `!has(…) || …` on the keep
-    // side. An unknown stage therefore lands on "keep stage" — the quote is
-    // still created and nothing illegal is written to the state machine.
+    // The two branches must PARTITION, so the keep side is the advance side
+    // negated whole (`ADVANCE` above): `has(…) && …` advances and everything
+    // else keeps. An unknown stage therefore lands on "keep stage" — the quote
+    // is still created and nothing illegal is written to the state machine.
     // These EDGES are the live sites; `check_stage` carries no
     // `config.condition` at all, because the engine never evaluates one.
     //
@@ -264,15 +274,11 @@ export const QuoteGenerationFlow: Flow = {
     // answers `false` — only the `vars.`-scoped form is total against both
     // hazards.
     //
-    // The approval term (see `check_stage`) is guarded the same way and in the
-    // same opposite polarity: an absent or null `approval_status` is "not
-    // under approval" and advances, as it did before the term existed.
-    { id: 'e4a', source: 'check_stage', target: 'update_opportunity', type: 'conditional', condition: P`has(vars.oppRecord) && has(vars.oppRecord.stage)
-      && (vars.oppRecord.stage == "prospecting" || vars.oppRecord.stage == "qualification" || vars.oppRecord.stage == "needs_analysis")
-      && (!has(vars.oppRecord.approval_status) || vars.oppRecord.approval_status != "pending")`, label: 'Advance' },
-    { id: 'e4b', source: 'check_stage', target: 'notify_owner', type: 'conditional', condition: P`!has(vars.oppRecord) || !has(vars.oppRecord.stage)
-      || (vars.oppRecord.stage != "prospecting" && vars.oppRecord.stage != "qualification" && vars.oppRecord.stage != "needs_analysis")
-      || (has(vars.oppRecord.approval_status) && vars.oppRecord.approval_status == "pending")`, label: 'Keep stage' },
+    // The approval term (see `check_stage`) is guarded the same way: an absent
+    // or null `approval_status` is "not under approval" and advances, as it
+    // did before the term existed.
+    { id: 'e4a', source: 'check_stage', target: 'update_opportunity', type: 'conditional', condition: expression(ADVANCE, 'cel'), label: 'Advance' },
+    { id: 'e4b', source: 'check_stage', target: 'notify_owner', type: 'conditional', condition: expression(`!(${ADVANCE})`, 'cel'), label: 'Keep stage' },
     { id: 'e5', source: 'update_opportunity', target: 'notify_owner', type: 'default' },
     { id: 'e6', source: 'notify_owner', target: 'end', type: 'default' },
   ],
