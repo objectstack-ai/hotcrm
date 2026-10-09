@@ -30,7 +30,7 @@ const quoteValidation: Hook = {
   priority: 200,
   description: 'Default expiration date and freeze accepted/expired quotes.',
   handler: async (ctx: HookContext) => {
-    // The refusal envelope. ⚠️ Mirrored from `./_refusal.ts` because a lowered
+    // The refusal envelope. ⚠️ Mirrored from `src/sales/objects/_refusal.ts` because a lowered
     // body has no module scope and `extractHookBody` THROWS on an import;
     // `test/refusal-envelope.test.ts` pins every copy against it.
     function refuse(

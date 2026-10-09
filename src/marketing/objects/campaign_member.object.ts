@@ -202,8 +202,8 @@ export const CampaignMember = ObjectSchema.create({
     //                  `add_contact_to_campaign` (contacts) stamp it on insert.
     //   responded    — the `mark_responded` action (src/marketing/actions/campaign.actions.ts).
     //   converted    — the member's lead converting; `campaign_lead_conversion_refresh`
-    //                  (campaign.hook.ts) promotes the row when
-    //                  `crm_lead.is_converted` flips.
+    //                  (src/sales/objects/lead.campaign-metrics.hook.ts) promotes
+    //                  the row when `crm_lead.is_converted` flips.
     //   unsubscribed — set by a rep (or an opt-out request) on the member row;
     //                  `campaign_member_optout_sync` round-trips it to the
     //                  lead/contact's `email_opt_out`, which is what makes the

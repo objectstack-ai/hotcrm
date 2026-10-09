@@ -345,7 +345,7 @@ export const EventAttendee = ObjectSchema.create({
     // user-context UPDATE writer, which none of the three columns #1666 / #1667
     // moved had. The census, in full:
     //   • the fifteen generated activity actions (5 `ACTIVITY_TARGETS` × 3
-    //     kinds, one shared body in `global.actions.ts`) INSERT it, and an
+    //     kinds, one shared body in `activity-actions.ts`) INSERT it, and an
     //     action body runs `isSystem` — exempt twice over;
     //   • the two `service.seed.ts` attendee seeds write it, and their
     //     `mode: 'upsert'` replay UPDATE is exempt too, because seed writes are

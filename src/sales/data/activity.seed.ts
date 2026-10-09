@@ -548,7 +548,7 @@ export const events = defineSeed(Event, {
  * true` row anywhere below. The organiser of every one of these meetings is the
  * rep — a `sys_user` — and a seed cannot name a user: lookup values resolve
  * against the target's externalId, which only works inside the app's own
- * object graph. `global.actions.ts` adds the organiser row at runtime, where
+ * object graph. `activity-actions.ts` adds the organiser row at runtime, where
  * the id exists. Nothing is invented here to stand in for it.
  *
  * # The external guest, revisited (#740)

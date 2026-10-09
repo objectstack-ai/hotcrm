@@ -378,7 +378,7 @@ function activityAction(spec: ActivitySpec, objectName: string, nameField: strin
       // buttons this factory builds; an event created any other way left it
       // null, under a comment asking every future author to remember. #595
       // moved the stamp to \`event_activity_bubble\` in
-      // \`src/objects/event.hook.ts\`, which already fires on exactly the
+      // \`src/sales/objects/event.hook.ts\`, which already fires on exactly the
       // condition that matters ("a held event, on its transition into held")
       // and already resolves \`related_to_case\`. Step 1 above writes that
       // event, so this action still stamps the case — through one writer
