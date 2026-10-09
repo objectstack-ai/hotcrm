@@ -371,9 +371,17 @@ describe('every locale is complete on every authored surface', () => {
         // instances carry no stable id, so `pages.<name>.title` / `.subtitle` are
         // the only keys that reach them. `title` legitimately falls back to
         // `label`, so it is only required when the two differ.
-        const header = (page.regions ?? [])
-          .flatMap((r: AnyRec) => r.components ?? [])
-          .find((c: AnyRec) => c?.type === 'page:header');
+        //
+        // A slotted page's header is reached by the same two keys: `translatePage`
+        // walks `slots` as it walks `regions`. This walk used to read `regions`
+        // only, so it never saw `account_detail_page`'s header, and the English
+        // pack shipped with no `title`. Served in English, that header read the
+        // page label "Account Detail" instead of the account's name (#2042).
+        const slotHeader = page.slots?.header;
+        const header = [
+          ...(page.regions ?? []).flatMap((r: AnyRec) => r.components ?? []),
+          ...(Array.isArray(slotHeader) ? slotHeader : slotHeader ? [slotHeader] : []),
+        ].find((c: AnyRec) => c?.type === 'page:header');
         const title = header?.properties?.title;
         const subtitle = header?.properties?.subtitle;
         if (title && title !== page.label && !t?.title) bad.push(`${locale}: ${page.name}.title`);
