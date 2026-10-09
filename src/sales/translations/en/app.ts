@@ -152,6 +152,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     account_detail_page: {
       label: 'Account Detail',
       description: 'Slotted account record page — custom header + persistent discussion feed.',
+      // Required, though it equals the page source: a missing `title` falls
+      // back to `label`, and the header then read "Account Detail" instead of
+      // the account's name (#2042).
+      title: '{name}',
+      subtitle: '{industry} · {type}',
     },
     account_workbench: {
       label: 'Account Workbench',

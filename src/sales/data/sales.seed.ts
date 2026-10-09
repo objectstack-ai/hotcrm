@@ -157,12 +157,28 @@ import { celDaysAgo, linesTotal, type LineSpec } from './_shared';
 // was never won. The criterion `$in [at_risk, churning]` does not match an
 // absent value, so a blank row is outside the panel either way — it says
 // "nobody has assessed this", which is exactly true of a prospect.
+//
+// ─── `approval_status`: every seeded account is already signed off ─────
+//
+// Each row below states `approval_status: 'approved'`, and it has to. The
+// column's default is `pending`, which arms `account_approval` on a real insert
+// (REQ-0003). A seed row never reaches that flow: the platform writes every
+// seed row with `skipTriggers` (`SEED_WRITE_EXECUTION_CONTEXT`,
+// `@objectstack/spec`), because a seed is established END-STATE data, not a
+// user event. A row left on the default therefore read `pending` with no
+// approval request behind it. The console then showed "Locked for approval"
+// and disabled Edit, and "Recall approval" found no request to recall, so no
+// admin could edit a seeded account (#2042). These accounts carry deals,
+// contracts and cases; they are past their sign-off, so the row says so.
+// ⛔ Do not "fix" it at the field default instead: that switches the gate off
+// for every account a user creates.
 export const accounts = defineSeed(Account, {
   mode: 'upsert',
   externalId: 'name',
   records: [
     {
       name: 'Acme Corporation',
+      approval_status: 'approved',
       type: 'customer',
       industry: 'technology',
       annual_revenue: 5000000,
@@ -219,6 +235,7 @@ three regional teams (NA, EMEA, APAC).
     },
     {
       name: 'Globex Industries',
+      approval_status: 'approved',
       type: 'prospect',
       industry: 'manufacturing',
       annual_revenue: 12000000,
@@ -234,6 +251,7 @@ three regional teams (NA, EMEA, APAC).
     },
     {
       name: 'Initech Solutions',
+      approval_status: 'approved',
       type: 'customer',
       industry: 'finance',
       annual_revenue: 3500000,
@@ -252,6 +270,7 @@ three regional teams (NA, EMEA, APAC).
     },
     {
       name: 'Stark Medical',
+      approval_status: 'approved',
       type: 'partner',
       industry: 'healthcare',
       annual_revenue: 8000000,
@@ -285,6 +304,7 @@ three regional teams (NA, EMEA, APAC).
     },
     {
       name: 'Wayne Enterprises',
+      approval_status: 'approved',
       type: 'customer',
       industry: 'technology',
       annual_revenue: 25000000,
@@ -313,6 +333,7 @@ three regional teams (NA, EMEA, APAC).
     },
     {
       name: 'Northwind Energy',
+      approval_status: 'approved',
       type: 'prospect',
       industry: 'energy',
       annual_revenue: 18000000,
@@ -331,6 +352,7 @@ three regional teams (NA, EMEA, APAC).
     },
     {
       name: 'Vertex Analytics',
+      approval_status: 'approved',
       type: 'customer',
       industry: 'software',
       annual_revenue: 9500000,
@@ -347,6 +369,7 @@ three regional teams (NA, EMEA, APAC).
     },
     {
       name: 'Lattice Education',
+      approval_status: 'approved',
       type: 'customer',
       industry: 'education',
       annual_revenue: 6800000,
@@ -369,6 +392,7 @@ three regional teams (NA, EMEA, APAC).
     },
     {
       name: 'Apex Logistics',
+      approval_status: 'approved',
       type: 'prospect',
       industry: 'logistics',
       annual_revenue: 22000000,

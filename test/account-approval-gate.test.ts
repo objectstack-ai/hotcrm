@@ -4,7 +4,8 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
 import stack from './helpers/composed-stack';
 import { AccountApprovalFlow } from '../src/sales/flows/account-approval.flow';
-import { hotcrmStack, conditionHolds as holdsOn } from './helpers/verify-stack';
+import { CrmSeedData } from '../objectstack.composition';
+import { hotcrmStack, conditionHolds as holdsOn, signUpPerson, flowRuns } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
 
@@ -92,5 +93,47 @@ describe('account approval — the gate ships armed (REQ-0003)', () => {
     // while the account sat pending.
     const start = (AccountApprovalFlow.nodes as Rec[]).find((n) => n.id === 'start');
     expect(start?.config?.triggerType).toBe('record-after-create');
+  });
+});
+
+/**
+ * A seeded account is established data, not a submission (#2042).
+ *
+ * The platform writes every seed row with `skipTriggers`, so a seeded account
+ * never reaches `account_approval`. Left on the column default, all nine read
+ * `pending` with no request behind them: the console locked each one, and
+ * "Recall approval" found nothing to recall. So the seed rows state
+ * `approved`. The field default stays `pending`, which keeps the gate armed for
+ * every account a user creates; the last test here holds that half.
+ */
+describe('a seeded account is already signed off (#2042)', () => {
+  type Dataset = { object: string; records: Rec[] };
+  const seeded = (CrmSeedData as unknown as Dataset[])
+    .filter((d) => d.object === 'crm_account')
+    .flatMap((d) => d.records);
+  const seededNames = seeded.map((r) => String(r.name));
+
+  it('every seed row states `approved`', () => {
+    // Guard the guard: no rows would make the next line vacuously true.
+    expect(seeded.length, 'no crm_account seed rows').toBeGreaterThanOrEqual(9);
+    expect(seeded.filter((r) => r.approval_status !== 'approved').map((r) => r.name)).toEqual([]);
+  });
+
+  it('the booted app stores every seeded account as `approved`', async () => {
+    // The column is `readonly`; this reads what the seed write actually landed,
+    // not what the row asked for.
+    const stored = await verify.rows('crm_account', { name: { $in: seededNames } });
+    expect(stored.map((r) => String(r.name)).sort(), 'a seeded account did not land').toEqual([...seededNames].sort());
+    expect(stored.filter((r) => r.approval_status !== 'approved').map((r) => r.name)).toEqual([]);
+  });
+
+  it('an account a rep creates still lands `pending` and enters the approval flow', async () => {
+    const rep = await signUpPerson(verify, 'rep@account-approval-gate.test', {
+      name: 'Approval Gate Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    });
+    const created = await verify.hooks.run('crm_account', 'insert', { name: 'Approval Gate Co' }, { as: rep.token });
+    const [stored] = await verify.rows('crm_account', { id: created.id });
+    expect(stored?.approval_status).toBe('pending');
+    expect(await flowRuns(verify, 'account_approval', String(created.id))).toHaveLength(1);
   });
 });
