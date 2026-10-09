@@ -33,6 +33,69 @@ export const QuoteGenerationFlow: Flow = {
   nodes: [
     { id: 'start', type: 'start', label: 'Start', config: { objectName: 'crm_opportunity' } },
     {
+      // ─── The 立项 (qualification) gate, REQ-0006 step 11 (#2032) ─────────
+      //
+      // 「新增商机可跟进，立项通过后方可更新阶段、投标、赢丢单操作。」 Ruled (hotcrm-R74b
+      // item 2, B): before 立项 is approved, Generate Quote REFUSES and creates
+      // nothing. Steps 15 and 18 put quoting after the deal's approval too.
+      //
+      // Why the refusal is HERE, ahead of the form and of every writer: this
+      // flow writes the quote BEFORE the stage, and a flow carries no
+      // transaction (ADR-0077). With the gate armed, `opportunity_lifecycle`
+      // refuses the `update_opportunity` stage write — so the run used to fail
+      // AFTER `create_quote` had landed: measured on 17.7.0 as a sales_rep,
+      // `FLOW_FAILED` 400 at `update_opportunity` ("This deal needs
+      // qualification approval first …"), one draft quote left behind, the
+      // stage unchanged. ⛔ Not #2015's keep-stage-and-quote: that lock does
+      // not hold quoting, this gate does.
+      //
+      // The flow is the one choke point every door reaches — the record-header
+      // and list-row buttons and `POST /automation/quote_generation/trigger` —
+      // so the refusal lives here and `generate_quote` stays visible: hiding
+      // it would leave the rep a missing button with no reason, because an
+      // action's `visible` / `disabled` are bare predicates with nowhere to
+      // put a sentence.
+      //
+      // A dedicated read of the verdict alone, at click time. ⛔ Do not fold it
+      // into `get_opportunity`: that read stays AFTER the screen so the
+      // pricing and the stage decision see the deal as it is at submit, which
+      // is what the #2015 approval branch (`e4a` / `e4b`) depends on. The
+      // verdict cannot drift the other way while the form is open:
+      // `not_required` and `approved` are never written back to `pending`.
+      id: 'get_qualification', type: 'get_record', label: 'Get Qualification Verdict',
+      config: {
+        objectName: 'crm_opportunity', filter: { id: '{recordId}' },
+        fields: ['qualification_approval_status'], outputVariable: 'qualificationRecord',
+      },
+    },
+    {
+      // Branching is on edges `e9` / `e10` — a `decision` node's singular
+      // `config.condition` is never evaluated, see `check_stage`.
+      id: 'check_qualification', type: 'decision', label: 'Qualified for Quoting?',
+    },
+    {
+      // A first-class refusal (`EndConfigSchema` `outcome: 'refused'`): the run
+      // ends `refused`, never `failed` and never parked, nothing is written,
+      // and the console shows the message with Close only — no Submit and no
+      // "completed" toast, which is what a message-only screen would give.
+      //
+      // The sentence mirrors the `opportunity_lifecycle` refusal of the same
+      // gate, so the rep is told the same next step from either door.
+      //
+      // ⚠️ English only, and not by choice: at 17.7.0 the `flows` translation
+      // group carries a flow's `label` and its screens' `title` / field copy,
+      // and no key for an `end` node's `message` (a screen's `description` is
+      // refused by name). The console titles the dialog with the action's
+      // translated label. A platform gap, raised from #2032; ⛔ do not
+      // re-route the refusal through a screen to borrow a translatable title.
+      id: 'refuse_unqualified', type: 'end', label: 'Quote Refused',
+      config: {
+        outcome: 'refused',
+        message:
+          'This deal needs qualification approval first: tick Request Qualification Approval. A quote can be generated once it is approved. Nothing has been created.',
+      },
+    },
+    {
       id: 'screen_1', type: 'screen', label: 'Quote Details',
       config: {
         fields: [
@@ -172,7 +235,29 @@ export const QuoteGenerationFlow: Flow = {
   ],
 
   edges: [
-    { id: 'e1', source: 'start', target: 'screen_1', type: 'default' },
+    // ⛔ A retired edge's id stays VACANT: `e1` (start → screen_1) is one.
+    // Every surviving edge keeps its id, and a new one takes the next id after
+    // the highest in use — a duplicate id is inert, so nothing would flag it.
+    { id: 'e7', source: 'start', target: 'get_qualification', type: 'default' },
+    { id: 'e8', source: 'get_qualification', target: 'check_qualification', type: 'default' },
+    // ── The 立项 gate (#2032) ──────────────────────────────────────────
+    //
+    // The verdict is read the way `opportunity_lifecycle` reads it: `pending`
+    // or `rejected` refuses — an approver's "no" is not a release — and every
+    // other value proceeds. `not_required` is the shipped default, so with the
+    // gate off this pair is invisible and the flow runs exactly as before;
+    // `test/flow-quote.test.ts` pins that the two answer alike, deal by deal.
+    //
+    // TOTAL and PARTITIONING (`e10` is `e9` negated by De Morgan): a decision
+    // node with no `config.conditions` takes every out-edge whose condition
+    // holds, in parallel, so overlapping guards would refuse and quote in one
+    // run. Fail-OPEN like the hook: an unbound or null record, or no verdict
+    // column (a deal older than it), proceeds — a missing deal then fails at
+    // `create_quote` exactly as it always did.
+    { id: 'e9', source: 'check_qualification', target: 'refuse_unqualified', type: 'conditional', condition: P`has(vars.qualificationRecord) && has(vars.qualificationRecord.qualification_approval_status)
+      && (vars.qualificationRecord.qualification_approval_status == "pending" || vars.qualificationRecord.qualification_approval_status == "rejected")`, label: 'Not qualified' },
+    { id: 'e10', source: 'check_qualification', target: 'screen_1', type: 'conditional', condition: P`!has(vars.qualificationRecord) || !has(vars.qualificationRecord.qualification_approval_status)
+      || (vars.qualificationRecord.qualification_approval_status != "pending" && vars.qualificationRecord.qualification_approval_status != "rejected")`, label: 'Qualified or gate off' },
     { id: 'e2', source: 'screen_1', target: 'get_opportunity', type: 'default' },
     { id: 'e3', source: 'get_opportunity', target: 'create_quote', type: 'default' },
     { id: 'e4', source: 'create_quote', target: 'check_stage', type: 'default' },
