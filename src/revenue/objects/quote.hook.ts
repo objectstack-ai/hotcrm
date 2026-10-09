@@ -462,8 +462,9 @@ const quoteAcceptedContractDraft: Hook = {
       //
       // DELIBERATELY BARE, like the close-won one in `quote_on_accepted`: a
       // cascade fault the accepting user neither caused nor can act on, so a
-      // 500, never a 4xx refusal envelope (#1075).
-      throw new Error(`could not draft the contract for quote ${String(input.id ?? previous?.id)}: ${(err as Error).message}`);
+      // 500, never a 4xx refusal envelope (#1075). It names the quote the way
+      // every screen does — the label composed above — never by its id (#1243).
+      throw new Error(`could not draft the contract for quote ${quoteLabel}: ${(err as Error).message}`);
     }
   },
 };
@@ -517,8 +518,9 @@ const quoteAccepted: Hook = {
       // on, so it is a server fault and belongs in the 5xx band. A bare Error is
       // already mapped to `500 / INTERNAL_ERROR` by `resolveThrownHttpError`,
       // which is the correct answer — dressing it in a 4xx refusal code would
-      // file a broken cascade as user error.
-      throw new Error(`could not close-won opportunity ${id}: ${(err as Error).message}`);
+      // file a broken cascade as user error. It names the quote by its number,
+      // the engine's autonumber every screen shows — never a record id (#1243).
+      throw new Error(`could not close-won the opportunity of quote ${String(previous?.quote_number)}: ${(err as Error).message}`);
     }
   },
 };

@@ -148,6 +148,10 @@ const accept = async (q: QuoteFixture, fault?: Parameters<typeof recordEngineWri
   }
 };
 
+/** The quote as every screen titles it (`quote_number - name`) — what a diagnostic names it by. */
+const titleOf = async (id: string): Promise<string> => String((await verify.rows('crm_quote', { id }))[0]!.display_title);
+const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 /** The stored opportunity, read fresh. */
 const opportunity = async (id: string) => (await verify.rows('crm_opportunity', { id }))[0]!;
 
@@ -224,7 +228,7 @@ describe('a contract that will not draft does not decide whether the deal is won
 
     // The failure is reported — `onError: 'log'` needs something true to log.
     expect(reported.join('\n')).toMatch(
-      new RegExp(`could not draft the contract for quote ${q.id}: Primary Contact is required`),
+      new RegExp(`could not draft the contract for quote ${escape(await titleOf(q.id))}: Primary Contact is required`),
     );
   });
 
@@ -233,7 +237,8 @@ describe('a contract that will not draft does not decide whether the deal is won
     const { contract, reported } = await accept(q, (op, object) =>
       (op === 'update' && object === 'crm_opportunity' ? new Error('write rejected') : undefined));
 
-    expect(reported.join('\n')).toMatch(new RegExp(`could not close-won opportunity ${q.opportunity}: write rejected`));
+    const [stored] = await verify.rows('crm_quote', { id: q.id });
+    expect(reported.join('\n')).toMatch(new RegExp(`could not close-won the opportunity of quote ${escape(String(stored!.quote_number))}: write rejected`));
     const outcome = await contract.settled;
     expect(outcome.ok, 'the contract leg was dragged down with the other').toBe(true);
     expect(await verify.rows('crm_contract', { id: ((outcome as AnyRec).value as AnyRec).id })).toHaveLength(1);
