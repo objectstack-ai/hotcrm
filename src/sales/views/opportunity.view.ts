@@ -24,6 +24,7 @@ export const OpportunityViews = defineView({
     type: 'grid',
     name: 'open_opportunities',
     label: 'Open Deals',
+    userActions: { editInline: true },
     data: { provider: 'object', object: 'crm_opportunity' },
     filter: [
       { field: 'stage', operator: 'not_in', value: ['closed_won', 'closed_lost'] },
@@ -130,6 +131,7 @@ export const OpportunityViews = defineView({
       name: 'all_opportunities',
       type: 'grid',
       label: 'All Opportunities',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_opportunity' },
       columns: [
         { field: 'name', width: 220, sortable: true, link: true },
@@ -219,6 +221,7 @@ export const OpportunityViews = defineView({
       name: 'my_open_deals',
       type: 'grid',
       label: 'My Open Deals',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_opportunity' },
       columns: ['name', 'crm_account', 'stage', 'amount', 'close_date'],
       // "Open" has to exclude BOTH closed stages. Excluding only closed_won
@@ -284,6 +287,7 @@ export const OpportunityViews = defineView({
       // queue a manager works. The `days_in_stage` column puts the
       // `opportunity_stagnation` threshold in plain sight on every row.
       label: '⚠️ Stale Opportunities · Longest in Stage First',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_opportunity' },
       columns: ['name', 'crm_account', 'stage', 'amount', 'stage_entry_date', 'days_in_stage', 'close_date', 'owner_id'],
       filter: [
@@ -309,6 +313,7 @@ export const OpportunityViews = defineView({
       name: 'tender_this_quarter',
       type: 'grid',
       label: 'Tender This Quarter',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_opportunity' },
       columns: ['name', 'crm_account', 'expected_tender_date', 'expected_tender_amount', 'expected_signing_date', 'stage', 'owner_id'],
       filter: [
@@ -332,6 +337,7 @@ export const OpportunityViews = defineView({
       name: 'closing_this_quarter',
       type: 'grid',
       label: 'Closing This Quarter',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_opportunity' },
       columns: ['name', 'crm_account', 'amount', 'forecast_category', 'probability', 'close_date', 'owner_id'],
       // The `close_date` window is what makes the label true (#743). Without

@@ -16,6 +16,7 @@ export const TaskViews = defineView({
     type: 'grid',
     name: 'all_tasks',
     label: 'All Tasks',
+    userActions: { editInline: true },
     data: { provider: 'object', object: 'crm_task' },
     // NO `progress_percent` column here (#1214 item 5). The default grid used
     // to render completion THREE times on one row — 是否完成 (tick), 状态, and
@@ -155,6 +156,7 @@ export const TaskViews = defineView({
       name: 'my_open_tasks',
       type: 'grid',
       label: 'My Open Tasks',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_task' },
       columns: ['subject', 'priority', 'due_date', 'progress_percent'],
       filter: [
@@ -169,6 +171,7 @@ export const TaskViews = defineView({
       name: 'todays_tasks',
       type: 'grid',
       label: '📅 My Priority Tasks',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_task' },
       columns: ['subject', 'priority', 'status', 'due_date', 'related_to_type', 'owner_id'],
       // Operator-only filter — priority and status, no tokens — and the reason
@@ -316,6 +319,7 @@ export const TaskViews = defineView({
       // As shipped: the open-task backlog ordered most-overdue-first (oldest
       // due date on top), which is the actionable queue a manager works.
       label: '⏰ Open Tasks · Most Overdue First',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_task' },
       columns: ['subject', 'priority', 'status', 'due_date', 'owner_id'],
       filter: [

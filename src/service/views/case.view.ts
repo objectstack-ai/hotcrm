@@ -15,6 +15,7 @@ export const CaseViews = defineView({
     type: 'grid',
     name: 'all_cases',
     label: 'All Cases',
+    userActions: { editInline: true },
     data: { provider: 'object', object: 'crm_case' },
     columns: [
       { field: 'case_number', width: 130, sortable: true, link: true, pinned: 'left' },
@@ -129,6 +130,7 @@ export const CaseViews = defineView({
       name: 'my_open_cases',
       type: 'grid',
       label: 'My Open Cases',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_case' },
       columns: ['case_number', 'subject', 'crm_account', 'priority', 'status', 'sla_due_date'],
       // ⚠️ `status not_in CLOSED_CASE_STATUSES`, NOT `is_closed == false`: the
@@ -216,6 +218,7 @@ export const CaseViews = defineView({
       name: 'unassigned_triage',
       type: 'grid',
       label: 'Unassigned — triage',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_case' },
       columns: ['case_number', 'subject', 'crm_account', 'crm_contact', 'priority', 'status', 'origin', 'sla_due_date'],
       filter: [
@@ -248,6 +251,7 @@ export const CaseViews = defineView({
       name: 'escalated_cases',
       type: 'grid',
       label: 'Escalated Cases',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_case' },
       columns: ['case_number', 'subject', 'crm_account', 'priority', 'sla_due_date', 'owner_id'],
       filter: [{ field: 'is_escalated', operator: 'equals', value: true }],
@@ -270,6 +274,7 @@ export const CaseViews = defineView({
       name: 'sla_at_risk',
       type: 'grid',
       label: '⏰ SLA at Risk',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_case' },
       columns: ['case_number', 'subject', 'crm_account', 'priority', 'sla_due_date', 'owner_id'],
       // Operator-only filter — sort by SLA due date ascending so the soonest

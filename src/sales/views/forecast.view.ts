@@ -14,6 +14,7 @@ export const ForecastViews = defineView({
     type: 'grid',
     name: 'all_forecasts',
     label: 'All Forecasts',
+    userActions: { editInline: true },
     data: { provider: 'object', object: 'crm_forecast' },
     columns: [
       { field: 'owner_id',            width: 160, pinned: 'left', link: true },
@@ -73,6 +74,7 @@ export const ForecastViews = defineView({
       // and names `{current_quarter_start}` as the fix, so the silent-empty
       // failure mode that removal was reacting to is no longer reachable.
       label: 'This Quarter',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_forecast' },
       columns: ['owner_id', 'quota', 'closed_amount', 'commit_amount', 'best_case_amount', 'pipeline_amount', 'attainment_pct', 'coverage_ratio'],
       filter: [
@@ -109,6 +111,7 @@ export const ForecastViews = defineView({
       name: 'my_forecast',
       type: 'grid',
       label: 'My Forecast',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_forecast' },
       columns: ['period_label', 'snapshot_date', 'quota', 'closed_amount', 'commit_amount', 'pipeline_amount', 'attainment_pct'],
       // `{current_user_id}` is the only user token the view runtime resolves

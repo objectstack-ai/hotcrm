@@ -27,6 +27,7 @@ export const EventViews = defineView({
     type: 'grid',
     name: 'all_events',
     label: 'All Events',
+    userActions: { editInline: true },
     data: { provider: 'object', object: 'crm_event' },
     columns: [
       { field: 'subject', width: 280, sortable: true, link: true },
@@ -116,6 +117,7 @@ export const EventViews = defineView({
       name: 'upcoming_events',
       type: 'grid',
       label: '📅 Upcoming · Soonest First',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_event' },
       columns: ['subject', 'type', 'start_datetime', 'location', 'related_to_type', 'owner_id'],
       filter: [{ field: 'status', operator: 'equals', value: 'planned' }],
@@ -127,6 +129,7 @@ export const EventViews = defineView({
       name: 'held_events',
       type: 'grid',
       label: '✅ Interaction History',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_event' },
       columns: ['subject', 'type', 'start_datetime', 'duration_minutes', 'related_to_type', 'owner_id'],
       filter: [{ field: 'status', operator: 'equals', value: 'held' }],

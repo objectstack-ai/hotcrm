@@ -25,6 +25,7 @@ export const KnowledgeArticleViews = defineView({
     type: 'grid',
     name: 'all_articles',
     label: 'All Articles',
+    userActions: { editInline: true },
     data: { provider: 'object', object: 'crm_knowledge_article' },
     columns: [
       { field: 'article_number', width: 120, link: true, pinned: 'left', sortable: true },
@@ -56,6 +57,7 @@ export const KnowledgeArticleViews = defineView({
       name: 'published_articles',
       type: 'grid',
       label: 'Published',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_knowledge_article' },
       columns: ['article_number', 'title', 'category', 'audience', 'helpful_count', 'not_helpful_count', 'published_at'],
       filter: [{ field: 'status', operator: 'equals', value: 'published' }],
@@ -65,6 +67,7 @@ export const KnowledgeArticleViews = defineView({
       name: 'my_drafts',
       type: 'grid',
       label: 'My Drafts',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_knowledge_article' },
       columns: ['article_number', 'title', 'category', 'status', 'updated_at'],
       filter: [

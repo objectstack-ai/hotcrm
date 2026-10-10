@@ -14,6 +14,7 @@ export const AccountViews = defineView({
     type: 'grid',
     name: 'all_accounts',
     label: 'All Accounts',
+    userActions: { editInline: true },
     data: { provider: 'object', object: 'crm_account' },
     columns: [
       { field: 'name', width: 240, sortable: true, link: true, pinned: 'left' },
@@ -138,6 +139,7 @@ export const AccountViews = defineView({
       name: 'enterprise_accounts',
       type: 'grid',
       label: 'Enterprise Accounts',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_account' },
       columns: ['name', 'industry', 'annual_revenue', 'number_of_employees', 'owner_id'],
       filter: [{ field: 'annual_revenue', operator: 'greater_than_or_equal', value: 10000000 }],
@@ -173,6 +175,7 @@ export const AccountViews = defineView({
       name: 'my_accounts',
       type: 'grid',
       label: 'My Accounts',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_account' },
       columns: ['name', 'industry', 'annual_revenue', 'phone', 'last_activity_date'],
       filter: [{ field: 'owner_id', operator: 'equals', value: '{current_user_id}' }],
@@ -190,6 +193,7 @@ export const AccountViews = defineView({
       name: 'at_risk_accounts',
       type: 'grid',
       label: '⚠️ At-Risk Accounts',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_account' },
       columns: ['name', 'tier', 'health_score', 'segment', 'last_activity_date'],
       filter: [

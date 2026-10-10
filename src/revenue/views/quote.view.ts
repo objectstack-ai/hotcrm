@@ -14,6 +14,7 @@ export const QuoteViews = defineView({
     type: 'grid',
     name: 'all_quotes',
     label: 'All Quotes',
+    userActions: { editInline: true },
     data: { provider: 'object', object: 'crm_quote' },
     columns: [
       { field: 'quote_number', width: 140, link: true, pinned: 'left' },
