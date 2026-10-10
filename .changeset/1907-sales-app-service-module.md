@@ -2,7 +2,9 @@
 'hotcrm': patch
 ---
 
-HotCRM now ships as one artifact carrying two packages: the HotCRM app and its Service module
+HotCRM now ships as one artifact carrying two packages: the HotCRM app and its Service module.
+It still installs as one app, and the one change a user sees is the menu order: **My Cases**
+is now the last item of **My Work**.
 
 **What changes for an installation.** The artifact still installs as one app,
 **HotCRM** (`app.objectstack.hotcrm`), and every object keeps its name, its
