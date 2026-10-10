@@ -1,5 +1,5 @@
 ---
-'hotcrm': minor
+'hotcrm': major
 ---
 
 **A contact's mailing address is now one structured field.** `crm_contact` stored its
