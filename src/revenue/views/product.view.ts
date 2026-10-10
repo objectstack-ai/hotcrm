@@ -19,6 +19,7 @@ export const ProductViews = defineView({
     type: 'grid',
     name: 'all_products',
     label: 'All Products',
+    userActions: { editInline: true },
     data: { provider: 'object', object: 'crm_product' },
     columns: [
       { field: 'product_code', width: 140, link: true, pinned: 'left' },

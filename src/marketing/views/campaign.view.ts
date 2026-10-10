@@ -15,6 +15,7 @@ export const CampaignViews = defineView({
     type: 'grid',
     name: 'all_campaigns',
     label: 'All Campaigns',
+    userActions: { editInline: true },
     data: { provider: 'object', object: 'crm_campaign' },
     columns: [
       { field: 'name', width: 240, sortable: true, link: true, pinned: 'left' },

@@ -125,6 +125,7 @@ export const LeadViews = defineView({
     type: 'grid',
     name: 'all_leads',
     label: 'All Leads',
+    userActions: { editInline: true },
     data: {
       provider: 'object',
       object: 'crm_lead',
@@ -403,6 +404,7 @@ export const LeadViews = defineView({
       name: 'my_leads',
       type: 'grid',
       label: 'My Leads',
+      userActions: { editInline: true },
       data: {
         provider: 'object',
         object: 'crm_lead',
@@ -452,6 +454,7 @@ export const LeadViews = defineView({
       name: 'hot_leads',
       type: 'grid',
       label: '🔥 Hot Leads',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_lead' },
       columns: ['full_name', 'company', 'phone', 'email', 'rating', 'next_followup_date', 'owner_id'],
       // Same rating cut as the `lead_assignment` hot branch, scoped to the
@@ -471,6 +474,7 @@ export const LeadViews = defineView({
       name: 'high_priority',
       type: 'grid',
       label: 'High Priority',
+      userActions: { editInline: true },
       data: {
         provider: 'object',
         object: 'crm_lead',
@@ -502,6 +506,7 @@ export const LeadViews = defineView({
       name: 'suspected_duplicates',
       type: 'grid',
       label: 'Suspected Duplicates',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_lead' },
       columns: [
         'full_name', 'company', 'email',

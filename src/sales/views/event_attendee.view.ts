@@ -55,6 +55,7 @@ export const EventAttendeeViews = defineView({
     type: 'grid',
     name: 'all_event_attendees',
     label: 'Event Attendees',
+    userActions: { editInline: true },
     data: { provider: 'object', object: 'crm_event_attendee' },
     columns: [
       { field: 'attendee_type', width: 120, sortable: true },
