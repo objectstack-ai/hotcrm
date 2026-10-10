@@ -4,7 +4,7 @@
 
 ### Major Changes
 
-- 5e50863: **A contact's mailing address is now one structured field.** `crm_contact` stored its
+- f44ab64: **A contact's mailing address is now one structured field.** `crm_contact` stored its
   address as five separate text fields — `mailing_street`, `mailing_city`, `mailing_state`,
   `mailing_postal_code`, `mailing_country`. It now carries one `mailing_address`
   (`Field.address()`), the same shape as an account's Billing Address and a lead's Address.
@@ -39,7 +39,7 @@
 
 ### Minor Changes
 
-- 5e50863: The SaaS tenant administrator may now author their own organization's views, dashboards and reports
+- bea1bf9: The SaaS tenant administrator may now author their own organization's views, dashboards and reports
   
   In the SaaS / multi-org composition (`HOTCRM_COMPOSITION=saas`), the
   **Tenant Administrator** permission set now holds the platform's org-scoped
@@ -54,7 +54,7 @@
   organization in a deployment, so a tenant admin still cannot author them. The
   community app's **System Administrator** and the default composition are
   unchanged.
-- 5e50863: An opportunity can now require **qualification approval (立项)** before it is committed:
+- 4807ed9: An opportunity can now require **qualification approval (立项)** before it is committed:
   until the deal is approved, its stage cannot move, and it can be neither closed won/lost
   nor asked to be. Everything else stays open, *Will Bid* included, so a new deal can still
   be worked, and its bid intent recorded for the approver, while it waits. **The gate ships
@@ -80,7 +80,7 @@
   yet qualified cannot raise a won/lost request either; once it is qualified, the
   status-change gate behaves exactly as it does alone. Each gate keeps its own verdict
   field, and the amount-based *Large Deal Approval* is unchanged.
-- 5e50863: An account now records **who it is on paper**, **what it spends**, **what it may be sold**,
+- 9531cde: An account now records **who it is on paper**, **what it spends**, **what it may be sold**,
   and **whether it has been signed off**. Six new fields on `crm_account`, a new **Business
   Profile** section, a capability gate on new opportunities, and an account approval flow
   (REQ-0003 — the `crm_account` half of REQ-0002's steps 1, 3, 4 and 5).
@@ -123,7 +123,7 @@
   
   Ships in all four locale packs (en, zh-CN, es-ES, ja-JP), with the account, automation and
   approval documentation updated in English, Simplified and Traditional Chinese.
-- 5e50863: A contact now records the **buying centre**: who this person is in the purchase
+- 661d2fa: A contact now records the **buying centre**: who this person is in the purchase
   decision, where they stand on us, and how well we actually know them. Three new
   optional fields on `crm_contact`, in their own **Buying Function** / **Attitude
   to Us** / **Relationship Strength** trio under a new **Buying Centre** section
@@ -165,7 +165,7 @@
   and the author-time `security-role-word` rule (ADR-0090 D3) refuses it on both
   the name and the label. The three non-English packs keep the natural term in
   their own language.
-- 5e50863: A lead now records **what the prospect needs and roughly what it is worth**, and
+- 391990e: A lead now records **what the prospect needs and roughly what it is worth**, and
   conversion can be put behind a **sign-off** (REQ-0005, the `crm_lead` half of
   REQ-0002's steps 6-7). Three new fields on `crm_lead`, all optional, all in the
   **Qualification** group.
@@ -210,7 +210,7 @@
   
   New user-facing page: **Sales Cloud › Lead Approval**, in all three doc
   languages.
-- 5e50863: **Line items now carry their line number.** `line_number` on opportunity and quote line
+- 1551914: **Line items now carry their line number.** `line_number` on opportunity and quote line
   items is read-only and platform-assigned, but nothing assigned it: every line a rep added
   stored an empty `Line #`, and the billing hand-off sent `"line_number": null` for each of
   them on every won deal and every activated contract. A new hook on both
@@ -227,7 +227,7 @@
   converged org reports zero rows. Each touched line re-runs the parent rollups, exactly as
   an edit would: an open deal's amount and a draft quote's totals are recomputed from their
   lines.
-- 5e50863: **Every CRM notification now arrives in the recipient's own language.** The 19 `notify`
+- 087b7c5: **Every CRM notification now arrives in the recipient's own language.** The 19 `notify`
   nodes across the sales, service and revenue flows stop sending a fixed English title and
   body and reference a `sys_email_template` bundle instead — 19 templates, four locales
   each (`en-US`, `zh-CN`, `ja-JP`, `es-ES`), 76 rows — supplying their record values as
@@ -239,7 +239,7 @@
   Wording is unchanged: every string is the text its node already sent, and no notification
   says anything new. Administrators can now edit and re-translate this copy in Studio as
   `sys_email_template` rows, rather than needing a code change for a typo.
-- 5e50863: Upgrade the ObjectStack platform to 17.5.0
+- 284b9e4: Upgrade the ObjectStack platform to 17.5.0
   
   All 21 `@objectstack/*` dependencies move 17.4.0 → 17.5.0 together — 20 in
   `dependencies`, `@objectstack/formula` in `devDependencies` — pinned exact, no
@@ -354,7 +354,7 @@
   fix is objectui#11105 (PR objectui#11119, merged). It reaches HotCRM with the
   first platform release whose `@objectstack/console` carries it, and HotCRM then
   needs only a pin bump.
-- 5e50863: Upgrade the ObjectStack platform to 17.6.0
+- 68f3701: Upgrade the ObjectStack platform to 17.6.0
   
   All 21 `@objectstack/*` dependencies move 17.5.0 → 17.6.0 together — 20 in
   `dependencies`, `@objectstack/formula` in `devDependencies` — pinned exact, no
@@ -430,7 +430,7 @@
     Both are known platform issues, fixed upstream after the pin. HotCRM's own
     datasets are packaged and read-only in Studio, and HotCRM declares no
     datasource, so neither issue reaches HotCRM metadata.
-- 5e50863: Upgrade the ObjectStack platform to 17.7.0
+- c967803: Upgrade the ObjectStack platform to 17.7.0
   
   All 21 `@objectstack/*` dependencies move 17.6.0 → 17.7.0 together — 20 in
   `dependencies`, `@objectstack/formula` in `devDependencies` — pinned exact, no
@@ -526,7 +526,7 @@
     the build sets `HOTCRM_BILLING_SIGNING_SECRET`, and no run of this upgrade set
     it. A deployment that does should rotate that secret after the first 17.7.0
     boot, as the 17.7.0 upgrade checklist says.
-- 5e50863: An opportunity now records **whether it is worth pursuing**, **the customer's own
+- 4e072fd: An opportunity now records **whether it is worth pursuing**, **the customer's own
   procurement calendar**, **the story behind the deal**, and **whether a won/lost call has
   been signed off**. Eighteen new fields on `crm_opportunity`, two new derived sections, a
   new list view, and a status-change approval gate that ships switched off (REQ-0006 — the
@@ -565,7 +565,7 @@
   ever born pending, the flow's start condition is false for every record, and amount-tiered
   approval behaves exactly as it does today. An install arms the gate by changing that one
   default; deals that predate the arming are untouched.
-- 5e50863: **Quotes and contracts now follow the account** (#549). Both `crm_quote` and
+- c418c5f: **Quotes and contracts now follow the account** (#549). Both `crm_quote` and
   `crm_contract` move from `sharingModel: 'private'` to `controlled_by_parent`
   under `crm_account`, with the account lookup promoted to master-detail — the
   same derivation contacts already use. A rep who receives an account through a
@@ -601,7 +601,7 @@
 
 ### Patch Changes
 
-- 5e50863: An account's page header now shows its company logo
+- c75dd42: An account's page header now shows its company logo
   
   Open an account that has a **Company Logo** uploaded (the **Branding** section
   of the form) and the logo now sits beside the title at the top of the page,
@@ -612,7 +612,7 @@
   platform draws in every record page header. The platform refuses an
   `imageField` that names anything other than an image or avatar field, so the
   declaration cannot point at the wrong field and still save.
-- 5e50863: An opportunity's Details tab now keeps Classification, Campaigns and Notes & Next Steps on screen when they are empty
+- 5ae5249: An opportunity's Details tab now keeps Classification, Campaigns and Notes & Next Steps on screen when they are empty
   
   A section with nothing filled in used to disappear from the Details tab. On a
   new deal that carries only its required fields, that meant the tab showed
@@ -629,7 +629,7 @@
   Basic Information and Financials are unchanged. Every field in Financials is
   already shown in the strip at the top of the page. In Basic Information, only
   **Primary Contact** is not already shown in the page title or the strip.
-- 5e50863: The "Ask the AI Assistant" card on Sales Home now shows its paragraph, and `pnpm lint` fails on warnings
+- c529de2: The "Ask the AI Assistant" card on Sales Home now shows its paragraph, and `pnpm lint` fails on warnings
   
   **What users see.** The **Ask the AI Assistant** card on Sales Home used to
   show only its title. Its paragraph was stored in a place the card does not
@@ -646,7 +646,7 @@
   The paragraph's four translations moved out of the language packs
   (`pages.sales_home_page.components.ai_briefing.description`) and into the page
   itself, next to the copy. The packs have no key for this kind of text.
-- 5e50863: Retire the `Demo Bootstrap` flow: seeded records get their owner from the platform, once
+- 572aa44: Retire the `Demo Bootstrap` flow: seeded records get their owner from the platform, once
   
   HotCRM shipped a scheduled flow, **Demo Bootstrap** (`demo_bootstrap`), that ran every ten
   minutes forever in every tenant. Each run filtered twelve objects for records with no owner
@@ -675,7 +675,7 @@
   **Upgrading an existing install:** the platform leaves the old
   `flow-schedule:demo_bootstrap` row in `sys_job`, still marked active, when the flow disappears.
   Nothing runs it any more. An operator who wants the table clean can delete that one row.
-- 5e50863: HotCRM now ships as one artifact carrying two packages: the HotCRM app and its Service module.
+- b54380c: HotCRM now ships as one artifact carrying two packages: the HotCRM app and its Service module.
   It still installs as one app, and the one change a user sees is the menu order: **My Cases**
   is now the last item of **My Work**.
   
@@ -706,10 +706,10 @@
   needs every collection of the app reads `test/helpers/composed-stack.ts`,
   because the built artifact keeps each package's metadata inside that
   package's entry in `packages[]`.
-- 5e50863: The in-product guide **Administration — Positions, Sharing & Automation Knobs** no longer tells admins that the business rules are in a `src/flows/` folder. That folder went away when HotCRM was split into packages. The *Automation knobs* section now says that each package keeps its own flows in its `flows/` directory. The thresholds, and the flows that define them, are unchanged.
+- 4fbfde1: The in-product guide **Administration — Positions, Sharing & Automation Knobs** no longer tells admins that the business rules are in a `src/flows/` folder. That folder went away when HotCRM was split into packages. The *Automation knobs* section now says that each package keeps its own flows in its `flows/` directory. The thresholds, and the flows that define them, are unchanged.
   
   For maintainers: source comments that still named the pre-package folders (`src/flows/`, `src/translations/`, `src/objects/` and the rest) now name each file's package home. That includes one comment inside the shipped script body of the *Log a Call* / *Log a Meeting* / *Schedule a Meeting* actions; the script does exactly what it did before. A comment that records where something used to live keeps the path it had then. No behaviour changes.
-- 5e50863: The case **SLA Due Date** field now says its unit: calendar hours
+- c7c5fb7: The case **SLA Due Date** field now says its unit: calendar hours
   
   The SLA deadline on a case has always been counted in calendar (wall-clock)
   hours. Nights, weekends and holidays count, because this app has no
@@ -727,7 +727,7 @@
   hook body with the clock fixed at Friday 17:00. A Critical case is due Friday
   21:00. On an SMB account, a Medium case is due Sunday 17:00 and a Low case the
   next Friday 17:00.
-- 5e50863: The *All Forecasts* list no longer shows a column total under **Expected**
+- 518c06b: The *All Forecasts* list no longer shows a column total under **Expected**
   
   **Expected** is a formula field (Closed Won + Commit, computed per row), so the
   database has no stored value for it to add up. The platform's aggregate rules
@@ -735,7 +735,7 @@
   column itself stays, with each row's value. **Closed Won** and **Commit** keep
   their totals, so the expected figure for a group or for the whole list is still
   the sum of those two totals. Quota, Best Case and Pipeline keep their totals too.
-- 5e50863: Cases you create now count in "Cases Opened by Priority × Day" and in the Customer Service dashboard's date range
+- 1e88edc: Cases you create now count in "Cases Opened by Priority × Day" and in the Customer Service dashboard's date range
   
   A case created in the app or through the REST API never showed up in the
   **Cases Opened by Priority × Day** report or inside the **Customer Service**
@@ -768,7 +768,7 @@
   day each one was opened. Since `@objectstack/*` 17.7.0 the platform keeps that
   value when a fresh database is seeded, so the report and the dashboard spread
   the demo cases over their own days, not the day you ran the demo.
-- 5e50863: The shipped contact import template now imports all 50 of its rows
+- 5b1f79b: The shipped contact import template now imports all 50 of its rows
   
   `assets/import-templates/contacts.csv` writes `HR` in its **Department** column.
   The import matches a picklist cell against an option's code exactly and its
@@ -780,7 +780,7 @@
   
   The template file itself is unchanged. A dry run and a real import of it now
   both report 50 rows and no errors.
-- 5e50863: The line-number and owner back-fill scripts run again on ObjectStack 17.6.0
+- 9466837: The line-number and owner back-fill scripts run again on ObjectStack 17.6.0
   
   `scripts/backfill-line-number.ts` (the one-time line-number back-fill this release asks you to
   run) and `scripts/backfill-owner-id.ts` (`pnpm backfill:owner`) both stopped on their first
@@ -804,7 +804,7 @@
   
   A new test runs every `scripts/backfill-*.ts` against the installed query schema. If a future
   platform version refuses one of their requests, `pnpm verify` fails before the script ships.
-- 5e50863: A lead's and a case's Details tab now keep the sections you are expected to fill on screen while they are empty
+- f24c196: A lead's and a case's Details tab now keep the sections you are expected to fill on screen while they are empty
   
   A section with nothing filled in used to disappear from the Details tab. On a
   new lead that carries only its required fields, that hid Contact Information,
@@ -824,7 +824,7 @@
   fills in. On a case it is SLA & Priority, whose dates are recorded for you, and
   Resolution, which **Close Case** records. Assignment is unchanged: the lead
   owner is shown in the strip at the top of the page.
-- 5e50863: Qualification approval (立项) leaves *Will Bid* open
+- 4054ec2: Qualification approval (立项) leaves *Will Bid* open
   
   While a deal waits for qualification approval, or after an approver rejects it, the rep can
   now record and change *Will Bid*. Whether you intend to bid is part of what the approver
@@ -839,9 +839,9 @@
   
   This narrows the qualification-approval gate that ships in this same release; its entry
   above now describes the gate as it ships.
-- 5e50863: Accepting a quote whose opportunity is still waiting on an approval is now refused with a message saying which approval must be granted first, a sales rep's accepted quote now gets its draft contract, a deal opened on a Settlement Only account is refused even for someone who cannot see that account (and the message no longer names the account), and a service agent's completed task or held call now refreshes the account's last activity date.
-- 5e50863: Sales reps, service agents and marketing users now see the follow-on updates their own saves trigger: a rep's won deal or converted lead updates its campaign, a rep's win promotes the account to customer, an agent's resolved case refreshes the account's last activity date, an agent's own escalation hands the case to a service manager, a marketing user's contact unsubscribe opts the contact out, a marketing user's enrollment no longer drops Private won deals from the campaign's numbers, and a withdrawn knowledge-article vote stops being counted.
-- 5e50863: Generate Quote now works on a deal that is waiting for approval
+- a2f2a40: Accepting a quote whose opportunity is still waiting on an approval is now refused with a message saying which approval must be granted first, a sales rep's accepted quote now gets its draft contract, a deal opened on a Settlement Only account is refused even for someone who cannot see that account (and the message no longer names the account), and a service agent's completed task or held call now refreshes the account's last activity date.
+- dc58e04: Sales reps, service agents and marketing users now see the follow-on updates their own saves trigger: a rep's won deal or converted lead updates its campaign, a rep's win promotes the account to customer, an agent's resolved case refreshes the account's last activity date, an agent's own escalation hands the case to a service manager, a marketing user's contact unsubscribe opts the contact out, a marketing user's enrollment no longer drops Private won deals from the campaign's numbers, and a withdrawn knowledge-article vote stops being counted.
+- 49fe305: Generate Quote now works on a deal that is waiting for approval
   
   A deal of $100K or more is locked while a manager reviews it. Clicking
   **Generate Quote** on such a deal used to create the quote and then report
@@ -852,13 +852,13 @@
   created, you are notified as usual, and the deal keeps its current stage until
   the approval is decided. A deal that is not under review still moves to
   *Proposal* as before.
-- 5e50863: Converting a lead whose company has no match key now stops with a clear message instead of attaching the lead to another customer's account
+- 17e91ba: Converting a lead whose company has no match key now stops with a clear message instead of attaching the lead to another customer's account
   
   Lead conversion finds the existing account by a match key that the app derives from the lead's Company. A lead can lack that key: a row from before the key existed, or a company sent through the record API as a number. Such a lead used to convert onto an unrelated account that also had no key. Its new contact and opportunity were filed under the wrong customer.
   
   **Convert** now opens a "Conversion refused" dialog for such a lead, before the conversion form. The dialog says why the lead was stopped and that nothing was created. To fix it, save the lead's Company again, which rebuilds the key, and then convert the lead. Leads with a company key convert exactly as before.
-- 5e50863: Converting a lead now marks its campaign memberships as Converted on the standard SQL database too: before, the campaign counted the converted lead, but every one of that lead's campaign members stayed Sent or Responded.
-- 5e50863: Deleting an account or a contact now tells you what really lets the delete through
+- f7cfb65: Converting a lead now marks its campaign memberships as Converted on the standard SQL database too: before, the campaign counted the converted lead, but every one of that lead's campaign members stayed Sent or Responded.
+- 08cfa20: Deleting an account or a contact now tells you what really lets the delete through
   
   A customer account with a deal on it said "Close or reassign it first", but
   closing the deal did not help: a closed deal is part of the account's sales
@@ -874,10 +874,10 @@
   
   The **Accounts** page states the same rule in English, Simplified Chinese and
   Traditional Chinese.
-- 5e50863: Sales reps, managers, marketers and service agents can now see the attachments on the quotes, accounts, opportunities, contacts, contracts and cases they can open (uploading and deleting stay with administrators until a platform fix lands), `pnpm demo:staff` runs to the end again, and the Email & Calendar guide now describes the notification email templates the app ships instead of saying it has none.
-- 5e50863: Sales reps, managers, marketers and service agents can now read the comments and the activity timeline on the records they can open, post comments there and edit their own (deleting a comment stays with administrators until a platform fix lands). Before, the Discussion panel refused them both halves with "You don't have permission to view comments on this record". The Quotes and Contracts pages now say that the nightly quote and contract expiry and the daily renewal reminder run only on a deployment that has switched scheduled work on, and what a default install does instead. The Automation page's email-template section now describes the notification templates the app ships instead of saying it has none. The in-product guides (Sales, Service, Administration and the overview) now give the same condition for every sweep they name, with the times unchanged.
-- 5e50863: Where qualification approval (立项) is turned on, Generate Quote on a deal that is not yet approved now tells you qualification approval comes first and creates nothing, instead of reporting a failure and leaving a draft quote behind.
-- 5e50863: The account page header shows the account's name, and the demo accounts can be edited
+- ac162c9: Sales reps, managers, marketers and service agents can now see the attachments on the quotes, accounts, opportunities, contacts, contracts and cases they can open (uploading and deleting stay with administrators until a platform fix lands), `pnpm demo:staff` runs to the end again, and the Email & Calendar guide now describes the notification email templates the app ships instead of saying it has none.
+- c12a251: Sales reps, managers, marketers and service agents can now read the comments and the activity timeline on the records they can open, post comments there and edit their own (deleting a comment stays with administrators until a platform fix lands). Before, the Discussion panel refused them both halves with "You don't have permission to view comments on this record". The Quotes and Contracts pages now say that the nightly quote and contract expiry and the daily renewal reminder run only on a deployment that has switched scheduled work on, and what a default install does instead. The Automation page's email-template section now describes the notification templates the app ships instead of saying it has none. The in-product guides (Sales, Service, Administration and the overview) now give the same condition for every sweep they name, with the times unchanged.
+- f562142: Where qualification approval (立项) is turned on, Generate Quote on a deal that is not yet approved now tells you qualification approval comes first and creates nothing, instead of reporting a failure and leaving a draft quote behind.
+- f6d2379: The account page header shows the account's name, and the demo accounts can be edited
   
   - **The header shows the account's name.** In English, the record page title
     read "Account Detail" (the page's label) on every account. The English
@@ -897,7 +897,7 @@
     **Related** and **Attachments**, the **Approvals** tab that an account
     shows once it has been through approval, and the **Discussion** feed below
     the tabs.
-- 5e50863: The Automation and Cases guides send readers to the record history they can actually open
+- f0afcbd: The Automation and Cases guides send readers to the record history they can actually open
   
   - **Users are sent to the record's own activity, not to an audit log.** The
     Automation guide's *Tips for users* told users to "check the audit log". A
@@ -919,7 +919,7 @@
     says what the tab shows for a tracked field and for any other edit.
   
   Both guides changed in English, Simplified Chinese and Traditional Chinese.
-- 5e50863: Tables keep cell editing when the console moves to the next objectui release
+- 81f8644: Tables keep cell editing when the console moves to the next objectui release
   
   Every HotCRM table (each list view shown as a grid, such as **All Leads**,
   **Open Deals** or **My Open Tasks**) now states that its cells can be edited in
@@ -931,7 +931,7 @@
   Who may edit has not changed. **Edit inline** is still offered only to a user
   who can edit records of that object. A user with read-only access sees the
   table without it, as before.
-- 5e50863: The Details tab of the lead, opportunity and case record pages now shows the object's own field groups
+- 1e47470: The Details tab of the lead, opportunity and case record pages now shows the object's own field groups
   
   Each of the three record pages used to list its own hand-picked sections, and
   those sections had drifted from the field groups the object declares. Fields
@@ -967,7 +967,7 @@
   
   Fields already shown in the strip at the top of the page (status, owner,
   amount, priority and similar) still appear only there.
-- 5e50863: **Currency fields no longer declare `scale`.** ObjectStack's next release refuses `scale` on a
+- 5bec6eb: **Currency fields no longer declare `scale`.** ObjectStack's next release refuses `scale` on a
   `currency` field: a currency amount's decimal places come from its currency's ISO 4217 minor unit
   (2 for USD), not from a field setting. The refusal has no automatic conversion, so an app that
   keeps the key cannot load on that release. `scale` is removed from all 23 money fields: account
@@ -987,7 +987,7 @@
     rejected with "must have at most 2 decimal places". It is now accepted as written, which is the
     platform's rule for currency fields from the next release on. The **Generate Quote** flow still
     rounds its discount and total to whole cents, so quote amounts are unchanged.
-- 5e50863: **Docs: every `src/` path the product documentation prints now resolves against the real
+- b1123a2: **Docs: every `src/` path the product documentation prints now resolves against the real
   tree.** ADR-0130 (#1905) made a directory under `src/` a package, and the two top-level
   directories the docs quoted most stopped existing: flows became `src/sales/flows/`,
   `src/service/flows/`, `src/revenue/flows/` and `src/marketing/flows/`, and the locale
@@ -1012,7 +1012,7 @@
   actually ships. It now lists the eight values `crm_contact.department` declares, in
   declaration order: Executive, Sales, Marketing, Engineering, Support, Finance, Human
   Resources, Operations.
-- 5e50863: Docs: repoint the product documentation at the real package tree — the third and last family of ADR-0130 dead directories.
+- c4e5518: Docs: repoint the product documentation at the real package tree — the third and last family of ADR-0130 dead directories.
   
   A directory under `src/` is a package, so the app-wide `src/objects/`, `src/views/`, `src/datasets/`, `src/skills/`, `src/reports/`, `src/pages/`, `src/dashboards/`, `src/actions/`, `src/sharing/`, `src/hooks/`, `src/mappings/` and `src/apps/` directories stopped existing. 426 citations across `content/docs/` in all three languages still named them. Every one now resolves against the real tree, or says what it means without writing a path at all.
   
@@ -1021,19 +1021,19 @@
   - **Extending Objects** — the three code fences that head `// src/objects/warranty.object.ts`, `// src/objects/index.ts` and `// src/objects/warranty.hook.ts` now name the package that owns them, and the hook section names the real registration point (`src/<package>/objects/hooks.ts`, assembled into `allHooks` by `objectstack.composition.ts`) instead of the removed `src/hooks/index.ts`.
   - **AI Skills** — registering a skill is two steps, not one: a re-export from the package's own `skills/index.ts`, then an entry in `allSkills` in `objectstack.composition.ts`. The old single fence put `allSkills` in the barrel, where it is not.
   - **Fork HotCRM** — the `rm src/objects/{…}.object.ts` command died on paste. Cutting Service, Revenue and Marketing now removes them as the packages they are, and the file-suffix protocol table carries the package dimension.
-- 5e50863: Quote pricing and the nightly forecast snapshot now compute their amounts with CEL, the
+- cf422b8: Quote pricing and the nightly forecast snapshot now compute their amounts with CEL, the
   expression language the platform declares for flow values, instead of the older `{…}`
   template form. Nothing you see changes: a quote prices exactly as before (whole cents,
   and a cleared discount still means no discount), and the forecast's pipeline, best case,
   commit and closed-won totals are the same sums. An opportunity with no amount still
   counts as 0, and an amount with cents keeps its cents. `objectstack validate --strict`
   no longer reports these six expressions.
-- 5e50863: Docs: **Extending Objects** now teaches the whole flow registration path, and a guard keeps it that way.
+- 7c50e95: Docs: **Extending Objects** now teaches the whole flow registration path, and a guard keeps it that way.
   
   **Add automation** told readers to put a new flow in the `flows/` directory of the package that owns its trigger object and export it from that directory's `index.ts`. That is necessary and not sufficient. `allFlows` in `objectstack.composition.ts` is an explicit ordered list — the registration order interleaves the four packages, so no per-package barrel can carry it — and a flow that reaches the barrel but never that array is handed to `defineStack()` by nobody. It binds no trigger, it never runs, and `pnpm validate` still exits 0 and names it nowhere. An author following the page shipped automation that did nothing, with no signal anywhere.
   
   The page now spells out both steps in all three languages, in the same shape the **AI Skills** page already used for `allSkills`. `test/flow-registration-completeness.test.ts` fails when a flow a package barrel exports is missing from `allFlows`, and in the opposite direction when `allFlows` carries a flow no barrel exports — which would run in the app while staying invisible to every suite that reads the barrels.
-- 5e50863: A fresh demo install now shows logged interactions on the lead **Activity** tab, which
+- c881114: A fresh demo install now shows logged interactions on the lead **Activity** tab, which
   used to read "No activity recorded" on every lead. **Lisa Thompson** (CloudFirst) and
   **David Kim** (EduTech Labs) each show two logged interactions from the past fortnight:
   a call or meeting, with its duration and a **View source** link to the calendar event
@@ -1046,7 +1046,7 @@
   real records at boot. Timeline entries are telemetry that the platform keeps for 14 days,
   so only interactions younger than that are seeded. They carry no acting user, because a
   seed cannot name one; the tab shows them as **System**.
-- 5e50863: Two fields that were stored but shown on no list now appear in the panels
+- aa61e1d: Two fields that were stored but shown on no list now appear in the panels
   where people read them.
   
   - **Subtotal** on a quote line item is now a column in the line items panel on
@@ -1060,7 +1060,7 @@
   
   Nothing is added, removed or renamed on either object. Both panels still show
   every column they showed before.
-- 5e50863: The **Customer Service** dashboard's case table is personal again: **Open Cases
+- df49be2: The **Customer Service** dashboard's case table is personal again: **Open Cases
   by Priority** → **My Open Cases by Priority**, showing only the open cases the
   signed-in user owns. It had been team-wide since the analytics query path could
   not resolve `{current_user_id}`; the pinned platform (17.4.0) now does, and two
@@ -1072,7 +1072,7 @@
   
   `{current_user_id}` scopes what the widget shows — it is not an access boundary;
   row-level security still decides which cases a user can reach.
-- 5e50863: **The demo pipeline board is draggable out of the box.** In a freshly seeded database nine of the
+- 2f7b232: **The demo pipeline board is draggable out of the box.** In a freshly seeded database nine of the
   ten open opportunities were priced at $100K or more, so every one of them was born into the
   **Large Deal Approval** flow, which locks the record while the approval is pending — on the
   **Sales Pipeline** kanban those cards refused every drag with `RECORD_LOCKED`, and only one open
@@ -1093,7 +1093,7 @@
   This is a change to the demo seed only, measured on a fresh database. An existing demo database is
   not re-priced in place — approval requests already open there stay open until decided or
   recalled; run `pnpm demo:reset` to start from the new seed.
-- 5e50863: Clear the `os validate --strict` findings that were dead metadata
+- 39ba05e: Clear the `os validate --strict` findings that were dead metadata
   
   The 17.6.0 upgrade left `os validate --strict` reporting 111 warnings. This
   change clears 97 of them. The 14 that remain are deliberate, and each is listed
