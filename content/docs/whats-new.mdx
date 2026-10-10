@@ -63,24 +63,63 @@ http://localhost:4001 and create the first admin account.
 
 ---
 
-## v3.1.0 — Latest release
+## v3.2.0 — Latest release
 
-**HotCRM 3.1.0**, running on **ObjectStack 17.4.0** across every
+**HotCRM 3.2.0**, running on **ObjectStack 17.7.0** across every
 `@objectstack/*` package. The app manifest declares the matching
-`^17.4.0` protocol range, so a runtime on a different protocol major
+`^17.7.0` protocol range, so a runtime on a different protocol major
 refuses the load up front with a structured diagnostic instead of failing deep
 in a schema parse.
 
-Since 3.1.0 was cut, the app has moved to **ObjectStack 17.7.0** (manifest range
-`^17.7.0`). That move ships with the next HotCRM release; until then, 3.1.0 is the
-release that runs on 17.4.0.
-
 > **This page does not keep a second release table.** The release-by-release
 > history is `CHANGELOG.md` in the repository, compiled from the `.changeset/`
-> entry every pull request adds. The versions between v1.0 and 3.1.0 are
+> entry every pull request adds. The versions between v1.0 and 3.2.0 are
 > recorded there and are deliberately not re-listed here — a hand-maintained
 > copy of that history is exactly how this section came to advertise a "v5.0"
 > that was never an app version, on a platform major that never shipped it.
+
+### What 3.2.0 adds
+
+A minor release that records more of each sale, with one upgrade step: an existing
+deployment converts its contacts' mailing addresses once (see the checks below).
+
+- **The sales records carry more of the deal.** An account records who it is on paper,
+  what it spends, what it may be sold and whether it has been signed off. A contact
+  records the buying centre: their role in the purchase decision, where they stand on
+  you, and how well you know them. A lead records what the prospect needs and roughly
+  what it is worth. An opportunity records whether it is worth pursuing, the customer's
+  own procurement calendar and the story behind the deal.
+- **Sign-offs where the company commits.** Qualification approval (立项) before a deal's
+  stage can move, and sign-offs on an account's registration, a lead's conversion and a
+  deal's won/lost call. The lead, qualification and won/lost gates ship switched off; an
+  administrator turns each one on.
+- **Every notification arrives in the recipient's own language.** One alert addressed
+  to a Chinese-speaking rep and a Japanese-speaking manager reaches each of them in
+  their own language.
+- **Quotes and contracts follow the account.** A rep now reads the quotes and contracts
+  of every account they can see, renewals included.
+- **A contact's mailing address is one field**, shown and edited as one unit, the same
+  shape as an account's billing address. The contact import template keeps its five
+  address columns.
+- **HotCRM installs as one app carrying two packages**: the HotCRM app and its Service
+  module, which holds cases and knowledge.
+- **The platform line moved from 17.4.0 to 17.7.0**, in three steps, every
+  `@objectstack/*` package together with the protocol range the manifest declares.
+
+Plus a long tail of fixes, each with its own entry in `CHANGELOG.md`.
+
+**Check these before upgrading:**
+
+- **Convert the contact addresses once, before `os migrate apply --allow-destructive`.**
+  Upgrading does not move a contact's old address fields, and that command deletes them.
+  The mailing-address entry of `CHANGELOG.md` gives the two commands.
+- **An integration that reads or writes `mailing_street` … `mailing_country`** on a
+  contact must use `mailing_address` and its parts instead.
+- **My Cases is now the last item of My Work.** Every other menu entry is where it was.
+- **A write to a record the caller cannot see now answers 404**, where it answered 403
+  before.
+- **Imports read dates strictly.** A month-first cell such as `07/15/2026` now fails its
+  row instead of importing as a different date.
 
 ### What 3.1.0 adds
 
