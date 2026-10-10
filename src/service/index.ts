@@ -130,14 +130,14 @@ export const createHotCrmServiceStack = (
     // own. Bump it with the app package's and `package.json` —
     // `test/docs-declared-versions.test.ts` holds all three, and the range
     // below, to one value.
-    version: '4.0.0',
+    version: '4.0.1',
     type: 'module',
     description: 'HotCRM support module — cases, knowledge articles, and the SLA surface.',
     // The same protocol as the app package (ADR-0087 handshake); bump it with
     // `specVersion` on every platform upgrade, exactly as the app's is.
     engines: { protocol: '^17.7.0' },
     // The App package this module extends.
-    dependencies: { 'app.objectstack.hotcrm': '^4.0.0' },
+    dependencies: { 'app.objectstack.hotcrm': '^4.0.1' },
 
     /**
      * The five navigation entries this module puts into the app's menu
