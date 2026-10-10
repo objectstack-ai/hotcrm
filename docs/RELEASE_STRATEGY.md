@@ -13,7 +13,7 @@ carrying the service module beside it (ADR-0130 D4; one artifact, one version â€
 | ObjectStack manifest id | `app.objectstack.hotcrm` |
 | Packages in the artifact | `app.objectstack.hotcrm` (`type: app`), `app.objectstack.hotcrm.service` (`type: module`) |
 | Namespace | `crm` |
-| Current version | `3.1.0` |
+| Current version | `4.0.0` |
 | Publish artifact | output from `pnpm build` |
 
 The active repository is not released as separate scoped npm packages.
