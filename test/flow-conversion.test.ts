@@ -297,3 +297,89 @@ describe('lead_conversion — the contact keeps the lead’s consent and person 
     }
   });
 });
+
+/**
+ * Create Opportunity ticked with no amount is refused BEFORE anything is
+ * written (#2060 item 2, finding A-01).
+ *
+ * `crm_opportunity.amount` is required, and the conversion's writes are not
+ * one transaction: on 17.7.0 a failed run is not undone. So a submission that
+ * reached `create_opportunity` without an amount failed there after
+ * `create_account` and `create_contact` had already run, and left an account,
+ * a contact, no opportunity and an unconverted lead. The screen's own
+ * contract refuses it now, ahead of every node, and the refused run stays
+ * open, so the rep adds the amount and submits the same dialog again.
+ *
+ * Each case compares the refusal and the store in ONE object: "the dialog
+ * said no" and "nothing was written" are two claims, and only together are
+ * they the fix.
+ */
+describe('lead_conversion — a ticked Create Opportunity needs an amount before anything is written (#2060 item 2)', () => {
+  /** Start the conversion and collect the bag the console submits: every prefilled field. */
+  const start = async (leadId: string) => {
+    const started = await verify.flows.run('lead_conversion', { recordId: leadId }, { as: rep.token });
+    const fields = (((started as Rec).screen ?? (started as Rec).output?.screen)?.fields ?? []) as Rec[];
+    const prefilled: Rec = {};
+    for (const f of fields) if (f.defaultValue !== undefined) prefilled[f.name] = f.defaultValue;
+    return { started, fields, prefilled };
+  };
+
+  /** What the conversion left for `who`, as counts. */
+  const state = async (who: { company: string; email: string }, leadId: string) => {
+    const out = await after(who, leadId);
+    return {
+      accounts: out.accounts.length, contacts: out.contacts.length, opportunities: out.opportunities.length,
+      isConverted: Boolean(out.lead.is_converted), leadStatus: out.lead.status,
+    };
+  };
+
+  // `null` is what the console posts untouched for a lead with no estimate
+  // (the prefill), `''` a cleared box, and an absent key a caller that skips
+  // the dialog.
+  it.each([
+    ['left empty (null)', { opportunityAmount: null }],
+    ['cleared (blank)', { opportunityAmount: '' }],
+    ['not posted', {}],
+  ] as const)('amount %s: refused with nothing written, and the same run converts once it is given', async (_shape, amount) => {
+    const who = identity();
+    const lead = await qualifiedLead(who);
+    const { started, fields, prefilled } = await start(lead.id);
+    expect(prefilled.opportunityAmount ?? null, 'fixture: a lead with no estimate prefills no amount').toBeNull();
+
+    const { opportunityAmount: _prefill, ...rest } = prefilled;
+    const answers = { ...rest, createOpportunity: true, opportunityName: 'Deal' };
+    const refused = await verify.flows.resume(started, { ...answers, ...amount }, { as: rep.token })
+      .then(() => undefined, (e: unknown) => e as Rec);
+    expect({ code: refused?.code, status: refused?.status, ...(await state(who, lead.id)) }).toEqual({
+      code: 'INVALID_SCREEN_INPUT', status: 400,
+      accounts: 0, contacts: 0, opportunities: 0, isConverted: false, leadStatus: 'qualified',
+    });
+    expect(String(refused?.message), 'the refusal names another field').toContain('"opportunityAmount"');
+    // The console's half: the descriptor it renders marks the amount required.
+    expect(fields.find((f) => f.name === 'opportunityAmount')?.required).toBe(true);
+
+    const done = await verify.flows.resume(started, { ...answers, opportunityAmount: 25_000 }, { as: rep.token });
+    expect(done.error ?? null).toBeNull();
+    expect(await state(who, lead.id)).toEqual({
+      accounts: 1, contacts: 1, opportunities: 1, isConverted: true, leadStatus: 'converted',
+    });
+    expect((await after(who, lead.id)).opportunities[0]!.amount).toBe(25_000);
+  });
+
+  it('control: a lead with an estimate converts with the box ticked and the prefilled amount untouched', async () => {
+    const who = identity();
+    const lead = await create('crm_lead', {
+      company: who.company, email: who.email, first_name: 'Joe', last_name: 'Green',
+      status: 'qualified', estimated_amount: 40_000,
+    });
+    const { started, prefilled } = await start(lead.id);
+    expect(prefilled.opportunityAmount, 'the estimate no longer prefills the amount').toBe(40_000);
+
+    const done = await verify.flows.resume(started, { ...prefilled, createOpportunity: true }, { as: rep.token });
+    expect(done.error ?? null).toBeNull();
+    expect(await state(who, lead.id)).toEqual({
+      accounts: 1, contacts: 1, opportunities: 1, isConverted: true, leadStatus: 'converted',
+    });
+    expect((await after(who, lead.id)).opportunities[0]!.amount).toBe(40_000);
+  });
+});

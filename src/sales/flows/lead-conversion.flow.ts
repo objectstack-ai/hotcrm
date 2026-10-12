@@ -129,8 +129,15 @@ export const LeadConversionFlow: Flow = {
           // and the rep confirms it. Writing it straight into
           // `create_opportunity` would put an unreviewed estimate into the
           // forecast and leave the two fields looking like copies of each other.
+          //
+          // `required` on the amount mirrors the column, for the reason given
+          // at `closeDate` below: `crm_opportunity.amount` is `required` +
+          // `notNull`, and without this a ticked box with no amount reached
+          // `create_opportunity` after the account and contact were written,
+          // leaving the lead half-converted (#2060 item 2). Visible-only, so
+          // an unticked box still converts with no amount.
           { name: 'opportunityName', label: 'Opportunity Name', type: 'text', required: true, defaultValue: '{leadRecord.company}', visibleWhen: 'createOpportunity == true' },
-          { name: 'opportunityAmount', label: 'Opportunity Amount', type: 'currency', defaultValue: '{leadRecord.estimated_amount}', visibleWhen: 'createOpportunity == true' },
+          { name: 'opportunityAmount', label: 'Opportunity Amount', type: 'currency', required: true, defaultValue: '{leadRecord.estimated_amount}', visibleWhen: 'createOpportunity == true' },
           // The close date, DEFAULTED AND VISIBLE. `close_date` is what files
           // an opportunity into a forecast PERIOD, so ⛔ never stamp it silently
           // inside `create_opportunity`: a hidden +90 days files every converted
