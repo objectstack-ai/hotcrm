@@ -12,7 +12,8 @@ import type { Page } from '@objectstack/spec/ui';
  * The Activity tab uses `record:activity`, which pulls the unified
  * timeline from `sys_comment`, `sys_activity`, `feed_item` and the field
  * history (enabled via `trackHistory: true` on `case.object.ts`). That is
- * how case comments and call logs surface here without a custom feed.
+ * how case comments and call logs surface here without a custom feed —
+ * call logs only because the block sets `showCompleted` (#2071).
  */
 export const CaseDetailPage: Page = {
   name: 'case_detail_page',
@@ -251,6 +252,19 @@ export const CaseDetailPage: Page = {
                       enableMentions: true,
                       enableReactions: true,
                       enableThreading: true,
+                      // Load-bearing (#2071): a call or meeting logged on the
+                      // case is a `sys_activity` row of type `completed` (the
+                      // `task` feed kind), and the renderer drops every such
+                      // row unless this is true — so an agent's logged call
+                      // never reached this tab. The case's other `completed`
+                      // writers are its own `resolved` / `closed` milestones
+                      // (`case.object.ts`), which belong on this timeline too.
+                      // Completed crm_task rows do NOT arrive here: a task's
+                      // audit rows are keyed to the task, and this feed reads
+                      // only rows keyed to the case. No `types` filter, unlike
+                      // the lead page: this timeline mixes comments and field
+                      // changes on purpose (`unifiedTimeline` above).
+                      showCompleted: true,
                     },
                   },
                 ],
