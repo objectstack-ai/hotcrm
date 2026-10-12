@@ -160,18 +160,19 @@ import { celDaysAgo, linesTotal, type LineSpec } from './_shared';
 //
 // ─── `approval_status`: every seeded account is already signed off ─────
 //
-// Each row below states `approval_status: 'approved'`, and it has to. The
-// column's default is `pending`, which arms `account_approval` on a real insert
-// (REQ-0003). A seed row never reaches that flow: the platform writes every
-// seed row with `skipTriggers` (`SEED_WRITE_EXECUTION_CONTEXT`,
-// `@objectstack/spec`), because a seed is established END-STATE data, not a
-// user event. A row left on the default therefore read `pending` with no
-// approval request behind it. The console then showed "Locked for approval"
-// and disabled Edit, and "Recall approval" found no request to recall, so no
-// admin could edit a seeded account (#2042). These accounts carry deals,
-// contracts and cases; they are past their sign-off, so the row says so.
-// ⛔ Do not "fix" it at the field default instead: that switches the gate off
-// for every account a user creates.
+// Each row below states `approval_status: 'approved'`, and it has to. On a real
+// insert the column is born blank and `account_approval` submits it (REQ-0003;
+// the request's mirror writes `pending`, #2067). A seed row never reaches that
+// flow: the platform writes every seed row with `skipTriggers`
+// (`SEED_WRITE_EXECUTION_CONTEXT`, `@objectstack/spec`), because a seed is
+// established END-STATE data, not a user event. Left unstated, a row would
+// claim no sign-off at all; under the former `pending` default it read
+// `pending` with no request behind it, the console showed "Locked for
+// approval" and disabled Edit, and no admin could edit a seeded account
+// (#2042). These accounts carry deals, contracts and cases; they are past
+// their sign-off, so the row says so.
+// ⛔ Do not "fix" it with an `approved` field default instead: that switches
+// the gate off for every account a user creates.
 export const accounts = defineSeed(Account, {
   mode: 'upsert',
   externalId: 'name',

@@ -22,14 +22,28 @@ type Flow = Automation.Flow;
  * opposite in as many words — acceptance 4: "A newly created account sits in a
  * pending state, appears in the platform approval inbox HotCRM already mounts,
  * and only reaches the approved state through a decision on that request." So
- * `crm_account.approval_status` ships `defaultValue: 'pending'` and every new
- * account enters here.
+ * every new account enters here: `crm_account.approval_status` ships with NO
+ * default, a new account is born blank, and the start condition below fires on
+ * the blank.
  *
- * The switch is still that `defaultValue`, not this flow's `status`: an install
- * that wants no account sign-off sets it to `approved`, the start condition
- * below is then false for every record that will ever exist, and the gate is
- * off AND still switchable. ⛔ Do NOT reach for `status: 'draft'` or
- * `'obsolete'` instead — both were measured on
+ * ## `pending` is written by the request, not by the field default (#2067)
+ *
+ * The approval node's `approvalStatusField` mirror writes `pending` onto the
+ * account the moment it opens the request (plugin-approvals `openNodeRequest`,
+ * measured on 17.7.0), inside the create, so with approvals in the
+ * composition acceptance 4 holds exactly as before and `pending` always has a
+ * request behind it. Without approvals no executor exists for the node, the
+ * run fails at it (`No executor registered for node type 'approval'`), and
+ * nothing writes `pending`: the account stays blank and editable. A shipped
+ * `pending` default had stamped every such account `pending` with no request
+ * behind it, and the console derives its lock from that value, so each one
+ * read "locked for approval" forever with nothing able to decide it.
+ *
+ * The off switch is still the field default, not this flow's `status`: an
+ * install that wants no account sign-off gives the column a default of
+ * `approved`, the start condition below is then false for every record that
+ * will ever exist, and the gate is off AND still switchable. ⛔ Do NOT reach
+ * for `status: 'draft'` or `'obsolete'` instead — both were measured on
  * `@objectstack/service-automation` 17.4.0 and neither is an off switch: draft
  * flows still fire their triggers, and `isFlowEnabled` composes authoring
  * status with the installation's activation ledger so that `obsolete` is a gate
@@ -38,13 +52,13 @@ type Flow = Automation.Flow;
  *
  * ## Why the trigger is insert-only
  *
- * `pending` appears at exactly one moment — the field default, stamped as the
- * row is written — so the request is opened where it appears. ⛔ An afterUpdate
- * twin would re-enter on every edit made while the account sat pending and open
- * a second request for the same decision. An account that predates this field
- * carries no `approval_status` at all, so the `has()` guard below reads it as
- * "not gated" and it is never dragged into an approval it was not created
- * under.
+ * Submission happens at exactly one moment, the account's creation, so that is
+ * where the request is opened. ⛔ An afterUpdate twin would re-enter on every
+ * edit made while the account sat blank or pending and open a second request
+ * for the same decision. The trigger, not the condition, is also what keeps an
+ * account that predates this field out: it carries no `approval_status`, which
+ * the condition below would read as blank, but it is never inserted again, so
+ * it is never dragged into an approval it was not created under.
  */
 export const AccountApprovalFlow: Flow = {
   name: 'account_approval',
@@ -70,11 +84,17 @@ export const AccountApprovalFlow: Flow = {
       config: {
         objectName: 'crm_account',
         triggerType: 'record-after-create',
-        // TOTALITY (AGENTS.md — validation predicates must be TOTAL): `has()`
-        // on every read. A flow condition is strict CEL on every run, and an
-        // unguarded read against a driver that omits absent columns aborts —
-        // which from 17.0.0-rc.2 FAILS THE RUN rather than skipping it.
-        condition: P`has(record.approval_status) && record.approval_status == "pending"`,
+        // Fires on the BLANK a new account is born with (see the header):
+        // absent on a sparse driver, null on SQL. A user cannot pre-fill the
+        // column (it is `readonly`), so only a system writer or an install's
+        // `approved` default can make it non-blank at insert, and both mean
+        // "nothing to submit".
+        // TOTALITY (AGENTS.md — validation predicates must be TOTAL): the
+        // `(!has(x) || isBlank(x))` form is the "x holds no value" row of that
+        // table. A flow condition is strict CEL on every run, and an unguarded
+        // read against a driver that omits absent columns aborts — which from
+        // 17.0.0-rc.2 FAILS THE RUN rather than skipping it.
+        condition: P`!has(record.approval_status) || isBlank(record.approval_status)`,
       },
     },
     {

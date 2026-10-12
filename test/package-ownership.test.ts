@@ -82,9 +82,12 @@ describe('every object has exactly one owner', () => {
       const own = new Set(namesOf(b.objects));
       const check = (kind: string, items: unknown, objectOf: (item: AnyRec) => unknown) => {
         for (const item of (Array.isArray(items) ? items : []) as AnyRec[]) {
-          const object = objectOf(item);
-          if (typeof object !== 'string' || !object.startsWith('crm_')) continue;
-          if (!own.has(object)) strays.push(`${b.id}: ${kind} "${item.name ?? item.object}" is authored against ${object}`);
+          // A hook may name several objects (`quote_workflow` does, #2060):
+          // every one of them is judged, never the list skipped as a non-string.
+          for (const object of [objectOf(item)].flat()) {
+            if (typeof object !== 'string' || !object.startsWith('crm_')) continue;
+            if (!own.has(object)) strays.push(`${b.id}: ${kind} "${item.name ?? item.object}" is authored against ${object}`);
+          }
         }
       };
       check('hook', b.hooks, (h) => h.object);
