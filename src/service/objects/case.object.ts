@@ -241,7 +241,10 @@ export const Case = ObjectSchema.create({
       group: 'sla',
     }),
     
-    // Stamped by the `case_sla_monitor` schedule flow.
+    // Stamped by two writers, one per side of the clock stop (#2070): the
+    // `case_sla_monitor` schedule flow while the case is live work, and
+    // `case_sla_defaults` on the write that resolves or closes it late. The
+    // rule both apply is `caseSlaBreached` in `./_case-sla.ts`.
     //
     // NOT `readonly` — but NOT for the reason this comment used to give, and
     // the difference is measured in `test/readonly-write-semantics.test.ts`
