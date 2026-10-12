@@ -47,9 +47,11 @@ The two axes are independent: a *Settlement Only* account can be a prospect, a c
 
 A newly created account starts at **Pending**. It shows up in the approval inbox, and a Sales Manager approves or rejects it. **Approval Status** is read-only on the form, so it only ever moves through a decision on that request — nobody can type their way to *Approved*. A rejected account stays on file, so its details can be corrected and sent back for another look.
 
+On a deployment that does not include approvals (a hosted plan that leaves them out, for example), there is no inbox to send the account to. A new account then keeps **Approval Status** blank and stays editable like any other record; it is never shown as locked for approval.
+
 **Approval Status** answers *"has this record been signed off?"*. **Active** answers *"is this account live at all?"*. They are deliberately separate: an approved account can later be deactivated, and a pending account is not the same thing as an inactive one.
 
-If your organisation does not want to sign accounts off, an admin changes the default on **Approval Status** to *Approved* and no new account enters the queue again — see [Administration › Automation](/docs/administration/automation).
+If your organisation does not want to sign accounts off, an admin sets the default on **Approval Status** to *Approved* and no new account enters the queue again — see [Administration › Automation](/docs/administration/automation).
 
 ## What each account record stores
 
