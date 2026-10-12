@@ -3,6 +3,14 @@
 import { defineView } from '@objectstack/spec/ui';
 
 /**
+ * The one data provider every view below reads — the default list, the seven
+ * named list views and the web-to-case form all list or write `crm_case` —
+ * written once and passed by shorthand (`data,`) rather than spelled out nine
+ * times.
+ */
+const data = { provider: 'object', object: 'crm_case' } as const;
+
+/**
  * Case (Service) Views
  *
  *   • grid     — support queue with SLA columns
@@ -16,7 +24,7 @@ export const CaseViews = defineView({
     name: 'all_cases',
     label: 'All Cases',
     userActions: { editInline: true },
-    data: { provider: 'object', object: 'crm_case' },
+    data,
     columns: [
       { field: 'case_number', width: 130, sortable: true, link: true, pinned: 'left' },
       { field: 'subject', width: 280, sortable: true },
@@ -76,7 +84,7 @@ export const CaseViews = defineView({
       name: 'case_workflow',
       type: 'kanban',
       label: 'Service Workflow',
-      data: { provider: 'object', object: 'crm_case' },
+      data,
       columns: ['case_number', 'subject', 'priority', 'sla_due_date'],
       kanban: {
         groupByField: 'status',
@@ -91,7 +99,7 @@ export const CaseViews = defineView({
       name: 'sla_calendar',
       type: 'calendar',
       label: 'SLA Calendar',
-      data: { provider: 'object', object: 'crm_case' },
+      data,
       columns: ['case_number', 'subject', 'priority'],
       calendar: {
         startDateField: 'sla_due_date',
@@ -105,7 +113,7 @@ export const CaseViews = defineView({
       name: 'case_timeline',
       type: 'timeline',
       label: 'Case Timeline',
-      data: { provider: 'object', object: 'crm_case' },
+      data,
       columns: ['case_number', 'subject'],
       timeline: {
         // `created_at`, the platform's own creation stamp — the object's
@@ -131,7 +139,7 @@ export const CaseViews = defineView({
       type: 'grid',
       label: 'My Open Cases',
       userActions: { editInline: true },
-      data: { provider: 'object', object: 'crm_case' },
+      data,
       columns: ['case_number', 'subject', 'crm_account', 'priority', 'status', 'sla_due_date'],
       // ⚠️ `status not_in CLOSED_CASE_STATUSES`, NOT `is_closed == false`: the
       // flag is derived as `effStatus === 'closed'` and never flips on
@@ -219,7 +227,7 @@ export const CaseViews = defineView({
       type: 'grid',
       label: 'Unassigned — triage',
       userActions: { editInline: true },
-      data: { provider: 'object', object: 'crm_case' },
+      data,
       columns: ['case_number', 'subject', 'crm_account', 'crm_contact', 'priority', 'status', 'origin', 'sla_due_date'],
       filter: [
         { field: 'owner_id', operator: 'is_null' },
@@ -252,7 +260,7 @@ export const CaseViews = defineView({
       type: 'grid',
       label: 'Escalated Cases',
       userActions: { editInline: true },
-      data: { provider: 'object', object: 'crm_case' },
+      data,
       columns: ['case_number', 'subject', 'crm_account', 'priority', 'sla_due_date', 'owner_id'],
       filter: [{ field: 'is_escalated', operator: 'equals', value: true }],
       sort: [{ field: 'priority_rank', order: 'desc' }],
@@ -275,7 +283,7 @@ export const CaseViews = defineView({
       type: 'grid',
       label: '⏰ SLA at Risk',
       userActions: { editInline: true },
-      data: { provider: 'object', object: 'crm_case' },
+      data,
       columns: ['case_number', 'subject', 'crm_account', 'priority', 'sla_due_date', 'owner_id'],
       // Operator-only filter — sort by SLA due date ascending so the soonest
       // surface first. (The view runtime does not interpolate `{NOW() + 4h}`.)
@@ -451,7 +459,7 @@ export const CaseViews = defineView({
   formViews: {
     web_to_case: {
       type: 'simple',
-      data: { provider: 'object', object: 'crm_case' },
+      data,
       sections: [
         {
           name: 'how_can_we_help',
