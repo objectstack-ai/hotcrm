@@ -1,0 +1,5 @@
+---
+'hotcrm': patch
+---
+
+A case that is resolved or closed after its **SLA Due Date** is now marked **SLA Violated** at that moment. Until now only the hourly SLA sweep set the flag, and the sweep only looks at open cases, so a case finished late before a sweep reached it — or on any deployment that does not run scheduled work, which is the platform default — stayed marked as within SLA. The **SLA Performance** report showed a 0.0% violation rate and the service dashboard's **SLA Compliance** gauge showed 100% over closed cases that had finished days late. Those surfaces now count every late finish, on every deployment. A case finished on time is not flagged, a case resolved on time is not flagged when it is closed later, a case with no due date is never flagged, and flagging a finished case does not escalate it or send any alert. The demo data's resolved and closed cases now carry the flag their own dates call for, so a fresh demo database shows 2 of 8 closed cases within SLA instead of 8 of 8. Cases closed late before this update keep the flag they already have.

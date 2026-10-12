@@ -107,3 +107,32 @@ export function caseSlaCalendarHours(priority: string, tier?: string | null): nu
   if (!row) return undefined;
   return row[tier as CaseSlaTier] ?? row[CASE_SLA_DEFAULT_TIER];
 }
+
+/**
+ * THE BREACH RULE (#2070): a case breached its SLA when its `sla_due_date` is
+ * STRICTLY before the instant its clock stopped. Both arguments are read on one
+ * clock — epoch milliseconds, or hours after the case was created — so a case
+ * that stops exactly on its deadline met it. A case with no due date has no
+ * clock, and is never judged at all: callers do not reach this without one.
+ *
+ * The clock stops when the case stops being live work — the first write that
+ * takes it into `CLOSED_CASE_STATUSES` (`_case-assignment.ts`). Two writers
+ * record a breach, one per side of that line, and both apply THIS rule:
+ *
+ *   - while the case is live: `case_sla_monitor` selects
+ *     `sla_due_date: { $lt: NOW() }`, the same strict comparison, with "now" as
+ *     the instant — but only on a deployment that runs scheduled work;
+ *   - at the stop: `case_sla_defaults` (`case.hook.ts`) compares the due date
+ *     with the instant of the resolving or closing write. It needs no schedule,
+ *     so the closed-case surfaces — the `sla_performance` report and the
+ *     `sla_compliance_rate` gauge — are right on every deployment.
+ *
+ * Neither writer ever clears the flag: a breach, once recorded, stays.
+ *
+ * The hook body spells this comparison inline, for the reason the matrix above
+ * is mirrored there (no module scope in the sandbox). The seed derives the
+ * flag of every settled demo case from this function, and
+ * `test/case-sla-breach-on-close.test.ts` drives the LOWERED hook body against
+ * it on both sides of the boundary, so the two cannot drift.
+ */
+export const caseSlaBreached = (dueAt: number, clockStoppedAt: number): boolean => dueAt < clockStoppedAt;

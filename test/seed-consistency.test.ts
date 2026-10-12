@@ -2,8 +2,9 @@
 
 import { describe, it, expect } from 'vitest';
 import { CrmSeedData } from '../objectstack.composition';
-import { CASE_SLA_DEFAULT_TIER, caseSlaCalendarHours } from '../src/service/objects/_case-sla';
+import { CASE_SLA_DEFAULT_TIER, caseSlaBreached, caseSlaCalendarHours } from '../src/service/objects/_case-sla';
 import { HIGH_VALUE_DEAL_AMOUNT, LARGE_DEAL_AMOUNT } from '../src/sales/objects/_thresholds';
+import { CLOSED_CASE_STATUSES } from '../src/service/objects/_case-assignment';
 
 /**
  * Seed ↔ hook consistency guards (#591).
@@ -483,6 +484,8 @@ describe('seeded case SLA due dates match the policy matrix (#595)', () => {
   /** The CEL source of a seeded expression value, or null for a plain value. */
   const celSource = (v: unknown): string | null =>
     v !== null && typeof v === 'object' && (v as Rec).dialect === 'cel' ? String((v as Rec).source) : null;
+  /** `CLOSED_CASE_STATUSES` — the statuses in which a case's SLA clock has stopped. */
+  const SETTLED = new Set<string>(CLOSED_CASE_STATUSES);
 
   it('seeds enough cases across enough priorities to be worth checking', () => {
     // Guards the guard: an empty or single-priority set would pass vacuously.
@@ -525,15 +528,15 @@ describe('seeded case SLA due dates match the policy matrix (#595)', () => {
     expect(problems, problems.join('\n')).toEqual([]);
   });
 
-  it('never marks a case as breached while its own due date is still ahead of it', () => {
-    // `is_sla_violated` is `case_sla_monitor`'s field to write, and the sweep's
-    // definition of a breach is "open, and past due". A seed that pre-sets the
-    // flag has to satisfy that definition on arrival, or the demo ships a
-    // breach the sweep would never have produced. `daysAgo(n)` is a UTC
-    // midnight, so a case is UNAMBIGUOUSLY past due when the matrix offset is
-    // no longer than its age.
+  it('never marks an OPEN case as breached while its own due date is still ahead of it', () => {
+    // On a live case `is_sla_violated` is `case_sla_monitor`'s to write, and
+    // the sweep's definition of a breach is "open, and past due". A seed that
+    // pre-sets the flag on an open case has to satisfy that definition on
+    // arrival, or the demo ships a breach the sweep would never have produced.
+    // `daysAgo(n)` is a UTC midnight, so a case is UNAMBIGUOUSLY past due when
+    // the matrix offset is no longer than its age.
     const problems: string[] = [];
-    for (const c of cases.filter((r) => r.is_sla_violated === true)) {
+    for (const c of cases.filter((r) => r.is_sla_violated === true && !SETTLED.has(String(r.status)))) {
       const age = /^daysAgo\((\d+)\)$/.exec(celSource(c.created_at) ?? '');
       const hours = caseSlaCalendarHours(String(c.priority), tierOf.get(String(c.crm_account)));
       const label = `${String(c.subject)} (${String(c.priority)})`;
@@ -544,11 +547,42 @@ describe('seeded case SLA due dates match the policy matrix (#595)', () => {
       if (Number(age[1]) * 24 < hours) {
         problems.push(`${label}: flagged as breached but only ${age[1]}d old against a ${hours}h clock`);
       }
-      if (c.status === 'resolved' || c.status === 'closed') {
-        problems.push(`${label}: a settled case has met its SLA — the sweep excludes it`);
+    }
+    expect(problems, problems.join('\n')).toEqual([]);
+  });
+
+  /**
+   * A SETTLED case carries the verdict `case_sla_defaults` records on the
+   * write that settles it (#2070): `caseSlaBreached` over its own dates. Both
+   * are offsets from the same `daysAgo()` midnight — the due date the matrix
+   * cell's hours after creation, the settle instant (`closed_date`, a settled
+   * seed row's resolved-date proxy) whole days after it. Every settled row used
+   * to be authored `false`, nine of them against their own dates, and the
+   * closed-case SLA surfaces read 100% met.
+   */
+  it('flags every settled case that settled after its own due date, and no other', () => {
+    const problems: string[] = [];
+    const verdicts: boolean[] = [];
+    for (const c of cases.filter((r) => SETTLED.has(String(r.status)))) {
+      const label = `${String(c.subject)} (${String(c.status)}, ${String(c.priority)} / ${String(c.crm_account)})`;
+      const created = /^daysAgo\((\d+)\)$/.exec(celSource(c.created_at) ?? '');
+      const settled = /^daysAgo\((\d+)\)$/.exec(celSource(c.closed_date) ?? '');
+      const hours = caseSlaCalendarHours(String(c.priority), tierOf.get(String(c.crm_account)));
+      if (!created || !settled || hours === undefined) {
+        problems.push(`${label}: needs daysAgo() created_at and closed_date, and a matrix row`);
+        continue;
+      }
+      const breached = caseSlaBreached(hours, (Number(created[1]) - Number(settled[1])) * 24);
+      verdicts.push(breached);
+      if (c.is_sla_violated !== breached) {
+        problems.push(`${label}: settled ${Number(created[1]) - Number(settled[1])}d after creation against a ${hours}h clock — expected is_sla_violated: ${breached}, seeded ${String(c.is_sla_violated)}`);
       }
     }
     expect(problems, problems.join('\n')).toEqual([]);
+    // Anti-vacuity: both verdicts occur, so a seed authored all-true or
+    // all-false cannot pass on a population that happens to be uniform.
+    expect(verdicts.filter(Boolean).length, 'no settled seed case finished late').toBeGreaterThan(0);
+    expect(verdicts.filter((v) => !v).length, 'no settled seed case finished on time').toBeGreaterThan(0);
   });
 });
 

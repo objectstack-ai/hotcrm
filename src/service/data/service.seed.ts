@@ -21,7 +21,7 @@ import { defineSeed } from '@objectstack/spec/data';
 import { cel } from '@objectstack/spec';
 import { Case } from '../objects/case.object';
 import { KnowledgeArticle } from '../objects/knowledge_article.object';
-import { CASE_SLA_DEFAULT_TIER, caseSlaCalendarHours } from '../objects/_case-sla';
+import { CASE_SLA_DEFAULT_TIER, caseSlaBreached, caseSlaCalendarHours } from '../objects/_case-sla';
 import { celDaysAgo } from '../../sales/data/_shared';
 import { accounts } from '../../sales/data/sales.seed';
 
@@ -44,6 +44,13 @@ const TIER_BY_ACCOUNT = new Map<string, string>(
   ]),
 );
 
+/** The matrix cell `case_sla_defaults` would have applied, in calendar hours after creation. */
+const seededSlaHours = (priority: string, accountName?: string): number => {
+  const hours = caseSlaCalendarHours(priority, accountName ? TIER_BY_ACCOUNT.get(accountName) : undefined);
+  if (hours === undefined) throw new Error(`seed: no SLA matrix row for priority "${priority}"`);
+  return hours;
+};
+
 /**
  * `created_at + matrix(priority, tier)`, as a CEL expression — the case's
  * authored creation instant (the platform's own `created_at`, which the seed
@@ -54,16 +61,34 @@ const TIER_BY_ACCOUNT = new Map<string, string>(
  * it — hence `+ duration('Nh')` rather than a second day-granular helper.
  *
  * A due date that lands in the past is expected and correct on an old open case
- * — that is what a breach IS, and `case_sla_monitor` is the thing that notices
- * it on its next hourly sweep. `is_sla_violated` is deliberately NOT derived
- * from this: the flag is the sweep's to write, and the seed only pre-sets it
- * where the demo wants a breach visible before the first sweep runs.
+ * — that is what a breach IS. On an OPEN case the flag is `case_sla_monitor`'s
+ * to write, on a deployment that runs scheduled work, and the seed only pre-sets
+ * it where the demo wants a breach visible without a sweep.
  */
-const celCaseSlaDue = (createdDaysAgo: number, priority: string, accountName?: string) => {
-  const hours = caseSlaCalendarHours(priority, accountName ? TIER_BY_ACCOUNT.get(accountName) : undefined);
-  if (hours === undefined) throw new Error(`seed: no SLA matrix row for priority "${priority}"`);
-  return cel`daysAgo(${createdDaysAgo}) + duration('${hours}h')`;
-};
+const celCaseSlaDue = (createdDaysAgo: number, priority: string, accountName?: string) =>
+  cel`daysAgo(${createdDaysAgo}) + duration('${seededSlaHours(priority, accountName)}h')`;
+
+/**
+ * `is_sla_violated` of a SETTLED case (resolved or closed) — DERIVED, never
+ * picked (#2070). `case_sla_defaults` records the breach on the write that
+ * settles a case after its due date, so a settled seed row has to arrive
+ * holding exactly what that write would have recorded: `caseSlaBreached` over
+ * the row's own dates. Both instants are offsets from the same `daysAgo()`
+ * midnight — the due date `matrix(priority, tier)` hours after creation, the
+ * settle instant (`closed_date`, which a settled seed row carries as its
+ * resolved-date proxy) whole days after it — so the hour counts compare
+ * directly, and a case settled exactly on its deadline met it.
+ *
+ * These rows used to be authored `false` across the board, which made the
+ * `sla_performance` report and the compliance gauge read 100% met over closed
+ * cases that had finished days late by their own dates.
+ */
+const seededSettledBreach = (
+  createdDaysAgo: number,
+  settledDaysAgo: number,
+  priority: string,
+  accountName?: string,
+): boolean => caseSlaBreached(seededSlaHours(priority, accountName), (createdDaysAgo - settledDaysAgo) * 24);
 
 // ─── Cases ────────────────────────────────────────────────────────────
 export const cases = defineSeed(Case, {
@@ -122,7 +147,7 @@ export const cases = defineSeed(Case, {
       // closed−created delta the hook would compute (daysAgo() is day-granular,
       // so deltas come in 24h steps).
       is_closed: false,
-      is_sla_violated: false,
+      is_sla_violated: seededSettledBreach(3, 2, 'medium', 'Initech Solutions'),
       is_escalated: false,
       resolution_time_hours: 24.0,
       created_at: cel`daysAgo(3)`,
@@ -140,7 +165,7 @@ export const cases = defineSeed(Case, {
       type: 'problem',
       origin: 'chat',
       is_closed: true,
-      is_sla_violated: false,
+      is_sla_violated: seededSettledBreach(7, 6, 'high', 'Wayne Enterprises'),
       is_escalated: false,
       // `resolution` is REQUIRED when status is 'closed' (object validation
       // `resolution_required_for_closed`) — without it the seed row is rejected.
@@ -220,7 +245,7 @@ export const cases = defineSeed(Case, {
       type: 'feature_request',
       origin: 'web',
       is_closed: true,
-      is_sla_violated: false,
+      is_sla_violated: seededSettledBreach(10, 8, 'low', 'Wayne Enterprises'),
       is_escalated: false,
       // Required for closed cases (resolution_required_for_closed).
       resolution: 'Delivered CSV bulk-import in the 9.4 release; shared the docs link with the customer.',
@@ -298,18 +323,22 @@ export const cases = defineSeed(Case, {
         // case's age); resolution_time_hours is exactly the closed−created
         // delta case.hook would compute (daysAgo() is day-granular → 24h steps).
         const resolutionDays = Math.min(ageDays, 1 + (i % 3));
-        // SLA breaches only make sense on OPEN cases with a due date already in
-        // the past (the case_sla_monitor flow's definition). The old generator
-        // flagged rows as violated while giving every row a FUTURE due date.
+        // A SETTLED row's flag is derived from its own dates (#2070,
+        // `seededSettledBreach`): the write that settled it would have recorded
+        // a late finish, so the seed does too.
         //
-        // Since #595 the due date is DERIVED (`celCaseSlaDue` below), so the
-        // "already in the past" half now holds by construction for these rows:
-        // a critical case is due 4h after creation and every generated case is
-        // at least a day old. The converse is deliberately not enforced — other
-        // open rows are past due too, and `case_sla_monitor` is the thing that
-        // notices them. Pre-setting the flag here only decides what the demo
-        // shows before the first hourly sweep lands.
-        const slaViolated = !settled && priority === 'critical' && i % 3 === 0;
+        // An OPEN row's flag is the sweep's definition — open, and its due date
+        // already in the past. The old generator flagged rows as violated while
+        // giving every row a FUTURE due date; since #595 the due date is DERIVED
+        // (`celCaseSlaDue` below), so "already in the past" holds by
+        // construction here: a critical case is due 4h after creation and every
+        // generated case is at least a day old. The converse is deliberately not
+        // enforced — other open rows are past due too, and `case_sla_monitor`
+        // notices them where scheduled work runs. Pre-setting the flag here only
+        // decides which open breaches the demo shows without a sweep.
+        const slaViolated = settled
+          ? seededSettledBreach(ageDays, ageDays - resolutionDays, priority, account)
+          : priority === 'critical' && i % 3 === 0;
         out.push({
           subject: `Demo case ${String(i + 1).padStart(2, '0')} — ${priority} ${type}`,
           description: `Auto-generated demo case for ${priority} priority on day -${ageDays}.`,

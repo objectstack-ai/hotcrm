@@ -13,6 +13,8 @@ import {
  *
  * - Stamps `sla_due_date` on a case that has none, from the priority × account
  *   tier matrix in `_case-sla.ts`.
+ * - Records `is_sla_violated` on the write that resolves or closes a case after
+ *   its `sla_due_date` — the half of the breach rule no schedule can miss.
  * - On escalation: creates a follow-up task OWNED BY the account owner (the
  *   single owner of escalation tasks — flows must not create their own).
  *   Owning it, not merely labelling it: `owner_id` is the one ownership column,
@@ -315,6 +317,35 @@ const caseValidation: Hook = {
       if (closedDate && createdDate) {
         const hrs = (new Date(closedDate).getTime() - new Date(createdDate).getTime()) / 3_600_000;
         if (Number.isFinite(hrs) && hrs >= 0) input.resolution_time_hours = Math.round(hrs * 10) / 10;
+      }
+
+      // ── The breach is recorded when the clock stops (#2070) ──
+      //
+      // `case_sla_monitor` flags a breach only while a case is live work, and
+      // only where scheduled work runs. A case resolved or closed after its
+      // `sla_due_date` therefore kept `is_sla_violated: false` for good, and
+      // the closed-case surfaces (`sla_performance`, the compliance gauge)
+      // counted it as met. The write that takes the case out of live work is
+      // the moment its clock stops, so that write records a late finish.
+      //
+      // The rule is `caseSlaBreached` in `_case-sla.ts`; the status set is
+      // `CLOSED_CASE_STATUSES` in `_case-assignment.ts`. Both are spelled
+      // inline because this body has no module scope:
+      // `test/case-sla-breach-on-close.test.ts` drives the lowered body
+      // against the helper, and `test/live-work-predicate-parity.test.ts` pins
+      // the set by name. Only the ENTRY into the set is judged (a
+      // resolved → closed write stopped no clock), a case with no due date is
+      // left alone, and the flag is never cleared — a breach stays recorded.
+      //
+      // The stop instant is the `closed_date` this write carries — the stamp
+      // above, or a system writer's own — else now. The flag is written onto
+      // this record's own payload, which is not a caller-supplied key, so the
+      // agent's `editable: false` mask on it does not refuse the agent's close.
+      const settledStatuses = ['resolved', 'closed'];
+      if (settledStatuses.includes(String(effStatus)) && !settledStatuses.includes(String(ctx.previous?.status))) {
+        const due = input.sla_due_date !== undefined ? input.sla_due_date : ctx.previous?.sla_due_date;
+        const stoppedAt = (typeof input.closed_date === 'string' && input.closed_date) || new Date().toISOString();
+        if (typeof due === 'string' && Date.parse(due) < Date.parse(stoppedAt)) input.is_sla_violated = true;
       }
     }
   },

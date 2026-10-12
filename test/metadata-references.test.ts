@@ -542,6 +542,52 @@ describe('page component references resolve', () => {
     ).toEqual([]);
   });
 
+  /**
+   * A logged call or meeting shows on the record it was logged on (#2071).
+   *
+   * `log_call` and `log_meeting` write their `sys_activity` row as type
+   * `completed` — the `task` feed kind — and the console's activity timeline
+   * drops every such row unless the block that renders it sets
+   * `showCompleted: true` (`RecordActivityProps.showCompleted`, default
+   * `false`). So a record page whose feed leaves it off shows the rep a
+   * success toast and then no call: measured on the case and the deal, whose
+   * Activity tabs never listed one, and on the account, whose Discussion feed
+   * — its only timeline — never did either.
+   *
+   * The pages are found, not listed: every authored record page of an object
+   * the app registers `log_call` / `log_meeting` on. Each must carry at least
+   * one feed block, and every feed block on it must show completed rows — on
+   * `record:activity` directly, on `record:chatter` / `record:discussion`
+   * under `feed`. An object with no authored page (`crm_contact`) renders the
+   * platform's default page, which this app cannot configure; that half is
+   * the platform's, reported from #2071.
+   */
+  it('every record page of an object that logs calls and meetings shows completed activity', () => {
+    const LOGGING = new Set(['log_call', 'log_meeting']);
+    const loggingObjects = new Set(
+      (((stack as AnyRec).actions ?? []) as AnyRec[])
+        .filter((a) => LOGGING.has(a.name) && typeof a.objectName === 'string')
+        .map((a) => a.objectName as string),
+    );
+    const recordPages = pages.filter((p) => p.type === 'record' && loggingObjects.has(p.object));
+    // Not vacuous: the lead, case, deal and account pages are all such pages.
+    expect(recordPages.length, 'no authored record page of a logging object was found').toBeGreaterThan(0);
+
+    const showsCompleted = (c: AnyRec): boolean =>
+      c.type === 'record:activity' ? c.properties?.showCompleted === true : c.properties?.feed?.showCompleted === true;
+    const bad: string[] = [];
+    for (const p of recordPages) {
+      const feeds = [...walk(p.regions), ...walk(p.slots)].filter((c) =>
+        ['record:activity', 'record:chatter', 'record:discussion'].includes(c.type),
+      );
+      if (feeds.length === 0) bad.push(`${p.name}: no activity feed block — a logged call has nowhere to appear`);
+      for (const c of feeds.filter((f) => !showsCompleted(f))) {
+        bad.push(`${p.name} › ${c.id}: ${c.type} hides completed rows — set showCompleted: true${c.type === 'record:activity' ? '' : ' under feed'}`);
+      }
+    }
+    expect(bad, `record pages that hide a logged call or meeting:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
   // ⚰️ RETIRED (#1583): "record:details / record:highlights / record:path only
   // name real fields on the page object". `objectstack lint --strict` reports
   // each as `page-field-unknown`, and `pnpm lint` fails on it.
