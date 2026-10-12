@@ -8,7 +8,9 @@ import type { HookApi } from '../../sales/objects/_hook-api';
  *
  * - Defaults `expiration_date` to `quote_date + 30 days` when missing.
  * - Freezes quotes once `accepted` or `expired` — against USER edits only: a
- *   write that is purely the engine clearing a link is let through.
+ *   write that is purely the engine clearing a link is let through. The
+ *   freeze covers the quote's LINE ITEMS too (#2060): a user may neither add
+ *   a line to a settled quote nor change one of its lines.
  * - Refuses a user's acceptance while the linked opportunity is held by an
  *   approval, because acceptance closes that deal as won (#2014).
  * - On `accepted`, drafts a contract — carrying the quote's negotiated
@@ -25,10 +27,14 @@ import type { HookApi } from '../../sales/objects/_hook-api';
 
 const quoteValidation: Hook = {
   name: 'quote_workflow',
-  object: 'crm_quote',
+  // ⚠️ Two objects, deliberately (#2060): the freeze below is ONE freeze — the
+  // quote's and its lines' — so it lives in one place, judged by one user/system
+  // boundary and carried by one envelope, rather than a second copy of both on
+  // the line. `test/package-ownership.test.ts` reads every name in the list.
+  object: ['crm_quote', 'crm_quote_line_item'],
   events: ['beforeInsert', 'beforeUpdate'],
   priority: 200,
-  description: 'Default expiration date and freeze accepted/expired quotes.',
+  description: 'Default expiration date; freeze accepted/expired quotes and their lines.',
   handler: async (ctx: HookContext) => {
     // The refusal envelope. ⚠️ Mirrored from `src/sales/objects/_refusal.ts` because a lowered
     // body has no module scope and `extractHookBody` THROWS on an import;
@@ -50,6 +56,40 @@ const quoteValidation: Hook = {
       return err;
     }
     const { event, input, previous } = ctx;
+
+    // ─── A settled quote's LINES are frozen with it (#2060 item 1, B-09) ──
+    //
+    // Measured on 17.7.0 before this branch: a rep added a line to an accepted
+    // quote (200), `quote_total_rollup` rightly left the settled totals alone,
+    // and the quote's lines stopped summing to them. The doc promises the
+    // opposite (`content/docs/sales/quotes.mdx`, "the quote is frozen").
+    //
+    // The freeze's own boundary, not a second one: USER writes only (a seed or
+    // import carries no user and is let through, as below), and an update is
+    // judged by what it CHANGES, like `violating` below — `id` addresses the
+    // row, `updated_at` / `updated_by` are the engine's stamps (measured on every
+    // user update), and `line_number` is the read-only platform ordinal, which
+    // the 4.0.0 one-time back-fill touches with `{ line_number: null }` on every
+    // unnumbered line, settled quotes included. Both parents are judged, so a
+    // line moves neither onto a settled quote nor off one.
+    //
+    // ⚠️ DELETE is not guarded, pending a decision on #2060: deleting a quote,
+    // or the account it cascades from, deletes its lines AS THE DELETING USER
+    // (measured: each line's `beforeDelete` sees that user), and no declared
+    // hook-context key tells that cascade from a hand delete of one line — so a
+    // delete guard would make every settled quote with lines undeletable.
+    if (ctx.object === 'crm_quote_line_item') {
+      const changed = Object.keys(input).some((k) => !['id', 'updated_at', 'updated_by', 'line_number'].includes(k) && input[k] !== previous?.[k]);
+      for (const id of new Set([input.crm_quote, previous?.crm_quote])) {
+        const q = changed && ctx.user?.id && typeof id === 'string' && id
+          ? await (ctx.api as HookApi | undefined)?.object('crm_quote').findOne({ where: { id }, fields: ['quote_number', 'name', 'status'] })
+          : null;
+        if (q?.status === 'accepted' || q?.status === 'expired') {
+          throw refuse(`Quote ${String(q.quote_number)} - ${String(q.name)} is ${q.status}, so its line items can no longer be added or changed.`, 'RECORD_LOCKED', 409);
+        }
+      }
+      return;
+    }
 
     // The quote as every quote surface titles it. `crm_quote.display_title` is
     // `quote_number - name`; compose the same pair from the two stored columns
