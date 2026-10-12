@@ -107,15 +107,33 @@ describe('case_sla_monitor — hourly breach sweep', () => {
     return String(kase.id);
   };
 
+  /**
+   * A case SETTLED ON TIME whose deadline has passed since — the case the
+   * sweep's status exclusion exists for. It settles first, on the matrix's
+   * future due date, and only then is the clock wound back by a system write
+   * that leaves the status alone.
+   *
+   * ⚠️ Settling in that order is load-bearing (#2070): a case that settles
+   * AFTER its due date is flagged by the settling write itself
+   * (`case_sla_defaults`, pinned in `test/case-sla-breach-on-close.test.ts`),
+   * so a fixture that settled late would carry the flag before the sweep ran
+   * and could no longer show that the sweep left it alone.
+   */
+  const settledOnTime = async (priority: string, stored: Rec, dueDaysAgo: number): Promise<string> => {
+    const id = await openCase(priority, stored);
+    await systemUpdate(verify, 'crm_case', { id, sla_due_date: iso(-dueDaysAgo) });
+    return id;
+  };
+
   const seedCases = async () => ({
     // Breached and still open — MUST be flagged.
     c_breached: await openCase('high', { status: 'in_progress', sla_due_date: iso(-2) }),
     // Due in the future — must be left alone.
     c_future: await openCase('high', { status: 'in_progress', sla_due_date: iso(+2) }),
-    // Past due but already resolved: work is finished, so this is NOT a breach.
-    c_resolved: await openCase('high', { status: 'resolved', resolution: 'Fixed.', sla_due_date: iso(-5) }),
-    // Past due but closed — likewise excluded.
-    c_closed: await openCase('low', { status: 'closed', resolution: 'Fixed.', sla_due_date: iso(-9) }),
+    // Resolved on time, past due since: work is finished, so this is NOT a breach.
+    c_resolved: await settledOnTime('high', { status: 'resolved', resolution: 'Fixed.' }, 5),
+    // Closed on time, past due since — likewise excluded.
+    c_closed: await settledOnTime('low', { status: 'closed', resolution: 'Fixed.' }, 9),
     // Already flagged — must not be re-processed (or re-notified).
     c_already: await openCase('high', { status: 'escalated', is_sla_violated: true, sla_due_date: iso(-3) }),
   });
