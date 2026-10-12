@@ -54,10 +54,23 @@ export const CaseDetailPage: Page = {
             // `z.array(z.string())` ("Action IDs to show in header") in
             // @objectstack/spec 17.3.0, and this repo authors against the
             // protocol (#1653). Each id is the `name` of a crm_case-scoped
-            // action — `escalate_case` / `close_case` in
-            // `src/service/actions/case.actions.ts`, `log_call` in
+            // action — `claim_case` / `escalate_case` / `close_case` in
+            // `src/service/actions/case.actions.ts`, the activity trio in
             // `src/service/actions/case-activity.actions.ts`.
-            actions: ['escalate_case', 'close_case', 'log_call'],
+            //
+            // This list is the whole header (#2072, the #592 sentence on
+            // `lead_detail.page.ts`): an action it does not name is reachable
+            // only from the list row's ⋮ menu, which is how an agent on an
+            // unowned case had to go back to the list to claim it, and could
+            // not log or book a meeting here at all. Each action's own
+            // `visible` still decides when it shows — `claim_case` only on an
+            // ownerless open case. `claim_case` goes FIRST because the header
+            // draws three buttons inline and folds the rest into ⋯: on an
+            // ownerless case claiming is the gesture, and on an owned one it
+            // is hidden, so the inline three stay escalate / close / call.
+            // `test/action-references.test.ts` holds this list to every
+            // crm_case action placed at `record_header`.
+            actions: ['claim_case', 'escalate_case', 'close_case', 'log_call', 'log_meeting', 'schedule_meeting'],
           },
         },
         {

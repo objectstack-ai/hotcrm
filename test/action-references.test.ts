@@ -370,6 +370,65 @@ describe('record-page header action references resolve', () => {
     expect(resolveHeaderAction('no_such_action', 'crm_lead')).toEqual([]);
     expect(resolveHeaderAction('convert_lead', 'crm_case')).toEqual([]);
   });
+
+  /**
+   * The converse (#2072): a record page's authored `page:header` names its
+   * buttons, and an action of the page's object that it does not name is
+   * reachable from the record by no button at all — only the list row's ⋮
+   * menu (#592). `case_detail_page` named three of the six crm_case actions
+   * this app places at `record_header`, so an agent on an unowned case went
+   * back to the list to claim it and could not log or book a meeting from
+   * the case.
+   *
+   * What this pins is a fact of THIS app, not a platform rule: both inputs
+   * are this app's own metadata — the `locations` each action declares and
+   * the id list each header authors — and the assertion is that the two
+   * agree. It predicts nothing about what the renderer draws (`visible`,
+   * capabilities and the inline/⋯ split stay the renderer's), so a header
+   * that lists an action whose `visible` hides it on a given record passes.
+   *
+   * An action deliberately kept off a header is written down in
+   * `LEFT_OUT_OF_HEADER` with the business reason, keyed by page then action
+   * name. None is today: every header lists every `record_header` action of
+   * its object.
+   */
+  const LEFT_OUT_OF_HEADER: Record<string, Record<string, string>> = {};
+
+  /** The `record_header` actions of the page's object its header does not list. */
+  const unlistedHeaderActions = (object: string, listed: unknown[]): string[] =>
+    actions
+      .filter((a) => a.objectName === object && (a.locations ?? []).includes('record_header'))
+      .map((a) => a.name as string)
+      .filter((name) => !listed.includes(name));
+
+  const recordHeaders = headers.filter(({ page }) => typeof page.object === 'string');
+
+  it('every record-page header lists each record_header action of its object, or says why not', () => {
+    expect(
+      recordHeaders.map(({ page }) => page.name),
+      'the walk no longer reaches the record-page headers this suite holds',
+    ).toContain('case_detail_page');
+    const bad: string[] = [];
+    for (const { page, component } of recordHeaders) {
+      const excused = LEFT_OUT_OF_HEADER[page.name] ?? {};
+      const unlisted = unlistedHeaderActions(page.object, component.properties?.actions ?? []);
+      for (const name of unlisted.filter((n) => !(n in excused))) {
+        bad.push(`${page.name}/${component.id}: "${name}" is placed at record_header on "${page.object}" but the header does not list it`);
+      }
+      for (const name of Object.keys(excused).filter((n) => !unlisted.includes(n))) {
+        bad.push(`${page.name}: LEFT_OUT_OF_HEADER excuses "${name}", which is no unlisted record_header action of "${page.object}"`);
+      }
+    }
+    expect(bad, `record_header actions no header button reaches:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('the completeness check still names an action a header leaves out', () => {
+    // The #2072 shape, on the real case header: take one action off its list.
+    const caseHeader = recordHeaders.find(({ page }) => page.name === 'case_detail_page');
+    const listed: string[] = caseHeader?.component.properties?.actions ?? [];
+    expect(listed).toContain('claim_case');
+    expect(unlistedHeaderActions('crm_case', listed.filter((n) => n !== 'claim_case'))).toEqual(['claim_case']);
+  });
 });
 
 describe('dashboard date ranges window a field the query layer can actually compare', () => {
