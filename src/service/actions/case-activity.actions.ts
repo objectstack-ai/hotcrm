@@ -1,6 +1,5 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import type { Action } from '@objectstack/spec/ui';
 import * as serviceObjects from '../objects';
 import { activityActionsFor } from '../../sales/actions/activity-actions';
 
@@ -18,12 +17,18 @@ import { activityActionsFor } from '../../sales/actions/activity-actions';
  * service -> sales, never sideways, never a second copy.
  *
  * The export names are the originals — `LogCallAction`, `LogMeetingAction`,
- * `CaseScheduleMeetingAction`, with no `Case` prefix on the first two —
- * because `src/service/pages/case_detail.page.ts` imports them by those names,
- * and this PR moves files without renaming what they export.
+ * `CaseScheduleMeetingAction`, with no `Case` prefix on the first two — because
+ * `src/service/index.ts` registers them by those names, and the PR that moved
+ * this file renamed nothing it exports. (The case page names them by action id
+ * since #1653, not by these exports.)
+ *
+ * No `: Action` annotation on the three: `activityActionsFor` already returns
+ * `Record<kind, Action>`, so each export is typed `Action` without one (#2072
+ * dropped the three, and the type-only import they needed, to pay for the case
+ * header's three new action ids under the `src/service` token ceiling).
  */
 const caseActivityActions = activityActionsFor('crm_case', serviceObjects);
 
-export const LogCallAction: Action = caseActivityActions.log_call;
-export const LogMeetingAction: Action = caseActivityActions.log_meeting;
-export const CaseScheduleMeetingAction: Action = caseActivityActions.schedule_meeting;
+export const LogCallAction = caseActivityActions.log_call;
+export const LogMeetingAction = caseActivityActions.log_meeting;
+export const CaseScheduleMeetingAction = caseActivityActions.schedule_meeting;
