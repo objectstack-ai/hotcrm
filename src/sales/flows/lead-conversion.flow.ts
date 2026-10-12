@@ -467,6 +467,18 @@ export const LeadConversionFlow: Flow = {
       config: {
         objectName: 'crm_contact',
         fields: {
+          // The person's own facts travel with them (#2068). `crm_contact`
+          // declares each of these on the lead's vocabulary (`_picklists.ts`
+          // for the two selects, pinned by `test/actions-flows-integrity`), so
+          // a straight copy is always legal. The two opt-outs are copied,
+          // never defaulted: a lead that opted out must not become a contact
+          // that has not — `email_opt_out` hides Send Email and silences
+          // `contact_welcome`, `do_not_call` refuses a scheduled call. A
+          // REUSED contact does not come through here: see
+          // `decision_contact_do_not_call`.
+          salutation: '{leadRecord.salutation}', mobile: '{leadRecord.mobile}',
+          lead_source: '{leadRecord.lead_source}',
+          do_not_call: '{leadRecord.do_not_call}', email_opt_out: '{leadRecord.email_opt_out}',
           first_name: '{leadRecord.first_name}', last_name: '{leadRecord.last_name}',
           email: '{leadRecord.email}', phone: '{leadRecord.phone}',
           title: '{leadRecord.title}', crm_account: '{accountId}',
@@ -482,6 +494,41 @@ export const LeadConversionFlow: Flow = {
     {
       id: 'use_existing_contact', type: 'assignment', label: 'Reuse Existing Contact',
       config: { assignments: { contactId: '{matchedContact.id}' } },
+    },
+    {
+      // ── A REUSED contact keeps the stricter consent (#2068) ──────────────
+      //
+      // `create_contact` copies the lead's opt-outs onto a NEW contact. A
+      // reused contact already holds its own answer, and an opt-out is a
+      // promise to a person that a conversion never takes back — so this path
+      // only ever RAISES a flag, one node per flag, and only when the lead
+      // carries it. The `raise_*` nodes write the literal `true`, ⛔ never
+      // `{leadRecord.x}`: a copy would write the lead's `false` over a contact
+      // who had opted out. `crm_account` carries neither flag, so the account
+      // half of "the stricter value wins" has nothing to write.
+      //
+      // The edges read the LEAD's flag only, not whether the contact already
+      // holds it. Reading `vars.matchedContact.x` needs a
+      // `has(vars.matchedContact)` guard, which
+      // `test/flow-variable-conditions.test.ts` forbids on this flow (a
+      // `get_record` binds it on every path) — and writing `true` over `true`
+      // changes nothing.
+      //
+      // Branching on `e35` / `e36`, then `e38` / `e39`: each pair is TOTAL and
+      // partitions by De Morgan, so exactly one edge holds on every shape
+      // `get_lead` can bind — pinned in `test/flow-conversion.test.ts`.
+      id: 'decision_contact_do_not_call', type: 'decision', label: 'Lead Is Do-Not-Call?',
+    },
+    {
+      id: 'raise_contact_do_not_call', type: 'update_record', label: 'Carry Do-Not-Call to Contact',
+      config: { objectName: 'crm_contact', filter: { id: '{contactId}' }, fields: { do_not_call: true } },
+    },
+    {
+      id: 'decision_contact_email_opt_out', type: 'decision', label: 'Lead Opted Out of Email?',
+    },
+    {
+      id: 'raise_contact_email_opt_out', type: 'update_record', label: 'Carry Email Opt-Out to Contact',
+      config: { objectName: 'crm_contact', filter: { id: '{contactId}' }, fields: { email_opt_out: true } },
     },
     {
       // Branching is on edges `e16` / `e17` — see `decision_account`.
@@ -549,15 +596,17 @@ export const LeadConversionFlow: Flow = {
 
   edges: [
     // ⛔ A retired edge's id stays VACANT and every surviving edge keeps the id
-    // it has always had — `e1` and `e3` are gaps on purpose. Renumbering to
-    // close a gap rewrites ids that other notes, tests and run logs refer to.
+    // it has always had — `e1`, `e3` and `e15` are gaps on purpose.
+    // Renumbering to close a gap rewrites ids that other notes, tests and run
+    // logs refer to.
     { id: 'e0', source: 'start', target: 'get_lead', type: 'default' },
     // ⛔ When you add an edge, take the next id AFTER THE HIGHEST IN USE — do
     // not reuse a vacant one, and do not assume an unused-looking id is free.
     // A duplicate id is INERT (traversal filters out-edges by `source`, never
     // by `id`), so nothing fails and the collision survives to trap the next
-    // editor picking out of the sequence. `e1` and `e3` are vacant retired ids
-    // and stay that way; `e27` is above the highest live id, not a gap-fill.
+    // editor picking out of the sequence. `e1`, `e3` and `e15` are vacant
+    // retired ids and stay that way; `e27` is above the highest live id, not
+    // a gap-fill.
     { id: 'e27', source: 'get_lead', target: 'decision_approval', type: 'default' },
     // ── The approval gate (REQ-0005 step 7) ────────────────────────────
     //
@@ -647,12 +696,24 @@ export const LeadConversionFlow: Flow = {
     { id: 'e8', source: 'use_new_account', target: 'find_contact', type: 'default' },
     { id: 'e9', source: 'use_existing_account', target: 'find_contact', type: 'default' },
     { id: 'e10', source: 'find_contact', target: 'decision_contact', type: 'default' },
-    // Existing contact → reuse; none → create. Both converge on decision_opportunity.
+    // Existing contact → reuse; none → create. Both converge on
+    // decision_opportunity, the reuse path through the consent raise below.
     { id: 'e11', source: 'decision_contact', target: 'use_existing_contact', type: 'default', condition: P`vars.matchedContact != null`, label: 'Existing' },
     { id: 'e12', source: 'decision_contact', target: 'create_contact', type: 'default', condition: P`vars.matchedContact == null`, label: 'New' },
     { id: 'e13', source: 'create_contact', target: 'use_new_contact', type: 'default' },
     { id: 'e14', source: 'use_new_contact', target: 'decision_opportunity', type: 'default' },
-    { id: 'e15', source: 'use_existing_contact', target: 'decision_opportunity', type: 'default' },
+    // ── The reused contact's consent raise (#2068) ─────────────────────
+    //
+    // `e15` (use_existing_contact → decision_opportunity) is RETIRED and stays
+    // vacant; `e34` replaces it. Each pair below is TOTAL and PARTITIONING, and
+    // only a flag the lead carries as `true` takes the raise.
+    { id: 'e34', source: 'use_existing_contact', target: 'decision_contact_do_not_call', type: 'default' },
+    { id: 'e35', source: 'decision_contact_do_not_call', target: 'raise_contact_do_not_call', type: 'default', condition: P`has(vars.leadRecord) && has(vars.leadRecord.do_not_call) && vars.leadRecord.do_not_call == true`, label: 'Do not call' },
+    { id: 'e36', source: 'decision_contact_do_not_call', target: 'decision_contact_email_opt_out', type: 'default', condition: P`!has(vars.leadRecord) || !has(vars.leadRecord.do_not_call) || vars.leadRecord.do_not_call != true`, label: 'Callable' },
+    { id: 'e37', source: 'raise_contact_do_not_call', target: 'decision_contact_email_opt_out', type: 'default' },
+    { id: 'e38', source: 'decision_contact_email_opt_out', target: 'raise_contact_email_opt_out', type: 'default', condition: P`has(vars.leadRecord) && has(vars.leadRecord.email_opt_out) && vars.leadRecord.email_opt_out == true`, label: 'Opted out' },
+    { id: 'e39', source: 'decision_contact_email_opt_out', target: 'decision_opportunity', type: 'default', condition: P`!has(vars.leadRecord) || !has(vars.leadRecord.email_opt_out) || vars.leadRecord.email_opt_out != true`, label: 'Emailable' },
+    { id: 'e40', source: 'raise_contact_email_opt_out', target: 'decision_opportunity', type: 'default' },
     { id: 'e16', source: 'decision_opportunity', target: 'create_opportunity', type: 'default', condition: P`vars.createOpportunity == true`, label: 'Yes' },
     { id: 'e17', source: 'decision_opportunity', target: 'no_opportunity', type: 'default', condition: P`vars.createOpportunity != true`, label: 'No' },
     { id: 'e18', source: 'create_opportunity', target: 'use_new_opportunity', type: 'default' },
