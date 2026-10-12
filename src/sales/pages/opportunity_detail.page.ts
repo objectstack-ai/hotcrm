@@ -422,6 +422,18 @@ export const OpportunityDetailPage: Page = {
                      */
                     properties: {
                       limit: 25,
+                      // Load-bearing (#2071): a call or meeting logged on the
+                      // deal is a `sys_activity` row of type `completed` (the
+                      // `task` feed kind), and the renderer drops every such
+                      // row unless this is true — so a rep's logged call never
+                      // reached this tab. The deal's other `completed` writers
+                      // are its own won / lost milestones
+                      // (`opportunity.object.ts`), which belong here too.
+                      // Completed crm_task rows do NOT arrive: their audit rows
+                      // are keyed to the task, and this feed reads only rows
+                      // keyed to the deal. Nor is this the `types` restriction
+                      // the note above refuses: it adds rows and filters none.
+                      showCompleted: true,
                     },
                   },
                 ],
