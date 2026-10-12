@@ -116,7 +116,8 @@ const named = (value: unknown): string => String(record(value)?.name ?? '<unname
  * useless without, so a value that has stopped being one is rejected rather
  * than half-recognised. Measured shapes on d9c2ef2:
  *
- *   hook          name, object, events[], priority, description, handler()
+ *   hook          name, object (one name, or a list — `quote_workflow`, #2060),
+ *                 events[], priority, description, handler()
  *   skill         name, label, description, surface, instructions, tools[], active
  *   sharing rule  name, label, object, type, condition, accessLevel, sharedWith
  *   seed          object, externalId, mode, env[], records[]   (no `name`)
@@ -127,7 +128,8 @@ const isHook = (value: unknown): boolean => {
   return (
     !!entry &&
     typeof entry.name === 'string' &&
-    typeof entry.object === 'string' &&
+    [entry.object].flat().length > 0 &&
+    [entry.object].flat().every((o) => typeof o === 'string') &&
     Array.isArray(entry.events) &&
     typeof entry.handler === 'function'
   );

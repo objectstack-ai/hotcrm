@@ -349,7 +349,7 @@ let shippedRunner: QuickJSScriptRunner | undefined;
 export async function runShippedHook(
   stack: VerifyStack,
   hook: Row,
-  ctx: { event: string; input?: Row; previous?: Row; as?: string },
+  ctx: { event: string; input?: Row; previous?: Row; as?: string; object?: string },
 ): Promise<Row> {
   const { source, capabilities } = extractHookBody(hook.handler, `hook '${String(hook.name)}'`);
   const bind = hookBodyRunnerFactory((shippedRunner ??= new QuickJSScriptRunner()), {
@@ -366,6 +366,8 @@ export async function runShippedHook(
   const executionContext = ctx.as ? await stack.contextFor(ctx.as) : undefined;
   const user = executionContext?.userId ? { id: executionContext.userId } : undefined;
   const input: Row = { ...(ctx.input ?? {}) };
-  await handler({ event: ctx.event, input, previous: ctx.previous, user, executionContext, object: hook.object });
+  // The engine dispatches ONE object per write, so a hook naming several
+  // (`quote_workflow`, #2060) is told which one with `ctx.object`.
+  await handler({ event: ctx.event, input, previous: ctx.previous, user, executionContext, object: ctx.object ?? hook.object });
   return input;
 }
