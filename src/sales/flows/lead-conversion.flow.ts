@@ -472,7 +472,7 @@ export const LeadConversionFlow: Flow = {
           // for the two selects, pinned by `test/actions-flows-integrity`), so
           // a straight copy is always legal. The two opt-outs are copied,
           // never defaulted: a lead that opted out must not become a contact
-          // that has not — `email_opt_out` hides **Send Email** and silences
+          // that has not — `email_opt_out` hides Send Email and silences
           // `contact_welcome`, `do_not_call` refuses a scheduled call. A
           // REUSED contact does not come through here: see
           // `decision_contact_do_not_call`.
@@ -514,8 +514,9 @@ export const LeadConversionFlow: Flow = {
       // `get_record` binds it on every path) — and writing `true` over `true`
       // changes nothing.
       //
-      // Branching on `e35` / `e36`, then `e38` / `e39`: each pair partitions
-      // by De Morgan, for the reason recorded at `e28` / `e29`.
+      // Branching on `e35` / `e36`, then `e38` / `e39`: each pair is TOTAL and
+      // partitions by De Morgan, so exactly one edge holds on every shape
+      // `get_lead` can bind — pinned in `test/flow-conversion.test.ts`.
       id: 'decision_contact_do_not_call', type: 'decision', label: 'Lead Is Do-Not-Call?',
     },
     {
@@ -595,15 +596,17 @@ export const LeadConversionFlow: Flow = {
 
   edges: [
     // ⛔ A retired edge's id stays VACANT and every surviving edge keeps the id
-    // it has always had — `e1`, `e3` and `e15` are gaps on purpose. Renumbering to
-    // close a gap rewrites ids that other notes, tests and run logs refer to.
+    // it has always had — `e1`, `e3` and `e15` are gaps on purpose.
+    // Renumbering to close a gap rewrites ids that other notes, tests and run
+    // logs refer to.
     { id: 'e0', source: 'start', target: 'get_lead', type: 'default' },
     // ⛔ When you add an edge, take the next id AFTER THE HIGHEST IN USE — do
     // not reuse a vacant one, and do not assume an unused-looking id is free.
     // A duplicate id is INERT (traversal filters out-edges by `source`, never
     // by `id`), so nothing fails and the collision survives to trap the next
     // editor picking out of the sequence. `e1`, `e3` and `e15` are vacant
-    // retired ids and stay that way; `e27` is above the highest live id, not a gap-fill.
+    // retired ids and stay that way; `e27` is above the highest live id, not
+    // a gap-fill.
     { id: 'e27', source: 'get_lead', target: 'decision_approval', type: 'default' },
     // ── The approval gate (REQ-0005 step 7) ────────────────────────────
     //
