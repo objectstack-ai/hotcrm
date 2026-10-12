@@ -215,6 +215,23 @@ function hookInlineStatusExclusions(hookName: string): string[] | undefined {
 }
 
 /**
+ * The status list a sandboxed hook body declares INLINE as `const <name> = [...]`.
+ *
+ * The membership-test sibling of {@link hookInlineStatusExclusions}: a hook
+ * that asks "has this write taken the case OUT of live work?" tests the status
+ * against a list rather than querying with `$nin`, and the sandbox makes it
+ * write that list out too. Read off the REGISTERED handler, for the same reason.
+ */
+function hookInlineStatusList(hookName: string, constName: string): string[] | undefined {
+  const hook = hooks.find((h) => h.name === hookName);
+  if (!hook) return undefined;
+  const body = String(hook.handler ?? '');
+  const match = new RegExp(`const\\s+${constName}\\s*=\\s*\\[([^\\]]*)\\]`).exec(body);
+  if (!match) return undefined;
+  return [...match[1].matchAll(/['"]([^'"]+)['"]/g)].map((s) => s[1]).sort();
+}
+
+/**
  * The roster. Every entry is looked up by NAME and must produce a set.
  */
 const LIVE_WORK_CONSUMERS: { name: string; surface: string; excluded: () => string[] | undefined }[] = [
@@ -257,6 +274,14 @@ const LIVE_WORK_CONSUMERS: { name: string; surface: string; excluded: () => stri
         .filter((s) => s.length > 0);
       return sets.length === 0 ? undefined : [...new Set(sets.flat())].sort();
     },
+  },
+  {
+    // The close-time breach stamp (#2070) is the sweep's other half: the sweep
+    // judges a case while it is live work, the stamp on the write that ends
+    // it. A status in one set and not the other would be judged twice or never.
+    name: 'case_sla_defaults',
+    surface: 'close-time breach stamp — src/service/objects/case.hook.ts',
+    excluded: () => hookInlineStatusList('case_sla_defaults', 'settledStatuses'),
   },
 ];
 

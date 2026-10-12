@@ -50,8 +50,13 @@ Where the sweep runs, you never have to manually catch a missed SLA — but you
 should work cases before the due date, because a breach is recorded permanently
 on the case. A default install boots the sweep unbound (scheduled work is off
 until the deployment turns it on; see **[Administration](crm_admin.md)**), so
-there no breach is flagged and nobody is alerted: watch the **SLA Due Date**
-yourself.
+there no open case is flagged or escalated and nobody is alerted: watch the
+**SLA Due Date** yourself.
+
+On every install, sweep or no sweep, a case that is resolved or closed after
+its **SLA Due Date** is marked **SLA Violated** on that save — it is not
+escalated and nobody is alerted, because the work is already done, but the SLA
+report and the compliance gauge count it.
 
 ## Critical cases escalate instantly (automatic)
 

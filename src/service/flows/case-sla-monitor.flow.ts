@@ -100,6 +100,12 @@ export const CaseSlaMonitorFlow: Flow = {
         // has met its SLA — work is finished — but `is_closed` only flips on
         // `closed`, so the boolean filter stamps false breaches on resolved
         // cases and drags them back to `escalated`.
+        //
+        // `$lt` is `caseSlaBreached` (`src/service/objects/_case-sla.ts`) read
+        // with "now" as the instant: STRICTLY past due. Its other half is
+        // `case_sla_defaults`, which applies the same rule on the write that
+        // settles a case — so a case settled late is flagged even when this
+        // sweep never reached it, or never runs (#2070).
         filter: {
           status: { $nin: ['resolved', 'closed'] },
           is_sla_violated: false,

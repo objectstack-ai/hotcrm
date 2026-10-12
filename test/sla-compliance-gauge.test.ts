@@ -298,28 +298,32 @@ for (const driverName of ['memory', 'sqlite'] as const) {
 // ───────────────────────── 3. the seeded org, end to end through the widget ──
 
 /**
- * The number in the card. The seeded demo org has 8 closed cases and none of
- * them breached SLA — the generator only ever flags OPEN cases
- * (`slaViolated = !settled && …`) — so the gauge must read 100%. It read 0.0%.
+ * The number in the card. The seeded demo org has 8 closed cases. Under #1213
+ * the gauge read 0.0% where it should have read compliance; and the 100% it
+ * then read was itself wrong (#2070): every settled seed row was authored
+ * `is_sla_violated: false`, though 6 of the 8 closed cases finished days after
+ * their own due dates. The settled rows' flags are now DERIVED from those dates
+ * (`seededSettledBreach`, pinned row by row in `test/seed-consistency.test.ts`),
+ * so 2 of 8 closed cases are within SLA and the gauge must read 25%.
  *
  * The rows come from the SHIPPED seed rather than hand-typed stand-ins, and
  * the binding comes from the SHIPPED widget, so re-pointing the widget or
  * re-seeding the org moves this test instead of leaving it agreeing with
  * itself.
  */
-describe('the gauge reads 100% on the seeded demo org', () => {
+describe('the gauge reads met ÷ closed on the seeded demo org', () => {
   type Dataset = { object: string; records: AnyRec[] };
   const seededCases = (CrmSeedData as unknown as Dataset[])
     .filter((d) => d.object === 'crm_case')
     .flatMap((d) => d.records);
   const closedSeeds = seededCases.filter((c) => c.is_closed === true);
 
-  it('seeds 8 closed cases, none of them SLA-breached', () => {
+  it('seeds 8 closed cases, 6 of them finished after their due date', () => {
     expect(closedSeeds.length).toBe(8);
-    expect(closedSeeds.filter((c) => c.is_sla_violated === true)).toEqual([]);
+    expect(closedSeeds.filter((c) => c.is_sla_violated === true)).toHaveLength(6);
   });
 
-  it('renders 100% through the shipped widget binding', async () => {
+  it('renders 25% through the shipped widget binding', async () => {
     const ql = (await ObjectQL.create({
       datasources: { default: new InMemoryDriver({ persistence: false }) },
       objects: { crm_case: kase } as never,
@@ -341,7 +345,7 @@ describe('the gauge reads 100% on the seeded demo org', () => {
       );
       const row = (res.rows ?? [])[0] as AnyRec;
       expect(row.closed_count).toBe(8);
-      expect(row.sla_compliance_rate as number).toBeCloseTo(1, 5);
+      expect(row.sla_compliance_rate as number).toBeCloseTo(2 / 8, 5);
     } finally {
       await (ql as AnyRec)?.close();
     }
