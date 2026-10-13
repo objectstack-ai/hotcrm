@@ -91,7 +91,6 @@ export const commerce: Record<string, ObjectTranslationData> = {
       unit_price: { label: 'Sales Price' },
       discount: { label: 'Discount %' },
       subtotal: { label: 'Subtotal' },
-      tax_rate: { label: 'Tax Rate %' },
       total_price: { label: 'Total' },
       line_number: { label: 'Line #' },
     },
