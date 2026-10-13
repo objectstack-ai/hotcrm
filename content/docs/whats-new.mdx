@@ -151,7 +151,8 @@ upgrade from 3.0.0 needs no migration step.
 - **The product catalog's *Default Tax Rate %* is gone.** `crm_product.tax_rate`
   could be set only through the REST API and no total anywhere read it. Tax is
   unchanged where it is actually computed: the quote line item's own rate, and
-  the Tax amount on the quote.
+  the Tax amount on the quote. (A later release retires the line's rate as well,
+  leaving the quote's Tax amount as the only tax.)
 
 Plus a long tail of fixes, each with its own entry in `CHANGELOG.md`.
 

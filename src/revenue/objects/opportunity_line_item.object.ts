@@ -59,7 +59,7 @@ export const OpportunityLineItem = ObjectSchema.create({
   // `quantity` is a pricing field here, not an identity one — it is a factor in
   // `total_price`, and separating it from the price it multiplies would put the
   // two halves of one product on two sections. `crm_quote_line_item` takes the
-  // same split over its eleven fields, and the parents agree: `crm_quote` and
+  // same split over its ten fields, and the parents agree: `crm_quote` and
   // `crm_product` both keep every money field in `pricing` — `crm_quote`'s
   // `tax` included — and both keep `description` in `basic`.
   //

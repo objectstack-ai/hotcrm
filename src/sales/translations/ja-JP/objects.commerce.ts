@@ -109,7 +109,6 @@ export const commerce: Record<string, ObjectTranslationData> = {
       unit_price: { label: '販売価格' },
       discount: { label: '割引率（%）' },
       subtotal: { label: '小計' },
-      tax_rate: { label: '税率（%）' },
       total_price: { label: '合計' },
       line_number: { label: '行番号' },
     },

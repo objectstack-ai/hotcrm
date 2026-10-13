@@ -51,13 +51,8 @@ export const QuoteLineItem = ObjectSchema.create({
   highlightFields: ['crm_product', 'quantity', 'unit_price', 'total_price'],
 
   // The same two-group split as `crm_opportunity_line_item` (#1453), derived
-  // from the eleven fields declared here: every factor `total_price` multiplies
+  // from the ten fields declared here: every factor `total_price` multiplies
   // is `pricing`, everything that says WHICH line this is is `basic`.
-  //
-  // `tax_rate` and `subtotal` are pricing, not a section of their own — the
-  // parent `crm_quote` keeps subtotal / discount / discount_amount / tax /
-  // shipping_handling / total_price in one `pricing` group. A separate tax
-  // section would be this repo's only one.
   //
   // ⚠️ Neither group may be a subset of the highlight strip — see the twin
   // object for the hoisting rule this satisfies.
@@ -86,9 +81,7 @@ export const QuoteLineItem = ObjectSchema.create({
       // `crm_campaign_member.crm_campaign`). A SUPERSET of the fallback it
       // replaces (`highlightFields` minus this lookup: Product / Quantity /
       // Sales Price / Total) plus `subtotal`, the line's price after its own
-      // discount and before tax — the formula was evaluated on every read and
-      // shown in no list. It sits before `total_price` because Total is
-      // Subtotal with the tax multiplier applied on top.
+      // discount — the formula was evaluated on every read and shown in no list.
       //
       // ⛔ Not added to `highlightFields`: the detail page hoists the first
       // four of that strip, so a fifth entry never reaches the strip, and
@@ -152,24 +145,13 @@ export const QuoteLineItem = ObjectSchema.create({
       expression: F`record.quantity * record.unit_price * (1 - record.discount / 100)`,
     }),
 
-    tax_rate: Field.percent({
-      label: 'Tax Rate %',
-      group: 'pricing',
-      scale: 2,
-      min: 0,
-      max: 100,
-      defaultValue: 0,
-    }),
-
-    // Composed from the same STORED fields `subtotal` reads, not from
-    // `subtotal` itself — a formula reading another formula depends on the
-    // platform hydrating that field first, which is the hazard warned against
-    // at `lead.object.ts:61-64`. The arithmetic is unchanged: this is
-    // `subtotal`'s expression with the tax multiplier applied on top.
+    // A line carries no tax: tax is the quote's own amount (#2069), so Total is
+    // `subtotal`'s expression, not a read of `subtotal` — a formula reading a
+    // formula depends on hydration order (`lead.object.ts:61-64`).
     total_price: Field.formula({
       label: 'Total',
       group: 'pricing',
-      expression: F`record.quantity * record.unit_price * (1 - record.discount / 100) * (1 + record.tax_rate / 100)`,
+      expression: F`record.quantity * record.unit_price * (1 - record.discount / 100)`,
     }),
 
     line_number: Field.number({
