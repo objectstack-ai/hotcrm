@@ -1,6 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { P, expression } from '@objectstack/spec';
+import { P, expression, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 import { guarded } from './_guarded-iteration';
 type Flow = Automation.Flow;
@@ -42,10 +42,10 @@ type Flow = Automation.Flow;
  * Per owner: ensure the current-period row exists, re-read it, then sum four
  * scoped queries into it. Two things force that ordering.
  *
- * 1. The period window is DATA, not arithmetic. A flow template resolves
- *    `{TODAY()}` and day offsets only — it cannot say "the first day of this
- *    calendar quarter". So the flow selects the row whose window CONTAINS
- *    today (`period_start <= today <= period_end`), lets `forecast.hook.ts`
+ * 1. The period window is DATA, not arithmetic. The 17.x flow template
+ *    resolved `{TODAY()}` and day offsets only — it could not say "the first
+ *    day of this calendar quarter". So the flow selects the row whose window
+ *    CONTAINS today (`period_start <= today <= period_end`), lets `forecast.hook.ts`
  *    derive a calendar-true window on create, and then reads the boundaries
  *    back off the row to scope the opportunity queries. One definition of "the
  *    current period", owned by the object.
@@ -119,10 +119,10 @@ const OPEN_STAGES = { $nin: ['closed_won', 'closed_lost'] };
  * a scheduled one does, and the sweep opens nothing beside it.
  */
 const CURRENT_PERIOD_FILTER = {
-  owner_id: '{currentOwner.id}',
+  owner_id: cel`currentOwner.id`,
   period: SNAPSHOT_PERIOD,
-  period_start: { $lte: '{TODAY()}' },
-  period_end: { $gte: '{TODAY()}' },
+  period_start: { $lte: cel`isoDate(today())` },
+  period_end: { $gte: cel`isoDate(today())` },
 };
 
 /**
@@ -156,7 +156,7 @@ const OWNED_PERIOD_FILTER = { ...CURRENT_PERIOD_FILTER, source: 'scheduled' };
  *
  * The pin is the target row's own organization, read back off
  * `currentForecast`. That is the SAME "prove the source carries the right
- * organization" mechanism `{ownerAnyDeal.organization_id}` establishes on
+ * organization" mechanism `ownerAnyDeal.organization_id` establishes on
  * `create_forecast`, inverted — not a second one. It is in scope by
  * construction: `currentForecast` already supplies the window boundaries in
  * this very filter, and `reload_forecast` binds it before any bucket runs.
@@ -169,11 +169,11 @@ const OWNED_PERIOD_FILTER = { ...CURRENT_PERIOD_FILTER, source: 'scheduled' };
  * deliberately not undertaken here.
  */
 const inPeriod = (extra: Record<string, unknown>) => ({
-  owner_id: '{currentOwner.id}',
-  organization_id: '{currentForecast.organization_id}',
+  owner_id: cel`currentOwner.id`,
+  organization_id: cel`currentForecast.organization_id`,
   close_date: {
-    $gte: '{currentForecast.period_start}',
-    $lte: '{currentForecast.period_end}',
+    $gte: cel`currentForecast.period_start`,
+    $lte: cel`currentForecast.period_end`,
   },
   ...extra,
 });
@@ -207,7 +207,7 @@ const sumBucket = (key: string, label: string, filter: Record<string, unknown>, 
     type: 'loop' as const,
     label: `Sum ${label}`,
     config: {
-      collection: `{${key}Opps}`,
+      collection: expression(`${key}Opps`, 'cel'),
       iteratorVariable: item,
       body: {
         nodes: [
@@ -292,7 +292,7 @@ export const ForecastSnapshotFlow: Flow = {
     {
       id: 'loop_owners', type: 'loop', label: 'For Each Owner',
       config: {
-        collection: '{ownerList}',
+        collection: cel`ownerList`,
         iteratorVariable: 'currentOwner',
         body: guarded('owner', {
           nodes: [
@@ -303,7 +303,7 @@ export const ForecastSnapshotFlow: Flow = {
               id: 'find_any_deal', type: 'get_record', label: 'Owns Any Live Deal?',
               config: {
                 objectName: 'crm_opportunity',
-                filter: { owner_id: '{currentOwner.id}', stage: { $nin: ['closed_lost'] } },
+                filter: { owner_id: cel`currentOwner.id`, stage: { $nin: ['closed_lost'] } },
                 outputVariable: 'ownerAnyDeal',
               },
             },
@@ -337,7 +337,7 @@ export const ForecastSnapshotFlow: Flow = {
               config: {
                 objectName: 'crm_forecast',
                 fields: {
-                  owner_id: '{currentOwner.id}',
+                  owner_id: cel`currentOwner.id`,
                   // ORG PARTITION. A schedule trigger carries no
                   // organization, so without this the snapshot row is born
                   // `organization_id` NULL — outside every org partition, where
@@ -349,19 +349,20 @@ export const ForecastSnapshotFlow: Flow = {
                   // item here is a `sys_user` row, and `sys_user` declares NO
                   // `organization_id` — identity is global, org-partitioned it
                   // is not (it carries `primary_business_unit_id` instead).
-                  // `{currentOwner.organization_id}` would interpolate to
-                  // `undefined` and land as NULL: the publish guard, which only
-                  // checks that the key is declared, would go green over a row
-                  // still born outside every partition. Measured, not assumed.
+                  // On 17.x `{currentOwner.organization_id}` interpolated to
+                  // `undefined` and landed as NULL: the publish guard, which only
+                  // checks that the key is declared, went green over a row still
+                  // born outside every partition (measured, not assumed). Under
+                  // CEL that read fails the iteration instead.
                   //
                   // `ownerAnyDeal` is the `crm_opportunity` from `find_any_deal`
                   // — it carries the column, and edge `b2` (`ownerAnyDeal !=
                   // null`) is the only route to this node, so it is never null
                   // here. Semantically right too: an owner's forecast belongs to
                   // the org their pipeline is in.
-                  organization_id: '{ownerAnyDeal.organization_id}',
+                  organization_id: cel`ownerAnyDeal.organization_id`,
                   period: SNAPSHOT_PERIOD,
-                  snapshot_date: '{TODAY()}',
+                  snapshot_date: cel`isoDate(today())`,
                   source: 'scheduled',
                   pipeline_amount: 0,
                   best_case_amount: 0,
@@ -421,13 +422,13 @@ export const ForecastSnapshotFlow: Flow = {
               id: 'write_snapshot', type: 'update_record', label: 'Write Snapshot',
               config: {
                 objectName: 'crm_forecast',
-                filter: { id: '{currentForecast.id}' },
+                filter: { id: cel`currentForecast.id` },
                 fields: {
-                  pipeline_amount: '{pipelineTotal}',
-                  best_case_amount: '{bestCaseTotal}',
-                  commit_amount: '{commitTotal}',
-                  closed_amount: '{closedTotal}',
-                  snapshot_date: '{TODAY()}',
+                  pipeline_amount: cel`pipelineTotal`,
+                  best_case_amount: cel`bestCaseTotal`,
+                  commit_amount: cel`commitTotal`,
+                  closed_amount: cel`closedTotal`,
+                  snapshot_date: cel`isoDate(today())`,
                   source: 'scheduled',
                 },
               },

@@ -1,6 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { P } from '@objectstack/spec';
+import { P, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 type Flow = Automation.Flow;
 
@@ -45,7 +45,7 @@ export const LeadConversionFlow: Flow = {
     // `defaultValue`, and that is measured rather than chosen: the engine
     // binds a DECLARATION's default raw — `seedDeclaredVariables` does a plain
     // `variables.set(name, defaultValue)` with no `interpolate` call — so
-    // `'{TODAY() + 90}'` written here would bind that string verbatim and
+    // `{TODAY() + 90}` written here would bind that string verbatim and
     // `create_opportunity` would post the braces into a date column. Measured
     // on 17.3.0 by running a probe flow, not by reading the engine. The screen
     // field is therefore the only layer that can carry the expression, which
@@ -70,22 +70,24 @@ export const LeadConversionFlow: Flow = {
         // the conversion decision is actually taken, and the one surface that
         // can say something TRUE about THIS lead.
         //
-        // Mechanism, measured on the shipped 17.1.0 bundles rather than
-        // assumed: the executor interpolates `config.description`
-        // (`interp(cfg.description)`) into the `ScreenSpec` it puts on the wire,
-        // and `FlowRunner.tsx` renders it — `{screen.description &&
-        // <DialogDescription>{screen.description}</DialogDescription>}`. A
-        // whole-string sole token returns the RAW value and `interp` maps null
-        // to `undefined`, so the clean-lead branch below (which assigns `null`)
-        // renders NO description at all rather than an empty paragraph. That is
-        // why the conditionality lives in an assignment and not in the copy: a
-        // screen `description` has no `visibleWhen`.
-        description: '{duplicateWarning}',
+        // Mechanism: the executor renders `config.description` — a text slot,
+        // written as a `{{ }}` hole since 18.0.0-next.0 — into the `ScreenSpec`
+        // it puts on the wire, and `FlowRunner.tsx` renders it —
+        // `{screen.description && <DialogDescription>…}`. A hole over `null`
+        // renders the empty string, which the executor's `renderTextSlot`
+        // turns into no description at all (read in the installed
+        // 18.0.0-next.0 `service-automation`; on the 17.1.0 bundles it was
+        // measured as `interp` mapping null to `undefined`), so the clean-lead
+        // branch below (which assigns `null`) renders NO description rather
+        // than an empty paragraph. That is why the conditionality lives in an
+        // assignment and not in the copy: a screen `description` has no
+        // `visibleWhen`.
+        description: '{{duplicateWarning}}',
         // `visibleWhen` on a screen field is BARE CEL over the screen's own
-        // field names — not the `{var}` template dialect the rest of this flow
-        // uses for filters, `update_record` fields and decision conditions. The
+        // field names — not the CEL value envelopes the rest of this flow uses
+        // for filters and `update_record` fields, evaluated on the server. The
         // client re-evaluates the predicate against the values collected so far,
-        // which is why it cannot be a server-interpolated template.
+        // which is why it cannot be a server-evaluated envelope.
         fields: [
           // ⛔ NEVER `required` on a boolean screen field. A checkbox has no
           // unanswered state — clear IS an answer, and "convert this lead
@@ -98,29 +100,30 @@ export const LeadConversionFlow: Flow = {
           // the user touched cannot convert a lead at all. The variable's
           // declared `defaultValue` is what supplies the answer.
           //
-          // DERIVED, not restated. `{createOpportunity}` reads the flow
-          // variable, so the literal `false` is written exactly once in this
+          // DERIVED, not restated. The envelope reads the flow variable
+          // `createOpportunity`, so the literal `false` is written exactly once in this
           // file — on the declaration — and the widget prefill cannot drift from
           // the value the engine binds.
           //
-          // A screen field's `defaultValue` is server-interpolated before the
-          // descriptor goes on the wire, and a whole-string sole token returns
-          // the RAW value rather than a stringification — measured on GA, the
-          // client receives boolean `false`, byte-identical to what the literal
-          // sent. (`visibleWhen` below is the opposite case: forwarded raw,
-          // never interpolated. Same node, two different dialects.)
-          { name: 'createOpportunity', label: 'Create Opportunity?', type: 'boolean', defaultValue: '{createOpportunity}' },
+          // A screen field's `defaultValue` is a CEL value envelope evaluated
+          // before the descriptor goes on the wire, so the client receives the
+          // value, never the envelope: boolean `false`, which is what the
+          // 17.0.0 GA template was measured to send. (`visibleWhen` below is the
+          // opposite case: forwarded raw, never evaluated on the server. Same
+          // node, two different dialects.)
+          { name: 'createOpportunity', label: 'Create Opportunity?', type: 'boolean', defaultValue: cel`createOpportunity` },
           // PREFILLED FROM THE LEAD (REQ-0005 acceptance 2). Both defaults are
-          // whole-string sole tokens over `leadRecord`, which `get_lead` bound
-          // before this screen was reached — the fetch sits AHEAD of the screen
-          // for the duplicate warning, and these two ride the same ordering.
+          // CEL envelopes over `leadRecord`, which `get_lead` bound before this
+          // screen was reached — the fetch sits AHEAD of the screen for the
+          // duplicate warning, and these two ride the same ordering.
           //
-          // ⚠️ A screen field's `defaultValue` is server-interpolated before the
-          // descriptor goes on the wire and a whole-string sole token returns
-          // the RAW value, so `estimated_amount` arrives as a NUMBER and
-          // `interp` maps a null to `undefined` — a lead with no estimate
-          // renders the empty box it always did, not the string "null". That is
-          // the same mechanism the `duplicateWarning` description depends on.
+          // ⚠️ Each envelope is evaluated before the descriptor goes on the
+          // wire, so `estimated_amount` arrives as a NUMBER. `company` is
+          // required on a lead; `estimated_amount` is not, so its read is
+          // guarded: a lead with no estimate is served `null` where 17.x served
+          // nothing (the migration entry: a field's `defaultValue` seeds the
+          // field with null), and an ABSENT column on a sparse datasource no
+          // longer fails the run at this screen.
           //
           // ⛔ The amount is prefilled, never copied silently. `estimated_amount`
           // is a pre-qualification guess and `crm_opportunity.amount` is a
@@ -136,8 +139,8 @@ export const LeadConversionFlow: Flow = {
           // `create_opportunity` after the account and contact were written,
           // leaving the lead half-converted (#2060 item 2). Visible-only, so
           // an unticked box still converts with no amount.
-          { name: 'opportunityName', label: 'Opportunity Name', type: 'text', required: true, defaultValue: '{leadRecord.company}', visibleWhen: 'createOpportunity == true' },
-          { name: 'opportunityAmount', label: 'Opportunity Amount', type: 'currency', required: true, defaultValue: '{leadRecord.estimated_amount}', visibleWhen: 'createOpportunity == true' },
+          { name: 'opportunityName', label: 'Opportunity Name', type: 'text', required: true, defaultValue: cel`leadRecord.company`, visibleWhen: 'createOpportunity == true' },
+          { name: 'opportunityAmount', label: 'Opportunity Amount', type: 'currency', required: true, defaultValue: cel`has(leadRecord.estimated_amount) ? leadRecord.estimated_amount : null`, visibleWhen: 'createOpportunity == true' },
           // The close date, DEFAULTED AND VISIBLE. `close_date` is what files
           // an opportunity into a forecast PERIOD, so ⛔ never stamp it silently
           // inside `create_opportunity`: a hidden +90 days files every converted
@@ -145,14 +148,13 @@ export const LeadConversionFlow: Flow = {
           //
           // The +90 is written HERE and nowhere else, and here the layer is
           // FORCED rather than preferred. A screen field's `defaultValue` is
-          // interpolated before the descriptor goes on the wire and a flow
-          // variable's is not (see the declaration above), so this is the only
-          // place the expression can be written at all. `resolveToken`
-          // recognises exactly one function form — `NOW()` / `TODAY()` with an
-          // optional `+`/`-` offset — and this is that form, not an arbitrary
-          // expression: measured on 17.3.0, the client receives the
-          // `YYYY-MM-DD` string 90 days out, and the value the rep sees is the
-          // value `create_opportunity` writes.
+          // evaluated before the descriptor goes on the wire and a flow
+          // variable's default is bound raw (see the declaration above), so this
+          // is the only place the expression can be written at all.
+          // `isoDate(daysFromNow(90))` writes the `YYYY-MM-DD` string 90 days out
+          // on the UTC calendar — what 17.3.0's `{TODAY() + 90}` was measured to
+          // send — and the value the rep sees is the value
+          // `create_opportunity` writes.
           //
           // `required` mirrors the column — `crm_opportunity.close_date` is
           // `required` + `notNull` — and it is what keeps the refusal at the
@@ -168,7 +170,7 @@ export const LeadConversionFlow: Flow = {
           // when `visibleWhen` evaluates false, and so does the console, which
           // is the untouched-checkbox path this screen has always had to keep
           // working.
-          { name: 'closeDate', label: 'Close Date', type: 'date', required: true, defaultValue: '{TODAY() + 90}', visibleWhen: 'createOpportunity == true' },
+          { name: 'closeDate', label: 'Close Date', type: 'date', required: true, defaultValue: cel`isoDate(daysFromNow(90))`, visibleWhen: 'createOpportunity == true' },
         ],
       },
     },
@@ -176,9 +178,9 @@ export const LeadConversionFlow: Flow = {
       // ⛔ This fetch must stay AHEAD of the screen: the duplicate warning
       // reads `leadRecord`, and a screen that suspends before the fetch has
       // nothing to read. The fetch itself never depended on the screen —
-      // `{recordId}` is an input variable, seeded before the run starts.
+      // `recordId` is an input variable, seeded before the run starts.
       id: 'get_lead', type: 'get_record', label: 'Get Lead Record',
-      config: { objectName: 'crm_lead', filter: { id: '{recordId}' }, outputVariable: 'leadRecord' },
+      config: { objectName: 'crm_lead', filter: { id: cel`recordId` }, outputVariable: 'leadRecord' },
     },
     {
       // Branching is on edges `e21` / `e22` / `e25` — see `decision_account`.
@@ -212,14 +214,14 @@ export const LeadConversionFlow: Flow = {
       config: {
         assignments: {
           duplicateWarning:
-            'Suspected duplicate — intake flagged this lead as repeating an existing record with this email address ({leadRecord.email}). Converting creates a second account, contact and opportunity for the same buyer; compare the linked record on the lead page before you continue.',
+            cel`'Suspected duplicate — intake flagged this lead as repeating an existing record with this email address (' + leadRecord.email + '). Converting creates a second account, contact and opportunity for the same buyer; compare the linked record on the lead page before you continue.'`,
         },
       },
     },
     {
       // The other branch assigns `null`, which is what makes the warning
-      // CONDITIONAL: `interp` maps it to `undefined` and the dialog renders no
-      // description. Same shape as `no_opportunity` below — both branches
+      // CONDITIONAL: the description hole renders it as no description at
+      // all (see `screen_1`). Same shape as `no_opportunity` below — both branches
       // write the variable so no downstream read ever meets an unset one.
       id: 'no_duplicate_warning', type: 'assignment', label: 'No Duplicate Warning',
       config: { assignments: { duplicateWarning: null } },
@@ -243,8 +245,8 @@ export const LeadConversionFlow: Flow = {
       // explain itself and `disabled` greys one out with no reason attached.
       // `errorMessage` on the Action is a single static string — what the
       // console toasts on a FAILED run — and cannot say anything about THIS
-      // lead. A screen node's `description` is interpolated per run and
-      // rendered by `FlowRunner` as the dialog body.
+      // lead. A screen node's `description` is a text slot rendered per run
+      // and shown by `FlowRunner` as the dialog body.
       //
       // The flow is also the only choke point covering every door: the
       // record-header button, the list-row button and the `action_convert_lead`
@@ -365,8 +367,8 @@ export const LeadConversionFlow: Flow = {
       // one — "Acme Corp" and "ACME  Corp" are the same account.
       //
       // Both sides of this comparison are stored, hook-maintained columns, and
-      // that is forced rather than chosen: a flow template cannot normalize
-      // ANYTHING. `service-automation`'s `resolveToken` recognises exactly one
+      // on 17.x that was forced rather than chosen: a flow template could not
+      // normalize ANYTHING. `service-automation`'s `resolveToken` recognises exactly one
       // function form — `NOW()` / `TODAY()` — and every bare identifier in the
       // expression fallback is substituted before evaluation, so no string
       // method is reachable either: `{LOWER(x)}`, `{TRIM(x)}` and
@@ -406,12 +408,19 @@ export const LeadConversionFlow: Flow = {
       // wrong account or creates a duplicate one, so the answer is the
       // refusal the rep reads in `refuse_no_match_key`.
       //
+      // Since 18.0.0-next.0 the operand is a CEL envelope: an absent key fails
+      // the run before the query, and a null one refuses the node instead of
+      // matching (the platform's `flow-value-slot-template-dialect-refused`
+      // entry; not re-measured here). Neither shape converts onto another
+      // account any more, and `decision_match_key` still refuses first, with
+      // copy the rep can read.
+      //
       // ⛔ Never paper this over with a second, case-sensitive lookup on the
       // raw `name`: a missing key means the producer could not derive one, and
       // a tolerant consumer path would hide that while restoring the exact bug
       // this node exists to fix.
       id: 'find_account', type: 'get_record', label: 'Find Existing Account',
-      config: { objectName: 'crm_account', filter: { name_normalized: '{leadRecord.company_normalized}' }, outputVariable: 'matchedAccount' },
+      config: { objectName: 'crm_account', filter: { name_normalized: cel`leadRecord.company_normalized` }, outputVariable: 'matchedAccount' },
     },
     {
       // Branching is on edges `e5` / `e6`. No `config.condition` here: a
@@ -432,23 +441,27 @@ export const LeadConversionFlow: Flow = {
       config: {
         objectName: 'crm_account',
         fields: {
-          name: '{leadRecord.company}', phone: '{leadRecord.phone}',
-          website: '{leadRecord.website}', industry: '{leadRecord.industry}',
-          annual_revenue: '{leadRecord.annual_revenue}',
-          number_of_employees: '{leadRecord.number_of_employees}',
-          billing_address: '{leadRecord.address}',
-          owner_id: '{$User.Id}', is_active: true,
+          // `company` is required on a lead; every other copied fact is
+          // optional, so its read is guarded to null (an insert treats null as
+          // it treated the key the template left out).
+          name: cel`leadRecord.company`, phone: cel`has(leadRecord.phone) ? leadRecord.phone : null`,
+          website: cel`has(leadRecord.website) ? leadRecord.website : null`,
+          industry: cel`has(leadRecord.industry) ? leadRecord.industry : null`,
+          annual_revenue: cel`has(leadRecord.annual_revenue) ? leadRecord.annual_revenue : null`,
+          number_of_employees: cel`has(leadRecord.number_of_employees) ? leadRecord.number_of_employees : null`,
+          billing_address: cel`has(leadRecord.address) ? leadRecord.address : null`,
+          owner_id: cel`current_user.id`, is_active: true,
         },
         outputVariable: 'createdAccount',
       },
     },
     {
       id: 'use_new_account', type: 'assignment', label: 'Use New Account',
-      config: { assignments: { accountId: '{createdAccount.id}' } },
+      config: { assignments: { accountId: cel`createdAccount.id` } },
     },
     {
       id: 'use_existing_account', type: 'assignment', label: 'Reuse Existing Account',
-      config: { assignments: { accountId: '{matchedAccount.id}' } },
+      config: { assignments: { accountId: cel`matchedAccount.id` } },
     },
     {
       // Contact dedupe by email — GLOBAL, not per-account. ⛔ Never scope this
@@ -460,7 +473,7 @@ export const LeadConversionFlow: Flow = {
       id: 'find_contact', type: 'get_record', label: 'Find Existing Contact',
       config: {
         objectName: 'crm_contact',
-        filter: { email: '{leadRecord.email}' },
+        filter: { email: cel`leadRecord.email` },
         outputVariable: 'matchedContact',
       },
     },
@@ -483,24 +496,31 @@ export const LeadConversionFlow: Flow = {
           // `contact_welcome`, `do_not_call` refuses a scheduled call. A
           // REUSED contact does not come through here: see
           // `decision_contact_do_not_call`.
-          salutation: '{leadRecord.salutation}', mobile: '{leadRecord.mobile}',
-          lead_source: '{leadRecord.lead_source}',
-          do_not_call: '{leadRecord.do_not_call}', email_opt_out: '{leadRecord.email_opt_out}',
-          first_name: '{leadRecord.first_name}', last_name: '{leadRecord.last_name}',
-          email: '{leadRecord.email}', phone: '{leadRecord.phone}',
-          title: '{leadRecord.title}', crm_account: '{accountId}',
-          is_primary: true, owner_id: '{$User.Id}',
+          //
+          // Names and email are required on a lead and read bare; the rest
+          // are optional and guarded to null, which an insert reads as the
+          // omitted key the template wrote (each opt-out then takes its
+          // `false` default, as before).
+          salutation: cel`has(leadRecord.salutation) ? leadRecord.salutation : null`,
+          mobile: cel`has(leadRecord.mobile) ? leadRecord.mobile : null`,
+          lead_source: cel`has(leadRecord.lead_source) ? leadRecord.lead_source : null`,
+          do_not_call: cel`has(leadRecord.do_not_call) ? leadRecord.do_not_call : null`,
+          email_opt_out: cel`has(leadRecord.email_opt_out) ? leadRecord.email_opt_out : null`,
+          first_name: cel`leadRecord.first_name`, last_name: cel`leadRecord.last_name`,
+          email: cel`leadRecord.email`, phone: cel`has(leadRecord.phone) ? leadRecord.phone : null`,
+          title: cel`has(leadRecord.title) ? leadRecord.title : null`, crm_account: cel`accountId`,
+          is_primary: true, owner_id: cel`current_user.id`,
         },
         outputVariable: 'createdContact',
       },
     },
     {
       id: 'use_new_contact', type: 'assignment', label: 'Use New Contact',
-      config: { assignments: { contactId: '{createdContact.id}' } },
+      config: { assignments: { contactId: cel`createdContact.id` } },
     },
     {
       id: 'use_existing_contact', type: 'assignment', label: 'Reuse Existing Contact',
-      config: { assignments: { contactId: '{matchedContact.id}' } },
+      config: { assignments: { contactId: cel`matchedContact.id` } },
     },
     {
       // ── A REUSED contact keeps the stricter consent (#2068) ──────────────
@@ -509,8 +529,8 @@ export const LeadConversionFlow: Flow = {
       // reused contact already holds its own answer, and an opt-out is a
       // promise to a person that a conversion never takes back — so this path
       // only ever RAISES a flag, one node per flag, and only when the lead
-      // carries it. The `raise_*` nodes write the literal `true`, ⛔ never
-      // `{leadRecord.x}`: a copy would write the lead's `false` over a contact
+      // carries it. The `raise_*` nodes write the literal `true`, ⛔ never a
+      // copy of `leadRecord.x`: a copy would write the lead's `false` over a contact
       // who had opted out. `crm_account` carries neither flag, so the account
       // half of "the stricter value wins" has nothing to write.
       //
@@ -528,14 +548,14 @@ export const LeadConversionFlow: Flow = {
     },
     {
       id: 'raise_contact_do_not_call', type: 'update_record', label: 'Carry Do-Not-Call to Contact',
-      config: { objectName: 'crm_contact', filter: { id: '{contactId}' }, fields: { do_not_call: true } },
+      config: { objectName: 'crm_contact', filter: { id: cel`contactId` }, fields: { do_not_call: true } },
     },
     {
       id: 'decision_contact_email_opt_out', type: 'decision', label: 'Lead Opted Out of Email?',
     },
     {
       id: 'raise_contact_email_opt_out', type: 'update_record', label: 'Carry Email Opt-Out to Contact',
-      config: { objectName: 'crm_contact', filter: { id: '{contactId}' }, fields: { email_opt_out: true } },
+      config: { objectName: 'crm_contact', filter: { id: cel`contactId` }, fields: { email_opt_out: true } },
     },
     {
       // Branching is on edges `e16` / `e17` — see `decision_account`.
@@ -543,17 +563,18 @@ export const LeadConversionFlow: Flow = {
     },
     {
       // `close_date` comes from the screen field, which is the only layer that
-      // can carry the `{TODAY() + 90}` expression — see the `closeDate`
-      // declaration. An unbound `{closeDate}` resolves to nothing and the
-      // platform refuses the write rather than inventing a quarter, which is
-      // the failure this node is allowed to have.
+      // can carry the `isoDate(daysFromNow(90))` expression — see the
+      // `closeDate` declaration. An unbound `closeDate` fails the run at this
+      // node rather than inventing a quarter, which is the failure this node
+      // is allowed to have.
       id: 'create_opportunity', type: 'create_record', label: 'Create Opportunity',
       config: {
         objectName: 'crm_opportunity',
         fields: {
-          name: '{opportunityName}', crm_account: '{accountId}', primary_contact: '{contactId}',
-          amount: '{opportunityAmount}', stage: 'prospecting', probability: 10,
-          lead_source: '{leadRecord.lead_source}', close_date: '{closeDate}', owner_id: '{$User.Id}',
+          name: cel`opportunityName`, crm_account: cel`accountId`, primary_contact: cel`contactId`,
+          amount: cel`opportunityAmount`, stage: 'prospecting', probability: 10,
+          lead_source: cel`has(leadRecord.lead_source) ? leadRecord.lead_source : null`,
+          close_date: cel`closeDate`, owner_id: cel`current_user.id`,
         },
         outputVariable: 'createdOpportunity',
       },
@@ -561,11 +582,12 @@ export const LeadConversionFlow: Flow = {
     {
       // Normalize both opportunity branches onto a single `opportunityId`, the
       // same pattern as accountId/contactId. ⛔ Never reference
-      // `{createdOpportunity.id}` downstream instead: on the "No" branch the
-      // create node never ran, and the unresolved token interpolates into the
-      // `converted_opportunity` lookup as a placeholder.
+      // `createdOpportunity.id` downstream instead: on the "No" branch the
+      // create node never ran, and the unbound read fails the run (on 17.x the
+      // unresolved token interpolated into the `converted_opportunity` lookup
+      // as a placeholder).
       id: 'use_new_opportunity', type: 'assignment', label: 'Use New Opportunity',
-      config: { assignments: { opportunityId: '{createdOpportunity.id}' } },
+      config: { assignments: { opportunityId: cel`createdOpportunity.id` } },
     },
     {
       id: 'no_opportunity', type: 'assignment', label: 'No Opportunity',
@@ -574,14 +596,14 @@ export const LeadConversionFlow: Flow = {
     {
       id: 'mark_converted', type: 'update_record', label: 'Mark Lead as Converted',
       config: {
-        objectName: 'crm_lead', filter: { id: '{recordId}' },
+        objectName: 'crm_lead', filter: { id: cel`recordId` },
         fields: {
           // `status: 'converted'` rides along so list views agree with the
           // conversion flags (the qualified → converted transition is legal
           // per the lead_status_progression state machine).
-          is_converted: true, status: 'converted', converted_date: '{NOW()}',
-          converted_account: '{accountId}', converted_contact: '{contactId}',
-          converted_opportunity: '{opportunityId}',
+          is_converted: true, status: 'converted', converted_date: cel`isoDatetime(now())`,
+          converted_account: cel`accountId`, converted_contact: cel`contactId`,
+          converted_opportunity: cel`opportunityId`,
         },
       },
     },
@@ -590,12 +612,12 @@ export const LeadConversionFlow: Flow = {
       // `script` + `actionType:'email'` shape is a no-op stub in 7.4.
       id: 'send_notification', type: 'notify', label: 'Send Confirmation',
       config: {
-        recipients: ['{$User.Id}'],
+        recipients: [cel`current_user.id`],
         channels: ['inbox', 'email'],
         topic: 'lead_converted',
         template: 'crm.lead_converted',
-        templateData: { first_name: '{leadRecord.first_name}', last_name: '{leadRecord.last_name}' },
-        actionUrl: '/crm_account/{accountId}',
+        templateData: { first_name: cel`leadRecord.first_name`, last_name: cel`leadRecord.last_name` },
+        actionUrl: '/crm_account/{{accountId}}',
       },
     },
     { id: 'end', type: 'end', label: 'End' },

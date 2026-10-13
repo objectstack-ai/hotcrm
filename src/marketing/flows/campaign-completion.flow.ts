@@ -1,5 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 import { guarded } from '../../sales/flows/_guarded-iteration';
 type Flow = Automation.Flow;
@@ -35,7 +36,7 @@ export const CampaignCompletionFlow: Flow = {
       id: 'query_campaigns', type: 'get_record', label: 'Find Ended Campaigns',
       config: {
         objectName: 'crm_campaign',
-        filter: { status: 'in_progress', end_date: { $lt: '{TODAY()}' } },
+        filter: { status: 'in_progress', end_date: { $lt: cel`isoDate(today())` } },
         limit: 500,
         outputVariable: 'campaignList',
       },
@@ -43,13 +44,13 @@ export const CampaignCompletionFlow: Flow = {
     {
       id: 'loop_campaigns', type: 'loop', label: 'For Each Campaign',
       config: {
-        collection: '{campaignList}',
+        collection: cel`campaignList`,
         iteratorVariable: 'currentCampaign',
         body: guarded('campaign', {
           nodes: [
             {
               id: 'mark_completed', type: 'update_record', label: 'Mark Completed',
-              config: { objectName: 'crm_campaign', filter: { id: '{currentCampaign.id}' }, fields: { status: 'completed' } },
+              config: { objectName: 'crm_campaign', filter: { id: cel`currentCampaign.id` }, fields: { status: 'completed' } },
             },
           ],
           edges: [],

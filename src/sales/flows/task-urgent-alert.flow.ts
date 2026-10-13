@@ -1,6 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { P } from '@objectstack/spec';
+import { P, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 type Flow = Automation.Flow;
 
@@ -54,13 +54,13 @@ export const TaskUrgentAlertFlow: Flow = {
     {
       id: 'notify_owner', type: 'notify', label: 'Notify Owner',
       config: {
-        recipients: ['{record.owner_id}'],
+        recipients: [cel`record.owner_id`],
         channels: ['inbox', 'email'],
         severity: 'warning',
         topic: 'urgent_task',
         template: 'crm.urgent_task',
-        templateData: { subject: '{record.subject}' },
-        actionUrl: '/crm_task/{record.id}',
+        templateData: { subject: cel`record.subject` },
+        actionUrl: '/crm_task/{{record.id}}',
       },
     },
     { id: 'end', type: 'end', label: 'End' },

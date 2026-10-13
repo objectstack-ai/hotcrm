@@ -1,6 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { P } from '@objectstack/spec';
+import { P, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 type Flow = Automation.Flow;
 
@@ -103,7 +103,7 @@ export const AccountApprovalFlow: Flow = {
       label: 'Get Account',
       config: {
         objectName: 'crm_account',
-        filter: { id: '{record.id}' },
+        filter: { id: cel`record.id` },
         outputVariable: 'accountRecord',
       },
     },
@@ -139,7 +139,7 @@ export const AccountApprovalFlow: Flow = {
       label: 'Mark Approved',
       config: {
         objectName: 'crm_account',
-        filter: { id: '{record.id}' },
+        filter: { id: cel`record.id` },
         fields: { approval_status: 'approved' },
       },
     },
@@ -148,12 +148,12 @@ export const AccountApprovalFlow: Flow = {
       type: 'notify',
       label: 'Notify Owner — Approved',
       config: {
-        recipients: ['{accountRecord.owner_id}'],
+        recipients: [cel`has(accountRecord.owner_id) ? accountRecord.owner_id : null`],
         channels: ['inbox'],
         topic: 'account_approved',
         template: 'crm.account_approved',
-        templateData: { name: '{accountRecord.name}' },
-        actionUrl: '/crm_account/{record.id}',
+        templateData: { name: cel`accountRecord.name` },
+        actionUrl: '/crm_account/{{record.id}}',
       },
     },
     {
@@ -162,7 +162,7 @@ export const AccountApprovalFlow: Flow = {
       label: 'Mark Rejected',
       config: {
         objectName: 'crm_account',
-        filter: { id: '{record.id}' },
+        filter: { id: cel`record.id` },
         fields: { approval_status: 'rejected' },
       },
     },
@@ -171,13 +171,13 @@ export const AccountApprovalFlow: Flow = {
       type: 'notify',
       label: 'Notify Owner — Rejected',
       config: {
-        recipients: ['{accountRecord.owner_id}'],
+        recipients: [cel`has(accountRecord.owner_id) ? accountRecord.owner_id : null`],
         channels: ['inbox'],
         severity: 'warning',
         topic: 'account_rejected',
         template: 'crm.account_rejected',
-        templateData: { name: '{accountRecord.name}' },
-        actionUrl: '/crm_account/{record.id}',
+        templateData: { name: cel`accountRecord.name` },
+        actionUrl: '/crm_account/{{record.id}}',
       },
     },
     { id: 'end', type: 'end', label: 'End' },

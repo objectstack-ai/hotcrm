@@ -1,5 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 import { TASK_TYPE_OPTIONS, plainOptions } from '../objects/_picklists';
 type Flow = Automation.Flow;
@@ -65,24 +66,29 @@ export const ScheduleFollowUpFlow: Flow = {
     },
     {
       id: 'get_lead', type: 'get_record', label: 'Get Lead Record',
-      config: { objectName: 'crm_lead', filter: { id: '{recordId}' }, outputVariable: 'leadRecord' },
+      config: { objectName: 'crm_lead', filter: { id: cel`recordId` }, outputVariable: 'leadRecord' },
     },
     {
       id: 'create_task', type: 'create_record', label: 'Create Follow-up Task',
       config: {
         objectName: 'crm_task',
         fields: {
-          subject: '{subject}',
-          due_date: '{dueDate}',
-          type: '{activityType}',
-          priority: '{priority}',
-          description: '{notes}',
+          subject: cel`subject`,
+          due_date: cel`dueDate`,
+          // The three optional answers: a resume may leave one unbound, which
+          // the template wrote as nothing and the guard writes as null. On an
+          // insert the two are the same — the engine applies a field's default
+          // to an explicit null exactly as to an omitted key, so an unanswered
+          // priority still lands as `normal`.
+          type: cel`has(vars.activityType) ? activityType : null`,
+          priority: cel`has(vars.priority) ? priority : null`,
+          description: cel`has(vars.notes) ? notes : null`,
           status: 'not_started',
-          owner_id: '{$User.Id}',
+          owner_id: cel`current_user.id`,
           // Polymorphic parent: both halves are required for the lead's
           // Related tab to pick the task up.
           related_to_type: 'crm_lead',
-          related_to_lead: '{recordId}',
+          related_to_lead: cel`recordId`,
         },
         outputVariable: 'createdTask',
       },
@@ -94,8 +100,8 @@ export const ScheduleFollowUpFlow: Flow = {
       id: 'stamp_lead', type: 'update_record', label: 'Stamp Next Follow-up Date',
       config: {
         objectName: 'crm_lead',
-        filter: { id: '{recordId}' },
-        fields: { next_followup_date: '{dueDate}' },
+        filter: { id: cel`recordId` },
+        fields: { next_followup_date: cel`dueDate` },
       },
     },
     { id: 'end', type: 'end', label: 'End' },

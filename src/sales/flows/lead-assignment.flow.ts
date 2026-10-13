@@ -1,6 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { P } from '@objectstack/spec';
+import { P, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 type Flow = Automation.Flow;
 
@@ -22,7 +22,7 @@ type Flow = Automation.Flow;
  * so the record-change trigger provider binds it to the ObjectQL `afterInsert`
  * lifecycle hook. Firing on insert only means the SLA write does not re-trigger
  * the flow. The full record is seeded into the run, so fields are read via
- * `{record.*}` (no get_record round-trip needed).
+ * `record.*` (no get_record round-trip needed).
  */
 export const LeadAssignmentFlow: Flow = {
   name: 'lead_assignment',
@@ -62,7 +62,7 @@ export const LeadAssignmentFlow: Flow = {
     // ── Hot path: 1-day SLA, high-severity alert ───────────────────
     {
       id: 'sla_hot', type: 'update_record', label: 'Set 1-Day SLA',
-      config: { objectName: 'crm_lead', filter: { id: '{record.id}' }, fields: { next_followup_date: '{TODAY() + 1}' } },
+      config: { objectName: 'crm_lead', filter: { id: cel`record.id` }, fields: { next_followup_date: cel`isoDate(daysFromNow(1))` } },
     },
     {
       id: 'notify_hot', type: 'notify', label: 'Alert — Hot Lead',
@@ -73,37 +73,37 @@ export const LeadAssignmentFlow: Flow = {
         // 'sales_manager' was stored verbatim as sys_inbox_message.user_id,
         // matching no real user, so these alerts reached nobody. owner is set
         // on insert (defaultValue os.user.id) and is the accountable party.
-        recipients: ['{record.owner_id}'],
+        recipients: [cel`record.owner_id`],
         channels: ['inbox', 'email'],
         severity: 'warning',
         topic: 'lead_routing',
         template: 'crm.lead_routing_hot',
         templateData: {
-          first_name: '{record.first_name}', last_name: '{record.last_name}',
-          company: '{record.company}', rating: '{record.rating}',
+          first_name: cel`record.first_name`, last_name: cel`record.last_name`,
+          company: cel`record.company`, rating: cel`record.rating`,
         },
-        actionUrl: '/crm_lead/{record.id}',
+        actionUrl: '/crm_lead/{{record.id}}',
       },
     },
 
     // ── Standard path: 3-day SLA, normal alert ─────────────────────
     {
       id: 'sla_std', type: 'update_record', label: 'Set 3-Day SLA',
-      config: { objectName: 'crm_lead', filter: { id: '{record.id}' }, fields: { next_followup_date: '{TODAY() + 3}' } },
+      config: { objectName: 'crm_lead', filter: { id: cel`record.id` }, fields: { next_followup_date: cel`isoDate(daysFromNow(3))` } },
     },
     {
       id: 'notify_std', type: 'notify', label: 'Alert — New Lead',
       config: {
         // Route to the lead's owner — see notify_hot for why a bare
         // 'sales_manager' position never reached anyone.
-        recipients: ['{record.owner_id}'],
+        recipients: [cel`record.owner_id`],
         channels: ['inbox'],
         topic: 'lead_routing',
         template: 'crm.lead_routing_new',
         templateData: {
-          first_name: '{record.first_name}', last_name: '{record.last_name}', company: '{record.company}',
+          first_name: cel`record.first_name`, last_name: cel`record.last_name`, company: cel`record.company`,
         },
-        actionUrl: '/crm_lead/{record.id}',
+        actionUrl: '/crm_lead/{{record.id}}',
       },
     },
 

@@ -1,5 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 type Flow = Automation.Flow;
 
@@ -90,7 +91,7 @@ export const CaseEscalationStampFlow: Flow = {
   runAs: 'system',
 
   variables: [
-    // Supplied by the caller's `subflow` node as `input: { recordId: '{recordId}' }`.
+    // Supplied by the caller's `subflow` node, whose `input` envelope reads its own `recordId`.
     { name: 'recordId', type: 'text', isInput: true, isOutput: false },
   ],
 
@@ -104,13 +105,13 @@ export const CaseEscalationStampFlow: Flow = {
       id: 'stamp', type: 'update_record', label: 'Stamp Escalation Flags',
       config: {
         objectName: 'crm_case',
-        filter: { id: '{recordId}' },
+        filter: { id: cel`recordId` },
         // ⛔ Do not add fields here. Every column in this node is written with
         // the elevated context; anything a user can legitimately type belongs
         // in `escalate_case` instead.
         fields: {
           is_escalated: true,
-          escalated_date: '{NOW()}',
+          escalated_date: cel`isoDatetime(now())`,
         },
       },
     },
