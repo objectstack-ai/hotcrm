@@ -16,27 +16,8 @@ import { App } from '@objectstack/spec/ui';
 const HOTCRM_ICON =
   'data:image/svg+xml,' +
   '<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="HotCRM">%0A' +
-  '  <defs>%0A' +
-  '    <linearGradient id="bg" x1="0" y1="0" x2="256" y2="256" gradientUnits="userSpaceOnUse">%0A' +
-  '      <stop offset="0" stop-color="%23FB923C"/>%0A' +
-  '      <stop offset="1" stop-color="%23EA580C"/>%0A' +
-  '    </linearGradient>%0A' +
-  '    <linearGradient id="flame" x1="64" y1="80" x2="192" y2="176" gradientUnits="userSpaceOnUse">%0A' +
-  '      <stop offset="0" stop-color="%23FFFBEB"/>%0A' +
-  '      <stop offset="1" stop-color="%23FED7AA"/>%0A' +
-  '    </linearGradient>%0A' +
-  '  </defs>%0A' +
-  '%0A' +
-  '  <rect x="16" y="16" width="224" height="224" rx="56" fill="url(%23bg)"/>%0A' +
-  '  <rect x="20" y="20" width="216" height="216" rx="52" stroke="%23FFF7ED" stroke-opacity=".30" stroke-width="2"/>%0A' +
-  '%0A' +
-  '  <path d="M73 136c19-45 72-58 107-26 21 19 17 53-8 65-21 11-42-2-58-23-12-18-25-25-43-16Z"%0A' +
-  '        fill="url(%23flame)" fill-opacity=".97"/>%0A' +
-  '  <path d="M183 119c-19 45-72 58-107 26-21-19-17-53 8-65 21-11 42 2 58 23 12 18 25 25 43 16Z"%0A' +
-  '        fill="%23FFF7ED" fill-opacity=".42"/>%0A' +
-  '%0A' +
-  '  <circle cx="128" cy="128" r="20" fill="%237C2D12" fill-opacity=".92"/>%0A' +
-  '  <circle cx="128" cy="128" r="20" stroke="%23FFF7ED" stroke-opacity=".35" stroke-width="2"/>%0A' +
+  '  <rect x="16" y="16" width="224" height="224" rx="56" fill="%23EA580C"/>%0A' +
+  '  <path d="M76 64h40v52h24V64h40v128h-40v-52h-24v52H76z" fill="%23FFFFFF"/>%0A' +
   '</svg>%0A';
 
 /**
@@ -87,8 +68,9 @@ export const CrmApp = App.create({
   // server path: an install serves only what the artifact carries. The console
   // passes each value through untouched — `logo` as the sidebar's `<img src>`,
   // `favicon` as the favicon `link.href` — and a `data:` URI renders in both.
+  // `primaryColor` is the icon's tile fill (#2066): the mark and the theme are one orange.
   branding: {
-    primaryColor: '#4169E1',
+    primaryColor: '#EA580C',
     logo: HOTCRM_ICON,
     favicon: HOTCRM_ICON,
   },

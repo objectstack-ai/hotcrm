@@ -211,6 +211,33 @@ describe('quote_total_rollup', () => {
     });
   });
 
+  it("adds up on QTE-0007's shape: the header's subtotal is the sum of the line totals beside it (#2069)", async () => {
+    // A 10% quote with an untaxed line and a discounted one, then the rep tries
+    // a 5% rate on the second line, as hosted QTE-0007 carried. On 4.0.1 the
+    // rate reached only that line's Total: lines 10,945 beside a header of
+    // 9,810. Tax is the quote's own amount, so the rate is refused.
+    const quote = await quoteOf({ status: 'draft', discount: 10 });
+    const lines: Rec[] = [];
+    for (const line of [
+      { quantity: 2, unit_price: 5000, discount: 0 }, // 10,000
+      { quantity: 1, unit_price: 1000, discount: 10 }, // 900
+    ]) {
+      lines.push(await repWrites('crm_quote_line_item', 'insert', {
+        crm_quote: quote.id, crm_product: (await productAt(line.unit_price)).id, ...line,
+      }));
+    }
+    const rated = await repWrites('crm_quote_line_item', 'update', { id: lines[1]!.id, tax_rate: 5 })
+      .then(() => null, (e: Rec) => [e.code, e.status]);
+    const q = await settles('crm_quote', quote.id, (row) => expect(row.subtotal).toBe(10_900));
+    const shown = await verify.rows('crm_quote_line_item', { crm_quote: quote.id });
+    expect({
+      lines: shown.reduce((sum, l) => sum + Number(l.total_price), 0),
+      subtotal: q.subtotal,
+      total: q.total_price,
+    }).toEqual({ lines: 10_900, subtotal: 10_900, total: 9_810 }); // 10,900 − 1,090
+    expect(rated, 'a line took a tax rate of its own').toEqual(['INVALID_FIELD', 400]);
+  });
+
   it('skips accepted quotes', async () => {
     const quote = await quoteOf({ status: 'accepted', discount: 0, tax: 0, shipping_handling: 0, total_price: 111 });
     // A line landing on an accepted quote — written by the system, the writer

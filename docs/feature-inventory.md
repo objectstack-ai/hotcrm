@@ -116,7 +116,7 @@
 | QUO-004 | 从商机生成报价 | 屏幕流收集名称/有效期/折扣,按商机金额播种报价定价,并把早期阶段商机推进到 proposal | `src/revenue/flows/quote-generation.flow.ts` + `src/sales/actions/opportunity.actions.ts`(`generate_quote`) |
 | QUO-005 | 接受报价→起草合同 | status 变 accepted 时自动创建 draft 合同(12 个日历月,合同额=报价总价);无联系人时给出具名报错;以系统身份起草,销售代表的接受也能拿到合同 | `src/revenue/objects/quote.hook.ts`(`quote_accepted_contract_draft`) |
 | QUO-006 | 接受报价→商机赢单 | 与起草合同相互独立的另一个 hook,以接受者本人身份:关联商机置 closed_won、补关闭日与 `win_reason='quote_accepted'`;商机被审批锁住时接受本身即被拒绝(`quote_workflow`) | `src/revenue/objects/quote.hook.ts`(`quote_on_accepted`) |
-| QUO-007 | 报价行项目与总额汇总 | 明细对象(`crm_quote_line_item`,受父控、删报价级联,行级税率公式):重算 subtotal/discount_amount/total_price 回写报价,已结报价跳过 | `src/revenue/objects/quote_line_item.object.ts` + `.hook.ts` |
+| QUO-007 | 报价行项目与总额汇总 | 明细对象(`crm_quote_line_item`,受父控、删报价级联,行合计 = 扣除本行折扣后的金额,行项目不单独计税):重算 subtotal/discount_amount/total_price 回写报价,已结报价跳过 | `src/revenue/objects/quote_line_item.object.ts` + `.hook.ts` |
 | QUO-008 | 报价自动过期 | 每日 01:00 把过了 `expiration_date` 的未结报价置 expired | `src/revenue/flows/quote-expiration.flow.ts` |
 | QUO-009 | 报价视图 | 状态看板(按 total_price 汇总)、报价日→失效日日历、总额汇总列表 | `src/revenue/views/quote.view.ts` |
 | QUO-010 | 产品目录对象 | `crm_product`:PRD-{0000} 编号、SKU 租户唯一、类别/产品族、定价(目录价/成本)、图片与 PDF datasheet,全组织可读 | `src/revenue/objects/product.object.ts` |
@@ -247,7 +247,7 @@
 
 | 编号 | 功能 | 说明 | 实现锚点 |
 | --- | --- | --- | --- |
-| ADM-001 | 应用定义与导航 | `crm_enterprise` 应用:7 个导航组(Sales/My Work/Activity/Marketing/Service/Insights/Approvals),royal blue 品牌,落地页为高管仪表板 | `src/sales/apps/crm.app.ts` |
+| ADM-001 | 应用定义与导航 | `crm_enterprise` 应用:7 个导航组(Sales/My Work/Activity/Marketing/Service/Insights/Approvals),橙色品牌,落地页为高管仪表板 | `src/sales/apps/crm.app.ts` |
 | ADM-002 | Sales Home 页 | 三栏首页(sales_rep/manager 默认):4 个实时 KPI、我的线索/交易/任务三个嵌入列表 tab、快速新建、AI 助手引导卡、今日日程 | `src/sales/pages/home.page.ts` |
 | ADM-003 | 启动器与工具条 | App Launcher(应用网格+全局搜索)与 Utility Bar(通知面板、快速笔记、快速搜索),四个 profile 全覆盖 | `src/sales/pages/app_launcher.page.ts`、`src/sales/pages/utility_bar.page.ts` |
 | ADM-004 | 数据导入 | 3 个可复用导入映射(客户/联系人/线索,CSV/XLSX upsert)+ 行业与线索来源同义词表 + 现成模板 | `src/sales/mappings/` + `assets/import-templates/` |

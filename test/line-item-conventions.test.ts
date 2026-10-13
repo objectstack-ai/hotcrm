@@ -129,15 +129,17 @@ describe('formulas resolve from stored values, not from other formulas', () => {
     expect(violations).toEqual([]);
   });
 
-  it('quote line total still applies tax on top of the discounted line amount', () => {
+  it('quote line total is its subtotal: a line carries no tax of its own (#2069)', () => {
     // Inlining `subtotal` must not change the arithmetic. 4 × 100 with a 10%
-    // line discount is 360; an 8% tax rate takes it to 388.80.
-    const source: string = (QuoteLineItem as AnyRec).fields.total_price.expression.source;
-    // The expression is pure arithmetic over `record`, so plain JS evaluates it
-    // identically to CEL — enough to prove the inlining preserved the math.
-    const evaluate = new Function('record', `return ${source};`) as (r: AnyRec) => number;
-    const total = evaluate({ quantity: 4, unit_price: 100, discount: 10, tax_rate: 8 });
-    expect(total).toBeCloseTo(388.8, 10);
+    // line discount is 360 in both, so the lines add up to the quote subtotal.
+    const fields: AnyRec = (QuoteLineItem as AnyRec).fields;
+    // The expressions are pure arithmetic over `record`, so plain JS evaluates
+    // them identically to CEL — enough to prove the inlining preserved the math.
+    const evaluate = (field: string) =>
+      (new Function('record', `return ${fields[field].expression.source};`) as (r: AnyRec) => number)(
+        { quantity: 4, unit_price: 100, discount: 10 },
+      );
+    expect([evaluate('subtotal'), evaluate('total_price')]).toEqual([360, 360]);
   });
 });
 

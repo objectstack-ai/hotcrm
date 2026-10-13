@@ -153,6 +153,7 @@ const caseViews = views.find((v) => v.list?.data?.object === 'crm_case');
 const sharingRules: AnyRec[] = ((stack as AnyRec).sharingRules ?? []) as AnyRec[];
 const flows: AnyRec[] = ((stack as AnyRec).flows ?? []) as AnyRec[];
 const hooks: AnyRec[] = ((stack as AnyRec).hooks ?? []) as AnyRec[];
+const dashboards: AnyRec[] = ((stack as AnyRec).dashboards ?? []) as AnyRec[];
 
 /** A view's `filter[]`, lowered rule by rule into one `$and`. */
 function loweredViewFilter(viewName: string): unknown {
@@ -189,6 +190,12 @@ function flowFilters(flowName: string): unknown[] {
   };
   walk(flow);
   return found;
+}
+
+/** One dashboard widget's `filter` — already a lowered `FilterCondition`. */
+function widgetFilter(dashboardName: string, widgetId: string): unknown {
+  const dashboard = dashboards.find((d) => d.name === dashboardName);
+  return ((dashboard?.widgets ?? []) as AnyRec[]).find((w) => w.id === widgetId)?.filter;
 }
 
 /**
@@ -282,6 +289,14 @@ const LIVE_WORK_CONSUMERS: { name: string; surface: string; excluded: () => stri
     name: 'case_sla_defaults',
     surface: 'close-time breach stamp — src/service/objects/case.hook.ts',
     excluded: () => hookInlineStatusList('case_sla_defaults', 'settledStatuses'),
+  },
+  {
+    // The SLA Violations tile's open-case branch (#2070): beside the flag, it
+    // counts a case still live work whose due date has passed — the sweep's
+    // own selection, read at query time. Only that branch excludes statuses.
+    name: 'sla_violations',
+    surface: 'dashboard widget filter — src/service/dashboards/service.dashboard.ts',
+    excluded: () => excludedValues(widgetFilter('service_dashboard', 'sla_violations'), 'status'),
   },
 ];
 
