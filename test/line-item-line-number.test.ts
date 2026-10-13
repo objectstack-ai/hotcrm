@@ -49,6 +49,22 @@ const seed = { isSystem: true };
 let ql: AnyRec;
 
 /**
+ * The two headers every case files its lines under, written as the seed loader
+ * would. Since 18.0.0-next.0 a non-system write of a detail must name a header
+ * the caller can read (`master_detail`, objectstack#22519), so the headers are
+ * real rows of the shipped parent objects rather than bare ids.
+ */
+const HEADERS = ['p1', 'p2'];
+const header: Record<string, (id: string) => AnyRec> = {
+  crm_opportunity: (id) => ({
+    id, name: `Header ${id}`, crm_account: 'acc_1', amount: 100, stage: 'prospecting', close_date: '2026-12-31',
+  }),
+  crm_quote: (id) => ({
+    id, name: `Header ${id}`, crm_account: 'acc_1', status: 'draft', quote_date: '2026-10-01', expiration_date: '2026-12-31',
+  }),
+};
+
+/**
  * Boot on the shipped schemas. Only the numbering hooks are bound: the price
  * fill and the async rollups are other hooks' behaviour, and a line here carries
  * its own price so none of them is needed to make the insert legal.
@@ -57,10 +73,15 @@ async function boot(withNumbering: boolean) {
   ql = (await ObjectQL.create({
     datasources: { default: new InMemoryDriver({ persistence: false }) },
     objects: {
+      crm_opportunity: byName('crm_opportunity'),
+      crm_quote: byName('crm_quote'),
       crm_opportunity_line_item: byName('crm_opportunity_line_item'),
       crm_quote_line_item: byName('crm_quote_line_item'),
     } as never,
   })) as never;
+  for (const parent of PAIRS.map((p) => p.parentKey)) {
+    for (const id of HEADERS) await ql.insert(parent, header[parent](id), { context: seed });
+  }
   if (withNumbering) {
     bindHooksToEngine(
       ql as never,

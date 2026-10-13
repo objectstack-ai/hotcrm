@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
+import { cel } from '@objectstack/spec';
 import { Account } from '../src/sales/objects/account.object';
 import { AccountViews } from '../src/sales/views/account.view';
 import { ContractRenewalFlow } from '../src/revenue/flows/contract-renewal.flow';
@@ -120,10 +121,10 @@ describe('renewal stays a contract-level process (#1181)', () => {
    */
   it('notifies the contract owner, and names no account renewal owner', () => {
     const notify = nodesOf(ContractRenewalFlow).find((n) => n.type === 'notify');
-    expect(notify?.config?.recipients).toEqual(['{currentContract.owner_id}']);
+    expect(notify?.config?.recipients).toEqual([cel`has(currentContract.owner_id) ? currentContract.owner_id : null`]);
 
     const task = nodesOf(ContractRenewalFlow).find((n) => n.id === 'create_renewal_task');
-    expect(task?.config?.fields?.owner_id).toBe('{currentContract.owner_id}');
+    expect(task?.config?.fields?.owner_id).toEqual(cel`has(currentContract.owner_id) ? currentContract.owner_id : null`);
 
     const whole = JSON.stringify(ContractRenewalFlow);
     for (const name of RETIRED) expect(whole).not.toContain(name);

@@ -106,10 +106,16 @@ export const CaseSlaMonitorFlow: Flow = {
         // `case_sla_defaults`, which applies the same rule on the write that
         // settles a case — so a case settled late is flagged even when this
         // sweep never reached it, or never runs (#2070).
+        //
+        // "Now" is the query engine's own `{now}` placeholder, which an
+        // 18.0.0-next.0 filter operand leaves to the engine as written. It
+        // renders the instant's ISO text, as the retired `{NOW()}` flow token
+        // did, and it is the spelling the SLA Violations tile reads, so the
+        // sweep and the tile say "past due" in one wording.
         filter: {
           status: { $nin: ['resolved', 'closed'] },
           is_sla_violated: false,
-          sla_due_date: { $lt: cel`isoDatetime(now())` },
+          sla_due_date: { $lt: '{now}' },
         },
         limit: 500,
         outputVariable: 'caseList',

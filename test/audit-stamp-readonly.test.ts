@@ -4,6 +4,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-automation';
+import { cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 import stack from './helpers/composed-stack';
 import { OpportunityApprovalFlow, OpportunityApprovalOnCreateFlow } from '../src/sales/flows/opportunity-approval.flow';
@@ -229,7 +230,7 @@ describe('#1666 — crm_opportunity approval stamps are declared readonly', () =
         'pin_mark_approved',
         (OpportunityApprovalFlow as AnyRec).runAs,
         node,
-        { filter: { id: '{rowId}' } },
+        { filter: { id: cel`rowId` } },
       ),
     });
     await engine.execute('pin_mark_approved', { params: { rowId: id }, userId: 'user_1', event: 'manual' } as never);
@@ -249,7 +250,7 @@ describe('#1666 — crm_opportunity approval stamps are declared readonly', () =
         'pin_mark_rejected',
         (OpportunityApprovalFlow as AnyRec).runAs,
         node,
-        { filter: { id: '{rowId}' } },
+        { filter: { id: cel`rowId` } },
       ),
     });
     await engine.execute('pin_mark_rejected', { params: { rowId: id }, userId: 'user_1', event: 'manual' } as never);
@@ -344,7 +345,7 @@ describe('#1667 — crm_campaign_member.added_date is declared readonly', () => 
       expect(node!.type, 'an INSERT on an elevated callee. If this ever becomes update_record it ' +
         'is a different write with different ordering — that is the failure #1667 trades against.').toBe('create_record');
       expect(node!.config.objectName).toBe('crm_campaign_member');
-      expect(node!.config.fields.added_date, 'the stamp itself, taken from source').toBe('{NOW()}');
+      expect(node!.config.fields.added_date, 'the stamp itself, taken from source').toEqual(cel`isoDatetime(now())`);
     }
   });
 
@@ -374,7 +375,7 @@ describe('#1667 — crm_campaign_member.added_date is declared readonly', () => 
         (CampaignLeadMemberEnrollFlow as AnyRec).runAs ?? 'user',
         node,
         // Addressing only — `status` and `added_date` stay exactly as authored.
-        { fields: { ...node.config.fields, crm_campaign: '{rowId}', crm_lead: '{linkId}' } },
+        { fields: { ...node.config.fields, crm_campaign: cel`rowId`, crm_lead: cel`linkId` } },
       ),
     });
     await engine.execute('pin_enrol', {

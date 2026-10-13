@@ -21,8 +21,7 @@ const hookNamed = (hooks: unknown, name: string): AnyRec => {
   return hook;
 };
 import { extractHookBody } from '@objectstack/cli/hook-body';
-import { SysUser, SysMember, SysOrganization } from '@objectstack/platform-objects/identity';
-import { identityObjects } from './helpers/identity-objects';
+import { createIdentityObjectsPlugin } from '@objectstack/plugin-auth';
 
 /**
  * A frozen record must not make the people it references undeletable (#720).
@@ -276,14 +275,22 @@ beforeAll(async () => {
   await kernel.use(new MetadataPlugin({ watch: false, artifactWatch: false, environmentId: 'proj_720' } as never));
   await kernel.use(new ObjectQLPlugin({ environmentId: 'proj_720' } as never));
   // 17.7.0 refuses an object name the registry does not hold (objectstack#21545):
-  // register the identity objects `plugin-auth` would (`test/helpers/identity-objects.ts`).
-  await kernel.use(identityObjects(SysUser, SysMember, SysOrganization) as never);
+  // register the identity objects `plugin-auth` would, through its own preset
+  // (`createIdentityObjectsPlugin`, objectstack#22074).
+  await kernel.use(createIdentityObjectsPlugin() as never);
   // The app's own metadata is the subject — objects and hooks exactly as
   // `objectstack.config.ts` declares them (the rig `cascade-guard-messages`
   // uses, which is the rig #720 was measured with).
   await kernel.use(new AppPlugin(artifact as never, undefined as never, { skipSeedData: true } as never));
   await kernel.bootstrap();
   ql = kernel.getService('objectql');
+  // The install's one organization. Since 18.0.0-next.0 a system write on a
+  // tenant-scoped object takes its organization from the install's ONE
+  // organization and is refused when there is none (ADR-0131 D3/D9,
+  // `SystemWriteOrganizationRequiredError`). `plugin-auth` creates it at boot
+  // under the `single` posture; this kernel mounts no `plugin-auth`, so it
+  // writes the row itself.
+  await ql.insert('sys_organization', { name: 'Default Organization', slug: 'default' }, { context: { isSystem: true } });
 
   const user = await insert('sys_user', { name: 'Erasure Rep', email: 'rep@freeze-cleanup.test' });
   userCtx = { userId: user.id, isSystem: true } as AnyRec;

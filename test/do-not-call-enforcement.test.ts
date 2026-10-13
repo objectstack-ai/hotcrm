@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect, beforeAll, vi } from 'vitest';
+import { cel } from '@objectstack/spec';
 import stack, { hookNamed } from './helpers/composed-stack';
 import { REFUSAL_CODES } from '../src/sales/objects/_refusal';
 import { ScheduleFollowUpFlow } from '../src/sales/flows/schedule-followup.flow';
@@ -351,7 +352,7 @@ describe('the schedule_followup screen flow is covered by the task guard', () =>
     const create = ScheduleFollowUpFlow.nodes.find((n) => n.id === 'create_task') as AnyRec;
     expect(create).toBeTruthy();
     expect(create.config.objectName).toBe('crm_task');
-    expect(create.config.fields.type).toBe('{activityType}');
+    expect(create.config.fields.type).toEqual(cel`has(vars.activityType) ? activityType : null`);
 
     const screen = ScheduleFollowUpFlow.nodes.find((n) => n.id === 'screen_1') as AnyRec;
     const typeField = screen.config.fields.find((f: AnyRec) => f.name === 'activityType');

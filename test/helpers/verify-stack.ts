@@ -123,7 +123,13 @@ export interface Person {
  * Sign up a person and give them the standing a fixture names — position rows
  * (`sys_user_position.position` holds the position NAME, which is what
  * `expandPositionUsers` filters on) and permission-set grants
- * (`sys_user_permission_set.permission_set_id`, the set's row id).
+ * (`sys_user_permission_set.permission_set`, the set's NAME).
+ *
+ * The grant names its set since 18.0.0-next.0 (ADR-0131 D4): no seeder writes
+ * a `sys_permission_set` row for a declared set any more (upstream c8a9783,
+ * #15204 stage 6b-2), so there is no row id to look up. The name is checked
+ * against the sets the booted registry serves, so a misspelt fixture still
+ * fails here, by name, rather than granting nothing.
  *
  * Fixture SETUP, written as the system through `seed`, the way the platform's
  * own bootstrap writes RBAC rows: the person is not the surface under test, and
@@ -141,9 +147,9 @@ export async function signUpPerson(
     await stack.seed('sys_user_position', [{ user_id: id, position }]);
   }
   for (const name of opts.permissionSets ?? []) {
-    const [set] = await stack.rows('sys_permission_set', { name });
-    if (!set) throw new Error(`no permission set named "${name}" is registered on this stack`);
-    await stack.seed('sys_user_permission_set', [{ user_id: id, permission_set_id: set.id }]);
+    const served = stack.metadata.items<{ name?: string }>('permission').some((set) => set.name === name);
+    if (!served) throw new Error(`no permission set named "${name}" is registered on this stack`);
+    await stack.seed('sys_user_permission_set', [{ user_id: id, permission_set: name }]);
   }
   return { token, id };
 }

@@ -1,6 +1,7 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect, beforeAll } from 'vitest';
+import { cel } from '@objectstack/spec';
 import type { VerifyStack } from '@objectstack/verify';
 import stack from './helpers/composed-stack';
 import { OpportunityApprovalFlow } from '../src/sales/flows/opportunity-approval.flow';
@@ -193,7 +194,7 @@ describe('the approval branches leave the gate unable to re-enter', () => {
   it('approve applies the REQUEST to the stage and stamps `approved` in the same write', () => {
     expect(edge('approve')?.target).toBe('apply_status');
     const fields = node('apply_status')?.config?.fields as AnyRec;
-    expect(fields.stage).toBe('{oppRecord.requested_status}');
+    expect(fields.stage).toEqual(cel`oppRecord.requested_status`);
     expect(fields.status_change_approval_status).toBe('approved');
   });
 

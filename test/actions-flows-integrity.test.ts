@@ -2,6 +2,7 @@
 
 import { readdirSync, readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
+import { cel } from '@objectstack/spec';
 import stack from './helpers/composed-stack';
 import { flowNodesDeep } from './helpers/flow-regions';
 import { join } from 'node:path';
@@ -104,10 +105,10 @@ describe('lead_conversion flow contracts', () => {
 
   it('normalizes both account branches onto a bare {accountId} id (no {accountId.id})', () => {
     const contact = nodeOf(f, 'create_contact');
-    expect(contact?.config?.fields?.crm_account).toBe('{accountId}');
+    expect(contact?.config?.fields?.crm_account).toEqual(cel`accountId`);
     // Guard against the earlier full-record vs id confusion resurfacing.
     const json = JSON.stringify(f);
-    expect(json, 'stale {accountId.id} ref — accountId is now a bare id string').not.toContain('{accountId.id}');
+    expect(json, 'stale {accountId.id} ref — accountId is now a bare id string').not.toContain('accountId.id');
   });
 
   it('every select value copied verbatim from the lead is legal on the target object (#531)', () => {
@@ -194,7 +195,7 @@ describe('lead conversion dedupes the contact too', () => {
     expect(find.type).toBe('get_record');
     expect(find.config?.objectName).toBe('crm_contact');
     // Converge on a bare {contactId} id (no stale {contactId.id}).
-    expect(JSON.stringify(f)).not.toContain('{contactId.id}');
+    expect(JSON.stringify(f)).not.toContain('contactId.id');
   });
 });
 

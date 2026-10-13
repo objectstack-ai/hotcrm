@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
+import { cel } from '@objectstack/spec';
 import { CrmSeedData } from '../objectstack.composition';
 import { Forecast } from '../src/sales/objects/forecast.object';
 import { ForecastSnapshotFlow } from '../src/sales/flows/forecast-snapshot.flow';
@@ -194,16 +195,18 @@ describe('the seeds stay out of the window forecast_snapshot owns (#702)', () =>
     // guard must be re-derived rather than left passing for a stale reason.
     expect(findNode('find_forecast'), 'forecast_snapshot has no find_forecast node').toBeDefined();
     expect(sweptPeriod, 'the sweep writes no fixed period any more').toMatch(/^(month|quarter)$/);
-    expect(String(sweepLookup.owner_id), 'the sweep lookup is no longer owner-scoped')
-      .toMatch(/\{currentOwner\.\w+\}/);
+    expect(String((sweepLookup.owner_id as { source?: unknown })?.source), 'the sweep lookup is no longer owner-scoped')
+      .toMatch(/^currentOwner\.\w+$/);
     // ⚠️ These two are SPELLING guards, and only that. They pin the window
-    // against a widening edit; they say nothing about whether `{TODAY()}` still
+    // against a widening edit; they say nothing about whether "today" still
     // MEANS anything, because they never execute the filter — which is how the
-    // rc.5 → rc.6 change in the token's treatment passed under them unnoticed
-    // (#1107). The execution guard lives in `test/flow-filter-today-token.test.ts`
-    // and must stay green beside these.
-    expect(sweepLookup.period_start).toEqual({ $lte: '{TODAY()}' });
-    expect(sweepLookup.period_end).toEqual({ $gte: '{TODAY()}' });
+    // rc.5 → rc.6 change in the `{TODAY()}` token's treatment passed under them
+    // unnoticed (#1107). The execution guard lives in
+    // `test/flow-filter-today-token.test.ts` and must stay green beside these.
+    // Since 18.0.0-next.0 the operand is the CEL value envelope the platform's
+    // migration entry prescribes for `{TODAY()}`.
+    expect(sweepLookup.period_start).toEqual({ $lte: cel`isoDate(today())` });
+    expect(sweepLookup.period_end).toEqual({ $gte: cel`isoDate(today())` });
   });
 
   it('no seeded forecast row lands inside that window', () => {
