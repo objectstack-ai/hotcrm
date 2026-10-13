@@ -40,8 +40,8 @@ type Flow = Automation.Flow;
  *
  * ⛔ Do NOT reach for `status: 'draft'` as the off switch instead, and ⛔ not
  * `'obsolete'` either. Both readings are measured and recorded in
- * `lead-conversion-approval.flow.ts`'s docstring on the pinned
- * `@objectstack/service-automation` 17.4.0: draft flows still fire their
+ * `lead-conversion-approval.flow.ts`'s docstring on
+ * `@objectstack/service-automation` 17.4.0, the pin at that taking: draft flows still fire their
  * triggers, and `isFlowEnabled` composes `obsolete` with the installation's
  * activation ledger into a gate no install can ever turn ON. ⛔ Do not
  * re-derive it here.
