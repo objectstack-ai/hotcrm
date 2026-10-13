@@ -3,6 +3,12 @@
 import type { Dashboard } from '@objectstack/spec/ui';
 
 /**
+ * The one dataset every widget below binds (`case_metrics`), written once and
+ * passed by shorthand (`dataset,`) rather than spelled out on each widget.
+ */
+const dataset = 'case_metrics';
+
+/**
  * Customer Service Dashboard
  *
  * Case load, SLA health, and resolution performance for the support team.
@@ -86,7 +92,7 @@ export const ServiceDashboard: Dashboard = {
       type: 'metric',
       filter: { is_closed: false },
       colorVariant: 'orange',
-      dataset: 'case_metrics', values: ['case_count'],
+      dataset, values: ['case_count'],
       layout: { x: 0, y: 0, w: 3, h: 2 },
     },
     {
@@ -96,7 +102,7 @@ export const ServiceDashboard: Dashboard = {
       type: 'metric',
       filter: { priority: 'critical', is_closed: false },
       colorVariant: 'danger',
-      dataset: 'case_metrics', values: ['case_count'],
+      dataset, values: ['case_count'],
       layout: { x: 3, y: 0, w: 3, h: 2 },
     },
     {
@@ -106,7 +112,7 @@ export const ServiceDashboard: Dashboard = {
       type: 'metric',
       filter: { is_closed: true },
       colorVariant: 'blue',
-      dataset: 'case_metrics', values: ['avg_resolution'],
+      dataset, values: ['avg_resolution'],
       layout: { x: 6, y: 0, w: 3, h: 2 },
     },
     {
@@ -116,7 +122,7 @@ export const ServiceDashboard: Dashboard = {
       type: 'metric',
       filter: { is_sla_violated: true },
       colorVariant: 'warning',
-      dataset: 'case_metrics', values: ['case_count'],
+      dataset, values: ['case_count'],
       layout: { x: 9, y: 0, w: 3, h: 2 },
     },
 
@@ -128,7 +134,7 @@ export const ServiceDashboard: Dashboard = {
       type: 'donut',
       filter: { is_closed: false },
       colorVariant: 'blue',
-      dataset: 'case_metrics', dimensions: ['status'], values: ['case_count'],
+      dataset, dimensions: ['status'], values: ['case_count'],
       layout: { x: 0, y: 2, w: 4, h: 4 },
       chartConfig: {
         showLegend: true,
@@ -143,7 +149,7 @@ export const ServiceDashboard: Dashboard = {
       type: 'pie',
       filter: { is_closed: false },
       colorVariant: 'warning',
-      dataset: 'case_metrics', dimensions: ['priority'], values: ['case_count'],
+      dataset, dimensions: ['priority'], values: ['case_count'],
       layout: { x: 4, y: 2, w: 4, h: 4 },
       chartConfig: {
         showLegend: true,
@@ -158,7 +164,7 @@ export const ServiceDashboard: Dashboard = {
       description: 'Where our cases are coming from',
       type: 'bar',
       colorVariant: 'purple',
-      dataset: 'case_metrics', dimensions: ['origin'], values: ['case_count'],
+      dataset, dimensions: ['origin'], values: ['case_count'],
       layout: { x: 8, y: 2, w: 4, h: 4 },
       chartConfig: {
         showLegend: false,
@@ -190,7 +196,7 @@ export const ServiceDashboard: Dashboard = {
       // is the intended reading.
       filterBindings: { dateRange: false },
       colorVariant: 'blue',
-      dataset: 'case_metrics', dimensions: ['created_at'], values: ['case_count'],
+      dataset, dimensions: ['created_at'], values: ['case_count'],
       layout: { x: 0, y: 6, w: 8, h: 4 },
       chartConfig: {
         showLegend: false,
@@ -216,7 +222,7 @@ export const ServiceDashboard: Dashboard = {
       // compliance. The key is gone rather than left pretending: a measure
       // that means what the widget says is the fix, and the measure's own
       // label prints under the number, so the two cannot drift apart again.
-      dataset: 'case_metrics', values: ['sla_compliance_rate'],
+      dataset, values: ['sla_compliance_rate'],
       layout: { x: 8, y: 6, w: 4, h: 4 },
       chartConfig: {
         showLegend: false,
@@ -249,7 +255,7 @@ export const ServiceDashboard: Dashboard = {
       description: 'Share of closed cases resolved with a knowledge article',
       type: 'metric',
       colorVariant: 'success',
-      dataset: 'case_metrics', values: ['kb_deflection_rate'],
+      dataset, values: ['kb_deflection_rate'],
       layout: { x: 0, y: 10, w: 4, h: 2 },
     },
     {
@@ -258,7 +264,7 @@ export const ServiceDashboard: Dashboard = {
       description: 'Closed cases pointing at the article that resolved them',
       type: 'metric',
       colorVariant: 'blue',
-      dataset: 'case_metrics', values: ['kb_resolved_count'],
+      dataset, values: ['kb_resolved_count'],
       layout: { x: 4, y: 10, w: 4, h: 2 },
     },
     {
@@ -267,7 +273,7 @@ export const ServiceDashboard: Dashboard = {
       description: 'The denominator behind the deflection rate',
       type: 'metric',
       colorVariant: 'default',
-      dataset: 'case_metrics', values: ['closed_count'],
+      dataset, values: ['closed_count'],
       layout: { x: 8, y: 10, w: 4, h: 2 },
     },
     {
@@ -277,7 +283,7 @@ export const ServiceDashboard: Dashboard = {
       type: 'table',
       filter: { is_closed: true },
       colorVariant: 'default',
-      dataset: 'case_metrics', dimensions: ['resolved_article'], values: ['kb_resolved_count'],
+      dataset, dimensions: ['resolved_article'], values: ['kb_resolved_count'],
       layout: { x: 0, y: 12, w: 12, h: 4 },
       options: {
         sortBy: 'kb_resolved_count',
@@ -302,7 +308,7 @@ export const ServiceDashboard: Dashboard = {
       // ANDing an agent pick into "mine" empties the widget for anyone else.
       filterBindings: { owner_id: false },
       colorVariant: 'default',
-      dataset: 'case_metrics', dimensions: ['priority'], values: ['case_count', 'avg_sla_violated'],
+      dataset, dimensions: ['priority'], values: ['case_count', 'avg_sla_violated'],
       layout: { x: 0, y: 16, w: 12, h: 4 },
       options: {
         sortBy: 'case_count',
