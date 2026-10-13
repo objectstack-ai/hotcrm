@@ -193,6 +193,49 @@ function ceilingOf(module: string, label: string): number {
 /** The verdict line's label, exactly as the gate spells it. */
 const verdictLabel = (module: string, label: string) => `${module} ${label}`;
 
+/**
+ * Re-declare the SANDBOX gate's committed rows in the ANCHORED kind, for the
+ * cases about the anchored advisory, and return the sandbox's ceilings by
+ * verdict label.
+ *
+ * Since #2031 every committed ceiling is RULED (the ×1.5 grant), and a RULED
+ * row is exempt from the advisory by design (#1607), so the real table no
+ * longer holds a row that exercises it. These cases exercise it against a
+ * sandbox gate that declares it: the technique the RULED branch below used
+ * while the committed table held no ruled row, and strictly stronger than
+ * pinning whatever the committed table happens to hold. An anchored ceiling is
+ * `anchor()` of some reading, a multiple of 1,000, and a grant such as 88,500
+ * is not one, so each RULED row becomes the largest multiple of 1,000 at or
+ * under its grant; a row already ANCHORED keeps its committed constant. The
+ * package, the label, the order and every other line are the gate's own, and a
+ * row this helper cannot find fails here rather than leaving the case to run
+ * against the ruled table.
+ */
+function anchoredSandbox(): Map<string, number> {
+  const gatePath = join(root, GATE);
+  let text = readFileSync(gatePath, 'utf8');
+  const ceilings = new Map<string, number>();
+  for (const row of COMMITTED_CEILINGS as { module: string; label: string; ceiling: number; kind: string }[]) {
+    if (row.kind === 'anchored') {
+      ceilings.set(verdictLabel(row.module, row.label), row.ceiling);
+      continue;
+    }
+    const anchored = Math.floor(row.ceiling / 1000) * 1000;
+    const committed = `{ module: '${row.module}', label: '${row.label}', ceiling: ${row.ceiling}, kind: CEILING_KIND.RULED }`;
+    expect(
+      text.split(committed).length - 1,
+      `the sandbox gate carries no row '${committed}' — teach anchoredSandbox() the new shape`,
+    ).toBe(1);
+    text = text.replace(
+      committed,
+      `{ module: '${row.module}', label: '${row.label}', ceiling: ${anchored}, kind: CEILING_KIND.ANCHORED }`,
+    );
+    ceilings.set(verdictLabel(row.module, row.label), anchored);
+  }
+  writeFileSync(gatePath, text);
+  return ceilings;
+}
+
 let root: string;
 
 beforeEach(() => {
@@ -603,7 +646,10 @@ describe('source token ratchet — the ratchet itself', () => {
     // Under 「给 5% 缓冲」 a healthy scope carries thousands of tokens of
     // headroom by design. An advisory that fired on that would instruct every
     // author to undo the ruling, so it triggers on relative drift instead — and
-    // when it does, it names the ceiling `anchor()` would commit today.
+    // when it does, it names the ceiling `anchor()` would commit today. On a
+    // sandbox gate whose rows are ANCHORED (`anchoredSandbox`): every committed
+    // row is RULED since #2031, and the advisory is the anchored kind's.
+    const sandbox = anchoredSandbox();
     write(biz('crm_thing.object.ts'), 'export const a = 1;\n');
     write(ux('thing.view.ts'), 'export const c = 2;\n');
 
@@ -613,8 +659,8 @@ describe('source token ratchet — the ratchet itself', () => {
     expect(tiny.output).toContain('re-anchor this ceiling to ~1,000');
 
     // A scope sitting inside the buffer says nothing at all: it draws a clean ✓
-    // and no advisory under it. Size that scope from the COMMITTED ceiling
-    // rather than from a literal — the largest reading whose `anchor()` is
+    // and no advisory under it. Size that scope from the sandbox's anchored
+    // ceiling rather than from a literal — the largest reading whose `anchor()` is
     // exactly this ceiling is the freshly-anchored one, the canonical "inside
     // the buffer", and that is what this case is about. It stays true at every
     // ceiling: the headroom it leaves is BUFFER/(1 + BUFFER) of the reading,
@@ -627,7 +673,7 @@ describe('source token ratchet — the ratchet itself', () => {
     // only re-anchoring exposes it: at a 39,000 or 41,000 ceiling
     // `Math.round` is off by one token and `anchor()` is off by a thousand.
     // `expect(anchor(...))` below is the assertion that catches it.
-    const ceiling = ceilingOf(SCOPE, 'interaction layer');
+    const ceiling = sandbox.get(verdictLabel(SCOPE, 'interaction layer'))!;
     const target = Math.floor(ceiling / (1 + BUFFER));
 
     // Fill to exactly `target` tokens. `~tokens` is stripped chars / 4, so
@@ -660,8 +706,8 @@ describe('source token ratchet — the ratchet itself', () => {
   /**
    * The second half of that advisory, and #1928 is what made it necessary.
    *
-   * `anchor()` rounds up to the next 1,000. On `src/sales`'s 59,000 that step is
-   * noise; on `src/marketing`'s interaction ceiling of 1,000 it IS the ceiling —
+   * `anchor()` rounds up to the next 1,000. On a ceiling the size of `src/sales`'s
+   * that step is noise; on an interaction ceiling of 1,000 it IS the ceiling —
    * every reading from 1 to 952 anchors to exactly 1,000. So a freshly anchored
    * small module sits permanently past the relative trigger (headroom is 14% of
    * a reading of 876) while `anchor()` has nothing lower to offer. Before this,
@@ -671,6 +717,9 @@ describe('source token ratchet — the ratchet itself', () => {
    * reader to skip the line on the run where it means something.
    */
   it('offers a re-anchor only when `anchor()` would commit a LOWER number', () => {
+    // Against the sandbox's ANCHORED rows: the committed ones are RULED since
+    // #2031, and a ruled row is never offered a re-anchor at all.
+    const sandbox = anchoredSandbox();
     write(biz('crm_thing.object.ts'), 'export const a = 1;\n');
     write(ux('thing.view.ts'), 'export const c = 2;\n');
 
@@ -680,7 +729,8 @@ describe('source token ratchet — the ratchet itself', () => {
 
     let offered = 0;
     let suppressed = 0;
-    for (const row of COMMITTED_CEILINGS as { module: string; label: string; ceiling: number }[]) {
+    for (const committed of COMMITTED_CEILINGS as { module: string; label: string }[]) {
+      const row = { ...committed, ceiling: sandbox.get(verdictLabel(committed.module, committed.label))! };
       const tokens = measureIn(row.module)[row.label].tokens;
       const at = lines.findIndex((l) => l.includes(`✓ ${verdictLabel(row.module, row.label)} ~`));
       expect(at, `no ✓ row for '${verdictLabel(row.module, row.label)}'`).toBeGreaterThan(-1);
@@ -721,23 +771,26 @@ describe('source token ratchet — the ratchet itself', () => {
     // ruled row that is an instruction, printed as this gate's own
     // recommendation, to hand back the headroom a maintainer had just granted.
     //
-    // ⚠️ No committed ceiling is RULED today. #1905 re-anchored onto the
-    // `src/sales/` reading, retiring the #1601 grant along with the surface it
-    // was about, and #1928 anchored all twelve. The kind is still the one the
-    // next grant declares, so the branch is exercised against a sandbox gate
-    // that declares it, rather than against whatever the committed table
-    // happens to hold. That is strictly stronger than pinning a real ruled row:
-    // it no longer passes by accident the day the table has one, and no longer
-    // goes vacuous the day it does not.
+    // ⚠️ Both branches run against a sandbox gate rather than against whatever
+    // the committed table happens to hold. Until #2031 no committed ceiling was
+    // RULED, so the ruled branch was the constructed one; since #2031's ×1.5
+    // grant every committed ceiling is RULED, so the ANCHORED control is
+    // constructed too (`anchoredSandbox`), and the ruled branch below patches
+    // one of its rows back. That is strictly stronger than pinning a real row
+    // of either kind: it no longer passes by accident the day the table holds
+    // one, and no longer goes vacuous the day it does not. The committed RULED
+    // rows themselves are the next case's.
     //
     // Which rows nag is still DERIVED from the kinds the gate under test
     // declares, never listed here: the exemption keys on the ruled/anchored
     // distinction rather than on a label, so a case naming a layer would pass
     // for the wrong reason.
+    const sandbox = anchoredSandbox();
+    const sandboxCeiling = (label: string) => sandbox.get(verdictLabel(SCOPE, label))!;
     write(biz('crm_thing.object.ts'), 'export const a = 1;\n');
     write(ux('thing.view.ts'), 'export const c = 2;\n');
 
-    // The ANCHORED control, against the real gate: the app package's rows nag.
+    // The ANCHORED control, against the sandbox gate: the app package's rows nag.
     const { status, output } = run(root);
     expect(status).toBe(0);
     const scopes = measure();
@@ -751,10 +804,11 @@ describe('source token ratchet — the ratchet itself', () => {
       // Non-vacuity: the row really is past the trigger AND `anchor()` really
       // has a lower number to offer, so it WOULD nag if the kind were not
       // consulted. Both halves, since #1928 added the second one.
-      expect(ceilingOf(SCOPE, row.label) - tokens, row.label).toBeGreaterThan(tokens * 2 * BUFFER);
-      expect(anchor(tokens), row.label).toBeLessThan(ceilingOf(SCOPE, row.label));
+      expect(sandboxCeiling(row.label) - tokens, row.label).toBeGreaterThan(tokens * 2 * BUFFER);
+      expect(anchor(tokens), row.label).toBeLessThan(sandboxCeiling(row.label));
 
-      expect(row.kind, `${row.label} — this control assumes every committed ceiling is anchored`)
+      // Read off the gate's own report: the control's rows really are anchored.
+      expect(scopes[row.label].kind, `${row.label} — this control runs on anchored rows`)
         .toBe('anchored');
       const lines = output.split('\n');
       const at = lines.findIndex((l) => l.includes(`✓ ${verdictLabel(SCOPE, row.label)} ~`));
@@ -765,9 +819,9 @@ describe('source token ratchet — the ratchet itself', () => {
       // would pass every other assertion in this case.
       expect(under, row.label).toContain('over twice the 5% buffer');
       expect(under, row.label).toContain(`re-anchor this ceiling to ~${fmt(anchor(tokens))}`);
-      expect(lines[at], row.label).toContain(`ceiling ~${fmt(ceilingOf(SCOPE, row.label))}`);
+      expect(lines[at], row.label).toContain(`ceiling ~${fmt(sandboxCeiling(row.label))}`);
       expect(lines[at], row.label).toContain(
-        `headroom ~${fmt(ceilingOf(SCOPE, row.label) - tokens)}`,
+        `headroom ~${fmt(sandboxCeiling(row.label) - tokens)}`,
       );
     }
 
@@ -779,7 +833,7 @@ describe('source token ratchet — the ratchet itself', () => {
     // a patch that matched nothing from passing silently.
     const gatePath = join(root, GATE);
     const target = new RegExp(
-      `(\\{ module: '${SCOPE}', label: '${RULED_LABEL}', ceiling: ${ceilingOf(SCOPE, RULED_LABEL)}, kind: CEILING_KIND\\.)ANCHORED`,
+      `(\\{ module: '${SCOPE}', label: '${RULED_LABEL}', ceiling: ${sandboxCeiling(RULED_LABEL)}, kind: CEILING_KIND\\.)ANCHORED`,
     );
     const before = readFileSync(gatePath, 'utf8');
     const patched = before.replace(target, '$1RULED');
@@ -811,7 +865,7 @@ describe('source token ratchet — the ratchet itself', () => {
     expect(under).toContain('Lowering it needs a ruling');
     // The ✓ row itself is untouched by the kind: the ceiling and the headroom
     // are still reported, so exempting a row is not hiding it.
-    const ceiling = ceilingOf(SCOPE, RULED_LABEL);
+    const ceiling = sandboxCeiling(RULED_LABEL);
     expect(ruledLines[at]).toContain(`ceiling ~${fmt(ceiling)}`);
     expect(ruledLines[at]).toContain(`headroom ~${fmt(ceiling - scopes[RULED_LABEL].tokens)}`);
 
@@ -830,6 +884,38 @@ describe('source token ratchet — the ratchet itself', () => {
     );
     expect(siblingAt, `no ✓ row for '${verdictLabel(sibling, RULED_LABEL)}'`).toBeGreaterThan(-1);
     expect(ruledLines[siblingAt + 1] ?? '').not.toContain('ruled ceiling');
+  });
+
+  it('exempts every committed RULED ceiling, against the real table', () => {
+    // The committed half of #1607, run on the gate's own table (#2031's ×1.5
+    // grant made every committed ceiling RULED). Tiny fixtures put every row far
+    // past the advisory's trigger with `anchor()` offering a lower number, so a
+    // ruled row that were read as anchored would print the instruction to hand
+    // the grant back. Which rows are ruled is read off the committed table, so
+    // a later re-anchoring of one row moves it out of this case on its own.
+    seedScope();
+    const { status, output } = run(root);
+    expect(status).toBe(0);
+    const lines = output.split('\n');
+    const ruled = (COMMITTED_CEILINGS as { module: string; label: string; ceiling: number; kind: string }[]).filter(
+      (row) => row.kind === 'ruled',
+    );
+    expect(ruled.length, 'no committed ceiling is RULED — this case has nothing to run on').toBeGreaterThan(0);
+    for (const row of ruled) {
+      const label = verdictLabel(row.module, row.label);
+      const tokens = measureIn(row.module)[row.label].tokens;
+      // Non-vacuity: it WOULD nag, were the kind not consulted.
+      expect(row.ceiling - tokens, label).toBeGreaterThan(tokens * 2 * BUFFER);
+      expect(anchor(tokens), label).toBeLessThan(row.ceiling);
+      const at = lines.findIndex((l) => l.includes(`✓ ${label} ~`));
+      expect(at, `no ✓ row for '${label}'`).toBeGreaterThan(-1);
+      expect(lines[at], label).toContain(`ceiling ~${fmt(row.ceiling)}`);
+      const under = lines[at + 1] ?? '';
+      expect(under, label).not.toContain('re-anchor this ceiling to');
+      expect(under, label).not.toContain('over twice the 5% buffer');
+      expect(under, label).toContain('ruled ceiling');
+      expect(under, label).toContain('Lowering it needs a ruling');
+    }
   });
 
   it('is red — not silently green — when a measured scope reads as empty', () => {
@@ -1303,20 +1389,24 @@ describe('source token ratchet — the header table is derived from the ceilings
     expect(ruledRows().map(key).sort()).toEqual(declared('ruled'));
     expect(rows().map(key).sort()).toEqual(declared('anchored'));
 
-    // Non-vacuity — one half measured, one half constructed.
+    // Non-vacuity — whichever half the committed table holds is measured, and
+    // BOTH parsers are proven live against a row in their shape, so an empty
+    // half never passes empty-to-empty on a parser that stopped reading.
     //
-    // The anchored half is measured: at least one committed ceiling is
-    // anchored, so that comparison is never empty-to-empty.
-    //
-    // The ruled half cannot be, any more. #1905 re-anchored onto the
-    // `src/sales/` reading, which retired the #1601 grant along with the
-    // whole-tree surface it was about, and #1928 anchored all twelve. That is
-    // the finished state of the table, not a disabled mechanism. What an
-    // empty-to-empty pass WOULD hide is a `RULED_ROW` that has quietly stopped
-    // parsing, so that is asserted directly instead: the parser is proven live
-    // against a row in the shape the header carried one, even while the header
-    // carries none.
-    expect(declared('anchored').length).toBeGreaterThan(0);
+    // Until #2031 the anchored half was the measured one and the ruled half
+    // was empty (#1905 retired the #1601 grant, #1928 anchored all twelve).
+    // #2031's ×1.5 grant turned that round: every committed ceiling is RULED,
+    // the ruled half is measured, and the anchored half is the empty one.
+    expect(declared('ruled').length + declared('anchored').length).toBe(COMMITTED_CEILINGS.length);
+    expect(Math.max(declared('ruled').length, declared('anchored').length)).toBeGreaterThan(0);
+    expect(
+      TABLE_ROW.exec(
+        ' *   src/sales      business semantics   55,986 × 1.05 =  58,785 -> ceil 1k ->  59,000  (headroom 3,014, 5.4%)  2026-09-18',
+      )?.groups,
+      'TABLE_ROW no longer parses a worked row in the shape the header carries one. Teach it the ' +
+        'new shape — leaving the anchored comparison above to pass on two empty sets is exactly the ' +
+        'vacuity this block exists to prevent.',
+    ).toMatchObject({ module: 'src/sales', label: 'business semantics', reading: '55,986', ceiling: '59,000' });
     expect(
       RULED_ROW.exec(
         ' *   src/sales      business semantics   ruled 100,000 — a maintainer grant, no reading derives it   2026-09-05',
@@ -1336,6 +1426,14 @@ describe('source token ratchet — the header table is derived from the ceilings
     for (const row of ruledRows()) {
       // The number printed in the row IS the constant committed below it …
       expect(row.ceiling, row.line).toBe(ceilingOf(row.module, row.label));
+
+      // … the row names the ruling that grants it, and the header carries that
+      // ruling's record — a grant's only record is its ruling (#2031) …
+      const ruling = /#(?<card>\d+) ruling/.exec(row.why)?.groups;
+      expect(ruling, `${row.line}\n  a ruled row must name the ruling that grants it`).toBeDefined();
+      expect(source(), `${row.line}\n  the header carries no record of the #${ruling?.card} ruling`).toContain(
+        `objectstack-ai/hotcrm#${ruling?.card} (comment `,
+      );
 
       // … and the row's own claim, that no reading derives this ceiling, is
       // checked rather than taken on trust.
@@ -1363,7 +1461,22 @@ describe('source token ratchet — the header table is derived from the ceilings
   });
 
   it('commits exactly `anchor(reading)` on every row', () => {
-    expect(rows().length).toBeGreaterThan(0);
+    // Every committed ANCHORED ceiling has its worked row …
+    expect(rows().map(key).sort()).toEqual(
+      (COMMITTED_CEILINGS as { module: string; label: string; kind: string }[])
+        .filter((row) => row.kind === 'anchored')
+        .map(key)
+        .sort(),
+    );
+    // … and the arithmetic below is live even while that set is empty, as it
+    // is since #2031 made every committed ceiling RULED: proven on a worked row
+    // in the shape the header carries one, so an empty loop cannot hide a
+    // parser or an `anchor()` that stopped agreeing with the table.
+    const sample = TABLE_ROW.exec(
+      ' *   src/sales      business semantics   55,986 × 1.05 =  58,785 -> ceil 1k ->  59,000  (headroom 3,014, 5.4%)  2026-09-18',
+    )?.groups;
+    expect(sample, 'TABLE_ROW no longer parses a worked row').toBeDefined();
+    expect(anchor(num(sample!.reading))).toBe(num(sample!.ceiling));
     for (const row of rows()) {
       // The number printed in the row IS the constant committed below it …
       expect(row.ceiling, row.line).toBe(ceilingOf(row.module, row.label));
@@ -1465,6 +1578,9 @@ describe('source token ratchet — the header table is derived from the ceilings
     ).toContain('1928 门禁 改为 多 sales 模块的门禁');
     expect(source()).toContain('给 5% 缓冲');
     expect(source()).toContain('translations + seed 肯定是不需要算 token 的');
+    // #2031's ×1.5 grant, which every committed ceiling now carries.
+    expect(source()).toContain('「hotcrm token 上限提升 50%」');
+    expect(source()).toContain('「暂时只优先处理升级相关的任务」');
   });
 });
 
