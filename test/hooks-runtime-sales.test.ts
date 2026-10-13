@@ -816,23 +816,24 @@ describe('account_protection', () => {
   });
 
   /**
-   * ⚠️ MEASURED DEFECT — reported as a finding on this card, pinned here so the
-   * fix is noticed. The guard lets drafts, expired and terminated contracts
-   * through, and the comment above says they go with the account. Measured on
-   * 17.7.0, the delete is refused all the same — by the engine, on the
-   * account's CONTACTS: the cascade reaches a contact while the contracts
-   * naming it as their required primary contact still exist. (The fixture
-   * carries no deal on the account: a closed one keeps the account by design
-   * since #2019, and would answer before the cascade this case measures.)
+   * The cascade the comment above promises, pinned. The guard lets drafts,
+   * expired and terminated contracts through, and they go with the account.
+   *
+   * Measured on 17.7.0 as a DEFECT: the delete was refused all the same, by the
+   * engine, on the account's CONTACTS — the cascade reached a contact while the
+   * contracts naming it as their required primary contact still existed. On
+   * 18.0.0-next.0 the same fixture deletes, as this case's own failure message
+   * asked to be told, so it now pins the cascade: the account and every one of
+   * its settled contracts are gone. (The fixture carries no deal on the
+   * account: a closed one keeps the account by design since #2019, and would
+   * answer before the cascade this case measures.)
    */
-  it('⚠️ an account whose contracts are all draft, expired or terminated still cannot be deleted (measured defect)', async () => {
-    const err = await refuseDeleteForContracts(['draft', 'in_approval', 'expired', 'terminated'])
-      .then(() => null, (e: Error & Rec) => e);
-    expect(
-      err,
-      'the account was deleted with its settled contracts — the defect is fixed: rewrite this case to pin the cascade',
-    ).toBeTruthy();
-    await refusedByTheEngineNotTheGuard('crm_contract')(err!);
+  it('an account whose contracts are all draft, expired or terminated is deleted, contracts and all', async () => {
+    const acct = await customerWith([], ['draft', 'in_approval', 'expired', 'terminated']);
+    expect(await verify.rows('crm_contract', { crm_account: acct.id }), 'the fixture wrote no contract').toHaveLength(4);
+    await expect(verify.hooks.run('crm_account', 'delete', { id: acct.id }, as(admin))).resolves.toBeDefined();
+    expect(await verify.rows('crm_account', { id: acct.id })).toEqual([]);
+    expect(await verify.rows('crm_contract', { crm_account: acct.id }), 'a settled contract outlived its account').toEqual([]);
   });
 
   it('opportunities are reported before activated contracts', async () => {

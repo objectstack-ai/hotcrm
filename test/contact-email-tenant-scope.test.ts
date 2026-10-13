@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { bootStack, type VerifyStack } from '@objectstack/verify';
 import artifact from '../objectstack.config';
-import { bootOptions, hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
+import { bootOptions, buildArtifactAgain, hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
 
@@ -66,7 +66,9 @@ let accountA: Rec;
 let accountB: Rec;
 let k = 0;
 beforeAll(async () => {
-  orgBound = await bootStack(artifact, bootOptions({ orgContext: true }));
+  // A build of its own: one configuration object holds one live kernel since
+  // 18.0.0-next.0 (objectstack#22301), and the shared boot below is booted too.
+  orgBound = await bootStack(await buildArtifactAgain(), bootOptions({ orgContext: true }));
   admin = await orgBound.signIn();
   adminOrg = String((await orgBound.contextFor(admin)).tenantId ?? '');
   expect(adminOrg, 'the org-bound boot bound the admin to no organization').not.toBe('');

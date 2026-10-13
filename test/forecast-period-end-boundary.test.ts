@@ -11,7 +11,7 @@ import artifact from '../objectstack.config';
 import stack from './helpers/composed-stack';
 import forecastHook from '../src/sales/objects/forecast.hook';
 import { forecasts } from '../src/sales/data/forecast.seed';
-import { bootOptions, hotcrmStack, hotcrmMemoryStack, signUpPerson, type Person } from './helpers/verify-stack';
+import { bootOptions, buildArtifactAgain, hotcrmStack, hotcrmMemoryStack, signUpPerson, type Person } from './helpers/verify-stack';
 
 /**
  * A forecast's window must be the calendar period it is labelled with — at the
@@ -169,8 +169,8 @@ const expectCalendarRefusal = (env: Awaited<ReturnType<typeof refusal>>) => {
  * hook and flow by reference — for the blocks whose claim is what the app does
  * WITHOUT a rule. Booted through the platform's own `bootStack`, like the app.
  */
-const artifactWithout = (...names: string[]) => {
-  const a = artifact as unknown as AnyRec;
+const artifactWithout = (base: typeof artifact, ...names: string[]) => {
+  const a = base as unknown as AnyRec;
   return {
     ...a,
     packages: (a.packages as AnyRec[]).map((p) => ({
@@ -188,7 +188,10 @@ const artifactWithout = (...names: string[]) => {
 
 /** The app booted with `names` removed from `crm_forecast`, and its manager. */
 const deskWithout = async (label: string, names: string[], over: Parameters<typeof bootOptions>[0] = {}): Promise<Desk> => {
-  const verify = await bootStack(artifactWithout(...names), bootOptions(over));
+  // From a build of its own: one configuration object holds one live kernel
+  // since 18.0.0-next.0 (objectstack#22301), and a copy of a live one is not
+  // a configuration of its own.
+  const verify = await bootStack(artifactWithout(await buildArtifactAgain(), ...names), bootOptions(over));
   const carried = ((verify.metadata.object('crm_forecast') as AnyRec).validations as AnyRec[]).map((r) => r.name);
   for (const name of names) expect(carried, `the variant boot still carries ${name}`).not.toContain(name);
   return { verify, manager: await managerOn(verify, label) };
@@ -591,7 +594,7 @@ describe('the window rule is an INVARIANT — it reaches a row already stored wr
     rederived = await legacy('stored before the rule existed, edited without its window');
     await before.verify.stop();
 
-    const verify = await bootStack(artifact, bootOptions({ databaseFile }));
+    const verify = await bootStack(await buildArtifactAgain(), bootOptions({ databaseFile }));
     desk = { verify, manager: await managerOn(verify, 'after-upgrade') };
     for (const id of [frozen, rederived]) {
       expect((await storedForecast(desk, id))?.period_end, 'the legacy row did not survive the restart').toBe('2027-05-15');

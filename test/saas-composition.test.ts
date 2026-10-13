@@ -224,15 +224,23 @@ describe('tenant_admin is an ORG admin, judged by the platform capability regist
     ).toBe('org');
   });
 
-  it('holds the org-scoped presentation-authoring capability (#1369)', () => {
-    // The org-bounded subset of metadata authoring. Its scope is read off the
-    // installed registry, never copied here: if the platform ever widened it,
-    // this and the platform-scoped pin below would both go red.
-    expect(TenantAdminProfile.systemPermissions).toContain('manage_org_presentation');
+  it('holds no presentation-authoring grant: 18.0.0-next.0 retired the org-scoped one (#1369)', () => {
+    // #1369 granted `manage_org_presentation`, the org-bounded subset of
+    // metadata authoring. 18.0.0-next.0 retires it with the per-organization
+    // overlay axis (ADR-0131 D6; the spec's `manage-org-presentation-retired`
+    // entry): it leaves the registry, nothing consults it, and the remedy is to
+    // delete it from every set. Read off the installed registry, so the day the
+    // platform declares an org-scoped authoring capability again this goes red
+    // and #1369 is re-measured rather than forgotten.
     expect(
-      scopeOf.get('manage_org_presentation'),
-      'manage_org_presentation is not org-scoped on the installed platform line — a tenant profile must not hold it',
-    ).toBe('org');
+      scopeOf.has('manage_org_presentation'),
+      'the installed platform declares manage_org_presentation again — re-measure #1369 before granting it',
+    ).toBe(false);
+    expect(TenantAdminProfile.systemPermissions).not.toContain('manage_org_presentation');
+    // The one key that still admits those writes lands them environment-wide,
+    // so a tenant profile may not hold it.
+    expect(scopeOf.get('manage_metadata')).toBe('platform');
+    expect(TenantAdminProfile.systemPermissions).not.toContain('manage_metadata');
   });
 
   it('grants NO platform-scoped capability', () => {

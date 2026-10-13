@@ -10,7 +10,7 @@ import artifact from '../objectstack.config';
 import { CrmFlows as allFlows } from './helpers/src-roster';
 import { regionsOf } from './helpers/flow-regions';
 import {
-  hotcrmStack, bootOptions, signUpPerson, systemUpdate, notificationsTo, type Person,
+  hotcrmStack, bootOptions, buildArtifactAgain, signUpPerson, systemUpdate, notificationsTo, type Person,
 } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
@@ -902,7 +902,9 @@ describe('re-seed × snapshot leaves one row per (owner, period, window) (#702)'
    * live current-quarter deal each, and one person the sweep must skip.
    */
   const bootWorld = async () => {
-    const stack = await bootStack(artifact, bootOptions());
+    // A build of its own (one live kernel per configuration since
+    // 18.0.0-next.0, objectstack#22301).
+    const stack = await bootStack(await buildArtifactAgain(), bootOptions());
     const adminToken = await stack.signIn();
     const adminId = String((await stack.contextFor(adminToken)).userId);
     const repTwo = await signUpPerson(stack, 'rep.two@reseed.flow-scheduled.test', { name: 'Rep Two' });

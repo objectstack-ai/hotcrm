@@ -200,13 +200,15 @@ describe('the spec gate accepts the pair and refuses the half (#880)', () => {
 beforeAll(async () => {
   // The platform's boot: `@objectstack/verify`'s `bootStack` over the shipped
   // artifact — objectql, auth (and its `tenancy` service), security with the
-  // app's own default profile, sharing. On the in-memory datasource this file
-  // has always measured on.
+  // app's own default profile, sharing. On the SQL in-memory datasource — through 17.7.0
+  // `driver-memory`, which on 18.0.0-next.0 refuses every tenant-scoped call
+  // once the boot creates the Default Organization (ADR-0131 D3; `@objectstack/verify`
+  // 34dba5a moves such a leg to the SQL driver).
   //
   // NB: no `hierarchy-scope-resolver` is registered — that service ships in
   // `@objectstack/security-enterprise`, which this repo does not depend on.
   // The manager's edit below must succeed WITHOUT it.
-  verify = await bootStack(artifact, { databaseDriver: 'memory' });
+  verify = await bootStack(artifact);
 
   // Fresh sign-ups are plain members (the stack's first user is its own
   // platform admin), given exactly the standing the fixture names.

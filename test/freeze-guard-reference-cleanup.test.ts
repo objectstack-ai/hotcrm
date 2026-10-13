@@ -271,7 +271,11 @@ const uniq = (): string => `${++seq}`;
 
 beforeAll(async () => {
   kernel = new ObjectKernel({ logger: { level: 'silent' } } as never);
-  await kernel.use(new DefaultDatasourcePlugin({ driver: 'memory', config: {} } as never));
+  // The SQL in-memory driver: `driver-memory` refuses every tenant-scoped call
+  // on 18.0.0-next.0, and a system write here now carries the install's one
+  // organization (below), so this kernel left it (`@objectstack/verify` 34dba5a
+  // names the same move for its own boots).
+  await kernel.use(new DefaultDatasourcePlugin({ driver: 'sqlite-wasm', config: { filename: ':memory:' } } as never));
   await kernel.use(new MetadataPlugin({ watch: false, artifactWatch: false, environmentId: 'proj_720' } as never));
   await kernel.use(new ObjectQLPlugin({ environmentId: 'proj_720' } as never));
   // 17.7.0 refuses an object name the registry does not hold (objectstack#21545):

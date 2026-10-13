@@ -277,18 +277,19 @@ describe('the sweep, the close-time stamp and the tile draw one boundary', () =>
   it('case_sla_monitor selects STRICTLY past-due cases, as caseSlaBreached does', () => {
     // A `$lte` here would flag a case exactly on its deadline as long as it is
     // open, while the close-time stamp calls the same instant "met".
-    expect(sweepSelection().sla_due_date).toEqual({ $lt: '{NOW()}' });
+    expect(sweepSelection().sla_due_date).toEqual({ $lt: '{now}' });
   });
 
   it('the SLA Violations tile counts the flag, or exactly the sweep\'s own selection', () => {
     // The sweep selects "open, past due, not yet flagged"; the tile counts
     // "flagged, or open and past due" — the same selection with the flag
-    // clause folded into the other branch. Only the instant's SPELLING
-    // differs, because the two slots are two dialects: a flow template reads
-    // `{NOW()}`, and a query filter refuses it (FILTER_TOKEN_UNKNOWN) and
-    // spells the current instant `{now}`. The operator is read off the sweep,
-    // so a `$lte` on either side, a different status set, or a third clause
-    // on the sweep turns this red.
+    // clause folded into the other branch. Since 18.0.0-next.0 the two spell
+    // the instant the same way too: a flow filter operand refuses the
+    // `{NOW()}` template token, and the sweep reads the query engine's own
+    // `{now}` placeholder, which the tile reads. So the tile's second branch
+    // IS the sweep's selection, compared whole: a `$lte` on either side, a
+    // different status set, another spelling of the instant, or a third
+    // clause on the sweep turns this red.
     const { is_sla_violated: unflagged, ...selection } = sweepSelection();
     expect(unflagged, 'the sweep no longer selects unflagged cases only').toBe(false);
     const operators = Object.keys(selection.sla_due_date ?? {});
@@ -296,7 +297,7 @@ describe('the sweep, the close-time stamp and the tile draw one boundary', () =>
     expect(tileFilter()).toEqual({
       $or: [
         { is_sla_violated: true },
-        { ...selection, sla_due_date: { [operators[0]!]: '{now}' } },
+        selection,
       ],
     });
   });

@@ -7,7 +7,7 @@ import artifact from '../objectstack.config';
 import stack from './helpers/composed-stack';
 import { AccountApprovalFlow } from '../src/sales/flows/account-approval.flow';
 import { CrmSeedData } from '../objectstack.composition';
-import { hotcrmStack, bootOptions, conditionHolds as holdsOn, signUpPerson, type Person } from './helpers/verify-stack';
+import { hotcrmStack, freshArtifact, bootOptions, conditionHolds as holdsOn, signUpPerson, type Person } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
 
@@ -231,7 +231,9 @@ describe('WITHOUT approvals in the composition — a new account is not stranded
   let bare: VerifyStack;
   let who: { rep: Person; manager: Person };
   beforeAll(async () => {
-    bare = await bootStackOnce(artifact, WITHOUT_APPROVALS_BOOT);
+    // A build of its own: since 18.0.0-next.0 one configuration object holds one
+    // live kernel (objectstack#22301), and the shared boot above is live.
+    bare = await bootStackOnce(await freshArtifact(), WITHOUT_APPROVALS_BOOT);
     who = await people(bare, 'without');
   }, 120_000);
 

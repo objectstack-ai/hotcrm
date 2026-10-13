@@ -60,42 +60,55 @@ beforeAll(async () => {
 // ══════════════════════════════════ premise 1: a flow cannot normalize ══
 
 /**
- * `service-automation`'s value expressions support a small closed vocabulary —
- * `round`, `floor`, `ceil`, `abs`, `min`, `max` (1:1 with the CEL stdlib) plus
- * the whole-token date macros `NOW()` / `TODAY()`. There is no `LOWER`, no
- * `TRIM`, and no string method.
+ * A flow cannot compute the match key `lead_duplicate_check` stores — lower
+ * case, trimmed, internal whitespace collapsed to one space — so it must READ
+ * the stored key rather than fold the company itself.
  *
- * Run on the real engine: each candidate spelling is the value of a
- * `create_record` field in a probe flow of its own, registered through the
- * platform's flow-authoring door (`POST /automation`, as the admin) and run
- * through the trigger door against a real lead. Since 17.3.0
- * (objectstack#11060) a function INSIDE a template hole that the vocabulary
- * does not declare REFUSES the run and names itself — nothing is written. A
- * function written OUTSIDE the braces is not an expression at all: it is
- * template text around a hole, and lands verbatim (measured on 17.7.0 —
- * `LOWER({x})` writes the literal `LOWER(ACME  Corp)`). Neither folds; the one
- * form that does anything is the bare pass-through.
+ * Through 17.7.0 the reason was the template dialect: its value expressions
+ * knew `round` / `floor` / `ceil` / `abs` / `min` / `max` and the date macros,
+ * no string function, and refused an unknown one inside a hole (17.3.0,
+ * objectstack#11060) while one written outside the braces landed verbatim
+ * (`LOWER({x})` wrote `LOWER(ACME  Corp)`).
+ *
+ * 18.0.0-next.0 retires that dialect from flow value slots (the spec's
+ * `flow-value-slot-template-dialect-refused` entry), so every one of those
+ * spellings is now refused at the flow-authoring door and the run never
+ * starts. The value slot speaks CEL instead, and CEL CAN do part of the fold —
+ * `lowerAscii()` and `trim()` exist — but not the third step: there is no
+ * string replacement, so `"ACME  Corp"` folds to `"acme  corp"`, never to the
+ * stored `"acme corp"`. The premise therefore still holds, for a narrower
+ * reason, and both halves of that reason are measured below.
+ *
+ * Run on the real engine: each candidate is the value of a `create_record`
+ * field in a probe flow of its own, registered through the platform's
+ * flow-authoring door (`POST /automation`, as the admin) and run through the
+ * trigger door against a real lead.
  */
-describe('premise: a flow template cannot fold a string', () => {
-  const REFUSED: Record<string, [string, RegExp]> = {
-    fn_lower: ['{LOWER(leadRecord.company)}', /LOWER/],
-    fn_trim: ['{TRIM(leadRecord.company)}', /TRIM/],
-    method_lower: ['{leadRecord.company.toLowerCase()}', /toLowerCase/],
-    parenthesised_method: ['{(leadRecord.company).toLowerCase()}', /toLowerCase/],
+describe('premise: a flow cannot fold a company into its match key', () => {
+  /** The retired template spellings — each refused at the door on 18.0.0-next.0. */
+  const RETIRED: Record<string, string> = {
+    template_passthrough: '{leadRecord.company}',
+    fn_lower: '{LOWER(leadRecord.company)}',
+    fn_trim: '{TRIM(leadRecord.company)}',
+    method_lower: '{leadRecord.company.toLowerCase()}',
+    unwrapped_lower: 'LOWER({leadRecord.company})',
   };
-  const UNWRAPPED = 'LOWER({leadRecord.company})';
-  const PASSTHROUGH = '{leadRecord.company}';
+  const cel = (source: string) => ({ dialect: 'cel', source });
 
   let leadId: string;
-  /** Run a probe writing `value` into a task's subject; the run's refusal (or null) and what it wrote. */
-  const probe = async (key: string, value: string) => {
+  /**
+   * Register a probe writing `value` into a task's subject and, if the door
+   * admits it, run it. Answers the door's status, the run's refusal (or null)
+   * and what it wrote.
+   */
+  const probe = async (key: string, value: unknown) => {
     const name = `probe_fold_${key}`;
     const flow = {
       name, label: 'probe', type: 'autolaunched', status: 'active', runAs: 'system',
       variables: [{ name: 'recordId', type: 'text', isInput: true, isOutput: false }],
       nodes: [
         { id: 'start', type: 'start', label: 'Start', config: {} },
-        { id: 'get_lead', type: 'get_record', label: 'Get Lead', config: { objectName: 'crm_lead', filter: { id: '{recordId}' }, outputVariable: 'leadRecord' } },
+        { id: 'get_lead', type: 'get_record', label: 'Get Lead', config: { objectName: 'crm_lead', filter: { id: cel('recordId') }, outputVariable: 'leadRecord' } },
         {
           id: 'probe', type: 'create_record', label: 'Probe',
           config: { objectName: 'crm_task', fields: { subject: value, description: `probe ${key}`, type: 'follow_up', priority: 'normal', status: 'not_started' } },
@@ -109,17 +122,19 @@ describe('premise: a flow template cannot fold a string', () => {
       ],
     };
     const registered = await verify.apiAs(admin, 'POST', '/automation', flow);
-    expect(registered.status, await registered.clone().text()).toBe(200);
+    const door = { status: registered.status, body: await registered.clone().text() };
     let refusal: string | null = null;
-    try {
-      await verify.flows.run(name, { recordId: leadId }, { as: admin });
-    } catch (e: unknown) {
-      refusal = String((e as Rec).message ?? e);
-    } finally {
-      expect((await verify.apiAs(admin, 'DELETE', `/automation/${name}`)).status).toBe(200);
+    if (registered.status === 200) {
+      try {
+        await verify.flows.run(name, { recordId: leadId }, { as: admin });
+      } catch (e: unknown) {
+        refusal = String((e as Rec).message ?? e);
+      } finally {
+        expect((await verify.apiAs(admin, 'DELETE', `/automation/${name}`)).status).toBe(200);
+      }
     }
     const written = (await verify.rows('crm_task', { description: `probe ${key}` })).map((t) => t.subject);
-    return { refusal, written };
+    return { door, refusal, written };
   };
 
   beforeAll(async () => {
@@ -129,28 +144,34 @@ describe('premise: a flow template cannot fold a string', () => {
     leadId = String(probeLead!.id);
   });
 
-  it('passes the raw value through unchanged — the only thing that works', async () => {
-    expect((await probe('passthrough', PASSTHROUGH)).written).toEqual(['ACME  Corp']);
-  });
-
-  it.each(Object.entries(REFUSED))('refuses the run on an unknown function, naming it — %s', async (key, [value, named]) => {
-    // Through 17.2.0 this run SUCCEEDED and wrote a row of silent wrong answers.
-    const { refusal } = await probe(key, value);
-    expect(refusal).toMatch(/unknown function/i);
-    expect(refusal).toMatch(named);
-  });
-
-  it.each(Object.entries(REFUSED))('writes NOTHING when it refuses — no row of wrong answers — %s', async (key, [value]) => {
-    expect((await probe(`${key}_nothing`, value)).written).toEqual([]);
-  });
-
-  it('a function OUTSIDE the braces is template text — it lands verbatim, unfolded', async () => {
-    // The worst-looking shape, and still no fold: `LOWER(` is literal text
-    // around the `{leadRecord.company}` hole. Pinned as measured, so nobody
-    // mistakes it for a working spelling.
-    const { refusal, written } = await probe('unwrapped_lower', UNWRAPPED);
+  it('passes the raw value through unchanged', async () => {
+    const { door, refusal, written } = await probe('passthrough', cel('leadRecord.company'));
+    expect(door.status, door.body).toBe(200);
     expect(refusal).toBeNull();
-    expect(written).toEqual(['LOWER(ACME  Corp)']);
+    expect(written).toEqual(['ACME  Corp']);
+  });
+
+  it.each(Object.entries(RETIRED))('refuses the retired template spelling at the door, writing nothing — %s', async (key, value) => {
+    const { door, written } = await probe(key, value);
+    expect(door.status, 'a single-brace template in a value slot was admitted').toBe(400);
+    expect(door.body).toMatch(/invalid expression/i);
+    expect(written).toEqual([]);
+  });
+
+  it('folds case and the outer spaces in CEL — but cannot collapse the inner ones', async () => {
+    // Two of the key's three steps exist as CEL functions. The written value
+    // keeps the double space the stored key collapses, so it can never equal
+    // `company_normalized`.
+    const { door, refusal, written } = await probe('lower_trim', cel('leadRecord.company.lowerAscii().trim()'));
+    expect(door.status, door.body).toBe(200);
+    expect(refusal).toBeNull();
+    expect(written).toEqual(['acme  corp']);
+  });
+
+  it('has no string replacement to collapse them with — the door refuses the call', async () => {
+    const { door, written } = await probe('replace', cel('leadRecord.company.replace("  ", " ")'));
+    expect(door.status, 'a string replace was admitted — premise 1 may no longer hold; re-measure').toBe(400);
+    expect(written).toEqual([]);
   });
 });
 

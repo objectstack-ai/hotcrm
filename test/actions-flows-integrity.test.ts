@@ -120,13 +120,21 @@ describe('lead_conversion flow contracts', () => {
     // superset relation itself so drift in either object re-fails CI.
     const leadFields = objects.find((o) => o.name === 'crm_lead')?.fields ?? {};
     const bad: string[] = [];
+    let copies = 0;
     for (const node of f?.nodes ?? []) {
       if (node.type !== 'create_record') continue;
       const targetObject: string = node.config?.objectName ?? '';
       const targetFields = objects.find((o) => o.name === targetObject)?.fields ?? {};
       for (const [target, template] of Object.entries(node.config?.fields ?? {})) {
-        const src = typeof template === 'string' && /^\{leadRecord\.(\w+)\}$/.exec(template)?.[1];
+        // A copied lead field, in either spelling: the 17.x `{leadRecord.x}`
+        // template, or since 18.0.0-next.0 a CEL envelope reading
+        // `leadRecord.x` (guarded to null where the field is optional).
+        const source = typeof template === 'string' ? template : (template as AnyRec | null)?.source;
+        const src = typeof source === 'string'
+          && (/^\{leadRecord\.(\w+)\}$/.exec(source)?.[1]
+            ?? /^(?:has\(leadRecord\.(\w+)\) \? )?leadRecord\.(\w+)(?: : null)?$/.exec(source)?.[2]);
         if (!src) continue;
+        copies++;
         const srcOptions = leadFields[src]?.options;
         const dstOptions = targetFields[target]?.options;
         // Only select→select copies carry enum constraints on both sides.
@@ -139,6 +147,9 @@ describe('lead_conversion flow contracts', () => {
         }
       }
     }
+    // Non-vacuity: a spelling this reader no longer recognises would skip every
+    // copy and pass over nothing.
+    expect(copies, 'no lead field copy was recognised — the reader is stale').toBeGreaterThan(0);
     expect(bad, bad.join('\n')).toEqual([]);
   });
 });
@@ -153,6 +164,7 @@ describe('notify recipients resolve to real audiences', () => {
         for (const spec of to) {
           const s = String(spec);
           const ok =
+            (typeof spec === 'object' && (spec as AnyRec)?.dialect === 'cel') || // CEL envelope → a user id
             s.includes('{') ||                       // template → a real user id / email
             /^(user|role|team|owner_of):/.test(s) ||  // explicit messaging audience selector
             s.includes('@');                          // email

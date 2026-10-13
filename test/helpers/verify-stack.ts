@@ -91,13 +91,44 @@ export const HOTCRM_BOOT: BootOptions = bootOptions();
 export const hotcrmStack = (): Promise<VerifyStack> => bootStackOnce(artifact, HOTCRM_BOOT);
 
 /**
+ * A second build of the app's configuration, from FRESH module instances — for
+ * a suite that keeps a second stack live beside {@link hotcrmStack}.
+ *
+ * Since 18.0.0-next.0 `bootStack` refuses a second live kernel of ONE
+ * configuration object (`RESOURCE_CONFLICT`, objectstack#22301): a live boot
+ * holds references into the configuration's nested definitions and plugin
+ * instances, so a second boot over the same object would share them. The
+ * remedy the refusal names is to build the configuration again from fresh
+ * module instances — never a `{ ...artifact }` copy — which is what
+ * `vi.resetModules()` and a dynamic import do. Built once per module registry,
+ * like the boots themselves.
+ */
+export const buildArtifactAgain = async (): Promise<typeof artifact> => {
+  vi.resetModules();
+  return (await import('../../objectstack.config')).default;
+};
+
+/** {@link buildArtifactAgain}, built once — for a boot shared through `bootStackOnce`. */
+let freshBuild: Promise<typeof artifact> | undefined;
+export const freshArtifact = (): Promise<typeof artifact> => (freshBuild ??= buildArtifactAgain());
+
+/**
  * The app on the SPARSE datasource (`driver-memory`): a column a row was never
  * written with comes back ABSENT rather than NULL — the shape `driver-mongodb`
  * also produces, and the one AGENTS.md's predicate-totality rule is about. Only
- * for a suite whose claim is about that shape.
+ * for a suite whose claim is about that shape. Booted on its own fresh build,
+ * so a suite can hold it beside {@link hotcrmStack}.
+ *
+ * ⚠️ On 18.0.0-next.0 this boot cannot serve a signed-in principal or a system
+ * write: the boot now creates the Default Organization (ADR-0131 D3), so every
+ * such call carries a tenant scope, and `driver-memory` refuses every
+ * tenant-scoped call (`MemoryMultiTenantUnsupportedError`). `@objectstack/verify`
+ * 34dba5a names that limit until ADR-0131 C8 and says to run such a leg on the
+ * SQL in-memory driver.
  */
 export const HOTCRM_MEMORY_BOOT: BootOptions = bootOptions({ databaseDriver: 'memory' });
-export const hotcrmMemoryStack = (): Promise<VerifyStack> => bootStackOnce(artifact, HOTCRM_MEMORY_BOOT);
+export const hotcrmMemoryStack = async (): Promise<VerifyStack> =>
+  bootStackOnce(await freshArtifact(), HOTCRM_MEMORY_BOOT);
 
 /**
  * The names of every object the booted runtime registers that this app does
@@ -135,6 +166,14 @@ export interface Person {
  * own bootstrap writes RBAC rows: the person is not the surface under test, and
  * routing their provisioning through a caller's data door would make the proof
  * depend on that caller's grants. A fresh sign-up is a plain member until then.
+ *
+ * A position row carries the person's organization, as an administrator's
+ * assignment in Setup does (a non-system insert is stamped with the writer's
+ * active organization). Since 18.0.0-next.0 every boot has one — the Default
+ * Organization (ADR-0131 D3) — and every request carries it, and the approval
+ * service's position expansion reads holders of the REQUEST's organization
+ * only, so an organization-less row routes no approval. Permission-set grants
+ * stay organization-less, a grant the platform applies in every organization.
  */
 export async function signUpPerson(
   stack: VerifyStack,
@@ -142,9 +181,11 @@ export async function signUpPerson(
   opts: { name?: string; positions?: string[]; permissionSets?: string[] } = {},
 ): Promise<Person> {
   const token = await stack.signUp(email, undefined, opts.name);
-  const id = String((await stack.contextFor(token)).userId);
+  const context = await stack.contextFor(token);
+  const id = String(context.userId);
+  const organization = context.tenantId ? { organization_id: String(context.tenantId) } : {};
   for (const position of opts.positions ?? []) {
-    await stack.seed('sys_user_position', [{ user_id: id, position }]);
+    await stack.seed('sys_user_position', [{ user_id: id, position, ...organization }]);
   }
   for (const name of opts.permissionSets ?? []) {
     const served = stack.metadata.items<{ name?: string }>('permission').some((set) => set.name === name);
