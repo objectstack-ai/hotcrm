@@ -120,7 +120,20 @@ export const ServiceDashboard: Dashboard = {
       title: 'SLA Violations',
       description: 'Cases that breached their SLA',
       type: 'metric',
-      filter: { is_sla_violated: true },
+      // Counted at READ time (#2070): a case already flagged, OR a case still
+      // open whose deadline has passed. The second branch is the selection
+      // `case_sla_monitor` sweeps — same status set, same strict `$lt` at the
+      // current instant (`{now}` is that instant in a query filter; `{NOW()}`
+      // in a flow template) — so the tile reads true on a deployment that runs
+      // no scheduled work, where nothing flags an open breach. It counts; it
+      // does not act: escalation and the owner's alert still need the sweep.
+      // `test/case-sla-breach-on-close.test.ts` pins the two to one selection.
+      filter: {
+        $or: [
+          { is_sla_violated: true },
+          { status: { $nin: ['resolved', 'closed'] }, sla_due_date: { $lt: '{now}' } },
+        ],
+      },
       colorVariant: 'warning',
       dataset, values: ['case_count'],
       layout: { x: 9, y: 0, w: 3, h: 2 },
