@@ -34,6 +34,13 @@ import { hotcrmStack, signUpPerson, systemUpdate, runShippedHook, type Person } 
  *
  * The truth table is spelled out longhand rather than recomputed from the
  * hook: the expected verdict of each row is what `caseSlaBreached` answers.
+ *
+ * Section 4 is the parity pin for the rule's THIRD reader. The SLA Violations
+ * tile counts at read time — a flagged case, or an open case past its due date
+ * — so it reads true where no sweep runs (#2070, acceptance 3, ruled C). Its
+ * open-case branch is pinned to the selection `case_sla_monitor` makes, first
+ * as metadata and then by running the sweep over the cases the tile counted:
+ * the sweep must flag exactly those, and the tile's number must not move.
  */
 
 type Rec = Record<string, any>;
@@ -250,14 +257,110 @@ describe('the SLA surfaces count the late finishes, through the dataset query pa
   });
 });
 
-// ──────────────────────────── 4. both writers draw the same boundary ──
+// ─────────────── 4. the sweep, the close-time stamp and the tile draw one boundary ──
 
-describe('the sweep and the close-time stamp agree on the boundary instant', () => {
+describe('the sweep, the close-time stamp and the tile draw one boundary', () => {
+  /** The shipped sweep's selection — the one place the open-case side of the rule is written. */
+  const sweepSelection = (): Rec => {
+    const flow = verify.metadata.items<Rec>('flow').find((f) => f.name === 'case_sla_monitor');
+    const query = (flow?.nodes as Rec[] | undefined)?.find((n) => n.id === 'query_breached');
+    expect(query?.config?.filter, 'case_sla_monitor has no query_breached filter').toBeTruthy();
+    return query!.config.filter as Rec;
+  };
+  const tileFilter = (): Rec => {
+    const dashboard = verify.metadata.items<Rec>('dashboard').find((d) => d.name === 'service_dashboard');
+    const tile = (dashboard?.widgets as Rec[] | undefined)?.find((w) => w.id === 'sla_violations');
+    expect(tile, 'service_dashboard has no sla_violations widget').toBeTruthy();
+    return tile!.filter as Rec;
+  };
+
   it('case_sla_monitor selects STRICTLY past-due cases, as caseSlaBreached does', () => {
     // A `$lte` here would flag a case exactly on its deadline as long as it is
     // open, while the close-time stamp calls the same instant "met".
-    const flow = verify.metadata.items<Rec>('flow').find((f) => f.name === 'case_sla_monitor');
-    const query = (flow?.nodes as Rec[] | undefined)?.find((n) => n.id === 'query_breached');
-    expect(query?.config?.filter?.sla_due_date).toEqual({ $lt: '{NOW()}' });
+    expect(sweepSelection().sla_due_date).toEqual({ $lt: '{NOW()}' });
   });
+
+  it('the SLA Violations tile counts the flag, or exactly the sweep\'s own selection', () => {
+    // The sweep selects "open, past due, not yet flagged"; the tile counts
+    // "flagged, or open and past due" — the same selection with the flag
+    // clause folded into the other branch. Only the instant's SPELLING
+    // differs, because the two slots are two dialects: a flow template reads
+    // `{NOW()}`, and a query filter refuses it (FILTER_TOKEN_UNKNOWN) and
+    // spells the current instant `{now}`. The operator is read off the sweep,
+    // so a `$lte` on either side, a different status set, or a third clause
+    // on the sweep turns this red.
+    const { is_sla_violated: unflagged, ...selection } = sweepSelection();
+    expect(unflagged, 'the sweep no longer selects unflagged cases only').toBe(false);
+    const operators = Object.keys(selection.sla_due_date ?? {});
+    expect(operators, 'the sweep compares sla_due_date with something other than one operator').toHaveLength(1);
+    expect(tileFilter()).toEqual({
+      $or: [
+        { is_sla_violated: true },
+        { ...selection, sla_due_date: { [operators[0]!]: '{now}' } },
+      ],
+    });
+  });
+});
+
+// ──────────────── 5. the tile counts an open breach nothing flagged, and the sweep agrees ──
+
+describe('the SLA Violations tile counts open breaches at read time, with no sweep', () => {
+  /**
+   * Cases in every state the tile has to tell apart, none of them flagged by
+   * a sweep — nothing in this file has run one yet. Each row's verdict is
+   * written longhand beside it.
+   */
+  const rows: Record<string, string> = {};
+  const COUNTED = ['openLate', 'parkedLate', 'flaggedLate', 'flaggedRenegotiated'];
+
+  beforeAll(async () => {
+    rows.openLate = await openCase(-5); // open, due five hours ago: counted
+    rows.openOnTime = await openCase(+5); // open, due in five hours: not counted
+    rows.parkedLate = await openCase(-5); // parked on the customer — the clock runs on: counted
+    await systemUpdate(verify, 'crm_case', { id: rows.parkedLate, status: 'waiting_customer' });
+    rows.flaggedLate = await openCase(-5); // flagged AND past due: counted ONCE
+    await systemUpdate(verify, 'crm_case', { id: rows.flaggedLate, is_sla_violated: true });
+    rows.flaggedRenegotiated = await openCase(+5); // flagged, deadline moved out later: counted
+    await systemUpdate(verify, 'crm_case', { id: rows.flaggedRenegotiated, is_sla_violated: true });
+    rows.resolvedOnTime = await openCase(+5); // resolved in time, deadline passed since: not counted
+    await verify.hooks.run('crm_case', 'update', { id: rows.resolvedOnTime, status: 'resolved' }, { as: agent.token });
+    await systemUpdate(verify, 'crm_case', { id: rows.resolvedOnTime, sla_due_date: new Date(Date.now() - HOUR).toISOString() });
+    rows.noDeadline = await openCase(-5); // no due date, no clock: not counted
+    await systemUpdate(verify, 'crm_case', { id: rows.noDeadline, sla_due_date: null });
+  }, 60_000);
+
+  /** The tile's count over these rows, through the booted analytics service, with its SHIPPED binding. */
+  const tileCount = async (): Promise<number> => {
+    const dashboard = verify.metadata.items<Rec>('dashboard').find((d) => d.name === 'service_dashboard');
+    const tile = (dashboard?.widgets as Rec[]).find((w) => w.id === 'sla_violations')!;
+    const dataset = verify.metadata.items<Rec>('dataset').find((d) => d.name === tile.dataset);
+    const analytics = verify.kernel.getService<Rec>('analytics');
+    const res = await analytics.queryDataset(dataset, {
+      measures: tile.values,
+      // The tile's filter ANDed with the scope, as the runtime ANDs a dashboard filter in.
+      runtimeFilter: { $and: [tile.filter, { id: { $in: Object.values(rows) } }] },
+    }, { isSystem: true });
+    return Number((res.rows as Rec[] | undefined)?.[0]?.case_count ?? 0);
+  };
+
+  /** Which of these rows carry the flag. */
+  const flagged = async (): Promise<string[]> => {
+    const stored = await verify.rows('crm_case', { id: { $in: Object.values(rows) } });
+    const byId = new Map(Object.entries(rows).map(([name, id]) => [id, name]));
+    return stored.filter((r: Rec) => r.is_sla_violated === true).map((r: Rec) => byId.get(String(r.id))!).sort();
+  };
+
+  it('counts the flagged cases and the open ones past due — not the flag alone', async () => {
+    expect(await flagged(), 'only the two flagged rows carry the flag').toEqual(['flaggedLate', 'flaggedRenegotiated']);
+    expect(await tileCount()).toBe(COUNTED.length);
+  }, 30_000);
+
+  it('the sweep then flags exactly the open cases the tile already counted, and the number holds', async () => {
+    // The behavioural half of section 4: whatever the two spellings, the
+    // sweep's selection and the tile's open-case branch are one set of rows.
+    const admin = await verify.signIn();
+    await verify.flows.run('case_sla_monitor', {}, { as: admin });
+    expect(await flagged()).toEqual([...COUNTED].sort());
+    expect(await tileCount()).toBe(COUNTED.length);
+  }, 120_000);
 });
