@@ -247,7 +247,7 @@
 
 | 编号 | 功能 | 说明 | 实现锚点 |
 | --- | --- | --- | --- |
-| ADM-001 | 应用定义与导航 | `crm_enterprise` 应用:7 个导航组(Sales/My Work/Activity/Marketing/Service/Insights/Approvals),royal blue 品牌,落地页为高管仪表板 | `src/sales/apps/crm.app.ts` |
+| ADM-001 | 应用定义与导航 | `crm_enterprise` 应用:7 个导航组(Sales/My Work/Activity/Marketing/Service/Insights/Approvals),橙色品牌,落地页为高管仪表板 | `src/sales/apps/crm.app.ts` |
 | ADM-002 | Sales Home 页 | 三栏首页(sales_rep/manager 默认):4 个实时 KPI、我的线索/交易/任务三个嵌入列表 tab、快速新建、AI 助手引导卡、今日日程 | `src/sales/pages/home.page.ts` |
 | ADM-003 | 启动器与工具条 | App Launcher(应用网格+全局搜索)与 Utility Bar(通知面板、快速笔记、快速搜索),四个 profile 全覆盖 | `src/sales/pages/app_launcher.page.ts`、`src/sales/pages/utility_bar.page.ts` |
 | ADM-004 | 数据导入 | 3 个可复用导入映射(客户/联系人/线索,CSV/XLSX upsert)+ 行业与线索来源同义词表 + 现成模板 | `src/sales/mappings/` + `assets/import-templates/` |
