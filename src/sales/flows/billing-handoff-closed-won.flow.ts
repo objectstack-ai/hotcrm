@@ -1,6 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { P } from '@objectstack/spec';
+import { P, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 type Flow = Automation.Flow;
 
@@ -8,11 +8,10 @@ import {
   BILLING_HANDOFF_ENDPOINT,
   BILLING_HANDOFF_EVENT,
   BILLING_HANDOFF_LINE_ITEM_LIMIT,
-  BILLING_HANDOFF_PAYLOAD_VERSION,
   BILLING_HANDOFF_SIGNING_SECRET,
   BILLING_HANDOFF_TIMEOUT_MS,
   LINE_ITEM_FIELDS,
-  accountBlock,
+  billingBody,
   loadAccountNode,
 } from './_billing-endpoint';
 
@@ -131,7 +130,7 @@ export const BillingHandoffClosedWonFlow: Flow = {
       label: 'Load Line Items',
       config: {
         objectName: 'crm_opportunity_line_item',
-        filter: { crm_opportunity: '{record.id}' },
+        filter: { crm_opportunity: cel`record.id` },
         fields: LINE_ITEM_FIELDS,
         // > 1 is what makes `get_record` issue a `find` and bind an ARRAY;
         // omit it and the node calls `findOne` and binds a single row.
@@ -154,25 +153,12 @@ export const BillingHandoffClosedWonFlow: Flow = {
         durable: true,
         timeoutMs: BILLING_HANDOFF_TIMEOUT_MS,
         signingSecret: BILLING_HANDOFF_SIGNING_SECRET,
-        body: {
-          event: BILLING_HANDOFF_EVENT.opportunityClosedWon,
-          version: BILLING_HANDOFF_PAYLOAD_VERSION,
-          occurred_at: '{NOW()}',
-          opportunity: {
-            id: '{record.id}',
-            name: '{record.name}',
-            amount: '{record.amount}',
-            close_date: '{record.close_date}',
-            stage: '{record.stage}',
-            type: '{record.type}',
-            account_id: '{record.crm_account}',
-            owner_id: '{record.owner_id}',
-          },
-          account: accountBlock,
-          // A whole-string single token resolves to the VALUE, not to its
-          // stringification, so the array survives as an array.
-          line_items: '{billingLineItems}',
-        },
+        // One envelope building the whole payload (see `billingBody`). Each
+        // read is the value itself, never its stringification, so the amount
+        // stays a number and the line items an array.
+        body: billingBody(BILLING_HANDOFF_EVENT.opportunityClosedWon, 'opportunity', [
+          'id', 'name', 'amount', 'close_date', 'stage', 'type', ['account_id', 'crm_account'], 'owner_id',
+        ]),
       },
     },
     { id: 'end', type: 'end', label: 'End' },

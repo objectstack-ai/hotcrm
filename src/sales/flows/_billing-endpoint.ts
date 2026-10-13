@@ -1,5 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { cel, expression } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 
 /**
@@ -122,31 +123,62 @@ export const LINE_ITEM_FIELDS = [
   'total_price',
 ];
 
+/** An optional column of the account row, read as `null` where the row lacks it. */
+const accountField = (field: string) => `has(billingAccount.${field}) ? billingAccount.${field} : null`;
+
 /**
- * The account block, shared by both payloads.
+ * The account block, shared by both payloads: a CEL map literal over the
+ * `billingAccount` row {@link loadAccountNode} binds, spliced into each body by
+ * {@link billingBody}.
  *
  * Authored field-by-field rather than passing the row whole: this object IS the
  * contract with the billing system, so it must not silently grow a column the
  * day someone adds a field to `crm_account`.
+ *
+ * `name` is required and `account_number` an autonumber, so both are read
+ * bare. The other four are optional, and a sparse driver (memory, mongodb)
+ * hands back a column the row was never written with ABSENT, which CEL refuses,
+ * so each is guarded to `null`. The 17.x template dropped such a key from the
+ * JSON instead; on the SQL drivers the column is always present and the two
+ * agree.
  */
-export const accountBlock = {
-  id: '{billingAccount.id}',
-  name: '{billingAccount.name}',
-  account_number: '{billingAccount.account_number}',
-  billing_address: '{billingAccount.billing_address}',
-  billing_country: '{billingAccount.billing_country}',
-  phone: '{billingAccount.phone}',
-  website: '{billingAccount.website}',
-};
+export const ACCOUNT_BLOCK =
+  `{'id': billingAccount.id, 'name': billingAccount.name, 'account_number': billingAccount.account_number, ` +
+  `'billing_address': ${accountField('billing_address')}, 'billing_country': ${accountField('billing_country')}, ` +
+  `'phone': ${accountField('phone')}, 'website': ${accountField('website')}}`;
+
+/**
+ * The http `body` of both hand-offs: ONE CEL value envelope building the whole
+ * payload. `key` names the record's own block, and `fields` lists what it
+ * carries, read straight off the triggering `record`: a field under its own
+ * name, or `[key, field]` where the payload names it differently. `record` is
+ * the record-change trigger's, which hands the run every declared field (null
+ * where unset), so these reads take no guard.
+ *
+ * Since 18.0.0-next.0 an http body is one value, evaluated once before the
+ * call, so the durable outbox enqueues exactly what an inline call would send.
+ * A `{…}` token in a nested string is refused there, and an envelope nested in
+ * a literal object would be sent as the object it spells — so the payload is
+ * built by one envelope, not by a literal with envelopes inside it. CEL holds a
+ * map's values to one type, so each literal and each nested map is wrapped in
+ * `dyn()`. `billingLineItems` is a variable read and already dynamic.
+ */
+export const billingBody = (event: string, key: string, fields: (string | [string, string])[]) =>
+  expression(
+    `{'event': dyn('${event}'), 'version': dyn(${BILLING_HANDOFF_PAYLOAD_VERSION}), ` +
+      `'occurred_at': dyn(isoDatetime(now())), ` +
+      `'${key}': dyn({${fields.map((f) => (typeof f === 'string' ? [f, f] : f)).map(([k, f]) => `'${k}': record.${f}`).join(', ')}}), ` +
+      `'account': dyn(${ACCOUNT_BLOCK}), 'line_items': billingLineItems}`,
+  );
 
 /**
  * Read the account named by the triggering record.
  *
  * `crm_account` is `required` + `storage.notNull` on both `crm_opportunity` and
- * `crm_contract`, so the token always resolves on a real row. Left UNGUARDED on
- * purpose: if it ever did resolve to nothing, `get_record` refuses the step and
- * the run fails loudly in Studio's Flow Runs page. For a required field that is the
- * right failure — a silent skip would drop a hand-off with no trace.
+ * `crm_contract`, so the value is always there on a real row. Left UNGUARDED on
+ * purpose: if it were ever absent, the envelope fails the run loudly in Studio's
+ * Flow Runs page. For a required field that is the right failure — a silent skip
+ * would drop a hand-off with no trace.
  */
 export const loadAccountNode = (): Automation.FlowNode => ({
   id: 'load_account',
@@ -154,10 +186,10 @@ export const loadAccountNode = (): Automation.FlowNode => ({
   label: 'Load Account',
   config: {
     objectName: 'crm_account',
-    filter: { id: '{record.crm_account}' },
+    filter: { id: cel`record.crm_account` },
     fields: ACCOUNT_FIELDS,
     // No `limit`: `get_record` calls `findOne` below 2 and binds the single row
-    // itself, which is what `{billingAccount.<field>}` needs.
+    // itself, which is what the account block's `billingAccount.FIELD` reads need.
     outputVariable: 'billingAccount',
   },
 });

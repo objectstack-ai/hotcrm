@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
 import {
-  hotcrmStack, hotcrmMemoryStack, signUpPerson, guestInsert, systemUpdate, type Person,
+  hotcrmStack, signUpPerson, guestInsert, systemUpdate, runScheduledFlow, type Person,
 } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
@@ -39,11 +39,12 @@ type Rec = Record<string, any>;
  * can be done about ownership — and it is the reason the two files do not
  * overlap.
  *
- * It runs on the shipped app booted by `@objectstack/verify`, once per
- * datasource: on SQL an ownerless row holds a NULL `owner_id`, and on the
- * sparse datasource (`driver-memory`, like `driver-mongodb`) a column a row was
- * never written with is ABSENT. The sweep is started through the trigger door
- * as the admin (`flows.run`), and it processes EVERY breached case in the
+ * It runs on the shipped app booted by `@objectstack/verify`, on the SQL
+ * datasource, where an ownerless row holds a NULL `owner_id`. (Until
+ * 18.0.0-next.0 it also ran on `driver-memory`, where such a column is ABSENT;
+ * that driver now refuses every tenant-scoped call, and the #2031 ruling
+ * retired the leg: 「就应该在 sql 上测试，作废内存驱动的测试」.) The sweep is started the way its schedule
+ * trigger starts it (`runScheduledFlow`), and it processes EVERY breached case in the
  * database — the boot's seed cases included — so it is run once first to
  * SETTLE them (flagged, they no longer match), and the fixture's own sweep is
  * the second.
@@ -66,11 +67,7 @@ const iso = (daysFromNow: number): string => {
  * reachable in production:
  *
  *  - NEVER WRITTEN — a web-to-case submission (a guest insert) carries no
- *    owner, and the rota is empty. On SQL the column reads NULL; on the
- *    sparse datasource the key is absent, and an unguarded
- *    `vars.currentCase.owner_id != null` aborts there with `No such key` and
- *    takes the run down exactly the way the empty recipient slate did. Only
- *    `has()` is total.
+ *    owner, and the rota is empty. On SQL the column reads NULL.
  *  - BLANK — '   ', left by a system write (a backfill, an integration; a
  *    person's write is held to a real user). The notify node's own
  *    `toStringList` trims and drops falsy entries, so it reaches the node as
@@ -81,7 +78,6 @@ const OWNERLESS = ['c_unwritten', 'c_blank'] as const;
 
 const DATASOURCES = [
   ['SQL datasource (NULL owner)', hotcrmStack],
-  ['sparse datasource (absent owner)', hotcrmMemoryStack],
 ] as const;
 
 describe.each(DATASOURCES)('case_sla_monitor — an ownerless breached case (#1405), %s', (_label, boot) => {
@@ -108,11 +104,11 @@ describe.each(DATASOURCES)('case_sla_monitor — an ownerless breached case (#14
 
   beforeAll(async () => {
     verify = await boot();
-    const admin = await verify.signIn();
+    await verify.signIn(); // the harness admin, as before: the sweep no longer runs as anyone
     rep1 = await signUpPerson(verify, `rep1.${_label.length}@flow-sla-ownerless-case.test`, { name: 'Rep One' });
     rep2 = await signUpPerson(verify, `rep2.${_label.length}@flow-sla-ownerless-case.test`, { name: 'Rep Two' });
     const rep3 = await signUpPerson(verify, `rep3.${_label.length}@flow-sla-ownerless-case.test`, { name: 'Rep Three' });
-    await verify.flows.run('case_sla_monitor', {}, { as: admin });
+    await runScheduledFlow(verify, 'case_sla_monitor');
     ids = {
       c_first: await breach('First breach', { status: 'in_progress', sla_due_date: iso(-3), owner_id: rep1.id }),
       c_unwritten: await breach('Owner never written', { sla_due_date: iso(-4) }),
@@ -126,8 +122,9 @@ describe.each(DATASOURCES)('case_sla_monitor — an ownerless breached case (#14
       c_future: await breach('Not due yet', { status: 'in_progress', sla_due_date: iso(+5), owner_id: rep3.id }),
     };
     // A terminal failure is recorded, not thrown by the run — and the trigger
-    // door turns a failed run into a refusal, so a dying sweep fails HERE.
-    result = await verify.flows.run('case_sla_monitor', {}, { as: admin });
+    // door turned a failed run into a refusal, as `runScheduledFlow` does, so
+    // a dying sweep fails HERE.
+    result = await runScheduledFlow(verify, 'case_sla_monitor');
     byId = {};
     for (const [key, id] of Object.entries(ids)) byId[key] = (await verify.rows('crm_case', { id }))[0]!;
   }, 120_000);

@@ -1,10 +1,11 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect, beforeAll } from 'vitest';
+import { cel } from '@objectstack/spec';
 import type { VerifyStack } from '@objectstack/verify';
 import { FLOW_REGION_SLOTS_BY_TYPE } from '@objectstack/spec/automation';
 import { CrmFlows as allFlows } from './helpers/src-roster';
-import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, runScheduledFlow, type Person } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
 
@@ -195,17 +196,16 @@ describe('scheduled create_record declares organization_id (#700)', () => {
  */
 /**
  * The runtime half, on the shipped app booted by `@objectstack/verify`: each
- * sweep is started through the trigger door as the admin (`flows.run`) — a
- * schedule run carries no organization of its own — over rows written by the
+ * sweep is started the way its schedule trigger starts it (`runScheduledFlow`)
+ * — a schedule run carries no organization of its own — over rows written by the
  * system into organizations created for the purpose, and what the sweep wrote
  * is read back off the engine.
  */
 let verify: VerifyStack;
-let admin: string;
 let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
-  admin = await verify.signIn();
+  await verify.signIn(); // the harness admin, as before: the sweeps no longer run as anyone
 }, 120_000);
 
 /** A fresh organization row, written as the system. */
@@ -254,7 +254,7 @@ describe('the declared organization_id actually resolves (#700)', () => {
       contract_type: 'subscription', contract_value: 90_000, auto_renewal: true, renewal_notice_days: 30,
       contract_term_months: 12, start_date: day(-345), end_date: day(+20), billing_frequency: 'monthly', payment_terms: 'net_30',
     }]);
-    await verify.flows.run('contract_renewal', {}, { as: admin });
+    await runScheduledFlow(verify, 'contract_renewal');
 
     const tasks = await verify.rows('crm_task', {
       related_to_account: acct.id, subject: `Renewal due: contract ${contract!.contract_number}`,
@@ -274,7 +274,7 @@ describe('the declared organization_id actually resolves (#700)', () => {
       name: `Stalled Deal ${++k}`, stage: 'proposal', stage_entry_date: day(-30), amount: 50_000,
       close_date: '2030-06-30', crm_account: acct.id, owner_id: who.id, organization_id: org,
     }]);
-    await verify.flows.run('opportunity_stagnation', {}, { as: admin });
+    await runScheduledFlow(verify, 'opportunity_stagnation');
 
     const tasks = await verify.rows('crm_task', { related_to_opportunity: deal!.id });
     expect(tasks, 'the sweep created no nudge task').toHaveLength(1);
@@ -292,7 +292,7 @@ describe('the declared organization_id actually resolves (#700)', () => {
       name: `Forecast Deal ${++k}`, owner_id: who.id, stage: 'negotiation', amount: 200_000, approval_status: 'approved',
       close_date: quarterStart(), crm_account: acct.id, organization_id: org,
     }]);
-    await verify.flows.run('forecast_snapshot', {}, { as: admin });
+    await runScheduledFlow(verify, 'forecast_snapshot');
 
     const rows = await verify.rows('crm_forecast', { owner_id: who.id });
     expect(rows, 'the sweep opened no snapshot row').toHaveLength(1);
@@ -360,7 +360,7 @@ describe('forecast_snapshot sums only the target row\u2019s organization (#1372)
 
   it('writes its own organization\u2019s totals, not the sum across both', async () => {
     const { who, orgA } = await crossOrganizationOwner();
-    await verify.flows.run('forecast_snapshot', {}, { as: admin });
+    await runScheduledFlow(verify, 'forecast_snapshot');
 
     const rows = await verify.rows('crm_forecast', { owner_id: who.id });
     expect(rows, 'the sweep opened no snapshot row').toHaveLength(1);
@@ -389,7 +389,7 @@ describe('forecast_snapshot sums only the target row\u2019s organization (#1372)
     // than the cross-tenant total above. Pinned here so a later change to that
     // key has to edit this expectation deliberately rather than drift past it.
     const { who, orgA } = await crossOrganizationOwner();
-    await verify.flows.run('forecast_snapshot', {}, { as: admin });
+    await runScheduledFlow(verify, 'forecast_snapshot');
 
     expect((await verify.rows('crm_forecast', { owner_id: who.id })).map((r) => r.organization_id)).toEqual([orgA]);
   });
@@ -526,11 +526,19 @@ function collectBindings(flow: Rec): Map<string, Binding[]> {
   return out;
 }
 
-/** The inner expression of every `{…}` interpolation in a value, recursively. */
+/**
+ * The expression inside every computed value, recursively: a CEL value
+ * envelope's `source`, the spelling every flow value slot takes since
+ * 18.0.0-next.0 (which refuses the single-brace template dialect), or the
+ * inner expression of a `{…}` hole wherever a string still carries one.
+ */
 function interpolationsIn(value: unknown): string[] {
   if (typeof value === 'string') return [...value.matchAll(/\{([^{}]*)\}/g)].map((m) => m[1]);
   if (Array.isArray(value)) return value.flatMap((v) => interpolationsIn(v));
-  if (isRec(value)) return Object.values(value).flatMap((v) => interpolationsIn(v));
+  if (isRec(value)) {
+    if (value.dialect === 'cel' && typeof value.source === 'string') return [value.source];
+    return Object.values(value).flatMap((v) => interpolationsIn(v));
+  }
   return [];
 }
 
@@ -543,11 +551,17 @@ function interpolationsIn(value: unknown): string[] {
  * `current_pipeline.amount` reads `current_pipeline`.
  */
 function rootVariablesIn(expression: string): string[] {
+  // A CEL string literal reads no variable, and neither does a CEL literal
+  // keyword; `vars.x` is the flow variable `x` read through the variables map.
+  const bare = expression.replace(/'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"/g, "''");
   const roots: string[] = [];
-  for (const match of expression.matchAll(/[A-Za-z_$][A-Za-z0-9_$]*(?:\.[A-Za-z0-9_$]+)*/g)) {
+  for (const match of bare.matchAll(/[A-Za-z_$][A-Za-z0-9_$]*(?:\.[A-Za-z0-9_$]+)*/g)) {
     const path = match[0];
-    if (expression.slice((match.index ?? 0) + path.length).trimStart().startsWith('(')) continue;
-    roots.push(path.split('.')[0]);
+    if (bare.slice((match.index ?? 0) + path.length).trimStart().startsWith('(')) continue;
+    const segments = path.split('.');
+    const root = segments[0] === 'vars' && segments.length > 1 ? segments[1] : segments[0];
+    if (root === 'true' || root === 'false' || root === 'null') continue;
+    roots.push(root);
   }
   return roots;
 }
@@ -671,7 +685,7 @@ function analyseUpdate(node: WriteNode, flow: Rec): Violation[] {
           flow: node.flow,
           nodeId: node.nodeId,
           field,
-          token: `{${expression}}`,
+          token: expression,
           reason: verdict.because,
         });
       }
@@ -727,7 +741,7 @@ describe('scheduled update_record writes only organization-neutral values (#1363
     const tokens = scheduledUpdateNodes
       .flatMap((n) => Object.values(n.fields))
       .flatMap((v) => interpolationsIn(v));
-    expect(tokens.length, 'no update_record field interpolates anything').toBeGreaterThan(0);
+    expect(tokens.length, 'no update_record field computes anything').toBeGreaterThan(0);
     expect(
       tokens.some((t) => rootVariablesIn(t).length > 0),
       'every token parsed as a bare function call — the variable reader is broken',
@@ -817,7 +831,7 @@ const CROSS_ROW_SWEEP_FIXTURE: Rec = {
       id: 'pick_user',
       type: 'assignment',
       label: 'Pick the first user',
-      config: { assignments: { chosenUser: '{userList.0}' } },
+      config: { assignments: { chosenUser: cel`userList[0]` } },
     },
     {
       id: 'find_leads',
@@ -830,7 +844,7 @@ const CROSS_ROW_SWEEP_FIXTURE: Rec = {
       type: 'loop',
       label: 'For Each Lead',
       config: {
-        collection: '{leadList}',
+        collection: cel`leadList`,
         iteratorVariable: 'currentLead',
         body: {
           nodes: [
@@ -840,18 +854,18 @@ const CROSS_ROW_SWEEP_FIXTURE: Rec = {
               label: 'Stamp Owner',
               config: {
                 objectName: 'crm_lead',
-                filter: { id: '{currentLead.id}' },
+                filter: { id: cel`currentLead.id` },
                 fields: {
                   // The crossing: one identity, fetched independently of the
                   // row being written, stamped into whatever organization the
                   // system context happened to select.
-                  owner_id: '{chosenUser.id}',
+                  owner_id: cel`chosenUser.id`,
                   // Must NOT be flagged — a literal carries no tenant.
                   status: 'working',
-                  // Must NOT be flagged — a template function reads no row.
-                  last_touched: '{NOW()}',
+                  // Must NOT be flagged — a function of the clock reads no row.
+                  last_touched: cel`isoDatetime(now())`,
                   // Must NOT be flagged — taken off the swept row itself.
-                  company: '{currentLead.company}',
+                  company: cel`currentLead.company`,
                 },
               },
             },
@@ -876,7 +890,7 @@ describe('the rule goes red on a cross-row write (#1363)', () => {
 
   it('flags the value sourced outside the swept row', () => {
     expect(found.map((v) => v.field)).toEqual(['owner_id']);
-    expect(found[0].token).toBe('{chosenUser.id}');
+    expect(found[0].token).toBe('chosenUser.id');
   });
 
   it('names the whole provenance chain, not just the token', () => {
@@ -913,7 +927,7 @@ describe('the rule goes red on a cross-row write (#1363)', () => {
     // out of a red would be the exemption register.
     const pinned = JSON.parse(JSON.stringify(CROSS_ROW_SWEEP_FIXTURE)) as Rec;
     const getUser = (pinned.nodes as Rec[])[1];
-    (getUser.config as Rec).filter = { organization_id: '{currentLead.organization_id}' };
+    (getUser.config as Rec).filter = { organization_id: cel`currentLead.organization_id` };
 
     const cleared = walkNodes(pinned, 'cross_row_sweep_fixture')
       .filter((n) => n.type === 'update_record')

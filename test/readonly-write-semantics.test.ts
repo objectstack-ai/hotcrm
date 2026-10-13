@@ -5,7 +5,7 @@ import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-automation';
 import type * as Automation from '@objectstack/spec/automation';
-import { P } from '@objectstack/spec';
+import { P, cel } from '@objectstack/spec';
 
 /** The engine's logger, silenced: these suites read results, not log lines. */
 const silentLogger: any = {
@@ -154,7 +154,7 @@ const writeNode = {
   id: 'write', type: 'update_record', label: 'Write Probe',
   config: {
     objectName: PROBE,
-    filter: { id: '{rowId}' },
+    filter: { id: cel`rowId` },
     fields: { locked_flag: true, open_flag: true },
   },
 };
@@ -558,7 +558,7 @@ const callerFlow = (name: string, childName: string): Flow =>
       },
       {
         id: 'stamp', type: 'subflow', label: 'Stamp',
-        config: { flowName: childName, input: { rowId: '{rowId}' } },
+        config: { flowName: childName, input: { rowId: cel`rowId` } },
       },
       {
         // The parent's OWN write, after the child returned. Same object, same
@@ -567,7 +567,7 @@ const callerFlow = (name: string, childName: string): Flow =>
         id: 'parent_write', type: 'update_record', label: 'Parent Write',
         config: {
           objectName: PROBE,
-          filter: { id: '{rowId}' },
+          filter: { id: cel`rowId` },
           fields: { locked_after: true },
         },
       },
@@ -671,7 +671,7 @@ const orderedStamp = (name: string): Flow =>
       { id: 'start', type: 'start', label: 'Start', config: {} },
       {
         id: 'write', type: 'update_record', label: 'Stamp',
-        config: { objectName: ORDERED, filter: { id: '{rowId}' }, fields: { locked_flag: true } },
+        config: { objectName: ORDERED, filter: { id: cel`rowId` }, fields: { locked_flag: true } },
       },
       { id: 'end', type: 'end', label: 'End' },
     ],
@@ -688,11 +688,11 @@ const orderedStamp = (name: string): Flow =>
 const orderedCaller = (name: string, childName: string, reasonFirst: boolean): Flow => {
   const reasonNode = {
     id: 'write_reason', type: 'update_record', label: 'Write Reason',
-    config: { objectName: ORDERED, filter: { id: '{rowId}' }, fields: { reason: '{reason}' } },
+    config: { objectName: ORDERED, filter: { id: cel`rowId` }, fields: { reason: cel`reason` } },
   };
   const stampNode = {
     id: 'stamp', type: 'subflow', label: 'Stamp',
-    config: { flowName: childName, input: { rowId: '{rowId}' } },
+    config: { flowName: childName, input: { rowId: cel`rowId` } },
   };
   const [first, second] = reasonFirst ? [reasonNode, stampNode] : [stampNode, reasonNode];
   return {

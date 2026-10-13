@@ -1,11 +1,12 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect, beforeAll, vi } from 'vitest';
+import { cel } from '@objectstack/spec';
 import stack, { hookNamed } from './helpers/composed-stack';
 import { REFUSAL_CODES } from '../src/sales/objects/_refusal';
 import { ScheduleFollowUpFlow } from '../src/sales/flows/schedule-followup.flow';
 import type { VerifyStack } from '@objectstack/verify';
-import { hotcrmMemoryStack, signUpPerson, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
 
 /**
  * `do_not_call` is enforced (#1180).
@@ -48,9 +49,12 @@ import { hotcrmMemoryStack, signUpPerson, type Person } from './helpers/verify-s
  * `ReferenceError` once lowered) is the build's to refuse: `objectstack build`
  * lowers every registered hook through the platform's `extractHookBody`.
  *
- * On the SPARSE datasource (`driver-memory`) on purpose: `contact_ok` is
- * written without a `do_not_call` key, and only a sparse driver hands that back
- * ABSENT rather than NULL — the shape a guard reading the flag must survive.
+ * On the SQL datasource. Until 18.0.0-next.0 this suite ran on `driver-memory`,
+ * which hands back a column a row was never written with as ABSENT; that driver
+ * now refuses every tenant-scoped call, and the maintainer's ruling on #2031
+ * (「就应该在 sql 上测试，作废内存驱动的测试」) retires its legs. `contact_ok`
+ * is still written without a `do_not_call` key, which is the shape a person
+ * created without the flag has on the datasource the app runs on.
  */
 
 type AnyRec = Record<string, any>;
@@ -67,7 +71,7 @@ let rep: Person;
 const person: Record<string, string> = {};
 
 beforeAll(async () => {
-  verify = await hotcrmMemoryStack();
+  verify = await hotcrmStack();
   rep = await signUpPerson(verify, 'rep@do-not-call.test', {
     name: 'DNC Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
   });
@@ -79,10 +83,9 @@ beforeAll(async () => {
    * scheduling against them.
    *
    * `lead_ok` carries `do_not_call: false` and `contact_ok` OMITS the key
-   * entirely — the two shapes a real driver produces for "not flagged"
-   * (`driver-memory` and `driver-mongodb` return a column that was never written
-   * as ABSENT, not null; see AGENTS.md on predicate totality). Both must pass, or
-   * the guard blocks every ordinary call in the app.
+   * entirely — the two ways a person comes to be "not flagged": set false, or
+   * never written. Both must pass, or the guard blocks every ordinary call in
+   * the app.
    */
   person.account = await create('crm_account', { name: 'DNC Holdings' });
   person.lead_dnc = await create('crm_lead', {
@@ -307,7 +310,7 @@ describe('an unflagged person is unaffected', () => {
     ).resolves.toBeTruthy();
   });
 
-  it('allows an open Call task on a contact whose do_not_call key is ABSENT', async () => {
+  it('allows an open Call task on a contact whose do_not_call was never written', async () => {
     await expect(
       runTask({ type: 'call', status: 'not_started', related_to_contact: OK_CONTACT }),
     ).resolves.toBeTruthy();
@@ -351,7 +354,7 @@ describe('the schedule_followup screen flow is covered by the task guard', () =>
     const create = ScheduleFollowUpFlow.nodes.find((n) => n.id === 'create_task') as AnyRec;
     expect(create).toBeTruthy();
     expect(create.config.objectName).toBe('crm_task');
-    expect(create.config.fields.type).toBe('{activityType}');
+    expect(create.config.fields.type).toEqual(cel`has(vars.activityType) ? activityType : null`);
 
     const screen = ScheduleFollowUpFlow.nodes.find((n) => n.id === 'screen_1') as AnyRec;
     const typeField = screen.config.fields.find((f: AnyRec) => f.name === 'activityType');

@@ -6,8 +6,7 @@ import { DefaultDatasourcePlugin, AppPlugin } from '@objectstack/runtime';
 import { ObjectQLPlugin } from '@objectstack/objectql';
 import { MetadataPlugin } from '@objectstack/metadata';
 import stack from '../objectstack.config';
-import { SysUser, SysMember, SysOrganization } from '@objectstack/platform-objects/identity';
-import { identityObjects } from './helpers/identity-objects';
+import { createIdentityObjectsPlugin } from '@objectstack/plugin-auth';
 
 /**
  * A guard's refusal must name the record that is refusing — never the record
@@ -100,18 +99,30 @@ const uniq = (): string => `${++seq}`;
 
 beforeAll(async () => {
   kernel = new ObjectKernel({ logger: { level: 'silent' } } as never);
-  await kernel.use(new DefaultDatasourcePlugin({ driver: 'memory', config: {} } as never));
+  // The SQL in-memory driver: `driver-memory` refuses every tenant-scoped call
+  // on 18.0.0-next.0, and a system write here now carries the install's one
+  // organization (below), so this kernel left it (`@objectstack/verify` 34dba5a
+  // names the same move for its own boots).
+  await kernel.use(new DefaultDatasourcePlugin({ driver: 'sqlite-wasm', config: { filename: ':memory:' } } as never));
   await kernel.use(new MetadataPlugin({ watch: false, artifactWatch: false, environmentId: 'proj_693' } as never));
   await kernel.use(new ObjectQLPlugin({ environmentId: 'proj_693' } as never));
   // 17.7.0 refuses an object name the registry does not hold (objectstack#21545):
-  // register the identity objects `plugin-auth` would (`test/helpers/identity-objects.ts`).
-  await kernel.use(identityObjects(SysUser, SysMember, SysOrganization) as never);
+  // register the identity objects `plugin-auth` would, through its own preset
+  // (`createIdentityObjectsPlugin`, objectstack#22074).
+  await kernel.use(createIdentityObjectsPlugin() as never);
   // The app's own metadata is the subject — objects and hooks exactly as
   // `objectstack.config.ts` declares them. Seed data is skipped; each test
   // builds the population it needs.
   await kernel.use(new AppPlugin(stack as never, undefined as never, { skipSeedData: true } as never));
   await kernel.bootstrap();
   ql = kernel.getService('objectql');
+  // The install's one organization. Since 18.0.0-next.0 a system write on a
+  // tenant-scoped object takes its organization from the install's ONE
+  // organization and is refused when there is none (ADR-0131 D3/D9,
+  // `SystemWriteOrganizationRequiredError`). `plugin-auth` creates it at boot
+  // under the `single` posture; this kernel mounts no `plugin-auth`, so it
+  // writes the row itself.
+  await ql.insert('sys_organization', { name: 'Default Organization', slug: 'default' }, { context: { isSystem: true } });
 
   const user = await insert('sys_user', { name: 'Acceptance Rep', email: 'rep@cascade-guards.test' });
   // `isSystem` keeps the fixture out of the sharing model (not what this file
@@ -357,20 +368,21 @@ describe('deleting a customer account with activated contracts (#549)', () => {
     expect(await rowsOf('crm_contract', contract.id)).toHaveLength(1);
   });
 
-  it('a draft contract is NOT what the guard refuses — the platform referential pass is', async () => {
-    // MEASURED, and the reason the docs say "an account carrying any contract
-    // cannot be deleted" rather than "drafts cascade": the guard stands down
-    // (no activated contract), then the engine's cascade reaches the CONTACTS
-    // first and stops on `crm_contract.crm_contact`, a required lookup that
-    // cannot be cleared. So the delete is still refused, by the platform and
-    // in its words, and every row stays. If this case starts passing with
-    // `null`, the engine reordered its cascade (contracts before contacts) and
-    // the docs' delete paragraph must be re-taken.
+  it('a draft contract is NOT what the guard refuses — it goes with the account', async () => {
+    // MEASURED. The guard stands down on a draft (no activated contract), and
+    // what follows is the engine's cascade. Through 17.7.0 that cascade reached
+    // the CONTACTS first and stopped on `crm_contract.crm_contact`, a required
+    // lookup that cannot be cleared, so the delete was refused in the platform's
+    // words ("still referenced by 1 Contract record") and every row stayed — the
+    // reason this case once asked to be told if it started answering `null`. On
+    // 18.0.0-next.0 it does: the delete goes through and the draft contract goes
+    // with the account, the cascade `hooks-runtime-sales`'s account_protection
+    // case pins for every settled status. The account docs promise only that an
+    // ACTIVATED contract blocks the delete, which still holds (the case above).
     const { account, contract } = await accountWithContract('draft');
     const message = await deleteAndCatch('crm_account', account.id);
-    expect(message).not.toContain('activated contract');
-    expect(message).toMatch(/still referenced by 1 Contract record/);
-    expect(await rowsOf('crm_account', account.id)).toHaveLength(1);
-    expect(await rowsOf('crm_contract', contract.id)).toHaveLength(1);
+    expect(message, 'the delete of an account carrying only a draft contract was refused').toBeNull();
+    expect(await rowsOf('crm_account', account.id)).toEqual([]);
+    expect(await rowsOf('crm_contract', contract.id), 'the draft contract outlived its account').toEqual([]);
   });
 });

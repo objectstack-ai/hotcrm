@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
+import { cel } from '@objectstack/spec';
 import { ObjectQL } from '@objectstack/objectql';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-automation';
@@ -650,7 +651,7 @@ describe('every variable a flow condition reads is BOUND on every path to it', (
       field.defaultValue,
       'the screen field restates the default instead of deriving it — that is the ' +
         'duplication #1173 removed, moved one level over',
-    ).toBe('{memberSource}');
+    ).toEqual(cel`memberSource`);
     const literals = (flow.variables as AnyRec[])
       .filter((v) => v.name === 'memberSource' && v.defaultValue !== undefined).length +
       (field.defaultValue === 'leads' ? 1 : 0);
@@ -658,10 +659,11 @@ describe('every variable a flow condition reads is BOUND on every path to it', (
 
     // `leadStatus` / `contactDepartment` are the DELIBERATE asymmetry, pinned
     // so a later reader does not "finish the job" by seeding them too. No
-    // condition reads either one — they are interpolated into a `get_record`
-    // filter, where an unresolved interpolation makes the node refuse to run
-    // and name the culprit. A declared default would replace that loud refusal
-    // with a silent enrolment of a segment nobody chose.
+    // condition reads either one — each is a `get_record` filter operand (a
+    // CEL envelope since 18.0.0-next.0), where an unbound variable fails the
+    // run before the query and names the culprit. A declared default would
+    // replace that loud failure with a silent enrolment of a segment nobody
+    // chose.
     for (const name of ['leadStatus', 'contactDepartment']) {
       const v = (flow.variables as AnyRec[]).find((x) => x.name === name)!;
       expect(v.defaultValue, `${name} gained a defaultValue — no condition reads it, so this buys nothing`).toBeUndefined();
@@ -681,7 +683,7 @@ describe('every variable a flow condition reads is BOUND on every path to it', (
       field.defaultValue,
       'the screen field restates the default instead of deriving it — that is the ' +
         'duplication #1155 removed, moved one level over',
-    ).toBe('{createOpportunity}');
+    ).toEqual(cel`createOpportunity`);
 
     // …and the literal really is written once. Restating `false` on the field
     // would put a second copy in this file with nothing reconciling them.
@@ -1115,8 +1117,8 @@ describe('the two defects, reproduced end-to-end', () => {
 
       const plain = await prefillOf({});
       expect(plain, 'the enrolment screen no longer offers memberSource').toBeDefined();
-      // Interpolated to the raw value — NOT the literal '{memberSource}', which
-      // a `select` would match against no option and render as nothing chosen.
+      // Evaluated to the raw value — NOT the envelope, which a `select` would
+      // match against no option and render as nothing chosen.
       expect(plain!.defaultValue).toBe('leads');
       expect(typeof plain!.defaultValue).toBe('string');
       expect(plain!.required, 'memberSource stopped being required — the refusal test above no longer measures this flow').toBe(true);

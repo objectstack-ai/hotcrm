@@ -4,7 +4,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
 import { OpportunityStagnationFlow } from '../src/sales/flows/opportunity-stagnation.flow';
 import { edgesUnder } from './helpers/flow-regions';
-import { hotcrmStack, signUpPerson, daysFromNow, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, daysFromNow, runScheduledFlow, type Person } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
 
@@ -37,8 +37,8 @@ type Rec = Record<string, any>;
 
 /**
  * On the shipped app booted by `@objectstack/verify`, each sweep is started
- * through the trigger door (`flows.run`, as the admin) and its terminal result
- * — the summary — read off what the door returns.
+ * the way its schedule trigger starts it (`runScheduledFlow`) and its terminal
+ * result — the summary — read off what the run returns.
  *
  * A sweep selects EVERY matching record in the database, and the boot replays
  * the app's seed deals and contracts. So the counts here are read as what THIS
@@ -80,8 +80,8 @@ beforeAll(async () => {
   accountId = String(account!.id);
 }, 120_000);
 
-/** Run a sweep as the admin and return its summary. */
-const sweep = async (flowName: string): Promise<RunSummary> => summaryOf(await verify.flows.run(flowName, {}, { as: admin }));
+/** Run a sweep as its schedule trigger does and return its summary. */
+const sweep = async (flowName: string): Promise<RunSummary> => summaryOf(await runScheduledFlow(verify, flowName));
 
 /** Two stalled deals of the rep's — 30 and 40 days in stage. */
 const stalledDeals = async (): Promise<Rec[]> => verify.seed('crm_opportunity', [

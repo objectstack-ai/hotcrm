@@ -597,9 +597,13 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   // — the keys `os lint`'s `i18n/missing-flow` names, read by the console's
   // flow runner since @objectstack 17.7.0 (the spec's `flows` liveness row is
   // `live` there). A screen with no authored `title` shows its flow's label in
-  // every locale, so each `screen_1.title` repeats the flow label. Select
-  // option labels and screen descriptions are not translatable keys on a
-  // screen (`FLOW_SCREEN_FIELD_NO_OPTIONS`), so they stay as authored.
+  // every locale, so each `screen_1.title` repeats the flow label. Since
+  // 18.0.0-next.0 three more surfaces are keys the engine reads in the run's
+  // locale, and `i18n/missing-flow` names each missing one: a select field's
+  // `options.<value>` (worded as the object field's own option in this pack),
+  // an authored screen `description`, and a refusing `end` node's
+  // `refusals.<node>.message`. A translated description or message is a text
+  // slot like the one it translates, so a hole in it is `{{ }}`.
   // The discount ceiling is interpolated from `QUOTE_DISCOUNT_CEILING`, never
   // retyped: the number lives in `_thresholds.ts` alone (#1711).
   flows: {
@@ -609,9 +613,12 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         screen_1: {
           title: 'キャンペーンにメンバーを登録',
           fields: {
-            memberSource: { label: '登録するメンバーの種類' },
-            leadStatus: { label: '登録するリードのステータス' },
-            contactDepartment: { label: '登録する取引先責任者の部門' },
+            memberSource: { label: '登録するメンバーの種類', options: { leads: 'リード', contacts: '取引先責任者' } },
+            leadStatus: { label: '登録するリードのステータス', options: { new: '新規', contacted: 'コンタクト済み', qualified: '適格' } },
+            contactDepartment: {
+              label: '登録する取引先責任者の部門',
+              options: { executive: '経営層', sales: '営業部', marketing: 'マーケティング部', engineering: 'エンジニアリング部', support: 'サポート部', finance: '経理部', hr: '人事部', operations: 'オペレーション部' },
+            },
           },
         },
       },
@@ -634,13 +641,26 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     },
     claim_case: {
       label: 'ケースを引き受ける',
-      screens: { screen_1: { title: 'ケースを引き受ける', fields: { claimStatus: { label: '対応状況' } } } },
+      screens: {
+        screen_1: {
+          title: 'ケースを引き受ける',
+          fields: {
+            claimStatus: {
+              label: '対応状況',
+              options: { in_progress: '対応中', waiting_customer: '顧客の回答待ち', waiting_support: 'サポートの回答待ち' },
+            },
+          },
+        },
+      },
     },
     lead_conversion: {
       label: 'リード変換プロセス',
       screens: {
         screen_1: {
           title: 'リード変換プロセス',
+          // The duplicate warning's text is a variable the flow assigns; this
+          // key can only carry the hole that shows it.
+          description: '{{duplicateWarning}}',
           fields: {
             createOpportunity: { label: '商談を作成しますか？' },
             opportunityName: { label: '商談名' },
@@ -648,8 +668,21 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
             closeDate: { label: '完了予定日' },
           },
         },
-        refuse_confirmed_duplicate: { title: '変換は拒否されました' },
-        refuse_unapproved: { title: '変換は拒否されました' },
+        refuse_confirmed_duplicate: {
+          title: '変換は拒否されました',
+          description:
+            'このリードの重複ステータスは「重複確定」です。レビュー担当者が既存のレコードと照合し、重複であると記録しました。変換すると、同じ購入者に対して取引先・取引先責任者・商談がもう 1 件ずつ作成されます。残すレコードはこのリードの「重複管理」セクションに表示されています。代わりに、このリードを重複として不適格にしてください。変換を再び可能にできるのは、その判定を見直すレビュー担当者だけです。',
+        },
+        refuse_unapproved: {
+          title: '変換は拒否されました',
+          description:
+            'このリードはまだ変換の承認を得ていません。取引先・取引先責任者・商談に変換するには、先に承認者の承認が必要です。リードの「コンバージョン承認」項目で、判断がまだ承認待ちか、却下されたかを確認できます。それまでの間もリードへの対応は続けてください。凍結されるものはありません。',
+        },
+        refuse_no_match_key: {
+          title: '変換は拒否されました',
+          description:
+            'このリードの会社名には照合キーがないため、変換ではどの取引先に属するかを判断できず、推測もしません。推測すると、取引先責任者と商談が別の顧客の下に登録されるおそれがあります。リードの「会社名」を保存するとキーが再作成されるので、もう一度保存してから変換してください。何も作成されていません。',
+        },
       },
     },
     schedule_followup: {
@@ -660,8 +693,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
           fields: {
             subject: { label: '次のステップは？' },
             dueDate: { label: '期限' },
-            activityType: { label: '活動種別' },
-            priority: { label: '優先度' },
+            activityType: {
+              label: '活動種別',
+              options: { call: '電話', email: 'メール', meeting: '会議', follow_up: 'フォローアップ', demo: 'デモ', other: 'その他' },
+            },
+            priority: { label: '優先度', options: { low: '低', normal: '通常', high: '高', urgent: '緊急' } },
             notes: { label: 'メモ' },
           },
         },
@@ -669,6 +705,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     },
     quote_generation: {
       label: '商談から見積を作成',
+      refusals: { refuse_held: { message: '先に案件化承認が必要です。「案件化承認を申請」にチェックを入れてください。何も作成されていません。' } },
       screens: {
         screen_1: {
           title: '商談から見積を作成',

@@ -1,6 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { P } from '@objectstack/spec';
+import { P, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 type Flow = Automation.Flow;
 
@@ -89,7 +89,7 @@ export const LeadConversionApprovalFlow: Flow = {
       id: 'get_lead',
       type: 'get_record',
       label: 'Get Lead',
-      config: { objectName: 'crm_lead', filter: { id: '{record.id}' }, outputVariable: 'leadRecord' },
+      config: { objectName: 'crm_lead', filter: { id: cel`record.id` }, outputVariable: 'leadRecord' },
     },
     {
       id: 'conversion_review',
@@ -126,7 +126,7 @@ export const LeadConversionApprovalFlow: Flow = {
       label: 'Mark Approved',
       config: {
         objectName: 'crm_lead',
-        filter: { id: '{record.id}' },
+        filter: { id: cel`record.id` },
         fields: { conversion_approval_status: 'approved' },
       },
     },
@@ -135,12 +135,12 @@ export const LeadConversionApprovalFlow: Flow = {
       type: 'notify',
       label: 'Notify Owner — Approved',
       config: {
-        recipients: ['{leadRecord.owner_id}'],
+        recipients: [cel`has(leadRecord.owner_id) ? leadRecord.owner_id : null`],
         channels: ['inbox'],
         topic: 'lead_conversion_approved',
         template: 'crm.lead_conversion_approved',
-        templateData: { first_name: '{leadRecord.first_name}', last_name: '{leadRecord.last_name}' },
-        actionUrl: '/crm_lead/{record.id}',
+        templateData: { first_name: cel`leadRecord.first_name`, last_name: cel`leadRecord.last_name` },
+        actionUrl: '/crm_lead/{{record.id}}',
       },
     },
     {
@@ -149,7 +149,7 @@ export const LeadConversionApprovalFlow: Flow = {
       label: 'Mark Rejected',
       config: {
         objectName: 'crm_lead',
-        filter: { id: '{record.id}' },
+        filter: { id: cel`record.id` },
         fields: { conversion_approval_status: 'rejected' },
       },
     },
@@ -158,13 +158,13 @@ export const LeadConversionApprovalFlow: Flow = {
       type: 'notify',
       label: 'Notify Owner — Rejected',
       config: {
-        recipients: ['{leadRecord.owner_id}'],
+        recipients: [cel`has(leadRecord.owner_id) ? leadRecord.owner_id : null`],
         channels: ['inbox'],
         severity: 'warning',
         topic: 'lead_conversion_rejected',
         template: 'crm.lead_conversion_rejected',
-        templateData: { first_name: '{leadRecord.first_name}', last_name: '{leadRecord.last_name}' },
-        actionUrl: '/crm_lead/{record.id}',
+        templateData: { first_name: cel`leadRecord.first_name`, last_name: cel`leadRecord.last_name` },
+        actionUrl: '/crm_lead/{{record.id}}',
       },
     },
     { id: 'end', type: 'end', label: 'End' },

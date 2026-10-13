@@ -15,7 +15,7 @@ import {
 } from '../src/service/objects/_case-assignment';
 import artifact from '../objectstack.config';
 import {
-  hotcrmStack, bootOptions, signUpPerson, guestInsert, systemUpdate, recordEngineWrites, type Person,
+  hotcrmStack, bootOptions, buildArtifactAgain, signUpPerson, guestInsert, systemUpdate, recordEngineWrites, type Person,
 } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
@@ -763,7 +763,9 @@ describe('case_escalation_reassign', () => {
     // On a boot of its own: once an install holds two organizations the engine
     // refuses every system insert that names none (it cannot tell which one
     // owns the row), which is every other fixture in this file.
-    const twoOrgs = await bootStack(artifact, bootOptions());
+    // (A build of its own, too: one configuration object holds one live kernel
+    // since 18.0.0-next.0, objectstack#22301.)
+    const twoOrgs = await bootStack(await buildArtifactAgain(), bootOptions());
     const orgs = await twoOrgs.seed('sys_organization', [
       { name: 'Case Org', slug: 'case-org' }, { name: 'Other Org', slug: 'other-org' },
     ]);

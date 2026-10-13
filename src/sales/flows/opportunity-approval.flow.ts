@@ -1,6 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { P } from '@objectstack/spec';
+import { P, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 import { HIGH_VALUE_DEAL_AMOUNT, LARGE_DEAL_AMOUNT } from '../objects/_thresholds';
 type Flow = Automation.Flow;
@@ -97,7 +97,7 @@ export const OpportunityApprovalFlow: Flow = {
       id: 'get_opportunity',
       type: 'get_record',
       label: 'Get Opportunity',
-      config: { objectName: 'crm_opportunity', filter: { id: '{record.id}' }, outputVariable: 'oppRecord' },
+      config: { objectName: 'crm_opportunity', filter: { id: cel`record.id` }, outputVariable: 'oppRecord' },
     },
 
     // ── Tier 1: Sales Manager review (all deals at $100K or more) ───
@@ -157,8 +157,8 @@ export const OpportunityApprovalFlow: Flow = {
       label: 'Mark Approved',
       config: {
         objectName: 'crm_opportunity',
-        filter: { id: '{record.id}' },
-        fields: { approval_status: 'approved', approved_date: '{NOW()}' },
+        filter: { id: cel`record.id` },
+        fields: { approval_status: 'approved', approved_date: cel`isoDatetime(now())` },
       },
     },
     {
@@ -166,12 +166,12 @@ export const OpportunityApprovalFlow: Flow = {
       type: 'notify',
       label: 'Notify Owner — Approved',
       config: {
-        recipients: ['{oppRecord.owner_id}'],
+        recipients: [cel`has(oppRecord.owner_id) ? oppRecord.owner_id : null`],
         channels: ['inbox', 'email'],
         topic: 'opportunity_approved',
         template: 'crm.opportunity_approved',
-        templateData: { name: '{oppRecord.name}' },
-        actionUrl: '/crm_opportunity/{record.id}',
+        templateData: { name: cel`oppRecord.name` },
+        actionUrl: '/crm_opportunity/{{record.id}}',
       },
     },
 
@@ -182,7 +182,7 @@ export const OpportunityApprovalFlow: Flow = {
       label: 'Mark Rejected',
       config: {
         objectName: 'crm_opportunity',
-        filter: { id: '{record.id}' },
+        filter: { id: cel`record.id` },
         fields: { approval_status: 'rejected' },
       },
     },
@@ -191,13 +191,13 @@ export const OpportunityApprovalFlow: Flow = {
       type: 'notify',
       label: 'Notify Owner — Rejected',
       config: {
-        recipients: ['{oppRecord.owner_id}'],
+        recipients: [cel`has(oppRecord.owner_id) ? oppRecord.owner_id : null`],
         channels: ['inbox', 'email'],
         severity: 'warning',
         topic: 'opportunity_rejected',
         template: 'crm.opportunity_rejected',
-        templateData: { name: '{oppRecord.name}' },
-        actionUrl: '/crm_opportunity/{record.id}',
+        templateData: { name: cel`oppRecord.name` },
+        actionUrl: '/crm_opportunity/{{record.id}}',
       },
     },
 

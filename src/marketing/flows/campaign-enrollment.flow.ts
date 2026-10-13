@@ -1,6 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { P } from '@objectstack/spec';
+import { P, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 import { guarded } from '../../sales/flows/_guarded-iteration';
 type Flow = Automation.Flow;
@@ -55,7 +55,7 @@ export const CampaignEnrollmentFlow: Flow = {
      *
      * ⚠️ Measured on the 17.1.0 spec, with the schema key re-checked on 17.2.0.
      * Neither that key nor the seeding behaviour was re-checked on 17.3.0 or
-     * 17.4.0 (PR #1814, #1807), nor on 17.5.0, 17.6.0 or 17.7.0 (the pin since the 17.7.0 bump).
+     * 17.4.0 (PR #1814, #1807), nor on 17.5.0, 17.6.0, 17.7.0 or 18.0.0-next.0 (the pin since #2031).
      *
      * ⛔ Never seed this with an assignment node instead. An assignment is
      * unconditional, so it CLOBBERS a supplied param — measured: launching with
@@ -70,26 +70,27 @@ export const CampaignEnrollmentFlow: Flow = {
      * path cannot reach an unbound read at all — unlike `lead_conversion`'s
      * checkbox, which is deliberately not `required` and therefore has an
      * unanswered state. The one path that skips that check is a resume carrying
-     * NO signal object; measured, it fails one node later at `query_leads`
-     * regardless of this binding, because `{leadStatus}` resolves to nothing and
-     * `get_record` refuses to run rather than widen the query.
+     * NO signal object; measured on 17.x, it fails one node later at
+     * `query_leads` regardless of this binding, because `leadStatus` is unbound
+     * and the query never runs widened. Since 18.0.0-next.0 the filter operand
+     * is a CEL envelope, and an unbound variable fails the run before the query
+     * (the platform's `flow-value-slot-template-dialect-refused` contract; not
+     * re-measured here).
      *
      * The literal lives HERE and nowhere else: the screen field derives its
-     * prefill from this variable (`defaultValue: '{memberSource}'`).
+     * prefill from this variable (its `defaultValue` envelope reads `memberSource`).
      */
     { name: 'memberSource', type: 'text', isInput: true, isOutput: false, defaultValue: 'leads' },
     /**
      * `leadStatus` / `contactDepartment` deliberately carry NO `defaultValue`,
      * and the asymmetry with `memberSource` is the point. No condition in this
-     * flow reads either one — they are interpolated into a `get_record`
-     * `filter` — so the binding analysis in
-     * `test/flow-variable-conditions.test.ts` does not cover them, and the CEL
-     * abort it exists to prevent cannot happen here. An unresolved
-     * interpolation makes `get_record` REFUSE TO RUN and name the offending
-     * condition, because an absent condition widens a query instead of
-     * narrowing it. Seeding these two would turn that loud refusal into a
-     * silent enrolment of a segment nobody chose; their `required: true`
-     * screen fields are what supply them.
+     * flow reads either one — each is a `get_record` `filter` operand — so the
+     * binding analysis in `test/flow-variable-conditions.test.ts` does not
+     * cover them. An unbound one fails the run before the query is made (the
+     * 18.0.0-next.0 filter-operand contract), because an absent condition
+     * widens a query instead of narrowing it. Seeding these two would turn that
+     * loud failure into a silent enrolment of a segment nobody chose; their
+     * `required: true` screen fields are what supply them.
      */
     { name: 'leadStatus', type: 'text', isInput: true, isOutput: false },
     { name: 'contactDepartment', type: 'text', isInput: true, isOutput: false },
@@ -104,11 +105,12 @@ export const CampaignEnrollmentFlow: Flow = {
           {
             // Prefill DERIVED from the variable, so the default is written
             // once (on the declaration) rather than restated here — the
-            // single-authority form. It reaches the client
-            // interpolated to the raw value, the string `leads`, which is what
-            // a literal `defaultValue: 'leads'` used to send.
+            // single-authority form. The envelope is evaluated before the
+            // screen goes on the wire, so the client receives the raw value,
+            // the string `leads`, which is what a literal
+            // `defaultValue: 'leads'` used to send.
             name: 'memberSource', label: 'Enroll', type: 'select', required: true,
-            defaultValue: '{memberSource}',
+            defaultValue: cel`memberSource`,
             options: [
               { label: 'Leads', value: 'leads' },
               { label: 'Contacts', value: 'contacts' },
@@ -125,7 +127,7 @@ export const CampaignEnrollmentFlow: Flow = {
           },
           {
             // Required, like `leadStatus`, and for the same reason: a blank
-            // segment would interpolate into the filter as an empty string and
+            // segment would reach the filter as an empty string and
             // silently match the contacts with NO department rather than all of
             // them. Both branches make the caller name a segment.
             name: 'contactDepartment', label: 'Enroll contacts in department',
@@ -146,7 +148,7 @@ export const CampaignEnrollmentFlow: Flow = {
     },
     {
       id: 'get_campaign', type: 'get_record', label: 'Get Campaign',
-      config: { objectName: 'crm_campaign', filter: { id: '{recordId}' }, outputVariable: 'campaignRecord' },
+      config: { objectName: 'crm_campaign', filter: { id: cel`recordId` }, outputVariable: 'campaignRecord' },
     },
     {
       // The gate itself is on edges `e4` / `e7` — see the notes there. This node
@@ -161,7 +163,7 @@ export const CampaignEnrollmentFlow: Flow = {
       config: {
         objectName: 'crm_lead',
         filter: {
-          status: '{leadStatus}',
+          status: cel`leadStatus`,
           is_converted: false,
           email: { $ne: null },
           // This is email-campaign enrollment — honour the opt-out flag.
@@ -176,7 +178,7 @@ export const CampaignEnrollmentFlow: Flow = {
     {
       id: 'loop_leads', type: 'loop', label: 'Process Each Lead',
       config: {
-        collection: '{leadList}',
+        collection: cel`leadList`,
         iteratorVariable: 'currentLead',
         body: guarded('lead', {
           nodes: [
@@ -187,7 +189,7 @@ export const CampaignEnrollmentFlow: Flow = {
               id: 'find_existing_member', type: 'get_record', label: 'Already Enrolled?',
               config: {
                 objectName: 'crm_campaign_member',
-                filter: { crm_campaign: '{recordId}', crm_lead: '{currentLead.id}' },
+                filter: { crm_campaign: cel`recordId`, crm_lead: cel`currentLead.id` },
                 outputVariable: 'existingMember',
               },
             },
@@ -211,7 +213,7 @@ export const CampaignEnrollmentFlow: Flow = {
               id: 'create_campaign_member', type: 'subflow', label: 'Add to Campaign',
               config: {
                 flowName: 'campaign_lead_member_enroll',
-                input: { campaignId: '{recordId}', leadId: '{currentLead.id}' },
+                input: { campaignId: cel`recordId`, leadId: cel`currentLead.id` },
               },
             },
           ],
@@ -230,7 +232,7 @@ export const CampaignEnrollmentFlow: Flow = {
       config: {
         objectName: 'crm_contact',
         filter: {
-          department: '{contactDepartment}',
+          department: cel`contactDepartment`,
           email: { $ne: null },
           // Same opt-out honour as the lead branch. There is no `is_converted`
           // twin here: a contact IS the converted end state.
@@ -243,7 +245,7 @@ export const CampaignEnrollmentFlow: Flow = {
     {
       id: 'loop_contacts', type: 'loop', label: 'Process Each Contact',
       config: {
-        collection: '{contactList}',
+        collection: cel`contactList`,
         iteratorVariable: 'currentContact',
         body: guarded('contact', {
           nodes: [
@@ -255,7 +257,7 @@ export const CampaignEnrollmentFlow: Flow = {
               id: 'find_existing_contact_member', type: 'get_record', label: 'Already Enrolled?',
               config: {
                 objectName: 'crm_campaign_member',
-                filter: { crm_campaign: '{recordId}', crm_contact: '{currentContact.id}' },
+                filter: { crm_campaign: cel`recordId`, crm_contact: cel`currentContact.id` },
                 outputVariable: 'existingContactMember',
               },
             },
@@ -269,7 +271,7 @@ export const CampaignEnrollmentFlow: Flow = {
               id: 'create_contact_member', type: 'subflow', label: 'Add Contact to Campaign',
               config: {
                 flowName: 'campaign_contact_member_enroll',
-                input: { campaignId: '{recordId}', contactId: '{currentContact.id}' },
+                input: { campaignId: cel`recordId`, contactId: cel`currentContact.id` },
               },
             },
           ],

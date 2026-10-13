@@ -1,6 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { P } from '@objectstack/spec';
+import { P, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 import { LARGE_DEAL_AMOUNT } from '../objects/_thresholds';
 type Flow = Automation.Flow;
@@ -85,13 +85,13 @@ export const OpportunityWonAlertFlow: Flow = {
         // Owner only: `{record.owner_id.manager}` cannot traverse a lookup on the
         // raw trigger snapshot — it interpolates to the literal "undefined"
         // and the message is delivered to a phantom user.
-        recipients: ['{record.owner_id}'],
+        recipients: [cel`record.owner_id`],
         channels: ['inbox', 'email'],
         severity: 'info',
         topic: 'large_deal_won',
         template: 'crm.large_deal_won',
-        templateData: { name: '{record.name}', amount: '{record.amount}' },
-        actionUrl: '/crm_opportunity/{record.id}',
+        templateData: { name: cel`record.name`, amount: cel`record.amount` },
+        actionUrl: '/crm_opportunity/{{record.id}}',
       },
     },
     { id: 'end', type: 'end', label: 'End' },

@@ -272,13 +272,15 @@ describe('the spec gate accepts a hierarchy readScope only when the capability i
 beforeAll(async () => {
   // The platform's boot — `@objectstack/verify`'s `bootStack` over the shipped
   // artifact (objectql, auth and its `tenancy` service, security with the app's
-  // own default profile, sharing) — on the in-memory datasource this file has
-  // always measured on.
+  // own default profile, sharing) — on the SQL in-memory datasource. Through 17.7.0 this file measured on
+  // `driver-memory`; on 18.0.0-next.0 that driver refuses every tenant-scoped
+  // call, and the boot now creates the Default Organization (ADR-0131 D3), so
+  // `@objectstack/verify` 34dba5a moves such a leg to the SQL driver.
   //
   // NB: no `hierarchy-scope-resolver` is registered — that service ships in
   // `@objectstack/security-enterprise`, which this repo does not depend on.
   // That absence is the whole subject of this file.
-  verify = await bootStack(artifact, { databaseDriver: 'memory' });
+  verify = await bootStack(artifact);
 
   // The throwaway permission sets, created as DATA. ⛔ Nothing here is authored
   // in `src/profiles/`; #1378 rules that no profile may gain a hierarchy

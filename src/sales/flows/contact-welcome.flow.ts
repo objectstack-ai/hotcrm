@@ -1,6 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { P } from '@objectstack/spec';
+import { P, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 type Flow = Automation.Flow;
 
@@ -66,12 +66,12 @@ export const ContactWelcomeFlow: Flow = {
     {
       id: 'send_welcome', type: 'notify', label: 'Prompt Owner to Welcome',
       config: {
-        recipients: ['{record.owner_id}'],
+        recipients: [cel`record.owner_id`],
         channels: ['inbox', 'email'],
         topic: 'contact_welcome',
         template: 'crm.contact_welcome',
-        templateData: { first_name: '{record.first_name}', last_name: '{record.last_name}' },
-        actionUrl: '/crm_contact/{record.id}',
+        templateData: { first_name: cel`record.first_name`, last_name: cel`record.last_name` },
+        actionUrl: '/crm_contact/{{record.id}}',
       },
     },
     { id: 'end', type: 'end', label: 'End' },

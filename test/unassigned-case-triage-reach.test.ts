@@ -27,22 +27,17 @@ import { CLAIMABLE_TARGET_STATUSES } from '../src/service/objects/_case-assignme
  * plugins `objectstack serve` mounts — over the app's own `objectstack.config.ts`
  * and asks the engine, as a real `service_agent`, what comes back.
  *
- * ### ⚠️ The hazard is the ROW SHAPE, and the two shapes are different inputs
+ * ### The row shape: an ownerless case holds `owner_id` NULL
  *
- * "No owner" is not one thing in storage:
+ * A SQL driver materialises every declared column, so an ownerless case has
+ * `owner_id` **present and NULL**, and the first describe below asserts that
+ * shape, so the matrix is measured on the input it claims to be.
  *
- *   - `driver-memory` (and `driver-mongodb`) store only the columns a row was
- *     actually written with, so an ownerless case has **no `owner_id` key at
- *     all**;
- *   - a SQL driver materialises every declared column, so the same case has
- *     `owner_id` **present and NULL**.
- *
- * A marketplace app does not choose its host's datasource, so a predicate that
- * answers on one and not the other is a rule that works on half its installs.
- * The whole matrix below therefore runs TWICE, once per driver, off one shared
- * fixture builder — and `the two drivers really do store different shapes`
- * asserts the difference is real, so the two runs cannot be the same measurement
- * twice.
+ * Until 18.0.0-next.0 the matrix also ran on `driver-memory`, whose rows hold
+ * only the columns they were written with (`owner_id` ABSENT). That driver now
+ * refuses every tenant-scoped call (`MemoryMultiTenantUnsupportedError`), and
+ * the maintainer's ruling on #2031 retired its legs:
+ * 「就应该在 sql 上测试，作废内存驱动的测试」.
  *
  * ### ⚠️ Why the rule carries NO `has()` guard
  *
@@ -56,9 +51,11 @@ import { CLAIMABLE_TARGET_STATUSES } from '../src/service/objects/_case-assignme
  * conditions); it does not reach this one, and applying it here is actively
  * harmful. `test/sharing-seeding.test.ts` pins the compiler's verdict on
  * `has()`; what THIS file pins is that the unguarded form nevertheless answers
- * correctly on the absent-key shape, which is the reason the guard is not
- * needed: `record.owner_id == null` lowers to `{ owner_id: { $null: true } }`,
- * and `$null` reads an absent key and a NULL column alike.
+ * correctly on the ownerless shape the app's datasource stores, which is the
+ * reason the guard is not needed: `record.owner_id == null` lowers to
+ * `{ owner_id: { $null: true } }`, a pushdown filter rather than a per-record
+ * read, and it selects the NULL column. (Until 18.0.0-next.0 this file also
+ * measured it on the absent-key shape; that leg went with `driver-memory`.)
  *
  * ### How to read a failure here
  *
@@ -124,8 +121,8 @@ interface Fixture {
   /**
    * The stored `owner_id` as a PRIMITIVE, read fresh from the driver.
    *
-   * ⚠️ Deliberately not "the row before" and "the row after". The in-memory
-   * driver can hand back the very object it stores, so a "before" ROW captured
+   * ⚠️ Deliberately not "the row before" and "the row after". A driver can hand
+   * back the very object it stores (`driver-memory` did, #1132), so a "before" ROW captured
    * into a variable is the same reference the write then mutates — comparing it
    * afterwards compares a row against itself and passes on unfixed code. A
    * string (or null) copied out at read time cannot do that.
@@ -155,7 +152,7 @@ interface Fixture {
  * measure. That is not a trick — it is the exact first-install state #596
  * describes, where an empty pool is the norm rather than an edge case.
  */
-async function boot(driver: 'memory' | 'sqlite-wasm'): Promise<Fixture> {
+async function boot(driver: 'sqlite-wasm'): Promise<Fixture> {
   const verify = await bootStack(artifact, { databaseDriver: driver });
 
   const id: Record<string, string> = {};
@@ -227,8 +224,8 @@ async function boot(driver: 'memory' | 'sqlite-wasm'): Promise<Fixture> {
   // empty-pool window, for the same reason as the three above — a row created
   // after the pool is staffed is round-robined onto an agent by
   // `case_auto_assign` and is not ownerless at all. That is also what gives
-  // them the driver's genuine ownerless SHAPE (key absent on memory, column
-  // NULL on SQL), which is the input `case_self_claim`'s guard 3 has to answer.
+  // them the driver's genuine ownerless SHAPE (the column NULL), which is the
+  // input `case_self_claim`'s guard 3 has to answer.
   id.claim_pickup = await insert('crm_case', caseDoc('Claimable — picked up'));
   id.claim_waiting = await insert('crm_case', caseDoc('Claimable — answered'));
   // Seeded already `waiting_customer` (an import/migration shape): the status
@@ -248,13 +245,12 @@ async function boot(driver: 'memory' | 'sqlite-wasm'): Promise<Fixture> {
   for (const user of [id.agent, id.other]) {
     await insert('sys_user_position', { user_id: user, position: 'service_agent' });
   }
-  const [agentSet] = await verify.rows('sys_permission_set', { name: 'service_agent' });
   for (const user of [id.agent, id.other]) {
-    // `permission_set_id` ONLY. `sys_user_permission_set` declares no bare
-    // `permission_set` column, and writing both keys — which a schemaless
-    // in-memory driver accepts silently — is rejected outright by SQL:
-    // "table sys_user_permission_set has no column named permission_set".
-    await insert('sys_user_permission_set', { user_id: user, permission_set_id: agentSet?.id });
+    // By NAME: since 18.0.0-next.0 a declared permission set has no
+    // `sys_permission_set` row to point an id at (objectstack c8a9783), and a
+    // grant names its set in `sys_user_permission_set.permission_set`
+    // (ADR-0131 D4, verify aa71c4d) — the way `signUpPerson` grants one.
+    await insert('sys_user_permission_set', { user_id: user, permission_set: 'service_agent' });
   }
 
   // ── the owned population ──────────────────────────────────────────────
@@ -328,16 +324,12 @@ async function boot(driver: 'memory' | 'sqlite-wasm'): Promise<Fixture> {
 }
 
 /**
- * The two row shapes, as two real datasources.
- *
- * `memory` is the sparse one — the shape `driver-mongodb` also produces, and the
- * only place in the stack that exercises "the key is absent". `sqlite-wasm` is
- * the column-complete one, standing in for every SQL host: it goes through
- * `@objectstack/driver-sql`'s knex path, so the filter is lowered to real SQL
- * rather than evaluated in JS.
+ * The datasource the matrix runs on. `sqlite-wasm` is column-complete,
+ * standing in for every SQL host: it goes through `@objectstack/driver-sql`'s
+ * knex path, so the filter is lowered to real SQL rather than evaluated in JS.
+ * (The `driver-memory` leg is retired by the #2031 ruling — see the header.)
  */
-const DRIVERS: Array<{ label: string; driver: 'memory' | 'sqlite-wasm' }> = [
-  { label: 'driver-memory (sparse rows — the key is ABSENT)', driver: 'memory' },
+const DRIVERS: Array<{ label: string; driver: 'sqlite-wasm' }> = [
   { label: 'sqlite-wasm (column-complete rows — the column is NULL)', driver: 'sqlite-wasm' },
 ];
 
@@ -353,24 +345,15 @@ afterAll(async () => {
   for (const fixture of fixtures.values()) await fixture.verify.stop();
 });
 
-describe('the two drivers really do store different shapes', () => {
-  it('memory omits the owner_id key; SQL materialises it as NULL', async () => {
-    // Anti-vacuum for the whole file: if both drivers stored the same shape,
-    // running the matrix twice would be one measurement repeated, and the
-    // "totality" question this card turns on would go unasked.
-    const sparse = await fixtures.get('memory')!.raw('crm_case', fixtures.get('memory')!.id.unowned_open);
+describe('the ownerless case is stored with owner_id NULL', () => {
+  it('SQL materialises owner_id as NULL', async () => {
+    // Anti-vacuum for the whole file: the matrix below is about the ownerless
+    // shape, so the fixture must really hold one.
     const complete = await fixtures
       .get('sqlite-wasm')!
       .raw('crm_case', fixtures.get('sqlite-wasm')!.id.unowned_open);
 
-    expect(Object.keys(sparse), 'the memory fixture stored no ownerless case at all').toContain('subject');
-    expect(
-      'owner_id' in sparse,
-      'driver-memory started materialising absent columns — the sparse shape this file ' +
-        'exists to cover is no longer being exercised anywhere in the suite',
-    ).toBe(false);
-
-    expect(Object.keys(complete)).toContain('subject');
+    expect(Object.keys(complete), 'the fixture stored no ownerless case at all').toContain('subject');
     expect(
       'owner_id' in complete,
       'the SQL fixture did not materialise owner_id — it is no longer the column-complete shape',
@@ -592,8 +575,8 @@ for (const { label, driver } of DRIVERS) {
     // an owner, and re-using it would be measuring a different question.
     //
     // ⚠️ How the "before" state is read matters here. `ownerOf()` copies a
-    // STRING (or null) out of a fresh read, never a row object: the in-memory
-    // driver can hand back the object it stores, so a row captured into a
+    // STRING (or null) out of a fresh read, never a row object: a driver can
+    // hand back the object it stores (`driver-memory` did), so a row captured into a
     // variable and re-inspected after the write is the same reference the write
     // mutated — a comparison against itself, green on unfixed code (#1132).
     describe('the write half — taking ownership', () => {
@@ -601,16 +584,11 @@ for (const { label, driver } of DRIVERS) {
         const { id, writes, ownerOf, raw, sees } = F();
 
         // The input shape this driver actually presents to the seam's guard 3.
-        // Asserted per driver, so a claim on the sparse (key-absent) shape and
-        // a claim on the column-complete (NULL) shape are two measurements and
-        // never one repeated — the same reason the whole matrix runs twice.
         const stored = await raw('crm_case', id.claim_pickup);
         expect(
           'owner_id' in stored,
-          driver === 'memory'
-            ? 'the memory fixture materialised owner_id — the absent-key shape is no longer covered'
-            : 'the SQL fixture did not materialise owner_id — the NULL-column shape is no longer covered',
-        ).toBe(driver !== 'memory');
+          'the SQL fixture did not materialise owner_id — the NULL-column shape is no longer covered',
+        ).toBe(true);
         expect(await ownerOf(id.claim_pickup), 'the fixture was not ownerless to begin with').toBeNull();
 
         expect(

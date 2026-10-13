@@ -1,5 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 import { guarded } from './_guarded-iteration';
 type Flow = Automation.Flow;
@@ -49,7 +50,7 @@ export const TaskDueReminderFlow: Flow = {
         // sweep reliable; `reminder_sent` is still stamped for the audit trail.
         filter: {
           is_completed: false,
-          reminder_date: { $lte: '{NOW()}' },
+          reminder_date: { $lte: cel`isoDatetime(now())` },
         },
         limit: 500,
         outputVariable: 'reminderList',
@@ -62,29 +63,29 @@ export const TaskDueReminderFlow: Flow = {
       // `{currentTask.*}` resolves empty. Verified empirically.
       id: 'loop_tasks', type: 'loop', label: 'For Each Due Task',
       config: {
-        collection: '{reminderList}',
+        collection: cel`reminderList`,
         iteratorVariable: 'currentTask',
         body: guarded('task', {
           nodes: [
             {
               id: 'notify_owner', type: 'notify', label: 'Notify Owner',
               config: {
-                recipients: ['{currentTask.owner_id}'],
+                recipients: [cel`has(currentTask.owner_id) ? currentTask.owner_id : null`],
                 channels: ['inbox', 'email'],
                 severity: 'warning',
                 topic: 'task_reminder',
                 template: 'crm.task_reminder',
                 templateData: {
-                  subject: '{currentTask.subject}', reminder_date: '{currentTask.reminder_date}',
+                  subject: cel`currentTask.subject`, reminder_date: cel`currentTask.reminder_date`,
                 },
-                actionUrl: '/crm_task/{currentTask.id}',
+                actionUrl: '/crm_task/{{currentTask.id}}',
               },
             },
             {
               id: 'mark_sent', type: 'update_record', label: 'Mark Reminder Sent',
               config: {
                 objectName: 'crm_task',
-                filter: { id: '{currentTask.id}' },
+                filter: { id: cel`currentTask.id` },
                 // Clearing reminder_date is what de-dups (the row stops matching
                 // the sweep's `$lte` next tick); reminder_sent is the audit flag.
                 fields: { reminder_sent: true, reminder_date: null },

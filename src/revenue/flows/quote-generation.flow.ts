@@ -1,6 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { P, expression } from '@objectstack/spec';
+import { P, expression, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 import { QUOTE_DISCOUNT_CEILING } from '../../sales/objects/_thresholds';
 type Flow = Automation.Flow;
@@ -77,7 +77,7 @@ export const QuoteGenerationFlow: Flow = {
     // the #2015 approval branch (`e4a` / `e4b`) see the deal as it is at
     // submit. The verdict cannot drift toward held while the form is open:
     // `not_required` and `approved` are never written back to `pending`.
-    { id: 'get_held', type: 'get_record', label: 'Get Held Deal', config: { objectName: 'crm_opportunity', filter: { id: '{recordId}', qualification_approval_status: { $in: ['pending', 'rejected'] } }, outputVariable: 'held' } },
+    { id: 'get_held', type: 'get_record', label: 'Get Held Deal', config: { objectName: 'crm_opportunity', filter: { id: cel`recordId`, qualification_approval_status: { $in: ['pending', 'rejected'] } }, outputVariable: 'held' } },
     // A first-class refusal (`EndConfigSchema` `outcome: 'refused'`): the run
     // ends `refused`, never `failed` and never parked, nothing is written,
     // and the console shows the message with Close only — no Submit and no
@@ -85,12 +85,12 @@ export const QuoteGenerationFlow: Flow = {
     // names the next step the `opportunity_lifecycle` refusal of this gate
     // names.
     //
-    // ⚠️ English only, and not by choice: at 17.7.0 the `flows` translation
-    // group carries a flow's `label` and its screens' `title` / field copy,
-    // and no key for an `end` node's `message` (a screen's `description` is
-    // refused by name). The console titles the dialog with the action's
-    // translated label. A platform gap, raised from #2032; ⛔ do not
-    // re-route the refusal through a screen to borrow a translatable title.
+    // Translated: since 18.0.0-next.0 the `flows` translation group keys an
+    // `end` node's refusal as `refusals.refuse_held.message`, which the
+    // engine renders in the run's locale (at 17.7.0 it had no such key, the
+    // gap raised from #2032). The console titles the dialog with the action's
+    // translated label. ⛔ Do not re-route the refusal through a screen to
+    // borrow a translatable title.
     { id: 'refuse_held', type: 'end', label: 'Quote Refused', config: { outcome: 'refused', message: 'Qualification approval comes first: tick Request Qualification Approval. Nothing was created.' } },
     {
       id: 'screen_1', type: 'screen', label: 'Quote Details',
@@ -131,21 +131,24 @@ export const QuoteGenerationFlow: Flow = {
     },
     {
       id: 'get_opportunity', type: 'get_record', label: 'Get Opportunity',
-      config: { objectName: 'crm_opportunity', filter: { id: '{recordId}' }, outputVariable: 'oppRecord' },
+      config: { objectName: 'crm_opportunity', filter: { id: cel`recordId` }, outputVariable: 'oppRecord' },
     },
     {
       id: 'create_quote', type: 'create_record', label: 'Create Quote',
       config: {
         objectName: 'crm_quote',
         fields: {
-          name: '{quoteName}', crm_opportunity: '{recordId}',
-          crm_account: '{oppRecord.crm_account}', crm_contact: '{oppRecord.primary_contact}',
-          owner_id: '{$User.Id}', status: 'draft',
-          quote_date: '{TODAY()}', expiration_date: '{TODAY() + expirationDays}',
+          name: cel`quoteName`, crm_opportunity: cel`recordId`,
+          crm_account: cel`oppRecord.crm_account`, crm_contact: cel`has(oppRecord.primary_contact) ? oppRecord.primary_contact : null`,
+          owner_id: cel`current_user.id`, status: 'draft',
+          quote_date: cel`isoDate(today())`, expiration_date: cel`isoDate(addDays(today(), expirationDays))`,
           // `subtotal` is a bare path pass-through and needs no rounding: it
           // copies `crm_opportunity.amount` as stored and does no arithmetic,
           // so it adds no floating-point tail of its own.
-          subtotal: '{oppRecord.amount}', discount: '{discount}',
+          // `discount` is an optional screen answer: a resume may leave it
+          // unbound, which the template wrote as nothing and the guard writes
+          // as null (the quote field has no default, so the two agree).
+          subtotal: cel`oppRecord.amount`, discount: cel`has(vars.discount) ? discount : null`,
           // ⛔ A currency × percentage MUST be rounded to whole cents inside the
           // expression — the flow hands the engine a money amount, never an
           // unrounded double. `discount / 100` is inexact for every percentage
@@ -211,7 +214,7 @@ export const QuoteGenerationFlow: Flow = {
       config: {
         // ⛔ No `last_activity_date` write: `crm_opportunity` has no such field
         // (it lives on `crm_account`), and an unknown column fails this node.
-        objectName: 'crm_opportunity', filter: { id: '{recordId}' },
+        objectName: 'crm_opportunity', filter: { id: cel`recordId` },
         fields: { stage: 'proposal' },
       },
     },
@@ -220,12 +223,12 @@ export const QuoteGenerationFlow: Flow = {
       // `script` + `actionType:'email'` shape is a no-op stub in 7.4.
       id: 'notify_owner', type: 'notify', label: 'Send Notification',
       config: {
-        recipients: ['{$User.Id}'],
+        recipients: [cel`current_user.id`],
         channels: ['inbox', 'email'],
         topic: 'quote_created',
         template: 'crm.quote_created',
-        templateData: { quote_name: '{quoteName}' },
-        actionUrl: '/crm_quote/{quoteId.id}',
+        templateData: { quote_name: cel`quoteName` },
+        actionUrl: '/crm_quote/{{quoteId.id}}',
       },
     },
     { id: 'end', type: 'end', label: 'End' },

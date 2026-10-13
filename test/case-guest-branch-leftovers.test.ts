@@ -159,9 +159,11 @@ const hoursFromNow = (iso: unknown): number =>
 beforeAll(async () => {
   // The platform's boot — `@objectstack/verify`'s `bootStack` over the shipped
   // artifact (objectql, auth and its `tenancy` service, security with the app's
-  // own default profile, sharing) — on the in-memory datasource this file has
-  // always measured on.
-  verify = await bootStack(artifact, { databaseDriver: 'memory' });
+  // own default profile, sharing) — on the SQL in-memory datasource. Through 17.7.0 this file measured on
+  // `driver-memory`; on 18.0.0-next.0 that driver refuses every tenant-scoped
+  // call, and the boot now creates the Default Organization (ADR-0131 D3), so
+  // `@objectstack/verify` 34dba5a moves such a leg to the SQL driver.
+  verify = await bootStack(artifact);
 
   // A fresh sign-up is an ordinary member (the stack's first user is its own
   // platform admin), so the agent's writes go through the same enforcement a

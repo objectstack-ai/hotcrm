@@ -5,7 +5,7 @@ import caseHooks from '../src/service/objects/case.hook';
 import { caseSlaBreached } from '../src/service/objects/_case-sla';
 import { CLOSED_CASE_STATUSES } from '../src/service/objects/_case-assignment';
 import type { VerifyStack } from '@objectstack/verify';
-import { hotcrmStack, signUpPerson, systemUpdate, runShippedHook, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, systemUpdate, runShippedHook, runScheduledFlow, type Person } from './helpers/verify-stack';
 
 /**
  * A case that finishes late records its breach when its clock stops (#2070).
@@ -277,18 +277,19 @@ describe('the sweep, the close-time stamp and the tile draw one boundary', () =>
   it('case_sla_monitor selects STRICTLY past-due cases, as caseSlaBreached does', () => {
     // A `$lte` here would flag a case exactly on its deadline as long as it is
     // open, while the close-time stamp calls the same instant "met".
-    expect(sweepSelection().sla_due_date).toEqual({ $lt: '{NOW()}' });
+    expect(sweepSelection().sla_due_date).toEqual({ $lt: '{now}' });
   });
 
   it('the SLA Violations tile counts the flag, or exactly the sweep\'s own selection', () => {
     // The sweep selects "open, past due, not yet flagged"; the tile counts
     // "flagged, or open and past due" — the same selection with the flag
-    // clause folded into the other branch. Only the instant's SPELLING
-    // differs, because the two slots are two dialects: a flow template reads
-    // `{NOW()}`, and a query filter refuses it (FILTER_TOKEN_UNKNOWN) and
-    // spells the current instant `{now}`. The operator is read off the sweep,
-    // so a `$lte` on either side, a different status set, or a third clause
-    // on the sweep turns this red.
+    // clause folded into the other branch. Since 18.0.0-next.0 the two spell
+    // the instant the same way too: a flow filter operand refuses the
+    // `{NOW()}` template token, and the sweep reads the query engine's own
+    // `{now}` placeholder, which the tile reads. So the tile's second branch
+    // IS the sweep's selection, compared whole: a `$lte` on either side, a
+    // different status set, another spelling of the instant, or a third
+    // clause on the sweep turns this red.
     const { is_sla_violated: unflagged, ...selection } = sweepSelection();
     expect(unflagged, 'the sweep no longer selects unflagged cases only').toBe(false);
     const operators = Object.keys(selection.sla_due_date ?? {});
@@ -296,7 +297,7 @@ describe('the sweep, the close-time stamp and the tile draw one boundary', () =>
     expect(tileFilter()).toEqual({
       $or: [
         { is_sla_violated: true },
-        { ...selection, sla_due_date: { [operators[0]!]: '{now}' } },
+        selection,
       ],
     });
   });
@@ -358,8 +359,7 @@ describe('the SLA Violations tile counts open breaches at read time, with no swe
   it('the sweep then flags exactly the open cases the tile already counted, and the number holds', async () => {
     // The behavioural half of section 4: whatever the two spellings, the
     // sweep's selection and the tile's open-case branch are one set of rows.
-    const admin = await verify.signIn();
-    await verify.flows.run('case_sla_monitor', {}, { as: admin });
+    await runScheduledFlow(verify, 'case_sla_monitor');
     expect(await flagged()).toEqual([...COUNTED].sort());
     expect(await tileCount()).toBe(COUNTED.length);
   }, 120_000);

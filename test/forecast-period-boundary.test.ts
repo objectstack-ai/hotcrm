@@ -5,7 +5,7 @@ import type { VerifyStack } from '@objectstack/verify';
 import stack from './helpers/composed-stack';
 import forecastHook from '../src/sales/objects/forecast.hook';
 import { forecasts } from '../src/sales/data/forecast.seed';
-import { hotcrmStack, hotcrmMemoryStack, signUpPerson, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
 
 /**
  * A forecast may only start on a calendar-period boundary (#1008).
@@ -59,10 +59,14 @@ import { hotcrmStack, hotcrmMemoryStack, signUpPerson, type Person } from './hel
  *
  * Every write here is a sales manager's — the persona who keys a forecast in —
  * through the engine's write door (`hooks.run`) on the app booted by
- * `@objectstack/verify`, on the sparse datasource and on SQL. So
+ * `@objectstack/verify`, on the SQL datasource. So
  * `forecast_derive_period` runs where production runs it (before the engine's
  * required-field check and `validations[]`), and what is asserted is the row
  * the engine stored or the refusal it raised.
+ *
+ * (Until 18.0.0-next.0 the refusal matrix ran on `driver-memory`, which now
+ * refuses every tenant-scoped call; the #2031 ruling moved it to SQL:
+ * 「就应该在 sql 上测试，作废内存驱动的测试」.)
  */
 
 type AnyRec = Record<string, any>;
@@ -188,8 +192,8 @@ describe('the boundary rule is declared where the platform can act on it', () =>
 
 // ──────────────────────────────────── the refusal, on the real engine ──
 
-describe('the write is REFUSED, not warned about (in-memory driver)', () => {
-  const desk = deskOn(hotcrmMemoryStack, 'memory');
+describe('the write is REFUSED, not warned about', () => {
+  const desk = deskOn(hotcrmStack, 'rule');
 
   // The three rows from the issue body, and their month twin.
   const REJECTED = [
@@ -305,11 +309,8 @@ describe('the write is REFUSED, not warned about (in-memory driver)', () => {
 // ─────────────────────── the same contract on a real SQL database ──────────
 
 describe('the write is REFUSED on a real SQLite database too', () => {
-  // The in-memory driver hands back sparse records; a SQL driver hands back a
-  // full row with NULLs. Those are different inputs to the same predicate, and
-  // a marketplace app does not choose the datasource its host runs on. Both
-  // drivers were measured to hand `period_start` back as a `YYYY-MM-DD` string,
-  // which is the shape `string()` renders for the regex.
+  // A SQL driver hands back a full row with NULLs, and `period_start` as a
+  // `YYYY-MM-DD` string, which is the shape `string()` renders for the regex.
   const desk = deskOn(hotcrmStack, 'sqlite');
 
   it('refuses the mid-quarter start and admits the boundary one', async () => {
@@ -327,7 +328,7 @@ describe('the write is REFUSED on a real SQLite database too', () => {
   it('reads a column-complete row back — the precondition for the update path', async () => {
     const row = await viaHook(desk, 'insert', { ...BASE, period: 'month', period_start: '2026-05-01' });
     const stored = await storedForecast(desk, row.id);
-    // Opposite precondition to the in-memory suite: the key IS present here.
+    // The precondition the update path reads: the key IS present.
     expect('period_label' in (stored ?? {})).toBe(true);
     const env = await refusal(() => viaHook(desk, 'update', { id: row.id, period_start: '2026-05-15' }));
     expect(env.code).toBe('VALIDATION_FAILED');

@@ -1,6 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { P } from '@objectstack/spec';
+import { P, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 import { guarded } from './_guarded-iteration';
 type Flow = Automation.Flow;
@@ -44,13 +44,14 @@ export const OpportunityStagnationFlow: Flow = {
         // `days_in_stage`: the latter is a formula, computed after the query, so
         // as a filter key it addresses a column that does not exist.
         // `entry < today − N`
-        // is the same test as `days_in_stage > N`, resolved by the flow
-        // template engine (same `{TODAY() ± n}` token as contract-renewal).
+        // is the same test as `days_in_stage > N`, computed by a CEL value
+        // envelope (the `isoDate(daysAgo(n))` spelling; contract-renewal uses
+        // its `daysFromNow` twin).
         // A row with a null `stage_entry_date` does not satisfy `$lt` and is
         // skipped, preserving "nothing has stagnated yet" for unstamped rows.
         filter: {
           stage: { $nin: ['closed_won', 'closed_lost'] },
-          stage_entry_date: { $lt: `{TODAY() - ${STALE_THRESHOLD_DAYS}}` },
+          stage_entry_date: { $lt: cel`isoDate(daysAgo(${STALE_THRESHOLD_DAYS}))` },
         },
         limit: 500,
         outputVariable: 'oppList',
@@ -59,7 +60,7 @@ export const OpportunityStagnationFlow: Flow = {
     {
       id: 'loop_opps', type: 'loop', label: 'For Each Stalled Deal',
       config: {
-        collection: '{oppList}',
+        collection: cel`oppList`,
         iteratorVariable: 'currentOpp',
         body: guarded('opp', {
           nodes: [
@@ -72,8 +73,8 @@ export const OpportunityStagnationFlow: Flow = {
               config: {
                 objectName: 'crm_task',
                 filter: {
-                  related_to_opportunity: '{currentOpp.id}',
-                  subject: 'Advance stalled deal: {currentOpp.name}',
+                  related_to_opportunity: cel`currentOpp.id`,
+                  subject: cel`'Advance stalled deal: ' + currentOpp.name`,
                   status: { $nin: ['completed'] },
                 },
                 outputVariable: 'existingStallTask',
@@ -89,15 +90,15 @@ export const OpportunityStagnationFlow: Flow = {
               // "undefined" (cf. opportunity_won_alert).
               id: 'notify_owner', type: 'notify', label: 'Nudge Owner',
               config: {
-                recipients: ['{currentOpp.owner_id}'],
+                recipients: [cel`has(currentOpp.owner_id) ? currentOpp.owner_id : null`],
                 channels: ['inbox', 'email'],
                 topic: 'deal_stalled',
                 template: 'crm.deal_stalled',
                 templateData: {
-                  name: '{currentOpp.name}', stage: '{currentOpp.stage}',
-                  days_in_stage: '{currentOpp.days_in_stage}',
+                  name: cel`currentOpp.name`, stage: cel`currentOpp.stage`,
+                  days_in_stage: cel`currentOpp.days_in_stage`,
                 },
-                actionUrl: '/crm_opportunity/{currentOpp.id}',
+                actionUrl: '/crm_opportunity/{{currentOpp.id}}',
               },
             },
             {
@@ -105,21 +106,23 @@ export const OpportunityStagnationFlow: Flow = {
               config: {
                 objectName: 'crm_task',
                 fields: {
-                  subject: 'Advance stalled deal: {currentOpp.name}',
+                  subject: cel`'Advance stalled deal: ' + currentOpp.name`,
                   type: 'follow_up', priority: 'high', status: 'not_started',
-                  due_date: '{TODAY() + 2}',
-                  owner_id: '{currentOpp.owner_id}',
+                  due_date: cel`isoDate(daysFromNow(2))`,
+                  owner_id: cel`has(currentOpp.owner_id) ? currentOpp.owner_id : null`,
                   // ORG PARTITION. A schedule trigger carries no
                   // organization, so without this the nudge task is born
                   // `organization_id` NULL — outside every org partition.
                   // Upstream ruling objectstack#6155 Q2=A assigns the answer to
                   // the flow author; the task belongs to the org of the deal it
-                  // nudges. `crm_opportunity` carries the column, so the token
-                  // resolves — a source lacking it would interpolate to
-                  // `undefined` and land as NULL while looking declared.
-                  organization_id: '{currentOpp.organization_id}',
+                  // nudges. `crm_opportunity` carries the column, so the read
+                  // resolves. It is deliberately UNGUARDED: on 17.x a source
+                  // lacking it interpolated to `undefined` and landed as NULL
+                  // while looking declared; CEL fails the iteration instead, and
+                  // a `has()` guard would write that NULL back.
+                  organization_id: cel`currentOpp.organization_id`,
                   related_to_type: 'crm_opportunity',
-                  related_to_opportunity: '{currentOpp.id}',
+                  related_to_opportunity: cel`currentOpp.id`,
                 },
               },
             },

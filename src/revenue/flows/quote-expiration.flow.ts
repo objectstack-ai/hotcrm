@@ -1,5 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 import { guarded } from '../../sales/flows/_guarded-iteration';
 type Flow = Automation.Flow;
@@ -27,7 +28,7 @@ export const QuoteExpirationFlow: Flow = {
       id: 'query_quotes', type: 'get_record', label: 'Find Expired Quotes',
       config: {
         objectName: 'crm_quote',
-        filter: { status: { $nin: ['accepted', 'rejected', 'expired'] }, expiration_date: { $lt: '{TODAY()}' } },
+        filter: { status: { $nin: ['accepted', 'rejected', 'expired'] }, expiration_date: { $lt: cel`isoDate(today())` } },
         limit: 500,
         outputVariable: 'quoteList',
       },
@@ -35,13 +36,13 @@ export const QuoteExpirationFlow: Flow = {
     {
       id: 'loop_quotes', type: 'loop', label: 'For Each Quote',
       config: {
-        collection: '{quoteList}',
+        collection: cel`quoteList`,
         iteratorVariable: 'currentQuote',
         body: guarded('quote', {
           nodes: [
             {
               id: 'mark_expired', type: 'update_record', label: 'Mark Expired',
-              config: { objectName: 'crm_quote', filter: { id: '{currentQuote.id}' }, fields: { status: 'expired' } },
+              config: { objectName: 'crm_quote', filter: { id: cel`currentQuote.id` }, fields: { status: 'expired' } },
             },
           ],
           edges: [],

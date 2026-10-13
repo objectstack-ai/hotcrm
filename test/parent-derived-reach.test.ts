@@ -119,8 +119,11 @@ beforeAll(async () => {
   // artifact: the app's objects, profiles, positions and sharing rules exactly
   // as `objectstack.config.ts` declares them, with objectql, auth (and its
   // `tenancy` service), security with the app's own default profile, and
-  // sharing — on the in-memory datasource this file has always measured on.
-  verify = await bootStack(artifact, { databaseDriver: 'memory' });
+  // sharing — on the SQL in-memory datasource. Through 17.7.0 this file measured on
+  // `driver-memory`, which on 18.0.0-next.0 refuses every tenant-scoped call once
+  // the boot creates the Default Organization (ADR-0131 D3); `@objectstack/verify`
+  // 34dba5a moves such a leg to the SQL driver.
+  verify = await bootStack(artifact);
 
   // ── principals ────────────────────────────────────────────────────────
   // Fresh sign-ups are ordinary members (the stack's first user is its own

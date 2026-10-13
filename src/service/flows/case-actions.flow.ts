@@ -1,5 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 import { CLAIMABLE_TARGET_STATUSES } from '../objects/_case-assignment';
 type Flow = Automation.Flow;
@@ -79,9 +80,9 @@ export const EscalateCaseFlow: Flow = {
       id: 'escalate', type: 'update_record', label: 'Escalate Case',
       config: {
         objectName: 'crm_case',
-        filter: { id: '{recordId}' },
+        filter: { id: cel`recordId` },
         fields: {
-          escalation_reason: '{reason}',
+          escalation_reason: cel`reason`,
           status: 'escalated',
           priority: 'critical',
         },
@@ -107,7 +108,7 @@ export const EscalateCaseFlow: Flow = {
       id: 'stamp_escalation', type: 'subflow', label: 'Stamp Escalation Flags',
       config: {
         flowName: 'case_escalation_stamp',
-        input: { recordId: '{recordId}' },
+        input: { recordId: cel`recordId` },
       },
     },
     { id: 'end', type: 'end', label: 'End' },
@@ -192,15 +193,21 @@ export const CloseCaseFlow: Flow = {
       // `decision` node could not have branched it either — this repo has
       // measured `decision.config.condition` to be inert metadata
       // (`test/win-loss-capture.test.ts`'s table of five such surfaces).
+      //
+      // The read is guarded because the field is optional: a resume that omits
+      // it leaves the variable unbound, which the 17.x template wrote as nothing
+      // (the stored link left alone) and CEL refuses. The guard writes NULL
+      // there — the value a blank field already lands as after the normalize
+      // hook — so an omitted answer and an empty one now close the case alike.
       id: 'close', type: 'update_record', label: 'Close Case',
       config: {
         objectName: 'crm_case',
-        filter: { id: '{recordId}' },
+        filter: { id: cel`recordId` },
         fields: {
           is_closed: true,
-          resolution: '{resolution}',
+          resolution: cel`resolution`,
           status: 'closed',
-          resolved_by_article: '{resolved_by_article}',
+          resolved_by_article: cel`has(vars.resolved_by_article) ? resolved_by_article : null`,
         },
       },
     },
@@ -308,9 +315,9 @@ export const ClaimCaseFlow: Flow = {
       id: 'claim', type: 'update_record', label: 'Claim Case',
       config: {
         objectName: 'crm_case',
-        filter: { id: '{recordId}' },
+        filter: { id: cel`recordId` },
         fields: {
-          status: '{claimStatus}',
+          status: cel`claimStatus`,
         },
       },
     },

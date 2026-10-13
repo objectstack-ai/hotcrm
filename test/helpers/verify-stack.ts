@@ -91,13 +91,23 @@ export const HOTCRM_BOOT: BootOptions = bootOptions();
 export const hotcrmStack = (): Promise<VerifyStack> => bootStackOnce(artifact, HOTCRM_BOOT);
 
 /**
- * The app on the SPARSE datasource (`driver-memory`): a column a row was never
- * written with comes back ABSENT rather than NULL — the shape `driver-mongodb`
- * also produces, and the one AGENTS.md's predicate-totality rule is about. Only
- * for a suite whose claim is about that shape.
+ * A second build of the app's configuration, from FRESH module instances — for
+ * a suite that keeps a second stack live beside {@link hotcrmStack}.
+ *
+ * Since 18.0.0-next.0 `bootStack` refuses a second live kernel of ONE
+ * configuration object (`RESOURCE_CONFLICT`, objectstack#22301): a live boot
+ * holds references into the configuration's nested definitions and plugin
+ * instances, so a second boot over the same object would share them. The
+ * remedy the refusal names is to build the configuration again from fresh
+ * module instances — never a `{ ...artifact }` copy — which is what
+ * `vi.resetModules()` and a dynamic import do. ⚠️ The reset reaches every
+ * module imported after it, so a test file that imports a local module
+ * dynamically after calling this gets a fresh instance of it.
  */
-export const HOTCRM_MEMORY_BOOT: BootOptions = bootOptions({ databaseDriver: 'memory' });
-export const hotcrmMemoryStack = (): Promise<VerifyStack> => bootStackOnce(artifact, HOTCRM_MEMORY_BOOT);
+export const buildArtifactAgain = async (): Promise<typeof artifact> => {
+  vi.resetModules();
+  return (await import('../../objectstack.config')).default;
+};
 
 /**
  * The names of every object the booted runtime registers that this app does
@@ -123,12 +133,26 @@ export interface Person {
  * Sign up a person and give them the standing a fixture names — position rows
  * (`sys_user_position.position` holds the position NAME, which is what
  * `expandPositionUsers` filters on) and permission-set grants
- * (`sys_user_permission_set.permission_set_id`, the set's row id).
+ * (`sys_user_permission_set.permission_set`, the set's NAME).
+ *
+ * The grant names its set since 18.0.0-next.0 (ADR-0131 D4): no seeder writes
+ * a `sys_permission_set` row for a declared set any more (upstream c8a9783,
+ * #15204 stage 6b-2), so there is no row id to look up. The name is checked
+ * against the sets the booted registry serves, so a misspelt fixture still
+ * fails here, by name, rather than granting nothing.
  *
  * Fixture SETUP, written as the system through `seed`, the way the platform's
  * own bootstrap writes RBAC rows: the person is not the surface under test, and
  * routing their provisioning through a caller's data door would make the proof
  * depend on that caller's grants. A fresh sign-up is a plain member until then.
+ *
+ * A position row carries the person's organization, as an administrator's
+ * assignment in Setup does (a non-system insert is stamped with the writer's
+ * active organization). Since 18.0.0-next.0 every boot has one — the Default
+ * Organization (ADR-0131 D3) — and every request carries it, and the approval
+ * service's position expansion reads holders of the REQUEST's organization
+ * only, so an organization-less row routes no approval. Permission-set grants
+ * stay organization-less, a grant the platform applies in every organization.
  */
 export async function signUpPerson(
   stack: VerifyStack,
@@ -136,14 +160,16 @@ export async function signUpPerson(
   opts: { name?: string; positions?: string[]; permissionSets?: string[] } = {},
 ): Promise<Person> {
   const token = await stack.signUp(email, undefined, opts.name);
-  const id = String((await stack.contextFor(token)).userId);
+  const context = await stack.contextFor(token);
+  const id = String(context.userId);
+  const organization = context.tenantId ? { organization_id: String(context.tenantId) } : {};
   for (const position of opts.positions ?? []) {
-    await stack.seed('sys_user_position', [{ user_id: id, position }]);
+    await stack.seed('sys_user_position', [{ user_id: id, position, ...organization }]);
   }
   for (const name of opts.permissionSets ?? []) {
-    const [set] = await stack.rows('sys_permission_set', { name });
-    if (!set) throw new Error(`no permission set named "${name}" is registered on this stack`);
-    await stack.seed('sys_user_permission_set', [{ user_id: id, permission_set_id: set.id }]);
+    const served = stack.metadata.items<{ name?: string }>('permission').some((set) => set.name === name);
+    if (!served) throw new Error(`no permission set named "${name}" is registered on this stack`);
+    await stack.seed('sys_user_permission_set', [{ user_id: id, permission_set: name }]);
   }
   return { token, id };
 }
@@ -256,6 +282,40 @@ export const runRecordFlow = (stack: VerifyStack, flowName: string, object: stri
   stack.kernel.getService<Row>('automation').execute(flowName, {
     record, object, event: 'record_change', params: { ...record },
   });
+
+/**
+ * Start a scheduled flow the way its schedule trigger does.
+ *
+ * Since 18.0.0-next.0 the trigger door refuses a `runAs: 'system'` flow of type
+ * `schedule`, `autolaunched` or `record_change` to every caller but the system
+ * principal, an admin's session included (objectstack ca135dc, #22310: "This
+ * caller may not start this flow"). The handle's `flows.run` answers through
+ * that door and takes a person only, so it no longer starts a sweep at all. The
+ * one starter left is the one production has: a tick of
+ * `@objectstack/trigger-schedule`, which hands the booted `automation` service
+ * `{ event: 'schedule', params, callerParamKeys: [] }` with no user, and no
+ * `tenantId` because no flow here declares an organization (the `single`
+ * posture resolves the install's one organization beneath the run). This hands
+ * the service that context (the tick's own `jobId` / `schedule` seeds are left
+ * out; no flow here reads them) and answers as the door did: the run's result
+ * with `flowName`, or a rejection when the engine reports the run unsuccessful,
+ * so a sweep that dies still fails where it is started. It rejects on the
+ * engine's own `success: false` (a paused run excepted), a superset of what the
+ * door refused. The missing door is raised upstream from #2031.
+ */
+export async function runScheduledFlow(stack: VerifyStack, flowName: string): Promise<Row> {
+  const result: Row = await stack.kernel.getService<Row>('automation').execute(flowName, {
+    event: 'schedule', params: {}, callerParamKeys: [],
+  });
+  if (result?.success === false && result.status !== 'paused') {
+    throw Object.assign(new Error(String(result.error || `flow '${flowName}' run failed`)), {
+      name: 'VerifyRefusal', code: String(result.code ?? 'FLOW_FAILED'),
+      ...(result.errorMessage !== undefined ? { errorMessage: result.errorMessage } : {}),
+      ...(result.summary !== undefined ? { summary: result.summary } : {}),
+    });
+  }
+  return { ...result, flowName };
+}
 
 /** One write the engine received while a recorder was attached. */
 export interface EngineWrite {
