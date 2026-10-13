@@ -204,12 +204,12 @@ export const LeadConversionFlow: Flow = {
       // reads "Suspected = flagged automatically at intake" in all four
       // locales, and `lead_duplicate_check` is insert-only by design.
       //
-      // Flow copy is English-only in this repo, deliberately and consistently:
-      // flows carry no entry in the locale packs (`src/sales/translations/*.ts`
-      // translate objects, fields, views and actions), which
-      // `test/automation-docs-coverage.test.ts` records as the reason its
-      // Chinese flow labels are authored in the test itself. The banner on the
-      // record page — which DOES have a locale channel — carries all four.
+      // This warning's TEXT is English-only: it is the value of a variable,
+      // and no locale pack reaches a variable — the screen's translated
+      // `description` can only carry the `{{duplicateWarning}}` hole that
+      // shows it. The screens' own headings and bodies are keyed in the packs
+      // (`flows.lead_conversion` in `src/sales/translations/<locale>/app.ts`),
+      // and the banner on the record page carries the warning in all four.
       id: 'warn_duplicate', type: 'assignment', label: 'Compose Duplicate Warning',
       config: {
         assignments: {
@@ -284,8 +284,8 @@ export const LeadConversionFlow: Flow = {
       // section this line points at, and a hand-copied machine list in prose is
       // the drift AGENTS.md documentation rule 5 forbids.
       //
-      // Flow copy is English-only in this repo — see `warn_duplicate` above for
-      // the measurement; a flow has no entry in `src/sales/translations/*.ts`.
+      // The title and the body are translated in the packs
+      // (`flows.lead_conversion.screens.refuse_confirmed_duplicate`).
       id: 'refuse_confirmed_duplicate', type: 'screen', label: 'Conversion Refused',
       config: {
         title: 'Conversion refused',
@@ -348,8 +348,8 @@ export const LeadConversionFlow: Flow = {
       // The copy claims only what holds on every path into it: the key is
       // derived from `company` on every write that carries it
       // (`lead_duplicate_check`), and nothing has been written, because every
-      // create and update in this flow sits behind `screen_1`. Flow copy is
-      // English-only in this repo — see `warn_duplicate`.
+      // create and update in this flow sits behind `screen_1`. Its title and
+      // body are translated in the packs, like the other two refusals.
       //
       // Field-less screen: `waitForInput` is what turns it from a server-side
       // pass-through into the dialog the rep reads. See

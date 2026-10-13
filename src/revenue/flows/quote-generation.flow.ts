@@ -85,12 +85,12 @@ export const QuoteGenerationFlow: Flow = {
     // names the next step the `opportunity_lifecycle` refusal of this gate
     // names.
     //
-    // ⚠️ English only, and not by choice: at 17.7.0 the `flows` translation
-    // group carries a flow's `label` and its screens' `title` / field copy,
-    // and no key for an `end` node's `message` (a screen's `description` is
-    // refused by name). The console titles the dialog with the action's
-    // translated label. A platform gap, raised from #2032; ⛔ do not
-    // re-route the refusal through a screen to borrow a translatable title.
+    // Translated: since 18.0.0-next.0 the `flows` translation group keys an
+    // `end` node's refusal as `refusals.refuse_held.message`, which the
+    // engine renders in the run's locale (at 17.7.0 it had no such key, the
+    // gap raised from #2032). The console titles the dialog with the action's
+    // translated label. ⛔ Do not re-route the refusal through a screen to
+    // borrow a translatable title.
     { id: 'refuse_held', type: 'end', label: 'Quote Refused', config: { outcome: 'refused', message: 'Qualification approval comes first: tick Request Qualification Approval. Nothing was created.' } },
     {
       id: 'screen_1', type: 'screen', label: 'Quote Details',
