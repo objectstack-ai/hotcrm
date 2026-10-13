@@ -103,8 +103,12 @@ describe('premise: a flow cannot fold a company into its match key', () => {
    */
   const probe = async (key: string, value: unknown) => {
     const name = `probe_fold_${key}`;
+    // Run as the admin, not elevated: since 18.0.0-next.0 the trigger door
+    // refuses a self-triggered `runAs: 'system'` flow to every caller but the
+    // system principal (objectstack ca135dc, #22310), and what this probe
+    // measures is the value slot, not the elevation.
     const flow = {
-      name, label: 'probe', type: 'autolaunched', status: 'active', runAs: 'system',
+      name, label: 'probe', type: 'autolaunched', status: 'active', runAs: 'user',
       variables: [{ name: 'recordId', type: 'text', isInput: true, isOutput: false }],
       nodes: [
         { id: 'start', type: 'start', label: 'Start', config: {} },

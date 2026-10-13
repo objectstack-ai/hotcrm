@@ -100,35 +100,14 @@ export const hotcrmStack = (): Promise<VerifyStack> => bootStackOnce(artifact, H
  * instances, so a second boot over the same object would share them. The
  * remedy the refusal names is to build the configuration again from fresh
  * module instances — never a `{ ...artifact }` copy — which is what
- * `vi.resetModules()` and a dynamic import do. Built once per module registry,
- * like the boots themselves.
+ * `vi.resetModules()` and a dynamic import do. ⚠️ The reset reaches every
+ * module imported after it, so a test file that imports a local module
+ * dynamically after calling this gets a fresh instance of it.
  */
 export const buildArtifactAgain = async (): Promise<typeof artifact> => {
   vi.resetModules();
   return (await import('../../objectstack.config')).default;
 };
-
-/** {@link buildArtifactAgain}, built once — for a boot shared through `bootStackOnce`. */
-let freshBuild: Promise<typeof artifact> | undefined;
-export const freshArtifact = (): Promise<typeof artifact> => (freshBuild ??= buildArtifactAgain());
-
-/**
- * The app on the SPARSE datasource (`driver-memory`): a column a row was never
- * written with comes back ABSENT rather than NULL — the shape `driver-mongodb`
- * also produces, and the one AGENTS.md's predicate-totality rule is about. Only
- * for a suite whose claim is about that shape. Booted on its own fresh build,
- * so a suite can hold it beside {@link hotcrmStack}.
- *
- * ⚠️ On 18.0.0-next.0 this boot cannot serve a signed-in principal or a system
- * write: the boot now creates the Default Organization (ADR-0131 D3), so every
- * such call carries a tenant scope, and `driver-memory` refuses every
- * tenant-scoped call (`MemoryMultiTenantUnsupportedError`). `@objectstack/verify`
- * 34dba5a names that limit until ADR-0131 C8 and says to run such a leg on the
- * SQL in-memory driver.
- */
-export const HOTCRM_MEMORY_BOOT: BootOptions = bootOptions({ databaseDriver: 'memory' });
-export const hotcrmMemoryStack = async (): Promise<VerifyStack> =>
-  bootStackOnce(await freshArtifact(), HOTCRM_MEMORY_BOOT);
 
 /**
  * The names of every object the booted runtime registers that this app does
@@ -303,6 +282,40 @@ export const runRecordFlow = (stack: VerifyStack, flowName: string, object: stri
   stack.kernel.getService<Row>('automation').execute(flowName, {
     record, object, event: 'record_change', params: { ...record },
   });
+
+/**
+ * Start a scheduled flow the way its schedule trigger does.
+ *
+ * Since 18.0.0-next.0 the trigger door refuses a `runAs: 'system'` flow of type
+ * `schedule`, `autolaunched` or `record_change` to every caller but the system
+ * principal, an admin's session included (objectstack ca135dc, #22310: "This
+ * caller may not start this flow"). The handle's `flows.run` answers through
+ * that door and takes a person only, so it no longer starts a sweep at all. The
+ * one starter left is the one production has: a tick of
+ * `@objectstack/trigger-schedule`, which hands the booted `automation` service
+ * `{ event: 'schedule', params, callerParamKeys: [] }` with no user, and no
+ * `tenantId` because no flow here declares an organization (the `single`
+ * posture resolves the install's one organization beneath the run). This hands
+ * the service that context (the tick's own `jobId` / `schedule` seeds are left
+ * out; no flow here reads them) and answers as the door did: the run's result
+ * with `flowName`, or a rejection when the engine reports the run unsuccessful,
+ * so a sweep that dies still fails where it is started. It rejects on the
+ * engine's own `success: false` (a paused run excepted), a superset of what the
+ * door refused. The missing door is raised upstream from #2031.
+ */
+export async function runScheduledFlow(stack: VerifyStack, flowName: string): Promise<Row> {
+  const result: Row = await stack.kernel.getService<Row>('automation').execute(flowName, {
+    event: 'schedule', params: {}, callerParamKeys: [],
+  });
+  if (result?.success === false && result.status !== 'paused') {
+    throw Object.assign(new Error(String(result.error || `flow '${flowName}' run failed`)), {
+      name: 'VerifyRefusal', code: String(result.code ?? 'FLOW_FAILED'),
+      ...(result.errorMessage !== undefined ? { errorMessage: result.errorMessage } : {}),
+      ...(result.summary !== undefined ? { summary: result.summary } : {}),
+    });
+  }
+  return { ...result, flowName };
+}
 
 /** One write the engine received while a recorder was attached. */
 export interface EngineWrite {

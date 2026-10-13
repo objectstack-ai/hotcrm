@@ -10,7 +10,7 @@ import artifact from '../objectstack.config';
 import { CrmFlows as allFlows } from './helpers/src-roster';
 import { regionsOf } from './helpers/flow-regions';
 import {
-  hotcrmStack, bootOptions, buildArtifactAgain, signUpPerson, systemUpdate, notificationsTo, type Person,
+  hotcrmStack, bootOptions, buildArtifactAgain, signUpPerson, systemUpdate, notificationsTo, runScheduledFlow, type Person,
 } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
@@ -29,7 +29,8 @@ type Rec = Record<string, any>;
  * These run on the shipped app booted by `@objectstack/verify`: the fixture
  * rows are written through the real engine (as a person, or as the system
  * where the row's state is not one a person can produce), each sweep is
- * started through the trigger door as the admin (`flows.run`), and its effects
+ * started the way its schedule trigger starts it (`runScheduledFlow`: the
+ * trigger door refuses a system sweep to a person since 18.0.0-next.0), and its effects
  * are read back off the engine — rows, and the notifications it handed the
  * messaging outbox (`notificationsTo`). The boot replays the app's seed data
  * and a sweep processes every match, seed rows included; so every reading is
@@ -52,13 +53,12 @@ const iso = (daysFromNow: number): string => {
 const day = (daysFromNow: number): string => iso(daysFromNow).slice(0, 10);
 
 let verify: VerifyStack;
-let admin: string;
 let rep: Person;
 let agent: Person;
 let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
-  admin = await verify.signIn();
+  await verify.signIn(); // the harness admin, as before: the sweeps no longer run as anyone
   rep = await signUpPerson(verify, 'rep@flow-scheduled.test', {
     name: 'Sweep Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
   });
@@ -69,8 +69,8 @@ beforeAll(async () => {
   });
 }, 120_000);
 
-/** Run a scheduled sweep once, as the admin, through the trigger door. */
-const sweep = (flowName: string) => verify.flows.run(flowName, {}, { as: admin });
+/** Run a scheduled sweep once, as its schedule trigger does. */
+const sweep = (flowName: string) => runScheduledFlow(verify, flowName);
 
 /** The notifications of `topic` addressed to `userId` about the record at `url`. */
 const notified = async (userId: string, topic: string, url: string) =>
@@ -917,7 +917,7 @@ describe('re-seed × snapshot leaves one row per (owner, period, window) (#702)'
     const ql = stack.kernel.getService<Rec>('objectql');
     const steps: Record<string, () => Promise<unknown>> = {
       claim: () => claimSeedOwnership(ql, adminId, { logger: silent }),
-      forecast_snapshot: () => stack.flows.run('forecast_snapshot', {}, { as: adminToken }),
+      forecast_snapshot: () => runScheduledFlow(stack, 'forecast_snapshot'),
     };
     const replaySeeds = () => new SeedLoaderService(ql as never, stack.kernel.getService('metadata') as never, silent as never)
       .load(SeedLoaderRequestSchema.parse({ seeds: [forecastSeed], config: { defaultMode: 'upsert', multiPass: true } }));

@@ -368,20 +368,21 @@ describe('deleting a customer account with activated contracts (#549)', () => {
     expect(await rowsOf('crm_contract', contract.id)).toHaveLength(1);
   });
 
-  it('a draft contract is NOT what the guard refuses — the platform referential pass is', async () => {
-    // MEASURED, and the reason the docs say "an account carrying any contract
-    // cannot be deleted" rather than "drafts cascade": the guard stands down
-    // (no activated contract), then the engine's cascade reaches the CONTACTS
-    // first and stops on `crm_contract.crm_contact`, a required lookup that
-    // cannot be cleared. So the delete is still refused, by the platform and
-    // in its words, and every row stays. If this case starts passing with
-    // `null`, the engine reordered its cascade (contracts before contacts) and
-    // the docs' delete paragraph must be re-taken.
+  it('a draft contract is NOT what the guard refuses — it goes with the account', async () => {
+    // MEASURED. The guard stands down on a draft (no activated contract), and
+    // what follows is the engine's cascade. Through 17.7.0 that cascade reached
+    // the CONTACTS first and stopped on `crm_contract.crm_contact`, a required
+    // lookup that cannot be cleared, so the delete was refused in the platform's
+    // words ("still referenced by 1 Contract record") and every row stayed — the
+    // reason this case once asked to be told if it started answering `null`. On
+    // 18.0.0-next.0 it does: the delete goes through and the draft contract goes
+    // with the account, the cascade `hooks-runtime-sales`'s account_protection
+    // case pins for every settled status. The account docs promise only that an
+    // ACTIVATED contract blocks the delete, which still holds (the case above).
     const { account, contract } = await accountWithContract('draft');
     const message = await deleteAndCatch('crm_account', account.id);
-    expect(message).not.toContain('activated contract');
-    expect(message).toMatch(/still referenced by 1 Contract record/);
-    expect(await rowsOf('crm_account', account.id)).toHaveLength(1);
-    expect(await rowsOf('crm_contract', contract.id)).toHaveLength(1);
+    expect(message, 'the delete of an account carrying only a draft contract was refused').toBeNull();
+    expect(await rowsOf('crm_account', account.id)).toEqual([]);
+    expect(await rowsOf('crm_contract', contract.id), 'the draft contract outlived its account').toEqual([]);
   });
 });

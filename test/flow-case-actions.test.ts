@@ -167,21 +167,24 @@ describe('case_escalation_stamp — the elevated stamping subflow (#1434)', () =
     expect(names).toContain('recordId');
   });
 
-  it('stamps the case when run directly', async () => {
+  it('is refused to an agent who starts it directly — the stamp comes only through its parent', async () => {
+    // Through 17.7.0 an agent could start this elevated subflow by name through
+    // the trigger door, and it stamped the case. Since 18.0.0-next.0 that door
+    // refuses a self-triggered `runAs: 'system'` flow to every caller but the
+    // system principal (objectstack ca135dc, #22310), so the stamp reaches a case
+    // only through `escalate_case`'s subflow node — measured by the cases above.
     const kase = await openCase({ escalation_reason: 'Breach' });
-    // No runId assertion here: this flow declares no screen, so it runs to
-    // completion synchronously and the engine returns no paused run to resume
-    // (unlike the screen flows above). The stored row is the evidence it ran —
-    // the case was opened with `is_escalated: false`, so a flow that never
-    // executed leaves it false and the assertions below fail.
     expect(kase.is_escalated).toBe(false);
-    await verify.flows.run(CaseEscalationStampFlow.name, { recordId: kase.id }, { as: agent.token });
-    const updated = await stored(kase.id);
-    expect(updated.is_escalated).toBe(true);
-    expect(updated.escalated_date).toBeTruthy();
-    // ⛔ It must not touch the agent's own columns.
-    expect(updated.escalation_reason).toBe('Breach');
-    expect(updated.priority).toBe('medium');
+    const refusal = await verify.flows
+      .run(CaseEscalationStampFlow.name, { recordId: kase.id }, { as: agent.token })
+      .then(() => null, (e: unknown) => e);
+    expect(refusal, 'an agent started the elevated stamping subflow by name').toMatchObject({ code: 'PERMISSION_DENIED', status: 403 });
+    // Nothing ran: the case is exactly as the agent left it.
+    const after = await stored(kase.id);
+    expect(after.is_escalated).toBe(false);
+    expect(after.escalated_date ?? null).toBeNull();
+    expect(after.escalation_reason).toBe('Breach');
+    expect(after.priority).toBe('medium');
   });
 });
 

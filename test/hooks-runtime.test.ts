@@ -1,9 +1,9 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect, beforeAll, vi } from 'vitest';
-import type { VerifyStack } from '@objectstack/verify';
+import { bootStack, type VerifyStack } from '@objectstack/verify';
 import {
-  hotcrmStack, hotcrmMemoryStack, signUpPerson, guestInsert, systemUpdate, recordEngineWrites, today, type Person,
+  hotcrmStack, bootOptions, buildArtifactAgain, signUpPerson, guestInsert, systemUpdate, recordEngineWrites, today, type Person,
 } from './helpers/verify-stack';
 
 /**
@@ -297,8 +297,11 @@ describe('lead_auto_assign', () => {
   });
 
   it('is a no-op when there is no rep pool (never blocks intake)', async () => {
-    // The app on its own datasource, where nobody holds `sales_rep` yet.
-    const empty = await hotcrmMemoryStack();
+    // The app on its own datasource, where nobody holds `sales_rep` yet. The
+    // SQL in-memory one: `driver-memory` refuses every tenant-scoped call since
+    // 18.0.0-next.0 (verify 34dba5a, until ADR-0131 C8), and a build of its own,
+    // as one configuration holds one live kernel (objectstack#22301).
+    const empty = await bootStack(await buildArtifactAgain(), bootOptions());
     expect(await empty.rows('sys_user_position', { position: 'sales_rep' }), 'the empty boot has a rep pool').toEqual([]);
     const [written] = await empty.seed('crm_lead', [lead()]);
     expect((await empty.rows('crm_lead', { id: written!.id }))[0]!.owner_id ?? null).toBeNull();

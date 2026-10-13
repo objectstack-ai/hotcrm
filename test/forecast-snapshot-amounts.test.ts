@@ -2,14 +2,14 @@
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
-import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, runScheduledFlow, type Person } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
 
 /**
  * `forecast_snapshot`'s four bucket accumulators are CEL value envelopes
  * (#1984), run here on the shipped app booted by `@objectstack/verify` (the
- * sweep started through the trigger door as the admin): each one is an
+ * sweep started the way its schedule trigger starts it): each one is an
  * `assignment` inside a `loop` body inside the owner loop's `try_catch`, so
  * this is also the proof that a value envelope in that position is evaluated
  * at all rather than written into the variable verbatim.
@@ -41,11 +41,10 @@ const inPeriod = isoUtc(qStart);
 const STALE = 9_999_999;
 
 let verify: VerifyStack;
-let admin: string;
 let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
-  admin = await verify.signIn();
+  await verify.signIn(); // the harness admin, as before: the sweeps no longer run as anyone
 }, 120_000);
 
 /** A fresh owner with a stale current-quarter snapshot row, and their account. */
@@ -67,7 +66,7 @@ const opp = (who: Person, accountId: string, over: Rec): Rec => ({
 });
 
 const sweep = async (who: Person) => {
-  await verify.flows.run('forecast_snapshot', {}, { as: admin });
+  await runScheduledFlow(verify, 'forecast_snapshot');
   const rows = await verify.rows('crm_forecast', { owner_id: who.id });
   expect(rows, 'the sweep opened a second row').toHaveLength(1);
   return rows[0]!;

@@ -56,7 +56,16 @@ type Rec = Record<string, any>;
 
 const ORG_A = 'org_alpha';
 const ORG_B = 'org_beta';
-const JOHN = 'john.smith@acme.example.com';
+/**
+ * The address the cases share. NOT the seed's own `john.smith@acme.example.com`
+ * (the address of the seed-replay refusal quoted above): since 18.0.0-next.0
+ * the boot creates the Default Organization and replays the seed data into it
+ * (ADR-0131 D3, verify 34dba5a), so that seed contact now lives in the admin's
+ * organization and an insert of its address there is a genuine duplicate. The
+ * cases are about one address in several organizations, so they take one no
+ * seed row carries — checked in `beforeAll`.
+ */
+const JOHN = 'john.smith@org-scope.example.com';
 
 /** The org-bound boot, its admin and the organization the platform bound them to. */
 let orgBound: VerifyStack;
@@ -72,6 +81,7 @@ beforeAll(async () => {
   admin = await orgBound.signIn();
   adminOrg = String((await orgBound.contextFor(admin)).tenantId ?? '');
   expect(adminOrg, 'the org-bound boot bound the admin to no organization').not.toBe('');
+  expect(await orgBound.rows('crm_contact', { email: JOHN }), 'a seed row already carries the fixture address').toEqual([]);
   [accountA, accountB] = (await orgBound.seed('crm_account', [{ name: 'Acme A' }, { name: 'Acme B' }])) as [Rec, Rec];
   // One contact of ORG_A, the row the first cases try to duplicate.
   await orgBound.seed('crm_contact', [{ first_name: 'John', last_name: 'Smith', email: JOHN, crm_account: accountA.id, organization_id: ORG_A }]);

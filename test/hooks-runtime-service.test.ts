@@ -5,7 +5,7 @@ import type { VerifyStack } from '@objectstack/verify';
 import campaignHooks, { CAMPAIGN_METRIC_WRITE_KEYS } from '../src/marketing/objects/campaign.hook';
 import leadHooks from '../src/sales/objects/lead.hook';
 import {
-  hotcrmStack, hotcrmMemoryStack, signUpPerson, guestInsert, systemUpdate, recordEngineWrites, today, daysFromNow,
+  hotcrmStack, signUpPerson, guestInsert, systemUpdate, recordEngineWrites, today, daysFromNow,
   type Person,
 } from './helpers/verify-stack';
 
@@ -571,24 +571,18 @@ describe('campaign_lead_conversion_refresh', () => {
    * one, sent in the other), and another lead L2 is in the first. The flip of
    * `is_converted` is the admin's (who may write members and campaigns).
    *
-   * On the SPARSE datasource, and the last case once more on SQL, the default.
-   * The promotion reads the lead's memberships with a field projection, then
-   * updates each by its `id`: `driver-memory` (like `driver-mongodb`) hands
-   * `id` back whether or not the projection names it, the SQL driver hands back
-   * exactly the projected columns — so the read names `id`, or on SQL every
-   * membership is skipped (#2018).
+   * On the SQL datasource, the file's shared boot and its people. The promotion
+   * reads the lead's memberships with a field projection, then updates each by
+   * its `id`: the SQL driver hands back exactly the projected columns, so the
+   * read names `id`, or every membership is skipped (#2018). (Until
+   * 18.0.0-next.0 this desk ran on `driver-memory`, which now refuses every
+   * tenant-scoped call; the #2031 ruling moved it to SQL:
+   * 「就应该在 sql 上测试，作废内存驱动的测试」.)
    */
   const desk = {} as { verify: VerifyStack; admin: string; rep: Person; marketer: Person };
-  beforeAll(async () => {
-    desk.verify = await hotcrmMemoryStack();
-    desk.admin = await desk.verify.signIn();
-    desk.rep = await signUpPerson(desk.verify, 'rep@hooks-runtime-service.test', {
-      name: 'Sales Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
-    });
-    desk.marketer = await signUpPerson(desk.verify, 'marketer@hooks-runtime-service.test', {
-      name: 'Marketing User', positions: ['marketing_user'], permissionSets: ['marketing_user'],
-    });
-  }, 120_000);
+  beforeAll(() => {
+    Object.assign(desk, { verify, admin, rep, marketer });
+  });
 
   const store = async (m2Status = 'sent', on: VerifyStack = desk.verify) => {
     const owner = on === desk.verify ? desk.marketer.id : marketer.id;

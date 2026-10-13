@@ -5,7 +5,7 @@ import { cel } from '@objectstack/spec';
 import type { VerifyStack } from '@objectstack/verify';
 import { FLOW_REGION_SLOTS_BY_TYPE } from '@objectstack/spec/automation';
 import { CrmFlows as allFlows } from './helpers/src-roster';
-import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, runScheduledFlow, type Person } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
 
@@ -196,17 +196,16 @@ describe('scheduled create_record declares organization_id (#700)', () => {
  */
 /**
  * The runtime half, on the shipped app booted by `@objectstack/verify`: each
- * sweep is started through the trigger door as the admin (`flows.run`) — a
- * schedule run carries no organization of its own — over rows written by the
+ * sweep is started the way its schedule trigger starts it (`runScheduledFlow`)
+ * — a schedule run carries no organization of its own — over rows written by the
  * system into organizations created for the purpose, and what the sweep wrote
  * is read back off the engine.
  */
 let verify: VerifyStack;
-let admin: string;
 let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
-  admin = await verify.signIn();
+  await verify.signIn(); // the harness admin, as before: the sweeps no longer run as anyone
 }, 120_000);
 
 /** A fresh organization row, written as the system. */
@@ -255,7 +254,7 @@ describe('the declared organization_id actually resolves (#700)', () => {
       contract_type: 'subscription', contract_value: 90_000, auto_renewal: true, renewal_notice_days: 30,
       contract_term_months: 12, start_date: day(-345), end_date: day(+20), billing_frequency: 'monthly', payment_terms: 'net_30',
     }]);
-    await verify.flows.run('contract_renewal', {}, { as: admin });
+    await runScheduledFlow(verify, 'contract_renewal');
 
     const tasks = await verify.rows('crm_task', {
       related_to_account: acct.id, subject: `Renewal due: contract ${contract!.contract_number}`,
@@ -275,7 +274,7 @@ describe('the declared organization_id actually resolves (#700)', () => {
       name: `Stalled Deal ${++k}`, stage: 'proposal', stage_entry_date: day(-30), amount: 50_000,
       close_date: '2030-06-30', crm_account: acct.id, owner_id: who.id, organization_id: org,
     }]);
-    await verify.flows.run('opportunity_stagnation', {}, { as: admin });
+    await runScheduledFlow(verify, 'opportunity_stagnation');
 
     const tasks = await verify.rows('crm_task', { related_to_opportunity: deal!.id });
     expect(tasks, 'the sweep created no nudge task').toHaveLength(1);
@@ -293,7 +292,7 @@ describe('the declared organization_id actually resolves (#700)', () => {
       name: `Forecast Deal ${++k}`, owner_id: who.id, stage: 'negotiation', amount: 200_000, approval_status: 'approved',
       close_date: quarterStart(), crm_account: acct.id, organization_id: org,
     }]);
-    await verify.flows.run('forecast_snapshot', {}, { as: admin });
+    await runScheduledFlow(verify, 'forecast_snapshot');
 
     const rows = await verify.rows('crm_forecast', { owner_id: who.id });
     expect(rows, 'the sweep opened no snapshot row').toHaveLength(1);
@@ -361,7 +360,7 @@ describe('forecast_snapshot sums only the target row\u2019s organization (#1372)
 
   it('writes its own organization\u2019s totals, not the sum across both', async () => {
     const { who, orgA } = await crossOrganizationOwner();
-    await verify.flows.run('forecast_snapshot', {}, { as: admin });
+    await runScheduledFlow(verify, 'forecast_snapshot');
 
     const rows = await verify.rows('crm_forecast', { owner_id: who.id });
     expect(rows, 'the sweep opened no snapshot row').toHaveLength(1);
@@ -390,7 +389,7 @@ describe('forecast_snapshot sums only the target row\u2019s organization (#1372)
     // than the cross-tenant total above. Pinned here so a later change to that
     // key has to edit this expectation deliberately rather than drift past it.
     const { who, orgA } = await crossOrganizationOwner();
-    await verify.flows.run('forecast_snapshot', {}, { as: admin });
+    await runScheduledFlow(verify, 'forecast_snapshot');
 
     expect((await verify.rows('crm_forecast', { owner_id: who.id })).map((r) => r.organization_id)).toEqual([orgA]);
   });

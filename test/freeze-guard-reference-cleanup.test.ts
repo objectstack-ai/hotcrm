@@ -12,7 +12,7 @@ import { REFUSAL_CODES } from '../src/sales/objects/_refusal';
 import oppHooks from '../src/sales/objects/opportunity.hook';
 import quoteHooks from '../src/revenue/objects/quote.hook';
 import type { VerifyStack } from '@objectstack/verify';
-import { hotcrmStack, hotcrmMemoryStack, signUpPerson, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
 const hookNamed = (hooks: unknown, name: string): AnyRec => {
@@ -645,16 +645,12 @@ const expectRefusal = (err: unknown, wording: RegExp): void => {
 interface Desk { verify: VerifyStack; rep: Person }
 /** The SQL datasource (every declared column materialised) — where every case below runs. */
 const sql = {} as Desk;
-/** The sparse datasource (`driver-memory`; `driver-mongodb` stores the same shape) — see the last case. */
-const sparse = {} as Desk;
 let n = 0;
 beforeAll(async () => {
-  for (const [desk, boot] of [[sql, hotcrmStack], [sparse, hotcrmMemoryStack]] as const) {
-    desk.verify = await boot();
-    desk.rep = await signUpPerson(desk.verify, 'rep@freeze-guard-units.test', {
-      name: 'Freeze Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
-    });
-  }
+  sql.verify = await hotcrmStack();
+  sql.rep = await signUpPerson(sql.verify, 'rep@freeze-guard-units.test', {
+    name: 'Freeze Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+  });
 }, 180_000);
 
 /** The records a settled one links to — an account, two contacts, two deals — written as the system. */
@@ -797,19 +793,13 @@ describe.each(GUARDS)('$label yields to the cleanup shape and nothing else', (gu
     expectRefusal(await refusalOf(object, id, { [businessField]: null }), refusal);
   });
 
-  it('does not yield when the link was already empty', async () => {
-    // Nothing to clean up: the engine only clears links that point somewhere,
-    // so a null over an absent value is a hand edit that invented one. That is
-    // the SPARSE datasource's shape — a link the row was never written with is
-    // ABSENT there — and the guard refuses it.
-    const { id } = await settled(false, sparse);
-    expectRefusal(await refusalOf(object, id, { [link]: null }, sparse), refusal);
-  });
-
-  it('on SQL the same write is no change at all, and lands as one', async () => {
-    // Measured, and recorded because the two datasources part here: SQL
-    // materialises the empty link as NULL, so `null` over it changes nothing,
-    // the guard finds nothing violating, and the link stays empty.
+  it('a null over a link that was already empty is no change at all, and lands as one', async () => {
+    // Measured: SQL materialises the empty link as NULL, so `null` over it
+    // changes nothing, the guard finds nothing violating, and the link stays
+    // empty. (Until 18.0.0-next.0 a twin case ran on `driver-memory`, where a
+    // link never written is ABSENT and the guard refused the same write; that
+    // driver now refuses every tenant-scoped call, and the #2031 ruling
+    // retired the case: 「就应该在 sql 上测试，作废内存驱动的测试」.)
     const { id } = await settled(false);
     expect((await repEdit(object, id, { [link]: null }))[link] ?? null).toBeNull();
   });

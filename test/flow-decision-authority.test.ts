@@ -6,7 +6,7 @@ import { P } from '@objectstack/spec';
 import { OpportunityStagnationFlow } from '../src/sales/flows/opportunity-stagnation.flow';
 import { allFlows } from '../objectstack.composition';
 import { flowGraphDeep } from './helpers/flow-regions';
-import { hotcrmStack, signUpPerson, daysFromNow, notificationsTo } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, daysFromNow, notificationsTo, runScheduledFlow } from './helpers/verify-stack';
 
 /**
  * ═══ HOUSE RULE: a `decision` node's OUT-EDGES are the only branch site ═════
@@ -199,8 +199,9 @@ describe('decision nodes state no predicate of their own', () => {
 describe('the mechanism, on the real engine', () => {
   // The shipped app booted through `@objectstack/verify`. A flow variant is
   // registered beside the shipped ones through the platform's own
-  // flow-authoring door (`POST /automation`, as the admin), run through the
-  // trigger door (`flows.run`), and removed again (`DELETE /automation/:name`).
+  // flow-authoring door (`POST /automation`, as the admin), run the way its
+  // schedule trigger runs it (`runScheduledFlow`), and removed again
+  // (`DELETE /automation/:name`).
   let verify: VerifyStack;
   let admin: string;
   let n = 0;
@@ -250,8 +251,8 @@ describe('the mechanism, on the real engine', () => {
   };
 
   const sweepTwice = async (flowName: string, deal: Awaited<ReturnType<typeof stalledDeal>>) => {
-    await verify.flows.run(flowName, {}, { as: admin });
-    await verify.flows.run(flowName, {}, { as: admin });
+    await runScheduledFlow(verify, flowName);
+    await runScheduledFlow(verify, flowName);
     const tasks = await verify.rows('crm_task', { related_to_opportunity: deal.opp.id });
     const notifications = await notificationsTo(verify, deal.rep.id, 'deal_stalled');
     return { tasks: tasks.length, notifications: notifications.length };
@@ -337,7 +338,7 @@ describe('the mechanism, on the real engine', () => {
       const nudge = `NUDGED ${i}`;
       await verify.seed('crm_task', [{ subject: stall, type: 'follow_up', priority: 'high', status: 'not_started' }]);
       const name = `decision_probe_${i}`;
-      await withFlow(name, gateFlow(stall, nudge, nodeAuthoritative), () => verify.flows.run(name, {}, { as: admin }));
+      await withFlow(name, gateFlow(stall, nudge, nodeAuthoritative), () => runScheduledFlow(verify, name));
       return (await verify.rows('crm_task', { subject: nudge })).map(() => 'NUDGED');
     };
 

@@ -5,7 +5,7 @@ import caseHooks from '../src/service/objects/case.hook';
 import { caseSlaBreached } from '../src/service/objects/_case-sla';
 import { CLOSED_CASE_STATUSES } from '../src/service/objects/_case-assignment';
 import type { VerifyStack } from '@objectstack/verify';
-import { hotcrmStack, signUpPerson, systemUpdate, runShippedHook, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, systemUpdate, runShippedHook, runScheduledFlow, type Person } from './helpers/verify-stack';
 
 /**
  * A case that finishes late records its breach when its clock stops (#2070).
@@ -359,8 +359,7 @@ describe('the SLA Violations tile counts open breaches at read time, with no swe
   it('the sweep then flags exactly the open cases the tile already counted, and the number holds', async () => {
     // The behavioural half of section 4: whatever the two spellings, the
     // sweep's selection and the tile's open-case branch are one set of rows.
-    const admin = await verify.signIn();
-    await verify.flows.run('case_sla_monitor', {}, { as: admin });
+    await runScheduledFlow(verify, 'case_sla_monitor');
     expect(await flagged()).toEqual([...COUNTED].sort());
     expect(await tileCount()).toBe(COUNTED.length);
   }, 120_000);

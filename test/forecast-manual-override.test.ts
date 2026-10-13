@@ -4,7 +4,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
 import { ForecastSnapshotFlow } from '../src/sales/flows/forecast-snapshot.flow';
 import { nodesUnder, edgesUnder } from './helpers/flow-regions';
-import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, runScheduledFlow, type Person } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
 
@@ -59,7 +59,7 @@ type Rec = Record<string, any>;
  * Inspecting the filter object would pass on a flow whose edges never reach the
  * write, and fail on a correct one authored differently. These drive
  * `forecast_snapshot` on the shipped app booted by `@objectstack/verify` —
- * started through the trigger door as the admin, with the real
+ * started the way its schedule trigger starts it, with the real
  * `forecast_derive_period` hook in the write path — and read the rows back off
  * the engine. Every case writes its own people, deals and forecast rows (as
  * the system), so the sweep's other work — the boot's seed owners — is not
@@ -155,7 +155,7 @@ const write = async (rows: Rec[]): Promise<Rec[]> => {
   return stored;
 };
 
-const sweep = () => verify.flows.run('forecast_snapshot', {}, { as: admin });
+const sweep = () => runScheduledFlow(verify, 'forecast_snapshot');
 
 /**
  * The window as the CONSUMERS see it: `period_start` matched by equality, the

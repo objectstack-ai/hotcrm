@@ -4,7 +4,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
 import { CaseEscalationFlow, CaseEscalationOnCreateFlow } from '../src/service/flows/case-escalation.flow';
 import {
-  hotcrmStack, hotcrmMemoryStack, signUpPerson, guestInsert, systemUpdate, flowRuns, notificationsTo,
+  hotcrmStack, signUpPerson, guestInsert, systemUpdate, flowRuns, notificationsTo,
   runRecordFlow, type Person,
 } from './helpers/verify-stack';
 
@@ -50,12 +50,10 @@ type FlowName = 'case_escalation' | 'case_escalation_on_create';
 const FLOW_NAMES: FlowName[] = ['case_escalation', 'case_escalation_on_create'];
 
 let sql: VerifyStack;
-let sparse: VerifyStack;
 let agent: Person;
 let k = 0;
 beforeAll(async () => {
   sql = await hotcrmStack();
-  sparse = await hotcrmMemoryStack();
   // An agent with the service grants but NOT on the `service_agent` rota: the
   // cases below are raised while that rota is empty, so `case_auto_assign`
   // leaves them ownerless — and a case the agent opens stays theirs.
@@ -103,11 +101,11 @@ async function raise(stack: VerifyStack, flowName: FlowName, owner?: unknown) {
  * terms and none of them is decoration.
  */
 const OWNERLESS: Record<string, { stack: () => VerifyStack; owner?: unknown; flows: FlowName[] }> = {
-  // The key is ABSENT. A driver row never written with the column is sparse
-  // (driver-memory / driver-mongodb store only the columns a row was written
-  // with) — an unguarded `vars.caseRecord.owner_id != null` aborts here with
-  // `No such key` and takes the run down exactly the way the empty slate did.
-  'owner column never written (sparse datasource)': { stack: () => sparse, flows: FLOW_NAMES },
+  // (An ABSENT key, the shape `driver-memory` stored for a column a row was
+  // never written with, was a leg here until 18.0.0-next.0. That driver now
+  // refuses every tenant-scoped call, and the #2031 ruling retired the leg:
+  // 「就应该在 sql 上测试，作废内存驱动的测试」.)
+  //
   // An explicit NULL — the nullable column, as a SQL datasource stores an
   // ownerless row. `string(null)` has no overload, so the `!= null` term must
   // short-circuit before the wrap.

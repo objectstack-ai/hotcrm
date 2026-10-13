@@ -5,7 +5,7 @@ import type { VerifyStack } from '@objectstack/verify';
 import { parseFilterAST } from '@objectstack/spec/data';
 import stack from './helpers/composed-stack';
 import { CLOSED_CASE_STATUSES } from '../src/service/objects/_case-assignment';
-import { hotcrmStack, hotcrmMemoryStack, signUpPerson } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson } from './helpers/verify-stack';
 
 /**
  * A RESOLVED case is not at risk — the ⏰ SLA at Risk tab and the SLA sweep
@@ -36,13 +36,14 @@ import { hotcrmStack, hotcrmMemoryStack, signUpPerson } from './helpers/verify-s
  * `not_in` ever stopped excluding, and this file would stay green if a sixth
  * spelling grew somewhere the view does not reach.
  *
- * ### Both datasources, and the fixture is written rather than declared
+ * ### The SQL datasource, and the fixture is written rather than declared
  *
- * The shipped app is booted through `@objectstack/verify`'s handle twice: on
- * the SQL datasource (every declared column materialised) and on the sparse one
- * (`driver-memory`, which stores only the columns a row was written with — the
- * shape `driver-mongodb` also produces). `is_closed` is exactly the kind of
- * boolean an absent-vs-NULL difference gets wrong, so the matrix runs twice.
+ * The shipped app is booted through `@objectstack/verify`'s handle on the SQL
+ * datasource (every declared column materialised). Until 18.0.0-next.0 the
+ * block also ran on `driver-memory`, whose rows hold only the columns they were
+ * written with; that driver now refuses every tenant-scoped call, and the
+ * maintainer's ruling on #2031 retired its leg:
+ * 「就应该在 sql 上测试，作废内存驱动的测试」.
  *
  * ⚠️ The fixture does not ASSERT `is_closed: false` on the resolved case — a
  * service agent writes each case through the engine's write door
@@ -87,11 +88,8 @@ describe('the ⏰ SLA at Risk view still selects on the live-work predicate', ()
   });
 });
 
-/**
- * Both row shapes. `memory` is the sparse one (`driver-mongodb` produces it
- * too); `sqlite` lowers the filter to real SQL over materialised columns.
- */
-for (const [driverName, boot] of [['memory', hotcrmMemoryStack], ['sqlite', hotcrmStack]] as const) {
+/** `sqlite` lowers the filter to real SQL over materialised columns. */
+for (const [driverName, boot] of [['sqlite', hotcrmStack]] as const) {
   describe(`a resolved case is not at risk — over ${driverName}`, () => {
     let verify: VerifyStack;
     /** The subjects THIS block wrote — the boot replays the app's seed cases too. */

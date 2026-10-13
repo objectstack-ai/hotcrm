@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
-import { hotcrmStack, signUpPerson, guestInsert, systemUpdate, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, guestInsert, systemUpdate, runScheduledFlow, type Person } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
 
@@ -38,7 +38,7 @@ type Rec = Record<string, any>;
  * `service_manager` in it, which is the one input the ruling turns on. The
  * EMPTY branch runs first; the pool is staffed for the NON-EMPTY one after.
  *
- * The sweep is started through the trigger door as the admin (`flows.run`),
+ * The sweep is started the way its schedule trigger starts it (`runScheduledFlow`),
  * and it processes EVERY breached case in the database — the boot's seed
  * cases included — so each branch first runs it once to SETTLE them (flagged,
  * they no longer match), then writes its own cases and runs it again. The
@@ -70,14 +70,13 @@ const iso = (daysFromNow: number): string => {
 const OWNERLESS = ['c_unwritten', 'c_blank'] as const;
 
 let verify: VerifyStack;
-let admin: string;
 let rep1: Person;
 let rep2: Person;
 let rep3: Person;
 let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
-  admin = await verify.signIn();
+  await verify.signIn(); // the harness admin, as before: the sweeps no longer run as anyone
   rep1 = await signUpPerson(verify, 'rep1@flow-sla-ownerless-assignment.test', { name: 'Rep One' });
   rep2 = await signUpPerson(verify, 'rep2@flow-sla-ownerless-assignment.test', { name: 'Rep Two' });
   rep3 = await signUpPerson(verify, 'rep3@flow-sla-ownerless-assignment.test', { name: 'Rep Three' });
@@ -110,12 +109,13 @@ const seedCases = async () => ({
 
 /** Settle the database, write the cases, run the sweep; what it did. */
 const runSweep = async (between: (ids: Record<string, string>) => Promise<void> = async () => undefined) => {
-  await verify.flows.run('case_sla_monitor', {}, { as: admin });
+  await runScheduledFlow(verify, 'case_sla_monitor');
   const ids: Record<string, string> = await seedCases();
   await between(ids);
   // A terminal failure is recorded, not thrown by the run — and the trigger
-  // door turns a failed run into a refusal, so a dying sweep fails HERE.
-  const result: Rec = await verify.flows.run('case_sla_monitor', {}, { as: admin });
+  // door turned a failed run into a refusal, as `runScheduledFlow` does, so a
+  // dying sweep fails HERE.
+  const result: Rec = await runScheduledFlow(verify, 'case_sla_monitor');
   const byId: Record<string, Rec> = {};
   for (const [key, id] of Object.entries(ids)) byId[key] = (await verify.rows('crm_case', { id }))[0]!;
   const nodeOf = (id: string) => (result.summary?.nodes ?? []).find((n: Rec) => n.nodeId === id);
@@ -229,12 +229,18 @@ describe('pool NON-EMPTY: the ownerless breach is assigned, then that owner is a
       // `mgr_busy`'s existing workload — what makes the two holders
       // distinguishable.
       busy = await caseIn('Already on the busy manager', { status: 'in_progress', priority: 'low', sla_due_date: iso(+30), owner_id: mgrBusy.id });
+      // Each holding carries the install's organization. Since 18.0.0-next.0
+      // every case does (the Default Organization, ADR-0131 D3), the escalation
+      // hook keeps a case inside its own organization's pool (AGENTS.md rule
+      // 10), and an assignment made through the platform's data door stamps the
+      // assigning session's organization, where a system seed stamps none.
+      const organization_id = String((await verify.contextFor(mgrBusy.token)).tenantId);
       await verify.seed('sys_user_position', [
-        { user_id: mgrBusy.id, position: 'service_manager' },
-        { user_id: mgrFree.id, position: 'service_manager' },
+        { user_id: mgrBusy.id, position: 'service_manager', organization_id },
+        { user_id: mgrFree.id, position: 'service_manager', organization_id },
         // A service AGENT in the same table: the pool read must filter by
         // position, not take every row it finds.
-        { user_id: agent.id, position: 'service_agent' },
+        { user_id: agent.id, position: 'service_agent', organization_id },
       ]);
     });
   }, 120_000);

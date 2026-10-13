@@ -1,13 +1,13 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect, beforeAll } from 'vitest';
-import { bootStackOnce, type BootOptions, type VerifyStack } from '@objectstack/verify';
+import { bootStack, type BootOptions, type VerifyStack } from '@objectstack/verify';
 import { ApprovalsServicePlugin } from '@objectstack/plugin-approvals';
 import artifact from '../objectstack.config';
 import stack from './helpers/composed-stack';
 import { AccountApprovalFlow } from '../src/sales/flows/account-approval.flow';
 import { CrmSeedData } from '../objectstack.composition';
-import { hotcrmStack, freshArtifact, bootOptions, conditionHolds as holdsOn, signUpPerson, type Person } from './helpers/verify-stack';
+import { hotcrmStack, buildArtifactAgain, bootOptions, conditionHolds as holdsOn, signUpPerson, type Person } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
 
@@ -141,13 +141,31 @@ describe('a seeded account is already signed off (#2042)', () => {
 /**
  * The app on a composition WITHOUT the `approvals` capability: the app's own
  * boot minus `ApprovalsServicePlugin` and nothing else, so the two boots differ
- * in exactly the capability under test. A module-level constant because
- * `bootStackOnce` memoises by options identity.
+ * in exactly the capability under test.
+ *
+ * Since 18.0.0-next.0 `bootStack` also mounts the provider of every capability
+ * the configuration's `requires` names, as `objectstack serve` does (verify
+ * 97610a5), so leaving the plugin out of `extraPlugins` alone no longer leaves
+ * approvals out. The composition without it is the app's own configuration
+ * with `approvals` dropped from the one package `requires` that names it,
+ * taken from a build of its own: one configuration object holds one live
+ * kernel (objectstack#22301), and a copy of a live one is not a configuration
+ * of its own.
  */
 const APP_BOOT = bootOptions();
 const WITHOUT_APPROVALS_BOOT: BootOptions = {
   ...APP_BOOT,
   extraPlugins: (APP_BOOT.extraPlugins ?? []).filter((p) => !(p instanceof ApprovalsServicePlugin)),
+};
+const withoutApprovals = (base: typeof artifact): typeof artifact => {
+  const a = base as unknown as Rec;
+  return {
+    ...a,
+    packages: (a.packages as Rec[]).map((p) => ({
+      ...p,
+      manifest: { ...p.manifest, requires: ((p.manifest.requires ?? []) as string[]).filter((token) => token !== 'approvals') },
+    })),
+  } as typeof artifact;
 };
 
 /**
@@ -231,9 +249,7 @@ describe('WITHOUT approvals in the composition — a new account is not stranded
   let bare: VerifyStack;
   let who: { rep: Person; manager: Person };
   beforeAll(async () => {
-    // A build of its own: since 18.0.0-next.0 one configuration object holds one
-    // live kernel (objectstack#22301), and the shared boot above is live.
-    bare = await bootStackOnce(await freshArtifact(), WITHOUT_APPROVALS_BOOT);
+    bare = await bootStack(withoutApprovals(await buildArtifactAgain()), WITHOUT_APPROVALS_BOOT);
     who = await people(bare, 'without');
   }, 120_000);
 
