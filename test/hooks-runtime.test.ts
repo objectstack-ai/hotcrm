@@ -45,7 +45,9 @@ beforeAll(async () => {
   });
 }, 120_000);
 
-const repWrites = (object: string, op: 'insert' | 'update' | 'delete', doc: Rec): Promise<Rec> =>
+// Generic over the operation, as `hooks.run` is (@objectstack/verify 18.0.0-next.0): an insert or
+// an update answers the row, a delete answers the engine's own `boolean | number`.
+const repWrites = <Op extends 'insert' | 'update' | 'delete'>(object: string, op: Op, doc: Rec) =>
   verify.hooks.run(object, op, doc, { as: rep.token });
 const stored = async (object: string, id: string): Promise<Rec> => (await verify.rows(object, { id }))[0]!;
 
