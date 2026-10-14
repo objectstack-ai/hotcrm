@@ -131,10 +131,10 @@ describe('a case created without any date is counted', () => {
     // The install's one organization. Since 18.0.0-next.0 a system write on a
     // tenant-scoped object takes its organization from the install's ONE
     // organization and is refused when there is none (ADR-0131 D3/D9,
-    // `SystemWriteOrganizationRequiredError`). `plugin-auth` creates it at boot
-    // under the `single` posture; this kernel mounts no `plugin-auth`, so it
-    // writes the row itself.
-    await ql.insert('sys_organization', { name: 'Default Organization', slug: 'default' }, { context: { isSystem: true } });
+    // `SystemWriteOrganizationRequiredError`). Since 18.0.0-next.1
+    // `createIdentityObjectsPlugin()` creates it at boot under the `single`
+    // posture (objectstack 917b1a0), so this kernel no longer writes the row
+    // itself: a second one would make every system write ambiguous.
 
     const read = async (id: string): Promise<AnyRec> =>
       ((await ql.findOne('crm_case', { where: { id } }, { context: { isSystem: true } })) ?? {}) as AnyRec;

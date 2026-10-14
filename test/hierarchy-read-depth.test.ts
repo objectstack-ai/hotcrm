@@ -86,8 +86,8 @@ process.env.OS_REGISTRY_LOG ??= 'silent';
 const HIERARCHY_SCOPES = new Set(['unit', 'unit_and_below', 'own_and_reports']);
 
 /**
- * The three throwaway grants. They exist only as rows this test inserts into
- * `sys_permission_set`; ⛔ none of them is authored in `src/profiles/`, and the
+ * The three throwaway grants. They exist only as permission sets this test
+ * saves through the metadata door; ⛔ none of them is authored in `src/profiles/`, and the
  * #1378 ruling forbids adding one there. Each differs from the next in exactly
  * one field, so a difference in what their holders can read is attributable.
  */
@@ -282,17 +282,21 @@ beforeAll(async () => {
   // That absence is the whole subject of this file.
   verify = await bootStack(artifact);
 
-  // The throwaway permission sets, created as DATA. ⛔ Nothing here is authored
-  // in `src/profiles/`; #1378 rules that no profile may gain a hierarchy
-  // readScope, and this file must not become the reason one does.
+  // The throwaway permission sets, saved through the metadata door at boot.
+  // ⛔ Nothing here is authored in `src/profiles/`; #1378 rules that no profile
+  // may gain a hierarchy readScope, and this file must not become the reason
+  // one does. Through 18.0.0-next.0 they were `sys_permission_set` DATA rows;
+  // 18.0.0-next.1 retires that object (objectstack 66949b7, ADR-0131 D3) and
+  // names `PUT /api/v1/meta/permission/:name` as its replacement.
+  const admin = await verify.signIn();
   for (const [name, grant] of Object.entries(PROBE_GRANTS)) {
-    id[`set_${name}`] = await insert('sys_permission_set', {
+    const res = await verify.apiAs(admin, 'PUT', `/meta/permission/${name}`, {
       name,
       label: `#1378 probe — ${name}`,
       description: 'Throwaway grant created by test/hierarchy-read-depth.test.ts. Not an app profile.',
-      object_permissions: JSON.stringify({ crm_opportunity: grant }),
-      active: true,
+      objects: { crm_opportunity: grant },
     });
+    expect(res.status, `saving the throwaway set ${name}: ${await res.clone().text()}`).toBeLessThan(300);
   }
 
   // Three managers, one per throwaway grant, so the three arms differ ONLY in
