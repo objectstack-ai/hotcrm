@@ -31,7 +31,7 @@ export const OpportunityViews = defineView({
     ],
     columns: [
       { field: 'name', width: 220, sortable: true, link: true },
-      { field: 'crm_account', label: 'Account', width: 180 },
+      { field: 'crm_account', width: 180 },
       { field: 'stage', width: 140, sortable: true },
       { field: 'amount', width: 140, align: 'right', sortable: true, summary: 'sum' },
       { field: 'probability', width: 110, align: 'right' },
@@ -135,7 +135,7 @@ export const OpportunityViews = defineView({
       data: { provider: 'object', object: 'crm_opportunity' },
       columns: [
         { field: 'name', width: 220, sortable: true, link: true },
-        { field: 'crm_account', label: 'Account', width: 180 },
+        { field: 'crm_account', width: 180 },
         { field: 'stage', width: 140, sortable: true },
         { field: 'amount', width: 140, align: 'right', sortable: true, summary: 'sum' },
         { field: 'probability', width: 110, align: 'right' },
