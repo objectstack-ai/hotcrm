@@ -25,7 +25,9 @@ export const AccountViews = defineView({
       { field: 'health_score', width: 140 },
     ],
     sort: [{ field: 'annual_revenue', order: 'desc' }],
-    rowColor: { field: 'is_active', colors: { true: 'green', false: 'slate' } },
+    // Only the exception row is tinted: an inactive account greys out, an
+    // active one stays plain.
+    rowColor: { field: 'is_active', colors: { false: 'slate' } },
     selection: { type: 'multiple' },
     pagination: { pageSize: 50, pageSizeOptions: [25, 50, 100] },
     exportOptions: { formats: ['csv', 'xlsx'] },

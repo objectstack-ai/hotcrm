@@ -66,13 +66,10 @@ export const TaskViews = defineView({
       { field: 'is_completed', order: 'asc' },
       { field: 'due_date', order: 'asc' },
     ],
-    rowColor: {
-      // Task priority is low/normal/high/urgent — the previous critical/medium
-      // keys were Case values, so urgent and normal rows got no color at all.
-      // Colors mirror the option colors on crm_task.priority.
-      field: 'priority',
-      colors: { urgent: 'red', high: 'orange', normal: 'green', low: 'slate' },
-    },
+    // Only the exception row is tinted: an urgent task turns red. The priority
+    // column already draws each value's badge, so a colour per value marked
+    // every row and flagged none.
+    rowColor: { field: 'priority', colors: { urgent: 'red' } },
     selection: { type: 'multiple' },
     pagination: { pageSize: 50 },
     appearance: {

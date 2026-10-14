@@ -249,12 +249,12 @@ describe('row colors and kanban groups key off real option values', () => {
  * The two guards above answer "is every value written here a real option?" —
  * a subset check. Nothing asked the converse, "is every real option written
  * here?", and that is the half that broke (#759): `needs_analysis` is one of
- * the seven canonical `OPPORTUNITY_STAGE_OPTIONS` and was absent from BOTH the
- * detail page's stage path and the Open Deals `rowColor` map. Six of seven
- * stages worked, so both surfaces looked fine on every deal that happened not
- * to be in Needs Analysis — the deal that WAS lit up no step on the path and
- * got no row tint, which reads to a user as corrupted data rather than as
- * missing metadata.
+ * the seven canonical `OPPORTUNITY_STAGE_OPTIONS` and was absent from the
+ * detail page's stage path. Six of seven stages worked, so the path looked
+ * fine on every deal that happened not to be in Needs Analysis — the deal that
+ * WAS lit up no step, which reads to a user as corrupted data rather than as
+ * missing metadata. (Open Deals no longer tints rows by stage, #2107, so the
+ * path is the one enumeration left to guard.)
  *
  * The expectation is derived from `OPPORTUNITY_STAGE_OPTIONS` itself — the
  * single source `crm_opportunity.stage` and the `mass_update_stage` action are
@@ -278,24 +278,11 @@ describe('every canonical opportunity stage reaches the UI that enumerates stage
           ]),
       );
 
-  /** Every list `rowColor` keyed on `crm_opportunity.stage`, as [viewName, colors]. */
-  const stageRowColors = (): [string, AnyRec][] =>
-    views
-      .filter((v) => (v.list?.data?.object ?? v.object) === 'crm_opportunity')
-      .flatMap((v) =>
-        ([v.list, ...Object.values(v.listViews ?? {})].filter(Boolean) as AnyRec[])
-          .filter((list) => list.rowColor?.field === 'stage')
-          .map((list): [string, AnyRec] => [
-            `view "${list.name ?? 'default'}"`,
-            list.rowColor?.colors ?? {},
-          ]),
-      );
-
   it('the canonical stage list is the set the object validates against', () => {
     // Guards the guard twice over: an empty or renamed constant would make
     // every assertion below pass by comparing against nothing, and a `stage`
-    // field that stopped being built from this constant would leave the two
-    // sites below chasing a list the runtime no longer enforces.
+    // field that stopped being built from this constant would leave the path
+    // guard below chasing a list the runtime no longer enforces.
     expect(canonical.length, 'OPPORTUNITY_STAGE_OPTIONS is empty').toBeGreaterThan(0);
     const objDef = objects.find((o) => o.name === 'crm_opportunity');
     const fieldValues = (objDef?.fields?.stage?.options ?? []).map((o: AnyRec) => String(o.value));
@@ -320,41 +307,6 @@ describe('every canonical opportunity stage reaches the UI that enumerates stage
       }
     }
     expect(bad, `incomplete stage paths:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-
-  it('every stage has a row colour in the opportunity list views that tint by stage', () => {
-    const sites = stageRowColors();
-    expect(sites.length, 'no rowColor keyed on crm_opportunity.stage was found').toBeGreaterThan(0);
-
-    const bad: string[] = [];
-    for (const [site, colors] of sites) {
-      const keys = Object.keys(colors);
-      for (const stage of canonical) {
-        if (!keys.includes(stage)) bad.push(`${site}: no rowColor entry for stage "${stage}"`);
-      }
-      for (const key of keys) {
-        if (!canonical.includes(key)) bad.push(`${site}: rowColor key "${key}" is not a canonical stage`);
-      }
-    }
-    expect(bad, `incomplete stage row colours:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-
-  it('stage colours stay distinguishable from one another', () => {
-    // The point of the map is that a rep can tell two stages apart at a
-    // glance; two stages sharing a hex make the tint say nothing. (#759 was
-    // nearly fixed by copying `needs_analysis`'s `#FFD700` out of
-    // _picklists.ts, one hue step from proposal's `#f59e0b`.)
-    const bad: string[] = [];
-    for (const [site, colors] of stageRowColors()) {
-      const seen = new Map<string, string>();
-      for (const key of Object.keys(colors)) {
-        const hex = String(colors[key]).toLowerCase();
-        const owner = seen.get(hex);
-        if (owner) bad.push(`${site}: "${key}" and "${owner}" are both ${hex}`);
-        else seen.set(hex, key);
-      }
-    }
-    expect(bad, `stages sharing a row colour:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 });
 

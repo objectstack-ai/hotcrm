@@ -45,10 +45,10 @@ export const CaseViews = defineView({
       { field: 'priority_rank', order: 'desc' },
       { field: 'sla_due_date', order: 'asc' },
     ],
-    rowColor: {
-      field: 'priority',
-      colors: { critical: 'red', high: 'orange', medium: 'yellow', low: 'slate' },
-    },
+    // Only the exception row is tinted: a case whose SLA is breached turns
+    // red and every other row stays plain. A colour per priority painted every
+    // row the priority column's own badge already marks, so it flagged none.
+    rowColor: { field: 'is_sla_violated', colors: { true: 'red' } },
     selection: { type: 'multiple' },
     pagination: { pageSize: 50 },
     // The UI door for the `allowExport` grant four profiles already hold on
@@ -238,10 +238,8 @@ export const CaseViews = defineView({
         { field: 'priority_rank', order: 'desc' },
         { field: 'sla_due_date', order: 'asc' },
       ],
-      rowColor: {
-        field: 'priority',
-        colors: { critical: 'red', high: 'orange', medium: 'yellow', low: 'slate' },
-      },
+      // Same exception tint as the main queue: a breached case turns red.
+      rowColor: { field: 'is_sla_violated', colors: { true: 'red' } },
       // The empty state carries the operational instruction, because "no rows"
       // here is ambiguous on its own: it means either "the round-robin placed
       // everything" (good) or "no case has arrived yet" (also fine) — and the

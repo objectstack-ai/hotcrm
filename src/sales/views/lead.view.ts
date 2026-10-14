@@ -441,8 +441,8 @@ export const LeadViews = defineView({
      * rating >= 4, still New or Contacted. What differs is what they are FOR.
      * Hot Leads is the work order — sorted by next-follow-up (the SLA that
      * routing just stamped), with phone, email and owner on the row so it can
-     * be dialled top to bottom. High Priority is the scan list — score-tinted
-     * rows and lead source, no SLA column, no time ordering. A 5-star-only
+     * be dialled top to bottom. High Priority is the scan list — rating and
+     * lead source on the row, no SLA column, no time ordering. A 5-star-only
      * queue, if it is ever a real need, gets its own view under its own name
      * instead of squatting on "Hot".
      *
@@ -483,13 +483,6 @@ export const LeadViews = defineView({
         { field: 'rating', operator: 'greater_than_or_equal', value: 4 },
         { field: 'status', operator: 'in', value: ['new', 'contacted'] },
       ],
-      rowColor: {
-        field: 'rating',
-        colors: {
-          '5': 'green',
-          '4': 'orange',
-        },
-      },
     },
 
     /**

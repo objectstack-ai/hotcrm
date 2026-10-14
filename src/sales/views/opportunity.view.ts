@@ -39,28 +39,6 @@ export const OpportunityViews = defineView({
       { field: 'close_date', width: 140, sortable: true },
     ],
     sort: [{ field: 'close_date', order: 'asc' }],
-    rowColor: {
-      field: 'stage',
-      colors: {
-        prospecting: 'slate',
-        qualification: 'sky',
-        // Teal sits between the cool qualification blue and the warm proposal
-        // amber, keeping the cool→warm funnel ramp readable. NOT the gold
-        // `#FFD700` this option carries in `_picklists.ts`: gold is one hue
-        // step from proposal's amber, so the two adjacent stages would tint
-        // rows the same.
-        //
-        // Values are colour NAMES, not hex: objectui's `useRowColor` resolves
-        // only a name from its own vocabulary (or a full `bg-*` class) and
-        // turns a hex into no colour at all — so until 17.6.0's lint said so,
-        // this map tinted nothing.
-        needs_analysis: 'teal',
-        proposal: 'amber',
-        negotiation: 'purple',
-        closed_won: 'green',
-        closed_lost: 'red',
-      },
-    },
     pagination: { pageSize: 25, pageSizeOptions: [25, 50, 100] },
     selection: { type: 'multiple' },
     showRecordCount: true,
