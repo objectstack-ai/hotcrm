@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
+import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import stack from './helpers/composed-stack';
 
 /**
@@ -107,12 +107,10 @@ describe('crm_campaign_member declares cascade on both party lookups', () => {
  * metadata-only assertion can show that a delete now succeeds, and no hook
  * harness runs the referential pass at all.
  *
- * `InMemoryDriver` is used for the same reason `object-validation-predicates`
- * uses it: it stores only the columns a row was written with, so the merged
- * record handed to the validator has ABSENT keys — the shape that made the rule
- * fire in the first place. A column-complete driver would still reproduce this
- * bug (the cleared column is `null`, not absent, and `isBlank(null)` is true),
- * but the sparse one exercises the harder shape.
+ * On a real SQLite database, column-complete: the cleared column is `null`,
+ * and `isBlank(null)` is true, so this reproduces the bug as it was found on
+ * `driver-memory` (whose merged record had the key ABSENT). The absent-key
+ * shape itself is swept per predicate in `object-validation-predicates`.
  */
 describe('deleting an enrolled person', () => {
   let ql: AnyRec;
@@ -120,7 +118,7 @@ describe('deleting an enrolled person', () => {
 
   beforeEach(async () => {
     ql = (await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
+      datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
       objects: {
         crm_campaign_member: CAMPAIGN_MEMBER,
         crm_campaign: byName('crm_campaign'),
@@ -129,6 +127,7 @@ describe('deleting an enrolled person', () => {
         crm_account: byName('crm_account'),
       } as never,
     })) as never;
+    await ql.syncSchemas();
     api = ql.createContext({ isSystem: true });
   });
   afterEach(async () => {

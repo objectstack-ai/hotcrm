@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
+import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import stack from './helpers/composed-stack';
 
 /**
@@ -512,7 +512,7 @@ describe('this_quarter_forecasts returns the current quarter, on the real engine
 
   beforeAll(async () => {
     ql = await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
+      datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
       objects: {
         crm_forecast: {
           name: 'crm_forecast',
@@ -527,14 +527,9 @@ describe('this_quarter_forecasts returns the current quarter, on the real engine
         },
       } as never,
     });
-    // ⛔ No `tenantId` here. From @objectstack/driver-memory 17.4.0 the in-memory
-    // driver REFUSES any call the engine hands a tenant scope
-    // (`MemoryMultiTenantUnsupportedError`, objectstack#16589): it has no
-    // row-level tenant isolation, so answering would read across organizations.
-    // This fixture holds one implicit tenant and measures nothing about tenancy,
-    // so the honest shape is not to ask an unisolating driver to isolate. ⛔ Do
-    // NOT reach for `tenancy: { enabled: false }` instead — the refusal names that
-    // as the wrong answer for data that really is per-organization.
+    await ql.syncSchemas();
+    // No `tenantId` here: this fixture holds one implicit tenant and measures
+    // nothing about tenancy.
     api = ql.createContext({ isSystem: true, userId: 'usr_1' } as never);
 
     // The current quarter, as the 03:00 sweep opens it — one row per owner.
@@ -661,7 +656,7 @@ describe('closing_this_quarter returns this quarter only, on the real engine (#7
 
   beforeAll(async () => {
     ql = await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
+      datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
       objects: {
         crm_opportunity: {
           name: 'crm_opportunity',
@@ -678,14 +673,9 @@ describe('closing_this_quarter returns this quarter only, on the real engine (#7
         },
       } as never,
     });
-    // ⛔ No `tenantId` here. From @objectstack/driver-memory 17.4.0 the in-memory
-    // driver REFUSES any call the engine hands a tenant scope
-    // (`MemoryMultiTenantUnsupportedError`, objectstack#16589): it has no
-    // row-level tenant isolation, so answering would read across organizations.
-    // This fixture holds one implicit tenant and measures nothing about tenancy,
-    // so the honest shape is not to ask an unisolating driver to isolate. ⛔ Do
-    // NOT reach for `tenancy: { enabled: false }` instead — the refusal names that
-    // as the wrong answer for data that really is per-organization.
+    await ql.syncSchemas();
+    // No `tenantId` here: this fixture holds one implicit tenant and measures
+    // nothing about tenancy.
     api = ql.createContext({ isSystem: true, userId: 'usr_1' } as never);
     for (const f of fixtures) {
       await api.object('crm_opportunity').insert({
