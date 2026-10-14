@@ -26,7 +26,9 @@ export const AccountViews = defineView({
     ],
     sort: [{ field: 'annual_revenue', order: 'desc' }],
     // Only the exception row is tinted: an inactive account greys out, an
-    // active one stays plain.
+    // active one stays plain. Measured on 18.0.0-next.1 it paints nothing: the
+    // console fetches only the columns and `is_active` is not one. That is a
+    // platform gap, reported upstream from #2107; ⛔ no column added to dodge it.
     rowColor: { field: 'is_active', colors: { false: 'slate' } },
     selection: { type: 'multiple' },
     pagination: { pageSize: 50, pageSizeOptions: [25, 50, 100] },
