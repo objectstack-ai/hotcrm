@@ -466,15 +466,17 @@ describe('flow conditions are TOTAL on the real engine', () => {
  *
  * Since the maintainer's ruling on #2092 every test runs on SQL. Measured on
  * 18.0.0-next.0 for #2092, with `case_escalation_on_create`'s start condition
- * put back to its unguarded form: a write through the trigger no longer hands
- * the condition an absent key on EITHER driver (the run evaluates, no abort),
- * while the same condition handed a record without `escalated_date` directly
- * still aborts with `No such key`. So these writes no longer reach the
- * absent-key shape; what they pin is that each flow runs end to end without a
- * condition abort on the driver a deployed install uses. The absent-key shape
- * (a sparse datasource such as `driver-mongodb`) is held by the `answers on a
- * record with no keys at all` and `any single referenced key is the one that
- * is missing` sweeps above.
+ * put back to its unguarded form: a born-critical case written through the
+ * trigger no longer hands the condition an absent key on EITHER driver (the
+ * run evaluates, no abort), while the same condition handed a record without
+ * `escalated_date` directly still aborts with `No such key`. That matches the
+ * 18.0.0-next.0 upgrade's own note (#2091): the trigger's `record` is
+ * materialised over every declared field. So these writes are not expected to
+ * reach the absent-key shape; what they pin is that each flow runs end to end
+ * without a condition abort on the driver a deployed install uses. The
+ * absent-key shape (a sparse datasource such as `driver-mongodb`) is held by
+ * the `answers on a record with no keys at all` and `any single referenced key
+ * is the one that is missing` sweeps above.
  */
 describe('conditions answer end-to-end on the real engine', () => {
   const objMap = Object.fromEntries(objects.map((o) => [o.name as string, o]));
