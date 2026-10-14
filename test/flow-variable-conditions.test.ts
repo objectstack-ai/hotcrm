@@ -1134,7 +1134,7 @@ describe('the two defects, reproduced end-to-end', () => {
   }, 60_000);
 
   it('lead_conversion: a resume signal that omits the untouched checkbox still converts', async () => {
-    const b = await boot(['lead_conversion']);
+    const b = await boot(['lead_conversion', 'lead_conversion_account_revenue']);
     try {
       const api = b.ql.createContext({ isSystem: true });
       const lead = await api.object('crm_lead').insert({
@@ -1179,7 +1179,7 @@ describe('the two defects, reproduced end-to-end', () => {
   }, 60_000);
 
   it('lead_conversion: an explicit yes still creates the opportunity', async () => {
-    const b = await boot(['lead_conversion']);
+    const b = await boot(['lead_conversion', 'lead_conversion_account_revenue']);
     try {
       const api = b.ql.createContext({ isSystem: true });
       const lead = await api.object('crm_lead').insert({
