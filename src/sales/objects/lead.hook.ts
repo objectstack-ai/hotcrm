@@ -105,8 +105,7 @@ const leadAutoAssignHook: Hook = {
 
     // Auto-assignment is a best-effort ENHANCEMENT — it must NEVER block lead
     // creation. So the pool lookup + load balancing are wrapped: on ANY error
-    // the lead is still captured, ownerless (a manager / the lead_assignment
-    // flow routes it).
+    // the lead is still captured, ownerless.
     try {
       // Rep pool = holders of the sales_rep position.
       const holders = await api.object('sys_user_position').find({
@@ -136,8 +135,8 @@ const leadAutoAssignHook: Hook = {
       if (best) input.owner_id = best;
     } catch {
       // Swallow: auto-assignment must never block the insert — the lead is
-      // still captured, ownerless, for downstream routing. (No `console` here —
-      // the L2 hook sandbox doesn't define it.)
+      // still captured, ownerless. (No `console` here — the L2 hook sandbox
+      // doesn't define it.)
     }
   },
 };
