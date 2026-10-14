@@ -2,7 +2,6 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL, applySystemFields } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { AnalyticsService } from '@objectstack/service-analytics';
 import stack from './helpers/composed-stack';
@@ -30,12 +29,13 @@ import { OpportunityDataset } from '../src/sales/datasets/opportunity.dataset';
  *
  * So the bar for this issue was never "the rule is declared". It is: drive a
  * REAL write through a REAL driver and watch it be REJECTED. That is what the
- * first two describe-blocks below do — on `InMemoryDriver` (whose stored rows
- * omit unwritten columns, the shape that makes a non-total predicate abort)
- * and again on a real SQLite database (column-complete rows, the shape a
- * deployed install has). A rejection is asserted together with "and the record
- * did not move", because a rule that reports a problem while the write lands
- * anyway is the flow-condition failure mode above, not enforcement.
+ * first two describe-blocks below do, on a real SQLite database
+ * (column-complete rows, the shape a deployed install has). The absent-key
+ * shape a sparse datasource hands back is held per predicate by the totality
+ * sweep in `object-validation-predicates.test.ts`. A rejection is asserted
+ * together with "and the record did not move", because a rule that reports a
+ * problem while the write lands anyway is the flow-condition failure mode
+ * above, not enforcement.
  *
  * `crm_case.resolution_required_for_closed` — the pattern the issue points at
  * — was re-measured the same way rather than assumed, and it does block today;
@@ -113,7 +113,7 @@ describe('the reason fields declare a conditional write contract', () => {
   });
 });
 
-// ─────────────────────────── enforcement, on a driver with SPARSE records ──
+// ──────────────────────────────────────── enforcement, on a real engine ──
 
 const OPEN_DEAL = {
   name: 'Enforcement Probe',
@@ -123,14 +123,15 @@ const OPEN_DEAL = {
   close_date: '2099-01-01',
 };
 
-describe('the write is REJECTED, not warned about (in-memory driver)', () => {
+describe('the write is REJECTED, not warned about', () => {
   let ql: AnyRec;
 
   beforeAll(async () => {
     ql = (await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
+      datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
       objects: { crm_opportunity: opportunity } as never,
     })) as never;
+    await ql.syncSchemas();
   });
   afterAll(async () => {
     await ql?.close();
@@ -141,17 +142,6 @@ describe('the write is REJECTED, not warned about (in-memory driver)', () => {
     const row = await api.object('crm_opportunity').insert({ ...OPEN_DEAL });
     return { api, row };
   };
-
-  it('stores no key for a column it was never given — the precondition', async () => {
-    const { api, row } = await newDeal();
-    const stored = await api.object('crm_opportunity').findOne({ where: { id: row.id } });
-    // Not `toBeNull()`: the key is ABSENT. That is the record shape that makes
-    // an unguarded predicate abort, and the reason this driver is the one the
-    // enforcement tests run on. If a platform upgrade makes it
-    // column-complete, this fails — which is the intended signal, because the
-    // tests below would stop proving the hard case.
-    expect('loss_reason' in (stored ?? {})).toBe(false);
-  });
 
   it('refuses to close a deal as LOST with no loss_reason', async () => {
     const { api, row } = await newDeal();
@@ -232,10 +222,10 @@ describe('the write is REJECTED, not warned about (in-memory driver)', () => {
 // ────────────────────── the same contract on a real SQL database ──────────
 
 describe('the write is REJECTED on a real SQLite database too', () => {
-  // The in-memory driver hands back sparse records; a SQL driver hands back a
-  // full row with NULLs. Those are different inputs to the same predicate, and
-  // "which driver is underneath" is not something a marketplace app chooses —
-  // so the contract is measured on both rather than generalised from one.
+  // The column-complete precondition, pinned: a SQL driver hands back a full
+  // row with NULLs, and the rule must refuse on that shape. (Its sparse twin
+  // ran on `driver-memory` until the #2092 ruling moved every test onto SQL;
+  // the no-keys shape is swept in `object-validation-predicates.test.ts`.)
   let ql: AnyRec;
 
   beforeAll(async () => {
@@ -266,8 +256,7 @@ describe('the write is REJECTED on a real SQLite database too', () => {
     const row = await api.object('crm_opportunity').insert({ ...OPEN_DEAL, name: 'SQL Probe' });
 
     const stored = await api.object('crm_opportunity').findOne({ where: { id: row.id } });
-    // The opposite precondition to the in-memory suite: here the key IS
-    // present and null. Both shapes must reach the same verdict.
+    // The column-complete shape: the key IS present, and null.
     expect('loss_reason' in (stored ?? {})).toBe(true);
     expect(stored?.loss_reason ?? null).toBeNull();
 
@@ -302,9 +291,10 @@ describe('crm_case.resolution_required_for_closed is still live', () => {
 
   beforeAll(async () => {
     ql = (await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
+      datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
       objects: { crm_case: kase } as never,
     })) as never;
+    await ql.syncSchemas();
   });
   afterAll(async () => {
     await ql?.close();
@@ -382,9 +372,10 @@ describe('every settled seed carries its reason', () => {
     // is an expression the seeder resolves at write time, and this assertion is
     // about the validation verdict, not about date arithmetic.
     const ql = (await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
+      datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
       objects: { crm_opportunity: opportunity } as never,
     })) as AnyRec;
+    await ql.syncSchemas();
     try {
       const api = ql.createContext({ isSystem: true });
       const isCel = (v: unknown) => !!v && typeof v === 'object' && 'source' in (v as AnyRec);
@@ -434,7 +425,7 @@ describe('win rate is measured, and both halves are load-bearing', () => {
 
   beforeAll(async () => {
     ql = (await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
+      datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
       objects: {
         // A shape-only stand-in: this block tests which rows the measures
         // select and what they divide, not the object's own rules (those are
@@ -455,6 +446,7 @@ describe('win rate is measured, and both halves are load-bearing', () => {
         },
       } as never,
     })) as never;
+    await ql.syncSchemas();
 
     analytics = new AnalyticsService({
       // The same bridge `AnalyticsServicePlugin` wires at boot.
@@ -724,7 +716,7 @@ describe('the shipped seeds produce a real win rate and a real loss breakdown', 
 
   beforeAll(async () => {
     ql = (await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
+      datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
       objects: {
         crm_opportunity: {
           name: 'crm_opportunity',
@@ -742,6 +734,7 @@ describe('the shipped seeds produce a real win rate and a real loss breakdown', 
         },
       } as never,
     })) as never;
+    await ql.syncSchemas();
 
     const api = ql.createContext({ isSystem: true });
     for (const rec of seedRecords) {
