@@ -376,8 +376,8 @@ describe('lead_auto_assign', () => {
       return (await twoOrgs.seed('crm_contact', [{ first_name: 'Ada', last_name: 'Org', email, crm_account: acct!.id, organization_id }]))[0]!;
     };
     const ownContact = await contactIn(own, `own${++k}@hooks-runtime.test`);
-    await contactIn(other, `shared${++k}@hooks-runtime.test`);
-    const shared = `shared${k}@hooks-runtime.test`;
+    const shared = `shared${++k}@hooks-runtime.test`;
+    await contactIn(other, shared);
     const intake = async (email: string) => {
       const [written] = await twoOrgs.seed('crm_lead', [lead({ email, organization_id: own })]);
       return (await twoOrgs.rows('crm_lead', { id: written!.id }))[0]!;
