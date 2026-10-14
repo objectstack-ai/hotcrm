@@ -131,7 +131,13 @@ export const LeadViews = defineView({
       object: 'crm_lead',
     },
     
-    // Column Configuration with Enhanced Features
+    // Column Configuration with Enhanced Features.
+    //
+    // No column carries its own `label:`. Without one the header is the
+    // field's label, which all four locale packs translate. With one, the
+    // string is served verbatim in every locale: the translation schema has no
+    // per-column key, so it left this whole header row English in zh-CN
+    // (#2094). A wording the field label cannot carry is a platform gap.
     columns: [
       {
         // One name column, not two. Splitting first/last spent 300px to say
@@ -139,37 +145,31 @@ export const LeadViews = defineView({
         // given name alone — so opening a person meant aiming at their first
         // name specifically.
         field: 'full_name',
-        label: 'Name',
         width: 200,
         sortable: true,
         link: true, // Primary navigation link
       },
       {
         field: 'company',
-        label: 'Company',
         width: 200,
         sortable: true,
       },
       {
         field: 'email',
-        label: 'Email',
         width: 200,
       },
       {
         field: 'status',
-        label: 'Status',
         width: 120,
         sortable: true,
       },
       {
         field: 'rating',
-        label: 'Score',
         width: 100,
         align: 'center',
       },
       {
         field: 'lead_source',
-        label: 'Source',
         width: 120,
       },
       // REQ-0005 acceptance 1: what the prospect wants and what it is worth,
@@ -182,20 +182,17 @@ export const LeadViews = defineView({
       // stored value, so a multi-valued column would group by the combination.
       {
         field: 'need_type',
-        label: 'Need Type',
         width: 160,
         sortable: true,
       },
       {
         field: 'estimated_amount',
-        label: 'Est. Amount',
         width: 130,
         align: 'right',
         sortable: true,
       },
       {
         field: 'owner_id',
-        label: 'Owner',
         width: 150,
       },
     ],
