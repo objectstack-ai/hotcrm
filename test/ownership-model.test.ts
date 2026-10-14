@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
+import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import type { VerifyStack } from '@objectstack/verify';
 import stack from './helpers/composed-stack';
 import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
@@ -190,7 +190,7 @@ describe('the transfer gate sees a hook’s ctx.api write, and not a beforeInser
   beforeAll(async () => {
     seen = [];
     ql = (await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
+      datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
       objects: {
         crm_lead: {
           name: 'crm_lead',
@@ -211,6 +211,7 @@ describe('the transfer gate sees a hook’s ctx.api write, and not a beforeInser
         },
       } as never,
     })) as never;
+    await ql.syncSchemas();
 
     // The SAME seam `@objectstack/plugin-security` registers its guard on. It
     // reads `opCtx.data` and passes everything through — a recorder, not a gate,

@@ -3,7 +3,7 @@
 import { describe, it, expect } from 'vitest';
 import { cel } from '@objectstack/spec';
 import { ObjectQL } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
+import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-automation';
 import stack from './helpers/composed-stack';
 import { flowGraphDeep, regionsOf } from './helpers/flow-regions';
@@ -82,8 +82,8 @@ import { flowGraphDeep, regionsOf } from './helpers/flow-regions';
  *
  * **What binds a variable.** `get_record` runs
  * `if (outputVariable) variables.set(outputVariable, record)` unconditionally,
- * and `findOne` answers a miss with `null` (measured against `InMemoryDriver`
- * below) — so after a `get_record`, the variable IS bound, possibly to `null`.
+ * and `findOne` answers a miss with `null` (measured on SQL below) — so after
+ * a `get_record`, the variable IS bound, possibly to `null`.
  * `assignment` sets every key of `config.assignments`. A `loop` binds its
  * `iteratorVariable` inside the body region, which runs in the ENCLOSING
  * variable scope. A failed node throws and the run stops, so a node that could
@@ -924,7 +924,7 @@ describe('declared defaults are seeded by the real engine, not just by this file
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// End-to-end, on the engine + driver that actually produce the shapes
+// End-to-end, on the real engine over a real SQLite database
 // ═══════════════════════════════════════════════════════════════════════════
 
 describe('the two defects, reproduced end-to-end', () => {
@@ -941,12 +941,13 @@ describe('the two defects, reproduced end-to-end', () => {
     silent.child = () => silent;
 
     const ql: AnyRec = (await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
+      datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
       objects: objMap as never,
       // `logger` is honoured at runtime but is not on the published options
       // type — without it this suite prints every engine INFO line.
       ...({ logger: silent } as object),
     })) as never;
+    await ql.syncSchemas();
 
     const engine = new AutomationEngine(silent);
     installBuiltinNodes(engine, {
@@ -986,15 +987,6 @@ describe('the two defects, reproduced end-to-end', () => {
       // Not `toBeFalsy()`: `null` specifically is what `get_record` then binds,
       // and `vars.X.f` on a null X aborts with `No such key: f`.
       expect(miss).toBeNull();
-      // …while `crm_campaign.status` IS required, so the sparse-COLUMN variant
-      // was never the exposure here. If that changes this assertion fails and
-      // the guard's second clause starts earning its keep.
-      const camp = await api.object('crm_campaign').insert({
-        name: 'Spring', type: 'email', status: 'planning',
-        start_date: '2026-01-01', end_date: '2026-03-01',
-      });
-      const stored = await api.object('crm_campaign').findOne({ where: { id: camp.id } });
-      expect('status' in (stored ?? {})).toBe(true);
     } finally {
       await b.close();
     }

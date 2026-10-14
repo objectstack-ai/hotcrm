@@ -35,7 +35,7 @@ import { Quote } from '../src/revenue/objects/quote.object';
  * ## The caller path is CLOSED, and that is what half 1 pins
  *
  * A key the caller supplies is refused before anything happens —
- * `INVALID_FIELD` / 400, identically on all three drivers. Upstream
+ * `INVALID_FIELD` / 400, identically on every driver measured. Upstream
  * objectstack#8682 (insert) and objectstack#8738 (update) put that door in,
  * ahead of hooks and ahead of statement construction.
  *
@@ -52,7 +52,7 @@ import { Quote } from '../src/revenue/objects/quote.object';
  *
  * The door sits in front of the hooks, so a key a hook itself assigns is never
  * checked against the schema. Whatever the hook wrote then reaches the driver
- * — and the three drivers do three different things with it:
+ * — and on 17.1.0 the three drivers measured did three different things with it:
  *
  *   - `memory`      — accepted, stored, and returned on read. #1200's original
  *                     defect, alive on 17.1.0 on this path.
@@ -231,13 +231,12 @@ async function measure(driver: string, config: AnyRec): Promise<{ kernels: AnyRe
 }
 
 /**
- * `memory` is the sparse, schemaless store; `sqlite` is `@objectstack/driver-sql`
- * on knex/better-sqlite3; `sqlite-wasm` is the WASM build of the same family.
- * All three ship in this repo's dependencies, so all three are deployments a
- * customer can actually run.
+ * `sqlite` is `@objectstack/driver-sql` on knex/better-sqlite3; `sqlite-wasm` is
+ * the WASM build of the same family. Both are deployments a customer can
+ * actually run. (`memory` was a third leg until the maintainer's ruling on
+ * #2092 moved every test onto SQL.)
  */
 const DRIVERS: Array<{ driver: string; config: AnyRec }> = [
-  { driver: 'memory', config: {} },
   { driver: 'sqlite', config: { filename: ':memory:' } },
   { driver: 'sqlite-wasm', config: { filename: ':memory:' } },
 ];
@@ -313,25 +312,17 @@ describe.each(DRIVERS.map((d) => d.driver))(
  * refused it, but as a raw driver error carrying neither the ADR-0112 `code` nor
  * a `status`, so no caller could handle it by shape.
  *
- * On 17.3.0 all three agree, and they agree on the strict answer: the write is
+ * On 17.3.0 all three agreed, and they agreed on the strict answer: the write is
  * refused with the same `INVALID_FIELD` / 400 envelope the declared-surface door
  * already produced (asserted in half 1 above). The hook door and the caller door
  * are now one contract.
  *
  * ⚠️ Read this as a REAL behaviour change for any app whose hook quietly wrote a
  * key its object does not declare: on `driver-memory` that write used to land
- * and now refuses. This app writes no such key outside this probe.
+ * and now refuses. This app writes no such key outside this probe. (The memory
+ * leg itself left this file with the #2092 ruling; the SQL legs remain.)
  */
 describe('half 2 — a key a HOOK writes is refused by every driver, in one envelope (#1200, closed)', () => {
-  it('memory no longer accepts it — the permissive driver came into line', () => {
-    const R = readings.get('memory')!;
-    expect(R.viaHook.ok, 'driver-memory accepted an undeclared key again').toBe(false);
-    expect(R.viaHookRow).toBeUndefined();
-    // The object still declares no such field — the premise is unchanged; what
-    // changed is that the platform now refuses instead of storing it.
-    expect(Object.keys((OpportunityLineItem as AnyRec).fields)).not.toContain(KEY);
-  });
-
   it.each(['sqlite', 'sqlite-wasm'])('%s refuses it as an ADR-0112 envelope now', (driver) => {
     const R = readings.get(driver)!;
     expect(R.viaHook.ok).toBe(false);
@@ -342,7 +333,7 @@ describe('half 2 — a key a HOOK writes is refused by every driver, in one enve
     expect(R.viaHookRow).toBeUndefined();
   });
 
-  it('so the three drivers DO agree — the convergence is the finding', () => {
+  it('so the SQL drivers DO agree — the convergence is the finding', () => {
     const outcomes = DRIVERS.map((d) => readings.get(d.driver)!.viaHook.ok);
     expect(new Set(outcomes).size).toBe(1);
     expect(outcomes.every((ok) => ok === false)).toBe(true);

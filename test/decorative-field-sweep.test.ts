@@ -214,7 +214,7 @@ describe('the roll-up actually computes, and keeps computing (#1182)', () => {
   beforeAll(async () => {
     process.env.OS_REGISTRY_LOG ??= 'silent';
     kernel = new ObjectKernel({ logger: { level: 'silent' } } as never);
-    await kernel.use(new DefaultDatasourcePlugin({ driver: 'memory', config: {} } as never));
+    await kernel.use(new DefaultDatasourcePlugin({ driver: 'sqlite-wasm', config: { filename: ':memory:' } } as never));
     await kernel.use(new MetadataPlugin({ watch: false, artifactWatch: false, environmentId: 'proj_sweep' } as never));
     await kernel.use(new ObjectQLPlugin({ environmentId: 'proj_sweep' } as never));
     // The app's own metadata is the subject. Seed data is skipped — the three

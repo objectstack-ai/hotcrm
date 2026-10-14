@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 import { ObjectQL, bindHooksToEngine } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
+import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import stack from './helpers/composed-stack';
 import { extractHookBody } from '@objectstack/cli/hook-body';
 import type { VerifyStack } from '@objectstack/verify';
@@ -71,7 +71,7 @@ const header: Record<string, (id: string) => AnyRec> = {
  */
 async function boot(withNumbering: boolean) {
   ql = (await ObjectQL.create({
-    datasources: { default: new InMemoryDriver({ persistence: false }) },
+    datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
     objects: {
       crm_opportunity: byName('crm_opportunity'),
       crm_quote: byName('crm_quote'),
@@ -79,6 +79,7 @@ async function boot(withNumbering: boolean) {
       crm_quote_line_item: byName('crm_quote_line_item'),
     } as never,
   })) as never;
+  await ql.syncSchemas();
   for (const parent of PAIRS.map((p) => p.parentKey)) {
     for (const id of HEADERS) await ql.insert(parent, header[parent](id), { context: seed });
   }

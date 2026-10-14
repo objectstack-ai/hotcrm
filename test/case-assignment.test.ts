@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
+import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { bootStack, type VerifyStack } from '@objectstack/verify';
 import { extractHookBody } from '@objectstack/cli/hook-body';
 import stack, { localePacks } from './helpers/composed-stack';
@@ -137,7 +137,7 @@ describe('the transfer gate cannot see a beforeInsert owner_id stamp on crm_case
   beforeAll(async () => {
     seen = [];
     ql = (await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
+      datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
       objects: {
         crm_case: {
           name: 'crm_case',
@@ -150,6 +150,7 @@ describe('the transfer gate cannot see a beforeInsert owner_id stamp on crm_case
         },
       } as never,
     })) as never;
+    await ql.syncSchemas();
 
     // The SAME seam `@objectstack/plugin-security` registers the #3004 owner_id
     // write guard on. A RECORDER, not a gate: what is being measured is
@@ -540,7 +541,7 @@ describe('the transfer gate on the UPDATE door: which escalation seam it can see
   beforeAll(async () => {
     seen = [];
     ql = (await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
+      datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
       objects: {
         crm_case: {
           name: 'crm_case',
@@ -553,6 +554,7 @@ describe('the transfer gate on the UPDATE door: which escalation seam it can see
         },
       } as never,
     })) as never;
+    await ql.syncSchemas();
 
     // Same recorder, same seam `@objectstack/plugin-security` registers the
     // #3004 guard on. Visibility is what is being measured, not the verdict.

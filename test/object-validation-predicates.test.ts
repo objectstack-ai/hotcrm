@@ -4,7 +4,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ObjectQL, evaluateValidationRules } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
+import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import stack from './helpers/composed-stack';
 import { REPO_ROOT } from './helpers/repo-root';
 
@@ -137,11 +137,13 @@ import { REPO_ROOT } from './helpers/repo-root';
  *      worse: a test that news up `InMemoryDriver` directly silently reverts to
  *      the trap, and nothing checks for it.
  *   2. **It would have hidden this class of bug rather than fixed it.** The
- *      in-memory driver's sparse rows are the only place in the stack that
- *      exercises the "merged record lacks the key" shape. Making the double
- *      agree with SQL would make the suite green while every Mongo-backed
- *      install stayed silently unprotected. The sparse double is an asset —
- *      do not "fix" it.
+ *      in-memory driver's sparse rows were then the only place in the stack
+ *      that exercised the "merged record lacks the key" shape. Making the
+ *      double agree with SQL would have made the suite green while every
+ *      Mongo-backed install stayed silently unprotected. Since the
+ *      maintainer's ruling on #2092 no test here runs on `driver-memory`; the
+ *      shape is held instead by `predicates are TOTAL on the real engine`
+ *      below, which hands every predicate a record with no keys at all.
  *   3. **It leaves the predicate depending on an environmental property.** A
  *      rule whose correctness rests on "the storage layer happens to return
  *      NULLs" is a rule one datasource swap away from being inert. Totality is
@@ -649,8 +651,8 @@ describe('every stdlib call argument is null-guarded', () => {
  * The test above is a regex over source text and can be satisfied by a guard
  * that sits in the wrong place. This one hands each object's real predicates to
  * the engine's own `evaluateValidationRules` with `mode: 'update'` and a
- * `previous` that has no keys at all — the exact shape the in-memory and Mongo
- * drivers produce — and fails on any `failed to evaluate` warning, which is how
+ * `previous` that has no keys at all — the exact shape a sparse driver
+ * (`driver-mongodb`) produces — and fails on any `failed to evaluate` warning, which is how
  * the engine reports a predicate it could not evaluate (skipped through
  * 17.0.0-rc.1, write rejected from 17.0.0-rc.2 — same warning either way, which
  * is why this sweep still reads it).
@@ -719,27 +721,28 @@ describe('predicates are TOTAL on the real engine', () => {
 });
 
 /**
- * End-to-end, on the driver that actually produces the sparse record.
+ * End-to-end, on a real engine over a real SQLite database.
  *
  * Everything above tests the predicate in isolation. This drives a real
- * ObjectQL over `InMemoryDriver` — which stores only the columns a row was
- * written with — and performs the exact operation from #630: insert a task
- * without `completed_date`, then update its status to `completed`. Before the
- * guards landed, the merged record had no `completed_date` key, CEL aborted,
- * the engine logged `predicate failed to evaluate … — skipped`, and the save
- * SUCCEEDED with the rule silently doing nothing. (On 17.0.0-rc.2 the same
- * unguarded predicate would block that save instead — a different wrong answer
- * from the same missing guard.)
+ * ObjectQL and performs the exact operation from #630: insert a task without
+ * `completed_date`, then update its status to `completed`. #630 was found on
+ * `driver-memory`, which stored only the columns a row was written with: the
+ * merged record had no `completed_date` key, CEL aborted, the engine logged
+ * `predicate failed to evaluate … — skipped`, and the save SUCCEEDED with the
+ * rule silently doing nothing. Since the #2092 ruling every test runs on SQL,
+ * whose row carries the column as NULL; the absent-key shape is swept per
+ * predicate above (`answers on a record with no keys at all`).
  */
-describe('the rule fires on a driver whose stored record omits the key', () => {
+describe('the rule fires on the real engine', () => {
   const task = objects.find((o) => o.name === 'crm_task') as AnyRec;
   let ql: AnyRec;
 
   beforeAll(async () => {
     ql = (await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
+      datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
       objects: { crm_task: task } as never,
     })) as never;
+    await ql.syncSchemas();
   });
   afterAll(async () => {
     await ql?.close();
@@ -752,15 +755,6 @@ describe('the rule fires on a driver whose stored record omits the key', () => {
       .insert({ subject: 'Call back', status: 'not_started', priority: 'normal' });
     return { api, row };
   };
-
-  it('stores no key for a column it was never given — the precondition', async () => {
-    const { api, row } = await newTask();
-    const stored = await api.object('crm_task').findOne({ where: { id: row.id } });
-    // Not `toBeNull()`: the key is ABSENT, which is the whole point. If a
-    // platform upgrade makes this driver column-complete, this assertion fails
-    // and the tests below stop proving anything — that is the intended signal.
-    expect('completed_date' in (stored ?? {})).toBe(false);
-  });
 
   it('rejects status=completed with no completed_date', async () => {
     const { api, row } = await newTask();

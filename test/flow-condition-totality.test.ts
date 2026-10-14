@@ -2,7 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
+import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-automation';
 import { RecordChangeTrigger } from '@objectstack/trigger-record-change';
 import stack from './helpers/composed-stack';
@@ -453,17 +453,32 @@ describe('flow conditions are TOTAL on the real engine', () => {
 });
 
 /**
- * End-to-end, on the driver that actually produces the sparse record.
+ * End-to-end, on a real engine over a real SQLite database.
  *
  * Everything above evaluates conditions in isolation. This boots a real
- * ObjectQL over `InMemoryDriver`, a real `AutomationEngine`, and the real
- * `RecordChangeTrigger` that wires them together, then performs the ordinary
- * writes that reproduced each of the three defects. Before the guards landed
+ * ObjectQL, a real `AutomationEngine`, and the real `RecordChangeTrigger` that
+ * wires them together, then performs the ordinary writes that reproduced each
+ * of the three defects. They were reproduced on `driver-memory`, whose
+ * post-write row omitted every unwritten column; before the guards landed
  * every one of these logged
  * `Trigger-fired run of flow '…' failed: condition failed to evaluate as CEL`
  * and the automation silently did not happen.
+ *
+ * Since the maintainer's ruling on #2092 every test runs on SQL. Measured on
+ * 18.0.0-next.0 for #2092, with `case_escalation_on_create`'s start condition
+ * put back to its unguarded form: a born-critical case written through the
+ * trigger no longer hands the condition an absent key on EITHER driver (the
+ * run evaluates, no abort), while the same condition handed a record without
+ * `escalated_date` directly still aborts with `No such key`. That matches the
+ * 18.0.0-next.0 upgrade's own note (#2091): the trigger's `record` is
+ * materialised over every declared field. So these writes are not expected to
+ * reach the absent-key shape; what they pin is that each flow runs end to end
+ * without a condition abort on the driver a deployed install uses. The
+ * absent-key shape (a sparse datasource such as `driver-mongodb`) is held by
+ * the `answers on a record with no keys at all` and `any single referenced key
+ * is the one that is missing` sweeps above.
  */
-describe('conditions answer on a driver whose stored record omits the key', () => {
+describe('conditions answer end-to-end on the real engine', () => {
   const objMap = Object.fromEntries(objects.map((o) => [o.name as string, o]));
 
   interface Booted {
@@ -478,7 +493,7 @@ describe('conditions answer on a driver whose stored record omits the key', () =
     silent.child = () => silent;
 
     const ql: AnyRec = (await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
+      datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
       objects: objMap as never,
       // `logger` is honoured at runtime but is not on the published options
       // type. Without it this suite prints every engine INFO line plus the
@@ -486,6 +501,7 @@ describe('conditions answer on a driver whose stored record omits the key', () =
       // user-less harness, which reads as a broken build when it is not.
       ...({ logger: silent } as object),
     })) as never;
+    await ql.syncSchemas();
 
     const engine = new AutomationEngine(silent);
     installBuiltinNodes(engine, {
@@ -530,32 +546,6 @@ describe('conditions answer on a driver whose stored record omits the key', () =
     b.runs
       .filter((r) => /failed to evaluate as CEL|No such key|no such overload/.test(r.error ?? ''))
       .map((r) => `${r.flow}: ${String(r.error).split('\n')[0]}`);
-
-  it('stores no key for a column it was never given — the precondition', async () => {
-    const b = await boot([]);
-    try {
-      const api = b.ql.createContext({ isSystem: true });
-      const row = await api.object('crm_case').insert({
-        subject: 'Prod outage', description: 'Everything is down',
-        priority: 'critical', status: 'new',
-      });
-      const stored = await api.object('crm_case').findOne({ where: { id: row.id } });
-      // Not `toBeNull()`: the key is ABSENT, which is the whole point. If a
-      // platform upgrade makes this driver column-complete, this assertion
-      // fails and everything below stops proving anything — intended signal.
-      expect('escalated_date' in (stored ?? {})).toBe(false);
-      // …and `owner_id` has no schema-level filler at all — the acting user is
-      // stamped onto it by the security middleware (#548), which this harness
-      // does not install and which a system write short-circuits anyway. So the
-      // column is missing rather than null, which is precisely the shape
-      // `contact_welcome`'s `has(record.owner_id)` guard has to survive. The
-      // positive direction — a USER insert really does come back owned — is
-      // pinned in `test/ownership-model.test.ts`.
-      expect('owner_id' in (stored ?? {})).toBe(false);
-    } finally {
-      await b.close();
-    }
-  }, 60_000);
 
   it('case_escalation_on_create: a case BORN critical still evaluates', async () => {
     const b = await boot(['case_escalation_on_create']);

@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
+import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { SysUser } from '@objectstack/platform-objects';
 import stack from './helpers/composed-stack';
 
@@ -171,10 +171,9 @@ describe('crm_event_attendee declares cascade on all three party lookups', () =>
  * metadata-only assertion can show that a delete now succeeds, and no hook
  * harness runs the referential pass at all.
  *
- * `InMemoryDriver` is used for the same reason `object-validation-predicates`
- * uses it: it stores only the columns a row was written with, so the merged
- * record handed to the validator has ABSENT keys — the shape that made the rule
- * fire in the first place.
+ * On a real SQLite database, column-complete: the cleared column is `null`.
+ * The rule first fired on `driver-memory`, whose merged record had the key
+ * ABSENT; that shape is swept per predicate in `object-validation-predicates`.
  *
  * `sys_user` is the PLATFORM object, imported rather than stubbed: the whole
  * user-side decision rests on a real account erasure reaching this same delete
@@ -189,7 +188,7 @@ describe('deleting a person who attended a meeting', () => {
 
   beforeEach(async () => {
     ql = (await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
+      datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
       objects: {
         crm_event_attendee: EVENT_ATTENDEE,
         crm_event: byName('crm_event'),
@@ -199,6 +198,7 @@ describe('deleting a person who attended a meeting', () => {
         sys_user: SysUser,
       } as never,
     })) as never;
+    await ql.syncSchemas();
     api = ql.createContext({ isSystem: true });
   });
   afterEach(async () => {

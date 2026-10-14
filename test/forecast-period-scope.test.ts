@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
+import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { AnalyticsService } from '@objectstack/service-analytics';
 import stack from './helpers/composed-stack';
 import { ForecastDataset } from '../src/sales/datasets/forecast.dataset';
@@ -180,9 +180,9 @@ const ANALYTICS_COLUMNS = [
   'closed_amount', 'pipeline_amount', 'commit_amount',
 ] as const;
 
-const makeEngine = () =>
-  ObjectQL.create({
-    datasources: { default: new InMemoryDriver({ persistence: false }) },
+const makeEngine = async () => {
+  const ql = await ObjectQL.create({
+    datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
     objects: {
       crm_forecast: {
         name: 'crm_forecast',
@@ -200,6 +200,9 @@ const makeEngine = () =>
       },
     } as never,
   });
+  await ql.syncSchemas();
+  return ql;
+};
 
 /**
  * The current-quarter quota, as it reaches a live table.

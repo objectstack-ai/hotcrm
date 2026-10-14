@@ -17,9 +17,6 @@ importers:
       '@objectstack/core':
         specifier: 18.0.0-next.0
         version: 18.0.0-next.0
-      '@objectstack/driver-memory':
-        specifier: 18.0.0-next.0
-        version: 18.0.0-next.0
       '@objectstack/driver-sql':
         specifier: 18.0.0-next.0
         version: 18.0.0-next.0
