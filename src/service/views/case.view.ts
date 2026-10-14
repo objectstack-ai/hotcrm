@@ -170,8 +170,7 @@ export const CaseViews = defineView({
      * NORM rather than an edge case: `sys_user_position` membership is runtime
      * data, so on a fresh org — and any time every agent has been unassigned
      * from the position — an inbound web-to-case lands ownerless. Best-effort
-     * assignment also stands down on a permission denial (the anonymous
-     * public-form context cannot read `sys_user_position` at all).
+     * assignment also stands down when its pool read fails.
      *
      * Those cases used to be invisible: no view filtered on the absence of an
      * owner, so an unowned case appeared in `All Cases` with a blank Owner

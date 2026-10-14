@@ -424,9 +424,9 @@ describe('the case-routing pools actually route (what this staffing lights)', ()
   };
 
   it('round-robins an ownerless case onto the demo service agent (#596)', async () => {
-    // Ownerless intake that reaches the pool: a case the system writes (an
-    // email-to-case integration, an import). An anonymous web form's grant
-    // cannot read the pool, so its cases wait in the triage queue instead.
+    // Ownerless intake: a case the system writes (an email-to-case
+    // integration, an import). An anonymous web form's case reaches the same
+    // pool, read elevated (#2014; pinned in case-assignment.test.ts).
     const [kase] = await verify.seed('crm_case', [{
       subject: 'Email-to-case: cannot sign in', description: 'Forwarded from support@.', status: 'new',
     }]);

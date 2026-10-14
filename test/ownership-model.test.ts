@@ -451,8 +451,8 @@ describe('lead_auto_assign assigns the platform column', () => {
   it('writes owner_id, not a second column', async () => {
     // Genuinely ownerless intake: a row written by the system with no owner —
     // the posture an import or a seed load writes under (the platform's own
-    // seed context). A public-form submission does not reach the pool at all:
-    // its grant cannot read `sys_user_position`, so the hook stands down.
+    // seed context). A public-form submission reaches the same pool, read
+    // elevated (#2014; pinned in hooks-runtime.test.ts).
     const [written] = await verify.seed('crm_lead', [lead()]);
     const [stored] = await verify.rows('crm_lead', { id: written!.id });
     expect(stored!.owner_id, 'did not assign the least-loaded rep on owner_id').toBe(repB.id);

@@ -367,7 +367,8 @@ describe('lead_assignment — hot-lead SLA routing', () => {
  * A lead with NO owner (#2060 item 6).
  *
  * Web-to-lead lands ownerless whenever `lead_auto_assign` stands down (an
- * empty `sales_rep` pool, or one the anonymous form grant cannot read), and a
+ * empty `sales_rep` pool, or a pool read that fails — the hook reads it
+ * elevated since #2014, so the form's own grant no longer decides it), and a
  * seed or integration write carries whatever owner it was given. The SLA stamp
  * is the routing decision about the lead and lands either way; the alert has
  * nobody to go to. `notify` refuses an audience that evaluates to nothing, so
@@ -687,9 +688,10 @@ describe('record-change flows under a user-less trigger (#684)', () => {
     expect(run?.status, String(run?.error ?? '')).toBe('completed');
     const [stored] = await verify.rows('crm_lead', { id: lead.id });
     expect(stored!.next_followup_date, 'hot lead got no SLA date').toBeTruthy();
-    // The anonymous form grant cannot read the rep pool, so `lead_auto_assign`
-    // leaves a web lead unowned (its documented stand-down).
-    expect(stored!.owner_id).toBeNull();
+    // `lead_auto_assign` reads the rep pool elevated (#2014), so the web lead
+    // lands on the file's one rep — and the hot-lead alert reaches them.
+    expect(stored!.owner_id, 'a web lead was not routed to the rep').toBe(rep.id);
+    expect(await notified(rep.id, 'lead_routing', `/crm_lead/${lead.id}`), 'the web lead alerted nobody').toHaveLength(1);
   });
 
   it('lead_assignment alerts the owner of an integration-written lead', async () => {

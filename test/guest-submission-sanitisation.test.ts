@@ -204,15 +204,12 @@ describe('crm_case — guest submission sanitisation', () => {
       ).not.toHaveProperty(retired);
     }
 
-    // The planted owner is gone. `case_auto_assign` runs after this strip, and
-    // only on a case the strip left ownerless — but a public-form submission
-    // writes under the `guest_portal` grant, which cannot read the agent pool,
-    // so the assignment stands down and the case lands unowned, for the triage
-    // queue (`case_unassigned_triage_sharing`). Measured under the anonymous
-    // door's own execution context; an empty context (which no door produces)
-    // read the pool and placed the case on the agent.
+    // The planted owner is gone. `case_auto_assign` runs after this strip, on
+    // the case the strip left ownerless, and reads the agent pool elevated
+    // (#2014) — so the case is owned by the real agent: a POSITIVE value, not
+    // an absence.
     expect(stored.owner_id).not.toBe('planted_user');
-    expect(stored.owner_id).toBeNull();
+    expect(stored.owner_id).toBe(id.agent);
   }, 60_000);
 
   it('derives is_closed from status rather than letting a guest state it', async () => {
@@ -297,12 +294,10 @@ describe('crm_lead — guest submission sanitisation', () => {
     // submission — and the link beside it can name any record id they care to
     // guess.
     //
-    // What this case does NOT assert is that the dedupe then ran and wrote its
-    // own `suspected` verdict. It cannot: an anonymous submission holds the
-    // `guest_portal` grant, which is INSERT-only on `crm_lead` and denies the
-    // reads that check needs, so `lead_duplicate_check` swallows the denial by
-    // design and a guest's duplicate lands unflagged. Asserting `suspected` here
-    // would pin a fiction. The security property is that the guest's own verdict
+    // What this case does NOT assert is a verdict of the dedupe's own: the
+    // address repeats nothing on this stack, so the scan (elevated since #2014,
+    // and pinned flagging a real web duplicate in hooks-runtime-service) finds
+    // nothing to write. The security property is that the guest's own verdict
     // does not survive, and that is what is measured.
     const second = await insertAs(GUEST, 'crm_lead', {
       first_name: 'Grace', last_name: 'Hopper', company: 'Mark II',

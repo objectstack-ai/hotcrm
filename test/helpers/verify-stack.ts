@@ -254,13 +254,12 @@ export const predicateUpdate = async (
  * branches key on. The platform's anonymous door is `POST /forms/:slug/submit`
  * (`@objectstack/rest` `registerFormEndpoints`), which writes under exactly
  * this execution context: the form's one-object grant, the `guest_portal`
- * permission set, `anonymous`. The handle's dispatcher does not serve that
- * route (measured on 17.7.0: `ENDPOINT_NOT_FOUND`), `hooks.run` needs a
- * signed-in person, `seed` is the most trusted caller there is, and an
- * unauthenticated `POST /api/v1/data/<object>` answers 401, so the handle
- * offers no way to reach that branch at all. The door also drops every key the
- * form does not collect; a fixture that passes another key is modelling a form
- * that collects it.
+ * permission set, `anonymous`. The handle's dispatcher did not serve that
+ * route on 17.7.0 (`ENDPOINT_NOT_FOUND`); since 18.0.0-next.0 `stack.api`
+ * reaches it, and a case about the door's ANSWER goes through it (#2014). This
+ * helper stays for the cases about what the hooks STORE: the door also drops
+ * every key the form does not collect, so a fixture that passes another key is
+ * modelling a form that collects it.
  */
 export const guestInsert = (stack: VerifyStack, object: string, doc: Row): Promise<Row> =>
   stack.kernel.getService<Row>('objectql').insert(object, doc, {
