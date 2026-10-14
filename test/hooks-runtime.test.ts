@@ -313,12 +313,79 @@ describe('lead_auto_assign', () => {
     expect((await stored('crm_lead', written!.id)).owner_id).toBe(rep.id);
   });
 
-  it('never throws when the rep-pool lookup is denied (anonymous Web-to-Lead)', async () => {
-    // The public-form grant denies `find` on sys_user_position. The hook must
-    // swallow that and leave the lead ownerless — NOT reject the insert.
+  it('routes an anonymous Web-to-Lead submission into the rep pool (#2014)', async () => {
+    // The form's own grant reads nothing, so as the caller the pool read came
+    // back empty and every web lead landed ownerless. The hook declares
+    // `runAs: 'system'`: who works an enquiry is the business's routing.
     const written = await guestInsert(verify, 'crm_lead', lead({ company: 'FromWebForm' }));
     const row = await stored('crm_lead', written.id);
-    expect(row.company).toBe('FromWebForm');
-    expect(row.owner_id).toBeNull(); // ownerless, but the insert proceeded
+    expect(row.lead_source, 'not the guest submission this case is about').toBe('web');
+    expect([rep.id, rep2.id], 'a web lead was not routed to the rep pool').toContain(row.owner_id);
   });
+
+  /**
+   * The acceptance of #2014's F9 at the platform's own anonymous door,
+   * `POST /forms/:slug/submit` (`verify.api` serves it since 18.0.0-next.0).
+   * Both elevated hooks find something about this submission — an owner, and
+   * the contact it repeats — and neither finding may reach the submitter:
+   * since objectstack#22437 the door answers the new record's id and nothing
+   * else, so no public form is an email-existence oracle (maintainer ruling on
+   * #2014, item 4 B: the platform fixed the door first).
+   */
+  it('a web lead is routed and flagged, and the anonymous answer carries only its id (#2014)', async () => {
+    const address = `known${++k}@hooks-runtime.test`;
+    const [known] = await verify.seed('crm_contact', [{
+      first_name: 'Ada', last_name: 'Known', email: address, crm_account: (await accountOf()).id, owner_id: rep.id,
+    }]);
+    const res = await verify.api('/forms/contact-us/submit', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ first_name: 'Ada', last_name: 'Again', email: address.toUpperCase(), company: 'Web Co', description: 'Back again.' }),
+    });
+    expect(res.status).toBe(201);
+    const answer = await res.json() as Rec;
+    expect(Object.keys(answer), 'the anonymous answer carries more than the new id').toEqual(['id']);
+    const row = await stored('crm_lead', String(answer.id));
+    expect(row.lead_source, 'not the guest submission this case is about').toBe('web');
+    expect([rep.id, rep2.id], 'a web lead was not routed to the rep pool').toContain(row.owner_id);
+    expect(row.duplicate_status, 'a web duplicate was not flagged').toBe('suspected');
+    expect(row.duplicate_of_contact).toBe(known!.id);
+  });
+
+  it('both lead intake hooks stay inside the new lead’s organization (AGENTS.md rule 10)', async () => {
+    // Elevated, the rep pool, the load counts and the duplicate scan are
+    // organization-neutral, so each is pinned to the organization the writer
+    // named on the lead. Two organizations: the other one's rep is the LESS
+    // loaded, and the other one holds a contact at the same address — an
+    // unpinned read picks that rep and flags that contact. A boot (and a
+    // build) of its own: once an install holds two organizations, every
+    // system insert must name one.
+    const twoOrgs = await bootStack(await buildArtifactAgain(), bootOptions());
+    const orgs = await twoOrgs.seed('sys_organization', [
+      { name: 'Lead Org', slug: 'lead-org' }, { name: 'Other Org', slug: 'other-org' },
+    ]);
+    const [own, other] = [String(orgs[0]!.id), String(orgs[1]!.id)];
+    const ownRep = await signUpPerson(twoOrgs, 'own.rep@hooks-runtime.test', { name: 'Own Rep' });
+    const otherRep = await signUpPerson(twoOrgs, 'other.rep@hooks-runtime.test', { name: 'Other Rep' });
+    await twoOrgs.seed('sys_user_position', [
+      { user_id: ownRep.id, position: 'sales_rep', organization_id: own },
+      { user_id: otherRep.id, position: 'sales_rep', organization_id: other },
+    ]);
+    await twoOrgs.seed('crm_lead', [lead({ owner_id: ownRep.id, organization_id: own })]);
+    const contactIn = async (organization_id: string, email: string) => {
+      const [acct] = await twoOrgs.seed('crm_account', [{ name: `Org Co ${++k}`, organization_id }]);
+      return (await twoOrgs.seed('crm_contact', [{ first_name: 'Ada', last_name: 'Org', email, crm_account: acct!.id, organization_id }]))[0]!;
+    };
+    const ownContact = await contactIn(own, `own${++k}@hooks-runtime.test`);
+    await contactIn(other, `shared${++k}@hooks-runtime.test`);
+    const shared = `shared${k}@hooks-runtime.test`;
+    const intake = async (email: string) => {
+      const [written] = await twoOrgs.seed('crm_lead', [lead({ email, organization_id: own })]);
+      return (await twoOrgs.rows('crm_lead', { id: written!.id }))[0]!;
+    };
+    const crossing = await intake(shared);
+    expect(crossing.owner_id, 'the intake crossed into another organization’s rep pool').toBe(ownRep.id);
+    expect(crossing.duplicate_status ?? null, 'the duplicate scan matched a contact in another organization').toBeNull();
+    // Anti-vacuum: the scan does run on this boot, inside the organization.
+    expect((await intake(String(ownContact.email))).duplicate_of_contact, 'the scan found nothing at all').toBe(ownContact.id);
+  }, 120_000);
 });

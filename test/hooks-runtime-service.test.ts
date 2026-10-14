@@ -144,8 +144,11 @@ describe('case_sla_defaults', () => {
     // The branch OVERWRITES with a safe value; it does not remove the key
     // (#1133) — `delete` on a hook's `input` is a silent no-op through the real
     // engine. So the stored values are what is asserted.
+    // The planted owner is gone: the elevated round-robin after the strip
+    // writes the pool's choice (the agent), never the submitter's (#2014).
+    expect(row.owner_id, 'the planted owner survived, or the web case was not routed').toBe(agent.id);
     for (const [stripped, safe] of [
-      ['owner_id', null], ['internal_notes', null], ['resolution', null],
+      ['internal_notes', null], ['resolution', null],
       // The flag AND the prose explaining it (#1296): a case stating an escalation
       // reason while not escalated contradicts itself in one field group.
       ['is_escalated', false], ['escalation_reason', null],
@@ -1077,7 +1080,7 @@ describe('lead_automation', () => {
     const written = await guestInsert(verify, 'crm_lead', {
       first_name: 'Web', last_name: `Visitor ${++k}`, email: `visitor${k}@hooks-runtime-service.test`,
       company: 'FromWebForm', is_converted: true, converted_account: account.id, converted_date: '2020-01-01',
-      owner_id: rep.id,
+      owner_id: manager.id,
     });
     const lead = await stored('crm_lead', written.id);
     expect(lead.lead_source).toBe('web');
@@ -1085,9 +1088,12 @@ describe('lead_automation', () => {
     // Overwritten with a safe value rather than removed (#1133) — see the
     // matching note on `case_sla_defaults` above.
     expect(lead.is_converted, 'public form kept is_converted').toBe(false);
-    for (const stripped of ['converted_account', 'converted_contact', 'converted_opportunity', 'converted_date', 'owner_id']) {
+    for (const stripped of ['converted_account', 'converted_contact', 'converted_opportunity', 'converted_date']) {
       expect(lead[stripped] ?? null, `public form kept ${stripped}`).toBeNull();
     }
+    // The planted owner (not a rep) is gone: the elevated round-robin after the
+    // strip writes the pool's choice, never the submitter's (#2014).
+    expect(lead.owner_id, 'public form kept owner_id, or the web lead was not routed').toBe(rep.id);
   });
 
   it('locks identity fields on a converted lead but leaves notes editable', async () => {
@@ -1240,18 +1246,30 @@ describe('lead_duplicate_check', () => {
     expect(lead.duplicate_status ?? null).toBeNull();
   });
 
-  it('writes nothing and throws nothing when the lookup is denied (anonymous Web-to-Lead)', async () => {
-    // A guest can INSERT on crm_lead and read NOTHING. Propagating that denial
-    // would reject the very submission this feature exists to accept — the
-    // duplicate lands unflagged rather than not landing at all.
+  it('flags an anonymous Web-to-Lead duplicate too — the scan is elevated (#2014)', async () => {
+    // A guest can INSERT on crm_lead and read NOTHING, so as the caller a web
+    // duplicate always landed unflagged. Whether an address is known is the
+    // CRM's fact; what the form answers the guest is pinned in hooks-runtime.
     const address = fresh();
-    await leadOf({ email: address });
+    const first = await leadOf({ email: address });
     const written = await guestInsert(verify, 'crm_lead', {
       first_name: 'Ada', last_name: 'Guest', company: 'Acme', email: address,
     });
     const lead = await stored('crm_lead', written.id);
-    expect(lead.email).toBe(address);
-    expect(lead.duplicate_status ?? null).toBeNull();
+    expect(lead.duplicate_status).toBe('suspected');
+    expect(lead.duplicate_of_lead).toBe(first.id);
+  });
+
+  it('finds a colleague’s record the writing rep cannot read (#2014)', async () => {
+    // As the caller a rep's scan saw only what the rep may read, so a repeat of
+    // a manager's contact went unflagged. The link names a record on the new
+    // lead; the suspected-duplicates queue is where the pair is compared.
+    const address = fresh();
+    const [theirs] = await verify.seed('crm_contact', [{
+      first_name: 'Ada', last_name: 'Theirs', email: address, crm_account: (await accountOf({ owner_id: manager.id })).id, owner_id: manager.id,
+    }]);
+    expect(await verify.rows('crm_contact', { id: theirs!.id }, as(rep)), 'the rep can read it, so this case proves nothing').toEqual([]);
+    expect((await repLead({ email: address })).duplicate_of_contact).toBe(theirs!.id);
   });
 
   it('runs after lead_automation, so a guest cannot spoof a verdict past the strip', async () => {
@@ -1259,8 +1277,8 @@ describe('lead_duplicate_check', () => {
     // client-supplied `duplicate_status: 'confirmed'` that lead_automation's
     // guest branch is there to null, and stand down. Nulled rather than removed
     // (#1133): `lead_duplicate_check` stands down on a NON-BLANK verdict and its
-    // own `isBlank` counts `null` as blank. (The check itself then cannot read
-    // anything under the anonymous grant — the case above.)
+    // own `isBlank` counts `null` as blank. (The address is fresh, so the
+    // elevated scan finds nothing to flag either.)
     const check = (leadHooks as Rec[]).find((h) => h.name === 'lead_duplicate_check')!;
     const automation = (leadHooks as Rec[]).find((h) => h.name === 'lead_automation')!;
     expect(check.priority).toBeGreaterThan(automation.priority);
@@ -1278,14 +1296,13 @@ describe('lead_duplicate_check', () => {
   });
 });
 
-describe('lead_auto_assign — permission resilience', () => {
-  it('never throws when the rep-pool lookup is denied (anonymous Web-to-Lead)', async () => {
-    // The public-form grant denies `find` on sys_user_position. The hook must
-    // swallow that and leave the lead ownerless — NOT reject the insert.
+describe('lead_auto_assign — the anonymous door', () => {
+  it('routes an anonymous Web-to-Lead submission to the rep pool (#2014)', async () => {
+    // The public-form grant reads nothing; the hook reads the pool elevated.
     const written = await guestInsert(verify, 'crm_lead', {
       first_name: 'Web', last_name: `Form ${++k}`, company: 'FromWebForm', email: `form${k}@hooks-runtime-service.test`,
     });
-    expect((await stored('crm_lead', written.id)).owner_id ?? null).toBeNull();
+    expect((await stored('crm_lead', written.id)).owner_id).toBe(rep.id);
   });
 });
 

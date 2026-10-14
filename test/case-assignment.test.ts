@@ -329,19 +329,49 @@ describe('case_auto_assign', () => {
     }
   });
 
-  it('never rejects the insert when the pool read is DENIED', async () => {
-    // The anonymous Web-to-Case grant permits create/read-back on `crm_case` and
-    // denies `find` on `sys_user_position`. Propagating that denial would 403
-    // the whole submission and break the public support form — so the case is
-    // captured ownerless and lands in triage instead.
-    const pool = await staff(SERVICE_AGENT_POSITION, [{ open: 0 }]);
+  it('routes an anonymous submission like any other intake — the reads are elevated (#2014)', async () => {
+    // The anonymous form's own grant (`guest_portal`) reads nothing, so as the
+    // caller the pool came back empty and every web case landed in triage.
+    // The hook declares `runAs: 'system'`: the reads are the business's, and
+    // the least-loaded agent gets the case.
+    const pool = await staff(SERVICE_AGENT_POSITION, [{ open: 1 }, { open: 0 }]);
     try {
+      const asTheForm = { publicFormGrant: { object: 'crm_case' }, permissions: ['guest_portal'], anonymous: true };
+      const guestRead = await verify.kernel.getService<Rec>('objectql')
+        .find('sys_user_position', { where: { position: SERVICE_AGENT_POSITION }, context: asTheForm })
+        .catch((error: unknown) => error);
+      expect(JSON.stringify(guestRead ?? null), 'the form’s own grant reads the pool, so this case proves nothing')
+        .not.toContain(pool.people[1]!.id);
       const written = await guestInsert(verify, 'crm_case', { subject: 'Anonymous submission', description: 'Help.' });
-      expect((await storedCase(written.id)).owner_id ?? null).toBeNull();
+      expect((await storedCase(written.id)).owner_id, 'a web case was not routed to the least-loaded agent')
+        .toBe(pool.people[1]!.id);
     } finally {
       await pool.release();
     }
   });
+
+  it('stays inside the new case’s organization (AGENTS.md rule 10)', async () => {
+    // Elevated, the pool and the load counts are organization-neutral, so the
+    // hook pins both to the organization the writer named on the case. Two
+    // organizations, one agent each: the other organization's agent is the
+    // LESS loaded one, so an unpinned read picks them. On a boot of its own
+    // (and a build of its own), as the escalation case below explains.
+    const twoOrgs = await bootStack(await buildArtifactAgain(), bootOptions());
+    const orgs = await twoOrgs.seed('sys_organization', [
+      { name: 'Intake Org', slug: 'intake-org' }, { name: 'Other Org', slug: 'other-org' },
+    ]);
+    const [own, other] = [String(orgs[0]!.id), String(orgs[1]!.id)];
+    const ownAgent = await signUpPerson(twoOrgs, 'own.agent@case-assignment.test', { name: 'Own Agent' });
+    const otherAgent = await signUpPerson(twoOrgs, 'other.agent@case-assignment.test', { name: 'Other Agent' });
+    await twoOrgs.seed('sys_user_position', [
+      { user_id: ownAgent.id, position: SERVICE_AGENT_POSITION, organization_id: own },
+      { user_id: otherAgent.id, position: SERVICE_AGENT_POSITION, organization_id: other },
+    ]);
+    await twoOrgs.seed('crm_case', [{ subject: 'Own load', description: 'x', status: 'new', owner_id: ownAgent.id, organization_id: own }]);
+    const [kase] = await twoOrgs.seed('crm_case', [{ subject: 'Org intake', description: 'x', status: 'new', organization_id: own }]);
+    const [after] = await twoOrgs.rows('crm_case', { id: kase!.id });
+    expect(after!.owner_id, 'the intake crossed into another organization’s pool').toBe(ownAgent.id);
+  }, 120_000);
 
   it('never blocks intake, whoever writes it', async () => {
     // The `!ctx.api` stand-down has no door on the shipped app — the engine
@@ -379,36 +409,41 @@ describe('the guest strip and the assignment are ordered, not merely coexisting'
 
   it('a guest submission’s spoofed owner is stripped before anything reads it', async () => {
     // The shape a web-to-case submission actually takes, including the spoofed
-    // owner a public form can always post. Nulled, not removed (#1133).
-    const written = await guestInsert(verify, 'crm_case', {
-      subject: 'Spoofed', description: 'x', owner_id: (await signUpPerson(verify, `victim.${++k}@case-assignment.test`)).id,
-    });
-    const kase = await storedCase(written.id);
-    expect(kase.owner_id ?? null, 'the guest strip stopped removing the spoofed owner').toBeNull();
-    expect(kase.origin, 'guest defaults regressed').toBe('web');
+    // owner a public form can always post. Nulled, not removed (#1133) — and
+    // the elevated round-robin after it writes the POOL's choice, never the
+    // submitter's: the victim is a member of the pool, and the more loaded one.
+    const pool = await staff(SERVICE_AGENT_POSITION, [{ open: 1 }, { open: 0 }]);
+    try {
+      const written = await guestInsert(verify, 'crm_case', { subject: 'Spoofed', description: 'x', owner_id: pool.people[0]!.id });
+      const kase = await storedCase(written.id);
+      expect(kase.owner_id, 'an anonymous client chose the owner').toBe(pool.people[1]!.id);
+      expect(kase.origin, 'guest defaults regressed').toBe('web');
+    } finally {
+      await pool.release();
+    }
   });
 
   /**
-   * ⚠️ MEASURED DEFECT — reported as a finding on this card, pinned here so the
-   * fix is noticed.
-   *
-   * The round-robin exists for exactly this submission (the header: a
-   * web-to-case case "used to land ownerless with nobody accountable"), and the
-   * strip-then-assign order above is what was meant to hand it to an agent.
-   * But the anonymous form door writes under the `guest_portal` grant, which
-   * cannot read the agent pool — the hook's own stand-down, two describes up —
-   * so the assignment never runs for a web submission at all. Measured on
-   * 17.7.0, under the form door's own execution context: with an agent staffed,
-   * the submission lands unowned.
+   * The acceptance of #2014's F9 at the platform's own anonymous door,
+   * `POST /forms/:slug/submit` (`verify.api` serves it since 18.0.0-next.0).
+   * The round-robin exists for exactly this submission, and it reaches the
+   * pool elevated; what elevation found must not reach the submitter. Since
+   * objectstack#22437 the door answers the new record's id and nothing else
+   * (maintainer ruling on #2014, item 4 B: the platform fixed the door first).
    */
-  it('⚠️ a web-to-case submission is never round-robined, even with an agent staffed (measured defect)', async () => {
+  it('a web-to-case submission is round-robined, and the anonymous answer carries only its id (#2014)', async () => {
     const pool = await staff(SERVICE_AGENT_POSITION, [{ open: 0 }]);
     try {
-      const written = await guestInsert(verify, 'crm_case', { subject: 'Web submission', description: 'Printer on fire.' });
-      expect(
-        (await storedCase(written.id)).owner_id ?? null,
-        'a web submission was assigned to the agent — the defect is fixed: rewrite this case to pin the hand-off',
-      ).toBeNull();
+      const res = await verify.api('/forms/support/submit', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ subject: 'Web submission', description: 'Printer on fire.', priority: 'high' }),
+      });
+      expect(res.status).toBe(201);
+      const answer = await res.json() as Rec;
+      expect(Object.keys(answer), 'the anonymous answer carries more than the new id').toEqual(['id']);
+      const kase = await storedCase(String(answer.id));
+      expect(kase.origin, 'not the guest submission this case is about').toBe('web');
+      expect(kase.owner_id, 'a web submission was not routed to the staffed agent').toBe(pool.people[0]!.id);
     } finally {
       await pool.release();
     }
