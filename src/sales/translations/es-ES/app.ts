@@ -594,8 +594,12 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   // `screens.<node>.title` and `screens.<node>.fields.<field>.{label,placeholder}`
   // — the keys `os lint`'s `i18n/missing-flow` names, read by the console's
   // flow runner since @objectstack 17.7.0 (the spec's `flows` liveness row is
-  // `live` there). A screen with no authored `title` shows its flow's label in
-  // every locale, so each `screen_1.title` repeats the flow label. Since
+  // `live` there). A screen with no authored `title` is headed by its node
+  // `label` (the executor's `config.title ?? node.label`, measured on
+  // 18.0.0-next.0), so each `screens.<node>.title` translates that node label,
+  // never the flow label: the dialog shows the flow label as its eyebrow above
+  // the title, and the two differ on `lead_conversion`, `quote_generation` and
+  // `campaign_enrollment` (#2096). Since
   // 18.0.0-next.0 three more surfaces are keys the engine reads in the run's
   // locale, and `i18n/missing-flow` names each missing one: a select field's
   // `options.<value>` (worded as the object field's own option in this pack),
@@ -609,7 +613,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: 'Inscribir miembros en la campaña',
       screens: {
         screen_1: {
-          title: 'Inscribir miembros en la campaña',
+          title: 'Criterios de Inscripción',
           fields: {
             memberSource: { label: 'Tipo de miembro a inscribir', options: { leads: 'Prospectos', contacts: 'Contactos' } },
             leadStatus: { label: 'Inscribir prospectos con estado', options: { new: 'Nuevo', contacted: 'Contactado', qualified: 'Calificado' } },
@@ -655,7 +659,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: 'Proceso de conversión de prospecto',
       screens: {
         screen_1: {
-          title: 'Proceso de conversión de prospecto',
+          title: 'Detalles de la Conversión',
           // The duplicate warning's text is a variable the flow assigns; this
           // key can only carry the hole that shows it.
           description: '{{duplicateWarning}}',
@@ -706,7 +710,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       refusals: { refuse_held: { message: 'Primero va la aprobación de calificación: marque Solicitar Aprobación de Calificación. No se creó nada.' } },
       screens: {
         screen_1: {
-          title: 'Generar cotización desde la oportunidad',
+          title: 'Detalles de la Cotización',
           fields: {
             quoteName: { label: 'Nombre de Cotización' },
             expirationDays: { label: 'Válida por (días)' },
