@@ -200,6 +200,10 @@ const ROW_LABEL: Record<string, Record<'zh-Hans' | 'zh-Hant', string>> = {
   // The flow itself carries no locale-pack entry, so this ledger is where the
   // page's spelling is pinned — it moves with the three pages, not after them.
   lead_conversion: { 'zh-Hans': '线索转化流程', 'zh-Hant': '線索轉化流程' },
+  // The elevated callee behind Convert Lead's new-account branch (#2016),
+  // 年营收 and 客户 as the zh-CN pack labels the column and the object, and
+  // 子流程 in the type column like the other callees.
+  lead_conversion_account_revenue: { 'zh-Hans': '将线索年营收写入新客户', 'zh-Hant': '將線索年營收寫入新客戶' },
   account_approval: { 'zh-Hans': '客户审批', 'zh-Hant': '客戶審批' },
   lead_conversion_approval: { 'zh-Hans': '线索转化审批', 'zh-Hant': '線索轉化審批' },
   quote_generation: { 'zh-Hans': '由商机生成报价', 'zh-Hant': '由商機產生報價' },

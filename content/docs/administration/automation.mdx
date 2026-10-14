@@ -50,11 +50,12 @@ A flow fires one of three ways, set by its start node:
 
 > **Auto-launch needs the `triggers` capability.** Record-change and scheduled flows only fire when the stack's `requires` list includes `triggers` — it installs the record-change + schedule trigger providers (schedule triggers also use the job service). Screen flows are always launched manually.
 
-**Built-in flows in HotCRM** (32). Each row carries the flow's own label — the name listed in **Studio → Automation → Flows**, and the name you pick from in **Studio → Developer → Flow Runs**, so a run you are chasing can be looked up here verbatim:
+**Built-in flows in HotCRM** (33). Each row carries the flow's own label — the name listed in **Studio → Automation → Flows**, and the name you pick from in **Studio → Developer → Flow Runs**, so a run you are chasing can be looked up here verbatim:
 
 | Flow | Trigger | What it does |
 | --- | --- | --- |
 | **Lead Conversion Process** | Screen | Convert a qualified lead into an account + contact (+ optional opportunity), then notify |
+| **Copy Lead Revenue to New Account** | Subflow | Called by **Lead Conversion Process** to copy the lead's annual revenue onto the account it has just created, with system privilege |
 | **Generate Quote from Opportunity** | Screen | Build a quote from an opportunity and move it to *Proposal* |
 | **Schedule Follow-up** | Screen | Create the next follow-up task on a lead, already linked to it and owned by the right user |
 | **Enroll Members in Campaign** | Screen | Bulk-enroll eligible leads or contacts into this campaign, skipping the already-enrolled and the opted-out |
