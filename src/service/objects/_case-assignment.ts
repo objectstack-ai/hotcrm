@@ -161,12 +161,35 @@ export const CLAIMABLE_TARGET_STATUSES = [
  *
  * ## Best-effort, always
  *
- * Auto-assignment is an ENHANCEMENT and must never reject the insert. An
- * anonymous Web-to-Case submission runs under the public-form grant, which
- * permits create/read-back on `crm_case` and DENIES `find` on
- * `sys_user_position`; letting that denial propagate would 403 the whole
- * submission and break the public support form. So every read is wrapped and
- * ANY failure leaves the case ownerless for the triage view to surface.
+ * Auto-assignment is an ENHANCEMENT and must never reject the insert, so every
+ * read is wrapped and ANY failure leaves the case ownerless for the triage
+ * view to surface.
+ *
+ * ## `runAs: 'system'` (#2014, AGENTS.md rule 9), and the organization pin
+ *
+ * Web-to-case is the intake this hook exists for (#596), and as the caller it
+ * never reached the pool: the anonymous form writes under `guest_portal`,
+ * which reads nothing, so the read came back empty and every web case landed
+ * in triage with agents staffed (measured on 17.7.0 and again on
+ * 18.0.0-next.0). Who works a case is the business's routing, not the
+ * submitter's privilege, so the hook elevates. Elevation reaches the two READS
+ * only: the owner is still stamped on the payload in flight (door ① above, no
+ * transfer grant), and the strip at priority 200 runs first, so an anonymous
+ * client cannot choose the owner.
+ *
+ * What elevation reads never reaches the submitter. Maintainer ruling on
+ * #2014 (item 4, B): the platform fixed the door first — since
+ * objectstack#22437 (18.0.0-next.0) the anonymous form answers the new
+ * record's id and nothing else. `test/case-assignment.test.ts` pins that
+ * answer through the real door.
+ *
+ * AGENTS.md rule 10: the pool and the load counts are pinned to the new
+ * case's `organization_id` when the writer named one (a system import into
+ * one organization of several). The anonymous form names none here — the
+ * platform stamps the organization after the beforeInsert hooks (ADR-0131) —
+ * and an organization-less insert lands only on an install with exactly one
+ * organization (with two, the platform refuses it), so an unpinned read has
+ * no other organization to reach.
  *
  * @param hookName registry name for the hook (metadata only — never read by
  *   the body, which the sandbox would not let it be).
@@ -177,6 +200,7 @@ export function createCaseRoundRobinAssign(hookName = 'case_auto_assign'): Hook 
     object: 'crm_case',
     events: ['beforeInsert'],
     priority: 250,
+    runAs: 'system',
     description: 'Assign ownerless new cases to the least-loaded service agent.',
     handler: async (ctx: HookContext) => {
       const { input } = ctx;
@@ -189,12 +213,20 @@ export function createCaseRoundRobinAssign(hookName = 'case_auto_assign'): Hook 
       const api = ctx.api as HookApi | undefined;
       if (!api) return;
 
+      // The rule-10 pin on both reads below: the organization the writer
+      // named on the new case, when it named one.
+      const organizationId =
+        typeof input.organization_id === 'string' && input.organization_id !== ''
+          ? input.organization_id
+          : undefined;
+      const inOrganization: Record<string, string> = organizationId ? { organization_id: organizationId } : {};
+
       try {
         // The pool = holders of the `service_agent` position. This literal is
         // the exported SERVICE_AGENT_POSITION; the sandbox forbids reading the
         // constant here, and `test/case-assignment.test.ts` pins the parity.
         const holders = await api.object('sys_user_position').find({
-          where: { position: 'service_agent' }, fields: ['user_id'], top: 1000,
+          where: { position: 'service_agent', ...inOrganization }, fields: ['user_id'], top: 1000,
         });
         const agentIds = Array.from(
           new Set(
@@ -214,7 +246,7 @@ export function createCaseRoundRobinAssign(hookName = 'case_auto_assign'): Hook 
         let bestCount = Infinity;
         for (const agentId of agentIds) {
           const openCount = await api.object('crm_case').count({
-            where: { owner_id: agentId, status: { $nin: ['resolved', 'closed'] } },
+            where: { owner_id: agentId, status: { $nin: ['resolved', 'closed'] }, ...inOrganization },
           });
           if (openCount < bestCount) {
             bestCount = openCount;
@@ -223,11 +255,9 @@ export function createCaseRoundRobinAssign(hookName = 'case_auto_assign'): Hook 
         }
         if (best) input.owner_id = best;
       } catch {
-        // Swallow: assignment must never block case creation. The common case
-        // is the anonymous public-form context, which cannot read
-        // `sys_user_position` — the case is still captured, ownerless, and the
-        // triage view surfaces it. (No `console` here — the L2 hook sandbox
-        // does not define one.)
+        // Swallow: assignment must never block case creation — the case is
+        // still captured, ownerless, and the triage view surfaces it. (No
+        // `console` here — the L2 hook sandbox does not define one.)
       }
     },
   };
