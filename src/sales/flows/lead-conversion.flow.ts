@@ -437,6 +437,11 @@ export const LeadConversionFlow: Flow = {
       // hook-owned, and `account_protection` derives it from the `name` written
       // here, so an account created by this node is immediately findable by the
       // next conversion.
+      //
+      // ⛔ No `annual_revenue` here, ever, not even as null. The `sales_rep`
+      // permission set makes it read-only, and the field lock refuses the KEY
+      // whatever its value, so carrying it failed every rep's conversion into
+      // a new account (#2016). `copy_account_revenue` below writes it.
       id: 'create_account', type: 'create_record', label: 'Create Account',
       config: {
         objectName: 'crm_account',
@@ -447,12 +452,32 @@ export const LeadConversionFlow: Flow = {
           name: cel`leadRecord.company`, phone: cel`has(leadRecord.phone) ? leadRecord.phone : null`,
           website: cel`has(leadRecord.website) ? leadRecord.website : null`,
           industry: cel`has(leadRecord.industry) ? leadRecord.industry : null`,
-          annual_revenue: cel`has(leadRecord.annual_revenue) ? leadRecord.annual_revenue : null`,
           number_of_employees: cel`has(leadRecord.number_of_employees) ? leadRecord.number_of_employees : null`,
           billing_address: cel`has(leadRecord.address) ? leadRecord.address : null`,
           owner_id: cel`current_user.id`, is_active: true,
         },
         outputVariable: 'createdAccount',
+      },
+    },
+    {
+      // The ELEVATED half of the new-account branch, and the only elevation
+      // in this flow (AGENTS.md house rule 9): the lead's annual revenue,
+      // written onto the account `create_account` just created by
+      // `lead_conversion_account_revenue` (`runAs: 'system'`). This flow stays
+      // `runAs: 'user'`, so the account itself is still the converting user's
+      // own write, held to their object and field permissions. Why the callee
+      // copies one column instead of creating the account is recorded in its
+      // header (`lead-conversion-account-revenue.flow.ts`).
+      //
+      // ⛔ `accountId` is only ever `createdAccount.id`: the callee writes
+      // with the system context onto whatever account it is handed.
+      id: 'copy_account_revenue', type: 'subflow', label: 'Copy Lead Revenue to Account',
+      config: {
+        flowName: 'lead_conversion_account_revenue',
+        input: {
+          accountId: cel`createdAccount.id`,
+          annualRevenue: cel`has(leadRecord.annual_revenue) ? leadRecord.annual_revenue : null`,
+        },
       },
     },
     {
@@ -625,7 +650,7 @@ export const LeadConversionFlow: Flow = {
 
   edges: [
     // ⛔ A retired edge's id stays VACANT and every surviving edge keeps the id
-    // it has always had — `e1`, `e3` and `e15` are gaps on purpose.
+    // it has always had — `e1`, `e3`, `e7` and `e15` are gaps on purpose.
     // Renumbering to close a gap rewrites ids that other notes, tests and run
     // logs refer to.
     { id: 'e0', source: 'start', target: 'get_lead', type: 'default' },
@@ -633,9 +658,9 @@ export const LeadConversionFlow: Flow = {
     // not reuse a vacant one, and do not assume an unused-looking id is free.
     // A duplicate id is INERT (traversal filters out-edges by `source`, never
     // by `id`), so nothing fails and the collision survives to trap the next
-    // editor picking out of the sequence. `e1`, `e3` and `e15` are vacant
-    // retired ids and stay that way; `e27` is above the highest live id, not
-    // a gap-fill.
+    // editor picking out of the sequence. `e1`, `e3`, `e7` and `e15` are
+    // vacant retired ids and stay that way; `e27` is above the highest live
+    // id, not a gap-fill.
     { id: 'e27', source: 'get_lead', target: 'decision_approval', type: 'default' },
     // ── The approval gate (REQ-0005 step 7) ────────────────────────────
     //
@@ -720,7 +745,10 @@ export const LeadConversionFlow: Flow = {
     // shape #650 retired from this repo's decision nodes.
     { id: 'e5', source: 'decision_account', target: 'use_existing_account', type: 'default', condition: P`vars.matchedAccount != null`, label: 'Existing' },
     { id: 'e6', source: 'decision_account', target: 'create_account', type: 'default', condition: P`vars.matchedAccount == null`, label: 'New' },
-    { id: 'e7', source: 'create_account', target: 'use_new_account', type: 'default' },
+    // `e7` (create_account → use_new_account) is RETIRED and stays vacant
+    // (#2016): the revenue copy sits between them now, on `e41` / `e42`.
+    { id: 'e41', source: 'create_account', target: 'copy_account_revenue', type: 'default' },
+    { id: 'e42', source: 'copy_account_revenue', target: 'use_new_account', type: 'default' },
     // Both account branches converge on the contact-dedupe lookup.
     { id: 'e8', source: 'use_new_account', target: 'find_contact', type: 'default' },
     { id: 'e9', source: 'use_existing_account', target: 'find_contact', type: 'default' },

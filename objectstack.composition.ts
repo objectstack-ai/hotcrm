@@ -107,7 +107,7 @@ import { campaignHook, campaignMemberHook } from './src/marketing/objects/hooks.
 import {
   ContactWelcomeFlow, ForecastSnapshotFlow, LeadAssignmentFlow,
   AccountApprovalFlow,
-  LeadConversionFlow, LeadConversionApprovalFlow,
+  LeadConversionFlow, LeadConversionAccountRevenueFlow, LeadConversionApprovalFlow,
   OpportunityApprovalFlow, OpportunityApprovalOnCreateFlow,
   OpportunityStatusChangeApprovalFlow, OpportunityQualificationApprovalFlow,
   OpportunityStagnationFlow, OpportunityWonAlertFlow, ScheduleFollowUpFlow,
@@ -218,6 +218,7 @@ export const appFlows = [
   CampaignContactMemberEnrollFlow,
   AccountApprovalFlow,
   LeadConversionFlow,
+  LeadConversionAccountRevenueFlow,
   LeadConversionApprovalFlow,
   ScheduleFollowUpFlow,
   OpportunityApprovalFlow,

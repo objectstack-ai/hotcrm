@@ -39,13 +39,9 @@ let rep: Person;
 let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
-  // The converter is a sales MANAGER. On 17.7.0 a sales rep's conversion of a
-  // lead into a NEW account is refused: the flow's `create_account` writes
-  // `annual_revenue`, which `sales_rep` may read but not edit
-  // (`'crm_account.annual_revenue': { editable: false }`), and the flow runs as
-  // its caller — reported as a finding. This file's subject is what the
-  // conversion creates and reuses, so it runs as a persona whose conversion
-  // completes.
+  // The converter here is a sales MANAGER, kept from when a rep's conversion
+  // into a NEW account was refused (#2016). The rep's own conversion into a
+  // new account is pinned in its own block below.
   rep = await signUpPerson(verify, 'manager@flow-conversion.test', {
     name: 'Conversion Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
   });
@@ -170,8 +166,8 @@ describe('lead_conversion flow — runtime', () => {
  *
  * Converted by a sales REP onto an account the rep already owns. The flow runs
  * as its caller, so this is the persona whose field-level grants every write
- * below has to clear; onto an EXISTING account because a rep's conversion into
- * a new one is refused at `create_account` (the note on the manager above).
+ * below has to clear. The account is an EXISTING one: these cases are about
+ * the contact, and the new-account branch is pinned in the #2016 block below.
  */
 describe('lead_conversion — the contact keeps the lead’s consent and person fields (#2068)', () => {
   let salesRep: Person;
@@ -381,5 +377,109 @@ describe('lead_conversion — a ticked Create Opportunity needs an amount before
       accounts: 1, contacts: 1, opportunities: 1, isConverted: true, leadStatus: 'converted',
     });
     expect((await after(who, lead.id)).opportunities[0]!.amount).toBe(40_000);
+  });
+});
+
+/**
+ * A sales REP converts a lead into a NEW account (#2016).
+ *
+ * `sales_rep` may read `crm_account.annual_revenue` but not edit it, and the
+ * conversion runs as its caller, so while `create_account` copied the lead's
+ * revenue every rep's conversion into a new account failed there with nothing
+ * written. The account is still the rep's own write; the revenue alone is
+ * written by `lead_conversion_account_revenue`, a `runAs: 'system'` flow that
+ * only a parent's `subflow` node can start.
+ */
+describe('lead_conversion — a rep converts into a NEW account, and the revenue comes with it (#2016)', () => {
+  let salesRep: Person;
+  let marketer: Person;
+  let admin: string;
+  beforeAll(async () => {
+    salesRep = await signUpPerson(verify, 'rep-new-account@flow-conversion.test', {
+      name: 'New Account Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    });
+    marketer = await signUpPerson(verify, 'marketer@flow-conversion.test', {
+      name: 'Conversion Marketer', permissionSets: ['marketing_user'],
+    });
+    admin = await verify.signIn();
+  }, 120_000);
+
+  /** A qualified lead owned by `owner`, for a company no account carries yet. */
+  const leadOf = async (owner: Person, revenue: number | null) => {
+    const who = identity();
+    const [lead] = await verify.seed('crm_lead', [{
+      company: who.company, email: who.email, first_name: 'Rita', last_name: 'Ruiz', status: 'qualified',
+      owner_id: owner.id, ...(revenue === null ? {} : { annual_revenue: revenue }),
+    }]);
+    return { who, lead: lead! };
+  };
+
+  /** The run's refusal as its ADR-0112 envelope, or `null` when the call succeeded. */
+  const refusalOf = (call: Promise<unknown>): Promise<Rec | null> =>
+    call.then(() => null, (e: Rec) => ({ code: e?.code, status: e?.status ?? e?.statusCode }));
+
+  it.each([
+    ['a sales rep', () => salesRep, 4_200_000],
+    ['a sales rep, lead with no revenue', () => salesRep, null],
+    ['a sales manager', () => rep, 4_200_000],
+  ] as const)('%s: converted into a new account that carries the lead’s revenue', async (_label, by, revenue) => {
+    const person = by();
+    const { who, lead } = await leadOf(person, revenue);
+    const done = await runConversion(lead.id, undefined, person);
+    expect(done.error ?? null).toBeNull();
+
+    const out = await after(who, lead.id);
+    const organization = (await verify.contextFor(person.token)).tenantId;
+    expect({
+      accounts: out.accounts.length, contacts: out.contacts.length, opportunities: out.opportunities.length,
+      isConverted: out.lead.is_converted, convertedAccount: out.lead.converted_account,
+    }).toEqual({ accounts: 1, contacts: 1, opportunities: 1, isConverted: true, convertedAccount: out.accounts[0]!.id });
+    // The account is the converter's own, in the converter's organization;
+    // the elevated copy changes none of that.
+    expect(out.accounts[0]).toMatchObject({
+      annual_revenue: revenue, owner_id: person.id, created_by: person.id, organization_id: organization,
+    });
+  });
+
+  it('the revenue lock stands: the rep still may not write annual_revenue on that account', async () => {
+    const { who, lead } = await leadOf(salesRep, 4_200_000);
+    await runConversion(lead.id, { createOpportunity: false }, salesRep);
+    const [account] = (await after(who, lead.id)).accounts;
+    expect(account?.owner_id, 'fixture: the rep owns the converted account').toBe(salesRep.id);
+
+    const refused = await refusalOf(
+      verify.hooks.run('crm_account', 'update', { id: account!.id, annual_revenue: 1 }, { as: salesRep.token }),
+    );
+    expect(refused).toEqual({ code: 'PERMISSION_DENIED', status: 403 });
+    expect((await verify.rows('crm_account', { id: account!.id }))[0]?.annual_revenue).toBe(4_200_000);
+  });
+
+  it.each([
+    ['a sales rep', () => salesRep.token],
+    ['the admin', () => admin],
+  ] as const)('%s cannot start lead_conversion_account_revenue directly — only a subflow node can', async (_label, token) => {
+    const { who, lead } = await leadOf(rep, 4_200_000);
+    await runConversion(lead.id, { createOpportunity: false });
+    const [account] = (await after(who, lead.id)).accounts;
+
+    const refused = await refusalOf(verify.flows.run(
+      'lead_conversion_account_revenue', { accountId: account!.id, annualRevenue: 999 }, { as: token() },
+    ));
+    expect(refused).toEqual({ code: 'PERMISSION_DENIED', status: 403 });
+    expect((await verify.rows('crm_account', { id: account!.id }))[0]?.annual_revenue).toBe(4_200_000);
+  });
+
+  it('a marketing user, who may not create accounts, still converts nothing into a new company', async () => {
+    // The elevation covers the revenue column only, so the account is still
+    // created under the converting user's object grant. Creating the whole
+    // account in the system flow was measured to leave an account behind for
+    // this persona, written past `allowCreate: false`, before the run failed
+    // at `create_contact`.
+    const { who, lead } = await leadOf(marketer, 4_200_000);
+    const refused = await refusalOf(runConversion(lead.id, { createOpportunity: false }, marketer));
+    const out = await after(who, lead.id);
+    expect({ ...refused, accounts: out.accounts.length, isConverted: out.lead.is_converted }).toEqual({
+      code: 'FLOW_FAILED', status: 400, accounts: 0, isConverted: false,
+    });
   });
 });
