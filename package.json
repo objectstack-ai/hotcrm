@@ -39,7 +39,6 @@
     "@objectstack/account": "18.0.0-next.0",
     "@objectstack/cli": "18.0.0-next.0",
     "@objectstack/core": "18.0.0-next.0",
-    "@objectstack/driver-memory": "18.0.0-next.0",
     "@objectstack/driver-sql": "18.0.0-next.0",
     "@objectstack/driver-sqlite-wasm": "18.0.0-next.0",
     "@objectstack/metadata": "18.0.0-next.0",
