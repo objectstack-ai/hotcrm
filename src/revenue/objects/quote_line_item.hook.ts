@@ -7,21 +7,19 @@ import { createLineItemNumbering, createLineItemPriceFill } from './_line-item-p
 /**
  * Quote total rollup.
  *
- * Keeps a quote's pricing (`subtotal` / `discount_amount` / `total_price`) in
- * sync with the sum of its line items. Fires after a quote line item is
- * inserted / updated / deleted (the console surfaces these as the quote's
- * "Line Items" related list).
+ * Keeps a quote's `subtotal` in sync with the sum of its line items. Fires
+ * after a quote line item is inserted / updated / deleted (the console
+ * surfaces these as the quote's "Line Items" related list).
  *
  * Why this exists: `quote_generation` seeds the quote totals from the source
  * opportunity's amount at create time, but nothing kept them in step once a
  * rep edited the line items — the quote total and its itemization could drift.
  *
- * Total model (mirrors the quote_generation flow):
- *   subtotal        = Σ line (quantity × unit_price × (1 − line_discount/100))
- *   discount_amount = subtotal × quote.discount%              (quote-level)
- *   total_price     = subtotal − discount_amount + tax + shipping_handling
- * Quote-level `tax` and `shipping_handling` stay manual; only the line-derived
- * figures are rolled up.
+ *   subtotal = Σ line (quantity × unit_price × (1 − line_discount/100))
+ * is all this hook writes. `discount_amount` / `total_price` are derived from
+ * it IN THE SAME WRITE by `quote_workflow` (`quote.hook.ts`), the header's one
+ * formula — which is also what keeps them in step when a person edits the
+ * quote's own discount, tax or shipping (#2083).
  *
  * Design decisions mirror opportunity_line_item.hook:
  * - recompute from raw `quantity/unit_price/discount` (not the `subtotal`
@@ -55,7 +53,7 @@ const quoteTotalRollup: Hook = {
   priority: 300,
   async: true,
   onError: 'log',
-  description: 'Recompute parent quote subtotal/discount/total from its line items.',
+  description: 'Recompute parent quote subtotal from its line items.',
   handler: async (ctx: HookContext) => {
     const api = ctx.api as HookApi | undefined;
     if (!api) return;
@@ -71,7 +69,7 @@ const quoteTotalRollup: Hook = {
     for (const quoteId of quoteIds) {
       const quote = await api.object('crm_quote').findOne({
         where: { id: quoteId },
-        fields: ['id', 'status', 'discount', 'tax', 'shipping_handling'],
+        fields: ['id', 'status'],
       });
       if (!quote) continue;
       const status = typeof quote.status === 'string' ? quote.status : undefined;
@@ -89,13 +87,7 @@ const quoteTotalRollup: Hook = {
       for (const l of lines) subtotal += num(l.quantity) * num(l.unit_price) * (1 - num(l.discount) / 100);
       subtotal = Math.round(subtotal * 100) / 100;
 
-      const discountAmount = Math.round(subtotal * (num(quote.discount) / 100) * 100) / 100;
-      const total = Math.round((subtotal - discountAmount + num(quote.tax) + num(quote.shipping_handling)) * 100) / 100;
-
-      await api.object('crm_quote').update(
-        { id: quoteId, subtotal, discount_amount: discountAmount, total_price: total },
-        { where: { id: quoteId } },
-      );
+      await api.object('crm_quote').update({ id: quoteId, subtotal }, { where: { id: quoteId } });
     }
   },
 };
