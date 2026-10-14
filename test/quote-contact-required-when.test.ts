@@ -2,7 +2,6 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL, applySystemFields } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import stack from './helpers/composed-stack';
 import { quotes } from '../src/revenue/data/revenue.seed';
@@ -34,10 +33,12 @@ import { quotes } from '../src/revenue/data/revenue.seed';
  * `win-loss-capture.test.ts`), and `requiredWhen` has its own version of that
  * failure — a predicate that cannot evaluate is SKIPPED with a warning, so an
  * unguarded `record.status == "presented"` would read as enforced and require
- * nothing. So the refusal is driven through a real ObjectQL on both driver
- * shapes: `InMemoryDriver`, whose stored rows OMIT unwritten columns (the shape
- * that makes an unguarded predicate abort), and a real SQLite database, whose
- * rows are column-complete with NULLs.
+ * nothing. So the refusal is driven through a real ObjectQL over a real
+ * SQLite database, whose rows are column-complete with NULLs — the shape a
+ * deployed install stores. The absent-key shape (a sparse datasource such as
+ * `driver-mongodb`) is held per predicate by the totality sweep in
+ * `object-validation-predicates.test.ts`, which evaluates every rule against a
+ * record with no keys at all.
  *
  * Each refusal is asserted by its SUBSTANCE, not by "it threw": the envelope's
  * `code` (`VALIDATION_FAILED`, which `@objectstack/runtime`'s
@@ -147,7 +148,7 @@ describe('the gate is declared where the platform can act on it', () => {
   });
 });
 
-// ──────────────────────────── enforcement, on a driver with SPARSE records ──
+// ──────────────────────────────────────── enforcement, on a real engine ──
 
 const DRAFT = {
   name: 'Gate Probe',
@@ -158,14 +159,15 @@ const DRAFT = {
   total_price: 1234,
 };
 
-describe('the write is REFUSED, not warned about (in-memory driver)', () => {
+describe('the write is REFUSED, not warned about', () => {
   let ql: AnyRec;
 
   beforeAll(async () => {
     ql = (await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
+      datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
       objects: { crm_quote: quote } as never,
     })) as never;
+    await ql.syncSchemas();
   });
   afterAll(async () => {
     await ql?.close();
@@ -176,16 +178,6 @@ describe('the write is REFUSED, not warned about (in-memory driver)', () => {
     const row = await api.object('crm_quote').insert({ ...DRAFT, name });
     return { api, row };
   };
-
-  it('stores no key for a column it was never given — the precondition', async () => {
-    const { api, row } = await newDraft('Sparse Precondition');
-    const stored = await api.object('crm_quote').findOne({ where: { id: row.id } });
-    // Not `toBeNull()`: the key is ABSENT. That is the record shape that makes
-    // an unguarded predicate abort, and the reason this driver is the one the
-    // enforcement tests run on.
-    expect('crm_contact' in (stored ?? {})).toBe(false);
-    expect(stored?.status).toBe('draft');
-  });
 
   it('refuses to PRESENT a quote with no contact, and the quote stays draft', async () => {
     const { api, row } = await newDraft('No Recipient');
@@ -295,9 +287,10 @@ describe('the write is REFUSED, not warned about (in-memory driver)', () => {
 // ────────────────────── the same contract on a real SQL database ──────────
 
 describe('the write is REFUSED on a real SQLite database too', () => {
-  // The in-memory driver hands back sparse records; a SQL driver hands back a
-  // full row with NULLs. Those are different inputs to the same predicate, and
-  // "which driver is underneath" is not something a marketplace app chooses.
+  // The column-complete precondition, pinned: a SQL driver hands back a full
+  // row with NULLs, and the predicate must refuse on that shape. (Its sparse
+  // twin ran on `driver-memory` until the #2092 ruling moved every test onto
+  // SQL; the no-keys shape is swept in `object-validation-predicates.test.ts`.)
   let ql: AnyRec;
 
   beforeAll(async () => {
@@ -327,8 +320,7 @@ describe('the write is REFUSED on a real SQLite database too', () => {
     const row = await api.object('crm_quote').insert({ ...DRAFT, name: 'SQL Probe' });
 
     const stored = await api.object('crm_quote').findOne({ where: { id: row.id } });
-    // The opposite precondition to the in-memory suite: here the key IS
-    // present and null. Both shapes must reach the same verdict.
+    // The column-complete shape: the key IS present, and null.
     expect('crm_contact' in (stored ?? {})).toBe(true);
     expect(stored?.crm_contact ?? null).toBeNull();
 
@@ -382,11 +374,12 @@ describe('a row that was ALREADY presented when the rule landed', () => {
 
   /** A store holding one contact-less `presented` quote, then re-opened gated. */
   const legacyRow = async () => {
-    const driver = new InMemoryDriver({ persistence: false });
+    const driver = new SqliteWasmDriver({ filename: ':memory:' });
     const before: AnyRec = (await ObjectQL.create({
       datasources: { default: driver },
       objects: { crm_quote: ungated() } as never,
     })) as never;
+    await before.syncSchemas();
     const row = await before
       .createContext({ isSystem: true })
       .object('crm_quote')
@@ -396,6 +389,7 @@ describe('a row that was ALREADY presented when the rule landed', () => {
       datasources: { default: driver },
       objects: { crm_quote: quote } as never,
     })) as never;
+    await after.syncSchemas();
     return { ql: after, api: after.createContext({ isSystem: true }), row };
   };
 

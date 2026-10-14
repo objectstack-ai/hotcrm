@@ -2,10 +2,11 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
+import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import type { VerifyStack } from '@objectstack/verify';
 import stack from './helpers/composed-stack';
 import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
+import { LeadViews } from '../src/sales/views/lead.view';
 
 /**
  * ═══ HotCRM has ONE owner, and it is the platform's (#548) ════════════════
@@ -162,6 +163,21 @@ describe('one ownership column, and it is `owner_id`', () => {
     );
     expect(withDefault, 'owner_id must have no schema default').toEqual([]);
   });
+
+  it('the New Lead form leaves `owner_id` to that stamp — offered, not required (#2097)', () => {
+    // `LeadViews.form` IS the create dialog (see `case-create-form-narrowing`),
+    // and a `required` entry there is a client-side submit check. Measured on
+    // 18.0.0-next.0: a rep's Leads → New stopped at "Lead Owner is required"
+    // with nothing POSTed, so the stamp never saw the insert. The server half —
+    // a rep's ownerless insert lands owned by the rep — is pinned end to end by
+    // `stands down when the middleware already stamped an owner` below.
+    const entries: unknown[] = ((LeadViews as AnyRec).form?.sections ?? []).flatMap(
+      (s: AnyRec) => s.fields ?? [],
+    );
+    const owner = entries.find((f) => (typeof f === 'string' ? f : (f as AnyRec)?.field) === 'owner_id');
+    expect(owner, 'owner_id left the New Lead form — this pin would judge nothing').toBeDefined();
+    expect((owner as AnyRec)?.required === true, 'the New Lead form demands an owner again').toBe(false);
+  });
 });
 
 // ──────────────────────────────────── which writers the gate can see ──
@@ -174,7 +190,7 @@ describe('the transfer gate sees a hook’s ctx.api write, and not a beforeInser
   beforeAll(async () => {
     seen = [];
     ql = (await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
+      datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
       objects: {
         crm_lead: {
           name: 'crm_lead',
@@ -195,6 +211,7 @@ describe('the transfer gate sees a hook’s ctx.api write, and not a beforeInser
         },
       } as never,
     })) as never;
+    await ql.syncSchemas();
 
     // The SAME seam `@objectstack/plugin-security` registers its guard on. It
     // reads `opCtx.data` and passes everything through — a recorder, not a gate,
@@ -435,8 +452,8 @@ describe('lead_auto_assign assigns the platform column', () => {
   it('writes owner_id, not a second column', async () => {
     // Genuinely ownerless intake: a row written by the system with no owner —
     // the posture an import or a seed load writes under (the platform's own
-    // seed context). A public-form submission does not reach the pool at all:
-    // its grant cannot read `sys_user_position`, so the hook stands down.
+    // seed context). A public-form submission reaches the same pool, read
+    // elevated (#2014; pinned in hooks-runtime.test.ts).
     const [written] = await verify.seed('crm_lead', [lead()]);
     const [stored] = await verify.rows('crm_lead', { id: written!.id });
     expect(stored!.owner_id, 'did not assign the least-loaded rep on owner_id').toBe(repB.id);

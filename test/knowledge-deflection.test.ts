@@ -2,7 +2,6 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL, applySystemFields } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { AnalyticsService } from '@objectstack/service-analytics';
 import type { VerifyStack } from '@objectstack/verify';
@@ -227,147 +226,137 @@ const makeAnalytics = (ql: AnyRec) =>
   });
 
 /**
- * The same suite, run twice: once on `InMemoryDriver` (whose stored rows OMIT
- * unwritten columns) and once on real SQLite (column-complete rows, NULL where
- * the app wrote nothing). Those two shapes disagree about what "absent" means,
- * which is precisely the axis a non-NULL-counting measure gets wrong — so a
- * single-driver green would not be evidence.
+ * The measures on real SQLite: column-complete rows, NULL where the app wrote
+ * nothing — the shape a deployed install stores, and the axis a
+ * non-NULL-counting measure gets wrong. (Through #2031 this suite also ran on
+ * `driver-memory`; the maintainer's ruling on #2092 moved every test onto SQL.)
  */
-for (const driverName of ['memory', 'sqlite'] as const) {
-  describe(`the deflection measures over ${driverName}`, () => {
-    let ql: AnyRec;
-    let analytics: AnalyticsService;
+describe('the deflection measures over sqlite', () => {
+  let ql: AnyRec;
+  let analytics: AnalyticsService;
 
-    beforeAll(async () => {
-      if (driverName === 'sqlite') {
-        const driver = new SqliteWasmDriver({ filename: ':memory:' });
-        await driver.connect();
-        // `ObjectQL.create` wires the datasource but emits no DDL — the exact
-        // call the runtime makes at boot.
-        for (const obj of [kase, article]) {
-          const materialized = applySystemFields(obj as never, { multiTenant: false }) as AnyRec;
-          await driver.initObjects([{
-            name: obj.name,
-            fields: materialized.fields as Record<string, unknown>,
-            indexes: materialized.indexes,
-          } as never]);
-        }
-        ql = (await ObjectQL.create({
-          datasources: { default: driver },
-          objects: { crm_case: kase, crm_knowledge_article: article } as never,
-        })) as never;
-      } else {
-        ql = (await ObjectQL.create({
-          datasources: { default: new InMemoryDriver({ persistence: false }) },
-          objects: { crm_case: kase, crm_knowledge_article: article } as never,
-        })) as never;
-      }
-      analytics = makeAnalytics(ql);
-    }, 60_000);
+  beforeAll(async () => {
+    const driver = new SqliteWasmDriver({ filename: ':memory:' });
+    await driver.connect();
+    // `ObjectQL.create` wires the datasource but emits no DDL — the exact
+    // call the runtime makes at boot.
+    for (const obj of [kase, article]) {
+      const materialized = applySystemFields(obj as never, { multiTenant: false }) as AnyRec;
+      await driver.initObjects([{
+        name: obj.name,
+        fields: materialized.fields as Record<string, unknown>,
+        indexes: materialized.indexes,
+      } as never]);
+    }
+    ql = (await ObjectQL.create({
+      datasources: { default: driver },
+      objects: { crm_case: kase, crm_knowledge_article: article } as never,
+    })) as never;
+    analytics = makeAnalytics(ql);
+  }, 60_000);
 
-    afterAll(async () => {
-      await ql?.close();
-    });
-
-    const api = () => ql.createContext({ isSystem: true });
-
-    const addCase = async (rec: AnyRec) => {
-      const row: AnyRec = {};
-      for (const c of CASE_COLUMNS) if (rec[c] !== undefined) row[c] = rec[c];
-      return api().object('crm_case').insert(row);
-    };
-
-    /** Run a SHIPPED widget binding through the real dataset executor. */
-    const run = async (w: AnyRec) => {
-      const res = await analytics.queryDataset(
-        CaseDataset as never,
-        {
-          ...(w.dimensions ? { dimensions: w.dimensions } : {}),
-          measures: w.values,
-          ...(w.filter ? { runtimeFilter: w.filter as never } : {}),
-        } as never,
-        { isSystem: true } as never,
-      );
-      return (res.rows ?? []) as AnyRec[];
-    };
-
-    const rate = async (): Promise<AnyRec> => (await run(
-      { values: ['closed_count', 'kb_resolved_count', 'kb_deflection_rate'] },
-    ))[0] ?? {};
-
-    it('measures the rate the dashboard shows, and its two halves', async () => {
-      // 2 of 4 closed cases resolved by an article; one OPEN case that also
-      // names one, to prove `is_closed` really scopes both halves.
-      await addCase(caseRow({ subject: 'c1', is_closed: true, status: 'closed', resolved_by_article: 'ka1' }));
-      await addCase(caseRow({ subject: 'c2', is_closed: true, status: 'closed', resolved_by_article: 'ka1' }));
-      await addCase(caseRow({ subject: 'c3', is_closed: true, status: 'closed' }));
-      await addCase(caseRow({ subject: 'c4', is_closed: true, status: 'closed' }));
-      await addCase(caseRow({ subject: 'c5', is_closed: false, resolved_by_article: 'ka2' }));
-
-      const row = await rate();
-      expect(row.closed_count).toBe(4);
-      expect(row.kb_resolved_count).toBe(2);
-      expect(row.kb_deflection_rate).toBeCloseTo(0.5, 5);
-    });
-
-    it('rises when another closed case names an article', async () => {
-      const before = (await rate()).kb_deflection_rate as number;
-      await addCase(caseRow({ subject: 'c6', is_closed: true, status: 'closed', resolved_by_article: 'ka1' }));
-      const after = await rate();
-      expect(after.kb_resolved_count).toBe(3);
-      expect(after.closed_count).toBe(5);
-      expect(after.kb_deflection_rate as number).toBeGreaterThan(before);
-      expect(after.kb_deflection_rate as number).toBeCloseTo(0.6, 5);
-    });
-
-    it('falls when a closed case resolves without one', async () => {
-      const before = (await rate()).kb_deflection_rate as number;
-      await addCase(caseRow({ subject: 'c7', is_closed: true, status: 'closed' }));
-      const after = await rate();
-      expect(after.kb_deflection_rate as number).toBeLessThan(before);
-    });
-
-    /**
-     * An OPEN case moves neither half. If it moved either, `is_closed` is not
-     * scoping the measure it is declared on — the missing-half shape of #614.
-     */
-    it('does not move for an open case, whatever it names', async () => {
-      const before = await rate();
-      await addCase(caseRow({ subject: 'c8', is_closed: false, resolved_by_article: 'ka1' }));
-      const after = await rate();
-      expect(after.closed_count).toBe(before.closed_count);
-      expect(after.kb_resolved_count).toBe(before.kb_resolved_count);
-    });
-
-    /**
-     * The empty string, at the layer that actually counts it. Everything above
-     * would still pass with the normalisation hook deleted — this is the case
-     * that would not.
-     */
-    it('counts an EMPTY-STRING link, which is why the hook nulls it', async () => {
-      const before = await rate();
-      await addCase(caseRow({ subject: 'c9', is_closed: true, status: 'closed', resolved_by_article: '' }));
-      const after = await rate();
-
-      expect(after.closed_count).toBe((before.closed_count as number) + 1);
-      // The numerator moving here is the DEFECT being demonstrated, not the
-      // behaviour being asked for — `case_resolution_article_normalize` is what
-      // guarantees such a row is never written in the first place.
-      expect(after.kb_resolved_count).toBe((before.kb_resolved_count as number) + 1);
-    });
-
-    it('ranks articles by the closed cases they resolved', async () => {
-      const rows = await run({
-        dimensions: ['resolved_article'],
-        values: ['kb_resolved_count'],
-        filter: { is_closed: true },
-      });
-      const ka1 = rows.find((r) => r.resolved_article === 'ka1');
-      expect(ka1, `no ka1 bucket in ${JSON.stringify(rows)}`).toBeTruthy();
-      expect(ka1!.kb_resolved_count).toBe(3);
-    });
+  afterAll(async () => {
+    await ql?.close();
   });
-}
+
+  const api = () => ql.createContext({ isSystem: true });
+
+  const addCase = async (rec: AnyRec) => {
+    const row: AnyRec = {};
+    for (const c of CASE_COLUMNS) if (rec[c] !== undefined) row[c] = rec[c];
+    return api().object('crm_case').insert(row);
+  };
+
+  /** Run a SHIPPED widget binding through the real dataset executor. */
+  const run = async (w: AnyRec) => {
+    const res = await analytics.queryDataset(
+      CaseDataset as never,
+      {
+        ...(w.dimensions ? { dimensions: w.dimensions } : {}),
+        measures: w.values,
+        ...(w.filter ? { runtimeFilter: w.filter as never } : {}),
+      } as never,
+      { isSystem: true } as never,
+    );
+    return (res.rows ?? []) as AnyRec[];
+  };
+
+  const rate = async (): Promise<AnyRec> => (await run(
+    { values: ['closed_count', 'kb_resolved_count', 'kb_deflection_rate'] },
+  ))[0] ?? {};
+
+  it('measures the rate the dashboard shows, and its two halves', async () => {
+    // 2 of 4 closed cases resolved by an article; one OPEN case that also
+    // names one, to prove `is_closed` really scopes both halves.
+    await addCase(caseRow({ subject: 'c1', is_closed: true, status: 'closed', resolved_by_article: 'ka1' }));
+    await addCase(caseRow({ subject: 'c2', is_closed: true, status: 'closed', resolved_by_article: 'ka1' }));
+    await addCase(caseRow({ subject: 'c3', is_closed: true, status: 'closed' }));
+    await addCase(caseRow({ subject: 'c4', is_closed: true, status: 'closed' }));
+    await addCase(caseRow({ subject: 'c5', is_closed: false, resolved_by_article: 'ka2' }));
+
+    const row = await rate();
+    expect(row.closed_count).toBe(4);
+    expect(row.kb_resolved_count).toBe(2);
+    expect(row.kb_deflection_rate).toBeCloseTo(0.5, 5);
+  });
+
+  it('rises when another closed case names an article', async () => {
+    const before = (await rate()).kb_deflection_rate as number;
+    await addCase(caseRow({ subject: 'c6', is_closed: true, status: 'closed', resolved_by_article: 'ka1' }));
+    const after = await rate();
+    expect(after.kb_resolved_count).toBe(3);
+    expect(after.closed_count).toBe(5);
+    expect(after.kb_deflection_rate as number).toBeGreaterThan(before);
+    expect(after.kb_deflection_rate as number).toBeCloseTo(0.6, 5);
+  });
+
+  it('falls when a closed case resolves without one', async () => {
+    const before = (await rate()).kb_deflection_rate as number;
+    await addCase(caseRow({ subject: 'c7', is_closed: true, status: 'closed' }));
+    const after = await rate();
+    expect(after.kb_deflection_rate as number).toBeLessThan(before);
+  });
+
+  /**
+   * An OPEN case moves neither half. If it moved either, `is_closed` is not
+   * scoping the measure it is declared on — the missing-half shape of #614.
+   */
+  it('does not move for an open case, whatever it names', async () => {
+    const before = await rate();
+    await addCase(caseRow({ subject: 'c8', is_closed: false, resolved_by_article: 'ka1' }));
+    const after = await rate();
+    expect(after.closed_count).toBe(before.closed_count);
+    expect(after.kb_resolved_count).toBe(before.kb_resolved_count);
+  });
+
+  /**
+   * The empty string, at the layer that actually counts it. Everything above
+   * would still pass with the normalisation hook deleted — this is the case
+   * that would not.
+   */
+  it('counts an EMPTY-STRING link, which is why the hook nulls it', async () => {
+    const before = await rate();
+    await addCase(caseRow({ subject: 'c9', is_closed: true, status: 'closed', resolved_by_article: '' }));
+    const after = await rate();
+
+    expect(after.closed_count).toBe((before.closed_count as number) + 1);
+    // The numerator moving here is the DEFECT being demonstrated, not the
+    // behaviour being asked for — `case_resolution_article_normalize` is what
+    // guarantees such a row is never written in the first place.
+    expect(after.kb_resolved_count).toBe((before.kb_resolved_count as number) + 1);
+  });
+
+  it('ranks articles by the closed cases they resolved', async () => {
+    const rows = await run({
+      dimensions: ['resolved_article'],
+      values: ['kb_resolved_count'],
+      filter: { is_closed: true },
+    });
+    const ka1 = rows.find((r) => r.resolved_article === 'ka1');
+    expect(ka1, `no ka1 bucket in ${JSON.stringify(rows)}`).toBeTruthy();
+    expect(ka1!.kb_resolved_count).toBe(3);
+  });
+});
 
 // ───────────────────────────────────── 4. the dashboard actually shows it ──
 

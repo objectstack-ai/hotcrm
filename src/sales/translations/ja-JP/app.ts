@@ -596,8 +596,12 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   // `screens.<node>.title` and `screens.<node>.fields.<field>.{label,placeholder}`
   // — the keys `os lint`'s `i18n/missing-flow` names, read by the console's
   // flow runner since @objectstack 17.7.0 (the spec's `flows` liveness row is
-  // `live` there). A screen with no authored `title` shows its flow's label in
-  // every locale, so each `screen_1.title` repeats the flow label. Since
+  // `live` there). A screen with no authored `title` is headed by its node
+  // `label` (the executor's `config.title ?? node.label`, measured on
+  // 18.0.0-next.0), so each `screens.<node>.title` translates that node label,
+  // never the flow label: the dialog shows the flow label as its eyebrow above
+  // the title, and the two differ on `lead_conversion`, `quote_generation` and
+  // `campaign_enrollment` (#2096). Since
   // 18.0.0-next.0 three more surfaces are keys the engine reads in the run's
   // locale, and `i18n/missing-flow` names each missing one: a select field's
   // `options.<value>` (worded as the object field's own option in this pack),
@@ -611,7 +615,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: 'キャンペーンにメンバーを登録',
       screens: {
         screen_1: {
-          title: 'キャンペーンにメンバーを登録',
+          title: '登録条件',
           fields: {
             memberSource: { label: '登録するメンバーの種類', options: { leads: 'リード', contacts: '取引先責任者' } },
             leadStatus: { label: '登録するリードのステータス', options: { new: '新規', contacted: 'コンタクト済み', qualified: '適格' } },
@@ -657,7 +661,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: 'リード変換プロセス',
       screens: {
         screen_1: {
-          title: 'リード変換プロセス',
+          title: '変換詳細',
           // The duplicate warning's text is a variable the flow assigns; this
           // key can only carry the hole that shows it.
           description: '{{duplicateWarning}}',
@@ -708,7 +712,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       refusals: { refuse_held: { message: '先に案件化承認が必要です。「案件化承認を申請」にチェックを入れてください。何も作成されていません。' } },
       screens: {
         screen_1: {
-          title: '商談から見積を作成',
+          title: '見積詳細',
           fields: {
             quoteName: { label: '見積名' },
             expirationDays: { label: '有効期間（日）' },

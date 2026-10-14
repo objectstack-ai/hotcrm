@@ -287,10 +287,12 @@ export const LeadViews = defineView({
           },
           'lead_source',
           'industry',
-          {
-            field: 'owner_id',
-            required: true,
-          },
+          // Offered, ⛔ not `required` (#2097): an insert that leaves it empty is
+          // stamped to the creator by the platform (see `lead.hook.ts`), so a
+          // rep's new lead is theirs without a pick. `required` blocked that
+          // save client-side. A pick of another owner on create is currently
+          // dropped by the console (objectui#12359).
+          'owner_id',
           // `disqualification_reason` is enforced by the
           // `disqualification_reason_required` validation on crm_lead, so every
           // form that lets a user pick "Unqualified" must also offer the reason

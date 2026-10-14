@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
+import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-automation';
 import { cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
@@ -76,7 +76,7 @@ let ql: any;
 
 beforeAll(async () => {
   ql = await ObjectQL.create({
-    datasources: { default: new InMemoryDriver({ persistence: false }) },
+    datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
     objects: {
       crm_account: shippedFields('crm_account'),
       crm_opportunity: shippedFields('crm_opportunity'),
@@ -85,6 +85,7 @@ beforeAll(async () => {
       crm_campaign_member: shippedFields('crm_campaign_member'),
     } as never,
   });
+  await ql.syncSchemas();
 });
 
 afterAll(async () => {
@@ -170,9 +171,15 @@ const readBack = (object: string, id: string): Promise<AnyRec> =>
 // ─────────────────────────────────────────────────────── #1666 · approval ──
 
 describe('#1666 — crm_opportunity approval stamps are declared readonly', () => {
-  /** A closable deal, inserted under a system context so the seed itself is not the measurement. */
+  /**
+   * A closable deal, inserted under a system context so the seed itself is not
+   * the measurement. Each deal gets its own account: `crm_account.name` is
+   * declared unique, and the SQL driver enforces it (`driver-memory`, which ran
+   * this file until #2092, did not).
+   */
+  let accounts = 0;
   async function seedOpportunity(): Promise<string> {
-    const account = await ql.insert('crm_account', { name: 'Acme Industrial' }, { context: sysCtx });
+    const account = await ql.insert('crm_account', { name: `Acme Industrial ${++accounts}` }, { context: sysCtx });
     const row = await ql.insert(
       'crm_opportunity',
       {

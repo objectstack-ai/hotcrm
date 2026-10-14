@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
+import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import stack from './helpers/composed-stack';
 
 /**
@@ -128,7 +128,7 @@ describe('deleting an itemised parent', () => {
 
   beforeEach(async () => {
     ql = (await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
+      datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
       objects: {
         crm_opportunity_line_item: OPP_LINE_ITEM,
         crm_quote_line_item: QUOTE_LINE_ITEM,
@@ -138,6 +138,7 @@ describe('deleting an itemised parent', () => {
         crm_product: byName('crm_product'),
       } as never,
     })) as never;
+    await ql.syncSchemas();
     api = ql.createContext({ isSystem: true });
   });
   afterEach(async () => {

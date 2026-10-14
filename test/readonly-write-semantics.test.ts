@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
+import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-automation';
 import type * as Automation from '@objectstack/spec/automation';
 import { P, cel } from '@objectstack/spec';
@@ -65,7 +65,7 @@ type Flow = Automation.Flow;
  * The rule under test is the engine's own, so the AutomationEngine's
  * `data` service here IS a real `ObjectQL` — its flat `update(object, data, options)`
  * surface is exactly what the `update_record` executor calls — over a real
- * `InMemoryDriver`. The probe object is purpose-built so the measurement never
+ * SQLite database. The probe object is purpose-built so the measurement never
  * depends on, or perturbs, the shipped `crm_case` declaration.
  *
  * First measured on `@objectstack/* 17.1.0`. RE-MEASURED 2026-09-03 against
@@ -231,7 +231,7 @@ const readBack = async (id: string): Promise<AnyRec> =>
 
 beforeAll(async () => {
   ql = await ObjectQL.create({
-    datasources: { default: new InMemoryDriver({ persistence: false }) },
+    datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
     objects: { [PROBE]: probeObject, [ORDERED]: orderedObject } as never,
     hooks: [
       {
@@ -249,6 +249,7 @@ beforeAll(async () => {
       },
     ],
   });
+  await ql.syncSchemas();
 });
 
 afterAll(async () => {

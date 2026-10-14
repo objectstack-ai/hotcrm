@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
+import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { SysUser } from '@objectstack/platform-objects';
 import { ExpressionEngine } from '@objectstack/formula';
 import { materializeDeclaredFields } from '@objectstack/objectql/core';
@@ -175,7 +175,7 @@ describe('the two-sided acceptance criterion, on the real ShareLinkService', () 
 
   beforeEach(async () => {
     ql = (await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
+      datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
       objects: {
         crm_knowledge_article: ARTICLE,
         crm_case: byName('crm_case'),
@@ -185,6 +185,7 @@ describe('the two-sided acceptance criterion, on the real ShareLinkService', () 
         sys_share_link: SysShareLink,
       } as never,
     })) as never;
+    await ql.syncSchemas();
     api = ql.createContext({ isSystem: true });
 
     for (const [key, status, audience] of FIXTURES) {
