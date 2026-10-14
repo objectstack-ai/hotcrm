@@ -148,18 +148,22 @@ describe('crm_event_attendee declares cascade on all three party lookups', () =>
   });
 
   /**
-   * The EVENT side is deliberately not cascade. `crm_event` is a REQUIRED
-   * lookup, and the engine escalates a `set_null` default on a required lookup
-   * to a refusal at delete time — with a message that names the real obstacle
-   * (see the last end-to-end test). That is the correct answer there, for the
-   * same reason `crm_campaign_member.crm_campaign` keeps it (#696): a meeting's
+   * The EVENT side is deliberately not cascade: deleting a meeting that has
+   * attendees is refused, with a message that names the real obstacle (see the
+   * last end-to-end test). That is the correct answer there, for the same
+   * reason `crm_campaign_member.crm_campaign` keeps it (#696): a meeting's
    * attendee list is the meeting's historical record, not a per-person
-   * artefact. Pinned so a copy-paste of the three lines above cannot reach here
-   * and start shredding meeting history.
+   * artefact. `crm_event` is the object's master, a required `master_detail`
+   * since 18.0.0-next.1 (#2105), which would cascade on its default, so it
+   * declares `restrict`; through 18.0.0-next.0 it was a required lookup whose
+   * `set_null` default the engine escalated to the same refusal. Pinned so a
+   * copy-paste of the three lines above cannot reach here and start shredding
+   * meeting history.
    */
-  it('leaves the required event lookup on the default', () => {
+  it('keeps the required event master on restrict', () => {
+    expect(EVENT_ATTENDEE.fields.crm_event.type).toBe('master_detail');
     expect(EVENT_ATTENDEE.fields.crm_event.required).toBe(true);
-    expect(EVENT_ATTENDEE.fields.crm_event.deleteBehavior).toBe('set_null');
+    expect(EVENT_ATTENDEE.fields.crm_event.deleteBehavior).toBe('restrict');
   });
 });
 

@@ -79,6 +79,10 @@ export const TaskDueReminderFlow: Flow = {
                   subject: cel`currentTask.subject`, reminder_date: cel`currentTask.reminder_date`,
                 },
                 actionUrl: '/crm_task/{{currentTask.id}}',
+                // A schedule run has no organization: since 18.0.0-next.1 the
+                // notification takes its owner from this record (objectstack#23284).
+                sourceObject: 'crm_task',
+                sourceId: cel`currentTask.id`,
               },
             },
             {

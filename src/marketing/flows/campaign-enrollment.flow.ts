@@ -55,7 +55,8 @@ export const CampaignEnrollmentFlow: Flow = {
      *
      * ⚠️ Measured on the 17.1.0 spec, with the schema key re-checked on 17.2.0.
      * Neither that key nor the seeding behaviour was re-checked on 17.3.0 or
-     * 17.4.0 (PR #1814, #1807), nor on 17.5.0, 17.6.0, 17.7.0 or 18.0.0-next.0 (the pin since #2031).
+     * 17.4.0 (PR #1814, #1807), nor on 17.5.0, 17.6.0, 17.7.0, 18.0.0-next.0 (the pin from #2031)
+     * or 18.0.0-next.1 (the pin since #2105).
      *
      * ⛔ Never seed this with an assignment node instead. An assignment is
      * unconditional, so it CLOBBERS a supplied param — measured: launching with

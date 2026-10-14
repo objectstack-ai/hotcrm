@@ -99,6 +99,10 @@ export const OpportunityStagnationFlow: Flow = {
                   days_in_stage: cel`currentOpp.days_in_stage`,
                 },
                 actionUrl: '/crm_opportunity/{{currentOpp.id}}',
+                // A schedule run has no organization: since 18.0.0-next.1 the
+                // notification takes its owner from this record (objectstack#23284).
+                sourceObject: 'crm_opportunity',
+                sourceId: cel`currentOpp.id`,
               },
             },
             {

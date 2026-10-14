@@ -119,6 +119,14 @@ export const ServiceAgentProfile = {
  * ⇒ For this app, "bind set X to position P" has exactly one spelling: declare
  * X's grants under the name P. Hence this export rather than a new file.
  *
+ * ⚠️ The schema half above is dated, not current: on 18.0.0-next.1
+ * `PositionSchema` accepts `permissionSets` and the `sys_position_permission_set`
+ * object is retired (objectstack 66949b7). The name binding still resolves
+ * there: for a demo user holding the `service_agent` position and no grant,
+ * `POST /api/v1/security/explain` answers `permissionSets: [service_agent,
+ * member_default]` (measured in #2105). Whether to declare the binding
+ * instead was not decided there.
+ *
  * ### Why a spread and not a copy
  *
  * `objects` and `fields` are carried by REFERENCE, so the two personas share

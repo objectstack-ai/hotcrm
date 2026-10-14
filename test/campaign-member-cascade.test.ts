@@ -85,17 +85,20 @@ describe('crm_campaign_member declares cascade on both party lookups', () => {
   });
 
   /**
-   * The CAMPAIGN side is deliberately NOT cascade, and is not changed by #696.
-   * `crm_campaign` is a REQUIRED lookup, and the engine escalates a `set_null`
-   * default on a required lookup to `restrict` — a campaign with members
-   * refuses to delete, with a message that names the real obstacle. That is the
-   * correct answer there (a campaign's member list is its historical record,
-   * not a per-person artefact), and it is pinned so a copy-paste of the two
-   * lines above cannot silently start shredding campaign history.
+   * The CAMPAIGN side is deliberately NOT cascade, and is not changed by #696:
+   * a campaign with members refuses to delete, with a message that names the
+   * real obstacle. That is the correct answer there (a campaign's member list
+   * is its historical record, not a per-person artefact), and it is pinned so a
+   * copy-paste of the two lines above cannot silently start shredding campaign
+   * history. `crm_campaign` is the object's master, a required `master_detail`
+   * since 18.0.0-next.1 (#2105), which would cascade on its default, so it
+   * declares `restrict`. Through 18.0.0-next.0 it was a required lookup whose
+   * `set_null` default the engine escalated to the same refusal.
    */
-  it('leaves the required campaign lookup on the default', () => {
+  it('keeps the required campaign master on restrict', () => {
+    expect(CAMPAIGN_MEMBER.fields.crm_campaign.type).toBe('master_detail');
     expect(CAMPAIGN_MEMBER.fields.crm_campaign.required).toBe(true);
-    expect(CAMPAIGN_MEMBER.fields.crm_campaign.deleteBehavior).toBe('set_null');
+    expect(CAMPAIGN_MEMBER.fields.crm_campaign.deleteBehavior).toBe('restrict');
   });
 });
 

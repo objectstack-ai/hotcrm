@@ -151,9 +151,11 @@ const partyFormHints = (column: string) => {
  *
  * # Access derives from the event
  *
- * `sharingModel: 'controlled_by_parent'` (ADR-0055). The relation resolver
- * accepts the REQUIRED `crm_event` lookup as the parent, so no master-detail
- * conversion is needed — same construction as `crm_campaign_member`.
+ * `sharingModel: 'controlled_by_parent'` (ADR-0055). The parent is `crm_event`,
+ * the object's ONE required `master_detail` — same construction as
+ * `crm_campaign_member`. Since @objectstack/spec 18.0.0-next.1 that is the only
+ * shape a controlled-by-parent object derives its master from; it was a
+ * required lookup through 18.0.0-next.0, which next.1 refuses at parse (#2105).
  *
  * Reads are filtered to attendees whose `crm_event` the caller can read, and
  * adding or updating an attendee requires edit access to that event. ⚠️ That
@@ -194,20 +196,21 @@ export const EventAttendee = ObjectSchema.create({
       format: 'EA-{00000}',
     }),
 
-    // ⚠️ Deliberately left on the spec default, and NOT cascaded with the party
-    // lookups below. Because it is REQUIRED, the engine escalates the stored
-    // `set_null` to a refusal at delete time, with a message naming the real
-    // obstacle instead of an unrelated rule: "Cannot delete crm_event (...): 3
-    // dependent crm_event_attendee record(s) reference it via crm_event
-    // (crm_event is required, so it cannot be cleared)." That is the correct
-    // answer on this side, for the same reason `crm_campaign_member.crm_campaign`
-    // keeps it: a meeting's attendee list is the meeting's historical record,
-    // not a per-person artefact. `test/event-attendee-cascade.test.ts` pins the
-    // resolved value so a copy-paste of the three cascades cannot reach here.
-    crm_event: Field.lookup('crm_event', {
+    // ⚠️ `restrict`, and NOT cascaded with the party lookups below. Deleting a
+    // meeting that still has attendees is refused, with a message naming the
+    // real obstacle instead of an unrelated rule. That is the correct answer on
+    // this side, for the same reason `crm_campaign_member.crm_campaign` keeps
+    // it: a meeting's attendee list is the meeting's historical record, not a
+    // per-person artefact. A `master_detail` left on its default would cascade
+    // and shred that history. Through 18.0.0-next.0 this was a required lookup
+    // on the `set_null` default, which the engine escalated to the same
+    // refusal. `test/event-attendee-cascade.test.ts` pins the resolved value so
+    // a copy-paste of the three cascades cannot reach here.
+    crm_event: Field.masterDetail('crm_event', {
       group: 'basic',
       label: 'Event',
       required: true,
+      deleteBehavior: 'restrict',
       storage: { notNull: true },
     }),
 

@@ -36,8 +36,9 @@ export const OpportunityLineItem = ObjectSchema.create({
   // written to go red the day the platform widens them: with the master set
   // resolved from RLS policies alone, any caller without the private-deal
   // policy — `sales_rep` included — reaches EVERY opportunity's lines.
-  // ADR-0055's relation resolver accepts a REQUIRED LOOKUP as the parent, so
-  // this works without converting the relationship to master-detail.
+  // The master is `crm_opportunity`, this object's one required
+  // `master_detail`: since 18.0.0-next.1 the only shape ADR-0055's relation
+  // resolver derives a master from (a required lookup no longer counts).
   //
   // ⛔ Not `private`: this object has no owner of its own, so `private` falls
   // back to the platform's auto-stamped `owner_id` (whoever inserted the row) —
