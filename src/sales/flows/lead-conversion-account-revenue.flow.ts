@@ -38,13 +38,17 @@ type Flow = Automation.Flow;
  * `case_escalation_stamp`: the user does the work, a system callee writes the
  * protected column afterwards.
  *
- * Creating the whole account here was measured first and refused: the system
+ * Creating the whole account here was measured first and rejected: the system
  * context skips the object gate as well as the field lock. A marketing user or
  * a service agent (both may read leads; neither may create accounts) then
  * created an account through Convert Lead and the run failed one node later at
- * `create_contact`, leaving that account behind. Today their conversion into a
- * new company stops at `create_account` with nothing written, and it still
- * does.
+ * `create_contact`, leaving that account behind. Their conversion into a new
+ * company stops at `create_account` with nothing written, as it always has;
+ * `test/flow-conversion.test.ts` pins that for the marketing user.
+ *
+ * ⚠️ The price of this shape, measured: `account_approval` opens the account's
+ * approval request on the insert, before this flow runs, so the request's
+ * submission snapshot carries no annual revenue. The account itself does.
  *
  * ## ⛔ What this flow deliberately does NOT do
  *
