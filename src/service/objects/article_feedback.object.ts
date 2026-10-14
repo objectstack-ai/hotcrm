@@ -129,8 +129,13 @@ export const ArticleFeedback = ObjectSchema.create({
      * enrolled person became permanently undeletable. A required lookup that
      * defaults to `set_null` is that bug waiting to happen, so the behaviour is
      * spelled out here rather than inherited.
+     *
+     * It is the master of this `controlled_by_parent` object: its ONE required
+     * `master_detail` (ADR-0055 §1). It was a required lookup through
+     * 18.0.0-next.0, which @objectstack/spec 18.0.0-next.1 refuses at parse
+     * (#2105); `cascade` was already declared, so deletes behave as before.
      */
-    crm_knowledge_article: Field.lookup('crm_knowledge_article', {
+    crm_knowledge_article: Field.masterDetail('crm_knowledge_article', {
       label: 'Article',
       required: true,
       storage: { notNull: true },
