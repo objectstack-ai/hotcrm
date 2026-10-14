@@ -54,6 +54,10 @@ export const ContractExpirationFlow: Flow = {
                 template: 'crm.contract_expired',
                 templateData: { contract_number: cel`currentContract.contract_number` },
                 actionUrl: '/crm_contract/{{currentContract.id}}',
+                // A schedule run has no organization: since 18.0.0-next.1 the
+                // notification takes its owner from this record (objectstack#23284).
+                sourceObject: 'crm_contract',
+                sourceId: cel`currentContract.id`,
               },
             },
           ],
