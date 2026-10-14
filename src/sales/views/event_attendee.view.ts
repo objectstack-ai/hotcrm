@@ -67,11 +67,9 @@ export const EventAttendeeViews = defineView({
       { field: 'is_organizer', width: 100, align: 'center' },
     ],
     sort: [{ field: 'is_organizer', order: 'desc' }],
-    rowColor: {
-      // Mirrors the option colors on crm_event_attendee.response.
-      field: 'response',
-      colors: { accepted: 'green', declined: 'red', tentative: 'orange', no_response: 'slate' },
-    },
+    // Only the exception row is tinted: a declined invitation turns red. The
+    // response column already draws each value's badge.
+    rowColor: { field: 'response', colors: { declined: 'red' } },
     pagination: { pageSize: 25 },
   },
 

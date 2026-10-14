@@ -42,10 +42,6 @@ export const KnowledgeArticleViews = defineView({
     grouping: { fields: [{ field: 'category', order: 'asc' }] },
     selection: { type: 'multiple' },
     pagination: { pageSize: 50 },
-    rowColor: {
-      field: 'status',
-      colors: { draft: 'slate', in_review: 'amber', published: 'emerald', archived: 'gray' },
-    },
     appearance: {
       showDescription: true,
       allowedVisualizations: ['grid', 'kanban'],

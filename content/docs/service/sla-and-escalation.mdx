@@ -28,7 +28,7 @@ The **Critical row is flat at four hours on purpose.** Before the matrix, every 
 
 A priority the matrix has no row for gets no due date at all, rather than a guessed one.
 
-What a breach looks like is the same at every priority now: the hourly monitor flags **SLA Violated**, escalates the case, and alerts the **case owner** by inbox + email. There is no red banner on the case detail page — this app has no banner mechanism — and no alert to a support manager: the notify node's recipient list is `{currentCase.owner_id}` alone. In a list view, the thing that reports a breach is the **SLA Violated** column, not the row colour: the only colour rule on a case list is the **row tint** in *All Cases*, and it is keyed on **priority** (High `#f97316`, Medium `#eab308`, Low `#94a3b8`), painting every case of that priority from the moment it is created, breach or no breach.
+What a breach looks like is the same at every priority now: the hourly monitor flags **SLA Violated**, escalates the case, and alerts the **case owner** by inbox + email. There is no red banner on the case detail page — this app has no banner mechanism — and no alert to a support manager: the notify node's recipient list is `{currentCase.owner_id}` alone. In a list view, a breach shows twice in *All Cases*: in the **SLA Violated** column, and as a red row from the moment the case is flagged. No other value tints a case row, so a red row means a breach, at any priority.
 
 The matrix lives in the hook rather than on a Setup screen — see the *Tips for admins* section below.
 

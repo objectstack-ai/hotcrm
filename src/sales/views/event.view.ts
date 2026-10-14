@@ -39,11 +39,6 @@ export const EventViews = defineView({
       { field: 'owner_id', width: 150 },
     ],
     sort: [{ field: 'start_datetime', order: 'desc' }],
-    rowColor: {
-      // Mirrors the option colors on crm_event.status.
-      field: 'status',
-      colors: { planned: 'blue', held: 'green', cancelled: 'slate', no_show: 'orange' },
-    },
     selection: { type: 'multiple' },
     pagination: { pageSize: 50 },
     appearance: {
