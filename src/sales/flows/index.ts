@@ -18,6 +18,7 @@
  * sources every package reads along its edge into sales.
  */
 export { LeadConversionFlow } from './lead-conversion.flow';
+export { LeadConversionAccountRevenueFlow } from './lead-conversion-account-revenue.flow';
 export { LeadConversionApprovalFlow } from './lead-conversion-approval.flow';
 export { AccountApprovalFlow } from './account-approval.flow';
 export { ScheduleFollowUpFlow } from './schedule-followup.flow';
