@@ -340,7 +340,7 @@ describe('the schedule_followup screen flow is covered by the task guard', () =>
   /**
    * The card asked whether the phone OPTION could be gated in the follow-up
    * screen instead. It cannot: a screen field's `options` are static metadata
-   * (`plainOptions(TASK_TYPE_OPTIONS)`), evaluated with no record in scope, so
+   * (`crm_task.type`'s own options, projected), evaluated with no record in scope, so
    * there is no expression in which "hide Call for THIS lead" can be written.
    * Refusing at the point the phone type is chosen is what the metadata can
    * express — and it costs the flow no change at all, because the flow reaches
