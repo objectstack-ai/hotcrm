@@ -62,6 +62,19 @@ const as = (who: Person) => ({ as: who.token });
 const notified = async (userId: string, topic: string, url: string) =>
   (await notificationsTo(verify, userId, topic)).filter((n) => n.payload?.actionUrl === url);
 
+/**
+ * The runs of `flow` for the record `id`, once the first history row has
+ * landed. The engine writes a finished run's row after the run returns (its
+ * `recordTerminal` write is not awaited), so a read straight after the write
+ * that fired the flow can come back empty — measured on a guest web-to-lead
+ * insert (#2060 item 6). For a case that asserts on the run itself.
+ */
+const landedRuns = (flow: string, id: string) => vi.waitFor(async () => {
+  const rows = await flowRuns(verify, flow, id);
+  expect(rows.length, `no ${flow} run recorded for ${id}`).toBeGreaterThan(0);
+  return rows;
+}, { timeout: 10_000, interval: 50 });
+
 describe('opportunity_won_alert — start condition', () => {
   /**
    * The rep's open deal. A deal of $100K or more is seeded with its large-deal
@@ -350,6 +363,62 @@ describe('lead_assignment — hot-lead SLA routing', () => {
   });
 });
 
+/**
+ * A lead with NO owner (#2060 item 6).
+ *
+ * Web-to-lead lands ownerless whenever `lead_auto_assign` stands down (an
+ * empty `sales_rep` pool, or one the anonymous form grant cannot read), and a
+ * seed or integration write carries whatever owner it was given. The SLA stamp
+ * is the routing decision about the lead and lands either way; the alert has
+ * nobody to go to. `notify` refuses an audience that evaluates to nothing, so
+ * without the owner gates the run FAILED at the notify node after the stamp
+ * (measured on 18.0.0-next.0: "notify: at least one recipient is required …
+ * `record.owner_id`").
+ *
+ * The lead is written through the system's seed door (no owner stamp, no flow
+ * fired) and handed to the flow the way the trigger hands it a write, so the
+ * case does not depend on how intake left it ownerless. Both shapes the
+ * trigger can hand over are run: `owner_id: null` (a SQL driver, the public
+ * form door) and the key ABSENT (driver-memory / driver-mongodb store only the
+ * columns a row was written with). An OWNED lead still alerting its owner, on
+ * both branches, is the describe above and the integration-written case below.
+ */
+describe('lead_assignment — a lead with no owner (#2060)', () => {
+  const CASES = [
+    { rating: 5, notify: 'notify_hot', owner: 'null' },
+    { rating: 5, notify: 'notify_hot', owner: 'absent' },
+    { rating: 1, notify: 'notify_std', owner: 'null' },
+    { rating: 1, notify: 'notify_std', owner: 'absent' },
+  ] as const;
+
+  it.each(CASES)('rating $rating, owner_id $owner: the SLA lands, $notify is passed over, the run completes', async ({ rating, notify, owner }) => {
+    const [seeded] = await verify.seed('crm_lead', [{
+      first_name: 'Ada', last_name: `Ownerless ${++k}`, company: `Ownerless Co ${k}`,
+      email: `ownerless${k}@flow-record-change.test`, rating,
+    }]);
+    const id = String(seeded!.id);
+    const [held] = await verify.rows('crm_lead', { id });
+    const { owner_id: _owner, ...unowned } = held!;
+    const record = owner === 'null' ? { ...unowned, owner_id: null } : unowned;
+
+    const result = await runRecordFlow(verify, 'lead_assignment', 'crm_lead', record);
+    expect(result.success, `the run failed on a lead with no owner: ${String(result.error ?? '')}`).toBe(true);
+
+    const [stored] = await verify.rows('crm_lead', { id });
+    expect(stored!.next_followup_date, 'the SLA stamp did not land').toBeTruthy();
+
+    const [run, ...more] = await landedRuns('lead_assignment', id);
+    expect(more).toHaveLength(0);
+    expect(run?.status).toBe('completed');
+    const step = (run?.summary?.nodes ?? []).find((n: Rec) => n.nodeId === notify);
+    expect(step?.status, `${notify} was not passed over`).toBe('skipped');
+
+    const sent = (await verify.rows('sys_notification_delivery', { topic: 'lead_routing' }))
+      .filter((n) => n.payload?.actionUrl === `/crm_lead/${id}`);
+    expect(sent, 'an alert went out for a lead with no owner').toHaveLength(0);
+  });
+});
+
 describe('opportunity_approval — start condition', () => {
   const startCondition = (OpportunityApprovalFlow.nodes as Rec[])
     .find((n) => n.id === 'start')?.config?.condition;
@@ -611,8 +680,11 @@ describe('record-change flows under a user-less trigger (#684)', () => {
       first_name: 'Ada', last_name: `Web ${++k}`, company: `Web Co ${k}`,
       email: `web${k}@flow-record-change.test`, rating: 5,
     });
-    const [run] = await flowRuns(verify, 'lead_assignment', lead.id);
+    const [run] = await landedRuns('lead_assignment', String(lead.id));
     expect(String(run?.error ?? '')).not.toContain('[runAs]');
+    // Owned or not, the run ends successfully (#2060 item 6): an ownerless
+    // lead used to fail at its notify node after the SLA stamp below.
+    expect(run?.status, String(run?.error ?? '')).toBe('completed');
     const [stored] = await verify.rows('crm_lead', { id: lead.id });
     expect(stored!.next_followup_date, 'hot lead got no SLA date').toBeTruthy();
     // The anonymous form grant cannot read the rep pool, so `lead_auto_assign`
